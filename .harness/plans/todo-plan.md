@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 7,
+  "plan_revision": 9,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
@@ -142,8 +142,8 @@
         "Текущий этап ограничен документацией; задачи кода остаются TODO"
       ],
       "expected_commit_message": "docs: подготовить передачу в новую сессию",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-prototype-001",
         "task_id": "T003",
@@ -487,7 +487,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 7
+Revision: 9
 
 ## Цель
 
@@ -511,8 +511,8 @@ Revision: 7
   - Git Commit: [DONE] docs: описать архитектуру и источники проекта
   - Reference: web-pilot-prototype-001 / T002 / implementation
   - Файлы: docs/architecture/ARCHITECTURE.md, docs/CONTEXT_DELIVERY.md, docs/SOURCE_WORKSPACES.md, docs/DOCUMENTATION_INDEX.md
-- [TODO] T003: Подготовить инструкции новой сессии и критерии проверки — Ожидает
-  - Git Commit: [PENDING] docs: подготовить передачу в новую сессию
+- [DONE] T003: Подготовить инструкции новой сессии и критерии проверки — Завершено
+  - Git Commit: [DONE] docs: подготовить передачу в новую сессию
   - Reference: web-pilot-prototype-001 / T003 / implementation
   - Файлы: AGENTS.md, docs/WORKFLOW_START.md, docs/VERIFICATION.md, docs/DOCUMENTATION_INDEX.md
 - [TODO] T004: Уточнить профиль прототипа и подключить проверки — Ожидает

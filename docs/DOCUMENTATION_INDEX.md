@@ -31,3 +31,7 @@
 | docs/VERIFICATION.md | Доказательства, проверки и приёмка прототипа |
 
 Документы PRODUCT, ARCHITECTURE, WORKFLOW_START, AGENTS и единственный план перечислены в разделе комплекта выше. Исторические результаты исходных приложений не означают готовность Project Web Pilot.
+
+## Порядок чтения для новой сессии
+
+`docs/WORKFLOW_START.md` → актуальный recovery packet и план → `docs/PRODUCT.md` / `docs/DECISIONS.md` → `docs/architecture/ARCHITECTURE.md` / `docs/CONTEXT_DELIVERY.md` → `docs/SOURCE_WORKSPACES.md` / `docs/VERIFICATION.md`. Статусы задач читать только из управляемого плана, не из исторических отчётов.
