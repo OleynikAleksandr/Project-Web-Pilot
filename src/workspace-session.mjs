@@ -49,14 +49,54 @@ export async function readWorkspace(input) {
 }
 
 const copy = value => structuredClone(value);
+const invalid = () => new WorkspaceError('SESSIONS_INVALID', 'Формат сохранённых проектов не поддерживается. Исходный файл сохранён.');
+const sessionFields = ['sessionId', 'chatUrl', 'attempt', 'receipt', 'title', 'createdAt', 'lastOpenedAt'];
+
+function validate(data) {
+  if (data?.schemaVersion !== 2 || !Array.isArray(data.projects)) throw invalid();
+  const urls = [], ids = [], workspaces = [];
+  for (const p of data.projects) {
+    if (!p || typeof p.workspace !== 'string' || !path.isAbsolute(p.workspace)
+        || typeof p.projectId !== 'string' || !p.projectId || typeof p.name !== 'string'
+        || !Array.isArray(p.sessions) || !p.sessions.length || typeof p.expanded !== 'boolean'
+        || !p.sessions.some(s => s?.sessionId === p.selectedSessionId)) throw invalid();
+    workspaces.push(p.workspace);
+    for (const s of p.sessions) {
+      if (!s || typeof s.sessionId !== 'string' || !s.sessionId || typeof s.title !== 'string'
+          || !Number.isFinite(s.createdAt) || !Number.isFinite(s.lastOpenedAt)
+          || (s.chatUrl !== null && (!normalizeChatUrl(s.chatUrl) || normalizeChatUrl(s.chatUrl) !== s.chatUrl))) throw invalid();
+      ids.push(s.sessionId);
+      if (s.chatUrl) urls.push(s.chatUrl);
+    }
+  }
+  for (const values of [urls, ids, workspaces]) if (new Set(values).size !== values.length) throw invalid();
+  return data;
+}
+
+function migrate(data) {
+  if (data?.schemaVersion !== 1 || !Array.isArray(data.projects)) throw invalid();
+  return { schemaVersion: 2, selectedWorkspace: data.selectedWorkspace, projects: data.projects.map(p => {
+    if (!p || typeof p.sessionId !== 'string') throw invalid();
+    const info = { ...p };
+    for (const key of sessionFields) delete info[key];
+    const time = p.attempt?.createdAtMs ?? p.lastOpenedAt ?? Date.now();
+    return { ...info, expanded: false, selectedSessionId: p.sessionId,
+      sessions: [{ sessionId: p.sessionId, chatUrl: p.chatUrl, attempt: p.attempt ?? null,
+        receipt: p.receipt ?? null, title: p.title ?? '', createdAt: time, lastOpenedAt: p.lastOpenedAt ?? time }] };
+  }) };
+}
+
+function currentView(project) {
+  if (!project) return null;
+  const { sessions, ...info } = project;
+  return copy({ ...info, ...sessions.find(s => s.sessionId === project.selectedSessionId) });
+}
 
 export class WorkspaceSessions {
-  constructor(file, { inspect = readWorkspace, uuid = randomUUID } = {}) {
-    this.file = file;
-    this.inspect = inspect;
-    this.uuid = uuid;
+  constructor(file, { inspect = readWorkspace, uuid = randomUUID, now = Date.now } = {}) {
+    Object.assign(this, { file, inspect, uuid, now });
     this.saveTail = Promise.resolve();
-    this.data = { schemaVersion: 1, selectedWorkspace: null, projects: [] };
+    this.data = { schemaVersion: 2, selectedWorkspace: null, projects: [] };
   }
 
   async load() {
@@ -65,28 +105,31 @@ export class WorkspaceSessions {
       if (error.code === 'ENOENT') return this.snapshot();
       throw error;
     }
-    let data;
-    try { data = JSON.parse(text); } catch {
-      throw new WorkspaceError('SESSIONS_INVALID', 'Не удалось прочитать сохранённые проекты. Файл сохранён для диагностики.');
-    }
-    if (data.schemaVersion !== 1 || !Array.isArray(data.projects)
-        || data.projects.some(p => !p || !path.isAbsolute(p.workspace ?? '')
-          || typeof p.projectId !== 'string' || typeof p.sessionId !== 'string'
-          || (p.chatUrl !== null && !normalizeChatUrl(p.chatUrl)))) {
-      throw new WorkspaceError('SESSIONS_INVALID', 'Формат сохранённых проектов не поддерживается.');
-    }
-    const urls = data.projects.map(p => p.chatUrl).filter(Boolean);
-    if (new Set(urls).size !== urls.length || new Set(data.projects.map(p => p.workspace)).size !== data.projects.length) {
-      throw new WorkspaceError('SESSIONS_INVALID', 'В сохранённых проектах есть неоднозначная связь с чатом.');
+    let parsed;
+    try { parsed = JSON.parse(text); } catch { throw invalid(); }
+    const legacy = parsed.schemaVersion === 1;
+    const data = validate(legacy ? migrate(parsed) : parsed);
+    if (legacy) {
+      try { await fs.writeFile(this.file + '.v1-backup', text, { mode: 0o600, flag: 'wx' }); }
+      catch (error) { if (error.code !== 'EEXIST') throw error; }
     }
     this.data = data;
     if (!data.projects.some(p => p.workspace === data.selectedWorkspace)) this.data.selectedWorkspace = null;
+    if (legacy) await this.save();
     return this.snapshot();
   }
 
   snapshot() { return copy(this.data); }
-  selected() { return copy(this.data.projects.find(p => p.workspace === this.data.selectedWorkspace) ?? null); }
-  project(workspace) { return copy(this.data.projects.find(p => p.workspace === workspace) ?? null); }
+  selected() { return this.project(this.data.selectedWorkspace); }
+  project(workspace) { return currentView(this.data.projects.find(p => p.workspace === workspace)); }
+
+  activeRecord(workspace, sessionId) {
+    const project = this.data.projects.find(p => p.workspace === workspace);
+    if (!project || project.selectedSessionId !== sessionId) {
+      throw new WorkspaceError('SESSION_CHANGED', 'Проект или сессия уже изменились.');
+    }
+    return { project, session: project.sessions.find(s => s.sessionId === sessionId) };
+  }
 
   save() {
     const text = JSON.stringify(this.data, null, 2) + '\n';
@@ -100,61 +143,90 @@ export class WorkspaceSessions {
     return operation;
   }
 
+  createSession() {
+    return { sessionId: 'web-pilot-' + this.uuid(), chatUrl: null, title: '',
+      createdAt: this.now(), lastOpenedAt: this.now(), attempt: null, receipt: null };
+  }
+
   async select(input) {
     const info = await this.inspect(input);
     let project = this.data.projects.find(p => p.workspace === info.workspace);
     if (project && project.projectId !== info.projectId) {
-      throw new WorkspaceError('PROJECT_REPLACED', 'В этой папке теперь другой проект. Старый чат сохранён; выберите другую папку для проверки.');
+      throw new WorkspaceError('PROJECT_REPLACED', 'В этой папке теперь другой проект. Сохранённые чаты оставлены без изменений.');
     }
     if (!project) {
-      project = { ...info, sessionId: 'web-pilot-' + this.uuid(), chatUrl: null,
-        attempt: null, receipt: null, lastOpenedAt: Date.now() };
+      const session = this.createSession();
+      project = { ...info, selectedSessionId: session.sessionId, sessions: [session], expanded: false };
       this.data.projects.unshift(project);
-    } else {
-      Object.assign(project, info, { lastOpenedAt: Date.now() });
-    }
+    } else Object.assign(project, info);
+    project.sessions.find(s => s.sessionId === project.selectedSessionId).lastOpenedAt = this.now();
     this.data.selectedWorkspace = project.workspace;
     await this.save();
-    return copy(project);
+    return currentView(project);
+  }
+
+  async selectSession(input, sessionId) {
+    const info = await this.inspect(input);
+    const project = this.data.projects.find(p => p.workspace === info.workspace);
+    if (!project || !project.sessions.some(s => s.sessionId === sessionId)) {
+      throw new WorkspaceError('SESSION_NOT_FOUND', 'Эта сессия не принадлежит выбранному проекту.');
+    }
+    if (project.projectId !== info.projectId) throw new WorkspaceError('PROJECT_REPLACED', 'В этой папке теперь другой проект. Сохранённые чаты оставлены без изменений.');
+    Object.assign(project, info, { selectedSessionId: sessionId, expanded: true });
+    project.sessions.find(s => s.sessionId === sessionId).lastOpenedAt = this.now();
+    this.data.selectedWorkspace = project.workspace;
+    await this.save();
+    return currentView(project);
   }
 
   async bindChat(workspace, sessionId, input) {
     const url = normalizeChatUrl(input);
     if (!url) throw new WorkspaceError('CHAT_URL_INVALID', 'Откройте конкретный чат ChatGPT.');
-    const project = this.data.projects.find(p => p.workspace === workspace);
-    if (!project || project.sessionId !== sessionId) {
-      throw new WorkspaceError('SESSION_CHANGED', 'Проект или сессия уже изменились.');
+    const { project, session } = this.activeRecord(workspace, sessionId);
+    if (session.chatUrl && session.chatUrl !== url) {
+      throw new WorkspaceError('CHAT_CHANGED', 'Открыт другой чат. Выберите его в дереве или вернитесь к сессии проекта.');
     }
-    if (project.chatUrl && project.chatUrl !== url) {
-      throw new WorkspaceError('CHAT_CHANGED', 'Открыт другой чат. Вернитесь к связанному чату или создайте новый через сайдбар.');
+    if (this.data.projects.some(p => p.sessions.some(s => s.sessionId !== sessionId && s.chatUrl === url))) {
+      throw new WorkspaceError('CHAT_IN_USE', 'Этот чат уже связан с другой сессией.');
     }
-    if (this.data.projects.some(p => p.workspace !== workspace && p.chatUrl === url)) {
-      throw new WorkspaceError('CHAT_IN_USE', 'Этот чат уже связан с другим проектом.');
-    }
-    project.chatUrl = url;
+    session.chatUrl = url;
     await this.save();
-    return copy(project);
+    return currentView(project);
   }
 
   async newChat(workspace) {
     const project = this.data.projects.find(p => p.workspace === workspace);
     if (!project) throw new WorkspaceError('WORKSPACE_REQUIRED', 'Сначала выберите проект.');
-    project.sessionId = 'web-pilot-' + this.uuid();
-    project.chatUrl = null;
-    project.attempt = null;
-    project.receipt = null;
+    const session = this.createSession();
+    project.sessions.push(session);
+    project.selectedSessionId = session.sessionId;
+    project.expanded = true;
     await this.save();
-    return copy(project);
+    return currentView(project);
+  }
+
+  async setExpanded(workspace, expanded) {
+    const project = this.data.projects.find(p => p.workspace === workspace);
+    if (!project || typeof expanded !== 'boolean') throw new WorkspaceError('WORKSPACE_REQUIRED', 'Выберите проект из списка.');
+    project.expanded = expanded;
+    await this.save();
+  }
+
+  async setSessionTitle(workspace, sessionId, value) {
+    const { session } = this.activeRecord(workspace, sessionId);
+    if (typeof value !== 'string') throw new WorkspaceError('TITLE_INVALID', 'Неверное название сессии.');
+    const title = value.replace(/\s+/g, ' ').trim().slice(0, 160);
+    if (!title || session.title === title) return false;
+    session.title = title;
+    await this.save();
+    return true;
   }
 
   async updateSession(workspace, sessionId, patch) {
-    const project = this.data.projects.find(p => p.workspace === workspace);
-    if (!project || project.sessionId !== sessionId) {
-      throw new WorkspaceError('SESSION_CHANGED', 'Сессия изменилась; результат сохранённого чата не применён.');
-    }
+    const { project, session } = this.activeRecord(workspace, sessionId);
     if (Object.keys(patch).some(k => !['attempt', 'receipt'].includes(k))) throw new Error('INVALID_SESSION_PATCH');
-    Object.assign(project, copy(patch));
+    Object.assign(session, copy(patch));
     await this.save();
-    return copy(project);
+    return currentView(project);
   }
 }

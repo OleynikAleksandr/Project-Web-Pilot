@@ -79,3 +79,69 @@ test('only actual HTTPS ChatGPT conversation URLs can be saved', () => {
     'https://chatgpt.com/auth/login', 'https://chatgpt.com:444/c/aaaaaaaa']) assert.equal(normalizeChatUrl(url), null);
   assert.equal(normalizeChatUrl('https://chatgpt.com/work/aaaaaaaa'), 'https://chatgpt.com/work/aaaaaaaa');
 });
+
+test('new chats retain all previous sessions and their independent context after restart', async t => {
+  const { project, store } = await fixture(t);
+  const first = await store.select(await project('История'));
+  await store.bindChat(first.workspace, first.sessionId, 'https://chatgpt.com/c/first-chat');
+  await store.setSessionTitle(first.workspace, first.sessionId, 'Первый разговор');
+  await store.updateSession(first.workspace, first.sessionId, { attempt: { state: 'sent', requestId: 'request-1' } });
+  const second = await store.newChat(first.workspace);
+  await store.bindChat(first.workspace, second.sessionId, 'https://chatgpt.com/c/second-chat');
+  await store.updateSession(first.workspace, second.sessionId, { attempt: { state: 'unknown', requestId: 'request-2' } });
+  assert.equal(store.snapshot().projects[0].sessions.length, 2);
+  await store.selectSession(first.workspace, first.sessionId);
+  assert.equal(store.selected().title, 'Первый разговор');
+  assert.equal(store.selected().attempt.requestId, 'request-1');
+  await store.setExpanded(first.workspace, false);
+  const restored = new WorkspaceSessions(store.file); await restored.load();
+  assert.equal(restored.selected().sessionId, first.sessionId);
+  assert.equal(restored.snapshot().projects[0].expanded, false);
+  await restored.selectSession(first.workspace, second.sessionId);
+  assert.equal(restored.selected().attempt.state, 'unknown');
+  assert.equal(restored.selected().chatUrl, 'https://chatgpt.com/c/second-chat');
+});
+
+test('legacy storage migrates intact with an exclusive backup and is not migrated twice', async t => {
+  const { project, store } = await fixture(t);
+  const original = await store.select(await project('Прежний проект'));
+  const legacy = { schemaVersion: 1, selectedWorkspace: original.workspace, projects: [{ ...original,
+    chatUrl: 'https://chatgpt.com/c/legacy-chat', attempt: { state: 'sent', text: 'Точный старый текст', requestId: 'legacy-request' },
+    receipt: { old: true } }] };
+  const text = JSON.stringify(legacy);
+  await fs.writeFile(store.file, text);
+  const restored = new WorkspaceSessions(store.file); await restored.load();
+  assert.equal(restored.snapshot().schemaVersion, 2);
+  assert.equal(restored.snapshot().projects[0].sessions.length, 1);
+  assert.equal(restored.selected().attempt.text, 'Точный старый текст');
+  assert.equal(restored.selected().chatUrl, legacy.projects[0].chatUrl);
+  assert.deepEqual(restored.selected().receipt, { old: true });
+  assert.equal(await fs.readFile(store.file + '.v1-backup', 'utf8'), text);
+  await restored.newChat(original.workspace); await restored.load();
+  assert.equal(restored.snapshot().projects[0].sessions.length, 2);
+  assert.equal(await fs.readFile(store.file + '.v1-backup', 'utf8'), text);
+});
+
+test('session selection and binding reject cross-project or duplicate conversations', async t => {
+  const { project, store } = await fixture(t);
+  const a = await store.select(await project('A'));
+  const b = await store.select(await project('B'));
+  await assert.rejects(store.selectSession(a.workspace, b.sessionId), { code: 'SESSION_NOT_FOUND' });
+  assert.equal(store.selected().workspace, b.workspace);
+  await store.bindChat(a.workspace, a.sessionId, 'https://chatgpt.com/c/one-chat');
+  const next = await store.newChat(a.workspace);
+  await assert.rejects(store.bindChat(a.workspace, next.sessionId, 'https://chatgpt.com/c/one-chat'), { code: 'CHAT_IN_USE' });
+  await assert.rejects(store.setSessionTitle(a.workspace, a.sessionId, 'Late title'), { code: 'SESSION_CHANGED' });
+});
+
+test('corrupt histories and invalid selection preserve the original data', async t => {
+  const { project, store } = await fixture(t);
+  await store.select(await project('A'));
+  for (const mutate of [d => d.projects[0].sessions.push({ ...d.projects[0].sessions[0] }),
+    d => d.projects[0].selectedSessionId = 'missing', d => d.projects[0].sessions[0].chatUrl = 'https://evil.test/c/anything']) {
+    const data = store.snapshot(); mutate(data); const text = JSON.stringify(data);
+    await fs.writeFile(store.file, text);
+    await assert.rejects(new WorkspaceSessions(store.file).load(), { code: 'SESSIONS_INVALID' });
+    assert.equal(await fs.readFile(store.file, 'utf8'), text);
+  }
+});

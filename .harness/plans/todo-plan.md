@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 51,
+  "plan_revision": 53,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
@@ -675,8 +675,8 @@
         "Нельзя открыть или изменить сессию чужого workspace; повторный запуск сохраняет список."
       ],
       "expected_commit_message": "feat: сохранять историю сессий workspace",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-prototype-001",
         "task_id": "T018",
@@ -808,7 +808,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 51
+Revision: 53
 
 ## Цель
 
@@ -892,8 +892,8 @@ Revision: 51
   - Git Commit: [DONE] chore: собрать прототип с прямой передачей контекста
   - Reference: web-pilot-prototype-001 / T017 / implementation
   - Файлы: package.json, package-lock.json, README.md, AGENTS.md, docs/PRODUCT.md, docs/WORKFLOW_START.md, docs/DECISIONS.md, docs/VERIFICATION.md, docs/SOURCE_WORKSPACES.md, docs/architecture/ARCHITECTURE.md
-- [TODO] T018: Сохранять несколько сессий workspace — Ожидает
-  - Git Commit: [PENDING] feat: сохранять историю сессий workspace
+- [DONE] T018: Сохранять несколько сессий workspace — Завершено
+  - Git Commit: [DONE] feat: сохранять историю сессий workspace
   - Reference: web-pilot-prototype-001 / T018 / implementation
   - Файлы: src/workspace-session.mjs, tests/workspace-session.test.mjs, docs/architecture/ARCHITECTURE.md, docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md
 - [TODO] T019: Добавить дерево сессий в сайдбар — Ожидает
