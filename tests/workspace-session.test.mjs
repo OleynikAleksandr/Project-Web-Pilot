@@ -111,7 +111,7 @@ test('legacy storage migrates intact with an exclusive backup and is not migrate
   const text = JSON.stringify(legacy);
   await fs.writeFile(store.file, text);
   const restored = new WorkspaceSessions(store.file); await restored.load();
-  assert.equal(restored.snapshot().schemaVersion, 2);
+  assert.equal(restored.snapshot().schemaVersion, 3);
   assert.equal(restored.snapshot().projects[0].sessions.length, 1);
   assert.equal(restored.selected().attempt.text, 'Точный старый текст');
   assert.equal(restored.selected().chatUrl, legacy.projects[0].chatUrl);
@@ -144,4 +144,51 @@ test('corrupt histories and invalid selection preserve the original data', async
     await assert.rejects(new WorkspaceSessions(store.file).load(), { code: 'SESSIONS_INVALID' });
     assert.equal(await fs.readFile(store.file, 'utf8'), text);
   }
+});
+
+test('archive and restore preserve every session, selection and project files', async t => {
+  const { project, store } = await fixture(t); const a = await store.select(await project('Архив'));
+  await store.bindChat(a.workspace, a.sessionId, 'https://chatgpt.com/c/archive-chat');
+  await store.updateSession(a.workspace, a.sessionId, { attempt: { state: 'sent', requestId: 'kept-request' } });
+  await store.newChat(a.workspace); await store.selectSession(a.workspace, a.sessionId);
+  const before = store.snapshot().projects[0], plan = await fs.readFile(path.join(a.workspace, '.harness/plans/todo-plan.md'));
+  await store.setArchived(a.workspace, true); assert.equal(store.selected(), null);
+  await assert.rejects(store.select(a.workspace), { code: 'PROJECT_ARCHIVED' });
+  await assert.rejects(store.newChat(a.workspace), { code: 'PROJECT_ARCHIVED' });
+  await assert.rejects(store.updateSession(a.workspace, a.sessionId, { receipt: {} }), { code: 'PROJECT_ARCHIVED' });
+  const restored = new WorkspaceSessions(store.file); await restored.load(); assert.ok(restored.project(a.workspace).archivedAt);
+  await restored.setArchived(a.workspace, false);
+  assert.deepEqual(restored.snapshot().projects[0], before);
+  assert.deepEqual(await fs.readFile(path.join(a.workspace, '.harness/plans/todo-plan.md')), plan);
+  const selected = await restored.select(a.workspace); assert.equal(selected.sessionId, a.sessionId); assert.equal(selected.attempt.requestId, 'kept-request');
+});
+test('version two history migrates with an exact backup and starts active', async t => {
+  const { project, store } = await fixture(t); await store.select(await project('Version 2')); await store.newChat(store.selected().workspace);
+  const old = store.snapshot(); old.schemaVersion = 2; delete old.projects[0].archivedAt;
+  const original = JSON.stringify(old); await fs.writeFile(store.file, original);
+  const next = new WorkspaceSessions(store.file); await next.load();
+  assert.equal(next.snapshot().schemaVersion, 3); assert.equal(next.selected().archivedAt, null);
+  assert.deepEqual(next.snapshot().projects[0].sessions, old.projects[0].sessions);
+  assert.equal(await fs.readFile(store.file + '.v2-backup', 'utf8'), original);
+});
+test('archive save failure preserves current state and queued edits do not lose other projects', async t => {
+  const { project, store } = await fixture(t); const a = await store.select(await project('A')); const b = await store.select(await project('B'));
+  const diskBefore = await fs.readFile(store.file), before = store.snapshot(), save = store.save;
+  store.save = async () => { throw new Error('disk full'); };
+  await assert.rejects(store.setArchived(a.workspace, true), /disk full/);
+  assert.deepEqual(store.snapshot(), before); assert.deepEqual(await fs.readFile(store.file), diskBefore);
+  store.save = save;
+  await Promise.all([store.setArchived(a.workspace, true), store.setSessionTitle(b.workspace, b.sessionId, 'Preserved title')]);
+  assert.ok(store.project(a.workspace).archivedAt); assert.equal(store.project(b.workspace).title, 'Preserved title');
+  assert.equal(store.selected().workspace, b.workspace);
+});
+test('forgetting requires an archived matching identity and removes all local sessions only', async t => {
+  const { project, store } = await fixture(t); const a = await store.select(await project('Forget'));
+  await store.newChat(a.workspace);
+  await assert.rejects(store.forgetArchived(a.workspace, a.projectId), { code: 'PROJECT_NOT_ARCHIVED' });
+  await store.setArchived(a.workspace, true);
+  await assert.rejects(store.forgetArchived(a.workspace, 'wrong-id'), { code: 'PROJECT_REPLACED' });
+  await store.forgetArchived(a.workspace, a.projectId);
+  assert.equal(store.project(a.workspace), null); assert.equal(store.snapshot().projects.length, 0);
+  assert.ok((await fs.stat(a.workspace)).isDirectory(), 'Metadata operation never deletes files');
 });

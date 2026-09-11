@@ -47,3 +47,5 @@
 | resources/workflow-kit/templates/PLAN.md | Исходный шаблон плана |
 | resources/workflow-kit/templates/PRODUCT.md | Исходный шаблон продукта |
 | resources/workflow-kit/templates/START.md | Исходный шаблон начала работы |
+
+| docs/PROJECT_ARCHIVE.md | Архив workspace, возврат и удаление локальных проектов; веб-чаты сохраняются |

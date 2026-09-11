@@ -53,12 +53,13 @@ const invalid = () => new WorkspaceError('SESSIONS_INVALID', 'Формат со�
 const sessionFields = ['sessionId', 'chatUrl', 'attempt', 'receipt', 'title', 'createdAt', 'lastOpenedAt'];
 
 function validate(data) {
-  if (data?.schemaVersion !== 2 || !Array.isArray(data.projects)) throw invalid();
+  if (data?.schemaVersion !== 3 || !Array.isArray(data.projects)) throw invalid();
   const urls = [], ids = [], workspaces = [];
   for (const p of data.projects) {
     if (!p || typeof p.workspace !== 'string' || !path.isAbsolute(p.workspace)
         || typeof p.projectId !== 'string' || !p.projectId || typeof p.name !== 'string'
         || !Array.isArray(p.sessions) || !p.sessions.length || typeof p.expanded !== 'boolean'
+        || (p.archivedAt !== null && (!Number.isFinite(p.archivedAt) || p.archivedAt <= 0))
         || !p.sessions.some(s => s?.sessionId === p.selectedSessionId)) throw invalid();
     workspaces.push(p.workspace);
     for (const s of p.sessions) {
@@ -74,16 +75,19 @@ function validate(data) {
 }
 
 function migrate(data) {
-  if (data?.schemaVersion !== 1 || !Array.isArray(data.projects)) throw invalid();
-  return { schemaVersion: 2, selectedWorkspace: data.selectedWorkspace, projects: data.projects.map(p => {
-    if (!p || typeof p.sessionId !== 'string') throw invalid();
-    const info = { ...p };
-    for (const key of sessionFields) delete info[key];
-    const time = p.attempt?.createdAtMs ?? p.lastOpenedAt ?? Date.now();
-    return { ...info, expanded: false, selectedSessionId: p.sessionId,
-      sessions: [{ sessionId: p.sessionId, chatUrl: p.chatUrl, attempt: p.attempt ?? null,
-        receipt: p.receipt ?? null, title: p.title ?? '', createdAt: time, lastOpenedAt: p.lastOpenedAt ?? time }] };
-  }) };
+  if (data?.schemaVersion === 1 && Array.isArray(data.projects)) {
+    data = { schemaVersion: 2, selectedWorkspace: data.selectedWorkspace, projects: data.projects.map(p => {
+      if (!p || typeof p.sessionId !== 'string') throw invalid();
+      const info = { ...p };
+      for (const key of sessionFields) delete info[key];
+      const time = p.attempt?.createdAtMs ?? p.lastOpenedAt ?? Date.now();
+      return { ...info, expanded: false, selectedSessionId: p.sessionId,
+        sessions: [{ sessionId: p.sessionId, chatUrl: p.chatUrl, attempt: p.attempt ?? null,
+          receipt: p.receipt ?? null, title: p.title ?? '', createdAt: time, lastOpenedAt: p.lastOpenedAt ?? time }] };
+    }) };
+  }
+  if (data?.schemaVersion !== 2 || !Array.isArray(data.projects)) throw invalid();
+  return { ...data, schemaVersion: 3, projects: data.projects.map(p => ({ ...p, archivedAt: null })) };
 }
 
 function currentView(project) {
@@ -96,7 +100,8 @@ export class WorkspaceSessions {
   constructor(file, { inspect = readWorkspace, uuid = randomUUID, now = Date.now } = {}) {
     Object.assign(this, { file, inspect, uuid, now });
     this.saveTail = Promise.resolve();
-    this.data = { schemaVersion: 2, selectedWorkspace: null, projects: [] };
+    this.mutationTail = Promise.resolve();
+    this.data = { schemaVersion: 3, selectedWorkspace: null, projects: [] };
   }
 
   async load() {
@@ -107,14 +112,14 @@ export class WorkspaceSessions {
     }
     let parsed;
     try { parsed = JSON.parse(text); } catch { throw invalid(); }
-    const legacy = parsed.schemaVersion === 1;
+    const legacy = [1, 2].includes(parsed.schemaVersion);
     const data = validate(legacy ? migrate(parsed) : parsed);
     if (legacy) {
-      try { await fs.writeFile(this.file + '.v1-backup', text, { mode: 0o600, flag: 'wx' }); }
+      try { await fs.writeFile(this.file + `.v${parsed.schemaVersion}-backup`, text, { mode: 0o600, flag: 'wx' }); }
       catch (error) { if (error.code !== 'EEXIST') throw error; }
     }
     this.data = data;
-    if (!data.projects.some(p => p.workspace === data.selectedWorkspace)) this.data.selectedWorkspace = null;
+    if (!data.projects.some(p => p.workspace === data.selectedWorkspace && p.archivedAt === null)) this.data.selectedWorkspace = null;
     if (legacy) await this.save();
     return this.snapshot();
   }
@@ -123,16 +128,17 @@ export class WorkspaceSessions {
   selected() { return this.project(this.data.selectedWorkspace); }
   project(workspace) { return currentView(this.data.projects.find(p => p.workspace === workspace)); }
 
-  activeRecord(workspace, sessionId) {
-    const project = this.data.projects.find(p => p.workspace === workspace);
+  activeRecord(workspace, sessionId, data = this.data) {
+    const project = data.projects.find(p => p.workspace === workspace);
+    if (project?.archivedAt) throw new WorkspaceError('PROJECT_ARCHIVED', 'Сначала верните проект из архива.');
     if (!project || project.selectedSessionId !== sessionId) {
       throw new WorkspaceError('SESSION_CHANGED', 'Проект или сессия уже изменились.');
     }
     return { project, session: project.sessions.find(s => s.sessionId === sessionId) };
   }
 
-  save() {
-    const text = JSON.stringify(this.data, null, 2) + '\n';
+  save(data = this.data) {
+    const text = JSON.stringify(data, null, 2) + '\n';
     const operation = this.saveTail.catch(() => {}).then(async () => {
       await fs.mkdir(path.dirname(this.file), { recursive: true, mode: 0o700 });
       const temporary = this.file + '.tmp-' + this.uuid();
@@ -148,85 +154,117 @@ export class WorkspaceSessions {
       createdAt: this.now(), lastOpenedAt: this.now(), attempt: null, receipt: null };
   }
 
-  async select(input) {
-    const info = await this.inspect(input);
-    let project = this.data.projects.find(p => p.workspace === info.workspace);
-    if (project && project.projectId !== info.projectId) {
-      throw new WorkspaceError('PROJECT_REPLACED', 'В этой папке теперь другой проект. Сохранённые чаты оставлены без изменений.');
-    }
-    if (!project) {
+  mutate(change) {
+    const operation = this.mutationTail.catch(() => {}).then(async () => {
+      const draft = copy(this.data);
+      const result = await change(draft);
+      await this.save(draft);
+      this.data = draft;
+      return result;
+    });
+    this.mutationTail = operation;
+    return operation;
+  }
+
+  select(input) {
+    return this.mutate(async data => {
+      const info = await this.inspect(input);
+      let project = data.projects.find(p => p.workspace === info.workspace);
+      if (project?.archivedAt) throw new WorkspaceError('PROJECT_ARCHIVED', 'Сначала верните проект из архива в настройках.');
+      if (project && project.projectId !== info.projectId) throw new WorkspaceError('PROJECT_REPLACED', 'В этой папке теперь другой проект. Сохранённые чаты оставлены без изменений.');
+      if (!project) {
+        const session = this.createSession();
+        project = { ...info, selectedSessionId: session.sessionId, sessions: [session], expanded: false, archivedAt: null };
+        data.projects.unshift(project);
+      } else Object.assign(project, info);
+      project.sessions.find(s => s.sessionId === project.selectedSessionId).lastOpenedAt = this.now();
+      data.selectedWorkspace = project.workspace;
+      return currentView(project);
+    });
+  }
+
+  selectSession(input, sessionId) {
+    return this.mutate(async data => {
+      const info = await this.inspect(input);
+      const project = data.projects.find(p => p.workspace === info.workspace);
+      if (!project || !project.sessions.some(s => s.sessionId === sessionId)) throw new WorkspaceError('SESSION_NOT_FOUND', 'Эта сессия не принадлежит выбранному проекту.');
+      if (project.archivedAt) throw new WorkspaceError('PROJECT_ARCHIVED', 'Сначала верните проект из архива.');
+      if (project.projectId !== info.projectId) throw new WorkspaceError('PROJECT_REPLACED', 'В этой папке теперь другой проект. Сохранённые чаты оставлены без изменений.');
+      Object.assign(project, info, { selectedSessionId: sessionId, expanded: true });
+      project.sessions.find(s => s.sessionId === sessionId).lastOpenedAt = this.now();
+      data.selectedWorkspace = project.workspace;
+      return currentView(project);
+    });
+  }
+
+  bindChat(workspace, sessionId, input) {
+    return this.mutate(data => {
+      const url = normalizeChatUrl(input);
+      if (!url) throw new WorkspaceError('CHAT_URL_INVALID', 'Откройте конкретный чат ChatGPT.');
+      const { session } = this.activeRecord(workspace, sessionId, data);
+      if (session.chatUrl && session.chatUrl !== url) throw new WorkspaceError('CHAT_CHANGED', 'Открыт другой чат. Выберите его в дереве или вернитесь к сессии проекта.');
+      if (data.projects.some(p => p.sessions.some(s => s.sessionId !== sessionId && s.chatUrl === url))) throw new WorkspaceError('CHAT_IN_USE', 'Этот чат уже связан с другой сессией.');
+      session.chatUrl = url;
+      return currentView(data.projects.find(p => p.workspace === workspace));
+    });
+  }
+
+  newChat(workspace) {
+    return this.mutate(data => {
+      const project = data.projects.find(p => p.workspace === workspace);
+      if (!project) throw new WorkspaceError('WORKSPACE_REQUIRED', 'Сначала выберите проект.');
+      if (project.archivedAt) throw new WorkspaceError('PROJECT_ARCHIVED', 'Сначала верните проект из архива.');
       const session = this.createSession();
-      project = { ...info, selectedSessionId: session.sessionId, sessions: [session], expanded: false };
-      this.data.projects.unshift(project);
-    } else Object.assign(project, info);
-    project.sessions.find(s => s.sessionId === project.selectedSessionId).lastOpenedAt = this.now();
-    this.data.selectedWorkspace = project.workspace;
-    await this.save();
-    return currentView(project);
+      project.sessions.push(session); project.selectedSessionId = session.sessionId; project.expanded = true;
+      return currentView(project);
+    });
   }
 
-  async selectSession(input, sessionId) {
-    const info = await this.inspect(input);
-    const project = this.data.projects.find(p => p.workspace === info.workspace);
-    if (!project || !project.sessions.some(s => s.sessionId === sessionId)) {
-      throw new WorkspaceError('SESSION_NOT_FOUND', 'Эта сессия не принадлежит выбранному проекту.');
-    }
-    if (project.projectId !== info.projectId) throw new WorkspaceError('PROJECT_REPLACED', 'В этой папке теперь другой проект. Сохранённые чаты оставлены без изменений.');
-    Object.assign(project, info, { selectedSessionId: sessionId, expanded: true });
-    project.sessions.find(s => s.sessionId === sessionId).lastOpenedAt = this.now();
-    this.data.selectedWorkspace = project.workspace;
-    await this.save();
-    return currentView(project);
+  setExpanded(workspace, expanded) {
+    return this.mutate(data => {
+      const project = data.projects.find(p => p.workspace === workspace);
+      if (!project || typeof expanded !== 'boolean') throw new WorkspaceError('WORKSPACE_REQUIRED', 'Выберите проект из списка.');
+      project.expanded = expanded;
+    });
   }
 
-  async bindChat(workspace, sessionId, input) {
-    const url = normalizeChatUrl(input);
-    if (!url) throw new WorkspaceError('CHAT_URL_INVALID', 'Откройте конкретный чат ChatGPT.');
-    const { project, session } = this.activeRecord(workspace, sessionId);
-    if (session.chatUrl && session.chatUrl !== url) {
-      throw new WorkspaceError('CHAT_CHANGED', 'Открыт другой чат. Выберите его в дереве или вернитесь к сессии проекта.');
-    }
-    if (this.data.projects.some(p => p.sessions.some(s => s.sessionId !== sessionId && s.chatUrl === url))) {
-      throw new WorkspaceError('CHAT_IN_USE', 'Этот чат уже связан с другой сессией.');
-    }
-    session.chatUrl = url;
-    await this.save();
-    return currentView(project);
+  setSessionTitle(workspace, sessionId, value) {
+    return this.mutate(data => {
+      const { session } = this.activeRecord(workspace, sessionId, data);
+      if (typeof value !== 'string') throw new WorkspaceError('TITLE_INVALID', 'Неверное название сессии.');
+      const title = value.replace(/\s+/g, ' ').trim().slice(0, 160);
+      if (!title || session.title === title) return false;
+      session.title = title; return true;
+    });
   }
 
-  async newChat(workspace) {
-    const project = this.data.projects.find(p => p.workspace === workspace);
-    if (!project) throw new WorkspaceError('WORKSPACE_REQUIRED', 'Сначала выберите проект.');
-    const session = this.createSession();
-    project.sessions.push(session);
-    project.selectedSessionId = session.sessionId;
-    project.expanded = true;
-    await this.save();
-    return currentView(project);
+  updateSession(workspace, sessionId, patch) {
+    return this.mutate(data => {
+      const { project, session } = this.activeRecord(workspace, sessionId, data);
+      if (Object.keys(patch).some(k => !['attempt', 'receipt'].includes(k))) throw new Error('INVALID_SESSION_PATCH');
+      Object.assign(session, copy(patch)); return currentView(project);
+    });
   }
 
-  async setExpanded(workspace, expanded) {
-    const project = this.data.projects.find(p => p.workspace === workspace);
-    if (!project || typeof expanded !== 'boolean') throw new WorkspaceError('WORKSPACE_REQUIRED', 'Выберите проект из списка.');
-    project.expanded = expanded;
-    await this.save();
+  setArchived(workspace, archived) {
+    return this.mutate(data => {
+      const project = data.projects.find(p => p.workspace === workspace);
+      if (!project || typeof archived !== 'boolean') throw new WorkspaceError('WORKSPACE_REQUIRED', 'Выберите проект из списка.');
+      project.archivedAt = archived ? (project.archivedAt ?? this.now()) : null;
+      if (archived && data.selectedWorkspace === workspace) data.selectedWorkspace = null;
+      return currentView(project);
+    });
   }
 
-  async setSessionTitle(workspace, sessionId, value) {
-    const { session } = this.activeRecord(workspace, sessionId);
-    if (typeof value !== 'string') throw new WorkspaceError('TITLE_INVALID', 'Неверное название сессии.');
-    const title = value.replace(/\s+/g, ' ').trim().slice(0, 160);
-    if (!title || session.title === title) return false;
-    session.title = title;
-    await this.save();
-    return true;
-  }
-
-  async updateSession(workspace, sessionId, patch) {
-    const { project, session } = this.activeRecord(workspace, sessionId);
-    if (Object.keys(patch).some(k => !['attempt', 'receipt'].includes(k))) throw new Error('INVALID_SESSION_PATCH');
-    Object.assign(session, copy(patch));
-    await this.save();
-    return currentView(project);
+  forgetArchived(workspace, projectId) {
+    return this.mutate(data => {
+      const project = data.projects.find(p => p.workspace === workspace);
+      if (!project) return false;
+      if (project.projectId !== projectId) throw new WorkspaceError('PROJECT_REPLACED', 'Запись проекта изменилась. Повторите проверку.');
+      if (!project.archivedAt) throw new WorkspaceError('PROJECT_NOT_ARCHIVED', 'Удалить можно только проект из архива.');
+      data.projects = data.projects.filter(p => p !== project);
+      if (data.selectedWorkspace === workspace) data.selectedWorkspace = null;
+      return true;
+    });
   }
 }
