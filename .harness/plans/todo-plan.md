@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 44,
+  "plan_revision": 46,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
@@ -569,8 +569,8 @@
         "Старые чаты сохраняются без ложного объявления новой доставки."
       ],
       "expected_commit_message": "feat: передавать контекст первым сообщением",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-prototype-001",
         "task_id": "T015",
@@ -695,7 +695,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 44
+Revision: 46
 
 ## Цель
 
@@ -766,8 +766,8 @@ Revision: 44
   - Git Commit: [DONE] feat: получать полный контекст до старта чата
   - Reference: web-pilot-prototype-001 / T014 / implementation
   - Файлы: src/mcp-runtime.mjs, tests/mcp-runtime.test.mjs, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md, docs/SOURCE_WORKSPACES.md, docs/VERIFICATION.md, docs/DECISIONS.md, AGENTS.md
-- [TODO] T015: Передавать контекст в первом сообщении — Ожидает
-  - Git Commit: [PENDING] feat: передавать контекст первым сообщением
+- [DONE] T015: Передавать контекст в первом сообщении — Завершено
+  - Git Commit: [DONE] feat: передавать контекст первым сообщением
   - Reference: web-pilot-prototype-001 / T015 / implementation
   - Файлы: src/context-session.mjs, tests/context-session.test.mjs, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T016: Показать передачу контекста без ACK — Ожидает

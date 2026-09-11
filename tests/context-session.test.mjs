@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ContextSession, receiptMatch, startupMessage } from '../src/context-session.mjs';
+import { createHash } from 'node:crypto';
+import { ContextSession, packetMatchesProject, startupMessage } from '../src/context-session.mjs';
 
 const project={workspace:'/Projects/Мой проект',projectId:'id-1',name:'Мой проект',planRevision:7,scopeId:'scope-1',
   scopeStatus:'ACTIVE',deliveryStatus:'IN_PROGRESS',nextTaskId:'T001',nextTaskTitle:'Read',sessionId:'session-1',
@@ -8,106 +9,101 @@ const project={workspace:'/Projects/Мой проект',projectId:'id-1',name:'
 const facts={project_id:project.projectId,project_name:project.name,plan_revision:7,scope_id:'scope-1',
   execution_scope_status:'ACTIVE',delivery_status:'IN_PROGRESS',task_id:'T001',task_title:'Read'};
 const now=2000000;
-const attempt={requestId:'request',excludedProbeIds:['old'],sendStartedAtMs:now-1000,state:'sent'};
-function evidence(overrides={}){
-  return {workspace:project.workspace,session_id:project.sessionId,
-    latest:{workspace:project.workspace,session_id:project.sessionId,probe_id:'new',source:'agent_request',issued_at:now/1000-.5,
-      acknowledged_at:now/1000,acknowledged:true,facts:{...facts}},
-    last_receipt:{workspace:project.workspace,probe_id:'new',source:'agent_request',status:'acknowledged',facts:{...facts},user_message:'Confirmed'},...overrides};
+function packet(){
+  const context='ПОЛНЫЙ КОНТЕКСТ\nОписание проекта\nПлан\n\nНезавершённые изменения\nКОНЕЦ';
+  return {delivery_protocol:'inline-context-v1',ack_required:false,status:'ready',completeness:'COMPLETE',workspace:project.workspace,
+    context,context_bytes:Buffer.byteLength(context),context_sha256:createHash('sha256').update(context).digest('hex'),
+    generated_at_ms:now,signature:'signature',head:'head',facts:{...facts}};
 }
-
-test('receipt requires a newly issued, same-project, same-session, acknowledged probe',()=>{
-  assert.equal(receiptMatch(evidence(),project,attempt,now).kind,'confirmed');
-  const mutations=[s=>{s.session_id='another';},s=>{s.latest.probe_id='old';s.last_receipt.probe_id='old';},
-    s=>{s.latest.acknowledged=false;},s=>{s.latest.issued_at=1;},s=>{s.last_receipt.workspace='/another';},
-    s=>{s.last_receipt.probe_id='other';},s=>{s.latest.source='startup';},s=>{s.latest.facts.plan_revision=2;},
-    s=>{delete s.last_receipt.facts.task_id;},s=>{s.last_receipt=null;},s=>{s.latest.acknowledged_at=null;}];
-  for(const mutate of mutations){const value=evidence();mutate(value);assert.equal(receiptMatch(value,project,attempt,now).kind,'waiting');}
-});
-
-test('a changed plan or replaced acknowledgement cannot be presented as current',()=>{
-  assert.equal(receiptMatch(evidence(),{...project,planRevision:8},attempt,now).kind,'stale');
-  assert.equal(receiptMatch(evidence(),project,{...attempt,ackProbeId:'previous'},now).kind,'superseded');
-});
-
-test('startup message carries explicit identity and read-only recovery/ACK with no simulated hook',()=>{
-  const text=startupMessage(project,'unique-request');
-  for(const item of ['"/Projects/Мой проект"','session-1','unique-request','bridge_status','workflow_context_recover','workflow_context_ack','source="agent_request"','Файлы не менять'])assert.ok(text.includes(item));
-  assert.ok(!text.includes('workflow_context_hook('));
-});
-
-function controllerFixture({ savedAttempt=null, statuses=[] }={}){
-  let saved={...structuredClone(project),attempt:savedAttempt};let sends=0;let inspection={url:project.chatUrl,editorAvailable:true,writable:true,draftLength:0,busy:false,login:false,messageSeen:false};
+function controllerFixture({ savedAttempt=null, chatUrl=project.chatUrl }={}){
+  let saved={...structuredClone(project),chatUrl,attempt:savedAttempt};let sends=0,loads=0;
+  let info={...project};let inspection={url:chatUrl??'https://chatgpt.com/',editorAvailable:true,writable:true,draftLength:0,busy:false,login:false,messageSeen:false};
   const stateLog=[];
-  const store={selected:()=>structuredClone(saved),project:()=>structuredClone(saved),inspect:async()=>{const {sessionId,chatUrl,attempt,receipt,...info}=project;return structuredClone(info);},
+  const store={selected:()=>structuredClone(saved),project:()=>structuredClone(saved),inspect:async()=>{
+    const {sessionId,chatUrl,attempt,receipt,...result}=info;return structuredClone(result);},
     updateSession:async(_w,_s,patch)=>{saved={...saved,...structuredClone(patch)};return structuredClone(saved);},
     bindChat:async(_w,_s,url)=>{saved.chatUrl=url;return structuredClone(saved);}};
-  const runtime={ensure:async()=>({}),contextStatus:async()=>statuses.shift()??{workspace:project.workspace,session_id:project.sessionId,latest:null,last_receipt:null}};
-  const composer={inspect:async()=>({...inspection}),deliver:async options=>{
-    assert.equal(saved.attempt.state,'prepared');await options.onBeforeSend();assert.equal(saved.attempt.state,'sending');
-    sends++;inspection.messageSeen=true;return {state:'sent'};
+  const runtime={ensure:async()=>({}),loadContext:async()=>{loads++;return packet();}};
+  const composer={inspect:async()=>({...inspection}),contents:{getURL:()=>inspection.url},deliver:async options=>{
+    assert.equal(saved.attempt.state,'prepared');assert.ok(options.text.includes(packet().context));
+    if(!options.canContinue())return {state:'cancelled'};
+    await options.onBeforeSend();if(!options.canContinue())return {state:'cancelled'};
+    assert.equal(saved.attempt.state,'sending');sends++;inspection.messageSeen=true;
+    inspection.url=project.chatUrl;return {state:'sent'};
   }};
-  const controller=new ContextSession({store,runtime,composer,onChange:s=>stateLog.push(s),now:()=>now-1000,uuid:()=> 'test-request'});
+  const controller=new ContextSession({store,runtime,composer,onChange:s=>stateLog.push(s),now:()=>now,uuid:()=> 'test-request'});
   controller.attach(saved);
-  return {controller,store,runtime,composer,stateLog,sends:()=>sends,get saved(){return saved;},inspection};
+  return {controller,store,runtime,composer,stateLog,sends:()=>sends,loads:()=>loads,get saved(){return saved;},inspection,info};
 }
 
-test('persists before sending, matches the actual status and reopens without duplicate messages',async()=>{
-  const f=controllerFixture({statuses:[{workspace:project.workspace,session_id:project.sessionId,latest:{probe_id:'old'},last_receipt:null},evidence(),evidence()]});
-  await f.controller.tick();assert.equal(f.sends(),1);assert.equal(f.saved.attempt.state,'sent');
-  f.controller.now=()=>now;await f.controller.tick();assert.equal(f.controller.state.phase,'confirmed');
-  f.controller.attach(f.saved);await f.controller.tick();assert.equal(f.sends(),1);assert.equal(f.controller.state.phase,'confirmed');
+test('the first message contains the exact complete packet and asks for a short project reply without tools',()=>{
+  const p=packet(), text=startupMessage(project,'unique-request',p);
+  assert.ok(text.includes('\n'+p.context+'\n'));
+  for(const item of ['"/Projects/Мой проект"','session-1','unique-request','коротко подтверди','опиши назначение проекта','не вызывай инструменты'])assert.ok(text.includes(item));
+  for(const name of ['workflow_context_recover','workflow_context_ack','workflow_context_hook'])assert.ok(!text.includes(name));
+  assert.equal(packetMatchesProject(p,project),true);
+  assert.equal(packetMatchesProject(p,{...project,planRevision:8}),false);
 });
 
-test('unknown outcome after restart only observes and never invokes deliver again',async()=>{
-  const f=controllerFixture({savedAttempt:{...attempt,state:'sending',text:'old-message'}});
-  await f.controller.tick();assert.equal(f.sends(),0);assert.equal(f.controller.state.phase,'send-unknown');
-  await f.controller.retry();assert.equal(f.sends(),0);
+test('loads once, saves full message before send, and reopens the same chat without another recovery or send',async()=>{
+  const f=controllerFixture({chatUrl:null});await f.controller.tick();assert.equal(f.sends(),1);assert.equal(f.loads(),1);
+  assert.equal(f.saved.attempt.state,'sent');await f.controller.tick();assert.equal(f.controller.state.phase,'delivered');
+  assert.equal(f.saved.chatUrl,project.chatUrl);assert.equal(f.controller.state.delivery.contextBytes,packet().context_bytes);
+  f.controller.attach(f.saved);await f.controller.tick();assert.equal(f.sends(),1);assert.equal(f.loads(),1);
 });
 
-test('an old receipt is baseline and cannot approve the next request',async()=>{
-  const stale=evidence();stale.latest.probe_id='old';stale.last_receipt.probe_id='old';
-  const f=controllerFixture({statuses:[stale,stale]});await f.controller.tick();await f.controller.tick();
-  assert.equal(f.controller.state.phase,'waiting-ack');assert.equal(f.saved.receipt,null);
+test('unknown send after restart only observes, including explicit retry, then recognizes the late message',async()=>{
+  const f=controllerFixture();await f.controller.tick();
+  const unknown={...f.saved.attempt,state:'unknown'};await f.store.updateSession('', '',{attempt:unknown});f.inspection.messageSeen=false;
+  f.controller.attach(f.saved);await f.controller.tick();assert.equal(f.controller.state.phase,'send-unknown');
+  await f.controller.retry();assert.equal(f.sends(),1);assert.equal(f.loads(),1);
+  f.inspection.messageSeen=true;await f.controller.tick();assert.equal(f.controller.state.phase,'delivered');
 });
 
-test('switching a workspace while MCP starts cancels before send',async()=>{
-  const f=controllerFixture();let release;f.runtime.ensure=()=>new Promise(r=>{release=r;});
-  const running=f.controller.tick();await new Promise(r=>setImmediate(r));f.controller.cancel();release();await running;
+test('legacy sessions stay bound and only explicit refresh sends the new protocol',async()=>{
+  const f=controllerFixture({savedAttempt:{requestId:'old',text:'old startup',state:'acknowledged',sendStartedAtMs:now-1000}});
+  await f.controller.tick();assert.equal(f.controller.state.phase,'legacy-session');assert.equal(f.loads(),0);assert.equal(f.sends(),0);
+  await f.controller.retry();await f.controller.tick();assert.equal(f.controller.state.phase,'delivered');assert.equal(f.sends(),1);
+  assert.equal(f.saved.attempt.protocol,'inline-context-v1');
+});
+
+test('drafts and generation delay packet preparation and do not overwrite user input',async()=>{
+  for(const [patch,phase] of [[{draftLength:7,draftMatches:false},'waiting-draft'],[{busy:true},'waiting-generation']]){
+    const f=controllerFixture();Object.assign(f.inspection,patch);await f.controller.tick();
+    assert.equal(f.controller.state.phase,phase);assert.equal(f.sends(),0);assert.equal(f.loads(),0);
+  }
+});
+
+test('incomplete or wrong-project packet and a changed plan fail before sending',async()=>{
+  for(const mutate of [p=>p.workspace='/other',p=>p.completeness='PARTIAL',p=>p.facts.plan_revision=6]){
+    const f=controllerFixture();f.runtime.loadContext=async()=>{const p=packet();mutate(p);return p;};await f.controller.tick();
+    assert.equal(f.controller.state.phase,'error');assert.equal(f.sends(),0);assert.equal(f.saved.attempt,null);
+  }
+});
+
+test('plan changes after filling cannot send an outdated packet',async()=>{
+  const f=controllerFixture();const deliver=f.composer.deliver;
+  f.composer.deliver=async options=>{f.info.planRevision=8;return deliver(options);};
+  await f.controller.tick();assert.equal(f.controller.state.phase,'prepared-stale');assert.equal(f.sends(),0);
+  assert.equal(f.saved.attempt.state,'prepared');assert.equal(f.saved.attempt.sendStartedAtMs,null);
+});
+
+test('switching workspace during context loading cancels before storing or sending',async()=>{
+  const f=controllerFixture();let release;f.runtime.loadContext=()=>new Promise(r=>{release=r;});
+  const running=f.controller.tick();await new Promise(r=>setImmediate(r));f.controller.cancel();release(packet());await running;
   assert.equal(f.sends(),0);assert.equal(f.saved.attempt,null);
 });
 
-test('an unbound workspace cannot adopt a manually opened existing chat before its own request',async()=>{
-  const f=controllerFixture();const unbound={...f.saved,chatUrl:null};
-  f.store.selected=()=>structuredClone(unbound);f.store.project=()=>structuredClone(unbound);
-  f.controller.attach(unbound);await f.controller.tick();
-  assert.equal(f.controller.state.phase,'chat-changed');assert.equal(f.sends(),0);
+test('a foreign chat opened before or during preparation is never used for Send',async()=>{
+  const unbound=controllerFixture({chatUrl:null});unbound.inspection.url=project.chatUrl;
+  await unbound.controller.tick();assert.equal(unbound.controller.state.phase,'chat-changed');assert.equal(unbound.loads(),0);
+  const changed=controllerFixture({chatUrl:null});changed.runtime.loadContext=async()=>{changed.inspection.url=project.chatUrl;return packet();};
+  await changed.controller.tick();assert.equal(changed.controller.state.phase,'chat-changed');assert.equal(changed.sends(),0);
 });
 
-test('an acknowledged outdated packet permits an explicit refresh without resending an uncertain request',async()=>{
-  const f=controllerFixture({savedAttempt:structuredClone(attempt),statuses:[evidence(),evidence()]});
-  const inspect=f.store.inspect;f.store.inspect=async()=>({...await inspect(),planRevision:8});
-  f.inspection.messageSeen=true;
-  await f.controller.tick();
-  assert.equal(f.controller.state.phase,'stale');assert.equal(f.sends(),0);
-  assert.equal(f.saved.attempt.state,'acknowledged');
-  assert.equal(f.saved.receipt.facts.plan_revision,7);
-  await f.controller.retry();
-  assert.equal(f.sends(),1);assert.equal(f.saved.attempt.state,'sent');
-  assert.ok(f.saved.attempt.excludedProbeIds.includes('new'));
-});
-
-test('missing MCP tools, active drafts, generation and a late ACK have distinct recoverable states',async()=>{
-  const failed=controllerFixture();
-  failed.runtime.ensure=async()=>{throw Object.assign(new Error('Missing context tool'),{code:'MCP_TOOLS_MISSING'});};
-  await failed.controller.tick();assert.equal(failed.controller.state.error.code,'MCP_TOOLS_MISSING');assert.equal(failed.sends(),0);
-  failed.runtime.ensure=async()=>({});await failed.controller.retry();assert.equal(failed.sends(),1);
-  for(const [patch,phase] of [[{draftLength:7,draftMatches:false},'waiting-draft'],[{busy:true},'waiting-generation']]){
-    const f=controllerFixture();Object.assign(f.inspection,patch);await f.controller.tick();
-    assert.equal(f.controller.state.phase,phase);assert.equal(f.sends(),0);
-  }
-  const late=controllerFixture({savedAttempt:structuredClone(attempt)});late.controller.now=()=>now+180001;
-  await late.controller.tick();assert.equal(late.controller.state.phase,'ack-timeout');assert.equal(late.sends(),0);
-  late.runtime.contextStatus=async()=>evidence();await late.controller.tick();
-  assert.equal(late.controller.state.phase,'confirmed');assert.equal(late.sends(),0);
+test('changed plan after delivery is shown as stale and explicit refresh obtains the new packet',async()=>{
+  const f=controllerFixture();await f.controller.tick();f.info.planRevision=8;await f.controller.tick();
+  assert.equal(f.controller.state.phase,'stale');assert.equal(f.sends(),1);
+  f.runtime.loadContext=async()=>{const p=packet();p.facts.plan_revision=8;return p;};
+  await f.controller.retry();await f.controller.tick();assert.equal(f.controller.state.phase,'delivered');assert.equal(f.sends(),2);
 });
