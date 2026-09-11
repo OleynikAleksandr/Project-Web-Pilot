@@ -61,3 +61,7 @@ T004 сначала документирует точный стек и реал
 ## T004 — подготовка разработки
 
 Зафиксированы точные зависимости и полная DEVELOPMENT-конфигурация в ARCHITECTURE. В этой задаче проверены доступность версий, требования Node, исходные control.py/status и recover/ACK/status. Исходники имеют прежние HEAD: WF001 20260a0, Codex Local Mac 1d0ddef; рабочие деревья чистые. Приложение ещё не собрано; ни одна будущая suite не объявлена пройденной. После документального commit применяются config:apply и verification_ids.
+
+## T005 — проверка каркаса
+
+11.09.2026: npm install завершён, audit: 0 vulnerabilities. node --check src/main.mjs пройден. Electron 44.3.0 --shell-smoke действительно запустил два WebContentsView и вернул require=undefined, process=undefined; exit code 0. При первом запуске найдена и исправлена блокировка ESM-загрузки ожиданием app.whenReady на верхнем уровне. Вход и полный сценарий ChatGPT этой проверкой не подтверждены.

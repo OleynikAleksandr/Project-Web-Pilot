@@ -210,3 +210,9 @@ MCP и tunnel могут обслуживать другие чаты. Суще�
 Технические основания: [WebContentsView](https://www.electronjs.org/docs/latest/api/web-contents-view), [изоляция удалённой страницы](https://www.electronjs.org/docs/latest/tutorial/security), [Secure MCP Tunnel](https://developers.openai.com/api/docs/guides/secure-mcp-tunnels). Документация сверена 11.09.2026; совместимость реального входа подтверждается отдельным запуском.
 
 required=true у syntax запускает общую проверку каркаса; остальные проверки обязательны в назначенных задачах через verification_ids. Так будущие тестовые файлы не запускаются до их создания. Любой ненулевой результат выбранной проверки блокирует commit.
+
+## Каркас — T005
+
+Создано одно BaseWindow с двумя WebContentsView. Локальная панель и удалённый браузер разделены; удалённому содержимому не доступны Node и IPC. Профиль persist:chatgpt находится в Library/Application Support/Project Web Pilot, обычный вход сохраняется отдельно от браузеров пользователя. HTTPS-переходы и окна авторизации допускаются с теми же изолированными настройками; непредусмотренные протоколы блокируются. Запуск через app.whenReady().then не удерживает ESM-загрузку ожиданием события ready.
+
+package.json фиксирует зависимости и команды start/test/smoke/build. node_modules и выход упаковки исключены из Git. Проверка --shell-smoke использует отдельный временный профиль, открывает оба view и проверяет отсутствие require/process в удалённом контексте. Она не обращается к аккаунту ChatGPT.

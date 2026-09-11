@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 15,
+  "plan_revision": 17,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
@@ -226,8 +226,8 @@
         "У удалённой страницы нет Node integration и доступа к произвольному IPC; реальный вход проверяется пользователем"
       ],
       "expected_commit_message": "feat: создать каркас приложения с Chromium",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-prototype-001",
         "task_id": "T005",
@@ -541,7 +541,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 15
+Revision: 17
 
 ## Цель
 
@@ -573,8 +573,8 @@ Revision: 15
   - Git Commit: [DONE] docs: определить профиль и проверки прототипа
   - Reference: web-pilot-prototype-001 / T004 / implementation
   - Файлы: docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/DECISIONS.md, AGENTS.md, docs/WORKFLOW_START.md
-- [TODO] T005: Создать запускаемый каркас Chromium-приложения — Ожидает
-  - Git Commit: [PENDING] feat: создать каркас приложения с Chromium
+- [DONE] T005: Создать запускаемый каркас Chromium-приложения — Завершено
+  - Git Commit: [DONE] feat: создать каркас приложения с Chromium
   - Reference: web-pilot-prototype-001 / T005 / implementation
   - Файлы: package.json, package-lock.json, src/main.mjs, .gitignore, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T006: Добавить сайдбар и привязку workspace к чату — Ожидает
