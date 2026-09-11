@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Workflow plan v1",
+  "description": "Cross-field, dependency, scope and projection invariants are enforced by lib/plan.mjs and lib/validate.mjs.",
+  "type": "object",
+  "required": ["schema_version", "plan_revision", "project_id", "project_name", "scope_id", "execution_scope_status", "delivery_status", "objective", "acceptance_criteria", "approved_scope", "baseline_commit", "current_task_id", "context_pack", "tasks", "blocked_reason", "user_decisions"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "plan_revision": {"type": "integer", "minimum": 1},
+    "project_id": {"type": "string", "minLength": 1},
+    "project_name": {"type": "string", "minLength": 1},
+    "scope_id": {"type": ["string", "null"]},
+    "execution_scope_status": {"enum": ["NONE", "ACTIVE", "BLOCKED"]},
+    "delivery_status": {"enum": ["IN_PROGRESS", "READY_FOR_ACCEPTANCE"]},
+    "objective": {"type": "string"},
+    "tasks": {"type": "array", "items": {"type": "object", "required": ["id", "title", "why", "implementation_status", "commit_status", "functional_paths", "documentation_paths", "dependencies", "acceptance_criteria", "verification_ids", "expected_commit_message", "commit_ref"]}},
+    "user_decisions": {"type": "array"}
+  }
+}

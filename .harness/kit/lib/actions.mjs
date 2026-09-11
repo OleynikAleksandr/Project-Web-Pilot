@@ -1,0 +1,150 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { VERSION, PLAN, CONFIG, MANIFEST, check, readJSON, atomic, json, hash, id, textFile } from './common.mjs';
+import { emptyPlan, readPlan, parsePlan, renderPlan, writePlan, validatePlan, nextTask } from './plan.mjs';
+import { validate, validateConfig, journal, resolveReferences, taskChecks } from './validate.mjs';
+import { git, head, localPath, allChanges, identityReady, paths, gitPath } from './git.mjs';
+import { locked, commitCandidate, completedTransaction, finishTransaction } from './transaction.mjs';
+import { recover } from './recovery.mjs';
+
+const noTransaction = root => check(!journal(root), 'TRANSACTION_PENDING', 'Сначала завершите текущую транзакцию commit/repair.');
+const acknowledgementsPath = root => path.join(root, '.harness/runtime/worktrees', hash(gitPath(root, 'index')).slice(0, 20), 'hook-acknowledgements.json');
+const revision = (p, value) => { if (value !== undefined) check(p.plan_revision === Number(value), 'REVISION_CHANGED', 'Revision плана изменилась. Сначала обновите status.'); };
+function service(root, plan, role, selected, message) {
+  return commitCandidate(root, { plan, role, selected, message, beforeHead: head(root) });
+}
+export function createScope(root, input, expectedRevision) {
+  return locked(root, () => {
+    noTransaction(root); const { plan: previous } = validate(root); revision(previous, expectedRevision);
+    check(previous.execution_scope_status === 'NONE', 'SCOPE_EXISTS', 'Текущий scope ещё не закрыт пользователем.');
+    check(head(root), 'NO_BASELINE', 'Сначала завершите bootstrap-коммит установки.');
+    check(typeof input.approval_note === 'string' && input.approval_note.trim().length >= 10, 'SCOPE_APPROVAL', 'Запишите согласованное пользователем содержание scope в approval_note.');
+    const plan = { ...emptyPlan(previous.project_name), ...input, schema_version: 1, project_id: previous.project_id,
+      project_name: previous.project_name, plan_revision: previous.plan_revision + 1, scope_id: input.scope_id || 'scope-' + id(),
+      execution_scope_status: 'ACTIVE', delivery_status: 'IN_PROGRESS', baseline_commit: head(root), current_task_id: null, blocked_reason: null };
+    delete plan.approval_note;
+    check(Array.isArray(input.tasks), 'PLAN_SCHEMA', 'Нужен список микрозадач.');
+    plan.tasks = input.tasks.map((t, i) => {
+      check(!t.implementation_status || t.implementation_status === 'TODO', 'PLAN_SCHEMA', 'Новый scope не может начинаться с завершённых задач.');
+      const taskId = t.id || 'T' + String(i + 1).padStart(3, '0');
+      return { dependencies: [], functional_paths: [], documentation_paths: [], verification_ids: [], ...t, id: taskId,
+        implementation_status: 'TODO', commit_status: 'PENDING', commit_ref: { scope_id: plan.scope_id, task_id: taskId, role: 'implementation' } };
+    });
+    plan.user_decisions = [...(input.user_decisions ?? []), { id: id(), text: input.approval_note, recorded_at: new Date().toISOString() }];
+    validatePlan(plan);
+    const selected = [PLAN, ...allChanges(root).filter(p => plan.approved_scope.documentation_paths.includes(p))];
+    const result = service(root, plan, 'scope-plan', selected, 'docs: согласовать scope ' + plan.scope_id);
+    return { ...result, state: recover(root) };
+  });
+}
+export function startTask(root, taskId, expectedRevision) {
+  return locked(root, () => {
+    noTransaction(root); const { plan, config } = validate(root); revision(plan, expectedRevision);
+    check(plan.execution_scope_status === 'ACTIVE', 'SCOPE_NOT_ACTIVE', 'Реализация разрешена только в ACTIVE scope.');
+    const task = plan.tasks.find(t => t.id === taskId);
+    check(task, 'UNKNOWN_TASK', 'Задача не найдена: ' + taskId);
+    if (plan.current_task_id === taskId) return recover(root);
+    check(plan.current_task_id === null && task.implementation_status === 'TODO', 'TASK_ALREADY_ACTIVE', 'Другую или завершённую задачу начать нельзя.');
+    check(task.dependencies.every(d => plan.tasks.find(t => t.id === d)?.commit_status === 'DONE'), 'DEPENDENCY_PENDING', 'Зависимости задачи ещё не завершены.');
+    taskChecks(task, config);
+    task.implementation_status = 'IN_PROGRESS'; plan.current_task_id = taskId; plan.plan_revision++;
+    writePlan(root, plan); return recover(root);
+  });
+}
+export function applyPlan(root, input, expectedRevision) {
+  return locked(root, () => {
+    noTransaction(root); const { plan: original } = validate(root);
+    check(expectedRevision !== undefined, 'EXPECTED_REVISION_REQUIRED', 'Укажите --expected-revision из status.'); revision(original, expectedRevision);
+    const permitted = ['objective', 'acceptance_criteria', 'approved_scope', 'context_pack', 'tasks', 'user_decisions', 'execution_scope_status', 'blocked_reason'];
+    check(Object.keys(input).every(k => permitted.includes(k)), 'MANAGED_FIELDS', 'Служебные поля плана не меняются через plan:apply.');
+    const plan = { ...structuredClone(original), ...input, plan_revision: original.plan_revision + 1 };
+    check(['ACTIVE', 'BLOCKED'].includes(plan.execution_scope_status) && original.execution_scope_status !== 'NONE', 'SCOPE_LIFECYCLE', 'Создание/архивирование scope выполняются отдельными командами.');
+    for (const old of original.tasks) {
+      const current = plan.tasks.find(t => t.id === old.id);
+      check(current, 'TASK_REMOVAL', 'Существующие задачи не удаляются из активного scope.');
+      if (old.commit_status === 'DONE') check(JSON.stringify(current) === JSON.stringify(old), 'COMPLETED_TASK_IMMUTABLE', 'Запись завершённой задачи неизменяема.');
+      else {
+        check(current.implementation_status === old.implementation_status && current.commit_status === old.commit_status && JSON.stringify(current.commit_ref) === JSON.stringify(old.commit_ref), 'MANAGED_FIELDS', 'Статусы и references меняются командами task:start/commit.');
+      }
+    }
+    for (const t of plan.tasks.filter(t => !original.tasks.some(old => old.id === t.id))) check(t.implementation_status === 'TODO' && t.commit_status === 'PENDING', 'MANAGED_FIELDS', 'Новая задача должна быть TODO/PENDING.');
+    plan.delivery_status = plan.tasks.length && plan.tasks.every(t => t.commit_status === 'DONE') ? 'READY_FOR_ACCEPTANCE' : 'IN_PROGRESS';
+    validatePlan(plan); resolveReferences(root, plan);
+    if (plan.current_task_id) writePlan(root, plan);
+    else service(root, plan, 'plan-adjustment', [PLAN], 'docs: уточнить план ' + plan.scope_id);
+    return recover(root);
+  });
+}
+export function applyConfig(root, input) {
+  return locked(root, () => {
+    noTransaction(root); const { plan } = validate(root);
+    check(plan.current_task_id === null, 'TASK_ACTIVE', 'Настройку стека фиксируйте между микрозадачами.');
+    const config = validateConfig(input); const before = fs.readFileSync(path.join(root, CONFIG), 'utf8');
+    check(paths(root, 'staged').every(p => p === CONFIG), 'FOREIGN_STAGED', 'Сначала отделите посторонние staged-изменения.');
+    atomic(path.join(root, CONFIG), json(config)); plan.plan_revision++;
+    try { return service(root, plan, 'plan-adjustment', [CONFIG, PLAN], 'chore: настроить профиль разработки'); }
+    catch (e) { if (!journal(root)) atomic(path.join(root, CONFIG), before); throw e; }
+  });
+}
+export function archive(root, scope, approvalNote) {
+  return locked(root, () => {
+    noTransaction(root); const { plan } = validate(root);
+    check(scope && plan.scope_id === scope, 'SCOPE_ID', 'Укажите точный --scope.');
+    check(typeof approvalNote === 'string' && approvalNote.trim().length >= 10, 'USER_CLOSE_REQUIRED', 'Нужна отдельная команда пользователя на закрытие, записанная в --approval-note. Приёмка сама по себе не закрывает scope.');
+    check(plan.tasks.every(t => t.commit_status === 'DONE'), 'SCOPE_UNFINISHED', 'В scope остались незавершённые задачи; обычное архивирование отклонено.');
+    check(allChanges(root).length === 0, 'DIRTY_WORKTREE', 'Архивирование требует чистого рабочего дерева.');
+    const destination = '.harness/plans/archive/' + scope + '.md';
+    check(!fs.existsSync(path.join(root, destination)), 'ARCHIVE_EXISTS', 'Архив с таким ID уже существует.');
+    atomic(path.join(root, destination), renderPlan(plan));
+    const empty = emptyPlan(plan.project_name); empty.project_id = plan.project_id; empty.plan_revision = plan.plan_revision + 1;
+    empty.archived_scope_id = scope; empty.user_decisions = [{ id: id(), text: approvalNote, recorded_at: new Date().toISOString() }];
+    return service(root, empty, 'archive', [PLAN, destination], 'docs: архивировать scope ' + scope);
+  });
+}
+export function repair(root, applyId) {
+  const pending = journal(root); const raw = textFile(root, PLAN); let operation;
+  if (pending) {
+    const completed = completedTransaction(root, pending);
+    operation = { kind: completed ? 'finish-commit' : 'retry-commit', sha: completed, message: completed ? 'Завершить технический журнал подтверждённого коммита.' : 'Повторить управляемую транзакцию с сохранением изменений.' };
+  } else {
+    const p = parsePlan(raw, { projection: false }); resolveReferences(root, p);
+    operation = { kind: renderPlan(p) === raw ? 'none' : 'projection', message: renderPlan(p) === raw ? 'Повреждение не обнаружено.' : 'Восстановить читаемую проекцию из канонического JSON.' };
+  }
+  const repairId = hash(json({ operation, head: head(root), raw, pending })).slice(0, 24);
+  if (!applyId) return { ok: true, repair_id: repairId, ...operation, dry_run: true };
+  check(repairId === applyId, 'REPAIR_CHANGED', 'Состояние изменилось. Повторите repair --dry-run.');
+  return locked(root, () => {
+    if (operation.kind === 'finish-commit') return finishTransaction(root, pending, operation.sha);
+    if (operation.kind === 'retry-commit') return commitCandidate(root, { plan: readPlan(root), role: pending.role, task: pending.task, selected: pending.selected, message: pending.message, checks: pending.checks, beforeHead: pending.before_head });
+    if (operation.kind === 'projection') { const p = parsePlan(raw, { projection: false }); writePlan(root, p); return { ok: true, message: 'Проекция восстановлена. Изменения не коммитились автоматически.' }; }
+    return { ok: true, message: operation.message };
+  });
+}
+export function acknowledgeHook(root, marker, client = 'Codex') {
+  const receipt = readJSON(localPath(root, 'recovery.json'));
+  check(receipt.marker && receipt.marker === marker && receipt.reason !== 'manual', 'HOOK_MARKER', 'Маркер не соответствует последнему lifecycle-событию.');
+  const hooksHash = hash(fs.readFileSync(path.join(root, '.codex/hooks.json')));
+  const file = acknowledgementsPath(root);
+  const records = fs.existsSync(file) ? readJSON(file) : {};
+  records[receipt.reason] = { marker, client, kit_version: VERSION, hooks_hash: hooksHash, at: new Date().toISOString(), signature: receipt.signature, plan_revision: receipt.plan_revision };
+  atomic(file, json(records)); return { ok: true, message: 'Получение контекста агентом отмечено для события ' + receipt.reason + '.' };
+}
+export function status(root) {
+  const { plan, config, resolved, transaction } = validate(root);
+  const receiptFile = localPath(root, 'recovery.json'); const ackFile = acknowledgementsPath(root);
+  const hooksFile = path.join(root, '.codex/hooks.json'); const hooksHash = fs.existsSync(hooksFile) ? hash(fs.readFileSync(hooksFile)) : null;
+  const receipts = fs.existsSync(ackFile) ? readJSON(ackFile) : {};
+  const acknowledged = Object.fromEntries(Object.entries(receipts).filter(([, r]) => r.hooks_hash === hooksHash && r.kit_version === VERSION));
+  const recovery = recover(root);
+  return { ok: true, project_path: root, project_name: plan.project_name, version: VERSION, project_id: plan.project_id,
+    scope_status: plan.execution_scope_status, delivery_status: plan.delivery_status, scope_id: plan.scope_id, objective: plan.objective,
+    current_task_id: plan.current_task_id, next_task_id: nextTask(plan)?.id ?? null, plan_revision: plan.plan_revision,
+    tasks_done: plan.tasks.filter(t => t.commit_status === 'DONE').length, tasks_total: plan.tasks.length,
+    profile: config.profile, stack: config.stack, head: head(root), changes: allChanges(root), resolved,
+    transaction: transaction ? { id: transaction.id, phase: transaction.phase, task: transaction.task_id } : null,
+    integration_status: !hooksHash ? 'HOOK_MISSING' : acknowledged.startup ? 'HOOK_VERIFIED' : 'HOOK_TRUST_PENDING',
+    hook_events: acknowledged, auto_compact_status: 'AUTO_COMPACT_UNVERIFIED',
+    last_hook_execution: fs.existsSync(receiptFile) ? readJSON(receiptFile) : null,
+    recovery_size: recovery.size, recovery_text: recovery.text,
+    git_identity_ready: identityReady(root), manifest_present: fs.existsSync(path.join(root, MANIFEST)) };
+}

@@ -1,0 +1,12 @@
+
+<!-- workflow-kit:begin -->
+# Project Workflow Kit
+
+Общайся по-русски. Канонический протокол работы: `.harness/kit/WORKFLOW.md`, раздел «Обязательные правила» передаётся также через SessionStart.
+
+Единственный активный план — `.harness/plans/todo-plan.md`; каталог документов — `docs/DOCUMENTATION_INDEX.md`. При новом старте, возобновлении и компакте используй текущий recovery packet. Если packet отсутствует, выполни `./scripts/workflow recover --format text` до реализации.
+
+Scope NONE разрешает обсуждение идеи и первого плана. Не выбирай стек до необходимости. Статусы меняются командами workflow. Каждая задача завершается отдельным управляемым commit вместе с документацией. Не обходи Git hooks. Релиз, публикация и архивирование scope выполняются только по указанию пользователя; приёмка не равна закрытию.
+
+В Windows команды имеют вид `./scripts/workflow.cmd status` (PowerShell/CMD); в Git Bash доступен `./scripts/workflow`. Пути внутри JSON плана всегда записываются через `/`.
+<!-- workflow-kit:end -->
