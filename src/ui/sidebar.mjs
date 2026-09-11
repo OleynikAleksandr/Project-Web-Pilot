@@ -1,3 +1,4 @@
+import { projectArchiveView } from './project-archive.mjs';
 import { workspaceSetupView } from './workspace-setup.mjs';
 const $ = id => document.getElementById(id);
 const api = window.webPilot;
@@ -26,9 +27,11 @@ const phases = {
 };
 
 const setupView = workspaceSetupView(action);
+const archiveView = projectArchiveView(action);
 
 async function action(method, ...args) {
   if (actionPending) return;
+  clearTimeout(workspaceClickTimer);
   actionPending = true;
   render(currentState);
   try {
@@ -79,7 +82,13 @@ function render(state) {
       button.addEventListener('keydown', event => {
         if ((event.key === 'ArrowRight' && !project.expanded) || (event.key === 'ArrowLeft' && project.expanded)) { event.preventDefault(); toggle(); }
       });
-      row.append(arrow, button); item.append(row);
+      const menuButton = document.createElement('button'); menuButton.className = 'icon-button project-menu-button'; menuButton.textContent = '⋯';
+      menuButton.setAttribute('aria-label', `Меню проекта ${project.name}`); menuButton.setAttribute('aria-expanded', 'false');
+      const menu = document.createElement('div'); menu.className = 'project-menu'; menu.hidden = true;
+      const archive = document.createElement('button'); archive.className = 'secondary archive-project'; archive.textContent = 'Перенести в архив';
+      archive.addEventListener('click', () => { clearTimeout(workspaceClickTimer); action('archiveProject', project.workspace); }); menu.append(archive);
+      menuButton.addEventListener('click', () => { clearTimeout(workspaceClickTimer); menu.hidden = !menu.hidden; menuButton.setAttribute('aria-expanded', String(!menu.hidden)); });
+      row.append(arrow, button, menuButton); item.append(row, menu);
       const sessions = document.createElement('ul'); sessions.className = 'sessions'; sessions.hidden = !project.expanded;
       sessions.setAttribute('aria-label', `Сессии ${project.name}`);
       for (const [index, session] of project.sessions.entries()) {
@@ -138,7 +147,8 @@ function render(state) {
     button.disabled = actionPending || (state.storageError && ['create-workspace', 'add-workspace', 'new-chat', 'retry-context'].includes(button.id));
   }
   setupView.render(state, actionPending);
-  $('choose-runtime').disabled = actionPending || !!state.setup;
+  archiveView.render(state, actionPending);
+  $('choose-runtime').disabled = actionPending || !!state.setup || !!state.settings;
   const health = state.workspaceHealth;
   $('workspace-health').textContent = health && selected && health.workspace === selected.workspace ? `Проект проверен · Workflow Kit ${health.version}` : '';
   $('workspace-notice').textContent = health && selected && health.workspace === selected.workspace ? (health.warnings ?? []).join('\n') : '';

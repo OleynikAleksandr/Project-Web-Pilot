@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 74,
+  "plan_revision": 76,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
@@ -1057,8 +1057,8 @@
         "Открытые сессии и передача контекста корректно реагируют на архив; remote IPC недоступен."
       ],
       "expected_commit_message": "feat: добавить архив в настройки сайдбара",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-prototype-001",
         "task_id": "T027",
@@ -1163,7 +1163,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 74
+Revision: 76
 
 ## Цель
 
@@ -1287,8 +1287,8 @@ Revision: 74
   - Git Commit: [DONE] feat: добавить удаление архивного проекта с диска
   - Reference: web-pilot-prototype-001 / T026 / implementation
   - Файлы: src/workspace-deletion.mjs, tests/workspace-deletion.test.mjs, docs/PROJECT_ARCHIVE.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T027: Добавить настройки с архивом в сайдбар — Ожидает
-  - Git Commit: [PENDING] feat: добавить архив в настройки сайдбара
+- [DONE] T027: Добавить настройки с архивом в сайдбар — Завершено
+  - Git Commit: [DONE] feat: добавить архив в настройки сайдбара
   - Reference: web-pilot-prototype-001 / T027 / implementation
   - Файлы: src/main.mjs, src/preload.cjs, src/ui/index.html, src/ui/sidebar.mjs, src/ui/project-archive.mjs, tests/electron-smoke.mjs, docs/PROJECT_ARCHIVE.md, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T028: Собрать приложение с архивом — Ожидает

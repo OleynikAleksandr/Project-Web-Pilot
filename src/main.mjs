@@ -8,6 +8,7 @@ import { WorkspaceSessions, normalizeChatUrl } from './workspace-session.mjs';
 import { McpRuntime, findRuntimeFolder } from './mcp-runtime.mjs';
 import { ChatGPTComposer } from './chatgpt-composer.mjs';
 import { ContextSession } from './context-session.mjs';
+import { WorkspaceDeletion } from './workspace-deletion.mjs';
 import { WorkspaceSetup } from './workspace-setup.mjs';
 
 const smoke = !app.isPackaged && process.argv.includes('--smoke');
@@ -31,6 +32,17 @@ let actionTail = Promise.resolve();
 const workspaceSetup = new WorkspaceSetup({ resourceDir: app.isPackaged ? path.join(process.resourcesPath, 'resources') : path.join(sourceDir, '../resources') });
 let setupState = null;
 let workspaceHealth = null;
+let settingsState = null;
+let deletion;
+
+function openSettings(workspace = null) {
+  pauseForSetup(); workspaceSetup.clear(); setupState = null; deletion.clear();
+  settingsState = { workspace, deletion: null, notice: null };
+}
+function closeSettings() {
+  deletion.clear(); settingsState = null; startupError = null;
+  const current = store.selected(); if (current) controller.attach(current);
+}
 
 function publicError(error) { return { code: error.code ?? 'APP_ERROR', message: String(error.message ?? error).slice(0, 700) }; }
 function snapshot() {
@@ -39,10 +51,13 @@ function snapshot() {
   const selected = saved && { ...saved, attempt: saved.attempt && { protocol: saved.attempt.protocol,
     requestId: saved.attempt.requestId, state: saved.attempt.state }, receipt: undefined,
     ...(info?.workspace === saved.workspace ? info : {}) };
-  return { projects: store.snapshot().projects.map(({ workspace, projectId, name, selectedSessionId, expanded, sessions }) => ({
+  return { projects: store.snapshot().projects.filter(p => !p.archivedAt).map(({ workspace, projectId, name, selectedSessionId, expanded, sessions }) => ({
     workspace, projectId, name, selectedSessionId, expanded,
     sessions: sessions.map(({ sessionId, chatUrl, title, createdAt }) => ({ sessionId, chatUrl, title, createdAt })),
   })),
+    archives: store.snapshot().projects.filter(p => p.archivedAt).map(({ workspace, projectId, name, archivedAt, sessions }) => ({
+      workspace, projectId, name, archivedAt, sessionCount: sessions.length, deletionPending: deletion?.isPending(workspace) ?? false,
+    })), settings: settingsState,
     selected, context: controller?.state ?? { phase: 'selected', servicesReady: false, messageSent: false },
     runtimeFolder, pageLoading, startupError, storageError, setup: setupState, workspaceHealth, version: app.getVersion(), fixture: smoke };
 }
@@ -73,7 +88,7 @@ function rememberSessionTitle() {
     .then(changed => { if (changed) publish(); }).catch(() => {});
 }
 
-function report(error) { startupError = publicError(error); if (setupState) setupState = { ...setupState, phase: 'error', error: startupError }; publish(); }
+function report(error) { startupError = publicError(error); if (settingsState) settingsState = { ...settingsState, notice: null }; if (setupState) setupState = { ...setupState, phase: 'error', error: startupError }; publish(); }
 function remotePreferences() {
   return { partition, nodeIntegration: false, contextIsolation: true, sandbox: true, webSecurity: true };
 }
@@ -141,6 +156,9 @@ function cancelSetup() {
 }
 async function reviewWorkspace(workspace, openReady = false) {
   if (storageError) throw new Error('Сначала нужно восстановить сохранённый список проектов. Исходный файл оставлен без изменений.');
+  const canonical = await fsp.realpath(workspace).catch(() => workspace);
+  if (store.project(canonical)?.archivedAt) { openSettings(canonical); publish(); return false; }
+  settingsState = null; deletion.clear();
   pauseForSetup(); setupState = { phase: 'checking', mode: 'existing', workspace }; publish();
   const preview = await workspaceSetup.preview({ mode: 'existing', workspace });
   setupState = { ...preview, phase: 'preview' };
@@ -163,10 +181,53 @@ function connectController() {
 
 function registerIpc() {
   ipcMain.handle('pilot:get-state', event => { assertLocalSender(event); return snapshot(); });
+  registerAction('pilot:open-settings', () => openSettings());
+  registerAction('pilot:close-settings', closeSettings);
+  registerAction('pilot:archive-project', async input => {
+    const project = store.project(input);
+    if (!project || project.archivedAt || storageError) throw new Error('Выберите активный проект.');
+    const selected = store.selected()?.workspace === input;
+    if (selected) { controller.cancel(); ++navigationId; }
+    try { await store.setArchived(input, true); } catch (error) { if (selected) controller.attach(project); throw error; }
+    startupError = null;
+    if (selected) { workspaceHealth = null; await navigate(null); }
+  });
+  registerAction('pilot:select-archive', input => {
+    if (!settingsState || !store.project(input)?.archivedAt) throw new Error('Выберите проект из архива.');
+    deletion.clear(); settingsState = { workspace: input, deletion: null, notice: null }; startupError = null;
+  });
+  registerAction('pilot:restore-project', async input => {
+    if (!settingsState || !store.project(input)?.archivedAt) throw new Error('Выберите проект из архива.');
+    if (deletion.isPending(input)) throw new Error('Сначала завершите ранее подтверждённое удаление.');
+    const name = store.project(input).name; await store.setArchived(input, false);
+    deletion.clear(); settingsState = { workspace: null, deletion: null, notice: `«${name}» возвращён в активные проекты.` }; startupError = null;
+  });
+  registerAction('pilot:preview-delete', async input => {
+    if (!settingsState || settingsState.workspace !== input) throw new Error('Выберите проект в настройках.');
+    settingsState = { ...settingsState, deletion: null, notice: 'Проверяем содержимое папки…' }; publish();
+    const preview = await deletion.preview(input);
+    settingsState = { workspace: input, deletion: preview, notice: null }; startupError = null;
+  });
+  registerAction('pilot:cancel-delete', () => {
+    deletion.clear(); if (settingsState) settingsState = { ...settingsState, deletion: null, notice: null }; startupError = null;
+  });
+  registerAction('pilot:delete-project', async input => {
+    if (!settingsState?.deletion || input?.token !== settingsState.deletion.token) throw new Error('Откройте подтверждение удаления.');
+    try { await deletion.apply(input.token, input.confirmation); }
+    catch (error) { settingsState = { ...settingsState, deletion: null, notice: null }; throw error; }
+    settingsState = { workspace: null, deletion: null, notice: 'Папка и локальная история удалены. Чаты в ChatGPT сохранены.' }; startupError = null;
+  });
+  registerAction('pilot:recover-deletions', async () => {
+    if (!settingsState) return;
+    const errors = await deletion.recover();
+    settingsState = { workspace: null, deletion: null, notice: errors.length ? null : 'Локальная очистка завершена.' };
+    if (errors.length) throw Object.assign(new Error(errors[0].message), { code: errors[0].code });
+    startupError = null;
+  });
   registerAction('pilot:begin-create', () => {
     if (storageError) throw new Error('Сначала нужно восстановить сохранённый список проектов.');
-    pauseForSetup(); workspaceSetup.clear();
-    setupState = { phase: 'form', mode: 'new', name: '', parent: smoke ? dataDir : path.dirname(store.selected()?.workspace ?? path.join(os.homedir(), 'VSCODE/Project')) };
+    settingsState = null; deletion.clear(); pauseForSetup(); workspaceSetup.clear();
+    setupState = { phase: 'form', mode: 'new', name: '', parent: smoke ? dataDir + '-projects' : path.dirname(store.selected()?.workspace ?? path.join(os.homedir(), 'VSCODE/Project')) };
   });
   registerAction('pilot:choose-parent', async input => {
     if (setupState?.mode !== 'new') return;
@@ -245,7 +306,7 @@ function registerIpc() {
     await fsp.mkdir(dataDir, { recursive: true, mode: 0o700 });
     await fsp.writeFile(settingsFile + '.tmp', JSON.stringify({ runtimeFolder: selected }, null, 2) + '\n', { mode: 0o600 });
     await fsp.rename(settingsFile + '.tmp', settingsFile);
-    runtimeFolder = selected;
+    runtimeFolder = selected; deletion.protectedPaths = [app.getAppPath(), runtimeFolder];
     runtime = new McpRuntime(runtimeFolder);
     connectController();
     startupError = null;
@@ -265,8 +326,8 @@ async function createWindow() {
   sidebar.webContents.on('will-navigate', event => event.preventDefault());
   sidebar.webContents.on('did-finish-load', publish);
   browser.webContents.on('page-title-updated', rememberSessionTitle);
-  browser.webContents.on('did-navigate-in-page', () => { publish(); if (!pageLoading && !setupState) void controller?.tick(); });
-  browser.webContents.on('did-finish-load', () => { publish(); if (!pageLoading && !setupState) void controller?.tick(); });
+  browser.webContents.on('did-navigate-in-page', () => { publish(); if (!pageLoading && !setupState && !settingsState) void controller?.tick(); });
+  browser.webContents.on('did-finish-load', () => { publish(); if (!pageLoading && !setupState && !settingsState) void controller?.tick(); });
   browser.webContents.on('render-process-gone', () => { controller?.cancel(); report(new Error('Страница ChatGPT закрылась. Нажмите обновление.')); });
   window.on('resize', layout);
   window.on('closed', () => {
@@ -276,18 +337,19 @@ async function createWindow() {
   });
   layout();
   if (smoke) {
+    await fsp.mkdir(dataDir + '-projects', { recursive: true });
     fixture = await import('../tests/electron-smoke.mjs');
     runtime = await fixture.createRuntime({ browser: browser.webContents, session: session.fromPartition(partition), dataDir });
   } else runtime = new McpRuntime(runtimeFolder);
   connectController();
   registerIpc();
   await sidebar.webContents.loadURL(sidebarUrl);
-  interval = setInterval(() => { if (!pageLoading && !setupState) void controller.tick(); }, 1500);
+  interval = setInterval(() => { if (!pageLoading && !setupState && !settingsState) void controller.tick(); }, 1500);
   if (smoke) {
     await fixture.run({ app, window, browser: browser.webContents, sidebar: sidebar.webContents,
       store, controller, selectWorkspace, snapshot, assertLocalSender, dataDir });
     window.close(); app.quit();
-  } else { const current = store.selected(); if (current && !storageError) void selectWorkspace(current.workspace).catch(report); else void navigate(); }
+  } else { const current = store.selected(); if (current && !storageError && !settingsState) void selectWorkspace(current.workspace).catch(report); else void navigate(); }
 }
 
 function installMenu() {
@@ -311,6 +373,11 @@ else {
       if (typeof settings.runtimeFolder === 'string' && path.isAbsolute(settings.runtimeFolder)) runtimeFolder = settings.runtimeFolder;
     } catch (error) { if (error.code !== 'ENOENT') startupError = { code: 'SETTINGS_INVALID', message: 'Не удалось прочитать настройки подключения. Выберите папку Codex Local Mac в подробностях.' }; }
     try { await store.load(); } catch (error) { startupError = publicError(error); storageError = true; }
+    deletion = new WorkspaceDeletion({ store, journalDir: path.join(dataDir, 'deletions'), protectedPaths: [app.getAppPath(), runtimeFolder] });
+    if (!storageError) {
+      const errors = await deletion.recover();
+      if (errors.length) { startupError = errors[0]; settingsState = { workspace: errors[0].workspace, deletion: null, notice: null }; }
+    }
     const remoteSession = session.fromPartition(partition);
     remoteSession.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
     remoteSession.setPermissionCheckHandler(() => false);

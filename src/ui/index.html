@@ -14,19 +14,37 @@
     .scroll{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:18px;padding:0 1px 2px}.footer{border-top:1px solid var(--line);padding-top:13px;color:var(--muted);font-size:10px}.footer-line{display:flex;justify-content:space-between;align-items:center;gap:6px}summary{cursor:pointer;user-select:none;font-size:10px;color:#61778b;padding:4px 0}details{margin-top:11px}details p{line-height:1.55;overflow-wrap:anywhere;font-size:10px;margin:7px 0}details button{margin-top:4px;width:100%;font-size:10px}.badge{font-size:9px;border:1px solid #d5e2e5;border-radius:5px;padding:3px 5px;color:#597d82}.error-banner{padding:10px;border:1px solid #edcdc8;border-radius:8px;background:#fff6f3;color:#9b4e40;line-height:1.5;font-size:11px} [hidden]{display:none!important}
     .projects,.sessions{list-style:none;padding:0}.projects{margin-bottom:0}.workspace-row{display:flex;align-items:stretch;gap:2px}.workspace-row .project{min-width:0;flex:1;padding:10px 8px}.expand-project{flex-shrink:0;width:24px;padding:0;border:0;border-radius:7px;background:transparent;color:#728697;font-size:12px}.expand-project:hover{background:#e4ecef;color:var(--teal)}.sessions{margin:5px 0 7px 12px;padding-left:14px;border-left:1px solid #d7e2e7;display:flex;flex-direction:column;gap:3px}.session{display:block;width:100%;text-align:left;border:1px solid transparent;border-radius:8px;padding:9px 10px;background:transparent;color:#52687b}.session:hover{background:#e9f0f3}.session.active{background:#e4f1f0;border-color:#bddad7;color:#135c61}.session strong{display:block;font-size:11px;font-weight:550;line-height:1.45;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.session small{display:block;font-size:9px;margin-top:4px;color:#778b9a;line-height:1.5}.project small{white-space:normal}.session small .pending{color:#af8038}
     .project-entry{display:flex;flex-direction:column;gap:7px}.setup h2{font-size:17px;margin:0 0 8px;line-height:1.4}.setup label{display:block;font-size:11px;font-weight:600;margin:15px 0 7px}.setup input{display:block;width:100%;padding:10px 11px;border:1px solid #cedae1;border-radius:8px;background:#fff;color:#243346}.setup form .primary{margin-top:16px}.setup form .secondary{width:100%;margin-top:5px}.setup-path{font-size:11px;line-height:1.6;background:#e9eff3;border-radius:8px;padding:10px;overflow-wrap:anywhere}.setup-checks,.setup-issues,.setup-file-list{list-style:none;padding:0;margin:12px 0}.setup-checks li{font-size:11px;padding:6px 0;color:#b37e3d}.setup-checks li[data-ok=true]{color:#087e80}.setup-issues li{font-size:11px;line-height:1.55;padding:10px;border:1px solid #edcdc8;background:#fff6f3;border-radius:8px;margin:7px 0;overflow-wrap:anywhere}.setup-issues strong,.setup-issues span{display:block}.setup-issues strong{margin-bottom:4px;color:#8a453b}.setup-notes{font-size:11px;white-space:pre-line;line-height:1.6;color:#6b7684}.setup-file-list{max-height:180px;overflow:auto;font-size:10px;line-height:1.65;overflow-wrap:anywhere}.setup-file-list li{padding:4px 0;border-bottom:1px solid #e0e7ec}.text-button{border:0;background:transparent;color:#627a8c;font-size:11px;padding:9px}.health{font-size:10px;line-height:1.5;color:#087e80;margin:9px 0 0}.notice{font-size:10px;line-height:1.55;white-space:pre-line;color:#81909e;margin:7px 0 0}.notice:empty,.health:empty{display:none}
+    .footer-controls{display:flex;align-items:flex-start;gap:6px;margin-top:10px}.footer-controls>details{flex:1;min-width:0;margin-top:0}.settings-button{width:30px;height:30px;flex-shrink:0;display:grid;place-items:center;margin-top:-3px}.settings-button svg{width:18px;height:18px}.settings-button[aria-pressed=true]{color:var(--teal);background:#e0eeed}.project-menu-button{align-self:center;flex-shrink:0;font-size:18px;width:25px}.project-menu{padding:3px 5px 6px 25px}.project-menu button{width:100%;text-align:left;font-size:11px}.archive-list{list-style:none;padding:0;margin:15px 0;display:flex;flex-direction:column;gap:7px}.archive-list button{display:block;width:100%;text-align:left;border:1px solid #dce5e9;border-radius:9px;background:white;padding:11px;color:#344b5d}.archive-list button[aria-pressed=true]{border-color:#74b0ae;background:#eaf5f3}.archive-list strong{display:block;font-size:12px;overflow-wrap:anywhere}.archive-list small{display:block;font-size:10px;color:var(--muted);margin-top:5px}.archive-detail{border-top:1px solid var(--line);padding-top:15px}.archive-detail h3{font-size:13px;margin:0 0 8px;overflow-wrap:anywhere}.danger{border:1px solid #c97165;border-radius:8px;background:#fff8f6;color:#a33f32;padding:10px 8px;font-size:11px;font-weight:600}.danger:hover{background:#fcece8}.danger.solid{background:#ac4235;color:white;border-color:#ac4235}.delete-note{font-size:11px;line-height:1.6;color:#9b4e40}.settings-notice{font-size:11px;line-height:1.6;padding:10px;background:#e6f2ee;border-radius:8px;color:#32665c}.archive-empty{font-size:12px;line-height:1.7;color:var(--muted);padding:8px 0}.archive-meta{font-size:11px;line-height:1.6;color:#677d8c;margin:10px 0}
     @media(max-height:760px){.shell{padding-top:18px;gap:15px}.scroll{gap:13px}.projects{max-height:29vh}.empty{padding-top:13px}.card{padding:12px}.description{margin:8px 0}.step{padding:6px 0}}
   </style>
 </head>
 <body>
   <main class="shell">
     <header class="brand"><div class="logo" aria-hidden="true">W</div><div><strong>Web Pilot</strong><span>PROJECT WORKSPACE</span></div></header>
-    <section aria-label="Проекты">
+    <section id="active-projects" aria-label="Проекты">
       <div class="heading"><p class="eyebrow">Ваши проекты</p><button id="reload-chat" class="icon-button" title="Обновить ChatGPT" aria-label="Обновить ChatGPT">↻</button></div>
       <div class="project-entry"><button id="create-workspace" class="primary"><span class="plus" aria-hidden="true">+</span> Создать проект</button><button id="add-workspace" class="secondary">Открыть папку проекта</button></div>
       <ul id="projects" class="projects" aria-label="Workspace и сессии"><li class="empty">Выберите проект, чтобы начать<br>работу с его контекстом.</li></ul>
     </section>
     <div class="scroll">
       <div id="error-banner" class="error-banner" role="alert" hidden></div>
+      <section id="settings-panel" class="setup" hidden>
+        <div class="heading"><h2>Настройки</h2><button id="close-settings" class="icon-button" title="Вернуться к проектам" aria-label="Закрыть настройки">✕</button></div>
+        <p class="eyebrow">Архив проектов</p>
+        <p class="description">Архив сохраняет папку проекта и все его сессии.</p>
+        <p id="settings-notice" class="settings-notice" hidden></p>
+        <p id="archive-empty" class="archive-empty">В архиве пока нет проектов.<br>Перенести проект в архив можно через меню ⋯ рядом с его названием.</p>
+        <ul id="archive-list" class="archive-list" aria-label="Архивные проекты"></ul>
+        <section id="archive-detail" class="archive-detail" hidden>
+          <h3 id="archive-name"></h3><p id="archive-path" class="path"></p><p id="archive-meta" class="archive-meta"></p>
+          <div id="archive-actions" class="actions"><button id="restore-project" class="primary">Вернуть в активные</button><button id="preview-delete" class="danger">Удалить с диска…</button><button id="recover-deletions" class="danger" hidden>Повторить очистку</button></div>
+          <form id="delete-form" hidden>
+            <p id="delete-note" class="delete-note"></p><p class="description">Чаты в аккаунте ChatGPT останутся.</p>
+            <label for="delete-confirmation">Для подтверждения введите имя проекта</label><input id="delete-confirmation" autocomplete="off" spellcheck="false">
+            <div class="actions"><button id="delete-project" type="submit" class="danger solid">Удалить безвозвратно</button><button id="cancel-delete" type="button" class="secondary">Отмена</button></div>
+          </form>
+        </section>
+      </section>
       <section id="setup-panel" class="setup" aria-live="polite" hidden>
         <h2 id="setup-title">Новый проект</h2><p id="setup-intro" class="description"></p>
         <form id="setup-form">
@@ -59,8 +77,8 @@
       </section>
     </div>
     <footer class="footer">
-      <div class="footer-line"><span>На вашем Mac</span><span class="badge">ПРОТОТИП 0.4</span></div>
-      <details><summary>Подробности подключения</summary><p id="connection-detail">Codex Local Mac · существующее подключение</p><p id="session-detail"></p><button id="choose-runtime" class="secondary">Выбрать папку Codex Local Mac</button></details>
+      <div class="footer-line"><span>На вашем Mac</span><span class="badge">ПРОТОТИП 0.5</span></div>
+      <div class="footer-controls"><details><summary>Подробности подключения</summary><p id="connection-detail">Codex Local Mac · существующее подключение</p><p id="session-detail"></p><button id="choose-runtime" class="secondary">Выбрать папку Codex Local Mac</button></details><button id="open-settings" class="icon-button settings-button" title="Настройки и архив проектов" aria-label="Настройки и архив проектов" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m9 3-.6 2.3-2 .9L4.3 5.5 2.5 8.6l1.7 1.6-.2 2.2-1.6 1.8L4.3 18l2.2-.6 1.8 1.1.7 2.5h4l.7-2.5 1.8-1.1 2.2.6 1.9-3.8-1.6-1.8-.2-2.2 1.7-1.6-1.8-3.1-2.1.7-2-.9L13 3Z"/><circle cx="11" cy="12" r="3.2"/></svg></button></div>
     </footer>
   </main>
   <script type="module" src="./sidebar.mjs"></script>

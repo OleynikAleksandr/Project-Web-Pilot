@@ -1,5 +1,14 @@
 const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('webPilot', Object.freeze({
+  openSettings: () => ipcRenderer.invoke('pilot:open-settings'),
+  closeSettings: () => ipcRenderer.invoke('pilot:close-settings'),
+  archiveProject: workspace => ipcRenderer.invoke('pilot:archive-project', workspace),
+  selectArchive: workspace => ipcRenderer.invoke('pilot:select-archive', workspace),
+  restoreProject: workspace => ipcRenderer.invoke('pilot:restore-project', workspace),
+  previewDelete: workspace => ipcRenderer.invoke('pilot:preview-delete', workspace),
+  cancelDelete: () => ipcRenderer.invoke('pilot:cancel-delete'),
+  deleteProject: (token, confirmation) => ipcRenderer.invoke('pilot:delete-project', { token, confirmation }),
+  recoverDeletions: () => ipcRenderer.invoke('pilot:recover-deletions'),
   getState: () => ipcRenderer.invoke('pilot:get-state'),
   beginCreate: () => ipcRenderer.invoke('pilot:begin-create'),
   chooseParent: name => ipcRenderer.invoke('pilot:choose-parent', { name }),

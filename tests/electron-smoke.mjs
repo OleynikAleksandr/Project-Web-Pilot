@@ -52,7 +52,7 @@ async function waitFor(predicate, description, snapshot) {
 
 export async function run({ app, window, browser, sidebar, store, controller, selectWorkspace, snapshot, assertLocalSender, dataDir }) {
   assert.equal(app.isPackaged, false, 'Fixtures never run from a packaged app');
-  const workspace = path.join(dataDir, 'Тестовый проект с пробелами');
+  const workspace = path.join(await fs.realpath(dataDir + '-projects'), 'Тестовый проект с пробелами');
   await waitFor(() => sidebar.executeJavaScript('typeof window.webPilot === "object"'), 'local IPC ready', snapshot);
   const previewNew = async () => {
     await sidebar.executeJavaScript('document.getElementById("create-workspace").click()');
@@ -141,8 +141,50 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await fs.writeFile(startFile, startText);
   await sidebar.executeJavaScript('document.getElementById("setup-cancel").click()');
   await waitFor(() => !snapshot().setup, 'cancel blocked open keeps current session', snapshot);
+  const archiveCurrent = async () => {
+    await sidebar.executeJavaScript('document.querySelector(".project-menu-button").click(); document.querySelector(".archive-project").click()');
+    await waitFor(() => snapshot().archives.length === 1 && !snapshot().selected && !snapshot().pageLoading, 'archive current project', snapshot);
+    assert.equal(snapshot().projects.length, 0); assert.equal(packetLoads, 2);
+  };
+  const openArchive = async () => {
+    await sidebar.executeJavaScript('document.getElementById("open-settings").click()');
+    await waitFor(() => !!snapshot().settings, 'gear opens settings', snapshot);
+    await sidebar.executeJavaScript('document.querySelector("#archive-list button").click()');
+    await waitFor(() => snapshot().settings?.workspace === workspace, 'choose archived project', snapshot);
+  };
+  await archiveCurrent();
+  assert.equal(await fs.readFile(startFile, 'utf8'), startText.toString(), 'Archiving preserves workspace files');
+  const archived = new WorkspaceSessions(store.file); await archived.load();
+  assert.equal(archived.snapshot().projects[0].sessions.length, 2); assert.ok(archived.project(workspace).archivedAt);
+  await openArchive();
+  assert.ok(await sidebar.executeJavaScript('document.getElementById("open-settings").getBoundingClientRect().left > document.querySelector(".footer-controls summary").getBoundingClientRect().left'));
+  await sidebar.executeJavaScript('document.getElementById("restore-project").click()');
+  await waitFor(() => snapshot().archives.length === 0, 'restore project', snapshot);
+  assert.equal(store.selected(), null); assert.equal(packetLoads, 2); assert.equal(snapshot().projects[0].sessions.length, 2);
+  await sidebar.executeJavaScript('document.getElementById("close-settings").click()');
+  await waitFor(() => !snapshot().settings, 'close settings', snapshot);
+  await sidebar.executeJavaScript('document.querySelector(".project").click()');
+  await waitFor(() => store.selected()?.sessionId === first.sessionId && snapshot().context.phase === 'delivered' && browser.getURL() === first.chatUrl, 'restored project keeps earlier chat', snapshot);
+  assert.equal(packetLoads, 2); assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 1);
+  await archiveCurrent(); await openArchive();
+  const deletionPreview = async () => {
+    await sidebar.executeJavaScript('document.getElementById("preview-delete").click()');
+    await waitFor(() => !!snapshot().settings?.deletion, 'delete preview', snapshot);
+  };
+  await deletionPreview();
+  assert.equal(snapshot().settings.deletion.sessionCount, 2);
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("delete-project").disabled'), true);
+  await sidebar.executeJavaScript('document.getElementById("cancel-delete").click()');
+  await waitFor(() => !snapshot().settings?.deletion, 'cancel deletion', snapshot); assert.ok(await fs.stat(workspace));
+  await deletionPreview();
+  await sidebar.executeJavaScript('document.getElementById("delete-confirmation").value="Тестовый проект с пробелами"; document.getElementById("delete-confirmation").dispatchEvent(new Event("input")); document.getElementById("delete-project").click()');
+  await waitFor(() => snapshot().archives.length === 0 && store.snapshot().projects.length === 0, 'confirmed local deletion', snapshot);
+  await assert.rejects(fs.stat(workspace), { code: 'ENOENT' });
+  await browser.loadURL(first.chatUrl);
+  assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 1, 'Web conversation remains after local deletion');
+  assert.equal(packetLoads, 2, 'Archive, restore and deletion never send another packet');
   const result = { mode: 'isolated-fixture', electron: process.versions.electron, chromium: process.versions.chrome,
-    views: window.contentView.children.length, secureRemote: true, sidebarIpc: true, workspaceCreation: true, workspaceValidation: true, cancelPreservesSession: true, startupMessages: packetLoads,
+    views: window.contentView.children.length, secureRemote: true, sidebarIpc: true, archiveRestore: true, archiveRestart: true, deleteCancel: true, localDeletion: true, cloudChatPreserved: true, workspaceCreation: true, workspaceValidation: true, cancelPreservesSession: true, startupMessages: packetLoads,
     restartKeepsSession: true, newChatCreatesSession: true, sessionTree: true, selectsEarlierSession: true, fullContextBytes: Buffer.byteLength(fixtureContext), liveChatGPT: false, agentToolsRequired: false };
   await fs.writeFile(path.join(dataDir, 'smoke-result.json'), JSON.stringify(result, null, 2));
   console.log(JSON.stringify(result));
