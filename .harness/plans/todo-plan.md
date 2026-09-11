@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 3,
+  "plan_revision": 5,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
@@ -84,8 +84,8 @@
         "Разделены первая проверка, полная цель и ещё не подтверждённые возможности"
       ],
       "expected_commit_message": "docs: определить идею Project Web Pilot",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-prototype-001",
         "task_id": "T001",
@@ -487,7 +487,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 3
+Revision: 5
 
 ## Цель
 
@@ -503,8 +503,8 @@ Revision: 3
 
 ## Микрозадачи
 
-- [TODO] T001: Зафиксировать идею и решения пользователя — Ожидает
-  - Git Commit: [PENDING] docs: определить идею Project Web Pilot
+- [DONE] T001: Зафиксировать идею и решения пользователя — Завершено
+  - Git Commit: [DONE] docs: определить идею Project Web Pilot
   - Reference: web-pilot-prototype-001 / T001 / implementation
   - Файлы: README.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/DOCUMENTATION_INDEX.md
 - [TODO] T002: Описать архитектуру, передачу контекста и исходные проекты — Ожидает
