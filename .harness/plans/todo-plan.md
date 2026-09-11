@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 59,
+  "plan_revision": 61,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
@@ -829,8 +829,8 @@
         "Исходные файлы скопированы без изменений, происхождение и SHA проверены."
       ],
       "expected_commit_message": "feat: включить ядро подготовки Workflow Kit",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-prototype-001",
         "task_id": "T021",
@@ -1002,7 +1002,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 59
+Revision: 61
 
 ## Цель
 
@@ -1100,8 +1100,8 @@ Revision: 59
   - Git Commit: [DONE] chore: собрать прототип с деревом сессий
   - Reference: web-pilot-prototype-001 / T020 / implementation
   - Файлы: package.json, package-lock.json, README.md, AGENTS.md, docs/PRODUCT.md, docs/WORKFLOW_START.md, docs/DECISIONS.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
-- [TODO] T021: Включить ядро подготовки Workflow Kit — Ожидает
-  - Git Commit: [PENDING] feat: включить ядро подготовки Workflow Kit
+- [DONE] T021: Включить ядро подготовки Workflow Kit — Завершено
+  - Git Commit: [DONE] feat: включить ядро подготовки Workflow Kit
   - Reference: web-pilot-prototype-001 / T021 / implementation
   - Файлы: resources/workflow-kit/WORKFLOW.md, resources/workflow-kit/cli.mjs, resources/workflow-kit/install.mjs, resources/workflow-kit/lib/actions.mjs, resources/workflow-kit/lib/common.mjs, resources/workflow-kit/lib/git-hooks.mjs, resources/workflow-kit/lib/git.mjs, resources/workflow-kit/lib/installation-files.mjs, resources/workflow-kit/lib/installer.mjs, resources/workflow-kit/lib/plan.mjs, resources/workflow-kit/lib/platform.mjs, resources/workflow-kit/lib/recovery.mjs, resources/workflow-kit/lib/transaction.mjs, resources/workflow-kit/lib/validate.mjs, resources/workflow-kit/schemas/plan.schema.json, resources/workflow-kit/schemas/workflow.schema.json, resources/workflow-kit/templates/AGENTS.md, resources/workflow-kit/templates/ARCHITECTURE.md, resources/workflow-kit/templates/PLAN.md, resources/workflow-kit/templates/PRODUCT.md, resources/workflow-kit/templates/START.md, tests/workflow-kit-source.test.mjs, docs/SOURCE_WORKSPACES.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T022: Проверять и подготавливать workspace — Ожидает
