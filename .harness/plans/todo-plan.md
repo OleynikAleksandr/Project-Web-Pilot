@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 34,
+  "plan_revision": 36,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
@@ -430,8 +430,8 @@
         "Если реальный вход или отправка недоступны, записан точный блокер; встроенный Chromium не заменён внешним браузером без решения пользователя"
       ],
       "expected_commit_message": "docs: зафиксировать реальную проверку первого сценария",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-prototype-001",
         "task_id": "T011",
@@ -547,7 +547,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 34
+Revision: 36
 
 ## Цель
 
@@ -603,8 +603,8 @@ Revision: 34
   - Git Commit: [DONE] feat: собрать стартовый сценарий в интерфейсе
   - Reference: web-pilot-prototype-001 / T010 / implementation
   - Файлы: src/main.mjs, src/preload.cjs, src/ui/sidebar.mjs, tests/electron-smoke.mjs, src/context-session.mjs, tests/context-session.test.mjs, src/chatgpt-composer.mjs, tests/chatgpt-composer.test.mjs, docs/architecture/ARCHITECTURE.md, docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md
-- [TODO] T011: Проверить вертикальный сценарий на реальном ChatGPT — Ожидает
-  - Git Commit: [PENDING] docs: зафиксировать реальную проверку первого сценария
+- [DONE] T011: Проверить вертикальный сценарий на реальном ChatGPT — Завершено
+  - Git Commit: [DONE] docs: зафиксировать реальную проверку первого сценария
   - Reference: web-pilot-prototype-001 / T011 / implementation
   - Файлы: docs/VERIFICATION.md, docs/DECISIONS.md
 - [TODO] T012: Проверить повторное открытие, ошибки и восстановление состояния — Ожидает
