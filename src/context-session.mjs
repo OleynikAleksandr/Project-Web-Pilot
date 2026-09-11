@@ -8,7 +8,6 @@ export function startupMessage(project, requestId) {
     `Session ID для этого чата: ${project.sessionId}`,
     `Идентификатор отправки оболочки: ${requestId}`,
     'Задача: прочитать актуальное состояние этого проекта и сообщить его. Файлы не менять.',
-    '',
     'Следуй действующим инструкциям MCP. Установи выбранную папку через bridge_status(repository=workspace).',
     'Получи полный пакет workflow_context_recover(workspace, session_id, source="agent_request") и прочитай весь context.',
     'Подтверди его через workflow_context_ack с probe_id/challenge из полученного пакета и точным объектом facts, включая null, в readback.',
@@ -61,10 +60,13 @@ export class ContextSession {
     this.generation++;
     this.active = { workspace: project.workspace, sessionId: project.sessionId };
     this.servicesReady = false;
-    this.emit({ phase: 'selected', messageSent: ['sent', 'acknowledged'].includes(project.attempt?.state), receipt: null, error: null });
+    this.emit({ phase: 'selected', messageSent: ['sent', 'acknowledged'].includes(project.attempt?.state), receipt: null, error: null, projectInfo: null });
   }
 
-  cancel() { this.generation++; this.active = null; }
+  cancel() {
+    this.generation++; this.active = null; this.servicesReady = false;
+    this.emit({ phase: 'selected', messageSent: false, receipt: null, error: null, projectInfo: null });
+  }
 
   emit(patch) {
     this.state = { ...this.state, ...patch, servicesReady: this.servicesReady };
@@ -116,6 +118,9 @@ export class ContextSession {
         this.emit({ phase: 'chat-changed', projectInfo: info }); return;
       }
       if (!project.chatUrl && currentUrl) {
+        if (!attempt?.sendStartedAtMs || !observation.messageSeen) {
+          this.emit({ phase: 'chat-changed', projectInfo: info }); return;
+        }
         project = { ...await this.store.bindChat(project.workspace, project.sessionId, currentUrl), ...info };
         if (!this.current(generation)) return;
       }
@@ -124,7 +129,7 @@ export class ContextSession {
       if (attempt && ['sending', 'unknown', 'sent', 'acknowledged'].includes(attempt.state)) {
         const matched = receiptMatch(status, project, attempt, this.now());
         const messageSent = observation.messageSeen || ['sent', 'acknowledged'].includes(attempt.state);
-        if (messageSent && matched.kind === 'confirmed') {
+        if (messageSent && project.chatUrl && matched.kind === 'confirmed') {
           if (attempt.state !== 'acknowledged' || attempt.ackProbeId !== matched.receipt.probeId) {
             attempt = { ...attempt, state: 'acknowledged', ackProbeId: matched.receipt.probeId };
             await this.store.updateSession(project.workspace, project.sessionId, { attempt, receipt: matched.receipt });

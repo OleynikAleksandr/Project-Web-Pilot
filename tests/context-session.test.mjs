@@ -75,3 +75,10 @@ test('switching a workspace while MCP starts cancels before send',async()=>{
   const running=f.controller.tick();await new Promise(r=>setImmediate(r));f.controller.cancel();release();await running;
   assert.equal(f.sends(),0);assert.equal(f.saved.attempt,null);
 });
+
+test('an unbound workspace cannot adopt a manually opened existing chat before its own request',async()=>{
+  const f=controllerFixture();const unbound={...f.saved,chatUrl:null};
+  f.store.selected=()=>structuredClone(unbound);f.store.project=()=>structuredClone(unbound);
+  f.controller.attach(unbound);await f.controller.tick();
+  assert.equal(f.controller.state.phase,'chat-changed');assert.equal(f.sends(),0);
+});

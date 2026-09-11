@@ -68,3 +68,11 @@ test('normal contenteditable receives text through the visible composer input pa
   const result=f.dom.window.eval(pageScript({action:'fill',...request}));
   assert.equal(result.action,'filled');assert.equal(editor.textContent,message);
 });
+
+test('Chromium paragraph spacing is normalized without accepting changed text or path spaces',()=>{
+  const f=fixture();const editor=f.document.createElement('div');editor.id='prompt-textarea';editor.setAttribute('contenteditable','true');f.editor.replaceWith(editor);
+  Object.defineProperty(editor,'innerText',{value:'Workspace: /My  Folder\n\nRequest: r-123',configurable:true});
+  assert.equal(f.dom.window.eval(pageScript({action:'inspect',text:'Workspace: /My  Folder\nRequest: r-123'})).draftMatches,true);
+  assert.equal(f.dom.window.eval(pageScript({action:'inspect',text:'Workspace: /My Folder\nRequest: r-123'})).draftMatches,false);
+  assert.equal(f.dom.window.eval(pageScript({action:'inspect',text:'Workspace: /Another\nRequest: r-123'})).draftMatches,false);
+});

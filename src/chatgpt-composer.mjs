@@ -15,7 +15,7 @@ export function pageOperation({ action = 'inspect', text = '', requestId = '' } 
   const login = !!first('[data-testid="login-button"],a[href="/auth/login"],a[href="https://chatgpt.com/auth/login"]');
   const draft = () => editor ? (editor.tagName === 'TEXTAREA' || editor.tagName === 'INPUT'
     ? editor.value : editor.innerText ?? editor.textContent ?? '') : '';
-  const normalized = value => value.replace(/\r\n/g, '\n').replace(/\u00a0/g, ' ').trim();
+  const normalized = value => value.replace(/\r\n/g, '\n').replace(/\n+/g, '\n').replace(/\u00a0/g, ' ').trim();
   const messages = [...document.querySelectorAll('[data-message-author-role="user"],[data-testid="user-message"]')];
   const messageSeen = !!requestId && messages.some(message => (message.innerText ?? message.textContent ?? '').includes(requestId));
   const button = first('[data-testid="send-button"],button[aria-label="Send prompt"],button[aria-label="Send message"],button[aria-label="Отправить сообщение"],button[aria-label="Отправить"]')

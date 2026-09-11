@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 28,
+  "plan_revision": 34,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
@@ -375,7 +375,11 @@
         "src/main.mjs",
         "src/preload.cjs",
         "src/ui/sidebar.mjs",
-        "tests/electron-smoke.mjs"
+        "tests/electron-smoke.mjs",
+        "src/context-session.mjs",
+        "tests/context-session.test.mjs",
+        "src/chatgpt-composer.mjs",
+        "tests/chatgpt-composer.test.mjs"
       ],
       "documentation_paths": [
         "docs/architecture/ARCHITECTURE.md",
@@ -395,14 +399,14 @@
         "При ACK показаны фактический проект и версия плана; состояние привязано к конкретному чату"
       ],
       "expected_commit_message": "feat: собрать стартовый сценарий в интерфейсе",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-prototype-001",
         "task_id": "T010",
         "role": "implementation"
       },
-      "file_limit_exception": "Дополнительный файл содержит проверку собранной цепочки в настоящем Electron; три производственных файла остаются по плану."
+      "file_limit_exception": "Интеграция затрагивает три запланированных UI-файла, отдельный Electron smoke и небольшую защиту координатора с регрессионным тестом: новый workspace нельзя привязать к случайно открытому чужому чату до собственной отправки. Реальный Work также потребовал нормализовать абзацные переводы строки в адаптере; изменён адаптер и добавлен регрессионный тест."
     },
     {
       "dependencies": [
@@ -543,7 +547,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 28
+Revision: 34
 
 ## Цель
 
@@ -595,10 +599,10 @@ Revision: 28
   - Git Commit: [DONE] feat: связать старт чата с подтверждением контекста
   - Reference: web-pilot-prototype-001 / T009 / implementation
   - Файлы: src/context-session.mjs, tests/context-session.test.mjs, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T010: Соединить сайдбар, службы, браузер и состояние контекста — Ожидает
-  - Git Commit: [PENDING] feat: собрать стартовый сценарий в интерфейсе
+- [DONE] T010: Соединить сайдбар, службы, браузер и состояние контекста — Завершено
+  - Git Commit: [DONE] feat: собрать стартовый сценарий в интерфейсе
   - Reference: web-pilot-prototype-001 / T010 / implementation
-  - Файлы: src/main.mjs, src/preload.cjs, src/ui/sidebar.mjs, tests/electron-smoke.mjs, docs/architecture/ARCHITECTURE.md, docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md
+  - Файлы: src/main.mjs, src/preload.cjs, src/ui/sidebar.mjs, tests/electron-smoke.mjs, src/context-session.mjs, tests/context-session.test.mjs, src/chatgpt-composer.mjs, tests/chatgpt-composer.test.mjs, docs/architecture/ARCHITECTURE.md, docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md
 - [TODO] T011: Проверить вертикальный сценарий на реальном ChatGPT — Ожидает
   - Git Commit: [PENDING] docs: зафиксировать реальную проверку первого сценария
   - Reference: web-pilot-prototype-001 / T011 / implementation
