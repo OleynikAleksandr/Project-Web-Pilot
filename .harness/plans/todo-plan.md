@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 26,
+  "plan_revision": 28,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
@@ -359,8 +359,8 @@
         "Чужой, старый или повторный ACK не засчитывается новому запуску; internal hook не симулируется"
       ],
       "expected_commit_message": "feat: связать старт чата с подтверждением контекста",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-prototype-001",
         "task_id": "T009",
@@ -543,7 +543,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 26
+Revision: 28
 
 ## Цель
 
@@ -591,8 +591,8 @@ Revision: 26
   - Git Commit: [DONE] feat: подготовить доставку стартового сообщения
   - Reference: web-pilot-prototype-001 / T008 / implementation
   - Файлы: src/chatgpt-composer.mjs, tests/chatgpt-composer.test.mjs, docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
-- [TODO] T009: Связать стартовое сообщение с recover и ACK — Ожидает
-  - Git Commit: [PENDING] feat: связать старт чата с подтверждением контекста
+- [DONE] T009: Связать стартовое сообщение с recover и ACK — Завершено
+  - Git Commit: [DONE] feat: связать старт чата с подтверждением контекста
   - Reference: web-pilot-prototype-001 / T009 / implementation
   - Файлы: src/context-session.mjs, tests/context-session.test.mjs, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T010: Соединить сайдбар, службы, браузер и состояние контекста — Ожидает
