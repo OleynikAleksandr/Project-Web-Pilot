@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 36,
+  "plan_revision": 38,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
@@ -465,8 +465,8 @@
         "Не объявляются обнаружение compact и автоматическое восстановление после него"
       ],
       "expected_commit_message": "fix: обработать повторный старт и сбои восстановления",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-prototype-001",
         "task_id": "T012",
@@ -547,7 +547,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 36
+Revision: 38
 
 ## Цель
 
@@ -607,8 +607,8 @@ Revision: 36
   - Git Commit: [DONE] docs: зафиксировать реальную проверку первого сценария
   - Reference: web-pilot-prototype-001 / T011 / implementation
   - Файлы: docs/VERIFICATION.md, docs/DECISIONS.md
-- [TODO] T012: Проверить повторное открытие, ошибки и восстановление состояния — Ожидает
-  - Git Commit: [PENDING] fix: обработать повторный старт и сбои восстановления
+- [DONE] T012: Проверить повторное открытие, ошибки и восстановление состояния — Завершено
+  - Git Commit: [DONE] fix: обработать повторный старт и сбои восстановления
   - Reference: web-pilot-prototype-001 / T012 / implementation
   - Файлы: src/workspace-session.mjs, src/context-session.mjs, tests/context-session.test.mjs, docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 - [TODO] T013: Подготовить результат прототипа к приёмке и следующий scope — Ожидает

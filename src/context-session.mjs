@@ -138,6 +138,12 @@ export class ContextSession {
           return;
         }
         if (matched.kind === 'stale' || matched.kind === 'superseded') {
+          // A valid but outdated ACK completes the old send; an explicit refresh may start a new request.
+          if (matched.receipt && messageSent && project.chatUrl && attempt.state !== 'acknowledged') {
+            attempt = { ...attempt, state: 'acknowledged', ackProbeId: matched.receipt.probeId };
+            await this.store.updateSession(project.workspace, project.sessionId, { attempt, receipt: matched.receipt });
+            if (!this.current(generation)) return;
+          }
           this.emit({ phase: 'stale', projectInfo: info, messageSent, receipt: matched.receipt ?? project.receipt }); return;
         }
         if (messageSent) {

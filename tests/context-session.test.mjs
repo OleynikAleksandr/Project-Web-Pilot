@@ -20,7 +20,8 @@ test('receipt requires a newly issued, same-project, same-session, acknowledged 
   assert.equal(receiptMatch(evidence(),project,attempt,now).kind,'confirmed');
   const mutations=[s=>{s.session_id='another';},s=>{s.latest.probe_id='old';s.last_receipt.probe_id='old';},
     s=>{s.latest.acknowledged=false;},s=>{s.latest.issued_at=1;},s=>{s.last_receipt.workspace='/another';},
-    s=>{s.last_receipt.probe_id='other';},s=>{s.latest.source='startup';},s=>{s.latest.facts.plan_revision=2;}];
+    s=>{s.last_receipt.probe_id='other';},s=>{s.latest.source='startup';},s=>{s.latest.facts.plan_revision=2;},
+    s=>{delete s.last_receipt.facts.task_id;},s=>{s.last_receipt=null;},s=>{s.latest.acknowledged_at=null;}];
   for(const mutate of mutations){const value=evidence();mutate(value);assert.equal(receiptMatch(value,project,attempt,now).kind,'waiting');}
 });
 
@@ -81,4 +82,32 @@ test('an unbound workspace cannot adopt a manually opened existing chat before i
   f.store.selected=()=>structuredClone(unbound);f.store.project=()=>structuredClone(unbound);
   f.controller.attach(unbound);await f.controller.tick();
   assert.equal(f.controller.state.phase,'chat-changed');assert.equal(f.sends(),0);
+});
+
+test('an acknowledged outdated packet permits an explicit refresh without resending an uncertain request',async()=>{
+  const f=controllerFixture({savedAttempt:structuredClone(attempt),statuses:[evidence(),evidence()]});
+  const inspect=f.store.inspect;f.store.inspect=async()=>({...await inspect(),planRevision:8});
+  f.inspection.messageSeen=true;
+  await f.controller.tick();
+  assert.equal(f.controller.state.phase,'stale');assert.equal(f.sends(),0);
+  assert.equal(f.saved.attempt.state,'acknowledged');
+  assert.equal(f.saved.receipt.facts.plan_revision,7);
+  await f.controller.retry();
+  assert.equal(f.sends(),1);assert.equal(f.saved.attempt.state,'sent');
+  assert.ok(f.saved.attempt.excludedProbeIds.includes('new'));
+});
+
+test('missing MCP tools, active drafts, generation and a late ACK have distinct recoverable states',async()=>{
+  const failed=controllerFixture();
+  failed.runtime.ensure=async()=>{throw Object.assign(new Error('Missing context tool'),{code:'MCP_TOOLS_MISSING'});};
+  await failed.controller.tick();assert.equal(failed.controller.state.error.code,'MCP_TOOLS_MISSING');assert.equal(failed.sends(),0);
+  failed.runtime.ensure=async()=>({});await failed.controller.retry();assert.equal(failed.sends(),1);
+  for(const [patch,phase] of [[{draftLength:7,draftMatches:false},'waiting-draft'],[{busy:true},'waiting-generation']]){
+    const f=controllerFixture();Object.assign(f.inspection,patch);await f.controller.tick();
+    assert.equal(f.controller.state.phase,phase);assert.equal(f.sends(),0);
+  }
+  const late=controllerFixture({savedAttempt:structuredClone(attempt)});late.controller.now=()=>now+180001;
+  await late.controller.tick();assert.equal(late.controller.state.phase,'ack-timeout');assert.equal(late.sends(),0);
+  late.runtime.contextStatus=async()=>evidence();await late.controller.tick();
+  assert.equal(late.controller.state.phase,'confirmed');assert.equal(late.sends(),0);
 });
