@@ -4,18 +4,19 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 50,
+  "plan_revision": 51,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
-  "objective": "Локальный macOS Web Pilot с встроенным ChatGPT, выбором проекта и полным контекстом в первом сообщении; агент сразу кратко подтверждает восстановление и описывает проект.",
+  "delivery_status": "IN_PROGRESS",
+  "objective": "Локальный macOS Web Pilot с встроенным ChatGPT, выбором проекта и полным контекстом в первом сообщении; агент сразу кратко подтверждает восстановление и описывает проект. Сайдбар сохраняет все созданные сессии workspace и позволяет выбирать их в раскрываемом дереве.",
   "acceptance_criteria": [
     "Полный канонический контекст передаёт приложение до первого ответа агента.",
     "Первый ответ кратко подтверждает восстановление и описывает выбранный проект без обязательного получения пакета через MCP и без hook/ACK оговорок.",
     "Привязки workspace/chat и неизвестный исход Send не создают дубли сообщений.",
-    "Реальный встроенный Work и повторный запуск проверены; пользовательская приёмка отдельно."
+    "Реальный встроенный Work и повторный запуск проверены; пользовательская приёмка отдельно.",
+    "Двойной клик по workspace раскрывает сессии; выбор открывает конкретный сохранённый чат."
   ],
   "approved_scope": {
     "functional_paths": [
@@ -650,6 +651,113 @@
         "task_id": "T017",
         "role": "implementation"
       }
+    },
+    {
+      "id": "T018",
+      "title": "Сохранять несколько сессий workspace",
+      "why": "Новый чат не должен заменять предыдущий.",
+      "dependencies": [],
+      "functional_paths": [
+        "src/workspace-session.mjs",
+        "tests/workspace-session.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [
+        "suite"
+      ],
+      "acceptance_criteria": [
+        "Каждый workspace хранит список сессий и выбранную сессию; новый чат добавляется в список.",
+        "Прежний формат переносится с резервной копией без потери сохранённого чата.",
+        "Нельзя открыть или изменить сессию чужого workspace; повторный запуск сохраняет список."
+      ],
+      "expected_commit_message": "feat: сохранять историю сессий workspace",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "web-pilot-prototype-001",
+        "task_id": "T018",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T019",
+      "title": "Добавить дерево сессий в сайдбар",
+      "why": "Выбирать любой чат проекта, а не только последний.",
+      "dependencies": [
+        "T018"
+      ],
+      "functional_paths": [
+        "src/main.mjs",
+        "src/preload.cjs",
+        "src/ui/sidebar.mjs",
+        "src/ui/index.html",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "acceptance_criteria": [
+        "Двойной клик по workspace раскрывает и сворачивает список его сессий.",
+        "Нажатие на сессию открывает именно её; новый чат остаётся в дереве вместе с прежними.",
+        "Названия и даты различают сессии; выбор и раскрытие сохраняются.",
+        "Переключение назад не повторяет отправку контекста и не смешивает состояния сессий."
+      ],
+      "file_limit_exception": "Дерево требует согласованных изменений renderer, разметки, двух сторон IPC и интеграционной проверки; это один пользовательский сценарий из пяти файлов.",
+      "expected_commit_message": "feat: выбирать сессии из дерева проектов",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "web-pilot-prototype-001",
+        "task_id": "T019",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T020",
+      "title": "Собрать и проверить дерево чатов",
+      "why": "Передать пользователю работающий выбор сессий.",
+      "dependencies": [
+        "T019"
+      ],
+      "functional_paths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "documentation_paths": [
+        "README.md",
+        "AGENTS.md",
+        "docs/PRODUCT.md",
+        "docs/WORKFLOW_START.md",
+        "docs/DECISIONS.md",
+        "docs/VERIFICATION.md",
+        "docs/architecture/ARCHITECTURE.md"
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "acceptance_criteria": [
+        "Новая локальная сборка показывает дерево и открывает выбранный реальный чат.",
+        "Повторный запуск сохраняет сессии; пользовательская инструкция актуальна."
+      ],
+      "expected_commit_message": "chore: собрать прототип с деревом сессий",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "web-pilot-prototype-001",
+        "task_id": "T020",
+        "role": "implementation"
+      }
     }
   ],
   "blocked_reason": null,
@@ -683,6 +791,11 @@
       "id": "inline-context-confirmation-20260911",
       "text": "Пользователь согласовал полный контекст в первом сообщении, очистку MCP от проверки hooks и обязательного ACK и короткий первый ответ: подтверждение восстановления плюс описание выбранного проекта. Поручил реализовать и пересобрать. Разрешено согласованное изменение Codex Local Mac для этой интеграции; WF001 сохраняется.",
       "recorded_at": "2026-09-11T09:32:26.851372+00:00"
+    },
+    {
+      "id": "workspace-session-tree",
+      "text": "Пользователь поручил сохранять несколько чатов/сессий под workspace, раскрывать дерево двойным кликом и выбирать конкретную сессию вместо только последней.",
+      "recorded_at": "2026-09-11T09:50:00Z"
     }
   ]
 }
@@ -692,14 +805,14 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 50
+Revision: 51
 
 ## Цель
 
-Локальный macOS Web Pilot с встроенным ChatGPT, выбором проекта и полным контекстом в первом сообщении; агент сразу кратко подтверждает восстановление и описывает проект.
+Локальный macOS Web Pilot с встроенным ChatGPT, выбором проекта и полным контекстом в первом сообщении; агент сразу кратко подтверждает восстановление и описывает проект. Сайдбар сохраняет все созданные сессии workspace и позволяет выбирать их в раскрываемом дереве.
 
 ## Критерии приёмки
 
@@ -707,6 +820,7 @@ Revision: 50
 - Первый ответ кратко подтверждает восстановление и описывает выбранный проект без обязательного получения пакета через MCP и без hook/ACK оговорок.
 - Привязки workspace/chat и неизвестный исход Send не создают дубли сообщений.
 - Реальный встроенный Work и повторный запуск проверены; пользовательская приёмка отдельно.
+- Двойной клик по workspace раскрывает сессии; выбор открывает конкретный сохранённый чат.
 
 ## Микрозадачи
 
@@ -778,6 +892,18 @@ Revision: 50
   - Git Commit: [DONE] chore: собрать прототип с прямой передачей контекста
   - Reference: web-pilot-prototype-001 / T017 / implementation
   - Файлы: package.json, package-lock.json, README.md, AGENTS.md, docs/PRODUCT.md, docs/WORKFLOW_START.md, docs/DECISIONS.md, docs/VERIFICATION.md, docs/SOURCE_WORKSPACES.md, docs/architecture/ARCHITECTURE.md
+- [TODO] T018: Сохранять несколько сессий workspace — Ожидает
+  - Git Commit: [PENDING] feat: сохранять историю сессий workspace
+  - Reference: web-pilot-prototype-001 / T018 / implementation
+  - Файлы: src/workspace-session.mjs, tests/workspace-session.test.mjs, docs/architecture/ARCHITECTURE.md, docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md
+- [TODO] T019: Добавить дерево сессий в сайдбар — Ожидает
+  - Git Commit: [PENDING] feat: выбирать сессии из дерева проектов
+  - Reference: web-pilot-prototype-001 / T019 / implementation
+  - Файлы: src/main.mjs, src/preload.cjs, src/ui/sidebar.mjs, src/ui/index.html, tests/electron-smoke.mjs, docs/architecture/ARCHITECTURE.md, docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md
+- [TODO] T020: Собрать и проверить дерево чатов — Ожидает
+  - Git Commit: [PENDING] chore: собрать прототип с деревом сессий
+  - Reference: web-pilot-prototype-001 / T020 / implementation
+  - Файлы: package.json, package-lock.json, README.md, AGENTS.md, docs/PRODUCT.md, docs/WORKFLOW_START.md, docs/DECISIONS.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 
 ## Context Pack For This Cycle
 
