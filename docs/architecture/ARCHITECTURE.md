@@ -2,7 +2,7 @@
 
 ## Состояние
 
-Это проект реализации, а не описание готового Project Web Pilot. Исходный workspace содержит Workflow Kit 1.1.0 и документы. Исполняемые компоненты нового приложения пока отсутствуют. Для реализации выбран Electron 44.3.0 с WebContentsView; профиль и проверки определены в T004.
+Реализован и собран локальный Project Web Pilot 0.1.0 для macOS arm64 на Electron 44.3.0 с WebContentsView. Реальный Work прошёл автоматическую отправку, MCP recover/ACK и отображение подтверждения; повторный запуск сохранил чат. Это первый прототип для пользовательского тестирования, с существующим внешним Codex Local Mac. Приёмка ожидается.
 
 ## Схема
 
@@ -62,9 +62,9 @@ MCP и tunnel могут обслуживать другие чаты. Суще�
 
 Точная карта файлов: [SOURCE_WORKSPACES.md](../SOURCE_WORKSPACES.md). Канонический порядок запуска и доставки: [CONTEXT_DELIVERY.md](../CONTEXT_DELIVERY.md).
 
-## Плановые файлы
+## Файлы реализации
 
-Имена `src/main.mjs`, `workspace-session.mjs`, `mcp-runtime.mjs`, `chatgpt-composer.mjs`, `context-session.mjs`, `src/ui/*` и `tests/*` в TODO задают первоначальное разделение задач. Это ещё не существующие файлы. Уточнение технических путей делается через plan:apply до их изменения. Дополнительный UI-фреймворк для простого проверочного сайдбара заранее не требуется.
+Реализация находится в `src/main.mjs`, `src/workspace-session.mjs`, `src/mcp-runtime.mjs`, `src/chatgpt-composer.mjs`, `src/context-session.mjs`, `src/preload.cjs` и `src/ui/*`. Поведенческие и интеграционные проверки — в `tests/*`. Сайдбар использует обычные HTML/CSS/JavaScript без UI-фреймворка. Новые пути включаются через plan:apply до изменения.
 
 ## Ограничение исследования compact
 

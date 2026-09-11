@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 38,
+  "plan_revision": 41,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Подготовить самодостаточный проект и первичный план; следующим этапом проверить локальное приложение с встроенным Chromium, выбором workspace, запуском MCP и автоматическим стартовым сообщением с подтверждением контекста.",
   "acceptance_criteria": [
     "Документы однозначно передают согласованную идею и источники; новый recovery packet COMPLETE",
@@ -484,7 +484,9 @@
         "docs/WORKFLOW_START.md",
         "docs/DECISIONS.md",
         "AGENTS.md",
-        "docs/architecture/ARCHITECTURE.md"
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/PRODUCT.md",
+        "docs/DOCUMENTATION_INDEX.md"
       ],
       "verification_ids": [
         "suite",
@@ -500,8 +502,8 @@
         "Публикация, упаковка для Windows и архивирование scope не выполняются автоматически"
       ],
       "expected_commit_message": "docs: подготовить прототип к приёмке",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-prototype-001",
         "task_id": "T013",
@@ -544,10 +546,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 38
+Revision: 41
 
 ## Цель
 
@@ -611,10 +613,10 @@ Revision: 38
   - Git Commit: [DONE] fix: обработать повторный старт и сбои восстановления
   - Reference: web-pilot-prototype-001 / T012 / implementation
   - Файлы: src/workspace-session.mjs, src/context-session.mjs, tests/context-session.test.mjs, docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
-- [TODO] T013: Подготовить результат прототипа к приёмке и следующий scope — Ожидает
-  - Git Commit: [PENDING] docs: подготовить прототип к приёмке
+- [DONE] T013: Подготовить результат прототипа к приёмке и следующий scope — Завершено
+  - Git Commit: [DONE] docs: подготовить прототип к приёмке
   - Reference: web-pilot-prototype-001 / T013 / implementation
-  - Файлы: README.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/DECISIONS.md, AGENTS.md, docs/architecture/ARCHITECTURE.md
+  - Файлы: README.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/DECISIONS.md, AGENTS.md, docs/architecture/ARCHITECTURE.md, docs/PRODUCT.md, docs/DOCUMENTATION_INDEX.md
 
 ## Context Pack For This Cycle
 
