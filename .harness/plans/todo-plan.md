@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 61,
+  "plan_revision": 62,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
@@ -848,7 +848,14 @@
       "functional_paths": [
         "resources/workspace-setup-worker.mjs",
         "src/workspace-setup.mjs",
-        "tests/workspace-setup.test.mjs"
+        "tests/workspace-setup.test.mjs",
+        "resources/workflow-kit/WORKFLOW.md",
+        "resources/workflow-kit/templates/PRODUCT.md",
+        "resources/workflow-kit/templates/ARCHITECTURE.md",
+        "resources/workflow-kit/templates/PLAN.md",
+        "resources/workflow-kit/templates/AGENTS.md",
+        "resources/workflow-kit/templates/START.md",
+        "tests/workflow-kit-source.test.mjs"
       ],
       "documentation_paths": [
         "docs/WORKSPACE_SETUP.md",
@@ -870,7 +877,8 @@
         "scope_id": "web-pilot-prototype-001",
         "task_id": "T022",
         "role": "implementation"
-      }
+      },
+      "file_limit_exception": "Завершение исходного импорта шестью Markdown-шаблонами и включение их в каталог вместе с адаптером и проверками; исходный WF001 неизменён."
     },
     {
       "id": "T023",
@@ -1002,7 +1010,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 61
+Revision: 62
 
 ## Цель
 
@@ -1107,7 +1115,7 @@ Revision: 61
 - [TODO] T022: Проверять и подготавливать workspace — Ожидает
   - Git Commit: [PENDING] feat: добавить проверку и подготовку workspace
   - Reference: web-pilot-prototype-001 / T022 / implementation
-  - Файлы: resources/workspace-setup-worker.mjs, src/workspace-setup.mjs, tests/workspace-setup.test.mjs, docs/WORKSPACE_SETUP.md, docs/DOCUMENTATION_INDEX.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+  - Файлы: resources/workspace-setup-worker.mjs, src/workspace-setup.mjs, tests/workspace-setup.test.mjs, resources/workflow-kit/WORKFLOW.md, resources/workflow-kit/templates/PRODUCT.md, resources/workflow-kit/templates/ARCHITECTURE.md, resources/workflow-kit/templates/PLAN.md, resources/workflow-kit/templates/AGENTS.md, resources/workflow-kit/templates/START.md, tests/workflow-kit-source.test.mjs, docs/WORKSPACE_SETUP.md, docs/DOCUMENTATION_INDEX.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T023: Добавить создание и подключение в интерфейс — Ожидает
   - Git Commit: [PENDING] feat: добавить создание и подключение проектов в сайдбар
   - Reference: web-pilot-prototype-001 / T023 / implementation
