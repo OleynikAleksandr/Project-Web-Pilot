@@ -4,19 +4,21 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 58,
+  "plan_revision": 59,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
-  "objective": "Локальный macOS Web Pilot с встроенным ChatGPT, выбором проекта и полным контекстом в первом сообщении; агент сразу кратко подтверждает восстановление и описывает проект. Сайдбар сохраняет все созданные сессии workspace и позволяет выбирать их в раскрываемом дереве.",
+  "delivery_status": "IN_PROGRESS",
+  "objective": "Локальный macOS Web Pilot с встроенным ChatGPT, выбором проекта и полным контекстом в первом сообщении; агент сразу кратко подтверждает восстановление и описывает проект. Сайдбар сохраняет все созданные сессии workspace и позволяет выбирать их в раскрываемом дереве. Создание нового workspace и подключение существующей папки повторяют Workflow Kit с проверкой структуры до открытия чата.",
   "acceptance_criteria": [
     "Полный канонический контекст передаёт приложение до первого ответа агента.",
     "Первый ответ кратко подтверждает восстановление и описывает выбранный проект без обязательного получения пакета через MCP и без hook/ACK оговорок.",
     "Привязки workspace/chat и неизвестный исход Send не создают дубли сообщений.",
     "Реальный встроенный Work и повторный запуск проверены; пользовательская приёмка отдельно.",
-    "Двойной клик по workspace раскрывает сессии; выбор открывает конкретный сохранённый чат."
+    "Двойной клик по workspace раскрывает сессии; выбор открывает конкретный сохранённый чат.",
+    "Пользователь может создать новый проект или подготовить существующую папку, сохранив её содержимое и историю.",
+    "Перед открытием проверяются комплект, план, команды и полный контекст; конфликты показаны без перезаписи."
   ],
   "approved_scope": {
     "functional_paths": [
@@ -35,7 +37,33 @@
       "src/preload.cjs",
       "src/ui/sidebar.mjs",
       ".gitignore",
-      "tests/electron-smoke.mjs"
+      "tests/electron-smoke.mjs",
+      "resources/workflow-kit/WORKFLOW.md",
+      "resources/workflow-kit/cli.mjs",
+      "resources/workflow-kit/install.mjs",
+      "resources/workflow-kit/lib/actions.mjs",
+      "resources/workflow-kit/lib/common.mjs",
+      "resources/workflow-kit/lib/git-hooks.mjs",
+      "resources/workflow-kit/lib/git.mjs",
+      "resources/workflow-kit/lib/installation-files.mjs",
+      "resources/workflow-kit/lib/installer.mjs",
+      "resources/workflow-kit/lib/plan.mjs",
+      "resources/workflow-kit/lib/platform.mjs",
+      "resources/workflow-kit/lib/recovery.mjs",
+      "resources/workflow-kit/lib/transaction.mjs",
+      "resources/workflow-kit/lib/validate.mjs",
+      "resources/workflow-kit/schemas/plan.schema.json",
+      "resources/workflow-kit/schemas/workflow.schema.json",
+      "resources/workflow-kit/templates/AGENTS.md",
+      "resources/workflow-kit/templates/ARCHITECTURE.md",
+      "resources/workflow-kit/templates/PLAN.md",
+      "resources/workflow-kit/templates/PRODUCT.md",
+      "resources/workflow-kit/templates/START.md",
+      "tests/workflow-kit-source.test.mjs",
+      "resources/workspace-setup-worker.mjs",
+      "src/workspace-setup.mjs",
+      "tests/workspace-setup.test.mjs",
+      "src/ui/workspace-setup.mjs"
     ],
     "documentation_paths": [
       "README.md",
@@ -47,7 +75,8 @@
       "docs/DECISIONS.md",
       "docs/VERIFICATION.md",
       "docs/WORKFLOW_START.md",
-      "docs/DOCUMENTATION_INDEX.md"
+      "docs/DOCUMENTATION_INDEX.md",
+      "docs/WORKSPACE_SETUP.md"
     ],
     "max_functional_files_per_task": 3
   },
@@ -758,6 +787,166 @@
         "task_id": "T020",
         "role": "implementation"
       }
+    },
+    {
+      "id": "T021",
+      "title": "Включить ядро подготовки Workflow Kit",
+      "why": "Повторно использовать исходный установщик без изменения WF001.",
+      "dependencies": [],
+      "functional_paths": [
+        "resources/workflow-kit/WORKFLOW.md",
+        "resources/workflow-kit/cli.mjs",
+        "resources/workflow-kit/install.mjs",
+        "resources/workflow-kit/lib/actions.mjs",
+        "resources/workflow-kit/lib/common.mjs",
+        "resources/workflow-kit/lib/git-hooks.mjs",
+        "resources/workflow-kit/lib/git.mjs",
+        "resources/workflow-kit/lib/installation-files.mjs",
+        "resources/workflow-kit/lib/installer.mjs",
+        "resources/workflow-kit/lib/plan.mjs",
+        "resources/workflow-kit/lib/platform.mjs",
+        "resources/workflow-kit/lib/recovery.mjs",
+        "resources/workflow-kit/lib/transaction.mjs",
+        "resources/workflow-kit/lib/validate.mjs",
+        "resources/workflow-kit/schemas/plan.schema.json",
+        "resources/workflow-kit/schemas/workflow.schema.json",
+        "resources/workflow-kit/templates/AGENTS.md",
+        "resources/workflow-kit/templates/ARCHITECTURE.md",
+        "resources/workflow-kit/templates/PLAN.md",
+        "resources/workflow-kit/templates/PRODUCT.md",
+        "resources/workflow-kit/templates/START.md",
+        "tests/workflow-kit-source.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/SOURCE_WORKSPACES.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [
+        "suite"
+      ],
+      "acceptance_criteria": [
+        "Исходные файлы скопированы без изменений, происхождение и SHA проверены."
+      ],
+      "expected_commit_message": "feat: включить ядро подготовки Workflow Kit",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "web-pilot-prototype-001",
+        "task_id": "T021",
+        "role": "implementation"
+      },
+      "file_limit_exception": "Атомарный импорт всего независимого ядра Workflow Kit и проверка точного состава; дробление нарушит работоспособность импорта."
+    },
+    {
+      "id": "T022",
+      "title": "Проверять и подготавливать workspace",
+      "why": "Создавать пустые проекты и сохранять существующие.",
+      "dependencies": [
+        "T021"
+      ],
+      "functional_paths": [
+        "resources/workspace-setup-worker.mjs",
+        "src/workspace-setup.mjs",
+        "tests/workspace-setup.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/WORKSPACE_SETUP.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [
+        "suite"
+      ],
+      "acceptance_criteria": [
+        "Предпросмотр, создание, подключение и диагностика проходят на реальных временных папках.",
+        "Старые рабочие установки открываются без переустановки; конфликт и изменившийся preview блокируют запись."
+      ],
+      "expected_commit_message": "feat: добавить проверку и подготовку workspace",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "web-pilot-prototype-001",
+        "task_id": "T022",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T023",
+      "title": "Добавить создание и подключение в интерфейс",
+      "why": "Пользователь видит результат проверки до открытия чата.",
+      "dependencies": [
+        "T022"
+      ],
+      "functional_paths": [
+        "src/main.mjs",
+        "src/preload.cjs",
+        "src/ui/index.html",
+        "src/ui/sidebar.mjs",
+        "src/ui/workspace-setup.mjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "docs/WORKSPACE_SETUP.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "acceptance_criteria": [
+        "Создать проект и Открыть папку доступны в приложении; подтверждение содержит путь и изменения.",
+        "Чат открывается только после успешной проверки; ошибки сохраняют прежнюю сессию."
+      ],
+      "expected_commit_message": "feat: добавить создание и подключение проектов в сайдбар",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "web-pilot-prototype-001",
+        "task_id": "T023",
+        "role": "implementation"
+      },
+      "file_limit_exception": "Единая интеграция main IPC, preload, формы, sidebar и обязательного Electron smoke требует шести согласованных файлов."
+    },
+    {
+      "id": "T024",
+      "title": "Собрать и проверить подготовку проектов",
+      "why": "Передать пользователю проверенное приложение.",
+      "dependencies": [
+        "T023"
+      ],
+      "functional_paths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "documentation_paths": [
+        "README.md",
+        "AGENTS.md",
+        "docs/PRODUCT.md",
+        "docs/WORKFLOW_START.md",
+        "docs/DECISIONS.md",
+        "docs/VERIFICATION.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/WORKSPACE_SETUP.md"
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "acceptance_criteria": [
+        "Локальная сборка содержит ядро и создаёт проект через реальный интерфейс.",
+        "Временный новый проект и существующая папка подключаются с сохранением файлов; инструкции актуальны."
+      ],
+      "expected_commit_message": "chore: собрать Web Pilot с подготовкой проектов",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "web-pilot-prototype-001",
+        "task_id": "T024",
+        "role": "implementation"
+      }
     }
   ],
   "blocked_reason": null,
@@ -796,6 +985,11 @@
       "id": "workspace-session-tree",
       "text": "Пользователь поручил сохранять несколько чатов/сессий под workspace, раскрывать дерево двойным кликом и выбирать конкретную сессию вместо только последней.",
       "recorded_at": "2026-09-11T09:50:00Z"
+    },
+    {
+      "id": "workflow-kit-create-connect",
+      "text": "Пользователь поручил реализовать создание и подключение workspace аналогично Project Workflow Kit: «Да, надо сделать все аналогично тому, как было сделано в Project Workflow Kit. Приступай».",
+      "recorded_at": "2026-09-11T10:08:43.610666+00:00"
     }
   ]
 }
@@ -805,14 +999,14 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 58
+Revision: 59
 
 ## Цель
 
-Локальный macOS Web Pilot с встроенным ChatGPT, выбором проекта и полным контекстом в первом сообщении; агент сразу кратко подтверждает восстановление и описывает проект. Сайдбар сохраняет все созданные сессии workspace и позволяет выбирать их в раскрываемом дереве.
+Локальный macOS Web Pilot с встроенным ChatGPT, выбором проекта и полным контекстом в первом сообщении; агент сразу кратко подтверждает восстановление и описывает проект. Сайдбар сохраняет все созданные сессии workspace и позволяет выбирать их в раскрываемом дереве. Создание нового workspace и подключение существующей папки повторяют Workflow Kit с проверкой структуры до открытия чата.
 
 ## Критерии приёмки
 
@@ -821,6 +1015,8 @@ Revision: 58
 - Привязки workspace/chat и неизвестный исход Send не создают дубли сообщений.
 - Реальный встроенный Work и повторный запуск проверены; пользовательская приёмка отдельно.
 - Двойной клик по workspace раскрывает сессии; выбор открывает конкретный сохранённый чат.
+- Пользователь может создать новый проект или подготовить существующую папку, сохранив её содержимое и историю.
+- Перед открытием проверяются комплект, план, команды и полный контекст; конфликты показаны без перезаписи.
 
 ## Микрозадачи
 
@@ -904,6 +1100,22 @@ Revision: 58
   - Git Commit: [DONE] chore: собрать прототип с деревом сессий
   - Reference: web-pilot-prototype-001 / T020 / implementation
   - Файлы: package.json, package-lock.json, README.md, AGENTS.md, docs/PRODUCT.md, docs/WORKFLOW_START.md, docs/DECISIONS.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
+- [TODO] T021: Включить ядро подготовки Workflow Kit — Ожидает
+  - Git Commit: [PENDING] feat: включить ядро подготовки Workflow Kit
+  - Reference: web-pilot-prototype-001 / T021 / implementation
+  - Файлы: resources/workflow-kit/WORKFLOW.md, resources/workflow-kit/cli.mjs, resources/workflow-kit/install.mjs, resources/workflow-kit/lib/actions.mjs, resources/workflow-kit/lib/common.mjs, resources/workflow-kit/lib/git-hooks.mjs, resources/workflow-kit/lib/git.mjs, resources/workflow-kit/lib/installation-files.mjs, resources/workflow-kit/lib/installer.mjs, resources/workflow-kit/lib/plan.mjs, resources/workflow-kit/lib/platform.mjs, resources/workflow-kit/lib/recovery.mjs, resources/workflow-kit/lib/transaction.mjs, resources/workflow-kit/lib/validate.mjs, resources/workflow-kit/schemas/plan.schema.json, resources/workflow-kit/schemas/workflow.schema.json, resources/workflow-kit/templates/AGENTS.md, resources/workflow-kit/templates/ARCHITECTURE.md, resources/workflow-kit/templates/PLAN.md, resources/workflow-kit/templates/PRODUCT.md, resources/workflow-kit/templates/START.md, tests/workflow-kit-source.test.mjs, docs/SOURCE_WORKSPACES.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+- [TODO] T022: Проверять и подготавливать workspace — Ожидает
+  - Git Commit: [PENDING] feat: добавить проверку и подготовку workspace
+  - Reference: web-pilot-prototype-001 / T022 / implementation
+  - Файлы: resources/workspace-setup-worker.mjs, src/workspace-setup.mjs, tests/workspace-setup.test.mjs, docs/WORKSPACE_SETUP.md, docs/DOCUMENTATION_INDEX.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+- [TODO] T023: Добавить создание и подключение в интерфейс — Ожидает
+  - Git Commit: [PENDING] feat: добавить создание и подключение проектов в сайдбар
+  - Reference: web-pilot-prototype-001 / T023 / implementation
+  - Файлы: src/main.mjs, src/preload.cjs, src/ui/index.html, src/ui/sidebar.mjs, src/ui/workspace-setup.mjs, tests/electron-smoke.mjs, docs/WORKSPACE_SETUP.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+- [TODO] T024: Собрать и проверить подготовку проектов — Ожидает
+  - Git Commit: [PENDING] chore: собрать Web Pilot с подготовкой проектов
+  - Reference: web-pilot-prototype-001 / T024 / implementation
+  - Файлы: package.json, package-lock.json, README.md, AGENTS.md, docs/PRODUCT.md, docs/WORKFLOW_START.md, docs/DECISIONS.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, docs/WORKSPACE_SETUP.md
 
 ## Context Pack For This Cycle
 
