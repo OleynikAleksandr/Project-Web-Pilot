@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 14,
+  "plan_revision": 15,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
@@ -214,7 +214,9 @@
         "docs/architecture/ARCHITECTURE.md",
         "docs/VERIFICATION.md"
       ],
-      "verification_ids": [],
+      "verification_ids": [
+        "syntax"
+      ],
       "id": "T005",
       "title": "Создать запускаемый каркас Chromium-приложения",
       "why": "Проверить самостоятельное окно и загрузку реального ChatGPT",
@@ -246,7 +248,9 @@
         "docs/architecture/ARCHITECTURE.md",
         "docs/VERIFICATION.md"
       ],
-      "verification_ids": [],
+      "verification_ids": [
+        "workspace"
+      ],
       "id": "T006",
       "title": "Добавить сайдбар и привязку workspace к чату",
       "why": "Сохранить выбранную папку и исключить смену контекста чужого чата",
@@ -277,7 +281,9 @@
         "docs/SOURCE_WORKSPACES.md",
         "docs/VERIFICATION.md"
       ],
-      "verification_ids": [],
+      "verification_ids": [
+        "runtime"
+      ],
       "id": "T007",
       "title": "Подключить управление существующим MCP и tunnel",
       "why": "Подготовить инструменты до первого сообщения модели",
@@ -307,7 +313,9 @@
         "docs/CONTEXT_DELIVERY.md",
         "docs/VERIFICATION.md"
       ],
-      "verification_ids": [],
+      "verification_ids": [
+        "composer"
+      ],
       "id": "T008",
       "title": "Реализовать отправку сообщения через поле ChatGPT",
       "why": "Проверить ключевой механизм оболочки",
@@ -338,7 +346,9 @@
         "docs/architecture/ARCHITECTURE.md",
         "docs/VERIFICATION.md"
       ],
-      "verification_ids": [],
+      "verification_ids": [
+        "context"
+      ],
       "id": "T009",
       "title": "Связать стартовое сообщение с recover и ACK",
       "why": "Получить проверяемое восстановление выбранного проекта",
@@ -371,7 +381,10 @@
         "docs/CONTEXT_DELIVERY.md",
         "docs/VERIFICATION.md"
       ],
-      "verification_ids": [],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
       "id": "T010",
       "title": "Соединить сайдбар, службы, браузер и состояние контекста",
       "why": "Получить одну пользовательскую цепочку",
@@ -399,7 +412,9 @@
         "docs/VERIFICATION.md",
         "docs/DECISIONS.md"
       ],
-      "verification_ids": [],
+      "verification_ids": [
+        "suite"
+      ],
       "id": "T011",
       "title": "Проверить вертикальный сценарий на реальном ChatGPT",
       "why": "Проверить основной риск до переноса двух кодовых баз",
@@ -431,7 +446,10 @@
         "docs/CONTEXT_DELIVERY.md",
         "docs/VERIFICATION.md"
       ],
-      "verification_ids": [],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
       "id": "T012",
       "title": "Проверить повторное открытие, ошибки и восстановление состояния",
       "why": "Сделать прототип пригодным для повторяемого старта",
@@ -462,7 +480,10 @@
         "AGENTS.md",
         "docs/architecture/ARCHITECTURE.md"
       ],
-      "verification_ids": [],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
       "id": "T013",
       "title": "Подготовить результат прототипа к приёмке и следующий scope",
       "why": "Закончить проверочный этап по фактическому результату",
@@ -520,7 +541,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 14
+Revision: 15
 
 ## Цель
 
