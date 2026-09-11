@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 57,
+  "plan_revision": 58,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
@@ -808,7 +808,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: READY_FOR_ACCEPTANCE
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 57
+Revision: 58
 
 ## Цель
 
