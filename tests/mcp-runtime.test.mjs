@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
-import { McpRuntime, LocalMcpClient, validateEndpoint } from '../src/mcp-runtime.mjs';
+import { createHash } from 'node:crypto';
+import { McpRuntime, LocalMcpClient, validateEndpoint, validateContextPacket } from '../src/mcp-runtime.mjs';
 
 const ready = { mcp: { running: true, owned: true, ready: true },
   tunnel: { running: true, owned: true, ready: true, configured: true }, mcp_url: 'http://127.0.0.1:17842/mcp' };
@@ -17,7 +18,7 @@ async function folder(t) {
   return fs.realpath(root);
 }
 
-const clientFactory = () => ({ initialize: async () => ({ serverName: 'Codex Local Mac', toolCount: 50 }) });
+const clientFactory = () => ({ initialize: async () => ({ serverName: 'Codex Local Mac', toolCount: 47 }) });
 
 test('ready shared services are reused, with explicit arguments and one concurrent initialization', async t => {
   const root = await folder(t); const calls = [];
@@ -49,14 +50,14 @@ test('foreign processes and unconfigured tunnel are never changed', async t => {
   }
 });
 
-test('HTTP JSON and streamed SSE response, session headers and read-only context call', async () => {
-  const requests=[];
+test('HTTP JSON and streamed SSE deliver the full packet with no agent receipt call', async () => {
+  const requests=[]; const packet=contextPacket();
   const fetchImpl=async (_url,options) => {
     const body=JSON.parse(options.body);requests.push({body,headers:options.headers});
     if(body.method==='notifications/initialized')return new Response(null,{status:202});
     const results={initialize:{serverInfo:{name:'Codex Local Mac'},protocolVersion:'2025-03-26'},
-      'tools/list':{tools:['bridge_status','workflow_context_recover','workflow_context_ack','workflow_context_status'].map(name=>({name}))},
-      'tools/call':{structuredContent:{workspace:'/project',session_id:'session',latest:null}}};
+      'tools/list':{tools:['bridge_status','workflow_context_recover'].map(name=>({name}))},
+      'tools/call':{structuredContent:packet}};
     const text=JSON.stringify({jsonrpc:'2.0',id:body.id,result:results[body.method]});
     if(body.method==='tools/call') {
       const bytes=new TextEncoder().encode(': keepalive\r\n\r\nevent: message\r\ndata: '+text+'\r\n\r\n');
@@ -65,9 +66,10 @@ test('HTTP JSON and streamed SSE response, session headers and read-only context
     return new Response(text,{headers:{'content-type':'application/json','mcp-session-id':'opaque-session'}});
   };
   const client=new LocalMcpClient(ready.mcp_url,{fetchImpl});
-  assert.deepEqual(await client.contextStatus('/project','session'),{workspace:'/project',session_id:'session',latest:null});
+  assert.deepEqual(await client.loadContext('/project'),packet);
   assert.equal(requests[2].headers['Mcp-Session-Id'],'opaque-session');
-  assert.equal(requests.at(-1).body.params.name,'workflow_context_status');
+  assert.equal(requests.at(-1).body.params.name,'workflow_context_recover');
+  assert.deepEqual(requests.at(-1).body.params.arguments,{workspace:'/project'});
   await assert.rejects(client.request('tools/call',{name:'workflow_context_ack'}),{code:'MCP_READ_ONLY'});
 });
 
@@ -79,4 +81,26 @@ test('non-local addresses and a server without context tools fail closed', async
     return new Response(JSON.stringify({id:body.id,result:body.method==='initialize'?{serverInfo:{name:'Codex Local Mac'},protocolVersion:'2025-03-26'}:{tools:[]}}),{headers:{'content-type':'application/json'}});
   }});
   await assert.rejects(client.initialize(),{code:'MCP_TOOLS_MISSING'});
+});
+
+function contextPacket() {
+  const context='Полный контекст\nЗадача и незавершённые изменения';
+  return {delivery_protocol:'inline-context-v1',ack_required:false,status:'ready',completeness:'COMPLETE',workspace:'/project',
+    context,context_bytes:Buffer.byteLength(context),context_sha256:createHash('sha256').update(context).digest('hex'),
+    generated_at_ms:Date.now(),signature:'snapshot',head:'head',objective:'Example',
+    facts:{project_id:'id',project_name:'Project',plan_revision:7,scope_id:'scope',execution_scope_status:'ACTIVE',delivery_status:'IN_PROGRESS',task_id:null,task_title:null}};
+}
+
+test('legacy diagnostics, another workspace, incomplete or modified context cannot be delivered',()=>{
+  assert.equal(validateContextPacket(contextPacket(),'/project').facts.plan_revision,7);
+  for(const [mutate,code] of [
+    [p=>delete p.delivery_protocol,'MCP_UPDATE_REQUIRED'],
+    [p=>p.workspace='/other','MCP_CONTEXT_MISMATCH'],
+    [p=>delete p.facts.task_id,'MCP_CONTEXT_INCOMPLETE'],
+    [p=>p.context+=' extra','MCP_CONTEXT_DAMAGED'],
+    [p=>p.context_bytes=1,'MCP_CONTEXT_DAMAGED'],
+    [p=>p.completeness='PARTIAL','MCP_CONTEXT_INCOMPLETE'],
+    [p=>p.challenge='old-probe','MCP_CONTEXT_INCOMPLETE'],
+    [p=>p.context='я'.repeat(100000),'MCP_CONTEXT_TOO_LARGE'],
+  ]) { const packet=contextPacket();mutate(packet);assert.throws(()=>validateContextPacket(packet,'/project'),{code}); }
 });

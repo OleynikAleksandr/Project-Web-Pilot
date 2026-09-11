@@ -1,13 +1,38 @@
 import { execFile as execFileCallback } from 'node:child_process';
 import { promisify } from 'node:util';
+import { createHash } from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
 const execFile = promisify(execFileCallback);
-const requiredTools = ['bridge_status', 'workflow_context_recover', 'workflow_context_ack', 'workflow_context_status'];
+const requiredTools = ['bridge_status', 'workflow_context_recover'];
+export const CONTEXT_PROTOCOL = 'inline-context-v1';
 
 export class RuntimeError extends Error {
   constructor(code, message) { super(message); this.code = code; }
+}
+
+export function validateContextPacket(packet, workspace) {
+  if (packet?.delivery_protocol !== CONTEXT_PROTOCOL || packet.ack_required !== false) {
+    throw new RuntimeError('MCP_UPDATE_REQUIRED', 'Нужна обновлённая версия Codex Local Mac с прямой передачей контекста.');
+  }
+  if (packet.workspace !== workspace) throw new RuntimeError('MCP_CONTEXT_MISMATCH', 'Получен контекст другой папки.');
+  const facts = packet.facts;
+  const factNames = ['project_id', 'project_name', 'plan_revision', 'scope_id', 'execution_scope_status', 'delivery_status', 'task_id', 'task_title'];
+  if (packet.status !== 'ready' || packet.completeness !== 'COMPLETE' || typeof packet.context !== 'string'
+      || !packet.context.trim() || typeof packet.signature !== 'string' || !packet.signature
+      || !facts || factNames.some(key => !(key in facts)) || Object.keys(facts).length !== factNames.length
+      || typeof facts.project_id !== 'string' || !facts.project_id || typeof facts.project_name !== 'string'
+      || !Number.isSafeInteger(facts.plan_revision) || facts.plan_revision < 0
+      || !Number.isFinite(packet.generated_at_ms) || ['probe_id', 'challenge'].some(key => key in packet)) {
+    throw new RuntimeError('MCP_CONTEXT_INCOMPLETE', 'Получен неполный пакет контекста.');
+  }
+  const bytes = Buffer.byteLength(packet.context, 'utf8');
+  if (bytes > 180000) throw new RuntimeError('MCP_CONTEXT_TOO_LARGE', 'Пакет контекста слишком велик. Нужно уменьшить его состав в Workflow Kit.');
+  if (bytes !== packet.context_bytes || createHash('sha256').update(packet.context, 'utf8').digest('hex') !== packet.context_sha256) {
+    throw new RuntimeError('MCP_CONTEXT_DAMAGED', 'Полный текст контекста не прошёл проверку целостности.');
+  }
+  return packet;
 }
 
 export function validateEndpoint(value) {
@@ -72,8 +97,8 @@ export class LocalMcpClient {
 
   async request(method, params = {}) {
     if (!['initialize', 'notifications/initialized', 'tools/list', 'tools/call'].includes(method)
-        || (method === 'tools/call' && params.name !== 'workflow_context_status')) {
-      throw new RuntimeError('MCP_READ_ONLY', 'Оболочка может только читать подтверждение контекста.');
+        || (method === 'tools/call' && params.name !== 'workflow_context_recover')) {
+      throw new RuntimeError('MCP_READ_ONLY', 'Оболочка может только получать полный контекст проекта.');
     }
     const notification = method.startsWith('notifications/');
     const id = notification ? undefined : ++this.sequence;
@@ -84,7 +109,7 @@ export class LocalMcpClient {
     try {
       response = await this.fetch(this.endpoint, { method: 'POST', headers,
         body: JSON.stringify({ jsonrpc: '2.0', ...(id === undefined ? {} : { id }), method, params }),
-        signal: AbortSignal.timeout(this.timeoutMs), redirect: 'error' });
+        signal: AbortSignal.timeout(params.name === 'workflow_context_recover' ? Math.max(this.timeoutMs, 35000) : this.timeoutMs), redirect: 'error' });
       if (method === 'initialize') this.sessionId = response.headers.get('mcp-session-id');
       const message = await responseMessage(response, id);
       if (message?.error) throw new RuntimeError('MCP_RPC_ERROR', String(message.error.message ?? 'Ошибка MCP.'));
@@ -98,7 +123,7 @@ export class LocalMcpClient {
   async initialize() {
     if (this.ready) return this.ready;
     const init = await this.request('initialize', { protocolVersion: this.protocolVersion,
-      capabilities: {}, clientInfo: { name: 'Project Web Pilot', version: '0.1.0' } });
+      capabilities: {}, clientInfo: { name: 'Project Web Pilot', version: '0.2.0' } });
     if (init?.serverInfo?.name !== 'Codex Local Mac') {
       throw new RuntimeError('MCP_SERVER_MISMATCH', 'Локальный адрес занят другим MCP-сервером.');
     }
@@ -121,22 +146,21 @@ export class LocalMcpClient {
     return this.ready;
   }
 
-  async contextStatus(workspace, sessionId) {
-    if (!path.isAbsolute(workspace) || typeof sessionId !== 'string' || !sessionId) throw new RuntimeError('MCP_CONTEXT_REQUIRED', 'Не выбраны проект и сессия.');
+  async loadContext(workspace) {
+    if (!path.isAbsolute(workspace)) throw new RuntimeError('MCP_CONTEXT_REQUIRED', 'Не выбран проект.');
     await this.initialize();
-    const result = await this.request('tools/call', { name: 'workflow_context_status',
-      arguments: { workspace, session_id: sessionId } });
-    if (result?.isError) throw new RuntimeError('MCP_STATUS_ERROR', 'MCP не смог прочитать состояние выбранного проекта.');
+    const result = await this.request('tools/call', { name: 'workflow_context_recover', arguments: { workspace } });
+    if (result?.isError) throw new RuntimeError('MCP_CONTEXT_ERROR', 'MCP не смог получить полный контекст проекта. Проверьте выбранную папку и версию Codex Local Mac.');
     let data = result?.structuredContent;
     if (data?.result && !data.workspace) data = data.result;
     if (!data?.workspace) {
       try { data = JSON.parse(result?.content?.find(item => item.type === 'text')?.text ?? ''); } catch {
-        throw new RuntimeError('MCP_STATUS_INVALID', 'Получен непонятный ответ проверки контекста.');
+        throw new RuntimeError('MCP_CONTEXT_INVALID', 'Получен непонятный ответ с контекстом.');
       }
     }
-    if (data.workspace !== workspace || data.session_id !== sessionId) throw new RuntimeError('MCP_CONTEXT_MISMATCH', 'Получен статус другого проекта или чата.');
-    return data;
+    return validateContextPacket(data, workspace);
   }
+
 }
 
 export async function findRuntimeFolder(input) {
@@ -207,8 +231,8 @@ export class McpRuntime {
     return { ...status, connection };
   }
 
-  async contextStatus(workspace, sessionId) {
+  async loadContext(workspace) {
     if (!this.client) await this.ensure();
-    return this.client.contextStatus(workspace, sessionId);
+    return this.client.loadContext(workspace);
   }
 }

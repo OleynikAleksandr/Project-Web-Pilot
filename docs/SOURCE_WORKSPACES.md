@@ -7,7 +7,7 @@
 | Проект | Абсолютный путь | Проверенный HEAD |
 | --- | --- | --- |
 | Project Workflow Kit | `/Users/oleksandroliinyk/VSCODE/WF001` | `20260a0cebd825c1d0415070d9eca6e1b1585fd4` |
-| Codex Local Mac | `/Users/oleksandroliinyk/VSCODE/Codex Local Mac` | `1d0ddef03c6d6af0dd3167831a20296307e2d930` |
+| Codex Local Mac | `/Users/oleksandroliinyk/VSCODE/Codex Local Mac` | `20ba452745ab50fc9bfa722a7b8fd34c8a42024a` — согласованное упрощение контекста |
 | Новый целевой проект | `/Users/oleksandroliinyk/VSCODE/Project Web Pilot` | Начальный bootstrap `08e138789734cc3ea61be3fb078d067d2676cbb5`; текущий HEAD читать из Git |
 
 Project ID нового проекта: `cf944136-d1fc-4bd5-9ea0-e46d1fe230e7`. В старых документах Codex Local Mac может называться `002`: папка была переименована пользователем. Для новых команд использовать текущий явный путь, не историческое имя.
@@ -41,16 +41,16 @@ Project ID нового проекта: `cf944136-d1fc-4bd5-9ea0-e46d1fe230e7`. 
 | [Архитектура](</Users/oleksandroliinyk/VSCODE/Codex Local Mac/docs/architecture/ARCHITECTURE.md>) | Python MCP, loopback и secure tunnel |
 | [Настройка Mac](</Users/oleksandroliinyk/VSCODE/Codex Local Mac/docs/MACOS_SETUP.md>) | Зависимости, подключение ChatGPT, управление службами |
 | [Приёмка](</Users/oleksandroliinyk/VSCODE/Codex Local Mac/docs/ACCEPTANCE.md>) | Реальные локальные и Safari-проверки |
-| [Проверка контекста](</Users/oleksandroliinyk/VSCODE/Codex Local Mac/docs/CONTEXT_PROBE.md>) | Уже реализованный recovery/ACK, положительный и отрицательный эксперименты |
+| [Проверка контекста](</Users/oleksandroliinyk/VSCODE/Codex Local Mac/docs/CONTEXT_PROBE.md>) | Полный read-only пакет и история отменённой диагностики |
 | [Канонический MCP skill](</Users/oleksandroliinyk/VSCODE/Codex Local Mac/mac-codex-local/skills/local-computer/SKILL.md>) | Последовательность действий агента и пределы доказательств |
 | [Управление службами](</Users/oleksandroliinyk/VSCODE/Codex Local Mac/mac-codex-local/control.py>) | setup/start/status/stop, readiness и владение процессами |
-| [MCP tools](</Users/oleksandroliinyk/VSCODE/Codex Local Mac/mac-codex-local/mcp/bridge_mcp.py>) | Сервер, tool schemas, instructions и четыре контекстных инструмента |
-| [ContextProbe](</Users/oleksandroliinyk/VSCODE/Codex Local Mac/mac-codex-local/server/context_probe.py>) | Полный пакет, свежесть, facts/readback и журнал ACK |
+| [MCP tools](</Users/oleksandroliinyk/VSCODE/Codex Local Mac/mac-codex-local/mcp/bridge_mcp.py>) | Сервер, tool schemas, instructions и read-only контекст |
+| [ContextPacket](</Users/oleksandroliinyk/VSCODE/Codex Local Mac/mac-codex-local/server/context_packet.py>) | Полный пакет, facts, размер и SHA-256 без журнала ACK |
 | [Файлы и процессы](</Users/oleksandroliinyk/VSCODE/Codex Local Mac/mac-codex-local/server/bridge_server.py>) | Основной bridge runtime |
 | [Локальные исправления workflow](</Users/oleksandroliinyk/VSCODE/Codex Local Mac/docs/WORKFLOW_FIXES.md>) | История исправления plan:apply и незавершённых транзакций |
 | [Windows-комплект](</Users/oleksandroliinyk/VSCODE/Codex Local Mac/Windows-Codex-Local/START_HERE.md>) | Отдельный переносимый источник для будущего Windows-этапа |
 
-Текущий macOS MCP публикует 50 tools: 46 основных и workflow_context_recover/ack/status/hook. Ранние разделы документации с числом 46 описывают прежний этап. Перед реализацией проверить текущий tools/list. Python-окружение находится в `mac-codex-local/.venv`, требования — `mac-codex-local/requirements.txt`; их не копировать целиком в Git.
+Текущий macOS MCP публикует 47 tools: 46 основных и read-only workflow_context_recover. Экспериментальные ACK/status/hook tools удалены по поручению пользователя 11.09.2026. Ранние разделы с числами 46 и 50 описывают прежние этапы. Перед реализацией проверить текущий tools/list. Python-окружение находится в `mac-codex-local/.venv`, требования — `mac-codex-local/requirements.txt`; их не копировать целиком в Git.
 
 Локальный endpoint текущей конфигурации — `http://127.0.0.1:17842/mcp`; service manager также проверяет tunnel readiness. Команды control.py возвращают JSON; проверять exit code и содержимое, не только наличие процесса. Пример read-only диагностики существующей установки:
 
@@ -63,7 +63,7 @@ Project ID нового проекта: `cf944136-d1fc-4bd5-9ea0-e46d1fe230e7`. 
 
 ## Правила переиспользования
 
-Сейчас источники нужны для чтения. Любое перенесение кода — отдельная задача нового плана после проверки прототипа. Для каждого перенесённого блока фиксировать repo/path/SHA и изменения, учитывать лицензии. Не делать скрытые изменения в оригиналах, не копировать .git, .venv, node_modules, runtime-состояние, tokens, cookies и ключи. Для переносимой поставки зависимость от абсолютных путей компьютера должна быть заменена явной упаковкой; прототип пока честно использует существующую установку.
+WF001 остаётся источником для чтения. Пользователь разрешил согласованно изменить Codex Local Mac для прямой передачи контекста и убрать hook/ACK диагностику; это сделано задачей T018 исходного проекта. Перенос остальных модулей остаётся отдельной задачей. Для каждого перенесённого блока фиксировать repo/path/SHA и изменения, учитывать лицензии. Не делать скрытые изменения в оригиналах, не копировать .git, .venv, node_modules, runtime-состояние, tokens, cookies и ключи. Для переносимой поставки зависимость от абсолютных путей компьютера должна быть заменена явной упаковкой; прототип пока честно использует существующую установку.
 
 ## Официальные технические источники
 
@@ -83,6 +83,10 @@ Project ID нового проекта: `cf944136-d1fc-4bd5-9ea0-e46d1fe230e7`. 
 
 Официальные hooks-документы не являются доказательством, что личное Web Work подключение пользователя принимает hook bundle. В нашем просмотренном UI такого способа не было; подробности и контрольные эксперименты сохранены в источнике CONTEXT_PROBE.md.
 
-## Проверка подключения в T007
+## Историческая проверка подключения в T007
 
 11.09.2026 актуальный initialize вернул Codex Local Mac, 50 tools; server instructions содержат полный текущий local-computer/SKILL.md. Описания и параметры recover/ack/status/hook совпадают с исходным backend: source=agent_request, точный readback, ACK только из пакета, status без challenge. Глобальные и проектные инструкции не добавляют альтернативной последовательности для этого сценария. Живые службы использованы с прежними PID: MCP 63546, tunnel 63553; оба ready. Новая оболочка не меняла исходники и не обновляла подключение аккаунта.
+
+## Обновление T014
+
+Новый фактический snapshot после перезапуска MCP: 47 tools, workflow_context_recover(workspace), readOnlyHint=true, protocol=inline-context-v1. Новый клиент получил полный WF001 (12531 UTF-8 байт) и сверил SHA-256. Tunnel сохранил свой процесс. Протокол server instructions, полного Skill, описаний инструментов и backend согласован; глобальные инструкции не добавляют альтернативного порядка. Старые Web-чаты проверяются отдельно от нового snapshot.

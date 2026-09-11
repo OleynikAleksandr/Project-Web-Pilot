@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 42,
+  "plan_revision": 44,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
@@ -536,8 +536,8 @@
         "Старый probe/ACK контракт отклоняется; агенту не поручается повторно запрашивать контекст."
       ],
       "expected_commit_message": "feat: получать полный контекст до старта чата",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-prototype-001",
         "task_id": "T014",
@@ -695,7 +695,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 42
+Revision: 44
 
 ## Цель
 
@@ -762,8 +762,8 @@ Revision: 42
   - Git Commit: [DONE] docs: подготовить прототип к приёмке
   - Reference: web-pilot-prototype-001 / T013 / implementation
   - Файлы: README.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/DECISIONS.md, AGENTS.md, docs/architecture/ARCHITECTURE.md, docs/PRODUCT.md, docs/DOCUMENTATION_INDEX.md
-- [TODO] T014: Получать полный контекст в приложении — Ожидает
-  - Git Commit: [PENDING] feat: получать полный контекст до старта чата
+- [DONE] T014: Получать полный контекст в приложении — Завершено
+  - Git Commit: [DONE] feat: получать полный контекст до старта чата
   - Reference: web-pilot-prototype-001 / T014 / implementation
   - Файлы: src/mcp-runtime.mjs, tests/mcp-runtime.test.mjs, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md, docs/SOURCE_WORKSPACES.md, docs/VERIFICATION.md, docs/DECISIONS.md, AGENTS.md
 - [TODO] T015: Передавать контекст в первом сообщении — Ожидает
