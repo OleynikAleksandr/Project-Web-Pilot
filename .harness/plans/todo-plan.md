@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 9,
+  "plan_revision": 10,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
@@ -54,9 +54,27 @@
   "context_pack": {
     "documents": [
       {
-        "path": "docs/PRODUCT.md",
+        "path": "AGENTS.md",
         "heading_path": [
-          "Продукт"
+          "Project Web Pilot — границы разработки"
+        ],
+        "required": true,
+        "revision": "WORKTREE"
+      },
+      {
+        "path": "docs/WORKFLOW_START.md",
+        "heading_path": [
+          "Начало работы",
+          "Опорный контекст новой сессии"
+        ],
+        "required": true,
+        "revision": "WORKTREE"
+      },
+      {
+        "path": "docs/CONTEXT_DELIVERY.md",
+        "heading_path": [
+          "Передача контекста",
+          "Каноническая последовательность"
         ],
         "required": true,
         "revision": "WORKTREE"
@@ -165,8 +183,8 @@
       "title": "Уточнить профиль прототипа и подключить проверки",
       "why": "Подготовить исполнимую конфигурацию до функциональных задач",
       "acceptance_criteria": [
-        "После поручения начать реализацию проверить текущую версию Electron и выбрать минимальный набор зависимостей",
-        "Между задачами применить DEVELOPMENT и реальные проверки через config:apply, затем назначить verification_ids задачам через plan:apply",
+        "После поручения начать реализацию проверить текущую версию Electron и определить минимальный набор зависимостей",
+        "Документировать полную конфигурацию и реальные проверки, завершить T004; затем между задачами применить DEVELOPMENT через config:apply и назначить verification_ids через plan:apply до начала T005",
         "Зафиксировать выбранные версии и команды, не объявлять пустую suite успешной"
       ],
       "expected_commit_message": "docs: определить профиль и проверки прототипа",
@@ -459,17 +477,17 @@
     {
       "id": "scope-boundary",
       "text": "Сейчас разрешена подготовка документации и плана для новой сессии. Приложение в этой сессии не реализовывать.",
-      "recorded_at": "2026-09-11T08:00:00Z"
+      "recorded_at": "2026-09-11T08:19:46.877Z"
     },
     {
       "id": "embedded-browser",
       "text": "Пользователь выбрал встроенный Chromium в одном окне с левым сайдбаром; модель работает через веб-аккаунт ChatGPT и локальный MCP.",
-      "recorded_at": "2026-09-11T08:00:00Z"
+      "recorded_at": "2026-09-11T08:19:46.877Z"
     },
     {
       "id": "startup-message",
       "text": "Оболочка вызывает собственный стартовый сценарий и сама вставляет и отправляет сообщение в пользовательское поле ChatGPT с workspace и задачей; реальный autocompact остаётся отдельным вопросом.",
-      "recorded_at": "2026-09-11T08:00:00Z"
+      "recorded_at": "2026-09-11T08:19:46.877Z"
     },
     {
       "id": "13ce9bc7-f80c-4bd4-9e89-83ef1378107c",
@@ -487,7 +505,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 9
+Revision: 10
 
 ## Цель
 
@@ -558,6 +576,8 @@ Revision: 9
 
 ## Context Pack For This Cycle
 
-- docs/PRODUCT.md → Продукт
+- AGENTS.md → Project Web Pilot — границы разработки
+- docs/WORKFLOW_START.md → Начало работы / Опорный контекст новой сессии
+- docs/CONTEXT_DELIVERY.md → Передача контекста / Каноническая последовательность
 
 Служебные состояния меняются только командами workflow. Приёмка не архивирует scope.
