@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 66,
+  "plan_revision": 69,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Локальный macOS Web Pilot с встроенным ChatGPT, выбором проекта и полным контекстом в первом сообщении; агент сразу кратко подтверждает восстановление и описывает проект. Сайдбар сохраняет все созданные сессии workspace и позволяет выбирать их в раскрываемом дереве. Создание нового workspace и подключение существующей папки повторяют Workflow Kit с проверкой структуры до открытия чата.",
   "acceptance_criteria": [
     "Полный канонический контекст передаёт приложение до первого ответа агента.",
@@ -937,7 +937,9 @@
         "docs/DECISIONS.md",
         "docs/VERIFICATION.md",
         "docs/architecture/ARCHITECTURE.md",
-        "docs/WORKSPACE_SETUP.md"
+        "docs/WORKSPACE_SETUP.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/DOCUMENTATION_INDEX.md"
       ],
       "verification_ids": [
         "suite",
@@ -948,8 +950,8 @@
         "Временный новый проект и существующая папка подключаются с сохранением файлов; инструкции актуальны."
       ],
       "expected_commit_message": "chore: собрать Web Pilot с подготовкой проектов",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-prototype-001",
         "task_id": "T024",
@@ -1007,10 +1009,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 66
+Revision: 69
 
 ## Цель
 
@@ -1120,10 +1122,10 @@ Revision: 66
   - Git Commit: [DONE] feat: добавить создание и подключение проектов в сайдбар
   - Reference: web-pilot-prototype-001 / T023 / implementation
   - Файлы: src/main.mjs, src/preload.cjs, src/ui/index.html, src/ui/sidebar.mjs, src/ui/workspace-setup.mjs, tests/electron-smoke.mjs, docs/WORKSPACE_SETUP.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T024: Собрать и проверить подготовку проектов — Ожидает
-  - Git Commit: [PENDING] chore: собрать Web Pilot с подготовкой проектов
+- [DONE] T024: Собрать и проверить подготовку проектов — Завершено
+  - Git Commit: [DONE] chore: собрать Web Pilot с подготовкой проектов
   - Reference: web-pilot-prototype-001 / T024 / implementation
-  - Файлы: package.json, package-lock.json, README.md, AGENTS.md, docs/PRODUCT.md, docs/WORKFLOW_START.md, docs/DECISIONS.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, docs/WORKSPACE_SETUP.md
+  - Файлы: package.json, package-lock.json, README.md, AGENTS.md, docs/PRODUCT.md, docs/WORKFLOW_START.md, docs/DECISIONS.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, docs/WORKSPACE_SETUP.md, docs/CONTEXT_DELIVERY.md, docs/DOCUMENTATION_INDEX.md
 
 ## Context Pack For This Cycle
 
