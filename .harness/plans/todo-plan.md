@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 76,
+  "plan_revision": 78,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Локальный macOS Web Pilot с встроенным ChatGPT, выбором проекта и полным контекстом в первом сообщении; агент сразу кратко подтверждает восстановление и описывает проект. Сайдбар сохраняет все созданные сессии workspace и позволяет выбирать их в раскрываемом дереве. Создание нового workspace и подключение существующей папки повторяют Workflow Kit с проверкой структуры до открытия чата. Архив workspace доступен в настройках через шестерёнку справа от подключения; проекты возвращаются в активные либо удаляются с диска вместе с локальными записями сессий. Облачные чаты сохраняются.",
   "acceptance_criteria": [
     "Полный канонический контекст передаёт приложение до первого ответа агента.",
@@ -1096,8 +1096,8 @@
         "Проверки пройдены, документация актуальна, облачные чаты не удалены."
       ],
       "expected_commit_message": "chore: собрать Web Pilot с архивом проектов",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-prototype-001",
         "task_id": "T028",
@@ -1160,10 +1160,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 76
+Revision: 78
 
 ## Цель
 
@@ -1291,8 +1291,8 @@ Revision: 76
   - Git Commit: [DONE] feat: добавить архив в настройки сайдбара
   - Reference: web-pilot-prototype-001 / T027 / implementation
   - Файлы: src/main.mjs, src/preload.cjs, src/ui/index.html, src/ui/sidebar.mjs, src/ui/project-archive.mjs, tests/electron-smoke.mjs, docs/PROJECT_ARCHIVE.md, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T028: Собрать приложение с архивом — Ожидает
-  - Git Commit: [PENDING] chore: собрать Web Pilot с архивом проектов
+- [DONE] T028: Собрать приложение с архивом — Завершено
+  - Git Commit: [DONE] chore: собрать Web Pilot с архивом проектов
   - Reference: web-pilot-prototype-001 / T028 / implementation
   - Файлы: package.json, package-lock.json, README.md, AGENTS.md, docs/PRODUCT.md, docs/WORKFLOW_START.md, docs/DECISIONS.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, docs/PROJECT_ARCHIVE.md
 
