@@ -4,9 +4,9 @@
   "stack": null,
   "checks": [],
   "budget": {
-    "soft_tokens": 6000,
-    "hard_tokens": 10000,
-    "hard_bytes": 49152
+    "soft_tokens": 16000,
+    "hard_tokens": 32000,
+    "hard_bytes": 65536
   },
   "documentation": {
     "index": "docs/DOCUMENTATION_INDEX.md",
