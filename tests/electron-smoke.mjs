@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { randomUUID, createHash } from 'node:crypto';
+import { createHash } from 'node:crypto';
 import { readWorkspace, WorkspaceSessions } from '../src/workspace-session.mjs';
 
 let packetLoads = 0;
@@ -53,16 +53,22 @@ async function waitFor(predicate, description, snapshot) {
 export async function run({ app, window, browser, sidebar, store, controller, selectWorkspace, snapshot, assertLocalSender, dataDir }) {
   assert.equal(app.isPackaged, false, 'Fixtures never run from a packaged app');
   const workspace = path.join(dataDir, 'Тестовый проект с пробелами');
-  await fs.mkdir(path.join(workspace, '.harness/plans'), { recursive: true });
-  await fs.mkdir(path.join(workspace, 'scripts'), { recursive: true });
-  await fs.writeFile(path.join(workspace, 'scripts/workflow.mjs'), '// Test fixture only');
-  const plan = { schema_version: 1, project_id: randomUUID(), project_name: 'Тестовый проект', plan_revision: 7,
-    scope_id: 'fixture-scope', execution_scope_status: 'ACTIVE', delivery_status: 'IN_PROGRESS', current_task_id: null,
-    tasks: [{ id: 'T001', title: 'Проверить fixture', commit_status: 'PENDING' }] };
-  await fs.writeFile(path.join(workspace, '.harness/plans/todo-plan.md'),
-    '<!-- workflow-state:begin -->\n```json\n' + JSON.stringify(plan) + '\n```\n<!-- workflow-state:end -->');
   await waitFor(() => sidebar.executeJavaScript('typeof window.webPilot === "object"'), 'local IPC ready', snapshot);
-  await selectWorkspace(workspace);
+  const previewNew = async () => {
+    await sidebar.executeJavaScript('document.getElementById("create-workspace").click()');
+    await waitFor(() => snapshot().setup?.phase === 'form', 'new workspace form', snapshot);
+    await sidebar.executeJavaScript(`document.getElementById('setup-name').value='Тестовый проект с пробелами'; document.getElementById('setup-preview').click()`);
+    await waitFor(() => snapshot().setup?.phase === 'preview', 'new workspace preview', snapshot);
+  };
+  await previewNew();
+  assert.equal(snapshot().setup.action, 'install'); assert.equal(packetLoads, 0); assert.equal(store.selected(), null);
+  await assert.rejects(fs.stat(workspace), { code: 'ENOENT' });
+  assert.ok(snapshot().setup.files.some(f => f.path === 'AGENTS.md'));
+  await sidebar.executeJavaScript('document.getElementById("setup-cancel").click()');
+  await waitFor(() => !snapshot().setup, 'cancel without creating', snapshot);
+  await assert.rejects(fs.stat(workspace), { code: 'ENOENT' });
+  await previewNew();
+  await sidebar.executeJavaScript('document.getElementById("setup-apply").click()');
   await waitFor(async () => {
     if (snapshot().context.phase === 'waiting-draft') {
       const actual = await browser.executeJavaScript('document.getElementById("prompt-textarea").innerText');
@@ -90,7 +96,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(prefs.nodeIntegration, false); assert.equal(prefs.contextIsolation, true); assert.equal(prefs.sandbox, true);
   assert.throws(() => assertLocalSender({ sender: browser, senderFrame: browser.mainFrame }), { code: 'IPC_FORBIDDEN' });
   assert.equal(await sidebar.executeJavaScript('document.getElementById("context-title").textContent'), 'Контекст передан');
-  assert.equal(await sidebar.executeJavaScript('document.getElementById("workspace-name").textContent'), 'Тестовый проект');
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("workspace-name").textContent'), 'Тестовый проект с пробелами');
   const restored = new WorkspaceSessions(store.file); await restored.load();
   assert.equal(restored.selected().sessionId, first.sessionId); assert.equal(restored.selected().chatUrl, first.chatUrl);
   controller.attach(store.selected()); await controller.tick();
@@ -125,8 +131,18 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(history.selected().sessionId, first.sessionId);
   assert.equal(history.snapshot().projects[0].sessions.length, 2);
   assert.equal(history.snapshot().projects[0].expanded, true);
+  const startFile = path.join(workspace, 'docs/WORKFLOW_START.md');
+  const startText = await fs.readFile(startFile); await fs.unlink(startFile);
+  const urlBefore = browser.getURL();
+  await selectWorkspace(workspace);
+  assert.equal(snapshot().setup.ready, false);
+  assert.ok(snapshot().setup.issues.some(i => i.path === 'docs/WORKFLOW_START.md'));
+  assert.equal(store.selected().sessionId, first.sessionId); assert.equal(browser.getURL(), urlBefore); assert.equal(packetLoads, 2);
+  await fs.writeFile(startFile, startText);
+  await sidebar.executeJavaScript('document.getElementById("setup-cancel").click()');
+  await waitFor(() => !snapshot().setup, 'cancel blocked open keeps current session', snapshot);
   const result = { mode: 'isolated-fixture', electron: process.versions.electron, chromium: process.versions.chrome,
-    views: window.contentView.children.length, secureRemote: true, sidebarIpc: true, startupMessages: packetLoads,
+    views: window.contentView.children.length, secureRemote: true, sidebarIpc: true, workspaceCreation: true, workspaceValidation: true, cancelPreservesSession: true, startupMessages: packetLoads,
     restartKeepsSession: true, newChatCreatesSession: true, sessionTree: true, selectsEarlierSession: true, fullContextBytes: Buffer.byteLength(fixtureContext), liveChatGPT: false, agentToolsRequired: false };
   await fs.writeFile(path.join(dataDir, 'smoke-result.json'), JSON.stringify(result, null, 2));
   console.log(JSON.stringify(result));

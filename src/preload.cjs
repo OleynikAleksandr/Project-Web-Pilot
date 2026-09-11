@@ -1,6 +1,12 @@
 const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('webPilot', Object.freeze({
   getState: () => ipcRenderer.invoke('pilot:get-state'),
+  beginCreate: () => ipcRenderer.invoke('pilot:begin-create'),
+  chooseParent: name => ipcRenderer.invoke('pilot:choose-parent', { name }),
+  previewNew: name => ipcRenderer.invoke('pilot:preview-new', { name }),
+  refreshSetup: () => ipcRenderer.invoke('pilot:refresh-setup'),
+  cancelSetup: () => ipcRenderer.invoke('pilot:cancel-setup'),
+  applySetup: (token, gitName, gitEmail) => ipcRenderer.invoke('pilot:apply-setup', { token, gitName, gitEmail }),
   chooseWorkspace: () => ipcRenderer.invoke('pilot:choose-workspace'),
   selectWorkspace: workspace => ipcRenderer.invoke('pilot:select-workspace', workspace),
   selectSession: (workspace, sessionId) => ipcRenderer.invoke('pilot:select-session', { workspace, sessionId }),

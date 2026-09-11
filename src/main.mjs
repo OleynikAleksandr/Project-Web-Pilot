@@ -8,6 +8,7 @@ import { WorkspaceSessions, normalizeChatUrl } from './workspace-session.mjs';
 import { McpRuntime, findRuntimeFolder } from './mcp-runtime.mjs';
 import { ChatGPTComposer } from './chatgpt-composer.mjs';
 import { ContextSession } from './context-session.mjs';
+import { WorkspaceSetup } from './workspace-setup.mjs';
 
 const smoke = !app.isPackaged && process.argv.includes('--smoke');
 const sourceDir = path.dirname(fileURLToPath(import.meta.url));
@@ -27,6 +28,9 @@ let startupError = null;
 let storageError = false;
 let lastDiagnostic = '';
 let actionTail = Promise.resolve();
+const workspaceSetup = new WorkspaceSetup({ resourceDir: app.isPackaged ? path.join(process.resourcesPath, 'resources') : path.join(sourceDir, '../resources') });
+let setupState = null;
+let workspaceHealth = null;
 
 function publicError(error) { return { code: error.code ?? 'APP_ERROR', message: String(error.message ?? error).slice(0, 700) }; }
 function snapshot() {
@@ -40,7 +44,7 @@ function snapshot() {
     sessions: sessions.map(({ sessionId, chatUrl, title, createdAt }) => ({ sessionId, chatUrl, title, createdAt })),
   })),
     selected, context: controller?.state ?? { phase: 'selected', servicesReady: false, messageSent: false },
-    runtimeFolder, pageLoading, startupError, storageError, version: app.getVersion(), fixture: smoke };
+    runtimeFolder, pageLoading, startupError, storageError, setup: setupState, workspaceHealth, version: app.getVersion(), fixture: smoke };
 }
 
 function publish() {
@@ -69,7 +73,7 @@ function rememberSessionTitle() {
     .then(changed => { if (changed) publish(); }).catch(() => {});
 }
 
-function report(error) { startupError = publicError(error); publish(); }
+function report(error) { startupError = publicError(error); if (setupState) setupState = { ...setupState, phase: 'error', error: startupError }; publish(); }
 function remotePreferences() {
   return { partition, nodeIntegration: false, contextIsolation: true, sandbox: true, webSecurity: true };
 }
@@ -127,15 +131,29 @@ async function navigate(project = store.selected()) {
   }
 }
 
-async function selectWorkspace(input) {
-  if (storageError) throw new Error('Сначала нужно восстановить сохранённый список проектов. Исходный файл оставлен без изменений.');
-  controller?.cancel();
-  startupError = null;
-  const project = await store.select(input);
+function pauseForSetup() {
+  controller?.cancel(); ++navigationId; pageLoading = false; startupError = null;
+}
+function cancelSetup() {
+  workspaceSetup.clear(); setupState = null; startupError = null;
+  const current = store.selected(); if (current) controller.attach(current);
   publish();
-  // Let the native sidebar stay responsive while the remote page loads.
-  void navigate(project);
-  return project;
+}
+async function reviewWorkspace(workspace, openReady = false) {
+  if (storageError) throw new Error('Сначала нужно восстановить сохранённый список проектов. Исходный файл оставлен без изменений.');
+  pauseForSetup(); setupState = { phase: 'checking', mode: 'existing', workspace }; publish();
+  const preview = await workspaceSetup.preview({ mode: 'existing', workspace });
+  setupState = { ...preview, phase: 'preview' };
+  if (preview.ready && openReady) {
+    workspaceHealth = preview; setupState = null; workspaceSetup.clear();
+    return true;
+  }
+  publish(); return false;
+}
+async function selectWorkspace(input) {
+  if (!await reviewWorkspace(input, true)) return;
+  const project = await store.select(workspaceHealth.workspace);
+  publish(); void navigate(project); return project;
 }
 
 function connectController() {
@@ -145,12 +163,49 @@ function connectController() {
 
 function registerIpc() {
   ipcMain.handle('pilot:get-state', event => { assertLocalSender(event); return snapshot(); });
+  registerAction('pilot:begin-create', () => {
+    if (storageError) throw new Error('Сначала нужно восстановить сохранённый список проектов.');
+    pauseForSetup(); workspaceSetup.clear();
+    setupState = { phase: 'form', mode: 'new', name: '', parent: smoke ? dataDir : path.dirname(store.selected()?.workspace ?? path.join(os.homedir(), 'VSCODE/Project')) };
+  });
+  registerAction('pilot:choose-parent', async input => {
+    if (setupState?.mode !== 'new') return;
+    const name = typeof input?.name === 'string' ? input.name.slice(0, 120) : setupState.name;
+    const result = await dialog.showOpenDialog(window, { title: 'Где создать проект', buttonLabel: 'Выбрать папку',
+      properties: ['openDirectory'], defaultPath: setupState.parent });
+    setupState = { phase: 'form', mode: 'new', name, parent: result.canceled ? setupState.parent : result.filePaths[0] };
+  });
+  registerAction('pilot:preview-new', async input => {
+    if (setupState?.mode !== 'new') throw new Error('Сначала нажмите «Создать проект».');
+    const parent = setupState.parent, name = input?.name;
+    setupState = { phase: 'checking', mode: 'new', parent, name }; publish();
+    const preview = await workspaceSetup.preview({ mode: 'new', parent, name });
+    setupState = { ...preview, phase: 'preview', parent, name };
+  });
+  registerAction('pilot:refresh-setup', async () => {
+    if (!setupState) return;
+    const { mode, parent, name, workspace } = setupState;
+    setupState = { phase: 'checking', mode, parent, name, workspace }; startupError = null; publish();
+    const preview = await workspaceSetup.preview({ mode, parent, name, workspace });
+    setupState = { ...preview, phase: 'preview', parent, name: preview.name };
+  });
+  registerAction('pilot:cancel-setup', cancelSetup);
+  registerAction('pilot:apply-setup', async input => {
+    if (!setupState?.token || input?.token !== setupState.token) throw new Error('Сначала проверьте выбранную папку.');
+    setupState = { ...setupState, phase: 'applying', error: null }; startupError = null; publish();
+    const result = await workspaceSetup.apply(input.token, { gitName: input.gitName, gitEmail: input.gitEmail });
+    setupState = { ...result, phase: 'preview', mode: 'existing' };
+    if (!result.ready) return;
+    workspaceHealth = result;
+    const project = await store.select(result.workspace);
+    setupState = null; publish(); void navigate(project);
+  });
   registerAction('pilot:choose-workspace', async () => {
-    controller?.cancel();
+    pauseForSetup();
     const result = await dialog.showOpenDialog(window, { title: 'Открыть папку проекта',
-      buttonLabel: 'Открыть проект', properties: ['openDirectory'], defaultPath: path.join(os.homedir(), 'VSCODE') });
-    if (result.canceled) { const current = store.selected(); if (current) controller.attach(current); return; }
-    return selectWorkspace(result.filePaths[0]);
+      buttonLabel: 'Проверить папку', properties: ['openDirectory'], defaultPath: path.join(os.homedir(), 'VSCODE') });
+    if (result.canceled) { cancelSetup(); return; }
+    return reviewWorkspace(result.filePaths[0]);
   });
   registerAction('pilot:select-workspace', input => {
     if (typeof input !== 'string' || !store.project(input)) throw new Error('Выберите проект из списка.');
@@ -159,7 +214,7 @@ function registerIpc() {
   registerAction('pilot:select-session', async input => {
     if (storageError) throw new Error('Сначала нужно восстановить сохранённый список проектов.');
     if (typeof input?.workspace !== 'string' || typeof input?.sessionId !== 'string') throw new Error('Выберите сессию из дерева проекта.');
-    controller.cancel();
+    if (!await reviewWorkspace(input.workspace, true)) return;
     const project = await store.selectSession(input.workspace, input.sessionId);
     startupError = null; void navigate(project);
   });
@@ -169,17 +224,18 @@ function registerIpc() {
   });
   registerAction('pilot:new-chat', async () => {
     const current = store.selected(); if (!current) return;
-    controller.cancel();
+    if (!await reviewWorkspace(current.workspace, true)) return;
     const project = await store.newChat(current.workspace);
     startupError = null; void navigate(project);
   });
-  registerAction('pilot:return-chat', () => { startupError = null; void navigate(); });
+  registerAction('pilot:return-chat', async () => { const current = store.selected(); if (current) await selectWorkspace(current.workspace); });
   registerAction('pilot:retry', async () => {
+    const selected = store.selected(); if (selected && !await reviewWorkspace(selected.workspace, true)) return;
     startupError = null;
     if (!controller.active) { const current = store.selected(); if (current) controller.attach(current); }
     await controller.retry();
   });
-  registerAction('pilot:reload', () => { startupError = null; void navigate(); });
+  registerAction('pilot:reload', async () => { startupError = null; const current = store.selected(); if (current) await selectWorkspace(current.workspace); else void navigate(); });
   registerAction('pilot:choose-runtime', async () => {
     const result = await dialog.showOpenDialog(window, { title: 'Выбрать Codex Local Mac', buttonLabel: 'Подключить',
       properties: ['openDirectory'], defaultPath: runtimeFolder });
@@ -209,8 +265,8 @@ async function createWindow() {
   sidebar.webContents.on('will-navigate', event => event.preventDefault());
   sidebar.webContents.on('did-finish-load', publish);
   browser.webContents.on('page-title-updated', rememberSessionTitle);
-  browser.webContents.on('did-navigate-in-page', () => { publish(); if (!pageLoading) void controller?.tick(); });
-  browser.webContents.on('did-finish-load', () => { publish(); if (!pageLoading) void controller?.tick(); });
+  browser.webContents.on('did-navigate-in-page', () => { publish(); if (!pageLoading && !setupState) void controller?.tick(); });
+  browser.webContents.on('did-finish-load', () => { publish(); if (!pageLoading && !setupState) void controller?.tick(); });
   browser.webContents.on('render-process-gone', () => { controller?.cancel(); report(new Error('Страница ChatGPT закрылась. Нажмите обновление.')); });
   window.on('resize', layout);
   window.on('closed', () => {
@@ -226,12 +282,12 @@ async function createWindow() {
   connectController();
   registerIpc();
   await sidebar.webContents.loadURL(sidebarUrl);
-  interval = setInterval(() => { if (!pageLoading) void controller.tick(); }, 1500);
+  interval = setInterval(() => { if (!pageLoading && !setupState) void controller.tick(); }, 1500);
   if (smoke) {
     await fixture.run({ app, window, browser: browser.webContents, sidebar: sidebar.webContents,
       store, controller, selectWorkspace, snapshot, assertLocalSender, dataDir });
     window.close(); app.quit();
-  } else void navigate();
+  } else { const current = store.selected(); if (current && !storageError) void selectWorkspace(current.workspace).catch(report); else void navigate(); }
 }
 
 function installMenu() {
@@ -240,7 +296,7 @@ function installMenu() {
       { role: 'hide', label: 'Скрыть' }, { role: 'quit', label: 'Завершить Project Web Pilot' }] },
     { label: 'Правка', submenu: [{ role: 'undo' }, { role: 'redo' }, { type: 'separator' },
       { role: 'cut' }, { role: 'copy' }, { role: 'paste' }, { role: 'selectAll' }] },
-    { label: 'Вид', submenu: [{ label: 'Обновить ChatGPT', accelerator: 'CmdOrCtrl+R', click: () => { if (browser) void navigate(); } },
+    { label: 'Вид', submenu: [{ label: 'Обновить ChatGPT', accelerator: 'CmdOrCtrl+R', click: () => { const current = store.selected(); if (current) void selectWorkspace(current.workspace).catch(report); else if (browser) void navigate(); } },
       { role: 'togglefullscreen' }, { role: 'resetZoom' }, { role: 'zoomIn' }, { role: 'zoomOut' }] },
   ]));
 }

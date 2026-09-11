@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 64,
+  "plan_revision": 66,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
@@ -909,8 +909,8 @@
         "Чат открывается только после успешной проверки; ошибки сохраняют прежнюю сессию."
       ],
       "expected_commit_message": "feat: добавить создание и подключение проектов в сайдбар",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-prototype-001",
         "task_id": "T023",
@@ -1010,7 +1010,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 64
+Revision: 66
 
 ## Цель
 
@@ -1116,8 +1116,8 @@ Revision: 64
   - Git Commit: [DONE] feat: добавить проверку и подготовку workspace
   - Reference: web-pilot-prototype-001 / T022 / implementation
   - Файлы: resources/workspace-setup-worker.mjs, src/workspace-setup.mjs, tests/workspace-setup.test.mjs, resources/workflow-kit/WORKFLOW.md, resources/workflow-kit/templates/PRODUCT.md, resources/workflow-kit/templates/ARCHITECTURE.md, resources/workflow-kit/templates/PLAN.md, resources/workflow-kit/templates/AGENTS.md, resources/workflow-kit/templates/START.md, tests/workflow-kit-source.test.mjs, docs/WORKSPACE_SETUP.md, docs/DOCUMENTATION_INDEX.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T023: Добавить создание и подключение в интерфейс — Ожидает
-  - Git Commit: [PENDING] feat: добавить создание и подключение проектов в сайдбар
+- [DONE] T023: Добавить создание и подключение в интерфейс — Завершено
+  - Git Commit: [DONE] feat: добавить создание и подключение проектов в сайдбар
   - Reference: web-pilot-prototype-001 / T023 / implementation
   - Файлы: src/main.mjs, src/preload.cjs, src/ui/index.html, src/ui/sidebar.mjs, src/ui/workspace-setup.mjs, tests/electron-smoke.mjs, docs/WORKSPACE_SETUP.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T024: Собрать и проверить подготовку проектов — Ожидает

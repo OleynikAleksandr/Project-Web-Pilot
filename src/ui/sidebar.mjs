@@ -1,3 +1,4 @@
+import { workspaceSetupView } from './workspace-setup.mjs';
 const $ = id => document.getElementById(id);
 const api = window.webPilot;
 window.addEventListener('pagehide', () => clearTimeout(workspaceClickTimer));
@@ -23,6 +24,8 @@ const phases = {
   'chat-changed': ['Открыт другой чат', 'Этот чат пока не связан с проектом. Вернитесь к чату проекта или начните новый через кнопку ниже.', 'working'],
   error: ['Не удалось передать контекст', 'Подробности ошибки показаны выше. После исправления нажмите «Проверить контекст».', 'error'],
 };
+
+const setupView = workspaceSetupView(action);
 
 async function action(method, ...args) {
   if (actionPending) return;
@@ -132,8 +135,13 @@ function render(state) {
   $('error-banner').hidden = !error;
   $('error-banner').textContent = error ? `${error.message} (${error.code})` : '';
   for (const button of document.querySelectorAll('button')) {
-    button.disabled = actionPending || (state.storageError && ['add-workspace', 'new-chat', 'retry-context'].includes(button.id));
+    button.disabled = actionPending || (state.storageError && ['create-workspace', 'add-workspace', 'new-chat', 'retry-context'].includes(button.id));
   }
+  setupView.render(state, actionPending);
+  $('choose-runtime').disabled = actionPending || !!state.setup;
+  const health = state.workspaceHealth;
+  $('workspace-health').textContent = health && selected && health.workspace === selected.workspace ? `Проект проверен · Workflow Kit ${health.version}` : '';
+  $('workspace-notice').textContent = health && selected && health.workspace === selected.workspace ? (health.warnings ?? []).join('\n') : '';
 }
 
 $('add-workspace').addEventListener('click', () => action('chooseWorkspace'));
