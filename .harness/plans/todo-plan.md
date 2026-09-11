@@ -4,19 +4,18 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 41,
+  "plan_revision": 42,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
-  "objective": "Подготовить самодостаточный проект и первичный план; следующим этапом проверить локальное приложение с встроенным Chromium, выбором workspace, запуском MCP и автоматическим стартовым сообщением с подтверждением контекста.",
+  "delivery_status": "IN_PROGRESS",
+  "objective": "Локальный macOS Web Pilot с встроенным ChatGPT, выбором проекта и полным контекстом в первом сообщении; агент сразу кратко подтверждает восстановление и описывает проект.",
   "acceptance_criteria": [
-    "Документы однозначно передают согласованную идею и источники; новый recovery packet COMPLETE",
-    "Первый прототип проверяет реальный ChatGPT внутри одного окна и автоматическую отправку через обычное поле ввода",
-    "Выбранный workspace, чат, session_id и подтверждённые факты плана не смешиваются",
-    "Локальное приложение запускает MCP до первого запроса агента; ACK проверяется по фактическому состоянию",
-    "Автоматический compact не объявляется решённым без отдельного подтверждённого события"
+    "Полный канонический контекст передаёт приложение до первого ответа агента.",
+    "Первый ответ кратко подтверждает восстановление и описывает выбранный проект без обязательного получения пакета через MCP и без hook/ACK оговорок.",
+    "Привязки workspace/chat и неизвестный исход Send не создают дубли сообщений.",
+    "Реальный встроенный Work и повторный запуск проверены; пользовательская приёмка отдельно."
   ],
   "approved_scope": {
     "functional_paths": [
@@ -509,6 +508,148 @@
         "task_id": "T013",
         "role": "implementation"
       }
+    },
+    {
+      "id": "T014",
+      "title": "Получать полный контекст в приложении",
+      "why": "Убрать промежуточное получение контекста агентом.",
+      "dependencies": [
+        "T013"
+      ],
+      "functional_paths": [
+        "src/mcp-runtime.mjs",
+        "tests/mcp-runtime.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/SOURCE_WORKSPACES.md",
+        "docs/VERIFICATION.md",
+        "docs/DECISIONS.md",
+        "AGENTS.md"
+      ],
+      "verification_ids": [
+        "runtime"
+      ],
+      "acceptance_criteria": [
+        "Оболочка получает полный пакет до сообщения и проверяет protocol, workspace, полноту и факты.",
+        "Старый probe/ACK контракт отклоняется; агенту не поручается повторно запрашивать контекст."
+      ],
+      "expected_commit_message": "feat: получать полный контекст до старта чата",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "web-pilot-prototype-001",
+        "task_id": "T014",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T015",
+      "title": "Передавать контекст в первом сообщении",
+      "why": "Агент сразу отвечает о выбранном проекте.",
+      "dependencies": [
+        "T014"
+      ],
+      "functional_paths": [
+        "src/context-session.mjs",
+        "tests/context-session.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [
+        "suite"
+      ],
+      "acceptance_criteria": [
+        "Первое сообщение содержит весь пакет и просит короткое подтверждение с описанием проекта без tools.",
+        "Неизвестный исход Send не дублируется, чужой черновик сохраняется, изменившийся до Send пакет не отправляется.",
+        "Старые чаты сохраняются без ложного объявления новой доставки."
+      ],
+      "expected_commit_message": "feat: передавать контекст первым сообщением",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "web-pilot-prototype-001",
+        "task_id": "T015",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T016",
+      "title": "Показать передачу контекста без ACK",
+      "why": "Согласовать UI с новым стартом.",
+      "dependencies": [
+        "T015"
+      ],
+      "functional_paths": [
+        "src/main.mjs",
+        "src/ui/index.html",
+        "src/ui/sidebar.mjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "acceptance_criteria": [
+        "Сайдбар показывает передачу контекста и сохраняет папку/чат при повторном открытии.",
+        "Electron smoke проверяет большой полный пакет и отсутствие повторного сообщения."
+      ],
+      "expected_commit_message": "feat: упростить состояния старта проекта",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "web-pilot-prototype-001",
+        "task_id": "T016",
+        "role": "implementation"
+      },
+      "file_limit_exception": "Главный процесс, разметка и renderer образуют один интерфейс; четвёртый файл — проверка в настоящем Electron."
+    },
+    {
+      "id": "T017",
+      "title": "Пересобрать и проверить краткий первый ответ",
+      "why": "Передать исправленный прототип пользователю.",
+      "dependencies": [
+        "T016"
+      ],
+      "functional_paths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "documentation_paths": [
+        "README.md",
+        "AGENTS.md",
+        "docs/PRODUCT.md",
+        "docs/WORKFLOW_START.md",
+        "docs/DECISIONS.md",
+        "docs/VERIFICATION.md",
+        "docs/SOURCE_WORKSPACES.md",
+        "docs/architecture/ARCHITECTURE.md"
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "acceptance_criteria": [
+        "Новая локальная сборка запускается; реальный первый ответ кратко подтверждает получение и описывает проект.",
+        "Проверены новый MCP snapshot, полная отправка и повторное открытие; ограничения и инструкция актуальны."
+      ],
+      "expected_commit_message": "chore: собрать прототип с прямой передачей контекста",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "web-pilot-prototype-001",
+        "task_id": "T017",
+        "role": "implementation"
+      }
     }
   ],
   "blocked_reason": null,
@@ -537,6 +678,11 @@
       "id": "31553ccf-3317-466b-a887-f5e98b8ca38e",
       "text": "11.09.2026, новая сессия: пользователь поручил продолжать без остановок до сборки первого запускаемого прототипа на Mac, который он сможет протестировать и дать фидбэк. Разрешены T004 и последующая реализация в согласованном scope; реальная авторизация и пользовательская приёмка проверяются отдельно.",
       "recorded_at": "2026-09-11T08:44:16.129775+00:00"
+    },
+    {
+      "id": "inline-context-confirmation-20260911",
+      "text": "Пользователь согласовал полный контекст в первом сообщении, очистку MCP от проверки hooks и обязательного ACK и короткий первый ответ: подтверждение восстановления плюс описание выбранного проекта. Поручил реализовать и пересобрать. Разрешено согласованное изменение Codex Local Mac для этой интеграции; WF001 сохраняется.",
+      "recorded_at": "2026-09-11T09:32:26.851372+00:00"
     }
   ]
 }
@@ -546,22 +692,21 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 41
+Revision: 42
 
 ## Цель
 
-Подготовить самодостаточный проект и первичный план; следующим этапом проверить локальное приложение с встроенным Chromium, выбором workspace, запуском MCP и автоматическим стартовым сообщением с подтверждением контекста.
+Локальный macOS Web Pilot с встроенным ChatGPT, выбором проекта и полным контекстом в первом сообщении; агент сразу кратко подтверждает восстановление и описывает проект.
 
 ## Критерии приёмки
 
-- Документы однозначно передают согласованную идею и источники; новый recovery packet COMPLETE
-- Первый прототип проверяет реальный ChatGPT внутри одного окна и автоматическую отправку через обычное поле ввода
-- Выбранный workspace, чат, session_id и подтверждённые факты плана не смешиваются
-- Локальное приложение запускает MCP до первого запроса агента; ACK проверяется по фактическому состоянию
-- Автоматический compact не объявляется решённым без отдельного подтверждённого события
+- Полный канонический контекст передаёт приложение до первого ответа агента.
+- Первый ответ кратко подтверждает восстановление и описывает выбранный проект без обязательного получения пакета через MCP и без hook/ACK оговорок.
+- Привязки workspace/chat и неизвестный исход Send не создают дубли сообщений.
+- Реальный встроенный Work и повторный запуск проверены; пользовательская приёмка отдельно.
 
 ## Микрозадачи
 
@@ -617,6 +762,22 @@ Revision: 41
   - Git Commit: [DONE] docs: подготовить прототип к приёмке
   - Reference: web-pilot-prototype-001 / T013 / implementation
   - Файлы: README.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/DECISIONS.md, AGENTS.md, docs/architecture/ARCHITECTURE.md, docs/PRODUCT.md, docs/DOCUMENTATION_INDEX.md
+- [TODO] T014: Получать полный контекст в приложении — Ожидает
+  - Git Commit: [PENDING] feat: получать полный контекст до старта чата
+  - Reference: web-pilot-prototype-001 / T014 / implementation
+  - Файлы: src/mcp-runtime.mjs, tests/mcp-runtime.test.mjs, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md, docs/SOURCE_WORKSPACES.md, docs/VERIFICATION.md, docs/DECISIONS.md, AGENTS.md
+- [TODO] T015: Передавать контекст в первом сообщении — Ожидает
+  - Git Commit: [PENDING] feat: передавать контекст первым сообщением
+  - Reference: web-pilot-prototype-001 / T015 / implementation
+  - Файлы: src/context-session.mjs, tests/context-session.test.mjs, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+- [TODO] T016: Показать передачу контекста без ACK — Ожидает
+  - Git Commit: [PENDING] feat: упростить состояния старта проекта
+  - Reference: web-pilot-prototype-001 / T016 / implementation
+  - Файлы: src/main.mjs, src/ui/index.html, src/ui/sidebar.mjs, tests/electron-smoke.mjs, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+- [TODO] T017: Пересобрать и проверить краткий первый ответ — Ожидает
+  - Git Commit: [PENDING] chore: собрать прототип с прямой передачей контекста
+  - Reference: web-pilot-prototype-001 / T017 / implementation
+  - Файлы: package.json, package-lock.json, README.md, AGENTS.md, docs/PRODUCT.md, docs/WORKFLOW_START.md, docs/DECISIONS.md, docs/VERIFICATION.md, docs/SOURCE_WORKSPACES.md, docs/architecture/ARCHITECTURE.md
 
 ## Context Pack For This Cycle
 
