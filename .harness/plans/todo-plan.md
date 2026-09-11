@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 18,
+  "plan_revision": 19,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
@@ -82,7 +82,7 @@
         "revision": "WORKTREE"
       }
     ],
-    "include_last_completed_task": true,
+    "include_last_completed_task": false,
     "dependency_task_ids": []
   },
   "tasks": [
@@ -541,7 +541,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 18
+Revision: 19
 
 ## Цель
 
