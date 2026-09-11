@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { randomUUID } from 'node:crypto';
+import { randomUUID, createHash } from 'node:crypto';
 import { readWorkspace, WorkspaceSessions } from '../src/workspace-session.mjs';
 
-const observedRequests = new Set();
+let packetLoads = 0;
+const fixtureContext = Array.from({ length: 400 }, (_, i) => `Раздел ${i + 1}: полный контекст проекта, включая кириллицу и точные пути.\n  Файл: /Projects/Мой проект/src/модуль.mjs\n\n`).join('');
 const html = `<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>TEST FIXTURE — no live ChatGPT</title>
 <style>body{font:16px -apple-system,sans-serif;padding:40px;background:#fcfcff;color:#29394c}aside{background:#fff0d7;padding:14px;margin-bottom:20px}#prompt-textarea{border:1px solid #9caeb8;padding:12px;min-height:80px;white-space:pre-wrap}button{padding:10px}article{white-space:pre-wrap;font-size:12px}</style></head>
 <body><aside>TEST FIXTURE · без реального ChatGPT, MCP и аккаунта</aside><h1>Composer fixture</h1>
@@ -24,22 +25,16 @@ export async function createRuntime({ browser, session }) {
   await session.protocol.handle('https', () => new Response(html, { headers: { 'content-type': 'text/html; charset=utf-8' } }));
   return {
     ensure: async () => ({ mcp: { ready: true }, tunnel: { ready: true }, fixture: true }),
-    contextStatus: async (workspace, sessionId) => {
-      const messages = await browser.executeJavaScript('window.fixtureMessages ?? []').catch(() => []);
-      const message = messages.find(item => item.text.includes(`Session ID для этого чата: ${sessionId}`));
-      if (!message) return { workspace, session_id: sessionId, latest: null, last_receipt: null };
+    loadContext: async workspace => {
+      packetLoads++;
       const info = await readWorkspace(workspace);
-      const requestId = message.text.match(/wp-request-[a-zA-Z0-9-]+/)?.[0];
-      observedRequests.add(requestId);
       const facts = { project_id: info.projectId, project_name: info.name, plan_revision: info.planRevision,
         scope_id: info.scopeId, execution_scope_status: info.scopeStatus, delivery_status: info.deliveryStatus,
         task_id: info.nextTaskId, task_title: info.nextTaskTitle };
-      const probeId = 'fixture-probe-' + requestId;
-      return { workspace, session_id: sessionId,
-        latest: { workspace, session_id: sessionId, probe_id: probeId, source: 'agent_request',
-          issued_at: message.at / 1000, acknowledged_at: message.at / 1000, acknowledged: true, facts },
-        last_receipt: { workspace, probe_id: probeId, source: 'agent_request', status: 'acknowledged', facts,
-          user_message: 'TEST FIXTURE: синтетический status, не реальный ACK.' } };
+      return { workspace, facts, delivery_protocol: 'inline-context-v1', ack_required: false,
+        status: 'ready', completeness: 'COMPLETE', signature: 'fixture-snapshot', head: 'fixture-head',
+        generated_at_ms: Date.now(), context: fixtureContext, context_bytes: Buffer.byteLength(fixtureContext),
+        context_sha256: createHash('sha256').update(fixtureContext).digest('hex') };
     },
   };
 }
@@ -73,30 +68,36 @@ export async function run({ app, window, browser, sidebar, store, controller, se
       let offset = 0; while (offset < Math.min(actual.length, expected.length) && actual[offset] === expected[offset]) offset++;
       throw new Error('FIXTURE_DRAFT_MISMATCH: ' + JSON.stringify({ offset, actualLength: actual.length, expectedLength: expected.length, actual: actual.slice(Math.max(0,offset-40),offset+100), expected: expected.slice(Math.max(0,offset-40),offset+100) }));
     }
-    return snapshot().context.phase === 'confirmed';
+    return snapshot().context.phase === 'delivered';
   }, 'first fixture context', snapshot);
   const first = store.selected();
   assert.ok(first.chatUrl.startsWith('https://chatgpt.com/c/'));
-  assert.equal(first.attempt.state, 'acknowledged');
-  assert.equal(observedRequests.size, 1);
+  assert.equal(first.attempt.state, 'sent');
+  assert.ok(first.attempt.text.includes(fixtureContext));
+  assert.ok(Buffer.byteLength(fixtureContext) > 60000);
+  assert.equal(snapshot().selected.attempt.text, undefined, 'Full prompt stays out of sidebar IPC');
+  const sent = await browser.executeJavaScript('window.fixtureMessages[0].text');
+  assert.equal(sent.replace(/\n+/g, '\n'), first.attempt.text.replace(/\n+/g, '\n'));
+  assert.equal(first.receipt, null);
+  assert.equal(packetLoads, 1);
   assert.deepEqual(await browser.executeJavaScript('({ require:typeof require, process:typeof process, bridge:typeof window.webPilot })'),
     { require: 'undefined', process: 'undefined', bridge: 'undefined' });
   const prefs = browser.getLastWebPreferences();
   assert.equal(prefs.nodeIntegration, false); assert.equal(prefs.contextIsolation, true); assert.equal(prefs.sandbox, true);
   assert.throws(() => assertLocalSender({ sender: browser, senderFrame: browser.mainFrame }), { code: 'IPC_FORBIDDEN' });
-  assert.equal(await sidebar.executeJavaScript('document.getElementById("context-title").textContent'), 'Контекст подтверждён');
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("context-title").textContent'), 'Контекст передан');
   assert.equal(await sidebar.executeJavaScript('document.getElementById("workspace-name").textContent'), 'Тестовый проект');
   const restored = new WorkspaceSessions(store.file); await restored.load();
   assert.equal(restored.selected().sessionId, first.sessionId); assert.equal(restored.selected().chatUrl, first.chatUrl);
   controller.attach(store.selected()); await controller.tick();
-  assert.equal(observedRequests.size, 1);
+  assert.equal(packetLoads, 1);
   await sidebar.executeJavaScript('document.getElementById("new-chat").click()');
-  await waitFor(() => store.selected()?.sessionId !== first.sessionId && snapshot().context.phase === 'confirmed', 'new chat via actual sidebar IPC', snapshot);
-  assert.equal(observedRequests.size, 2);
+  await waitFor(() => store.selected()?.sessionId !== first.sessionId && snapshot().context.phase === 'delivered', 'new chat via actual sidebar IPC', snapshot);
+  assert.equal(packetLoads, 2);
   assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 1);
   const result = { mode: 'isolated-fixture', electron: process.versions.electron, chromium: process.versions.chrome,
-    views: window.contentView.children.length, secureRemote: true, sidebarIpc: true, startupMessages: observedRequests.size,
-    restartKeepsSession: true, newChatCreatesSession: true, liveChatGPT: false, realAck: false };
+    views: window.contentView.children.length, secureRemote: true, sidebarIpc: true, startupMessages: packetLoads,
+    restartKeepsSession: true, newChatCreatesSession: true, fullContextBytes: Buffer.byteLength(fixtureContext), liveChatGPT: false, agentToolsRequired: false };
   await fs.writeFile(path.join(dataDir, 'smoke-result.json'), JSON.stringify(result, null, 2));
   console.log(JSON.stringify(result));
 }

@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 46,
+  "plan_revision": 48,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
@@ -604,8 +604,8 @@
         "Electron smoke проверяет большой полный пакет и отсутствие повторного сообщения."
       ],
       "expected_commit_message": "feat: упростить состояния старта проекта",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-prototype-001",
         "task_id": "T016",
@@ -695,7 +695,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 46
+Revision: 48
 
 ## Цель
 
@@ -770,8 +770,8 @@ Revision: 46
   - Git Commit: [DONE] feat: передавать контекст первым сообщением
   - Reference: web-pilot-prototype-001 / T015 / implementation
   - Файлы: src/context-session.mjs, tests/context-session.test.mjs, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T016: Показать передачу контекста без ACK — Ожидает
-  - Git Commit: [PENDING] feat: упростить состояния старта проекта
+- [DONE] T016: Показать передачу контекста без ACK — Завершено
+  - Git Commit: [DONE] feat: упростить состояния старта проекта
   - Reference: web-pilot-prototype-001 / T016 / implementation
   - Файлы: src/main.mjs, src/ui/index.html, src/ui/sidebar.mjs, tests/electron-smoke.mjs, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T017: Пересобрать и проверить краткий первый ответ — Ожидает

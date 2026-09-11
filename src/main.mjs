@@ -32,7 +32,9 @@ function publicError(error) { return { code: error.code ?? 'APP_ERROR', message:
 function snapshot() {
   const saved = store.selected();
   const info = controller?.state.projectInfo;
-  const selected = saved && { ...saved, ...(info?.workspace === saved.workspace ? info : {}) };
+  const selected = saved && { ...saved, attempt: saved.attempt && { protocol: saved.attempt.protocol,
+    requestId: saved.attempt.requestId, state: saved.attempt.state }, receipt: undefined,
+    ...(info?.workspace === saved.workspace ? info : {}) };
   return { projects: store.snapshot().projects.map(({ workspace, projectId, name, chatUrl }) => ({ workspace, projectId, name, chatUrl })),
     selected, context: controller?.state ?? { phase: 'selected', servicesReady: false, messageSent: false },
     runtimeFolder, pageLoading, startupError, storageError, version: app.getVersion(), fixture: smoke };
@@ -42,7 +44,7 @@ function publish() {
   if (sidebar && !sidebar.webContents.isDestroyed()) sidebar.webContents.send('pilot:state-changed', snapshot());
   const state = snapshot();
   const record = { phase: state.context.phase, workspace: state.selected?.workspace, sessionId: state.selected?.sessionId,
-    requestId: state.selected?.attempt?.requestId, probeId: state.context.receipt?.probeId,
+    requestId: state.selected?.attempt?.requestId, contextSha256: state.context.delivery?.contextSha256,
     planRevision: state.context.projectInfo?.planRevision, errorCode: state.context.error?.code ?? startupError?.code };
   const signature = JSON.stringify(record);
   if (signature !== lastDiagnostic) {

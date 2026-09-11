@@ -6,18 +6,20 @@ let actionPending = false;
 const phases = {
   selected: ['Готов к началу', 'Войдите в ChatGPT справа и выберите папку проекта слева.', 'neutral'],
   preparing: ['Подготавливаем подключение', 'Проверяем локальные инструменты и связь с ChatGPT.', 'working'],
-  'waiting-login': ['Войдите в ChatGPT', 'После входа в аккаунт стартовое сообщение отправится автоматически.', 'working'],
-  'waiting-composer': ['Ожидаем поле сообщения', 'Откройте новый чат в режиме с доступом к Codex Local Mac. Старт продолжится автоматически.', 'working'],
-  'waiting-draft': ['В поле есть черновик', 'Закончите или уберите свой черновик. Его содержимое сохранено; стартовое сообщение подождёт.', 'working'],
-  'waiting-generation': ['Ждём завершения ответа', 'ChatGPT отвечает. Проверка проекта начнётся, когда поле освободится.', 'working'],
-  sending: ['Отправляем сообщение', 'Передаём ChatGPT папку проекта и просьбу восстановить контекст.', 'working'],
-  'waiting-ack': ['Ждём подтверждения', 'Сообщение отправлено. Агент должен получить контекст через Codex Local Mac и подтвердить его.', 'working'],
-  confirmed: ['Контекст подтверждён', 'Агент получил контекст выбранного проекта. Можно продолжать работу в чате.', 'success'],
-  stale: ['Контекст нужно обновить', 'План или подтверждение изменились. Нажмите «Обновить контекст», чтобы получить актуальные факты.', 'working'],
-  'send-unknown': ['Проверяем результат отправки', 'Результат пока неизвестен. Повторная отправка отключена; проверяем появление сообщения и подтверждения.', 'working'],
+  'loading-context': ['Получаем контекст проекта', 'Готовим полный пакет для первого сообщения.', 'working'],
+  'waiting-login': ['Войдите в ChatGPT', 'После входа полный контекст отправится автоматически.', 'working'],
+  'waiting-composer': ['Ожидаем поле сообщения', 'Откройте доступное поле ChatGPT. Старт продолжится автоматически.', 'working'],
+  'waiting-draft': ['В поле есть черновик', 'Закончите или уберите свой черновик. Стартовое сообщение подождёт.', 'working'],
+  'waiting-generation': ['Ждём завершения ответа', 'ChatGPT отвечает. Передача контекста начнётся, когда поле освободится.', 'working'],
+  sending: ['Передаём контекст', 'Отправляем полный контекст проекта одним сообщением.', 'working'],
+  'waiting-chat': ['Контекст отправлен', 'Сохраняем связь проекта с этим чатом.', 'working'],
+  delivered: ['Контекст передан', 'Полный пакет отправлен в этот чат. Агент кратко подтвердит получение и опишет проект.', 'success'],
+  stale: ['Контекст нужно обновить', 'План изменился после отправки. Нажмите «Обновить контекст», чтобы передать актуальную версию.', 'working'],
+  'prepared-stale': ['Пакет в поле устарел', 'Уберите подготовленный черновик и нажмите «Обновить контекст». Отправка приостановлена.', 'working'],
+  'legacy-session': ['Сохранённый чат проекта', 'Чат открыт. Для передачи полного пакета нажмите «Обновить контекст» или начните новый чат.', 'neutral'],
+  'send-unknown': ['Проверяем результат отправки', 'Результат пока неизвестен. Проверяем появление сообщения перед повторной отправкой.', 'working'],
   'chat-changed': ['Открыт другой чат', 'Этот чат пока не связан с проектом. Вернитесь к чату проекта или начните новый через кнопку ниже.', 'working'],
-  'ack-timeout': ['Подтверждение не пришло', 'Проверьте ответ в чате и доступ к Codex Local Mac. При необходимости выберите режим Work с этим подключением.', 'working'],
-  error: ['Нужна проверка подключения', 'Не удалось завершить старт. Подробности ошибки показаны выше.', 'error'],
+  error: ['Не удалось передать контекст', 'Подробности ошибки показаны выше. После исправления нажмите «Проверить контекст».', 'error'],
 };
 
 async function action(method, ...args) {
@@ -74,15 +76,15 @@ function render(state) {
   $('state-service').dataset.ready = String(context.servicesReady);
   $('state-message').textContent = context.messageSent ? 'Отправлено' : context.phase === 'sending' ? 'Отправка…' : context.phase === 'send-unknown' ? 'Уточняем' : 'Ожидание';
   $('state-message').dataset.ready = String(!!context.messageSent);
-  $('state-context').textContent = context.phase === 'confirmed' ? 'Подтверждён' : context.phase === 'stale' ? 'Устарел' : 'Ожидание';
-  $('state-context').dataset.ready = String(context.phase === 'confirmed');
+  $('state-context').textContent = context.phase === 'delivered' ? 'Передан целиком' : ['stale', 'prepared-stale'].includes(context.phase) ? 'Устарел' : context.phase === 'loading-context' ? 'Подготовка…' : context.phase === 'legacy-session' ? 'Прежняя сессия' : 'Ожидание';
+  $('state-context').dataset.ready = String(context.phase === 'delivered');
   $('return-chat').hidden = context.phase !== 'chat-changed';
-  $('retry-context').textContent = ['confirmed', 'stale'].includes(context.phase) ? 'Обновить контекст'
-    : ['send-unknown', 'waiting-ack', 'ack-timeout'].includes(context.phase) ? 'Проверить статус' : 'Проверить контекст';
+  $('retry-context').textContent = ['delivered', 'stale', 'prepared-stale', 'legacy-session'].includes(context.phase) ? 'Обновить контекст'
+    : ['send-unknown', 'waiting-chat'].includes(context.phase) ? 'Проверить статус' : 'Проверить контекст';
   $('connection-detail').textContent = state.runtimeFolder;
-  const receipt = context.receipt;
+  const delivery = context.delivery;
   $('session-detail').textContent = selected ? `Сессия: ${selected.sessionId}`
-    + (receipt ? `\nПодтверждение: ${receipt.probeId}\nПлан ${receipt.facts.plan_revision} · ${new Date(receipt.acknowledgedAtMs).toLocaleString('ru-RU')}` : '') : '';
+    + (delivery ? `\nПередано ${(delivery.contextBytes / 1024).toFixed(1)} КБ · план ${delivery.facts.plan_revision}\n${new Date(delivery.sentAtMs).toLocaleString('ru-RU')}` : '') : '';
   if (state.fixture) $('connection-detail').textContent = 'TEST FIXTURE · без реального аккаунта и MCP';
   const error = state.startupError ?? context.error;
   $('error-banner').hidden = !error;
