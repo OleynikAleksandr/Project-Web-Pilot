@@ -4,13 +4,13 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 69,
+  "plan_revision": 70,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
-  "objective": "Локальный macOS Web Pilot с встроенным ChatGPT, выбором проекта и полным контекстом в первом сообщении; агент сразу кратко подтверждает восстановление и описывает проект. Сайдбар сохраняет все созданные сессии workspace и позволяет выбирать их в раскрываемом дереве. Создание нового workspace и подключение существующей папки повторяют Workflow Kit с проверкой структуры до открытия чата.",
+  "delivery_status": "IN_PROGRESS",
+  "objective": "Локальный macOS Web Pilot с встроенным ChatGPT, выбором проекта и полным контекстом в первом сообщении; агент сразу кратко подтверждает восстановление и описывает проект. Сайдбар сохраняет все созданные сессии workspace и позволяет выбирать их в раскрываемом дереве. Создание нового workspace и подключение существующей папки повторяют Workflow Kit с проверкой структуры до открытия чата. Архив workspace доступен в настройках через шестерёнку справа от подключения; проекты возвращаются в активные либо удаляются с диска вместе с локальными записями сессий. Облачные чаты сохраняются.",
   "acceptance_criteria": [
     "Полный канонический контекст передаёт приложение до первого ответа агента.",
     "Первый ответ кратко подтверждает восстановление и описывает выбранный проект без обязательного получения пакета через MCP и без hook/ACK оговорок.",
@@ -18,7 +18,9 @@
     "Реальный встроенный Work и повторный запуск проверены; пользовательская приёмка отдельно.",
     "Двойной клик по workspace раскрывает сессии; выбор открывает конкретный сохранённый чат.",
     "Пользователь может создать новый проект или подготовить существующую папку, сохранив её содержимое и историю.",
-    "Перед открытием проверяются комплект, план, команды и полный контекст; конфликты показаны без перезаписи."
+    "Перед открытием проверяются комплект, план, команды и полный контекст; конфликты показаны без перезаписи.",
+    "Архивные проекты скрыты из активного списка и доступны в настройках.",
+    "Удаление архивного проекта явно подтверждается и очищает только выбранную локальную папку и локальные сессии; чаты ChatGPT остаются."
   ],
   "approved_scope": {
     "functional_paths": [
@@ -63,7 +65,10 @@
       "resources/workspace-setup-worker.mjs",
       "src/workspace-setup.mjs",
       "tests/workspace-setup.test.mjs",
-      "src/ui/workspace-setup.mjs"
+      "src/ui/workspace-setup.mjs",
+      "src/workspace-deletion.mjs",
+      "tests/workspace-deletion.test.mjs",
+      "src/ui/project-archive.mjs"
     ],
     "documentation_paths": [
       "README.md",
@@ -76,7 +81,8 @@
       "docs/VERIFICATION.md",
       "docs/WORKFLOW_START.md",
       "docs/DOCUMENTATION_INDEX.md",
-      "docs/WORKSPACE_SETUP.md"
+      "docs/WORKSPACE_SETUP.md",
+      "docs/PROJECT_ARCHIVE.md"
     ],
     "max_functional_files_per_task": 3
   },
@@ -957,6 +963,146 @@
         "task_id": "T024",
         "role": "implementation"
       }
+    },
+    {
+      "id": "T025",
+      "title": "Сохранять архив workspace",
+      "why": "Скрывать проекты с сохранением истории сессий.",
+      "dependencies": [],
+      "functional_paths": [
+        "src/workspace-session.mjs",
+        "tests/workspace-session.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/PROJECT_ARCHIVE.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [
+        "suite"
+      ],
+      "acceptance_criteria": [
+        "Формат мигрирует с резервной копией; архив сохраняет все сессии и переживает перезапуск.",
+        "Архив не меняет файлы и план; возврат в активные восстанавливает дерево."
+      ],
+      "expected_commit_message": "feat: добавить архив workspace",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "web-pilot-prototype-001",
+        "task_id": "T025",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T026",
+      "title": "Удалять архивный проект с диска",
+      "why": "Удалять только явно выбранную папку и её локальные привязки после подтверждения.",
+      "dependencies": [
+        "T025"
+      ],
+      "functional_paths": [
+        "src/workspace-deletion.mjs",
+        "tests/workspace-deletion.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/PROJECT_ARCHIVE.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [
+        "suite"
+      ],
+      "acceptance_criteria": [
+        "Предпросмотр привязан к идентичности папки; изменившийся путь и чужие проекты блокируют удаление.",
+        "Физическое удаление и очистка локальных сессий проверены в изолированных папках, чаты ChatGPT не удаляются."
+      ],
+      "expected_commit_message": "feat: добавить удаление архивного проекта с диска",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "web-pilot-prototype-001",
+        "task_id": "T026",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T027",
+      "title": "Добавить настройки с архивом в сайдбар",
+      "why": "Шестерёнка справа от подключения открывает архив и действия проекта.",
+      "dependencies": [
+        "T026"
+      ],
+      "functional_paths": [
+        "src/main.mjs",
+        "src/preload.cjs",
+        "src/ui/index.html",
+        "src/ui/sidebar.mjs",
+        "src/ui/project-archive.mjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "docs/PROJECT_ARCHIVE.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "acceptance_criteria": [
+        "Меню workspace архивирует; настройки содержат архив, возврат и подтверждение удаления.",
+        "Открытые сессии и передача контекста корректно реагируют на архив; remote IPC недоступен."
+      ],
+      "expected_commit_message": "feat: добавить архив в настройки сайдбара",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "web-pilot-prototype-001",
+        "task_id": "T027",
+        "role": "implementation"
+      },
+      "file_limit_exception": "Единый интерфейс main/preload/sidebar, новый экран и Electron smoke требуют согласованного изменения шести файлов."
+    },
+    {
+      "id": "T028",
+      "title": "Собрать приложение с архивом",
+      "why": "Проверить и передать новую сборку пользователю.",
+      "dependencies": [
+        "T027"
+      ],
+      "functional_paths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "documentation_paths": [
+        "README.md",
+        "AGENTS.md",
+        "docs/PRODUCT.md",
+        "docs/WORKFLOW_START.md",
+        "docs/DECISIONS.md",
+        "docs/VERIFICATION.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/PROJECT_ARCHIVE.md"
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "acceptance_criteria": [
+        "Настройки, архив, возврат и подтверждение удаления доступны в обычном окне; сборка совпадает с исходниками.",
+        "Проверки пройдены, документация актуальна, облачные чаты не удалены."
+      ],
+      "expected_commit_message": "chore: собрать Web Pilot с архивом проектов",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "web-pilot-prototype-001",
+        "task_id": "T028",
+        "role": "implementation"
+      }
     }
   ],
   "blocked_reason": null,
@@ -1000,6 +1146,11 @@
       "id": "workflow-kit-create-connect",
       "text": "Пользователь поручил реализовать создание и подключение workspace аналогично Project Workflow Kit: «Да, надо сделать все аналогично тому, как было сделано в Project Workflow Kit. Приступай».",
       "recorded_at": "2026-09-11T10:08:43.610666+00:00"
+    },
+    {
+      "id": "settings-project-archive",
+      "text": "Пользователь поручил шестерёнку внизу справа от подробностей подключения, архив проектов внутри настроек, возврат в активные и полное удаление папки с диска. От удаления веб-сессий отказался: чаты остаются в ChatGPT. Разрешена реализация функций; существующие пользовательские проекты без отдельного выбора не удалять.",
+      "recorded_at": "2026-09-11T10:41:08.632013+00:00"
     }
   ]
 }
@@ -1009,14 +1160,14 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 69
+Revision: 70
 
 ## Цель
 
-Локальный macOS Web Pilot с встроенным ChatGPT, выбором проекта и полным контекстом в первом сообщении; агент сразу кратко подтверждает восстановление и описывает проект. Сайдбар сохраняет все созданные сессии workspace и позволяет выбирать их в раскрываемом дереве. Создание нового workspace и подключение существующей папки повторяют Workflow Kit с проверкой структуры до открытия чата.
+Локальный macOS Web Pilot с встроенным ChatGPT, выбором проекта и полным контекстом в первом сообщении; агент сразу кратко подтверждает восстановление и описывает проект. Сайдбар сохраняет все созданные сессии workspace и позволяет выбирать их в раскрываемом дереве. Создание нового workspace и подключение существующей папки повторяют Workflow Kit с проверкой структуры до открытия чата. Архив workspace доступен в настройках через шестерёнку справа от подключения; проекты возвращаются в активные либо удаляются с диска вместе с локальными записями сессий. Облачные чаты сохраняются.
 
 ## Критерии приёмки
 
@@ -1027,6 +1178,8 @@ Revision: 69
 - Двойной клик по workspace раскрывает сессии; выбор открывает конкретный сохранённый чат.
 - Пользователь может создать новый проект или подготовить существующую папку, сохранив её содержимое и историю.
 - Перед открытием проверяются комплект, план, команды и полный контекст; конфликты показаны без перезаписи.
+- Архивные проекты скрыты из активного списка и доступны в настройках.
+- Удаление архивного проекта явно подтверждается и очищает только выбранную локальную папку и локальные сессии; чаты ChatGPT остаются.
 
 ## Микрозадачи
 
@@ -1126,6 +1279,22 @@ Revision: 69
   - Git Commit: [DONE] chore: собрать Web Pilot с подготовкой проектов
   - Reference: web-pilot-prototype-001 / T024 / implementation
   - Файлы: package.json, package-lock.json, README.md, AGENTS.md, docs/PRODUCT.md, docs/WORKFLOW_START.md, docs/DECISIONS.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, docs/WORKSPACE_SETUP.md, docs/CONTEXT_DELIVERY.md, docs/DOCUMENTATION_INDEX.md
+- [TODO] T025: Сохранять архив workspace — Ожидает
+  - Git Commit: [PENDING] feat: добавить архив workspace
+  - Reference: web-pilot-prototype-001 / T025 / implementation
+  - Файлы: src/workspace-session.mjs, tests/workspace-session.test.mjs, docs/PROJECT_ARCHIVE.md, docs/DOCUMENTATION_INDEX.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+- [TODO] T026: Удалять архивный проект с диска — Ожидает
+  - Git Commit: [PENDING] feat: добавить удаление архивного проекта с диска
+  - Reference: web-pilot-prototype-001 / T026 / implementation
+  - Файлы: src/workspace-deletion.mjs, tests/workspace-deletion.test.mjs, docs/PROJECT_ARCHIVE.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+- [TODO] T027: Добавить настройки с архивом в сайдбар — Ожидает
+  - Git Commit: [PENDING] feat: добавить архив в настройки сайдбара
+  - Reference: web-pilot-prototype-001 / T027 / implementation
+  - Файлы: src/main.mjs, src/preload.cjs, src/ui/index.html, src/ui/sidebar.mjs, src/ui/project-archive.mjs, tests/electron-smoke.mjs, docs/PROJECT_ARCHIVE.md, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+- [TODO] T028: Собрать приложение с архивом — Ожидает
+  - Git Commit: [PENDING] chore: собрать Web Pilot с архивом проектов
+  - Reference: web-pilot-prototype-001 / T028 / implementation
+  - Файлы: package.json, package-lock.json, README.md, AGENTS.md, docs/PRODUCT.md, docs/WORKFLOW_START.md, docs/DECISIONS.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, docs/PROJECT_ARCHIVE.md
 
 ## Context Pack For This Cycle
 
