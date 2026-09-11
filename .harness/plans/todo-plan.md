@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 19,
+  "plan_revision": 21,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
@@ -260,8 +260,8 @@
         "Проверены пробелы, кириллица, повторное открытие и несовпадающий проект"
       ],
       "expected_commit_message": "feat: связать workspace и сессию чата",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-prototype-001",
         "task_id": "T006",
@@ -541,7 +541,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 19
+Revision: 21
 
 ## Цель
 
@@ -577,8 +577,8 @@ Revision: 19
   - Git Commit: [DONE] feat: создать каркас приложения с Chromium
   - Reference: web-pilot-prototype-001 / T005 / implementation
   - Файлы: package.json, package-lock.json, src/main.mjs, .gitignore, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T006: Добавить сайдбар и привязку workspace к чату — Ожидает
-  - Git Commit: [PENDING] feat: связать workspace и сессию чата
+- [DONE] T006: Добавить сайдбар и привязку workspace к чату — Завершено
+  - Git Commit: [DONE] feat: связать workspace и сессию чата
   - Reference: web-pilot-prototype-001 / T006 / implementation
   - Файлы: src/workspace-session.mjs, src/ui/index.html, tests/workspace-session.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T007: Подключить управление существующим MCP и tunnel — Ожидает
