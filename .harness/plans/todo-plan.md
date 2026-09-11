@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 21,
+  "plan_revision": 23,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
@@ -293,8 +293,8 @@
         "Старт идемпотентен; чужие процессы и глобальные настройки не меняются; ошибки не превращаются в готовность"
       ],
       "expected_commit_message": "feat: подключить запуск локального MCP",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-prototype-001",
         "task_id": "T007",
@@ -541,7 +541,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 21
+Revision: 23
 
 ## Цель
 
@@ -581,8 +581,8 @@ Revision: 21
   - Git Commit: [DONE] feat: связать workspace и сессию чата
   - Reference: web-pilot-prototype-001 / T006 / implementation
   - Файлы: src/workspace-session.mjs, src/ui/index.html, tests/workspace-session.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T007: Подключить управление существующим MCP и tunnel — Ожидает
-  - Git Commit: [PENDING] feat: подключить запуск локального MCP
+- [DONE] T007: Подключить управление существующим MCP и tunnel — Завершено
+  - Git Commit: [DONE] feat: подключить запуск локального MCP
   - Reference: web-pilot-prototype-001 / T007 / implementation
   - Файлы: src/mcp-runtime.mjs, tests/mcp-runtime.test.mjs, docs/architecture/ARCHITECTURE.md, docs/SOURCE_WORKSPACES.md, docs/VERIFICATION.md
 - [TODO] T008: Реализовать отправку сообщения через поле ChatGPT — Ожидает
