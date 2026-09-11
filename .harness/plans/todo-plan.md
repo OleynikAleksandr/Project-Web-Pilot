@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 5,
+  "plan_revision": 7,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
@@ -113,8 +113,8 @@
         "Стартовый сценарий отделён от неподключённого автоматического compact"
       ],
       "expected_commit_message": "docs: описать архитектуру и источники проекта",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-prototype-001",
         "task_id": "T002",
@@ -487,7 +487,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 5
+Revision: 7
 
 ## Цель
 
@@ -507,8 +507,8 @@ Revision: 5
   - Git Commit: [DONE] docs: определить идею Project Web Pilot
   - Reference: web-pilot-prototype-001 / T001 / implementation
   - Файлы: README.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/DOCUMENTATION_INDEX.md
-- [TODO] T002: Описать архитектуру, передачу контекста и исходные проекты — Ожидает
-  - Git Commit: [PENDING] docs: описать архитектуру и источники проекта
+- [DONE] T002: Описать архитектуру, передачу контекста и исходные проекты — Завершено
+  - Git Commit: [DONE] docs: описать архитектуру и источники проекта
   - Reference: web-pilot-prototype-001 / T002 / implementation
   - Файлы: docs/architecture/ARCHITECTURE.md, docs/CONTEXT_DELIVERY.md, docs/SOURCE_WORKSPACES.md, docs/DOCUMENTATION_INDEX.md
 - [TODO] T003: Подготовить инструкции новой сессии и критерии проверки — Ожидает
