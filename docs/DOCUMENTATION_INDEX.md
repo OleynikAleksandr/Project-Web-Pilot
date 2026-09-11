@@ -35,3 +35,15 @@
 ## Порядок чтения для новой сессии
 
 `docs/WORKFLOW_START.md` → актуальный recovery packet и план → `docs/PRODUCT.md` / `docs/DECISIONS.md` → `docs/architecture/ARCHITECTURE.md` / `docs/CONTEXT_DELIVERY.md` → `docs/SOURCE_WORKSPACES.md` / `docs/VERIFICATION.md`. Статусы задач читать только из управляемого плана, не из исторических отчётов.
+
+## Подготовка workspace
+
+| Документ | Назначение |
+| --- | --- |
+| docs/WORKSPACE_SETUP.md | Создание, подключение, проверки и сохранение существующих файлов |
+| resources/workflow-kit/WORKFLOW.md | Исходный протокол в поставляемом ядре |
+| resources/workflow-kit/templates/AGENTS.md | Исходный шаблон инструкций |
+| resources/workflow-kit/templates/ARCHITECTURE.md | Исходный шаблон архитектуры |
+| resources/workflow-kit/templates/PLAN.md | Исходный шаблон плана |
+| resources/workflow-kit/templates/PRODUCT.md | Исходный шаблон продукта |
+| resources/workflow-kit/templates/START.md | Исходный шаблон начала работы |

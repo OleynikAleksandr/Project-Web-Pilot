@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 62,
+  "plan_revision": 64,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
@@ -871,8 +871,8 @@
         "Старые рабочие установки открываются без переустановки; конфликт и изменившийся preview блокируют запись."
       ],
       "expected_commit_message": "feat: добавить проверку и подготовку workspace",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-prototype-001",
         "task_id": "T022",
@@ -1010,7 +1010,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 62
+Revision: 64
 
 ## Цель
 
@@ -1112,8 +1112,8 @@ Revision: 62
   - Git Commit: [DONE] feat: включить ядро подготовки Workflow Kit
   - Reference: web-pilot-prototype-001 / T021 / implementation
   - Файлы: resources/workflow-kit/WORKFLOW.md, resources/workflow-kit/cli.mjs, resources/workflow-kit/install.mjs, resources/workflow-kit/lib/actions.mjs, resources/workflow-kit/lib/common.mjs, resources/workflow-kit/lib/git-hooks.mjs, resources/workflow-kit/lib/git.mjs, resources/workflow-kit/lib/installation-files.mjs, resources/workflow-kit/lib/installer.mjs, resources/workflow-kit/lib/plan.mjs, resources/workflow-kit/lib/platform.mjs, resources/workflow-kit/lib/recovery.mjs, resources/workflow-kit/lib/transaction.mjs, resources/workflow-kit/lib/validate.mjs, resources/workflow-kit/schemas/plan.schema.json, resources/workflow-kit/schemas/workflow.schema.json, resources/workflow-kit/templates/AGENTS.md, resources/workflow-kit/templates/ARCHITECTURE.md, resources/workflow-kit/templates/PLAN.md, resources/workflow-kit/templates/PRODUCT.md, resources/workflow-kit/templates/START.md, tests/workflow-kit-source.test.mjs, docs/SOURCE_WORKSPACES.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T022: Проверять и подготавливать workspace — Ожидает
-  - Git Commit: [PENDING] feat: добавить проверку и подготовку workspace
+- [DONE] T022: Проверять и подготавливать workspace — Завершено
+  - Git Commit: [DONE] feat: добавить проверку и подготовку workspace
   - Reference: web-pilot-prototype-001 / T022 / implementation
   - Файлы: resources/workspace-setup-worker.mjs, src/workspace-setup.mjs, tests/workspace-setup.test.mjs, resources/workflow-kit/WORKFLOW.md, resources/workflow-kit/templates/PRODUCT.md, resources/workflow-kit/templates/ARCHITECTURE.md, resources/workflow-kit/templates/PLAN.md, resources/workflow-kit/templates/AGENTS.md, resources/workflow-kit/templates/START.md, tests/workflow-kit-source.test.mjs, docs/WORKSPACE_SETUP.md, docs/DOCUMENTATION_INDEX.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T023: Добавить создание и подключение в интерфейс — Ожидает
