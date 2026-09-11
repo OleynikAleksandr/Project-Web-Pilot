@@ -90,3 +90,7 @@ WF001 остаётся источником для чтения. Пользов�
 ## Обновление T014
 
 Новый фактический snapshot после перезапуска MCP: 47 tools, workflow_context_recover(workspace), readOnlyHint=true, protocol=inline-context-v1. Новый клиент получил полный WF001 (12531 UTF-8 байт) и сверил SHA-256. Tunnel сохранил свой процесс. Протокол server instructions, полного Skill, описаний инструментов и backend согласован; глобальные инструкции не добавляют альтернативного порядка. Старые Web-чаты проверяются отдельно от нового snapshot.
+
+## Повторная сверка T017
+
+После реального нового старта и перезапуска Web Pilot: WF001 HEAD 20260a0cebd825c1d0415070d9eca6e1b1585fd4, Codex Local Mac HEAD 20ba452745ab50fc9bfa722a7b8fd34c8a42024a; оба рабочих дерева чистые. Полный актуальный MCP Skill, server instructions, tool descriptions и backend не требуют hook/ACK. Новый старт Work описан в VERIFICATION.

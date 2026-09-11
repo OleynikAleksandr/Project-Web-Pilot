@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 48,
+  "plan_revision": 50,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Локальный macOS Web Pilot с встроенным ChatGPT, выбором проекта и полным контекстом в первом сообщении; агент сразу кратко подтверждает восстановление и описывает проект.",
   "acceptance_criteria": [
     "Полный канонический контекст передаёт приложение до первого ответа агента.",
@@ -643,8 +643,8 @@
         "Проверены новый MCP snapshot, полная отправка и повторное открытие; ограничения и инструкция актуальны."
       ],
       "expected_commit_message": "chore: собрать прототип с прямой передачей контекста",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-prototype-001",
         "task_id": "T017",
@@ -692,10 +692,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 48
+Revision: 50
 
 ## Цель
 
@@ -774,8 +774,8 @@ Revision: 48
   - Git Commit: [DONE] feat: упростить состояния старта проекта
   - Reference: web-pilot-prototype-001 / T016 / implementation
   - Файлы: src/main.mjs, src/ui/index.html, src/ui/sidebar.mjs, tests/electron-smoke.mjs, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T017: Пересобрать и проверить краткий первый ответ — Ожидает
-  - Git Commit: [PENDING] chore: собрать прототип с прямой передачей контекста
+- [DONE] T017: Пересобрать и проверить краткий первый ответ — Завершено
+  - Git Commit: [DONE] chore: собрать прототип с прямой передачей контекста
   - Reference: web-pilot-prototype-001 / T017 / implementation
   - Файлы: package.json, package-lock.json, README.md, AGENTS.md, docs/PRODUCT.md, docs/WORKFLOW_START.md, docs/DECISIONS.md, docs/VERIFICATION.md, docs/SOURCE_WORKSPACES.md, docs/architecture/ARCHITECTURE.md
 
