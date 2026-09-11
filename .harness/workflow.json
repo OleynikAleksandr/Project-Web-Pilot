@@ -1,8 +1,92 @@
 {
   "schema_version": 1,
-  "profile": "DISCOVERY",
-  "stack": null,
-  "checks": [],
+  "profile": "DEVELOPMENT",
+  "stack": "Electron 44.3.0 / Chromium, JavaScript ESM, Node.js 22.17.0; macOS arm64",
+  "checks": [
+    {
+      "id": "syntax",
+      "executable": "node",
+      "args": [
+        "--check",
+        "src/main.mjs"
+      ],
+      "cwd": ".",
+      "required": true,
+      "timeout_ms": 30000,
+      "stage": "commit"
+    },
+    {
+      "id": "workspace",
+      "executable": "node",
+      "args": [
+        "--test",
+        "tests/workspace-session.test.mjs"
+      ],
+      "cwd": ".",
+      "required": false,
+      "timeout_ms": 60000,
+      "stage": "commit"
+    },
+    {
+      "id": "runtime",
+      "executable": "node",
+      "args": [
+        "--test",
+        "tests/mcp-runtime.test.mjs"
+      ],
+      "cwd": ".",
+      "required": false,
+      "timeout_ms": 60000,
+      "stage": "commit"
+    },
+    {
+      "id": "composer",
+      "executable": "node",
+      "args": [
+        "--test",
+        "tests/chatgpt-composer.test.mjs"
+      ],
+      "cwd": ".",
+      "required": false,
+      "timeout_ms": 60000,
+      "stage": "commit"
+    },
+    {
+      "id": "context",
+      "executable": "node",
+      "args": [
+        "--test",
+        "tests/context-session.test.mjs"
+      ],
+      "cwd": ".",
+      "required": false,
+      "timeout_ms": 60000,
+      "stage": "commit"
+    },
+    {
+      "id": "suite",
+      "executable": "npm",
+      "args": [
+        "test"
+      ],
+      "cwd": ".",
+      "required": false,
+      "timeout_ms": 120000,
+      "stage": "commit"
+    },
+    {
+      "id": "electron-smoke",
+      "executable": "npm",
+      "args": [
+        "run",
+        "smoke"
+      ],
+      "cwd": ".",
+      "required": false,
+      "timeout_ms": 60000,
+      "stage": "commit"
+    }
+  ],
   "budget": {
     "soft_tokens": 16000,
     "hard_tokens": 32000,
@@ -10,6 +94,31 @@
   },
   "documentation": {
     "index": "docs/DOCUMENTATION_INDEX.md",
-    "mappings": []
+    "mappings": [
+      {
+        "code": "src/**",
+        "documents": [
+          "docs/architecture/ARCHITECTURE.md"
+        ]
+      },
+      {
+        "code": "tests/**",
+        "documents": [
+          "docs/VERIFICATION.md"
+        ]
+      },
+      {
+        "code": "package*.json",
+        "documents": [
+          "docs/architecture/ARCHITECTURE.md"
+        ]
+      },
+      {
+        "code": ".gitignore",
+        "documents": [
+          "docs/architecture/ARCHITECTURE.md"
+        ]
+      }
+    ]
   }
 }
