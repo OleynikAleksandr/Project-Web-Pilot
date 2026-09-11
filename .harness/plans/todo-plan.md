@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 55,
+  "plan_revision": 57,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Локальный macOS Web Pilot с встроенным ChatGPT, выбором проекта и полным контекстом в первом сообщении; агент сразу кратко подтверждает восстановление и описывает проект. Сайдбар сохраняет все созданные сессии workspace и позволяет выбирать их в раскрываемом дереве.",
   "acceptance_criteria": [
     "Полный канонический контекст передаёт приложение до первого ответа агента.",
@@ -751,8 +751,8 @@
         "Повторный запуск сохраняет сессии; пользовательская инструкция актуальна."
       ],
       "expected_commit_message": "chore: собрать прототип с деревом сессий",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-prototype-001",
         "task_id": "T020",
@@ -805,10 +805,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 55
+Revision: 57
 
 ## Цель
 
@@ -900,8 +900,8 @@ Revision: 55
   - Git Commit: [DONE] feat: выбирать сессии из дерева проектов
   - Reference: web-pilot-prototype-001 / T019 / implementation
   - Файлы: src/main.mjs, src/preload.cjs, src/ui/sidebar.mjs, src/ui/index.html, tests/electron-smoke.mjs, docs/architecture/ARCHITECTURE.md, docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md
-- [TODO] T020: Собрать и проверить дерево чатов — Ожидает
-  - Git Commit: [PENDING] chore: собрать прототип с деревом сессий
+- [DONE] T020: Собрать и проверить дерево чатов — Завершено
+  - Git Commit: [DONE] chore: собрать прототип с деревом сессий
   - Reference: web-pilot-prototype-001 / T020 / implementation
   - Файлы: package.json, package-lock.json, README.md, AGENTS.md, docs/PRODUCT.md, docs/WORKFLOW_START.md, docs/DECISIONS.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 
