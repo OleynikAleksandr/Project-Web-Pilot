@@ -2,7 +2,7 @@
 
 ## Состояние
 
-Это проект реализации, а не описание готового Project Web Pilot. Исходный workspace содержит Workflow Kit 1.1.0 и документы. Исполняемые компоненты нового приложения пока отсутствуют. Electron/WebContentsView — предлагаемый минимальный путь; конкретные версии и проверки определяются в T004.
+Это проект реализации, а не описание готового Project Web Pilot. Исходный workspace содержит Workflow Kit 1.1.0 и документы. Исполняемые компоненты нового приложения пока отсутствуют. Для реализации выбран Electron 44.3.0 с WebContentsView; профиль и проверки определены в T004.
 
 ## Схема
 
@@ -69,3 +69,144 @@ MCP и tunnel могут обслуживать другие чаты. Суще�
 ## Ограничение исследования compact
 
 Приложение контролирует своё открытие, выбор workspace, ввод и отправку сообщения. Оно пока не имеет подтверждённого сигнала внутреннего compact ChatGPT. Не превращать загрузку страницы, idle, reconnect, счётчик сообщений или задержку ответа в событие compact. Исследование возможного сигнала оформляется отдельно после первого прототипа.
+
+## Профиль первого прототипа — T004
+
+11.09.2026 пользователь поручил продолжить до запускаемого прототипа. Точные зависимости сверены с npm registry: Electron 44.3.0, @electron/packager 20.3.0. Язык — JavaScript ESM, без UI-фреймворка; локальный Node.js 22.17.0 и npm 10.9.2. Для DOM fixtures выбран jsdom 26.1.0, совместимый с установленным Node; он используется только в тестах и не входит в приложение.
+
+Производственная оболочка использует встроенные Node modules и локальный MCP Streamable HTTP через fetch; модельных API-клиентов и runtime npm-зависимостей нет. Служебная упаковка в локальный .app выполняется @electron/packager; приложение открывается пользователем без терминала. Выход сборки — ignored .harness/runtime/build. Это локальный прототип без публикации, установщика или нотариализации. Browser profile хранится отдельно в каталоге данных Project Web Pilot.
+
+Проверки назначаются по мере появления модулей: syntax — настоящий синтаксис entrypoint; workspace/runtime/composer/context — проверки поведения; suite — все созданные *.test.mjs; electron-smoke — окно, IPC и сценарий с явно обозначенным локальным fixture в настоящем Electron. Fixture не подтверждает вход, MCP доступ в аккаунте или реальный ACK.
+
+Полная конфигурация, применяемая между T004 и T005:
+
+```json
+{
+  "schema_version": 1,
+  "profile": "DEVELOPMENT",
+  "stack": "Electron 44.3.0 / Chromium, JavaScript ESM, Node.js 22.17.0; macOS arm64",
+  "checks": [
+    {
+      "id": "syntax",
+      "executable": "node",
+      "args": [
+        "--check",
+        "src/main.mjs"
+      ],
+      "cwd": ".",
+      "required": true,
+      "timeout_ms": 30000,
+      "stage": "commit"
+    },
+    {
+      "id": "workspace",
+      "executable": "node",
+      "args": [
+        "--test",
+        "tests/workspace-session.test.mjs"
+      ],
+      "cwd": ".",
+      "required": false,
+      "timeout_ms": 60000,
+      "stage": "commit"
+    },
+    {
+      "id": "runtime",
+      "executable": "node",
+      "args": [
+        "--test",
+        "tests/mcp-runtime.test.mjs"
+      ],
+      "cwd": ".",
+      "required": false,
+      "timeout_ms": 60000,
+      "stage": "commit"
+    },
+    {
+      "id": "composer",
+      "executable": "node",
+      "args": [
+        "--test",
+        "tests/chatgpt-composer.test.mjs"
+      ],
+      "cwd": ".",
+      "required": false,
+      "timeout_ms": 60000,
+      "stage": "commit"
+    },
+    {
+      "id": "context",
+      "executable": "node",
+      "args": [
+        "--test",
+        "tests/context-session.test.mjs"
+      ],
+      "cwd": ".",
+      "required": false,
+      "timeout_ms": 60000,
+      "stage": "commit"
+    },
+    {
+      "id": "suite",
+      "executable": "npm",
+      "args": [
+        "test"
+      ],
+      "cwd": ".",
+      "required": false,
+      "timeout_ms": 120000,
+      "stage": "commit"
+    },
+    {
+      "id": "electron-smoke",
+      "executable": "npm",
+      "args": [
+        "run",
+        "smoke"
+      ],
+      "cwd": ".",
+      "required": false,
+      "timeout_ms": 60000,
+      "stage": "commit"
+    }
+  ],
+  "budget": {
+    "soft_tokens": 16000,
+    "hard_tokens": 32000,
+    "hard_bytes": 65536
+  },
+  "documentation": {
+    "index": "docs/DOCUMENTATION_INDEX.md",
+    "mappings": [
+      {
+        "code": "src/**",
+        "documents": [
+          "docs/architecture/ARCHITECTURE.md"
+        ]
+      },
+      {
+        "code": "tests/**",
+        "documents": [
+          "docs/VERIFICATION.md"
+        ]
+      },
+      {
+        "code": "package*.json",
+        "documents": [
+          "docs/architecture/ARCHITECTURE.md"
+        ]
+      },
+      {
+        "code": ".gitignore",
+        "documents": [
+          "docs/architecture/ARCHITECTURE.md"
+        ]
+      }
+    ]
+  }
+}
+```
+
+Технические основания: [WebContentsView](https://www.electronjs.org/docs/latest/api/web-contents-view), [изоляция удалённой страницы](https://www.electronjs.org/docs/latest/tutorial/security), [Secure MCP Tunnel](https://developers.openai.com/api/docs/guides/secure-mcp-tunnels). Документация сверена 11.09.2026; совместимость реального входа подтверждается отдельным запуском.
+
+required=true у syntax запускает общую проверку каркаса; остальные проверки обязательны в назначенных задачах через verification_ids. Так будущие тестовые файлы не запускаются до их создания. Любой ненулевой результат выбранной проверки блокирует commit.

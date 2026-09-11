@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 11,
+  "plan_revision": 13,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
@@ -192,8 +192,8 @@
         "Зафиксировать выбранные версии и команды, не объявлять пустую suite успешной"
       ],
       "expected_commit_message": "docs: определить профиль и проверки прототипа",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-prototype-001",
         "task_id": "T004",
@@ -520,7 +520,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 11
+Revision: 13
 
 ## Цель
 
@@ -548,8 +548,8 @@ Revision: 11
   - Git Commit: [DONE] docs: подготовить передачу в новую сессию
   - Reference: web-pilot-prototype-001 / T003 / implementation
   - Файлы: AGENTS.md, docs/WORKFLOW_START.md, docs/VERIFICATION.md, docs/DOCUMENTATION_INDEX.md
-- [TODO] T004: Уточнить профиль прототипа и подключить проверки — Ожидает
-  - Git Commit: [PENDING] docs: определить профиль и проверки прототипа
+- [DONE] T004: Уточнить профиль прототипа и подключить проверки — Завершено
+  - Git Commit: [DONE] docs: определить профиль и проверки прототипа
   - Reference: web-pilot-prototype-001 / T004 / implementation
   - Файлы: docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/DECISIONS.md, AGENTS.md, docs/WORKFLOW_START.md
 - [TODO] T005: Создать запускаемый каркас Chromium-приложения — Ожидает
