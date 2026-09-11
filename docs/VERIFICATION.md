@@ -77,3 +77,7 @@ T004 сначала документирует точный стек и реал
 Пройдены 5 Node tests: повторное использование готовых служб, один start при необходимости, запрет действий с чужим процессом, отсутствие tunnel, SSE/JSON/session headers, разрешение только status и отсутствие обязательных tools. Исправлена тестовая нормализация /var → /private/var на macOS.
 
 Живой McpRuntime.ensure подтвердил mcpReady=true, tunnelReady=true, serverName=Codex Local Mac, toolCount=50, protocolVersion=2025-03-26. Context status для WF001 с новым transport-test session_id вернул latest=null и правильную папку. Recover и ACK в этой проверке не вызывались. Готовность плагина внутри нового входа ChatGPT остаётся отдельной проверкой.
+
+## T008 — доставка сообщения
+
+Пройдены 7 jsdom/Node tests: один Send и наблюдаемый user message, неизменность чужого черновика, активная генерация, правка текста пользователем перед click, неопределённый результат без повторного Send, сериализация/отмена, исключение assistant quote, login и contenteditable-ввод. Fixture воспроизводит обычное поле; текущая разметка настоящего ChatGPT после входа ещё требует проверки. Успех fixture не считается реальным отправленным сообщением.

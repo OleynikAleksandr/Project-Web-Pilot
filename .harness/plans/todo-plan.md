@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 23,
+  "plan_revision": 26,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
@@ -311,7 +311,8 @@
       ],
       "documentation_paths": [
         "docs/CONTEXT_DELIVERY.md",
-        "docs/VERIFICATION.md"
+        "docs/VERIFICATION.md",
+        "docs/architecture/ARCHITECTURE.md"
       ],
       "verification_ids": [
         "composer"
@@ -325,8 +326,8 @@
         "Локальные тесты дополняются отдельной проверкой на реальной странице ChatGPT"
       ],
       "expected_commit_message": "feat: подготовить доставку стартового сообщения",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-prototype-001",
         "task_id": "T008",
@@ -444,7 +445,8 @@
       ],
       "documentation_paths": [
         "docs/CONTEXT_DELIVERY.md",
-        "docs/VERIFICATION.md"
+        "docs/VERIFICATION.md",
+        "docs/architecture/ARCHITECTURE.md"
       ],
       "verification_ids": [
         "suite",
@@ -541,7 +543,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 23
+Revision: 26
 
 ## Цель
 
@@ -585,10 +587,10 @@ Revision: 23
   - Git Commit: [DONE] feat: подключить запуск локального MCP
   - Reference: web-pilot-prototype-001 / T007 / implementation
   - Файлы: src/mcp-runtime.mjs, tests/mcp-runtime.test.mjs, docs/architecture/ARCHITECTURE.md, docs/SOURCE_WORKSPACES.md, docs/VERIFICATION.md
-- [TODO] T008: Реализовать отправку сообщения через поле ChatGPT — Ожидает
-  - Git Commit: [PENDING] feat: подготовить доставку стартового сообщения
+- [DONE] T008: Реализовать отправку сообщения через поле ChatGPT — Завершено
+  - Git Commit: [DONE] feat: подготовить доставку стартового сообщения
   - Reference: web-pilot-prototype-001 / T008 / implementation
-  - Файлы: src/chatgpt-composer.mjs, tests/chatgpt-composer.test.mjs, docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md
+  - Файлы: src/chatgpt-composer.mjs, tests/chatgpt-composer.test.mjs, docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 - [TODO] T009: Связать стартовое сообщение с recover и ACK — Ожидает
   - Git Commit: [PENDING] feat: связать старт чата с подтверждением контекста
   - Reference: web-pilot-prototype-001 / T009 / implementation
@@ -604,7 +606,7 @@ Revision: 23
 - [TODO] T012: Проверить повторное открытие, ошибки и восстановление состояния — Ожидает
   - Git Commit: [PENDING] fix: обработать повторный старт и сбои восстановления
   - Reference: web-pilot-prototype-001 / T012 / implementation
-  - Файлы: src/workspace-session.mjs, src/context-session.mjs, tests/context-session.test.mjs, docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md
+  - Файлы: src/workspace-session.mjs, src/context-session.mjs, tests/context-session.test.mjs, docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 - [TODO] T013: Подготовить результат прототипа к приёмке и следующий scope — Ожидает
   - Git Commit: [PENDING] docs: подготовить прототип к приёмке
   - Reference: web-pilot-prototype-001 / T013 / implementation
