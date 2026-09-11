@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 10,
+  "plan_revision": 11,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
@@ -33,7 +33,9 @@
       "src/context-session.mjs",
       "tests/context-session.test.mjs",
       "src/preload.cjs",
-      "src/ui/sidebar.mjs"
+      "src/ui/sidebar.mjs",
+      ".gitignore",
+      "tests/electron-smoke.mjs"
     ],
     "documentation_paths": [
       "README.md",
@@ -176,7 +178,9 @@
       "documentation_paths": [
         "docs/architecture/ARCHITECTURE.md",
         "docs/VERIFICATION.md",
-        "docs/DECISIONS.md"
+        "docs/DECISIONS.md",
+        "AGENTS.md",
+        "docs/WORKFLOW_START.md"
       ],
       "verification_ids": [],
       "id": "T004",
@@ -203,7 +207,8 @@
       "functional_paths": [
         "package.json",
         "package-lock.json",
-        "src/main.mjs"
+        "src/main.mjs",
+        ".gitignore"
       ],
       "documentation_paths": [
         "docs/architecture/ARCHITECTURE.md",
@@ -225,7 +230,8 @@
         "scope_id": "web-pilot-prototype-001",
         "task_id": "T005",
         "role": "implementation"
-      }
+      },
+      "file_limit_exception": "Четвёртый файл .gitignore исключает зависимости и сборку из Git в том же атомарном каркасе; функциональных модулей по-прежнему один."
     },
     {
       "dependencies": [
@@ -357,7 +363,8 @@
       "functional_paths": [
         "src/main.mjs",
         "src/preload.cjs",
-        "src/ui/sidebar.mjs"
+        "src/ui/sidebar.mjs",
+        "tests/electron-smoke.mjs"
       ],
       "documentation_paths": [
         "docs/architecture/ARCHITECTURE.md",
@@ -380,7 +387,8 @@
         "scope_id": "web-pilot-prototype-001",
         "task_id": "T010",
         "role": "implementation"
-      }
+      },
+      "file_limit_exception": "Дополнительный файл содержит проверку собранной цепочки в настоящем Electron; три производственных файла остаются по плану."
     },
     {
       "dependencies": [
@@ -450,7 +458,9 @@
         "README.md",
         "docs/VERIFICATION.md",
         "docs/WORKFLOW_START.md",
-        "docs/DECISIONS.md"
+        "docs/DECISIONS.md",
+        "AGENTS.md",
+        "docs/architecture/ARCHITECTURE.md"
       ],
       "verification_ids": [],
       "id": "T013",
@@ -493,6 +503,11 @@
       "id": "13ce9bc7-f80c-4bd4-9e89-83ef1378107c",
       "text": "11.09.2026 пользователь создал Project Web Pilot через Project Workflow Kit и поручил наполнить его первичными документами, ссылками на WF001 и Codex Local Mac и планом реализации для новой сессии. В этом сеансе выполняются T001–T003 и настройка context pack. Функциональные T004–T013 подготовлены для последующего поручения в новой сессии, сейчас не начинаются.",
       "recorded_at": "2026-09-11T08:14:01.195Z"
+    },
+    {
+      "id": "31553ccf-3317-466b-a887-f5e98b8ca38e",
+      "text": "11.09.2026, новая сессия: пользователь поручил продолжать без остановок до сборки первого запускаемого прототипа на Mac, который он сможет протестировать и дать фидбэк. Разрешены T004 и последующая реализация в согласованном scope; реальная авторизация и пользовательская приёмка проверяются отдельно.",
+      "recorded_at": "2026-09-11T08:44:16.129775+00:00"
     }
   ]
 }
@@ -505,7 +520,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 10
+Revision: 11
 
 ## Цель
 
@@ -536,11 +551,11 @@ Revision: 10
 - [TODO] T004: Уточнить профиль прототипа и подключить проверки — Ожидает
   - Git Commit: [PENDING] docs: определить профиль и проверки прототипа
   - Reference: web-pilot-prototype-001 / T004 / implementation
-  - Файлы: docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/DECISIONS.md
+  - Файлы: docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/DECISIONS.md, AGENTS.md, docs/WORKFLOW_START.md
 - [TODO] T005: Создать запускаемый каркас Chromium-приложения — Ожидает
   - Git Commit: [PENDING] feat: создать каркас приложения с Chromium
   - Reference: web-pilot-prototype-001 / T005 / implementation
-  - Файлы: package.json, package-lock.json, src/main.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+  - Файлы: package.json, package-lock.json, src/main.mjs, .gitignore, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T006: Добавить сайдбар и привязку workspace к чату — Ожидает
   - Git Commit: [PENDING] feat: связать workspace и сессию чата
   - Reference: web-pilot-prototype-001 / T006 / implementation
@@ -560,7 +575,7 @@ Revision: 10
 - [TODO] T010: Соединить сайдбар, службы, браузер и состояние контекста — Ожидает
   - Git Commit: [PENDING] feat: собрать стартовый сценарий в интерфейсе
   - Reference: web-pilot-prototype-001 / T010 / implementation
-  - Файлы: src/main.mjs, src/preload.cjs, src/ui/sidebar.mjs, docs/architecture/ARCHITECTURE.md, docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md
+  - Файлы: src/main.mjs, src/preload.cjs, src/ui/sidebar.mjs, tests/electron-smoke.mjs, docs/architecture/ARCHITECTURE.md, docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md
 - [TODO] T011: Проверить вертикальный сценарий на реальном ChatGPT — Ожидает
   - Git Commit: [PENDING] docs: зафиксировать реальную проверку первого сценария
   - Reference: web-pilot-prototype-001 / T011 / implementation
@@ -572,7 +587,7 @@ Revision: 10
 - [TODO] T013: Подготовить результат прототипа к приёмке и следующий scope — Ожидает
   - Git Commit: [PENDING] docs: подготовить прототип к приёмке
   - Reference: web-pilot-prototype-001 / T013 / implementation
-  - Файлы: README.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/DECISIONS.md
+  - Файлы: README.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/DECISIONS.md, AGENTS.md, docs/architecture/ARCHITECTURE.md
 
 ## Context Pack For This Cycle
 
