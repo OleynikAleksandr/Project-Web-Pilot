@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 72,
+  "plan_revision": 74,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
@@ -1019,8 +1019,8 @@
         "Физическое удаление и очистка локальных сессий проверены в изолированных папках, чаты ChatGPT не удаляются."
       ],
       "expected_commit_message": "feat: добавить удаление архивного проекта с диска",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-prototype-001",
         "task_id": "T026",
@@ -1163,7 +1163,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 72
+Revision: 74
 
 ## Цель
 
@@ -1283,8 +1283,8 @@ Revision: 72
   - Git Commit: [DONE] feat: добавить архив workspace
   - Reference: web-pilot-prototype-001 / T025 / implementation
   - Файлы: src/workspace-session.mjs, tests/workspace-session.test.mjs, docs/PROJECT_ARCHIVE.md, docs/DOCUMENTATION_INDEX.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T026: Удалять архивный проект с диска — Ожидает
-  - Git Commit: [PENDING] feat: добавить удаление архивного проекта с диска
+- [DONE] T026: Удалять архивный проект с диска — Завершено
+  - Git Commit: [DONE] feat: добавить удаление архивного проекта с диска
   - Reference: web-pilot-prototype-001 / T026 / implementation
   - Файлы: src/workspace-deletion.mjs, tests/workspace-deletion.test.mjs, docs/PROJECT_ARCHIVE.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T027: Добавить настройки с архивом в сайдбар — Ожидает
