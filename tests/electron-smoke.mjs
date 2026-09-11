@@ -11,12 +11,14 @@ const html = `<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>
 <body><aside>TEST FIXTURE · без реального ChatGPT, MCP и аккаунта</aside><h1>Composer fixture</h1>
 <div id="messages"></div><form><div id="prompt-textarea" contenteditable="true" role="textbox"></div><button type="submit" data-testid="send-button">Send fixture</button></form>
 <script>
-window.fixtureMessages=[];
+window.fixtureMessages=JSON.parse(sessionStorage.getItem(location.pathname)||'[]');
+function showMessage(text){const article=document.createElement('article');article.setAttribute('data-message-author-role','user');article.textContent=text;document.getElementById('messages').append(article);}
+window.fixtureMessages.forEach(message=>showMessage(message.text));
 document.querySelector('form').addEventListener('submit',event=>{
  event.preventDefault(); const editor=document.getElementById('prompt-textarea');const text=editor.innerText;
  const message={text,at:Date.now()};window.fixtureMessages.push(message);
- const article=document.createElement('article');article.setAttribute('data-message-author-role','user');article.textContent=text;document.getElementById('messages').append(article);
- editor.textContent='';const id=text.match(/wp-request-[a-zA-Z0-9-]+/)[0];history.pushState({},'', '/c/'+id);
+ showMessage(text);
+ editor.textContent='';const id=text.match(/wp-request-[a-zA-Z0-9-]+/)[0];history.pushState({},'', '/c/'+id);sessionStorage.setItem(location.pathname,JSON.stringify(window.fixtureMessages));
 });
 </script></body></html>`;
 
@@ -70,6 +72,8 @@ export async function run({ app, window, browser, sidebar, store, controller, se
     }
     return snapshot().context.phase === 'delivered';
   }, 'first fixture context', snapshot);
+  await browser.executeJavaScript("document.title='Первый разговор проекта'");
+  await waitFor(() => snapshot().projects[0].sessions[0].title === 'Первый разговор проекта', 'conversation title', snapshot);
   const first = store.selected();
   assert.ok(first.chatUrl.startsWith('https://chatgpt.com/c/'));
   assert.equal(first.attempt.state, 'sent');
@@ -95,9 +99,35 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await waitFor(() => store.selected()?.sessionId !== first.sessionId && snapshot().context.phase === 'delivered', 'new chat via actual sidebar IPC', snapshot);
   assert.equal(packetLoads, 2);
   assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 1);
+  const second = store.selected();
+  assert.equal(store.snapshot().projects[0].sessions.length, 2);
+  assert.equal(snapshot().projects[0].sessions[0].attempt, undefined, 'Session tree only receives metadata');
+  await sidebar.executeJavaScript(`document.querySelector('[data-session-id="${first.sessionId}"]').click()`);
+  await waitFor(() => store.selected()?.sessionId === first.sessionId && snapshot().context.phase === 'delivered'
+    && browser.getURL() === first.chatUrl, 'select earlier session via tree', snapshot);
+  assert.equal(packetLoads, 2, 'Earlier chat does not receive another context packet');
+  assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 1);
+  assert.ok(await browser.executeJavaScript(`window.fixtureMessages[0].text.includes('${first.attempt.requestId}')`));
+  assert.equal(store.selected().attempt.requestId, first.attempt.requestId);
+  assert.equal(store.snapshot().projects[0].sessions[1].sessionId, second.sessionId);
+  const doubleClickWorkspace = () => sidebar.executeJavaScript(`{
+    const button = document.querySelector('.project');
+    button.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
+    button.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 2 }));
+    button.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, detail: 2 }));
+  }`);
+  await doubleClickWorkspace();
+  await waitFor(() => sidebar.executeJavaScript('document.querySelector(".sessions").hidden'), 'double click collapses sessions', snapshot);
+  await doubleClickWorkspace();
+  await waitFor(() => sidebar.executeJavaScript('!document.querySelector(".sessions").hidden'), 'double click expands sessions', snapshot);
+  assert.equal(store.selected().sessionId, first.sessionId, 'Expanding does not switch to latest session');
+  const history = new WorkspaceSessions(store.file); await history.load();
+  assert.equal(history.selected().sessionId, first.sessionId);
+  assert.equal(history.snapshot().projects[0].sessions.length, 2);
+  assert.equal(history.snapshot().projects[0].expanded, true);
   const result = { mode: 'isolated-fixture', electron: process.versions.electron, chromium: process.versions.chrome,
     views: window.contentView.children.length, secureRemote: true, sidebarIpc: true, startupMessages: packetLoads,
-    restartKeepsSession: true, newChatCreatesSession: true, fullContextBytes: Buffer.byteLength(fixtureContext), liveChatGPT: false, agentToolsRequired: false };
+    restartKeepsSession: true, newChatCreatesSession: true, sessionTree: true, selectsEarlierSession: true, fullContextBytes: Buffer.byteLength(fixtureContext), liveChatGPT: false, agentToolsRequired: false };
   await fs.writeFile(path.join(dataDir, 'smoke-result.json'), JSON.stringify(result, null, 2));
   console.log(JSON.stringify(result));
 }

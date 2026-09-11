@@ -1,8 +1,10 @@
 const $ = id => document.getElementById(id);
 const api = window.webPilot;
+window.addEventListener('pagehide', () => clearTimeout(workspaceClickTimer));
 let lastProjects = '';
 let currentState;
 let actionPending = false;
+let workspaceClickTimer;
 const phases = {
   selected: ['Готов к началу', 'Войдите в ChatGPT справа и выберите папку проекта слева.', 'neutral'],
   preparing: ['Подготавливаем подключение', 'Проверяем локальные инструменты и связь с ChatGPT.', 'working'],
@@ -40,22 +42,62 @@ function render(state) {
   currentState = state;
   const selected = state.selected;
   const context = state.context;
-  const signature = JSON.stringify([state.projects, selected?.workspace]);
+  const signature = JSON.stringify([state.projects, selected?.workspace, selected?.sessionId]);
   if (signature !== lastProjects) {
     lastProjects = signature;
     const fragment = document.createDocumentFragment();
+    const dateFormat = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
     for (const project of state.projects) {
+      const item = document.createElement('li');
+      const row = document.createElement('div'); row.className = 'workspace-row';
+      const toggle = () => { clearTimeout(workspaceClickTimer); action('setExpanded', project.workspace, !project.expanded); };
+      const arrow = document.createElement('button'); arrow.className = 'expand-project';
+      arrow.textContent = project.expanded ? '▾' : '▸';
+      arrow.setAttribute('aria-label', `${project.expanded ? 'Свернуть' : 'Раскрыть'} сессии ${project.name}`);
+      arrow.setAttribute('aria-expanded', String(project.expanded));
+      arrow.addEventListener('click', toggle);
       const button = document.createElement('button');
       button.className = 'project' + (project.workspace === selected?.workspace ? ' active' : '');
+      button.dataset.workspace = project.workspace;
       button.setAttribute('aria-pressed', String(project.workspace === selected?.workspace));
-      button.title = project.workspace;
+      button.setAttribute('aria-expanded', String(project.expanded));
+      button.title = `${project.workspace}\nДвойной клик — раскрыть сессии`;
       const name = document.createElement('strong'); name.textContent = project.name;
-      const caption = document.createElement('small'); caption.textContent = project.chatUrl ? 'Связанный чат сохранён' : 'Новый чат проекта';
-      button.append(name, caption); button.addEventListener('click', () => action('selectWorkspace', project.workspace));
-      fragment.append(button);
+      const caption = document.createElement('small');
+      const count = project.sessions.length;
+      caption.textContent = `${count} ${count % 10 === 1 && count % 100 !== 11 ? 'сессия' : count % 10 >= 2 && count % 10 <= 4 && !(count % 100 >= 12 && count % 100 <= 14) ? 'сессии' : 'сессий'}`;
+      button.append(name, caption);
+      button.addEventListener('click', event => {
+        clearTimeout(workspaceClickTimer);
+        if (!event.detail) { action('selectWorkspace', project.workspace); return; }
+        if (event.detail === 1) workspaceClickTimer = setTimeout(() => action('selectWorkspace', project.workspace), 450);
+      });
+      button.addEventListener('dblclick', event => { event.preventDefault(); toggle(); });
+      button.addEventListener('keydown', event => {
+        if ((event.key === 'ArrowRight' && !project.expanded) || (event.key === 'ArrowLeft' && project.expanded)) { event.preventDefault(); toggle(); }
+      });
+      row.append(arrow, button); item.append(row);
+      const sessions = document.createElement('ul'); sessions.className = 'sessions'; sessions.hidden = !project.expanded;
+      sessions.setAttribute('aria-label', `Сессии ${project.name}`);
+      for (const [index, session] of project.sessions.entries()) {
+        const entry = document.createElement('li');
+        const choice = document.createElement('button');
+        const active = selected?.workspace === project.workspace && selected?.sessionId === session.sessionId;
+        choice.className = 'session' + (active ? ' active' : '');
+        choice.dataset.sessionId = session.sessionId;
+        if (active) choice.setAttribute('aria-current', 'page');
+        const title = document.createElement('strong'); title.textContent = session.title || `Сессия ${index + 1}`;
+        const date = document.createElement('small');
+        date.textContent = `Сессия ${index + 1} · ${dateFormat.format(new Date(session.createdAt))}` + (session.chatUrl ? '' : ' · новый чат');
+        choice.title = `${session.title || 'Новая сессия'}\n${new Date(session.createdAt).toLocaleString('ru-RU')}`;
+        choice.append(title, date);
+        choice.addEventListener('click', () => { clearTimeout(workspaceClickTimer); action('selectSession', project.workspace, session.sessionId); });
+        entry.append(choice); sessions.append(entry);
+      }
+      item.append(sessions); fragment.append(item);
     }
     if (!state.projects.length) {
-      const empty = document.createElement('div'); empty.className = 'empty';
+      const empty = document.createElement('li'); empty.className = 'empty';
       empty.textContent = 'Выберите проект, чтобы начать работу с его контекстом.'; fragment.append(empty);
     }
     $('projects').replaceChildren(fragment);

@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 53,
+  "plan_revision": 55,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
@@ -714,8 +714,8 @@
       ],
       "file_limit_exception": "Дерево требует согласованных изменений renderer, разметки, двух сторон IPC и интеграционной проверки; это один пользовательский сценарий из пяти файлов.",
       "expected_commit_message": "feat: выбирать сессии из дерева проектов",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-prototype-001",
         "task_id": "T019",
@@ -808,7 +808,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 53
+Revision: 55
 
 ## Цель
 
@@ -896,8 +896,8 @@ Revision: 53
   - Git Commit: [DONE] feat: сохранять историю сессий workspace
   - Reference: web-pilot-prototype-001 / T018 / implementation
   - Файлы: src/workspace-session.mjs, tests/workspace-session.test.mjs, docs/architecture/ARCHITECTURE.md, docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md
-- [TODO] T019: Добавить дерево сессий в сайдбар — Ожидает
-  - Git Commit: [PENDING] feat: выбирать сессии из дерева проектов
+- [DONE] T019: Добавить дерево сессий в сайдбар — Завершено
+  - Git Commit: [DONE] feat: выбирать сессии из дерева проектов
   - Reference: web-pilot-prototype-001 / T019 / implementation
   - Файлы: src/main.mjs, src/preload.cjs, src/ui/sidebar.mjs, src/ui/index.html, tests/electron-smoke.mjs, docs/architecture/ARCHITECTURE.md, docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md
 - [TODO] T020: Собрать и проверить дерево чатов — Ожидает

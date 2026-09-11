@@ -35,12 +35,16 @@ function snapshot() {
   const selected = saved && { ...saved, attempt: saved.attempt && { protocol: saved.attempt.protocol,
     requestId: saved.attempt.requestId, state: saved.attempt.state }, receipt: undefined,
     ...(info?.workspace === saved.workspace ? info : {}) };
-  return { projects: store.snapshot().projects.map(({ workspace, projectId, name, chatUrl }) => ({ workspace, projectId, name, chatUrl })),
+  return { projects: store.snapshot().projects.map(({ workspace, projectId, name, selectedSessionId, expanded, sessions }) => ({
+    workspace, projectId, name, selectedSessionId, expanded,
+    sessions: sessions.map(({ sessionId, chatUrl, title, createdAt }) => ({ sessionId, chatUrl, title, createdAt })),
+  })),
     selected, context: controller?.state ?? { phase: 'selected', servicesReady: false, messageSent: false },
     runtimeFolder, pageLoading, startupError, storageError, version: app.getVersion(), fixture: smoke };
 }
 
 function publish() {
+  rememberSessionTitle();
   if (sidebar && !sidebar.webContents.isDestroyed()) sidebar.webContents.send('pilot:state-changed', snapshot());
   const state = snapshot();
   const record = { phase: state.context.phase, workspace: state.selected?.workspace, sessionId: state.selected?.sessionId,
@@ -53,6 +57,16 @@ function publish() {
       .then(() => fsp.appendFile(path.join(dataDir, 'diagnostics.jsonl'), JSON.stringify({ at: new Date().toISOString(), fixture: smoke, ...record }) + '\n', { mode: 0o600 }))
       .catch(() => {});
   }
+}
+
+function rememberSessionTitle() {
+  if (!browser || browser.webContents.isDestroyed() || pageLoading) return;
+  const selected = store.selected();
+  if (!selected?.chatUrl || normalizeChatUrl(browser.webContents.getURL()) !== selected.chatUrl) return;
+  const title = browser.webContents.getTitle().replace(/\s*[-–—|]\s*ChatGPT$/i, '').trim();
+  if (!title || /^(ChatGPT|New chat|Новый чат)$/i.test(title) || selected.title === title) return;
+  void store.setSessionTitle(selected.workspace, selected.sessionId, title)
+    .then(changed => { if (changed) publish(); }).catch(() => {});
 }
 
 function report(error) { startupError = publicError(error); publish(); }
@@ -142,6 +156,17 @@ function registerIpc() {
     if (typeof input !== 'string' || !store.project(input)) throw new Error('Выберите проект из списка.');
     return selectWorkspace(input);
   });
+  registerAction('pilot:select-session', async input => {
+    if (storageError) throw new Error('Сначала нужно восстановить сохранённый список проектов.');
+    if (typeof input?.workspace !== 'string' || typeof input?.sessionId !== 'string') throw new Error('Выберите сессию из дерева проекта.');
+    controller.cancel();
+    const project = await store.selectSession(input.workspace, input.sessionId);
+    startupError = null; void navigate(project);
+  });
+  registerAction('pilot:set-expanded', input => {
+    if (storageError) throw new Error('Сначала нужно восстановить сохранённый список проектов.');
+    return store.setExpanded(input?.workspace, input?.expanded);
+  });
   registerAction('pilot:new-chat', async () => {
     const current = store.selected(); if (!current) return;
     controller.cancel();
@@ -183,6 +208,7 @@ async function createWindow() {
   sidebar.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   sidebar.webContents.on('will-navigate', event => event.preventDefault());
   sidebar.webContents.on('did-finish-load', publish);
+  browser.webContents.on('page-title-updated', rememberSessionTitle);
   browser.webContents.on('did-navigate-in-page', () => { publish(); if (!pageLoading) void controller?.tick(); });
   browser.webContents.on('did-finish-load', () => { publish(); if (!pageLoading) void controller?.tick(); });
   browser.webContents.on('render-process-gone', () => { controller?.cancel(); report(new Error('Страница ChatGPT закрылась. Нажмите обновление.')); });
