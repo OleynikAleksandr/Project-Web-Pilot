@@ -4,13 +4,13 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 119,
+  "plan_revision": 120,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-layout-archive-002",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
-  "objective": "Сделать ширину левого сайдбара регулируемой, вынести архив в отдельное окно и сделать статус контекста компактным: детали сворачиваются под динамическим заголовком, а раскрывающие элементы проектов и статуса хорошо читаются.",
+  "delivery_status": "IN_PROGRESS",
+  "objective": "Упростить интерфейс выбранного проекта: под списком сессий оставить только строку плана, а полный путь workspace перенести в команду меню проекта «Скопировать полный путь», не меняя представление самого плана.",
   "acceptance_criteria": [
     "Граница между сайдбаром и ChatGPT перетаскивается мышью; сайдбар не сужается меньше текущих 312 px, а выбранная ширина сохраняется между запусками.",
     "Settings содержит компактную кнопку «Архив проектов», открывающую отдельное локальное окно; повторное нажатие фокусирует уже открытое окно.",
@@ -20,7 +20,10 @@
     "После «Убрать из списка» папку можно снова подключить через «Открыть папку проекта» как существующий workspace.",
     "Автоматические тесты и Electron smoke проходят, обновлённая macOS arm64 сборка готова к пользовательской проверке.",
     "Карточка состояния контекста всегда показывает текущий заголовок, а детали и действия можно раскрыть/скрыть большим треугольником.",
-    "Треугольник раскрытия сессий проекта заметно увеличен и однозначно читается как disclosure control."
+    "Треугольник раскрытия сессий проекта заметно увеличен и однозначно читается как disclosure control.",
+    "Под выбранным проектом больше не повторяются имя workspace, полный путь и статус проверки; остаётся только существующая информация о плане.",
+    "В меню ⋯ активного проекта есть команда «Скопировать полный путь», которая копирует канонический путь workspace в системный буфер обмена.",
+    "Логика архива, сессий и представление плана не меняются; обновлённая macOS сборка проходит автоматические проверки."
   ],
   "approved_scope": {
     "functional_paths": [
@@ -355,6 +358,104 @@
         "task_id": "T008",
         "role": "implementation"
       }
+    },
+    {
+      "id": "T009",
+      "title": "Убрать дублирующие сведения workspace из блока под проектом",
+      "why": "Освободить место в сайдбаре и оставить отдельное обсуждение представления плана без лишних сведений",
+      "dependencies": [
+        "T008"
+      ],
+      "functional_paths": [
+        "src/ui/index.html",
+        "src/ui/sidebar.mjs"
+      ],
+      "documentation_paths": [
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "acceptance_criteria": [
+        "В workspace-details отсутствуют повторное имя проекта, полный путь и статус проверки",
+        "При выбранном workspace блок содержит только существующий plan-text",
+        "Состояние проверки workspace продолжает использоваться внутренней логикой и не отображается отдельной строкой"
+      ],
+      "verification_ids": [
+        "suite"
+      ],
+      "expected_commit_message": "feat: оставить под проектом только план",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "web-pilot-layout-archive-002",
+        "task_id": "T009",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T010",
+      "title": "Добавить копирование полного пути в меню проекта",
+      "why": "Сохранить быстрый доступ к полному пути без постоянного отображения его в сайдбаре",
+      "dependencies": [
+        "T009"
+      ],
+      "functional_paths": [
+        "src/main.mjs",
+        "src/preload.cjs",
+        "src/ui/sidebar.mjs"
+      ],
+      "documentation_paths": [
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "acceptance_criteria": [
+        "В меню ⋯ есть строка «Скопировать полный путь» рядом с архивированием",
+        "Копирование выполняется главным процессом через системный clipboard и принимает только зарегистрированный активный workspace",
+        "Удалённый ChatGPT не получает clipboard IPC"
+      ],
+      "verification_ids": [
+        "syntax",
+        "suite"
+      ],
+      "expected_commit_message": "feat: копировать путь workspace из меню",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "web-pilot-layout-archive-002",
+        "task_id": "T010",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T011",
+      "title": "Проверить упрощённый блок проекта и пересобрать приложение",
+      "why": "Закрепить новый пользовательский сценарий автоматическим Electron smoke и подготовить тестируемую сборку",
+      "dependencies": [
+        "T010"
+      ],
+      "functional_paths": [
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "README.md",
+        "docs/VERIFICATION.md"
+      ],
+      "acceptance_criteria": [
+        "Smoke подтверждает, что под выбранным проектом отображается только plan-text",
+        "Smoke вызывает пункт «Скопировать полный путь» и подтверждает точный текст системного clipboard",
+        "Финальная arm64 .app пересобрана, рабочее дерево чистое"
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "expected_commit_message": "test: проверить компактный блок проекта",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "web-pilot-layout-archive-002",
+        "task_id": "T011",
+        "role": "implementation"
+      }
     }
   ],
   "blocked_reason": null,
@@ -377,14 +478,14 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: web-pilot-layout-archive-002
 Current Task: нет
-Revision: 119
+Revision: 120
 
 ## Цель
 
-Сделать ширину левого сайдбара регулируемой, вынести архив в отдельное окно и сделать статус контекста компактным: детали сворачиваются под динамическим заголовком, а раскрывающие элементы проектов и статуса хорошо читаются.
+Упростить интерфейс выбранного проекта: под списком сессий оставить только строку плана, а полный путь workspace перенести в команду меню проекта «Скопировать полный путь», не меняя представление самого плана.
 
 ## Критерии приёмки
 
@@ -397,6 +498,9 @@ Revision: 119
 - Автоматические тесты и Electron smoke проходят, обновлённая macOS arm64 сборка готова к пользовательской проверке.
 - Карточка состояния контекста всегда показывает текущий заголовок, а детали и действия можно раскрыть/скрыть большим треугольником.
 - Треугольник раскрытия сессий проекта заметно увеличен и однозначно читается как disclosure control.
+- Под выбранным проектом больше не повторяются имя workspace, полный путь и статус проверки; остаётся только существующая информация о плане.
+- В меню ⋯ активного проекта есть команда «Скопировать полный путь», которая копирует канонический путь workspace в системный буфер обмена.
+- Логика архива, сессий и представление плана не меняются; обновлённая macOS сборка проходит автоматические проверки.
 
 ## Микрозадачи
 
@@ -432,6 +536,18 @@ Revision: 119
   - Git Commit: [DONE] feat: свернуть детали статуса контекста
   - Reference: web-pilot-layout-archive-002 / T008 / implementation
   - Файлы: src/ui/index.html, src/ui/sidebar.mjs, tests/electron-smoke.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+- [TODO] T009: Убрать дублирующие сведения workspace из блока под проектом — Ожидает
+  - Git Commit: [PENDING] feat: оставить под проектом только план
+  - Reference: web-pilot-layout-archive-002 / T009 / implementation
+  - Файлы: src/ui/index.html, src/ui/sidebar.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+- [TODO] T010: Добавить копирование полного пути в меню проекта — Ожидает
+  - Git Commit: [PENDING] feat: копировать путь workspace из меню
+  - Reference: web-pilot-layout-archive-002 / T010 / implementation
+  - Файлы: src/main.mjs, src/preload.cjs, src/ui/sidebar.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+- [TODO] T011: Проверить упрощённый блок проекта и пересобрать приложение — Ожидает
+  - Git Commit: [PENDING] test: проверить компактный блок проекта
+  - Reference: web-pilot-layout-archive-002 / T011 / implementation
+  - Файлы: tests/electron-smoke.mjs, README.md, docs/VERIFICATION.md
 
 ## Context Pack For This Cycle
 
