@@ -25,5 +25,33 @@ export function runtimeLayout(folder, platform = process.platform) {
 }
 
 export function isAbsolutePlatformPath(value, platform = process.platform) {
-  return typeof value === 'string' && pathApi(platform).isAbsolute(value);
+  if (typeof value !== 'string') return false;
+  if (platform === 'win32') return /^[A-Za-z]:[\\/]/.test(value) || /^\\\\[^\\]/.test(value);
+  return pathApi(platform).isAbsolute(value);
+}
+
+export function nodeExecutableCandidates({
+  platform = process.platform,
+  environment = process.env,
+  execPath = process.execPath,
+  electron = Boolean(process.versions.electron),
+} = {}) {
+  if (platform === 'darwin') {
+    return [...new Set(['/opt/homebrew/bin/node', '/usr/local/bin/node', ...(!electron ? [execPath] : [])])];
+  }
+  if (platform === 'win32') {
+    const api = path.win32;
+    const candidates = [];
+    for (const root of [environment.ProgramFiles, environment['ProgramFiles(x86)']]) {
+      if (typeof root === 'string' && root) candidates.push(api.join(root, 'nodejs', 'node.exe'));
+    }
+    if (!electron && isAbsolutePlatformPath(execPath, platform)) candidates.push(execPath);
+    candidates.push('node.exe');
+    return [...new Set(candidates)];
+  }
+  return [...new Set([...(!electron ? [execPath] : []), 'node'])];
+}
+
+export function executableCandidateAllowed(value, platform = process.platform) {
+  return isAbsolutePlatformPath(value, platform) || (typeof value === 'string' && /^[A-Za-z0-9_.-]+$/.test(value));
 }

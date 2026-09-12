@@ -442,3 +442,7 @@ Raw-эксперимент подтвердил транспорт `conversation
 ## Platform boundary локального runtime — scope 008 / T004
 
 `src/platform.mjs` становится единственным местом, где код приложения знает filesystem layout локального Codex runtime. Для `darwin` сохраняется текущий источник `mac-codex-local` и `.venv/bin/python3`; для `win32` описан layout `.venv/Scripts/python.exe` и нейтральные варианты корня `windows-codex-local`/`codex-local`. `McpRuntime` получает `platform` как зависимость и использует только результат adapter, поэтому бизнес-логика запуска `status/start`, проверка ownership и MCP protocol не зависят от ОС. Это подготовка границы платформы, а не утверждение готовности Windows runtime.
+
+## Platform boundary внешнего Node — scope 008 / T005
+
+`WorkspaceSetup` больше не содержит Homebrew/Windows-path assumptions. `src/platform.mjs` формирует кандидаты Node для выбранной платформы: на macOS сохраняются `/opt/homebrew/bin/node` и `/usr/local/bin/node`; на Windows используются стандартные `Program Files\\nodejs\\node.exe` и безопасный PATH fallback `node.exe`. При симуляции другой ОС текущий `process.execPath` принимается только если имеет корректный абсолютный layout той платформы, поэтому macOS executable не может случайно попасть в win32-конфигурацию. Ошибка установки Node теперь платформенно-нейтральна.

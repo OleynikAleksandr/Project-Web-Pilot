@@ -4,14 +4,21 @@ import { fileURLToPath } from 'node:url';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { randomUUID } from 'node:crypto';
+import { executableCandidateAllowed, nodeExecutableCandidates } from './platform.mjs';
 const execute = promisify(execFile);
 const fail = (code, message) => Object.assign(new Error(message), { code });
 
 export class WorkspaceSetup {
   constructor({ resourceDir = fileURLToPath(new URL('../resources/', import.meta.url)), nodeCandidates,
-    environment = process.env } = {}) {
+    environment = process.env, platform = process.platform } = {}) {
     this.resourceDir = resourceDir;
-    this.nodeCandidates = nodeCandidates ?? ['/opt/homebrew/bin/node', '/usr/local/bin/node', ...(!process.versions.electron ? [process.execPath] : [])];
+    this.platform = platform;
+    this.nodeCandidates = nodeCandidates ?? nodeExecutableCandidates({
+      platform,
+      environment,
+      execPath: process.execPath,
+      electron: Boolean(process.versions.electron),
+    });
     this.environment = { ...environment, GIT_OPTIONAL_LOCKS: '0', GIT_TERMINAL_PROMPT: '0' };
     for (const key of ['GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_COMMON_DIR', 'GIT_OBJECT_DIRECTORY', 'GIT_ALTERNATE_OBJECT_DIRECTORIES', 'GIT_PREFIX', 'ELECTRON_RUN_AS_NODE']) delete this.environment[key];
     this.tickets = new Map();
@@ -19,13 +26,13 @@ export class WorkspaceSetup {
   async node() {
     if (this.nodeExecutable) return this.nodeExecutable;
     for (const candidate of this.nodeCandidates) {
-      if (!path.isAbsolute(candidate)) continue;
+      if (!executableCandidateAllowed(candidate, this.platform)) continue;
       try {
         const { stdout } = await execute(candidate, ['--version'], { timeout: 5000, env: this.environment });
         if (/^v(\d+)\./.test(stdout) && Number(RegExp.$1) >= 22) return this.nodeExecutable = candidate;
       } catch {}
     }
-    throw fail('NODE_MISSING', 'Для подготовки проектов нужен Node.js 22 или новее. Установите его на Mac и повторите проверку.');
+    throw fail('NODE_MISSING', 'Для подготовки проектов нужен Node.js 22 или новее. Установите его и повторите проверку.');
   }
   async call(input) {
     const node = await this.node();

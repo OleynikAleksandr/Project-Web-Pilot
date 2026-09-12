@@ -5,6 +5,7 @@ import path from 'node:path';
 import os from 'node:os';
 import { execFileSync } from 'node:child_process';
 import { WorkspaceSetup } from '../src/workspace-setup.mjs';
+import { nodeExecutableCandidates } from '../src/platform.mjs';
 const environment = { ...process.env, GIT_AUTHOR_NAME: 'Web Pilot Test', GIT_AUTHOR_EMAIL: 'test@example.invalid', GIT_COMMITTER_NAME: 'Web Pilot Test', GIT_COMMITTER_EMAIL: 'test@example.invalid' };
 for (const key of ['GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_COMMON_DIR', 'GIT_OBJECT_DIRECTORY', 'GIT_ALTERNATE_OBJECT_DIRECTORIES', 'GIT_PREFIX']) delete environment[key];
 async function fixture(t) {
@@ -23,6 +24,24 @@ async function create(t) {
   return { ...f, workspace: result.workspace, result };
 }
 function git(cwd, ...args) { return execFileSync('git', args, { cwd, env: environment, encoding: 'utf8' }).trim(); }
+
+test('Node candidates are centralized for macOS and Windows', () => {
+  assert.deepEqual(nodeExecutableCandidates({ platform: 'darwin', environment: {}, execPath: '/usr/bin/node', electron: true }), [
+    '/opt/homebrew/bin/node', '/usr/local/bin/node',
+  ]);
+  assert.deepEqual(nodeExecutableCandidates({
+    platform: 'win32',
+    environment: { ProgramFiles: 'C:\\Program Files', 'ProgramFiles(x86)': 'C:\\Program Files (x86)' },
+    execPath: 'C:\\Node\\node.exe',
+    electron: true,
+  }), [
+    'C:\\Program Files\\nodejs\\node.exe',
+    'C:\\Program Files (x86)\\nodejs\\node.exe',
+    'node.exe',
+  ]);
+  const setup = new WorkspaceSetup({ platform: 'win32', environment: { ProgramFiles: 'C:\\Program Files' } });
+  assert.deepEqual(setup.nodeCandidates, ['C:\\Program Files\\nodejs\\node.exe', 'node.exe']);
+});
 
 test('create a real empty Workflow Kit project and reopen without changes', async t => {
   const { setup, workspace } = await create(t);

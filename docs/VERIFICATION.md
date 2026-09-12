@@ -395,3 +395,7 @@ Unit tests проверяют вложенный SSE `encoded_item` с тест�
 ## Scope 008 / T004 — platform layout MCP runtime
 
 `tests/mcp-runtime.test.mjs` отдельно проверяет `darwin` и `win32` без запуска Windows: macOS путь остаётся `.venv/bin/python3`, Windows layout формируется как `.venv\\Scripts\\python.exe`, а варианты вложенной runtime-папки выбираются adapter. Существующий runtime test дополнительно подтверждает, что macOS `McpRuntime` по-прежнему запускает тот же Python и `control.py` без shell.
+
+## Scope 008 / T005 — Node candidates для darwin/win32
+
+`tests/workspace-setup.test.mjs` проверяет неизменный набор macOS candidates и Windows `Program Files`/`node.exe` fallback без запуска Windows. Отдельно проверяется, что `WorkspaceSetup({platform:'win32'})` не подмешивает macOS `process.execPath`. Основные setup fixtures продолжают выполнять реальную установку/проверку Workflow Kit на macOS.

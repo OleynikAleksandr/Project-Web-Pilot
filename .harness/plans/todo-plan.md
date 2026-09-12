@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 186,
+  "plan_revision": 188,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-context-observation-008",
@@ -214,8 +214,8 @@
         "Unit tests покрывают обе платформенные конфигурации."
       ],
       "expected_commit_message": "refactor: отделить platform layout Node runtime",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-context-observation-008",
         "task_id": "T005",
@@ -282,7 +282,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-context-observation-008
 Current Task: нет
-Revision: 186
+Revision: 188
 
 ## Цель
 
@@ -314,8 +314,8 @@ Revision: 186
   - Git Commit: [DONE] refactor: отделить platform layout MCP runtime
   - Reference: web-pilot-context-observation-008 / T004 / implementation
   - Файлы: src/platform.mjs, src/mcp-runtime.mjs, tests/mcp-runtime.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T005: Сделать поиск внешнего Node платформенно-независимым — Ожидает
-  - Git Commit: [PENDING] refactor: отделить platform layout Node runtime
+- [DONE] T005: Сделать поиск внешнего Node платформенно-независимым — Завершено
+  - Git Commit: [DONE] refactor: отделить platform layout Node runtime
   - Reference: web-pilot-context-observation-008 / T005 / implementation
   - Файлы: src/platform.mjs, src/workspace-setup.mjs, tests/workspace-setup.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T006: Подключить platform boundary в main и build scripts — Ожидает
