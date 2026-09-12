@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 90,
+  "plan_revision": 91,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Локальный macOS Web Pilot с встроенным ChatGPT, выбором проекта и полным контекстом в первом сообщении; агент сразу кратко подтверждает восстановление и описывает проект. Сайдбар сохраняет все созданные сессии workspace и позволяет выбирать их в раскрываемом дереве. Создание нового workspace и подключение существующей папки повторяют Workflow Kit с проверкой структуры до открытия чата. Архив workspace доступен в настройках через шестерёнку справа от подключения; проекты возвращаются в активные либо удаляются с диска вместе с локальными записями сессий. Облачные чаты сохраняются. Оформление оболочки настраивается отдельно в Settings: светлая или тёмная тема применяется к сайдбару и верхней панели окна. Отображение строк вызовов инструментов ChatGPT можно скрывать из Settings без отключения самих tools.",
   "acceptance_criteria": [
     "Полный канонический контекст передаёт приложение до первого ответа агента.",
@@ -1277,6 +1277,40 @@
         "task_id": "T033",
         "role": "implementation"
       }
+    },
+    {
+      "id": "T034",
+      "title": "Подключить переключатель фильтра в Settings",
+      "why": "Завершить пользовательский интерфейс скрытия tool-call строк с обязательной архитектурной синхронизацией",
+      "dependencies": [
+        "T033"
+      ],
+      "functional_paths": [
+        "src/ui/index.html",
+        "src/ui/project-archive.mjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "acceptance_criteria": [
+        "В Settings есть явный выбор Скрывать/Показывать для строк вызовов инструментов",
+        "Переключение применяется к уже открытому ChatGPT без перезагрузки и сохраняется в settings.json",
+        "Electron smoke проверяет скрытие, показ, повторное скрытие и поздно добавленную строку tool-call"
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "expected_commit_message": "feat: добавить настройку скрытия вызовов инструментов",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "web-pilot-prototype-001",
+        "task_id": "T034",
+        "role": "implementation"
+      }
     }
   ],
   "blocked_reason": null,
@@ -1344,10 +1378,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 90
+Revision: 91
 
 ## Цель
 
@@ -1501,6 +1535,10 @@ Revision: 90
   - Git Commit: [DONE] test: проверить скрытие вызовов инструментов
   - Reference: web-pilot-prototype-001 / T033 / implementation
   - Файлы: src/ui/index.html, src/ui/project-archive.mjs, tests/electron-smoke.mjs, README.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/DECISIONS.md, docs/PRODUCT.md
+- [TODO] T034: Подключить переключатель фильтра в Settings — Ожидает
+  - Git Commit: [PENDING] feat: добавить настройку скрытия вызовов инструментов
+  - Reference: web-pilot-prototype-001 / T034 / implementation
+  - Файлы: src/ui/index.html, src/ui/project-archive.mjs, tests/electron-smoke.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 
 ## Context Pack For This Cycle
 
