@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 100,
+  "plan_revision": 102,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-layout-archive-002",
@@ -99,8 +99,8 @@
         "Зафиксировано, что массовые возврат/убрать из списка допустимы, а физическое удаление выполняется по одному проекту"
       ],
       "expected_commit_message": "docs: определить resize и новое окно архива",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-layout-archive-002",
         "task_id": "T001",
@@ -335,7 +335,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-layout-archive-002
 Current Task: нет
-Revision: 100
+Revision: 102
 
 ## Цель
 
@@ -353,8 +353,8 @@ Revision: 100
 
 ## Микрозадачи
 
-- [TODO] T001: Зафиксировать UX нового scope — Ожидает
-  - Git Commit: [PENDING] docs: определить resize и новое окно архива
+- [DONE] T001: Зафиксировать UX нового scope — Завершено
+  - Git Commit: [DONE] docs: определить resize и новое окно архива
   - Reference: web-pilot-layout-archive-002 / T001 / implementation
   - Файлы: docs/PRODUCT.md, docs/DECISIONS.md, docs/PROJECT_ARCHIVE.md
 - [TODO] T002: Добавить атомарное забывание нескольких архивов — Ожидает
