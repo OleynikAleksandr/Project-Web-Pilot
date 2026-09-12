@@ -11,7 +11,7 @@ import { ContextSession } from './context-session.mjs';
 import { WorkspaceDeletion } from './workspace-deletion.mjs';
 import { WorkspaceSetup } from './workspace-setup.mjs';
 import { ChromiumDiagnostics } from './chromium-diagnostics.mjs';
-import { defaultRuntimeFolder, bundledWindowsRuntimeFolder } from './platform.mjs';
+import { defaultRuntimeFolder, bundledWindowsRuntimeFolder, nodeExecutableCandidates } from './platform.mjs';
 import { WindowsRuntimeBootstrap, WINDOWS_RUNTIME_ARCHIVE } from './windows-runtime.mjs';
 
 const smoke = !app.isPackaged && process.argv.includes('--smoke');
@@ -39,7 +39,17 @@ let startupError = null;
 let storageError = false;
 let lastDiagnostic = '';
 let actionTail = Promise.resolve();
-const workspaceSetup = new WorkspaceSetup({ resourceDir: app.isPackaged ? path.join(process.resourcesPath, 'resources') : path.join(sourceDir, '../resources') });
+const windowsPortableNode = process.platform === 'win32'
+  ? (app.isPackaged
+      ? path.join(process.resourcesPath, 'windows-node', 'node-v22.17.0-win-x64', 'node.exe')
+      : path.join(sourceDir, '../.harness/runtime/windows-node/node-v22.17.0-win-x64/node.exe'))
+  : null;
+const workspaceSetup = new WorkspaceSetup({
+  resourceDir: app.isPackaged ? path.join(process.resourcesPath, 'resources') : path.join(sourceDir, '../resources'),
+  nodeCandidates: windowsPortableNode
+    ? [windowsPortableNode, ...nodeExecutableCandidates({ platform: 'win32', environment: process.env, electron: true })]
+    : undefined,
+});
 let setupState = null;
 let workspaceHealth = null;
 let settingsState = null;

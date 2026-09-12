@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { WINDOWS_RUNTIME_SHA256, WINDOWS_CONTEXT_PACKET_SOURCE, patchWindowsBridgeSource, sha256File, windowsRuntimePaths, windowsExpandInvocation, windowsSetupInvocation } from '../src/windows-runtime.mjs';
 import { bundledWindowsRuntimeFolder } from '../src/platform.mjs';
+import { extractionCommand, NODE_ARCHIVE, NODE_SHA256, windowsToolchainPaths } from '../scripts/prepare-windows-toolchain.mjs';
 
 test('Windows runtime paths stay in writable userData and use Windows venv layout', () => {
   const p = windowsRuntimePaths('C:\\Users\\Alex\\AppData\\Roaming\\Project Web Pilot', 'C:\\Program Files\\Project Web Pilot\\resources\\windows-runtime\\runtime.zip');
@@ -46,4 +47,18 @@ test('Windows MCP compatibility overlay adds Workflow Kit recovery exactly once'
   assert.match(WINDOWS_CONTEXT_PACKET_SOURCE, /inline-context-v1/);
   assert.ok(WINDOWS_CONTEXT_PACKET_SOURCE.includes(String.raw`r'json\s*\n(.*?)\n'`));
   assert.doesNotMatch(WINDOWS_CONTEXT_PACKET_SOURCE, /scripts\/workflow\.cmd/);
+});
+
+
+test('portable Node build payload has pinned Windows x64 layout and safe extraction plans', () => {
+  assert.equal(NODE_ARCHIVE, 'node-v22.17.0-win-x64.zip');
+  assert.equal(NODE_SHA256, '721ab118a3aac8584348b132767eadf51379e0616f0db802cc1e66d7f0d98f85');
+  const p = windowsToolchainPaths('/repo');
+  assert.match(p.nodeExe, /windows-node[\\/]node-v22\.17\.0-win-x64[\\/]node\.exe$/);
+  const mac = extractionCommand('darwin', '/cache/node.zip', '/out');
+  assert.deepEqual(mac, { executable: '/usr/bin/ditto', args: ['-x', '-k', '/cache/node.zip', '/out'], env: {} });
+  const win = extractionCommand('win32', 'C:\\cache\\node.zip', 'C:\\out');
+  assert.equal(win.executable, 'powershell.exe');
+  assert.equal(win.env.WEB_PILOT_NODE_ARCHIVE, 'C:\\cache\\node.zip');
+  assert.ok(!win.args.join(' ').includes('C:\\cache\\node.zip'), 'archive path is not interpolated into PowerShell source');
 });

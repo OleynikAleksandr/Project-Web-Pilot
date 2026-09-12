@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 206,
+  "plan_revision": 208,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-context-observation-008",
@@ -529,8 +529,8 @@
         "suite"
       ],
       "expected_commit_message": "build: встроить portable Node Windows",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-context-observation-008",
         "task_id": "T014",
@@ -566,7 +566,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-context-observation-008
 Current Task: нет
-Revision: 206
+Revision: 208
 
 ## Цель
 
@@ -637,8 +637,8 @@ Revision: 206
   - Git Commit: [PENDING] docs: принять Windows 10/11 runtime
   - Reference: web-pilot-context-observation-008 / T013 / implementation
   - Файлы: docs/VERIFICATION.md, docs/WORKFLOW_START.md
-- [TODO] T014: Встроить portable Node.js для чистой Windows — Ожидает
-  - Git Commit: [PENDING] build: встроить portable Node Windows
+- [DONE] T014: Встроить portable Node.js для чистой Windows — Завершено
+  - Git Commit: [DONE] build: встроить portable Node Windows
   - Reference: web-pilot-context-observation-008 / T014 / implementation
   - Файлы: windows-runtime/node-v22.17.0-win-x64.zip.sha256, scripts/prepare-windows-toolchain.mjs, src/main.mjs, tests/windows-runtime.test.mjs, docs/SOURCE_WORKSPACES.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 

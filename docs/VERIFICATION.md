@@ -419,3 +419,7 @@ Windows tunnel IPC не принимает payload и недоступен вн�
 ## Scope 008 / T011 — Windows onboarding UI
 
 Renderer выводит Windows runtime section только при `state.platform=win32`; состояние строится только из bootstrap phase и трёх service booleans. API key/tunnel ID в state отсутствуют. Electron smoke на macOS требует, чтобы Windows section оставался hidden, а ручной picker Codex Local Mac оставался видимым, тем самым проверяя отсутствие UI-регрессии текущей версии.
+
+## Scope 008 / T014 — portable Node для чистой Windows
+
+Unit test фиксирует Node.js 22.17.0 win-x64 archive name/SHA, expected `windows-node/node-v22.17.0-win-x64/node.exe` layout и безопасные extraction plans для macOS/win32. Реальный `node scripts/prepare-windows-toolchain.mjs` на build host скачал archive, подтвердил SHA `721ab118…` и получил `node.exe` в ignored cache. T012 дополнительно проверяет присутствие этого executable в собранном Windows package; фактический запуск на Windows — T013.

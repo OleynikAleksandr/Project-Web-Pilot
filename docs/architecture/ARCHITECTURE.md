@@ -476,3 +476,9 @@ Sidebar не получает tunnel ID или API key. Единственный
 Windows-only onboarding остаётся локальным sidebar UI и не расширяет поверхность удалённого ChatGPT. `state.platform=win32` открывает секцию Settings «Локальные инструменты Windows»; macOS renderer оставляет её скрытой и сохраняет прежний ручной picker Codex Local Mac. Renderer строит состояние только из bootstrap phase (`embedded`, `verifying`, `extracting`, `installing`, `installed`, `tunnel-setup-launched`, `error`) и трёх булевых service-флагов `mcpReady`, `tunnelReady`, `tunnelConfigured`. Секретные tunnel ID/API key отсутствуют в snapshot и renderer state.
 
 Кнопки секции вызывают два уже ограниченных preload IPC: `configureWindowsTunnel()` без аргументов и `refreshWindowsRuntime()` без аргументов. Таким образом renderer может инициировать локальную установку/открытие Windows console и перечитать readiness, но не может передать или прочитать tunnel credentials.
+
+## Portable Workflow Node на Windows — scope 008 / T014
+
+`WorkspaceSetup` на packaged win32 первым кандидатом получает `process.resourcesPath/windows-node/node-v22.17.0-win-x64/node.exe`. Поэтому initial worker запускается настоящим Node 22 даже на машине без Node в `PATH`. Vendored Workflow Kit `prepareRuntime()` затем видит `process.execPath` именно этого portable Node и копирует его в `.harness/runtime/node.exe` нового workspace; дальнейшие `workflow.cmd`, hooks и Windows MCP recovery используют проектный локальный Node без зависимости от пути установки Web Pilot.
+
+`scripts/prepare-windows-toolchain.mjs` воспроизводимо получает официальный archive, проверяет pinned SHA-256 и распаковывает его в ignored build-cache. Пути при PowerShell extraction передаются через environment; на macOS cross-build используется `/usr/bin/ditto`. Системный Node остаётся только fallback для диагностики, а не обязательным runtime.
