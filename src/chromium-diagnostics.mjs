@@ -261,11 +261,12 @@ const IGNORED_CDP = new Set([
 ]);
 
 export class ChromiumDiagnostics {
-  constructor(contents, { file, maxBytes, sampleIntervalMs = 5000, allowFixture = false } = {}) {
+  constructor(contents, { file, maxBytes, sampleIntervalMs = 5000, allowFixture = false, onContextObservation = null } = {}) {
     if (!contents || !file) throw new TypeError('ChromiumDiagnostics requires contents and file');
     this.contents = contents;
     this.allowFixture = allowFixture;
     this.sampleIntervalMs = sampleIntervalMs;
+    this.onContextObservation = typeof onContextObservation === 'function' ? onContextObservation : null;
     this.log = new DiagnosticJsonl(file, { maxBytes });
     this.handlers = [];
     this.sampleTimer = null;
@@ -273,6 +274,7 @@ export class ChromiumDiagnostics {
     this.started = false;
     this.streamResponses = new Map();
     this.lastContextUsage = null;
+    this.latestContextObservation = { status: 'unknown' };
     this.onDebuggerMessage = this.onDebuggerMessage.bind(this);
     this.onDebuggerDetach = this.onDebuggerDetach.bind(this);
   }
@@ -289,6 +291,20 @@ export class ChromiumDiagnostics {
     await this.sampleDom();
   }
 
+  contextObservation() {
+    return { ...this.latestContextObservation };
+  }
+
+  #setContextObservation(observation) {
+    this.latestContextObservation = observation;
+    try { this.onContextObservation?.(this.contextObservation()); } catch {}
+  }
+
+  #resetContextObservation() {
+    this.lastContextUsage = null;
+    if (this.latestContextObservation.status !== 'unknown') this.#setContextObservation({ status: 'unknown' });
+  }
+
   #on(name, handler) {
     this.contents.on(name, handler);
     this.handlers.push([name, handler]);
@@ -298,8 +314,14 @@ export class ChromiumDiagnostics {
     this.#on('did-start-loading', () => this.log.record('webContents', 'did-start-loading', { url: safeUrl(this.contents.getURL()) }));
     this.#on('did-stop-loading', () => this.log.record('webContents', 'did-stop-loading', { url: safeUrl(this.contents.getURL()) }));
     this.#on('did-finish-load', () => this.log.record('webContents', 'did-finish-load', { url: safeUrl(this.contents.getURL()) }));
-    this.#on('did-navigate', (_event, url) => this.log.record('webContents', 'did-navigate', { url: safeUrl(url) }));
-    this.#on('did-navigate-in-page', (_event, url, isMainFrame) => this.log.record('webContents', 'did-navigate-in-page', { url: safeUrl(url), isMainFrame }));
+    this.#on('did-navigate', (_event, url) => {
+      this.#resetContextObservation();
+      this.log.record('webContents', 'did-navigate', { url: safeUrl(url) });
+    });
+    this.#on('did-navigate-in-page', (_event, url, isMainFrame) => {
+      if (isMainFrame) this.#resetContextObservation();
+      this.log.record('webContents', 'did-navigate-in-page', { url: safeUrl(url), isMainFrame });
+    });
     this.#on('unresponsive', () => this.log.record('webContents', 'unresponsive'));
     this.#on('responsive', () => this.log.record('webContents', 'responsive'));
     this.#on('render-process-gone', (_event, details) => this.log.record('webContents', 'render-process-gone', { reason: details?.reason, exitCode: details?.exitCode }));
@@ -409,8 +431,18 @@ export class ChromiumDiagnostics {
       if (inputTokens === 0) compactSignal = 'token-reset';
       else if (inputTokens < previous.inputTokens * 0.5) compactSignal = 'token-drop';
     }
-    if (Number.isFinite(inputTokens) && inputTokens > 0 && Number.isFinite(modelContextWindow) && modelContextWindow > 0) {
+    const observedAt = new Date().toISOString();
+    const known = Number.isFinite(inputTokens) && inputTokens > 0
+      && Number.isFinite(modelContextWindow) && modelContextWindow > 0;
+    if (known) {
       this.lastContextUsage = { inputTokens, modelContextWindow, usedPercent };
+      this.#setContextObservation({
+        status: 'known', inputTokens, modelContextWindow, usedPercent,
+        source: origin, observedAt, compactSignal,
+      });
+    } else if (compactSignal) {
+      this.lastContextUsage = null;
+      this.#setContextObservation({ status: 'unknown', source: origin, observedAt, compactSignal });
     }
     this.log.record('telemetry', 'context', {
       origin, ...fields, markers, presence: telemetry?.presence ?? [],

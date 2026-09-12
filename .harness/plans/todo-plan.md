@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 173,
+  "plan_revision": 175,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-context-window-indicator-007",
@@ -114,8 +114,8 @@
         "Main snapshot передаёт sidebar только этот безопасный state, без raw payload и conversation text."
       ],
       "expected_commit_message": "feat: публиковать состояние context window",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-context-window-indicator-007",
         "task_id": "T002",
@@ -178,7 +178,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-context-window-indicator-007
 Current Task: нет
-Revision: 173
+Revision: 175
 
 ## Цель
 
@@ -198,8 +198,8 @@ Revision: 173
   - Git Commit: [DONE] feat: обнаруживать context поля Web stream
   - Reference: web-pilot-context-window-indicator-007 / T001 / implementation
   - Файлы: src/chromium-diagnostics.mjs, tests/chromium-diagnostics.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T002: Хранить последнее наблюдение context window — Ожидает
-  - Git Commit: [PENDING] feat: публиковать состояние context window
+- [DONE] T002: Хранить последнее наблюдение context window — Завершено
+  - Git Commit: [DONE] feat: публиковать состояние context window
   - Reference: web-pilot-context-window-indicator-007 / T002 / implementation
   - Файлы: src/chromium-diagnostics.mjs, src/main.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T003: Показать индикатор контекстного окна в sidebar — Ожидает

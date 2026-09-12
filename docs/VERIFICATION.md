@@ -375,3 +375,7 @@ Electron smoke поднимает изолированный `https` fixture, г
 
 `tests/chromium-diagnostics.test.mjs` добавляет Web-style fixture с альтернативными именами `used_token_count`, `context_window_size`, `usage_ratio`, `prompt_token_count`, `compact_generation`. Проверка требует candidate key paths и числовые значения из `metadata`, но запрещает чтение `content`: приватная строка, `token_secret`, `context_secret_number` и их числовое значение не должны появляться в сериализованной telemetry. Существующие тесты Codex `token_count`/`ContextCompaction` продолжают проходить.
 
+## Scope 007 / T002 — безопасный state context window
+
+`ChromiumDiagnostics` хранит `latestContextObservation` отдельно от JSONL. Контракт допускает `known` только при одновременно подтверждённых положительных `inputTokens` и `modelContextWindow`; candidate discovery без подтверждённой пары не создаёт процента. Main передаёт `contextWindow` через уже существующий локальный snapshot sidebar. Синтаксические проверки `src/chromium-diagnostics.mjs` и `src/main.mjs` обязательны; end-to-end отображение known/unknown проверяется Electron smoke в T003.
+
