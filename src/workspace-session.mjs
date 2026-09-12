@@ -40,12 +40,28 @@ export async function readWorkspace(input) {
       || !Array.isArray(plan.tasks)) {
     throw new WorkspaceError('WORKFLOW_PLAN_INVALID', 'План проекта имеет неподдерживаемый формат.');
   }
+  const tasks = plan.tasks.map(task => {
+    if (!task || typeof task.id !== 'string' || !task.id || typeof task.title !== 'string' || !task.title
+        || !['TODO', 'IN_PROGRESS', 'DONE'].includes(task.implementation_status)
+        || !['PENDING', 'DONE'].includes(task.commit_status)) {
+      throw new WorkspaceError('WORKFLOW_PLAN_INVALID', 'План проекта содержит некорректную микрозадачу.');
+    }
+    return { id: task.id, title: task.title,
+      status: task.commit_status === 'DONE' ? 'done' : task.implementation_status === 'IN_PROGRESS' ? 'current' : 'pending' };
+  });
   const current = plan.tasks.find(t => t.id === plan.current_task_id)
     ?? plan.tasks.find(t => t.commit_status !== 'DONE');
+  const completed = tasks.filter(task => task.status === 'done').length;
+  const planState = plan.execution_scope_status === 'BLOCKED' ? 'blocked'
+    : plan.execution_scope_status === 'ACTIVE' && plan.delivery_status === 'READY_FOR_ACCEPTANCE' && completed === tasks.length && tasks.length > 0 ? 'awaiting-acceptance'
+      : plan.execution_scope_status === 'ACTIVE' ? 'working'
+        : typeof plan.archived_scope_id === 'string' && plan.archived_scope_id ? 'closed' : 'not-created';
   return { workspace, projectId: plan.project_id, name: plan.project_name,
     planRevision: plan.plan_revision, scopeId: plan.scope_id,
     scopeStatus: plan.execution_scope_status, deliveryStatus: plan.delivery_status,
-    nextTaskId: current?.id ?? null, nextTaskTitle: current?.title ?? null };
+    nextTaskId: current?.id ?? null, nextTaskTitle: current?.title ?? null,
+    planView: { state: planState, completed, total: tasks.length, tasks,
+      blockedReason: planState === 'blocked' && typeof plan.blocked_reason === 'string' ? plan.blocked_reason : null } };
 }
 
 const copy = value => structuredClone(value);

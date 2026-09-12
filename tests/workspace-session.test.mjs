@@ -16,13 +16,54 @@ async function fixture(t) {
     await fs.writeFile(path.join(folder, 'scripts/workflow.mjs'), '// fixture');
     const plan = { schema_version: 1, project_id: id, project_name: name, plan_revision: 7,
       scope_id: 'fixture-scope', execution_scope_status: 'ACTIVE', delivery_status: 'IN_PROGRESS',
-      current_task_id: null, tasks: [{ id: 'T001', title: 'Задача', commit_status: 'PENDING' }] };
+      current_task_id: null, tasks: [{ id: 'T001', title: 'Задача', implementation_status: 'TODO', commit_status: 'PENDING' }] };
     await fs.writeFile(path.join(folder, '.harness/plans/todo-plan.md'),
       '<!-- workflow-state:begin -->\n```json\n' + JSON.stringify(plan) + '\n```\n<!-- workflow-state:end -->');
     return folder;
   }
   return { root, project, store: new WorkspaceSessions(path.join(root, 'app-data/sessions.json')) };
 }
+
+
+
+test('readWorkspace exposes user plan lifecycle without using plan revision as UI state', async t => {
+  const { project } = await fixture(t);
+  const folder = await project('Plan view');
+  const file = path.join(folder, '.harness/plans/todo-plan.md');
+  const write = async plan => fs.writeFile(file, '<!-- workflow-state:begin -->\n```json\n' + JSON.stringify(plan) + '\n```\n<!-- workflow-state:end -->');
+  const base = { schema_version: 1, project_id: randomUUID(), project_name: 'Plan view', plan_revision: 99,
+    scope_id: 'scope-1', execution_scope_status: 'ACTIVE', delivery_status: 'IN_PROGRESS', blocked_reason: null,
+    current_task_id: 'T002', tasks: [
+      { id: 'T001', title: 'Готовая задача', implementation_status: 'DONE', commit_status: 'DONE' },
+      { id: 'T002', title: 'Текущая задача', implementation_status: 'IN_PROGRESS', commit_status: 'PENDING' },
+      { id: 'T003', title: 'Следующая задача', implementation_status: 'TODO', commit_status: 'PENDING' },
+    ] };
+  await write(base);
+  let info = await readWorkspace(folder);
+  assert.deepEqual(info.planView, { state: 'working', completed: 1, total: 3, blockedReason: null, tasks: [
+    { id: 'T001', title: 'Готовая задача', status: 'done' },
+    { id: 'T002', title: 'Текущая задача', status: 'current' },
+    { id: 'T003', title: 'Следующая задача', status: 'pending' },
+  ] });
+  assert.equal(info.planRevision, 99, 'revision remains available only for protocol matching');
+
+  await write({ ...base, current_task_id: null, delivery_status: 'READY_FOR_ACCEPTANCE',
+    tasks: base.tasks.map(t => ({ ...t, implementation_status: 'DONE', commit_status: 'DONE' })) });
+  info = await readWorkspace(folder);
+  assert.equal(info.planView.state, 'awaiting-acceptance'); assert.equal(info.planView.completed, 3);
+
+  await write({ ...base, execution_scope_status: 'BLOCKED', blocked_reason: 'Нужно решение пользователя', current_task_id: null });
+  info = await readWorkspace(folder);
+  assert.equal(info.planView.state, 'blocked'); assert.equal(info.planView.blockedReason, 'Нужно решение пользователя');
+
+  await write({ ...base, scope_id: null, execution_scope_status: 'NONE', delivery_status: 'IN_PROGRESS', current_task_id: null, tasks: [], archived_scope_id: 'scope-1' });
+  info = await readWorkspace(folder);
+  assert.equal(info.planView.state, 'closed'); assert.equal(info.planView.total, 0);
+
+  const { archived_scope_id, ...never } = { ...base, scope_id: null, execution_scope_status: 'NONE', delivery_status: 'IN_PROGRESS', current_task_id: null, tasks: [], archived_scope_id: 'scope-1' };
+  await write(never);
+  info = await readWorkspace(folder); assert.equal(info.planView.state, 'not-created');
+});
 
 test('canonical folder with spaces and Cyrillic survives restart with its conversation', async t => {
   const { root, project, store } = await fixture(t);

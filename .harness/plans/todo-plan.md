@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 132,
+  "plan_revision": 134,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-plan-ui-003",
@@ -106,8 +106,8 @@
         "Тесты покрывают active, current task, ready for acceptance и archived scope"
       ],
       "expected_commit_message": "feat: публиковать состояние плана для интерфейса",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-plan-ui-003",
         "task_id": "T002",
@@ -203,7 +203,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-plan-ui-003
 Current Task: нет
-Revision: 132
+Revision: 134
 
 ## Цель
 
@@ -223,8 +223,8 @@ Revision: 132
   - Git Commit: [DONE] docs: определить пользовательский блок плана
   - Reference: web-pilot-plan-ui-003 / T001 / implementation
   - Файлы: docs/PRODUCT.md, docs/DECISIONS.md
-- [TODO] T002: Экспортировать пользовательское состояние плана — Ожидает
-  - Git Commit: [PENDING] feat: публиковать состояние плана для интерфейса
+- [DONE] T002: Экспортировать пользовательское состояние плана — Завершено
+  - Git Commit: [DONE] feat: публиковать состояние плана для интерфейса
   - Reference: web-pilot-plan-ui-003 / T002 / implementation
   - Файлы: src/workspace-session.mjs, tests/workspace-session.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T003: Сделать самостоятельную карточку План — Ожидает
