@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 79,
+  "plan_revision": 81,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
@@ -1130,8 +1130,8 @@
         "suite"
       ],
       "expected_commit_message": "feat: сохранять тему оболочки Web Pilot",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-prototype-001",
         "task_id": "T029",
@@ -1271,7 +1271,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 79
+Revision: 81
 
 ## Цель
 
@@ -1404,8 +1404,8 @@ Revision: 79
   - Git Commit: [DONE] chore: собрать Web Pilot с архивом проектов
   - Reference: web-pilot-prototype-001 / T028 / implementation
   - Файлы: package.json, package-lock.json, README.md, AGENTS.md, docs/PRODUCT.md, docs/WORKFLOW_START.md, docs/DECISIONS.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, docs/PROJECT_ARCHIVE.md
-- [TODO] T029: Сохранять тему оболочки и нативной панели — Ожидает
-  - Git Commit: [PENDING] feat: сохранять тему оболочки Web Pilot
+- [DONE] T029: Сохранять тему оболочки и нативной панели — Завершено
+  - Git Commit: [DONE] feat: сохранять тему оболочки Web Pilot
   - Reference: web-pilot-prototype-001 / T029 / implementation
   - Файлы: src/main.mjs, src/preload.cjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T030: Добавить переключатель темы в Settings — Ожидает

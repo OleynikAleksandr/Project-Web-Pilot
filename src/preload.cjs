@@ -2,6 +2,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('webPilot', Object.freeze({
   openSettings: () => ipcRenderer.invoke('pilot:open-settings'),
   closeSettings: () => ipcRenderer.invoke('pilot:close-settings'),
+  setTheme: theme => ipcRenderer.invoke('pilot:set-theme', theme),
   archiveProject: workspace => ipcRenderer.invoke('pilot:archive-project', workspace),
   selectArchive: workspace => ipcRenderer.invoke('pilot:select-archive', workspace),
   restoreProject: workspace => ipcRenderer.invoke('pilot:restore-project', workspace),

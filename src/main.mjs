@@ -1,4 +1,4 @@
-import { app, BaseWindow, WebContentsView, Menu, session, ipcMain, dialog } from 'electron';
+import { app, BaseWindow, WebContentsView, Menu, session, ipcMain, dialog, nativeTheme } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
 import fsp from 'node:fs/promises';
@@ -22,6 +22,7 @@ const settingsFile = path.join(dataDir, 'settings.json');
 const store = new WorkspaceSessions(path.join(dataDir, 'workspaces.json'));
 const partition = smoke ? 'web-pilot-smoke' : 'persist:chatgpt';
 let runtimeFolder = path.join(os.homedir(), 'VSCODE/Codex Local Mac/mac-codex-local');
+let shellTheme = 'light';
 let window, browser, sidebar, runtime, controller, interval, fixture;
 let navigationId = 0;
 let pageLoading = false;
@@ -34,6 +35,20 @@ let setupState = null;
 let workspaceHealth = null;
 let settingsState = null;
 let deletion;
+const shellBackground = { light: '#f4f6f8', dark: '#1b1d22' };
+
+function applyShellTheme(theme) {
+  shellTheme = theme === 'dark' ? 'dark' : 'light';
+  nativeTheme.themeSource = shellTheme;
+  if (window && !window.isDestroyed()) window.setBackgroundColor(shellBackground[shellTheme]);
+}
+
+async function saveSettings(overrides = {}) {
+  const settings = { runtimeFolder, shellTheme, ...overrides };
+  await fsp.mkdir(dataDir, { recursive: true, mode: 0o700 });
+  await fsp.writeFile(settingsFile + '.tmp', JSON.stringify(settings, null, 2) + '\n', { mode: 0o600 });
+  await fsp.rename(settingsFile + '.tmp', settingsFile);
+}
 
 function openSettings(workspace = null) {
   pauseForSetup(); workspaceSetup.clear(); setupState = null; deletion.clear();
@@ -59,7 +74,7 @@ function snapshot() {
       workspace, projectId, name, archivedAt, sessionCount: sessions.length, deletionPending: deletion?.isPending(workspace) ?? false,
     })), settings: settingsState,
     selected, context: controller?.state ?? { phase: 'selected', servicesReady: false, messageSent: false },
-    runtimeFolder, pageLoading, startupError, storageError, setup: setupState, workspaceHealth, version: app.getVersion(), fixture: smoke };
+    runtimeFolder, theme: shellTheme, pageLoading, startupError, storageError, setup: setupState, workspaceHealth, version: app.getVersion(), fixture: smoke };
 }
 
 function publish() {
@@ -183,6 +198,12 @@ function registerIpc() {
   ipcMain.handle('pilot:get-state', event => { assertLocalSender(event); return snapshot(); });
   registerAction('pilot:open-settings', () => openSettings());
   registerAction('pilot:close-settings', closeSettings);
+  registerAction('pilot:set-theme', async input => {
+    if (!['light', 'dark'].includes(input)) throw new Error('Неизвестная тема оформления.');
+    if (input === shellTheme) return;
+    await saveSettings({ shellTheme: input });
+    applyShellTheme(input);
+  });
   registerAction('pilot:archive-project', async input => {
     const project = store.project(input);
     if (!project || project.archivedAt || storageError) throw new Error('Выберите активный проект.');
@@ -303,9 +324,7 @@ function registerIpc() {
     if (result.canceled) return;
     const selected = await findRuntimeFolder(result.filePaths[0]);
     controller.cancel();
-    await fsp.mkdir(dataDir, { recursive: true, mode: 0o700 });
-    await fsp.writeFile(settingsFile + '.tmp', JSON.stringify({ runtimeFolder: selected }, null, 2) + '\n', { mode: 0o600 });
-    await fsp.rename(settingsFile + '.tmp', settingsFile);
+    await saveSettings({ runtimeFolder: selected });
     runtimeFolder = selected; deletion.protectedPaths = [app.getAppPath(), runtimeFolder];
     runtime = new McpRuntime(runtimeFolder);
     connectController();
@@ -316,7 +335,7 @@ function registerIpc() {
 
 async function createWindow() {
   window = new BaseWindow({ title: smoke ? 'Project Web Pilot — TEST FIXTURE' : 'Project Web Pilot',
-    width: 1440, height: 940, minWidth: 980, minHeight: 700, backgroundColor: '#f4f6f8' });
+    width: 1440, height: 940, minWidth: 980, minHeight: 700, backgroundColor: shellBackground[shellTheme] });
   sidebar = new WebContentsView({ webPreferences: { preload: path.join(sourceDir, 'preload.cjs'),
     nodeIntegration: false, contextIsolation: true, sandbox: true, webSecurity: true } });
   browser = new WebContentsView({ webPreferences: remotePreferences() });
@@ -371,7 +390,9 @@ else {
     try {
       const settings = JSON.parse(await fsp.readFile(settingsFile, 'utf8'));
       if (typeof settings.runtimeFolder === 'string' && path.isAbsolute(settings.runtimeFolder)) runtimeFolder = settings.runtimeFolder;
-    } catch (error) { if (error.code !== 'ENOENT') startupError = { code: 'SETTINGS_INVALID', message: 'Не удалось прочитать настройки подключения. Выберите папку Codex Local Mac в подробностях.' }; }
+      if (['light', 'dark'].includes(settings.shellTheme)) shellTheme = settings.shellTheme;
+    } catch (error) { if (error.code !== 'ENOENT') startupError = { code: 'SETTINGS_INVALID', message: 'Не удалось прочитать локальные настройки Web Pilot. Проверьте настройки подключения.' }; }
+    applyShellTheme(shellTheme);
     try { await store.load(); } catch (error) { startupError = publicError(error); storageError = true; }
     deletion = new WorkspaceDeletion({ store, journalDir: path.join(dataDir, 'deletions'), protectedPaths: [app.getAppPath(), runtimeFolder] });
     if (!storageError) {
