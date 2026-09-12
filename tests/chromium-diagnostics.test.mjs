@@ -127,6 +127,34 @@ test('context telemetry discovers Web-style candidate keys without recording val
   assert.equal(serialized.includes('999999'), false);
 });
 
+test('context telemetry unwraps nested JSON stream envelopes but never parses message/content strings', () => {
+  const nestedUsage = JSON.stringify({
+    type: 'stream-item',
+    payload: JSON.stringify({
+      type: 'token_count',
+      info: {
+        last_token_usage: { input_tokens: 201234, cached_input_tokens: 198000, total_tokens: 201345 },
+        model_context_window: 258400,
+      },
+      content: JSON.stringify({ input_tokens: 999999, model_context_window: 999999, token_secret: 'PRIVATE CONTENT' }),
+    }),
+  });
+  const payload = JSON.stringify({
+    type: 'conversation-turn-stream',
+    data: nestedUsage,
+    message: JSON.stringify({ input_tokens: 888888, model_context_window: 888888, context_secret: 'PRIVATE MESSAGE' }),
+  });
+  const telemetry = contextTelemetry(payload);
+  assert.deepEqual(telemetry.markers, ['token_count']);
+  assert.deepEqual(telemetry.lastTokenUsage, [{ input_tokens: 201234, cached_input_tokens: 198000, total_tokens: 201345 }]);
+  assert.deepEqual(telemetry.metrics.model_context_window, [258400]);
+  const serialized = JSON.stringify(telemetry);
+  assert.equal(serialized.includes('999999'), false);
+  assert.equal(serialized.includes('888888'), false);
+  assert.equal(serialized.includes('PRIVATE CONTENT'), false);
+  assert.equal(serialized.includes('PRIVATE MESSAGE'), false);
+});
+
 test('DiagnosticJsonl writes valid JSONL and rotates bounded files', async () => {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'web-pilot-diagnostics-'));
   const file = path.join(dir, 'chromium-events.jsonl');

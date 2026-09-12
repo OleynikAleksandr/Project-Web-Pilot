@@ -19,7 +19,11 @@ const TELEMETRY_MARKERS = new Set([
 const PRESENCE_KEYS = new Set(['compaction_response_id', 'window_id', 'previous_window_id', 'first_window_id']);
 const TELEMETRY_KEY_PATTERN = /(token|context|usage|window|compact)/i;
 const SAFE_KEY_SEGMENT = /^[A-Za-z0-9_.:-]{1,80}$/;
-const SKIP_TELEMETRY_SUBTREES = new Set(['content', 'parts', 'text', 'replacement_history', 'guardian_history']);
+const SKIP_TELEMETRY_SUBTREES = new Set([
+  'content', 'parts', 'text', 'message', 'replacement_history', 'guardian_history',
+  'tool_output', 'toolOutput', 'output_text', 'input_text',
+]);
+const NESTED_JSON_MAX_CHARS = 256 * 1024;
 const SAFE_IDENTIFIER = /^[A-Za-z0-9_.:/-]{1,96}$/;
 const LONG_PATH_ID = /^[A-Za-z0-9_-]{20,}$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -75,8 +79,23 @@ function collectUsageObject(value) {
   return Object.keys(usage).length ? usage : null;
 }
 
-function collectTelemetry(value, out, depth = 0, budget = { left: 800 }, path = []) {
-  if (!value || typeof value !== 'object' || depth > 8 || budget.left-- <= 0) return;
+function nestedJsonValue(value, budget) {
+  if (typeof value !== 'string' || value.length < 2 || value.length > NESTED_JSON_MAX_CHARS) return null;
+  if ((budget.nested ?? 0) >= 12) return null;
+  const text = value.trim();
+  if (!((text.startsWith('{') && text.endsWith('}')) || (text.startsWith('[') && text.endsWith(']')))) return null;
+  try {
+    const parsed = JSON.parse(text);
+    if (!parsed || typeof parsed !== 'object') return null;
+    budget.nested = (budget.nested ?? 0) + 1;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function collectTelemetry(value, out, depth = 0, budget = { left: 800, nested: 0 }, path = []) {
+  if (!value || typeof value !== 'object' || depth > 10 || budget.left-- <= 0) return;
   if (Array.isArray(value)) {
     for (const item of value.slice(0, 80)) collectTelemetry(item, out, depth + 1, budget, path);
     return;
@@ -102,9 +121,13 @@ function collectTelemetry(value, out, depth = 0, budget = { left: 800 }, path = 
         else out.usage.push(usage);
       }
     }
-    if (item && typeof item === 'object' && !SKIP_TELEMETRY_SUBTREES.has(key)) {
+    if (SKIP_TELEMETRY_SUBTREES.has(key)) continue;
+    if (item && typeof item === 'object') {
       collectTelemetry(item, out, depth + 1, budget, nextPath);
+      continue;
     }
+    const nested = nestedJsonValue(item, budget);
+    if (nested) collectTelemetry(nested, out, depth + 1, budget, nextPath);
   }
 }
 

@@ -430,3 +430,7 @@ Transient `planAcceptance` теперь хранит `scopeId` вместе с w
 
 Локальный renderer получает только `state.contextWindow` из main snapshot. При `status=known` карточка «Контекстное окно» показывает компактные значения `inputTokens / modelContextWindow`, подтверждённый `usedPercent` и progressbar с тем же значением. При `unknown` выводится только «Ожидаем данные», а progressbar скрыт; renderer не читает JSONL и не имеет доступа к CDP/WebSocket/SSE payload. Навигационный reset из T002 тем самым немедленно убирает устаревший процент из UI.
 
+
+## Вложенные JSON-envelope Web stream — scope 008 / T001
+
+Production-наблюдение scope 007 подтвердило, что обычный `/backend-api/f/conversation` после запуска новой сборки содержит только безопасный candidate `token` без числового context usage. Для WebSocket `conversation-turn-stream/stream-item` parser теперь ограниченно раскрывает JSON-object/array, сериализованный внутри строкового transport-envelope, и повторно применяет тот же числовой telemetry allowlist/candidate discovery. Разбор ограничен 256 KiB на строку, максимум 12 вложенными JSON-string и общим traversal budget. Ветви `message`, `content`, `parts`, `text`, `tool_output`, `output_text`, `input_text`, `replacement_history` и `guardian_history` никогда не раскрываются как nested JSON, поэтому пользовательский JSON и текст tool output не могут сформировать ложную context telemetry.

@@ -383,3 +383,7 @@ Electron smoke поднимает изолированный `https` fixture, г
 
 Electron smoke сначала требует `contextWindow.status=unknown`, текст «Ожидаем данные» и скрытый progressbar. Затем fixture делает настоящий Chromium `fetch('/backend-api/f/conversation')`; CDP извлекает тестовые `229043 / 258400`, main snapshot становится `known`, а sidebar обязан показать `229K / 258K · 88,6%`, открыть progressbar и поставить `aria-valuenow=88.6`. Диагностические privacy-проверки scope 006 остаются активными.
 
+
+## Scope 008 / T001 — nested stream envelope
+
+`tests/chromium-diagnostics.test.mjs` проверяет двойную JSON-string упаковку `conversation-turn-stream → data → stream-item → payload` с `token_count`, `last_token_usage` и `model_context_window`. Ожидаемые `201234 / 258400` извлекаются, но JSON-строки в `message` и `content` со значениями `888888/999999` и приватным текстом полностью игнорируются. Лимиты вложенности и размера являются частью privacy/DoS boundary parser.

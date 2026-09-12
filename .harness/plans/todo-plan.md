@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 179,
+  "plan_revision": 181,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-context-observation-008",
@@ -78,8 +78,8 @@
         "Unit tests покрывают nested stream-item с context usage и приватным текстом."
       ],
       "expected_commit_message": "feat: разбирать вложенную telemetry Web stream",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-context-observation-008",
         "task_id": "T001",
@@ -168,7 +168,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-context-observation-008
 Current Task: нет
-Revision: 179
+Revision: 181
 
 ## Цель
 
@@ -183,8 +183,8 @@ Revision: 179
 
 ## Микрозадачи
 
-- [TODO] T001: Разбирать вложенные служебные JSON-envelope stream-item — Ожидает
-  - Git Commit: [PENDING] feat: разбирать вложенную telemetry Web stream
+- [DONE] T001: Разбирать вложенные служебные JSON-envelope stream-item — Завершено
+  - Git Commit: [DONE] feat: разбирать вложенную telemetry Web stream
   - Reference: web-pilot-context-observation-008 / T001 / implementation
   - Файлы: src/chromium-diagnostics.mjs, tests/chromium-diagnostics.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T002: Проверить production context-window telemetry — Ожидает
