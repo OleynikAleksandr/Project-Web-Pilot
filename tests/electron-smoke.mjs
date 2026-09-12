@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
+import { nativeTheme } from 'electron';
 import { readWorkspace, WorkspaceSessions } from '../src/workspace-session.mjs';
 
 let packetLoads = 0;
@@ -158,6 +159,16 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(archived.snapshot().projects[0].sessions.length, 2); assert.ok(archived.project(workspace).archivedAt);
   await openArchive();
   assert.ok(await sidebar.executeJavaScript('document.getElementById("open-settings").getBoundingClientRect().left > document.querySelector(".footer-controls summary").getBoundingClientRect().left'));
+  assert.equal(snapshot().theme, 'light');
+  assert.equal(await sidebar.executeJavaScript('document.documentElement.dataset.theme'), 'light');
+  await sidebar.executeJavaScript('document.getElementById("theme-dark").click()');
+  await waitFor(() => snapshot().theme === 'dark', 'switch shell theme to dark', snapshot);
+  assert.equal(await sidebar.executeJavaScript('document.documentElement.dataset.theme'), 'dark');
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("theme-dark").getAttribute("aria-pressed")'), 'true');
+  assert.equal(nativeTheme.shouldUseDarkColors, true);
+  const persistedSettings = JSON.parse(await fs.readFile(path.join(dataDir, 'settings.json'), 'utf8'));
+  assert.equal(persistedSettings.shellTheme, 'dark');
+  assert.equal(typeof persistedSettings.runtimeFolder, 'string');
   await sidebar.executeJavaScript('document.getElementById("restore-project").click()');
   await waitFor(() => snapshot().archives.length === 0, 'restore project', snapshot);
   assert.equal(store.selected(), null); assert.equal(packetLoads, 2); assert.equal(snapshot().projects[0].sessions.length, 2);
@@ -185,7 +196,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(packetLoads, 2, 'Archive, restore and deletion never send another packet');
   const result = { mode: 'isolated-fixture', electron: process.versions.electron, chromium: process.versions.chrome,
     views: window.contentView.children.length, secureRemote: true, sidebarIpc: true, archiveRestore: true, archiveRestart: true, deleteCancel: true, localDeletion: true, cloudChatPreserved: true, workspaceCreation: true, workspaceValidation: true, cancelPreservesSession: true, startupMessages: packetLoads,
-    restartKeepsSession: true, newChatCreatesSession: true, sessionTree: true, selectsEarlierSession: true, fullContextBytes: Buffer.byteLength(fixtureContext), liveChatGPT: false, agentToolsRequired: false };
+    restartKeepsSession: true, newChatCreatesSession: true, sessionTree: true, selectsEarlierSession: true, shellTheme: true, nativeTitlebarTheme: nativeTheme.shouldUseDarkColors, fullContextBytes: Buffer.byteLength(fixtureContext), liveChatGPT: false, agentToolsRequired: false };
   await fs.writeFile(path.join(dataDir, 'smoke-result.json'), JSON.stringify(result, null, 2));
   console.log(JSON.stringify(result));
 }

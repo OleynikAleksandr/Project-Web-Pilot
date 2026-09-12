@@ -243,3 +243,9 @@ Electron smoke прошёл с полным пакетом 75092 UTF-8 байт�
 ## T030 — переключатель в Settings
 
 В Settings добавлены две кнопки «Светлая»/«Тёмная» с `aria-pressed`; renderer получает тему только из локального snapshot и применяет её через `data-theme`. Тёмные стили покрывают основной список, дерево сессий, карточку контекста, формы, архив и опасные действия. Назначенные проверки этапа — полная Node-suite и Electron smoke; отдельные утверждения о сохранении темы и nativeTheme добавляются в T031.
+
+## T031 — проверка темы и обновлённая сборка, 12.09.2026
+
+Electron smoke переключил оболочку через настоящую кнопку «Тёмная» в Settings. Snapshot сменился с `theme=light` на `theme=dark`, корневой `data-theme` сайдбара стал `dark`, выбранная кнопка получила `aria-pressed=true`, а `nativeTheme.shouldUseDarkColors` стал `true`. В отдельном smoke-профиле `settings.json` сохранил `shellTheme: "dark"` вместе с `runtimeFolder`; удалённый WebContents по-прежнему не имеет `window.webPilot`.
+
+Обновлённая macOS arm64-сборка создана штатной командой `npm run build` в `.harness/runtime/build/Project Web Pilot-darwin-arm64/Project Web Pilot.app`. SHA-256 `app.asar`: `af2589428c6e16902e093998db666bc5e8e7650590e06a14eeb9fea063f47992`, размер 181420 байт. Отдельный `npm run smoke` завершился успешно с `shellTheme=true` и `nativeTitlebarTheme=true`; полный пакет fixture — 75092 байта. Пользовательская визуальная приёмка светлой/тёмной оболочки остаётся отдельной.

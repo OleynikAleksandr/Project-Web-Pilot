@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 83,
+  "plan_revision": 85,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Локальный macOS Web Pilot с встроенным ChatGPT, выбором проекта и полным контекстом в первом сообщении; агент сразу кратко подтверждает восстановление и описывает проект. Сайдбар сохраняет все созданные сессии workspace и позволяет выбирать их в раскрываемом дереве. Создание нового workspace и подключение существующей папки повторяют Workflow Kit с проверкой структуры до открытия чата. Архив workspace доступен в настройках через шестерёнку справа от подключения; проекты возвращаются в активные либо удаляются с диска вместе с локальными записями сессий. Облачные чаты сохраняются. Оформление оболочки настраивается отдельно в Settings: светлая или тёмная тема применяется к сайдбару и верхней панели окна.",
   "acceptance_criteria": [
     "Полный канонический контекст передаёт приложение до первого ответа агента.",
@@ -1199,8 +1199,8 @@
         "electron-smoke"
       ],
       "expected_commit_message": "test: проверить темы оболочки Web Pilot",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-prototype-001",
         "task_id": "T031",
@@ -1268,10 +1268,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 83
+Revision: 85
 
 ## Цель
 
@@ -1412,8 +1412,8 @@ Revision: 83
   - Git Commit: [DONE] feat: добавить тёмную тему сайдбара
   - Reference: web-pilot-prototype-001 / T030 / implementation
   - Файлы: src/ui/index.html, src/ui/project-archive.mjs, docs/PROJECT_ARCHIVE.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T031: Проверить тему и пересобрать приложение — Ожидает
-  - Git Commit: [PENDING] test: проверить темы оболочки Web Pilot
+- [DONE] T031: Проверить тему и пересобрать приложение — Завершено
+  - Git Commit: [DONE] test: проверить темы оболочки Web Pilot
   - Reference: web-pilot-prototype-001 / T031 / implementation
   - Файлы: tests/electron-smoke.mjs, README.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/DECISIONS.md, docs/PRODUCT.md
 
