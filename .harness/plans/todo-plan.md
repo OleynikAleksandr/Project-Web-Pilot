@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 102,
+  "plan_revision": 104,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-layout-archive-002",
@@ -133,8 +133,8 @@
         "Ошибка одного элемента оставляет весь набор без изменений"
       ],
       "expected_commit_message": "feat: забывать выбранные архивные проекты",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-layout-archive-002",
         "task_id": "T002",
@@ -335,7 +335,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-layout-archive-002
 Current Task: нет
-Revision: 102
+Revision: 104
 
 ## Цель
 
@@ -357,8 +357,8 @@ Revision: 102
   - Git Commit: [DONE] docs: определить resize и новое окно архива
   - Reference: web-pilot-layout-archive-002 / T001 / implementation
   - Файлы: docs/PRODUCT.md, docs/DECISIONS.md, docs/PROJECT_ARCHIVE.md
-- [TODO] T002: Добавить атомарное забывание нескольких архивов — Ожидает
-  - Git Commit: [PENDING] feat: забывать выбранные архивные проекты
+- [DONE] T002: Добавить атомарное забывание нескольких архивов — Завершено
+  - Git Commit: [DONE] feat: забывать выбранные архивные проекты
   - Reference: web-pilot-layout-archive-002 / T002 / implementation
   - Файлы: src/workspace-session.mjs, tests/workspace-session.test.mjs, docs/PROJECT_ARCHIVE.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T003: Сохранять регулируемую ширину сайдбара — Ожидает

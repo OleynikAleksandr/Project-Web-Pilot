@@ -327,3 +327,7 @@ Web Pilot хранит локальный флаг `hideToolCalls` в `settings.
 ### macOS privacy descriptions — T036
 
 `resources/mac-permissions.plist` передаётся `electron-packager` через `--extend-info`, поэтому usage descriptions входят в основной `Info.plist` до завершения упаковки. Сборка содержит `NSMicrophoneUsageDescription`, `NSLocationWhenInUseUsageDescription` и совместимый `NSLocationUsageDescription`. Стандартный Electron template также содержит `NSCameraUsageDescription`, но это только текст системного privacy-ключа: фактический запрос камеры отклоняется allowlist-политикой T035.
+
+## Массовое забывание архивов — scope 002 / T002
+
+`WorkspaceSessions.forgetArchivedMany()` валидирует весь набор архивных `workspace/projectId` над копией store и только затем удаляет записи из `workspaces.json`. Файловая система workspace не участвует. `forgetArchived()` делегирует этому методу, поэтому физическое удаление после quarantine и новое действие «Убрать из списка» используют одну проверку локальной идентичности.

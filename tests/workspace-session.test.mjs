@@ -192,3 +192,23 @@ test('forgetting requires an archived matching identity and removes all local se
   assert.equal(store.project(a.workspace), null); assert.equal(store.snapshot().projects.length, 0);
   assert.ok((await fs.stat(a.workspace)).isDirectory(), 'Metadata operation never deletes files');
 });
+
+test('forgetting several archived projects is atomic and leaves folders untouched', async t => {
+  const { project, store } = await fixture(t);
+  const a = await store.select(await project('Forget A'));
+  const b = await store.select(await project('Forget B'));
+  const c = await store.select(await project('Keep active'));
+  await store.setArchived(a.workspace, true); await store.setArchived(b.workspace, true);
+  const before = store.snapshot();
+  await assert.rejects(store.forgetArchivedMany([
+    { workspace: a.workspace, projectId: a.projectId },
+    { workspace: c.workspace, projectId: c.projectId },
+  ]), { code: 'PROJECT_NOT_ARCHIVED' });
+  assert.deepEqual(store.snapshot(), before, 'failed batch is atomic');
+  assert.equal(await store.forgetArchivedMany([
+    { workspace: a.workspace, projectId: a.projectId },
+    { workspace: b.workspace, projectId: b.projectId },
+  ]), 2);
+  assert.equal(store.project(a.workspace), null); assert.equal(store.project(b.workspace), null); assert.ok(store.project(c.workspace));
+  assert.ok((await fs.stat(a.workspace)).isDirectory()); assert.ok((await fs.stat(b.workspace)).isDirectory());
+});

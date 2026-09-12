@@ -257,14 +257,26 @@ export class WorkspaceSessions {
   }
 
   forgetArchived(workspace, projectId) {
+    return this.forgetArchivedMany([{ workspace, projectId }]).then(count => count > 0);
+  }
+
+  forgetArchivedMany(items) {
     return this.mutate(data => {
-      const project = data.projects.find(p => p.workspace === workspace);
-      if (!project) return false;
-      if (project.projectId !== projectId) throw new WorkspaceError('PROJECT_REPLACED', 'Запись проекта изменилась. Повторите проверку.');
-      if (!project.archivedAt) throw new WorkspaceError('PROJECT_NOT_ARCHIVED', 'Удалить можно только проект из архива.');
-      data.projects = data.projects.filter(p => p !== project);
-      if (data.selectedWorkspace === workspace) data.selectedWorkspace = null;
-      return true;
+      if (!Array.isArray(items) || !items.length) throw new WorkspaceError('WORKSPACE_REQUIRED', 'Выберите проект из архива.');
+      const seen = new Set();
+      const projects = items.map(item => {
+        if (!item || typeof item.workspace !== 'string' || typeof item.projectId !== 'string' || seen.has(item.workspace))
+          throw new WorkspaceError('WORKSPACE_REQUIRED', 'Выберите корректные проекты из архива.');
+        seen.add(item.workspace);
+        const project = data.projects.find(p => p.workspace === item.workspace);
+        if (!project || project.projectId !== item.projectId) throw new WorkspaceError('PROJECT_REPLACED', 'Запись проекта изменилась. Повторите проверку.');
+        if (!project.archivedAt) throw new WorkspaceError('PROJECT_NOT_ARCHIVED', 'Убрать из списка можно только проект из архива.');
+        return project;
+      });
+      const remove = new Set(projects.map(project => project.workspace));
+      data.projects = data.projects.filter(project => !remove.has(project.workspace));
+      if (remove.has(data.selectedWorkspace)) data.selectedWorkspace = null;
+      return projects.length;
     });
   }
 }
