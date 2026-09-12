@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 110,
+  "plan_revision": 112,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-layout-archive-002",
@@ -273,8 +273,8 @@
         "Settings показывает только кнопку открытия архива вместо списка"
       ],
       "expected_commit_message": "feat: добавить multi-select управление архивом",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-layout-archive-002",
         "task_id": "T006",
@@ -335,7 +335,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-layout-archive-002
 Current Task: нет
-Revision: 110
+Revision: 112
 
 ## Цель
 
@@ -373,8 +373,8 @@ Revision: 110
   - Git Commit: [DONE] feat: вынести архив в отдельное окно
   - Reference: web-pilot-layout-archive-002 / T005 / implementation
   - Файлы: src/main.mjs, src/archive-preload.cjs, src/ui/archive.html, docs/PROJECT_ARCHIVE.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T006: Реализовать множественный выбор и действия архива — Ожидает
-  - Git Commit: [PENDING] feat: добавить multi-select управление архивом
+- [DONE] T006: Реализовать множественный выбор и действия архива — Завершено
+  - Git Commit: [DONE] feat: добавить multi-select управление архивом
   - Reference: web-pilot-layout-archive-002 / T006 / implementation
   - Файлы: src/ui/archive.mjs, src/ui/project-archive.mjs, src/preload.cjs, docs/PROJECT_ARCHIVE.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T007: Проверить интеграцию и пересобрать приложение — Ожидает

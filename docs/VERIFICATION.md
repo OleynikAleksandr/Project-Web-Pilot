@@ -290,3 +290,7 @@ Electron smoke синтетическим pointer drag расширяет sideba
 ## Scope 002 / T005 — каркас окна архива
 
 Добавлен одиночный локальный BrowserWindow архива, отдельный preload и локальный HTML. Все archive IPC проверяют точный sender и используют тот же сериализованный actionTail/store. Пользовательский multi-select renderer и полный Electron smoke добавляются следующими задачами.
+
+## Scope 002 / T006 — UI архива
+
+Реализован отдельный renderer с обычным click/Shift/Command-Ctrl selection model. Массовые restore/forget и одиночный delete используют специализированный archive preload; Settings свёрнут до кнопки открытия окна. Полная проверка пользовательского пути выполняется T007 Electron smoke.

@@ -343,3 +343,7 @@ Web Pilot хранит локальный флаг `hideToolCalls` в `settings.
 ## Отдельное окно архива — scope 002 / T005
 
 Архив реализован отдельным локальным `BrowserWindow` с `contextIsolation`, `sandbox` и специализированным `archive-preload.cjs`. Remote ChatGPT и обычный sidebar не получают archive-only команды массового forget/delete. Main хранит только transient deletion preview/notice; список проектов по-прежнему строится непосредственно из `WorkspaceSessions`.
+
+### Archive renderer — scope 002 / T006
+
+`src/ui/archive.mjs` хранит только transient Set выбранных workspace и anchor для Shift. Все проверки идентичности и файловые операции остаются в main/store. Обычный sidebar preload больше не экспортирует restore/delete archive IPC; он умеет только архивировать активный workspace и открыть локальное окно архива.
