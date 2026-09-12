@@ -458,3 +458,9 @@ Windows-версия Web Pilot поставляет один immutable payload `
 ## Автоматический bootstrap Windows runtime — scope 008 / T008
 
 `src/windows-runtime.mjs` отделяет установку bundled Codex Local Windows от обычного MCP lifecycle. На win32 payload сначала проверяется streaming SHA-256, затем `Expand-Archive` получает пути только через environment variables, а extracted tree обязан содержать единственный top-level `Windows-Codex-Local`. Runtime разворачивается под writable `userData/runtime`, не в Program Files. Канонический `scripts/setup.ps1` затем готовит приватный Python 3.13, uv/MinGit/ripgrep/tunnel-client и `.venv`; успешная установка фиксируется marker `windows-runtime.json` с payload hash. Повторный запуск с тем же hash переиспользует установленную копию. Секреты tunnel в этот bootstrap не входят.
+
+## Bundled Windows runtime lifecycle — scope 008 / T009
+
+На win32 `main.mjs` создаёт `WindowsRuntimeBootstrap` из payload в `process.resourcesPath/windows-payload` и использует установленный `userData/runtime/Windows-Codex-Local` как default runtime. `McpRuntime` получает `ensureRuntime` callback и вызывает bootstrap перед каждым `status/start`; macOS остаётся на прежнем внешнем Codex Local Mac без bootstrap. `LocalMcpClient` параметризован ожидаемым server name (`Codex Local Mac` / `Codex Local Windows`).
+
+Канонический Windows snapshot на момент упаковки имел 46 tools и предшествовал добавлению `workflow_context_recover`. Поэтому bootstrap после проверки SHA накладывает минимальный Web Pilot compatibility overlay: `server/context_packet.py` формирует тот же `inline-context-v1` через локальный `.harness/runtime/node.exe` и `scripts/workflow.mjs`, а `mcp/bridge_mcp.py` получает один read-only tool. Overlay version входит в installation marker, идемпотентно проверяется и не изменяет исходный ZIP. Таким образом стартовая доставка и последующий recovery имеют одинаковый контракт на macOS и Windows.

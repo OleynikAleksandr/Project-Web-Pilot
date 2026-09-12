@@ -106,3 +106,7 @@ Chromium diagnostics теперь ориентирован не только н�
 ## Граница платформы macOS/Windows — scope 008 / T004–T006
 
 Project Web Pilot остаётся одним Electron-приложением с общей Chromium/UI/workflow-логикой. Подготовка к Windows выполнена без отдельной кодовой ветки: platform-specific различия локального runtime, Python venv, внешнего Node и default runtime folder вынесены в `src/platform.mjs`. На macOS поведение и текущий путь Codex Local Mac сохранены. Windows layout и packaging target добавлены как подготовка; это не означает, что Windows Local MCP/Desktop runtime уже реализован или принят пользователем.
+
+## Самодостаточный Windows runtime — scope 008 / T009
+
+Windows 10/11 x64 версия использует встроенный Codex Local Windows как свой локальный runtime: при первом обращении он автоматически проверяется, разворачивается и подготавливается в профиле пользователя; вручную выбирать папку Codex Local не требуется. Web Pilot добавляет к исходному Windows MCP только read-only `workflow_context_recover`, чтобы автоматическая доставка и восстановление контекста проекта работали тем же способом, что на macOS. Настройка tunnel остаётся отдельным одноразовым локальным шагом и не передаёт секрет в ChatGPT.

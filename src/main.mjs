@@ -11,7 +11,8 @@ import { ContextSession } from './context-session.mjs';
 import { WorkspaceDeletion } from './workspace-deletion.mjs';
 import { WorkspaceSetup } from './workspace-setup.mjs';
 import { ChromiumDiagnostics } from './chromium-diagnostics.mjs';
-import { defaultRuntimeFolder } from './platform.mjs';
+import { defaultRuntimeFolder, bundledWindowsRuntimeFolder } from './platform.mjs';
+import { WindowsRuntimeBootstrap, WINDOWS_RUNTIME_ARCHIVE } from './windows-runtime.mjs';
 
 const smoke = !app.isPackaged && process.argv.includes('--smoke');
 const sourceDir = path.dirname(fileURLToPath(import.meta.url));
@@ -25,13 +26,13 @@ const settingsFile = path.join(dataDir, 'settings.json');
 const chromiumDiagnosticsFile = path.join(dataDir, 'diagnostics', 'chromium-events.jsonl');
 const store = new WorkspaceSessions(path.join(dataDir, 'workspaces.json'));
 const partition = smoke ? 'web-pilot-smoke' : 'persist:chatgpt';
-let runtimeFolder = defaultRuntimeFolder(os.homedir(), process.platform);
+let runtimeFolder = bundledWindowsRuntimeFolder(dataDir, process.platform) ?? defaultRuntimeFolder(os.homedir(), process.platform);
 let shellTheme = 'light';
 let hideToolCalls = true;
 const SIDEBAR_MIN_WIDTH = 312;
 const BROWSER_MIN_WIDTH = 600;
 let sidebarWidth = SIDEBAR_MIN_WIDTH;
-let window, browser, sidebar, archiveWindow, runtime, controller, interval, fixture, chromiumDiagnostics;
+let window, browser, sidebar, archiveWindow, runtime, controller, interval, fixture, chromiumDiagnostics, windowsRuntimeBootstrap;
 let navigationId = 0;
 let pageLoading = false;
 let startupError = null;
@@ -143,7 +144,8 @@ function snapshot() {
     contextWindow: chromiumDiagnostics?.contextObservation() ?? { status: 'unknown' },
     planAcceptance: planAcceptance?.workspace === selected?.workspace && planAcceptance?.scopeId === selected?.scopeId
       && selected?.planView?.state === 'awaiting-acceptance' ? planAcceptance.state : null,
-    runtimeFolder, theme: shellTheme, hideToolCalls, sidebarWidth, sidebarMinWidth: SIDEBAR_MIN_WIDTH, pageLoading, startupError, storageError, setup: setupState, workspaceHealth, version: app.getVersion(), fixture: smoke };
+    runtimeFolder, platform: process.platform, windowsRuntime: windowsRuntimeBootstrap?.snapshot() ?? null,
+    theme: shellTheme, hideToolCalls, sidebarWidth, sidebarMinWidth: SIDEBAR_MIN_WIDTH, pageLoading, startupError, storageError, setup: setupState, workspaceHealth, version: app.getVersion(), fixture: smoke };
 }
 
 function publish() {
@@ -329,6 +331,14 @@ async function selectWorkspace(input) {
   publish(); void navigate(project); return project;
 }
 
+function createLocalRuntime() {
+  return new McpRuntime(runtimeFolder, {
+    platform: process.platform,
+    expectedServerName: process.platform === 'win32' ? 'Codex Local Windows' : 'Codex Local Mac',
+    ensureRuntime: windowsRuntimeBootstrap ? () => windowsRuntimeBootstrap.ensure(store.selected()?.workspace ?? os.homedir()) : null,
+  });
+}
+
 function connectController() {
   controller?.cancel();
   controller = new ContextSession({ store, runtime, composer: new ChatGPTComposer(browser.webContents), onChange: publish });
@@ -512,6 +522,7 @@ function registerIpc() {
   });
   registerAction('pilot:reload', async () => { startupError = null; const current = store.selected(); if (current) await selectWorkspace(current.workspace); else void navigate(); });
   registerAction('pilot:choose-runtime', async () => {
+    if (process.platform === 'win32') throw new Error('Windows-версия использует встроенный Codex Local Windows runtime.');
     const result = await dialog.showOpenDialog(window, { title: 'Выбрать Codex Local Mac', buttonLabel: 'Подключить',
       properties: ['openDirectory'], defaultPath: runtimeFolder });
     if (result.canceled) return;
@@ -519,7 +530,7 @@ function registerIpc() {
     controller.cancel();
     await saveSettings({ runtimeFolder: selected });
     runtimeFolder = selected; deletion.protectedPaths = [app.getAppPath(), runtimeFolder];
-    runtime = new McpRuntime(runtimeFolder);
+    runtime = createLocalRuntime();
     connectController();
     startupError = null;
     const current = store.selected(); if (current) controller.attach(current);
@@ -596,7 +607,7 @@ async function createWindow() {
     await fsp.mkdir(dataDir + '-projects', { recursive: true });
     fixture = await import('../tests/electron-smoke.mjs');
     runtime = await fixture.createRuntime({ browser: browser.webContents, session: session.fromPartition(partition), dataDir });
-  } else runtime = new McpRuntime(runtimeFolder);
+  } else runtime = createLocalRuntime();
   connectController();
   registerIpc();
   await sidebar.webContents.loadURL(sidebarUrl);
@@ -628,13 +639,21 @@ else {
   app.whenReady().then(async () => {
     try {
       const settings = JSON.parse(await fsp.readFile(settingsFile, 'utf8'));
-      if (typeof settings.runtimeFolder === 'string' && path.isAbsolute(settings.runtimeFolder)) runtimeFolder = settings.runtimeFolder;
+      if (process.platform !== 'win32' && typeof settings.runtimeFolder === 'string' && path.isAbsolute(settings.runtimeFolder)) runtimeFolder = settings.runtimeFolder;
       if (['light', 'dark'].includes(settings.shellTheme)) shellTheme = settings.shellTheme;
       if (typeof settings.hideToolCalls === 'boolean') hideToolCalls = settings.hideToolCalls;
       if (Number.isFinite(settings.sidebarWidth)) sidebarWidth = Math.max(SIDEBAR_MIN_WIDTH, Math.round(settings.sidebarWidth));
     } catch (error) { if (error.code !== 'ENOENT') startupError = { code: 'SETTINGS_INVALID', message: 'Не удалось прочитать локальные настройки Web Pilot. Проверьте настройки подключения.' }; }
     applyShellTheme(shellTheme);
     try { await store.load(); } catch (error) { startupError = publicError(error); storageError = true; }
+    if (process.platform === 'win32') {
+      const payloadFile = app.isPackaged
+        ? path.join(process.resourcesPath, 'windows-payload', WINDOWS_RUNTIME_ARCHIVE)
+        : path.join(sourceDir, '../.harness/runtime/windows-payload', WINDOWS_RUNTIME_ARCHIVE);
+      windowsRuntimeBootstrap = new WindowsRuntimeBootstrap({ payloadFile, dataDir, onState: publish });
+      runtimeFolder = windowsRuntimeBootstrap.paths.folder;
+      await windowsRuntimeBootstrap.inspect();
+    }
     deletion = new WorkspaceDeletion({ store, journalDir: path.join(dataDir, 'deletions'), protectedPaths: [app.getAppPath(), runtimeFolder] });
     if (!storageError) {
       const errors = await deletion.recover();

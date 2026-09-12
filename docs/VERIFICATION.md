@@ -407,3 +407,7 @@ Unit tests проверяют вложенный SSE `encoded_item` с тест�
 ## Scope 008 / T008 — Windows runtime bootstrap
 
 `tests/windows-runtime.test.mjs` проверяет win32 layout под userData, `.venv\\Scripts\\python.exe`, безопасное формирование PowerShell `Expand-Archive` через env вместо shell interpolation, `setup.ps1 -Workspace` через argv и streaming SHA-256. Эти проверки намеренно не вызывают Windows API на macOS; живое выполнение setup остаётся частью T013.
+
+## Scope 008 / T009 — Windows lifecycle и context recovery overlay
+
+Compatibility overlay проверяется на реальном `Windows-Codex-Local/mcp/bridge_mcp.py`: после patch в памяти Python `py_compile` принимает и bridge, и сгенерированный `context_packet.py`; unit test требует ровно один `workflow_context_recover` после повторного patch. Windows recovery вызывает проектный `.harness/runtime/node.exe`, поэтому не зависит от системного Node. macOS suite/smoke подтверждают, что добавление win32 bootstrap не изменило существующий путь.

@@ -10,6 +10,126 @@ export const WINDOWS_RUNTIME_ARCHIVE = 'Windows-Codex-Local-2026-09-10.zip';
 export const WINDOWS_RUNTIME_SHA256 = '1f041488ad97d8abf1984fd3521afb8abe15f50b8df3d3e11f1cc4248e019d98';
 export const WINDOWS_RUNTIME_FOLDER = 'Windows-Codex-Local';
 
+export const WINDOWS_RUNTIME_OVERLAY_VERSION = 1;
+export const WINDOWS_CONTEXT_PACKET_SOURCE = String.raw`"""Workflow Kit recovery packet used by Project Web Pilot on Windows."""
+from __future__ import annotations
+
+import hashlib
+import json
+from pathlib import Path
+import re
+import subprocess
+import time
+from typing import Any
+
+PROTOCOL = 'inline-context-v1'
+MAX_CONTEXT_BYTES = 180000
+
+class ContextPacket:
+    @staticmethod
+    def _workspace(workspace: str) -> Path:
+        if not isinstance(workspace, str) or not workspace.strip() or not Path(workspace).is_absolute():
+            raise ValueError('WORKSPACE_REQUIRED: supply the explicit absolute project directory')
+        path = Path(workspace).resolve(strict=True)
+        if not (path / '.harness/plans/todo-plan.md').is_file() or not (path / 'scripts/workflow.mjs').is_file():
+            raise ValueError('WORKFLOW_NOT_INSTALLED: the selected directory has no Workflow Kit')
+        node = path / '.harness/runtime/node.exe'
+        if not node.is_file():
+            raise ValueError('WORKFLOW_RUNTIME_MISSING: reconnect this project in Project Web Pilot')
+        return path
+
+    def recover(self, workspace: str) -> dict[str, Any]:
+        path = self._workspace(workspace)
+        plan_file = path / '.harness/plans/todo-plan.md'
+        before = plan_file.read_bytes()
+        node = path / '.harness/runtime/node.exe'
+        workflow = path / 'scripts/workflow.mjs'
+        try:
+            process = subprocess.run([str(node), str(workflow), 'recover', '--format', 'json'],
+                                     cwd=path, capture_output=True, timeout=25)
+        except subprocess.TimeoutExpired as exc:
+            raise ValueError('RECOVERY_TIMEOUT: workflow recover exceeded 25 seconds') from exc
+        if process.returncode:
+            raise ValueError('RECOVERY_FAILED: ' + process.stdout.decode('utf-8', errors='replace')[:2000])
+        try:
+            packet = json.loads(process.stdout)
+            fence = chr(96) * 3
+            match = re.search(re.escape(fence) + r'json\s*\n(.*?)\n' + re.escape(fence), before.decode('utf-8'), re.S)
+            plan = json.loads(match.group(1))
+        except (ValueError, AttributeError) as exc:
+            raise ValueError('RECOVERY_INVALID: invalid workflow packet or plan JSON') from exc
+        if before != plan_file.read_bytes() or packet.get('plan_revision') != plan.get('plan_revision'):
+            raise ValueError('RECOVERY_CHANGED: plan changed while reading; recover again')
+        if (packet.get('ok') is not True or packet.get('completeness') != 'COMPLETE'
+                or not isinstance(packet.get('text'), str) or not packet['text'].strip()
+                or not isinstance(packet.get('signature'), str) or not packet['signature']):
+            raise ValueError('RECOVERY_INCOMPLETE: a complete canonical packet is required')
+        content = packet['text'].encode('utf-8')
+        if len(content) > MAX_CONTEXT_BYTES:
+            raise ValueError('RECOVERY_TOO_LARGE: split the workflow context before delivery')
+        task_id = packet.get('task_id') or packet.get('next_task_id')
+        try:
+            task = next((t for t in plan['tasks'] if t['id'] == task_id), None)
+            if task_id and task is None:
+                raise ValueError('RECOVERY_INVALID: current task is missing from the plan')
+            facts = {'project_id': plan['project_id'], 'project_name': plan['project_name'],
+                     'plan_revision': plan['plan_revision'], 'scope_id': plan['scope_id'],
+                     'execution_scope_status': plan['execution_scope_status'],
+                     'delivery_status': plan['delivery_status'], 'task_id': task_id,
+                     'task_title': task['title'] if task else None}
+            objective, head = plan['objective'], packet['head']
+        except (KeyError, TypeError) as exc:
+            raise ValueError('RECOVERY_INVALID: project identity is incomplete') from exc
+        return {'delivery_protocol': PROTOCOL, 'status': 'ready', 'completeness': 'COMPLETE',
+                'workspace': str(path), 'facts': facts, 'objective': objective, 'head': head,
+                'signature': packet['signature'], 'context': packet['text'],
+                'context_sha256': hashlib.sha256(content).hexdigest(), 'context_bytes': len(content),
+                'generated_at_ms': int(time.time() * 1000), 'ack_required': False}
+`;
+
+const WINDOWS_CONTEXT_TOOL = String.raw`    @mcp.tool(
+        title="Read the selected project context",
+        description=("Return the complete canonical Workflow Kit packet for an explicit absolute workspace. "
+                     "Web Pilot fetches it before sending the first project message; no acknowledgement is required."),
+        annotations=READ_ONLY,
+    )
+    def workflow_context_recover(workspace: str) -> dict[str, Any]:
+        return context_packet.recover(workspace)
+
+`;
+
+export function patchWindowsBridgeSource(source) {
+  if (typeof source !== 'string' || !source.includes('FastMCP(') || !source.includes('def bridge_status(')) {
+    throw new WindowsRuntimeError('WINDOWS_RUNTIME_BRIDGE_INVALID', 'Windows MCP bridge не соответствует ожидаемому snapshot.');
+  }
+  let result = source;
+  if (!result.includes('from context_packet import ContextPacket')) {
+    const anchor = 'from windows_computer import WindowsComputer  # noqa: E402';
+    if (!result.includes(anchor)) throw new WindowsRuntimeError('WINDOWS_RUNTIME_BRIDGE_INVALID', 'Не найден import anchor Windows MCP.');
+    result = result.replace(anchor, anchor + '\nfrom context_packet import ContextPacket  # noqa: E402');
+  }
+  if (!result.includes('context_packet = ContextPacket()')) {
+    const anchor = '    turn_watchdog = TurnWatchdog()\n';
+    if (!result.includes(anchor)) throw new WindowsRuntimeError('WINDOWS_RUNTIME_BRIDGE_INVALID', 'Не найден server-state anchor Windows MCP.');
+    result = result.replace(anchor, anchor + '    context_packet = ContextPacket()\n');
+  }
+  if (!result.includes('def workflow_context_recover(')) {
+    const anchor = '        return status\n\n    @mcp.tool(\n        title="Computer status",';
+    if (!result.includes(anchor)) throw new WindowsRuntimeError('WINDOWS_RUNTIME_BRIDGE_INVALID', 'Не найден bridge_status anchor Windows MCP.');
+    result = result.replace(anchor, '        return status\n\n' + WINDOWS_CONTEXT_TOOL + '    @mcp.tool(\n        title="Computer status",');
+  }
+  return result;
+}
+
+export async function applyWindowsWebPilotOverlay(folder) {
+  const serverFile = path.win32.join(folder, 'server', 'context_packet.py');
+  const bridgeFile = path.win32.join(folder, 'mcp', 'bridge_mcp.py');
+  const bridge = await fs.readFile(bridgeFile, 'utf8');
+  const patched = patchWindowsBridgeSource(bridge);
+  await fs.writeFile(serverFile, WINDOWS_CONTEXT_PACKET_SOURCE, { encoding: 'utf8', mode: 0o600 });
+  if (patched !== bridge) await fs.writeFile(bridgeFile, patched, { encoding: 'utf8', mode: 0o600 });
+}
+
 export class WindowsRuntimeError extends Error {
   constructor(code, message) { super(message); this.code = code; }
 }
@@ -87,7 +207,7 @@ export class WindowsRuntimeBootstrap {
   async inspect() {
     if (this.platform !== 'win32') return this.snapshot();
     const marker = await this.#marker();
-    const installed = marker?.payloadSha256 === this.expectedSha256
+    const installed = marker?.payloadSha256 === this.expectedSha256 && marker?.overlayVersion === WINDOWS_RUNTIME_OVERLAY_VERSION
       && await exists(this.paths.control) && await exists(this.paths.python) && await exists(this.paths.locations);
     this.#publish({ phase: installed ? 'installed' : 'embedded', installed, payloadSha256: marker?.payloadSha256 ?? null });
     return this.snapshot();
@@ -134,6 +254,7 @@ export class WindowsRuntimeBootstrap {
     await fs.rm(this.paths.folder, { recursive: true, force: true });
     await fs.rename(extracted, this.paths.folder);
     await fs.rm(this.paths.staging, { recursive: true, force: true });
+    await applyWindowsWebPilotOverlay(this.paths.folder);
     this.#publish({ phase: 'installing' });
     const setup = windowsSetupInvocation(this.paths.setupScript, workspace);
     try {
@@ -148,7 +269,7 @@ export class WindowsRuntimeBootstrap {
     if (!(await exists(this.paths.control) && await exists(this.paths.python) && await exists(this.paths.locations))) {
       throw new WindowsRuntimeError('WINDOWS_RUNTIME_SETUP_INCOMPLETE', 'Windows runtime setup завершился без обязательных файлов.');
     }
-    const markerData = { schemaVersion: 1, payloadSha256: actual, installedAt: new Date().toISOString(), folder: this.paths.folder };
+    const markerData = { schemaVersion: 1, payloadSha256: actual, overlayVersion: WINDOWS_RUNTIME_OVERLAY_VERSION, installedAt: new Date().toISOString(), folder: this.paths.folder };
     await fs.mkdir(this.paths.root, { recursive: true });
     await fs.writeFile(this.paths.marker + '.tmp', JSON.stringify(markerData, null, 2) + '\n', { mode: 0o600 });
     await fs.rename(this.paths.marker + '.tmp', this.paths.marker);

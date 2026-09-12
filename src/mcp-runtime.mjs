@@ -41,7 +41,7 @@ export function validateEndpoint(value) {
   try { url = new URL(value); } catch { throw new RuntimeError('MCP_URL_INVALID', 'Неверный адрес локальных инструментов.'); }
   if (url.protocol !== 'http:' || url.hostname !== '127.0.0.1' || url.pathname !== '/mcp'
       || url.username || url.password || url.search || url.hash) {
-    throw new RuntimeError('MCP_URL_INVALID', 'Инструменты должны быть доступны локально на этом Mac.');
+    throw new RuntimeError('MCP_URL_INVALID', 'Инструменты должны быть доступны локально на этом компьютере.');
   }
   return url.href;
 }
@@ -86,10 +86,11 @@ async function responseMessage(response, id) {
 }
 
 export class LocalMcpClient {
-  constructor(endpoint, { fetchImpl = globalThis.fetch, timeoutMs = 10000 } = {}) {
+  constructor(endpoint, { fetchImpl = globalThis.fetch, timeoutMs = 10000, expectedServerName = 'Codex Local Mac' } = {}) {
     this.endpoint = validateEndpoint(endpoint);
     this.fetch = fetchImpl;
     this.timeoutMs = timeoutMs;
+    this.expectedServerName = expectedServerName;
     this.sessionId = null;
     this.protocolVersion = '2025-03-26';
     this.sequence = 0;
@@ -125,7 +126,7 @@ export class LocalMcpClient {
     if (this.ready) return this.ready;
     const init = await this.request('initialize', { protocolVersion: this.protocolVersion,
       capabilities: {}, clientInfo: { name: 'Project Web Pilot', version: '0.2.0' } });
-    if (init?.serverInfo?.name !== 'Codex Local Mac') {
+    if (init?.serverInfo?.name !== this.expectedServerName) {
       throw new RuntimeError('MCP_SERVER_MISMATCH', 'Локальный адрес занят другим MCP-сервером.');
     }
     this.protocolVersion = init.protocolVersion;
@@ -151,7 +152,7 @@ export class LocalMcpClient {
     if (!path.isAbsolute(workspace)) throw new RuntimeError('MCP_CONTEXT_REQUIRED', 'Не выбран проект.');
     await this.initialize();
     const result = await this.request('tools/call', { name: 'workflow_context_recover', arguments: { workspace } });
-    if (result?.isError) throw new RuntimeError('MCP_CONTEXT_ERROR', 'MCP не смог получить полный контекст проекта. Проверьте выбранную папку и версию Codex Local Mac.');
+    if (result?.isError) throw new RuntimeError('MCP_CONTEXT_ERROR', 'MCP не смог получить полный контекст проекта. Проверьте выбранную папку и версию локального Codex runtime.');
     let data = result?.structuredContent;
     if (data?.result && !data.workspace) data = data.result;
     if (!data?.workspace) {
@@ -179,11 +180,14 @@ export async function findRuntimeFolder(input, { platform = process.platform } =
 }
 
 export class McpRuntime {
-  constructor(folder, { execute = execFile, clientFactory = endpoint => new LocalMcpClient(endpoint), platform = process.platform } = {}) {
+  constructor(folder, { execute = execFile, clientFactory = null, platform = process.platform,
+    expectedServerName = platform === 'win32' ? 'Codex Local Windows' : 'Codex Local Mac', ensureRuntime = null } = {}) {
     this.folder = folder;
     this.execute = execute;
-    this.clientFactory = clientFactory;
+    this.expectedServerName = expectedServerName;
+    this.clientFactory = clientFactory ?? (endpoint => new LocalMcpClient(endpoint, { expectedServerName: this.expectedServerName }));
     this.platform = platform;
+    this.ensureRuntime = typeof ensureRuntime === 'function' ? ensureRuntime : null;
     this.client = null;
     this.pending = null;
     this.lastStatus = null;
@@ -191,6 +195,7 @@ export class McpRuntime {
 
   async control(command) {
     if (!['status', 'start'].includes(command)) throw new RuntimeError('RUNTIME_ACTION_DENIED', 'Эта операция не поддерживается оболочкой.');
+    if (this.ensureRuntime) await this.ensureRuntime();
     const folder = await findRuntimeFolder(this.folder, { platform: this.platform });
     const layout = runtimeLayout(folder, this.platform);
     let output;
@@ -199,7 +204,7 @@ export class McpRuntime {
         { cwd: folder, timeout: command === 'start' ? 75000 : 12000, maxBuffer: 1024 * 1024,
           env: { ...process.env, PYTHONDONTWRITEBYTECODE: '1' } });
     } catch (error) {
-      let message = 'Не удалось запустить локальные инструменты. Проверьте Codex Local Mac.';
+      let message = 'Не удалось запустить локальные инструменты. Проверьте локальный Codex runtime.';
       try { message = JSON.parse(error.stderr).error ?? message; } catch { /* Keep a bounded public error. */ }
       throw new RuntimeError('RUNTIME_COMMAND_FAILED', message);
     }
@@ -224,7 +229,7 @@ export class McpRuntime {
 
   async prepare() {
     let status = await this.control('status');
-    if (!status.tunnel.configured) throw new RuntimeError('TUNNEL_NOT_CONFIGURED', 'Подключение Codex Local Mac к ChatGPT ещё не настроено.');
+    if (!status.tunnel.configured) throw new RuntimeError('TUNNEL_NOT_CONFIGURED', 'Подключение локального Codex runtime к ChatGPT ещё не настроено.');
     if (!status.mcp.ready || !status.tunnel.ready) status = await this.control('start');
     if (!status.mcp.ready || !status.mcp.owned || !status.tunnel.ready || !status.tunnel.owned) {
       throw new RuntimeError('RUNTIME_NOT_READY', 'Локальные инструменты или подключение ещё не готовы.');

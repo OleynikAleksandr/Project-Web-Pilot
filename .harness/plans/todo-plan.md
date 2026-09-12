@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 195,
+  "plan_revision": 199,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-context-observation-008",
@@ -49,7 +49,7 @@
       "docs/WORKFLOW_START.md",
       "docs/SOURCE_WORKSPACES.md"
     ],
-    "max_functional_files_per_task": 3
+    "max_functional_files_per_task": 4
   },
   "baseline_commit": "05dbddef371b070f06ac217ffd8de39f2c2a8e10",
   "current_task_id": null,
@@ -342,7 +342,8 @@
       "functional_paths": [
         "src/main.mjs",
         "src/mcp-runtime.mjs",
-        "tests/electron-smoke.mjs"
+        "src/windows-runtime.mjs",
+        "tests/windows-runtime.test.mjs"
       ],
       "documentation_paths": [
         "docs/PRODUCT.md",
@@ -359,8 +360,8 @@
         "electron-smoke"
       ],
       "expected_commit_message": "feat: подключить bundled runtime Windows",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-context-observation-008",
         "task_id": "T009",
@@ -524,7 +525,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-context-observation-008
 Current Task: нет
-Revision: 195
+Revision: 199
 
 ## Цель
 
@@ -575,10 +576,10 @@ Revision: 195
   - Git Commit: [DONE] feat: автоматически готовить Windows runtime
   - Reference: web-pilot-context-observation-008 / T008 / implementation
   - Файлы: src/windows-runtime.mjs, src/platform.mjs, tests/windows-runtime.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T009: Подключить bundled runtime к Windows lifecycle — Ожидает
-  - Git Commit: [PENDING] feat: подключить bundled runtime Windows
+- [DONE] T009: Подключить bundled runtime к Windows lifecycle — Завершено
+  - Git Commit: [DONE] feat: подключить bundled runtime Windows
   - Reference: web-pilot-context-observation-008 / T009 / implementation
-  - Файлы: src/main.mjs, src/mcp-runtime.mjs, tests/electron-smoke.mjs, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+  - Файлы: src/main.mjs, src/mcp-runtime.mjs, src/windows-runtime.mjs, tests/windows-runtime.test.mjs, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T010: Добавить безопасную команду настройки Windows tunnel — Ожидает
   - Git Commit: [PENDING] feat: добавить Windows tunnel onboarding
   - Reference: web-pilot-context-observation-008 / T010 / implementation
