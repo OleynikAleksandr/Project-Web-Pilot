@@ -423,3 +423,9 @@ Renderer выводит Windows runtime section только при `state.platf
 ## Scope 008 / T014 — portable Node для чистой Windows
 
 Unit test фиксирует Node.js 22.17.0 win-x64 archive name/SHA, expected `windows-node/node-v22.17.0-win-x64/node.exe` layout и безопасные extraction plans для macOS/win32. Реальный `node scripts/prepare-windows-toolchain.mjs` на build host скачал archive, подтвердил SHA `721ab118…` и получил `node.exe` в ignored cache. T012 дополнительно проверяет присутствие этого executable в собранном Windows package; фактический запуск на Windows — T013.
+
+## Scope 008 / T012 — Windows distribution
+
+`npm run build:win` успешно собрал `.harness/runtime/build/Project Web Pilot-win32-x64`. Статический verifier подтвердил `Project Web Pilot.exe` (PE), `resources/app.asar`, Workflow Kit, workspace worker, канонический Windows runtime SHA `1f041488ad97d8abf1984fd3521afb8abe15f50b8df3d3e11f1cc4248e019d98`, Node archive SHA `721ab118a3aac8584348b132767eadf51379e0616f0db802cc1e66d7f0d98f85` и 85,219,968-byte portable `node.exe`. SHA основного executable этой сборки: `d76010f496d58874c806fb8e4bec8d46096849818108d2fa6a9945e0386cd783`.
+
+Для передачи создан `.harness/runtime/build/Project-Web-Pilot-0.6.0-Windows-x64.zip`, размер около 305 MiB, SHA-256 `b2d2602011770c55b97d409bcab264a54e6cc4fe255679580a921ec2bb53a66e`. Архив повторно проверен `unzip -t`, не содержит `__MACOSX`; внутри присутствуют `.exe`, Windows runtime ZIP, portable `node.exe` и Workflow Kit. После общих изменений `npm run build:mac` также проходит. Это доказывает состав/cross-package, но не запуск Windows API; live acceptance остаётся T013.

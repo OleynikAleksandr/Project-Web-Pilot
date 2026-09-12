@@ -114,3 +114,9 @@ Windows 10/11 x64 версия использует встроенный Codex L
 ## Windows onboarding в Settings — scope 008 / T011
 
 В Windows Settings появляется отдельный блок «Локальные инструменты Windows». Он показывает этапы embedded/verifying/extracting/installing, установленный runtime, отдельное состояние «tunnel не настроен» и готовность MCP+tunnel. Кнопка «Установить и настроить tunnel…» при необходимости сначала запускает автоматический bootstrap, затем открывает секретный шаг в отдельной консоли; «Проверить» перечитывает runtime status без перезапуска. На macOS секция скрыта, а прежняя ручная кнопка выбора Codex Local Mac остаётся без изменений.
+
+## Windows 10/11 x64 distribution — scope 008 / T012
+
+Собрана переносимая Windows x64 поставка Project Web Pilot 0.6.0. Она содержит тот же Electron 44/Chromium UI, Workflow Kit, канонический `Windows-Codex-Local-2026-09-10.zip` и официальный portable Node.js 22.17.0 win-x64. Пользователю не нужно отдельно копировать Codex Local Windows, Git, Python, ripgrep, tunnel-client или устанавливать системный Node. При первом использовании локальных инструментов runtime разворачивается в профиль пользователя; единственный обязательный секретный шаг — настройка Secure MCP Tunnel в отдельной Windows-консоли.
+
+Поставка пока является portable test build, а не подписанным Windows installer: после распаковки запускается `Project Web Pilot.exe`. Финальная продуктовая приёмка Windows требует запуска на реальном Windows 10/11 ПК (T013).

@@ -482,3 +482,9 @@ Windows-only onboarding остаётся локальным sidebar UI и не �
 `WorkspaceSetup` на packaged win32 первым кандидатом получает `process.resourcesPath/windows-node/node-v22.17.0-win-x64/node.exe`. Поэтому initial worker запускается настоящим Node 22 даже на машине без Node в `PATH`. Vendored Workflow Kit `prepareRuntime()` затем видит `process.execPath` именно этого portable Node и копирует его в `.harness/runtime/node.exe` нового workspace; дальнейшие `workflow.cmd`, hooks и Windows MCP recovery используют проектный локальный Node без зависимости от пути установки Web Pilot.
 
 `scripts/prepare-windows-toolchain.mjs` воспроизводимо получает официальный archive, проверяет pinned SHA-256 и распаковывает его в ignored build-cache. Пути при PowerShell extraction передаются через environment; на macOS cross-build используется `/usr/bin/ditto`. Системный Node остаётся только fallback для диагностики, а не обязательным runtime.
+
+## Windows distribution pipeline — scope 008 / T012
+
+`npm run build:win` выполняет три стадии: `prepare:win` проверяет/caches private Codex Local payload и официальный portable Node; `build:win:package` cross-packages Electron win32-x64 и добавляет `resources`, `windows-payload`, `windows-node`; `verify:win` проверяет PE magic основного `.exe` и portable `node.exe`, SHA обоих ZIP payload, наличие Workflow Kit/workspace worker и отсутствие macOS bundle layout `Contents/Info.plist`.
+
+Private Codex Local ZIP не хранится в Git из-за размера и Workflow Kit snapshot limit; build-preflight берёт уже проверенный cache либо копирует канонический sibling artifact / путь `WEB_PILOT_WINDOWS_RUNTIME_ARCHIVE`. Готовый пользовательский package при этом полностью содержит payload и не зависит от sibling workspace.

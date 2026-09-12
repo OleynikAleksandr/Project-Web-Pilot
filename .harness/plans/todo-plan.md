@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 208,
+  "plan_revision": 212,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-context-observation-008",
@@ -451,12 +451,14 @@
       "functional_paths": [
         "package.json",
         "scripts/verify-windows-package.mjs",
-        "tests/windows-runtime.test.mjs"
+        "tests/windows-runtime.test.mjs",
+        "scripts/prepare-windows-toolchain.mjs"
       ],
       "documentation_paths": [
         "docs/PRODUCT.md",
         "docs/VERIFICATION.md",
-        "docs/WORKFLOW_START.md"
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/ARCHITECTURE.md"
       ],
       "acceptance_criteria": [
         "build:win создаёт x64 package с runtime ZIP и workflow resources.",
@@ -467,8 +469,8 @@
         "suite"
       ],
       "expected_commit_message": "build: подготовить Windows distribution",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-context-observation-008",
         "task_id": "T012",
@@ -566,7 +568,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-context-observation-008
 Current Task: нет
-Revision: 208
+Revision: 212
 
 ## Цель
 
@@ -629,10 +631,10 @@ Revision: 208
   - Git Commit: [DONE] feat: добавить Windows runtime UI
   - Reference: web-pilot-context-observation-008 / T011 / implementation
   - Файлы: src/ui/index.html, src/ui/project-archive.mjs, src/ui/sidebar.mjs, tests/electron-smoke.mjs, docs/PRODUCT.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
-- [TODO] T012: Собрать и проверить Windows distribution — Ожидает
-  - Git Commit: [PENDING] build: подготовить Windows distribution
+- [DONE] T012: Собрать и проверить Windows distribution — Завершено
+  - Git Commit: [DONE] build: подготовить Windows distribution
   - Reference: web-pilot-context-observation-008 / T012 / implementation
-  - Файлы: package.json, scripts/verify-windows-package.mjs, tests/windows-runtime.test.mjs, docs/PRODUCT.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md
+  - Файлы: package.json, scripts/verify-windows-package.mjs, tests/windows-runtime.test.mjs, scripts/prepare-windows-toolchain.mjs, docs/PRODUCT.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md
 - [TODO] T013: Провести живую приёмку Windows 10/11 — Ожидает
   - Git Commit: [PENDING] docs: принять Windows 10/11 runtime
   - Reference: web-pilot-context-observation-008 / T013 / implementation

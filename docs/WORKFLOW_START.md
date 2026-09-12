@@ -64,3 +64,9 @@
 ## Scope 008 — что показал полный transport capture
 
 Два коротких production turn были временно записаны полностью и проанализированы. Числового input/output/context usage в browser transport не найдено. При этом `/backend-api/models` подтверждает `gpt-5-6-thinking.max_tokens=262144`, а полный conversation response содержит `context_truncation_continuation=null`. Поэтому дальнейшее наблюдение auto-compact ориентируется прежде всего на изменение `context_truncation_continuation` и связанных безопасных metadata, а не на ожидаемый `token_count`. Временный raw-capture после эксперимента удалён; обычная сборка не хранит полный transport payload.
+
+## Проверка Windows 10/11 build — scope 008
+
+Готовый portable archive для реального Windows x64 теста: `.harness/runtime/build/Project-Web-Pilot-0.6.0-Windows-x64.zip`, SHA-256 `b2d2602011770c55b97d409bcab264a54e6cc4fe255679580a921ec2bb53a66e`. После распаковки запускать `Project Web Pilot-win32-x64\\Project Web Pilot.exe`. Сборка не подписана, поэтому Windows SmartScreen может показать предупреждение для неизвестного издателя.
+
+На чистой Windows системный Node/Git/Python не требуются. Создание Workflow Kit использует portable Node из package; локальный Codex runtime при первом обращении проверяет embedded ZIP и устанавливает приватные Python/Git/ripgrep/tunnel components в профиль пользователя. В Settings → «Локальные инструменты Windows» кнопка настройки tunnel открывает отдельную console; restricted API key вводится только там и сохраняется DPAPI. После завершения нажать «Проверить». T013 считается выполненной только после реального запуска, входа в ChatGPT, создания/открытия workspace, MCP/tunnel tool call и Windows Computer Use проверки.

@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { WINDOWS_RUNTIME_SHA256, WINDOWS_CONTEXT_PACKET_SOURCE, patchWindowsBridgeSource, sha256File, windowsRuntimePaths, windowsExpandInvocation, windowsSetupInvocation } from '../src/windows-runtime.mjs';
 import { bundledWindowsRuntimeFolder } from '../src/platform.mjs';
-import { extractionCommand, NODE_ARCHIVE, NODE_SHA256, windowsToolchainPaths } from '../scripts/prepare-windows-toolchain.mjs';
+import { extractionCommand, NODE_ARCHIVE, NODE_SHA256, windowsRuntimeSourceCandidates, windowsToolchainPaths } from '../scripts/prepare-windows-toolchain.mjs';
 
 test('Windows runtime paths stay in writable userData and use Windows venv layout', () => {
   const p = windowsRuntimePaths('C:\\Users\\Alex\\AppData\\Roaming\\Project Web Pilot', 'C:\\Program Files\\Project Web Pilot\\resources\\windows-runtime\\runtime.zip');
@@ -61,4 +61,11 @@ test('portable Node build payload has pinned Windows x64 layout and safe extract
   assert.equal(win.executable, 'powershell.exe');
   assert.equal(win.env.WEB_PILOT_NODE_ARCHIVE, 'C:\\cache\\node.zip');
   assert.ok(!win.args.join(' ').includes('C:\\cache\\node.zip'), 'archive path is not interpolated into PowerShell source');
+});
+
+
+test('Windows build preflight can resolve the private runtime payload without hard-coding a user path', () => {
+  const candidates = windowsRuntimeSourceCandidates('/repo/Project Web Pilot', { WEB_PILOT_WINDOWS_RUNTIME_ARCHIVE: 'D:\\cache\\runtime.zip' });
+  assert.equal(candidates[0], 'D:\\cache\\runtime.zip');
+  assert.equal(candidates[1], path.resolve('/repo/Project Web Pilot', '..', 'Codex Local Mac', 'Windows-Codex-Local-2026-09-10.zip'));
 });
