@@ -20,7 +20,7 @@ document.querySelector('form').addEventListener('submit',event=>{
  event.preventDefault(); const editor=document.getElementById('prompt-textarea');const text=editor.innerText;
  const message={text,at:Date.now()};window.fixtureMessages.push(message);
  showMessage(text);
- editor.textContent='';const id=text.match(/wp-request-[a-zA-Z0-9-]+/)[0];history.pushState({},'', '/c/'+id);sessionStorage.setItem(location.pathname,JSON.stringify(window.fixtureMessages));
+ editor.textContent='';const match=text.match(/wp-request-[a-zA-Z0-9-]+/);if(match)history.pushState({},'', '/c/'+match[0]);sessionStorage.setItem(location.pathname,JSON.stringify(window.fixtureMessages));
 });
 </script></body></html>`;
 
@@ -155,11 +155,16 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   const readyPlan = { ...activePlan, plan_revision: activePlan.plan_revision + 1, delivery_status: 'READY_FOR_ACCEPTANCE', current_task_id: null,
     tasks: activePlan.tasks.map(task => ({ ...task, implementation_status: 'DONE', commit_status: 'DONE' })) };
   await writeFixturePlan(readyPlan); controller.attach(store.selected()); await controller.tick();
-  await waitFor(() => sidebar.executeJavaScript('document.getElementById("plan-status").textContent.includes("ожидается ваша приёмка")'), 'ready for acceptance plan UI', snapshot);
-  assert.equal(await sidebar.executeJavaScript('document.querySelectorAll("#plan-tasks .plan-task[data-status=done]").length'), 3);
+  await waitFor(() => sidebar.executeJavaScript('document.getElementById(\"plan-status\").textContent.includes(\"ожидается ваша приёмка\")'), 'ready for acceptance plan UI', snapshot);
+  assert.equal(await sidebar.executeJavaScript('document.querySelectorAll(\"#plan-tasks .plan-task[data-status=done]\").length'), 3);
+  await sidebar.executeJavaScript('window.webPilot.acceptPlan()');
+  await waitFor(() => browser.executeJavaScript('window.fixtureMessages.length === 2'), 'acceptance user message', snapshot);
+  assert.equal(await browser.executeJavaScript('window.fixtureMessages[1].text'), 'Принимаю текущий план и результат работы. Это моя явная команда закрыть текущий scope: штатно архивируй его через Workflow Kit и оставь проект в состоянии без активного scope (NONE), готовым к следующему новому плану. Новый scope автоматически не создавай. После закрытия коротко подтверди результат.');
+  await waitFor(() => snapshot().planAcceptance === 'sent', 'acceptance send confirmed', snapshot);
 
   await fs.writeFile(planFile, originalPlanText); controller.attach(store.selected()); await controller.tick();
   await waitFor(() => sidebar.executeJavaScript('document.getElementById("plan-status").textContent === "План ещё не создан"'), 'restore fixture plan', snapshot);
+  assert.equal(snapshot().planAcceptance, null);
   await clipboard.clear();
   await waitFor(() => sidebar.executeJavaScript('!document.querySelector(".project-menu-button").disabled'), 'project menu enabled', snapshot);
   await sidebar.executeJavaScript(`document.querySelector('.project-menu-button').click(); document.querySelector('.copy-workspace-path').click()`);
@@ -189,7 +194,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await waitFor(() => store.selected()?.sessionId === first.sessionId && snapshot().context.phase === 'delivered'
     && browser.getURL() === first.chatUrl, 'select earlier session via tree', snapshot);
   assert.equal(packetLoads, 2, 'Earlier chat does not receive another context packet');
-  assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 1);
+  assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 2);
   assert.ok(await browser.executeJavaScript(`window.fixtureMessages[0].text.includes('${first.attempt.requestId}')`));
   assert.equal(store.selected().attempt.requestId, first.attempt.requestId);
   assert.equal(store.snapshot().projects[0].sessions[1].sessionId, second.sessionId);
@@ -293,12 +298,12 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await assert.rejects(fs.stat(auxF.workspace), { code: 'ENOENT' });
   assert.ok(store.project(auxE.workspace)?.archivedAt, 'unselected archived project is untouched');
   await browser.loadURL(first.chatUrl);
-  assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 1, 'Web conversation remains after archive operations');
+  assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 2, 'Web conversation remains after archive operations');
   assert.equal(packetLoads, 2, 'Archive operations never send context packets');
   firstArchiveWindow.close();
   const result = { mode: 'isolated-fixture', electron: process.versions.electron, chromium: process.versions.chrome,
     views: window.contentView.children.length, secureRemote: true, sidebarIpc: true, archiveRestore: true, archiveRestart: true, deleteCancel: true, localDeletion: true, cloudChatPreserved: true, workspaceCreation: true, workspaceValidation: true, cancelPreservesSession: true, startupMessages: packetLoads,
-    restartKeepsSession: true, newChatCreatesSession: true, sessionTree: true, selectsEarlierSession: true, compactWorkspaceDetails: true, projectPathClipboard: true, resizableSidebar: true, separateArchiveWindow: true, archiveMultiSelect: true, archiveForgetKeepsFolder: true, shellTheme: true, nativeTitlebarTheme: nativeTheme.shouldUseDarkColors, toolCallFilter: true, microphonePermission: true, geolocationPermission: true, cameraPermission: false, fullContextBytes: Buffer.byteLength(fixtureContext), liveChatGPT: false, agentToolsRequired: false };
+    restartKeepsSession: true, newChatCreatesSession: true, sessionTree: true, selectsEarlierSession: true, compactWorkspaceDetails: true, projectPathClipboard: true, planAcceptanceButton: true, resizableSidebar: true, separateArchiveWindow: true, archiveMultiSelect: true, archiveForgetKeepsFolder: true, shellTheme: true, nativeTitlebarTheme: nativeTheme.shouldUseDarkColors, toolCallFilter: true, microphonePermission: true, geolocationPermission: true, cameraPermission: false, fullContextBytes: Buffer.byteLength(fixtureContext), liveChatGPT: false, agentToolsRequired: false };
   await fs.writeFile(path.join(dataDir, 'smoke-result.json'), JSON.stringify(result, null, 2));
   console.log(JSON.stringify(result));
 }

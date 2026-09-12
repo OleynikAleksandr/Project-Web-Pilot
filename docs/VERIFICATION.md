@@ -329,7 +329,15 @@ Electron smoke на одном временном workspace последоват
 
 Контрольная arm64-сборка создана `npm run build` с `project-web-pilot@0.6.0` и `--app-version=0.6.0`. SHA-256 `app.asar`: `ebc0bcd6ca97a0052a991671f5e7f4ea5ec2de2271b66c70917c3db2903b4b4f`, размер 211734 байт. Итоговый `Info.plist` проверяется на версию 0.6.0; полная suite и Electron smoke дополнительно выполняются штатным workflow commit перед фиксацией релиза.
 
-\n## Scope 003 / T005 — обычное сообщение приёмки\n\nComposer tests проверяют точный текст без marker, сохранение существующего черновика, блокировку при активной генерации, cancellation до мутации и отсутствие повторного клика при не наблюдаемом результате Send.\n
+
+## Scope 003 / T005 — обычное сообщение приёмки
+
+Composer tests проверяют точный текст без marker, сохранение существующего черновика, блокировку при активной генерации, cancellation до мутации и отсутствие повторного клика при не наблюдаемом результате Send.
+
 ## Scope 003 / T006 — команда приёмки из sidebar
 
 Main проверяет выбранный активный workspace, `awaiting-acceptance` и совпадение открытого chat URL до отправки. Черновик/активная генерация обрабатываются Composer без overwrite; при unknown после click повторная команда блокируется transient-состоянием.
+
+## Scope 003 / T007 — кнопка «Принять» end-to-end
+
+Electron smoke переводит fixture plan из `not-created` в working и READY_FOR_ACCEPTANCE, проверяет disabled/enabled кнопки, затем реальный click sidebar → IPC → visible ChatGPT composer. В fixture появляется второе user message с точным текстом явной команды закрытия scope; `planAcceptance=sent` блокирует повторный click до смены lifecycle.
