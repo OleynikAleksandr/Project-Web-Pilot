@@ -4,59 +4,201 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 178,
+  "plan_revision": 179,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
-  "scope_id": null,
-  "execution_scope_status": "NONE",
+  "scope_id": "web-pilot-context-observation-008",
+  "execution_scope_status": "ACTIVE",
   "delivery_status": "IN_PROGRESS",
-  "objective": "",
-  "acceptance_criteria": [],
+  "objective": "Продолжать реальное наблюдение ChatGPT Web до обнаружения фактического context window и auto-compact: безопасно раскрыть служебные вложенные JSON-envelope WebSocket stream-item и анализировать только структурную/числовую telemetry без текста разговора.",
+  "acceptance_criteria": [
+    "Подтверждён фактический источник context-window данных либо зафиксировано, какие наблюдаемые transport-слои их не содержат.",
+    "Вложенные JSON-envelope WebSocket/SSE разбираются только для служебной структуры; пользовательский текст и произвольные string values не сохраняются.",
+    "При обнаружении фактических input/window значений существующий sidebar-индикатор показывает их без оценочной подстановки.",
+    "Scope остаётся активным до реального наблюдения auto-compact или отдельного решения пользователя изменить границы исследования."
+  ],
   "approved_scope": {
-    "functional_paths": [],
-    "documentation_paths": [],
+    "functional_paths": [
+      "src/chromium-diagnostics.mjs",
+      "tests/chromium-diagnostics.test.mjs",
+      "tests/electron-smoke.mjs"
+    ],
+    "documentation_paths": [
+      "docs/PRODUCT.md",
+      "docs/architecture/ARCHITECTURE.md",
+      "docs/VERIFICATION.md",
+      "docs/WORKFLOW_START.md"
+    ],
     "max_functional_files_per_task": 3
   },
-  "baseline_commit": null,
+  "baseline_commit": "05dbddef371b070f06ac217ffd8de39f2c2a8e10",
   "current_task_id": null,
   "context_pack": {
-    "documents": [],
+    "documents": [
+      {
+        "path": "docs/PRODUCT.md",
+        "heading_path": [
+          "Продукт"
+        ],
+        "required": true,
+        "revision": "WORKTREE"
+      },
+      {
+        "path": "docs/architecture/ARCHITECTURE.md",
+        "heading_path": [
+          "Архитектура"
+        ],
+        "required": true,
+        "revision": "WORKTREE"
+      }
+    ],
     "include_last_completed_task": true,
     "dependency_task_ids": []
   },
-  "tasks": [],
+  "tasks": [
+    {
+      "dependencies": [],
+      "functional_paths": [
+        "src/chromium-diagnostics.mjs",
+        "tests/chromium-diagnostics.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [
+        "suite"
+      ],
+      "id": "T001",
+      "title": "Разбирать вложенные служебные JSON-envelope stream-item",
+      "why": "Production-log после scope 007 видит только candidatePresence=token в conversation SSE; WebSocket conversation-turn-stream может нести полезную telemetry в сериализованном JSON внутри строкового envelope.",
+      "acceptance_criteria": [
+        "Парсер ограниченно распознаёт JSON-object/array в служебных string fields известных stream envelope и повторно применяет безопасный telemetry parser.",
+        "Message/content/text/tool-output строки не разбираются как вложенный JSON и не сохраняются.",
+        "Unit tests покрывают nested stream-item с context usage и приватным текстом."
+      ],
+      "expected_commit_message": "feat: разбирать вложенную telemetry Web stream",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "web-pilot-context-observation-008",
+        "task_id": "T001",
+        "role": "implementation"
+      }
+    },
+    {
+      "dependencies": [
+        "T001"
+      ],
+      "functional_paths": [
+        "src/chromium-diagnostics.mjs",
+        "tests/chromium-diagnostics.test.mjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "docs/PRODUCT.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md"
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "id": "T002",
+      "title": "Проверить production context-window telemetry",
+      "why": "После новой сборки нужно на реальном ChatGPT Web определить фактические key paths и при необходимости уточнить только безопасный mapping к существующему индикатору.",
+      "acceptance_criteria": [
+        "После production-наблюдения записаны найденные безопасные candidate paths и установлено, можно ли достоверно получить inputTokens/modelContextWindow.",
+        "Если семантика пары подтверждена, она маппится в существующий contextObservation; иначе UI остаётся unknown.",
+        "Все тесты и Electron smoke проходят после фактического mapping."
+      ],
+      "expected_commit_message": "feat: сопоставить context window ChatGPT Web",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "web-pilot-context-observation-008",
+        "task_id": "T002",
+        "role": "implementation"
+      }
+    },
+    {
+      "dependencies": [
+        "T002"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md"
+      ],
+      "verification_ids": [],
+      "id": "T003",
+      "title": "Наблюдать реальный auto-compact",
+      "why": "Нужен фактический production-сигнал compact, а не эмуляция или предположение по порогу.",
+      "acceptance_criteria": [
+        "В production-log зафиксирован реальный direct compact marker или согласованный набор сильных коррелирующих сигналов до/после compact.",
+        "Зафиксированы context-window значения непосредственно до и после compact, если сервер их предоставляет.",
+        "Никакая автоматическая отправка Обновить контекст не включается в этом scope без отдельного решения пользователя."
+      ],
+      "expected_commit_message": "docs: зафиксировать реальный auto-compact",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "web-pilot-context-observation-008",
+        "task_id": "T003",
+        "role": "implementation"
+      }
+    }
+  ],
   "blocked_reason": null,
   "user_decisions": [
     {
-      "id": "1ed14024-bd6c-47cc-8484-77fa8f1d01c5",
-      "text": "Прямая команда пользователя: принимаю текущий план и результат работы; закрыть scope и оставить NONE без нового scope",
-      "recorded_at": "2026-09-12T11:50:16.625Z"
+      "id": "848cbdd5-7f04-4776-ac19-09fc612e821e",
+      "text": "12.09.2026 пользователь поручил сохранить тот же исследовательский план: собирать из production-логов данные context window и держать наблюдение до появления auto-compact.",
+      "recorded_at": "2026-09-12T11:52:10.998Z"
     }
-  ],
-  "archived_scope_id": "web-pilot-context-window-indicator-007"
+  ]
 }
 ```
 <!-- workflow-state:end -->
 
 ## Состояние
 
-Execution Scope Status: NONE
+Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
-Scope: не создан
+Scope: web-pilot-context-observation-008
 Current Task: нет
-Revision: 178
+Revision: 179
 
 ## Цель
 
-Обсудить идею проекта и согласовать ближайший scope. Стек пока не выбран.
+Продолжать реальное наблюдение ChatGPT Web до обнаружения фактического context window и auto-compact: безопасно раскрыть служебные вложенные JSON-envelope WebSocket stream-item и анализировать только структурную/числовую telemetry без текста разговора.
 
 ## Критерии приёмки
 
+- Подтверждён фактический источник context-window данных либо зафиксировано, какие наблюдаемые transport-слои их не содержат.
+- Вложенные JSON-envelope WebSocket/SSE разбираются только для служебной структуры; пользовательский текст и произвольные string values не сохраняются.
+- При обнаружении фактических input/window значений существующий sidebar-индикатор показывает их без оценочной подстановки.
+- Scope остаётся активным до реального наблюдения auto-compact или отдельного решения пользователя изменить границы исследования.
 
 ## Микрозадачи
 
+- [TODO] T001: Разбирать вложенные служебные JSON-envelope stream-item — Ожидает
+  - Git Commit: [PENDING] feat: разбирать вложенную telemetry Web stream
+  - Reference: web-pilot-context-observation-008 / T001 / implementation
+  - Файлы: src/chromium-diagnostics.mjs, tests/chromium-diagnostics.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+- [TODO] T002: Проверить production context-window telemetry — Ожидает
+  - Git Commit: [PENDING] feat: сопоставить context window ChatGPT Web
+  - Reference: web-pilot-context-observation-008 / T002 / implementation
+  - Файлы: src/chromium-diagnostics.mjs, tests/chromium-diagnostics.test.mjs, tests/electron-smoke.mjs, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md
+- [TODO] T003: Наблюдать реальный auto-compact — Ожидает
+  - Git Commit: [PENDING] docs: зафиксировать реальный auto-compact
+  - Reference: web-pilot-context-observation-008 / T003 / implementation
+  - Файлы: docs/VERIFICATION.md, docs/WORKFLOW_START.md
 
 ## Context Pack For This Cycle
 
+- docs/PRODUCT.md → Продукт
+- docs/architecture/ARCHITECTURE.md → Архитектура
 
 Служебные состояния меняются только командами workflow. Приёмка не архивирует scope.
