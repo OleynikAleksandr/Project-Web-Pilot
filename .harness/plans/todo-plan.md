@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 96,
+  "plan_revision": 98,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Локальный macOS Web Pilot с встроенным ChatGPT, выбором проекта и полным контекстом в первом сообщении; агент сразу кратко подтверждает восстановление и описывает проект. Сайдбар сохраняет все созданные сессии workspace и позволяет выбирать их в раскрываемом дереве. Создание нового workspace и подключение существующей папки повторяют Workflow Kit с проверкой структуры до открытия чата. Архив workspace доступен в настройках через шестерёнку справа от подключения; проекты возвращаются в активные либо удаляются с диска вместе с локальными записями сессий. Облачные чаты сохраняются. Оформление оболочки настраивается отдельно в Settings: светлая или тёмная тема применяется к сайдбару и верхней панели окна. Отображение строк вызовов инструментов ChatGPT можно скрывать из Settings без отключения самих tools. Встроенному ChatGPT разрешены микрофон и геолокация; камера и остальные browser permissions остаются запрещены.",
   "acceptance_criteria": [
     "Полный канонический контекст передаёт приложение до первого ответа агента.",
@@ -1378,8 +1378,8 @@
         "Финальная arm64 .app пересобрана и Info.plist проверен"
       ],
       "expected_commit_message": "build: добавить privacy descriptions macOS",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-prototype-001",
         "task_id": "T036",
@@ -1457,10 +1457,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 96
+Revision: 98
 
 ## Цель
 
@@ -1623,8 +1623,8 @@ Revision: 96
   - Git Commit: [DONE] feat: разрешить микрофон и геолокацию ChatGPT
   - Reference: web-pilot-prototype-001 / T035 / implementation
   - Файлы: src/main.mjs, tests/electron-smoke.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T036: Добавить macOS privacy descriptions и пересобрать — Ожидает
-  - Git Commit: [PENDING] build: добавить privacy descriptions macOS
+- [DONE] T036: Добавить macOS privacy descriptions и пересобрать — Завершено
+  - Git Commit: [DONE] build: добавить privacy descriptions macOS
   - Reference: web-pilot-prototype-001 / T036 / implementation
   - Файлы: package.json, resources/mac-permissions.plist, README.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/DECISIONS.md, docs/PRODUCT.md
 

@@ -322,3 +322,8 @@ Web Pilot хранит локальный флаг `hideToolCalls` в `settings.
 Профиль `persist:chatgpt` больше не отклоняет все browser permissions безусловно. Главный процесс применяет единый allowlist только к точному HTTPS-origin `chatgpt.com`: `geolocation`/`geolocation-approximate` разрешены, а `media` разрешён лишь когда Electron сообщает исключительно `audio`. Любой запрос с `video`, смешанный audio+video, другой permission или другой origin отклоняется. Удалённая страница по-прежнему не получает preload или локальный IPC.
 
 Одинаковая политика используется в `setPermissionRequestHandler` и `setPermissionCheckHandler`, поскольку Electron требует оба обработчика для полного permission flow. Это разрешает веб-диктовку и location API, но не открывает камеру, screen capture, notifications либо другие возможности Chromium.
+
+
+### macOS privacy descriptions — T036
+
+`resources/mac-permissions.plist` передаётся `electron-packager` через `--extend-info`, поэтому usage descriptions входят в основной `Info.plist` до завершения упаковки. Сборка содержит `NSMicrophoneUsageDescription`, `NSLocationWhenInUseUsageDescription` и совместимый `NSLocationUsageDescription`. Стандартный Electron template также содержит `NSCameraUsageDescription`, но это только текст системного privacy-ключа: фактический запрос камеры отклоняется allowlist-политикой T035.

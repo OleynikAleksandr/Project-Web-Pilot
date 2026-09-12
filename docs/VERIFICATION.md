@@ -269,3 +269,8 @@ Electron smoke проверяет весь пользовательский пу
 ## T035 — микрофон и геолокация
 
 Electron smoke проверяет чистую permission policy: `media` с `audio` для `https://chatgpt.com` разрешён, `video` и `audio+video` отклоняются; `geolocation` и `geolocation-approximate` разрешены; notifications и тот же audio-запрос с чужого origin отклоняются. Существующая проверка изоляции подтверждает отсутствие `window.webPilot`, Node и process в удалённом WebContents. Системные macOS privacy descriptions и финальная упакованная сборка проверяются отдельно в T036.
+
+
+## T036 — macOS privacy descriptions и сборка, 12.09.2026
+
+`resources/mac-permissions.plist` проходит `plutil -lint`, а `npm run build` использует `--extend-info=resources/mac-permissions.plist`. В итоговом `Project Web Pilot.app/Contents/Info.plist` проверены `NSMicrophoneUsageDescription`, `NSLocationWhenInUseUsageDescription` и `NSLocationUsageDescription`; `CFBundleIdentifier` остаётся `com.oleynik.ProjectWebPilot`. Камера не разрешена политикой T035, несмотря на стандартный `NSCameraUsageDescription` Electron template. Предварительная сборка после изменения имеет SHA-256 `app.asar` `742db7addd6ec875ae87b1a30588628d122cb41efa76888b72c07dc607c3c69a`, размер 186161 байт; финальная сборка повторяется после управляемого commit.
