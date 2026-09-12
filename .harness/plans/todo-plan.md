@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 112,
+  "plan_revision": 116,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-layout-archive-002",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Сделать ширину левого сайдбара регулируемой с сохранением текущей ширины как минимума и вынести управление архивом проектов из Settings в отдельное локальное окно с множественным выбором, возвратом, удалением локальной записи без удаления папки и безопасным удалением с диска.",
   "acceptance_criteria": [
     "Граница между сайдбаром и ChatGPT перетаскивается мышью; сайдбар не сужается меньше текущих 312 px, а выбранная ширина сохраняется между запусками.",
@@ -287,13 +287,16 @@
         "T006"
       ],
       "functional_paths": [
-        "tests/electron-smoke.mjs"
+        "tests/electron-smoke.mjs",
+        "src/ui/project-archive.mjs",
+        "src/ui/archive.mjs"
       ],
       "documentation_paths": [
         "README.md",
         "docs/PROJECT_ARCHIVE.md",
         "docs/VERIFICATION.md",
-        "docs/WORKFLOW_START.md"
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/ARCHITECTURE.md"
       ],
       "verification_ids": [
         "suite",
@@ -308,8 +311,8 @@
         "Финальная arm64 сборка создана, а рабочее дерево чистое"
       ],
       "expected_commit_message": "test: проверить resize и отдельный архив",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-layout-archive-002",
         "task_id": "T007",
@@ -332,10 +335,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: web-pilot-layout-archive-002
 Current Task: нет
-Revision: 112
+Revision: 116
 
 ## Цель
 
@@ -377,10 +380,10 @@ Revision: 112
   - Git Commit: [DONE] feat: добавить multi-select управление архивом
   - Reference: web-pilot-layout-archive-002 / T006 / implementation
   - Файлы: src/ui/archive.mjs, src/ui/project-archive.mjs, src/preload.cjs, docs/PROJECT_ARCHIVE.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T007: Проверить интеграцию и пересобрать приложение — Ожидает
-  - Git Commit: [PENDING] test: проверить resize и отдельный архив
+- [DONE] T007: Проверить интеграцию и пересобрать приложение — Завершено
+  - Git Commit: [DONE] test: проверить resize и отдельный архив
   - Reference: web-pilot-layout-archive-002 / T007 / implementation
-  - Файлы: tests/electron-smoke.mjs, README.md, docs/PROJECT_ARCHIVE.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md
+  - Файлы: tests/electron-smoke.mjs, src/ui/project-archive.mjs, src/ui/archive.mjs, README.md, docs/PROJECT_ARCHIVE.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md
 
 ## Context Pack For This Cycle
 

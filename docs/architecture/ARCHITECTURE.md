@@ -347,3 +347,7 @@ Web Pilot хранит локальный флаг `hideToolCalls` в `settings.
 ### Archive renderer — scope 002 / T006
 
 `src/ui/archive.mjs` хранит только transient Set выбранных workspace и anchor для Shift. Все проверки идентичности и файловые операции остаются в main/store. Обычный sidebar preload больше не экспортирует restore/delete archive IPC; он умеет только архивировать активный workspace и открыть локальное окно архива.
+
+### Финальная интеграция scope 002 — T007
+
+Интеграционная проверка не расширяет доверенную поверхность: resize остаётся sidebar→main IPC, а массовые archive-команды доступны только отдельному локальному archive preload. Settings открывает окно архива, но не получает restore/forget/delete методы обратно.

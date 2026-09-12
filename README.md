@@ -55,3 +55,7 @@ npm run build
 Начните с [WORKFLOW_START](docs/WORKFLOW_START.md) и актуального recovery packet. Единственный план — [.harness/plans/todo-plan.md](.harness/plans/todo-plan.md); каталог — [DOCUMENTATION_INDEX](docs/DOCUMENTATION_INDEX.md). Канонический контракт — [CONTEXT_DELIVERY](docs/CONTEXT_DELIVERY.md); устройство приложения — [ARCHITECTURE](docs/architecture/ARCHITECTURE.md).
 
 [WF001](/Users/oleksandroliinyk/VSCODE/WF001) и [Codex Local Mac](</Users/oleksandroliinyk/VSCODE/Codex Local Mac>) остаются отдельными репозиториями. По поручению пользователя MCP обновлён для прямой передачи контекста. Профили браузеров и секреты не переносились. Приёмка не архивирует scope; следующий объём определяется отзывом пользователя.
+
+### Размер панели и архив
+
+Правую границу левого сайдбара можно перетаскивать мышью; исходные 312 px остаются минимальной шириной, выбранный размер сохраняется. В Settings кнопка «Архив проектов…» открывает отдельное окно. Там Shift выбирает диапазон, ⌘ на macOS / Ctrl на других системах добавляет или убирает отдельные проекты. «Убрать из списка» стирает только локальную запись Web Pilot — папка и чаты ChatGPT остаются, поэтому папку можно подключить снова. «Удалить с диска…» по-прежнему работает только с одним проектом и требует точного подтверждения.
