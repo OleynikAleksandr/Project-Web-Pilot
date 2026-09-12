@@ -25,7 +25,7 @@ export function pageOperation({ action = 'inspect', text = '', requestId = '' } 
   const writable = !!editor && !editor.disabled && !editor.readOnly && editor.getAttribute('contenteditable') !== 'false';
   const sendEnabled = !!button && !button.disabled && button.getAttribute('aria-disabled') !== 'true';
   const result = { url: location.href, editorAvailable: !!editor, writable, login, busy,
-    draftLength, draftMatches, sendEnabled, messageSeen };
+    draftLength, draftMatches, sendEnabled, messageSeen, userMessageCount: messages.length };
   if (action === 'inspect') return result;
   if (messageSeen) return { ...result, action: 'already-sent' };
   if (login || !writable) return { ...result, action: 'deferred', reason: 'LOGIN_REQUIRED' };
@@ -79,6 +79,43 @@ export class ChatGPTComposer {
       return { login: true, editorAvailable: false, url: current };
     }
     return this.contents.executeJavaScript(pageScript({ action, text, requestId }), action !== 'inspect');
+  }
+
+  async sendUserMessage({ text, canContinue = () => true }) {
+    if (this.inFlight) throw new ComposerError('SEND_IN_PROGRESS', 'Другая отправка ещё не завершилась.');
+    if (typeof text !== 'string' || !text.trim()) throw new ComposerError('MESSAGE_INVALID', 'Не подготовлено пользовательское сообщение.');
+    this.inFlight = true;
+    let clicked = false;
+    try {
+      if (!canContinue()) return { state: 'cancelled' };
+      let observation = await this.inspect({ text });
+      const beforeCount = observation.userMessageCount ?? 0;
+      if (observation.login || !observation.editorAvailable || !observation.writable) return { state: 'deferred', reason: 'LOGIN_REQUIRED', observation };
+      if (observation.busy) return { state: 'deferred', reason: 'GENERATION_ACTIVE', observation };
+      if (observation.draftLength) return { state: 'deferred', reason: 'DRAFT_PRESENT', observation };
+      observation = await this.inspect({ action: 'fill', text });
+      if (observation.action !== 'filled') return { state: 'deferred', reason: observation.reason ?? 'SEND_UNAVAILABLE', observation };
+      await this.wait(this.settleMs);
+      if (!canContinue()) return { state: 'cancelled' };
+      observation = await this.inspect({ text });
+      if (!observation.draftMatches || !observation.sendEnabled || observation.busy) {
+        return { state: 'deferred', reason: observation.busy ? 'GENERATION_ACTIVE' : !observation.draftMatches ? 'DRAFT_CHANGED' : 'SEND_UNAVAILABLE', observation };
+      }
+      observation = await this.inspect({ action: 'send', text });
+      if (observation.action !== 'clicked') return { state: 'deferred', reason: observation.reason ?? 'SEND_UNAVAILABLE', observation };
+      clicked = true;
+      const deadline = this.now() + this.timeoutMs;
+      do {
+        if (!canContinue()) return { state: 'unknown', reason: 'CHAT_CHANGED' };
+        observation = await this.inspect();
+        if ((observation.userMessageCount ?? 0) > beforeCount) return { state: 'sent', observation };
+        await this.wait(this.settleMs);
+      } while (this.now() < deadline);
+      return { state: 'unknown', reason: 'SEND_NOT_OBSERVED' };
+    } catch (error) {
+      if (clicked) return { state: 'unknown', reason: 'PAGE_UNAVAILABLE' };
+      throw error;
+    } finally { this.inFlight = false; }
   }
 
   async deliver({ text, requestId, canContinue = () => true, onBeforeSend = async () => {} }) {

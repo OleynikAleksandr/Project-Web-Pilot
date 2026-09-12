@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 140,
+  "plan_revision": 142,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-plan-ui-003",
@@ -216,8 +216,8 @@
         "suite"
       ],
       "expected_commit_message": "feat: безопасно отправлять команду приёмки плана",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-plan-ui-003",
         "task_id": "T005",
@@ -316,7 +316,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-plan-ui-003
 Current Task: нет
-Revision: 140
+Revision: 142
 
 ## Цель
 
@@ -349,8 +349,8 @@ Revision: 140
   - Git Commit: [DONE] release: собрать Project Web Pilot 0.6.0
   - Reference: web-pilot-plan-ui-003 / T004 / implementation
   - Файлы: package.json, package-lock.json, src/ui/index.html, README.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md
-- [TODO] T005: Добавить безопасную отправку пользовательской команды приёмки — Ожидает
-  - Git Commit: [PENDING] feat: безопасно отправлять команду приёмки плана
+- [DONE] T005: Добавить безопасную отправку пользовательской команды приёмки — Завершено
+  - Git Commit: [DONE] feat: безопасно отправлять команду приёмки плана
   - Reference: web-pilot-plan-ui-003 / T005 / implementation
   - Файлы: src/chatgpt-composer.mjs, tests/chatgpt-composer.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T006: Добавить кнопку Принять в карточку плана — Ожидает

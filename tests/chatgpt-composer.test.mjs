@@ -76,3 +76,28 @@ test('Chromium paragraph spacing is normalized without accepting changed text or
   assert.equal(f.dom.window.eval(pageScript({action:'inspect',text:'Workspace: /My Folder\nRequest: r-123'})).draftMatches,false);
   assert.equal(f.dom.window.eval(pageScript({action:'inspect',text:'Workspace: /Another\nRequest: r-123'})).draftMatches,false);
 });
+
+
+test('sends a normal user message without a request marker and confirms a new user message', async()=>{
+  const f=fixture(); const text='Принимаю текущий план. Закрой scope и оставь NONE.';
+  const result=await f.composer.sendUserMessage({text});
+  assert.equal(result.state,'sent'); assert.equal(f.sends(),1);
+  assert.equal(f.document.querySelector('[data-message-author-role="user"]').textContent,text);
+  assert.equal((await f.composer.inspect()).userMessageCount,1);
+});
+
+test('normal user message preserves drafts and active generation', async()=>{
+  for(const options of [{draft:'Мой черновик'},{stop:true}]){
+    const f=fixture(options); const result=await f.composer.sendUserMessage({text:'Принять план'});
+    assert.equal(result.state,'deferred'); assert.equal(f.sends(),0);
+    assert.equal(f.editor.value,options.draft??'');
+    assert.equal(result.reason, options.stop ? 'GENERATION_ACTIVE' : 'DRAFT_PRESENT');
+  }
+});
+
+test('normal user message does not retry an unobserved click and respects cancellation', async()=>{
+  const f=fixture({emitMessage:false}); const result=await f.composer.sendUserMessage({text:'Принять план'});
+  assert.equal(result.state,'unknown'); assert.equal(f.sends(),1);
+  const f2=fixture(); assert.equal((await f2.composer.sendUserMessage({text:'Принять план',canContinue:()=>false})).state,'cancelled');
+  assert.equal(f2.sends(),0); assert.equal(f2.editor.value,'');
+});
