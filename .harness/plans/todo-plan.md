@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 108,
+  "plan_revision": 110,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-layout-archive-002",
@@ -238,8 +238,8 @@
         "Состояние архива обновляется при изменениях основного store"
       ],
       "expected_commit_message": "feat: вынести архив в отдельное окно",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-layout-archive-002",
         "task_id": "T005",
@@ -335,7 +335,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-layout-archive-002
 Current Task: нет
-Revision: 108
+Revision: 110
 
 ## Цель
 
@@ -369,8 +369,8 @@ Revision: 108
   - Git Commit: [DONE] feat: добавить splitter сайдбара
   - Reference: web-pilot-layout-archive-002 / T004 / implementation
   - Файлы: src/ui/index.html, src/ui/sidebar.mjs, tests/electron-smoke.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T005: Создать отдельное локальное окно архива — Ожидает
-  - Git Commit: [PENDING] feat: вынести архив в отдельное окно
+- [DONE] T005: Создать отдельное локальное окно архива — Завершено
+  - Git Commit: [DONE] feat: вынести архив в отдельное окно
   - Reference: web-pilot-layout-archive-002 / T005 / implementation
   - Файлы: src/main.mjs, src/archive-preload.cjs, src/ui/archive.html, docs/PROJECT_ARCHIVE.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T006: Реализовать множественный выбор и действия архива — Ожидает

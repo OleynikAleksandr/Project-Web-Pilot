@@ -339,3 +339,7 @@ Web Pilot хранит локальный флаг `hideToolCalls` в `settings.
 ### Drag splitter sidebar — scope 002 / T004
 
 Локальный renderer рисует узкий `role=separator` у правого края sidebar. Pointer drag вычисляет новую ширину по `screenX`, а main остаётся единственным владельцем bounds и ограничений. Запросы во время drag ограничены `requestAnimationFrame`; клавиши ←/→ меняют ширину шагом 24 px. Минимум и текущее значение публикуются как ARIA metadata.
+
+## Отдельное окно архива — scope 002 / T005
+
+Архив реализован отдельным локальным `BrowserWindow` с `contextIsolation`, `sandbox` и специализированным `archive-preload.cjs`. Remote ChatGPT и обычный sidebar не получают archive-only команды массового forget/delete. Main хранит только transient deletion preview/notice; список проектов по-прежнему строится непосредственно из `WorkspaceSessions`.

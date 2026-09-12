@@ -1,4 +1,4 @@
-import { app, BaseWindow, WebContentsView, Menu, session, ipcMain, dialog, nativeTheme } from 'electron';
+import { app, BaseWindow, BrowserWindow, WebContentsView, Menu, session, ipcMain, dialog, nativeTheme } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
 import fsp from 'node:fs/promises';
@@ -14,6 +14,7 @@ import { WorkspaceSetup } from './workspace-setup.mjs';
 const smoke = !app.isPackaged && process.argv.includes('--smoke');
 const sourceDir = path.dirname(fileURLToPath(import.meta.url));
 const sidebarUrl = pathToFileURL(path.join(sourceDir, 'ui/index.html')).href;
+const archiveUrl = pathToFileURL(path.join(sourceDir, 'ui/archive.html')).href;
 app.setName('Project Web Pilot');
 app.setPath('userData', smoke ? fs.mkdtempSync(path.join(os.tmpdir(), 'web-pilot-electron-smoke-'))
   : path.join(app.getPath('appData'), 'Project Web Pilot'));
@@ -27,7 +28,7 @@ let hideToolCalls = true;
 const SIDEBAR_MIN_WIDTH = 312;
 const BROWSER_MIN_WIDTH = 600;
 let sidebarWidth = SIDEBAR_MIN_WIDTH;
-let window, browser, sidebar, runtime, controller, interval, fixture;
+let window, browser, sidebar, archiveWindow, runtime, controller, interval, fixture;
 let navigationId = 0;
 let pageLoading = false;
 let startupError = null;
@@ -38,6 +39,7 @@ const workspaceSetup = new WorkspaceSetup({ resourceDir: app.isPackaged ? path.j
 let setupState = null;
 let workspaceHealth = null;
 let settingsState = null;
+let archiveState = { deletion: null, notice: null, focusWorkspace: null };
 let deletion;
 const shellBackground = { light: '#f4f6f8', dark: '#1b1d22' };
 
@@ -108,6 +110,19 @@ function closeSettings() {
 }
 
 function publicError(error) { return { code: error.code ?? 'APP_ERROR', message: String(error.message ?? error).slice(0, 700) }; }
+function projectedArchives() {
+  return store.snapshot().projects.filter(project => project.archivedAt).map(({ workspace, projectId, name, archivedAt, sessions }) => ({
+    workspace, projectId, name, archivedAt, sessionCount: sessions.length, deletionPending: deletion?.isPending(workspace) ?? false,
+  }));
+}
+function archiveSnapshot() {
+  return { archives: projectedArchives(), deletion: archiveState.deletion, notice: archiveState.notice,
+    focusWorkspace: archiveState.focusWorkspace, theme: shellTheme, fixture: smoke };
+}
+function publishArchive() {
+  if (archiveWindow && !archiveWindow.isDestroyed() && !archiveWindow.webContents.isDestroyed())
+    archiveWindow.webContents.send('pilot-archive:state-changed', archiveSnapshot());
+}
 function snapshot() {
   const saved = store.selected();
   const info = controller?.state.projectInfo;
@@ -118,9 +133,7 @@ function snapshot() {
     workspace, projectId, name, selectedSessionId, expanded,
     sessions: sessions.map(({ sessionId, chatUrl, title, createdAt }) => ({ sessionId, chatUrl, title, createdAt })),
   })),
-    archives: store.snapshot().projects.filter(p => p.archivedAt).map(({ workspace, projectId, name, archivedAt, sessions }) => ({
-      workspace, projectId, name, archivedAt, sessionCount: sessions.length, deletionPending: deletion?.isPending(workspace) ?? false,
-    })), settings: settingsState,
+    archives: projectedArchives(), settings: settingsState,
     selected, context: controller?.state ?? { phase: 'selected', servicesReady: false, messageSent: false },
     runtimeFolder, theme: shellTheme, hideToolCalls, sidebarWidth, sidebarMinWidth: SIDEBAR_MIN_WIDTH, pageLoading, startupError, storageError, setup: setupState, workspaceHealth, version: app.getVersion(), fixture: smoke };
 }
@@ -128,6 +141,7 @@ function snapshot() {
 function publish() {
   rememberSessionTitle();
   if (sidebar && !sidebar.webContents.isDestroyed()) sidebar.webContents.send('pilot:state-changed', snapshot());
+  publishArchive();
   const state = snapshot();
   const record = { phase: state.context.phase, workspace: state.selected?.workspace, sessionId: state.selected?.sessionId,
     requestId: state.selected?.attempt?.requestId, contextSha256: state.context.delivery?.contextSha256,
@@ -198,6 +212,40 @@ function assertLocalSender(event) {
       || event.senderFrame.url !== sidebarUrl) throw Object.assign(new Error('Недопустимый источник команды.'), { code: 'IPC_FORBIDDEN' });
 }
 
+function assertArchiveSender(event) {
+  if (!archiveWindow || archiveWindow.isDestroyed() || event.sender !== archiveWindow.webContents
+      || event.senderFrame !== archiveWindow.webContents.mainFrame || event.senderFrame.url !== archiveUrl)
+    throw Object.assign(new Error('Недопустимый источник команды архива.'), { code: 'IPC_FORBIDDEN' });
+}
+
+function archiveRecords(items, { single = false } = {}) {
+  if (!Array.isArray(items) || !items.length || (single && items.length !== 1)) throw new Error(single ? 'Выберите один проект.' : 'Выберите проекты из архива.');
+  const seen = new Set();
+  return items.map(item => {
+    if (!item || typeof item.workspace !== 'string' || typeof item.projectId !== 'string' || seen.has(item.workspace)) throw new Error('Некорректный выбор архива.');
+    seen.add(item.workspace);
+    const project = store.project(item.workspace);
+    if (!project?.archivedAt || project.projectId !== item.projectId) throw new Error('Список архива изменился. Повторите выбор.');
+    return project;
+  });
+}
+
+function registerArchiveAction(channel, action) {
+  ipcMain.handle(channel, (event, input) => {
+    assertArchiveSender(event);
+    const operation = actionTail.catch(() => {}).then(async () => {
+      try {
+        const result = await action(input); publish();
+        return { ok: true, state: archiveSnapshot(), result };
+      } catch (error) {
+        archiveState = { ...archiveState, notice: publicError(error).message }; publishArchive();
+        return { ok: false, error: publicError(error), state: archiveSnapshot() };
+      }
+    });
+    actionTail = operation; return operation;
+  });
+}
+
 function registerAction(channel, action) {
   ipcMain.handle(channel, (event, input) => {
     assertLocalSender(event);
@@ -208,6 +256,20 @@ function registerAction(channel, action) {
     actionTail = operation;
     return operation;
   });
+}
+
+async function openArchiveWindow(workspace = null) {
+  archiveState = { deletion: null, notice: null, focusWorkspace: workspace }; deletion.clear();
+  if (archiveWindow && !archiveWindow.isDestroyed()) { archiveWindow.show(); archiveWindow.focus(); publishArchive(); return; }
+  archiveWindow = new BrowserWindow({ title: 'Архив проектов — Project Web Pilot', width: 780, height: 720, minWidth: 620, minHeight: 480,
+    backgroundColor: shellBackground[shellTheme], webPreferences: { preload: path.join(sourceDir, 'archive-preload.cjs'),
+      nodeIntegration: false, contextIsolation: true, sandbox: true, webSecurity: true } });
+  archiveWindow.setWindowOpenHandler?.(() => ({ action: 'deny' }));
+  archiveWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  archiveWindow.webContents.on('will-navigate', event => event.preventDefault());
+  archiveWindow.webContents.on('did-finish-load', publishArchive);
+  archiveWindow.on('closed', () => { deletion.clear(); archiveWindow = null; archiveState = { deletion: null, notice: null, focusWorkspace: null }; });
+  await archiveWindow.loadURL(archiveUrl);
 }
 
 async function navigate(project = store.selected()) {
@@ -242,7 +304,7 @@ function cancelSetup() {
 async function reviewWorkspace(workspace, openReady = false) {
   if (storageError) throw new Error('Сначала нужно восстановить сохранённый список проектов. Исходный файл оставлен без изменений.');
   const canonical = await fsp.realpath(workspace).catch(() => workspace);
-  if (store.project(canonical)?.archivedAt) { openSettings(canonical); publish(); return false; }
+  if (store.project(canonical)?.archivedAt) { await openArchiveWindow(canonical); publish(); return false; }
   settingsState = null; deletion.clear();
   pauseForSetup(); setupState = { phase: 'checking', mode: 'existing', workspace }; publish();
   const preview = await workspaceSetup.preview({ mode: 'existing', workspace });
@@ -266,6 +328,7 @@ function connectController() {
 
 function registerIpc() {
   ipcMain.handle('pilot:get-state', event => { assertLocalSender(event); return snapshot(); });
+  registerAction('pilot:open-archive-window', input => openArchiveWindow(typeof input === 'string' ? input : null));
   registerAction('pilot:open-settings', () => openSettings());
   registerAction('pilot:close-settings', closeSettings);
   registerAction('pilot:set-sidebar-width', async input => {
@@ -416,6 +479,42 @@ function registerIpc() {
     startupError = null;
     const current = store.selected(); if (current) controller.attach(current);
   });
+
+  ipcMain.handle('archive:get-state', event => { assertArchiveSender(event); return archiveSnapshot(); });
+  registerArchiveAction('archive:restore', async input => {
+    const projects = archiveRecords(input);
+    for (const project of projects) {
+      if (deletion.isPending(project.workspace)) throw new Error('Сначала завершите подтверждённое удаление.');
+    }
+    for (const project of projects) await store.setArchived(project.workspace, false);
+    deletion.clear(); archiveState = { deletion: null, notice: `Возвращено в активные: ${projects.length}.`, focusWorkspace: null };
+    return projects.length;
+  });
+  registerArchiveAction('archive:forget', async input => {
+    const projects = archiveRecords(input);
+    for (const project of projects) if (deletion.isPending(project.workspace)) throw new Error('Сначала завершите подтверждённое удаление.');
+    const count = await store.forgetArchivedMany(projects.map(project => ({ workspace: project.workspace, projectId: project.projectId })));
+    deletion.clear(); archiveState = { deletion: null, notice: `Убрано из списка: ${count}. Папки на диске сохранены.`, focusWorkspace: null };
+    return count;
+  });
+  registerArchiveAction('archive:preview-delete', async input => {
+    const [project] = archiveRecords([input], { single: true });
+    archiveState = { deletion: null, notice: 'Проверяем содержимое папки…', focusWorkspace: project.workspace }; publishArchive();
+    const preview = await deletion.preview(project.workspace);
+    archiveState = { deletion: preview, notice: null, focusWorkspace: project.workspace }; return preview;
+  });
+  registerArchiveAction('archive:cancel-delete', () => { deletion.clear(); archiveState = { ...archiveState, deletion: null, notice: null }; });
+  registerArchiveAction('archive:delete-project', async input => {
+    if (!archiveState.deletion || input?.token !== archiveState.deletion.token) throw new Error('Откройте подтверждение удаления заново.');
+    await deletion.apply(input.token, input.confirmation);
+    archiveState = { deletion: null, notice: 'Папка и локальная история удалены. Чаты ChatGPT сохранены.', focusWorkspace: null };
+  });
+  registerArchiveAction('archive:recover-deletions', async () => {
+    const errors = await deletion.recover();
+    archiveState = { deletion: null, notice: errors.length ? null : 'Локальная очистка завершена.', focusWorkspace: errors[0]?.workspace ?? null };
+    if (errors.length) throw Object.assign(new Error(errors[0].message), { code: errors[0].code });
+  });
+  ipcMain.handle('archive:close', event => { assertArchiveSender(event); archiveWindow?.close(); return { ok: true }; });
 }
 
 async function createWindow() {
@@ -436,6 +535,7 @@ async function createWindow() {
   window.on('resize', layout);
   window.on('closed', () => {
     controller?.cancel(); clearInterval(interval);
+    if (archiveWindow && !archiveWindow.isDestroyed()) archiveWindow.close();
     for (const view of [sidebar, browser]) if (!view.webContents.isDestroyed()) view.webContents.close();
     window = null;
   });
@@ -451,7 +551,8 @@ async function createWindow() {
   interval = setInterval(() => { if (!pageLoading && !setupState && !settingsState) void controller.tick(); }, 1500);
   if (smoke) {
     await fixture.run({ app, window, browser: browser.webContents, sidebar: sidebar.webContents,
-      store, controller, selectWorkspace, snapshot, assertLocalSender, permissionAllowed, dataDir });
+      store, controller, selectWorkspace, snapshot, assertLocalSender, permissionAllowed, dataDir,
+      openArchiveWindow, getArchiveWindow: () => archiveWindow });
     window.close(); app.quit();
   } else { const current = store.selected(); if (current && !storageError && !settingsState) void selectWorkspace(current.workspace).catch(report); else void navigate(); }
 }

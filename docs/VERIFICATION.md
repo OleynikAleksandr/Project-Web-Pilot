@@ -286,3 +286,7 @@ Electron smoke через локальный IPC меняет sidebar с 312 н�
 ## Scope 002 / T004 — drag splitter
 
 Electron smoke синтетическим pointer drag расширяет sidebar с 312 до 432 px и проверяет смещение Chromium. Дополнительно ArrowLeft на separator уменьшает ширину на 24 px, подтверждая доступный клавиатурный путь.
+
+## Scope 002 / T005 — каркас окна архива
+
+Добавлен одиночный локальный BrowserWindow архива, отдельный preload и локальный HTML. Все archive IPC проверяют точный sender и используют тот же сериализованный actionTail/store. Пользовательский multi-select renderer и полный Electron smoke добавляются следующими задачами.
