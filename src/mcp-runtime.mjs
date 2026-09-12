@@ -3,6 +3,7 @@ import { promisify } from 'node:util';
 import { createHash } from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { isAbsolutePlatformPath, runtimeFolderCandidates, runtimeLayout } from './platform.mjs';
 
 const execFile = promisify(execFileCallback);
 const requiredTools = ['bridge_status', 'workflow_context_recover'];
@@ -163,24 +164,26 @@ export class LocalMcpClient {
 
 }
 
-export async function findRuntimeFolder(input) {
-  if (typeof input !== 'string' || !path.isAbsolute(input)) throw new RuntimeError('RUNTIME_PATH_REQUIRED', 'Выберите папку Codex Local Mac.');
-  for (const candidate of [input, path.join(input, 'mac-codex-local')]) {
+export async function findRuntimeFolder(input, { platform = process.platform } = {}) {
+  if (!isAbsolutePlatformPath(input, platform)) throw new RuntimeError('RUNTIME_PATH_REQUIRED', 'Выберите папку локального Codex runtime.');
+  for (const candidate of runtimeFolderCandidates(input, platform)) {
     try {
       const folder = await fs.realpath(candidate);
-      await fs.access(path.join(folder, 'control.py'));
-      await fs.access(path.join(folder, '.venv/bin/python3'));
+      const layout = runtimeLayout(folder, platform);
+      await fs.access(layout.control);
+      await fs.access(layout.python);
       return folder;
-    } catch { /* Try the source workspace's inner folder. */ }
+    } catch { /* Try the platform-specific source workspace inner folder. */ }
   }
-  throw new RuntimeError('RUNTIME_NOT_FOUND', 'В выбранной папке не найден настроенный Codex Local Mac.');
+  throw new RuntimeError('RUNTIME_NOT_FOUND', 'В выбранной папке не найден настроенный локальный Codex runtime.');
 }
 
 export class McpRuntime {
-  constructor(folder, { execute = execFile, clientFactory = endpoint => new LocalMcpClient(endpoint) } = {}) {
+  constructor(folder, { execute = execFile, clientFactory = endpoint => new LocalMcpClient(endpoint), platform = process.platform } = {}) {
     this.folder = folder;
     this.execute = execute;
     this.clientFactory = clientFactory;
+    this.platform = platform;
     this.client = null;
     this.pending = null;
     this.lastStatus = null;
@@ -188,10 +191,11 @@ export class McpRuntime {
 
   async control(command) {
     if (!['status', 'start'].includes(command)) throw new RuntimeError('RUNTIME_ACTION_DENIED', 'Эта операция не поддерживается оболочкой.');
-    const folder = await findRuntimeFolder(this.folder);
+    const folder = await findRuntimeFolder(this.folder, { platform: this.platform });
+    const layout = runtimeLayout(folder, this.platform);
     let output;
     try {
-      output = await this.execute(path.join(folder, '.venv/bin/python3'), ['-B', path.join(folder, 'control.py'), command],
+      output = await this.execute(layout.python, ['-B', layout.control, command],
         { cwd: folder, timeout: command === 'start' ? 75000 : 12000, maxBuffer: 1024 * 1024,
           env: { ...process.env, PYTHONDONTWRITEBYTECODE: '1' } });
     } catch (error) {

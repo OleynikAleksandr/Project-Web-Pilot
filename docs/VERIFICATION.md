@@ -391,3 +391,7 @@ Electron smoke сначала требует `contextWindow.status=unknown`, т�
 ## Scope 008 / T002 — итог raw-эксперимента и безопасная замена
 
 Unit tests проверяют вложенный SSE `encoded_item` с тестовыми token/context полями и гарантируют, что content-поддерево не попадает в telemetry. `contextServiceMetadata()` проверяется отдельно: для models возвращается только `gpt-5-6-thinking / 262144`, а для conversation — только presence/type `context_truncation_continuation`, presence `summary_metadata` и `has_previous_page`, без opaque continuation/history. Production raw-файл после эксперимента не является частью итоговой реализации.
+
+## Scope 008 / T004 — platform layout MCP runtime
+
+`tests/mcp-runtime.test.mjs` отдельно проверяет `darwin` и `win32` без запуска Windows: macOS путь остаётся `.venv/bin/python3`, Windows layout формируется как `.venv\\Scripts\\python.exe`, а варианты вложенной runtime-папки выбираются adapter. Существующий runtime test дополнительно подтверждает, что macOS `McpRuntime` по-прежнему запускает тот же Python и `control.py` без shell.

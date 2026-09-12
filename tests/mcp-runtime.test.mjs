@@ -5,6 +5,7 @@ import path from 'node:path';
 import os from 'node:os';
 import { createHash } from 'node:crypto';
 import { McpRuntime, LocalMcpClient, validateEndpoint, validateContextPacket } from '../src/mcp-runtime.mjs';
+import { runtimeFolderCandidates, runtimeLayout } from '../src/platform.mjs';
 
 const ready = { mcp: { running: true, owned: true, ready: true },
   tunnel: { running: true, owned: true, ready: true, configured: true }, mcp_url: 'http://127.0.0.1:17842/mcp' };
@@ -20,12 +21,32 @@ async function folder(t) {
 
 const clientFactory = () => ({ initialize: async () => ({ serverName: 'Codex Local Mac', toolCount: 47 }) });
 
+test('platform runtime layout preserves macOS and defines Windows paths without runtime access', () => {
+  assert.deepEqual(runtimeLayout('/Users/test/Codex Local Mac/mac-codex-local', 'darwin'), {
+    control: '/Users/test/Codex Local Mac/mac-codex-local/control.py',
+    python: '/Users/test/Codex Local Mac/mac-codex-local/.venv/bin/python3',
+  });
+  assert.deepEqual(runtimeFolderCandidates('/Users/test/Codex Local Mac', 'darwin'), [
+    '/Users/test/Codex Local Mac', '/Users/test/Codex Local Mac/mac-codex-local',
+  ]);
+  assert.deepEqual(runtimeLayout('C:\\Users\\test\\Codex Local', 'win32'), {
+    control: 'C:\\Users\\test\\Codex Local\\control.py',
+    python: 'C:\\Users\\test\\Codex Local\\.venv\\Scripts\\python.exe',
+  });
+  assert.deepEqual(runtimeFolderCandidates('C:\\Users\\test\\Codex Local', 'win32'), [
+    'C:\\Users\\test\\Codex Local',
+    'C:\\Users\\test\\Codex Local\\windows-codex-local',
+    'C:\\Users\\test\\Codex Local\\codex-local',
+  ]);
+});
+
 test('ready shared services are reused, with explicit arguments and one concurrent initialization', async t => {
   const root = await folder(t); const calls = [];
   const runtime = new McpRuntime(root, { clientFactory,
     execute: async (...args) => { calls.push(args); return { stdout: JSON.stringify(ready) }; } });
   const [a,b] = await Promise.all([runtime.ensure(), runtime.ensure()]);
   assert.deepEqual(a,b); assert.equal(calls.length,1);
+  assert.equal(calls[0][0], path.join(root,'.venv/bin/python3'));
   assert.deepEqual(calls[0][1], ['-B',path.join(root,'control.py'),'status']);
   assert.equal(calls[0][2].cwd,root); assert.equal(calls[0][2].shell,undefined);
   await assert.rejects(runtime.control('stop'), { code:'RUNTIME_ACTION_DENIED' });

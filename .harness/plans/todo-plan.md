@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 184,
+  "plan_revision": 186,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-context-observation-008",
@@ -181,8 +181,8 @@
         "Unit tests проверяют darwin и win32 layout без требования реального Windows runtime."
       ],
       "expected_commit_message": "refactor: отделить platform layout MCP runtime",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-context-observation-008",
         "task_id": "T004",
@@ -282,7 +282,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-context-observation-008
 Current Task: нет
-Revision: 184
+Revision: 186
 
 ## Цель
 
@@ -310,8 +310,8 @@ Revision: 184
   - Git Commit: [PENDING] docs: зафиксировать реальный auto-compact
   - Reference: web-pilot-context-observation-008 / T003 / implementation
   - Файлы: docs/VERIFICATION.md, docs/WORKFLOW_START.md
-- [TODO] T004: Вынести platform adapter локального MCP runtime — Ожидает
-  - Git Commit: [PENDING] refactor: отделить platform layout MCP runtime
+- [DONE] T004: Вынести platform adapter локального MCP runtime — Завершено
+  - Git Commit: [DONE] refactor: отделить platform layout MCP runtime
   - Reference: web-pilot-context-observation-008 / T004 / implementation
   - Файлы: src/platform.mjs, src/mcp-runtime.mjs, tests/mcp-runtime.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T005: Сделать поиск внешнего Node платформенно-независимым — Ожидает
