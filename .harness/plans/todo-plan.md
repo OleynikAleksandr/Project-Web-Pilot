@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 193,
+  "plan_revision": 195,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-context-observation-008",
@@ -324,8 +324,8 @@
         "suite"
       ],
       "expected_commit_message": "feat: автоматически готовить Windows runtime",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-context-observation-008",
         "task_id": "T008",
@@ -524,7 +524,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-context-observation-008
 Current Task: нет
-Revision: 193
+Revision: 195
 
 ## Цель
 
@@ -571,8 +571,8 @@ Revision: 193
   - Git Commit: [DONE] build: встроить Windows Codex Local runtime
   - Reference: web-pilot-context-observation-008 / T007 / implementation
   - Файлы: windows-runtime/Windows-Codex-Local-2026-09-10.zip, windows-runtime/Windows-Codex-Local-2026-09-10.zip.sha256, docs/SOURCE_WORKSPACES.md, docs/architecture/ARCHITECTURE.md
-- [TODO] T008: Автоматизировать установку Windows runtime — Ожидает
-  - Git Commit: [PENDING] feat: автоматически готовить Windows runtime
+- [DONE] T008: Автоматизировать установку Windows runtime — Завершено
+  - Git Commit: [DONE] feat: автоматически готовить Windows runtime
   - Reference: web-pilot-context-observation-008 / T008 / implementation
   - Файлы: src/windows-runtime.mjs, src/platform.mjs, tests/windows-runtime.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T009: Подключить bundled runtime к Windows lifecycle — Ожидает

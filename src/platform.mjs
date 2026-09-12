@@ -62,3 +62,7 @@ export function nodeExecutableCandidates({
 export function executableCandidateAllowed(value, platform = process.platform) {
   return isAbsolutePlatformPath(value, platform) || (typeof value === 'string' && /^[A-Za-z0-9_.-]+$/.test(value));
 }
+
+export function bundledWindowsRuntimeFolder(dataDir, platform = process.platform) {
+  return platform === 'win32' ? path.win32.join(dataDir, 'runtime', 'Windows-Codex-Local') : null;
+}

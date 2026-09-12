@@ -403,3 +403,7 @@ Unit tests проверяют вложенный SSE `encoded_item` с тест�
 ## Scope 008 / T006 — platform main и packaging
 
 Проверены `defaultRuntimeFolder('/Users/test','darwin')` и Windows drive path; macOS default остаётся `/Users/test/VSCODE/Codex Local Mac/mac-codex-local`. На macOS успешно выполнены `npm run build:mac` и cross-package `npm run build:win`, создав соответственно `Project Web Pilot-darwin-arm64` и `Project Web Pilot-win32-x64`. Windows пакет не запускался и не считается Windows-приёмкой. Финальная задача дополнительно требует полный `npm test` и Electron smoke на текущей macOS среде.
+
+## Scope 008 / T008 — Windows runtime bootstrap
+
+`tests/windows-runtime.test.mjs` проверяет win32 layout под userData, `.venv\\Scripts\\python.exe`, безопасное формирование PowerShell `Expand-Archive` через env вместо shell interpolation, `setup.ps1 -Workspace` через argv и streaming SHA-256. Эти проверки намеренно не вызывают Windows API на macOS; живое выполнение setup остаётся частью T013.
