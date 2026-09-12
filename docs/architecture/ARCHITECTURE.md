@@ -302,3 +302,7 @@ T025 переводит WorkspaceSessions на schemaVersion 3 с archivedAt и 
 Project Web Pilot хранит собственную тему оболочки (`light`/`dark`) в `~/Library/Application Support/Project Web Pilot/settings.json` рядом с путём Codex Local Mac. Запись выполняется тем же атомарным временным файлом, поэтому смена темы и смена runtime не перетирают друг друга. Текущее значение входит в локальный snapshot и доступно только sidebar через preload IPC; удалённый ChatGPT этот канал не получает.
 
 Главный процесс применяет тему через Electron `nativeTheme.themeSource` и соответствующий `backgroundColor` BaseWindow. Это окрашивает нативную верхнюю панель macOS и служебную рамку приложения согласованно с локальным интерфейсом. Web Pilot не открывает и не меняет настройку темы внутри ChatGPT Web; пользовательский выбор ChatGPT остаётся отдельным.
+
+### Переключатель темы в Settings — T030
+
+`src/ui/project-archive.mjs` применяет `state.theme` к корневому `data-theme` и отправляет только `setTheme('light'|'dark')`. Палитра тёмного режима определена локальными CSS-переопределениями в sidebar: дерево проектов и сессий, карточки состояния, формы создания, Settings/архив, уведомления и кнопки не требуют перезагрузки. Удалённый WebContents не получает класс, CSS или IPC команды темы.

@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 81,
+  "plan_revision": 83,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
@@ -1164,8 +1164,8 @@
         "electron-smoke"
       ],
       "expected_commit_message": "feat: добавить тёмную тему сайдбара",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-prototype-001",
         "task_id": "T030",
@@ -1271,7 +1271,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 81
+Revision: 83
 
 ## Цель
 
@@ -1408,8 +1408,8 @@ Revision: 81
   - Git Commit: [DONE] feat: сохранять тему оболочки Web Pilot
   - Reference: web-pilot-prototype-001 / T029 / implementation
   - Файлы: src/main.mjs, src/preload.cjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T030: Добавить переключатель темы в Settings — Ожидает
-  - Git Commit: [PENDING] feat: добавить тёмную тему сайдбара
+- [DONE] T030: Добавить переключатель темы в Settings — Завершено
+  - Git Commit: [DONE] feat: добавить тёмную тему сайдбара
   - Reference: web-pilot-prototype-001 / T030 / implementation
   - Файлы: src/ui/index.html, src/ui/project-archive.mjs, docs/PROJECT_ARCHIVE.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T031: Проверить тему и пересобрать приложение — Ожидает

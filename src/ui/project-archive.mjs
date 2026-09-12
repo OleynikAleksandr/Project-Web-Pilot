@@ -4,6 +4,8 @@ export function projectArchiveView(action) {
   const selected = () => state?.archives.find(p => p.workspace === state.settings?.workspace);
   $('open-settings').addEventListener('click', () => action(state?.settings ? 'closeSettings' : 'openSettings'));
   $('close-settings').addEventListener('click', () => action('closeSettings'));
+  $('theme-light').addEventListener('click', () => action('setTheme', 'light'));
+  $('theme-dark').addEventListener('click', () => action('setTheme', 'dark'));
   $('restore-project').addEventListener('click', () => action('restoreProject', selected()?.workspace));
   $('preview-delete').addEventListener('click', () => action('previewDelete', selected()?.workspace));
   $('cancel-delete').addEventListener('click', () => action('cancelDelete'));
@@ -13,6 +15,11 @@ export function projectArchiveView(action) {
   function updateConfirm() { $('delete-project').disabled = pending || $('delete-confirmation').value !== state?.settings?.deletion?.name; }
   function render(next, actionPending) {
     state = next; pending = actionPending;
+    const theme = state.theme === 'dark' ? 'dark' : 'light';
+    document.documentElement.dataset.theme = theme;
+    $('theme-light').setAttribute('aria-pressed', String(theme === 'light'));
+    $('theme-dark').setAttribute('aria-pressed', String(theme === 'dark'));
+    $('theme-light').disabled = pending; $('theme-dark').disabled = pending;
     const settings = state.settings;
     $('settings-panel').hidden = !settings; $('active-projects').hidden = !!settings;
     $('open-settings').setAttribute('aria-pressed', String(!!settings));
