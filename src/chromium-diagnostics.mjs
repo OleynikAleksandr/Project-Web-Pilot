@@ -17,6 +17,9 @@ const TELEMETRY_MARKERS = new Set([
   'response.compact', 'response.compaction', 'contextCompaction',
 ]);
 const PRESENCE_KEYS = new Set(['compaction_response_id', 'window_id', 'previous_window_id', 'first_window_id']);
+const TELEMETRY_KEY_PATTERN = /(token|context|usage|window|compact)/i;
+const SAFE_KEY_SEGMENT = /^[A-Za-z0-9_.:-]{1,80}$/;
+const SKIP_TELEMETRY_SUBTREES = new Set(['content', 'parts', 'text', 'replacement_history', 'guardian_history']);
 const SAFE_IDENTIFIER = /^[A-Za-z0-9_.:/-]{1,96}$/;
 const LONG_PATH_ID = /^[A-Za-z0-9_-]{20,}$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -54,6 +57,14 @@ function addMetric(metrics, key, value) {
   metrics[key] = current.slice(0, 8);
 }
 
+function addCandidateMetric(metrics, path, value) {
+  const number = finiteNumber(value);
+  if (number === null || !path) return;
+  const current = metrics[path] ?? [];
+  if (!current.includes(number)) current.push(number);
+  metrics[path] = current.slice(0, 8);
+}
+
 function collectUsageObject(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const usage = {};
@@ -64,16 +75,25 @@ function collectUsageObject(value) {
   return Object.keys(usage).length ? usage : null;
 }
 
-function collectTelemetry(value, out, depth = 0, budget = { left: 800 }) {
+function collectTelemetry(value, out, depth = 0, budget = { left: 800 }, path = []) {
   if (!value || typeof value !== 'object' || depth > 8 || budget.left-- <= 0) return;
   if (Array.isArray(value)) {
-    for (const item of value.slice(0, 80)) collectTelemetry(item, out, depth + 1, budget);
+    for (const item of value.slice(0, 80)) collectTelemetry(item, out, depth + 1, budget, path);
     return;
   }
   for (const [key, item] of Object.entries(value)) {
+    const safeKey = SAFE_KEY_SEGMENT.test(key) ? key : null;
+    const nextPath = safeKey ? [...path, safeKey] : path;
+    const candidatePath = safeKey ? nextPath.join('.') : null;
     if (SAFE_SIGNAL_KEYS.has(key) && typeof item === 'string' && TELEMETRY_MARKERS.has(item)) out.markers.add(item);
     if (CONTEXT_NUMBER_KEYS.has(key)) addMetric(out.metrics, key, item);
     if (PRESENCE_KEYS.has(key) && item != null) out.presence.add(key);
+    if (safeKey && TELEMETRY_KEY_PATTERN.test(key)
+        && !CONTEXT_NUMBER_KEYS.has(key) && !TELEMETRY_OBJECT_KEYS.has(key) && !PRESENCE_KEYS.has(key)) {
+      const number = finiteNumber(item);
+      if (number !== null) addCandidateMetric(out.candidateMetrics, candidatePath, number);
+      else if (item != null) out.candidatePresence.add(candidatePath);
+    }
     if (TELEMETRY_OBJECT_KEYS.has(key)) {
       const usage = collectUsageObject(item);
       if (usage) {
@@ -82,12 +102,18 @@ function collectTelemetry(value, out, depth = 0, budget = { left: 800 }) {
         else out.usage.push(usage);
       }
     }
-    if (item && typeof item === 'object') collectTelemetry(item, out, depth + 1, budget);
+    if (item && typeof item === 'object' && !SKIP_TELEMETRY_SUBTREES.has(key)) {
+      collectTelemetry(item, out, depth + 1, budget, nextPath);
+    }
   }
 }
 
 function telemetryCollector() {
-  return { markers: new Set(), presence: new Set(), metrics: {}, lastTokenUsage: [], totalTokenUsage: [], usage: [] };
+  return {
+    markers: new Set(), presence: new Set(), metrics: {},
+    candidateMetrics: {}, candidatePresence: new Set(),
+    lastTokenUsage: [], totalTokenUsage: [], usage: [],
+  };
 }
 
 function finalizeTelemetry(out) {
@@ -95,6 +121,10 @@ function finalizeTelemetry(out) {
   if (out.markers.size) result.markers = [...out.markers].sort();
   if (out.presence.size) result.presence = [...out.presence].sort();
   if (Object.keys(out.metrics).length) result.metrics = Object.fromEntries(Object.entries(out.metrics).sort(([a], [b]) => a.localeCompare(b)));
+  if (Object.keys(out.candidateMetrics).length) {
+    result.candidateMetrics = Object.fromEntries(Object.entries(out.candidateMetrics).sort(([a], [b]) => a.localeCompare(b)).slice(0, 48));
+  }
+  if (out.candidatePresence.size) result.candidatePresence = [...out.candidatePresence].sort().slice(0, 48);
   if (out.lastTokenUsage.length) result.lastTokenUsage = out.lastTokenUsage.slice(0, 8);
   if (out.totalTokenUsage.length) result.totalTokenUsage = out.totalTokenUsage.slice(0, 8);
   if (out.usage.length) result.usage = out.usage.slice(0, 8);

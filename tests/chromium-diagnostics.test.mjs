@@ -89,6 +89,44 @@ test('context telemetry recognizes direct compact signatures and SSE without rec
   assert.equal(serialized.includes('secret-item-id'), false);
 });
 
+test('context telemetry discovers Web-style candidate keys without recording values from message content', () => {
+  const payload = JSON.stringify({
+    type: 'conversation-turn-stream',
+    payload: {
+      type: 'stream-item',
+      item: {
+        metadata: {
+          context_usage: {
+            used_token_count: 184321,
+            context_window_size: 258400,
+            usage_ratio: 0.713,
+            context_label: 'PRIVATE CONTEXT LABEL',
+          },
+          prompt_token_count: 184321,
+          compact_generation: 4,
+        },
+        content: {
+          context_secret_number: 999999,
+          token_secret: 'DO NOT LOG THIS',
+        },
+      },
+    },
+  });
+  const telemetry = contextTelemetry(payload);
+  assert.deepEqual(telemetry.candidateMetrics['payload.item.metadata.context_usage.used_token_count'], [184321]);
+  assert.deepEqual(telemetry.candidateMetrics['payload.item.metadata.context_usage.context_window_size'], [258400]);
+  assert.deepEqual(telemetry.candidateMetrics['payload.item.metadata.context_usage.usage_ratio'], [0.713]);
+  assert.deepEqual(telemetry.candidateMetrics['payload.item.metadata.prompt_token_count'], [184321]);
+  assert.deepEqual(telemetry.candidateMetrics['payload.item.metadata.compact_generation'], [4]);
+  assert.ok(telemetry.candidatePresence.includes('payload.item.metadata.context_usage'));
+  assert.ok(telemetry.candidatePresence.includes('payload.item.metadata.context_usage.context_label'));
+  const serialized = JSON.stringify(telemetry);
+  assert.equal(serialized.includes('PRIVATE CONTEXT LABEL'), false);
+  assert.equal(serialized.includes('DO NOT LOG THIS'), false);
+  assert.equal(serialized.includes('context_secret_number'), false, 'content subtree is never inspected for candidate telemetry');
+  assert.equal(serialized.includes('999999'), false);
+});
+
 test('DiagnosticJsonl writes valid JSONL and rotates bounded files', async () => {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'web-pilot-diagnostics-'));
   const file = path.join(dir, 'chromium-events.jsonl');

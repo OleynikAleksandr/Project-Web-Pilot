@@ -371,3 +371,7 @@ Electron smoke запускает diagnostics на настоящем `WebConten
 
 Electron smoke поднимает изолированный `https` fixture, где `POST /backend-api/f/conversation` возвращает `text/event-stream` с тестовым `token_count` (`input_tokens=229043`, `model_context_window=258400`) и `ContextCompaction`. Настоящий CDP в Electron фиксирует response, после `loadingFinished` читает body через `Network.getResponseBody`, а тест требует `conversation-stream-inspected.telemetryFound=true` и `telemetry/context` с ожидаемыми числами и `compactSignal=direct`. Весь JSONL дополнительно проверяется на отсутствие fixture private stream text, compaction item ID, recovery context и текста пользовательской команды приёмки.
 
+## Scope 007 / T001 — discovery неизвестных Web context keys
+
+`tests/chromium-diagnostics.test.mjs` добавляет Web-style fixture с альтернативными именами `used_token_count`, `context_window_size`, `usage_ratio`, `prompt_token_count`, `compact_generation`. Проверка требует candidate key paths и числовые значения из `metadata`, но запрещает чтение `content`: приватная строка, `token_secret`, `context_secret_number` и их числовое значение не должны появляться в сериализованной telemetry. Существующие тесты Codex `token_count`/`ContextCompaction` продолжают проходить.
+

@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 171,
+  "plan_revision": 173,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-context-window-indicator-007",
@@ -82,8 +82,8 @@
         "Существующая telemetry по точным Codex-полям остаётся совместимой."
       ],
       "expected_commit_message": "feat: обнаруживать context поля Web stream",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-context-window-indicator-007",
         "task_id": "T001",
@@ -178,7 +178,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-context-window-indicator-007
 Current Task: нет
-Revision: 171
+Revision: 173
 
 ## Цель
 
@@ -194,8 +194,8 @@ Revision: 171
 
 ## Микрозадачи
 
-- [TODO] T001: Расширить безопасное обнаружение полей Web stream — Ожидает
-  - Git Commit: [PENDING] feat: обнаруживать context поля Web stream
+- [DONE] T001: Расширить безопасное обнаружение полей Web stream — Завершено
+  - Git Commit: [DONE] feat: обнаруживать context поля Web stream
   - Reference: web-pilot-context-window-indicator-007 / T001 / implementation
   - Файлы: src/chromium-diagnostics.mjs, tests/chromium-diagnostics.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T002: Хранить последнее наблюдение context window — Ожидает
