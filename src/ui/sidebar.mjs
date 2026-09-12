@@ -168,6 +168,8 @@ function render(state) {
           : plan.state === 'not-created' ? 'План ещё не создан'
             : `В работе · ${plan.completed} из ${plan.total} выполнено`;
     $('plan-status').textContent = statusText; $('plan-status').dataset.state = plan.state;
+    $('plan-note').hidden = plan.state !== 'closed';
+    $('plan-note').textContent = plan.state === 'closed' ? 'Проект готов к следующему новому плану.' : '';
     $('plan-reason').hidden = !plan.blockedReason; $('plan-reason').textContent = plan.blockedReason ?? '';
     $('plan-tasks').replaceChildren(...plan.tasks.map(task => {
       const item = document.createElement('li'); item.className = 'plan-task'; item.dataset.status = task.status;
@@ -176,7 +178,7 @@ function render(state) {
       const body = document.createElement('div'), title = document.createElement('strong'), id = document.createElement('small');
       title.textContent = task.title; id.textContent = task.id; body.append(title, id); item.append(mark, body); return item;
     }));
-  } else { $('plan-tasks').replaceChildren(); $('plan-reason').hidden = true; }
+  } else { $('plan-tasks').replaceChildren(); $('plan-note').hidden = true; $('plan-reason').hidden = true; }
   const [title, detail, tone] = phases[context.phase] ?? phases.selected;
   $('context-title').textContent = state.pageLoading ? 'Открываем ChatGPT' : title;
   $('context-details').hidden = !contextExpanded;

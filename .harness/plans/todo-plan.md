@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 151,
+  "plan_revision": 153,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-closed-plan-004",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "После штатной приёмки и архивирования scope явно показывать в карточке План, что scope завершён и проект готов к следующему новому плану.",
   "acceptance_criteria": [
     "При NONE с archived_scope_id карточка План показывает «Scope завершён и архивирован».",
@@ -80,8 +80,8 @@
         "Electron smoke проверяет closed-state и отсутствие кнопки приёмки в нём"
       ],
       "expected_commit_message": "feat: показать завершённый scope в плане",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-closed-plan-004",
         "task_id": "T001",
@@ -104,10 +104,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: web-pilot-closed-plan-004
 Current Task: нет
-Revision: 151
+Revision: 153
 
 ## Цель
 
@@ -122,8 +122,8 @@ Revision: 151
 
 ## Микрозадачи
 
-- [TODO] T001: Показать завершённый scope в карточке План — Ожидает
-  - Git Commit: [PENDING] feat: показать завершённый scope в плане
+- [DONE] T001: Показать завершённый scope в карточке План — Завершено
+  - Git Commit: [DONE] feat: показать завершённый scope в плане
   - Reference: web-pilot-closed-plan-004 / T001 / implementation
   - Файлы: src/ui/index.html, src/ui/sidebar.mjs, tests/electron-smoke.mjs, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 

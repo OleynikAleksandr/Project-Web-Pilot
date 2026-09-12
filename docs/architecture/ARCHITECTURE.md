@@ -392,3 +392,8 @@ Sidebar рендерит `selected.planView` как самостоятельну
 ## Renderer кнопки приёмки — scope 003 / T008
 
 `src/ui/sidebar.mjs` активирует `#accept-plan` только для `planView.state=awaiting-acceptance` и при отсутствии transient `planAcceptance`. После IPC-состояний `sending/sent/unknown` меняется подпись кнопки и повторный click блокируется. Это чистое отображение main-policy: renderer не может сам архивировать scope или обойти повторную проверку канонического плана.
+
+
+## Closed-state карточки плана — scope 004 / T001
+
+Renderer использует уже существующий `planView.state=closed`, который `readWorkspace()` формирует для `NONE` с непустым `archived_scope_id`. В этом состоянии карточка показывает основной статус «Scope завершён и архивирован» и нейтральную вторую строку «Проект готов к следующему новому плану.». Кнопка приёмки остаётся disabled; отдельного IPC или нового lifecycle-состояния не добавляется.

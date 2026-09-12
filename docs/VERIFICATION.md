@@ -345,3 +345,8 @@ Electron smoke переводит fixture plan из `not-created` в working и 
 ## Scope 003 / T008 — реальный click кнопки «Принять»
 
 Smoke проверяет disabled при `not-created` и working, enabled только при READY_FOR_ACCEPTANCE, затем выполняет настоящий DOM click по `#accept-plan`. В ChatGPT fixture появляется точный user message; после `planAcceptance=sent` кнопка показывает «Отправлено» и остаётся disabled. После смены lifecycle transient-состояние исчезает.
+
+
+## Scope 004 / T001 — завершённый scope
+
+Electron smoke после READY_FOR_ACCEPTANCE переводит fixture-plan в `execution_scope_status=NONE` с `archived_scope_id`, проверяет точные строки «Scope завершён и архивирован» и «Проект готов к следующему новому плану.», скрытие второй строки после возврата в `not-created` и disabled-кнопку приёмки в closed-state.

@@ -167,8 +167,18 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(await sidebar.executeJavaScript('document.getElementById("accept-plan").textContent'), 'Отправлено');
   assert.equal(await sidebar.executeJavaScript('document.getElementById("accept-plan").disabled'), true);
 
+  const closedPlan = { ...readyPlan, plan_revision: readyPlan.plan_revision + 1, scope_id: null, execution_scope_status: 'NONE',
+    delivery_status: 'IN_PROGRESS', archived_scope_id: 'fixture-plan-ui', current_task_id: null, tasks: [] };
+  await writeFixturePlan(closedPlan); controller.attach(store.selected()); await controller.tick();
+  await waitFor(() => sidebar.executeJavaScript('document.getElementById("plan-status").textContent === "Scope завершён и архивирован"'), 'closed plan UI', snapshot);
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("plan-note").textContent'), 'Проект готов к следующему новому плану.');
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("plan-note").hidden'), false);
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("accept-plan").disabled'), true);
+  assert.equal(snapshot().planAcceptance, null);
+
   await fs.writeFile(planFile, originalPlanText); controller.attach(store.selected()); await controller.tick();
   await waitFor(() => sidebar.executeJavaScript('document.getElementById("plan-status").textContent === "План ещё не создан"'), 'restore fixture plan', snapshot);
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("plan-note").hidden'), true);
   assert.equal(snapshot().planAcceptance, null);
   assert.equal(await sidebar.executeJavaScript('document.getElementById("accept-plan").disabled'), true);
   await clipboard.clear();
