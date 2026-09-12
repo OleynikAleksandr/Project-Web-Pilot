@@ -94,6 +94,23 @@ function nestedJsonValue(value, budget) {
   }
 }
 
+function nestedSseValues(value, budget) {
+  if (typeof value !== 'string' || value.length < 6 || value.length > NESTED_JSON_MAX_CHARS) return [];
+  if ((budget.nested ?? 0) >= 12 || !/(^|\n)(event|data):/.test(value)) return [];
+  const values = [];
+  for (const line of value.split(/\r?\n/)) {
+    if (!line.startsWith('data:')) continue;
+    const text = line.slice(5).trim();
+    if (!text || text === '[DONE]') continue;
+    try {
+      const parsed = JSON.parse(text);
+      if (parsed && typeof parsed === 'object') values.push(parsed);
+    } catch {}
+  }
+  if (values.length) budget.nested = (budget.nested ?? 0) + 1;
+  return values.slice(0, 40);
+}
+
 function collectTelemetry(value, out, depth = 0, budget = { left: 800, nested: 0 }, path = []) {
   if (!value || typeof value !== 'object' || depth > 10 || budget.left-- <= 0) return;
   if (Array.isArray(value)) {
@@ -128,6 +145,7 @@ function collectTelemetry(value, out, depth = 0, budget = { left: 800, nested: 0
     }
     const nested = nestedJsonValue(item, budget);
     if (nested) collectTelemetry(nested, out, depth + 1, budget, nextPath);
+    else for (const nestedItem of nestedSseValues(item, budget)) collectTelemetry(nestedItem, out, depth + 1, budget, nextPath);
   }
 }
 
@@ -180,6 +198,29 @@ function telemetryFromSse(text) {
 export function contextTelemetry(data) {
   const text = typeof data === 'string' ? data : Buffer.isBuffer(data) ? data.toString('utf8') : String(data ?? '');
   return telemetryFromJson(text) ?? telemetryFromSse(text);
+}
+
+export function contextServiceMetadata(kind, data) {
+  const text = typeof data === 'string' ? data : Buffer.isBuffer(data) ? data.toString('utf8') : String(data ?? '');
+  let value;
+  try { value = JSON.parse(text); } catch { return null; }
+  if (kind === 'models') {
+    const models = Array.isArray(value?.models) ? value.models : [];
+    const model = models.find(item => item?.slug === 'gpt-5-6-thinking');
+    const maxTokens = finiteNumber(model?.max_tokens);
+    return maxTokens && maxTokens > 0 ? { modelSlug: 'gpt-5-6-thinking', maxTokens } : null;
+  }
+  if (kind === 'conversation') {
+    if (!Object.prototype.hasOwnProperty.call(value ?? {}, 'context_truncation_continuation')) return null;
+    const continuation = value.context_truncation_continuation;
+    return {
+      continuationPresent: continuation != null,
+      continuationType: continuation == null ? 'null' : Array.isArray(continuation) ? 'array' : typeof continuation,
+      summaryMetadataPresent: value.summary_metadata != null,
+      hasPreviousPage: value.page_info?.has_previous_page === true,
+    };
+  }
+  return null;
 }
 
 function collectSignals(value, out, depth = 0, budget = { left: 80 }) {
@@ -296,6 +337,8 @@ export class ChromiumDiagnostics {
     this.attachedByUs = false;
     this.started = false;
     this.streamResponses = new Map();
+    this.serviceResponses = new Map();
+    this.modelContextLimit = null;
     this.lastContextUsage = null;
     this.latestContextObservation = { status: 'unknown' };
     this.onDebuggerMessage = this.onDebuggerMessage.bind(this);
@@ -382,6 +425,13 @@ export class ChromiumDiagnostics {
     }
     if (method === 'Network.responseReceived') {
       const url = safeUrl(params.response?.url);
+      try {
+        const rawUrl = new URL(params.response?.url);
+        if (rawUrl.origin === 'https://chatgpt.com' && params.response?.mimeType === 'application/json') {
+          if (rawUrl.pathname === '/backend-api/models') this.serviceResponses.set(params.requestId, { kind: 'models', url });
+          else if (/^\/backend-api\/conversations\/[^/]+$/.test(rawUrl.pathname)) this.serviceResponses.set(params.requestId, { kind: 'conversation', url });
+        }
+      } catch {}
       if (url.origin === 'https://chatgpt.com' && url.path === '/backend-api/f/conversation'
           && params.response?.mimeType === 'text/event-stream') {
         this.streamResponses.set(params.requestId, { url, mimeType: params.response.mimeType });
@@ -391,6 +441,11 @@ export class ChromiumDiagnostics {
     }
     if (method === 'Network.loadingFinished') {
       const entry = this.log.record('cdp', 'loading-finished', { ...base, requestId: params.requestId, encodedDataLength: params.encodedDataLength });
+      const service = this.serviceResponses.get(params.requestId);
+      if (service) {
+        this.serviceResponses.delete(params.requestId);
+        void this.#inspectServiceResponse(params.requestId, service);
+      }
       const stream = this.streamResponses.get(params.requestId);
       if (stream) {
         this.streamResponses.delete(params.requestId);
@@ -400,6 +455,7 @@ export class ChromiumDiagnostics {
     }
     if (method === 'Network.loadingFailed') {
       this.streamResponses.delete(params.requestId);
+      this.serviceResponses.delete(params.requestId);
       return this.log.record('cdp', 'loading-failed', { ...base, requestId: params.requestId, errorType: safeSignal(params.type) ?? null,
         canceled: !!params.canceled, blockedReason: safeSignal(params.blockedReason) ?? null });
     }
@@ -443,7 +499,7 @@ export class ChromiumDiagnostics {
     const usage = telemetry?.lastTokenUsage?.at(-1) ?? telemetry?.usage?.at(-1) ?? null;
     const windowValues = telemetry?.metrics?.model_context_window ?? telemetry?.metrics?.context_window
       ?? telemetry?.metrics?.max_context_tokens ?? [];
-    const modelContextWindow = windowValues.at(-1) ?? null;
+    const modelContextWindow = windowValues.at(-1) ?? this.modelContextLimit ?? null;
     const metricInputs = telemetry?.metrics?.input_tokens ?? [];
     const inputTokens = usage?.input_tokens ?? (metricInputs.length === 1 ? metricInputs[0] : null);
     const usedPercent = Number.isFinite(inputTokens) && Number.isFinite(modelContextWindow) && modelContextWindow > 0
@@ -471,6 +527,26 @@ export class ChromiumDiagnostics {
       origin, ...fields, markers, presence: telemetry?.presence ?? [],
       inputTokens, modelContextWindow, usedPercent, compactSignal, telemetry,
     });
+  }
+
+  async #inspectServiceResponse(requestId, service) {
+    try {
+      const response = await this.contents.debugger.sendCommand('Network.getResponseBody', { requestId });
+      const body = response?.base64Encoded ? Buffer.from(response.body ?? '', 'base64') : Buffer.from(response?.body ?? '', 'utf8');
+      const metadata = contextServiceMetadata(service.kind, body);
+      if (!metadata) return;
+      if (service.kind === 'models') {
+        this.modelContextLimit = metadata.maxTokens;
+        this.log.record('telemetry', 'model-limit', { requestId, url: service.url, ...metadata });
+        if (this.latestContextObservation.status === 'unknown') {
+          this.#setContextObservation({ status: 'unknown', modelContextWindow: metadata.maxTokens, source: 'model-metadata', observedAt: new Date().toISOString() });
+        }
+      } else {
+        this.log.record('telemetry', 'context-truncation-state', { requestId, url: service.url, ...metadata });
+      }
+    } catch (error) {
+      this.log.record('telemetry', 'service-metadata-inspection-failed', { requestId, kind: service.kind, url: service.url, name: error?.name ?? 'Error', code: error?.code ?? null });
+    }
   }
 
   async #inspectConversationStream(requestId, stream) {
@@ -515,6 +591,7 @@ export class ChromiumDiagnostics {
     if (this.sampleTimer) clearInterval(this.sampleTimer);
     this.sampleTimer = null;
     this.streamResponses.clear();
+    this.serviceResponses.clear();
     for (const [name, handler] of this.handlers) this.contents.removeListener(name, handler);
     this.handlers = [];
     const debug = this.contents.debugger;

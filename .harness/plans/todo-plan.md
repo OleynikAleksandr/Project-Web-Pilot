@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 181,
+  "plan_revision": 183,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-context-observation-008",
@@ -114,8 +114,8 @@
         "Все тесты и Electron smoke проходят после фактического mapping."
       ],
       "expected_commit_message": "feat: сопоставить context window ChatGPT Web",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-context-observation-008",
         "task_id": "T002",
@@ -168,7 +168,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-context-observation-008
 Current Task: нет
-Revision: 181
+Revision: 183
 
 ## Цель
 
@@ -187,8 +187,8 @@ Revision: 181
   - Git Commit: [DONE] feat: разбирать вложенную telemetry Web stream
   - Reference: web-pilot-context-observation-008 / T001 / implementation
   - Файлы: src/chromium-diagnostics.mjs, tests/chromium-diagnostics.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T002: Проверить production context-window telemetry — Ожидает
-  - Git Commit: [PENDING] feat: сопоставить context window ChatGPT Web
+- [DONE] T002: Проверить production context-window telemetry — Завершено
+  - Git Commit: [DONE] feat: сопоставить context window ChatGPT Web
   - Reference: web-pilot-context-observation-008 / T002 / implementation
   - Файлы: src/chromium-diagnostics.mjs, tests/chromium-diagnostics.test.mjs, tests/electron-smoke.mjs, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md
 - [TODO] T003: Наблюдать реальный auto-compact — Ожидает

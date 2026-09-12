@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { contextTelemetry, DiagnosticJsonl, payloadMetadata, safeUrl } from '../src/chromium-diagnostics.mjs';
+import { contextServiceMetadata, contextTelemetry, DiagnosticJsonl, payloadMetadata, safeUrl } from '../src/chromium-diagnostics.mjs';
 
 test('safeUrl keeps endpoint shape but strips query values, fragments and long identifiers', () => {
   const result = safeUrl('https://chatgpt.com/backend-api/conversation/123e4567-e89b-42d3-a456-426614174000?token=SUPER_SECRET&mode=compact#private');
@@ -153,6 +153,37 @@ test('context telemetry unwraps nested JSON stream envelopes but never parses me
   assert.equal(serialized.includes('888888'), false);
   assert.equal(serialized.includes('PRIVATE CONTENT'), false);
   assert.equal(serialized.includes('PRIVATE MESSAGE'), false);
+});
+
+test('context telemetry unwraps nested SSE encoded_item safely', () => {
+  const encoded = [
+    'event: delta_encoding',
+    'data: "v1"',
+    '',
+    'data: {"type":"token_count","info":{"last_token_usage":{"input_tokens":203456,"total_tokens":203600},"model_context_window":262144},"content":{"input_tokens":999999}}',
+    '',
+  ].join('\n');
+  const payload = JSON.stringify({ type: 'conversation-turn-stream', payload: { type: 'stream-item', encoded_item: encoded } });
+  const telemetry = contextTelemetry(payload);
+  assert.deepEqual(telemetry.markers, ['token_count']);
+  assert.deepEqual(telemetry.lastTokenUsage, [{ input_tokens: 203456, total_tokens: 203600 }]);
+  assert.deepEqual(telemetry.metrics.model_context_window, [262144]);
+  assert.equal(JSON.stringify(telemetry).includes('999999'), false);
+});
+
+test('service metadata extracts only model limit and truncation state', () => {
+  assert.deepEqual(contextServiceMetadata('models', JSON.stringify({ models: [
+    { slug: 'other', max_tokens: 123 },
+    { slug: 'gpt-5-6-thinking', max_tokens: 262144, description: 'PRIVATE' },
+  ] })), { modelSlug: 'gpt-5-6-thinking', maxTokens: 262144 });
+  assert.deepEqual(contextServiceMetadata('conversation', JSON.stringify({
+    context_truncation_continuation: null,
+    page_info: { has_previous_page: true },
+    messages: [{ content: { parts: ['PRIVATE HISTORY'] } }],
+  })), { continuationPresent: false, continuationType: 'null', summaryMetadataPresent: false, hasPreviousPage: true });
+  assert.deepEqual(contextServiceMetadata('conversation', JSON.stringify({
+    context_truncation_continuation: { opaque: 'DO NOT LOG' }, summary_metadata: { opaque: 'PRIVATE' }, page_info: {},
+  })), { continuationPresent: true, continuationType: 'object', summaryMetadataPresent: true, hasPreviousPage: false });
 });
 
 test('DiagnosticJsonl writes valid JSONL and rotates bounded files', async () => {

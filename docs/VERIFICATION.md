@@ -387,3 +387,7 @@ Electron smoke сначала требует `contextWindow.status=unknown`, т�
 ## Scope 008 / T001 — nested stream envelope
 
 `tests/chromium-diagnostics.test.mjs` проверяет двойную JSON-string упаковку `conversation-turn-stream → data → stream-item → payload` с `token_count`, `last_token_usage` и `model_context_window`. Ожидаемые `201234 / 258400` извлекаются, но JSON-строки в `message` и `content` со значениями `888888/999999` и приватным текстом полностью игнорируются. Лимиты вложенности и размера являются частью privacy/DoS boundary parser.
+
+## Scope 008 / T002 — итог raw-эксперимента и безопасная замена
+
+Unit tests проверяют вложенный SSE `encoded_item` с тестовыми token/context полями и гарантируют, что content-поддерево не попадает в telemetry. `contextServiceMetadata()` проверяется отдельно: для models возвращается только `gpt-5-6-thinking / 262144`, а для conversation — только presence/type `context_truncation_continuation`, presence `summary_metadata` и `has_previous_page`, без opaque continuation/history. Production raw-файл после эксперимента не является частью итоговой реализации.

@@ -61,3 +61,6 @@
 
 С scope 007 sidebar отображает последнее подтверждённое наблюдение как «Контекстное окно». Если фактическая пара usage/window пока не найдена, показывается «Ожидаем данные» без процента. Для исследования отличающихся Web-схем diagnostic parser также записывает безопасные candidate key paths и числовые значения вне текстовых content-поддеревьев. После установки новой сборки следующий обычный ответ ChatGPT используется для поиска этих кандидатов; найденные имена затем можно сопоставить с input/window semantics без чтения текста разговора.
 
+## Scope 008 — что показал полный transport capture
+
+Два коротких production turn были временно записаны полностью и проанализированы. Числового input/output/context usage в browser transport не найдено. При этом `/backend-api/models` подтверждает `gpt-5-6-thinking.max_tokens=262144`, а полный conversation response содержит `context_truncation_continuation=null`. Поэтому дальнейшее наблюдение auto-compact ориентируется прежде всего на изменение `context_truncation_continuation` и связанных безопасных metadata, а не на ожидаемый `token_count`. Временный raw-capture после эксперимента удалён; обычная сборка не хранит полный transport payload.
