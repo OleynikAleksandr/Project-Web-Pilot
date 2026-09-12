@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 146,
+  "plan_revision": 147,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-plan-ui-003",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Сделать план самостоятельным пользовательским блоком сайдбара: показывать понятный статус текущего scope и полный список микрозадач с признаками выполнено, выполняется и ожидает; убрать из пользовательского интерфейса технический plan_revision и выпустить обновлённую macOS-сборку 0.6.0. Кнопка «Принять» в карточке плана отправляет явную пользовательскую команду на штатное закрытие текущего scope и переход в NONE.",
   "acceptance_criteria": [
     "Блок План является самостоятельной карточкой сайдбара и не показывает plan_revision.",
@@ -291,6 +291,39 @@
         "task_id": "T007",
         "role": "implementation"
       }
+    },
+    {
+      "id": "T008",
+      "title": "Подключить кнопку Принять в renderer",
+      "why": "Завершить пользовательский путь READY_FOR_ACCEPTANCE → click → user message без нарушения docs-sync",
+      "dependencies": [
+        "T007"
+      ],
+      "functional_paths": [
+        "src/ui/sidebar.mjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "acceptance_criteria": [
+        "Кнопка disabled при not-created/working/closed и enabled только при awaiting-acceptance",
+        "После click renderer показывает Отправляем…/Отправлено и блокирует повторную команду",
+        "Electron smoke проходит реальный DOM click и подтверждает точный user message"
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "expected_commit_message": "feat: подключить кнопку приёмки плана",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "web-pilot-plan-ui-003",
+        "task_id": "T008",
+        "role": "implementation"
+      }
     }
   ],
   "blocked_reason": null,
@@ -313,10 +346,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: web-pilot-plan-ui-003
 Current Task: нет
-Revision: 146
+Revision: 147
 
 ## Цель
 
@@ -361,6 +394,10 @@ Revision: 146
   - Git Commit: [DONE] test: проверить приёмку плана из sidebar
   - Reference: web-pilot-plan-ui-003 / T007 / implementation
   - Файлы: src/ui/sidebar.mjs, tests/electron-smoke.mjs, README.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md
+- [TODO] T008: Подключить кнопку Принять в renderer — Ожидает
+  - Git Commit: [PENDING] feat: подключить кнопку приёмки плана
+  - Reference: web-pilot-plan-ui-003 / T008 / implementation
+  - Файлы: src/ui/sidebar.mjs, tests/electron-smoke.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 
 ## Context Pack For This Cycle
 
