@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 164,
+  "plan_revision": 166,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-context-telemetry-006",
@@ -80,8 +80,8 @@
         "Unit tests используют образцы структуры из нативного Codex JSONL и проверяют redaction."
       ],
       "expected_commit_message": "feat: извлекать context telemetry из Chromium payload",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-context-telemetry-006",
         "task_id": "T001",
@@ -143,7 +143,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-context-telemetry-006
 Current Task: нет
-Revision: 164
+Revision: 166
 
 ## Цель
 
@@ -159,8 +159,8 @@ Revision: 164
 
 ## Микрозадачи
 
-- [TODO] T001: Извлекать context/token/compact telemetry из payload — Ожидает
-  - Git Commit: [PENDING] feat: извлекать context telemetry из Chromium payload
+- [DONE] T001: Извлекать context/token/compact telemetry из payload — Завершено
+  - Git Commit: [DONE] feat: извлекать context telemetry из Chromium payload
   - Reference: web-pilot-context-telemetry-006 / T001 / implementation
   - Файлы: src/chromium-diagnostics.mjs, tests/chromium-diagnostics.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T002: Разбирать служебный stream ChatGPT Web — Ожидает

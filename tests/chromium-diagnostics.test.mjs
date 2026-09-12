@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { DiagnosticJsonl, payloadMetadata, safeUrl } from '../src/chromium-diagnostics.mjs';
+import { contextTelemetry, DiagnosticJsonl, payloadMetadata, safeUrl } from '../src/chromium-diagnostics.mjs';
 
 test('safeUrl keeps endpoint shape but strips query values, fragments and long identifiers', () => {
   const result = safeUrl('https://chatgpt.com/backend-api/conversation/123e4567-e89b-42d3-a456-426614174000?token=SUPER_SECRET&mode=compact#private');
@@ -29,6 +29,64 @@ test('payload metadata preserves only structure, digest and safe event identifie
   assert.equal(sse.format, 'sse');
   assert.deepEqual(sse.signals, ['event=message', 'type=response.compact']);
   assert.equal(JSON.stringify(sse).includes('DO NOT LOG'), false);
+});
+
+test('context telemetry extracts Codex token_count numbers without message content', () => {
+  const payload = JSON.stringify({
+    type: 'event_msg',
+    payload: {
+      type: 'token_count',
+      info: {
+        total_token_usage: { input_tokens: 1565554, cached_input_tokens: 1536768, output_tokens: 3368, reasoning_output_tokens: 1196, total_tokens: 1568922 },
+        last_token_usage: { input_tokens: 111809, cached_input_tokens: 111360, output_tokens: 420, reasoning_output_tokens: 309, total_tokens: 112229 },
+        model_context_window: 258400,
+      },
+      message: 'PRIVATE CHAT TEXT',
+      token: 'SECRET_VALUE',
+    },
+  });
+  const telemetry = contextTelemetry(payload);
+  assert.deepEqual(telemetry.markers, ['token_count']);
+  assert.deepEqual(telemetry.metrics.model_context_window, [258400]);
+  assert.deepEqual(telemetry.metrics.input_tokens.sort((a, b) => a - b), [111809, 1565554]);
+  assert.deepEqual(telemetry.lastTokenUsage, [{ input_tokens: 111809, cached_input_tokens: 111360, output_tokens: 420, reasoning_output_tokens: 309, total_tokens: 112229 }]);
+  const serialized = JSON.stringify(telemetry);
+  assert.equal(serialized.includes('PRIVATE CHAT TEXT'), false);
+  assert.equal(serialized.includes('SECRET_VALUE'), false);
+});
+
+test('context telemetry recognizes direct compact signatures and SSE without recording summary text', () => {
+  const compacted = contextTelemetry(JSON.stringify({
+    type: 'compacted',
+    payload: {
+      message: 'VERY PRIVATE SUMMARY',
+      replacement_history: [{ role: 'user', content: 'DO NOT LOG' }],
+      window_number: 7,
+      previous_window_id: 'window-before-secret-id',
+      window_id: 'window-after-secret-id',
+      compaction_response_id: 'resp_secret',
+    },
+  }));
+  assert.deepEqual(compacted.markers, ['compacted']);
+  assert.deepEqual(compacted.metrics.window_number, [7]);
+  assert.deepEqual(compacted.presence, ['compaction_response_id', 'previous_window_id', 'window_id']);
+  assert.equal(JSON.stringify(compacted).includes('VERY PRIVATE SUMMARY'), false);
+  assert.equal(JSON.stringify(compacted).includes('window-before-secret-id'), false);
+
+  const sse = [
+    'event: message',
+    'data: {"type":"event_msg","payload":{"type":"token_count","info":{"last_token_usage":{"input_tokens":229043,"cached_input_tokens":220000,"total_tokens":229153},"model_context_window":258400},"message":"PRIVATE"}}',
+    '',
+    'data: {"type":"event_msg","payload":{"type":"item_completed","item":{"type":"ContextCompaction","id":"secret-item-id"}}}',
+    '',
+  ].join('\n');
+  const telemetry = contextTelemetry(sse);
+  assert.deepEqual(telemetry.markers, ['ContextCompaction', 'token_count']);
+  assert.deepEqual(telemetry.metrics.model_context_window, [258400]);
+  assert.deepEqual(telemetry.lastTokenUsage, [{ input_tokens: 229043, cached_input_tokens: 220000, total_tokens: 229153 }]);
+  const serialized = JSON.stringify(telemetry);
+  assert.equal(serialized.includes('PRIVATE'), false);
+  assert.equal(serialized.includes('secret-item-id'), false);
 });
 
 test('DiagnosticJsonl writes valid JSONL and rotates bounded files', async () => {

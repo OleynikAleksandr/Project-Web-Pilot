@@ -363,3 +363,7 @@ Electron smoke воспроизводит последовательность: 
 
 Electron smoke запускает diagnostics на настоящем `WebContentsView`, подтверждает `diagnostics/session-start`, успешный CDP attach, native `did-finish-load`, network metadata и DOM pulse с наблюдаемым пользовательским сообщением. Дополнительно весь JSONL проверяется на отсутствие фрагмента recovery context и текста пользовательской команды приёмки. Smoke использует отдельный временный `userData`; production-файл находится в `~/Library/Application Support/Project Web Pilot/diagnostics/chromium-events.jsonl`.
 
+## Scope 006 / T001 — безопасный parser context telemetry
+
+`tests/chromium-diagnostics.test.mjs` использует структуры, подтверждённые на нативном Codex JSONL: `event_msg.payload.type=token_count`, `last_token_usage`, `total_token_usage`, `model_context_window`, верхнеуровневый `type=compacted` и `item.type=ContextCompaction`. Проверки подтверждают извлечение только числовых usage/context данных и marker/presence metadata; приватный message/summary, replacement history, token values и реальные window/response IDs в сериализованный результат не попадают.
+

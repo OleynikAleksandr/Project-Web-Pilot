@@ -3,6 +3,20 @@ import path from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
 
 const SAFE_SIGNAL_KEYS = new Set(['type', 'event', 'event_type', 'eventType', 'method', 'kind', 'op', 'action']);
+const TOKEN_USAGE_KEYS = new Set([
+  'input_tokens', 'cached_input_tokens', 'cache_write_input_tokens', 'output_tokens',
+  'reasoning_output_tokens', 'total_tokens',
+]);
+const CONTEXT_NUMBER_KEYS = new Set([
+  ...TOKEN_USAGE_KEYS, 'model_context_window', 'context_tokens', 'context_window', 'context_length',
+  'max_context_tokens', 'remaining_tokens', 'window_number',
+]);
+const TELEMETRY_OBJECT_KEYS = new Set(['last_token_usage', 'total_token_usage', 'usage', 'token_usage']);
+const TELEMETRY_MARKERS = new Set([
+  'token_count', 'compacted', 'ContextCompaction', 'context_compaction', 'conversation.compaction',
+  'response.compact', 'response.compaction', 'contextCompaction',
+]);
+const PRESENCE_KEYS = new Set(['compaction_response_id', 'window_id', 'previous_window_id', 'first_window_id']);
 const SAFE_IDENTIFIER = /^[A-Za-z0-9_.:/-]{1,96}$/;
 const LONG_PATH_ID = /^[A-Za-z0-9_-]{20,}$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -26,6 +40,93 @@ export function safeUrl(input) {
 
 function safeSignal(value) {
   return typeof value === 'string' && SAFE_IDENTIFIER.test(value) ? value : null;
+}
+
+function finiteNumber(value) {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : null;
+}
+
+function addMetric(metrics, key, value) {
+  const number = finiteNumber(value);
+  if (number === null) return;
+  const current = metrics[key] ?? [];
+  if (!current.includes(number)) current.push(number);
+  metrics[key] = current.slice(0, 8);
+}
+
+function collectUsageObject(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const usage = {};
+  for (const key of TOKEN_USAGE_KEYS) {
+    const number = finiteNumber(value[key]);
+    if (number !== null) usage[key] = number;
+  }
+  return Object.keys(usage).length ? usage : null;
+}
+
+function collectTelemetry(value, out, depth = 0, budget = { left: 800 }) {
+  if (!value || typeof value !== 'object' || depth > 8 || budget.left-- <= 0) return;
+  if (Array.isArray(value)) {
+    for (const item of value.slice(0, 80)) collectTelemetry(item, out, depth + 1, budget);
+    return;
+  }
+  for (const [key, item] of Object.entries(value)) {
+    if (SAFE_SIGNAL_KEYS.has(key) && typeof item === 'string' && TELEMETRY_MARKERS.has(item)) out.markers.add(item);
+    if (CONTEXT_NUMBER_KEYS.has(key)) addMetric(out.metrics, key, item);
+    if (PRESENCE_KEYS.has(key) && item != null) out.presence.add(key);
+    if (TELEMETRY_OBJECT_KEYS.has(key)) {
+      const usage = collectUsageObject(item);
+      if (usage) {
+        if (key === 'last_token_usage') out.lastTokenUsage.push(usage);
+        else if (key === 'total_token_usage') out.totalTokenUsage.push(usage);
+        else out.usage.push(usage);
+      }
+    }
+    if (item && typeof item === 'object') collectTelemetry(item, out, depth + 1, budget);
+  }
+}
+
+function telemetryCollector() {
+  return { markers: new Set(), presence: new Set(), metrics: {}, lastTokenUsage: [], totalTokenUsage: [], usage: [] };
+}
+
+function finalizeTelemetry(out) {
+  const result = {};
+  if (out.markers.size) result.markers = [...out.markers].sort();
+  if (out.presence.size) result.presence = [...out.presence].sort();
+  if (Object.keys(out.metrics).length) result.metrics = Object.fromEntries(Object.entries(out.metrics).sort(([a], [b]) => a.localeCompare(b)));
+  if (out.lastTokenUsage.length) result.lastTokenUsage = out.lastTokenUsage.slice(0, 8);
+  if (out.totalTokenUsage.length) result.totalTokenUsage = out.totalTokenUsage.slice(0, 8);
+  if (out.usage.length) result.usage = out.usage.slice(0, 8);
+  return Object.keys(result).length ? result : null;
+}
+
+function telemetryFromJson(text) {
+  try {
+    const value = JSON.parse(text);
+    const out = telemetryCollector();
+    collectTelemetry(value, out);
+    return finalizeTelemetry(out);
+  } catch {
+    return null;
+  }
+}
+
+function telemetryFromSse(text) {
+  if (!/(^|\n)(event|data):/.test(text)) return null;
+  const out = telemetryCollector();
+  for (const line of text.split(/\r?\n/)) {
+    if (!line.startsWith('data:')) continue;
+    const json = line.slice(5).trim();
+    if (!json || json === '[DONE]') continue;
+    try { collectTelemetry(JSON.parse(json), out); } catch {}
+  }
+  return finalizeTelemetry(out);
+}
+
+export function contextTelemetry(data) {
+  const text = typeof data === 'string' ? data : Buffer.isBuffer(data) ? data.toString('utf8') : String(data ?? '');
+  return telemetryFromJson(text) ?? telemetryFromSse(text);
 }
 
 function collectSignals(value, out, depth = 0, budget = { left: 80 }) {
@@ -76,10 +177,12 @@ function structuralSse(text) {
 export function payloadMetadata(data) {
   const text = typeof data === 'string' ? data : Buffer.isBuffer(data) ? data.toString('utf8') : String(data ?? '');
   const structural = structuralJson(text) ?? structuralSse(text) ?? { format: 'opaque', keys: [], signals: [] };
+  const telemetry = contextTelemetry(text);
   return {
     bytes: Buffer.byteLength(text),
     sha256: createHash('sha256').update(text).digest('hex'),
     ...structural,
+    ...(telemetry ? { telemetry } : {}),
   };
 }
 
