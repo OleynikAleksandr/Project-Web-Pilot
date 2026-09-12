@@ -5,6 +5,7 @@ contextBridge.exposeInMainWorld('webPilot', Object.freeze({
   setSidebarWidth: width => ipcRenderer.invoke('pilot:set-sidebar-width', width),
   setTheme: theme => ipcRenderer.invoke('pilot:set-theme', theme),
   setHideToolCalls: value => ipcRenderer.invoke('pilot:set-hide-tool-calls', value),
+  copyWorkspacePath: workspace => ipcRenderer.invoke('pilot:copy-workspace-path', workspace),
   archiveProject: workspace => ipcRenderer.invoke('pilot:archive-project', workspace),
   openArchive: workspace => ipcRenderer.invoke('pilot:open-archive-window', workspace),
   getState: () => ipcRenderer.invoke('pilot:get-state'),

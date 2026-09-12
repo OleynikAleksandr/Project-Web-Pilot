@@ -1,4 +1,4 @@
-import { app, BaseWindow, BrowserWindow, WebContentsView, Menu, session, ipcMain, dialog, nativeTheme } from 'electron';
+import { app, BaseWindow, BrowserWindow, WebContentsView, Menu, session, ipcMain, dialog, nativeTheme, clipboard } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
 import fsp from 'node:fs/promises';
@@ -351,6 +351,12 @@ function registerIpc() {
     await saveSettings({ hideToolCalls: input });
     hideToolCalls = input;
     await applyToolCallVisibility();
+  });
+  registerAction('pilot:copy-workspace-path', input => {
+    const project = store.project(input);
+    if (!project || project.archivedAt) throw new Error('Выберите активный проект.');
+    clipboard.writeText(project.workspace);
+    return project.workspace;
   });
   registerAction('pilot:archive-project', async input => {
     const project = store.project(input);

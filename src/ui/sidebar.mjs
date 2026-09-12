@@ -125,8 +125,10 @@ function render(state) {
       const menuButton = document.createElement('button'); menuButton.className = 'icon-button project-menu-button'; menuButton.textContent = '⋯';
       menuButton.setAttribute('aria-label', `Меню проекта ${project.name}`); menuButton.setAttribute('aria-expanded', 'false');
       const menu = document.createElement('div'); menu.className = 'project-menu'; menu.hidden = true;
+      const copyPath = document.createElement('button'); copyPath.className = 'secondary copy-workspace-path'; copyPath.textContent = 'Скопировать полный путь';
+      copyPath.addEventListener('click', () => { clearTimeout(workspaceClickTimer); menu.hidden = true; menuButton.setAttribute('aria-expanded', 'false'); action('copyWorkspacePath', project.workspace); });
       const archive = document.createElement('button'); archive.className = 'secondary archive-project'; archive.textContent = 'Перенести в архив';
-      archive.addEventListener('click', () => { clearTimeout(workspaceClickTimer); action('archiveProject', project.workspace); }); menu.append(archive);
+      archive.addEventListener('click', () => { clearTimeout(workspaceClickTimer); action('archiveProject', project.workspace); }); menu.append(copyPath, archive);
       menuButton.addEventListener('click', () => { clearTimeout(workspaceClickTimer); menu.hidden = !menu.hidden; menuButton.setAttribute('aria-expanded', String(!menu.hidden)); });
       row.append(arrow, button, menuButton); item.append(row, menu);
       const sessions = document.createElement('ul'); sessions.className = 'sessions'; sessions.hidden = !project.expanded;

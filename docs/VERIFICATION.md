@@ -309,3 +309,7 @@ Electron smoke проверяет, что заголовок карточки в
 ## Scope 002 / T009 — блок выбранного проекта
 
 Renderer больше не обращается к `workspace-name`, `workspace-path`, `workspace-health` и `workspace-notice`; в `workspace-details` остаётся только `plan-text`. Полная Electron-проверка видимого результата выполняется в T011.
+
+## Scope 002 / T010 — системный clipboard
+
+Команда `pilot:copy-workspace-path` принимает только зарегистрированный активный workspace и возвращает тот же канонический путь после записи в Electron clipboard. Полный пользовательский путь через меню ⋯ и фактическое содержимое clipboard проверяются Electron smoke в T011.
