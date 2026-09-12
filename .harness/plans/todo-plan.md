@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 120,
+  "plan_revision": 122,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-layout-archive-002",
@@ -383,8 +383,8 @@
         "suite"
       ],
       "expected_commit_message": "feat: оставить под проектом только план",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-layout-archive-002",
         "task_id": "T009",
@@ -481,7 +481,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-layout-archive-002
 Current Task: нет
-Revision: 120
+Revision: 122
 
 ## Цель
 
@@ -536,8 +536,8 @@ Revision: 120
   - Git Commit: [DONE] feat: свернуть детали статуса контекста
   - Reference: web-pilot-layout-archive-002 / T008 / implementation
   - Файлы: src/ui/index.html, src/ui/sidebar.mjs, tests/electron-smoke.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T009: Убрать дублирующие сведения workspace из блока под проектом — Ожидает
-  - Git Commit: [PENDING] feat: оставить под проектом только план
+- [DONE] T009: Убрать дублирующие сведения workspace из блока под проектом — Завершено
+  - Git Commit: [DONE] feat: оставить под проектом только план
   - Reference: web-pilot-layout-archive-002 / T009 / implementation
   - Файлы: src/ui/index.html, src/ui/sidebar.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T010: Добавить копирование полного пути в меню проекта — Ожидает

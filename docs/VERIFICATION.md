@@ -305,3 +305,7 @@ Electron smoke проверяет сохранение ширины sidebar, poi
 ## Scope 002 / T008 — компактный статус контекста
 
 Electron smoke проверяет, что заголовок карточки виден при свёрнутых деталях, `context-toggle` меняет `aria-expanded` и видимость `context-details`, а project disclosure имеет кнопку не менее 32 px и визуальный треугольник не менее 11 px. Существующее раскрытие сессий продолжает работать прежним `setExpanded`.
+
+## Scope 002 / T009 — блок выбранного проекта
+
+Renderer больше не обращается к `workspace-name`, `workspace-path`, `workspace-health` и `workspace-notice`; в `workspace-details` остаётся только `plan-text`. Полная Electron-проверка видимого результата выполняется в T011.

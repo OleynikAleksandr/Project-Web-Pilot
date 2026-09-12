@@ -157,8 +157,6 @@ function render(state) {
   $('workspace-details').hidden = !selected;
   $('session-actions').hidden = !selected;
   if (selected) {
-    $('workspace-name').textContent = selected.name;
-    $('workspace-path').textContent = selected.workspace;
     $('plan-text').textContent = `План · версия ${selected.planRevision}`
       + (selected.nextTaskId ? `\n${selected.nextTaskId} — ${selected.nextTaskTitle}` : '\nОткрытых задач нет');
   }
@@ -192,9 +190,6 @@ function render(state) {
   setupView.render(state, actionPending);
   archiveView.render(state, actionPending);
   $('choose-runtime').disabled = actionPending || !!state.setup || !!state.settings;
-  const health = state.workspaceHealth;
-  $('workspace-health').textContent = health && selected && health.workspace === selected.workspace ? `Проект проверен · Workflow Kit ${health.version}` : '';
-  $('workspace-notice').textContent = health && selected && health.workspace === selected.workspace ? (health.warnings ?? []).join('\n') : '';
 }
 
 $('context-toggle').addEventListener('click', () => { contextExpanded = !contextExpanded; render(currentState); });
