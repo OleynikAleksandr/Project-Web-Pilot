@@ -168,6 +168,15 @@ export function windowsSetupInvocation(setupScript, workspace) {
   };
 }
 
+export function windowsTunnelSetupInvocation(connectScript, workingDirectory) {
+  return {
+    executable: 'powershell.exe',
+    args: ['-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command',
+      'Start-Process -FilePath $env:WEB_PILOT_TUNNEL_SCRIPT -WorkingDirectory $env:WEB_PILOT_TUNNEL_CWD -WindowStyle Normal'],
+    environment: { WEB_PILOT_TUNNEL_SCRIPT: connectScript, WEB_PILOT_TUNNEL_CWD: workingDirectory },
+  };
+}
+
 export async function sha256File(file) {
   const hash = createHash('sha256');
   await new Promise((resolve, reject) => {
@@ -218,6 +227,21 @@ export class WindowsRuntimeBootstrap {
     if (this.pending) return this.pending;
     this.pending = this.#ensure(workspace).finally(() => { this.pending = null; });
     return this.pending;
+  }
+
+  async launchTunnelSetup() {
+    if (this.platform !== 'win32') throw new WindowsRuntimeError('WINDOWS_ONLY', 'Настройка tunnel доступна только в Windows-сборке.');
+    const current = await this.inspect();
+    if (!current.installed || !(await exists(this.paths.connectScript))) {
+      throw new WindowsRuntimeError('WINDOWS_RUNTIME_NOT_INSTALLED', 'Сначала установите встроенный Windows runtime.');
+    }
+    const launch = windowsTunnelSetupInvocation(this.paths.connectScript, this.paths.folder);
+    await this.execute(launch.executable, launch.args, {
+      timeout: 15000, maxBuffer: 1024 * 1024,
+      env: { ...this.environment, ...launch.environment }, windowsHide: true,
+    });
+    this.#publish({ phase: 'tunnel-setup-launched', installed: true, error: null });
+    return { launched: true, folder: this.paths.folder };
   }
 
   async #ensure(workspace) {

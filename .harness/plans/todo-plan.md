@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 199,
+  "plan_revision": 201,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-context-observation-008",
@@ -393,8 +393,8 @@
         "suite"
       ],
       "expected_commit_message": "feat: добавить Windows tunnel onboarding",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-context-observation-008",
         "task_id": "T010",
@@ -525,7 +525,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-context-observation-008
 Current Task: нет
-Revision: 199
+Revision: 201
 
 ## Цель
 
@@ -580,8 +580,8 @@ Revision: 199
   - Git Commit: [DONE] feat: подключить bundled runtime Windows
   - Reference: web-pilot-context-observation-008 / T009 / implementation
   - Файлы: src/main.mjs, src/mcp-runtime.mjs, src/windows-runtime.mjs, tests/windows-runtime.test.mjs, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T010: Добавить безопасную команду настройки Windows tunnel — Ожидает
-  - Git Commit: [PENDING] feat: добавить Windows tunnel onboarding
+- [DONE] T010: Добавить безопасную команду настройки Windows tunnel — Завершено
+  - Git Commit: [DONE] feat: добавить Windows tunnel onboarding
   - Reference: web-pilot-context-observation-008 / T010 / implementation
   - Файлы: src/main.mjs, src/preload.cjs, src/windows-runtime.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T011: Показать Windows runtime onboarding в Settings — Ожидает

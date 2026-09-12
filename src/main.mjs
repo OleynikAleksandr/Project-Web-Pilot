@@ -144,7 +144,14 @@ function snapshot() {
     contextWindow: chromiumDiagnostics?.contextObservation() ?? { status: 'unknown' },
     planAcceptance: planAcceptance?.workspace === selected?.workspace && planAcceptance?.scopeId === selected?.scopeId
       && selected?.planView?.state === 'awaiting-acceptance' ? planAcceptance.state : null,
-    runtimeFolder, platform: process.platform, windowsRuntime: windowsRuntimeBootstrap?.snapshot() ?? null,
+    runtimeFolder, platform: process.platform, windowsRuntime: windowsRuntimeBootstrap ? {
+      ...windowsRuntimeBootstrap.snapshot(),
+      service: runtime?.lastStatus ? {
+        mcpReady: !!runtime.lastStatus.mcp?.ready,
+        tunnelReady: !!runtime.lastStatus.tunnel?.ready,
+        tunnelConfigured: !!runtime.lastStatus.tunnel?.configured,
+      } : null,
+    } : null,
     theme: shellTheme, hideToolCalls, sidebarWidth, sidebarMinWidth: SIDEBAR_MIN_WIDTH, pageLoading, startupError, storageError, setup: setupState, workspaceHealth, version: app.getVersion(), fixture: smoke };
 }
 
@@ -369,6 +376,18 @@ function registerIpc() {
     await saveSettings({ hideToolCalls: input });
     hideToolCalls = input;
     await applyToolCallVisibility();
+  });
+  registerAction('pilot:configure-windows-tunnel', async () => {
+    if (process.platform !== 'win32' || !windowsRuntimeBootstrap) throw new Error('Настройка Windows tunnel недоступна на этой платформе.');
+    await windowsRuntimeBootstrap.ensure(store.selected()?.workspace ?? os.homedir());
+    return windowsRuntimeBootstrap.launchTunnelSetup();
+  });
+  registerAction('pilot:refresh-windows-runtime', async () => {
+    if (process.platform !== 'win32' || !windowsRuntimeBootstrap) throw new Error('Windows runtime недоступен на этой платформе.');
+    await windowsRuntimeBootstrap.ensure(store.selected()?.workspace ?? os.homedir());
+    const status = await runtime.control('status');
+    startupError = null;
+    return { windowsRuntime: windowsRuntimeBootstrap.snapshot(), service: status };
   });
   registerAction('pilot:copy-workspace-path', async input => {
     const project = store.project(input);
