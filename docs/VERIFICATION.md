@@ -265,3 +265,7 @@ Electron smoke использует отдельную кликабельную 
 Electron smoke проверяет весь пользовательский путь через реальные кнопки Settings: строка «Вызываемый инструмент» скрыта по умолчанию, «Показывать» возвращает её без перезагрузки, «Скрывать» снова убирает, а новая строка, добавленная после загрузки, автоматически скрывается MutationObserver. После каждого переключения проверяется `settings.json`; удалённый fixture не получает `window.webPilot`.
 
 Финальная arm64-сборка T034 создана командой `npm run build` в `.harness/runtime/build/Project Web Pilot-darwin-arm64/Project Web Pilot.app`. SHA-256 `app.asar`: `41048e6693843624aea6bd99e4ade1052628ac453ecca7605e3914e77629a67a`, размер 185114 байт. Контрольный smoke завершился с `toolCallFilter=true`, `shellTheme=true` и `nativeTitlebarTheme=true`.
+
+## T035 — микрофон и геолокация
+
+Electron smoke проверяет чистую permission policy: `media` с `audio` для `https://chatgpt.com` разрешён, `video` и `audio+video` отклоняются; `geolocation` и `geolocation-approximate` разрешены; notifications и тот же audio-запрос с чужого origin отклоняются. Существующая проверка изоляции подтверждает отсутствие `window.webPilot`, Node и process в удалённом WebContents. Системные macOS privacy descriptions и финальная упакованная сборка проверяются отдельно в T036.

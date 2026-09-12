@@ -153,6 +153,22 @@ function remotePreferences() {
   return { partition, nodeIntegration: false, contextIsolation: true, sandbox: true, webSecurity: true };
 }
 
+function isChatGPTOrigin(value) {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' && url.hostname === 'chatgpt.com' && (!url.port || url.port === '443');
+  } catch { return false; }
+}
+
+function permissionAllowed(permission, origin, details = {}) {
+  if (!isChatGPTOrigin(origin)) return false;
+  if (permission === 'geolocation' || permission === 'geolocation-approximate') return true;
+  if (permission !== 'media') return false;
+  const mediaTypes = Array.isArray(details.mediaTypes) ? details.mediaTypes
+    : details.mediaType ? [details.mediaType] : [];
+  return mediaTypes.length > 0 && mediaTypes.every(type => type === 'audio');
+}
+
 function secureRemote(contents) {
   contents.on('will-navigate', (event, url) => { if (!url.startsWith('https://')) event.preventDefault(); });
   contents.setWindowOpenHandler(({ url }) => ({ action: url.startsWith('https://') ? 'allow' : 'deny',
@@ -418,7 +434,7 @@ async function createWindow() {
   interval = setInterval(() => { if (!pageLoading && !setupState && !settingsState) void controller.tick(); }, 1500);
   if (smoke) {
     await fixture.run({ app, window, browser: browser.webContents, sidebar: sidebar.webContents,
-      store, controller, selectWorkspace, snapshot, assertLocalSender, dataDir });
+      store, controller, selectWorkspace, snapshot, assertLocalSender, permissionAllowed, dataDir });
     window.close(); app.quit();
   } else { const current = store.selected(); if (current && !storageError && !settingsState) void selectWorkspace(current.workspace).catch(report); else void navigate(); }
 }
@@ -453,8 +469,14 @@ else {
       if (errors.length) { startupError = errors[0]; settingsState = { workspace: errors[0].workspace, deletion: null, notice: null }; }
     }
     const remoteSession = session.fromPartition(partition);
-    remoteSession.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
-    remoteSession.setPermissionCheckHandler(() => false);
+    remoteSession.setPermissionRequestHandler((contents, permission, callback, details) => {
+      const origin = details?.securityOrigin ?? details?.requestingUrl ?? contents.getURL();
+      callback(permissionAllowed(permission, origin, details));
+    });
+    remoteSession.setPermissionCheckHandler((_contents, permission, requestingOrigin, details) => {
+      const origin = details?.securityOrigin ?? requestingOrigin ?? details?.requestingUrl;
+      return permissionAllowed(permission, origin, details);
+    });
     installMenu();
     await createWindow();
   }).catch(error => {

@@ -316,3 +316,9 @@ Web Pilot хранит локальный флаг `hideToolCalls` в `settings.
 ### Переключатель фильтра в Settings — T034
 
 `src/ui/project-archive.mjs` отображает локальное состояние `hideToolCalls` двумя кнопками «Скрывать»/«Показывать» и отправляет только булеву команду через preload. Переключение применяется к уже открытому удалённому WebContents без навигации или перезагрузки. Настройка относится только к служебным строкам активности; содержимое сообщений, выполнение MCP/tools и изоляция ChatGPT не меняются.
+
+## Разрешения встроенного ChatGPT — T035
+
+Профиль `persist:chatgpt` больше не отклоняет все browser permissions безусловно. Главный процесс применяет единый allowlist только к точному HTTPS-origin `chatgpt.com`: `geolocation`/`geolocation-approximate` разрешены, а `media` разрешён лишь когда Electron сообщает исключительно `audio`. Любой запрос с `video`, смешанный audio+video, другой permission или другой origin отклоняется. Удалённая страница по-прежнему не получает preload или локальный IPC.
+
+Одинаковая политика используется в `setPermissionRequestHandler` и `setPermissionCheckHandler`, поскольку Electron требует оба обработчика для полного permission flow. Это разрешает веб-диктовку и location API, но не открывает камеру, screen capture, notifications либо другие возможности Chromium.

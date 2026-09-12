@@ -52,8 +52,16 @@ async function waitFor(predicate, description, snapshot) {
   throw new Error(`SMOKE_TIMEOUT: ${description}; ${JSON.stringify(snapshot?.())}`);
 }
 
-export async function run({ app, window, browser, sidebar, store, controller, selectWorkspace, snapshot, assertLocalSender, dataDir }) {
+export async function run({ app, window, browser, sidebar, store, controller, selectWorkspace, snapshot, assertLocalSender, permissionAllowed, dataDir }) {
   assert.equal(app.isPackaged, false, 'Fixtures never run from a packaged app');
+  assert.equal(permissionAllowed('media', 'https://chatgpt.com', { mediaTypes: ['audio'] }), true);
+  assert.equal(permissionAllowed('media', 'https://chatgpt.com/', { mediaType: 'audio' }), true);
+  assert.equal(permissionAllowed('media', 'https://chatgpt.com', { mediaTypes: ['video'] }), false);
+  assert.equal(permissionAllowed('media', 'https://chatgpt.com', { mediaTypes: ['audio', 'video'] }), false);
+  assert.equal(permissionAllowed('geolocation', 'https://chatgpt.com', {}), true);
+  assert.equal(permissionAllowed('geolocation-approximate', 'https://chatgpt.com', {}), true);
+  assert.equal(permissionAllowed('notifications', 'https://chatgpt.com', {}), false);
+  assert.equal(permissionAllowed('media', 'https://example.com', { mediaTypes: ['audio'] }), false);
   const workspace = path.join(await fs.realpath(dataDir + '-projects'), 'Тестовый проект с пробелами');
   await waitFor(() => sidebar.executeJavaScript('typeof window.webPilot === "object"'), 'local IPC ready', snapshot);
   const previewNew = async () => {
@@ -212,7 +220,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(packetLoads, 2, 'Archive, restore and deletion never send another packet');
   const result = { mode: 'isolated-fixture', electron: process.versions.electron, chromium: process.versions.chrome,
     views: window.contentView.children.length, secureRemote: true, sidebarIpc: true, archiveRestore: true, archiveRestart: true, deleteCancel: true, localDeletion: true, cloudChatPreserved: true, workspaceCreation: true, workspaceValidation: true, cancelPreservesSession: true, startupMessages: packetLoads,
-    restartKeepsSession: true, newChatCreatesSession: true, sessionTree: true, selectsEarlierSession: true, shellTheme: true, nativeTitlebarTheme: nativeTheme.shouldUseDarkColors, toolCallFilter: true, fullContextBytes: Buffer.byteLength(fixtureContext), liveChatGPT: false, agentToolsRequired: false };
+    restartKeepsSession: true, newChatCreatesSession: true, sessionTree: true, selectsEarlierSession: true, shellTheme: true, nativeTitlebarTheme: nativeTheme.shouldUseDarkColors, toolCallFilter: true, microphonePermission: true, geolocationPermission: true, cameraPermission: false, fullContextBytes: Buffer.byteLength(fixtureContext), liveChatGPT: false, agentToolsRequired: false };
   await fs.writeFile(path.join(dataDir, 'smoke-result.json'), JSON.stringify(result, null, 2));
   console.log(JSON.stringify(result));
 }

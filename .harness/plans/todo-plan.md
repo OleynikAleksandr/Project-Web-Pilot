@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 94,
+  "plan_revision": 96,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
@@ -1340,8 +1340,8 @@
         "Electron smoke проверяет разрешённые и запрещённые комбинации без ослабления remote isolation"
       ],
       "expected_commit_message": "feat: разрешить микрофон и геолокацию ChatGPT",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-prototype-001",
         "task_id": "T035",
@@ -1460,7 +1460,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 94
+Revision: 96
 
 ## Цель
 
@@ -1619,8 +1619,8 @@ Revision: 94
   - Git Commit: [DONE] feat: добавить настройку скрытия вызовов инструментов
   - Reference: web-pilot-prototype-001 / T034 / implementation
   - Файлы: src/ui/index.html, src/ui/project-archive.mjs, tests/electron-smoke.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T035: Разрешить микрофон и геолокацию ChatGPT — Ожидает
-  - Git Commit: [PENDING] feat: разрешить микрофон и геолокацию ChatGPT
+- [DONE] T035: Разрешить микрофон и геолокацию ChatGPT — Завершено
+  - Git Commit: [DONE] feat: разрешить микрофон и геолокацию ChatGPT
   - Reference: web-pilot-prototype-001 / T035 / implementation
   - Файлы: src/main.mjs, tests/electron-smoke.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T036: Добавить macOS privacy descriptions и пересобрать — Ожидает
