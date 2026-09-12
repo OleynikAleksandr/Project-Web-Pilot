@@ -4,19 +4,20 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 139,
+  "plan_revision": 140,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-plan-ui-003",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
-  "objective": "Сделать план самостоятельным пользовательским блоком сайдбара: показывать понятный статус текущего scope и полный список микрозадач с признаками выполнено, выполняется и ожидает; убрать из пользовательского интерфейса технический plan_revision и выпустить обновлённую macOS-сборку 0.6.0.",
+  "delivery_status": "IN_PROGRESS",
+  "objective": "Сделать план самостоятельным пользовательским блоком сайдбара: показывать понятный статус текущего scope и полный список микрозадач с признаками выполнено, выполняется и ожидает; убрать из пользовательского интерфейса технический plan_revision и выпустить обновлённую macOS-сборку 0.6.0. Кнопка «Принять» в карточке плана отправляет явную пользовательскую команду на штатное закрытие текущего scope и переход в NONE.",
   "acceptance_criteria": [
     "Блок План является самостоятельной карточкой сайдбара и не показывает plan_revision.",
     "Каждая микрозадача текущего scope отображается по имени и имеет понятный статус: ✓ выполнена, ● выполняется, ○ ожидает.",
     "Для активной работы показывается прогресс X из N выполнено; после завершения всех задач явно показывается ожидание приёмки пользователя.",
     "После архивирования scope интерфейс отличает завершённый scope от проекта, в котором план ещё никогда не создавался.",
-    "Обновлённая macOS arm64 сборка версии 0.6.0 проходит Node suite и Electron smoke и готова к пользовательской проверке."
+    "Обновлённая macOS arm64 сборка версии 0.6.0 проходит Node suite и Electron smoke и готова к пользовательской проверке.",
+    "В карточке План справа есть кнопка «Принять», активная только при ожидании приёмки; она безопасно отправляет явную пользовательскую команду закрыть scope и оставить проект в NONE."
   ],
   "approved_scope": {
     "functional_paths": [
@@ -26,7 +27,11 @@
       "src/ui/sidebar.mjs",
       "tests/electron-smoke.mjs",
       "package.json",
-      "package-lock.json"
+      "package-lock.json",
+      "src/chatgpt-composer.mjs",
+      "src/preload.cjs",
+      "src/main.mjs",
+      "tests/chatgpt-composer.test.mjs"
     ],
     "documentation_paths": [
       "docs/PRODUCT.md",
@@ -185,6 +190,107 @@
         "task_id": "T004",
         "role": "implementation"
       }
+    },
+    {
+      "id": "T005",
+      "title": "Добавить безопасную отправку пользовательской команды приёмки",
+      "why": "Кнопка должна отправлять обычное пользовательское сообщение через видимый composer без служебного marker в тексте",
+      "dependencies": [
+        "T004"
+      ],
+      "functional_paths": [
+        "src/chatgpt-composer.mjs",
+        "tests/chatgpt-composer.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "acceptance_criteria": [
+        "Composer отправляет обычный текст только при пустом доступном поле и отсутствии генерации",
+        "Успех подтверждается увеличением числа пользовательских сообщений после click, без request-id в тексте",
+        "Черновик, генерация, недоступный Send и смена чата не приводят к скрытой повторной отправке"
+      ],
+      "verification_ids": [
+        "composer",
+        "suite"
+      ],
+      "expected_commit_message": "feat: безопасно отправлять команду приёмки плана",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "web-pilot-plan-ui-003",
+        "task_id": "T005",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T006",
+      "title": "Добавить кнопку Принять в карточку плана",
+      "why": "Пользователь должен принимать полностью выполненный scope одним явным действием без ручного набора текста",
+      "dependencies": [
+        "T005"
+      ],
+      "functional_paths": [
+        "src/main.mjs",
+        "src/preload.cjs",
+        "src/ui/index.html"
+      ],
+      "documentation_paths": [
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "acceptance_criteria": [
+        "Кнопка находится справа от заголовка План и активна только при awaiting-acceptance",
+        "Main повторно проверяет выбранный workspace и фактический awaiting-acceptance перед отправкой",
+        "Команда в чат явно просит архивировать текущий scope и оставить Workflow Kit в NONE; при черновике/ответе пользователь получает понятный отказ"
+      ],
+      "verification_ids": [
+        "syntax",
+        "suite"
+      ],
+      "expected_commit_message": "feat: добавить приёмку плана из sidebar",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "web-pilot-plan-ui-003",
+        "task_id": "T006",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T007",
+      "title": "Проверить кнопку приёмки и пересобрать 0.6.0",
+      "why": "Закрепить реальный путь кнопка → ChatGPT message и подготовить обновлённую сборку",
+      "dependencies": [
+        "T006"
+      ],
+      "functional_paths": [
+        "src/ui/sidebar.mjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "README.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md"
+      ],
+      "acceptance_criteria": [
+        "Smoke проверяет disabled вне awaiting-acceptance, активную кнопку в ready state и точный текст нового user message",
+        "После отправки кнопка не позволяет повторить команду до смены lifecycle",
+        "Финальная 0.6.0 arm64 сборка пересобрана, suite/smoke проходят, репозиторий чистый"
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "expected_commit_message": "test: проверить приёмку плана из sidebar",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "web-pilot-plan-ui-003",
+        "task_id": "T007",
+        "role": "implementation"
+      }
     }
   ],
   "blocked_reason": null,
@@ -193,6 +299,11 @@
       "id": "5883b46a-4da8-4878-b699-00e08c6201cf",
       "text": "12.09.2026 пользователь полностью согласовал самостоятельный блок План со списком микрозадач и статусами и поручил составить новый план и выполнить его в новом релизе.",
       "recorded_at": "2026-09-12T09:14:51.993Z"
+    },
+    {
+      "id": "plan-accept-button-20260912",
+      "text": "12.09.2026 пользователь поручил добавить справа в карточке План кнопку «Принять», активную при ожидании приёмки. Кнопка должна отправлять обычное пользовательское сообщение с явной командой закрыть текущий scope и оставить проект в пустом состоянии NONE для следующего плана.",
+      "recorded_at": "2026-09-12T09:46:44Z"
     }
   ]
 }
@@ -202,14 +313,14 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: web-pilot-plan-ui-003
 Current Task: нет
-Revision: 139
+Revision: 140
 
 ## Цель
 
-Сделать план самостоятельным пользовательским блоком сайдбара: показывать понятный статус текущего scope и полный список микрозадач с признаками выполнено, выполняется и ожидает; убрать из пользовательского интерфейса технический plan_revision и выпустить обновлённую macOS-сборку 0.6.0.
+Сделать план самостоятельным пользовательским блоком сайдбара: показывать понятный статус текущего scope и полный список микрозадач с признаками выполнено, выполняется и ожидает; убрать из пользовательского интерфейса технический plan_revision и выпустить обновлённую macOS-сборку 0.6.0. Кнопка «Принять» в карточке плана отправляет явную пользовательскую команду на штатное закрытие текущего scope и переход в NONE.
 
 ## Критерии приёмки
 
@@ -218,6 +329,7 @@ Revision: 139
 - Для активной работы показывается прогресс X из N выполнено; после завершения всех задач явно показывается ожидание приёмки пользователя.
 - После архивирования scope интерфейс отличает завершённый scope от проекта, в котором план ещё никогда не создавался.
 - Обновлённая macOS arm64 сборка версии 0.6.0 проходит Node suite и Electron smoke и готова к пользовательской проверке.
+- В карточке План справа есть кнопка «Принять», активная только при ожидании приёмки; она безопасно отправляет явную пользовательскую команду закрыть scope и оставить проект в NONE.
 
 ## Микрозадачи
 
@@ -237,6 +349,18 @@ Revision: 139
   - Git Commit: [DONE] release: собрать Project Web Pilot 0.6.0
   - Reference: web-pilot-plan-ui-003 / T004 / implementation
   - Файлы: package.json, package-lock.json, src/ui/index.html, README.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md
+- [TODO] T005: Добавить безопасную отправку пользовательской команды приёмки — Ожидает
+  - Git Commit: [PENDING] feat: безопасно отправлять команду приёмки плана
+  - Reference: web-pilot-plan-ui-003 / T005 / implementation
+  - Файлы: src/chatgpt-composer.mjs, tests/chatgpt-composer.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+- [TODO] T006: Добавить кнопку Принять в карточку плана — Ожидает
+  - Git Commit: [PENDING] feat: добавить приёмку плана из sidebar
+  - Reference: web-pilot-plan-ui-003 / T006 / implementation
+  - Файлы: src/main.mjs, src/preload.cjs, src/ui/index.html, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+- [TODO] T007: Проверить кнопку приёмки и пересобрать 0.6.0 — Ожидает
+  - Git Commit: [PENDING] test: проверить приёмку плана из sidebar
+  - Reference: web-pilot-plan-ui-003 / T007 / implementation
+  - Файлы: src/ui/sidebar.mjs, tests/electron-smoke.mjs, README.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md
 
 ## Context Pack For This Cycle
 
