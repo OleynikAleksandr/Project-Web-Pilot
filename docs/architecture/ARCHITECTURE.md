@@ -401,3 +401,8 @@ Renderer использует уже существующий `planView.state=cl
 ## Scope-bound приёмка — scope 004 / T002
 
 Transient `planAcceptance` теперь хранит `scopeId` вместе с workspace. Sidebar получает `sending/sent/unknown` только когда совпадают и workspace, и текущий `scopeId`; поэтому подтверждение предыдущего scope не может заблокировать кнопку «Принять» в следующем scope того же проекта. Main использует тот же `scopeId` для дедупликации повторного клика.
+
+## Безопасный Chromium diagnostics — scope 005 / T001
+
+`src/chromium-diagnostics.mjs` содержит независимый от UI диагностический слой. `DiagnosticJsonl` сериализует JSONL-запись и ротирует основной файл при достижении лимита, сохраняя одну предыдущую копию. `safeUrl()` удаляет fragment и значения query-параметров и маскирует длинные/UUID path-segments. `payloadMetadata()` никогда не сохраняет исходный WebSocket/SSE payload: только byte length, SHA-256, top-level JSON keys и ограниченный набор безопасных identifier-полей. `ChromiumDiagnostics` умеет принимать native WebContents/CDP события и безопасные DOM pulses; подключение к production WebContents выполняется отдельной задачей T002.
+

@@ -354,3 +354,8 @@ Electron smoke после READY_FOR_ACCEPTANCE переводит fixture-plan �
 ## Scope 004 / T002 — новый scope после принятого
 
 Electron smoke воспроизводит последовательность: scope A в READY_FOR_ACCEPTANCE → команда приёмки подтверждена (`sent`) → A переходит в closed → появляется scope B в READY_FOR_ACCEPTANCE. Для scope B `planAcceptance` обязан быть `null`, кнопка снова показывает «Принять» и активна.
+
+## Scope 005 / T001 — безопасный журнал Chromium
+
+`tests/chromium-diagnostics.test.mjs` проверяет, что URL не содержит query values/fragment и маскирует UUID, JSON/SSE metadata не содержит приватный текст или token values, но сохраняет структурные event identifiers, а JSONL-ротация оставляет валидные ограниченные файлы.
+

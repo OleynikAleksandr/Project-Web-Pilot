@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 158,
+  "plan_revision": 160,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-compact-diagnostics-005",
@@ -83,8 +83,8 @@
         "Unit tests проверяют redaction, payload metadata и rotation."
       ],
       "expected_commit_message": "feat: добавить безопасный Chromium diagnostics log",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-compact-diagnostics-005",
         "task_id": "T001",
@@ -146,7 +146,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-compact-diagnostics-005
 Current Task: нет
-Revision: 158
+Revision: 160
 
 ## Цель
 
@@ -162,8 +162,8 @@ Revision: 158
 
 ## Микрозадачи
 
-- [TODO] T001: Реализовать безопасный журнал Chromium — Ожидает
-  - Git Commit: [PENDING] feat: добавить безопасный Chromium diagnostics log
+- [DONE] T001: Реализовать безопасный журнал Chromium — Завершено
+  - Git Commit: [DONE] feat: добавить безопасный Chromium diagnostics log
   - Reference: web-pilot-compact-diagnostics-005 / T001 / implementation
   - Файлы: src/chromium-diagnostics.mjs, tests/chromium-diagnostics.test.mjs, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T002: Подключить diagnostics к ChatGPT WebContents — Ожидает
