@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 170,
+  "plan_revision": 171,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-context-window-indicator-007",
@@ -42,7 +42,7 @@
       {
         "path": "docs/PRODUCT.md",
         "heading_path": [
-          "Целевая context telemetry — scope 006"
+          "Продукт"
         ],
         "required": true,
         "revision": "WORKTREE"
@@ -50,7 +50,7 @@
       {
         "path": "docs/architecture/ARCHITECTURE.md",
         "heading_path": [
-          "ChatGPT stream telemetry — scope 006 / T002"
+          "Архитектура"
         ],
         "required": true,
         "revision": "WORKTREE"
@@ -178,7 +178,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-context-window-indicator-007
 Current Task: нет
-Revision: 170
+Revision: 171
 
 ## Цель
 
@@ -209,7 +209,7 @@ Revision: 170
 
 ## Context Pack For This Cycle
 
-- docs/PRODUCT.md → Целевая context telemetry — scope 006
-- docs/architecture/ARCHITECTURE.md → ChatGPT stream telemetry — scope 006 / T002
+- docs/PRODUCT.md → Продукт
+- docs/architecture/ARCHITECTURE.md → Архитектура
 
 Служебные состояния меняются только командами workflow. Приёмка не архивирует scope.
