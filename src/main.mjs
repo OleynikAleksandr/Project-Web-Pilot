@@ -24,6 +24,9 @@ const partition = smoke ? 'web-pilot-smoke' : 'persist:chatgpt';
 let runtimeFolder = path.join(os.homedir(), 'VSCODE/Codex Local Mac/mac-codex-local');
 let shellTheme = 'light';
 let hideToolCalls = true;
+const SIDEBAR_MIN_WIDTH = 312;
+const BROWSER_MIN_WIDTH = 600;
+let sidebarWidth = SIDEBAR_MIN_WIDTH;
 let window, browser, sidebar, runtime, controller, interval, fixture;
 let navigationId = 0;
 let pageLoading = false;
@@ -89,7 +92,7 @@ async function applyToolCallVisibility() {
 }
 
 async function saveSettings(overrides = {}) {
-  const settings = { runtimeFolder, shellTheme, hideToolCalls, ...overrides };
+  const settings = { runtimeFolder, shellTheme, hideToolCalls, sidebarWidth, ...overrides };
   await fsp.mkdir(dataDir, { recursive: true, mode: 0o700 });
   await fsp.writeFile(settingsFile + '.tmp', JSON.stringify(settings, null, 2) + '\n', { mode: 0o600 });
   await fsp.rename(settingsFile + '.tmp', settingsFile);
@@ -119,7 +122,7 @@ function snapshot() {
       workspace, projectId, name, archivedAt, sessionCount: sessions.length, deletionPending: deletion?.isPending(workspace) ?? false,
     })), settings: settingsState,
     selected, context: controller?.state ?? { phase: 'selected', servicesReady: false, messageSent: false },
-    runtimeFolder, theme: shellTheme, hideToolCalls, pageLoading, startupError, storageError, setup: setupState, workspaceHealth, version: app.getVersion(), fixture: smoke };
+    runtimeFolder, theme: shellTheme, hideToolCalls, sidebarWidth, sidebarMinWidth: SIDEBAR_MIN_WIDTH, pageLoading, startupError, storageError, setup: setupState, workspaceHealth, version: app.getVersion(), fixture: smoke };
 }
 
 function publish() {
@@ -176,12 +179,18 @@ function secureRemote(contents) {
   contents.on('did-create-window', child => secureRemote(child.webContents));
 }
 
+function clampedSidebarWidth(value = sidebarWidth) {
+  const windowWidth = window && !window.isDestroyed() ? window.getContentSize()[0] : 1440;
+  const max = Math.max(SIDEBAR_MIN_WIDTH, windowWidth - BROWSER_MIN_WIDTH);
+  return Math.max(SIDEBAR_MIN_WIDTH, Math.min(max, Math.round(Number(value) || SIDEBAR_MIN_WIDTH)));
+}
+
 function layout() {
   if (!window || window.isDestroyed()) return;
   const [width, height] = window.getContentSize();
-  const sidebarWidth = 312;
-  sidebar.setBounds({ x: 0, y: 0, width: sidebarWidth, height });
-  browser.setBounds({ x: sidebarWidth, y: 0, width: Math.max(0, width - sidebarWidth), height });
+  const effectiveSidebarWidth = clampedSidebarWidth();
+  sidebar.setBounds({ x: 0, y: 0, width: effectiveSidebarWidth, height });
+  browser.setBounds({ x: effectiveSidebarWidth, y: 0, width: Math.max(0, width - effectiveSidebarWidth), height });
 }
 
 function assertLocalSender(event) {
@@ -259,6 +268,14 @@ function registerIpc() {
   ipcMain.handle('pilot:get-state', event => { assertLocalSender(event); return snapshot(); });
   registerAction('pilot:open-settings', () => openSettings());
   registerAction('pilot:close-settings', closeSettings);
+  registerAction('pilot:set-sidebar-width', async input => {
+    if (!Number.isFinite(input)) throw new Error('Некорректная ширина сайдбара.');
+    const next = clampedSidebarWidth(input);
+    if (next === sidebarWidth) { layout(); return next; }
+    sidebarWidth = next; layout();
+    await saveSettings({ sidebarWidth: next });
+    return next;
+  });
   registerAction('pilot:set-theme', async input => {
     if (!['light', 'dark'].includes(input)) throw new Error('Неизвестная тема оформления.');
     if (input === shellTheme) return;
@@ -460,6 +477,7 @@ else {
       if (typeof settings.runtimeFolder === 'string' && path.isAbsolute(settings.runtimeFolder)) runtimeFolder = settings.runtimeFolder;
       if (['light', 'dark'].includes(settings.shellTheme)) shellTheme = settings.shellTheme;
       if (typeof settings.hideToolCalls === 'boolean') hideToolCalls = settings.hideToolCalls;
+      if (Number.isFinite(settings.sidebarWidth)) sidebarWidth = Math.max(SIDEBAR_MIN_WIDTH, Math.round(settings.sidebarWidth));
     } catch (error) { if (error.code !== 'ENOENT') startupError = { code: 'SETTINGS_INVALID', message: 'Не удалось прочитать локальные настройки Web Pilot. Проверьте настройки подключения.' }; }
     applyShellTheme(shellTheme);
     try { await store.load(); } catch (error) { startupError = publicError(error); storageError = true; }

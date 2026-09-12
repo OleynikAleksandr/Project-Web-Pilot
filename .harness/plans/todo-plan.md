@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 104,
+  "plan_revision": 106,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-layout-archive-002",
@@ -168,8 +168,8 @@
         "При сужении окна сохраняется минимальная полезная ширина Chromium"
       ],
       "expected_commit_message": "feat: сохранять ширину сайдбара",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-layout-archive-002",
         "task_id": "T003",
@@ -335,7 +335,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-layout-archive-002
 Current Task: нет
-Revision: 104
+Revision: 106
 
 ## Цель
 
@@ -361,8 +361,8 @@ Revision: 104
   - Git Commit: [DONE] feat: забывать выбранные архивные проекты
   - Reference: web-pilot-layout-archive-002 / T002 / implementation
   - Файлы: src/workspace-session.mjs, tests/workspace-session.test.mjs, docs/PROJECT_ARCHIVE.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T003: Сохранять регулируемую ширину сайдбара — Ожидает
-  - Git Commit: [PENDING] feat: сохранять ширину сайдбара
+- [DONE] T003: Сохранять регулируемую ширину сайдбара — Завершено
+  - Git Commit: [DONE] feat: сохранять ширину сайдбара
   - Reference: web-pilot-layout-archive-002 / T003 / implementation
   - Файлы: src/main.mjs, src/preload.cjs, tests/electron-smoke.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T004: Добавить перетаскиваемую границу в sidebar — Ожидает

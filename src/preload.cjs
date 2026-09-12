@@ -2,6 +2,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('webPilot', Object.freeze({
   openSettings: () => ipcRenderer.invoke('pilot:open-settings'),
   closeSettings: () => ipcRenderer.invoke('pilot:close-settings'),
+  setSidebarWidth: width => ipcRenderer.invoke('pilot:set-sidebar-width', width),
   setTheme: theme => ipcRenderer.invoke('pilot:set-theme', theme),
   setHideToolCalls: value => ipcRenderer.invoke('pilot:set-hide-tool-calls', value),
   archiveProject: workspace => ipcRenderer.invoke('pilot:archive-project', workspace),
