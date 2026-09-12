@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 175,
+  "plan_revision": 177,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-context-window-indicator-007",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Найти фактические служебные данные контекстного окна ChatGPT Web в Chromium-потоке и вывести в левом сайдбаре индикатор заполнения, не сохраняя текст разговора и не подменяя реальные данные оценкой.",
   "acceptance_criteria": [
     "Diagnostics безопасно обнаруживает candidate key paths и числовые token/context/usage/window значения внутри реальных ChatGPT Web stream-item/SSE без сохранения текста сообщений.",
@@ -151,8 +151,8 @@
         "Electron smoke проверяет known и unknown representation; macOS arm64 build создан."
       ],
       "expected_commit_message": "feat: показать context window в sidebar",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-context-window-indicator-007",
         "task_id": "T003",
@@ -175,10 +175,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: web-pilot-context-window-indicator-007
 Current Task: нет
-Revision: 175
+Revision: 177
 
 ## Цель
 
@@ -202,8 +202,8 @@ Revision: 175
   - Git Commit: [DONE] feat: публиковать состояние context window
   - Reference: web-pilot-context-window-indicator-007 / T002 / implementation
   - Файлы: src/chromium-diagnostics.mjs, src/main.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T003: Показать индикатор контекстного окна в sidebar — Ожидает
-  - Git Commit: [PENDING] feat: показать context window в sidebar
+- [DONE] T003: Показать индикатор контекстного окна в sidebar — Завершено
+  - Git Commit: [DONE] feat: показать context window в sidebar
   - Reference: web-pilot-context-window-indicator-007 / T003 / implementation
   - Файлы: src/ui/index.html, src/ui/sidebar.mjs, tests/electron-smoke.mjs, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md
 

@@ -59,3 +59,5 @@
 
 С scope 006 диагностический файл `~/Library/Application Support/Project Web Pilot/diagnostics/chromium-events.jsonl` содержит отдельные записи `source=telemetry,event=context`, если ChatGPT Web передал распознаваемые context/token metadata. Поля `inputTokens`, `modelContextWindow` и `usedPercent` позволяют построить временную серию; `compactSignal=direct` означает найденный прямой marker, `token-reset`/`token-drop` — только сильный косвенный признак. До подтверждения на реальном ChatGPT Web эти события используются для наблюдения и анализа, но не инициируют автоматическую отправку обновлённого project context.
 
+С scope 007 sidebar отображает последнее подтверждённое наблюдение как «Контекстное окно». Если фактическая пара usage/window пока не найдена, показывается «Ожидаем данные» без процента. Для исследования отличающихся Web-схем diagnostic parser также записывает безопасные candidate key paths и числовые значения вне текстовых content-поддеревьев. После установки новой сборки следующий обычный ответ ChatGPT используется для поиска этих кандидатов; найденные имена затем можно сопоставить с input/window semantics без чтения текста разговора.
+

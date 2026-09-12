@@ -379,3 +379,7 @@ Electron smoke поднимает изолированный `https` fixture, г
 
 `ChromiumDiagnostics` хранит `latestContextObservation` отдельно от JSONL. Контракт допускает `known` только при одновременно подтверждённых положительных `inputTokens` и `modelContextWindow`; candidate discovery без подтверждённой пары не создаёт процента. Main передаёт `contextWindow` через уже существующий локальный snapshot sidebar. Синтаксические проверки `src/chromium-diagnostics.mjs` и `src/main.mjs` обязательны; end-to-end отображение known/unknown проверяется Electron smoke в T003.
 
+## Scope 007 / T003 — индикатор context window
+
+Electron smoke сначала требует `contextWindow.status=unknown`, текст «Ожидаем данные» и скрытый progressbar. Затем fixture делает настоящий Chromium `fetch('/backend-api/f/conversation')`; CDP извлекает тестовые `229043 / 258400`, main snapshot становится `known`, а sidebar обязан показать `229K / 258K · 88,6%`, открыть progressbar и поставить `aria-valuenow=88.6`. Диагностические privacy-проверки scope 006 остаются активными.
+

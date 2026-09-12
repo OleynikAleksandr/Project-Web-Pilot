@@ -426,3 +426,7 @@ Transient `planAcceptance` теперь хранит `scopeId` вместе с w
 
 `ChromiumDiagnostics.contextObservation()` возвращает только локальный безопасный state. `known` создаётся исключительно когда в фактической telemetry одновременно найдены положительные `inputTokens` и `modelContextWindow`; тогда сохраняются также `usedPercent`, origin, время наблюдения и compact signal. Candidate keys сами по себе не превращаются в known-state. При прямом compact без новой пары usage/window состояние становится `unknown`; при main-frame navigation также очищаются предыдущий usage и observation, поэтому значение одного чата не переносится в другой. Main добавляет этот state в обычный sidebar snapshot и публикует изменение через существующий локальный канал; удалённый ChatGPT не получает IPC.
 
+## Sidebar context-window indicator — scope 007 / T003
+
+Локальный renderer получает только `state.contextWindow` из main snapshot. При `status=known` карточка «Контекстное окно» показывает компактные значения `inputTokens / modelContextWindow`, подтверждённый `usedPercent` и progressbar с тем же значением. При `unknown` выводится только «Ожидаем данные», а progressbar скрыт; renderer не читает JSONL и не имеет доступа к CDP/WebSocket/SSE payload. Навигационный reset из T002 тем самым немедленно убирает устаревший процент из UI.
+

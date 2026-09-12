@@ -95,3 +95,7 @@ Project Web Pilot пассивно накапливает диагностиче
 
 Chromium diagnostics теперь ориентирован не только на общий forensic log, но и на конкретные server-side признаки контекстного окна. Для WebSocket и `POST /backend-api/f/conversation` (`text/event-stream`) Web Pilot в памяти ищет безопасные token/context поля и markers, подтверждённые на нативных Codex JSONL: `token_count`, `last_token_usage`, `input_tokens`, `model_context_window`, `compacted`, `ContextCompaction` и наличие `compaction_response_id`. В журнал записываются только числовая telemetry и признаки событий; сырой SSE/WebSocket payload, текст сообщений и summary не сохраняются. Этот scope по-прежнему не запускает автоматическое «Обновить контекст»: сначала требуется реальное наблюдение сигнала ChatGPT Web.
 
+## Индикатор контекстного окна — scope 007
+
+В левом sidebar есть отдельный компактный индикатор «Контекстное окно». Он показывает процент и пару «использовано / окно» только когда Chromium diagnostics получил от ChatGPT Web подтверждённые числовые `inputTokens` и `modelContextWindow`; никакой локальной оценки по длине переписки не подставляется. Пока серверная пара не обнаружена, пользователь видит «Ожидаем данные» без фиктивной полосы. При навигации на другой чат наблюдение сбрасывается. Для поиска отличающихся Web-названий parser дополнительно сохраняет только безопасные пути ключей и числовые candidate values вне message/content-поддеревьев. Auto-compact в этом scope остаётся наблюдаемым событием и ещё не запускает автоматический refresh контекста.
+
