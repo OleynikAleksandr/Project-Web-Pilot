@@ -450,3 +450,7 @@ Raw-эксперимент подтвердил транспорт `conversation
 ## Platform boundary main/build — scope 008 / T006
 
 Главный процесс больше не формирует путь `Codex Local Mac/mac-codex-local` самостоятельно: `defaultRuntimeFolder(home, platform)` возвращает platform-specific convention, а дальнейшая runtime-логика остаётся общей. `package.json` разделяет `build:mac` и `build:win`; `npm run build` сохраняет прежний macOS arm64 alias. `build:win` создаёт Electron win32-x64 package с теми же `src` и `resources`, но без macOS `extend-info`. Успешная cross-package сборка на macOS доказывает только отсутствие packaging blockers; отдельный Windows MCP/runtime, desktop automation и физический запуск на Windows остаются будущей задачей.
+
+## Канонический Windows runtime payload — scope 008 / T007
+
+Windows-версия Web Pilot поставляет один immutable payload `Windows-Codex-Local-2026-09-10.zip`, скопированный побайтно из соседнего Codex Local workspace в ignored build-cache `.harness/runtime/windows-payload/`. Workflow Kit ограничивает task snapshot 16 MiB, поэтому 82 MiB ZIP не хранится в обычном Git worktree; tracked `.sha256` фиксирует `1f041488ad97d8abf1984fd3521afb8abe15f50b8df3d3e11f1cc4248e019d98`. В Git пакет не распаковывается: bootstrap следующей задачи проверяет hash до извлечения и разворачивает runtime только в пользовательский writable каталог Windows. Это отделяет upstream snapshot от состояния установки (`.venv`, tools, DPAPI secrets, logs) и позволяет заменять runtime новой версией без смешивания исходников приложения с локальным состоянием.

@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 191,
+  "plan_revision": 193,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-context-observation-008",
@@ -291,8 +291,8 @@
       ],
       "verification_ids": [],
       "expected_commit_message": "build: встроить Windows Codex Local runtime",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-context-observation-008",
         "task_id": "T007",
@@ -524,7 +524,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-context-observation-008
 Current Task: нет
-Revision: 191
+Revision: 193
 
 ## Цель
 
@@ -567,8 +567,8 @@ Revision: 191
   - Git Commit: [DONE] refactor: подготовить platform boundary приложения
   - Reference: web-pilot-context-observation-008 / T006 / implementation
   - Файлы: src/platform.mjs, src/main.mjs, package.json, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T007: Встроить канонический Codex Local Windows payload — Ожидает
-  - Git Commit: [PENDING] build: встроить Windows Codex Local runtime
+- [DONE] T007: Встроить канонический Codex Local Windows payload — Завершено
+  - Git Commit: [DONE] build: встроить Windows Codex Local runtime
   - Reference: web-pilot-context-observation-008 / T007 / implementation
   - Файлы: windows-runtime/Windows-Codex-Local-2026-09-10.zip, windows-runtime/Windows-Codex-Local-2026-09-10.zip.sha256, docs/SOURCE_WORKSPACES.md, docs/architecture/ARCHITECTURE.md
 - [TODO] T008: Автоматизировать установку Windows runtime — Ожидает
