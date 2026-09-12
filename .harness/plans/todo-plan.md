@@ -4,19 +4,22 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 190,
+  "plan_revision": 191,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-context-observation-008",
   "execution_scope_status": "ACTIVE",
   "delivery_status": "IN_PROGRESS",
-  "objective": "Продолжать реальное наблюдение ChatGPT Web до обнаружения фактического context window и auto-compact: безопасно раскрыть служебные вложенные JSON-envelope WebSocket stream-item и анализировать только структурную/числовую telemetry без текста разговора. Параллельно отделить platform-specific runtime/build слой, чтобы будущая Windows 10/11 версия переиспользовала тот же Chromium/UI/workflow-код.",
+  "objective": "Продолжать наблюдение ChatGPT Web до реального auto-compact и параллельно довести Project Web Pilot до самодостаточной Windows 10/11 x64 версии: тот же Electron/Chromium/UI/Workflow Kit, встроенный Codex Local Windows runtime, автоматическая локальная установка и безопасная настройка tunnel.",
   "acceptance_criteria": [
     "Подтверждён фактический источник context-window данных либо зафиксировано, какие наблюдаемые transport-слои их не содержат.",
     "Вложенные JSON-envelope WebSocket/SSE разбираются только для служебной структуры; пользовательский текст и произвольные string values не сохраняются.",
     "При обнаружении фактических input/window значений существующий sidebar-индикатор показывает их без оценочной подстановки.",
     "Scope остаётся активным до реального наблюдения auto-compact или отдельного решения пользователя изменить границы исследования.",
-    "macOS-поведение после platform-refactor не меняется; runtime/Node/build различия централизованы и имеют Windows layout tests."
+    "macOS-поведение не меняется; Windows 10/11 x64 package включает проверенный Codex Local Windows runtime и не требует отдельного копирования runtime.",
+    "На первом Windows запуске runtime разворачивается в userData, проверяется по SHA-256 и подготавливает приватный Python/Git/ripgrep/tunnel без admin installation.",
+    "Tunnel secret настраивается только локально в Windows console/DPAPI и не проходит через ChatGPT или renderer IPC.",
+    "Windows build проходит cross-package/static tests на Mac и остаётся на live-acceptance до проверки пользователем на настоящем Windows 10/11 ПК."
   ],
   "approved_scope": {
     "functional_paths": [
@@ -29,13 +32,22 @@
       "src/workspace-setup.mjs",
       "tests/workspace-setup.test.mjs",
       "src/main.mjs",
-      "package.json"
+      "package.json",
+      "windows-runtime/Windows-Codex-Local-2026-09-10.zip",
+      "windows-runtime/Windows-Codex-Local-2026-09-10.zip.sha256",
+      "src/windows-runtime.mjs",
+      "tests/windows-runtime.test.mjs",
+      "src/preload.cjs",
+      "src/ui/index.html",
+      "src/ui/project-archive.mjs",
+      "scripts/verify-windows-package.mjs"
     ],
     "documentation_paths": [
       "docs/PRODUCT.md",
       "docs/architecture/ARCHITECTURE.md",
       "docs/VERIFICATION.md",
-      "docs/WORKFLOW_START.md"
+      "docs/WORKFLOW_START.md",
+      "docs/SOURCE_WORKSPACES.md"
     ],
     "max_functional_files_per_task": 3
   },
@@ -257,6 +269,231 @@
         "task_id": "T006",
         "role": "implementation"
       }
+    },
+    {
+      "id": "T007",
+      "title": "Встроить канонический Codex Local Windows payload",
+      "why": "Windows Web Pilot должен поставляться с тем же проверенным Windows runtime, а не требовать отдельного скачивания.",
+      "dependencies": [
+        "T006"
+      ],
+      "functional_paths": [
+        "windows-runtime/Windows-Codex-Local-2026-09-10.zip",
+        "windows-runtime/Windows-Codex-Local-2026-09-10.zip.sha256"
+      ],
+      "documentation_paths": [
+        "docs/SOURCE_WORKSPACES.md",
+        "docs/architecture/ARCHITECTURE.md"
+      ],
+      "acceptance_criteria": [
+        "ZIP совпадает с каноническим соседним Windows-Codex-Local snapshot по SHA-256.",
+        "Происхождение, размер и hash зафиксированы; payload не распаковывается в Git."
+      ],
+      "verification_ids": [],
+      "expected_commit_message": "build: встроить Windows Codex Local runtime",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "web-pilot-context-observation-008",
+        "task_id": "T007",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T008",
+      "title": "Автоматизировать установку Windows runtime",
+      "why": "На Windows приложение должно само развернуть встроенный runtime в userData и подготовить его до первого MCP запуска.",
+      "dependencies": [
+        "T007"
+      ],
+      "functional_paths": [
+        "src/windows-runtime.mjs",
+        "src/platform.mjs",
+        "tests/windows-runtime.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "acceptance_criteria": [
+        "Bootstrap проверяет SHA-256 payload, распаковывает только ожидаемый top-level folder и не пишет в Program Files.",
+        "Установка выполняется PowerShell setup.ps1 в userData runtime и переиспользует уже установленный matching payload.",
+        "Tests покрывают paths/hash/commands для win32 без исполнения Windows API на Mac."
+      ],
+      "verification_ids": [
+        "suite"
+      ],
+      "expected_commit_message": "feat: автоматически готовить Windows runtime",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "web-pilot-context-observation-008",
+        "task_id": "T008",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T009",
+      "title": "Подключить bundled runtime к Windows lifecycle",
+      "why": "McpRuntime должен на Windows автоматически bootstrap-ить встроенный runtime перед status/start.",
+      "dependencies": [
+        "T008"
+      ],
+      "functional_paths": [
+        "src/main.mjs",
+        "src/mcp-runtime.mjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "docs/PRODUCT.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "acceptance_criteria": [
+        "Windows main выбирает installed bundled runtime по умолчанию и не требует ручного выбора папки.",
+        "Bootstrap выполняется до control status/start; macOS путь не меняется.",
+        "Electron smoke и suite сохраняют существующее macOS поведение."
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "expected_commit_message": "feat: подключить bundled runtime Windows",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "web-pilot-context-observation-008",
+        "task_id": "T009",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T010",
+      "title": "Добавить безопасную команду настройки Windows tunnel",
+      "why": "Пользователь должен выполнить обязательный секретный шаг из Web Pilot, не передавая API key через ChatGPT/renderer.",
+      "dependencies": [
+        "T009"
+      ],
+      "functional_paths": [
+        "src/main.mjs",
+        "src/preload.cjs",
+        "src/windows-runtime.mjs"
+      ],
+      "documentation_paths": [
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "acceptance_criteria": [
+        "Локальный IPC доступен только sidebar и только на win32.",
+        "Команда запускает 2_CONNECT_TUNNEL.cmd в отдельной Windows console; Web Pilot не читает tunnel key.",
+        "После настройки runtime status можно обновить без перезапуска приложения."
+      ],
+      "verification_ids": [
+        "suite"
+      ],
+      "expected_commit_message": "feat: добавить Windows tunnel onboarding",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "web-pilot-context-observation-008",
+        "task_id": "T010",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T011",
+      "title": "Показать Windows runtime onboarding в Settings",
+      "why": "Windows-пользователь должен видеть состояние встроенного runtime и понятную кнопку одноразовой настройки tunnel.",
+      "dependencies": [
+        "T010"
+      ],
+      "functional_paths": [
+        "src/ui/index.html",
+        "src/ui/project-archive.mjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "docs/PRODUCT.md",
+        "docs/VERIFICATION.md"
+      ],
+      "acceptance_criteria": [
+        "Settings показывает Windows runtime section только на Windows.",
+        "Есть состояния embedded/installing/installed/tunnel-unconfigured/ready и кнопка настройки tunnel.",
+        "macOS Settings визуально не меняется."
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "expected_commit_message": "feat: добавить Windows runtime UI",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "web-pilot-context-observation-008",
+        "task_id": "T011",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T012",
+      "title": "Собрать и проверить Windows distribution",
+      "why": "Нужен готовый каталог/архив для передачи на реальный Windows 10/11 ПК.",
+      "dependencies": [
+        "T011"
+      ],
+      "functional_paths": [
+        "package.json",
+        "scripts/verify-windows-package.mjs",
+        "tests/windows-runtime.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/PRODUCT.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md"
+      ],
+      "acceptance_criteria": [
+        "build:win создаёт x64 package с runtime ZIP и workflow resources.",
+        "Статический verifier проверяет exe, bundled payload hash и отсутствие macOS-only Info.plist зависимости.",
+        "Готов путь к Windows package и SHA-256 для пользовательской проверки."
+      ],
+      "verification_ids": [
+        "suite"
+      ],
+      "expected_commit_message": "build: подготовить Windows distribution",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "web-pilot-context-observation-008",
+        "task_id": "T012",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T013",
+      "title": "Провести живую приёмку Windows 10/11",
+      "why": "Cross-build на Mac не доказывает запуск, Windows Computer Use и tunnel на реальном Windows ПК.",
+      "dependencies": [
+        "T012"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md"
+      ],
+      "acceptance_criteria": [
+        "Пользователь запускает package на реальном Windows 10/11 x64.",
+        "Подтверждены startup/login, создание или открытие workspace, runtime setup, tunnel/MCP и минимум одна локальная file/Git команда.",
+        "Подтверждён хотя бы один Windows Computer Use action либо записана точная блокирующая причина."
+      ],
+      "verification_ids": [],
+      "expected_commit_message": "docs: принять Windows 10/11 runtime",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "web-pilot-context-observation-008",
+        "task_id": "T013",
+        "role": "implementation"
+      }
     }
   ],
   "blocked_reason": null,
@@ -270,6 +507,11 @@
       "id": "portability-user-20260912",
       "text": "12.09.2026 пользователь попросил уже сейчас подкорректировать macOS-код так, чтобы будущий перенос на Windows 10/11 требовал меньше переписывания; текущую macOS-функциональность не менять.",
       "recorded_at": "2026-09-12T15:27:49.324Z"
+    },
+    {
+      "id": "windows-full-user-20260912",
+      "text": "12.09.2026 пользователь поручил в ожидании auto-compact сделать полноценную Windows 10/11 версию и сообщил, что имеет Windows ПК для живой проверки.",
+      "recorded_at": "2026-09-12T15:52:39.891Z"
     }
   ]
 }
@@ -282,11 +524,11 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-context-observation-008
 Current Task: нет
-Revision: 190
+Revision: 191
 
 ## Цель
 
-Продолжать реальное наблюдение ChatGPT Web до обнаружения фактического context window и auto-compact: безопасно раскрыть служебные вложенные JSON-envelope WebSocket stream-item и анализировать только структурную/числовую telemetry без текста разговора. Параллельно отделить platform-specific runtime/build слой, чтобы будущая Windows 10/11 версия переиспользовала тот же Chromium/UI/workflow-код.
+Продолжать наблюдение ChatGPT Web до реального auto-compact и параллельно довести Project Web Pilot до самодостаточной Windows 10/11 x64 версии: тот же Electron/Chromium/UI/Workflow Kit, встроенный Codex Local Windows runtime, автоматическая локальная установка и безопасная настройка tunnel.
 
 ## Критерии приёмки
 
@@ -294,7 +536,10 @@ Revision: 190
 - Вложенные JSON-envelope WebSocket/SSE разбираются только для служебной структуры; пользовательский текст и произвольные string values не сохраняются.
 - При обнаружении фактических input/window значений существующий sidebar-индикатор показывает их без оценочной подстановки.
 - Scope остаётся активным до реального наблюдения auto-compact или отдельного решения пользователя изменить границы исследования.
-- macOS-поведение после platform-refactor не меняется; runtime/Node/build различия централизованы и имеют Windows layout tests.
+- macOS-поведение не меняется; Windows 10/11 x64 package включает проверенный Codex Local Windows runtime и не требует отдельного копирования runtime.
+- На первом Windows запуске runtime разворачивается в userData, проверяется по SHA-256 и подготавливает приватный Python/Git/ripgrep/tunnel без admin installation.
+- Tunnel secret настраивается только локально в Windows console/DPAPI и не проходит через ChatGPT или renderer IPC.
+- Windows build проходит cross-package/static tests на Mac и остаётся на live-acceptance до проверки пользователем на настоящем Windows 10/11 ПК.
 
 ## Микрозадачи
 
@@ -322,6 +567,34 @@ Revision: 190
   - Git Commit: [DONE] refactor: подготовить platform boundary приложения
   - Reference: web-pilot-context-observation-008 / T006 / implementation
   - Файлы: src/platform.mjs, src/main.mjs, package.json, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+- [TODO] T007: Встроить канонический Codex Local Windows payload — Ожидает
+  - Git Commit: [PENDING] build: встроить Windows Codex Local runtime
+  - Reference: web-pilot-context-observation-008 / T007 / implementation
+  - Файлы: windows-runtime/Windows-Codex-Local-2026-09-10.zip, windows-runtime/Windows-Codex-Local-2026-09-10.zip.sha256, docs/SOURCE_WORKSPACES.md, docs/architecture/ARCHITECTURE.md
+- [TODO] T008: Автоматизировать установку Windows runtime — Ожидает
+  - Git Commit: [PENDING] feat: автоматически готовить Windows runtime
+  - Reference: web-pilot-context-observation-008 / T008 / implementation
+  - Файлы: src/windows-runtime.mjs, src/platform.mjs, tests/windows-runtime.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+- [TODO] T009: Подключить bundled runtime к Windows lifecycle — Ожидает
+  - Git Commit: [PENDING] feat: подключить bundled runtime Windows
+  - Reference: web-pilot-context-observation-008 / T009 / implementation
+  - Файлы: src/main.mjs, src/mcp-runtime.mjs, tests/electron-smoke.mjs, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+- [TODO] T010: Добавить безопасную команду настройки Windows tunnel — Ожидает
+  - Git Commit: [PENDING] feat: добавить Windows tunnel onboarding
+  - Reference: web-pilot-context-observation-008 / T010 / implementation
+  - Файлы: src/main.mjs, src/preload.cjs, src/windows-runtime.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+- [TODO] T011: Показать Windows runtime onboarding в Settings — Ожидает
+  - Git Commit: [PENDING] feat: добавить Windows runtime UI
+  - Reference: web-pilot-context-observation-008 / T011 / implementation
+  - Файлы: src/ui/index.html, src/ui/project-archive.mjs, tests/electron-smoke.mjs, docs/PRODUCT.md, docs/VERIFICATION.md
+- [TODO] T012: Собрать и проверить Windows distribution — Ожидает
+  - Git Commit: [PENDING] build: подготовить Windows distribution
+  - Reference: web-pilot-context-observation-008 / T012 / implementation
+  - Файлы: package.json, scripts/verify-windows-package.mjs, tests/windows-runtime.test.mjs, docs/PRODUCT.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md
+- [TODO] T013: Провести живую приёмку Windows 10/11 — Ожидает
+  - Git Commit: [PENDING] docs: принять Windows 10/11 runtime
+  - Reference: web-pilot-context-observation-008 / T013 / implementation
+  - Файлы: docs/VERIFICATION.md, docs/WORKFLOW_START.md
 
 ## Context Pack For This Cycle
 
