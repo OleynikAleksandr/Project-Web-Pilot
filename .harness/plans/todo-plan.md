@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 134,
+  "plan_revision": 136,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-plan-ui-003",
@@ -142,8 +142,8 @@
         "Electron smoke проверяет состояния и названия задач"
       ],
       "expected_commit_message": "feat: показать микрозадачи в блоке плана",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-plan-ui-003",
         "task_id": "T003",
@@ -203,7 +203,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-plan-ui-003
 Current Task: нет
-Revision: 134
+Revision: 136
 
 ## Цель
 
@@ -227,8 +227,8 @@ Revision: 134
   - Git Commit: [DONE] feat: публиковать состояние плана для интерфейса
   - Reference: web-pilot-plan-ui-003 / T002 / implementation
   - Файлы: src/workspace-session.mjs, tests/workspace-session.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T003: Сделать самостоятельную карточку План — Ожидает
-  - Git Commit: [PENDING] feat: показать микрозадачи в блоке плана
+- [DONE] T003: Сделать самостоятельную карточку План — Завершено
+  - Git Commit: [DONE] feat: показать микрозадачи в блоке плана
   - Reference: web-pilot-plan-ui-003 / T003 / implementation
   - Файлы: src/ui/index.html, src/ui/sidebar.mjs, tests/electron-smoke.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T004: Выпустить Project Web Pilot 0.6.0 — Ожидает

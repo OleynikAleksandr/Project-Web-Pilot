@@ -321,3 +321,7 @@ Node-suite: 52/52. Electron smoke подтверждает, что `workspace-de
 ## Scope 003 / T002 — пользовательская модель плана
 
 Workspace tests проверяют ACTIVE с выполненной/текущей/ожидающей задачами, READY_FOR_ACCEPTANCE, BLOCKED с причиной, закрытый архивированный scope и проект без когда-либо созданного scope. `planRevision` сохраняется для протокола контекста, но отсутствует в `planView`.
+
+## Scope 003 / T003 — карточка плана
+
+Electron smoke на одном временном workspace последовательно проверяет `not-created`, ACTIVE с одной done/current/pending задачей и READY_FOR_ACCEPTANCE. Проверяются точные названия задач, символы `✓/●/○`, выделение текущей задачи и отсутствие слов `Revision`/`версия` внутри пользовательской карточки.

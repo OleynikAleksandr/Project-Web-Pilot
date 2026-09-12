@@ -124,12 +124,42 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(prefs.nodeIntegration, false); assert.equal(prefs.contextIsolation, true); assert.equal(prefs.sandbox, true);
   assert.throws(() => assertLocalSender({ sender: browser, senderFrame: browser.mainFrame }), { code: 'IPC_FORBIDDEN' });
   assert.equal(await sidebar.executeJavaScript(`({
-    childCount: document.getElementById('workspace-details').children.length,
-    onlyPlan: document.getElementById('workspace-details').firstElementChild?.id,
-    name: !!document.getElementById('workspace-name'), path: !!document.getElementById('workspace-path'),
-    health: !!document.getElementById('workspace-health'), notice: !!document.getElementById('workspace-notice')
-  })`).then(value => JSON.stringify(value)), JSON.stringify({ childCount: 1, onlyPlan: 'plan-text', name: false, path: false, health: false, notice: false }));
-  assert.ok((await sidebar.executeJavaScript('document.getElementById("plan-text").textContent')).startsWith('План · версия '));
+    planCard: !document.getElementById('plan-card').hidden,
+    detailsVisible: !document.getElementById('workspace-details').hidden, oldPlanText: !!document.getElementById('plan-text'),
+    revisionVisible: document.getElementById('plan-card').textContent.includes('версия') || document.getElementById('plan-card').textContent.includes('Revision')
+  })`).then(value => JSON.stringify(value)), JSON.stringify({ planCard: true, detailsVisible: true, oldPlanText: false, revisionVisible: false }));
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("plan-status").textContent'), 'План ещё не создан');
+  assert.equal(await sidebar.executeJavaScript('document.querySelectorAll("#plan-tasks .plan-task").length'), 0);
+
+  const planFile = path.join(workspace, '.harness/plans/todo-plan.md');
+  const originalPlanText = await fs.readFile(planFile, 'utf8');
+  const block = originalPlanText.match(/<!-- workflow-state:begin -->\s*```json\s*([\s\S]*?)```\s*<!-- workflow-state:end -->/);
+  const activePlan = JSON.parse(block[1]);
+  Object.assign(activePlan, { plan_revision: activePlan.plan_revision + 1, scope_id: 'fixture-plan-ui', execution_scope_status: 'ACTIVE',
+    delivery_status: 'IN_PROGRESS', current_task_id: 'T002', archived_scope_id: undefined, tasks: [
+      { id: 'T001', title: 'Подготовить модель', implementation_status: 'DONE', commit_status: 'DONE' },
+      { id: 'T002', title: 'Сделать интерфейс', implementation_status: 'IN_PROGRESS', commit_status: 'PENDING' },
+      { id: 'T003', title: 'Собрать релиз', implementation_status: 'TODO', commit_status: 'PENDING' },
+    ] });
+  delete activePlan.archived_scope_id;
+  const writeFixturePlan = async plan => fs.writeFile(planFile, '<!-- workflow-state:begin -->\n```json\n' + JSON.stringify(plan) + '\n```\n<!-- workflow-state:end -->');
+  await writeFixturePlan(activePlan); controller.attach(store.selected()); await controller.tick();
+  await waitFor(() => sidebar.executeJavaScript('document.getElementById("plan-status").textContent === "В работе · 1 из 3 выполнено"'), 'working plan UI', snapshot);
+  assert.deepEqual(await sidebar.executeJavaScript(`Array.from(document.querySelectorAll('#plan-tasks .plan-task')).map(e=>({status:e.dataset.status,title:e.querySelector('strong').textContent,mark:e.querySelector('.plan-task-state').textContent}))`), [
+    { status: 'done', title: 'Подготовить модель', mark: '✓' },
+    { status: 'current', title: 'Сделать интерфейс', mark: '●' },
+    { status: 'pending', title: 'Собрать релиз', mark: '○' },
+  ]);
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("plan-card").textContent.includes("Revision") || document.getElementById("plan-card").textContent.includes("версия")'), false);
+
+  const readyPlan = { ...activePlan, plan_revision: activePlan.plan_revision + 1, delivery_status: 'READY_FOR_ACCEPTANCE', current_task_id: null,
+    tasks: activePlan.tasks.map(task => ({ ...task, implementation_status: 'DONE', commit_status: 'DONE' })) };
+  await writeFixturePlan(readyPlan); controller.attach(store.selected()); await controller.tick();
+  await waitFor(() => sidebar.executeJavaScript('document.getElementById("plan-status").textContent.includes("ожидается ваша приёмка")'), 'ready for acceptance plan UI', snapshot);
+  assert.equal(await sidebar.executeJavaScript('document.querySelectorAll("#plan-tasks .plan-task[data-status=done]").length'), 3);
+
+  await fs.writeFile(planFile, originalPlanText); controller.attach(store.selected()); await controller.tick();
+  await waitFor(() => sidebar.executeJavaScript('document.getElementById("plan-status").textContent === "План ещё не создан"'), 'restore fixture plan', snapshot);
   await clipboard.clear();
   await waitFor(() => sidebar.executeJavaScript('!document.querySelector(".project-menu-button").disabled'), 'project menu enabled', snapshot);
   await sidebar.executeJavaScript(`document.querySelector('.project-menu-button').click(); document.querySelector('.copy-workspace-path').click()`);

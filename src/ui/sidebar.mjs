@@ -156,12 +156,27 @@ function render(state) {
     }
     $('projects').replaceChildren(fragment);
   }
-  $('workspace-details').hidden = !selected;
+  $('plan-card').hidden = !selected;
   $('session-actions').hidden = !selected;
   if (selected) {
-    $('plan-text').textContent = `План · версия ${selected.planRevision}`
-      + (selected.nextTaskId ? `\n${selected.nextTaskId} — ${selected.nextTaskTitle}` : '\nОткрытых задач нет');
-  }
+    const plan = selected.planView ?? { state: 'not-created', completed: 0, total: 0, tasks: [], blockedReason: null };
+    const plural = count => count % 10 === 1 && count % 100 !== 11 ? 'задача'
+      : count % 10 >= 2 && count % 10 <= 4 && !(count % 100 >= 12 && count % 100 <= 14) ? 'задачи' : 'задач';
+    const statusText = plan.state === 'awaiting-acceptance' ? `Все ${plan.total} ${plural(plan.total)} выполнены · ожидается ваша приёмка`
+      : plan.state === 'blocked' ? `План заблокирован · ${plan.completed} из ${plan.total} выполнено`
+        : plan.state === 'closed' ? 'Scope завершён и архивирован'
+          : plan.state === 'not-created' ? 'План ещё не создан'
+            : `В работе · ${plan.completed} из ${plan.total} выполнено`;
+    $('plan-status').textContent = statusText; $('plan-status').dataset.state = plan.state;
+    $('plan-reason').hidden = !plan.blockedReason; $('plan-reason').textContent = plan.blockedReason ?? '';
+    $('plan-tasks').replaceChildren(...plan.tasks.map(task => {
+      const item = document.createElement('li'); item.className = 'plan-task'; item.dataset.status = task.status;
+      const mark = document.createElement('span'); mark.className = 'plan-task-state'; mark.setAttribute('aria-hidden', 'true');
+      mark.textContent = task.status === 'done' ? '✓' : task.status === 'current' ? '●' : '○';
+      const body = document.createElement('div'), title = document.createElement('strong'), id = document.createElement('small');
+      title.textContent = task.title; id.textContent = task.id; body.append(title, id); item.append(mark, body); return item;
+    }));
+  } else { $('plan-tasks').replaceChildren(); $('plan-reason').hidden = true; }
   const [title, detail, tone] = phases[context.phase] ?? phases.selected;
   $('context-title').textContent = state.pageLoading ? 'Открываем ChatGPT' : title;
   $('context-details').hidden = !contextExpanded;
