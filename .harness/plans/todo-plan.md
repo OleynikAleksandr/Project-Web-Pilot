@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 136,
+  "plan_revision": 137,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-plan-ui-003",
@@ -156,12 +156,14 @@
       ],
       "functional_paths": [
         "package.json",
-        "package-lock.json"
+        "package-lock.json",
+        "src/ui/index.html"
       ],
       "documentation_paths": [
         "README.md",
         "docs/VERIFICATION.md",
-        "docs/WORKFLOW_START.md"
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/ARCHITECTURE.md"
       ],
       "verification_ids": [
         "suite",
@@ -203,7 +205,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-plan-ui-003
 Current Task: нет
-Revision: 136
+Revision: 137
 
 ## Цель
 
@@ -234,7 +236,7 @@ Revision: 136
 - [TODO] T004: Выпустить Project Web Pilot 0.6.0 — Ожидает
   - Git Commit: [PENDING] release: собрать Project Web Pilot 0.6.0
   - Reference: web-pilot-plan-ui-003 / T004 / implementation
-  - Файлы: package.json, package-lock.json, README.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md
+  - Файлы: package.json, package-lock.json, src/ui/index.html, README.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md
 
 ## Context Pack For This Cycle
 
