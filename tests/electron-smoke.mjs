@@ -10,6 +10,7 @@ const fixtureContext = Array.from({ length: 400 }, (_, i) => `Раздел ${i +
 const html = `<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>TEST FIXTURE — no live ChatGPT</title>
 <style>body{font:16px -apple-system,sans-serif;padding:40px;background:#fcfcff;color:#29394c}aside{background:#fff0d7;padding:14px;margin-bottom:20px}#prompt-textarea{border:1px solid #9caeb8;padding:12px;min-height:80px;white-space:pre-wrap}button{padding:10px}article{white-space:pre-wrap;font-size:12px}</style></head>
 <body><aside>TEST FIXTURE · без реального ChatGPT, MCP и аккаунта</aside><h1>Composer fixture</h1>
+<div id="tool-activity"><button id="fixture-tool-call" type="button">Вызываемый инструмент</button></div>
 <div id="messages"></div><form><div id="prompt-textarea" contenteditable="true" role="textbox"></div><button type="submit" data-testid="send-button">Send fixture</button></form>
 <script>
 window.fixtureMessages=JSON.parse(sessionStorage.getItem(location.pathname)||'[]');
@@ -166,9 +167,24 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(await sidebar.executeJavaScript('document.documentElement.dataset.theme'), 'dark');
   assert.equal(await sidebar.executeJavaScript('document.getElementById("theme-dark").getAttribute("aria-pressed")'), 'true');
   assert.equal(nativeTheme.shouldUseDarkColors, true);
-  const persistedSettings = JSON.parse(await fs.readFile(path.join(dataDir, 'settings.json'), 'utf8'));
+  let persistedSettings = JSON.parse(await fs.readFile(path.join(dataDir, 'settings.json'), 'utf8'));
   assert.equal(persistedSettings.shellTheme, 'dark');
   assert.equal(typeof persistedSettings.runtimeFolder, 'string');
+  assert.equal(snapshot().hideToolCalls, true);
+  await waitFor(() => browser.executeJavaScript('document.getElementById("fixture-tool-call").getAttribute("data-web-pilot-tool-call-hidden") === "true"'), 'default tool call hidden', snapshot);
+  await sidebar.executeJavaScript('document.getElementById("tool-calls-show").click()');
+  await waitFor(() => snapshot().hideToolCalls === false, 'show tool calls setting', snapshot);
+  assert.equal(await browser.executeJavaScript('document.getElementById("fixture-tool-call").hasAttribute("data-web-pilot-tool-call-hidden")'), false);
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("tool-calls-show").getAttribute("aria-pressed")'), 'true');
+  persistedSettings = JSON.parse(await fs.readFile(path.join(dataDir, 'settings.json'), 'utf8'));
+  assert.equal(persistedSettings.hideToolCalls, false);
+  await sidebar.executeJavaScript('document.getElementById("tool-calls-hide").click()');
+  await waitFor(() => snapshot().hideToolCalls === true, 'hide tool calls setting', snapshot);
+  await waitFor(() => browser.executeJavaScript('document.getElementById("fixture-tool-call").getAttribute("data-web-pilot-tool-call-hidden") === "true"'), 'tool call hidden again', snapshot);
+  await browser.executeJavaScript(`{ const button=document.createElement('button'); button.id='fixture-tool-call-late'; button.textContent='Вызываемый инструмент'; document.getElementById('tool-activity').append(button); }`);
+  await waitFor(() => browser.executeJavaScript('document.getElementById("fixture-tool-call-late").getAttribute("data-web-pilot-tool-call-hidden") === "true"'), 'late tool call hidden by observer', snapshot);
+  persistedSettings = JSON.parse(await fs.readFile(path.join(dataDir, 'settings.json'), 'utf8'));
+  assert.equal(persistedSettings.hideToolCalls, true);
   await sidebar.executeJavaScript('document.getElementById("restore-project").click()');
   await waitFor(() => snapshot().archives.length === 0, 'restore project', snapshot);
   assert.equal(store.selected(), null); assert.equal(packetLoads, 2); assert.equal(snapshot().projects[0].sessions.length, 2);
@@ -196,7 +212,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(packetLoads, 2, 'Archive, restore and deletion never send another packet');
   const result = { mode: 'isolated-fixture', electron: process.versions.electron, chromium: process.versions.chrome,
     views: window.contentView.children.length, secureRemote: true, sidebarIpc: true, archiveRestore: true, archiveRestart: true, deleteCancel: true, localDeletion: true, cloudChatPreserved: true, workspaceCreation: true, workspaceValidation: true, cancelPreservesSession: true, startupMessages: packetLoads,
-    restartKeepsSession: true, newChatCreatesSession: true, sessionTree: true, selectsEarlierSession: true, shellTheme: true, nativeTitlebarTheme: nativeTheme.shouldUseDarkColors, fullContextBytes: Buffer.byteLength(fixtureContext), liveChatGPT: false, agentToolsRequired: false };
+    restartKeepsSession: true, newChatCreatesSession: true, sessionTree: true, selectsEarlierSession: true, shellTheme: true, nativeTitlebarTheme: nativeTheme.shouldUseDarkColors, toolCallFilter: true, fullContextBytes: Buffer.byteLength(fixtureContext), liveChatGPT: false, agentToolsRequired: false };
   await fs.writeFile(path.join(dataDir, 'smoke-result.json'), JSON.stringify(result, null, 2));
   console.log(JSON.stringify(result));
 }

@@ -259,3 +259,9 @@ Electron smoke переключил оболочку через настоящу
 Electron smoke использует отдельную кликабельную строку «Вызываемый инструмент» в изолированном ChatGPT fixture. При настройке по умолчанию строка получает marker Web Pilot и скрывается; кнопка «Показывать» немедленно снимает marker без перезагрузки, а «Скрывать» возвращает его. Отдельно создаётся поздняя строка после загрузки — MutationObserver также скрывает её. `settings.json` проверяется после обоих переключений; удалённый fixture по-прежнему не имеет локального bridge.
 
 Финальная arm64-сборка после T033 создана командой `npm run build`: `.harness/runtime/build/Project Web Pilot-darwin-arm64/Project Web Pilot.app`. SHA-256 `app.asar`: `41048e6693843624aea6bd99e4ade1052628ac453ecca7605e3914e77629a67a`, размер 185114 байт. Отдельный smoke завершился с `toolCallFilter=true`; пользовательская проверка реального ChatGPT остаётся визуальной, потому что DOM веб-интерфейса может изменяться со стороны OpenAI.
+
+## T034 — финальный Settings UI фильтра
+
+Electron smoke проверяет весь пользовательский путь через реальные кнопки Settings: строка «Вызываемый инструмент» скрыта по умолчанию, «Показывать» возвращает её без перезагрузки, «Скрывать» снова убирает, а новая строка, добавленная после загрузки, автоматически скрывается MutationObserver. После каждого переключения проверяется `settings.json`; удалённый fixture не получает `window.webPilot`.
+
+Финальная arm64-сборка T034 создана командой `npm run build` в `.harness/runtime/build/Project Web Pilot-darwin-arm64/Project Web Pilot.app`. SHA-256 `app.asar`: `41048e6693843624aea6bd99e4ade1052628ac453ecca7605e3914e77629a67a`, размер 185114 байт. Контрольный smoke завершился с `toolCallFilter=true`, `shellTheme=true` и `nativeTitlebarTheme=true`.
