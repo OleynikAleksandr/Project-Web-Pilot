@@ -4,13 +4,13 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 78,
+  "plan_revision": 79,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
-  "objective": "Локальный macOS Web Pilot с встроенным ChatGPT, выбором проекта и полным контекстом в первом сообщении; агент сразу кратко подтверждает восстановление и описывает проект. Сайдбар сохраняет все созданные сессии workspace и позволяет выбирать их в раскрываемом дереве. Создание нового workspace и подключение существующей папки повторяют Workflow Kit с проверкой структуры до открытия чата. Архив workspace доступен в настройках через шестерёнку справа от подключения; проекты возвращаются в активные либо удаляются с диска вместе с локальными записями сессий. Облачные чаты сохраняются.",
+  "delivery_status": "IN_PROGRESS",
+  "objective": "Локальный macOS Web Pilot с встроенным ChatGPT, выбором проекта и полным контекстом в первом сообщении; агент сразу кратко подтверждает восстановление и описывает проект. Сайдбар сохраняет все созданные сессии workspace и позволяет выбирать их в раскрываемом дереве. Создание нового workspace и подключение существующей папки повторяют Workflow Kit с проверкой структуры до открытия чата. Архив workspace доступен в настройках через шестерёнку справа от подключения; проекты возвращаются в активные либо удаляются с диска вместе с локальными записями сессий. Облачные чаты сохраняются. Оформление оболочки настраивается отдельно в Settings: светлая или тёмная тема применяется к сайдбару и верхней панели окна.",
   "acceptance_criteria": [
     "Полный канонический контекст передаёт приложение до первого ответа агента.",
     "Первый ответ кратко подтверждает восстановление и описывает выбранный проект без обязательного получения пакета через MCP и без hook/ACK оговорок.",
@@ -20,7 +20,8 @@
     "Пользователь может создать новый проект или подготовить существующую папку, сохранив её содержимое и историю.",
     "Перед открытием проверяются комплект, план, команды и полный контекст; конфликты показаны без перезаписи.",
     "Архивные проекты скрыты из активного списка и доступны в настройках.",
-    "Удаление архивного проекта явно подтверждается и очищает только выбранную локальную папку и локальные сессии; чаты ChatGPT остаются."
+    "Удаление архивного проекта явно подтверждается и очищает только выбранную локальную папку и локальные сессии; чаты ChatGPT остаются.",
+    "В Settings можно выбрать светлую или тёмную тему оболочки; выбор сохраняется и применяется к левому сайдбару и нативной верхней панели окна, не изменяя настройку темы ChatGPT Web."
   ],
   "approved_scope": {
     "functional_paths": [
@@ -1103,6 +1104,108 @@
         "task_id": "T028",
         "role": "implementation"
       }
+    },
+    {
+      "id": "T029",
+      "title": "Сохранять тему оболочки и нативной панели",
+      "why": "Дать оболочке собственную устойчивую настройку оформления независимо от выбранной темы ChatGPT Web",
+      "dependencies": [
+        "T028"
+      ],
+      "functional_paths": [
+        "src/main.mjs",
+        "src/preload.cjs"
+      ],
+      "documentation_paths": [
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "acceptance_criteria": [
+        "Настройка light/dark хранится в локальном settings.json вместе с runtimeFolder без потери существующих данных",
+        "Выбор темы меняет Electron nativeTheme и фон окна, чтобы нативная верхняя панель соответствовала оболочке",
+        "Текущее значение темы доступно локальному sidebar через ограниченный IPC"
+      ],
+      "verification_ids": [
+        "syntax",
+        "suite"
+      ],
+      "expected_commit_message": "feat: сохранять тему оболочки Web Pilot",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "web-pilot-prototype-001",
+        "task_id": "T029",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T030",
+      "title": "Добавить переключатель темы в Settings",
+      "why": "Пользователь должен менять оформление там же, где уже находятся настройки и архив",
+      "dependencies": [
+        "T029"
+      ],
+      "functional_paths": [
+        "src/ui/index.html",
+        "src/ui/project-archive.mjs"
+      ],
+      "documentation_paths": [
+        "docs/PROJECT_ARCHIVE.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "acceptance_criteria": [
+        "В Settings есть явный выбор Светлая/Тёмная",
+        "Тёмная палитра применяется ко всему левому сайдбару, включая экран настроек, формы, карточки и дерево сессий",
+        "Переключение не выполняет действий внутри страницы ChatGPT Web"
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "expected_commit_message": "feat: добавить тёмную тему сайдбара",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "web-pilot-prototype-001",
+        "task_id": "T030",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T031",
+      "title": "Проверить тему и пересобрать приложение",
+      "why": "Зафиксировать поведение переключателя и подготовить обновлённую macOS-сборку к пользовательской проверке",
+      "dependencies": [
+        "T030"
+      ],
+      "functional_paths": [
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "README.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/DECISIONS.md",
+        "docs/PRODUCT.md"
+      ],
+      "acceptance_criteria": [
+        "Electron smoke переключает тему через реальный Settings UI и проверяет состояние sidebar и nativeTheme",
+        "Локальный settings.json содержит выбранную тему",
+        "Обновлённая arm64-сборка создана и готова к пользовательской приёмке"
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "expected_commit_message": "test: проверить темы оболочки Web Pilot",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "web-pilot-prototype-001",
+        "task_id": "T031",
+        "role": "implementation"
+      }
     }
   ],
   "blocked_reason": null,
@@ -1151,6 +1254,11 @@
       "id": "settings-project-archive",
       "text": "Пользователь поручил шестерёнку внизу справа от подробностей подключения, архив проектов внутри настроек, возврат в активные и полное удаление папки с диска. От удаления веб-сессий отказался: чаты остаются в ChatGPT. Разрешена реализация функций; существующие пользовательские проекты без отдельного выбора не удалять.",
       "recorded_at": "2026-09-11T10:41:08.632013+00:00"
+    },
+    {
+      "id": "shell-theme-settings-20260912",
+      "text": "12.09.2026 пользователь поручил добавить в Settings по шестерёнке переключение светлой и тёмной темы именно для оболочки Project Web Pilot: левый сайдбар и верхняя нативная панель окна. Тема встроенного ChatGPT Web остаётся его собственной настройкой.",
+      "recorded_at": "2026-09-12T07:00:34.920Z"
     }
   ]
 }
@@ -1160,14 +1268,14 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 78
+Revision: 79
 
 ## Цель
 
-Локальный macOS Web Pilot с встроенным ChatGPT, выбором проекта и полным контекстом в первом сообщении; агент сразу кратко подтверждает восстановление и описывает проект. Сайдбар сохраняет все созданные сессии workspace и позволяет выбирать их в раскрываемом дереве. Создание нового workspace и подключение существующей папки повторяют Workflow Kit с проверкой структуры до открытия чата. Архив workspace доступен в настройках через шестерёнку справа от подключения; проекты возвращаются в активные либо удаляются с диска вместе с локальными записями сессий. Облачные чаты сохраняются.
+Локальный macOS Web Pilot с встроенным ChatGPT, выбором проекта и полным контекстом в первом сообщении; агент сразу кратко подтверждает восстановление и описывает проект. Сайдбар сохраняет все созданные сессии workspace и позволяет выбирать их в раскрываемом дереве. Создание нового workspace и подключение существующей папки повторяют Workflow Kit с проверкой структуры до открытия чата. Архив workspace доступен в настройках через шестерёнку справа от подключения; проекты возвращаются в активные либо удаляются с диска вместе с локальными записями сессий. Облачные чаты сохраняются. Оформление оболочки настраивается отдельно в Settings: светлая или тёмная тема применяется к сайдбару и верхней панели окна.
 
 ## Критерии приёмки
 
@@ -1180,6 +1288,7 @@ Revision: 78
 - Перед открытием проверяются комплект, план, команды и полный контекст; конфликты показаны без перезаписи.
 - Архивные проекты скрыты из активного списка и доступны в настройках.
 - Удаление архивного проекта явно подтверждается и очищает только выбранную локальную папку и локальные сессии; чаты ChatGPT остаются.
+- В Settings можно выбрать светлую или тёмную тему оболочки; выбор сохраняется и применяется к левому сайдбару и нативной верхней панели окна, не изменяя настройку темы ChatGPT Web.
 
 ## Микрозадачи
 
@@ -1295,6 +1404,18 @@ Revision: 78
   - Git Commit: [DONE] chore: собрать Web Pilot с архивом проектов
   - Reference: web-pilot-prototype-001 / T028 / implementation
   - Файлы: package.json, package-lock.json, README.md, AGENTS.md, docs/PRODUCT.md, docs/WORKFLOW_START.md, docs/DECISIONS.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, docs/PROJECT_ARCHIVE.md
+- [TODO] T029: Сохранять тему оболочки и нативной панели — Ожидает
+  - Git Commit: [PENDING] feat: сохранять тему оболочки Web Pilot
+  - Reference: web-pilot-prototype-001 / T029 / implementation
+  - Файлы: src/main.mjs, src/preload.cjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+- [TODO] T030: Добавить переключатель темы в Settings — Ожидает
+  - Git Commit: [PENDING] feat: добавить тёмную тему сайдбара
+  - Reference: web-pilot-prototype-001 / T030 / implementation
+  - Файлы: src/ui/index.html, src/ui/project-archive.mjs, docs/PROJECT_ARCHIVE.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+- [TODO] T031: Проверить тему и пересобрать приложение — Ожидает
+  - Git Commit: [PENDING] test: проверить темы оболочки Web Pilot
+  - Reference: web-pilot-prototype-001 / T031 / implementation
+  - Файлы: tests/electron-smoke.mjs, README.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/DECISIONS.md, docs/PRODUCT.md
 
 ## Context Pack For This Cycle
 
