@@ -7,6 +7,12 @@ import { readWorkspace, WorkspaceSessions } from '../src/workspace-session.mjs';
 
 let packetLoads = 0;
 const fixtureContext = Array.from({ length: 400 }, (_, i) => `Раздел ${i + 1}: полный контекст проекта, включая кириллицу и точные пути.\n  Файл: /Projects/Мой проект/src/модуль.mjs\n\n`).join('');
+const fixtureTelemetrySse = [
+  'data: {"type":"event_msg","payload":{"type":"token_count","info":{"last_token_usage":{"input_tokens":229043,"cached_input_tokens":220000,"total_tokens":229153},"model_context_window":258400},"message":"PRIVATE STREAM TEXT"}}',
+  '',
+  'data: {"type":"event_msg","payload":{"type":"item_completed","item":{"type":"ContextCompaction","id":"PRIVATE-COMPACTION-ID"}}}',
+  '',
+].join('\n');
 const html = `<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>TEST FIXTURE — no live ChatGPT</title>
 <style>body{font:16px -apple-system,sans-serif;padding:40px;background:#fcfcff;color:#29394c}aside{background:#fff0d7;padding:14px;margin-bottom:20px}#prompt-textarea{border:1px solid #9caeb8;padding:12px;min-height:80px;white-space:pre-wrap}button{padding:10px}article{white-space:pre-wrap;font-size:12px}</style></head>
 <body><aside>TEST FIXTURE · без реального ChatGPT, MCP и аккаунта</aside><h1>Composer fixture</h1>
@@ -26,7 +32,13 @@ document.querySelector('form').addEventListener('submit',event=>{
 
 export async function createRuntime({ browser, session }) {
   // Explicit isolated test mode only. No request is sent to a real service.
-  await session.protocol.handle('https', () => new Response(html, { headers: { 'content-type': 'text/html; charset=utf-8' } }));
+  await session.protocol.handle('https', request => {
+    const url = new URL(request.url);
+    if (url.hostname === 'chatgpt.com' && url.pathname === '/backend-api/f/conversation') {
+      return new Response(fixtureTelemetrySse, { headers: { 'content-type': 'text/event-stream; charset=utf-8' } });
+    }
+    return new Response(html, { headers: { 'content-type': 'text/html; charset=utf-8' } });
+  });
   return {
     ensure: async () => ({ mcp: { ready: true }, tunnel: { ready: true }, fixture: true }),
     loadContext: async workspace => {
@@ -326,6 +338,12 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(packetLoads, 2, 'Archive operations never send context packets');
   firstArchiveWindow.close();
 
+  await browser.executeJavaScript(`fetch('/backend-api/f/conversation',{method:'POST'}).then(response=>response.text())`);
+  await waitFor(async () => {
+    await chromiumDiagnostics.flush();
+    const text = await fs.readFile(chromiumDiagnosticsFile, 'utf8');
+    return text.includes('conversation-stream-inspected');
+  }, 'conversation SSE diagnostics', snapshot);
   await chromiumDiagnostics.sampleDom(); await chromiumDiagnostics.flush();
   const diagnosticLines = (await fs.readFile(chromiumDiagnosticsFile, 'utf8')).trim().split('\n').map(line => JSON.parse(line));
   assert.ok(diagnosticLines.some(entry => entry.source === 'diagnostics' && entry.event === 'session-start'), 'diagnostic session is logged');
@@ -333,9 +351,14 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.ok(diagnosticLines.some(entry => entry.source === 'webContents' && entry.event === 'did-finish-load'), 'native load is logged');
   assert.ok(diagnosticLines.some(entry => entry.source === 'dom' && entry.event === 'pulse' && entry.userMessages >= 1 && entry.composer === true), 'DOM pulse is logged');
   assert.ok(diagnosticLines.some(entry => entry.source === 'cdp' && ['request','response','loading-finished'].includes(entry.event)), 'network metadata is logged');
+  assert.ok(diagnosticLines.some(entry => entry.source === 'telemetry' && entry.event === 'conversation-stream-inspected' && entry.telemetryFound === true), 'conversation SSE body is inspected');
+  assert.ok(diagnosticLines.some(entry => entry.source === 'telemetry' && entry.event === 'context' && entry.origin === 'conversation-sse'
+    && entry.inputTokens === 229043 && entry.modelContextWindow === 258400 && entry.compactSignal === 'direct'), 'context and compact telemetry is extracted');
   const diagnosticText = JSON.stringify(diagnosticLines);
   assert.equal(diagnosticText.includes('Раздел 1: полный контекст проекта'), false, 'diagnostics never contain project context text');
   assert.equal(diagnosticText.includes('Принимаю текущий план и результат работы'), false, 'diagnostics never contain user message text');
+  assert.equal(diagnosticText.includes('PRIVATE STREAM TEXT'), false, 'SSE private text is never logged');
+  assert.equal(diagnosticText.includes('PRIVATE-COMPACTION-ID'), false, 'SSE item identifiers are never logged');
 
   const result = { mode: 'isolated-fixture', electron: process.versions.electron, chromium: process.versions.chrome,
     views: window.contentView.children.length, secureRemote: true, sidebarIpc: true, archiveRestore: true, archiveRestart: true, deleteCancel: true, localDeletion: true, cloudChatPreserved: true, workspaceCreation: true, workspaceValidation: true, cancelPreservesSession: true, startupMessages: packetLoads,

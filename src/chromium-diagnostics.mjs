@@ -241,6 +241,8 @@ export class ChromiumDiagnostics {
     this.sampleTimer = null;
     this.attachedByUs = false;
     this.started = false;
+    this.streamResponses = new Map();
+    this.lastContextUsage = null;
     this.onDebuggerMessage = this.onDebuggerMessage.bind(this);
     this.onDebuggerDetach = this.onDebuggerDetach.bind(this);
   }
@@ -304,14 +306,25 @@ export class ChromiumDiagnostics {
         resourceType: params.type, url: safeUrl(params.request?.url) });
     }
     if (method === 'Network.responseReceived') {
+      const url = safeUrl(params.response?.url);
+      if (url.origin === 'https://chatgpt.com' && url.path === '/backend-api/f/conversation'
+          && params.response?.mimeType === 'text/event-stream') {
+        this.streamResponses.set(params.requestId, { url, mimeType: params.response.mimeType });
+      }
       return this.log.record('cdp', 'response', { ...base, requestId: params.requestId, resourceType: params.type,
-        status: params.response?.status, mimeType: params.response?.mimeType, protocol: params.response?.protocol,
-        url: safeUrl(params.response?.url) });
+        status: params.response?.status, mimeType: params.response?.mimeType, protocol: params.response?.protocol, url });
     }
     if (method === 'Network.loadingFinished') {
-      return this.log.record('cdp', 'loading-finished', { ...base, requestId: params.requestId, encodedDataLength: params.encodedDataLength });
+      const entry = this.log.record('cdp', 'loading-finished', { ...base, requestId: params.requestId, encodedDataLength: params.encodedDataLength });
+      const stream = this.streamResponses.get(params.requestId);
+      if (stream) {
+        this.streamResponses.delete(params.requestId);
+        void this.#inspectConversationStream(params.requestId, stream);
+      }
+      return entry;
     }
     if (method === 'Network.loadingFailed') {
+      this.streamResponses.delete(params.requestId);
       return this.log.record('cdp', 'loading-failed', { ...base, requestId: params.requestId, errorType: safeSignal(params.type) ?? null,
         canceled: !!params.canceled, blockedReason: safeSignal(params.blockedReason) ?? null });
     }
@@ -322,13 +335,19 @@ export class ChromiumDiagnostics {
       return this.log.record('cdp', 'websocket-closed', { ...base, requestId: params.requestId });
     }
     if (method === 'Network.webSocketFrameReceived' || method === 'Network.webSocketFrameSent') {
-      return this.log.record('cdp', method.endsWith('Received') ? 'websocket-frame-received' : 'websocket-frame-sent', {
-        ...base, requestId: params.requestId, opcode: params.response?.opcode, payload: payloadMetadata(params.response?.payloadData ?? ''),
+      const payload = payloadMetadata(params.response?.payloadData ?? '');
+      const entry = this.log.record('cdp', method.endsWith('Received') ? 'websocket-frame-received' : 'websocket-frame-sent', {
+        ...base, requestId: params.requestId, opcode: params.response?.opcode, payload,
       });
+      if (method.endsWith('Received') && payload.telemetry) this.#recordContextTelemetry('websocket', payload.telemetry, { requestId: params.requestId });
+      return entry;
     }
     if (method === 'Network.eventSourceMessageReceived') {
-      return this.log.record('cdp', 'eventsource-message', { ...base, requestId: params.requestId,
-        eventName: safeSignal(params.eventName) ?? null, eventIdPresent: !!params.eventId, payload: payloadMetadata(params.data ?? '') });
+      const payload = payloadMetadata(params.data ?? '');
+      const entry = this.log.record('cdp', 'eventsource-message', { ...base, requestId: params.requestId,
+        eventName: safeSignal(params.eventName) ?? null, eventIdPresent: !!params.eventId, payload });
+      if (payload.telemetry) this.#recordContextTelemetry('eventsource', payload.telemetry, { requestId: params.requestId });
+      return entry;
     }
     if (method === 'Page.lifecycleEvent') {
       return this.log.record('cdp', 'lifecycle', { ...base, name: safeSignal(params.name) ?? null, frameId: params.frameId });
@@ -339,6 +358,50 @@ export class ChromiumDiagnostics {
         level: safeSignal(entry.level) ?? null, url: safeUrl(entry.url), lineNumber: entry.lineNumber });
     }
     if (!IGNORED_CDP.has(method)) this.log.record('cdp', 'event', base);
+  }
+
+  #recordContextTelemetry(origin, telemetry, fields = {}) {
+    const markers = telemetry?.markers ?? [];
+    const directCompact = markers.some(marker => ['compacted', 'ContextCompaction', 'context_compaction', 'conversation.compaction',
+      'response.compact', 'response.compaction', 'contextCompaction'].includes(marker))
+      || (telemetry?.presence ?? []).includes('compaction_response_id');
+    const usage = telemetry?.lastTokenUsage?.at(-1) ?? telemetry?.usage?.at(-1) ?? null;
+    const windowValues = telemetry?.metrics?.model_context_window ?? telemetry?.metrics?.context_window
+      ?? telemetry?.metrics?.max_context_tokens ?? [];
+    const modelContextWindow = windowValues.at(-1) ?? null;
+    const metricInputs = telemetry?.metrics?.input_tokens ?? [];
+    const inputTokens = usage?.input_tokens ?? (metricInputs.length === 1 ? metricInputs[0] : null);
+    const usedPercent = Number.isFinite(inputTokens) && Number.isFinite(modelContextWindow) && modelContextWindow > 0
+      ? Math.round((inputTokens / modelContextWindow) * 1000) / 10 : null;
+    let compactSignal = directCompact ? 'direct' : null;
+    const previous = this.lastContextUsage;
+    if (!compactSignal && previous && Number.isFinite(inputTokens) && previous.usedPercent >= 75) {
+      if (inputTokens === 0) compactSignal = 'token-reset';
+      else if (inputTokens < previous.inputTokens * 0.5) compactSignal = 'token-drop';
+    }
+    if (Number.isFinite(inputTokens) && inputTokens > 0 && Number.isFinite(modelContextWindow) && modelContextWindow > 0) {
+      this.lastContextUsage = { inputTokens, modelContextWindow, usedPercent };
+    }
+    this.log.record('telemetry', 'context', {
+      origin, ...fields, markers, presence: telemetry?.presence ?? [],
+      inputTokens, modelContextWindow, usedPercent, compactSignal, telemetry,
+    });
+  }
+
+  async #inspectConversationStream(requestId, stream) {
+    try {
+      const response = await this.contents.debugger.sendCommand('Network.getResponseBody', { requestId });
+      const body = response?.base64Encoded ? Buffer.from(response.body ?? '', 'base64') : Buffer.from(response?.body ?? '', 'utf8');
+      const metadata = payloadMetadata(body);
+      this.log.record('telemetry', 'conversation-stream-inspected', {
+        requestId, url: stream.url, bytes: metadata.bytes, sha256: metadata.sha256, telemetryFound: !!metadata.telemetry,
+      });
+      if (metadata.telemetry) this.#recordContextTelemetry('conversation-sse', metadata.telemetry, { requestId, url: stream.url });
+    } catch (error) {
+      this.log.record('telemetry', 'conversation-stream-inspection-failed', {
+        requestId, url: stream.url, name: error?.name ?? 'Error', code: error?.code ?? null,
+      });
+    }
   }
 
   async sampleDom() {
@@ -366,6 +429,7 @@ export class ChromiumDiagnostics {
     this.started = false;
     if (this.sampleTimer) clearInterval(this.sampleTimer);
     this.sampleTimer = null;
+    this.streamResponses.clear();
     for (const [name, handler] of this.handlers) this.contents.removeListener(name, handler);
     this.handlers = [];
     const debug = this.contents.debugger;

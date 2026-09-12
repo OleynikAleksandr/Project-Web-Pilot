@@ -55,3 +55,7 @@
 
 С 12.09.2026 Web Pilot 0.6 пишет пассивный Chromium diagnostic log для исследования ChatGPT Web auto-compact: `~/Library/Application Support/Project Web Pilot/diagnostics/chromium-events.jsonl` и одна ротация `.1`. Журнал не является доказательством compact сам по себе и пока не запускает автоматическое обновление контекста. После наблюдаемого/предполагаемого compact нужно анализировать временной диапазон журнала и искать устойчивый сетевой/CDP/DOM признак; только после повторяемого сигнала проектировать автоматический refresh.
 
+## Наблюдение context window и auto-compact
+
+С scope 006 диагностический файл `~/Library/Application Support/Project Web Pilot/diagnostics/chromium-events.jsonl` содержит отдельные записи `source=telemetry,event=context`, если ChatGPT Web передал распознаваемые context/token metadata. Поля `inputTokens`, `modelContextWindow` и `usedPercent` позволяют построить временную серию; `compactSignal=direct` означает найденный прямой marker, `token-reset`/`token-drop` — только сильный косвенный признак. До подтверждения на реальном ChatGPT Web эти события используются для наблюдения и анализа, но не инициируют автоматическую отправку обновлённого project context.
+

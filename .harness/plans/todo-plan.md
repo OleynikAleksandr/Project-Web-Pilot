@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 166,
+  "plan_revision": 168,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-context-telemetry-006",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Преобразовать Chromium diagnostics в целевую телеметрию контекстного окна ChatGPT Web: безопасно извлекать token/context usage и прямые признаки auto-compact из WebSocket/SSE/служебных ответов без сохранения текста разговора.",
   "acceptance_criteria": [
     "Парсер распознаёт известные по Codex служебные поля token_count, last_token_usage, input_tokens, model_context_window и прямые compact-маркеры compacted/ContextCompaction/compaction_response_id.",
@@ -116,8 +116,8 @@
         "Electron smoke подтверждает telemetry extraction и отсутствие пользовательского текста в diagnostic log."
       ],
       "expected_commit_message": "feat: наблюдать context telemetry ChatGPT stream",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-context-telemetry-006",
         "task_id": "T002",
@@ -140,10 +140,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: web-pilot-context-telemetry-006
 Current Task: нет
-Revision: 166
+Revision: 168
 
 ## Цель
 
@@ -163,8 +163,8 @@ Revision: 166
   - Git Commit: [DONE] feat: извлекать context telemetry из Chromium payload
   - Reference: web-pilot-context-telemetry-006 / T001 / implementation
   - Файлы: src/chromium-diagnostics.mjs, tests/chromium-diagnostics.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T002: Разбирать служебный stream ChatGPT Web — Ожидает
-  - Git Commit: [PENDING] feat: наблюдать context telemetry ChatGPT stream
+- [DONE] T002: Разбирать служебный stream ChatGPT Web — Завершено
+  - Git Commit: [DONE] feat: наблюдать context telemetry ChatGPT stream
   - Reference: web-pilot-context-telemetry-006 / T002 / implementation
   - Файлы: src/chromium-diagnostics.mjs, tests/electron-smoke.mjs, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md
 

@@ -91,3 +91,7 @@ Project Web Pilot — самостоятельное локальное прил
 
 Project Web Pilot пассивно накапливает диагностический журнал поведения встроенного ChatGPT Chromium, чтобы после предполагаемого auto-compact сравнить фактические события до и после него. Журнал сам не определяет compact и не запускает «Обновить контекст»: текущий scope только собирает доказательства. Основной файл находится в `~/Library/Application Support/Project Web Pilot/diagnostics/chromium-events.jsonl`, предыдущая ротация — рядом с суффиксом `.1`. Пользовательские сообщения, recovery context, cookies, authorization headers, request bodies и query values не записываются.
 
+## Целевая context telemetry — scope 006
+
+Chromium diagnostics теперь ориентирован не только на общий forensic log, но и на конкретные server-side признаки контекстного окна. Для WebSocket и `POST /backend-api/f/conversation` (`text/event-stream`) Web Pilot в памяти ищет безопасные token/context поля и markers, подтверждённые на нативных Codex JSONL: `token_count`, `last_token_usage`, `input_tokens`, `model_context_window`, `compacted`, `ContextCompaction` и наличие `compaction_response_id`. В журнал записываются только числовая telemetry и признаки событий; сырой SSE/WebSocket payload, текст сообщений и summary не сохраняются. Этот scope по-прежнему не запускает автоматическое «Обновить контекст»: сначала требуется реальное наблюдение сигнала ChatGPT Web.
+
