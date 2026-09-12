@@ -176,6 +176,14 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(await sidebar.executeJavaScript('document.getElementById("accept-plan").disabled'), true);
   assert.equal(snapshot().planAcceptance, null);
 
+  const nextReadyPlan = { ...readyPlan, plan_revision: closedPlan.plan_revision + 1, scope_id: 'fixture-plan-ui-b',
+    execution_scope_status: 'ACTIVE', delivery_status: 'READY_FOR_ACCEPTANCE', archived_scope_id: 'fixture-plan-ui', current_task_id: null };
+  await writeFixturePlan(nextReadyPlan); controller.attach(store.selected()); await controller.tick();
+  await waitFor(() => sidebar.executeJavaScript('document.getElementById(\"plan-status\").textContent.includes(\"ожидается ваша приёмка\")'), 'next scope ready UI', snapshot);
+  assert.equal(snapshot().planAcceptance, null, 'Acceptance state from previous scope must not leak into the next scope');
+  assert.equal(await sidebar.executeJavaScript('document.getElementById(\"accept-plan\").textContent'), 'Принять');
+  assert.equal(await sidebar.executeJavaScript('document.getElementById(\"accept-plan\").disabled'), false);
+
   await fs.writeFile(planFile, originalPlanText); controller.attach(store.selected()); await controller.tick();
   await waitFor(() => sidebar.executeJavaScript('document.getElementById("plan-status").textContent === "План ещё не создан"'), 'restore fixture plan', snapshot);
   assert.equal(await sidebar.executeJavaScript('document.getElementById("plan-note").hidden'), true);

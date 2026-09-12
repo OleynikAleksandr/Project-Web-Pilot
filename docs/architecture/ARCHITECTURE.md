@@ -397,3 +397,7 @@ Sidebar рендерит `selected.planView` как самостоятельну
 ## Closed-state карточки плана — scope 004 / T001
 
 Renderer использует уже существующий `planView.state=closed`, который `readWorkspace()` формирует для `NONE` с непустым `archived_scope_id`. В этом состоянии карточка показывает основной статус «Scope завершён и архивирован» и нейтральную вторую строку «Проект готов к следующему новому плану.». Кнопка приёмки остаётся disabled; отдельного IPC или нового lifecycle-состояния не добавляется.
+
+## Scope-bound приёмка — scope 004 / T002
+
+Transient `planAcceptance` теперь хранит `scopeId` вместе с workspace. Sidebar получает `sending/sent/unknown` только когда совпадают и workspace, и текущий `scopeId`; поэтому подтверждение предыдущего scope не может заблокировать кнопку «Принять» в следующем scope того же проекта. Main использует тот же `scopeId` для дедупликации повторного клика.

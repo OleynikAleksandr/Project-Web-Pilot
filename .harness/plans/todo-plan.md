@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 154,
+  "plan_revision": 156,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-closed-plan-004",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "После штатной приёмки и архивирования scope явно показывать в карточке План, что scope завершён и проект готов к следующему новому плану.",
   "acceptance_criteria": [
     "При NONE с archived_scope_id карточка План показывает «Scope завершён и архивирован».",
@@ -115,8 +115,8 @@
         "electron-smoke"
       ],
       "expected_commit_message": "fix: сбрасывать приёмку между scope",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-closed-plan-004",
         "task_id": "T002",
@@ -144,10 +144,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: web-pilot-closed-plan-004
 Current Task: нет
-Revision: 154
+Revision: 156
 
 ## Цель
 
@@ -167,8 +167,8 @@ Revision: 154
   - Git Commit: [DONE] feat: показать завершённый scope в плане
   - Reference: web-pilot-closed-plan-004 / T001 / implementation
   - Файлы: src/ui/index.html, src/ui/sidebar.mjs, tests/electron-smoke.mjs, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T002: Не переносить Отправлено на следующий scope — Ожидает
-  - Git Commit: [PENDING] fix: сбрасывать приёмку между scope
+- [DONE] T002: Не переносить Отправлено на следующий scope — Завершено
+  - Git Commit: [DONE] fix: сбрасывать приёмку между scope
   - Reference: web-pilot-closed-plan-004 / T002 / implementation
   - Файлы: src/main.mjs, tests/electron-smoke.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 

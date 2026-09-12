@@ -350,3 +350,7 @@ Smoke проверяет disabled при `not-created` и working, enabled то�
 ## Scope 004 / T001 — завершённый scope
 
 Electron smoke после READY_FOR_ACCEPTANCE переводит fixture-plan в `execution_scope_status=NONE` с `archived_scope_id`, проверяет точные строки «Scope завершён и архивирован» и «Проект готов к следующему новому плану.», скрытие второй строки после возврата в `not-created` и disabled-кнопку приёмки в closed-state.
+
+## Scope 004 / T002 — новый scope после принятого
+
+Electron smoke воспроизводит последовательность: scope A в READY_FOR_ACCEPTANCE → команда приёмки подтверждена (`sent`) → A переходит в closed → появляется scope B в READY_FOR_ACCEPTANCE. Для scope B `planAcceptance` обязан быть `null`, кнопка снова показывает «Принять» и активна.

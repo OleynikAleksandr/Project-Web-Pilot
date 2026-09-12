@@ -137,7 +137,8 @@ function snapshot() {
   })),
     archives: projectedArchives(), settings: settingsState,
     selected, context: controller?.state ?? { phase: 'selected', servicesReady: false, messageSent: false },
-    planAcceptance: planAcceptance?.workspace === selected?.workspace && selected?.planView?.state === 'awaiting-acceptance' ? planAcceptance.state : null,
+    planAcceptance: planAcceptance?.workspace === selected?.workspace && planAcceptance?.scopeId === selected?.scopeId
+      && selected?.planView?.state === 'awaiting-acceptance' ? planAcceptance.state : null,
     runtimeFolder, theme: shellTheme, hideToolCalls, sidebarWidth, sidebarMinWidth: SIDEBAR_MIN_WIDTH, pageLoading, startupError, storageError, setup: setupState, workspaceHealth, version: app.getVersion(), fixture: smoke };
 }
 
@@ -368,17 +369,18 @@ function registerIpc() {
     if (info.planView?.state !== 'awaiting-acceptance') throw new Error('План ещё не готов к приёмке.');
     if (!current.chatUrl || normalizeChatUrl(browser.webContents.getURL()) !== current.chatUrl)
       throw new Error('Сначала откройте сохранённый чат этого проекта.');
-    if (planAcceptance?.workspace === current.workspace && ['sending', 'sent', 'unknown'].includes(planAcceptance.state)) return planAcceptance.state;
-    planAcceptance = { workspace: current.workspace, state: 'sending' }; publish();
+    if (planAcceptance?.workspace === current.workspace && planAcceptance?.scopeId === info.scopeId
+        && ['sending', 'sent', 'unknown'].includes(planAcceptance.state)) return planAcceptance.state;
+    planAcceptance = { workspace: current.workspace, scopeId: info.scopeId, state: 'sending' }; publish();
     const sameChat = () => {
       const selected = store.selected();
       return selected?.workspace === current.workspace && selected.sessionId === current.sessionId
         && normalizeChatUrl(browser.webContents.getURL()) === current.chatUrl;
     };
     const result = await controller.composer.sendUserMessage({ text: PLAN_ACCEPTANCE_MESSAGE, canContinue: sameChat });
-    if (result.state === 'sent') { planAcceptance = { workspace: current.workspace, state: 'sent' }; return 'sent'; }
+    if (result.state === 'sent') { planAcceptance = { workspace: current.workspace, scopeId: info.scopeId, state: 'sent' }; return 'sent'; }
     if (result.state === 'unknown') {
-      planAcceptance = { workspace: current.workspace, state: 'unknown' };
+      planAcceptance = { workspace: current.workspace, scopeId: info.scopeId, state: 'unknown' };
       throw new Error('Команда могла быть отправлена. Проверьте чат; повторная отправка заблокирована до изменения состояния плана.');
     }
     planAcceptance = null;
