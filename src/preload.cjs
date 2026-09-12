@@ -3,6 +3,7 @@ contextBridge.exposeInMainWorld('webPilot', Object.freeze({
   openSettings: () => ipcRenderer.invoke('pilot:open-settings'),
   closeSettings: () => ipcRenderer.invoke('pilot:close-settings'),
   setTheme: theme => ipcRenderer.invoke('pilot:set-theme', theme),
+  setHideToolCalls: value => ipcRenderer.invoke('pilot:set-hide-tool-calls', value),
   archiveProject: workspace => ipcRenderer.invoke('pilot:archive-project', workspace),
   selectArchive: workspace => ipcRenderer.invoke('pilot:select-archive', workspace),
   restoreProject: workspace => ipcRenderer.invoke('pilot:restore-project', workspace),

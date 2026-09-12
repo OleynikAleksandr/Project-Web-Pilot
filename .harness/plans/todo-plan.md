@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 86,
+  "plan_revision": 88,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
@@ -1233,8 +1233,8 @@
         "suite"
       ],
       "expected_commit_message": "feat: скрывать строки вызовов инструментов ChatGPT",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-prototype-001",
         "task_id": "T032",
@@ -1347,7 +1347,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 86
+Revision: 88
 
 ## Цель
 
@@ -1493,8 +1493,8 @@ Revision: 86
   - Git Commit: [DONE] test: проверить темы оболочки Web Pilot
   - Reference: web-pilot-prototype-001 / T031 / implementation
   - Файлы: tests/electron-smoke.mjs, README.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/DECISIONS.md, docs/PRODUCT.md
-- [TODO] T032: Фильтровать строки вызовов инструментов ChatGPT — Ожидает
-  - Git Commit: [PENDING] feat: скрывать строки вызовов инструментов ChatGPT
+- [DONE] T032: Фильтровать строки вызовов инструментов ChatGPT — Завершено
+  - Git Commit: [DONE] feat: скрывать строки вызовов инструментов ChatGPT
   - Reference: web-pilot-prototype-001 / T032 / implementation
   - Файлы: src/main.mjs, src/preload.cjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T033: Добавить настройку фильтра и проверить сборку — Ожидает

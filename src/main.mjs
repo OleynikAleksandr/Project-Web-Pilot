@@ -23,6 +23,7 @@ const store = new WorkspaceSessions(path.join(dataDir, 'workspaces.json'));
 const partition = smoke ? 'web-pilot-smoke' : 'persist:chatgpt';
 let runtimeFolder = path.join(os.homedir(), 'VSCODE/Codex Local Mac/mac-codex-local');
 let shellTheme = 'light';
+let hideToolCalls = true;
 let window, browser, sidebar, runtime, controller, interval, fixture;
 let navigationId = 0;
 let pageLoading = false;
@@ -43,8 +44,52 @@ function applyShellTheme(theme) {
   if (window && !window.isDestroyed()) window.setBackgroundColor(shellBackground[shellTheme]);
 }
 
+async function applyToolCallVisibility() {
+  if (!browser || browser.webContents.isDestroyed()) return;
+  const url = browser.webContents.getURL();
+  if (!url.startsWith('https://chatgpt.com/')) return;
+  const hide = hideToolCalls;
+  await browser.webContents.executeJavaScript(`(() => {
+    const attr = 'data-web-pilot-tool-call-hidden';
+    const stateKey = '__webPilotToolCallFilter';
+    const labels = ['вызываемый инструмент', 'called tool', 'tool call'];
+    const normalize = value => String(value ?? '').replace(/\\s+/g, ' ').trim().toLocaleLowerCase();
+    const restore = () => {
+      for (const element of document.querySelectorAll('[' + attr + ']')) {
+        element.style.removeProperty('display');
+        element.removeAttribute(attr);
+      }
+    };
+    restore();
+    window[stateKey]?.disconnect?.();
+    delete window[stateKey];
+    if (!${hide ? 'true' : 'false'}) return 0;
+    const matches = element => {
+      const text = normalize(element.textContent);
+      return labels.some(label => text === label || text.startsWith(label + ' '));
+    };
+    const apply = () => {
+      for (const element of document.querySelectorAll('button,[role="button"],summary')) {
+        if (!matches(element)) continue;
+        element.setAttribute(attr, 'true');
+        element.style.setProperty('display', 'none', 'important');
+      }
+    };
+    let queued = false;
+    const observer = new MutationObserver(() => {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(() => { queued = false; apply(); });
+    });
+    observer.observe(document.documentElement, { childList: true, subtree: true, characterData: true });
+    window[stateKey] = { disconnect: () => observer.disconnect(), apply };
+    apply();
+    return document.querySelectorAll('[' + attr + ']').length;
+  })()`, true).catch(() => {});
+}
+
 async function saveSettings(overrides = {}) {
-  const settings = { runtimeFolder, shellTheme, ...overrides };
+  const settings = { runtimeFolder, shellTheme, hideToolCalls, ...overrides };
   await fsp.mkdir(dataDir, { recursive: true, mode: 0o700 });
   await fsp.writeFile(settingsFile + '.tmp', JSON.stringify(settings, null, 2) + '\n', { mode: 0o600 });
   await fsp.rename(settingsFile + '.tmp', settingsFile);
@@ -74,7 +119,7 @@ function snapshot() {
       workspace, projectId, name, archivedAt, sessionCount: sessions.length, deletionPending: deletion?.isPending(workspace) ?? false,
     })), settings: settingsState,
     selected, context: controller?.state ?? { phase: 'selected', servicesReady: false, messageSent: false },
-    runtimeFolder, theme: shellTheme, pageLoading, startupError, storageError, setup: setupState, workspaceHealth, version: app.getVersion(), fixture: smoke };
+    runtimeFolder, theme: shellTheme, hideToolCalls, pageLoading, startupError, storageError, setup: setupState, workspaceHealth, version: app.getVersion(), fixture: smoke };
 }
 
 function publish() {
@@ -203,6 +248,13 @@ function registerIpc() {
     if (input === shellTheme) return;
     await saveSettings({ shellTheme: input });
     applyShellTheme(input);
+  });
+  registerAction('pilot:set-hide-tool-calls', async input => {
+    if (typeof input !== 'boolean') throw new Error('Некорректная настройка отображения инструментов.');
+    if (input === hideToolCalls) return;
+    await saveSettings({ hideToolCalls: input });
+    hideToolCalls = input;
+    await applyToolCallVisibility();
   });
   registerAction('pilot:archive-project', async input => {
     const project = store.project(input);
@@ -345,8 +397,8 @@ async function createWindow() {
   sidebar.webContents.on('will-navigate', event => event.preventDefault());
   sidebar.webContents.on('did-finish-load', publish);
   browser.webContents.on('page-title-updated', rememberSessionTitle);
-  browser.webContents.on('did-navigate-in-page', () => { publish(); if (!pageLoading && !setupState && !settingsState) void controller?.tick(); });
-  browser.webContents.on('did-finish-load', () => { publish(); if (!pageLoading && !setupState && !settingsState) void controller?.tick(); });
+  browser.webContents.on('did-navigate-in-page', () => { void applyToolCallVisibility(); publish(); if (!pageLoading && !setupState && !settingsState) void controller?.tick(); });
+  browser.webContents.on('did-finish-load', () => { void applyToolCallVisibility(); publish(); if (!pageLoading && !setupState && !settingsState) void controller?.tick(); });
   browser.webContents.on('render-process-gone', () => { controller?.cancel(); report(new Error('Страница ChatGPT закрылась. Нажмите обновление.')); });
   window.on('resize', layout);
   window.on('closed', () => {
@@ -391,6 +443,7 @@ else {
       const settings = JSON.parse(await fsp.readFile(settingsFile, 'utf8'));
       if (typeof settings.runtimeFolder === 'string' && path.isAbsolute(settings.runtimeFolder)) runtimeFolder = settings.runtimeFolder;
       if (['light', 'dark'].includes(settings.shellTheme)) shellTheme = settings.shellTheme;
+      if (typeof settings.hideToolCalls === 'boolean') hideToolCalls = settings.hideToolCalls;
     } catch (error) { if (error.code !== 'ENOENT') startupError = { code: 'SETTINGS_INVALID', message: 'Не удалось прочитать локальные настройки Web Pilot. Проверьте настройки подключения.' }; }
     applyShellTheme(shellTheme);
     try { await store.load(); } catch (error) { startupError = publicError(error); storageError = true; }
