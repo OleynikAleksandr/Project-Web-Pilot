@@ -313,3 +313,7 @@ Renderer больше не обращается к `workspace-name`, `workspace-
 ## Scope 002 / T010 — системный clipboard
 
 Команда `pilot:copy-workspace-path` принимает только зарегистрированный активный workspace и возвращает тот же канонический путь после записи в Electron clipboard. Полный пользовательский путь через меню ⋯ и фактическое содержимое clipboard проверяются Electron smoke в T011.
+
+## Scope 002 / T011 — компактный блок и копирование пути
+
+Node-suite: 52/52. Electron smoke подтверждает, что `workspace-details` содержит единственный `plan-text`, прежние элементы имени/пути/health/notice отсутствуют, а пункт ⋯ → «Скопировать полный путь» записывает точный канонический workspace в системный clipboard. В ходе проверки обнаружено и исправлено требование Electron 44 ожидать асинхронный `clipboard.writeText()`.

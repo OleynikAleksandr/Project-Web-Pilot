@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 124,
+  "plan_revision": 128,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-layout-archive-002",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Упростить интерфейс выбранного проекта: под списком сессий оставить только строку плана, а полный путь workspace перенести в команду меню проекта «Скопировать полный путь», не меняя представление самого плана.",
   "acceptance_criteria": [
     "Граница между сайдбаром и ChatGPT перетаскивается мышью; сайдбар не сужается меньше текущих 312 px, а выбранная ширина сохраняется между запусками.",
@@ -433,11 +433,13 @@
         "T010"
       ],
       "functional_paths": [
-        "tests/electron-smoke.mjs"
+        "tests/electron-smoke.mjs",
+        "src/main.mjs"
       ],
       "documentation_paths": [
         "README.md",
-        "docs/VERIFICATION.md"
+        "docs/VERIFICATION.md",
+        "docs/architecture/ARCHITECTURE.md"
       ],
       "acceptance_criteria": [
         "Smoke подтверждает, что под выбранным проектом отображается только plan-text",
@@ -449,8 +451,8 @@
         "electron-smoke"
       ],
       "expected_commit_message": "test: проверить компактный блок проекта",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-layout-archive-002",
         "task_id": "T011",
@@ -478,10 +480,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: web-pilot-layout-archive-002
 Current Task: нет
-Revision: 124
+Revision: 128
 
 ## Цель
 
@@ -544,10 +546,10 @@ Revision: 124
   - Git Commit: [DONE] feat: копировать путь workspace из меню
   - Reference: web-pilot-layout-archive-002 / T010 / implementation
   - Файлы: src/main.mjs, src/preload.cjs, src/ui/sidebar.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T011: Проверить упрощённый блок проекта и пересобрать приложение — Ожидает
-  - Git Commit: [PENDING] test: проверить компактный блок проекта
+- [DONE] T011: Проверить упрощённый блок проекта и пересобрать приложение — Завершено
+  - Git Commit: [DONE] test: проверить компактный блок проекта
   - Reference: web-pilot-layout-archive-002 / T011 / implementation
-  - Файлы: tests/electron-smoke.mjs, README.md, docs/VERIFICATION.md
+  - Файлы: tests/electron-smoke.mjs, src/main.mjs, README.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 
 ## Context Pack For This Cycle
 

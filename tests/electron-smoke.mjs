@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
-import { nativeTheme } from 'electron';
+import { nativeTheme, clipboard } from 'electron';
 import { readWorkspace, WorkspaceSessions } from '../src/workspace-session.mjs';
 
 let packetLoads = 0;
@@ -123,6 +123,17 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   const prefs = browser.getLastWebPreferences();
   assert.equal(prefs.nodeIntegration, false); assert.equal(prefs.contextIsolation, true); assert.equal(prefs.sandbox, true);
   assert.throws(() => assertLocalSender({ sender: browser, senderFrame: browser.mainFrame }), { code: 'IPC_FORBIDDEN' });
+  assert.equal(await sidebar.executeJavaScript(`({
+    childCount: document.getElementById('workspace-details').children.length,
+    onlyPlan: document.getElementById('workspace-details').firstElementChild?.id,
+    name: !!document.getElementById('workspace-name'), path: !!document.getElementById('workspace-path'),
+    health: !!document.getElementById('workspace-health'), notice: !!document.getElementById('workspace-notice')
+  })`).then(value => JSON.stringify(value)), JSON.stringify({ childCount: 1, onlyPlan: 'plan-text', name: false, path: false, health: false, notice: false }));
+  assert.ok((await sidebar.executeJavaScript('document.getElementById("plan-text").textContent')).startsWith('План · версия '));
+  await clipboard.clear();
+  await waitFor(() => sidebar.executeJavaScript('!document.querySelector(".project-menu-button").disabled'), 'project menu enabled', snapshot);
+  await sidebar.executeJavaScript(`document.querySelector('.project-menu-button').click(); document.querySelector('.copy-workspace-path').click()`);
+  await waitFor(async () => await clipboard.readText() === workspace, 'copy exact workspace path from menu', snapshot);
   assert.equal(await sidebar.executeJavaScript('document.getElementById("context-title").textContent'), 'Контекст передан');
   assert.equal(await sidebar.executeJavaScript('document.getElementById("context-toggle").getAttribute("aria-expanded")'), 'false');
   assert.equal(await sidebar.executeJavaScript('document.getElementById("context-details").hidden'), true);
@@ -133,7 +144,6 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(await sidebar.executeJavaScript('document.getElementById("context-details").hidden'), true);
   const disclosureSize = await sidebar.executeJavaScript(`(() => { const e=document.querySelector('.expand-project'); const p=getComputedStyle(e,'::before'); return {button:e.getBoundingClientRect().width, triangle:parseFloat(p.borderLeftWidth), expanded:e.getAttribute('aria-expanded')}; })()`);
   assert.ok(disclosureSize.button >= 32); assert.ok(disclosureSize.triangle >= 11); assert.equal(disclosureSize.expanded, 'false');
-  assert.equal(await sidebar.executeJavaScript('document.getElementById("workspace-name").textContent'), 'Тестовый проект с пробелами');
   const restored = new WorkspaceSessions(store.file); await restored.load();
   assert.equal(restored.selected().sessionId, first.sessionId); assert.equal(restored.selected().chatUrl, first.chatUrl);
   controller.attach(store.selected()); await controller.tick();
@@ -258,7 +268,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   firstArchiveWindow.close();
   const result = { mode: 'isolated-fixture', electron: process.versions.electron, chromium: process.versions.chrome,
     views: window.contentView.children.length, secureRemote: true, sidebarIpc: true, archiveRestore: true, archiveRestart: true, deleteCancel: true, localDeletion: true, cloudChatPreserved: true, workspaceCreation: true, workspaceValidation: true, cancelPreservesSession: true, startupMessages: packetLoads,
-    restartKeepsSession: true, newChatCreatesSession: true, sessionTree: true, selectsEarlierSession: true, resizableSidebar: true, separateArchiveWindow: true, archiveMultiSelect: true, archiveForgetKeepsFolder: true, shellTheme: true, nativeTitlebarTheme: nativeTheme.shouldUseDarkColors, toolCallFilter: true, microphonePermission: true, geolocationPermission: true, cameraPermission: false, fullContextBytes: Buffer.byteLength(fixtureContext), liveChatGPT: false, agentToolsRequired: false };
+    restartKeepsSession: true, newChatCreatesSession: true, sessionTree: true, selectsEarlierSession: true, compactWorkspaceDetails: true, projectPathClipboard: true, resizableSidebar: true, separateArchiveWindow: true, archiveMultiSelect: true, archiveForgetKeepsFolder: true, shellTheme: true, nativeTitlebarTheme: nativeTheme.shouldUseDarkColors, toolCallFilter: true, microphonePermission: true, geolocationPermission: true, cameraPermission: false, fullContextBytes: Buffer.byteLength(fixtureContext), liveChatGPT: false, agentToolsRequired: false };
   await fs.writeFile(path.join(dataDir, 'smoke-result.json'), JSON.stringify(result, null, 2));
   console.log(JSON.stringify(result));
 }

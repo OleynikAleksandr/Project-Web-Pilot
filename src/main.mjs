@@ -352,10 +352,10 @@ function registerIpc() {
     hideToolCalls = input;
     await applyToolCallVisibility();
   });
-  registerAction('pilot:copy-workspace-path', input => {
+  registerAction('pilot:copy-workspace-path', async input => {
     const project = store.project(input);
     if (!project || project.archivedAt) throw new Error('Выберите активный проект.');
-    clipboard.writeText(project.workspace);
+    await clipboard.writeText(project.workspace);
     return project.workspace;
   });
   registerAction('pilot:archive-project', async input => {
