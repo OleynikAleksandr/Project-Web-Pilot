@@ -446,3 +446,7 @@ Raw-эксперимент подтвердил транспорт `conversation
 ## Platform boundary внешнего Node — scope 008 / T005
 
 `WorkspaceSetup` больше не содержит Homebrew/Windows-path assumptions. `src/platform.mjs` формирует кандидаты Node для выбранной платформы: на macOS сохраняются `/opt/homebrew/bin/node` и `/usr/local/bin/node`; на Windows используются стандартные `Program Files\\nodejs\\node.exe` и безопасный PATH fallback `node.exe`. При симуляции другой ОС текущий `process.execPath` принимается только если имеет корректный абсолютный layout той платформы, поэтому macOS executable не может случайно попасть в win32-конфигурацию. Ошибка установки Node теперь платформенно-нейтральна.
+
+## Platform boundary main/build — scope 008 / T006
+
+Главный процесс больше не формирует путь `Codex Local Mac/mac-codex-local` самостоятельно: `defaultRuntimeFolder(home, platform)` возвращает platform-specific convention, а дальнейшая runtime-логика остаётся общей. `package.json` разделяет `build:mac` и `build:win`; `npm run build` сохраняет прежний macOS arm64 alias. `build:win` создаёт Electron win32-x64 package с теми же `src` и `resources`, но без macOS `extend-info`. Успешная cross-package сборка на macOS доказывает только отсутствие packaging blockers; отдельный Windows MCP/runtime, desktop automation и физический запуск на Windows остаются будущей задачей.

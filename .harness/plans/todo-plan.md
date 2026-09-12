@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 188,
+  "plan_revision": 190,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-context-observation-008",
@@ -250,8 +250,8 @@
         "Electron smoke и полный suite проходят на macOS; Windows build обозначен как packaging target, а не как принятая Windows-версия."
       ],
       "expected_commit_message": "refactor: подготовить platform boundary приложения",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-context-observation-008",
         "task_id": "T006",
@@ -282,7 +282,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-context-observation-008
 Current Task: нет
-Revision: 188
+Revision: 190
 
 ## Цель
 
@@ -318,8 +318,8 @@ Revision: 188
   - Git Commit: [DONE] refactor: отделить platform layout Node runtime
   - Reference: web-pilot-context-observation-008 / T005 / implementation
   - Файлы: src/platform.mjs, src/workspace-setup.mjs, tests/workspace-setup.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T006: Подключить platform boundary в main и build scripts — Ожидает
-  - Git Commit: [PENDING] refactor: подготовить platform boundary приложения
+- [DONE] T006: Подключить platform boundary в main и build scripts — Завершено
+  - Git Commit: [DONE] refactor: подготовить platform boundary приложения
   - Reference: web-pilot-context-observation-008 / T006 / implementation
   - Файлы: src/platform.mjs, src/main.mjs, package.json, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 

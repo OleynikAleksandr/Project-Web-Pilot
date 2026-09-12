@@ -102,3 +102,7 @@ Chromium diagnostics теперь ориентирован не только н�
 ## Результат полного transport-эксперимента — scope 008 / T002
 
 Контролируемый raw-capture двух коротких turn показал, что ChatGPT Web не передаёт browser-клиенту числовые `input_tokens`, `output_tokens`, `total_tokens` или текущую занятость context window даже внутри вложенного `encoded_item`. Зато live `GET /backend-api/models` для используемого `gpt-5-6-thinking` возвращает `max_tokens=262144`, а полный объект разговора содержит отдельное поле `context_truncation_continuation`, которое в момент эксперимента равно `null`. Временный raw-capture удалён из продукта. Обычная диагностика теперь сохраняет только безопасный model limit и булево/типовое состояние truncation continuation; содержимое continuation, история разговора и сырые payload не записываются.
+
+## Граница платформы macOS/Windows — scope 008 / T004–T006
+
+Project Web Pilot остаётся одним Electron-приложением с общей Chromium/UI/workflow-логикой. Подготовка к Windows выполнена без отдельной кодовой ветки: platform-specific различия локального runtime, Python venv, внешнего Node и default runtime folder вынесены в `src/platform.mjs`. На macOS поведение и текущий путь Codex Local Mac сохранены. Windows layout и packaging target добавлены как подготовка; это не означает, что Windows Local MCP/Desktop runtime уже реализован или принят пользователем.

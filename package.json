@@ -12,7 +12,9 @@
     "start": "electron .",
     "test": "node --test tests/*.test.mjs",
     "smoke": "electron . --smoke",
-    "build": "electron-packager . 'Project Web Pilot' --platform=darwin --arch=arm64 --out=.harness/runtime/build --overwrite --app-bundle-id=com.oleynik.ProjectWebPilot --app-version=0.6.0 --extend-info=resources/mac-permissions.plist --asar --extra-resource=resources --ignore='^/(resources|docs|tests|scripts|\\.harness|\\.git|\\.codex|AGENTS\\.md|README\\.md)'"
+    "build": "npm run build:mac",
+    "build:mac": "electron-packager . \"Project Web Pilot\" --platform=darwin --arch=arm64 --out=.harness/runtime/build --overwrite --app-bundle-id=com.oleynik.ProjectWebPilot --app-version=0.6.0 --extend-info=resources/mac-permissions.plist --asar --extra-resource=resources --ignore=\"^/(resources|docs|tests|scripts|\\.harness|\\.git|\\.codex|AGENTS\\.md|README\\.md)\"",
+    "build:win": "electron-packager . \"Project Web Pilot\" --platform=win32 --arch=x64 --out=.harness/runtime/build --overwrite --app-version=0.6.0 --asar --extra-resource=resources --ignore=\"^/(resources|docs|tests|scripts|\\.harness|\\.git|\\.codex|AGENTS\\.md|README\\.md)\""
   },
   "engines": {
     "node": ">=22.12.0"

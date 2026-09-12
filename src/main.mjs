@@ -11,6 +11,7 @@ import { ContextSession } from './context-session.mjs';
 import { WorkspaceDeletion } from './workspace-deletion.mjs';
 import { WorkspaceSetup } from './workspace-setup.mjs';
 import { ChromiumDiagnostics } from './chromium-diagnostics.mjs';
+import { defaultRuntimeFolder } from './platform.mjs';
 
 const smoke = !app.isPackaged && process.argv.includes('--smoke');
 const sourceDir = path.dirname(fileURLToPath(import.meta.url));
@@ -24,7 +25,7 @@ const settingsFile = path.join(dataDir, 'settings.json');
 const chromiumDiagnosticsFile = path.join(dataDir, 'diagnostics', 'chromium-events.jsonl');
 const store = new WorkspaceSessions(path.join(dataDir, 'workspaces.json'));
 const partition = smoke ? 'web-pilot-smoke' : 'persist:chatgpt';
-let runtimeFolder = path.join(os.homedir(), 'VSCODE/Codex Local Mac/mac-codex-local');
+let runtimeFolder = defaultRuntimeFolder(os.homedir(), process.platform);
 let shellTheme = 'light';
 let hideToolCalls = true;
 const SIDEBAR_MIN_WIDTH = 312;

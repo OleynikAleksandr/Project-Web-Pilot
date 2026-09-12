@@ -4,6 +4,13 @@ function pathApi(platform) {
   return platform === 'win32' ? path.win32 : path.posix;
 }
 
+export function defaultRuntimeFolder(homeDir, platform = process.platform) {
+  const api = pathApi(platform);
+  if (platform === 'darwin') return api.join(homeDir, 'VSCODE', 'Codex Local Mac', 'mac-codex-local');
+  if (platform === 'win32') return api.join(homeDir, 'VSCODE', 'Codex Local Windows', 'windows-codex-local');
+  return api.join(homeDir, 'VSCODE', 'Codex Local', 'codex-local');
+}
+
 export function runtimeFolderCandidates(input, platform = process.platform) {
   const api = pathApi(platform);
   const names = platform === 'darwin'
