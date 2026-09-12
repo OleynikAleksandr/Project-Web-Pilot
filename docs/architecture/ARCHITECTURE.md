@@ -406,3 +406,7 @@ Transient `planAcceptance` теперь хранит `scopeId` вместе с w
 
 `src/chromium-diagnostics.mjs` содержит независимый от UI диагностический слой. `DiagnosticJsonl` сериализует JSONL-запись и ротирует основной файл при достижении лимита, сохраняя одну предыдущую копию. `safeUrl()` удаляет fragment и значения query-параметров и маскирует длинные/UUID path-segments. `payloadMetadata()` никогда не сохраняет исходный WebSocket/SSE payload: только byte length, SHA-256, top-level JSON keys и ограниченный набор безопасных identifier-полей. `ChromiumDiagnostics` умеет принимать native WebContents/CDP события и безопасные DOM pulses; подключение к production WebContents выполняется отдельной задачей T002.
 
+## Подключение Chromium diagnostics — scope 005 / T002
+
+Главный ChatGPT `WebContents` получает один `ChromiumDiagnostics`. Чтобы не вмешиваться в создание renderer, CDP подключается только после первого `did-finish-load`, а не к исходному `about:blank`. Затем включаются `Network`, `Page`, `Log` и lifecycle events. Native WebContents события, request/response metadata, WebSocket/EventSource metadata и периодический DOM pulse пишутся в `userData/diagnostics/chromium-events.jsonl`. Production DOM pulse выполняется раз в 5 секунд и содержит только redacted URL, количество user/assistant сообщений, признаки busy/composer и `document.visibilityState`. Файл ограничен 25 MiB и ротируется в одну предыдущую копию. Диагностика best-effort: ошибка attach не должна ломать ChatGPT.
+

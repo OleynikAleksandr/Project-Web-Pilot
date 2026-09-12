@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 160,
+  "plan_revision": 162,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-compact-diagnostics-005",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Добавить пассивный диагностический журнал Electron/Chromium для исследования внутреннего auto-compact ChatGPT Web без вмешательства в работу чата и без записи чувствительного содержимого.",
   "acceptance_criteria": [
     "Project Web Pilot постоянно пишет отдельный JSONL-журнал наблюдаемых событий ChatGPT WebContents с точными временными метками.",
@@ -119,8 +119,8 @@
         "Закрытие окна корректно flush/stop diagnostics."
       ],
       "expected_commit_message": "feat: логировать события ChatGPT Chromium",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-compact-diagnostics-005",
         "task_id": "T002",
@@ -143,10 +143,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: web-pilot-compact-diagnostics-005
 Current Task: нет
-Revision: 160
+Revision: 162
 
 ## Цель
 
@@ -166,8 +166,8 @@ Revision: 160
   - Git Commit: [DONE] feat: добавить безопасный Chromium diagnostics log
   - Reference: web-pilot-compact-diagnostics-005 / T001 / implementation
   - Файлы: src/chromium-diagnostics.mjs, tests/chromium-diagnostics.test.mjs, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T002: Подключить diagnostics к ChatGPT WebContents — Ожидает
-  - Git Commit: [PENDING] feat: логировать события ChatGPT Chromium
+- [DONE] T002: Подключить diagnostics к ChatGPT WebContents — Завершено
+  - Git Commit: [DONE] feat: логировать события ChatGPT Chromium
   - Reference: web-pilot-compact-diagnostics-005 / T002 / implementation
   - Файлы: src/main.mjs, tests/electron-smoke.mjs, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md
 

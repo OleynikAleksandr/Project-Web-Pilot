@@ -359,3 +359,7 @@ Electron smoke воспроизводит последовательность: 
 
 `tests/chromium-diagnostics.test.mjs` проверяет, что URL не содержит query values/fragment и маскирует UUID, JSON/SSE metadata не содержит приватный текст или token values, но сохраняет структурные event identifiers, а JSONL-ротация оставляет валидные ограниченные файлы.
 
+## Scope 005 / T002 — реальный Electron/CDP журнал
+
+Electron smoke запускает diagnostics на настоящем `WebContentsView`, подтверждает `diagnostics/session-start`, успешный CDP attach, native `did-finish-load`, network metadata и DOM pulse с наблюдаемым пользовательским сообщением. Дополнительно весь JSONL проверяется на отсутствие фрагмента recovery context и текста пользовательской команды приёмки. Smoke использует отдельный временный `userData`; production-файл находится в `~/Library/Application Support/Project Web Pilot/diagnostics/chromium-events.jsonl`.
+

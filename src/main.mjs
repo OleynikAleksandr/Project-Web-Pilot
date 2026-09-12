@@ -10,6 +10,7 @@ import { ChatGPTComposer } from './chatgpt-composer.mjs';
 import { ContextSession } from './context-session.mjs';
 import { WorkspaceDeletion } from './workspace-deletion.mjs';
 import { WorkspaceSetup } from './workspace-setup.mjs';
+import { ChromiumDiagnostics } from './chromium-diagnostics.mjs';
 
 const smoke = !app.isPackaged && process.argv.includes('--smoke');
 const sourceDir = path.dirname(fileURLToPath(import.meta.url));
@@ -20,6 +21,7 @@ app.setPath('userData', smoke ? fs.mkdtempSync(path.join(os.tmpdir(), 'web-pilot
   : path.join(app.getPath('appData'), 'Project Web Pilot'));
 const dataDir = app.getPath('userData');
 const settingsFile = path.join(dataDir, 'settings.json');
+const chromiumDiagnosticsFile = path.join(dataDir, 'diagnostics', 'chromium-events.jsonl');
 const store = new WorkspaceSessions(path.join(dataDir, 'workspaces.json'));
 const partition = smoke ? 'web-pilot-smoke' : 'persist:chatgpt';
 let runtimeFolder = path.join(os.homedir(), 'VSCODE/Codex Local Mac/mac-codex-local');
@@ -28,7 +30,7 @@ let hideToolCalls = true;
 const SIDEBAR_MIN_WIDTH = 312;
 const BROWSER_MIN_WIDTH = 600;
 let sidebarWidth = SIDEBAR_MIN_WIDTH;
-let window, browser, sidebar, archiveWindow, runtime, controller, interval, fixture;
+let window, browser, sidebar, archiveWindow, runtime, controller, interval, fixture, chromiumDiagnostics;
 let navigationId = 0;
 let pageLoading = false;
 let startupError = null;
@@ -566,16 +568,23 @@ async function createWindow() {
   browser = new WebContentsView({ webPreferences: remotePreferences() });
   window.contentView.addChildView(sidebar); window.contentView.addChildView(browser);
   secureRemote(browser.webContents);
+  chromiumDiagnostics = new ChromiumDiagnostics(browser.webContents, { file: chromiumDiagnosticsFile,
+    sampleIntervalMs: smoke ? 250 : 5000, allowFixture: smoke });
   sidebar.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   sidebar.webContents.on('will-navigate', event => event.preventDefault());
   sidebar.webContents.on('did-finish-load', publish);
   browser.webContents.on('page-title-updated', rememberSessionTitle);
   browser.webContents.on('did-navigate-in-page', () => { void applyToolCallVisibility(); publish(); if (!pageLoading && !setupState && !settingsState) void controller?.tick(); });
-  browser.webContents.on('did-finish-load', () => { void applyToolCallVisibility(); publish(); if (!pageLoading && !setupState && !settingsState) void controller?.tick(); });
+  browser.webContents.on('did-finish-load', () => {
+    if (!chromiumDiagnostics.started) void chromiumDiagnostics.start({ appVersion: app.getVersion(), electron: process.versions.electron,
+      chromium: process.versions.chrome, fixture: smoke }).catch(() => {});
+    void applyToolCallVisibility(); publish(); if (!pageLoading && !setupState && !settingsState) void controller?.tick();
+  });
   browser.webContents.on('render-process-gone', () => { controller?.cancel(); report(new Error('Страница ChatGPT закрылась. Нажмите обновление.')); });
   window.on('resize', layout);
   window.on('closed', () => {
     controller?.cancel(); clearInterval(interval);
+    void chromiumDiagnostics?.stop(); chromiumDiagnostics = null;
     if (archiveWindow && !archiveWindow.isDestroyed()) archiveWindow.close();
     for (const view of [sidebar, browser]) if (!view.webContents.isDestroyed()) view.webContents.close();
     window = null;
@@ -593,7 +602,8 @@ async function createWindow() {
   if (smoke) {
     await fixture.run({ app, window, browser: browser.webContents, sidebar: sidebar.webContents,
       store, controller, selectWorkspace, snapshot, assertLocalSender, permissionAllowed, dataDir,
-      openArchiveWindow, getArchiveWindow: () => archiveWindow });
+      chromiumDiagnostics, chromiumDiagnosticsFile, openArchiveWindow, getArchiveWindow: () => archiveWindow });
+    await chromiumDiagnostics.stop(); chromiumDiagnostics = null;
     window.close(); app.quit();
   } else { const current = store.selected(); if (current && !storageError && !settingsState) void selectWorkspace(current.workspace).catch(report); else void navigate(); }
 }

@@ -52,7 +52,7 @@ async function waitFor(predicate, description, snapshot) {
   throw new Error(`SMOKE_TIMEOUT: ${description}; ${JSON.stringify(snapshot?.())}`);
 }
 
-export async function run({ app, window, browser, sidebar, store, controller, selectWorkspace, snapshot, assertLocalSender, permissionAllowed, dataDir, getArchiveWindow }) {
+export async function run({ app, window, browser, sidebar, store, controller, selectWorkspace, snapshot, assertLocalSender, permissionAllowed, dataDir, chromiumDiagnostics, chromiumDiagnosticsFile, getArchiveWindow }) {
   assert.equal(app.isPackaged, false, 'Fixtures never run from a packaged app');
   assert.equal(permissionAllowed('media', 'https://chatgpt.com', { mediaTypes: ['audio'] }), true);
   assert.equal(permissionAllowed('media', 'https://chatgpt.com/', { mediaType: 'audio' }), true);
@@ -325,9 +325,21 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 2, 'Web conversation remains after archive operations');
   assert.equal(packetLoads, 2, 'Archive operations never send context packets');
   firstArchiveWindow.close();
+
+  await chromiumDiagnostics.sampleDom(); await chromiumDiagnostics.flush();
+  const diagnosticLines = (await fs.readFile(chromiumDiagnosticsFile, 'utf8')).trim().split('\n').map(line => JSON.parse(line));
+  assert.ok(diagnosticLines.some(entry => entry.source === 'diagnostics' && entry.event === 'session-start'), 'diagnostic session is logged');
+  assert.ok(diagnosticLines.some(entry => entry.source === 'cdp' && entry.event === 'attached'), 'CDP is attached');
+  assert.ok(diagnosticLines.some(entry => entry.source === 'webContents' && entry.event === 'did-finish-load'), 'native load is logged');
+  assert.ok(diagnosticLines.some(entry => entry.source === 'dom' && entry.event === 'pulse' && entry.userMessages >= 1 && entry.composer === true), 'DOM pulse is logged');
+  assert.ok(diagnosticLines.some(entry => entry.source === 'cdp' && ['request','response','loading-finished'].includes(entry.event)), 'network metadata is logged');
+  const diagnosticText = JSON.stringify(diagnosticLines);
+  assert.equal(diagnosticText.includes('Раздел 1: полный контекст проекта'), false, 'diagnostics never contain project context text');
+  assert.equal(diagnosticText.includes('Принимаю текущий план и результат работы'), false, 'diagnostics never contain user message text');
+
   const result = { mode: 'isolated-fixture', electron: process.versions.electron, chromium: process.versions.chrome,
     views: window.contentView.children.length, secureRemote: true, sidebarIpc: true, archiveRestore: true, archiveRestart: true, deleteCancel: true, localDeletion: true, cloudChatPreserved: true, workspaceCreation: true, workspaceValidation: true, cancelPreservesSession: true, startupMessages: packetLoads,
-    restartKeepsSession: true, newChatCreatesSession: true, sessionTree: true, selectsEarlierSession: true, compactWorkspaceDetails: true, projectPathClipboard: true, planAcceptanceButton: true, resizableSidebar: true, separateArchiveWindow: true, archiveMultiSelect: true, archiveForgetKeepsFolder: true, shellTheme: true, nativeTitlebarTheme: nativeTheme.shouldUseDarkColors, toolCallFilter: true, microphonePermission: true, geolocationPermission: true, cameraPermission: false, fullContextBytes: Buffer.byteLength(fixtureContext), liveChatGPT: false, agentToolsRequired: false };
+    restartKeepsSession: true, newChatCreatesSession: true, sessionTree: true, selectsEarlierSession: true, compactWorkspaceDetails: true, projectPathClipboard: true, planAcceptanceButton: true, chromiumDiagnostics: true, resizableSidebar: true, separateArchiveWindow: true, archiveMultiSelect: true, archiveForgetKeepsFolder: true, shellTheme: true, nativeTitlebarTheme: nativeTheme.shouldUseDarkColors, toolCallFilter: true, microphonePermission: true, geolocationPermission: true, cameraPermission: false, fullContextBytes: Buffer.byteLength(fixtureContext), liveChatGPT: false, agentToolsRequired: false };
   await fs.writeFile(path.join(dataDir, 'smoke-result.json'), JSON.stringify(result, null, 2));
   console.log(JSON.stringify(result));
 }
