@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 142,
+  "plan_revision": 144,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-plan-ui-003",
@@ -250,8 +250,8 @@
         "suite"
       ],
       "expected_commit_message": "feat: добавить приёмку плана из sidebar",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-plan-ui-003",
         "task_id": "T006",
@@ -316,7 +316,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-plan-ui-003
 Current Task: нет
-Revision: 142
+Revision: 144
 
 ## Цель
 
@@ -353,8 +353,8 @@ Revision: 142
   - Git Commit: [DONE] feat: безопасно отправлять команду приёмки плана
   - Reference: web-pilot-plan-ui-003 / T005 / implementation
   - Файлы: src/chatgpt-composer.mjs, tests/chatgpt-composer.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T006: Добавить кнопку Принять в карточку плана — Ожидает
-  - Git Commit: [PENDING] feat: добавить приёмку плана из sidebar
+- [DONE] T006: Добавить кнопку Принять в карточку плана — Завершено
+  - Git Commit: [DONE] feat: добавить приёмку плана из sidebar
   - Reference: web-pilot-plan-ui-003 / T006 / implementation
   - Файлы: src/main.mjs, src/preload.cjs, src/ui/index.html, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T007: Проверить кнопку приёмки и пересобрать 0.6.0 — Ожидает

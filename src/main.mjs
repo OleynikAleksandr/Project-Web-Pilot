@@ -40,8 +40,10 @@ let setupState = null;
 let workspaceHealth = null;
 let settingsState = null;
 let archiveState = { deletion: null, notice: null, focusWorkspace: null };
+let planAcceptance = null;
 let deletion;
 const shellBackground = { light: '#f4f6f8', dark: '#1b1d22' };
+const PLAN_ACCEPTANCE_MESSAGE = `Принимаю текущий план и результат работы. Это моя явная команда закрыть текущий scope: штатно архивируй его через Workflow Kit и оставь проект в состоянии без активного scope (NONE), готовым к следующему новому плану. Новый scope автоматически не создавай. После закрытия коротко подтверди результат.`;
 
 function applyShellTheme(theme) {
   shellTheme = theme === 'dark' ? 'dark' : 'light';
@@ -135,6 +137,7 @@ function snapshot() {
   })),
     archives: projectedArchives(), settings: settingsState,
     selected, context: controller?.state ?? { phase: 'selected', servicesReady: false, messageSent: false },
+    planAcceptance: planAcceptance?.workspace === selected?.workspace && selected?.planView?.state === 'awaiting-acceptance' ? planAcceptance.state : null,
     runtimeFolder, theme: shellTheme, hideToolCalls, sidebarWidth, sidebarMinWidth: SIDEBAR_MIN_WIDTH, pageLoading, startupError, storageError, setup: setupState, workspaceHealth, version: app.getVersion(), fixture: smoke };
 }
 
@@ -357,6 +360,36 @@ function registerIpc() {
     if (!project || project.archivedAt) throw new Error('Выберите активный проект.');
     await clipboard.writeText(project.workspace);
     return project.workspace;
+  });
+  registerAction('pilot:accept-plan', async () => {
+    const current = store.selected();
+    if (!current || current.archivedAt) throw new Error('Выберите активный проект.');
+    const info = await store.inspect(current.workspace);
+    if (info.planView?.state !== 'awaiting-acceptance') throw new Error('План ещё не готов к приёмке.');
+    if (!current.chatUrl || normalizeChatUrl(browser.webContents.getURL()) !== current.chatUrl)
+      throw new Error('Сначала откройте сохранённый чат этого проекта.');
+    if (planAcceptance?.workspace === current.workspace && ['sending', 'sent', 'unknown'].includes(planAcceptance.state)) return planAcceptance.state;
+    planAcceptance = { workspace: current.workspace, state: 'sending' }; publish();
+    const sameChat = () => {
+      const selected = store.selected();
+      return selected?.workspace === current.workspace && selected.sessionId === current.sessionId
+        && normalizeChatUrl(browser.webContents.getURL()) === current.chatUrl;
+    };
+    const result = await controller.composer.sendUserMessage({ text: PLAN_ACCEPTANCE_MESSAGE, canContinue: sameChat });
+    if (result.state === 'sent') { planAcceptance = { workspace: current.workspace, state: 'sent' }; return 'sent'; }
+    if (result.state === 'unknown') {
+      planAcceptance = { workspace: current.workspace, state: 'unknown' };
+      throw new Error('Команда могла быть отправлена. Проверьте чат; повторная отправка заблокирована до изменения состояния плана.');
+    }
+    planAcceptance = null;
+    const reason = {
+      DRAFT_PRESENT: 'В поле ChatGPT уже есть ваш черновик. Отправьте или очистите его и нажмите «Принять» снова.',
+      GENERATION_ACTIVE: 'ChatGPT сейчас отвечает. Дождитесь окончания ответа и нажмите «Принять» снова.',
+      LOGIN_REQUIRED: 'ChatGPT недоступен для отправки. Проверьте вход и открытый чат проекта.',
+      SEND_UNAVAILABLE: 'Кнопка отправки ChatGPT сейчас недоступна. Повторите после её появления.',
+      DRAFT_CHANGED: 'Текст в поле ChatGPT изменился во время отправки. Ваш текст сохранён; повторите приёмку вручную.',
+    };
+    throw new Error(reason[result.reason] ?? 'Не удалось отправить команду приёмки. Повторите после проверки чата.');
   });
   registerAction('pilot:archive-project', async input => {
     const project = store.project(input);
