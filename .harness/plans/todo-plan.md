@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 147,
+  "plan_revision": 149,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-plan-ui-003",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Сделать план самостоятельным пользовательским блоком сайдбара: показывать понятный статус текущего scope и полный список микрозадач с признаками выполнено, выполняется и ожидает; убрать из пользовательского интерфейса технический plan_revision и выпустить обновлённую macOS-сборку 0.6.0. Кнопка «Принять» в карточке плана отправляет явную пользовательскую команду на штатное закрытие текущего scope и переход в NONE.",
   "acceptance_criteria": [
     "Блок План является самостоятельной карточкой сайдбара и не показывает plan_revision.",
@@ -317,8 +317,8 @@
         "electron-smoke"
       ],
       "expected_commit_message": "feat: подключить кнопку приёмки плана",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-plan-ui-003",
         "task_id": "T008",
@@ -346,10 +346,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: web-pilot-plan-ui-003
 Current Task: нет
-Revision: 147
+Revision: 149
 
 ## Цель
 
@@ -394,8 +394,8 @@ Revision: 147
   - Git Commit: [DONE] test: проверить приёмку плана из sidebar
   - Reference: web-pilot-plan-ui-003 / T007 / implementation
   - Файлы: src/ui/sidebar.mjs, tests/electron-smoke.mjs, README.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md
-- [TODO] T008: Подключить кнопку Принять в renderer — Ожидает
-  - Git Commit: [PENDING] feat: подключить кнопку приёмки плана
+- [DONE] T008: Подключить кнопку Принять в renderer — Завершено
+  - Git Commit: [DONE] feat: подключить кнопку приёмки плана
   - Reference: web-pilot-plan-ui-003 / T008 / implementation
   - Файлы: src/ui/sidebar.mjs, tests/electron-smoke.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 

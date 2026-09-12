@@ -340,4 +340,8 @@ Main проверяет выбранный активный workspace, `awaiting
 
 ## Scope 003 / T007 — кнопка «Принять» end-to-end
 
-Electron smoke переводит fixture plan из `not-created` в working и READY_FOR_ACCEPTANCE, проверяет disabled/enabled кнопки, затем реальный click sidebar → IPC → visible ChatGPT composer. В fixture появляется второе user message с точным текстом явной команды закрытия scope; `planAcceptance=sent` блокирует повторный click до смены lifecycle.
+Electron smoke переводит fixture plan из `not-created` в working и READY_FOR_ACCEPTANCE и через preload IPC проверяет точный обычный user message без изменения Workflow Kit. В fixture появляется второе user message с точным текстом явной команды закрытия scope; `planAcceptance=sent` блокирует повторный click до смены lifecycle.
+
+## Scope 003 / T008 — реальный click кнопки «Принять»
+
+Smoke проверяет disabled при `not-created` и working, enabled только при READY_FOR_ACCEPTANCE, затем выполняет настоящий DOM click по `#accept-plan`. В ChatGPT fixture появляется точный user message; после `planAcceptance=sent` кнопка показывает «Отправлено» и остаётся disabled. После смены lifecycle transient-состояние исчезает.

@@ -130,6 +130,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   })`).then(value => JSON.stringify(value)), JSON.stringify({ planCard: true, detailsVisible: true, oldPlanText: false, revisionVisible: false }));
   assert.equal(await sidebar.executeJavaScript('document.getElementById("plan-status").textContent'), 'План ещё не создан');
   assert.equal(await sidebar.executeJavaScript('document.querySelectorAll("#plan-tasks .plan-task").length'), 0);
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("accept-plan").disabled'), true);
 
   const planFile = path.join(workspace, '.harness/plans/todo-plan.md');
   const originalPlanText = await fs.readFile(planFile, 'utf8');
@@ -151,20 +152,25 @@ export async function run({ app, window, browser, sidebar, store, controller, se
     { status: 'pending', title: 'Собрать релиз', mark: '○' },
   ]);
   assert.equal(await sidebar.executeJavaScript('document.getElementById("plan-card").textContent.includes("Revision") || document.getElementById("plan-card").textContent.includes("версия")'), false);
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("accept-plan").disabled'), true);
 
   const readyPlan = { ...activePlan, plan_revision: activePlan.plan_revision + 1, delivery_status: 'READY_FOR_ACCEPTANCE', current_task_id: null,
     tasks: activePlan.tasks.map(task => ({ ...task, implementation_status: 'DONE', commit_status: 'DONE' })) };
   await writeFixturePlan(readyPlan); controller.attach(store.selected()); await controller.tick();
   await waitFor(() => sidebar.executeJavaScript('document.getElementById(\"plan-status\").textContent.includes(\"ожидается ваша приёмка\")'), 'ready for acceptance plan UI', snapshot);
   assert.equal(await sidebar.executeJavaScript('document.querySelectorAll(\"#plan-tasks .plan-task[data-status=done]\").length'), 3);
-  await sidebar.executeJavaScript('window.webPilot.acceptPlan()');
+  await waitFor(() => sidebar.executeJavaScript('!document.getElementById("accept-plan").disabled'), 'accept plan enabled', snapshot);
+  await sidebar.executeJavaScript('document.getElementById("accept-plan").click()');
   await waitFor(() => browser.executeJavaScript('window.fixtureMessages.length === 2'), 'acceptance user message', snapshot);
   assert.equal(await browser.executeJavaScript('window.fixtureMessages[1].text'), 'Принимаю текущий план и результат работы. Это моя явная команда закрыть текущий scope: штатно архивируй его через Workflow Kit и оставь проект в состоянии без активного scope (NONE), готовым к следующему новому плану. Новый scope автоматически не создавай. После закрытия коротко подтверди результат.');
   await waitFor(() => snapshot().planAcceptance === 'sent', 'acceptance send confirmed', snapshot);
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("accept-plan").textContent'), 'Отправлено');
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("accept-plan").disabled'), true);
 
   await fs.writeFile(planFile, originalPlanText); controller.attach(store.selected()); await controller.tick();
   await waitFor(() => sidebar.executeJavaScript('document.getElementById("plan-status").textContent === "План ещё не создан"'), 'restore fixture plan', snapshot);
   assert.equal(snapshot().planAcceptance, null);
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("accept-plan").disabled'), true);
   await clipboard.clear();
   await waitFor(() => sidebar.executeJavaScript('!document.querySelector(".project-menu-button").disabled'), 'project menu enabled', snapshot);
   await sidebar.executeJavaScript(`document.querySelector('.project-menu-button').click(); document.querySelector('.copy-workspace-path').click()`);

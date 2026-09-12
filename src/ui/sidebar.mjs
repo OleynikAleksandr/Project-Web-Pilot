@@ -158,8 +158,8 @@ function render(state) {
   }
   $('plan-card').hidden = !selected;
   $('session-actions').hidden = !selected;
+  const plan = selected?.planView ?? { state: 'not-created', completed: 0, total: 0, tasks: [], blockedReason: null };
   if (selected) {
-    const plan = selected.planView ?? { state: 'not-created', completed: 0, total: 0, tasks: [], blockedReason: null };
     const plural = count => count % 10 === 1 && count % 100 !== 11 ? 'задача'
       : count % 10 >= 2 && count % 10 <= 4 && !(count % 100 >= 12 && count % 100 <= 14) ? 'задачи' : 'задач';
     const statusText = plan.state === 'awaiting-acceptance' ? `Все ${plan.total} ${plural(plan.total)} выполнены · ожидается ваша приёмка`
@@ -204,12 +204,17 @@ function render(state) {
   for (const button of document.querySelectorAll('button')) {
     button.disabled = actionPending || (state.storageError && ['create-workspace', 'add-workspace', 'new-chat', 'retry-context'].includes(button.id));
   }
+  const acceptance = state.planAcceptance;
+  $('accept-plan').textContent = acceptance === 'sending' ? 'Отправляем…' : acceptance === 'sent' ? 'Отправлено'
+    : acceptance === 'unknown' ? 'Проверьте чат' : 'Принять';
+  $('accept-plan').disabled = actionPending || !selected || plan.state !== 'awaiting-acceptance' || !!acceptance;
   setupView.render(state, actionPending);
   archiveView.render(state, actionPending);
   $('choose-runtime').disabled = actionPending || !!state.setup || !!state.settings;
 }
 
 $('context-toggle').addEventListener('click', () => { contextExpanded = !contextExpanded; render(currentState); });
+$('accept-plan').addEventListener('click', () => action('acceptPlan'));
 $('add-workspace').addEventListener('click', () => action('chooseWorkspace'));
 $('reload-chat').addEventListener('click', () => action('reload'));
 $('retry-context').addEventListener('click', () => action('retry'));
