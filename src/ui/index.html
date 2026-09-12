@@ -41,6 +41,12 @@
           <div class="theme-choice" role="group" aria-label="Отображение вызовов инструментов"><button id="tool-calls-hide" type="button" class="secondary" aria-pressed="true">Скрывать</button><button id="tool-calls-show" type="button" class="secondary" aria-pressed="false">Показывать</button></div>
           <p class="settings-help">Скрывает только служебные строки «Вызываемый инструмент» в диалоге. Сами инструменты и MCP продолжают работать.</p>
         </div>
+        <div id="windows-runtime-section" class="settings-section" hidden>
+          <p class="eyebrow">Локальные инструменты Windows</p>
+          <p id="windows-runtime-status" class="description" data-state="embedded">Встроенный runtime готов к установке.</p>
+          <p class="settings-help">Web Pilot сам установит локальный Python, Git, MCP и tunnel-client в профиль Windows. Для tunnel откроется отдельная консоль: API key вводится только там и сохраняется через DPAPI.</p>
+          <div class="actions" style="margin-top:10px"><button id="configure-windows-tunnel" type="button" class="primary">Установить и настроить tunnel…</button><button id="refresh-windows-runtime" type="button" class="secondary">Проверить</button></div>
+        </div>
         <p class="eyebrow">Архив проектов</p>
         <p class="description">Архив сохраняет папку проекта и все его сессии.</p>
         <p id="settings-notice" class="settings-notice" hidden></p>

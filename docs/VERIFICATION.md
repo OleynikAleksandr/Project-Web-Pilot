@@ -415,3 +415,7 @@ Compatibility overlay проверяется на реальном `Windows-Code
 ## Scope 008 / T010 — tunnel onboarding boundary
 
 Windows tunnel IPC не принимает payload и недоступен вне win32. Launch plan использует `powershell.exe Start-Process` с script/cwd в environment, а не с пользовательским секретом в argv. Renderer получает только status booleans. Фактический ввод restricted API key, DPAPI-запись и запуск tunnel-client проверяются на реальном Windows ПК в T013.
+
+## Scope 008 / T011 — Windows onboarding UI
+
+Renderer выводит Windows runtime section только при `state.platform=win32`; состояние строится только из bootstrap phase и трёх service booleans. API key/tunnel ID в state отсутствуют. Electron smoke на macOS требует, чтобы Windows section оставался hidden, а ручной picker Codex Local Mac оставался видимым, тем самым проверяя отсутствие UI-регрессии текущей версии.

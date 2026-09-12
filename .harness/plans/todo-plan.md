@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 201,
+  "plan_revision": 205,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-context-observation-008",
@@ -40,7 +40,8 @@
       "src/preload.cjs",
       "src/ui/index.html",
       "src/ui/project-archive.mjs",
-      "scripts/verify-windows-package.mjs"
+      "scripts/verify-windows-package.mjs",
+      "src/ui/sidebar.mjs"
     ],
     "documentation_paths": [
       "docs/PRODUCT.md",
@@ -411,11 +412,13 @@
       "functional_paths": [
         "src/ui/index.html",
         "src/ui/project-archive.mjs",
+        "src/ui/sidebar.mjs",
         "tests/electron-smoke.mjs"
       ],
       "documentation_paths": [
         "docs/PRODUCT.md",
-        "docs/VERIFICATION.md"
+        "docs/VERIFICATION.md",
+        "docs/architecture/ARCHITECTURE.md"
       ],
       "acceptance_criteria": [
         "Settings показывает Windows runtime section только на Windows.",
@@ -427,8 +430,8 @@
         "electron-smoke"
       ],
       "expected_commit_message": "feat: добавить Windows runtime UI",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-context-observation-008",
         "task_id": "T011",
@@ -525,7 +528,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-context-observation-008
 Current Task: нет
-Revision: 201
+Revision: 205
 
 ## Цель
 
@@ -584,10 +587,10 @@ Revision: 201
   - Git Commit: [DONE] feat: добавить Windows tunnel onboarding
   - Reference: web-pilot-context-observation-008 / T010 / implementation
   - Файлы: src/main.mjs, src/preload.cjs, src/windows-runtime.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T011: Показать Windows runtime onboarding в Settings — Ожидает
-  - Git Commit: [PENDING] feat: добавить Windows runtime UI
+- [DONE] T011: Показать Windows runtime onboarding в Settings — Завершено
+  - Git Commit: [DONE] feat: добавить Windows runtime UI
   - Reference: web-pilot-context-observation-008 / T011 / implementation
-  - Файлы: src/ui/index.html, src/ui/project-archive.mjs, tests/electron-smoke.mjs, docs/PRODUCT.md, docs/VERIFICATION.md
+  - Файлы: src/ui/index.html, src/ui/project-archive.mjs, src/ui/sidebar.mjs, tests/electron-smoke.mjs, docs/PRODUCT.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 - [TODO] T012: Собрать и проверить Windows distribution — Ожидает
   - Git Commit: [PENDING] build: подготовить Windows distribution
   - Reference: web-pilot-context-observation-008 / T012 / implementation

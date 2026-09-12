@@ -221,7 +221,7 @@ function render(state) {
   $('return-chat').hidden = context.phase !== 'chat-changed';
   $('retry-context').textContent = ['delivered', 'stale', 'prepared-stale', 'legacy-session'].includes(context.phase) ? 'Обновить контекст'
     : ['send-unknown', 'waiting-chat'].includes(context.phase) ? 'Проверить статус' : 'Проверить контекст';
-  $('connection-detail').textContent = state.runtimeFolder;
+  $('connection-detail').textContent = state.platform === 'win32' ? 'Codex Local Windows · встроенный runtime' : state.runtimeFolder;
   const delivery = context.delivery;
   $('session-detail').textContent = selected ? `Сессия: ${selected.sessionId}`
     + (delivery ? `\nПередано ${(delivery.contextBytes / 1024).toFixed(1)} КБ · план ${delivery.facts.plan_revision}\n${new Date(delivery.sentAtMs).toLocaleString('ru-RU')}` : '') : '';
@@ -238,6 +238,7 @@ function render(state) {
   $('accept-plan').disabled = actionPending || !selected || plan.state !== 'awaiting-acceptance' || !!acceptance;
   setupView.render(state, actionPending);
   archiveView.render(state, actionPending);
+  $('choose-runtime').hidden = state.platform === 'win32';
   $('choose-runtime').disabled = actionPending || !!state.setup || !!state.settings;
 }
 

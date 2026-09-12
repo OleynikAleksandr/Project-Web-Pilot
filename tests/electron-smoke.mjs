@@ -283,6 +283,9 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await waitFor(() => !!snapshot().settings, 'gear opens settings', snapshot);
   assert.equal(await sidebar.executeJavaScript('document.getElementById("archive-list").hidden'), true);
   assert.equal(await sidebar.executeJavaScript('document.getElementById("open-archive-window").textContent'), 'Архив проектов…');
+  assert.equal(snapshot().platform, process.platform);
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("windows-runtime-section").hidden'), true, 'Windows onboarding stays hidden on macOS smoke');
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("choose-runtime").hidden'), false, 'macOS keeps manual Codex Local picker');
   assert.equal(snapshot().theme, 'light');
   await sidebar.executeJavaScript('document.getElementById("theme-dark").click()');
   await waitFor(() => snapshot().theme === 'dark', 'switch shell theme to dark', snapshot);

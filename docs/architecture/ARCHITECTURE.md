@@ -470,3 +470,9 @@ Windows-версия Web Pilot поставляет один immutable payload `
 Sidebar не получает tunnel ID или API key. Единственный IPC `pilot:configure-windows-tunnel` не принимает аргументов, доступен через существующую проверку локального sender и на win32 сначала гарантирует установленный bundled runtime. Затем PowerShell `Start-Process` запускает канонический `2_CONNECT_TUNNEL.cmd` в отдельной обычной Windows-консоли; путь передаётся через environment variables, а сам Web Pilot не читает stdin/секреты. Скрипт сохраняет key через DPAPI CurrentUser в `%LOCALAPPDATA%\\CodexLocalWindows`.
 
 `pilot:refresh-windows-runtime` повторно вызывает безопасный `control.py status`, поэтому после закрытия консоли настройки можно проверить без перезапуска приложения. В snapshot публикуются только булевы `mcpReady`, `tunnelReady`, `tunnelConfigured`; tunnel ID/key не передаются renderer.
+
+## Windows runtime onboarding UI — scope 008 / T011
+
+Windows-only onboarding остаётся локальным sidebar UI и не расширяет поверхность удалённого ChatGPT. `state.platform=win32` открывает секцию Settings «Локальные инструменты Windows»; macOS renderer оставляет её скрытой и сохраняет прежний ручной picker Codex Local Mac. Renderer строит состояние только из bootstrap phase (`embedded`, `verifying`, `extracting`, `installing`, `installed`, `tunnel-setup-launched`, `error`) и трёх булевых service-флагов `mcpReady`, `tunnelReady`, `tunnelConfigured`. Секретные tunnel ID/API key отсутствуют в snapshot и renderer state.
+
+Кнопки секции вызывают два уже ограниченных preload IPC: `configureWindowsTunnel()` без аргументов и `refreshWindowsRuntime()` без аргументов. Таким образом renderer может инициировать локальную установку/открытие Windows console и перечитать readiness, но не может передать или прочитать tunnel credentials.
