@@ -74,3 +74,7 @@
 ## Scope 008 — дальнейшая Windows-приёмка
 
 Живая Windows 10/11 приёмка больше не выполняется в этом macOS scope. Она перенесена в отдельный workspace `Win Project Web Pilot`, который пользователь будет проверять на Windows 10. Здесь остаётся только корректно завершить исследование auto-compact и архивировать scope.
+
+## Scope 008 — наблюдение auto-compact завершено
+
+Финальная проверка безопасного production-log до 12.09.2026 17:01:27Z не обнаружила надёжного события auto-compact. Из браузера подтверждается `modelContextWindow=262144`, но фактическая занятость окна не приходит (`inputTokens/usedPercent=null`), а `context_truncation_continuation` во всех наблюдавшихся conversation metadata оставался `null`. Исследование закрыто по прямой команде пользователя; это отрицательный результат наблюдения, а не утверждение, что server-side compaction невозможен.

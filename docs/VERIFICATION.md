@@ -433,3 +433,9 @@ Unit test фиксирует Node.js 22.17.0 win-x64 archive name/SHA, expected 
 ## Scope 008 / T013 — Windows live acceptance передана
 
 12.09.2026 пользователь перенёс дальнейшую живую проверку Windows 10/11 в отдельный workspace `Win Project Web Pilot`. В нём уже собраны Windows-oriented repository, проектные документы и executable. Поэтому T013 в этом macOS scope фиксирует именно передачу ответственности за live acceptance, а не утверждает, что реальный Windows запуск уже принят.
+
+## Scope 008 / T003 — финальный результат наблюдения auto-compact
+
+Финальный production-log `~/Library/Application Support/Project Web Pilot/diagnostics/chromium-events.jsonl` проверен до события 12.09.2026 17:01:27Z. Надёжный direct marker auto-compact не обнаружен. В наблюдаемой telemetry `modelContextWindow` стабильно равен `262144`, но `inputTokens` и `usedPercent` остаются `null`. Все зарегистрированные `context-truncation-state` в этой сессии имеют `continuationPresent=false`, `continuationType=null`, `summaryMetadataPresent=false`; изменение `context_truncation_continuation` не наблюдалось.
+
+Это фиксируется как отрицательный результат наблюдения, а не как доказательство отсутствия server-side compaction вообще: браузерный transport не показал ни занятость окна, ни подтверждённое событие compact. По прямому решению пользователя дальнейшее ожидание в этом scope прекращено.

@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 215,
+  "plan_revision": 217,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-context-observation-008",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Зафиксировать итог исследования ChatGPT Web context/auto-compact, передать дальнейшую Windows-приёмку в отдельный workspace и закрыть текущий macOS scope по прямой команде пользователя.",
   "acceptance_criteria": [
     "Финальные production-логи проверены и результат наблюдения auto-compact зафиксирован без домыслов.",
@@ -159,8 +159,8 @@
         "Исследование закрывается как отрицательный результат по прямому решению пользователя, без утверждения, что auto-compact был наблюдён."
       ],
       "expected_commit_message": "docs: завершить наблюдение auto-compact",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-context-observation-008",
         "task_id": "T003",
@@ -565,10 +565,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: web-pilot-context-observation-008
 Current Task: нет
-Revision: 215
+Revision: 217
 
 ## Цель
 
@@ -590,8 +590,8 @@ Revision: 215
   - Git Commit: [DONE] feat: сопоставить context window ChatGPT Web
   - Reference: web-pilot-context-observation-008 / T002 / implementation
   - Файлы: src/chromium-diagnostics.mjs, tests/chromium-diagnostics.test.mjs, tests/electron-smoke.mjs, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md
-- [TODO] T003: Завершить наблюдение auto-compact без обнаруженного сигнала — Ожидает
-  - Git Commit: [PENDING] docs: завершить наблюдение auto-compact
+- [DONE] T003: Завершить наблюдение auto-compact без обнаруженного сигнала — Завершено
+  - Git Commit: [DONE] docs: завершить наблюдение auto-compact
   - Reference: web-pilot-context-observation-008 / T003 / implementation
   - Файлы: docs/VERIFICATION.md, docs/WORKFLOW_START.md
 - [DONE] T004: Вынести platform adapter локального MCP runtime — Завершено
