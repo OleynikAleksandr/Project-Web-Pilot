@@ -325,3 +325,7 @@ Workspace tests проверяют ACTIVE с выполненной/текуще
 ## Scope 003 / T003 — карточка плана
 
 Electron smoke на одном временном workspace последовательно проверяет `not-created`, ACTIVE с одной done/current/pending задачей и READY_FOR_ACCEPTANCE. Проверяются точные названия задач, символы `✓/●/○`, выделение текущей задачи и отсутствие слов `Revision`/`версия` внутри пользовательской карточки.
+## Scope 003 / T004 — релиз 0.6.0
+
+Контрольная arm64-сборка создана `npm run build` с `project-web-pilot@0.6.0` и `--app-version=0.6.0`. SHA-256 `app.asar`: `ebc0bcd6ca97a0052a991671f5e7f4ea5ec2de2271b66c70917c3db2903b4b4f`, размер 211734 байт. Итоговый `Info.plist` проверяется на версию 0.6.0; полная suite и Electron smoke дополнительно выполняются штатным workflow commit перед фиксацией релиза.
+
