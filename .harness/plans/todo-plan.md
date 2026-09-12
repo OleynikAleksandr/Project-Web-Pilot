@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 106,
+  "plan_revision": 108,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-layout-archive-002",
@@ -202,8 +202,8 @@
         "Electron smoke проверяет drag и сохранённую ширину"
       ],
       "expected_commit_message": "feat: добавить splitter сайдбара",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-layout-archive-002",
         "task_id": "T004",
@@ -335,7 +335,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-layout-archive-002
 Current Task: нет
-Revision: 106
+Revision: 108
 
 ## Цель
 
@@ -365,8 +365,8 @@ Revision: 106
   - Git Commit: [DONE] feat: сохранять ширину сайдбара
   - Reference: web-pilot-layout-archive-002 / T003 / implementation
   - Файлы: src/main.mjs, src/preload.cjs, tests/electron-smoke.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T004: Добавить перетаскиваемую границу в sidebar — Ожидает
-  - Git Commit: [PENDING] feat: добавить splitter сайдбара
+- [DONE] T004: Добавить перетаскиваемую границу в sidebar — Завершено
+  - Git Commit: [DONE] feat: добавить splitter сайдбара
   - Reference: web-pilot-layout-archive-002 / T004 / implementation
   - Файлы: src/ui/index.html, src/ui/sidebar.mjs, tests/electron-smoke.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T005: Создать отдельное локальное окно архива — Ожидает

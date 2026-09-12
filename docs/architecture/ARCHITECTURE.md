@@ -335,3 +335,7 @@ Web Pilot хранит локальный флаг `hideToolCalls` в `settings.
 ## Регулируемая ширина sidebar — scope 002 / T003
 
 Главный процесс хранит `sidebarWidth` в локальном `settings.json` и единолично рассчитывает bounds двух `WebContentsView`. Историческая ширина 312 px — жёсткий минимум; справа сохраняется не менее 600 px для Chromium. Renderer может только запросить новую числовую ширину через ограниченный IPC, после чего main немедленно выполняет layout без навигации или перезагрузки ChatGPT.
+
+### Drag splitter sidebar — scope 002 / T004
+
+Локальный renderer рисует узкий `role=separator` у правого края sidebar. Pointer drag вычисляет новую ширину по `screenX`, а main остаётся единственным владельцем bounds и ограничений. Запросы во время drag ограничены `requestAnimationFrame`; клавиши ←/→ меняют ширину шагом 24 px. Минимум и текущее значение публикуются как ARIA metadata.

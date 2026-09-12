@@ -282,3 +282,7 @@ Workspace tests проверяют, что пакет из нескольких 
 ## Scope 002 / T003 — хранение ширины sidebar
 
 Electron smoke через локальный IPC меняет sidebar с 312 на 420 px и проверяет bounds обоих `WebContentsView` и `settings.json`. Запрос 100 px зажимается обратно до исторического минимума 312 px.
+
+## Scope 002 / T004 — drag splitter
+
+Electron smoke синтетическим pointer drag расширяет sidebar с 312 до 432 px и проверяет смещение Chromium. Дополнительно ArrowLeft на separator уменьшает ширину на 24 px, подтверждая доступный клавиатурный путь.

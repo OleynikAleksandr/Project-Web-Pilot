@@ -29,6 +29,43 @@ const phases = {
 const setupView = workspaceSetupView(action);
 const archiveView = projectArchiveView(action);
 
+const splitter = $('sidebar-splitter');
+let splitterDrag = null, resizeFrame = 0, requestedSidebarWidth = null;
+function requestSidebarWidth(width) {
+  requestedSidebarWidth = width;
+  if (resizeFrame) return;
+  resizeFrame = requestAnimationFrame(async () => {
+    resizeFrame = 0;
+    const value = requestedSidebarWidth; requestedSidebarWidth = null;
+    try {
+      const result = await api.setSidebarWidth(value);
+      if (result?.state) render(result.state);
+    } catch (error) { $('error-banner').hidden = false; $('error-banner').textContent = error.message; }
+  });
+}
+splitter.addEventListener('pointerdown', event => {
+  if (event.button !== 0) return;
+  splitterDrag = { pointerId: event.pointerId, startX: event.screenX, startWidth: currentState?.sidebarWidth ?? 312 };
+  splitter.classList.add('dragging');
+  try { splitter.setPointerCapture(event.pointerId); } catch {}
+  event.preventDefault();
+});
+splitter.addEventListener('pointermove', event => {
+  if (!splitterDrag || event.pointerId !== splitterDrag.pointerId) return;
+  requestSidebarWidth(splitterDrag.startWidth + event.screenX - splitterDrag.startX);
+});
+function finishSplitter(event) {
+  if (!splitterDrag || event.pointerId !== splitterDrag.pointerId) return;
+  requestSidebarWidth(splitterDrag.startWidth + event.screenX - splitterDrag.startX);
+  splitterDrag = null; splitter.classList.remove('dragging');
+}
+splitter.addEventListener('pointerup', finishSplitter);
+splitter.addEventListener('pointercancel', finishSplitter);
+splitter.addEventListener('keydown', event => {
+  if (!['ArrowLeft','ArrowRight'].includes(event.key)) return;
+  event.preventDefault(); requestSidebarWidth((currentState?.sidebarWidth ?? 312) + (event.key === 'ArrowRight' ? 24 : -24));
+});
+
 async function action(method, ...args) {
   if (actionPending) return;
   clearTimeout(workspaceClickTimer);
@@ -46,6 +83,8 @@ async function action(method, ...args) {
 function render(state) {
   if (!state) return;
   currentState = state;
+  splitter.setAttribute('aria-valuemin', String(state.sidebarMinWidth ?? 312));
+  splitter.setAttribute('aria-valuenow', String(state.sidebarWidth ?? 312));
   const selected = state.selected;
   const context = state.context;
   const signature = JSON.stringify([state.projects, selected?.workspace, selected?.sessionId]);
