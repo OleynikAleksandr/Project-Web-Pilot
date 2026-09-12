@@ -4,13 +4,13 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 93,
+  "plan_revision": 94,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-prototype-001",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
-  "objective": "Локальный macOS Web Pilot с встроенным ChatGPT, выбором проекта и полным контекстом в первом сообщении; агент сразу кратко подтверждает восстановление и описывает проект. Сайдбар сохраняет все созданные сессии workspace и позволяет выбирать их в раскрываемом дереве. Создание нового workspace и подключение существующей папки повторяют Workflow Kit с проверкой структуры до открытия чата. Архив workspace доступен в настройках через шестерёнку справа от подключения; проекты возвращаются в активные либо удаляются с диска вместе с локальными записями сессий. Облачные чаты сохраняются. Оформление оболочки настраивается отдельно в Settings: светлая или тёмная тема применяется к сайдбару и верхней панели окна. Отображение строк вызовов инструментов ChatGPT можно скрывать из Settings без отключения самих tools.",
+  "delivery_status": "IN_PROGRESS",
+  "objective": "Локальный macOS Web Pilot с встроенным ChatGPT, выбором проекта и полным контекстом в первом сообщении; агент сразу кратко подтверждает восстановление и описывает проект. Сайдбар сохраняет все созданные сессии workspace и позволяет выбирать их в раскрываемом дереве. Создание нового workspace и подключение существующей папки повторяют Workflow Kit с проверкой структуры до открытия чата. Архив workspace доступен в настройках через шестерёнку справа от подключения; проекты возвращаются в активные либо удаляются с диска вместе с локальными записями сессий. Облачные чаты сохраняются. Оформление оболочки настраивается отдельно в Settings: светлая или тёмная тема применяется к сайдбару и верхней панели окна. Отображение строк вызовов инструментов ChatGPT можно скрывать из Settings без отключения самих tools. Встроенному ChatGPT разрешены микрофон и геолокация; камера и остальные browser permissions остаются запрещены.",
   "acceptance_criteria": [
     "Полный канонический контекст передаёт приложение до первого ответа агента.",
     "Первый ответ кратко подтверждает восстановление и описывает выбранный проект без обязательного получения пакета через MCP и без hook/ACK оговорок.",
@@ -22,7 +22,8 @@
     "Архивные проекты скрыты из активного списка и доступны в настройках.",
     "Удаление архивного проекта явно подтверждается и очищает только выбранную локальную папку и локальные сессии; чаты ChatGPT остаются.",
     "В Settings можно выбрать светлую или тёмную тему оболочки; выбор сохраняется и применяется к левому сайдбару и нативной верхней панели окна, не изменяя настройку темы ChatGPT Web.",
-    "В Settings можно скрыть или показать строки вызовов инструментов во встроенном ChatGPT; настройка сохраняется, а сами вызовы инструментов продолжают работать."
+    "В Settings можно скрыть или показать строки вызовов инструментов во встроенном ChatGPT; настройка сохраняется, а сами вызовы инструментов продолжают работать.",
+    "Встроенный ChatGPT может запрашивать микрофон и геолокацию на macOS; камера и остальные разрешения остаются заблокированными."
   ],
   "approved_scope": {
     "functional_paths": [
@@ -70,7 +71,8 @@
       "src/ui/workspace-setup.mjs",
       "src/workspace-deletion.mjs",
       "tests/workspace-deletion.test.mjs",
-      "src/ui/project-archive.mjs"
+      "src/ui/project-archive.mjs",
+      "resources/mac-permissions.plist"
     ],
     "documentation_paths": [
       "README.md",
@@ -1311,6 +1313,78 @@
         "task_id": "T034",
         "role": "implementation"
       }
+    },
+    {
+      "dependencies": [
+        "T034"
+      ],
+      "functional_paths": [
+        "src/main.mjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [
+        "syntax",
+        "suite",
+        "electron-smoke"
+      ],
+      "id": "T035",
+      "title": "Разрешить микрофон и геолокацию ChatGPT",
+      "why": "Дать диктовке и location API работать во встроенном ChatGPT без открытия камеры и прочих разрешений",
+      "acceptance_criteria": [
+        "Permission handlers принимают только запросы chatgpt.com на geolocation/geolocation-approximate и media audio без video",
+        "Камера и все прочие permissions отклоняются",
+        "Electron smoke проверяет разрешённые и запрещённые комбинации без ослабления remote isolation"
+      ],
+      "expected_commit_message": "feat: разрешить микрофон и геолокацию ChatGPT",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "web-pilot-prototype-001",
+        "task_id": "T035",
+        "role": "implementation"
+      }
+    },
+    {
+      "dependencies": [
+        "T035"
+      ],
+      "functional_paths": [
+        "package.json",
+        "resources/mac-permissions.plist"
+      ],
+      "documentation_paths": [
+        "README.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/DECISIONS.md",
+        "docs/PRODUCT.md"
+      ],
+      "verification_ids": [
+        "syntax",
+        "suite",
+        "electron-smoke"
+      ],
+      "id": "T036",
+      "title": "Добавить macOS privacy descriptions и пересобрать",
+      "why": "macOS должен показать системные запросы микрофона и геолокации для упакованного приложения",
+      "acceptance_criteria": [
+        "Сборка через electron-packager добавляет NSMicrophoneUsageDescription и NSLocationWhenInUseUsageDescription до подписи/упаковки",
+        "NSCameraUsageDescription не означает разрешение камеры: permission handler продолжает её отклонять",
+        "Финальная arm64 .app пересобрана и Info.plist проверен"
+      ],
+      "expected_commit_message": "build: добавить privacy descriptions macOS",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "web-pilot-prototype-001",
+        "task_id": "T036",
+        "role": "implementation"
+      }
     }
   ],
   "blocked_reason": null,
@@ -1369,6 +1443,11 @@
       "id": "hide-tool-calls-20260912",
       "text": "12.09.2026 пользователь поручил добавить в Settings Web Pilot возможность визуально скрывать бесконечные строки вызовов инструментов в диалоге ChatGPT, не отключая сами инструменты, и пересобрать приложение.",
       "recorded_at": "2026-09-12T07:35:08.222Z"
+    },
+    {
+      "id": "chatgpt-microphone-geolocation-20260912",
+      "text": "12.09.2026 пользователь поручил разрешить во встроенном ChatGPT микрофон и геолокацию, но не камеру; приложение нужно пересобрать.",
+      "recorded_at": "2026-09-12T07:51:38.520Z"
     }
   ]
 }
@@ -1378,14 +1457,14 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: web-pilot-prototype-001
 Current Task: нет
-Revision: 93
+Revision: 94
 
 ## Цель
 
-Локальный macOS Web Pilot с встроенным ChatGPT, выбором проекта и полным контекстом в первом сообщении; агент сразу кратко подтверждает восстановление и описывает проект. Сайдбар сохраняет все созданные сессии workspace и позволяет выбирать их в раскрываемом дереве. Создание нового workspace и подключение существующей папки повторяют Workflow Kit с проверкой структуры до открытия чата. Архив workspace доступен в настройках через шестерёнку справа от подключения; проекты возвращаются в активные либо удаляются с диска вместе с локальными записями сессий. Облачные чаты сохраняются. Оформление оболочки настраивается отдельно в Settings: светлая или тёмная тема применяется к сайдбару и верхней панели окна. Отображение строк вызовов инструментов ChatGPT можно скрывать из Settings без отключения самих tools.
+Локальный macOS Web Pilot с встроенным ChatGPT, выбором проекта и полным контекстом в первом сообщении; агент сразу кратко подтверждает восстановление и описывает проект. Сайдбар сохраняет все созданные сессии workspace и позволяет выбирать их в раскрываемом дереве. Создание нового workspace и подключение существующей папки повторяют Workflow Kit с проверкой структуры до открытия чата. Архив workspace доступен в настройках через шестерёнку справа от подключения; проекты возвращаются в активные либо удаляются с диска вместе с локальными записями сессий. Облачные чаты сохраняются. Оформление оболочки настраивается отдельно в Settings: светлая или тёмная тема применяется к сайдбару и верхней панели окна. Отображение строк вызовов инструментов ChatGPT можно скрывать из Settings без отключения самих tools. Встроенному ChatGPT разрешены микрофон и геолокация; камера и остальные browser permissions остаются запрещены.
 
 ## Критерии приёмки
 
@@ -1400,6 +1479,7 @@ Revision: 93
 - Удаление архивного проекта явно подтверждается и очищает только выбранную локальную папку и локальные сессии; чаты ChatGPT остаются.
 - В Settings можно выбрать светлую или тёмную тему оболочки; выбор сохраняется и применяется к левому сайдбару и нативной верхней панели окна, не изменяя настройку темы ChatGPT Web.
 - В Settings можно скрыть или показать строки вызовов инструментов во встроенном ChatGPT; настройка сохраняется, а сами вызовы инструментов продолжают работать.
+- Встроенный ChatGPT может запрашивать микрофон и геолокацию на macOS; камера и остальные разрешения остаются заблокированными.
 
 ## Микрозадачи
 
@@ -1539,6 +1619,14 @@ Revision: 93
   - Git Commit: [DONE] feat: добавить настройку скрытия вызовов инструментов
   - Reference: web-pilot-prototype-001 / T034 / implementation
   - Файлы: src/ui/index.html, src/ui/project-archive.mjs, tests/electron-smoke.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+- [TODO] T035: Разрешить микрофон и геолокацию ChatGPT — Ожидает
+  - Git Commit: [PENDING] feat: разрешить микрофон и геолокацию ChatGPT
+  - Reference: web-pilot-prototype-001 / T035 / implementation
+  - Файлы: src/main.mjs, tests/electron-smoke.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+- [TODO] T036: Добавить macOS privacy descriptions и пересобрать — Ожидает
+  - Git Commit: [PENDING] build: добавить privacy descriptions macOS
+  - Reference: web-pilot-prototype-001 / T036 / implementation
+  - Файлы: package.json, resources/mac-permissions.plist, README.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/DECISIONS.md, docs/PRODUCT.md
 
 ## Context Pack For This Cycle
 
