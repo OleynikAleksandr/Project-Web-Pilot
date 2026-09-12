@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 130,
+  "plan_revision": 132,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-plan-ui-003",
@@ -73,8 +73,8 @@
         "plan_revision явно отнесён к внутренним данным и исключён из пользовательского блока"
       ],
       "expected_commit_message": "docs: определить пользовательский блок плана",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-plan-ui-003",
         "task_id": "T001",
@@ -203,7 +203,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-plan-ui-003
 Current Task: нет
-Revision: 130
+Revision: 132
 
 ## Цель
 
@@ -219,8 +219,8 @@ Revision: 130
 
 ## Микрозадачи
 
-- [TODO] T001: Зафиксировать пользовательскую семантику блока План — Ожидает
-  - Git Commit: [PENDING] docs: определить пользовательский блок плана
+- [DONE] T001: Зафиксировать пользовательскую семантику блока План — Завершено
+  - Git Commit: [DONE] docs: определить пользовательский блок плана
   - Reference: web-pilot-plan-ui-003 / T001 / implementation
   - Файлы: docs/PRODUCT.md, docs/DECISIONS.md
 - [TODO] T002: Экспортировать пользовательское состояние плана — Ожидает
