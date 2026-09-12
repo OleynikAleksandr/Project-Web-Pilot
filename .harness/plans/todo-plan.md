@@ -4,22 +4,17 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 212,
+  "plan_revision": 215,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-context-observation-008",
   "execution_scope_status": "ACTIVE",
   "delivery_status": "IN_PROGRESS",
-  "objective": "Продолжать наблюдение ChatGPT Web до реального auto-compact и параллельно довести Project Web Pilot до самодостаточной Windows 10/11 x64 версии: тот же Electron/Chromium/UI/Workflow Kit, встроенный Codex Local Windows runtime, автоматическая локальная установка и безопасная настройка tunnel.",
+  "objective": "Зафиксировать итог исследования ChatGPT Web context/auto-compact, передать дальнейшую Windows-приёмку в отдельный workspace и закрыть текущий macOS scope по прямой команде пользователя.",
   "acceptance_criteria": [
-    "Подтверждён фактический источник context-window данных либо зафиксировано, какие наблюдаемые transport-слои их не содержат.",
-    "Вложенные JSON-envelope WebSocket/SSE разбираются только для служебной структуры; пользовательский текст и произвольные string values не сохраняются.",
-    "При обнаружении фактических input/window значений существующий sidebar-индикатор показывает их без оценочной подстановки.",
-    "Scope остаётся активным до реального наблюдения auto-compact или отдельного решения пользователя изменить границы исследования.",
-    "macOS-поведение не меняется; Windows 10/11 x64 package включает проверенный Codex Local Windows runtime и не требует отдельного копирования runtime.",
-    "На первом Windows запуске runtime разворачивается в userData, проверяется по SHA-256 и подготавливает приватный Python/Git/ripgrep/tunnel без admin installation.",
-    "Tunnel secret настраивается только локально в Windows console/DPAPI и не проходит через ChatGPT или renderer IPC.",
-    "Windows build проходит cross-package/static tests на Mac и остаётся на live-acceptance до проверки пользователем на настоящем Windows 10/11 ПК."
+    "Финальные production-логи проверены и результат наблюдения auto-compact зафиксирован без домыслов.",
+    "Windows live acceptance передана в отдельный Win Project Web Pilot и больше не блокирует этот scope.",
+    "После завершения T013 и T003 scope архивируется по прямой команде пользователя."
   ],
   "approved_scope": {
     "functional_paths": [
@@ -156,14 +151,14 @@
       ],
       "verification_ids": [],
       "id": "T003",
-      "title": "Наблюдать реальный auto-compact",
-      "why": "Нужен фактический production-сигнал compact, а не эмуляция или предположение по порогу.",
+      "title": "Завершить наблюдение auto-compact без обнаруженного сигнала",
+      "why": "Финальная проверка production-log до 12.09.2026 17:01:27Z не показала direct compact marker, input token usage или изменения context_truncation_continuation; пользователь прямо поручил прекратить наблюдение и закрыть scope.",
       "acceptance_criteria": [
-        "В production-log зафиксирован реальный direct compact marker или согласованный набор сильных коррелирующих сигналов до/после compact.",
-        "Зафиксированы context-window значения непосредственно до и после compact, если сервер их предоставляет.",
-        "Никакая автоматическая отправка Обновить контекст не включается в этом scope без отдельного решения пользователя."
+        "Зафиксирован финальный просмотр production-log: modelContextWindow=262144 виден, inputTokens/usedPercent отсутствуют.",
+        "Во всех наблюдаемых context-truncation-state continuationPresent=false и continuationType=null; direct compact marker не обнаружен.",
+        "Исследование закрывается как отрицательный результат по прямому решению пользователя, без утверждения, что auto-compact был наблюдён."
       ],
-      "expected_commit_message": "docs: зафиксировать реальный auto-compact",
+      "expected_commit_message": "docs: завершить наблюдение auto-compact",
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
@@ -479,8 +474,8 @@
     },
     {
       "id": "T013",
-      "title": "Провести живую приёмку Windows 10/11",
-      "why": "Cross-build на Mac не доказывает запуск, Windows Computer Use и tunnel на реальном Windows ПК.",
+      "title": "Передать живую Windows-приёмку в отдельный workspace",
+      "why": "Пользователь перенёс дальнейшую проверку Windows 10/11 в отдельный workspace Win Project Web Pilot; в macOS scope нужно только зафиксировать передачу и не изображать live acceptance как выполненную здесь.",
       "dependencies": [
         "T012"
       ],
@@ -490,14 +485,14 @@
         "docs/WORKFLOW_START.md"
       ],
       "acceptance_criteria": [
-        "Пользователь запускает package на реальном Windows 10/11 x64.",
-        "Подтверждены startup/login, создание или открытие workspace, runtime setup, tunnel/MCP и минимум одна локальная file/Git команда.",
-        "Подтверждён хотя бы один Windows Computer Use action либо записана точная блокирующая причина."
+        "Windows-oriented repository, документация и executable перенесены в отдельный workspace Win Project Web Pilot.",
+        "Живая приёмка Windows 10/11 исключена из текущего macOS scope и будет выполняться на Windows-компьютере в отдельном проекте.",
+        "Текущий scope не содержит ложного утверждения, что Windows runtime уже принят на реальном Windows."
       ],
       "verification_ids": [],
-      "expected_commit_message": "docs: принять Windows 10/11 runtime",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "expected_commit_message": "docs: передать Windows приёмку в отдельный workspace",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-context-observation-008",
         "task_id": "T013",
@@ -556,6 +551,11 @@
       "id": "windows-full-user-20260912",
       "text": "12.09.2026 пользователь поручил в ожидании auto-compact сделать полноценную Windows 10/11 версию и сообщил, что имеет Windows ПК для живой проверки.",
       "recorded_at": "2026-09-12T15:52:39.891Z"
+    },
+    {
+      "id": "close-observation-user-20260912",
+      "text": "12.09.2026 после финальной проверки логов пользователь прямо поручил прекратить наблюдение auto-compact, перенести живую Windows-приёмку в отдельный Win Project Web Pilot и самостоятельно закрыть текущий scope.",
+      "recorded_at": "2026-09-12T17:02:18.339Z"
     }
   ]
 }
@@ -568,22 +568,17 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-context-observation-008
 Current Task: нет
-Revision: 212
+Revision: 215
 
 ## Цель
 
-Продолжать наблюдение ChatGPT Web до реального auto-compact и параллельно довести Project Web Pilot до самодостаточной Windows 10/11 x64 версии: тот же Electron/Chromium/UI/Workflow Kit, встроенный Codex Local Windows runtime, автоматическая локальная установка и безопасная настройка tunnel.
+Зафиксировать итог исследования ChatGPT Web context/auto-compact, передать дальнейшую Windows-приёмку в отдельный workspace и закрыть текущий macOS scope по прямой команде пользователя.
 
 ## Критерии приёмки
 
-- Подтверждён фактический источник context-window данных либо зафиксировано, какие наблюдаемые transport-слои их не содержат.
-- Вложенные JSON-envelope WebSocket/SSE разбираются только для служебной структуры; пользовательский текст и произвольные string values не сохраняются.
-- При обнаружении фактических input/window значений существующий sidebar-индикатор показывает их без оценочной подстановки.
-- Scope остаётся активным до реального наблюдения auto-compact или отдельного решения пользователя изменить границы исследования.
-- macOS-поведение не меняется; Windows 10/11 x64 package включает проверенный Codex Local Windows runtime и не требует отдельного копирования runtime.
-- На первом Windows запуске runtime разворачивается в userData, проверяется по SHA-256 и подготавливает приватный Python/Git/ripgrep/tunnel без admin installation.
-- Tunnel secret настраивается только локально в Windows console/DPAPI и не проходит через ChatGPT или renderer IPC.
-- Windows build проходит cross-package/static tests на Mac и остаётся на live-acceptance до проверки пользователем на настоящем Windows 10/11 ПК.
+- Финальные production-логи проверены и результат наблюдения auto-compact зафиксирован без домыслов.
+- Windows live acceptance передана в отдельный Win Project Web Pilot и больше не блокирует этот scope.
+- После завершения T013 и T003 scope архивируется по прямой команде пользователя.
 
 ## Микрозадачи
 
@@ -595,8 +590,8 @@ Revision: 212
   - Git Commit: [DONE] feat: сопоставить context window ChatGPT Web
   - Reference: web-pilot-context-observation-008 / T002 / implementation
   - Файлы: src/chromium-diagnostics.mjs, tests/chromium-diagnostics.test.mjs, tests/electron-smoke.mjs, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md
-- [TODO] T003: Наблюдать реальный auto-compact — Ожидает
-  - Git Commit: [PENDING] docs: зафиксировать реальный auto-compact
+- [TODO] T003: Завершить наблюдение auto-compact без обнаруженного сигнала — Ожидает
+  - Git Commit: [PENDING] docs: завершить наблюдение auto-compact
   - Reference: web-pilot-context-observation-008 / T003 / implementation
   - Файлы: docs/VERIFICATION.md, docs/WORKFLOW_START.md
 - [DONE] T004: Вынести platform adapter локального MCP runtime — Завершено
@@ -635,8 +630,8 @@ Revision: 212
   - Git Commit: [DONE] build: подготовить Windows distribution
   - Reference: web-pilot-context-observation-008 / T012 / implementation
   - Файлы: package.json, scripts/verify-windows-package.mjs, tests/windows-runtime.test.mjs, scripts/prepare-windows-toolchain.mjs, docs/PRODUCT.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md
-- [TODO] T013: Провести живую приёмку Windows 10/11 — Ожидает
-  - Git Commit: [PENDING] docs: принять Windows 10/11 runtime
+- [DONE] T013: Передать живую Windows-приёмку в отдельный workspace — Завершено
+  - Git Commit: [DONE] docs: передать Windows приёмку в отдельный workspace
   - Reference: web-pilot-context-observation-008 / T013 / implementation
   - Файлы: docs/VERIFICATION.md, docs/WORKFLOW_START.md
 - [DONE] T014: Встроить portable Node.js для чистой Windows — Завершено

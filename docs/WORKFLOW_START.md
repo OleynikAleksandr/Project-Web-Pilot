@@ -70,3 +70,7 @@
 Готовый portable archive для реального Windows x64 теста: `.harness/runtime/build/Project-Web-Pilot-0.6.0-Windows-x64.zip`, SHA-256 `b2d2602011770c55b97d409bcab264a54e6cc4fe255679580a921ec2bb53a66e`. После распаковки запускать `Project Web Pilot-win32-x64\\Project Web Pilot.exe`. Сборка не подписана, поэтому Windows SmartScreen может показать предупреждение для неизвестного издателя.
 
 На чистой Windows системный Node/Git/Python не требуются. Создание Workflow Kit использует portable Node из package; локальный Codex runtime при первом обращении проверяет embedded ZIP и устанавливает приватные Python/Git/ripgrep/tunnel components в профиль пользователя. В Settings → «Локальные инструменты Windows» кнопка настройки tunnel открывает отдельную console; restricted API key вводится только там и сохраняется DPAPI. После завершения нажать «Проверить». T013 считается выполненной только после реального запуска, входа в ChatGPT, создания/открытия workspace, MCP/tunnel tool call и Windows Computer Use проверки.
+
+## Scope 008 — дальнейшая Windows-приёмка
+
+Живая Windows 10/11 приёмка больше не выполняется в этом macOS scope. Она перенесена в отдельный workspace `Win Project Web Pilot`, который пользователь будет проверять на Windows 10. Здесь остаётся только корректно завершить исследование auto-compact и архивировать scope.

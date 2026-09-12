@@ -429,3 +429,7 @@ Unit test фиксирует Node.js 22.17.0 win-x64 archive name/SHA, expected 
 `npm run build:win` успешно собрал `.harness/runtime/build/Project Web Pilot-win32-x64`. Статический verifier подтвердил `Project Web Pilot.exe` (PE), `resources/app.asar`, Workflow Kit, workspace worker, канонический Windows runtime SHA `1f041488ad97d8abf1984fd3521afb8abe15f50b8df3d3e11f1cc4248e019d98`, Node archive SHA `721ab118a3aac8584348b132767eadf51379e0616f0db802cc1e66d7f0d98f85` и 85,219,968-byte portable `node.exe`. SHA основного executable этой сборки: `d76010f496d58874c806fb8e4bec8d46096849818108d2fa6a9945e0386cd783`.
 
 Для передачи создан `.harness/runtime/build/Project-Web-Pilot-0.6.0-Windows-x64.zip`, размер около 305 MiB, SHA-256 `b2d2602011770c55b97d409bcab264a54e6cc4fe255679580a921ec2bb53a66e`. Архив повторно проверен `unzip -t`, не содержит `__MACOSX`; внутри присутствуют `.exe`, Windows runtime ZIP, portable `node.exe` и Workflow Kit. После общих изменений `npm run build:mac` также проходит. Это доказывает состав/cross-package, но не запуск Windows API; live acceptance остаётся T013.
+
+## Scope 008 / T013 — Windows live acceptance передана
+
+12.09.2026 пользователь перенёс дальнейшую живую проверку Windows 10/11 в отдельный workspace `Win Project Web Pilot`. В нём уже собраны Windows-oriented repository, проектные документы и executable. Поэтому T013 в этом macOS scope фиксирует именно передачу ответственности за live acceptance, а не утверждает, что реальный Windows запуск уже принят.
