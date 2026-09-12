@@ -7,6 +7,7 @@ let lastProjects = '';
 let currentState;
 let actionPending = false;
 let workspaceClickTimer;
+let contextExpanded = false;
 const phases = {
   selected: ['Готов к началу', 'Войдите в ChatGPT справа и выберите папку проекта слева.', 'neutral'],
   preparing: ['Подготавливаем подключение', 'Проверяем локальные инструменты и связь с ChatGPT.', 'working'],
@@ -97,7 +98,7 @@ function render(state) {
       const row = document.createElement('div'); row.className = 'workspace-row';
       const toggle = () => { clearTimeout(workspaceClickTimer); action('setExpanded', project.workspace, !project.expanded); };
       const arrow = document.createElement('button'); arrow.className = 'expand-project';
-      arrow.textContent = project.expanded ? '▾' : '▸';
+      arrow.textContent = '';
       arrow.setAttribute('aria-label', `${project.expanded ? 'Свернуть' : 'Раскрыть'} сессии ${project.name}`);
       arrow.setAttribute('aria-expanded', String(project.expanded));
       arrow.addEventListener('click', toggle);
@@ -163,6 +164,9 @@ function render(state) {
   }
   const [title, detail, tone] = phases[context.phase] ?? phases.selected;
   $('context-title').textContent = state.pageLoading ? 'Открываем ChatGPT' : title;
+  $('context-details').hidden = !contextExpanded;
+  $('context-toggle').setAttribute('aria-expanded', String(contextExpanded));
+  $('context-toggle').setAttribute('aria-label', `${contextExpanded ? 'Скрыть' : 'Показать'} подробности состояния контекста`);
   $('context-detail').textContent = state.pageLoading ? 'Загружаем чат выбранного проекта.' : detail;
   $('context-card').dataset.tone = state.pageLoading ? 'working' : tone;
   $('state-service').textContent = context.servicesReady ? 'Готовы' : context.phase === 'preparing' ? 'Проверка…' : 'Не проверены';
@@ -193,6 +197,7 @@ function render(state) {
   $('workspace-notice').textContent = health && selected && health.workspace === selected.workspace ? (health.warnings ?? []).join('\n') : '';
 }
 
+$('context-toggle').addEventListener('click', () => { contextExpanded = !contextExpanded; render(currentState); });
 $('add-workspace').addEventListener('click', () => action('chooseWorkspace'));
 $('reload-chat').addEventListener('click', () => action('reload'));
 $('retry-context').addEventListener('click', () => action('retry'));

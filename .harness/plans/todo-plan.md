@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 117,
+  "plan_revision": 119,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-layout-archive-002",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Сделать ширину левого сайдбара регулируемой, вынести архив в отдельное окно и сделать статус контекста компактным: детали сворачиваются под динамическим заголовком, а раскрывающие элементы проектов и статуса хорошо читаются.",
   "acceptance_criteria": [
     "Граница между сайдбаром и ChatGPT перетаскивается мышью; сайдбар не сужается меньше текущих 312 px, а выбранная ширина сохраняется между запусками.",
@@ -348,8 +348,8 @@
         "electron-smoke"
       ],
       "expected_commit_message": "feat: свернуть детали статуса контекста",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-layout-archive-002",
         "task_id": "T008",
@@ -377,10 +377,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: web-pilot-layout-archive-002
 Current Task: нет
-Revision: 117
+Revision: 119
 
 ## Цель
 
@@ -428,8 +428,8 @@ Revision: 117
   - Git Commit: [DONE] test: проверить resize и отдельный архив
   - Reference: web-pilot-layout-archive-002 / T007 / implementation
   - Файлы: tests/electron-smoke.mjs, src/ui/project-archive.mjs, src/ui/archive.mjs, README.md, docs/PROJECT_ARCHIVE.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md
-- [TODO] T008: Сделать компактный статус контекста и крупные disclosure-треугольники — Ожидает
-  - Git Commit: [PENDING] feat: свернуть детали статуса контекста
+- [DONE] T008: Сделать компактный статус контекста и крупные disclosure-треугольники — Завершено
+  - Git Commit: [DONE] feat: свернуть детали статуса контекста
   - Reference: web-pilot-layout-archive-002 / T008 / implementation
   - Файлы: src/ui/index.html, src/ui/sidebar.mjs, tests/electron-smoke.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 

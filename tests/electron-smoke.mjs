@@ -124,6 +124,15 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(prefs.nodeIntegration, false); assert.equal(prefs.contextIsolation, true); assert.equal(prefs.sandbox, true);
   assert.throws(() => assertLocalSender({ sender: browser, senderFrame: browser.mainFrame }), { code: 'IPC_FORBIDDEN' });
   assert.equal(await sidebar.executeJavaScript('document.getElementById("context-title").textContent'), 'Контекст передан');
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("context-toggle").getAttribute("aria-expanded")'), 'false');
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("context-details").hidden'), true);
+  await sidebar.executeJavaScript('document.getElementById("context-toggle").click()');
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("context-toggle").getAttribute("aria-expanded")'), 'true');
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("context-details").hidden'), false);
+  await sidebar.executeJavaScript('document.getElementById("context-toggle").click()');
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("context-details").hidden'), true);
+  const disclosureSize = await sidebar.executeJavaScript(`(() => { const e=document.querySelector('.expand-project'); const p=getComputedStyle(e,'::before'); return {button:e.getBoundingClientRect().width, triangle:parseFloat(p.borderLeftWidth), expanded:e.getAttribute('aria-expanded')}; })()`);
+  assert.ok(disclosureSize.button >= 32); assert.ok(disclosureSize.triangle >= 11); assert.equal(disclosureSize.expanded, 'false');
   assert.equal(await sidebar.executeJavaScript('document.getElementById("workspace-name").textContent'), 'Тестовый проект с пробелами');
   const restored = new WorkspaceSessions(store.file); await restored.load();
   assert.equal(restored.selected().sessionId, first.sessionId); assert.equal(restored.selected().chatUrl, first.chatUrl);

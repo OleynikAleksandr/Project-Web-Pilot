@@ -300,3 +300,8 @@ Electron smoke синтетическим pointer drag расширяет sideba
 Electron smoke проверяет сохранение ширины sidebar, pointer/keyboard splitter, компактные Settings, единственный отдельный archive BrowserWindow, изоляцию его preload, Shift и Command multi-select, массовые restore/forget и одиночный delete. После forget исходная папка существует и снова принимается WorkspaceSessions; удаляется только выбранный delete-проект.
 
 Финальная arm64-сборка scope 002 создана командой `npm run build`: `.harness/runtime/build/Project Web Pilot-darwin-arm64/Project Web Pilot.app`. SHA-256 `app.asar`: `992b99bc4b72a6dbc0887359c122bee845b179c883407621c7fd064bcd35a3aa`, размер 205551 байт. Предварительный Electron smoke завершился с `resizableSidebar=true`, `separateArchiveWindow=true`, `archiveMultiSelect=true` и `archiveForgetKeepsFolder=true`.
+
+
+## Scope 002 / T008 — компактный статус контекста
+
+Electron smoke проверяет, что заголовок карточки виден при свёрнутых деталях, `context-toggle` меняет `aria-expanded` и видимость `context-details`, а project disclosure имеет кнопку не менее 32 px и визуальный треугольник не менее 11 px. Существующее раскрытие сессий продолжает работать прежним `setExpanded`.
