@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 222,
+  "plan_revision": 226,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-unified-mac-windows-009",
@@ -42,7 +42,8 @@
       "docs/WORKFLOW_START.md",
       "docs/TRANSFER_TO_WINDOWS.md",
       "docs/DECISIONS.md",
-      "docs/architecture/ARCHITECTURE.md"
+      "docs/architecture/ARCHITECTURE.md",
+      "docs/DOCUMENTATION_INDEX.md"
     ],
     "max_functional_files_per_task": 7
   },
@@ -122,7 +123,9 @@
         "docs/PRODUCT.md",
         "docs/TRANSFER_TO_WINDOWS.md",
         "docs/WORKFLOW_START.md",
-        "docs/architecture/ARCHITECTURE.md"
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md",
+        "docs/DOCUMENTATION_INDEX.md"
       ],
       "verification_ids": [
         "syntax"
@@ -136,8 +139,8 @@
         "node_modules, .harness/runtime, windows-app и platform build outputs не синхронизируются через Git."
       ],
       "expected_commit_message": "build: объединить macOS и Windows packaging",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-unified-mac-windows-009",
         "task_id": "T002",
@@ -200,7 +203,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-unified-mac-windows-009
 Current Task: нет
-Revision: 222
+Revision: 226
 
 ## Цель
 
@@ -220,10 +223,10 @@ Revision: 222
   - Git Commit: [DONE] fix: синхронизировать Windows runtime с общим проектом
   - Reference: web-pilot-unified-mac-windows-009 / T001 / implementation
   - Файлы: src/windows-runtime.mjs, src/mcp-runtime.mjs, src/main.mjs, tests/windows-runtime.test.mjs, tests/mcp-runtime.test.mjs, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
-- [TODO] T002: Объединить packaging macOS и Windows — Ожидает
-  - Git Commit: [PENDING] build: объединить macOS и Windows packaging
+- [DONE] T002: Объединить packaging macOS и Windows — Завершено
+  - Git Commit: [DONE] build: объединить macOS и Windows packaging
   - Reference: web-pilot-unified-mac-windows-009 / T002 / implementation
-  - Файлы: package.json, package-lock.json, scripts/prepare-windows-toolchain.mjs, BUILD_WINDOWS.cmd, RUN_WINDOWS.cmd, .gitignore, tests/windows-runtime.test.mjs, docs/PRODUCT.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md
+  - Файлы: package.json, package-lock.json, scripts/prepare-windows-toolchain.mjs, BUILD_WINDOWS.cmd, RUN_WINDOWS.cmd, .gitignore, tests/windows-runtime.test.mjs, docs/PRODUCT.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/DOCUMENTATION_INDEX.md
 - [TODO] T003: Синхронизировать кроссплатформенные тесты и проверить обе сборки — Ожидает
   - Git Commit: [PENDING] test: подтвердить единый macOS Windows репозиторий
   - Reference: web-pilot-unified-mac-windows-009 / T003 / implementation

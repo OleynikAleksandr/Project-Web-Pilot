@@ -120,3 +120,7 @@ Windows 10/11 x64 версия использует встроенный Codex L
 Собрана переносимая Windows x64 поставка Project Web Pilot 0.6.0. Она содержит тот же Electron 44/Chromium UI, Workflow Kit, канонический `Windows-Codex-Local-2026-09-10.zip` и официальный portable Node.js 22.17.0 win-x64. Пользователю не нужно отдельно копировать Codex Local Windows, Git, Python, ripgrep, tunnel-client или устанавливать системный Node. При первом использовании локальных инструментов runtime разворачивается в профиль пользователя; единственный обязательный секретный шаг — настройка Secure MCP Tunnel в отдельной Windows-консоли.
 
 Поставка пока является portable test build, а не подписанным Windows installer: после распаковки запускается `Project Web Pilot.exe`. Финальная продуктовая приёмка Windows требует запуска на реальном Windows 10/11 ПК (T013).
+
+## Единый macOS/Windows репозиторий — scope 009
+
+Начиная с объединения 13.09.2026 macOS и Windows больше не рассматриваются как отдельные кодовые проекты. `Project Web Pilot` является единым source of truth: общий `src`, Workflow Kit, tests, docs и планы синхронизируются через Git; `node_modules`, `.harness/runtime`, `windows-app` и пользовательские runtime/settings остаются локальными на каждом компьютере. Версия общей кодовой базы синхронизирована на 0.6.2.

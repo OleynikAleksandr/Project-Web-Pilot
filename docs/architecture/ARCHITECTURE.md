@@ -494,3 +494,9 @@ Private Codex Local ZIP не хранится в Git из-за размера и
 Общий Project Web Pilot использует один runtime contract для обеих платформ. На Windows bootstrap сначала ищет совместимую уже установленную Codex Local Windows через локальное состояние и сохранённый preferred path; если такая установка найдена, Web Pilot переиспользует её MCP/tunnel и добавляет только read-only compatibility overlay `workflow_context_recover`. Bundled Windows runtime остаётся fallback.
 
 `McpRuntime` принимает `folder`, возвращённый `ensureRuntime`, как фактический runtime path до проверки layout. Это устраняет `RUNTIME_NOT_FOUND`, когда bootstrap успешно нашёл или подготовил runtime, а сохранённый ранее путь устарел. macOS layout и выбор Codex Local Mac не меняются.
+
+## Общий packaging macOS/Windows — scope 009 / T002
+
+`package.json` хранит оба platform target: `build:mac` создаёт macOS arm64 `.app`, `build:win` готовит payload и создаёт Windows x64 `.exe`. Общий `npm run build` последовательно выполняет обе сборки, поэтому обычная release-проверка на Mac сразу обновляет оба package. Platform-specific runtime/build outputs остаются в `.harness/runtime` или `windows-app` и не являются Git-состоянием проекта.
+
+Windows build-preflight сначала может переиспользовать локальный payload из `windows-app/resources/windows-payload`, затем sibling artifact и только для публичного Node — network fallback. Это позволяет одному Git checkout не таскать тяжёлые binary runtime-артефакты между компьютерами.

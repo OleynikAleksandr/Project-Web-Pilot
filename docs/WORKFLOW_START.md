@@ -78,3 +78,7 @@
 ## Scope 008 — наблюдение auto-compact завершено
 
 Финальная проверка безопасного production-log до 12.09.2026 17:01:27Z не обнаружила надёжного события auto-compact. Из браузера подтверждается `modelContextWindow=262144`, но фактическая занятость окна не приходит (`inputTokens/usedPercent=null`), а `context_truncation_continuation` во всех наблюдавшихся conversation metadata оставался `null`. Исследование закрыто по прямой команде пользователя; это отрицательный результат наблюдения, а не утверждение, что server-side compaction невозможен.
+
+## Работа из одного репозитория на двух компьютерах
+
+Общий source of truth — Git-репозиторий `Project Web Pilot`. Перед переходом Mac → Windows или Windows → Mac изменения сначала фиксируются штатным Workflow Kit commit и отправляются в private remote; на втором компьютере выполняется pull. `.harness/runtime`, `node_modules`, `windows-app`, profile/settings и локальные diagnostics не синхронизируются. Одновременно пишет только один worktree/агент.

@@ -18,6 +18,7 @@ export const NODE_FOLDER = `node-v${NODE_VERSION}-win-x64`;
 export function windowsRuntimeSourceCandidates(root = ROOT, environment = process.env) {
   return [...new Set([
     environment.WEB_PILOT_WINDOWS_RUNTIME_ARCHIVE,
+    path.join(root, 'windows-app', 'resources', 'windows-payload', WINDOWS_RUNTIME_ARCHIVE),
     path.resolve(root, '..', 'Codex Local Mac', WINDOWS_RUNTIME_ARCHIVE),
   ].filter(Boolean))];
 }
@@ -97,8 +98,15 @@ export async function prepareWindowsToolchain({ root = ROOT, platform = process.
   try { digest = await sha256(p.archive); } catch {}
   if (digest !== NODE_SHA256) {
     await fs.rm(p.archive, { force: true });
-    await fetchArchive(NODE_URL, p.archive);
-    digest = await sha256(p.archive);
+    const packagedNode = path.join(root, 'windows-app', 'resources', 'windows-payload', NODE_ARCHIVE);
+    try {
+      if (await sha256(packagedNode) === NODE_SHA256) await fs.copyFile(packagedNode, p.archive);
+    } catch {}
+    try { digest = await sha256(p.archive); } catch { digest = null; }
+    if (digest !== NODE_SHA256) {
+      await fetchArchive(NODE_URL, p.archive);
+      digest = await sha256(p.archive);
+    }
   }
   if (digest !== NODE_SHA256) throw new Error(`Node payload SHA-256 mismatch: ${digest ?? 'missing'}`);
   let marker = null;

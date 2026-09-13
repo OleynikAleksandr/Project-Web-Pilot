@@ -143,5 +143,6 @@ test('portable Node build payload has pinned Windows x64 layout and safe extract
 test('Windows build preflight can resolve the private runtime payload without hard-coding a user path', () => {
   const candidates = windowsRuntimeSourceCandidates('/repo/Project Web Pilot', { WEB_PILOT_WINDOWS_RUNTIME_ARCHIVE: 'D:\\cache\\runtime.zip' });
   assert.equal(candidates[0], 'D:\\cache\\runtime.zip');
-  assert.equal(candidates[1], path.resolve('/repo/Project Web Pilot', '..', 'Codex Local Mac', 'Windows-Codex-Local-2026-09-10.zip'));
+  assert.equal(candidates[1], path.join('/repo/Project Web Pilot', 'windows-app', 'resources', 'windows-payload', 'Windows-Codex-Local-2026-09-10.zip'));
+  assert.equal(candidates[2], path.resolve('/repo/Project Web Pilot', '..', 'Codex Local Mac', 'Windows-Codex-Local-2026-09-10.zip'));
 });

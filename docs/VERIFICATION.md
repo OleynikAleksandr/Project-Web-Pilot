@@ -443,3 +443,7 @@ Unit test фиксирует Node.js 22.17.0 win-x64 archive name/SHA, expected 
 ## Общий runtime после Windows 0.6.1/0.6.2
 
 13.09.2026 в основной репозиторий перенесены подтверждённые на реальном Windows исправления: reuse совместимой установленной Codex Local Windows вместо запуска второй копии, безопасное применение `workflow_context_recover` overlay и использование фактического `folder`, возвращённого bootstrap, вместо stale runtime path. Regression coverage находится в `tests/windows-runtime.test.mjs` и `tests/mcp-runtime.test.mjs`; macOS runtime path остаётся отдельной веткой platform layout.
+
+## Единый packaging macOS/Windows — scope 009 / T002
+
+Общий репозиторий хранит обе platform build-команды. `npm run build` последовательно вызывает `build:mac` и `build:win`; platform outputs остаются локальными. Windows preflight сначала ищет canonical runtime/Node payload внутри локального `windows-app`, затем внешний sibling/cache source, поэтому Git-синхронизация не требует переносить binary distribution. `tests/windows-runtime.test.mjs` фиксирует этот порядок источников.
