@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 221,
+  "plan_revision": 222,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-unified-mac-windows-009",
@@ -115,7 +115,8 @@
         "scripts/prepare-windows-toolchain.mjs",
         "BUILD_WINDOWS.cmd",
         "RUN_WINDOWS.cmd",
-        ".gitignore"
+        ".gitignore",
+        "tests/windows-runtime.test.mjs"
       ],
       "documentation_paths": [
         "docs/PRODUCT.md",
@@ -199,7 +200,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-unified-mac-windows-009
 Current Task: нет
-Revision: 221
+Revision: 222
 
 ## Цель
 
@@ -222,7 +223,7 @@ Revision: 221
 - [TODO] T002: Объединить packaging macOS и Windows — Ожидает
   - Git Commit: [PENDING] build: объединить macOS и Windows packaging
   - Reference: web-pilot-unified-mac-windows-009 / T002 / implementation
-  - Файлы: package.json, package-lock.json, scripts/prepare-windows-toolchain.mjs, BUILD_WINDOWS.cmd, RUN_WINDOWS.cmd, .gitignore, docs/PRODUCT.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md
+  - Файлы: package.json, package-lock.json, scripts/prepare-windows-toolchain.mjs, BUILD_WINDOWS.cmd, RUN_WINDOWS.cmd, .gitignore, tests/windows-runtime.test.mjs, docs/PRODUCT.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md
 - [TODO] T003: Синхронизировать кроссплатформенные тесты и проверить обе сборки — Ожидает
   - Git Commit: [PENDING] test: подтвердить единый macOS Windows репозиторий
   - Reference: web-pilot-unified-mac-windows-009 / T003 / implementation
