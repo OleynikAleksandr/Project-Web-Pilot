@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 229,
+  "plan_revision": 231,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-unified-mac-windows-009",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Объединить Project Web Pilot для macOS и Windows в один канонический репозиторий: перенести подтверждённые Windows-исправления в общий код, сохранить обе платформенные сборки и подготовить лёгкую Git-синхронизацию между компьютерами без переноса runtime/build-артефактов.",
   "acceptance_criteria": [
     "Полезные Windows runtime fixes 0.6.1/0.6.2 перенесены в общий код без регрессии macOS.",
@@ -206,8 +206,8 @@
       ],
       "verification_ids": [],
       "expected_commit_message": "chore: подключить общий GitHub remote",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-unified-mac-windows-009",
         "task_id": "T004",
@@ -235,10 +235,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: web-pilot-unified-mac-windows-009
 Current Task: нет
-Revision: 229
+Revision: 231
 
 ## Цель
 
@@ -266,8 +266,8 @@ Revision: 229
   - Git Commit: [DONE] test: подтвердить единый macOS Windows репозиторий
   - Reference: web-pilot-unified-mac-windows-009 / T003 / implementation
   - Файлы: tests/workflow-kit-source.test.mjs, tests/workspace-deletion.test.mjs, tests/workspace-session.test.mjs, tests/workspace-setup.test.mjs, docs/VERIFICATION.md, docs/DECISIONS.md, docs/WORKFLOW_START.md
-- [TODO] T004: Подключить private Git remote и опубликовать общий main — Ожидает
-  - Git Commit: [PENDING] chore: подключить общий GitHub remote
+- [DONE] T004: Подключить private Git remote и опубликовать общий main — Завершено
+  - Git Commit: [DONE] chore: подключить общий GitHub remote
   - Reference: web-pilot-unified-mac-windows-009 / T004 / implementation
   - Файлы: LICENSE, docs/WORKFLOW_START.md, docs/DECISIONS.md
 

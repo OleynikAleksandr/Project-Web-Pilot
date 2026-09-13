@@ -99,3 +99,7 @@ Electron с WebContentsView используется для собственно
 ## 13.09.2026 — один Git-репозиторий для macOS и Windows
 
 Пользователь решил прекратить ведение двух независимых кодовых проектов. Канонический source of truth — `Project Web Pilot`; macOS и Windows являются двумя checkout/worktree одного Git repository. Общие исходники, Workflow Kit, docs, tests и `.harness/plans` синхронизируются через private remote Git. `node_modules`, `.harness/runtime`, `windows-app`, userData/profile/settings и build outputs остаются локальными и между компьютерами не переносятся. Одновременно изменяет общий проект только один компьютер/агент; переход на другой компьютер выполняется после commit/push и pull.
+
+## 13.09.2026 — GitHub remote общего проекта
+
+Пользователь выбрал `OleynikAleksandr/Project-Web-Pilot` как единый GitHub source of truth. Стартовый GitHub `LICENSE` сохраняется в общей истории; дальнейшие macOS и Windows изменения синхронизируются через один `main`, а не переносом полной папки между компьютерами.

@@ -86,3 +86,7 @@
 ## Проверка общего репозитория 13.09.2026
 
 После объединения Windows fixes общий workspace прошёл `npm test` (75 passed, 2 win32-only skipped, 0 failed), `npm run smoke` и `npm run build`. Последняя команда из одного checkout собрала обе платформы: `.harness/runtime/build/Project Web Pilot-darwin-arm64/Project Web Pilot.app` и `.harness/runtime/build/Project Web Pilot-win32-x64/Project Web Pilot.exe`. Для реальной Windows-проверки используется тот же Git commit после pull на Windows; build/runtime directories не синхронизируются.
+
+## GitHub source of truth — 13.09.2026
+
+Канонический remote общего macOS/Windows проекта: `https://github.com/OleynikAleksandr/Project-Web-Pilot`. Обычный цикл между компьютерами: штатный Workflow Kit commit → `git push`; на втором компьютере → `git pull`. Тяжёлые локальные `node_modules`, `.harness/runtime`, `windows-app`, userData/settings и build outputs остаются локальными и в remote не публикуются.
