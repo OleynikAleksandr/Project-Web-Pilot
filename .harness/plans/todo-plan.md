@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 228,
+  "plan_revision": 229,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-unified-mac-windows-009",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Объединить Project Web Pilot для macOS и Windows в один канонический репозиторий: перенести подтверждённые Windows-исправления в общий код, сохранить обе платформенные сборки и подготовить лёгкую Git-синхронизацию между компьютерами без переноса runtime/build-артефактов.",
   "acceptance_criteria": [
     "Полезные Windows runtime fixes 0.6.1/0.6.2 перенесены в общий код без регрессии macOS.",
@@ -34,7 +34,8 @@
       "tests/workflow-kit-source.test.mjs",
       "tests/workspace-deletion.test.mjs",
       "tests/workspace-session.test.mjs",
-      "tests/workspace-setup.test.mjs"
+      "tests/workspace-setup.test.mjs",
+      "LICENSE"
     ],
     "documentation_paths": [
       "docs/PRODUCT.md",
@@ -183,6 +184,35 @@
         "task_id": "T003",
         "role": "implementation"
       }
+    },
+    {
+      "id": "T004",
+      "title": "Подключить private Git remote и опубликовать общий main",
+      "why": "Завершить переход от двух переносимых папок к одному удалённому Git source of truth для Mac и Windows.",
+      "dependencies": [
+        "T003"
+      ],
+      "functional_paths": [
+        "LICENSE"
+      ],
+      "documentation_paths": [
+        "docs/WORKFLOW_START.md",
+        "docs/DECISIONS.md"
+      ],
+      "acceptance_criteria": [
+        "Стартовый LICENSE из GitHub сохранён в общем репозитории.",
+        "origin указывает на OleynikAleksandr/Project-Web-Pilot и канонический main опубликован без build/runtime артефактов.",
+        "Удалённый main после push совпадает с локальным HEAD, а дальнейшая синхронизация выполняется обычным pull/push."
+      ],
+      "verification_ids": [],
+      "expected_commit_message": "chore: подключить общий GitHub remote",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "web-pilot-unified-mac-windows-009",
+        "task_id": "T004",
+        "role": "implementation"
+      }
     }
   ],
   "blocked_reason": null,
@@ -191,6 +221,11 @@
       "id": "61622b55-bfd4-4d6e-9fca-a2685dba5225",
       "text": "13.09.2026 пользователь прямо поручил объединить macOS и Windows проекты в один Project Web Pilot, дальше вести обе платформы параллельно из общего Git-репозитория и после успешной синхронизации отказаться от отдельной папки Win Project Web Pilot.",
       "recorded_at": "2026-09-13T17:50:23.012Z"
+    },
+    {
+      "id": "github-remote-20260913",
+      "text": "13.09.2026 пользователь передал GitHub-репозиторий https://github.com/OleynikAleksandr/Project-Web-Pilot для общего source of truth macOS/Windows и тем самым поручил подключить remote и синхронизировать общий main.",
+      "recorded_at": "2026-09-13T18:03:55.208Z"
     }
   ]
 }
@@ -200,10 +235,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: web-pilot-unified-mac-windows-009
 Current Task: нет
-Revision: 228
+Revision: 229
 
 ## Цель
 
@@ -231,6 +266,10 @@ Revision: 228
   - Git Commit: [DONE] test: подтвердить единый macOS Windows репозиторий
   - Reference: web-pilot-unified-mac-windows-009 / T003 / implementation
   - Файлы: tests/workflow-kit-source.test.mjs, tests/workspace-deletion.test.mjs, tests/workspace-session.test.mjs, tests/workspace-setup.test.mjs, docs/VERIFICATION.md, docs/DECISIONS.md, docs/WORKFLOW_START.md
+- [TODO] T004: Подключить private Git remote и опубликовать общий main — Ожидает
+  - Git Commit: [PENDING] chore: подключить общий GitHub remote
+  - Reference: web-pilot-unified-mac-windows-009 / T004 / implementation
+  - Файлы: LICENSE, docs/WORKFLOW_START.md, docs/DECISIONS.md
 
 ## Context Pack For This Cycle
 
