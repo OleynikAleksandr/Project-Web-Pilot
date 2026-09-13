@@ -439,3 +439,7 @@ Unit test фиксирует Node.js 22.17.0 win-x64 archive name/SHA, expected 
 Финальный production-log `~/Library/Application Support/Project Web Pilot/diagnostics/chromium-events.jsonl` проверен до события 12.09.2026 17:01:27Z. Надёжный direct marker auto-compact не обнаружен. В наблюдаемой telemetry `modelContextWindow` стабильно равен `262144`, но `inputTokens` и `usedPercent` остаются `null`. Все зарегистрированные `context-truncation-state` в этой сессии имеют `continuationPresent=false`, `continuationType=null`, `summaryMetadataPresent=false`; изменение `context_truncation_continuation` не наблюдалось.
 
 Это фиксируется как отрицательный результат наблюдения, а не как доказательство отсутствия server-side compaction вообще: браузерный transport не показал ни занятость окна, ни подтверждённое событие compact. По прямому решению пользователя дальнейшее ожидание в этом scope прекращено.
+
+## Общий runtime после Windows 0.6.1/0.6.2
+
+13.09.2026 в основной репозиторий перенесены подтверждённые на реальном Windows исправления: reuse совместимой установленной Codex Local Windows вместо запуска второй копии, безопасное применение `workflow_context_recover` overlay и использование фактического `folder`, возвращённого bootstrap, вместо stale runtime path. Regression coverage находится в `tests/windows-runtime.test.mjs` и `tests/mcp-runtime.test.mjs`; macOS runtime path остаётся отдельной веткой platform layout.

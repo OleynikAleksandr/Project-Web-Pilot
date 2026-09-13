@@ -134,22 +134,42 @@ export class WindowsRuntimeError extends Error {
   constructor(code, message) { super(message); this.code = code; }
 }
 
-export function windowsRuntimePaths(dataDir, payloadFile = '') {
+function windowsRuntimeFolderPaths(folder) {
   const api = path.win32;
-  const root = api.join(dataDir, 'runtime');
-  const folder = api.join(root, WINDOWS_RUNTIME_FOLDER);
   return {
-    root,
     folder,
     control: api.join(folder, 'control.py'),
     python: api.join(folder, '.venv', 'Scripts', 'python.exe'),
     locations: api.join(folder, '.runtime', 'locations.json'),
     setupScript: api.join(folder, 'scripts', 'setup.ps1'),
     connectScript: api.join(folder, '2_CONNECT_TUNNEL.cmd'),
+  };
+}
+
+export function windowsRuntimePaths(dataDir, payloadFile = '') {
+  const api = path.win32;
+  const root = api.join(dataDir, 'runtime');
+  const folder = api.join(root, WINDOWS_RUNTIME_FOLDER);
+  return {
+    root,
+    ...windowsRuntimeFolderPaths(folder),
     marker: api.join(root, 'windows-runtime.json'),
     staging: api.join(root, '.windows-runtime-staging'),
     payloadFile,
   };
+}
+
+export function windowsRuntimeStateDirectory(environment = process.env) {
+  const base = environment?.LOCALAPPDATA;
+  return typeof base === 'string' && path.win32.isAbsolute(base) ? path.win32.join(base, 'CodexLocalWindows') : null;
+}
+
+export function windowsCommandFailureText(error, fallback = 'Windows runtime command failed') {
+  for (const value of [error?.stderr, error?.stdout, error?.message]) {
+    const text = String(value ?? '').trim();
+    if (text) return text.slice(-1500);
+  }
+  return fallback;
 }
 
 export function windowsExpandInvocation(payloadFile, destination) {
@@ -194,31 +214,78 @@ async function exists(file) {
 
 export class WindowsRuntimeBootstrap {
   constructor({ payloadFile, dataDir, execute = execFile, environment = process.env, platform = process.platform,
-    expectedSha256 = WINDOWS_RUNTIME_SHA256, onState = null } = {}) {
+    expectedSha256 = WINDOWS_RUNTIME_SHA256, onState = null, preferredFolder = null, stateDir = null } = {}) {
     if (!payloadFile || !dataDir) throw new TypeError('WindowsRuntimeBootstrap requires payloadFile and dataDir');
     this.platform = platform;
     this.environment = environment;
     this.execute = execute;
     this.expectedSha256 = expectedSha256;
     this.paths = windowsRuntimePaths(dataDir, payloadFile);
+    this.preferredFolder = typeof preferredFolder === 'string' && path.win32.isAbsolute(preferredFolder) ? preferredFolder : null;
+    this.stateDir = stateDir ?? windowsRuntimeStateDirectory(environment);
     this.onState = typeof onState === 'function' ? onState : null;
     this.pending = null;
+    this.external = null;
     this.state = { phase: platform === 'win32' ? 'embedded' : 'unavailable', folder: this.paths.folder };
   }
 
   snapshot() { return { ...this.state }; }
-  #publish(next) { this.state = { ...this.state, ...next, folder: this.paths.folder }; try { this.onState?.(this.snapshot()); } catch {} }
+  #publish(next) { this.state = { ...this.state, ...next, folder: next?.folder ?? this.state.folder ?? this.paths.folder }; try { this.onState?.(this.snapshot()); } catch {} }
 
   async #marker() {
     try { return JSON.parse(await fs.readFile(this.paths.marker, 'utf8')); } catch { return null; }
   }
 
+  async #externalCandidates() {
+    const values = [];
+    if (this.stateDir) {
+      for (const name of ['mcp.pid.json', 'tunnel.pid.json']) {
+        try {
+          const record = JSON.parse(await fs.readFile(path.win32.join(this.stateDir, name), 'utf8'));
+          if (typeof record?.package_root === 'string' && path.win32.isAbsolute(record.package_root)) values.push(record.package_root);
+        } catch {}
+      }
+    }
+    if (this.preferredFolder) values.push(this.preferredFolder);
+    const bundled = path.win32.resolve(this.paths.folder).toLowerCase();
+    return [...new Map(values.map(value => [path.win32.resolve(value).toLowerCase(), value])).entries()]
+      .filter(([key]) => key !== bundled).map(([, value]) => value);
+  }
+
+  async #inspectExternal() {
+    for (const folder of await this.#externalCandidates()) {
+      const layout = windowsRuntimeFolderPaths(folder);
+      if (!(await exists(layout.control) && await exists(layout.python) && await exists(layout.locations))) continue;
+      try {
+        const output = await this.execute(layout.python, ['-B', layout.control, 'status'], {
+          cwd: folder, timeout: 12000, maxBuffer: 1024 * 1024,
+          env: { ...this.environment, PYTHONUTF8: '1', PYTHONDONTWRITEBYTECODE: '1' }, windowsHide: true,
+        });
+        const service = JSON.parse(output.stdout);
+        if (!service?.mcp || !service?.tunnel || typeof service.package_root !== 'string') continue;
+        if ([service.mcp, service.tunnel].some(item => item?.running && !item?.owned)) continue;
+        if (path.win32.resolve(service.package_root).toLowerCase() !== path.win32.resolve(folder).toLowerCase()) continue;
+        return { folder, layout, service };
+      } catch {}
+    }
+    return null;
+  }
+
   async inspect() {
     if (this.platform !== 'win32') return this.snapshot();
+    const external = await this.#inspectExternal();
+    if (external) {
+      this.external = external;
+      this.#publish({ phase: 'installed', installed: true, source: 'external', folder: external.folder,
+        payloadSha256: null, service: external.service, error: null });
+      return this.snapshot();
+    }
+    this.external = null;
     const marker = await this.#marker();
     const installed = marker?.payloadSha256 === this.expectedSha256 && marker?.overlayVersion === WINDOWS_RUNTIME_OVERLAY_VERSION
       && await exists(this.paths.control) && await exists(this.paths.python) && await exists(this.paths.locations);
-    this.#publish({ phase: installed ? 'installed' : 'embedded', installed, payloadSha256: marker?.payloadSha256 ?? null });
+    this.#publish({ phase: installed ? 'installed' : 'embedded', installed, source: installed ? 'bundled' : 'embedded',
+      folder: this.paths.folder, payloadSha256: marker?.payloadSha256 ?? null, service: null });
     return this.snapshot();
   }
 
@@ -229,19 +296,74 @@ export class WindowsRuntimeBootstrap {
     return this.pending;
   }
 
+  async #externalControl(folder, command, extraArgs = []) {
+    const layout = windowsRuntimeFolderPaths(folder);
+    return this.execute(layout.python, ['-B', layout.control, command, ...extraArgs], {
+      cwd: folder, timeout: command === 'start' ? 90000 : 20000, maxBuffer: 1024 * 1024,
+      env: { ...this.environment, PYTHONUTF8: '1', PYTHONDONTWRITEBYTECODE: '1' }, windowsHide: true,
+    });
+  }
+
+  async #ensureExternal(current) {
+    const folder = current.folder;
+    const bridgeFile = path.win32.join(folder, 'mcp', 'bridge_mcp.py');
+    const contextFile = path.win32.join(folder, 'server', 'context_packet.py');
+    let bridge;
+    try { bridge = await fs.readFile(bridgeFile, 'utf8'); }
+    catch { throw new WindowsRuntimeError('WINDOWS_RUNTIME_EXTERNAL_INCOMPATIBLE', `Найдена установленная Codex Local Windows, но отсутствует совместимый MCP bridge: ${folder}`); }
+    let patched;
+    try { patched = patchWindowsBridgeSource(bridge); }
+    catch (error) { throw new WindowsRuntimeError('WINDOWS_RUNTIME_EXTERNAL_INCOMPATIBLE', `Найдена установленная Codex Local Windows, но её MCP bridge несовместим с Web Pilot: ${error.message}`); }
+    let contextBefore = null;
+    let contextExisted = false;
+    try { contextBefore = await fs.readFile(contextFile, 'utf8'); contextExisted = true; } catch {}
+    const needsOverlay = patched !== bridge || contextBefore !== WINDOWS_CONTEXT_PACKET_SOURCE;
+    if (!needsOverlay) {
+      this.#publish({ phase: 'installed', installed: true, source: 'external', folder, error: null });
+      return { ...this.snapshot(), reused: true, adopted: true };
+    }
+    const mcpWasRunning = !!current.service?.mcp?.owned && !!current.service?.mcp?.running;
+    const tunnelWasRunning = !!current.service?.tunnel?.owned && !!current.service?.tunnel?.running;
+    const wasRunning = mcpWasRunning || tunnelWasRunning;
+    this.#publish({ phase: 'adopting', installed: true, source: 'external', folder, error: null });
+    try {
+      if (wasRunning) await this.#externalControl(folder, 'stop');
+      await fs.writeFile(contextFile, WINDOWS_CONTEXT_PACKET_SOURCE, { encoding: 'utf8', mode: 0o600 });
+      if (patched !== bridge) await fs.writeFile(bridgeFile, patched, { encoding: 'utf8', mode: 0o600 });
+      if (wasRunning) await this.#externalControl(folder, 'start', tunnelWasRunning ? [] : ['--mcp-only']);
+    } catch (error) {
+      try {
+        await fs.writeFile(bridgeFile, bridge, { encoding: 'utf8', mode: 0o600 });
+        if (contextExisted) await fs.writeFile(contextFile, contextBefore, { encoding: 'utf8', mode: 0o600 });
+        else await fs.rm(contextFile, { force: true });
+        if (wasRunning) await this.#externalControl(folder, 'start', tunnelWasRunning ? [] : ['--mcp-only']);
+      } catch {}
+      this.#publish({ phase: 'error', installed: true, source: 'external', folder, error: 'WINDOWS_RUNTIME_EXTERNAL_ADOPTION_FAILED' });
+      throw new WindowsRuntimeError('WINDOWS_RUNTIME_EXTERNAL_ADOPTION_FAILED', windowsCommandFailureText(error, 'Не удалось подключить существующую Codex Local Windows.'));
+    }
+    const refreshed = await this.#inspectExternal();
+    if (refreshed) this.external = refreshed;
+    this.#publish({ phase: 'installed', installed: true, source: 'external', folder, service: refreshed?.service ?? current.service, error: null });
+    return { ...this.snapshot(), reused: true, adopted: true };
+  }
+
   async launchTunnelSetup() {
     if (this.platform !== 'win32') throw new WindowsRuntimeError('WINDOWS_ONLY', 'Настройка tunnel доступна только в Windows-сборке.');
     const current = await this.inspect();
-    if (!current.installed || !(await exists(this.paths.connectScript))) {
-      throw new WindowsRuntimeError('WINDOWS_RUNTIME_NOT_INSTALLED', 'Сначала установите встроенный Windows runtime.');
+    const layout = windowsRuntimeFolderPaths(current.folder);
+    if (!current.installed || !(await exists(layout.connectScript))) {
+      throw new WindowsRuntimeError('WINDOWS_RUNTIME_NOT_INSTALLED', 'Сначала установите или подключите Windows runtime.');
     }
-    const launch = windowsTunnelSetupInvocation(this.paths.connectScript, this.paths.folder);
+    if (current.source === 'external' && current.service?.tunnel?.configured) {
+      return { launched: false, configured: true, folder: current.folder };
+    }
+    const launch = windowsTunnelSetupInvocation(layout.connectScript, current.folder);
     await this.execute(launch.executable, launch.args, {
       timeout: 15000, maxBuffer: 1024 * 1024,
       env: { ...this.environment, ...launch.environment }, windowsHide: true,
     });
-    this.#publish({ phase: 'tunnel-setup-launched', installed: true, error: null });
-    return { launched: true, folder: this.paths.folder };
+    this.#publish({ phase: 'tunnel-setup-launched', installed: true, error: null, folder: current.folder });
+    return { launched: true, folder: current.folder };
   }
 
   async #ensure(workspace) {
@@ -249,6 +371,7 @@ export class WindowsRuntimeBootstrap {
       throw new WindowsRuntimeError('WINDOWS_WORKSPACE_REQUIRED', 'Для подготовки Windows runtime нужен абсолютный путь workspace.');
     }
     const current = await this.inspect();
+    if (current.installed && current.source === 'external') return this.#ensureExternal(current);
     if (current.installed) return { ...current, reused: true };
     this.#publish({ phase: 'verifying', installed: false, error: null });
     let actual;
@@ -288,7 +411,7 @@ export class WindowsRuntimeBootstrap {
       });
     } catch (error) {
       this.#publish({ phase: 'error', error: 'WINDOWS_RUNTIME_SETUP_FAILED' });
-      throw new WindowsRuntimeError('WINDOWS_RUNTIME_SETUP_FAILED', String(error?.stderr || error?.message || 'Windows runtime setup failed').slice(-1500));
+      throw new WindowsRuntimeError('WINDOWS_RUNTIME_SETUP_FAILED', windowsCommandFailureText(error, 'Windows runtime setup failed'));
     }
     if (!(await exists(this.paths.control) && await exists(this.paths.python) && await exists(this.paths.locations))) {
       throw new WindowsRuntimeError('WINDOWS_RUNTIME_SETUP_INCOMPLETE', 'Windows runtime setup завершился без обязательных файлов.');

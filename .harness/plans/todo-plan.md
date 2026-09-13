@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 219,
+  "plan_revision": 221,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-unified-mac-windows-009",
@@ -97,8 +97,8 @@
         "macOS runtime path и поведение не меняются."
       ],
       "expected_commit_message": "fix: синхронизировать Windows runtime с общим проектом",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-unified-mac-windows-009",
         "task_id": "T001",
@@ -199,7 +199,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: web-pilot-unified-mac-windows-009
 Current Task: нет
-Revision: 219
+Revision: 221
 
 ## Цель
 
@@ -215,8 +215,8 @@ Revision: 219
 
 ## Микрозадачи
 
-- [TODO] T001: Синхронизировать Windows runtime fixes — Ожидает
-  - Git Commit: [PENDING] fix: синхронизировать Windows runtime с общим проектом
+- [DONE] T001: Синхронизировать Windows runtime fixes — Завершено
+  - Git Commit: [DONE] fix: синхронизировать Windows runtime с общим проектом
   - Reference: web-pilot-unified-mac-windows-009 / T001 / implementation
   - Файлы: src/windows-runtime.mjs, src/mcp-runtime.mjs, src/main.mjs, tests/windows-runtime.test.mjs, tests/mcp-runtime.test.mjs, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 - [TODO] T002: Объединить packaging macOS и Windows — Ожидает

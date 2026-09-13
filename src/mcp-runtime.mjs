@@ -195,8 +195,15 @@ export class McpRuntime {
 
   async control(command) {
     if (!['status', 'start'].includes(command)) throw new RuntimeError('RUNTIME_ACTION_DENIED', 'Эта операция не поддерживается оболочкой.');
-    if (this.ensureRuntime) await this.ensureRuntime();
-    const folder = await findRuntimeFolder(this.folder, { platform: this.platform });
+    let runtimeFolder = this.folder;
+    if (this.ensureRuntime) {
+      const ensured = await this.ensureRuntime();
+      if (typeof ensured?.folder === 'string' && isAbsolutePlatformPath(ensured.folder, this.platform)) {
+        runtimeFolder = ensured.folder;
+        this.folder = ensured.folder;
+      }
+    }
+    const folder = await findRuntimeFolder(runtimeFolder, { platform: this.platform });
     const layout = runtimeLayout(folder, this.platform);
     let output;
     try {

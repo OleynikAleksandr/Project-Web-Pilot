@@ -27,6 +27,7 @@ const chromiumDiagnosticsFile = path.join(dataDir, 'diagnostics', 'chromium-even
 const store = new WorkspaceSessions(path.join(dataDir, 'workspaces.json'));
 const partition = smoke ? 'web-pilot-smoke' : 'persist:chatgpt';
 let runtimeFolder = bundledWindowsRuntimeFolder(dataDir, process.platform) ?? defaultRuntimeFolder(os.homedir(), process.platform);
+let configuredRuntimeFolder = null;
 let shellTheme = 'light';
 let hideToolCalls = true;
 const SIDEBAR_MIN_WIDTH = 312;
@@ -668,7 +669,10 @@ else {
   app.whenReady().then(async () => {
     try {
       const settings = JSON.parse(await fsp.readFile(settingsFile, 'utf8'));
-      if (process.platform !== 'win32' && typeof settings.runtimeFolder === 'string' && path.isAbsolute(settings.runtimeFolder)) runtimeFolder = settings.runtimeFolder;
+      if (typeof settings.runtimeFolder === 'string' && path.isAbsolute(settings.runtimeFolder)) {
+        if (process.platform === 'win32') configuredRuntimeFolder = settings.runtimeFolder;
+        else runtimeFolder = settings.runtimeFolder;
+      }
       if (['light', 'dark'].includes(settings.shellTheme)) shellTheme = settings.shellTheme;
       if (typeof settings.hideToolCalls === 'boolean') hideToolCalls = settings.hideToolCalls;
       if (Number.isFinite(settings.sidebarWidth)) sidebarWidth = Math.max(SIDEBAR_MIN_WIDTH, Math.round(settings.sidebarWidth));
@@ -679,9 +683,10 @@ else {
       const payloadFile = app.isPackaged
         ? path.join(process.resourcesPath, 'windows-payload', WINDOWS_RUNTIME_ARCHIVE)
         : path.join(sourceDir, '../.harness/runtime/windows-payload', WINDOWS_RUNTIME_ARCHIVE);
-      windowsRuntimeBootstrap = new WindowsRuntimeBootstrap({ payloadFile, dataDir, onState: publish });
-      runtimeFolder = windowsRuntimeBootstrap.paths.folder;
-      await windowsRuntimeBootstrap.inspect();
+      windowsRuntimeBootstrap = new WindowsRuntimeBootstrap({ payloadFile, dataDir, preferredFolder: configuredRuntimeFolder, onState: publish });
+      const windowsRuntimeState = await windowsRuntimeBootstrap.inspect();
+      runtimeFolder = windowsRuntimeState.folder;
+      if (windowsRuntimeState.source === 'external' || configuredRuntimeFolder) await saveSettings({ runtimeFolder });
     }
     deletion = new WorkspaceDeletion({ store, journalDir: path.join(dataDir, 'deletions'), protectedPaths: [app.getAppPath(), runtimeFolder] });
     if (!storageError) {

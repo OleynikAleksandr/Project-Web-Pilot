@@ -488,3 +488,9 @@ Windows-only onboarding остаётся локальным sidebar UI и не �
 `npm run build:win` выполняет три стадии: `prepare:win` проверяет/caches private Codex Local payload и официальный portable Node; `build:win:package` cross-packages Electron win32-x64 и добавляет `resources`, `windows-payload`, `windows-node`; `verify:win` проверяет PE magic основного `.exe` и portable `node.exe`, SHA обоих ZIP payload, наличие Workflow Kit/workspace worker и отсутствие macOS bundle layout `Contents/Info.plist`.
 
 Private Codex Local ZIP не хранится в Git из-за размера и Workflow Kit snapshot limit; build-preflight берёт уже проверенный cache либо копирует канонический sibling artifact / путь `WEB_PILOT_WINDOWS_RUNTIME_ARCHIVE`. Готовый пользовательский package при этом полностью содержит payload и не зависит от sibling workspace.
+
+## Синхронизация Windows runtime 0.6.1/0.6.2
+
+Общий Project Web Pilot использует один runtime contract для обеих платформ. На Windows bootstrap сначала ищет совместимую уже установленную Codex Local Windows через локальное состояние и сохранённый preferred path; если такая установка найдена, Web Pilot переиспользует её MCP/tunnel и добавляет только read-only compatibility overlay `workflow_context_recover`. Bundled Windows runtime остаётся fallback.
+
+`McpRuntime` принимает `folder`, возвращённый `ensureRuntime`, как фактический runtime path до проверки layout. Это устраняет `RUNTIME_NOT_FOUND`, когда bootstrap успешно нашёл или подготовил runtime, а сохранённый ранее путь устарел. macOS layout и выбор Codex Local Mac не меняются.

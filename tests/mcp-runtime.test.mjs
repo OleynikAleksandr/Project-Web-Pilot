@@ -13,13 +13,14 @@ const ready = { mcp: { running: true, owned: true, ready: true },
 async function folder(t) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'web-pilot-служба с пробелами-'));
   t.after(() => fs.rm(root, { recursive: true, force: true }));
-  await fs.mkdir(path.join(root, '.venv/bin'), { recursive: true });
-  await fs.writeFile(path.join(root, 'control.py'), '# fixture');
-  await fs.writeFile(path.join(root, '.venv/bin/python3'), 'fixture');
+  const layout = runtimeLayout(root);
+  await fs.mkdir(path.dirname(layout.python), { recursive: true });
+  await fs.writeFile(layout.control, '# fixture');
+  await fs.writeFile(layout.python, 'fixture');
   return fs.realpath(root);
 }
 
-const clientFactory = () => ({ initialize: async () => ({ serverName: 'Codex Local Mac', toolCount: 47 }) });
+const clientFactory = () => ({ initialize: async () => ({ serverName: process.platform === 'win32' ? 'Codex Local Windows' : 'Codex Local Mac', toolCount: 47 }) });
 
 test('platform runtime layout preserves macOS and defines Windows paths without runtime access', () => {
   assert.deepEqual(runtimeLayout('/Users/test/Codex Local Mac/mac-codex-local', 'darwin'), {
@@ -46,10 +47,25 @@ test('ready shared services are reused, with explicit arguments and one concurre
     execute: async (...args) => { calls.push(args); return { stdout: JSON.stringify(ready) }; } });
   const [a,b] = await Promise.all([runtime.ensure(), runtime.ensure()]);
   assert.deepEqual(a,b); assert.equal(calls.length,1);
-  assert.equal(calls[0][0], path.join(root,'.venv/bin/python3'));
-  assert.deepEqual(calls[0][1], ['-B',path.join(root,'control.py'),'status']);
+  const layout = runtimeLayout(root);
+  assert.equal(calls[0][0], layout.python);
+  assert.deepEqual(calls[0][1], ['-B',layout.control,'status']);
   assert.equal(calls[0][2].cwd,root); assert.equal(calls[0][2].shell,undefined);
   await assert.rejects(runtime.control('stop'), { code:'RUNTIME_ACTION_DENIED' });
+});
+
+test('ensureRuntime can replace a stale runtime path with the actual prepared folder', async t => {
+  const root = await folder(t);
+  const stale = path.join(path.dirname(root), 'missing-runtime');
+  const calls = [];
+  const runtime = new McpRuntime(stale, { clientFactory,
+    ensureRuntime: async () => ({ folder: root }),
+    execute: async (...args) => { calls.push(args); return { stdout: JSON.stringify(ready) }; } });
+  const result = await runtime.ensure();
+  assert.equal(runtime.folder, root);
+  assert.equal(result.mcp.ready, true);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0][2].cwd, root);
 });
 
 test('start is called once only for unready owned services and readiness is rechecked', async t => {
