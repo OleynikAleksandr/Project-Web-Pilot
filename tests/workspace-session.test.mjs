@@ -6,6 +6,8 @@ import os from 'node:os';
 import { randomUUID } from 'node:crypto';
 import { WorkspaceSessions, readWorkspace, normalizeChatUrl } from '../src/workspace-session.mjs';
 
+const directoryLink = (target, link) => fs.symlink(target, link, process.platform === 'win32' ? 'junction' : 'dir');
+
 async function fixture(t) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'web-pilot-workspaces-'));
   t.after(() => fs.rm(root, { recursive: true, force: true }));
@@ -68,7 +70,7 @@ test('readWorkspace exposes user plan lifecycle without using plan revision as U
 test('canonical folder with spaces and Cyrillic survives restart with its conversation', async t => {
   const { root, project, store } = await fixture(t);
   const folder = await project('Мой проект');
-  const link = path.join(root, 'ссылка'); await fs.symlink(folder, link);
+  const link = path.join(root, 'ссылка'); await directoryLink(folder, link);
   const a = await store.select(link);
   assert.equal(a.workspace, await fs.realpath(folder));
   assert.equal(a.nextTaskId, 'T001');
@@ -78,7 +80,7 @@ test('canonical folder with spaces and Cyrillic survives restart with its conver
   const reopened = await next.select(folder);
   assert.equal(reopened.sessionId, a.sessionId);
   assert.equal(reopened.chatUrl, chat);
-  assert.equal((await fs.stat(store.file)).mode & 0o777, 0o600);
+  if (process.platform !== 'win32') assert.equal((await fs.stat(store.file)).mode & 0o777, 0o600);
 });
 
 test('switching project cannot mutate another chat or accept late session results', async t => {

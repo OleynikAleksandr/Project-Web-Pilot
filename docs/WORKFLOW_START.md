@@ -82,3 +82,7 @@
 ## Работа из одного репозитория на двух компьютерах
 
 Общий source of truth — Git-репозиторий `Project Web Pilot`. Перед переходом Mac → Windows или Windows → Mac изменения сначала фиксируются штатным Workflow Kit commit и отправляются в private remote; на втором компьютере выполняется pull. `.harness/runtime`, `node_modules`, `windows-app`, profile/settings и локальные diagnostics не синхронизируются. Одновременно пишет только один worktree/агент.
+
+## Проверка общего репозитория 13.09.2026
+
+После объединения Windows fixes общий workspace прошёл `npm test` (75 passed, 2 win32-only skipped, 0 failed), `npm run smoke` и `npm run build`. Последняя команда из одного checkout собрала обе платформы: `.harness/runtime/build/Project Web Pilot-darwin-arm64/Project Web Pilot.app` и `.harness/runtime/build/Project Web Pilot-win32-x64/Project Web Pilot.exe`. Для реальной Windows-проверки используется тот же Git commit после pull на Windows; build/runtime directories не синхронизируются.

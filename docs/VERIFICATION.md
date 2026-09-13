@@ -447,3 +447,9 @@ Unit test фиксирует Node.js 22.17.0 win-x64 archive name/SHA, expected 
 ## Единый packaging macOS/Windows — scope 009 / T002
 
 Общий репозиторий хранит обе platform build-команды. `npm run build` последовательно вызывает `build:mac` и `build:win`; platform outputs остаются локальными. Windows preflight сначала ищет canonical runtime/Node payload внутри локального `windows-app`, затем внешний sibling/cache source, поэтому Git-синхронизация не требует переносить binary distribution. `tests/windows-runtime.test.mjs` фиксирует этот порядок источников.
+
+## Единый macOS/Windows source of truth — scope 009 / T003
+
+13.09.2026 после синхронизации Windows fixes полный `npm test` на macOS завершился: 77 tests total, 75 passed, 0 failed, 2 native-win32 сценария ожидаемо skipped. `npm run smoke` успешно подтвердил Electron 44.3.0 / Chromium 152 и локальные IPC/UI contracts.
+
+Из одного и того же workspace одной командой `npm run build` последовательно собраны macOS arm64 и Windows x64 packages. Windows verifier подтвердил `Project Web Pilot.exe` SHA-256 `03c359d2c9674c8bc7d77a0134f6158c9a7cf0c52e7d587d13952356407ffa57`, canonical Windows runtime SHA `1f041488ad97d8abf1984fd3521afb8abe15f50b8df3d3e11f1cc4248e019d98`, Node archive SHA `721ab118a3aac8584348b132767eadf51379e0616f0db802cc1e66d7f0d98f85` и наличие Workflow Kit. Это cross-build доказательство; нативные Windows API/runtime действия по-прежнему проверяются на Windows-компьютере после Git sync.

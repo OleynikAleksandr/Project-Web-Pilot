@@ -6,6 +6,8 @@ import path from 'node:path';
 import { WorkspaceSessions } from '../src/workspace-session.mjs';
 import { WorkspaceDeletion } from '../src/workspace-deletion.mjs';
 
+const directoryLink = (target, link) => fs.symlink(target, link, process.platform === 'win32' ? 'junction' : 'dir');
+
 async function fixture(t) {
   const root = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'web-pilot-delete-test-')));
   t.after(() => fs.rm(root, { recursive: true, force: true }));
@@ -25,7 +27,7 @@ async function fixture(t) {
 test('confirmed archive deletion removes files, all local sessions and backup references, preserving outside symlink targets', async t => {
   const { root, store, service, project } = await fixture(t); const a = await project('Удаляемый'), b = await project('Соседний');
   await store.newChat(a); await store.bindChat(a, store.project(a).sessionId, 'https://chatgpt.com/c/keep-cloud-chat');
-  await fs.symlink(b, path.join(a, 'outside-link'));
+  await directoryLink(b, path.join(a, 'outside-link'));
   await fs.writeFile(store.file + '.v2-backup', JSON.stringify(store.snapshot()));
   await fs.writeFile(path.join(root, 'app/diagnostics.jsonl'), [a, b].map(workspace => JSON.stringify({ workspace })).join('\n') + '\n');
   await store.setArchived(a, true); const p = await service.preview(a);
@@ -47,7 +49,7 @@ test('active, protected, nested, replaced and symlink roots cannot be deleted', 
   const planFile = path.join(a, '.harness/plans/todo-plan.md'); const plan = await fs.readFile(planFile, 'utf8');
   await fs.writeFile(planFile, plan.replace('"project_id":"A"', '"project_id":"replacement"'));
   await assert.rejects(service.preview(a), { code: 'PROJECT_REPLACED' }); await fs.writeFile(planFile, plan);
-  await fs.rename(a, path.join(root, 'original')); await fs.symlink(b, a);
+  await fs.rename(a, path.join(root, 'original')); await directoryLink(b, a);
   await assert.rejects(service.preview(a), { code: 'DELETE_PATH_CHANGED' }); assert.ok(await fs.stat(b));
 });
 

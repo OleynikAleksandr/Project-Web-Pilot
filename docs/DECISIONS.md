@@ -95,3 +95,7 @@ Electron с WebContentsView используется для собственно
 
 12.09.2026 пользователь поручил начать пассивное логирование событий Electron/Chromium, чтобы после предполагаемого auto-compact проанализировать фактические признаки события. Журнал предназначен только для диагностики: не сохранять cookies, authorization headers, request bodies, query values или полный текст сообщений. Для WebSocket/SSE сохраняются размер и SHA-256 payload, структурные JSON-ключи и только короткие безопасные значения полей `type/event/event_type/method/kind/op/action`. Файл ограничен ротацией.
 
+
+## 13.09.2026 — один Git-репозиторий для macOS и Windows
+
+Пользователь решил прекратить ведение двух независимых кодовых проектов. Канонический source of truth — `Project Web Pilot`; macOS и Windows являются двумя checkout/worktree одного Git repository. Общие исходники, Workflow Kit, docs, tests и `.harness/plans` синхронизируются через private remote Git. `node_modules`, `.harness/runtime`, `windows-app`, userData/profile/settings и build outputs остаются локальными и между компьютерами не переносятся. Одновременно изменяет общий проект только один компьютер/агент; переход на другой компьютер выполняется после commit/push и pull.

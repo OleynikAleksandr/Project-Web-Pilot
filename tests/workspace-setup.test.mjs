@@ -39,8 +39,10 @@ test('Node candidates are centralized for macOS and Windows', () => {
     'C:\\Program Files (x86)\\nodejs\\node.exe',
     'node.exe',
   ]);
-  const setup = new WorkspaceSetup({ platform: 'win32', environment: { ProgramFiles: 'C:\\Program Files' } });
-  assert.deepEqual(setup.nodeCandidates, ['C:\\Program Files\\nodejs\\node.exe', 'node.exe']);
+  const setupEnvironment = { ProgramFiles: 'C:\\Program Files' };
+  const setup = new WorkspaceSetup({ platform: 'win32', environment: setupEnvironment });
+  assert.deepEqual(setup.nodeCandidates, nodeExecutableCandidates({ platform: 'win32', environment: setupEnvironment,
+    execPath: process.execPath, electron: Boolean(process.versions.electron) }));
 });
 
 test('create a real empty Workflow Kit project and reopen without changes', async t => {
@@ -84,7 +86,8 @@ test('missing local checks reconnect, changed core and missing documents never o
   const { setup, workspace } = await create(t);
   const hook = path.join(workspace, '.git/hooks/pre-commit'); await fs.unlink(hook);
   const preview = await setup.preview({ mode: 'existing', workspace }); assert.equal(preview.action, 'reconnect');
-  assert.equal((await setup.apply(preview.token)).ready, true); assert.ok((await fs.stat(hook)).mode & 0o111);
+  assert.equal((await setup.apply(preview.token)).ready, true);
+  const hookStat = await fs.stat(hook); if (process.platform !== 'win32') assert.ok(hookStat.mode & 0o111);
   const source = path.join(workspace, '.harness/kit/lib/common.mjs'); await fs.appendFile(source, '\n// user change\n');
   const conflict = await setup.preview({ mode: 'existing', workspace }); assert.equal(conflict.action, null); assert.ok(conflict.issues.some(i => i.path.endsWith('common.mjs')));
   await fs.unlink(path.join(workspace, 'docs/WORKFLOW_START.md'));

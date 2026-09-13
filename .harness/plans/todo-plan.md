@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 226,
+  "plan_revision": 228,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-unified-mac-windows-009",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Объединить Project Web Pilot для macOS и Windows в один канонический репозиторий: перенести подтверждённые Windows-исправления в общий код, сохранить обе платформенные сборки и подготовить лёгкую Git-синхронизацию между компьютерами без переноса runtime/build-артефактов.",
   "acceptance_criteria": [
     "Полезные Windows runtime fixes 0.6.1/0.6.2 перенесены в общий код без регрессии macOS.",
@@ -176,8 +176,8 @@
         "Документация фиксирует один общий Git source of truth и локальные platform runtimes."
       ],
       "expected_commit_message": "test: подтвердить единый macOS Windows репозиторий",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-unified-mac-windows-009",
         "task_id": "T003",
@@ -200,10 +200,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: web-pilot-unified-mac-windows-009
 Current Task: нет
-Revision: 226
+Revision: 228
 
 ## Цель
 
@@ -227,8 +227,8 @@ Revision: 226
   - Git Commit: [DONE] build: объединить macOS и Windows packaging
   - Reference: web-pilot-unified-mac-windows-009 / T002 / implementation
   - Файлы: package.json, package-lock.json, scripts/prepare-windows-toolchain.mjs, BUILD_WINDOWS.cmd, RUN_WINDOWS.cmd, .gitignore, tests/windows-runtime.test.mjs, docs/PRODUCT.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/DOCUMENTATION_INDEX.md
-- [TODO] T003: Синхронизировать кроссплатформенные тесты и проверить обе сборки — Ожидает
-  - Git Commit: [PENDING] test: подтвердить единый macOS Windows репозиторий
+- [DONE] T003: Синхронизировать кроссплатформенные тесты и проверить обе сборки — Завершено
+  - Git Commit: [DONE] test: подтвердить единый macOS Windows репозиторий
   - Reference: web-pilot-unified-mac-windows-009 / T003 / implementation
   - Файлы: tests/workflow-kit-source.test.mjs, tests/workspace-deletion.test.mjs, tests/workspace-session.test.mjs, tests/workspace-setup.test.mjs, docs/VERIFICATION.md, docs/DECISIONS.md, docs/WORKFLOW_START.md
 

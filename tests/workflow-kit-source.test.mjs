@@ -29,7 +29,7 @@ const expected = {
 };
 test('vendored Workflow Kit exactly matches WF001 20260a0 source snapshot', async () => {
   const root = new URL('../resources/workflow-kit/', import.meta.url);
-  const files = (await fs.readdir(root, { recursive: true, withFileTypes: true })).filter(e => e.isFile()).map(e => path.relative(fileURLToPath(root), path.join(e.parentPath, e.name))).sort();
+  const files = (await fs.readdir(root, { recursive: true, withFileTypes: true })).filter(e => e.isFile()).map(e => path.relative(fileURLToPath(root), path.join(e.parentPath, e.name)).split(path.sep).join('/')).sort();
   assert.deepEqual(files, Object.keys(expected).sort());
   for (const [file, sha] of Object.entries(expected)) assert.equal(createHash('sha256').update(await fs.readFile(new URL(file, root))).digest('hex'), sha, file);
 });
