@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 232,
+  "plan_revision": 234,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-unified-mac-windows-009",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Объединить Project Web Pilot для macOS и Windows в один канонический репозиторий: перенести подтверждённые Windows-исправления в общий код, сохранить обе платформенные сборки и подготовить лёгкую Git-синхронизацию между компьютерами без переноса runtime/build-артефактов.",
   "acceptance_criteria": [
     "Полезные Windows runtime fixes 0.6.1/0.6.2 перенесены в общий код без регрессии macOS.",
@@ -239,8 +239,8 @@
         "suite"
       ],
       "expected_commit_message": "test: сделать Workflow Kit snapshot кроссплатформенным",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-unified-mac-windows-009",
         "task_id": "T005",
@@ -268,10 +268,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: web-pilot-unified-mac-windows-009
 Current Task: нет
-Revision: 232
+Revision: 234
 
 ## Цель
 
@@ -303,8 +303,8 @@ Revision: 232
   - Git Commit: [DONE] chore: подключить общий GitHub remote
   - Reference: web-pilot-unified-mac-windows-009 / T004 / implementation
   - Файлы: LICENSE, docs/WORKFLOW_START.md, docs/DECISIONS.md
-- [TODO] T005: Устранить CRLF-зависимость snapshot Workflow Kit — Ожидает
-  - Git Commit: [PENDING] test: сделать Workflow Kit snapshot кроссплатформенным
+- [DONE] T005: Устранить CRLF-зависимость snapshot Workflow Kit — Завершено
+  - Git Commit: [DONE] test: сделать Workflow Kit snapshot кроссплатформенным
   - Reference: web-pilot-unified-mac-windows-009 / T005 / implementation
   - Файлы: .gitattributes, tests/workflow-kit-source.test.mjs, docs/VERIFICATION.md, docs/WORKFLOW_START.md
 

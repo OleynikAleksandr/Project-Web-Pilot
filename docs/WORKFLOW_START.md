@@ -90,3 +90,7 @@
 ## GitHub source of truth — 13.09.2026
 
 Канонический remote общего macOS/Windows проекта: `https://github.com/OleynikAleksandr/Project-Web-Pilot`. Обычный цикл между компьютерами: штатный Workflow Kit commit → `git push`; на втором компьютере → `git pull`. Тяжёлые локальные `node_modules`, `.harness/runtime`, `windows-app`, userData/settings и build outputs остаются локальными и в remote не публикуются.
+
+## Windows checkout и окончания строк
+
+Vendored `resources/workflow-kit/**` закреплён в Git как `text eol=lf`; snapshot-test канонизирует только CRLF→LF. Поэтому `core.autocrlf` на Windows не должен давать ложный mismatch исходного Workflow Kit. После обновления старого Windows checkout с уже материализованными CRLF достаточно обычного `git pull`; при необходимости принудительного перечитывания можно выполнить `git restore --source=HEAD --worktree resources/workflow-kit`.

@@ -453,3 +453,9 @@ Unit test фиксирует Node.js 22.17.0 win-x64 archive name/SHA, expected 
 13.09.2026 после синхронизации Windows fixes полный `npm test` на macOS завершился: 77 tests total, 75 passed, 0 failed, 2 native-win32 сценария ожидаемо skipped. `npm run smoke` успешно подтвердил Electron 44.3.0 / Chromium 152 и локальные IPC/UI contracts.
 
 Из одного и того же workspace одной командой `npm run build` последовательно собраны macOS arm64 и Windows x64 packages. Windows verifier подтвердил `Project Web Pilot.exe` SHA-256 `03c359d2c9674c8bc7d77a0134f6158c9a7cf0c52e7d587d13952356407ffa57`, canonical Windows runtime SHA `1f041488ad97d8abf1984fd3521afb8abe15f50b8df3d3e11f1cc4248e019d98`, Node archive SHA `721ab118a3aac8584348b132767eadf51379e0616f0db802cc1e66d7f0d98f85` и наличие Workflow Kit. Это cross-build доказательство; нативные Windows API/runtime действия по-прежнему проверяются на Windows-компьютере после Git sync.
+
+## Windows CRLF и vendored Workflow Kit — scope 009 / T005
+
+13.09.2026 нативная Windows-проверка свежего clone на `d12c6c0` дала 76/77: единственный `workflow-kit-source` test видел SHA `1b3714e7…` вместо canonical `9f706c90…` для `WORKFLOW.md`. На macOS искусственное преобразование только LF→CRLF воспроизвело Windows SHA побайтно, поэтому содержательного расхождения Workflow Kit не было.
+
+`.gitattributes` теперь фиксирует `resources/workflow-kit/**` как `text eol=lf`. Source-snapshot test дополнительно нормализует только CRLF→LF перед SHA-256, сохраняя обнаружение любых остальных изменений содержимого. Это делает проверку независимой от `core.autocrlf` и одновременно сохраняет canonical LF checkout для новых clone.

@@ -3,3 +3,6 @@
 /.harness/** -text
 /scripts/workflow* -text
 # workflow-kit:end
+
+# Canonical vendored Workflow Kit text across macOS/Windows
+/resources/workflow-kit/** text eol=lf
