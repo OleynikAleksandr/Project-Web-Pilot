@@ -4,59 +4,124 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 238,
+  "plan_revision": 239,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
-  "scope_id": null,
-  "execution_scope_status": "NONE",
+  "scope_id": "workflow-kit-recovery-packet-010",
+  "execution_scope_status": "ACTIVE",
   "delivery_status": "IN_PROGRESS",
-  "objective": "",
-  "acceptance_criteria": [],
+  "objective": "Разобрать, почему recovery-пакет Workflow Kit разрастается до CONTEXT_TOO_LARGE, измерить фактический состав и стоимость обязательного контекста и выбрать безопасную политику упаковки без потери данных, необходимых агенту для продолжения работы.",
+  "acceptance_criteria": [
+    "На Mac воспроизведён или точно смоделирован сценарий CONTEXT_TOO_LARGE на реалистичном активном плане без изменения production semantics.",
+    "Измерен вклад основных разделов recovery-пакета в bytes и оценочные tokens; обязательные и необязательные части разделены явно.",
+    "Зафиксированы действующие лимиты Workflow Kit и Web Pilot и точная точка, где возникает переполнение.",
+    "Сравнены безопасные варианты: изменение budget, изменение состава пакета и уменьшение повторяющегося контекста; дана конкретная рекомендация с рисками.",
+    "До отдельного согласования пользователя код, budget и recovery semantics не изменяются."
+  ],
   "approved_scope": {
     "functional_paths": [],
-    "documentation_paths": [],
+    "documentation_paths": [
+      "docs/CONTEXT_DELIVERY.md",
+      "docs/VERIFICATION.md",
+      "docs/WORKFLOW_START.md"
+    ],
     "max_functional_files_per_task": 3
   },
-  "baseline_commit": null,
+  "baseline_commit": "d83a01bd9a21ecc3e02538ef976365f719dec0a6",
   "current_task_id": null,
   "context_pack": {
-    "documents": [],
+    "documents": [
+      {
+        "path": "docs/CONTEXT_DELIVERY.md",
+        "heading_path": [
+          "Передача контекста"
+        ],
+        "required": true,
+        "revision": "WORKTREE"
+      },
+      {
+        "path": "docs/VERIFICATION.md",
+        "heading_path": [
+          "Проверки и приёмка"
+        ],
+        "required": true,
+        "revision": "WORKTREE"
+      }
+    ],
     "include_last_completed_task": true,
     "dependency_task_ids": []
   },
-  "tasks": [],
+  "tasks": [
+    {
+      "dependencies": [],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [],
+      "id": "T001",
+      "title": "Разобрать состав и budget recovery-пакета",
+      "why": "На Windows уже наблюдался CONTEXT_TOO_LARGE, а дальнейшие изменения Workflow Kit нужно делать по измерениям, а не простым увеличением лимита.",
+      "acceptance_criteria": [
+        "Получен воспроизводимый пример или controlled fixture переполнения.",
+        "Для recovery-пакета построен breakdown по основным секциям с bytes/tokens.",
+        "Определено, какие секции обязательны для корректного восстановления, а какие можно сделать условными или компактнее.",
+        "Сопоставлены лимиты Workflow Kit и 180000-byte лимит Web Pilot.",
+        "В документах записаны минимум два варианта решения и рекомендованный следующий шаг; production-код и budget не менялись."
+      ],
+      "expected_commit_message": "docs: разобрать recovery budget Workflow Kit",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "workflow-kit-recovery-packet-010",
+        "task_id": "T001",
+        "role": "implementation"
+      }
+    }
+  ],
   "blocked_reason": null,
   "user_decisions": [
     {
-      "id": "ee8a8575-c9d7-4871-92aa-54c27f804c55",
-      "text": "14.09.2026 пользователь после исправления копирования во встроенном Chromium прямо поручил закрыть и архивировать текущий scope и начать новый план по Workflow Kit.",
-      "recorded_at": "2026-09-14T06:08:13.873Z"
+      "id": "a005eb9f-1da7-4b83-b70e-d6809403b836",
+      "text": "14.09.2026 пользователь после закрытия объединяющего macOS/Windows scope прямо поручил начать новый план по Workflow Kit, сосредоточенный на том, как Kit упаковывает состояние проекта для передачи агенту.",
+      "recorded_at": "2026-09-14T06:09:04.364Z"
     }
-  ],
-  "archived_scope_id": "web-pilot-unified-mac-windows-009"
+  ]
 }
 ```
 <!-- workflow-state:end -->
 
 ## Состояние
 
-Execution Scope Status: NONE
+Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
-Scope: не создан
+Scope: workflow-kit-recovery-packet-010
 Current Task: нет
-Revision: 238
+Revision: 239
 
 ## Цель
 
-Обсудить идею проекта и согласовать ближайший scope. Стек пока не выбран.
+Разобрать, почему recovery-пакет Workflow Kit разрастается до CONTEXT_TOO_LARGE, измерить фактический состав и стоимость обязательного контекста и выбрать безопасную политику упаковки без потери данных, необходимых агенту для продолжения работы.
 
 ## Критерии приёмки
 
+- На Mac воспроизведён или точно смоделирован сценарий CONTEXT_TOO_LARGE на реалистичном активном плане без изменения production semantics.
+- Измерен вклад основных разделов recovery-пакета в bytes и оценочные tokens; обязательные и необязательные части разделены явно.
+- Зафиксированы действующие лимиты Workflow Kit и Web Pilot и точная точка, где возникает переполнение.
+- Сравнены безопасные варианты: изменение budget, изменение состава пакета и уменьшение повторяющегося контекста; дана конкретная рекомендация с рисками.
+- До отдельного согласования пользователя код, budget и recovery semantics не изменяются.
 
 ## Микрозадачи
 
+- [TODO] T001: Разобрать состав и budget recovery-пакета — Ожидает
+  - Git Commit: [PENDING] docs: разобрать recovery budget Workflow Kit
+  - Reference: workflow-kit-recovery-packet-010 / T001 / implementation
+  - Файлы: docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md
 
 ## Context Pack For This Cycle
 
+- docs/CONTEXT_DELIVERY.md → Передача контекста
+- docs/VERIFICATION.md → Проверки и приёмка
 
 Служебные состояния меняются только командами workflow. Приёмка не архивирует scope.
