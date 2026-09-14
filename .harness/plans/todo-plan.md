@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 244,
+  "plan_revision": 245,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-kit-recovery-packet-010",
@@ -136,21 +136,25 @@
       ],
       "functional_paths": [],
       "documentation_paths": [
+        "docs/MODULES.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/workflow-kit-recovery.md",
         "docs/CONTEXT_DELIVERY.md",
-        "docs/VERIFICATION.md"
+        "docs/VERIFICATION.md",
+        "docs/DOCUMENTATION_INDEX.md"
       ],
       "verification_ids": [],
       "id": "T001",
-      "title": "Разобрать состав и budget recovery-пакета",
-      "why": "На Windows уже наблюдался CONTEXT_TOO_LARGE, а дальнейшие изменения Workflow Kit нужно делать по измерениям, а не простым увеличением лимита.",
+      "title": "Зафиксировать module specification Workflow Recovery v2",
+      "why": "Сначала закрепить согласованный контракт module-centric recovery, бюджет и границы пакета; todo-plan реализации должен опираться на эту спецификацию.",
       "acceptance_criteria": [
-        "Получен воспроизводимый пример или controlled fixture переполнения.",
-        "Для recovery-пакета построен breakdown по основным секциям с bytes/tokens.",
-        "Определено, какие секции обязательны для корректного восстановления, а какие можно сделать условными или компактнее.",
-        "Сопоставлены лимиты Workflow Kit и 180000-byte лимит Web Pilot.",
-        "В документах записаны минимум два варианта решения и рекомендованный следующий шаг; production-код и budget не менялись."
+        "Module map определяет Context Recovery как архитектурного владельца текущего функционала.",
+        "Module specification фиксирует Workflow Core, module-first цикл, состав Recovery Capsule v2, context_pack semantics, dependency diffs и budget.",
+        "Компактный project overview отделён от полной исторической ARCHITECTURE.",
+        "Измерения текущего 118003-byte recovery и причина роста зафиксированы до изменения production semantics.",
+        "Документация явно утверждает: большой WORKFLOW.md и исторический VERIFICATION не являются стандартным recovery payload."
       ],
-      "expected_commit_message": "docs: разобрать recovery budget Workflow Kit",
+      "expected_commit_message": "docs: определить Workflow Recovery v2",
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
@@ -225,7 +229,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-kit-recovery-packet-010
 Current Task: нет
-Revision: 244
+Revision: 245
 
 ## Цель
 
@@ -248,10 +252,10 @@ Revision: 244
   - Git Commit: [DONE] fix: ограничить clipboard write основным ChatGPT
   - Reference: workflow-kit-recovery-packet-010 / T000 / implementation
   - Файлы: src/main.mjs, tests/electron-smoke.mjs, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
-- [TODO] T001: Разобрать состав и budget recovery-пакета — Ожидает
-  - Git Commit: [PENDING] docs: разобрать recovery budget Workflow Kit
+- [TODO] T001: Зафиксировать module specification Workflow Recovery v2 — Ожидает
+  - Git Commit: [PENDING] docs: определить Workflow Recovery v2
   - Reference: workflow-kit-recovery-packet-010 / T001 / implementation
-  - Файлы: docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md
+  - Файлы: docs/MODULES.md, docs/architecture/OVERVIEW.md, docs/modules/workflow-kit-recovery.md, docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md, docs/DOCUMENTATION_INDEX.md
 - [TODO] T002: Спроектировать self-healing startup MCP и tunnel — Ожидает
   - Git Commit: [PENDING] docs: спроектировать self-healing runtime startup
   - Reference: workflow-kit-recovery-packet-010 / T002 / implementation
