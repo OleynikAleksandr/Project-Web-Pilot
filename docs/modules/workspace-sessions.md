@@ -180,3 +180,7 @@ Storage schema v4 и `newSession(workspace, experience)` реализованы 
 Routing вынесен в `src/chatgpt-experience.mjs`: обычный Chat стартует на `https://chatgpt.com/`, Work — на `https://chatgpt.com/work/`. `navigate()` выбирает entrypoint только по persisted `session.experience` и не выбирает модель/режим reasoning. `ContextSession` независимо проверяет фактический URL перед recovery: новая Work-сессия принимает только `/work` namespace, Chat — обычный Chat namespace. При mismatch выдаётся `CHATGPT_EXPERIENCE_MISMATCH`, `loadContext()` и отправка не выполняются.
 
 После наблюдаемой отправки прежний `bindChat()` сохраняет только concrete conversation URL и дополнительно проверяет совпадение URL с immutable experience. Electron smoke создаёт через проектное меню сначала дополнительный Chat, затем Work; fixture Work начинается на `/work/`, после отправки становится `/work/<request-id>`, сохраняется как Work и отображается соответствующим badge.
+
+## Release integration — T005 / Project Web Pilot 0.6.5
+
+Релиз 0.6.5 включает storage schema v4, project-level `Новый Chat` / `Новый Work`, выбор первой session для нового/впервые подключаемого проекта, session badges и fail-closed Chat/Work routing. Recovery Capsule и MCP protocol не менялись: обе разновидности session используют один Context Recovery flow. Финальная ручная проверка реального аккаунта ChatGPT оставлена пользователю; scope не архивируется автоматически.

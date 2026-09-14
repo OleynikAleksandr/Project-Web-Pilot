@@ -536,3 +536,7 @@ Release 0.6.4 integrates persisted runtime registration and lifecycle adapters f
 ## Chat / Work experience routing — scope 011 / T004
 
 Workspace & Sessions владеет только верхнеуровневым маршрутом Chat/Work. `chatgpt-experience` задаёт два entrypoint и классификатор URL; `ContextSession` fail-closed проверяет experience до получения/отправки recovery. Модель внутри ChatGPT не фиксируется Web Pilot. Concrete conversation URL остаётся единственной долговременной облачной привязкой сессии и обязан соответствовать persisted `experience`.
+
+## Project Web Pilot 0.6.5 — Chat / Work sessions
+
+Release 0.6.5 добавляет persisted `session.experience=chat|work`, first-session choice и project-menu session creation. Chat и Work различаются только entrypoint/URL namespace на уровне Workspace & Sessions; `ContextSession` fail-closed блокирует recovery при mismatch. Модель ChatGPT остаётся нативной настройкой соответствующего experience. macOS и Windows пакеты собираются из одного source of truth.

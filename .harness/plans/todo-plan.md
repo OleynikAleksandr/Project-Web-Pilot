@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 291,
+  "plan_revision": 294,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workspace-chat-work-sessions-011",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Добавить в Workspace & Sessions явный выбор Chat или Work для первой и дополнительных сессий проекта, сохранить experience в session model, перенести создание сессий в меню проекта и открыть выбранный ChatGPT experience без изменения Recovery flow.",
   "acceptance_criteria": [
     "Каждая session имеет persisted experience chat|work и старое хранилище мигрируется без потери данных.",
@@ -233,7 +233,8 @@
       "documentation_paths": [
         "docs/WORKFLOW_START.md",
         "docs/modules/workspace-sessions.md",
-        "docs/VERIFICATION.md"
+        "docs/VERIFICATION.md",
+        "docs/architecture/ARCHITECTURE.md"
       ],
       "verification_ids": [
         "suite",
@@ -248,8 +249,8 @@
         "Scope остаётся READY_FOR_ACCEPTANCE для ручной проверки пользователем; автоматическая архивация не выполняется."
       ],
       "expected_commit_message": "build: выпустить Chat и Work sessions",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workspace-chat-work-sessions-011",
         "task_id": "T005",
@@ -272,10 +273,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: workspace-chat-work-sessions-011
 Current Task: нет
-Revision: 291
+Revision: 294
 
 ## Цель
 
@@ -309,10 +310,10 @@ Revision: 291
   - Git Commit: [DONE] feat: маршрутизировать Chat и Work sessions
   - Reference: workspace-chat-work-sessions-011 / T004 / implementation
   - Файлы: src/chatgpt-experience.mjs, src/main.mjs, tests/chatgpt-experience.test.mjs, tests/electron-smoke.mjs, src/context-session.mjs, tests/context-session.test.mjs, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T005: Собрать релиз Chat Work sessions — Ожидает
-  - Git Commit: [PENDING] build: выпустить Chat и Work sessions
+- [DONE] T005: Собрать релиз Chat Work sessions — Завершено
+  - Git Commit: [DONE] build: выпустить Chat и Work sessions
   - Reference: workspace-chat-work-sessions-011 / T005 / implementation
-  - Файлы: package.json, package-lock.json, tests/electron-smoke.mjs, docs/WORKFLOW_START.md, docs/modules/workspace-sessions.md, docs/VERIFICATION.md
+  - Файлы: package.json, package-lock.json, tests/electron-smoke.mjs, docs/WORKFLOW_START.md, docs/modules/workspace-sessions.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 
 ## Context Pack For This Cycle
 
