@@ -570,3 +570,8 @@ Persisted storage переходит на schema v5 с `session.archivedAt`. Pro
 ## Session archive UI — scope 011 / T011
 
 Archive BrowserWindow остаётся единым локальным surface, но разделён на project/session tabs. Project deletion сохраняет прежний filesystem-safe workflow. Session deletion вызывает только WorkspaceSessions local metadata cleanup и не использует WorkspaceDeletion, поэтому workspace folder не может быть удалён через session action. Sidebar session menu и archive IPC используют workspace+projectId+sessionId identity, а snapshot активного проекта публикует только неархивные sessions.
+
+
+## Project Web Pilot 0.6.7 — session archive
+
+Release 0.6.7 добавляет session-level archive поверх WorkspaceSessions schema v5. Sidebar публикует только активные sessions, Archive BrowserWindow разделяет project/session tabs, а local session deletion работает только с metadata/bindings и не использует filesystem project deletion. Chat/Work routing и Recovery Capsule protocol не меняются.

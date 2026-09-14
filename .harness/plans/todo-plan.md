@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 309,
+  "plan_revision": 311,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workspace-chat-work-sessions-011",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Добавить в Workspace & Sessions явный выбор Chat или Work для первой и дополнительных сессий проекта, сохранить experience в session model, перенести создание сессий в меню проекта и открыть выбранный ChatGPT experience без изменения Recovery flow.",
   "acceptance_criteria": [
     "Каждая session имеет persisted experience chat|work и старое хранилище мигрируется без потери данных.",
@@ -496,8 +496,8 @@
         "electron-smoke"
       ],
       "expected_commit_message": "build: выпустить архив сессий",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workspace-chat-work-sessions-011",
         "task_id": "T012",
@@ -530,10 +530,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: workspace-chat-work-sessions-011
 Current Task: нет
-Revision: 309
+Revision: 311
 
 ## Цель
 
@@ -595,8 +595,8 @@ Revision: 309
   - Git Commit: [DONE] feat: добавить UI архива сессий
   - Reference: workspace-chat-work-sessions-011 / T011 / implementation
   - Файлы: src/main.mjs, src/preload.cjs, src/archive-preload.cjs, src/ui/sidebar.mjs, src/ui/archive.mjs, src/ui/archive.html, src/ui/project-archive.mjs, tests/electron-smoke.mjs, src/ui/index.html, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T012: Собрать релиз с архивом сессий — Ожидает
-  - Git Commit: [PENDING] build: выпустить архив сессий
+- [DONE] T012: Собрать релиз с архивом сессий — Завершено
+  - Git Commit: [DONE] build: выпустить архив сессий
   - Reference: workspace-chat-work-sessions-011 / T012 / implementation
   - Файлы: package.json, package-lock.json, docs/WORKFLOW_START.md, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 

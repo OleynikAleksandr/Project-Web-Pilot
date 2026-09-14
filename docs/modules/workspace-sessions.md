@@ -225,3 +225,8 @@ Storage schema v5 добавляет `session.archivedAt`. Миграция v4 �
 ## Реализация session archive UI — T011
 
 Sidebar добавляет `⋯ → Перенести в архив` для каждой активной session. Main snapshot скрывает `session.archivedAt != null` из активного дерева. Общее окно `Архив` имеет две вкладки — `Проекты` и `Сессии`; session row показывает title, badge Chat/Work, project owner и дату архивации. В session tab доступны batch restore и подтверждаемое локальное delete; текст явно указывает, что cloud conversation OpenAI сохраняется. Sessions проектов, которые сами находятся в project archive, не показываются в session tab.
+
+
+## Release integration — T012 / Project Web Pilot 0.6.7
+
+Patch release 0.6.7 объединяет подтверждённые Chat/Work sessions и session archive. Storage schema v5 мигрирует прежние sessions как активные, отдельный archive позволяет restore или локальный delete без удаления OpenAI conversation, а project archive и session archive остаются независимыми lifecycle. Финальная ручная приёмка остаётся пользователю; scope автоматически не архивируется.
