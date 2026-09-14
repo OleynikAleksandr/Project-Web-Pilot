@@ -82,3 +82,7 @@ Windows продолжает использовать встроенный paylo
 - отсутствие Mac runtime приводит к bundled bootstrap, а не к ручному выбору папки;
 - Windows contract и regression tests подтверждают тот же no-kill/dynamic-endpoint принцип;
 - при штатном self-heal sidebar не показывает ошибку.
+
+## Реализация macOS control v2 — T006
+
+Versioned control facade хранит `runtime-endpoints.json` в private state. `managed_process()` удаляет PID record при исчезнувшем PID или identity mismatch, не отправляя signal. `reconcile_endpoints()` сохраняет preferred endpoint только если он свободен; иначе выбирает свободный loopback port и согласованно обновляет bridge config и существующий tunnel profile. `status()` возвращает `runtime_contract=2`, `package_root`, фактические endpoints и readiness. Bundled source snapshot содержит тот же control facade и runtime Python sources без private state, venv и tunnel credentials.

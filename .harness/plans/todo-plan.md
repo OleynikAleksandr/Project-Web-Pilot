@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 265,
+  "plan_revision": 270,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-kit-recovery-packet-010",
@@ -77,7 +77,9 @@
       "resources/mac-runtime/server/codex_local_runtime.py",
       "resources/mac-runtime/server/macos_computer.py",
       "resources/mac-runtime/server/context_packet.py",
-      "resources/mac-runtime/skills/local-computer/SKILL.md"
+      "resources/mac-runtime/skills/local-computer/SKILL.md",
+      "resources/mac-runtime/control.py",
+      "resources/mac-runtime.zip"
     ],
     "documentation_paths": [
       "docs/CONTEXT_DELIVERY.md",
@@ -354,13 +356,7 @@
       ],
       "functional_paths": [
         "resources/runtime-control/mac-control.py",
-        "resources/mac-runtime/requirements.txt",
-        "resources/mac-runtime/mcp/bridge_mcp.py",
-        "resources/mac-runtime/server/bridge_server.py",
-        "resources/mac-runtime/server/codex_local_runtime.py",
-        "resources/mac-runtime/server/macos_computer.py",
-        "resources/mac-runtime/server/context_packet.py",
-        "resources/mac-runtime/skills/local-computer/SKILL.md",
+        "resources/mac-runtime.zip",
         "tests/mac-runtime.test.mjs"
       ],
       "documentation_paths": [
@@ -374,10 +370,12 @@
         "Bridge config и существующий tunnel profile согласованно получают новые endpoints без изменения tunnel credentials.",
         "Повторный status/start использует persisted endpoints."
       ],
-      "verification_ids": [],
+      "verification_ids": [
+        "suite"
+      ],
       "expected_commit_message": "feat: добавить self-healing Mac runtime control",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workflow-kit-recovery-packet-010",
         "task_id": "T006",
@@ -534,7 +532,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-kit-recovery-packet-010
 Current Task: нет
-Revision: 265
+Revision: 270
 
 ## Цель
 
@@ -576,10 +574,10 @@ Revision: 265
   - Git Commit: [DONE] build: выпустить Project Web Pilot с Recovery v2
   - Reference: workflow-kit-recovery-packet-010 / T005 / implementation
   - Файлы: package.json, package-lock.json, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md
-- [TODO] T006: Реализовать self-healing runtime control v2 на macOS — Ожидает
-  - Git Commit: [PENDING] feat: добавить self-healing Mac runtime control
+- [DONE] T006: Реализовать self-healing runtime control v2 на macOS — Завершено
+  - Git Commit: [DONE] feat: добавить self-healing Mac runtime control
   - Reference: workflow-kit-recovery-packet-010 / T006 / implementation
-  - Файлы: resources/runtime-control/mac-control.py, resources/mac-runtime/requirements.txt, resources/mac-runtime/mcp/bridge_mcp.py, resources/mac-runtime/server/bridge_server.py, resources/mac-runtime/server/codex_local_runtime.py, resources/mac-runtime/server/macos_computer.py, resources/mac-runtime/server/context_packet.py, resources/mac-runtime/skills/local-computer/SKILL.md, tests/mac-runtime.test.mjs, docs/modules/runtime-lifecycle.md, docs/VERIFICATION.md
+  - Файлы: resources/runtime-control/mac-control.py, resources/mac-runtime.zip, tests/mac-runtime.test.mjs, docs/modules/runtime-lifecycle.md, docs/VERIFICATION.md
 - [TODO] T007: Интегрировать Mac runtime bootstrap и persisted registration в Web Pilot — Ожидает
   - Git Commit: [PENDING] feat: интегрировать self-healing Mac runtime
   - Reference: workflow-kit-recovery-packet-010 / T007 / implementation
