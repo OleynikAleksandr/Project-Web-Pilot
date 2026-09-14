@@ -463,3 +463,12 @@ Unit test фиксирует Node.js 22.17.0 win-x64 archive name/SHA, expected 
 ## Clipboard write ChatGPT — scope 009 / T006
 
 14.09.2026 подтверждено, что прежний permission allowlist разрешал только audio/geolocation и тем самым блокировал Electron permission `clipboard-sanitized-write`, используемый Async Clipboard API. После согласования пользователя policy ужесточена: sanitized write разрешён только точному `chatgpt.com` и только основному правому ChatGPT WebContents; тот же запрос от другого WebContents отклоняется, `clipboard-read` остаётся запрещённым. Smoke fixture проверяет оба policy-границы и фактический `navigator.clipboard.writeText()` из основного удалённого WebContents с последующей проверкой системного clipboard через Electron.
+
+
+## Workflow Recovery v2 — анализ бюджета 14.09.2026
+
+До изменения production semantics текущий recovery Project Web Pilot измерен: 118003 UTF-8 bytes / 59002 conservative tokens. Из них полный `docs/VERIFICATION.md` занимает 83968 bytes (~71%), `docs/CONTEXT_DELIVERY.md` — 11774 bytes, diff последней T000 — 7325 bytes, остальные обязательные блоки — около 14936 bytes. Без полного VERIFICATION тот же packet был бы около 34035 bytes; без VERIFICATION и автоматического last-completed diff — около 26710 bytes.
+
+Текущая конфигурация Workflow Kit допускала `hard_bytes=524288`, тогда как Web Pilot уже отклоняет packet свыше 180000 bytes. `soft_tokens=16000` применялся только к optional documents и не ограничивал mandatory body. Это подтверждает, что увеличение транспортного лимита не требуется: основной дефект — состав обязательного context и несогласованные budgets.
+
+Согласованное решение: module-centric Recovery v2. Required context задаётся текущим plan/task и должен состоять прежде всего из compact project overview + module specification. Исторические документы остаются в репозитории как reference. Last completed commit больше не является автоматической зависимостью. Required data не усекать; при hard-limit ошибке показывать крупнейшие секции.

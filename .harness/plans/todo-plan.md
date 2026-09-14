@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 245,
+  "plan_revision": 247,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-kit-recovery-packet-010",
@@ -155,8 +155,8 @@
         "Документация явно утверждает: большой WORKFLOW.md и исторический VERIFICATION не являются стандартным recovery payload."
       ],
       "expected_commit_message": "docs: определить Workflow Recovery v2",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workflow-kit-recovery-packet-010",
         "task_id": "T001",
@@ -229,7 +229,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-kit-recovery-packet-010
 Current Task: нет
-Revision: 245
+Revision: 247
 
 ## Цель
 
@@ -252,8 +252,8 @@ Revision: 245
   - Git Commit: [DONE] fix: ограничить clipboard write основным ChatGPT
   - Reference: workflow-kit-recovery-packet-010 / T000 / implementation
   - Файлы: src/main.mjs, tests/electron-smoke.mjs, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
-- [TODO] T001: Зафиксировать module specification Workflow Recovery v2 — Ожидает
-  - Git Commit: [PENDING] docs: определить Workflow Recovery v2
+- [DONE] T001: Зафиксировать module specification Workflow Recovery v2 — Завершено
+  - Git Commit: [DONE] docs: определить Workflow Recovery v2
   - Reference: workflow-kit-recovery-packet-010 / T001 / implementation
   - Файлы: docs/MODULES.md, docs/architecture/OVERVIEW.md, docs/modules/workflow-kit-recovery.md, docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md, docs/DOCUMENTATION_INDEX.md
 - [TODO] T002: Спроектировать self-healing startup MCP и tunnel — Ожидает

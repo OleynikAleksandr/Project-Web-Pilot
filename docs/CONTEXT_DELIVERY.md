@@ -26,6 +26,19 @@
 
 Локальный клиент Web Pilot может вызывать только этот read-only tool, initialize и tools/list. Модельные API отсутствуют. Пакет ограничен 180000 UTF-8 байт; чрезмерный пакет даёт явную ошибку, без скрытого усечения. Полный текст и состав пакета определяет Workflow Kit, а не самостоятельно собранная подборка файлов.
 
+
+## Recovery Capsule v2 — согласованный контракт 14.09.2026
+
+Workflow Kit формирует не «полный архив проекта», а минимальный execution capsule текущего scope. Новая сессия, ручное «Обновить контекст» и будущий подтверждённый compact используют один и тот же builder; отличается только reason.
+
+Стандартный capsule содержит компактный Workflow Core, идентичность project/workspace/HEAD/plan, цель и progress текущего todo-plan, required context текущего архитектурного модуля, прямые dependency commit diffs, изменения файлов текущей task, релевантную verification evidence и однозначный next action.
+
+Функциональный scope сначала сопоставляется с владельцем из `docs/MODULES.md`. Для существующего модуля сначала согласуется изменение module specification; если владельца нет, сначала создаётся новая specification. Todo-plan реализует уже согласованный контракт. Required документы перечисляются самим plan/task и передаются сразу; optional документы являются reference-only и читаются агентом по необходимости.
+
+Большой `.harness/kit/WORKFLOW.md`, полный исторический `VERIFICATION.md`, полный `PRODUCT.md`/`ARCHITECTURE.md`, старые scopes/build reports и просто «последний завершённый commit» автоматически не входят. `include_last_completed_task` в новой семантике по умолчанию false; commit diff включается только как прямая task dependency или явная context dependency.
+
+Hard limit Workflow Kit должен совпадать с транспортным лимитом Web Pilot 180000 UTF-8 bytes. Soft budget — сигнал качества модульной границы, а не механизм silent truncation. Целевая масса normal capsule — 15–30 KiB, сложного модуля — 30–50 KiB; устойчивый рост к 80–100 KiB требует проверки module/task boundary.
+
 ## Адаптер обычного поля
 
 Text area заполняется native value setter с input/change; contenteditable — обычным Chromium insertText. Адаптер проверяет видимость, чужой черновик, активную генерацию и доступность Send. Перед click сравнивается полный текст; нормализуется только представление абзацных переводов строки и неразрывных пробелов браузером. Для подтверждения отправки требуется request_id в сообщении роли user, а не цитата assistant. Unknown outcome не повторяет click.

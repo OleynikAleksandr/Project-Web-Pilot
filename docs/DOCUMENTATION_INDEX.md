@@ -17,6 +17,8 @@
 | docs/PRODUCT.md | Контракт проекта; уточняется при обсуждении |
 | docs/architecture/ARCHITECTURE.md | Контракт проекта; уточняется при обсуждении |
 | docs/WORKFLOW_START.md | Контракт проекта; уточняется при обсуждении |
+| docs/MODULES.md | Карта архитектурных владельцев функционала |
+| docs/architecture/OVERVIEW.md | Компактная архитектурная карта для recovery |
 | docs/DOCUMENTATION_INDEX.md | Контракт проекта; уточняется при обсуждении |
 <!-- workflow-kit:end -->
 
@@ -26,7 +28,8 @@
 | --- | --- |
 | README.md | Запуск прототипа, первый тест, ограничения и разработка |
 | docs/DECISIONS.md | Решения пользователя, предложения и границы полномочий |
-| docs/CONTEXT_DELIVERY.md | Канонический контракт полного контекста в первом сообщении |
+| docs/CONTEXT_DELIVERY.md | Канонический контракт recovery capsule и доставки контекста |
+| docs/modules/workflow-kit-recovery.md | Module specification Workflow Kit / Context Recovery |
 | docs/SOURCE_WORKSPACES.md | Исходные проекты, пути, версии и официальные ссылки |
 | docs/VERIFICATION.md | Доказательства, проверки и приёмка прототипа |
 | docs/TRANSFER_TO_WINDOWS.md | Перенос и проверка Windows-сборки из общего репозитория |
@@ -35,7 +38,7 @@
 
 ## Порядок чтения для новой сессии
 
-`docs/WORKFLOW_START.md` → актуальный recovery packet и план → `docs/PRODUCT.md` / `docs/DECISIONS.md` → `docs/architecture/ARCHITECTURE.md` / `docs/CONTEXT_DELIVERY.md` → `docs/SOURCE_WORKSPACES.md` / `docs/VERIFICATION.md`. Статусы задач читать только из управляемого плана, не из исторических отчётов.
+Новая сессия должна начинаться с recovery capsule. Он уже содержит Workflow Core, текущий plan и required context текущего модуля. Дополнительные документы читать только по ссылкам текущего plan/module spec через этот каталог; исторические PRODUCT/ARCHITECTURE/VERIFICATION не являются обязательным стартовым набором.
 
 ## Подготовка workspace
 
