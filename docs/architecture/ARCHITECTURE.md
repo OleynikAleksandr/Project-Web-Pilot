@@ -524,3 +524,7 @@ Windows build-preflight сначала может переиспользоват
 ## Self-healing Windows lifecycle — scope 010 / T008
 
 Windows external/bundled runtime получает lifecycle contract 2 через отдельный adapter-control из ресурсов приложения. Старый payload не удаляется и control source external installation не перезаписывается. Adapter очищает stale PID records без signal foreign PID, выбирает persisted dynamic loopback endpoints и синхронно обновляет bridge config/tunnel profile; MCP context overlay остаётся прежним и при необходимости безопасно перезапускает owned сервисы. DPAPI key не выходит из Windows private runtime state.
+
+## Project Web Pilot 0.6.4 — self-healing Runtime Lifecycle
+
+Release 0.6.4 integrates persisted runtime registration and lifecycle adapters for macOS/Windows. macOS package includes the clean runtime ZIP plus pinned arm64 `uv`; Windows keeps the existing payload/portable Node and adds adapter-control without forcing payload reinstall. Web Pilot no longer treats 17842/17843 as application constants: the runtime owns dynamic loopback endpoints and Web Pilot uses `status.mcp_url`. External Mac source is not modified; Windows external lifecycle control is likewise adapter-based while the pre-existing MCP context overlay remains separate.

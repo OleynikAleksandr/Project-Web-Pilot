@@ -30,7 +30,7 @@ Todo-plan обязан перечислять весь внешний конте
 
 В приложении слева работает локальный workspace/project UI, справа — настоящий ChatGPT Web в изолированном Chromium. Локальные действия агента идут через MCP/tunnel; модельные API приложением не используются. Компактная карта — `docs/architecture/OVERVIEW.md`, владельцы — `docs/MODULES.md`.
 
-Текущая версия приложения после Recovery v2 — 0.6.3. Workflow Kit — 1.2.0. Детальные исторические проверки остаются в `docs/VERIFICATION.md` и не являются стартовым контекстом.
+Текущая версия приложения — 0.6.4 с Recovery v2 и self-healing Runtime Lifecycle. Workflow Kit — 1.2.0. Детальные исторические проверки остаются в `docs/VERIFICATION.md` и не являются стартовым контекстом.
 
 ## Служебные команды
 
@@ -43,4 +43,4 @@ Todo-plan обязан перечислять весь внешний конте
 
 В Windows PowerShell/CMD используется `./scripts/workflow.cmd`. Полный `.harness/kit/WORKFLOW.md` открывать только для точной семантики команд, repair/install/upgrade и редких аварийных сценариев.
 
-Текущий следующий функциональный модуль: `Runtime Lifecycle` → `docs/modules/runtime-lifecycle.md`; self-healing MCP/tunnel реализуется только по этому контракту.
+Runtime Lifecycle реализован по `docs/modules/runtime-lifecycle.md`: приложение автоматически переиспользует/устанавливает runtime, восстанавливает stale PID и принимает динамические loopback endpoints; ручной выбор runtime остаётся аварийным override.

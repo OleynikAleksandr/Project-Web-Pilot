@@ -496,3 +496,11 @@ Targeted runtime tests: 14/14 passed (Mac control/bootstrap + McpRuntime). По�
 ## Self-healing Runtime Lifecycle — T008 Windows adapter
 
 Windows lifecycle adapter source проверен на Mac там, где WinAPI не требуется: contract v2/source pinning и isolated stale-PID/dynamic-port regression. Fixture подставляет test-only `psutil` stub, вызывает production `status()/reconcile_endpoints()`, подтверждает удаление stale record, выбор новых ports при занятых persisted endpoints и сохранение tunnel ID/env-key reference. `tests/windows-runtime.test.mjs`: 9 passed, 0 failed, 2 native-win32 skipped. DPAPI/setup и фактический restart остаются native Windows validation после pull.
+
+## Project Web Pilot 0.6.4 / self-healing runtime — T009
+
+14.09.2026 final verification: `npm test` — 89 total, 87 passed, 0 failed, 2 native-Windows skipped; Electron smoke passed. `npm run build` created macOS arm64 and Windows x64 packages; Windows verifier passed. macOS bundle `CFBundleShortVersionString/CFBundleVersion=0.6.4`. macOS `app.asar` SHA-256 `3f4e583af4cd07ec6cc78874566ff5336207899b41438a575ebd181d1dac4541`; Windows EXE SHA-256 `34d2a9d6400b2ae96fb58a9e1ab57328773b218107b6b48f97083bc99a45e99e`.
+
+Packaged macOS resources verified in place: uv SHA `11609c939296348c7cc1e1231b3fbf7ca90a603a4c494ec72b59d7ceafa695e1`, runtime ZIP SHA `7313094f06d17e78624362a398e4d12d4be81434fd83f9a8ff2d946ec8c1f64d`, Mac control SHA `747f25d51b65c004d65e6d02dd19721748ed6022b44b48c64740180f432407d3`, Windows control SHA `f69b9e0e1df16f07f566c6b54cdc68be1a77ee4d4cb4fb17e46ed64b1237332b`. Packaged Mac adapter real-check: contract 2, MCP/tunnel ready, tunnel configured, `Codex Local Mac`, 47 tools. External Codex Local Mac repo remained clean and its original control SHA remained `6c5c14972774ece2a9820059b3953fe2fe968c186bb6e17af074c7752dc294be`.
+
+Windows lifecycle stale-PID/dynamic-endpoint behavior is covered by portable production-function fixture; DPAPI/setup and external-runtime restart remain native-Windows validation after pull. Cross-build and verifier do not substitute that native run.

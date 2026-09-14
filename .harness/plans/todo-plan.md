@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 276,
+  "plan_revision": 279,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-kit-recovery-packet-010",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Интегрировать self-healing Runtime Lifecycle для MCP+tunnel на macOS и Windows: безопасное переиспользование/установка runtime, stale PID recovery, persisted dynamic endpoints и автоматический startup без остановки чужих процессов.",
   "acceptance_criteria": [
     "Runtime Lifecycle specification является канонической границей MCP/tunnel startup.",
@@ -79,7 +79,8 @@
       "resources/mac-runtime/server/context_packet.py",
       "resources/mac-runtime/skills/local-computer/SKILL.md",
       "resources/mac-runtime/control.py",
-      "resources/mac-runtime.zip"
+      "resources/mac-runtime.zip",
+      "scripts/prepare-mac-toolchain.mjs"
     ],
     "documentation_paths": [
       "docs/CONTEXT_DELIVERY.md",
@@ -474,12 +475,14 @@
       "functional_paths": [
         "package.json",
         "package-lock.json",
-        "tests/electron-smoke.mjs"
+        "tests/electron-smoke.mjs",
+        "scripts/prepare-mac-toolchain.mjs"
       ],
       "documentation_paths": [
         "docs/VERIFICATION.md",
         "docs/WORKFLOW_START.md",
-        "docs/modules/runtime-lifecycle.md"
+        "docs/modules/runtime-lifecycle.md",
+        "docs/architecture/ARCHITECTURE.md"
       ],
       "acceptance_criteria": [
         "На текущем Mac existing runtime проходит real ensure/status после overlay и использует сохранённый tunnel config.",
@@ -492,8 +495,8 @@
         "electron-smoke"
       ],
       "expected_commit_message": "build: выпустить self-healing runtime startup",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workflow-kit-recovery-packet-010",
         "task_id": "T009",
@@ -531,10 +534,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: workflow-kit-recovery-packet-010
 Current Task: нет
-Revision: 276
+Revision: 279
 
 ## Цель
 
@@ -588,10 +591,10 @@ Revision: 276
   - Git Commit: [DONE] feat: добавить self-healing Windows runtime
   - Reference: workflow-kit-recovery-packet-010 / T008 / implementation
   - Файлы: resources/runtime-control/windows-control.py, src/windows-runtime.mjs, tests/windows-runtime.test.mjs, src/main.mjs, docs/modules/runtime-lifecycle.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T009: Проверить и выпустить self-healing runtime release — Ожидает
-  - Git Commit: [PENDING] build: выпустить self-healing runtime startup
+- [DONE] T009: Проверить и выпустить self-healing runtime release — Завершено
+  - Git Commit: [DONE] build: выпустить self-healing runtime startup
   - Reference: workflow-kit-recovery-packet-010 / T009 / implementation
-  - Файлы: package.json, package-lock.json, tests/electron-smoke.mjs, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/modules/runtime-lifecycle.md
+  - Файлы: package.json, package-lock.json, tests/electron-smoke.mjs, scripts/prepare-mac-toolchain.mjs, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/modules/runtime-lifecycle.md, docs/architecture/ARCHITECTURE.md
 
 ## Context Pack For This Cycle
 

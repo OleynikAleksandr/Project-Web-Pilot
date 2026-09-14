@@ -96,3 +96,9 @@ Web Pilot хранит несекретный runtime registration (folder/sourc
 ## Windows lifecycle adapter — T008
 
 Windows Web Pilot использует тот же runtime contract v2 через `resources/runtime-control/windows-control.py`, выполняемый Python существующего external/bundled runtime с `WEB_PILOT_RUNTIME_ROOT`. Тяжёлый bundled payload и его marker не переустанавливаются ради lifecycle update; существующий MCP context overlay остаётся отдельным механизмом. Adapter хранит dynamic endpoints в private `runtime-endpoints.json`, stale PID identity mismatch удаляет только record, bridge config/tunnel profile получают фактические ports, DPAPI tunnel key остаётся в private state. `WindowsRuntimeBootstrap` передаёт adapter path в `McpRuntime`, поэтому фактический `status.mcp_url` используется без fixed-port assumptions.
+
+## Release integration — T009 / Project Web Pilot 0.6.4
+
+macOS release bundles pinned `uv 0.9.13` (arm64 SHA-256 `11609c939296348c7cc1e1231b3fbf7ca90a603a4c494ec72b59d7ceafa695e1`) under `Contents/Resources/mac-tools/uv`, so first-time bundled runtime bootstrap does not depend on a preinstalled uv. Runtime source payload SHA-256 is `7313094f06d17e78624362a398e4d12d4be81434fd83f9a8ff2d946ec8c1f64d`. Packaged lifecycle adapters are separate resources and external runtime source remains untouched.
+
+Release verification used the packaged Mac adapter against the current external Codex Local Mac: contract 2, MCP/tunnel ready, tunnel configured, 47 tools. External repo/control SHA remained unchanged. Full suite: 89 total, 87 passed, 0 failed, 2 native-Windows skipped; Electron smoke passed. Both macOS arm64 and Windows x64 packages were built from the same checkout.
