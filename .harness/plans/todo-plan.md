@@ -4,19 +4,20 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 234,
+  "plan_revision": 235,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-unified-mac-windows-009",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Объединить Project Web Pilot для macOS и Windows в один канонический репозиторий: перенести подтверждённые Windows-исправления в общий код, сохранить обе платформенные сборки и подготовить лёгкую Git-синхронизацию между компьютерами без переноса runtime/build-артефактов.",
   "acceptance_criteria": [
     "Полезные Windows runtime fixes 0.6.1/0.6.2 перенесены в общий код без регрессии macOS.",
     "Общий package/build contract поддерживает build:mac и build:win; обычная общая сборка формирует оба package на Mac.",
     "Кроссплатформенные regression tests синхронизированы и полный suite проходит на Mac.",
     "macOS package и Windows x64 package успешно собираются из одного workspace.",
-    "Тяжёлые локальные runtime/build артефакты не входят в Git; общий репозиторий готов к private remote sync между Mac и Windows."
+    "Тяжёлые локальные runtime/build артефакты не входят в Git; общий репозиторий готов к private remote sync между Mac и Windows.",
+    "Штатное копирование ответа ChatGPT во встроенном Chromium работает без предоставления странице права читать системный clipboard."
   ],
   "approved_scope": {
     "functional_paths": [
@@ -36,7 +37,8 @@
       "tests/workspace-session.test.mjs",
       "tests/workspace-setup.test.mjs",
       "LICENSE",
-      ".gitattributes"
+      ".gitattributes",
+      "tests/electron-smoke.mjs"
     ],
     "documentation_paths": [
       "docs/PRODUCT.md",
@@ -246,6 +248,39 @@
         "task_id": "T005",
         "role": "implementation"
       }
+    },
+    {
+      "id": "T006",
+      "title": "Разрешить копирование из встроенного ChatGPT",
+      "why": "Permission allowlist удалённого Chromium блокирует clipboard-sanitized-write, поэтому штатная кнопка копирования ChatGPT сообщает об ошибке.",
+      "dependencies": [
+        "T005"
+      ],
+      "functional_paths": [
+        "src/main.mjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "acceptance_criteria": [
+        "Для точного origin chatgpt.com разрешён clipboard-sanitized-write, но clipboard-read и другие origins остаются запрещены.",
+        "Electron smoke подтверждает фактическую запись из удалённого WebContents в системный clipboard.",
+        "Полный test/smoke проходят без ослабления остальных permission границ."
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "expected_commit_message": "fix: разрешить копирование из ChatGPT",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "web-pilot-unified-mac-windows-009",
+        "task_id": "T006",
+        "role": "implementation"
+      }
     }
   ],
   "blocked_reason": null,
@@ -259,6 +294,11 @@
       "id": "github-remote-20260913",
       "text": "13.09.2026 пользователь передал GitHub-репозиторий https://github.com/OleynikAleksandr/Project-Web-Pilot для общего source of truth macOS/Windows и тем самым поручил подключить remote и синхронизировать общий main.",
       "recorded_at": "2026-09-13T18:03:55.208Z"
+    },
+    {
+      "id": "clipboard-fix-20260914",
+      "text": "14.09.2026 пользователь поручил перед закрытием текущего scope исправить штатное копирование во встроенном Chromium ChatGPT, затем архивировать текущий scope и начать новый план по Workflow Kit.",
+      "recorded_at": "2026-09-14T06:04:20.757Z"
     }
   ]
 }
@@ -268,10 +308,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: web-pilot-unified-mac-windows-009
 Current Task: нет
-Revision: 234
+Revision: 235
 
 ## Цель
 
@@ -284,6 +324,7 @@ Revision: 234
 - Кроссплатформенные regression tests синхронизированы и полный suite проходит на Mac.
 - macOS package и Windows x64 package успешно собираются из одного workspace.
 - Тяжёлые локальные runtime/build артефакты не входят в Git; общий репозиторий готов к private remote sync между Mac и Windows.
+- Штатное копирование ответа ChatGPT во встроенном Chromium работает без предоставления странице права читать системный clipboard.
 
 ## Микрозадачи
 
@@ -307,6 +348,10 @@ Revision: 234
   - Git Commit: [DONE] test: сделать Workflow Kit snapshot кроссплатформенным
   - Reference: web-pilot-unified-mac-windows-009 / T005 / implementation
   - Файлы: .gitattributes, tests/workflow-kit-source.test.mjs, docs/VERIFICATION.md, docs/WORKFLOW_START.md
+- [TODO] T006: Разрешить копирование из встроенного ChatGPT — Ожидает
+  - Git Commit: [PENDING] fix: разрешить копирование из ChatGPT
+  - Reference: web-pilot-unified-mac-windows-009 / T006 / implementation
+  - Файлы: src/main.mjs, tests/electron-smoke.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 
 ## Context Pack For This Cycle
 
