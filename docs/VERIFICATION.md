@@ -584,3 +584,7 @@ Electron smoke проверяет полный session archive flow: Chat sessio
 ## Scope 012 / T002 — tiktoken и session storage
 
 node --test tests/session-tokens.test.mjs: 5 проверок пройдены. Проверены известный BPE-вектор hello world = 2, замена streaming текста без удвоения, повторное чтение/выгрузка DOM, кириллица/код/литеральные special tokens, исключение draft/buttons, вложенные DOM-селекторы, отдельный worker и сохранение/restore/delete сессии. Устаревшие записи после переключения и несовпадающий conversation URL отклоняются. npm install js-tiktoken@1.0.21 завершён; production dependency и lock сохранены. Полный suite назначен обязательным gate этой микрозадачи.
+
+## Scope 012 / T003 — счётчик в Electron
+
+Electron smoke проходит с реальным js-tiktoken worker: стартовый пакет >75 KB учитывается, повторное чтение не прибавляет токены, Hello → Hello world заменяет значение одного assistant message (+1 → +2). Проверены отдельный Work conversation, отсутствие чужого message ID в оценке и игнорирование постороннего URL. UI geometry проверяется на раскрытом дереве при ширине sidebar 312 px: число справа снизу, без наложения на дату. Снимок token-counter-ui.png из isolated fixture просмотрен. Скрытая таблица ID/хешей не попадает в sidebar IPC. Это fixture-проверка, не сравнение с серверным контекстом реального ChatGPT.

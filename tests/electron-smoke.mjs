@@ -25,7 +25,7 @@ function setFixtureMode(mode){window.fixtureMode=mode;localStorage.setItem('fixt
 setFixtureMode(window.fixtureMode);
 document.querySelectorAll('[data-tpp-toggle-value]').forEach(button=>button.addEventListener('click',()=>{window.fixtureModeClicks++;setFixtureMode(button.dataset.tppToggleValue);}));
 window.fixtureMessages=JSON.parse(sessionStorage.getItem(location.pathname)||'[]');
-function showMessage(text){const article=document.createElement('article');article.setAttribute('data-message-author-role','user');article.textContent=text;document.getElementById('messages').append(article);}
+function showMessage(text){const article=document.createElement('article');article.setAttribute('data-message-author-role','user');article.setAttribute('data-message-id','fixture-message-'+document.querySelectorAll('[data-message-author-role="user"]').length);article.textContent=text;document.getElementById('messages').append(article);}
 window.fixtureMessages.forEach(message=>showMessage(message.text));
 document.querySelector('form').addEventListener('submit',event=>{
  event.preventDefault(); const editor=document.getElementById('prompt-textarea');const text=editor.innerText;
@@ -74,7 +74,7 @@ async function waitFor(predicate, description, snapshot) {
   throw new Error(`SMOKE_TIMEOUT: ${description}; ${JSON.stringify(snapshot?.())}`);
 }
 
-export async function run({ app, window, browser, sidebar, store, controller, selectWorkspace, snapshot, assertLocalSender, permissionAllowed, dataDir, chromiumDiagnostics, chromiumDiagnosticsFile, getArchiveWindow }) {
+export async function run({ app, window, browser, sidebar, store, controller, selectWorkspace, snapshot, assertLocalSender, permissionAllowed, dataDir, chromiumDiagnostics, chromiumDiagnosticsFile, getArchiveWindow, sampleSessionTokens }) {
   assert.equal(app.isPackaged, false, 'Fixtures never run from a packaged app');
   assert.equal(permissionAllowed('media', 'https://chatgpt.com', { mediaTypes: ['audio'] }), true);
   assert.equal(permissionAllowed('media', 'https://chatgpt.com/', { mediaType: 'audio' }), true);
@@ -161,6 +161,40 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await clipboard.clear();
   await browser.executeJavaScript("navigator.clipboard.writeText('REMOTE_CHATGPT_CLIPBOARD_FIXTURE')");
   await waitFor(async () => await clipboard.readText() === 'REMOTE_CHATGPT_CLIPBOARD_FIXTURE', 'remote ChatGPT clipboard write', snapshot);
+
+  await sampleSessionTokens({ force: true });
+  await waitFor(() => store.selected().tokenEstimate?.total > 1000, 'recovery token estimate', snapshot);
+  const firstTokenTotal = store.selected().tokenEstimate.total;
+  await sampleSessionTokens({ force: true });
+  assert.equal(store.selected().tokenEstimate.total, firstTokenTotal, 'no duplicate count');
+  await browser.executeJavaScript(`{ const e=document.createElement('article');e.dataset.messageAuthorRole='assistant';e.dataset.messageId='token-test-reply';e.textContent='Hello';document.getElementById('messages').append(e); }`);
+  await sampleSessionTokens({ force: true });
+  assert.equal(store.selected().tokenEstimate.total, firstTokenTotal+1);
+  await browser.executeJavaScript(`document.querySelector('[data-message-id="token-test-reply"]').textContent='Hello world'`);
+  await sampleSessionTokens({ force: true });
+  assert.equal(store.selected().tokenEstimate.total, firstTokenTotal+2, 'streaming replaces the reply');
+  assert.equal(snapshot().selected.tokenEstimate.messages, undefined);
+  assert.equal(snapshot().projects[0].sessions[0].tokenEstimate.messages, undefined);
+  await waitFor(() => sidebar.executeJavaScript('document.querySelector(".session-tokens").textContent.startsWith("≈ ")'), 'token label', snapshot);
+  const tokenSidebarWidth = snapshot().sidebarWidth;
+  await sidebar.executeJavaScript('window.webPilot.setSidebarWidth(312)');
+  await waitFor(() => snapshot().sidebarWidth === 312, 'minimum sidebar width for token layout', snapshot);
+  const tokenTreeInitiallyHidden = await sidebar.executeJavaScript('document.querySelector(".sessions").hidden');
+  if (tokenTreeInitiallyHidden) await sidebar.executeJavaScript('document.querySelector(".expand-project").click()');
+  await waitFor(() => sidebar.executeJavaScript('document.querySelector(".session").getBoundingClientRect().width > 100'), 'visible token row', snapshot);
+  const g=await sidebar.executeJavaScript(`(() => {const c=document.querySelector('.session').getBoundingClientRect(),e=document.querySelector('.session-tokens'),t=e.getBoundingClientRect(),d=document.querySelector('.session small').getBoundingClientRect();return {w:c.width,height:c.height,r:t.right,b:t.bottom,cr:c.right,cb:c.bottom,dr:d.right,l:t.left,title:e.title,y:Math.max(0,Math.floor(c.top)-8),h:Math.ceil(c.height)+16};})()`);
+  assert.ok(g.w>100 && g.height>20, 'visible row has measurable geometry');
+  assert.ok(g.r<=g.cr && g.cr-g.r<=12, 'right aligned');
+  assert.ok(g.b<=g.cb && g.cb-g.b<=12, 'bottom aligned');
+  assert.ok(g.dr<=g.l, 'no overlap with date at minimum width');
+  assert.ok(g.title.includes('не заполнение окна'));
+  await fs.writeFile(path.join(dataDir,'token-counter-ui.png'),(await sidebar.capturePage({x:0,y:g.y,width:312,height:g.h})).toPNG());
+
+  await sidebar.executeJavaScript(`window.webPilot.setSidebarWidth(${tokenSidebarWidth})`);
+  if (tokenTreeInitiallyHidden) {
+    await sidebar.executeJavaScript('document.querySelector(".expand-project").click()');
+    await waitFor(() => sidebar.executeJavaScript('document.querySelector(".sessions").hidden'), 'restore collapsed tree', snapshot);
+  }
   const prefs = browser.getLastWebPreferences();
   assert.equal(prefs.nodeIntegration, false); assert.equal(prefs.contextIsolation, true); assert.equal(prefs.sandbox, true);
   assert.throws(() => assertLocalSender({ sender: browser, senderFrame: browser.mainFrame }), { code: 'IPC_FORBIDDEN' });
@@ -267,6 +301,15 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.ok(third.chatUrl.startsWith('https://chatgpt.com/c/'));
   assert.ok(browser.getURL().startsWith('https://chatgpt.com/c/'));
   assert.equal(third.experience, 'work', 'shared /c URL keeps Work provenance');
+  await sampleSessionTokens({ force: true });
+  assert.ok(store.selected().tokenEstimate.total>1000,'Work is counted');
+  assert.equal(store.selected().tokenEstimate.messages['assistant:token-test-reply'],undefined,'session isolation');
+  const workTokenTotal=store.selected().tokenEstimate.total;
+  await browser.executeJavaScript("history.pushState({},'', '/c/unrelated-token-fixture')");
+  await sampleSessionTokens({ force: true });
+  assert.equal(store.selected().tokenEstimate.total,workTokenTotal,'foreign conversation ignored');
+  await browser.executeJavaScript(`history.replaceState({},'', ${JSON.stringify(third.chatUrl)})`);
+
   assert.equal(store.snapshot().projects[0].sessions.length, 3);
   assert.deepEqual(await sidebar.executeJavaScript('Array.from(document.querySelectorAll(".session-experience")).map(e=>e.textContent)'), ['Chat', 'Chat', 'Work']);
   assert.equal(await browser.executeJavaScript('window.fixtureMessages[0].mode'), 'work');
@@ -468,7 +511,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
 
   const result = { mode: 'isolated-fixture', electron: process.versions.electron, chromium: process.versions.chrome,
     views: window.contentView.children.length, secureRemote: true, sidebarIpc: true, archiveRestore: true, archiveRestart: true, deleteCancel: true, localDeletion: true, cloudChatPreserved: true, workspaceCreation: true, workspaceValidation: true, cancelPreservesSession: true, startupMessages: packetLoads,
-    restartKeepsSession: true, newChatCreatesSession: true, sessionTree: true, selectsEarlierSession: true, compactWorkspaceDetails: true, projectPathClipboard: true, planAcceptanceButton: true, chromiumDiagnostics: true, contextWindowIndicator: true, resizableSidebar: true, separateArchiveWindow: true, archiveMultiSelect: true, archiveForgetKeepsFolder: true, shellTheme: true, nativeTitlebarTheme: nativeTheme.shouldUseDarkColors, toolCallFilter: true, microphonePermission: true, geolocationPermission: true, cameraPermission: false, fullContextBytes: Buffer.byteLength(fixtureContext), liveChatGPT: false, agentToolsRequired: false };
+    sessionTokenCounter: true, tokenCounterScreenshot: path.join(dataDir, 'token-counter-ui.png'), restartKeepsSession: true, newChatCreatesSession: true, sessionTree: true, selectsEarlierSession: true, compactWorkspaceDetails: true, projectPathClipboard: true, planAcceptanceButton: true, chromiumDiagnostics: true, contextWindowIndicator: true, resizableSidebar: true, separateArchiveWindow: true, archiveMultiSelect: true, archiveForgetKeepsFolder: true, shellTheme: true, nativeTitlebarTheme: nativeTheme.shouldUseDarkColors, toolCallFilter: true, microphonePermission: true, geolocationPermission: true, cameraPermission: false, fullContextBytes: Buffer.byteLength(fixtureContext), liveChatGPT: false, agentToolsRequired: false };
   await fs.writeFile(path.join(dataDir, 'smoke-result.json'), JSON.stringify(result, null, 2));
   console.log(JSON.stringify(result));
 }

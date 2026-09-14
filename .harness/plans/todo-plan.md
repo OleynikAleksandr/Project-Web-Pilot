@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 323,
+  "plan_revision": 325,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "next-modifications-discussion-012",
@@ -147,8 +147,8 @@
         "Electron smoke подтверждает обновление, изоляцию сессий и размещение счётчика."
       ],
       "expected_commit_message": "feat: показывать оценку токенов в строках сессий",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "next-modifications-discussion-012",
         "task_id": "T003",
@@ -214,7 +214,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: next-modifications-discussion-012
 Current Task: нет
-Revision: 323
+Revision: 325
 
 ## Цель
 
@@ -236,8 +236,8 @@ Revision: 323
   - Git Commit: [DONE] feat: считать и сохранять токены сессий через tiktoken
   - Reference: next-modifications-discussion-012 / T002 / implementation
   - Файлы: src/session-tokens.mjs, src/workspace-session.mjs, package.json, package-lock.json, tests/session-tokens.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/workspace-sessions.md
-- [TODO] T003: Подключить счётчик к открытому чату и нижнему правому углу сессии — Ожидает
-  - Git Commit: [PENDING] feat: показывать оценку токенов в строках сессий
+- [DONE] T003: Подключить счётчик к открытому чату и нижнему правому углу сессии — Завершено
+  - Git Commit: [DONE] feat: показывать оценку токенов в строках сессий
   - Reference: next-modifications-discussion-012 / T003 / implementation
   - Файлы: src/main.mjs, src/ui/sidebar.mjs, src/ui/index.html, tests/electron-smoke.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/workspace-sessions.md
 - [TODO] T004: Собрать обновление приложения для проверки пользователем — Ожидает

@@ -597,3 +597,7 @@ macOS arm64 и Windows x64 packages пересобираются из одног
 ## Session token estimate — scope 012 / T002
 
 Workspace & Sessions использует src/session-tokens.mjs и js-tiktoken 1.0.21 (pure JS, o200k_base из установленного пакета). Токенизация исполняется в одном worker_threads worker вне Electron main thread. DOM reader читает только user/assistant message elements с устойчивым message/turn ID, удаляет UI controls и не трогает composer/сеть. Неизменённые тексты пропускаются по SHA-256; новая версия того же message ID заменяет количество. Локальная schema v5 допускает optional tokenEstimate; старые записи без поля остаются читаемыми. Record содержит encoding, total, updatedAt и таблицу ID → digest/tokens, без копии текста. Guard записи проверяет выбранную session и exact chatUrl. Оценка включает ранее прочитанные сообщения, даже если DOM их выгрузил; не измеряет серверный контекст.
+
+## Session token UI — scope 012 / T003
+
+Main читает доступные DOM-сообщения выбранного concrete conversation раз в 3 секунды и передаёт их SessionTokenCounter. До/после асинхронного чтения и токенизации проверяются navigationId, workspace, sessionId и exact URL. В sidebar передаются только total/encoding/messageCount/updatedAt, без message IDs/хешей/текстов. Session row содержит нижнюю flex-строку: дата слева, ≈ N ток. справа; неизвестное значение обозначено — ток. Ширина 312 px и светлая/тёмная тема поддерживаются. Tooltip объясняет учёт только прочитанного текста и загрузку старых сообщений при прокрутке.

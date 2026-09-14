@@ -160,7 +160,16 @@ function render(state) {
         const date = document.createElement('small');
         date.textContent = `Сессия ${index + 1} · ${dateFormat.format(new Date(session.createdAt))}` + (session.chatUrl ? '' : ' · новая');
         choice.title = `${session.title || 'Новая сессия'} · ${session.experience === 'work' ? 'Work' : 'Chat'}\n${new Date(session.createdAt).toLocaleString('ru-RU')}`;
-        choice.append(top, date);
+        const bottom = document.createElement('div'); bottom.className = 'session-bottom';
+        const tokens = document.createElement('span'); tokens.className = 'session-tokens';
+        const estimate = session.tokenEstimate;
+        tokens.textContent = estimate ? `≈ ${estimate.total.toLocaleString('ru-RU')} ток.` : '— ток.';
+        tokens.title = estimate
+          ? `Оценка текста прочитанных сообщений: ${estimate.messageCount}. Скрытый контекст, reasoning и вложения не учитываются. Старые сообщения учитываются после загрузки при прокрутке. Это не расход API и не заполнение окна. Обновлено: ${new Date(estimate.updatedAt).toLocaleString('ru-RU')}.`
+          : 'Оценка появится после чтения сообщений открытой сессии.';
+        tokens.setAttribute('aria-label', estimate ? `Оценка токенов сессии: ${estimate.total}` : 'Оценка токенов сессии пока неизвестна');
+        bottom.append(date, tokens);
+        choice.append(top, bottom);
         choice.addEventListener('click', () => { clearTimeout(workspaceClickTimer); action('selectSession', project.workspace, session.sessionId); });
         const menuButton = document.createElement('button'); menuButton.className = 'icon-button session-menu-button'; menuButton.textContent = '⋯';
         menuButton.setAttribute('aria-label', `Меню сессии ${session.title || index + 1}`); menuButton.setAttribute('aria-expanded', 'false');
