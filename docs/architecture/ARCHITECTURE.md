@@ -540,3 +540,8 @@ Workspace & Sessions владеет только верхнеуровневым 
 ## Project Web Pilot 0.6.5 — Chat / Work sessions
 
 Release 0.6.5 добавляет persisted `session.experience=chat|work`, first-session choice и project-menu session creation. Chat и Work различаются только entrypoint/URL namespace на уровне Workspace & Sessions; `ContextSession` fail-closed блокирует recovery при mismatch. Модель ChatGPT остаётся нативной настройкой соответствующего experience. macOS и Windows пакеты собираются из одного source of truth.
+
+
+## Work conversation URL correction — scope 011 / T006
+
+Production ChatGPT использует `/work/` только как entrypoint. После создания Work conversation URL становится общим `/c/<id>`, поэтому URL namespace не является владельцем experience. `WorkspaceSessions.experience` остаётся immutable source of truth; shared `/c/<id>` допустим для Work, а старые schema без experience по-прежнему мигрируют `/c/<id>` как Chat.

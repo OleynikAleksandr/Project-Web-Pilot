@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 295,
+  "plan_revision": 297,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workspace-chat-work-sessions-011",
@@ -282,8 +282,8 @@
         "suite"
       ],
       "expected_commit_message": "fix: разрешить Work conversation на общем URL",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workspace-chat-work-sessions-011",
         "task_id": "T006",
@@ -384,7 +384,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workspace-chat-work-sessions-011
 Current Task: нет
-Revision: 295
+Revision: 297
 
 ## Цель
 
@@ -422,8 +422,8 @@ Revision: 295
   - Git Commit: [DONE] build: выпустить Chat и Work sessions
   - Reference: workspace-chat-work-sessions-011 / T005 / implementation
   - Файлы: package.json, package-lock.json, tests/electron-smoke.mjs, docs/WORKFLOW_START.md, docs/modules/workspace-sessions.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
-- [TODO] T006: Исправить URL-контракт Work conversation — Ожидает
-  - Git Commit: [PENDING] fix: разрешить Work conversation на общем URL
+- [DONE] T006: Исправить URL-контракт Work conversation — Завершено
+  - Git Commit: [DONE] fix: разрешить Work conversation на общем URL
   - Reference: workspace-chat-work-sessions-011 / T006 / implementation
   - Файлы: src/workspace-session.mjs, tests/workspace-session.test.mjs, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T007: Исправить fail-closed guard Work после отправки — Ожидает

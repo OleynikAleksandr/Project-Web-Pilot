@@ -35,7 +35,7 @@ lastOpenedAt
 attempt / receipt
 ```
 
-`experience` задаётся в момент создания сессии и после привязки облачного разговора не меняется. URL служит подтверждением фактического experience: Work conversation URL должен оставаться Work; обычный conversation URL — Chat.
+`experience` задаётся в момент создания сессии и после привязки облачного разговора не меняется. Production-проверка 14.09.2026 показала, что URL больше не кодирует experience однозначно: Work стартует на `/work/`, но после создания разговора ChatGPT переводит его на общий `/c/<id>`. Поэтому источником истины после создания является persisted `experience` + точный conversation URL, а не namespace URL.
 
 Для старого локального хранилища миграция определяется по URL:
 - Work URL (`/work/...`) → `work`;
@@ -111,7 +111,7 @@ Context Recovery не различает Chat и Work. После того ка�
 
 ## URL Contract
 
-`normalizeChatUrl()` принимает только HTTPS `chatgpt.com` concrete conversation URLs. Оно уже поддерживает обычные и Work URL и должно дополнительно проверять, что сохранённый URL согласуется с `experience` сессии.
+`normalizeChatUrl()` принимает только HTTPS `chatgpt.com` concrete conversation URLs. Совместимость URL с persisted `experience` асимметрична: Chat не принимает явно Work-only `/work/...`; Work принимает как исторический `/work/...`, так и реальный production `/c/<id>`. Для legacy schema без поля `experience` обычный `/c/<id>` по-прежнему мигрируется как Chat.
 
 Начальный URL новой сессии не сохраняется как `chatUrl`: он только открывает нужный experience. `chatUrl` появляется после фактического создания/наблюдения облачного разговора.
 
@@ -159,7 +159,7 @@ Context Recovery не различает Chat и Work. После того ка�
 
 Для нового Work Web Pilot использует канонический верхнеуровневый entrypoint `https://chatgpt.com/work/`. OpenAI публикует Work именно по этому адресу и описывает Chat и Work как отдельные ChatGPT experiences. Web Pilot не кликает внутренний переключатель режима и не выбирает модель.
 
-Fail-closed правило: стартовая Work session может передавать recovery только если текущий URL остаётся в `/work` namespace и страница предоставляет доступный composer. Если ChatGPT изменит маршрут/поведение, Web Pilot показывает ошибку/ожидание Work и не отправляет пакет в обычный Chat. После первой наблюдаемой отправки сохраняется только concrete Work conversation URL (`/work/<id>` либо совместимый `/work/c/<id>`), а не стартовый `/work/`.
+Fail-closed правило: стартовая Work session может передавать recovery только если текущий URL остаётся в `/work` namespace и страница предоставляет доступный composer. Если ChatGPT изменит маршрут/поведение, Web Pilot показывает ошибку/ожидание Work и не отправляет пакет в обычный Chat. После первой наблюдаемой отправки сохраняется фактический concrete conversation URL. В текущем production ChatGPT это обычный `/c/<id>`, хотя визуально и функционально conversation остаётся Work.
 
 Для Chat стартовый entrypoint остаётся `https://chatgpt.com/`; после первой наблюдаемой отправки сохраняется concrete обычный conversation URL `/c/<id>`.
 
@@ -184,3 +184,7 @@ Routing вынесен в `src/chatgpt-experience.mjs`: обычный Chat ст
 ## Release integration — T005 / Project Web Pilot 0.6.5
 
 Релиз 0.6.5 включает storage schema v4, project-level `Новый Chat` / `Новый Work`, выбор первой session для нового/впервые подключаемого проекта, session badges и fail-closed Chat/Work routing. Recovery Capsule и MCP protocol не менялись: обе разновидности session используют один Context Recovery flow. Финальная ручная проверка реального аккаунта ChatGPT оставлена пользователю; scope не архивируется автоматически.
+
+## Production correction — T006 / shared conversation URL
+
+Реальная приёмка 0.6.5 показала Work UI с Astra при URL `/c/<id>`. Production diagnostics зафиксировали последовательность `/work/` → отправка recovery → `/c/<id>`. Storage contract исправлен: schema v4 сохраняет immutable `experience=work`, разрешает Work concrete `/c/<id>` и переживает restart. Legacy inference не меняется: старый `/c/<id>` без persisted experience мигрируется как Chat.

@@ -528,3 +528,8 @@ T004 final candidate: `npm test` — 95 total, 93 passed, 0 failed, 2 native-Win
 ## Project Web Pilot 0.6.5 / Chat–Work sessions — T005
 
 14.09.2026 final release verification: `npm test` — 95 total, 93 passed, 0 failed, 2 native-Windows skipped; Electron smoke passed и выполнил три startup recovery (исходный Chat, дополнительный Chat, дополнительный Work). `npm run build` успешно создал macOS arm64 и Windows x64 packages; Windows verifier passed. macOS `CFBundleShortVersionString/CFBundleVersion=0.6.5`. macOS `app.asar` SHA-256 `f350e9906802b2fc3aeb92844607bc573a3372ed60c66a5953f98b913c8d74f8`; Windows EXE SHA-256 `bfcea894dcbe234bca4516718e382ef91cfc42616e955be31bfa583d03ce8063`. Windows runtime SHA остался `1f041488ad97d8abf1984fd3521afb8abe15f50b8df3d3e11f1cc4248e019d98`, portable Node SHA — `721ab118a3aac8584348b132767eadf51379e0616f0db802cc1e66d7f0d98f85`. Native Windows запуск остаётся пользовательской проверкой после pull/сборки; scope после commit должен остаться READY_FOR_ACCEPTANCE.
+
+
+## Chat / Work sessions — T006 production URL correction
+
+По реальному запуску 0.6.5 подтверждено: Work загружается через `/work/`, но после первой отправки ChatGPT использует `/c/<id>`. Локальная Work session при этом остаётся `experience=work`. Targeted `workspace-session` suite после исправления: 17/17 passed; отдельно проверены сохранение/restart Work с `/c/<id>`, legacy migration `/c/<id>`→Chat и запрет Chat session на явно Work-only URL.

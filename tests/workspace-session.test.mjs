@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import { randomUUID } from 'node:crypto';
-import { WorkspaceSessions, readWorkspace, normalizeChatUrl, conversationExperience } from '../src/workspace-session.mjs';
+import { WorkspaceSessions, readWorkspace, normalizeChatUrl, conversationExperience, conversationUrlCompatibleWithExperience } from '../src/workspace-session.mjs';
 
 const directoryLink = (target, link) => fs.symlink(target, link, process.platform === 'win32' ? 'junction' : 'dir');
 
@@ -118,13 +118,21 @@ test('session experience persists, migrates from v3, and rejects cross-experienc
   await store.bindChat(chat.workspace, chat.sessionId, 'https://chatgpt.com/c/chat-session');
   const work = await store.newSession(chat.workspace, 'work');
   assert.equal(work.experience, 'work');
-  await assert.rejects(store.bindChat(chat.workspace, work.sessionId, 'https://chatgpt.com/c/wrong-mode'), { code: 'CHAT_EXPERIENCE_MISMATCH' });
-  await store.bindChat(chat.workspace, work.sessionId, 'https://chatgpt.com/work/work-session');
+  await store.bindChat(chat.workspace, work.sessionId, 'https://chatgpt.com/c/work-session');
+  assert.equal(store.selected().experience, 'work');
+  assert.equal(store.selected().chatUrl, 'https://chatgpt.com/c/work-session');
   await assert.rejects(store.newSession(chat.workspace, 'astra'), { code: 'SESSION_EXPERIENCE' });
   const saved = store.snapshot();
   assert.deepEqual(saved.projects[0].sessions.map(session => session.experience), ['chat', 'work']);
+  const restarted = new WorkspaceSessions(store.file); await restarted.load();
+  assert.equal(restarted.project(chat.workspace).experience, 'work');
+  assert.equal(restarted.project(chat.workspace).chatUrl, 'https://chatgpt.com/c/work-session');
+
+  const chatOnly = await store.select(await project('Chat only'));
+  await assert.rejects(store.bindChat(chatOnly.workspace, chatOnly.sessionId, 'https://chatgpt.com/work/not-chat'), { code: 'CHAT_EXPERIENCE_MISMATCH' });
 
   const v3 = structuredClone(saved); v3.schemaVersion = 3;
+  v3.projects[0].sessions[1].chatUrl = 'https://chatgpt.com/work/legacy-work';
   for (const session of v3.projects[0].sessions) delete session.experience;
   const original = JSON.stringify(v3); await fs.writeFile(store.file, original);
   const migrated = new WorkspaceSessions(store.file); await migrated.load();
@@ -134,6 +142,8 @@ test('session experience persists, migrates from v3, and rejects cross-experienc
   assert.equal(conversationExperience('https://chatgpt.com/c/aaaaaaaa'), 'chat');
   assert.equal(conversationExperience('https://chatgpt.com/work/aaaaaaaa'), 'work');
   assert.equal(conversationExperience('https://chatgpt.com/'), null);
+  assert.equal(conversationUrlCompatibleWithExperience('https://chatgpt.com/c/aaaaaaaa', 'work'), true);
+  assert.equal(conversationUrlCompatibleWithExperience('https://chatgpt.com/work/aaaaaaaa', 'chat'), false);
 });
 
 test('a replacement project is rejected and the original binding is preserved', async t => {

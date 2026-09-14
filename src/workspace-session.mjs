@@ -21,7 +21,17 @@ export function conversationExperience(input) {
   const normalized = normalizeChatUrl(input);
   if (!normalized) return null;
   const pathname = new URL(normalized).pathname;
+  // Legacy inference only: before schema v4, /c/<id> meant Chat because experience was not persisted.
   return pathname.startsWith('/work/') ? 'work' : 'chat';
+}
+
+export function conversationUrlCompatibleWithExperience(input, experience) {
+  const normalized = normalizeChatUrl(input);
+  if (!normalized || !['chat', 'work'].includes(experience)) return false;
+  const pathname = new URL(normalized).pathname;
+  if (experience === 'chat') return !pathname.startsWith('/work/');
+  // Production ChatGPT Work enters through /work/, but created Work conversations currently use shared /c/<id>.
+  return pathname.startsWith('/work/') || /^\/c\/[a-zA-Z0-9_-]{8,}$/.test(pathname);
 }
 
 function sessionExperience(value) {
@@ -95,7 +105,7 @@ function validate(data) {
           || !['chat', 'work'].includes(s.experience)
           || !Number.isFinite(s.createdAt) || !Number.isFinite(s.lastOpenedAt)
           || (s.chatUrl !== null && (!normalizeChatUrl(s.chatUrl) || normalizeChatUrl(s.chatUrl) !== s.chatUrl
-            || conversationExperience(s.chatUrl) !== s.experience))) throw invalid();
+            || !conversationUrlCompatibleWithExperience(s.chatUrl, s.experience)))) throw invalid();
       ids.push(s.sessionId);
       if (s.chatUrl) urls.push(s.chatUrl);
     }
@@ -237,9 +247,9 @@ export class WorkspaceSessions {
       const url = normalizeChatUrl(input);
       if (!url) throw new WorkspaceError('CHAT_URL_INVALID', 'Откройте конкретный чат ChatGPT.');
       const { session } = this.activeRecord(workspace, sessionId, data);
-      if (conversationExperience(url) !== session.experience) {
+      if (!conversationUrlCompatibleWithExperience(url, session.experience)) {
         throw new WorkspaceError('CHAT_EXPERIENCE_MISMATCH', session.experience === 'work'
-          ? 'Эта сессия создана как Work. Откройте разговор Work.' : 'Эта сессия создана как Chat. Откройте обычный Chat.');
+          ? 'Эта сессия создана как Work. Откройте разговор, созданный из Work.' : 'Эта сессия создана как Chat. Откройте обычный Chat.');
       }
       if (session.chatUrl && session.chatUrl !== url) throw new WorkspaceError('CHAT_CHANGED', 'Открыт другой чат. Выберите его в дереве или вернитесь к сессии проекта.');
       if (data.projects.some(p => p.sessions.some(s => s.sessionId !== sessionId && s.chatUrl === url))) throw new WorkspaceError('CHAT_IN_USE', 'Этот чат уже связан с другой сессией.');
