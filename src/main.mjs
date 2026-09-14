@@ -136,8 +136,15 @@ function projectedArchives() {
     workspace, projectId, name, archivedAt, sessionCount: sessions.length, deletionPending: deletion?.isPending(workspace) ?? false,
   }));
 }
+function projectedSessionArchives() {
+  return store.snapshot().projects.filter(project => !project.archivedAt).flatMap(project => project.sessions
+    .filter(session => session.archivedAt)
+    .map((session, index) => ({ workspace: project.workspace, projectId: project.projectId, projectName: project.name,
+      sessionId: session.sessionId, title: session.title || `Сессия ${index + 1}`, experience: session.experience,
+      chatUrl: session.chatUrl, archivedAt: session.archivedAt, createdAt: session.createdAt })));
+}
 function archiveSnapshot() {
-  return { archives: projectedArchives(), deletion: archiveState.deletion, notice: archiveState.notice,
+  return { archives: projectedArchives(), sessionArchives: projectedSessionArchives(), deletion: archiveState.deletion, notice: archiveState.notice,
     focusWorkspace: archiveState.focusWorkspace, theme: shellTheme, fixture: smoke };
 }
 function publishArchive() {
@@ -152,7 +159,7 @@ function snapshot() {
     ...(info?.workspace === saved.workspace ? info : {}) };
   return { projects: store.snapshot().projects.filter(p => !p.archivedAt).map(({ workspace, projectId, name, selectedSessionId, expanded, sessions }) => ({
     workspace, projectId, name, selectedSessionId, expanded,
-    sessions: sessions.map(({ sessionId, experience, chatUrl, title, createdAt }) => ({ sessionId, experience, chatUrl, title, createdAt })),
+    sessions: sessions.filter(session => !session.archivedAt).map(({ sessionId, experience, chatUrl, title, createdAt }) => ({ sessionId, experience, chatUrl, title, createdAt })),
   })),
     archives: projectedArchives(), settings: settingsState,
     selected, context: controller?.state ?? { phase: 'selected', servicesReady: false, messageSent: false },
@@ -266,6 +273,22 @@ function archiveRecords(items, { single = false } = {}) {
   });
 }
 
+function sessionArchiveRecords(items) {
+  if (!Array.isArray(items) || !items.length) throw new Error('Выберите сессии из архива.');
+  const snapshot = store.snapshot(); const seen = new Set();
+  return items.map(item => {
+    const key = `${item?.workspace ?? ''}\n${item?.sessionId ?? ''}`;
+    if (!item || typeof item.workspace !== 'string' || typeof item.projectId !== 'string' || typeof item.sessionId !== 'string' || seen.has(key))
+      throw new Error('Некорректный выбор сессий архива.');
+    seen.add(key);
+    const project = snapshot.projects.find(project => project.workspace === item.workspace);
+    if (!project || project.projectId !== item.projectId || project.archivedAt) throw new Error('Проект сессии изменился. Повторите выбор.');
+    const session = project.sessions.find(session => session.sessionId === item.sessionId);
+    if (!session?.archivedAt) throw new Error('Сессия больше не находится в архиве.');
+    return { project, session };
+  });
+}
+
 function registerArchiveAction(channel, action) {
   ipcMain.handle(channel, (event, input) => {
     assertArchiveSender(event);
@@ -297,7 +320,7 @@ function registerAction(channel, action) {
 async function openArchiveWindow(workspace = null) {
   archiveState = { deletion: null, notice: null, focusWorkspace: workspace }; deletion.clear();
   if (archiveWindow && !archiveWindow.isDestroyed()) { archiveWindow.show(); archiveWindow.focus(); publishArchive(); return; }
-  archiveWindow = new BrowserWindow({ title: 'Архив проектов — Project Web Pilot', width: 780, height: 720, minWidth: 620, minHeight: 480,
+  archiveWindow = new BrowserWindow({ title: 'Архив — Project Web Pilot', width: 780, height: 720, minWidth: 620, minHeight: 480,
     backgroundColor: shellBackground[shellTheme], webPreferences: { preload: path.join(sourceDir, 'archive-preload.cjs'),
       nodeIntegration: false, contextIsolation: true, sandbox: true, webSecurity: true } });
   archiveWindow.setWindowOpenHandler?.(() => ({ action: 'deny' }));
@@ -484,6 +507,15 @@ function registerIpc() {
     startupError = null;
     if (selected) { workspaceHealth = null; await navigate(null); }
   });
+  registerAction('pilot:archive-session', async input => {
+    if (typeof input?.workspace !== 'string' || typeof input?.sessionId !== 'string') throw new Error('Выберите сессию проекта.');
+    const current = store.selected(); const selected = current?.workspace === input.workspace && current.sessionId === input.sessionId;
+    if (selected) { controller.cancel(); ++navigationId; }
+    try { await store.setSessionArchived(input.workspace, input.sessionId, true); }
+    catch (error) { if (selected && current) controller.attach(current); throw error; }
+    startupError = null;
+    if (selected) { const fallback = store.selected(); if (fallback) await navigate(fallback); }
+  });
   registerAction('pilot:select-archive', input => {
     if (!settingsState || !store.project(input)?.archivedAt) throw new Error('Выберите проект из архива.');
     deletion.clear(); settingsState = { workspace: input, deletion: null, notice: null }; startupError = null;
@@ -631,6 +663,18 @@ function registerIpc() {
     for (const project of projects) if (deletion.isPending(project.workspace)) throw new Error('Сначала завершите подтверждённое удаление.');
     const count = await store.forgetArchivedMany(projects.map(project => ({ workspace: project.workspace, projectId: project.projectId })));
     deletion.clear(); archiveState = { deletion: null, notice: `Убрано из списка: ${count}. Папки на диске сохранены.`, focusWorkspace: null };
+    return count;
+  });
+  registerArchiveAction('archive:restore-sessions', async input => {
+    const records = sessionArchiveRecords(input);
+    for (const { project, session } of records) await store.setSessionArchived(project.workspace, session.sessionId, false);
+    archiveState = { ...archiveState, notice: `Возвращено сессий: ${records.length}.` };
+    return records.length;
+  });
+  registerArchiveAction('archive:delete-sessions', async input => {
+    const records = sessionArchiveRecords(input);
+    const count = await store.forgetArchivedSessions(records.map(({ project, session }) => ({ workspace: project.workspace, projectId: project.projectId, sessionId: session.sessionId })));
+    archiveState = { ...archiveState, notice: `Удалено локальных сессий: ${count}. Облачные чаты ChatGPT сохранены.` };
     return count;
   });
   registerArchiveAction('archive:preview-delete', async input => {

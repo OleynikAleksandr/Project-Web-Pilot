@@ -553,3 +553,8 @@ Targeted `context-session` suite: 13/13 passed. Новый regression воспр
 ## Chat / Work sessions — T010 session storage
 
 Targeted `workspace-session` suite после schema v5: 19/19 passed. Проверены migration v4→v5, fallback selected session, запрет архивирования последней активной session, restore с сохранением experience/chatUrl, persistence после restart и локальный forget с очисткой `.v4-backup`/`diagnostics.jsonl` при сохранении workspace folder. Полный `npm test`: 98 total, 96 passed, 0 failed, 2 native-Windows skipped.
+
+
+## Chat / Work sessions — T011 session archive UI
+
+Electron smoke проверяет полный session archive flow: Chat session архивируется из sidebar и исчезает из active tree; во вкладке `Сессии` видны её Chat badge и project owner; restore возвращает session; Work session затем архивируется и удаляется локально через отдельное подтверждение, workspace folder остаётся. После архивирования всего проекта его ранее архивная session не дублируется в session tab. Smoke passed. Final candidate: `npm test` — 98 total, 96 passed, 0 failed, 2 native-Windows skipped; `npm run smoke` passed.

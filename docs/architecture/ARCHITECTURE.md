@@ -565,3 +565,8 @@ Workspace & Sessions расширяет lifecycle на отдельный арх
 ## Session archive storage — scope 011 / T010
 
 Persisted storage переходит на schema v5 с `session.archivedAt`. Project-level `archivedAt` и session-level archive остаются независимыми; current view сохраняет project archive state отдельно от `sessionArchivedAt`. Active project инвариантно содержит хотя бы одну активную session. Локальный forget архивной session очищает session metadata и известные migration backup/diagnostic references, но не файловую систему workspace и не OpenAI.
+
+
+## Session archive UI — scope 011 / T011
+
+Archive BrowserWindow остаётся единым локальным surface, но разделён на project/session tabs. Project deletion сохраняет прежний filesystem-safe workflow. Session deletion вызывает только WorkspaceSessions local metadata cleanup и не использует WorkspaceDeletion, поэтому workspace folder не может быть удалён через session action. Sidebar session menu и archive IPC используют workspace+projectId+sessionId identity, а snapshot активного проекта публикует только неархивные sessions.

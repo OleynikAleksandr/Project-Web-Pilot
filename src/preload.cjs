@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld('webPilot', Object.freeze({
   copyWorkspacePath: workspace => ipcRenderer.invoke('pilot:copy-workspace-path', workspace),
   acceptPlan: () => ipcRenderer.invoke('pilot:accept-plan'),
   archiveProject: workspace => ipcRenderer.invoke('pilot:archive-project', workspace),
+  archiveSession: (workspace, sessionId) => ipcRenderer.invoke('pilot:archive-session', { workspace, sessionId }),
   openArchive: workspace => ipcRenderer.invoke('pilot:open-archive-window', workspace),
   getState: () => ipcRenderer.invoke('pilot:get-state'),
   beginCreate: () => ipcRenderer.invoke('pilot:begin-create'),

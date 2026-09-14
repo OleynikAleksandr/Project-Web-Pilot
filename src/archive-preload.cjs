@@ -3,6 +3,8 @@ contextBridge.exposeInMainWorld('webPilotArchive', Object.freeze({
   getState: () => ipcRenderer.invoke('archive:get-state'),
   restore: items => ipcRenderer.invoke('archive:restore', items),
   forget: items => ipcRenderer.invoke('archive:forget', items),
+  restoreSessions: items => ipcRenderer.invoke('archive:restore-sessions', items),
+  deleteSessions: items => ipcRenderer.invoke('archive:delete-sessions', items),
   previewDelete: item => ipcRenderer.invoke('archive:preview-delete', item),
   cancelDelete: () => ipcRenderer.invoke('archive:cancel-delete'),
   deleteProject: (token, confirmation) => ipcRenderer.invoke('archive:delete-project', { token, confirmation }),

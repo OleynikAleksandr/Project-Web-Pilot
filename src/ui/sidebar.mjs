@@ -147,6 +147,7 @@ function render(state) {
       sessions.setAttribute('aria-label', `Сессии ${project.name}`);
       for (const [index, session] of project.sessions.entries()) {
         const entry = document.createElement('li');
+        const row = document.createElement('div'); row.className = 'session-row';
         const choice = document.createElement('button');
         const active = selected?.workspace === project.workspace && selected?.sessionId === session.sessionId;
         choice.className = 'session' + (active ? ' active' : '');
@@ -161,7 +162,14 @@ function render(state) {
         choice.title = `${session.title || 'Новая сессия'} · ${session.experience === 'work' ? 'Work' : 'Chat'}\n${new Date(session.createdAt).toLocaleString('ru-RU')}`;
         choice.append(top, date);
         choice.addEventListener('click', () => { clearTimeout(workspaceClickTimer); action('selectSession', project.workspace, session.sessionId); });
-        entry.append(choice); sessions.append(entry);
+        const menuButton = document.createElement('button'); menuButton.className = 'icon-button session-menu-button'; menuButton.textContent = '⋯';
+        menuButton.setAttribute('aria-label', `Меню сессии ${session.title || index + 1}`); menuButton.setAttribute('aria-expanded', 'false');
+        const menu = document.createElement('div'); menu.className = 'session-menu'; menu.hidden = true;
+        const archive = document.createElement('button'); archive.className = 'secondary archive-session'; archive.textContent = 'Перенести в архив';
+        archive.addEventListener('click', () => { menu.hidden = true; menuButton.setAttribute('aria-expanded', 'false'); action('archiveSession', project.workspace, session.sessionId); });
+        menu.append(archive);
+        menuButton.addEventListener('click', event => { event.stopPropagation(); menu.hidden = !menu.hidden; menuButton.setAttribute('aria-expanded', String(!menu.hidden)); });
+        row.append(choice, menuButton); entry.append(row, menu); sessions.append(entry);
       }
       item.append(sessions); fragment.append(item);
     }

@@ -2,7 +2,7 @@ export function projectArchiveView(action) {
   const $ = id => document.getElementById(id);
   const archiveButton = document.createElement('button');
   archiveButton.id = 'open-archive-window'; archiveButton.type = 'button'; archiveButton.className = 'secondary';
-  archiveButton.textContent = 'Архив проектов…'; archiveButton.style.width = '100%'; archiveButton.style.marginTop = '10px';
+  archiveButton.textContent = 'Архив…'; archiveButton.style.width = '100%'; archiveButton.style.marginTop = '10px';
   $('archive-list').before(archiveButton);
   for (const id of ['archive-empty', 'archive-list', 'archive-detail', 'settings-notice']) $(id).hidden = true;
   archiveButton.addEventListener('click', () => action('openArchive'));

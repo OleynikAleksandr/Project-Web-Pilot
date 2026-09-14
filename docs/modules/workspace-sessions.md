@@ -220,3 +220,8 @@ Archive UI содержит две независимые вкладки: `Пр�
 ## Реализация session archive storage — T010
 
 Storage schema v5 добавляет `session.archivedAt`. Миграция v4 выставляет `archivedAt=null` и сохраняет `.v4-backup`. Архивирование выбранной session атомарно переключает selection на наиболее недавно открытую оставшуюся активную session; `SESSION_LAST_ACTIVE` блокирует архивирование последней активной session. Restore сохраняет `experience/chatUrl`. Локальный forget архивной session удаляет primary metadata и доступные ссылки этой session из migration backup/diagnostics, не удаляя workspace или cloud conversation.
+
+
+## Реализация session archive UI — T011
+
+Sidebar добавляет `⋯ → Перенести в архив` для каждой активной session. Main snapshot скрывает `session.archivedAt != null` из активного дерева. Общее окно `Архив` имеет две вкладки — `Проекты` и `Сессии`; session row показывает title, badge Chat/Work, project owner и дату архивации. В session tab доступны batch restore и подтверждаемое локальное delete; текст явно указывает, что cloud conversation OpenAI сохраняется. Sessions проектов, которые сами находятся в project archive, не показываются в session tab.

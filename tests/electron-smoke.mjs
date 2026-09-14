@@ -266,6 +266,41 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(store.selected().attempt.requestId, first.attempt.requestId);
   assert.equal(store.snapshot().projects[0].sessions[1].sessionId, second.sessionId);
   assert.equal(store.snapshot().projects[0].sessions[2].sessionId, third.sessionId);
+
+  const archiveSessionFromTree = async sessionId => {
+    await sidebar.executeJavaScript(`{ const choice=document.querySelector('[data-session-id="${sessionId}"]'); const li=choice.closest('li'); li.querySelector('.session-menu-button').click(); li.querySelector('.archive-session').click(); }`);
+    await waitFor(() => store.snapshot().projects[0].sessions.find(session => session.sessionId === sessionId)?.archivedAt, 'archive session from tree', snapshot);
+  };
+  await archiveSessionFromTree(second.sessionId);
+  assert.equal(snapshot().projects[0].sessions.some(session => session.sessionId === second.sessionId), false, 'archived session disappears from active tree');
+  await sidebar.executeJavaScript('window.webPilot.openArchive()');
+  await waitFor(() => !!getArchiveWindow() && !getArchiveWindow().isDestroyed(), 'session archive window', snapshot);
+  let sessionArchiveWindow = getArchiveWindow(), sessionArchive = sessionArchiveWindow.webContents;
+  await waitFor(() => sessionArchive.executeJavaScript('typeof window.webPilotArchive === "object"'), 'session archive preload ready', snapshot);
+  await sessionArchive.executeJavaScript('document.getElementById("tab-sessions").click()');
+  await waitFor(() => sessionArchive.executeJavaScript('document.querySelectorAll(".item").length === 1'), 'archived session visible', snapshot);
+  assert.ok(await sessionArchive.executeJavaScript('document.querySelector(".item").textContent.includes("Тестовый проект с пробелами")'));
+  assert.ok(await sessionArchive.executeJavaScript('document.querySelector(".item").textContent.includes("Chat")'));
+  await sessionArchive.executeJavaScript('document.querySelector(".item").click(); document.getElementById("restore-sessions").click()');
+  await waitFor(() => !store.snapshot().projects[0].sessions.find(session => session.sessionId === second.sessionId)?.archivedAt, 'restore archived session', snapshot);
+  sessionArchiveWindow.close(); await waitFor(() => !getArchiveWindow() || getArchiveWindow().isDestroyed(), 'close session archive window', snapshot);
+
+  await archiveSessionFromTree(third.sessionId);
+  await sidebar.executeJavaScript('window.webPilot.openArchive()');
+  await waitFor(() => !!getArchiveWindow() && !getArchiveWindow().isDestroyed(), 'session delete archive window', snapshot);
+  sessionArchiveWindow = getArchiveWindow(); sessionArchive = sessionArchiveWindow.webContents;
+  await waitFor(() => sessionArchive.executeJavaScript('typeof window.webPilotArchive === "object"'), 'session delete archive preload ready', snapshot);
+  await sessionArchive.executeJavaScript('document.getElementById("tab-sessions").click()');
+  await waitFor(() => sessionArchive.executeJavaScript('document.querySelectorAll(".item").length === 1'), 'Work session in archive', snapshot);
+  assert.ok(await sessionArchive.executeJavaScript('document.querySelector(".item").textContent.includes("Work")'));
+  await sessionArchive.executeJavaScript('document.querySelector(".item").click(); document.getElementById("delete-sessions").click()');
+  await waitFor(() => sessionArchive.executeJavaScript('!document.getElementById("session-delete-panel").hidden'), 'session local delete confirmation', snapshot);
+  assert.ok(await sessionArchive.executeJavaScript('document.getElementById("session-delete-panel").textContent.includes("OpenAI")'));
+  await sessionArchive.executeJavaScript('document.getElementById("confirm-session-delete").click()');
+  await waitFor(() => !store.snapshot().projects[0].sessions.some(session => session.sessionId === third.sessionId), 'delete archived session locally', snapshot);
+  assert.ok(await fs.stat(workspace), 'session delete keeps workspace folder');
+  sessionArchiveWindow.close(); await waitFor(() => !getArchiveWindow() || getArchiveWindow().isDestroyed(), 'close session delete archive', snapshot);
+  await archiveSessionFromTree(second.sessionId);
   const doubleClickWorkspace = () => sidebar.executeJavaScript(`{
     const button = document.querySelector('.project');
     button.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
@@ -279,7 +314,8 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(store.selected().sessionId, first.sessionId, 'Expanding does not switch to latest session');
   const history = new WorkspaceSessions(store.file); await history.load();
   assert.equal(history.selected().sessionId, first.sessionId);
-  assert.equal(history.snapshot().projects[0].sessions.length, 3);
+  assert.equal(history.snapshot().projects[0].sessions.length, 2);
+  assert.ok(history.snapshot().projects[0].sessions.find(session => session.sessionId === second.sessionId).archivedAt);
   assert.equal(history.snapshot().projects[0].expanded, true);
   const startFile = path.join(workspace, 'docs/WORKFLOW_START.md');
   const startText = await fs.readFile(startFile); await fs.unlink(startFile);
@@ -314,7 +350,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await sidebar.executeJavaScript('document.getElementById("open-settings").click()');
   await waitFor(() => !!snapshot().settings, 'gear opens settings', snapshot);
   assert.equal(await sidebar.executeJavaScript('document.getElementById("archive-list").hidden'), true);
-  assert.equal(await sidebar.executeJavaScript('document.getElementById("open-archive-window").textContent'), 'Архив проектов…');
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("open-archive-window").textContent'), 'Архив…');
   assert.equal(snapshot().platform, process.platform);
   assert.equal(await sidebar.executeJavaScript('document.getElementById("windows-runtime-section").hidden'), true, 'Windows onboarding stays hidden on macOS smoke');
   assert.equal(await sidebar.executeJavaScript('document.getElementById("choose-runtime").hidden'), false, 'macOS keeps manual Codex Local picker');
@@ -338,6 +374,9 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await waitFor(() => archive.executeJavaScript('typeof window.webPilotArchive === "object"'), 'archive preload ready', snapshot);
   assert.deepEqual(await archive.executeJavaScript('({require:typeof require,process:typeof process})'), { require: 'undefined', process: 'undefined' });
   assert.equal(await archive.executeJavaScript('document.querySelectorAll(".item").length'), 6);
+  await archive.executeJavaScript('document.getElementById("tab-sessions").click()');
+  assert.equal(await archive.executeJavaScript('document.querySelectorAll(".item").length'), 0, 'sessions of archived projects are not duplicated');
+  await archive.executeJavaScript('document.getElementById("tab-projects").click()');
   await sidebar.executeJavaScript('window.webPilot.openArchive()');
   await new Promise(resolve => setTimeout(resolve, 100)); assert.equal(getArchiveWindow(), firstArchiveWindow, 'archive window is single-instance');
 

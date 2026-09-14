@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 306,
+  "plan_revision": 309,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workspace-chat-work-sessions-011",
@@ -441,7 +441,8 @@
         "src/ui/archive.mjs",
         "src/ui/archive.html",
         "src/ui/project-archive.mjs",
-        "tests/electron-smoke.mjs"
+        "tests/electron-smoke.mjs",
+        "src/ui/index.html"
       ],
       "documentation_paths": [
         "docs/modules/workspace-sessions.md",
@@ -459,13 +460,14 @@
         "electron-smoke"
       ],
       "expected_commit_message": "feat: добавить UI архива сессий",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workspace-chat-work-sessions-011",
         "task_id": "T011",
         "role": "implementation"
-      }
+      },
+      "file_limit_exception": "Session archive UI требует согласованных изменений main/preload, sidebar CSS, archive BrowserWindow renderer/preload и Electron smoke как одного сквозного пользовательского сценария."
     },
     {
       "id": "T012",
@@ -531,7 +533,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workspace-chat-work-sessions-011
 Current Task: нет
-Revision: 306
+Revision: 309
 
 ## Цель
 
@@ -589,10 +591,10 @@ Revision: 306
   - Git Commit: [DONE] feat: добавить lifecycle архива сессий
   - Reference: workspace-chat-work-sessions-011 / T010 / implementation
   - Файлы: src/workspace-session.mjs, tests/workspace-session.test.mjs, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T011: Добавить архив сессий в UI и IPC — Ожидает
-  - Git Commit: [PENDING] feat: добавить UI архива сессий
+- [DONE] T011: Добавить архив сессий в UI и IPC — Завершено
+  - Git Commit: [DONE] feat: добавить UI архива сессий
   - Reference: workspace-chat-work-sessions-011 / T011 / implementation
-  - Файлы: src/main.mjs, src/preload.cjs, src/archive-preload.cjs, src/ui/sidebar.mjs, src/ui/archive.mjs, src/ui/archive.html, src/ui/project-archive.mjs, tests/electron-smoke.mjs, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+  - Файлы: src/main.mjs, src/preload.cjs, src/archive-preload.cjs, src/ui/sidebar.mjs, src/ui/archive.mjs, src/ui/archive.html, src/ui/project-archive.mjs, tests/electron-smoke.mjs, src/ui/index.html, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T012: Собрать релиз с архивом сессий — Ожидает
   - Git Commit: [PENDING] build: выпустить архив сессий
   - Reference: workspace-chat-work-sessions-011 / T012 / implementation
