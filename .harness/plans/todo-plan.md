@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 281,
+  "plan_revision": 283,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workspace-chat-work-sessions-011",
@@ -97,8 +97,8 @@
         "Module specification содержит окончательный Chat/Work data/UI/routing contract и first-session semantics."
       ],
       "expected_commit_message": "docs: определить Chat и Work sessions",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workspace-chat-work-sessions-011",
         "task_id": "T001",
@@ -267,7 +267,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workspace-chat-work-sessions-011
 Current Task: нет
-Revision: 281
+Revision: 283
 
 ## Цель
 
@@ -285,8 +285,8 @@ Revision: 281
 
 ## Микрозадачи
 
-- [TODO] T001: Подтвердить Work entrypoint и зафиксировать Workspace Sessions contract — Ожидает
-  - Git Commit: [PENDING] docs: определить Chat и Work sessions
+- [DONE] T001: Подтвердить Work entrypoint и зафиксировать Workspace Sessions contract — Завершено
+  - Git Commit: [DONE] docs: определить Chat и Work sessions
   - Reference: workspace-chat-work-sessions-011 / T001 / implementation
   - Файлы: docs/modules/workspace-sessions.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/VERIFICATION.md
 - [TODO] T002: Мигрировать session model на experience Chat Work — Ожидает

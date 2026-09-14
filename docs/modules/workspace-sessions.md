@@ -154,3 +154,15 @@ Context Recovery не различает Chat и Work. После того ка�
 - Старое хранилище мигрируется детерминированно.
 - Chat и Work получают один и тот же recovery-flow без отдельной логики Context Recovery.
 - Новый Work действительно открывается как чистая Work-сессия в текущем ChatGPT Web и после первого сообщения сохраняется как Work conversation URL.
+
+## Подтверждённый Work entrypoint — 14.09.2026
+
+Для нового Work Web Pilot использует канонический верхнеуровневый entrypoint `https://chatgpt.com/work/`. OpenAI публикует Work именно по этому адресу и описывает Chat и Work как отдельные ChatGPT experiences. Web Pilot не кликает внутренний переключатель режима и не выбирает модель.
+
+Fail-closed правило: стартовая Work session может передавать recovery только если текущий URL остаётся в `/work` namespace и страница предоставляет доступный composer. Если ChatGPT изменит маршрут/поведение, Web Pilot показывает ошибку/ожидание Work и не отправляет пакет в обычный Chat. После первой наблюдаемой отправки сохраняется только concrete Work conversation URL (`/work/<id>` либо совместимый `/work/c/<id>`), а не стартовый `/work/`.
+
+Для Chat стартовый entrypoint остаётся `https://chatgpt.com/`; после первой наблюдаемой отправки сохраняется concrete обычный conversation URL `/c/<id>`.
+
+Актуальные публичные источники OpenAI на момент решения:
+- `https://chatgpt.com/work/` — канонический Work entrypoint;
+- OpenAI Help Center, `ChatGPT Work and Codex` — Chat и Work описаны как отдельные experiences; конкретный модельный выбор остаётся нативному ChatGPT UI.

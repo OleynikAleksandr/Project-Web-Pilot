@@ -504,3 +504,7 @@ Windows lifecycle adapter source проверен на Mac там, где WinAPI
 Packaged macOS resources verified in place: uv SHA `11609c939296348c7cc1e1231b3fbf7ca90a603a4c494ec72b59d7ceafa695e1`, runtime ZIP SHA `7313094f06d17e78624362a398e4d12d4be81434fd83f9a8ff2d946ec8c1f64d`, Mac control SHA `747f25d51b65c004d65e6d02dd19721748ed6022b44b48c64740180f432407d3`, Windows control SHA `f69b9e0e1df16f07f566c6b54cdc68be1a77ee4d4cb4fb17e46ed64b1237332b`. Packaged Mac adapter real-check: contract 2, MCP/tunnel ready, tunnel configured, `Codex Local Mac`, 47 tools. External Codex Local Mac repo remained clean and its original control SHA remained `6c5c14972774ece2a9820059b3953fe2fe968c186bb6e17af074c7752dc294be`.
 
 Windows lifecycle stale-PID/dynamic-endpoint behavior is covered by portable production-function fixture; DPAPI/setup and external-runtime restart remain native-Windows validation after pull. Cross-build and verifier do not substitute that native run.
+
+## Chat / Work sessions — T001 entrypoint
+
+14.09.2026 перед реализацией подтверждён канонический публичный Work entrypoint `https://chatgpt.com/work/`; OpenAI Help Center описывает Chat и Work как отдельные ChatGPT experiences. Принят fail-closed contract: Web Pilot открывает `/work/`, но не отправляет recovery, если фактическая страница не остаётся в Work namespace или не имеет доступного composer. DOM-переключатель Chat/Work не используется. Конкретная модель внутри Work остаётся нативному ChatGPT.
