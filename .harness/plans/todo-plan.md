@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 297,
+  "plan_revision": 299,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workspace-chat-work-sessions-011",
@@ -317,8 +317,8 @@
         "electron-smoke"
       ],
       "expected_commit_message": "fix: сохранить Work provenance после отправки",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workspace-chat-work-sessions-011",
         "task_id": "T007",
@@ -384,7 +384,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workspace-chat-work-sessions-011
 Current Task: нет
-Revision: 297
+Revision: 299
 
 ## Цель
 
@@ -426,8 +426,8 @@ Revision: 297
   - Git Commit: [DONE] fix: разрешить Work conversation на общем URL
   - Reference: workspace-chat-work-sessions-011 / T006 / implementation
   - Файлы: src/workspace-session.mjs, tests/workspace-session.test.mjs, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T007: Исправить fail-closed guard Work после отправки — Ожидает
-  - Git Commit: [PENDING] fix: сохранить Work provenance после отправки
+- [DONE] T007: Исправить fail-closed guard Work после отправки — Завершено
+  - Git Commit: [DONE] fix: сохранить Work provenance после отправки
   - Reference: workspace-chat-work-sessions-011 / T007 / implementation
   - Файлы: src/context-session.mjs, tests/context-session.test.mjs, tests/electron-smoke.mjs, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T008: Собрать исправленный релиз Work sessions — Ожидает

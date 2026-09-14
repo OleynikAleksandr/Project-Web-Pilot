@@ -26,7 +26,7 @@ document.querySelector('form').addEventListener('submit',event=>{
  event.preventDefault(); const editor=document.getElementById('prompt-textarea');const text=editor.innerText;
  const message={text,at:Date.now()};window.fixtureMessages.push(message);
  showMessage(text);
- editor.textContent='';const match=text.match(/wp-request-[a-zA-Z0-9-]+/);if(match){const prefix=location.pathname.startsWith('/work')?'/work/':'/c/';history.pushState({},'', prefix+match[0]);}sessionStorage.setItem(location.pathname,JSON.stringify(window.fixtureMessages));
+ editor.textContent='';const match=text.match(/wp-request-[a-zA-Z0-9-]+/);if(match){history.pushState({},'', '/c/'+match[0]);}sessionStorage.setItem(location.pathname,JSON.stringify(window.fixtureMessages));
 });
 </script></body></html>`;
 
@@ -252,8 +252,9 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(packetLoads, 3);
   const third = store.selected();
   assert.equal(third.experience, 'work');
-  assert.ok(third.chatUrl.startsWith('https://chatgpt.com/work/'));
-  assert.ok(browser.getURL().startsWith('https://chatgpt.com/work/'));
+  assert.ok(third.chatUrl.startsWith('https://chatgpt.com/c/'));
+  assert.ok(browser.getURL().startsWith('https://chatgpt.com/c/'));
+  assert.equal(third.experience, 'work', 'shared /c URL keeps Work provenance');
   assert.equal(store.snapshot().projects[0].sessions.length, 3);
   assert.deepEqual(await sidebar.executeJavaScript('Array.from(document.querySelectorAll(".session-experience")).map(e=>e.textContent)'), ['Chat', 'Chat', 'Work']);
   await sidebar.executeJavaScript(`document.querySelector('[data-session-id="${first.sessionId}"]').click()`);

@@ -133,3 +133,32 @@ test('unbound Work session accepts Work entrypoint before recovery', async()=>{
   assert.equal(f.loads(),1);
   assert.equal(f.controller.state.phase,'waiting-composer');
 });
+
+
+test('Work session keeps provenance when ChatGPT moves from /work/ to shared /c/<id>', async()=>{
+  const f=controllerFixture({chatUrl:null});
+  f.saved.experience='work';
+  f.store.selected=()=>({...structuredClone(f.saved),experience:'work'});
+  f.store.project=()=>({...structuredClone(f.saved),experience:'work'});
+  f.inspection.url='https://chatgpt.com/work/';
+  f.composer.contents.getURL=()=>f.inspection.url;
+  f.composer.deliver=async options=>{
+    assert.equal(options.canContinue(),true);
+    await options.onBeforeSend();
+    f.inspection.url='https://chatgpt.com/c/work-real-session';
+    f.inspection.messageSeen=true;
+    assert.equal(options.canContinue(),true,'same Work send may transition to shared conversation URL');
+    return {state:'sent'};
+  };
+  f.controller.attach({...f.saved,experience:'work'});
+  await f.controller.tick();
+  assert.equal(f.loads(),1); assert.equal(f.controller.state.phase,'waiting-chat');
+  await f.controller.tick();
+  assert.equal(f.controller.state.phase,'delivered');
+  assert.equal(f.saved.experience,'work');
+  assert.equal(f.saved.chatUrl,'https://chatgpt.com/c/work-real-session');
+  f.controller.attach(f.saved);
+  await f.controller.tick();
+  assert.equal(f.controller.state.phase,'delivered','bound Work /c URL is authoritative by exact match');
+  assert.equal(f.loads(),1,'reopen does not reload recovery');
+});

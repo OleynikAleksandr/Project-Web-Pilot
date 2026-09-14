@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { normalizeChatUrl } from './workspace-session.mjs';
+import { normalizeChatUrl, conversationUrlCompatibleWithExperience } from './workspace-session.mjs';
 import { CONTEXT_PROTOCOL, validateContextPacket } from './mcp-runtime.mjs';
 import { chatGPTUrlMatchesExperience } from './chatgpt-experience.mjs';
 
@@ -71,12 +71,13 @@ export class ContextSession {
     return selected?.workspace === this.active.workspace && selected.sessionId === this.active.sessionId;
   }
 
-  atExpectedChat(project) {
+  atExpectedChat(project, attempt = project.attempt) {
     if (!this.composer.contents?.getURL) return true;
     const current = this.composer.contents.getURL();
     const url = normalizeChatUrl(current);
-    return project.chatUrl ? project.chatUrl === url
-      : !url && chatGPTUrlMatchesExperience(current, project.experience ?? 'chat');
+    if (project.chatUrl) return project.chatUrl === url;
+    if (!url) return chatGPTUrlMatchesExperience(current, project.experience ?? 'chat');
+    return !!attempt?.sendStartedAtMs && conversationUrlCompatibleWithExperience(url, project.experience ?? 'chat');
   }
 
   async retry() {
@@ -114,21 +115,31 @@ export class ContextSession {
       const observation = await this.composer.inspect({ requestId: attempt?.requestId, text: attempt?.text });
       if (!this.current(generation)) return;
       if (observation.login) { this.emit({ phase: 'waiting-login', projectInfo: info }); return; }
-      if (!chatGPTUrlMatchesExperience(observation.url, project.experience ?? 'chat')) {
-        throw failure('CHATGPT_EXPERIENCE_MISMATCH', project.experience === 'work'
-          ? 'Work-сессия не открыта в режиме Work. Recovery не отправлен.'
-          : 'Chat-сессия не открыта в обычном Chat. Recovery не отправлен.');
-      }
+      const experience = project.experience ?? 'chat';
       const currentUrl = normalizeChatUrl(observation.url);
-      if (project.chatUrl && currentUrl !== project.chatUrl) {
-        this.emit({ phase: 'chat-changed', projectInfo: info }); return;
-      }
-      if (!project.chatUrl && currentUrl) {
-        if (!attempt?.sendStartedAtMs || !observation.messageSeen) {
+      if (project.chatUrl) {
+        if (currentUrl !== project.chatUrl) { this.emit({ phase: 'chat-changed', projectInfo: info }); return; }
+      } else if (currentUrl) {
+        if (!attempt?.sendStartedAtMs) {
+          if (!chatGPTUrlMatchesExperience(observation.url, experience)) {
+            throw failure('CHATGPT_EXPERIENCE_MISMATCH', experience === 'work'
+              ? 'Work-сессия не открыта в режиме Work. Recovery не отправлен.'
+              : 'Chat-сессия не открыта в обычном Chat. Recovery не отправлен.');
+          }
           this.emit({ phase: 'chat-changed', projectInfo: info }); return;
         }
+        if (!conversationUrlCompatibleWithExperience(currentUrl, experience)) {
+          throw failure('CHATGPT_EXPERIENCE_MISMATCH', experience === 'work'
+            ? 'Work-сессия перешла в неподдерживаемый разговор. Recovery не привязан.'
+            : 'Chat-сессия перешла в неподдерживаемый разговор. Recovery не привязан.');
+        }
+        if (!observation.messageSeen) { this.emit({ phase: 'send-unknown', projectInfo: info, messageSent: false }); return; }
         project = { ...await this.store.bindChat(project.workspace, project.sessionId, currentUrl), ...info };
         if (!this.current(generation)) return;
+      } else if (!chatGPTUrlMatchesExperience(observation.url, experience)) {
+        throw failure('CHATGPT_EXPERIENCE_MISMATCH', experience === 'work'
+          ? 'Work-сессия не открыта в режиме Work. Recovery не отправлен.'
+          : 'Chat-сессия не открыта в обычном Chat. Recovery не отправлен.');
       }
       if (attempt && attempt.protocol !== CONTEXT_PROTOCOL) {
         const known = ['sent', 'acknowledged'].includes(attempt.state) || observation.messageSeen;
@@ -176,12 +187,12 @@ export class ContextSession {
         if (!this.current(generation)) return;
       }
       const result = await this.composer.deliver({ text: attempt.text, requestId: attempt.requestId,
-        canContinue: () => this.current(generation) && this.atExpectedChat(project), onBeforeSend: async () => {
+        canContinue: () => this.current(generation) && this.atExpectedChat(project, attempt), onBeforeSend: async () => {
           const latest = await this.store.inspect(project.workspace);
           if (!packetMatchesProject(attempt.packet, latest) || this.now() - attempt.packet.generatedAtMs > 300000) {
             throw failure('CONTEXT_CHANGED_BEFORE_SEND', 'Пакет в поле устарел. Уберите этот черновик и обновите контекст.');
           }
-          if (!this.current(generation) || !this.atExpectedChat(project)) return;
+          if (!this.current(generation) || !this.atExpectedChat(project, attempt)) return;
           attempt = { ...attempt, state: 'sending', sendStartedAtMs: this.now() };
           await this.store.updateSession(project.workspace, project.sessionId, { attempt });
           if (this.current(generation)) this.emit({ phase: 'sending', projectInfo: info, messageSent: false });

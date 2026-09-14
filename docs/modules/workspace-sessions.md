@@ -188,3 +188,8 @@ Routing вынесен в `src/chatgpt-experience.mjs`: обычный Chat ст
 ## Production correction — T006 / shared conversation URL
 
 Реальная приёмка 0.6.5 показала Work UI с Astra при URL `/c/<id>`. Production diagnostics зафиксировали последовательность `/work/` → отправка recovery → `/c/<id>`. Storage contract исправлен: schema v4 сохраняет immutable `experience=work`, разрешает Work concrete `/c/<id>` и переживает restart. Legacy inference не меняется: старый `/c/<id>` без persisted experience мигрируется как Chat.
+
+
+## Production correction — T007 / Work provenance guard
+
+Fail-closed теперь действует по фазе lifecycle. До первой отправки unbound Work обязан находиться на `/work/`; обычный Chat URL блокируется до `loadContext()`/send. После того как send уже начат из подтверждённого Work и request marker наблюдается в текущем conversation, переход на shared `/c/<id>` допустим и URL привязывается к persisted `experience=work`. Для уже привязанной session источником истины является exact сохранённый conversation URL; повторно выводить experience из его namespace запрещено.

@@ -533,3 +533,8 @@ T004 final candidate: `npm test` — 95 total, 93 passed, 0 failed, 2 native-Win
 ## Chat / Work sessions — T006 production URL correction
 
 По реальному запуску 0.6.5 подтверждено: Work загружается через `/work/`, но после первой отправки ChatGPT использует `/c/<id>`. Локальная Work session при этом остаётся `experience=work`. Targeted `workspace-session` suite после исправления: 17/17 passed; отдельно проверены сохранение/restart Work с `/c/<id>`, legacy migration `/c/<id>`→Chat и запрет Chat session на явно Work-only URL.
+
+
+## Chat / Work sessions — T007 provenance guard
+
+Targeted `context-session` suite: 13/13 passed. Новый regression воспроизводит production: Work стартует на `/work/`, `onBeforeSend` фиксирует sending, затем URL становится `/c/<id>` при видимом request marker; conversation привязывается как `experience=work`, повторное открытие exact `/c/<id>` остаётся delivered без дополнительного recovery. Отдельный test сохраняет fail-closed для unbound Work на обычном Chat URL. Electron smoke также переведён на shared `/c/<id>` для Work и проходит.

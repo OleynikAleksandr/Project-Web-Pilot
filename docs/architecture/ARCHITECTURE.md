@@ -545,3 +545,8 @@ Release 0.6.5 добавляет persisted `session.experience=chat|work`, first
 ## Work conversation URL correction — scope 011 / T006
 
 Production ChatGPT использует `/work/` только как entrypoint. После создания Work conversation URL становится общим `/c/<id>`, поэтому URL namespace не является владельцем experience. `WorkspaceSessions.experience` остаётся immutable source of truth; shared `/c/<id>` допустим для Work, а старые schema без experience по-прежнему мигрируют `/c/<id>` как Chat.
+
+
+## Work provenance guard — scope 011 / T007
+
+`ContextSession` проверяет experience только пока Work conversation ещё не привязан: `/work/` обязателен до send. После начала send общий `/c/<id>` не считается сменой experience; binding разрешён только если текущая страница содержит request marker именно этой отправки. После binding используется exact conversation URL. Это сохраняет fail-closed до mutation и устраняет ложный mismatch реального Work.
