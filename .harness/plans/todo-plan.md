@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 249,
+  "plan_revision": 250,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-kit-recovery-packet-010",
@@ -82,23 +82,32 @@
   "context_pack": {
     "documents": [
       {
-        "path": "docs/CONTEXT_DELIVERY.md",
+        "path": "docs/architecture/OVERVIEW.md",
         "heading_path": [
-          "Передача контекста"
+          "Краткая архитектура проекта"
         ],
         "required": true,
         "revision": "WORKTREE"
       },
       {
-        "path": "docs/VERIFICATION.md",
+        "path": "docs/modules/workflow-kit-recovery.md",
         "heading_path": [
-          "Проверки и приёмка"
+          "Module Specification — Workflow Kit / Context Recovery"
         ],
         "required": true,
         "revision": "WORKTREE"
+      },
+      {
+        "path": "docs/CONTEXT_DELIVERY.md",
+        "heading_path": [
+          "Передача контекста",
+          "Recovery Capsule v2 — согласованный контракт 14.09.2026"
+        ],
+        "required": false,
+        "revision": "WORKTREE"
       }
     ],
-    "include_last_completed_task": true,
+    "include_last_completed_task": false,
     "dependency_task_ids": []
   },
   "tasks": [
@@ -172,7 +181,7 @@
       "title": "Спроектировать self-healing startup MCP и tunnel",
       "why": "Исключить повторение RUNTIME_FOREIGN_PROCESS, stale PID и конфликтов фиксированных портов при старте приложения; существующую совместимую установку нужно переиспользовать, отсутствующую — автоматически устанавливать и подключать.",
       "dependencies": [
-        "T001"
+        "T005"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -196,6 +205,123 @@
       "commit_ref": {
         "scope_id": "workflow-kit-recovery-packet-010",
         "task_id": "T002",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T003",
+      "title": "Реализовать core Workflow Recovery v2",
+      "why": "Перевести builder и базовые правила Kit с исторического полного контекста на module-centric execution capsule без изменения transport API Web Pilot.",
+      "dependencies": [
+        "T001"
+      ],
+      "functional_paths": [
+        "resources/workflow-kit/WORKFLOW.md",
+        "resources/workflow-kit/lib/plan.mjs",
+        "resources/workflow-kit/lib/recovery.mjs",
+        "resources/workflow-kit/lib/validate.mjs",
+        "resources/workflow-kit/lib/actions.mjs",
+        "resources/workflow-kit/templates/AGENTS.md",
+        "resources/workflow-kit/templates/PLAN.md",
+        "tests/workflow-kit-source.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/workflow-kit-recovery.md",
+        "docs/CONTEXT_DELIVERY.md"
+      ],
+      "acceptance_criteria": [
+        "Recovery передаёт только Workflow Core, текущий plan/task, required context, dependency diffs, current worktree и verification evidence.",
+        "Optional documents становятся reference-only; full WORKFLOW/VERIFICATION не включаются автоматически.",
+        "include_last_completed_task по умолчанию false; прямые task dependencies продолжают включаться.",
+        "Functional scope/create требует required module spec и compact project overview, не ломая продолжение уже существующих legacy scope.",
+        "CONTEXT_TOO_LARGE сообщает крупнейшие секции; effective hard transport budget не превышает 180000 bytes."
+      ],
+      "verification_ids": [],
+      "expected_commit_message": "feat: реализовать Workflow Recovery v2",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "workflow-kit-recovery-packet-010",
+        "task_id": "T003",
+        "role": "implementation"
+      },
+      "file_limit_exception": "Core recovery меняет согласованный набор тесно связанных файлов Workflow Kit и один regression test."
+    },
+    {
+      "id": "T004",
+      "title": "Добавить Workflow Kit 1.2 install/upgrade contract",
+      "why": "Новые проекты должны получать module map/overview сразу, а существующие совместимые 1.1 installations — безопасно обновляться без перезаписи пользовательских документов.",
+      "dependencies": [
+        "T003"
+      ],
+      "functional_paths": [
+        "resources/workflow-kit/lib/common.mjs",
+        "resources/workflow-kit/lib/installation-files.mjs",
+        "resources/workflow-kit/lib/installer.mjs",
+        "resources/workflow-kit/lib/transaction.mjs",
+        "resources/workflow-kit/templates/START.md",
+        "resources/workspace-setup-worker.mjs",
+        "src/ui/workspace-setup.mjs",
+        "tests/workspace-setup.test.mjs",
+        "tests/workflow-kit-source.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/WORKSPACE_SETUP.md",
+        "docs/modules/workflow-kit-recovery.md"
+      ],
+      "acceptance_criteria": [
+        "Fresh install Workflow Kit 1.2 создаёт docs/MODULES.md и docs/architecture/OVERVIEW.md и новый plan template.",
+        "Совместимый неизменённый Kit 1.1 определяется как upgradeable; upgrade заменяет owned runtime, обновляет managed section и создаёт недостающие новые docs, сохраняя пользовательские документы.",
+        "Upgrade фиксируется управляемым kit-update commit и не переписывает активный todo-plan.",
+        "Workspace setup показывает upgrade как отдельное безопасное действие и после него повторно проверяет проект.",
+        "Unsupported/modified installations остаются заблокированными без автоматической перезаписи."
+      ],
+      "verification_ids": [
+        "suite"
+      ],
+      "expected_commit_message": "feat: добавить обновление Workflow Kit 1.2",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "workflow-kit-recovery-packet-010",
+        "task_id": "T004",
+        "role": "implementation"
+      },
+      "file_limit_exception": "Installer/migration, workspace adapter и regression tests образуют одну атомарную compatibility boundary."
+    },
+    {
+      "id": "T005",
+      "title": "Мигрировать Project Web Pilot на Recovery v2 и пересобрать",
+      "why": "Подтвердить новую семантику на реальном активном проекте, синхронизировать установленный Kit, уменьшить recovery и выпустить новую локальную сборку.",
+      "dependencies": [
+        "T004"
+      ],
+      "functional_paths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "documentation_paths": [
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/CONTEXT_DELIVERY.md"
+      ],
+      "acceptance_criteria": [
+        "Текущий Project Web Pilot обновлён до Workflow Kit 1.2 управляемым upgrade без потери plan/history.",
+        "Текущий workflow config hard_bytes согласован с 180000-byte transport limit, а context_pack содержит overview + module spec без full historical VERIFICATION.",
+        "Новый recovery Project Web Pilot существенно меньше старых 118003 bytes и не содержит полный VERIFICATION.md/WORKFLOW.md.",
+        "Полный npm test и Electron smoke проходят после миграции.",
+        "Версия Project Web Pilot обновлена, macOS app пересобрана; общий build contract для Windows не сломан."
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "expected_commit_message": "build: выпустить Project Web Pilot с Recovery v2",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "workflow-kit-recovery-packet-010",
+        "task_id": "T005",
         "role": "implementation"
       }
     }
@@ -233,7 +359,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-kit-recovery-packet-010
 Current Task: нет
-Revision: 249
+Revision: 250
 
 ## Цель
 
@@ -264,10 +390,23 @@ Revision: 249
   - Git Commit: [PENDING] docs: спроектировать self-healing runtime startup
   - Reference: workflow-kit-recovery-packet-010 / T002 / implementation
   - Файлы: docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md
+- [TODO] T003: Реализовать core Workflow Recovery v2 — Ожидает
+  - Git Commit: [PENDING] feat: реализовать Workflow Recovery v2
+  - Reference: workflow-kit-recovery-packet-010 / T003 / implementation
+  - Файлы: resources/workflow-kit/WORKFLOW.md, resources/workflow-kit/lib/plan.mjs, resources/workflow-kit/lib/recovery.mjs, resources/workflow-kit/lib/validate.mjs, resources/workflow-kit/lib/actions.mjs, resources/workflow-kit/templates/AGENTS.md, resources/workflow-kit/templates/PLAN.md, tests/workflow-kit-source.test.mjs, docs/modules/workflow-kit-recovery.md, docs/CONTEXT_DELIVERY.md
+- [TODO] T004: Добавить Workflow Kit 1.2 install/upgrade contract — Ожидает
+  - Git Commit: [PENDING] feat: добавить обновление Workflow Kit 1.2
+  - Reference: workflow-kit-recovery-packet-010 / T004 / implementation
+  - Файлы: resources/workflow-kit/lib/common.mjs, resources/workflow-kit/lib/installation-files.mjs, resources/workflow-kit/lib/installer.mjs, resources/workflow-kit/lib/transaction.mjs, resources/workflow-kit/templates/START.md, resources/workspace-setup-worker.mjs, src/ui/workspace-setup.mjs, tests/workspace-setup.test.mjs, tests/workflow-kit-source.test.mjs, docs/WORKSPACE_SETUP.md, docs/modules/workflow-kit-recovery.md
+- [TODO] T005: Мигрировать Project Web Pilot на Recovery v2 и пересобрать — Ожидает
+  - Git Commit: [PENDING] build: выпустить Project Web Pilot с Recovery v2
+  - Reference: workflow-kit-recovery-packet-010 / T005 / implementation
+  - Файлы: package.json, package-lock.json, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/CONTEXT_DELIVERY.md
 
 ## Context Pack For This Cycle
 
-- docs/CONTEXT_DELIVERY.md → Передача контекста
-- docs/VERIFICATION.md → Проверки и приёмка
+- docs/architecture/OVERVIEW.md → Краткая архитектура проекта
+- docs/modules/workflow-kit-recovery.md → Module Specification — Workflow Kit / Context Recovery
+- docs/CONTEXT_DELIVERY.md → Передача контекста / Recovery Capsule v2 — согласованный контракт 14.09.2026
 
 Служебные состояния меняются только командами workflow. Приёмка не архивирует scope.
