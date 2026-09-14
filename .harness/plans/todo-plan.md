@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 261,
+  "plan_revision": 262,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-kit-recovery-packet-010",
@@ -73,7 +73,8 @@
       "docs/MODULES.md",
       "docs/modules/workflow-kit-recovery.md",
       "docs/architecture/OVERVIEW.md",
-      "docs/WORKSPACE_SETUP.md"
+      "docs/WORKSPACE_SETUP.md",
+      "docs/modules/runtime-lifecycle.md"
     ],
     "max_functional_files_per_task": 20
   },
@@ -90,18 +91,17 @@
         "revision": "WORKTREE"
       },
       {
-        "path": "docs/modules/workflow-kit-recovery.md",
+        "path": "docs/modules/runtime-lifecycle.md",
         "heading_path": [
-          "Module Specification — Workflow Kit / Context Recovery"
+          "Module Specification — Runtime Lifecycle"
         ],
         "required": true,
         "revision": "WORKTREE"
       },
       {
-        "path": "docs/CONTEXT_DELIVERY.md",
+        "path": "docs/architecture/ARCHITECTURE.md",
         "heading_path": [
-          "Передача контекста",
-          "Recovery Capsule v2 — согласованный контракт 14.09.2026"
+          "Архитектура"
         ],
         "required": false,
         "revision": "WORKTREE"
@@ -178,28 +178,28 @@
     },
     {
       "id": "T002",
-      "title": "Спроектировать self-healing startup MCP и tunnel",
-      "why": "Исключить повторение RUNTIME_FOREIGN_PROCESS, stale PID и конфликтов фиксированных портов при старте приложения; существующую совместимую установку нужно переиспользовать, отсутствующую — автоматически устанавливать и подключать.",
+      "title": "Определить module specification self-healing Runtime Lifecycle",
+      "why": "Сначала закрепить контракт process identity, persisted endpoints, adoption/bootstrap и безопасного self-healing; реализация приложения должна опираться на согласованную модульную границу.",
       "dependencies": [
         "T005"
       ],
       "functional_paths": [],
       "documentation_paths": [
+        "docs/MODULES.md",
+        "docs/modules/runtime-lifecycle.md",
         "docs/WORKFLOW_START.md",
-        "docs/architecture/ARCHITECTURE.md"
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/DOCUMENTATION_INDEX.md"
       ],
       "acceptance_criteria": [
-        "Определён persisted runtime registration: приложение запоминает подтверждённые runtime path/version/identity и фактические MCP+tunnel endpoints, а при следующем старте сначала быстро валидирует их вместо полного поиска.",
-        "Если совместимые MCP и tunnel уже установлены и здоровы, приложение переиспользует их; если отсутствуют — bootstrap/install выполняется автоматически для текущей платформы.",
-        "Проверен реальный endpoint-контракт для обоих сервисов: host/IP, локальный port и, где применимо, public tunnel URL; решение не предполагает заранее фиксированные 17842/17843.",
-        "Stale PID/PID reuse и несовпадение process identity распознаются безопасно; чужие процессы не завершаются и не принимаются за собственный runtime.",
-        "Если собственный MCP или tunnel не может стартовать из-за занятого порта, выбирается свободный локальный порт, новый endpoint атомарно передаётся всем зависимым компонентам и сохраняется для следующих запусков.",
-        "Self-healing выполняется молча в штатных случаях; пользователь получает ошибку только если безопасное автоматическое восстановление невозможно.",
-        "Перед реализацией отдельно проверены последствия динамических портов для Secure MCP Tunnel/profile, MCP client, Windows overlay и macOS runtime; секреты tunnel не попадают в Git, чат или диагностику.",
-        "До отдельного согласования пользователя production-код lifecycle/ports не изменяется."
+        "Runtime Lifecycle зарегистрирован отдельным архитектурным модулем и имеет facade/границы ответственности.",
+        "Спецификация определяет persisted registration, stale PID/PID reuse, dynamic loopback endpoints и no-kill policy.",
+        "Определены adoption существующего macOS/Windows runtime и bundled fallback при отсутствии установки.",
+        "Первичная tunnel credential настройка отделена от автоматического штатного self-healing и секреты не попадают в renderer/Git/diagnostics.",
+        "Зафиксированы проверяемые сценарии: stale PID, занятые 17842/17843, повторный startup с сохранёнными endpoints и отсутствие runtime."
       ],
       "verification_ids": [],
-      "expected_commit_message": "docs: спроектировать self-healing runtime startup",
+      "expected_commit_message": "docs: определить self-healing Runtime Lifecycle",
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
@@ -364,7 +364,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-kit-recovery-packet-010
 Current Task: нет
-Revision: 261
+Revision: 262
 
 ## Цель
 
@@ -391,10 +391,10 @@ Revision: 261
   - Git Commit: [DONE] docs: определить Workflow Recovery v2
   - Reference: workflow-kit-recovery-packet-010 / T001 / implementation
   - Файлы: docs/MODULES.md, docs/architecture/OVERVIEW.md, docs/modules/workflow-kit-recovery.md, docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md, docs/DOCUMENTATION_INDEX.md
-- [TODO] T002: Спроектировать self-healing startup MCP и tunnel — Ожидает
-  - Git Commit: [PENDING] docs: спроектировать self-healing runtime startup
+- [TODO] T002: Определить module specification self-healing Runtime Lifecycle — Ожидает
+  - Git Commit: [PENDING] docs: определить self-healing Runtime Lifecycle
   - Reference: workflow-kit-recovery-packet-010 / T002 / implementation
-  - Файлы: docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md
+  - Файлы: docs/MODULES.md, docs/modules/runtime-lifecycle.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md, docs/DOCUMENTATION_INDEX.md
 - [DONE] T003: Реализовать core Workflow Recovery v2 — Завершено
   - Git Commit: [DONE] feat: реализовать Workflow Recovery v2
   - Reference: workflow-kit-recovery-packet-010 / T003 / implementation
@@ -411,7 +411,7 @@ Revision: 261
 ## Context Pack For This Cycle
 
 - docs/architecture/OVERVIEW.md → Краткая архитектура проекта
-- docs/modules/workflow-kit-recovery.md → Module Specification — Workflow Kit / Context Recovery
-- docs/CONTEXT_DELIVERY.md → Передача контекста / Recovery Capsule v2 — согласованный контракт 14.09.2026
+- docs/modules/runtime-lifecycle.md → Module Specification — Runtime Lifecycle
+- docs/architecture/ARCHITECTURE.md → Архитектура
 
 Служебные состояния меняются только командами workflow. Приёмка не архивирует scope.
