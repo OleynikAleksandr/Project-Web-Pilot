@@ -30,7 +30,7 @@ Todo-plan обязан перечислять весь внешний конте
 
 В приложении слева работает локальный workspace/project UI, справа — настоящий ChatGPT Web в изолированном Chromium. Локальные действия агента идут через MCP/tunnel; модельные API приложением не используются. Компактная карта — `docs/architecture/OVERVIEW.md`, владельцы — `docs/MODULES.md`.
 
-Текущая версия приложения — 0.6.5 с Recovery v2, self-healing Runtime Lifecycle и Chat/Work sessions. Workflow Kit — 1.2.0. Детальные исторические проверки остаются в `docs/VERIFICATION.md` и не являются стартовым контекстом.
+Текущая версия приложения — 0.6.6 с Recovery v2, self-healing Runtime Lifecycle и исправленными Chat/Work sessions. Workflow Kit — 1.2.0. Детальные исторические проверки остаются в `docs/VERIFICATION.md` и не являются стартовым контекстом.
 
 ## Служебные команды
 

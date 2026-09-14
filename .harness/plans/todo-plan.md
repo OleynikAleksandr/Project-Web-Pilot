@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 299,
+  "plan_revision": 301,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workspace-chat-work-sessions-011",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Добавить в Workspace & Sessions явный выбор Chat или Work для первой и дополнительных сессий проекта, сохранить experience в session model, перенести создание сессий в меню проекта и открыть выбранный ChatGPT experience без изменения Recovery flow.",
   "acceptance_criteria": [
     "Каждая session имеет persisted experience chat|work и старое хранилище мигрируется без потери данных.",
@@ -352,8 +352,8 @@
         "electron-smoke"
       ],
       "expected_commit_message": "build: выпустить исправление Work sessions",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workspace-chat-work-sessions-011",
         "task_id": "T008",
@@ -381,10 +381,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: workspace-chat-work-sessions-011
 Current Task: нет
-Revision: 299
+Revision: 301
 
 ## Цель
 
@@ -430,8 +430,8 @@ Revision: 299
   - Git Commit: [DONE] fix: сохранить Work provenance после отправки
   - Reference: workspace-chat-work-sessions-011 / T007 / implementation
   - Файлы: src/context-session.mjs, tests/context-session.test.mjs, tests/electron-smoke.mjs, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T008: Собрать исправленный релиз Work sessions — Ожидает
-  - Git Commit: [PENDING] build: выпустить исправление Work sessions
+- [DONE] T008: Собрать исправленный релиз Work sessions — Завершено
+  - Git Commit: [DONE] build: выпустить исправление Work sessions
   - Reference: workspace-chat-work-sessions-011 / T008 / implementation
   - Файлы: package.json, package-lock.json, docs/WORKFLOW_START.md, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 

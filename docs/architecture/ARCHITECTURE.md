@@ -550,3 +550,8 @@ Production ChatGPT использует `/work/` только как entrypoint.
 ## Work provenance guard — scope 011 / T007
 
 `ContextSession` проверяет experience только пока Work conversation ещё не привязан: `/work/` обязателен до send. После начала send общий `/c/<id>` не считается сменой experience; binding разрешён только если текущая страница содержит request marker именно этой отправки. После binding используется exact conversation URL. Это сохраняет fail-closed до mutation и устраняет ложный mismatch реального Work.
+
+
+## Project Web Pilot 0.6.6 — Work shared URL fix
+
+Patch release 0.6.6 корректирует Workspace & Sessions для фактического production routing ChatGPT Work: `/work/` является entrypoint, а created conversation использует общий `/c/<id>`. Experience хранится локально и после binding подтверждается exact URL + request-marker provenance, а не namespace.

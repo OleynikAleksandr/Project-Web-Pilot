@@ -193,3 +193,8 @@ Routing вынесен в `src/chatgpt-experience.mjs`: обычный Chat ст
 ## Production correction — T007 / Work provenance guard
 
 Fail-closed теперь действует по фазе lifecycle. До первой отправки unbound Work обязан находиться на `/work/`; обычный Chat URL блокируется до `loadContext()`/send. После того как send уже начат из подтверждённого Work и request marker наблюдается в текущем conversation, переход на shared `/c/<id>` допустим и URL привязывается к persisted `experience=work`. Для уже привязанной session источником истины является exact сохранённый conversation URL; повторно выводить experience из его namespace запрещено.
+
+
+## Release integration — T008 / Project Web Pilot 0.6.6
+
+Patch release 0.6.6 исправляет production mismatch Work после перехода `/work/` → shared `/c/<id>`. Persisted `experience=work` сохраняется, binding требует observed request marker, а до первой отправки Work entrypoint остаётся fail-closed. Финальная ручная проверка реального аккаунта остаётся пользователю.
