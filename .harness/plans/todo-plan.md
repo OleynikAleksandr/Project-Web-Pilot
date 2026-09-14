@@ -4,22 +4,21 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 264,
+  "plan_revision": 265,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-kit-recovery-packet-010",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
-  "objective": "Перевести Workflow Kit на module-centric Recovery v2: перед функциональным scope определять владельца функционала, сначала согласовывать module specification, затем выполнять todo-plan; новая сессия/refresh/compact получают компактный execution capsule из Workflow Core, project overview, module spec, текущего плана, прямых dependency diffs, текущих изменений и релевантных проверок. После этого отдельно спроектировать self-healing lifecycle MCP+tunnel.",
+  "delivery_status": "IN_PROGRESS",
+  "objective": "Интегрировать self-healing Runtime Lifecycle для MCP+tunnel на macOS и Windows: безопасное переиспользование/установка runtime, stale PID recovery, persisted dynamic endpoints и автоматический startup без остановки чужих процессов.",
   "acceptance_criteria": [
-    "Новый функциональный scope опирается на зарегистрированный архитектурный модуль и согласованную module specification до реализации.",
-    "Recovery не включает полный WORKFLOW.md, исторический VERIFICATION.md или последний commit только потому, что он последний.",
-    "Recovery включает компактный Workflow Core, project overview, module spec/required task context, прямые dependency diffs, текущий worktree и релевантные verification evidence.",
-    "include_last_completed_task по умолчанию false; optional documents являются ссылками, а не автоматическим payload.",
-    "Hard budget Workflow Kit согласован с транспортным лимитом Web Pilot 180000 UTF-8 bytes; soft budget служит целевым сигналом компактности.",
-    "Workflow Kit 1.2 устанавливает module map и compact overview для новых проектов и безопасно обновляет совместимые 1.1 installations без перезаписи пользовательских документов.",
-    "Project Web Pilot использует обновлённый Kit, проходит test/smoke и пересобирается для macOS; Windows package остаётся собираемым из той же кодовой базы.",
-    "Следующая отдельная задача сохраняет ранее согласованное проектирование self-healing MCP+tunnel."
+    "Runtime Lifecycle specification является канонической границей MCP/tunnel startup.",
+    "Existing compatible runtime переиспользуется; отсутствующий macOS runtime получает bundled bootstrap.",
+    "Stale PID/PID reuse восстанавливается молча без signal чужому процессу.",
+    "Занятые preferred ports автоматически заменяются свободными persisted endpoints; Web Pilot использует фактический status.mcp_url.",
+    "Tunnel credentials остаются в private runtime state и не попадают в renderer/Git/diagnostics.",
+    "Одинаковый lifecycle contract покрыт regression tests на macOS и Windows.",
+    "Полный test/smoke/build проходит и обе platform packages пересобраны."
   ],
   "approved_scope": {
     "functional_paths": [
@@ -62,7 +61,23 @@
       "resources/workflow-kit/lib/actions.mjs",
       "resources/workflow-kit/lib/transaction.mjs",
       "package.json",
-      "package-lock.json"
+      "package-lock.json",
+      "src/mac-runtime.mjs",
+      "src/mcp-runtime.mjs",
+      "src/platform.mjs",
+      "src/windows-runtime.mjs",
+      "tests/mac-runtime.test.mjs",
+      "tests/mcp-runtime.test.mjs",
+      "tests/windows-runtime.test.mjs",
+      "resources/runtime-control/mac-control.py",
+      "resources/runtime-control/windows-control.py",
+      "resources/mac-runtime/requirements.txt",
+      "resources/mac-runtime/mcp/bridge_mcp.py",
+      "resources/mac-runtime/server/bridge_server.py",
+      "resources/mac-runtime/server/codex_local_runtime.py",
+      "resources/mac-runtime/server/macos_computer.py",
+      "resources/mac-runtime/server/context_packet.py",
+      "resources/mac-runtime/skills/local-computer/SKILL.md"
     ],
     "documentation_paths": [
       "docs/CONTEXT_DELIVERY.md",
@@ -329,6 +344,161 @@
         "task_id": "T005",
         "role": "implementation"
       }
+    },
+    {
+      "id": "T006",
+      "title": "Реализовать self-healing runtime control v2 на macOS",
+      "why": "Runtime должен сам безопасно очищать stale PID и владеть persisted dynamic endpoints.",
+      "dependencies": [
+        "T002"
+      ],
+      "functional_paths": [
+        "resources/runtime-control/mac-control.py",
+        "resources/mac-runtime/requirements.txt",
+        "resources/mac-runtime/mcp/bridge_mcp.py",
+        "resources/mac-runtime/server/bridge_server.py",
+        "resources/mac-runtime/server/codex_local_runtime.py",
+        "resources/mac-runtime/server/macos_computer.py",
+        "resources/mac-runtime/server/context_packet.py",
+        "resources/mac-runtime/skills/local-computer/SKILL.md",
+        "tests/mac-runtime.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/runtime-lifecycle.md",
+        "docs/VERIFICATION.md"
+      ],
+      "acceptance_criteria": [
+        "Known legacy Mac control может быть заменён versioned lifecycle control без доступа к secret state.",
+        "Stale PID identity mismatch очищается без signal чужому PID.",
+        "Занятые preferred MCP/tunnel ports приводят к выбору и сохранению свободных loopback ports.",
+        "Bridge config и существующий tunnel profile согласованно получают новые endpoints без изменения tunnel credentials.",
+        "Повторный status/start использует persisted endpoints."
+      ],
+      "verification_ids": [],
+      "expected_commit_message": "feat: добавить self-healing Mac runtime control",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "workflow-kit-recovery-packet-010",
+        "task_id": "T006",
+        "role": "implementation"
+      },
+      "file_limit_exception": "Runtime lifecycle изменяет тесно связанный cross-platform control/bootstrap contract."
+    },
+    {
+      "id": "T007",
+      "title": "Интегрировать Mac runtime bootstrap и persisted registration в Web Pilot",
+      "why": "Приложение должно автоматически adopt/install/ensure runtime без ручного выбора папки при штатном запуске.",
+      "dependencies": [
+        "T006"
+      ],
+      "functional_paths": [
+        "src/mac-runtime.mjs",
+        "src/mcp-runtime.mjs",
+        "src/platform.mjs",
+        "src/main.mjs",
+        "tests/mcp-runtime.test.mjs",
+        "tests/mac-runtime.test.mjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/runtime-lifecycle.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "acceptance_criteria": [
+        "Persisted runtime registration валидируется через status и не считается источником истины.",
+        "Known external Mac runtime автоматически получает lifecycle overlay и сохраняет private tunnel state.",
+        "При отсутствии external runtime bundled source разворачивается в userData/runtime и запускается setup.",
+        "McpRuntime принимает фактический dynamic mcp_url и больше не останавливается на stale PID как RUNTIME_FOREIGN_PROCESS.",
+        "Штатный self-heal не показывает startup error."
+      ],
+      "verification_ids": [
+        "runtime",
+        "suite",
+        "electron-smoke"
+      ],
+      "expected_commit_message": "feat: интегрировать self-healing Mac runtime",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "workflow-kit-recovery-packet-010",
+        "task_id": "T007",
+        "role": "implementation"
+      },
+      "file_limit_exception": "Runtime lifecycle изменяет тесно связанный cross-platform control/bootstrap contract."
+    },
+    {
+      "id": "T008",
+      "title": "Расширить Windows runtime тем же self-healing contract",
+      "why": "Windows external/bundled lifecycle должен иметь тот же stale-PID/no-kill/dynamic-endpoint contract.",
+      "dependencies": [
+        "T006"
+      ],
+      "functional_paths": [
+        "resources/runtime-control/windows-control.py",
+        "src/windows-runtime.mjs",
+        "tests/windows-runtime.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/runtime-lifecycle.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "acceptance_criteria": [
+        "Known Windows control snapshot получает versioned lifecycle overlay.",
+        "Stale PID record не блокирует startup и не приводит к остановке foreign process.",
+        "Occupied preferred ports приводят к persisted dynamic endpoints и обновлению profile/config.",
+        "External adoption и bundled fallback сохраняются; unknown modified control не перезаписывается."
+      ],
+      "verification_ids": [
+        "suite"
+      ],
+      "expected_commit_message": "feat: добавить self-healing Windows runtime",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "workflow-kit-recovery-packet-010",
+        "task_id": "T008",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T009",
+      "title": "Проверить и выпустить self-healing runtime release",
+      "why": "Подтвердить полный macOS/Windows build и фактический startup на текущем Mac.",
+      "dependencies": [
+        "T007",
+        "T008"
+      ],
+      "functional_paths": [
+        "package.json",
+        "package-lock.json",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/modules/runtime-lifecycle.md"
+      ],
+      "acceptance_criteria": [
+        "На текущем Mac existing runtime проходит real ensure/status после overlay и использует сохранённый tunnel config.",
+        "npm test и Electron smoke проходят.",
+        "Общий npm run build создаёт macOS и Windows packages и Windows verifier проходит.",
+        "Git working tree чистый; release опубликован в общий main."
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "expected_commit_message": "build: выпустить self-healing runtime startup",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "workflow-kit-recovery-packet-010",
+        "task_id": "T009",
+        "role": "implementation"
+      }
     }
   ],
   "blocked_reason": null,
@@ -361,25 +531,24 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: workflow-kit-recovery-packet-010
 Current Task: нет
-Revision: 264
+Revision: 265
 
 ## Цель
 
-Перевести Workflow Kit на module-centric Recovery v2: перед функциональным scope определять владельца функционала, сначала согласовывать module specification, затем выполнять todo-plan; новая сессия/refresh/compact получают компактный execution capsule из Workflow Core, project overview, module spec, текущего плана, прямых dependency diffs, текущих изменений и релевантных проверок. После этого отдельно спроектировать self-healing lifecycle MCP+tunnel.
+Интегрировать self-healing Runtime Lifecycle для MCP+tunnel на macOS и Windows: безопасное переиспользование/установка runtime, stale PID recovery, persisted dynamic endpoints и автоматический startup без остановки чужих процессов.
 
 ## Критерии приёмки
 
-- Новый функциональный scope опирается на зарегистрированный архитектурный модуль и согласованную module specification до реализации.
-- Recovery не включает полный WORKFLOW.md, исторический VERIFICATION.md или последний commit только потому, что он последний.
-- Recovery включает компактный Workflow Core, project overview, module spec/required task context, прямые dependency diffs, текущий worktree и релевантные verification evidence.
-- include_last_completed_task по умолчанию false; optional documents являются ссылками, а не автоматическим payload.
-- Hard budget Workflow Kit согласован с транспортным лимитом Web Pilot 180000 UTF-8 bytes; soft budget служит целевым сигналом компактности.
-- Workflow Kit 1.2 устанавливает module map и compact overview для новых проектов и безопасно обновляет совместимые 1.1 installations без перезаписи пользовательских документов.
-- Project Web Pilot использует обновлённый Kit, проходит test/smoke и пересобирается для macOS; Windows package остаётся собираемым из той же кодовой базы.
-- Следующая отдельная задача сохраняет ранее согласованное проектирование self-healing MCP+tunnel.
+- Runtime Lifecycle specification является канонической границей MCP/tunnel startup.
+- Existing compatible runtime переиспользуется; отсутствующий macOS runtime получает bundled bootstrap.
+- Stale PID/PID reuse восстанавливается молча без signal чужому процессу.
+- Занятые preferred ports автоматически заменяются свободными persisted endpoints; Web Pilot использует фактический status.mcp_url.
+- Tunnel credentials остаются в private runtime state и не попадают в renderer/Git/diagnostics.
+- Одинаковый lifecycle contract покрыт regression tests на macOS и Windows.
+- Полный test/smoke/build проходит и обе platform packages пересобраны.
 
 ## Микрозадачи
 
@@ -407,6 +576,22 @@ Revision: 264
   - Git Commit: [DONE] build: выпустить Project Web Pilot с Recovery v2
   - Reference: workflow-kit-recovery-packet-010 / T005 / implementation
   - Файлы: package.json, package-lock.json, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md
+- [TODO] T006: Реализовать self-healing runtime control v2 на macOS — Ожидает
+  - Git Commit: [PENDING] feat: добавить self-healing Mac runtime control
+  - Reference: workflow-kit-recovery-packet-010 / T006 / implementation
+  - Файлы: resources/runtime-control/mac-control.py, resources/mac-runtime/requirements.txt, resources/mac-runtime/mcp/bridge_mcp.py, resources/mac-runtime/server/bridge_server.py, resources/mac-runtime/server/codex_local_runtime.py, resources/mac-runtime/server/macos_computer.py, resources/mac-runtime/server/context_packet.py, resources/mac-runtime/skills/local-computer/SKILL.md, tests/mac-runtime.test.mjs, docs/modules/runtime-lifecycle.md, docs/VERIFICATION.md
+- [TODO] T007: Интегрировать Mac runtime bootstrap и persisted registration в Web Pilot — Ожидает
+  - Git Commit: [PENDING] feat: интегрировать self-healing Mac runtime
+  - Reference: workflow-kit-recovery-packet-010 / T007 / implementation
+  - Файлы: src/mac-runtime.mjs, src/mcp-runtime.mjs, src/platform.mjs, src/main.mjs, tests/mcp-runtime.test.mjs, tests/mac-runtime.test.mjs, tests/electron-smoke.mjs, docs/modules/runtime-lifecycle.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+- [TODO] T008: Расширить Windows runtime тем же self-healing contract — Ожидает
+  - Git Commit: [PENDING] feat: добавить self-healing Windows runtime
+  - Reference: workflow-kit-recovery-packet-010 / T008 / implementation
+  - Файлы: resources/runtime-control/windows-control.py, src/windows-runtime.mjs, tests/windows-runtime.test.mjs, docs/modules/runtime-lifecycle.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+- [TODO] T009: Проверить и выпустить self-healing runtime release — Ожидает
+  - Git Commit: [PENDING] build: выпустить self-healing runtime startup
+  - Reference: workflow-kit-recovery-packet-010 / T009 / implementation
+  - Файлы: package.json, package-lock.json, tests/electron-smoke.mjs, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/modules/runtime-lifecycle.md
 
 ## Context Pack For This Cycle
 
