@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 239,
+  "plan_revision": 240,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-kit-recovery-packet-010",
@@ -19,11 +19,15 @@
     "До отдельного согласования пользователя код, budget и recovery semantics не изменяются."
   ],
   "approved_scope": {
-    "functional_paths": [],
+    "functional_paths": [
+      "src/main.mjs",
+      "tests/electron-smoke.mjs"
+    ],
     "documentation_paths": [
       "docs/CONTEXT_DELIVERY.md",
       "docs/VERIFICATION.md",
-      "docs/WORKFLOW_START.md"
+      "docs/WORKFLOW_START.md",
+      "docs/architecture/ARCHITECTURE.md"
     ],
     "max_functional_files_per_task": 3
   },
@@ -53,7 +57,41 @@
   },
   "tasks": [
     {
+      "id": "T000",
+      "title": "Ограничить clipboard-write основным ChatGPT WebContents",
+      "why": "Пользователь согласовал более строгий вариант: штатное копирование должно работать только из основного встроенного ChatGPT, без права чтения clipboard и без доступа для popup/дочерних WebContents.",
       "dependencies": [],
+      "functional_paths": [
+        "src/main.mjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "docs/VERIFICATION.md",
+        "docs/architecture/ARCHITECTURE.md"
+      ],
+      "acceptance_criteria": [
+        "clipboard-sanitized-write разрешён только точному https://chatgpt.com и только основному правому WebContents ChatGPT.",
+        "clipboard-read и clipboard write для popup/других WebContents/origin остаются запрещены.",
+        "Electron smoke подтверждает фактическую запись из основного WebContents и policy deny для чужого WebContents.",
+        "Полный npm test и smoke проходят."
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "expected_commit_message": "fix: ограничить clipboard write основным ChatGPT",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "workflow-kit-recovery-packet-010",
+        "task_id": "T000",
+        "role": "implementation"
+      }
+    },
+    {
+      "dependencies": [
+        "T000"
+      ],
       "functional_paths": [],
       "documentation_paths": [
         "docs/CONTEXT_DELIVERY.md",
@@ -86,6 +124,11 @@
       "id": "a005eb9f-1da7-4b83-b70e-d6809403b836",
       "text": "14.09.2026 пользователь после закрытия объединяющего macOS/Windows scope прямо поручил начать новый план по Workflow Kit, сосредоточенный на том, как Kit упаковывает состояние проекта для передачи агенту.",
       "recorded_at": "2026-09-14T06:09:04.364Z"
+    },
+    {
+      "id": "clipboard-primary-webcontents-20260914",
+      "text": "14.09.2026 пользователь согласовал строгую clipboard-policy: разрешить sanitized write только основному встроенному ChatGPT WebContents и точному origin chatgpt.com, не разрешая чтение clipboard и popup/дочерним WebContents. После этого перейти к обсуждению recovery budget.",
+      "recorded_at": "2026-09-14T06:13:23+02:00"
     }
   ]
 }
@@ -98,7 +141,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-kit-recovery-packet-010
 Current Task: нет
-Revision: 239
+Revision: 240
 
 ## Цель
 
@@ -114,6 +157,10 @@ Revision: 239
 
 ## Микрозадачи
 
+- [TODO] T000: Ограничить clipboard-write основным ChatGPT WebContents — Ожидает
+  - Git Commit: [PENDING] fix: ограничить clipboard write основным ChatGPT
+  - Reference: workflow-kit-recovery-packet-010 / T000 / implementation
+  - Файлы: src/main.mjs, tests/electron-smoke.mjs, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 - [TODO] T001: Разобрать состав и budget recovery-пакета — Ожидает
   - Git Commit: [PENDING] docs: разобрать recovery budget Workflow Kit
   - Reference: workflow-kit-recovery-packet-010 / T001 / implementation
