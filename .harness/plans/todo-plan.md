@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 258,
+  "plan_revision": 259,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-kit-recovery-packet-010",
@@ -307,7 +307,8 @@
       "documentation_paths": [
         "docs/VERIFICATION.md",
         "docs/WORKFLOW_START.md",
-        "docs/CONTEXT_DELIVERY.md"
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/architecture/ARCHITECTURE.md"
       ],
       "acceptance_criteria": [
         "Текущий Project Web Pilot обновлён до Workflow Kit 1.2 управляемым upgrade без потери plan/history.",
@@ -363,7 +364,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-kit-recovery-packet-010
 Current Task: нет
-Revision: 258
+Revision: 259
 
 ## Цель
 
@@ -405,7 +406,7 @@ Revision: 258
 - [TODO] T005: Мигрировать Project Web Pilot на Recovery v2 и пересобрать — Ожидает
   - Git Commit: [PENDING] build: выпустить Project Web Pilot с Recovery v2
   - Reference: workflow-kit-recovery-packet-010 / T005 / implementation
-  - Файлы: package.json, package-lock.json, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/CONTEXT_DELIVERY.md
+  - Файлы: package.json, package-lock.json, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md
 
 ## Context Pack For This Cycle
 
