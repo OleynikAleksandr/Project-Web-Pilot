@@ -580,3 +580,7 @@ Electron smoke проверяет полный session archive flow: Chat sessio
 - macOS app.asar SHA-256: ebd81be350d077eb164f1c7f18527280270c0f91a402850953a91be26177826e.
 - Windows app.asar SHA-256: 95738c6adcf0e8e844f4fd6e245038cd161d5449aedfd618d840e917012eab92.
 - Финальные назначенные checks для T014 фиксирует workflow commit. Ручная проверка нового Chat в реальном аккаунте и native Windows acceptance остаются пользователю. Уже созданный в неправильном режиме облачный разговор автоматически не конвертируется.
+
+## Scope 012 / T002 — tiktoken и session storage
+
+node --test tests/session-tokens.test.mjs: 5 проверок пройдены. Проверены известный BPE-вектор hello world = 2, замена streaming текста без удвоения, повторное чтение/выгрузка DOM, кириллица/код/литеральные special tokens, исключение draft/buttons, вложенные DOM-селекторы, отдельный worker и сохранение/restore/delete сессии. Устаревшие записи после переключения и несовпадающий conversation URL отклоняются. npm install js-tiktoken@1.0.21 завершён; production dependency и lock сохранены. Полный suite назначен обязательным gate этой микрозадачи.

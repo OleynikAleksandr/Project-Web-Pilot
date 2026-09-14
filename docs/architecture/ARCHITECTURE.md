@@ -593,3 +593,7 @@ Production diagnostics 14.09.2026 17:52:57–17:53:08 UTC: новый Chat за�
 Patch 0.6.8 подтверждает фактический Chat/Work через нативный переключатель до первого recovery. Новый Chat после Work открывается с явно выбранным Chat; модель не фиксируется. Временный URL /c/WEB:<uuid> ожидает permanent URL без ложного mismatch и повторной отправки. Уже существующие привязки и пользовательские черновики сохраняются.
 
 macOS arm64 и Windows x64 packages пересобираются из одного исходного дерева. Реальная проверка нового Chat/Work остаётся пользователю; scope остаётся ACTIVE/READY_FOR_ACCEPTANCE после обязательных checks.
+
+## Session token estimate — scope 012 / T002
+
+Workspace & Sessions использует src/session-tokens.mjs и js-tiktoken 1.0.21 (pure JS, o200k_base из установленного пакета). Токенизация исполняется в одном worker_threads worker вне Electron main thread. DOM reader читает только user/assistant message elements с устойчивым message/turn ID, удаляет UI controls и не трогает composer/сеть. Неизменённые тексты пропускаются по SHA-256; новая версия того же message ID заменяет количество. Локальная schema v5 допускает optional tokenEstimate; старые записи без поля остаются читаемыми. Record содержит encoding, total, updatedAt и таблицу ID → digest/tokens, без копии текста. Guard записи проверяет выбранную session и exact chatUrl. Оценка включает ранее прочитанные сообщения, даже если DOM их выгрузил; не измеряет серверный контекст.

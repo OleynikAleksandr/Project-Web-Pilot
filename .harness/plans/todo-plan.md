@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 321,
+  "plan_revision": 323,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "next-modifications-discussion-012",
@@ -109,8 +109,8 @@
         "Неизвестное количество отличается от нуля; текст сообщений не сохраняется счётчиком."
       ],
       "expected_commit_message": "feat: считать и сохранять токены сессий через tiktoken",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "next-modifications-discussion-012",
         "task_id": "T002",
@@ -214,7 +214,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: next-modifications-discussion-012
 Current Task: нет
-Revision: 321
+Revision: 323
 
 ## Цель
 
@@ -232,8 +232,8 @@ Revision: 321
   - Git Commit: [DONE] docs: согласовать следующую модификацию Web Pilot
   - Reference: next-modifications-discussion-012 / T001 / implementation
   - Файлы: docs/DECISIONS.md, docs/modules/workspace-sessions.md
-- [TODO] T002: Добавить tiktoken, подсчёт и сохранение оценки по сессиям — Ожидает
-  - Git Commit: [PENDING] feat: считать и сохранять токены сессий через tiktoken
+- [DONE] T002: Добавить tiktoken, подсчёт и сохранение оценки по сессиям — Завершено
+  - Git Commit: [DONE] feat: считать и сохранять токены сессий через tiktoken
   - Reference: next-modifications-discussion-012 / T002 / implementation
   - Файлы: src/session-tokens.mjs, src/workspace-session.mjs, package.json, package-lock.json, tests/session-tokens.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/workspace-sessions.md
 - [TODO] T003: Подключить счётчик к открытому чату и нижнему правому углу сессии — Ожидает
