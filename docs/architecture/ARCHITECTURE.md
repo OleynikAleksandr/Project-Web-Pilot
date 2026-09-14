@@ -516,3 +516,7 @@ Windows build-preflight сначала может переиспользоват
 ## Runtime Lifecycle self-healing — scope 010 / T002
 
 Архитектурный владелец локальных MCP/tunnel выделен в `docs/modules/runtime-lifecycle.md`. Web Pilot использует facade `ensure()`, а runtime владеет process identity и фактическими loopback endpoints. Stale PID record при identity mismatch очищается без signal чужому PID. Порты 17842/17843 остаются только предпочтительными: занятый чужой listener приводит к выбору свободного local port и согласованному обновлению bridge config/tunnel profile. Existing compatible runtime переиспользуется; при отсутствии runtime используется bundled bootstrap. Tunnel credentials остаются только в private runtime state и не возвращаются renderer.
+
+## Self-healing Mac bootstrap — scope 010 / T007
+
+`MacRuntimeBootstrap` валидирует persisted registration и known external source, но не переписывает внешний runtime. Versioned control-v2 выполняется как adapter через Python внешней установки и получает runtime root только через process environment. При отсутствии совместимой external установки bundled Mac source разворачивается в writable userData runtime. `McpRuntime` кэширует успешный bootstrap на экземпляр и всегда строит client по фактическому `status.mcp_url`; первая установка без tunnel credentials поднимает MCP-only и затем запрашивает только одноразовую локальную настройку tunnel.

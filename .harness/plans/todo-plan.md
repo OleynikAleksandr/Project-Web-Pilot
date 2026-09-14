@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 270,
+  "plan_revision": 273,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-kit-recovery-packet-010",
@@ -397,7 +397,8 @@
         "src/main.mjs",
         "tests/mcp-runtime.test.mjs",
         "tests/mac-runtime.test.mjs",
-        "tests/electron-smoke.mjs"
+        "tests/electron-smoke.mjs",
+        "resources/runtime-control/mac-control.py"
       ],
       "documentation_paths": [
         "docs/modules/runtime-lifecycle.md",
@@ -417,8 +418,8 @@
         "electron-smoke"
       ],
       "expected_commit_message": "feat: интегрировать self-healing Mac runtime",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workflow-kit-recovery-packet-010",
         "task_id": "T007",
@@ -532,7 +533,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-kit-recovery-packet-010
 Current Task: нет
-Revision: 270
+Revision: 273
 
 ## Цель
 
@@ -578,10 +579,10 @@ Revision: 270
   - Git Commit: [DONE] feat: добавить self-healing Mac runtime control
   - Reference: workflow-kit-recovery-packet-010 / T006 / implementation
   - Файлы: resources/runtime-control/mac-control.py, resources/mac-runtime.zip, tests/mac-runtime.test.mjs, docs/modules/runtime-lifecycle.md, docs/VERIFICATION.md
-- [TODO] T007: Интегрировать Mac runtime bootstrap и persisted registration в Web Pilot — Ожидает
-  - Git Commit: [PENDING] feat: интегрировать self-healing Mac runtime
+- [DONE] T007: Интегрировать Mac runtime bootstrap и persisted registration в Web Pilot — Завершено
+  - Git Commit: [DONE] feat: интегрировать self-healing Mac runtime
   - Reference: workflow-kit-recovery-packet-010 / T007 / implementation
-  - Файлы: src/mac-runtime.mjs, src/mcp-runtime.mjs, src/platform.mjs, src/main.mjs, tests/mcp-runtime.test.mjs, tests/mac-runtime.test.mjs, tests/electron-smoke.mjs, docs/modules/runtime-lifecycle.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+  - Файлы: src/mac-runtime.mjs, src/mcp-runtime.mjs, src/platform.mjs, src/main.mjs, tests/mcp-runtime.test.mjs, tests/mac-runtime.test.mjs, tests/electron-smoke.mjs, resources/runtime-control/mac-control.py, docs/modules/runtime-lifecycle.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T008: Расширить Windows runtime тем же self-healing contract — Ожидает
   - Git Commit: [PENDING] feat: добавить self-healing Windows runtime
   - Reference: workflow-kit-recovery-packet-010 / T008 / implementation

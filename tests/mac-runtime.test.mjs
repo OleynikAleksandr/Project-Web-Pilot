@@ -46,3 +46,39 @@ test('Mac runtime moves occupied preferred ports and preserves tunnel profile id
  const second=JSON.parse((await run()).stdout); assert.deepEqual(second,first,'persisted dynamic endpoints are reused on next startup');
  const status=JSON.parse((await py(state)).stdout); assert.equal(status.mcp_url,`http://127.0.0.1:${first.mcp_port}/mcp`); assert.equal(status.endpoints.tunnel_port,first.tunnel_port);
 });
+
+import { createHash } from 'node:crypto';
+import { MacRuntimeBootstrap } from '../src/mac-runtime.mjs';
+
+const sha=value=>createHash('sha256').update(value).digest('hex');
+
+test('Mac bootstrap adopts known external runtime through adapter without modifying source',async t=>{
+ const root=await fs.mkdtemp(path.join(os.tmpdir(),'web-pilot-mac-adopt-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+ const external=path.join(root,'external');await fs.mkdir(path.join(external,'.venv','bin'),{recursive:true});
+ const legacy='legacy-known-control\n';await fs.writeFile(path.join(external,'control.py'),legacy);await fs.writeFile(path.join(external,'.venv','bin','python3'),'fixture');
+ const calls=[];const execute=async(file,args)=>{calls.push({file,args:[...args]});return {stdout:JSON.stringify({runtime_contract:2,package_root:external,mcp:{running:false,owned:false,ready:false},tunnel:{running:false,owned:false,ready:false,configured:true},mcp_url:'http://127.0.0.1:19001/mcp',tunnel_ui:'http://127.0.0.1:19002/ui',endpoints:{mcp_port:19001,tunnel_port:19002}})};};
+ const b=new MacRuntimeBootstrap({payloadFile:path.join(root,'missing.zip'),controlSourceFile:control,dataDir:path.join(root,'data'),preferredFolder:external,defaultFolder:null,execute,platform:'darwin',legacyControlHashes:[sha(legacy)]});
+ const result=await b.ensure('/tmp');assert.equal(result.source,'external');assert.equal(result.reused,true);assert.equal(result.service.runtime_contract,2);
+ assert.equal(result.control,control);assert.equal(await fs.readFile(path.join(external,'control.py'),'utf8'),legacy,'external source stays untouched');
+ await assert.rejects(fs.stat(path.join(external,'.web-pilot-backups')),{code:'ENOENT'});
+ const statusCall=calls.find(c=>c.args.at(-1)==='status');assert.equal(statusCall.args[1],control);assert.ok(!calls.some(c=>c.args.includes('setup')));
+});
+
+test('Mac bootstrap installs bundled payload when no external runtime exists',async t=>{
+ const root=await fs.mkdtemp(path.join(os.tmpdir(),'web-pilot-mac-install-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+ const payload=path.join(root,'payload.zip');await fs.writeFile(payload,'fake-zip');const data=path.join(root,'data');const fakeUv=path.join(root,'uv');await fs.writeFile(fakeUv,'fixture');
+ const calls=[];const execute=async(file,args,options={})=>{
+  calls.push({file,args:[...args]});
+  if(file==='/usr/bin/ditto'){
+   const dest=args.at(-1),folder=path.join(dest,'Codex-Local-Mac');await fs.mkdir(folder,{recursive:true});await fs.writeFile(path.join(folder,'control.py'),await fs.readFile(control));await fs.writeFile(path.join(folder,'requirements.txt'),'mcp\n');return {stdout:''};
+  }
+  if(file===fakeUv&&args[0]==='venv'){const venv=args.at(-1);await fs.mkdir(path.join(venv,'bin'),{recursive:true});await fs.writeFile(path.join(venv,'bin','python3'),'fixture');return {stdout:''};}
+  if(args.includes('setup'))return {stdout:JSON.stringify({installed:true})};
+  if(args.at(-1)==='status'){const folder=path.dirname(args[1]);return {stdout:JSON.stringify({runtime_contract:2,package_root:folder,mcp:{running:false,owned:false,ready:false},tunnel:{running:false,owned:false,ready:false,configured:false},mcp_url:'http://127.0.0.1:17842/mcp',tunnel_ui:'http://127.0.0.1:17843/ui',endpoints:{mcp_port:17842,tunnel_port:17843}})};}
+  throw new Error('unexpected '+file+' '+args.join(' '));
+ };
+ const b=new MacRuntimeBootstrap({payloadFile:payload,controlSourceFile:control,dataDir:data,preferredFolder:null,defaultFolder:null,execute,environment:{WEB_PILOT_UV:fakeUv},platform:'darwin'});
+ const result=await b.ensure('/tmp');assert.equal(result.source,'bundled');assert.equal(result.reused,false);assert.equal(result.installed,true);
+ assert.ok(calls.some(c=>c.file==='/usr/bin/ditto'));assert.ok(calls.some(c=>c.file===fakeUv&&c.args[0]==='venv'));assert.ok(calls.some(c=>c.args.includes('setup')));
+ const marker=JSON.parse(await fs.readFile(path.join(data,'runtime','mac-runtime.json'),'utf8'));assert.equal(marker.schemaVersion,1);
+});

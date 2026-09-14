@@ -488,3 +488,7 @@ Unit test фиксирует Node.js 22.17.0 win-x64 archive name/SHA, expected 
 ## Self-healing Runtime Lifecycle — T006 macOS control
 
 Добавлен runtime contract v2 для macOS. Изолированный regression создаёт stale PID record с PID живого Node-процесса и неверной identity: `status` удаляет только record, возвращает `stale_cleaned=true` и не сигналит процесс. Второй regression занимает два persisted preferred loopback ports foreign listeners: `reconcile_endpoints()` выбирает другие ports, сохраняет их в private runtime state, обновляет `bridge_config.json.port` и tunnel profile health/MCP URL, сохраняя tunnel ID и env-key reference; повторный вызов использует те же persisted endpoints.
+
+## Self-healing Runtime Lifecycle — T007 Web Pilot/macOS integration
+
+Targeted runtime tests: 14/14 passed (Mac control/bootstrap + McpRuntime). Полный `npm test`: 87 total, 85 passed, 0 failed, 2 Windows-only skipped; Electron smoke passed. Реальная read-only проверка текущего внешнего Codex Local Mac через Web Pilot adapter вернула runtime contract 2, MCP/tunnel ready, tunnel configured, server `Codex Local Mac`, 47 tools. До и после проверки external repo был clean, а SHA `mac-codex-local/control.py` оставался `6c5c14972774ece2a9820059b3953fe2fe968c186bb6e17af074c7752dc294be`; source external runtime не изменялся.

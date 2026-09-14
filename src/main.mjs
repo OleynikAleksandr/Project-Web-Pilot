@@ -13,6 +13,7 @@ import { WorkspaceSetup } from './workspace-setup.mjs';
 import { ChromiumDiagnostics } from './chromium-diagnostics.mjs';
 import { defaultRuntimeFolder, bundledWindowsRuntimeFolder, nodeExecutableCandidates } from './platform.mjs';
 import { WindowsRuntimeBootstrap, WINDOWS_RUNTIME_ARCHIVE } from './windows-runtime.mjs';
+import { MacRuntimeBootstrap } from './mac-runtime.mjs';
 
 const smoke = !app.isPackaged && process.argv.includes('--smoke');
 const sourceDir = path.dirname(fileURLToPath(import.meta.url));
@@ -28,6 +29,8 @@ const store = new WorkspaceSessions(path.join(dataDir, 'workspaces.json'));
 const partition = smoke ? 'web-pilot-smoke' : 'persist:chatgpt';
 let runtimeFolder = bundledWindowsRuntimeFolder(dataDir, process.platform) ?? defaultRuntimeFolder(os.homedir(), process.platform);
 let configuredRuntimeFolder = null;
+let runtimeRegistration = null;
+let macRuntimeBootstrap = null;
 let shellTheme = 'light';
 let hideToolCalls = true;
 const SIDEBAR_MIN_WIDTH = 312;
@@ -111,7 +114,7 @@ async function applyToolCallVisibility() {
 }
 
 async function saveSettings(overrides = {}) {
-  const settings = { runtimeFolder, shellTheme, hideToolCalls, sidebarWidth, ...overrides };
+  const settings = { runtimeFolder, runtimeRegistration, shellTheme, hideToolCalls, sidebarWidth, ...overrides };
   await fsp.mkdir(dataDir, { recursive: true, mode: 0o700 });
   await fsp.writeFile(settingsFile + '.tmp', JSON.stringify(settings, null, 2) + '\n', { mode: 0o600 });
   await fsp.rename(settingsFile + '.tmp', settingsFile);
@@ -353,11 +356,39 @@ async function selectWorkspace(input) {
   publish(); void navigate(project); return project;
 }
 
+function runtimeRegistrationFrom(result) {
+  const service = result?.service ?? result;
+  if (!result?.folder || !service?.mcp_url) return runtimeRegistration;
+  return { platform: process.platform, folder: result.folder, source: result.source ?? 'external',
+    contract: Number(service.runtime_contract ?? 1), mcpUrl: service.mcp_url, tunnelUi: service.tunnel_ui ?? null,
+    verifiedAt: new Date().toISOString() };
+}
+function macBootstrap(preferred = runtimeRegistration?.folder ?? runtimeFolder) {
+  if (process.platform !== 'darwin' || smoke) return null;
+  const resourceRoot = app.isPackaged ? path.join(process.resourcesPath, 'resources') : path.join(sourceDir, '../resources');
+  return new MacRuntimeBootstrap({
+    payloadFile: path.join(resourceRoot, 'mac-runtime.zip'),
+    controlSourceFile: path.join(resourceRoot, 'runtime-control', 'mac-control.py'),
+    dataDir, preferredFolder: preferred, defaultFolder: defaultRuntimeFolder(os.homedir(), 'darwin'), onState: publish,
+    environment: { ...process.env, ...(app.isPackaged ? { WEB_PILOT_UV: path.join(process.resourcesPath, 'mac-tools', 'uv') } : {}) },
+  });
+}
+async function ensurePlatformRuntime() {
+  const workspace = store.selected()?.workspace ?? os.homedir();
+  const result = windowsRuntimeBootstrap ? await windowsRuntimeBootstrap.ensure(workspace)
+    : macRuntimeBootstrap ? await macRuntimeBootstrap.ensure(workspace) : null;
+  if (result?.folder) {
+    runtimeFolder = result.folder; runtimeRegistration = runtimeRegistrationFrom(result);
+    if (deletion) deletion.protectedPaths = [app.getAppPath(), runtimeFolder];
+    await saveSettings({ runtimeFolder, runtimeRegistration });
+  }
+  return result;
+}
 function createLocalRuntime() {
   return new McpRuntime(runtimeFolder, {
     platform: process.platform,
     expectedServerName: process.platform === 'win32' ? 'Codex Local Windows' : 'Codex Local Mac',
-    ensureRuntime: windowsRuntimeBootstrap ? () => windowsRuntimeBootstrap.ensure(store.selected()?.workspace ?? os.homedir()) : null,
+    ensureRuntime: windowsRuntimeBootstrap || macRuntimeBootstrap ? ensurePlatformRuntime : null,
   });
 }
 
@@ -562,8 +593,9 @@ function registerIpc() {
     if (result.canceled) return;
     const selected = await findRuntimeFolder(result.filePaths[0]);
     controller.cancel();
-    await saveSettings({ runtimeFolder: selected });
-    runtimeFolder = selected; deletion.protectedPaths = [app.getAppPath(), runtimeFolder];
+    runtimeFolder = selected; runtimeRegistration = null; macRuntimeBootstrap = macBootstrap(selected);
+    await saveSettings({ runtimeFolder: selected, runtimeRegistration: null });
+    deletion.protectedPaths = [app.getAppPath(), runtimeFolder];
     runtime = createLocalRuntime();
     connectController();
     startupError = null;
@@ -677,6 +709,17 @@ else {
         if (process.platform === 'win32') configuredRuntimeFolder = settings.runtimeFolder;
         else runtimeFolder = settings.runtimeFolder;
       }
+      if (settings.runtimeRegistration && typeof settings.runtimeRegistration === 'object'
+          && settings.runtimeRegistration.platform === process.platform
+          && typeof settings.runtimeRegistration.folder === 'string' && path.isAbsolute(settings.runtimeRegistration.folder)) {
+        runtimeRegistration = { platform: process.platform, folder: settings.runtimeRegistration.folder,
+          source: typeof settings.runtimeRegistration.source === 'string' ? settings.runtimeRegistration.source : 'external',
+          contract: Number.isSafeInteger(settings.runtimeRegistration.contract) ? settings.runtimeRegistration.contract : 1,
+          mcpUrl: typeof settings.runtimeRegistration.mcpUrl === 'string' ? settings.runtimeRegistration.mcpUrl : null,
+          tunnelUi: typeof settings.runtimeRegistration.tunnelUi === 'string' ? settings.runtimeRegistration.tunnelUi : null,
+          verifiedAt: typeof settings.runtimeRegistration.verifiedAt === 'string' ? settings.runtimeRegistration.verifiedAt : null };
+        if (process.platform === 'darwin') runtimeFolder = runtimeRegistration.folder;
+      }
       if (['light', 'dark'].includes(settings.shellTheme)) shellTheme = settings.shellTheme;
       if (typeof settings.hideToolCalls === 'boolean') hideToolCalls = settings.hideToolCalls;
       if (Number.isFinite(settings.sidebarWidth)) sidebarWidth = Math.max(SIDEBAR_MIN_WIDTH, Math.round(settings.sidebarWidth));
@@ -691,6 +734,12 @@ else {
       const windowsRuntimeState = await windowsRuntimeBootstrap.inspect();
       runtimeFolder = windowsRuntimeState.folder;
       if (windowsRuntimeState.source === 'external' || configuredRuntimeFolder) await saveSettings({ runtimeFolder });
+    }
+    else if (process.platform === 'darwin' && !smoke) {
+      macRuntimeBootstrap = macBootstrap(runtimeRegistration?.folder ?? runtimeFolder);
+      const macRuntimeState = await macRuntimeBootstrap.inspect();
+      runtimeFolder = macRuntimeState.folder;
+      if (macRuntimeState.error) startupError = { code: macRuntimeState.error, message: 'Выбранный Codex Local Mac изменён; автоматическое восстановление остановлено.' };
     }
     deletion = new WorkspaceDeletion({ store, journalDir: path.join(dataDir, 'deletions'), protectedPaths: [app.getAppPath(), runtimeFolder] });
     if (!storageError) {

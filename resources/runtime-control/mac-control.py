@@ -24,7 +24,7 @@ import time
 import urllib.request
 import zipfile
 
-ROOT=Path(__file__).resolve().parent
+ROOT=Path(os.environ.get('WEB_PILOT_RUNTIME_ROOT') or Path(__file__).resolve().parent).resolve()
 VENV=ROOT/'.venv'
 PYTHON=VENV/'bin/python'
 CLIENT=ROOT/'tools/tunnel-client'

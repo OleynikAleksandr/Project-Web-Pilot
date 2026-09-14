@@ -189,27 +189,35 @@ export class McpRuntime {
     this.platform = platform;
     this.ensureRuntime = typeof ensureRuntime === 'function' ? ensureRuntime : null;
     this.client = null;
+    this.controlFile = null;
+    this.runtimePrepared = false;
     this.pending = null;
     this.lastStatus = null;
   }
 
-  async control(command) {
+  async control(command, { mcpOnly = false } = {}) {
     if (!['status', 'start'].includes(command)) throw new RuntimeError('RUNTIME_ACTION_DENIED', 'Эта операция не поддерживается оболочкой.');
     let runtimeFolder = this.folder;
-    if (this.ensureRuntime) {
+    if (this.ensureRuntime && !this.runtimePrepared) {
       const ensured = await this.ensureRuntime();
       if (typeof ensured?.folder === 'string' && isAbsolutePlatformPath(ensured.folder, this.platform)) {
         runtimeFolder = ensured.folder;
         this.folder = ensured.folder;
       }
+      this.controlFile = typeof ensured?.control === 'string' && isAbsolutePlatformPath(ensured.control, this.platform)
+        ? ensured.control : null;
+      this.runtimePrepared = true;
     }
     const folder = await findRuntimeFolder(runtimeFolder, { platform: this.platform });
     const layout = runtimeLayout(folder, this.platform);
+    const controlFile = this.controlFile ?? layout.control;
     let output;
     try {
-      output = await this.execute(layout.python, ['-B', layout.control, command],
+      const args = ['-B', controlFile, command, ...(command === 'start' && mcpOnly ? ['--mcp-only'] : [])];
+      output = await this.execute(layout.python, args,
         { cwd: folder, timeout: command === 'start' ? 75000 : 12000, maxBuffer: 1024 * 1024,
-          env: { ...process.env, PYTHONDONTWRITEBYTECODE: '1' } });
+          env: { ...process.env, PYTHONDONTWRITEBYTECODE: '1',
+            ...(this.controlFile ? { WEB_PILOT_RUNTIME_ROOT: folder } : {}) } });
     } catch (error) {
       let message = 'Не удалось запустить локальные инструменты. Проверьте локальный Codex runtime.';
       try { message = JSON.parse(error.stderr).error ?? message; } catch { /* Keep a bounded public error. */ }
@@ -236,7 +244,11 @@ export class McpRuntime {
 
   async prepare() {
     let status = await this.control('status');
-    if (!status.tunnel.configured) throw new RuntimeError('TUNNEL_NOT_CONFIGURED', 'Подключение локального Codex runtime к ChatGPT ещё не настроено.');
+    if (!status.tunnel.configured) {
+      // First-time bootstrap still brings the local MCP up; only tunnel credentials require user action.
+      if (!status.mcp.ready) status = await this.control('start', { mcpOnly: true });
+      throw new RuntimeError('TUNNEL_NOT_CONFIGURED', 'Локальный MCP готов. Один раз настройте Secure MCP Tunnel в локальном runtime; ключ не передаётся Web Pilot.');
+    }
     if (!status.mcp.ready || !status.tunnel.ready) status = await this.control('start');
     if (!status.mcp.ready || !status.mcp.owned || !status.tunnel.ready || !status.tunnel.owned) {
       throw new RuntimeError('RUNTIME_NOT_READY', 'Локальные инструменты или подключение ещё не готовы.');

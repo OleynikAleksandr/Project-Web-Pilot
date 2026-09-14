@@ -141,3 +141,20 @@ test('legacy diagnostics, another workspace, incomplete or modified context cann
     [p=>p.context='я'.repeat(100000),'MCP_CONTEXT_TOO_LARGE'],
   ]) { const packet=contextPacket();mutate(packet);assert.throws(()=>validateContextPacket(packet,'/project'),{code}); }
 });
+
+test('external runtime adapter control is executed without replacing the runtime folder control', async t => {
+  const root = await folder(t); const adapter = path.join(path.dirname(root), 'adapter-control.py'); await fs.writeFile(adapter, '# adapter');
+  const calls=[]; const runtime=new McpRuntime(root,{clientFactory,
+    ensureRuntime:async()=>{calls.push(['ensureRuntime']);return {folder:root,control:adapter};},
+    execute:async(...args)=>{calls.push(args);return {stdout:JSON.stringify({...ready,runtime_contract:2,mcp_url:'http://127.0.0.1:19111/mcp'})};}});
+  await runtime.ensure(); await runtime.control('status'); assert.equal(calls.filter(c=>Array.isArray(c)&&c[0]==='ensureRuntime').length,1); const execCalls=calls.filter(c=>c[0]!=='ensureRuntime'); assert.equal(execCalls.length,2); assert.equal(execCalls[0][1][1],adapter); assert.equal(execCalls[0][2].env.WEB_PILOT_RUNTIME_ROOT,root);
+});
+
+test('first-time runtime starts MCP only before reporting missing tunnel configuration', async t => {
+  const root=await folder(t); const calls=[];
+  const status={...ready,runtime_contract:2,mcp:{running:false,owned:false,ready:false},tunnel:{running:false,owned:false,ready:false,configured:false}};
+  const mcpOnly={...status,mcp:{running:true,owned:true,ready:true}};
+  const runtime=new McpRuntime(root,{clientFactory,execute:async(_bin,args)=>{calls.push([...args]);return {stdout:JSON.stringify(args.at(-1)==='--mcp-only'?mcpOnly:status)};}});
+  await assert.rejects(runtime.ensure(),{code:'TUNNEL_NOT_CONFIGURED'});
+  assert.deepEqual(calls.map(args=>args.slice(2)),[['status'],['start','--mcp-only']]);
+});

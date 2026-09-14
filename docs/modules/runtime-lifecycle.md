@@ -86,3 +86,9 @@ Windows продолжает использовать встроенный paylo
 ## Реализация macOS control v2 — T006
 
 Versioned control facade хранит `runtime-endpoints.json` в private state. `managed_process()` удаляет PID record при исчезнувшем PID или identity mismatch, не отправляя signal. `reconcile_endpoints()` сохраняет preferred endpoint только если он свободен; иначе выбирает свободный loopback port и согласованно обновляет bridge config и существующий tunnel profile. `status()` возвращает `runtime_contract=2`, `package_root`, фактические endpoints и readiness. Bundled source snapshot содержит тот же control facade и runtime Python sources без private state, venv и tunnel credentials.
+
+## Интеграция Web Pilot / macOS — T007
+
+Web Pilot хранит несекретный runtime registration (folder/source/contract/endpoints/verifiedAt) в локальных settings как ускоряющий hint. На одном экземпляре `McpRuntime` discovery/bootstrap выполняется один раз; последующие status/start используют уже подтверждённую папку. External legacy Mac runtime не модифицируется: Web Pilot запускает versioned control-v2 adapter через Python внешнего runtime с `WEB_PILOT_RUNTIME_ROOT`, поэтому private state/tunnel credentials используются на месте, а Git source остаётся неизменным. При отсутствии external runtime `MacRuntimeBootstrap` атомарно распаковывает bundled ZIP под `userData/runtime/Codex-Local-Mac`, создаёт venv через bundled/system uv либо Python 3.13+ и выполняет setup.
+
+Реальная проверка на текущем Mac подключила внешний runtime через adapter: contract=2, MCP ready, tunnel ready/configured, `mcp_url=http://127.0.0.1:17842/mcp`, server `Codex Local Mac`, 47 tools. SHA внешнего `control.py` до/после остался `6c5c14972774ece2a9820059b3953fe2fe968c186bb6e17af074c7752dc294be`, Git external repo остался чистым.
