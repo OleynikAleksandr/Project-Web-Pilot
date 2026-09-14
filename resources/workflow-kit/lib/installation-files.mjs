@@ -13,6 +13,21 @@ export const BLOCK_START = '# workflow-kit:begin';
 export const BLOCK_END = '# workflow-kit:end';
 export const MD_START = '<!-- workflow-kit:begin -->';
 export const MD_END = '<!-- workflow-kit:end -->';
+
+const MODULES_TEMPLATE = `# Модули проекта
+
+Карта архитектурных владельцев функционала. Перед функциональным scope найдите существующего владельца; если его нет, сначала создайте и согласуйте module specification.
+
+| Модуль | Спецификация | Ответственность |
+| --- | --- | --- |
+| Первый модуль | docs/modules/<module>.md | Уточняется перед первым функциональным scope |
+`;
+const OVERVIEW_TEMPLATE = `# Краткая архитектура проекта
+
+Коротко опишите назначение продукта, основные архитектурные границы и место модулей. Этот документ предназначен для recovery и должен оставаться компактным; подробности живут в module specifications и профильных документах.
+
+Карта модулей: docs/MODULES.md.
+`;
 export function walk(directory, prefix = '') {
   if (!fs.existsSync(directory)) return [];
   const output = [];
@@ -65,6 +80,8 @@ export function payload(root, name, hookLocation) {
   for (const [target, source] of [['docs/PRODUCT.md', 'PRODUCT.md'], ['docs/architecture/ARCHITECTURE.md', 'ARCHITECTURE.md'], ['docs/WORKFLOW_START.md', 'START.md']]) {
     if (!fs.existsSync(path.join(root, target))) add(target, fs.readFileSync(path.join(kitRoot, 'templates', source), 'utf8'), 'editable');
   }
+  if (!fs.existsSync(path.join(root, 'docs/MODULES.md'))) add('docs/MODULES.md', MODULES_TEMPLATE, 'editable');
+  if (!fs.existsSync(path.join(root, 'docs/architecture/OVERVIEW.md'))) add('docs/architecture/OVERVIEW.md', OVERVIEW_TEMPLATE, 'editable');
   const inventory = [...new Set([...walk(root), ...entries.map(e => e.path), INDEX])].filter(p => /\.(md|markdown)$/.test(p));
   const indexOld = fs.existsSync(path.join(root, INDEX)) ? fs.readFileSync(path.join(root, INDEX), 'utf8') : '# Каталог документации\n';
   add(INDEX, addSection(indexOld, '## Документы проекта\n\n| Документ | Назначение |\n| --- | --- |\n' + inventory.map(p => '| ' + p + ' | ' + (p === PLAN ? 'Единственный активный план' : p.includes('/kit/') ? 'Протокол и шаблон комплекта' : 'Контракт проекта; уточняется при обсуждении') + ' |').join('\n')), 'managed');

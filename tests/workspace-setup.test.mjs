@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { WorkspaceSetup } from '../src/workspace-setup.mjs';
 import { nodeExecutableCandidates } from '../src/platform.mjs';
 const environment = { ...process.env, GIT_AUTHOR_NAME: 'Web Pilot Test', GIT_AUTHOR_EMAIL: 'test@example.invalid', GIT_COMMITTER_NAME: 'Web Pilot Test', GIT_COMMITTER_EMAIL: 'test@example.invalid' };
@@ -24,6 +25,7 @@ async function create(t) {
   return { ...f, workspace: result.workspace, result };
 }
 function git(cwd, ...args) { return execFileSync('git', args, { cwd, env: environment, encoding: 'utf8' }).trim(); }
+const sha = value => createHash('sha256').update(value).digest('hex');
 
 test('Node candidates are centralized for macOS and Windows', () => {
   assert.deepEqual(nodeExecutableCandidates({ platform: 'darwin', environment: {}, execPath: '/usr/bin/node', electron: true }), [
@@ -49,7 +51,9 @@ test('create a real empty Workflow Kit project and reopen without changes', asyn
   const { setup, workspace } = await create(t);
   const config = JSON.parse(await fs.readFile(path.join(workspace, '.harness/workflow.json'), 'utf8'));
   const plan = JSON.parse((await fs.readFile(path.join(workspace, '.harness/plans/todo-plan.md'), 'utf8')).match(/```json\n([\s\S]*?)\n```/)[1]);
-  assert.equal(config.profile, 'DISCOVERY'); assert.equal(plan.execution_scope_status, 'NONE'); assert.deepEqual(plan.tasks, []);
+  assert.equal(config.profile, 'DISCOVERY'); assert.equal(config.budget.hard_bytes, 180000); assert.equal(plan.execution_scope_status, 'NONE'); assert.deepEqual(plan.tasks, []);
+  assert.equal(plan.context_pack.include_last_completed_task, false);
+  await fs.stat(path.join(workspace, 'docs/MODULES.md')); await fs.stat(path.join(workspace, 'docs/architecture/OVERVIEW.md'));
   const head = git(workspace, 'rev-parse', 'HEAD');
   const next = await setup.preview({ mode: 'existing', workspace });
   assert.equal(next.action, 'open'); assert.ok(next.checks.every(c => c.ok));
@@ -101,6 +105,34 @@ test('legacy compatible version opens unchanged and unsupported version is expli
   m.version = '9.0.0'; await fs.writeFile(file, JSON.stringify(m));
   const unsupported = await setup.preview({ mode: 'existing', workspace }); assert.equal(unsupported.action, null); assert.match(unsupported.issues[0].reason, /9.0.0/);
 });
+
+test('compatible 1.1 installation upgrades to 1.2 without overwriting user documents', async t => {
+  const { setup, workspace } = await create(t);
+  const manifestFile = path.join(workspace, '.harness/kit-manifest.json');
+  const manifest = JSON.parse(await fs.readFile(manifestFile, 'utf8')); manifest.version = '1.1.0';
+  const commonPath = path.join(workspace, '.harness/kit/lib/common.mjs');
+  const legacyCommon = (await fs.readFile(commonPath, 'utf8')).replace("VERSION = '1.2.0'", "VERSION = '1.1.0'");
+  await fs.writeFile(commonPath, legacyCommon);
+  const commonEntry = manifest.files.find(entry => entry.path === '.harness/kit/lib/common.mjs'); commonEntry.hash = sha(legacyCommon);
+  await fs.writeFile(manifestFile, JSON.stringify(manifest, null, 2) + '\n');
+  await fs.rm(path.join(workspace, 'docs/MODULES.md'));
+  await fs.writeFile(path.join(workspace, 'docs/architecture/OVERVIEW.md'), '# Краткая архитектура проекта\n\nCUSTOM_OVERVIEW_STAYS\n');
+  await fs.writeFile(path.join(workspace, 'docs/PRODUCT.md'), '# User product stays\n');
+  const indexFile = path.join(workspace, 'docs/DOCUMENTATION_INDEX.md');
+  const customIndex = (await fs.readFile(indexFile, 'utf8')).replace('<!-- workflow-kit:end -->', '| docs/custom.md | User-added index row |\n<!-- workflow-kit:end -->');
+  await fs.writeFile(indexFile, customIndex);
+  git(workspace, 'add', '.'); git(workspace, '-c', 'core.hooksPath=/dev/null', 'commit', '-m', 'simulate legacy 1.1');
+  const preview = await setup.preview({ mode: 'existing', workspace });
+  assert.equal(preview.action, 'upgrade', JSON.stringify(preview));
+  const result = await setup.apply(preview.token);
+  assert.equal(result.ready, true, JSON.stringify(result)); assert.equal(result.version, '1.2.0');
+  assert.match(await fs.readFile(commonPath, 'utf8'), /VERSION = '1\.2\.0'/);
+  await fs.stat(path.join(workspace, 'docs/MODULES.md')); assert.match(await fs.readFile(path.join(workspace, 'docs/architecture/OVERVIEW.md'), 'utf8'), /CUSTOM_OVERVIEW_STAYS/);
+  assert.equal(await fs.readFile(path.join(workspace, 'docs/PRODUCT.md'), 'utf8'), '# User product stays\n');
+  const upgradedIndex = await fs.readFile(indexFile, 'utf8'); assert.match(upgradedIndex, /docs\/custom\.md/); assert.match(upgradedIndex, /docs\/MODULES\.md/); assert.match(upgradedIndex, /docs\/architecture\/OVERVIEW\.md/);
+  assert.equal(git(workspace, 'status', '--porcelain'), '');
+});
+
 test('Git subfolder resolves to project root and preview change prevents reopening', async t => {
   const { setup, workspace } = await create(t); const child = path.join(workspace, 'nested'); await fs.mkdir(child);
   const preview = await setup.preview({ mode: 'existing', workspace: child }); assert.equal(preview.workspace, workspace);

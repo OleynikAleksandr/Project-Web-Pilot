@@ -5,7 +5,7 @@ import { check, hash, json, MANIFEST, errorResult } from './workflow-kit/lib/com
 import { hooksDirectory, BLOCK_START, BLOCK_END } from './workflow-kit/lib/installation-files.mjs';
 import { run } from './workflow-kit/lib/git.mjs';
 
-const supported = new Set(['1.0.0', '1.1.0']);
+const supported = new Set(['1.0.0', '1.1.0', '1.2.0']);
 function options(input) {
   check(input && ['inspect', 'apply'].includes(input.action), 'SETUP_ACTION', 'Неизвестное действие подготовки.');
   check(['new', 'existing'].includes(input.mode), 'SETUP_MODE', 'Выберите создание или подключение проекта.');
@@ -25,6 +25,7 @@ function inspectProject(opts) {
   if (!supported.has(p.version)) result.issues.push({ path: MANIFEST, reason: `Версия ${p.version} пока не поддерживается. Автоматическое обновление не выполняется.` });
   const anchors = ['.harness/workflow.json', '.harness/plans/todo-plan.md', '.harness/plans/todo-plan.template.md',
     'docs/DOCUMENTATION_INDEX.md', 'docs/WORKFLOW_START.md', 'docs/PRODUCT.md', 'docs/architecture/ARCHITECTURE.md'];
+  if (p.version === '1.2.0') anchors.push('docs/MODULES.md', 'docs/architecture/OVERVIEW.md');
   const manifest = JSON.parse(fs.readFileSync(path.join(p.project_path, MANIFEST), 'utf8'));
   anchors.push(...manifest.files.filter(f => f.kind === 'managed' && /^AGENTS(?:\.override)?\.md$/.test(f.path)).map(f => f.path));
   if (!anchors.some(f => /^AGENTS/.test(f))) result.issues.push({ path: 'AGENTS.md', reason: 'Не найдены зарегистрированные инструкции проекта.' });
@@ -34,6 +35,12 @@ function inspectProject(opts) {
   }
   result.checks.push({ label: 'Файлы комплекта и документы', ok: !result.issues.length });
   if (result.issues.length) return result; // Never execute a damaged installation.
+  if (p.upgradeable) {
+    result.checks.push({ label: `Workflow Kit ${p.version} → 1.2.0`, ok: true });
+    result.action = 'upgrade'; result.warnings.push('Совместимый runtime будет обновлён; активный plan и пользовательские документы сохранятся.');
+    result.fingerprint = hash(json({ root: p.project_path, version: p.version, manifest: hash(fs.readFileSync(path.join(p.project_path, MANIFEST))), state: [p.state?.head, p.state?.plan_revision, p.state?.changes] }));
+    return result;
+  }
   const d = doctor(p.project_path);
   const checks = d.diagnostics.filter(c => !['Codex', 'SessionStart', 'Первый коммит'].includes(c.name));
   // Verify owned Git-hook sections too: presence of a marker is insufficient.
@@ -60,7 +67,7 @@ function inspectProject(opts) {
   result.checks.push({ label: 'Полный контекст проекта', ok: complete });
   if (!complete) result.issues.push({ path: 'Контекст проекта', reason: packet?.message ?? 'Не удалось собрать полный пакет контекста.' });
   if (d.installation?.bootstrap_pending) result.warnings.push('Файлы комплекта подготовлены. Их первая фиксация в истории ещё ожидает команды install:commit; исходные изменения сохранены.');
-  if (p.version !== '1.1.0') result.warnings.push(`Установлен Workflow Kit ${p.version}. Рабочая версия сохраняется без обновления.`);
+  if (p.version !== '1.2.0') result.warnings.push(`Установлен Workflow Kit ${p.version}. Рабочая версия сохраняется без обновления.`);
   const repairable = !result.issues.length && p.compatible && (hookErrors.length || launcher?.status === 'ERROR');
   result.ready = !result.issues.length && !hookErrors.length && launcher?.status === 'OK';
   result.action = result.ready ? 'open' : repairable ? 'reconnect' : null;
@@ -80,8 +87,8 @@ try {
   if (input.action === 'apply') {
     check(typeof input.fingerprint === 'string' && result.fingerprint === input.fingerprint, 'PREVIEW_CHANGED', 'Папка изменилась после проверки. Проверьте её ещё раз.');
     check(result.action, 'SETUP_BLOCKED', 'Сначала устраните показанные проблемы. Файлы сохранены.');
-    if (result.action === 'install' || result.action === 'reconnect') {
-      const installed = install({ ...opts, 'expected-fingerprint': input.fingerprint,
+    if (['install', 'reconnect', 'upgrade'].includes(result.action)) {
+      const installed = install({ ...opts, ...(result.action === 'upgrade' ? { update: true } : {}), 'expected-fingerprint': input.fingerprint,
         ...(input.gitName || input.gitEmail ? { 'git-name': input.gitName, 'git-email': input.gitEmail } : {}) });
       result = inspectProject({ project: installed.project_path, mode: 'existing' });
     }

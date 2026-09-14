@@ -472,3 +472,7 @@ Unit test фиксирует Node.js 22.17.0 win-x64 archive name/SHA, expected 
 Текущая конфигурация Workflow Kit допускала `hard_bytes=524288`, тогда как Web Pilot уже отклоняет packet свыше 180000 bytes. `soft_tokens=16000` применялся только к optional documents и не ограничивал mandatory body. Это подтверждает, что увеличение транспортного лимита не требуется: основной дефект — состав обязательного context и несогласованные budgets.
 
 Согласованное решение: module-centric Recovery v2. Required context задаётся текущим plan/task и должен состоять прежде всего из compact project overview + module specification. Исторические документы остаются в репозитории как reference. Last completed commit больше не является автоматической зависимостью. Required data не усекать; при hard-limit ошибке показывать крупнейшие секции.
+
+## Workflow Kit 1.2 install/upgrade — T004
+
+Добавлена изолированная проверка upgrade 1.1→1.2: fixture понижает manifest/runtime до совместимого 1.1, удаляет новые module docs, оставляет пользовательское изменение PRODUCT и запускает обычный Workspace Setup. Upgrade проходит через `kit-update` commit, восстанавливает runtime 1.2 и MODULES/OVERVIEW, сохраняет PRODUCT и оставляет чистое Git-состояние. Отдельный workspace setup suite: 9/9 passed. Recovery v2 regression покрывает module-context gate, reference-only optional context, direct dependency diffs и largest-section diagnostics при CONTEXT_TOO_LARGE.

@@ -24,6 +24,7 @@ export function workspaceSetupView(action) {
       : form ? 'Начните с имени и места для новой папки.'
       : setup.action === 'install' ? 'Добавим инструкции, документацию и план. Существующие файлы сохранятся.'
       : setup.action === 'reconnect' ? 'Восстановим локальные команды и проверки. План проекта сохранится.'
+      : setup.action === 'upgrade' ? 'Обновим Workflow Kit до новой совместимой версии. План и пользовательские документы сохранятся.'
       : setup.ready ? 'Структура и полный контекст проверены. Можно продолжать работу в ChatGPT.'
       : 'Открытие приостановлено. Ниже указано, что нужно исправить.';
     $('setup-form').hidden = !form;
@@ -56,7 +57,7 @@ export function workspaceSetupView(action) {
     const identity = setup.action === 'install' && !setup.gitIdentityReady;
     $('setup-identity').hidden = !identity;
     $('setup-apply').hidden = !setup.action || busy || !!setup.error;
-    $('setup-apply').textContent = { install: setup.mode === 'new' ? 'Создать и открыть' : 'Подготовить и открыть', reconnect: 'Восстановить и открыть', open: 'Открыть проект' }[setup.action] ?? 'Открыть проект';
+    $('setup-apply').textContent = { install: setup.mode === 'new' ? 'Создать и открыть' : 'Подготовить и открыть', reconnect: 'Восстановить и открыть', upgrade: 'Обновить и открыть', open: 'Открыть проект' }[setup.action] ?? 'Открыть проект';
     $('setup-apply').disabled = actionPending || (identity && (!$('setup-git-name').value.trim() || !$('setup-git-email').value.trim()));
     $('setup-refresh').hidden = busy || form || (!setup.installed && !setup.workspace);
     $('setup-cancel').textContent = busy ? 'Подождите…' : 'Отмена';

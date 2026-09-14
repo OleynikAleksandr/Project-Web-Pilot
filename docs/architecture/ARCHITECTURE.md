@@ -504,3 +504,7 @@ Windows build-preflight сначала может переиспользоват
 ## Clipboard write во встроенном ChatGPT — scope 009 / T006
 
 Удалённый Chromium по-прежнему работает без preload, Node и локального IPC. Permission policy разрешает `clipboard-sanitized-write`, необходимый штатной кнопке «Копировать»/`navigator.clipboard.writeText()`, только при одновременном выполнении двух условий: точный origin `https://chatgpt.com` и запрос исходит из основного правого ChatGPT WebContents. Popup/дочерние WebContents того же origin этого разрешения не получают. Чтение системного clipboard (`clipboard-read`) остаётся запрещённым, как и clipboard write для любых других origin. Остальные ограничения media/geolocation и sandbox не ослабляются.
+
+## Workflow Kit 1.2 — module-centric recovery и upgrade
+
+Встроенный Workflow Kit 1.2 вводит module-centric Recovery v2 без изменения transport API Web Pilot. Fresh workspace получает compact `docs/architecture/OVERVIEW.md`, `docs/MODULES.md` и новый plan template; функциональный scope требует согласованный module context. Existing 1.1 workspace может быть обновлён через Workspace Setup, если owned runtime не изменён: owned Kit/launchers заменяются, AGENTS managed section проверяется по manifest, а `DOCUMENTATION_INDEX.md` сохраняется и расширяется аддитивно. Active plan, workflow config и пользовательские editable docs не перезаписываются. Modified critical runtime или неизвестная версия блокируют автоматический upgrade.

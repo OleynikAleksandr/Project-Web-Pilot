@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 253,
+  "plan_revision": 257,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-kit-recovery-packet-010",
@@ -264,11 +264,14 @@
         "resources/workspace-setup-worker.mjs",
         "src/ui/workspace-setup.mjs",
         "tests/workspace-setup.test.mjs",
-        "tests/workflow-kit-source.test.mjs"
+        "tests/workflow-kit-source.test.mjs",
+        "tests/workflow-kit-recovery.test.mjs"
       ],
       "documentation_paths": [
         "docs/WORKSPACE_SETUP.md",
-        "docs/modules/workflow-kit-recovery.md"
+        "docs/modules/workflow-kit-recovery.md",
+        "docs/VERIFICATION.md",
+        "docs/architecture/ARCHITECTURE.md"
       ],
       "acceptance_criteria": [
         "Fresh install Workflow Kit 1.2 создаёт docs/MODULES.md и docs/architecture/OVERVIEW.md и новый plan template.",
@@ -281,8 +284,8 @@
         "suite"
       ],
       "expected_commit_message": "feat: добавить обновление Workflow Kit 1.2",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workflow-kit-recovery-packet-010",
         "task_id": "T004",
@@ -360,7 +363,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-kit-recovery-packet-010
 Current Task: нет
-Revision: 253
+Revision: 257
 
 ## Цель
 
@@ -395,10 +398,10 @@ Revision: 253
   - Git Commit: [DONE] feat: реализовать Workflow Recovery v2
   - Reference: workflow-kit-recovery-packet-010 / T003 / implementation
   - Файлы: resources/workflow-kit/WORKFLOW.md, resources/workflow-kit/lib/plan.mjs, resources/workflow-kit/lib/recovery.mjs, resources/workflow-kit/lib/validate.mjs, resources/workflow-kit/lib/actions.mjs, resources/workflow-kit/templates/AGENTS.md, resources/workflow-kit/templates/PLAN.md, tests/workflow-kit-source.test.mjs, tests/workflow-kit-recovery.test.mjs, docs/modules/workflow-kit-recovery.md, docs/CONTEXT_DELIVERY.md
-- [TODO] T004: Добавить Workflow Kit 1.2 install/upgrade contract — Ожидает
-  - Git Commit: [PENDING] feat: добавить обновление Workflow Kit 1.2
+- [DONE] T004: Добавить Workflow Kit 1.2 install/upgrade contract — Завершено
+  - Git Commit: [DONE] feat: добавить обновление Workflow Kit 1.2
   - Reference: workflow-kit-recovery-packet-010 / T004 / implementation
-  - Файлы: resources/workflow-kit/lib/common.mjs, resources/workflow-kit/lib/installation-files.mjs, resources/workflow-kit/lib/installer.mjs, resources/workflow-kit/lib/transaction.mjs, resources/workflow-kit/templates/START.md, resources/workspace-setup-worker.mjs, src/ui/workspace-setup.mjs, tests/workspace-setup.test.mjs, tests/workflow-kit-source.test.mjs, docs/WORKSPACE_SETUP.md, docs/modules/workflow-kit-recovery.md
+  - Файлы: resources/workflow-kit/lib/common.mjs, resources/workflow-kit/lib/installation-files.mjs, resources/workflow-kit/lib/installer.mjs, resources/workflow-kit/lib/transaction.mjs, resources/workflow-kit/templates/START.md, resources/workspace-setup-worker.mjs, src/ui/workspace-setup.mjs, tests/workspace-setup.test.mjs, tests/workflow-kit-source.test.mjs, tests/workflow-kit-recovery.test.mjs, docs/WORKSPACE_SETUP.md, docs/modules/workflow-kit-recovery.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 - [TODO] T005: Мигрировать Project Web Pilot на Recovery v2 и пересобрать — Ожидает
   - Git Commit: [PENDING] build: выпустить Project Web Pilot с Recovery v2
   - Reference: workflow-kit-recovery-packet-010 / T005 / implementation

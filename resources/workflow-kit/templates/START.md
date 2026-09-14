@@ -1,13 +1,13 @@
 # Начало работы
 
-1. Добавьте эту папку как локальный проект в Codex.
-2. Разрешите проектные инструкции и предусмотренные Codex hooks, если приложение запросит доверие.
-3. Начните новую сессию и расскажите идею. Стек выбирать заранее не требуется.
+Новая сессия начинает работу с recovery capsule Workflow Kit. Capsule уже содержит Workflow Core, текущий todo-plan, required module context, dependency diffs и текущее рабочее состояние. Большой WORKFLOW.md и исторические документы читать целиком не требуется.
 
-Агент получает правила и текущее состояние через SessionStart. При первой доставке он подтверждает маркер. В Project Workflow Kit можно заново выбрать эту папку и проверить состояние.
+## Порядок
 
-При отсутствии packet агент выполняет `./scripts/workflow recover --format text`. Для диагностики: `./scripts/workflow doctor`. Если Git сообщил об отсутствии автора, настройте имя/email и затем выполните `./scripts/workflow install:commit`.
+1. Использовать доставленный capsule; если его нет — `./scripts/workflow recover --format text`.
+2. Для нового функционального запроса найти владельца в `docs/MODULES.md`.
+3. Сначала согласовать изменение существующей module specification или создать новую; только затем создавать/уточнять todo-plan реализации.
+4. Дополнительные документы читать только по ссылкам plan/module spec через `docs/DOCUMENTATION_INDEX.md`.
+5. Перед правкой начать task, после микрозадачи выполнить управляемый commit и назначенные проверки.
 
-Существующий проект не переустанавливается при каждом открытии. Актуальное состояние — `.harness/plans/todo-plan.md`. Полный порядок работы — `.harness/kit/WORKFLOW.md`.
-
-В Windows используйте `./scripts/workflow.cmd status` и `./scripts/workflow.cmd doctor`. Node и Git подготовлены приложением в `.harness/runtime/`. После клонирования подключите папку через приложение для восстановления локального runtime и Git hooks.
+`docs/architecture/OVERVIEW.md` — компактная карта проекта для recovery. Подробная история и профильные документы остаются reference-only.

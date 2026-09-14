@@ -116,3 +116,7 @@ Source Workflow Kit использует отдельный `Workflow Core` из
 Recovery builder копирует только `required` sections. `required=false` становится reference-only записью пути/heading и не расходует payload содержимым. Commit diffs выбираются только из прямых `task.dependencies` и явных `context_pack.dependency_task_ids`. Verification evidence включается только если относится к текущему HEAD/dependency или текущей transaction.
 
 Эффективный hard budget ограничен минимумом project config и transport ceiling 180000 bytes / 90000 conservative tokens. При переполнении exception содержит `largest_sections`; required data не обрезается. `soft_tokens` публикуется как quality signal (`soft_exceeded`), но не удаляет данные автоматически.
+
+## Install/upgrade contract 1.2 — T004
+
+Fresh Workflow Kit 1.2 создаёт `docs/MODULES.md`, `docs/architecture/OVERVIEW.md` и plan template с module-centric `context_pack`. Workspace Setup распознаёт неизменённую 1.1 installation как upgradeable. Upgrade заменяет только подтверждённый owned runtime, обновляет принадлежащие Kit managed sections и создаёт недостающие новые документы; пользовательский active plan/config/editable docs сохраняются. Изменённый owned runtime или неизвестная версия не перезаписываются автоматически.
