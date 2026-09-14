@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 314,
+  "plan_revision": 316,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workspace-chat-work-sessions-011",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Добавить в Workspace & Sessions явный выбор Chat или Work для первой и дополнительных сессий проекта, сохранить experience в session model, перенести создание сессий в меню проекта и открыть выбранный ChatGPT experience без изменения Recovery flow.",
   "acceptance_criteria": [
     "Каждая session имеет persisted experience chat|work и старое хранилище мигрируется без потери данных.",
@@ -548,8 +548,8 @@
       }
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "id": "T014",
       "title": "Собрать исправленный релиз выбора Chat",
       "why": "Обновить macOS и Windows packages для повторной пользовательской приёмки.",
@@ -608,10 +608,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: workspace-chat-work-sessions-011
 Current Task: нет
-Revision: 314
+Revision: 316
 
 ## Цель
 
@@ -681,8 +681,8 @@ Revision: 314
   - Git Commit: [DONE] fix: выбирать фактический Chat до передачи контекста
   - Reference: workspace-chat-work-sessions-011 / T013 / implementation
   - Файлы: src/chatgpt-experience.mjs, src/chatgpt-composer.mjs, src/context-session.mjs, tests/chatgpt-experience.test.mjs, tests/chatgpt-composer.test.mjs, tests/context-session.test.mjs, tests/electron-smoke.mjs, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T014: Собрать исправленный релиз выбора Chat — Ожидает
-  - Git Commit: [PENDING] build: выпустить исправление выбора Chat
+- [DONE] T014: Собрать исправленный релиз выбора Chat — Завершено
+  - Git Commit: [DONE] build: выпустить исправление выбора Chat
   - Reference: workspace-chat-work-sessions-011 / T014 / implementation
   - Файлы: package.json, package-lock.json, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md
 

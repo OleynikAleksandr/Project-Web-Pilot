@@ -570,3 +570,13 @@ Electron smoke проверяет полный session archive flow: Chat sessio
 Причина подтверждена production diagnostics и скриншотом пользователя: root URL отображал Work, а промежуточный `/c/WEB:<uuid>` останавливал tracking уже начатой отправки. Нативные элементы переключателя сверены с публичным production bundle ChatGPT.
 
 Добавлены проверки: фактический выбор Chat из Work; отдельно наблюдаемое подтверждение toggle; недоступный/неизвестный режим; сохранение draft; смена режима/URL перед click; ожидание временного URL для Chat и Work без сохранения временной ссылки и повторной отправки. Electron fixture моделирует Work default, Work → новый Chat и временный WEB URL до permanent conversation. Результаты назначенных checks фиксируются Workflow Kit. Реальный аккаунт проверяет пользователь после пересборки.
+
+
+## T014 — Project Web Pilot 0.6.8
+
+- T013: syntax, полный suite и Electron smoke — PASSED; commit cce8f3c78f8d9c9f16dfe11b20788cee0188e603.
+- npm run build — exit 0; macOS arm64 и Windows x64 packages созданы; verify:win — PASSED.
+- Обе app.asar содержат version 0.6.8 и побайтово совпадающие с исходным деревом context-session, chatgpt-composer и chatgpt-experience.
+- macOS app.asar SHA-256: ebd81be350d077eb164f1c7f18527280270c0f91a402850953a91be26177826e.
+- Windows app.asar SHA-256: 95738c6adcf0e8e844f4fd6e245038cd161d5449aedfd618d840e917012eab92.
+- Финальные назначенные checks для T014 фиксирует workflow commit. Ручная проверка нового Chat в реальном аккаунте и native Windows acceptance остаются пользователю. Уже созданный в неправильном режиме облачный разговор автоматически не конвертируется.

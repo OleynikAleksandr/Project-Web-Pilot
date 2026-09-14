@@ -158,9 +158,9 @@ Context Recovery не различает Chat и Work. После того ка�
 
 ## Подтверждённый Work entrypoint — 14.09.2026
 
-Для нового Work Web Pilot использует канонический верхнеуровневый entrypoint `https://chatgpt.com/work/`. OpenAI публикует Work именно по этому адресу и описывает Chat и Work как отдельные ChatGPT experiences. Web Pilot не кликает внутренний переключатель режима и не выбирает модель.
+Для нового Work Web Pilot использует канонический верхнеуровневый entrypoint `https://chatgpt.com/work/`. OpenAI публикует Work именно по этому адресу и описывает Chat и Work как отдельные ChatGPT experiences. Перед первым recovery Web Pilot подтверждает фактический режим через нативный переключатель Chat/Work; конкретная модель не выбирается. Подробности production correction — T013.
 
-Fail-closed правило: стартовая Work session может передавать recovery только если текущий URL остаётся в `/work` namespace и страница предоставляет доступный composer. Если ChatGPT изменит маршрут/поведение, Web Pilot показывает ошибку/ожидание Work и не отправляет пакет в обычный Chat. После первой наблюдаемой отправки сохраняется фактический concrete conversation URL. В текущем production ChatGPT это обычный `/c/<id>`, хотя визуально и функционально conversation остаётся Work.
+Fail-closed правило: стартовая Work session может передавать recovery только если текущий URL остаётся в `/work` namespace и страница предоставляет доступный composer с подтверждённым режимом Work. Если ChatGPT изменит маршрут/поведение, Web Pilot показывает ошибку/ожидание Work и не отправляет пакет в обычный Chat. После первой наблюдаемой отправки сохраняется фактический concrete conversation URL. В текущем production ChatGPT это обычный `/c/<id>`, хотя визуально и функционально conversation остаётся Work.
 
 Для Chat стартовый entrypoint остаётся `https://chatgpt.com/`; после первой наблюдаемой отправки сохраняется concrete обычный conversation URL `/c/<id>`.
 
@@ -241,3 +241,10 @@ Production diagnostics 14.09.2026 17:52:57–17:53:08 UTC: новый Chat за�
 Перед первым recovery новая session подтверждает фактический режим через toggle. Если выбран другой режим, выполняется нативный click и отдельное чтение подтверждения. Fallback ограничен группой с точным доступным именем Select chat surface / Выберите режим чата. Недоступный или неопределённый toggle блокирует подготовку/отправку; draft и active generation сохраняются. Режим дополнительно проверяется в renderer в том же действии, что fill/send. Это исправление исполняет ранее согласованный выбор Chat/Work и не выбирает модель.
 
 `/c/WEB:<uuid>` допускается только как промежуточный адрес после начатой отправки. Он не сохраняется в chatUrl. Наблюдение request marker подтверждает отправку; binding ждёт permanent concrete URL. Повторная отправка не выполняется. Уже привязанные sessions продолжают проверяться по exact URL.
+
+
+## Release integration — T014 / Project Web Pilot 0.6.8
+
+Patch 0.6.8 подтверждает фактический Chat/Work через нативный переключатель до первого recovery. Новый Chat после Work открывается с явно выбранным Chat; модель не фиксируется. Временный URL /c/WEB:<uuid> ожидает permanent URL без ложного mismatch и повторной отправки. Уже существующие привязки и пользовательские черновики сохраняются.
+
+macOS arm64 и Windows x64 packages пересобираются из одного исходного дерева. Реальная проверка нового Chat/Work остаётся пользователю; scope остаётся ACTIVE/READY_FOR_ACCEPTANCE после обязательных checks.
