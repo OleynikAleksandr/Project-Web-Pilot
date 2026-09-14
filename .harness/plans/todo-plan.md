@@ -4,33 +4,74 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 243,
+  "plan_revision": 244,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-kit-recovery-packet-010",
   "execution_scope_status": "ACTIVE",
   "delivery_status": "IN_PROGRESS",
-  "objective": "Разобрать, почему recovery-пакет Workflow Kit разрастается до CONTEXT_TOO_LARGE, измерить фактический состав и стоимость обязательного контекста и выбрать безопасную политику упаковки без потери данных, необходимых агенту для продолжения работы. После разбора recovery budget спроектировать устойчивый self-healing bootstrap/lifecycle локальных MCP и tunnel на macOS/Windows: переиспользование существующей установки, установка при отсутствии и автоматическое восстановление при конфликтах endpoint/портов без вмешательства пользователя.",
+  "objective": "Перевести Workflow Kit на module-centric Recovery v2: перед функциональным scope определять владельца функционала, сначала согласовывать module specification, затем выполнять todo-plan; новая сессия/refresh/compact получают компактный execution capsule из Workflow Core, project overview, module spec, текущего плана, прямых dependency diffs, текущих изменений и релевантных проверок. После этого отдельно спроектировать self-healing lifecycle MCP+tunnel.",
   "acceptance_criteria": [
-    "На Mac воспроизведён или точно смоделирован сценарий CONTEXT_TOO_LARGE на реалистичном активном плане без изменения production semantics.",
-    "Измерен вклад основных разделов recovery-пакета в bytes и оценочные tokens; обязательные и необязательные части разделены явно.",
-    "Зафиксированы действующие лимиты Workflow Kit и Web Pilot и точная точка, где возникает переполнение.",
-    "Сравнены безопасные варианты: изменение budget, изменение состава пакета и уменьшение повторяющегося контекста; дана конкретная рекомендация с рисками.",
-    "До отдельного согласования пользователя код, budget и recovery semantics не изменяются.",
-    "Отдельной следующей задачей спроектирован startup-механизм MCP+tunnel: persisted registration, быстрая проверка известной установки, fallback discovery/bootstrap, динамические endpoint/порты и безопасное самовосстановление при занятых портах без остановки чужих процессов."
+    "Новый функциональный scope опирается на зарегистрированный архитектурный модуль и согласованную module specification до реализации.",
+    "Recovery не включает полный WORKFLOW.md, исторический VERIFICATION.md или последний commit только потому, что он последний.",
+    "Recovery включает компактный Workflow Core, project overview, module spec/required task context, прямые dependency diffs, текущий worktree и релевантные verification evidence.",
+    "include_last_completed_task по умолчанию false; optional documents являются ссылками, а не автоматическим payload.",
+    "Hard budget Workflow Kit согласован с транспортным лимитом Web Pilot 180000 UTF-8 bytes; soft budget служит целевым сигналом компактности.",
+    "Workflow Kit 1.2 устанавливает module map и compact overview для новых проектов и безопасно обновляет совместимые 1.1 installations без перезаписи пользовательских документов.",
+    "Project Web Pilot использует обновлённый Kit, проходит test/smoke и пересобирается для macOS; Windows package остаётся собираемым из той же кодовой базы.",
+    "Следующая отдельная задача сохраняет ранее согласованное проектирование self-healing MCP+tunnel."
   ],
   "approved_scope": {
     "functional_paths": [
       "src/main.mjs",
-      "tests/electron-smoke.mjs"
+      "tests/electron-smoke.mjs",
+      "src/ui/workspace-setup.mjs",
+      "resources/workspace-setup-worker.mjs",
+      "tests/workspace-setup.test.mjs",
+      "tests/workflow-kit-source.test.mjs",
+      "tests/workflow-kit-recovery.test.mjs",
+      "resources/workflow-kit/WORKFLOW.md",
+      "resources/workflow-kit/lib/common.mjs",
+      "resources/workflow-kit/lib/plan.mjs",
+      "resources/workflow-kit/lib/recovery.mjs",
+      "resources/workflow-kit/lib/validate.mjs",
+      "resources/workflow-kit/lib/installation-files.mjs",
+      "resources/workflow-kit/lib/installer.mjs",
+      "resources/workflow-kit/templates/AGENTS.md",
+      "resources/workflow-kit/templates/PLAN.md",
+      "resources/workflow-kit/templates/MODULES.md",
+      "resources/workflow-kit/templates/MODULE.md",
+      "resources/workflow-kit/templates/OVERVIEW.md",
+      "resources/workflow-kit/templates/START.md",
+      ".harness/kit/WORKFLOW.md",
+      ".harness/kit/lib/common.mjs",
+      ".harness/kit/lib/plan.mjs",
+      ".harness/kit/lib/recovery.mjs",
+      ".harness/kit/lib/validate.mjs",
+      ".harness/kit/lib/installation-files.mjs",
+      ".harness/kit/lib/installer.mjs",
+      ".harness/kit/templates/AGENTS.md",
+      ".harness/kit/templates/PLAN.md",
+      ".harness/kit/templates/MODULES.md",
+      ".harness/kit/templates/MODULE.md",
+      ".harness/kit/templates/OVERVIEW.md",
+      ".harness/kit/templates/START.md",
+      ".harness/kit-manifest.json",
+      ".harness/plans/todo-plan.template.md",
+      "AGENTS.md"
     ],
     "documentation_paths": [
       "docs/CONTEXT_DELIVERY.md",
       "docs/VERIFICATION.md",
       "docs/WORKFLOW_START.md",
-      "docs/architecture/ARCHITECTURE.md"
+      "docs/architecture/ARCHITECTURE.md",
+      "docs/DOCUMENTATION_INDEX.md",
+      "docs/MODULES.md",
+      "docs/modules/workflow-kit-recovery.md",
+      "docs/architecture/OVERVIEW.md",
+      "docs/WORKSPACE_SETUP.md"
     ],
-    "max_functional_files_per_task": 3
+    "max_functional_files_per_task": 20
   },
   "baseline_commit": "d83a01bd9a21ecc3e02538ef976365f719dec0a6",
   "current_task_id": null,
@@ -167,6 +208,11 @@
       "id": "runtime-self-healing-ports-20260914",
       "text": "14.09.2026 пользователь поручил записать в текущий план будущий механизм запуска: до установки/старта обнаруживать и переиспользовать существующие MCP+tunnel, при отсутствии автоматически устанавливать; запоминать подтверждённые endpoints, проверять фактические адреса/порты обоих сервисов и при конфликте порта молча выбирать свободный порт и переподключать компоненты, не завершая чужие процессы. Сначала требуется обсудить архитектуру и последствия, затем отдельно согласовать реализацию.",
       "recorded_at": "2026-09-14T06:22:42+02:00"
+    },
+    {
+      "id": "workflow-recovery-v2-20260914",
+      "text": "14.09.2026 пользователь согласовал Workflow Recovery v2: module-centric architecture; при изменении функционала сначала определить существующий модуль или создать новый, согласовать module specification и только затем todo-plan; recovery новой сессии/refresh/compact должен быть минимальным execution state, а не историей проекта; большой WORKFLOW.md остаётся справочником, в packet передаётся только компактный Workflow Core. Пользователь прямо разрешил реализовать изменения и пересобрать приложение.",
+      "recorded_at": "2026-09-14T06:40:25+02:00"
     }
   ]
 }
@@ -179,20 +225,22 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-kit-recovery-packet-010
 Current Task: нет
-Revision: 243
+Revision: 244
 
 ## Цель
 
-Разобрать, почему recovery-пакет Workflow Kit разрастается до CONTEXT_TOO_LARGE, измерить фактический состав и стоимость обязательного контекста и выбрать безопасную политику упаковки без потери данных, необходимых агенту для продолжения работы. После разбора recovery budget спроектировать устойчивый self-healing bootstrap/lifecycle локальных MCP и tunnel на macOS/Windows: переиспользование существующей установки, установка при отсутствии и автоматическое восстановление при конфликтах endpoint/портов без вмешательства пользователя.
+Перевести Workflow Kit на module-centric Recovery v2: перед функциональным scope определять владельца функционала, сначала согласовывать module specification, затем выполнять todo-plan; новая сессия/refresh/compact получают компактный execution capsule из Workflow Core, project overview, module spec, текущего плана, прямых dependency diffs, текущих изменений и релевантных проверок. После этого отдельно спроектировать self-healing lifecycle MCP+tunnel.
 
 ## Критерии приёмки
 
-- На Mac воспроизведён или точно смоделирован сценарий CONTEXT_TOO_LARGE на реалистичном активном плане без изменения production semantics.
-- Измерен вклад основных разделов recovery-пакета в bytes и оценочные tokens; обязательные и необязательные части разделены явно.
-- Зафиксированы действующие лимиты Workflow Kit и Web Pilot и точная точка, где возникает переполнение.
-- Сравнены безопасные варианты: изменение budget, изменение состава пакета и уменьшение повторяющегося контекста; дана конкретная рекомендация с рисками.
-- До отдельного согласования пользователя код, budget и recovery semantics не изменяются.
-- Отдельной следующей задачей спроектирован startup-механизм MCP+tunnel: persisted registration, быстрая проверка известной установки, fallback discovery/bootstrap, динамические endpoint/порты и безопасное самовосстановление при занятых портах без остановки чужих процессов.
+- Новый функциональный scope опирается на зарегистрированный архитектурный модуль и согласованную module specification до реализации.
+- Recovery не включает полный WORKFLOW.md, исторический VERIFICATION.md или последний commit только потому, что он последний.
+- Recovery включает компактный Workflow Core, project overview, module spec/required task context, прямые dependency diffs, текущий worktree и релевантные verification evidence.
+- include_last_completed_task по умолчанию false; optional documents являются ссылками, а не автоматическим payload.
+- Hard budget Workflow Kit согласован с транспортным лимитом Web Pilot 180000 UTF-8 bytes; soft budget служит целевым сигналом компактности.
+- Workflow Kit 1.2 устанавливает module map и compact overview для новых проектов и безопасно обновляет совместимые 1.1 installations без перезаписи пользовательских документов.
+- Project Web Pilot использует обновлённый Kit, проходит test/smoke и пересобирается для macOS; Windows package остаётся собираемым из той же кодовой базы.
+- Следующая отдельная задача сохраняет ранее согласованное проектирование self-healing MCP+tunnel.
 
 ## Микрозадачи
 
