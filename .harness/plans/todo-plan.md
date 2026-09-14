@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 294,
+  "plan_revision": 295,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workspace-chat-work-sessions-011",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Добавить в Workspace & Sessions явный выбор Chat или Work для первой и дополнительных сессий проекта, сохранить experience в session model, перенести создание сессий в меню проекта и открыть выбранный ChatGPT experience без изменения Recovery flow.",
   "acceptance_criteria": [
     "Каждая session имеет persisted experience chat|work и старое хранилище мигрируется без потери данных.",
@@ -256,6 +256,109 @@
         "task_id": "T005",
         "role": "implementation"
       }
+    },
+    {
+      "id": "T006",
+      "title": "Исправить URL-контракт Work conversation",
+      "why": "Реальный ChatGPT Work после создания разговора переходит с /work/ на обычный /c/<id>; persisted experience должен оставаться Work и такой concrete URL должен быть допустим.",
+      "dependencies": [
+        "T005"
+      ],
+      "functional_paths": [
+        "src/workspace-session.mjs",
+        "tests/workspace-session.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/workspace-sessions.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "acceptance_criteria": [
+        "Work session может сохранить concrete /c/<id> после подтверждённой Work-отправки, не меняя experience=work.",
+        "Legacy migration по-прежнему трактует старый /c/<id> как Chat, потому что в старой schema experience отсутствовал.",
+        "Chat session не принимает явно Work-only URL namespace."
+      ],
+      "verification_ids": [
+        "suite"
+      ],
+      "expected_commit_message": "fix: разрешить Work conversation на общем URL",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "workspace-chat-work-sessions-011",
+        "task_id": "T006",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T007",
+      "title": "Исправить fail-closed guard Work после отправки",
+      "why": "Fail-closed должен проверять Work entrypoint до recovery, но не ошибочно отвергать /c/<id> после того, как recovery уже наблюдаемо отправлен из Work.",
+      "dependencies": [
+        "T006"
+      ],
+      "functional_paths": [
+        "src/context-session.mjs",
+        "tests/context-session.test.mjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/workspace-sessions.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "acceptance_criteria": [
+        "Новая unbound Work session на обычном Chat URL по-прежнему блокируется до loadContext/send.",
+        "После наблюдаемой Work-отправки переход на /c/<id> допускается и conversation URL привязывается только если request marker виден в текущем чате.",
+        "Уже привязанная Work session открывается по exact сохранённому /c/<id> без ложного mismatch."
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "expected_commit_message": "fix: сохранить Work provenance после отправки",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "workspace-chat-work-sessions-011",
+        "task_id": "T007",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T008",
+      "title": "Собрать исправленный релиз Work sessions",
+      "why": "Передать пользователю исправленную сборку после реальной ошибки приёмки.",
+      "dependencies": [
+        "T007"
+      ],
+      "functional_paths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "documentation_paths": [
+        "docs/WORKFLOW_START.md",
+        "docs/modules/workspace-sessions.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "acceptance_criteria": [
+        "Версия повышена до patch release и полный test/smoke проходят.",
+        "Общий build создаёт macOS arm64 и Windows x64 packages; Windows verifier проходит.",
+        "Scope снова READY_FOR_ACCEPTANCE и остаётся ACTIVE до команды пользователя."
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "expected_commit_message": "build: выпустить исправление Work sessions",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "workspace-chat-work-sessions-011",
+        "task_id": "T008",
+        "role": "implementation"
+      }
     }
   ],
   "blocked_reason": null,
@@ -264,6 +367,11 @@
       "id": "469c2e28-ca0d-41d1-b1e9-1e3063381825",
       "text": "14.09.2026 пользователь согласовал UX и контракт: в меню проекта две команды Новый Chat / Новый Work; из карточки контекста убрать создание чата; при создании нового или первом подключении проекта выбирать первую сессию Chat/Work с default Chat; в дереве сессий справа показывать badge Chat/Work; Recovery одинаков для обоих режимов. Разрешена реализация и сборка, финальная проверка релиза остаётся за пользователем.",
       "recorded_at": "2026-09-14T08:39:01.478Z"
+    },
+    {
+      "id": "work-url-real-20260914",
+      "text": "14.09.2026 при реальной приёмке пользователь показал Work UI с Astra и ошибку CHATGPT_EXPERIENCE_MISMATCH. Production diagnostics подтвердили: Work стартует на /work/, но созданный Work conversation переходит на общий /c/<id>. Пользователь поручил исправить ошибку и закончить план.",
+      "recorded_at": "2026-09-14T10:16:15+02:00"
     }
   ]
 }
@@ -273,10 +381,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: workspace-chat-work-sessions-011
 Current Task: нет
-Revision: 294
+Revision: 295
 
 ## Цель
 
@@ -314,6 +422,18 @@ Revision: 294
   - Git Commit: [DONE] build: выпустить Chat и Work sessions
   - Reference: workspace-chat-work-sessions-011 / T005 / implementation
   - Файлы: package.json, package-lock.json, tests/electron-smoke.mjs, docs/WORKFLOW_START.md, docs/modules/workspace-sessions.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
+- [TODO] T006: Исправить URL-контракт Work conversation — Ожидает
+  - Git Commit: [PENDING] fix: разрешить Work conversation на общем URL
+  - Reference: workspace-chat-work-sessions-011 / T006 / implementation
+  - Файлы: src/workspace-session.mjs, tests/workspace-session.test.mjs, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+- [TODO] T007: Исправить fail-closed guard Work после отправки — Ожидает
+  - Git Commit: [PENDING] fix: сохранить Work provenance после отправки
+  - Reference: workspace-chat-work-sessions-011 / T007 / implementation
+  - Файлы: src/context-session.mjs, tests/context-session.test.mjs, tests/electron-smoke.mjs, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+- [TODO] T008: Собрать исправленный релиз Work sessions — Ожидает
+  - Git Commit: [PENDING] build: выпустить исправление Work sessions
+  - Reference: workspace-chat-work-sessions-011 / T008 / implementation
+  - Файлы: package.json, package-lock.json, docs/WORKFLOW_START.md, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 
 ## Context Pack For This Cycle
 
