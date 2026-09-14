@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 301,
+  "plan_revision": 302,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workspace-chat-work-sessions-011",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Добавить в Workspace & Sessions явный выбор Chat или Work для первой и дополнительных сессий проекта, сохранить experience в session model, перенести создание сессий в меню проекта и открыть выбранный ChatGPT experience без изменения Recovery flow.",
   "acceptance_criteria": [
     "Каждая session имеет persisted experience chat|work и старое хранилище мигрируется без потери данных.",
@@ -35,7 +35,11 @@
       "package.json",
       "package-lock.json",
       "src/context-session.mjs",
-      "tests/context-session.test.mjs"
+      "tests/context-session.test.mjs",
+      "src/archive-preload.cjs",
+      "src/ui/archive.mjs",
+      "src/ui/archive.html",
+      "src/ui/project-archive.mjs"
     ],
     "documentation_paths": [
       "docs/modules/workspace-sessions.md",
@@ -359,6 +363,144 @@
         "task_id": "T008",
         "role": "implementation"
       }
+    },
+    {
+      "id": "T009",
+      "title": "Зафиксировать контракт архива сессий",
+      "why": "Расширить Workspace & Sessions lifecycle на архивирование/восстановление/локальное удаление сессий без удаления облачного ChatGPT conversation.",
+      "dependencies": [
+        "T008"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/modules/workspace-sessions.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "acceptance_criteria": [
+        "Спецификация определяет session.archivedAt, правило запрета архивирования последней активной сессии и выбор fallback при архивировании выбранной сессии.",
+        "Архив разделён на проекты и сессии; сессии архивированных проектов не дублируются в session archive.",
+        "Удаление архивной сессии удаляет только локальные metadata/привязки и локальные копии; облачный ChatGPT conversation сохраняется."
+      ],
+      "verification_ids": [],
+      "expected_commit_message": "docs: согласовать архив сессий",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "workspace-chat-work-sessions-011",
+        "task_id": "T009",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T010",
+      "title": "Реализовать lifecycle архива сессий в storage",
+      "why": "Persisted session model должен хранить архивный статус и безопасно удалять локальные ссылки без потери проекта.",
+      "dependencies": [
+        "T009"
+      ],
+      "functional_paths": [
+        "src/workspace-session.mjs",
+        "tests/workspace-session.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/workspace-sessions.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "acceptance_criteria": [
+        "Storage schema v5 добавляет session.archivedAt и мигрирует v4 с archivedAt=null.",
+        "Архивирование выбранной сессии переключает проект на наиболее недавно открытую оставшуюся активную сессию; последнюю активную сессию архивировать нельзя.",
+        "Restore возвращает сессию в активное дерево без изменения experience/chatUrl.",
+        "Forget удаляет только архивную session и очищает её локальные backup/diagnostic references, не затрагивая папку проекта."
+      ],
+      "verification_ids": [
+        "suite"
+      ],
+      "expected_commit_message": "feat: добавить lifecycle архива сессий",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "workspace-chat-work-sessions-011",
+        "task_id": "T010",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T011",
+      "title": "Добавить архив сессий в UI и IPC",
+      "why": "Пользователю нужны команды архивирования сессии и отдельная вкладка архива с проектом-владельцем, restore и локальным delete.",
+      "dependencies": [
+        "T010"
+      ],
+      "functional_paths": [
+        "src/main.mjs",
+        "src/preload.cjs",
+        "src/archive-preload.cjs",
+        "src/ui/sidebar.mjs",
+        "src/ui/archive.mjs",
+        "src/ui/archive.html",
+        "src/ui/project-archive.mjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/workspace-sessions.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "acceptance_criteria": [
+        "У каждой активной session есть меню с Перенести в архив.",
+        "Archive window имеет отдельные вкладки Проекты и Сессии; session row показывает имя/тип и проект-владелец.",
+        "Session archive не показывает sessions проектов, которые сами находятся в project archive.",
+        "Из session archive можно восстановить session или удалить её локальную запись; UI явно сообщает, что облачный ChatGPT conversation остаётся."
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "expected_commit_message": "feat: добавить UI архива сессий",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "workspace-chat-work-sessions-011",
+        "task_id": "T011",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T012",
+      "title": "Собрать релиз с архивом сессий",
+      "why": "Передать пользователю цельную patch-сборку для финальной проверки Chat/Work и session archive.",
+      "dependencies": [
+        "T011"
+      ],
+      "functional_paths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "documentation_paths": [
+        "docs/WORKFLOW_START.md",
+        "docs/modules/workspace-sessions.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "acceptance_criteria": [
+        "Patch version повышена; полный npm test и Electron smoke проходят.",
+        "Общий npm run build создаёт macOS arm64 и Windows x64 packages; Windows verifier проходит.",
+        "Scope остаётся ACTIVE/READY_FOR_ACCEPTANCE до явной команды пользователя."
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "expected_commit_message": "build: выпустить архив сессий",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "workspace-chat-work-sessions-011",
+        "task_id": "T012",
+        "role": "implementation"
+      }
     }
   ],
   "blocked_reason": null,
@@ -372,6 +514,11 @@
       "id": "work-url-real-20260914",
       "text": "14.09.2026 при реальной приёмке пользователь показал Work UI с Astra и ошибку CHATGPT_EXPERIENCE_MISMATCH. Production diagnostics подтвердили: Work стартует на /work/, но созданный Work conversation переходит на общий /c/<id>. Пользователь поручил исправить ошибку и закончить план.",
       "recorded_at": "2026-09-14T10:16:15+02:00"
+    },
+    {
+      "id": "session-archive-20260914",
+      "text": "14.09.2026 пользователь после успешной проверки Work поручил завершить scope архивом сессий: session можно отправить в архив; в архиве отдельно показываются проекты и sessions активных проектов с индикатором проекта-владельца; session можно restore или удалить локально вместе с локальными ссылками/metadata, при этом облачный ChatGPT conversation на сервере OpenAI не удаляется.",
+      "recorded_at": "2026-09-14T10:52:02+02:00"
     }
   ]
 }
@@ -381,10 +528,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: workspace-chat-work-sessions-011
 Current Task: нет
-Revision: 301
+Revision: 302
 
 ## Цель
 
@@ -433,6 +580,22 @@ Revision: 301
 - [DONE] T008: Собрать исправленный релиз Work sessions — Завершено
   - Git Commit: [DONE] build: выпустить исправление Work sessions
   - Reference: workspace-chat-work-sessions-011 / T008 / implementation
+  - Файлы: package.json, package-lock.json, docs/WORKFLOW_START.md, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+- [TODO] T009: Зафиксировать контракт архива сессий — Ожидает
+  - Git Commit: [PENDING] docs: согласовать архив сессий
+  - Reference: workspace-chat-work-sessions-011 / T009 / implementation
+  - Файлы: docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+- [TODO] T010: Реализовать lifecycle архива сессий в storage — Ожидает
+  - Git Commit: [PENDING] feat: добавить lifecycle архива сессий
+  - Reference: workspace-chat-work-sessions-011 / T010 / implementation
+  - Файлы: src/workspace-session.mjs, tests/workspace-session.test.mjs, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+- [TODO] T011: Добавить архив сессий в UI и IPC — Ожидает
+  - Git Commit: [PENDING] feat: добавить UI архива сессий
+  - Reference: workspace-chat-work-sessions-011 / T011 / implementation
+  - Файлы: src/main.mjs, src/preload.cjs, src/archive-preload.cjs, src/ui/sidebar.mjs, src/ui/archive.mjs, src/ui/archive.html, src/ui/project-archive.mjs, tests/electron-smoke.mjs, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+- [TODO] T012: Собрать релиз с архивом сессий — Ожидает
+  - Git Commit: [PENDING] build: выпустить архив сессий
+  - Reference: workspace-chat-work-sessions-011 / T012 / implementation
   - Файлы: package.json, package-lock.json, docs/WORKFLOW_START.md, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 
 ## Context Pack For This Cycle
