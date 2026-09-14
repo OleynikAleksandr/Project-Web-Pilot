@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 283,
+  "plan_revision": 285,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workspace-chat-work-sessions-011",
@@ -129,8 +129,8 @@
         "bindChat отклоняет concrete conversation URL, не соответствующий experience выбранной session."
       ],
       "expected_commit_message": "feat: добавить experience сессии",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workspace-chat-work-sessions-011",
         "task_id": "T002",
@@ -267,7 +267,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workspace-chat-work-sessions-011
 Current Task: нет
-Revision: 283
+Revision: 285
 
 ## Цель
 
@@ -289,8 +289,8 @@ Revision: 283
   - Git Commit: [DONE] docs: определить Chat и Work sessions
   - Reference: workspace-chat-work-sessions-011 / T001 / implementation
   - Файлы: docs/modules/workspace-sessions.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/VERIFICATION.md
-- [TODO] T002: Мигрировать session model на experience Chat Work — Ожидает
-  - Git Commit: [PENDING] feat: добавить experience сессии
+- [DONE] T002: Мигрировать session model на experience Chat Work — Завершено
+  - Git Commit: [DONE] feat: добавить experience сессии
   - Reference: workspace-chat-work-sessions-011 / T002 / implementation
   - Файлы: src/workspace-session.mjs, tests/workspace-session.test.mjs, docs/modules/workspace-sessions.md, docs/VERIFICATION.md
 - [TODO] T003: Перенести создание Chat Work в проектный UI и первую сессию — Ожидает

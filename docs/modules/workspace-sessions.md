@@ -166,3 +166,7 @@ Fail-closed правило: стартовая Work session может пере�
 Актуальные публичные источники OpenAI на момент решения:
 - `https://chatgpt.com/work/` — канонический Work entrypoint;
 - OpenAI Help Center, `ChatGPT Work and Codex` — Chat и Work описаны как отдельные experiences; конкретный модельный выбор остаётся нативному ChatGPT UI.
+
+## Контракт session model — T002
+
+Для persisted-модели зафиксирована schema v4: каждая session обязана хранить `experience: chat|work`; канонический creator — `newSession(workspace, experience)`. Миграция v1/v2/v3 должна сохранять точный backup исходного файла, выводить `/work/...` как `work`, а обычные/непривязанные старые session — как `chat`. `bindChat()` обязан fail-closed отклонять concrete conversation URL другого experience. Фактическая реализация этого контракта объединяется с T003, где одновременно обновляются проектный UI и обязательный архитектурный документ.

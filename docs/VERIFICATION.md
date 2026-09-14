@@ -508,3 +508,7 @@ Windows lifecycle stale-PID/dynamic-endpoint behavior is covered by portable pro
 ## Chat / Work sessions — T001 entrypoint
 
 14.09.2026 перед реализацией подтверждён канонический публичный Work entrypoint `https://chatgpt.com/work/`; OpenAI Help Center описывает Chat и Work как отдельные ChatGPT experiences. Принят fail-closed contract: Web Pilot открывает `/work/`, но не отправляет recovery, если фактическая страница не остаётся в Work namespace или не имеет доступного composer. DOM-переключатель Chat/Work не используется. Конкретная модель внутри Work остаётся нативному ChatGPT.
+
+## Chat / Work sessions — T002 session-model contract
+
+До фиксации контракта был прогнан подготовленный migration candidate: targeted `workspace-session` 16/16 и полный `npm test` 90 total / 88 passed / 0 failed / 2 native-Windows skipped. Workflow Kit потребовал обязательный `docs/architecture/ARCHITECTURE.md` для изменения `src/**`; незавершённая exact-candidate transaction не допускает расширения набора файлов. Поэтому T002 фиксирует schema/migration contract, а тот же проверенный implementation diff переносится в T003 вместе с architecture sync.
