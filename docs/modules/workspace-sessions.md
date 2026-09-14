@@ -174,3 +174,9 @@ Fail-closed правило: стартовая Work session может пере�
 ## Реализация project/session UI — T003
 
 Storage schema v4 и `newSession(workspace, experience)` реализованы вместе с UI. Создание дополнительной session из меню проекта одновременно выбирает этот проект; повторное открытие проекта сохраняет уже существующую selected session. Setup хранит first-session choice только transiently: new/first-connect preview показывает Chat|Work с default Chat, cancel/new setup снова начинается с Chat. Sidebar больше не содержит кнопку создания session в Context card; проектное меню содержит Новый Chat / Новый Work, а session row показывает badge справа от имени.
+
+## Реализация experience routing — T004
+
+Routing вынесен в `src/chatgpt-experience.mjs`: обычный Chat стартует на `https://chatgpt.com/`, Work — на `https://chatgpt.com/work/`. `navigate()` выбирает entrypoint только по persisted `session.experience` и не выбирает модель/режим reasoning. `ContextSession` независимо проверяет фактический URL перед recovery: новая Work-сессия принимает только `/work` namespace, Chat — обычный Chat namespace. При mismatch выдаётся `CHATGPT_EXPERIENCE_MISMATCH`, `loadContext()` и отправка не выполняются.
+
+После наблюдаемой отправки прежний `bindChat()` сохраняет только concrete conversation URL и дополнительно проверяет совпадение URL с immutable experience. Electron smoke создаёт через проектное меню сначала дополнительный Chat, затем Work; fixture Work начинается на `/work/`, после отправки становится `/work/<request-id>`, сохраняется как Work и отображается соответствующим badge.

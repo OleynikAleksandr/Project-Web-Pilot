@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { normalizeChatUrl } from './workspace-session.mjs';
 import { CONTEXT_PROTOCOL, validateContextPacket } from './mcp-runtime.mjs';
+import { chatGPTUrlMatchesExperience } from './chatgpt-experience.mjs';
 
 export function packetMatchesProject(packet, project) {
   const expected = { project_id: project.projectId, project_name: project.name, plan_revision: project.planRevision,
@@ -72,8 +73,10 @@ export class ContextSession {
 
   atExpectedChat(project) {
     if (!this.composer.contents?.getURL) return true;
-    const url = normalizeChatUrl(this.composer.contents.getURL());
-    return project.chatUrl ? project.chatUrl === url : !url;
+    const current = this.composer.contents.getURL();
+    const url = normalizeChatUrl(current);
+    return project.chatUrl ? project.chatUrl === url
+      : !url && chatGPTUrlMatchesExperience(current, project.experience ?? 'chat');
   }
 
   async retry() {
@@ -111,6 +114,11 @@ export class ContextSession {
       const observation = await this.composer.inspect({ requestId: attempt?.requestId, text: attempt?.text });
       if (!this.current(generation)) return;
       if (observation.login) { this.emit({ phase: 'waiting-login', projectInfo: info }); return; }
+      if (!chatGPTUrlMatchesExperience(observation.url, project.experience ?? 'chat')) {
+        throw failure('CHATGPT_EXPERIENCE_MISMATCH', project.experience === 'work'
+          ? 'Work-сессия не открыта в режиме Work. Recovery не отправлен.'
+          : 'Chat-сессия не открыта в обычном Chat. Recovery не отправлен.');
+      }
       const currentUrl = normalizeChatUrl(observation.url);
       if (project.chatUrl && currentUrl !== project.chatUrl) {
         this.emit({ phase: 'chat-changed', projectInfo: info }); return;

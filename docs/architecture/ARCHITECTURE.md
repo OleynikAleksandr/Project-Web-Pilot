@@ -532,3 +532,7 @@ Release 0.6.4 integrates persisted runtime registration and lifecycle adapters f
 ## Workspace sessions Chat / Work — scope 011
 
 `WorkspaceSessions` переходит на storage schema v4: каждая локальная session имеет immutable `experience=chat|work`, а concrete conversation URL обязан принадлежать тому же experience. Создание session является операцией проекта: меню `⋯` создаёт `newSession(workspace, experience)` и одновременно делает этот проект/сессию выбранными. Первая session нового или впервые подключаемого проекта получает experience из transient setup state; повторное открытие уже зарегистрированного проекта не создаёт session и не спрашивает тип заново. Context Recovery остаётся независимым от experience.
+
+## Chat / Work experience routing — scope 011 / T004
+
+Workspace & Sessions владеет только верхнеуровневым маршрутом Chat/Work. `chatgpt-experience` задаёт два entrypoint и классификатор URL; `ContextSession` fail-closed проверяет experience до получения/отправки recovery. Модель внутри ChatGPT не фиксируется Web Pilot. Concrete conversation URL остаётся единственной долговременной облачной привязкой сессии и обязан соответствовать persisted `experience`.

@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 288,
+  "plan_revision": 291,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workspace-chat-work-sessions-011",
@@ -33,7 +33,9 @@
       "tests/chatgpt-experience.test.mjs",
       "tests/electron-smoke.mjs",
       "package.json",
-      "package-lock.json"
+      "package-lock.json",
+      "src/context-session.mjs",
+      "tests/context-session.test.mjs"
     ],
     "documentation_paths": [
       "docs/modules/workspace-sessions.md",
@@ -188,7 +190,9 @@
         "src/chatgpt-experience.mjs",
         "src/main.mjs",
         "tests/chatgpt-experience.test.mjs",
-        "tests/electron-smoke.mjs"
+        "tests/electron-smoke.mjs",
+        "src/context-session.mjs",
+        "tests/context-session.test.mjs"
       ],
       "documentation_paths": [
         "docs/modules/workspace-sessions.md",
@@ -209,8 +213,8 @@
         "При изменении ChatGPT UI/route Work fallback fail-closed не отправляет recovery в неправильный experience."
       ],
       "expected_commit_message": "feat: маршрутизировать Chat и Work sessions",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workspace-chat-work-sessions-011",
         "task_id": "T004",
@@ -271,7 +275,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workspace-chat-work-sessions-011
 Current Task: нет
-Revision: 288
+Revision: 291
 
 ## Цель
 
@@ -301,10 +305,10 @@ Revision: 288
   - Git Commit: [DONE] feat: добавить UI Chat и Work sessions
   - Reference: workspace-chat-work-sessions-011 / T003 / implementation
   - Файлы: src/main.mjs, src/preload.cjs, src/ui/index.html, src/ui/sidebar.mjs, src/ui/workspace-setup.mjs, tests/electron-smoke.mjs, src/workspace-session.mjs, tests/workspace-session.test.mjs, docs/modules/workspace-sessions.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
-- [TODO] T004: Интегрировать Chat Work experience routing с recovery — Ожидает
-  - Git Commit: [PENDING] feat: маршрутизировать Chat и Work sessions
+- [DONE] T004: Интегрировать Chat Work experience routing с recovery — Завершено
+  - Git Commit: [DONE] feat: маршрутизировать Chat и Work sessions
   - Reference: workspace-chat-work-sessions-011 / T004 / implementation
-  - Файлы: src/chatgpt-experience.mjs, src/main.mjs, tests/chatgpt-experience.test.mjs, tests/electron-smoke.mjs, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+  - Файлы: src/chatgpt-experience.mjs, src/main.mjs, tests/chatgpt-experience.test.mjs, tests/electron-smoke.mjs, src/context-session.mjs, tests/context-session.test.mjs, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T005: Собрать релиз Chat Work sessions — Ожидает
   - Git Commit: [PENDING] build: выпустить Chat и Work sessions
   - Reference: workspace-chat-work-sessions-011 / T005 / implementation

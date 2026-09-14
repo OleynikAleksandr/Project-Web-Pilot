@@ -518,3 +518,9 @@ Windows lifecycle stale-PID/dynamic-endpoint behavior is covered by portable pro
 `workspace-session` targeted suite после интеграции schema v4: 17/17 passed. Electron smoke через реальный sidebar IPC проверяет: first-session control видим на preview нового проекта, default Chat, переключение на Work и сброс после cancel; созданная первая session имеет `experience=chat`; в Context card отсутствует старая кнопка; project menu содержит `Новый Chat`, `Новый Work`, copy path и archive; новая Chat session создаётся из меню; session tree показывает badge Chat. Фактическая Work navigation/отправка намеренно проверяется в T004 после добавления experience router.
 
 T003 final candidate: `npm test` — 91 total, 89 passed, 0 failed, 2 native-Windows skipped; `npm run smoke` passed. Smoke использует только Chat для фактической отправки на этом этапе; Work-кнопка и first-session Work selection проверяются как UI/state, а фактический `/work/` routing относится к T004.
+
+## Chat / Work sessions — T004 routing
+
+Targeted routing/context tests подтверждают явные entrypoints и fail-closed: Work-сессия на обычном `https://chatgpt.com/` получает `CHATGPT_EXPERIENCE_MISMATCH` до `loadContext()`/send; Work entrypoint `/work/` допускает тот же recovery flow. Electron smoke создаёт новую Work через проектное меню, загружает `/work/`, отправляет recovery, получает concrete `/work/<request-id>`, сохраняет `experience=work` и затем без новой загрузки recovery возвращается к старой Chat-сессии.
+
+T004 final candidate: `npm test` — 95 total, 93 passed, 0 failed, 2 native-Windows skipped; `npm run smoke` passed. Smoke выполнил три startup recovery: исходный Chat, дополнительный Chat и дополнительный Work. Work сохранился как concrete `/work/<request-id>`; возврат к первой Chat-сессии не вызвал новую загрузку recovery.

@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto';
 import { ContextSession, packetMatchesProject, startupMessage } from '../src/context-session.mjs';
 
 const project={workspace:'/Projects/Мой проект',projectId:'id-1',name:'Мой проект',planRevision:7,scopeId:'scope-1',
-  scopeStatus:'ACTIVE',deliveryStatus:'IN_PROGRESS',nextTaskId:'T001',nextTaskTitle:'Read',sessionId:'session-1',
+  scopeStatus:'ACTIVE',deliveryStatus:'IN_PROGRESS',nextTaskId:'T001',nextTaskTitle:'Read',sessionId:'session-1', experience:'chat',
   chatUrl:'https://chatgpt.com/c/aaaaaaaa',attempt:null,receipt:null};
 const facts={project_id:project.projectId,project_name:project.name,plan_revision:7,scope_id:'scope-1',
   execution_scope_status:'ACTIVE',delivery_status:'IN_PROGRESS',task_id:'T001',task_title:'Read'};
@@ -20,7 +20,7 @@ function controllerFixture({ savedAttempt=null, chatUrl=project.chatUrl }={}){
   let info={...project};let inspection={url:chatUrl??'https://chatgpt.com/',editorAvailable:true,writable:true,draftLength:0,busy:false,login:false,messageSeen:false};
   const stateLog=[];
   const store={selected:()=>structuredClone(saved),project:()=>structuredClone(saved),inspect:async()=>{
-    const {sessionId,chatUrl,attempt,receipt,...result}=info;return structuredClone(result);},
+    const {sessionId,experience,chatUrl,attempt,receipt,...result}=info;return structuredClone(result);},
     updateSession:async(_w,_s,patch)=>{saved={...saved,...structuredClone(patch)};return structuredClone(saved);},
     bindChat:async(_w,_s,url)=>{saved.chatUrl=url;return structuredClone(saved);}};
   const runtime={ensure:async()=>({}),loadContext:async()=>{loads++;return packet();}};
@@ -106,4 +106,30 @@ test('changed plan after delivery is shown as stale and explicit refresh obtains
   assert.equal(f.controller.state.phase,'stale');assert.equal(f.sends(),1);
   f.runtime.loadContext=async()=>{const p=packet();p.facts.plan_revision=8;return p;};
   await f.controller.retry();await f.controller.tick();assert.equal(f.controller.state.phase,'delivered');assert.equal(f.sends(),2);
+});
+
+
+test('Work session fails closed when ChatGPT is not in Work experience', async()=>{
+  const f=controllerFixture({chatUrl:null});
+  f.store.selected=()=>({...structuredClone(f.saved),experience:'work'});
+  f.store.project=()=>({...structuredClone(f.saved),experience:'work'});
+  f.inspection.url='https://chatgpt.com/';
+  f.controller.attach({...f.saved,experience:'work'});
+  await f.controller.tick();
+  assert.equal(f.controller.state.phase,'error');
+  assert.equal(f.controller.state.error.code,'CHATGPT_EXPERIENCE_MISMATCH');
+  assert.equal(f.loads(),0); assert.equal(f.sends(),0);
+});
+
+test('unbound Work session accepts Work entrypoint before recovery', async()=>{
+  const f=controllerFixture({chatUrl:null});
+  f.store.selected=()=>({...structuredClone(f.saved),experience:'work'});
+  f.store.project=()=>({...structuredClone(f.saved),experience:'work'});
+  f.inspection.url='https://chatgpt.com/work/';
+  f.composer.contents.getURL=()=>f.inspection.url;
+  f.composer.deliver=async options=>{ assert.equal(options.canContinue(),true); return {state:'deferred',reason:'SEND_UNAVAILABLE'}; };
+  f.controller.attach({...f.saved,experience:'work'});
+  await f.controller.tick();
+  assert.equal(f.loads(),1);
+  assert.equal(f.controller.state.phase,'waiting-composer');
 });

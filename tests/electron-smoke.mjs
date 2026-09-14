@@ -26,7 +26,7 @@ document.querySelector('form').addEventListener('submit',event=>{
  event.preventDefault(); const editor=document.getElementById('prompt-textarea');const text=editor.innerText;
  const message={text,at:Date.now()};window.fixtureMessages.push(message);
  showMessage(text);
- editor.textContent='';const match=text.match(/wp-request-[a-zA-Z0-9-]+/);if(match)history.pushState({},'', '/c/'+match[0]);sessionStorage.setItem(location.pathname,JSON.stringify(window.fixtureMessages));
+ editor.textContent='';const match=text.match(/wp-request-[a-zA-Z0-9-]+/);if(match){const prefix=location.pathname.startsWith('/work')?'/work/':'/c/';history.pushState({},'', prefix+match[0]);}sessionStorage.setItem(location.pathname,JSON.stringify(window.fixtureMessages));
 });
 </script></body></html>`;
 
@@ -247,14 +247,24 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(store.snapshot().projects[0].sessions.length, 2);
   assert.deepEqual(await sidebar.executeJavaScript('Array.from(document.querySelectorAll(".session-experience")).map(e=>e.textContent)'), ['Chat', 'Chat']);
   assert.equal(snapshot().projects[0].sessions[0].attempt, undefined, 'Session tree only receives metadata');
+  await sidebar.executeJavaScript(`document.querySelector('.project-menu-button').click(); document.querySelector('.new-project-work').click()`);
+  await waitFor(() => store.selected()?.experience === 'work' && snapshot().context.phase === 'delivered', 'new Work via project menu IPC', snapshot);
+  assert.equal(packetLoads, 3);
+  const third = store.selected();
+  assert.equal(third.experience, 'work');
+  assert.ok(third.chatUrl.startsWith('https://chatgpt.com/work/'));
+  assert.ok(browser.getURL().startsWith('https://chatgpt.com/work/'));
+  assert.equal(store.snapshot().projects[0].sessions.length, 3);
+  assert.deepEqual(await sidebar.executeJavaScript('Array.from(document.querySelectorAll(".session-experience")).map(e=>e.textContent)'), ['Chat', 'Chat', 'Work']);
   await sidebar.executeJavaScript(`document.querySelector('[data-session-id="${first.sessionId}"]').click()`);
   await waitFor(() => store.selected()?.sessionId === first.sessionId && snapshot().context.phase === 'delivered'
     && browser.getURL() === first.chatUrl, 'select earlier session via tree', snapshot);
-  assert.equal(packetLoads, 2, 'Earlier chat does not receive another context packet');
+  assert.equal(packetLoads, 3, 'Earlier chat does not receive another context packet');
   assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 2);
   assert.ok(await browser.executeJavaScript(`window.fixtureMessages[0].text.includes('${first.attempt.requestId}')`));
   assert.equal(store.selected().attempt.requestId, first.attempt.requestId);
   assert.equal(store.snapshot().projects[0].sessions[1].sessionId, second.sessionId);
+  assert.equal(store.snapshot().projects[0].sessions[2].sessionId, third.sessionId);
   const doubleClickWorkspace = () => sidebar.executeJavaScript(`{
     const button = document.querySelector('.project');
     button.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
@@ -268,7 +278,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(store.selected().sessionId, first.sessionId, 'Expanding does not switch to latest session');
   const history = new WorkspaceSessions(store.file); await history.load();
   assert.equal(history.selected().sessionId, first.sessionId);
-  assert.equal(history.snapshot().projects[0].sessions.length, 2);
+  assert.equal(history.snapshot().projects[0].sessions.length, 3);
   assert.equal(history.snapshot().projects[0].expanded, true);
   const startFile = path.join(workspace, 'docs/WORKFLOW_START.md');
   const startText = await fs.readFile(startFile); await fs.unlink(startFile);
@@ -276,14 +286,14 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await selectWorkspace(workspace);
   assert.equal(snapshot().setup.ready, false);
   assert.ok(snapshot().setup.issues.some(i => i.path === 'docs/WORKFLOW_START.md'));
-  assert.equal(store.selected().sessionId, first.sessionId); assert.equal(browser.getURL(), urlBefore); assert.equal(packetLoads, 2);
+  assert.equal(store.selected().sessionId, first.sessionId); assert.equal(browser.getURL(), urlBefore); assert.equal(packetLoads, 3);
   await fs.writeFile(startFile, startText);
   await sidebar.executeJavaScript('document.getElementById("setup-cancel").click()');
   await waitFor(() => !snapshot().setup, 'cancel blocked open keeps current session', snapshot);
   const archiveCurrent = async () => {
     await sidebar.executeJavaScript('document.querySelector(".project-menu-button").click(); document.querySelector(".archive-project").click()');
     await waitFor(() => snapshot().archives.some(project => project.workspace === workspace) && !snapshot().selected && !snapshot().pageLoading, 'archive current project', snapshot);
-    assert.equal(packetLoads, 2);
+    assert.equal(packetLoads, 3);
   };
   const makeAux = async (name, suffix) => {
     const dir = path.join(dataDir + '-projects', name);
@@ -359,7 +369,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.ok(store.project(auxE.workspace)?.archivedAt, 'unselected archived project is untouched');
   await browser.loadURL(first.chatUrl);
   assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 2, 'Web conversation remains after archive operations');
-  assert.equal(packetLoads, 2, 'Archive operations never send context packets');
+  assert.equal(packetLoads, 3, 'Archive operations never send context packets');
   firstArchiveWindow.close();
 
   await waitFor(() => sidebar.executeJavaScript('document.getElementById("context-window-value").textContent === "Ожидаем данные"'), 'unknown context window UI', snapshot);

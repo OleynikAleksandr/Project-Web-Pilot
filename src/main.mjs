@@ -8,6 +8,7 @@ import { WorkspaceSessions, normalizeChatUrl } from './workspace-session.mjs';
 import { McpRuntime, findRuntimeFolder } from './mcp-runtime.mjs';
 import { ChatGPTComposer } from './chatgpt-composer.mjs';
 import { ContextSession } from './context-session.mjs';
+import { chatGPTEntrypoint } from './chatgpt-experience.mjs';
 import { WorkspaceDeletion } from './workspace-deletion.mjs';
 import { WorkspaceSetup } from './workspace-setup.mjs';
 import { ChromiumDiagnostics } from './chromium-diagnostics.mjs';
@@ -311,7 +312,7 @@ async function navigate(project = store.selected()) {
   const ownNavigation = ++navigationId;
   controller?.cancel();
   pageLoading = true; publish();
-  const target = project?.chatUrl ?? 'https://chatgpt.com/';
+  const target = project?.chatUrl ?? chatGPTEntrypoint(project?.experience ?? 'chat');
   try {
     await browser.webContents.loadURL(target);
     if (ownNavigation !== navigationId) return;
