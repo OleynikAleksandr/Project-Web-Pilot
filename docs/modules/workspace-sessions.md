@@ -215,3 +215,8 @@ Session archive является частью Workspace & Sessions и не ме�
 Archive UI содержит две независимые вкладки: `Проекты` и `Сессии`. В `Сессиях` показываются только архивные sessions проектов, которые сами не находятся в project archive. Строка session обязательно показывает project owner, title/fallback name, badge `Chat|Work` и дату архивирования. Если проект архивирован целиком, его sessions не дублируются в отдельной session-вкладке; после restore проекта ранее архивные sessions снова становятся видимы в session archive.
 
 Локальное удаление session очищает primary workspace storage и доступные локальные ссылки этой session в migration-backups/diagnostics, если они существуют. Папка проекта, Git repository и любые облачные чаты не удаляются.
+
+
+## Реализация session archive storage — T010
+
+Storage schema v5 добавляет `session.archivedAt`. Миграция v4 выставляет `archivedAt=null` и сохраняет `.v4-backup`. Архивирование выбранной session атомарно переключает selection на наиболее недавно открытую оставшуюся активную session; `SESSION_LAST_ACTIVE` блокирует архивирование последней активной session. Restore сохраняет `experience/chatUrl`. Локальный forget архивной session удаляет primary metadata и доступные ссылки этой session из migration backup/diagnostics, не удаляя workspace или cloud conversation.

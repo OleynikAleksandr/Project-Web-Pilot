@@ -548,3 +548,8 @@ Targeted `context-session` suite: 13/13 passed. Новый regression воспр
 ## Chat / Work sessions — T009 session archive contract
 
 14.09.2026 по результату пользовательской приёмки 0.6.6 согласовано расширение текущего scope: отдельный lifecycle архивных sessions с project owner в UI. Последняя активная session проекта не архивируется; selected session при архивировании переключается на оставшуюся. Session archive не дублирует sessions проекта, если сам проект находится в project archive. Delete session означает локальное удаление metadata/reference; облачный ChatGPT conversation сохраняется.
+
+
+## Chat / Work sessions — T010 session storage
+
+Targeted `workspace-session` suite после schema v5: 19/19 passed. Проверены migration v4→v5, fallback selected session, запрет архивирования последней активной session, restore с сохранением experience/chatUrl, persistence после restart и локальный forget с очисткой `.v4-backup`/`diagnostics.jsonl` при сохранении workspace folder. Полный `npm test`: 98 total, 96 passed, 0 failed, 2 native-Windows skipped.

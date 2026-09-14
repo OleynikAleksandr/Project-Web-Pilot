@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 304,
+  "plan_revision": 306,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workspace-chat-work-sessions-011",
@@ -418,8 +418,8 @@
         "suite"
       ],
       "expected_commit_message": "feat: добавить lifecycle архива сессий",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workspace-chat-work-sessions-011",
         "task_id": "T010",
@@ -531,7 +531,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workspace-chat-work-sessions-011
 Current Task: нет
-Revision: 304
+Revision: 306
 
 ## Цель
 
@@ -585,8 +585,8 @@ Revision: 304
   - Git Commit: [DONE] docs: согласовать архив сессий
   - Reference: workspace-chat-work-sessions-011 / T009 / implementation
   - Файлы: docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T010: Реализовать lifecycle архива сессий в storage — Ожидает
-  - Git Commit: [PENDING] feat: добавить lifecycle архива сессий
+- [DONE] T010: Реализовать lifecycle архива сессий в storage — Завершено
+  - Git Commit: [DONE] feat: добавить lifecycle архива сессий
   - Reference: workspace-chat-work-sessions-011 / T010 / implementation
   - Файлы: src/workspace-session.mjs, tests/workspace-session.test.mjs, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T011: Добавить архив сессий в UI и IPC — Ожидает

@@ -88,22 +88,24 @@ export async function readWorkspace(input) {
 
 const copy = value => structuredClone(value);
 const invalid = () => new WorkspaceError('SESSIONS_INVALID', 'Формат сохранённых проектов не поддерживается. Исходный файл сохранён.');
-const sessionFields = ['sessionId', 'experience', 'chatUrl', 'attempt', 'receipt', 'title', 'createdAt', 'lastOpenedAt'];
+const sessionFields = ['sessionId', 'experience', 'chatUrl', 'attempt', 'receipt', 'title', 'createdAt', 'lastOpenedAt', 'archivedAt'];
 
 function validate(data) {
-  if (data?.schemaVersion !== 4 || !Array.isArray(data.projects)) throw invalid();
+  if (data?.schemaVersion !== 5 || !Array.isArray(data.projects)) throw invalid();
   const urls = [], ids = [], workspaces = [];
   for (const p of data.projects) {
     if (!p || typeof p.workspace !== 'string' || !path.isAbsolute(p.workspace)
         || typeof p.projectId !== 'string' || !p.projectId || typeof p.name !== 'string'
         || !Array.isArray(p.sessions) || !p.sessions.length || typeof p.expanded !== 'boolean'
         || (p.archivedAt !== null && (!Number.isFinite(p.archivedAt) || p.archivedAt <= 0))
-        || !p.sessions.some(s => s?.sessionId === p.selectedSessionId)) throw invalid();
+        || !p.sessions.some(s => s?.sessionId === p.selectedSessionId && s.archivedAt === null)
+        || !p.sessions.some(s => s?.archivedAt === null)) throw invalid();
     workspaces.push(p.workspace);
     for (const s of p.sessions) {
       if (!s || typeof s.sessionId !== 'string' || !s.sessionId || typeof s.title !== 'string'
           || !['chat', 'work'].includes(s.experience)
           || !Number.isFinite(s.createdAt) || !Number.isFinite(s.lastOpenedAt)
+          || (s.archivedAt !== null && (!Number.isFinite(s.archivedAt) || s.archivedAt <= 0))
           || (s.chatUrl !== null && (!normalizeChatUrl(s.chatUrl) || normalizeChatUrl(s.chatUrl) !== s.chatUrl
             || !conversationUrlCompatibleWithExperience(s.chatUrl, s.experience)))) throw invalid();
       ids.push(s.sessionId);
@@ -129,15 +131,63 @@ function migrate(data) {
   if (data?.schemaVersion === 2 && Array.isArray(data.projects)) {
     data = { ...data, schemaVersion: 3, projects: data.projects.map(p => ({ ...p, archivedAt: null })) };
   }
-  if (data?.schemaVersion !== 3 || !Array.isArray(data.projects)) throw invalid();
-  return { ...data, schemaVersion: 4, projects: data.projects.map(p => ({ ...p,
-    sessions: p.sessions.map(session => ({ ...session, experience: conversationExperience(session.chatUrl) ?? 'chat' })) })) };
+  if (data?.schemaVersion === 3 && Array.isArray(data.projects)) {
+    data = { ...data, schemaVersion: 4, projects: data.projects.map(p => ({ ...p,
+      sessions: p.sessions.map(session => ({ ...session, experience: conversationExperience(session.chatUrl) ?? 'chat' })) })) };
+  }
+  if (data?.schemaVersion !== 4 || !Array.isArray(data.projects)) throw invalid();
+  return { ...data, schemaVersion: 5, projects: data.projects.map(p => ({ ...p,
+    sessions: p.sessions.map(session => ({ ...session, archivedAt: null })) })) };
+}
+
+async function fileExists(file) {
+  try { await fs.access(file); return true; } catch (error) { if (error.code === 'ENOENT') return false; throw error; }
+}
+
+async function writeJsonAtomic(file, data) {
+  const temporary = file + '.tmp-session-archive';
+  await fs.writeFile(temporary, JSON.stringify(data, null, 2) + '\n', { mode: 0o600 });
+  await fs.rename(temporary, file);
+}
+
+async function purgeSessionCopies(storeFile, workspace, sessionId) {
+  for (const version of [1, 2, 3, 4]) {
+    const file = storeFile + `.v${version}-backup`;
+    if (!await fileExists(file)) continue;
+    const data = JSON.parse(await fs.readFile(file, 'utf8'));
+    if (!Array.isArray(data.projects)) throw new WorkspaceError('SESSION_LOCAL_CLEANUP', 'Не удалось очистить старую локальную копию сессий.');
+    let projectRemoved = false;
+    data.projects = data.projects.filter(project => {
+      if (project.workspace !== workspace) return true;
+      if (Array.isArray(project.sessions)) {
+        project.sessions = project.sessions.filter(session => session.sessionId !== sessionId);
+        if (project.selectedSessionId === sessionId) project.selectedSessionId = project.sessions[0]?.sessionId ?? null;
+        if (!project.sessions.length) { projectRemoved = true; return false; }
+        return true;
+      }
+      if (project.sessionId === sessionId) { projectRemoved = true; return false; }
+      return true;
+    });
+    if (projectRemoved && data.selectedWorkspace === workspace && !data.projects.some(project => project.workspace === workspace)) data.selectedWorkspace = null;
+    await writeJsonAtomic(file, data);
+  }
+  const diagnostics = path.join(path.dirname(storeFile), 'diagnostics.jsonl');
+  if (await fileExists(diagnostics)) {
+    const lines = (await fs.readFile(diagnostics, 'utf8')).split('\n').filter(Boolean).filter(line => {
+      const entry = JSON.parse(line);
+      return !(entry.workspace === workspace && entry.sessionId === sessionId);
+    });
+    const temporary = diagnostics + '.tmp-session-archive';
+    await fs.writeFile(temporary, lines.length ? lines.join('\n') + '\n' : '', { mode: 0o600 });
+    await fs.rename(temporary, diagnostics);
+  }
 }
 
 function currentView(project) {
   if (!project) return null;
-  const { sessions, ...info } = project;
-  return copy({ ...info, ...sessions.find(s => s.sessionId === project.selectedSessionId) });
+  const { sessions, archivedAt: projectArchivedAt, ...info } = project;
+  const session = sessions.find(s => s.sessionId === project.selectedSessionId);
+  return copy({ ...info, ...session, archivedAt: projectArchivedAt, sessionArchivedAt: session.archivedAt });
 }
 
 export class WorkspaceSessions {
@@ -145,7 +195,7 @@ export class WorkspaceSessions {
     Object.assign(this, { file, inspect, uuid, now });
     this.saveTail = Promise.resolve();
     this.mutationTail = Promise.resolve();
-    this.data = { schemaVersion: 4, selectedWorkspace: null, projects: [] };
+    this.data = { schemaVersion: 5, selectedWorkspace: null, projects: [] };
   }
 
   async load() {
@@ -156,7 +206,7 @@ export class WorkspaceSessions {
     }
     let parsed;
     try { parsed = JSON.parse(text); } catch { throw invalid(); }
-    const legacy = [1, 2, 3].includes(parsed.schemaVersion);
+    const legacy = [1, 2, 3, 4].includes(parsed.schemaVersion);
     const data = validate(legacy ? migrate(parsed) : parsed);
     if (legacy) {
       try { await fs.writeFile(this.file + `.v${parsed.schemaVersion}-backup`, text, { mode: 0o600, flag: 'wx' }); }
@@ -196,7 +246,7 @@ export class WorkspaceSessions {
   createSession(experience = 'chat') {
     experience = sessionExperience(experience);
     return { sessionId: 'web-pilot-' + this.uuid(), experience, chatUrl: null, title: '',
-      createdAt: this.now(), lastOpenedAt: this.now(), attempt: null, receipt: null };
+      createdAt: this.now(), lastOpenedAt: this.now(), archivedAt: null, attempt: null, receipt: null };
   }
 
   mutate(change) {
@@ -233,6 +283,7 @@ export class WorkspaceSessions {
       const info = await this.inspect(input);
       const project = data.projects.find(p => p.workspace === info.workspace);
       if (!project || !project.sessions.some(s => s.sessionId === sessionId)) throw new WorkspaceError('SESSION_NOT_FOUND', 'Эта сессия не принадлежит выбранному проекту.');
+      if (project.sessions.find(s => s.sessionId === sessionId)?.archivedAt) throw new WorkspaceError('SESSION_ARCHIVED', 'Сначала верните сессию из архива.');
       if (project.archivedAt) throw new WorkspaceError('PROJECT_ARCHIVED', 'Сначала верните проект из архива.');
       if (project.projectId !== info.projectId) throw new WorkspaceError('PROJECT_REPLACED', 'В этой папке теперь другой проект. Сохранённые чаты оставлены без изменений.');
       Object.assign(project, info, { selectedSessionId: sessionId, expanded: true });
@@ -295,6 +346,51 @@ export class WorkspaceSessions {
       const { project, session } = this.activeRecord(workspace, sessionId, data);
       if (Object.keys(patch).some(k => !['attempt', 'receipt'].includes(k))) throw new Error('INVALID_SESSION_PATCH');
       Object.assign(session, copy(patch)); return currentView(project);
+    });
+  }
+
+  setSessionArchived(workspace, sessionId, archived) {
+    return this.mutate(data => {
+      if (typeof archived !== 'boolean') throw new WorkspaceError('SESSION_ARCHIVE', 'Неверное состояние архива сессии.');
+      const project = data.projects.find(p => p.workspace === workspace);
+      if (!project) throw new WorkspaceError('WORKSPACE_REQUIRED', 'Выберите проект из списка.');
+      if (project.archivedAt) throw new WorkspaceError('PROJECT_ARCHIVED', 'Сначала верните проект из архива.');
+      const session = project.sessions.find(item => item.sessionId === sessionId);
+      if (!session) throw new WorkspaceError('SESSION_NOT_FOUND', 'Сессия не найдена.');
+      if (archived) {
+        if (session.archivedAt) return currentView(project);
+        const active = project.sessions.filter(item => item.archivedAt === null);
+        if (active.length <= 1) throw new WorkspaceError('SESSION_LAST_ACTIVE', 'Нельзя архивировать единственную активную сессию проекта.');
+        session.archivedAt = this.now();
+        if (project.selectedSessionId === sessionId) {
+          const fallback = active.filter(item => item.sessionId !== sessionId)
+            .sort((a, b) => b.lastOpenedAt - a.lastOpenedAt || b.createdAt - a.createdAt)[0];
+          project.selectedSessionId = fallback.sessionId;
+          fallback.lastOpenedAt = this.now();
+        }
+      } else session.archivedAt = null;
+      return currentView(project);
+    });
+  }
+
+  forgetArchivedSessions(items) {
+    return this.mutate(async data => {
+      if (!Array.isArray(items) || !items.length) throw new WorkspaceError('SESSION_ARCHIVE', 'Выберите сессии из архива.');
+      const seen = new Set();
+      const records = items.map(item => {
+        const key = `${item?.workspace ?? ''}\n${item?.sessionId ?? ''}`;
+        if (!item || typeof item.workspace !== 'string' || typeof item.projectId !== 'string' || typeof item.sessionId !== 'string' || seen.has(key))
+          throw new WorkspaceError('SESSION_ARCHIVE', 'Выберите корректные сессии из архива.');
+        seen.add(key);
+        const project = data.projects.find(project => project.workspace === item.workspace);
+        if (!project || project.projectId !== item.projectId) throw new WorkspaceError('PROJECT_REPLACED', 'Запись проекта изменилась. Повторите выбор.');
+        const session = project.sessions.find(session => session.sessionId === item.sessionId);
+        if (!session?.archivedAt) throw new WorkspaceError('SESSION_NOT_ARCHIVED', 'Удалить локально можно только сессию из архива.');
+        return { project, session };
+      });
+      for (const { project, session } of records) await purgeSessionCopies(this.file, project.workspace, session.sessionId);
+      for (const { project, session } of records) project.sessions = project.sessions.filter(item => item.sessionId !== session.sessionId);
+      return records.length;
     });
   }
 

@@ -560,3 +560,8 @@ Patch release 0.6.6 корректирует Workspace & Sessions для фак�
 ## Session archive — scope 011 / T009
 
 Workspace & Sessions расширяет lifecycle на отдельный архив session. `session.archivedAt` скрывает разговор из активного дерева без удаления cloud conversation. Активный проект всегда сохраняет хотя бы одну неархивную session; при архивировании выбранной session selection атомарно переходит на последнюю использованную оставшуюся session. Archive window разделяет project archive и session archive; sessions архивированных проектов не дублируются отдельно. Локальный delete session удаляет только metadata/bindings и доступные локальные backup/diagnostic references, не затрагивая workspace folder или OpenAI.
+
+
+## Session archive storage — scope 011 / T010
+
+Persisted storage переходит на schema v5 с `session.archivedAt`. Project-level `archivedAt` и session-level archive остаются независимыми; current view сохраняет project archive state отдельно от `sessionArchivedAt`. Active project инвариантно содержит хотя бы одну активную session. Локальный forget архивной session очищает session metadata и известные migration backup/diagnostic references, но не файловую систему workspace и не OpenAI.

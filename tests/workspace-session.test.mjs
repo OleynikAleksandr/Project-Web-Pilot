@@ -136,7 +136,7 @@ test('session experience persists, migrates from v3, and rejects cross-experienc
   for (const session of v3.projects[0].sessions) delete session.experience;
   const original = JSON.stringify(v3); await fs.writeFile(store.file, original);
   const migrated = new WorkspaceSessions(store.file); await migrated.load();
-  assert.equal(migrated.snapshot().schemaVersion, 4);
+  assert.equal(migrated.snapshot().schemaVersion, 5);
   assert.deepEqual(migrated.snapshot().projects[0].sessions.map(session => session.experience), ['chat', 'work']);
   assert.equal(await fs.readFile(store.file + '.v3-backup', 'utf8'), original);
   assert.equal(conversationExperience('https://chatgpt.com/c/aaaaaaaa'), 'chat');
@@ -144,6 +144,55 @@ test('session experience persists, migrates from v3, and rejects cross-experienc
   assert.equal(conversationExperience('https://chatgpt.com/'), null);
   assert.equal(conversationUrlCompatibleWithExperience('https://chatgpt.com/c/aaaaaaaa', 'work'), true);
   assert.equal(conversationUrlCompatibleWithExperience('https://chatgpt.com/work/aaaaaaaa', 'chat'), false);
+});
+
+
+
+test('session archive switches selection, blocks the last active session, restores, and persists', async t => {
+  let clock = 1000;
+  const { project, root } = await fixture(t);
+  const store = new WorkspaceSessions(path.join(root, 'app-data/archive-sessions.json'), { now: () => ++clock });
+  const first = await store.select(await project('Session archive'));
+  const second = await store.newSession(first.workspace, 'chat');
+  const third = await store.newSession(first.workspace, 'work');
+  await store.selectSession(first.workspace, first.sessionId);
+  await store.setSessionArchived(first.workspace, first.sessionId, true);
+  assert.equal(store.selected().sessionId, third.sessionId, 'most recently opened remaining session becomes selected');
+  let raw = store.snapshot().projects[0];
+  assert.ok(raw.sessions.find(session => session.sessionId === first.sessionId).archivedAt);
+  await assert.rejects(store.selectSession(first.workspace, first.sessionId), { code: 'SESSION_ARCHIVED' });
+  await store.setSessionArchived(first.workspace, first.sessionId, false);
+  assert.equal(raw.sessions?.find?.(session => session.sessionId === first.sessionId)?.experience ?? 'chat', 'chat');
+  await store.selectSession(first.workspace, first.sessionId);
+  await store.setSessionArchived(first.workspace, second.sessionId, true);
+  await store.setSessionArchived(first.workspace, third.sessionId, true);
+  await assert.rejects(store.setSessionArchived(first.workspace, first.sessionId, true), { code: 'SESSION_LAST_ACTIVE' });
+  const restarted = new WorkspaceSessions(store.file); await restarted.load();
+  assert.equal(restarted.snapshot().schemaVersion, 5);
+  assert.equal(restarted.snapshot().projects[0].sessions.filter(session => session.archivedAt === null).length, 1);
+});
+
+test('forget archived session removes local references but keeps project folder and active sessions', async t => {
+  const { root, project, store } = await fixture(t);
+  const first = await store.select(await project('Forget session'));
+  const second = await store.newSession(first.workspace, 'work');
+  await store.bindChat(first.workspace, second.sessionId, 'https://chatgpt.com/c/work-session-delete');
+  await store.setSessionArchived(first.workspace, second.sessionId, true);
+  const backup = store.snapshot(); backup.schemaVersion = 4;
+  for (const item of backup.projects.flatMap(project => project.sessions)) delete item.archivedAt;
+  await fs.writeFile(store.file + '.v4-backup', JSON.stringify(backup));
+  await fs.writeFile(path.join(path.dirname(store.file), 'diagnostics.jsonl'), [
+    JSON.stringify({ workspace: first.workspace, sessionId: second.sessionId, phase: 'test' }),
+    JSON.stringify({ workspace: first.workspace, sessionId: first.sessionId, phase: 'keep' }),
+  ].join('\n') + '\n');
+  await store.forgetArchivedSessions([{ workspace: first.workspace, projectId: first.projectId, sessionId: second.sessionId }]);
+  assert.equal(store.snapshot().projects[0].sessions.length, 1);
+  assert.equal(store.snapshot().projects[0].sessions[0].sessionId, first.sessionId);
+  assert.ok((await fs.stat(first.workspace)).isDirectory());
+  const backupAfter = JSON.parse(await fs.readFile(store.file + '.v4-backup', 'utf8'));
+  assert.equal(backupAfter.projects[0].sessions.some(session => session.sessionId === second.sessionId), false);
+  const diagnostics = await fs.readFile(path.join(path.dirname(store.file), 'diagnostics.jsonl'), 'utf8');
+  assert.equal(diagnostics.includes(second.sessionId), false); assert.equal(diagnostics.includes(first.sessionId), true);
 });
 
 test('a replacement project is rejected and the original binding is preserved', async t => {
@@ -202,7 +251,7 @@ test('legacy storage migrates intact with an exclusive backup and is not migrate
   const text = JSON.stringify(legacy);
   await fs.writeFile(store.file, text);
   const restored = new WorkspaceSessions(store.file); await restored.load();
-  assert.equal(restored.snapshot().schemaVersion, 4);
+  assert.equal(restored.snapshot().schemaVersion, 5);
   assert.equal(restored.snapshot().projects[0].sessions.length, 1);
   assert.equal(restored.selected().attempt.text, 'Точный старый текст');
   assert.equal(restored.selected().chatUrl, legacy.projects[0].chatUrl);
@@ -258,8 +307,8 @@ test('version two history migrates with an exact backup and starts active', asyn
   const old = store.snapshot(); old.schemaVersion = 2; delete old.projects[0].archivedAt;
   const original = JSON.stringify(old); await fs.writeFile(store.file, original);
   const next = new WorkspaceSessions(store.file); await next.load();
-  assert.equal(next.snapshot().schemaVersion, 4); assert.equal(next.selected().archivedAt, null);
-  assert.deepEqual(next.snapshot().projects[0].sessions, old.projects[0].sessions.map(session => ({ ...session, experience: conversationExperience(session.chatUrl) ?? 'chat' })));
+  assert.equal(next.snapshot().schemaVersion, 5); assert.equal(next.selected().archivedAt, null);
+  assert.deepEqual(next.snapshot().projects[0].sessions, old.projects[0].sessions.map(session => ({ ...session, experience: conversationExperience(session.chatUrl) ?? 'chat', archivedAt: null })));
   assert.equal(await fs.readFile(store.file + '.v2-backup', 'utf8'), original);
 });
 test('archive save failure preserves current state and queued edits do not lose other projects', async t => {
