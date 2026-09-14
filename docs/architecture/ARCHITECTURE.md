@@ -500,3 +500,7 @@ Private Codex Local ZIP не хранится в Git из-за размера и
 `package.json` хранит оба platform target: `build:mac` создаёт macOS arm64 `.app`, `build:win` готовит payload и создаёт Windows x64 `.exe`. Общий `npm run build` последовательно выполняет обе сборки, поэтому обычная release-проверка на Mac сразу обновляет оба package. Platform-specific runtime/build outputs остаются в `.harness/runtime` или `windows-app` и не являются Git-состоянием проекта.
 
 Windows build-preflight сначала может переиспользовать локальный payload из `windows-app/resources/windows-payload`, затем sibling artifact и только для публичного Node — network fallback. Это позволяет одному Git checkout не таскать тяжёлые binary runtime-артефакты между компьютерами.
+
+## Clipboard write во встроенном ChatGPT — scope 009 / T006
+
+Удалённый Chromium по-прежнему работает без preload, Node и локального IPC. Permission policy разрешает точному origin `https://chatgpt.com` только `clipboard-sanitized-write`, необходимый штатной кнопке «Копировать»/`navigator.clipboard.writeText()`. Чтение системного clipboard (`clipboard-read`) остаётся запрещённым, как и clipboard write для любых других origin. Остальные ограничения media/geolocation и sandbox не ослабляются.

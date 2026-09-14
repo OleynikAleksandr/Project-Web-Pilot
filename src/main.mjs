@@ -207,7 +207,7 @@ function isChatGPTOrigin(value) {
 
 function permissionAllowed(permission, origin, details = {}) {
   if (!isChatGPTOrigin(origin)) return false;
-  if (permission === 'geolocation' || permission === 'geolocation-approximate') return true;
+  if (permission === 'geolocation' || permission === 'geolocation-approximate' || permission === 'clipboard-sanitized-write') return true;
   if (permission !== 'media') return false;
   const mediaTypes = Array.isArray(details.mediaTypes) ? details.mediaTypes
     : details.mediaType ? [details.mediaType] : [];

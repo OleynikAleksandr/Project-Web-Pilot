@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 235,
+  "plan_revision": 237,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "web-pilot-unified-mac-windows-009",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Объединить Project Web Pilot для macOS и Windows в один канонический репозиторий: перенести подтверждённые Windows-исправления в общий код, сохранить обе платформенные сборки и подготовить лёгкую Git-синхронизацию между компьютерами без переноса runtime/build-артефактов.",
   "acceptance_criteria": [
     "Полезные Windows runtime fixes 0.6.1/0.6.2 перенесены в общий код без регрессии macOS.",
@@ -274,8 +274,8 @@
         "electron-smoke"
       ],
       "expected_commit_message": "fix: разрешить копирование из ChatGPT",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "web-pilot-unified-mac-windows-009",
         "task_id": "T006",
@@ -308,10 +308,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: web-pilot-unified-mac-windows-009
 Current Task: нет
-Revision: 235
+Revision: 237
 
 ## Цель
 
@@ -348,8 +348,8 @@ Revision: 235
   - Git Commit: [DONE] test: сделать Workflow Kit snapshot кроссплатформенным
   - Reference: web-pilot-unified-mac-windows-009 / T005 / implementation
   - Файлы: .gitattributes, tests/workflow-kit-source.test.mjs, docs/VERIFICATION.md, docs/WORKFLOW_START.md
-- [TODO] T006: Разрешить копирование из встроенного ChatGPT — Ожидает
-  - Git Commit: [PENDING] fix: разрешить копирование из ChatGPT
+- [DONE] T006: Разрешить копирование из встроенного ChatGPT — Завершено
+  - Git Commit: [DONE] fix: разрешить копирование из ChatGPT
   - Reference: web-pilot-unified-mac-windows-009 / T006 / implementation
   - Файлы: src/main.mjs, tests/electron-smoke.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 

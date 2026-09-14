@@ -459,3 +459,7 @@ Unit test фиксирует Node.js 22.17.0 win-x64 archive name/SHA, expected 
 13.09.2026 нативная Windows-проверка свежего clone на `d12c6c0` дала 76/77: единственный `workflow-kit-source` test видел SHA `1b3714e7…` вместо canonical `9f706c90…` для `WORKFLOW.md`. На macOS искусственное преобразование только LF→CRLF воспроизвело Windows SHA побайтно, поэтому содержательного расхождения Workflow Kit не было.
 
 `.gitattributes` теперь фиксирует `resources/workflow-kit/**` как `text eol=lf`. Source-snapshot test дополнительно нормализует только CRLF→LF перед SHA-256, сохраняя обнаружение любых остальных изменений содержимого. Это делает проверку независимой от `core.autocrlf` и одновременно сохраняет canonical LF checkout для новых clone.
+
+## Clipboard write ChatGPT — scope 009 / T006
+
+14.09.2026 подтверждено, что прежний permission allowlist разрешал только audio/geolocation и тем самым блокировал Electron permission `clipboard-sanitized-write`, используемый Async Clipboard API. Smoke fixture теперь проверяет policy (`clipboard-sanitized-write=true` только для `chatgpt.com`, `clipboard-read=false`) и фактический `navigator.clipboard.writeText()` из удалённого WebContents с последующей проверкой системного clipboard через Electron.

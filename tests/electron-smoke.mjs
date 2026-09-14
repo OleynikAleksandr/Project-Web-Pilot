@@ -72,7 +72,10 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(permissionAllowed('media', 'https://chatgpt.com', { mediaTypes: ['audio', 'video'] }), false);
   assert.equal(permissionAllowed('geolocation', 'https://chatgpt.com', {}), true);
   assert.equal(permissionAllowed('geolocation-approximate', 'https://chatgpt.com', {}), true);
+  assert.equal(permissionAllowed('clipboard-sanitized-write', 'https://chatgpt.com', {}), true);
+  assert.equal(permissionAllowed('clipboard-read', 'https://chatgpt.com', {}), false);
   assert.equal(permissionAllowed('notifications', 'https://chatgpt.com', {}), false);
+  assert.equal(permissionAllowed('clipboard-sanitized-write', 'https://example.com', {}), false);
   assert.equal(permissionAllowed('media', 'https://example.com', { mediaTypes: ['audio'] }), false);
   const workspace = path.join(await fs.realpath(dataDir + '-projects'), 'Тестовый проект с пробелами');
   await waitFor(() => sidebar.executeJavaScript('typeof window.webPilot === "object"'), 'local IPC ready', snapshot);
@@ -132,6 +135,9 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(packetLoads, 1);
   assert.deepEqual(await browser.executeJavaScript('({ require:typeof require, process:typeof process, bridge:typeof window.webPilot })'),
     { require: 'undefined', process: 'undefined', bridge: 'undefined' });
+  await clipboard.clear();
+  await browser.executeJavaScript("navigator.clipboard.writeText('REMOTE_CHATGPT_CLIPBOARD_FIXTURE')");
+  await waitFor(async () => await clipboard.readText() === 'REMOTE_CHATGPT_CLIPBOARD_FIXTURE', 'remote ChatGPT clipboard write', snapshot);
   const prefs = browser.getLastWebPreferences();
   assert.equal(prefs.nodeIntegration, false); assert.equal(prefs.contextIsolation, true); assert.equal(prefs.sandbox, true);
   assert.throws(() => assertLocalSender({ sender: browser, senderFrame: browser.mainFrame }), { code: 'IPC_FORBIDDEN' });
