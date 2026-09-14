@@ -35,3 +35,9 @@
 Project Web Pilot различает совместимую установку 1.1 и повреждённый/неизвестный runtime. Неизменённый owned runtime 1.1 предлагается как `upgrade`, а не как reconnect: Kit обновляет owned `.harness/kit` и launchers, обновляет только подтверждённые managed sections, обновляет plan template если пользователь его не менял и создаёт недостающие `docs/MODULES.md` / `docs/architecture/OVERVIEW.md`. Активный todo-plan, workflow config и пользовательские editable документы не перезаписываются.
 
 Если owned runtime или критическая managed section не совпадает со старым manifest, автоматический upgrade блокируется. `DOCUMENTATION_INDEX.md` является исключением: каталог штатно развивается вместе с проектом, поэтому upgrade сохраняет его содержимое и только аддитивно добавляет новые MODULES/OVERVIEW строки. Upgrade создаёт отдельный `kit-update` commit через те же Git hooks. Fresh install 1.2 сразу создаёт module map/overview и `include_last_completed_task=false` в пустом plan.
+
+## Первая сессия Chat / Work — scope 011
+
+При создании нового проекта и при первом подключении готовой папки, которой ещё нет в локальном списке Web Pilot, preview показывает выбор «Первая сессия проекта: Chat | Work». Default — Chat; выбор хранится только в текущем setup flow и после отмены сбрасывается. Повторное открытие уже зарегистрированного проекта не показывает этот выбор и не создаёт новую session.
+
+Создание дополнительных sessions перенесено из карточки контекста в меню `⋯` проекта: `Новый Chat` и `Новый Work`. Карточка контекста управляет только выбранной session. В дереве рядом с названием каждой session отображается read-only badge Chat/Work.

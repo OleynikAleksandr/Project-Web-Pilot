@@ -106,12 +106,19 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   };
   await previewNew();
   assert.equal(snapshot().setup.action, 'install'); assert.equal(packetLoads, 0); assert.equal(store.selected(), null);
+  assert.equal(snapshot().setup.firstSessionRequired, true); assert.equal(snapshot().setup.firstSessionExperience, 'chat');
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("setup-experience").hidden'), false);
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("setup-experience-chat").getAttribute("aria-pressed")'), 'true');
+  await sidebar.executeJavaScript('document.getElementById("setup-experience-work").click()');
+  await waitFor(() => snapshot().setup?.firstSessionExperience === 'work', 'choose Work as first session', snapshot);
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("setup-experience-work").getAttribute("aria-pressed")'), 'true');
   await assert.rejects(fs.stat(workspace), { code: 'ENOENT' });
   assert.ok(snapshot().setup.files.some(f => f.path === 'AGENTS.md'));
   await sidebar.executeJavaScript('document.getElementById("setup-cancel").click()');
   await waitFor(() => !snapshot().setup, 'cancel without creating', snapshot);
   await assert.rejects(fs.stat(workspace), { code: 'ENOENT' });
   await previewNew();
+  assert.equal(snapshot().setup.firstSessionExperience, 'chat', 'choice is not remembered globally after cancel');
   await sidebar.executeJavaScript('document.getElementById("setup-apply").click()');
   await waitFor(async () => {
     if (snapshot().context.phase === 'waiting-draft') {
@@ -125,7 +132,10 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await browser.executeJavaScript("document.title='Первый разговор проекта'");
   await waitFor(() => snapshot().projects[0].sessions[0].title === 'Первый разговор проекта', 'conversation title', snapshot);
   const first = store.selected();
+  assert.equal(first.experience, 'chat');
   assert.ok(first.chatUrl.startsWith('https://chatgpt.com/c/'));
+  assert.equal(await sidebar.executeJavaScript('document.querySelector(".session-experience").textContent'), 'Chat');
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("new-chat")'), null, 'context card has no session creation button');
   assert.equal(first.attempt.state, 'sent');
   assert.ok(first.attempt.text.includes(fixtureContext));
   assert.ok(Buffer.byteLength(fixtureContext) > 60000);
@@ -226,12 +236,16 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(restored.selected().sessionId, first.sessionId); assert.equal(restored.selected().chatUrl, first.chatUrl);
   controller.attach(store.selected()); await controller.tick();
   assert.equal(packetLoads, 1);
-  await sidebar.executeJavaScript('document.getElementById("new-chat").click()');
-  await waitFor(() => store.selected()?.sessionId !== first.sessionId && snapshot().context.phase === 'delivered', 'new chat via actual sidebar IPC', snapshot);
+  assert.deepEqual(await sidebar.executeJavaScript(`(() => { document.querySelector('.project-menu-button').click(); return Array.from(document.querySelectorAll('.project-menu button')).map(button => button.textContent); })()`),
+    ['Новый Chat', 'Новый Work', 'Скопировать полный путь', 'Перенести в архив']);
+  await sidebar.executeJavaScript('document.querySelector(".new-project-chat").click()');
+  await waitFor(() => store.selected()?.sessionId !== first.sessionId && snapshot().context.phase === 'delivered', 'new Chat via project menu IPC', snapshot);
   assert.equal(packetLoads, 2);
   assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 1);
   const second = store.selected();
+  assert.equal(second.experience, 'chat');
   assert.equal(store.snapshot().projects[0].sessions.length, 2);
+  assert.deepEqual(await sidebar.executeJavaScript('Array.from(document.querySelectorAll(".session-experience")).map(e=>e.textContent)'), ['Chat', 'Chat']);
   assert.equal(snapshot().projects[0].sessions[0].attempt, undefined, 'Session tree only receives metadata');
   await sidebar.executeJavaScript(`document.querySelector('[data-session-id="${first.sessionId}"]').click()`);
   await waitFor(() => store.selected()?.sessionId === first.sessionId && snapshot().context.phase === 'delivered'

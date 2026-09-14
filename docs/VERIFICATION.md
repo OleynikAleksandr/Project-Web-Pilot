@@ -512,3 +512,9 @@ Windows lifecycle stale-PID/dynamic-endpoint behavior is covered by portable pro
 ## Chat / Work sessions — T002 session-model contract
 
 До фиксации контракта был прогнан подготовленный migration candidate: targeted `workspace-session` 16/16 и полный `npm test` 90 total / 88 passed / 0 failed / 2 native-Windows skipped. Workflow Kit потребовал обязательный `docs/architecture/ARCHITECTURE.md` для изменения `src/**`; незавершённая exact-candidate transaction не допускает расширения набора файлов. Поэтому T002 фиксирует schema/migration contract, а тот же проверенный implementation diff переносится в T003 вместе с architecture sync.
+
+## Chat / Work sessions — T003 UI и first session
+
+`workspace-session` targeted suite после интеграции schema v4: 17/17 passed. Electron smoke через реальный sidebar IPC проверяет: first-session control видим на preview нового проекта, default Chat, переключение на Work и сброс после cancel; созданная первая session имеет `experience=chat`; в Context card отсутствует старая кнопка; project menu содержит `Новый Chat`, `Новый Work`, copy path и archive; новая Chat session создаётся из меню; session tree показывает badge Chat. Фактическая Work navigation/отправка намеренно проверяется в T004 после добавления experience router.
+
+T003 final candidate: `npm test` — 91 total, 89 passed, 0 failed, 2 native-Windows skipped; `npm run smoke` passed. Smoke использует только Chat для фактической отправки на этом этапе; Work-кнопка и first-session Work selection проверяются как UI/state, а фактический `/work/` routing относится к T004.

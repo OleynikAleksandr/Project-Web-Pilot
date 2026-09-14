@@ -21,9 +21,9 @@ const phases = {
   delivered: ['Контекст передан', 'Полный пакет отправлен в этот чат. Агент кратко подтвердит получение и опишет проект.', 'success'],
   stale: ['Контекст нужно обновить', 'План изменился после отправки. Нажмите «Обновить контекст», чтобы передать актуальную версию.', 'working'],
   'prepared-stale': ['Пакет в поле устарел', 'Уберите подготовленный черновик и нажмите «Обновить контекст». Отправка приостановлена.', 'working'],
-  'legacy-session': ['Сохранённый чат проекта', 'Чат открыт. Для передачи полного пакета нажмите «Обновить контекст» или начните новый чат.', 'neutral'],
+  'legacy-session': ['Сохранённый чат проекта', 'Чат открыт. Для передачи полного пакета нажмите «Обновить контекст» или создайте новую сессию через меню проекта.', 'neutral'],
   'send-unknown': ['Проверяем результат отправки', 'Результат пока неизвестен. Проверяем появление сообщения перед повторной отправкой.', 'working'],
-  'chat-changed': ['Открыт другой чат', 'Этот чат пока не связан с проектом. Вернитесь к чату проекта или начните новый через кнопку ниже.', 'working'],
+  'chat-changed': ['Открыт другой чат', 'Этот чат пока не связан с проектом. Вернитесь к сессии проекта или создайте новую через меню проекта.', 'working'],
   error: ['Не удалось передать контекст', 'Подробности ошибки показаны выше. После исправления нажмите «Проверить контекст».', 'error'],
 };
 
@@ -132,10 +132,15 @@ function render(state) {
       const menuButton = document.createElement('button'); menuButton.className = 'icon-button project-menu-button'; menuButton.textContent = '⋯';
       menuButton.setAttribute('aria-label', `Меню проекта ${project.name}`); menuButton.setAttribute('aria-expanded', 'false');
       const menu = document.createElement('div'); menu.className = 'project-menu'; menu.hidden = true;
+      const newChat = document.createElement('button'); newChat.className = 'secondary new-project-chat'; newChat.textContent = 'Новый Chat';
+      newChat.addEventListener('click', () => { clearTimeout(workspaceClickTimer); menu.hidden = true; menuButton.setAttribute('aria-expanded', 'false'); action('newSession', project.workspace, 'chat'); });
+      const newWork = document.createElement('button'); newWork.className = 'secondary new-project-work'; newWork.textContent = 'Новый Work';
+      newWork.addEventListener('click', () => { clearTimeout(workspaceClickTimer); menu.hidden = true; menuButton.setAttribute('aria-expanded', 'false'); action('newSession', project.workspace, 'work'); });
+      const separator = document.createElement('div'); separator.className = 'menu-separator'; separator.setAttribute('aria-hidden', 'true');
       const copyPath = document.createElement('button'); copyPath.className = 'secondary copy-workspace-path'; copyPath.textContent = 'Скопировать полный путь';
       copyPath.addEventListener('click', () => { clearTimeout(workspaceClickTimer); menu.hidden = true; menuButton.setAttribute('aria-expanded', 'false'); action('copyWorkspacePath', project.workspace); });
       const archive = document.createElement('button'); archive.className = 'secondary archive-project'; archive.textContent = 'Перенести в архив';
-      archive.addEventListener('click', () => { clearTimeout(workspaceClickTimer); action('archiveProject', project.workspace); }); menu.append(copyPath, archive);
+      archive.addEventListener('click', () => { clearTimeout(workspaceClickTimer); action('archiveProject', project.workspace); }); menu.append(newChat, newWork, separator, copyPath, archive);
       menuButton.addEventListener('click', () => { clearTimeout(workspaceClickTimer); menu.hidden = !menu.hidden; menuButton.setAttribute('aria-expanded', String(!menu.hidden)); });
       row.append(arrow, button, menuButton); item.append(row, menu);
       const sessions = document.createElement('ul'); sessions.className = 'sessions'; sessions.hidden = !project.expanded;
@@ -147,11 +152,14 @@ function render(state) {
         choice.className = 'session' + (active ? ' active' : '');
         choice.dataset.sessionId = session.sessionId;
         if (active) choice.setAttribute('aria-current', 'page');
+        const top = document.createElement('div'); top.className = 'session-top';
         const title = document.createElement('strong'); title.textContent = session.title || `Сессия ${index + 1}`;
+        const experience = document.createElement('span'); experience.className = 'session-experience'; experience.dataset.experience = session.experience ?? 'chat'; experience.textContent = session.experience === 'work' ? 'Work' : 'Chat';
+        top.append(title, experience);
         const date = document.createElement('small');
-        date.textContent = `Сессия ${index + 1} · ${dateFormat.format(new Date(session.createdAt))}` + (session.chatUrl ? '' : ' · новый чат');
-        choice.title = `${session.title || 'Новая сессия'}\n${new Date(session.createdAt).toLocaleString('ru-RU')}`;
-        choice.append(title, date);
+        date.textContent = `Сессия ${index + 1} · ${dateFormat.format(new Date(session.createdAt))}` + (session.chatUrl ? '' : ' · новая');
+        choice.title = `${session.title || 'Новая сессия'} · ${session.experience === 'work' ? 'Work' : 'Chat'}\n${new Date(session.createdAt).toLocaleString('ru-RU')}`;
+        choice.append(top, date);
         choice.addEventListener('click', () => { clearTimeout(workspaceClickTimer); action('selectSession', project.workspace, session.sessionId); });
         entry.append(choice); sessions.append(entry);
       }
@@ -230,7 +238,7 @@ function render(state) {
   $('error-banner').hidden = !error;
   $('error-banner').textContent = error ? `${error.message} (${error.code})` : '';
   for (const button of document.querySelectorAll('button')) {
-    button.disabled = actionPending || (state.storageError && ['create-workspace', 'add-workspace', 'new-chat', 'retry-context'].includes(button.id));
+    button.disabled = actionPending || (state.storageError && ['create-workspace', 'add-workspace', 'retry-context'].includes(button.id));
   }
   const acceptance = state.planAcceptance;
   $('accept-plan').textContent = acceptance === 'sending' ? 'Отправляем…' : acceptance === 'sent' ? 'Отправлено'
@@ -247,7 +255,6 @@ $('accept-plan').addEventListener('click', () => action('acceptPlan'));
 $('add-workspace').addEventListener('click', () => action('chooseWorkspace'));
 $('reload-chat').addEventListener('click', () => action('reload'));
 $('retry-context').addEventListener('click', () => action('retry'));
-$('new-chat').addEventListener('click', () => action('newChat'));
 $('return-chat').addEventListener('click', () => action('returnToChat'));
 $('choose-runtime').addEventListener('click', () => action('chooseRuntime'));
 api.onState(render);

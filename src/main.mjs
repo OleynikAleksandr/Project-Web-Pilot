@@ -151,7 +151,7 @@ function snapshot() {
     ...(info?.workspace === saved.workspace ? info : {}) };
   return { projects: store.snapshot().projects.filter(p => !p.archivedAt).map(({ workspace, projectId, name, selectedSessionId, expanded, sessions }) => ({
     workspace, projectId, name, selectedSessionId, expanded,
-    sessions: sessions.map(({ sessionId, chatUrl, title, createdAt }) => ({ sessionId, chatUrl, title, createdAt })),
+    sessions: sessions.map(({ sessionId, experience, chatUrl, title, createdAt }) => ({ sessionId, experience, chatUrl, title, createdAt })),
   })),
     archives: projectedArchives(), settings: settingsState,
     selected, context: controller?.state ?? { phase: 'selected', servicesReady: false, messageSent: false },
@@ -341,9 +341,11 @@ async function reviewWorkspace(workspace, openReady = false) {
   const canonical = await fsp.realpath(workspace).catch(() => workspace);
   if (store.project(canonical)?.archivedAt) { await openArchiveWindow(canonical); publish(); return false; }
   settingsState = null; deletion.clear();
-  pauseForSetup(); setupState = { phase: 'checking', mode: 'existing', workspace }; publish();
+  const firstSessionExperience = 'chat';
+  pauseForSetup(); setupState = { phase: 'checking', mode: 'existing', workspace, firstSessionExperience }; publish();
   const preview = await workspaceSetup.preview({ mode: 'existing', workspace });
-  setupState = { ...preview, phase: 'preview' };
+  const firstSessionRequired = !store.project(preview.workspace);
+  setupState = { ...preview, phase: 'preview', firstSessionRequired, firstSessionExperience: firstSessionRequired ? firstSessionExperience : 'chat' };
   if (preview.ready && openReady) {
     workspaceHealth = preview; setupState = null; workspaceSetup.clear();
     return true;
@@ -516,38 +518,47 @@ function registerIpc() {
   registerAction('pilot:begin-create', () => {
     if (storageError) throw new Error('Сначала нужно восстановить сохранённый список проектов.');
     settingsState = null; deletion.clear(); pauseForSetup(); workspaceSetup.clear();
-    setupState = { phase: 'form', mode: 'new', name: '', parent: smoke ? dataDir + '-projects' : path.dirname(store.selected()?.workspace ?? path.join(os.homedir(), 'VSCODE/Project')) };
+    setupState = { phase: 'form', mode: 'new', name: '', firstSessionRequired: true, firstSessionExperience: 'chat', parent: smoke ? dataDir + '-projects' : path.dirname(store.selected()?.workspace ?? path.join(os.homedir(), 'VSCODE/Project')) };
   });
   registerAction('pilot:choose-parent', async input => {
     if (setupState?.mode !== 'new') return;
     const name = typeof input?.name === 'string' ? input.name.slice(0, 120) : setupState.name;
     const result = await dialog.showOpenDialog(window, { title: 'Где создать проект', buttonLabel: 'Выбрать папку',
       properties: ['openDirectory'], defaultPath: setupState.parent });
-    setupState = { phase: 'form', mode: 'new', name, parent: result.canceled ? setupState.parent : result.filePaths[0] };
+    setupState = { phase: 'form', mode: 'new', name, firstSessionRequired: true, firstSessionExperience: setupState.firstSessionExperience ?? 'chat', parent: result.canceled ? setupState.parent : result.filePaths[0] };
   });
   registerAction('pilot:preview-new', async input => {
     if (setupState?.mode !== 'new') throw new Error('Сначала нажмите «Создать проект».');
-    const parent = setupState.parent, name = input?.name;
-    setupState = { phase: 'checking', mode: 'new', parent, name }; publish();
+    const parent = setupState.parent, name = input?.name, firstSessionExperience = setupState.firstSessionExperience ?? 'chat';
+    setupState = { phase: 'checking', mode: 'new', parent, name, firstSessionRequired: true, firstSessionExperience }; publish();
     const preview = await workspaceSetup.preview({ mode: 'new', parent, name });
-    setupState = { ...preview, phase: 'preview', parent, name };
+    setupState = { ...preview, phase: 'preview', parent, name, firstSessionRequired: true, firstSessionExperience };
   });
   registerAction('pilot:refresh-setup', async () => {
     if (!setupState) return;
     const { mode, parent, name, workspace } = setupState;
-    setupState = { phase: 'checking', mode, parent, name, workspace }; startupError = null; publish();
+    const firstSessionExperience = setupState.firstSessionExperience ?? 'chat';
+    setupState = { phase: 'checking', mode, parent, name, workspace, firstSessionRequired: setupState.firstSessionRequired, firstSessionExperience }; startupError = null; publish();
     const preview = await workspaceSetup.preview({ mode, parent, name, workspace });
-    setupState = { ...preview, phase: 'preview', parent, name: preview.name };
+    const firstSessionRequired = !store.project(preview.workspace);
+    setupState = { ...preview, phase: 'preview', parent, name: preview.name, firstSessionRequired, firstSessionExperience: firstSessionRequired ? firstSessionExperience : 'chat' };
+  });
+  registerAction('pilot:set-first-session-experience', input => {
+    if (!setupState?.firstSessionRequired || !['chat', 'work'].includes(input)) throw new Error('Выберите Chat или Work для первой сессии.');
+    setupState = { ...setupState, firstSessionExperience: input };
+    return input;
   });
   registerAction('pilot:cancel-setup', cancelSetup);
   registerAction('pilot:apply-setup', async input => {
     if (!setupState?.token || input?.token !== setupState.token) throw new Error('Сначала проверьте выбранную папку.');
+    const firstSessionRequired = !!setupState.firstSessionRequired;
+    const firstSessionExperience = firstSessionRequired && setupState.firstSessionExperience === 'work' ? 'work' : 'chat';
     setupState = { ...setupState, phase: 'applying', error: null }; startupError = null; publish();
     const result = await workspaceSetup.apply(input.token, { gitName: input.gitName, gitEmail: input.gitEmail });
-    setupState = { ...result, phase: 'preview', mode: 'existing' };
+    setupState = { ...result, phase: 'preview', mode: 'existing', firstSessionRequired, firstSessionExperience };
     if (!result.ready) return;
     workspaceHealth = result;
-    const project = await store.select(result.workspace);
+    const project = await store.select(result.workspace, { experience: firstSessionExperience });
     setupState = null; publish(); void navigate(project);
   });
   registerAction('pilot:choose-workspace', async () => {
@@ -572,10 +583,12 @@ function registerIpc() {
     if (storageError) throw new Error('Сначала нужно восстановить сохранённый список проектов.');
     return store.setExpanded(input?.workspace, input?.expanded);
   });
-  registerAction('pilot:new-chat', async () => {
-    const current = store.selected(); if (!current) return;
-    if (!await reviewWorkspace(current.workspace, true)) return;
-    const project = await store.newChat(current.workspace);
+  registerAction('pilot:new-session', async input => {
+    if (typeof input?.workspace !== 'string' || !['chat', 'work'].includes(input?.experience)) throw new Error('Выберите проект и тип новой сессии.');
+    if (!store.project(input.workspace)) throw new Error('Выберите активный проект.');
+    if (!await reviewWorkspace(input.workspace, true)) return;
+    await store.select(input.workspace);
+    const project = await store.newSession(input.workspace, input.experience);
     startupError = null; void navigate(project);
   });
   registerAction('pilot:return-chat', async () => { const current = store.selected(); if (current) await selectWorkspace(current.workspace); });

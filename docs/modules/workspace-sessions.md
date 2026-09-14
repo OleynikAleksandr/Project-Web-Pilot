@@ -170,3 +170,7 @@ Fail-closed правило: стартовая Work session может пере�
 ## Контракт session model — T002
 
 Для persisted-модели зафиксирована schema v4: каждая session обязана хранить `experience: chat|work`; канонический creator — `newSession(workspace, experience)`. Миграция v1/v2/v3 должна сохранять точный backup исходного файла, выводить `/work/...` как `work`, а обычные/непривязанные старые session — как `chat`. `bindChat()` обязан fail-closed отклонять concrete conversation URL другого experience. Фактическая реализация этого контракта объединяется с T003, где одновременно обновляются проектный UI и обязательный архитектурный документ.
+
+## Реализация project/session UI — T003
+
+Storage schema v4 и `newSession(workspace, experience)` реализованы вместе с UI. Создание дополнительной session из меню проекта одновременно выбирает этот проект; повторное открытие проекта сохраняет уже существующую selected session. Setup хранит first-session choice только transiently: new/first-connect preview показывает Chat|Work с default Chat, cancel/new setup снова начинается с Chat. Sidebar больше не содержит кнопку создания session в Context card; проектное меню содержит Новый Chat / Новый Work, а session row показывает badge справа от имени.

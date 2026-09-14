@@ -17,6 +17,18 @@ export function normalizeChatUrl(input) {
   } catch { return null; }
 }
 
+export function conversationExperience(input) {
+  const normalized = normalizeChatUrl(input);
+  if (!normalized) return null;
+  const pathname = new URL(normalized).pathname;
+  return pathname.startsWith('/work/') ? 'work' : 'chat';
+}
+
+function sessionExperience(value) {
+  if (!['chat', 'work'].includes(value)) throw new WorkspaceError('SESSION_EXPERIENCE', 'Выберите Chat или Work.');
+  return value;
+}
+
 export async function readWorkspace(input) {
   if (typeof input !== 'string' || !path.isAbsolute(input)) {
     throw new WorkspaceError('WORKSPACE_REQUIRED', 'Выберите папку проекта.');
@@ -66,10 +78,10 @@ export async function readWorkspace(input) {
 
 const copy = value => structuredClone(value);
 const invalid = () => new WorkspaceError('SESSIONS_INVALID', 'Формат сохранённых проектов не поддерживается. Исходный файл сохранён.');
-const sessionFields = ['sessionId', 'chatUrl', 'attempt', 'receipt', 'title', 'createdAt', 'lastOpenedAt'];
+const sessionFields = ['sessionId', 'experience', 'chatUrl', 'attempt', 'receipt', 'title', 'createdAt', 'lastOpenedAt'];
 
 function validate(data) {
-  if (data?.schemaVersion !== 3 || !Array.isArray(data.projects)) throw invalid();
+  if (data?.schemaVersion !== 4 || !Array.isArray(data.projects)) throw invalid();
   const urls = [], ids = [], workspaces = [];
   for (const p of data.projects) {
     if (!p || typeof p.workspace !== 'string' || !path.isAbsolute(p.workspace)
@@ -80,8 +92,10 @@ function validate(data) {
     workspaces.push(p.workspace);
     for (const s of p.sessions) {
       if (!s || typeof s.sessionId !== 'string' || !s.sessionId || typeof s.title !== 'string'
+          || !['chat', 'work'].includes(s.experience)
           || !Number.isFinite(s.createdAt) || !Number.isFinite(s.lastOpenedAt)
-          || (s.chatUrl !== null && (!normalizeChatUrl(s.chatUrl) || normalizeChatUrl(s.chatUrl) !== s.chatUrl))) throw invalid();
+          || (s.chatUrl !== null && (!normalizeChatUrl(s.chatUrl) || normalizeChatUrl(s.chatUrl) !== s.chatUrl
+            || conversationExperience(s.chatUrl) !== s.experience))) throw invalid();
       ids.push(s.sessionId);
       if (s.chatUrl) urls.push(s.chatUrl);
     }
@@ -102,8 +116,12 @@ function migrate(data) {
           receipt: p.receipt ?? null, title: p.title ?? '', createdAt: time, lastOpenedAt: p.lastOpenedAt ?? time }] };
     }) };
   }
-  if (data?.schemaVersion !== 2 || !Array.isArray(data.projects)) throw invalid();
-  return { ...data, schemaVersion: 3, projects: data.projects.map(p => ({ ...p, archivedAt: null })) };
+  if (data?.schemaVersion === 2 && Array.isArray(data.projects)) {
+    data = { ...data, schemaVersion: 3, projects: data.projects.map(p => ({ ...p, archivedAt: null })) };
+  }
+  if (data?.schemaVersion !== 3 || !Array.isArray(data.projects)) throw invalid();
+  return { ...data, schemaVersion: 4, projects: data.projects.map(p => ({ ...p,
+    sessions: p.sessions.map(session => ({ ...session, experience: conversationExperience(session.chatUrl) ?? 'chat' })) })) };
 }
 
 function currentView(project) {
@@ -117,7 +135,7 @@ export class WorkspaceSessions {
     Object.assign(this, { file, inspect, uuid, now });
     this.saveTail = Promise.resolve();
     this.mutationTail = Promise.resolve();
-    this.data = { schemaVersion: 3, selectedWorkspace: null, projects: [] };
+    this.data = { schemaVersion: 4, selectedWorkspace: null, projects: [] };
   }
 
   async load() {
@@ -128,7 +146,7 @@ export class WorkspaceSessions {
     }
     let parsed;
     try { parsed = JSON.parse(text); } catch { throw invalid(); }
-    const legacy = [1, 2].includes(parsed.schemaVersion);
+    const legacy = [1, 2, 3].includes(parsed.schemaVersion);
     const data = validate(legacy ? migrate(parsed) : parsed);
     if (legacy) {
       try { await fs.writeFile(this.file + `.v${parsed.schemaVersion}-backup`, text, { mode: 0o600, flag: 'wx' }); }
@@ -165,8 +183,9 @@ export class WorkspaceSessions {
     return operation;
   }
 
-  createSession() {
-    return { sessionId: 'web-pilot-' + this.uuid(), chatUrl: null, title: '',
+  createSession(experience = 'chat') {
+    experience = sessionExperience(experience);
+    return { sessionId: 'web-pilot-' + this.uuid(), experience, chatUrl: null, title: '',
       createdAt: this.now(), lastOpenedAt: this.now(), attempt: null, receipt: null };
   }
 
@@ -182,14 +201,14 @@ export class WorkspaceSessions {
     return operation;
   }
 
-  select(input) {
+  select(input, { experience = 'chat' } = {}) {
     return this.mutate(async data => {
       const info = await this.inspect(input);
       let project = data.projects.find(p => p.workspace === info.workspace);
       if (project?.archivedAt) throw new WorkspaceError('PROJECT_ARCHIVED', 'Сначала верните проект из архива в настройках.');
       if (project && project.projectId !== info.projectId) throw new WorkspaceError('PROJECT_REPLACED', 'В этой папке теперь другой проект. Сохранённые чаты оставлены без изменений.');
       if (!project) {
-        const session = this.createSession();
+        const session = this.createSession(experience);
         project = { ...info, selectedSessionId: session.sessionId, sessions: [session], expanded: false, archivedAt: null };
         data.projects.unshift(project);
       } else Object.assign(project, info);
@@ -218,6 +237,10 @@ export class WorkspaceSessions {
       const url = normalizeChatUrl(input);
       if (!url) throw new WorkspaceError('CHAT_URL_INVALID', 'Откройте конкретный чат ChatGPT.');
       const { session } = this.activeRecord(workspace, sessionId, data);
+      if (conversationExperience(url) !== session.experience) {
+        throw new WorkspaceError('CHAT_EXPERIENCE_MISMATCH', session.experience === 'work'
+          ? 'Эта сессия создана как Work. Откройте разговор Work.' : 'Эта сессия создана как Chat. Откройте обычный Chat.');
+      }
       if (session.chatUrl && session.chatUrl !== url) throw new WorkspaceError('CHAT_CHANGED', 'Открыт другой чат. Выберите его в дереве или вернитесь к сессии проекта.');
       if (data.projects.some(p => p.sessions.some(s => s.sessionId !== sessionId && s.chatUrl === url))) throw new WorkspaceError('CHAT_IN_USE', 'Этот чат уже связан с другой сессией.');
       session.chatUrl = url;
@@ -225,16 +248,19 @@ export class WorkspaceSessions {
     });
   }
 
-  newChat(workspace) {
+  newSession(workspace, experience) {
     return this.mutate(data => {
+      experience = sessionExperience(experience);
       const project = data.projects.find(p => p.workspace === workspace);
       if (!project) throw new WorkspaceError('WORKSPACE_REQUIRED', 'Сначала выберите проект.');
       if (project.archivedAt) throw new WorkspaceError('PROJECT_ARCHIVED', 'Сначала верните проект из архива.');
-      const session = this.createSession();
+      const session = this.createSession(experience);
       project.sessions.push(session); project.selectedSessionId = session.sessionId; project.expanded = true;
       return currentView(project);
     });
   }
+
+  newChat(workspace) { return this.newSession(workspace, 'chat'); }
 
   setExpanded(workspace, expanded) {
     return this.mutate(data => {

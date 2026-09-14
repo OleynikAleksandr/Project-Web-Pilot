@@ -7,6 +7,8 @@ export function workspaceSetupView(action) {
   $('setup-cancel').addEventListener('click', () => action('cancelSetup'));
   $('setup-refresh').addEventListener('click', () => action('refreshSetup'));
   $('setup-apply').addEventListener('click', () => action('applySetup', last?.setup?.token, $('setup-git-name').value, $('setup-git-email').value));
+  $('setup-experience-chat').addEventListener('click', () => action('setFirstSessionExperience', 'chat'));
+  $('setup-experience-work').addEventListener('click', () => action('setFirstSessionExperience', 'work'));
   for (const id of ['setup-git-name', 'setup-git-email']) $(id).addEventListener('input', () => render(last, pending));
   function render(state, actionPending) {
     last = state; pending = actionPending;
@@ -56,6 +58,13 @@ export function workspaceSetupView(action) {
     $('setup-file-list').replaceChildren(...files.map(file => { const item = document.createElement('li'); item.textContent = `${file.action}: ${file.path}`; return item; }));
     const identity = setup.action === 'install' && !setup.gitIdentityReady;
     $('setup-identity').hidden = !identity;
+    const firstSession = !!setup.firstSessionRequired && !form;
+    $('setup-experience').hidden = !firstSession;
+    const experience = setup.firstSessionExperience === 'work' ? 'work' : 'chat';
+    $('setup-experience-chat').setAttribute('aria-pressed', String(experience === 'chat'));
+    $('setup-experience-work').setAttribute('aria-pressed', String(experience === 'work'));
+    $('setup-experience-chat').disabled = busy || actionPending;
+    $('setup-experience-work').disabled = busy || actionPending;
     $('setup-apply').hidden = !setup.action || busy || !!setup.error;
     $('setup-apply').textContent = { install: setup.mode === 'new' ? 'Создать и открыть' : 'Подготовить и открыть', reconnect: 'Восстановить и открыть', upgrade: 'Обновить и открыть', open: 'Открыть проект' }[setup.action] ?? 'Открыть проект';
     $('setup-apply').disabled = actionPending || (identity && (!$('setup-git-name').value.trim() || !$('setup-git-email').value.trim()));

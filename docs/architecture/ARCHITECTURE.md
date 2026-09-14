@@ -528,3 +528,7 @@ Windows external/bundled runtime получает lifecycle contract 2 чере�
 ## Project Web Pilot 0.6.4 — self-healing Runtime Lifecycle
 
 Release 0.6.4 integrates persisted runtime registration and lifecycle adapters for macOS/Windows. macOS package includes the clean runtime ZIP plus pinned arm64 `uv`; Windows keeps the existing payload/portable Node and adds adapter-control without forcing payload reinstall. Web Pilot no longer treats 17842/17843 as application constants: the runtime owns dynamic loopback endpoints and Web Pilot uses `status.mcp_url`. External Mac source is not modified; Windows external lifecycle control is likewise adapter-based while the pre-existing MCP context overlay remains separate.
+
+## Workspace sessions Chat / Work — scope 011
+
+`WorkspaceSessions` переходит на storage schema v4: каждая локальная session имеет immutable `experience=chat|work`, а concrete conversation URL обязан принадлежать тому же experience. Создание session является операцией проекта: меню `⋯` создаёт `newSession(workspace, experience)` и одновременно делает этот проект/сессию выбранными. Первая session нового или впервые подключаемого проекта получает experience из transient setup state; повторное открытие уже зарегистрированного проекта не создаёт session и не спрашивает тип заново. Context Recovery остаётся независимым от experience.
