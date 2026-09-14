@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 251,
+  "plan_revision": 253,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-kit-recovery-packet-010",
@@ -239,8 +239,8 @@
       ],
       "verification_ids": [],
       "expected_commit_message": "feat: реализовать Workflow Recovery v2",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workflow-kit-recovery-packet-010",
         "task_id": "T003",
@@ -360,7 +360,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-kit-recovery-packet-010
 Current Task: нет
-Revision: 251
+Revision: 253
 
 ## Цель
 
@@ -391,8 +391,8 @@ Revision: 251
   - Git Commit: [PENDING] docs: спроектировать self-healing runtime startup
   - Reference: workflow-kit-recovery-packet-010 / T002 / implementation
   - Файлы: docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md
-- [TODO] T003: Реализовать core Workflow Recovery v2 — Ожидает
-  - Git Commit: [PENDING] feat: реализовать Workflow Recovery v2
+- [DONE] T003: Реализовать core Workflow Recovery v2 — Завершено
+  - Git Commit: [DONE] feat: реализовать Workflow Recovery v2
   - Reference: workflow-kit-recovery-packet-010 / T003 / implementation
   - Файлы: resources/workflow-kit/WORKFLOW.md, resources/workflow-kit/lib/plan.mjs, resources/workflow-kit/lib/recovery.mjs, resources/workflow-kit/lib/validate.mjs, resources/workflow-kit/lib/actions.mjs, resources/workflow-kit/templates/AGENTS.md, resources/workflow-kit/templates/PLAN.md, tests/workflow-kit-source.test.mjs, tests/workflow-kit-recovery.test.mjs, docs/modules/workflow-kit-recovery.md, docs/CONTEXT_DELIVERY.md
 - [TODO] T004: Добавить Workflow Kit 1.2 install/upgrade contract — Ожидает

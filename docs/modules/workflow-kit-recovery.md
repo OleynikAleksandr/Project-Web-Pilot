@@ -108,3 +108,11 @@
 - Прямые dependencies включаются; unrelated completed commits — нет.
 - Recovery текущего Project Web Pilot после миграции укладывается существенно ниже 180000 bytes и не содержит полного исторического `VERIFICATION.md`.
 - Fresh install создаёт module map и compact overview; migration 1.1→1.2 сохраняет пользовательские документы.
+
+## Реализация core Recovery v2 — T003
+
+Source Workflow Kit использует отдельный `Workflow Core` из reference manual вместо полного блока правил. `emptyPlan()` по умолчанию ставит `include_last_completed_task=false`. При `scope:create` функциональный scope требует required `docs/architecture/OVERVIEW.md` и хотя бы одну `docs/modules/*.md`; уже существующие legacy scope не блокируются только из-за старого контракта, но добавление нового функционального task требует актуального module context.
+
+Recovery builder копирует только `required` sections. `required=false` становится reference-only записью пути/heading и не расходует payload содержимым. Commit diffs выбираются только из прямых `task.dependencies` и явных `context_pack.dependency_task_ids`. Verification evidence включается только если относится к текущему HEAD/dependency или текущей transaction.
+
+Эффективный hard budget ограничен минимумом project config и transport ceiling 180000 bytes / 90000 conservative tokens. При переполнении exception содержит `largest_sections`; required data не обрезается. `soft_tokens` публикуется как quality signal (`soft_exceeded`), но не удаляет данные автоматически.

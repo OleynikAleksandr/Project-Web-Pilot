@@ -66,3 +66,7 @@ Workspace содержит список сессий. Передача конт�
 ## Архив workspace
 
 Архивирование выбранного проекта останавливает его ContextSession и снимает локальный выбор. В настройках tick приостановлен. Возврат из архива сохраняет sessionId, chatUrl, attempts и selectedSessionId; ничего не отправляет автоматически. Открытие возвращённого workspace выполняет обычную проверку готовности и открывает прежний выбранный чат без повторной отправки. Удаление очищает локальные записи, а веб-разговоры остаются в аккаунте пользователя.
+
+### Реализация core v2 — T003
+
+Builder Workflow Kit больше не использует большой `Обязательные правила` как session payload: передаётся только `Workflow Core`. Optional context sections перечисляются как reference-only. Unrelated last-completed commit не добавляется; обязательны только прямые/явные dependencies. Transport API Web Pilot не меняется: он по-прежнему получает COMPLETE text + bytes/hash/facts, поэтому переход на v2 не требует нового MCP protocol.

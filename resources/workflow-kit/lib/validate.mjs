@@ -6,7 +6,7 @@ import { commitHistory, commitPaths, git, head, localPath } from './git.mjs';
 
 export function defaultConfig() {
   return { schema_version: 1, profile: 'DISCOVERY', stack: null, checks: [],
-    budget: { soft_tokens: 6000, hard_tokens: 10000, hard_bytes: 49152 },
+    budget: { soft_tokens: 16000, hard_tokens: 90000, hard_bytes: 180000 },
     documentation: { index: INDEX, mappings: [] } };
 }
 export function validateConfig(c) {
