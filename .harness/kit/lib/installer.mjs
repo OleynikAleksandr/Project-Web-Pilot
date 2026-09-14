@@ -11,6 +11,19 @@ import { prepareRuntime, launcherCommand, windows } from './platform.mjs';
 
 const hookNames = ['pre-commit', 'commit-msg', 'post-commit', 'pre-push'];
 const hookName = entry => path.posix.basename(entry.path.replaceAll('\\', '/'));
+const upgradeFrom = new Set(['1.1.0']);
+function sectionBounds(text, start, end) {
+  const i = text.indexOf(start), j = text.indexOf(end, i + start.length);
+  check(i >= 0 && j >= i, 'MODIFIED_INTEGRATION', 'Управляемая секция отсутствует; автоматическое обновление остановлено.');
+  return { i, j, value: text.slice(i, j + end.length) };
+}
+function replaceOwnedSection(current, entry, content, start = MD_START, end = MD_END) {
+  const found = sectionBounds(current, start, end);
+  check(entry.section_hash && hash(found.value) === entry.section_hash, 'MODIFIED_INTEGRATION', 'Управляемая секция изменена; автоматическое обновление остановлено: ' + entry.path);
+  const next = start + '\n' + content.trim() + '\n' + end;
+  return current.slice(0, found.i) + next + current.slice(found.j + end.length);
+}
+function manifestEntry(entry) { return installationManifest([entry], {}).files[0]; }
 function manifestTarget(root, entry) {
   if (!entry.external) return safePath(root, entry.path);
   check(entry.kind === 'git-hook' && hookNames.includes(hookName(entry)), 'MANIFEST_PATH', 'Неизвестный внешний путь manifest.');
@@ -73,9 +86,11 @@ export function inspect(opts) {
       if (!fs.existsSync(f) || hash(fs.readFileSync(f)) !== e.hash) conflicts.push({ path: e.path, reason: 'Файл runtime отсутствует или изменён.' });
     }
     let state; try { state = status(root); } catch (e) { state = errorResult(e); }
+    const compatible = manifest.version === VERSION;
+    const upgradeable = !compatible && upgradeFrom.has(manifest.version) && conflicts.length === 0;
     return { ok: true, installed: true, project_path: root, project_name: state.project_name ?? path.basename(root), version: manifest.version,
-      compatible: manifest.version === VERSION, conflicts, can_install: false, state, files: [],
-      message: conflicts.length ? 'Найдены изменения runtime. Автоматическая перезапись запрещена.' : 'Комплект уже установлен. План и файлы сохранены.' };
+      compatible, upgradeable, conflicts, can_install: false, state, files: [],
+      message: conflicts.length ? 'Найдены изменения runtime. Автоматическая перезапись запрещена.' : upgradeable ? `Workflow Kit ${manifest.version} можно безопасно обновить до ${VERSION}.` : 'Комплект уже установлен. План и файлы сохранены.' };
   }
   const pendingFile = path.join(root, '.harness/runtime/install-journal.json');
   let entries; let hookLocation; let initialChanges;
@@ -102,10 +117,74 @@ export function inspect(opts) {
     existing_changes: initialChanges ?? (isGit ? allChanges(root) : []), preview_fingerprint: fingerprint(root, entries, isGit),
     partial_install: fs.existsSync(pendingFile), _entries: entries, _hook_location: hookLocation };
 }
+function upgradeInstallation(root, preview) {
+  check(preview.upgradeable && !preview.conflicts.length, 'UNSUPPORTED_MIGRATION', 'Автоматическое обновление этой установки недоступно.');
+  return locked(root, () => {
+    const old = readJSON(path.join(root, MANIFEST));
+    check(upgradeFrom.has(old.version), 'UNSUPPORTED_MIGRATION', 'Версия установки изменилась после preview.');
+    const temp = path.join(root, '.harness/runtime/kit-upgrade-preview-' + id());
+    fs.mkdirSync(temp, { recursive: true });
+    let desired;
+    try { desired = payload(temp, preview.project_name, { folder: path.join(temp, '.git/hooks'), tracked: false, mechanism: 'git' }); }
+    finally { fs.rmSync(temp, { recursive: true, force: true }); }
+    const desiredMap = new Map(desired.filter(e => !e.external).map(e => [e.path, e]));
+    const oldMap = new Map(old.files.map(e => [e.path, e]));
+    const replacements = new Map(); const changed = [];
+    const write = (entry, content) => {
+      const file = safePath(root, entry.path); const before = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : null;
+      if (before !== content) { atomic(file, content, entry.mode ?? 0o644); if (entry.mode === 0o755) fs.chmodSync(file, 0o755); changed.push(entry.path); }
+      replacements.set(entry.path, manifestEntry({ ...entry, content, original_hash: entry.original_hash ?? (before === null ? null : hash(before)), hash: hash(content), existed: before !== null }));
+    };
+    for (const entry of old.files.filter(e => e.kind === 'owned' && (e.path.startsWith('.harness/kit/') || ['scripts/workflow', 'scripts/workflow.mjs', 'scripts/workflow.cmd'].includes(e.path)))) {
+      const file = manifestTarget(root, entry); check(fs.existsSync(file) && hash(fs.readFileSync(file)) === entry.hash, 'MODIFIED_INTEGRATION', 'Runtime изменён; обновление остановлено: ' + entry.path);
+      const next = desiredMap.get(entry.path); check(next, 'UPGRADE_PAYLOAD', 'Новый runtime не содержит путь: ' + entry.path); write(next, next.content);
+    }
+    const planTemplate = desiredMap.get('.harness/plans/todo-plan.template.md');
+    if (planTemplate) {
+      const previous = oldMap.get(planTemplate.path); const file = safePath(root, planTemplate.path); const current = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : null;
+      if (current === null || (previous && hash(current) === previous.hash)) write(planTemplate, planTemplate.content);
+      else replacements.set(planTemplate.path, manifestEntry(planTemplate));
+    }
+    const agentEntry = old.files.find(e => e.kind === 'managed' && /^AGENTS(?:\.override)?\.md$/.test(e.path));
+    if (agentEntry) {
+      const current = fs.readFileSync(manifestTarget(root, agentEntry), 'utf8');
+      const template = desiredMap.get('.harness/kit/templates/AGENTS.md')?.content; check(template, 'UPGRADE_PAYLOAD', 'Новый комплект не содержит AGENTS template.');
+      const next = replaceOwnedSection(current, agentEntry, template); write({ ...agentEntry, path: agentEntry.path, external: false, kind: 'managed' }, next);
+    }
+    const indexEntry = old.files.find(e => e.path === 'docs/DOCUMENTATION_INDEX.md' && e.kind === 'managed');
+    if (indexEntry) {
+      const current = fs.readFileSync(manifestTarget(root, indexEntry), 'utf8'); const found = sectionBounds(current, MD_START, MD_END);
+      // Documentation index is expected to evolve during normal project work. Upgrade is additive only:
+      // preserve every existing row and append the two new recovery-v2 entries when absent.
+      let section = found.value;
+      for (const row of ['| docs/MODULES.md | Карта архитектурных модулей |', '| docs/architecture/OVERVIEW.md | Компактная архитектура для recovery |']) if (!section.includes(row.split(' | ')[0])) section = section.replace(MD_END, row + '\n' + MD_END);
+      write({ ...indexEntry, path: indexEntry.path, external: false, kind: 'managed' }, current.slice(0, found.i) + section + current.slice(found.j + MD_END.length));
+    }
+    for (const name of ['docs/MODULES.md', 'docs/architecture/OVERVIEW.md']) {
+      const entry = desiredMap.get(name); check(entry, 'UPGRADE_PAYLOAD', 'Новый комплект не содержит ' + name);
+      const file = safePath(root, name);
+      if (!fs.existsSync(file)) write(entry, entry.content);
+      else {
+        const current = fs.readFileSync(file, 'utf8');
+        replacements.set(name, manifestEntry({ ...entry, content: current, original_hash: hash(current), hash: hash(current), existed: true }));
+      }
+    }
+    const kept = old.files.filter(e => !replacements.has(e.path));
+    const metadata = { ...old, version: VERSION, upgraded_from: old.version, upgraded_at: new Date().toISOString(), files: [...kept, ...replacements.values()] };
+    delete metadata.installed_at; metadata.installed_at = new Date().toISOString();
+    atomic(path.join(root, MANIFEST), json(metadata)); changed.push(MANIFEST);
+    const selected = [...new Set(changed)];
+    const result = commitCandidate(root, { plan: readPlan(root), role: 'kit-update', selected, message: 'chore: обновить Project Workflow Kit до ' + VERSION, beforeHead: head(root) });
+    return { ok: true, installed: true, upgraded: true, project_path: root, project_name: preview.project_name, version: VERSION, sha: result.sha,
+      state: status(root), message: 'Workflow Kit обновлён до ' + VERSION + '; активный план и пользовательские документы сохранены.' };
+  });
+}
+
 export function install(opts) {
   const preview = inspect(opts);
-  if (preview.installed && opts.update) check(preview.compatible, 'UNSUPPORTED_MIGRATION', 'Для этой версии пока нет миграции. Существующая установка сохранена.');
   if (opts['dry-run']) return publicPreview(preview);
+  if (preview.installed && opts.update && preview.upgradeable) return upgradeInstallation(preview.project_path, preview);
+  if (preview.installed && opts.update) check(preview.compatible, 'UNSUPPORTED_MIGRATION', 'Для этой версии нет безопасной миграции. Существующая установка сохранена.');
   if (preview.installed) return reconnect(preview.project_path, preview);
   check(preview.can_install, 'INSTALL_CONFLICT', 'Установка остановлена из-за конфликтов. Существующие файлы сохранены.', { conflicts: preview.conflicts });
   if (opts['expected-fingerprint']) check(opts['expected-fingerprint'] === preview.preview_fingerprint, 'PREVIEW_CHANGED', 'Папка изменилась после предварительного просмотра. Проверьте её ещё раз.');

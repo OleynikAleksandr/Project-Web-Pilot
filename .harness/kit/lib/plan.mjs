@@ -12,7 +12,7 @@ export function emptyPlan(name) {
   return { schema_version: 1, plan_revision: 1, project_id: id(), project_name: name, scope_id: null,
     execution_scope_status: 'NONE', delivery_status: 'IN_PROGRESS', objective: '', acceptance_criteria: [],
     approved_scope: { functional_paths: [], documentation_paths: [], max_functional_files_per_task: 3 },
-    baseline_commit: null, current_task_id: null, context_pack: { documents: [], include_last_completed_task: true, dependency_task_ids: [] },
+    baseline_commit: null, current_task_id: null, context_pack: { documents: [], include_last_completed_task: false, dependency_task_ids: [] },
     tasks: [], blocked_reason: null, user_decisions: [] };
 }
 export function validatePlan(p) {
@@ -27,6 +27,7 @@ export function validatePlan(p) {
   }
   check(Number.isInteger(p.approved_scope.max_functional_files_per_task) && p.approved_scope.max_functional_files_per_task > 0, 'PLAN_SCHEMA', 'Некорректный лимит файлов.');
   array(p.context_pack?.documents, 'context_pack.documents'); array(p.context_pack?.dependency_task_ids, 'context_pack.dependency_task_ids');
+  check(typeof p.context_pack.include_last_completed_task === 'boolean', 'PLAN_SCHEMA', 'include_last_completed_task должен быть boolean.');
   const validateContext = pack => {
     if (!pack) return;
     array(pack.documents, 'context.documents');

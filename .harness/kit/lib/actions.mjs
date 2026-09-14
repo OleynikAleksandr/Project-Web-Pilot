@@ -10,6 +10,13 @@ import { recover } from './recovery.mjs';
 const noTransaction = root => check(!journal(root), 'TRANSACTION_PENDING', 'Сначала завершите текущую транзакцию commit/repair.');
 const acknowledgementsPath = root => path.join(root, '.harness/runtime/worktrees', hash(gitPath(root, 'index')).slice(0, 20), 'hook-acknowledgements.json');
 const revision = (p, value) => { if (value !== undefined) check(p.plan_revision === Number(value), 'REVISION_CHANGED', 'Revision плана изменилась. Сначала обновите status.'); };
+const requiredDocuments = pack => (pack?.documents ?? []).filter(d => d.required);
+function requireModuleContext(planLike) {
+  if (!(planLike.tasks ?? []).some(t => (t.functional_paths ?? []).length)) return;
+  const docs = requiredDocuments(planLike.context_pack);
+  check(docs.some(d => d.path === 'docs/architecture/OVERVIEW.md'), 'MODULE_CONTEXT_REQUIRED', 'Функциональному scope нужен required compact project overview: docs/architecture/OVERVIEW.md.');
+  check(docs.some(d => /^docs\/modules\/.+\.md$/i.test(d.path)), 'MODULE_CONTEXT_REQUIRED', 'Функциональному scope нужна required module specification в docs/modules/. Сначала согласуйте контракт модуля.');
+}
 function service(root, plan, role, selected, message) {
   return commitCandidate(root, { plan, role, selected, message, beforeHead: head(root) });
 }
@@ -19,6 +26,7 @@ export function createScope(root, input, expectedRevision) {
     check(previous.execution_scope_status === 'NONE', 'SCOPE_EXISTS', 'Текущий scope ещё не закрыт пользователем.');
     check(head(root), 'NO_BASELINE', 'Сначала завершите bootstrap-коммит установки.');
     check(typeof input.approval_note === 'string' && input.approval_note.trim().length >= 10, 'SCOPE_APPROVAL', 'Запишите согласованное пользователем содержание scope в approval_note.');
+    requireModuleContext(input);
     const plan = { ...emptyPlan(previous.project_name), ...input, schema_version: 1, project_id: previous.project_id,
       project_name: previous.project_name, plan_revision: previous.plan_revision + 1, scope_id: input.scope_id || 'scope-' + id(),
       execution_scope_status: 'ACTIVE', delivery_status: 'IN_PROGRESS', baseline_commit: head(root), current_task_id: null, blocked_reason: null };
@@ -67,7 +75,9 @@ export function applyPlan(root, input, expectedRevision) {
         check(current.implementation_status === old.implementation_status && current.commit_status === old.commit_status && JSON.stringify(current.commit_ref) === JSON.stringify(old.commit_ref), 'MANAGED_FIELDS', 'Статусы и references меняются командами task:start/commit.');
       }
     }
-    for (const t of plan.tasks.filter(t => !original.tasks.some(old => old.id === t.id))) check(t.implementation_status === 'TODO' && t.commit_status === 'PENDING', 'MANAGED_FIELDS', 'Новая задача должна быть TODO/PENDING.');
+    const added = plan.tasks.filter(t => !original.tasks.some(old => old.id === t.id));
+    for (const t of added) check(t.implementation_status === 'TODO' && t.commit_status === 'PENDING', 'MANAGED_FIELDS', 'Новая задача должна быть TODO/PENDING.');
+    if (added.some(t => t.functional_paths.length) || (input.context_pack && plan.tasks.some(t => t.functional_paths.length && t.commit_status !== 'DONE'))) requireModuleContext(plan);
     plan.delivery_status = plan.tasks.length && plan.tasks.every(t => t.commit_status === 'DONE') ? 'READY_FOR_ACCEPTANCE' : 'IN_PROGRESS';
     validatePlan(plan); resolveReferences(root, plan);
     if (plan.current_task_id) writePlan(root, plan);

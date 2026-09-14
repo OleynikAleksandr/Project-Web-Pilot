@@ -15,7 +15,7 @@ export function checkServicePaths(role, files) {
     repair: p => p === PLAN,
     archive: p => p === PLAN || p.startsWith('.harness/plans/archive/') && p.endsWith('.md'),
     bootstrap: p => p.startsWith('.harness/') || p.startsWith('docs/') || ['AGENTS.md', 'AGENTS.override.md', '.gitignore', '.gitattributes', '.codex/hooks.json', 'scripts/workflow', 'scripts/workflow.mjs', 'scripts/workflow.cmd'].includes(p) || p.startsWith('.husky/'),
-    'kit-update': p => p.startsWith('.harness/kit/') || ['.harness/kit-manifest.json', 'scripts/workflow', 'scripts/workflow.mjs', 'scripts/workflow.cmd'].includes(p),
+    'kit-update': p => p === PLAN || p.startsWith('.harness/kit/') || ['.harness/kit-manifest.json', '.harness/plans/todo-plan.template.md', 'scripts/workflow', 'scripts/workflow.mjs', 'scripts/workflow.cmd', 'AGENTS.md', 'AGENTS.override.md', 'docs/DOCUMENTATION_INDEX.md', 'docs/MODULES.md', 'docs/architecture/OVERVIEW.md'].includes(p),
   };
   check(patterns[role], 'SERVICE_ROLE', 'Недопустимая служебная роль.');
   check(files.every(patterns[role]), 'SERVICE_SCOPE', 'Служебный коммит содержит недопустимые пути.', { files, role });

@@ -1,227 +1,10 @@
 {
   "schema_version": 1,
-  "version": "1.1.0",
-  "installed_at": "2026-09-11T08:09:52.561Z",
+  "version": "1.2.0",
   "initialized_git": true,
   "hook_mechanism": "git",
   "node_runtime": "system",
   "files": [
-    {
-      "path": ".harness/kit/WORKFLOW.md",
-      "external": false,
-      "kind": "owned",
-      "mode": 420,
-      "original_hash": null,
-      "hash": "9f706c909294631ab62a0564f2ccb0e1cea7f67d3f8ea6cded078ac58b1cd124",
-      "existed": false
-    },
-    {
-      "path": ".harness/kit/cli.mjs",
-      "external": false,
-      "kind": "owned",
-      "mode": 420,
-      "original_hash": null,
-      "hash": "951eb369a762a824a475a3cdc65ebf6aef6c36c65587b576a2318c78eefb205a",
-      "existed": false
-    },
-    {
-      "path": ".harness/kit/install.mjs",
-      "external": false,
-      "kind": "owned",
-      "mode": 420,
-      "original_hash": null,
-      "hash": "528f4f545564e0b6eee109053d984e66c5b8fa9403fd4cd5cf36fc36122a03dc",
-      "existed": false
-    },
-    {
-      "path": ".harness/kit/lib/actions.mjs",
-      "external": false,
-      "kind": "owned",
-      "mode": 420,
-      "original_hash": null,
-      "hash": "9e7f1d2c4fc15a40e5bd0e5514ae11661ae3b93d7fbb4b6fcbebf8cd53b44d46",
-      "existed": false
-    },
-    {
-      "path": ".harness/kit/lib/common.mjs",
-      "external": false,
-      "kind": "owned",
-      "mode": 420,
-      "original_hash": null,
-      "hash": "3c1bdd4fc8c796d96060216b2369f33f47cfc429fa6c768e6e54765ab05e25d1",
-      "existed": false
-    },
-    {
-      "path": ".harness/kit/lib/git-hooks.mjs",
-      "external": false,
-      "kind": "owned",
-      "mode": 420,
-      "original_hash": null,
-      "hash": "72ebf77c2f2482b09ea7b5c38f03e8c26367549bc4df3d13036ef51f9416ad23",
-      "existed": false
-    },
-    {
-      "path": ".harness/kit/lib/git.mjs",
-      "external": false,
-      "kind": "owned",
-      "mode": 420,
-      "original_hash": null,
-      "hash": "226ba1ee0935fcefb38dd343282c720baba096fb9349d34ab349ca6be35fa44b",
-      "existed": false
-    },
-    {
-      "path": ".harness/kit/lib/installation-files.mjs",
-      "external": false,
-      "kind": "owned",
-      "mode": 420,
-      "original_hash": null,
-      "hash": "c24459d1acb31bb65a8a698f133b9e3adf949e46c6af3328467cd74526fc0b9f",
-      "existed": false
-    },
-    {
-      "path": ".harness/kit/lib/installer.mjs",
-      "external": false,
-      "kind": "owned",
-      "mode": 420,
-      "original_hash": null,
-      "hash": "5bfee2a88c3f2bb308576414955caf7df7075893e2e901bb09fb270dfe4f94aa",
-      "existed": false
-    },
-    {
-      "path": ".harness/kit/lib/plan.mjs",
-      "external": false,
-      "kind": "owned",
-      "mode": 420,
-      "original_hash": null,
-      "hash": "0099067c38486697c41e2e5ddd709356e6c1ea7f1b365553ea26be4f904fcca8",
-      "existed": false
-    },
-    {
-      "path": ".harness/kit/lib/platform.mjs",
-      "external": false,
-      "kind": "owned",
-      "mode": 420,
-      "original_hash": null,
-      "hash": "42786f88026d4ba7300cf08ae7b3e09645c49bc2730741bc71b009ffb55531eb",
-      "existed": false
-    },
-    {
-      "path": ".harness/kit/lib/recovery.mjs",
-      "external": false,
-      "kind": "owned",
-      "mode": 420,
-      "original_hash": null,
-      "hash": "13e96bf800d8c464e1e76692d5df71618f2092888fc3a508dd419ca14fd980cb",
-      "existed": false
-    },
-    {
-      "path": ".harness/kit/lib/transaction.mjs",
-      "external": false,
-      "kind": "owned",
-      "mode": 420,
-      "original_hash": null,
-      "hash": "a6c0ca7a034fb51aae733ab913d8634958ed223c2b0cbc1fe8830789736e6389",
-      "existed": false
-    },
-    {
-      "path": ".harness/kit/lib/validate.mjs",
-      "external": false,
-      "kind": "owned",
-      "mode": 420,
-      "original_hash": null,
-      "hash": "a4f0edc04213a47f4ea0cda03b8178d0ec51a792cbd384ff93022e5542435689",
-      "existed": false
-    },
-    {
-      "path": ".harness/kit/schemas/plan.schema.json",
-      "external": false,
-      "kind": "owned",
-      "mode": 420,
-      "original_hash": null,
-      "hash": "b93898e7509debb33dccf1a60c4742a4b0f710a60ef778a6d60acbb23a7507ca",
-      "existed": false
-    },
-    {
-      "path": ".harness/kit/schemas/workflow.schema.json",
-      "external": false,
-      "kind": "owned",
-      "mode": 420,
-      "original_hash": null,
-      "hash": "2703199fdf049ad2634f4f7221ef3f74de6d11f039f19cbe02d9c03358721a1f",
-      "existed": false
-    },
-    {
-      "path": ".harness/kit/templates/AGENTS.md",
-      "external": false,
-      "kind": "owned",
-      "mode": 420,
-      "original_hash": null,
-      "hash": "a657ab164b3db5bc33b55efa591c53e7eade746cafe4f12bdbecc10855f1fe66",
-      "existed": false
-    },
-    {
-      "path": ".harness/kit/templates/ARCHITECTURE.md",
-      "external": false,
-      "kind": "owned",
-      "mode": 420,
-      "original_hash": null,
-      "hash": "d5342fbcfbb0885d1bff0f7705ce6a1f9cfd05b9af6d76c7f318ef4694c68a42",
-      "existed": false
-    },
-    {
-      "path": ".harness/kit/templates/PLAN.md",
-      "external": false,
-      "kind": "owned",
-      "mode": 420,
-      "original_hash": null,
-      "hash": "fed35748aca82771516506f75b1e4cf1a0a9f983c80c9f3f46f3f8efcb8a607f",
-      "existed": false
-    },
-    {
-      "path": ".harness/kit/templates/PRODUCT.md",
-      "external": false,
-      "kind": "owned",
-      "mode": 420,
-      "original_hash": null,
-      "hash": "6f101bde2d38b40c8477a33e5cedefb0595db913972b60f552ea2b9553aff4f0",
-      "existed": false
-    },
-    {
-      "path": ".harness/kit/templates/START.md",
-      "external": false,
-      "kind": "owned",
-      "mode": 420,
-      "original_hash": null,
-      "hash": "5decb9e56e178b03151ef9f3d658753a7103f147a24b1224c82c4f83b3d950f3",
-      "existed": false
-    },
-    {
-      "path": "scripts/workflow.mjs",
-      "external": false,
-      "kind": "owned",
-      "mode": 493,
-      "original_hash": null,
-      "hash": "db1202e2c33ef0ff9be90234a4255fb800ae852b028e4e45f90d2e9ab0afbc52",
-      "existed": false
-    },
-    {
-      "path": "scripts/workflow.cmd",
-      "external": false,
-      "kind": "owned",
-      "mode": 420,
-      "original_hash": null,
-      "hash": "e27df6f19e051c9030f6ea3b6f9cd14d5de8d5cccc1aff812f7e7890c23dbbc8",
-      "existed": false
-    },
-    {
-      "path": "scripts/workflow",
-      "external": false,
-      "kind": "owned",
-      "mode": 493,
-      "original_hash": null,
-      "hash": "8a87379d8a858a0c55c3999879d35ff5e61fe635abe6b195c8a209a6febaeb6e",
-      "existed": false
-    },
     {
       "path": ".harness/workflow.json",
       "external": false,
@@ -239,25 +22,6 @@
       "original_hash": null,
       "hash": "9f399a2c343652950759aabca37dddd18f9a861e373b8e9fa64e75221bb03242",
       "existed": false
-    },
-    {
-      "path": ".harness/plans/todo-plan.template.md",
-      "external": false,
-      "kind": "editable",
-      "mode": 420,
-      "original_hash": null,
-      "hash": "fed35748aca82771516506f75b1e4cf1a0a9f983c80c9f3f46f3f8efcb8a607f",
-      "existed": false
-    },
-    {
-      "path": "AGENTS.md",
-      "external": false,
-      "kind": "managed",
-      "mode": 420,
-      "original_hash": null,
-      "hash": "639fd3a87b4ecd70772df228c991767c6b6e2906dcbedbff1a71e8c265e801bf",
-      "existed": false,
-      "section_hash": "639f6cb67ea7caa37def1be2887875bb44dfa85f15102575273e5ee4aec21eea"
     },
     {
       "path": "docs/PRODUCT.md",
@@ -285,16 +49,6 @@
       "original_hash": null,
       "hash": "5decb9e56e178b03151ef9f3d658753a7103f147a24b1224c82c4f83b3d950f3",
       "existed": false
-    },
-    {
-      "path": "docs/DOCUMENTATION_INDEX.md",
-      "external": false,
-      "kind": "managed",
-      "mode": 420,
-      "original_hash": null,
-      "hash": "d23ede546bee08dce7e1975382567087896216d4a2167cd7f93a8e95e0d9401b",
-      "existed": false,
-      "section_hash": "22d8df97710b503b31f24b60442e8eea35af4a8088b88c9d9a8897d54e43a612"
     },
     {
       "path": ".gitignore",
@@ -365,6 +119,272 @@
       "hash": "09455a4fbcee21b8c7c9f8aac9da9f65ddc8812f392230fdf228fa22e7db7cd0",
       "existed": false,
       "section_hash": "0c699cbc5307a926b72d72b1709b6ad7a559d3bbbe6797d6933503a8cb2aa9c2"
+    },
+    {
+      "path": ".harness/kit/WORKFLOW.md",
+      "external": false,
+      "kind": "owned",
+      "mode": 420,
+      "original_hash": "9f706c909294631ab62a0564f2ccb0e1cea7f67d3f8ea6cded078ac58b1cd124",
+      "hash": "707b2cc6b44cc604f4bedd8e9f6ad39877c0e685706e8c985183240af6834f88",
+      "existed": true
+    },
+    {
+      "path": ".harness/kit/cli.mjs",
+      "external": false,
+      "kind": "owned",
+      "mode": 420,
+      "original_hash": "951eb369a762a824a475a3cdc65ebf6aef6c36c65587b576a2318c78eefb205a",
+      "hash": "951eb369a762a824a475a3cdc65ebf6aef6c36c65587b576a2318c78eefb205a",
+      "existed": true
+    },
+    {
+      "path": ".harness/kit/install.mjs",
+      "external": false,
+      "kind": "owned",
+      "mode": 420,
+      "original_hash": "528f4f545564e0b6eee109053d984e66c5b8fa9403fd4cd5cf36fc36122a03dc",
+      "hash": "528f4f545564e0b6eee109053d984e66c5b8fa9403fd4cd5cf36fc36122a03dc",
+      "existed": true
+    },
+    {
+      "path": ".harness/kit/lib/actions.mjs",
+      "external": false,
+      "kind": "owned",
+      "mode": 420,
+      "original_hash": "9e7f1d2c4fc15a40e5bd0e5514ae11661ae3b93d7fbb4b6fcbebf8cd53b44d46",
+      "hash": "91d1313cbadc998d5e3f091963c50110232b8ecbc8e837e3ccb679ca6d29e781",
+      "existed": true
+    },
+    {
+      "path": ".harness/kit/lib/common.mjs",
+      "external": false,
+      "kind": "owned",
+      "mode": 420,
+      "original_hash": "3c1bdd4fc8c796d96060216b2369f33f47cfc429fa6c768e6e54765ab05e25d1",
+      "hash": "13a75bd5ddc42e24c300102ed202af301df4a64066d7a39ab49e1a68c24992da",
+      "existed": true
+    },
+    {
+      "path": ".harness/kit/lib/git-hooks.mjs",
+      "external": false,
+      "kind": "owned",
+      "mode": 420,
+      "original_hash": "72ebf77c2f2482b09ea7b5c38f03e8c26367549bc4df3d13036ef51f9416ad23",
+      "hash": "72ebf77c2f2482b09ea7b5c38f03e8c26367549bc4df3d13036ef51f9416ad23",
+      "existed": true
+    },
+    {
+      "path": ".harness/kit/lib/git.mjs",
+      "external": false,
+      "kind": "owned",
+      "mode": 420,
+      "original_hash": "226ba1ee0935fcefb38dd343282c720baba096fb9349d34ab349ca6be35fa44b",
+      "hash": "226ba1ee0935fcefb38dd343282c720baba096fb9349d34ab349ca6be35fa44b",
+      "existed": true
+    },
+    {
+      "path": ".harness/kit/lib/installation-files.mjs",
+      "external": false,
+      "kind": "owned",
+      "mode": 420,
+      "original_hash": "c24459d1acb31bb65a8a698f133b9e3adf949e46c6af3328467cd74526fc0b9f",
+      "hash": "46335e793ee1343f39815adbb94e6ddf8c8eb9a01b8d192705d77fd7d7cd8f32",
+      "existed": true
+    },
+    {
+      "path": ".harness/kit/lib/installer.mjs",
+      "external": false,
+      "kind": "owned",
+      "mode": 420,
+      "original_hash": "5bfee2a88c3f2bb308576414955caf7df7075893e2e901bb09fb270dfe4f94aa",
+      "hash": "0d3353f43257030e565b7abc35bb7bd31dddac1d8c37cf1ad774a4586788b81a",
+      "existed": true
+    },
+    {
+      "path": ".harness/kit/lib/plan.mjs",
+      "external": false,
+      "kind": "owned",
+      "mode": 420,
+      "original_hash": "0099067c38486697c41e2e5ddd709356e6c1ea7f1b365553ea26be4f904fcca8",
+      "hash": "4f57ee52cfad2af3450fa6099926c8c9dbf11e7ab3b5c90e32d4ffc33a196bbc",
+      "existed": true
+    },
+    {
+      "path": ".harness/kit/lib/platform.mjs",
+      "external": false,
+      "kind": "owned",
+      "mode": 420,
+      "original_hash": "42786f88026d4ba7300cf08ae7b3e09645c49bc2730741bc71b009ffb55531eb",
+      "hash": "42786f88026d4ba7300cf08ae7b3e09645c49bc2730741bc71b009ffb55531eb",
+      "existed": true
+    },
+    {
+      "path": ".harness/kit/lib/recovery.mjs",
+      "external": false,
+      "kind": "owned",
+      "mode": 420,
+      "original_hash": "13e96bf800d8c464e1e76692d5df71618f2092888fc3a508dd419ca14fd980cb",
+      "hash": "2296e1ea1e6a55fe9913b0daa6a131ace504553798301760d0532ed983cbb5ea",
+      "existed": true
+    },
+    {
+      "path": ".harness/kit/lib/transaction.mjs",
+      "external": false,
+      "kind": "owned",
+      "mode": 420,
+      "original_hash": "a6c0ca7a034fb51aae733ab913d8634958ed223c2b0cbc1fe8830789736e6389",
+      "hash": "742bcc1b5e952f694be8e4533b1292d19a69888d5c964a4f5f884dbae6fc72a8",
+      "existed": true
+    },
+    {
+      "path": ".harness/kit/lib/validate.mjs",
+      "external": false,
+      "kind": "owned",
+      "mode": 420,
+      "original_hash": "a4f0edc04213a47f4ea0cda03b8178d0ec51a792cbd384ff93022e5542435689",
+      "hash": "0e7c827051a8725994e114241d1b0254b35efeb8300dd41602d62f1e442f189c",
+      "existed": true
+    },
+    {
+      "path": ".harness/kit/schemas/plan.schema.json",
+      "external": false,
+      "kind": "owned",
+      "mode": 420,
+      "original_hash": "b93898e7509debb33dccf1a60c4742a4b0f710a60ef778a6d60acbb23a7507ca",
+      "hash": "b93898e7509debb33dccf1a60c4742a4b0f710a60ef778a6d60acbb23a7507ca",
+      "existed": true
+    },
+    {
+      "path": ".harness/kit/schemas/workflow.schema.json",
+      "external": false,
+      "kind": "owned",
+      "mode": 420,
+      "original_hash": "2703199fdf049ad2634f4f7221ef3f74de6d11f039f19cbe02d9c03358721a1f",
+      "hash": "2703199fdf049ad2634f4f7221ef3f74de6d11f039f19cbe02d9c03358721a1f",
+      "existed": true
+    },
+    {
+      "path": ".harness/kit/templates/AGENTS.md",
+      "external": false,
+      "kind": "owned",
+      "mode": 420,
+      "original_hash": "a657ab164b3db5bc33b55efa591c53e7eade746cafe4f12bdbecc10855f1fe66",
+      "hash": "474270920c3b564b81e385e0c03c6601ff5a8bc2e370764a2444106208151034",
+      "existed": true
+    },
+    {
+      "path": ".harness/kit/templates/ARCHITECTURE.md",
+      "external": false,
+      "kind": "owned",
+      "mode": 420,
+      "original_hash": "d5342fbcfbb0885d1bff0f7705ce6a1f9cfd05b9af6d76c7f318ef4694c68a42",
+      "hash": "d5342fbcfbb0885d1bff0f7705ce6a1f9cfd05b9af6d76c7f318ef4694c68a42",
+      "existed": true
+    },
+    {
+      "path": ".harness/kit/templates/PLAN.md",
+      "external": false,
+      "kind": "owned",
+      "mode": 420,
+      "original_hash": "fed35748aca82771516506f75b1e4cf1a0a9f983c80c9f3f46f3f8efcb8a607f",
+      "hash": "56f86b36012df64eeb2dee726a89961e96034fddb76120218ddb4f6835cb1bb8",
+      "existed": true
+    },
+    {
+      "path": ".harness/kit/templates/PRODUCT.md",
+      "external": false,
+      "kind": "owned",
+      "mode": 420,
+      "original_hash": "6f101bde2d38b40c8477a33e5cedefb0595db913972b60f552ea2b9553aff4f0",
+      "hash": "6f101bde2d38b40c8477a33e5cedefb0595db913972b60f552ea2b9553aff4f0",
+      "existed": true
+    },
+    {
+      "path": ".harness/kit/templates/START.md",
+      "external": false,
+      "kind": "owned",
+      "mode": 420,
+      "original_hash": "5decb9e56e178b03151ef9f3d658753a7103f147a24b1224c82c4f83b3d950f3",
+      "hash": "9b98c1fb954237a254fcde10669ed28c248e9c9cf15db7430169b6723b2c67ee",
+      "existed": true
+    },
+    {
+      "path": "scripts/workflow.mjs",
+      "external": false,
+      "kind": "owned",
+      "mode": 493,
+      "original_hash": "db1202e2c33ef0ff9be90234a4255fb800ae852b028e4e45f90d2e9ab0afbc52",
+      "hash": "db1202e2c33ef0ff9be90234a4255fb800ae852b028e4e45f90d2e9ab0afbc52",
+      "existed": true
+    },
+    {
+      "path": "scripts/workflow.cmd",
+      "external": false,
+      "kind": "owned",
+      "mode": 420,
+      "original_hash": "e27df6f19e051c9030f6ea3b6f9cd14d5de8d5cccc1aff812f7e7890c23dbbc8",
+      "hash": "e27df6f19e051c9030f6ea3b6f9cd14d5de8d5cccc1aff812f7e7890c23dbbc8",
+      "existed": true
+    },
+    {
+      "path": "scripts/workflow",
+      "external": false,
+      "kind": "owned",
+      "mode": 493,
+      "original_hash": "8a87379d8a858a0c55c3999879d35ff5e61fe635abe6b195c8a209a6febaeb6e",
+      "hash": "8a87379d8a858a0c55c3999879d35ff5e61fe635abe6b195c8a209a6febaeb6e",
+      "existed": true
+    },
+    {
+      "path": ".harness/plans/todo-plan.template.md",
+      "external": false,
+      "kind": "editable",
+      "mode": 420,
+      "original_hash": "fed35748aca82771516506f75b1e4cf1a0a9f983c80c9f3f46f3f8efcb8a607f",
+      "hash": "56f86b36012df64eeb2dee726a89961e96034fddb76120218ddb4f6835cb1bb8",
+      "existed": true
+    },
+    {
+      "path": "AGENTS.md",
+      "external": false,
+      "kind": "managed",
+      "mode": 420,
+      "original_hash": "7e7c610e010d88b54ce04d5e2ddbcb7aa685fefafb25334e1d614f8d2f10e5fd",
+      "hash": "d804b525d4179da18c977515215f9525d334abf8374bf4e18456fd4936d05cd9",
+      "existed": true,
+      "section_hash": "bfaf78932ff964d6cc7c081c1b6ba690a23b011ad293a19b7e0c7ae3e8982cd1"
+    },
+    {
+      "path": "docs/DOCUMENTATION_INDEX.md",
+      "external": false,
+      "kind": "managed",
+      "mode": 420,
+      "original_hash": "f9a53ac2080ac2a8bad5d73dbbfbb469925b837fc1324929bbbe08b64e739f96",
+      "hash": "f9a53ac2080ac2a8bad5d73dbbfbb469925b837fc1324929bbbe08b64e739f96",
+      "existed": true,
+      "section_hash": "f1ee67232d49b1c836792df88d71b8ba4823430809f406a0b7a13d2d3470d47a"
+    },
+    {
+      "path": "docs/MODULES.md",
+      "external": false,
+      "kind": "editable",
+      "mode": 420,
+      "original_hash": "1246651a488be2df5b030b7df71c808bb4ea0e5a64c947c23262ad74cd7896d3",
+      "hash": "1246651a488be2df5b030b7df71c808bb4ea0e5a64c947c23262ad74cd7896d3",
+      "existed": true
+    },
+    {
+      "path": "docs/architecture/OVERVIEW.md",
+      "external": false,
+      "kind": "editable",
+      "mode": 420,
+      "original_hash": "4ac43714e377cb1a78e26c2f76079dccf73b7dd306c4eb01fa3c1f062250da26",
+      "hash": "4ac43714e377cb1a78e26c2f76079dccf73b7dd306c4eb01fa3c1f062250da26",
+      "existed": true
     }
-  ]
+  ],
+  "upgraded_from": "1.1.0",
+  "upgraded_at": "2026-09-14T07:20:35.583Z",
+  "installed_at": "2026-09-14T07:20:35.583Z"
 }

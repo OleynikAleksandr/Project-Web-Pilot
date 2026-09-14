@@ -2,13 +2,15 @@
 <!-- workflow-kit:begin -->
 # Project Workflow Kit
 
-Общайся по-русски. Канонический протокол работы: `.harness/kit/WORKFLOW.md`, раздел «Обязательные правила» передаётся также через SessionStart.
+Общайся по-русски. При старте/возобновлении/compact используй доставленный recovery capsule; если его нет — `./scripts/workflow recover --format text`.
 
-Единственный активный план — `.harness/plans/todo-plan.md`; каталог документов — `docs/DOCUMENTATION_INDEX.md`. При новом старте, возобновлении и компакте используй текущий recovery packet. Если packet отсутствует, выполни `./scripts/workflow recover --format text` до реализации.
+Единственный активный plan — `.harness/plans/todo-plan.md`. Новый функциональный запрос сначала сопоставь с владельцем в `docs/MODULES.md`: существующему модулю сначала согласуй изменение specification, при отсутствии владельца сначала создай specification. Todo-plan реализует согласованный контракт.
 
-Scope NONE разрешает обсуждение идеи и первого плана. Не выбирай стек до необходимости. Статусы меняются командами workflow. Каждая задача завершается отдельным управляемым commit вместе с документацией. Не обходи Git hooks. Релиз, публикация и архивирование scope выполняются только по указанию пользователя; приёмка не равна закрытию.
+Machine-managed состояния меняются только командами Workflow Kit. Перед правкой начни task; каждую микрозадачу заверши `workflow commit`, не обходя hooks. Не удаляй и не откатывай посторонние изменения. Scope архивируется только по прямой команде пользователя.
 
-В Windows команды имеют вид `./scripts/workflow.cmd status` (PowerShell/CMD); в Git Bash доступен `./scripts/workflow`. Пути внутри JSON плана всегда записываются через `/`.
+Большой `.harness/kit/WORKFLOW.md` — reference manual для редких административных/аварийных случаев; читать его целиком в обычной сессии не требуется. Дополнительные документы бери только из ссылок текущего plan/module spec через `docs/DOCUMENTATION_INDEX.md`.
+
+В Windows PowerShell/CMD используй `./scripts/workflow.cmd`; в Git Bash/macOS — `./scripts/workflow`.
 <!-- workflow-kit:end -->
 
 # Project Web Pilot — границы разработки
