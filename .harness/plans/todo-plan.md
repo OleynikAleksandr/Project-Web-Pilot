@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 285,
+  "plan_revision": 286,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workspace-chat-work-sessions-011",
@@ -147,12 +147,15 @@
         "src/ui/index.html",
         "src/ui/sidebar.mjs",
         "src/ui/workspace-setup.mjs",
-        "tests/electron-smoke.mjs"
+        "tests/electron-smoke.mjs",
+        "src/workspace-session.mjs",
+        "tests/workspace-session.test.mjs"
       ],
       "documentation_paths": [
         "docs/modules/workspace-sessions.md",
         "docs/WORKSPACE_SETUP.md",
-        "docs/VERIFICATION.md"
+        "docs/VERIFICATION.md",
+        "docs/architecture/ARCHITECTURE.md"
       ],
       "verification_ids": [
         "suite",
@@ -165,7 +168,8 @@
         "Проектное меню содержит Новый Chat и Новый Work; контекстная карточка содержит только действия текущего контекста.",
         "Форма нового/впервые подключаемого проекта показывает выбор первой сессии Chat|Work с default Chat.",
         "Повторное открытие зарегистрированного проекта не предлагает first-session choice и не создаёт session.",
-        "Session tree показывает badge Chat/Work справа от названия."
+        "Session tree показывает badge Chat/Work справа от названия.",
+        "Session schema v4 и newSession(workspace, experience) реализованы вместе с UI и покрыты migration/cross-experience tests."
       ],
       "expected_commit_message": "feat: добавить UI Chat и Work sessions",
       "implementation_status": "TODO",
@@ -267,7 +271,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workspace-chat-work-sessions-011
 Current Task: нет
-Revision: 285
+Revision: 286
 
 ## Цель
 
@@ -296,7 +300,7 @@ Revision: 285
 - [TODO] T003: Перенести создание Chat Work в проектный UI и первую сессию — Ожидает
   - Git Commit: [PENDING] feat: добавить UI Chat и Work sessions
   - Reference: workspace-chat-work-sessions-011 / T003 / implementation
-  - Файлы: src/main.mjs, src/preload.cjs, src/ui/index.html, src/ui/sidebar.mjs, src/ui/workspace-setup.mjs, tests/electron-smoke.mjs, docs/modules/workspace-sessions.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md
+  - Файлы: src/main.mjs, src/preload.cjs, src/ui/index.html, src/ui/sidebar.mjs, src/ui/workspace-setup.mjs, tests/electron-smoke.mjs, src/workspace-session.mjs, tests/workspace-session.test.mjs, docs/modules/workspace-sessions.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 - [TODO] T004: Интегрировать Chat Work experience routing с recovery — Ожидает
   - Git Commit: [PENDING] feat: маршрутизировать Chat и Work sessions
   - Reference: workspace-chat-work-sessions-011 / T004 / implementation
