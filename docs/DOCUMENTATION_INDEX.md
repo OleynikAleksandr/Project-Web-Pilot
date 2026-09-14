@@ -30,6 +30,7 @@
 | docs/DECISIONS.md | Решения пользователя, предложения и границы полномочий |
 | docs/CONTEXT_DELIVERY.md | Канонический контракт recovery capsule и доставки контекста |
 | docs/modules/workflow-kit-recovery.md | Module specification Workflow Kit / Context Recovery |
+| docs/modules/runtime-lifecycle.md | Module specification self-healing MCP/tunnel lifecycle |
 | docs/SOURCE_WORKSPACES.md | Исходные проекты, пути, версии и официальные ссылки |
 | docs/VERIFICATION.md | Доказательства, проверки и приёмка прототипа |
 | docs/TRANSFER_TO_WINDOWS.md | Перенос и проверка Windows-сборки из общего репозитория |

@@ -42,3 +42,5 @@ Todo-plan обязан перечислять весь внешний конте
 ```
 
 В Windows PowerShell/CMD используется `./scripts/workflow.cmd`. Полный `.harness/kit/WORKFLOW.md` открывать только для точной семантики команд, repair/install/upgrade и редких аварийных сценариев.
+
+Текущий следующий функциональный модуль: `Runtime Lifecycle` → `docs/modules/runtime-lifecycle.md`; self-healing MCP/tunnel реализуется только по этому контракту.

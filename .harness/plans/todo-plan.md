@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 262,
+  "plan_revision": 264,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-kit-recovery-packet-010",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Перевести Workflow Kit на module-centric Recovery v2: перед функциональным scope определять владельца функционала, сначала согласовывать module specification, затем выполнять todo-plan; новая сессия/refresh/compact получают компактный execution capsule из Workflow Core, project overview, module spec, текущего плана, прямых dependency diffs, текущих изменений и релевантных проверок. После этого отдельно спроектировать self-healing lifecycle MCP+tunnel.",
   "acceptance_criteria": [
     "Новый функциональный scope опирается на зарегистрированный архитектурный модуль и согласованную module specification до реализации.",
@@ -200,8 +200,8 @@
       ],
       "verification_ids": [],
       "expected_commit_message": "docs: определить self-healing Runtime Lifecycle",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workflow-kit-recovery-packet-010",
         "task_id": "T002",
@@ -361,10 +361,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: workflow-kit-recovery-packet-010
 Current Task: нет
-Revision: 262
+Revision: 264
 
 ## Цель
 
@@ -391,8 +391,8 @@ Revision: 262
   - Git Commit: [DONE] docs: определить Workflow Recovery v2
   - Reference: workflow-kit-recovery-packet-010 / T001 / implementation
   - Файлы: docs/MODULES.md, docs/architecture/OVERVIEW.md, docs/modules/workflow-kit-recovery.md, docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md, docs/DOCUMENTATION_INDEX.md
-- [TODO] T002: Определить module specification self-healing Runtime Lifecycle — Ожидает
-  - Git Commit: [PENDING] docs: определить self-healing Runtime Lifecycle
+- [DONE] T002: Определить module specification self-healing Runtime Lifecycle — Завершено
+  - Git Commit: [DONE] docs: определить self-healing Runtime Lifecycle
   - Reference: workflow-kit-recovery-packet-010 / T002 / implementation
   - Файлы: docs/MODULES.md, docs/modules/runtime-lifecycle.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md, docs/DOCUMENTATION_INDEX.md
 - [DONE] T003: Реализовать core Workflow Recovery v2 — Завершено

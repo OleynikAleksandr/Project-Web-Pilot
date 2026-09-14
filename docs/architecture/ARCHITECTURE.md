@@ -512,3 +512,7 @@ Windows build-preflight сначала может переиспользоват
 ## Project Web Pilot 0.6.3 — Recovery v2
 
 Версия 0.6.3 поставляется со встроенным Workflow Kit 1.2.0. Recovery теперь module-centric: Web Pilot получает уже сформированный COMPLETE execution capsule и не знает о внутреннем составе module context. Kit ограничивает effective hard payload транспортным потолком 180000 bytes; optional docs передаются как reference-only. Fresh workspace получает MODULES/OVERVIEW, а совместимый 1.1 workspace обновляется через отдельный безопасный upgrade. Общий `build` по-прежнему последовательно создаёт macOS arm64 и Windows x64 packages.
+
+## Runtime Lifecycle self-healing — scope 010 / T002
+
+Архитектурный владелец локальных MCP/tunnel выделен в `docs/modules/runtime-lifecycle.md`. Web Pilot использует facade `ensure()`, а runtime владеет process identity и фактическими loopback endpoints. Stale PID record при identity mismatch очищается без signal чужому PID. Порты 17842/17843 остаются только предпочтительными: занятый чужой listener приводит к выбору свободного local port и согласованному обновлению bridge config/tunnel profile. Existing compatible runtime переиспользуется; при отсутствии runtime используется bundled bootstrap. Tunnel credentials остаются только в private runtime state и не возвращаются renderer.
