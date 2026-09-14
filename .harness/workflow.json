@@ -89,8 +89,8 @@
   ],
   "budget": {
     "soft_tokens": 16000,
-    "hard_tokens": 262144,
-    "hard_bytes": 524288
+    "hard_tokens": 90000,
+    "hard_bytes": 180000
   },
   "documentation": {
     "index": "docs/DOCUMENTATION_INDEX.md",
