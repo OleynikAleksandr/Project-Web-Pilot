@@ -492,3 +492,7 @@ Unit test фиксирует Node.js 22.17.0 win-x64 archive name/SHA, expected 
 ## Self-healing Runtime Lifecycle — T007 Web Pilot/macOS integration
 
 Targeted runtime tests: 14/14 passed (Mac control/bootstrap + McpRuntime). Полный `npm test`: 87 total, 85 passed, 0 failed, 2 Windows-only skipped; Electron smoke passed. Реальная read-only проверка текущего внешнего Codex Local Mac через Web Pilot adapter вернула runtime contract 2, MCP/tunnel ready, tunnel configured, server `Codex Local Mac`, 47 tools. До и после проверки external repo был clean, а SHA `mac-codex-local/control.py` оставался `6c5c14972774ece2a9820059b3953fe2fe968c186bb6e17af074c7752dc294be`; source external runtime не изменялся.
+
+## Self-healing Runtime Lifecycle — T008 Windows adapter
+
+Windows lifecycle adapter source проверен на Mac там, где WinAPI не требуется: contract v2/source pinning и isolated stale-PID/dynamic-port regression. Fixture подставляет test-only `psutil` stub, вызывает production `status()/reconcile_endpoints()`, подтверждает удаление stale record, выбор новых ports при занятых persisted endpoints и сохранение tunnel ID/env-key reference. `tests/windows-runtime.test.mjs`: 9 passed, 0 failed, 2 native-win32 skipped. DPAPI/setup и фактический restart остаются native Windows validation после pull.

@@ -520,3 +520,7 @@ Windows build-preflight сначала может переиспользоват
 ## Self-healing Mac bootstrap — scope 010 / T007
 
 `MacRuntimeBootstrap` валидирует persisted registration и known external source, но не переписывает внешний runtime. Versioned control-v2 выполняется как adapter через Python внешней установки и получает runtime root только через process environment. При отсутствии совместимой external установки bundled Mac source разворачивается в writable userData runtime. `McpRuntime` кэширует успешный bootstrap на экземпляр и всегда строит client по фактическому `status.mcp_url`; первая установка без tunnel credentials поднимает MCP-only и затем запрашивает только одноразовую локальную настройку tunnel.
+
+## Self-healing Windows lifecycle — scope 010 / T008
+
+Windows external/bundled runtime получает lifecycle contract 2 через отдельный adapter-control из ресурсов приложения. Старый payload не удаляется и control source external installation не перезаписывается. Adapter очищает stale PID records без signal foreign PID, выбирает persisted dynamic loopback endpoints и синхронно обновляет bridge config/tunnel profile; MCP context overlay остаётся прежним и при необходимости безопасно перезапускает owned сервисы. DPAPI key не выходит из Windows private runtime state.

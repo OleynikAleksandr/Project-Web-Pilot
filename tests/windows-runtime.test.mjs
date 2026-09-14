@@ -3,7 +3,14 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { WindowsRuntimeBootstrap, WINDOWS_RUNTIME_SHA256, WINDOWS_CONTEXT_PACKET_SOURCE, patchWindowsBridgeSource, sha256File, windowsRuntimePaths, windowsRuntimeStateDirectory, windowsCommandFailureText, windowsExpandInvocation, windowsSetupInvocation } from '../src/windows-runtime.mjs';
+import net from 'node:net';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+import { fileURLToPath } from 'node:url';
+import { WindowsRuntimeBootstrap, WINDOWS_RUNTIME_SHA256, WINDOWS_CONTEXT_PACKET_SOURCE, WINDOWS_RUNTIME_CONTROL_CONTRACT, WINDOWS_LEGACY_CONTROL_SHA256, patchWindowsBridgeSource, sha256File, windowsRuntimePaths, windowsRuntimeStateDirectory, windowsCommandFailureText, windowsExpandInvocation, windowsSetupInvocation } from '../src/windows-runtime.mjs';
+const execute = promisify(execFile);
+const windowsControl = fileURLToPath(new URL('../resources/runtime-control/windows-control.py', import.meta.url));
+
 import { bundledWindowsRuntimeFolder } from '../src/platform.mjs';
 import { extractionCommand, NODE_ARCHIVE, NODE_SHA256, windowsRuntimeSourceCandidates, windowsToolchainPaths } from '../scripts/prepare-windows-toolchain.mjs';
 
@@ -145,4 +152,44 @@ test('Windows build preflight can resolve the private runtime payload without ha
   assert.equal(candidates[0], 'D:\\cache\\runtime.zip');
   assert.equal(candidates[1], path.join('/repo/Project Web Pilot', 'windows-app', 'resources', 'windows-payload', 'Windows-Codex-Local-2026-09-10.zip'));
   assert.equal(candidates[2], path.resolve('/repo/Project Web Pilot', '..', 'Codex Local Mac', 'Windows-Codex-Local-2026-09-10.zip'));
+});
+
+
+test('Windows lifecycle adapter declares contract v2 and recognizes pinned legacy source', async () => {
+  assert.equal(WINDOWS_RUNTIME_CONTROL_CONTRACT, 2);
+  assert.match(WINDOWS_LEGACY_CONTROL_SHA256, /^[0-9a-f]{64}$/);
+  const source = await fs.readFile(windowsControl, 'utf8');
+  assert.match(source, /RUNTIME_CONTRACT = 2/);
+  assert.match(source, /WEB_PILOT_RUNTIME_ROOT/);
+  assert.match(source, /runtime-endpoints\.json/);
+  assert.match(source, /stale_cleaned/);
+});
+
+function listenLocal(port=0){return new Promise((resolve,reject)=>{const server=net.createServer();server.once('error',reject);server.listen(port,'127.0.0.1',()=>resolve(server));});}
+function closeLocal(server){return new Promise(resolve=>server.close(resolve));}
+async function reserveLocalPort(){const server=await listenLocal();const port=server.address().port;await closeLocal(server);return port;}
+async function pythonWithPsutilStub(t,state,runtime,args){
+  const stub=path.join(state,'stubs');await fs.mkdir(stub,{recursive:true});
+  await fs.writeFile(path.join(stub,'psutil.py'),`class NoSuchProcess(Exception): pass\nclass ZombieProcess(Exception): pass\nclass AccessDenied(Exception): pass\nclass Process:\n    def __init__(self,pid): raise NoSuchProcess(pid)\n`);
+  return execute('python3',args,{env:{...process.env,PYTHONPATH:stub,CODEX_LOCAL_WINDOWS_STATE_DIR:state,WEB_PILOT_RUNTIME_ROOT:runtime,PYTHONDONTWRITEBYTECODE:'1'},timeout:10000});
+}
+
+test('Windows lifecycle adapter cleans stale PID and moves occupied persisted endpoints without WinAPI secrets', async t => {
+  const state=await fs.mkdtemp(path.join(os.tmpdir(),'web-pilot-win-control-'));t.after(()=>fs.rm(state,{recursive:true,force:true}));
+  const runtime=path.join(state,'runtime-root');await fs.mkdir(runtime,{recursive:true});
+  const pidFile=path.join(state,'mcp.pid.json');await fs.writeFile(pidFile,JSON.stringify({package_root:runtime,identity:{pid:999999,created:0,exe:'foreign',cmdline:['foreign']}},null,2));
+  const statusCode=`import importlib.util,json\ns=importlib.util.spec_from_file_location('c',${JSON.stringify(windowsControl)})\nm=importlib.util.module_from_spec(s);s.loader.exec_module(m)\nprint(json.dumps(m.status()))`;
+  const first=JSON.parse((await pythonWithPsutilStub(t,state,runtime,['-c',statusCode])).stdout);
+  assert.equal(first.runtime_contract,2);assert.equal(first.mcp.running,false);assert.equal(first.mcp.stale_cleaned,true);await assert.rejects(fs.stat(pidFile),{code:'ENOENT'});
+  const priv=path.join(state,'private'),profileDir=path.join(priv,'tunnel-profile');await fs.mkdir(profileDir,{recursive:true});
+  const preferredMcp=await reserveLocalPort(),preferredTunnel=await reserveLocalPort();
+  await fs.writeFile(path.join(priv,'runtime-endpoints.json'),JSON.stringify({schema_version:1,mcp_port:preferredMcp,tunnel_port:preferredTunnel}));
+  await fs.writeFile(path.join(priv,'bridge_config.json'),JSON.stringify({repo:'/tmp/project',token:'opaque',port:preferredMcp}));
+  const profile={control_plane:{tunnel_id:'tunnel_fixture_1234567890',api_key:'env:CODEX_LOCAL_WINDOWS_TUNNEL_API_KEY'},health:{listen_addr:`127.0.0.1:${preferredTunnel}`},mcp:{server_urls:[{channel:'main',url:`http://127.0.0.1:${preferredMcp}/mcp`}]}};
+  await fs.writeFile(path.join(profileDir,'windows-local.yaml'),JSON.stringify(profile));
+  const a=await listenLocal(preferredMcp),b=await listenLocal(preferredTunnel);let ao=true,bo=true;t.after(async()=>{if(ao)await closeLocal(a).catch(()=>{});if(bo)await closeLocal(b).catch(()=>{});});
+  const code=`import importlib.util,json\ns=importlib.util.spec_from_file_location('c',${JSON.stringify(windowsControl)})\nm=importlib.util.module_from_spec(s);s.loader.exec_module(m)\nprint(json.dumps(m.reconcile_endpoints()))`;
+  const moved=JSON.parse((await pythonWithPsutilStub(t,state,runtime,['-c',code])).stdout);assert.notEqual(moved.mcp_port,preferredMcp);assert.notEqual(moved.tunnel_port,preferredTunnel);
+  const updated=JSON.parse(await fs.readFile(path.join(profileDir,'windows-local.yaml'),'utf8'));assert.equal(updated.control_plane.tunnel_id,profile.control_plane.tunnel_id);assert.equal(updated.control_plane.api_key,profile.control_plane.api_key);assert.equal(updated.mcp.server_urls[0].url,`http://127.0.0.1:${moved.mcp_port}/mcp`);
+  await closeLocal(a);ao=false;await closeLocal(b);bo=false;
 });

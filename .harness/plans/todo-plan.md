@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 273,
+  "plan_revision": 276,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-kit-recovery-packet-010",
@@ -437,7 +437,8 @@
       "functional_paths": [
         "resources/runtime-control/windows-control.py",
         "src/windows-runtime.mjs",
-        "tests/windows-runtime.test.mjs"
+        "tests/windows-runtime.test.mjs",
+        "src/main.mjs"
       ],
       "documentation_paths": [
         "docs/modules/runtime-lifecycle.md",
@@ -454,8 +455,8 @@
         "suite"
       ],
       "expected_commit_message": "feat: добавить self-healing Windows runtime",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workflow-kit-recovery-packet-010",
         "task_id": "T008",
@@ -533,7 +534,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-kit-recovery-packet-010
 Current Task: нет
-Revision: 273
+Revision: 276
 
 ## Цель
 
@@ -583,10 +584,10 @@ Revision: 273
   - Git Commit: [DONE] feat: интегрировать self-healing Mac runtime
   - Reference: workflow-kit-recovery-packet-010 / T007 / implementation
   - Файлы: src/mac-runtime.mjs, src/mcp-runtime.mjs, src/platform.mjs, src/main.mjs, tests/mcp-runtime.test.mjs, tests/mac-runtime.test.mjs, tests/electron-smoke.mjs, resources/runtime-control/mac-control.py, docs/modules/runtime-lifecycle.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T008: Расширить Windows runtime тем же self-healing contract — Ожидает
-  - Git Commit: [PENDING] feat: добавить self-healing Windows runtime
+- [DONE] T008: Расширить Windows runtime тем же self-healing contract — Завершено
+  - Git Commit: [DONE] feat: добавить self-healing Windows runtime
   - Reference: workflow-kit-recovery-packet-010 / T008 / implementation
-  - Файлы: resources/runtime-control/windows-control.py, src/windows-runtime.mjs, tests/windows-runtime.test.mjs, docs/modules/runtime-lifecycle.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+  - Файлы: resources/runtime-control/windows-control.py, src/windows-runtime.mjs, tests/windows-runtime.test.mjs, src/main.mjs, docs/modules/runtime-lifecycle.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T009: Проверить и выпустить self-healing runtime release — Ожидает
   - Git Commit: [PENDING] build: выпустить self-healing runtime startup
   - Reference: workflow-kit-recovery-packet-010 / T009 / implementation

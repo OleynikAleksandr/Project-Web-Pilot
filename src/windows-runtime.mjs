@@ -11,6 +11,8 @@ export const WINDOWS_RUNTIME_SHA256 = '1f041488ad97d8abf1984fd3521afb8abe15f50b8
 export const WINDOWS_RUNTIME_FOLDER = 'Windows-Codex-Local';
 
 export const WINDOWS_RUNTIME_OVERLAY_VERSION = 1;
+export const WINDOWS_RUNTIME_CONTROL_CONTRACT = 2;
+export const WINDOWS_LEGACY_CONTROL_SHA256 = '13dd532f339db09cc0a99568ba3be63a12a0c4548f25e9c611fd0978ca70bdda';
 export const WINDOWS_CONTEXT_PACKET_SOURCE = String.raw`"""Workflow Kit recovery packet used by Project Web Pilot on Windows."""
 from __future__ import annotations
 
@@ -214,7 +216,8 @@ async function exists(file) {
 
 export class WindowsRuntimeBootstrap {
   constructor({ payloadFile, dataDir, execute = execFile, environment = process.env, platform = process.platform,
-    expectedSha256 = WINDOWS_RUNTIME_SHA256, onState = null, preferredFolder = null, stateDir = null } = {}) {
+    expectedSha256 = WINDOWS_RUNTIME_SHA256, onState = null, preferredFolder = null, stateDir = null,
+    controlSourceFile = null, legacyControlHashes = [WINDOWS_LEGACY_CONTROL_SHA256] } = {}) {
     if (!payloadFile || !dataDir) throw new TypeError('WindowsRuntimeBootstrap requires payloadFile and dataDir');
     this.platform = platform;
     this.environment = environment;
@@ -223,6 +226,8 @@ export class WindowsRuntimeBootstrap {
     this.paths = windowsRuntimePaths(dataDir, payloadFile);
     this.preferredFolder = typeof preferredFolder === 'string' && path.win32.isAbsolute(preferredFolder) ? preferredFolder : null;
     this.stateDir = stateDir ?? windowsRuntimeStateDirectory(environment);
+    this.controlSourceFile = controlSourceFile;
+    this.legacyControlHashes = new Set(legacyControlHashes);
     this.onState = typeof onState === 'function' ? onState : null;
     this.pending = null;
     this.external = null;
@@ -234,6 +239,26 @@ export class WindowsRuntimeBootstrap {
 
   async #marker() {
     try { return JSON.parse(await fs.readFile(this.paths.marker, 'utf8')); } catch { return null; }
+  }
+
+  async #controlFor(folder) {
+    const layout = windowsRuntimeFolderPaths(folder);
+    if (!this.controlSourceFile) return layout.control;
+    let desired, current;
+    try { [desired, current] = await Promise.all([sha256File(this.controlSourceFile), sha256File(layout.control)]); }
+    catch { throw new WindowsRuntimeError('WINDOWS_RUNTIME_CONTROL_MISSING', 'Не удалось проверить Windows lifecycle control.'); }
+    if (current === desired || this.legacyControlHashes.has(current)) return this.controlSourceFile;
+    throw new WindowsRuntimeError('WINDOWS_RUNTIME_EXTERNAL_INCOMPATIBLE', 'Windows control.py изменён и не будет автоматически адаптирован.');
+  }
+
+  async #runControl(folder, command, extraArgs = []) {
+    const layout = windowsRuntimeFolderPaths(folder);
+    const control = await this.#controlFor(folder);
+    return this.execute(layout.python, ['-B', control, command, ...extraArgs], {
+      cwd: folder, timeout: command === 'start' ? 90000 : 20000, maxBuffer: 1024 * 1024,
+      env: { ...this.environment, PYTHONUTF8: '1', PYTHONDONTWRITEBYTECODE: '1',
+        ...(control !== layout.control ? { WEB_PILOT_RUNTIME_ROOT: folder } : {}) }, windowsHide: true,
+    });
   }
 
   async #externalCandidates() {
@@ -257,12 +282,10 @@ export class WindowsRuntimeBootstrap {
       const layout = windowsRuntimeFolderPaths(folder);
       if (!(await exists(layout.control) && await exists(layout.python) && await exists(layout.locations))) continue;
       try {
-        const output = await this.execute(layout.python, ['-B', layout.control, 'status'], {
-          cwd: folder, timeout: 12000, maxBuffer: 1024 * 1024,
-          env: { ...this.environment, PYTHONUTF8: '1', PYTHONDONTWRITEBYTECODE: '1' }, windowsHide: true,
-        });
+        const output = await this.#runControl(folder, 'status');
         const service = JSON.parse(output.stdout);
         if (!service?.mcp || !service?.tunnel || typeof service.package_root !== 'string') continue;
+        if (this.controlSourceFile && service.runtime_contract !== WINDOWS_RUNTIME_CONTROL_CONTRACT) continue;
         if ([service.mcp, service.tunnel].some(item => item?.running && !item?.owned)) continue;
         if (path.win32.resolve(service.package_root).toLowerCase() !== path.win32.resolve(folder).toLowerCase()) continue;
         return { folder, layout, service };
@@ -296,13 +319,8 @@ export class WindowsRuntimeBootstrap {
     return this.pending;
   }
 
-  async #externalControl(folder, command, extraArgs = []) {
-    const layout = windowsRuntimeFolderPaths(folder);
-    return this.execute(layout.python, ['-B', layout.control, command, ...extraArgs], {
-      cwd: folder, timeout: command === 'start' ? 90000 : 20000, maxBuffer: 1024 * 1024,
-      env: { ...this.environment, PYTHONUTF8: '1', PYTHONDONTWRITEBYTECODE: '1' }, windowsHide: true,
-    });
-  }
+  async #externalControl(folder, command, extraArgs = []) { return this.#runControl(folder, command, extraArgs); }
+
 
   async #ensureExternal(current) {
     const folder = current.folder;
@@ -320,7 +338,7 @@ export class WindowsRuntimeBootstrap {
     const needsOverlay = patched !== bridge || contextBefore !== WINDOWS_CONTEXT_PACKET_SOURCE;
     if (!needsOverlay) {
       this.#publish({ phase: 'installed', installed: true, source: 'external', folder, error: null });
-      return { ...this.snapshot(), reused: true, adopted: true };
+      return { ...this.snapshot(), control: this.controlSourceFile ?? windowsRuntimeFolderPaths(folder).control, reused: true, adopted: true };
     }
     const mcpWasRunning = !!current.service?.mcp?.owned && !!current.service?.mcp?.running;
     const tunnelWasRunning = !!current.service?.tunnel?.owned && !!current.service?.tunnel?.running;
@@ -344,7 +362,7 @@ export class WindowsRuntimeBootstrap {
     const refreshed = await this.#inspectExternal();
     if (refreshed) this.external = refreshed;
     this.#publish({ phase: 'installed', installed: true, source: 'external', folder, service: refreshed?.service ?? current.service, error: null });
-    return { ...this.snapshot(), reused: true, adopted: true };
+    return { ...this.snapshot(), control: this.controlSourceFile ?? windowsRuntimeFolderPaths(folder).control, reused: true, adopted: true };
   }
 
   async launchTunnelSetup() {
@@ -372,7 +390,7 @@ export class WindowsRuntimeBootstrap {
     }
     const current = await this.inspect();
     if (current.installed && current.source === 'external') return this.#ensureExternal(current);
-    if (current.installed) return { ...current, reused: true };
+    if (current.installed) return { ...current, control: this.controlSourceFile ?? windowsRuntimeFolderPaths(current.folder).control, reused: true };
     this.#publish({ phase: 'verifying', installed: false, error: null });
     let actual;
     try { actual = await sha256File(this.paths.payloadFile); }
@@ -421,6 +439,6 @@ export class WindowsRuntimeBootstrap {
     await fs.writeFile(this.paths.marker + '.tmp', JSON.stringify(markerData, null, 2) + '\n', { mode: 0o600 });
     await fs.rename(this.paths.marker + '.tmp', this.paths.marker);
     this.#publish({ phase: 'installed', installed: true, payloadSha256: actual, error: null });
-    return { ...this.snapshot(), reused: false };
+    return { ...this.snapshot(), control: this.controlSourceFile ?? this.paths.control, reused: false };
   }
 }

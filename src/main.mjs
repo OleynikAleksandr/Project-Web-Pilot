@@ -730,7 +730,9 @@ else {
       const payloadFile = app.isPackaged
         ? path.join(process.resourcesPath, 'windows-payload', WINDOWS_RUNTIME_ARCHIVE)
         : path.join(sourceDir, '../.harness/runtime/windows-payload', WINDOWS_RUNTIME_ARCHIVE);
-      windowsRuntimeBootstrap = new WindowsRuntimeBootstrap({ payloadFile, dataDir, preferredFolder: configuredRuntimeFolder, onState: publish });
+      const runtimeControlRoot = app.isPackaged ? path.join(process.resourcesPath, 'resources', 'runtime-control') : path.join(sourceDir, '../resources/runtime-control');
+      windowsRuntimeBootstrap = new WindowsRuntimeBootstrap({ payloadFile, dataDir, preferredFolder: configuredRuntimeFolder,
+        controlSourceFile: path.join(runtimeControlRoot, 'windows-control.py'), onState: publish });
       const windowsRuntimeState = await windowsRuntimeBootstrap.inspect();
       runtimeFolder = windowsRuntimeState.folder;
       if (windowsRuntimeState.source === 'external' || configuredRuntimeFolder) await saveSettings({ runtimeFolder });
