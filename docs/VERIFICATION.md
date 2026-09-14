@@ -563,3 +563,10 @@ Electron smoke проверяет полный session archive flow: Chat sessio
 ## Project Web Pilot 0.6.7 / session archive — T012
 
 14.09.2026 final release verification: `npm test` — 98 total, 96 passed, 0 failed, 2 native-Windows skipped; Electron smoke passed с полным session archive flow (archive/restore Chat, local-delete Work, project owner, отсутствие дублирования sessions архивного проекта). `npm run build` успешно создал macOS arm64 и Windows x64 packages; Windows verifier passed. macOS `CFBundleShortVersionString/CFBundleVersion=0.6.7`, `app.asar` SHA-256 `cd7d0d1b726e5825a29e82e3ca3a0e531519c1e2bacfe190f6a7265816181129`; Windows EXE SHA-256 `c374f8b57d882f2ceae1326449a7f15e75ccb8b56deb94aa5a71434a68667fa5`. Windows runtime SHA остаётся `1f041488ad97d8abf1984fd3521afb8abe15f50b8df3d3e11f1cc4248e019d98`, portable Node SHA — `721ab118a3aac8584348b132767eadf51379e0616f0db802cc1e66d7f0d98f85`. Scope после commit должен остаться ACTIVE/READY_FOR_ACCEPTANCE.
+
+
+## T013 — regression при выборе Chat после Work
+
+Причина подтверждена production diagnostics и скриншотом пользователя: root URL отображал Work, а промежуточный `/c/WEB:<uuid>` останавливал tracking уже начатой отправки. Нативные элементы переключателя сверены с публичным production bundle ChatGPT.
+
+Добавлены проверки: фактический выбор Chat из Work; отдельно наблюдаемое подтверждение toggle; недоступный/неизвестный режим; сохранение draft; смена режима/URL перед click; ожидание временного URL для Chat и Work без сохранения временной ссылки и повторной отправки. Electron fixture моделирует Work default, Work → новый Chat и временный WEB URL до permanent conversation. Результаты назначенных checks фиксируются Workflow Kit. Реальный аккаунт проверяет пользователь после пересборки.

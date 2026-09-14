@@ -17,16 +17,26 @@ const html = `<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>
 <style>body{font:16px -apple-system,sans-serif;padding:40px;background:#fcfcff;color:#29394c}aside{background:#fff0d7;padding:14px;margin-bottom:20px}#prompt-textarea{border:1px solid #9caeb8;padding:12px;min-height:80px;white-space:pre-wrap}button{padding:10px}article{white-space:pre-wrap;font-size:12px}</style></head>
 <body><aside>TEST FIXTURE · без реального ChatGPT, MCP и аккаунта</aside><h1>Composer fixture</h1>
 <div id="tool-activity"><button id="fixture-tool-call" type="button">Вызываемый инструмент</button></div>
-<div id="messages"></div><form><div id="prompt-textarea" contenteditable="true" role="textbox"></div><button type="submit" data-testid="send-button">Send fixture</button></form>
+<div aria-label="Select chat surface"><button type="button" data-tpp-toggle-value="chatgpt">Chat</button><button type="button" data-tpp-toggle-value="work">Work</button></div>\n<div id="messages"></div><form><div id="prompt-textarea" contenteditable="true" role="textbox"></div><button type="submit" data-testid="send-button">Send fixture</button></form>
 <script>
+window.fixtureMode=location.pathname.startsWith('/work')?'work':localStorage.getItem('fixture-mode')||'work';
+window.fixtureModeClicks=0;
+function setFixtureMode(mode){window.fixtureMode=mode;localStorage.setItem('fixture-mode',mode);document.querySelectorAll('[data-tpp-toggle-value]').forEach(button=>button.setAttribute('data-state',button.dataset.tppToggleValue===mode?'on':'off'));}
+setFixtureMode(window.fixtureMode);
+document.querySelectorAll('[data-tpp-toggle-value]').forEach(button=>button.addEventListener('click',()=>{window.fixtureModeClicks++;setFixtureMode(button.dataset.tppToggleValue);}));
 window.fixtureMessages=JSON.parse(sessionStorage.getItem(location.pathname)||'[]');
 function showMessage(text){const article=document.createElement('article');article.setAttribute('data-message-author-role','user');article.textContent=text;document.getElementById('messages').append(article);}
 window.fixtureMessages.forEach(message=>showMessage(message.text));
 document.querySelector('form').addEventListener('submit',event=>{
  event.preventDefault(); const editor=document.getElementById('prompt-textarea');const text=editor.innerText;
- const message={text,at:Date.now()};window.fixtureMessages.push(message);
+ const message={text,at:Date.now(),mode:window.fixtureMode};window.fixtureMessages.push(message);
  showMessage(text);
- editor.textContent='';const match=text.match(/wp-request-[a-zA-Z0-9-]+/);if(match){history.pushState({},'', '/c/'+match[0]);}sessionStorage.setItem(location.pathname,JSON.stringify(window.fixtureMessages));
+ editor.textContent='';const match=text.match(/wp-request-[a-zA-Z0-9-]+/);
+ if(match && !location.pathname.startsWith('/c/')){
+   const target='/c/'+match[0];history.pushState({},'', '/c/WEB:12345678-1234-1234-1234-123456789abc');
+   sessionStorage.setItem(target,JSON.stringify(window.fixtureMessages));
+   setTimeout(()=>history.replaceState({},'',target),600);
+ }else{sessionStorage.setItem(location.pathname,JSON.stringify(window.fixtureMessages));}
 });
 </script></body></html>`;
 
@@ -133,6 +143,8 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await waitFor(() => snapshot().projects[0].sessions[0].title === 'Первый разговор проекта', 'conversation title', snapshot);
   const first = store.selected();
   assert.equal(first.experience, 'chat');
+  assert.equal(await browser.executeJavaScript('window.fixtureMessages[0].mode'), 'chatgpt', 'root defaults to Work but startup explicitly selects Chat');
+  assert.equal(await browser.executeJavaScript('window.fixtureModeClicks'), 1);
   assert.ok(first.chatUrl.startsWith('https://chatgpt.com/c/'));
   assert.equal(await sidebar.executeJavaScript('document.querySelector(".session-experience").textContent'), 'Chat');
   assert.equal(await sidebar.executeJavaScript('document.getElementById("new-chat")'), null, 'context card has no session creation button');
@@ -257,10 +269,18 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(third.experience, 'work', 'shared /c URL keeps Work provenance');
   assert.equal(store.snapshot().projects[0].sessions.length, 3);
   assert.deepEqual(await sidebar.executeJavaScript('Array.from(document.querySelectorAll(".session-experience")).map(e=>e.textContent)'), ['Chat', 'Chat', 'Work']);
+  assert.equal(await browser.executeJavaScript('window.fixtureMessages[0].mode'), 'work');
+  await sidebar.executeJavaScript(`document.querySelector('.project-menu-button').click(); document.querySelector('.new-project-chat').click()`);
+  await waitFor(() => store.selected()?.experience === 'chat' && store.selected()?.sessionId !== second.sessionId
+    && snapshot().context.phase === 'delivered', 'new Chat after Work remembers browser preference', snapshot);
+  assert.equal(packetLoads, 4);
+  assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 1);
+  assert.equal(await browser.executeJavaScript('window.fixtureMessages[0].mode'), 'chatgpt');
+  assert.equal(await browser.executeJavaScript('window.fixtureModeClicks'), 1);
   await sidebar.executeJavaScript(`document.querySelector('[data-session-id="${first.sessionId}"]').click()`);
   await waitFor(() => store.selected()?.sessionId === first.sessionId && snapshot().context.phase === 'delivered'
     && browser.getURL() === first.chatUrl, 'select earlier session via tree', snapshot);
-  assert.equal(packetLoads, 3, 'Earlier chat does not receive another context packet');
+  assert.equal(packetLoads, 4, 'Earlier chat does not receive another context packet');
   assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 2);
   assert.ok(await browser.executeJavaScript(`window.fixtureMessages[0].text.includes('${first.attempt.requestId}')`));
   assert.equal(store.selected().attempt.requestId, first.attempt.requestId);
@@ -314,7 +334,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(store.selected().sessionId, first.sessionId, 'Expanding does not switch to latest session');
   const history = new WorkspaceSessions(store.file); await history.load();
   assert.equal(history.selected().sessionId, first.sessionId);
-  assert.equal(history.snapshot().projects[0].sessions.length, 2);
+  assert.equal(history.snapshot().projects[0].sessions.length, 3);
   assert.ok(history.snapshot().projects[0].sessions.find(session => session.sessionId === second.sessionId).archivedAt);
   assert.equal(history.snapshot().projects[0].expanded, true);
   const startFile = path.join(workspace, 'docs/WORKFLOW_START.md');
@@ -323,14 +343,14 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await selectWorkspace(workspace);
   assert.equal(snapshot().setup.ready, false);
   assert.ok(snapshot().setup.issues.some(i => i.path === 'docs/WORKFLOW_START.md'));
-  assert.equal(store.selected().sessionId, first.sessionId); assert.equal(browser.getURL(), urlBefore); assert.equal(packetLoads, 3);
+  assert.equal(store.selected().sessionId, first.sessionId); assert.equal(browser.getURL(), urlBefore); assert.equal(packetLoads, 4);
   await fs.writeFile(startFile, startText);
   await sidebar.executeJavaScript('document.getElementById("setup-cancel").click()');
   await waitFor(() => !snapshot().setup, 'cancel blocked open keeps current session', snapshot);
   const archiveCurrent = async () => {
     await sidebar.executeJavaScript('document.querySelector(".project-menu-button").click(); document.querySelector(".archive-project").click()');
     await waitFor(() => snapshot().archives.some(project => project.workspace === workspace) && !snapshot().selected && !snapshot().pageLoading, 'archive current project', snapshot);
-    assert.equal(packetLoads, 3);
+    assert.equal(packetLoads, 4);
   };
   const makeAux = async (name, suffix) => {
     const dir = path.join(dataDir + '-projects', name);
@@ -409,7 +429,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.ok(store.project(auxE.workspace)?.archivedAt, 'unselected archived project is untouched');
   await browser.loadURL(first.chatUrl);
   assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 2, 'Web conversation remains after archive operations');
-  assert.equal(packetLoads, 3, 'Archive operations never send context packets');
+  assert.equal(packetLoads, 4, 'Archive operations never send context packets');
   firstArchiveWindow.close();
 
   await waitFor(() => sidebar.executeJavaScript('document.getElementById("context-window-value").textContent === "Ожидаем данные"'), 'unknown context window UI', snapshot);

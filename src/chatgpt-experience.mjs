@@ -21,6 +21,7 @@ export function chatGPTExperienceForUrl(input) {
   if (!url) return null;
   const pathname = url.pathname.replace(/\/+$/, '') || '/';
   if (pathname === '/work' || pathname.startsWith('/work/')) return 'work';
+  if (pathname === '/' && ['work', 'tpp'].includes(url.searchParams.get('surface'))) return 'work';
   if (pathname === '/' || /^\/c\/[a-zA-Z0-9_-]{8,}$/.test(pathname)
       || /^\/g\/[a-zA-Z0-9_-]+\/c\/[a-zA-Z0-9_-]{8,}$/.test(pathname)) return 'chat';
   return null;
@@ -28,4 +29,10 @@ export function chatGPTExperienceForUrl(input) {
 
 export function chatGPTUrlMatchesExperience(input, experience) {
   return chatGPTExperienceForUrl(input) === experience;
+}
+
+// ChatGPT briefly uses this optimistic URL after clicking Send; it is never a persisted chatUrl.
+export function isPendingChatGPTConversation(input) {
+  const url = parsedChatGPTUrl(input);
+  return !!url && /^\/c\/WEB(?::|%3A)[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/?$/i.test(url.pathname);
 }

@@ -5,7 +5,7 @@ export class ComposerError extends Error {
 }
 
 // Runs only in the visible ChatGPT document. No page internals, cookies or API requests.
-export function pageOperation({ action = 'inspect', text = '', requestId = '' } = {}) {
+export function pageOperation({ action = 'inspect', text = '', requestId = '', expectedExperience = null } = {}) {
   const visible = element => !!element && !element.hidden && element.getAttribute('aria-hidden') !== 'true'
     && getComputedStyle(element).display !== 'none' && getComputedStyle(element).visibility !== 'hidden'
     && element.getClientRects().length > 0;
@@ -24,12 +24,48 @@ export function pageOperation({ action = 'inspect', text = '', requestId = '' } 
   const draftMatches = !!text && normalized(draft()) === normalized(text);
   const writable = !!editor && !editor.disabled && !editor.readOnly && editor.getAttribute('contenteditable') !== 'false';
   const sendEnabled = !!button && !button.disabled && button.getAttribute('aria-disabled') !== 'true';
+  // Native ChatGPT toggle, verified in the production web bundle on 2026-09-14.
+  // Restrict the fallback to the labelled surface group; never match message text or model names.
+  let modeButtons = [...document.querySelectorAll('button[data-tpp-toggle-value]')].filter(visible);
+  if (!modeButtons.length) {
+    const group = first('[aria-label="Select chat surface"],[aria-label="Выберите режим чата"]');
+    modeButtons = [...(group?.querySelectorAll('button') ?? [])].filter(visible);
+  }
+  const modeOf = element => {
+    const value = element.getAttribute('data-tpp-toggle-value');
+    if (value === 'chatgpt') return 'chat';
+    if (value === 'work') return 'work';
+    const label = (element.innerText ?? element.textContent ?? '').trim();
+    return /^(Chat|Чат)$/.test(label) ? 'chat' : /^(Work|Работа)$/.test(label) ? 'work' : null;
+  };
+  const selectedModes = [...new Set(modeButtons.filter(element => element.getAttribute('data-state') === 'on'
+    || element.getAttribute('aria-checked') === 'true' || element.getAttribute('aria-pressed') === 'true')
+    .map(modeOf).filter(Boolean))];
+  const experience = selectedModes.length === 1 ? selectedModes[0] : null;
   const result = { url: location.href, editorAvailable: !!editor, writable, login, busy,
-    draftLength, draftMatches, sendEnabled, messageSeen, userMessageCount: messages.length };
+    draftLength, draftMatches, sendEnabled, messageSeen, userMessageCount: messages.length, experience };
   if (action === 'inspect') return result;
   if (messageSeen) return { ...result, action: 'already-sent' };
   if (login || !writable) return { ...result, action: 'deferred', reason: 'LOGIN_REQUIRED' };
   if (busy) return { ...result, action: 'deferred', reason: 'GENERATION_ACTIVE' };
+  if (expectedExperience) {
+    const entry = location.pathname.replace(/\/+$/, '') || '/';
+    const atEntrypoint = expectedExperience === 'chat' ? entry === '/'
+      && !['work', 'tpp'].includes(new URLSearchParams(location.search).get('surface')) : entry === '/work';
+    if (!atEntrypoint || messages.length) return { ...result, action: 'deferred', reason: 'CHAT_CHANGED' };
+    if (action === 'select-experience') {
+      if (experience === expectedExperience) return { ...result, action: 'experience-confirmed' };
+      if (draftLength) return { ...result, action: 'deferred', reason: 'DRAFT_PRESENT' };
+      const target = modeButtons.find(element => modeOf(element) === expectedExperience);
+      if (!target || target.disabled || target.getAttribute('aria-disabled') === 'true') {
+        return { ...result, action: 'deferred', reason: 'EXPERIENCE_UNCONFIRMED' };
+      }
+      target.click();
+      // Confirmation requires a fresh observation after React processes the native click.
+      return { ...result, action: 'experience-selecting' };
+    }
+    if (experience !== expectedExperience) return { ...result, action: 'deferred', reason: 'EXPERIENCE_UNCONFIRMED' };
+  }
   if (action === 'fill') {
     if (draftLength && !draftMatches) return { ...result, action: 'deferred', reason: 'DRAFT_PRESENT' };
     if (draftMatches) return { ...result, action: 'filled' };
@@ -70,7 +106,7 @@ export class ChatGPTComposer {
     this.inFlight = false;
   }
 
-  async inspect({ text = '', requestId = '', action = 'inspect' } = {}) {
+  async inspect({ text = '', requestId = '', action = 'inspect', expectedExperience = null } = {}) {
     const current = this.contents.getURL();
     let url;
     try { url = new URL(current); } catch { return { login: true, editorAvailable: false, url: current }; }
@@ -78,7 +114,7 @@ export class ChatGPTComposer {
     if (!isChat && !(this.allowFixture && url.protocol === 'file:')) {
       return { login: true, editorAvailable: false, url: current };
     }
-    return this.contents.executeJavaScript(pageScript({ action, text, requestId }), action !== 'inspect');
+    return this.contents.executeJavaScript(pageScript({ action, text, requestId, expectedExperience }), action !== 'inspect');
   }
 
   async sendUserMessage({ text, canContinue = () => true }) {
@@ -118,7 +154,7 @@ export class ChatGPTComposer {
     } finally { this.inFlight = false; }
   }
 
-  async deliver({ text, requestId, canContinue = () => true, onBeforeSend = async () => {} }) {
+  async deliver({ text, requestId, expectedExperience = null, canContinue = () => true, onBeforeSend = async () => {} }) {
     if (this.inFlight) throw new ComposerError('SEND_IN_PROGRESS', 'Другая отправка ещё не завершилась.');
     if (typeof text !== 'string' || !text || !requestId || !text.includes(requestId)) throw new ComposerError('MESSAGE_INVALID', 'Не подготовлено стартовое сообщение.');
     this.inFlight = true;
@@ -128,7 +164,7 @@ export class ChatGPTComposer {
       let observation = await this.inspect({ text, requestId });
       if (observation.messageSeen) return { state: 'sent', recovered: true, observation };
       if (!canContinue()) return { state: 'cancelled' };
-      observation = await this.inspect({ action: 'fill', text, requestId });
+      observation = await this.inspect({ action: 'fill', text, requestId, expectedExperience });
       if (observation.action === 'already-sent') return { state: 'sent', recovered: true, observation };
       if (observation.action !== 'filled') return { state: 'deferred', reason: observation.reason ?? 'LOGIN_REQUIRED', observation };
       await this.wait(this.settleMs);
@@ -140,7 +176,7 @@ export class ChatGPTComposer {
       // Persist an uncertain attempt BEFORE the click, so a crash never triggers a second send.
       await onBeforeSend();
       if (!canContinue()) return { state: 'cancelled' };
-      observation = await this.inspect({ action: 'send', text, requestId });
+      observation = await this.inspect({ action: 'send', text, requestId, expectedExperience });
       if (observation.action === 'already-sent') return { state: 'sent', recovered: true, observation };
       if (observation.action !== 'clicked') return { state: 'deferred', reason: observation.reason, observation };
       clicked = true;

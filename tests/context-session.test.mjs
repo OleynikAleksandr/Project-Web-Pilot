@@ -24,7 +24,9 @@ function controllerFixture({ savedAttempt=null, chatUrl=project.chatUrl }={}){
     updateSession:async(_w,_s,patch)=>{saved={...saved,...structuredClone(patch)};return structuredClone(saved);},
     bindChat:async(_w,_s,url)=>{saved.chatUrl=url;return structuredClone(saved);}};
   const runtime={ensure:async()=>({}),loadContext:async()=>{loads++;return packet();}};
-  const composer={inspect:async()=>({...inspection}),contents:{getURL:()=>inspection.url},deliver:async options=>{
+  const composer={inspect:async options=>({...inspection,
+    ...(options?.action==='select-experience'?{action: (inspection.experience??store.project().experience)===options.expectedExperience
+      ?'experience-confirmed':'experience-selecting'}:{})}),contents:{getURL:()=>inspection.url},deliver:async options=>{
     assert.equal(saved.attempt.state,'prepared');assert.ok(options.text.includes(packet().context));
     if(!options.canContinue())return {state:'cancelled'};
     await options.onBeforeSend();if(!options.canContinue())return {state:'cancelled'};
@@ -161,4 +163,45 @@ test('Work session keeps provenance when ChatGPT moves from /work/ to shared /c/
   await f.controller.tick();
   assert.equal(f.controller.state.phase,'delivered','bound Work /c URL is authoritative by exact match');
   assert.equal(f.loads(),1,'reopen does not reload recovery');
+});
+
+test('unconfirmed native mode prevents packet preparation, then confirmed Chat sends once', async () => {
+  const f=controllerFixture({chatUrl:null});
+  f.inspection.experience='work';
+  await f.controller.tick(); assert.equal(f.loads(),0); assert.equal(f.sends(),0);
+  assert.equal(f.controller.state.phase,'waiting-composer');
+  f.inspection.experience='chat';
+  await f.controller.tick(); await f.controller.tick();
+  assert.equal(f.sends(),1); assert.equal(f.controller.state.phase,'delivered');
+});
+test('pending WEB conversation after Send waits for its permanent URL for Chat and Work', async () => {
+  for (const experience of ['chat','work']) {
+    const f=controllerFixture({chatUrl:null}); f.saved.experience=experience;
+    f.inspection.url=experience==='work'?'https://chatgpt.com/work/':'https://chatgpt.com/';
+    let clicks=0;
+    f.composer.deliver=async options=>{
+      assert.equal(options.expectedExperience,experience);
+      await options.onBeforeSend(); clicks++;
+      f.inspection.url='https://chatgpt.com/c/WEB:12345678-1234-1234-1234-123456789abc';
+      assert.equal(options.canContinue(),true);
+      return {state:'unknown'};
+    };
+    await f.controller.tick();
+    await f.controller.tick(); assert.equal(f.controller.state.phase,'send-unknown');
+    assert.equal(f.saved.chatUrl,null);
+    f.inspection.messageSeen=true;
+    await f.controller.tick(); assert.equal(f.controller.state.phase,'waiting-chat');
+    assert.equal(f.controller.state.messageSent,true); assert.equal(f.saved.attempt.state,'sent');
+    assert.equal(f.saved.chatUrl,null);
+    f.inspection.url='https://chatgpt.com/c/permanent-conversation';
+    await f.controller.tick(); assert.equal(f.controller.state.phase,'delivered');
+    assert.equal(f.saved.chatUrl,f.inspection.url); assert.equal(clicks,1);
+    f.controller.attach(f.saved);await f.controller.tick();assert.equal(clicks,1);
+  }
+});
+test('pending WEB conversation before any send never receives project context', async () => {
+  const f=controllerFixture({chatUrl:null});
+  f.inspection.url='https://chatgpt.com/c/WEB:12345678-1234-1234-1234-123456789abc';
+  await f.controller.tick();
+  assert.equal(f.controller.state.phase,'chat-changed');assert.equal(f.loads(),0);assert.equal(f.sends(),0);
 });

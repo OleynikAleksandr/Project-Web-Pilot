@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { normalizeChatUrl, conversationUrlCompatibleWithExperience } from './workspace-session.mjs';
 import { CONTEXT_PROTOCOL, validateContextPacket } from './mcp-runtime.mjs';
-import { chatGPTUrlMatchesExperience } from './chatgpt-experience.mjs';
+import { chatGPTUrlMatchesExperience, isPendingChatGPTConversation } from './chatgpt-experience.mjs';
 
 export function packetMatchesProject(packet, project) {
   const expected = { project_id: project.projectId, project_name: project.name, plan_revision: project.planRevision,
@@ -76,7 +76,8 @@ export class ContextSession {
     const current = this.composer.contents.getURL();
     const url = normalizeChatUrl(current);
     if (project.chatUrl) return project.chatUrl === url;
-    if (!url) return chatGPTUrlMatchesExperience(current, project.experience ?? 'chat');
+    if (!url) return (!!attempt?.sendStartedAtMs && isPendingChatGPTConversation(current))
+      || chatGPTUrlMatchesExperience(current, project.experience ?? 'chat');
     return !!attempt?.sendStartedAtMs && conversationUrlCompatibleWithExperience(url, project.experience ?? 'chat');
   }
 
@@ -112,7 +113,7 @@ export class ContextSession {
         this.servicesReady = true;
       }
       let attempt = project.attempt;
-      const observation = await this.composer.inspect({ requestId: attempt?.requestId, text: attempt?.text });
+      let observation = await this.composer.inspect({ requestId: attempt?.requestId, text: attempt?.text });
       if (!this.current(generation)) return;
       if (observation.login) { this.emit({ phase: 'waiting-login', projectInfo: info }); return; }
       const experience = project.experience ?? 'chat';
@@ -136,10 +137,30 @@ export class ContextSession {
         if (!observation.messageSeen) { this.emit({ phase: 'send-unknown', projectInfo: info, messageSent: false }); return; }
         project = { ...await this.store.bindChat(project.workspace, project.sessionId, currentUrl), ...info };
         if (!this.current(generation)) return;
+      } else if (isPendingChatGPTConversation(observation.url)) {
+        if (!attempt?.sendStartedAtMs) { this.emit({ phase: 'chat-changed', projectInfo: info }); return; }
+        const sent = observation.messageSeen || attempt.state === 'sent';
+        if (observation.messageSeen && attempt.state !== 'sent') {
+          attempt = { ...attempt, state: 'sent', sentAtMs: this.now() };
+          await this.store.updateSession(project.workspace, project.sessionId, { attempt });
+          if (!this.current(generation)) return;
+        }
+        this.emit({ phase: sent ? 'waiting-chat' : 'send-unknown', projectInfo: info, messageSent: sent, error: null });
+        return;
       } else if (!chatGPTUrlMatchesExperience(observation.url, experience)) {
         throw failure('CHATGPT_EXPERIENCE_MISMATCH', experience === 'work'
           ? 'Work-сессия не открыта в режиме Work. Recovery не отправлен.'
           : 'Chat-сессия не открыта в обычном Chat. Recovery не отправлен.');
+      }
+      if (!project.chatUrl && !attempt?.sendStartedAtMs) {
+        observation = await this.composer.inspect({ action: 'select-experience', expectedExperience: experience,
+          requestId: attempt?.requestId, text: attempt?.text });
+        if (!this.current(generation)) return;
+        if (observation.action !== 'experience-confirmed') {
+          this.emit({ phase: observation.reason === 'CHAT_CHANGED' ? 'chat-changed' : phaseForReason(observation.reason),
+            projectInfo: info });
+          return;
+        }
       }
       if (attempt && attempt.protocol !== CONTEXT_PROTOCOL) {
         const known = ['sent', 'acknowledged'].includes(attempt.state) || observation.messageSeen;
@@ -187,6 +208,7 @@ export class ContextSession {
         if (!this.current(generation)) return;
       }
       const result = await this.composer.deliver({ text: attempt.text, requestId: attempt.requestId,
+        expectedExperience: project.chatUrl ? null : experience,
         canContinue: () => this.current(generation) && this.atExpectedChat(project, attempt), onBeforeSend: async () => {
           const latest = await this.store.inspect(project.workspace);
           if (!packetMatchesProject(attempt.packet, latest) || this.now() - attempt.packet.generatedAtMs > 300000) {

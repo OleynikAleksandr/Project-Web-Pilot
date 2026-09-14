@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 312,
+  "plan_revision": 314,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workspace-chat-work-sessions-011",
@@ -507,8 +507,8 @@
       }
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "id": "T013",
       "title": "Исправить выбор Chat и обработку временного conversation URL",
       "why": "При приёмке Chat открылся как Work; временный /c/WEB: вызвал ложный mismatch после фактической отправки. Исправление реализует уже согласованный выбор experience.",
@@ -611,7 +611,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workspace-chat-work-sessions-011
 Current Task: нет
-Revision: 312
+Revision: 314
 
 ## Цель
 
@@ -677,8 +677,8 @@ Revision: 312
   - Git Commit: [DONE] build: выпустить архив сессий
   - Reference: workspace-chat-work-sessions-011 / T012 / implementation
   - Файлы: package.json, package-lock.json, docs/WORKFLOW_START.md, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T013: Исправить выбор Chat и обработку временного conversation URL — Ожидает
-  - Git Commit: [PENDING] fix: выбирать фактический Chat до передачи контекста
+- [DONE] T013: Исправить выбор Chat и обработку временного conversation URL — Завершено
+  - Git Commit: [DONE] fix: выбирать фактический Chat до передачи контекста
   - Reference: workspace-chat-work-sessions-011 / T013 / implementation
   - Файлы: src/chatgpt-experience.mjs, src/chatgpt-composer.mjs, src/context-session.mjs, tests/chatgpt-experience.test.mjs, tests/chatgpt-composer.test.mjs, tests/context-session.test.mjs, tests/electron-smoke.mjs, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T014: Собрать исправленный релиз выбора Chat — Ожидает

@@ -230,3 +230,14 @@ Sidebar добавляет `⋯ → Перенести в архив` для к�
 ## Release integration — T012 / Project Web Pilot 0.6.7
 
 Patch release 0.6.7 объединяет подтверждённые Chat/Work sessions и session archive. Storage schema v5 мигрирует прежние sessions как активные, отдельный archive позволяет restore или локальный delete без удаления OpenAI conversation, а project archive и session archive остаются независимыми lifecycle. Финальная ручная приёмка остаётся пользователю; scope автоматически не архивируется.
+
+
+## Исправление выбора Chat и временного URL — T013
+
+Production diagnostics 14.09.2026 17:52:57–17:53:08 UTC: новый Chat загрузил `/`, отправил recovery, затем прошёл `/c/WEB:<uuid>` → `/c/<id>`. Скриншот пользователя подтвердил фактический Work. Корневой URL не доказывает выбранный Chat: веб-приложение использует сохранённый режим и может выбирать Work по умолчанию.
+
+Проверен публичный код текущего ChatGPT Web: `4813494d-i88ebrgl0r2g94a4.js` определяет persisted ChatSurfaceMode и Work default; `984a38d2-hg7qoqxweuz8lvz0.js` реализует нативный toggle с `data-tpp-toggle-value=chatgpt|work` и `data-state=on|off`. Источник: https://chatgpt.com/cdn/assets/984a38d2-hg7qoqxweuz8lvz0.js. Web Pilot использует наблюдаемый нативный toggle; cookies, localStorage и внутренние функции ChatGPT не изменяются напрямую.
+
+Перед первым recovery новая session подтверждает фактический режим через toggle. Если выбран другой режим, выполняется нативный click и отдельное чтение подтверждения. Fallback ограничен группой с точным доступным именем Select chat surface / Выберите режим чата. Недоступный или неопределённый toggle блокирует подготовку/отправку; draft и active generation сохраняются. Режим дополнительно проверяется в renderer в том же действии, что fill/send. Это исправление исполняет ранее согласованный выбор Chat/Work и не выбирает модель.
+
+`/c/WEB:<uuid>` допускается только как промежуточный адрес после начатой отправки. Он не сохраняется в chatUrl. Наблюдение request marker подтверждает отправку; binding ждёт permanent concrete URL. Повторная отправка не выполняется. Уже привязанные sessions продолжают проверяться по exact URL.

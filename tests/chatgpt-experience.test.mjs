@@ -19,3 +19,19 @@ test('experience classifier accepts only matching chatgpt.com routes', () => {
   assert.equal(chatGPTUrlMatchesExperience('https://chatgpt.com/work/', 'work'), true);
   assert.equal(chatGPTUrlMatchesExperience('https://chatgpt.com/', 'work'), false);
 });
+
+test('optimistic WEB URLs are pending only on the exact HTTPS ChatGPT origin', async () => {
+  const { isPendingChatGPTConversation } = await import('../src/chatgpt-experience.mjs');
+  const { normalizeChatUrl } = await import('../src/workspace-session.mjs');
+  const route = '/c/WEB:12345678-1234-1234-1234-123456789abc';
+  for (const path of [route, route.replace(':', '%3A')]) {
+    assert.equal(isPendingChatGPTConversation('https://chatgpt.com' + path), true);
+    assert.equal(normalizeChatUrl('https://chatgpt.com' + path), null);
+  }
+  for (const url of ['https://evil.test'+route, 'http://chatgpt.com'+route, 'https://chatgpt.com:444'+route,
+    'https://user@chatgpt.com'+route, 'https://chatgpt.com/c/WEB:bad', 'https://chatgpt.com/c/aaaaaaaa']) {
+    assert.equal(isPendingChatGPTConversation(url), false);
+  }
+  assert.equal(chatGPTUrlMatchesExperience('https://chatgpt.com/?surface=work', 'chat'), false);
+  assert.equal(chatGPTUrlMatchesExperience('https://chatgpt.com/?surface=tpp', 'chat'), false);
+});
