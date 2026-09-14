@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 250,
+  "plan_revision": 251,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-kit-recovery-packet-010",
@@ -223,7 +223,8 @@
         "resources/workflow-kit/lib/actions.mjs",
         "resources/workflow-kit/templates/AGENTS.md",
         "resources/workflow-kit/templates/PLAN.md",
-        "tests/workflow-kit-source.test.mjs"
+        "tests/workflow-kit-source.test.mjs",
+        "tests/workflow-kit-recovery.test.mjs"
       ],
       "documentation_paths": [
         "docs/modules/workflow-kit-recovery.md",
@@ -359,7 +360,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-kit-recovery-packet-010
 Current Task: нет
-Revision: 250
+Revision: 251
 
 ## Цель
 
@@ -393,7 +394,7 @@ Revision: 250
 - [TODO] T003: Реализовать core Workflow Recovery v2 — Ожидает
   - Git Commit: [PENDING] feat: реализовать Workflow Recovery v2
   - Reference: workflow-kit-recovery-packet-010 / T003 / implementation
-  - Файлы: resources/workflow-kit/WORKFLOW.md, resources/workflow-kit/lib/plan.mjs, resources/workflow-kit/lib/recovery.mjs, resources/workflow-kit/lib/validate.mjs, resources/workflow-kit/lib/actions.mjs, resources/workflow-kit/templates/AGENTS.md, resources/workflow-kit/templates/PLAN.md, tests/workflow-kit-source.test.mjs, docs/modules/workflow-kit-recovery.md, docs/CONTEXT_DELIVERY.md
+  - Файлы: resources/workflow-kit/WORKFLOW.md, resources/workflow-kit/lib/plan.mjs, resources/workflow-kit/lib/recovery.mjs, resources/workflow-kit/lib/validate.mjs, resources/workflow-kit/lib/actions.mjs, resources/workflow-kit/templates/AGENTS.md, resources/workflow-kit/templates/PLAN.md, tests/workflow-kit-source.test.mjs, tests/workflow-kit-recovery.test.mjs, docs/modules/workflow-kit-recovery.md, docs/CONTEXT_DELIVERY.md
 - [TODO] T004: Добавить Workflow Kit 1.2 install/upgrade contract — Ожидает
   - Git Commit: [PENDING] feat: добавить обновление Workflow Kit 1.2
   - Reference: workflow-kit-recovery-packet-010 / T004 / implementation
