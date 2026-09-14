@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 311,
+  "plan_revision": 312,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workspace-chat-work-sessions-011",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Добавить в Workspace & Sessions явный выбор Chat или Work для первой и дополнительных сессий проекта, сохранить experience в session model, перенести создание сессий в меню проекта и открыть выбранный ChatGPT experience без изменения Recovery flow.",
   "acceptance_criteria": [
     "Каждая session имеет persisted experience chat|work и старое хранилище мигрируется без потери данных.",
@@ -39,7 +39,9 @@
       "src/archive-preload.cjs",
       "src/ui/archive.mjs",
       "src/ui/archive.html",
-      "src/ui/project-archive.mjs"
+      "src/ui/project-archive.mjs",
+      "src/chatgpt-composer.mjs",
+      "tests/chatgpt-composer.test.mjs"
     ],
     "documentation_paths": [
       "docs/modules/workspace-sessions.md",
@@ -503,6 +505,82 @@
         "task_id": "T012",
         "role": "implementation"
       }
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "id": "T013",
+      "title": "Исправить выбор Chat и обработку временного conversation URL",
+      "why": "При приёмке Chat открылся как Work; временный /c/WEB: вызвал ложный mismatch после фактической отправки. Исправление реализует уже согласованный выбор experience.",
+      "dependencies": [
+        "T012"
+      ],
+      "functional_paths": [
+        "src/chatgpt-experience.mjs",
+        "src/chatgpt-composer.mjs",
+        "src/context-session.mjs",
+        "tests/chatgpt-experience.test.mjs",
+        "tests/chatgpt-composer.test.mjs",
+        "tests/context-session.test.mjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/workspace-sessions.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "acceptance_criteria": [
+        "До первого recovery подтверждается фактический Chat/Work через нативный переключатель; root URL сам по себе не доказывает Chat.",
+        "Изменение режима перед отправкой блокирует клик; пользовательские черновики сохраняются.",
+        "Временный /c/WEB: после начатой отправки ожидает concrete URL и не сохраняется как chatUrl; повторной отправки нет.",
+        "Regression покрывает Work затем Chat, temporary URL и неизвестный режим."
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "expected_commit_message": "fix: выбирать фактический Chat до передачи контекста",
+      "file_limit_exception": "Единое исправление routing требует согласовать composer, lifecycle guard и проверки обоих слоёв со сквозным Electron smoke.",
+      "commit_ref": {
+        "scope_id": "workspace-chat-work-sessions-011",
+        "task_id": "T013",
+        "role": "implementation"
+      }
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "id": "T014",
+      "title": "Собрать исправленный релиз выбора Chat",
+      "why": "Обновить macOS и Windows packages для повторной пользовательской приёмки.",
+      "dependencies": [
+        "T013"
+      ],
+      "functional_paths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "documentation_paths": [
+        "docs/modules/workspace-sessions.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md"
+      ],
+      "acceptance_criteria": [
+        "Patch version повышена; назначенные проверки пройдены.",
+        "macOS arm64 и Windows x64 packages пересобраны, Windows verifier пройден.",
+        "Scope остаётся ACTIVE/READY_FOR_ACCEPTANCE."
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "expected_commit_message": "build: выпустить исправление выбора Chat",
+      "commit_ref": {
+        "scope_id": "workspace-chat-work-sessions-011",
+        "task_id": "T014",
+        "role": "implementation"
+      }
     }
   ],
   "blocked_reason": null,
@@ -530,10 +608,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: workspace-chat-work-sessions-011
 Current Task: нет
-Revision: 311
+Revision: 312
 
 ## Цель
 
@@ -599,6 +677,14 @@ Revision: 311
   - Git Commit: [DONE] build: выпустить архив сессий
   - Reference: workspace-chat-work-sessions-011 / T012 / implementation
   - Файлы: package.json, package-lock.json, docs/WORKFLOW_START.md, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+- [TODO] T013: Исправить выбор Chat и обработку временного conversation URL — Ожидает
+  - Git Commit: [PENDING] fix: выбирать фактический Chat до передачи контекста
+  - Reference: workspace-chat-work-sessions-011 / T013 / implementation
+  - Файлы: src/chatgpt-experience.mjs, src/chatgpt-composer.mjs, src/context-session.mjs, tests/chatgpt-experience.test.mjs, tests/chatgpt-composer.test.mjs, tests/context-session.test.mjs, tests/electron-smoke.mjs, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+- [TODO] T014: Собрать исправленный релиз выбора Chat — Ожидает
+  - Git Commit: [PENDING] build: выпустить исправление выбора Chat
+  - Reference: workspace-chat-work-sessions-011 / T014 / implementation
+  - Файлы: package.json, package-lock.json, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md
 
 ## Context Pack For This Cycle
 
