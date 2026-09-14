@@ -476,3 +476,11 @@ Unit test фиксирует Node.js 22.17.0 win-x64 archive name/SHA, expected 
 ## Workflow Kit 1.2 install/upgrade — T004
 
 Добавлена изолированная проверка upgrade 1.1→1.2: fixture понижает manifest/runtime до совместимого 1.1, удаляет новые module docs, оставляет пользовательское изменение PRODUCT и запускает обычный Workspace Setup. Upgrade проходит через `kit-update` commit, восстанавливает runtime 1.2 и MODULES/OVERVIEW, сохраняет PRODUCT и оставляет чистое Git-состояние. Отдельный workspace setup suite: 9/9 passed. Recovery v2 regression покрывает module-context gate, reference-only optional context, direct dependency diffs и largest-section diagnostics при CONTEXT_TOO_LARGE.
+
+## Project Web Pilot 0.6.3 / Recovery v2 — T005
+
+Текущий workspace обновлён до Workflow Kit 1.2.0 через реальный `kit-update` commit `e8bea1d898080affeee7bf6cc4d79b9bf74a6157`; active scope/plan history сохранены, рабочее дерево после upgrade было чистым. Budget предварительно выровнен отдельным plan-adjustment commit до `soft_tokens=16000`, `hard_tokens=90000`, `hard_bytes=180000`.
+
+После миграции `npm test`: 81 total, 79 passed, 0 failed, 2 native-win32 skipped. `npm run smoke` успешно подтвердил Electron 44.3.0 / Chromium 152 и существующие IPC/UI/security contracts. Recovery schema 2 на T005: 81243 bytes / 40622 conservative tokens; основной body использует Workflow Core + required OVERVIEW/module spec, `docs/CONTEXT_DELIVERY.md` показан только как REFERENCE_ONLY, полный исторический VERIFICATION отсутствует. Для сравнения baseline до Recovery v2 был 118003 bytes / 59002 tokens.
+
+Общий `npm run build` для версии 0.6.3 успешно сформировал обе платформы. macOS arm64 `app.asar` SHA-256 `5a4e2239d69fa80caec4643fb7b7ea02840611d05887739693ae9292f8d8ef65`. Windows x64 `Project Web Pilot.exe` SHA-256 `be7478e5fa8b0022b979d49382e7d6548d9c0bec93c3407f510103767d5b1337`; verifier также подтвердил runtime SHA `1f041488ad97d8abf1984fd3521afb8abe15f50b8df3d3e11f1cc4248e019d98` и Node archive SHA `721ab118a3aac8584348b132767eadf51379e0616f0db802cc1e66d7f0d98f85`. Windows package остаётся cross-build evidence; native запуск проверяется на Windows после pull.

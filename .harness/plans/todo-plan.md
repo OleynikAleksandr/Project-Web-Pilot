@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 259,
+  "plan_revision": 261,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-kit-recovery-packet-010",
@@ -322,8 +322,8 @@
         "electron-smoke"
       ],
       "expected_commit_message": "build: выпустить Project Web Pilot с Recovery v2",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workflow-kit-recovery-packet-010",
         "task_id": "T005",
@@ -364,7 +364,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-kit-recovery-packet-010
 Current Task: нет
-Revision: 259
+Revision: 261
 
 ## Цель
 
@@ -403,8 +403,8 @@ Revision: 259
   - Git Commit: [DONE] feat: добавить обновление Workflow Kit 1.2
   - Reference: workflow-kit-recovery-packet-010 / T004 / implementation
   - Файлы: resources/workflow-kit/lib/common.mjs, resources/workflow-kit/lib/installation-files.mjs, resources/workflow-kit/lib/installer.mjs, resources/workflow-kit/lib/transaction.mjs, resources/workflow-kit/templates/START.md, resources/workspace-setup-worker.mjs, src/ui/workspace-setup.mjs, tests/workspace-setup.test.mjs, tests/workflow-kit-source.test.mjs, tests/workflow-kit-recovery.test.mjs, docs/WORKSPACE_SETUP.md, docs/modules/workflow-kit-recovery.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
-- [TODO] T005: Мигрировать Project Web Pilot на Recovery v2 и пересобрать — Ожидает
-  - Git Commit: [PENDING] build: выпустить Project Web Pilot с Recovery v2
+- [DONE] T005: Мигрировать Project Web Pilot на Recovery v2 и пересобрать — Завершено
+  - Git Commit: [DONE] build: выпустить Project Web Pilot с Recovery v2
   - Reference: workflow-kit-recovery-packet-010 / T005 / implementation
   - Файлы: package.json, package-lock.json, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md
 

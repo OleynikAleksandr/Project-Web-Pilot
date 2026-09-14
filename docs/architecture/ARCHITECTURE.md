@@ -508,3 +508,7 @@ Windows build-preflight сначала может переиспользоват
 ## Workflow Kit 1.2 — module-centric recovery и upgrade
 
 Встроенный Workflow Kit 1.2 вводит module-centric Recovery v2 без изменения transport API Web Pilot. Fresh workspace получает compact `docs/architecture/OVERVIEW.md`, `docs/MODULES.md` и новый plan template; функциональный scope требует согласованный module context. Existing 1.1 workspace может быть обновлён через Workspace Setup, если owned runtime не изменён: owned Kit/launchers заменяются, AGENTS managed section проверяется по manifest, а `DOCUMENTATION_INDEX.md` сохраняется и расширяется аддитивно. Active plan, workflow config и пользовательские editable docs не перезаписываются. Modified critical runtime или неизвестная версия блокируют автоматический upgrade.
+
+## Project Web Pilot 0.6.3 — Recovery v2
+
+Версия 0.6.3 поставляется со встроенным Workflow Kit 1.2.0. Recovery теперь module-centric: Web Pilot получает уже сформированный COMPLETE execution capsule и не знает о внутреннем составе module context. Kit ограничивает effective hard payload транспортным потолком 180000 bytes; optional docs передаются как reference-only. Fresh workspace получает MODULES/OVERVIEW, а совместимый 1.1 workspace обновляется через отдельный безопасный upgrade. Общий `build` по-прежнему последовательно создаёт macOS arm64 и Windows x64 packages.

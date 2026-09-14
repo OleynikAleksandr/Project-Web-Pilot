@@ -70,3 +70,9 @@ Workspace содержит список сессий. Передача конт�
 ### Реализация core v2 — T003
 
 Builder Workflow Kit больше не использует большой `Обязательные правила` как session payload: передаётся только `Workflow Core`. Optional context sections перечисляются как reference-only. Unrelated last-completed commit не добавляется; обязательны только прямые/явные dependencies. Transport API Web Pilot не меняется: он по-прежнему получает COMPLETE text + bytes/hash/facts, поэтому переход на v2 не требует нового MCP protocol.
+
+## Project Web Pilot 0.6.3 / Workflow Kit 1.2
+
+14.09.2026 текущий workspace штатно обновлён с Kit 1.1.0 до 1.2.0 отдельным `kit-update` commit без изменения active plan/history. Project budget выровнен с транспортом: hard 180000 UTF-8 bytes / 90000 conservative tokens, soft 16000. Context pack содержит required compact OVERVIEW + module specification; CONTEXT_DELIVERY остаётся reference-only.
+
+На активной T005 recovery schema 2 занимает 81243 bytes вместо прежних 118003 bytes, несмотря на обязательный прямой dependency diff большого T004 upgrade. Полный исторический VERIFICATION и полный WORKFLOW rules block не являются top-level payload; optional docs не копируются. Transport interface Web Pilot остаётся прежним — COMPLETE context + bytes/hash/facts.

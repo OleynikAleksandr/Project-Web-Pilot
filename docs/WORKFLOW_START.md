@@ -1,32 +1,36 @@
 # Начало работы
 
-## Опорный контекст новой сессии
+Project Web Pilot использует Workflow Kit 1.2 и Recovery Capsule v2. Обычная новая сессия, ручное «Обновить контекст» и будущий подтверждённый compact должны получать текущий execution capsule; повторно читать историю проекта «на всякий случай» не требуется.
 
-Рабочая папка — `/Users/oleksandroliinyk/VSCODE/Project Web Pilot`, project_id `cf944136-d1fc-4bd5-9ea0-e46d1fe230e7`. Название пользователя — Project Web Pilot. Не возобновлять разработку WF001 или Codex Local Mac вместо этого проекта.
+## Что уже находится в capsule
 
-Продукт: одно локальное окно, слева проекты, справа настоящий ChatGPT Web во встроенном Chromium со своим сохранённым входом. Версия 0.6 создаёт новые workspace и проверяет/подключает существующие по WORKSPACE_SETUP, сохраняет несколько сессий на workspace с выбором из дерева и передаёт полный контекст проекта первым сообщением. В Settings отдельно выбирается светлая или тёмная тема оболочки и можно скрыть служебные строки вызова инструментов в диалоге ChatGPT; сами tools/MCP не отключаются. Встроенный ChatGPT может запрашивать микрофон и геолокацию; камера и остальные browser permissions запрещены локальной allowlist-политикой. Тема оболочки применяется к сайдбару и нативной верхней панели, а тема ChatGPT Web остаётся собственной настройкой ChatGPT. Агент сразу кратко подтверждает восстановление и описывает проект; дополнительных запросов контекста и обязательного машинного ACK нет. Канонический порядок — CONTEXT_DELIVERY.
+- компактный Workflow Core;
+- project/workspace/HEAD/scope/current task;
+- цель, критерии и progress единственного todo-plan;
+- required compact project overview и module specification;
+- diff прямых task/context dependencies;
+- staged/unstaged/untracked изменения текущей task;
+- релевантная verification evidence и next action.
 
-11.09.2026 пользователь разрешил реализовать прототип, затем поручил убрать hook/ACK диагностику из MCP, передавать весь пакет в первом сообщении и пересобрать приложение. Изменение выполнено в T014–T017, а MCP обновлён задачей T018 исходного Codex Local Mac. Авторитетные статусы, revision и коммиты читать из единственного плана и workflow status. Следующим поручением пользователь добавил дерево сессий workspace: T018–T020. Затем пользователь поручил реализовать создание и подключение аналогично Project Workflow Kit: T021–T024. Затем пользователь поручил шестерёнку настроек, архив проектов, возврат и локальное удаление папки с сохранением облачных чатов: T025–T028, контракт PROJECT_ARCHIVE. 12.09.2026 поручено добавить в те же Settings светлую/тёмную тему оболочки с нативной верхней панелью: T029–T031, затем визуальный фильтр строк вызовов инструментов ChatGPT без отключения tools: T032–T033. Затем разрешены микрофон и геолокация встроенному ChatGPT при сохранённом запрете камеры: T035–T036. Дальнейший объём определяет отзыв пользователя.
+Optional/reference documents не копируются в payload. Большой `.harness/kit/WORKFLOW.md`, исторические `PRODUCT.md`, `ARCHITECTURE.md`, `VERIFICATION.md`, `DECISIONS.md` читаются только по явной необходимости через `docs/DOCUMENTATION_INDEX.md`.
 
-Стек: Electron 44.3.0/WebContentsView, JavaScript ESM, @electron/packager 20.3.0, DEVELOPMENT. Проверки назначены через config:apply и plan:apply: 51 Node tests и Electron smoke. Локальное приложение: `.harness/runtime/build/Project Web Pilot-darwin-arm64/Project Web Pilot.app`. Запуск — README, фактические проверки — VERIFICATION. Пользовательская приёмка ожидается; scope не архивирован.
+## Новый запрос пользователя
 
-Источники: `/Users/oleksandroliinyk/VSCODE/WF001` (Workflow Kit 1.1.0, только чтение) и `/Users/oleksandroliinyk/VSCODE/Codex Local Mac` (существующий MCP/tunnel с обновлённым inline-context-v1). Конкретные пути и SHA — SOURCE_WORKSPACES. Ядро Workflow Kit включено в ресурсы сборки; создание и подключение реализованы в T021–T024. Для подготовки используется существующий Node 22+. Самостоятельная поставка MCP/runtime ещё не выполнена. Не копировать ключи и browser profiles.
+1. Найти архитектурного владельца в `docs/MODULES.md`.
+2. Для существующего модуля сначала обсудить и согласовать изменение его specification.
+3. Если владельца нет — сначала создать/согласовать module specification и зарегистрировать модуль.
+4. Только затем создавать или расширять todo-plan реализации.
+5. Перед кодом начать task; каждую микрозадачу завершать управляемым commit с назначенными checks.
 
-Приложение получает полный read-only пакет через MCP до отправки. Сайдбар показывает факт передачи пользовательского сообщения, а короткий ответ модели виден в чате. Повторное открытие сохраняет выбранную сессию без нового сообщения; старые чаты обновляются явно. Модельных API-вызовов нет. Переключение папки не меняет рабочую папку уже работающего чата. Восстановление после автоматического compact не входит в текущий сценарий.
+Todo-plan обязан перечислять весь внешний контекст, необходимый следующей сессии. Всё остальное является reference-only.
 
-## Порядок восстановления
+## Текущий Project Web Pilot
 
-1. Использовать этот workspace и актуальные AGENTS/packet. Если packet отсутствует, выполнить `./scripts/workflow recover --format text`; проверить COMPLETE, project_id и workspace.
-2. Прочитать `./scripts/workflow status`: текущую задачу, Git и незавершённую транзакцию. Исторический отчёт не заменяет состояние плана.
-3. Прочитать нужные документы через DOCUMENTATION_INDEX: PRODUCT, DECISIONS, ARCHITECTURE, CONTEXT_DELIVERY, SOURCE_WORKSPACES, VERIFICATION.
-4. Продолжать изменения по поручению пользователя и единственному плану. Для нового отзыва сначала определить конкретные изменения, включить пути через plan:apply и начать задачу через task:start.
-5. Код, проверки, связанные документы и статус фиксировать вместе через workflow commit. Не обходить hooks и не редактировать машинные статусы вручную.
+Единый macOS/Windows source of truth — `https://github.com/OleynikAleksandr/Project-Web-Pilot`. Mac является основной средой разработки; Windows используется для native validation после pull. Platform runtime/build/userData не синхронизируются через Git.
 
-Только если настоящий hook доставил DELIVERY-MARKER в дополнительном контексте, подтвердить его штатным hook:ack с фактическим клиентом. Не искать маркер в журнале ради отметки успешности. Обычный recover подтверждает пакет, а не доставку hook.
+В приложении слева работает локальный workspace/project UI, справа — настоящий ChatGPT Web в изолированном Chromium. Локальные действия агента идут через MCP/tunnel; модельные API приложением не используются. Компактная карта — `docs/architecture/OVERVIEW.md`, владельцы — `docs/MODULES.md`.
 
-## Две разные сессии
-
-Локальная сессия Codex разрабатывает Project Web Pilot с Workflow Kit этой папки. Встроенный ChatGPT получает отдельное стартовое сообщение и работает с выбранной папкой через MCP. Успех одного механизма не подтверждает внутренние hooks другого.
+Текущая версия приложения после Recovery v2 — 0.6.3. Workflow Kit — 1.2.0. Детальные исторические проверки остаются в `docs/VERIFICATION.md` и не являются стартовым контекстом.
 
 ## Служебные команды
 
@@ -37,60 +41,4 @@
 ./scripts/workflow doctor
 ```
 
-В Windows установленный Workflow Kit использует `./scripts/workflow.cmd` в PowerShell/CMD. Это переносимость комплекта, а не проверенная Windows-версия приложения. Повторная установка в эту папку не требуется. Приёмка и передача в новую сессию не архивируют scope.
-
-## Scope 002 — регулируемый sidebar и отдельный архив
-
-12.09.2026 пользователь поручил сделать правую границу sidebar перетаскиваемой с минимумом 312 px и вынести архив из Settings в отдельное окно. Архив поддерживает Shift-диапазон и Command/Ctrl выбор отдельных проектов, массовые «Вернуть в активные» и «Убрать из списка». Последнее удаляет только локальную запись Web Pilot; папка и ChatGPT-чаты сохраняются. Физическое удаление остаётся одиночным подтверждаемым действием.
-## Версия 0.6 — пользовательский блок плана
-
-12.09.2026 пользователь принял предыдущий scope и поручил новый релиз с самостоятельной карточкой «План». Карточка показывает названия всех микрозадач и состояния `✓ / ● / ○`, прогресс выполнения и отдельное состояние «Все задачи выполнены · ожидается ваша приёмка». Внутренний `plan_revision` в пользовательском интерфейсе не показывается. Канонический план остаётся `.harness/plans/todo-plan.md`; карточка только отображает его безопасное пользовательское представление.
-
-
-### Приёмка из карточки плана
-
-В версии 0.6 кнопка «Принять» справа в карточке плана активируется только при READY_FOR_ACCEPTANCE. Клик отправляет обычное пользовательское сообщение в текущий связанный ChatGPT-чат: это явная команда агенту штатно архивировать текущий scope и оставить Workflow Kit в `NONE` без автоматического создания нового scope. Черновик или активный ответ ChatGPT не перезаписываются.
-
-## Диагностика auto-compact
-
-С 12.09.2026 Web Pilot 0.6 пишет пассивный Chromium diagnostic log для исследования ChatGPT Web auto-compact: `~/Library/Application Support/Project Web Pilot/diagnostics/chromium-events.jsonl` и одна ротация `.1`. Журнал не является доказательством compact сам по себе и пока не запускает автоматическое обновление контекста. После наблюдаемого/предполагаемого compact нужно анализировать временной диапазон журнала и искать устойчивый сетевой/CDP/DOM признак; только после повторяемого сигнала проектировать автоматический refresh.
-
-## Наблюдение context window и auto-compact
-
-С scope 006 диагностический файл `~/Library/Application Support/Project Web Pilot/diagnostics/chromium-events.jsonl` содержит отдельные записи `source=telemetry,event=context`, если ChatGPT Web передал распознаваемые context/token metadata. Поля `inputTokens`, `modelContextWindow` и `usedPercent` позволяют построить временную серию; `compactSignal=direct` означает найденный прямой marker, `token-reset`/`token-drop` — только сильный косвенный признак. До подтверждения на реальном ChatGPT Web эти события используются для наблюдения и анализа, но не инициируют автоматическую отправку обновлённого project context.
-
-С scope 007 sidebar отображает последнее подтверждённое наблюдение как «Контекстное окно». Если фактическая пара usage/window пока не найдена, показывается «Ожидаем данные» без процента. Для исследования отличающихся Web-схем diagnostic parser также записывает безопасные candidate key paths и числовые значения вне текстовых content-поддеревьев. После установки новой сборки следующий обычный ответ ChatGPT используется для поиска этих кандидатов; найденные имена затем можно сопоставить с input/window semantics без чтения текста разговора.
-
-## Scope 008 — что показал полный transport capture
-
-Два коротких production turn были временно записаны полностью и проанализированы. Числового input/output/context usage в browser transport не найдено. При этом `/backend-api/models` подтверждает `gpt-5-6-thinking.max_tokens=262144`, а полный conversation response содержит `context_truncation_continuation=null`. Поэтому дальнейшее наблюдение auto-compact ориентируется прежде всего на изменение `context_truncation_continuation` и связанных безопасных metadata, а не на ожидаемый `token_count`. Временный raw-capture после эксперимента удалён; обычная сборка не хранит полный transport payload.
-
-## Проверка Windows 10/11 build — scope 008
-
-Готовый portable archive для реального Windows x64 теста: `.harness/runtime/build/Project-Web-Pilot-0.6.0-Windows-x64.zip`, SHA-256 `b2d2602011770c55b97d409bcab264a54e6cc4fe255679580a921ec2bb53a66e`. После распаковки запускать `Project Web Pilot-win32-x64\\Project Web Pilot.exe`. Сборка не подписана, поэтому Windows SmartScreen может показать предупреждение для неизвестного издателя.
-
-На чистой Windows системный Node/Git/Python не требуются. Создание Workflow Kit использует portable Node из package; локальный Codex runtime при первом обращении проверяет embedded ZIP и устанавливает приватные Python/Git/ripgrep/tunnel components в профиль пользователя. В Settings → «Локальные инструменты Windows» кнопка настройки tunnel открывает отдельную console; restricted API key вводится только там и сохраняется DPAPI. После завершения нажать «Проверить». T013 считается выполненной только после реального запуска, входа в ChatGPT, создания/открытия workspace, MCP/tunnel tool call и Windows Computer Use проверки.
-
-## Scope 008 — дальнейшая Windows-приёмка
-
-Живая Windows 10/11 приёмка больше не выполняется в этом macOS scope. Она перенесена в отдельный workspace `Win Project Web Pilot`, который пользователь будет проверять на Windows 10. Здесь остаётся только корректно завершить исследование auto-compact и архивировать scope.
-
-## Scope 008 — наблюдение auto-compact завершено
-
-Финальная проверка безопасного production-log до 12.09.2026 17:01:27Z не обнаружила надёжного события auto-compact. Из браузера подтверждается `modelContextWindow=262144`, но фактическая занятость окна не приходит (`inputTokens/usedPercent=null`), а `context_truncation_continuation` во всех наблюдавшихся conversation metadata оставался `null`. Исследование закрыто по прямой команде пользователя; это отрицательный результат наблюдения, а не утверждение, что server-side compaction невозможен.
-
-## Работа из одного репозитория на двух компьютерах
-
-Общий source of truth — Git-репозиторий `Project Web Pilot`. Перед переходом Mac → Windows или Windows → Mac изменения сначала фиксируются штатным Workflow Kit commit и отправляются в private remote; на втором компьютере выполняется pull. `.harness/runtime`, `node_modules`, `windows-app`, profile/settings и локальные diagnostics не синхронизируются. Одновременно пишет только один worktree/агент.
-
-## Проверка общего репозитория 13.09.2026
-
-После объединения Windows fixes общий workspace прошёл `npm test` (75 passed, 2 win32-only skipped, 0 failed), `npm run smoke` и `npm run build`. Последняя команда из одного checkout собрала обе платформы: `.harness/runtime/build/Project Web Pilot-darwin-arm64/Project Web Pilot.app` и `.harness/runtime/build/Project Web Pilot-win32-x64/Project Web Pilot.exe`. Для реальной Windows-проверки используется тот же Git commit после pull на Windows; build/runtime directories не синхронизируются.
-
-## GitHub source of truth — 13.09.2026
-
-Канонический remote общего macOS/Windows проекта: `https://github.com/OleynikAleksandr/Project-Web-Pilot`. Обычный цикл между компьютерами: штатный Workflow Kit commit → `git push`; на втором компьютере → `git pull`. Тяжёлые локальные `node_modules`, `.harness/runtime`, `windows-app`, userData/settings и build outputs остаются локальными и в remote не публикуются.
-
-## Windows checkout и окончания строк
-
-Vendored `resources/workflow-kit/**` закреплён в Git как `text eol=lf`; snapshot-test канонизирует только CRLF→LF. Поэтому `core.autocrlf` на Windows не должен давать ложный mismatch исходного Workflow Kit. После обновления старого Windows checkout с уже материализованными CRLF достаточно обычного `git pull`; при необходимости принудительного перечитывания можно выполнить `git restore --source=HEAD --worktree resources/workflow-kit`.
+В Windows PowerShell/CMD используется `./scripts/workflow.cmd`. Полный `.harness/kit/WORKFLOW.md` открывать только для точной семантики команд, repair/install/upgrade и редких аварийных сценариев.
