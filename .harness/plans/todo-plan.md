@@ -4,19 +4,20 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 242,
+  "plan_revision": 243,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-kit-recovery-packet-010",
   "execution_scope_status": "ACTIVE",
   "delivery_status": "IN_PROGRESS",
-  "objective": "Разобрать, почему recovery-пакет Workflow Kit разрастается до CONTEXT_TOO_LARGE, измерить фактический состав и стоимость обязательного контекста и выбрать безопасную политику упаковки без потери данных, необходимых агенту для продолжения работы.",
+  "objective": "Разобрать, почему recovery-пакет Workflow Kit разрастается до CONTEXT_TOO_LARGE, измерить фактический состав и стоимость обязательного контекста и выбрать безопасную политику упаковки без потери данных, необходимых агенту для продолжения работы. После разбора recovery budget спроектировать устойчивый self-healing bootstrap/lifecycle локальных MCP и tunnel на macOS/Windows: переиспользование существующей установки, установка при отсутствии и автоматическое восстановление при конфликтах endpoint/портов без вмешательства пользователя.",
   "acceptance_criteria": [
     "На Mac воспроизведён или точно смоделирован сценарий CONTEXT_TOO_LARGE на реалистичном активном плане без изменения production semantics.",
     "Измерен вклад основных разделов recovery-пакета в bytes и оценочные tokens; обязательные и необязательные части разделены явно.",
     "Зафиксированы действующие лимиты Workflow Kit и Web Pilot и точная точка, где возникает переполнение.",
     "Сравнены безопасные варианты: изменение budget, изменение состава пакета и уменьшение повторяющегося контекста; дана конкретная рекомендация с рисками.",
-    "До отдельного согласования пользователя код, budget и recovery semantics не изменяются."
+    "До отдельного согласования пользователя код, budget и recovery semantics не изменяются.",
+    "Отдельной следующей задачей спроектирован startup-механизм MCP+tunnel: persisted registration, быстрая проверка известной установки, fallback discovery/bootstrap, динамические endpoint/порты и безопасное самовосстановление при занятых портах без остановки чужих процессов."
   ],
   "approved_scope": {
     "functional_paths": [
@@ -116,6 +117,38 @@
         "task_id": "T001",
         "role": "implementation"
       }
+    },
+    {
+      "id": "T002",
+      "title": "Спроектировать self-healing startup MCP и tunnel",
+      "why": "Исключить повторение RUNTIME_FOREIGN_PROCESS, stale PID и конфликтов фиксированных портов при старте приложения; существующую совместимую установку нужно переиспользовать, отсутствующую — автоматически устанавливать и подключать.",
+      "dependencies": [
+        "T001"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/ARCHITECTURE.md"
+      ],
+      "acceptance_criteria": [
+        "Определён persisted runtime registration: приложение запоминает подтверждённые runtime path/version/identity и фактические MCP+tunnel endpoints, а при следующем старте сначала быстро валидирует их вместо полного поиска.",
+        "Если совместимые MCP и tunnel уже установлены и здоровы, приложение переиспользует их; если отсутствуют — bootstrap/install выполняется автоматически для текущей платформы.",
+        "Проверен реальный endpoint-контракт для обоих сервисов: host/IP, локальный port и, где применимо, public tunnel URL; решение не предполагает заранее фиксированные 17842/17843.",
+        "Stale PID/PID reuse и несовпадение process identity распознаются безопасно; чужие процессы не завершаются и не принимаются за собственный runtime.",
+        "Если собственный MCP или tunnel не может стартовать из-за занятого порта, выбирается свободный локальный порт, новый endpoint атомарно передаётся всем зависимым компонентам и сохраняется для следующих запусков.",
+        "Self-healing выполняется молча в штатных случаях; пользователь получает ошибку только если безопасное автоматическое восстановление невозможно.",
+        "Перед реализацией отдельно проверены последствия динамических портов для Secure MCP Tunnel/profile, MCP client, Windows overlay и macOS runtime; секреты tunnel не попадают в Git, чат или диагностику.",
+        "До отдельного согласования пользователя production-код lifecycle/ports не изменяется."
+      ],
+      "verification_ids": [],
+      "expected_commit_message": "docs: спроектировать self-healing runtime startup",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "workflow-kit-recovery-packet-010",
+        "task_id": "T002",
+        "role": "implementation"
+      }
     }
   ],
   "blocked_reason": null,
@@ -129,6 +162,11 @@
       "id": "clipboard-primary-webcontents-20260914",
       "text": "14.09.2026 пользователь согласовал строгую clipboard-policy: разрешить sanitized write только основному встроенному ChatGPT WebContents и точному origin chatgpt.com, не разрешая чтение clipboard и popup/дочерним WebContents. После этого перейти к обсуждению recovery budget.",
       "recorded_at": "2026-09-14T06:13:23+02:00"
+    },
+    {
+      "id": "runtime-self-healing-ports-20260914",
+      "text": "14.09.2026 пользователь поручил записать в текущий план будущий механизм запуска: до установки/старта обнаруживать и переиспользовать существующие MCP+tunnel, при отсутствии автоматически устанавливать; запоминать подтверждённые endpoints, проверять фактические адреса/порты обоих сервисов и при конфликте порта молча выбирать свободный порт и переподключать компоненты, не завершая чужие процессы. Сначала требуется обсудить архитектуру и последствия, затем отдельно согласовать реализацию.",
+      "recorded_at": "2026-09-14T06:22:42+02:00"
     }
   ]
 }
@@ -141,11 +179,11 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-kit-recovery-packet-010
 Current Task: нет
-Revision: 242
+Revision: 243
 
 ## Цель
 
-Разобрать, почему recovery-пакет Workflow Kit разрастается до CONTEXT_TOO_LARGE, измерить фактический состав и стоимость обязательного контекста и выбрать безопасную политику упаковки без потери данных, необходимых агенту для продолжения работы.
+Разобрать, почему recovery-пакет Workflow Kit разрастается до CONTEXT_TOO_LARGE, измерить фактический состав и стоимость обязательного контекста и выбрать безопасную политику упаковки без потери данных, необходимых агенту для продолжения работы. После разбора recovery budget спроектировать устойчивый self-healing bootstrap/lifecycle локальных MCP и tunnel на macOS/Windows: переиспользование существующей установки, установка при отсутствии и автоматическое восстановление при конфликтах endpoint/портов без вмешательства пользователя.
 
 ## Критерии приёмки
 
@@ -154,6 +192,7 @@ Revision: 242
 - Зафиксированы действующие лимиты Workflow Kit и Web Pilot и точная точка, где возникает переполнение.
 - Сравнены безопасные варианты: изменение budget, изменение состава пакета и уменьшение повторяющегося контекста; дана конкретная рекомендация с рисками.
 - До отдельного согласования пользователя код, budget и recovery semantics не изменяются.
+- Отдельной следующей задачей спроектирован startup-механизм MCP+tunnel: persisted registration, быстрая проверка известной установки, fallback discovery/bootstrap, динамические endpoint/порты и безопасное самовосстановление при занятых портах без остановки чужих процессов.
 
 ## Микрозадачи
 
@@ -165,6 +204,10 @@ Revision: 242
   - Git Commit: [PENDING] docs: разобрать recovery budget Workflow Kit
   - Reference: workflow-kit-recovery-packet-010 / T001 / implementation
   - Файлы: docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md
+- [TODO] T002: Спроектировать self-healing startup MCP и tunnel — Ожидает
+  - Git Commit: [PENDING] docs: спроектировать self-healing runtime startup
+  - Reference: workflow-kit-recovery-packet-010 / T002 / implementation
+  - Файлы: docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md
 
 ## Context Pack For This Cycle
 
