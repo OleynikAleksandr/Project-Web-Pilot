@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 247,
+  "plan_revision": 248,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-kit-recovery-packet-010",
@@ -58,7 +58,9 @@
       ".harness/kit/templates/START.md",
       ".harness/kit-manifest.json",
       ".harness/plans/todo-plan.template.md",
-      "AGENTS.md"
+      "AGENTS.md",
+      "resources/workflow-kit/lib/actions.mjs",
+      "resources/workflow-kit/lib/transaction.mjs"
     ],
     "documentation_paths": [
       "docs/CONTEXT_DELIVERY.md",
@@ -229,7 +231,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-kit-recovery-packet-010
 Current Task: нет
-Revision: 247
+Revision: 248
 
 ## Цель
 
