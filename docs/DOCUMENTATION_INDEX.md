@@ -54,3 +54,4 @@
 | resources/workflow-kit/templates/START.md | Исходный шаблон начала работы |
 
 | docs/PROJECT_ARCHIVE.md | Архив workspace, возврат и удаление локальных проектов; веб-чаты сохраняются |
+- `docs/modules/workspace-sessions.md` — контракт проектов/сессий, Chat/Work experience, первая сессия и session tree.
