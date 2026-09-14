@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 325,
+  "plan_revision": 327,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "next-modifications-discussion-012",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Добавить локальную оценку токенов переписки через tiktoken в правый нижний угол строки каждой сессии.",
   "acceptance_criteria": [
     "Отдельная сохраняемая оценка для каждой Chat/Work сессии обновляется при чтении сообщений.",
@@ -183,8 +183,8 @@
         "Версия и результат проверок зафиксированы; финальная оценка показаний остаётся пользователю."
       ],
       "expected_commit_message": "chore: собрать Web Pilot 0.6.9 со счётчиком токенов",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "next-modifications-discussion-012",
         "task_id": "T004",
@@ -211,10 +211,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: next-modifications-discussion-012
 Current Task: нет
-Revision: 325
+Revision: 327
 
 ## Цель
 
@@ -240,8 +240,8 @@ Revision: 325
   - Git Commit: [DONE] feat: показывать оценку токенов в строках сессий
   - Reference: next-modifications-discussion-012 / T003 / implementation
   - Файлы: src/main.mjs, src/ui/sidebar.mjs, src/ui/index.html, tests/electron-smoke.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/workspace-sessions.md
-- [TODO] T004: Собрать обновление приложения для проверки пользователем — Ожидает
-  - Git Commit: [PENDING] chore: собрать Web Pilot 0.6.9 со счётчиком токенов
+- [DONE] T004: Собрать обновление приложения для проверки пользователем — Завершено
+  - Git Commit: [DONE] chore: собрать Web Pilot 0.6.9 со счётчиком токенов
   - Reference: next-modifications-discussion-012 / T004 / implementation
   - Файлы: package.json, package-lock.json, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/modules/workspace-sessions.md
 

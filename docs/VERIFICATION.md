@@ -588,3 +588,10 @@ node --test tests/session-tokens.test.mjs: 5 проверок пройдены. 
 ## Scope 012 / T003 — счётчик в Electron
 
 Electron smoke проходит с реальным js-tiktoken worker: стартовый пакет >75 KB учитывается, повторное чтение не прибавляет токены, Hello → Hello world заменяет значение одного assistant message (+1 → +2). Проверены отдельный Work conversation, отсутствие чужого message ID в оценке и игнорирование постороннего URL. UI geometry проверяется на раскрытом дереве при ширине sidebar 312 px: число справа снизу, без наложения на дату. Снимок token-counter-ui.png из isolated fixture просмотрен. Скрытая таблица ID/хешей не попадает в sidebar IPC. Это fixture-проверка, не сравнение с серверным контекстом реального ChatGPT.
+
+## Scope 012 / T004 — Project Web Pilot 0.6.9
+
+- npm run build — exit 0; macOS arm64 и Windows x64 packages пересобраны, verify:win — PASSED.
+- Обе app.asar содержат version 0.6.9, js-tiktoken 1.0.21 и o200k_base (2 325 563 байта); src/session-tokens.mjs, src/workspace-session.mjs, src/main.mjs, src/ui/sidebar.mjs и src/ui/index.html побайтово совпадают с исходным деревом.
+- Отдельный Electron процесс импортировал SessionTokenCounter из macOS app.asar: worker вернул hello world = 2 токена и не повторил подсчёт неизменённого сообщения; exit 0.
+- Финальные syntax, suite и electron-smoke назначены обязательными gates workflow commit T004. Реальный аккаунт ChatGPT и native Windows acceptance проверяет пользователь; токенизация доступного текста не подтверждает величину серверного контекстного окна.

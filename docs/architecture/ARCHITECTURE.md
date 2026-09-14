@@ -601,3 +601,7 @@ Workspace & Sessions использует src/session-tokens.mjs и js-tiktoken 
 ## Session token UI — scope 012 / T003
 
 Main читает доступные DOM-сообщения выбранного concrete conversation раз в 3 секунды и передаёт их SessionTokenCounter. До/после асинхронного чтения и токенизации проверяются navigationId, workspace, sessionId и exact URL. В sidebar передаются только total/encoding/messageCount/updatedAt, без message IDs/хешей/текстов. Session row содержит нижнюю flex-строку: дата слева, ≈ N ток. справа; неизвестное значение обозначено — ток. Ширина 312 px и светлая/тёмная тема поддерживаются. Tooltip объясняет учёт только прочитанного текста и загрузку старых сообщений при прокрутке.
+
+## Release integration — scope 012 / T004 / Project Web Pilot 0.6.9
+
+Версия 0.6.9 добавляет локальную оценку токенов прочитанной переписки справа снизу каждой session row. js-tiktoken 1.0.21 и словарь o200k_base включены в macOS arm64 и Windows x64 packages; загрузка словаря из сети не требуется. Обе app.asar содержат одинаковые с исходным деревом модули счётчика, storage, main и sidebar. Отдельно проверен запуск SessionTokenCounter worker из собранного macOS app.asar в Electron. Recovery и Chat/Work routing не меняются; сравнение оценки с реальным ChatGPT остаётся ручной приёмкой пользователя.
