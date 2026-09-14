@@ -205,9 +205,13 @@ function isChatGPTOrigin(value) {
   } catch { return false; }
 }
 
-function permissionAllowed(permission, origin, details = {}) {
+function permissionAllowed(permission, origin, details = {}, contents = null) {
   if (!isChatGPTOrigin(origin)) return false;
-  if (permission === 'geolocation' || permission === 'geolocation-approximate' || permission === 'clipboard-sanitized-write') return true;
+  if (permission === 'clipboard-sanitized-write') {
+    const primary = browser?.webContents;
+    return Boolean(contents && primary && !primary.isDestroyed() && contents.id === primary.id);
+  }
+  if (permission === 'geolocation' || permission === 'geolocation-approximate') return true;
   if (permission !== 'media') return false;
   const mediaTypes = Array.isArray(details.mediaTypes) ? details.mediaTypes
     : details.mediaType ? [details.mediaType] : [];
@@ -696,11 +700,11 @@ else {
     const remoteSession = session.fromPartition(partition);
     remoteSession.setPermissionRequestHandler((contents, permission, callback, details) => {
       const origin = details?.securityOrigin ?? details?.requestingUrl ?? contents.getURL();
-      callback(permissionAllowed(permission, origin, details));
+      callback(permissionAllowed(permission, origin, details, contents));
     });
     remoteSession.setPermissionCheckHandler((_contents, permission, requestingOrigin, details) => {
       const origin = details?.securityOrigin ?? requestingOrigin ?? details?.requestingUrl;
-      return permissionAllowed(permission, origin, details);
+      return permissionAllowed(permission, origin, details, _contents);
     });
     installMenu();
     await createWindow();

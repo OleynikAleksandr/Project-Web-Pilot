@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 240,
+  "plan_revision": 242,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-kit-recovery-packet-010",
@@ -80,8 +80,8 @@
         "electron-smoke"
       ],
       "expected_commit_message": "fix: ограничить clipboard write основным ChatGPT",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workflow-kit-recovery-packet-010",
         "task_id": "T000",
@@ -141,7 +141,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-kit-recovery-packet-010
 Current Task: нет
-Revision: 240
+Revision: 242
 
 ## Цель
 
@@ -157,8 +157,8 @@ Revision: 240
 
 ## Микрозадачи
 
-- [TODO] T000: Ограничить clipboard-write основным ChatGPT WebContents — Ожидает
-  - Git Commit: [PENDING] fix: ограничить clipboard write основным ChatGPT
+- [DONE] T000: Ограничить clipboard-write основным ChatGPT WebContents — Завершено
+  - Git Commit: [DONE] fix: ограничить clipboard write основным ChatGPT
   - Reference: workflow-kit-recovery-packet-010 / T000 / implementation
   - Файлы: src/main.mjs, tests/electron-smoke.mjs, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 - [TODO] T001: Разобрать состав и budget recovery-пакета — Ожидает

@@ -72,10 +72,11 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(permissionAllowed('media', 'https://chatgpt.com', { mediaTypes: ['audio', 'video'] }), false);
   assert.equal(permissionAllowed('geolocation', 'https://chatgpt.com', {}), true);
   assert.equal(permissionAllowed('geolocation-approximate', 'https://chatgpt.com', {}), true);
-  assert.equal(permissionAllowed('clipboard-sanitized-write', 'https://chatgpt.com', {}), true);
-  assert.equal(permissionAllowed('clipboard-read', 'https://chatgpt.com', {}), false);
+  assert.equal(permissionAllowed('clipboard-sanitized-write', 'https://chatgpt.com', {}, browser), true);
+  assert.equal(permissionAllowed('clipboard-sanitized-write', 'https://chatgpt.com', {}, sidebar), false);
+  assert.equal(permissionAllowed('clipboard-read', 'https://chatgpt.com', {}, browser), false);
   assert.equal(permissionAllowed('notifications', 'https://chatgpt.com', {}), false);
-  assert.equal(permissionAllowed('clipboard-sanitized-write', 'https://example.com', {}), false);
+  assert.equal(permissionAllowed('clipboard-sanitized-write', 'https://example.com', {}, browser), false);
   assert.equal(permissionAllowed('media', 'https://example.com', { mediaTypes: ['audio'] }), false);
   const workspace = path.join(await fs.realpath(dataDir + '-projects'), 'Тестовый проект с пробелами');
   await waitFor(() => sidebar.executeJavaScript('typeof window.webPilot === "object"'), 'local IPC ready', snapshot);

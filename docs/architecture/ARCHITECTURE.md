@@ -503,4 +503,4 @@ Windows build-preflight сначала может переиспользоват
 
 ## Clipboard write во встроенном ChatGPT — scope 009 / T006
 
-Удалённый Chromium по-прежнему работает без preload, Node и локального IPC. Permission policy разрешает точному origin `https://chatgpt.com` только `clipboard-sanitized-write`, необходимый штатной кнопке «Копировать»/`navigator.clipboard.writeText()`. Чтение системного clipboard (`clipboard-read`) остаётся запрещённым, как и clipboard write для любых других origin. Остальные ограничения media/geolocation и sandbox не ослабляются.
+Удалённый Chromium по-прежнему работает без preload, Node и локального IPC. Permission policy разрешает `clipboard-sanitized-write`, необходимый штатной кнопке «Копировать»/`navigator.clipboard.writeText()`, только при одновременном выполнении двух условий: точный origin `https://chatgpt.com` и запрос исходит из основного правого ChatGPT WebContents. Popup/дочерние WebContents того же origin этого разрешения не получают. Чтение системного clipboard (`clipboard-read`) остаётся запрещённым, как и clipboard write для любых других origin. Остальные ограничения media/geolocation и sandbox не ослабляются.
