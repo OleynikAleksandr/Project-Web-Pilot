@@ -32,6 +32,7 @@ chatUrl: string | null
 title
 createdAt
 lastOpenedAt
+archivedAt: number | null
 attempt / receipt
 ```
 
@@ -198,3 +199,19 @@ Fail-closed теперь действует по фазе lifecycle. До пер
 ## Release integration — T008 / Project Web Pilot 0.6.6
 
 Patch release 0.6.6 исправляет production mismatch Work после перехода `/work/` → shared `/c/<id>`. Persisted `experience=work` сохраняется, binding требует observed request marker, а до первой отправки Work entrypoint остаётся fail-closed. Финальная ручная проверка реального аккаунта остаётся пользователю.
+
+
+## Session Archive Contract — T009
+
+Session archive является частью Workspace & Sessions и не меняет облачный ChatGPT conversation. Каждая persisted session получает `archivedAt: number|null`; `null` означает активную session. Архивирование скрывает session из дерева активного проекта, но сохраняет `sessionId`, `experience`, `chatUrl`, title и delivery metadata для возможного restore.
+
+Правила lifecycle:
+- архивировать можно session только активного проекта;
+- последнюю активную session проекта архивировать нельзя (`SESSION_LAST_ACTIVE`), чтобы проект всегда оставался открываемым;
+- если архивируется выбранная session и существуют другие активные, `selectedSessionId` атомарно переключается на наиболее недавно открытую оставшуюся session;
+- restore снимает `archivedAt`, не меняя experience/chatUrl и не создавая новый облачный разговор;
+- удаление разрешено только для архивной session и удаляет локальную запись/привязку Web Pilot. Облачный ChatGPT conversation на стороне OpenAI остаётся неизменным.
+
+Archive UI содержит две независимые вкладки: `Проекты` и `Сессии`. В `Сессиях` показываются только архивные sessions проектов, которые сами не находятся в project archive. Строка session обязательно показывает project owner, title/fallback name, badge `Chat|Work` и дату архивирования. Если проект архивирован целиком, его sessions не дублируются в отдельной session-вкладке; после restore проекта ранее архивные sessions снова становятся видимы в session archive.
+
+Локальное удаление session очищает primary workspace storage и доступные локальные ссылки этой session в migration-backups/diagnostics, если они существуют. Папка проекта, Git repository и любые облачные чаты не удаляются.

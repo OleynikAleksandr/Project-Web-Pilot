@@ -543,3 +543,8 @@ Targeted `context-session` suite: 13/13 passed. Новый regression воспр
 ## Project Web Pilot 0.6.6 / Work shared URL fix — T008
 
 14.09.2026 final patch verification: `npm test` — 96 total, 94 passed, 0 failed, 2 native-Windows skipped; Electron smoke passed с production-like Work transition `/work/` → `/c/<id>` и сохранением `experience=work`. `npm run build` успешно создал macOS arm64 и Windows x64 packages; Windows verifier passed. macOS `CFBundleShortVersionString/CFBundleVersion=0.6.6`, `app.asar` SHA-256 `76073370f2fc5aae5af09d93c9f4d6c3e9e754884b8668740f2741a9db138633`; Windows EXE SHA-256 `b6091393249e9dbeef47852283117d00e801ff3b955eea0f5d282214c4727097`. Windows runtime SHA остаётся `1f041488ad97d8abf1984fd3521afb8abe15f50b8df3d3e11f1cc4248e019d98`, portable Node SHA — `721ab118a3aac8584348b132767eadf51379e0616f0db802cc1e66d7f0d98f85`. Scope после commit должен остаться READY_FOR_ACCEPTANCE для повторной пользовательской проверки.
+
+
+## Chat / Work sessions — T009 session archive contract
+
+14.09.2026 по результату пользовательской приёмки 0.6.6 согласовано расширение текущего scope: отдельный lifecycle архивных sessions с project owner в UI. Последняя активная session проекта не архивируется; selected session при архивировании переключается на оставшуюся. Session archive не дублирует sessions проекта, если сам проект находится в project archive. Delete session означает локальное удаление metadata/reference; облачный ChatGPT conversation сохраняется.

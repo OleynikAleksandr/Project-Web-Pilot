@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 302,
+  "plan_revision": 304,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workspace-chat-work-sessions-011",
@@ -384,8 +384,8 @@
       ],
       "verification_ids": [],
       "expected_commit_message": "docs: согласовать архив сессий",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workspace-chat-work-sessions-011",
         "task_id": "T009",
@@ -531,7 +531,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workspace-chat-work-sessions-011
 Current Task: нет
-Revision: 302
+Revision: 304
 
 ## Цель
 
@@ -581,8 +581,8 @@ Revision: 302
   - Git Commit: [DONE] build: выпустить исправление Work sessions
   - Reference: workspace-chat-work-sessions-011 / T008 / implementation
   - Файлы: package.json, package-lock.json, docs/WORKFLOW_START.md, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T009: Зафиксировать контракт архива сессий — Ожидает
-  - Git Commit: [PENDING] docs: согласовать архив сессий
+- [DONE] T009: Зафиксировать контракт архива сессий — Завершено
+  - Git Commit: [DONE] docs: согласовать архив сессий
   - Reference: workspace-chat-work-sessions-011 / T009 / implementation
   - Файлы: docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T010: Реализовать lifecycle архива сессий в storage — Ожидает

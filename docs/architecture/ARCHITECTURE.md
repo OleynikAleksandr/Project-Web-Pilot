@@ -555,3 +555,8 @@ Production ChatGPT использует `/work/` только как entrypoint.
 ## Project Web Pilot 0.6.6 — Work shared URL fix
 
 Patch release 0.6.6 корректирует Workspace & Sessions для фактического production routing ChatGPT Work: `/work/` является entrypoint, а created conversation использует общий `/c/<id>`. Experience хранится локально и после binding подтверждается exact URL + request-marker provenance, а не namespace.
+
+
+## Session archive — scope 011 / T009
+
+Workspace & Sessions расширяет lifecycle на отдельный архив session. `session.archivedAt` скрывает разговор из активного дерева без удаления cloud conversation. Активный проект всегда сохраняет хотя бы одну неархивную session; при архивировании выбранной session selection атомарно переходит на последнюю использованную оставшуюся session. Archive window разделяет project archive и session archive; sessions архивированных проектов не дублируются отдельно. Локальный delete session удаляет только metadata/bindings и доступные локальные backup/diagnostic references, не затрагивая workspace folder или OpenAI.
