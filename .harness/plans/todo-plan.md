@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 381,
+  "plan_revision": 383,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "scope-014",
@@ -219,8 +219,8 @@
         "Проверить полный переход в Electron выполнено согласно контракту"
       ],
       "expected_commit_message": "test: verify post-acceptance Chat and Work transitions",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "scope-014",
         "task_id": "T005",
@@ -278,7 +278,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: scope-014
 Current Task: нет
-Revision: 381
+Revision: 383
 
 ## Цель
 
@@ -310,8 +310,8 @@ Revision: 381
   - Git Commit: [DONE] feat: ask for next session experience
   - Reference: scope-014 / T004 / implementation
   - Файлы: src/preload.cjs, src/ui/sidebar.mjs, src/ui/index.html, docs/architecture/ARCHITECTURE.md, docs/modules/workspace-sessions.md
-- [TODO] T005: Проверить полный переход в Electron — Ожидает
-  - Git Commit: [PENDING] test: verify post-acceptance Chat and Work transitions
+- [DONE] T005: Проверить полный переход в Electron — Завершено
+  - Git Commit: [DONE] test: verify post-acceptance Chat and Work transitions
   - Reference: scope-014 / T005 / implementation
   - Файлы: tests/electron-smoke.mjs, docs/VERIFICATION.md, docs/modules/workspace-sessions.md
 - [TODO] T006: Собрать релиз 0.6.14 для проверки — Ожидает

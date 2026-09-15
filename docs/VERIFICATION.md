@@ -661,3 +661,9 @@ Electron fixture создаёт активный scope с objective и ждёт 
 ## Scope 014 / T002 — модель перехода
 
 Регрессионные сценарии добавлены к workspace-session suite: READY не закрывает scope, оба experience, сохранение watching/choice/opened после load, повторная команда, старый NONE, смена проекта, заменённый project и новый scope перед выбором. Результат назначенной проверки фиксирует workflow commit.
+
+## Scope 014 / T005 — интеграционная проверка
+
+Electron fixture проверяет прежнюю кнопку приёмки с обновлённой командой, затем два полных перехода: Chat после кнопки и Work после прямого архивирования fixture plan. Проверяются вопрос при NONE, отсутствие перехода до выбора, сохранение choice/opened при reload хранилища, двойной клик/повторный IPC без дубля, неизменность старого URL и ровно один recovery с новыми facts NONE/revision. Снимок вопроса и результат сохраняются в изолированном smoke userData. Назначены полная Node suite и Electron smoke; реальный аккаунт не используется.
+
+Уточнение T005: переход проверяется с настоящими createScope/task:start/commit/archive Workflow Kit внутри временного fixture repository, чтобы штатная проверка workspace подтверждала реальную историю. Минимальный sidebar перед снимком явно установлен в 312 px.
