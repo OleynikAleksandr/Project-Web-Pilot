@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 374,
+  "plan_revision": 376,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "scope-014",
@@ -124,8 +124,8 @@
         "Сохранить переход и исключить дубли сессий выполнено согласно контракту"
       ],
       "expected_commit_message": "feat: persist scope session transitions",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "scope-014",
         "task_id": "T002",
@@ -273,7 +273,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: scope-014
 Current Task: нет
-Revision: 374
+Revision: 376
 
 ## Цель
 
@@ -293,8 +293,8 @@ Revision: 374
   - Git Commit: [DONE] docs: define post-acceptance session transition
   - Reference: scope-014 / T001 / implementation
   - Файлы: docs/modules/workspace-sessions.md, docs/modules/workflow-kit-recovery.md, docs/DECISIONS.md, docs/PRODUCT.md
-- [TODO] T002: Сохранить переход и исключить дубли сессий — Ожидает
-  - Git Commit: [PENDING] feat: persist scope session transitions
+- [DONE] T002: Сохранить переход и исключить дубли сессий — Завершено
+  - Git Commit: [DONE] feat: persist scope session transitions
   - Reference: scope-014 / T002 / implementation
   - Файлы: src/workspace-session.mjs, tests/workspace-session.test.mjs, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T003: Связать закрытие плана с открытием новой сессии — Ожидает

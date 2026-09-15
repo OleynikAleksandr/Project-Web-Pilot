@@ -664,3 +664,7 @@ WorkspaceSessions не меняет идентичность Workflow Kit рад
 
 
 Фактическая package-проверка 0.6.13: macOS `CFBundleShortVersionString=0.6.13`; macOS и Windows `app.asar/package.json` также 0.6.13. В обоих asar найдены `pilot:rename-project`, `pilot:rename-session`, UI `rename-project` и scope naming path `rememberScopeTitle/applyScopeTitle`.
+
+## Переход после scope — 014 / T002
+
+WorkspaceSessions хранит optional scopeTransition (scopeId, watching/choice/opened, sessionId). observeScope записывает известный активный scope и подтверждённое NONE/archivedScopeId. continueAfterScope перечитывает plan и атомарно сохраняет новую session вместе с обработанным переходом. Повторное обращение выбирает ранее созданную session; прежние records и schema v5 сохраняются.

@@ -81,6 +81,7 @@ export async function readWorkspace(input) {
   return { workspace, projectId: plan.project_id, name: plan.project_name,
     planRevision: plan.plan_revision, scopeId: plan.scope_id, objective: typeof plan.objective === 'string' ? plan.objective : '',
     scopeStatus: plan.execution_scope_status, deliveryStatus: plan.delivery_status,
+    archivedScopeId: typeof plan.archived_scope_id === 'string' ? plan.archived_scope_id : null,
     nextTaskId: current?.id ?? null, nextTaskTitle: current?.title ?? null,
     planView: { state: planState, completed, total: tasks.length, tasks,
       blockedReason: planState === 'blocked' && typeof plan.blocked_reason === 'string' ? plan.blocked_reason : null } };
@@ -110,6 +111,13 @@ function validate(data) {
         || (p.archivedAt !== null && (!Number.isFinite(p.archivedAt) || p.archivedAt <= 0))
         || !p.sessions.some(s => s?.sessionId === p.selectedSessionId && s.archivedAt === null)
         || !p.sessions.some(s => s?.archivedAt === null)) throw invalid();
+    if (p.scopeTransition !== undefined && p.scopeTransition !== null) {
+      const transition = p.scopeTransition;
+      if (typeof transition.scopeId !== 'string' || !transition.scopeId
+          || !['watching', 'choice', 'opened'].includes(transition.state)
+          || (transition.state === 'opened' ? typeof transition.sessionId !== 'string' || !transition.sessionId : transition.sessionId !== null))
+        throw invalid();
+    }
     workspaces.push(p.workspace);
     for (const s of p.sessions) {
       if (!s || typeof s.sessionId !== 'string' || !s.sessionId || typeof s.title !== 'string'
@@ -343,6 +351,53 @@ export class WorkspaceSessions {
   }
 
   newChat(workspace) { return this.newSession(workspace, 'chat'); }
+
+  observeScope(workspace, sessionId, info) {
+    return this.mutate(data => {
+      if (data.selectedWorkspace !== workspace) return false;
+      const { project } = this.activeRecord(workspace, sessionId, data);
+      if (info?.workspace !== workspace || info.projectId !== project.projectId) return false;
+      const previous = project.scopeTransition;
+      if (['ACTIVE', 'BLOCKED'].includes(info.scopeStatus) && typeof info.scopeId === 'string' && info.scopeId) {
+        if (previous?.scopeId === info.scopeId) return false;
+        project.scopeTransition = { scopeId: info.scopeId, state: 'watching', sessionId: null };
+        return true;
+      }
+      if (info.scopeStatus === 'NONE' && info.scopeId === null && info.archivedScopeId
+          && previous?.scopeId === info.archivedScopeId && previous.state === 'watching') {
+        project.scopeTransition = { ...previous, state: 'choice' };
+        return true;
+      }
+      return false;
+    });
+  }
+
+  continueAfterScope(workspace, scopeId, experience) {
+    return this.mutate(async data => {
+      experience = sessionExperience(experience);
+      const project = data.projects.find(p => p.workspace === workspace);
+      if (!project || project.archivedAt || data.selectedWorkspace !== workspace)
+        throw new WorkspaceError('SESSION_CHANGED', 'Сначала выберите активный проект.');
+      const info = await this.inspect(workspace);
+      if (info.projectId !== project.projectId || info.scopeStatus !== 'NONE' || info.scopeId !== null
+          || info.archivedScopeId !== scopeId || project.scopeTransition?.scopeId !== scopeId)
+        throw new WorkspaceError('SCOPE_CHANGED', 'Состояние плана изменилось. Проверьте текущий план.');
+      const transition = project.scopeTransition;
+      if (transition.state === 'opened') {
+        const existing = project.sessions.find(s => s.sessionId === transition.sessionId && !s.archivedAt);
+        if (!existing) throw new WorkspaceError('SESSION_NOT_FOUND', 'Созданная сессия уже убрана из активных.');
+        project.selectedSessionId = existing.sessionId;
+        return currentView(project);
+      }
+      if (transition.state !== 'choice')
+        throw new WorkspaceError('SCOPE_NOT_CLOSED', 'Дождитесь архивирования принятого плана.');
+      const session = this.createSession(experience);
+      Object.assign(project, info, { selectedSessionId: session.sessionId, expanded: true,
+        scopeTransition: { scopeId, state: 'opened', sessionId: session.sessionId } });
+      project.sessions.push(session);
+      return currentView(project);
+    });
+  }
 
   setExpanded(workspace, expanded) {
     return this.mutate(data => {

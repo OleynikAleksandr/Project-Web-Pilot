@@ -657,3 +657,7 @@ Electron fixture создаёт активный scope с objective и ждёт 
 
 
 Результат T004: `npm run smoke` прошёл с `projectRename=true`, `sessionRename=true`, `scopeSessionRename=true`; `npm test` прошёл полностью. `npm run build` собрал macOS arm64 и Windows x64; Windows package verification прошёл. Дополнительная проверка обоих `app.asar` подтвердила версию 0.6.13 и наличие rename/scope-title кода; macOS Info.plist также сообщает 0.6.13.
+
+## Scope 014 / T002 — модель перехода
+
+Регрессионные сценарии добавлены к workspace-session suite: READY не закрывает scope, оба experience, сохранение watching/choice/opened после load, повторная команда, старый NONE, смена проекта, заменённый project и новый scope перед выбором. Результат назначенной проверки фиксирует workflow commit.
