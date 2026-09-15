@@ -667,3 +667,9 @@ Electron fixture создаёт активный scope с objective и ждёт 
 Electron fixture проверяет прежнюю кнопку приёмки с обновлённой командой, затем два полных перехода: Chat после кнопки и Work после прямого архивирования fixture plan. Проверяются вопрос при NONE, отсутствие перехода до выбора, сохранение choice/opened при reload хранилища, двойной клик/повторный IPC без дубля, неизменность старого URL и ровно один recovery с новыми facts NONE/revision. Снимок вопроса и результат сохраняются в изолированном smoke userData. Назначены полная Node suite и Electron smoke; реальный аккаунт не используется.
 
 Уточнение T005: переход проверяется с настоящими createScope/task:start/commit/archive Workflow Kit внутри временного fixture repository, чтобы штатная проверка workspace подтверждала реальную историю. Минимальный sidebar перед снимком явно установлен в 312 px.
+
+## Scope 014 / T006 — релиз 0.6.14
+
+Управляемый commit T005 подтвердил syntax, полную Node suite (18.6 с) и Electron smoke (27.3 с). Smoke прошёл scopeContinuationChat, scopeContinuationWork, scopeContinuationRestart и scopeContinuationNoDuplicates; обе ветки использовали реальные createScope/startTask/commit/archive внутри отдельного временного проекта. Визуально проверена карточка выбора при sidebar 312 px.
+
+npm run build успешно собрал macOS arm64 и Windows x64; штатная Windows package verification прошла. app.asar каждой платформы проверен на version=0.6.14 и побайтное совпадение main/workspace-session/context-session/preload/sidebar/index.html с исходниками. macOS Info.plist сообщает 0.6.14. Артефакты находятся в стандартной .harness/runtime/build; подробные хеши — .harness/runtime/release-014.json. Реальный аккаунт ChatGPT и физический Windows ПК этой проверкой не покрываются; пользовательская приёмка остаётся открытой.

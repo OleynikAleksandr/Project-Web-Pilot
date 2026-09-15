@@ -676,3 +676,7 @@ Main наблюдает scope через существующий ContextSession
 ## Выбор следующей сессии — 014 / T004
 
 В существующей plan-card появился локальный вопрос с Chat/Work. Sidebar получает только workspace/scopeId ожидающего перехода и вызывает узкий preload facade continueAfterScope. До ответа навигации нет; обе кнопки блокируются общим actionPending. Используются существующие session-choice, тема и стили карточки.
+
+## Релиз 0.6.14 — scope 014 / T006
+
+macOS arm64 и Windows x64 packages собраны из общей реализации перехода после принятия плана. Проверка package version и шести изменённых src-файлов внутри обоих app.asar сверяется с исходниками; версия Info.plist совпадает. Зависимости и формат recovery не изменены. Текущий scope остаётся READY_FOR_ACCEPTANCE до пользовательской проверки.

@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 383,
+  "plan_revision": 385,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "scope-014",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Новая сессия после приёмки плана",
   "acceptance_criteria": [
     "После штатного архивирования завершённого плана появляется вопрос о Chat или Work",
@@ -251,8 +251,8 @@
         "Собрать релиз 0.6.14 для проверки выполнено согласно контракту"
       ],
       "expected_commit_message": "release: build Web Pilot 0.6.14",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "scope-014",
         "task_id": "T006",
@@ -275,10 +275,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: scope-014
 Current Task: нет
-Revision: 383
+Revision: 385
 
 ## Цель
 
@@ -314,8 +314,8 @@ Revision: 383
   - Git Commit: [DONE] test: verify post-acceptance Chat and Work transitions
   - Reference: scope-014 / T005 / implementation
   - Файлы: tests/electron-smoke.mjs, docs/VERIFICATION.md, docs/modules/workspace-sessions.md
-- [TODO] T006: Собрать релиз 0.6.14 для проверки — Ожидает
-  - Git Commit: [PENDING] release: build Web Pilot 0.6.14
+- [DONE] T006: Собрать релиз 0.6.14 для проверки — Завершено
+  - Git Commit: [DONE] release: build Web Pilot 0.6.14
   - Reference: scope-014 / T006 / implementation
   - Файлы: package.json, package-lock.json, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/modules/workspace-sessions.md
 
