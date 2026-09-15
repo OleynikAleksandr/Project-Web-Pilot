@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 352,
+  "plan_revision": 354,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "next-modifications-discussion-012",
@@ -532,8 +532,8 @@
         "Удаление счётчика согласовано пользователем; recovery cache и общие спиннеры остаются."
       ],
       "expected_commit_message": "docs: согласовать удаление счётчика токенов",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "next-modifications-discussion-012",
         "task_id": "T014",
@@ -661,7 +661,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: next-modifications-discussion-012
 Current Task: нет
-Revision: 352
+Revision: 354
 
 ## Цель
 
@@ -728,8 +728,8 @@ Revision: 352
   - Git Commit: [DONE] chore: собрать Web Pilot 0.6.11 с полной историей
   - Reference: next-modifications-discussion-012 / T013 / implementation
   - Файлы: package.json, package-lock.json, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md
-- [TODO] T014: Зафиксировать отказ от счётчика токенов — Ожидает
-  - Git Commit: [PENDING] docs: согласовать удаление счётчика токенов
+- [DONE] T014: Зафиксировать отказ от счётчика токенов — Завершено
+  - Git Commit: [DONE] docs: согласовать удаление счётчика токенов
   - Reference: next-modifications-discussion-012 / T014 / implementation
   - Файлы: docs/modules/workspace-sessions.md, docs/DECISIONS.md
 - [TODO] T015: Удалить подсчёт, пагинацию, worker и интерфейс — Ожидает
