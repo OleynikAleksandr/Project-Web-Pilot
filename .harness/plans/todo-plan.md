@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 360,
+  "plan_revision": 361,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "project-session-renaming-013",
@@ -52,6 +52,7 @@
       {
         "path": "docs/modules/workspace-sessions.md",
         "heading_path": [
+          "Module Specification — Workspace & Sessions",
           "Переименование проектов и сессий — scope 013"
         ],
         "required": true,
@@ -218,7 +219,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: project-session-renaming-013
 Current Task: нет
-Revision: 360
+Revision: 361
 
 ## Цель
 
@@ -253,6 +254,6 @@ Revision: 360
 ## Context Pack For This Cycle
 
 - docs/architecture/OVERVIEW.md → Краткая архитектура проекта
-- docs/modules/workspace-sessions.md → Переименование проектов и сессий — scope 013
+- docs/modules/workspace-sessions.md → Module Specification — Workspace & Sessions / Переименование проектов и сессий — scope 013
 
 Служебные состояния меняются только командами workflow. Приёмка не архивирует scope.
