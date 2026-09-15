@@ -710,3 +710,7 @@ Scroll позиции читаются только у видимых списк
 ## Windows workspace Node — 15.09.2026
 
 Windows-only исправление WorkspaceSetup изолирует NODE_OPTIONS/NODE_PATH в окружении дочернего настоящего Node и различает отсутствие Node, старую версию и отказ запуска. Bundled portable Node остаётся первым кандидатом, Electron/новый runtime не добавляются. Полный контракт — docs/WORKSPACE_SETUP.md. Изменение исполняет поручение исправить показанный NODE_MISSING только в Windows.
+
+## Windows-only сборка 0.6.17
+
+Из общего checkout собран только Windows x64 пакет с исправлением WorkspaceSetup. Версия исходного package/lock и обеих будущих packaging-команд согласована на 0.6.17; существующая Mac 0.6.16 не пересобиралась. Доказательства — docs/VERIFICATION.md; актуальная доставка — docs/TRANSFER_TO_WINDOWS.md.

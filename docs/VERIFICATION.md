@@ -707,3 +707,15 @@ Electron smoke требует отсутствия `context-window-card` и по
 Воспроизведение на Mac с Windows-веткой WorkspaceSetup и настоящим локальным Node: чистое окружение находит node; NODE_OPTIONS=--web-pilot-invalid-option возвращает ложный NODE_MISSING. Это подтверждённый дефект обработки ошибок, но не доказательство наличия такого окружения на компьютере пользователя. Native Windows 10 запуск пока не выполнен.
 
 T001: node --test tests/workspace-setup.test.mjs — 19/19 passed, 0 failed. Реальный worker успешно создал и повторно открыл временные проекты при invalid NODE_OPTIONS и несуществующем preload; Windows API ошибки проверены через заменяемый исполнитель. Проверены повтор после отказа, fallback и сохранение macOS environment/diagnostics. Это cross-platform regression на Mac, а не native Windows 10 приёмка.
+
+## Windows 0.6.17 — scope windows-node-setup-019 / T002
+
+T001 commit 13372b7: обязательная syntax и назначенная suite прошли (exit 0). Отдельная setup regression — 19/19 passed.
+
+npm run build:win и встроенная verify:win завершились успешно. Сравнение src/workspace-setup.mjs с файлом внутри app.asar — точное совпадение; package.json внутри Windows — 0.6.17. В существующем Mac app.asar по-прежнему 0.6.16: Mac не пересобирался. Общая версия исходников и будущих build scripts синхронизирована на 0.6.17.
+
+Распакованный node.exe совпадает по SHA-256 с node.exe из проверенного официального ZIP: 39d45b5933f339d3ebdebd76474893dab5d7da1038920f65cf5bbcf0f20f3636. EXE приложения: 48c078c0b72d78d808766133952e32cd66a3c00d57ce810a4551e599ff98ac33.
+
+Архив Project-Web-Pilot-0.6.17-Windows-x64.zip: 316264204 байт; SHA-256 25b8b0adb083d86b9bb35f81caf3ec50a16f0c794d69faf8fb4d268c323226b2. Копия для пользователя в Downloads на Mac.
+
+Native Windows 10 запуск не выполнялся: Windows API ошибки смоделированы, реальный setup worker проверен на Mac. Пользователь проверяет подключение исходного проекта на Windows. Scope остаётся ACTIVE/READY_FOR_ACCEPTANCE; архивирование не разрешено до явного принятия.

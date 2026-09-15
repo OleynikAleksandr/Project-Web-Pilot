@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 414,
+  "plan_revision": 416,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-node-setup-019",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Устранить воспроизведённый ложный NODE_MISSING в Windows-подготовке проектов и проверить Windows-поставку.",
   "acceptance_criteria": [
     "Windows использует встроенный Node.js независимо от унаследованных NODE_OPTIONS/NODE_PATH.",
@@ -123,8 +123,8 @@
         "Зафиксированы локальные проверки и отсутствие native Windows 10 запуска."
       ],
       "expected_commit_message": "build(windows): подготовить исправленную сборку 0.6.17",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "windows-node-setup-019",
         "task_id": "T002",
@@ -147,10 +147,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: windows-node-setup-019
 Current Task: нет
-Revision: 414
+Revision: 416
 
 ## Цель
 
@@ -168,8 +168,8 @@ Revision: 414
   - Git Commit: [DONE] fix(windows): исправить запуск Node при подготовке проектов
   - Reference: windows-node-setup-019 / T001 / implementation
   - Файлы: src/workspace-setup.mjs, tests/workspace-setup.test.mjs, docs/modules/workspace-sessions.md, docs/WORKSPACE_SETUP.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T002: Подготовить Windows-сборку с исправлением и инструкцией проверки — Ожидает
-  - Git Commit: [PENDING] build(windows): подготовить исправленную сборку 0.6.17
+- [DONE] T002: Подготовить Windows-сборку с исправлением и инструкцией проверки — Завершено
+  - Git Commit: [DONE] build(windows): подготовить исправленную сборку 0.6.17
   - Reference: windows-node-setup-019 / T002 / implementation
   - Файлы: package.json, package-lock.json, docs/TRANSFER_TO_WINDOWS.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 
