@@ -702,3 +702,7 @@ Scroll позиции читаются только у видимых списк
 15.09.2026 отдельная пользовательская плашка «Контекстное окно / Ожидаем данные» удалена из sidebar. Renderer больше не форматирует input/model token counts и не показывает progress заполнения окна. Общая Chromium diagnostics остаётся внутренней служебной подсистемой и не является пользовательской метрикой размера активного контекста.
 
 В T002 `main` перестал проецировать `contextWindow` в sidebar snapshot, а `ChromiumDiagnostics` больше не имеет observer/callback API для пользовательского индикатора. Внутренний разбор безопасной token/context telemetry, model-limit и compact signals сохранён для диагностики, но не инициирует отдельные перерисовки sidebar.
+
+## Релиз 0.6.16 — scope 016 / T003
+
+Единые macOS arm64 и Windows x64 пакеты собраны без пользовательского индикатора context window и без отдельного `contextWindow` state/callback. Безопасный внутренний parser Chromium diagnostics для token/context/compact telemetry сохранён. `package.json`, lockfile, оба electron-packager target и macOS bundle синхронизированы на 0.6.16; содержимое ключевых source-файлов в обоих app.asar совпадает с рабочим деревом.

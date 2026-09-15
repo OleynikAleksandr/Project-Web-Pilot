@@ -403,3 +403,7 @@ Main наблюдает закрытие при обычном poll, незав�
 15.09.2026 пользователь поручил полностью убрать оставшуюся плашку «Контекстное окно / Ожидаем данные». Sidebar больше не показывает размер, процент заполнения или progress активного context window и не содержит отдельного UI для этих данных. Это уточняет существующий инвариант: Web Pilot не вычисляет и не отображает внутренние лимиты OpenAI как пользовательскую метрику.
 
 Общая безопасная Chromium diagnostics может продолжать собирать служебную telemetry для диагностики transport/compaction, но она не публикуется в sidebar как `contextWindow` state и не инициирует отдельные перерисовки ради такого индикатора. Recovery, Chat/Work routing, план и lifecycle сессий не меняются.
+
+### Release integration — scope 016 / T003 / Project Web Pilot 0.6.16
+
+Релиз удаляет пользовательскую плашку context window, formatter/progress UI и отдельную observer-публикацию `contextWindow`, сохраняя внутреннюю безопасную Chromium telemetry. Финальный Electron smoke подтверждает `contextWindowIndicatorRemoved=true`; Node suite и обе package-сборки пройдены. Scope остаётся ACTIVE до явной пользовательской приёмки.

@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 408,
+  "plan_revision": 410,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "context-window-removal-016",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Полностью убрать из Web Pilot оставшийся индикатор контекстного окна и его отдельную публикацию состояния, сохранив общую Chromium-диагностику и recovery без изменений.",
   "acceptance_criteria": [
     "В левом sidebar отсутствует плашка «Контекстное окно» и связанный progress UI.",
@@ -146,8 +146,8 @@
         "Версия 0.6.16 собрана для macOS arm64 и Windows x64, package verification и обязательные проверки проходят, результаты зафиксированы."
       ],
       "expected_commit_message": "release: build Web Pilot 0.6.16",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "context-window-removal-016",
         "task_id": "T003",
@@ -170,10 +170,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: context-window-removal-016
 Current Task: нет
-Revision: 408
+Revision: 410
 
 ## Цель
 
@@ -197,8 +197,8 @@ Revision: 408
   - Git Commit: [DONE] refactor: удалить публикацию context window
   - Reference: context-window-removal-016 / T002 / implementation
   - Файлы: src/main.mjs, src/chromium-diagnostics.mjs, tests/electron-smoke.mjs, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
-- [TODO] T003: Собрать Web Pilot 0.6.16 — Ожидает
-  - Git Commit: [PENDING] release: build Web Pilot 0.6.16
+- [DONE] T003: Собрать Web Pilot 0.6.16 — Завершено
+  - Git Commit: [DONE] release: build Web Pilot 0.6.16
   - Reference: context-window-removal-016 / T003 / implementation
   - Файлы: package.json, package-lock.json, docs/modules/workspace-sessions.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, docs/PRODUCT.md, docs/WORKFLOW_START.md
 

@@ -695,3 +695,7 @@ JSDOM-тесты исполняют сам sidebar.mjs и проверяют nat
 ## Scope 016 / T002 — удаление индикатора context window
 
 Electron smoke требует отсутствия `context-window-card` и поля `contextWindow` в sidebar snapshot до и после получения тестовой SSE telemetry. При этом тот же stream по-прежнему обязан дать внутреннюю запись `telemetry/context` с `229043 / 258400` и `compactSignal=direct`. Это проверяет, что пользовательский индикатор и его публикация удалены, а безопасная Chromium diagnostics сохранена.
+
+## Scope 016 / T003 — релиз 0.6.16
+
+Финальные проверки: полная Node suite — 126 тестов, 124 passed и 2 platform-specific skipped; Electron smoke 0.6.16 прошёл с `contextWindowIndicatorRemoved=true` и сохранён в `.harness/runtime/scope016-smoke-result.json`. `npm run build` успешно создал macOS arm64 и Windows x64; штатная Windows package verification пройдена. Версии `package.json` внутри обоих `app.asar` и macOS Info.plist равны 0.6.16; main/workspace-session/context-session/preload/sidebar/index.html в обоих пакетах побайтно совпадают с исходниками. SHA-256 и размеры `app.asar` записаны в `.harness/runtime/release-016.json`. Реальный аккаунт ChatGPT и физический Windows ПК остаются пользовательской проверкой.
