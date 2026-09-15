@@ -685,3 +685,9 @@ npm run build успешно собрал macOS arm64 и Windows x64; штатн
 ## Scope 015 / T005 — регрессии состояния sidebar
 
 JSDOM-тесты исполняют сам sidebar.mjs и проверяют native disclosure без преждевременного закрытия от focusout, вызов существующего действия, независимое раскрытие, выбор проекта/старой сессии, порядок, сохранение позиции после обновления metadata и сброс на новой сессии. Отдельная регрессия воспроизводит временно скрытый родитель при проверке папки, замену дочернего списка и отложенный scroll отсоединённого узла. Геометрия, scrollbar и настоящий Popover API проверены Electron smoke в T004; полная Node suite — gate T005.
+
+## Scope 015 / T006 — релиз 0.6.15
+
+Все назначенные gates пройдены: workspace в T002, Electron smoke в T004 (31,7 с), полная Node suite в T005 (17,4 с). Smoke исполнялся с изолированными userData, workspace, ChatGPT fixture и MCP; пользовательский профиль не использовался. В обеих темах визуально проверено дерево и резерв полосы справа; отдельные проверки покрывают ширины 312/408 px.
+
+`npm run build` успешно создал macOS arm64 и Windows x64 0.6.15; штатная Windows package verification пройдена. Версии package.json внутри обоих app.asar и macOS Info.plist равны 0.6.15. Main, workspace-session, context-session, preload, sidebar и index.html в обоих пакетах побайтно совпадают с исходниками. Подробные SHA-256 — `.harness/runtime/release-015.json`; результат smoke и четыре снимка сохранены в `.harness/runtime/scope015-*`. Сборки находятся в стандартной `.harness/runtime/build`. Нативный запуск Windows и реальный аккаунт ChatGPT остаются пользовательской проверкой. Scope не архивирован, приёмка открыта.

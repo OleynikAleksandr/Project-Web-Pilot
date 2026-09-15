@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 399,
+  "plan_revision": 401,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "scope-015",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Ваши проекты: компактное дерево сессий",
   "acceptance_criteria": [
     "Создание и подключение проекта находятся в раскрывающемся меню Ваши проекты.",
@@ -245,8 +245,8 @@
       ],
       "expected_commit_message": "release: build Web Pilot 0.6.15",
       "id": "T006",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "scope-015",
         "task_id": "T006",
@@ -269,10 +269,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: scope-015
 Current Task: нет
-Revision: 399
+Revision: 401
 
 ## Цель
 
@@ -309,8 +309,8 @@ Revision: 399
   - Git Commit: [DONE] test: cover sidebar state and hidden scroll restoration
   - Reference: scope-015 / T005 / implementation
   - Файлы: tests/sidebar.test.mjs, docs/VERIFICATION.md
-- [TODO] T006: Собрать релиз 0.6.15 для проверки — Ожидает
-  - Git Commit: [PENDING] release: build Web Pilot 0.6.15
+- [DONE] T006: Собрать релиз 0.6.15 для проверки — Завершено
+  - Git Commit: [DONE] release: build Web Pilot 0.6.15
   - Reference: scope-015 / T006 / implementation
   - Файлы: package.json, package-lock.json, docs/WORKFLOW_START.md, docs/PRODUCT.md, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 
