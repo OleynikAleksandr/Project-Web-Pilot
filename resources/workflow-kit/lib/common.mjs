@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 
-export const VERSION = '1.2.0';
+export const VERSION = '1.3.0';
 export const PLAN = '.harness/plans/todo-plan.md';
 export const CONFIG = '.harness/workflow.json';
 export const MANIFEST = '.harness/kit-manifest.json';

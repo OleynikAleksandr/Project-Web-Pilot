@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 437,
+  "plan_revision": 440,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-project-continuity-021",
@@ -39,7 +39,8 @@
       "tests/workflow-kit-recovery.test.mjs",
       "tests/workflow-kit-source.test.mjs",
       "package.json",
-      "package-lock.json"
+      "package-lock.json",
+      "resources/workspace-setup-worker.mjs"
     ],
     "documentation_paths": [
       ".harness/kit/WORKFLOW.md",
@@ -58,7 +59,7 @@
       "docs/PRODUCT.md",
       "docs/VERIFICATION.md"
     ],
-    "max_functional_files_per_task": 6
+    "max_functional_files_per_task": 7
   },
   "baseline_commit": "f19b4d9afed1f56cd92e81f59625364b588226b6",
   "current_task_id": null,
@@ -194,7 +195,8 @@
         ".harness/kit/lib/installation-files.mjs",
         "resources/workflow-kit/lib/common.mjs",
         "resources/workflow-kit/lib/installer.mjs",
-        "resources/workflow-kit/lib/installation-files.mjs"
+        "resources/workflow-kit/lib/installation-files.mjs",
+        "resources/workspace-setup-worker.mjs"
       ],
       "documentation_paths": [],
       "verification_ids": [],
@@ -205,8 +207,8 @@
         "Версия Workflow Kit повышена; 1.2.0 поддерживается как безопасный источник upgrade; fresh install создаёт универсальные overview/module/index документы и NONE plan с постоянной навигацией."
       ],
       "expected_commit_message": "feat(workflow): выпустить kit continuity",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workflow-project-continuity-021",
         "task_id": "T004",
@@ -355,7 +357,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-project-continuity-021
 Current Task: нет
-Revision: 437
+Revision: 440
 
 ## Цель
 
@@ -383,10 +385,10 @@ Revision: 437
   - Git Commit: [DONE] feat(workflow): завершать scope через документацию
   - Reference: workflow-project-continuity-021 / T003 / implementation
   - Файлы: .harness/kit/lib/transaction.mjs, .harness/kit/lib/git-hooks.mjs, .harness/kit/lib/recovery.mjs, resources/workflow-kit/lib/transaction.mjs, resources/workflow-kit/lib/git-hooks.mjs, resources/workflow-kit/lib/recovery.mjs
-- [TODO] T004: Обновить Workflow Kit и миграцию — Ожидает
-  - Git Commit: [PENDING] feat(workflow): выпустить kit continuity
+- [DONE] T004: Обновить Workflow Kit и миграцию — Завершено
+  - Git Commit: [DONE] feat(workflow): выпустить kit continuity
   - Reference: workflow-project-continuity-021 / T004 / implementation
-  - Файлы: .harness/kit/lib/common.mjs, .harness/kit/lib/installer.mjs, .harness/kit/lib/installation-files.mjs, resources/workflow-kit/lib/common.mjs, resources/workflow-kit/lib/installer.mjs, resources/workflow-kit/lib/installation-files.mjs
+  - Файлы: .harness/kit/lib/common.mjs, .harness/kit/lib/installer.mjs, .harness/kit/lib/installation-files.mjs, resources/workflow-kit/lib/common.mjs, resources/workflow-kit/lib/installer.mjs, resources/workflow-kit/lib/installation-files.mjs, resources/workspace-setup-worker.mjs
 - [TODO] T005: Обновить шаблоны и инструкции — Ожидает
   - Git Commit: [PENDING] docs(workflow): обновить обязательный шаблон
   - Reference: workflow-project-continuity-021 / T005 / implementation

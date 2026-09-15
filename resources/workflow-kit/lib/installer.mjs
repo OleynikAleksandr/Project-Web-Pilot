@@ -3,7 +3,7 @@ import path from 'node:path';
 import { VERSION, MANIFEST, PLAN, CONFIG, check, hash, id, json, readJSON, atomic, safePath, errorResult } from './common.mjs';
 import { git, run, repoRoot, head, allChanges, identityReady, localPath } from './git.mjs';
 import { status } from './actions.mjs';
-import { readPlan } from './plan.mjs';
+import { readPlan, emptyPlan, writePlan } from './plan.mjs';
 import { journal } from './validate.mjs';
 import { commitCandidate, locked } from './transaction.mjs';
 import { payload, hooksDirectory, hookContent, installationManifest, HOOK_COMMAND, BLOCK_START, BLOCK_END, MD_START, MD_END } from './installation-files.mjs';
@@ -11,7 +11,25 @@ import { prepareRuntime, launcherCommand, windows } from './platform.mjs';
 
 const hookNames = ['pre-commit', 'commit-msg', 'post-commit', 'pre-push'];
 const hookName = entry => path.posix.basename(entry.path.replaceAll('\\', '/'));
-const upgradeFrom = new Set(['1.1.0']);
+const upgradeFrom = new Set(['1.1.0', '1.2.0']);
+function migrateNonePlanForContinuity(root) {
+  const file = path.join(root, PLAN);
+  if (!fs.existsSync(file)) return false;
+  const text = fs.readFileSync(file, 'utf8');
+  const match = text.match(/<!-- workflow-state:begin -->\s*```json\s*([\s\S]*?)```\s*<!-- workflow-state:end -->/);
+  let current;
+  try { current = JSON.parse(match?.[1] ?? ''); } catch { return false; }
+  if (current?.schema_version !== 1 || current.execution_scope_status !== 'NONE') return false;
+  const required = new Set(current.context_pack?.documents?.filter(doc => doc.required).map(doc => doc.path) ?? []);
+  if (['docs/architecture/OVERVIEW.md', 'docs/MODULES.md', 'docs/DOCUMENTATION_INDEX.md'].every(name => required.has(name))) return false;
+  const next = emptyPlan(typeof current.project_name === 'string' && current.project_name ? current.project_name : path.basename(root));
+  next.project_id = current.project_id;
+  next.plan_revision = Number.isSafeInteger(current.plan_revision) ? current.plan_revision + 1 : 1;
+  if (typeof current.archived_scope_id === 'string' && current.archived_scope_id) next.archived_scope_id = current.archived_scope_id;
+  if (Array.isArray(current.user_decisions)) next.user_decisions = current.user_decisions;
+  writePlan(root, next);
+  return true;
+}
 function sectionBounds(text, start, end) {
   const i = text.indexOf(start), j = text.indexOf(end, i + start.length);
   check(i >= 0 && j >= i, 'MODIFIED_INTEGRATION', 'Управляемая секция отсутствует; автоматическое обновление остановлено.');
@@ -169,6 +187,7 @@ function upgradeInstallation(root, preview) {
         replacements.set(name, manifestEntry({ ...entry, content: current, original_hash: hash(current), hash: hash(current), existed: true }));
       }
     }
+    if (migrateNonePlanForContinuity(root)) changed.push(PLAN);
     const kept = old.files.filter(e => !replacements.has(e.path));
     const metadata = { ...old, version: VERSION, upgraded_from: old.version, upgraded_at: new Date().toISOString(), files: [...kept, ...replacements.values()] };
     delete metadata.installed_at; metadata.installed_at = new Date().toISOString();
