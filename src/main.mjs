@@ -134,14 +134,14 @@ function closeSettings() {
 
 function publicError(error) { return { code: error.code ?? 'APP_ERROR', message: String(error.message ?? error).slice(0, 700) }; }
 function projectedArchives() {
-  return store.snapshot().projects.filter(project => project.archivedAt).map(({ workspace, projectId, name, archivedAt, sessions }) => ({
-    workspace, projectId, name, archivedAt, sessionCount: sessions.length, deletionPending: deletion?.isPending(workspace) ?? false,
+  return store.snapshot().projects.filter(project => project.archivedAt).map(({ workspace, projectId, name, displayName, archivedAt, sessions }) => ({
+    workspace, projectId, name: displayName || name, archivedAt, sessionCount: sessions.length, deletionPending: deletion?.isPending(workspace) ?? false,
   }));
 }
 function projectedSessionArchives() {
   return store.snapshot().projects.filter(project => !project.archivedAt).flatMap(project => project.sessions
     .filter(session => session.archivedAt)
-    .map((session, index) => ({ workspace: project.workspace, projectId: project.projectId, projectName: project.name,
+    .map((session, index) => ({ workspace: project.workspace, projectId: project.projectId, projectName: project.displayName || project.name,
       sessionId: session.sessionId, title: session.title || `Сессия ${index + 1}`, experience: session.experience,
       chatUrl: session.chatUrl, archivedAt: session.archivedAt, createdAt: session.createdAt })));
 }
@@ -159,8 +159,8 @@ function snapshot() {
   const selected = saved && { ...saved, attempt: saved.attempt && { protocol: saved.attempt.protocol,
     requestId: saved.attempt.requestId, state: saved.attempt.state }, receipt: undefined,
     ...(info?.workspace === saved.workspace ? info : {}) };
-  return { projects: store.snapshot().projects.filter(p => !p.archivedAt).map(({ workspace, projectId, name, selectedSessionId, expanded, sessions }) => ({
-    workspace, projectId, name, selectedSessionId, expanded,
+  return { projects: store.snapshot().projects.filter(p => !p.archivedAt).map(({ workspace, projectId, name, displayName, selectedSessionId, expanded, sessions }) => ({
+    workspace, projectId, name: displayName || name, selectedSessionId, expanded,
     sessions: sessions.filter(session => !session.archivedAt).map(({ sessionId, experience, chatUrl, title, createdAt }) => ({ sessionId, experience, chatUrl, title, createdAt })),
   })),
     archives: projectedArchives(), settings: settingsState,
@@ -471,6 +471,14 @@ function registerIpc() {
     if (!project || project.archivedAt) throw new Error('Выберите активный проект.');
     await clipboard.writeText(project.workspace);
     return project.workspace;
+  });
+  registerAction('pilot:rename-project', async input => {
+    if (typeof input?.workspace !== 'string') throw new Error('Выберите активный проект.');
+    return store.setProjectDisplayName(input.workspace, input.name);
+  });
+  registerAction('pilot:rename-session', async input => {
+    if (typeof input?.workspace !== 'string' || typeof input?.sessionId !== 'string') throw new Error('Выберите сессию проекта.');
+    return store.renameSession(input.workspace, input.sessionId, input.name);
   });
   registerAction('pilot:accept-plan', async () => {
     const current = store.selected();

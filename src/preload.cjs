@@ -8,6 +8,8 @@ contextBridge.exposeInMainWorld('webPilot', Object.freeze({
   configureWindowsTunnel: () => ipcRenderer.invoke('pilot:configure-windows-tunnel'),
   refreshWindowsRuntime: () => ipcRenderer.invoke('pilot:refresh-windows-runtime'),
   copyWorkspacePath: workspace => ipcRenderer.invoke('pilot:copy-workspace-path', workspace),
+  renameProject: (workspace, name) => ipcRenderer.invoke('pilot:rename-project', { workspace, name }),
+  renameSession: (workspace, sessionId, name) => ipcRenderer.invoke('pilot:rename-session', { workspace, sessionId, name }),
   acceptPlan: () => ipcRenderer.invoke('pilot:accept-plan'),
   archiveProject: workspace => ipcRenderer.invoke('pilot:archive-project', workspace),
   archiveSession: (workspace, sessionId) => ipcRenderer.invoke('pilot:archive-session', { workspace, sessionId }),

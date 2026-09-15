@@ -339,3 +339,8 @@ CDP подключается на пустой служебной страниц
 ### Persisted naming model — scope 013 / T001
 
 Project record хранит optional `displayName` отдельно от канонического `name`, а session — optional `titleSource=page|manual|scope`; проект также запоминает `lastNamedScopeId`. Старые schema v5 записи остаются валидными без миграции. Page title обновляет только fallback-имя, ручное и scope-имя защищены. `applyScopeTitle` атомарно закрепляет новый scope за текущей session и не переносит тот же scope на другую session после переключения.
+
+
+### Ручное переименование в sidebar — scope 013 / T002
+
+Локальный preload публикует только две узкие команды `renameProject(workspace,name)` и `renameSession(workspace,sessionId,name)` для sidebar origin. Удалённый ChatGPT Web их не получает. В project menu команда `Переименовать` находится рядом с пользовательскими действиями над проектом; в session menu — перед архивированием. Project snapshot и списки архива показывают `displayName || canonical name`; каноническая идентичность recovery не меняется.

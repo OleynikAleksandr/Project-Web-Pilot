@@ -142,10 +142,16 @@ function render(state) {
       const newWork = document.createElement('button'); newWork.className = 'secondary new-project-work'; newWork.textContent = 'Новый Work';
       newWork.addEventListener('click', () => { clearTimeout(workspaceClickTimer); menu.hidden = true; menuButton.setAttribute('aria-expanded', 'false'); action('newSession', project.workspace, 'work'); });
       const separator = document.createElement('div'); separator.className = 'menu-separator'; separator.setAttribute('aria-hidden', 'true');
+      const rename = document.createElement('button'); rename.className = 'secondary rename-project'; rename.textContent = 'Переименовать';
+      rename.addEventListener('click', () => {
+        clearTimeout(workspaceClickTimer); menu.hidden = true; menuButton.setAttribute('aria-expanded', 'false');
+        const value = window.prompt('Название проекта в Web Pilot', project.name);
+        if (value !== null) action('renameProject', project.workspace, value);
+      });
       const copyPath = document.createElement('button'); copyPath.className = 'secondary copy-workspace-path'; copyPath.textContent = 'Скопировать полный путь';
       copyPath.addEventListener('click', () => { clearTimeout(workspaceClickTimer); menu.hidden = true; menuButton.setAttribute('aria-expanded', 'false'); action('copyWorkspacePath', project.workspace); });
       const archive = document.createElement('button'); archive.className = 'secondary archive-project'; archive.textContent = 'Перенести в архив';
-      archive.addEventListener('click', () => { clearTimeout(workspaceClickTimer); action('archiveProject', project.workspace); }); menu.append(newChat, newWork, separator, copyPath, archive);
+      archive.addEventListener('click', () => { clearTimeout(workspaceClickTimer); action('archiveProject', project.workspace); }); menu.append(newChat, newWork, separator, rename, copyPath, archive);
       menuButton.addEventListener('click', () => { clearTimeout(workspaceClickTimer); menu.hidden = !menu.hidden; menuButton.setAttribute('aria-expanded', String(!menu.hidden)); });
       row.append(arrow, button, menuButton); item.append(row, menu);
       const sessions = document.createElement('ul'); sessions.className = 'sessions'; sessions.hidden = !project.expanded;
@@ -170,9 +176,15 @@ function render(state) {
         const menuButton = document.createElement('button'); menuButton.className = 'icon-button session-menu-button'; menuButton.textContent = '⋯';
         menuButton.setAttribute('aria-label', `Меню сессии ${session.title || index + 1}`); menuButton.setAttribute('aria-expanded', 'false');
         const menu = document.createElement('div'); menu.className = 'session-menu'; menu.hidden = true;
+        const rename = document.createElement('button'); rename.className = 'secondary rename-session'; rename.textContent = 'Переименовать';
+        rename.addEventListener('click', () => {
+          menu.hidden = true; menuButton.setAttribute('aria-expanded', 'false');
+          const value = window.prompt('Название сессии', session.title || `Сессия ${index + 1}`);
+          if (value !== null) action('renameSession', project.workspace, session.sessionId, value);
+        });
         const archive = document.createElement('button'); archive.className = 'secondary archive-session'; archive.textContent = 'Перенести в архив';
         archive.addEventListener('click', () => { menu.hidden = true; menuButton.setAttribute('aria-expanded', 'false'); action('archiveSession', project.workspace, session.sessionId); });
-        menu.append(archive);
+        menu.append(rename, archive);
         menuButton.addEventListener('click', event => { event.stopPropagation(); menu.hidden = !menu.hidden; menuButton.setAttribute('aria-expanded', String(!menu.hidden)); });
         row.append(choice, menuButton); entry.append(row, menu); sessions.append(entry);
       }

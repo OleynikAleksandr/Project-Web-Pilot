@@ -646,3 +646,8 @@ macOS arm64 и Windows x64 собираются из одного source tree с
 ## Локальные имена проекта и session — scope 013 / T001
 
 WorkspaceSessions не меняет идентичность Workflow Kit ради пользовательского переименования. Канонические `workspace/projectId/name` продолжают приходить из plan, а `displayName` является отдельным persisted alias оболочки. Session title получил источник `page|manual|scope`; page title — только fallback. `lastNamedScopeId` хранится на project record и обеспечивает одно автоматическое именование на scope. Schema остаётся v5: новые поля optional и старые записи читаются без миграции.
+
+
+## Rename IPC и sidebar — scope 013 / T002
+
+Ручное переименование проходит через существующий `assertLocalSender` и два специализированных IPC channel; универсального write/shell API не добавлено. Remote WebContents ChatGPT не имеет preload этих команд. Renderer использует нативный prompt только для ввода строки, после чего main процесс валидирует workspace/session и сохраняет нормализованное значение через WorkspaceSessions. UI получает alias уже из безопасного snapshot.
