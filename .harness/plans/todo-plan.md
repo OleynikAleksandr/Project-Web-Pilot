@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 328,
+  "plan_revision": 330,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "next-modifications-discussion-012",
@@ -223,8 +223,8 @@
         "Актуальность и полнота канонического пакета сохранены; результат проверен."
       ],
       "expected_commit_message": "docs: согласовать ускорение подготовки контекста",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "next-modifications-discussion-012",
         "task_id": "T005",
@@ -362,7 +362,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: next-modifications-discussion-012
 Current Task: нет
-Revision: 328
+Revision: 330
 
 ## Цель
 
@@ -395,8 +395,8 @@ Revision: 328
   - Git Commit: [DONE] chore: собрать Web Pilot 0.6.9 со счётчиком токенов
   - Reference: next-modifications-discussion-012 / T004 / implementation
   - Файлы: package.json, package-lock.json, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/modules/workspace-sessions.md
-- [TODO] T005: Зафиксировать анализ и контракт предварительной подготовки контекста — Ожидает
-  - Git Commit: [PENDING] docs: согласовать ускорение подготовки контекста
+- [DONE] T005: Зафиксировать анализ и контракт предварительной подготовки контекста — Завершено
+  - Git Commit: [DONE] docs: согласовать ускорение подготовки контекста
   - Reference: next-modifications-discussion-012 / T005 / implementation
   - Файлы: docs/modules/workflow-kit-recovery.md, docs/CONTEXT_DELIVERY.md, docs/DECISIONS.md
 - [TODO] T006: Добавить проверяемый кэш полного recovery packet — Ожидает
