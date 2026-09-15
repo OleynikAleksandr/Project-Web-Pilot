@@ -722,3 +722,7 @@ Windows-only исправление WorkspaceSetup изолирует NODE_OPTIO
 ## Release 0.6.18 — scope chat-autoscroll-020 / T002
 
 macOS arm64 и Windows x64 используют один модуль conversation auto-scroll и одну main-process интеграцию. Оба `app.asar` содержат версию 0.6.18 и побайтно совпадающую с source копию `src/chatgpt-auto-scroll.mjs`; platform-specific runtime packaging не меняет semantics прокрутки.
+
+## Restart correction — scope chat-autoscroll-020 / T003
+
+Первоначальный controller трактовал любое `scroll` away from bottom как ручное действие. Это неверно при startup: ChatGPT может асинхронно восстановить сохранённую позицию уже после `did-finish-load`. Версия controller v2 отделяет user scroll intent от самого scroll event. Non-bottom scroll без предшествующего wheel/keyboard/touch/pointer gesture не снимает follow и планирует возврат вниз; ручной gesture сохраняет suspended semantics. Resume при Send и смене route очищает прежнее intent-window.

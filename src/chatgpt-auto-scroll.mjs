@@ -4,7 +4,7 @@ const CHATGPT_ORIGIN = 'https://chatgpt.com';
 export function installAutoScrollPage({ forceFollow = false } = {}) {
   const stateKey = '__webPilotConversationAutoScroll';
   const previous = window[stateKey];
-  if (previous?.version === 1 && typeof previous.refresh === 'function') {
+  if (previous?.version === 2 && typeof previous.refresh === 'function') {
     if (forceFollow) previous.resume();
     else previous.refresh();
     return previous.snapshot();
@@ -20,6 +20,7 @@ export function installAutoScrollPage({ forceFollow = false } = {}) {
   let scheduled = false;
   let observer = null;
   let routeKey = location.pathname;
+  let userScrollIntentUntil = 0;
 
   const rootScroller = () => document.scrollingElement || document.documentElement;
   const maxScrollTop = element => Math.max(0, (element?.scrollHeight ?? 0) - (element?.clientHeight ?? 0));
@@ -43,9 +44,20 @@ export function installAutoScrollPage({ forceFollow = false } = {}) {
     return nearestScroller(lastMessage) || nearestScroller(editor) || rootScroller();
   };
 
+  const markUserScrollIntent = () => { userScrollIntentUntil = Date.now() + 1500; };
+  const hasUserScrollIntent = () => Date.now() <= userScrollIntentUntil;
   const onScroll = () => {
     if (!target) return;
-    following = atBottom(target);
+    if (atBottom(target)) {
+      following = true;
+      return;
+    }
+    if (hasUserScrollIntent()) {
+      following = false;
+      return;
+    }
+    // ChatGPT may restore a remembered scrollTop after load. That is not a request to read history.
+    if (following) scheduleFollow();
   };
   const bindTarget = () => {
     const next = findTarget();
@@ -73,6 +85,7 @@ export function installAutoScrollPage({ forceFollow = false } = {}) {
     requestAnimationFrame(() => requestAnimationFrame(scrollNow));
   };
   const resume = () => {
+    userScrollIntentUntil = 0;
     following = true;
     bindTarget();
     scheduleFollow();
@@ -81,6 +94,7 @@ export function installAutoScrollPage({ forceFollow = false } = {}) {
     const nextRouteKey = location.pathname;
     if (nextRouteKey !== routeKey) {
       routeKey = nextRouteKey;
+      userScrollIntentUntil = 0;
       following = true;
     }
     bindTarget();
@@ -94,8 +108,20 @@ export function installAutoScrollPage({ forceFollow = false } = {}) {
   };
   const onKeyDown = event => {
     if (event.key === 'Enter' && !event.shiftKey && !event.altKey && !event.ctrlKey && !event.metaKey
-        && !event.isComposing && isComposerTarget(event.target)) resume();
+        && !event.isComposing && isComposerTarget(event.target)) {
+      resume();
+      return;
+    }
+    if (!isComposerTarget(event.target)
+        && ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '].includes(event.key)) markUserScrollIntent();
   };
+  const onWheel = () => markUserScrollIntent();
+  const onTouch = () => markUserScrollIntent();
+  const onPointerDown = event => {
+    const element = bindTarget();
+    if (element && (event.target === element || element.contains?.(event.target))) markUserScrollIntent();
+  };
+  const onPointerMove = event => { if (event.buttons) markUserScrollIntent(); };
   const onSubmit = event => {
     if (event.target?.querySelector?.(editorSelector)) resume();
   };
@@ -108,11 +134,16 @@ export function installAutoScrollPage({ forceFollow = false } = {}) {
   observer.observe(document.documentElement, { childList: true, subtree: true, characterData: true });
   document.addEventListener('click', onClick, true);
   document.addEventListener('keydown', onKeyDown, true);
+  document.addEventListener('wheel', onWheel, { capture: true, passive: true });
+  document.addEventListener('touchstart', onTouch, { capture: true, passive: true });
+  document.addEventListener('touchmove', onTouch, { capture: true, passive: true });
+  document.addEventListener('pointerdown', onPointerDown, true);
+  document.addEventListener('pointermove', onPointerMove, true);
   document.addEventListener('submit', onSubmit, true);
   window.addEventListener('resize', onResize, { passive: true });
 
   const controller = {
-    version: 1,
+    version: 2,
     resume,
     refresh,
     snapshot,
@@ -121,6 +152,11 @@ export function installAutoScrollPage({ forceFollow = false } = {}) {
       target?.removeEventListener('scroll', onScroll);
       document.removeEventListener('click', onClick, true);
       document.removeEventListener('keydown', onKeyDown, true);
+      document.removeEventListener('wheel', onWheel, true);
+      document.removeEventListener('touchstart', onTouch, true);
+      document.removeEventListener('touchmove', onTouch, true);
+      document.removeEventListener('pointerdown', onPointerDown, true);
+      document.removeEventListener('pointermove', onPointerMove, true);
       document.removeEventListener('submit', onSubmit, true);
       window.removeEventListener('resize', onResize);
       if (window[stateKey] === controller) delete window[stateKey];

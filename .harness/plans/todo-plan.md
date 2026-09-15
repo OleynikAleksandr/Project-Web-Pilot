@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 423,
+  "plan_revision": 425,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "chat-autoscroll-020",
@@ -157,8 +157,8 @@
         "Regression test явно воспроизводит startup restore scroll без пользовательского события."
       ],
       "expected_commit_message": "fix(chat): отличать ручную прокрутку от восстановления позиции",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "chat-autoscroll-020",
         "task_id": "T003",
@@ -222,7 +222,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: chat-autoscroll-020
 Current Task: нет
-Revision: 423
+Revision: 425
 
 ## Цель
 
@@ -247,8 +247,8 @@ Revision: 423
   - Git Commit: [DONE] build: подготовить релиз автопрокрутки
   - Reference: chat-autoscroll-020 / T002 / implementation
   - Файлы: package.json, package-lock.json, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T003: Исправить автопрокрутку после повторного открытия — Ожидает
-  - Git Commit: [PENDING] fix(chat): отличать ручную прокрутку от восстановления позиции
+- [DONE] T003: Исправить автопрокрутку после повторного открытия — Завершено
+  - Git Commit: [DONE] fix(chat): отличать ручную прокрутку от восстановления позиции
   - Reference: chat-autoscroll-020 / T003 / implementation
   - Файлы: src/chatgpt-auto-scroll.mjs, tests/chatgpt-auto-scroll.test.mjs, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T004: Пересобрать исправленный релиз 0.6.18 — Ожидает

@@ -731,3 +731,7 @@ JSDOM regression исполняет тот же renderer script, который 
 `npm run build` успешно создал macOS arm64 и Windows x64 packages; штатный `verify:win` подтвердил Windows executable и bundled runtime/Node. macOS Info.plist и `package.json` внутри обоих `app.asar` сообщают 0.6.18. `src/chatgpt-auto-scroll.mjs` внутри обоих `app.asar` совпадает с source SHA-256 `32061fd3394e170411f4b27cf626b0337c1e8962b567a24b9a3bd5b4e4f1b846`.
 
 Готовые архивы: macOS arm64 — 145174349 байт, SHA-256 `e1ec90bf798880a0f160a6cf3530f3f718626eb55fa9eadbd0edc57ce3fc3528`; Windows x64 — 317732370 байт, SHA-256 `3ae151f8df68d1304ccf0a309fb3de1dd443234c5370557f3c63f9312348e114`. Реальный аккаунт ChatGPT и нативный запуск Windows остаются пользовательской приёмкой.
+
+## Scope chat-autoscroll-020 / T003 — restart regression
+
+После пользовательской проверки добавлен отдельный regression, моделирующий позднее программное восстановление `scrollTop` после установки controller: non-bottom `scroll` без пользовательского input не переводит follow в suspended и на следующих animation frames возвращается к последнему сообщению. Отдельный table test подтверждает manual suspend после wheel/trackpad, PageUp, touch и pointer gesture. Targeted suite `node --test tests/chatgpt-auto-scroll.test.mjs` проходит 7/7.

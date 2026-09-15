@@ -39,10 +39,24 @@ test('follows new messages while the conversation is at the bottom', async () =>
   assert.equal(f.window.__webPilotConversationAutoScroll.snapshot().following, true);
 });
 
+test('programmatic startup scroll restoration does not suspend following', async () => {
+  const f = fixture();
+  f.window.eval(autoScrollPageScript({ forceFollow: true }));
+  await waitFrames(f.window);
+  assert.equal(f.scroller.scrollTop, 800);
+
+  f.scroller.scrollTop = 260;
+  f.scroller.dispatchEvent(new f.window.Event('scroll'));
+  assert.equal(f.window.__webPilotConversationAutoScroll.snapshot().following, true, 'programmatic restore must not look like manual reading');
+  await waitFrames(f.window);
+  assert.equal(f.scroller.scrollTop, 800, 'startup restore is corrected back to the latest message');
+});
+
 test('manual scroll up suspends following until the user returns to the bottom', async () => {
   const f = fixture();
   f.window.eval(autoScrollPageScript({ forceFollow: true }));
   await waitFrames(f.window);
+  f.scroller.dispatchEvent(new f.window.WheelEvent('wheel', { bubbles: true, deltaY: -120 }));
   f.scroller.scrollTop = 400;
   f.scroller.dispatchEvent(new f.window.Event('scroll'));
   assert.equal(f.window.__webPilotConversationAutoScroll.snapshot().following, false);
@@ -58,10 +72,29 @@ test('manual scroll up suspends following until the user returns to the bottom',
   assert.equal(f.scroller.scrollTop, 1000);
 });
 
+test('wheel, keyboard, touch and pointer gestures mark a scroll as manual', async () => {
+  const gestures = [
+    f => f.scroller.dispatchEvent(new f.window.WheelEvent('wheel', { bubbles: true, deltaY: -120 })),
+    f => f.window.document.body.dispatchEvent(new f.window.KeyboardEvent('keydown', { bubbles: true, key: 'PageUp' })),
+    f => f.scroller.dispatchEvent(new f.window.Event('touchstart', { bubbles: true })),
+    f => f.scroller.dispatchEvent(new f.window.Event('pointerdown', { bubbles: true })),
+  ];
+  for (const gesture of gestures) {
+    const f = fixture();
+    f.window.eval(autoScrollPageScript({ forceFollow: true }));
+    await waitFrames(f.window);
+    gesture(f);
+    f.scroller.scrollTop = 320;
+    f.scroller.dispatchEvent(new f.window.Event('scroll'));
+    assert.equal(f.window.__webPilotConversationAutoScroll.snapshot().following, false);
+  }
+});
+
 test('sending a new prompt resumes following even when history was manually scrolled up', async () => {
   const f = fixture();
   f.window.eval(autoScrollPageScript({ forceFollow: true }));
   await waitFrames(f.window);
+  f.scroller.dispatchEvent(new f.window.WheelEvent('wheel', { bubbles: true, deltaY: -120 }));
   f.scroller.scrollTop = 300;
   f.scroller.dispatchEvent(new f.window.Event('scroll'));
   assert.equal(f.window.__webPilotConversationAutoScroll.snapshot().following, false);
@@ -77,6 +110,7 @@ test('reinstall is idempotent and SPA navigation may force a fresh follow', asyn
   f.window.eval(autoScrollPageScript({ forceFollow: true }));
   await waitFrames(f.window);
   const first = f.window.__webPilotConversationAutoScroll;
+  f.scroller.dispatchEvent(new f.window.WheelEvent('wheel', { bubbles: true, deltaY: -120 }));
   f.scroller.scrollTop = 250;
   f.scroller.dispatchEvent(new f.window.Event('scroll'));
   f.window.eval(autoScrollPageScript());
