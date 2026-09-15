@@ -167,7 +167,6 @@ function snapshot() {
     archives: projectedArchives(), settings: settingsState,
     selected, context: controller?.state ?? { phase: 'selected', servicesReady: false, messageSent: false },
     contextPreparation: { busy: contextCache.building.has(saved?.workspace) },
-    contextWindow: chromiumDiagnostics?.contextObservation() ?? { status: 'unknown' },
     scopeTransition: saved?.scopeTransition?.state === 'choice' && info?.workspace === saved.workspace
       && info.scopeStatus === 'NONE' && info.scopeId === null && info.archivedScopeId === saved.scopeTransition.scopeId
       ? { workspace: saved.workspace, scopeId: saved.scopeTransition.scopeId } : null,
@@ -763,7 +762,7 @@ async function createWindow() {
   window.contentView.addChildView(sidebar); window.contentView.addChildView(browser);
   secureRemote(browser.webContents);
   chromiumDiagnostics = new ChromiumDiagnostics(browser.webContents, { file: chromiumDiagnosticsFile,
-    sampleIntervalMs: smoke ? 250 : 5000, allowFixture: smoke, onContextObservation: () => publish() });
+    sampleIntervalMs: smoke ? 250 : 5000, allowFixture: smoke });
   sidebar.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   sidebar.webContents.on('will-navigate', event => event.preventDefault());
   sidebar.webContents.on('did-finish-load', publish);

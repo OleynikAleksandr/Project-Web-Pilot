@@ -325,12 +325,11 @@ const IGNORED_CDP = new Set([
 ]);
 
 export class ChromiumDiagnostics {
-  constructor(contents, { file, maxBytes, sampleIntervalMs = 5000, allowFixture = false, onContextObservation = null } = {}) {
+  constructor(contents, { file, maxBytes, sampleIntervalMs = 5000, allowFixture = false } = {}) {
     if (!contents || !file) throw new TypeError('ChromiumDiagnostics requires contents and file');
     this.contents = contents;
     this.allowFixture = allowFixture;
     this.sampleIntervalMs = sampleIntervalMs;
-    this.onContextObservation = typeof onContextObservation === 'function' ? onContextObservation : null;
     this.log = new DiagnosticJsonl(file, { maxBytes });
     this.handlers = [];
     this.sampleTimer = null;
@@ -340,7 +339,6 @@ export class ChromiumDiagnostics {
     this.serviceResponses = new Map();
     this.modelContextLimit = null;
     this.lastContextUsage = null;
-    this.latestContextObservation = { status: 'unknown' };
     this.onDebuggerMessage = this.onDebuggerMessage.bind(this);
     this.onDebuggerDetach = this.onDebuggerDetach.bind(this);
   }
@@ -357,19 +355,6 @@ export class ChromiumDiagnostics {
     await this.sampleDom();
   }
 
-  contextObservation() {
-    return { ...this.latestContextObservation };
-  }
-
-  #setContextObservation(observation) {
-    this.latestContextObservation = observation;
-    try { this.onContextObservation?.(this.contextObservation()); } catch {}
-  }
-
-  #resetContextObservation() {
-    this.lastContextUsage = null;
-    if (this.latestContextObservation.status !== 'unknown') this.#setContextObservation({ status: 'unknown' });
-  }
 
   #on(name, handler) {
     this.contents.on(name, handler);
@@ -381,11 +366,11 @@ export class ChromiumDiagnostics {
     this.#on('did-stop-loading', () => this.log.record('webContents', 'did-stop-loading', { url: safeUrl(this.contents.getURL()) }));
     this.#on('did-finish-load', () => this.log.record('webContents', 'did-finish-load', { url: safeUrl(this.contents.getURL()) }));
     this.#on('did-navigate', (_event, url) => {
-      this.#resetContextObservation();
+      this.lastContextUsage = null;
       this.log.record('webContents', 'did-navigate', { url: safeUrl(url) });
     });
     this.#on('did-navigate-in-page', (_event, url, isMainFrame) => {
-      if (isMainFrame) this.#resetContextObservation();
+      if (isMainFrame) this.lastContextUsage = null;
       this.log.record('webContents', 'did-navigate-in-page', { url: safeUrl(url), isMainFrame });
     });
     this.#on('unresponsive', () => this.log.record('webContents', 'unresponsive'));
@@ -510,19 +495,10 @@ export class ChromiumDiagnostics {
       if (inputTokens === 0) compactSignal = 'token-reset';
       else if (inputTokens < previous.inputTokens * 0.5) compactSignal = 'token-drop';
     }
-    const observedAt = new Date().toISOString();
     const known = Number.isFinite(inputTokens) && inputTokens > 0
       && Number.isFinite(modelContextWindow) && modelContextWindow > 0;
-    if (known) {
-      this.lastContextUsage = { inputTokens, modelContextWindow, usedPercent };
-      this.#setContextObservation({
-        status: 'known', inputTokens, modelContextWindow, usedPercent,
-        source: origin, observedAt, compactSignal,
-      });
-    } else if (compactSignal) {
-      this.lastContextUsage = null;
-      this.#setContextObservation({ status: 'unknown', source: origin, observedAt, compactSignal });
-    }
+    if (known) this.lastContextUsage = { inputTokens, modelContextWindow, usedPercent };
+    else if (compactSignal) this.lastContextUsage = null;
     this.log.record('telemetry', 'context', {
       origin, ...fields, markers, presence: telemetry?.presence ?? [],
       inputTokens, modelContextWindow, usedPercent, compactSignal, telemetry,
@@ -538,9 +514,6 @@ export class ChromiumDiagnostics {
       if (service.kind === 'models') {
         this.modelContextLimit = metadata.maxTokens;
         this.log.record('telemetry', 'model-limit', { requestId, url: service.url, ...metadata });
-        if (this.latestContextObservation.status === 'unknown') {
-          this.#setContextObservation({ status: 'unknown', modelContextWindow: metadata.maxTokens, source: 'model-metadata', observedAt: new Date().toISOString() });
-        }
       } else {
         this.log.record('telemetry', 'context-truncation-state', { requestId, url: service.url, ...metadata });
       }

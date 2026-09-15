@@ -518,9 +518,8 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 2, 'Web conversation remains after archive operations');
   firstArchiveWindow.close();
 
-  await waitFor(() => sidebar.executeJavaScript('document.getElementById("context-window-value").textContent === "Ожидаем данные"'), 'unknown context window UI', snapshot);
-  assert.equal(snapshot().contextWindow.status, 'unknown');
-  assert.equal(await sidebar.executeJavaScript('document.getElementById("context-window-track").hidden'), true, 'unknown context window has no fake progress');
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("context-window-card")'), null, 'context window indicator is absent');
+  assert.equal(Object.hasOwn(snapshot(), 'contextWindow'), false, 'sidebar snapshot exposes no contextWindow state');
 
   await browser.executeJavaScript(`fetch('/backend-api/f/conversation',{method:'POST'}).then(response=>response.text())`);
   await waitFor(async () => {
@@ -528,14 +527,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
     const text = await fs.readFile(chromiumDiagnosticsFile, 'utf8');
     return text.includes('conversation-stream-inspected');
   }, 'conversation SSE diagnostics', snapshot);
-  await waitFor(() => snapshot().contextWindow.status === 'known', 'known context window state', snapshot);
-  assert.equal(snapshot().contextWindow.inputTokens, 229043);
-  assert.equal(snapshot().contextWindow.modelContextWindow, 258400);
-  assert.equal(snapshot().contextWindow.usedPercent, 88.6);
-  await waitFor(() => sidebar.executeJavaScript('document.getElementById("context-window-value").dataset.known === "true"'), 'known context window UI', snapshot);
-  assert.equal(await sidebar.executeJavaScript('document.getElementById("context-window-value").textContent'), '229K / 258K · 88,6%');
-  assert.equal(await sidebar.executeJavaScript('document.getElementById("context-window-track").hidden'), false);
-  assert.equal(await sidebar.executeJavaScript('document.getElementById("context-window-track").getAttribute("aria-valuenow")'), '88.6');
+  assert.equal(Object.hasOwn(snapshot(), 'contextWindow'), false, 'telemetry does not republish contextWindow state');
   await chromiumDiagnostics.sampleDom(); await chromiumDiagnostics.flush();
   const diagnosticLines = (await fs.readFile(chromiumDiagnosticsFile, 'utf8')).trim().split('\n').map(line => JSON.parse(line));
   assert.ok(diagnosticLines.some(entry => entry.source === 'diagnostics' && entry.event === 'session-start'), 'diagnostic session is logged');
@@ -625,7 +617,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   const result = { newestSessionFirst: true, projectSelectsNewest: true, threeSessionViewport: true, sessionScrollPreserved: true, visibleSessionScrollbar: true, nativeProjectsDisclosure: true, treePopover: true, treeScreenshots, scopeContinuationChat: true, scopeContinuationWork: true, scopeContinuationRestart: true, scopeContinuationNoDuplicates: true,
     transitionScreenshot: path.join(dataDir, 'next-session-choice.png'), mode: 'isolated-fixture', electron: process.versions.electron, chromium: process.versions.chrome,
     views: window.contentView.children.length, secureRemote: true, sidebarIpc: true, archiveRestore: true, archiveRestart: true, deleteCancel: true, localDeletion: true, cloudChatPreserved: true, workspaceCreation: true, workspaceValidation: true, cancelPreservesSession: true, startupMessages: 4, canonicalPacketLoads: packetLoads, recoveryCache: true, operationProgress: true, progressScreenshot: path.join(dataDir, 'progress-ui.png'),
-    tokenCounterRemoved: true, projectRename: true, sessionRename: true, scopeSessionRename: true, restartKeepsSession: true, newChatCreatesSession: true, sessionTree: true, selectsEarlierSession: true, compactWorkspaceDetails: true, projectPathClipboard: true, planAcceptanceButton: true, chromiumDiagnostics: true, contextWindowIndicator: true, resizableSidebar: true, separateArchiveWindow: true, archiveMultiSelect: true, archiveForgetKeepsFolder: true, shellTheme: true, nativeTitlebarTheme: nativeTheme.shouldUseDarkColors, toolCallFilter: true, microphonePermission: true, geolocationPermission: true, cameraPermission: false, fullContextBytes: Buffer.byteLength(fixtureContext), liveChatGPT: false, agentToolsRequired: false };
+    tokenCounterRemoved: true, projectRename: true, sessionRename: true, scopeSessionRename: true, restartKeepsSession: true, newChatCreatesSession: true, sessionTree: true, selectsEarlierSession: true, compactWorkspaceDetails: true, projectPathClipboard: true, planAcceptanceButton: true, chromiumDiagnostics: true, contextWindowIndicatorRemoved: true, resizableSidebar: true, separateArchiveWindow: true, archiveMultiSelect: true, archiveForgetKeepsFolder: true, shellTheme: true, nativeTitlebarTheme: nativeTheme.shouldUseDarkColors, toolCallFilter: true, microphonePermission: true, geolocationPermission: true, cameraPermission: false, fullContextBytes: Buffer.byteLength(fixtureContext), liveChatGPT: false, agentToolsRequired: false };
   await fs.writeFile(path.join(dataDir, 'smoke-result.json'), JSON.stringify(result, null, 2));
   console.log(JSON.stringify(result));
 }
