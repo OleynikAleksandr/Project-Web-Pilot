@@ -188,7 +188,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   const originalPlanText = await fs.readFile(planFile, 'utf8');
   const block = originalPlanText.match(/<!-- workflow-state:begin -->\s*```json\s*([\s\S]*?)```\s*<!-- workflow-state:end -->/);
   const activePlan = JSON.parse(block[1]);
-  Object.assign(activePlan, { plan_revision: activePlan.plan_revision + 1, scope_id: 'fixture-plan-ui', execution_scope_status: 'ACTIVE',
+  Object.assign(activePlan, { plan_revision: activePlan.plan_revision + 1, scope_id: 'fixture-plan-ui', objective: 'Автоимя scope fixture', execution_scope_status: 'ACTIVE',
     delivery_status: 'IN_PROGRESS', current_task_id: 'T002', archived_scope_id: undefined, tasks: [
       { id: 'T001', title: 'Подготовить модель', implementation_status: 'DONE', commit_status: 'DONE' },
       { id: 'T002', title: 'Сделать интерфейс', implementation_status: 'IN_PROGRESS', commit_status: 'PENDING' },
@@ -198,6 +198,8 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   const writeFixturePlan = async plan => fs.writeFile(planFile, '<!-- workflow-state:begin -->\n```json\n' + JSON.stringify(plan) + '\n```\n<!-- workflow-state:end -->');
   await writeFixturePlan(activePlan); controller.attach(store.selected()); await controller.tick();
   await waitFor(() => sidebar.executeJavaScript('document.getElementById("plan-status").textContent === "В работе · 1 из 3 выполнено"'), 'working plan UI', snapshot);
+  await waitFor(() => store.selected()?.title === 'Автоимя scope fixture', 'scope automatically names current session', snapshot);
+  assert.equal(store.selected().titleSource, 'scope');
   assert.deepEqual(await sidebar.executeJavaScript(`Array.from(document.querySelectorAll('#plan-tasks .plan-task')).map(e=>({status:e.dataset.status,title:e.querySelector('strong').textContent,mark:e.querySelector('.plan-task-state').textContent}))`), [
     { status: 'done', title: 'Подготовить модель', mark: '✓' },
     { status: 'current', title: 'Сделать интерфейс', mark: '●' },
@@ -261,7 +263,16 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await controller.contextCache.load(workspace);
   const warmPacketLoads = packetLoads;
   assert.deepEqual(await sidebar.executeJavaScript(`(() => { document.querySelector('.project-menu-button').click(); return Array.from(document.querySelectorAll('.project-menu button')).map(button => button.textContent); })()`),
-    ['Новый Chat', 'Новый Work', 'Скопировать полный путь', 'Перенести в архив']);
+    ['Новый Chat', 'Новый Work', 'Переименовать', 'Скопировать полный путь', 'Перенести в архив']);
+  await sidebar.executeJavaScript(`window.prompt=()=>"Проект Smoke Rename"; document.querySelector('.project-menu-button').click(); document.querySelector('.rename-project').click()`);
+  await waitFor(() => snapshot().projects[0].name === 'Проект Smoke Rename', 'project rename menu IPC', snapshot);
+  assert.equal(store.project(workspace).name, 'Тестовый проект с пробелами', 'project rename keeps canonical workflow name');
+  await sidebar.executeJavaScript(`window.prompt=()=>"Сессия Smoke Rename"; { const li=document.querySelector('[data-session-id="${first.sessionId}"]').closest('li'); li.querySelector('.session-menu-button').click(); li.querySelector('.rename-session').click(); }`);
+  await waitFor(() => store.selected()?.title === 'Сессия Smoke Rename', 'session rename menu IPC', snapshot);
+  assert.equal(store.selected().titleSource, 'manual');
+  await browser.executeJavaScript(`document.title='Поздний заголовок ChatGPT'`);
+  await new Promise(resolve => setTimeout(resolve, 150));
+  assert.equal(store.selected().title, 'Сессия Smoke Rename', 'page title cannot overwrite manual session name');
   await sidebar.executeJavaScript('document.querySelector(".new-project-chat").click()');
   await waitFor(() => store.selected()?.sessionId !== first.sessionId && snapshot().context.phase === 'delivered', 'new Chat via project menu IPC', snapshot);
   assert.equal(packetLoads, warmPacketLoads, 'packet loads at line 289');
@@ -317,7 +328,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await waitFor(() => sessionArchive.executeJavaScript('typeof window.webPilotArchive === "object"'), 'session archive preload ready', snapshot);
   await sessionArchive.executeJavaScript('document.getElementById("tab-sessions").click()');
   await waitFor(() => sessionArchive.executeJavaScript('document.querySelectorAll(".item").length === 1'), 'archived session visible', snapshot);
-  assert.ok(await sessionArchive.executeJavaScript('document.querySelector(".item").textContent.includes("Тестовый проект с пробелами")'));
+  assert.ok(await sessionArchive.executeJavaScript('document.querySelector(".item").textContent.includes("Проект Smoke Rename")'));
   assert.ok(await sessionArchive.executeJavaScript('document.querySelector(".item").textContent.includes("Chat")'));
   await sessionArchive.executeJavaScript('document.querySelector(".item").click(); document.getElementById("restore-sessions").click()');
   await waitFor(() => !store.snapshot().projects[0].sessions.find(session => session.sessionId === second.sessionId)?.archivedAt, 'restore archived session', snapshot);
@@ -484,7 +495,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
 
   const result = { mode: 'isolated-fixture', electron: process.versions.electron, chromium: process.versions.chrome,
     views: window.contentView.children.length, secureRemote: true, sidebarIpc: true, archiveRestore: true, archiveRestart: true, deleteCancel: true, localDeletion: true, cloudChatPreserved: true, workspaceCreation: true, workspaceValidation: true, cancelPreservesSession: true, startupMessages: 4, canonicalPacketLoads: packetLoads, recoveryCache: true, operationProgress: true, progressScreenshot: path.join(dataDir, 'progress-ui.png'),
-    tokenCounterRemoved: true, restartKeepsSession: true, newChatCreatesSession: true, sessionTree: true, selectsEarlierSession: true, compactWorkspaceDetails: true, projectPathClipboard: true, planAcceptanceButton: true, chromiumDiagnostics: true, contextWindowIndicator: true, resizableSidebar: true, separateArchiveWindow: true, archiveMultiSelect: true, archiveForgetKeepsFolder: true, shellTheme: true, nativeTitlebarTheme: nativeTheme.shouldUseDarkColors, toolCallFilter: true, microphonePermission: true, geolocationPermission: true, cameraPermission: false, fullContextBytes: Buffer.byteLength(fixtureContext), liveChatGPT: false, agentToolsRequired: false };
+    tokenCounterRemoved: true, projectRename: true, sessionRename: true, scopeSessionRename: true, restartKeepsSession: true, newChatCreatesSession: true, sessionTree: true, selectsEarlierSession: true, compactWorkspaceDetails: true, projectPathClipboard: true, planAcceptanceButton: true, chromiumDiagnostics: true, contextWindowIndicator: true, resizableSidebar: true, separateArchiveWindow: true, archiveMultiSelect: true, archiveForgetKeepsFolder: true, shellTheme: true, nativeTitlebarTheme: nativeTheme.shouldUseDarkColors, toolCallFilter: true, microphonePermission: true, geolocationPermission: true, cameraPermission: false, fullContextBytes: Buffer.byteLength(fixtureContext), liveChatGPT: false, agentToolsRequired: false };
   await fs.writeFile(path.join(dataDir, 'smoke-result.json'), JSON.stringify(result, null, 2));
   console.log(JSON.stringify(result));
 }

@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 367,
+  "plan_revision": 369,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "project-session-renaming-013",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Переименование проектов и сессий",
   "acceptance_criteria": [
     "Пользователь может переименовать проект из его меню и сессию из её меню",
@@ -192,8 +192,8 @@
         "macOS arm64 и Windows x64 packages собраны"
       ],
       "expected_commit_message": "chore: собрать Web Pilot 0.6.13 с переименованием",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "project-session-renaming-013",
         "task_id": "T004",
@@ -216,10 +216,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: project-session-renaming-013
 Current Task: нет
-Revision: 367
+Revision: 369
 
 ## Цель
 
@@ -246,8 +246,8 @@ Revision: 367
   - Git Commit: [DONE] feat: именовать сессию по scope
   - Reference: project-session-renaming-013 / T003 / implementation
   - Файлы: src/main.mjs, src/workspace-session.mjs, tests/workspace-session.test.mjs, docs/modules/workspace-sessions.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T004: Проверить UI и собрать релиз 0.6.13 — Ожидает
-  - Git Commit: [PENDING] chore: собрать Web Pilot 0.6.13 с переименованием
+- [DONE] T004: Проверить UI и собрать релиз 0.6.13 — Завершено
+  - Git Commit: [DONE] chore: собрать Web Pilot 0.6.13 с переименованием
   - Reference: project-session-renaming-013 / T004 / implementation
   - Файлы: tests/electron-smoke.mjs, package.json, package-lock.json, docs/modules/workspace-sessions.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md
 

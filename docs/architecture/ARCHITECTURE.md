@@ -656,3 +656,11 @@ WorkspaceSessions не меняет идентичность Workflow Kit рад
 ## Scope-driven session title — scope 013 / T003
 
 Автоимя не расширяет MCP surface. `readWorkspace` возвращает `objective`; уже существующий ContextSession poll помещает актуальный projectInfo в state. `publish()` проверяет новый `scopeId`, а WorkspaceSessions атомарно применяет objective к текущей session и сохраняет `lastNamedScopeId`. Повторные publish/tick идемпотентны.
+
+
+## Release 0.6.13 — scope 013 / T004
+
+Обе platform-сборки используют одну реализацию rename: локальный project alias, persisted session title source и scope-driven name. Нового MCP endpoint нет; security boundary remote ChatGPT/local sidebar не расширен.
+
+
+Фактическая package-проверка 0.6.13: macOS `CFBundleShortVersionString=0.6.13`; macOS и Windows `app.asar/package.json` также 0.6.13. В обоих asar найдены `pilot:rename-project`, `pilot:rename-session`, UI `rename-project` и scope naming path `rememberScopeTitle/applyScopeTitle`.

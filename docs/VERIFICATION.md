@@ -649,3 +649,11 @@ Workspace unit coverage проверяет, что локальный alias пр
 ## Scope 013 / T003 — автоматическое имя scope
 
 Workspace tests дополнительно подтверждают проекцию `objective` из plan и идемпотентное применение scope title. Один scope не переименовывает вторую session после переключения; новый scope может переименовать текущую. Syntax main процесса проходит с локальным hook из publish без нового MCP/API.
+
+
+## Scope 013 / T004 — интеграционная проверка rename
+
+Electron fixture создаёт активный scope с objective и ждёт автоматическое имя текущей session, затем вызывает оба пункта «Переименовать» через настоящий sidebar IPC. Проверяется, что project alias не меняет canonical Workflow Kit name и поздний page title не перезаписывает ручное имя session. Финальная suite/smoke и обе package-сборки относятся к версии 0.6.13.
+
+
+Результат T004: `npm run smoke` прошёл с `projectRename=true`, `sessionRename=true`, `scopeSessionRename=true`; `npm test` прошёл полностью. `npm run build` собрал macOS arm64 и Windows x64; Windows package verification прошёл. Дополнительная проверка обоих `app.asar` подтвердила версию 0.6.13 и наличие rename/scope-title кода; macOS Info.plist также сообщает 0.6.13.

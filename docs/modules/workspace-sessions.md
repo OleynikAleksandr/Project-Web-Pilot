@@ -349,3 +349,11 @@ Project record хранит optional `displayName` отдельно от кан�
 ### Автоимя из scope — scope 013 / T003
 
 `readWorkspace` теперь проецирует непустой `objective` вместе со штатными `scopeId/scopeStatus`. После обычного poll ContextSession main-процесс сравнивает наблюдаемый scope с `lastNamedScopeId` и вызывает `applyScopeTitle` для выбранной session. Это тот же локальный inspect, который уже нужен доставке контекста; новый MCP tool, model call или скрытая команда агента не добавляются.
+
+
+### Release integration — scope 013 / T004 / Project Web Pilot 0.6.13
+
+Electron smoke проверяет наличие обеих команд «Переименовать», сохранение канонического project name, ручное имя session, защиту от позднего page title и автоимя текущей session после появления нового scope objective. Версия поставки повышена до 0.6.13 для macOS arm64 и Windows x64.
+
+
+Сборка 0.6.13 выполнена для macOS arm64 и Windows x64. Проверка обоих `app.asar` подтвердила package version 0.6.13 и наличие rename IPC/menu и scope-driven title logic.
