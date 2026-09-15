@@ -609,3 +609,7 @@ Main читает доступные DOM-сообщения выбранного
 ## Предварительная подготовка recovery — scope 012 / T006
 
 ContextCache хранит до четырёх полных штатных MCP packets в памяти, объединяет конкурентные запросы и прогревает выбранный workspace с интервалом 5 секунд. contextInputKey асинхронно читает Git metadata/status и хеши содержимого declared inputs, изменённых файлов, Kit/launcher, transaction/evidence. Проверяется канонический путь и состояние до/после builder; нестабильный пакет не попадает в кэш. Unsupported inputs оставляют foreground на штатном recover; background не запускает recovery при активной transaction. Сессии получают отдельные request IDs поверх общего пакета. Новых зависимостей и дисковых копий контекста нет.
+
+## Подключение предварительной подготовки — scope 012 / T007
+
+ContextSession прогревает пакет после готовности runtime и затем при обычных ticks, в том числе во время ответа ChatGPT. Новая сессия и refresh используют один ContextCache. Метаданные попытки сохраняют input key, длительность foreground preparation и browser delivery; перед click проверяется ключ, а не только plan revision/возраст. В UI подробности показывают оба времени. Проверка staged состояния использует logical index (git ls-files --stage), не служебные stat-поля index; простое обновление Git stat cache не инвалидирует неизменившийся контекст. Полный текст и hash сохраняются без изменений; request_id создаётся отдельно для каждой отправки.

@@ -10,8 +10,10 @@ export class ContextCache {
   clear() { this.epoch++; this.entries.clear(); this.nextWarm.clear(); }
   async load(workspace) {
     if (this.pending.has(workspace)) {
-      await this.pending.get(workspace);
-      return this.load(workspace);
+      const pendingResult = await this.pending.get(workspace);
+      const packet = await this.load(workspace);
+      if (!pendingResult.preparation.cacheHit) packet.preparation.cacheHit = false;
+      return packet;
     }
     const promise = this.prepare(workspace);
     this.pending.set(workspace, promise);

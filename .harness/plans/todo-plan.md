@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 332,
+  "plan_revision": 336,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "next-modifications-discussion-012",
@@ -34,7 +34,11 @@
       "src/context-cache.mjs",
       "tests/context-cache.test.mjs",
       "src/context-session.mjs",
-      "tests/context-session.test.mjs"
+      "tests/context-session.test.mjs",
+      "src/ui/progress.mjs",
+      "src/ui/archive.mjs",
+      "src/ui/archive.html",
+      "tests/progress.test.mjs"
     ],
     "documentation_paths": [
       "docs/DECISIONS.md",
@@ -276,7 +280,9 @@
         "src/context-session.mjs",
         "src/ui/sidebar.mjs",
         "tests/context-session.test.mjs",
-        "tests/electron-smoke.mjs"
+        "tests/electron-smoke.mjs",
+        "src/context-cache.mjs",
+        "src/context-inputs.mjs"
       ],
       "documentation_paths": [
         "docs/modules/workflow-kit-recovery.md",
@@ -293,8 +299,8 @@
       ],
       "expected_commit_message": "feat: использовать подготовленный контекст при отправке",
       "file_limit_exception": "Интеграция одного recovery cache в координатор, интерфейс и обязательные regression tests.",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "next-modifications-discussion-012",
         "task_id": "T007",
@@ -303,10 +309,50 @@
     },
     {
       "id": "T008",
+      "title": "Показать выполнение операций спиннерами и понятными этапами",
+      "why": "Пользователь отдельно поручил показывать выполнение процессов 15.09.2026.",
+      "dependencies": [
+        "T007"
+      ],
+      "functional_paths": [
+        "src/ui/progress.mjs",
+        "src/ui/sidebar.mjs",
+        "src/ui/index.html",
+        "src/ui/archive.mjs",
+        "src/ui/archive.html",
+        "tests/progress.test.mjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/modules/workspace-sessions.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "acceptance_criteria": [
+        "Спиннер и название действия видны во время операций приложения, включая setup/archive.",
+        "Ошибки и ожидание пользователя не отображаются как бесконечное выполнение; reduced motion поддержан."
+      ],
+      "expected_commit_message": "feat: показывать ход операций приложения",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "next-modifications-discussion-012",
+        "task_id": "T008",
+        "role": "implementation"
+      },
+      "file_limit_exception": "Единый UI-индикатор в двух renderer views, CSS и regression tests; без изменения бизнес-операций."
+    },
+    {
+      "id": "T009",
       "title": "Измерить ускорение и собрать релиз 0.6.10",
       "why": "Ускорить повторную передачу полного актуального контекста по поручению пользователя 15.09.2026.",
       "dependencies": [
-        "T007"
+        "T008"
       ],
       "functional_paths": [
         "package.json",
@@ -331,7 +377,7 @@
       "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "next-modifications-discussion-012",
-        "task_id": "T008",
+        "task_id": "T009",
         "role": "implementation"
       }
     }
@@ -350,6 +396,10 @@
     {
       "id": "context-prewarm-20260915",
       "text": "15.09.2026 пользователь поручил проанализировать ускорение передачи контекста более чем вдвое, формировать и хранить его заранее во время работы, реализовать и собрать новый релиз для тестов. Разрешён кэш полного канонического пакета с обязательной проверкой актуальности; содержание и защиты доставки сохраняются."
+    },
+    {
+      "id": "operation-spinners-20260915",
+      "text": "Пользователь дополнительно поручил сделать спиннеры выполнения процессов, чтобы было видно, что приложение работает. Включено в текущий релиз."
     }
   ]
 }
@@ -362,7 +412,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: next-modifications-discussion-012
 Current Task: нет
-Revision: 332
+Revision: 336
 
 ## Цель
 
@@ -403,13 +453,17 @@ Revision: 332
   - Git Commit: [DONE] feat: заранее готовить актуальный recovery packet
   - Reference: next-modifications-discussion-012 / T006 / implementation
   - Файлы: src/context-inputs.mjs, src/context-cache.mjs, tests/context-cache.test.mjs, docs/modules/workflow-kit-recovery.md, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T007: Подключить прогрев и проверку перед отправкой — Ожидает
-  - Git Commit: [PENDING] feat: использовать подготовленный контекст при отправке
+- [DONE] T007: Подключить прогрев и проверку перед отправкой — Завершено
+  - Git Commit: [DONE] feat: использовать подготовленный контекст при отправке
   - Reference: next-modifications-discussion-012 / T007 / implementation
-  - Файлы: src/main.mjs, src/context-session.mjs, src/ui/sidebar.mjs, tests/context-session.test.mjs, tests/electron-smoke.mjs, docs/modules/workflow-kit-recovery.md, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T008: Измерить ускорение и собрать релиз 0.6.10 — Ожидает
-  - Git Commit: [PENDING] chore: собрать Web Pilot 0.6.10 с быстрым recovery
+  - Файлы: src/main.mjs, src/context-session.mjs, src/ui/sidebar.mjs, tests/context-session.test.mjs, tests/electron-smoke.mjs, src/context-cache.mjs, src/context-inputs.mjs, docs/modules/workflow-kit-recovery.md, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+- [TODO] T008: Показать выполнение операций спиннерами и понятными этапами — Ожидает
+  - Git Commit: [PENDING] feat: показывать ход операций приложения
   - Reference: next-modifications-discussion-012 / T008 / implementation
+  - Файлы: src/ui/progress.mjs, src/ui/sidebar.mjs, src/ui/index.html, src/ui/archive.mjs, src/ui/archive.html, tests/progress.test.mjs, tests/electron-smoke.mjs, docs/CONTEXT_DELIVERY.md, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+- [TODO] T009: Измерить ускорение и собрать релиз 0.6.10 — Ожидает
+  - Git Commit: [PENDING] chore: собрать Web Pilot 0.6.10 с быстрым recovery
+  - Reference: next-modifications-discussion-012 / T009 / implementation
   - Файлы: package.json, package-lock.json, docs/modules/workflow-kit-recovery.md, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md
 
 ## Context Pack For This Cycle

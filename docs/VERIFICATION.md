@@ -599,3 +599,7 @@ Electron smoke проходит с реальным js-tiktoken worker: стар
 ## Scope 012 / T006 — recovery cache
 
 Шесть targeted tests пройдены: reuse неизменного пакета независимо от возраста, изоляция/лимит workspace, concurrent single build, гонки с изменениями, fallback и повреждённый packet; реальные Git fixtures проверяют same-size/mtime edit, index/HEAD, ignored required document, missing file, evidence, Kit runtime, transaction, linked worktree и symlink. Полный suite назначен workflow gate.
+
+## Scope 012 / T007 — доставка подготовленного пакета
+
+ContextSession tests проверяют передачу старого по времени, но актуального по входам пакета, повторный refresh без recover, замеры и блокировку после правки файла без изменения plan revision. Electron fixture проверяет одну подготовку для нескольких новых Chat/Work sessions при одинаковых входах, разные request_id и отображение времени в подробностях. Исходный тест изменяет plan между сценариями: фоновая пересборка при таких изменениях допустима и не считается повторной отправкой.

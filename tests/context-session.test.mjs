@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
+import { ContextCache } from '../src/context-cache.mjs';
 import { ContextSession, packetMatchesProject, startupMessage } from '../src/context-session.mjs';
 
 const project={workspace:'/Projects/Мой проект',projectId:'id-1',name:'Мой проект',planRevision:7,scopeId:'scope-1',
@@ -204,4 +205,23 @@ test('pending WEB conversation before any send never receives project context', 
   f.inspection.url='https://chatgpt.com/c/WEB:12345678-1234-1234-1234-123456789abc';
   await f.controller.tick();
   assert.equal(f.controller.state.phase,'chat-changed');assert.equal(f.loads(),0);assert.equal(f.sends(),0);
+});
+
+
+test('prepared cache removes recover from explicit refresh and records timings',async()=>{
+  const f=controllerFixture();
+  const cache=new ContextCache({load:async()=>({...packet(),generated_at_ms:1}),inputKey:async()=> 'unchanged'});
+  await cache.load(project.workspace);f.controller.contextCache=cache;
+  await f.controller.tick();assert.equal(f.sends(),1);assert.equal(f.loads(),0);
+  assert.equal(f.saved.attempt.packet.cacheHit,true);assert.equal(f.saved.attempt.packet.generatedAtMs,1);
+  assert.ok(Number.isFinite(f.saved.attempt.packet.preparationMs));assert.ok(Number.isFinite(f.saved.attempt.packet.deliveryMs));
+  await f.controller.retry();assert.equal(f.sends(),2);assert.equal(f.loads(),0);
+});
+test('source edit after fill blocks send even when plan revision is unchanged',async()=>{
+  const f=controllerFixture();let key='before';
+  const cache=new ContextCache({load:async()=>packet(),inputKey:async()=>key});
+  await cache.load(project.workspace);f.controller.contextCache=cache;
+  const deliver=f.composer.deliver;f.composer.deliver=async options=>{key='after';return deliver(options);};
+  await f.controller.tick();assert.equal(f.sends(),0);assert.equal(f.controller.state.phase,'prepared-stale');
+  assert.equal(f.saved.attempt.state,'prepared');assert.equal(f.saved.attempt.sendStartedAtMs,null);
 });

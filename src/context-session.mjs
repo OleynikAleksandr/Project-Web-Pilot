@@ -34,12 +34,13 @@ const phaseForReason = reason => ({ LOGIN_REQUIRED: 'waiting-login', GENERATION_
   DRAFT_PRESENT: 'waiting-draft', DRAFT_CHANGED: 'waiting-draft' })[reason] ?? 'waiting-composer';
 const metadata = packet => ({ workspace: packet.workspace, facts: packet.facts, signature: packet.signature,
   head: packet.head, contextBytes: packet.context_bytes, contextSha256: packet.context_sha256,
-  generatedAtMs: packet.generated_at_ms });
+  generatedAtMs: packet.generated_at_ms, cacheKey: packet.preparation?.inputKey,
+  preparationMs: packet.preparation?.ms, cacheHit: packet.preparation?.cacheHit });
 const failure = (code, message) => Object.assign(new Error(message), { code });
 
 export class ContextSession {
-  constructor({ store, runtime, composer, onChange = () => {}, now = Date.now, uuid = randomUUID }) {
-    Object.assign(this, { store, runtime, composer, onChange, now, uuid });
+  constructor({ store, runtime, composer, contextCache = null, onChange = () => {}, now = Date.now, uuid = randomUUID }) {
+    Object.assign(this, { store, runtime, composer, contextCache, onChange, now, uuid });
     this.generation = 0;
     this.active = null;
     this.pending = false;
@@ -81,6 +82,12 @@ export class ContextSession {
     return !!attempt?.sendStartedAtMs && conversationUrlCompatibleWithExperience(url, project.experience ?? 'chat');
   }
 
+  async packetIsCurrent(packet, project) {
+    if (!packetMatchesProject(packet, project)) return false;
+    if (packet.cacheKey && this.contextCache) return this.contextCache.isCurrent(project.workspace, packet.cacheKey);
+    return this.now() - packet.generatedAtMs <= 300000;
+  }
+
   async retry() {
     if (!this.active || this.pending) return;
     const project = this.store.project(this.active.workspace);
@@ -112,6 +119,7 @@ export class ContextSession {
         if (!this.current(generation)) return;
         this.servicesReady = true;
       }
+      if (this.contextCache) void this.contextCache.warm(project.workspace);
       let attempt = project.attempt;
       let observation = await this.composer.inspect({ requestId: attempt?.requestId, text: attempt?.text });
       if (!this.current(generation)) return;
@@ -187,7 +195,7 @@ export class ContextSession {
       if (!observation.editorAvailable || !observation.writable) { this.emit({ phase: 'waiting-composer', projectInfo: info }); return; }
       if (observation.busy) { this.emit({ phase: 'waiting-generation', projectInfo: info }); return; }
       if (observation.draftLength && !observation.draftMatches) { this.emit({ phase: 'waiting-draft', projectInfo: info }); return; }
-      if (attempt && (!packetMatchesProject(attempt.packet, project) || this.now() - attempt.packet.generatedAtMs > 300000)) {
+      if (attempt && !await this.packetIsCurrent(attempt.packet, project)) {
         if (observation.draftLength) { this.emit({ phase: 'prepared-stale', projectInfo: info }); return; }
         attempt = null;
         await this.store.updateSession(project.workspace, project.sessionId, { attempt: null, receipt: null });
@@ -195,7 +203,10 @@ export class ContextSession {
       }
       if (!attempt) {
         this.emit({ phase: 'loading-context', projectInfo: info });
-        const packet = validateContextPacket(await this.runtime.loadContext(project.workspace), project.workspace);
+        const preparationStarted = performance.now();
+        const packet = validateContextPacket(await (this.contextCache
+          ? this.contextCache.load(project.workspace) : this.runtime.loadContext(project.workspace)), project.workspace);
+        const preparationMs = performance.now() - preparationStarted;
         if (!this.current(generation)) return;
         info = await this.store.inspect(project.workspace);
         if (!this.current(generation)) return;
@@ -203,15 +214,17 @@ export class ContextSession {
         if (!packetMatchesProject(packet, project)) throw failure('CONTEXT_CHANGED', 'План изменился во время подготовки. Обновите контекст.');
         const requestId = 'wp-request-' + this.uuid();
         attempt = { protocol: CONTEXT_PROTOCOL, requestId, text: startupMessage(project, requestId, packet),
-          packet: metadata(packet), createdAtMs: this.now(), sendStartedAtMs: null, state: 'prepared' };
+          packet: { ...metadata(packet), preparationMs }, createdAtMs: this.now(), sendStartedAtMs: null, state: 'prepared' };
         await this.store.updateSession(project.workspace, project.sessionId, { attempt, receipt: null });
         if (!this.current(generation)) return;
       }
+      this.emit({ phase: 'preparing-message', projectInfo: info });
+      const deliveryStarted = performance.now();
       const result = await this.composer.deliver({ text: attempt.text, requestId: attempt.requestId,
         expectedExperience: project.chatUrl ? null : experience,
         canContinue: () => this.current(generation) && this.atExpectedChat(project, attempt), onBeforeSend: async () => {
           const latest = await this.store.inspect(project.workspace);
-          if (!packetMatchesProject(attempt.packet, latest) || this.now() - attempt.packet.generatedAtMs > 300000) {
+          if (!await this.packetIsCurrent(attempt.packet, latest)) {
             throw failure('CONTEXT_CHANGED_BEFORE_SEND', 'Пакет в поле устарел. Уберите этот черновик и обновите контекст.');
           }
           if (!this.current(generation) || !this.atExpectedChat(project, attempt)) return;
@@ -221,7 +234,7 @@ export class ContextSession {
         } });
       if (!this.current(generation)) return;
       if (result.state === 'sent') {
-        attempt = { ...attempt, state: 'sent', sentAtMs: this.now(), sendStartedAtMs: attempt.sendStartedAtMs ?? attempt.createdAtMs };
+        attempt = { ...attempt, packet: { ...attempt.packet, deliveryMs: performance.now() - deliveryStarted }, state: 'sent', sentAtMs: this.now(), sendStartedAtMs: attempt.sendStartedAtMs ?? attempt.createdAtMs };
         await this.store.updateSession(project.workspace, project.sessionId, { attempt });
         if (this.current(generation)) this.emit({ phase: 'waiting-chat', messageSent: true, projectInfo: info, delivery: { ...attempt.packet, sentAtMs: attempt.sentAtMs } });
       } else if (result.state === 'unknown') {

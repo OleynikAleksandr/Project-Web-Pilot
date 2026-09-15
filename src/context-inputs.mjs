@@ -55,10 +55,11 @@ export async function contextInputKey(workspace) {
   for (const name of ['GIT_DIR','GIT_WORK_TREE','GIT_INDEX_FILE','GIT_COMMON_DIR','GIT_OBJECT_DIRECTORY','GIT_ALTERNATE_OBJECT_DIRECTORIES','GIT_PREFIX']) delete env[name];
   const git = async args => (await execFile(executable, ['--literal-pathspecs', '-c', 'core.quotePath=false', ...args],
     { cwd: root, env, windowsHide: true, timeout: 10000, maxBuffer: 8 * 1024 * 1024 })).stdout;
-  const [locations, status, replacements] = await Promise.all([
+  const [locations, status, replacements, index] = await Promise.all([
     git(['rev-parse', '--path-format=absolute', '--git-dir', '--git-common-dir', 'HEAD']),
     git(['status', '--porcelain=v1', '-z', '--untracked-files=all', '--ignore-submodules=none']),
     git(['for-each-ref', '--format=%(refname):%(objectname)', 'refs/replace']),
+    git(['ls-files', '--stage', '-z']),
   ]);
   const [gitDir, commonDir, head] = locations.trim().split('\n');
   if (!gitDir || !commonDir || !/^[a-f0-9]{40,64}$/.test(head)) throw inputError('Git snapshot unavailable');
@@ -90,7 +91,7 @@ export async function contextInputKey(workspace) {
   }
   const files = [...relative].sort().map(name => safeInput(root, name));
   // Worktree-local index/journal and common Git metadata both matter in linked worktrees.
-  files.push(...['HEAD', 'index', 'workflow-kit/transaction.json', 'workflow-kit/last-verification.json',
+  files.push(...['HEAD', 'workflow-kit/transaction.json', 'workflow-kit/last-verification.json',
     'MERGE_HEAD', 'CHERRY_PICK_HEAD', 'REVERT_HEAD'].map(name => path.join(gitDir, name)));
   files.push(...['config', 'shallow', 'info/grafts', 'info/attributes', 'info/exclude', 'objects/info/alternates'].map(name => path.join(commonDir, name)));
   for (const directory of ['rebase-merge', 'rebase-apply']) {
@@ -104,5 +105,5 @@ export async function contextInputKey(workspace) {
   }
   const transaction = states.find(([file]) => file === path.join(gitDir, 'workflow-kit/transaction.json'));
   if (transaction?.[1]) throw inputError('Commit transaction active');
-  return digest(JSON.stringify({ version: 1, root, head, status, replacements, states }));
+  return digest(JSON.stringify({ version: 1, root, head, status, replacements, index, states }));
 }

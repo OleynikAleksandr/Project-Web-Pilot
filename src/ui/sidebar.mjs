@@ -16,6 +16,7 @@ const phases = {
   'waiting-composer': ['Ожидаем поле сообщения', 'Откройте доступное поле ChatGPT. Старт продолжится автоматически.', 'working'],
   'waiting-draft': ['В поле есть черновик', 'Закончите или уберите свой черновик. Стартовое сообщение подождёт.', 'working'],
   'waiting-generation': ['Ждём завершения ответа', 'ChatGPT отвечает. Передача контекста начнётся, когда поле освободится.', 'working'],
+  'preparing-message': ['Вставляем контекст в сообщение', 'Проверяем полный текст перед отправкой.', 'working'],
   sending: ['Передаём контекст', 'Отправляем полный контекст проекта одним сообщением.', 'working'],
   'waiting-chat': ['Контекст отправлен', 'Сохраняем связь проекта с этим чатом.', 'working'],
   delivered: ['Контекст передан', 'Полный пакет отправлен в этот чат. Агент кратко подтвердит получение и опишет проект.', 'success'],
@@ -249,7 +250,9 @@ function render(state) {
   $('connection-detail').textContent = state.platform === 'win32' ? 'Codex Local Windows · встроенный runtime' : state.runtimeFolder;
   const delivery = context.delivery;
   $('session-detail').textContent = selected ? `Сессия: ${selected.sessionId}`
-    + (delivery ? `\nПередано ${(delivery.contextBytes / 1024).toFixed(1)} КБ · план ${delivery.facts.plan_revision}\n${new Date(delivery.sentAtMs).toLocaleString('ru-RU')}` : '') : '';
+    + (delivery ? `\nПередано ${(delivery.contextBytes / 1024).toFixed(1)} КБ · план ${delivery.facts.plan_revision}\n${new Date(delivery.sentAtMs).toLocaleString('ru-RU')}` : '')
+    + (Number.isFinite(delivery?.preparationMs) ? `\nПодготовка: ${Math.round(delivery.preparationMs)} мс${delivery.cacheHit ? ' · пакет готов заранее' : ''}` : '')
+    + (Number.isFinite(delivery?.deliveryMs) ? `\nОтправка: ${(delivery.deliveryMs / 1000).toFixed(2)} с` : '') : '';
   if (state.fixture) $('connection-detail').textContent = 'TEST FIXTURE · без реального аккаунта и MCP';
   const error = state.startupError ?? context.error;
   $('error-banner').hidden = !error;

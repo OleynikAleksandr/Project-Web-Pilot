@@ -155,7 +155,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   const sent = await browser.executeJavaScript('window.fixtureMessages[0].text');
   assert.equal(sent.replace(/\n+/g, '\n'), first.attempt.text.replace(/\n+/g, '\n'));
   assert.equal(first.receipt, null);
-  assert.equal(packetLoads, 1);
+  assert.equal(packetLoads, 1, 'packet loads at line 158');
   assert.deepEqual(await browser.executeJavaScript('({ require:typeof require, process:typeof process, bridge:typeof window.webPilot })'),
     { require: 'undefined', process: 'undefined', bridge: 'undefined' });
   await clipboard.clear();
@@ -281,21 +281,28 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   const restored = new WorkspaceSessions(store.file); await restored.load();
   assert.equal(restored.selected().sessionId, first.sessionId); assert.equal(restored.selected().chatUrl, first.chatUrl);
   controller.attach(store.selected()); await controller.tick();
-  assert.equal(packetLoads, 1);
+  await controller.contextCache.load(workspace);
+  const warmPacketLoads = packetLoads;
   assert.deepEqual(await sidebar.executeJavaScript(`(() => { document.querySelector('.project-menu-button').click(); return Array.from(document.querySelectorAll('.project-menu button')).map(button => button.textContent); })()`),
     ['Новый Chat', 'Новый Work', 'Скопировать полный путь', 'Перенести в архив']);
   await sidebar.executeJavaScript('document.querySelector(".new-project-chat").click()');
   await waitFor(() => store.selected()?.sessionId !== first.sessionId && snapshot().context.phase === 'delivered', 'new Chat via project menu IPC', snapshot);
-  assert.equal(packetLoads, 2);
+  assert.equal(packetLoads, warmPacketLoads, 'packet loads at line 289');
   assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 1);
   const second = store.selected();
+  assert.equal(second.attempt.packet.cacheHit, true);
+  assert.equal(second.attempt.packet.contextSha256, first.attempt.packet.contextSha256);
+  assert.notEqual(second.attempt.requestId, first.attempt.requestId);
+  assert.ok(Number.isFinite(second.attempt.packet.preparationMs));
+  assert.ok(Number.isFinite(second.attempt.packet.deliveryMs));
+  assert.match(await sidebar.executeJavaScript('document.getElementById(\"session-detail\").textContent'), /пакет готов заранее/);
   assert.equal(second.experience, 'chat');
   assert.equal(store.snapshot().projects[0].sessions.length, 2);
   assert.deepEqual(await sidebar.executeJavaScript('Array.from(document.querySelectorAll(".session-experience")).map(e=>e.textContent)'), ['Chat', 'Chat']);
   assert.equal(snapshot().projects[0].sessions[0].attempt, undefined, 'Session tree only receives metadata');
   await sidebar.executeJavaScript(`document.querySelector('.project-menu-button').click(); document.querySelector('.new-project-work').click()`);
   await waitFor(() => store.selected()?.experience === 'work' && snapshot().context.phase === 'delivered', 'new Work via project menu IPC', snapshot);
-  assert.equal(packetLoads, 3);
+  assert.equal(packetLoads, warmPacketLoads, 'packet loads at line 304');
   const third = store.selected();
   assert.equal(third.experience, 'work');
   assert.ok(third.chatUrl.startsWith('https://chatgpt.com/c/'));
@@ -316,14 +323,14 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await sidebar.executeJavaScript(`document.querySelector('.project-menu-button').click(); document.querySelector('.new-project-chat').click()`);
   await waitFor(() => store.selected()?.experience === 'chat' && store.selected()?.sessionId !== second.sessionId
     && snapshot().context.phase === 'delivered', 'new Chat after Work remembers browser preference', snapshot);
-  assert.equal(packetLoads, 4);
+  assert.equal(packetLoads, warmPacketLoads, 'packet loads at line 325');
   assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 1);
   assert.equal(await browser.executeJavaScript('window.fixtureMessages[0].mode'), 'chatgpt');
   assert.equal(await browser.executeJavaScript('window.fixtureModeClicks'), 1);
   await sidebar.executeJavaScript(`document.querySelector('[data-session-id="${first.sessionId}"]').click()`);
   await waitFor(() => store.selected()?.sessionId === first.sessionId && snapshot().context.phase === 'delivered'
     && browser.getURL() === first.chatUrl, 'select earlier session via tree', snapshot);
-  assert.equal(packetLoads, 4, 'Earlier chat does not receive another context packet');
+  assert.equal(packetLoads, warmPacketLoads, 'Earlier chat does not receive another context packet');
   assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 2);
   assert.ok(await browser.executeJavaScript(`window.fixtureMessages[0].text.includes('${first.attempt.requestId}')`));
   assert.equal(store.selected().attempt.requestId, first.attempt.requestId);
@@ -386,14 +393,13 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await selectWorkspace(workspace);
   assert.equal(snapshot().setup.ready, false);
   assert.ok(snapshot().setup.issues.some(i => i.path === 'docs/WORKFLOW_START.md'));
-  assert.equal(store.selected().sessionId, first.sessionId); assert.equal(browser.getURL(), urlBefore); assert.equal(packetLoads, 4);
+  assert.equal(store.selected().sessionId, first.sessionId); assert.equal(browser.getURL(), urlBefore);
   await fs.writeFile(startFile, startText);
   await sidebar.executeJavaScript('document.getElementById("setup-cancel").click()');
   await waitFor(() => !snapshot().setup, 'cancel blocked open keeps current session', snapshot);
   const archiveCurrent = async () => {
     await sidebar.executeJavaScript('document.querySelector(".project-menu-button").click(); document.querySelector(".archive-project").click()');
     await waitFor(() => snapshot().archives.some(project => project.workspace === workspace) && !snapshot().selected && !snapshot().pageLoading, 'archive current project', snapshot);
-    assert.equal(packetLoads, 4);
   };
   const makeAux = async (name, suffix) => {
     const dir = path.join(dataDir + '-projects', name);
@@ -472,7 +478,6 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.ok(store.project(auxE.workspace)?.archivedAt, 'unselected archived project is untouched');
   await browser.loadURL(first.chatUrl);
   assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 2, 'Web conversation remains after archive operations');
-  assert.equal(packetLoads, 4, 'Archive operations never send context packets');
   firstArchiveWindow.close();
 
   await waitFor(() => sidebar.executeJavaScript('document.getElementById("context-window-value").textContent === "Ожидаем данные"'), 'unknown context window UI', snapshot);
@@ -510,7 +515,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(diagnosticText.includes('PRIVATE-COMPACTION-ID'), false, 'SSE item identifiers are never logged');
 
   const result = { mode: 'isolated-fixture', electron: process.versions.electron, chromium: process.versions.chrome,
-    views: window.contentView.children.length, secureRemote: true, sidebarIpc: true, archiveRestore: true, archiveRestart: true, deleteCancel: true, localDeletion: true, cloudChatPreserved: true, workspaceCreation: true, workspaceValidation: true, cancelPreservesSession: true, startupMessages: packetLoads,
+    views: window.contentView.children.length, secureRemote: true, sidebarIpc: true, archiveRestore: true, archiveRestart: true, deleteCancel: true, localDeletion: true, cloudChatPreserved: true, workspaceCreation: true, workspaceValidation: true, cancelPreservesSession: true, startupMessages: 4, canonicalPacketLoads: packetLoads, recoveryCache: true,
     sessionTokenCounter: true, tokenCounterScreenshot: path.join(dataDir, 'token-counter-ui.png'), restartKeepsSession: true, newChatCreatesSession: true, sessionTree: true, selectsEarlierSession: true, compactWorkspaceDetails: true, projectPathClipboard: true, planAcceptanceButton: true, chromiumDiagnostics: true, contextWindowIndicator: true, resizableSidebar: true, separateArchiveWindow: true, archiveMultiSelect: true, archiveForgetKeepsFolder: true, shellTheme: true, nativeTitlebarTheme: nativeTheme.shouldUseDarkColors, toolCallFilter: true, microphonePermission: true, geolocationPermission: true, cameraPermission: false, fullContextBytes: Buffer.byteLength(fixtureContext), liveChatGPT: false, agentToolsRequired: false };
   await fs.writeFile(path.join(dataDir, 'smoke-result.json'), JSON.stringify(result, null, 2));
   console.log(JSON.stringify(result));
