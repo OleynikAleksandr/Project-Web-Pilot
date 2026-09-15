@@ -83,6 +83,60 @@ test('canonical folder with spaces and Cyrillic survives restart with its conver
   if (process.platform !== 'win32') assert.equal((await fs.stat(store.file)).mode & 0o777, 0o600);
 });
 
+
+
+test('local project alias and explicit session titles persist without changing canonical workflow identity', async t => {
+  const { project, store } = await fixture(t);
+  const folder = await project('Canonical project');
+  const first = await store.select(folder);
+  assert.equal(await store.setProjectDisplayName(first.workspace, '  Мой   проект  '), true);
+  assert.equal(await store.renameSession(first.workspace, first.sessionId, '  Ручное   имя  '), true);
+  assert.equal(await store.setSessionTitle(first.workspace, first.sessionId, 'Заголовок страницы'), false,
+    'page title cannot overwrite an explicit local title');
+  await store.select(folder);
+  let raw = store.snapshot().projects[0];
+  assert.equal(raw.name, 'Canonical project');
+  assert.equal(raw.displayName, 'Мой проект');
+  assert.equal(raw.sessions[0].title, 'Ручное имя');
+  assert.equal(raw.sessions[0].titleSource, 'manual');
+
+  const restarted = new WorkspaceSessions(store.file); await restarted.load();
+  raw = restarted.snapshot().projects[0];
+  assert.equal(raw.name, 'Canonical project'); assert.equal(raw.displayName, 'Мой проект');
+  assert.equal(raw.sessions[0].title, 'Ручное имя'); assert.equal(raw.sessions[0].titleSource, 'manual');
+});
+
+test('page titles are fallback and each scope names only the session selected on first observation', async t => {
+  const { project, store } = await fixture(t);
+  const first = await store.select(await project('Scope titles'));
+  assert.equal(await store.setSessionTitle(first.workspace, first.sessionId, 'ChatGPT title'), true);
+  assert.equal(store.selected().titleSource, 'page');
+  assert.equal(await store.applyScopeTitle(first.workspace, first.sessionId,
+    { scopeId: 'scope-a', objective: '  Первый   scope  ', scopeStatus: 'ACTIVE' }), true);
+  assert.equal(store.selected().title, 'Первый scope'); assert.equal(store.selected().titleSource, 'scope');
+  assert.equal(await store.setSessionTitle(first.workspace, first.sessionId, 'Поздний page title'), false);
+
+  const second = await store.newSession(first.workspace, 'chat');
+  assert.equal(await store.applyScopeTitle(first.workspace, second.sessionId,
+    { scopeId: 'scope-a', objective: 'Первый scope', scopeStatus: 'ACTIVE' }), false,
+    'the same scope must not move its title to another session');
+  assert.equal(store.selected().title, '');
+  assert.equal(await store.applyScopeTitle(first.workspace, second.sessionId,
+    { scopeId: 'scope-b', objective: 'Второй scope', scopeStatus: 'BLOCKED' }), true);
+  await store.renameSession(first.workspace, second.sessionId, 'Моё имя');
+  assert.equal(await store.applyScopeTitle(first.workspace, second.sessionId,
+    { scopeId: 'scope-b', objective: 'Второй scope', scopeStatus: 'ACTIVE' }), false);
+  assert.equal(store.selected().title, 'Моё имя');
+  assert.equal(await store.applyScopeTitle(first.workspace, second.sessionId,
+    { scopeId: 'scope-c', objective: 'Третий scope', scopeStatus: 'ACTIVE' }), true,
+    'a later scope may rename the current session again');
+  assert.equal(store.selected().title, 'Третий scope'); assert.equal(store.selected().titleSource, 'scope');
+
+  const restarted = new WorkspaceSessions(store.file); await restarted.load();
+  assert.equal(restarted.snapshot().projects[0].lastNamedScopeId, 'scope-c');
+  assert.equal(restarted.selected().title, 'Третий scope');
+});
+
 test('switching project cannot mutate another chat or accept late session results', async t => {
   const { project, store } = await fixture(t);
   const a = await store.select(await project('A')); const b = await store.select(await project('B'));

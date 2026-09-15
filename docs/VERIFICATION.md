@@ -639,3 +639,8 @@ Unit tests проверяют названия этапов, отсутстви�
 Назначены syntax/suite/electron-smoke. Проверка пакетов сверяет 0.6.12, отсутствие удалённых modules и js-tiktoken во всём app.asar и совпадение оставшихся шести связанных source files. Пользователь проверяет готовность реальной сессии после перезапуска; scope остаётся ACTIVE/READY_FOR_ACCEPTANCE.
 
 Результат: npm run build успешно пересобрал macOS arm64 и Windows x64. Проверка обоих app.asar подтвердила версию 0.6.12, отсутствие двух удалённых модулей и пакета js-tiktoken, а также точное совпадение шести связанных source files.
+
+
+## Scope 013 / T001 — persisted имена
+
+Workspace unit coverage проверяет, что локальный alias проекта переживает повторный inspect/restart и не меняет каноническое имя Workflow Kit; ручное имя session не перетирается page title; scope-имя применяется ровно к session, выбранной при первом наблюдении scope, тот же scope не переезжает на другую session, а следующий scope может задать новое имя.

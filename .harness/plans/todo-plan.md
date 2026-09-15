@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 361,
+  "plan_revision": 363,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "project-session-renaming-013",
@@ -86,8 +86,8 @@
         "Unit tests покрывают приоритеты и persistence"
       ],
       "expected_commit_message": "feat: добавить локальные имена проектов и сессий",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "project-session-renaming-013",
         "task_id": "T001",
@@ -219,7 +219,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: project-session-renaming-013
 Current Task: нет
-Revision: 361
+Revision: 363
 
 ## Цель
 
@@ -234,8 +234,8 @@ Revision: 361
 
 ## Микрозадачи
 
-- [TODO] T001: Добавить локальные имена и приоритеты заголовков — Ожидает
-  - Git Commit: [PENDING] feat: добавить локальные имена проектов и сессий
+- [DONE] T001: Добавить локальные имена и приоритеты заголовков — Завершено
+  - Git Commit: [DONE] feat: добавить локальные имена проектов и сессий
   - Reference: project-session-renaming-013 / T001 / implementation
   - Файлы: src/workspace-session.mjs, tests/workspace-session.test.mjs, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T002: Добавить ручное переименование в меню — Ожидает

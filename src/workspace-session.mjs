@@ -88,7 +88,15 @@ export async function readWorkspace(input) {
 
 const copy = value => structuredClone(value);
 const invalid = () => new WorkspaceError('SESSIONS_INVALID', 'Формат сохранённых проектов не поддерживается. Исходный файл сохранён.');
-const sessionFields = ['sessionId', 'experience', 'chatUrl', 'attempt', 'receipt', 'title', 'createdAt', 'lastOpenedAt', 'archivedAt'];
+const sessionFields = ['sessionId', 'experience', 'chatUrl', 'attempt', 'receipt', 'title', 'titleSource', 'createdAt', 'lastOpenedAt', 'archivedAt'];
+const explicitTitleSources = new Set(['manual', 'scope']);
+
+function localName(value, { empty = 'Нужно непустое название.', code = 'TITLE_INVALID' } = {}) {
+  if (typeof value !== 'string') throw new WorkspaceError(code, empty);
+  const name = value.replace(/\s+/g, ' ').trim().slice(0, 160);
+  if (!name) throw new WorkspaceError(code, empty);
+  return name;
+}
 
 function validate(data) {
   if (data?.schemaVersion !== 5 || !Array.isArray(data.projects)) throw invalid();
@@ -96,6 +104,8 @@ function validate(data) {
   for (const p of data.projects) {
     if (!p || typeof p.workspace !== 'string' || !path.isAbsolute(p.workspace)
         || typeof p.projectId !== 'string' || !p.projectId || typeof p.name !== 'string'
+        || (p.displayName !== undefined && p.displayName !== null && (typeof p.displayName !== 'string' || !p.displayName.trim()))
+        || (p.lastNamedScopeId !== undefined && p.lastNamedScopeId !== null && (typeof p.lastNamedScopeId !== 'string' || !p.lastNamedScopeId))
         || !Array.isArray(p.sessions) || !p.sessions.length || typeof p.expanded !== 'boolean'
         || (p.archivedAt !== null && (!Number.isFinite(p.archivedAt) || p.archivedAt <= 0))
         || !p.sessions.some(s => s?.sessionId === p.selectedSessionId && s.archivedAt === null)
@@ -103,6 +113,7 @@ function validate(data) {
     workspaces.push(p.workspace);
     for (const s of p.sessions) {
       if (!s || typeof s.sessionId !== 'string' || !s.sessionId || typeof s.title !== 'string'
+          || (s.titleSource !== undefined && s.titleSource !== null && !['page', 'manual', 'scope'].includes(s.titleSource))
           || !['chat', 'work'].includes(s.experience)
           || !Number.isFinite(s.createdAt) || !Number.isFinite(s.lastOpenedAt)
           || (s.archivedAt !== null && (!Number.isFinite(s.archivedAt) || s.archivedAt <= 0))
@@ -255,7 +266,7 @@ export class WorkspaceSessions {
 
   createSession(experience = 'chat') {
     experience = sessionExperience(experience);
-    return { sessionId: 'web-pilot-' + this.uuid(), experience, chatUrl: null, title: '',
+    return { sessionId: 'web-pilot-' + this.uuid(), experience, chatUrl: null, title: '', titleSource: null,
       createdAt: this.now(), lastOpenedAt: this.now(), archivedAt: null, attempt: null, receipt: null };
   }
 
@@ -341,13 +352,50 @@ export class WorkspaceSessions {
     });
   }
 
+  setProjectDisplayName(workspace, value) {
+    return this.mutate(data => {
+      const project = data.projects.find(p => p.workspace === workspace);
+      if (!project) throw new WorkspaceError('WORKSPACE_REQUIRED', 'Выберите проект из списка.');
+      if (project.archivedAt) throw new WorkspaceError('PROJECT_ARCHIVED', 'Сначала верните проект из архива.');
+      const displayName = localName(value, { code: 'PROJECT_NAME_INVALID', empty: 'Введите название проекта.' });
+      if (project.displayName === displayName) return false;
+      project.displayName = displayName; return true;
+    });
+  }
+
+  renameSession(workspace, sessionId, value) {
+    return this.mutate(data => {
+      const project = data.projects.find(p => p.workspace === workspace);
+      if (!project) throw new WorkspaceError('WORKSPACE_REQUIRED', 'Выберите проект из списка.');
+      if (project.archivedAt) throw new WorkspaceError('PROJECT_ARCHIVED', 'Сначала верните проект из архива.');
+      const session = project.sessions.find(item => item.sessionId === sessionId);
+      if (!session) throw new WorkspaceError('SESSION_NOT_FOUND', 'Сессия не найдена.');
+      if (session.archivedAt) throw new WorkspaceError('SESSION_ARCHIVED', 'Сначала верните сессию из архива.');
+      const title = localName(value, { empty: 'Введите название сессии.' });
+      if (session.title === title && session.titleSource === 'manual') return false;
+      session.title = title; session.titleSource = 'manual'; return true;
+    });
+  }
+
   setSessionTitle(workspace, sessionId, value) {
     return this.mutate(data => {
       const { session } = this.activeRecord(workspace, sessionId, data);
       if (typeof value !== 'string') throw new WorkspaceError('TITLE_INVALID', 'Неверное название сессии.');
       const title = value.replace(/\s+/g, ' ').trim().slice(0, 160);
-      if (!title || session.title === title) return false;
-      session.title = title; return true;
+      if (!title || explicitTitleSources.has(session.titleSource)) return false;
+      if (session.title === title && session.titleSource === 'page') return false;
+      session.title = title; session.titleSource = 'page'; return true;
+    });
+  }
+
+  applyScopeTitle(workspace, sessionId, { scopeId, objective, scopeStatus } = {}) {
+    return this.mutate(data => {
+      const { project, session } = this.activeRecord(workspace, sessionId, data);
+      if (!['ACTIVE', 'BLOCKED'].includes(scopeStatus) || typeof scopeId !== 'string' || !scopeId) return false;
+      if (project.lastNamedScopeId === scopeId) return false;
+      const title = localName(objective, { empty: 'У scope нет названия для сессии.' });
+      session.title = title; session.titleSource = 'scope'; project.lastNamedScopeId = scopeId;
+      return true;
     });
   }
 

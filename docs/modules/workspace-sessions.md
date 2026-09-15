@@ -334,3 +334,8 @@ CDP подключается на пустой служебной страниц
 - Для текущего scope согласованное название этой session: `Переименование проектов и сессий`.
 
 Приёмка: оба меню содержат `Переименовать`; проектный alias меняется только из пользовательского UI; session сохраняет ручное имя; новый scope автоматически именует только текущую session один раз; page title больше не перетирает явные имена; restart/archive сохраняют результат.
+
+
+### Persisted naming model — scope 013 / T001
+
+Project record хранит optional `displayName` отдельно от канонического `name`, а session — optional `titleSource=page|manual|scope`; проект также запоминает `lastNamedScopeId`. Старые schema v5 записи остаются валидными без миграции. Page title обновляет только fallback-имя, ручное и scope-имя защищены. `applyScopeTitle` атомарно закрепляет новый scope за текущей session и не переносит тот же scope на другую session после переключения.

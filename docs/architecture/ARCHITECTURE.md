@@ -641,3 +641,8 @@ macOS arm64 и Windows x64 собираются из одного source tree с
 ## Release 0.6.12 — scope 012 / T016
 
 Удаление подсчёта включено в обе platform-сборки. В app.asar нет session-tokens.mjs, conversation-history.mjs и js-tiktoken. Сохраняются быстрый recovery, проектные Chat/Work sessions, archive и общие operation spinners.
+
+
+## Локальные имена проекта и session — scope 013 / T001
+
+WorkspaceSessions не меняет идентичность Workflow Kit ради пользовательского переименования. Канонические `workspace/projectId/name` продолжают приходить из plan, а `displayName` является отдельным persisted alias оболочки. Session title получил источник `page|manual|scope`; page title — только fallback. `lastNamedScopeId` хранится на project record и обеспечивает одно автоматическое именование на scope. Schema остаётся v5: новые поля optional и старые записи читаются без миграции.
