@@ -4,17 +4,20 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 327,
+  "plan_revision": 328,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "next-modifications-discussion-012",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
-  "objective": "Добавить локальную оценку токенов переписки через tiktoken в правый нижний угол строки каждой сессии.",
+  "delivery_status": "IN_PROGRESS",
+  "objective": "Оценка токенов сессий и существенное ускорение повторной передачи полного актуального контекста через предварительную подготовку.",
   "acceptance_criteria": [
     "Отдельная сохраняемая оценка для каждой Chat/Work сессии обновляется при чтении сообщений.",
     "Счётчик расположен справа снизу; повторное отображение одного сообщения не увеличивает сумму.",
-    "Показания явно являются оценкой доступного текста; пользователь проверяет их на реальном ChatGPT."
+    "Показания явно являются оценкой доступного текста; пользователь проверяет их на реальном ChatGPT.",
+    "Готовый пакет переиспользуется только после проверки исходных данных; изменения Git, плана, документов и evidence инвалидируют кэш.",
+    "Замер одинакового пакета показывает более чем двукратное ускорение подготовки при попадании в кэш; время страницы/ответа ChatGPT учитывается отдельно.",
+    "Обновлены macOS/Windows packages для пользовательской приёмки."
   ],
   "approved_scope": {
     "functional_paths": [
@@ -26,14 +29,21 @@
       "src/main.mjs",
       "src/ui/sidebar.mjs",
       "src/ui/index.html",
-      "tests/electron-smoke.mjs"
+      "tests/electron-smoke.mjs",
+      "src/context-inputs.mjs",
+      "src/context-cache.mjs",
+      "tests/context-cache.test.mjs",
+      "src/context-session.mjs",
+      "tests/context-session.test.mjs"
     ],
     "documentation_paths": [
       "docs/DECISIONS.md",
       "docs/modules/workspace-sessions.md",
       "docs/architecture/ARCHITECTURE.md",
       "docs/VERIFICATION.md",
-      "docs/WORKFLOW_START.md"
+      "docs/WORKFLOW_START.md",
+      "docs/modules/workflow-kit-recovery.md",
+      "docs/CONTEXT_DELIVERY.md"
     ],
     "max_functional_files_per_task": 3
   },
@@ -43,11 +53,17 @@
     "documents": [
       {
         "path": "docs/architecture/OVERVIEW.md",
+        "heading_path": [
+          "Краткая архитектура проекта"
+        ],
         "required": true,
         "revision": "WORKTREE"
       },
       {
-        "path": "docs/modules/workspace-sessions.md",
+        "path": "docs/modules/workflow-kit-recovery.md",
+        "heading_path": [
+          "Module Specification — Workflow Kit / Context Recovery"
+        ],
         "required": true,
         "revision": "WORKTREE"
       }
@@ -190,6 +206,134 @@
         "task_id": "T004",
         "role": "implementation"
       }
+    },
+    {
+      "id": "T005",
+      "title": "Зафиксировать анализ и контракт предварительной подготовки контекста",
+      "why": "Ускорить повторную передачу полного актуального контекста по поручению пользователя 15.09.2026.",
+      "dependencies": [],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/modules/workflow-kit-recovery.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/DECISIONS.md"
+      ],
+      "verification_ids": [],
+      "acceptance_criteria": [
+        "Актуальность и полнота канонического пакета сохранены; результат проверен."
+      ],
+      "expected_commit_message": "docs: согласовать ускорение подготовки контекста",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "next-modifications-discussion-012",
+        "task_id": "T005",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T006",
+      "title": "Добавить проверяемый кэш полного recovery packet",
+      "why": "Ускорить повторную передачу полного актуального контекста по поручению пользователя 15.09.2026.",
+      "dependencies": [
+        "T005"
+      ],
+      "functional_paths": [
+        "src/context-inputs.mjs",
+        "src/context-cache.mjs",
+        "tests/context-cache.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/workflow-kit-recovery.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [
+        "suite"
+      ],
+      "acceptance_criteria": [
+        "Актуальность и полнота канонического пакета сохранены; результат проверен."
+      ],
+      "expected_commit_message": "feat: заранее готовить актуальный recovery packet",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "next-modifications-discussion-012",
+        "task_id": "T006",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T007",
+      "title": "Подключить прогрев и проверку перед отправкой",
+      "why": "Ускорить повторную передачу полного актуального контекста по поручению пользователя 15.09.2026.",
+      "dependencies": [
+        "T006"
+      ],
+      "functional_paths": [
+        "src/main.mjs",
+        "src/context-session.mjs",
+        "src/ui/sidebar.mjs",
+        "tests/context-session.test.mjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/workflow-kit-recovery.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "acceptance_criteria": [
+        "Актуальность и полнота канонического пакета сохранены; результат проверен."
+      ],
+      "expected_commit_message": "feat: использовать подготовленный контекст при отправке",
+      "file_limit_exception": "Интеграция одного recovery cache в координатор, интерфейс и обязательные regression tests.",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "next-modifications-discussion-012",
+        "task_id": "T007",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T008",
+      "title": "Измерить ускорение и собрать релиз 0.6.10",
+      "why": "Ускорить повторную передачу полного актуального контекста по поручению пользователя 15.09.2026.",
+      "dependencies": [
+        "T007"
+      ],
+      "functional_paths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "documentation_paths": [
+        "docs/modules/workflow-kit-recovery.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md"
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "acceptance_criteria": [
+        "Актуальность и полнота канонического пакета сохранены; результат проверен."
+      ],
+      "expected_commit_message": "chore: собрать Web Pilot 0.6.10 с быстрым recovery",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "next-modifications-discussion-012",
+        "task_id": "T008",
+        "role": "implementation"
+      }
     }
   ],
   "blocked_reason": null,
@@ -202,6 +346,10 @@
     {
       "id": "session-tiktoken-20260914",
       "text": "Пользователь поручил интегрировать tiktoken и показывать израсходованные токены справа внизу плашки сессии; пользователь сам сравнит показания с реальным контекстным окном. Реализация и локальная сборка для проверки авторизованы. Считаем доступный текст сообщений, отображаем оценку, без процента окна и без изменения Recovery."
+    },
+    {
+      "id": "context-prewarm-20260915",
+      "text": "15.09.2026 пользователь поручил проанализировать ускорение передачи контекста более чем вдвое, формировать и хранить его заранее во время работы, реализовать и собрать новый релиз для тестов. Разрешён кэш полного канонического пакета с обязательной проверкой актуальности; содержание и защиты доставки сохраняются."
     }
   ]
 }
@@ -211,20 +359,23 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: next-modifications-discussion-012
 Current Task: нет
-Revision: 327
+Revision: 328
 
 ## Цель
 
-Добавить локальную оценку токенов переписки через tiktoken в правый нижний угол строки каждой сессии.
+Оценка токенов сессий и существенное ускорение повторной передачи полного актуального контекста через предварительную подготовку.
 
 ## Критерии приёмки
 
 - Отдельная сохраняемая оценка для каждой Chat/Work сессии обновляется при чтении сообщений.
 - Счётчик расположен справа снизу; повторное отображение одного сообщения не увеличивает сумму.
 - Показания явно являются оценкой доступного текста; пользователь проверяет их на реальном ChatGPT.
+- Готовый пакет переиспользуется только после проверки исходных данных; изменения Git, плана, документов и evidence инвалидируют кэш.
+- Замер одинакового пакета показывает более чем двукратное ускорение подготовки при попадании в кэш; время страницы/ответа ChatGPT учитывается отдельно.
+- Обновлены macOS/Windows packages для пользовательской приёмки.
 
 ## Микрозадачи
 
@@ -244,10 +395,26 @@ Revision: 327
   - Git Commit: [DONE] chore: собрать Web Pilot 0.6.9 со счётчиком токенов
   - Reference: next-modifications-discussion-012 / T004 / implementation
   - Файлы: package.json, package-lock.json, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/modules/workspace-sessions.md
+- [TODO] T005: Зафиксировать анализ и контракт предварительной подготовки контекста — Ожидает
+  - Git Commit: [PENDING] docs: согласовать ускорение подготовки контекста
+  - Reference: next-modifications-discussion-012 / T005 / implementation
+  - Файлы: docs/modules/workflow-kit-recovery.md, docs/CONTEXT_DELIVERY.md, docs/DECISIONS.md
+- [TODO] T006: Добавить проверяемый кэш полного recovery packet — Ожидает
+  - Git Commit: [PENDING] feat: заранее готовить актуальный recovery packet
+  - Reference: next-modifications-discussion-012 / T006 / implementation
+  - Файлы: src/context-inputs.mjs, src/context-cache.mjs, tests/context-cache.test.mjs, docs/modules/workflow-kit-recovery.md, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+- [TODO] T007: Подключить прогрев и проверку перед отправкой — Ожидает
+  - Git Commit: [PENDING] feat: использовать подготовленный контекст при отправке
+  - Reference: next-modifications-discussion-012 / T007 / implementation
+  - Файлы: src/main.mjs, src/context-session.mjs, src/ui/sidebar.mjs, tests/context-session.test.mjs, tests/electron-smoke.mjs, docs/modules/workflow-kit-recovery.md, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+- [TODO] T008: Измерить ускорение и собрать релиз 0.6.10 — Ожидает
+  - Git Commit: [PENDING] chore: собрать Web Pilot 0.6.10 с быстрым recovery
+  - Reference: next-modifications-discussion-012 / T008 / implementation
+  - Файлы: package.json, package-lock.json, docs/modules/workflow-kit-recovery.md, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md
 
 ## Context Pack For This Cycle
 
-- docs/architecture/OVERVIEW.md
-- docs/modules/workspace-sessions.md
+- docs/architecture/OVERVIEW.md → Краткая архитектура проекта
+- docs/modules/workflow-kit-recovery.md → Module Specification — Workflow Kit / Context Recovery
 
 Служебные состояния меняются только командами workflow. Приёмка не архивирует scope.
