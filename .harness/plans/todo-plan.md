@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 393,
+  "plan_revision": 397,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "scope-015",
@@ -161,15 +161,16 @@
         "T003"
       ],
       "functional_paths": [
-        "tests/sidebar.test.mjs",
-        "tests/electron-smoke.mjs"
+        "tests/electron-smoke.mjs",
+        "src/ui/index.html",
+        "src/ui/sidebar.mjs"
       ],
       "documentation_paths": [
-        "docs/VERIFICATION.md"
+        "docs/VERIFICATION.md",
+        "docs/architecture/ARCHITECTURE.md"
       ],
       "verification_ids": [
         "syntax",
-        "suite",
         "electron-smoke"
       ],
       "id": "T004",
@@ -180,8 +181,8 @@
         "Пройдены Node suite и Electron smoke на изолированном fixture"
       ],
       "expected_commit_message": "test: verify compact sidebar and newest session flow",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "scope-015",
         "task_id": "T004",
@@ -191,6 +192,36 @@
     {
       "dependencies": [
         "T004"
+      ],
+      "functional_paths": [
+        "tests/sidebar.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [
+        "syntax",
+        "suite"
+      ],
+      "id": "T005",
+      "title": "Закрепить регрессии состояния дерева",
+      "why": "Проверить перерисовку и временное скрытие дерева отдельно от Electron",
+      "acceptance_criteria": [
+        "Проверены меню, порядок, выбор, сворачивание и сохранение scroll при временно скрытой области",
+        "Пройдена полная Node suite"
+      ],
+      "expected_commit_message": "test: cover sidebar state and hidden scroll restoration",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "scope-015",
+        "task_id": "T005",
+        "role": "implementation"
+      }
+    },
+    {
+      "dependencies": [
+        "T005"
       ],
       "functional_paths": [
         "package.json",
@@ -206,7 +237,6 @@
       "verification_ids": [
         "syntax"
       ],
-      "id": "T005",
       "title": "Собрать релиз 0.6.15 для проверки",
       "why": "Передать пользователю обновлённое приложение",
       "acceptance_criteria": [
@@ -214,11 +244,12 @@
         "Версии bundle и исходники app.asar сверены; scope оставлен на приёмке"
       ],
       "expected_commit_message": "release: build Web Pilot 0.6.15",
+      "id": "T006",
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "scope-015",
-        "task_id": "T005",
+        "task_id": "T006",
         "role": "implementation"
       }
     }
@@ -241,7 +272,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: scope-015
 Current Task: нет
-Revision: 393
+Revision: 397
 
 ## Цель
 
@@ -270,13 +301,17 @@ Revision: 393
   - Git Commit: [DONE] feat: integrate compact project tree and session scrolling
   - Reference: scope-015 / T003 / implementation
   - Файлы: src/ui/sidebar.mjs, src/ui/index.html, docs/architecture/ARCHITECTURE.md
-- [TODO] T004: Проверить интерфейс и сценарии сессий — Ожидает
-  - Git Commit: [PENDING] test: verify compact sidebar and newest session flow
+- [DONE] T004: Проверить интерфейс и сценарии сессий — Завершено
+  - Git Commit: [DONE] test: verify compact sidebar and newest session flow
   - Reference: scope-015 / T004 / implementation
-  - Файлы: tests/sidebar.test.mjs, tests/electron-smoke.mjs, docs/VERIFICATION.md
-- [TODO] T005: Собрать релиз 0.6.15 для проверки — Ожидает
-  - Git Commit: [PENDING] release: build Web Pilot 0.6.15
+  - Файлы: tests/electron-smoke.mjs, src/ui/index.html, src/ui/sidebar.mjs, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
+- [TODO] T005: Закрепить регрессии состояния дерева — Ожидает
+  - Git Commit: [PENDING] test: cover sidebar state and hidden scroll restoration
   - Reference: scope-015 / T005 / implementation
+  - Файлы: tests/sidebar.test.mjs, docs/VERIFICATION.md
+- [TODO] T006: Собрать релиз 0.6.15 для проверки — Ожидает
+  - Git Commit: [PENDING] release: build Web Pilot 0.6.15
+  - Reference: scope-015 / T006 / implementation
   - Файлы: package.json, package-lock.json, docs/WORKFLOW_START.md, docs/PRODUCT.md, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 
 ## Context Pack For This Cycle

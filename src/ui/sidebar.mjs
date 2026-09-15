@@ -132,6 +132,9 @@ async function action(method, ...args) {
 function render(state) {
   progress.show(operationLabel(state ?? {}, pendingAction));
   if (!state) return;
+  for (const list of $('projects').querySelectorAll('.sessions')) {
+    if (!list.closest('[hidden]')) sessionScroll.set(list.dataset.workspace, list.scrollTop);
+  }
   const previousProjects = currentState?.projects ?? [];
   currentState = state;
   splitter.setAttribute('aria-valuemin', String(state.sidebarMinWidth ?? 312));
@@ -142,9 +145,6 @@ function render(state) {
   if (signature !== lastProjects) {
     lastProjects = signature;
     const outerScroll = $('projects').scrollTop;
-    for (const list of $('projects').querySelectorAll('.sessions')) {
-      if (!list.hidden) sessionScroll.set(list.dataset.workspace, list.scrollTop);
-    }
     const oldProject = previousProjects.find(project => project.workspace === selected?.workspace);
     if (selected && !oldProject?.sessions.some(session => session.sessionId === selected.sessionId)) sessionScroll.set(selected.workspace, 0);
     closeTreeMenus();
@@ -198,7 +198,9 @@ function render(state) {
       sessions.dataset.workspace = project.workspace;
       sessions.setAttribute('aria-label', `Сессии ${project.name}, новые сверху`);
       sessions.tabIndex = 0;
-      sessions.addEventListener('scroll', () => sessionScroll.set(project.workspace, sessions.scrollTop), { passive: true });
+      sessions.addEventListener('scroll', () => {
+        if (sessions.isConnected && !sessions.closest('[hidden]')) sessionScroll.set(project.workspace, sessions.scrollTop);
+      }, { passive: true });
       for (const session of project.sessions) {
         const entry = document.createElement('li');
         const row = document.createElement('div'); row.className = 'session-row';
@@ -237,7 +239,6 @@ function render(state) {
       empty.textContent = 'Откройте меню «Ваши проекты», чтобы создать проект или выбрать его папку.'; fragment.append(empty);
     }
     $('projects').replaceChildren(fragment);
-    for (const list of $('projects').querySelectorAll('.sessions')) list.scrollTop = sessionScroll.get(list.dataset.workspace) ?? 0;
     $('projects').scrollTop = outerScroll;
     for (const workspace of sessionScroll.keys()) if (!state.projects.some(project => project.workspace === workspace)) sessionScroll.delete(workspace);
   }
@@ -322,6 +323,13 @@ function render(state) {
   $('accept-plan').disabled = actionPending || !selected || plan.state !== 'awaiting-acceptance' || !!acceptance;
   setupView.render(state, actionPending);
   archiveView.render(state, actionPending);
+  // Setup briefly hides the tree while checking a folder. Restore only after it is visible.
+  for (const list of $('projects').querySelectorAll('.sessions')) {
+    if (!list.closest('[hidden]')) {
+      const top = sessionScroll.get(list.dataset.workspace) ?? 0;
+      if (list.scrollTop !== top) list.scrollTop = top;
+    }
+  }
   $('choose-runtime').hidden = state.platform === 'win32';
   $('choose-runtime').disabled = actionPending || !!state.setup || !!state.settings;
 }

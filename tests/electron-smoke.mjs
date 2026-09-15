@@ -111,6 +111,13 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(window.contentView.children[0].getBounds().width, 432); assert.equal(window.contentView.children[1].getBounds().x, 432);
   await sidebar.executeJavaScript(`document.getElementById('sidebar-splitter').dispatchEvent(new KeyboardEvent('keydown',{bubbles:true,key:'ArrowLeft'}))`);
   await waitFor(() => snapshot().sidebarWidth === 408, 'keyboard sidebar resize', snapshot);
+  const disclosure = await sidebar.executeJavaScript(`(() => {
+    const details=document.getElementById('project-actions'), summary=details.querySelector('summary');
+    const initially=details.open; summary.click(); summary.dispatchEvent(new FocusEvent('focusout',{bubbles:true}));
+    const opened=details.open; summary.click(); const closed=!details.open;
+    summary.click(); document.body.click(); return {initially,opened,closed,outsideClosed:!details.open};
+  })()`);
+  assert.deepEqual(disclosure, {initially:false,opened:true,closed:true,outsideClosed:true});
   const previewNew = async () => {
     await sidebar.executeJavaScript('document.getElementById("create-workspace").click()');
     await waitFor(() => snapshot().setup?.phase === 'form', 'new workspace form', snapshot);
@@ -257,8 +264,8 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(await sidebar.executeJavaScript('document.getElementById("context-details").hidden'), false);
   await sidebar.executeJavaScript('document.getElementById("context-toggle").click()');
   assert.equal(await sidebar.executeJavaScript('document.getElementById("context-details").hidden'), true);
-  const disclosureSize = await sidebar.executeJavaScript(`(() => { const e=document.querySelector('.expand-project'); const p=getComputedStyle(e,'::before'); return {button:e.getBoundingClientRect().width, triangle:parseFloat(p.borderLeftWidth), expanded:e.getAttribute('aria-expanded')}; })()`);
-  assert.ok(disclosureSize.button >= 32); assert.ok(disclosureSize.triangle >= 11); assert.equal(disclosureSize.expanded, 'false');
+  const disclosureSize = await sidebar.executeJavaScript(`(() => { const e=document.querySelector('.expand-project'); const p=getComputedStyle(e,'::before'); return {button:e.getBoundingClientRect().width, icon:e.querySelector('svg').getBoundingClientRect().width, expanded:e.getAttribute('aria-expanded')}; })()`);
+  assert.ok(disclosureSize.button >= 32); assert.ok(disclosureSize.icon >= 18); assert.equal(disclosureSize.expanded, 'false');
   const restored = new WorkspaceSessions(store.file); await restored.load();
   assert.equal(restored.selected().sessionId, first.sessionId); assert.equal(restored.selected().chatUrl, first.chatUrl);
   controller.attach(store.selected()); await controller.tick();
@@ -269,6 +276,8 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await sidebar.executeJavaScript(`window.prompt=()=>"Проект Smoke Rename"; document.querySelector('.project-menu-button').click(); document.querySelector('.rename-project').click()`);
   await waitFor(() => snapshot().projects[0].name === 'Проект Smoke Rename', 'project rename menu IPC', snapshot);
   assert.equal(store.project(workspace).name, 'Тестовый проект с пробелами', 'project rename keeps canonical workflow name');
+  await sidebar.executeJavaScript('document.querySelector(".expand-project").click()');
+  await waitFor(() => sidebar.executeJavaScript('!document.querySelector(".sessions").hidden && !document.querySelector(".session").disabled'), 'expand before session actions', snapshot);
   await sidebar.executeJavaScript(`window.prompt=()=>"Сессия Smoke Rename"; { const li=document.querySelector('[data-session-id="${first.sessionId}"]').closest('li'); li.querySelector('.session-menu-button').click(); li.querySelector('.rename-session').click(); }`);
   await waitFor(() => store.selected()?.title === 'Сессия Smoke Rename', 'session rename menu IPC', snapshot);
   assert.equal(store.selected().titleSource, 'manual');
@@ -299,7 +308,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.ok(browser.getURL().startsWith('https://chatgpt.com/c/'));
   assert.equal(third.experience, 'work', 'shared /c URL keeps Work provenance');
   assert.equal(store.snapshot().projects[0].sessions.length, 3);
-  assert.deepEqual(await sidebar.executeJavaScript('Array.from(document.querySelectorAll(".session-experience")).map(e=>e.textContent)'), ['Chat', 'Chat', 'Work']);
+  assert.deepEqual(await sidebar.executeJavaScript('Array.from(document.querySelectorAll(".session-experience")).map(e=>e.textContent)'), ['Work', 'Chat', 'Chat']);
   assert.equal(await browser.executeJavaScript('window.fixtureMessages[0].mode'), 'work');
   await sidebar.executeJavaScript(`document.querySelector('.project-menu-button').click(); document.querySelector('.new-project-chat').click()`);
   await waitFor(() => store.selected()?.experience === 'chat' && store.selected()?.sessionId !== second.sessionId
@@ -308,9 +317,52 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 1);
   assert.equal(await browser.executeJavaScript('window.fixtureMessages[0].mode'), 'chatgpt');
   assert.equal(await browser.executeJavaScript('window.fixtureModeClicks'), 1);
+  const fourth = store.selected();
+  assert.deepEqual(snapshot().projects[0].sessions.map(s => s.sessionId), [fourth.sessionId, third.sessionId, second.sessionId, first.sessionId]);
+  const treeScreenshots = [];
+  for (const width of [312, 408]) {
+    await sidebar.executeJavaScript('window.webPilot.setSidebarWidth(' + width + ')');
+    await waitFor(() => snapshot().sidebarWidth === width, 'tree width ' + width, snapshot);
+    for (const theme of ['light', 'dark']) {
+      await sidebar.executeJavaScript('window.webPilot.setTheme(' + JSON.stringify(theme) + ')');
+      await waitFor(() => sidebar.executeJavaScript('document.documentElement.dataset.theme === ' + JSON.stringify(theme)), 'tree theme ' + theme, snapshot);
+      const bounds = await sidebar.executeJavaScript(`(() => {
+        const list=document.querySelector('.sessions'), rows=[...list.children], row=rows[0], style=getComputedStyle(list);
+        const right=list.getBoundingClientRect().right, menu=row.querySelector('.session-menu-button').getBoundingClientRect();
+        const badge=row.querySelector('.session-experience').getBoundingClientRect();
+        return {height:list.clientHeight,rowHeight:row.getBoundingClientRect().height,overflow:list.scrollHeight>list.clientHeight,
+          scrollbar:list.offsetWidth-list.clientWidth, gutter:style.scrollbarGutter, right,menuRight:menu.right,badgeRight:badge.right,
+          horizontal:list.scrollWidth<=list.clientWidth, bodyFits:document.documentElement.scrollWidth<=innerWidth};
+      })()`);
+      assert.ok(Math.abs(bounds.height - bounds.rowHeight * 3) < 2, JSON.stringify(bounds));
+      assert.ok(bounds.overflow && bounds.horizontal && bounds.bodyFits, JSON.stringify(bounds));
+      assert.ok(bounds.scrollbar >= 10 && bounds.gutter === 'stable', JSON.stringify(bounds));
+      assert.ok(bounds.menuRight < bounds.right - bounds.scrollbar && bounds.badgeRight < bounds.menuRight, JSON.stringify(bounds));
+      const imageFile=path.join(dataDir, 'projects-' + width + '-' + theme + '.png');
+      await fs.writeFile(imageFile, (await sidebar.capturePage()).toPNG()); treeScreenshots.push(imageFile);
+    }
+  }
+  await sidebar.executeJavaScript('window.webPilot.setTheme("light")');
+  await waitFor(() => snapshot().theme === 'light', 'restore theme after tree check', snapshot);
+  await sidebar.executeJavaScript(`document.querySelector('.sessions').scrollTop=document.querySelector('.sessions').scrollHeight`);
+  await sidebar.executeJavaScript('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
+  const oldScroll = await sidebar.executeJavaScript(`(() => {
+    const list=document.querySelector('.sessions');
+    const button=list.querySelector('[data-session-id="${first.sessionId}"]').closest('li').querySelector('.session-menu-button');
+    button.focus({preventScroll:true}); button.click(); const menu=button.closest('li').querySelector('.session-menu'), rect=menu.getBoundingClientRect();
+    const result={scroll:list.scrollTop,open:menu.matches(':popover-open'),visible:rect.width>0 && rect.top>=0 && rect.bottom<=innerHeight};
+    menu.hidePopover(); result.afterHide=list.scrollTop; return result;
+  })()`);
+  assert.ok(oldScroll.scroll > 0 && oldScroll.open && oldScroll.visible, JSON.stringify(oldScroll));
+  assert.equal(oldScroll.afterHide, oldScroll.scroll, JSON.stringify(oldScroll));
+  await sidebar.executeJavaScript('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
+  assert.equal(await sidebar.executeJavaScript('document.querySelector(".sessions").scrollTop'), oldScroll.scroll, 'menu closing preserves scroll');
+
   await sidebar.executeJavaScript(`document.querySelector('[data-session-id="${first.sessionId}"]').click()`);
   await waitFor(() => store.selected()?.sessionId === first.sessionId && snapshot().context.phase === 'delivered'
     && browser.getURL() === first.chatUrl, 'select earlier session via tree', snapshot);
+  assert.equal(await sidebar.executeJavaScript('document.querySelector(".sessions").scrollTop'), oldScroll.scroll, 'old session keeps scroll after state refresh');
+  assert.deepEqual(snapshot().projects[0].sessions.map(s => s.sessionId), [fourth.sessionId, third.sessionId, second.sessionId, first.sessionId]);
   assert.equal(packetLoads, warmPacketLoads, 'Earlier chat does not receive another context packet');
   assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 2);
   assert.ok(await browser.executeJavaScript(`window.fixtureMessages[0].text.includes('${first.attempt.requestId}')`));
@@ -352,17 +404,22 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.ok(await fs.stat(workspace), 'session delete keeps workspace folder');
   sessionArchiveWindow.close(); await waitFor(() => !getArchiveWindow() || getArchiveWindow().isDestroyed(), 'close session delete archive', snapshot);
   await archiveSessionFromTree(second.sessionId);
-  const doubleClickWorkspace = () => sidebar.executeJavaScript(`{
-    const button = document.querySelector('.project');
-    button.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
-    button.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 2 }));
-    button.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, detail: 2 }));
-  }`);
-  await doubleClickWorkspace();
-  await waitFor(() => sidebar.executeJavaScript('document.querySelector(".sessions").hidden'), 'double click collapses sessions', snapshot);
-  await doubleClickWorkspace();
-  await waitFor(() => sidebar.executeJavaScript('!document.querySelector(".sessions").hidden'), 'double click expands sessions', snapshot);
-  assert.equal(store.selected().sessionId, first.sessionId, 'Expanding does not switch to latest session');
+  await sidebar.executeJavaScript('document.querySelector(".expand-project").click()');
+  await waitFor(() => sidebar.executeJavaScript('document.querySelector(".sessions").hidden && !document.querySelector(".expand-project").disabled'), 'arrow collapses sessions', snapshot);
+  assert.equal(store.selected().sessionId, first.sessionId);
+  await sidebar.executeJavaScript('document.querySelector(".expand-project").click()');
+  await waitFor(() => sidebar.executeJavaScript('!document.querySelector(".sessions").hidden && !document.querySelector(".project").disabled'), 'arrow expands sessions', snapshot);
+  assert.equal(store.selected().sessionId, first.sessionId, 'disclosure preserves conversation');
+  await sidebar.executeJavaScript('document.querySelector(".project").click()');
+  await waitFor(() => store.selected().sessionId === fourth.sessionId && snapshot().context.phase === 'delivered', 'project name selects latest session', snapshot);
+  assert.equal(await sidebar.executeJavaScript('document.querySelector(".sessions").scrollTop'), 0);
+  await sidebar.executeJavaScript('document.getElementById("toggle-projects").click()');
+  await waitFor(() => sidebar.executeJavaScript('document.querySelector(".sessions").hidden && !document.getElementById("toggle-projects").disabled'), 'collapse all projects', snapshot);
+  await sidebar.executeJavaScript('document.getElementById("toggle-projects").click()');
+  await waitFor(() => sidebar.executeJavaScript('!document.querySelector(".sessions").hidden && !document.getElementById("toggle-projects").disabled'), 'expand all projects', snapshot);
+  assert.equal(store.selected().sessionId, fourth.sessionId);
+  await sidebar.executeJavaScript(`document.querySelector('[data-session-id="${first.sessionId}"]').click()`);
+  await waitFor(() => store.selected().sessionId === first.sessionId && snapshot().context.phase === 'delivered', 'restore old selection for restart check', snapshot);
   const history = new WorkspaceSessions(store.file); await history.load();
   assert.equal(history.selected().sessionId, first.sessionId);
   assert.equal(history.snapshot().projects[0].sessions.length, 3);
@@ -565,7 +622,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
     assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 1);
   }
 
-  const result = { scopeContinuationChat: true, scopeContinuationWork: true, scopeContinuationRestart: true, scopeContinuationNoDuplicates: true,
+  const result = { newestSessionFirst: true, projectSelectsNewest: true, threeSessionViewport: true, sessionScrollPreserved: true, visibleSessionScrollbar: true, nativeProjectsDisclosure: true, treePopover: true, treeScreenshots, scopeContinuationChat: true, scopeContinuationWork: true, scopeContinuationRestart: true, scopeContinuationNoDuplicates: true,
     transitionScreenshot: path.join(dataDir, 'next-session-choice.png'), mode: 'isolated-fixture', electron: process.versions.electron, chromium: process.versions.chrome,
     views: window.contentView.children.length, secureRemote: true, sidebarIpc: true, archiveRestore: true, archiveRestart: true, deleteCancel: true, localDeletion: true, cloudChatPreserved: true, workspaceCreation: true, workspaceValidation: true, cancelPreservesSession: true, startupMessages: 4, canonicalPacketLoads: packetLoads, recoveryCache: true, operationProgress: true, progressScreenshot: path.join(dataDir, 'progress-ui.png'),
     tokenCounterRemoved: true, projectRename: true, sessionRename: true, scopeSessionRename: true, restartKeepsSession: true, newChatCreatesSession: true, sessionTree: true, selectsEarlierSession: true, compactWorkspaceDetails: true, projectPathClipboard: true, planAcceptanceButton: true, chromiumDiagnostics: true, contextWindowIndicator: true, resizableSidebar: true, separateArchiveWindow: true, archiveMultiSelect: true, archiveForgetKeepsFolder: true, shellTheme: true, nativeTitlebarTheme: nativeTheme.shouldUseDarkColors, toolCallFilter: true, microphonePermission: true, geolocationPermission: true, cameraPermission: false, fullContextBytes: Buffer.byteLength(fixtureContext), liveChatGPT: false, agentToolsRequired: false };
