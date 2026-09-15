@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 342,
+  "plan_revision": 344,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "next-modifications-discussion-012",
@@ -401,8 +401,8 @@
         "Полнота подтверждается исчерпанием пагинации; DOM-фрагмент не обозначается полной историей."
       ],
       "expected_commit_message": "docs: уточнить контракт полного подсчёта истории",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "next-modifications-discussion-012",
         "task_id": "T010",
@@ -552,7 +552,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: next-modifications-discussion-012
 Current Task: нет
-Revision: 342
+Revision: 344
 
 ## Цель
 
@@ -606,8 +606,8 @@ Revision: 342
   - Git Commit: [DONE] chore: собрать Web Pilot 0.6.10 с быстрым recovery
   - Reference: next-modifications-discussion-012 / T009 / implementation
   - Файлы: package.json, package-lock.json, docs/modules/workflow-kit-recovery.md, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md
-- [TODO] T010: Зафиксировать исправление подсчёта всей истории — Ожидает
-  - Git Commit: [PENDING] docs: уточнить контракт полного подсчёта истории
+- [DONE] T010: Зафиксировать исправление подсчёта всей истории — Завершено
+  - Git Commit: [DONE] docs: уточнить контракт полного подсчёта истории
   - Reference: next-modifications-discussion-012 / T010 / implementation
   - Файлы: docs/modules/workspace-sessions.md, docs/DECISIONS.md
 - [TODO] T011: Загрузить полную историю через наблюдаемую пагинацию ChatGPT — Ожидает
