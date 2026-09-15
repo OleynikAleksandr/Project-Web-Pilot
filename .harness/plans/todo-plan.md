@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 397,
+  "plan_revision": 399,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "scope-015",
@@ -211,8 +211,8 @@
         "Пройдена полная Node suite"
       ],
       "expected_commit_message": "test: cover sidebar state and hidden scroll restoration",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "scope-015",
         "task_id": "T005",
@@ -272,7 +272,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: scope-015
 Current Task: нет
-Revision: 397
+Revision: 399
 
 ## Цель
 
@@ -305,8 +305,8 @@ Revision: 397
   - Git Commit: [DONE] test: verify compact sidebar and newest session flow
   - Reference: scope-015 / T004 / implementation
   - Файлы: tests/electron-smoke.mjs, src/ui/index.html, src/ui/sidebar.mjs, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
-- [TODO] T005: Закрепить регрессии состояния дерева — Ожидает
-  - Git Commit: [PENDING] test: cover sidebar state and hidden scroll restoration
+- [DONE] T005: Закрепить регрессии состояния дерева — Завершено
+  - Git Commit: [DONE] test: cover sidebar state and hidden scroll restoration
   - Reference: scope-015 / T005 / implementation
   - Файлы: tests/sidebar.test.mjs, docs/VERIFICATION.md
 - [TODO] T006: Собрать релиз 0.6.15 для проверки — Ожидает
