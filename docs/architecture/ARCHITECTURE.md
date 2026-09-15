@@ -605,3 +605,7 @@ Main читает доступные DOM-сообщения выбранного
 ## Release integration — scope 012 / T004 / Project Web Pilot 0.6.9
 
 Версия 0.6.9 добавляет локальную оценку токенов прочитанной переписки справа снизу каждой session row. js-tiktoken 1.0.21 и словарь o200k_base включены в macOS arm64 и Windows x64 packages; загрузка словаря из сети не требуется. Обе app.asar содержат одинаковые с исходным деревом модули счётчика, storage, main и sidebar. Отдельно проверен запуск SessionTokenCounter worker из собранного macOS app.asar в Electron. Recovery и Chat/Work routing не меняются; сравнение оценки с реальным ChatGPT остаётся ручной приёмкой пользователя.
+
+## Предварительная подготовка recovery — scope 012 / T006
+
+ContextCache хранит до четырёх полных штатных MCP packets в памяти, объединяет конкурентные запросы и прогревает выбранный workspace с интервалом 5 секунд. contextInputKey асинхронно читает Git metadata/status и хеши содержимого declared inputs, изменённых файлов, Kit/launcher, transaction/evidence. Проверяется канонический путь и состояние до/после builder; нестабильный пакет не попадает в кэш. Unsupported inputs оставляют foreground на штатном recover; background не запускает recovery при активной transaction. Сессии получают отдельные request IDs поверх общего пакета. Новых зависимостей и дисковых копий контекста нет.

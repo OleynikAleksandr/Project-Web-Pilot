@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 330,
+  "plan_revision": 332,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "next-modifications-discussion-012",
@@ -256,8 +256,8 @@
         "Актуальность и полнота канонического пакета сохранены; результат проверен."
       ],
       "expected_commit_message": "feat: заранее готовить актуальный recovery packet",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "next-modifications-discussion-012",
         "task_id": "T006",
@@ -362,7 +362,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: next-modifications-discussion-012
 Current Task: нет
-Revision: 330
+Revision: 332
 
 ## Цель
 
@@ -399,8 +399,8 @@ Revision: 330
   - Git Commit: [DONE] docs: согласовать ускорение подготовки контекста
   - Reference: next-modifications-discussion-012 / T005 / implementation
   - Файлы: docs/modules/workflow-kit-recovery.md, docs/CONTEXT_DELIVERY.md, docs/DECISIONS.md
-- [TODO] T006: Добавить проверяемый кэш полного recovery packet — Ожидает
-  - Git Commit: [PENDING] feat: заранее готовить актуальный recovery packet
+- [DONE] T006: Добавить проверяемый кэш полного recovery packet — Завершено
+  - Git Commit: [DONE] feat: заранее готовить актуальный recovery packet
   - Reference: next-modifications-discussion-012 / T006 / implementation
   - Файлы: src/context-inputs.mjs, src/context-cache.mjs, tests/context-cache.test.mjs, docs/modules/workflow-kit-recovery.md, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T007: Подключить прогрев и проверку перед отправкой — Ожидает

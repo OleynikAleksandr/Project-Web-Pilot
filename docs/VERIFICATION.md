@@ -595,3 +595,7 @@ Electron smoke проходит с реальным js-tiktoken worker: стар
 - Обе app.asar содержат version 0.6.9, js-tiktoken 1.0.21 и o200k_base (2 325 563 байта); src/session-tokens.mjs, src/workspace-session.mjs, src/main.mjs, src/ui/sidebar.mjs и src/ui/index.html побайтово совпадают с исходным деревом.
 - Отдельный Electron процесс импортировал SessionTokenCounter из macOS app.asar: worker вернул hello world = 2 токена и не повторил подсчёт неизменённого сообщения; exit 0.
 - Финальные syntax, suite и electron-smoke назначены обязательными gates workflow commit T004. Реальный аккаунт ChatGPT и native Windows acceptance проверяет пользователь; токенизация доступного текста не подтверждает величину серверного контекстного окна.
+
+## Scope 012 / T006 — recovery cache
+
+Шесть targeted tests пройдены: reuse неизменного пакета независимо от возраста, изоляция/лимит workspace, concurrent single build, гонки с изменениями, fallback и повреждённый packet; реальные Git fixtures проверяют same-size/mtime edit, index/HEAD, ignored required document, missing file, evidence, Kit runtime, transaction, linked worktree и symlink. Полный suite назначен workflow gate.
