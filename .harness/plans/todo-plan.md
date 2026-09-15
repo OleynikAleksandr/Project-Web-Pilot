@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 336,
+  "plan_revision": 337,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "next-modifications-discussion-012",
@@ -321,7 +321,9 @@
         "src/ui/archive.mjs",
         "src/ui/archive.html",
         "tests/progress.test.mjs",
-        "tests/electron-smoke.mjs"
+        "tests/electron-smoke.mjs",
+        "src/main.mjs",
+        "src/context-cache.mjs"
       ],
       "documentation_paths": [
         "docs/CONTEXT_DELIVERY.md",
@@ -412,7 +414,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: next-modifications-discussion-012
 Current Task: нет
-Revision: 336
+Revision: 337
 
 ## Цель
 
@@ -460,7 +462,7 @@ Revision: 336
 - [TODO] T008: Показать выполнение операций спиннерами и понятными этапами — Ожидает
   - Git Commit: [PENDING] feat: показывать ход операций приложения
   - Reference: next-modifications-discussion-012 / T008 / implementation
-  - Файлы: src/ui/progress.mjs, src/ui/sidebar.mjs, src/ui/index.html, src/ui/archive.mjs, src/ui/archive.html, tests/progress.test.mjs, tests/electron-smoke.mjs, docs/CONTEXT_DELIVERY.md, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+  - Файлы: src/ui/progress.mjs, src/ui/sidebar.mjs, src/ui/index.html, src/ui/archive.mjs, src/ui/archive.html, tests/progress.test.mjs, tests/electron-smoke.mjs, src/main.mjs, src/context-cache.mjs, docs/CONTEXT_DELIVERY.md, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T009: Измерить ускорение и собрать релиз 0.6.10 — Ожидает
   - Git Commit: [PENDING] chore: собрать Web Pilot 0.6.10 с быстрым recovery
   - Reference: next-modifications-discussion-012 / T009 / implementation
