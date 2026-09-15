@@ -106,30 +106,46 @@ test('legacy compatible version opens unchanged and unsupported version is expli
   const unsupported = await setup.preview({ mode: 'existing', workspace }); assert.equal(unsupported.action, null); assert.match(unsupported.issues[0].reason, /9.0.0/);
 });
 
-test('compatible 1.1 installation upgrades to 1.2 without overwriting user documents', async t => {
+test('compatible 1.2 NONE installation upgrades to 1.3 with project continuity and preserves user documents', async t => {
   const { setup, workspace } = await create(t);
   const manifestFile = path.join(workspace, '.harness/kit-manifest.json');
-  const manifest = JSON.parse(await fs.readFile(manifestFile, 'utf8')); manifest.version = '1.1.0';
+  const manifest = JSON.parse(await fs.readFile(manifestFile, 'utf8')); manifest.version = '1.2.0';
   const commonPath = path.join(workspace, '.harness/kit/lib/common.mjs');
-  const legacyCommon = (await fs.readFile(commonPath, 'utf8')).replace("VERSION = '1.2.0'", "VERSION = '1.1.0'");
+  const legacyCommon = (await fs.readFile(commonPath, 'utf8')).replace("VERSION = '1.3.0'", "VERSION = '1.2.0'");
   await fs.writeFile(commonPath, legacyCommon);
   const commonEntry = manifest.files.find(entry => entry.path === '.harness/kit/lib/common.mjs'); commonEntry.hash = sha(legacyCommon);
   await fs.writeFile(manifestFile, JSON.stringify(manifest, null, 2) + '\n');
-  await fs.rm(path.join(workspace, 'docs/MODULES.md'));
+
+  const planFile = path.join(workspace, '.harness/plans/todo-plan.md');
+  let planText = await fs.readFile(planFile, 'utf8');
+  const block = planText.match(/<!-- workflow-state:begin -->\s*```json\s*([\s\S]*?)```\s*<!-- workflow-state:end -->/);
+  const legacyPlan = JSON.parse(block[1]); legacyPlan.objective = '';
+  legacyPlan.context_pack = { documents: [], include_last_completed_task: false, dependency_task_ids: [] };
+  const legacyBlock = '<!-- workflow-state:begin -->\n```json\n' + JSON.stringify(legacyPlan, null, 2) + '\n```\n<!-- workflow-state:end -->';
+  planText = planText.slice(0, block.index) + legacyBlock + planText.slice(block.index + block[0].length);
+  await fs.writeFile(planFile, planText);
+
   await fs.writeFile(path.join(workspace, 'docs/architecture/OVERVIEW.md'), '# Краткая архитектура проекта\n\nCUSTOM_OVERVIEW_STAYS\n');
   await fs.writeFile(path.join(workspace, 'docs/PRODUCT.md'), '# User product stays\n');
   const indexFile = path.join(workspace, 'docs/DOCUMENTATION_INDEX.md');
   const customIndex = (await fs.readFile(indexFile, 'utf8')).replace('<!-- workflow-kit:end -->', '| docs/custom.md | User-added index row |\n<!-- workflow-kit:end -->');
   await fs.writeFile(indexFile, customIndex);
-  git(workspace, 'add', '.'); git(workspace, '-c', 'core.hooksPath=/dev/null', 'commit', '-m', 'simulate legacy 1.1');
+  git(workspace, 'add', '.'); git(workspace, '-c', 'core.hooksPath=/dev/null', 'commit', '-m', 'simulate legacy 1.2 NONE');
+
   const preview = await setup.preview({ mode: 'existing', workspace });
   assert.equal(preview.action, 'upgrade', JSON.stringify(preview));
   const result = await setup.apply(preview.token);
-  assert.equal(result.ready, true, JSON.stringify(result)); assert.equal(result.version, '1.2.0');
-  assert.match(await fs.readFile(commonPath, 'utf8'), /VERSION = '1\.2\.0'/);
-  await fs.stat(path.join(workspace, 'docs/MODULES.md')); assert.match(await fs.readFile(path.join(workspace, 'docs/architecture/OVERVIEW.md'), 'utf8'), /CUSTOM_OVERVIEW_STAYS/);
+  assert.equal(result.ready, true, JSON.stringify(result)); assert.equal(result.version, '1.3.0');
+  assert.match(await fs.readFile(commonPath, 'utf8'), /VERSION = '1\.3\.0'/);
+  assert.match(await fs.readFile(path.join(workspace, 'docs/architecture/OVERVIEW.md'), 'utf8'), /CUSTOM_OVERVIEW_STAYS/);
   assert.equal(await fs.readFile(path.join(workspace, 'docs/PRODUCT.md'), 'utf8'), '# User product stays\n');
   const upgradedIndex = await fs.readFile(indexFile, 'utf8'); assert.match(upgradedIndex, /docs\/custom\.md/); assert.match(upgradedIndex, /docs\/MODULES\.md/); assert.match(upgradedIndex, /docs\/architecture\/OVERVIEW\.md/);
+  const upgradedPlanText = await fs.readFile(planFile, 'utf8');
+  const upgradedPlan = JSON.parse(upgradedPlanText.match(/```json\n([\s\S]*?)\n```/)[1]);
+  assert.equal(upgradedPlan.objective, 'Обсудите следующий этап проекта с пользователем.');
+  for (const required of ['docs/architecture/OVERVIEW.md', 'docs/MODULES.md', 'docs/DOCUMENTATION_INDEX.md']) {
+    assert.ok(upgradedPlan.context_pack.documents.some(doc => doc.path === required && doc.required));
+  }
   assert.equal(git(workspace, 'status', '--porcelain'), '');
 });
 

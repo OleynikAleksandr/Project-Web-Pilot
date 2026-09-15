@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 442,
+  "plan_revision": 445,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-project-continuity-021",
@@ -40,7 +40,8 @@
       "tests/workflow-kit-source.test.mjs",
       "package.json",
       "package-lock.json",
-      "resources/workspace-setup-worker.mjs"
+      "resources/workspace-setup-worker.mjs",
+      "tests/workspace-setup.test.mjs"
     ],
     "documentation_paths": [
       ".harness/kit/WORKFLOW.md",
@@ -253,7 +254,8 @@
       ],
       "functional_paths": [
         "tests/workflow-kit-recovery.test.mjs",
-        "tests/workflow-kit-source.test.mjs"
+        "tests/workflow-kit-source.test.mjs",
+        "tests/workspace-setup.test.mjs"
       ],
       "documentation_paths": [],
       "verification_ids": [
@@ -266,13 +268,14 @@
         "Тесты проверяют archive→NONE context, автоматическую финальную задачу, gate READY_FOR_ACCEPTANCE, fresh/upgrade contract и точное совпадение bundled/installed Kit."
       ],
       "expected_commit_message": "test(workflow): закрепить continuity contract",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workflow-project-continuity-021",
         "task_id": "T006",
         "role": "implementation"
-      }
+      },
+      "documentation_exception": "T006 закрепляет уже согласованный continuity contract регрессионными тестами; итоговые результаты полной проверки и релиза будут внесены в docs/VERIFICATION.md обязательной финальной задачей DOCS."
     },
     {
       "dependencies": [
@@ -357,7 +360,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-project-continuity-021
 Current Task: нет
-Revision: 442
+Revision: 445
 
 ## Цель
 
@@ -393,10 +396,10 @@ Revision: 442
   - Git Commit: [DONE] docs(workflow): обновить обязательный шаблон
   - Reference: workflow-project-continuity-021 / T005 / implementation
   - Файлы: .harness/kit/WORKFLOW.md, resources/workflow-kit/WORKFLOW.md, .harness/kit/templates/PLAN.md, resources/workflow-kit/templates/PLAN.md, .harness/kit/templates/AGENTS.md, resources/workflow-kit/templates/AGENTS.md, .harness/plans/todo-plan.template.md, AGENTS.md
-- [TODO] T006: Усилить регрессии и синхронизацию bundled Kit — Ожидает
-  - Git Commit: [PENDING] test(workflow): закрепить continuity contract
+- [DONE] T006: Усилить регрессии и синхронизацию bundled Kit — Завершено
+  - Git Commit: [DONE] test(workflow): закрепить continuity contract
   - Reference: workflow-project-continuity-021 / T006 / implementation
-  - Файлы: tests/workflow-kit-recovery.test.mjs, tests/workflow-kit-source.test.mjs
+  - Файлы: tests/workflow-kit-recovery.test.mjs, tests/workflow-kit-source.test.mjs, tests/workspace-setup.test.mjs
 - [TODO] T007: Подготовить релиз Project Web Pilot — Ожидает
   - Git Commit: [PENDING] build: подготовить релиз continuity workflow
   - Reference: workflow-project-continuity-021 / T007 / implementation

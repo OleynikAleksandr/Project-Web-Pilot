@@ -6,7 +6,7 @@ import os from 'node:os';
 import { execFileSync } from 'node:child_process';
 import { emptyPlan, writePlan, readPlan, FINAL_DOCUMENTATION_TASK_TITLE } from '../resources/workflow-kit/lib/plan.mjs';
 import { defaultConfig } from '../resources/workflow-kit/lib/validate.mjs';
-import { createScope, startTask } from '../resources/workflow-kit/lib/actions.mjs';
+import { createScope, startTask, archive } from '../resources/workflow-kit/lib/actions.mjs';
 import { commitTask } from '../resources/workflow-kit/lib/transaction.mjs';
 import { recover } from '../resources/workflow-kit/lib/recovery.mjs';
 
@@ -53,6 +53,16 @@ function scopeInput(valid = true) {
     ],
   };
 }
+function continuityScopeInput() {
+  return {
+    scope_id: 'continuity-acceptance-001', objective: 'Проверить lifecycle универсального проекта',
+    approval_note: 'Пользователь согласовал проверку continuity lifecycle.', acceptance_criteria: ['Этап проходит через DOCS и пользовательскую приёмку'],
+    approved_scope: { functional_paths: [], documentation_paths: ['docs/notes.md'], max_functional_files_per_task: 3 },
+    context_pack: { documents: [], include_last_completed_task: false, dependency_task_ids: [] },
+    tasks: [{ id: 'T001', title: 'Подготовить результат этапа', why: 'Создать проверяемое изменение проекта', dependencies: [],
+      functional_paths: [], documentation_paths: ['docs/notes.md'], acceptance_criteria: ['Результат подготовлен'], verification_ids: [], expected_commit_message: 'docs: подготовить результат этапа' }],
+  };
+}
 
 test('NONE plan keeps project navigation and scope:create appends the mandatory documentation finalizer', async t => {
   const root = await fixture(t);
@@ -71,6 +81,45 @@ test('NONE plan keeps project navigation and scope:create appends the mandatory 
   for (const required of ['docs/architecture/OVERVIEW.md', 'docs/MODULES.md', 'docs/DOCUMENTATION_INDEX.md']) {
     assert.ok(active.context_pack.documents.some(doc => doc.path === required && doc.required));
   }
+});
+
+test('READY_FOR_ACCEPTANCE requires DOCS and archive returns a contextual NONE plan', async t => {
+  const root = await fixture(t);
+  createScope(root, continuityScopeInput());
+  let plan = readPlan(root);
+  assert.equal(plan.delivery_status, 'IN_PROGRESS');
+  assert.equal(plan.tasks.at(-1).id, 'DOCS');
+  assert.deepEqual(plan.tasks.at(-1).dependencies, ['T001']);
+
+  startTask(root, 'T001');
+  await fs.appendFile(path.join(root, 'docs/notes.md'), '\nRESULT_READY\n');
+  commitTask(root, 'T001');
+  plan = readPlan(root);
+  assert.equal(plan.delivery_status, 'IN_PROGRESS');
+  assert.equal(plan.tasks.find(task => task.id === 'DOCS').commit_status, 'PENDING');
+
+  startTask(root, 'DOCS');
+  commitTask(root, 'DOCS');
+  plan = readPlan(root);
+  assert.equal(plan.execution_scope_status, 'ACTIVE');
+  assert.equal(plan.delivery_status, 'READY_FOR_ACCEPTANCE');
+  assert.equal(git(root, 'status', '--porcelain'), '');
+  assert.match(recover(root, 'manual').text, /Финальная актуализация документации завершена/);
+
+  archive(root, plan.scope_id, 'Пользователь принял результат и поручил закрыть этот scope.');
+  const none = readPlan(root);
+  assert.equal(none.execution_scope_status, 'NONE');
+  assert.equal(none.archived_scope_id, 'continuity-acceptance-001');
+  assert.equal(none.objective, 'Обсудите следующий этап проекта с пользователем.');
+  assert.deepEqual(none.tasks, []);
+  for (const required of ['docs/architecture/OVERVIEW.md', 'docs/MODULES.md', 'docs/DOCUMENTATION_INDEX.md']) {
+    assert.ok(none.context_pack.documents.some(doc => doc.path === required && doc.required));
+  }
+  const packet = recover(root, 'startup');
+  assert.match(packet.text, /OVERVIEW_REQUIRED/);
+  assert.match(packet.text, /Fixture module map/);
+  assert.match(packet.text, /Обсудите следующий этап проекта с пользователем/);
+  assert.equal(git(root, 'status', '--porcelain'), '');
 });
 
 test('functional scope requires compact overview and module specification', async t => {
