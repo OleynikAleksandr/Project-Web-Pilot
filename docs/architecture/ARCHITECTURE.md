@@ -613,3 +613,7 @@ ContextCache хранит до четырёх полных штатных MCP pa
 ## Подключение предварительной подготовки — scope 012 / T007
 
 ContextSession прогревает пакет после готовности runtime и затем при обычных ticks, в том числе во время ответа ChatGPT. Новая сессия и refresh используют один ContextCache. Метаданные попытки сохраняют input key, длительность foreground preparation и browser delivery; перед click проверяется ключ, а не только plan revision/возраст. В UI подробности показывают оба времени. Проверка staged состояния использует logical index (git ls-files --stage), не служебные stat-поля index; простое обновление Git stat cache не инвалидирует неизменившийся контекст. Полный текст и hash сохраняются без изменений; request_id создаётся отдельно для каждой отправки.
+
+## Индикаторы операций — scope 012 / T008
+
+Общий renderer-компонент progress.mjs отображает spinners/название этапа/elapsed без процентов. Sidebar объединяет pageLoading, setup phase, ContextSession phase и pending IPC action; отдельное окно archive использует тот же компонент. ContextCache сообщает только начало/конец фактической сборки через onChange; дешёвые cache checks не зажигают busy-индикатор. Фоновая сборка отображается отдельно и не меняет delivery state. Timer не пересоздаётся при обычных snapshot updates, снимается при завершении/pagehide. CSS поддерживает dark theme и prefers-reduced-motion. Индикатор доступен через role=status, изменение секунд исключено из live announcements.

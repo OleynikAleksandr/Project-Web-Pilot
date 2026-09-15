@@ -1,5 +1,9 @@
+import { createProgress, operationLabel } from './progress.mjs';
 const $ = id => document.getElementById(id);
 const api = window.webPilotArchive;
+const progress = createProgress($('operation-progress'));
+let pendingAction = null;
+window.addEventListener('pagehide', () => progress.destroy());
 let state = null, pending = false, mode = 'projects', projectAnchor = null, sessionAnchor = null, confirmSessionDelete = false;
 const selectedProjects = new Set(), selectedSessions = new Set();
 const sessionKey = item => `${item.workspace}\t${item.sessionId}`;
@@ -14,7 +18,7 @@ function sessionItems() {
 }
 async function action(method, ...args) {
   if (pending) return false;
-  pending = true; render();
+  pending = true; pendingAction = method; render();
   try {
     const response = await api[method](...args);
     if (response?.state) state = response.state;
@@ -23,7 +27,7 @@ async function action(method, ...args) {
   } catch (error) {
     state = { ...(state ?? { archives: [], sessionArchives: [] }), notice: error.message };
     return false;
-  } finally { pending = false; render(); }
+  } finally { pending = false; pendingAction = null; render(); }
 }
 function choose(list, selected, getKey, item, index, event, anchor, setAnchor) {
   const key = getKey(item);
@@ -46,6 +50,7 @@ function selectMode(value) {
   render();
 }
 function render(next = state) {
+  progress.show(operationLabel({}, pendingAction));
   if (next) state = next;
   if (!state) return;
   state.archives ??= []; state.sessionArchives ??= [];

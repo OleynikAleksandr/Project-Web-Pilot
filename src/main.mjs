@@ -9,7 +9,7 @@ import { McpRuntime, findRuntimeFolder } from './mcp-runtime.mjs';
 import { ChatGPTComposer } from './chatgpt-composer.mjs';
 import { readSessionMessages, SessionTokenCounter } from './session-tokens.mjs';
 import { ContextCache } from './context-cache.mjs';
-const contextCache = new ContextCache({ load: workspace => runtime.loadContext(workspace) });
+const contextCache = new ContextCache({ load: workspace => runtime.loadContext(workspace), onChange: () => publish() });
 import { ContextSession } from './context-session.mjs';
 import { chatGPTEntrypoint } from './chatgpt-experience.mjs';
 import { WorkspaceDeletion } from './workspace-deletion.mjs';
@@ -168,6 +168,7 @@ function snapshot() {
   })),
     archives: projectedArchives(), settings: settingsState,
     selected, context: controller?.state ?? { phase: 'selected', servicesReady: false, messageSent: false },
+    contextPreparation: { busy: contextCache.building.has(saved?.workspace) },
     contextWindow: chromiumDiagnostics?.contextObservation() ?? { status: 'unknown' },
     planAcceptance: planAcceptance?.workspace === selected?.workspace && planAcceptance?.scopeId === selected?.scopeId
       && selected?.planView?.state === 'awaiting-acceptance' ? planAcceptance.state : null,

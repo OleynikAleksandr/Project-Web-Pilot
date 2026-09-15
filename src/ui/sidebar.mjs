@@ -1,3 +1,4 @@
+import { createProgress, operationLabel } from './progress.mjs';
 import { projectArchiveView } from './project-archive.mjs';
 import { workspaceSetupView } from './workspace-setup.mjs';
 const $ = id => document.getElementById(id);
@@ -5,7 +6,9 @@ const api = window.webPilot;
 window.addEventListener('pagehide', () => clearTimeout(workspaceClickTimer));
 let lastProjects = '';
 let currentState;
-let actionPending = false;
+let actionPending = false, pendingAction = null;
+const progress = createProgress($('operation-progress'));
+window.addEventListener('pagehide', () => progress.destroy());
 let workspaceClickTimer;
 let contextExpanded = false;
 const phases = {
@@ -78,7 +81,7 @@ function compactTokenCount(value) {
 async function action(method, ...args) {
   if (actionPending) return;
   clearTimeout(workspaceClickTimer);
-  actionPending = true;
+  actionPending = true; pendingAction = method;
   render(currentState);
   try {
     const result = await api[method](...args);
@@ -86,10 +89,11 @@ async function action(method, ...args) {
   } catch (error) {
     $('error-banner').hidden = false;
     $('error-banner').textContent = error.message;
-  } finally { actionPending = false; render(currentState); }
+  } finally { actionPending = false; pendingAction = null; render(currentState); }
 }
 
 function render(state) {
+  progress.show(operationLabel(state ?? {}, pendingAction));
   if (!state) return;
   currentState = state;
   splitter.setAttribute('aria-valuemin', String(state.sidebarMinWidth ?? 312));

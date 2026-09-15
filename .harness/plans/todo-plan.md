@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 337,
+  "plan_revision": 339,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "next-modifications-discussion-012",
@@ -340,8 +340,8 @@
         "Ошибки и ожидание пользователя не отображаются как бесконечное выполнение; reduced motion поддержан."
       ],
       "expected_commit_message": "feat: показывать ход операций приложения",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "next-modifications-discussion-012",
         "task_id": "T008",
@@ -414,7 +414,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: next-modifications-discussion-012
 Current Task: нет
-Revision: 337
+Revision: 339
 
 ## Цель
 
@@ -459,8 +459,8 @@ Revision: 337
   - Git Commit: [DONE] feat: использовать подготовленный контекст при отправке
   - Reference: next-modifications-discussion-012 / T007 / implementation
   - Файлы: src/main.mjs, src/context-session.mjs, src/ui/sidebar.mjs, tests/context-session.test.mjs, tests/electron-smoke.mjs, src/context-cache.mjs, src/context-inputs.mjs, docs/modules/workflow-kit-recovery.md, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T008: Показать выполнение операций спиннерами и понятными этапами — Ожидает
-  - Git Commit: [PENDING] feat: показывать ход операций приложения
+- [DONE] T008: Показать выполнение операций спиннерами и понятными этапами — Завершено
+  - Git Commit: [DONE] feat: показывать ход операций приложения
   - Reference: next-modifications-discussion-012 / T008 / implementation
   - Файлы: src/ui/progress.mjs, src/ui/sidebar.mjs, src/ui/index.html, src/ui/archive.mjs, src/ui/archive.html, tests/progress.test.mjs, tests/electron-smoke.mjs, src/main.mjs, src/context-cache.mjs, docs/CONTEXT_DELIVERY.md, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T009: Измерить ускорение и собрать релиз 0.6.10 — Ожидает

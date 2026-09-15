@@ -2,9 +2,10 @@ import { contextInputKey } from './context-inputs.mjs';
 import { validateContextPacket } from './mcp-runtime.mjs';
 
 export class ContextCache {
-  constructor({ load, inputKey = contextInputKey, now = Date.now, intervalMs = 5000, limit = 4 }) {
+  constructor({ load, inputKey = contextInputKey, now = Date.now, intervalMs = 5000, limit = 4, onChange = () => {} }) {
     Object.assign(this, { loadPacket: load, inputKey, now, intervalMs, limit });
     this.entries = new Map(); this.pending = new Map(); this.nextWarm = new Map();
+    this.building = new Set(); this.onChange = onChange;
     this.epoch = 0;
   }
   clear() { this.epoch++; this.entries.clear(); this.nextWarm.clear(); }
@@ -19,6 +20,11 @@ export class ContextCache {
     this.pending.set(workspace, promise);
     try { return await promise; } finally { this.pending.delete(workspace); }
   }
+  async build(workspace) {
+    this.building.add(workspace); this.onChange();
+    try { return await this.loadPacket(workspace); }
+    finally { this.building.delete(workspace); this.onChange(); }
+  }
   async prepare(workspace) {
     const started = performance.now(), epoch = this.epoch;
     for (let attempt = 0; attempt < 2; attempt++) {
@@ -27,7 +33,7 @@ export class ContextCache {
       catch {
         this.entries.delete(workspace);
         // Unsupported repositories retain the original canonical recovery path.
-        const packet = validateContextPacket(await this.loadPacket(workspace), workspace);
+        const packet = validateContextPacket(await this.build(workspace), workspace);
         return { ...packet, preparation: { cacheHit: false, ms: performance.now() - started } };
       }
       const cached = this.entries.get(workspace);
@@ -36,7 +42,7 @@ export class ContextCache {
         return { ...structuredClone(cached.packet), preparation: { cacheHit: true, inputKey: key, ms: performance.now() - started } };
       }
       this.entries.delete(workspace);
-      const packet = validateContextPacket(await this.loadPacket(workspace), workspace);
+      const packet = validateContextPacket(await this.build(workspace), workspace);
       let after;
       try { after = await this.inputKey(workspace); } catch { after = null; }
       if (key !== after || epoch !== this.epoch) continue;
