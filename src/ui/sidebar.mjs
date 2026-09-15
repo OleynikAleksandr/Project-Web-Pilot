@@ -103,13 +103,6 @@ splitter.addEventListener('keydown', event => {
   event.preventDefault(); requestSidebarWidth((currentState?.sidebarWidth ?? 312) + (event.key === 'ArrowRight' ? 24 : -24));
 });
 
-function compactTokenCount(value) {
-  if (!Number.isFinite(value)) return '—';
-  if (value >= 1_000_000) return `${(value / 1_000_000).toLocaleString('ru-RU', { maximumFractionDigits: 1 })}M`;
-  if (value >= 1000) return `${Math.round(value / 1000).toLocaleString('ru-RU')}K`;
-  return Math.round(value).toLocaleString('ru-RU');
-}
-
 async function action(method, ...args) {
   if (actionPending) return;
   closeTreeMenus();
@@ -268,25 +261,6 @@ function render(state) {
       title.textContent = task.title; id.textContent = task.id; body.append(title, id); item.append(mark, body); return item;
     }));
   } else { $('plan-tasks').replaceChildren(); $('plan-note').hidden = true; $('plan-reason').hidden = true; }
-  const contextWindow = state.contextWindow ?? { status: 'unknown' };
-  const contextWindowKnown = contextWindow.status === 'known' && Number.isFinite(contextWindow.inputTokens)
-    && Number.isFinite(contextWindow.modelContextWindow) && Number.isFinite(contextWindow.usedPercent);
-  $('context-window-card').hidden = !selected;
-  $('context-window-value').dataset.known = String(contextWindowKnown);
-  $('context-window-value').textContent = contextWindowKnown
-    ? `${compactTokenCount(contextWindow.inputTokens)} / ${compactTokenCount(contextWindow.modelContextWindow)} · ${contextWindow.usedPercent.toLocaleString('ru-RU', { maximumFractionDigits: 1 })}%`
-    : 'Ожидаем данные';
-  $('context-window-track').hidden = !contextWindowKnown;
-  if (contextWindowKnown) {
-    const percent = Math.max(0, Math.min(100, contextWindow.usedPercent));
-    $('context-window-fill').style.width = `${percent}%`;
-    $('context-window-track').setAttribute('aria-valuenow', String(percent));
-    $('context-window-track').setAttribute('aria-valuetext', `${contextWindow.usedPercent.toLocaleString('ru-RU', { maximumFractionDigits: 1 })}% — ${contextWindow.inputTokens.toLocaleString('ru-RU')} из ${contextWindow.modelContextWindow.toLocaleString('ru-RU')} токенов`);
-  } else {
-    $('context-window-fill').style.width = '0%';
-    $('context-window-track').removeAttribute('aria-valuenow');
-    $('context-window-track').removeAttribute('aria-valuetext');
-  }
   const [title, detail, tone] = phases[context.phase] ?? phases.selected;
   $('context-title').textContent = state.pageLoading ? 'Открываем ChatGPT' : title;
   $('context-details').hidden = !contextExpanded;

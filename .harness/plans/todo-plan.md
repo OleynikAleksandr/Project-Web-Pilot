@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 403,
+  "plan_revision": 406,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "context-window-removal-016",
@@ -75,7 +75,8 @@
         "src/ui/sidebar.mjs"
       ],
       "documentation_paths": [
-        "docs/modules/workspace-sessions.md"
+        "docs/modules/workspace-sessions.md",
+        "docs/architecture/ARCHITECTURE.md"
       ],
       "verification_ids": [],
       "id": "T001",
@@ -85,8 +86,8 @@
         "Плашка, стили и renderer-логика context window полностью отсутствуют; спецификация фиксирует отмену индикатора."
       ],
       "expected_commit_message": "fix: удалить индикатор контекстного окна",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "context-window-removal-016",
         "task_id": "T001",
@@ -172,7 +173,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: context-window-removal-016
 Current Task: нет
-Revision: 403
+Revision: 406
 
 ## Цель
 
@@ -188,10 +189,10 @@ Revision: 403
 
 ## Микрозадачи
 
-- [TODO] T001: Удалить индикатор контекстного окна из sidebar — Ожидает
-  - Git Commit: [PENDING] fix: удалить индикатор контекстного окна
+- [DONE] T001: Удалить индикатор контекстного окна из sidebar — Завершено
+  - Git Commit: [DONE] fix: удалить индикатор контекстного окна
   - Reference: context-window-removal-016 / T001 / implementation
-  - Файлы: src/ui/index.html, src/ui/sidebar.mjs, docs/modules/workspace-sessions.md
+  - Файлы: src/ui/index.html, src/ui/sidebar.mjs, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md
 - [TODO] T002: Удалить публикацию состояния индикатора и обновить smoke — Ожидает
   - Git Commit: [PENDING] refactor: удалить публикацию context window
   - Reference: context-window-removal-016 / T002 / implementation
