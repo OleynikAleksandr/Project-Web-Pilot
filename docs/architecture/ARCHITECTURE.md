@@ -617,3 +617,7 @@ ContextSession прогревает пакет после готовности r
 ## Индикаторы операций — scope 012 / T008
 
 Общий renderer-компонент progress.mjs отображает spinners/название этапа/elapsed без процентов. Sidebar объединяет pageLoading, setup phase, ContextSession phase и pending IPC action; отдельное окно archive использует тот же компонент. ContextCache сообщает только начало/конец фактической сборки через onChange; дешёвые cache checks не зажигают busy-индикатор. Фоновая сборка отображается отдельно и не меняет delivery state. Timer не пересоздаётся при обычных snapshot updates, снимается при завершении/pagehide. CSS поддерживает dark theme и prefers-reduced-motion. Индикатор доступен через role=status, изменение секунд исключено из live announcements.
+
+## Release 0.6.10 — scope 012 / T009
+
+macOS arm64 и Windows x64 packages включают предварительную подготовку полных recovery packets и общие индикаторы операций. Готовый пакет хранится в памяти и проверяется по входным данным; первая подготовка после старта обычная. При работе selected workspace обновляется фоновым прогревом каждые 5 секунд. Новые сессии и manual refresh используют ту же копию при неизменных входах. Подробности контекста показывают реальные preparation/delivery durations. Смена сессии автоматически по завершении плана и изменение подсчёта токенов в этот релиз не входят.

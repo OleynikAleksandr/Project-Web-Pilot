@@ -607,3 +607,11 @@ ContextSession tests проверяют передачу старого по в�
 ## Scope 012 / T008 — видимость выполнения
 
 Unit tests проверяют названия этапов, отсутствие busy при idle/login/draft/error, фоновые сборки и archive actions, elapsed без сброса при перерисовке и очистку timer. Electron fixture искусственно задерживает получение пакета на 650 ms для наблюдения реального DOM-индикатора: проверяются видимость, текст, CSS animation и role=status; progress-ui.png сохраняется для визуальной проверки. Эта задержка относится только к fixture и не участвует в performance benchmark.
+
+## Scope 012 / T009 — релиз 0.6.10 и измерения
+
+- npm run build — exit 0, macOS arm64 и Windows x64; verify:win пройден. Девять файлов cache/input guard/coordinator/main/оба renderer views и HTML в каждой app.asar побайтово совпадают с исходным деревом; package version 0.6.10.
+- После завершения сборки, без параллельного packager, измерен один и тот же полный пакет 69 556 bytes / SHA-256 3526eb579ee9bec8a9daebc739bb8a801793d2a84d5afa9f20c00ede5cf5b9ae. Три штатных loadContext: 704.21 / 691.55 / 687.70 ms. Пять cache loads: 18.51 / 18.07 / 17.98 / 17.93 / 17.83 ms. Дополнительный before-Send input check: 17.91 / 18.42 / 18.09 / 18.43 / 18.08 ms. Медианный выигрыш подготовки 38.47x; с дополнительной проверкой 19.17x. Проверено точное равенство context и единственная сборка для cache.
+- Отдельный Electron процесс импортировал ContextCache/McpRuntime непосредственно из macOS app.asar, получил канонический пакет через локальный MCP и проверил cache hit/current: 40.24 ms на load+validation, exit 0.
+- Визуально проверен progress-ui.png: кольцо, читаемая подпись и время в одной строке. Electron smoke проверяет доставку, cache reuse, отсутствие двойных сообщений и DOM-индикатор. syntax/suite/electron-smoke назначены финальными gates workflow commit T009.
+- Измерения относятся к подготовке пакета и актуальности, не включают workspace review, bootstrap, загрузку ChatGPT или первый ответ модели. Native Windows и реальный UI ChatGPT проверяет пользователь после перезапуска.

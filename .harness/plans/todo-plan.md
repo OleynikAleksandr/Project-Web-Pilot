@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 339,
+  "plan_revision": 341,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "next-modifications-discussion-012",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Оценка токенов сессий и существенное ускорение повторной передачи полного актуального контекста через предварительную подготовку.",
   "acceptance_criteria": [
     "Отдельная сохраняемая оценка для каждой Chat/Work сессии обновляется при чтении сообщений.",
@@ -375,8 +375,8 @@
         "Актуальность и полнота канонического пакета сохранены; результат проверен."
       ],
       "expected_commit_message": "chore: собрать Web Pilot 0.6.10 с быстрым recovery",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "next-modifications-discussion-012",
         "task_id": "T009",
@@ -411,10 +411,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: next-modifications-discussion-012
 Current Task: нет
-Revision: 339
+Revision: 341
 
 ## Цель
 
@@ -463,8 +463,8 @@ Revision: 339
   - Git Commit: [DONE] feat: показывать ход операций приложения
   - Reference: next-modifications-discussion-012 / T008 / implementation
   - Файлы: src/ui/progress.mjs, src/ui/sidebar.mjs, src/ui/index.html, src/ui/archive.mjs, src/ui/archive.html, tests/progress.test.mjs, tests/electron-smoke.mjs, src/main.mjs, src/context-cache.mjs, docs/CONTEXT_DELIVERY.md, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T009: Измерить ускорение и собрать релиз 0.6.10 — Ожидает
-  - Git Commit: [PENDING] chore: собрать Web Pilot 0.6.10 с быстрым recovery
+- [DONE] T009: Измерить ускорение и собрать релиз 0.6.10 — Завершено
+  - Git Commit: [DONE] chore: собрать Web Pilot 0.6.10 с быстрым recovery
   - Reference: next-modifications-discussion-012 / T009 / implementation
   - Файлы: package.json, package-lock.json, docs/modules/workflow-kit-recovery.md, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md
 
