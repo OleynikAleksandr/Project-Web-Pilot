@@ -81,3 +81,19 @@ test('per-session estimates survive restart/archive and reject stale writes', as
   await store.forgetArchivedSessions([{ workspace: dir, projectId: 'project-a', sessionId: first.sessionId }]);
   assert.equal((await fs.readFile(file, 'utf8')).includes(first.sessionId), false);
 });
+
+test('complete history replaces old DOM fragments and obsolete alternate branches', async t => {
+  const counter = new SessionTokenCounter();
+  t.after(() => counter.close());
+  const fragment = await counter.estimate([{ id: 'assistant:old-branch', text: 'obsolete answer' }]);
+  const messages = [user, { id: 'assistant:current', text: 'Hello world' }];
+  const full = await counter.estimate(messages, fragment, { complete: true });
+  assert.equal(full.coverage, 'full-history');
+  assert.equal(full.total, 4);
+  assert.equal(full.messages['assistant:old-branch'], undefined);
+  assert.equal(await counter.estimate(messages, full, { complete: true }), null);
+  const changed = await counter.estimate([user], full, { complete: true });
+  assert.equal(changed.total, 2);
+  assert.equal(changed.coverage, 'full-history');
+  assert.equal(JSON.stringify(full).includes('Hello world'), false);
+});

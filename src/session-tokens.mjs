@@ -35,6 +35,7 @@ export function readSessionMessages() {
 
 export function validTokenEstimate(value) {
   return !!value && value.encoding === TOKEN_ENCODING && Number.isSafeInteger(value.total) && value.total >= 0
+    && (value.coverage == null || ['partial', 'full-history'].includes(value.coverage))
     && Number.isFinite(value.updatedAt) && value.updatedAt > 0
     && value.messages && typeof value.messages === 'object' && !Array.isArray(value.messages)
     && Object.entries(value.messages).every(([id, entry]) => id.length > 0 && id.length <= 256
@@ -42,10 +43,14 @@ export function validTokenEstimate(value) {
     && Object.values(value.messages).reduce((sum, entry) => sum + entry.tokens, 0) === value.total;
 }
 
-export async function estimateMessageTokens(messages, previous = null, now = Date.now()) {
+export async function estimateMessageTokens(messages, previous = null, now = Date.now(), { complete = false } = {}) {
   if (!Array.isArray(messages)) return null;
   const entries = new Map(validTokenEstimate(previous) ? Object.entries(previous.messages) : []);
-  let changed = false;
+  let changed = complete && previous?.coverage !== 'full-history';
+  if (complete) {
+    const ids = new Set(messages.map(message => message?.id));
+    for (const id of entries.keys()) if (!ids.has(id)) { entries.delete(id); changed = true; }
+  }
   for (const message of messages) {
     if (typeof message?.id !== 'string' || !message.id || message.id.length > 256
         || typeof message.text !== 'string' || !message.text) continue;
@@ -63,14 +68,14 @@ export async function estimateMessageTokens(messages, previous = null, now = Dat
     changed = true;
   }
   if (!changed) return null;
-  return { encoding: TOKEN_ENCODING, total: [...entries.values()].reduce((sum, entry) => sum + entry.tokens, 0),
+  return { encoding: TOKEN_ENCODING, coverage: complete ? 'full-history' : 'partial', total: [...entries.values()].reduce((sum, entry) => sum + entry.tokens, 0),
     messages: Object.fromEntries(entries), updatedAt: now };
 }
 
 // Large recovery packets are tokenized off the Electron main thread.
 export class SessionTokenCounter {
   constructor() { this.worker = null; this.pending = new Map(); this.serial = 0; }
-  estimate(messages, previous) {
+  estimate(messages, previous, options = {}) {
     if (!this.worker) {
       const worker = new Worker(new URL(import.meta.url), { workerData: { sessionTokenCounter: true } });
       this.worker = worker;
@@ -96,7 +101,7 @@ export class SessionTokenCounter {
     return new Promise((resolve, reject) => {
       this.pending.set(id, { resolve, reject });
       this.worker.ref();
-      this.worker.postMessage({ id, messages, previous });
+      this.worker.postMessage({ id, messages, previous, options });
     });
   }
   async close() {
@@ -109,8 +114,8 @@ export class SessionTokenCounter {
 }
 
 if (!isMainThread && workerData?.sessionTokenCounter) {
-  parentPort.on('message', async ({ id, messages, previous }) => {
-    try { parentPort.postMessage({ id, estimate: await estimateMessageTokens(messages, previous) }); }
+  parentPort.on('message', async ({ id, messages, previous, options }) => {
+    try { parentPort.postMessage({ id, estimate: await estimateMessageTokens(messages, previous, Date.now(), options) }); }
     catch (error) { parentPort.postMessage({ id, error: String(error.message) }); }
   });
 }

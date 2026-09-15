@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 344,
+  "plan_revision": 346,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "next-modifications-discussion-012",
@@ -436,8 +436,8 @@
         "Полный снимок заменяет прежние DOM-оценки; тексты и авторизация не сохраняются на диск."
       ],
       "expected_commit_message": "fix: считать полную историю разговора с пагинацией",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "next-modifications-discussion-012",
         "task_id": "T011",
@@ -552,7 +552,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: next-modifications-discussion-012
 Current Task: нет
-Revision: 344
+Revision: 346
 
 ## Цель
 
@@ -610,8 +610,8 @@ Revision: 344
   - Git Commit: [DONE] docs: уточнить контракт полного подсчёта истории
   - Reference: next-modifications-discussion-012 / T010 / implementation
   - Файлы: docs/modules/workspace-sessions.md, docs/DECISIONS.md
-- [TODO] T011: Загрузить полную историю через наблюдаемую пагинацию ChatGPT — Ожидает
-  - Git Commit: [PENDING] fix: считать полную историю разговора с пагинацией
+- [DONE] T011: Загрузить полную историю через наблюдаемую пагинацию ChatGPT — Завершено
+  - Git Commit: [DONE] fix: считать полную историю разговора с пагинацией
   - Reference: next-modifications-discussion-012 / T011 / implementation
   - Файлы: src/conversation-history.mjs, src/session-tokens.mjs, tests/conversation-history.test.mjs, tests/session-tokens.test.mjs, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T012: Подключить полную историю и честный статус счётчика — Ожидает
