@@ -718,3 +718,7 @@ Windows-only исправление WorkspaceSetup изолирует NODE_OPTIO
 ## ChatGPT conversation auto-scroll — scope chat-autoscroll-020 / T001
 
 Автоследование реализовано отдельным renderer-side DOM controller `chatgpt-auto-scroll.mjs`, устанавливаемым main process после полной загрузки и SPA-навигации ChatGPT. Controller не обращается к закрытым API страницы: он находит ближайший scrollable ancestor сообщения/composer, следит за DOM mutation, прекращает follow после scroll away from bottom и возобновляет его при возврате вниз или стандартной отправке из composer. Один state key в `window` делает повторную установку идемпотентной.
+
+## Release 0.6.18 — scope chat-autoscroll-020 / T002
+
+macOS arm64 и Windows x64 используют один модуль conversation auto-scroll и одну main-process интеграцию. Оба `app.asar` содержат версию 0.6.18 и побайтно совпадающую с source копию `src/chatgpt-auto-scroll.mjs`; platform-specific runtime packaging не меняет semantics прокрутки.

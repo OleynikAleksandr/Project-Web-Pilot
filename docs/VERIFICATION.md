@@ -723,3 +723,11 @@ Native Windows 10 запуск не выполнялся: Windows API ошибк
 ## Scope chat-autoscroll-020 / T001 — регрессия автопрокрутки
 
 JSDOM regression исполняет тот же renderer script, который внедряется в ChatGPT Web: проверяются initial/follow-to-bottom, продолжение при добавлении сообщения, suspended после ручной прокрутки вверх, отсутствие сдвига во время новых ответов, manual resume у низа, resume при Send и идемпотентная повторная установка. Отдельно проверяется origin guard Electron wrapper. Реальный аккаунт ChatGPT остаётся пользовательской приёмкой после package-сборки.
+
+## Scope chat-autoscroll-020 / T002 — релиз 0.6.18
+
+Перед упаковкой `npm test` завершился с 141 тестом: 139 passed, 0 failed, 2 platform-specific skipped. `npm run smoke` на Electron 44.3.0 / Chromium 152.0.7977.78 также завершился успешно в isolated fixture.
+
+`npm run build` успешно создал macOS arm64 и Windows x64 packages; штатный `verify:win` подтвердил Windows executable и bundled runtime/Node. macOS Info.plist и `package.json` внутри обоих `app.asar` сообщают 0.6.18. `src/chatgpt-auto-scroll.mjs` внутри обоих `app.asar` совпадает с source SHA-256 `32061fd3394e170411f4b27cf626b0337c1e8962b567a24b9a3bd5b4e4f1b846`.
+
+Готовые архивы: macOS arm64 — 145174349 байт, SHA-256 `e1ec90bf798880a0f160a6cf3530f3f718626eb55fa9eadbd0edc57ce3fc3528`; Windows x64 — 317732370 байт, SHA-256 `3ae151f8df68d1304ccf0a309fb3de1dd443234c5370557f3c63f9312348e114`. Реальный аккаунт ChatGPT и нативный запуск Windows остаются пользовательской приёмкой.

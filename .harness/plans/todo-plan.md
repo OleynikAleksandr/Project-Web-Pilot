@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 420,
+  "plan_revision": 422,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "chat-autoscroll-020",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Сделать встроенный ChatGPT самопрокручивающимся к последним сообщениям, не мешая пользователю читать историю, и выпустить одинаковое исправление для macOS и Windows.",
   "acceptance_criteria": [
     "При открытии/продолжении сессии и появлении новых сообщений диалог остаётся у последнего сообщения, пока пользователь находится внизу.",
@@ -120,8 +120,8 @@
         "Полный suite и Electron smoke проходят перед упаковкой."
       ],
       "expected_commit_message": "build: подготовить релиз автопрокрутки",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "chat-autoscroll-020",
         "task_id": "T002",
@@ -144,10 +144,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: chat-autoscroll-020
 Current Task: нет
-Revision: 420
+Revision: 422
 
 ## Цель
 
@@ -167,8 +167,8 @@ Revision: 420
   - Git Commit: [DONE] feat(chat): добавить умную автопрокрутку диалога
   - Reference: chat-autoscroll-020 / T001 / implementation
   - Файлы: src/chatgpt-auto-scroll.mjs, src/main.mjs, tests/chatgpt-auto-scroll.test.mjs, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T002: Подготовить релиз автопрокрутки — Ожидает
-  - Git Commit: [PENDING] build: подготовить релиз автопрокрутки
+- [DONE] T002: Подготовить релиз автопрокрутки — Завершено
+  - Git Commit: [DONE] build: подготовить релиз автопрокрутки
   - Reference: chat-autoscroll-020 / T002 / implementation
   - Файлы: package.json, package-lock.json, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 
