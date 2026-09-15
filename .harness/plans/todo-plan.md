@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 356,
+  "plan_revision": 358,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "next-modifications-discussion-012",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Быстрая предварительная подготовка актуального контекста и спиннеры операций; экспериментальный счётчик токенов удалён по решению пользователя.",
   "acceptance_criteria": [
     "Полностью удалён счётчик: нет tokenizer worker, фонового DOM-сэмплинга и загрузки истории для расчёта.",
@@ -614,8 +614,8 @@
         "План остаётся открытым до пользовательской проверки."
       ],
       "expected_commit_message": "chore: собрать Web Pilot 0.6.12 без счётчика",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "next-modifications-discussion-012",
         "task_id": "T016",
@@ -658,10 +658,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: next-modifications-discussion-012
 Current Task: нет
-Revision: 356
+Revision: 358
 
 ## Цель
 
@@ -736,8 +736,8 @@ Revision: 356
   - Git Commit: [DONE] refactor: полностью удалить подсчёт токенов сессий
   - Reference: next-modifications-discussion-012 / T015 / implementation
   - Файлы: src/session-tokens.mjs, src/conversation-history.mjs, src/main.mjs, src/workspace-session.mjs, src/ui/sidebar.mjs, src/ui/index.html, src/ui/progress.mjs, tests/session-tokens.test.mjs, tests/conversation-history.test.mjs, tests/electron-smoke.mjs, tests/progress.test.mjs, tests/workspace-session.test.mjs, package.json, package-lock.json, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T016: Собрать релиз без счётчика для приёмки — Ожидает
-  - Git Commit: [PENDING] chore: собрать Web Pilot 0.6.12 без счётчика
+- [DONE] T016: Собрать релиз без счётчика для приёмки — Завершено
+  - Git Commit: [DONE] chore: собрать Web Pilot 0.6.12 без счётчика
   - Reference: next-modifications-discussion-012 / T016 / implementation
   - Файлы: package.json, package-lock.json, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md
 

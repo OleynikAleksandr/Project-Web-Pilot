@@ -637,3 +637,7 @@ macOS arm64 и Windows x64 собираются из одного source tree с
 ## Scope 012 / T015 — удаление экспериментального подсчёта
 
 Счётчик истории полностью исключён из runtime: удалены ConversationHistory и SessionTokenCounter, зависимость js-tiktoken, DOM-сэмплинг, загрузка предыдущих страниц и ранняя подготовка WebContents. Main снова открывает выбранный ChatGPT напрямую. Sidebar не содержит чисел токенов/состояний счётчика. WorkspaceSessions удаляет obsolete tokenEstimate при загрузке, сохраняя основной session contract. Существующая пассивная Chromium diagnostics и recovery/cache не менялись.
+
+## Release 0.6.12 — scope 012 / T016
+
+Удаление подсчёта включено в обе platform-сборки. В app.asar нет session-tokens.mjs, conversation-history.mjs и js-tiktoken. Сохраняются быстрый recovery, проектные Chat/Work sessions, archive и общие operation spinners.
