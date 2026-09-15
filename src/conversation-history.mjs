@@ -52,6 +52,8 @@ export async function collectHistory(first, fetchPage, { signal, onProgress = ()
   const messages = new Map();
   const cursors = new Set();
   let value = first;
+  if (typeof first?.current_node === 'string' && first.messages?.length
+      && !first.messages.some(message => message?.id === first.current_node)) throw problem('HISTORY_BRANCH');
   let pages = 0;
   let bytes = 0;
   while (true) {
@@ -88,7 +90,10 @@ export class ConversationHistory {
     this.onMessage = this.onMessage.bind(this);
     contents.debugger.on('message', this.onMessage);
   }
-  current(url) { return !this.closed && normalizeChatUrl(this.activeUrl()) === url; }
+  current(url) {
+    try { return !!url && !this.closed && normalizeChatUrl(this.activeUrl()) === url; }
+    catch { return false; }
+  }
   view() {
     return this.current(this.state.url) ? { status: this.state.status, pages: this.state.pages,
       messageCount: this.state.messageCount, error: this.state.error ?? null } : { status: 'waiting', pages: 0, messageCount: 0 };
@@ -182,7 +187,9 @@ export class ConversationHistory {
         } finally { await reader.cancel().catch(() => {}); }
         return JSON.parse(Buffer.concat(chunks).toString('utf8'));
       };
-      const result = await collectHistory(JSON.parse(text), fetchPage, { signal: abort.signal,
+      const first = JSON.parse(text);
+      if (first.conversation_id != null && first.conversation_id !== request.id) throw problem('HISTORY_CONVERSATION');
+      const result = await collectHistory(first, fetchPage, { signal: abort.signal,
         onProgress: progress => { if (valid()) this.set({ url: request.chatUrl, status: 'loading', ...progress }); } });
       if (!valid()) return;
       this.snapshot = { ...result, url: request.chatUrl, revision };

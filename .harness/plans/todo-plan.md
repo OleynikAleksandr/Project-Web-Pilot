@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 346,
+  "plan_revision": 349,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "next-modifications-discussion-012",
@@ -457,7 +457,9 @@
         "src/ui/sidebar.mjs",
         "src/ui/progress.mjs",
         "tests/electron-smoke.mjs",
-        "tests/progress.test.mjs"
+        "tests/progress.test.mjs",
+        "src/conversation-history.mjs",
+        "tests/conversation-history.test.mjs"
       ],
       "documentation_paths": [
         "docs/modules/workspace-sessions.md",
@@ -474,8 +476,8 @@
         "Полная история считается независимо от смонтированного DOM и сохраняется по сессии."
       ],
       "expected_commit_message": "fix: показывать полный подсчёт и загрузку истории",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "next-modifications-discussion-012",
         "task_id": "T012",
@@ -552,7 +554,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: next-modifications-discussion-012
 Current Task: нет
-Revision: 346
+Revision: 349
 
 ## Цель
 
@@ -614,10 +616,10 @@ Revision: 346
   - Git Commit: [DONE] fix: считать полную историю разговора с пагинацией
   - Reference: next-modifications-discussion-012 / T011 / implementation
   - Файлы: src/conversation-history.mjs, src/session-tokens.mjs, tests/conversation-history.test.mjs, tests/session-tokens.test.mjs, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T012: Подключить полную историю и честный статус счётчика — Ожидает
-  - Git Commit: [PENDING] fix: показывать полный подсчёт и загрузку истории
+- [DONE] T012: Подключить полную историю и честный статус счётчика — Завершено
+  - Git Commit: [DONE] fix: показывать полный подсчёт и загрузку истории
   - Reference: next-modifications-discussion-012 / T012 / implementation
-  - Файлы: src/main.mjs, src/ui/sidebar.mjs, src/ui/progress.mjs, tests/electron-smoke.mjs, tests/progress.test.mjs, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+  - Файлы: src/main.mjs, src/ui/sidebar.mjs, src/ui/progress.mjs, tests/electron-smoke.mjs, tests/progress.test.mjs, src/conversation-history.mjs, tests/conversation-history.test.mjs, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T013: Собрать релиз с исправленным счётчиком — Ожидает
   - Git Commit: [PENDING] chore: собрать Web Pilot 0.6.11 с полной историей
   - Reference: next-modifications-discussion-012 / T013 / implementation

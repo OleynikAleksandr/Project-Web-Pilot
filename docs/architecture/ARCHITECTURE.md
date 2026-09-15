@@ -625,3 +625,7 @@ macOS arm64 и Windows x64 packages включают предварительн�
 ## Scope 012 / T011 — полная история для счётчика
 
 ConversationHistory наблюдает нативные GET выбранной беседы через уже используемый CDP. Пагинация читает messages/page_info/start_cursor до явного конца; предыдущие страницы загружаются Electron session.fetch в том же профиле, только GET того же conversation ID. Заголовки авторизации живут в памяти; текст не пишется в логи/storage. Ограничены размер, число страниц, время; ошибки не дают статус полноты. SessionTokenCounter принимает complete snapshot: удаляет старые DOM/branch entries и сохраняет coverage=full-history. Оценка активного контекстного окна не вычисляется.
+
+## Scope 012 / T012 — история и состояние счётчика в Electron
+
+Main подключает ConversationHistory к тому же debugger и session, которые уже обслуживают ChatGPT. Начальный about:blank нужен для готовности WebContents перед CDP; затем перехватывается первая реальная загрузка истории. Самостоятельные GET ограничены предыдущими страницами выбранной беседы. Session snapshot передаёт coverage и краткий tokenHistory status; тексты, курсоры и авторизация в renderer/sidebar не передаются. UI отделяет неполную оценку, загрузку и завершённую текстовую историю; время последнего полного расчёта видно в tooltip. Recovery cache и доставка остаются прежними.

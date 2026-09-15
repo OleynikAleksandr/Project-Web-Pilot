@@ -30,6 +30,7 @@ export function operationLabel(state = {}, action = null) {
   if (['waiting-login','waiting-draft','waiting-composer','prepared-stale','error','chat-changed'].includes(state.context?.phase)) return null;
   if (phaseLabels[state.context?.phase]) return phaseLabels[state.context.phase];
   if (state.contextPreparation?.busy) return 'Подготавливаем контекст заранее';
+  if (state.tokenHistory?.status === 'loading') return 'Загружаем и считаем всю историю';
   return null;
 }
 export function createProgress(element, { now = Date.now, schedule = setInterval, cancel = clearInterval } = {}) {

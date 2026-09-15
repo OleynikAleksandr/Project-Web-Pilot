@@ -114,3 +114,8 @@ test('unsupported larger page size retries with observed native size', async t =
   assert.deepEqual(sizes, ['50', '2']);
   assert.equal(f.history.view().status, 'ready');
 });
+
+test('page centered on an old message cannot masquerade as the whole current branch', async () => {
+  await assert.rejects(collectHistory({ ...page([message('older')]), current_node: 'latest' }, async () => {}),
+    { code: 'HISTORY_BRANCH' });
+});

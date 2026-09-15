@@ -168,11 +168,17 @@ function render(state) {
         const bottom = document.createElement('div'); bottom.className = 'session-bottom';
         const tokens = document.createElement('span'); tokens.className = 'session-tokens';
         const estimate = session.tokenEstimate;
-        tokens.textContent = estimate ? `≈ ${estimate.total.toLocaleString('ru-RU')} ток.` : '— ток.';
-        tokens.title = estimate
-          ? `Оценка текста прочитанных сообщений: ${estimate.messageCount}. Скрытый контекст, reasoning и вложения не учитываются. Старые сообщения учитываются после загрузки при прокрутке. Это не расход API и не заполнение окна. Обновлено: ${new Date(estimate.updatedAt).toLocaleString('ru-RU')}.`
-          : 'Оценка появится после чтения сообщений открытой сессии.';
-        tokens.setAttribute('aria-label', estimate ? `Оценка токенов сессии: ${estimate.total}` : 'Оценка токенов сессии пока неизвестна');
+        const complete = estimate?.coverage === 'full-history';
+        const history = state.selected?.sessionId === session.sessionId ? state.tokenHistory : null;
+        const loading = history?.status === 'loading';
+        tokens.textContent = loading ? 'Подсчёт…' : complete ? `≈ ${estimate.total.toLocaleString('ru-RU')} ток.`
+          : estimate ? 'Неполный подсчёт' : '— ток.';
+        tokens.title = loading
+          ? `Загружаем всю историю: ${history.pages ?? 0} страниц, ${history.messageCount ?? 0} сообщений.`
+          : complete
+            ? `Вся доступная текстовая история: ${estimate.messageCount} сообщений, включая тексты инструментов. Это не расход API и не заполнение окна. Скрытый серверный контекст и бинарные вложения не учитываются. Обновлено: ${new Date(estimate.updatedAt).toLocaleString('ru-RU')}.${history?.status === 'error' ? ' Последнее обновление не удалось; показан предыдущий полный подсчёт.' : ''}`
+            : `Вся история ещё не подсчитана.${estimate ? ' Прочитанный фрагмент: ≈ ' + estimate.total.toLocaleString('ru-RU') + ' ток.' : ''} Откройте сессию для загрузки истории.${history?.status === 'error' ? ' Загрузка не завершилась; обновите ChatGPT для повторной попытки.' : ''}`;
+        tokens.setAttribute('aria-label', tokens.textContent + '. ' + tokens.title);
         bottom.append(date, tokens);
         choice.append(top, bottom);
         choice.addEventListener('click', () => { clearTimeout(workspaceClickTimer); action('selectSession', project.workspace, session.sessionId); });

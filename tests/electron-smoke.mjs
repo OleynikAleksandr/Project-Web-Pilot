@@ -4,8 +4,10 @@ import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { nativeTheme, clipboard } from 'electron';
 import { readWorkspace, WorkspaceSessions } from '../src/workspace-session.mjs';
+import { estimateMessageTokens } from '../src/session-tokens.mjs';
 
 let packetLoads = 0;
+let historyPageRequests = 0;
 const fixtureContext = Array.from({ length: 400 }, (_, i) => `Раздел ${i + 1}: полный контекст проекта, включая кириллицу и точные пути.\n  Файл: /Projects/Мой проект/src/модуль.mjs\n\n`).join('');
 const fixtureTelemetrySse = [
   'data: {"type":"event_msg","payload":{"type":"token_count","info":{"last_token_usage":{"input_tokens":229043,"cached_input_tokens":220000,"total_tokens":229153},"model_context_window":258400},"message":"PRIVATE STREAM TEXT"}}',
@@ -44,6 +46,18 @@ export async function createRuntime({ browser, session }) {
   // Explicit isolated test mode only. No request is sent to a real service.
   await session.protocol.handle('https', request => {
     const url = new URL(request.url);
+    if (url.hostname === 'chatgpt.com' && /^\/backend-api\/conversations\/[^/]+(?:\/messages)?$/.test(url.pathname)) {
+      const older = url.pathname.endsWith('/messages');
+      const final = url.searchParams.get('before') === 'history-first';
+      if (older) historyPageRequests++;
+      const messages = older ? final
+        ? [{ id: 'full-recovery', author: { role: 'user' }, content: { parts: [fixtureContext.repeat(3)] } }]
+        : [{ id: 'full-tool', author: { role: 'tool' }, content: { parts: ['Tool output absent from DOM'] } }]
+        : [{ id: 'full-latest', author: { role: 'assistant' }, content: { parts: ['Hello world'] } }];
+      const body = { messages, page_info: { has_previous_page: !final, start_cursor: final ? null : older ? 'history-first' : 'history-middle' } };
+      return new Promise(resolve => setTimeout(() => resolve(new Response(JSON.stringify(body),
+        { headers: { 'content-type': 'application/json' } })), older ? 350 : 0));
+    }
     if (url.hostname === 'chatgpt.com' && url.pathname === '/backend-api/f/conversation') {
       return new Response(fixtureTelemetrySse, { headers: { 'content-type': 'text/event-stream; charset=utf-8' } });
     }
@@ -182,7 +196,26 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(store.selected().tokenEstimate.total, firstTokenTotal+2, 'streaming replaces the reply');
   assert.equal(snapshot().selected.tokenEstimate.messages, undefined);
   assert.equal(snapshot().projects[0].sessions[0].tokenEstimate.messages, undefined);
-  await waitFor(() => sidebar.executeJavaScript('document.querySelector(".session-tokens").textContent.startsWith("≈ ")'), 'token label', snapshot);
+  await waitFor(() => sidebar.executeJavaScript('document.querySelector(".session-tokens").textContent === "Неполный подсчёт"'), 'partial token label', snapshot);
+  // Only a tiny latest message is mounted. Older recovery and tool output exist solely in paginated network responses.
+  await browser.executeJavaScript(`document.getElementById('messages').innerHTML='<article data-message-author-role="assistant" data-message-id="full-latest">Hello world</article>'`);
+  const requestHistory = () => browser.executeJavaScript(`fetch('/backend-api/conversations/'+location.pathname.split('/').pop()+'?num_turns=2&include_has_versions=true').then(r=>r.json()).then(()=>true)`);
+  await requestHistory();
+  await waitFor(() => snapshot().tokenHistory.status === 'loading', 'full history loading status', snapshot);
+  await waitFor(() => sidebar.executeJavaScript('document.getElementById("operation-progress").textContent.includes("всю историю")'), 'history spinner', snapshot);
+  await waitFor(() => store.selected().tokenEstimate?.coverage === 'full-history', 'complete paginated history count', snapshot);
+  const expectedFull = await estimateMessageTokens([
+    { id: 'assistant:full-latest', text: 'Hello world' },
+    { id: 'tool:full-tool', text: 'Tool output absent from DOM' },
+    { id: 'user:full-recovery', text: fixtureContext.repeat(3) },
+  ], null, Date.now(), { complete: true });
+  assert.equal(store.selected().tokenEstimate.total, expectedFull.total);
+  assert.ok(expectedFull.total > firstTokenTotal * 2, 'full history greatly exceeds the visible fragment');
+  assert.equal(historyPageRequests, 2, 'every previous page was fetched through Electron session');
+  assert.equal(Object.keys(store.selected().tokenEstimate.messages).length, 3, 'DOM fragments replaced, not added');
+  await sampleSessionTokens({ force: true });
+  assert.equal(store.selected().tokenEstimate.total, expectedFull.total, 'DOM cannot overwrite a complete snapshot');
+  await waitFor(() => sidebar.executeJavaScript('document.querySelector(".session-tokens").textContent.startsWith("≈ ")'), 'full token label', snapshot);
   const tokenSidebarWidth = snapshot().sidebarWidth;
   await sidebar.executeJavaScript('window.webPilot.setSidebarWidth(312)');
   await waitFor(() => snapshot().sidebarWidth === 312, 'minimum sidebar width for token layout', snapshot);
@@ -523,7 +556,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
 
   const result = { mode: 'isolated-fixture', electron: process.versions.electron, chromium: process.versions.chrome,
     views: window.contentView.children.length, secureRemote: true, sidebarIpc: true, archiveRestore: true, archiveRestart: true, deleteCancel: true, localDeletion: true, cloudChatPreserved: true, workspaceCreation: true, workspaceValidation: true, cancelPreservesSession: true, startupMessages: 4, canonicalPacketLoads: packetLoads, recoveryCache: true, operationProgress: true, progressScreenshot: path.join(dataDir, 'progress-ui.png'),
-    sessionTokenCounter: true, tokenCounterScreenshot: path.join(dataDir, 'token-counter-ui.png'), restartKeepsSession: true, newChatCreatesSession: true, sessionTree: true, selectsEarlierSession: true, compactWorkspaceDetails: true, projectPathClipboard: true, planAcceptanceButton: true, chromiumDiagnostics: true, contextWindowIndicator: true, resizableSidebar: true, separateArchiveWindow: true, archiveMultiSelect: true, archiveForgetKeepsFolder: true, shellTheme: true, nativeTitlebarTheme: nativeTheme.shouldUseDarkColors, toolCallFilter: true, microphonePermission: true, geolocationPermission: true, cameraPermission: false, fullContextBytes: Buffer.byteLength(fixtureContext), liveChatGPT: false, agentToolsRequired: false };
+    sessionTokenCounter: true, fullHistoryPagination: true, historyPageRequests, tokenCounterScreenshot: path.join(dataDir, 'token-counter-ui.png'), restartKeepsSession: true, newChatCreatesSession: true, sessionTree: true, selectsEarlierSession: true, compactWorkspaceDetails: true, projectPathClipboard: true, planAcceptanceButton: true, chromiumDiagnostics: true, contextWindowIndicator: true, resizableSidebar: true, separateArchiveWindow: true, archiveMultiSelect: true, archiveForgetKeepsFolder: true, shellTheme: true, nativeTitlebarTheme: nativeTheme.shouldUseDarkColors, toolCallFilter: true, microphonePermission: true, geolocationPermission: true, cameraPermission: false, fullContextBytes: Buffer.byteLength(fixtureContext), liveChatGPT: false, agentToolsRequired: false };
   await fs.writeFile(path.join(dataDir, 'smoke-result.json'), JSON.stringify(result, null, 2));
   console.log(JSON.stringify(result));
 }

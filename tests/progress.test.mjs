@@ -13,6 +13,8 @@ test('operations show stages; idle, errors and user input waits never spin',()=>
   assert.equal(operationLabel({setup:{phase:'applying'}}),'Подготавливаем проект');
   assert.equal(operationLabel({context:{phase:'delivered'},contextPreparation:{busy:true}}),'Подготавливаем контекст заранее');
   assert.equal(operationLabel({context:{phase:'error'},contextPreparation:{busy:true}}),null);
+  assert.equal(operationLabel({context:{phase:'delivered'},tokenHistory:{status:'loading'}}),'Загружаем и считаем всю историю');
+  assert.equal(operationLabel({context:{phase:'delivered'},tokenHistory:{status:'error'}}),null);
   assert.equal(operationLabel({},'deleteSessions'),'Удаляем локальные сессии');
   assert.equal(operationLabel({},'restore'),'Восстанавливаем проекты');
   assert.equal(operationLabel({},'chooseParent'),null);
