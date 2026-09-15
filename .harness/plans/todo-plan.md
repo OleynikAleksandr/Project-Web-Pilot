@@ -4,21 +4,18 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 351,
+  "plan_revision": 352,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "next-modifications-discussion-012",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
-  "objective": "Оценка токенов сессий и существенное ускорение повторной передачи полного актуального контекста через предварительную подготовку.",
+  "delivery_status": "IN_PROGRESS",
+  "objective": "Быстрая предварительная подготовка актуального контекста и спиннеры операций; экспериментальный счётчик токенов удалён по решению пользователя.",
   "acceptance_criteria": [
-    "Отдельная сохраняемая оценка для каждой Chat/Work сессии обновляется при чтении сообщений.",
-    "Счётчик расположен справа снизу; повторное отображение одного сообщения не увеличивает сумму.",
-    "Показания явно являются оценкой доступного текста; пользователь проверяет их на реальном ChatGPT.",
-    "Готовый пакет переиспользуется только после проверки исходных данных; изменения Git, плана, документов и evidence инвалидируют кэш.",
-    "Замер одинакового пакета показывает более чем двукратное ускорение подготовки при попадании в кэш; время страницы/ответа ChatGPT учитывается отдельно.",
-    "Обновлены macOS/Windows packages для пользовательской приёмки.",
-    "Полная текстовая история считывается по всем страницам; фрагменты не выдаются за общий итог."
+    "Полностью удалён счётчик: нет tokenizer worker, фонового DOM-сэмплинга и загрузки истории для расчёта.",
+    "Сессии и recovery сохраняются; устаревшие локальные оценки очищаются.",
+    "Предварительная подготовка полного актуального контекста и общие спиннеры операций работают.",
+    "macOS/Windows packages пересобраны; пользователь проверяет релиз перед закрытием scope."
   ],
   "approved_scope": {
     "functional_paths": [
@@ -41,7 +38,8 @@
       "src/ui/archive.html",
       "tests/progress.test.mjs",
       "src/conversation-history.mjs",
-      "tests/conversation-history.test.mjs"
+      "tests/conversation-history.test.mjs",
+      "tests/workspace-session.test.mjs"
     ],
     "documentation_paths": [
       "docs/DECISIONS.md",
@@ -518,6 +516,111 @@
         "task_id": "T013",
         "role": "implementation"
       }
+    },
+    {
+      "id": "T014",
+      "title": "Зафиксировать отказ от счётчика токенов",
+      "why": "15.09.2026 пользователь поручил полностью убрать бесполезный для оценки окна счётчик и пересобрать релиз.",
+      "dependencies": [],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/modules/workspace-sessions.md",
+        "docs/DECISIONS.md"
+      ],
+      "verification_ids": [],
+      "acceptance_criteria": [
+        "Удаление счётчика согласовано пользователем; recovery cache и общие спиннеры остаются."
+      ],
+      "expected_commit_message": "docs: согласовать удаление счётчика токенов",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "next-modifications-discussion-012",
+        "task_id": "T014",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T015",
+      "title": "Удалить подсчёт, пагинацию, worker и интерфейс",
+      "why": "15.09.2026 пользователь поручил полностью убрать бесполезный для оценки окна счётчик и пересобрать релиз.",
+      "dependencies": [
+        "T014"
+      ],
+      "functional_paths": [
+        "src/session-tokens.mjs",
+        "src/conversation-history.mjs",
+        "src/main.mjs",
+        "src/workspace-session.mjs",
+        "src/ui/sidebar.mjs",
+        "src/ui/index.html",
+        "src/ui/progress.mjs",
+        "tests/session-tokens.test.mjs",
+        "tests/conversation-history.test.mjs",
+        "tests/electron-smoke.mjs",
+        "tests/progress.test.mjs",
+        "tests/workspace-session.test.mjs",
+        "package.json",
+        "package-lock.json"
+      ],
+      "documentation_paths": [
+        "docs/modules/workspace-sessions.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [
+        "syntax",
+        "suite",
+        "electron-smoke"
+      ],
+      "acceptance_criteria": [
+        "Нет фонового подсчёта, дополнительных запросов истории, worker, зависимости и индикаторов счётчика.",
+        "Старые оценки удаляются при загрузке storage без потери сессий и привязок."
+      ],
+      "expected_commit_message": "refactor: полностью удалить подсчёт токенов сессий",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "next-modifications-discussion-012",
+        "task_id": "T015",
+        "role": "implementation"
+      },
+      "file_limit_exception": "Атомарное удаление одного модуля вместе со всеми вызовами, зависимостью, UI и его tests; разбиение оставит неработающие imports."
+    },
+    {
+      "id": "T016",
+      "title": "Собрать релиз без счётчика для приёмки",
+      "why": "15.09.2026 пользователь поручил полностью убрать бесполезный для оценки окна счётчик и пересобрать релиз.",
+      "dependencies": [
+        "T015"
+      ],
+      "functional_paths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "documentation_paths": [
+        "docs/modules/workspace-sessions.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md"
+      ],
+      "verification_ids": [
+        "syntax",
+        "suite",
+        "electron-smoke"
+      ],
+      "acceptance_criteria": [
+        "macOS и Windows packages обновлены до 0.6.12 и не содержат счётчик/tiktoken.",
+        "План остаётся открытым до пользовательской проверки."
+      ],
+      "expected_commit_message": "chore: собрать Web Pilot 0.6.12 без счётчика",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "next-modifications-discussion-012",
+        "task_id": "T016",
+        "role": "implementation"
+      }
     }
   ],
   "blocked_reason": null,
@@ -542,6 +645,10 @@
     {
       "id": "full-session-tokens-20260915",
       "text": "15.09.2026 пользователь повторно указал, что счётчик показывает малый фрагмент вместо всей сессии. Исправление первоначально порученного полного подсчёта и сборка для тестов авторизованы."
+    },
+    {
+      "id": "remove-token-counter-20260915",
+      "text": "Пользователь поручил полностью убрать модуль подсчёта токенов, чтобы он не занимал время готовности сессии, и пересобрать релиз. Закрытие плана — после его проверки."
     }
   ]
 }
@@ -551,24 +658,21 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: next-modifications-discussion-012
 Current Task: нет
-Revision: 351
+Revision: 352
 
 ## Цель
 
-Оценка токенов сессий и существенное ускорение повторной передачи полного актуального контекста через предварительную подготовку.
+Быстрая предварительная подготовка актуального контекста и спиннеры операций; экспериментальный счётчик токенов удалён по решению пользователя.
 
 ## Критерии приёмки
 
-- Отдельная сохраняемая оценка для каждой Chat/Work сессии обновляется при чтении сообщений.
-- Счётчик расположен справа снизу; повторное отображение одного сообщения не увеличивает сумму.
-- Показания явно являются оценкой доступного текста; пользователь проверяет их на реальном ChatGPT.
-- Готовый пакет переиспользуется только после проверки исходных данных; изменения Git, плана, документов и evidence инвалидируют кэш.
-- Замер одинакового пакета показывает более чем двукратное ускорение подготовки при попадании в кэш; время страницы/ответа ChatGPT учитывается отдельно.
-- Обновлены macOS/Windows packages для пользовательской приёмки.
-- Полная текстовая история считывается по всем страницам; фрагменты не выдаются за общий итог.
+- Полностью удалён счётчик: нет tokenizer worker, фонового DOM-сэмплинга и загрузки истории для расчёта.
+- Сессии и recovery сохраняются; устаревшие локальные оценки очищаются.
+- Предварительная подготовка полного актуального контекста и общие спиннеры операций работают.
+- macOS/Windows packages пересобраны; пользователь проверяет релиз перед закрытием scope.
 
 ## Микрозадачи
 
@@ -623,6 +727,18 @@ Revision: 351
 - [DONE] T013: Собрать релиз с исправленным счётчиком — Завершено
   - Git Commit: [DONE] chore: собрать Web Pilot 0.6.11 с полной историей
   - Reference: next-modifications-discussion-012 / T013 / implementation
+  - Файлы: package.json, package-lock.json, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md
+- [TODO] T014: Зафиксировать отказ от счётчика токенов — Ожидает
+  - Git Commit: [PENDING] docs: согласовать удаление счётчика токенов
+  - Reference: next-modifications-discussion-012 / T014 / implementation
+  - Файлы: docs/modules/workspace-sessions.md, docs/DECISIONS.md
+- [TODO] T015: Удалить подсчёт, пагинацию, worker и интерфейс — Ожидает
+  - Git Commit: [PENDING] refactor: полностью удалить подсчёт токенов сессий
+  - Reference: next-modifications-discussion-012 / T015 / implementation
+  - Файлы: src/session-tokens.mjs, src/conversation-history.mjs, src/main.mjs, src/workspace-session.mjs, src/ui/sidebar.mjs, src/ui/index.html, src/ui/progress.mjs, tests/session-tokens.test.mjs, tests/conversation-history.test.mjs, tests/electron-smoke.mjs, tests/progress.test.mjs, tests/workspace-session.test.mjs, package.json, package-lock.json, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+- [TODO] T016: Собрать релиз без счётчика для приёмки — Ожидает
+  - Git Commit: [PENDING] chore: собрать Web Pilot 0.6.12 без счётчика
+  - Reference: next-modifications-discussion-012 / T016 / implementation
   - Файлы: package.json, package-lock.json, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md
 
 ## Context Pack For This Cycle
