@@ -147,3 +147,89 @@ test('invalid names, expired tickets and missing Node do not create folders', as
   await assert.rejects(missing.preview({ mode: 'new', parent, name: 'New' }), { code: 'NODE_MISSING' });
   assert.deepEqual(await fs.readdir(parent), []);
 });
+
+test('Windows setup ignores inherited Node flags and preload hooks in a real worker', async t => {
+  const { parent } = await fixture(t);
+  for (const [index, options] of ['--web-pilot-invalid-option', '--require=web-pilot-missing-preload'].entries()) {
+    const inherited = {
+      ...environment,
+      PATH: path.dirname(process.execPath) + path.delimiter + (environment.PATH ?? environment.Path ?? ''),
+      NODE_OPTIONS: options, Node_Options: options,
+      NODE_PATH: '/web-pilot-unrelated-modules', Node_Path: '/web-pilot-unrelated-modules',
+    };
+    const setup = new WorkspaceSetup({
+      platform: 'win32', nodeCandidates: [path.basename(process.execPath)], environment: inherited,
+    });
+    const preview = await setup.preview({ mode: 'new', parent, name: 'Windows flags ' + index });
+    assert.equal(preview.action, 'install');
+    await assert.rejects(fs.stat(preview.workspace), { code: 'ENOENT' });
+    assert.equal((await setup.apply(preview.token)).ready, true);
+    assert.equal((await setup.preview({ mode: 'existing', workspace: preview.workspace })).action, 'open');
+    assert.equal(inherited.NODE_OPTIONS, options);
+    assert.equal(inherited.Node_Options, options);
+    assert.equal(inherited.NODE_PATH, '/web-pilot-unrelated-modules');
+    assert.equal(Object.keys(setup.environment).some(key => /^node_(options|path)$/i.test(key)), false);
+  }
+});
+
+test('Windows Node errors distinguish missing, old, denied, invalid and timed out executables', async t => {
+  const cases = [
+    { name: 'missing', error: { code: 'ENOENT' }, expected: 'NODE_MISSING', message: /resources/ },
+    { name: 'old', stdout: 'v20.19.0\r\n', expected: 'NODE_TOO_OLD', message: /v20\.19\.0/ },
+    { name: 'denied', error: { code: 'EACCES' }, expected: 'NODE_START_FAILED', message: /EACCES/ },
+    { name: 'invalid image', error: { code: 'UNKNOWN' }, expected: 'NODE_START_FAILED', message: /UNKNOWN/ },
+    { name: 'timeout', error: { code: null, killed: true }, expected: 'NODE_START_FAILED', message: /TIMEOUT/ },
+    { name: 'unexpected output', stdout: 'not-node-secret', expected: 'NODE_START_FAILED', message: /INVALID_VERSION_OUTPUT/ },
+  ];
+  for (const item of cases) await t.test(item.name, async () => {
+    const setup = new WorkspaceSetup({
+      platform: 'win32', nodeCandidates: ['C:\\Program Files\\Web Pilot\\node.exe'],
+      executeNode: async () => {
+        if (item.error) throw Object.assign(new Error('stderr-secret'), item.error);
+        return { stdout: item.stdout };
+      },
+    });
+    await assert.rejects(setup.node(), error => {
+      assert.equal(error.code, item.expected);
+      assert.match(error.message, item.message);
+      assert.doesNotMatch(error.message, /secret/);
+      return true;
+    });
+  });
+});
+
+test('Windows keeps searching after failure and caches only a successful Node', async () => {
+  const calls = [];
+  let available = false;
+  const setup = new WorkspaceSetup({
+    platform: 'win32', nodeCandidates: ['missing.exe', 'blocked.exe', 'old.exe', 'good.exe'],
+    executeNode: async candidate => {
+      calls.push(candidate);
+      if (candidate === 'blocked.exe') throw Object.assign(new Error(), { code: 'EACCES' });
+      if (candidate === 'old.exe') return { stdout: 'v18.20.0\n' };
+      if (candidate === 'good.exe' && available) return { stdout: 'v22.17.0\r\n' };
+      throw Object.assign(new Error(), { code: 'ENOENT' });
+    },
+  });
+  await assert.rejects(setup.node(), { code: 'NODE_START_FAILED' });
+  available = true;
+  assert.equal(await setup.node(), 'good.exe');
+  assert.deepEqual(calls, ['missing.exe', 'blocked.exe', 'old.exe', 'good.exe',
+    'missing.exe', 'blocked.exe', 'old.exe', 'good.exe']);
+  assert.equal(await setup.node(), 'good.exe');
+  assert.equal(calls.length, 8);
+});
+
+test('macOS retains Node environment and legacy missing-Node diagnostics', async () => {
+  const setup = new WorkspaceSetup({
+    platform: 'darwin', environment: { NODE_OPTIONS: '--trace-warnings', NODE_PATH: '/existing/modules' },
+    nodeCandidates: ['/usr/local/bin/node'],
+    executeNode: async (_candidate, _args, options) => {
+      assert.equal(options.env.NODE_OPTIONS, '--trace-warnings');
+      assert.equal(options.env.NODE_PATH, '/existing/modules');
+      assert.equal(options.windowsHide, undefined);
+      throw Object.assign(new Error(), { code: 'EACCES' });
+    },
+  });
+  await assert.rejects(setup.node(), { code: 'NODE_MISSING' });
+});

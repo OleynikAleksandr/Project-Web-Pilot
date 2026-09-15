@@ -699,3 +699,11 @@ Electron smoke требует отсутствия `context-window-card` и по
 ## Scope 016 / T003 — релиз 0.6.16
 
 Финальные проверки: полная Node suite — 126 тестов, 124 passed и 2 platform-specific skipped; Electron smoke 0.6.16 прошёл с `contextWindowIndicatorRemoved=true` и сохранён в `.harness/runtime/scope016-smoke-result.json`. `npm run build` успешно создал macOS arm64 и Windows x64; штатная Windows package verification пройдена. Версии `package.json` внутри обоих `app.asar` и macOS Info.plist равны 0.6.16; main/workspace-session/context-session/preload/sidebar/index.html в обоих пакетах побайтно совпадают с исходниками. SHA-256 и размеры `app.asar` записаны в `.harness/runtime/release-016.json`. Реальный аккаунт ChatGPT и физический Windows ПК остаются пользовательской проверкой.
+
+## Windows NODE_MISSING: диагностика — 15.09.2026
+
+Получен скриншот ошибки NODE_MISSING при подключении D:\AI Projects\Test002 на Windows 10; версия и логи той машины неизвестны. По истории до 0fb755e от 12.09.2026 setup искал только системный Node. Текущая 0.6.16 содержит portable node.exe (85 219 968 байт), verify:win прошёл; архив Node имеет официальный SHA-256 721ab118a3aac8584348b132767eadf51379e0616f0db802cc1e66d7f0d98f85 (https://nodejs.org/en/blog/release/v22.17.0).
+
+Воспроизведение на Mac с Windows-веткой WorkspaceSetup и настоящим локальным Node: чистое окружение находит node; NODE_OPTIONS=--web-pilot-invalid-option возвращает ложный NODE_MISSING. Это подтверждённый дефект обработки ошибок, но не доказательство наличия такого окружения на компьютере пользователя. Native Windows 10 запуск пока не выполнен.
+
+T001: node --test tests/workspace-setup.test.mjs — 19/19 passed, 0 failed. Реальный worker успешно создал и повторно открыл временные проекты при invalid NODE_OPTIONS и несуществующем preload; Windows API ошибки проверены через заменяемый исполнитель. Проверены повтор после отказа, fallback и сохранение macOS environment/diagnostics. Это cross-platform regression на Mac, а не native Windows 10 приёмка.

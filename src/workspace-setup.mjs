@@ -10,9 +10,10 @@ const fail = (code, message) => Object.assign(new Error(message), { code });
 
 export class WorkspaceSetup {
   constructor({ resourceDir = fileURLToPath(new URL('../resources/', import.meta.url)), nodeCandidates,
-    environment = process.env, platform = process.platform } = {}) {
+    environment = process.env, platform = process.platform, executeNode = execute } = {}) {
     this.resourceDir = resourceDir;
     this.platform = platform;
+    this.executeNode = executeNode;
     this.nodeCandidates = nodeCandidates ?? nodeExecutableCandidates({
       platform,
       environment,
@@ -21,23 +22,51 @@ export class WorkspaceSetup {
     });
     this.environment = { ...environment, GIT_OPTIONAL_LOCKS: '0', GIT_TERMINAL_PROMPT: '0' };
     for (const key of ['GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_COMMON_DIR', 'GIT_OBJECT_DIRECTORY', 'GIT_ALTERNATE_OBJECT_DIRECTORIES', 'GIT_PREFIX', 'ELECTRON_RUN_AS_NODE']) delete this.environment[key];
+    if (platform === 'win32') {
+      // The bundled worker must not inherit Node flags/module hooks from other apps.
+      for (const key of Object.keys(this.environment)) {
+        if (['NODE_OPTIONS', 'NODE_PATH'].includes(key.toUpperCase())) delete this.environment[key];
+      }
+    }
     this.tickets = new Map();
   }
   async node() {
     if (this.nodeExecutable) return this.nodeExecutable;
+    const windowsIssues = [];
     for (const candidate of this.nodeCandidates) {
       if (!executableCandidateAllowed(candidate, this.platform)) continue;
       try {
-        const { stdout } = await execute(candidate, ['--version'], { timeout: 5000, env: this.environment });
-        if (/^v(\d+)\./.test(stdout) && Number(RegExp.$1) >= 22) return this.nodeExecutable = candidate;
-      } catch {}
+        const { stdout } = await this.executeNode(candidate, ['--version'], {
+          timeout: 5000, env: this.environment,
+          ...(this.platform === 'win32' ? { windowsHide: true } : {}),
+        });
+        const version = /^v(\d+)\.\d+\.\d+/.exec(stdout);
+        if (version && Number(version[1]) >= 22) return this.nodeExecutable = candidate;
+        if (this.platform === 'win32') windowsIssues.push({
+          candidate, code: version ? 'NODE_TOO_OLD' : 'INVALID_VERSION_OUTPUT', version: version?.[0],
+        });
+      } catch (error) {
+        if (this.platform === 'win32' && error.code !== 'ENOENT') windowsIssues.push({
+          candidate, code: error.killed ? 'TIMEOUT' : String(error.code ?? 'START_FAILED'),
+        });
+      }
+    }
+    if (this.platform === 'win32') {
+      const issue = windowsIssues.find(item => item.code !== 'NODE_TOO_OLD') ?? windowsIssues[0];
+      if (issue?.code === 'NODE_TOO_OLD') throw fail('NODE_TOO_OLD',
+        'Найден Node.js ' + issue.version + ', нужен 22 или новее. Распакуйте всю папку актуальной Windows-версии приложения.');
+      if (issue) throw fail('NODE_START_FAILED',
+        'Не удалось запустить Node.js: ' + issue.candidate + ' (' + issue.code + '). Проверьте доступ к файлу и повторите проверку.');
+      throw fail('NODE_MISSING',
+        'Node.js не найден. Распакуйте всю папку Windows-версии приложения, включая resources, и повторите проверку.');
     }
     throw fail('NODE_MISSING', 'Для подготовки проектов нужен Node.js 22 или новее. Установите его и повторите проверку.');
   }
   async call(input) {
     const node = await this.node();
     const child = execFile(node, [path.join(this.resourceDir, 'workspace-setup-worker.mjs')],
-      { env: this.environment, timeout: 120000, maxBuffer: 4 * 1024 * 1024, encoding: 'utf8' });
+      { env: this.environment, timeout: 120000, maxBuffer: 4 * 1024 * 1024, encoding: 'utf8',
+        ...(this.platform === 'win32' ? { windowsHide: true } : {}) });
     const result = await new Promise((resolve, reject) => {
       let stdout = '', stderr = '';
       child.stdout.on('data', chunk => { stdout += chunk; }); child.stderr.on('data', chunk => { stderr += chunk; });

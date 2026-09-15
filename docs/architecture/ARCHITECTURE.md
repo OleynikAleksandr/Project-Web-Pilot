@@ -706,3 +706,7 @@ Scroll позиции читаются только у видимых списк
 ## Релиз 0.6.16 — scope 016 / T003
 
 Единые macOS arm64 и Windows x64 пакеты собраны без пользовательского индикатора context window и без отдельного `contextWindow` state/callback. Безопасный внутренний parser Chromium diagnostics для token/context/compact telemetry сохранён. `package.json`, lockfile, оба electron-packager target и macOS bundle синхронизированы на 0.6.16; содержимое ключевых source-файлов в обоих app.asar совпадает с рабочим деревом.
+
+## Windows workspace Node — 15.09.2026
+
+Windows-only исправление WorkspaceSetup изолирует NODE_OPTIONS/NODE_PATH в окружении дочернего настоящего Node и различает отсутствие Node, старую версию и отказ запуска. Bundled portable Node остаётся первым кандидатом, Electron/новый runtime не добавляются. Полный контракт — docs/WORKSPACE_SETUP.md. Изменение исполняет поручение исправить показанный NODE_MISSING только в Windows.

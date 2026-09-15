@@ -407,3 +407,7 @@ Main наблюдает закрытие при обычном poll, незав�
 ### Release integration — scope 016 / T003 / Project Web Pilot 0.6.16
 
 Релиз удаляет пользовательскую плашку context window, formatter/progress UI и отдельную observer-публикацию `contextWindow`, сохраняя внутреннюю безопасную Chromium telemetry. Финальный Electron smoke подтверждает `contextWindowIndicatorRemoved=true`; Node suite и обе package-сборки пройдены. Scope остаётся ACTIVE до явной пользовательской приёмки.
+
+## Windows workspace Node — scope windows-node-setup-019
+
+По поручению пользователя от 15.09.2026 исправляется существующая подготовка Windows-проектов; новый продуктовый сценарий не вводится. Workspace & Sessions владеет запуском setup worker до создания первой session. Контракт встроенного portable Node: готовая Windows-поставка работает без системного Node; NODE_OPTIONS и NODE_PATH других приложений не влияют на дочерний worker. Отсутствие исполняемого файла, старая версия и ошибка запуска различаются. При ошибке кандидата поиск продолжается; неуспешный результат не кэшируется. Платформенная ветка macOS сохраняет существующее поведение. Полный setup contract — docs/WORKSPACE_SETUP.md.

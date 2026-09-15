@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 412,
+  "plan_revision": 414,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-node-setup-019",
@@ -90,8 +90,8 @@
         "Рабочий fallback, retry и различные классы ошибок проверены; macOS сохраняет прежнее поведение."
       ],
       "expected_commit_message": "fix(windows): исправить запуск Node при подготовке проектов",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "windows-node-setup-019",
         "task_id": "T001",
@@ -150,7 +150,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: windows-node-setup-019
 Current Task: нет
-Revision: 412
+Revision: 414
 
 ## Цель
 
@@ -164,8 +164,8 @@ Revision: 412
 
 ## Микрозадачи
 
-- [TODO] T001: Исправить запуск и диагностику Node.js при подготовке Windows-проектов — Ожидает
-  - Git Commit: [PENDING] fix(windows): исправить запуск Node при подготовке проектов
+- [DONE] T001: Исправить запуск и диагностику Node.js при подготовке Windows-проектов — Завершено
+  - Git Commit: [DONE] fix(windows): исправить запуск Node при подготовке проектов
   - Reference: windows-node-setup-019 / T001 / implementation
   - Файлы: src/workspace-setup.mjs, tests/workspace-setup.test.mjs, docs/modules/workspace-sessions.md, docs/WORKSPACE_SETUP.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T002: Подготовить Windows-сборку с исправлением и инструкцией проверки — Ожидает
