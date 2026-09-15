@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 341,
+  "plan_revision": 342,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "next-modifications-discussion-012",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Оценка токенов сессий и существенное ускорение повторной передачи полного актуального контекста через предварительную подготовку.",
   "acceptance_criteria": [
     "Отдельная сохраняемая оценка для каждой Chat/Work сессии обновляется при чтении сообщений.",
@@ -17,7 +17,8 @@
     "Показания явно являются оценкой доступного текста; пользователь проверяет их на реальном ChatGPT.",
     "Готовый пакет переиспользуется только после проверки исходных данных; изменения Git, плана, документов и evidence инвалидируют кэш.",
     "Замер одинакового пакета показывает более чем двукратное ускорение подготовки при попадании в кэш; время страницы/ответа ChatGPT учитывается отдельно.",
-    "Обновлены macOS/Windows packages для пользовательской приёмки."
+    "Обновлены macOS/Windows packages для пользовательской приёмки.",
+    "Полная текстовая история считывается по всем страницам; фрагменты не выдаются за общий итог."
   ],
   "approved_scope": {
     "functional_paths": [
@@ -38,7 +39,9 @@
       "src/ui/progress.mjs",
       "src/ui/archive.mjs",
       "src/ui/archive.html",
-      "tests/progress.test.mjs"
+      "tests/progress.test.mjs",
+      "src/conversation-history.mjs",
+      "tests/conversation-history.test.mjs"
     ],
     "documentation_paths": [
       "docs/DECISIONS.md",
@@ -64,9 +67,9 @@
         "revision": "WORKTREE"
       },
       {
-        "path": "docs/modules/workflow-kit-recovery.md",
+        "path": "docs/modules/workspace-sessions.md",
         "heading_path": [
-          "Module Specification — Workflow Kit / Context Recovery"
+          "Module Specification — Workspace & Sessions"
         ],
         "required": true,
         "revision": "WORKTREE"
@@ -382,6 +385,137 @@
         "task_id": "T009",
         "role": "implementation"
       }
+    },
+    {
+      "id": "T010",
+      "title": "Зафиксировать исправление подсчёта всей истории",
+      "why": "Исправить подтверждённый пользователем неполный подсчёт всей сессии.",
+      "dependencies": [],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/modules/workspace-sessions.md",
+        "docs/DECISIONS.md"
+      ],
+      "verification_ids": [],
+      "acceptance_criteria": [
+        "Полнота подтверждается исчерпанием пагинации; DOM-фрагмент не обозначается полной историей."
+      ],
+      "expected_commit_message": "docs: уточнить контракт полного подсчёта истории",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "next-modifications-discussion-012",
+        "task_id": "T010",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T011",
+      "title": "Загрузить полную историю через наблюдаемую пагинацию ChatGPT",
+      "why": "Исправить подтверждённый пользователем неполный подсчёт всей сессии.",
+      "dependencies": [
+        "T010"
+      ],
+      "functional_paths": [
+        "src/conversation-history.mjs",
+        "src/session-tokens.mjs",
+        "tests/conversation-history.test.mjs",
+        "tests/session-tokens.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/workspace-sessions.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [
+        "syntax",
+        "suite"
+      ],
+      "acceptance_criteria": [
+        "История загружается до начала без прокрутки; циклы, ошибки и смена беседы не дают ложной полноты.",
+        "Полный снимок заменяет прежние DOM-оценки; тексты и авторизация не сохраняются на диск."
+      ],
+      "expected_commit_message": "fix: считать полную историю разговора с пагинацией",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "next-modifications-discussion-012",
+        "task_id": "T011",
+        "role": "implementation"
+      },
+      "file_limit_exception": "Единое исправление подсчёта истории и его обязательная интеграционная проверка."
+    },
+    {
+      "id": "T012",
+      "title": "Подключить полную историю и честный статус счётчика",
+      "why": "Исправить подтверждённый пользователем неполный подсчёт всей сессии.",
+      "dependencies": [
+        "T011"
+      ],
+      "functional_paths": [
+        "src/main.mjs",
+        "src/ui/sidebar.mjs",
+        "src/ui/progress.mjs",
+        "tests/electron-smoke.mjs",
+        "tests/progress.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/workspace-sessions.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [
+        "syntax",
+        "suite",
+        "electron-smoke"
+      ],
+      "acceptance_criteria": [
+        "Старые фрагменты явно помечены; загрузка истории показывает ход работы.",
+        "Полная история считается независимо от смонтированного DOM и сохраняется по сессии."
+      ],
+      "expected_commit_message": "fix: показывать полный подсчёт и загрузку истории",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "next-modifications-discussion-012",
+        "task_id": "T012",
+        "role": "implementation"
+      },
+      "file_limit_exception": "Единое исправление подсчёта истории и его обязательная интеграционная проверка."
+    },
+    {
+      "id": "T013",
+      "title": "Собрать релиз с исправленным счётчиком",
+      "why": "Исправить подтверждённый пользователем неполный подсчёт всей сессии.",
+      "dependencies": [
+        "T012"
+      ],
+      "functional_paths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "documentation_paths": [
+        "docs/modules/workspace-sessions.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md"
+      ],
+      "verification_ids": [
+        "syntax",
+        "suite",
+        "electron-smoke"
+      ],
+      "acceptance_criteria": [
+        "macOS и Windows packages пересобраны; реальные ограничения проверки явно указаны."
+      ],
+      "expected_commit_message": "chore: собрать Web Pilot 0.6.11 с полной историей",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "next-modifications-discussion-012",
+        "task_id": "T013",
+        "role": "implementation"
+      }
     }
   ],
   "blocked_reason": null,
@@ -402,6 +536,10 @@
     {
       "id": "operation-spinners-20260915",
       "text": "Пользователь дополнительно поручил сделать спиннеры выполнения процессов, чтобы было видно, что приложение работает. Включено в текущий релиз."
+    },
+    {
+      "id": "full-session-tokens-20260915",
+      "text": "15.09.2026 пользователь повторно указал, что счётчик показывает малый фрагмент вместо всей сессии. Исправление первоначально порученного полного подсчёта и сборка для тестов авторизованы."
     }
   ]
 }
@@ -411,10 +549,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: next-modifications-discussion-012
 Current Task: нет
-Revision: 341
+Revision: 342
 
 ## Цель
 
@@ -428,6 +566,7 @@ Revision: 341
 - Готовый пакет переиспользуется только после проверки исходных данных; изменения Git, плана, документов и evidence инвалидируют кэш.
 - Замер одинакового пакета показывает более чем двукратное ускорение подготовки при попадании в кэш; время страницы/ответа ChatGPT учитывается отдельно.
 - Обновлены macOS/Windows packages для пользовательской приёмки.
+- Полная текстовая история считывается по всем страницам; фрагменты не выдаются за общий итог.
 
 ## Микрозадачи
 
@@ -467,10 +606,26 @@ Revision: 341
   - Git Commit: [DONE] chore: собрать Web Pilot 0.6.10 с быстрым recovery
   - Reference: next-modifications-discussion-012 / T009 / implementation
   - Файлы: package.json, package-lock.json, docs/modules/workflow-kit-recovery.md, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md
+- [TODO] T010: Зафиксировать исправление подсчёта всей истории — Ожидает
+  - Git Commit: [PENDING] docs: уточнить контракт полного подсчёта истории
+  - Reference: next-modifications-discussion-012 / T010 / implementation
+  - Файлы: docs/modules/workspace-sessions.md, docs/DECISIONS.md
+- [TODO] T011: Загрузить полную историю через наблюдаемую пагинацию ChatGPT — Ожидает
+  - Git Commit: [PENDING] fix: считать полную историю разговора с пагинацией
+  - Reference: next-modifications-discussion-012 / T011 / implementation
+  - Файлы: src/conversation-history.mjs, src/session-tokens.mjs, tests/conversation-history.test.mjs, tests/session-tokens.test.mjs, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+- [TODO] T012: Подключить полную историю и честный статус счётчика — Ожидает
+  - Git Commit: [PENDING] fix: показывать полный подсчёт и загрузку истории
+  - Reference: next-modifications-discussion-012 / T012 / implementation
+  - Файлы: src/main.mjs, src/ui/sidebar.mjs, src/ui/progress.mjs, tests/electron-smoke.mjs, tests/progress.test.mjs, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+- [TODO] T013: Собрать релиз с исправленным счётчиком — Ожидает
+  - Git Commit: [PENDING] chore: собрать Web Pilot 0.6.11 с полной историей
+  - Reference: next-modifications-discussion-012 / T013 / implementation
+  - Файлы: package.json, package-lock.json, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md
 
 ## Context Pack For This Cycle
 
 - docs/architecture/OVERVIEW.md → Краткая архитектура проекта
-- docs/modules/workflow-kit-recovery.md → Module Specification — Workflow Kit / Context Recovery
+- docs/modules/workspace-sessions.md → Module Specification — Workspace & Sessions
 
 Служебные состояния меняются только командами workflow. Приёмка не архивирует scope.
