@@ -8,11 +8,30 @@ const label = { TODO: 'Ожидает', IN_PROGRESS: 'В работе', DONE: '�
 const string = (v, field) => check(typeof v === 'string' && v.trim().length > 0, 'PLAN_SCHEMA', 'Нужно непустое поле: ' + field);
 const array = (v, field) => check(Array.isArray(v), 'PLAN_SCHEMA', 'Нужен массив: ' + field);
 const unique = (values, field) => check(new Set(values).size === values.length, 'PLAN_SCHEMA', 'Повторяющиеся значения: ' + field);
+export const PROJECT_CONTINUATION_OBJECTIVE = 'Обсудите следующий этап проекта с пользователем.';
+export const FINAL_DOCUMENTATION_TASK_ID = 'DOCS';
+export const FINAL_DOCUMENTATION_TASK_TITLE = 'Актуализация всех документов проекта';
+export const PROJECT_CONTEXT_DOCUMENTS = Object.freeze([
+  { path: 'docs/architecture/OVERVIEW.md', heading_path: ['Краткая архитектура проекта'], required: true, revision: 'WORKTREE' },
+  { path: 'docs/MODULES.md', heading_path: ['Модули проекта'], required: true, revision: 'WORKTREE' },
+  { path: 'docs/DOCUMENTATION_INDEX.md', heading_path: ['Каталог документации'], required: true, revision: 'WORKTREE' },
+]);
+export const projectContextPaths = () => PROJECT_CONTEXT_DOCUMENTS.map(doc => doc.path);
+export function projectContextPack(pack = {}) {
+  const provided = new Map((pack.documents ?? []).map(doc => [doc.path, doc]));
+  const foundation = PROJECT_CONTEXT_DOCUMENTS.map(doc => ({ ...doc, ...(provided.get(doc.path) ?? {}),
+    path: doc.path, heading_path: [...doc.heading_path], required: true, revision: 'WORKTREE' }));
+  const extras = (pack.documents ?? []).filter(doc => !PROJECT_CONTEXT_DOCUMENTS.some(base => base.path === doc.path));
+  return { documents: [...foundation, ...extras], include_last_completed_task: pack.include_last_completed_task ?? false,
+    dependency_task_ids: [...(pack.dependency_task_ids ?? [])] };
+}
+export const isDocumentationFinalizationTask = task => task?.id === FINAL_DOCUMENTATION_TASK_ID
+  && task?.title === FINAL_DOCUMENTATION_TASK_TITLE;
 export function emptyPlan(name) {
   return { schema_version: 1, plan_revision: 1, project_id: id(), project_name: name, scope_id: null,
-    execution_scope_status: 'NONE', delivery_status: 'IN_PROGRESS', objective: '', acceptance_criteria: [],
+    execution_scope_status: 'NONE', delivery_status: 'IN_PROGRESS', objective: PROJECT_CONTINUATION_OBJECTIVE, acceptance_criteria: [],
     approved_scope: { functional_paths: [], documentation_paths: [], max_functional_files_per_task: 3 },
-    baseline_commit: null, current_task_id: null, context_pack: { documents: [], include_last_completed_task: false, dependency_task_ids: [] },
+    baseline_commit: null, current_task_id: null, context_pack: projectContextPack(),
     tasks: [], blocked_reason: null, user_decisions: [] };
 }
 export function validatePlan(p) {
@@ -40,6 +59,10 @@ export function validatePlan(p) {
   validateContext(p.context_pack);
   if (p.execution_scope_status === 'NONE') {
     check(p.scope_id === null && p.current_task_id === null && p.tasks.length === 0, 'PLAN_SCHEMA', 'NONE не может содержать активные задачи.');
+    for (const doc of PROJECT_CONTEXT_DOCUMENTS) {
+      check(p.context_pack.documents.some(current => current.path === doc.path && current.required === true),
+        'PROJECT_CONTEXT_REQUIRED', 'NONE должен сохранять обязательную ссылку: ' + doc.path);
+    }
   } else {
     string(p.scope_id, 'scope_id'); string(p.objective, 'objective');
     check(/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(p.scope_id), 'PLAN_SCHEMA', 'scope_id: латинские буквы, цифры, точка, дефис, подчёркивание.');
@@ -77,6 +100,15 @@ export function validatePlan(p) {
   const current = p.tasks.filter(t => t.implementation_status === 'IN_PROGRESS');
   check(current.length <= 1 && (current[0]?.id ?? null) === p.current_task_id, 'PLAN_SCHEMA', 'current_task_id не соответствует текущей задаче.');
   check(p.execution_scope_status !== 'BLOCKED' || (typeof p.blocked_reason === 'string' && p.blocked_reason.trim()), 'PLAN_SCHEMA', 'BLOCKED требует причину.');
+  const finalTask = p.tasks.find(isDocumentationFinalizationTask);
+  if (finalTask) {
+    check(p.tasks.at(-1)?.id === finalTask.id, 'DOCUMENTATION_FINAL_TASK', 'Актуализация документов должна быть последней задачей scope.');
+    check(finalTask.functional_paths.length === 0, 'DOCUMENTATION_FINAL_TASK', 'Финальная актуализация документации не содержит функциональных файлов.');
+    check(finalTask.documentation_paths.includes('docs/DOCUMENTATION_INDEX.md'), 'DOCUMENTATION_FINAL_TASK', 'Финальная актуализация должна включать docs/DOCUMENTATION_INDEX.md.');
+    const expected = p.tasks.slice(0, -1).map(task => task.id);
+    check(expected.every(id => finalTask.dependencies.includes(id)) && finalTask.dependencies.length === expected.length,
+      'DOCUMENTATION_FINAL_TASK', 'Финальная актуализация документации должна зависеть от всех предыдущих задач.');
+  }
   check(p.delivery_status !== 'READY_FOR_ACCEPTANCE' || (p.tasks.length > 0 && p.tasks.every(t => t.commit_status === 'DONE')), 'PLAN_SCHEMA', 'Готовность к приёмке не подтверждается задачами.');
   return p;
 }
@@ -85,7 +117,7 @@ export function renderPlan(p) {
   const lines = ['# Активный план — ' + p.project_name, '', BEGIN, '```json', JSON.stringify(p, null, 2), '```', END, '',
     '## Состояние', '', 'Execution Scope Status: ' + p.execution_scope_status, 'Delivery Status: ' + p.delivery_status,
     'Scope: ' + (p.scope_id ?? 'не создан'), 'Current Task: ' + (p.current_task_id ?? 'нет'), 'Revision: ' + p.plan_revision, '',
-    '## Цель', '', p.objective || 'Обсудить идею проекта и согласовать ближайший scope. Стек пока не выбран.', '', '## Критерии приёмки', '', ...p.acceptance_criteria.map(c => '- ' + c), '', '## Микрозадачи', ''];
+    '## Цель', '', p.objective || PROJECT_CONTINUATION_OBJECTIVE, '', '## Критерии приёмки', '', ...p.acceptance_criteria.map(c => '- ' + c), '', '## Микрозадачи', ''];
   for (const t of p.tasks) {
     lines.push('- [' + t.implementation_status + '] ' + t.id + ': ' + t.title + ' — ' + label[t.implementation_status],
       '  - Git Commit: [' + t.commit_status + '] ' + t.expected_commit_message,

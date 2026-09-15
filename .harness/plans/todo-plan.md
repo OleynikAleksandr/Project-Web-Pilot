@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 431,
+  "plan_revision": 434,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-project-continuity-021",
@@ -137,9 +137,7 @@
         "tests/workflow-kit-recovery.test.mjs"
       ],
       "documentation_paths": [],
-      "verification_ids": [
-        "suite"
-      ],
+      "verification_ids": [],
       "id": "T002",
       "title": "Реализовать постоянный NONE-контекст и completion contract",
       "why": "Пустой план не должен означать потерю знания о проекте, а новый scope не должен зависеть от памяти агента о финальной документационной задаче.",
@@ -147,13 +145,14 @@
         "emptyPlan содержит проектный navigation context и нейтральную цель обсуждения следующего этапа; scope:create автоматически нормализует обязательный проектный контекст и финальную DOCS-задачу."
       ],
       "expected_commit_message": "feat(workflow): закрепить project continuity",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workflow-project-continuity-021",
         "task_id": "T002",
         "role": "implementation"
-      }
+      },
+      "documentation_exception": "Контракт изменения уже согласован и зафиксирован в prerequisite T001: docs/modules/workflow-kit-recovery.md, docs/architecture/OVERVIEW.md и docs/MODULES.md. T002 реализует этот утверждённый контракт без нового изменения документации."
     },
     {
       "dependencies": [
@@ -168,9 +167,7 @@
         "resources/workflow-kit/lib/recovery.mjs"
       ],
       "documentation_paths": [],
-      "verification_ids": [
-        "suite"
-      ],
+      "verification_ids": [],
       "id": "T003",
       "title": "Закрепить финальную документационную задачу в commit/recovery",
       "why": "Финальная проверка документации должна быть выполнима даже без искусственных правок файлов и должна предшествовать пользовательской приёмке.",
@@ -199,9 +196,7 @@
         "resources/workflow-kit/lib/installation-files.mjs"
       ],
       "documentation_paths": [],
-      "verification_ids": [
-        "suite"
-      ],
+      "verification_ids": [],
       "id": "T004",
       "title": "Обновить Workflow Kit и миграцию",
       "why": "Новый контракт должен поставляться новым и существующим workspace, а не только текущему репозиторию.",
@@ -358,7 +353,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-project-continuity-021
 Current Task: нет
-Revision: 431
+Revision: 434
 
 ## Цель
 
@@ -378,8 +373,8 @@ Revision: 431
   - Git Commit: [DONE] docs: согласовать continuity проектов
   - Reference: workflow-project-continuity-021 / T001 / implementation
   - Файлы: docs/modules/workflow-kit-recovery.md, docs/architecture/OVERVIEW.md, docs/MODULES.md
-- [TODO] T002: Реализовать постоянный NONE-контекст и completion contract — Ожидает
-  - Git Commit: [PENDING] feat(workflow): закрепить project continuity
+- [DONE] T002: Реализовать постоянный NONE-контекст и completion contract — Завершено
+  - Git Commit: [DONE] feat(workflow): закрепить project continuity
   - Reference: workflow-project-continuity-021 / T002 / implementation
   - Файлы: .harness/kit/lib/plan.mjs, .harness/kit/lib/actions.mjs, resources/workflow-kit/lib/plan.mjs, resources/workflow-kit/lib/actions.mjs, tests/workflow-kit-recovery.test.mjs
 - [TODO] T003: Закрепить финальную документационную задачу в commit/recovery — Ожидает

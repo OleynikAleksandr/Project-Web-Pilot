@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import { execFileSync } from 'node:child_process';
-import { emptyPlan, writePlan } from '../resources/workflow-kit/lib/plan.mjs';
+import { emptyPlan, writePlan, readPlan, FINAL_DOCUMENTATION_TASK_TITLE } from '../resources/workflow-kit/lib/plan.mjs';
 import { defaultConfig } from '../resources/workflow-kit/lib/validate.mjs';
 import { createScope, startTask } from '../resources/workflow-kit/lib/actions.mjs';
 import { commitTask } from '../resources/workflow-kit/lib/transaction.mjs';
@@ -26,10 +26,11 @@ async function fixture(t) {
   await fs.writeFile(path.join(root, '.harness/workflow.json'), JSON.stringify(defaultConfig(), null, 2) + '\n');
   writePlan(root, emptyPlan('Recovery Fixture'));
   await fs.writeFile(path.join(root, 'docs/architecture/OVERVIEW.md'), '# Краткая архитектура проекта\n\nOVERVIEW_REQUIRED\n');
+  await fs.writeFile(path.join(root, 'docs/MODULES.md'), '# Модули проекта\n\nFixture module map.\n');
   await fs.writeFile(path.join(root, 'docs/modules/module.md'), '# Module Specification — Fixture\n\nMODULE_REQUIRED\n');
   await fs.writeFile(path.join(root, 'docs/optional.md'), '# Optional\n\nOPTIONAL_SECRET_BODY_SHOULD_NOT_BE_COPIED\n');
   await fs.writeFile(path.join(root, 'docs/notes.md'), '# Notes\n\ninitial\n');
-  await fs.writeFile(path.join(root, 'docs/DOCUMENTATION_INDEX.md'), '# Index\n\ndocs/architecture/OVERVIEW.md\ndocs/modules/module.md\ndocs/optional.md\ndocs/notes.md\n');
+  await fs.writeFile(path.join(root, 'docs/DOCUMENTATION_INDEX.md'), '# Каталог документации\n\ndocs/architecture/OVERVIEW.md\ndocs/MODULES.md\ndocs/modules/module.md\ndocs/optional.md\ndocs/notes.md\n');
   await fs.writeFile(path.join(root, 'src/module.mjs'), 'export const value = 1;\n');
   git(root, 'init', '-b', 'main'); git(root, 'config', 'user.name', 'Workflow Test'); git(root, 'config', 'user.email', 'workflow@example.invalid');
   git(root, 'add', '.'); git(root, 'commit', '-m', 'baseline');
@@ -52,6 +53,25 @@ function scopeInput(valid = true) {
     ],
   };
 }
+
+test('NONE plan keeps project navigation and scope:create appends the mandatory documentation finalizer', async t => {
+  const root = await fixture(t);
+  const none = readPlan(root);
+  assert.equal(none.objective, 'Обсудите следующий этап проекта с пользователем.');
+  assert.deepEqual(none.context_pack.documents.slice(0, 3).map(doc => doc.path), [
+    'docs/architecture/OVERVIEW.md', 'docs/MODULES.md', 'docs/DOCUMENTATION_INDEX.md',
+  ]);
+  createScope(root, scopeInput(true));
+  const active = readPlan(root);
+  const finalTask = active.tasks.at(-1);
+  assert.equal(finalTask.id, 'DOCS');
+  assert.equal(finalTask.title, FINAL_DOCUMENTATION_TASK_TITLE);
+  assert.deepEqual(finalTask.dependencies, ['T001', 'T002', 'T003']);
+  assert.ok(finalTask.documentation_paths.includes('docs/DOCUMENTATION_INDEX.md'));
+  for (const required of ['docs/architecture/OVERVIEW.md', 'docs/MODULES.md', 'docs/DOCUMENTATION_INDEX.md']) {
+    assert.ok(active.context_pack.documents.some(doc => doc.path === required && doc.required));
+  }
+});
 
 test('functional scope requires compact overview and module specification', async t => {
   const root = await fixture(t);

@@ -1,7 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { VERSION, PLAN, CONFIG, MANIFEST, check, readJSON, atomic, json, hash, id, textFile } from './common.mjs';
-import { emptyPlan, readPlan, parsePlan, renderPlan, writePlan, validatePlan, nextTask } from './plan.mjs';
+import { emptyPlan, readPlan, parsePlan, renderPlan, writePlan, validatePlan, nextTask, projectContextPack, projectContextPaths,
+  FINAL_DOCUMENTATION_TASK_ID, FINAL_DOCUMENTATION_TASK_TITLE, isDocumentationFinalizationTask } from './plan.mjs';
 import { validate, validateConfig, journal, resolveReferences, taskChecks } from './validate.mjs';
 import { git, head, localPath, allChanges, identityReady, paths, gitPath } from './git.mjs';
 import { locked, commitCandidate, completedTransaction, finishTransaction } from './transaction.mjs';
@@ -17,6 +18,33 @@ function requireModuleContext(planLike) {
   check(docs.some(d => d.path === 'docs/architecture/OVERVIEW.md'), 'MODULE_CONTEXT_REQUIRED', 'Функциональному scope нужен required compact project overview: docs/architecture/OVERVIEW.md.');
   check(docs.some(d => /^docs\/modules\/.+\.md$/i.test(d.path)), 'MODULE_CONTEXT_REQUIRED', 'Функциональному scope нужна required module specification в docs/modules/. Сначала согласуйте контракт модуля.');
 }
+function normalizeCompletionContract(plan) {
+  const foundation = projectContextPaths();
+  plan.context_pack = projectContextPack(plan.context_pack);
+  plan.approved_scope = { ...plan.approved_scope,
+    documentation_paths: [...new Set([...(plan.approved_scope?.documentation_paths ?? []), ...foundation])] };
+  const existing = plan.tasks.filter(task => task.id === FINAL_DOCUMENTATION_TASK_ID || task.title === FINAL_DOCUMENTATION_TASK_TITLE);
+  check(existing.length <= 1, 'DOCUMENTATION_FINAL_TASK', 'В scope должна быть одна финальная задача актуализации документации.');
+  let finalTask = existing[0];
+  const ordinary = plan.tasks.filter(task => task !== finalTask);
+  if (!finalTask) {
+    finalTask = {
+      id: FINAL_DOCUMENTATION_TASK_ID, title: FINAL_DOCUMENTATION_TASK_TITLE,
+      why: 'Проверить весь действующий комплект документации по docs/DOCUMENTATION_INDEX.md и обновить только устаревшие сведения после выполнения scope.',
+      dependencies: [], functional_paths: [], documentation_paths: foundation,
+      acceptance_criteria: ['Все документы из индекса проверены; устаревшие сведения и ссылки исправлены; после этого результат готов только к пользовательской приёмке.'],
+      verification_ids: [], expected_commit_message: 'docs: актуализировать документацию проекта',
+    };
+  }
+  check(finalTask.id === FINAL_DOCUMENTATION_TASK_ID && finalTask.title === FINAL_DOCUMENTATION_TASK_TITLE,
+    'DOCUMENTATION_FINAL_TASK', 'Зарезервированный пункт DOCS должен называться «' + FINAL_DOCUMENTATION_TASK_TITLE + '».');
+  check(finalTask.commit_status !== 'DONE' || ordinary.every(task => task.commit_status === 'DONE'),
+    'DOCUMENTATION_FINAL_TASK', 'Завершённую DOCS-задачу нельзя ставить перед незавершёнными задачами.');
+  finalTask = { ...finalTask, dependencies: ordinary.map(task => task.id), functional_paths: [],
+    documentation_paths: [...new Set([...(finalTask.documentation_paths ?? []), ...foundation])] };
+  plan.tasks = [...ordinary, finalTask];
+  return plan;
+}
 function service(root, plan, role, selected, message) {
   return commitCandidate(root, { plan, role, selected, message, beforeHead: head(root) });
 }
@@ -26,7 +54,6 @@ export function createScope(root, input, expectedRevision) {
     check(previous.execution_scope_status === 'NONE', 'SCOPE_EXISTS', 'Текущий scope ещё не закрыт пользователем.');
     check(head(root), 'NO_BASELINE', 'Сначала завершите bootstrap-коммит установки.');
     check(typeof input.approval_note === 'string' && input.approval_note.trim().length >= 10, 'SCOPE_APPROVAL', 'Запишите согласованное пользователем содержание scope в approval_note.');
-    requireModuleContext(input);
     const plan = { ...emptyPlan(previous.project_name), ...input, schema_version: 1, project_id: previous.project_id,
       project_name: previous.project_name, plan_revision: previous.plan_revision + 1, scope_id: input.scope_id || 'scope-' + id(),
       execution_scope_status: 'ACTIVE', delivery_status: 'IN_PROGRESS', baseline_commit: head(root), current_task_id: null, blocked_reason: null };
@@ -38,6 +65,10 @@ export function createScope(root, input, expectedRevision) {
       return { dependencies: [], functional_paths: [], documentation_paths: [], verification_ids: [], ...t, id: taskId,
         implementation_status: 'TODO', commit_status: 'PENDING', commit_ref: { scope_id: plan.scope_id, task_id: taskId, role: 'implementation' } };
     });
+    normalizeCompletionContract(plan);
+    plan.tasks = plan.tasks.map(task => ({ implementation_status: 'TODO', commit_status: 'PENDING',
+      commit_ref: { scope_id: plan.scope_id, task_id: task.id, role: 'implementation' }, ...task }));
+    requireModuleContext(plan);
     plan.user_decisions = [...(input.user_decisions ?? []), { id: id(), text: input.approval_note, recorded_at: new Date().toISOString() }];
     validatePlan(plan);
     const selected = [PLAN, ...allChanges(root).filter(p => plan.approved_scope.documentation_paths.includes(p))];
@@ -77,6 +108,11 @@ export function applyPlan(root, input, expectedRevision) {
     }
     const added = plan.tasks.filter(t => !original.tasks.some(old => old.id === t.id));
     for (const t of added) check(t.implementation_status === 'TODO' && t.commit_status === 'PENDING', 'MANAGED_FIELDS', 'Новая задача должна быть TODO/PENDING.');
+    const originalFinal = original.tasks.find(isDocumentationFinalizationTask);
+    if (originalFinal?.commit_status === 'DONE' && added.length) {
+      check(false, 'DOCUMENTATION_FINALIZED', 'Финальная актуализация уже завершена; после READY_FOR_ACCEPTANCE новые задачи в этот scope не добавляются.');
+    }
+    if (originalFinal?.commit_status !== 'DONE' || (!originalFinal && added.length)) normalizeCompletionContract(plan);
     if (added.some(t => t.functional_paths.length) || (input.context_pack && plan.tasks.some(t => t.functional_paths.length && t.commit_status !== 'DONE'))) requireModuleContext(plan);
     plan.delivery_status = plan.tasks.length && plan.tasks.every(t => t.commit_status === 'DONE') ? 'READY_FOR_ACCEPTANCE' : 'IN_PROGRESS';
     validatePlan(plan); resolveReferences(root, plan);
