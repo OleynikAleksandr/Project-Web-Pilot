@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 371,
+  "plan_revision": 374,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "scope-014",
@@ -44,36 +44,36 @@
   "baseline_commit": "b1a20c35da16287590b572cdea5a057c79ea0f4d",
   "current_task_id": null,
   "context_pack": {
+    "dependency_task_ids": [],
     "documents": [
       {
-        "path": "docs/architecture/OVERVIEW.md",
         "heading_path": [
           "Краткая архитектура проекта"
         ],
+        "path": "docs/architecture/OVERVIEW.md",
         "required": true,
         "revision": "WORKTREE"
       },
       {
-        "path": "docs/modules/workspace-sessions.md",
         "heading_path": [
           "Module Specification — Workspace & Sessions",
           "Новая сессия после приёмки плана — scope 014"
         ],
-        "required": false,
+        "path": "docs/modules/workspace-sessions.md",
+        "required": true,
         "revision": "WORKTREE"
       },
       {
-        "path": "docs/modules/workspace-sessions.md",
         "heading_path": [
           "Module Specification — Workspace & Sessions",
           "Session Contract"
         ],
+        "path": "docs/modules/workspace-sessions.md",
         "required": true,
         "revision": "WORKTREE"
       }
     ],
-    "include_last_completed_task": false,
-    "dependency_task_ids": []
+    "include_last_completed_task": false
   },
   "tasks": [
     {
@@ -93,8 +93,8 @@
         "Зафиксировать переход в новую сессию после приёмки выполнено согласно контракту"
       ],
       "expected_commit_message": "docs: define post-acceptance session transition",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "scope-014",
         "task_id": "T001",
@@ -273,7 +273,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: scope-014
 Current Task: нет
-Revision: 371
+Revision: 374
 
 ## Цель
 
@@ -289,8 +289,8 @@ Revision: 371
 
 ## Микрозадачи
 
-- [TODO] T001: Зафиксировать переход в новую сессию после приёмки — Ожидает
-  - Git Commit: [PENDING] docs: define post-acceptance session transition
+- [DONE] T001: Зафиксировать переход в новую сессию после приёмки — Завершено
+  - Git Commit: [DONE] docs: define post-acceptance session transition
   - Reference: scope-014 / T001 / implementation
   - Файлы: docs/modules/workspace-sessions.md, docs/modules/workflow-kit-recovery.md, docs/DECISIONS.md, docs/PRODUCT.md
 - [TODO] T002: Сохранить переход и исключить дубли сессий — Ожидает
