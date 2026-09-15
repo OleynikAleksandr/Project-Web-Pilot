@@ -673,3 +673,7 @@ Electron fixture проверяет прежнюю кнопку приёмки �
 Управляемый commit T005 подтвердил syntax, полную Node suite (18.6 с) и Electron smoke (27.3 с). Smoke прошёл scopeContinuationChat, scopeContinuationWork, scopeContinuationRestart и scopeContinuationNoDuplicates; обе ветки использовали реальные createScope/startTask/commit/archive внутри отдельного временного проекта. Визуально проверена карточка выбора при sidebar 312 px.
 
 npm run build успешно собрал macOS arm64 и Windows x64; штатная Windows package verification прошла. app.asar каждой платформы проверен на version=0.6.14 и побайтное совпадение main/workspace-session/context-session/preload/sidebar/index.html с исходниками. macOS Info.plist сообщает 0.6.14. Артефакты находятся в стандартной .harness/runtime/build; подробные хеши — .harness/runtime/release-014.json. Реальный аккаунт ChatGPT и физический Windows ПК этой проверкой не покрываются; пользовательская приёмка остаётся открытой.
+
+## Scope 015 / T002 — порядок и выбор последней сессии
+
+Регрессионный тест покрывает одинаковые createdAt, обратный порядок вставки, исключение архивной session, отсутствие перестановки после открытия старой, неизменность исходного массива, выбор newest при явной команде, восстановление старого conversation URL после restart. Управляемый commit выполняет syntax и workspace.

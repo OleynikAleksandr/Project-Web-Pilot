@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import { randomUUID } from 'node:crypto';
-import { WorkspaceSessions, readWorkspace, normalizeChatUrl, conversationExperience, conversationUrlCompatibleWithExperience } from '../src/workspace-session.mjs';
+import { WorkspaceSessions, readWorkspace, normalizeChatUrl, conversationExperience, conversationUrlCompatibleWithExperience, activeSessionsNewestFirst } from '../src/workspace-session.mjs';
 
 const directoryLink = (target, link) => fs.symlink(target, link, process.platform === 'win32' ? 'junction' : 'dir');
 
@@ -501,4 +501,37 @@ test('historical archives, other projects and changed plans cannot trigger a sta
   await store.observeScope(folder, old.sessionId, await readWorkspace(folder));
   assert.deepEqual(store.selected().scopeTransition, { scopeId: 'newer', state: 'watching', sessionId: null });
   assert.equal(store.snapshot().projects.find(p => p.workspace === folder).sessions.length, 1);
+});
+
+test('project selection chooses newest created active session without reordering stored history or reload selection', async t => {
+  const { store, project } = await fixture(t);
+  let time = 100;
+  store.now = () => time;
+  const input = await project('Recent sessions');
+  const first = await store.select(input);
+  const folder = first.workspace;
+  const firstUrl = 'https://chatgpt.com/c/aaaaaaaa-1111-2222-3333-eeeeeeeeeeee';
+  await store.bindChat(folder, first.sessionId, firstUrl);
+  time = 200;
+  const second = await store.newSession(folder, 'work');
+  const third = await store.newSession(folder, 'chat');
+  const order = () => activeSessionsNewestFirst(store.snapshot().projects.find(p => p.workspace === folder).sessions).map(s => s.sessionId);
+  assert.deepEqual(order(), [third.sessionId, second.sessionId, first.sessionId], 'equal creation times use reverse insertion order');
+  time = 500;
+  await store.selectSession(folder, first.sessionId);
+  assert.deepEqual(order(), [third.sessionId, second.sessionId, first.sessionId], 'opening old history does not promote it');
+  assert.equal((await store.select(folder)).sessionId, first.sessionId, 'service reload preserves selection');
+  const newest = await store.select(folder, { latest: true });
+  assert.equal(newest.sessionId, third.sessionId);
+  assert.equal(store.project(folder).expanded, true);
+  assert.deepEqual(store.snapshot().projects.find(p => p.workspace === folder).sessions.map(s => s.sessionId), [first.sessionId, second.sessionId, third.sessionId], 'projection does not mutate storage order');
+  await store.setSessionArchived(folder, third.sessionId, true);
+  assert.equal((await store.select(folder, { latest: true })).sessionId, second.sessionId, 'archive is excluded');
+  await store.selectSession(folder, first.sessionId);
+  const restarted = new WorkspaceSessions(store.file);
+  await restarted.load();
+  assert.equal((await restarted.select(folder)).sessionId, first.sessionId, 'restart preserves explicitly chosen old conversation');
+  assert.equal(restarted.selected().chatUrl, firstUrl);
+  assert.equal((await restarted.select(folder, { latest: true })).sessionId, second.sessionId);
+  assert.deepEqual(activeSessionsNewestFirst([]), []);
 });

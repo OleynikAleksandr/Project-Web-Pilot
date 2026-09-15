@@ -680,3 +680,7 @@ Main наблюдает scope через существующий ContextSession
 ## Релиз 0.6.14 — scope 014 / T006
 
 macOS arm64 и Windows x64 packages собраны из общей реализации перехода после принятия плана. Проверка package version и шести изменённых src-файлов внутри обоих app.asar сверяется с исходниками; версия Info.plist совпадает. Зависимости и формат recovery не изменены. Текущий scope остаётся READY_FOR_ACCEPTANCE до пользовательской проверки.
+
+## Компактное дерево — scope 015 / T002
+
+WorkspaceSessions экспортирует activeSessionsNewestFirst: активные sessions по createdAt убыванию, равные даты — обратный исходный индекс, исходный массив не меняется. Main snapshot и явный выбор проекта используют одну функцию. Параметр latest=true передаётся только пользовательским pilot:select-workspace: выбирается newest active session и раскрывается проект. Reload, return-chat, startup, archive и recovery сохраняют прежнюю семантику выбранной session. Новая схема данных и дополнительные API не нужны.

@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import os from 'node:os';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { WorkspaceSessions, normalizeChatUrl } from './workspace-session.mjs';
+import { WorkspaceSessions, normalizeChatUrl, activeSessionsNewestFirst } from './workspace-session.mjs';
 import { McpRuntime, findRuntimeFolder } from './mcp-runtime.mjs';
 import { ChatGPTComposer } from './chatgpt-composer.mjs';
 import { ContextCache } from './context-cache.mjs';
@@ -162,7 +162,7 @@ function snapshot() {
     ...(info?.workspace === saved.workspace ? info : {}) };
   return { projects: store.snapshot().projects.filter(p => !p.archivedAt).map(({ workspace, projectId, name, displayName, selectedSessionId, expanded, sessions }) => ({
     workspace, projectId, name: displayName || name, selectedSessionId, expanded,
-    sessions: sessions.filter(session => !session.archivedAt).map(({ sessionId, experience, chatUrl, title, createdAt }) => ({ sessionId, experience, chatUrl, title, createdAt })),
+    sessions: activeSessionsNewestFirst(sessions).map(({ sessionId, experience, chatUrl, title, createdAt }) => ({ sessionId, experience, chatUrl, title, createdAt })),
   })),
     archives: projectedArchives(), settings: settingsState,
     selected, context: controller?.state ?? { phase: 'selected', servicesReady: false, messageSent: false },
@@ -415,9 +415,9 @@ async function reviewWorkspace(workspace, openReady = false) {
   }
   publish(); return false;
 }
-async function selectWorkspace(input) {
+async function selectWorkspace(input, { latest = false } = {}) {
   if (!await reviewWorkspace(input, true)) return;
-  const project = await store.select(workspaceHealth.workspace);
+  const project = await store.select(workspaceHealth.workspace, { latest });
   publish(); void navigate(project); return project;
 }
 
@@ -651,7 +651,7 @@ function registerIpc() {
   });
   registerAction('pilot:select-workspace', input => {
     if (typeof input !== 'string' || !store.project(input)) throw new Error('Выберите проект из списка.');
-    return selectWorkspace(input);
+    return selectWorkspace(input, { latest: true });
   });
   registerAction('pilot:select-session', async input => {
     if (storageError) throw new Error('Сначала нужно восстановить сохранённый список проектов.');

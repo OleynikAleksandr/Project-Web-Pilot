@@ -6,6 +6,13 @@ export class WorkspaceError extends Error {
   constructor(code, message) { super(message); this.code = code; }
 }
 
+export function activeSessionsNewestFirst(sessions) {
+  return sessions.map((session, index) => ({ session, index }))
+    .filter(({ session }) => !session.archivedAt)
+    .sort((a, b) => b.session.createdAt - a.session.createdAt || b.index - a.index)
+    .map(({ session }) => session);
+}
+
 export function normalizeChatUrl(input) {
   if (typeof input !== 'string') return null;
   try {
@@ -290,7 +297,7 @@ export class WorkspaceSessions {
     return operation;
   }
 
-  select(input, { experience = 'chat' } = {}) {
+  select(input, { experience = 'chat', latest = false } = {}) {
     return this.mutate(async data => {
       const info = await this.inspect(input);
       let project = data.projects.find(p => p.workspace === info.workspace);
@@ -301,6 +308,10 @@ export class WorkspaceSessions {
         project = { ...info, selectedSessionId: session.sessionId, sessions: [session], expanded: false, archivedAt: null };
         data.projects.unshift(project);
       } else Object.assign(project, info);
+      if (latest) {
+        project.selectedSessionId = activeSessionsNewestFirst(project.sessions)[0].sessionId;
+        project.expanded = true;
+      }
       project.sessions.find(s => s.sessionId === project.selectedSessionId).lastOpenedAt = this.now();
       data.selectedWorkspace = project.workspace;
       return currentView(project);

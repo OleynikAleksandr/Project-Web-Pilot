@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 389,
+  "plan_revision": 391,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "scope-015",
@@ -116,8 +116,8 @@
         "Архивные сессии исключены, данные и URL сохранены"
       ],
       "expected_commit_message": "feat: select newest project session and order recent sessions",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "scope-015",
         "task_id": "T002",
@@ -241,7 +241,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: scope-015
 Current Task: нет
-Revision: 389
+Revision: 391
 
 ## Цель
 
@@ -262,8 +262,8 @@ Revision: 389
   - Git Commit: [DONE] docs: approve compact projects sidebar contract
   - Reference: scope-015 / T001 / implementation
   - Файлы: docs/modules/workspace-sessions.md, docs/DECISIONS.md
-- [TODO] T002: Выбирать последнюю сессию и выдавать новые первыми — Ожидает
-  - Git Commit: [PENDING] feat: select newest project session and order recent sessions
+- [DONE] T002: Выбирать последнюю сессию и выдавать новые первыми — Завершено
+  - Git Commit: [DONE] feat: select newest project session and order recent sessions
   - Reference: scope-015 / T002 / implementation
   - Файлы: src/workspace-session.mjs, src/main.mjs, tests/workspace-session.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T003: Внедрить меню и компактное дерево с прокруткой — Ожидает
