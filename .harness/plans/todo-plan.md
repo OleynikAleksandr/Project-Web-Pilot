@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 449,
+  "plan_revision": 450,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-project-continuity-021",
@@ -310,13 +310,43 @@
     },
     {
       "dependencies": [
+        "T007"
+      ],
+      "functional_paths": [
+        ".harness/kit/lib/recovery.mjs",
+        "resources/workflow-kit/lib/recovery.mjs",
+        "tests/workflow-kit-recovery.test.mjs"
+      ],
+      "documentation_paths": [],
+      "verification_ids": [
+        "suite"
+      ],
+      "id": "T008",
+      "title": "Не включать ordering dependencies DOCS в recovery",
+      "why": "DOCS зависит от всех предыдущих задач для порядка выполнения, но recovery не должен автоматически вкладывать diff всех этих коммитов.",
+      "acceptance_criteria": [
+        "Recovery для DOCS включает project navigation/specification, но не dependency commit diffs только из-за ordering dependencies; обычные задачи сохраняют прямые dependency diffs."
+      ],
+      "expected_commit_message": "fix(workflow): ограничить recovery финальной документации",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "workflow-project-continuity-021",
+        "task_id": "T008",
+        "role": "implementation"
+      },
+      "documentation_exception": "T008 исправляет выявленную интеграционную ошибку уже согласованного Project Continuity Contract; итоговая документация обновляется обязательной DOCS."
+    },
+    {
+      "dependencies": [
         "T001",
         "T002",
         "T003",
         "T004",
         "T005",
         "T006",
-        "T007"
+        "T007",
+        "T008"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -363,7 +393,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-project-continuity-021
 Current Task: нет
-Revision: 449
+Revision: 450
 
 ## Цель
 
@@ -407,6 +437,10 @@ Revision: 449
   - Git Commit: [DONE] build: подготовить релиз continuity workflow
   - Reference: workflow-project-continuity-021 / T007 / implementation
   - Файлы: package.json, package-lock.json, tests/electron-smoke.mjs
+- [TODO] T008: Не включать ordering dependencies DOCS в recovery — Ожидает
+  - Git Commit: [PENDING] fix(workflow): ограничить recovery финальной документации
+  - Reference: workflow-project-continuity-021 / T008 / implementation
+  - Файлы: .harness/kit/lib/recovery.mjs, resources/workflow-kit/lib/recovery.mjs, tests/workflow-kit-recovery.test.mjs
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать документацию проекта
   - Reference: workflow-project-continuity-021 / DOCS / implementation
