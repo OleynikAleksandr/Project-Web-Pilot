@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 440,
+  "plan_revision": 442,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-project-continuity-021",
@@ -239,8 +239,8 @@
         "Шаблон содержит OVERVIEW, MODULES и DOCUMENTATION_INDEX, показывает обязательную DOCS-задачу и отдельную пользовательскую приёмку; инструкции не ограничивают Workflow Kit программными продуктами."
       ],
       "expected_commit_message": "docs(workflow): обновить обязательный шаблон",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workflow-project-continuity-021",
         "task_id": "T005",
@@ -357,7 +357,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-project-continuity-021
 Current Task: нет
-Revision: 440
+Revision: 442
 
 ## Цель
 
@@ -389,8 +389,8 @@ Revision: 440
   - Git Commit: [DONE] feat(workflow): выпустить kit continuity
   - Reference: workflow-project-continuity-021 / T004 / implementation
   - Файлы: .harness/kit/lib/common.mjs, .harness/kit/lib/installer.mjs, .harness/kit/lib/installation-files.mjs, resources/workflow-kit/lib/common.mjs, resources/workflow-kit/lib/installer.mjs, resources/workflow-kit/lib/installation-files.mjs, resources/workspace-setup-worker.mjs
-- [TODO] T005: Обновить шаблоны и инструкции — Ожидает
-  - Git Commit: [PENDING] docs(workflow): обновить обязательный шаблон
+- [DONE] T005: Обновить шаблоны и инструкции — Завершено
+  - Git Commit: [DONE] docs(workflow): обновить обязательный шаблон
   - Reference: workflow-project-continuity-021 / T005 / implementation
   - Файлы: .harness/kit/WORKFLOW.md, resources/workflow-kit/WORKFLOW.md, .harness/kit/templates/PLAN.md, resources/workflow-kit/templates/PLAN.md, .harness/kit/templates/AGENTS.md, resources/workflow-kit/templates/AGENTS.md, .harness/plans/todo-plan.template.md, AGENTS.md
 - [TODO] T006: Усилить регрессии и синхронизацию bundled Kit — Ожидает
