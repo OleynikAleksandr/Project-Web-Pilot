@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 418,
+  "plan_revision": 420,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "chat-autoscroll-020",
@@ -85,8 +85,8 @@
         "Unit tests покрывают follow, suspend, manual resume и submit resume."
       ],
       "expected_commit_message": "feat(chat): добавить умную автопрокрутку диалога",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "chat-autoscroll-020",
         "task_id": "T001",
@@ -147,7 +147,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: chat-autoscroll-020
 Current Task: нет
-Revision: 418
+Revision: 420
 
 ## Цель
 
@@ -163,8 +163,8 @@ Revision: 418
 
 ## Микрозадачи
 
-- [TODO] T001: Реализовать автопрокрутку диалога ChatGPT — Ожидает
-  - Git Commit: [PENDING] feat(chat): добавить умную автопрокрутку диалога
+- [DONE] T001: Реализовать автопрокрутку диалога ChatGPT — Завершено
+  - Git Commit: [DONE] feat(chat): добавить умную автопрокрутку диалога
   - Reference: chat-autoscroll-020 / T001 / implementation
   - Файлы: src/chatgpt-auto-scroll.mjs, src/main.mjs, tests/chatgpt-auto-scroll.test.mjs, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T002: Подготовить релиз автопрокрутки — Ожидает

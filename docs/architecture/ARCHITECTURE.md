@@ -714,3 +714,7 @@ Windows-only исправление WorkspaceSetup изолирует NODE_OPTIO
 ## Windows-only сборка 0.6.17
 
 Из общего checkout собран только Windows x64 пакет с исправлением WorkspaceSetup. Версия исходного package/lock и обеих будущих packaging-команд согласована на 0.6.17; существующая Mac 0.6.16 не пересобиралась. Доказательства — docs/VERIFICATION.md; актуальная доставка — docs/TRANSFER_TO_WINDOWS.md.
+
+## ChatGPT conversation auto-scroll — scope chat-autoscroll-020 / T001
+
+Автоследование реализовано отдельным renderer-side DOM controller `chatgpt-auto-scroll.mjs`, устанавливаемым main process после полной загрузки и SPA-навигации ChatGPT. Controller не обращается к закрытым API страницы: он находит ближайший scrollable ancestor сообщения/composer, следит за DOM mutation, прекращает follow после scroll away from bottom и возобновляет его при возврате вниз или стандартной отправке из composer. Один state key в `window` делает повторную установку идемпотентной.

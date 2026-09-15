@@ -719,3 +719,7 @@ npm run build:win и встроенная verify:win завершились ус
 Архив Project-Web-Pilot-0.6.17-Windows-x64.zip: 316264204 байт; SHA-256 25b8b0adb083d86b9bb35f81caf3ec50a16f0c794d69faf8fb4d268c323226b2. Копия для пользователя в Downloads на Mac.
 
 Native Windows 10 запуск не выполнялся: Windows API ошибки смоделированы, реальный setup worker проверен на Mac. Пользователь проверяет подключение исходного проекта на Windows. Scope остаётся ACTIVE/READY_FOR_ACCEPTANCE; архивирование не разрешено до явного принятия.
+
+## Scope chat-autoscroll-020 / T001 — регрессия автопрокрутки
+
+JSDOM regression исполняет тот же renderer script, который внедряется в ChatGPT Web: проверяются initial/follow-to-bottom, продолжение при добавлении сообщения, suspended после ручной прокрутки вверх, отсутствие сдвига во время новых ответов, manual resume у низа, resume при Send и идемпотентная повторная установка. Отдельно проверяется origin guard Electron wrapper. Реальный аккаунт ChatGPT остаётся пользовательской приёмкой после package-сборки.

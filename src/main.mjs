@@ -7,6 +7,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { WorkspaceSessions, normalizeChatUrl, activeSessionsNewestFirst } from './workspace-session.mjs';
 import { McpRuntime, findRuntimeFolder } from './mcp-runtime.mjs';
 import { ChatGPTComposer } from './chatgpt-composer.mjs';
+import { installChatGPTAutoScroll } from './chatgpt-auto-scroll.mjs';
 import { ContextCache } from './context-cache.mjs';
 const contextCache = new ContextCache({ load: workspace => runtime.loadContext(workspace), onChange: () => publish() });
 import { ContextSession } from './context-session.mjs';
@@ -767,11 +768,11 @@ async function createWindow() {
   sidebar.webContents.on('will-navigate', event => event.preventDefault());
   sidebar.webContents.on('did-finish-load', publish);
   browser.webContents.on('page-title-updated', rememberSessionTitle);
-  browser.webContents.on('did-navigate-in-page', () => { void applyToolCallVisibility(); publish(); if (!pageLoading && !setupState && !settingsState) void controller?.tick(); });
+  browser.webContents.on('did-navigate-in-page', () => { void applyToolCallVisibility(); void installChatGPTAutoScroll(browser.webContents); publish(); if (!pageLoading && !setupState && !settingsState) void controller?.tick(); });
   browser.webContents.on('did-finish-load', () => {
     if (!chromiumDiagnostics.started) void chromiumDiagnostics.start({ appVersion: app.getVersion(), electron: process.versions.electron,
       chromium: process.versions.chrome, fixture: smoke }).catch(() => {});
-    void applyToolCallVisibility(); publish(); if (!pageLoading && !setupState && !settingsState) void controller?.tick();
+    void applyToolCallVisibility(); void installChatGPTAutoScroll(browser.webContents, { forceFollow: true }); publish(); if (!pageLoading && !setupState && !settingsState) void controller?.tick();
   });
   browser.webContents.on('render-process-gone', () => { controller?.cancel(); report(new Error('Страница ChatGPT закрылась. Нажмите обновление.')); });
   window.on('resize', layout);
