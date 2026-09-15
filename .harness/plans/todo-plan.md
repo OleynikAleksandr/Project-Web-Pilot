@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 452,
+  "plan_revision": 453,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-project-continuity-021",
@@ -59,7 +59,23 @@
       "docs/DOCUMENTATION_INDEX.md",
       "docs/WORKFLOW_START.md",
       "docs/PRODUCT.md",
-      "docs/VERIFICATION.md"
+      "docs/VERIFICATION.md",
+      ".harness/kit/templates/ARCHITECTURE.md",
+      "resources/workflow-kit/templates/ARCHITECTURE.md",
+      ".harness/kit/templates/PRODUCT.md",
+      "resources/workflow-kit/templates/PRODUCT.md",
+      ".harness/kit/templates/START.md",
+      "resources/workflow-kit/templates/START.md",
+      "README.md",
+      "docs/architecture/ARCHITECTURE.md",
+      "docs/DECISIONS.md",
+      "docs/CONTEXT_DELIVERY.md",
+      "docs/modules/runtime-lifecycle.md",
+      "docs/modules/workspace-sessions.md",
+      "docs/SOURCE_WORKSPACES.md",
+      "docs/TRANSFER_TO_WINDOWS.md",
+      "docs/WORKSPACE_SETUP.md",
+      "docs/PROJECT_ARCHIVE.md"
     ],
     "max_functional_files_per_task": 7
   },
@@ -350,13 +366,37 @@
       ],
       "functional_paths": [],
       "documentation_paths": [
+        ".harness/kit/WORKFLOW.md",
+        "resources/workflow-kit/WORKFLOW.md",
+        ".harness/kit/templates/AGENTS.md",
+        "resources/workflow-kit/templates/AGENTS.md",
+        ".harness/kit/templates/ARCHITECTURE.md",
+        "resources/workflow-kit/templates/ARCHITECTURE.md",
+        ".harness/kit/templates/PLAN.md",
+        "resources/workflow-kit/templates/PLAN.md",
+        ".harness/kit/templates/PRODUCT.md",
+        "resources/workflow-kit/templates/PRODUCT.md",
+        ".harness/kit/templates/START.md",
+        "resources/workflow-kit/templates/START.md",
+        ".harness/plans/todo-plan.template.md",
+        "AGENTS.md",
+        "README.md",
         "docs/DOCUMENTATION_INDEX.md",
         "docs/architecture/OVERVIEW.md",
+        "docs/architecture/ARCHITECTURE.md",
         "docs/MODULES.md",
         "docs/WORKFLOW_START.md",
         "docs/PRODUCT.md",
+        "docs/DECISIONS.md",
+        "docs/CONTEXT_DELIVERY.md",
         "docs/VERIFICATION.md",
-        "docs/modules/workflow-kit-recovery.md"
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/PROJECT_ARCHIVE.md",
+        "docs/SOURCE_WORKSPACES.md",
+        "docs/modules/workflow-kit-recovery.md",
+        "docs/modules/runtime-lifecycle.md",
+        "docs/modules/workspace-sessions.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -393,7 +433,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-project-continuity-021
 Current Task: нет
-Revision: 452
+Revision: 453
 
 ## Цель
 
@@ -444,7 +484,7 @@ Revision: 452
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать документацию проекта
   - Reference: workflow-project-continuity-021 / DOCS / implementation
-  - Файлы: docs/DOCUMENTATION_INDEX.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/WORKFLOW_START.md, docs/PRODUCT.md, docs/VERIFICATION.md, docs/modules/workflow-kit-recovery.md
+  - Файлы: .harness/kit/WORKFLOW.md, resources/workflow-kit/WORKFLOW.md, .harness/kit/templates/AGENTS.md, resources/workflow-kit/templates/AGENTS.md, .harness/kit/templates/ARCHITECTURE.md, resources/workflow-kit/templates/ARCHITECTURE.md, .harness/kit/templates/PLAN.md, resources/workflow-kit/templates/PLAN.md, .harness/kit/templates/PRODUCT.md, resources/workflow-kit/templates/PRODUCT.md, .harness/kit/templates/START.md, resources/workflow-kit/templates/START.md, .harness/plans/todo-plan.template.md, AGENTS.md, README.md, docs/DOCUMENTATION_INDEX.md, docs/architecture/OVERVIEW.md, docs/architecture/ARCHITECTURE.md, docs/MODULES.md, docs/WORKFLOW_START.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKSPACE_SETUP.md, docs/PROJECT_ARCHIVE.md, docs/SOURCE_WORKSPACES.md, docs/modules/workflow-kit-recovery.md, docs/modules/runtime-lifecycle.md, docs/modules/workspace-sessions.md
 
 ## Context Pack For This Cycle
 
