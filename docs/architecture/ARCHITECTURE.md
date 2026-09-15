@@ -629,3 +629,7 @@ ConversationHistory наблюдает нативные GET выбранной �
 ## Scope 012 / T012 — история и состояние счётчика в Electron
 
 Main подключает ConversationHistory к тому же debugger и session, которые уже обслуживают ChatGPT. Начальный about:blank нужен для готовности WebContents перед CDP; затем перехватывается первая реальная загрузка истории. Самостоятельные GET ограничены предыдущими страницами выбранной беседы. Session snapshot передаёт coverage и краткий tokenHistory status; тексты, курсоры и авторизация в renderer/sidebar не передаются. UI отделяет неполную оценку, загрузку и завершённую текстовую историю; время последнего полного расчёта видно в tooltip. Recovery cache и доставка остаются прежними.
+
+## Release 0.6.11 — scope 012 / T013
+
+macOS arm64 и Windows x64 собираются из одного source tree с ConversationHistory, полным snapshot counter и явной неполнотой старых значений. Recovery cache, Chat/Work routing и archive lifecycle сохранены. Нативный веб-механизм пагинации подтверждён публичным клиентским кодом и реальными метаданными has_previous_page; автоматическая end-to-end проверка выполнена на изолированной Electron fixture. Проверка количества сообщений реального аккаунта требует открытия сессии в обновлённом приложении.

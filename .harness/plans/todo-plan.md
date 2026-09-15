@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 349,
+  "plan_revision": 351,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "next-modifications-discussion-012",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Оценка токенов сессий и существенное ускорение повторной передачи полного актуального контекста через предварительную подготовку.",
   "acceptance_criteria": [
     "Отдельная сохраняемая оценка для каждой Chat/Work сессии обновляется при чтении сообщений.",
@@ -511,8 +511,8 @@
         "macOS и Windows packages пересобраны; реальные ограничения проверки явно указаны."
       ],
       "expected_commit_message": "chore: собрать Web Pilot 0.6.11 с полной историей",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "next-modifications-discussion-012",
         "task_id": "T013",
@@ -551,10 +551,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: next-modifications-discussion-012
 Current Task: нет
-Revision: 349
+Revision: 351
 
 ## Цель
 
@@ -620,8 +620,8 @@ Revision: 349
   - Git Commit: [DONE] fix: показывать полный подсчёт и загрузку истории
   - Reference: next-modifications-discussion-012 / T012 / implementation
   - Файлы: src/main.mjs, src/ui/sidebar.mjs, src/ui/progress.mjs, tests/electron-smoke.mjs, tests/progress.test.mjs, src/conversation-history.mjs, tests/conversation-history.test.mjs, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T013: Собрать релиз с исправленным счётчиком — Ожидает
-  - Git Commit: [PENDING] chore: собрать Web Pilot 0.6.11 с полной историей
+- [DONE] T013: Собрать релиз с исправленным счётчиком — Завершено
+  - Git Commit: [DONE] chore: собрать Web Pilot 0.6.11 с полной историей
   - Reference: next-modifications-discussion-012 / T013 / implementation
   - Файлы: package.json, package-lock.json, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md
 
