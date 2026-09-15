@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 391,
+  "plan_revision": 393,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "scope-015",
@@ -148,8 +148,8 @@
         "Меню сессий не обрезается областью прокрутки; scroll position сохраняется при обновлениях состояния"
       ],
       "expected_commit_message": "feat: integrate compact project tree and session scrolling",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "scope-015",
         "task_id": "T003",
@@ -241,7 +241,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: scope-015
 Current Task: нет
-Revision: 391
+Revision: 393
 
 ## Цель
 
@@ -266,8 +266,8 @@ Revision: 391
   - Git Commit: [DONE] feat: select newest project session and order recent sessions
   - Reference: scope-015 / T002 / implementation
   - Файлы: src/workspace-session.mjs, src/main.mjs, tests/workspace-session.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T003: Внедрить меню и компактное дерево с прокруткой — Ожидает
-  - Git Commit: [PENDING] feat: integrate compact project tree and session scrolling
+- [DONE] T003: Внедрить меню и компактное дерево с прокруткой — Завершено
+  - Git Commit: [DONE] feat: integrate compact project tree and session scrolling
   - Reference: scope-015 / T003 / implementation
   - Файлы: src/ui/sidebar.mjs, src/ui/index.html, docs/architecture/ARCHITECTURE.md
 - [TODO] T004: Проверить интерфейс и сценарии сессий — Ожидает

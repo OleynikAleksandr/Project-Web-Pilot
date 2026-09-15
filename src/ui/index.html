@@ -20,15 +20,113 @@
     .sidebar-splitter{position:fixed;z-index:100;top:0;right:0;width:7px;height:100vh;cursor:col-resize;touch-action:none;background:transparent}.sidebar-splitter::after{content:"";position:absolute;top:0;bottom:0;right:0;width:1px;background:var(--line);transition:background .12s,width .12s}.sidebar-splitter:hover::after,.sidebar-splitter.dragging::after,.sidebar-splitter:focus-visible::after{width:3px;background:var(--teal)}
     @media(max-height:760px){.shell{padding-top:18px;gap:15px}.scroll{gap:13px}.projects{max-height:29vh}.empty{padding-top:13px}.card{padding:12px}.description{margin:8px 0}.step{padding:6px 0}}
     .operation-progress{display:flex;align-items:center;gap:9px;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:#eaf4f3;color:#276d6b;font-size:11px;line-height:1.4;flex-shrink:0}.operation-progress[hidden]{display:none}.operation-spinner{width:15px;height:15px;flex-shrink:0;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:operation-spin .8s linear infinite}.operation-label{flex:1;min-width:0;overflow-wrap:anywhere}.operation-elapsed{font-size:10px;white-space:nowrap;opacity:.75;font-variant-numeric:tabular-nums}@keyframes operation-spin{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){.operation-spinner{animation:none}}:root[data-theme=dark] .operation-progress{background:#203536;color:#8ad0c8}
+      /* Compact project tree, approved scope-015. */
+    :root{--tree-panel:#e8edf2;--tree-hover:#dde6eb;--tree-selected:#deefed;--tree-accent:#087e80;--tree-text:#334559;--tree-branch:#9aadb9;--tree-thumb:#758c9d;--tree-track:#dce5ec;--tree-row-height:80px}
+    :root[data-theme=dark]{--tree-panel:#242a32;--tree-hover:#2b333d;--tree-selected:#203a3b;--tree-accent:#7fd3ce;--tree-text:#c9d3dd;--tree-branch:#485460;--tree-thumb:#8da0b1;--tree-track:#29343f}
+    #active-projects{flex-shrink:0;min-width:0}#active-projects [hidden]{display:none!important}
+    .tree-icon{width:18px;height:18px;flex-shrink:0;display:block;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+    .projects-toolbar{margin-bottom:16px;gap:8px}.project-actions{margin:0;position:relative;min-width:0}
+    .project-actions>summary{list-style:none;display:flex;align-items:center;gap:10px;font-size:20px;font-weight:600;color:inherit;border-radius:8px;padding:6px 9px;margin-left:-9px;min-height:40px}.project-actions>summary::-webkit-details-marker{display:none}
+    .project-actions>summary:hover,.project-actions[open]>summary{background:var(--tree-panel)}.project-actions>summary .tree-icon{color:var(--muted);transition:transform .16s}.project-actions[open]>summary .tree-icon{transform:rotate(180deg)}
+    #active-projects .icon-button{width:34px;height:34px;display:grid;place-items:center;flex-shrink:0;padding:0;color:var(--muted)}#active-projects .icon-button:hover,#active-projects .icon-button[aria-expanded=true]{background:var(--tree-hover);color:inherit}
+    .project-actions-menu,.project-menu[popover],.session-menu[popover]{padding:6px;border:1px solid var(--tree-branch);border-radius:11px;background:var(--tree-panel);color:inherit;box-shadow:0 12px 30px #0004}
+    .project-actions-menu{position:absolute;z-index:150;left:-8px;top:calc(100% + 6px);width:272px;max-width:calc(100vw - 40px)}
+    .project-actions-menu button,.project-menu[popover] button,.session-menu[popover] button{display:flex;align-items:center;gap:10px;text-align:left;width:100%;min-height:40px;padding:9px 10px;margin:0;border:0;border-radius:6px;font-size:12px;font-weight:500;color:inherit;background:transparent;box-shadow:none}
+    .project-actions-menu button:hover,.project-menu[popover] button:hover,.session-menu[popover] button:hover{background:var(--tree-hover)}
+    .project-menu[popover],.session-menu[popover]{position:fixed;inset:auto;margin:0;width:236px;max-width:calc(100vw - 16px);max-height:calc(100vh - 16px);overflow:auto}
+    .project-menu[popover]:not(:popover-open),.session-menu[popover]:not(:popover-open){display:none}.project-menu[popover]:popover-open,.session-menu[popover]:popover-open{display:flex;flex-direction:column;gap:0}.menu-separator{height:1px;flex-shrink:0;background:var(--tree-branch);margin:5px 6px}
+    #projects{list-style:none;padding:0;margin:0;gap:10px;max-height:58vh;overflow:auto;overscroll-behavior-y:contain}.workspace-tree{min-width:0}
+    #projects .workspace-row{position:relative;display:flex;align-items:center;gap:0;min-height:64px;padding-right:6px;background:var(--tree-panel);border-radius:10px}
+    #projects .workspace-row:has(.expand-project[aria-expanded=true])::after{content:"";position:absolute;width:1px;left:25.5px;top:calc(50% + 13px);bottom:0;background:var(--tree-branch);pointer-events:none}
+    #projects .expand-project{border:0;background:transparent;width:51px;align-self:stretch;flex:0 0 51px;display:grid;place-items:center;padding:0;border-radius:10px;color:var(--muted)}
+    #projects .expand-project::before{display:none}#projects .expand-project .tree-icon{width:20px;height:20px;transition:transform .16s}#projects .expand-project[aria-expanded=true] .tree-icon{transform:rotate(90deg)}#projects .expand-project:hover{background:var(--tree-hover)}
+    #projects .project{min-width:0;flex:1;display:flex;align-items:center;gap:12px;align-self:stretch;padding:12px 5px 12px 0;border:0;border-radius:8px;background:transparent;box-shadow:none;color:inherit}
+    #projects .project:hover{background:var(--tree-hover)}#projects .project>.tree-icon{width:21px;height:21px;color:var(--muted)}#projects .project[aria-expanded=true]>.tree-icon{color:var(--tree-accent)}
+    .project-copy{min-width:0}#projects .project strong{font-size:16px;font-weight:650;white-space:normal;overflow-wrap:anywhere;line-height:1.35}#projects .project small{font-size:12px;margin-top:2px;line-height:1.4}
+    #projects .sessions{list-style:none;display:block;margin:0;padding:0 10px 0 0;border:0;max-height:calc(3 * var(--tree-row-height));overflow-y:auto;overflow-x:hidden;scrollbar-gutter:stable;scrollbar-width:auto;scrollbar-color:var(--tree-thumb) var(--tree-track);overscroll-behavior-y:contain}
+    #projects .sessions::-webkit-scrollbar{width:14px}#projects .sessions::-webkit-scrollbar-track{background:var(--tree-track);border-radius:7px}#projects .sessions::-webkit-scrollbar-thumb{background:var(--tree-thumb);border:3px solid var(--tree-track);border-radius:7px;min-height:36px}
+    #projects .sessions>li{position:relative;display:flex;align-items:stretch;height:var(--tree-row-height);padding:3px 0 3px 49px}
+    #projects .sessions>li::before{content:"";position:absolute;left:25.5px;width:1px;top:0;bottom:0;background:var(--tree-branch)}#projects .sessions>li::after{content:"";position:absolute;left:25.5px;top:50%;width:23.5px;height:1px;background:var(--tree-branch)}#projects .sessions>li:last-child::before{bottom:50%}
+    #projects .session-row{position:relative;display:flex;align-items:center;gap:1px;flex:1;min-width:0;border-radius:8px;padding-right:4px}#projects .session-row:hover{background:var(--tree-panel)}#projects .session-row:has(.session.active){background:var(--tree-selected)}
+    #projects .session-row:has(.session.active)::before{content:"";position:absolute;width:3px;left:0;top:11px;bottom:11px;border-radius:3px;background:var(--tree-accent)}
+    #projects .session{display:flex;align-items:center;gap:12px;min-width:0;flex:1;padding:10px 9px 10px 14px;text-align:left;border:0;border-radius:8px;background:transparent;height:100%;color:var(--tree-text)}
+    .session-copy{min-width:0;flex:1}#projects .session strong{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;text-overflow:ellipsis;white-space:normal;overflow-wrap:anywhere;font-size:14px;font-weight:500;line-height:1.4}#projects .session.active strong{color:var(--tree-accent)}#projects .session small{display:block;margin-top:4px;font-size:12px;line-height:1.4;color:var(--muted);white-space:normal}
+    #projects .session-experience{font-size:11px;line-height:20px;padding:0 7px;border:0;border-radius:5px;background:var(--tree-panel);color:var(--muted);flex:0 0 auto}#projects .session-experience[data-experience=work]{color:var(--tree-accent);background:var(--tree-selected)}
+    @media(max-width:600px){:root{--tree-row-height:104px}#projects .session strong{-webkit-line-clamp:3}}
+    @media(max-width:430px){:root{--tree-row-height:144px}.project-actions>summary{font-size:18px}#projects .project{gap:9px}#projects .project strong{font-size:15px}#projects .session{flex-wrap:wrap;align-content:center;gap:6px;padding-right:4px}.session-copy{flex-basis:100%}}
+    @media(prefers-reduced-motion:reduce){#projects .tree-icon,.project-actions .tree-icon{transition:none}}
+
   </style>
 </head>
 <body>
+<!-- Icons: Lucide. ISC License
+
+Copyright (c) 2026 Lucide Icons and Contributors
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted, provided that the above
+copyright notice and this permission notice appear in all copies.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+—-
+
+The following Lucide icons are derived from the Feather project:
+
+airplay, alert-circle, alert-octagon, alert-triangle, aperture, arrow-down-circle, arrow-down-left, arrow-down-right, arrow-down, arrow-left-circle, arrow-left, arrow-right-circle, arrow-right, arrow-up-circle, arrow-up-left, arrow-up-right, arrow-up, at-sign, calendar, cast, check, chevron-down, chevron-left, chevron-right, chevron-up, chevrons-down, chevrons-left, chevrons-right, chevrons-up, circle, clipboard, clock, code, columns, command, compass, corner-down-left, corner-down-right, corner-left-down, corner-left-up, corner-right-down, corner-right-up, corner-up-left, corner-up-right, crosshair, database, divide-circle, divide-square, dollar-sign, download, external-link, feather, frown, hash, headphones, help-circle, info, italic, key, layout, life-buoy, link-2, link, loader, lock, log-in, log-out, maximize, meh, minimize, minimize-2, minus-circle, minus-square, minus, monitor, moon, more-horizontal, more-vertical, move, music, navigation-2, navigation, octagon, pause-circle, percent, plus-circle, plus-square, plus, power, radio, rss, search, server, share, shopping-bag, sidebar, smartphone, smile, square, table-2, tablet, target, terminal, trash-2, trash, triangle, tv, type, upload, x-circle, x-octagon, x-square, x, zoom-in, zoom-out
+
+The MIT License (MIT) (for the icons listed above)
+
+Copyright (c) 2013-present Cole Bemis
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+ -->
+<svg width="0" height="0" aria-hidden="true" style="position:absolute;pointer-events:none"><defs><symbol id="tree-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+<symbol id="tree-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+<symbol id="tree-folder" viewBox="0 0 24 24"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></symbol>
+<symbol id="tree-folder-open" viewBox="0 0 24 24"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/></symbol>
+<symbol id="tree-ellipsis" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></symbol>
+<symbol id="tree-plus" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></symbol>
+<symbol id="tree-refresh-cw" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></symbol>
+<symbol id="tree-list-chevrons-up-down" viewBox="0 0 24 24"><path d="M3 5h8"/><path d="M3 12h8"/><path d="M3 19h8"/><path d="m15 8 3-3 3 3"/><path d="m15 16 3 3 3-3"/></symbol></defs></svg>
   <main class="shell">
     <header class="brand"><div class="logo" aria-hidden="true">W</div><div><strong>Web Pilot</strong><span>PROJECT WORKSPACE</span></div></header>
     <div id="operation-progress" class="operation-progress" role="status" aria-live="polite" hidden></div>
     <section id="active-projects" aria-label="Проекты">
-      <div class="heading"><p class="eyebrow">Ваши проекты</p><button id="reload-chat" class="icon-button" title="Обновить ChatGPT" aria-label="Обновить ChatGPT">↻</button></div>
-      <div class="project-entry"><button id="create-workspace" class="primary"><span class="plus" aria-hidden="true">+</span> Создать проект</button><button id="add-workspace" class="secondary">Открыть папку проекта</button></div>
+      <div class="heading projects-toolbar">
+        <details class="project-actions" id="project-actions">
+          <summary>Ваши проекты <svg class="tree-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#tree-chevron-down"/></svg></summary>
+          <div class="project-actions-menu">
+            <button id="create-workspace"><svg class="tree-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#tree-plus"/></svg><span>Создать проект</span></button>
+            <button id="add-workspace"><svg class="tree-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#tree-folder-open"/></svg><span>Открыть папку проекта</span></button>
+            <div class="menu-separator" aria-hidden="true"></div>
+            <button id="reload-chat"><svg class="tree-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#tree-refresh-cw"/></svg><span>Обновить ChatGPT</span></button>
+          </div>
+        </details>
+        <button id="toggle-projects" class="icon-button" title="Свернуть все проекты" aria-label="Свернуть все проекты"><svg class="tree-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#tree-list-chevrons-up-down"/></svg></button>
+      </div>
       <ul id="projects" class="projects" aria-label="Workspace и сессии"><li class="empty">Выберите проект, чтобы начать<br>работу с его контекстом.</li></ul>
     </section>
     <div class="scroll">

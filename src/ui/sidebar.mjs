@@ -3,14 +3,46 @@ import { projectArchiveView } from './project-archive.mjs';
 import { workspaceSetupView } from './workspace-setup.mjs';
 const $ = id => document.getElementById(id);
 const api = window.webPilot;
-window.addEventListener('pagehide', () => clearTimeout(workspaceClickTimer));
 let lastProjects = '';
 let currentState;
 let actionPending = false, pendingAction = null;
 const progress = createProgress($('operation-progress'));
 window.addEventListener('pagehide', () => progress.destroy());
-let workspaceClickTimer;
 let contextExpanded = false;
+const sessionScroll = new Map();
+function treeIcon(name) {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('class', 'tree-icon'); svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('aria-hidden', 'true');
+  const use = document.createElementNS('http://www.w3.org/2000/svg', 'use'); use.setAttribute('href', `#tree-${name}`); svg.append(use);
+  return svg;
+}
+function closeTreeMenus() {
+  for (const menu of document.querySelectorAll('.project-menu:popover-open, .session-menu:popover-open')) menu.hidePopover();
+}
+function bindTreeMenu(button, menu, label) {
+  menu.setAttribute('popover', 'auto'); menu.setAttribute('aria-label', label);
+  button.setAttribute('aria-label', label); button.setAttribute('aria-expanded', 'false'); button.setAttribute('aria-haspopup', 'true');
+  menu.addEventListener('toggle', event => button.setAttribute('aria-expanded', String(event.newState === 'open')));
+  button.addEventListener('click', () => {
+    if (menu.matches(':popover-open')) { menu.hidePopover(); return; }
+    $('project-actions').open = false;
+    menu.showPopover();
+    const rect = button.getBoundingClientRect();
+    menu.style.left = `${Math.max(8, Math.min(rect.right - menu.offsetWidth, innerWidth - menu.offsetWidth - 8))}px`;
+    menu.style.top = `${Math.max(8, rect.bottom + menu.offsetHeight + 14 <= innerHeight ? rect.bottom + 6 : rect.top - menu.offsetHeight - 6)}px`;
+  });
+}
+document.addEventListener('click', event => { if (!$('project-actions').contains(event.target)) $('project-actions').open = false; });
+document.addEventListener('keydown', event => { if (event.key === 'Escape') $('project-actions').open = false; });
+document.addEventListener('scroll', event => { if (!event.target.closest?.('[popover]')) closeTreeMenus(); }, true);
+window.addEventListener('resize', closeTreeMenus);
+$('project-actions').addEventListener('toggle', () => { if ($('project-actions').open) closeTreeMenus(); });
+$('toggle-projects').addEventListener('click', async () => {
+  if (actionPending || !currentState) return;
+  const expand = !currentState.projects.some(project => project.expanded);
+  for (const project of currentState.projects.filter(project => project.expanded !== expand)) await action('setExpanded', project.workspace, expand);
+});
+
 const phases = {
   selected: ['Готов к началу', 'Войдите в ChatGPT справа и выберите папку проекта слева.', 'neutral'],
   preparing: ['Подготавливаем подключение', 'Проверяем локальные инструменты и связь с ChatGPT.', 'working'],
@@ -80,7 +112,12 @@ function compactTokenCount(value) {
 
 async function action(method, ...args) {
   if (actionPending) return;
-  clearTimeout(workspaceClickTimer);
+  closeTreeMenus();
+  $('project-actions').open = false;
+  if (['selectWorkspace', 'newSession'].includes(method)) {
+    sessionScroll.set(args[0], 0);
+    for (const list of $('projects').querySelectorAll('.sessions')) if (list.dataset.workspace === args[0]) list.scrollTop = 0;
+  }
   actionPending = true; pendingAction = method;
   render(currentState);
   try {
@@ -95,6 +132,7 @@ async function action(method, ...args) {
 function render(state) {
   progress.show(operationLabel(state ?? {}, pendingAction));
   if (!state) return;
+  const previousProjects = currentState?.projects ?? [];
   currentState = state;
   splitter.setAttribute('aria-valuemin', String(state.sidebarMinWidth ?? 312));
   splitter.setAttribute('aria-valuenow', String(state.sidebarWidth ?? 312));
@@ -103,99 +141,109 @@ function render(state) {
   const signature = JSON.stringify([state.projects, selected?.workspace, selected?.sessionId]);
   if (signature !== lastProjects) {
     lastProjects = signature;
+    const outerScroll = $('projects').scrollTop;
+    for (const list of $('projects').querySelectorAll('.sessions')) {
+      if (!list.hidden) sessionScroll.set(list.dataset.workspace, list.scrollTop);
+    }
+    const oldProject = previousProjects.find(project => project.workspace === selected?.workspace);
+    if (selected && !oldProject?.sessions.some(session => session.sessionId === selected.sessionId)) sessionScroll.set(selected.workspace, 0);
+    closeTreeMenus();
     const fragment = document.createDocumentFragment();
     const dateFormat = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
     for (const project of state.projects) {
-      const item = document.createElement('li');
-      const row = document.createElement('div'); row.className = 'workspace-row';
-      const toggle = () => { clearTimeout(workspaceClickTimer); action('setExpanded', project.workspace, !project.expanded); };
+      const item = document.createElement('li'); item.className = 'workspace-tree';
+      const activeProject = project.workspace === selected?.workspace;
+      const row = document.createElement('div'); row.className = 'workspace-row' + (activeProject ? ' active' : '');
+      const toggle = () => action('setExpanded', project.workspace, !project.expanded);
       const arrow = document.createElement('button'); arrow.className = 'expand-project';
-      arrow.textContent = '';
+      arrow.append(treeIcon('chevron-right'));
       arrow.setAttribute('aria-label', `${project.expanded ? 'Свернуть' : 'Раскрыть'} сессии ${project.name}`);
       arrow.setAttribute('aria-expanded', String(project.expanded));
       arrow.addEventListener('click', toggle);
       const button = document.createElement('button');
-      button.className = 'project' + (project.workspace === selected?.workspace ? ' active' : '');
+      button.className = 'project' + (activeProject ? ' active' : '');
       button.dataset.workspace = project.workspace;
-      button.setAttribute('aria-pressed', String(project.workspace === selected?.workspace));
+      button.setAttribute('aria-pressed', String(activeProject));
       button.setAttribute('aria-expanded', String(project.expanded));
-      button.title = `${project.workspace}\nДвойной клик — раскрыть сессии`;
+      button.title = `${project.workspace}\nОткрыть последнюю сессию`;
+      const label = document.createElement('span'); label.className = 'project-copy';
       const name = document.createElement('strong'); name.textContent = project.name;
       const caption = document.createElement('small');
       const count = project.sessions.length;
       caption.textContent = `${count} ${count % 10 === 1 && count % 100 !== 11 ? 'сессия' : count % 10 >= 2 && count % 10 <= 4 && !(count % 100 >= 12 && count % 100 <= 14) ? 'сессии' : 'сессий'}`;
-      button.append(name, caption);
-      button.addEventListener('click', event => {
-        clearTimeout(workspaceClickTimer);
-        if (!event.detail) { action('selectWorkspace', project.workspace); return; }
-        if (event.detail === 1) workspaceClickTimer = setTimeout(() => action('selectWorkspace', project.workspace), 450);
-      });
-      button.addEventListener('dblclick', event => { event.preventDefault(); toggle(); });
+      label.append(name, caption); button.append(treeIcon(project.expanded ? 'folder-open' : 'folder'), label);
+      button.addEventListener('click', () => action('selectWorkspace', project.workspace));
       button.addEventListener('keydown', event => {
         if ((event.key === 'ArrowRight' && !project.expanded) || (event.key === 'ArrowLeft' && project.expanded)) { event.preventDefault(); toggle(); }
       });
-      const menuButton = document.createElement('button'); menuButton.className = 'icon-button project-menu-button'; menuButton.textContent = '⋯';
-      menuButton.setAttribute('aria-label', `Меню проекта ${project.name}`); menuButton.setAttribute('aria-expanded', 'false');
-      const menu = document.createElement('div'); menu.className = 'project-menu'; menu.hidden = true;
-      const newChat = document.createElement('button'); newChat.className = 'secondary new-project-chat'; newChat.textContent = 'Новый Chat';
-      newChat.addEventListener('click', () => { clearTimeout(workspaceClickTimer); menu.hidden = true; menuButton.setAttribute('aria-expanded', 'false'); action('newSession', project.workspace, 'chat'); });
-      const newWork = document.createElement('button'); newWork.className = 'secondary new-project-work'; newWork.textContent = 'Новый Work';
-      newWork.addEventListener('click', () => { clearTimeout(workspaceClickTimer); menu.hidden = true; menuButton.setAttribute('aria-expanded', 'false'); action('newSession', project.workspace, 'work'); });
-      const separator = document.createElement('div'); separator.className = 'menu-separator'; separator.setAttribute('aria-hidden', 'true');
-      const rename = document.createElement('button'); rename.className = 'secondary rename-project'; rename.textContent = 'Переименовать';
-      rename.addEventListener('click', () => {
-        clearTimeout(workspaceClickTimer); menu.hidden = true; menuButton.setAttribute('aria-expanded', 'false');
+      const menuButton = document.createElement('button'); menuButton.className = 'icon-button project-menu-button'; menuButton.append(treeIcon('ellipsis'));
+      const menu = document.createElement('div'); menu.className = 'project-menu';
+      bindTreeMenu(menuButton, menu, `Меню проекта ${project.name}`);
+      const menuAction = (className, text, handler) => {
+        const control = document.createElement('button'); control.className = `secondary ${className}`; control.textContent = text;
+        control.addEventListener('click', () => { closeTreeMenus(); handler(); });
+        menu.append(control);
+      };
+      menuAction('new-project-chat', 'Новый Chat', () => action('newSession', project.workspace, 'chat'));
+      menuAction('new-project-work', 'Новый Work', () => action('newSession', project.workspace, 'work'));
+      const separator = document.createElement('div'); separator.className = 'menu-separator'; separator.setAttribute('aria-hidden', 'true'); menu.append(separator);
+      menuAction('rename-project', 'Переименовать', () => {
         const value = window.prompt('Название проекта в Web Pilot', project.name);
         if (value !== null) action('renameProject', project.workspace, value);
       });
-      const copyPath = document.createElement('button'); copyPath.className = 'secondary copy-workspace-path'; copyPath.textContent = 'Скопировать полный путь';
-      copyPath.addEventListener('click', () => { clearTimeout(workspaceClickTimer); menu.hidden = true; menuButton.setAttribute('aria-expanded', 'false'); action('copyWorkspacePath', project.workspace); });
-      const archive = document.createElement('button'); archive.className = 'secondary archive-project'; archive.textContent = 'Перенести в архив';
-      archive.addEventListener('click', () => { clearTimeout(workspaceClickTimer); action('archiveProject', project.workspace); }); menu.append(newChat, newWork, separator, rename, copyPath, archive);
-      menuButton.addEventListener('click', () => { clearTimeout(workspaceClickTimer); menu.hidden = !menu.hidden; menuButton.setAttribute('aria-expanded', String(!menu.hidden)); });
+      menuAction('copy-workspace-path', 'Скопировать полный путь', () => action('copyWorkspacePath', project.workspace));
+      menuAction('archive-project', 'Перенести в архив', () => action('archiveProject', project.workspace));
       row.append(arrow, button, menuButton); item.append(row, menu);
       const sessions = document.createElement('ul'); sessions.className = 'sessions'; sessions.hidden = !project.expanded;
-      sessions.setAttribute('aria-label', `Сессии ${project.name}`);
-      for (const [index, session] of project.sessions.entries()) {
+      sessions.dataset.workspace = project.workspace;
+      sessions.setAttribute('aria-label', `Сессии ${project.name}, новые сверху`);
+      sessions.tabIndex = 0;
+      sessions.addEventListener('scroll', () => sessionScroll.set(project.workspace, sessions.scrollTop), { passive: true });
+      for (const session of project.sessions) {
         const entry = document.createElement('li');
         const row = document.createElement('div'); row.className = 'session-row';
         const choice = document.createElement('button');
-        const active = selected?.workspace === project.workspace && selected?.sessionId === session.sessionId;
+        const active = activeProject && selected?.sessionId === session.sessionId;
         choice.className = 'session' + (active ? ' active' : '');
         choice.dataset.sessionId = session.sessionId;
         if (active) choice.setAttribute('aria-current', 'page');
-        const top = document.createElement('div'); top.className = 'session-top';
-        const title = document.createElement('strong'); title.textContent = session.title || `Сессия ${index + 1}`;
-        const experience = document.createElement('span'); experience.className = 'session-experience'; experience.dataset.experience = session.experience ?? 'chat'; experience.textContent = session.experience === 'work' ? 'Work' : 'Chat';
-        top.append(title, experience);
+        const copy = document.createElement('span'); copy.className = 'session-copy';
+        const title = document.createElement('strong'); title.textContent = session.title || 'Новая сессия';
         const date = document.createElement('small');
-        date.textContent = `Сессия ${index + 1} · ${dateFormat.format(new Date(session.createdAt))}` + (session.chatUrl ? '' : ' · новая');
-        choice.title = `${session.title || 'Новая сессия'} · ${session.experience === 'work' ? 'Work' : 'Chat'}\n${new Date(session.createdAt).toLocaleString('ru-RU')}`;
-        choice.append(top, date);
-        choice.addEventListener('click', () => { clearTimeout(workspaceClickTimer); action('selectSession', project.workspace, session.sessionId); });
-        const menuButton = document.createElement('button'); menuButton.className = 'icon-button session-menu-button'; menuButton.textContent = '⋯';
-        menuButton.setAttribute('aria-label', `Меню сессии ${session.title || index + 1}`); menuButton.setAttribute('aria-expanded', 'false');
-        const menu = document.createElement('div'); menu.className = 'session-menu'; menu.hidden = true;
+        date.textContent = dateFormat.format(new Date(session.createdAt)) + (session.chatUrl ? '' : ' · новая');
+        copy.append(title, date);
+        const experience = document.createElement('span'); experience.className = 'session-experience'; experience.dataset.experience = session.experience ?? 'chat'; experience.textContent = session.experience === 'work' ? 'Work' : 'Chat';
+        choice.title = `${session.title || 'Новая сессия'} · ${experience.textContent}\n${new Date(session.createdAt).toLocaleString('ru-RU')}`;
+        choice.append(copy, experience);
+        choice.addEventListener('click', () => action('selectSession', project.workspace, session.sessionId));
+        const menuButton = document.createElement('button'); menuButton.className = 'icon-button session-menu-button'; menuButton.append(treeIcon('ellipsis'));
+        const menu = document.createElement('div'); menu.className = 'session-menu';
+        bindTreeMenu(menuButton, menu, `Меню сессии ${session.title || 'Новая сессия'}`);
         const rename = document.createElement('button'); rename.className = 'secondary rename-session'; rename.textContent = 'Переименовать';
         rename.addEventListener('click', () => {
-          menu.hidden = true; menuButton.setAttribute('aria-expanded', 'false');
-          const value = window.prompt('Название сессии', session.title || `Сессия ${index + 1}`);
+          closeTreeMenus();
+          const value = window.prompt('Название сессии', session.title || 'Новая сессия');
           if (value !== null) action('renameSession', project.workspace, session.sessionId, value);
         });
         const archive = document.createElement('button'); archive.className = 'secondary archive-session'; archive.textContent = 'Перенести в архив';
-        archive.addEventListener('click', () => { menu.hidden = true; menuButton.setAttribute('aria-expanded', 'false'); action('archiveSession', project.workspace, session.sessionId); });
+        archive.addEventListener('click', () => { closeTreeMenus(); action('archiveSession', project.workspace, session.sessionId); });
         menu.append(rename, archive);
-        menuButton.addEventListener('click', event => { event.stopPropagation(); menu.hidden = !menu.hidden; menuButton.setAttribute('aria-expanded', String(!menu.hidden)); });
         row.append(choice, menuButton); entry.append(row, menu); sessions.append(entry);
       }
       item.append(sessions); fragment.append(item);
     }
     if (!state.projects.length) {
       const empty = document.createElement('li'); empty.className = 'empty';
-      empty.textContent = 'Выберите проект, чтобы начать работу с его контекстом.'; fragment.append(empty);
+      empty.textContent = 'Откройте меню «Ваши проекты», чтобы создать проект или выбрать его папку.'; fragment.append(empty);
     }
     $('projects').replaceChildren(fragment);
+    for (const list of $('projects').querySelectorAll('.sessions')) list.scrollTop = sessionScroll.get(list.dataset.workspace) ?? 0;
+    $('projects').scrollTop = outerScroll;
+    for (const workspace of sessionScroll.keys()) if (!state.projects.some(project => project.workspace === workspace)) sessionScroll.delete(workspace);
   }
+  const collapseAll = state.projects.some(project => project.expanded);
+  $('toggle-projects').title = collapseAll ? 'Свернуть все проекты' : 'Раскрыть все проекты';
+  $('toggle-projects').setAttribute('aria-label', $('toggle-projects').title);
   $('plan-card').hidden = !selected;
   $('session-actions').hidden = !selected;
   const plan = selected?.planView ?? { state: 'not-created', completed: 0, total: 0, tasks: [], blockedReason: null };
