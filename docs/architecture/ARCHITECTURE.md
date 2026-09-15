@@ -726,3 +726,7 @@ macOS arm64 и Windows x64 используют один модуль conversati
 ## Restart correction — scope chat-autoscroll-020 / T003
 
 Первоначальный controller трактовал любое `scroll` away from bottom как ручное действие. Это неверно при startup: ChatGPT может асинхронно восстановить сохранённую позицию уже после `did-finish-load`. Версия controller v2 отделяет user scroll intent от самого scroll event. Non-bottom scroll без предшествующего wheel/keyboard/touch/pointer gesture не снимает follow и планирует возврат вниз; ручной gesture сохраняет suspended semantics. Resume при Send и смене route очищает прежнее intent-window.
+
+## Rebuilt 0.6.18 — scope chat-autoscroll-020 / T004
+
+macOS arm64 и Windows x64 повторно упакованы после restart correction. Оба `app.asar` содержат controller v2 и точную source-копию `src/chatgpt-auto-scroll.mjs` с SHA-256 `a0cf397fc41c2aab175427472790fc1e2182b778b533efe2a49dfc5736a109f7`. Номер версии остаётся 0.6.18; различать первоначальный и исправленный пакет следует по ZIP SHA-256 из `docs/VERIFICATION.md`.

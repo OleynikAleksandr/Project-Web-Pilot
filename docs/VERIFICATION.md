@@ -735,3 +735,9 @@ JSDOM regression исполняет тот же renderer script, который 
 ## Scope chat-autoscroll-020 / T003 — restart regression
 
 После пользовательской проверки добавлен отдельный regression, моделирующий позднее программное восстановление `scrollTop` после установки controller: non-bottom `scroll` без пользовательского input не переводит follow в suspended и на следующих animation frames возвращается к последнему сообщению. Отдельный table test подтверждает manual suspend после wheel/trackpad, PageUp, touch и pointer gesture. Targeted suite `node --test tests/chatgpt-auto-scroll.test.mjs` проходит 7/7.
+
+## Scope chat-autoscroll-020 / T004 — исправленная сборка 0.6.18
+
+`npm run build` после T003 успешно пересобрал macOS arm64 и Windows x64; штатный `verify:win` прошёл, Windows executable SHA-256: `fc21313dc35681c79d84d4e69fd2fed5f2bdc516d88b960f490fe334e9afc7c1`. macOS Info.plist и package.json обоих `app.asar` сообщают 0.6.18. Исправленный `src/chatgpt-auto-scroll.mjs` в обоих пакетах побайтно совпадает с source SHA-256 `a0cf397fc41c2aab175427472790fc1e2182b778b533efe2a49dfc5736a109f7` и содержит controller v2.
+
+Повторно созданные ZIP: macOS arm64 — 145174692 байт, SHA-256 `ab1db8a652a85b5af624d16cf79c2812f4c013a97d2f62272469cb6592d370c3`; Windows x64 — 317732707 байт, SHA-256 `b5a53be911d85ed8e52cb2943da9c4e0b2a53586d7690621d35869e2d7493675`. Эти файлы заменили прежние одноимённые 0.6.18 в Downloads. Финальная suite/smoke выполняется управляемым commit T004; реальный startup ChatGPT остаётся повторной пользовательской приёмкой.

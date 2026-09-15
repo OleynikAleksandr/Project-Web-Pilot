@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 425,
+  "plan_revision": 427,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "chat-autoscroll-020",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Сделать встроенный ChatGPT самопрокручивающимся к последним сообщениям, не мешая пользователю читать историю, и выпустить одинаковое исправление для macOS и Windows.",
   "acceptance_criteria": [
     "При открытии/продолжении сессии и появлении новых сообщений диалог остаётся у последнего сообщения, пока пользователь находится внизу.",
@@ -190,8 +190,8 @@
         "Новые ZIP-релизы и SHA-256 подготовлены для повторной пользовательской проверки."
       ],
       "expected_commit_message": "build: пересобрать исправленный релиз автопрокрутки",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "chat-autoscroll-020",
         "task_id": "T004",
@@ -219,10 +219,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: chat-autoscroll-020
 Current Task: нет
-Revision: 425
+Revision: 427
 
 ## Цель
 
@@ -251,8 +251,8 @@ Revision: 425
   - Git Commit: [DONE] fix(chat): отличать ручную прокрутку от восстановления позиции
   - Reference: chat-autoscroll-020 / T003 / implementation
   - Файлы: src/chatgpt-auto-scroll.mjs, tests/chatgpt-auto-scroll.test.mjs, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T004: Пересобрать исправленный релиз 0.6.18 — Ожидает
-  - Git Commit: [PENDING] build: пересобрать исправленный релиз автопрокрутки
+- [DONE] T004: Пересобрать исправленный релиз 0.6.18 — Завершено
+  - Git Commit: [DONE] build: пересобрать исправленный релиз автопрокрутки
   - Reference: chat-autoscroll-020 / T004 / implementation
   - Файлы: docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 
