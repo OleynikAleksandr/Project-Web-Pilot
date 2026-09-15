@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 429,
+  "plan_revision": 431,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-project-continuity-021",
@@ -117,8 +117,8 @@
         "Спецификация описывает постоянный проектный контекст, универсальные части проекта, обязательную финальную актуализацию документов и отдельную пользовательскую приёмку."
       ],
       "expected_commit_message": "docs: согласовать continuity проектов",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workflow-project-continuity-021",
         "task_id": "T001",
@@ -358,7 +358,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-project-continuity-021
 Current Task: нет
-Revision: 429
+Revision: 431
 
 ## Цель
 
@@ -374,8 +374,8 @@ Revision: 429
 
 ## Микрозадачи
 
-- [TODO] T001: Зафиксировать универсальный контракт continuity — Ожидает
-  - Git Commit: [PENDING] docs: согласовать continuity проектов
+- [DONE] T001: Зафиксировать универсальный контракт continuity — Завершено
+  - Git Commit: [DONE] docs: согласовать continuity проектов
   - Reference: workflow-project-continuity-021 / T001 / implementation
   - Файлы: docs/modules/workflow-kit-recovery.md, docs/architecture/OVERVIEW.md, docs/MODULES.md
 - [TODO] T002: Реализовать постоянный NONE-контекст и completion contract — Ожидает
