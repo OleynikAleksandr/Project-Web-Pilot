@@ -93,12 +93,15 @@ test('READY_FOR_ACCEPTANCE requires DOCS and archive returns a contextual NONE p
 
   startTask(root, 'T001');
   await fs.appendFile(path.join(root, 'docs/notes.md'), '\nRESULT_READY\n');
-  commitTask(root, 'T001');
+  const implementation = commitTask(root, 'T001');
   plan = readPlan(root);
   assert.equal(plan.delivery_status, 'IN_PROGRESS');
   assert.equal(plan.tasks.find(task => task.id === 'DOCS').commit_status, 'PENDING');
 
   startTask(root, 'DOCS');
+  const docsPacket = recover(root, 'manual');
+  assert.equal(docsPacket.included.includes(implementation.sha), false, 'DOCS ordering dependency is not copied as commit diff');
+  assert.doesNotMatch(docsPacket.text, /RESULT_READY/, 'DOCS recovery does not replay completed implementation diff');
   commitTask(root, 'DOCS');
   plan = readPlan(root);
   assert.equal(plan.execution_scope_status, 'ACTIVE');

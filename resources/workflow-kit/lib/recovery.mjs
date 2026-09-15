@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { VERSION, PLAN, CONFIG, check, contextPath, textFile, atomic, json, hash, id, errorResult } from './common.mjs';
 import { validate } from './validate.mjs';
-import { nextTask, PROJECT_CONTINUATION_OBJECTIVE } from './plan.mjs';
+import { nextTask, PROJECT_CONTINUATION_OBJECTIVE, isDocumentationFinalizationTask } from './plan.mjs';
 import { snapshot, diff, git, localPath, head, fileFingerprint } from './git.mjs';
 
 export const TRANSPORT_HARD_BYTES = 180000;
@@ -78,7 +78,8 @@ export function recover(root, reason = 'manual', options = {}) {
     }
 
     const core = section(textFile(root, rulesPath), ['Workflow', 'Workflow Core'], rulesPath);
-    const neededIds = [...new Set([...plan.context_pack.dependency_task_ids, ...(task?.dependencies ?? [])])];
+    const taskDependencies = isDocumentationFinalizationTask(task) ? [] : (task?.dependencies ?? []);
+    const neededIds = [...new Set([...plan.context_pack.dependency_task_ids, ...taskDependencies])];
     const neededShas = [];
     const selected = task ? [...task.functional_paths, ...task.documentation_paths] : [];
     const selectedSet = new Set(selected);
