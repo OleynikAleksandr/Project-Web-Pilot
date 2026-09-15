@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 446,
+  "plan_revision": 449,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-project-continuity-021",
@@ -41,7 +41,8 @@
       "package.json",
       "package-lock.json",
       "resources/workspace-setup-worker.mjs",
-      "tests/workspace-setup.test.mjs"
+      "tests/workspace-setup.test.mjs",
+      "tests/electron-smoke.mjs"
     ],
     "documentation_paths": [
       ".harness/kit/WORKFLOW.md",
@@ -283,7 +284,8 @@
       ],
       "functional_paths": [
         "package.json",
-        "package-lock.json"
+        "package-lock.json",
+        "tests/electron-smoke.mjs"
       ],
       "documentation_paths": [],
       "verification_ids": [
@@ -297,8 +299,8 @@
         "Версия приложения увеличена; полная suite и Electron smoke проходят перед сборкой; build создаёт macOS arm64 и Windows x64 с новым bundled Workflow Kit."
       ],
       "expected_commit_message": "build: подготовить релиз continuity workflow",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workflow-project-continuity-021",
         "task_id": "T007",
@@ -361,7 +363,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-project-continuity-021
 Current Task: нет
-Revision: 446
+Revision: 449
 
 ## Цель
 
@@ -401,10 +403,10 @@ Revision: 446
   - Git Commit: [DONE] test(workflow): закрепить continuity contract
   - Reference: workflow-project-continuity-021 / T006 / implementation
   - Файлы: tests/workflow-kit-recovery.test.mjs, tests/workflow-kit-source.test.mjs, tests/workspace-setup.test.mjs
-- [TODO] T007: Подготовить релиз Project Web Pilot — Ожидает
-  - Git Commit: [PENDING] build: подготовить релиз continuity workflow
+- [DONE] T007: Подготовить релиз Project Web Pilot — Завершено
+  - Git Commit: [DONE] build: подготовить релиз continuity workflow
   - Reference: workflow-project-continuity-021 / T007 / implementation
-  - Файлы: package.json, package-lock.json
+  - Файлы: package.json, package-lock.json, tests/electron-smoke.mjs
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать документацию проекта
   - Reference: workflow-project-continuity-021 / DOCS / implementation

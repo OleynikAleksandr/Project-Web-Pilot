@@ -566,6 +566,12 @@ export async function run({ app, window, browser, sidebar, store, controller, se
     startTask(workspace, 'T001');
     await fs.appendFile(path.join(workspace, 'docs/PRODUCT.md'), '\nTransition fixture ' + experience + '\n');
     assert.equal(commitTask(workspace, 'T001').ok, true);
+    const beforeDocs = await readWorkspace(workspace);
+    assert.equal(beforeDocs.planView.state, 'working', 'implementation alone cannot reach user acceptance');
+    assert.equal(beforeDocs.nextTaskId, 'DOCS');
+    startTask(workspace, 'DOCS');
+    assert.equal(commitTask(workspace, 'DOCS').ok, true);
+    assert.equal((await readWorkspace(workspace)).planView.state, 'awaiting-acceptance', 'DOCS completion enables user acceptance');
     controller.attach(store.selected()); await controller.tick();
     await waitFor(() => store.selected().scopeTransition?.scopeId === scopeId, 'watch scope before closing', snapshot);
     assert.equal(snapshot().scopeTransition, null, 'READY alone cannot open a session');
