@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 387,
+  "plan_revision": 389,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "scope-015",
@@ -82,8 +82,8 @@
         "Спецификация фиксирует меню, дерево, выбор последней, порядок по дате создания и прокрутку трёх строк"
       ],
       "expected_commit_message": "docs: approve compact projects sidebar contract",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "scope-015",
         "task_id": "T001",
@@ -241,7 +241,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: scope-015
 Current Task: нет
-Revision: 387
+Revision: 389
 
 ## Цель
 
@@ -258,8 +258,8 @@ Revision: 387
 
 ## Микрозадачи
 
-- [TODO] T001: Зафиксировать согласованный контракт блока проектов — Ожидает
-  - Git Commit: [PENDING] docs: approve compact projects sidebar contract
+- [DONE] T001: Зафиксировать согласованный контракт блока проектов — Завершено
+  - Git Commit: [DONE] docs: approve compact projects sidebar contract
   - Reference: scope-015 / T001 / implementation
   - Файлы: docs/modules/workspace-sessions.md, docs/DECISIONS.md
 - [TODO] T002: Выбирать последнюю сессию и выдавать новые первыми — Ожидает
