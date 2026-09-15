@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 434,
+  "plan_revision": 437,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-project-continuity-021",
@@ -175,13 +175,14 @@
         "DOCS-задача может подтвердить проверку без бессмысленного редактирования документа; recovery в NONE говорит об обсуждении следующего этапа, а READY_FOR_ACCEPTANCE остаётся пользовательским gate."
       ],
       "expected_commit_message": "feat(workflow): завершать scope через документацию",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workflow-project-continuity-021",
         "task_id": "T003",
         "role": "implementation"
-      }
+      },
+      "documentation_exception": "Поведение финальной DOCS-задачи уже согласовано и описано в T001 в docs/modules/workflow-kit-recovery.md; T003 реализует этот контракт в транзакции и recovery без нового изменения specification."
     },
     {
       "dependencies": [
@@ -210,7 +211,8 @@
         "scope_id": "workflow-project-continuity-021",
         "task_id": "T004",
         "role": "implementation"
-      }
+      },
+      "documentation_exception": "Контракт поставки и миграции Workflow Kit 1.3 следует согласованному Project Continuity Contract; пользовательская документация будет обновлена отдельными T005 и DOCS."
     },
     {
       "dependencies": [
@@ -353,7 +355,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-project-continuity-021
 Current Task: нет
-Revision: 434
+Revision: 437
 
 ## Цель
 
@@ -377,8 +379,8 @@ Revision: 434
   - Git Commit: [DONE] feat(workflow): закрепить project continuity
   - Reference: workflow-project-continuity-021 / T002 / implementation
   - Файлы: .harness/kit/lib/plan.mjs, .harness/kit/lib/actions.mjs, resources/workflow-kit/lib/plan.mjs, resources/workflow-kit/lib/actions.mjs, tests/workflow-kit-recovery.test.mjs
-- [TODO] T003: Закрепить финальную документационную задачу в commit/recovery — Ожидает
-  - Git Commit: [PENDING] feat(workflow): завершать scope через документацию
+- [DONE] T003: Закрепить финальную документационную задачу в commit/recovery — Завершено
+  - Git Commit: [DONE] feat(workflow): завершать scope через документацию
   - Reference: workflow-project-continuity-021 / T003 / implementation
   - Файлы: .harness/kit/lib/transaction.mjs, .harness/kit/lib/git-hooks.mjs, .harness/kit/lib/recovery.mjs, resources/workflow-kit/lib/transaction.mjs, resources/workflow-kit/lib/git-hooks.mjs, resources/workflow-kit/lib/recovery.mjs
 - [TODO] T004: Обновить Workflow Kit и миграцию — Ожидает

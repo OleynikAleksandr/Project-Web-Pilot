@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { PLAN, check, hash, id, json, atomic, withLock, safePath } from './common.mjs';
-import { readPlan, renderPlan, parsePlan } from './plan.mjs';
+import { readPlan, renderPlan, parsePlan, isDocumentationFinalizationTask } from './plan.mjs';
 import { validate, journal, taskChecks } from './validate.mjs';
 import { git, head, paths, localPath, gitPath, allChanges, ensureIdleGit, identityReady, snapshot } from './git.mjs';
 
@@ -78,7 +78,9 @@ export function commitCandidate(root, { plan, role, task = null, selected, messa
   atomic(path.join(root, PLAN), candidateText);
   const changed = allChanges(root).filter(p => files.includes(p));
   check(changed.length > 0, 'NOTHING_TO_COMMIT', 'Нет изменений для фиксации.');
-  if (role === 'implementation') check(changed.some(p => p !== PLAN), 'EMPTY_TASK', 'Микрозадача должна менять заявленные файлы.');
+  if (role === 'implementation' && !isDocumentationFinalizationTask(task)) {
+    check(changed.some(p => p !== PLAN), 'EMPTY_TASK', 'Микрозадача должна менять заявленные файлы.');
+  }
   check(head(root) === t.before_head, 'HEAD_CHANGED', 'HEAD изменился до staging.');
   git(root, ['add', '--', ...changed]);
   t.selected = files; t.candidate_tree = git(root, ['write-tree']).stdout.trim();

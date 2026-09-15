@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { VERSION, PLAN, CONFIG, check, contextPath, textFile, atomic, json, hash, id, errorResult } from './common.mjs';
 import { validate } from './validate.mjs';
-import { nextTask } from './plan.mjs';
+import { nextTask, PROJECT_CONTINUATION_OBJECTIVE } from './plan.mjs';
 import { snapshot, diff, git, localPath, head, fileFingerprint } from './git.mjs';
 
 export const TRANSPORT_HARD_BYTES = 180000;
@@ -86,9 +86,9 @@ export function recover(root, reason = 'manual', options = {}) {
     const pending = transaction && !Object.values(resolved).some(r => r.sha && transaction.result_sha === r.sha);
     let continuation;
     if (transaction) continuation = 'Есть незавершённый журнал commit. Сначала status и повтор commit/repair; новую задачу не начинать.';
-    else if (plan.execution_scope_status === 'NONE') continuation = 'Обсудить запрос пользователя, найти владельца в docs/MODULES.md и сначала согласовать module specification. После согласования ближайшего scope создать plan через scope:create.';
+    else if (plan.execution_scope_status === 'NONE') continuation = PROJECT_CONTINUATION_OBJECTIVE + ' Постоянная навигация проекта: docs/architecture/OVERVIEW.md, docs/MODULES.md и docs/DOCUMENTATION_INDEX.md. Новый scope создавать только после согласования следующего этапа.';
     else if (plan.execution_scope_status === 'BLOCKED') continuation = 'Разрешены обсуждение и диагностика. Причина: ' + plan.blocked_reason;
-    else if (plan.delivery_status === 'READY_FOR_ACCEPTANCE') continuation = 'Все микрозадачи зафиксированы. Показать результат пользователю. Scope остаётся ACTIVE; архивирование требует отдельной прямой команды.';
+    else if (plan.delivery_status === 'READY_FOR_ACCEPTANCE') continuation = 'Финальная актуализация документации завершена. Предъявить результат пользователю на приёмку. Scope остаётся ACTIVE; архивирование требует отдельной прямой команды пользователя.';
     else continuation = (plan.current_task_id ? 'Продолжить ' : 'Начать через task:start ') + (task?.id ?? 'задачу после уточнения зависимостей') + '. Проверки и фиксация выполняются управляемой командой commit.';
 
     const parts = [];
@@ -98,7 +98,7 @@ export function recover(root, reason = 'manual', options = {}) {
     add('snapshot', 'HEAD: ' + (before.head ?? 'первого коммита ещё нет') + '\nPlan revision: ' + plan.plan_revision + '\nSnapshot: ' + before.fingerprint);
     add('state', 'Состояние: ' + plan.execution_scope_status + ' / ' + plan.delivery_status + (pending ? ' / COMMIT_PENDING' : ''));
     add('workflow-core', core);
-    add('objective', 'ЦЕЛЬ\n' + (plan.objective || 'Сформулировать идею нового проекта.') + '\nКритерии:\n' + plan.acceptance_criteria.map(c => '- ' + c).join('\n'));
+    add('objective', 'ЦЕЛЬ\n' + (plan.objective || PROJECT_CONTINUATION_OBJECTIVE) + '\nКритерии:\n' + plan.acceptance_criteria.map(c => '- ' + c).join('\n'));
     add('user-decisions', 'РЕШЕНИЯ ПОЛЬЗОВАТЕЛЯ\n' + json(plan.user_decisions));
     add('current-task', 'ТЕКУЩАЯ ЗАДАЧА\n' + (task ? json(task) : 'Активной микрозадачи нет.'));
     add('progress', 'ПРОГРЕСС\n' + plan.tasks.map(t => t.id + ': ' + t.implementation_status + (resolved[t.id]?.sha ? ' / ' + resolved[t.id].sha : resolved[t.id]?.pending ? ' / COMMIT_PENDING' : '')).join('\n'));

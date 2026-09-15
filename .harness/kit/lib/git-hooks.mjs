@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { check, hash, PLAN, json, atomic, safePath } from './common.mjs';
-import { parsePlan } from './plan.mjs';
+import { parsePlan, isDocumentationFinalizationTask } from './plan.mjs';
 import { journal, readConfig, validateDocs, resolveReferences } from './validate.mjs';
 import { git, head, paths, run, localPath, snapshot } from './git.mjs';
 import { messageFor, saveJournal, completedTransaction, checkServicePaths } from './transaction.mjs';
@@ -18,7 +18,7 @@ export function validateStaged(root) {
   const plan = parsePlan(planText);
   if (t.role === 'implementation') {
     check(t.task?.id === t.task_id && plan.tasks.find(task => task.id === t.task_id)?.commit_status === 'DONE', 'CANDIDATE_TASK', 'Кандидат не завершает нужную задачу.');
-    check(selected.some(p => p !== PLAN), 'EMPTY_TASK', 'Микрозадача не содержит изменений.');
+    if (!isDocumentationFinalizationTask(t.task)) check(selected.some(p => p !== PLAN), 'EMPTY_TASK', 'Микрозадача не содержит изменений.');
     const config = readConfig(root);
     validateDocs(root, selected, t.task, config, p => {
       const r = git(root, ['show', ':' + p], { allowFailure: true });
