@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 445,
+  "plan_revision": 446,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-project-continuity-021",
@@ -303,7 +303,8 @@
         "scope_id": "workflow-project-continuity-021",
         "task_id": "T007",
         "role": "implementation"
-      }
+      },
+      "documentation_exception": "T007 меняет только release version/package metadata; архитектурный контракт не изменяется, итоговая версия и результаты сборки фиксируются обязательной задачей DOCS."
     },
     {
       "dependencies": [
@@ -360,7 +361,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-project-continuity-021
 Current Task: нет
-Revision: 445
+Revision: 446
 
 ## Цель
 
