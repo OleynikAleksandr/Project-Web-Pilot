@@ -668,3 +668,7 @@ WorkspaceSessions не меняет идентичность Workflow Kit рад
 ## Переход после scope — 014 / T002
 
 WorkspaceSessions хранит optional scopeTransition (scopeId, watching/choice/opened, sessionId). observeScope записывает известный активный scope и подтверждённое NONE/archivedScopeId. continueAfterScope перечитывает plan и атомарно сохраняет новую session вместе с обработанным переходом. Повторное обращение выбирает ранее созданную session; прежние records и schema v5 сохраняются.
+
+## Наблюдение закрытия — 014 / T003
+
+Main наблюдает scope через существующий ContextSession inspect и сохраняет переход для точной выбранной session. Snapshot показывает ожидающий выбор лишь при совпадении текущего NONE/archivedScopeId. Локальный IPC continue-after-scope проверяет workspace, вызывает атомарный session creator и обычный navigate/ContextSession. Browser не получает доступ к локальному API. Стартовый envelope передаёт согласованное правило приёмки агенту; сам capsule не изменяется.

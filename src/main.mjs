@@ -62,9 +62,10 @@ let workspaceHealth = null;
 let settingsState = null;
 let archiveState = { deletion: null, notice: null, focusWorkspace: null };
 let planAcceptance = null;
+let scopeObservationPending = false;
 let deletion;
 const shellBackground = { light: '#f4f6f8', dark: '#1b1d22' };
-const PLAN_ACCEPTANCE_MESSAGE = `Принимаю текущий план и результат работы. Это моя явная команда закрыть текущий scope: штатно архивируй его через Workflow Kit и оставь проект в состоянии без активного scope (NONE), готовым к следующему новому плану. Новый scope автоматически не создавай. После закрытия коротко подтверди результат.`;
+const PLAN_ACCEPTANCE_MESSAGE = `Принимаю текущий план и результат работы. Это моя явная команда закрыть текущий scope: штатно архивируй его через Workflow Kit и оставь проект без активного scope (NONE). Новый scope автоматически не создавай. После закрытия коротко подтверди результат и предложи выбрать Chat или Work в блоке «План»: Web Pilot откроет новую сессию с актуальным контекстом после моего выбора.`;
 
 function applyShellTheme(theme) {
   shellTheme = theme === 'dark' ? 'dark' : 'light';
@@ -167,6 +168,9 @@ function snapshot() {
     selected, context: controller?.state ?? { phase: 'selected', servicesReady: false, messageSent: false },
     contextPreparation: { busy: contextCache.building.has(saved?.workspace) },
     contextWindow: chromiumDiagnostics?.contextObservation() ?? { status: 'unknown' },
+    scopeTransition: saved?.scopeTransition?.state === 'choice' && info?.workspace === saved.workspace
+      && info.scopeStatus === 'NONE' && info.scopeId === null && info.archivedScopeId === saved.scopeTransition.scopeId
+      ? { workspace: saved.workspace, scopeId: saved.scopeTransition.scopeId } : null,
     planAcceptance: planAcceptance?.workspace === selected?.workspace && planAcceptance?.scopeId === selected?.scopeId
       && selected?.planView?.state === 'awaiting-acceptance' ? planAcceptance.state : null,
     runtimeFolder, platform: process.platform, windowsRuntime: windowsRuntimeBootstrap ? {
@@ -183,6 +187,7 @@ function snapshot() {
 function publish() {
   rememberSessionTitle();
   rememberScopeTitle();
+  rememberScopeTransition();
   if (sidebar && !sidebar.webContents.isDestroyed()) sidebar.webContents.send('pilot:state-changed', snapshot());
   publishArchive();
   const state = snapshot();
@@ -217,6 +222,25 @@ function rememberScopeTitle() {
       || typeof info.objective !== 'string' || !info.objective.trim()) return;
   void store.applyScopeTitle(selected.workspace, selected.sessionId, { scopeId: info.scopeId, objective: info.objective, scopeStatus: info.scopeStatus })
     .then(changed => { if (changed) publish(); }).catch(() => {});
+}
+
+function rememberScopeTransition() {
+  const selected = store.selected(), info = controller?.state?.projectInfo;
+  if (scopeObservationPending || storageError || !selected || !info || selected.archivedAt
+      || info.workspace !== selected.workspace || controller.active?.sessionId !== selected.sessionId) return;
+  const previous = selected.scopeTransition;
+  const active = ['ACTIVE', 'BLOCKED'].includes(info.scopeStatus) && info.scopeId && previous?.scopeId !== info.scopeId;
+  const closed = info.scopeStatus === 'NONE' && info.scopeId === null && info.archivedScopeId
+    && previous?.scopeId === info.archivedScopeId && previous.state === 'watching';
+  if (!active && !closed) return;
+  scopeObservationPending = true;
+  void store.observeScope(selected.workspace, selected.sessionId, info).then(changed => {
+    scopeObservationPending = false;
+    if (changed) publish();
+  }).catch(error => {
+    scopeObservationPending = false;
+    if (error.code !== 'SESSION_CHANGED') startupError = publicError(error);
+  });
 }
 
 function report(error) { startupError = publicError(error); if (settingsState) settingsState = { ...settingsState, notice: null }; if (setupState) setupState = { ...setupState, phase: 'error', error: startupError }; publish(); }
@@ -639,6 +663,15 @@ function registerIpc() {
   registerAction('pilot:set-expanded', input => {
     if (storageError) throw new Error('Сначала нужно восстановить сохранённый список проектов.');
     return store.setExpanded(input?.workspace, input?.expanded);
+  });
+  registerAction('pilot:continue-after-scope', async input => {
+    if (storageError || typeof input?.workspace !== 'string' || typeof input?.scopeId !== 'string'
+        || !['chat', 'work'].includes(input?.experience)) throw new Error('Выберите Chat или Work для завершённого плана.');
+    if (store.selected()?.workspace !== input.workspace) throw new Error('Выбран другой проект.');
+    if (!await reviewWorkspace(input.workspace, true)) return;
+    const project = await store.continueAfterScope(input.workspace, input.scopeId, input.experience);
+    startupError = null;
+    await navigate(project);
   });
   registerAction('pilot:new-session', async input => {
     if (typeof input?.workspace !== 'string' || !['chat', 'work'].includes(input?.experience)) throw new Error('Выберите проект и тип новой сессии.');

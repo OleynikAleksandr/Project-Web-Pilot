@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 376,
+  "plan_revision": 379,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "scope-014",
@@ -28,7 +28,8 @@
       "src/ui/index.html",
       "tests/electron-smoke.mjs",
       "package.json",
-      "package-lock.json"
+      "package-lock.json",
+      "src/context-session.mjs"
     ],
     "documentation_paths": [
       "docs/modules/workspace-sessions.md",
@@ -37,7 +38,8 @@
       "docs/PRODUCT.md",
       "docs/architecture/ARCHITECTURE.md",
       "docs/VERIFICATION.md",
-      "docs/WORKFLOW_START.md"
+      "docs/WORKFLOW_START.md",
+      "docs/CONTEXT_DELIVERY.md"
     ],
     "max_functional_files_per_task": 3
   },
@@ -137,14 +139,17 @@
         "T002"
       ],
       "functional_paths": [
-        "src/main.mjs"
+        "src/main.mjs",
+        "src/context-session.mjs"
       ],
       "documentation_paths": [
         "docs/architecture/ARCHITECTURE.md",
-        "docs/modules/workspace-sessions.md"
+        "docs/modules/workspace-sessions.md",
+        "docs/CONTEXT_DELIVERY.md"
       ],
       "verification_ids": [
-        "syntax"
+        "syntax",
+        "context"
       ],
       "id": "T003",
       "title": "Связать закрытие плана с открытием новой сессии",
@@ -153,8 +158,8 @@
         "Связать закрытие плана с открытием новой сессии выполнено согласно контракту"
       ],
       "expected_commit_message": "feat: integrate post-archive session transition",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "scope-014",
         "task_id": "T003",
@@ -273,7 +278,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: scope-014
 Current Task: нет
-Revision: 376
+Revision: 379
 
 ## Цель
 
@@ -297,10 +302,10 @@ Revision: 376
   - Git Commit: [DONE] feat: persist scope session transitions
   - Reference: scope-014 / T002 / implementation
   - Файлы: src/workspace-session.mjs, tests/workspace-session.test.mjs, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T003: Связать закрытие плана с открытием новой сессии — Ожидает
-  - Git Commit: [PENDING] feat: integrate post-archive session transition
+- [DONE] T003: Связать закрытие плана с открытием новой сессии — Завершено
+  - Git Commit: [DONE] feat: integrate post-archive session transition
   - Reference: scope-014 / T003 / implementation
-  - Файлы: src/main.mjs, docs/architecture/ARCHITECTURE.md, docs/modules/workspace-sessions.md
+  - Файлы: src/main.mjs, src/context-session.mjs, docs/architecture/ARCHITECTURE.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md
 - [TODO] T004: Добавить вопрос о выборе Chat или Work — Ожидает
   - Git Commit: [PENDING] feat: ask for next session experience
   - Reference: scope-014 / T004 / implementation
