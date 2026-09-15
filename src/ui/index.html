@@ -87,6 +87,14 @@
           <p id="plan-note" class="plan-note" hidden></p>
           <p id="plan-reason" class="plan-reason" hidden></p>
           <ul id="plan-tasks" class="plan-tasks" aria-label="Микрозадачи плана"></ul>
+          <div id="next-session-choice" hidden>
+            <p class="description">План закрыт. Открыть новую сессию?</p>
+            <div class="session-choice" role="group" aria-label="Режим новой сессии после принятия плана">
+              <button id="next-session-chat" type="button" class="secondary">Chat</button>
+              <button id="next-session-work" type="button" class="secondary">Work</button>
+            </div>
+            <p class="settings-help">Новая сессия получит актуальный контекст проекта.</p>
+          </div>
         </section>
       </section>
       <section id="context-window-card" class="card context-window-card" aria-live="polite" hidden>

@@ -11,6 +11,7 @@ contextBridge.exposeInMainWorld('webPilot', Object.freeze({
   renameProject: (workspace, name) => ipcRenderer.invoke('pilot:rename-project', { workspace, name }),
   renameSession: (workspace, sessionId, name) => ipcRenderer.invoke('pilot:rename-session', { workspace, sessionId, name }),
   acceptPlan: () => ipcRenderer.invoke('pilot:accept-plan'),
+  continueAfterScope: (workspace, scopeId, experience) => ipcRenderer.invoke('pilot:continue-after-scope', { workspace, scopeId, experience }),
   archiveProject: workspace => ipcRenderer.invoke('pilot:archive-project', workspace),
   archiveSession: (workspace, sessionId) => ipcRenderer.invoke('pilot:archive-session', { workspace, sessionId }),
   openArchive: workspace => ipcRenderer.invoke('pilot:open-archive-window', workspace),

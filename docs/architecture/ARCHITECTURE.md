@@ -672,3 +672,7 @@ WorkspaceSessions хранит optional scopeTransition (scopeId, watching/choic
 ## Наблюдение закрытия — 014 / T003
 
 Main наблюдает scope через существующий ContextSession inspect и сохраняет переход для точной выбранной session. Snapshot показывает ожидающий выбор лишь при совпадении текущего NONE/archivedScopeId. Локальный IPC continue-after-scope проверяет workspace, вызывает атомарный session creator и обычный navigate/ContextSession. Browser не получает доступ к локальному API. Стартовый envelope передаёт согласованное правило приёмки агенту; сам capsule не изменяется.
+
+## Выбор следующей сессии — 014 / T004
+
+В существующей plan-card появился локальный вопрос с Chat/Work. Sidebar получает только workspace/scopeId ожидающего перехода и вызывает узкий preload facade continueAfterScope. До ответа навигации нет; обе кнопки блокируются общим actionPending. Используются существующие session-choice, тема и стили карточки.

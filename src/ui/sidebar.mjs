@@ -267,6 +267,7 @@ function render(state) {
   for (const button of document.querySelectorAll('button')) {
     button.disabled = actionPending || (state.storageError && ['create-workspace', 'add-workspace', 'retry-context'].includes(button.id));
   }
+  $('next-session-choice').hidden = !state.scopeTransition;
   const acceptance = state.planAcceptance;
   $('accept-plan').textContent = acceptance === 'sending' ? 'Отправляем…' : acceptance === 'sent' ? 'Отправлено'
     : acceptance === 'unknown' ? 'Проверьте чат' : 'Принять';
@@ -279,6 +280,10 @@ function render(state) {
 
 $('context-toggle').addEventListener('click', () => { contextExpanded = !contextExpanded; render(currentState); });
 $('accept-plan').addEventListener('click', () => action('acceptPlan'));
+for (const experience of ['chat', 'work']) $('next-session-' + experience).addEventListener('click', () => {
+  const transition = currentState?.scopeTransition;
+  if (transition) action('continueAfterScope', transition.workspace, transition.scopeId, experience);
+});
 $('add-workspace').addEventListener('click', () => action('chooseWorkspace'));
 $('reload-chat').addEventListener('click', () => action('reload'));
 $('retry-context').addEventListener('click', () => action('retry'));

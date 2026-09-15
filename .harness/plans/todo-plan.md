@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 379,
+  "plan_revision": 381,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "scope-014",
@@ -189,8 +189,8 @@
         "Добавить вопрос о выборе Chat или Work выполнено согласно контракту"
       ],
       "expected_commit_message": "feat: ask for next session experience",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "scope-014",
         "task_id": "T004",
@@ -278,7 +278,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: scope-014
 Current Task: нет
-Revision: 379
+Revision: 381
 
 ## Цель
 
@@ -306,8 +306,8 @@ Revision: 379
   - Git Commit: [DONE] feat: integrate post-archive session transition
   - Reference: scope-014 / T003 / implementation
   - Файлы: src/main.mjs, src/context-session.mjs, docs/architecture/ARCHITECTURE.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md
-- [TODO] T004: Добавить вопрос о выборе Chat или Work — Ожидает
-  - Git Commit: [PENDING] feat: ask for next session experience
+- [DONE] T004: Добавить вопрос о выборе Chat или Work — Завершено
+  - Git Commit: [DONE] feat: ask for next session experience
   - Reference: scope-014 / T004 / implementation
   - Файлы: src/preload.cjs, src/ui/sidebar.mjs, src/ui/index.html, docs/architecture/ARCHITECTURE.md, docs/modules/workspace-sessions.md
 - [TODO] T005: Проверить полный переход в Electron — Ожидает
