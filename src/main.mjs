@@ -7,8 +7,6 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { WorkspaceSessions, normalizeChatUrl } from './workspace-session.mjs';
 import { McpRuntime, findRuntimeFolder } from './mcp-runtime.mjs';
 import { ChatGPTComposer } from './chatgpt-composer.mjs';
-import { readSessionMessages, SessionTokenCounter } from './session-tokens.mjs';
-import { ConversationHistory } from './conversation-history.mjs';
 import { ContextCache } from './context-cache.mjs';
 const contextCache = new ContextCache({ load: workspace => runtime.loadContext(workspace), onChange: () => publish() });
 import { ContextSession } from './context-session.mjs';
@@ -48,9 +46,6 @@ let startupError = null;
 let storageError = false;
 let lastDiagnostic = '';
 let actionTail = Promise.resolve();
-const tokenCounter = new SessionTokenCounter();
-let tokenScanBusy = false, nextTokenScanAt = 0;
-let conversationHistory;
 const windowsPortableNode = process.platform === 'win32'
   ? (app.isPackaged
       ? path.join(process.resourcesPath, 'windows-node', 'node-v22.17.0-win-x64', 'node.exe')
@@ -161,17 +156,16 @@ function publishArchive() {
 function snapshot() {
   const saved = store.selected();
   const info = controller?.state.projectInfo;
-  const selected = saved && { ...saved, tokenEstimate: tokenEstimateView(saved.tokenEstimate), attempt: saved.attempt && { protocol: saved.attempt.protocol,
+  const selected = saved && { ...saved, attempt: saved.attempt && { protocol: saved.attempt.protocol,
     requestId: saved.attempt.requestId, state: saved.attempt.state }, receipt: undefined,
     ...(info?.workspace === saved.workspace ? info : {}) };
   return { projects: store.snapshot().projects.filter(p => !p.archivedAt).map(({ workspace, projectId, name, selectedSessionId, expanded, sessions }) => ({
     workspace, projectId, name, selectedSessionId, expanded,
-    sessions: sessions.filter(session => !session.archivedAt).map(({ sessionId, experience, chatUrl, title, createdAt, tokenEstimate }) => ({ sessionId, experience, chatUrl, title, createdAt, tokenEstimate: tokenEstimateView(tokenEstimate) })),
+    sessions: sessions.filter(session => !session.archivedAt).map(({ sessionId, experience, chatUrl, title, createdAt }) => ({ sessionId, experience, chatUrl, title, createdAt })),
   })),
     archives: projectedArchives(), settings: settingsState,
     selected, context: controller?.state ?? { phase: 'selected', servicesReady: false, messageSent: false },
     contextPreparation: { busy: contextCache.building.has(saved?.workspace) },
-    tokenHistory: conversationHistory?.view() ?? { status: 'waiting' },
     contextWindow: chromiumDiagnostics?.contextObservation() ?? { status: 'unknown' },
     planAcceptance: planAcceptance?.workspace === selected?.workspace && planAcceptance?.scopeId === selected?.scopeId
       && selected?.planView?.state === 'awaiting-acceptance' ? planAcceptance.state : null,
@@ -203,40 +197,6 @@ function publish() {
   }
 }
 
-
-function tokenEstimateView(estimate) {
-  return estimate ? { total: estimate.total, encoding: estimate.encoding, coverage: estimate.coverage ?? 'partial',
-    messageCount: Object.keys(estimate.messages).length, updatedAt: estimate.updatedAt } : null;
-}
-
-async function sampleSessionTokens({ force = false } = {}) {
-  if (tokenScanBusy || pageLoading || !browser || browser.webContents.isDestroyed()
-      || (!force && Date.now() < nextTokenScanAt)) return;
-  const selected = store.selected();
-  const nav = navigationId;
-  const contents = browser.webContents;
-  if (!selected?.chatUrl || normalizeChatUrl(contents.getURL()) !== selected.chatUrl) return;
-  nextTokenScanAt = Date.now() + 3000;
-  const stillCurrent = () => {
-    const current = store.selected();
-    return !pageLoading && nav === navigationId && !contents.isDestroyed()
-      && current?.workspace === selected.workspace && current?.sessionId === selected.sessionId
-      && current?.chatUrl === selected.chatUrl && normalizeChatUrl(contents.getURL()) === selected.chatUrl;
-  };
-  tokenScanBusy = true;
-  try {
-    const full = conversationHistory?.pendingSnapshot();
-    if (!full && (selected.tokenEstimate?.coverage === 'full-history' || conversationHistory?.view().status === 'loading')) return;
-    const observation = full ?? await contents.executeJavaScript('(' + readSessionMessages.toString() + ')()');
-    if (!stillCurrent() || normalizeChatUrl(observation?.url) !== selected.chatUrl || !Array.isArray(observation.messages) || (!full && !observation.messages.length)) return;
-    const estimate = await tokenCounter.estimate(observation.messages, selected.tokenEstimate, { complete: !!full });
-    if (!stillCurrent() || (full && conversationHistory?.pendingSnapshot()?.revision !== full.revision)) return;
-    if (estimate && await store.setSessionTokenEstimate(selected.workspace, selected.sessionId, selected.chatUrl, estimate)) publish();
-    if (full) conversationHistory.acknowledge(full.revision);
-  } catch {
-    // An unavailable page/estimate must not interrupt Recovery or erase the last measurement.
-  } finally { tokenScanBusy = false; }
-}
 
 function rememberSessionTitle() {
   if (!browser || browser.webContents.isDestroyed() || pageLoading) return;
@@ -377,7 +337,6 @@ async function openArchiveWindow(workspace = null) {
 
 async function navigate(project = store.selected()) {
   const ownNavigation = ++navigationId;
-  conversationHistory?.reset();
   controller?.cancel();
   pageLoading = true; publish();
   const target = project?.chatUrl ?? chatGPTEntrypoint(project?.experience ?? 'chat');
@@ -751,19 +710,8 @@ async function createWindow() {
   browser = new WebContentsView({ webPreferences: remotePreferences() });
   window.contentView.addChildView(sidebar); window.contentView.addChildView(browser);
   secureRemote(browser.webContents);
-  await browser.webContents.loadURL('about:blank');
-  conversationHistory = new ConversationHistory(browser.webContents, {
-    activeUrl: () => {
-      const selected = store.selected();
-      return selected?.chatUrl && normalizeChatUrl(browser.webContents.getURL()) === selected.chatUrl ? selected.chatUrl : null;
-    },
-    onChange: () => { publish(); void sampleSessionTokens({ force: true }); },
-  });
   chromiumDiagnostics = new ChromiumDiagnostics(browser.webContents, { file: chromiumDiagnosticsFile,
     sampleIntervalMs: smoke ? 250 : 5000, allowFixture: smoke, onContextObservation: () => publish() });
-  // Attach before the first navigation so its initial history GET cannot be missed.
-  await chromiumDiagnostics.start({ appVersion: app.getVersion(), electron: process.versions.electron,
-    chromium: process.versions.chrome, fixture: smoke });
   sidebar.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   sidebar.webContents.on('will-navigate', event => event.preventDefault());
   sidebar.webContents.on('did-finish-load', publish);
@@ -778,8 +726,6 @@ async function createWindow() {
   window.on('resize', layout);
   window.on('closed', () => {
     controller?.cancel(); clearInterval(interval); contextCache.clear();
-    conversationHistory?.close();
-    void tokenCounter.close();
     void chromiumDiagnostics?.stop(); chromiumDiagnostics = null;
     if (archiveWindow && !archiveWindow.isDestroyed()) archiveWindow.close();
     for (const view of [sidebar, browser]) if (!view.webContents.isDestroyed()) view.webContents.close();
@@ -795,12 +741,12 @@ async function createWindow() {
   registerIpc();
   await sidebar.webContents.loadURL(sidebarUrl);
   interval = setInterval(() => {
-    if (!pageLoading && !setupState && !settingsState) { void controller.tick(); void sampleSessionTokens(); }
+    if (!pageLoading && !setupState && !settingsState) { void controller.tick(); }
   }, 1500);
   if (smoke) {
     await fixture.run({ app, window, browser: browser.webContents, sidebar: sidebar.webContents,
       store, controller, selectWorkspace, snapshot, assertLocalSender, permissionAllowed, dataDir,
-      chromiumDiagnostics, chromiumDiagnosticsFile, openArchiveWindow, getArchiveWindow: () => archiveWindow, sampleSessionTokens });
+      chromiumDiagnostics, chromiumDiagnosticsFile, openArchiveWindow, getArchiveWindow: () => archiveWindow });
     await chromiumDiagnostics.stop(); chromiumDiagnostics = null;
     window.close(); app.quit();
   } else { const current = store.selected(); if (current && !storageError && !settingsState) void selectWorkspace(current.workspace).catch(report); else void navigate(); }

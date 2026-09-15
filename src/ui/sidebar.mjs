@@ -165,22 +165,7 @@ function render(state) {
         const date = document.createElement('small');
         date.textContent = `Сессия ${index + 1} · ${dateFormat.format(new Date(session.createdAt))}` + (session.chatUrl ? '' : ' · новая');
         choice.title = `${session.title || 'Новая сессия'} · ${session.experience === 'work' ? 'Work' : 'Chat'}\n${new Date(session.createdAt).toLocaleString('ru-RU')}`;
-        const bottom = document.createElement('div'); bottom.className = 'session-bottom';
-        const tokens = document.createElement('span'); tokens.className = 'session-tokens';
-        const estimate = session.tokenEstimate;
-        const complete = estimate?.coverage === 'full-history';
-        const history = state.selected?.sessionId === session.sessionId ? state.tokenHistory : null;
-        const loading = history?.status === 'loading';
-        tokens.textContent = loading ? 'Подсчёт…' : complete ? `≈ ${estimate.total.toLocaleString('ru-RU')} ток.`
-          : estimate ? 'Неполный подсчёт' : '— ток.';
-        tokens.title = loading
-          ? `Загружаем всю историю: ${history.pages ?? 0} страниц, ${history.messageCount ?? 0} сообщений.`
-          : complete
-            ? `Вся доступная текстовая история: ${estimate.messageCount} сообщений, включая тексты инструментов. Это не расход API и не заполнение окна. Скрытый серверный контекст и бинарные вложения не учитываются. Обновлено: ${new Date(estimate.updatedAt).toLocaleString('ru-RU')}.${history?.status === 'error' ? ' Последнее обновление не удалось; показан предыдущий полный подсчёт.' : ''}`
-            : `Вся история ещё не подсчитана.${estimate ? ' Прочитанный фрагмент: ≈ ' + estimate.total.toLocaleString('ru-RU') + ' ток.' : ''} Откройте сессию для загрузки истории.${history?.status === 'error' ? ' Загрузка не завершилась; обновите ChatGPT для повторной попытки.' : ''}`;
-        tokens.setAttribute('aria-label', tokens.textContent + '. ' + tokens.title);
-        bottom.append(date, tokens);
-        choice.append(top, bottom);
+        choice.append(top, date);
         choice.addEventListener('click', () => { clearTimeout(workspaceClickTimer); action('selectSession', project.workspace, session.sessionId); });
         const menuButton = document.createElement('button'); menuButton.className = 'icon-button session-menu-button'; menuButton.textContent = '⋯';
         menuButton.setAttribute('aria-label', `Меню сессии ${session.title || index + 1}`); menuButton.setAttribute('aria-expanded', 'false');

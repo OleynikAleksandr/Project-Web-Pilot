@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 354,
+  "plan_revision": 356,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "next-modifications-discussion-012",
@@ -578,8 +578,8 @@
         "Старые оценки удаляются при загрузке storage без потери сессий и привязок."
       ],
       "expected_commit_message": "refactor: полностью удалить подсчёт токенов сессий",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "next-modifications-discussion-012",
         "task_id": "T015",
@@ -661,7 +661,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: next-modifications-discussion-012
 Current Task: нет
-Revision: 354
+Revision: 356
 
 ## Цель
 
@@ -732,8 +732,8 @@ Revision: 354
   - Git Commit: [DONE] docs: согласовать удаление счётчика токенов
   - Reference: next-modifications-discussion-012 / T014 / implementation
   - Файлы: docs/modules/workspace-sessions.md, docs/DECISIONS.md
-- [TODO] T015: Удалить подсчёт, пагинацию, worker и интерфейс — Ожидает
-  - Git Commit: [PENDING] refactor: полностью удалить подсчёт токенов сессий
+- [DONE] T015: Удалить подсчёт, пагинацию, worker и интерфейс — Завершено
+  - Git Commit: [DONE] refactor: полностью удалить подсчёт токенов сессий
   - Reference: next-modifications-discussion-012 / T015 / implementation
   - Файлы: src/session-tokens.mjs, src/conversation-history.mjs, src/main.mjs, src/workspace-session.mjs, src/ui/sidebar.mjs, src/ui/index.html, src/ui/progress.mjs, tests/session-tokens.test.mjs, tests/conversation-history.test.mjs, tests/electron-smoke.mjs, tests/progress.test.mjs, tests/workspace-session.test.mjs, package.json, package-lock.json, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T016: Собрать релиз без счётчика для приёмки — Ожидает

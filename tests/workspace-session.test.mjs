@@ -352,3 +352,29 @@ test('forgetting several archived projects is atomic and leaves folders untouche
   assert.equal(store.project(a.workspace), null); assert.equal(store.project(b.workspace), null); assert.ok(store.project(c.workspace));
   assert.ok((await fs.stat(a.workspace)).isDirectory()); assert.ok((await fs.stat(b.workspace)).isDirectory());
 });
+
+test('retired token estimates are removed on load without changing sessions or archive state', async t => {
+  const { store, project } = await fixture(t);
+  const folder = await fs.realpath(await project('Counter removal'));
+  await store.load();
+  await store.select(folder);
+  const first = store.selected();
+  await store.bindChat(folder, first.sessionId, 'https://chatgpt.com/c/removed-counter-chat');
+  await store.newSession(folder, 'work');
+  const second = store.selected();
+  await store.bindChat(folder, second.sessionId, 'https://chatgpt.com/c/removed-counter-work');
+  await store.setSessionArchived(folder, first.sessionId, true);
+  const expected = store.snapshot();
+  const old = structuredClone(expected);
+  for (const session of old.projects[0].sessions) {
+    session.tokenEstimate = { obsolete: true, total: 4052533, messages: { unused: { tokens: 4052533 } } };
+  }
+  await fs.writeFile(store.file, JSON.stringify(old));
+  const reopened = new WorkspaceSessions(store.file);
+  await reopened.load();
+  assert.deepEqual(reopened.snapshot(), expected);
+  assert.deepEqual(JSON.parse(await fs.readFile(store.file, 'utf8')), expected);
+  reopened.save = () => { throw new Error('Already clean storage must not be rewritten'); };
+  await reopened.load();
+  assert.deepEqual(reopened.snapshot(), expected);
+});

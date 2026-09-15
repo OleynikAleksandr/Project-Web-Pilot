@@ -1,7 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
-import { validTokenEstimate } from './session-tokens.mjs';
 
 export class WorkspaceError extends Error {
   constructor(code, message) { super(message); this.code = code; }
@@ -89,7 +88,7 @@ export async function readWorkspace(input) {
 
 const copy = value => structuredClone(value);
 const invalid = () => new WorkspaceError('SESSIONS_INVALID', 'Формат сохранённых проектов не поддерживается. Исходный файл сохранён.');
-const sessionFields = ['sessionId', 'experience', 'chatUrl', 'attempt', 'receipt', 'title', 'createdAt', 'lastOpenedAt', 'archivedAt', 'tokenEstimate'];
+const sessionFields = ['sessionId', 'experience', 'chatUrl', 'attempt', 'receipt', 'title', 'createdAt', 'lastOpenedAt', 'archivedAt'];
 
 function validate(data) {
   if (data?.schemaVersion !== 5 || !Array.isArray(data.projects)) throw invalid();
@@ -106,7 +105,6 @@ function validate(data) {
       if (!s || typeof s.sessionId !== 'string' || !s.sessionId || typeof s.title !== 'string'
           || !['chat', 'work'].includes(s.experience)
           || !Number.isFinite(s.createdAt) || !Number.isFinite(s.lastOpenedAt)
-          || (s.tokenEstimate != null && !validTokenEstimate(s.tokenEstimate))
           || (s.archivedAt !== null && (!Number.isFinite(s.archivedAt) || s.archivedAt <= 0))
           || (s.chatUrl !== null && (!normalizeChatUrl(s.chatUrl) || normalizeChatUrl(s.chatUrl) !== s.chatUrl
             || !conversationUrlCompatibleWithExperience(s.chatUrl, s.experience)))) throw invalid();
@@ -214,9 +212,19 @@ export class WorkspaceSessions {
       try { await fs.writeFile(this.file + `.v${parsed.schemaVersion}-backup`, text, { mode: 0o600, flag: 'wx' }); }
       catch (error) { if (error.code !== 'EEXIST') throw error; }
     }
+    // Retire the optional estimate without keeping hashes/counts in normal session state.
+    let removedEstimate = false;
+    for (const project of data.projects) {
+      for (const session of project.sessions) {
+        if (Object.hasOwn(session, 'tokenEstimate')) {
+          delete session.tokenEstimate;
+          removedEstimate = true;
+        }
+      }
+    }
     this.data = data;
     if (!data.projects.some(p => p.workspace === data.selectedWorkspace && p.archivedAt === null)) this.data.selectedWorkspace = null;
-    if (legacy) await this.save();
+    if (legacy || removedEstimate) await this.save();
     return this.snapshot();
   }
 
@@ -248,7 +256,7 @@ export class WorkspaceSessions {
   createSession(experience = 'chat') {
     experience = sessionExperience(experience);
     return { sessionId: 'web-pilot-' + this.uuid(), experience, chatUrl: null, title: '',
-      createdAt: this.now(), lastOpenedAt: this.now(), archivedAt: null, attempt: null, receipt: null, tokenEstimate: null };
+      createdAt: this.now(), lastOpenedAt: this.now(), archivedAt: null, attempt: null, receipt: null };
   }
 
   mutate(change) {
@@ -330,17 +338,6 @@ export class WorkspaceSessions {
       const project = data.projects.find(p => p.workspace === workspace);
       if (!project || typeof expanded !== 'boolean') throw new WorkspaceError('WORKSPACE_REQUIRED', 'Выберите проект из списка.');
       project.expanded = expanded;
-    });
-  }
-
-  setSessionTokenEstimate(workspace, sessionId, chatUrl, estimate) {
-    return this.mutate(data => {
-      const { session } = this.activeRecord(workspace, sessionId, data);
-      if (session.archivedAt || !chatUrl || session.chatUrl !== chatUrl) throw new WorkspaceError('CHAT_CHANGED', 'Открыта другая сессия.');
-      if (!validTokenEstimate(estimate)) throw new WorkspaceError('TOKEN_ESTIMATE_INVALID', 'Неверная оценка токенов.');
-      if (JSON.stringify(session.tokenEstimate) === JSON.stringify(estimate)) return false;
-      session.tokenEstimate = copy(estimate);
-      return true;
     });
   }
 

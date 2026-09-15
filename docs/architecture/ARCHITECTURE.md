@@ -633,3 +633,7 @@ Main подключает ConversationHistory к тому же debugger и sessi
 ## Release 0.6.11 — scope 012 / T013
 
 macOS arm64 и Windows x64 собираются из одного source tree с ConversationHistory, полным snapshot counter и явной неполнотой старых значений. Recovery cache, Chat/Work routing и archive lifecycle сохранены. Нативный веб-механизм пагинации подтверждён публичным клиентским кодом и реальными метаданными has_previous_page; автоматическая end-to-end проверка выполнена на изолированной Electron fixture. Проверка количества сообщений реального аккаунта требует открытия сессии в обновлённом приложении.
+
+## Scope 012 / T015 — удаление экспериментального подсчёта
+
+Счётчик истории полностью исключён из runtime: удалены ConversationHistory и SessionTokenCounter, зависимость js-tiktoken, DOM-сэмплинг, загрузка предыдущих страниц и ранняя подготовка WebContents. Main снова открывает выбранный ChatGPT напрямую. Sidebar не содержит чисел токенов/состояний счётчика. WorkspaceSessions удаляет obsolete tokenEstimate при загрузке, сохраняя основной session contract. Существующая пассивная Chromium diagnostics и recovery/cache не менялись.
