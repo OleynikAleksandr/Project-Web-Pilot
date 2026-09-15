@@ -651,3 +651,8 @@ WorkspaceSessions не меняет идентичность Workflow Kit рад
 ## Rename IPC и sidebar — scope 013 / T002
 
 Ручное переименование проходит через существующий `assertLocalSender` и два специализированных IPC channel; универсального write/shell API не добавлено. Remote WebContents ChatGPT не имеет preload этих команд. Renderer использует нативный prompt только для ввода строки, после чего main процесс валидирует workspace/session и сохраняет нормализованное значение через WorkspaceSessions. UI получает alias уже из безопасного snapshot.
+
+
+## Scope-driven session title — scope 013 / T003
+
+Автоимя не расширяет MCP surface. `readWorkspace` возвращает `objective`; уже существующий ContextSession poll помещает актуальный projectInfo в state. `publish()` проверяет новый `scopeId`, а WorkspaceSessions атомарно применяет objective к текущей session и сохраняет `lastNamedScopeId`. Повторные publish/tick идемпотентны.

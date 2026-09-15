@@ -344,3 +344,8 @@ Project record хранит optional `displayName` отдельно от кан�
 ### Ручное переименование в sidebar — scope 013 / T002
 
 Локальный preload публикует только две узкие команды `renameProject(workspace,name)` и `renameSession(workspace,sessionId,name)` для sidebar origin. Удалённый ChatGPT Web их не получает. В project menu команда `Переименовать` находится рядом с пользовательскими действиями над проектом; в session menu — перед архивированием. Project snapshot и списки архива показывают `displayName || canonical name`; каноническая идентичность recovery не меняется.
+
+
+### Автоимя из scope — scope 013 / T003
+
+`readWorkspace` теперь проецирует непустой `objective` вместе со штатными `scopeId/scopeStatus`. После обычного poll ContextSession main-процесс сравнивает наблюдаемый scope с `lastNamedScopeId` и вызывает `applyScopeTitle` для выбранной session. Это тот же локальный inspect, который уже нужен доставке контекста; новый MCP tool, model call или скрытая команда агента не добавляются.

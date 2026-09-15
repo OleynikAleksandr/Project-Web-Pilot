@@ -644,3 +644,8 @@ Unit tests проверяют названия этапов, отсутстви�
 ## Scope 013 / T001 — persisted имена
 
 Workspace unit coverage проверяет, что локальный alias проекта переживает повторный inspect/restart и не меняет каноническое имя Workflow Kit; ручное имя session не перетирается page title; scope-имя применяется ровно к session, выбранной при первом наблюдении scope, тот же scope не переезжает на другую session, а следующий scope может задать новое имя.
+
+
+## Scope 013 / T003 — автоматическое имя scope
+
+Workspace tests дополнительно подтверждают проекцию `objective` из plan и идемпотентное применение scope title. Один scope не переименовывает вторую session после переключения; новый scope может переименовать текущую. Syntax main процесса проходит с локальным hook из publish без нового MCP/API.

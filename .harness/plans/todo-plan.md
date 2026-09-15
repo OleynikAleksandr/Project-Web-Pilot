@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 365,
+  "plan_revision": 367,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "project-session-renaming-013",
@@ -156,8 +156,8 @@
         "Следующий scope может дать новое имя текущей session"
       ],
       "expected_commit_message": "feat: именовать сессию по scope",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "project-session-renaming-013",
         "task_id": "T003",
@@ -219,7 +219,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: project-session-renaming-013
 Current Task: нет
-Revision: 365
+Revision: 367
 
 ## Цель
 
@@ -242,8 +242,8 @@ Revision: 365
   - Git Commit: [DONE] feat: добавить переименование в меню
   - Reference: project-session-renaming-013 / T002 / implementation
   - Файлы: src/preload.cjs, src/main.mjs, src/ui/sidebar.mjs, docs/modules/workspace-sessions.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md
-- [TODO] T003: Автоматически именовать session по новому scope — Ожидает
-  - Git Commit: [PENDING] feat: именовать сессию по scope
+- [DONE] T003: Автоматически именовать session по новому scope — Завершено
+  - Git Commit: [DONE] feat: именовать сессию по scope
   - Reference: project-session-renaming-013 / T003 / implementation
   - Файлы: src/main.mjs, src/workspace-session.mjs, tests/workspace-session.test.mjs, docs/modules/workspace-sessions.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T004: Проверить UI и собрать релиз 0.6.13 — Ожидает

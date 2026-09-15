@@ -34,7 +34,7 @@ test('readWorkspace exposes user plan lifecycle without using plan revision as U
   const file = path.join(folder, '.harness/plans/todo-plan.md');
   const write = async plan => fs.writeFile(file, '<!-- workflow-state:begin -->\n```json\n' + JSON.stringify(plan) + '\n```\n<!-- workflow-state:end -->');
   const base = { schema_version: 1, project_id: randomUUID(), project_name: 'Plan view', plan_revision: 99,
-    scope_id: 'scope-1', execution_scope_status: 'ACTIVE', delivery_status: 'IN_PROGRESS', blocked_reason: null,
+    scope_id: 'scope-1', objective: 'Проверить отображение плана', execution_scope_status: 'ACTIVE', delivery_status: 'IN_PROGRESS', blocked_reason: null,
     current_task_id: 'T002', tasks: [
       { id: 'T001', title: 'Готовая задача', implementation_status: 'DONE', commit_status: 'DONE' },
       { id: 'T002', title: 'Текущая задача', implementation_status: 'IN_PROGRESS', commit_status: 'PENDING' },
@@ -48,6 +48,7 @@ test('readWorkspace exposes user plan lifecycle without using plan revision as U
     { id: 'T003', title: 'Следующая задача', status: 'pending' },
   ] });
   assert.equal(info.planRevision, 99, 'revision remains available only for protocol matching');
+  assert.equal(info.objective, 'Проверить отображение плана', 'scope objective is available for local session naming');
 
   await write({ ...base, current_task_id: null, delivery_status: 'READY_FOR_ACCEPTANCE',
     tasks: base.tasks.map(t => ({ ...t, implementation_status: 'DONE', commit_status: 'DONE' })) });

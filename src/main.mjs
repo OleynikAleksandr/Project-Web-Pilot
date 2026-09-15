@@ -182,6 +182,7 @@ function snapshot() {
 
 function publish() {
   rememberSessionTitle();
+  rememberScopeTitle();
   if (sidebar && !sidebar.webContents.isDestroyed()) sidebar.webContents.send('pilot:state-changed', snapshot());
   publishArchive();
   const state = snapshot();
@@ -205,6 +206,16 @@ function rememberSessionTitle() {
   const title = browser.webContents.getTitle().replace(/\s*[-–—|]\s*ChatGPT$/i, '').trim();
   if (!title || /^(ChatGPT|New chat|Новый чат)$/i.test(title) || selected.title === title) return;
   void store.setSessionTitle(selected.workspace, selected.sessionId, title)
+    .then(changed => { if (changed) publish(); }).catch(() => {});
+}
+
+function rememberScopeTitle() {
+  const selected = store.selected();
+  const info = controller?.state?.projectInfo;
+  if (!selected || !info || info.workspace !== selected.workspace || selected.lastNamedScopeId === info.scopeId
+      || !['ACTIVE', 'BLOCKED'].includes(info.scopeStatus) || typeof info.scopeId !== 'string' || !info.scopeId
+      || typeof info.objective !== 'string' || !info.objective.trim()) return;
+  void store.applyScopeTitle(selected.workspace, selected.sessionId, { scopeId: info.scopeId, objective: info.objective, scopeStatus: info.scopeStatus })
     .then(changed => { if (changed) publish(); }).catch(() => {});
 }
 

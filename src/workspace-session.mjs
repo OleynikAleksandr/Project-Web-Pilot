@@ -79,7 +79,7 @@ export async function readWorkspace(input) {
       : plan.execution_scope_status === 'ACTIVE' ? 'working'
         : typeof plan.archived_scope_id === 'string' && plan.archived_scope_id ? 'closed' : 'not-created';
   return { workspace, projectId: plan.project_id, name: plan.project_name,
-    planRevision: plan.plan_revision, scopeId: plan.scope_id,
+    planRevision: plan.plan_revision, scopeId: plan.scope_id, objective: typeof plan.objective === 'string' ? plan.objective : '',
     scopeStatus: plan.execution_scope_status, deliveryStatus: plan.delivery_status,
     nextTaskId: current?.id ?? null, nextTaskTitle: current?.title ?? null,
     planView: { state: planState, completed, total: tasks.length, tasks,
