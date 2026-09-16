@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 515,
+  "plan_revision": 516,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "chat-colors-024",
@@ -249,6 +249,40 @@
       "expected_commit_message": "feat: expose chat color editor in settings"
     },
     {
+      "acceptance_criteria": [
+        "Сброс возвращает исходные computed styles без перезагрузки; повторное изменение цвета не оставляет старых стилей.",
+        "Полный suite и Electron smoke проходят со строгим regression сброса; известного дефекта в релизе нет."
+      ],
+      "commit_ref": {
+        "role": "implementation",
+        "scope_id": "chat-colors-024",
+        "task_id": "T005B"
+      },
+      "commit_status": "PENDING",
+      "dependencies": [
+        "T005"
+      ],
+      "documentation_paths": [
+        "docs/modules/workspace-sessions.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "expected_commit_message": "fix: remove chat color overrides reliably in Electron",
+      "functional_paths": [
+        "src/chatgpt-colors.mjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "id": "T005B",
+      "implementation_status": "TODO",
+      "title": "Исправить сброс палитры в Electron 44 и подтвердить regression",
+      "verification_ids": [
+        "syntax",
+        "suite",
+        "electron-smoke"
+      ],
+      "why": "Настоящий Chromium выявил, что user-origin CSS не снимается; author-origin CSS с !important прошёл isolated probe."
+    },
+    {
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
@@ -257,7 +291,7 @@
         "role": "implementation"
       },
       "dependencies": [
-        "T005"
+        "T005B"
       ],
       "functional_paths": [
         "package.json",
@@ -292,6 +326,7 @@
         "T003",
         "T004",
         "T005",
+        "T005B",
         "T006"
       ],
       "functional_paths": [],
@@ -344,7 +379,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: chat-colors-024
 Current Task: нет
-Revision: 515
+Revision: 516
 
 ## Цель
 
@@ -380,6 +415,10 @@ Revision: 515
   - Git Commit: [DONE] feat: expose chat color editor in settings
   - Reference: chat-colors-024 / T005 / implementation
   - Файлы: src/ui/index.html, src/ui/project-archive.mjs, tests/electron-smoke.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+- [TODO] T005B: Исправить сброс палитры в Electron 44 и подтвердить regression — Ожидает
+  - Git Commit: [PENDING] fix: remove chat color overrides reliably in Electron
+  - Reference: chat-colors-024 / T005B / implementation
+  - Файлы: src/chatgpt-colors.mjs, tests/electron-smoke.mjs, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T006: Сборка релиза 0.6.23 для macOS и Windows — Ожидает
   - Git Commit: [PENDING] release: build Web Pilot 0.6.23 with chat colors
   - Reference: chat-colors-024 / T006 / implementation
