@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 532,
+  "plan_revision": 533,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "chat-colors-024",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Отдельный перемещаемый редактор цветов чата из Settings: общий фон, фон пользовательского сообщения, цвет пользовательского текста и цвет текста агента; немедленное применение, сохранение и сброс; релиз macOS/Windows.",
   "acceptance_criteria": [
     "Settings содержит отдельную кнопку редактора.",
@@ -17,7 +17,8 @@
     "Окно можно перемещать; повторный вызов поднимает существующее окно.",
     "Палитра сохраняется между запусками и переходами; сброс восстанавливает ChatGPT.",
     "Собраны macOS arm64 и Windows x64 0.6.23.",
-    "Каждый macOS релиз обновляет Project Web Pilot.app в корне проекта с сохранением алиаса; ZIP остаётся отдельным артефактом."
+    "Каждый macOS релиз обновляет Project Web Pilot.app в корне проекта с сохранением алиаса; ZIP остаётся отдельным артефактом.",
+    "Цвет плашки пользователя меняет скруглённый внутренний элемент, не окрашивая прямоугольную строку вокруг."
   ],
   "approved_scope": {
     "functional_paths": [
@@ -420,13 +421,80 @@
       "expected_commit_message": "release: install Web Pilot 0.6.23 at stable path"
     },
     {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "chat-colors-024",
+        "task_id": "B001",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "R003"
+      ],
+      "functional_paths": [
+        "src/chatgpt-colors.mjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/workspace-sessions.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md",
+        "docs/RELEASE.md"
+      ],
+      "verification_ids": [
+        "syntax",
+        "suite",
+        "electron-smoke"
+      ],
+      "id": "B001",
+      "title": "Исправить цвет скруглённой плашки пользователя",
+      "why": "Пользовательская проверка выявила окраску внешнего контейнера вместо скруглённой плашки.",
+      "acceptance_criteria": [
+        "Цвет применяется к user-message-bubble-color; внешняя строка остаётся прозрачной.",
+        "Chromium проверяет вложенную плашку, повторное сообщение, сохранение формы и сброс к синему фону."
+      ],
+      "expected_commit_message": "fix: color the actual ChatGPT user message bubble"
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "chat-colors-024",
+        "task_id": "B002",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "B001"
+      ],
+      "functional_paths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "documentation_paths": [
+        "docs/modules/workspace-sessions.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md",
+        "docs/RELEASE.md"
+      ],
+      "verification_ids": [
+        "syntax"
+      ],
+      "id": "B002",
+      "title": "Собрать и установить исправленный релиз 0.6.24",
+      "why": "Пользовательская проверка выявила окраску внешнего контейнера вместо скруглённой плашки.",
+      "acceptance_criteria": [
+        "Постоянный macOS app обновлён с сохранением identity; отдельные macOS/Windows ZIP проверены."
+      ],
+      "expected_commit_message": "release: publish Web Pilot 0.6.24 bubble color fix"
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "chat-colors-024",
         "task_id": "DOCS",
         "role": "implementation",
-        "iteration": 2
+        "iteration": 3
       },
       "dependencies": [
         "T001",
@@ -438,7 +506,9 @@
         "T006",
         "R001",
         "R002",
-        "R003"
+        "R003",
+        "B001",
+        "B002"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -484,6 +554,11 @@
       "id": "801a6be0-dd73-4ff8-8033-e89257f5bffa",
       "text": "16.09.2026 пользователь указал старый алиас на .harness/runtime/releases/0.6.20/Project Web Pilot-darwin-arm64/Project Web Pilot.app и поручил обновить его до 0.6.23, исправить инструкции, создавать ZIP отдельно. Затем прямо поручил постоянный путь релиза, возможно в корне, для единственного постоянного алиаса. Выбран <workspace>/Project Web Pilot.app.",
       "recorded_at": "2026-09-16T10:49:31.071Z"
+    },
+    {
+      "id": "88b6c938-4d51-48c6-b131-009b05359652",
+      "recorded_at": "2026-09-16T11:11:42.748Z",
+      "text": "16.09.2026 пользователь подтвердил остальные настройки цветов, но на скриншоте показал окраску внешней области вместо синей скруглённой плашки и поручил исправить этот цвет. Коррекция продолжается в текущем scope до приёмки."
     }
   ]
 }
@@ -493,10 +568,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: chat-colors-024
 Current Task: нет
-Revision: 532
+Revision: 533
 
 ## Цель
 
@@ -510,6 +585,7 @@ Revision: 532
 - Палитра сохраняется между запусками и переходами; сброс восстанавливает ChatGPT.
 - Собраны macOS arm64 и Windows x64 0.6.23.
 - Каждый macOS релиз обновляет Project Web Pilot.app в корне проекта с сохранением алиаса; ZIP остаётся отдельным артефактом.
+- Цвет плашки пользователя меняет скруглённый внутренний элемент, не окрашивая прямоугольную строку вокруг.
 
 ## Микрозадачи
 
@@ -553,8 +629,16 @@ Revision: 532
   - Git Commit: [DONE] release: install Web Pilot 0.6.23 at stable path
   - Reference: chat-colors-024 / R003 / implementation
   - Файлы: package.json, README.md, docs/RELEASE.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/TRANSFER_TO_WINDOWS.md
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: document chat colors and release 0.6.23
+- [TODO] B001: Исправить цвет скруглённой плашки пользователя — Ожидает
+  - Git Commit: [PENDING] fix: color the actual ChatGPT user message bubble
+  - Reference: chat-colors-024 / B001 / implementation
+  - Файлы: src/chatgpt-colors.mjs, tests/electron-smoke.mjs, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/RELEASE.md
+- [TODO] B002: Собрать и установить исправленный релиз 0.6.24 — Ожидает
+  - Git Commit: [PENDING] release: publish Web Pilot 0.6.24 bubble color fix
+  - Reference: chat-colors-024 / B002 / implementation
+  - Файлы: package.json, package-lock.json, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/RELEASE.md
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: document chat colors and release 0.6.23
   - Reference: chat-colors-024 / DOCS / implementation
   - Файлы: README.md, AGENTS.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md, docs/WORKFLOW_START.md, docs/MODULES.md, docs/architecture/OVERVIEW.md, docs/DOCUMENTATION_INDEX.md, docs/modules/workspace-sessions.md, docs/modules/project-doctor.md, docs/modules/runtime-lifecycle.md, docs/modules/workflow-kit-recovery.md, docs/SOURCE_WORKSPACES.md, docs/VERIFICATION.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKSPACE_SETUP.md, docs/PROJECT_ARCHIVE.md, docs/RELEASE.md
 
