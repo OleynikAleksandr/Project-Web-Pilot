@@ -8,3 +8,6 @@ node_modules/
 .DS_Store
 *.log
 windows-app/
+# Permanent macOS release and transient install staging
+/Project Web Pilot.app/
+/.web-pilot-install-*/

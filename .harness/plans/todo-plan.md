@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 526,
+  "plan_revision": 528,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "chat-colors-024",
@@ -356,8 +356,8 @@
       "expected_commit_message": "docs: define stable macOS release location"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "chat-colors-024",
         "task_id": "R002",
@@ -496,7 +496,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: chat-colors-024
 Current Task: нет
-Revision: 526
+Revision: 528
 
 ## Цель
 
@@ -545,8 +545,8 @@ Revision: 526
   - Git Commit: [DONE] docs: define stable macOS release location
   - Reference: chat-colors-024 / R001 / implementation
   - Файлы: AGENTS.md, docs/RELEASE.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/architecture/OVERVIEW.md, docs/WORKFLOW_START.md, docs/DECISIONS.md
-- [TODO] R002: Надёжное обновление постоянного приложения и упаковка ZIP — Ожидает
-  - Git Commit: [PENDING] fix: preserve app alias across macOS releases
+- [DONE] R002: Надёжное обновление постоянного приложения и упаковка ZIP — Завершено
+  - Git Commit: [DONE] fix: preserve app alias across macOS releases
   - Reference: chat-colors-024 / R002 / implementation
   - Файлы: .gitignore, scripts/release-mac.mjs, tests/release-mac.test.mjs, docs/RELEASE.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] R003: Подключить штатную сборку и установить релиз 0.6.23 — Ожидает
