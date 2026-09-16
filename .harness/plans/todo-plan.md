@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 574,
+  "plan_revision": 576,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "clean-install-lab-027",
@@ -171,8 +171,8 @@
       "expected_commit_message": "docs: record clean macOS test environment"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "clean-install-lab-027",
         "task_id": "T004",
@@ -288,7 +288,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: clean-install-lab-027
 Current Task: нет
-Revision: 574
+Revision: 576
 
 ## Цель
 
@@ -314,8 +314,8 @@ Revision: 574
   - Git Commit: [DONE] docs: record clean macOS test environment
   - Reference: clean-install-lab-027 / T003 / implementation
   - Файлы: docs/CLEAN_INSTALL.md
-- [TODO] T004: Завершить подготовку виртуальной Windows и зафиксировать границы проверки x64 — Ожидает
-  - Git Commit: [PENDING] docs: record clean Windows test environment
+- [DONE] T004: Завершить подготовку виртуальной Windows и зафиксировать границы проверки x64 — Завершено
+  - Git Commit: [DONE] docs: record clean Windows test environment
   - Reference: clean-install-lab-027 / T004 / implementation
   - Файлы: docs/CLEAN_INSTALL.md
 - [TODO] T005: Проверить первый запуск текущих поставок и записать шаги установки — Ожидает
