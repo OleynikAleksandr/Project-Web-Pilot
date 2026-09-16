@@ -535,10 +535,11 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   restoredPalette.dispose(); restoredView.close();
   await browser.executeJavaScript('history.pushState({}, "", location.pathname + "?palette=1")');
   await waitFor(() => browser.executeJavaScript('getComputedStyle(document.getElementById("palette-agent")).color === "rgb(73, 61, 101)"'), 'SPA preserves palette', snapshot);
+  const rapidColors = await reopenedColors.executeJavaScript('Promise.all(["#101010","#202020","#303030"].map(value=>window.webPilotColors.change("background",value)))');
+  assert.ok(rapidColors.every(result=>result.ok));
+  assert.equal(await browser.executeJavaScript('getComputedStyle(document.body).backgroundColor'), 'rgb(48, 48, 48)', 'latest color replaces previous values');
   await reopenedColors.executeJavaScript('window.webPilotColors.reset()');
-  // Characterization checkpoint: Electron 44.3.0 does not remove user-origin sheets.
-  // Must be changed to baselineBackground by the correction task before release.
-  assert.notEqual(await browser.executeJavaScript('getComputedStyle(document.body).backgroundColor'), baselineBackground, 'known user-origin reset defect reproduced');
+  assert.equal(await browser.executeJavaScript('getComputedStyle(document.body).backgroundColor'), baselineBackground, 'reset removes user CSS');
   assert.equal(Object.values(JSON.parse(await fs.readFile(path.join(dataDir, 'settings.json'), 'utf8')).chatColors).every(value => value === null), true);
   getColorWindow().close(); window.show(); window.focus();
   await browser.executeJavaScript('document.getElementById("palette-probe").remove(); history.replaceState({}, "", location.pathname)');
@@ -744,7 +745,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(store.selected().experience, 'work');
   assert.equal(store.snapshot().projects.find(p => p.workspace === workspace).sessions.length, beforeDoctorNew + 1);
 
-  const result = { liveChatColors: true, chatColorsPersistence: true, chatColorsReset: false, chatColorsResetKnownDefect: true, colorScreenshots, projectDoctor: true, doctorBackup: true, doctorOpen: true, doctorRefresh: true, doctorNewSession: true, doctorScreenshots, newestSessionFirst: true, projectSelectsNewest: true, threeSessionViewport: true, sessionScrollPreserved: true, visibleSessionScrollbar: true, nativeProjectsDisclosure: true, treePopover: true, treeScreenshots, scopeContinuationChat: true, scopeContinuationWork: true, scopeContinuationRestart: true, scopeContinuationNoDuplicates: true,
+  const result = { liveChatColors: true, chatColorsPersistence: true, chatColorsReset: true, colorScreenshots, projectDoctor: true, doctorBackup: true, doctorOpen: true, doctorRefresh: true, doctorNewSession: true, doctorScreenshots, newestSessionFirst: true, projectSelectsNewest: true, threeSessionViewport: true, sessionScrollPreserved: true, visibleSessionScrollbar: true, nativeProjectsDisclosure: true, treePopover: true, treeScreenshots, scopeContinuationChat: true, scopeContinuationWork: true, scopeContinuationRestart: true, scopeContinuationNoDuplicates: true,
     transitionScreenshot: path.join(dataDir, 'next-session-choice.png'), mode: 'isolated-fixture', electron: process.versions.electron, chromium: process.versions.chrome,
     views: window.contentView.children.length, secureRemote: true, sidebarIpc: true, archiveRestore: true, archiveRestart: true, deleteCancel: true, localDeletion: true, cloudChatPreserved: true, workspaceCreation: true, workspaceValidation: true, cancelPreservesSession: true, startupMessages: 4, canonicalPacketLoads: packetLoads, recoveryCache: true, operationProgress: true, progressScreenshot: path.join(dataDir, 'progress-ui.png'),
     tokenCounterRemoved: true, projectRename: true, sessionRename: true, scopeSessionRename: true, restartKeepsSession: true, newChatCreatesSession: true, sessionTree: true, selectsEarlierSession: true, compactWorkspaceDetails: true, projectPathClipboard: true, planAcceptanceButton: true, chromiumDiagnostics: true, contextWindowIndicatorRemoved: true, resizableSidebar: true, separateArchiveWindow: true, archiveMultiSelect: true, archiveForgetKeepsFolder: true, shellTheme: true, nativeTitlebarTheme: nativeTheme.shouldUseDarkColors, toolCallFilter: true, microphonePermission: true, geolocationPermission: true, cameraPermission: false, fullContextBytes: Buffer.byteLength(fixtureContext), liveChatGPT: false, agentToolsRequired: false };

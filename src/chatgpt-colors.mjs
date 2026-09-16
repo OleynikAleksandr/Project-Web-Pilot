@@ -66,7 +66,8 @@ export class ChatColors {
       const doc = this.document, contents = this.contents;
       if (contents.isDestroyed() || !isChatColorsURL(contents.getURL())) return;
       const previous = this.key, css = chatColorsCSS(this.colors);
-      const next = css ? await contents.insertCSS(css, { cssOrigin: 'user' }) : null;
+      // Electron 44.3.0 removes author sheets reliably; !important wins over site styles.
+      const next = css ? await contents.insertCSS(css, { cssOrigin: 'author' }) : null;
       if (doc !== this.document || contents.isDestroyed()) {
         // Navigation owns a new document; never remove a sheet using an old document's key.
         continue;

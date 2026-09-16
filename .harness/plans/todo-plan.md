@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 516,
+  "plan_revision": 518,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "chat-colors-024",
@@ -258,7 +258,7 @@
         "scope_id": "chat-colors-024",
         "task_id": "T005B"
       },
-      "commit_status": "PENDING",
+      "commit_status": "DONE",
       "dependencies": [
         "T005"
       ],
@@ -273,7 +273,7 @@
         "tests/electron-smoke.mjs"
       ],
       "id": "T005B",
-      "implementation_status": "TODO",
+      "implementation_status": "DONE",
       "title": "Исправить сброс палитры в Electron 44 и подтвердить regression",
       "verification_ids": [
         "syntax",
@@ -379,7 +379,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: chat-colors-024
 Current Task: нет
-Revision: 516
+Revision: 518
 
 ## Цель
 
@@ -415,8 +415,8 @@ Revision: 516
   - Git Commit: [DONE] feat: expose chat color editor in settings
   - Reference: chat-colors-024 / T005 / implementation
   - Файлы: src/ui/index.html, src/ui/project-archive.mjs, tests/electron-smoke.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T005B: Исправить сброс палитры в Electron 44 и подтвердить regression — Ожидает
-  - Git Commit: [PENDING] fix: remove chat color overrides reliably in Electron
+- [DONE] T005B: Исправить сброс палитры в Electron 44 и подтвердить regression — Завершено
+  - Git Commit: [DONE] fix: remove chat color overrides reliably in Electron
   - Reference: chat-colors-024 / T005B / implementation
   - Файлы: src/chatgpt-colors.mjs, tests/electron-smoke.mjs, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T006: Сборка релиза 0.6.23 для macOS и Windows — Ожидает
