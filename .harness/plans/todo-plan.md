@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 483,
+  "plan_revision": 485,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "post-doctor-correction-022",
@@ -219,8 +219,8 @@
       "expected_commit_message": "test(workflow): закрепить повторную коррекцию"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "post-doctor-correction-022",
         "task_id": "T005",
@@ -345,7 +345,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: post-doctor-correction-022
 Current Task: нет
-Revision: 483
+Revision: 485
 
 ## Цель
 
@@ -378,8 +378,8 @@ Revision: 483
   - Git Commit: [DONE] test(workflow): закрепить повторную коррекцию
   - Reference: post-doctor-correction-022 / T004 / implementation
   - Файлы: resources/workflow-kit/lib/actions.mjs, resources/workflow-kit/lib/transaction.mjs, resources/workflow-kit/lib/validate.mjs, tests/workflow-kit-recovery.test.mjs, tests/workflow-kit-source.test.mjs, docs/VERIFICATION.md
-- [TODO] T005: Подготовить версию 0.6.21 — Ожидает
-  - Git Commit: [PENDING] build: подготовить релиз 0.6.21
+- [DONE] T005: Подготовить версию 0.6.21 — Завершено
+  - Git Commit: [DONE] build: подготовить релиз 0.6.21
   - Reference: post-doctor-correction-022 / T005 / implementation
   - Файлы: package.json, package-lock.json, docs/architecture/ARCHITECTURE.md
 - [TODO] T006: Проверить и собрать релиз 0.6.21 — Ожидает
