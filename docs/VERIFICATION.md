@@ -498,6 +498,341 @@ Targeted runtime tests: 14/14 passed (Mac control/bootstrap + McpRuntime). По�
 Windows lifecycle adapter source проверен на Mac там, где WinAPI не требуется: contract v2/source pinning и isolated stale-PID/dynamic-port regression. Fixture подставляет test-only `psutil` stub, вызывает production `status()/reconcile_endpoints()`, подтверждает удаление stale record, выбор новых ports при занятых persisted endpoints и сохранение tunnel ID/env-key reference. `tests/windows-runtime.test.mjs`: 9 passed, 0 failed, 2 native-win32 skipped. DPAPI/setup и фактический restart остаются native Windows validation после pull.
 
 ## Project Web Pilot 0.6.4 / self-healing runtime — T009
+
+14.09.2026 final verification: `npm test` — 89 total, 87 passed, 0 failed, 2 native-Windows skipped; Electron smoke passed. `npm run build` created macOS arm64 and Windows x64 packages; Windows verifier passed. macOS bundle `CFBundleShortVersionString/CFBundleVersion=0.6.4`. macOS `app.asar` SHA-256 `3f4e583af4cd07ec6cc78874566ff5336207899b41438a575ebd181d1dac4541`; Windows EXE SHA-256 `34d2a9d6400b2ae96fb58a9e1ab57328773b218107b6b48f97083bc99a45e99e`.
+
+Packaged macOS resources verified in place: uv SHA `11609c939296348c7cc1e1231b3fbf7ca90a603a4c494ec72b59d7ceafa695e1`, runtime ZIP SHA `7313094f06d17e78624362a398e4d12d4be81434fd83f9a8ff2d946ec8c1f64d`, Mac control SHA `747f25d51b65c004d65e6d02dd19721748ed6022b44b48c64740180f432407d3`, Windows control SHA `f69b9e0e1df16f07f566c6b54cdc68be1a77ee4d4cb4fb17e46ed64b1237332b`. Packaged Mac adapter real-check: contract 2, MCP/tunnel ready, tunnel configured, `Codex Local Mac`, 47 tools. External Codex Local Mac repo remained clean and its original control SHA remained `6c5c14972774ece2a9820059b3953fe2fe968c186bb6e17af074c7752dc294be`.
+
+Windows lifecycle stale-PID/dynamic-endpoint behavior is covered by portable production-function fixture; DPAPI/setup and external-runtime restart remain native-Windows validation after pull. Cross-build and verifier do not substitute that native run.
+
+## Chat / Work sessions — T001 entrypoint
+
+14.09.2026 перед реализацией подтверждён канонический публичный Work entrypoint `https://chatgpt.com/work/`; OpenAI Help Center описывает Chat и Work как отдельные ChatGPT experiences. Принят fail-closed contract: Web Pilot открывает `/work/`, но не отправляет recovery, если фактическая страница не остаётся в Work namespace или не имеет доступного composer. DOM-переключатель Chat/Work не используется. Конкретная модель внутри Work остаётся нативному ChatGPT.
+
+## Chat / Work sessions — T002 session-model contract
+
+До фиксации контракта был прогнан подготовленный migration candidate: targeted `workspace-session` 16/16 и полный `npm test` 90 total / 88 passed / 0 failed / 2 native-Windows skipped. Workflow Kit потребовал обязательный `docs/architecture/ARCHITECTURE.md` для изменения `src/**`; незавершённая exact-candidate transaction не допускает расширения набора файлов. Поэтому T002 фиксирует schema/migration contract, а тот же проверенный implementation diff переносится в T003 вместе с architecture sync.
+
+## Chat / Work sessions — T003 UI и first session
+
+`workspace-session` targeted suite после интеграции schema v4: 17/17 passed. Electron smoke через реальный sidebar IPC проверяет: first-session control видим на preview нового проекта, default Chat, переключение на Work и сброс после cancel; созданная первая session имеет `experience=chat`; в Context card отсутствует старая кнопка; project menu содержит `Новый Chat`, `Новый Work`, copy path и archive; новая Chat session создаётся из меню; session tree показывает badge Chat. Фактическая Work navigation/отправка намеренно проверяется в T004 после добавления experience router.
+
+T003 final candidate: `npm test` — 91 total, 89 passed, 0 failed, 2 native-Windows skipped; `npm run smoke` passed. Smoke использует только Chat для фактической отправки на этом этапе; Work-кнопка и first-session Work selection проверяются как UI/state, а фактический `/work/` routing относится к T004.
+
+## Chat / Work sessions — T004 routing
+
+Targeted routing/context tests подтверждают явные entrypoints и fail-closed: Work-сессия на обычном `https://chatgpt.com/` получает `CHATGPT_EXPERIENCE_MISMATCH` до `loadContext()`/send; Work entrypoint `/work/` допускает тот же recovery flow. Electron smoke создаёт новую Work через проектное меню, загружает `/work/`, отправляет recovery, получает concrete `/work/<request-id>`, сохраняет `experience=work` и затем без новой загрузки recovery возвращается к старой Chat-сессии.
+
+T004 final candidate: `npm test` — 95 total, 93 passed, 0 failed, 2 native-Windows skipped; `npm run smoke` passed. Smoke выполнил три startup recovery: исходный Chat, дополнительный Chat и дополнительный Work. Work сохранился как concrete `/work/<request-id>`; возврат к первой Chat-сессии не вызвал новую загрузку recovery.
+
+## Project Web Pilot 0.6.5 / Chat–Work sessions — T005
+
+14.09.2026 final release verification: `npm test` — 95 total, 93 passed, 0 failed, 2 native-Windows skipped; Electron smoke passed и выполнил три startup recovery (исходный Chat, дополнительный Chat, дополнительный Work). `npm run build` успешно создал macOS arm64 и Windows x64 packages; Windows verifier passed. macOS `CFBundleShortVersionString/CFBundleVersion=0.6.5`. macOS `app.asar` SHA-256 `f350e9906802b2fc3aeb92844607bc573a3372ed60c66a5953f98b913c8d74f8`; Windows EXE SHA-256 `bfcea894dcbe234bca4516718e382ef91cfc42616e955be31bfa583d03ce8063`. Windows runtime SHA остался `1f041488ad97d8abf1984fd3521afb8abe15f50b8df3d3e11f1cc4248e019d98`, portable Node SHA — `721ab118a3aac8584348b132767eadf51379e0616f0db802cc1e66d7f0d98f85`. Native Windows запуск остаётся пользовательской проверкой после pull/сборки; scope после commit должен остаться READY_FOR_ACCEPTANCE.
+
+
+## Chat / Work sessions — T006 production URL correction
+
+По реальному запуску 0.6.5 подтверждено: Work загружается через `/work/`, но после первой отправки ChatGPT использует `/c/<id>`. Локальная Work session при этом остаётся `experience=work`. Targeted `workspace-session` suite после исправления: 17/17 passed; отдельно проверены сохранение/restart Work с `/c/<id>`, legacy migration `/c/<id>`→Chat и запрет Chat session на явно Work-only URL.
+
+
+## Chat / Work sessions — T007 provenance guard
+
+Targeted `context-session` suite: 13/13 passed. Новый regression воспроизводит production: Work стартует на `/work/`, `onBeforeSend` фиксирует sending, затем URL становится `/c/<id>` при видимом request marker; conversation привязывается как `experience=work`, повторное открытие exact `/c/<id>` остаётся delivered без дополнительного recovery. Отдельный test сохраняет fail-closed для unbound Work на обычном Chat URL. Electron smoke также переведён на shared `/c/<id>` для Work и проходит.
+
+
+## Project Web Pilot 0.6.6 / Work shared URL fix — T008
+
+14.09.2026 final patch verification: `npm test` — 96 total, 94 passed, 0 failed, 2 native-Windows skipped; Electron smoke passed с production-like Work transition `/work/` → `/c/<id>` и сохранением `experience=work`. `npm run build` успешно создал macOS arm64 и Windows x64 packages; Windows verifier passed. macOS `CFBundleShortVersionString/CFBundleVersion=0.6.6`, `app.asar` SHA-256 `76073370f2fc5aae5af09d93c9f4d6c3e9e754884b8668740f2741a9db138633`; Windows EXE SHA-256 `b6091393249e9dbeef47852283117d00e801ff3b955eea0f5d282214c4727097`. Windows runtime SHA остаётся `1f041488ad97d8abf1984fd3521afb8abe15f50b8df3d3e11f1cc4248e019d98`, portable Node SHA — `721ab118a3aac8584348b132767eadf51379e0616f0db802cc1e66d7f0d98f85`. Scope после commit должен остаться READY_FOR_ACCEPTANCE для повторной пользовательской проверки.
+
+
+## Chat / Work sessions — T009 session archive contract
+
+14.09.2026 по результату пользовательской приёмки 0.6.6 согласовано расширение текущего scope: отдельный lifecycle архивных sessions с project owner в UI. Последняя активная session проекта не архивируется; selected session при архивировании переключается на оставшуюся. Session archive не дублирует sessions проекта, если сам проект находится в project archive. Delete session означает локальное удаление metadata/reference; облачный ChatGPT conversation сохраняется.
+
+
+## Chat / Work sessions — T010 session storage
+
+Targeted `workspace-session` suite после schema v5: 19/19 passed. Проверены migration v4→v5, fallback selected session, запрет архивирования последней активной session, restore с сохранением experience/chatUrl, persistence после restart и локальный forget с очисткой `.v4-backup`/`diagnostics.jsonl` при сохранении workspace folder. Полный `npm test`: 98 total, 96 passed, 0 failed, 2 native-Windows skipped.
+
+
+## Chat / Work sessions — T011 session archive UI
+
+Electron smoke проверяет полный session archive flow: Chat session архивируется из sidebar и исчезает из active tree; во вкладке `Сессии` видны её Chat badge и project owner; restore возвращает session; Work session затем архивируется и удаляется локально через отдельное подтверждение, workspace folder остаётся. После архивирования всего проекта его ранее архивная session не дублируется в session tab. Smoke passed. Final candidate: `npm test` — 98 total, 96 passed, 0 failed, 2 native-Windows skipped; `npm run smoke` passed.
+
+
+## Project Web Pilot 0.6.7 / session archive — T012
+
+14.09.2026 final release verification: `npm test` — 98 total, 96 passed, 0 failed, 2 native-Windows skipped; Electron smoke passed с полным session archive flow (archive/restore Chat, local-delete Work, project owner, отсутствие дублирования sessions архивного проекта). `npm run build` успешно создал macOS arm64 и Windows x64 packages; Windows verifier passed. macOS `CFBundleShortVersionString/CFBundleVersion=0.6.7`, `app.asar` SHA-256 `cd7d0d1b726e5825a29e82e3ca3a0e531519c1e2bacfe190f6a7265816181129`; Windows EXE SHA-256 `c374f8b57d882f2ceae1326449a7f15e75ccb8b56deb94aa5a71434a68667fa5`. Windows runtime SHA остаётся `1f041488ad97d8abf1984fd3521afb8abe15f50b8df3d3e11f1cc4248e019d98`, portable Node SHA — `721ab118a3aac8584348b132767eadf51379e0616f0db802cc1e66d7f0d98f85`. Scope после commit должен остаться ACTIVE/READY_FOR_ACCEPTANCE.
+
+
+## T013 — regression при выборе Chat после Work
+
+Причина подтверждена production diagnostics и скриншотом пользователя: root URL отображал Work, а промежуточный `/c/WEB:<uuid>` останавливал tracking уже начатой отправки. Нативные элементы переключателя сверены с публичным production bundle ChatGPT.
+
+Добавлены проверки: фактический выбор Chat из Work; отдельно наблюдаемое подтверждение toggle; недоступный/неизвестный режим; сохранение draft; смена режима/URL перед click; ожидание временного URL для Chat и Work без сохранения временной ссылки и повторной отправки. Electron fixture моделирует Work default, Work → новый Chat и временный WEB URL до permanent conversation. Результаты назначенных checks фиксируются Workflow Kit. Реальный аккаунт проверяет пользователь после пересборки.
+
+
+## T014 — Project Web Pilot 0.6.8
+
+- T013: syntax, полный suite и Electron smoke — PASSED; commit cce8f3c78f8d9c9f16dfe11b20788cee0188e603.
+- npm run build — exit 0; macOS arm64 и Windows x64 packages созданы; verify:win — PASSED.
+- Обе app.asar содержат version 0.6.8 и побайтово совпадающие с исходным деревом context-session, chatgpt-composer и chatgpt-experience.
+- macOS app.asar SHA-256: ebd81be350d077eb164f1c7f18527280270c0f91a402850953a91be26177826e.
+- Windows app.asar SHA-256: 95738c6adcf0e8e844f4fd6e245038cd161d5449aedfd618d840e917012eab92.
+- Финальные назначенные checks для T014 фиксирует workflow commit. Ручная проверка нового Chat в реальном аккаунте и native Windows acceptance остаются пользователю. Уже созданный в неправильном режиме облачный разговор автоматически не конвертируется.
+
+## Scope 012 / T002 — tiktoken и session storage
+
+node --test tests/session-tokens.test.mjs: 5 проверок пройдены. Проверены известный BPE-вектор hello world = 2, замена streaming текста без удвоения, повторное чтение/выгрузка DOM, кириллица/код/литеральные special tokens, исключение draft/buttons, вложенные DOM-селекторы, отдельный worker и сохранение/restore/delete сессии. Устаревшие записи после переключения и несовпадающий conversation URL отклоняются. npm install js-tiktoken@1.0.21 завершён; production dependency и lock сохранены. Полный suite назначен обязательным gate этой микрозадачи.
+
+## Scope 012 / T003 — счётчик в Electron
+
+Electron smoke проходит с реальным js-tiktoken worker: стартовый пакет >75 KB учитывается, повторное чтение не прибавляет токены, Hello → Hello world заменяет значение одного assistant message (+1 → +2). Проверены отдельный Work conversation, отсутствие чужого message ID в оценке и игнорирование постороннего URL. UI geometry проверяется на раскрытом дереве при ширине sidebar 312 px: число справа снизу, без наложения на дату. Снимок token-counter-ui.png из isolated fixture просмотрен. Скрытая таблица ID/хешей не попадает в sidebar IPC. Это fixture-проверка, не сравнение с серверным контекстом реального ChatGPT.
+
+## Scope 012 / T004 — Project Web Pilot 0.6.9
+
+- npm run build — exit 0; macOS arm64 и Windows x64 packages пересобраны, verify:win — PASSED.
+- Обе app.asar содержат version 0.6.9, js-tiktoken 1.0.21 и o200k_base (2 325 563 байта); src/session-tokens.mjs, src/workspace-session.mjs, src/main.mjs, src/ui/sidebar.mjs и src/ui/index.html побайтово совпадают с исходным деревом.
+- Отдельный Electron процесс импортировал SessionTokenCounter из macOS app.asar: worker вернул hello world = 2 токена и не повторил подсчёт неизменённого сообщения; exit 0.
+- Финальные syntax, suite и electron-smoke назначены обязательными gates workflow commit T004. Реальный аккаунт ChatGPT и native Windows acceptance проверяет пользователь; токенизация доступного текста не подтверждает величину серверного контекстного окна.
+
+## Scope 012 / T006 — recovery cache
+
+Шесть targeted tests пройдены: reuse неизменного пакета независимо от возраста, изоляция/лимит workspace, concurrent single build, гонки с изменениями, fallback и повреждённый packet; реальные Git fixtures проверяют same-size/mtime edit, index/HEAD, ignored required document, missing file, evidence, Kit runtime, transaction, linked worktree и symlink. Полный suite назначен workflow gate.
+
+## Scope 012 / T007 — доставка подготовленного пакета
+
+ContextSession tests проверяют передачу старого по времени, но актуального по входам пакета, повторный refresh без recover, замеры и блокировку после правки файла без изменения plan revision. Electron fixture проверяет одну подготовку для нескольких новых Chat/Work sessions при одинаковых входах, разные request_id и отображение времени в подробностях. Исходный тест изменяет plan между сценариями: фоновая пересборка при таких изменениях допустима и не считается повторной отправкой.
+
+## Scope 012 / T008 — видимость выполнения
+
+Unit tests проверяют названия этапов, отсутствие busy при idle/login/draft/error, фоновые сборки и archive actions, elapsed без сброса при перерисовке и очистку timer. Electron fixture искусственно задерживает получение пакета на 650 ms для наблюдения реального DOM-индикатора: проверяются видимость, текст, CSS animation и role=status; progress-ui.png сохраняется для визуальной проверки. Эта задержка относится только к fixture и не участвует в performance benchmark.
+
+## Scope 012 / T009 — релиз 0.6.10 и измерения
+
+- npm run build — exit 0, macOS arm64 и Windows x64; verify:win пройден. Девять файлов cache/input guard/coordinator/main/оба renderer views и HTML в каждой app.asar побайтово совпадают с исходным деревом; package version 0.6.10.
+- После завершения сборки, без параллельного packager, измерен один и тот же полный пакет 69 556 bytes / SHA-256 3526eb579ee9bec8a9daebc739bb8a801793d2a84d5afa9f20c00ede5cf5b9ae. Три штатных loadContext: 704.21 / 691.55 / 687.70 ms. Пять cache loads: 18.51 / 18.07 / 17.98 / 17.93 / 17.83 ms. Дополнительный before-Send input check: 17.91 / 18.42 / 18.09 / 18.43 / 18.08 ms. Медианный выигрыш подготовки 38.47x; с дополнительной проверкой 19.17x. Проверено точное равенство context и единственная сборка для cache.
+- Отдельный Electron процесс импортировал ContextCache/McpRuntime непосредственно из macOS app.asar, получил канонический пакет через локальный MCP и проверил cache hit/current: 40.24 ms на load+validation, exit 0.
+- Визуально проверен progress-ui.png: кольцо, читаемая подпись и время в одной строке. Electron smoke проверяет доставку, cache reuse, отсутствие двойных сообщений и DOM-индикатор. syntax/suite/electron-smoke назначены финальными gates workflow commit T009.
+- Измерения относятся к подготовке пакета и актуальности, не включают workspace review, bootstrap, загрузку ChatGPT или первый ответ модели. Native Windows и реальный UI ChatGPT проверяет пользователь после перезапуска.
+
+## Scope 012 / T011 — regression полного подсчёта
+
+Добавлены многостраничная история с длинным recovery вне DOM, overlap страниц, tool text без asset URLs, неизвестная схема, курсорные ошибки, отмена, 401, ограниченный GET и fallback размера страницы. Worker проверяет замену фрагментов/старых веток полным снимком и отсутствие повторного счёта. Это fixtures; реальный аккаунт проверяется отдельно.
+
+## Scope 012 / T012 — Electron regression пагинации
+
+Реальный Electron/CDP в изолированной fixture наблюдает GET последней страницы и загружает ещё две через session.fetch. В DOM оставлено только Hello world; в предыдущих страницах находятся длинный recovery и tool output. Сумма совпадает с независимым tiktoken для всех трёх сообщений, превышает старую оценку более чем вдвое; DOM-фрагменты заменяются, не прибавляются. Проверены спиннер, неполная подпись, полная подпись и геометрия при sidebar 312 px. Реальный аккаунт OpenAI этим тестом не моделируется.
+
+## Release 0.6.11 — scope 012 / T013
+
+Обязательные syntax/suite/electron-smoke gates выполняются перед фиксацией релиза. Обе platform packages проверяются на версию и точное совпадение модуля полной истории, worker/tokenizer и UI с исходниками; worker дополнительно запускается из macOS app.asar с complete snapshot. Нативная Windows-приёмка и реальная длинная беседа ChatGPT остаются пользовательскими проверками.
+
+Результат упаковки: npm run build завершён успешно для macOS arm64/Windows x64; версия 0.6.11 и семь изменённых/связанных source modules в обоих app.asar совпали с исходниками. Запущенный из macOS app.asar worker подтвердил полный двухстраничный снимок, замену старого DOM-фрагмента и отсутствие дублирования (4 токена для двух hello world сообщений).
+
+## Scope 012 / T015 — проверка удаления счётчика
+
+Удалены tests снятого модуля. Storage regression загружает две Chat/Work сессии, включая архивную, с устаревшими оценками, проверяет полное сохранение остальных данных и очистку primary JSON; повторная загрузка не пишет файл. Electron smoke подтверждает отсутствие счётчика в UI и snapshot наряду с действующими recovery/cache/spinner сценариями. Release packages отдельно проверяются на отсутствие modules и tiktoken.
+
+## Release 0.6.12 — scope 012 / T016
+
+Назначены syntax/suite/electron-smoke. Проверка пакетов сверяет 0.6.12, отсутствие удалённых modules и js-tiktoken во всём app.asar и совпадение оставшихся шести связанных source files. Пользователь проверяет готовность реальной сессии после перезапуска; scope остаётся ACTIVE/READY_FOR_ACCEPTANCE.
+
+Результат: npm run build успешно пересобрал macOS arm64 и Windows x64. Проверка обоих app.asar подтвердила версию 0.6.12, отсутствие двух удалённых модулей и пакета js-tiktoken, а также точное совпадение шести связанных source files.
+
+
+## Scope 013 / T001 — persisted имена
+
+Workspace unit coverage проверяет, что локальный alias проекта переживает повторный inspect/restart и не меняет каноническое имя Workflow Kit; ручное имя session не перетирается page title; scope-имя применяется ровно к session, выбранной при первом наблюдении scope, тот же scope не переезжает на другую session, а следующий scope может задать новое имя.
+
+
+## Scope 013 / T003 — автоматическое имя scope
+
+Workspace tests дополнительно подтверждают проекцию `objective` из plan и идемпотентное применение scope title. Один scope не переименовывает вторую session после переключения; новый scope может переименовать текущую. Syntax main процесса проходит с локальным hook из publish без нового MCP/API.
+
+
+## Scope 013 / T004 — интеграционная проверка rename
+
+Electron fixture создаёт активный scope с objective и ждёт автоматическое имя текущей session, затем вызывает оба пункта «Переименовать» через настоящий sidebar IPC. Проверяется, что project alias не меняет canonical Workflow Kit name и поздний page title не перезаписывает ручное имя session. Финальная suite/smoke и обе package-сборки относятся к версии 0.6.13.
+
+
+Результат T004: `npm run smoke` прошёл с `projectRename=true`, `sessionRename=true`, `scopeSessionRename=true`; `npm test` прошёл полностью. `npm run build` собрал macOS arm64 и Windows x64; Windows package verification прошёл. Дополнительная проверка обоих `app.asar` подтвердила версию 0.6.13 и наличие rename/scope-title кода; macOS Info.plist также сообщает 0.6.13.
+
+## Scope 014 / T002 — модель перехода
+
+Регрессионные сценарии добавлены к workspace-session suite: READY не закрывает scope, оба experience, сохранение watching/choice/opened после load, повторная команда, старый NONE, смена проекта, заменённый project и новый scope перед выбором. Результат назначенной проверки фиксирует workflow commit.
+
+## Scope 014 / T005 — интеграционная проверка
+
+Electron fixture проверяет прежнюю кнопку приёмки с обновлённой командой, затем два полных перехода: Chat после кнопки и Work после прямого архивирования fixture plan. Проверяются вопрос при NONE, отсутствие перехода до выбора, сохранение choice/opened при reload хранилища, двойной клик/повторный IPC без дубля, неизменность старого URL и ровно один recovery с новыми facts NONE/revision. Снимок вопроса и результат сохраняются в изолированном smoke userData. Назначены полная Node suite и Electron smoke; реальный аккаунт не используется.
+
+Уточнение T005: переход проверяется с настоящими createScope/task:start/commit/archive Workflow Kit внутри временного fixture repository, чтобы штатная проверка workspace подтверждала реальную историю. Минимальный sidebar перед снимком явно установлен в 312 px.
+
+## Scope 014 / T006 — релиз 0.6.14
+
+Управляемый commit T005 подтвердил syntax, полную Node suite (18.6 с) и Electron smoke (27.3 с). Smoke прошёл scopeContinuationChat, scopeContinuationWork, scopeContinuationRestart и scopeContinuationNoDuplicates; обе ветки использовали реальные createScope/startTask/commit/archive внутри отдельного временного проекта. Визуально проверена карточка выбора при sidebar 312 px.
+
+npm run build успешно собрал macOS arm64 и Windows x64; штатная Windows package verification прошла. app.asar каждой платформы проверен на version=0.6.14 и побайтное совпадение main/workspace-session/context-session/preload/sidebar/index.html с исходниками. macOS Info.plist сообщает 0.6.14. Артефакты находятся в стандартной .harness/runtime/build; подробные хеши — .harness/runtime/release-014.json. Реальный аккаунт ChatGPT и физический Windows ПК этой проверкой не покрываются; пользовательская приёмка остаётся открытой.
+
+## Scope 015 / T002 — порядок и выбор последней сессии
+
+Регрессионный тест покрывает одинаковые createdAt, обратный порядок вставки, исключение архивной session, отсутствие перестановки после открытия старой, неизменность исходного массива, выбор newest при явной команде, восстановление старого conversation URL после restart. Управляемый commit выполняет syntax и workspace.
+
+## Scope 015 / T004 — компактное дерево в Electron
+
+Изолированный smoke проверяет native details/summary, отдельное раскрытие стрелкой, выбор последней сессии по имени проекта, порядок newest-first, создание Chat/Work, архивирование и переименование. На ширинах 312/408 px в светлой и тёмной теме проверяются три строки viewport, отсутствие горизонтального overflow, полоса scrollbar с зарезервированными 14 px и меню в верхнем слое. Проверяются прокрутка к четвёртой сессии, сохранение позиции при выборе и временной проверке папки, возврат к началу по имени проекта и общее сворачивание. Скриншоты projects-<width>-<theme>.png сохраняются вместе с smoke-result.json в отдельном fixture userData.
+
+## Scope 015 / T005 — регрессии состояния sidebar
+
+JSDOM-тесты исполняют сам sidebar.mjs и проверяют native disclosure без преждевременного закрытия от focusout, вызов существующего действия, независимое раскрытие, выбор проекта/старой сессии, порядок, сохранение позиции после обновления metadata и сброс на новой сессии. Отдельная регрессия воспроизводит временно скрытый родитель при проверке папки, замену дочернего списка и отложенный scroll отсоединённого узла. Геометрия, scrollbar и настоящий Popover API проверены Electron smoke в T004; полная Node suite — gate T005.
+
+## Scope 015 / T006 — релиз 0.6.15
+
+Все назначенные gates пройдены: workspace в T002, Electron smoke в T004 (31,7 с), полная Node suite в T005 (17,4 с). Smoke исполнялся с изолированными userData, workspace, ChatGPT fixture и MCP; пользовательский профиль не использовался. В обеих темах визуально проверено дерево и резерв полосы справа; отдельные проверки покрывают ширины 312/408 px.
+
+`npm run build` успешно создал macOS arm64 и Windows x64 0.6.15; штатная Windows package verification пройдена. Версии package.json внутри обоих app.asar и macOS Info.plist равны 0.6.15. Main, workspace-session, context-session, preload, sidebar и index.html в обоих пакетах побайтно совпадают с исходниками. Подробные SHA-256 — `.harness/runtime/release-015.json`; результат smoke и четыре снимка сохранены в `.harness/runtime/scope015-*`. Сборки находятся в стандартной `.harness/runtime/build`. Нативный запуск Windows и реальный аккаунт ChatGPT остаются пользовательской проверкой. Scope не архивирован, приёмка открыта.
+
+## Scope 016 / T002 — удаление индикатора context window
+
+Electron smoke требует отсутствия `context-window-card` и поля `contextWindow` в sidebar snapshot до и после получения тестовой SSE telemetry. При этом тот же stream по-прежнему обязан дать внутреннюю запись `telemetry/context` с `229043 / 258400` и `compactSignal=direct`. Это проверяет, что пользовательский индикатор и его публикация удалены, а безопасная Chromium diagnostics сохранена.
+
+## Scope 016 / T003 — релиз 0.6.16
+
+Финальные проверки: полная Node suite — 126 тестов, 124 passed и 2 platform-specific skipped; Electron smoke 0.6.16 прошёл с `contextWindowIndicatorRemoved=true` и сохранён в `.harness/runtime/scope016-smoke-result.json`. `npm run build` успешно создал macOS arm64 и Windows x64; штатная Windows package verification пройдена. Версии `package.json` внутри обоих `app.asar` и macOS Info.plist равны 0.6.16; main/workspace-session/context-session/preload/sidebar/index.html в обоих пакетах побайтно совпадают с исходниками. SHA-256 и размеры `app.asar` записаны в `.harness/runtime/release-016.json`. Реальный аккаунт ChatGPT и физический Windows ПК остаются пользовательской проверкой.
+
+## Windows NODE_MISSING: диагностика — 15.09.2026
+
+Получен скриншот ошибки NODE_MISSING при подключении D:\AI Projects\Test002 на Windows 10; версия и логи той машины неизвестны. По истории до 0fb755e от 12.09.2026 setup искал только системный Node. Текущая 0.6.16 содержит portable node.exe (85 219 968 байт), verify:win прошёл; архив Node имеет официальный SHA-256 721ab118a3aac8584348b132767eadf51379e0616f0db802cc1e66d7f0d98f85 (https://nodejs.org/en/blog/release/v22.17.0).
+
+Воспроизведение на Mac с Windows-веткой WorkspaceSetup и настоящим локальным Node: чистое окружение находит node; NODE_OPTIONS=--web-pilot-invalid-option возвращает ложный NODE_MISSING. Это подтверждённый дефект обработки ошибок, но не доказательство наличия такого окружения на компьютере пользователя. Native Windows 10 запуск пока не выполнен.
+
+T001: node --test tests/workspace-setup.test.mjs — 19/19 passed, 0 failed. Реальный worker успешно создал и повторно открыл временные проекты при invalid NODE_OPTIONS и несуществующем preload; Windows API ошибки проверены через заменяемый исполнитель. Проверены повтор после отказа, fallback и сохранение macOS environment/diagnostics. Это cross-platform regression на Mac, а не native Windows 10 приёмка.
+
+## Windows 0.6.17 — scope windows-node-setup-019 / T002
+
+T001 commit 13372b7: обязательная syntax и назначенная suite прошли (exit 0). Отдельная setup regression — 19/19 passed.
+
+npm run build:win и встроенная verify:win завершились успешно. Сравнение src/workspace-setup.mjs с файлом внутри app.asar — точное совпадение; package.json внутри Windows — 0.6.17. В существующем Mac app.asar по-прежнему 0.6.16: Mac не пересобирался. Общая версия исходников и будущих build scripts синхронизирована на 0.6.17.
+
+Распакованный node.exe совпадает по SHA-256 с node.exe из проверенного официального ZIP: 39d45b5933f339d3ebdebd76474893dab5d7da1038920f65cf5bbcf0f20f3636. EXE приложения: 48c078c0b72d78d808766133952e32cd66a3c00d57ce810a4551e599ff98ac33.
+
+Архив Project-Web-Pilot-0.6.17-Windows-x64.zip: 316264204 байт; SHA-256 25b8b0adb083d86b9bb35f81caf3ec50a16f0c794d69faf8fb4d268c323226b2. Копия для пользователя в Downloads на Mac.
+
+Native Windows 10 запуск не выполнялся: Windows API ошибки смоделированы, реальный setup worker проверен на Mac. Пользователь проверяет подключение исходного проекта на Windows. Scope остаётся ACTIVE/READY_FOR_ACCEPTANCE; архивирование не разрешено до явного принятия.
+
+## Scope chat-autoscroll-020 / T001 — регрессия автопрокрутки
+
+JSDOM regression исполняет тот же renderer script, который внедряется в ChatGPT Web: проверяются initial/follow-to-bottom, продолжение при добавлении сообщения, suspended после ручной прокрутки вверх, отсутствие сдвига во время новых ответов, manual resume у низа, resume при Send и идемпотентная повторная установка. Отдельно проверяется origin guard Electron wrapper. Реальный аккаунт ChatGPT остаётся пользовательской приёмкой после package-сборки.
+
+## Scope chat-autoscroll-020 / T002 — релиз 0.6.18
+
+Перед упаковкой `npm test` завершился с 141 тестом: 139 passed, 0 failed, 2 platform-specific skipped. `npm run smoke` на Electron 44.3.0 / Chromium 152.0.7977.78 также завершился успешно в isolated fixture.
+
+`npm run build` успешно создал macOS arm64 и Windows x64 packages; штатный `verify:win` подтвердил Windows executable и bundled runtime/Node. macOS Info.plist и `package.json` внутри обоих `app.asar` сообщают 0.6.18. `src/chatgpt-auto-scroll.mjs` внутри обоих `app.asar` совпадает с source SHA-256 `32061fd3394e170411f4b27cf626b0337c1e8962b567a24b9a3bd5b4e4f1b846`.
+
+Готовые архивы: macOS arm64 — 145174349 байт, SHA-256 `e1ec90bf798880a0f160a6cf3530f3f718626eb55fa9eadbd0edc57ce3fc3528`; Windows x64 — 317732370 байт, SHA-256 `3ae151f8df68d1304ccf0a309fb3de1dd443234c5370557f3c63f9312348e114`. Реальный аккаунт ChatGPT и нативный запуск Windows остаются пользовательской приёмкой.
+
+## Scope chat-autoscroll-020 / T003 — restart regression
+
+После пользовательской проверки добавлен отдельный regression, моделирующий позднее программное восстановление `scrollTop` после установки controller: non-bottom `scroll` без пользовательского input не переводит follow в suspended и на следующих animation frames возвращается к последнему сообщению. Отдельный table test подтверждает manual suspend после wheel/trackpad, PageUp, touch и pointer gesture. Targeted suite `node --test tests/chatgpt-auto-scroll.test.mjs` проходит 7/7.
+
+## Scope chat-autoscroll-020 / T004 — исправленная сборка 0.6.18
+
+`npm run build` после T003 успешно пересобрал macOS arm64 и Windows x64; штатный `verify:win` прошёл, Windows executable SHA-256: `fc21313dc35681c79d84d4e69fd2fed5f2bdc516d88b960f490fe334e9afc7c1`. macOS Info.plist и package.json обоих `app.asar` сообщают 0.6.18. Исправленный `src/chatgpt-auto-scroll.mjs` в обоих пакетах побайтно совпадает с source SHA-256 `a0cf397fc41c2aab175427472790fc1e2182b778b533efe2a49dfc5736a109f7` и содержит controller v2.
+
+Повторно созданные ZIP: macOS arm64 — 145174692 байт, SHA-256 `ab1db8a652a85b5af624d16cf79c2812f4c013a97d2f62272469cb6592d370c3`; Windows x64 — 317732707 байт, SHA-256 `b5a53be911d85ed8e52cb2943da9c4e0b2a53586d7690621d35869e2d7493675`. Эти файлы заменили прежние одноимённые 0.6.18 в Downloads. Финальная suite/smoke выполняется управляемым commit T004; реальный startup ChatGPT остаётся повторной пользовательской приёмкой.
+
+## Project Doctor — T010 / 16.09.2026
+
+Девять изолированных Node regression tests подтверждают: stale manifest 1.2→1.3 при совпадении кода с bundled payload, backup, неизменность user staging/HEAD/плана, повторный запуск, missing owned file/hook и executable bits, отказ от неизвестного/дополнительного кода, malformed manifest/plan, ремонт читаемой проекции, отказ при изменении snapshot, symlink и откат после ошибки записи. Реальная установка Project Web Pilot не ремонтировалась.
+
+## Project Doctor UI/coordinator — T011 / 16.09.2026
+
+Шесть DOM/coordinator tests проверяют явный запуск, точную папку, недоступность повторного запуска, отсутствие false success при ошибке служб, textContent для diagnostics, доступ к Settings/доктору из setup failure, сохранение backup при ошибке подключения, отсутствие проверки/выполнения неизвестного runtime и reconnect локальных команд. Ремонт реального проекта по поручению пользователя не запускался.
+
+## Project Doctor release 0.6.20 — T012 / 16.09.2026
+
+Десять backend tests дополнительно проверяют настоящий interrupted commit: неподтверждённый candidate не фиксируется доктором, завершённый exact commit закрывает только технический журнал с backup и без изменения HEAD. Electron smoke на отдельном fixture воспроизвёл stale manifest и блокировку открытия, вход в доктор через setup, отсутствие ремонта при одном открытии Settings, явный repair, backup, повторную readiness, открытие прежней сессии, повторный no-op, ровно одну передачу при refresh и создание нового Work. Проверены light/dark на минимальной ширине 312 px. Проверка не обращается к реальному ChatGPT/MCP.
+
+## Итоговая проверка выпуска 0.6.20
+
+Управляемый commit T012 `10a1198a537bbcbc3729f242b44aa953374a9093`: syntax PASSED; Node suite — 161 tests, 159 passed, 0 failed, 2 skipped (платформенные Windows cases); Electron smoke PASSED за 39.6 секунды. Расширенному smoke выделен предел 120 секунд после первого таймаута старого 60-секундного лимита; проверки не исключались. Итоговые screenshots светлой/тёмной темы визуально проверены, кнопки продолжения компактны на 312 px.
+
+macOS arm64 и Windows x64 собраны в `.harness/runtime/releases/0.6.20/`; версия package внутри обеих сборок — 0.6.20. IPC/UI/worker bytes сверены с исходниками. Windows verify-package проверил EXE, portable Node и pinned runtime SHA. ZIP обеих платформ и `SHA256SUMS.txt` находятся рядом. Реальный запуск Windows остаётся пользовательской проверкой.
+
+Предъявление: закрыть предыдущую версию и открыть новую `.app`, затем Settings → Доктор проекта → Project Web Pilot → «Проверить и исправить». Собственный `.harness/kit-manifest.json` не менялся; исходные 14 integrity-conflicts специально сохранены до пользовательского запуска. Проверки исправления выполнялись только на собственных временных fixtures.
+
+## Correction round Workflow Kit — scope 022 / T004
+
+Regression воспроизводит полный повторный цикл одного ACTIVE scope: первая `DOCS` переводит результат в `READY_FOR_ACCEPTANCE`; явный `plan:apply` с новой correction task возвращает `IN_PROGRESS`, rearm финальной `DOCS` с `commit_ref.iteration=2`, выполняет correction task и вторую `DOCS`. Исторический первый DOCS commit без iteration трактуется как iteration 1; новый implementation commit содержит `Workflow-Iteration`, поэтому resolver однозначно выбирает требуемый проход. Installed и bundled lifecycle-код синхронизированы.
+
+## Correction release 0.6.21 — scope 022 / T006
+
+Перед упаковкой `npm test` завершился: 162 tests, 160 passed, 0 failed, 2 platform-specific skipped. `npm run smoke` на Electron 44.3.0 / Chromium 152.0.7977.78 прошёл в isolated fixture, включая Project Doctor и переходы после scope. `npm run build` успешно собрал macOS arm64 и Windows x64; штатный Windows package verifier подтвердил EXE, portable Node и pinned runtime.
+
+Релиз размещён отдельно в `.harness/runtime/releases/0.6.21/`, не заменяя 0.6.20. `package.json` внутри обоих `app.asar` и macOS Info.plist сообщают 0.6.21. Windows ZIP: 317750757 bytes, SHA-256 `083982e0f98c615345de8b6f3068efefe06fcdfc058abdb946eb7b0fa3fecc31`; macOS ZIP: 145193119 bytes, SHA-256 `bc8f2cc0f113ab509e532a98aec9e50f3fbb7e658d4acaf2f73bb07c0641076f`. `SHA256SUMS.txt` повторно проверен. Windows executable SHA-256: `2818056c6949794e45746de150d66dbc18f7a01f8084aa4b893fa3e9dd612141`.
+
+Текущий `.harness/kit-manifest.json` пересогласован с финальными installed Workflow Kit 1.3.0 bytes после correction-round изменения; installed/bundled WORKFLOW и lifecycle source совпадают. Managed commit T006 завершился успешно после повторной проверки: syntax PASSED, suite PASSED (162 tests / 160 passed / 2 skipped), Electron smoke PASSED. Пользовательская приёмка следует только после обязательной DOCS.
+
+Два первых pre-commit smoke после полного suite выявили флейк внутреннего fixture `waitFor`: общий check budget уже 120 секунд, но отдельное ожидание оставалось 25 секунд. Standalone smoke с тем же кандидатом проходил. В T006 внутренний deadline увеличен до 60 секунд без удаления или ослабления assertions; после этого managed commit повторно прошёл полный suite и smoke.
+
+## Реальный пользовательский Project Doctor — 16.09.2026
+
+После исторической подготовки 0.6.20 пользователь запустил Доктор на реальном Project Web Pilot. `.harness/kit-manifest.json` изменён с 1.2.0 на 1.3.0, записан `doctor_reconciled_at=2026-09-16T07:28:22.983Z`; owned hashes соответствовали установленному Kit на момент reconcile. Это завершает ранее отложенную физическую проверку stale-manifest сценария. Последующий correction scope изменил Workflow Kit, поэтому manifest дополнительно синхронизирован с финальными correction-round bytes перед сборкой 0.6.21. Исторические записи выше о намеренно сохранённом stale manifest относятся только к состоянию до этого пользовательского запуска.
+## Scope hidden-tool-scroll-023 / T001B — layout-footprint скрытых tool-call строк
+
+Regression расширяет существующий Electron smoke: tool-call fixture теперь имеет собственный контейнер с измеримой минимальной высотой. При `hideToolCalls=true` проверяется не только marker на кнопке, но и `display:none` на максимально высоком безопасном tool-only wrapper; при «Показывать» wrapper и marker полностью восстанавливаются, при повторном «Скрывать» footprint снова исчезает. После изменения layout production-код вызывает только `refresh()` существующего auto-scroll controller, не принудительный resume, поэтому ручной suspended режим сохраняется. MCP/tools и содержимое сообщений этим фильтром не затрагиваются.
+
+T001B: `node --check src/main.mjs` — PASSED. Прямой `npm run smoke` на Electron 44.3.0 / Chromium 152.0.7977.78 — PASSED в isolated fixture; итоговый smoke-result сообщает `toolCallFilter=true`. Реальный DOM текущего ChatGPT остаётся пользовательской приёмкой после package-сборки 0.6.22.
+
+## Release 0.6.22 — scope hidden-tool-scroll-023 / T003
+
+Перед выпуском `npm test` на версии 0.6.22 завершился: 162 tests, 160 passed, 0 failed, 2 platform-specific skipped. Финальный `npm run smoke` на Electron 44.3.0 / Chromium 152.0.7977.78 прошёл в isolated fixture; результат включает `toolCallFilter=true` с новым regression на удаление layout-footprint.
+
+`npm run build` успешно собрал macOS arm64 и Windows x64. Штатный `verify:win` подтвердил Windows executable, portable Node и pinned runtime; SHA-256 EXE: `75b12ac5eebd13ba7530617bfb3dfb31dbf5826387ee84a2d4d7bfe9caa31e35`. `package.json` внутри обоих `app.asar` и macOS `CFBundleShortVersionString` сообщают 0.6.22. Production `src/main.mjs` внутри обоих `app.asar` побайтно совпадает с source, SHA-256 `ab68e62b8ab373e2202ac6819b4fe2a920bdf0fd9a15afc20a0bb883172c3ad8`.
+
+Релиз размещён отдельно в `.harness/runtime/releases/0.6.22/`, не заменяя 0.6.21. macOS ZIP `Project-Web-Pilot-0.6.22-macOS-arm64.zip`: 145193401 bytes, SHA-256 `d0fdbc4aaa67100b59a6c4912ba275655cb75794b24cf4472903e30cac3a86fb`. Windows ZIP `Project-Web-Pilot-0.6.22-Windows-x64.zip`: 318021433 bytes, SHA-256 `ddef89afce038c0ba01839db966c0255680fd48da0472b130f58639f23ef357e`. `SHA256SUMS.txt` проверен через `shasum -c`; оба ZIP дополнительно прошли `unzip -tq` без ошибок. Реальный ChatGPT DOM и native Windows 10/11 запуск остаются пользовательской приёмкой.
+
+Managed commit T003 `c3dd81dfba89136766efed7092ad9f3b37042521` повторно прошёл назначенные полную Node suite и Electron smoke; release evidence зафиксирован после успешных проверок.
+
+## Scope chat-colors-024 — проверки палитры
+
+Добавлены regression tests на валидацию цветов/отсечение CSS injection, объединение быстрых изменений, отсутствие накопления стилей, восстановление после навигации, сброс и исключение стороннего origin. Реальное применение CSS и editor IPC проверяются последующим Electron smoke.
+
+T005: Electron fixture расширен проверкой фактических computed styles четырёх цветов, сохранения цвета кода, перемещения и single-instance окна, повторного открытия, восстановления палитры в новом WebContents, SPA navigation, сброса и отсутствия локального API в удалённой странице. Формируются скриншоты редактора в светлой и тёмной теме. Результаты фиксируются после запуска.
+
+Интеграционный checkpoint T005 выявил подтверждённый дефект Electron 44.3.0: removeInsertedCSS не снимает user-origin стиль (isolated probe воспроизвёл это даже после задержки). Author-origin стиль снимается корректно в том же probe. Этот checkpoint намеренно характеризует наблюдаемый дефект, возвращает chatColorsReset=false и НЕ является release gate. До релиза обязательна отдельная коррекция фасада и замена characterization на строгий regression сброса; остальные assertions сохранены. Незавершённая транзакция Workflow Kit допускает правки только файлов T005, поэтому коррекция фасада оформляется следующим штатным task после этого checkpoint.
+
+T005B: production facade переведён на author-origin CSS с !important; временная characterization заменена строгим assert исходного фона после reset, добавлена последовательная смена трёх цветов до сброса. В Doctor fixture следующее независимое действие теперь ждёт завершения предыдущей фоновой cache preparation: прежний smoke мог отменить ещё работающий synthetic recovery и получить CONTEXT_CHANGED. Production Doctor/cache и все его assertions сохранены. Финальная проверка запускается штатными commit gates.
+
+
+## Release 0.6.23 — scope chat-colors-024
+
+Финальный managed commit T005B 8713285891f5e4e650d3bda02d94c1aa853b5ef4 прошёл syntax, полную Node suite (164 tests: 162 passed, 0 failed, 2 platform-specific skipped) и Electron smoke (44.3.0 / Chromium 152.0.7977.78). Строгие regression assertions подтвердили computed styles четырёх цветов, сохранение подсветки кода, latest-wins при быстрой смене цвета, полный reset к исходному фону без reload, сохранение settings и восстановление в новом WebContents, SPA navigation, single-instance/перемещение редактора и изоляцию IPC. Итоговый smoke-result: liveChatColors=true, chatColorsPersistence=true, chatColorsReset=true; известный промежуточный дефект T005 устранён. Светлая и тёмная темы редактора проверены по PNG.
+
+T006: npm run build успешно собрал macOS arm64 и Windows x64 0.6.23. Windows verifier подтвердил PE/portable Node/pinned runtime; executable SHA-256 f5b0aea5e0b09550e46806d77b2cbb838798f6a6ded10e272d37be68253cc6bb. В обоих app.asar версия 0.6.23 и все девять затронутых runtime/UI-файлов побайтно совпадают с source; macOS Info.plist также 0.6.23. ZIP integrity проверена unzip -tq.
+
+Поставки в .harness/runtime/releases/0.6.23/ и ~/Downloads/WebPilot-0.6.23/:
+- Project-Web-Pilot-0.6.23-macOS-arm64.zip: 145198496 bytes, SHA-256 767fbc51a6447bb4c04465a03ffaa98446fc1a1a8e0b7149849bda9c8e172047
+- Project-Web-Pilot-0.6.23-Windows-x64.zip: 318045853 bytes, SHA-256 430c991bd23744532329472c8c6934714717dc8eed424ea6aee1fa91bcdcb076
+
+SHA256SUMS.txt и release-manifest.json находятся рядом с архивами в release-каталоге. Реальный ChatGPT аккаунт не использовался в автоматическом smoke (isolated fixture); native Windows 10/11 запуск остаётся пользовательской проверкой. Релиз готовится к приёмке после DOCS; scope не архивируется автоматически.
+
+DOCS: пройден полный индекс из 33 действующих документов, проверены существование путей и актуальность затронутых контрактов. Обновлены README, PRODUCT, WORKFLOW_START, DECISIONS, MODULES/OVERVIEW/INDEX, specification Workspace & Sessions, актуальная версия в Project Doctor и Windows transfer. Workflow Core/templates/runtime/context delivery/archive не менялись; их действующие контракты сохранены. Исторические сведения о 0.6.22 и промежуточном T005 оставлены как история, итоговый результат — исправленный T005B и release 0.6.23.
+
 ## Постоянный путь релиза — R002, 16.09.2026
 
 `node --test tests/release-mac.test.mjs`: **3 passed, 0 failed** на macOS. Fixture публикует последовательно 1.0.0 и 1.0.1: inode/device app сохранены, новый app и распакованный отдельный ZIP содержат новую версию, obsolete-файл отсутствует в новом app и сохранён в backup. Неверная версия, неизвестный файл в корне и symlink target отклоняются с сохранением исходного содержимого. Проверки используют временные bundle, не пользовательский app. Source UI не менялся.
+
+## Исправленная доставка 0.6.23 — R003, 16.09.2026
+
+Предыдущие ZIP-хеши T006 выше относятся к первоначальной упаковке; действующие архивы пересобраны в R003. Причина коррекции: ZIP 0.6.23 не обновлял приложение по адресу пользовательского алиаса 0.6.20.
+
+`npm run build` и повторный `npm run build:mac` завершились успешно. Постоянный `/Users/oleksandroliinyk/VSCODE/Project Web Pilot/Project Web Pilot.app` имеет версию 0.6.23 и сохранил device/inode (16777231/398344301) после повторной сборки. Старый адрес `.harness/runtime/releases/0.6.20/Project Web Pilot-darwin-arm64/Project Web Pilot.app` обновлён до 0.6.23 с сохранением inode 398123328; прежний Contents сохранён в release-backups/mac-0hX7kS. App.asar обоих адресов и staging: `b8a447d6d5b6340d4ad2c839ca7cef2ca50f9c3512aa40288a576657524b5f2b`.
+
+В обеих platform assemblies проверены package version и девять runtime/UI source files, вложенного корневого app нет. ZIP integrity и актуальные SHA256SUMS проверены; копии ZIP находятся в Downloads/WebPilot-0.6.23. Текущие архивы:
+
+- Project-Web-Pilot-0.6.23-macOS-arm64.zip: 145198496 bytes; SHA-256 `c8e008e16253c7d9b2a3fb6aa34add62454f8bacc15d6e8ae1563052932514b6`.
+- Project-Web-Pilot-0.6.23-Windows-x64.zip: 318045853 bytes; SHA-256 `9428a6485fbdd40635f937a0a1458dd5a3ec8dff558b9a8671a62964f9b9ee3c`.
+
+Полная Node suite после коррекции: 167 tests, 165 passed, 0 failed, 2 native-Windows skipped. Три новых macOS regression tests входят в suite. Код UI не менялся; последний Electron smoke T005B сохраняет актуальность для этого runtime. Native Windows и реальный пользовательский ChatGPT остаются вне автоматической проверки. Работающий Web Pilot не завершался: новую версию пользователь запускает после полного выхода. Scope остаётся ACTIVE до явной приёмки/архивирования.

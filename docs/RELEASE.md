@@ -34,3 +34,7 @@
 ## Проверка механизма
 
 `node --test tests/release-mac.test.mjs` на macOS проверяет повторный выпуск, неизменный device/inode постоянного app, отсутствие устаревших файлов, backup, распаковку отдельного ZIP и отказ при неверной версии, посторонних файлах или symlink target. На других платформах эти три проверки пропускаются. `mac-release.json` и `<zip>.sha256` сохраняют фактическую доставку и контрольную сумму.
+
+## Выполненный переход — 0.6.23
+
+Постоянный корневой app установлен и повторно обновлён штатным build:mac с неизменным inode. Прежний app в releases/0.6.20 также обновлён до 0.6.23 с сохранением identity. Проверены версии, совпадение app.asar со staging, ZIP integrity и отсутствие вложенного app в обоих platform packages. Подробные контрольные суммы и evidence — `docs/VERIFICATION.md` и `.harness/runtime/releases/0.6.23/release-manifest.json`.

@@ -1,6 +1,6 @@
 # Перенос на Windows 10/11
 
-Актуальная Windows-сборка: **Project Web Pilot 0.6.23, x64**. Архив `Project-Web-Pilot-0.6.23-Windows-x64.zip` подготовлен в `.harness/runtime/releases/0.6.23/` на Mac. SHA-256 архива: `430c991bd23744532329472c8c6934714717dc8eed424ea6aee1fa91bcdcb076`. Все исходники по-прежнему принадлежат одному репозиторию `OleynikAleksandr/Project-Web-Pilot`; отдельный исходный проект Win Project Web Pilot больше не нужен.
+Актуальная Windows-сборка: **Project Web Pilot 0.6.23, x64**. Архив `Project-Web-Pilot-0.6.23-Windows-x64.zip` подготовлен в `.harness/runtime/releases/0.6.23/` на Mac. SHA-256 архива: `9428a6485fbdd40635f937a0a1458dd5a3ec8dff558b9a8671a62964f9b9ee3c`. Все исходники по-прежнему принадлежат одному репозиторию `OleynikAleksandr/Project-Web-Pilot`; отдельный исходный проект Win Project Web Pilot больше не нужен.
 
 1. Перенесите ZIP на Windows и полностью распакуйте его в новую папку на локальном диске.
 2. Закройте старый Web Pilot. В распакованной папке `Project Web Pilot-win32-x64` запустите `Project Web Pilot.exe`.

@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 528,
+  "plan_revision": 530,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "chat-colors-024",
@@ -388,8 +388,8 @@
       "expected_commit_message": "fix: preserve app alias across macOS releases"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "chat-colors-024",
         "task_id": "R003",
@@ -496,7 +496,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: chat-colors-024
 Current Task: нет
-Revision: 528
+Revision: 530
 
 ## Цель
 
@@ -549,8 +549,8 @@ Revision: 528
   - Git Commit: [DONE] fix: preserve app alias across macOS releases
   - Reference: chat-colors-024 / R002 / implementation
   - Файлы: .gitignore, scripts/release-mac.mjs, tests/release-mac.test.mjs, docs/RELEASE.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] R003: Подключить штатную сборку и установить релиз 0.6.23 — Ожидает
-  - Git Commit: [PENDING] release: install Web Pilot 0.6.23 at stable path
+- [DONE] R003: Подключить штатную сборку и установить релиз 0.6.23 — Завершено
+  - Git Commit: [DONE] release: install Web Pilot 0.6.23 at stable path
   - Reference: chat-colors-024 / R003 / implementation
   - Файлы: package.json, README.md, docs/RELEASE.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/TRANSFER_TO_WINDOWS.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает

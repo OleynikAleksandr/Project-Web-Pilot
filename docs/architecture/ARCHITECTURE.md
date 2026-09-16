@@ -498,6 +498,290 @@ Private Codex Local ZIP не хранится в Git из-за размера и
 ## Общий packaging macOS/Windows — scope 009 / T002
 
 `package.json` хранит оба platform target: `build:mac` создаёт macOS arm64 `.app`, `build:win` готовит payload и создаёт Windows x64 `.exe`. Общий `npm run build` последовательно выполняет обе сборки, поэтому обычная release-проверка на Mac сразу обновляет оба package. Platform-specific runtime/build outputs остаются в `.harness/runtime` или `windows-app` и не являются Git-состоянием проекта.
+
+Windows build-preflight сначала может переиспользовать локальный payload из `windows-app/resources/windows-payload`, затем sibling artifact и только для публичного Node — network fallback. Это позволяет одному Git checkout не таскать тяжёлые binary runtime-артефакты между компьютерами.
+
+## Clipboard write во встроенном ChatGPT — scope 009 / T006
+
+Удалённый Chromium по-прежнему работает без preload, Node и локального IPC. Permission policy разрешает `clipboard-sanitized-write`, необходимый штатной кнопке «Копировать»/`navigator.clipboard.writeText()`, только при одновременном выполнении двух условий: точный origin `https://chatgpt.com` и запрос исходит из основного правого ChatGPT WebContents. Popup/дочерние WebContents того же origin этого разрешения не получают. Чтение системного clipboard (`clipboard-read`) остаётся запрещённым, как и clipboard write для любых других origin. Остальные ограничения media/geolocation и sandbox не ослабляются.
+
+## Workflow Kit 1.2 — module-centric recovery и upgrade
+
+Встроенный Workflow Kit 1.2 вводит module-centric Recovery v2 без изменения transport API Web Pilot. Fresh workspace получает compact `docs/architecture/OVERVIEW.md`, `docs/MODULES.md` и новый plan template; функциональный scope требует согласованный module context. Existing 1.1 workspace может быть обновлён через Workspace Setup, если owned runtime не изменён: owned Kit/launchers заменяются, AGENTS managed section проверяется по manifest, а `DOCUMENTATION_INDEX.md` сохраняется и расширяется аддитивно. Active plan, workflow config и пользовательские editable docs не перезаписываются. Modified critical runtime или неизвестная версия блокируют автоматический upgrade.
+
+## Project Web Pilot 0.6.3 — Recovery v2
+
+Версия 0.6.3 поставляется со встроенным Workflow Kit 1.2.0. Recovery теперь module-centric: Web Pilot получает уже сформированный COMPLETE execution capsule и не знает о внутреннем составе module context. Kit ограничивает effective hard payload транспортным потолком 180000 bytes; optional docs передаются как reference-only. Fresh workspace получает MODULES/OVERVIEW, а совместимый 1.1 workspace обновляется через отдельный безопасный upgrade. Общий `build` по-прежнему последовательно создаёт macOS arm64 и Windows x64 packages.
+
+## Runtime Lifecycle self-healing — scope 010 / T002
+
+Архитектурный владелец локальных MCP/tunnel выделен в `docs/modules/runtime-lifecycle.md`. Web Pilot использует facade `ensure()`, а runtime владеет process identity и фактическими loopback endpoints. Stale PID record при identity mismatch очищается без signal чужому PID. Порты 17842/17843 остаются только предпочтительными: занятый чужой listener приводит к выбору свободного local port и согласованному обновлению bridge config/tunnel profile. Existing compatible runtime переиспользуется; при отсутствии runtime используется bundled bootstrap. Tunnel credentials остаются только в private runtime state и не возвращаются renderer.
+
+## Self-healing Mac bootstrap — scope 010 / T007
+
+`MacRuntimeBootstrap` валидирует persisted registration и known external source, но не переписывает внешний runtime. Versioned control-v2 выполняется как adapter через Python внешней установки и получает runtime root только через process environment. При отсутствии совместимой external установки bundled Mac source разворачивается в writable userData runtime. `McpRuntime` кэширует успешный bootstrap на экземпляр и всегда строит client по фактическому `status.mcp_url`; первая установка без tunnel credentials поднимает MCP-only и затем запрашивает только одноразовую локальную настройку tunnel.
+
+## Self-healing Windows lifecycle — scope 010 / T008
+
+Windows external/bundled runtime получает lifecycle contract 2 через отдельный adapter-control из ресурсов приложения. Старый payload не удаляется и control source external installation не перезаписывается. Adapter очищает stale PID records без signal foreign PID, выбирает persisted dynamic loopback endpoints и синхронно обновляет bridge config/tunnel profile; MCP context overlay остаётся прежним и при необходимости безопасно перезапускает owned сервисы. DPAPI key не выходит из Windows private runtime state.
+
+## Project Web Pilot 0.6.4 — self-healing Runtime Lifecycle
+
+Release 0.6.4 integrates persisted runtime registration and lifecycle adapters for macOS/Windows. macOS package includes the clean runtime ZIP plus pinned arm64 `uv`; Windows keeps the existing payload/portable Node and adds adapter-control without forcing payload reinstall. Web Pilot no longer treats 17842/17843 as application constants: the runtime owns dynamic loopback endpoints and Web Pilot uses `status.mcp_url`. External Mac source is not modified; Windows external lifecycle control is likewise adapter-based while the pre-existing MCP context overlay remains separate.
+
+## Workspace sessions Chat / Work — scope 011
+
+`WorkspaceSessions` переходит на storage schema v4: каждая локальная session имеет immutable `experience=chat|work`, а concrete conversation URL обязан принадлежать тому же experience. Создание session является операцией проекта: меню `⋯` создаёт `newSession(workspace, experience)` и одновременно делает этот проект/сессию выбранными. Первая session нового или впервые подключаемого проекта получает experience из transient setup state; повторное открытие уже зарегистрированного проекта не создаёт session и не спрашивает тип заново. Context Recovery остаётся независимым от experience.
+
+## Chat / Work experience routing — scope 011 / T004
+
+Workspace & Sessions владеет только верхнеуровневым маршрутом Chat/Work. `chatgpt-experience` задаёт два entrypoint и классификатор URL; `ContextSession` fail-closed проверяет experience до получения/отправки recovery. Модель внутри ChatGPT не фиксируется Web Pilot. Concrete conversation URL остаётся единственной долговременной облачной привязкой сессии и обязан соответствовать persisted `experience`.
+
+## Project Web Pilot 0.6.5 — Chat / Work sessions
+
+Release 0.6.5 добавляет persisted `session.experience=chat|work`, first-session choice и project-menu session creation. Chat и Work различаются только entrypoint/URL namespace на уровне Workspace & Sessions; `ContextSession` fail-closed блокирует recovery при mismatch. Модель ChatGPT остаётся нативной настройкой соответствующего experience. macOS и Windows пакеты собираются из одного source of truth.
+
+
+## Work conversation URL correction — scope 011 / T006
+
+Production ChatGPT использует `/work/` только как entrypoint. После создания Work conversation URL становится общим `/c/<id>`, поэтому URL namespace не является владельцем experience. `WorkspaceSessions.experience` остаётся immutable source of truth; shared `/c/<id>` допустим для Work, а старые schema без experience по-прежнему мигрируют `/c/<id>` как Chat.
+
+
+## Work provenance guard — scope 011 / T007
+
+`ContextSession` проверяет experience только пока Work conversation ещё не привязан: `/work/` обязателен до send. После начала send общий `/c/<id>` не считается сменой experience; binding разрешён только если текущая страница содержит request marker именно этой отправки. После binding используется exact conversation URL. Это сохраняет fail-closed до mutation и устраняет ложный mismatch реального Work.
+
+
+## Project Web Pilot 0.6.6 — Work shared URL fix
+
+Patch release 0.6.6 корректирует Workspace & Sessions для фактического production routing ChatGPT Work: `/work/` является entrypoint, а created conversation использует общий `/c/<id>`. Experience хранится локально и после binding подтверждается exact URL + request-marker provenance, а не namespace.
+
+
+## Session archive — scope 011 / T009
+
+Workspace & Sessions расширяет lifecycle на отдельный архив session. `session.archivedAt` скрывает разговор из активного дерева без удаления cloud conversation. Активный проект всегда сохраняет хотя бы одну неархивную session; при архивировании выбранной session selection атомарно переходит на последнюю использованную оставшуюся session. Archive window разделяет project archive и session archive; sessions архивированных проектов не дублируются отдельно. Локальный delete session удаляет только metadata/bindings и доступные локальные backup/diagnostic references, не затрагивая workspace folder или OpenAI.
+
+
+## Session archive storage — scope 011 / T010
+
+Persisted storage переходит на schema v5 с `session.archivedAt`. Project-level `archivedAt` и session-level archive остаются независимыми; current view сохраняет project archive state отдельно от `sessionArchivedAt`. Active project инвариантно содержит хотя бы одну активную session. Локальный forget архивной session очищает session metadata и известные migration backup/diagnostic references, но не файловую систему workspace и не OpenAI.
+
+
+## Session archive UI — scope 011 / T011
+
+Archive BrowserWindow остаётся единым локальным surface, но разделён на project/session tabs. Project deletion сохраняет прежний filesystem-safe workflow. Session deletion вызывает только WorkspaceSessions local metadata cleanup и не использует WorkspaceDeletion, поэтому workspace folder не может быть удалён через session action. Sidebar session menu и archive IPC используют workspace+projectId+sessionId identity, а snapshot активного проекта публикует только неархивные sessions.
+
+
+## Project Web Pilot 0.6.7 — session archive
+
+Release 0.6.7 добавляет session-level archive поверх WorkspaceSessions schema v5. Sidebar публикует только активные sessions, Archive BrowserWindow разделяет project/session tabs, а local session deletion работает только с metadata/bindings и не использует filesystem project deletion. Chat/Work routing и Recovery Capsule protocol не меняются.
+
+
+## Исправление выбора Chat и временного URL — T013
+
+Production diagnostics 14.09.2026 17:52:57–17:53:08 UTC: новый Chat загрузил `/`, отправил recovery, затем прошёл `/c/WEB:<uuid>` → `/c/<id>`. Скриншот пользователя подтвердил фактический Work. Корневой URL не доказывает выбранный Chat: веб-приложение использует сохранённый режим и может выбирать Work по умолчанию.
+
+Проверен публичный код текущего ChatGPT Web: `4813494d-i88ebrgl0r2g94a4.js` определяет persisted ChatSurfaceMode и Work default; `984a38d2-hg7qoqxweuz8lvz0.js` реализует нативный toggle с `data-tpp-toggle-value=chatgpt|work` и `data-state=on|off`. Источник: https://chatgpt.com/cdn/assets/984a38d2-hg7qoqxweuz8lvz0.js. Web Pilot использует наблюдаемый нативный toggle; cookies, localStorage и внутренние функции ChatGPT не изменяются напрямую.
+
+Перед первым recovery новая session подтверждает фактический режим через toggle. Если выбран другой режим, выполняется нативный click и отдельное чтение подтверждения. Fallback ограничен группой с точным доступным именем Select chat surface / Выберите режим чата. Недоступный или неопределённый toggle блокирует подготовку/отправку; draft и active generation сохраняются. Режим дополнительно проверяется в renderer в том же действии, что fill/send. Это исправление исполняет ранее согласованный выбор Chat/Work и не выбирает модель.
+
+`/c/WEB:<uuid>` допускается только как промежуточный адрес после начатой отправки. Он не сохраняется в chatUrl. Наблюдение request marker подтверждает отправку; binding ждёт permanent concrete URL. Повторная отправка не выполняется. Уже привязанные sessions продолжают проверяться по exact URL.
+
+
+## Release integration — T014 / Project Web Pilot 0.6.8
+
+Patch 0.6.8 подтверждает фактический Chat/Work через нативный переключатель до первого recovery. Новый Chat после Work открывается с явно выбранным Chat; модель не фиксируется. Временный URL /c/WEB:<uuid> ожидает permanent URL без ложного mismatch и повторной отправки. Уже существующие привязки и пользовательские черновики сохраняются.
+
+macOS arm64 и Windows x64 packages пересобираются из одного исходного дерева. Реальная проверка нового Chat/Work остаётся пользователю; scope остаётся ACTIVE/READY_FOR_ACCEPTANCE после обязательных checks.
+
+## Session token estimate — scope 012 / T002
+
+Workspace & Sessions использует src/session-tokens.mjs и js-tiktoken 1.0.21 (pure JS, o200k_base из установленного пакета). Токенизация исполняется в одном worker_threads worker вне Electron main thread. DOM reader читает только user/assistant message elements с устойчивым message/turn ID, удаляет UI controls и не трогает composer/сеть. Неизменённые тексты пропускаются по SHA-256; новая версия того же message ID заменяет количество. Локальная schema v5 допускает optional tokenEstimate; старые записи без поля остаются читаемыми. Record содержит encoding, total, updatedAt и таблицу ID → digest/tokens, без копии текста. Guard записи проверяет выбранную session и exact chatUrl. Оценка включает ранее прочитанные сообщения, даже если DOM их выгрузил; не измеряет серверный контекст.
+
+## Session token UI — scope 012 / T003
+
+Main читает доступные DOM-сообщения выбранного concrete conversation раз в 3 секунды и передаёт их SessionTokenCounter. До/после асинхронного чтения и токенизации проверяются navigationId, workspace, sessionId и exact URL. В sidebar передаются только total/encoding/messageCount/updatedAt, без message IDs/хешей/текстов. Session row содержит нижнюю flex-строку: дата слева, ≈ N ток. справа; неизвестное значение обозначено — ток. Ширина 312 px и светлая/тёмная тема поддерживаются. Tooltip объясняет учёт только прочитанного текста и загрузку старых сообщений при прокрутке.
+
+## Release integration — scope 012 / T004 / Project Web Pilot 0.6.9
+
+Версия 0.6.9 добавляет локальную оценку токенов прочитанной переписки справа снизу каждой session row. js-tiktoken 1.0.21 и словарь o200k_base включены в macOS arm64 и Windows x64 packages; загрузка словаря из сети не требуется. Обе app.asar содержат одинаковые с исходным деревом модули счётчика, storage, main и sidebar. Отдельно проверен запуск SessionTokenCounter worker из собранного macOS app.asar в Electron. Recovery и Chat/Work routing не меняются; сравнение оценки с реальным ChatGPT остаётся ручной приёмкой пользователя.
+
+## Предварительная подготовка recovery — scope 012 / T006
+
+ContextCache хранит до четырёх полных штатных MCP packets в памяти, объединяет конкурентные запросы и прогревает выбранный workspace с интервалом 5 секунд. contextInputKey асинхронно читает Git metadata/status и хеши содержимого declared inputs, изменённых файлов, Kit/launcher, transaction/evidence. Проверяется канонический путь и состояние до/после builder; нестабильный пакет не попадает в кэш. Unsupported inputs оставляют foreground на штатном recover; background не запускает recovery при активной transaction. Сессии получают отдельные request IDs поверх общего пакета. Новых зависимостей и дисковых копий контекста нет.
+
+## Подключение предварительной подготовки — scope 012 / T007
+
+ContextSession прогревает пакет после готовности runtime и затем при обычных ticks, в том числе во время ответа ChatGPT. Новая сессия и refresh используют один ContextCache. Метаданные попытки сохраняют input key, длительность foreground preparation и browser delivery; перед click проверяется ключ, а не только plan revision/возраст. В UI подробности показывают оба времени. Проверка staged состояния использует logical index (git ls-files --stage), не служебные stat-поля index; простое обновление Git stat cache не инвалидирует неизменившийся контекст. Полный текст и hash сохраняются без изменений; request_id создаётся отдельно для каждой отправки.
+
+## Индикаторы операций — scope 012 / T008
+
+Общий renderer-компонент progress.mjs отображает spinners/название этапа/elapsed без процентов. Sidebar объединяет pageLoading, setup phase, ContextSession phase и pending IPC action; отдельное окно archive использует тот же компонент. ContextCache сообщает только начало/конец фактической сборки через onChange; дешёвые cache checks не зажигают busy-индикатор. Фоновая сборка отображается отдельно и не меняет delivery state. Timer не пересоздаётся при обычных snapshot updates, снимается при завершении/pagehide. CSS поддерживает dark theme и prefers-reduced-motion. Индикатор доступен через role=status, изменение секунд исключено из live announcements.
+
+## Release 0.6.10 — scope 012 / T009
+
+macOS arm64 и Windows x64 packages включают предварительную подготовку полных recovery packets и общие индикаторы операций. Готовый пакет хранится в памяти и проверяется по входным данным; первая подготовка после старта обычная. При работе selected workspace обновляется фоновым прогревом каждые 5 секунд. Новые сессии и manual refresh используют ту же копию при неизменных входах. Подробности контекста показывают реальные preparation/delivery durations. Смена сессии автоматически по завершении плана и изменение подсчёта токенов в этот релиз не входят.
+
+## Scope 012 / T011 — полная история для счётчика
+
+ConversationHistory наблюдает нативные GET выбранной беседы через уже используемый CDP. Пагинация читает messages/page_info/start_cursor до явного конца; предыдущие страницы загружаются Electron session.fetch в том же профиле, только GET того же conversation ID. Заголовки авторизации живут в памяти; текст не пишется в логи/storage. Ограничены размер, число страниц, время; ошибки не дают статус полноты. SessionTokenCounter принимает complete snapshot: удаляет старые DOM/branch entries и сохраняет coverage=full-history. Оценка активного контекстного окна не вычисляется.
+
+## Scope 012 / T012 — история и состояние счётчика в Electron
+
+Main подключает ConversationHistory к тому же debugger и session, которые уже обслуживают ChatGPT. Начальный about:blank нужен для готовности WebContents перед CDP; затем перехватывается первая реальная загрузка истории. Самостоятельные GET ограничены предыдущими страницами выбранной беседы. Session snapshot передаёт coverage и краткий tokenHistory status; тексты, курсоры и авторизация в renderer/sidebar не передаются. UI отделяет неполную оценку, загрузку и завершённую текстовую историю; время последнего полного расчёта видно в tooltip. Recovery cache и доставка остаются прежними.
+
+## Release 0.6.11 — scope 012 / T013
+
+macOS arm64 и Windows x64 собираются из одного source tree с ConversationHistory, полным snapshot counter и явной неполнотой старых значений. Recovery cache, Chat/Work routing и archive lifecycle сохранены. Нативный веб-механизм пагинации подтверждён публичным клиентским кодом и реальными метаданными has_previous_page; автоматическая end-to-end проверка выполнена на изолированной Electron fixture. Проверка количества сообщений реального аккаунта требует открытия сессии в обновлённом приложении.
+
+## Scope 012 / T015 — удаление экспериментального подсчёта
+
+Счётчик истории полностью исключён из runtime: удалены ConversationHistory и SessionTokenCounter, зависимость js-tiktoken, DOM-сэмплинг, загрузка предыдущих страниц и ранняя подготовка WebContents. Main снова открывает выбранный ChatGPT напрямую. Sidebar не содержит чисел токенов/состояний счётчика. WorkspaceSessions удаляет obsolete tokenEstimate при загрузке, сохраняя основной session contract. Существующая пассивная Chromium diagnostics и recovery/cache не менялись.
+
+## Release 0.6.12 — scope 012 / T016
+
+Удаление подсчёта включено в обе platform-сборки. В app.asar нет session-tokens.mjs, conversation-history.mjs и js-tiktoken. Сохраняются быстрый recovery, проектные Chat/Work sessions, archive и общие operation spinners.
+
+
+## Локальные имена проекта и session — scope 013 / T001
+
+WorkspaceSessions не меняет идентичность Workflow Kit ради пользовательского переименования. Канонические `workspace/projectId/name` продолжают приходить из plan, а `displayName` является отдельным persisted alias оболочки. Session title получил источник `page|manual|scope`; page title — только fallback. `lastNamedScopeId` хранится на project record и обеспечивает одно автоматическое именование на scope. Schema остаётся v5: новые поля optional и старые записи читаются без миграции.
+
+
+## Rename IPC и sidebar — scope 013 / T002
+
+Ручное переименование проходит через существующий `assertLocalSender` и два специализированных IPC channel; универсального write/shell API не добавлено. Remote WebContents ChatGPT не имеет preload этих команд. Renderer использует нативный prompt только для ввода строки, после чего main процесс валидирует workspace/session и сохраняет нормализованное значение через WorkspaceSessions. UI получает alias уже из безопасного snapshot.
+
+
+## Scope-driven session title — scope 013 / T003
+
+Автоимя не расширяет MCP surface. `readWorkspace` возвращает `objective`; уже существующий ContextSession poll помещает актуальный projectInfo в state. `publish()` проверяет новый `scopeId`, а WorkspaceSessions атомарно применяет objective к текущей session и сохраняет `lastNamedScopeId`. Повторные publish/tick идемпотентны.
+
+
+## Release 0.6.13 — scope 013 / T004
+
+Обе platform-сборки используют одну реализацию rename: локальный project alias, persisted session title source и scope-driven name. Нового MCP endpoint нет; security boundary remote ChatGPT/local sidebar не расширен.
+
+
+Фактическая package-проверка 0.6.13: macOS `CFBundleShortVersionString=0.6.13`; macOS и Windows `app.asar/package.json` также 0.6.13. В обоих asar найдены `pilot:rename-project`, `pilot:rename-session`, UI `rename-project` и scope naming path `rememberScopeTitle/applyScopeTitle`.
+
+## Переход после scope — 014 / T002
+
+WorkspaceSessions хранит optional scopeTransition (scopeId, watching/choice/opened, sessionId). observeScope записывает известный активный scope и подтверждённое NONE/archivedScopeId. continueAfterScope перечитывает plan и атомарно сохраняет новую session вместе с обработанным переходом. Повторное обращение выбирает ранее созданную session; прежние records и schema v5 сохраняются.
+
+## Наблюдение закрытия — 014 / T003
+
+Main наблюдает scope через существующий ContextSession inspect и сохраняет переход для точной выбранной session. Snapshot показывает ожидающий выбор лишь при совпадении текущего NONE/archivedScopeId. Локальный IPC continue-after-scope проверяет workspace, вызывает атомарный session creator и обычный navigate/ContextSession. Browser не получает доступ к локальному API. Стартовый envelope передаёт согласованное правило приёмки агенту; сам capsule не изменяется.
+
+## Выбор следующей сессии — 014 / T004
+
+В существующей plan-card появился локальный вопрос с Chat/Work. Sidebar получает только workspace/scopeId ожидающего перехода и вызывает узкий preload facade continueAfterScope. До ответа навигации нет; обе кнопки блокируются общим actionPending. Используются существующие session-choice, тема и стили карточки.
+
+## Релиз 0.6.14 — scope 014 / T006
+
+macOS arm64 и Windows x64 packages собраны из общей реализации перехода после принятия плана. Проверка package version и шести изменённых src-файлов внутри обоих app.asar сверяется с исходниками; версия Info.plist совпадает. Зависимости и формат recovery не изменены. Текущий scope остаётся READY_FOR_ACCEPTANCE до пользовательской проверки.
+
+## Компактное дерево — scope 015 / T002
+
+WorkspaceSessions экспортирует activeSessionsNewestFirst: активные sessions по createdAt убыванию, равные даты — обратный исходный индекс, исходный массив не меняется. Main snapshot и явный выбор проекта используют одну функцию. Параметр latest=true передаётся только пользовательским pilot:select-workspace: выбирается newest active session и раскрывается проект. Reload, return-chat, startup, archive и recovery сохраняют прежнюю семантику выбранной session. Новая схема данных и дополнительные API не нужны.
+
+### Компактное дерево проектов (scope-015)
+
+Sidebar использует native details/summary для редких действий в заголовке «Ваши проекты». Клик по имени сразу выбирает последнюю сессию; отдельная стрелка меняет только expanded. Сессии имеют общий с проектом ствол и ответвления, выбранная строка выделена акцентом. Каждый список ограничен тремя строками и прокручивается независимо; scrollbar-gutter и постоянное оформление полосы оставляют место справа от Work/Chat и меню. ScrollTop сохраняется по workspace при перерисовке, а явный выбор проекта/новая сессия возвращают список к началу. Меню проектов и сессий используют native Popover API и верхний слой Chromium, поэтому не обрезаются прокруткой. Встроены только используемые SVG Lucide с сохранением лицензии; новых зависимостей нет.
+
+Для Electron на macOS scrollbar-color оставлен auto: явные ::-webkit-scrollbar width/track/thumb включают полосу с зарезервированной шириной вместо скрывающегося системного overlay. Геометрия проверяется в реальном Chromium.
+
+Scroll позиции читаются только у видимых списков до render и восстанавливаются после setup/archive views. События скрытых или отсоединённых списков игнорируются: временная проверка папки не может заменить сохранённую позицию нулём.
+
+## Релиз 0.6.15 — scope 015 / T006
+
+Единые исходники macOS arm64 и Windows x64 включают компактное дерево проектов. Версии package.json, package-lock.json и обоих вызовов electron-packager синхронизированы на 0.6.15. Проверки хранилища и sidebar выполнены в T002/T005, реальный Electron IPC/DOM и геометрия в T004. Новые зависимости и изменения runtime не требуются.
+
+## Scope 016 — удаление индикатора context window
+
+15.09.2026 отдельная пользовательская плашка «Контекстное окно / Ожидаем данные» удалена из sidebar. Renderer больше не форматирует input/model token counts и не показывает progress заполнения окна. Общая Chromium diagnostics остаётся внутренней служебной подсистемой и не является пользовательской метрикой размера активного контекста.
+
+В T002 `main` перестал проецировать `contextWindow` в sidebar snapshot, а `ChromiumDiagnostics` больше не имеет observer/callback API для пользовательского индикатора. Внутренний разбор безопасной token/context telemetry, model-limit и compact signals сохранён для диагностики, но не инициирует отдельные перерисовки sidebar.
+
+## Релиз 0.6.16 — scope 016 / T003
+
+Единые macOS arm64 и Windows x64 пакеты собраны без пользовательского индикатора context window и без отдельного `contextWindow` state/callback. Безопасный внутренний parser Chromium diagnostics для token/context/compact telemetry сохранён. `package.json`, lockfile, оба electron-packager target и macOS bundle синхронизированы на 0.6.16; содержимое ключевых source-файлов в обоих app.asar совпадает с рабочим деревом.
+
+## Windows workspace Node — 15.09.2026
+
+Windows-only исправление WorkspaceSetup изолирует NODE_OPTIONS/NODE_PATH в окружении дочернего настоящего Node и различает отсутствие Node, старую версию и отказ запуска. Bundled portable Node остаётся первым кандидатом, Electron/новый runtime не добавляются. Полный контракт — docs/WORKSPACE_SETUP.md. Изменение исполняет поручение исправить показанный NODE_MISSING только в Windows.
+
+## Windows-only сборка 0.6.17
+
+Из общего checkout собран только Windows x64 пакет с исправлением WorkspaceSetup. Версия исходного package/lock и обеих будущих packaging-команд согласована на 0.6.17; существующая Mac 0.6.16 не пересобиралась. Доказательства — docs/VERIFICATION.md; актуальная доставка — docs/TRANSFER_TO_WINDOWS.md.
+
+## ChatGPT conversation auto-scroll — scope chat-autoscroll-020 / T001
+
+Автоследование реализовано отдельным renderer-side DOM controller `chatgpt-auto-scroll.mjs`, устанавливаемым main process после полной загрузки и SPA-навигации ChatGPT. Controller не обращается к закрытым API страницы: он находит ближайший scrollable ancestor сообщения/composer, следит за DOM mutation, прекращает follow после scroll away from bottom и возобновляет его при возврате вниз или стандартной отправке из composer. Один state key в `window` делает повторную установку идемпотентной.
+
+## Release 0.6.18 — scope chat-autoscroll-020 / T002
+
+macOS arm64 и Windows x64 используют один модуль conversation auto-scroll и одну main-process интеграцию. Оба `app.asar` содержат версию 0.6.18 и побайтно совпадающую с source копию `src/chatgpt-auto-scroll.mjs`; platform-specific runtime packaging не меняет semantics прокрутки.
+
+## Restart correction — scope chat-autoscroll-020 / T003
+
+Первоначальный controller трактовал любое `scroll` away from bottom как ручное действие. Это неверно при startup: ChatGPT может асинхронно восстановить сохранённую позицию уже после `did-finish-load`. Версия controller v2 отделяет user scroll intent от самого scroll event. Non-bottom scroll без предшествующего wheel/keyboard/touch/pointer gesture не снимает follow и планирует возврат вниз; ручной gesture сохраняет suspended semantics. Resume при Send и смене route очищает прежнее intent-window.
+
+## Rebuilt 0.6.18 — scope chat-autoscroll-020 / T004
+
+macOS arm64 и Windows x64 повторно упакованы после restart correction. Оба `app.asar` содержат controller v2 и точную source-копию `src/chatgpt-auto-scroll.mjs` с SHA-256 `a0cf397fc41c2aab175427472790fc1e2182b778b533efe2a49dfc5736a109f7`. Номер версии остаётся 0.6.18; различать первоначальный и исправленный пакет следует по ZIP SHA-256 из `docs/VERIFICATION.md`.
+
+## Project Doctor — T010
+
+Автономный Node worker `resources/project-doctor-worker.mjs` использует bundled Workflow Kit, проверяет known payload и выполняет допустимые файловые операции под общей блокировкой. `resources/project-doctor/core.mjs` формирует план ремонта; `files.mjs` отвечает за пути, snapshot, backup, atomic writes и осторожный rollback. Канонический контракт — `docs/modules/project-doctor.md`.
+
+### Desktop integration Project Doctor — T011
+
+Координатор `src/project-doctor.mjs` запускает repair worker вне MCP/ChatGPT, повторяет проверку Workspace Setup, при необходимости переподключает локальные команды и проверяет Runtime Lifecycle. `src/ui/project-doctor.mjs` отображает выбранный проект, этап, исправления и blockers; IPC main проверяет источник и workspace. Settings остаются доступны при setup failure, а setup содержит прямую кнопку доктора. Ни открытие Settings, ни чтение отчёта не инициируют ремонт.
+
+### Release Project Doctor 0.6.20
+
+Доктор включён в обе платформенные поставки. Версионированные сборки размещаются в `.harness/runtime/releases/0.6.20/`, чтобы не заменять уже запущенную предыдущую сборку. Файлы `.harness/kit-manifest.json` реального проекта намеренно оставлены с исходным рассогласованием для пользовательского запуска доктора; само приложение не чинит его при запуске.
+
+## Correction release 0.6.21 — scope 022 / T005
+
+После пользовательского запуска Project Doctor исходный 0.6.20 сохраняется как отдельный исторический релиз. Correction release получает собственную версию 0.6.21; package metadata и app-version packaging обоих targets синхронизированы.
+
+### Проверка и поставка 0.6.21 — scope 022 / T006
+
+Correction release использует тот же Electron 44.3.0 source tree и Workflow Kit 1.3.0 с correction-round semantics. Поставки macOS arm64 и Windows x64 находятся отдельно в `.harness/runtime/releases/0.6.21/`; пакетная версия внутри обоих `app.asar` и macOS Info.plist равна 0.6.21. Release checks включают полную Node suite, isolated Electron smoke, Windows package verification и SHA-256 обоих ZIP.
+
+### Реальный Doctor reconcile и correction lifecycle — scope 022 / DOCS
+
+16.09.2026 пользователь физически запустил Project Doctor 0.6.20 на текущем Project Web Pilot. Manifest был reconciled до Workflow Kit 1.3.0 (`doctor_reconciled_at=2026-09-16T07:28:22.983Z`). После этого correction scope устранил расхождение lifecycle: `READY_FOR_ACCEPTANCE` остаётся ACTIVE gate, а явное новое поручение до archive может добавить correction tasks, вернуть plan в `IN_PROGRESS` и rearm `DOCS` с новой commit iteration. 0.6.21 остаётся историческим correction release; актуальная поставка — 0.6.22.
+
+## Release 0.6.22 — scope hidden-tool-scroll-023 / T002
+
+Исправление footprint скрытых tool-call строк выпускается отдельной версией 0.6.22; принятая ранее 0.6.21 остаётся неизменным историческим релизом. `package.json`, lockfile и `--app-version` для macOS arm64/Windows x64 синхронизированы на 0.6.22. Функциональное изменение ограничено DOM-фильтром ChatGPT и его взаимодействием с уже существующим conversation auto-scroll; release packaging, MCP/runtime и Workflow Kit не меняются.
+
+## Цвета чата — T001
+
+Чистый модуль src/chatgpt-colors.mjs валидирует четыре nullable HEX-цвета и формирует ограниченный CSS. Facade ChatColors держит одну актуальную author-origin таблицу стилей с !important, объединяет быстрые изменения и повторяет применение после навигации ChatGPT. Сброс удаляет наложенные стили; сторонние origin исключены.
+
+T002: ChatColorsWindow создаёт одно немодальное перемещаемое окно как архив. Его preload допускает только palette get/change/reset/close; IPC проверяет точный WebContents, mainFrame и локальный URL. Переходы и новые окна редактора запрещены. Повторное открытие фокусирует существующий экземпляр.
+
+T003: локальный renderer редактора содержит четыре нативных color picker с live input, HEX-поля и независимый/общий сброс. Ответы IPC с устаревшим номером изменения не перерисовывают свежий выбор; ошибки сохранения показаны в самом редакторе. Светлое/тёмное оформление повторяет окно архива.
+
+T004: main подключает палитру к изолированному ChatGPT WebContents, восстанавливает её из settings.json и предоставляет редактор через проверенный sidebar IPC. Сохранение всех настроек использует общую последовательную очередь, исключая конкуренцию за временный settings.json.tmp. Изменение цвета применяется до ожидания дисковой записи; окно редактора закрывается вместе с приложением.
+
+T005: отдельная кнопка «Цвета чата…» размещена в Settings рядом с оформлением оболочки. Редактор оставляет открытый чат видимым и сохраняет настройки автоматически.
+
+T005B: используется author-origin insertCSS с !important. В Electron 44.3.0 user-origin стили в isolated probe не снимались removeInsertedCSS; author-origin проходит строгий regression сброса и последовательной смены цветов. Исторический T005 checkpoint не является итоговым результатом.
+
+
+## Релиз 0.6.23 — цвета чата
+
+Общий source собран для macOS arm64 и Windows x64. Палитрой владеют ChatColors (валидация/CSS/lifecycle), ChatColorsWindow (локальное окно и IPC) и renderer chat-colors (четыре controls). main отвечает за binding и последовательную запись settings; схема workspace/session не менялась. Author-origin CSS с !important снимается при сбросе без reload. Поставки формируются в .harness/runtime/releases/0.6.23/; ZIP-копии — ~/Downloads/WebPilot-0.6.23/.
+
 ## Постоянный macOS app — R002, 16.09.2026
 
 `release-mac.mjs` разделяет проверку bundle, установку Contents с сохранением корневого device/inode и публикацию ZIP. Источник и копия проверяются по версии Info.plist/package.json, bundle ID и SHA-256 app.asar/Info.plist. Старый Contents сохраняется в `.harness/runtime/release-backups/`; ошибка установки возвращает его. Постоянный `Project Web Pilot.app` и временный install staging исключены из Git. Результат publisher — app в корне, ZIP/checksum, копия ZIP в Downloads и `mac-release.json`; конкурентная публикация блокируется lock. Контракт: `docs/RELEASE.md`.
+
+## Штатная публикация macOS — R003, 16.09.2026
+
+`build:mac` теперь вызывает prepare → build:mac:package → release:mac. Оба packager commands исключают постоянный app и install staging из входного дерева. Полный build и повторный build:mac прошли; повторный выпуск сохранил inode app 398344301. Legacy app по адресу releases/0.6.20 обновлён однократно с сохранением inode 398123328. Оба адреса содержат 0.6.23; будущая доставка использует корневой app. Работающие процессы не перезапускались.
