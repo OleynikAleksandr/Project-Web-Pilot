@@ -853,3 +853,5 @@ B001 commit c96f06d: managed syntax PASSED (19 ms), suite PASSED (21176 ms), ele
 - Project-Web-Pilot-0.6.24-Windows-x64.zip: 318045865 bytes; SHA-256 e88232f15af71b7249c31d981a1e328b778cc14182bb983cc9cdec9505b9e70e.
 
 Native Windows и визуальная проверка настоящего ChatGPT остаются пользовательскими; исправление проверено на Chromium fixture с реальным DOM-маркером плашки. Scope не архивирован.
+
+DOCS correction iteration: проверены 34 indexed documents и согласованность release/current-version ссылок. Обновлены README, PRODUCT, WORKFLOW_START, Project Doctor current version, Windows transfer и DECISIONS; контракты цветов и постоянного релиза обновлены в B001/B002. Scope вновь готов к пользовательской приёмке после commit DOCS.
