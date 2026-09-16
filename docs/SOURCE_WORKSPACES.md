@@ -31,7 +31,7 @@ Project ID нового проекта: `cf944136-d1fc-4bd5-9ea0-e46d1fe230e7`. 
 
 Связанные исходники: `kit/lib/plan.mjs`, `validate.mjs`, `transaction.mjs`, `git.mjs`, `git-hooks.mjs`, `common.mjs`, `platform.mjs`, `installation-files.mjs`, `kit/schemas/`, `kit/templates/`. Регрессии: `tests/install.test.mjs`, `workflow.test.mjs`, `recovery.test.mjs`, `windows.test.mjs` и `scripts/demo-workflow.mjs`.
 
-Источник переносимого runtime — **WF001/kit**, версия 1.1.0 по common.mjs. Собственная установленная WF001/.harness/kit имеет manifest 1.0.0: не перепутать установленный экземпляр с исходным комплектом. В Project Web Pilot установлена версия 1.1.0; её не переустанавливать ради начала сессии.
+Источник переносимого runtime — **WF001/kit**, версия 1.1.0 по common.mjs. Собственная установленная WF001/.harness/kit имеет manifest 1.0.0: не перепутать установленный экземпляр с исходным комплектом. Это историческое происхождение комплекта. Текущий source/bundled Workflow Kit в Web Pilot — 1.3.0; собственный manifest 1.2.0 намеренно оставлен для пользовательского теста Доктора 0.6.20. Не переустанавливать его ради начала сессии.
 
 ## Codex Local Mac: откуда брать локальное подключение
 
@@ -50,7 +50,7 @@ Project ID нового проекта: `cf944136-d1fc-4bd5-9ea0-e46d1fe230e7`. 
 | [Локальные исправления workflow](</Users/oleksandroliinyk/VSCODE/Codex Local Mac/docs/WORKFLOW_FIXES.md>) | История исправления plan:apply и незавершённых транзакций |
 | [Windows-комплект](</Users/oleksandroliinyk/VSCODE/Codex Local Mac/Windows-Codex-Local/START_HERE.md>) | Отдельный переносимый источник для будущего Windows-этапа |
 
-Текущий macOS MCP публикует 47 tools: 46 основных и read-only workflow_context_recover. Экспериментальные ACK/status/hook tools удалены по поручению пользователя 11.09.2026. Ранние разделы с числами 46 и 50 описывают прежние этапы. Перед реализацией проверить текущий tools/list. Python-окружение находится в `mac-codex-local/.venv`, требования — `mac-codex-local/requirements.txt`; их не копировать целиком в Git.
+В снимке 11.09.2026 macOS MCP публиковал 47 tools: 46 основных и read-only workflow_context_recover. Экспериментальные ACK/status/hook tools удалены по поручению пользователя 11.09.2026. Ранние разделы с числами 46 и 50 описывают прежние этапы. Перед реализацией проверить текущий tools/list. Python-окружение находится в `mac-codex-local/.venv`, требования — `mac-codex-local/requirements.txt`; их не копировать целиком в Git.
 
 Локальный endpoint текущей конфигурации — `http://127.0.0.1:17842/mcp`; service manager также проверяет tunnel readiness. Команды control.py возвращают JSON; проверять exit code и содержимое, не только наличие процесса. Пример read-only диагностики существующей установки:
 

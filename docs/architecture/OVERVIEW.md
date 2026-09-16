@@ -12,6 +12,7 @@ Project Workflow Kit предназначен для проектов любог
 - Каждый рабочий scope заканчивается отдельной задачей «Актуализация всех документов проекта»; только после её завершения результат может перейти в `READY_FOR_ACCEPTANCE`. Пользовательская приёмка остаётся отдельным последующим gate.
 - Web Pilot доставляет уже сформированный recovery packet в связанную ChatGPT-сессию и не собирает проектный контекст самостоятельно.
 - Workspace/session слой хранит связь проекта с чатами, но не меняет semantics Workflow Kit.
+- Project Doctor проверяет и чинит известные служебные неисправности через доверенный локальный worker, с backup и повторной readiness; не зависит от рабочего ChatGPT/MCP для файлового ремонта.
 - Runtime lifecycle поднимает или переиспользует MCP+tunnel и должен оставаться отделён от plan/recovery semantics.
 - macOS и Windows используют один Git source of truth; platform runtime/build state остаётся локальным.
 

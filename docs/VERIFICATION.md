@@ -753,3 +753,11 @@ JSDOM regression исполняет тот же renderer script, который 
 ## Project Doctor release 0.6.20 — T012 / 16.09.2026
 
 Десять backend tests дополнительно проверяют настоящий interrupted commit: неподтверждённый candidate не фиксируется доктором, завершённый exact commit закрывает только технический журнал с backup и без изменения HEAD. Electron smoke на отдельном fixture воспроизвёл stale manifest и блокировку открытия, вход в доктор через setup, отсутствие ремонта при одном открытии Settings, явный repair, backup, повторную readiness, открытие прежней сессии, повторный no-op, ровно одну передачу при refresh и создание нового Work. Проверены light/dark на минимальной ширине 312 px. Проверка не обращается к реальному ChatGPT/MCP.
+
+## Итоговая проверка выпуска 0.6.20
+
+Управляемый commit T012 `10a1198a537bbcbc3729f242b44aa953374a9093`: syntax PASSED; Node suite — 161 tests, 159 passed, 0 failed, 2 skipped (платформенные Windows cases); Electron smoke PASSED за 39.6 секунды. Расширенному smoke выделен предел 120 секунд после первого таймаута старого 60-секундного лимита; проверки не исключались. Итоговые screenshots светлой/тёмной темы визуально проверены, кнопки продолжения компактны на 312 px.
+
+macOS arm64 и Windows x64 собраны в `.harness/runtime/releases/0.6.20/`; версия package внутри обеих сборок — 0.6.20. IPC/UI/worker bytes сверены с исходниками. Windows verify-package проверил EXE, portable Node и pinned runtime SHA. ZIP обеих платформ и `SHA256SUMS.txt` находятся рядом. Реальный запуск Windows остаётся пользовательской проверкой.
+
+Предъявление: закрыть предыдущую версию и открыть новую `.app`, затем Settings → Доктор проекта → Project Web Pilot → «Проверить и исправить». Собственный `.harness/kit-manifest.json` не менялся; исходные 14 integrity-conflicts специально сохранены до пользовательского запуска. Проверки исправления выполнялись только на собственных временных fixtures.

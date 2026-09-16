@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 471,
+  "plan_revision": 473,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-project-continuity-021",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Сделать Workflow Kit универсальным для проектов любого типа: сохранять постоянный проектный контекст в NONE, автоматически добавлять обязательную финальную актуализацию документации и только после неё переводить результат к пользовательской приёмке. Добавить автономный Доктор проекта в Settings и на экран ошибки; выпустить 0.6.20, оставив текущий рассогласованный manifest для пользовательского теста.",
   "acceptance_criteria": [
     "После archive новый NONE ToDo-plan содержит обязательные ссылки на docs/architecture/OVERVIEW.md, docs/MODULES.md и docs/DOCUMENTATION_INDEX.md и приглашает обсудить следующий этап проекта.",
@@ -593,8 +593,8 @@
         "Все документы из docs/DOCUMENTATION_INDEX.md проверены на соответствие фактическому результату; устаревшие сведения исправлены, индекс и ссылки актуальны; после этого scope может быть только предъявлен пользователю на приёмку."
       ],
       "expected_commit_message": "docs: актуализировать документацию проекта",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workflow-project-continuity-021",
         "task_id": "DOCS",
@@ -627,10 +627,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: workflow-project-continuity-021
 Current Task: нет
-Revision: 471
+Revision: 473
 
 ## Цель
 
@@ -695,8 +695,8 @@ Revision: 471
   - Git Commit: [DONE] feat(doctor): Проверить интерфейс и собрать новый релиз
   - Reference: workflow-project-continuity-021 / T012 / implementation
   - Файлы: package.json, package-lock.json, tests/electron-smoke.mjs, src/project-doctor.mjs, src/main.mjs, src/preload.cjs, src/ui/project-doctor.mjs, src/ui/sidebar.mjs, src/ui/project-archive.mjs, src/ui/workspace-setup.mjs, src/ui/index.html, src/ui/progress.mjs, tests/project-doctor-ui.test.mjs, resources/project-doctor/core.mjs, tests/project-doctor.test.mjs, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, docs/modules/project-doctor.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать документацию проекта
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать документацию проекта
   - Reference: workflow-project-continuity-021 / DOCS / implementation
   - Файлы: .harness/kit/WORKFLOW.md, resources/workflow-kit/WORKFLOW.md, .harness/kit/templates/AGENTS.md, resources/workflow-kit/templates/AGENTS.md, .harness/kit/templates/ARCHITECTURE.md, resources/workflow-kit/templates/ARCHITECTURE.md, .harness/kit/templates/PLAN.md, resources/workflow-kit/templates/PLAN.md, .harness/kit/templates/PRODUCT.md, resources/workflow-kit/templates/PRODUCT.md, .harness/kit/templates/START.md, resources/workflow-kit/templates/START.md, .harness/plans/todo-plan.template.md, AGENTS.md, README.md, docs/DOCUMENTATION_INDEX.md, docs/architecture/OVERVIEW.md, docs/architecture/ARCHITECTURE.md, docs/MODULES.md, docs/WORKFLOW_START.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKSPACE_SETUP.md, docs/PROJECT_ARCHIVE.md, docs/SOURCE_WORKSPACES.md, docs/modules/workflow-kit-recovery.md, docs/modules/runtime-lifecycle.md, docs/modules/workspace-sessions.md, docs/modules/project-doctor.md
 
