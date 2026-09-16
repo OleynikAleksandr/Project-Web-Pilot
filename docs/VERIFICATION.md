@@ -817,3 +817,5 @@ T006: npm run build успешно собрал macOS arm64 и Windows x64 0.6.2
 - Project-Web-Pilot-0.6.23-Windows-x64.zip: 318045853 bytes, SHA-256 430c991bd23744532329472c8c6934714717dc8eed424ea6aee1fa91bcdcb076
 
 SHA256SUMS.txt и release-manifest.json находятся рядом с архивами в release-каталоге. Реальный ChatGPT аккаунт не использовался в автоматическом smoke (isolated fixture); native Windows 10/11 запуск остаётся пользовательской проверкой. Релиз готовится к приёмке после DOCS; scope не архивируется автоматически.
+
+DOCS: пройден полный индекс из 33 действующих документов, проверены существование путей и актуальность затронутых контрактов. Обновлены README, PRODUCT, WORKFLOW_START, DECISIONS, MODULES/OVERVIEW/INDEX, specification Workspace & Sessions, актуальная версия в Project Doctor и Windows transfer. Workflow Core/templates/runtime/context delivery/archive не менялись; их действующие контракты сохранены. Исторические сведения о 0.6.22 и промежуточном T005 оставлены как история, итоговый результат — исправленный T005B и release 0.6.23.

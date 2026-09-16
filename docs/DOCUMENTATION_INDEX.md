@@ -32,7 +32,7 @@
 | docs/modules/workflow-kit-recovery.md | Specification Workflow Kit / Context Recovery / project continuity |
 | docs/modules/project-doctor.md | Контракт автономного Доктора проекта и границы автоматического ремонта |
 | docs/modules/runtime-lifecycle.md | Specification self-healing MCP/tunnel lifecycle |
-| docs/modules/workspace-sessions.md | Specification проектов, Chat/Work sessions, session tree и переходов после scope |
+| docs/modules/workspace-sessions.md | Specification проектов, Chat/Work sessions, session tree, переходов после scope и редактора цветов чата |
 | docs/SOURCE_WORKSPACES.md | Исходные проекты, пути, версии и официальные ссылки |
 | docs/VERIFICATION.md | Проверки, release evidence и границы пользовательской приёмки |
 | docs/TRANSFER_TO_WINDOWS.md | Актуальная Windows x64 поставка и порядок физической проверки |
