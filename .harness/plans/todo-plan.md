@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 511,
+  "plan_revision": 513,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "chat-colors-024",
@@ -187,8 +187,8 @@
       "expected_commit_message": "feat: add live chat color controls"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "chat-colors-024",
         "task_id": "T004",
@@ -344,7 +344,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: chat-colors-024
 Current Task: нет
-Revision: 511
+Revision: 513
 
 ## Цель
 
@@ -372,8 +372,8 @@ Revision: 511
   - Git Commit: [DONE] feat: add live chat color controls
   - Reference: chat-colors-024 / T003 / implementation
   - Файлы: src/ui/chat-colors.html, src/ui/chat-colors.mjs, docs/architecture/ARCHITECTURE.md
-- [TODO] T004: Подключение палитры к приложению и сохранению настроек — Ожидает
-  - Git Commit: [PENDING] feat: persist chat colors across navigation and restart
+- [DONE] T004: Подключение палитры к приложению и сохранению настроек — Завершено
+  - Git Commit: [DONE] feat: persist chat colors across navigation and restart
   - Reference: chat-colors-024 / T004 / implementation
   - Файлы: src/main.mjs, src/preload.cjs, docs/architecture/ARCHITECTURE.md
 - [TODO] T005: Кнопка в Settings и интеграционная проверка — Ожидает

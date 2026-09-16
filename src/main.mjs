@@ -8,6 +8,8 @@ import { WorkspaceSessions, normalizeChatUrl, activeSessionsNewestFirst } from '
 import { McpRuntime, findRuntimeFolder } from './mcp-runtime.mjs';
 import { ChatGPTComposer } from './chatgpt-composer.mjs';
 import { installChatGPTAutoScroll } from './chatgpt-auto-scroll.mjs';
+import { ChatColors, normalizeChatColors, validateColorChange, DEFAULT_COLORS } from './chatgpt-colors.mjs';
+import { ChatColorsWindow } from './chat-colors-window.mjs';
 import { ContextCache } from './context-cache.mjs';
 const contextCache = new ContextCache({ load: workspace => runtime.loadContext(workspace), onChange: () => publish() });
 import { ContextSession } from './context-session.mjs';
@@ -38,6 +40,9 @@ let runtimeRegistration = null;
 let macRuntimeBootstrap = null;
 let shellTheme = 'light';
 let hideToolCalls = true;
+let chatColors = normalizeChatColors();
+let chatColorStyles, colorEditor;
+let settingsSaveTail = Promise.resolve();
 const SIDEBAR_MIN_WIDTH = 312;
 const BROWSER_MIN_WIDTH = 600;
 let sidebarWidth = SIDEBAR_MIN_WIDTH;
@@ -74,6 +79,7 @@ const PLAN_ACCEPTANCE_MESSAGE = `Принимаю текущий план и р�
 function applyShellTheme(theme) {
   shellTheme = theme === 'dark' ? 'dark' : 'light';
   nativeTheme.themeSource = shellTheme;
+  colorEditor?.publish();
   if (window && !window.isDestroyed()) window.setBackgroundColor(shellBackground[shellTheme]);
 }
 
@@ -147,11 +153,22 @@ async function applyToolCallVisibility() {
   })()`, true).catch(() => {});
 }
 
-async function saveSettings(overrides = {}) {
-  const settings = { runtimeFolder, runtimeRegistration, shellTheme, hideToolCalls, sidebarWidth, ...overrides };
-  await fsp.mkdir(dataDir, { recursive: true, mode: 0o700 });
-  await fsp.writeFile(settingsFile + '.tmp', JSON.stringify(settings, null, 2) + '\n', { mode: 0o600 });
-  await fsp.rename(settingsFile + '.tmp', settingsFile);
+function saveSettings(overrides = {}) {
+  const settings = { runtimeFolder, runtimeRegistration, shellTheme, hideToolCalls, sidebarWidth, chatColors, ...overrides };
+  const operation = settingsSaveTail.catch(() => {}).then(async () => {
+    await fsp.mkdir(dataDir, { recursive: true, mode: 0o700 });
+    await fsp.writeFile(settingsFile + '.tmp', JSON.stringify(settings, null, 2) + '\n', { mode: 0o600 });
+    await fsp.rename(settingsFile + '.tmp', settingsFile);
+  });
+  settingsSaveTail = operation;
+  return operation;
+}
+
+async function setChatColors(colors) {
+  chatColors = normalizeChatColors(colors);
+  const apply = chatColorStyles.set(chatColors);
+  const save = saveSettings();
+  await Promise.all([apply, save]);
 }
 
 function openSettings(workspace = null) {
@@ -499,6 +516,7 @@ function registerIpc() {
   ipcMain.handle('pilot:get-state', event => { assertLocalSender(event); return snapshot(); });
   registerAction('pilot:open-archive-window', input => openArchiveWindow(typeof input === 'string' ? input : null));
   registerAction('pilot:open-settings', () => openSettings());
+  registerAction('pilot:open-chat-colors', () => colorEditor.open());
   registerAction('pilot:open-doctor', () => openSettings(setupState?.workspace ?? store.selected()?.workspace));
   const doctorWorkspace = input => {
     if (typeof input !== 'string' || (!store.project(input) && input !== doctorState?.workspace)) throw new Error('Выберите проект в настройках.');
@@ -827,6 +845,13 @@ async function createWindow() {
   sidebar = new WebContentsView({ webPreferences: { preload: path.join(sourceDir, 'preload.cjs'),
     nodeIntegration: false, contextIsolation: true, sandbox: true, webSecurity: true } });
   browser = new WebContentsView({ webPreferences: remotePreferences() });
+  chatColorStyles = new ChatColors(browser.webContents, chatColors);
+  colorEditor = new ChatColorsWindow({
+    sourceDir, getBounds: () => window?.getBounds(),
+    getState: () => ({ colors: { ...chatColors }, defaults: DEFAULT_COLORS[shellTheme], theme: shellTheme }),
+    change: input => { const { key, value } = validateColorChange(input); return setChatColors({ ...chatColors, [key]: value }); },
+    reset: () => setChatColors({}),
+  });
   window.contentView.addChildView(sidebar); window.contentView.addChildView(browser);
   secureRemote(browser.webContents);
   chromiumDiagnostics = new ChromiumDiagnostics(browser.webContents, { file: chromiumDiagnosticsFile,
@@ -845,6 +870,7 @@ async function createWindow() {
   window.on('resize', layout);
   window.on('closed', () => {
     controller?.cancel(); clearInterval(interval); contextCache.clear();
+    colorEditor?.close(); chatColorStyles?.dispose();
     void chromiumDiagnostics?.stop(); chromiumDiagnostics = null;
     if (archiveWindow && !archiveWindow.isDestroyed()) archiveWindow.close();
     for (const view of [sidebar, browser]) if (!view.webContents.isDestroyed()) view.webContents.close();
@@ -865,7 +891,8 @@ async function createWindow() {
   if (smoke) {
     await fixture.run({ app, window, browser: browser.webContents, sidebar: sidebar.webContents,
       store, controller, selectWorkspace, snapshot, assertLocalSender, permissionAllowed, dataDir,
-      chromiumDiagnostics, chromiumDiagnosticsFile, openArchiveWindow, getArchiveWindow: () => archiveWindow });
+      chromiumDiagnostics, chromiumDiagnosticsFile, openArchiveWindow, getArchiveWindow: () => archiveWindow,
+      getColorWindow: () => colorEditor.window, chatColorStyles });
     await chromiumDiagnostics.stop(); chromiumDiagnostics = null;
     window.close(); app.quit();
   } else { const current = store.selected(); if (current && !storageError && !settingsState) void selectWorkspace(current.workspace).catch(report); else void navigate(); }
@@ -906,6 +933,7 @@ else {
       }
       if (['light', 'dark'].includes(settings.shellTheme)) shellTheme = settings.shellTheme;
       if (typeof settings.hideToolCalls === 'boolean') hideToolCalls = settings.hideToolCalls;
+      chatColors = normalizeChatColors(settings.chatColors);
       if (Number.isFinite(settings.sidebarWidth)) sidebarWidth = Math.max(SIDEBAR_MIN_WIDTH, Math.round(settings.sidebarWidth));
     } catch (error) { if (error.code !== 'ENOENT') startupError = { code: 'SETTINGS_INVALID', message: 'Не удалось прочитать локальные настройки Web Pilot. Проверьте настройки подключения.' }; }
     applyShellTheme(shellTheme);

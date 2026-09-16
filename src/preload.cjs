@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld('webPilot', Object.freeze({
   showDoctorBackup: () => ipcRenderer.invoke('pilot:doctor-backup'),
   reviewDoctorProject: () => ipcRenderer.invoke('pilot:doctor-review'),
   openSettings: () => ipcRenderer.invoke('pilot:open-settings'),
+  openChatColors: () => ipcRenderer.invoke('pilot:open-chat-colors'),
   closeSettings: () => ipcRenderer.invoke('pilot:close-settings'),
   setSidebarWidth: width => ipcRenderer.invoke('pilot:set-sidebar-width', width),
   setTheme: theme => ipcRenderer.invoke('pilot:set-theme', theme),
