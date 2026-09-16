@@ -38,3 +38,7 @@
 ## Выполненный переход — 0.6.23
 
 Постоянный корневой app установлен и повторно обновлён штатным build:mac с неизменным inode. Прежний app в releases/0.6.20 также обновлён до 0.6.23 с сохранением identity. Проверены версии, совпадение app.asar со staging, ZIP integrity и отсутствие вложенного app в обоих platform packages. Подробные контрольные суммы и evidence — `docs/VERIFICATION.md` и `.harness/runtime/releases/0.6.23/release-manifest.json`.
+
+## Последующий выпуск — 0.6.24
+
+Штатная сборка обновила постоянный корневой app с 0.6.23 до 0.6.24, сохранив device/inode. Отдельный ZIP и checksum находятся в .harness/runtime/releases/0.6.24/ и ~/Downloads/WebPilot-0.6.24/. Исторический адрес releases/0.6.20 остаётся однократно обновлённой копией 0.6.23; актуальный запуск — только постоянный корневой app.

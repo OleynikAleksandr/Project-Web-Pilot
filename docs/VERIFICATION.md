@@ -844,3 +844,12 @@ DOCS correction iteration: проверен полный индекс из 34 д
 Скриншот пользователя подтвердил окраску внешней прямоугольной строки вместо синей скруглённой плашки. До исправления новый Chromium probe не получал заданный фон на целевом bubble (bubble-before-fix.log). После исправления полный Electron smoke прошёл: liveChatColors/chatColorsPersistence/chatColorsReset=true (bubble-after-fix.log).
 
 Регрессия содержит нативную синюю .user-message-bubble-color, следующий вложенный bubble с data-testid, совместимый старый класс и неизвестную разметку. Проверяются три цвета плашек, четыре прозрачных внешних контейнера, неизменные radius/width/padding и полный возврат исходного синего фона после reset. Остальные три настройки и IPC/persistence проверяются прежними assertions. Это изолированный fixture в Electron 44.3.0; реальный аккаунт ChatGPT пользователь проверяет после установки.
+
+## Release 0.6.24 — B002, 16.09.2026
+
+B001 commit c96f06d: managed syntax PASSED (19 ms), suite PASSED (21176 ms), electron-smoke PASSED (38725 ms). Сборка обеих платформ прошла; Windows verifier подтвердил PE/portable Node/pinned runtime. В установленном корневом app и обоих staging packages версия 0.6.24, девять runtime/UI files совпадают с source. Вложенного корневого app в пакетах нет. Постоянный macOS app сохранил inode 398344301. ZIP integrity и checksum проверены; копии обоих архивов доставлены в Downloads/WebPilot-0.6.24.
+
+- Project-Web-Pilot-0.6.24-macOS-arm64.zip: 145198514 bytes; SHA-256 94d5bed732d539cb1f016cb1c76139291222f15614a8e742ef01e8552d23edf4.
+- Project-Web-Pilot-0.6.24-Windows-x64.zip: 318045865 bytes; SHA-256 e88232f15af71b7249c31d981a1e328b778cc14182bb983cc9cdec9505b9e70e.
+
+Native Windows и визуальная проверка настоящего ChatGPT остаются пользовательскими; исправление проверено на Chromium fixture с реальным DOM-маркером плашки. Scope не архивирован.
