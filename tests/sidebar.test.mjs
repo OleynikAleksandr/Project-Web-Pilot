@@ -71,6 +71,22 @@ test('old session selection preserves scroll and order, project click resets to 
   assert.equal(f.calls.filter(call => call[0] === 'selectWorkspace').length, 1, 'one immediate project action');
 });
 
+
+test('active session outline continues the accent project tree around the full row', async t => {
+  const f = await fixture(t);
+  const css = f.document.querySelector('style').textContent.replace(/\s+/g, ' ');
+  const activeRow = f.document.querySelector('.session.active').closest('.session-row');
+  assert.ok(activeRow.querySelector('.session-experience'), 'outline row contains Chat/Work badge');
+  assert.ok(activeRow.querySelector('.session-menu-button'), 'outline row contains session menu');
+  assert.ok(css.includes('#projects .expand-project{border:0;background:transparent;width:51px;align-self:stretch;flex:0 0 51px;display:grid;place-items:center;padding:0;border-radius:10px;color:var(--tree-accent)}'));
+  assert.ok(css.includes('#projects .expand-project .tree-icon{width:20px;height:20px;stroke-width:1.2;transition:transform .16s}'));
+  assert.ok(css.includes('background:var(--tree-accent);pointer-events:none}'), 'project trunk uses accent');
+  assert.ok(css.includes('width:23.5px;height:1px;background:var(--tree-accent)}'), 'session branch uses one-pixel accent line');
+  assert.ok(css.includes('#projects .session-row{position:relative;display:flex;align-items:center;gap:1px;flex:1;min-width:0;border:1px solid transparent;border-radius:8px;padding-right:4px}'));
+  assert.ok(css.includes('#projects .session-row:has(.session.active){background:var(--tree-selected);border-color:var(--tree-accent)}'));
+  assert.ok(!css.includes('.session-row:has(.session.active)::before'), 'legacy vertical active marker is removed');
+});
+
 test('newly added session starts at top while global folding preserves current session', async t => {
   const f = await fixture(t);
   f.document.querySelector('.sessions').scrollTop = 144;

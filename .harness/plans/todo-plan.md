@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 552,
+  "plan_revision": 555,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-tree-outline-026",
@@ -91,8 +91,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-tree-outline-026",
         "task_id": "T001",
@@ -103,7 +103,9 @@
         "src/ui/index.html",
         "tests/sidebar.test.mjs"
       ],
-      "documentation_paths": [],
+      "documentation_paths": [
+        "docs/modules/workspace-sessions.md"
+      ],
       "verification_ids": [],
       "id": "T001",
       "title": "Объединить выделение сессии с линиями дерева",
@@ -114,7 +116,8 @@
         "Chevron и все ветви дерева используют tree-accent, как и active outline.",
         "Тест фиксирует CSS-контракт и существующее поведение выбора/scroll остаётся зелёным."
       ],
-      "expected_commit_message": "feat: unify active session tree outline"
+      "expected_commit_message": "feat: unify active session tree outline",
+      "documentation_exception": "Модульный контракт Workspace & Sessions обновляется в этой задаче; широкие архитектурные и verification-сводки по mappings будут актуализированы обязательной финальной задачей DOCS."
     },
     {
       "implementation_status": "TODO",
@@ -201,7 +204,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-tree-outline-026
 Current Task: нет
-Revision: 552
+Revision: 555
 
 ## Цель
 
@@ -217,10 +220,10 @@ Revision: 552
 
 ## Микрозадачи
 
-- [TODO] T001: Объединить выделение сессии с линиями дерева — Ожидает
-  - Git Commit: [PENDING] feat: unify active session tree outline
+- [DONE] T001: Объединить выделение сессии с линиями дерева — Завершено
+  - Git Commit: [DONE] feat: unify active session tree outline
   - Reference: session-tree-outline-026 / T001 / implementation
-  - Файлы: src/ui/index.html, tests/sidebar.test.mjs
+  - Файлы: src/ui/index.html, tests/sidebar.test.mjs, docs/modules/workspace-sessions.md
 - [TODO] T002: Собрать и проверить релиз 0.6.26 — Ожидает
   - Git Commit: [PENDING] release: publish Web Pilot 0.6.26 with session outline
   - Reference: session-tree-outline-026 / T002 / implementation
