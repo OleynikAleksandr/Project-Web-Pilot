@@ -794,3 +794,7 @@ T001B: `node --check src/main.mjs` — PASSED. Прямой `npm run smoke` на
 Релиз размещён отдельно в `.harness/runtime/releases/0.6.22/`, не заменяя 0.6.21. macOS ZIP `Project-Web-Pilot-0.6.22-macOS-arm64.zip`: 145193401 bytes, SHA-256 `d0fdbc4aaa67100b59a6c4912ba275655cb75794b24cf4472903e30cac3a86fb`. Windows ZIP `Project-Web-Pilot-0.6.22-Windows-x64.zip`: 318021433 bytes, SHA-256 `ddef89afce038c0ba01839db966c0255680fd48da0472b130f58639f23ef357e`. `SHA256SUMS.txt` проверен через `shasum -c`; оба ZIP дополнительно прошли `unzip -tq` без ошибок. Реальный ChatGPT DOM и native Windows 10/11 запуск остаются пользовательской приёмкой.
 
 Managed commit T003 `c3dd81dfba89136766efed7092ad9f3b37042521` повторно прошёл назначенные полную Node suite и Electron smoke; release evidence зафиксирован после успешных проверок.
+
+## Scope chat-colors-024 — проверки палитры
+
+Добавлены regression tests на валидацию цветов/отсечение CSS injection, объединение быстрых изменений, отсутствие накопления стилей, восстановление после навигации, сброс и исключение стороннего origin. Реальное применение CSS и editor IPC проверяются последующим Electron smoke.

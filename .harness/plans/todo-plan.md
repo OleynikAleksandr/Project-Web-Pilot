@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 505,
+  "plan_revision": 507,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "chat-colors-024",
@@ -100,8 +100,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "chat-colors-024",
         "task_id": "T001",
@@ -344,7 +344,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: chat-colors-024
 Current Task: нет
-Revision: 505
+Revision: 507
 
 ## Цель
 
@@ -360,8 +360,8 @@ Revision: 505
 
 ## Микрозадачи
 
-- [TODO] T001: Палитра чата и применение CSS — Ожидает
-  - Git Commit: [PENDING] feat: add isolated ChatGPT color palette
+- [DONE] T001: Палитра чата и применение CSS — Завершено
+  - Git Commit: [DONE] feat: add isolated ChatGPT color palette
   - Reference: chat-colors-024 / T001 / implementation
   - Файлы: src/chatgpt-colors.mjs, tests/chatgpt-colors.test.mjs, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T002: Перемещаемое окно редактора и безопасный IPC — Ожидает

@@ -758,3 +758,7 @@ Correction release использует тот же Electron 44.3.0 source tree 
 ## Release 0.6.22 — scope hidden-tool-scroll-023 / T002
 
 Исправление footprint скрытых tool-call строк выпускается отдельной версией 0.6.22; принятая ранее 0.6.21 остаётся неизменным историческим релизом. `package.json`, lockfile и `--app-version` для macOS arm64/Windows x64 синхронизированы на 0.6.22. Функциональное изменение ограничено DOM-фильтром ChatGPT и его взаимодействием с уже существующим conversation auto-scroll; release packaging, MCP/runtime и Workflow Kit не меняются.
+
+## Цвета чата — T001
+
+Чистый модуль src/chatgpt-colors.mjs валидирует четыре nullable HEX-цвета и формирует ограниченный CSS. Facade ChatColors держит одну актуальную user-origin таблицу стилей, объединяет быстрые изменения и повторяет применение после навигации ChatGPT. Сброс удаляет наложенные стили; сторонние origin исключены.
