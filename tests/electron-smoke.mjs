@@ -69,7 +69,7 @@ export async function createRuntime({ browser, session }) {
 }
 
 async function waitFor(predicate, description, snapshot) {
-  const end = Date.now() + 25000;
+  const end = Date.now() + 60000;
   while (Date.now() < end) {
     if (await predicate()) return;
     await new Promise(resolve => setTimeout(resolve, 100));

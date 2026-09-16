@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 486,
+  "plan_revision": 488,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "post-doctor-correction-022",
@@ -248,8 +248,8 @@
       "expected_commit_message": "build: подготовить релиз 0.6.21"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "post-doctor-correction-022",
         "task_id": "T006",
@@ -349,7 +349,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: post-doctor-correction-022
 Current Task: нет
-Revision: 486
+Revision: 488
 
 ## Цель
 
@@ -386,8 +386,8 @@ Revision: 486
   - Git Commit: [DONE] build: подготовить релиз 0.6.21
   - Reference: post-doctor-correction-022 / T005 / implementation
   - Файлы: package.json, package-lock.json, docs/architecture/ARCHITECTURE.md
-- [TODO] T006: Проверить и собрать релиз 0.6.21 — Ожидает
-  - Git Commit: [PENDING] build: выпустить Project Web Pilot 0.6.21
+- [DONE] T006: Проверить и собрать релиз 0.6.21 — Завершено
+  - Git Commit: [DONE] build: выпустить Project Web Pilot 0.6.21
   - Reference: post-doctor-correction-022 / T006 / implementation
   - Файлы: tests/electron-smoke.mjs, .harness/kit-manifest.json, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, .harness/kit/WORKFLOW.md, resources/workflow-kit/WORKFLOW.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает

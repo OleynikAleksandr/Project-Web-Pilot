@@ -765,3 +765,13 @@ macOS arm64 и Windows x64 собраны в `.harness/runtime/releases/0.6.20/`
 ## Correction round Workflow Kit — scope 022 / T004
 
 Regression воспроизводит полный повторный цикл одного ACTIVE scope: первая `DOCS` переводит результат в `READY_FOR_ACCEPTANCE`; явный `plan:apply` с новой correction task возвращает `IN_PROGRESS`, rearm финальной `DOCS` с `commit_ref.iteration=2`, выполняет correction task и вторую `DOCS`. Исторический первый DOCS commit без iteration трактуется как iteration 1; новый implementation commit содержит `Workflow-Iteration`, поэтому resolver однозначно выбирает требуемый проход. Installed и bundled lifecycle-код синхронизированы.
+
+## Correction release 0.6.21 — scope 022 / T006
+
+Перед упаковкой `npm test` завершился: 162 tests, 160 passed, 0 failed, 2 platform-specific skipped. `npm run smoke` на Electron 44.3.0 / Chromium 152.0.7977.78 прошёл в isolated fixture, включая Project Doctor и переходы после scope. `npm run build` успешно собрал macOS arm64 и Windows x64; штатный Windows package verifier подтвердил EXE, portable Node и pinned runtime.
+
+Релиз размещён отдельно в `.harness/runtime/releases/0.6.21/`, не заменяя 0.6.20. `package.json` внутри обоих `app.asar` и macOS Info.plist сообщают 0.6.21. Windows ZIP: 317750757 bytes, SHA-256 `083982e0f98c615345de8b6f3068efefe06fcdfc058abdb946eb7b0fa3fecc31`; macOS ZIP: 145193119 bytes, SHA-256 `bc8f2cc0f113ab509e532a98aec9e50f3fbb7e658d4acaf2f73bb07c0641076f`. `SHA256SUMS.txt` повторно проверен. Windows executable SHA-256: `2818056c6949794e45746de150d66dbc18f7a01f8084aa4b893fa3e9dd612141`.
+
+Текущий `.harness/kit-manifest.json` пересогласован с финальными installed Workflow Kit 1.3.0 bytes после correction-round изменения; installed/bundled WORKFLOW и lifecycle source совпадают. Финальный managed commit T006 повторно запускает suite и Electron smoke; пользовательская приёмка следует только после обязательной DOCS.
+
+Два первых pre-commit smoke после полного suite выявили флейк внутреннего fixture `waitFor`: общий check budget уже 120 секунд, но отдельное ожидание оставалось 25 секунд. Standalone smoke с тем же кандидатом проходил. В T006 внутренний deadline увеличен до 60 секунд без удаления или ослабления assertions; managed commit обязан повторно пройти полный suite и smoke.

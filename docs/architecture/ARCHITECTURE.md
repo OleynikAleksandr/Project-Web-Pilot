@@ -746,3 +746,7 @@ macOS arm64 и Windows x64 повторно упакованы после restar
 ## Correction release 0.6.21 — scope 022 / T005
 
 После пользовательского запуска Project Doctor исходный 0.6.20 сохраняется как отдельный исторический релиз. Correction release получает собственную версию 0.6.21; package metadata и app-version packaging обоих targets синхронизированы.
+
+### Проверка и поставка 0.6.21 — scope 022 / T006
+
+Correction release использует тот же Electron 44.3.0 source tree и Workflow Kit 1.3.0 с correction-round semantics. Поставки macOS arm64 и Windows x64 находятся отдельно в `.harness/runtime/releases/0.6.21/`; пакетная версия внутри обоих `app.asar` и macOS Info.plist равна 0.6.21. Release checks включают полную Node suite, isolated Electron smoke, Windows package verification и SHA-256 обоих ZIP.
