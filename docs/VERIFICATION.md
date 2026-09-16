@@ -836,3 +836,5 @@ DOCS: пройден полный индекс из 33 действующих д
 - Project-Web-Pilot-0.6.23-Windows-x64.zip: 318045853 bytes; SHA-256 `9428a6485fbdd40635f937a0a1458dd5a3ec8dff558b9a8671a62964f9b9ee3c`.
 
 Полная Node suite после коррекции: 167 tests, 165 passed, 0 failed, 2 native-Windows skipped. Три новых macOS regression tests входят в suite. Код UI не менялся; последний Electron smoke T005B сохраняет актуальность для этого runtime. Native Windows и реальный пользовательский ChatGPT остаются вне автоматической проверки. Работающий Web Pilot не завершался: новую версию пользователь запускает после полного выхода. Scope остаётся ACTIVE до явной приёмки/архивирования.
+
+DOCS correction iteration: проверен полный индекс из 34 документов; исправлена таблица MODULES. Инструкции AGENTS, OVERVIEW, WORKFLOW_START, RELEASE и README согласованы с постоянным адресом запуска; текущий Windows transfer указывает обновлённый checksum. Исторические разделы сохранены; действующие результаты доставки приведены в R003. Контракты приложения, Workflow Kit, recovery, Doctor и архивирования не менялись. Итоговая приёмка остаётся за пользователем.

@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 530,
+  "plan_revision": 532,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "chat-colors-024",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Отдельный перемещаемый редактор цветов чата из Settings: общий фон, фон пользовательского сообщения, цвет пользовательского текста и цвет текста агента; немедленное применение, сохранение и сброс; релиз macOS/Windows.",
   "acceptance_criteria": [
     "Settings содержит отдельную кнопку редактора.",
@@ -420,8 +420,8 @@
       "expected_commit_message": "release: install Web Pilot 0.6.23 at stable path"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "chat-colors-024",
         "task_id": "DOCS",
@@ -493,10 +493,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: chat-colors-024
 Current Task: нет
-Revision: 530
+Revision: 532
 
 ## Цель
 
@@ -553,8 +553,8 @@ Revision: 530
   - Git Commit: [DONE] release: install Web Pilot 0.6.23 at stable path
   - Reference: chat-colors-024 / R003 / implementation
   - Файлы: package.json, README.md, docs/RELEASE.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/TRANSFER_TO_WINDOWS.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: document chat colors and release 0.6.23
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: document chat colors and release 0.6.23
   - Reference: chat-colors-024 / DOCS / implementation
   - Файлы: README.md, AGENTS.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md, docs/WORKFLOW_START.md, docs/MODULES.md, docs/architecture/OVERVIEW.md, docs/DOCUMENTATION_INDEX.md, docs/modules/workspace-sessions.md, docs/modules/project-doctor.md, docs/modules/runtime-lifecycle.md, docs/modules/workflow-kit-recovery.md, docs/SOURCE_WORKSPACES.md, docs/VERIFICATION.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKSPACE_SETUP.md, docs/PROJECT_ARCHIVE.md, docs/RELEASE.md
 
