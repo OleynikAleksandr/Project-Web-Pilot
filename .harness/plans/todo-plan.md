@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 485,
+  "plan_revision": 486,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "post-doctor-correction-022",
@@ -259,11 +259,14 @@
         "T005"
       ],
       "functional_paths": [
-        "tests/electron-smoke.mjs"
+        "tests/electron-smoke.mjs",
+        ".harness/kit-manifest.json"
       ],
       "documentation_paths": [
         "docs/VERIFICATION.md",
-        "docs/architecture/ARCHITECTURE.md"
+        "docs/architecture/ARCHITECTURE.md",
+        ".harness/kit/WORKFLOW.md",
+        "resources/workflow-kit/WORKFLOW.md"
       ],
       "verification_ids": [
         "suite",
@@ -273,7 +276,8 @@
       "title": "Проверить и собрать релиз 0.6.21",
       "why": "Перед финальной документацией получить фактические test/smoke/package evidence для обеих платформ.",
       "acceptance_criteria": [
-        "Полный suite и Electron smoke проходят; macOS arm64/Windows x64 собраны в отдельной папке releases/0.6.21, Windows package verified, SHA256SUMS сформирован."
+        "Полный suite и Electron smoke проходят; macOS arm64/Windows x64 собраны в отдельной папке releases/0.6.21, Windows package verified, SHA256SUMS сформирован.",
+        "Installed и bundled Workflow Kit остаются синхронны, а текущий kit-manifest содержит hashes именно этого финального 1.3.0 runtime."
       ],
       "expected_commit_message": "build: выпустить Project Web Pilot 0.6.21"
     },
@@ -345,7 +349,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: post-doctor-correction-022
 Current Task: нет
-Revision: 485
+Revision: 486
 
 ## Цель
 
@@ -385,7 +389,7 @@ Revision: 485
 - [TODO] T006: Проверить и собрать релиз 0.6.21 — Ожидает
   - Git Commit: [PENDING] build: выпустить Project Web Pilot 0.6.21
   - Reference: post-doctor-correction-022 / T006 / implementation
-  - Файлы: tests/electron-smoke.mjs, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
+  - Файлы: tests/electron-smoke.mjs, .harness/kit-manifest.json, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, .harness/kit/WORKFLOW.md, resources/workflow-kit/WORKFLOW.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать документацию 0.6.21
   - Reference: post-doctor-correction-022 / DOCS / implementation
