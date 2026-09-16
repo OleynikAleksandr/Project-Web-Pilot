@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 475,
+  "plan_revision": 477,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "post-doctor-correction-022",
@@ -109,8 +109,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "post-doctor-correction-022",
         "task_id": "T001",
@@ -345,7 +345,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: post-doctor-correction-022
 Current Task: нет
-Revision: 475
+Revision: 477
 
 ## Цель
 
@@ -362,8 +362,8 @@ Revision: 475
 
 ## Микрозадачи
 
-- [TODO] T001: Согласовать correction-round contract — Ожидает
-  - Git Commit: [PENDING] docs(workflow): согласовать correction round
+- [DONE] T001: Согласовать correction-round contract — Завершено
+  - Git Commit: [DONE] docs(workflow): согласовать correction round
   - Reference: post-doctor-correction-022 / T001 / implementation
   - Файлы: docs/modules/workflow-kit-recovery.md, docs/architecture/OVERVIEW.md
 - [TODO] T002: Закрепить успешный Doctor reconcile и восстановить package manifest — Ожидает
