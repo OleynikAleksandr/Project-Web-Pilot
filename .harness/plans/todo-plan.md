@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 465,
+  "plan_revision": 469,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-project-continuity-021",
@@ -509,7 +509,8 @@
         "src/ui/index.html",
         "src/ui/progress.mjs",
         "tests/project-doctor-ui.test.mjs",
-        "resources/project-doctor/core.mjs"
+        "resources/project-doctor/core.mjs",
+        "tests/project-doctor.test.mjs"
       ],
       "documentation_paths": [
         "docs/VERIFICATION.md",
@@ -612,6 +613,11 @@
       "id": "c09656cf-c9ae-463b-9cda-69cebb26a43a",
       "recorded_at": "2026-09-16T07:06:52.986Z",
       "text": "16.09.2026 пользователь поручил реализовать Доктор проекта и собрать релиз, сохранив текущую неисправность для самостоятельного теста. Незавершённая DOCS отложена до конца расширенного этапа через валидированный API Workflow Kit; прежние изменения сохранены."
+    },
+    {
+      "id": "74cfb350-fef2-4046-8278-66bcbe3bccdb",
+      "recorded_at": "2026-09-16T07:20:54.727Z",
+      "text": "Для расширенного smoke Доктора прежний предел 60 секунд недостаточен. Незавершённая T012 отложена с сохранением работы для штатного config:apply timeout 120 секунд; проверки не отключаются."
     }
   ]
 }
@@ -624,7 +630,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-project-continuity-021
 Current Task: нет
-Revision: 465
+Revision: 469
 
 ## Цель
 
@@ -688,7 +694,7 @@ Revision: 465
 - [TODO] T012: Проверить интерфейс и собрать новый релиз — Ожидает
   - Git Commit: [PENDING] feat(doctor): Проверить интерфейс и собрать новый релиз
   - Reference: workflow-project-continuity-021 / T012 / implementation
-  - Файлы: package.json, package-lock.json, tests/electron-smoke.mjs, src/project-doctor.mjs, src/main.mjs, src/preload.cjs, src/ui/project-doctor.mjs, src/ui/sidebar.mjs, src/ui/project-archive.mjs, src/ui/workspace-setup.mjs, src/ui/index.html, src/ui/progress.mjs, tests/project-doctor-ui.test.mjs, resources/project-doctor/core.mjs, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, docs/modules/project-doctor.md
+  - Файлы: package.json, package-lock.json, tests/electron-smoke.mjs, src/project-doctor.mjs, src/main.mjs, src/preload.cjs, src/ui/project-doctor.mjs, src/ui/sidebar.mjs, src/ui/project-archive.mjs, src/ui/workspace-setup.mjs, src/ui/index.html, src/ui/progress.mjs, tests/project-doctor-ui.test.mjs, resources/project-doctor/core.mjs, tests/project-doctor.test.mjs, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, docs/modules/project-doctor.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать документацию проекта
   - Reference: workflow-project-continuity-021 / DOCS / implementation
