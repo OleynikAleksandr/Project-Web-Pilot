@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 509,
+  "plan_revision": 511,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "chat-colors-024",
@@ -158,8 +158,8 @@
       "expected_commit_message": "feat: add floating chat color editor window"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "chat-colors-024",
         "task_id": "T003",
@@ -344,7 +344,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: chat-colors-024
 Current Task: нет
-Revision: 509
+Revision: 511
 
 ## Цель
 
@@ -368,8 +368,8 @@ Revision: 509
   - Git Commit: [DONE] feat: add floating chat color editor window
   - Reference: chat-colors-024 / T002 / implementation
   - Файлы: src/chat-colors-window.mjs, src/chat-colors-preload.cjs, docs/architecture/ARCHITECTURE.md
-- [TODO] T003: Интерактивный редактор четырёх цветов — Ожидает
-  - Git Commit: [PENDING] feat: add live chat color controls
+- [DONE] T003: Интерактивный редактор четырёх цветов — Завершено
+  - Git Commit: [DONE] feat: add live chat color controls
   - Reference: chat-colors-024 / T003 / implementation
   - Файлы: src/ui/chat-colors.html, src/ui/chat-colors.mjs, docs/architecture/ARCHITECTURE.md
 - [TODO] T004: Подключение палитры к приложению и сохранению настроек — Ожидает
