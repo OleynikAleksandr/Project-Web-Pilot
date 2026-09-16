@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 555,
+  "plan_revision": 556,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-tree-outline-026",
@@ -135,7 +135,10 @@
         "package-lock.json"
       ],
       "documentation_paths": [],
-      "verification_ids": [],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
       "id": "T002",
       "title": "Собрать и проверить релиз 0.6.26",
       "why": "Предоставить пользователю новый проверяемый выпуск для обеих поддерживаемых платформ.",
@@ -145,7 +148,8 @@
         "macOS arm64 и Windows x64 packages успешно собраны и проверены штатными release scripts.",
         "Постоянный macOS app обновлён штатным механизмом без смены filesystem identity."
       ],
-      "expected_commit_message": "release: publish Web Pilot 0.6.26 with session outline"
+      "expected_commit_message": "release: publish Web Pilot 0.6.26 with session outline",
+      "documentation_exception": "T002 меняет только version/package metadata и выполняет уже согласованную поставку; фактическая версия, checksums и release evidence фиксируются обязательной финальной задачей DOCS."
     },
     {
       "implementation_status": "TODO",
@@ -204,7 +208,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-tree-outline-026
 Current Task: нет
-Revision: 555
+Revision: 556
 
 ## Цель
 
