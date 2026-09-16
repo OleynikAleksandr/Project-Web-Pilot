@@ -779,3 +779,8 @@ Regression воспроизводит полный повторный цикл �
 ## Реальный пользовательский Project Doctor — 16.09.2026
 
 После исторической подготовки 0.6.20 пользователь запустил Доктор на реальном Project Web Pilot. `.harness/kit-manifest.json` изменён с 1.2.0 на 1.3.0, записан `doctor_reconciled_at=2026-09-16T07:28:22.983Z`; owned hashes соответствовали установленному Kit на момент reconcile. Это завершает ранее отложенную физическую проверку stale-manifest сценария. Последующий correction scope изменил Workflow Kit, поэтому manifest дополнительно синхронизирован с финальными correction-round bytes перед сборкой 0.6.21. Исторические записи выше о намеренно сохранённом stale manifest относятся только к состоянию до этого пользовательского запуска.
+## Scope hidden-tool-scroll-023 / T001B — layout-footprint скрытых tool-call строк
+
+Regression расширяет существующий Electron smoke: tool-call fixture теперь имеет собственный контейнер с измеримой минимальной высотой. При `hideToolCalls=true` проверяется не только marker на кнопке, но и `display:none` на максимально высоком безопасном tool-only wrapper; при «Показывать» wrapper и marker полностью восстанавливаются, при повторном «Скрывать» footprint снова исчезает. После изменения layout production-код вызывает только `refresh()` существующего auto-scroll controller, не принудительный resume, поэтому ручной suspended режим сохраняется. MCP/tools и содержимое сообщений этим фильтром не затрагиваются.
+
+T001B: `node --check src/main.mjs` — PASSED. Прямой `npm run smoke` на Electron 44.3.0 / Chromium 152.0.7977.78 — PASSED в isolated fixture; итоговый smoke-result сообщает `toolCallFilter=true`. Реальный DOM текущего ChatGPT остаётся пользовательской приёмкой после package-сборки 0.6.22.

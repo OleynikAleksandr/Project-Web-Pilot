@@ -18,7 +18,7 @@ const fixtureTelemetrySse = [
 const html = `<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>TEST FIXTURE — no live ChatGPT</title>
 <style>body{font:16px -apple-system,sans-serif;padding:40px;background:#fcfcff;color:#29394c}aside{background:#fff0d7;padding:14px;margin-bottom:20px}#prompt-textarea{border:1px solid #9caeb8;padding:12px;min-height:80px;white-space:pre-wrap}button{padding:10px}article{white-space:pre-wrap;font-size:12px}</style></head>
 <body><aside>TEST FIXTURE · без реального ChatGPT, MCP и аккаунта</aside><h1>Composer fixture</h1>
-<div id="tool-activity"><button id="fixture-tool-call" type="button">Вызываемый инструмент</button></div>
+<div id="tool-activity" style="min-height:96px;padding:12px"><div class="tool-row"><button id="fixture-tool-call" type="button">Вызываемый инструмент</button></div></div>
 <div aria-label="Select chat surface"><button type="button" data-tpp-toggle-value="chatgpt">Chat</button><button type="button" data-tpp-toggle-value="work">Work</button></div>\n<div id="messages"></div><form><div id="prompt-textarea" contenteditable="true" role="textbox"></div><button type="submit" data-testid="send-button">Send fixture</button></form>
 <script>
 window.fixtureMode=location.pathname.startsWith('/work')?'work':localStorage.getItem('fixture-mode')||'work';
@@ -469,11 +469,16 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(persistedSettings.shellTheme, 'dark'); assert.equal(persistedSettings.sidebarWidth, 408);
   assert.equal(snapshot().hideToolCalls, true);
   await waitFor(() => browser.executeJavaScript('document.getElementById("fixture-tool-call").getAttribute("data-web-pilot-tool-call-hidden") === "true"'), 'default tool call hidden', snapshot);
+  assert.equal(await browser.executeJavaScript('getComputedStyle(document.getElementById("tool-activity")).display'), 'none', 'hidden tool-only wrapper leaves no layout footprint');
+  assert.equal(await browser.executeJavaScript('document.getElementById("tool-activity").getAttribute("data-web-pilot-tool-call-footprint-hidden")'), 'true');
   await sidebar.executeJavaScript('document.getElementById("tool-calls-show").click()');
   await waitFor(() => snapshot().hideToolCalls === false, 'show tool calls setting', snapshot);
   assert.equal(await browser.executeJavaScript('document.getElementById("fixture-tool-call").hasAttribute("data-web-pilot-tool-call-hidden")'), false);
+  assert.notEqual(await browser.executeJavaScript('getComputedStyle(document.getElementById("tool-activity")).display'), 'none', 'show tool calls restores wrapper layout');
+  assert.equal(await browser.executeJavaScript('document.getElementById("tool-activity").hasAttribute("data-web-pilot-tool-call-footprint-hidden")'), false);
   await sidebar.executeJavaScript('document.getElementById("tool-calls-hide").click()');
   await waitFor(() => snapshot().hideToolCalls === true, 'hide tool calls setting', snapshot);
+  await waitFor(() => browser.executeJavaScript('getComputedStyle(document.getElementById("tool-activity")).display === "none"'), 'rehide removes tool layout footprint', snapshot);
 
   await sidebar.executeJavaScript('document.getElementById("open-archive-window").click()');
   await waitFor(() => !!getArchiveWindow() && !getArchiveWindow().isDestroyed(), 'separate archive window', snapshot);
