@@ -81,3 +81,19 @@ test('write failure rolls back already written files and leaves recovery backup'
   assert.throws(()=>backupAndWrite(root,[{file:first,content:'changed',mode:0o644,label:'one'},{file:second,content:'change',mode:-1,label:'two'}]));
   assert.equal(readFile(first).content.toString(),'original');assert.equal(readFile(second).content.toString(),'keep');
 });
+
+test('interrupted commit is finished only when the exact commit already exists',t=>{
+  const root=fixture(t);
+  // Generate a real managed scope/commit with the bundled CLI and deterministic failpoint.
+  const cli=path.join(root,'scripts/workflow.mjs');
+  const draft={scope_id:'doctor-test',objective:'Doctor transaction fixture',approval_note:'Approved isolated doctor transaction fixture',acceptance_criteria:['Stored'],approved_scope:{functional_paths:[],documentation_paths:['docs/PRODUCT.md'],max_functional_files_per_task:3},context_pack:{documents:[],include_last_completed_task:false,dependency_task_ids:[]},tasks:[{id:'T001',title:'Fixture',why:'Test recovery',dependencies:[],functional_paths:[],documentation_paths:['docs/PRODUCT.md'],acceptance_criteria:['Stored'],verification_ids:[],expected_commit_message:'docs: fixture'}]};
+  const input=path.join(root,'.harness/runtime/draft.json');fs.writeFileSync(input,JSON.stringify(draft));
+  execFileSync(process.execPath,[cli,'scope:create','--input',input],{cwd:root,env});
+  execFileSync(process.execPath,[cli,'task:start','T001'],{cwd:root,env});fs.appendFileSync(path.join(root,'docs/PRODUCT.md'),'\nfixture\n');
+  assert.throws(()=>execFileSync(process.execPath,[cli,'commit','--task','T001'],{cwd:root,env:{...env,WORKFLOW_TEST_FAILPOINT:'prepared'},stdio:'pipe'}));
+  const blocked=repairProject(root);assert.ok(blocked.issues.some(e=>e.code==='DOCTOR_PENDING'));
+  assert.throws(()=>execFileSync(process.execPath,[cli,'commit','--task','T001'],{cwd:root,env:{...env,WORKFLOW_TEST_FAILPOINT:'committed'},stdio:'pipe'}));
+  const before=execFileSync('git',['rev-parse','HEAD'],{cwd:root});
+  const fixed=repairProject(root);assert.equal(fixed.issues.length,0,JSON.stringify(fixed.issues));assert.ok(fixed.backupPath);
+  assert.equal(fs.existsSync(gitPath(root,'workflow-kit/transaction.json')),false);assert.deepEqual(execFileSync('git',['rev-parse','HEAD'],{cwd:root}),before);
+});

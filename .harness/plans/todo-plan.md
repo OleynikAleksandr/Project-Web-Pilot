@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 469,
+  "plan_revision": 471,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-project-continuity-021",
@@ -526,8 +526,8 @@
         "Контракт Доктора выполнен; текущий manifest реального проекта сохранён без изменений; проверки проходят на fixtures."
       ],
       "expected_commit_message": "feat(doctor): Проверить интерфейс и собрать новый релиз",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workflow-project-continuity-021",
         "task_id": "T012",
@@ -630,7 +630,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-project-continuity-021
 Current Task: нет
-Revision: 469
+Revision: 471
 
 ## Цель
 
@@ -691,8 +691,8 @@ Revision: 469
   - Git Commit: [DONE] feat(doctor): Подключить Доктор к настройкам и экрану ошибки
   - Reference: workflow-project-continuity-021 / T011 / implementation
   - Файлы: src/project-doctor.mjs, src/main.mjs, src/preload.cjs, src/ui/project-doctor.mjs, src/ui/sidebar.mjs, src/ui/project-archive.mjs, src/ui/workspace-setup.mjs, src/ui/index.html, src/ui/progress.mjs, tests/project-doctor-ui.test.mjs, resources/project-doctor/core.mjs, docs/modules/project-doctor.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
-- [TODO] T012: Проверить интерфейс и собрать новый релиз — Ожидает
-  - Git Commit: [PENDING] feat(doctor): Проверить интерфейс и собрать новый релиз
+- [DONE] T012: Проверить интерфейс и собрать новый релиз — Завершено
+  - Git Commit: [DONE] feat(doctor): Проверить интерфейс и собрать новый релиз
   - Reference: workflow-project-continuity-021 / T012 / implementation
   - Файлы: package.json, package-lock.json, tests/electron-smoke.mjs, src/project-doctor.mjs, src/main.mjs, src/preload.cjs, src/ui/project-doctor.mjs, src/ui/sidebar.mjs, src/ui/project-archive.mjs, src/ui/workspace-setup.mjs, src/ui/index.html, src/ui/progress.mjs, tests/project-doctor-ui.test.mjs, resources/project-doctor/core.mjs, tests/project-doctor.test.mjs, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, docs/modules/project-doctor.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает

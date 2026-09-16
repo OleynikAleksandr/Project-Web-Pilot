@@ -620,7 +620,59 @@ export async function run({ app, window, browser, sidebar, store, controller, se
     assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 1);
   }
 
-  const result = { newestSessionFirst: true, projectSelectsNewest: true, threeSessionViewport: true, sessionScrollPreserved: true, visibleSessionScrollbar: true, nativeProjectsDisclosure: true, treePopover: true, treeScreenshots, scopeContinuationChat: true, scopeContinuationWork: true, scopeContinuationRestart: true, scopeContinuationNoDuplicates: true,
+  // Doctor operates on this isolated fixture only. The real workspace stays broken for user acceptance.
+  const doctorManifest = path.join(workspace, '.harness/kit-manifest.json');
+  const staleManifest = JSON.parse(await fs.readFile(doctorManifest, 'utf8'));
+  staleManifest.version = '1.2.0';
+  for (const entry of staleManifest.files.filter(e => e.kind === 'owned')) entry.hash = '0'.repeat(64);
+  await fs.writeFile(doctorManifest, JSON.stringify(staleManifest, null, 2) + '\n');
+  const damagedBytes = await fs.readFile(doctorManifest);
+  const doctorSession = store.selected().sessionId;
+  await sidebar.executeJavaScript(`window.webPilot.selectSession(${JSON.stringify(workspace)}, ${JSON.stringify(doctorSession)})`);
+  assert.equal(snapshot().setup.ready, false);
+  assert.ok(snapshot().setup.issues.length > 0);
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("setup-doctor").hidden'), false);
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("open-settings").disabled'), false);
+  await sidebar.executeJavaScript('document.getElementById("setup-doctor").click()');
+  await waitFor(() => snapshot().settings && !snapshot().setup, 'doctor from setup failure', snapshot);
+  assert.deepEqual(await fs.readFile(doctorManifest), damagedBytes, 'opening doctor does not repair');
+  await waitFor(() => sidebar.executeJavaScript('!document.getElementById("doctor-run").disabled'), 'doctor button ready', snapshot);
+  await sidebar.executeJavaScript('document.getElementById("doctor-run").click(); document.getElementById("doctor-run").click()');
+  await waitFor(() => snapshot().doctor?.phase === 'done', 'doctor repair completed', snapshot);
+  const doctorReport = snapshot().doctor;
+  assert.equal(doctorReport.projectReady, true, JSON.stringify(doctorReport));
+  assert.equal(doctorReport.servicesReady, true); assert.deepEqual(doctorReport.issues, []);
+  assert.ok(doctorReport.backupPath); assert.equal(JSON.parse(await fs.readFile(doctorManifest)).version, '1.3.0');
+  assert.equal(store.selected().sessionId, doctorSession, 'repair never starts a session');
+  await fs.stat(path.join(doctorReport.backupPath,'repair.json'));
+  await waitFor(() => sidebar.executeJavaScript('!document.getElementById("doctor-open").disabled'), 'doctor success actions ready', snapshot);
+  const doctorScreenshots = [];
+  assert.equal(await sidebar.executeJavaScript('Array.from(document.querySelectorAll("#doctor-actions button")).every(button => button.getBoundingClientRect().height < 75)'), true, 'doctor actions stay compact');
+  for (const theme of ['light','dark']) {
+    await sidebar.executeJavaScript(`window.webPilot.setTheme('${theme}')`);
+    await sidebar.executeJavaScript('document.getElementById("doctor-panel").scrollIntoView({block:"start"})');
+    const file = path.join(dataDir, 'doctor-' + theme + '.png');
+    await fs.writeFile(file, (await sidebar.capturePage()).toPNG()); doctorScreenshots.push(file);
+    assert.equal(await sidebar.executeJavaScript('document.getElementById("doctor-panel").scrollWidth <= document.getElementById("doctor-panel").clientWidth + 1'), true, 'doctor fits minimum width');
+  }
+  await sidebar.executeJavaScript('document.getElementById("doctor-open").click()');
+  await waitFor(() => !snapshot().settings && !snapshot().setup && snapshot().context.phase === 'delivered', 'repaired session opens', snapshot);
+  assert.equal(store.selected().sessionId, doctorSession);
+  await sidebar.executeJavaScript('window.webPilot.openSettings()');
+  await sidebar.executeJavaScript('window.webPilot.runDoctor(' + JSON.stringify(workspace) + ')');
+  assert.equal(snapshot().doctor.repaired, false, 'repeat repair is idempotent');
+  const beforeDoctorRefresh = await browser.executeJavaScript('window.fixtureMessages.length');
+  await sidebar.executeJavaScript('window.webPilot.continueDoctor("refresh")');
+  await waitFor(() => snapshot().context.phase === 'delivered', 'doctor refresh delivered', snapshot);
+  assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), beforeDoctorRefresh + 1);
+  await sidebar.executeJavaScript('window.webPilot.openSettings()');
+  const beforeDoctorNew = store.snapshot().projects.find(p => p.workspace === workspace).sessions.length;
+  await sidebar.executeJavaScript('window.webPilot.continueDoctor("work")');
+  await waitFor(() => store.selected().sessionId !== doctorSession && snapshot().context.phase === 'delivered', 'doctor new Work created', snapshot);
+  assert.equal(store.selected().experience, 'work');
+  assert.equal(store.snapshot().projects.find(p => p.workspace === workspace).sessions.length, beforeDoctorNew + 1);
+
+  const result = { projectDoctor: true, doctorBackup: true, doctorOpen: true, doctorRefresh: true, doctorNewSession: true, doctorScreenshots, newestSessionFirst: true, projectSelectsNewest: true, threeSessionViewport: true, sessionScrollPreserved: true, visibleSessionScrollbar: true, nativeProjectsDisclosure: true, treePopover: true, treeScreenshots, scopeContinuationChat: true, scopeContinuationWork: true, scopeContinuationRestart: true, scopeContinuationNoDuplicates: true,
     transitionScreenshot: path.join(dataDir, 'next-session-choice.png'), mode: 'isolated-fixture', electron: process.versions.electron, chromium: process.versions.chrome,
     views: window.contentView.children.length, secureRemote: true, sidebarIpc: true, archiveRestore: true, archiveRestart: true, deleteCancel: true, localDeletion: true, cloudChatPreserved: true, workspaceCreation: true, workspaceValidation: true, cancelPreservesSession: true, startupMessages: 4, canonicalPacketLoads: packetLoads, recoveryCache: true, operationProgress: true, progressScreenshot: path.join(dataDir, 'progress-ui.png'),
     tokenCounterRemoved: true, projectRename: true, sessionRename: true, scopeSessionRename: true, restartKeepsSession: true, newChatCreatesSession: true, sessionTree: true, selectsEarlierSession: true, compactWorkspaceDetails: true, projectPathClipboard: true, planAcceptanceButton: true, chromiumDiagnostics: true, contextWindowIndicatorRemoved: true, resizableSidebar: true, separateArchiveWindow: true, archiveMultiSelect: true, archiveForgetKeepsFolder: true, shellTheme: true, nativeTitlebarTheme: nativeTheme.shouldUseDarkColors, toolCallFilter: true, microphonePermission: true, geolocationPermission: true, cameraPermission: false, fullContextBytes: Buffer.byteLength(fixtureContext), liveChatGPT: false, agentToolsRequired: false };

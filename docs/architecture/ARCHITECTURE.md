@@ -738,3 +738,7 @@ macOS arm64 и Windows x64 повторно упакованы после restar
 ### Desktop integration Project Doctor — T011
 
 Координатор `src/project-doctor.mjs` запускает repair worker вне MCP/ChatGPT, повторяет проверку Workspace Setup, при необходимости переподключает локальные команды и проверяет Runtime Lifecycle. `src/ui/project-doctor.mjs` отображает выбранный проект, этап, исправления и blockers; IPC main проверяет источник и workspace. Settings остаются доступны при setup failure, а setup содержит прямую кнопку доктора. Ни открытие Settings, ни чтение отчёта не инициируют ремонт.
+
+### Release Project Doctor 0.6.20
+
+Доктор включён в обе платформенные поставки. Версионированные сборки размещаются в `.harness/runtime/releases/0.6.20/`, чтобы не заменять уже запущенную предыдущую сборку. Файлы `.harness/kit-manifest.json` реального проекта намеренно оставлены с исходным рассогласованием для пользовательского запуска доктора; само приложение не чинит его при запуске.

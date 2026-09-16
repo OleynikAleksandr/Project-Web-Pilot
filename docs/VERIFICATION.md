@@ -749,3 +749,7 @@ JSDOM regression исполняет тот же renderer script, который 
 ## Project Doctor UI/coordinator — T011 / 16.09.2026
 
 Шесть DOM/coordinator tests проверяют явный запуск, точную папку, недоступность повторного запуска, отсутствие false success при ошибке служб, textContent для diagnostics, доступ к Settings/доктору из setup failure, сохранение backup при ошибке подключения, отсутствие проверки/выполнения неизвестного runtime и reconnect локальных команд. Ремонт реального проекта по поручению пользователя не запускался.
+
+## Project Doctor release 0.6.20 — T012 / 16.09.2026
+
+Десять backend tests дополнительно проверяют настоящий interrupted commit: неподтверждённый candidate не фиксируется доктором, завершённый exact commit закрывает только технический журнал с backup и без изменения HEAD. Electron smoke на отдельном fixture воспроизвёл stale manifest и блокировку открытия, вход в доктор через setup, отсутствие ремонта при одном открытии Settings, явный repair, backup, повторную readiness, открытие прежней сессии, повторный no-op, ровно одну передачу при refresh и создание нового Work. Проверены light/dark на минимальной ширине 312 px. Проверка не обращается к реальному ChatGPT/MCP.
