@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 518,
+  "plan_revision": 520,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "chat-colors-024",
@@ -283,8 +283,8 @@
       "why": "Настоящий Chromium выявил, что user-origin CSS не снимается; author-origin CSS с !important прошёл isolated probe."
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "chat-colors-024",
         "task_id": "T006",
@@ -379,7 +379,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: chat-colors-024
 Current Task: нет
-Revision: 518
+Revision: 520
 
 ## Цель
 
@@ -419,8 +419,8 @@ Revision: 518
   - Git Commit: [DONE] fix: remove chat color overrides reliably in Electron
   - Reference: chat-colors-024 / T005B / implementation
   - Файлы: src/chatgpt-colors.mjs, tests/electron-smoke.mjs, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T006: Сборка релиза 0.6.23 для macOS и Windows — Ожидает
-  - Git Commit: [PENDING] release: build Web Pilot 0.6.23 with chat colors
+- [DONE] T006: Сборка релиза 0.6.23 для macOS и Windows — Завершено
+  - Git Commit: [DONE] release: build Web Pilot 0.6.23 with chat colors
   - Reference: chat-colors-024 / T006 / implementation
   - Файлы: package.json, package-lock.json, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает

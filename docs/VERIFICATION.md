@@ -804,3 +804,16 @@ T005: Electron fixture расширен проверкой фактически�
 Интеграционный checkpoint T005 выявил подтверждённый дефект Electron 44.3.0: removeInsertedCSS не снимает user-origin стиль (isolated probe воспроизвёл это даже после задержки). Author-origin стиль снимается корректно в том же probe. Этот checkpoint намеренно характеризует наблюдаемый дефект, возвращает chatColorsReset=false и НЕ является release gate. До релиза обязательна отдельная коррекция фасада и замена characterization на строгий regression сброса; остальные assertions сохранены. Незавершённая транзакция Workflow Kit допускает правки только файлов T005, поэтому коррекция фасада оформляется следующим штатным task после этого checkpoint.
 
 T005B: production facade переведён на author-origin CSS с !important; временная characterization заменена строгим assert исходного фона после reset, добавлена последовательная смена трёх цветов до сброса. В Doctor fixture следующее независимое действие теперь ждёт завершения предыдущей фоновой cache preparation: прежний smoke мог отменить ещё работающий synthetic recovery и получить CONTEXT_CHANGED. Production Doctor/cache и все его assertions сохранены. Финальная проверка запускается штатными commit gates.
+
+
+## Release 0.6.23 — scope chat-colors-024
+
+Финальный managed commit T005B 8713285891f5e4e650d3bda02d94c1aa853b5ef4 прошёл syntax, полную Node suite (164 tests: 162 passed, 0 failed, 2 platform-specific skipped) и Electron smoke (44.3.0 / Chromium 152.0.7977.78). Строгие regression assertions подтвердили computed styles четырёх цветов, сохранение подсветки кода, latest-wins при быстрой смене цвета, полный reset к исходному фону без reload, сохранение settings и восстановление в новом WebContents, SPA navigation, single-instance/перемещение редактора и изоляцию IPC. Итоговый smoke-result: liveChatColors=true, chatColorsPersistence=true, chatColorsReset=true; известный промежуточный дефект T005 устранён. Светлая и тёмная темы редактора проверены по PNG.
+
+T006: npm run build успешно собрал macOS arm64 и Windows x64 0.6.23. Windows verifier подтвердил PE/portable Node/pinned runtime; executable SHA-256 f5b0aea5e0b09550e46806d77b2cbb838798f6a6ded10e272d37be68253cc6bb. В обоих app.asar версия 0.6.23 и все девять затронутых runtime/UI-файлов побайтно совпадают с source; macOS Info.plist также 0.6.23. ZIP integrity проверена unzip -tq.
+
+Поставки в .harness/runtime/releases/0.6.23/ и ~/Downloads/WebPilot-0.6.23/:
+- Project-Web-Pilot-0.6.23-macOS-arm64.zip: 145198496 bytes, SHA-256 767fbc51a6447bb4c04465a03ffaa98446fc1a1a8e0b7149849bda9c8e172047
+- Project-Web-Pilot-0.6.23-Windows-x64.zip: 318045853 bytes, SHA-256 430c991bd23744532329472c8c6934714717dc8eed424ea6aee1fa91bcdcb076
+
+SHA256SUMS.txt и release-manifest.json находятся рядом с архивами в release-каталоге. Реальный ChatGPT аккаунт не использовался в автоматическом smoke (isolated fixture); native Windows 10/11 запуск остаётся пользовательской проверкой. Релиз готовится к приёмке после DOCS; scope не архивируется автоматически.

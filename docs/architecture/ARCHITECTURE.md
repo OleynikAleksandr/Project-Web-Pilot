@@ -772,3 +772,8 @@ T004: main подключает палитру к изолированному C
 T005: отдельная кнопка «Цвета чата…» размещена в Settings рядом с оформлением оболочки. Редактор оставляет открытый чат видимым и сохраняет настройки автоматически.
 
 T005B: используется author-origin insertCSS с !important. В Electron 44.3.0 user-origin стили в isolated probe не снимались removeInsertedCSS; author-origin проходит строгий regression сброса и последовательной смены цветов. Исторический T005 checkpoint не является итоговым результатом.
+
+
+## Релиз 0.6.23 — цвета чата
+
+Общий source собран для macOS arm64 и Windows x64. Палитрой владеют ChatColors (валидация/CSS/lifecycle), ChatColorsWindow (локальное окно и IPC) и renderer chat-colors (четыре controls). main отвечает за binding и последовательную запись settings; схема workspace/session не менялась. Author-origin CSS с !important снимается при сбросе без reload. Поставки формируются в .harness/runtime/releases/0.6.23/; ZIP-копии — ~/Downloads/WebPilot-0.6.23/.
