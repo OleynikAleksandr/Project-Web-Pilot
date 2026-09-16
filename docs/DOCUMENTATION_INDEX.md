@@ -5,53 +5,64 @@
 
 | Документ | Назначение |
 | --- | --- |
-| .harness/kit/WORKFLOW.md | Протокол и шаблон комплекта |
-| .harness/kit/templates/AGENTS.md | Протокол и шаблон комплекта |
-| .harness/kit/templates/ARCHITECTURE.md | Протокол и шаблон комплекта |
-| .harness/kit/templates/PLAN.md | Протокол и шаблон комплекта |
-| .harness/kit/templates/PRODUCT.md | Протокол и шаблон комплекта |
-| .harness/kit/templates/START.md | Протокол и шаблон комплекта |
-| .harness/plans/todo-plan.md | Единственный активный план |
-| .harness/plans/todo-plan.template.md | Контракт проекта; уточняется при обсуждении |
-| AGENTS.md | Контракт проекта; уточняется при обсуждении |
-| docs/PRODUCT.md | Контракт проекта; уточняется при обсуждении |
-| docs/architecture/ARCHITECTURE.md | Контракт проекта; уточняется при обсуждении |
-| docs/WORKFLOW_START.md | Контракт проекта; уточняется при обсуждении |
-| docs/MODULES.md | Карта архитектурных владельцев функционала |
-| docs/architecture/OVERVIEW.md | Компактная архитектурная карта для recovery |
-| docs/DOCUMENTATION_INDEX.md | Контракт проекта; уточняется при обсуждении |
+| .harness/kit/WORKFLOW.md | Канонический протокол Workflow Kit |
+| .harness/kit/templates/AGENTS.md | Шаблон управляемых инструкций нового проекта |
+| .harness/kit/templates/ARCHITECTURE.md | Универсальный шаблон глобальной структуры проекта |
+| .harness/kit/templates/PLAN.md | Обязательный шаблон входа ToDo-plan: project navigation, DOCS и пользовательская приёмка |
+| .harness/kit/templates/PRODUCT.md | Универсальный шаблон общего замысла проекта |
+| .harness/kit/templates/START.md | Шаблон правил начала новой сессии |
+| .harness/plans/todo-plan.md | Единственный текущий ToDo-plan; при `NONE` сохраняет project navigation |
+| .harness/plans/todo-plan.template.md | Доступный агенту шаблон следующего рабочего scope |
+| AGENTS.md | Управляемые инструкции Workflow Kit и границы Project Web Pilot |
+| docs/PRODUCT.md | Действующий продуктовый контракт Project Web Pilot |
+| docs/architecture/ARCHITECTURE.md | Подробная архитектура и история реализации Project Web Pilot |
+| docs/WORKFLOW_START.md | Актуальный порядок начала и продолжения работы |
+| docs/MODULES.md | Карта самостоятельных частей проекта и их владельцев |
+| docs/architecture/OVERVIEW.md | Компактная общая структура проекта для каждого recovery |
+| docs/DOCUMENTATION_INDEX.md | Полный пополняемый индекс действующей документации |
 <!-- workflow-kit:end -->
 
 ## Project Web Pilot
 
 | Документ | Назначение |
 | --- | --- |
-| README.md | Запуск прототипа, первый тест, ограничения и разработка |
-| docs/DECISIONS.md | Решения пользователя, предложения и границы полномочий |
-| docs/CONTEXT_DELIVERY.md | Канонический контракт recovery capsule и доставки контекста |
-| docs/modules/workflow-kit-recovery.md | Module specification Workflow Kit / Context Recovery |
-| docs/modules/runtime-lifecycle.md | Module specification self-healing MCP/tunnel lifecycle |
+| README.md | Актуальный запуск, пользовательское поведение, ограничения и разработка |
+| docs/DECISIONS.md | Решения пользователя и зафиксированные границы полномочий |
+| docs/CONTEXT_DELIVERY.md | Канонический контракт recovery capsule и доставки контекста в ChatGPT |
+| docs/modules/workflow-kit-recovery.md | Specification Workflow Kit / Context Recovery / project continuity |
+| docs/modules/project-doctor.md | Контракт автономного Доктора проекта и границы автоматического ремонта |
+| docs/modules/runtime-lifecycle.md | Specification self-healing MCP/tunnel lifecycle |
+| docs/modules/workspace-sessions.md | Specification проектов, Chat/Work sessions, session tree и переходов после scope |
 | docs/SOURCE_WORKSPACES.md | Исходные проекты, пути, версии и официальные ссылки |
-| docs/VERIFICATION.md | Доказательства, проверки и приёмка прототипа |
-| docs/TRANSFER_TO_WINDOWS.md | Перенос и проверка Windows-сборки из общего репозитория |
+| docs/VERIFICATION.md | Проверки, release evidence и границы пользовательской приёмки |
+| docs/TRANSFER_TO_WINDOWS.md | Актуальная Windows x64 поставка и порядок физической проверки |
+| docs/WORKSPACE_SETUP.md | Создание/подключение workspace и install/upgrade Workflow Kit |
+| docs/PROJECT_ARCHIVE.md | Архив workspace, возврат и безопасное локальное удаление; веб-чаты сохраняются |
 
-Документы PRODUCT, ARCHITECTURE, WORKFLOW_START, AGENTS и единственный план перечислены в разделе комплекта выше. Исторические результаты исходных приложений не означают готовность Project Web Pilot.
+## Обязательная навигация проекта
 
-## Порядок чтения для новой сессии
+Каждый текущий ToDo-plan, включая состояние `NONE`, содержит required-ссылки на:
+1. `docs/architecture/OVERVIEW.md` — что это за проект и как он устроен в целом;
+2. `docs/MODULES.md` — из каких самостоятельных частей он состоит и где их спецификации;
+3. `docs/DOCUMENTATION_INDEX.md` — какие документы существуют и что в них находится.
 
-Новая сессия должна начинаться с recovery capsule. Он уже содержит Workflow Core, текущий plan и required context текущего модуля. Дополнительные документы читать только по ссылкам текущего plan/module spec через этот каталог; исторические PRODUCT/ARCHITECTURE/VERIFICATION не являются обязательным стартовым набором.
+Для активного scope добавляются specification/planning documents затрагиваемых частей. Исторические документы и старые release sections не входят в recovery автоматически.
 
-## Подготовка workspace
+## Порядок чтения новой сессией
+
+Новая сессия начинает с recovery capsule. При `NONE` capsule уже содержит Workflow Core и три обязательных навигационных документа и предлагает обсудить следующий этап проекта. При активном scope дополнительно передаются цель, текущая задача, релевантные specification/planning documents, рабочие изменения и только необходимые dependency diffs.
+
+Большие исторические `PRODUCT`, `ARCHITECTURE`, `VERIFICATION`, `DECISIONS` и другие профильные документы читаются по этому индексу только когда нужны для конкретного этапа. Завершённые планы находятся в `.harness/plans/archive/` и являются историей, а не действующим контрактом.
+
+## Поставляемое ядро Workspace Setup
 
 | Документ | Назначение |
 | --- | --- |
-| docs/WORKSPACE_SETUP.md | Создание, подключение, проверки и сохранение существующих файлов |
-| resources/workflow-kit/WORKFLOW.md | Исходный протокол в поставляемом ядре |
-| resources/workflow-kit/templates/AGENTS.md | Исходный шаблон инструкций |
-| resources/workflow-kit/templates/ARCHITECTURE.md | Исходный шаблон архитектуры |
-| resources/workflow-kit/templates/PLAN.md | Исходный шаблон плана |
-| resources/workflow-kit/templates/PRODUCT.md | Исходный шаблон продукта |
-| resources/workflow-kit/templates/START.md | Исходный шаблон начала работы |
+| resources/workflow-kit/WORKFLOW.md | Поставляемая копия протокола Workflow Kit |
+| resources/workflow-kit/templates/AGENTS.md | Поставляемый шаблон AGENTS |
+| resources/workflow-kit/templates/ARCHITECTURE.md | Поставляемый универсальный шаблон структуры проекта |
+| resources/workflow-kit/templates/PLAN.md | Поставляемый шаблон ToDo-plan |
+| resources/workflow-kit/templates/PRODUCT.md | Поставляемый универсальный шаблон общего замысла |
+| resources/workflow-kit/templates/START.md | Поставляемый шаблон начала работы |
 
-| docs/PROJECT_ARCHIVE.md | Архив workspace, возврат и удаление локальных проектов; веб-чаты сохраняются |
-- `docs/modules/workspace-sessions.md` — контракт проектов/сессий, Chat/Work experience, первая сессия и session tree.
+Установленный `.harness/kit` и `resources/workflow-kit` должны совпадать для файлов ядра; это проверяется автоматическим regression test.

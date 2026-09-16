@@ -7,6 +7,7 @@
 | Модуль / часть проекта | Спецификация | Ответственность |
 | --- | --- | --- |
 | Workflow Kit / Context Recovery | `docs/modules/workflow-kit-recovery.md` | Текущий ToDo-plan, lifecycle scope, recovery capsule, dependency context и continuity между сессиями |
+| Project Doctor | `docs/modules/project-doctor.md` | Автономная диагностика, резервная копия и безопасное исправление известных проблем открытия проекта |
 | Runtime Lifecycle | `docs/modules/runtime-lifecycle.md` | MCP/tunnel discovery, bootstrap, process identity, persisted endpoints и self-healing startup |
 | Workspace & Sessions | `docs/modules/workspace-sessions.md` | Проекты, Chat/Work sessions, session tree, first-session choice и ChatGPT experience routing |
 

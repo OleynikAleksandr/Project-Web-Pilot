@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 456,
+  "plan_revision": 458,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-project-continuity-021",
@@ -395,8 +395,8 @@
         "Контракт Доктора выполнен; текущий manifest реального проекта сохранён без изменений; проверки проходят на fixtures."
       ],
       "expected_commit_message": "feat(doctor): Зафиксировать контракт Доктора проекта",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workflow-project-continuity-021",
         "task_id": "T009",
@@ -598,7 +598,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-project-continuity-021
 Current Task: нет
-Revision: 456
+Revision: 458
 
 ## Цель
 
@@ -647,8 +647,8 @@ Revision: 456
   - Git Commit: [DONE] fix(workflow): ограничить recovery финальной документации
   - Reference: workflow-project-continuity-021 / T008 / implementation
   - Файлы: .harness/kit/lib/recovery.mjs, resources/workflow-kit/lib/recovery.mjs, tests/workflow-kit-recovery.test.mjs
-- [TODO] T009: Зафиксировать контракт Доктора проекта — Ожидает
-  - Git Commit: [PENDING] feat(doctor): Зафиксировать контракт Доктора проекта
+- [DONE] T009: Зафиксировать контракт Доктора проекта — Завершено
+  - Git Commit: [DONE] feat(doctor): Зафиксировать контракт Доктора проекта
   - Reference: workflow-project-continuity-021 / T009 / implementation
   - Файлы: .harness/kit/templates/ARCHITECTURE.md, .harness/kit/templates/PRODUCT.md, .harness/kit/templates/START.md, resources/workflow-kit/templates/ARCHITECTURE.md, resources/workflow-kit/templates/PRODUCT.md, resources/workflow-kit/templates/START.md, README.md, docs/DOCUMENTATION_INDEX.md, docs/WORKFLOW_START.md, docs/MODULES.md, docs/modules/project-doctor.md
 - [TODO] T010: Реализовать безопасный ремонт проекта — Ожидает
