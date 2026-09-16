@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 477,
+  "plan_revision": 479,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "post-doctor-correction-022",
@@ -132,8 +132,8 @@
       "expected_commit_message": "docs(workflow): согласовать correction round"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "post-doctor-correction-022",
         "task_id": "T002",
@@ -345,7 +345,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: post-doctor-correction-022
 Current Task: нет
-Revision: 477
+Revision: 479
 
 ## Цель
 
@@ -366,8 +366,8 @@ Revision: 477
   - Git Commit: [DONE] docs(workflow): согласовать correction round
   - Reference: post-doctor-correction-022 / T001 / implementation
   - Файлы: docs/modules/workflow-kit-recovery.md, docs/architecture/OVERVIEW.md
-- [TODO] T002: Закрепить успешный Doctor reconcile и восстановить package manifest — Ожидает
-  - Git Commit: [PENDING] fix(project): восстановить состояние после doctor
+- [DONE] T002: Закрепить успешный Doctor reconcile и восстановить package manifest — Завершено
+  - Git Commit: [DONE] fix(project): восстановить состояние после doctor
   - Reference: post-doctor-correction-022 / T002 / implementation
   - Файлы: .harness/kit-manifest.json, package.json
 - [TODO] T003: Реализовать повторный correction round Workflow Kit — Ожидает
