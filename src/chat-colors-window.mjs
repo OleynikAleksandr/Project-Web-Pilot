@@ -27,7 +27,7 @@ export class ChatColorsWindow {
     }
     const bounds = this.getBounds?.();
     this.window = new BrowserWindow({
-      title: 'Цвета чата — Project Web Pilot', width: 440, height: 610, minWidth: 400, minHeight: 540,
+      title: 'Цвета чата — Project Web Pilot', width: 440, height: 710, minWidth: 400, minHeight: 540,
       ...(bounds ? { x: bounds.x + 24, y: bounds.y + 90 } : {}),
       show: false, maximizable: false, backgroundColor: this.getState().theme === 'dark' ? '#1b1d22' : '#f4f6f8',
       webPreferences: { preload: path.join(this.sourceDir, 'chat-colors-preload.cjs'),

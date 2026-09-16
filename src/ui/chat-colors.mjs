@@ -1,5 +1,5 @@
 const api = window.webPilotColors;
-const labels = { background: 'Фон чата', userBackground: 'Плашка ваших сообщений', userText: 'Текст ваших сообщений', assistantText: 'Текст ответов агента' };
+const labels = { background: 'Фон чата', userBackground: 'Плашка ваших сообщений', userText: 'Текст ваших сообщений', assistantText: 'Текст ответов агента', composerBackground: 'Фон поля ввода' };
 const rows = new Map();
 let state, version = 0, pending = Promise.resolve();
 const status = document.getElementById('status');

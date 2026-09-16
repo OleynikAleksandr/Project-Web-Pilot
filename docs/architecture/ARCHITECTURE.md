@@ -799,3 +799,9 @@ T005B: используется author-origin insertCSS с !important. В Electr
 В ChatColors добавлен nullable composerBackground; normalizeChatColors сохраняет старые четыре значения и добавляет null. Для composer используются семантический surface token и ограниченный :has(prompt-editor). Подход сверён с опубликованным GPTskins: https://github.com/dboyza/GPTskins/blob/master/content/content.js (composer-surface-primary). Зависимостей не добавлено.
 
 Прежние assistant selectors не охватывали промежуточную markdown-разметку без author-role; добавлен ограниченный markdown/prose fallback вне user/editable content. Правила CSS действуют на новые фрагменты автоматически, без наблюдателя. Реальное сообщение пользователя описывает streaming regression; исправленный вариант разметки отдельно воспроизведён в Chromium.
+
+## composer-color-025 / T002
+
+Editor labels содержит пятый пункт «Фон поля ввода». Окно увеличено до 710 px по высоте; все пять строк и общий reset видны без вертикальной прокрутки при стандартном размере. Отдельного IPC или хранилища не добавлено: существующий facade сохраняет новый ключ вместе с палитрой.
+
+Electron smoke меняет composerBackground через UI, проверяет оба DOM surface-варианта, прозрачность самого editor, сохранение черновика/кнопок/геометрии, независимый reset и восстановление в новом WebContents. Во время ответа fixture каждые 20 ms добавляет текст, меняет assistantText через редактор, заменяет Markdown root, продолжает поток и переводит его в окончательную author-role разметку; выбранный цвет сохраняется на каждом шаге.

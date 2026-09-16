@@ -859,3 +859,7 @@ DOCS correction iteration: проверены 34 indexed documents и согла
 ## composer-color-025 / T001
 
 node --test tests/chatgpt-colors.test.mjs: 3 passed, 0 failed; проверены backward-compatible palette и валидация пятого поля. Изолированный Electron composer-color-probe.cjs подтвердил новый и legacy composer surface, сохранение черновика/кнопок/радиуса/цвета вводимого текста, reset и цвет roleless streaming fragment после DOM replacement. Source syntax проверен. UI/IPC/полный suite выполняются в T002.
+
+## composer-color-025 / T002
+
+Ручной запуск npm run smoke завершился успешно: composerBackground=true, streamingAssistantColor=true, liveChatColors/chatColorsPersistence/chatColorsReset=true. Регрессия проверяет изменение цвета агента через UI во время появления новых фрагментов и после замены DOM; поле ввода и пользовательский Markdown сохраняют свои цвета. Проверены независимый и полный reset, сохранение нового поля и новое WebContents. Скриншоты пяти строк light/dark визуально просмотрены: всё помещается, обрезки нет (web-pilot-electron-smoke-4efBbm). Реальный аккаунт и native Windows остаются пользовательской проверкой.

@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 544,
+  "plan_revision": 546,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "composer-color-025",
@@ -133,8 +133,8 @@
       "expected_commit_message": "feat: add composer background to chat palette"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "composer-color-025",
         "task_id": "T002",
@@ -266,7 +266,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: composer-color-025
 Current Task: нет
-Revision: 544
+Revision: 546
 
 ## Цель
 
@@ -286,8 +286,8 @@ Revision: 544
   - Git Commit: [DONE] feat: add composer background to chat palette
   - Reference: composer-color-025 / T001 / implementation
   - Файлы: src/chatgpt-colors.mjs, tests/chatgpt-colors.test.mjs, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T002: Пятый пункт редактора и Chromium-проверка — Ожидает
-  - Git Commit: [PENDING] feat: expose and verify live composer background control
+- [DONE] T002: Пятый пункт редактора и Chromium-проверка — Завершено
+  - Git Commit: [DONE] feat: expose and verify live composer background control
   - Reference: composer-color-025 / T002 / implementation
   - Файлы: src/ui/chat-colors.mjs, src/chat-colors-window.mjs, tests/electron-smoke.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T003: Собрать и установить релиз 0.6.25 — Ожидает

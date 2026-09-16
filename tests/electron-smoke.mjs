@@ -490,7 +490,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await sidebar.executeJavaScript('document.getElementById("open-chat-colors").click()');
   await waitFor(() => getColorWindow() && !getColorWindow().webContents.isLoading(), 'color editor opens', snapshot);
   const firstColorWindow = getColorWindow(), colors = firstColorWindow.webContents;
-  await waitFor(() => colors.executeJavaScript('document.querySelectorAll("input[type=color]").length === 4 && document.getElementById("background-hex").value.length === 7'), 'color controls ready', snapshot);
+  await waitFor(() => colors.executeJavaScript('document.querySelectorAll("input[type=color]").length === 5 && document.getElementById("background-hex").value.length === 7'), 'color controls ready', snapshot);
   assert.deepEqual(await colors.executeJavaScript('({require:typeof require,process:typeof process,pilot:typeof window.webPilot})'), { require: 'undefined', process: 'undefined', pilot: 'undefined' });
   assert.equal(await browser.executeJavaScript('typeof window.webPilotColors'), 'undefined');
   assert.equal(firstColorWindow.isModal(), false);
@@ -504,8 +504,12 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   const bubbleProbe = "(() => {\nconst ids=['palette-user-row','palette-second-row','palette-unknown-row','palette-legacy-row'];\nconst rowBackgrounds=ids.map(id=>getComputedStyle(document.getElementById(id)).backgroundColor);\nconst bubbles=['palette-user-bubble','palette-second-bubble','palette-legacy-bubble'].map(id=>getComputedStyle(document.getElementById(id)).backgroundColor);\nconst bubble=document.getElementById('palette-user-bubble'),style=getComputedStyle(bubble);\nreturn {rowBackgrounds,bubbles,radius:style.borderRadius,width:style.width,padding:style.padding};\n})()";
   const originalBubbles = await browser.executeJavaScript(bubbleProbe);
   assert.equal(originalBubbles.bubbles[0], 'rgb(27, 64, 124)', 'fixture starts with the native blue rounded bubble');
+  const composerFixture = "<main id=\"palette-composer-probe\">\n<style>\n#palette-composer,#composer-background{background:#e4e8ec;border-radius:28px;padding:18px;color:#334455}\n#palette-editor{background:#e4e8ec;min-height:30px}\n#palette-stream p,#palette-stream span{color:#0d0d0d}\n#palette-composer button{background:#224466;color:#fff}\n</style>\n<form id=\"palette-composer-form\"><div class=\"bg-(--composer-surface-primary)\" id=\"palette-composer\"><div id=\"palette-editor\" data-testid=\"composer-text-input\" class=\"prose\" contenteditable=\"true\" role=\"textbox\">Сохранённый черновик</div><button id=\"palette-composer-button\" type=\"button\">Отправить</button></div></form>\n<form><div id=\"composer-background\"><textarea data-testid=\"prompt-textarea\">Другой черновик</textarea></div></form>\n<form id=\"palette-unrelated-form\"><textarea>Обычное поле</textarea></form>\n<div id=\"palette-stream\" class=\"markdown\"><p>Потоковый ответ без роли</p></div>\n<div data-message-author-role=\"user\"><div class=\"markdown\"><p id=\"palette-user-markdown\">Текст пользователя</p></div></div>\n</main>";
+  await browser.executeJavaScript('document.body.insertAdjacentHTML("beforeend", ' + JSON.stringify(composerFixture) + ')');
+  const composerProbe = '(() => {const c=id=>getComputedStyle(document.getElementById(id));return {background:c("palette-composer").backgroundColor,legacy:c("composer-background").backgroundColor,editorBackground:c("palette-editor").backgroundColor,editorColor:c("palette-editor").color,draft:document.getElementById("palette-editor").textContent,button:c("palette-composer-button").backgroundColor,radius:c("palette-composer").borderRadius,padding:c("palette-composer").padding,width:c("palette-composer").width,unrelated:c("palette-unrelated-form").backgroundColor};})()';
+  const originalComposer = await browser.executeJavaScript(composerProbe);
   const baselineBackground = await browser.executeJavaScript('getComputedStyle(document.body).backgroundColor');
-  const palette = { background: '#efe5d4', userBackground: '#c5ddd3', userText: '#183b36', assistantText: '#493d65' };
+  const palette = { background: '#efe5d4', userBackground: '#c5ddd3', userText: '#183b36', assistantText: '#493d65', composerBackground: '#243344' };
   for (const [key, value] of Object.entries(palette)) {
     await colors.executeJavaScript('(() => { const input = document.getElementById(' + JSON.stringify(key) + '); input.value = ' + JSON.stringify(value) + '; input.dispatchEvent(new Event("input",{bubbles:true})); })()');
   }
@@ -519,8 +523,35 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.deepEqual(coloredBubbles.rowBackgrounds, Array(4).fill('rgba(0, 0, 0, 0)'), 'outer rows remain transparent');
   assert.deepEqual(coloredBubbles.bubbles, Array(3).fill('rgb(197, 221, 211)'), 'first, subsequent and legacy bubbles receive the color');
   for (const key of ['radius','width','padding']) assert.equal(coloredBubbles[key], originalBubbles[key], 'bubble geometry stays unchanged: ' + key);
+  const coloredComposer = await browser.executeJavaScript(composerProbe);
+  assert.equal(coloredComposer.background, 'rgb(36, 51, 68)', 'whole composer surface receives its independent color');
+  assert.equal(coloredComposer.legacy, coloredComposer.background, 'legacy composer surface is supported');
+  assert.equal(coloredComposer.editorBackground, 'rgba(0, 0, 0, 0)', 'editable region shows the same surface');
+  for (const key of ['editorColor','draft','button','radius','padding','width','unrelated']) assert.equal(coloredComposer[key], originalComposer[key], 'composer preserves ' + key);
+  await colors.executeJavaScript('document.getElementById("composerBackground").closest(".row").querySelector(".reset-one").click()');
+  await waitFor(async () => JSON.parse(await fs.readFile(path.join(dataDir,'settings.json'),'utf8')).chatColors.composerBackground === null, 'independent composer reset saved', snapshot);
+  await waitFor(async () => (await browser.executeJavaScript(composerProbe)).background === originalComposer.background, 'independent composer reset applied', snapshot);
+  assert.equal(JSON.parse(await fs.readFile(path.join(dataDir,'settings.json'),'utf8')).chatColors.assistantText, palette.assistantText);
+  await colors.executeJavaScript('(() => { const input=document.getElementById("composerBackground");input.value="#243344";input.dispatchEvent(new Event("input",{bubbles:true})); })()');
+  await waitFor(async () => JSON.parse(await fs.readFile(path.join(dataDir,'settings.json'),'utf8')).chatColors.composerBackground === palette.composerBackground, 'composer restored for persistence check', snapshot);
+  await browser.executeJavaScript('window.__paletteChunks=0;window.__paletteStream=setInterval(()=>{const node=document.getElementById("palette-stream");if(node){const span=document.createElement("span");span.style.color="#000000";span.textContent=" fragment";node.append(span);window.__paletteChunks++;}},20)');
+  await colors.executeJavaScript('(() => { const input=document.getElementById("assistantText");input.value="#b24a78";input.dispatchEvent(new Event("input",{bubbles:true})); })()');
+  await waitFor(async () => JSON.parse(await fs.readFile(path.join(dataDir,'settings.json'),'utf8')).chatColors.assistantText === '#b24a78', 'assistant color saved during streaming', snapshot);
+  await waitFor(() => browser.executeJavaScript('window.__paletteChunks >= 3'), 'streaming adds chunks', snapshot);
+  assert.equal(await browser.executeJavaScript('[...document.querySelectorAll("#palette-stream p,#palette-stream span")].every(node=>getComputedStyle(node).color==="rgb(178, 74, 120)")'), true, 'new roleless streaming fragments retain selected text color');
+  await browser.executeJavaScript('document.getElementById("palette-stream").outerHTML=\'<div id="palette-stream" class="markdown"><p style="color:#000000">Replacement while streaming</p></div>\'');
+  await waitFor(() => browser.executeJavaScript('window.__paletteChunks >= 6'), 'streaming continues after DOM replacement', snapshot);
+  assert.equal(await browser.executeJavaScript('[...document.querySelectorAll("#palette-stream p,#palette-stream span")].every(node=>getComputedStyle(node).color==="rgb(178, 74, 120)")'), true, 'replacement does not restore native text color');
+  await browser.executeJavaScript('clearInterval(window.__paletteStream);document.getElementById("palette-stream").className="";document.getElementById("palette-stream").setAttribute("data-message-author-role","assistant")');
+  assert.equal(await browser.executeJavaScript('getComputedStyle(document.querySelector("#palette-stream p")).color'), 'rgb(178, 74, 120)', 'completed answer retains streaming color');
+  assert.equal(await browser.executeJavaScript('getComputedStyle(document.getElementById("palette-user-markdown")).color'), 'rgb(24, 59, 54)', 'user Markdown keeps user text color');
+  assert.equal((await browser.executeJavaScript(composerProbe)).editorColor, originalComposer.editorColor, 'streaming color leaves the draft unchanged');
+  assert.equal(await colors.executeJavaScript('document.getElementById("assistantText-hex").value.toLowerCase()'), '#b24a78', 'editor retains chosen streaming color');
+  await colors.executeJavaScript('(() => { const input=document.getElementById("assistantText");input.value="#493d65";input.dispatchEvent(new Event("input",{bubbles:true})); })()');
+  await waitFor(async () => JSON.parse(await fs.readFile(path.join(dataDir,'settings.json'),'utf8')).chatColors.assistantText === palette.assistantText, 'assistant palette restored after streaming test', snapshot);
   assert.equal((await colors.executeJavaScript('window.webPilotColors.change("background","red;display:none")')).ok, false, 'invalid CSS rejected');
   assert.equal(await colors.executeJavaScript('document.documentElement.scrollWidth <= innerWidth'), true, 'editor does not overflow');
+  assert.equal(await colors.executeJavaScript('document.documentElement.scrollHeight <= innerHeight'), true, 'five color rows and reset fit the default window');
   const colorScreenshots = [];
   for (const theme of ['light','dark']) {
     await sidebar.executeJavaScript('window.webPilot.setTheme(' + JSON.stringify(theme) + ')');
@@ -540,6 +571,8 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await restoredView.loadURL('https://chatgpt.com/c/palette-restart-fixture');
   await restoredPalette.apply();
   assert.equal(await restoredView.webContents.executeJavaScript('getComputedStyle(document.body).backgroundColor'), 'rgb(239, 229, 212)', 'persisted palette hydrates fresh WebContents');
+  await restoredView.webContents.executeJavaScript('document.body.insertAdjacentHTML("beforeend", ' + JSON.stringify(composerFixture) + ')');
+  assert.equal((await restoredView.webContents.executeJavaScript(composerProbe)).background, 'rgb(36, 51, 68)', 'composer color hydrates fresh WebContents and newly inserted editor');
   restoredPalette.dispose(); restoredView.close();
   await browser.executeJavaScript('history.pushState({}, "", location.pathname + "?palette=1")');
   await waitFor(() => browser.executeJavaScript('getComputedStyle(document.getElementById("palette-agent")).color === "rgb(73, 61, 101)"'), 'SPA preserves palette', snapshot);
@@ -550,8 +583,9 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(await browser.executeJavaScript('getComputedStyle(document.body).backgroundColor'), baselineBackground, 'reset removes user CSS');
   assert.deepEqual(await browser.executeJavaScript(bubbleProbe), originalBubbles, 'reset restores native blue bubbles and transparent rows');
   assert.equal(Object.values(JSON.parse(await fs.readFile(path.join(dataDir, 'settings.json'), 'utf8')).chatColors).every(value => value === null), true);
+  assert.deepEqual(await browser.executeJavaScript(composerProbe), originalComposer, 'global reset restores native composer and keeps draft');
   getColorWindow().close(); window.show(); window.focus();
-  await browser.executeJavaScript('document.getElementById("palette-probe").remove(); history.replaceState({}, "", location.pathname)');
+  await browser.executeJavaScript('document.getElementById("palette-probe").remove(); document.getElementById("palette-composer-probe").remove(); history.replaceState({}, "", location.pathname)');
 
   await sidebar.executeJavaScript('document.getElementById("open-archive-window").click()');
   await waitFor(() => !!getArchiveWindow() && !getArchiveWindow().isDestroyed(), 'separate archive window', snapshot);
@@ -754,7 +788,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(store.selected().experience, 'work');
   assert.equal(store.snapshot().projects.find(p => p.workspace === workspace).sessions.length, beforeDoctorNew + 1);
 
-  const result = { liveChatColors: true, chatColorsPersistence: true, chatColorsReset: true, colorScreenshots, projectDoctor: true, doctorBackup: true, doctorOpen: true, doctorRefresh: true, doctorNewSession: true, doctorScreenshots, newestSessionFirst: true, projectSelectsNewest: true, threeSessionViewport: true, sessionScrollPreserved: true, visibleSessionScrollbar: true, nativeProjectsDisclosure: true, treePopover: true, treeScreenshots, scopeContinuationChat: true, scopeContinuationWork: true, scopeContinuationRestart: true, scopeContinuationNoDuplicates: true,
+  const result = { liveChatColors: true, composerBackground: true, streamingAssistantColor: true, chatColorsPersistence: true, chatColorsReset: true, colorScreenshots, projectDoctor: true, doctorBackup: true, doctorOpen: true, doctorRefresh: true, doctorNewSession: true, doctorScreenshots, newestSessionFirst: true, projectSelectsNewest: true, threeSessionViewport: true, sessionScrollPreserved: true, visibleSessionScrollbar: true, nativeProjectsDisclosure: true, treePopover: true, treeScreenshots, scopeContinuationChat: true, scopeContinuationWork: true, scopeContinuationRestart: true, scopeContinuationNoDuplicates: true,
     transitionScreenshot: path.join(dataDir, 'next-session-choice.png'), mode: 'isolated-fixture', electron: process.versions.electron, chromium: process.versions.chrome,
     views: window.contentView.children.length, secureRemote: true, sidebarIpc: true, archiveRestore: true, archiveRestart: true, deleteCancel: true, localDeletion: true, cloudChatPreserved: true, workspaceCreation: true, workspaceValidation: true, cancelPreservesSession: true, startupMessages: 4, canonicalPacketLoads: packetLoads, recoveryCache: true, operationProgress: true, progressScreenshot: path.join(dataDir, 'progress-ui.png'),
     tokenCounterRemoved: true, projectRename: true, sessionRename: true, scopeSessionRename: true, restartKeepsSession: true, newChatCreatesSession: true, sessionTree: true, selectsEarlierSession: true, compactWorkspaceDetails: true, projectPathClipboard: true, planAcceptanceButton: true, chromiumDiagnostics: true, contextWindowIndicatorRemoved: true, resizableSidebar: true, separateArchiveWindow: true, archiveMultiSelect: true, archiveForgetKeepsFolder: true, shellTheme: true, nativeTitlebarTheme: nativeTheme.shouldUseDarkColors, toolCallFilter: true, microphonePermission: true, geolocationPermission: true, cameraPermission: false, fullContextBytes: Buffer.byteLength(fixtureContext), liveChatGPT: false, agentToolsRequired: false };
