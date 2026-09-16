@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 507,
+  "plan_revision": 509,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "chat-colors-024",
@@ -129,8 +129,8 @@
       "expected_commit_message": "feat: add isolated ChatGPT color palette"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "chat-colors-024",
         "task_id": "T002",
@@ -344,7 +344,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: chat-colors-024
 Current Task: нет
-Revision: 507
+Revision: 509
 
 ## Цель
 
@@ -364,8 +364,8 @@ Revision: 507
   - Git Commit: [DONE] feat: add isolated ChatGPT color palette
   - Reference: chat-colors-024 / T001 / implementation
   - Файлы: src/chatgpt-colors.mjs, tests/chatgpt-colors.test.mjs, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T002: Перемещаемое окно редактора и безопасный IPC — Ожидает
-  - Git Commit: [PENDING] feat: add floating chat color editor window
+- [DONE] T002: Перемещаемое окно редактора и безопасный IPC — Завершено
+  - Git Commit: [DONE] feat: add floating chat color editor window
   - Reference: chat-colors-024 / T002 / implementation
   - Файлы: src/chat-colors-window.mjs, src/chat-colors-preload.cjs, docs/architecture/ARCHITECTURE.md
 - [TODO] T003: Интерактивный редактор четырёх цветов — Ожидает
