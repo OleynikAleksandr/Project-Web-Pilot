@@ -872,3 +872,5 @@ T002 managed checks: syntax PASSED (19 ms), suite PASSED (27096 ms), electron-sm
 - Project-Web-Pilot-0.6.25-Windows-x64.zip: 318046192 bytes, SHA-256 86592b1c56eafd76923cb9a193058592b810f77de54066a6dc25010529520f33.
 
 Физический Windows запуск и реальная визуальная приёмка ChatGPT остаются за пользователем; проверки composer/streaming выполнены на Chromium fixture. Текущая сессия не прерывалась. Архивирование требует отдельного принятия/поручения пользователя.
+
+composer-color-025 / DOCS: проверены 34 indexed documents и существование ссылок. Текущие описания обновлены до пяти цветов и 0.6.25; исторические сведения о 0.6.23/0.6.24 сохранены. Изменены README, PRODUCT, OVERVIEW, WORKFLOW_START, DECISIONS, Windows transfer и current version в Project Doctor; профильные контракты и release evidence обновлены в T001–T003. Workflow Kit/recovery/runtime/archive не менялись. Scope остаётся ACTIVE до пользовательской приёмки и явной команды archive.

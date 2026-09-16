@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 548,
+  "plan_revision": 550,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "composer-color-025",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Добавить пятый цвет «Фон поля ввода» в существующий редактор: немедленное применение к скруглённому блоку ввода, сохранение и сброс; выпуск macOS/Windows 0.6.25. Проверить и исправить сохранение цвета текста агента во время потокового ответа.",
   "acceptance_criteria": [
     "Редактор содержит отдельный пункт «Фон поля ввода».",
@@ -198,8 +198,8 @@
       "expected_commit_message": "release: publish Web Pilot 0.6.25 with composer color"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "composer-color-025",
         "task_id": "DOCS",
@@ -263,10 +263,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: composer-color-025
 Current Task: нет
-Revision: 548
+Revision: 550
 
 ## Цель
 
@@ -294,8 +294,8 @@ Revision: 548
   - Git Commit: [DONE] release: publish Web Pilot 0.6.25 with composer color
   - Reference: composer-color-025 / T003 / implementation
   - Файлы: package.json, package-lock.json, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/RELEASE.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: document composer color and release 0.6.25
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: document composer color and release 0.6.25
   - Reference: composer-color-025 / DOCS / implementation
   - Файлы: README.md, AGENTS.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md, docs/WORKFLOW_START.md, docs/MODULES.md, docs/architecture/OVERVIEW.md, docs/DOCUMENTATION_INDEX.md, docs/modules/workspace-sessions.md, docs/modules/project-doctor.md, docs/modules/runtime-lifecycle.md, docs/modules/workflow-kit-recovery.md, docs/SOURCE_WORKSPACES.md, docs/VERIFICATION.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKSPACE_SETUP.md, docs/PROJECT_ARCHIVE.md, docs/RELEASE.md
 
