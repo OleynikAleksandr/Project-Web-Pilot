@@ -9,9 +9,9 @@ class Contents extends EventEmitter {
   async insertCSS(css) { const key = String(++this.serial); this.sheets.set(key, css); await new Promise(resolve => setImmediate(resolve)); return key; }
   async removeInsertedCSS(key) { this.sheets.delete(key); }
 }
-test('palette accepts only four hex colors and rejects CSS injection', () => {
+test('palette accepts only five hex colors and rejects CSS injection', () => {
   assert.deepEqual(normalizeChatColors({ background: '#ABCDEF', userText: 'red;display:none', extra: '#ffffff' }), {
-    background: '#abcdef', userBackground: null, userText: null, assistantText: null,
+    background: '#abcdef', userBackground: null, userText: null, assistantText: null, composerBackground: null,
   });
   assert.throws(() => validateColorChange({ key: 'background', value: 'url(https://example.com)' }));
   assert.throws(() => validateColorChange({ key: 'other', value: '#ffffff' }));
@@ -35,4 +35,10 @@ test('rapid changes converge to one sheet, reset removes it, navigation reapplie
   assert.equal(contents.sheets.size, 0);
   palette.dispose();
   assert.equal(contents.listenerCount('dom-ready'), 0);
+});
+test('old palettes retain their colors while the composer defaults to native', () => {
+  const old = { background: '#102030', userBackground: '#304050', userText: '#abcDEF', assistantText: '#654321' };
+  assert.deepEqual(normalizeChatColors(old), { ...old, userText: '#abcdef', composerBackground: null });
+  assert.deepEqual(validateColorChange({ key: 'composerBackground', value: '#Ab1234' }), { key: 'composerBackground', value: '#ab1234' });
+  assert.throws(() => validateColorChange({ key: 'composerBackground', value: '#abc;display:none' }));
 });

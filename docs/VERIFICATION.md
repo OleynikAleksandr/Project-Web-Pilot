@@ -855,3 +855,7 @@ B001 commit c96f06d: managed syntax PASSED (19 ms), suite PASSED (21176 ms), ele
 Native Windows и визуальная проверка настоящего ChatGPT остаются пользовательскими; исправление проверено на Chromium fixture с реальным DOM-маркером плашки. Scope не архивирован.
 
 DOCS correction iteration: проверены 34 indexed documents и согласованность release/current-version ссылок. Обновлены README, PRODUCT, WORKFLOW_START, Project Doctor current version, Windows transfer и DECISIONS; контракты цветов и постоянного релиза обновлены в B001/B002. Scope вновь готов к пользовательской приёмке после commit DOCS.
+
+## composer-color-025 / T001
+
+node --test tests/chatgpt-colors.test.mjs: 3 passed, 0 failed; проверены backward-compatible palette и валидация пятого поля. Изолированный Electron composer-color-probe.cjs подтвердил новый и legacy composer surface, сохранение черновика/кнопок/радиуса/цвета вводимого текста, reset и цвет roleless streaming fragment после DOM replacement. Source syntax проверен. UI/IPC/полный suite выполняются в T002.

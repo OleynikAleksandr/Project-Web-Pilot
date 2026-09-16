@@ -793,3 +793,9 @@ T005B: используется author-origin insertCSS с !important. В Electr
 ## Release 0.6.24 — B002
 
 Сборки macOS arm64 и Windows x64 содержат исправленный selector внутренней плашки. Постоянный корневой app обновлён штатным build:mac с сохранением inode 398344301; ZIP опубликован отдельно в releases/0.6.24 и Downloads/WebPilot-0.6.24. Нынешний запуск пользователя не прерывался; исправление вступает в силу после полного выхода и нового запуска корневого app.
+
+## composer-color-025 / T001
+
+В ChatColors добавлен nullable composerBackground; normalizeChatColors сохраняет старые четыре значения и добавляет null. Для composer используются семантический surface token и ограниченный :has(prompt-editor). Подход сверён с опубликованным GPTskins: https://github.com/dboyza/GPTskins/blob/master/content/content.js (composer-surface-primary). Зависимостей не добавлено.
+
+Прежние assistant selectors не охватывали промежуточную markdown-разметку без author-role; добавлен ограниченный markdown/prose fallback вне user/editable content. Правила CSS действуют на новые фрагменты автоматически, без наблюдателя. Реальное сообщение пользователя описывает streaming regression; исправленный вариант разметки отдельно воспроизведён в Chromium.

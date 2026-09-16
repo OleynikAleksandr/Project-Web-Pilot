@@ -1,7 +1,7 @@
-export const COLOR_KEYS = Object.freeze(['background', 'userBackground', 'userText', 'assistantText']);
+export const COLOR_KEYS = Object.freeze(['background', 'userBackground', 'userText', 'assistantText', 'composerBackground']);
 export const DEFAULT_COLORS = Object.freeze({
-  light: Object.freeze({ background: '#ffffff', userBackground: '#f4f4f4', userText: '#0d0d0d', assistantText: '#0d0d0d' }),
-  dark: Object.freeze({ background: '#212121', userBackground: '#303030', userText: '#ececec', assistantText: '#ececec' }),
+  light: Object.freeze({ background: '#ffffff', userBackground: '#f4f4f4', userText: '#0d0d0d', assistantText: '#0d0d0d', composerBackground: '#ffffff' }),
+  dark: Object.freeze({ background: '#212121', userBackground: '#303030', userText: '#ececec', assistantText: '#ececec', composerBackground: '#303030' }),
 });
 export function normalizeChatColors(value = {}) {
   const result = {};
@@ -17,6 +17,11 @@ export function validateColorChange(input) {
   return { key: input.key, value: input.value?.toLowerCase() ?? null };
 }
 const role = name => ':is([data-message-author-role="' + name + '"],[data-testid="' + name + '-message"])';
+const composerEditor = ':is(#prompt-textarea,textarea[data-testid="prompt-textarea"],[data-testid="composer-text-input"])';
+const composerSurface = ':is(#composer-background,[data-testid="composer"],[class*="bg-(--composer-surface-primary)"]):has(' + composerEditor + ')';
+const userContent = role('user') + ',' + role('user') + ' *,.user-message-bubble,.user-message-bubble *,.user-message-bubble-color,.user-message-bubble-color *';
+const editableContent = '[contenteditable="true"],[contenteditable="true"] *,#prompt-textarea,#prompt-textarea *';
+const assistantContent = ':is(' + role('assistant') + ',main :is(.markdown,.prose,[class*="markdown-new-styling"]):not(:where(' + userContent + ',' + editableContent + ')))';
 export function chatColorsCSS(input) {
   const colors = normalizeChatColors(input), rules = [];
   if (colors.background) {
@@ -28,9 +33,16 @@ export function chatColorsCSS(input) {
     // The role element spans the row; only the inner bubble owns the rounded fill.
     rules.push('.user-message-bubble-color,.user-message-bubble{background:' + colors.userBackground + '!important}');
   }
+  if (colors.composerBackground) {
+    const c = colors.composerBackground;
+    rules.push(composerSurface + '{--composer-surface:' + c + '!important;--composer-surface-primary:' + c + '!important;background:' + c + '!important}');
+    rules.push(composerSurface + ' ' + composerEditor + '{background:transparent!important}');
+  }
   for (const name of ['user', 'assistant']) {
     const c = colors[name + 'Text'];
-    if (c) rules.push(role(name) + ',' + role(name) + ' :not(:where(pre,pre *,code,code *,a,a *,svg,svg *)){color:' + c + '!important}');
+    const target = name === 'assistant' ? assistantContent : role(name);
+    // Streaming Markdown can appear before ChatGPT adds its assistant role wrapper.
+    if (c) rules.push(target + ',' + target + ' :not(:where(pre,pre *,code,code *,a,a *,svg,svg *,button,button *,' + editableContent + ')){color:' + c + '!important}');
   }
   return rules.join('\n');
 }
