@@ -4,11 +4,11 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 568,
+  "plan_revision": 569,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "clean-install-lab-027",
-  "execution_scope_status": "ACTIVE",
+  "execution_scope_status": "BLOCKED",
   "delivery_status": "IN_PROGRESS",
   "objective": "Чистые macOS и Windows для проверки установки Web Pilot",
   "acceptance_criteria": [
@@ -264,7 +264,7 @@
       "expected_commit_message": "docs: update project documentation for clean installation lab"
     }
   ],
-  "blocked_reason": null,
+  "blocked_reason": "T001 и T002 завершены. Для создания macOS VM через наблюдаемый GUI нужно системное разрешение записи экрана локальному MCP (computer_status: screen_recording=false; accessibility/post_events=true). UTM 4.7.5 build 118 установлен и проверен. Открыт раздел macOS Privacy_ScreenCapture; пользователь должен разрешить запись экрана для Terminal/фактического приложения запуска MCP. После этого повторить computer_status, штатно вернуть ACTIVE и продолжить T003. Гостевые macOS/Windows пока не созданы.",
   "user_decisions": [
     {
       "id": "56c0fc31-e66a-47c3-a704-fd807594fc7a",
@@ -278,11 +278,11 @@
 
 ## Состояние
 
-Execution Scope Status: ACTIVE
+Execution Scope Status: BLOCKED
 Delivery Status: IN_PROGRESS
 Scope: clean-install-lab-027
 Current Task: нет
-Revision: 568
+Revision: 569
 
 ## Цель
 
