@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 499,
+  "plan_revision": 501,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "hidden-tool-scroll-023",
@@ -183,8 +183,8 @@
       "expected_commit_message": "build: подготовить релиз 0.6.22"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "hidden-tool-scroll-023",
         "task_id": "T003",
@@ -273,7 +273,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: hidden-tool-scroll-023
 Current Task: нет
-Revision: 499
+Revision: 501
 
 ## Цель
 
@@ -301,8 +301,8 @@ Revision: 499
   - Git Commit: [DONE] build: подготовить релиз 0.6.22
   - Reference: hidden-tool-scroll-023 / T002 / implementation
   - Файлы: package.json, package-lock.json, docs/architecture/ARCHITECTURE.md
-- [TODO] T003: Проверить и собрать релиз 0.6.22 — Ожидает
-  - Git Commit: [PENDING] build: выпустить Project Web Pilot 0.6.22
+- [DONE] T003: Проверить и собрать релиз 0.6.22 — Завершено
+  - Git Commit: [DONE] build: выпустить Project Web Pilot 0.6.22
   - Reference: hidden-tool-scroll-023 / T003 / implementation
   - Файлы: docs/VERIFICATION.md, docs/TRANSFER_TO_WINDOWS.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает

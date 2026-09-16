@@ -784,3 +784,11 @@ Regression воспроизводит полный повторный цикл �
 Regression расширяет существующий Electron smoke: tool-call fixture теперь имеет собственный контейнер с измеримой минимальной высотой. При `hideToolCalls=true` проверяется не только marker на кнопке, но и `display:none` на максимально высоком безопасном tool-only wrapper; при «Показывать» wrapper и marker полностью восстанавливаются, при повторном «Скрывать» footprint снова исчезает. После изменения layout production-код вызывает только `refresh()` существующего auto-scroll controller, не принудительный resume, поэтому ручной suspended режим сохраняется. MCP/tools и содержимое сообщений этим фильтром не затрагиваются.
 
 T001B: `node --check src/main.mjs` — PASSED. Прямой `npm run smoke` на Electron 44.3.0 / Chromium 152.0.7977.78 — PASSED в isolated fixture; итоговый smoke-result сообщает `toolCallFilter=true`. Реальный DOM текущего ChatGPT остаётся пользовательской приёмкой после package-сборки 0.6.22.
+
+## Release 0.6.22 — scope hidden-tool-scroll-023 / T003
+
+Перед выпуском `npm test` на версии 0.6.22 завершился: 162 tests, 160 passed, 0 failed, 2 platform-specific skipped. Финальный `npm run smoke` на Electron 44.3.0 / Chromium 152.0.7977.78 прошёл в isolated fixture; результат включает `toolCallFilter=true` с новым regression на удаление layout-footprint.
+
+`npm run build` успешно собрал macOS arm64 и Windows x64. Штатный `verify:win` подтвердил Windows executable, portable Node и pinned runtime; SHA-256 EXE: `75b12ac5eebd13ba7530617bfb3dfb31dbf5826387ee84a2d4d7bfe9caa31e35`. `package.json` внутри обоих `app.asar` и macOS `CFBundleShortVersionString` сообщают 0.6.22. Production `src/main.mjs` внутри обоих `app.asar` побайтно совпадает с source, SHA-256 `ab68e62b8ab373e2202ac6819b4fe2a920bdf0fd9a15afc20a0bb883172c3ad8`.
+
+Релиз размещён отдельно в `.harness/runtime/releases/0.6.22/`, не заменяя 0.6.21. macOS ZIP `Project-Web-Pilot-0.6.22-macOS-arm64.zip`: 145193401 bytes, SHA-256 `d0fdbc4aaa67100b59a6c4912ba275655cb75794b24cf4472903e30cac3a86fb`. Windows ZIP `Project-Web-Pilot-0.6.22-Windows-x64.zip`: 318021433 bytes, SHA-256 `ddef89afce038c0ba01839db966c0255680fd48da0472b130f58639f23ef357e`. `SHA256SUMS.txt` проверен через `shasum -c`; оба ZIP дополнительно прошли `unzip -tq` без ошибок. Реальный ChatGPT DOM и native Windows 10/11 запуск остаются пользовательской приёмкой.
