@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 492,
+  "plan_revision": 494,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "hidden-tool-scroll-023",
@@ -89,8 +89,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "hidden-tool-scroll-023",
         "task_id": "T001",
@@ -238,7 +238,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: hidden-tool-scroll-023
 Current Task: нет
-Revision: 492
+Revision: 494
 
 ## Цель
 
@@ -254,8 +254,8 @@ Revision: 492
 
 ## Микрозадачи
 
-- [TODO] T001: Убрать layout-footprint скрытых tool-call строк — Ожидает
-  - Git Commit: [PENDING] fix(chat): убрать пустоту скрытых tool calls
+- [DONE] T001: Убрать layout-footprint скрытых tool-call строк — Завершено
+  - Git Commit: [DONE] fix(chat): убрать пустоту скрытых tool calls
   - Reference: hidden-tool-scroll-023 / T001 / implementation
   - Файлы: src/main.mjs, tests/electron-smoke.mjs, docs/modules/workspace-sessions.md
 - [TODO] T002: Подготовить версию 0.6.22 — Ожидает
