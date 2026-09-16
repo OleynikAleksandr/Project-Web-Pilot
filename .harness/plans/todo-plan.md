@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 513,
+  "plan_revision": 515,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "chat-colors-024",
@@ -216,8 +216,8 @@
       "expected_commit_message": "feat: persist chat colors across navigation and restart"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "chat-colors-024",
         "task_id": "T005",
@@ -344,7 +344,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: chat-colors-024
 Current Task: нет
-Revision: 513
+Revision: 515
 
 ## Цель
 
@@ -376,8 +376,8 @@ Revision: 513
   - Git Commit: [DONE] feat: persist chat colors across navigation and restart
   - Reference: chat-colors-024 / T004 / implementation
   - Файлы: src/main.mjs, src/preload.cjs, docs/architecture/ARCHITECTURE.md
-- [TODO] T005: Кнопка в Settings и интеграционная проверка — Ожидает
-  - Git Commit: [PENDING] feat: expose chat color editor in settings
+- [DONE] T005: Кнопка в Settings и интеграционная проверка — Завершено
+  - Git Commit: [DONE] feat: expose chat color editor in settings
   - Reference: chat-colors-024 / T005 / implementation
   - Файлы: src/ui/index.html, src/ui/project-archive.mjs, tests/electron-smoke.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T006: Сборка релиза 0.6.23 для macOS и Windows — Ожидает

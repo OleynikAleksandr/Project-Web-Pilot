@@ -8,6 +8,7 @@ export function projectArchiveView(action) {
   $('archive-list').before(archiveButton);
   for (const id of ['archive-empty', 'archive-list', 'archive-detail', 'settings-notice']) $(id).hidden = true;
   archiveButton.addEventListener('click', () => action('openArchive'));
+  $('open-chat-colors').addEventListener('click', () => action('openChatColors'));
   $('open-settings').addEventListener('click', () => action(state?.settings ? 'closeSettings' : 'openSettings'));
   $('close-settings').addEventListener('click', () => action('closeSettings'));
   $('theme-light').addEventListener('click', () => action('setTheme', 'light'));
@@ -59,6 +60,7 @@ export function projectArchiveView(action) {
     $('open-settings').setAttribute('aria-pressed', String(!!settings));
     $('open-settings').disabled = pending || state.storageError;
     archiveButton.disabled = pending;
+    $('open-chat-colors').disabled = pending;
     if (!settings) return;
     $('setup-panel').hidden = true; $('workspace-details').hidden = true; $('context-card').hidden = true;
   }

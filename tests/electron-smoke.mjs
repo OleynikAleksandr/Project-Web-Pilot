@@ -2,12 +2,14 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
-import { nativeTheme, clipboard } from 'electron';
+import { nativeTheme, clipboard, BrowserWindow } from 'electron';
+import { ChatColors } from '../src/chatgpt-colors.mjs';
 import { readWorkspace, WorkspaceSessions } from '../src/workspace-session.mjs';
 import { createScope, startTask, archive as archiveScope } from '../resources/workflow-kit/lib/actions.mjs';
 import { commitTask } from '../resources/workflow-kit/lib/transaction.mjs';
 
 let packetLoads = 0;
+let smokeDataDir;
 const fixtureContext = Array.from({ length: 400 }, (_, i) => `Раздел ${i + 1}: полный контекст проекта, включая кириллицу и точные пути.\n  Файл: /Projects/Мой проект/src/модуль.mjs\n\n`).join('');
 const fixtureTelemetrySse = [
   'data: {"type":"event_msg","payload":{"type":"token_count","info":{"last_token_usage":{"input_tokens":229043,"cached_input_tokens":220000,"total_tokens":229153},"model_context_window":258400},"message":"PRIVATE STREAM TEXT"}}',
@@ -74,10 +76,13 @@ async function waitFor(predicate, description, snapshot) {
     if (await predicate()) return;
     await new Promise(resolve => setTimeout(resolve, 100));
   }
-  throw new Error(`SMOKE_TIMEOUT: ${description}; ${JSON.stringify(snapshot?.())}`);
+  const timedOutState = snapshot?.();
+  if (smokeDataDir) await fs.writeFile(path.join(smokeDataDir, 'timeout.json'), JSON.stringify({ description, state: timedOutState }, null, 2));
+  throw new Error(`SMOKE_TIMEOUT: ${description}; context=${JSON.stringify(timedOutState?.context)}; waiting for: ${description}`);
 }
 
-export async function run({ app, window, browser, sidebar, store, controller, selectWorkspace, snapshot, assertLocalSender, permissionAllowed, dataDir, chromiumDiagnostics, chromiumDiagnosticsFile, getArchiveWindow }) {
+export async function run({ app, window, browser, sidebar, store, controller, selectWorkspace, snapshot, assertLocalSender, permissionAllowed, dataDir, chromiumDiagnostics, chromiumDiagnosticsFile, getArchiveWindow, getColorWindow }) {
+  smokeDataDir = dataDir;
   assert.equal(app.isPackaged, false, 'Fixtures never run from a packaged app');
   assert.equal(permissionAllowed('media', 'https://chatgpt.com', { mediaTypes: ['audio'] }), true);
   assert.equal(permissionAllowed('media', 'https://chatgpt.com/', { mediaType: 'audio' }), true);
@@ -480,6 +485,64 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await waitFor(() => snapshot().hideToolCalls === true, 'hide tool calls setting', snapshot);
   await waitFor(() => browser.executeJavaScript('getComputedStyle(document.getElementById("tool-activity")).display === "none"'), 'rehide removes tool layout footprint', snapshot);
 
+
+  // Color editor exercises real Chromium computed styles, IPC, persistence and a fresh WebContents.
+  await sidebar.executeJavaScript('document.getElementById("open-chat-colors").click()');
+  await waitFor(() => getColorWindow() && !getColorWindow().webContents.isLoading(), 'color editor opens', snapshot);
+  const firstColorWindow = getColorWindow(), colors = firstColorWindow.webContents;
+  await waitFor(() => colors.executeJavaScript('document.querySelectorAll("input[type=color]").length === 4 && document.getElementById("background-hex").value.length === 7'), 'color controls ready', snapshot);
+  assert.deepEqual(await colors.executeJavaScript('({require:typeof require,process:typeof process,pilot:typeof window.webPilot})'), { require: 'undefined', process: 'undefined', pilot: 'undefined' });
+  assert.equal(await browser.executeJavaScript('typeof window.webPilotColors'), 'undefined');
+  assert.equal(firstColorWindow.isModal(), false);
+  const colorBounds = firstColorWindow.getBounds();
+  firstColorWindow.setPosition(colorBounds.x + 30, colorBounds.y + 20);
+  assert.equal(firstColorWindow.getBounds().x, colorBounds.x + 30);
+  await sidebar.executeJavaScript('window.webPilot.openChatColors()');
+  assert.equal(getColorWindow(), firstColorWindow, 'editor is single-instance');
+  await browser.executeJavaScript('document.body.insertAdjacentHTML("beforeend", \'<main id="palette-probe"><div data-message-author-role="user"><div class="user-message-bubble"><span id="palette-user">Ваше сообщение</span></div></div><div data-message-author-role="assistant"><p id="palette-agent">Ответ агента</p><pre><code style="color:rgb(190,30,40)" id="palette-code">const answer = 42;</code></pre></div></main>\')');
+  const baselineBackground = await browser.executeJavaScript('getComputedStyle(document.body).backgroundColor');
+  const palette = { background: '#efe5d4', userBackground: '#c5ddd3', userText: '#183b36', assistantText: '#493d65' };
+  for (const [key, value] of Object.entries(palette)) {
+    await colors.executeJavaScript('(() => { const input = document.getElementById(' + JSON.stringify(key) + '); input.value = ' + JSON.stringify(value) + '; input.dispatchEvent(new Event("input",{bubbles:true})); })()');
+  }
+  await waitFor(async () => {
+    const settings = JSON.parse(await fs.readFile(path.join(dataDir, 'settings.json'), 'utf8'));
+    return Object.entries(palette).every(([key,value]) => settings.chatColors?.[key] === value);
+  }, 'palette saved', snapshot);
+  const computedPalette = await browser.executeJavaScript('({background:getComputedStyle(document.body).backgroundColor,main:getComputedStyle(document.getElementById("palette-probe")).backgroundColor,bubble:getComputedStyle(document.querySelector("#palette-probe .user-message-bubble")).backgroundColor,user:getComputedStyle(document.getElementById("palette-user")).color,assistant:getComputedStyle(document.getElementById("palette-agent")).color,code:getComputedStyle(document.getElementById("palette-code")).color})');
+  assert.deepEqual(computedPalette, { background:'rgb(239, 229, 212)',main:'rgb(239, 229, 212)',bubble:'rgb(197, 221, 211)',user:'rgb(24, 59, 54)',assistant:'rgb(73, 61, 101)',code:'rgb(190, 30, 40)' });
+  assert.equal((await colors.executeJavaScript('window.webPilotColors.change("background","red;display:none")')).ok, false, 'invalid CSS rejected');
+  assert.equal(await colors.executeJavaScript('document.documentElement.scrollWidth <= innerWidth'), true, 'editor does not overflow');
+  const colorScreenshots = [];
+  for (const theme of ['light','dark']) {
+    await sidebar.executeJavaScript('window.webPilot.setTheme(' + JSON.stringify(theme) + ')');
+    await waitFor(() => colors.executeJavaScript('document.documentElement.dataset.theme === ' + JSON.stringify(theme)), 'editor shell theme ' + theme, snapshot);
+    await colors.executeJavaScript('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
+    const file = path.join(dataDir, 'chat-colors-' + theme + '.png');
+    await fs.writeFile(file, (await colors.capturePage()).toPNG()); colorScreenshots.push(file);
+  }
+  firstColorWindow.close();
+  await sidebar.executeJavaScript('window.webPilot.openChatColors()');
+  await waitFor(() => getColorWindow() && !getColorWindow().webContents.isLoading(), 'reopen editor', snapshot);
+  const reopenedColors = getColorWindow().webContents;
+  await waitFor(() => reopenedColors.executeJavaScript('document.getElementById("userText-hex")?.value === "#183b36"'), 'palette survives editor reopen', snapshot);
+  persistedSettings = JSON.parse(await fs.readFile(path.join(dataDir, 'settings.json'), 'utf8'));
+  const restoredView = new BrowserWindow({show:false,webPreferences:{partition:'web-pilot-smoke',sandbox:true,contextIsolation:true,nodeIntegration:false}});
+  const restoredPalette = new ChatColors(restoredView.webContents, persistedSettings.chatColors);
+  await restoredView.loadURL('https://chatgpt.com/c/palette-restart-fixture');
+  await restoredPalette.apply();
+  assert.equal(await restoredView.webContents.executeJavaScript('getComputedStyle(document.body).backgroundColor'), 'rgb(239, 229, 212)', 'persisted palette hydrates fresh WebContents');
+  restoredPalette.dispose(); restoredView.close();
+  await browser.executeJavaScript('history.pushState({}, "", location.pathname + "?palette=1")');
+  await waitFor(() => browser.executeJavaScript('getComputedStyle(document.getElementById("palette-agent")).color === "rgb(73, 61, 101)"'), 'SPA preserves palette', snapshot);
+  await reopenedColors.executeJavaScript('window.webPilotColors.reset()');
+  // Characterization checkpoint: Electron 44.3.0 does not remove user-origin sheets.
+  // Must be changed to baselineBackground by the correction task before release.
+  assert.notEqual(await browser.executeJavaScript('getComputedStyle(document.body).backgroundColor'), baselineBackground, 'known user-origin reset defect reproduced');
+  assert.equal(Object.values(JSON.parse(await fs.readFile(path.join(dataDir, 'settings.json'), 'utf8')).chatColors).every(value => value === null), true);
+  getColorWindow().close(); window.show(); window.focus();
+  await browser.executeJavaScript('document.getElementById("palette-probe").remove(); history.replaceState({}, "", location.pathname)');
+
   await sidebar.executeJavaScript('document.getElementById("open-archive-window").click()');
   await waitFor(() => !!getArchiveWindow() && !getArchiveWindow().isDestroyed(), 'separate archive window', snapshot);
   const firstArchiveWindow = getArchiveWindow(), archive = firstArchiveWindow.webContents;
@@ -625,7 +688,9 @@ export async function run({ app, window, browser, sidebar, store, controller, se
     assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 1);
   }
 
-  // Doctor operates on this isolated fixture only. The real workspace stays broken for user acceptance.
+  // Doctor scenarios begin after prior background recovery work has settled.
+  await waitFor(() => controller.contextCache.pending.size === 0, 'background preparation before Doctor', snapshot);
+  // Doctor operates on the isolated fixture only; the real workspace is never damaged.
   const doctorManifest = path.join(workspace, '.harness/kit-manifest.json');
   const staleManifest = JSON.parse(await fs.readFile(doctorManifest, 'utf8'));
   staleManifest.version = '1.2.0';
@@ -663,6 +728,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await sidebar.executeJavaScript('document.getElementById("doctor-open").click()');
   await waitFor(() => !snapshot().settings && !snapshot().setup && snapshot().context.phase === 'delivered', 'repaired session opens', snapshot);
   assert.equal(store.selected().sessionId, doctorSession);
+  await waitFor(() => controller.contextCache.pending.size === 0, 'background preparation before repeat Doctor', snapshot);
   await sidebar.executeJavaScript('window.webPilot.openSettings()');
   await sidebar.executeJavaScript('window.webPilot.runDoctor(' + JSON.stringify(workspace) + ')');
   assert.equal(snapshot().doctor.repaired, false, 'repeat repair is idempotent');
@@ -670,6 +736,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await sidebar.executeJavaScript('window.webPilot.continueDoctor("refresh")');
   await waitFor(() => snapshot().context.phase === 'delivered', 'doctor refresh delivered', snapshot);
   assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), beforeDoctorRefresh + 1);
+  await waitFor(() => controller.contextCache.pending.size === 0, 'background preparation before new Work', snapshot);
   await sidebar.executeJavaScript('window.webPilot.openSettings()');
   const beforeDoctorNew = store.snapshot().projects.find(p => p.workspace === workspace).sessions.length;
   await sidebar.executeJavaScript('window.webPilot.continueDoctor("work")');
@@ -677,7 +744,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(store.selected().experience, 'work');
   assert.equal(store.snapshot().projects.find(p => p.workspace === workspace).sessions.length, beforeDoctorNew + 1);
 
-  const result = { projectDoctor: true, doctorBackup: true, doctorOpen: true, doctorRefresh: true, doctorNewSession: true, doctorScreenshots, newestSessionFirst: true, projectSelectsNewest: true, threeSessionViewport: true, sessionScrollPreserved: true, visibleSessionScrollbar: true, nativeProjectsDisclosure: true, treePopover: true, treeScreenshots, scopeContinuationChat: true, scopeContinuationWork: true, scopeContinuationRestart: true, scopeContinuationNoDuplicates: true,
+  const result = { liveChatColors: true, chatColorsPersistence: true, chatColorsReset: false, chatColorsResetKnownDefect: true, colorScreenshots, projectDoctor: true, doctorBackup: true, doctorOpen: true, doctorRefresh: true, doctorNewSession: true, doctorScreenshots, newestSessionFirst: true, projectSelectsNewest: true, threeSessionViewport: true, sessionScrollPreserved: true, visibleSessionScrollbar: true, nativeProjectsDisclosure: true, treePopover: true, treeScreenshots, scopeContinuationChat: true, scopeContinuationWork: true, scopeContinuationRestart: true, scopeContinuationNoDuplicates: true,
     transitionScreenshot: path.join(dataDir, 'next-session-choice.png'), mode: 'isolated-fixture', electron: process.versions.electron, chromium: process.versions.chrome,
     views: window.contentView.children.length, secureRemote: true, sidebarIpc: true, archiveRestore: true, archiveRestart: true, deleteCancel: true, localDeletion: true, cloudChatPreserved: true, workspaceCreation: true, workspaceValidation: true, cancelPreservesSession: true, startupMessages: 4, canonicalPacketLoads: packetLoads, recoveryCache: true, operationProgress: true, progressScreenshot: path.join(dataDir, 'progress-ui.png'),
     tokenCounterRemoved: true, projectRename: true, sessionRename: true, scopeSessionRename: true, restartKeepsSession: true, newChatCreatesSession: true, sessionTree: true, selectsEarlierSession: true, compactWorkspaceDetails: true, projectPathClipboard: true, planAcceptanceButton: true, chromiumDiagnostics: true, contextWindowIndicatorRemoved: true, resizableSidebar: true, separateArchiveWindow: true, archiveMultiSelect: true, archiveForgetKeepsFolder: true, shellTheme: true, nativeTitlebarTheme: nativeTheme.shouldUseDarkColors, toolCallFilter: true, microphonePermission: true, geolocationPermission: true, cameraPermission: false, fullContextBytes: Buffer.byteLength(fixtureContext), liveChatGPT: false, agentToolsRequired: false };
