@@ -1,5 +1,11 @@
 const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('webPilot', Object.freeze({
+  openDoctor: () => ipcRenderer.invoke('pilot:open-doctor'),
+  runDoctor: workspace => ipcRenderer.invoke('pilot:doctor-run', workspace),
+  selectDoctorProject: workspace => ipcRenderer.invoke('pilot:doctor-select', workspace),
+  continueDoctor: mode => ipcRenderer.invoke('pilot:doctor-continue', mode),
+  showDoctorBackup: () => ipcRenderer.invoke('pilot:doctor-backup'),
+  reviewDoctorProject: () => ipcRenderer.invoke('pilot:doctor-review'),
   openSettings: () => ipcRenderer.invoke('pilot:open-settings'),
   closeSettings: () => ipcRenderer.invoke('pilot:close-settings'),
   setSidebarWidth: width => ipcRenderer.invoke('pilot:set-sidebar-width', width),

@@ -117,10 +117,10 @@ export function inspectProject(workspace) {
 export function publicReport(result) { const { changes, pending, completed, ...report } = result; return report; }
 export function repairProject(workspace, expectedFingerprint) {
   const first = inspectProject(workspace);
-  if (first.issues.length) return publicReport(first);
+  if (first.issues.length) return { ...publicReport(first), repairs: [] };
   return locked(first.workspace, () => {
     const next = inspectProject(first.workspace);
-    if (next.issues.length) return publicReport(next);
+    if (next.issues.length) return { ...publicReport(next), repairs: [] };
     if (next.fingerprint !== first.fingerprint || expectedFingerprint && next.fingerprint !== expectedFingerprint) throw fail('DOCTOR_CHANGED', 'Проект изменился после проверки. Повторите запуск доктора.');
     const root = next.workspace;
     let changes = next.changes;

@@ -734,3 +734,7 @@ macOS arm64 и Windows x64 повторно упакованы после restar
 ## Project Doctor — T010
 
 Автономный Node worker `resources/project-doctor-worker.mjs` использует bundled Workflow Kit, проверяет known payload и выполняет допустимые файловые операции под общей блокировкой. `resources/project-doctor/core.mjs` формирует план ремонта; `files.mjs` отвечает за пути, snapshot, backup, atomic writes и осторожный rollback. Канонический контракт — `docs/modules/project-doctor.md`.
+
+### Desktop integration Project Doctor — T011
+
+Координатор `src/project-doctor.mjs` запускает repair worker вне MCP/ChatGPT, повторяет проверку Workspace Setup, при необходимости переподключает локальные команды и проверяет Runtime Lifecycle. `src/ui/project-doctor.mjs` отображает выбранный проект, этап, исправления и blockers; IPC main проверяет источник и workspace. Settings остаются доступны при setup failure, а setup содержит прямую кнопку доктора. Ни открытие Settings, ни чтение отчёта не инициируют ремонт.

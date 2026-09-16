@@ -1,4 +1,5 @@
 const actionLabels = {
+  runDoctor: 'Проверяем и восстанавливаем проект', continueDoctor: 'Возвращаемся к работе', reviewDoctorProject: 'Проверяем папку',
   newSession: 'Создаём сессию', selectSession: 'Открываем сессию', selectWorkspace: 'Открываем проект',
   reload: 'Обновляем ChatGPT', retry: 'Обновляем контекст', returnToChat: 'Возвращаемся к чату',
   acceptPlan: 'Отправляем подтверждение плана', previewNew: 'Проверяем новый проект',
@@ -21,6 +22,7 @@ const phaseLabels = {
   'waiting-generation': 'Ждём завершения ответа ChatGPT',
 };
 export function operationLabel(state = {}, action = null) {
+  if (['repairing','verifying','services'].includes(state.doctor?.phase)) return 'Доктор проекта: проверка и восстановление';
   if (state.setup?.phase === 'checking') return 'Проверяем папку проекта';
   if (state.setup?.phase === 'applying') return 'Подготавливаем проект';
   if (state.pageLoading) return 'Открываем ChatGPT';

@@ -1,4 +1,4 @@
-import { app, BaseWindow, BrowserWindow, WebContentsView, Menu, session, ipcMain, dialog, nativeTheme, clipboard } from 'electron';
+import { app, BaseWindow, BrowserWindow, WebContentsView, Menu, session, ipcMain, dialog, nativeTheme, clipboard, shell } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
 import fsp from 'node:fs/promises';
@@ -14,6 +14,7 @@ import { ContextSession } from './context-session.mjs';
 import { chatGPTEntrypoint } from './chatgpt-experience.mjs';
 import { WorkspaceDeletion } from './workspace-deletion.mjs';
 import { WorkspaceSetup } from './workspace-setup.mjs';
+import { ProjectDoctor } from './project-doctor.mjs';
 import { ChromiumDiagnostics } from './chromium-diagnostics.mjs';
 import { defaultRuntimeFolder, bundledWindowsRuntimeFolder, nodeExecutableCandidates } from './platform.mjs';
 import { WindowsRuntimeBootstrap, WINDOWS_RUNTIME_ARCHIVE } from './windows-runtime.mjs';
@@ -61,6 +62,8 @@ const workspaceSetup = new WorkspaceSetup({
 let setupState = null;
 let workspaceHealth = null;
 let settingsState = null;
+let doctorState = null;
+const projectDoctor = new ProjectDoctor({ setup: workspaceSetup, ensureServices: () => runtime.ensure() });
 let archiveState = { deletion: null, notice: null, focusWorkspace: null };
 let planAcceptance = null;
 let scopeObservationPending = false;
@@ -126,6 +129,8 @@ async function saveSettings(overrides = {}) {
 }
 
 function openSettings(workspace = null) {
+  workspace ??= setupState?.workspace ?? store.selected()?.workspace ?? null;
+  if (doctorState?.workspace !== workspace) doctorState = { workspace, phase: 'idle' };
   pauseForSetup(); workspaceSetup.clear(); setupState = null; deletion.clear();
   settingsState = { workspace, deletion: null, notice: null };
 }
@@ -165,7 +170,7 @@ function snapshot() {
     workspace, projectId, name: displayName || name, selectedSessionId, expanded,
     sessions: activeSessionsNewestFirst(sessions).map(({ sessionId, experience, chatUrl, title, createdAt }) => ({ sessionId, experience, chatUrl, title, createdAt })),
   })),
-    archives: projectedArchives(), settings: settingsState,
+    archives: projectedArchives(), settings: settingsState, doctor: doctorState,
     selected, context: controller?.state ?? { phase: 'selected', servicesReady: false, messageSent: false },
     contextPreparation: { busy: contextCache.building.has(saved?.workspace) },
     scopeTransition: saved?.scopeTransition?.state === 'choice' && info?.workspace === saved.workspace
@@ -370,7 +375,7 @@ async function openArchiveWindow(workspace = null) {
   await archiveWindow.loadURL(archiveUrl);
 }
 
-async function navigate(project = store.selected()) {
+async function navigate(project = store.selected(), { refresh = false } = {}) {
   const ownNavigation = ++navigationId;
   controller?.cancel();
   pageLoading = true; publish();
@@ -381,7 +386,8 @@ async function navigate(project = store.selected()) {
     pageLoading = false;
     if (project) {
       controller.attach(store.project(project.workspace));
-      void controller.tick();
+      if (refresh) await controller.retry();
+      else void controller.tick();
     }
     publish();
   } catch (error) {
@@ -467,6 +473,41 @@ function registerIpc() {
   ipcMain.handle('pilot:get-state', event => { assertLocalSender(event); return snapshot(); });
   registerAction('pilot:open-archive-window', input => openArchiveWindow(typeof input === 'string' ? input : null));
   registerAction('pilot:open-settings', () => openSettings());
+  registerAction('pilot:open-doctor', () => openSettings(setupState?.workspace ?? store.selected()?.workspace));
+  const doctorWorkspace = input => {
+    if (typeof input !== 'string' || (!store.project(input) && input !== doctorState?.workspace)) throw new Error('Выберите проект в настройках.');
+    return input;
+  };
+  registerAction('pilot:doctor-select', input => {
+    if (!settingsState) throw new Error('Откройте настройки.');
+    doctorState = { workspace: doctorWorkspace(input), phase: 'idle' };
+  });
+  registerAction('pilot:doctor-run', async input => {
+    if (!settingsState) throw new Error('Откройте настройки.');
+    const workspace = doctorWorkspace(input);
+    pauseForSetup(); contextCache.clear();
+    const result = await projectDoctor.run(workspace, report => { doctorState = report; publish(); });
+    doctorState = { ...result, phase: 'done' }; startupError = null;
+  });
+  registerAction('pilot:doctor-backup', async () => {
+    if (!doctorState?.backupPath) throw new Error('Резервная копия ещё не создана.');
+    const error = await shell.openPath(doctorState.backupPath);
+    if (error) throw new Error('Не удалось открыть папку резервной копии.');
+  });
+  registerAction('pilot:doctor-review', async () => {
+    if (!doctorState?.workspace) throw new Error('Выберите проект.');
+    await reviewWorkspace(doctorState.workspace);
+  });
+  registerAction('pilot:doctor-continue', async mode => {
+    if (!['open','chat','work','refresh'].includes(mode) || doctorState?.phase !== 'done' || !doctorState.projectReady || !doctorState.servicesReady || doctorState.issues.length) throw new Error('Сначала завершите проверку проекта.');
+    const workspace = doctorState.workspace;
+    if (!await reviewWorkspace(workspace, true)) return;
+    const existing = store.project(workspace);
+    let project = await store.select(workspace, { experience: mode === 'work' ? 'work' : 'chat' });
+    if (['chat','work'].includes(mode) && existing) project = await store.newSession(workspace, mode);
+    // Navigation attaches the selected session. Refresh is requested only after it loaded.
+    await navigate(project, { refresh: mode === 'refresh' });
+  });
   registerAction('pilot:close-settings', closeSettings);
   registerAction('pilot:set-sidebar-width', async input => {
     if (!Number.isFinite(input)) throw new Error('Некорректная ширина сайдбара.');

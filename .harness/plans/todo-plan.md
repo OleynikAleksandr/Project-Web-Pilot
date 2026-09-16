@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 461,
+  "plan_revision": 465,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-project-continuity-021",
@@ -127,6 +127,14 @@
         "path": "docs/modules/workflow-kit-recovery.md",
         "heading_path": [
           "Module Specification — Workflow Kit / Context Recovery"
+        ],
+        "required": true,
+        "revision": "WORKTREE"
+      },
+      {
+        "path": "docs/modules/project-doctor.md",
+        "heading_path": [
+          "Module Specification — Project Doctor"
         ],
         "required": true,
         "revision": "WORKTREE"
@@ -455,7 +463,8 @@
         "src/ui/workspace-setup.mjs",
         "src/ui/index.html",
         "src/ui/progress.mjs",
-        "tests/project-doctor-ui.test.mjs"
+        "tests/project-doctor-ui.test.mjs",
+        "resources/project-doctor/core.mjs"
       ],
       "documentation_paths": [
         "docs/modules/project-doctor.md",
@@ -470,8 +479,8 @@
         "Контракт Доктора выполнен; текущий manifest реального проекта сохранён без изменений; проверки проходят на fixtures."
       ],
       "expected_commit_message": "feat(doctor): Подключить Доктор к настройкам и экрану ошибки",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workflow-project-continuity-021",
         "task_id": "T011",
@@ -489,11 +498,23 @@
       "functional_paths": [
         "package.json",
         "package-lock.json",
-        "tests/electron-smoke.mjs"
+        "tests/electron-smoke.mjs",
+        "src/project-doctor.mjs",
+        "src/main.mjs",
+        "src/preload.cjs",
+        "src/ui/project-doctor.mjs",
+        "src/ui/sidebar.mjs",
+        "src/ui/project-archive.mjs",
+        "src/ui/workspace-setup.mjs",
+        "src/ui/index.html",
+        "src/ui/progress.mjs",
+        "tests/project-doctor-ui.test.mjs",
+        "resources/project-doctor/core.mjs"
       ],
       "documentation_paths": [
         "docs/VERIFICATION.md",
-        "docs/architecture/ARCHITECTURE.md"
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/modules/project-doctor.md"
       ],
       "verification_ids": [
         "syntax",
@@ -510,7 +531,8 @@
         "scope_id": "workflow-project-continuity-021",
         "task_id": "T012",
         "role": "implementation"
-      }
+      },
+      "file_limit_exception": "Интеграционные smoke-проверки и выпуск охватывают связанный UI/IPC/координатор; исправления найденных проверкой дефектов входят в тот же контракт."
     },
     {
       "dependencies": [
@@ -602,7 +624,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-project-continuity-021
 Current Task: нет
-Revision: 461
+Revision: 465
 
 ## Цель
 
@@ -659,14 +681,14 @@ Revision: 461
   - Git Commit: [DONE] feat(doctor): Реализовать безопасный ремонт проекта
   - Reference: workflow-project-continuity-021 / T010 / implementation
   - Файлы: resources/project-doctor/core.mjs, resources/project-doctor/files.mjs, resources/project-doctor-worker.mjs, tests/project-doctor.test.mjs, docs/modules/project-doctor.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
-- [TODO] T011: Подключить Доктор к настройкам и экрану ошибки — Ожидает
-  - Git Commit: [PENDING] feat(doctor): Подключить Доктор к настройкам и экрану ошибки
+- [DONE] T011: Подключить Доктор к настройкам и экрану ошибки — Завершено
+  - Git Commit: [DONE] feat(doctor): Подключить Доктор к настройкам и экрану ошибки
   - Reference: workflow-project-continuity-021 / T011 / implementation
-  - Файлы: src/project-doctor.mjs, src/main.mjs, src/preload.cjs, src/ui/project-doctor.mjs, src/ui/sidebar.mjs, src/ui/project-archive.mjs, src/ui/workspace-setup.mjs, src/ui/index.html, src/ui/progress.mjs, tests/project-doctor-ui.test.mjs, docs/modules/project-doctor.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
+  - Файлы: src/project-doctor.mjs, src/main.mjs, src/preload.cjs, src/ui/project-doctor.mjs, src/ui/sidebar.mjs, src/ui/project-archive.mjs, src/ui/workspace-setup.mjs, src/ui/index.html, src/ui/progress.mjs, tests/project-doctor-ui.test.mjs, resources/project-doctor/core.mjs, docs/modules/project-doctor.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 - [TODO] T012: Проверить интерфейс и собрать новый релиз — Ожидает
   - Git Commit: [PENDING] feat(doctor): Проверить интерфейс и собрать новый релиз
   - Reference: workflow-project-continuity-021 / T012 / implementation
-  - Файлы: package.json, package-lock.json, tests/electron-smoke.mjs, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
+  - Файлы: package.json, package-lock.json, tests/electron-smoke.mjs, src/project-doctor.mjs, src/main.mjs, src/preload.cjs, src/ui/project-doctor.mjs, src/ui/sidebar.mjs, src/ui/project-archive.mjs, src/ui/workspace-setup.mjs, src/ui/index.html, src/ui/progress.mjs, tests/project-doctor-ui.test.mjs, resources/project-doctor/core.mjs, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, docs/modules/project-doctor.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать документацию проекта
   - Reference: workflow-project-continuity-021 / DOCS / implementation
@@ -678,5 +700,6 @@ Revision: 461
 - docs/MODULES.md → Модули проекта
 - docs/DOCUMENTATION_INDEX.md → Каталог документации
 - docs/modules/workflow-kit-recovery.md → Module Specification — Workflow Kit / Context Recovery
+- docs/modules/project-doctor.md → Module Specification — Project Doctor
 
 Служебные состояния меняются только командами workflow. Приёмка не архивирует scope.

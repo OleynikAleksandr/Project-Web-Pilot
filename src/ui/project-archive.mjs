@@ -1,5 +1,7 @@
+import { projectDoctorView } from './project-doctor.mjs';
 export function projectArchiveView(action) {
   const $ = id => document.getElementById(id);
+  const doctor = projectDoctorView(action);
   const archiveButton = document.createElement('button');
   archiveButton.id = 'open-archive-window'; archiveButton.type = 'button'; archiveButton.className = 'secondary';
   archiveButton.textContent = 'Архив…'; archiveButton.style.width = '100%'; archiveButton.style.marginTop = '10px';
@@ -17,6 +19,7 @@ export function projectArchiveView(action) {
   let state;
   function render(next, pending) {
     state = next;
+    doctor.render(state, pending);
     const theme = state.theme === 'dark' ? 'dark' : 'light';
     document.documentElement.dataset.theme = theme;
     $('theme-light').setAttribute('aria-pressed', String(theme === 'light'));
@@ -54,7 +57,7 @@ export function projectArchiveView(action) {
     const settings = state.settings;
     $('settings-panel').hidden = !settings; $('active-projects').hidden = !!settings;
     $('open-settings').setAttribute('aria-pressed', String(!!settings));
-    $('open-settings').disabled = pending || !!state.setup || state.storageError;
+    $('open-settings').disabled = pending || state.storageError;
     archiveButton.disabled = pending;
     if (!settings) return;
     $('setup-panel').hidden = true; $('workspace-details').hidden = true; $('context-card').hidden = true;

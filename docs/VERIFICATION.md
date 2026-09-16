@@ -745,3 +745,7 @@ JSDOM regression исполняет тот же renderer script, который 
 ## Project Doctor — T010 / 16.09.2026
 
 Девять изолированных Node regression tests подтверждают: stale manifest 1.2→1.3 при совпадении кода с bundled payload, backup, неизменность user staging/HEAD/плана, повторный запуск, missing owned file/hook и executable bits, отказ от неизвестного/дополнительного кода, malformed manifest/plan, ремонт читаемой проекции, отказ при изменении snapshot, symlink и откат после ошибки записи. Реальная установка Project Web Pilot не ремонтировалась.
+
+## Project Doctor UI/coordinator — T011 / 16.09.2026
+
+Шесть DOM/coordinator tests проверяют явный запуск, точную папку, недоступность повторного запуска, отсутствие false success при ошибке служб, textContent для diagnostics, доступ к Settings/доктору из setup failure, сохранение backup при ошибке подключения, отсутствие проверки/выполнения неизвестного runtime и reconnect локальных команд. Ремонт реального проекта по поручению пользователя не запускался.

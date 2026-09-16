@@ -5,6 +5,7 @@ export function workspaceSetupView(action) {
   $('setup-parent-button').addEventListener('click', () => action('chooseParent', $('setup-name').value));
   $('setup-form').addEventListener('submit', event => { event.preventDefault(); action('previewNew', $('setup-name').value); });
   $('setup-cancel').addEventListener('click', () => action('cancelSetup'));
+  $('setup-doctor').addEventListener('click', () => action('openDoctor'));
   $('setup-refresh').addEventListener('click', () => action('refreshSetup'));
   $('setup-apply').addEventListener('click', () => action('applySetup', last?.setup?.token, $('setup-git-name').value, $('setup-git-email').value));
   $('setup-experience-chat').addEventListener('click', () => action('setFirstSessionExperience', 'chat'));
@@ -69,6 +70,8 @@ export function workspaceSetupView(action) {
     $('setup-apply').textContent = { install: setup.mode === 'new' ? 'Создать и открыть' : 'Подготовить и открыть', reconnect: 'Восстановить и открыть', upgrade: 'Обновить и открыть', open: 'Открыть проект' }[setup.action] ?? 'Открыть проект';
     $('setup-apply').disabled = actionPending || (identity && (!$('setup-git-name').value.trim() || !$('setup-git-email').value.trim()));
     $('setup-refresh').hidden = busy || form || (!setup.installed && !setup.workspace);
+    $('setup-doctor').hidden = busy || form || setup.ready || !setup.workspace;
+    $('setup-doctor').disabled = actionPending;
     $('setup-cancel').textContent = busy ? 'Подождите…' : 'Отмена';
   }
   return { render };
