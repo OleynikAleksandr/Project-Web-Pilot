@@ -18,3 +18,4 @@ Project Workflow Kit предназначен для проектов любог
 - macOS и Windows используют один Git source of truth; platform runtime/build state остаётся локальным.
 
 Подробная карта частей проекта находится в `docs/MODULES.md`, полный перечень пополняемых документов — в `docs/DOCUMENTATION_INDEX.md`. Полная историческая архитектура остаётся в `docs/architecture/ARCHITECTURE.md` и не является обязательным recovery-контекстом.
+Постоянный путь запуска macOS — `Project Web Pilot.app` в корне workspace. Каждый macOS-релиз обновляет этот app с сохранением Finder-алиаса; версионированный ZIP создаётся отдельно. Обязательный контракт выпуска: `docs/RELEASE.md`.

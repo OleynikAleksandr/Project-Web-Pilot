@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 523,
+  "plan_revision": 525,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "chat-colors-024",
@@ -318,8 +318,8 @@
       "expected_commit_message": "release: build Web Pilot 0.6.23 with chat colors"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "chat-colors-024",
         "task_id": "R001",
@@ -487,7 +487,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: chat-colors-024
 Current Task: нет
-Revision: 523
+Revision: 525
 
 ## Цель
 
@@ -532,8 +532,8 @@ Revision: 523
   - Git Commit: [DONE] release: build Web Pilot 0.6.23 with chat colors
   - Reference: chat-colors-024 / T006 / implementation
   - Файлы: package.json, package-lock.json, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] R001: Закрепить постоянный путь запуска и контракт выпуска — Ожидает
-  - Git Commit: [PENDING] docs: define stable macOS release location
+- [DONE] R001: Закрепить постоянный путь запуска и контракт выпуска — Завершено
+  - Git Commit: [DONE] docs: define stable macOS release location
   - Reference: chat-colors-024 / R001 / implementation
   - Файлы: AGENTS.md, docs/RELEASE.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/architecture/OVERVIEW.md, docs/WORKFLOW_START.md, docs/DECISIONS.md
 - [TODO] R002: Надёжное обновление постоянного приложения и упаковка ZIP — Ожидает
