@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 494,
+  "plan_revision": 495,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "hidden-tool-scroll-023",
@@ -124,11 +124,45 @@
       "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "hidden-tool-scroll-023",
-        "task_id": "T002",
+        "task_id": "T001B",
         "role": "implementation"
       },
       "dependencies": [
         "T001"
+      ],
+      "functional_paths": [
+        "src/main.mjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [
+        "syntax",
+        "electron-smoke"
+      ],
+      "id": "T001B",
+      "title": "Реализовать удаление footprint и regression",
+      "why": "Контракт T001 уже зафиксирован; реализация и smoke выделены в отдельную микрозадачу вместе с обязательными связанными документами архитектуры и verification.",
+      "acceptance_criteria": [
+        "Фильтр скрывает максимально высокий безопасный tool-only контейнер, не поднимаясь до корня сообщения.",
+        "При выключении фильтра исходный layout полностью восстанавливается.",
+        "После apply/restore вызывается refresh существующего auto-scroll controller без принудительного resume ручного чтения.",
+        "Electron smoke подтверждает исчезновение layout-footprint и обратимое восстановление."
+      ],
+      "expected_commit_message": "fix(chat): синхронизировать скрытые tool calls с прокруткой"
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "hidden-tool-scroll-023",
+        "task_id": "T002",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "T001B"
       ],
       "functional_paths": [
         "package.json",
@@ -186,6 +220,7 @@
       },
       "dependencies": [
         "T001",
+        "T001B",
         "T002",
         "T003"
       ],
@@ -238,7 +273,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: hidden-tool-scroll-023
 Current Task: нет
-Revision: 494
+Revision: 495
 
 ## Цель
 
@@ -258,6 +293,10 @@ Revision: 494
   - Git Commit: [DONE] fix(chat): убрать пустоту скрытых tool calls
   - Reference: hidden-tool-scroll-023 / T001 / implementation
   - Файлы: src/main.mjs, tests/electron-smoke.mjs, docs/modules/workspace-sessions.md
+- [TODO] T001B: Реализовать удаление footprint и regression — Ожидает
+  - Git Commit: [PENDING] fix(chat): синхронизировать скрытые tool calls с прокруткой
+  - Reference: hidden-tool-scroll-023 / T001B / implementation
+  - Файлы: src/main.mjs, tests/electron-smoke.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T002: Подготовить версию 0.6.22 — Ожидает
   - Git Commit: [PENDING] build: подготовить релиз 0.6.22
   - Reference: hidden-tool-scroll-023 / T002 / implementation
