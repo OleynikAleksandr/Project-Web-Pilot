@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 525,
+  "plan_revision": 526,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "chat-colors-024",
@@ -95,6 +95,14 @@
         "heading_path": [
           "Module Specification — Workspace & Sessions",
           "Граница ответственности"
+        ],
+        "required": true,
+        "revision": "WORKTREE"
+      },
+      {
+        "path": "docs/RELEASE.md",
+        "heading_path": [
+          "Выпуск и постоянный путь запуска"
         ],
         "required": true,
         "revision": "WORKTREE"
@@ -452,7 +460,8 @@
         "docs/VERIFICATION.md",
         "docs/TRANSFER_TO_WINDOWS.md",
         "docs/WORKSPACE_SETUP.md",
-        "docs/PROJECT_ARCHIVE.md"
+        "docs/PROJECT_ARCHIVE.md",
+        "docs/RELEASE.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -487,7 +496,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: chat-colors-024
 Current Task: нет
-Revision: 525
+Revision: 526
 
 ## Цель
 
@@ -547,7 +556,7 @@ Revision: 525
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: document chat colors and release 0.6.23
   - Reference: chat-colors-024 / DOCS / implementation
-  - Файлы: README.md, AGENTS.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md, docs/WORKFLOW_START.md, docs/MODULES.md, docs/architecture/OVERVIEW.md, docs/DOCUMENTATION_INDEX.md, docs/modules/workspace-sessions.md, docs/modules/project-doctor.md, docs/modules/runtime-lifecycle.md, docs/modules/workflow-kit-recovery.md, docs/SOURCE_WORKSPACES.md, docs/VERIFICATION.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKSPACE_SETUP.md, docs/PROJECT_ARCHIVE.md
+  - Файлы: README.md, AGENTS.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md, docs/WORKFLOW_START.md, docs/MODULES.md, docs/architecture/OVERVIEW.md, docs/DOCUMENTATION_INDEX.md, docs/modules/workspace-sessions.md, docs/modules/project-doctor.md, docs/modules/runtime-lifecycle.md, docs/modules/workflow-kit-recovery.md, docs/SOURCE_WORKSPACES.md, docs/VERIFICATION.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKSPACE_SETUP.md, docs/PROJECT_ARCHIVE.md, docs/RELEASE.md
 
 ## Context Pack For This Cycle
 
@@ -555,5 +564,6 @@ Revision: 525
 - docs/MODULES.md → Модули проекта
 - docs/DOCUMENTATION_INDEX.md → Каталог документации
 - docs/modules/workspace-sessions.md → Module Specification — Workspace & Sessions / Граница ответственности
+- docs/RELEASE.md → Выпуск и постоянный путь запуска
 
 Служебные состояния меняются только командами workflow. Приёмка не архивирует scope.
