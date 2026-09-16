@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 558,
+  "plan_revision": 559,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-tree-outline-026",
@@ -37,7 +37,8 @@
       "docs/WORKFLOW_START.md",
       "docs/DECISIONS.md",
       "docs/TRANSFER_TO_WINDOWS.md",
-      "docs/architecture/ARCHITECTURE.md"
+      "docs/architecture/ARCHITECTURE.md",
+      "docs/modules/project-doctor.md"
     ],
     "max_functional_files_per_task": 3
   },
@@ -176,7 +177,8 @@
         "docs/WORKFLOW_START.md",
         "docs/DECISIONS.md",
         "docs/TRANSFER_TO_WINDOWS.md",
-        "docs/architecture/ARCHITECTURE.md"
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/modules/project-doctor.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -208,7 +210,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-tree-outline-026
 Current Task: нет
-Revision: 558
+Revision: 559
 
 ## Цель
 
@@ -235,7 +237,7 @@ Revision: 558
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: document session outline and release 0.6.26
   - Reference: session-tree-outline-026 / DOCS / implementation
-  - Файлы: docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/modules/workspace-sessions.md, docs/RELEASE.md, docs/VERIFICATION.md, README.md, docs/PRODUCT.md, docs/WORKFLOW_START.md, docs/DECISIONS.md, docs/TRANSFER_TO_WINDOWS.md, docs/architecture/ARCHITECTURE.md
+  - Файлы: docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/modules/workspace-sessions.md, docs/RELEASE.md, docs/VERIFICATION.md, README.md, docs/PRODUCT.md, docs/WORKFLOW_START.md, docs/DECISIONS.md, docs/TRANSFER_TO_WINDOWS.md, docs/architecture/ARCHITECTURE.md, docs/modules/project-doctor.md
 
 ## Context Pack For This Cycle
 
