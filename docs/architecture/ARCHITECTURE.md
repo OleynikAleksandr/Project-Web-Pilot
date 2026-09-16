@@ -785,3 +785,7 @@ T005B: используется author-origin insertCSS с !important. В Electr
 ## Штатная публикация macOS — R003, 16.09.2026
 
 `build:mac` теперь вызывает prepare → build:mac:package → release:mac. Оба packager commands исключают постоянный app и install staging из входного дерева. Полный build и повторный build:mac прошли; повторный выпуск сохранил inode app 398344301. Legacy app по адресу releases/0.6.20 обновлён однократно с сохранением inode 398123328. Оба адреса содержат 0.6.23; будущая доставка использует корневой app. Работающие процессы не перезапускались.
+
+## Цвет внутренней плашки — B001, 16.09.2026
+
+Пользовательская проверка обнаружила окраску всей строки: прежний fallback выбирал элемент с ролью user при отсутствии `.user-message-bubble`. Текущий CSS целится в `.user-message-bubble-color` и совместимый старый класс; background на role-контейнере и его token override удалены. Тот же актуальный класс используется в опубликованном ChatGPT CSS fixes (2026-07-23): https://gist.github.com/alexchexes/d2ff0b9137aa3ac9de8b0448138125ce . Заимствован только DOM-маркер, внешняя библиотека не добавлена.

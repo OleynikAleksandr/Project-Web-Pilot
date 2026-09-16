@@ -25,8 +25,8 @@ export function chatColorsCSS(input) {
     rules.push('html,body,main,#main,[role="main"],#thread,#thread :is(.bg-token-main-surface-primary,.bg-token-bg-primary),main :is(.bg-token-main-surface-primary,.bg-token-bg-primary){background-color:' + c + '!important}');
   }
   if (colors.userBackground) {
-    rules.push(role('user') + '{--message-surface:' + colors.userBackground + '!important}');
-    rules.push('.user-message-bubble,' + role('user') + ':not(:has(.user-message-bubble)){background-color:' + colors.userBackground + '!important}');
+    // The role element spans the row; only the inner bubble owns the rounded fill.
+    rules.push('.user-message-bubble-color,.user-message-bubble{background:' + colors.userBackground + '!important}');
   }
   for (const name of ['user', 'assistant']) {
     const c = colors[name + 'Text'];

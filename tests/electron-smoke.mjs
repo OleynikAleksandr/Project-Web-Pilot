@@ -499,7 +499,11 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(firstColorWindow.getBounds().x, colorBounds.x + 30);
   await sidebar.executeJavaScript('window.webPilot.openChatColors()');
   assert.equal(getColorWindow(), firstColorWindow, 'editor is single-instance');
-  await browser.executeJavaScript('document.body.insertAdjacentHTML("beforeend", \'<main id="palette-probe"><div data-message-author-role="user"><div class="user-message-bubble"><span id="palette-user">Ваше сообщение</span></div></div><div data-message-author-role="assistant"><p id="palette-agent">Ответ агента</p><pre><code style="color:rgb(190,30,40)" id="palette-code">const answer = 42;</code></pre></div></main>\')');
+  const bubbleFixture = "<main id=\"palette-probe\">\n<style>\n#palette-probe .user-message-bubble-color{background:#1b407c;border-radius:28px;padding:12px 20px;max-width:70%}\n#palette-user-row{display:flex;justify-content:flex-end;width:100%}\n</style>\n<div data-message-author-role=\"user\" id=\"palette-user-row\"><div class=\"user-message-bubble-color\" id=\"palette-user-bubble\"><span id=\"palette-user\">Ваше сообщение в скруглённой плашке</span></div></div>\n<div data-testid=\"user-message\" id=\"palette-second-row\"><div><div class=\"user-message-bubble-color\" id=\"palette-second-bubble\">Следующее сообщение</div></div></div>\n<div data-message-author-role=\"user\" id=\"palette-unknown-row\">Неизвестная разметка</div>\n<div data-message-author-role=\"user\" id=\"palette-legacy-row\"><div class=\"user-message-bubble\" id=\"palette-legacy-bubble\">Совместимая плашка</div></div>\n<div data-message-author-role=\"assistant\"><p id=\"palette-agent\">Ответ агента</p><pre><code style=\"color:rgb(190,30,40)\" id=\"palette-code\">const answer = 42;</code></pre></div>\n</main>";
+  await browser.executeJavaScript('document.body.insertAdjacentHTML("beforeend", ' + JSON.stringify(bubbleFixture) + ')');
+  const bubbleProbe = "(() => {\nconst ids=['palette-user-row','palette-second-row','palette-unknown-row','palette-legacy-row'];\nconst rowBackgrounds=ids.map(id=>getComputedStyle(document.getElementById(id)).backgroundColor);\nconst bubbles=['palette-user-bubble','palette-second-bubble','palette-legacy-bubble'].map(id=>getComputedStyle(document.getElementById(id)).backgroundColor);\nconst bubble=document.getElementById('palette-user-bubble'),style=getComputedStyle(bubble);\nreturn {rowBackgrounds,bubbles,radius:style.borderRadius,width:style.width,padding:style.padding};\n})()";
+  const originalBubbles = await browser.executeJavaScript(bubbleProbe);
+  assert.equal(originalBubbles.bubbles[0], 'rgb(27, 64, 124)', 'fixture starts with the native blue rounded bubble');
   const baselineBackground = await browser.executeJavaScript('getComputedStyle(document.body).backgroundColor');
   const palette = { background: '#efe5d4', userBackground: '#c5ddd3', userText: '#183b36', assistantText: '#493d65' };
   for (const [key, value] of Object.entries(palette)) {
@@ -509,8 +513,12 @@ export async function run({ app, window, browser, sidebar, store, controller, se
     const settings = JSON.parse(await fs.readFile(path.join(dataDir, 'settings.json'), 'utf8'));
     return Object.entries(palette).every(([key,value]) => settings.chatColors?.[key] === value);
   }, 'palette saved', snapshot);
-  const computedPalette = await browser.executeJavaScript('({background:getComputedStyle(document.body).backgroundColor,main:getComputedStyle(document.getElementById("palette-probe")).backgroundColor,bubble:getComputedStyle(document.querySelector("#palette-probe .user-message-bubble")).backgroundColor,user:getComputedStyle(document.getElementById("palette-user")).color,assistant:getComputedStyle(document.getElementById("palette-agent")).color,code:getComputedStyle(document.getElementById("palette-code")).color})');
+  const computedPalette = await browser.executeJavaScript('({background:getComputedStyle(document.body).backgroundColor,main:getComputedStyle(document.getElementById("palette-probe")).backgroundColor,bubble:getComputedStyle(document.querySelector("#palette-user-bubble")).backgroundColor,user:getComputedStyle(document.getElementById("palette-user")).color,assistant:getComputedStyle(document.getElementById("palette-agent")).color,code:getComputedStyle(document.getElementById("palette-code")).color})');
   assert.deepEqual(computedPalette, { background:'rgb(239, 229, 212)',main:'rgb(239, 229, 212)',bubble:'rgb(197, 221, 211)',user:'rgb(24, 59, 54)',assistant:'rgb(73, 61, 101)',code:'rgb(190, 30, 40)' });
+  const coloredBubbles = await browser.executeJavaScript(bubbleProbe);
+  assert.deepEqual(coloredBubbles.rowBackgrounds, Array(4).fill('rgba(0, 0, 0, 0)'), 'outer rows remain transparent');
+  assert.deepEqual(coloredBubbles.bubbles, Array(3).fill('rgb(197, 221, 211)'), 'first, subsequent and legacy bubbles receive the color');
+  for (const key of ['radius','width','padding']) assert.equal(coloredBubbles[key], originalBubbles[key], 'bubble geometry stays unchanged: ' + key);
   assert.equal((await colors.executeJavaScript('window.webPilotColors.change("background","red;display:none")')).ok, false, 'invalid CSS rejected');
   assert.equal(await colors.executeJavaScript('document.documentElement.scrollWidth <= innerWidth'), true, 'editor does not overflow');
   const colorScreenshots = [];
@@ -540,6 +548,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(await browser.executeJavaScript('getComputedStyle(document.body).backgroundColor'), 'rgb(48, 48, 48)', 'latest color replaces previous values');
   await reopenedColors.executeJavaScript('window.webPilotColors.reset()');
   assert.equal(await browser.executeJavaScript('getComputedStyle(document.body).backgroundColor'), baselineBackground, 'reset removes user CSS');
+  assert.deepEqual(await browser.executeJavaScript(bubbleProbe), originalBubbles, 'reset restores native blue bubbles and transparent rows');
   assert.equal(Object.values(JSON.parse(await fs.readFile(path.join(dataDir, 'settings.json'), 'utf8')).chatColors).every(value => value === null), true);
   getColorWindow().close(); window.show(); window.focus();
   await browser.executeJavaScript('document.getElementById("palette-probe").remove(); history.replaceState({}, "", location.pathname)');

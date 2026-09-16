@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 533,
+  "plan_revision": 535,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "chat-colors-024",
@@ -421,8 +421,8 @@
       "expected_commit_message": "release: install Web Pilot 0.6.23 at stable path"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "chat-colors-024",
         "task_id": "B001",
@@ -571,7 +571,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: chat-colors-024
 Current Task: нет
-Revision: 533
+Revision: 535
 
 ## Цель
 
@@ -629,8 +629,8 @@ Revision: 533
   - Git Commit: [DONE] release: install Web Pilot 0.6.23 at stable path
   - Reference: chat-colors-024 / R003 / implementation
   - Файлы: package.json, README.md, docs/RELEASE.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/TRANSFER_TO_WINDOWS.md
-- [TODO] B001: Исправить цвет скруглённой плашки пользователя — Ожидает
-  - Git Commit: [PENDING] fix: color the actual ChatGPT user message bubble
+- [DONE] B001: Исправить цвет скруглённой плашки пользователя — Завершено
+  - Git Commit: [DONE] fix: color the actual ChatGPT user message bubble
   - Reference: chat-colors-024 / B001 / implementation
   - Файлы: src/chatgpt-colors.mjs, tests/electron-smoke.mjs, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/RELEASE.md
 - [TODO] B002: Собрать и установить исправленный релиз 0.6.24 — Ожидает
