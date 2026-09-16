@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 566,
+  "plan_revision": 568,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "clean-install-lab-027",
@@ -119,8 +119,8 @@
       "expected_commit_message": "docs: define clean installation verification lab"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "clean-install-lab-027",
         "task_id": "T002",
@@ -282,7 +282,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: clean-install-lab-027
 Current Task: нет
-Revision: 566
+Revision: 568
 
 ## Цель
 
@@ -300,8 +300,8 @@ Revision: 566
   - Git Commit: [DONE] docs: define clean installation verification lab
   - Reference: clean-install-lab-027 / T001 / implementation
   - Файлы: docs/CLEAN_INSTALL.md, docs/RELEASE.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/DECISIONS.md
-- [TODO] T002: Установить и проверить UTM на основном Mac — Ожидает
-  - Git Commit: [PENDING] docs: record verified UTM installation
+- [DONE] T002: Установить и проверить UTM на основном Mac — Завершено
+  - Git Commit: [DONE] docs: record verified UTM installation
   - Reference: clean-install-lab-027 / T002 / implementation
   - Файлы: docs/CLEAN_INSTALL.md
 - [TODO] T003: Подготовить чистую виртуальную macOS — Ожидает

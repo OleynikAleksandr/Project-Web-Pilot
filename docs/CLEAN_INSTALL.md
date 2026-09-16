@@ -51,7 +51,8 @@
 ## Текущее выполнение
 
 - T001: зафиксированы контракт стенда и исходные ограничения.
-- UTM: установка ещё не выполнена.
+- T002: UTM 4.7.5 build 118 установлен в `~/Applications/UTM.app` из официального DMG. SHA-256: `a8435c93cfb5f8bbfeea4b134cfad1ac66b67632b75e438c63b1a8ae043bef0e`; codesign --verify --deep --strict успешен, Gatekeeper: accepted / Notarized Developer ID. Установка не перезапускала основной Web Pilot/MCP. Несекретная квитанция: `~/Documents/WebPilot-Test-Lab/utm-installation.json`.
+- Переход к T003 ожидает разрешения записи экрана. Согласно `Codex Local Mac/docs/MACOS_SETUP.md`, автозапуск MCP идёт через Terminal; пользователю нужно проверить его разрешение в системных настройках, затем повторить computer_status. Прежние разрешения ввода уже доступны.
 - macOS VM: ещё не создана.
 - Windows VM: ещё не создана; архитектура не выбрана.
 - Исходные проверки 0.6.26 на чистых гостях: не выполнены.
