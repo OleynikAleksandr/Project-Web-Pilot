@@ -809,3 +809,12 @@ Electron smoke меняет composerBackground через UI, проверяет
 ## composer-color-025 / T003 / Release 0.6.25
 
 Версии package.json, lock и обеих packager-команд обновлены до 0.6.25. Штатный build установил macOS app по постоянному корневому адресу с сохранением inode 398344301 и собрал Windows x64; Windows verifier подтвердил PE, portable Node и pinned runtime. В релиз входят пятый цвет composerBackground и CSS для потокового ответа. Приложение пользователя не перезапускалось; настройки палитры сохраняются.
+
+
+## session-tree-outline-026 / T001
+
+В компактном project tree выбранная `.session-row` получила постоянную прозрачную 1 px border-box геометрию; в active state border окрашивается `tree-accent`. Старый псевдоэлемент-маркер шириной 3 px удалён. Вертикальная линия от project chevron и горизонтальные branches переведены с muted `tree-branch` на тот же `tree-accent`; chevron использует уменьшенный SVG stroke, визуально соответствующий однопиксельным CSS-линиям. За счёт border на контейнере внутри обводки остаются session content, badge `Chat/Work` и menu button, а прозрачная border у неактивных строк исключает layout shift.
+
+## session-tree-outline-026 / T002 / Release 0.6.26
+
+Package metadata и обе packager-команды синхронизированы на 0.6.26. Полная Node suite и isolated Electron smoke прошли; macOS arm64 установлен по постоянному пути с неизменным inode `398344301`, Windows x64 прошёл автоматический verifier. ZIP обеих платформ опубликованы в `.harness/runtime/releases/0.6.26/` и скопированы в `~/Downloads/WebPilot-0.6.26/`. Физический Windows запуск и визуальная проверка реального аккаунта ChatGPT остаются пользовательской приёмкой.

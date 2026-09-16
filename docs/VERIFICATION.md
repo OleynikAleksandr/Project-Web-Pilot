@@ -874,3 +874,21 @@ T002 managed checks: syntax PASSED (19 ms), suite PASSED (27096 ms), electron-sm
 Физический Windows запуск и реальная визуальная приёмка ChatGPT остаются за пользователем; проверки composer/streaming выполнены на Chromium fixture. Текущая сессия не прерывалась. Архивирование требует отдельного принятия/поручения пользователя.
 
 composer-color-025 / DOCS: проверены 34 indexed documents и существование ссылок. Текущие описания обновлены до пяти цветов и 0.6.25; исторические сведения о 0.6.23/0.6.24 сохранены. Изменены README, PRODUCT, OVERVIEW, WORKFLOW_START, DECISIONS, Windows transfer и current version в Project Doctor; профильные контракты и release evidence обновлены в T001–T003. Workflow Kit/recovery/runtime/archive не менялись. Scope остаётся ACTIVE до пользовательской приёмки и явной команды archive.
+
+
+## session-tree-outline-026 / T001
+
+`node --test tests/sidebar.test.mjs`: 5 passed, 0 failed. Новый regression фиксирует полный active outline вокруг `.session-row`, наличие внутри badge и menu, единый `tree-accent` для chevron/trunk/branch/border, однопиксельную геометрию branch/border и отсутствие старого `.session-row:has(.session.active)::before` marker. Commit: `2b2a3bb3bb1fde57708f1773d309fa15fd153ca6`. Модульный контракт Workspace & Sessions обновлён в том же task.
+
+## session-tree-outline-026 / T002 / Release 0.6.26
+
+Версия package/lock и обеих packager-команд — 0.6.26. Финальная managed transaction: syntax PASSED (18 ms), suite PASSED (22890 ms; 169 tests, 167 passed, 2 native-Windows skipped), electron-smoke PASSED (39886 ms); commit `7f0ecd7fd323a0f2f19e26cec9ca8d5ab3ed6f6c`. Перед этим один managed smoke завершился ранним недиагностическим `Project Web Pilot: undefined`; немедленный прямой smoke на том же candidate прошёл полностью, затем повтор managed transaction также прошёл без изменения source candidate.
+
+Полный build macOS arm64 + Windows x64 завершён успешно. macOS publisher установил 0.6.26 по постоянному пути и сохранил inode `398344301`; Windows verifier подтвердил executable, portable Node 22.17.0, Workflow Kit и pinned runtime. В постоянном app и обоих staging `app.asar` семантическая package version равна 0.6.26; `src/main.mjs`, `src/preload.cjs`, `src/ui/index.html` и `src/ui/sidebar.mjs` побайтно совпадают с source. Оба ZIP прошли `unzip -tq`; копии доставлены в `~/Downloads/WebPilot-0.6.26/`.
+
+- `Project-Web-Pilot-0.6.26-macOS-arm64.zip`: 145198822 bytes, SHA-256 `db3ee4520f371b6c1af9cbe58555139ce99d6473140f09d3bcce7f38f83655b7`.
+- `Project-Web-Pilot-0.6.26-Windows-x64.zip`: 317756455 bytes, SHA-256 `fda8e51583060873a60ca67903271d77c9dcb66bf437a48fa4befc627a7e59f3`.
+
+`release-manifest.json` фиксирует source HEAD, permanent app identity, package version, exact verified UI/runtime files и hashes; `SHA256SUMS.txt` лежит рядом с ZIP и в Downloads. Native Windows и визуальная приёмка реального ChatGPT остаются за пользователем. Scope не архивирован.
+
+session-tree-outline-026 / DOCS: проверены все документы текущего индекса и актуальные version/release ссылки. Обновлены README, PRODUCT, WORKFLOW_START, DECISIONS, RELEASE, Windows transfer, Workspace & Sessions, Project Doctor current version, ARCHITECTURE и эта verification evidence; OVERVIEW, MODULES, DOCUMENTATION_INDEX, Context Delivery, Workflow Kit/Runtime/Archive/Workspace Setup остаются актуальными без содержательных изменений. После DOCS scope должен быть предъявлен пользователю в `READY_FOR_ACCEPTANCE`; archive требует отдельной прямой команды.

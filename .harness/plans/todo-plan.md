@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 559,
+  "plan_revision": 561,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-tree-outline-026",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Заменить отдельную акцентную полосу выбранной сессии на тонкую обводку всей карточки, визуально объединённую с яркими линиями дерева, и выпустить новый релиз macOS/Windows.",
   "acceptance_criteria": [
     "У активной сессии отсутствует отдельная вертикальная акцентная полоса.",
@@ -153,8 +153,8 @@
       "documentation_exception": "T002 меняет только version/package metadata и выполняет уже согласованную поставку; фактическая версия, checksums и release evidence фиксируются обязательной финальной задачей DOCS."
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-tree-outline-026",
         "task_id": "DOCS",
@@ -207,10 +207,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: session-tree-outline-026
 Current Task: нет
-Revision: 559
+Revision: 561
 
 ## Цель
 
@@ -234,8 +234,8 @@ Revision: 559
   - Git Commit: [DONE] release: publish Web Pilot 0.6.26 with session outline
   - Reference: session-tree-outline-026 / T002 / implementation
   - Файлы: package.json, package-lock.json
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: document session outline and release 0.6.26
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: document session outline and release 0.6.26
   - Reference: session-tree-outline-026 / DOCS / implementation
   - Файлы: docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/modules/workspace-sessions.md, docs/RELEASE.md, docs/VERIFICATION.md, README.md, docs/PRODUCT.md, docs/WORKFLOW_START.md, docs/DECISIONS.md, docs/TRANSFER_TO_WINDOWS.md, docs/architecture/ARCHITECTURE.md, docs/modules/project-doctor.md
 
