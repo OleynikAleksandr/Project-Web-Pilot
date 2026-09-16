@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 556,
+  "plan_revision": 558,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-tree-outline-026",
@@ -120,8 +120,8 @@
       "documentation_exception": "Модульный контракт Workspace & Sessions обновляется в этой задаче; широкие архитектурные и verification-сводки по mappings будут актуализированы обязательной финальной задачей DOCS."
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-tree-outline-026",
         "task_id": "T002",
@@ -208,7 +208,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-tree-outline-026
 Current Task: нет
-Revision: 556
+Revision: 558
 
 ## Цель
 
@@ -228,8 +228,8 @@ Revision: 556
   - Git Commit: [DONE] feat: unify active session tree outline
   - Reference: session-tree-outline-026 / T001 / implementation
   - Файлы: src/ui/index.html, tests/sidebar.test.mjs, docs/modules/workspace-sessions.md
-- [TODO] T002: Собрать и проверить релиз 0.6.26 — Ожидает
-  - Git Commit: [PENDING] release: publish Web Pilot 0.6.26 with session outline
+- [DONE] T002: Собрать и проверить релиз 0.6.26 — Завершено
+  - Git Commit: [DONE] release: publish Web Pilot 0.6.26 with session outline
   - Reference: session-tree-outline-026 / T002 / implementation
   - Файлы: package.json, package-lock.json
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
