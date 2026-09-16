@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 501,
+  "plan_revision": 503,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "hidden-tool-scroll-023",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Устранить пустое пространство, остающееся в разговоре после визуального скрытия строк вызовов инструментов, синхронизировать фильтр с существующей автопрокруткой и выпустить новый релиз Project Web Pilot 0.6.22 для macOS и Windows.",
   "acceptance_criteria": [
     "При включённом Settings → скрывать вызовы инструментов скрывается не только кнопка tool-call, но и её безопасно определяемый служебный layout-контейнер, поэтому скрытые строки не оставляют пустой хвост внизу разговора.",
@@ -211,8 +211,8 @@
       "expected_commit_message": "build: выпустить Project Web Pilot 0.6.22"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "hidden-tool-scroll-023",
         "task_id": "DOCS",
@@ -270,10 +270,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: hidden-tool-scroll-023
 Current Task: нет
-Revision: 501
+Revision: 503
 
 ## Цель
 
@@ -305,8 +305,8 @@ Revision: 501
   - Git Commit: [DONE] build: выпустить Project Web Pilot 0.6.22
   - Reference: hidden-tool-scroll-023 / T003 / implementation
   - Файлы: docs/VERIFICATION.md, docs/TRANSFER_TO_WINDOWS.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать документацию 0.6.22
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать документацию 0.6.22
   - Reference: hidden-tool-scroll-023 / DOCS / implementation
   - Файлы: README.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/architecture/ARCHITECTURE.md, docs/WORKFLOW_START.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKSPACE_SETUP.md, docs/PROJECT_ARCHIVE.md, docs/SOURCE_WORKSPACES.md, docs/modules/workflow-kit-recovery.md, docs/modules/project-doctor.md, docs/modules/runtime-lifecycle.md, docs/modules/workspace-sessions.md
 
