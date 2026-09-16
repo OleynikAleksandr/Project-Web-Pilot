@@ -4,19 +4,20 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 453,
+  "plan_revision": 456,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-project-continuity-021",
   "execution_scope_status": "ACTIVE",
   "delivery_status": "IN_PROGRESS",
-  "objective": "Сделать Workflow Kit универсальным для проектов любого типа: сохранять постоянный проектный контекст в NONE, автоматически добавлять обязательную финальную актуализацию документации и только после неё переводить результат к пользовательской приёмке.",
+  "objective": "Сделать Workflow Kit универсальным для проектов любого типа: сохранять постоянный проектный контекст в NONE, автоматически добавлять обязательную финальную актуализацию документации и только после неё переводить результат к пользовательской приёмке. Добавить автономный Доктор проекта в Settings и на экран ошибки; выпустить 0.6.20, оставив текущий рассогласованный manifest для пользовательского теста.",
   "acceptance_criteria": [
     "После archive новый NONE ToDo-plan содержит обязательные ссылки на docs/architecture/OVERVIEW.md, docs/MODULES.md и docs/DOCUMENTATION_INDEX.md и приглашает обсудить следующий этап проекта.",
     "Новый рабочий scope автоматически содержит последнюю микрозадачу «Актуализация всех документов проекта», которая зависит от всех остальных задач.",
     "READY_FOR_ACCEPTANCE появляется только после завершения финальной актуализации документации; пользовательская приёмка остаётся отдельным последующим gate и не закрывается агентом.",
     "Workflow и шаблоны описывают проекты общего типа, а для программных проектов сохраняют модульные спецификации и фасады как профильную специализацию.",
-    "Bundled Workflow Kit обновлён и новый релиз Project Web Pilot проходит автоматические проверки и сборку macOS/Windows."
+    "Bundled Workflow Kit обновлён и новый релиз Project Web Pilot проходит автоматические проверки и сборку macOS/Windows.",
+    "Доктор автоматически чинит известные ошибки с резервной копией и повторной проверкой, неизвестные изменения не затирает. Реальный дефект до пользовательского запуска сохраняется."
   ],
   "approved_scope": {
     "functional_paths": [
@@ -42,7 +43,21 @@
       "package-lock.json",
       "resources/workspace-setup-worker.mjs",
       "tests/workspace-setup.test.mjs",
-      "tests/electron-smoke.mjs"
+      "tests/electron-smoke.mjs",
+      "resources/project-doctor/core.mjs",
+      "resources/project-doctor/files.mjs",
+      "resources/project-doctor-worker.mjs",
+      "tests/project-doctor.test.mjs",
+      "src/project-doctor.mjs",
+      "src/main.mjs",
+      "src/preload.cjs",
+      "src/ui/project-doctor.mjs",
+      "src/ui/sidebar.mjs",
+      "src/ui/project-archive.mjs",
+      "src/ui/workspace-setup.mjs",
+      "src/ui/index.html",
+      "src/ui/progress.mjs",
+      "tests/project-doctor-ui.test.mjs"
     ],
     "documentation_paths": [
       ".harness/kit/WORKFLOW.md",
@@ -75,7 +90,8 @@
       "docs/SOURCE_WORKSPACES.md",
       "docs/TRANSFER_TO_WINDOWS.md",
       "docs/WORKSPACE_SETUP.md",
-      "docs/PROJECT_ARCHIVE.md"
+      "docs/PROJECT_ARCHIVE.md",
+      "docs/modules/project-doctor.md"
     ],
     "max_functional_files_per_task": 7
   },
@@ -354,6 +370,145 @@
       "documentation_exception": "T008 исправляет выявленную интеграционную ошибку уже согласованного Project Continuity Contract; итоговая документация обновляется обязательной DOCS."
     },
     {
+      "id": "T009",
+      "title": "Зафиксировать контракт Доктора проекта",
+      "why": "Реализовать согласованный механизм самостоятельного восстановления без изменения реального дефекта до пользовательского теста.",
+      "dependencies": [
+        "T008"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        ".harness/kit/templates/ARCHITECTURE.md",
+        ".harness/kit/templates/PRODUCT.md",
+        ".harness/kit/templates/START.md",
+        "resources/workflow-kit/templates/ARCHITECTURE.md",
+        "resources/workflow-kit/templates/PRODUCT.md",
+        "resources/workflow-kit/templates/START.md",
+        "README.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/WORKFLOW_START.md",
+        "docs/MODULES.md",
+        "docs/modules/project-doctor.md"
+      ],
+      "verification_ids": [],
+      "acceptance_criteria": [
+        "Контракт Доктора выполнен; текущий manifest реального проекта сохранён без изменений; проверки проходят на fixtures."
+      ],
+      "expected_commit_message": "feat(doctor): Зафиксировать контракт Доктора проекта",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "workflow-project-continuity-021",
+        "task_id": "T009",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T010",
+      "title": "Реализовать безопасный ремонт проекта",
+      "why": "Реализовать согласованный механизм самостоятельного восстановления без изменения реального дефекта до пользовательского теста.",
+      "dependencies": [
+        "T009"
+      ],
+      "functional_paths": [
+        "resources/project-doctor/core.mjs",
+        "resources/project-doctor/files.mjs",
+        "resources/project-doctor-worker.mjs",
+        "tests/project-doctor.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/project-doctor.md"
+      ],
+      "verification_ids": [
+        "syntax",
+        "suite"
+      ],
+      "acceptance_criteria": [
+        "Контракт Доктора выполнен; текущий manifest реального проекта сохранён без изменений; проверки проходят на fixtures."
+      ],
+      "expected_commit_message": "feat(doctor): Реализовать безопасный ремонт проекта",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "workflow-project-continuity-021",
+        "task_id": "T010",
+        "role": "implementation"
+      },
+      "file_limit_exception": "Единый атомарный контракт безопасности и его проверка требуют согласованного изменения перечисленных файлов."
+    },
+    {
+      "id": "T011",
+      "title": "Подключить Доктор к настройкам и экрану ошибки",
+      "why": "Реализовать согласованный механизм самостоятельного восстановления без изменения реального дефекта до пользовательского теста.",
+      "dependencies": [
+        "T010"
+      ],
+      "functional_paths": [
+        "src/project-doctor.mjs",
+        "src/main.mjs",
+        "src/preload.cjs",
+        "src/ui/project-doctor.mjs",
+        "src/ui/sidebar.mjs",
+        "src/ui/project-archive.mjs",
+        "src/ui/workspace-setup.mjs",
+        "src/ui/index.html",
+        "src/ui/progress.mjs",
+        "tests/project-doctor-ui.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/project-doctor.md"
+      ],
+      "verification_ids": [
+        "syntax",
+        "suite"
+      ],
+      "acceptance_criteria": [
+        "Контракт Доктора выполнен; текущий manifest реального проекта сохранён без изменений; проверки проходят на fixtures."
+      ],
+      "expected_commit_message": "feat(doctor): Подключить Доктор к настройкам и экрану ошибки",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "workflow-project-continuity-021",
+        "task_id": "T011",
+        "role": "implementation"
+      },
+      "file_limit_exception": "Единый атомарный контракт безопасности и его проверка требуют согласованного изменения перечисленных файлов."
+    },
+    {
+      "id": "T012",
+      "title": "Проверить интерфейс и собрать новый релиз",
+      "why": "Реализовать согласованный механизм самостоятельного восстановления без изменения реального дефекта до пользовательского теста.",
+      "dependencies": [
+        "T011"
+      ],
+      "functional_paths": [
+        "package.json",
+        "package-lock.json",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "docs/VERIFICATION.md",
+        "docs/architecture/ARCHITECTURE.md"
+      ],
+      "verification_ids": [
+        "syntax",
+        "suite",
+        "electron-smoke"
+      ],
+      "acceptance_criteria": [
+        "Контракт Доктора выполнен; текущий manifest реального проекта сохранён без изменений; проверки проходят на fixtures."
+      ],
+      "expected_commit_message": "feat(doctor): Проверить интерфейс и собрать новый релиз",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "workflow-project-continuity-021",
+        "task_id": "T012",
+        "role": "implementation"
+      }
+    },
+    {
       "dependencies": [
         "T001",
         "T002",
@@ -362,7 +517,11 @@
         "T005",
         "T006",
         "T007",
-        "T008"
+        "T008",
+        "T009",
+        "T010",
+        "T011",
+        "T012"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -396,7 +555,8 @@
         "docs/SOURCE_WORKSPACES.md",
         "docs/modules/workflow-kit-recovery.md",
         "docs/modules/runtime-lifecycle.md",
-        "docs/modules/workspace-sessions.md"
+        "docs/modules/workspace-sessions.md",
+        "docs/modules/project-doctor.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -421,6 +581,11 @@
       "id": "a0b4e136-d0db-4a21-b7b9-06efc1f1eab7",
       "text": "Пользователь согласовал отдельный scope: обязательные ссылки на архитектурные документы и индекс, финальная актуализация всей документации, затем пользовательская приёмка; после archive новый NONE ToDo-plan сохраняет навигацию проекта.",
       "recorded_at": "2026-09-15T16:54:33.036Z"
+    },
+    {
+      "id": "c09656cf-c9ae-463b-9cda-69cebb26a43a",
+      "recorded_at": "2026-09-16T07:06:52.986Z",
+      "text": "16.09.2026 пользователь поручил реализовать Доктор проекта и собрать релиз, сохранив текущую неисправность для самостоятельного теста. Незавершённая DOCS отложена до конца расширенного этапа через валидированный API Workflow Kit; прежние изменения сохранены."
     }
   ]
 }
@@ -433,11 +598,11 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-project-continuity-021
 Current Task: нет
-Revision: 453
+Revision: 456
 
 ## Цель
 
-Сделать Workflow Kit универсальным для проектов любого типа: сохранять постоянный проектный контекст в NONE, автоматически добавлять обязательную финальную актуализацию документации и только после неё переводить результат к пользовательской приёмке.
+Сделать Workflow Kit универсальным для проектов любого типа: сохранять постоянный проектный контекст в NONE, автоматически добавлять обязательную финальную актуализацию документации и только после неё переводить результат к пользовательской приёмке. Добавить автономный Доктор проекта в Settings и на экран ошибки; выпустить 0.6.20, оставив текущий рассогласованный manifest для пользовательского теста.
 
 ## Критерии приёмки
 
@@ -446,6 +611,7 @@ Revision: 453
 - READY_FOR_ACCEPTANCE появляется только после завершения финальной актуализации документации; пользовательская приёмка остаётся отдельным последующим gate и не закрывается агентом.
 - Workflow и шаблоны описывают проекты общего типа, а для программных проектов сохраняют модульные спецификации и фасады как профильную специализацию.
 - Bundled Workflow Kit обновлён и новый релиз Project Web Pilot проходит автоматические проверки и сборку macOS/Windows.
+- Доктор автоматически чинит известные ошибки с резервной копией и повторной проверкой, неизвестные изменения не затирает. Реальный дефект до пользовательского запуска сохраняется.
 
 ## Микрозадачи
 
@@ -481,10 +647,26 @@ Revision: 453
   - Git Commit: [DONE] fix(workflow): ограничить recovery финальной документации
   - Reference: workflow-project-continuity-021 / T008 / implementation
   - Файлы: .harness/kit/lib/recovery.mjs, resources/workflow-kit/lib/recovery.mjs, tests/workflow-kit-recovery.test.mjs
+- [TODO] T009: Зафиксировать контракт Доктора проекта — Ожидает
+  - Git Commit: [PENDING] feat(doctor): Зафиксировать контракт Доктора проекта
+  - Reference: workflow-project-continuity-021 / T009 / implementation
+  - Файлы: .harness/kit/templates/ARCHITECTURE.md, .harness/kit/templates/PRODUCT.md, .harness/kit/templates/START.md, resources/workflow-kit/templates/ARCHITECTURE.md, resources/workflow-kit/templates/PRODUCT.md, resources/workflow-kit/templates/START.md, README.md, docs/DOCUMENTATION_INDEX.md, docs/WORKFLOW_START.md, docs/MODULES.md, docs/modules/project-doctor.md
+- [TODO] T010: Реализовать безопасный ремонт проекта — Ожидает
+  - Git Commit: [PENDING] feat(doctor): Реализовать безопасный ремонт проекта
+  - Reference: workflow-project-continuity-021 / T010 / implementation
+  - Файлы: resources/project-doctor/core.mjs, resources/project-doctor/files.mjs, resources/project-doctor-worker.mjs, tests/project-doctor.test.mjs, docs/modules/project-doctor.md
+- [TODO] T011: Подключить Доктор к настройкам и экрану ошибки — Ожидает
+  - Git Commit: [PENDING] feat(doctor): Подключить Доктор к настройкам и экрану ошибки
+  - Reference: workflow-project-continuity-021 / T011 / implementation
+  - Файлы: src/project-doctor.mjs, src/main.mjs, src/preload.cjs, src/ui/project-doctor.mjs, src/ui/sidebar.mjs, src/ui/project-archive.mjs, src/ui/workspace-setup.mjs, src/ui/index.html, src/ui/progress.mjs, tests/project-doctor-ui.test.mjs, docs/modules/project-doctor.md
+- [TODO] T012: Проверить интерфейс и собрать новый релиз — Ожидает
+  - Git Commit: [PENDING] feat(doctor): Проверить интерфейс и собрать новый релиз
+  - Reference: workflow-project-continuity-021 / T012 / implementation
+  - Файлы: package.json, package-lock.json, tests/electron-smoke.mjs, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать документацию проекта
   - Reference: workflow-project-continuity-021 / DOCS / implementation
-  - Файлы: .harness/kit/WORKFLOW.md, resources/workflow-kit/WORKFLOW.md, .harness/kit/templates/AGENTS.md, resources/workflow-kit/templates/AGENTS.md, .harness/kit/templates/ARCHITECTURE.md, resources/workflow-kit/templates/ARCHITECTURE.md, .harness/kit/templates/PLAN.md, resources/workflow-kit/templates/PLAN.md, .harness/kit/templates/PRODUCT.md, resources/workflow-kit/templates/PRODUCT.md, .harness/kit/templates/START.md, resources/workflow-kit/templates/START.md, .harness/plans/todo-plan.template.md, AGENTS.md, README.md, docs/DOCUMENTATION_INDEX.md, docs/architecture/OVERVIEW.md, docs/architecture/ARCHITECTURE.md, docs/MODULES.md, docs/WORKFLOW_START.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKSPACE_SETUP.md, docs/PROJECT_ARCHIVE.md, docs/SOURCE_WORKSPACES.md, docs/modules/workflow-kit-recovery.md, docs/modules/runtime-lifecycle.md, docs/modules/workspace-sessions.md
+  - Файлы: .harness/kit/WORKFLOW.md, resources/workflow-kit/WORKFLOW.md, .harness/kit/templates/AGENTS.md, resources/workflow-kit/templates/AGENTS.md, .harness/kit/templates/ARCHITECTURE.md, resources/workflow-kit/templates/ARCHITECTURE.md, .harness/kit/templates/PLAN.md, resources/workflow-kit/templates/PLAN.md, .harness/kit/templates/PRODUCT.md, resources/workflow-kit/templates/PRODUCT.md, .harness/kit/templates/START.md, resources/workflow-kit/templates/START.md, .harness/plans/todo-plan.template.md, AGENTS.md, README.md, docs/DOCUMENTATION_INDEX.md, docs/architecture/OVERVIEW.md, docs/architecture/ARCHITECTURE.md, docs/MODULES.md, docs/WORKFLOW_START.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKSPACE_SETUP.md, docs/PROJECT_ARCHIVE.md, docs/SOURCE_WORKSPACES.md, docs/modules/workflow-kit-recovery.md, docs/modules/runtime-lifecycle.md, docs/modules/workspace-sessions.md, docs/modules/project-doctor.md
 
 ## Context Pack For This Cycle
 
