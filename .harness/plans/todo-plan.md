@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 570,
+  "plan_revision": 574,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "clean-install-lab-027",
@@ -144,8 +144,8 @@
       "expected_commit_message": "docs: record verified UTM installation"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "clean-install-lab-027",
         "task_id": "T003",
@@ -160,12 +160,13 @@
       ],
       "verification_ids": [],
       "id": "T003",
-      "title": "Подготовить чистую виртуальную macOS",
-      "why": "Проверять готовый app без системных зависимостей компьютера разработчика.",
+      "title": "Подготовить чистую виртуальную macOS и параллельно начать создание Windows 11",
+      "why": "Проверять готовый app без зависимостей компьютера разработчика; по команде пользователя подготовка Windows начинается во время загрузки macOS.",
       "acceptance_criteria": [
         "Гостевая macOS установлена из совместимого официального образа и достигает рабочего стола.",
         "Исходное чистое состояние сохранено; Node, Git и MCP разработчика не перенесены.",
-        "Возможность видеть и управлять гостевым окном проверена после выдачи системных разрешений."
+        "Видимость гостевого окна подтверждена; по дальнейшему поручению пользователя настройка и проверки выполняются вручную по передаваемым скриншотам, без Computer Use.",
+        "По поручению пользователя параллельно начаты загрузка официального образа Windows 11 и подготовка её VM; архитектура и фактическое состояние записаны."
       ],
       "expected_commit_message": "docs: record clean macOS test environment"
     },
@@ -186,7 +187,7 @@
       ],
       "verification_ids": [],
       "id": "T004",
-      "title": "Подготовить виртуальную Windows и зафиксировать границы проверки x64",
+      "title": "Завершить подготовку виртуальной Windows и зафиксировать границы проверки x64",
       "why": "Повторять установку Windows-поставки независимо от рабочего Mac.",
       "acceptance_criteria": [
         "Гостевая Windows установлена из официального образа при выполненных лицензионных условиях.",
@@ -270,6 +271,11 @@
       "id": "56c0fc31-e66a-47c3-a704-fd807594fc7a",
       "text": "16.09.2026 пользователь согласился на проверку в виртуальных системах: «Делаем так. Начнем с виртуальной MacOS? Я бы и виртуальный Windows поставил, чтобы можно было проверять обе версии». Текущий этап — стенд и исходная проверка готовых поставок; затем по фактическим результатам обсуждаются исправления самодостаточности и пошаговые подсказки.",
       "recorded_at": "2026-09-16T13:48:43.118Z"
+    },
+    {
+      "id": "8497c9aa-da76-4c54-a104-24d967dece8a",
+      "text": "16.09.2026 пользователь поручил продолжать настройку и проверку виртуальных машин без Computer Use: пользователь передаёт скриншоты, агент даёт пошаговые инструкции. Это заменяет проверку дальнейшего управления гостями через Computer Use.",
+      "recorded_at": "2026-09-16T17:08:51.204648Z"
     }
   ]
 }
@@ -282,7 +288,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: clean-install-lab-027
 Current Task: нет
-Revision: 570
+Revision: 574
 
 ## Цель
 
@@ -304,11 +310,11 @@ Revision: 570
   - Git Commit: [DONE] docs: record verified UTM installation
   - Reference: clean-install-lab-027 / T002 / implementation
   - Файлы: docs/CLEAN_INSTALL.md
-- [TODO] T003: Подготовить чистую виртуальную macOS — Ожидает
-  - Git Commit: [PENDING] docs: record clean macOS test environment
+- [DONE] T003: Подготовить чистую виртуальную macOS и параллельно начать создание Windows 11 — Завершено
+  - Git Commit: [DONE] docs: record clean macOS test environment
   - Reference: clean-install-lab-027 / T003 / implementation
   - Файлы: docs/CLEAN_INSTALL.md
-- [TODO] T004: Подготовить виртуальную Windows и зафиксировать границы проверки x64 — Ожидает
+- [TODO] T004: Завершить подготовку виртуальной Windows и зафиксировать границы проверки x64 — Ожидает
   - Git Commit: [PENDING] docs: record clean Windows test environment
   - Reference: clean-install-lab-027 / T004 / implementation
   - Файлы: docs/CLEAN_INSTALL.md
