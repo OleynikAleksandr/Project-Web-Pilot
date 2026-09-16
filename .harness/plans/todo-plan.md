@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 497,
+  "plan_revision": 499,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "hidden-tool-scroll-023",
@@ -154,8 +154,8 @@
       "expected_commit_message": "fix(chat): синхронизировать скрытые tool calls с прокруткой"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "hidden-tool-scroll-023",
         "task_id": "T002",
@@ -273,7 +273,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: hidden-tool-scroll-023
 Current Task: нет
-Revision: 497
+Revision: 499
 
 ## Цель
 
@@ -297,8 +297,8 @@ Revision: 497
   - Git Commit: [DONE] fix(chat): синхронизировать скрытые tool calls с прокруткой
   - Reference: hidden-tool-scroll-023 / T001B / implementation
   - Файлы: src/main.mjs, tests/electron-smoke.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T002: Подготовить версию 0.6.22 — Ожидает
-  - Git Commit: [PENDING] build: подготовить релиз 0.6.22
+- [DONE] T002: Подготовить версию 0.6.22 — Завершено
+  - Git Commit: [DONE] build: подготовить релиз 0.6.22
   - Reference: hidden-tool-scroll-023 / T002 / implementation
   - Файлы: package.json, package-lock.json, docs/architecture/ARCHITECTURE.md
 - [TODO] T003: Проверить и собрать релиз 0.6.22 — Ожидает
