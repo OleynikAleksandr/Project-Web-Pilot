@@ -761,3 +761,7 @@ JSDOM regression исполняет тот же renderer script, который 
 macOS arm64 и Windows x64 собраны в `.harness/runtime/releases/0.6.20/`; версия package внутри обеих сборок — 0.6.20. IPC/UI/worker bytes сверены с исходниками. Windows verify-package проверил EXE, portable Node и pinned runtime SHA. ZIP обеих платформ и `SHA256SUMS.txt` находятся рядом. Реальный запуск Windows остаётся пользовательской проверкой.
 
 Предъявление: закрыть предыдущую версию и открыть новую `.app`, затем Settings → Доктор проекта → Project Web Pilot → «Проверить и исправить». Собственный `.harness/kit-manifest.json` не менялся; исходные 14 integrity-conflicts специально сохранены до пользовательского запуска. Проверки исправления выполнялись только на собственных временных fixtures.
+
+## Correction round Workflow Kit — scope 022 / T004
+
+Regression воспроизводит полный повторный цикл одного ACTIVE scope: первая `DOCS` переводит результат в `READY_FOR_ACCEPTANCE`; явный `plan:apply` с новой correction task возвращает `IN_PROGRESS`, rearm финальной `DOCS` с `commit_ref.iteration=2`, выполняет correction task и вторую `DOCS`. Исторический первый DOCS commit без iteration трактуется как iteration 1; новый implementation commit содержит `Workflow-Iteration`, поэтому resolver однозначно выбирает требуемый проход. Installed и bundled lifecycle-код синхронизированы.

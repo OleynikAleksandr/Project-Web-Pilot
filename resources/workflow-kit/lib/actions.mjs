@@ -98,21 +98,29 @@ export function applyPlan(root, input, expectedRevision) {
     check(Object.keys(input).every(k => permitted.includes(k)), 'MANAGED_FIELDS', 'Служебные поля плана не меняются через plan:apply.');
     const plan = { ...structuredClone(original), ...input, plan_revision: original.plan_revision + 1 };
     check(['ACTIVE', 'BLOCKED'].includes(plan.execution_scope_status) && original.execution_scope_status !== 'NONE', 'SCOPE_LIFECYCLE', 'Создание/архивирование scope выполняются отдельными командами.');
+    const added = plan.tasks.filter(t => !original.tasks.some(old => old.id === t.id));
+    const originalFinal = original.tasks.find(isDocumentationFinalizationTask);
+    const correctionRound = original.execution_scope_status === 'ACTIVE' && original.delivery_status === 'READY_FOR_ACCEPTANCE'
+      && original.current_task_id === null && originalFinal?.commit_status === 'DONE' && added.length > 0;
     for (const old of original.tasks) {
       const current = plan.tasks.find(t => t.id === old.id);
       check(current, 'TASK_REMOVAL', 'Существующие задачи не удаляются из активного scope.');
-      if (old.commit_status === 'DONE') check(JSON.stringify(current) === JSON.stringify(old), 'COMPLETED_TASK_IMMUTABLE', 'Запись завершённой задачи неизменяема.');
-      else {
+      if (old.commit_status === 'DONE') {
+        if (correctionRound && isDocumentationFinalizationTask(old))
+          check(JSON.stringify(current) === JSON.stringify(old), 'COMPLETED_TASK_IMMUTABLE', 'Перед повторным открытием DOCS её запись не меняется вручную.');
+        else check(JSON.stringify(current) === JSON.stringify(old), 'COMPLETED_TASK_IMMUTABLE', 'Запись завершённой задачи неизменяема.');
+      } else {
         check(current.implementation_status === old.implementation_status && current.commit_status === old.commit_status && JSON.stringify(current.commit_ref) === JSON.stringify(old.commit_ref), 'MANAGED_FIELDS', 'Статусы и references меняются командами task:start/commit.');
       }
     }
-    const added = plan.tasks.filter(t => !original.tasks.some(old => old.id === t.id));
     for (const t of added) check(t.implementation_status === 'TODO' && t.commit_status === 'PENDING', 'MANAGED_FIELDS', 'Новая задача должна быть TODO/PENDING.');
-    const originalFinal = original.tasks.find(isDocumentationFinalizationTask);
-    if (originalFinal?.commit_status === 'DONE' && added.length) {
-      check(false, 'DOCUMENTATION_FINALIZED', 'Финальная актуализация уже завершена; после READY_FOR_ACCEPTANCE новые задачи в этот scope не добавляются.');
-    }
-    if (originalFinal?.commit_status !== 'DONE' || (!originalFinal && added.length)) normalizeCompletionContract(plan);
+    if (correctionRound) {
+      const currentFinal = plan.tasks.find(isDocumentationFinalizationTask);
+      const iteration = currentFinal.commit_ref?.iteration ?? 1;
+      currentFinal.implementation_status = 'TODO'; currentFinal.commit_status = 'PENDING';
+      currentFinal.commit_ref = { ...currentFinal.commit_ref, iteration: iteration + 1 };
+      normalizeCompletionContract(plan);
+    } else if (originalFinal?.commit_status !== 'DONE' || (!originalFinal && added.length)) normalizeCompletionContract(plan);
     if (added.some(t => t.functional_paths.length) || (input.context_pack && plan.tasks.some(t => t.functional_paths.length && t.commit_status !== 'DONE'))) requireModuleContext(plan);
     plan.delivery_status = plan.tasks.length && plan.tasks.every(t => t.commit_status === 'DONE') ? 'READY_FOR_ACCEPTANCE' : 'IN_PROGRESS';
     validatePlan(plan); resolveReferences(root, plan);

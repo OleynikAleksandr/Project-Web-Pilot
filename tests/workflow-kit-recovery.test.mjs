@@ -6,7 +6,7 @@ import os from 'node:os';
 import { execFileSync } from 'node:child_process';
 import { emptyPlan, writePlan, readPlan, FINAL_DOCUMENTATION_TASK_TITLE } from '../resources/workflow-kit/lib/plan.mjs';
 import { defaultConfig } from '../resources/workflow-kit/lib/validate.mjs';
-import { createScope, startTask, archive } from '../resources/workflow-kit/lib/actions.mjs';
+import { createScope, startTask, applyPlan, archive } from '../resources/workflow-kit/lib/actions.mjs';
 import { commitTask } from '../resources/workflow-kit/lib/transaction.mjs';
 import { recover } from '../resources/workflow-kit/lib/recovery.mjs';
 
@@ -123,6 +123,47 @@ test('READY_FOR_ACCEPTANCE requires DOCS and archive returns a contextual NONE p
   assert.match(packet.text, /Fixture module map/);
   assert.match(packet.text, /Обсудите следующий этап проекта с пользователем/);
   assert.equal(git(root, 'status', '--porcelain'), '');
+});
+
+test('READY_FOR_ACCEPTANCE can reopen for corrections and rerun DOCS with an unambiguous iteration', async t => {
+  const root = await fixture(t);
+  createScope(root, continuityScopeInput());
+  startTask(root, 'T001');
+  await fs.appendFile(path.join(root, 'docs/notes.md'), '\nFIRST_RESULT\n');
+  commitTask(root, 'T001');
+  startTask(root, 'DOCS');
+  const firstDocs = commitTask(root, 'DOCS');
+  let plan = readPlan(root);
+  assert.equal(plan.delivery_status, 'READY_FOR_ACCEPTANCE');
+  assert.equal(plan.tasks.at(-1).commit_ref.iteration, undefined);
+
+  const correction = { id: 'T002', title: 'Исправить результат после проверки', why: 'Учесть замечание пользователя',
+    dependencies: ['T001'], functional_paths: [], documentation_paths: ['docs/notes.md'],
+    acceptance_criteria: ['Исправление внесено'], verification_ids: [], expected_commit_message: 'docs: исправить результат',
+    implementation_status: 'TODO', commit_status: 'PENDING',
+    commit_ref: { scope_id: plan.scope_id, task_id: 'T002', role: 'implementation' } };
+  applyPlan(root, { tasks: [...plan.tasks, correction] }, plan.plan_revision);
+  plan = readPlan(root);
+  assert.equal(plan.delivery_status, 'IN_PROGRESS');
+  assert.equal(plan.tasks.at(-1).id, 'DOCS');
+  assert.equal(plan.tasks.at(-1).commit_status, 'PENDING');
+  assert.equal(plan.tasks.at(-1).commit_ref.iteration, 2);
+  assert.deepEqual(plan.tasks.at(-1).dependencies, ['T001', 'T002']);
+
+  startTask(root, 'T002');
+  await fs.appendFile(path.join(root, 'docs/notes.md'), '\nCORRECTED_RESULT\n');
+  commitTask(root, 'T002');
+  startTask(root, 'DOCS');
+  assert.doesNotThrow(() => recover(root, 'manual'));
+  const secondDocs = commitTask(root, 'DOCS');
+  plan = readPlan(root);
+  assert.equal(plan.delivery_status, 'READY_FOR_ACCEPTANCE');
+  assert.equal(plan.tasks.at(-1).commit_ref.iteration, 2);
+  assert.notEqual(secondDocs.sha, firstDocs.sha);
+  const log = git(root, 'log', '--format=%B', plan.baseline_commit + '..HEAD');
+  assert.match(log, /Workflow-Task: DOCS[\s\S]*Workflow-Iteration: 2/);
+  assert.equal((log.match(/Workflow-Task: DOCS/g) ?? []).length, 2);
+  assert.doesNotThrow(() => recover(root, 'manual'));
 });
 
 test('functional scope requires compact overview and module specification', async t => {

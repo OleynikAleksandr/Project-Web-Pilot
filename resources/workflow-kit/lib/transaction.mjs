@@ -6,7 +6,7 @@ import { validate, journal, taskChecks } from './validate.mjs';
 import { git, head, paths, localPath, gitPath, allChanges, ensureIdleGit, identityReady, snapshot } from './git.mjs';
 
 export const saveJournal = (root, data) => atomic(localPath(root, 'transaction.json'), json(data));
-export const messageFor = t => t.message + '\n\nWorkflow-Scope: ' + (t.scope_id ?? 'NONE') + '\nWorkflow-Task: ' + (t.task_id ?? t.id) + '\nWorkflow-Role: ' + t.role + '\nWorkflow-Transaction: ' + t.id;
+export const messageFor = t => t.message + '\n\nWorkflow-Scope: ' + (t.scope_id ?? 'NONE') + '\nWorkflow-Task: ' + (t.task_id ?? t.id) + '\nWorkflow-Role: ' + t.role + (t.role === 'implementation' ? '\nWorkflow-Iteration: ' + (t.task?.commit_ref?.iteration ?? 1) : '') + '\nWorkflow-Transaction: ' + t.id;
 export const locked = (root, fn) => withLock(localPath(root, 'operation.lock'), fn);
 export function checkServicePaths(role, files) {
   const patterns = {

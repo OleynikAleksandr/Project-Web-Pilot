@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 481,
+  "plan_revision": 483,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "post-doctor-correction-022",
@@ -186,8 +186,8 @@
       "expected_commit_message": "fix(workflow): поддержать correction round"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "post-doctor-correction-022",
         "task_id": "T004",
@@ -345,7 +345,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: post-doctor-correction-022
 Current Task: нет
-Revision: 481
+Revision: 483
 
 ## Цель
 
@@ -374,8 +374,8 @@ Revision: 481
   - Git Commit: [DONE] fix(workflow): поддержать correction round
   - Reference: post-doctor-correction-022 / T003 / implementation
   - Файлы: .harness/kit/lib/actions.mjs, .harness/kit/lib/transaction.mjs, .harness/kit/lib/validate.mjs, docs/modules/workflow-kit-recovery.md
-- [TODO] T004: Синхронизировать bundled Kit и regression tests — Ожидает
-  - Git Commit: [PENDING] test(workflow): закрепить повторную коррекцию
+- [DONE] T004: Синхронизировать bundled Kit и regression tests — Завершено
+  - Git Commit: [DONE] test(workflow): закрепить повторную коррекцию
   - Reference: post-doctor-correction-022 / T004 / implementation
   - Файлы: resources/workflow-kit/lib/actions.mjs, resources/workflow-kit/lib/transaction.mjs, resources/workflow-kit/lib/validate.mjs, tests/workflow-kit-recovery.test.mjs, tests/workflow-kit-source.test.mjs, docs/VERIFICATION.md
 - [TODO] T005: Подготовить версию 0.6.21 — Ожидает

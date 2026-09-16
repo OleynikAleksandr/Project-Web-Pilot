@@ -65,13 +65,22 @@ export function taskChecks(task, config, stage = 'commit') {
   }
   return checks;
 }
+function commitIteration(commit) {
+  const values = commit.trailers['Workflow-Iteration'];
+  if (!values?.length) return 1;
+  check(values.length === 1 && /^[1-9][0-9]*$/.test(values[0]), 'AMBIGUOUS_COMMIT', 'Некорректный Workflow-Iteration: ' + commit.sha);
+  return Number(values[0]);
+}
 export function resolveReferences(root, p, pending = journal(root)) {
   const history = p.scope_id ? commitHistory(root, p.baseline_commit) : [];
   const resolved = {};
   for (const task of p.tasks) {
-    const candidates = history.filter(c => c.trailers['Workflow-Scope']?.includes(p.scope_id) && c.trailers['Workflow-Task']?.includes(task.id) && c.trailers['Workflow-Role']?.includes('implementation'));
-    for (const c of candidates) for (const key of ['Workflow-Scope', 'Workflow-Task', 'Workflow-Role']) check(c.trailers[key]?.length === 1, 'AMBIGUOUS_COMMIT', 'Дублированные trailers: ' + c.sha);
-    check(candidates.length <= 1, 'AMBIGUOUS_COMMIT', 'Найдено несколько коммитов задачи ' + task.id);
+    const targetIteration = task.commit_ref?.iteration ?? 1;
+    check(Number.isSafeInteger(targetIteration) && targetIteration > 0, 'PLAN_SCHEMA', 'commit_ref.iteration должна быть положительным целым: ' + task.id);
+    const taskHistory = history.filter(c => c.trailers['Workflow-Scope']?.includes(p.scope_id) && c.trailers['Workflow-Task']?.includes(task.id) && c.trailers['Workflow-Role']?.includes('implementation'));
+    for (const c of taskHistory) for (const key of ['Workflow-Scope', 'Workflow-Task', 'Workflow-Role']) check(c.trailers[key]?.length === 1, 'AMBIGUOUS_COMMIT', 'Дублированные trailers: ' + c.sha);
+    const candidates = taskHistory.filter(c => commitIteration(c) === targetIteration);
+    check(candidates.length <= 1, 'AMBIGUOUS_COMMIT', 'Найдено несколько коммитов задачи ' + task.id + ' iteration ' + targetIteration);
     if (!candidates.length) {
       const inTransaction = pending?.task_id === task.id && pending.before_head === head(root) && pending.candidate_hash === hash(renderPlan(p));
       check(task.commit_status !== 'DONE' || inTransaction, 'PLAN_COMMIT_MISMATCH', 'Задача ' + task.id + ' отмечена DONE, но коммит не найден.');
@@ -88,7 +97,10 @@ export function resolveReferences(root, p, pending = journal(root)) {
     const record = committed.tasks.find(t => t.id === task.id);
     check(committed.scope_id === p.scope_id && record?.commit_status === 'DONE', 'COMMIT_PLAN_MISMATCH', 'Коммит не содержит завершение нужной задачи.');
     for (const dep of task.dependencies) {
-      const earlier = history.find(h => h.trailers['Workflow-Scope']?.[0] === p.scope_id && h.trailers['Workflow-Task']?.[0] === dep && h.trailers['Workflow-Role']?.[0] === 'implementation');
+      const depTask = p.tasks.find(item => item.id === dep);
+      const depIteration = depTask?.commit_ref?.iteration ?? 1;
+      const earlier = history.find(h => h.trailers['Workflow-Scope']?.[0] === p.scope_id && h.trailers['Workflow-Task']?.[0] === dep
+        && h.trailers['Workflow-Role']?.[0] === 'implementation' && commitIteration(h) === depIteration);
       check(earlier && git(root, ['merge-base', '--is-ancestor', earlier.sha, c.parents[0]], { allowFailure: true }).status === 0, 'DEPENDENCY_ORDER', 'Зависимость не предшествует задаче ' + task.id);
     }
     resolved[task.id] = { sha: c.sha, parent: c.parents[0], paths: changed };
