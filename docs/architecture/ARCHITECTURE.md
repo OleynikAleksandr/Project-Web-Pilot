@@ -750,3 +750,7 @@ macOS arm64 и Windows x64 повторно упакованы после restar
 ### Проверка и поставка 0.6.21 — scope 022 / T006
 
 Correction release использует тот же Electron 44.3.0 source tree и Workflow Kit 1.3.0 с correction-round semantics. Поставки macOS arm64 и Windows x64 находятся отдельно в `.harness/runtime/releases/0.6.21/`; пакетная версия внутри обоих `app.asar` и macOS Info.plist равна 0.6.21. Release checks включают полную Node suite, isolated Electron smoke, Windows package verification и SHA-256 обоих ZIP.
+
+### Реальный Doctor reconcile и correction lifecycle — scope 022 / DOCS
+
+16.09.2026 пользователь физически запустил Project Doctor 0.6.20 на текущем Project Web Pilot. Manifest был reconciled до Workflow Kit 1.3.0 (`doctor_reconciled_at=2026-09-16T07:28:22.983Z`). После этого correction scope устранил расхождение lifecycle: `READY_FOR_ACCEPTANCE` остаётся ACTIVE gate, а явное новое поручение до archive может добавить correction tasks, вернуть plan в `IN_PROGRESS` и rearm `DOCS` с новой commit iteration. Актуальная поставка — 0.6.21.

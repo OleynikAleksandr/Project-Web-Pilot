@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 488,
+  "plan_revision": 490,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "post-doctor-correction-022",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Исправить выявленные после пользовательской проверки 0.6.20 расхождения: поддержать корректирующий цикл после READY_FOR_ACCEPTANCE, зафиксировать фактический успешный Project Doctor reconcile, восстановить повреждённый package.json, актуализировать документацию и выпустить отдельный релиз 0.6.21 для macOS/Windows.",
   "acceptance_criteria": [
     "После READY_FOR_ACCEPTANCE пользователь может поручить дополнительные исправления в том же активном scope; Workflow Kit возвращает scope в IN_PROGRESS и повторно делает DOCS последней обязательной задачей без неоднозначных commit references.",
@@ -282,8 +282,8 @@
       "expected_commit_message": "build: выпустить Project Web Pilot 0.6.21"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "post-doctor-correction-022",
         "task_id": "DOCS",
@@ -346,10 +346,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: post-doctor-correction-022
 Current Task: нет
-Revision: 488
+Revision: 490
 
 ## Цель
 
@@ -390,8 +390,8 @@ Revision: 488
   - Git Commit: [DONE] build: выпустить Project Web Pilot 0.6.21
   - Reference: post-doctor-correction-022 / T006 / implementation
   - Файлы: tests/electron-smoke.mjs, .harness/kit-manifest.json, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, .harness/kit/WORKFLOW.md, resources/workflow-kit/WORKFLOW.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать документацию 0.6.21
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать документацию 0.6.21
   - Reference: post-doctor-correction-022 / DOCS / implementation
   - Файлы: README.md, AGENTS.md, .harness/kit/WORKFLOW.md, resources/workflow-kit/WORKFLOW.md, docs/DOCUMENTATION_INDEX.md, docs/architecture/OVERVIEW.md, docs/architecture/ARCHITECTURE.md, docs/MODULES.md, docs/WORKFLOW_START.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKSPACE_SETUP.md, docs/PROJECT_ARCHIVE.md, docs/SOURCE_WORKSPACES.md, docs/modules/workflow-kit-recovery.md, docs/modules/project-doctor.md, docs/modules/runtime-lifecycle.md, docs/modules/workspace-sessions.md
 

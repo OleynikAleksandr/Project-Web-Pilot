@@ -31,7 +31,7 @@ Project ID нового проекта: `cf944136-d1fc-4bd5-9ea0-e46d1fe230e7`. 
 
 Связанные исходники: `kit/lib/plan.mjs`, `validate.mjs`, `transaction.mjs`, `git.mjs`, `git-hooks.mjs`, `common.mjs`, `platform.mjs`, `installation-files.mjs`, `kit/schemas/`, `kit/templates/`. Регрессии: `tests/install.test.mjs`, `workflow.test.mjs`, `recovery.test.mjs`, `windows.test.mjs` и `scripts/demo-workflow.mjs`.
 
-Источник переносимого runtime — **WF001/kit**, версия 1.1.0 по common.mjs. Собственная установленная WF001/.harness/kit имеет manifest 1.0.0: не перепутать установленный экземпляр с исходным комплектом. Это историческое происхождение комплекта. Текущий source/bundled Workflow Kit в Web Pilot — 1.3.0; собственный manifest 1.2.0 намеренно оставлен для пользовательского теста Доктора 0.6.20. Не переустанавливать его ради начала сессии.
+Источник переносимого runtime — **WF001/kit**, версия 1.1.0 по common.mjs. Собственная установленная WF001/.harness/kit имеет manifest 1.0.0: не перепутать установленный экземпляр с исходным комплектом. Это историческое происхождение комплекта. Текущий installed/bundled Workflow Kit в Web Pilot — 1.3.0. Реальный Project Web Pilot manifest был reconciled Доктором 16.09.2026 (`doctor_reconciled_at=2026-09-16T07:28:22.983Z`) и затем синхронизирован с финальными correction-round bytes; намеренно возвращать его к 1.2.0 не нужно.
 
 ## Codex Local Mac: откуда брать локальное подключение
 

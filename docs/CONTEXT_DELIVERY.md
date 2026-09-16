@@ -112,3 +112,7 @@ Builder Workflow Kit больше не использует большой `Об
 ## Восстановление перед доставкой — Project Doctor 0.6.20
 
 Ошибка Workspace Setup может быть исправлена явным запуском Доктора из Settings/экрана ошибки. Доктор не отправляет сообщение и не создаёт сессию. После повторной readiness пользователь выбирает действие продолжения; оно использует эту каноническую последовательность доставки. Project continuity 1.3 всегда включает OVERVIEW, MODULES и DOCUMENTATION_INDEX, в том числе при NONE; финальная DOCS не расширяет recovery всеми историческими dependency diffs.
+
+## Post-doctor correction — 0.6.21
+
+16.09.2026 пользователь реально выполнил Project Doctor на текущем workspace; после успешного reconcile manifest соответствует Workflow Kit 1.3.0. Доставка контекста не меняет протокол: новая/обновлённая session по-прежнему получает COMPLETE capsule через `workflow_context_recover`. Correction-round Workflow Kit позволяет ACTIVE scope после `READY_FOR_ACCEPTANCE` вернуться в `IN_PROGRESS` по явному новому поручению пользователя и повторно пройти финальную `DOCS` до следующей приёмки.
