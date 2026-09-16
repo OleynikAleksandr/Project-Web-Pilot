@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 563,
+  "plan_revision": 566,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "clean-install-lab-027",
@@ -63,19 +63,27 @@
         "revision": "WORKTREE"
       },
       {
-        "path": "docs/RELEASE.md",
         "heading_path": [
           "Выпуск и постоянный путь запуска"
         ],
+        "path": "docs/RELEASE.md",
         "required": true,
         "revision": "WORKTREE"
       },
       {
-        "path": "docs/modules/runtime-lifecycle.md",
         "heading_path": [
           "Module Specification — Runtime Lifecycle"
         ],
+        "path": "docs/modules/runtime-lifecycle.md",
         "required": false,
+        "revision": "WORKTREE"
+      },
+      {
+        "path": "docs/CLEAN_INSTALL.md",
+        "heading_path": [
+          "Проверка установки на чистых системах"
+        ],
+        "required": true,
         "revision": "WORKTREE"
       }
     ],
@@ -84,8 +92,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "clean-install-lab-027",
         "task_id": "T001",
@@ -274,7 +282,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: clean-install-lab-027
 Current Task: нет
-Revision: 563
+Revision: 566
 
 ## Цель
 
@@ -288,8 +296,8 @@ Revision: 563
 
 ## Микрозадачи
 
-- [TODO] T001: Зафиксировать стенд чистой установки и исходные ограничения — Ожидает
-  - Git Commit: [PENDING] docs: define clean installation verification lab
+- [DONE] T001: Зафиксировать стенд чистой установки и исходные ограничения — Завершено
+  - Git Commit: [DONE] docs: define clean installation verification lab
   - Reference: clean-install-lab-027 / T001 / implementation
   - Файлы: docs/CLEAN_INSTALL.md, docs/RELEASE.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/DECISIONS.md
 - [TODO] T002: Установить и проверить UTM на основном Mac — Ожидает
@@ -320,5 +328,6 @@ Revision: 563
 - docs/DOCUMENTATION_INDEX.md → Каталог документации
 - docs/RELEASE.md → Выпуск и постоянный путь запуска
 - docs/modules/runtime-lifecycle.md → Module Specification — Runtime Lifecycle
+- docs/CLEAN_INSTALL.md → Проверка установки на чистых системах
 
 Служебные состояния меняются только командами workflow. Приёмка не архивирует scope.
