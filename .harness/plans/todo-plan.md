@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 458,
+  "plan_revision": 461,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-project-continuity-021",
@@ -417,7 +417,9 @@
         "tests/project-doctor.test.mjs"
       ],
       "documentation_paths": [
-        "docs/modules/project-doctor.md"
+        "docs/modules/project-doctor.md",
+        "docs/VERIFICATION.md",
+        "docs/architecture/ARCHITECTURE.md"
       ],
       "verification_ids": [
         "syntax",
@@ -427,8 +429,8 @@
         "Контракт Доктора выполнен; текущий manifest реального проекта сохранён без изменений; проверки проходят на fixtures."
       ],
       "expected_commit_message": "feat(doctor): Реализовать безопасный ремонт проекта",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workflow-project-continuity-021",
         "task_id": "T010",
@@ -456,7 +458,9 @@
         "tests/project-doctor-ui.test.mjs"
       ],
       "documentation_paths": [
-        "docs/modules/project-doctor.md"
+        "docs/modules/project-doctor.md",
+        "docs/VERIFICATION.md",
+        "docs/architecture/ARCHITECTURE.md"
       ],
       "verification_ids": [
         "syntax",
@@ -598,7 +602,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-project-continuity-021
 Current Task: нет
-Revision: 458
+Revision: 461
 
 ## Цель
 
@@ -651,14 +655,14 @@ Revision: 458
   - Git Commit: [DONE] feat(doctor): Зафиксировать контракт Доктора проекта
   - Reference: workflow-project-continuity-021 / T009 / implementation
   - Файлы: .harness/kit/templates/ARCHITECTURE.md, .harness/kit/templates/PRODUCT.md, .harness/kit/templates/START.md, resources/workflow-kit/templates/ARCHITECTURE.md, resources/workflow-kit/templates/PRODUCT.md, resources/workflow-kit/templates/START.md, README.md, docs/DOCUMENTATION_INDEX.md, docs/WORKFLOW_START.md, docs/MODULES.md, docs/modules/project-doctor.md
-- [TODO] T010: Реализовать безопасный ремонт проекта — Ожидает
-  - Git Commit: [PENDING] feat(doctor): Реализовать безопасный ремонт проекта
+- [DONE] T010: Реализовать безопасный ремонт проекта — Завершено
+  - Git Commit: [DONE] feat(doctor): Реализовать безопасный ремонт проекта
   - Reference: workflow-project-continuity-021 / T010 / implementation
-  - Файлы: resources/project-doctor/core.mjs, resources/project-doctor/files.mjs, resources/project-doctor-worker.mjs, tests/project-doctor.test.mjs, docs/modules/project-doctor.md
+  - Файлы: resources/project-doctor/core.mjs, resources/project-doctor/files.mjs, resources/project-doctor-worker.mjs, tests/project-doctor.test.mjs, docs/modules/project-doctor.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 - [TODO] T011: Подключить Доктор к настройкам и экрану ошибки — Ожидает
   - Git Commit: [PENDING] feat(doctor): Подключить Доктор к настройкам и экрану ошибки
   - Reference: workflow-project-continuity-021 / T011 / implementation
-  - Файлы: src/project-doctor.mjs, src/main.mjs, src/preload.cjs, src/ui/project-doctor.mjs, src/ui/sidebar.mjs, src/ui/project-archive.mjs, src/ui/workspace-setup.mjs, src/ui/index.html, src/ui/progress.mjs, tests/project-doctor-ui.test.mjs, docs/modules/project-doctor.md
+  - Файлы: src/project-doctor.mjs, src/main.mjs, src/preload.cjs, src/ui/project-doctor.mjs, src/ui/sidebar.mjs, src/ui/project-archive.mjs, src/ui/workspace-setup.mjs, src/ui/index.html, src/ui/progress.mjs, tests/project-doctor-ui.test.mjs, docs/modules/project-doctor.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 - [TODO] T012: Проверить интерфейс и собрать новый релиз — Ожидает
   - Git Commit: [PENDING] feat(doctor): Проверить интерфейс и собрать новый релиз
   - Reference: workflow-project-continuity-021 / T012 / implementation

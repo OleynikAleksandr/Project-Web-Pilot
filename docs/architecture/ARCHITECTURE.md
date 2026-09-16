@@ -730,3 +730,7 @@ macOS arm64 и Windows x64 используют один модуль conversati
 ## Rebuilt 0.6.18 — scope chat-autoscroll-020 / T004
 
 macOS arm64 и Windows x64 повторно упакованы после restart correction. Оба `app.asar` содержат controller v2 и точную source-копию `src/chatgpt-auto-scroll.mjs` с SHA-256 `a0cf397fc41c2aab175427472790fc1e2182b778b533efe2a49dfc5736a109f7`. Номер версии остаётся 0.6.18; различать первоначальный и исправленный пакет следует по ZIP SHA-256 из `docs/VERIFICATION.md`.
+
+## Project Doctor — T010
+
+Автономный Node worker `resources/project-doctor-worker.mjs` использует bundled Workflow Kit, проверяет known payload и выполняет допустимые файловые операции под общей блокировкой. `resources/project-doctor/core.mjs` формирует план ремонта; `files.mjs` отвечает за пути, snapshot, backup, atomic writes и осторожный rollback. Канонический контракт — `docs/modules/project-doctor.md`.
