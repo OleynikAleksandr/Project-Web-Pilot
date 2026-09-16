@@ -863,3 +863,12 @@ node --test tests/chatgpt-colors.test.mjs: 3 passed, 0 failed; проверен�
 ## composer-color-025 / T002
 
 Ручной запуск npm run smoke завершился успешно: composerBackground=true, streamingAssistantColor=true, liveChatColors/chatColorsPersistence/chatColorsReset=true. Регрессия проверяет изменение цвета агента через UI во время появления новых фрагментов и после замены DOM; поле ввода и пользовательский Markdown сохраняют свои цвета. Проверены независимый и полный reset, сохранение нового поля и новое WebContents. Скриншоты пяти строк light/dark визуально просмотрены: всё помещается, обрезки нет (web-pilot-electron-smoke-4efBbm). Реальный аккаунт и native Windows остаются пользовательской проверкой.
+
+## composer-color-025 / T003 / Release 0.6.25
+
+T002 managed checks: syntax PASSED (19 ms), suite PASSED (27096 ms), electron-smoke PASSED (41186 ms); commit 2e7f903708ec1620759da65d63a3a5334c7fb4aa. Обе platform-сборки прошли. Постоянный macOS app имеет версию 0.6.25 и прежний inode 398344301. Версия и девять runtime/UI-файлов в постоянном app и обеих staging assemblies совпадают с source; вложенного app в пакете нет. ZIP integrity/SHA-256 проверены, копии доставлены в Downloads/WebPilot-0.6.25.
+
+- Project-Web-Pilot-0.6.25-macOS-arm64.zip: 145198845 bytes, SHA-256 52473e713781b64a49af4956b1fe48a08444e21be868ad69e10846187a9cf766.
+- Project-Web-Pilot-0.6.25-Windows-x64.zip: 318046192 bytes, SHA-256 86592b1c56eafd76923cb9a193058592b810f77de54066a6dc25010529520f33.
+
+Физический Windows запуск и реальная визуальная приёмка ChatGPT остаются за пользователем; проверки composer/streaming выполнены на Chromium fixture. Текущая сессия не прерывалась. Архивирование требует отдельного принятия/поручения пользователя.

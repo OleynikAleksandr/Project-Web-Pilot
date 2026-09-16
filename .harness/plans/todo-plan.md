@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 546,
+  "plan_revision": 548,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "composer-color-025",
@@ -167,8 +167,8 @@
       "expected_commit_message": "feat: expose and verify live composer background control"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "composer-color-025",
         "task_id": "T003",
@@ -266,7 +266,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: composer-color-025
 Current Task: нет
-Revision: 546
+Revision: 548
 
 ## Цель
 
@@ -290,8 +290,8 @@ Revision: 546
   - Git Commit: [DONE] feat: expose and verify live composer background control
   - Reference: composer-color-025 / T002 / implementation
   - Файлы: src/ui/chat-colors.mjs, src/chat-colors-window.mjs, tests/electron-smoke.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T003: Собрать и установить релиз 0.6.25 — Ожидает
-  - Git Commit: [PENDING] release: publish Web Pilot 0.6.25 with composer color
+- [DONE] T003: Собрать и установить релиз 0.6.25 — Завершено
+  - Git Commit: [DONE] release: publish Web Pilot 0.6.25 with composer color
   - Reference: composer-color-025 / T003 / implementation
   - Файлы: package.json, package-lock.json, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/RELEASE.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
