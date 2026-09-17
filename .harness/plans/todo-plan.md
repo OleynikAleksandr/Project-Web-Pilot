@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 585,
+  "plan_revision": 588,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-owned-plans-028",
@@ -56,6 +56,10 @@
       ".harness/kit/lib/session-plans.mjs",
       "resources/workflow-kit/lib/session-plans.mjs",
       "tests/session-plans.test.mjs",
+      ".harness/kit/lib/common.mjs",
+      "resources/workflow-kit/lib/common.mjs",
+      ".harness/kit/lib/plan.mjs",
+      "resources/workflow-kit/lib/plan.mjs",
       ".harness/kit/lib/actions.mjs",
       "resources/workflow-kit/lib/actions.mjs",
       ".harness/kit/cli.mjs",
@@ -64,40 +68,41 @@
       "resources/workflow-kit/lib/transaction.mjs",
       ".harness/kit/lib/validate.mjs",
       "resources/workflow-kit/lib/validate.mjs",
+      ".harness/kit/lib/git-hooks.mjs",
+      "resources/workflow-kit/lib/git-hooks.mjs",
+      "tests/workflow-kit-source.test.mjs",
       "src/workspace-session.mjs",
       "tests/workspace-session.test.mjs",
+      "src/session-plans.mjs",
       ".harness/kit/lib/recovery.mjs",
       "resources/workflow-kit/lib/recovery.mjs",
       "tests/workflow-kit-recovery.test.mjs",
       "src/context-session.mjs",
       "src/context-cache.mjs",
       "src/context-inputs.mjs",
+      "src/mcp-runtime.mjs",
+      "tests/context-cache.test.mjs",
+      "tests/context-session.test.mjs",
+      "tests/mcp-runtime.test.mjs",
       "src/main.mjs",
       "src/preload.cjs",
       "src/ui/sidebar.mjs",
       "src/ui/index.html",
       "src/ui/progress.mjs",
+      "tests/sidebar.test.mjs",
+      "tests/progress.test.mjs",
       ".harness/kit/lib/installer.mjs",
       "resources/workflow-kit/lib/installer.mjs",
       "src/workspace-setup.mjs",
       "src/project-doctor.mjs",
-      "tests/workflow-kit-source.test.mjs",
-      "tests/sidebar.test.mjs",
-      "tests/electron-smoke.mjs",
-      "tests/context-session.test.mjs",
-      "package.json",
-      "package-lock.json",
-      ".harness/kit/lib/plan.mjs",
-      "resources/workflow-kit/lib/plan.mjs",
-      ".harness/kit/lib/common.mjs",
-      "resources/workflow-kit/lib/common.mjs",
-      ".harness/kit/schemas/plan.schema.json",
-      "resources/workflow-kit/schemas/plan.schema.json",
       ".harness/kit/lib/installation-files.mjs",
       "resources/workflow-kit/lib/installation-files.mjs",
       ".harness/kit-manifest.json",
-      "tests/context-cache.test.mjs",
-      "tests/project-doctor.test.mjs"
+      "tests/project-doctor.test.mjs",
+      "tests/workspace-setup.test.mjs",
+      "tests/electron-smoke.mjs",
+      "package.json",
+      "package-lock.json"
     ],
     "max_functional_files_per_task": 3
   },
@@ -183,8 +188,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-owned-plans-028",
         "task_id": "T001",
@@ -225,7 +230,11 @@
       "functional_paths": [
         ".harness/kit/lib/session-plans.mjs",
         "resources/workflow-kit/lib/session-plans.mjs",
-        "tests/session-plans.test.mjs"
+        "tests/session-plans.test.mjs",
+        ".harness/kit/lib/common.mjs",
+        "resources/workflow-kit/lib/common.mjs",
+        ".harness/kit/lib/plan.mjs",
+        "resources/workflow-kit/lib/plan.mjs"
       ],
       "documentation_paths": [
         "docs/modules/session-owned-plans.md",
@@ -244,7 +253,8 @@
       "expected_commit_message": "feat: persist session plans and continuation drafts",
       "id": "T002",
       "title": "Добавить каноническое хранение планов и черновиков",
-      "why": "Каждый план сохраняет идентичность и доступность независимо от выбранной сессии."
+      "why": "Каждый план сохраняет идентичность и доступность независимо от выбранной сессии.",
+      "file_limit_exception": "Единый контракт явной адресации и его проверки; синхронное изменение установленной и поставляемой копий ядра."
     },
     {
       "implementation_status": "TODO",
@@ -261,7 +271,10 @@
         ".harness/kit/lib/actions.mjs",
         "resources/workflow-kit/lib/actions.mjs",
         ".harness/kit/cli.mjs",
-        "resources/workflow-kit/cli.mjs"
+        "resources/workflow-kit/cli.mjs",
+        ".harness/kit/lib/plan.mjs",
+        "resources/workflow-kit/lib/plan.mjs",
+        "tests/session-plans.test.mjs"
       ],
       "documentation_paths": [
         "docs/modules/session-owned-plans.md",
@@ -279,7 +292,7 @@
         "Запись адресуется конкретному plan/session, а не глобальному последнему выбору; CLI старого формата имеет явную совместимость."
       ],
       "expected_commit_message": "feat: add session scoped plan lifecycle commands",
-      "file_limit_exception": "Единый проверяемый контракт затрагивает установленную и поставляемую копии Workflow Kit и связанную интеграцию; обе копии должны изменяться синхронно, без промежуточного расхождения.",
+      "file_limit_exception": "Единый контракт явной адресации и его проверки; синхронное изменение установленной и поставляемой копий ядра.",
       "id": "T003",
       "title": "Добавить команды подготовки и продолжения планов",
       "why": "Агент управляет нужным планом, включая полностью выполненный, по явной привязке."
@@ -300,7 +313,10 @@
         "resources/workflow-kit/lib/transaction.mjs",
         ".harness/kit/lib/validate.mjs",
         "resources/workflow-kit/lib/validate.mjs",
-        "tests/session-plans.test.mjs"
+        "tests/session-plans.test.mjs",
+        ".harness/kit/lib/git-hooks.mjs",
+        "resources/workflow-kit/lib/git-hooks.mjs",
+        "tests/workflow-kit-source.test.mjs"
       ],
       "documentation_paths": [
         "docs/modules/session-owned-plans.md",
@@ -318,7 +334,7 @@
         "Workflow trailers и исторические references продолжают разрешаться без переписывания истории."
       ],
       "expected_commit_message": "fix: bind plan transactions to their owning session",
-      "file_limit_exception": "Единый проверяемый контракт затрагивает установленную и поставляемую копии Workflow Kit и связанную интеграцию; обе копии должны изменяться синхронно, без промежуточного расхождения.",
+      "file_limit_exception": "Единый контракт явной адресации и его проверки; синхронное изменение установленной и поставляемой копий ядра.",
       "id": "T004",
       "title": "Сохранить проверки и транзакции для нескольких планов",
       "why": "При смене сессии агент не должен изменить чужую задачу или потерять коммит."
@@ -336,7 +352,8 @@
       ],
       "functional_paths": [
         "src/workspace-session.mjs",
-        "tests/workspace-session.test.mjs"
+        "tests/workspace-session.test.mjs",
+        "src/session-plans.mjs"
       ],
       "documentation_paths": [
         "docs/modules/session-owned-plans.md",
@@ -372,7 +389,9 @@
       "functional_paths": [
         ".harness/kit/lib/recovery.mjs",
         "resources/workflow-kit/lib/recovery.mjs",
-        "tests/workflow-kit-recovery.test.mjs"
+        "tests/workflow-kit-recovery.test.mjs",
+        ".harness/kit/cli.mjs",
+        "resources/workflow-kit/cli.mjs"
       ],
       "documentation_paths": [
         "docs/modules/session-owned-plans.md",
@@ -393,7 +412,8 @@
       "expected_commit_message": "feat: recover context for the selected session plan",
       "id": "T006",
       "title": "Формировать recovery по плану выбранной сессии",
-      "why": "Новая и возвращённая сессии должны получать правильный рабочий контекст."
+      "why": "Новая и возвращённая сессии должны получать правильный рабочий контекст.",
+      "file_limit_exception": "Единый контракт явной адресации и его проверки; синхронное изменение установленной и поставляемой копий ядра."
     },
     {
       "implementation_status": "TODO",
@@ -409,7 +429,11 @@
       "functional_paths": [
         "src/context-session.mjs",
         "src/context-cache.mjs",
-        "src/context-inputs.mjs"
+        "src/context-inputs.mjs",
+        "src/mcp-runtime.mjs",
+        "tests/context-cache.test.mjs",
+        "tests/context-session.test.mjs",
+        "tests/mcp-runtime.test.mjs"
       ],
       "documentation_paths": [
         "docs/modules/session-owned-plans.md",
@@ -429,7 +453,8 @@
       "expected_commit_message": "fix: isolate context delivery and cache by session plan",
       "id": "T007",
       "title": "Привязать доставку и кэш контекста к сессии и плану",
-      "why": "Кэш или запоздалый ответ не должен перенести чужой план в новый чат."
+      "why": "Кэш или запоздалый ответ не должен перенести чужой план в новый чат.",
+      "file_limit_exception": "Единый контракт явной адресации и его проверки; синхронное изменение установленной и поставляемой копий ядра."
     },
     {
       "implementation_status": "TODO",
@@ -445,7 +470,9 @@
       "functional_paths": [
         "src/main.mjs",
         "src/preload.cjs",
-        "src/workspace-session.mjs"
+        "src/workspace-session.mjs",
+        "src/session-plans.mjs",
+        "tests/workspace-session.test.mjs"
       ],
       "documentation_paths": [
         "docs/modules/session-owned-plans.md",
@@ -470,7 +497,8 @@
       "expected_commit_message": "feat: create sessions from prepared plans or empty scope",
       "id": "T008",
       "title": "Подключить два сценария ручного создания сессии",
-      "why": "Пользователь явно выбирает продолжение готового плана либо новую тему."
+      "why": "Пользователь явно выбирает продолжение готового плана либо новую тему.",
+      "file_limit_exception": "Единый контракт явной адресации и его проверки; синхронное изменение установленной и поставляемой копий ядра."
     },
     {
       "implementation_status": "TODO",
@@ -486,7 +514,9 @@
       "functional_paths": [
         "src/ui/sidebar.mjs",
         "src/ui/index.html",
-        "src/ui/progress.mjs"
+        "src/ui/progress.mjs",
+        "tests/sidebar.test.mjs",
+        "tests/progress.test.mjs"
       ],
       "documentation_paths": [
         "docs/modules/session-owned-plans.md",
@@ -508,7 +538,8 @@
       "expected_commit_message": "feat: show session plans and prepared continuations in sidebar",
       "id": "T009",
       "title": "Обновить сайдбар по принятому макету",
-      "why": "Свой план и подготовленное продолжение должны быть видимы и различимы."
+      "why": "Свой план и подготовленное продолжение должны быть видимы и различимы.",
+      "file_limit_exception": "Единый контракт явной адресации и его проверки; синхронное изменение установленной и поставляемой копий ядра."
     },
     {
       "implementation_status": "TODO",
@@ -568,7 +599,14 @@
         "resources/workflow-kit/lib/installer.mjs",
         "src/workspace-setup.mjs",
         "src/project-doctor.mjs",
-        "tests/workflow-kit-source.test.mjs"
+        "tests/workflow-kit-source.test.mjs",
+        ".harness/kit/lib/common.mjs",
+        "resources/workflow-kit/lib/common.mjs",
+        ".harness/kit/lib/installation-files.mjs",
+        "resources/workflow-kit/lib/installation-files.mjs",
+        ".harness/kit-manifest.json",
+        "tests/project-doctor.test.mjs",
+        "tests/workspace-setup.test.mjs"
       ],
       "documentation_paths": [
         "docs/modules/session-owned-plans.md",
@@ -588,7 +626,7 @@
         "Проверки выполняются на временных fixtures; обе копии Workflow Kit совпадают."
       ],
       "expected_commit_message": "fix: migrate workflow installation and doctor for session plans",
-      "file_limit_exception": "Единый проверяемый контракт затрагивает установленную и поставляемую копии Workflow Kit и связанную интеграцию; обе копии должны изменяться синхронно, без промежуточного расхождения.",
+      "file_limit_exception": "Единый контракт явной адресации и его проверки; синхронное изменение установленной и поставляемой копий ядра.",
       "id": "T011",
       "title": "Согласовать установку, обновление и Doctor с новой моделью",
       "why": "Служебное восстановление не должно вернуть глобальный план или потерять связи."
@@ -607,7 +645,11 @@
       "functional_paths": [
         "tests/sidebar.test.mjs",
         "tests/electron-smoke.mjs",
-        "tests/context-session.test.mjs"
+        "tests/context-session.test.mjs",
+        "tests/session-plans.test.mjs",
+        "tests/workflow-kit-recovery.test.mjs",
+        "tests/context-cache.test.mjs",
+        "tests/workspace-session.test.mjs"
       ],
       "documentation_paths": [
         "docs/modules/session-owned-plans.md",
@@ -628,7 +670,8 @@
       "expected_commit_message": "test: verify session plan continuity and manual creation",
       "id": "T012",
       "title": "Проверить полный сценарий сессий и продолжения",
-      "why": "Подтвердить сохранение планов и контекста во всех принятых переходах."
+      "why": "Подтвердить сохранение планов и контекста во всех принятых переходах.",
+      "file_limit_exception": "Единый контракт явной адресации и его проверки; синхронное изменение установленной и поставляемой копий ядра."
     },
     {
       "implementation_status": "TODO",
@@ -643,7 +686,8 @@
       ],
       "functional_paths": [
         "package.json",
-        "package-lock.json"
+        "package-lock.json",
+        "tests/sidebar.test.mjs"
       ],
       "documentation_paths": [
         "docs/modules/session-owned-plans.md",
@@ -742,6 +786,11 @@
       "id": "85685484-f2b1-48fd-84df-8f49b5bd6a92",
       "text": "17.09.2026 пользователь согласовал модель собственных планов сессий и блок Подготовлено здесь; исключил + Задача и обязательную приёмку; утвердил ручное создание с подготовленным планом через существующий выбор Chat/Work и самостоятельные Chat/Work с NONE через меню проекта. Последним поручением разрешил закрыть предыдущий план и создать этот новый для выполнения в следующей сессии. Сейчас разрешена только подготовка плана/контракта/макета; реализация и сборка в следующей сессии.",
       "recorded_at": "2026-09-17T08:02:20.988Z"
+    },
+    {
+      "id": "6cb63237-b8a4-4917-b254-c7e3664a4d38",
+      "text": "17.09.2026 в новой сессии пользователь прямо поручил начать реализацию текущего согласованного плана и подготовку релиза.",
+      "recorded_at": "2026-09-17T08:08:19.630Z"
     }
   ]
 }
@@ -754,7 +803,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-owned-plans-028
 Current Task: нет
-Revision: 585
+Revision: 588
 
 ## Цель
 
@@ -771,42 +820,42 @@ Revision: 585
 
 ## Микрозадачи
 
-- [TODO] T001: Уточнить контракт хранения и безопасную миграцию — Ожидает
-  - Git Commit: [PENDING] docs: specify session plan ownership and migration
+- [DONE] T001: Уточнить контракт хранения и безопасную миграцию — Завершено
+  - Git Commit: [DONE] docs: specify session plan ownership and migration
   - Reference: session-owned-plans-028 / T001 / implementation
   - Файлы: docs/modules/session-owned-plans.md, docs/modules/workspace-sessions.md, docs/modules/workflow-kit-recovery.md, docs/CONTEXT_DELIVERY.md, docs/RELEASE.md
 - [TODO] T002: Добавить каноническое хранение планов и черновиков — Ожидает
   - Git Commit: [PENDING] feat: persist session plans and continuation drafts
   - Reference: session-owned-plans-028 / T002 / implementation
-  - Файлы: .harness/kit/lib/session-plans.mjs, resources/workflow-kit/lib/session-plans.mjs, tests/session-plans.test.mjs, docs/modules/session-owned-plans.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/workflow-kit-recovery.md
+  - Файлы: .harness/kit/lib/session-plans.mjs, resources/workflow-kit/lib/session-plans.mjs, tests/session-plans.test.mjs, .harness/kit/lib/common.mjs, resources/workflow-kit/lib/common.mjs, .harness/kit/lib/plan.mjs, resources/workflow-kit/lib/plan.mjs, docs/modules/session-owned-plans.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/workflow-kit-recovery.md
 - [TODO] T003: Добавить команды подготовки и продолжения планов — Ожидает
   - Git Commit: [PENDING] feat: add session scoped plan lifecycle commands
   - Reference: session-owned-plans-028 / T003 / implementation
-  - Файлы: .harness/kit/lib/actions.mjs, resources/workflow-kit/lib/actions.mjs, .harness/kit/cli.mjs, resources/workflow-kit/cli.mjs, docs/modules/session-owned-plans.md, docs/modules/workflow-kit-recovery.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+  - Файлы: .harness/kit/lib/actions.mjs, resources/workflow-kit/lib/actions.mjs, .harness/kit/cli.mjs, resources/workflow-kit/cli.mjs, .harness/kit/lib/plan.mjs, resources/workflow-kit/lib/plan.mjs, tests/session-plans.test.mjs, docs/modules/session-owned-plans.md, docs/modules/workflow-kit-recovery.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T004: Сохранить проверки и транзакции для нескольких планов — Ожидает
   - Git Commit: [PENDING] fix: bind plan transactions to their owning session
   - Reference: session-owned-plans-028 / T004 / implementation
-  - Файлы: .harness/kit/lib/transaction.mjs, resources/workflow-kit/lib/transaction.mjs, .harness/kit/lib/validate.mjs, resources/workflow-kit/lib/validate.mjs, tests/session-plans.test.mjs, docs/modules/session-owned-plans.md, docs/modules/workflow-kit-recovery.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+  - Файлы: .harness/kit/lib/transaction.mjs, resources/workflow-kit/lib/transaction.mjs, .harness/kit/lib/validate.mjs, resources/workflow-kit/lib/validate.mjs, tests/session-plans.test.mjs, .harness/kit/lib/git-hooks.mjs, resources/workflow-kit/lib/git-hooks.mjs, tests/workflow-kit-source.test.mjs, docs/modules/session-owned-plans.md, docs/modules/workflow-kit-recovery.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T005: Связать сессии с планами и мигрировать сохранённые данные — Ожидает
   - Git Commit: [PENDING] feat: bind persisted sessions to their plans
   - Reference: session-owned-plans-028 / T005 / implementation
-  - Файлы: src/workspace-session.mjs, tests/workspace-session.test.mjs, docs/modules/session-owned-plans.md, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+  - Файлы: src/workspace-session.mjs, tests/workspace-session.test.mjs, src/session-plans.mjs, docs/modules/session-owned-plans.md, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T006: Формировать recovery по плану выбранной сессии — Ожидает
   - Git Commit: [PENDING] feat: recover context for the selected session plan
   - Reference: session-owned-plans-028 / T006 / implementation
-  - Файлы: .harness/kit/lib/recovery.mjs, resources/workflow-kit/lib/recovery.mjs, tests/workflow-kit-recovery.test.mjs, docs/modules/session-owned-plans.md, docs/modules/workflow-kit-recovery.md, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+  - Файлы: .harness/kit/lib/recovery.mjs, resources/workflow-kit/lib/recovery.mjs, tests/workflow-kit-recovery.test.mjs, .harness/kit/cli.mjs, resources/workflow-kit/cli.mjs, docs/modules/session-owned-plans.md, docs/modules/workflow-kit-recovery.md, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T007: Привязать доставку и кэш контекста к сессии и плану — Ожидает
   - Git Commit: [PENDING] fix: isolate context delivery and cache by session plan
   - Reference: session-owned-plans-028 / T007 / implementation
-  - Файлы: src/context-session.mjs, src/context-cache.mjs, src/context-inputs.mjs, docs/modules/session-owned-plans.md, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+  - Файлы: src/context-session.mjs, src/context-cache.mjs, src/context-inputs.mjs, src/mcp-runtime.mjs, tests/context-cache.test.mjs, tests/context-session.test.mjs, tests/mcp-runtime.test.mjs, docs/modules/session-owned-plans.md, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T008: Подключить два сценария ручного создания сессии — Ожидает
   - Git Commit: [PENDING] feat: create sessions from prepared plans or empty scope
   - Reference: session-owned-plans-028 / T008 / implementation
-  - Файлы: src/main.mjs, src/preload.cjs, src/workspace-session.mjs, docs/modules/session-owned-plans.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+  - Файлы: src/main.mjs, src/preload.cjs, src/workspace-session.mjs, src/session-plans.mjs, tests/workspace-session.test.mjs, docs/modules/session-owned-plans.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T009: Обновить сайдбар по принятому макету — Ожидает
   - Git Commit: [PENDING] feat: show session plans and prepared continuations in sidebar
   - Reference: session-owned-plans-028 / T009 / implementation
-  - Файлы: src/ui/sidebar.mjs, src/ui/index.html, src/ui/progress.mjs, docs/modules/session-owned-plans.md, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/design/session-plan-navigation.md
+  - Файлы: src/ui/sidebar.mjs, src/ui/index.html, src/ui/progress.mjs, tests/sidebar.test.mjs, tests/progress.test.mjs, docs/modules/session-owned-plans.md, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/design/session-plan-navigation.md
 - [TODO] T010: Обновить инструкции агента и шаблоны Workflow Kit — Ожидает
   - Git Commit: [PENDING] docs: align agent instructions and templates with session plans
   - Reference: session-owned-plans-028 / T010 / implementation
@@ -814,15 +863,15 @@ Revision: 585
 - [TODO] T011: Согласовать установку, обновление и Doctor с новой моделью — Ожидает
   - Git Commit: [PENDING] fix: migrate workflow installation and doctor for session plans
   - Reference: session-owned-plans-028 / T011 / implementation
-  - Файлы: .harness/kit/lib/installer.mjs, resources/workflow-kit/lib/installer.mjs, src/workspace-setup.mjs, src/project-doctor.mjs, tests/workflow-kit-source.test.mjs, docs/modules/session-owned-plans.md, docs/WORKSPACE_SETUP.md, docs/modules/project-doctor.md, docs/modules/workflow-kit-recovery.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+  - Файлы: .harness/kit/lib/installer.mjs, resources/workflow-kit/lib/installer.mjs, src/workspace-setup.mjs, src/project-doctor.mjs, tests/workflow-kit-source.test.mjs, .harness/kit/lib/common.mjs, resources/workflow-kit/lib/common.mjs, .harness/kit/lib/installation-files.mjs, resources/workflow-kit/lib/installation-files.mjs, .harness/kit-manifest.json, tests/project-doctor.test.mjs, tests/workspace-setup.test.mjs, docs/modules/session-owned-plans.md, docs/WORKSPACE_SETUP.md, docs/modules/project-doctor.md, docs/modules/workflow-kit-recovery.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T012: Проверить полный сценарий сессий и продолжения — Ожидает
   - Git Commit: [PENDING] test: verify session plan continuity and manual creation
   - Reference: session-owned-plans-028 / T012 / implementation
-  - Файлы: tests/sidebar.test.mjs, tests/electron-smoke.mjs, tests/context-session.test.mjs, docs/modules/session-owned-plans.md, docs/VERIFICATION.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md
+  - Файлы: tests/sidebar.test.mjs, tests/electron-smoke.mjs, tests/context-session.test.mjs, tests/session-plans.test.mjs, tests/workflow-kit-recovery.test.mjs, tests/context-cache.test.mjs, tests/workspace-session.test.mjs, docs/modules/session-owned-plans.md, docs/VERIFICATION.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md
 - [TODO] T013: Собрать новый релиз для проверки пользователя — Ожидает
   - Git Commit: [PENDING] build: release session owned plans for user verification
   - Reference: session-owned-plans-028 / T013 / implementation
-  - Файлы: package.json, package-lock.json, docs/modules/session-owned-plans.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+  - Файлы: package.json, package-lock.json, tests/sidebar.test.mjs, docs/modules/session-owned-plans.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: update all project documentation for session plans
   - Reference: session-owned-plans-028 / DOCS / implementation
