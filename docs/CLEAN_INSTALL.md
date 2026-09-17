@@ -131,6 +131,6 @@ Loopback включает обработчик, локальный HTTP и се�
 - [UTM: Windows и различия архитектур](https://docs.getutm.app/guides/windows/)
 - [CrystalFetch: официальный релиз 2.2.0](https://github.com/TuringSoftware/CrystalFetch/releases/tag/v2.2.0)
 - [Microsoft: эмуляция приложений x64 в Windows ARM](https://learn.microsoft.com/en-us/windows/arm/apps-on-arm-x86-emulation)
-## Актуальная поставка для следующей проверки — 0.6.28
+## Актуальная поставка для следующей проверки — 0.6.29
 
-17.09.2026 отдельно выпущены планы сессий (scope session-owned-plans-028). Пакеты 0.6.28 лежат в ~/Downloads/WebPilot-0.6.28/; их упаковка и checksum проверены по RELEASE. Стенд, гостевые ОС и внешнее MCP/runtime этим scope не изменялись. Первый запуск на чистых ОС и устранение ранее отмеченных зависимостей остаются следующей отдельно согласуемой работой.
+17.09.2026 после планов сессий выпущено быстрое открытие (scope session-opening-performance-029). Пакеты 0.6.29 с Kit 1.4.1 лежат в ~/Downloads/WebPilot-0.6.29/; упаковка, checksum и локальные packaged-замеры проверены по RELEASE. Стенд, гостевые ОС и внешнее MCP/runtime этим scope не изменялись. Первый запуск на чистых ОС и устранение ранее отмеченных зависимостей остаются следующей отдельно согласуемой работой.

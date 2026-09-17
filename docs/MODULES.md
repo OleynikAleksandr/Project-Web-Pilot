@@ -21,4 +21,4 @@
 
 ## Ускорение открытия — scope 029
 
-Совместный контракт Workspace & Sessions и Workflow Kit / Context Recovery: [Быстрое открытие сессий и планов](modules/session-opening-performance.md). Первые пять задач реализуют сокращение Git/validation, ограниченный readiness-кэш и ранний показ собственного плана; завершение, полная проверка и выпуск выполняются следующими задачами этого же плана.
+Совместный контракт Workspace & Sessions и Workflow Kit / Context Recovery: [Быстрое открытие сессий и планов](modules/session-opening-performance.md). Контракт реализован и проверен в 0.6.29 / Kit 1.4.1: пакетные операции Git, единая validation, ограниченный readiness-кэш, ранний показ собственного плана и строгая доставка контекста. Source и packaged замеры подтверждены; все изменения находятся в main, лишние worktrees/ветка удалены. План остаётся в своей сессии.

@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 34,
+  "plan_revision": 37,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-opening-performance-029",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Быстрое открытие сессий и планов",
   "acceptance_criteria": [
     "При обычном переключении подключённого проекта свежий собственный план и начало загрузки нужного чата появляются без ожидания полной диагностики всей папки; при NONE не подставляется чужой план.",
@@ -138,7 +138,7 @@
       {
         "heading_path": [
           "Module Specification — Workspace & Sessions",
-          "Действующая модель — 0.6.28 / schema v6"
+          "Действующая модель — 0.6.29 / schema v6"
         ],
         "path": "docs/modules/workspace-sessions.md",
         "required": true,
@@ -631,8 +631,8 @@
       "expected_commit_message": "chore: consolidate main and remove temporary worktrees"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-opening-performance-029",
         "task_id": "DOCS",
@@ -730,10 +730,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: session-opening-performance-029
 Current Task: нет
-Revision: 34
+Revision: 37
 
 ## Цель
 
@@ -790,8 +790,8 @@ Revision: 34
   - Git Commit: [DONE] chore: consolidate main and remove temporary worktrees
   - Reference: session-opening-performance-029 / T010 / implementation
   - Файлы: docs/VERIFICATION.md, docs/RELEASE.md, docs/modules/session-opening-performance.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: update project documentation for fast session opening
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: update project documentation for fast session opening
   - Reference: session-opening-performance-029 / DOCS / implementation
   - Файлы: docs/modules/session-opening-performance.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, README.md, AGENTS.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md, docs/WORKSPACE_SETUP.md, docs/CONTEXT_DELIVERY.md, docs/modules/workspace-sessions.md, docs/modules/workflow-kit-recovery.md, docs/modules/session-owned-plans.md, docs/modules/project-doctor.md, docs/modules/runtime-lifecycle.md, docs/PROJECT_ARCHIVE.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md, docs/SOURCE_WORKSPACES.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, .harness/kit/WORKFLOW.md, resources/workflow-kit/WORKFLOW.md, .harness/kit/templates/AGENTS.md, resources/workflow-kit/templates/AGENTS.md, .harness/kit/templates/START.md, resources/workflow-kit/templates/START.md, .harness/kit/templates/PLAN.md, resources/workflow-kit/templates/PLAN.md, .harness/plans/todo-plan.template.md
 
@@ -801,7 +801,7 @@ Revision: 34
 - docs/MODULES.md → Модули проекта
 - docs/DOCUMENTATION_INDEX.md → Каталог документации
 - docs/modules/workflow-kit-recovery.md → Module Specification — Workflow Kit / Context Recovery
-- docs/modules/workspace-sessions.md → Module Specification — Workspace & Sessions / Действующая модель — 0.6.28 / schema v6
+- docs/modules/workspace-sessions.md → Module Specification — Workspace & Sessions / Действующая модель — 0.6.29 / schema v6
 - docs/modules/session-owned-plans.md
 - docs/WORKSPACE_SETUP.md
 - docs/CONTEXT_DELIVERY.md
