@@ -4,17 +4,18 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 576,
+  "plan_revision": 579,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "clean-install-lab-027",
   "execution_scope_status": "ACTIVE",
   "delivery_status": "IN_PROGRESS",
-  "objective": "Чистые macOS и Windows для проверки установки Web Pilot",
+  "objective": "Готовый стенд macOS/Windows и диагностика задержек Computer Use",
   "acceptance_criteria": [
-    "Подготовлены изолированные гостевые macOS и Windows для повторяемой проверки установки.",
-    "Готовые пакеты проверены на чистом состоянии, ограничения и ошибки записаны.",
-    "Рабочее приложение, основной MCP/tunnel, существующие проекты и учётные данные сохранены."
+    "Подготовлены изолированные Clean/Test macOS и Windows.",
+    "Фактическое состояние пакетов записано; первый запуск и самодостаточность перенесены в следующий scope.",
+    "Диагностика Computer Use содержит измерения, ограничения и следующие действия.",
+    "Рабочие приложение, MCP/tunnel и профили сохранены; документы сверены."
   ],
   "approved_scope": {
     "functional_paths": [],
@@ -197,8 +198,8 @@
       "expected_commit_message": "docs: record clean Windows test environment"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "clean-install-lab-027",
         "task_id": "T005",
@@ -215,14 +216,41 @@
       ],
       "verification_ids": [],
       "id": "T005",
-      "title": "Проверить первый запуск текущих поставок и записать шаги установки",
-      "why": "Получить реальные ошибки для следующего этапа самодостаточной поставки и будущих подсказок.",
+      "title": "Зафиксировать готовый стенд и перенос первого запуска",
+      "why": "По поручению пользователя 17.09 проверка приложения переносится в следующий scope.",
       "acceptance_criteria": [
-        "На чистых гостях проверен первый запуск готовых пакетов 0.6.26.",
-        "Шаги, результаты, blockers и пользовательские действия записаны без секретов.",
-        "Отсутствующие зависимости не установлены вручную ради ложного успешного результата."
+        "Записаны готовые Clean/Test VM и распаковка macOS-пакета 0.6.27.",
+        "Первый запуск, зависимости и Windows-поставка явно отложены до следующего scope и не объявлены проверенными.",
+        "История анализа 0.6.26 сохранена; рабочие runtime и профили не перенесены."
       ],
-      "expected_commit_message": "docs: record clean installation baseline"
+      "expected_commit_message": "docs: record lab handoff and defer first-launch checks"
+    },
+    {
+      "id": "T006",
+      "title": "Диагностировать задержки Computer Use через MCP",
+      "why": "Понять причины неэффективного управления VM перед приёмкой.",
+      "dependencies": [
+        "T005"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/CLEAN_INSTALL.md",
+        "docs/VERIFICATION.md"
+      ],
+      "acceptance_criteria": [
+        "Сопоставлены локальные задержки и MCP-вызовы; факты отделены от гипотез.",
+        "Изучены обработчики снимков и доступные несекретные журналы.",
+        "Записаны следующие действия без изменения кода, перезапуска рабочего runtime и управления гостями."
+      ],
+      "verification_ids": [],
+      "expected_commit_message": "docs: diagnose Computer Use latency across MCP transport",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "clean-install-lab-027",
+        "task_id": "T006",
+        "role": "implementation"
+      }
     },
     {
       "implementation_status": "TODO",
@@ -237,7 +265,8 @@
         "T002",
         "T003",
         "T004",
-        "T005"
+        "T005",
+        "T006"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -276,6 +305,11 @@
       "id": "8497c9aa-da76-4c54-a104-24d967dece8a",
       "text": "16.09.2026 пользователь поручил продолжать настройку и проверку виртуальных машин без Computer Use: пользователь передаёт скриншоты, агент даёт пошаговые инструкции. Это заменяет проверку дальнейшего управления гостями через Computer Use.",
       "recorded_at": "2026-09-16T17:08:51.204648Z"
+    },
+    {
+      "id": "9e94cfdb-1e49-4183-8ad3-37eaba73513b",
+      "text": "17.09.2026 пользователь выбрал пакет 0.6.27, затем поручил перенести продолжение проверки установки в новый scope, до закрытия текущего диагностировать задержки Computer Use и актуализировать документы. Управление гостями не возобновляется. Архивирование после явного принятия результата.",
+      "recorded_at": "2026-09-17T07:01:00.201775+00:00"
     }
   ]
 }
@@ -288,17 +322,18 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: clean-install-lab-027
 Current Task: нет
-Revision: 576
+Revision: 579
 
 ## Цель
 
-Чистые macOS и Windows для проверки установки Web Pilot
+Готовый стенд macOS/Windows и диагностика задержек Computer Use
 
 ## Критерии приёмки
 
-- Подготовлены изолированные гостевые macOS и Windows для повторяемой проверки установки.
-- Готовые пакеты проверены на чистом состоянии, ограничения и ошибки записаны.
-- Рабочее приложение, основной MCP/tunnel, существующие проекты и учётные данные сохранены.
+- Подготовлены изолированные Clean/Test macOS и Windows.
+- Фактическое состояние пакетов записано; первый запуск и самодостаточность перенесены в следующий scope.
+- Диагностика Computer Use содержит измерения, ограничения и следующие действия.
+- Рабочие приложение, MCP/tunnel и профили сохранены; документы сверены.
 
 ## Микрозадачи
 
@@ -318,9 +353,13 @@ Revision: 576
   - Git Commit: [DONE] docs: record clean Windows test environment
   - Reference: clean-install-lab-027 / T004 / implementation
   - Файлы: docs/CLEAN_INSTALL.md
-- [TODO] T005: Проверить первый запуск текущих поставок и записать шаги установки — Ожидает
-  - Git Commit: [PENDING] docs: record clean installation baseline
+- [DONE] T005: Зафиксировать готовый стенд и перенос первого запуска — Завершено
+  - Git Commit: [DONE] docs: record lab handoff and defer first-launch checks
   - Reference: clean-install-lab-027 / T005 / implementation
+  - Файлы: docs/CLEAN_INSTALL.md, docs/VERIFICATION.md
+- [TODO] T006: Диагностировать задержки Computer Use через MCP — Ожидает
+  - Git Commit: [PENDING] docs: diagnose Computer Use latency across MCP transport
+  - Reference: clean-install-lab-027 / T006 / implementation
   - Файлы: docs/CLEAN_INSTALL.md, docs/VERIFICATION.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: update project documentation for clean installation lab
