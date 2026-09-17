@@ -875,3 +875,7 @@ Main использует общий openConnectedSession и поколения 
 ## Scope 029 / T006 — готовность перед доставкой
 
 Production ContextCache использует readinessContextKey: WorkspaceSetup.ready подтверждает полное текущее состояние, затем ключ включает workspace и нормализованный адрес sessionId/planId. Проверки до/после builder и перед Send используют один фасад. Ошибка inputKey больше не разрешает unkeyed пакет с TTL. ContextSession сначала обрабатывает сохранённый sent/legacy/unknown чат; эти ветви не запускают runtime.ensure или warm. Прогрев остаётся только при ожидании composer/черновика новой передачи, без лишнего предварительного key-read. Existing generation/identity/draft/duplicate guards сохранены.
+
+## Scope 030 / T003–T004 — persistent window geometry и 0.6.31
+
+Главное окно использует встроенный Electron window-state persistence вместо собственного менеджера координат: стабильный `name: main-window`, `bounds: true`, `displayMode: false`. Поэтому source не вводит новый JSON-фасад, debounce или display-selection алгоритм. Существующая ширина sidebar продолжает жить в `settings.json`; layout двух `WebContentsView` и ограничения минимальной ширины не менялись. Релиз 0.6.31 собран из этого единого source для macOS arm64 и Windows x64.

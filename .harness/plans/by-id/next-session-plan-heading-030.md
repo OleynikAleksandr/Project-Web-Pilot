@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 15,
+  "plan_revision": 17,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "next-session-plan-heading-030",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Переименовать блок будущего плана, сохранять геометрию интерфейса между запусками и релизами и выпустить актуальный Project Web Pilot.",
   "acceptance_criteria": [
     "В сайдбаре будущий подготовленный план подписан «План следующей сессии».",
@@ -222,8 +222,8 @@
       "documentation_exception": "T004 меняет только version/package metadata и выполняет согласованную поставку; фактические checksums и release evidence фиксируются повторной DOCS."
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "next-session-plan-heading-030",
         "task_id": "DOCS",
@@ -286,10 +286,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: next-session-plan-heading-030
 Current Task: нет
-Revision: 15
+Revision: 17
 
 ## Цель
 
@@ -322,8 +322,8 @@ Revision: 15
   - Git Commit: [DONE] build: release 0.6.31
   - Reference: next-session-plan-heading-030 / T004 / implementation
   - Файлы: package.json, package-lock.json
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: document persistent window geometry release
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: document persistent window geometry release
   - Reference: next-session-plan-heading-030 / DOCS / implementation
   - Файлы: README.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/OVERVIEW.md, docs/architecture/ARCHITECTURE.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/modules/session-owned-plans.md, docs/design/session-plan-navigation.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/modules/workspace-sessions.md
 

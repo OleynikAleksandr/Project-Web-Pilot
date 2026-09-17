@@ -97,3 +97,14 @@ Scope 029 / T010: после выпуска все изменения наход
 - `Project-Web-Pilot-0.6.30-Windows-x64.zip`: SHA-256 `8ea8469720524105fe23c55c37125c0d48203b42a2bc8fca561b771e4027a33e`, 315991998 bytes.
 
 Оба ZIP прошли integrity и app.asar verification; копии и `SHA256SUMS.txt` находятся в `~/Downloads/WebPilot-0.6.30/`. Evidence: `.harness/runtime/releases/0.6.30/{mac-release.json,source-verification.json,release-manifest.json,SHA256SUMS.txt}`. Native Windows и чистые VM этим коротким выпуском не запускались. Для применения в уже открытом Web Pilot нужен полный выход и повторный запуск постоянного app/алиаса.
+
+## Выпуск 0.6.31 — сохранение размеров и позиции интерфейса
+
+17.09.2026 выпущен Project Web Pilot 0.6.31. Главное окно теперь сохраняет и восстанавливает position/size штатным Electron `windowStatePersistence`; ширина сайдбара продолжает сохраняться существующим `settings.json`. Оба состояния находятся в userData вне app bundle, поэтому штатная замена релиза их не удаляет. Полноэкранный/максимизированный display mode не сохраняется.
+
+`npm run build` успешно собрал macOS arm64 и Windows x64. Постоянный macOS app обновлён с сохранением device `16777232` / inode `398344301`; backup прежнего Contents — `.harness/runtime/release-backups/mac-LhYcRR`. Все 33 файла `src` и 31 файл `resources` побайтово совпали с macOS staging, Windows staging и установленным app; Windows verifier подтвердил portable Node/runtime и Workflow Kit.
+
+- `Project-Web-Pilot-0.6.31-macOS-arm64.zip`: SHA-256 `14fa8dd2d4f3941b71bfe482997257a4dd028e5a4100279d0f567fa26f432fe9`, 145219263 bytes.
+- `Project-Web-Pilot-0.6.31-Windows-x64.zip`: SHA-256 `00b4a80973718d137bc733df2937858fe12b9dbeba7230a302b00213f34ff5b5`, 315992040 bytes.
+
+Оба ZIP прошли integrity/app.asar verification и скопированы в `~/Downloads/WebPilot-0.6.31/`; `SHA256SUMS.txt` лежит рядом. Evidence: `.harness/runtime/releases/0.6.31/`. Native Windows и чистые VM в этом коротком дополнении не запускались. Уже открытое окно не перезапускалось автоматически.

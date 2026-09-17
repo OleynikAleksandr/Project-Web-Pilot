@@ -502,3 +502,9 @@ Scope 029 / T004: готовность workspace может переисполь
 ## Готовность доставки — scope 029 / T006
 
 Наблюдение ранее отправленного или legacy/unknown чата не запускает MCP/tunnel и прогрев recovery. Для новой Chat/Work и явного обновления контекста ContextCache получает ключ из WorkspaceSetup.ready с отдельными sessionId/planId; тот же путь проверяется перед Send. Ошибка и отмена не разрешают отправку, черновик сохраняется. Фоновая готовность просмотра и адресованный COMPLETE packet остаются разными результатами.
+
+## Сохранение геометрии интерфейса — 0.6.31
+
+Главное `BaseWindow` имеет стабильное имя `main-window` и включает Electron `windowStatePersistence` только для `bounds` (`displayMode: false`). Electron владеет восстановлением x/y/width/height и корректировкой при изменившейся конфигурации дисплеев. Дефолт 1440×940 и существующие minWidth/minHeight остаются fallback, когда сохранённого состояния нет.
+
+Ширина левого `WebContentsView` не дублируется в native window state: существующий IPC `pilot:set-sidebar-width` сохраняет `sidebarWidth` в `<userData>/settings.json`, startup загружает его до создания окна, а `clampedSidebarWidth()` сохраняет минимальную ширину браузера. `userData` стабилен между версиями Project Web Pilot и находится вне заменяемого `.app`, поэтому оба вида состояния переживают штатное обновление релиза.
