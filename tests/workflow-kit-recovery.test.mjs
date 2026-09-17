@@ -227,3 +227,53 @@ test('session recovery carries its own pending tasks and transport identity whil
   assert.equal(empty.plan_id,null); assert.equal(empty.facts.execution_scope_status,'NONE');
   assert.match(empty.context,/OVERVIEW_REQUIRED/); assert.doesNotMatch(empty.context,/ONLY_session/);
 });
+
+test('batched Git trailers retain parse semantics, Unicode, duplicates, unfolding and patch dividers', async t => {
+  const root = await fixture(t);
+  const { commitHistory } = await import('../resources/workflow-kit/lib/git.mjs');
+  const messages = [
+    'plain message without trailers',
+    'subject\n\nWorkflow-Scope: scope-α\nWorkflow-Task: T001\nWorkflow-Task: T002\nWorkflow-Iteration: 2\n',
+    'subject\n\nWorkflow-Task: длинное\n продолжение\n\tстроки\n',
+    'subject\n\nWorkflow-Task:\n',
+    'subject\n\nWorkflow-Task: before\n---\npatch\nWorkflow-Task: after\n',
+    'subject\n\nText with record separator \x1e survives\n\nWorkflow-Task: T001\n',
+  ];
+  for (const message of messages) git(root, 'commit', '--allow-empty', '--cleanup=verbatim', '-m', message);
+  const history = commitHistory(root, null);
+  assert.equal(history.length, messages.length + 1);
+  for (const record of history) {
+    const parsed = execFileSync('git', ['interpret-trailers', '--parse'], { cwd: root, env, input: record.body, encoding: 'utf8' }).trim();
+    const expected = {};
+    for (const line of parsed.split('\n').filter(Boolean)) {
+      const colon = line.indexOf(':'); if (colon < 0) continue;
+      (expected[line.slice(0, colon)] ??= []).push(line.slice(colon + 1).trim());
+    }
+    assert.deepEqual(record.trailers, expected, record.body);
+  }
+  assert.deepEqual(history.find(r => r.body.includes('scope-α')).trailers['Workflow-Task'], ['T001', 'T002']);
+  assert.equal(history.find(r => r.body.includes('patch')).trailers['Workflow-Task'][0], 'before');
+  assert.throws(() => commitHistory(root, '0'.repeat(40)), { code: 'BASELINE_MISMATCH' });
+});
+
+test('batched ancestry follows merge graph and changed replacement refs', async t => {
+  const root = await fixture(t);
+  const { areAncestors, commitHistory } = await import('../resources/workflow-kit/lib/git.mjs');
+  const base = git(root, 'rev-parse', 'HEAD');
+  git(root, 'checkout', '-b', 'side');
+  git(root, 'commit', '--allow-empty', '-m', 'side'); const side = git(root, 'rev-parse', 'HEAD');
+  git(root, 'checkout', 'main');
+  git(root, 'commit', '--allow-empty', '-m', 'main'); const main = git(root, 'rev-parse', 'HEAD');
+  assert.equal(areAncestors(root, [base, side], main), false);
+  git(root, 'merge', '--no-ff', 'side', '-m', 'merge');
+  const merged = git(root, 'rev-parse', 'HEAD');
+  assert.equal(areAncestors(root, [base, side, main], merged), true);
+  assert.equal(areAncestors(root, [], merged), true);
+  const replacement = git(root, 'commit-tree', merged + '^{tree}', '-p', main, '-m', 'replacement\n\nWorkflow-Task: replacement');
+  git(root, 'replace', merged, replacement);
+  assert.equal(areAncestors(root, [base, side], merged), false);
+  assert.deepEqual(commitHistory(root, base)[0].trailers['Workflow-Task'], ['replacement']);
+  git(root, 'replace', '-d', merged);
+  assert.equal(areAncestors(root, [base, side], merged), true);
+});
+

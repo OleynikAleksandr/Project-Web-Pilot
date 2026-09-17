@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 7,
+  "plan_revision": 9,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-opening-performance-029",
@@ -218,8 +218,8 @@
       "expected_commit_message": "docs: specify fast session opening and performance targets"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-opening-performance-029",
         "task_id": "T002",
@@ -637,7 +637,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-opening-performance-029
 Current Task: нет
-Revision: 7
+Revision: 9
 
 ## Цель
 
@@ -658,8 +658,8 @@ Revision: 7
   - Git Commit: [DONE] docs: specify fast session opening and performance targets
   - Reference: session-opening-performance-029 / T001 / implementation
   - Файлы: docs/modules/session-opening-performance.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/modules/workflow-kit-recovery.md, docs/VERIFICATION.md
-- [TODO] T002: Сократить число процессов Git при проверке истории — Ожидает
-  - Git Commit: [PENDING] perf: batch workflow git history reads
+- [DONE] T002: Сократить число процессов Git при проверке истории — Завершено
+  - Git Commit: [DONE] perf: batch workflow git history reads
   - Reference: session-opening-performance-029 / T002 / implementation
   - Файлы: .harness/kit/lib/git.mjs, resources/workflow-kit/lib/git.mjs, tests/workflow-kit-recovery.test.mjs, .harness/kit/lib/validate.mjs, resources/workflow-kit/lib/validate.mjs, docs/modules/session-opening-performance.md, docs/modules/workflow-kit-recovery.md, docs/VERIFICATION.md
 - [TODO] T003: Устранить повторную полную валидацию в одной проверке — Ожидает

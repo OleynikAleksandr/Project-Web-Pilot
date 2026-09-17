@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { check, CONFIG, PLAN, planPath, INDEX, readJSON, textFile, hash, contextPath, relativePath } from './common.mjs';
 import { readPlan, parsePlan, renderPlan } from './plan.mjs';
-import { commitHistory, commitPaths, git, head, localPath } from './git.mjs';
+import { commitHistory, commitPaths, areAncestors, git, head, localPath } from './git.mjs';
 
 export function defaultConfig() {
   return { schema_version: 1, profile: 'DISCOVERY', stack: null, checks: [],
@@ -105,13 +105,15 @@ export function resolveReferences(root, p, pending = journal(root)) {
     const committed = planCandidates[0].plan;
     const record = committed.tasks.find(t => t.id === task.id);
     check(committed.scope_id === p.scope_id && record?.commit_status === 'DONE', 'COMMIT_PLAN_MISMATCH', 'Коммит не содержит завершение нужной задачи.');
-    for (const dep of task.dependencies) {
+    const dependencyCommits = task.dependencies.map(dep => {
       const depTask = p.tasks.find(item => item.id === dep);
       const depIteration = depTask?.commit_ref?.iteration ?? 1;
       const earlier = history.find(h => h.trailers['Workflow-Scope']?.[0] === p.scope_id && h.trailers['Workflow-Task']?.[0] === dep
         && h.trailers['Workflow-Role']?.[0] === 'implementation' && commitIteration(h) === depIteration);
-      check(earlier && git(root, ['merge-base', '--is-ancestor', earlier.sha, c.parents[0]], { allowFailure: true }).status === 0, 'DEPENDENCY_ORDER', 'Зависимость не предшествует задаче ' + task.id);
-    }
+      check(earlier, 'DEPENDENCY_ORDER', 'Зависимость не предшествует задаче ' + task.id);
+      return earlier.sha;
+    });
+    check(areAncestors(root, dependencyCommits, c.parents[0]), 'DEPENDENCY_ORDER', 'Зависимость не предшествует задаче ' + task.id);
     resolved[task.id] = { sha: c.sha, parent: c.parents[0], paths: changed };
   }
   return resolved;

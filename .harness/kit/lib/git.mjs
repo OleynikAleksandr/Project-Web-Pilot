@@ -63,20 +63,36 @@ export function commitPaths(root, sha) {
 export function isAncestor(root, from, to = 'HEAD') {
   return git(root, ['merge-base', '--is-ancestor', from, to], { allowFailure: true }).status === 0;
 }
+export function areAncestors(root, from, to) {
+  const commits = [...new Set(from)];
+  if (!commits.length) return true;
+  if (commits.length === 1) return isAncestor(root, commits[0], to);
+  // Git performs the graph walk, including merges and replacement refs.
+  const result = git(root, ['rev-list', '--max-count=1', ...commits, '--not', to, '--'], { allowFailure: true });
+  return result.status === 0 && result.stdout.trim() === '';
+}
 export function commitHistory(root, baseline) {
   if (!head(root)) return [];
   if (baseline) check(isAncestor(root, baseline), 'BASELINE_MISMATCH', 'Baseline не принадлежит текущей истории.');
-  const raw = git(root, ['log', '--format=%H%x00%P%x00%B%x00%x1e', baseline ? baseline + '..HEAD' : 'HEAD']).stdout;
-  return raw.split('\x1e').map(s => s.replace(/^\n/, '')).filter(s => s.trim()).map(record => {
-    const [sha, parents, body] = record.split('\0');
-    const parsed = git(root, ['interpret-trailers', '--parse'], { input: body }).stdout.trim();
+  const raw = git(root, ['log', '-z', '--format=%H%x00%P%x00%B%x00%(trailers:only,unfold)', baseline ? baseline + '..HEAD' : 'HEAD']).stdout;
+  const fields = raw.split('\0');
+  if (fields.at(-1) === '') fields.pop();
+  check(fields.length % 4 === 0, 'HISTORY_FORMAT', 'Git вернул неполную историю коммитов.');
+  const history = [];
+  for (let i = 0; i < fields.length; i += 4) {
+    const [sha, parents, body, formatted] = fields.slice(i, i + 4);
+    // Pretty trailers ignore the patch divider, whereas --parse stops there.
+    // Keep Git's legacy interpretation for this uncommon commit-message form.
+    const parsed = (/(?:^|\n)---/.test(body)
+      ? git(root, ['interpret-trailers', '--parse'], { input: body }).stdout : formatted).trim();
     const trailers = {};
     for (const line of parsed.split('\n').filter(Boolean)) {
       const colon = line.indexOf(':'); if (colon < 0) continue;
       const key = line.slice(0, colon); (trailers[key] ??= []).push(line.slice(colon + 1).trim());
     }
-    return { sha, parents: parents.split(' ').filter(Boolean), body, trailers };
-  });
+    history.push({ sha, parents: parents.split(' ').filter(Boolean), body, trailers });
+  }
+  return history;
 }
 export function ensureIdleGit(root) {
   for (const name of ['MERGE_HEAD', 'CHERRY_PICK_HEAD', 'REVERT_HEAD', 'rebase-merge', 'rebase-apply']) {
