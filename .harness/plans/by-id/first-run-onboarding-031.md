@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 82,
+  "plan_revision": 83,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-onboarding-031",
@@ -1515,11 +1515,185 @@
       }
     },
     {
-      "id": "R005",
-      "title": "Обновить документы и передать проверку 0.6.36",
-      "why": "Обновить документы и передать проверку 0.6.36",
+      "id": "V004",
+      "title": "Синхронизировать smoke с отображением ширины сайдбара",
+      "why": "При проверке B005 выявлена гонка: main уже хранит 312, но renderer ещё использует 420 в начале перетягивания.",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "first-run-onboarding-031",
+        "task_id": "V004",
+        "role": "implementation"
+      },
       "dependencies": [
         "B005"
+      ],
+      "functional_paths": [
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "docs/VERIFICATION.md",
+        "docs/architecture/ARCHITECTURE.md"
+      ],
+      "verification_ids": [
+        "electron-smoke"
+      ],
+      "acceptance_criteria": [
+        "Перед pointerdown smoke ожидает фактическое aria-valuenow в renderer, не только main snapshot.",
+        "Проверки перетягивания 432 и клавиатуры 408 сохранены, сценарий не пропускается и проверки не ослабляются.",
+        "Обязательный Electron smoke проходит с синхронизированным состоянием; код поставляемого приложения не меняется."
+      ],
+      "expected_commit_message": "test: wait for sidebar width before simulated drag"
+    },
+    {
+      "id": "C011",
+      "title": "Принимать комплектный macOS runtime и повторно использовать установку",
+      "why": "Изолированная установка реального ZIP воспроизводит MAC_RUNTIME_EXTERNAL_MODIFIED: поставляемая версия control.py отсутствует среди известных адаптеру.",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "first-run-onboarding-031",
+        "task_id": "C011",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "V004"
+      ],
+      "functional_paths": [
+        "src/mac-runtime.mjs",
+        "tests/mac-runtime.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/first-run-onboarding.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/VERIFICATION.md",
+        "docs/PRODUCT.md",
+        "docs/DECISIONS.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/RELEASE.md",
+        "docs/modules/runtime-lifecycle.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/modules/workspace-sessions.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "README.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/MODULES.md",
+        "docs/DOCUMENTATION_INDEX.md"
+      ],
+      "verification_ids": [
+        "suite"
+      ],
+      "acceptance_criteria": [
+        "Фактический control.py из resources/mac-runtime.zip допускается через facade по точному известному SHA; неизвестные изменения внешних компонентов остаются защищены.",
+        "Собственная папка не считается внешней; ранее завершившая setup установка восстанавливается без удаления её настроек и повторной загрузки.",
+        "Холодная установка из реального ZIP и повторный ensure проверены в изолированной папке без запуска текущего MCP/tunnel."
+      ],
+      "expected_commit_message": "fix: recognize shipped Mac runtime during first setup"
+    },
+    {
+      "id": "C012",
+      "title": "Различать ошибки подготовки и состояние ожидания",
+      "why": "Общая ошибка ошибочно советует интернет, а двадцатиминутная установка Apple описана как несколько минут.",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "first-run-onboarding-031",
+        "task_id": "C012",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "C011"
+      ],
+      "functional_paths": [
+        "src/startup-readiness.mjs",
+        "src/ui/startup.mjs",
+        "tests/startup-readiness.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/first-run-onboarding.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/VERIFICATION.md",
+        "docs/PRODUCT.md",
+        "docs/DECISIONS.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/RELEASE.md",
+        "docs/modules/runtime-lifecycle.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/modules/workspace-sessions.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "README.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/MODULES.md",
+        "docs/DOCUMENTATION_INDEX.md"
+      ],
+      "verification_ids": [
+        "suite"
+      ],
+      "acceptance_criteria": [
+        "Известные причины подготовки получают безопасное понятное сообщение и код, исходный stderr и секреты не показываются.",
+        "Интерфейс отличает ожидание системного установщика, подготовку и остановку; не обещает несколько минут.",
+        "Повтор после ошибки сохраняется; уже установленные инструменты Apple повторно не устанавливаются."
+      ],
+      "expected_commit_message": "fix: explain setup failures and installation waiting"
+    },
+    {
+      "id": "B006",
+      "title": "Собрать 0.6.37 для проверки подготовки после установки Apple",
+      "why": "Передать исправления комплектного runtime, показа установщика и ожидания в обе поставки.",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "first-run-onboarding-031",
+        "task_id": "B006",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "C012"
+      ],
+      "functional_paths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "documentation_paths": [
+        "docs/modules/first-run-onboarding.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/VERIFICATION.md",
+        "docs/PRODUCT.md",
+        "docs/DECISIONS.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/RELEASE.md",
+        "docs/modules/runtime-lifecycle.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/modules/workspace-sessions.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "README.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/MODULES.md",
+        "docs/DOCUMENTATION_INDEX.md"
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "acceptance_criteria": [
+        "macOS arm64 и Windows x64 собраны из общих исходников, ZIP и ASAR проверены и доставлены.",
+        "Постоянный Mac app обновлён с сохранением inode; рабочий процесс не перезапускается.",
+        "Результат в гостевой VM проверяет пользователь; сборка не считается прохождением полного пути."
+      ],
+      "expected_commit_message": "build: release bundled runtime setup recovery"
+    },
+    {
+      "id": "R005",
+      "title": "Обновить документы и передать проверку 0.6.37",
+      "why": "Передать исправление воспроизведённого сбоя подготовки и сохранить ограничения проверки.",
+      "dependencies": [
+        "B006"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -1543,8 +1717,8 @@
       ],
       "verification_ids": [],
       "acceptance_criteria": [
-        "Документы описывают показ установщика Apple, фактический успех 0.6.35 на чистом клоне и границы проверки 0.6.36.",
-        "Инструкция повтора и полный T017 сохранены; DOCS остаётся последней."
+        "Документы отражают подтверждённую причину MAC_RUNTIME_EXTERNAL_MODIFIED, исправления показа установщика и длительного ожидания.",
+        "Инструкция проверяет восстановление текущего клона и чистый путь; T017 и финальная DOCS остаются невыполненными до испытаний."
       ],
       "expected_commit_message": "docs: deliver installer visibility check",
       "implementation_status": "TODO",
@@ -1804,6 +1978,10 @@
         "C009",
         "C010",
         "B005",
+        "V004",
+        "C011",
+        "C012",
+        "B006",
         "R005",
         "T017",
         "T010",
@@ -1899,7 +2077,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-onboarding-031
 Current Task: нет
-Revision: 82
+Revision: 83
 
 ## Цель
 
@@ -2054,7 +2232,23 @@ Revision: 82
   - Git Commit: [DONE] build: release visible Apple installer handoff
   - Reference: first-run-onboarding-031 / B005 / implementation
   - Файлы: package.json, package-lock.json, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
-- [TODO] R005: Обновить документы и передать проверку 0.6.36 — Ожидает
+- [TODO] V004: Синхронизировать smoke с отображением ширины сайдбара — Ожидает
+  - Git Commit: [PENDING] test: wait for sidebar width before simulated drag
+  - Reference: first-run-onboarding-031 / V004 / implementation
+  - Файлы: tests/electron-smoke.mjs, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
+- [TODO] C011: Принимать комплектный macOS runtime и повторно использовать установку — Ожидает
+  - Git Commit: [PENDING] fix: recognize shipped Mac runtime during first setup
+  - Reference: first-run-onboarding-031 / C011 / implementation
+  - Файлы: src/mac-runtime.mjs, tests/mac-runtime.test.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
+- [TODO] C012: Различать ошибки подготовки и состояние ожидания — Ожидает
+  - Git Commit: [PENDING] fix: explain setup failures and installation waiting
+  - Reference: first-run-onboarding-031 / C012 / implementation
+  - Файлы: src/startup-readiness.mjs, src/ui/startup.mjs, tests/startup-readiness.test.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
+- [TODO] B006: Собрать 0.6.37 для проверки подготовки после установки Apple — Ожидает
+  - Git Commit: [PENDING] build: release bundled runtime setup recovery
+  - Reference: first-run-onboarding-031 / B006 / implementation
+  - Файлы: package.json, package-lock.json, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
+- [TODO] R005: Обновить документы и передать проверку 0.6.37 — Ожидает
   - Git Commit: [PENDING] docs: deliver installer visibility check
   - Reference: first-run-onboarding-031 / R005 / implementation
   - Файлы: docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
