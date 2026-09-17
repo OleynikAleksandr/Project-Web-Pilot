@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 7,
+  "plan_revision": 9,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "next-session-plan-heading-030",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Переименовать непонятный заголовок блока будущего плана в «План следующей сессии» без изменения механики собственных и подготовленных планов и выпустить Project Web Pilot 0.6.30.",
   "acceptance_criteria": [
     "В сайдбаре будущий подготовленный план подписан «План следующей сессии».",
@@ -148,8 +148,8 @@
       "documentation_exception": "T002 меняет только version/package metadata и выполняет уже согласованную поставку; фактическая версия, checksums и release evidence фиксируются обязательной финальной задачей DOCS."
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "next-session-plan-heading-030",
         "task_id": "DOCS",
@@ -202,10 +202,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: next-session-plan-heading-030
 Current Task: нет
-Revision: 7
+Revision: 9
 
 ## Цель
 
@@ -229,8 +229,8 @@ Revision: 7
   - Git Commit: [DONE] build: release 0.6.30
   - Reference: next-session-plan-heading-030 / T002 / implementation
   - Файлы: package.json, package-lock.json
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: document next session plan heading release
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: document next session plan heading release
   - Reference: next-session-plan-heading-030 / DOCS / implementation
   - Файлы: README.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/OVERVIEW.md, docs/architecture/ARCHITECTURE.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/modules/session-owned-plans.md, docs/design/session-plan-navigation.md, docs/VERIFICATION.md, docs/RELEASE.md
 

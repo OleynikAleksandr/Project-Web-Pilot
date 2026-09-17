@@ -69,7 +69,7 @@
     <div id="wps-own"></div>
   </section>
   <section class="wp-block" id="wps-prepared" aria-labelledby="wps-prepared-heading">
-    <div class="wp-heading"><h2 id="wps-prepared-heading">Подготовлено здесь</h2></div>
+    <div class="wp-heading"><h2 id="wps-prepared-heading">План следующей сессии</h2></div>
     <div id="wps-related" class="wp-related"></div>
   </section>
   <div id="wps-announcement" class="wp-sr" aria-live="polite"></div>

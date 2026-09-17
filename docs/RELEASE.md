@@ -86,3 +86,14 @@ Evidence: .harness/runtime/releases/0.6.28/{mac-release.json,source-verification
 Короткая пользовательская проверка: полностью выйти из работающего Web Pilot и открыть постоянный app/алиас; несколько раз переключить сессии и проверить собственный план/NONE; затем создать Chat/Work или явно обновить контекст и проверить доставку после готовности. Рабочий профиль и чаты сохраняются, приложение не перезапускалось автоматически.
 
 Scope 029 / T010: после выпуска все изменения находятся в main, лишние зарегистрированные worktrees и временная ветка удалены. Их уникальные отчёты/черновики и Git refs сохранены в .harness/runtime/cleanup-029/. В основном репозитории остаётся одно рабочее дерево и одна локальная ветка main; выпуск не архивирует план сессии.
+
+## Выпуск 0.6.30 — понятное название плана следующей сессии
+
+17.09.2026 выпущен Project Web Pilot 0.6.30. Изменение пользовательского интерфейса одно: блок будущего подготовленного плана теперь называется «План следующей сессии» вместо «Подготовлено здесь»; механика plan:prepare/plan:bind, выбор Chat/Work и связи между сессиями не менялись. Sidebar regression, полный Node suite и Electron smoke прошли.
+
+`npm run build` успешно собрал macOS arm64 и Windows x64. Постоянный `Project Web Pilot.app` обновлён штатным release facade с сохранением device `16777232` / inode `398344301`; резервная копия прежнего Contents — `.harness/runtime/release-backups/mac-0zA7Wi`. Все 33 файла `src` и 31 файл `resources` побайтово совпали с macOS package, Windows package и установленным app; Windows verifier подтвердил PE, portable Node 22.17.0, runtime SHA и наличие Workflow Kit.
+
+- `Project-Web-Pilot-0.6.30-macOS-arm64.zip`: SHA-256 `1247fec6f7e8ad21040805ce64e5703b318dcdba95771dcc22166be7a6158f4f`, 145219230 bytes.
+- `Project-Web-Pilot-0.6.30-Windows-x64.zip`: SHA-256 `8ea8469720524105fe23c55c37125c0d48203b42a2bc8fca561b771e4027a33e`, 315991998 bytes.
+
+Оба ZIP прошли integrity и app.asar verification; копии и `SHA256SUMS.txt` находятся в `~/Downloads/WebPilot-0.6.30/`. Evidence: `.harness/runtime/releases/0.6.30/{mac-release.json,source-verification.json,release-manifest.json,SHA256SUMS.txt}`. Native Windows и чистые VM этим коротким выпуском не запускались. Для применения в уже открытом Web Pilot нужен полный выход и повторный запуск постоянного app/алиаса.
