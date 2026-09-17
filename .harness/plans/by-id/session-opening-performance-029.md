@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 32,
+  "plan_revision": 34,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-opening-performance-029",
@@ -621,8 +621,8 @@
         "git worktree list оставляет только основной workspace, локальная рабочая ветка main и чистый status; финальная DOCS остаётся последней, scope не архивируется."
       ],
       "verification_ids": [],
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-opening-performance-029",
         "task_id": "T010",
@@ -733,7 +733,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-opening-performance-029
 Current Task: нет
-Revision: 32
+Revision: 34
 
 ## Цель
 
@@ -786,8 +786,8 @@ Revision: 32
   - Git Commit: [DONE] build: release faster session and plan opening
   - Reference: session-opening-performance-029 / T009 / implementation
   - Файлы: package.json, package-lock.json, docs/modules/session-opening-performance.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md, docs/SOURCE_WORKSPACES.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
-- [TODO] T010: Объединить изменения и удалить лишние рабочие деревья и ветки — Ожидает
-  - Git Commit: [PENDING] chore: consolidate main and remove temporary worktrees
+- [DONE] T010: Объединить изменения и удалить лишние рабочие деревья и ветки — Завершено
+  - Git Commit: [DONE] chore: consolidate main and remove temporary worktrees
   - Reference: session-opening-performance-029 / T010 / implementation
   - Файлы: docs/VERIFICATION.md, docs/RELEASE.md, docs/modules/session-opening-performance.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
