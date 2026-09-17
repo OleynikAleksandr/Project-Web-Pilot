@@ -1177,3 +1177,16 @@ C002, C003, V002 и B002 завершены управляемыми commit с �
 C004: отдельные Node tests проверяют ранний DOM при pending resources, одну попытку восстановления, окончательный timeout, сохранение появившегося документа, отказ без повтора при certificate error, смену generation и предел ожидания reset. Реальный гостевой повтор остаётся T015.
 
 C004 native evidence: изолированный Electron 44.3.0 с локальным HTTP fixture удерживает первый ответ, принимает второй после recovery, затем оставляет изображение незагруженным. Фактически проверены ровно два запроса/один recovery, DOM и чтение mainFrame при isLoading=true, сохранение заранее заданной тестовой cookie. Обычный webContents.executeJavaScript ожидал завершения ресурсов; для наблюдения аккаунта используется mainFrame.executeJavaScript после готовности DOM. Лог .harness/runtime/browser-recovery-native.log содержит ok=true; временный harness .harness/runtime/browser-recovery-native.mjs. Дополнительно 10 unit tests покрывают отмену и позднее завершение reset.
+
+## Выпуск 0.6.34 — ограниченное первое открытие
+
+Обе платформы собраны штатным npm run build. В пустой панели без проекта первый документ получает до 15 секунд; при отсутствии документа соединение восстанавливается один раз, не дольше 5 секунд, затем запрос получает ещё до 15 секунд. Готовый DOM позволяет macOS-мастеру проверить вход, пока дополнительные ресурсы продолжают загружаться. Существующие проекты сохраняют прежние проверки навигации и доставки; cookies и настройки не удаляются.
+
+Постоянный macOS app обновлён до 0.6.34 с сохранением device 16777232 / inode 398344301. Работающий процесс и рабочий runtime не перезапускались.
+
+- macOS arm64: Project-Web-Pilot-0.6.34-macOS-arm64.zip, 181071249 байт, SHA-256 57467253485aafc67165bc8844febabf3280f6b974afbc76d7f39d9a6f846933.
+- Windows x64: Project-Web-Pilot-0.6.34-Windows-x64.zip, 317788339 байт, SHA-256 be7688a5a4982f121f8cc231f0a4570a51e0c26096e44efa692f12b6da5199f4.
+
+Все 36 файлов src и 32 файла resources побайтово совпали с source в обеих поставках и установленном app. app.asar установленного Mac, staging и ZIP совпадает; проверены целостность обоих ZIP, четыре mac-tools и запуск встроенного Node v22.17.0 arm64. Windows verifier подтвердил portable Node/runtime и структуру EXE-поставки. Архивы, SHA256SUMS.txt и INSTALL.txt находятся в ~/Downloads/WebPilot-0.6.34/.
+
+Evidence: .harness/runtime/releases/0.6.34/{mac-release.json,source-verification.json,release-manifest.json,browser-recovery-native.log}. Локальный native Electron fixture подтвердил один recovery, чтение DOM при незавершённом изображении и сохранение cookie. Повтор в Test macOS 01 ещё не выполнен; причина сети гостя не установлена, MAC-002 остаётся открытым. Нативный Windows-запуск и Windows-мастер не объявлены проверенными.

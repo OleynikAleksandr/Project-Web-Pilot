@@ -129,3 +129,16 @@ Scope 029 / T010: после выпуска все изменения наход
 ZIP проверены и скопированы в ~/Downloads/WebPilot-0.6.33/ вместе с SHA256SUMS.txt и INSTALL.txt. Все 35 файлов src и 32 файла resources совпали с source в обеих поставках и постоянном app; app.asar установленного Mac, staging и ZIP совпадает. Проверены четыре bundled mac-tools и исполнение Node v22.17.0 arm64. Windows verifier подтвердил PE, portable Node и runtime SHA; нативного Windows-запуска не было.
 
 Evidence — .harness/runtime/releases/0.6.33/{mac-release.json,source-verification.json,release-manifest.json}. Этот выпуск устраняет доказанный диагностический пробел, но причина пустой панели гостя остаётся неизвестной. Проверка в госте и весь чистый путь ещё впереди.
+
+## Выпуск 0.6.34 — ограниченное первое открытие
+
+Обе платформы собраны штатным npm run build. В пустой панели без проекта первый документ получает до 15 секунд; при отсутствии документа соединение восстанавливается один раз, не дольше 5 секунд, затем запрос получает ещё до 15 секунд. Готовый DOM позволяет macOS-мастеру проверить вход, пока дополнительные ресурсы продолжают загружаться. Существующие проекты сохраняют прежние проверки навигации и доставки; cookies и настройки не удаляются.
+
+Постоянный macOS app обновлён до 0.6.34 с сохранением device 16777232 / inode 398344301. Работающий процесс и рабочий runtime не перезапускались.
+
+- macOS arm64: Project-Web-Pilot-0.6.34-macOS-arm64.zip, 181071249 байт, SHA-256 57467253485aafc67165bc8844febabf3280f6b974afbc76d7f39d9a6f846933.
+- Windows x64: Project-Web-Pilot-0.6.34-Windows-x64.zip, 317788339 байт, SHA-256 be7688a5a4982f121f8cc231f0a4570a51e0c26096e44efa692f12b6da5199f4.
+
+Все 36 файлов src и 32 файла resources побайтово совпали с source в обеих поставках и установленном app. app.asar установленного Mac, staging и ZIP совпадает; проверены целостность обоих ZIP, четыре mac-tools и запуск встроенного Node v22.17.0 arm64. Windows verifier подтвердил portable Node/runtime и структуру EXE-поставки. Архивы, SHA256SUMS.txt и INSTALL.txt находятся в ~/Downloads/WebPilot-0.6.34/.
+
+Evidence: .harness/runtime/releases/0.6.34/{mac-release.json,source-verification.json,release-manifest.json,browser-recovery-native.log}. Локальный native Electron fixture подтвердил один recovery, чтение DOM при незавершённом изображении и сохранение cookie. Повтор в Test macOS 01 ещё не выполнен; причина сети гостя не установлена, MAC-002 остаётся открытым. Нативный Windows-запуск и Windows-мастер не объявлены проверенными.
