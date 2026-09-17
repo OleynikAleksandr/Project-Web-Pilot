@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 15,
+  "plan_revision": 17,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-onboarding-031",
@@ -291,8 +291,8 @@
       "id": "F001",
       "title": "Проверять готовность чистой системы перед началом работы",
       "why": "Первый запуск не должен предполагать прежний вход в ChatGPT или наличие компонентов, локальной службы и туннеля.",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-onboarding-031",
         "task_id": "F001",
@@ -818,7 +818,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-onboarding-031
 Current Task: нет
-Revision: 15
+Revision: 17
 
 ## Цель
 
@@ -857,8 +857,8 @@ Revision: 15
   - Git Commit: [DONE] fix: bootstrap first workspace on clean macOS
   - Reference: first-run-onboarding-031 / T005 / implementation
   - Файлы: src/startup-readiness.mjs, tests/startup-readiness.test.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, docs/WORKSPACE_SETUP.md, docs/modules/runtime-lifecycle.md
-- [TODO] F001: Проверять готовность чистой системы перед началом работы — Ожидает
-  - Git Commit: [PENDING] feat: check first-run readiness on startup
+- [DONE] F001: Проверять готовность чистой системы перед началом работы — Завершено
+  - Git Commit: [DONE] feat: check first-run readiness on startup
   - Reference: first-run-onboarding-031 / F001 / implementation
   - Файлы: src/main.mjs, src/preload.cjs, src/ui/progress.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, docs/modules/runtime-lifecycle.md
 - [TODO] T006: Встроить понятное сопровождение первого запуска — Ожидает

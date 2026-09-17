@@ -22,9 +22,10 @@ import { WorkspaceDeletion } from './workspace-deletion.mjs';
 import { WorkspaceSetup } from './workspace-setup.mjs';
 import { ProjectDoctor } from './project-doctor.mjs';
 import { ChromiumDiagnostics } from './chromium-diagnostics.mjs';
-import { defaultRuntimeFolder, bundledWindowsRuntimeFolder, nodeExecutableCandidates } from './platform.mjs';
+import { defaultRuntimeFolder, bundledWindowsRuntimeFolder, bundledMacNode, nodeExecutableCandidates } from './platform.mjs';
 import { WindowsRuntimeBootstrap, WINDOWS_RUNTIME_ARCHIVE } from './windows-runtime.mjs';
 import { MacRuntimeBootstrap } from './mac-runtime.mjs';
+import { StartupReadiness, inspectMacGit, installMacGit, accountObservation } from './startup-readiness.mjs';
 
 const smoke = !app.isPackaged && process.argv.includes('--smoke');
 const sourceDir = path.dirname(fileURLToPath(import.meta.url));
@@ -54,6 +55,7 @@ let window, browser, sidebar, archiveWindow, runtime, controller, interval, fixt
 let navigationId = 0;
 const actionContext = new AsyncLocalStorage();
 let pageLoading = false;
+let startupFlow = null, startupActive = false, observingAccount = false;
 let startupError = null;
 let storageError = false;
 let lastDiagnostic = '';
@@ -67,7 +69,9 @@ const workspaceSetup = new WorkspaceSetup({
   resourceDir: app.isPackaged ? path.join(process.resourcesPath, 'resources') : path.join(sourceDir, '../resources'),
   nodeCandidates: windowsPortableNode
     ? [windowsPortableNode, ...nodeExecutableCandidates({ platform: 'win32', environment: process.env, electron: true })]
-    : undefined,
+    : process.platform === 'darwin'
+      ? [bundledMacNode(app.isPackaged ? process.resourcesPath : path.join(sourceDir, '../.harness/runtime')), ...nodeExecutableCandidates()]
+      : undefined,
 });
 const sessionPlans = new SessionPlans({ setup: workspaceSetup });
 store.planService = sessionPlans;
@@ -230,6 +234,7 @@ function snapshot() {
         tunnelConfigured: !!runtime.lastStatus.tunnel?.configured,
       } : null,
     } : null,
+    startup: startupFlow ? { ...startupFlow.snapshot(), active: startupActive } : null,
     theme: shellTheme, hideToolCalls, sidebarWidth, sidebarMinWidth: SIDEBAR_MIN_WIDTH, pageLoading, startupError, storageError, setup: setupState, workspaceHealth, version: app.getVersion(), fixture: smoke };
 }
 
@@ -429,7 +434,7 @@ function attachController(project) {
   return true;
 }
 
-async function navigate(project = store.selected(), { refresh = false, generation = null, resume = false } = {}) {
+async function navigate(project = store.selected(), { refresh = false, generation = null, resume = false, entryUrl = null } = {}) {
   const ownNavigation = generation ?? nextNavigation();
   if (!navigationCurrent(ownNavigation)) return;
   if (workspaceHealth?.ready && workspaceHealth.workspace === project?.workspace
@@ -437,13 +442,14 @@ async function navigate(project = store.selected(), { refresh = false, generatio
     workspaceHealth = { ...workspaceHealth, generation: ownNavigation, sessionId: project.sessionId };
   preparedChoice = null;
   controller?.cancel();
-  pageLoading = true; publish();
-  const target = project?.chatUrl ?? chatGPTEntrypoint(project?.experience ?? 'chat');
+  pageLoading = true; startupFlow?.beginPage(ownNavigation); publish();
+  const target = entryUrl ?? project?.chatUrl ?? chatGPTEntrypoint(project?.experience ?? 'chat');
   try {
     const alreadyOpen = resume && !browser.webContents.isLoading() && browser.webContents.getURL() === target;
     if (!alreadyOpen) await browser.webContents.loadURL(target);
     if (!navigationCurrent(ownNavigation)) return;
-    pageLoading = false;
+    pageLoading = false; startupFlow?.finishPage(ownNavigation);
+    void observeStartupAccount();
     if (attachController(project && store.project(project.workspace))) {
       if (refresh) await controller.retry();
       else void controller.tick();
@@ -451,7 +457,7 @@ async function navigate(project = store.selected(), { refresh = false, generatio
     publish();
   } catch (error) {
     if (!navigationCurrent(ownNavigation)) return;
-    pageLoading = false;
+    pageLoading = false; startupFlow?.finishPage(ownNavigation, error.code ?? 'PAGE_LOAD_FAILED');
     report(Object.assign(new Error('Не удалось открыть ChatGPT. Проверьте интернет и нажмите обновление рядом с проектами.'), { code: 'PAGE_LOAD_FAILED' }));
   }
 }
@@ -580,6 +586,63 @@ function createLocalRuntime() {
   });
 }
 
+function createStartupFlow() {
+  if (process.platform !== 'darwin' || smoke) return;
+  startupActive = store.snapshot().projects.length === 0;
+  startupFlow = new StartupReadiness({
+    probeNode: () => workspaceSetup.node(), probeGit: () => inspectMacGit(), installGit: () => installMacGit(),
+    inspectRuntime: async () => {
+      const current = await macRuntimeBootstrap.inspect();
+      return current.installed ? runtime.control('status') : null;
+    },
+    prepareRuntime: async () => {
+      let status = await runtime.control('status');
+      if (!status.mcp.ready || (status.tunnel.configured && !status.tunnel.ready))
+        status = await runtime.control('start', { mcpOnly: !status.tunnel.configured });
+      return status;
+    },
+    configureTunnel: async () => {
+      await ensurePlatformRuntime();
+      return macRuntimeBootstrap.configureTunnel();
+    },
+    onChange: publish,
+  });
+}
+async function observeStartupAccount() {
+  if (!startupFlow || !startupActive || pageLoading || observingAccount || !browser || browser.webContents.isDestroyed()) return;
+  observingAccount = true;
+  const generation = navigationId;
+  try {
+    if (!isChatGPTOrigin(browser.webContents.getURL())) return;
+    const observation = await browser.webContents.executeJavaScript('(' + accountObservation.toString() + ')()');
+    if (navigationCurrent(generation)) startupFlow.observe(generation, observation);
+  } catch { /* Unknown remains unverified; a later visible document can be inspected. */ }
+  finally { observingAccount = false; }
+}
+async function startupAction(action) {
+  if (!startupFlow) throw new Error('Начальная настройка недоступна на этой платформе.');
+  if (action === 'show') { startupActive = true; return startupFlow.check(); }
+  if (!startupActive) throw new Error('Сначала откройте начальную настройку.');
+  if (action === 'check') { void observeStartupAccount(); return startupFlow.check({ prepare: true }); }
+  if (action === 'install-git') return startupFlow.install();
+  if (action === 'configure-tunnel') return startupFlow.configure();
+  if (action === 'chat' || action === 'signup') { startupError = null; return navigate(null); }
+  if (action === 'plugins') { startupError = null; return navigate(null, { entryUrl: 'https://chatgpt.com/plugins' }); }
+  const pages = {
+    tunnels: 'https://platform.openai.com/settings/organization/tunnels',
+    keys: 'https://platform.openai.com/api-keys',
+    help: 'https://developers.openai.com/api/docs/guides/secure-mcp-tunnels',
+  };
+  if (Object.hasOwn(pages, action)) return shell.openExternal(pages[action]);
+  if (action === 'continue') {
+    const state = startupFlow.snapshot();
+    if (state.busy || !state.node || !state.git || !state.runtime || !state.tunnel || state.account !== 'signed-in')
+      throw new Error('Завершите вход и проверку подключения перед созданием проекта.');
+    startupActive = false; startupError = null; return true;
+  }
+  throw new Error('Неизвестное действие начальной настройки.');
+}
+
 function connectController() {
   controller?.cancel();
   controller = new ContextSession({ store, runtime, contextCache, composer: new ChatGPTComposer(browser.webContents), onChange: publish });
@@ -587,6 +650,7 @@ function connectController() {
 
 function registerIpc() {
   ipcMain.handle('pilot:get-state', event => { assertLocalSender(event); return snapshot(); });
+  registerAction('pilot:startup', action => startupAction(action), { navigation: true });
   registerAction('pilot:open-archive-window', input => openArchiveWindow(typeof input === 'string' ? input : null));
   registerAction('pilot:open-settings', () => openSettings());
   registerAction('pilot:open-chat-colors', () => colorEditor.open());
@@ -953,7 +1017,7 @@ async function createWindow() {
   browser.webContents.on('render-process-gone', () => { controller?.cancel(); report(new Error('Страница ChatGPT закрылась. Нажмите обновление.')); });
   window.on('resize', layout);
   window.on('closed', () => {
-    ++navigationId; controller?.cancel(); clearInterval(interval); contextCache.clear(); workspaceSetup.invalidateReadiness();
+    ++navigationId; startupFlow?.dispose(); startupFlow = null; controller?.cancel(); clearInterval(interval); contextCache.clear(); workspaceSetup.invalidateReadiness();
     colorEditor?.close(); chatColorStyles?.dispose();
     void chromiumDiagnostics?.stop(); chromiumDiagnostics = null;
     if (archiveWindow && !archiveWindow.isDestroyed()) archiveWindow.close();
@@ -967,9 +1031,12 @@ async function createWindow() {
     runtime = await fixture.createRuntime({ browser: browser.webContents, session: session.fromPartition(partition), dataDir });
   } else runtime = createLocalRuntime();
   connectController();
+  createStartupFlow();
   registerIpc();
   await sidebar.webContents.loadURL(sidebarUrl);
+  if (startupFlow) void startupFlow.check({ prepare: startupActive });
   interval = setInterval(() => {
+    void observeStartupAccount();
     if (!pageLoading && !setupState && !settingsState) { void controller.tick(); }
   }, 1500);
   if (smoke) {

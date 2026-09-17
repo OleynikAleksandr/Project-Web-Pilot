@@ -25,6 +25,7 @@ export function operationLabel(state = {}, action = null) {
   if (['repairing','verifying','services'].includes(state.doctor?.phase)) return 'Доктор проекта: проверка и восстановление';
   if (state.setup?.phase === 'checking') return 'Проверяем папку проекта';
   if (state.setup?.phase === 'applying') return 'Подготавливаем проект';
+  if (state.startup?.active) return state.startup.busy ? (state.startup.phase === 'preparing' ? 'Готовим компоненты на компьютере' : state.startup.phase === 'configuring' ? 'Настраиваем подключение' : 'Проверяем готовность') : null;
   if (state.pageLoading) return 'Открываем ChatGPT';
   if (action && phaseLabels[state.context?.phase] && !state.context?.error) return phaseLabels[state.context.phase];
   if (action) return actionLabels[action] ?? null; // Native file dialogs already show what they await.

@@ -1,5 +1,6 @@
 const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('webPilot', Object.freeze({
+  startup: action => ipcRenderer.invoke('pilot:startup', action),
   openDoctor: () => ipcRenderer.invoke('pilot:open-doctor'),
   runDoctor: workspace => ipcRenderer.invoke('pilot:doctor-run', workspace),
   selectDoctorProject: workspace => ipcRenderer.invoke('pilot:doctor-select', workspace),
