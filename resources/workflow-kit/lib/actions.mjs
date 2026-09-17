@@ -56,7 +56,7 @@ export function createScope(root, input, expectedRevision) {
     check(previous.execution_scope_status === 'NONE', 'SCOPE_EXISTS', 'У этой сессии уже есть план; используйте plan:apply или plan:prepare.');
     const scopeId = input.scope_id || 'scope-' + id();
     check(!listPlans(root).some(r => r.plan.scope_id === scopeId), 'SCOPE_EXISTS', 'Идентификатор плана уже занят.');
-    return withPlanFile(root, ownedPlanPath(scopeId), { ...selection, newPlan: true, virtualPlan: previous }, () => createScope(root, { ...input, scope_id: scopeId }, expectedRevision));
+    return withPlanFile(root, fs.existsSync(path.join(root, planPath(root))) ? planPath(root) : ownedPlanPath(scopeId), { ...selection, newPlan: true, virtualPlan: previous }, () => createScope(root, { ...input, scope_id: scopeId }, expectedRevision));
   }
   const PLAN = planPath(root);
   return locked(root, () => {
@@ -108,7 +108,7 @@ export function startTask(root, taskId, expectedRevision) {
 export function applyPlan(root, input, expectedRevision) {
   const PLAN = planPath(root);
   return locked(root, () => {
-    noTransaction(root); const { plan: original } = validate(root);
+    noTransaction(root); assertSingleWriter(root, PLAN); const { plan: original } = validate(root);
     check(expectedRevision !== undefined, 'EXPECTED_REVISION_REQUIRED', 'Укажите --expected-revision из status.'); revision(original, expectedRevision);
     const permitted = ['objective', 'acceptance_criteria', 'approved_scope', 'context_pack', 'tasks', 'user_decisions', 'execution_scope_status', 'blocked_reason'];
     check(Object.keys(input).every(k => permitted.includes(k)), 'MANAGED_FIELDS', 'Служебные поля плана не меняются через plan:apply.');

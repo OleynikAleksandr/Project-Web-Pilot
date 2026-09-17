@@ -35,6 +35,10 @@ export function selectPlan(root, { sessionId, planId, allowDraft = false, allowU
   }
   let selected = planId ? plans.find(r => r.plan.scope_id === planId)
     : plans.find(r => r.plan.owner_session_id === sessionId);
+  if (!selected && planId && allowUnowned) {
+    const archived = '.harness/plans/archive/' + planId + '.md';
+    if (fs.existsSync(safePath(root, archived))) selected = { file: ownedPlanPath(planId), plan: parsePlan(textFile(root, archived)), virtual: true };
+  }
   if (planId) check(selected, 'PLAN_NOT_FOUND', 'План не найден: ' + planId);
   if (selected) {
     if (sessionId) check(selected.plan.owner_session_id === sessionId

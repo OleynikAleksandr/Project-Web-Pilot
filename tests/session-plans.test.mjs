@@ -67,12 +67,14 @@ async function lifecycleFixture(t) {
   const result = await setup.apply(preview.token);
   assert.equal(result.ready, true, JSON.stringify(result));
   const root = result.workspace;
+  let extraEnv = {};
   const cli = (...args) => {
     let stdout;
-    try { stdout = execFileSync(process.execPath, ['scripts/workflow.mjs', ...args], { cwd: root, env: environment, encoding: 'utf8', maxBuffer: 4e6 }); }
+    try { stdout = execFileSync(process.execPath, ['scripts/workflow.mjs', ...args], { cwd: root, env: { ...environment, ...extraEnv }, encoding: 'utf8', maxBuffer: 4e6 }); }
     catch (error) { stdout = error.stdout; }
     return JSON.parse(stdout);
   };
+  cli.setEnvironment = value => { extraEnv = value; };
   const input = value => { const p = path.join(root, '.harness/runtime/input.json'); fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, JSON.stringify(value)); return p; };
   const scope = id => ({ scope_id: id, objective: id, approval_note: 'Пользователь согласовал эту проверку.', acceptance_criteria: ['Done'],
     approved_scope: { functional_paths: [], documentation_paths: ['docs/architecture/OVERVIEW.md'], max_functional_files_per_task: 3 },
@@ -112,3 +114,30 @@ test('addressed CLI prepares, binds once, commits with real hooks, and continues
   assert.equal(ok(cli('plan:view', '--session', 'new')).plan_id, null);
 });
 
+
+test('a failed transaction cannot be resumed by another owner and both failpoints recover exactly once', async t => {
+  const { root, cli, input, scope, ok } = await lifecycleFixture(t);
+  for (const session of ['a','b']) ok(cli('scope:create', '--session', session, '--input', input(scope(session)), '--expected-revision', '1'));
+  assert.equal(cli('task:start','T1','--session','a','--expected-revision','999').code,'REVISION_CHANGED');
+  ok(cli('task:start','T1','--session','a'));
+  fs.appendFileSync(path.join(root,'docs/architecture/OVERVIEW.md'),'\nCRASH_FIXTURE\n');
+  cli.setEnvironment({ WORKFLOW_TEST_FAILPOINT: 'prepared' });
+  assert.equal(cli('commit','--task','T1','--session','a').code,'TEST_INTERRUPTION');
+  cli.setEnvironment({});
+  assert.equal(cli('commit','--task','T1','--session','b').code,'TRANSACTION_TARGET_MISMATCH');
+  assert.equal(ok(cli('recover','--session','b','--format','json')).scope_id,'b');
+  const committed=ok(cli('commit','--task','T1','--session','a'));
+  assert.equal(ok(cli('commit','--task','T1','--session','a')).sha,committed.sha);
+  ok(cli('task:start','DOCS','--session','a'));
+  cli.setEnvironment({ WORKFLOW_TEST_FAILPOINT: 'committed' });
+  assert.equal(cli('commit','--task','DOCS','--session','a').code,'TEST_INTERRUPTION');
+  cli.setEnvironment({});
+  const docs=ok(cli('commit','--task','DOCS','--session','a'));
+  assert.equal(ok(cli('validate','--session','a')).resolved.DOCS.sha,docs.sha);
+  assert.equal(ok(cli('plan:view','--session','b')).plan.tasks[0].commit_status,'PENDING');
+  ok(cli('archive','--session','a','--scope','a','--approval-note','Пользователь явно поручил закрыть тестовый scope.'));
+  const none=ok(cli('plan:view','--session','a'));
+  assert.equal(none.plan_id,null);
+  ok(cli('scope:create','--session','a','--input',input(scope('a-second')),'--expected-revision',String(none.plan.plan_revision)));
+  assert.equal(ok(cli('plan:view','--session','a')).plan_id,'a-second');
+});

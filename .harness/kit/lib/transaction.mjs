@@ -48,6 +48,7 @@ export function commitCandidate(root, { plan, role, task = null, selected, messa
   ensureIdleGit(root); check(identityReady(root), 'GIT_IDENTITY', 'Git не знает автора. Настройте user.name и user.email; файлы сохранены.');
   let t = journal(root);
   if (t) {
+    check((t.plan_path ?? '.harness/plans/todo-plan.md') === PLAN, 'TRANSACTION_TARGET_MISMATCH', 'Незавершённый commit принадлежит другому плану.');
     const existing = completedTransaction(root, t); if (existing) return finishTransaction(root, t, existing);
     check(t.role === role && t.task_id === (task?.id ?? null), 'TRANSACTION_PENDING', 'Сначала завершите предыдущую транзакцию.');
     check(head(root) === t.before_head, 'HEAD_CHANGED', 'HEAD изменён другим процессом; нужен repair --dry-run.');
@@ -102,6 +103,7 @@ export function commitTask(root, taskId) {
   return locked(root, () => {
     const pending = journal(root);
     if (pending) {
+      check((pending.plan_path ?? '.harness/plans/todo-plan.md') === planPath(root), 'TRANSACTION_TARGET_MISMATCH', 'Незавершённый commit принадлежит другой сессии.');
       check(pending.task_id === taskId, 'TRANSACTION_PENDING', 'Другая задача ожидает завершения commit.');
       const done = completedTransaction(root, pending); if (done) return finishTransaction(root, pending, done);
       const plan = parsePlan(pending.original_plan);

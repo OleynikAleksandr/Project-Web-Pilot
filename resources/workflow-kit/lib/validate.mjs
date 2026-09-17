@@ -84,7 +84,7 @@ export function resolveReferences(root, p, pending = journal(root)) {
     const candidates = taskHistory.filter(c => commitIteration(c) === targetIteration);
     check(candidates.length <= 1, 'AMBIGUOUS_COMMIT', 'Найдено несколько коммитов задачи ' + task.id + ' iteration ' + targetIteration);
     if (!candidates.length) {
-      const inTransaction = pending?.task_id === task.id && pending.before_head === head(root) && pending.candidate_hash === hash(renderPlan(p));
+      const inTransaction = pending?.scope_id === p.scope_id && (pending.plan_path ?? '.harness/plans/todo-plan.md') === PLAN && pending?.task_id === task.id && pending.before_head === head(root) && pending.candidate_hash === hash(renderPlan(p));
       check(task.commit_status !== 'DONE' || inTransaction, 'PLAN_COMMIT_MISMATCH', 'Задача ' + task.id + ' отмечена DONE, но коммит не найден.');
       if (inTransaction) resolved[task.id] = { pending: true };
       continue;
@@ -93,9 +93,16 @@ export function resolveReferences(root, p, pending = journal(root)) {
     check(task.commit_status === 'DONE', 'PLAN_COMMIT_MISMATCH', 'Коммит уже существует, а задача не закрыта: ' + task.id);
     check(c.parents.length === 1, 'HISTORY_NOT_LINEAR', 'Коммит микрозадачи должен иметь одного родителя.');
     const changed = commitPaths(root, c.sha);
-    const allowed = new Set([...task.functional_paths, ...task.documentation_paths, PLAN]);
-    check(changed.includes(PLAN) && changed.every(f => allowed.has(f)), 'COMMIT_SCOPE_MISMATCH', 'Состав коммита не соответствует задаче ' + task.id, { sha: c.sha, changed });
-    const committed = parsePlan(git(root, ['show', c.sha + ':' + PLAN]).stdout);
+    // Historical task commits predate adoption; inspect the path in THAT commit.
+    const planCandidates = [...new Set([PLAN, '.harness/plans/todo-plan.md'])].filter(file => changed.includes(file))
+      .map(file => { const result = git(root, ['show', c.sha + ':' + file], { allowFailure: true });
+        return result.status === 0 ? { file, plan: parsePlan(result.stdout) } : null; })
+      .filter(record => record?.plan.scope_id === p.scope_id);
+    check(planCandidates.length === 1, 'COMMIT_PLAN_MISMATCH', 'Коммит не содержит однозначный план этой задачи.');
+    const committedPath = planCandidates[0].file;
+    const allowed = new Set([...task.functional_paths, ...task.documentation_paths, committedPath]);
+    check(changed.every(f => allowed.has(f)), 'COMMIT_SCOPE_MISMATCH', 'Состав коммита не соответствует задаче ' + task.id, { sha: c.sha, changed });
+    const committed = planCandidates[0].plan;
     const record = committed.tasks.find(t => t.id === task.id);
     check(committed.scope_id === p.scope_id && record?.commit_status === 'DONE', 'COMMIT_PLAN_MISMATCH', 'Коммит не содержит завершение нужной задачи.');
     for (const dep of task.dependencies) {
@@ -110,7 +117,8 @@ export function resolveReferences(root, p, pending = journal(root)) {
   return resolved;
 }
 export function validate(root) {
-  const plan = readPlan(root); const config = readConfig(root); const pending = journal(root);
+  const plan = readPlan(root); const config = readConfig(root); const pendingJournal = journal(root);
+  const pending = pendingJournal && (pendingJournal.plan_path ?? '.harness/plans/todo-plan.md') === planPath(root) ? pendingJournal : null;
   const resolved = resolveReferences(root, plan, pending);
   for (const task of plan.tasks) {
     for (const p of [...task.functional_paths, ...task.documentation_paths]) contextPath(root, p);
