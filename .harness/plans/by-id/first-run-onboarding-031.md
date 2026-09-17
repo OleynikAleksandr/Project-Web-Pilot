@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 93,
+  "plan_revision": 94,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-onboarding-031",
@@ -110,7 +110,80 @@
       },
       {
         "heading_path": [
-          "Первый запуск Web Pilot на чистой системе"
+          "Первый запуск Web Pilot на чистой системе",
+          "Согласованная цель — first-run-onboarding-031"
+        ],
+        "path": "docs/modules/first-run-onboarding.md",
+        "required": true,
+        "revision": "WORKTREE"
+      },
+      {
+        "heading_path": [
+          "Первый запуск Web Pilot на чистой системе",
+          "Владельцы и существующие решения"
+        ],
+        "path": "docs/modules/first-run-onboarding.md",
+        "required": true,
+        "revision": "WORKTREE"
+      },
+      {
+        "heading_path": [
+          "Первый запуск Web Pilot на чистой системе",
+          "Подготовленный эталон и испытания"
+        ],
+        "path": "docs/modules/first-run-onboarding.md",
+        "required": true,
+        "revision": "WORKTREE"
+      },
+      {
+        "heading_path": [
+          "Первый запуск Web Pilot на чистой системе",
+          "Пользовательский путь"
+        ],
+        "path": "docs/modules/first-run-onboarding.md",
+        "required": true,
+        "revision": "WORKTREE"
+      },
+      {
+        "heading_path": [
+          "Первый запуск Web Pilot на чистой системе",
+          "Уточнение пользователя: никаких предварительных условий"
+        ],
+        "path": "docs/modules/first-run-onboarding.md",
+        "required": true,
+        "revision": "WORKTREE"
+      },
+      {
+        "heading_path": [
+          "Первый запуск Web Pilot на чистой системе",
+          "Границы и facade"
+        ],
+        "path": "docs/modules/first-run-onboarding.md",
+        "required": true,
+        "revision": "WORKTREE"
+      },
+      {
+        "heading_path": [
+          "Первый запуск Web Pilot на чистой системе",
+          "Повторяемый цикл исправлений"
+        ],
+        "path": "docs/modules/first-run-onboarding.md",
+        "required": true,
+        "revision": "WORKTREE"
+      },
+      {
+        "heading_path": [
+          "Первый запуск Web Pilot на чистой системе",
+          "Критерии завершения"
+        ],
+        "path": "docs/modules/first-run-onboarding.md",
+        "required": true,
+        "revision": "WORKTREE"
+      },
+      {
+        "heading_path": [
+          "Первый запуск Web Pilot на чистой системе",
+          "Подготовка компонентов — актуальное исправление 0.6.37"
         ],
         "path": "docs/modules/first-run-onboarding.md",
         "required": true,
@@ -2077,7 +2150,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-onboarding-031
 Current Task: нет
-Revision: 93
+Revision: 94
 
 ## Цель
 
@@ -2286,7 +2359,15 @@ Revision: 93
 - docs/architecture/OVERVIEW.md → Краткая архитектура проекта
 - docs/MODULES.md → Модули проекта
 - docs/DOCUMENTATION_INDEX.md → Каталог документации
-- docs/modules/first-run-onboarding.md → Первый запуск Web Pilot на чистой системе
+- docs/modules/first-run-onboarding.md → Первый запуск Web Pilot на чистой системе / Согласованная цель — first-run-onboarding-031
+- docs/modules/first-run-onboarding.md → Первый запуск Web Pilot на чистой системе / Владельцы и существующие решения
+- docs/modules/first-run-onboarding.md → Первый запуск Web Pilot на чистой системе / Подготовленный эталон и испытания
+- docs/modules/first-run-onboarding.md → Первый запуск Web Pilot на чистой системе / Пользовательский путь
+- docs/modules/first-run-onboarding.md → Первый запуск Web Pilot на чистой системе / Уточнение пользователя: никаких предварительных условий
+- docs/modules/first-run-onboarding.md → Первый запуск Web Pilot на чистой системе / Границы и facade
+- docs/modules/first-run-onboarding.md → Первый запуск Web Pilot на чистой системе / Повторяемый цикл исправлений
+- docs/modules/first-run-onboarding.md → Первый запуск Web Pilot на чистой системе / Критерии завершения
+- docs/modules/first-run-onboarding.md → Первый запуск Web Pilot на чистой системе / Подготовка компонентов — актуальное исправление 0.6.37
 - docs/modules/runtime-lifecycle.md → Module Specification — Runtime Lifecycle
 - docs/WORKSPACE_SETUP.md → Создание и подключение workspace
 
