@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 588,
+  "plan_revision": 590,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-owned-plans-028",
@@ -217,8 +217,8 @@
       "why": "Сопоставить согласованный UX с существующими модулями и выбрать минимальные изменения."
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-owned-plans-028",
         "task_id": "T002",
@@ -803,7 +803,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-owned-plans-028
 Current Task: нет
-Revision: 588
+Revision: 590
 
 ## Цель
 
@@ -824,8 +824,8 @@ Revision: 588
   - Git Commit: [DONE] docs: specify session plan ownership and migration
   - Reference: session-owned-plans-028 / T001 / implementation
   - Файлы: docs/modules/session-owned-plans.md, docs/modules/workspace-sessions.md, docs/modules/workflow-kit-recovery.md, docs/CONTEXT_DELIVERY.md, docs/RELEASE.md
-- [TODO] T002: Добавить каноническое хранение планов и черновиков — Ожидает
-  - Git Commit: [PENDING] feat: persist session plans and continuation drafts
+- [DONE] T002: Добавить каноническое хранение планов и черновиков — Завершено
+  - Git Commit: [DONE] feat: persist session plans and continuation drafts
   - Reference: session-owned-plans-028 / T002 / implementation
   - Файлы: .harness/kit/lib/session-plans.mjs, resources/workflow-kit/lib/session-plans.mjs, tests/session-plans.test.mjs, .harness/kit/lib/common.mjs, resources/workflow-kit/lib/common.mjs, .harness/kit/lib/plan.mjs, resources/workflow-kit/lib/plan.mjs, docs/modules/session-owned-plans.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/workflow-kit-recovery.md
 - [TODO] T003: Добавить команды подготовки и продолжения планов — Ожидает

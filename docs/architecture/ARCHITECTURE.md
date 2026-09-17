@@ -824,3 +824,6 @@ Electron smoke меняет composerBackground через UI, проверяет
 ## session-tree-outline-026 / T002 / Release 0.6.26
 
 Package metadata и обе packager-команды синхронизированы на 0.6.26. Полная Node suite и isolated Electron smoke прошли; macOS arm64 установлен по постоянному пути с неизменным inode `398344301`, Windows x64 прошёл автоматический verifier. ZIP обеих платформ опубликованы в `.harness/runtime/releases/0.6.26/` и скопированы в `~/Downloads/WebPilot-0.6.26/`. Физический Windows запуск и визуальная проверка реального аккаунта ChatGPT остаются пользовательской приёмкой.
+
+
+Scope 028 / T002: добавлен канонический фасад выбора session plan; AsyncLocalStorage изолирует операции одного вызова и не зависит от UI selection.

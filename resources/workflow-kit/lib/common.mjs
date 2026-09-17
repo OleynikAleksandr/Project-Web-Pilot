@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import { AsyncLocalStorage } from 'node:async_hooks';
 
 export const VERSION = '1.3.0';
 export const PLAN = '.harness/plans/todo-plan.md';
@@ -77,3 +78,15 @@ export function withLock(file, fn) {
   finally { fs.closeSync(fd); fs.unlinkSync(file); }
 }
 export function errorResult(e) { return { ok: false, code: e.code ?? 'INTERNAL_ERROR', message: e.message, details: e.details ?? {} }; }
+
+// Invocation-local addressing; selecting a UI row never changes command ownership.
+const planContext = new AsyncLocalStorage();
+export const currentPlanSelection = () => planContext.getStore() ?? null;
+export function planPath(root) {
+  const selected = currentPlanSelection();
+  return selected && path.resolve(root) === selected.root ? selected.file : PLAN;
+}
+export function withPlanFile(root, file, metadata, fn) {
+  safePath(root, file);
+  return planContext.run({ ...metadata, root: path.resolve(root), file }, fn);
+}

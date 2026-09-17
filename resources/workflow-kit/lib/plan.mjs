@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { PLAN, check, json, atomic, textFile, relativePath, id } from './common.mjs';
+import { PLAN, planPath, currentPlanSelection, check, json, atomic, textFile, relativePath, id } from './common.mjs';
 
 const BEGIN = '<!-- workflow-state:begin -->';
 const END = '<!-- workflow-state:end -->';
@@ -138,6 +138,10 @@ export function parsePlan(text, { projection = true } = {}) {
   if (projection) check(renderPlan(p) === text, 'PLAN_PROJECTION', 'Читаемая проекция изменена вручную. Используйте repair --dry-run.');
   return p;
 }
-export const readPlan = root => parsePlan(textFile(root, PLAN));
-export const writePlan = (root, p) => atomic(path.join(root, PLAN), renderPlan(p));
+export const readPlan = root => {
+  const selected = currentPlanSelection();
+  if (selected?.virtualPlan && !fs.existsSync(path.join(root, planPath(root)))) return structuredClone(selected.virtualPlan);
+  return parsePlan(textFile(root, planPath(root)));
+};
+export const writePlan = (root, p) => atomic(path.join(root, planPath(root)), renderPlan(p));
 export function nextTask(p) { return p.tasks.find(t => t.id === p.current_task_id) ?? p.tasks.find(t => t.implementation_status === 'TODO' && t.dependencies.every(d => p.tasks.find(t2 => t2.id === d).commit_status === 'DONE')) ?? null; }
