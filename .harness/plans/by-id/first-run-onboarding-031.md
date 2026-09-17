@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 72,
+  "plan_revision": 75,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-onboarding-031",
@@ -75,7 +75,8 @@
       "src/browser-startup.mjs",
       "tests/browser-startup.test.mjs",
       "src/startup-network-trace.mjs",
-      "tests/startup-network-trace.test.mjs"
+      "tests/startup-network-trace.test.mjs",
+      "src/chatgpt-experience.mjs"
     ],
     "max_functional_files_per_task": 3
   },
@@ -1352,8 +1353,8 @@
       }
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "dependencies": [
         "R004"
       ],
@@ -1365,6 +1366,188 @@
       ],
       "verification_ids": [],
       "acceptance_criteria": [
+        "Сохранены обе попытки одного диагностического сеанса: 120010 и 120008 мс, без HTTP-ответа/DOM.",
+        "Отмечено, что network относится только к первому запросу, причина повторного ожидания по этой части не установлена.",
+        "Локальные пробы различают главную страницу и прямой вход; условия и ограничения результатов явно записаны.",
+        "Полные критерии прежнего T016 без потери перенесены в T017; чистый пользовательский путь не объявлен пройденным."
+      ],
+      "expected_commit_message": "docs: record repeated startup timeout and login route probes",
+      "id": "T016",
+      "title": "Зафиксировать два отказа 0.6.35 и сравнение начальных URL",
+      "why": "Непрерывное ожидание и ручной повтор не устранили MAC-002; локализовать следующую узкую коррекцию.",
+      "commit_ref": {
+        "scope_id": "first-run-onboarding-031",
+        "task_id": "T016",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "C009",
+      "title": "Открывать страницу входа напрямую при запуске без проекта",
+      "why": "Открывать страницу входа напрямую при запуске без проекта",
+      "dependencies": [
+        "T016"
+      ],
+      "functional_paths": [
+        "src/chatgpt-experience.mjs",
+        "src/main.mjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/first-run-onboarding.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/VERIFICATION.md",
+        "docs/PRODUCT.md",
+        "docs/DECISIONS.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/RELEASE.md",
+        "docs/modules/runtime-lifecycle.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/modules/workspace-sessions.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "README.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/MODULES.md",
+        "docs/DOCUMENTATION_INDEX.md"
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "acceptance_criteria": [
+        "Навигация без проекта направляется на штатный https://chatgpt.com/auth/login; явные entryUrl сохраняют приоритет.",
+        "Сохранённые URL проектов и Chat/Work entrypoints не меняются.",
+        "Electron fixture подтверждает фактический адрес первого открытия без проекта; защита, заголовки, cookies и диагностика не меняются."
+      ],
+      "expected_commit_message": "fix: open the sign-in page directly during onboarding",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "first-run-onboarding-031",
+        "task_id": "C009",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "B005",
+      "title": "Собрать 0.6.36 для проверки прямого входа на обеих платформах",
+      "why": "Собрать 0.6.36 для проверки прямого входа на обеих платформах",
+      "dependencies": [
+        "C009"
+      ],
+      "functional_paths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "documentation_paths": [
+        "docs/modules/first-run-onboarding.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/VERIFICATION.md",
+        "docs/PRODUCT.md",
+        "docs/DECISIONS.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/RELEASE.md",
+        "docs/modules/runtime-lifecycle.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/modules/workspace-sessions.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "README.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/MODULES.md",
+        "docs/DOCUMENTATION_INDEX.md"
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "acceptance_criteria": [
+        "macOS arm64 и Windows x64 собраны и сверены с исходниками; ZIP доставлены.",
+        "Постоянный Mac app обновлён с сохранением identity и рабочего процесса.",
+        "Устранение гостевого дефекта ожидает ручной проверки, нативная Windows не объявлена проверенной."
+      ],
+      "expected_commit_message": "build: release direct sign-in startup",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "first-run-onboarding-031",
+        "task_id": "B005",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "R005",
+      "title": "Обновить документы и передать проверку 0.6.36",
+      "why": "Обновить документы и передать проверку 0.6.36",
+      "dependencies": [
+        "B005"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/modules/first-run-onboarding.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/VERIFICATION.md",
+        "docs/PRODUCT.md",
+        "docs/DECISIONS.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/RELEASE.md",
+        "docs/modules/runtime-lifecycle.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/modules/workspace-sessions.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "README.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/MODULES.md",
+        "docs/DOCUMENTATION_INDEX.md"
+      ],
+      "verification_ids": [],
+      "acceptance_criteria": [
+        "Действующая документация описывает прямую страницу входа и фактические результаты 0.6.35.",
+        "Инструкция повторной проверки и полный T017 сохранены; DOCS остаётся последней."
+      ],
+      "expected_commit_message": "docs: deliver direct sign-in startup check",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "first-run-onboarding-031",
+        "task_id": "R005",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T017",
+      "title": "Проверить прямой вход и полный чистый путь macOS",
+      "why": "Проверить прямой вход и полный чистый путь macOS",
+      "dependencies": [
+        "R005"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/modules/first-run-onboarding.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/VERIFICATION.md",
+        "docs/PRODUCT.md",
+        "docs/DECISIONS.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/RELEASE.md",
+        "docs/modules/runtime-lifecycle.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/modules/workspace-sessions.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "README.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/MODULES.md",
+        "docs/DOCUMENTATION_INDEX.md"
+      ],
+      "verification_ids": [],
+      "acceptance_criteria": [
         "На новом клоне Base пройден путь от пакета до проекта, доставки контекста и разрешённого действия агента с тестовым файлом гостя.",
         "Для подтверждения готовности достаточно подсказок поставки и приложения; помощь агента в обход недостающего UI считается проблемой.",
         "Каждый оставшийся дефект добавляет задачи исправления, сборки и нового прохода до последующих проверок и DOCS; число циклов не ограничивается.",
@@ -1372,12 +1555,11 @@
         "Перед повторным испытанием подтвердить сборку/архитектуру гостя, отсутствие предустановленных зависимостей/профиля в Base и версию/происхождение гостевого app; ранее отсутствовавшие данные T001 не считать подтверждёнными."
       ],
       "expected_commit_message": "docs: verify clean macOS guided startup",
-      "id": "T016",
-      "title": "Проверить непрерывный первый запрос и полный чистый путь macOS",
-      "why": "Доказать самостоятельный первый запуск исправленной поставки.",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "first-run-onboarding-031",
-        "task_id": "T016",
+        "task_id": "T017",
         "role": "implementation"
       }
     },
@@ -1390,7 +1572,7 @@
         "role": "implementation"
       },
       "dependencies": [
-        "T016"
+        "T017"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -1583,6 +1765,10 @@
         "B004",
         "R004",
         "T016",
+        "C009",
+        "B005",
+        "R005",
+        "T017",
         "T010",
         "T011",
         "T012",
@@ -1671,7 +1857,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-onboarding-031
 Current Task: нет
-Revision: 72
+Revision: 75
 
 ## Цель
 
@@ -1810,10 +1996,26 @@ Revision: 72
   - Git Commit: [DONE] docs: deliver uninterrupted startup check
   - Reference: first-run-onboarding-031 / R004 / implementation
   - Файлы: docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
-- [TODO] T016: Проверить непрерывный первый запрос и полный чистый путь macOS — Ожидает
-  - Git Commit: [PENDING] docs: verify clean macOS guided startup
+- [DONE] T016: Зафиксировать два отказа 0.6.35 и сравнение начальных URL — Завершено
+  - Git Commit: [DONE] docs: record repeated startup timeout and login route probes
   - Reference: first-run-onboarding-031 / T016 / implementation
   - Файлы: docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md
+- [TODO] C009: Открывать страницу входа напрямую при запуске без проекта — Ожидает
+  - Git Commit: [PENDING] fix: open the sign-in page directly during onboarding
+  - Reference: first-run-onboarding-031 / C009 / implementation
+  - Файлы: src/chatgpt-experience.mjs, src/main.mjs, tests/electron-smoke.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
+- [TODO] B005: Собрать 0.6.36 для проверки прямого входа на обеих платформах — Ожидает
+  - Git Commit: [PENDING] build: release direct sign-in startup
+  - Reference: first-run-onboarding-031 / B005 / implementation
+  - Файлы: package.json, package-lock.json, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
+- [TODO] R005: Обновить документы и передать проверку 0.6.36 — Ожидает
+  - Git Commit: [PENDING] docs: deliver direct sign-in startup check
+  - Reference: first-run-onboarding-031 / R005 / implementation
+  - Файлы: docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
+- [TODO] T017: Проверить прямой вход и полный чистый путь macOS — Ожидает
+  - Git Commit: [PENDING] docs: verify clean macOS guided startup
+  - Reference: first-run-onboarding-031 / T017 / implementation
+  - Файлы: docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
 - [TODO] T010: Пройти первый запуск Windows и выявить отличия — Ожидает
   - Git Commit: [PENDING] docs: record Windows first-run findings
   - Reference: first-run-onboarding-031 / T010 / implementation
