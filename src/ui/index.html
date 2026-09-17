@@ -61,6 +61,18 @@
     #doctor-results li[data-kind=issue]{color:#ac594b}:root[data-theme=dark] #doctor-results li[data-kind=issue]{color:#e2a093}#doctor-results li[data-kind=ok],#doctor-results li[data-kind=repair]{color:var(--teal)}#doctor-panel .actions{flex-direction:row;flex-wrap:wrap}#doctor-actions button{flex:1 1 110px}
 
     .own-plan-title{font-size:13px;line-height:1.45;margin:10px 0 4px;overflow-wrap:anywhere}.plan-origin{font-size:10px;line-height:1.5;color:var(--muted);margin:5px 0 10px}.plan-origin button{border:0;background:none;color:var(--teal);padding:2px;text-align:left;font:inherit}.prepared-card{margin-top:10px}.prepared-item+.prepared-item{border-top:1px solid var(--tree-branch);padding-top:14px;margin-top:14px}.prepared-title{font-size:12px;line-height:1.5;margin:8px 0 4px;overflow-wrap:anywhere}.prepared-state{font-size:10px;color:var(--muted);margin:4px 0 8px}.prepared-preview>summary{cursor:pointer;font-size:11px;color:var(--teal);padding:7px 0}.prepared-docs{margin:8px 0;padding-top:7px;border-top:1px solid var(--tree-branch);font-size:10px;color:var(--muted);line-height:1.5;overflow-wrap:anywhere}.prepared-docs span{display:block;margin-top:3px}.prepared-action{font-size:11px;margin-top:10px;line-height:1.4}.cancel-choice{width:100%;margin-top:8px}.prepared-preview .plan-task{padding:5px 0}
+  
+    .startup-panel h2{font-size:23px;line-height:1.2;margin:0 0 10px;letter-spacing:-.6px}
+    .startup-intro{font-size:12px;color:var(--muted);line-height:1.6;margin:0 0 20px}
+    .startup-step{border-top:1px solid var(--line);padding:16px 0}
+    .startup-step h3{display:flex;align-items:center;gap:8px;font-size:13px;margin:0 0 8px}
+    .startup-number{display:grid;place-items:center;width:23px;height:23px;flex-shrink:0;border-radius:50%;background:#087e8019;color:var(--teal);font-size:11px}
+    .startup-step p,.startup-instructions{font-size:11px;line-height:1.65;color:var(--muted)}
+    .startup-status{margin:5px 0 8px}
+    .startup-step .secondary,.startup-step .primary{width:100%;margin:6px 0;font-size:11px}
+    .startup-instructions{padding-left:18px;margin:12px 0}
+    .startup-instructions li{padding-left:2px;margin:12px 0}
+    .startup-step summary{font-size:11px}
   </style>
 </head>
 <body>
@@ -136,6 +148,55 @@ SOFTWARE.
     </section>
     <div class="scroll">
       <div id="error-banner" class="error-banner" role="alert" hidden></div>
+      <section id="startup-panel" class="startup-panel" aria-labelledby="startup-title" hidden>
+        <p class="eyebrow">Первое знакомство</p>
+        <h2 id="startup-title">Начнём работу</h2>
+        <p class="startup-intro">Мы поможем войти в ChatGPT и подготовим компьютер для ваших проектов.</p>
+        <p id="startup-error" class="error-banner" role="alert" hidden></p>
+        <section class="startup-step" id="startup-account-step">
+          <h3><span class="startup-number">1</span> Аккаунт ChatGPT</h3>
+          <p id="startup-account-status" class="startup-status" role="status"></p>
+          <div id="startup-account-body">
+            <p>Есть аккаунт? Нажмите «Войти» на странице справа. Нет аккаунта? Выберите там «Зарегистрироваться» / «Sign up» и следуйте шагам OpenAI.</p>
+            <p>Отдельное приложение ChatGPT устанавливать не нужно. Вход или регистрация выполняются здесь, в веб-версии.</p>
+            <div class="actions"><button class="primary" data-startup="chat">Открыть вход в ChatGPT</button><button class="secondary" data-startup="signup">У меня ещё нет аккаунта</button></div>
+            <p id="startup-signup-help" hidden>На странице справа выберите «Sign up» / «Зарегистрироваться». Создайте аккаунт, подтвердите почту, если это потребуется, и завершите вход. Затем нажмите «Проверить вход» ниже.</p>
+            <button class="text-button" data-startup="check">Проверить вход и продолжить</button>
+          </div>
+        </section>
+        <section class="startup-step">
+          <h3><span class="startup-number">2</span> Подготовка компьютера</h3>
+          <p id="startup-components-status" class="startup-status" role="status"></p>
+          <div id="startup-components-body">
+            <p id="startup-components-help"></p>
+            <button id="startup-install-git" class="primary" data-startup="install-git" hidden>Установить компонент Apple</button>
+            <button class="secondary" data-startup="check" data-runtime-action>Проверить и продолжить</button>
+          </div>
+        </section>
+        <section class="startup-step">
+          <h3><span class="startup-number">3</span> Подключение к файлам</h3>
+          <p id="startup-tunnel-status" class="startup-status" role="status"></p>
+          <div id="startup-tunnel-body">
+            <p>Нужно личное защищённое подключение между ChatGPT и этим компьютером. Оно называется туннелем. Для нового компьютера создайте отдельное подключение.</p>
+            <ol class="startup-instructions">
+              <li>Откройте OpenAI Platform, войдите или завершите регистрацию. В разделе Tunnels создайте туннель, свяжите его со своим пространством ChatGPT и сохраните его идентификатор (tunnel_id).<button class="secondary" data-startup="tunnels">Открыть создание туннеля ↗</button></li>
+              <li>В той же организации создайте личный ключ с ограниченными правами: Tunnels → Read и Use. Права на модели не нужны. Скопируйте ключ для следующего шага.<button class="secondary" data-startup="keys">Открыть создание ключа ↗</button></li>
+              <li>Введите идентификатор и ключ в двух системных окнах. Ключ останется на этом компьютере.<button class="primary" data-startup="configure-tunnel" data-runtime-action>Ввести данные подключения</button></li>
+            </ol>
+            <details><summary>Нет раздела Tunnels или доступа?</summary><p>Проверьте выбранную организацию OpenAI. Для создания нужны права Tunnels Read + Manage, для использования — Read + Use. Доступ к developer mode в ChatGPT проверяется отдельно; в управляемом пространстве его выдаёт администратор.</p><button class="secondary" data-startup="help">Официальная инструкция ↗</button></details>
+          </div>
+        </section>
+        <section class="startup-step">
+          <h3><span class="startup-number">4</span> Первый проект</h3>
+          <div id="startup-project-body">
+            <p>Сначала добавьте это подключение в ChatGPT: Plugins → «+» → Connection: Tunnel. Выберите созданный туннель. Для локального подключения выберите No Auth. Если «+» недоступен, включите developer mode в настройках ChatGPT.</p>
+            <button class="secondary" data-startup="plugins">Открыть Plugins в ChatGPT</button>
+            <p>Затем создайте проект. Доступ к его файлам проверим первым действием агента — работа локальных служб сама по себе этого не подтверждает.</p>
+            <button id="startup-continue" class="primary" data-startup="continue">Создать первый проект</button>
+          </div>
+          <p id="startup-project-wait" class="startup-status">Завершите предыдущие шаги.</p>
+        </section>
+      </section>
       <section id="workspace-health" class="notice" aria-live="polite" hidden>
         <span id="workspace-health-message"></span>
         <div id="workspace-health-actions" class="actions" hidden>
@@ -247,11 +308,13 @@ SOFTWARE.
       </section>
     </div>
     <footer class="footer">
+      <button id="open-startup" class="text-button" hidden>Начальная настройка</button>
       <div class="footer-line"><span>На вашем Mac</span><span class="badge">ПРОТОТИП 0.6</span></div>
       <div class="footer-controls"><details><summary>Подробности подключения</summary><p id="connection-detail">Codex Local Mac · существующее подключение</p><p id="session-detail"></p><button id="choose-runtime" class="secondary">Выбрать папку Codex Local Mac</button></details><button id="open-settings" class="icon-button settings-button" title="Настройки и архив проектов" aria-label="Настройки и архив проектов" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m9 3-.6 2.3-2 .9L4.3 5.5 2.5 8.6l1.7 1.6-.2 2.2-1.6 1.8L4.3 18l2.2-.6 1.8 1.1.7 2.5h4l.7-2.5 1.8-1.1 2.2.6 1.9-3.8-1.6-1.8-.2-2.2 1.7-1.6-1.8-3.1-2.1.7-2-.9L13 3Z"/><circle cx="11" cy="12" r="3.2"/></svg></button></div>
     </footer>
     <div id="sidebar-splitter" class="sidebar-splitter" role="separator" aria-orientation="vertical" aria-label="Изменить ширину панели проектов" tabindex="0"></div>
   </main>
   <script type="module" src="./sidebar.mjs"></script>
+  <script type="module" src="./startup.mjs"></script>
 </body>
 </html>

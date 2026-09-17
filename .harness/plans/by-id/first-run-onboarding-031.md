@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 17,
+  "plan_revision": 19,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-onboarding-031",
@@ -327,8 +327,8 @@
       "expected_commit_message": "feat: check first-run readiness on startup"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-onboarding-031",
         "task_id": "T006",
@@ -818,7 +818,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-onboarding-031
 Current Task: нет
-Revision: 17
+Revision: 19
 
 ## Цель
 
@@ -861,8 +861,8 @@ Revision: 17
   - Git Commit: [DONE] feat: check first-run readiness on startup
   - Reference: first-run-onboarding-031 / F001 / implementation
   - Файлы: src/main.mjs, src/preload.cjs, src/ui/progress.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, docs/modules/runtime-lifecycle.md
-- [TODO] T006: Встроить понятное сопровождение первого запуска — Ожидает
-  - Git Commit: [PENDING] feat: guide users through first startup
+- [DONE] T006: Встроить понятное сопровождение первого запуска — Завершено
+  - Git Commit: [DONE] feat: guide users through first startup
   - Reference: first-run-onboarding-031 / T006 / implementation
   - Файлы: src/ui/startup.mjs, src/ui/index.html, src/ui/sidebar.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, docs/PRODUCT.md, docs/modules/workspace-sessions.md, docs/WORKSPACE_SETUP.md
 - [TODO] T007: Сопроводить вход и первичную настройку подключения — Ожидает

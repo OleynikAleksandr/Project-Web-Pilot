@@ -350,12 +350,17 @@ function render(state) {
   $('error-banner').hidden = !error;
   $('error-banner').textContent = error ? `${error.message} (${error.code})` : '';
   for (const button of document.querySelectorAll('button')) {
+    if (button.closest('#startup-panel') || button.id === 'open-startup') continue;
     button.disabled = actionPending || (state.storageError && ['create-workspace', 'add-workspace', 'retry-context'].includes(button.id));
   }
   $('next-session-choice').hidden = !state.preparedChoice;
   $('next-session-title').textContent = state.preparedChoice ? 'Открыть «' + state.preparedChoice.title + '» в новой сессии:' : '';
   setupView.render(state, actionPending);
   archiveView.render(state, actionPending);
+  const guidedStartup = !!state.startup?.active && !state.setup && !state.settings;
+  $('active-projects').hidden = guidedStartup || !!state.setup || !!state.settings;
+  if (guidedStartup) { $('context-card').hidden = true; $('workspace-health').hidden = true; }
+
   // Setup briefly hides the tree while checking a folder. Restore only after it is visible.
   for (const list of $('projects').querySelectorAll('.sessions')) {
     if (!list.closest('[hidden]')) {
