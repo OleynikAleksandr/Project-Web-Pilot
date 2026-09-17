@@ -203,3 +203,67 @@ test('DiagnosticJsonl writes valid JSONL and rotates bounded files', async () =>
   assert.ok((await fs.stat(file)).size <= 600);
   await fs.rm(dir, { recursive: true, force: true });
 });
+
+import { EventEmitter } from 'node:events';
+import { ChromiumDiagnostics } from '../src/chromium-diagnostics.mjs';
+
+async function startupDiagnostics(t, { pendingDebugger = false } = {}) {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'web-pilot-early-diagnostics-'));
+  const contents = new EventEmitter(), debug = new EventEmitter();
+  let attached = false;
+  debug.attach = () => { attached = true; };
+  debug.isAttached = () => attached;
+  debug.detach = () => { attached = false; };
+  debug.sendCommand = () => pendingDebugger ? new Promise(() => {}) : Promise.resolve({});
+  contents.debugger = debug; contents.getURL = () => 'about:blank';
+  contents.isDestroyed = () => false;
+  contents.executeJavaScript = async () => { throw new Error('Do not inspect a document that has not loaded'); };
+  const file = path.join(dir, 'chromium-events.jsonl');
+  const diagnostics = new ChromiumDiagnostics(contents, { file, allowFixture: true, sampleIntervalMs: 60000 });
+  await diagnostics.start({ appVersion: 'test' });
+  t.after(async () => { await diagnostics.stop(); await fs.rm(dir, { recursive: true, force: true }); });
+  return { diagnostics, contents, file };
+}
+
+test('first navigation failure is recorded before a successful page without logging URL secrets', async t => {
+  const { diagnostics, contents, file } = await startupDiagnostics(t);
+  const url = 'https://chatgpt.com/?token=PRIVATE_QUERY#PRIVATE_FRAGMENT';
+  contents.emit('did-start-navigation', { url, isMainFrame: true, isSameDocument: false });
+  contents.emit('did-fail-provisional-load', {}, -105, 'ERR_NAME_NOT_RESOLVED', url, true);
+  contents.emit('did-fail-load', {}, -105, 'ERR_NAME_NOT_RESOLVED', url, true);
+  diagnostics.onDebuggerMessage({}, 'Network.loadingFailed', { requestId: 'fixture', type: 'Document', errorText: 'net::ERR_NAME_NOT_RESOLVED' });
+  const report = JSON.parse(await diagnostics.startupReport());
+  assert.equal(report.events[0].event, 'session-start');
+  const failure = report.events.find(e => e.event === 'did-fail-load');
+  assert.equal(failure.errorCode, -105); assert.equal(failure.errorName, 'ERR_NAME_NOT_RESOLVED');
+  assert.equal(failure.isMainFrame, true);
+  assert.equal(report.events.some(e => e.event === 'did-finish-load'), false);
+  assert.ok(report.events.some(e => e.errorName === 'net::ERR_NAME_NOT_RESOLVED'));
+  const text = await fs.readFile(file, 'utf8');
+  assert.equal(/PRIVATE_QUERY|PRIVATE_FRAGMENT/.test(text), false);
+});
+
+test('startup report stays bounded and excludes chat telemetry and previous diagnostic sessions', async t => {
+  const { diagnostics, contents, file } = await startupDiagnostics(t);
+  await diagnostics.flush();
+  await fs.appendFile(file, JSON.stringify({ diagnosticSession: 'previous-session', event: 'navigation-requested', marker: 'OLD_SESSION' }) + '\n');
+  diagnostics.log.record('telemetry', 'context', { marker: 'CHAT_TELEMETRY' });
+  for (let i = 0; i < 100; i++) contents.emit('did-frame-navigate', {}, 'https://chatgpt.com/', 503, 'PRIVATE_STATUS_TEXT', true);
+  contents.emit('did-fail-load', {}, -2, 'PRIVATE_ERROR_MESSAGE', 'https://chatgpt.com/', true);
+  const text = await diagnostics.startupReport(), report = JSON.parse(text);
+  assert.ok(report.events.length <= 61);
+  assert.equal(report.events[0].event, 'session-start');
+  assert.ok(report.events.some(e => e.event === 'main-document-response' && e.status === 503));
+  assert.equal(report.events.at(-1).errorName, null);
+  assert.equal(/OLD_SESSION|CHAT_TELEMETRY|PRIVATE_STATUS_TEXT|PRIVATE_ERROR_MESSAGE/.test(text), false);
+});
+
+test('native startup logging does not wait for a debugger awaiting its first renderer', async t => {
+  let timer;
+  const f = await Promise.race([
+    startupDiagnostics(t, { pendingDebugger: true }),
+    new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('Diagnostic channel blocked first navigation')), 1000); }),
+  ]).finally(() => clearTimeout(timer));
+  f.contents.emit('did-fail-load', {}, -106, 'ERR_INTERNET_DISCONNECTED', 'https://chatgpt.com/', true);
+  assert.match(await f.diagnostics.startupReport(), /ERR_INTERNET_DISCONNECTED/);
+});

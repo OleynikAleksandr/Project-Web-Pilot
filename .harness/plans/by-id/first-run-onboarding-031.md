@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 39,
+  "plan_revision": 41,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-onboarding-031",
@@ -685,8 +685,8 @@
       "id": "V002",
       "title": "Проверить ранний журнал и повтор неудачной загрузки",
       "why": "Нужна воспроизводимая проверка случая, когда первая страница не загрузилась.",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-onboarding-031",
         "task_id": "V002",
@@ -1125,7 +1125,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-onboarding-031
 Current Task: нет
-Revision: 39
+Revision: 41
 
 ## Цель
 
@@ -1204,8 +1204,8 @@ Revision: 39
   - Git Commit: [DONE] fix: guide users when ChatGPT has not opened
   - Reference: first-run-onboarding-031 / C003 / implementation
   - Файлы: src/ui/startup.mjs, src/ui/index.html, tests/startup-ui.test.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
-- [TODO] V002: Проверить ранний журнал и повтор неудачной загрузки — Ожидает
-  - Git Commit: [PENDING] test: verify first navigation failure diagnostics
+- [DONE] V002: Проверить ранний журнал и повтор неудачной загрузки — Завершено
+  - Git Commit: [DONE] test: verify first navigation failure diagnostics
   - Reference: first-run-onboarding-031 / V002 / implementation
   - Файлы: tests/chromium-diagnostics.test.mjs, tests/electron-smoke.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
 - [TODO] B002: Собрать обе платформы с ранней диагностикой загрузки — Ожидает

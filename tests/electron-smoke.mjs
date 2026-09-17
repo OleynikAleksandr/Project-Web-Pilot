@@ -132,12 +132,20 @@ export async function run({ app, window, browser, sidebar, store, controller, se
     noSecretInput: !document.querySelector('#startup-panel input'),
     projectsHidden: document.getElementById('active-projects').hidden,
     continueDisabled: document.getElementById('startup-continue').disabled,
+    loginInstructionsHidden: document.getElementById('startup-account-instructions').hidden,
+    signupHidden: document.getElementById('startup-signup').hidden,
+    copyVisible: !document.getElementById('startup-copy-diagnostics').hidden,
   })`);
   assert.match(firstRun.signup, /нет аккаунта/);
   assert.match(firstRun.slow, /ChatGPT/);
   assert.equal(firstRun.retry, true); assert.equal(firstRun.noSecretInput, true);
   assert.equal(firstRun.projectsHidden, true); assert.equal(firstRun.continueDisabled, true);
+  assert.equal(firstRun.loginInstructionsHidden, true); assert.equal(firstRun.signupHidden, true); assert.equal(firstRun.copyVisible, true);
   await fs.writeFile(path.join(dataDir, 'startup-account.png'), (await sidebar.capturePage()).toPNG());
+  sidebar.send('pilot:state-changed', { ...startupFixture, startup: { ...startupFixture.startup, page: 'loaded', account: 'signed-out' } });
+  await waitFor(() => sidebar.executeJavaScript('!document.getElementById("startup-signup").hidden'), 'registration after visible login', snapshot);
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("startup-account-instructions").hidden'), false);
+  await fs.writeFile(path.join(dataDir, 'startup-login.png'), (await sidebar.capturePage()).toPNG());
   sidebar.send('pilot:state-changed', { ...startupFixture, startup: { ...startupFixture.startup, page: 'loaded', account: 'signed-in' } });
   await waitFor(() => sidebar.executeJavaScript('!document.getElementById("startup-components-body").hidden'), 'first-run components', snapshot);
   assert.equal(await sidebar.executeJavaScript('document.getElementById("startup-install-git").hidden'), false);
@@ -871,7 +879,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(store.selected().experience, 'work');
   assert.equal(store.snapshot().projects.find(p => p.workspace === workspace).sessions.length, beforeDoctorNew + 1);
 
-  const result = { earlyFirstLoadDiagnostics: true, guidedFirstRun: true, firstRunScreenshots: [path.join(dataDir, "startup-account.png"), path.join(dataDir, "startup-components.png")], fastSavedNavigation: true, lastNavigationWins: true, readinessBeforeOrAfterLoad: true, backgroundFailureRetry: true, liveChatColors: true, composerBackground: true, streamingAssistantColor: true, chatColorsPersistence: true, chatColorsReset: true, colorScreenshots, projectDoctor: true, doctorBackup: true, doctorOpen: true, doctorRefresh: true, doctorNewSession: true, doctorScreenshots, newestSessionFirst: true, projectSelectsNewest: true, threeSessionViewport: true, sessionScrollPreserved: true, visibleSessionScrollbar: true, nativeProjectsDisclosure: true, treePopover: true, treeScreenshots, scopeContinuationChat: true, scopeContinuationWork: true, scopeContinuationRestart: true, scopeContinuationNoDuplicates: true,
+  const result = { earlyFirstLoadDiagnostics: true, guidedFirstRun: true, firstRunScreenshots: [path.join(dataDir, "startup-account.png"), path.join(dataDir, "startup-login.png"), path.join(dataDir, "startup-components.png")], fastSavedNavigation: true, lastNavigationWins: true, readinessBeforeOrAfterLoad: true, backgroundFailureRetry: true, liveChatColors: true, composerBackground: true, streamingAssistantColor: true, chatColorsPersistence: true, chatColorsReset: true, colorScreenshots, projectDoctor: true, doctorBackup: true, doctorOpen: true, doctorRefresh: true, doctorNewSession: true, doctorScreenshots, newestSessionFirst: true, projectSelectsNewest: true, threeSessionViewport: true, sessionScrollPreserved: true, visibleSessionScrollbar: true, nativeProjectsDisclosure: true, treePopover: true, treeScreenshots, scopeContinuationChat: true, scopeContinuationWork: true, scopeContinuationRestart: true, scopeContinuationNoDuplicates: true,
     transitionScreenshot: path.join(dataDir, 'next-session-choice.png'), mode: 'isolated-fixture', electron: process.versions.electron, chromium: process.versions.chrome,
     views: window.contentView.children.length, secureRemote: true, sidebarIpc: true, archiveRestore: true, archiveRestart: true, deleteCancel: true, localDeletion: true, cloudChatPreserved: true, workspaceCreation: true, workspaceValidation: true, cancelPreservesSession: true, startupMessages: 4, canonicalPacketLoads: packetLoads, recoveryCache: true, operationProgress: true, progressScreenshot: path.join(dataDir, 'progress-ui.png'),
     tokenCounterRemoved: true, projectRename: true, sessionRename: true, scopeSessionRename: true, restartKeepsSession: true, newChatCreatesSession: true, sessionTree: true, selectsEarlierSession: true, compactWorkspaceDetails: true, projectPathClipboard: true, sessionPlans: true, preparedPlans: true, manualChatWorkChoice: true, noAcceptanceButton: true, chromiumDiagnostics: true, contextWindowIndicatorRemoved: true, resizableSidebar: true, separateArchiveWindow: true, archiveMultiSelect: true, archiveForgetKeepsFolder: true, shellTheme: true, nativeTitlebarTheme: nativeTheme.shouldUseDarkColors, toolCallFilter: true, microphonePermission: true, geolocationPermission: true, cameraPermission: false, fullContextBytes: Buffer.byteLength(fixtureContext), liveChatGPT: false, agentToolsRequired: false };
