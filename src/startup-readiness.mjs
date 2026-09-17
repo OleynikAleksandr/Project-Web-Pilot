@@ -2,6 +2,18 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import path from 'node:path';
 const execute = promisify(execFile);
+const PREPARATION_ERRORS = {
+  MAC_RUNTIME_EXTERNAL_MODIFIED: 'Локальный компонент отличается от поддерживаемой версии. Обновите Web Pilot. Если ошибка повторяется, передайте этот код разработчику; удалять настройки не нужно.',
+  MAC_RUNTIME_SETUP_FAILED: 'Не удалось загрузить или установить локальные компоненты. Нажмите «Проверить и продолжить», чтобы повторить подготовку. Если ошибка повторяется, передайте этот код разработчику.',
+  MAC_RUNTIME_STATUS_FAILED: 'Не удалось проверить локальные компоненты. Нажмите «Проверить и продолжить». Если ошибка повторяется, передайте этот код разработчику.',
+  MAC_RUNTIME_STATUS_INVALID: 'Локальный компонент вернул непонятный ответ. Обновите Web Pilot и повторите подготовку.',
+  MAC_RUNTIME_CONTRACT: 'Версия локального компонента несовместима с Web Pilot. Обновите приложение и повторите подготовку.',
+  MAC_RUNTIME_PAYLOAD_MISSING: 'В приложении отсутствуют файлы для подготовки. Заново распакуйте полный архив Web Pilot и замените приложение.',
+  MAC_RUNTIME_ARCHIVE_INVALID: 'Комплект локальных компонентов повреждён. Заново распакуйте полный архив Web Pilot и замените приложение.',
+  MAC_RUNTIME_BOOTSTRAP_TOOL_MISSING: 'Не запускается встроенный инструмент установки. Заново распакуйте полный архив Web Pilot и замените приложение.',
+  MAC_RUNTIME_NOT_FOUND: 'Установленные локальные компоненты не найдены. Перезапустите Web Pilot и повторите подготовку.',
+};
+
 
 // Avoid /usr/bin/git on an unprepared Mac: the shim can launch a system dialog.
 export async function inspectMacGit(run = execute) {
@@ -52,7 +64,8 @@ export class StartupReadiness {
     this.publish({ busy: true, error: null });
     this.pending = Promise.resolve().then(operation).catch(error => {
       // Never publish command arguments or raw stderr, which may contain credentials.
-      this.publish({ phase: 'error', error: error.publicMessage || 'Подготовка не завершилась. Проверьте подключение к интернету и повторите этот шаг.' });
+      const known = Object.hasOwn(PREPARATION_ERRORS, error?.code) ? PREPARATION_ERRORS[error.code] + ' (' + error.code + ')' : null;
+      this.publish({ phase: 'error', error: error?.publicMessage || known || 'Не удалось подготовить локальные компоненты. Нажмите «Проверить и продолжить». Если ошибка повторяется, сообщите разработчику, на каком шаге она появилась.' });
     }).finally(() => { this.pending = null; this.publish({ busy: false }); });
     return this.pending;
   }

@@ -135,3 +135,26 @@ test('failed installer activation offers visible recovery and a fresh retry', as
   assert.equal(f.flow.snapshot().phase, 'git-installing');
   assert.equal(f.flow.snapshot().error, null);
 });
+
+test('known setup error explains the cause, preserves installed Git and supports retry without leaking stderr', async () => {
+ let failed = true;
+ const f = fixture({ inspectRuntime: async () => {
+  if (failed) throw Object.assign(new Error('private sk-runtime-secret'), {code:'MAC_RUNTIME_EXTERNAL_MODIFIED',stderr:'private token'});
+  return {mcp:{ready:true},tunnel:{ready:false,configured:false}};
+ } });
+ await f.flow.check();
+ assert.equal(f.flow.snapshot().git,true);
+ assert.equal(f.flow.snapshot().phase,'error');
+ assert.match(f.flow.snapshot().error,/MAC_RUNTIME_EXTERNAL_MODIFIED/);
+ assert.doesNotMatch(f.flow.snapshot().error,/интернет|private|sk-runtime/);
+ failed=false;await f.flow.check();
+ assert.equal(f.flow.snapshot().error,null);
+ assert.equal(f.flow.snapshot().runtime,true);
+ assert.equal(f.flow.snapshot().phase,'tunnel');
+});
+test('unknown preparation errors do not blame the network or publish an arbitrary error code', async () => {
+ const f=fixture({inspectRuntime:async()=>{throw Object.assign(new Error('private error'),{code:'private-secret-code'});}});
+ await f.flow.check();
+ assert.match(f.flow.snapshot().error,/Проверить и продолжить/);
+ assert.doesNotMatch(f.flow.snapshot().error,/private|интернет/);
+});

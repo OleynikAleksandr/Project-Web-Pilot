@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 87,
+  "plan_revision": 89,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-onboarding-031",
@@ -1596,8 +1596,8 @@
       "id": "C012",
       "title": "Различать ошибки подготовки и состояние ожидания",
       "why": "Общая ошибка ошибочно советует интернет, а двадцатиминутная установка Apple описана как несколько минут.",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-onboarding-031",
         "task_id": "C012",
@@ -2077,7 +2077,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-onboarding-031
 Current Task: нет
-Revision: 87
+Revision: 89
 
 ## Цель
 
@@ -2240,8 +2240,8 @@ Revision: 87
   - Git Commit: [DONE] fix: recognize shipped Mac runtime during first setup
   - Reference: first-run-onboarding-031 / C011 / implementation
   - Файлы: src/mac-runtime.mjs, tests/mac-runtime.test.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
-- [TODO] C012: Различать ошибки подготовки и состояние ожидания — Ожидает
-  - Git Commit: [PENDING] fix: explain setup failures and installation waiting
+- [DONE] C012: Различать ошибки подготовки и состояние ожидания — Завершено
+  - Git Commit: [DONE] fix: explain setup failures and installation waiting
   - Reference: first-run-onboarding-031 / C012 / implementation
   - Файлы: src/startup-readiness.mjs, src/ui/startup.mjs, tests/startup-readiness.test.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
 - [TODO] B006: Собрать 0.6.37 для проверки подготовки после установки Apple — Ожидает
