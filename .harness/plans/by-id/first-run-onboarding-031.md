@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 80,
+  "plan_revision": 82,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-onboarding-031",
@@ -1506,8 +1506,8 @@
         "Устранение гостевого дефекта ожидает ручной проверки, нативная Windows не объявлена проверенной."
       ],
       "expected_commit_message": "build: release visible Apple installer handoff",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-onboarding-031",
         "task_id": "B005",
@@ -1899,7 +1899,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-onboarding-031
 Current Task: нет
-Revision: 80
+Revision: 82
 
 ## Цель
 
@@ -2050,8 +2050,8 @@ Revision: 80
   - Git Commit: [DONE] fix: bring Apple command line tools installer to front
   - Reference: first-run-onboarding-031 / C010 / implementation
   - Файлы: src/startup-readiness.mjs, tests/startup-readiness.test.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, docs/DECISIONS.md
-- [TODO] B005: Собрать 0.6.36 с исправлением показа установщика — Ожидает
-  - Git Commit: [PENDING] build: release visible Apple installer handoff
+- [DONE] B005: Собрать 0.6.36 с исправлением показа установщика — Завершено
+  - Git Commit: [DONE] build: release visible Apple installer handoff
   - Reference: first-run-onboarding-031 / B005 / implementation
   - Файлы: package.json, package-lock.json, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
 - [TODO] R005: Обновить документы и передать проверку 0.6.36 — Ожидает

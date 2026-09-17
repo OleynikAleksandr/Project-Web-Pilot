@@ -153,3 +153,12 @@ Evidence: .harness/runtime/releases/0.6.34/{mac-release.json,source-verification
 - Project-Web-Pilot-0.6.35-Windows-x64.zip: 317790975 bytes; SHA-256 75d2d4daadfbda5417268b181e11f64753af27edd49d868e43a76f679ea1136c.
 
 Пакеты, SHA256SUMS.txt и INSTALL.txt: ~/Downloads/WebPilot-0.6.35/. Evidence: .harness/runtime/releases/0.6.35/{mac-release.json,source-verification.json,release-manifest.json,SHA256SUMS.txt}. Рабочий процесс Web Pilot, профили и runtime не перезапускались. Нативная Windows и результат гостевой проверки 0.6.35 не подтверждены. Следующая задача T016 сохраняет полный чистый путь, финальная DOCS остаётся последней.
+
+## Выпуск 0.6.36 — показ установщика Apple / B005
+
+Штатный npm run build собрал macOS arm64 и Windows x64. Постоянный корневой Project Web Pilot.app обновлён с сохранением device 16777232 / inode 398344301; версия Info.plist и app.asar — 0.6.36. Все 37 файлов src и 32 файла resources побайтово совпали с обеими поставками и установленным app; 4 файла mac-tools также совпали. ZIP прошли integrity, app.asar и проверку SHA-256 после копирования в ~/Downloads/WebPilot-0.6.36/. Windows package verifier подтвердил состав runtime; native Windows не запускалась.
+
+- Project-Web-Pilot-0.6.36-macOS-arm64.zip: 181074205 bytes; SHA-256 c5ee9d318961f4954282c801d6bdd3b33bea693fb1859a98581833e288d46558.
+- Project-Web-Pilot-0.6.36-Windows-x64.zip: 316322177 bytes; SHA-256 733c28af4853e3bf8b7a2259cd84d3e5ceec31ef9cc511fbb9941f4a0d2c835e.
+
+Изменения: после запроса установки Apple активируется штатное окно через open; ошибки запуска и показа различимы. Ранее подготовленная C009 добавляет прямой /auth/login для открытия без выбранного проекта. Сетевой дефект не объявляется устранённым: новый исходный клон 0.6.35 работал без изменения маршрута, тогда как прежний давал таймауты. Рабочий процесс и профиль основного Mac не перезапускались. Видимость системного окна и полный путь в госте ожидают T017. Evidence: .harness/runtime/installer-focus-{build,verify}-036.log, releases/0.6.36/{mac-release.json,source-verification.json,release-manifest.json,SHA256SUMS.txt}.
