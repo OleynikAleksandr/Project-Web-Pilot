@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 63,
+  "plan_revision": 65,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-onboarding-031",
@@ -1205,8 +1205,8 @@
         "Startup network trace подключён только к запуску без проектов, существующие пользовательские профили не меняются."
       ],
       "expected_commit_message": "test: verify first-request diagnostic iteration",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-onboarding-031",
         "task_id": "V003",
@@ -1621,7 +1621,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-onboarding-031
 Current Task: нет
-Revision: 63
+Revision: 65
 
 ## Цель
 
@@ -1744,8 +1744,8 @@ Revision: 63
   - Git Commit: [DONE] feat: capture first-request network stages
   - Reference: first-run-onboarding-031 / C007 / implementation
   - Файлы: src/startup-network-trace.mjs, tests/startup-network-trace.test.mjs, src/chromium-diagnostics.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
-- [TODO] V003: Проверить сохранение начала отчёта и диагностический первый запуск — Ожидает
-  - Git Commit: [PENDING] test: verify first-request diagnostic iteration
+- [DONE] V003: Проверить сохранение начала отчёта и диагностический первый запуск — Завершено
+  - Git Commit: [DONE] test: verify first-request diagnostic iteration
   - Reference: first-run-onboarding-031 / V003 / implementation
   - Файлы: tests/chromium-diagnostics.test.mjs, tests/electron-smoke.mjs, src/main.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
 - [TODO] B004: Выпустить диагностическую 0.6.35 для обеих платформ — Ожидает

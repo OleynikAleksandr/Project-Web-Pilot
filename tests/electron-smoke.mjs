@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import http from 'node:http';
+import { openStartupPage } from '../src/browser-startup.mjs';
+import { summarizeStartupNetwork } from '../src/startup-network-trace.mjs';
 import { createHash } from 'node:crypto';
 import { nativeTheme, clipboard, BrowserWindow } from 'electron';
 import { ChatColors } from '../src/chatgpt-colors.mjs';
@@ -49,8 +52,9 @@ document.querySelector('form').addEventListener('submit',event=>{
 
 export async function createRuntime({ browser, session }) {
   // Explicit isolated test mode only. No request is sent to a real service.
-  await session.protocol.handle('https', request => {
+  await session.protocol.handle('https', async request => {
     const url = new URL(request.url);
+    if (url.pathname === '/fixture-flight') await new Promise(r => setTimeout(r, 250));
     if (url.pathname === '/fixture-first-load-failure') return Response.error();
     if (url.hostname === 'chatgpt.com' && url.pathname === '/backend-api/f/conversation') {
       return new Response(fixtureTelemetrySse, { headers: { 'content-type': 'text/event-stream; charset=utf-8' } });
@@ -85,8 +89,49 @@ async function waitFor(predicate, description, snapshot) {
   throw new Error(`SMOKE_TIMEOUT: ${description}; context=${JSON.stringify(timedOutState?.context)}; waiting for: ${description}`);
 }
 
-export async function run({ app, window, browser, sidebar, store, controller, selectWorkspace, workspaceSetup, snapshot, assertLocalSender, permissionAllowed, dataDir, chromiumDiagnostics, chromiumDiagnosticsFile, getArchiveWindow, getColorWindow }) {
+async function verifyUninterruptedRequest(dataDir) {
+  let requests = 0, responseTimer;
+  const server = http.createServer((req, res) => {
+    if (req.url !== '/') return;
+    requests++;
+    responseTimer = setTimeout(() => {
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end('<title>First document</title><h1>Ready</h1><img src="/pending-image">');
+    }, 16000);
+  });
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  const url = 'http://127.0.0.1:' + server.address().port + '/';
+  const probe = new BrowserWindow({ show: false, webPreferences: { partition: 'startup-network-fixture', sandbox: true, contextIsolation: true } });
+  const nativeLog = probe.webContents.session.netLog;
+  const rawFile = path.join(dataDir, 'native-network-raw.json');
+  try {
+    // Verify the native journal independently: Chromium's bounded capture currently
+    // rejects this sandboxed fixture; the application adapter is corrected next.
+    await nativeLog.startLogging(rawFile, { captureMode: 'default' });
+    const began = Date.now();
+    await openStartupPage(probe.webContents, url);
+    const elapsedMs = Date.now() - began;
+    assert.equal(requests, 1); assert.ok(elapsedMs >= 15000);
+    assert.equal(await probe.webContents.mainFrame.executeJavaScript('document.title'), 'First document');
+    assert.equal(probe.webContents.isLoading(), true, 'DOM-ready does not wait for the held image');
+    await nativeLog.stopLogging();
+    const network = summarizeStartupNetwork(JSON.parse(await fs.readFile(rawFile, 'utf8')), { origin: new URL(url).origin });
+    await fs.rm(rawFile, { force: true });
+    assert.equal(network.state, 'complete', JSON.stringify(network)); assert.ok(network.matchedRequests >= 1);
+    assert.ok(network.events.some(e => e.stage === 'TCP_CONNECT'));
+    assert.ok(network.events.some(e => e.status === 200 && e.tMs >= 15000));
+    await assert.rejects(fs.stat(path.join(dataDir, 'native-network-raw.json')), { code: 'ENOENT' });
+    await fs.writeFile(path.join(dataDir, 'startup-network-native.json'), JSON.stringify({ requests, elapsedMs, network }, null, 2));
+  } finally {
+    if (nativeLog.currentlyLogging) await nativeLog.stopLogging();
+    await fs.rm(rawFile, { force: true });
+    probe.destroy(); clearTimeout(responseTimer); server.closeAllConnections(); server.close();
+  }
+}
+
+export async function run({ app, window, browser, sidebar, store, controller, selectWorkspace, workspaceSetup, snapshot, assertLocalSender, permissionAllowed, dataDir, chromiumDiagnostics, chromiumDiagnosticsFile, navigate, getArchiveWindow, getColorWindow }) {
   smokeDataDir = dataDir;
+  await verifyUninterruptedRequest(dataDir);
   assert.equal(app.isPackaged, false, 'Fixtures never run from a packaged app');
   assert.equal(permissionAllowed('media', 'https://chatgpt.com', { mediaTypes: ['audio'] }), true);
   assert.equal(permissionAllowed('media', 'https://chatgpt.com/', { mediaType: 'audio' }), true);
@@ -118,6 +163,12 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await chromiumDiagnostics.flush();
   assert.match(await chromiumDiagnostics.startupReport(), /main-document-response/, 'retry reaches a document');
 
+  const opening = navigate(null, { entryUrl: 'https://chatgpt.com/fixture-flight' });
+  const duplicate = navigate(null, { entryUrl: 'https://chatgpt.com/fixture-flight' });
+  await Promise.all([opening, duplicate]);
+  const navigationReport = JSON.parse(await chromiumDiagnostics.startupReport());
+  assert.equal(navigationReport.events.filter(e => e.event === 'navigation-requested' && e.url?.path === '/fixture-flight').length, 1);
+
   // Render the real startup UI with isolated state; never install host components or use real credentials.
   await sidebar.executeJavaScript('import("./startup.mjs").then(() => window.webPilot.getState()).then(() => true)');
   const startupFixture = { ...snapshot(), setup: null, settings: null, selected: null, projects: [],
@@ -138,7 +189,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   })`);
   assert.match(firstRun.signup, /нет аккаунта/);
   assert.match(firstRun.slow, /ChatGPT/);
-  assert.equal(firstRun.retry, true); assert.equal(firstRun.noSecretInput, true);
+  assert.equal(firstRun.retry, false); assert.equal(firstRun.noSecretInput, true);
   assert.equal(firstRun.projectsHidden, true); assert.equal(firstRun.continueDisabled, true);
   assert.equal(firstRun.loginInstructionsHidden, true); assert.equal(firstRun.signupHidden, true); assert.equal(firstRun.copyVisible, true);
   await fs.writeFile(path.join(dataDir, 'startup-account.png'), (await sidebar.capturePage()).toPNG());
@@ -879,7 +930,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(store.selected().experience, 'work');
   assert.equal(store.snapshot().projects.find(p => p.workspace === workspace).sessions.length, beforeDoctorNew + 1);
 
-  const result = { earlyFirstLoadDiagnostics: true, guidedFirstRun: true, firstRunScreenshots: [path.join(dataDir, "startup-account.png"), path.join(dataDir, "startup-login.png"), path.join(dataDir, "startup-components.png")], fastSavedNavigation: true, lastNavigationWins: true, readinessBeforeOrAfterLoad: true, backgroundFailureRetry: true, liveChatColors: true, composerBackground: true, streamingAssistantColor: true, chatColorsPersistence: true, chatColorsReset: true, colorScreenshots, projectDoctor: true, doctorBackup: true, doctorOpen: true, doctorRefresh: true, doctorNewSession: true, doctorScreenshots, newestSessionFirst: true, projectSelectsNewest: true, threeSessionViewport: true, sessionScrollPreserved: true, visibleSessionScrollbar: true, nativeProjectsDisclosure: true, treePopover: true, treeScreenshots, scopeContinuationChat: true, scopeContinuationWork: true, scopeContinuationRestart: true, scopeContinuationNoDuplicates: true,
+  const result = { uninterruptedFirstRequest: true, firstRequestNetworkTrace: true, duplicateStartupBlocked: true, earlyFirstLoadDiagnostics: true, guidedFirstRun: true, firstRunScreenshots: [path.join(dataDir, "startup-account.png"), path.join(dataDir, "startup-login.png"), path.join(dataDir, "startup-components.png")], fastSavedNavigation: true, lastNavigationWins: true, readinessBeforeOrAfterLoad: true, backgroundFailureRetry: true, liveChatColors: true, composerBackground: true, streamingAssistantColor: true, chatColorsPersistence: true, chatColorsReset: true, colorScreenshots, projectDoctor: true, doctorBackup: true, doctorOpen: true, doctorRefresh: true, doctorNewSession: true, doctorScreenshots, newestSessionFirst: true, projectSelectsNewest: true, threeSessionViewport: true, sessionScrollPreserved: true, visibleSessionScrollbar: true, nativeProjectsDisclosure: true, treePopover: true, treeScreenshots, scopeContinuationChat: true, scopeContinuationWork: true, scopeContinuationRestart: true, scopeContinuationNoDuplicates: true,
     transitionScreenshot: path.join(dataDir, 'next-session-choice.png'), mode: 'isolated-fixture', electron: process.versions.electron, chromium: process.versions.chrome,
     views: window.contentView.children.length, secureRemote: true, sidebarIpc: true, archiveRestore: true, archiveRestart: true, deleteCancel: true, localDeletion: true, cloudChatPreserved: true, workspaceCreation: true, workspaceValidation: true, cancelPreservesSession: true, startupMessages: 4, canonicalPacketLoads: packetLoads, recoveryCache: true, operationProgress: true, progressScreenshot: path.join(dataDir, 'progress-ui.png'),
     tokenCounterRemoved: true, projectRename: true, sessionRename: true, scopeSessionRename: true, restartKeepsSession: true, newChatCreatesSession: true, sessionTree: true, selectsEarlierSession: true, compactWorkspaceDetails: true, projectPathClipboard: true, sessionPlans: true, preparedPlans: true, manualChatWorkChoice: true, noAcceptanceButton: true, chromiumDiagnostics: true, contextWindowIndicatorRemoved: true, resizableSidebar: true, separateArchiveWindow: true, archiveMultiSelect: true, archiveForgetKeepsFolder: true, shellTheme: true, nativeTitlebarTheme: nativeTheme.shouldUseDarkColors, toolCallFilter: true, microphonePermission: true, geolocationPermission: true, cameraPermission: false, fullContextBytes: Buffer.byteLength(fixtureContext), liveChatGPT: false, agentToolsRequired: false };

@@ -438,7 +438,7 @@ function attachController(project) {
 }
 
 async function navigate(project = store.selected(), { refresh = false, generation = null, resume = false, entryUrl = null } = {}) {
-  if (!project && pageLoading && startupActive) return;
+  if (!project && pageLoading) return;
   const ownNavigation = generation ?? nextNavigation();
   if (!navigationCurrent(ownNavigation)) return;
   if (workspaceHealth?.ready && workspaceHealth.workspace === project?.workspace
@@ -1044,7 +1044,8 @@ async function createWindow() {
   window.contentView.addChildView(sidebar); window.contentView.addChildView(browser);
   secureRemote(browser.webContents);
   chromiumDiagnostics = new ChromiumDiagnostics(browser.webContents, { file: chromiumDiagnosticsFile,
-    sampleIntervalMs: smoke ? 250 : 5000, allowFixture: smoke });
+    sampleIntervalMs: smoke ? 250 : 5000, allowFixture: smoke,
+    startupNetwork: !smoke && store.snapshot().projects.length === 0 });
   sidebar.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   sidebar.webContents.on('will-navigate', event => event.preventDefault());
   sidebar.webContents.on('did-finish-load', publish);
@@ -1087,7 +1088,7 @@ async function createWindow() {
   if (smoke) {
     await fixture.run({ app, window, browser: browser.webContents, sidebar: sidebar.webContents,
       store, controller, selectWorkspace, workspaceSetup, snapshot, assertLocalSender, permissionAllowed, dataDir,
-      chromiumDiagnostics, chromiumDiagnosticsFile, openArchiveWindow, getArchiveWindow: () => archiveWindow,
+      chromiumDiagnostics, chromiumDiagnosticsFile, navigate, openArchiveWindow, getArchiveWindow: () => archiveWindow,
       getColorWindow: () => colorEditor.window, chatColorStyles });
     await chromiumDiagnostics.stop(); chromiumDiagnostics = null;
     window.close(); app.quit();

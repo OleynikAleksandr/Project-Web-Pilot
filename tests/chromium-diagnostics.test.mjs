@@ -267,3 +267,16 @@ test('native startup logging does not wait for a debugger awaiting its first ren
   f.contents.emit('did-fail-load', {}, -106, 'ERR_INTERNET_DISCONNECTED', 'https://chatgpt.com/', true);
   assert.match(await f.diagnostics.startupReport(), /ERR_INTERNET_DISCONNECTED/);
 });
+
+test('startup report preserves the earliest request after later attempts and file rotation', async t => {
+  const { diagnostics, contents } = await startupDiagnostics(t);
+  diagnostics.log.maxBytes = 1200;
+  diagnostics.log.record('app', 'navigation-requested', { generation: 1, url: { origin: 'https://chatgpt.com', path: '/' } });
+  for (let i = 0; i < 200; i++) contents.emit('did-frame-navigate', {}, 'https://chatgpt.com/', 200, 'OK', true);
+  diagnostics.log.record('app', 'load-url-failed', { generation: 50, errorName: 'PAGE_RESPONSE_TIMEOUT' });
+  const report = JSON.parse(await diagnostics.startupReport());
+  assert.ok(report.events.some(e => e.event === 'navigation-requested' && e.generation === 1));
+  assert.ok(report.events.some(e => e.event === 'load-url-failed' && e.generation === 50));
+  assert.ok(report.eventsOmitted > 0);
+  assert.ok(report.events.length <= 61);
+});
