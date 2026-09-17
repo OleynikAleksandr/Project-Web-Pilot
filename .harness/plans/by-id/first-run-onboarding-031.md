@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 19,
+  "plan_revision": 22,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-onboarding-031",
@@ -368,8 +368,8 @@
       "why": "Пользователь должен понимать и выполнять следующий шаг из самого приложения."
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-onboarding-031",
         "task_id": "T007",
@@ -407,6 +407,41 @@
       "why": "Устранить необходимость самостоятельно разбираться с аккаунтом, туннелем и разрешениями."
     },
     {
+      "id": "C001",
+      "title": "Сохранить работоспособность мастера после отмены и возврата",
+      "why": "Проверка переходов выявила, что отмена подготовки/настроек меняет generation страницы; мастер должен продолжать проверку актуального документа.",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "first-run-onboarding-031",
+        "task_id": "C001",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "T007"
+      ],
+      "functional_paths": [
+        "src/main.mjs",
+        "src/startup-readiness.mjs",
+        "tests/startup-readiness.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md",
+        "docs/modules/first-run-onboarding.md"
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "acceptance_criteria": [
+        "Возврат/отмена первого проекта и настроек сохраняют доступный мастер и актуальную проверку страницы.",
+        "Перед переходом к проекту готовность перепроверяется; гостевой редактор без подтверждённого аккаунта не считается входом.",
+        "Повторные действия и неизвестное состояние страницы не разрешают ложную готовность."
+      ],
+      "expected_commit_message": "fix: resume first-run checks after cancelled setup"
+    },
+    {
       "id": "V001",
       "title": "Проверить мастер в интерфейсе и сценарии отказов",
       "why": "Нужны доказательства наблюдаемого исправления первого экрана до выпуска.",
@@ -418,7 +453,7 @@
         "role": "implementation"
       },
       "dependencies": [
-        "T007"
+        "C001"
       ],
       "functional_paths": [
         "tests/startup-ui.test.mjs",
@@ -726,6 +761,7 @@
         "F001",
         "T006",
         "T007",
+        "C001",
         "V001",
         "T008",
         "R001",
@@ -818,7 +854,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-onboarding-031
 Current Task: нет
-Revision: 19
+Revision: 22
 
 ## Цель
 
@@ -865,10 +901,14 @@ Revision: 19
   - Git Commit: [DONE] feat: guide users through first startup
   - Reference: first-run-onboarding-031 / T006 / implementation
   - Файлы: src/ui/startup.mjs, src/ui/index.html, src/ui/sidebar.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, docs/PRODUCT.md, docs/modules/workspace-sessions.md, docs/WORKSPACE_SETUP.md
-- [TODO] T007: Сопроводить вход и первичную настройку подключения — Ожидает
-  - Git Commit: [PENDING] feat: guide initial connection setup
+- [DONE] T007: Сопроводить вход и первичную настройку подключения — Завершено
+  - Git Commit: [DONE] feat: guide initial connection setup
   - Reference: first-run-onboarding-031 / T007 / implementation
   - Файлы: resources/runtime-control/mac-first-run.py, src/mac-runtime.mjs, tests/mac-first-run.test.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, docs/modules/runtime-lifecycle.md, docs/CONTEXT_DELIVERY.md, docs/PRODUCT.md
+- [TODO] C001: Сохранить работоспособность мастера после отмены и возврата — Ожидает
+  - Git Commit: [PENDING] fix: resume first-run checks after cancelled setup
+  - Reference: first-run-onboarding-031 / C001 / implementation
+  - Файлы: src/main.mjs, src/startup-readiness.mjs, tests/startup-readiness.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md
 - [TODO] V001: Проверить мастер в интерфейсе и сценарии отказов — Ожидает
   - Git Commit: [PENDING] test: verify guided startup and retries
   - Reference: first-run-onboarding-031 / V001 / implementation

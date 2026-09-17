@@ -70,6 +70,31 @@ export class MacRuntimeBootstrap {
   await fs.mkdir(this.paths.root,{recursive:true});await fs.writeFile(this.paths.marker+'.tmp',JSON.stringify({schemaVersion:1,payloadSha256:payloadSha,installedAt:new Date().toISOString(),folder:this.paths.folder},null,2)+'\n',{mode:0o600});await fs.rename(this.paths.marker+'.tmp',this.paths.marker);
   return this.paths.folder;
  }
+ configureTunnel() {
+  if (this.configurePending) return this.configurePending;
+  this.configurePending = this.#configureTunnel().finally(() => { this.configurePending = null; });
+  return this.configurePending;
+ }
+ async #configureTunnel() {
+  const current = await this.inspect();
+  if (!current.installed) throw new MacRuntimeError('MAC_RUNTIME_NOT_FOUND', 'Сначала подготовьте локальные компоненты.');
+  await this.#controlFor(current.folder);
+  const layout = macRuntimeFolderPaths(current.folder);
+  const helper = path.join(path.dirname(this.controlSourceFile), 'mac-first-run.py');
+  try {
+   const result = await this.execute(layout.python, ['-B', helper], {
+    cwd: current.folder, timeout: 16 * 60 * 1000, maxBuffer: 64 * 1024,
+    env: { ...this.environment, PYTHONDONTWRITEBYTECODE: '1', WEB_PILOT_RUNTIME_ROOT: current.folder },
+   });
+   const value = JSON.parse(result.stdout);
+   if (value.cancelled === true) return { cancelled: true };
+   if (value.configured === true) return { configured: true };
+   throw new Error('Unexpected setup result');
+  } catch {
+   const error = new MacRuntimeError('MAC_TUNNEL_SETUP_FAILED', 'Не удалось сохранить подключение. Проверьте tunnel_id и ключ и повторите ввод. Действующее подключение автоматически не заменяется.');
+   error.publicMessage = error.message; throw error;
+  }
+ }
  ensure(workspace){if(this.platform!=='darwin')return Promise.reject(new MacRuntimeError('MAC_ONLY','Mac runtime доступен только на macOS.'));if(this.pending)return this.pending;this.pending=this.#ensure(workspace).finally(()=>{this.pending=null;});return this.pending;}
  async #ensure(workspace){
   if(typeof workspace!=='string'||!path.isAbsolute(workspace))throw new MacRuntimeError('MAC_WORKSPACE_REQUIRED','Для Mac runtime нужен абсолютный workspace.');
