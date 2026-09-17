@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 2,
+  "plan_revision": 4,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "next-session-plan-heading-030",
@@ -90,8 +90,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "next-session-plan-heading-030",
         "task_id": "T001",
@@ -204,7 +204,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: next-session-plan-heading-030
 Current Task: нет
-Revision: 2
+Revision: 4
 
 ## Цель
 
@@ -220,8 +220,8 @@ Revision: 2
 
 ## Микрозадачи
 
-- [TODO] T001: Переименовать блок будущего плана — Ожидает
-  - Git Commit: [PENDING] fix: rename next session plan heading
+- [DONE] T001: Переименовать блок будущего плана — Завершено
+  - Git Commit: [DONE] fix: rename next session plan heading
   - Reference: next-session-plan-heading-030 / T001 / implementation
   - Файлы: src/ui/index.html, tests/sidebar.test.mjs
 - [TODO] T002: Собрать релиз 0.6.30 — Ожидает

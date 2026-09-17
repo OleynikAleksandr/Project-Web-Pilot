@@ -128,6 +128,7 @@ test('own completed plan stays visible and prepared choice can be cancelled with
     planId:'future',objective:'Продолжение',revision:3,sessionId:null,documents:['docs/next.md'],
     planView:{state:'working',completed:0,total:1,tasks:[{id:'N1',title:'Следующая работа',status:'pending'}]}
   }]};f.emit(state);
+  assert.equal(f.document.querySelector('#prepared-card .eyebrow').textContent,'План следующей сессии');
   assert.equal(f.document.querySelector('#accept-plan'),null);assert.equal(f.document.getElementById('plan-title').textContent,'Мой выполненный план');
   assert.equal(f.document.getElementById('plan-status').textContent.includes('приёмк'),false);
   assert.equal(f.document.querySelector('#plan-tasks strong').textContent,'Сохранённый результат');
