@@ -101,6 +101,33 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(permissionAllowed('media', 'https://example.com', { mediaTypes: ['audio'] }), false);
   const workspace = path.join(await fs.realpath(dataDir + '-projects'), 'Тестовый проект с пробелами');
   await waitFor(() => sidebar.executeJavaScript('typeof window.webPilot === "object"'), 'local IPC ready', snapshot);
+
+  // Render the real startup UI with isolated state; never install host components or use real credentials.
+  await sidebar.executeJavaScript('import("./startup.mjs").then(() => window.webPilot.getState()).then(() => true)');
+  const startupFixture = { ...snapshot(), setup: null, settings: null, selected: null, projects: [],
+    startup: { active: true, node: true, git: false, runtime: false, tunnel: false,
+      account: 'signed-out', page: 'slow', phase: 'git', busy: false, error: null } };
+  sidebar.send('pilot:state-changed', startupFixture);
+  await waitFor(() => sidebar.executeJavaScript('!document.getElementById("startup-panel").hidden'), 'first-run panel', snapshot);
+  const firstRun = await sidebar.executeJavaScript(`({
+    signup: document.querySelector('[data-startup="signup"]').textContent,
+    retry: !document.querySelector('[data-startup="chat"]').disabled,
+    slow: document.getElementById('startup-account-status').textContent,
+    noSecretInput: !document.querySelector('#startup-panel input'),
+    projectsHidden: document.getElementById('active-projects').hidden,
+    continueDisabled: document.getElementById('startup-continue').disabled,
+  })`);
+  assert.match(firstRun.signup, /нет аккаунта/);
+  assert.match(firstRun.slow, /дольше обычного/);
+  assert.equal(firstRun.retry, true); assert.equal(firstRun.noSecretInput, true);
+  assert.equal(firstRun.projectsHidden, true); assert.equal(firstRun.continueDisabled, true);
+  await fs.writeFile(path.join(dataDir, 'startup-account.png'), (await sidebar.capturePage()).toPNG());
+  sidebar.send('pilot:state-changed', { ...startupFixture, startup: { ...startupFixture.startup, page: 'loaded', account: 'signed-in' } });
+  await waitFor(() => sidebar.executeJavaScript('!document.getElementById("startup-components-body").hidden'), 'first-run components', snapshot);
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("startup-install-git").hidden'), false);
+  await fs.writeFile(path.join(dataDir, 'startup-components.png'), (await sidebar.capturePage()).toPNG());
+  sidebar.send('pilot:state-changed', snapshot());
+  await waitFor(() => sidebar.executeJavaScript('document.getElementById("startup-panel").hidden'), 'normal sidebar after startup fixture', snapshot);
   assert.equal(snapshot().sidebarWidth, 312);
   await sidebar.executeJavaScript('window.webPilot.setSidebarWidth(420)');
   await waitFor(() => snapshot().sidebarWidth === 420, 'persist sidebar width', snapshot);
@@ -828,7 +855,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(store.selected().experience, 'work');
   assert.equal(store.snapshot().projects.find(p => p.workspace === workspace).sessions.length, beforeDoctorNew + 1);
 
-  const result = { fastSavedNavigation: true, lastNavigationWins: true, readinessBeforeOrAfterLoad: true, backgroundFailureRetry: true, liveChatColors: true, composerBackground: true, streamingAssistantColor: true, chatColorsPersistence: true, chatColorsReset: true, colorScreenshots, projectDoctor: true, doctorBackup: true, doctorOpen: true, doctorRefresh: true, doctorNewSession: true, doctorScreenshots, newestSessionFirst: true, projectSelectsNewest: true, threeSessionViewport: true, sessionScrollPreserved: true, visibleSessionScrollbar: true, nativeProjectsDisclosure: true, treePopover: true, treeScreenshots, scopeContinuationChat: true, scopeContinuationWork: true, scopeContinuationRestart: true, scopeContinuationNoDuplicates: true,
+  const result = { guidedFirstRun: true, firstRunScreenshots: [path.join(dataDir, "startup-account.png"), path.join(dataDir, "startup-components.png")], fastSavedNavigation: true, lastNavigationWins: true, readinessBeforeOrAfterLoad: true, backgroundFailureRetry: true, liveChatColors: true, composerBackground: true, streamingAssistantColor: true, chatColorsPersistence: true, chatColorsReset: true, colorScreenshots, projectDoctor: true, doctorBackup: true, doctorOpen: true, doctorRefresh: true, doctorNewSession: true, doctorScreenshots, newestSessionFirst: true, projectSelectsNewest: true, threeSessionViewport: true, sessionScrollPreserved: true, visibleSessionScrollbar: true, nativeProjectsDisclosure: true, treePopover: true, treeScreenshots, scopeContinuationChat: true, scopeContinuationWork: true, scopeContinuationRestart: true, scopeContinuationNoDuplicates: true,
     transitionScreenshot: path.join(dataDir, 'next-session-choice.png'), mode: 'isolated-fixture', electron: process.versions.electron, chromium: process.versions.chrome,
     views: window.contentView.children.length, secureRemote: true, sidebarIpc: true, archiveRestore: true, archiveRestart: true, deleteCancel: true, localDeletion: true, cloudChatPreserved: true, workspaceCreation: true, workspaceValidation: true, cancelPreservesSession: true, startupMessages: 4, canonicalPacketLoads: packetLoads, recoveryCache: true, operationProgress: true, progressScreenshot: path.join(dataDir, 'progress-ui.png'),
     tokenCounterRemoved: true, projectRename: true, sessionRename: true, scopeSessionRename: true, restartKeepsSession: true, newChatCreatesSession: true, sessionTree: true, selectsEarlierSession: true, compactWorkspaceDetails: true, projectPathClipboard: true, sessionPlans: true, preparedPlans: true, manualChatWorkChoice: true, noAcceptanceButton: true, chromiumDiagnostics: true, contextWindowIndicatorRemoved: true, resizableSidebar: true, separateArchiveWindow: true, archiveMultiSelect: true, archiveForgetKeepsFolder: true, shellTheme: true, nativeTitlebarTheme: nativeTheme.shouldUseDarkColors, toolCallFilter: true, microphonePermission: true, geolocationPermission: true, cameraPermission: false, fullContextBytes: Buffer.byteLength(fixtureContext), liveChatGPT: false, agentToolsRequired: false };

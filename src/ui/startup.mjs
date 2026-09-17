@@ -21,7 +21,7 @@ export function createStartupView({ document, api }) {
     $('startup-components-help').textContent = !s.git
       ? 'Для истории проектов нужен Git из набора Apple Command Line Tools. Нажмите кнопку, затем «Установить» в системном окне и примите условия Apple. Загрузка может занять несколько минут. После завершения нажмите «Проверить и продолжить».'
       : 'Необходимые компоненты входят в приложение или загружаются автоматически. Подготовка может занять несколько минут; оставьте приложение открытым.';
-    $('startup-install-git').hidden = !!s.git;
+    $('startup-install-git').hidden = !!s.git || s.phase === 'git-installing';
     $('startup-tunnel-status').textContent = s.tunnel ? 'Служба подключения работает' : !local ? 'После подготовки компьютера' : 'Нужна однократная настройка';
     $('startup-tunnel-body').hidden = !logged || !local || s.tunnel;
     $('startup-project-body').hidden = !logged || !ready;

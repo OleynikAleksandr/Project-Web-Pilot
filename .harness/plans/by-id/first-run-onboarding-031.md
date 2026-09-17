@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 25,
+  "plan_revision": 28,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-onboarding-031",
@@ -446,8 +446,8 @@
       "id": "V001",
       "title": "Проверить мастер в интерфейсе и сценарии отказов",
       "why": "Нужны доказательства наблюдаемого исправления первого экрана до выпуска.",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-onboarding-031",
         "task_id": "V001",
@@ -458,8 +458,8 @@
       ],
       "functional_paths": [
         "tests/startup-ui.test.mjs",
-        "tests/sidebar.test.mjs",
-        "tests/electron-smoke.mjs"
+        "tests/electron-smoke.mjs",
+        "src/ui/startup.mjs"
       ],
       "documentation_paths": [
         "docs/VERIFICATION.md",
@@ -855,7 +855,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-onboarding-031
 Current Task: нет
-Revision: 25
+Revision: 28
 
 ## Цель
 
@@ -910,10 +910,10 @@ Revision: 25
   - Git Commit: [DONE] fix: resume first-run checks after cancelled setup
   - Reference: first-run-onboarding-031 / C001 / implementation
   - Файлы: src/main.mjs, src/startup-readiness.mjs, tests/startup-readiness.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md
-- [TODO] V001: Проверить мастер в интерфейсе и сценарии отказов — Ожидает
-  - Git Commit: [PENDING] test: verify guided startup and retries
+- [DONE] V001: Проверить мастер в интерфейсе и сценарии отказов — Завершено
+  - Git Commit: [DONE] test: verify guided startup and retries
   - Reference: first-run-onboarding-031 / V001 / implementation
-  - Файлы: tests/startup-ui.test.mjs, tests/sidebar.test.mjs, tests/electron-smoke.mjs, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, docs/modules/first-run-onboarding.md
+  - Файлы: tests/startup-ui.test.mjs, tests/electron-smoke.mjs, src/ui/startup.mjs, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, docs/modules/first-run-onboarding.md
 - [TODO] T008: Собрать проверенную macOS-поставку после исправлений — Ожидает
   - Git Commit: [PENDING] build: package guided macOS first run
   - Reference: first-run-onboarding-031 / T008 / implementation
