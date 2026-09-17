@@ -5,24 +5,67 @@ import { createHash } from 'node:crypto';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { fileURLToPath } from 'node:url';
-const execute=promisify(execFile);
-export const UV_VERSION='0.9.13';
-export const UV_SHA256='11609c939296348c7cc1e1231b3fbf7ca90a603a4c494ec72b59d7ceafa695e1';
-const root=path.resolve(fileURLToPath(new URL('..',import.meta.url)));
-const out=path.join(root,'.harness/runtime/mac-tools/uv');
-const candidates=[process.env.WEB_PILOT_UV,path.join(os.homedir(),'.local/bin/uv'),'/opt/homebrew/bin/uv','/usr/local/bin/uv'].filter(Boolean);
-async function sha(file){const data=await fs.readFile(file);return createHash('sha256').update(data).digest('hex');}
-let source=null,version=null,digest=null;
-for(const candidate of candidates){
- try{
-  const stat=await fs.stat(candidate);if(!stat.isFile())continue;
-  const result=await execute(candidate,['--version'],{timeout:5000});
-  const match=/^uv\s+(\d+\.\d+\.\d+)/.exec(result.stdout.trim());if(match?.[1]!==UV_VERSION)continue;
-  const actual=await sha(candidate);if(actual!==UV_SHA256)continue;
-  source=candidate;version=match[1];digest=actual;break;
- }catch{}
+const execute = promisify(execFile);
+const ROOT = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
+export const UV_VERSION = '0.9.13';
+export const UV_SHA256 = '11609c939296348c7cc1e1231b3fbf7ca90a603a4c494ec72b59d7ceafa695e1';
+export const NODE_VERSION = '22.17.0';
+export const NODE_SHA256 = '615dda58b5fb41fad2be43940b6398ca56554cbe05800953afadc724729cb09e';
+export const NODE_ARCHIVE = 'node-v' + NODE_VERSION + '-darwin-arm64.tar.gz';
+const digest = async file => createHash('sha256').update(await fs.readFile(file)).digest('hex');
+const matches = async (file, sha) => { try { return await digest(file) === sha; } catch { return false; } };
+
+export async function prepareMacNode({ root = ROOT, run = execute, download = async (url, target) => {
+  const response = await fetch(url, { signal: AbortSignal.timeout(120000) });
+  if (!response.ok) throw new Error('Node download failed: HTTP ' + response.status);
+  await fs.writeFile(target, Buffer.from(await response.arrayBuffer()));
+} } = {}) {
+  const cache = path.join(root, '.harness/runtime/mac-node-cache');
+  const output = path.join(root, '.harness/runtime/mac-tools/node');
+  await fs.mkdir(cache, { recursive: true });
+  const archive = path.join(cache, NODE_ARCHIVE);
+  if (!await matches(archive, NODE_SHA256)) {
+    const temporary = archive + '.download';
+    try {
+      await download('https://nodejs.org/dist/v' + NODE_VERSION + '/' + NODE_ARCHIVE, temporary);
+      if (!await matches(temporary, NODE_SHA256)) throw new Error('Mac Node archive SHA-256 mismatch.');
+      await fs.rename(temporary, archive);
+    } finally { await fs.rm(temporary, { force: true }); }
+  }
+  const temporary = await fs.mkdtemp(path.join(cache, 'extract-'));
+  try {
+    await run('/usr/bin/tar', ['-xzf', archive, '-C', temporary], { timeout: 60000 });
+    const source = path.join(temporary, 'node-v' + NODE_VERSION + '-darwin-arm64');
+    const node = path.join(source, 'bin/node');
+    const result = await run(node, ['-p', 'process.version + " " + process.arch'], { timeout: 5000 });
+    if (result.stdout.trim() !== 'v' + NODE_VERSION + ' arm64') throw new Error('Unexpected Mac Node binary.');
+    await fs.mkdir(path.join(output, 'bin'), { recursive: true });
+    await fs.copyFile(node, path.join(output, 'bin/node'));
+    await fs.chmod(path.join(output, 'bin/node'), 0o755);
+    await fs.copyFile(path.join(source, 'LICENSE'), path.join(output, 'LICENSE'));
+    const evidence = { version: NODE_VERSION, archiveSha256: NODE_SHA256, binarySha256: await digest(node) };
+    await fs.writeFile(path.join(output, 'manifest.json'), JSON.stringify(evidence, null, 2) + '\n');
+    return { output, ...evidence };
+  } finally { await fs.rm(temporary, { recursive: true, force: true }); }
 }
-if(!source)throw new Error(`Pinned uv ${UV_VERSION} (${UV_SHA256}) not found. Set WEB_PILOT_UV to the verified arm64 binary.`);
-await fs.mkdir(path.dirname(out),{recursive:true});await fs.copyFile(source,out);await fs.chmod(out,0o755);
-if(await sha(out)!==UV_SHA256)throw new Error('Copied uv SHA-256 mismatch.');
-process.stdout.write(JSON.stringify({source,out,version,sha256:digest,platform:process.platform,arch:process.arch})+'\n');
+export async function prepareMacToolchain({ root = ROOT, environment = process.env } = {}) {
+  const out = path.join(root, '.harness/runtime/mac-tools/uv');
+  const candidates = [environment.WEB_PILOT_UV, out, path.join(os.homedir(), '.local/bin/uv'), '/opt/homebrew/bin/uv', '/usr/local/bin/uv'].filter(Boolean);
+  let source;
+  for (const candidate of candidates) {
+    if (!await matches(candidate, UV_SHA256)) continue;
+    const result = await execute(candidate, ['--version'], { timeout: 5000 });
+    if (result.stdout.trim().startsWith('uv ' + UV_VERSION)) { source = candidate; break; }
+  }
+  if (!source) throw new Error('Pinned uv ' + UV_VERSION + ' not found. Set WEB_PILOT_UV to the verified arm64 binary.');
+  await fs.mkdir(path.dirname(out), { recursive: true });
+  if (source !== out) await fs.copyFile(source, out);
+  await fs.chmod(out, 0o755);
+  if (!await matches(out, UV_SHA256)) throw new Error('Copied uv SHA-256 mismatch.');
+  return { uv: { out, version: UV_VERSION, sha256: UV_SHA256 }, node: await prepareMacNode({ root }) };
+}
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  prepareMacToolchain().then(result => process.stdout.write(JSON.stringify(result) + '\n')).catch(error => {
+    console.error(error.message); process.exitCode = 1;
+  });
+}

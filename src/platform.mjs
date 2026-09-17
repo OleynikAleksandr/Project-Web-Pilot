@@ -66,3 +66,7 @@ export function executableCandidateAllowed(value, platform = process.platform) {
 export function bundledWindowsRuntimeFolder(dataDir, platform = process.platform) {
   return platform === 'win32' ? path.win32.join(dataDir, 'runtime', 'Windows-Codex-Local') : null;
 }
+
+export function bundledMacNode(resourcesPath) {
+  return path.posix.join(resourcesPath, 'mac-tools', 'node', 'bin', 'node');
+}

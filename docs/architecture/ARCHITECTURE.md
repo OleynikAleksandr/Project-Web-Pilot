@@ -879,3 +879,8 @@ Production ContextCache использует readinessContextKey: WorkspaceSetup
 ## Scope 030 / T003–T004 — persistent window geometry и 0.6.31
 
 Главное окно использует встроенный Electron window-state persistence вместо собственного менеджера координат: стабильный `name: main-window`, `bounds: true`, `displayMode: false`. Поэтому source не вводит новый JSON-фасад, debounce или display-selection алгоритм. Существующая ширина sidebar продолжает жить в `settings.json`; layout двух `WebContentsView` и ограничения минимальной ширины не менялись. Релиз 0.6.31 собран из этого единого source для macOS arm64 и Windows x64.
+
+
+## Первый запуск / T004
+
+T004: mac-tools содержит проверенный официальный Node.js 22.17.0 arm64 (bin, LICENSE, manifest), alongside uv. Подключение к WorkspaceSetup выполняется F001; Electron под видом Node не копируется.

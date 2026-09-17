@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 11,
+  "plan_revision": 13,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-onboarding-031",
@@ -216,8 +216,8 @@
       "why": "Сделать пользовательский путь понятным и реализовать его существующими средствами."
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-onboarding-031",
         "task_id": "T004",
@@ -818,7 +818,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-onboarding-031
 Current Task: нет
-Revision: 11
+Revision: 13
 
 ## Цель
 
@@ -849,8 +849,8 @@ Revision: 11
   - Git Commit: [DONE] docs: define guided first-run steps
   - Reference: first-run-onboarding-031 / T003 / implementation
   - Файлы: docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/PRODUCT.md, docs/DECISIONS.md
-- [TODO] T004: Обеспечить доступность компонентов для чистой macOS — Ожидает
-  - Git Commit: [PENDING] fix: prepare dependencies for clean macOS
+- [DONE] T004: Обеспечить доступность компонентов для чистой macOS — Завершено
+  - Git Commit: [DONE] fix: prepare dependencies for clean macOS
   - Reference: first-run-onboarding-031 / T004 / implementation
   - Файлы: scripts/prepare-mac-toolchain.mjs, src/platform.mjs, tests/mac-toolchain.test.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md
 - [TODO] T005: Реализовать проверку и последовательную подготовку чистого окружения — Ожидает
