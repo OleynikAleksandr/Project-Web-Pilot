@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 4,
+  "plan_revision": 5,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "next-session-plan-heading-030",
@@ -144,7 +144,8 @@
         "macOS arm64 build обновляет постоянный Project Web Pilot.app штатным release facade.",
         "Windows x64 package проходит штатный verifier; обе поставки имеют проверенные архивы/checksum."
       ],
-      "expected_commit_message": "build: release 0.6.30"
+      "expected_commit_message": "build: release 0.6.30",
+      "documentation_exception": "T002 меняет только version/package metadata и выполняет уже согласованную поставку; фактическая версия, checksums и release evidence фиксируются обязательной финальной задачей DOCS."
     },
     {
       "implementation_status": "TODO",
@@ -204,7 +205,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: next-session-plan-heading-030
 Current Task: нет
-Revision: 4
+Revision: 5
 
 ## Цель
 
