@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { StartupReadiness, inspectMacGit } from '../src/startup-readiness.mjs';
+import { StartupReadiness, inspectMacGit, installMacGit } from '../src/startup-readiness.mjs';
 const service = { mcp: { ready: true }, tunnel: { configured: true, ready: true } };
 function fixture(overrides = {}) {
   const calls = [], updates = [];
@@ -92,4 +92,46 @@ test('an installation conflict cannot silently replace another app', async () =>
   const dialog = { showMessageBox: async () => ({ response: 0 }), showMessageBoxSync: () => 1 };
   assert.equal(await offerMacInstallation({ app, dialog, fresh: true }), false);
   assert.equal(replaced, false);
+});
+
+test('Apple installer is activated after launch; repeated clicks share the same handoff', async () => {
+  let launched;
+  const calls = [];
+  const f = fixture({ probeGit: async () => false, installGit: () => installMacGit(async (command, args) => {
+    calls.push({ command, args });
+    if (command === '/usr/bin/xcode-select') await new Promise(resolve => { launched = resolve; });
+  }) });
+  await f.flow.check();
+  const first = f.flow.install(), second = f.flow.install();
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(calls.length, 1, 'do not activate the helper before the install request succeeds');
+  assert.equal(f.flow.snapshot().busy, true);
+  launched(); await Promise.all([first, second]);
+  assert.deepEqual(calls, [
+    { command: '/usr/bin/xcode-select', args: ['--install'] },
+    { command: '/usr/bin/open', args: ['-a', '/System/Library/CoreServices/Install Command Line Developer Tools.app'] },
+  ]);
+  assert.equal(f.flow.snapshot().phase, 'git-installing');
+  assert.equal(f.flow.snapshot().git, false, 'showing the installer is not proof of installation');
+});
+test('failed Apple installation request does not activate the helper', async () => {
+  const calls = [];
+  await assert.rejects(installMacGit(async command => {
+    calls.push(command); throw new Error('private command details');
+  }), error => /Не удалось открыть установку Apple/.test(error.publicMessage));
+  assert.deepEqual(calls, ['/usr/bin/xcode-select']);
+});
+test('failed installer activation offers visible recovery and a fresh retry', async () => {
+  let failed = true;
+  const f = fixture({ probeGit: async () => false, installGit: () => installMacGit(async command => {
+    if (command === '/usr/bin/open' && failed) throw new Error('private launch error');
+  }) });
+  await f.flow.check(); await f.flow.install();
+  assert.equal(f.flow.snapshot().phase, 'error');
+  assert.match(f.flow.snapshot().error, /Сверните Web Pilot жёлтой кнопкой/);
+  assert.doesNotMatch(f.flow.snapshot().error, /private launch error/);
+  assert.equal(f.flow.snapshot().git, false);
+  failed = false; await f.flow.install();
+  assert.equal(f.flow.snapshot().phase, 'git-installing');
+  assert.equal(f.flow.snapshot().error, null);
 });

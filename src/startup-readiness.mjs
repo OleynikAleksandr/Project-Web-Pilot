@@ -16,6 +16,15 @@ export async function inspectMacGit(run = execute) {
 export async function installMacGit(run = execute) {
   try { await run('/usr/bin/xcode-select', ['--install'], { timeout: 10000 }); }
   catch { throw Object.assign(new Error('Не удалось открыть установку Apple.'), { publicMessage: 'Не удалось открыть установку Apple. Проверьте «Системные настройки → Основные → Обновление ПО» и повторите проверку.' }); }
+  // xcode-select requests installation but does not guarantee foreground activation.
+  // LaunchServices reuses the system helper; no AppleScript or accessibility consent.
+  try {
+    await run('/usr/bin/open', ['-a', '/System/Library/CoreServices/Install Command Line Developer Tools.app'], { timeout: 10000 });
+  } catch {
+    throw Object.assign(new Error('Не удалось показать окно установки Apple.'), {
+      publicMessage: 'Установка Apple запущена, но её окно не удалось вывести вперёд. Сверните Web Pilot жёлтой кнопкой и подтвердите установку. После завершения вернитесь и нажмите «Проверить и продолжить».',
+    });
+  }
 }
 
 // No cookies, account APIs, tokens, or page internals.

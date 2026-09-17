@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 78,
+  "plan_revision": 80,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-onboarding-031",
@@ -1458,8 +1458,8 @@
         "Наблюдения 0.6.35: чистые клоны созданы до экспериментов; сайт и вход успешны на другом клоне, причина прежнего сетевого сбоя не объявлена устранённой."
       ],
       "expected_commit_message": "fix: bring Apple command line tools installer to front",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-onboarding-031",
         "task_id": "C010",
@@ -1899,7 +1899,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-onboarding-031
 Current Task: нет
-Revision: 78
+Revision: 80
 
 ## Цель
 
@@ -2046,8 +2046,8 @@ Revision: 78
   - Git Commit: [DONE] fix: open the sign-in page directly during onboarding
   - Reference: first-run-onboarding-031 / C009 / implementation
   - Файлы: src/chatgpt-experience.mjs, src/main.mjs, tests/electron-smoke.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
-- [TODO] C010: Показывать установщик Apple поверх Web Pilot — Ожидает
-  - Git Commit: [PENDING] fix: bring Apple command line tools installer to front
+- [DONE] C010: Показывать установщик Apple поверх Web Pilot — Завершено
+  - Git Commit: [DONE] fix: bring Apple command line tools installer to front
   - Reference: first-run-onboarding-031 / C010 / implementation
   - Файлы: src/startup-readiness.mjs, tests/startup-readiness.test.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, docs/DECISIONS.md
 - [TODO] B005: Собрать 0.6.36 с исправлением показа установщика — Ожидает
