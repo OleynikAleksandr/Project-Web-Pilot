@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 615,
+  "plan_revision": 618,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-owned-plans-028",
@@ -702,8 +702,8 @@
       "file_limit_exception": "Единый контракт явной адресации и его проверки; синхронное изменение установленной и поставляемой копий ядра."
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-owned-plans-028",
         "task_id": "T013",
@@ -715,7 +715,8 @@
       "functional_paths": [
         "package.json",
         "package-lock.json",
-        "tests/sidebar.test.mjs"
+        "tests/sidebar.test.mjs",
+        "tests/electron-smoke.mjs"
       ],
       "documentation_paths": [
         "docs/modules/session-owned-plans.md",
@@ -737,7 +738,8 @@
       "expected_commit_message": "build: release session owned plans for user verification",
       "id": "T013",
       "title": "Собрать новый релиз для проверки пользователя",
-      "why": "Доставить реализованное поведение в привычный app и отдельные пакеты."
+      "why": "Доставить реализованное поведение в привычный app и отдельные пакеты.",
+      "file_limit_exception": "Версия поставки и обязательная проверка снимков двух тем перед выпуском."
     },
     {
       "implementation_status": "TODO",
@@ -831,7 +833,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-owned-plans-028
 Current Task: нет
-Revision: 615
+Revision: 618
 
 ## Цель
 
@@ -896,10 +898,10 @@ Revision: 615
   - Git Commit: [DONE] test: verify session plan continuity and manual creation
   - Reference: session-owned-plans-028 / T012 / implementation
   - Файлы: tests/sidebar.test.mjs, tests/electron-smoke.mjs, tests/context-session.test.mjs, tests/session-plans.test.mjs, tests/workflow-kit-recovery.test.mjs, tests/context-cache.test.mjs, tests/workspace-session.test.mjs, src/ui/sidebar.mjs, docs/modules/session-owned-plans.md, docs/VERIFICATION.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md
-- [TODO] T013: Собрать новый релиз для проверки пользователя — Ожидает
-  - Git Commit: [PENDING] build: release session owned plans for user verification
+- [DONE] T013: Собрать новый релиз для проверки пользователя — Завершено
+  - Git Commit: [DONE] build: release session owned plans for user verification
   - Reference: session-owned-plans-028 / T013 / implementation
-  - Файлы: package.json, package-lock.json, tests/sidebar.test.mjs, docs/modules/session-owned-plans.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+  - Файлы: package.json, package-lock.json, tests/sidebar.test.mjs, tests/electron-smoke.mjs, docs/modules/session-owned-plans.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: update all project documentation for session plans
   - Reference: session-owned-plans-028 / DOCS / implementation

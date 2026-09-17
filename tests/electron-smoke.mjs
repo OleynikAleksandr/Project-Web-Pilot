@@ -680,6 +680,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
     if(experience==='chat') for(const theme of ['light','dark']){
       await sidebar.executeJavaScript('window.webPilot.setTheme('+JSON.stringify(theme)+')');
       await waitFor(()=>sidebar.executeJavaScript('document.documentElement.dataset.theme === '+JSON.stringify(theme)),'plan theme '+theme,snapshot);
+      await sidebar.executeJavaScript('document.getElementById("next-session-choice").scrollIntoView({block:"center"});new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');
       await fs.writeFile(path.join(dataDir,'session-plans-'+theme+'.png'),(await sidebar.capturePage()).toPNG());
     }
     if(experience==='chat')await fs.writeFile(path.join(dataDir,'next-session-choice.png'),(await sidebar.capturePage()).toPNG());

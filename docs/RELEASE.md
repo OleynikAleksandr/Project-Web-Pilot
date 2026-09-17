@@ -62,3 +62,12 @@
 На 17.09.2026 этот Git-checkout содержит исходники 0.6.26, а установленный корневой macOS app по Info.plist — 0.6.27. Пользователь сообщил о выпуске 0.6.27 другим агентом; ZIP обеих платформ есть в ~/Downloads/WebPilot-0.6.27/. Соответствие этих пакетов данному checkout и их чистая установка пока не подтверждены.
 
 Пакет macOS 0.6.27 скопирован и распакован пользователем в гостевой Test-macOS. Публикация, rebuild, изменение версии исходников и проверка release provenance в clean-install-lab-027 не выполнялись. Перед следующим испытанием сверить выбранные пакеты и SHA-256; сведения об успешно проверенной 0.6.26 выше сохраняются как история.
+
+## Выпуск 0.6.28 — планы сессий / T013
+
+17.09.2026 собраны macOS arm64 и Windows x64 из одного source. Workflow Kit 1.4.0 включён в обе поставки. Постоянный Project Web Pilot.app обновлён штатным build:mac; device 16777232 / inode 398344301 сохранены. app.asar установленного приложения совпадает со staging и ZIP; все 32 файла src и поставляемые resources совпадают с source. Обводка дерева из 0.6.27 сохранена. Windows verifier проверил PE, Node и runtime SHA. Оба ZIP проверены и скопированы в ~/Downloads/WebPilot-0.6.28/ вместе с SHA256SUMS.txt.
+
+- Project-Web-Pilot-0.6.28-macOS-arm64.zip: SHA-256 df7ddb3a155c320ea5b980dadf130316eb1c7896029c7634a4b690136220570b; 145210773 bytes.
+- Project-Web-Pilot-0.6.28-Windows-x64.zip: SHA-256 f61492cc74bc2c560412a2a0adb6cfa54469232f0c21fd7bf25f5c9fe0f6c222; 318057661 bytes.
+
+Evidence: .harness/runtime/releases/0.6.28/{mac-release.json,source-verification.json,release-manifest.json,SHA256SUMS.txt}. Реальный ChatGPT, чистая установка в UTM и native Windows этим выпуском не проверялись. Работающее приложение не перезапускалось: для применения нужен полный выход и повторный запуск через постоянный app/алиас.
