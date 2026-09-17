@@ -863,3 +863,7 @@ T012: пустая сессия с неоднозначной legacy-связь�
 - Project-Web-Pilot-0.6.28-Windows-x64.zip: SHA-256 f61492cc74bc2c560412a2a0adb6cfa54469232f0c21fd7bf25f5c9fe0f6c222; 318057661 bytes.
 
 Evidence: .harness/runtime/releases/0.6.28/{mac-release.json,source-verification.json,release-manifest.json,SHA256SUMS.txt}. Реальный ChatGPT, чистая установка в UTM и native Windows этим выпуском не проверялись. Работающее приложение не перезапускалось: для применения нужен полный выход и повторный запуск через постоянный app/алиас.
+
+## Scope 029 — readiness cache
+
+Существующий WorkspaceSetup worker дополнен read-only fingerprint, использующим общий Workflow Kit inspectionInputs. Узкий WorkspaceReadiness ограничивает память четырьмя ready-результатами, worker-нагрузку одной активной и одной последней ожидающей проверкой, объединяет одинаковые запросы и отбрасывает stale/transaction/error. Контекст по-прежнему строит только Workflow Kit; кэш recovery не объединён с readiness.

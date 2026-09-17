@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 12,
+  "plan_revision": 14,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-opening-performance-029",
@@ -304,8 +304,8 @@
       "file_limit_exception": "Одна проверяемая часть существующего фасада: синхронные installed/bundled копии, интеграция вызова и профильные regression. Новые файлы служат только общей проверке актуальности; отдельного менеджера/сервиса нет."
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-opening-performance-029",
         "task_id": "T004",
@@ -641,7 +641,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-opening-performance-029
 Current Task: нет
-Revision: 12
+Revision: 14
 
 ## Цель
 
@@ -670,8 +670,8 @@ Revision: 12
   - Git Commit: [DONE] perf: reuse workflow validation within workspace inspection
   - Reference: session-opening-performance-029 / T003 / implementation
   - Файлы: .harness/kit/lib/actions.mjs, resources/workflow-kit/lib/actions.mjs, .harness/kit/lib/validate.mjs, resources/workflow-kit/lib/validate.mjs, .harness/kit/lib/recovery.mjs, resources/workflow-kit/lib/recovery.mjs, .harness/kit/lib/installer.mjs, resources/workflow-kit/lib/installer.mjs, resources/workspace-setup-worker.mjs, tests/workspace-setup.test.mjs, tests/workflow-kit-recovery.test.mjs, .harness/kit/lib/inspection-inputs.mjs, resources/workflow-kit/lib/inspection-inputs.mjs, docs/modules/session-opening-performance.md, docs/WORKSPACE_SETUP.md, docs/modules/workflow-kit-recovery.md, docs/VERIFICATION.md
-- [TODO] T004: Переиспользовать готовность неизменившегося проекта — Ожидает
-  - Git Commit: [PENDING] perf: reuse unchanged workspace readiness
+- [DONE] T004: Переиспользовать готовность неизменившегося проекта — Завершено
+  - Git Commit: [DONE] perf: reuse unchanged workspace readiness
   - Reference: session-opening-performance-029 / T004 / implementation
   - Файлы: src/workspace-readiness.mjs, src/workspace-setup.mjs, tests/workspace-readiness.test.mjs, resources/workspace-setup-worker.mjs, docs/modules/session-opening-performance.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 - [TODO] T005: Ускорить показ плана и открытие выбранного чата — Ожидает

@@ -5,6 +5,7 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { randomUUID } from 'node:crypto';
 import { executableCandidateAllowed, nodeExecutableCandidates } from './platform.mjs';
+import { WorkspaceReadiness } from './workspace-readiness.mjs';
 const execute = promisify(execFile);
 const fail = (code, message) => Object.assign(new Error(message), { code });
 
@@ -29,6 +30,10 @@ export class WorkspaceSetup {
       }
     }
     this.tickets = new Map();
+    this.readiness = new WorkspaceReadiness({
+      fingerprint: workspace => this.call({ action: 'fingerprint', mode: 'existing', project: workspace }),
+      inspect: workspace => this.call({ action: 'inspect', mode: 'existing', project: workspace }),
+    });
   }
   async node() {
     if (this.nodeExecutable) return this.nodeExecutable;
@@ -89,6 +94,7 @@ export class WorkspaceSetup {
       workspace = path.join(canonicalParent, name);
     }
     if (typeof workspace !== 'string' || !path.isAbsolute(workspace)) throw fail('PROJECT_PATH', 'Выберите папку проекта.');
+    this.readiness.clear(workspace);
     const request = { action: 'inspect', mode, project: workspace, name: mode === 'new' ? name : undefined };
     const result = await this.call(request);
     const token = randomUUID();
@@ -98,10 +104,16 @@ export class WorkspaceSetup {
   async apply(token, { gitName, gitEmail } = {}) {
     const ticket = this.tickets.get(token);
     if (!ticket) throw fail('PREVIEW_REQUIRED', 'Сначала проверьте выбранную папку.');
+    this.readiness.clear(ticket.request.project);
     if ((gitName || gitEmail) && [gitName, gitEmail].some(v => typeof v !== 'string' || !v.trim() || /[\r\n\0]/.test(v))) throw fail('GIT_IDENTITY', 'Укажите имя и email для истории этого проекта.');
     const result = await this.call({ ...ticket.request, action: 'apply', fingerprint: ticket.fingerprint, gitName, gitEmail });
     this.tickets.delete(token);
     return result;
   }
   clear() { this.tickets.clear(); }
+  async ready(workspace) {
+    if (typeof workspace !== 'string' || !path.isAbsolute(workspace)) throw fail('PROJECT_PATH', 'Выберите папку проекта.');
+    return this.readiness.check(await fs.realpath(workspace));
+  }
+  invalidateReadiness(workspace = null) { this.readiness.clear(workspace); }
 }

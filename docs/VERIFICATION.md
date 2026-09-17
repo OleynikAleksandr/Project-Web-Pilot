@@ -980,3 +980,9 @@ Focused regression: 2/2 — equivalence с interpret-trailers для Unicode/con
 Existing focused recovery/setup: 29/29. Новые regression: 2/2, включая bytes при прежнем mtime/размере, index, внешние attributes, chmod hooks, pending transaction и посторонний большой файл/symlink; три canonical plans (owned + prepared + NONE), ровно два git log для двух active plans; изменение документа при обоих проходах вызывает CONCURRENT_CHANGE после единственного повтора.
 
 Сопоставимый d07ac2c baseline двух планов: preview 3292.95 / 3020.55 / 3054.24 мс; медиана 3054.24 против 15998.36 мс (−80.9%). Git processes 1283→213, log 10→2, diff-tree/show 135→27. Все ready=true/issues=[], COMPLETE сохранён. inspectionInputs 143.40 / 132.87 / 134.86 мс, ключи совпадают с preview inputKey. Штатный Doctor с backup зарегистрировал новый модуль в manifest изолированного fixture. Evidence: .harness/runtime/performance-029/T003-profile/. Это source full preview, packaged цели проверяются позднее.
+
+## Scope 029 / T004 — readiness reuse
+
+Focused tests 4/4: coalescing, свежий ключ при hit, независимость возвращаемых объектов, memory bound, изменение во время работы/явная invalidate, error retry, transaction rejection, latest pending workspace и настоящий worker с изменением required-документа.
+
+На неизменном двухплановом T003 fixture cold ready 3413.57 мс (1 inspect + 2 fingerprint, 233 Git-процесса). Cached ready: 174.35 / 173.64 / 173.99 / 174.83 / 172.71 мс; медиана 173.99. Каждый hit — 0 inspect, 1 fingerprint и 10 Git-процессов; ready=true, issues=[], inputKey совпадают, cache size=1, fixture не изменён. Это latency readiness, не UI/packaged startup. Raw/driver: .harness/runtime/performance-029/T004-profile/.

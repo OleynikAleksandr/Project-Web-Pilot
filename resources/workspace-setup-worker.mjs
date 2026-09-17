@@ -9,7 +9,7 @@ import { run } from './workflow-kit/lib/git.mjs';
 
 const supported = new Set(['1.0.0', '1.1.0', '1.2.0', '1.3.0', VERSION]);
 function options(input) {
-  check(input && ['inspect', 'apply'].includes(input.action), 'SETUP_ACTION', 'Неизвестное действие подготовки.');
+  check(input && ['inspect', 'apply', 'fingerprint'].includes(input.action), 'SETUP_ACTION', 'Неизвестное действие подготовки.');
   check(['new', 'existing'].includes(input.mode), 'SETUP_MODE', 'Выберите создание или подключение проекта.');
   check(typeof input.project === 'string' && path.isAbsolute(input.project) && !/[\r\n\0]/.test(input.project), 'PROJECT_PATH', 'Нужен полный путь к папке проекта.');
   return { project: input.project, mode: input.mode, name: input.name };
@@ -103,7 +103,9 @@ function inspectProject(opts) {
 try {
   const input = JSON.parse(fs.readFileSync(0, 'utf8'));
   const opts = options(input);
-  let result = inspectProject(opts);
+  let result = input.action === 'fingerprint'
+    ? { workspace: fs.realpathSync(opts.project), ...inspectionInputs(opts.project) }
+    : inspectProject(opts);
   if (input.action === 'apply') {
     check(typeof input.fingerprint === 'string' && result.fingerprint === input.fingerprint, 'PREVIEW_CHANGED', 'Папка изменилась после проверки. Проверьте её ещё раз.');
     check(result.action, 'SETUP_BLOCKED', 'Сначала устраните показанные проблемы. Файлы сохранены.');
