@@ -29,41 +29,19 @@ function firstDocument(contents, url, isCurrent, timeoutMs) {
   });
 }
 
-async function resetConnection(contents, isCurrent, timeoutMs) {
-  let deadline, active = true;
-  const reset = async () => {
-    if (!active || !isCurrent()) throw superseded();
-    await contents.session.closeAllConnections();
-    if (!active || !isCurrent()) throw superseded();
-    await contents.session.clearHostResolverCache();
-    if (!active || !isCurrent()) throw superseded();
-  };
-  try {
-    await Promise.race([reset(), new Promise((_, reject) => {
-      deadline = setTimeout(() => reject(failure('PAGE_CONNECTION_RESET_TIMEOUT',
-        'Не удалось восстановить соединение с ChatGPT.')), timeoutMs);
-    })]);
-  } finally { active = false; clearTimeout(deadline); }
-}
-
-/** First opening into an empty view. Existing chats keep their navigation contract. */
+// Diagnostic iteration: let Chromium complete its own first connection attempt.
+export const STARTUP_REQUEST_TIMEOUT_MS = 120000;
 export async function openStartupPage(contents, url, {
-  isCurrent = () => true, onRecovery = () => {}, timeoutMs = 15000, resetTimeoutMs = 5000,
+  isCurrent = () => true, timeoutMs = STARTUP_REQUEST_TIMEOUT_MS,
 } = {}) {
-  for (let attempt = 0; attempt < 2; attempt++) {
+  if (!isCurrent()) throw superseded();
+  try {
+    await firstDocument(contents, url, isCurrent, timeoutMs);
+    return { recovered: false };
+  } catch (error) {
     if (!isCurrent()) throw superseded();
-    try {
-      await firstDocument(contents, url, isCurrent, timeoutMs);
-      return { recovered: attempt > 0 };
-    } catch (error) {
-      if (!isCurrent()) throw superseded();
-      if (error.code !== 'PAGE_RESPONSE_TIMEOUT') throw error;
-      // Never interrupt a document that has already appeared.
-      if (contents.getURL()) throw error;
-      contents.stop();
-      if (attempt > 0) throw error;
-      onRecovery();
-      await resetConnection(contents, isCurrent, resetTimeoutMs);
-    }
+    if (error.code === 'PAGE_RESPONSE_TIMEOUT'
+        && (!contents.getURL() || contents.getURL() === 'about:blank')) contents.stop();
+    throw error;
   }
 }

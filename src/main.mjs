@@ -438,6 +438,7 @@ function attachController(project) {
 }
 
 async function navigate(project = store.selected(), { refresh = false, generation = null, resume = false, entryUrl = null } = {}) {
+  if (!project && pageLoading && startupActive) return;
   const ownNavigation = generation ?? nextNavigation();
   if (!navigationCurrent(ownNavigation)) return;
   if (workspaceHealth?.ready && workspaceHealth.workspace === project?.workspace
@@ -463,13 +464,6 @@ async function navigate(project = store.selected(), { refresh = false, generatio
       const firstOpening = !project && !browser.webContents.getURL();
       if (firstOpening) await openStartupPage(browser.webContents, target, {
         isCurrent: () => navigationCurrent(ownNavigation),
-        onRecovery: () => {
-          chromiumDiagnostics?.log.record('app', 'navigation-waiting', {
-            generation: ownNavigation, phase: 'connection-recovery', attempt: 2,
-            elapsedMs: Date.now() - began, url: safeUrl(target),
-          });
-          startupFlow?.beginPage(ownNavigation); publish();
-        },
       });
       else await browser.webContents.loadURL(target);
     }
@@ -487,7 +481,10 @@ async function navigate(project = store.selected(), { refresh = false, generatio
       elapsedMs: Date.now() - began, errorCode: Number.isFinite(error.errno) ? error.errno : null,
       errorName: /^(?:ERR|PAGE)_[A-Z0-9_]+$/.test(error.code ?? '') ? error.code : null });
     pageLoading = false; startupFlow?.finishPage(ownNavigation, error.code ?? 'PAGE_LOAD_FAILED');
-    report(Object.assign(new Error('Не удалось открыть сайт ChatGPT. Повторите открытие страницы.'), { code: 'PAGE_LOAD_FAILED' }));
+    const code = /^(?:ERR|PAGE)_[A-Z0-9_]+$/.test(error.code ?? '') ? error.code : 'PAGE_LOAD_FAILED';
+    report(Object.assign(new Error(code === 'PAGE_RESPONSE_TIMEOUT'
+      ? 'ChatGPT не ответил за две минуты. Скопируйте диагностику перед повтором.'
+      : 'Не удалось открыть сайт ChatGPT. Скопируйте диагностику и повторите открытие.'), { code }));
   } finally { clearTimeout(waiting); }
 }
 

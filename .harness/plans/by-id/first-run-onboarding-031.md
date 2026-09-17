@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 57,
+  "plan_revision": 59,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-onboarding-031",
@@ -1060,8 +1060,8 @@
         "Навигация существующих проектов сохраняет прежний контракт."
       ],
       "expected_commit_message": "fix: observe uninterrupted first browser request",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-onboarding-031",
         "task_id": "C005",
@@ -1621,7 +1621,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-onboarding-031
 Current Task: нет
-Revision: 57
+Revision: 59
 
 ## Цель
 
@@ -1732,8 +1732,8 @@ Revision: 57
   - Git Commit: [DONE] docs: record delayed first navigation findings
   - Reference: first-run-onboarding-031 / T015 / implementation
   - Файлы: docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md
-- [TODO] C005: Проверить один непрерывный запрос до 120 секунд — Ожидает
-  - Git Commit: [PENDING] fix: observe uninterrupted first browser request
+- [DONE] C005: Проверить один непрерывный запрос до 120 секунд — Завершено
+  - Git Commit: [DONE] fix: observe uninterrupted first browser request
   - Reference: first-run-onboarding-031 / C005 / implementation
   - Файлы: src/browser-startup.mjs, tests/browser-startup.test.mjs, src/main.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
 - [TODO] C006: Показывать ожидание и блокировать конкурирующие повторы — Ожидает

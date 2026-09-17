@@ -16,7 +16,7 @@ function fixture(load) {
   wc.loadURL = target => { wc.calls.push('load'); return load(wc, target); };
   return wc;
 }
-const options = { timeoutMs: 20, resetTimeoutMs: 20 };
+const options = { timeoutMs: 20 };
 function ready(wc) { wc.url = url; wc.emit('did-frame-navigate', {}, url, 200, 'OK', true); wc.emit('dom-ready'); }
 
 test('first DOM is usable while resource loading remains pending', async () => {
@@ -26,18 +26,21 @@ test('first DOM is usable while resource loading remains pending', async () => {
   assert.equal(wc.listenerCount('dom-ready'), 0);
 });
 
-test('first response timeout resets only connections and DNS, then opens once', async () => {
-  let count = 0, recoveries = 0;
-  const wc = fixture(wc => { if (++count === 2) queueMicrotask(() => ready(wc)); return new Promise(() => {}); });
-  assert.deepEqual(await openStartupPage(wc, url, { ...options, onRecovery: () => recoveries++ }), { recovered: true });
-  assert.equal(recoveries, 1);
-  assert.deepEqual(wc.calls, ['load', 'stop', 'connections', 'dns', 'load']);
+test('the first request remains uninterrupted after 105 seconds', async t => {
+  t.mock.timers.enable({ apis: ['setTimeout', 'setInterval'] });
+  const wc = fixture(() => new Promise(() => {}));
+  const opening = openStartupPage(wc, url);
+  t.mock.timers.tick(105000);
+  assert.deepEqual(wc.calls, ['load']);
+  ready(wc);
+  await opening;
+  assert.deepEqual(wc.calls, ['load']);
 });
 
-test('permanent first response failure ends after one recovery', async () => {
+test('the final deadline stops one request without retry or DNS reset', async () => {
   const wc = fixture(() => new Promise(() => {}));
   await assert.rejects(openStartupPage(wc, url, options), { code: 'PAGE_RESPONSE_TIMEOUT' });
-  assert.deepEqual(wc.calls, ['load', 'stop', 'connections', 'dns', 'load', 'stop']);
+  assert.deepEqual(wc.calls, ['load', 'stop']);
   assert.equal(wc.listenerCount('dom-ready'), 0);
 });
 
@@ -64,36 +67,11 @@ test('superseded navigation leaves the new request untouched', async () => {
   assert.equal(wc.listenerCount('dom-ready'), 0);
 });
 
-test('superseded recovery does not clear DNS or start another navigation', async () => {
-  let current = true;
-  const wc = fixture(() => new Promise(() => {}));
-  wc.session.closeAllConnections = async () => { wc.calls.push('connections'); current = false; };
-  await assert.rejects(openStartupPage(wc, url, { ...options, isCurrent: () => current }), { code: 'NAVIGATION_SUPERSEDED' });
-  assert.deepEqual(wc.calls, ['load', 'stop', 'connections']);
-});
-
-test('a stalled connection reset is bounded', async () => {
-  const wc = fixture(() => new Promise(() => {}));
-  wc.session.closeAllConnections = () => new Promise(() => {});
-  await assert.rejects(openStartupPage(wc, url, options), { code: 'PAGE_CONNECTION_RESET_TIMEOUT' });
-  assert.deepEqual(wc.calls, ['load', 'stop']);
-});
-
 test('initial about:blank DOM does not complete a remote opening', async () => {
   const wc = fixture(wc => {
     queueMicrotask(() => { wc.url = 'about:blank'; wc.emit('dom-ready'); });
     return new Promise(() => {});
   });
   await assert.rejects(openStartupPage(wc, url, options), { code: 'PAGE_RESPONSE_TIMEOUT' });
-  assert.deepEqual(wc.calls, ['load']);
-});
-
-test('a late connection reset cannot continue after its timeout', async () => {
-  let finishReset;
-  const wc = fixture(() => new Promise(() => {}));
-  wc.session.closeAllConnections = () => new Promise(resolve => { finishReset = resolve; });
-  await assert.rejects(openStartupPage(wc, url, options), { code: 'PAGE_CONNECTION_RESET_TIMEOUT' });
-  finishReset();
-  await new Promise(resolve => setImmediate(resolve));
   assert.deepEqual(wc.calls, ['load', 'stop']);
 });
