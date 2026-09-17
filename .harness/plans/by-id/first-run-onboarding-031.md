@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 65,
+  "plan_revision": 66,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-onboarding-031",
@@ -1214,11 +1214,60 @@
       }
     },
     {
+      "id": "C008",
+      "title": "Исправить ограничение native netLog без изменения sandbox",
+      "why": "Electron fixture выявил ERR_INSUFFICIENT_RESOURCES при native maxFileSize; до выпуска нужен рабочий сетевой отчёт.",
+      "dependencies": [
+        "V003"
+      ],
+      "functional_paths": [
+        "src/startup-network-trace.mjs",
+        "tests/startup-network-trace.test.mjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/first-run-onboarding.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/VERIFICATION.md",
+        "docs/PRODUCT.md",
+        "docs/DECISIONS.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/RELEASE.md",
+        "docs/modules/runtime-lifecycle.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/modules/workspace-sessions.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "README.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/MODULES.md",
+        "docs/DOCUMENTATION_INDEX.md"
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "acceptance_criteria": [
+        "Ограничение файла выполняет приложение, native default netLog запускается без maxFileSize; sandbox не меняется.",
+        "Регрессия подтверждает остановку по порогу размера и удаление сырого журнала.",
+        "Electron fixture использует настоящий StartupNetworkTrace и получает TCP/HTTP 200 после одного 16-секундного запроса."
+      ],
+      "expected_commit_message": "fix: bound startup netlog in the application",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "first-run-onboarding-031",
+        "task_id": "C008",
+        "role": "implementation"
+      }
+    },
+    {
       "id": "B004",
       "title": "Выпустить диагностическую 0.6.35 для обеих платформ",
       "why": "Выпустить диагностическую 0.6.35 для обеих платформ",
       "dependencies": [
-        "V003"
+        "C008"
       ],
       "functional_paths": [
         "package.json",
@@ -1530,6 +1579,7 @@
         "C006",
         "C007",
         "V003",
+        "C008",
         "B004",
         "R004",
         "T016",
@@ -1621,7 +1671,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-onboarding-031
 Current Task: нет
-Revision: 65
+Revision: 66
 
 ## Цель
 
@@ -1748,6 +1798,10 @@ Revision: 65
   - Git Commit: [DONE] test: verify first-request diagnostic iteration
   - Reference: first-run-onboarding-031 / V003 / implementation
   - Файлы: tests/chromium-diagnostics.test.mjs, tests/electron-smoke.mjs, src/main.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
+- [TODO] C008: Исправить ограничение native netLog без изменения sandbox — Ожидает
+  - Git Commit: [PENDING] fix: bound startup netlog in the application
+  - Reference: first-run-onboarding-031 / C008 / implementation
+  - Файлы: src/startup-network-trace.mjs, tests/startup-network-trace.test.mjs, tests/electron-smoke.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
 - [TODO] B004: Выпустить диагностическую 0.6.35 для обеих платформ — Ожидает
   - Git Commit: [PENDING] build: release uninterrupted startup diagnostics
   - Reference: first-run-onboarding-031 / B004 / implementation
