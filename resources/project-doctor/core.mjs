@@ -1,9 +1,10 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { payload, hooksDirectory, hookContent, BLOCK_START, BLOCK_END, MD_START, MD_END } from '../workflow-kit/lib/installation-files.mjs';
-import { VERSION, MANIFEST, PLAN, json, hash } from '../workflow-kit/lib/common.mjs';
+import { payload, hooksDirectory, hookContent, BLOCK_START, BLOCK_END, MD_START, MD_END, installationManifest } from '../workflow-kit/lib/installation-files.mjs';
+import { VERSION, MANIFEST, PLAN, withPlanFile, json, hash } from '../workflow-kit/lib/common.mjs';
 import { repoRoot, head, gitPath, ensureIdleGit, localPath } from '../workflow-kit/lib/git.mjs';
+import { listPlans } from '../workflow-kit/lib/session-plans.mjs';
 import { parsePlan, renderPlan } from '../workflow-kit/lib/plan.mjs';
 import { journal, resolveReferences, readConfig } from '../workflow-kit/lib/validate.mjs';
 import { locked, completedTransaction, finishTransaction } from '../workflow-kit/lib/transaction.mjs';
@@ -41,11 +42,11 @@ export function inspectProject(workspace) {
     const manifestBytes = read(MANIFEST);
     if (!manifestBytes) throw fail('DOCTOR_MANIFEST', 'Установочная запись отсутствует. Откройте папку проекта через обычную подготовку; доктор не угадывает состав установки.');
     let manifest; try { manifest = JSON.parse(manifestBytes.content); } catch { throw fail('DOCTOR_MANIFEST', 'Установочная запись повреждена. Нужна её резервная копия.'); }
-    if (manifest.schema_version !== 1 || !Array.isArray(manifest.files) || !['1.1.0', '1.2.0', VERSION].includes(manifest.version)) throw fail('DOCTOR_VERSION', 'Версия или формат установки неизвестны. Нужен совместимый выпуск приложения.');
+    if (manifest.schema_version !== 1 || !Array.isArray(manifest.files) || !['1.1.0', '1.2.0', '1.3.0', VERSION].includes(manifest.version)) throw fail('DOCTOR_VERSION', 'Версия или формат установки неизвестны. Нужен совместимый выпуск приложения.');
     result.version = manifest.version;
     const trusted = trustedFiles(), trustedMap = new Map(trusted.map(e => [e.path, e]));
     const owned = manifest.files.filter(e => e.kind === 'owned');
-    if (new Set(owned.map(e => e.path)).size !== owned.length || owned.some(e => !trustedMap.has(e.path)) || trusted.some(e => !owned.some(old => old.path === e.path))) throw fail('DOCTOR_INVENTORY', 'Состав служебного комплекта неизвестен. Автоматическое исправление остановлено.');
+    if (new Set(owned.map(e => e.path)).size !== owned.length || owned.some(e => !trustedMap.has(e.path))) throw fail('DOCTOR_INVENTORY', 'Состав служебного комплекта неизвестен. Автоматическое исправление остановлено.');
     let reconcile = manifest.version !== VERSION;
     const repairedManifest = structuredClone(manifest);
     for (const entry of trusted) {
@@ -54,13 +55,18 @@ export function inspectProject(workspace) {
         result.issues.push(issue(entry.path, 'Файл отличается от комплекта этого выпуска. Откройте обычную подготовку для обновления целой старой версии; неизвестные изменения сохранены.'));
         continue;
       }
-      if (!current && installed.hash !== entry.hash) {
+      if (!current && installed?.hash !== entry.hash) {
         result.issues.push(issue(entry.path, 'Отсутствующий файл относится к другой версии. Нужен исходный комплект этой версии.')); continue;
       }
       if (!current) changes.push({ file: file(entry.path), content: entry.content, mode: entry.mode, label: 'Восстановлен служебный файл: ' + entry.path });
       else if (process.platform !== 'win32' && entry.mode & 0o111 && !(current.mode & 0o111)) changes.push({ file: file(entry.path), content: current.content, mode: current.mode | 0o111, label: 'Восстановлено право запуска: ' + entry.path });
-      if (installed.hash !== entry.hash) reconcile = true;
-      Object.assign(repairedManifest.files.find(e => e.kind === 'owned' && e.path === entry.path), { hash: entry.hash, mode: entry.mode });
+      if (!installed) {
+        // Reconcile only a complete byte-identical trusted source tree, never invent missing old-version files.
+        repairedManifest.files.push(installationManifest([entry], {}).files[0]); reconcile = true;
+      } else {
+        if (installed.hash !== entry.hash) reconcile = true;
+        Object.assign(repairedManifest.files.find(e => e.kind === 'owned' && e.path === entry.path), { hash: entry.hash, mode: entry.mode });
+      }
     }
     for (const extra of scanTree(file('.harness/kit'))) if (!trustedMap.has(path.relative(root, extra).split(path.sep).join('/'))) result.issues.push(issue(path.relative(root, extra), 'В ядре найден дополнительный неизвестный файл. Он сохранён; автоматический ремонт остановлен.'));
     result.checks.push({ label: 'Служебные файлы проверены по комплекту приложения', ok: result.issues.length === 0 });
@@ -85,9 +91,9 @@ export function inspectProject(workspace) {
       } else changes.push({ file: target, content: hookContent(content, name), mode: (current?.mode ?? 0o644) | 0o111, label: 'Восстановлена проверка изменений: ' + name });
       if (current && content.includes(BLOCK_START) && process.platform !== 'win32' && !(current.mode & 0o111)) changes.push({ file: target, content, mode: current.mode | 0o111, label: 'Восстановлено право запуска проверки: ' + name });
     }
-    const raw = read(PLAN)?.content.toString();
-    if (!raw) throw fail('DOCTOR_PLAN', 'План отсутствует. Нужна его резервная копия; новый план поверх работы не создаётся.');
-    const plan = parsePlan(raw, { projection: false });
+    if (!read(PLAN)) throw fail('DOCTOR_PLAN', 'Навигационный план отсутствует. Нужна его резервная копия.');
+    scanTree(file('.harness/plans/by-id'));
+    const plans = listPlans(root, { projection: false });
     read('.harness/workflow.json'); readConfig(root);
     regularPath(localPath(root, 'transaction.json')); pending = journal(root);
     observed.add(localPath(root, 'transaction.json'));
@@ -95,9 +101,12 @@ export function inspectProject(workspace) {
       completed = completedTransaction(root, pending);
       if (!completed) throw fail('DOCTOR_PENDING', 'Осталась незавершённая операция фиксации. Продолжите её исходную задачу; доктор не фиксирует работу автоматически.');
     }
-    resolveReferences(root, plan, pending);
-    if (renderPlan(plan) !== raw) changes.push({ file: file(PLAN), content: renderPlan(plan), mode: readFile(file(PLAN)).mode, label: 'Восстановлено читаемое представление плана' });
-    const required = new Set(['docs/DOCUMENTATION_INDEX.md','docs/WORKFLOW_START.md','docs/PRODUCT.md','docs/architecture/ARCHITECTURE.md','docs/MODULES.md','docs/architecture/OVERVIEW.md','.harness/plans/todo-plan.template.md', ...(plan.context_pack.documents ?? []).filter(e => e.required).map(e => e.path)]);
+    for (const { file: name, plan } of plans) {
+      const raw = read(name).content.toString();
+      withPlanFile(root, name, {}, () => resolveReferences(root, plan, pending?.plan_path === name || !pending?.plan_path && name === PLAN ? pending : null));
+      if (renderPlan(plan) !== raw) changes.push({ file: file(name), content: renderPlan(plan), mode: readFile(file(name)).mode, label: 'Восстановлено читаемое представление: ' + name });
+    }
+    const required = new Set(['docs/DOCUMENTATION_INDEX.md','docs/WORKFLOW_START.md','docs/PRODUCT.md','docs/architecture/ARCHITECTURE.md','docs/MODULES.md','docs/architecture/OVERVIEW.md','.harness/plans/todo-plan.template.md', ...plans.flatMap(({plan}) => (plan.context_pack.documents ?? []).filter(e => e.required).map(e => e.path))]);
     for (const name of required) {
       if (typeof name !== 'string' || path.isAbsolute(name) || name.split(/[\\/]/).includes('..')) throw fail('DOCTOR_PATH','Недопустимый путь документа.');
       if (!read(name)) result.issues.push(issue(name, 'Обязательный документ отсутствует. Восстановите его из своей резервной копии или истории проекта.'));
@@ -125,9 +134,9 @@ export function repairProject(workspace, expectedFingerprint) {
     const root = next.workspace;
     let changes = next.changes;
     // A confirmed commit journal is backed up before its metadata is finalized.
-    if (next.completed && !changes.length) changes = [{ file: path.join(root, PLAN), content: readFile(path.join(root, PLAN)).content, mode: readFile(path.join(root, PLAN)).mode, label: 'Сохранён план перед завершением журнала' }];
-    const backupPath = backupAndWrite(root, changes, [path.join(root, PLAN), path.join(root, MANIFEST), ...(next.pending ? ['transaction.json','index-before','last-verification.json','last-commit.json'].map(name => localPath(root,name)) : [])]);
-    if (next.completed) finishTransaction(root, next.pending, next.completed);
+    if (next.completed && !changes.length) changes = [{ file: path.join(root, next.pending.plan_path ?? PLAN), content: readFile(path.join(root, next.pending.plan_path ?? PLAN)).content, mode: readFile(path.join(root, next.pending.plan_path ?? PLAN)).mode, label: 'Сохранён план перед завершением журнала' }];
+    const backupPath = backupAndWrite(root, changes, [...listPlans(root, { projection: false }).map(e => path.join(root, e.file)), path.join(root, MANIFEST), ...(next.pending ? ['transaction.json','index-before','last-verification.json','last-commit.json'].map(name => localPath(root,name)) : [])]);
+    if (next.completed) withPlanFile(root, next.pending.plan_path ?? PLAN, {}, () => finishTransaction(root, next.pending, next.completed));
     return { ...publicReport(inspectProject(root)), repairs: next.repairs, backupPath, repaired: Boolean(changes.length || next.completed) };
   });
 }

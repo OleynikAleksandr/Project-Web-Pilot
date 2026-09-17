@@ -106,12 +106,12 @@ test('legacy compatible version opens unchanged and unsupported version is expli
   const unsupported = await setup.preview({ mode: 'existing', workspace }); assert.equal(unsupported.action, null); assert.match(unsupported.issues[0].reason, /9.0.0/);
 });
 
-test('compatible 1.2 NONE installation upgrades to 1.3 with project continuity and preserves user documents', async t => {
+test('compatible 1.2 NONE installation upgrades to 1.4 with project continuity and preserves user documents', async t => {
   const { setup, workspace } = await create(t);
   const manifestFile = path.join(workspace, '.harness/kit-manifest.json');
   const manifest = JSON.parse(await fs.readFile(manifestFile, 'utf8')); manifest.version = '1.2.0';
   const commonPath = path.join(workspace, '.harness/kit/lib/common.mjs');
-  const legacyCommon = (await fs.readFile(commonPath, 'utf8')).replace("VERSION = '1.3.0'", "VERSION = '1.2.0'");
+  const legacyCommon = (await fs.readFile(commonPath, 'utf8')).replace("VERSION = '1.4.0'", "VERSION = '1.2.0'");
   await fs.writeFile(commonPath, legacyCommon);
   const commonEntry = manifest.files.find(entry => entry.path === '.harness/kit/lib/common.mjs'); commonEntry.hash = sha(legacyCommon);
   await fs.writeFile(manifestFile, JSON.stringify(manifest, null, 2) + '\n');
@@ -135,8 +135,8 @@ test('compatible 1.2 NONE installation upgrades to 1.3 with project continuity a
   const preview = await setup.preview({ mode: 'existing', workspace });
   assert.equal(preview.action, 'upgrade', JSON.stringify(preview));
   const result = await setup.apply(preview.token);
-  assert.equal(result.ready, true, JSON.stringify(result)); assert.equal(result.version, '1.3.0');
-  assert.match(await fs.readFile(commonPath, 'utf8'), /VERSION = '1\.3\.0'/);
+  assert.equal(result.ready, true, JSON.stringify(result)); assert.equal(result.version, '1.4.0');
+  assert.match(await fs.readFile(commonPath, 'utf8'), /VERSION = '1\.4\.0'/);
   assert.match(await fs.readFile(path.join(workspace, 'docs/architecture/OVERVIEW.md'), 'utf8'), /CUSTOM_OVERVIEW_STAYS/);
   assert.equal(await fs.readFile(path.join(workspace, 'docs/PRODUCT.md'), 'utf8'), '# User product stays\n');
   const upgradedIndex = await fs.readFile(indexFile, 'utf8'); assert.match(upgradedIndex, /docs\/custom\.md/); assert.match(upgradedIndex, /docs\/MODULES\.md/); assert.match(upgradedIndex, /docs\/architecture\/OVERVIEW\.md/);
@@ -248,4 +248,23 @@ test('macOS retains Node environment and legacy missing-Node diagnostics', async
     },
   });
   await assert.rejects(setup.node(), { code: 'NODE_MISSING' });
+});
+
+test('1.3 upgrade installs newly introduced core files with a backup and preserves sessions plans', async t => {
+  const {setup,workspace}=await create(t);
+  const manifestFile=path.join(workspace,'.harness/kit-manifest.json');
+  const m=JSON.parse(await fs.readFile(manifestFile,'utf8'));m.version='1.3.0';
+  m.files=m.files.filter(e=>e.path!=='.harness/kit/lib/session-plans.mjs');
+  await fs.unlink(path.join(workspace,'.harness/kit/lib/session-plans.mjs'));
+  await fs.writeFile(manifestFile,JSON.stringify(m,null,2)+'\n');
+  const original=await fs.readFile(path.join(workspace,'.harness/plans/todo-plan.md'));
+  git(workspace,'add','.');git(workspace,'-c','core.hooksPath=/dev/null','commit','-m','simulate pre-session kit inventory');
+  const preview=await setup.preview({mode:'existing',workspace});
+  assert.equal(preview.action,'upgrade',JSON.stringify(preview));
+  const result=await setup.apply(preview.token);
+  assert.equal(result.ready,true,JSON.stringify(result));assert.equal(result.version,'1.4.0');
+  assert.deepEqual(await fs.readFile(path.join(workspace,'.harness/plans/todo-plan.md')),original);
+  assert.ok((await fs.readdir(path.join(workspace,'.harness/runtime'))).some(n=>n.startsWith('kit-upgrade-')));
+  await fs.stat(path.join(workspace,'.harness/kit/lib/session-plans.mjs'));
+  assert.ok(JSON.parse(await fs.readFile(manifestFile)).files.some(e=>e.path==='.harness/kit/lib/session-plans.mjs'));
 });

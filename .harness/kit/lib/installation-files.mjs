@@ -86,7 +86,7 @@ export function payload(root, name, hookLocation) {
   if (!fs.existsSync(path.join(root, 'docs/architecture/OVERVIEW.md'))) add('docs/architecture/OVERVIEW.md', OVERVIEW_TEMPLATE, 'editable');
   const inventory = [...new Set([...walk(root), ...entries.map(e => e.path), INDEX])].filter(p => /\.(md|markdown)$/.test(p));
   const indexOld = fs.existsSync(path.join(root, INDEX)) ? fs.readFileSync(path.join(root, INDEX), 'utf8') : '# Каталог документации\n';
-  add(INDEX, addSection(indexOld, '## Документы проекта\n\n| Документ | Назначение |\n| --- | --- |\n' + inventory.map(p => '| ' + p + ' | ' + (p === PLAN ? 'Единственный активный план' : p.includes('/kit/') ? 'Протокол и шаблон комплекта' : 'Контракт проекта; уточняется при обсуждении') + ' |').join('\n')), 'managed');
+  add(INDEX, addSection(indexOld, '## Документы проекта\n\n| Документ | Назначение |\n| --- | --- |\n' + inventory.map(p => '| ' + p + ' | ' + (p === PLAN ? 'Прежний план и навигация; планы сессий — .harness/plans/by-id/' : p.includes('/kit/') ? 'Протокол и шаблон комплекта' : 'Контракт проекта; уточняется при обсуждении') + ' |').join('\n')), 'managed');
   const ignore = fs.existsSync(path.join(root, '.gitignore')) ? fs.readFileSync(path.join(root, '.gitignore'), 'utf8') : '';
   add('.gitignore', addSection(ignore, '.harness/runtime/\n', BLOCK_START, BLOCK_END), 'managed');
   const attributes = fs.existsSync(path.join(root, '.gitattributes')) ? fs.readFileSync(path.join(root, '.gitattributes'), 'utf8') : '';

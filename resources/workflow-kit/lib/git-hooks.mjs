@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { check, hash, PLAN, json, atomic, safePath } from './common.mjs';
+import { check, hash, PLAN, withPlanFile, json, atomic, safePath } from './common.mjs';
+import { listPlans } from './session-plans.mjs';
 import { parsePlan, isDocumentationFinalizationTask } from './plan.mjs';
 import { journal, readConfig, validateDocs, resolveReferences } from './validate.mjs';
 import { git, head, paths, run, localPath, snapshot } from './git.mjs';
@@ -65,8 +66,7 @@ export function postCommit(root) {
 }
 export function prePush(root) {
   check(!journal(root), 'TRANSACTION_PENDING', 'Перед push завершите commit/repair.');
-  const plan = parsePlan(fs.readFileSync(path.join(root, PLAN), 'utf8'));
-  resolveReferences(root, plan);
+  for (const { file, plan } of listPlans(root)) withPlanFile(root, file, {}, () => resolveReferences(root, plan));
   const config = readConfig(root);
   for (const test of config.checks.filter(c => c.stage === 'push' && c.required)) {
     const result = run(test.executable, test.args, test.cwd && test.cwd !== '.' ? safePath(root, test.cwd) : root, { timeout: test.timeout_ms });

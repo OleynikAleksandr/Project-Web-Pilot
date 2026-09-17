@@ -20,5 +20,5 @@ test('bundled Workflow Kit exactly matches the installed Project Web Pilot sourc
   const bundled = await snapshot(new URL('../resources/workflow-kit/', import.meta.url));
   assert.deepEqual(bundled.files, installed.files);
   for (const file of installed.files) assert.equal(bundled.contents.get(file), installed.contents.get(file), file);
-  assert.match(installed.contents.get('lib/common.mjs'), /VERSION = '1\.3\.0'/);
+  assert.match(installed.contents.get('lib/common.mjs'), /VERSION = '1\.4\.0'/);
 });

@@ -1,7 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { VERSION, MANIFEST, PLAN, CONFIG, check, hash, id, json, readJSON, atomic, safePath, errorResult } from './common.mjs';
+import { VERSION, MANIFEST, PLAN, CONFIG, withPlanFile, check, hash, id, json, readJSON, atomic, safePath, errorResult } from './common.mjs';
 import { git, run, repoRoot, head, allChanges, identityReady, localPath } from './git.mjs';
+import { listPlans } from './session-plans.mjs';
 import { status } from './actions.mjs';
 import { readPlan, emptyPlan, writePlan } from './plan.mjs';
 import { journal } from './validate.mjs';
@@ -11,7 +12,7 @@ import { prepareRuntime, launcherCommand, windows } from './platform.mjs';
 
 const hookNames = ['pre-commit', 'commit-msg', 'post-commit', 'pre-push'];
 const hookName = entry => path.posix.basename(entry.path.replaceAll('\\', '/'));
-const upgradeFrom = new Set(['1.1.0', '1.2.0']);
+const upgradeFrom = new Set(['1.1.0', '1.2.0', '1.3.0']);
 function migrateNonePlanForContinuity(root) {
   const file = path.join(root, PLAN);
   if (!fs.existsSync(file)) return false;
@@ -103,7 +104,10 @@ export function inspect(opts) {
       const f = manifestTarget(root, e);
       if (!fs.existsSync(f) || hash(fs.readFileSync(f)) !== e.hash) conflicts.push({ path: e.path, reason: 'Файл runtime отсутствует или изменён.' });
     }
-    let state; try { state = status(root); } catch (e) { state = errorResult(e); }
+    let state; try {
+      const states = listPlans(root).map(({ file, plan }) => withPlanFile(root, file, { sessionId: plan.owner_session_id ?? null }, () => ({ plan_path: file, ...status(root) })));
+      state = { ...states[0], ok: states.every(s => s.ok), plans: states };
+    } catch (e) { state = errorResult(e); }
     const compatible = manifest.version === VERSION;
     const upgradeable = !compatible && upgradeFrom.has(manifest.version) && conflicts.length === 0;
     return { ok: true, installed: true, project_path: root, project_name: state.project_name ?? path.basename(root), version: manifest.version,
@@ -147,15 +151,21 @@ function upgradeInstallation(root, preview) {
     finally { fs.rmSync(temp, { recursive: true, force: true }); }
     const desiredMap = new Map(desired.filter(e => !e.external).map(e => [e.path, e]));
     const oldMap = new Map(old.files.map(e => [e.path, e]));
-    const replacements = new Map(); const changed = [];
+    const replacements = new Map(); const changed = []; const writes = [];
     const write = (entry, content) => {
       const file = safePath(root, entry.path); const before = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : null;
-      if (before !== content) { atomic(file, content, entry.mode ?? 0o644); if (entry.mode === 0o755) fs.chmodSync(file, 0o755); changed.push(entry.path); }
+      if (before !== content) { writes.push({ file, content, mode: entry.mode ?? 0o644 }); changed.push(entry.path); }
       replacements.set(entry.path, manifestEntry({ ...entry, content, original_hash: entry.original_hash ?? (before === null ? null : hash(before)), hash: hash(content), existed: before !== null }));
     };
     for (const entry of old.files.filter(e => e.kind === 'owned' && (e.path.startsWith('.harness/kit/') || ['scripts/workflow', 'scripts/workflow.mjs', 'scripts/workflow.cmd'].includes(e.path)))) {
       const file = manifestTarget(root, entry); check(fs.existsSync(file) && hash(fs.readFileSync(file)) === entry.hash, 'MODIFIED_INTEGRATION', 'Runtime изменён; обновление остановлено: ' + entry.path);
       const next = desiredMap.get(entry.path); check(next, 'UPGRADE_PAYLOAD', 'Новый runtime не содержит путь: ' + entry.path); write(next, next.content);
+    }
+    // New core files are part of the same preflight; never replace an unowned collision.
+    for (const entry of desired.filter(e => e.kind === 'owned' && !oldMap.has(e.path))) {
+      const file = safePath(root, entry.path);
+      check(!fs.existsSync(file) || hash(fs.readFileSync(file)) === entry.hash, 'MODIFIED_INTEGRATION', 'Новый служебный путь занят: ' + entry.path);
+      write(entry, entry.content);
     }
     const planTemplate = desiredMap.get('.harness/plans/todo-plan.template.md');
     if (planTemplate) {
@@ -187,6 +197,16 @@ function upgradeInstallation(root, preview) {
         replacements.set(name, manifestEntry({ ...entry, content: current, original_hash: hash(current), hash: hash(current), existed: true }));
       }
     }
+    // Keep originals before changing the kit, instructions or navigation.
+    const backup = path.join(root, '.harness/runtime/kit-upgrade-' + id());
+    fs.mkdirSync(backup, { recursive: true });
+    const originals = [...new Set([...writes.map(e => e.file), path.join(root, MANIFEST), path.join(root, PLAN)])].map((file, i) => {
+      const exists = fs.existsSync(file), copy = exists ? String(i) + '.backup' : null;
+      if (exists) fs.copyFileSync(file, path.join(backup, copy));
+      return { path: path.relative(root, file).split(path.sep).join('/'), backup: copy };
+    });
+    atomic(path.join(backup, 'upgrade.json'), json({ version: VERSION, from: old.version, files: originals }));
+    for (const entry of writes) { atomic(entry.file, entry.content, entry.mode); if (entry.mode === 0o755) fs.chmodSync(entry.file, 0o755); }
     if (migrateNonePlanForContinuity(root)) changed.push(PLAN);
     const kept = old.files.filter(e => !replacements.has(e.path));
     const metadata = { ...old, version: VERSION, upgraded_from: old.version, upgraded_at: new Date().toISOString(), files: [...kept, ...replacements.values()] };
@@ -194,7 +214,7 @@ function upgradeInstallation(root, preview) {
     atomic(path.join(root, MANIFEST), json(metadata)); changed.push(MANIFEST);
     const selected = [...new Set(changed)];
     const result = commitCandidate(root, { plan: readPlan(root), role: 'kit-update', selected, message: 'chore: обновить Project Workflow Kit до ' + VERSION, beforeHead: head(root) });
-    return { ok: true, installed: true, upgraded: true, project_path: root, project_name: preview.project_name, version: VERSION, sha: result.sha,
+    return { ok: true, installed: true, upgraded: true, project_path: root, project_name: preview.project_name, version: VERSION, sha: result.sha, backup_path: backup,
       state: status(root), message: 'Workflow Kit обновлён до ' + VERSION + '; активный план и пользовательские документы сохранены.' };
   });
 }
@@ -240,7 +260,10 @@ export function install(opts) {
       bootstrap = commitCandidate(root, { plan: readPlan(root), role: 'bootstrap', selected: installedPaths, message: 'chore: установить Project Workflow Kit', beforeHead: head(root) });
       atomic(localPath(root, 'installation.json'), json({ paths: installedPaths, preexisting_changes: [], bootstrap_pending: false, sha: bootstrap.sha }));
     }
-    let state; try { state = status(root); } catch (e) { state = errorResult(e); }
+    let state; try {
+      const states = listPlans(root).map(({ file, plan }) => withPlanFile(root, file, { sessionId: plan.owner_session_id ?? null }, () => ({ plan_path: file, ...status(root) })));
+      state = { ...states[0], ok: states.every(s => s.ok), plans: states };
+    } catch (e) { state = errorResult(e); }
     return { ok: true, installed: true, project_path: root, project_name: preview.project_name, version: VERSION,
       installation_status: 'FILES_INSTALLED', integration_status: 'HOOK_TRUST_PENDING', state, bootstrap, warnings,
       message: 'Проект подготовлен. Добавьте эту папку в Codex и разрешите проектные hooks.' };
@@ -272,7 +295,7 @@ export function doctor(root) {
     diagnostics.push({ name: f, status: ready ? 'OK' : 'ERROR', detail: ready ? 'Проверка подключена.' : 'Проверка отсутствует или не исполняется.' });
   }
   const command = launcherCommand(root);
-  const launcher = run(command.executable, [...command.args, 'validate', '--json'], root, { allowFailure: true });
+  const launcher = run(command.executable, [...command.args, 'help'], root, { allowFailure: true });
   diagnostics.push({ name: 'Launcher', status: launcher.status === 0 ? 'OK' : 'ERROR', detail: launcher.status === 0 ? 'Команды проекта запускаются.' : String(launcher.stderr || launcher.stdout || launcher.error?.message).slice(-2000) });
   diagnostics.push({ name: 'Codex', status: inspected.state?.integration_status === 'HOOK_VERIFIED' ? 'OK' : 'PENDING', detail: 'Фактическая доставка подтверждается маркером из новой сессии; файл конфигурации сам по себе её не доказывает.' });
   const recordFile = localPath(root, 'installation.json');
@@ -282,7 +305,7 @@ export function doctor(root) {
 }
 export function remove(root, dryRun) {
   const manifest = readJSON(path.join(root, MANIFEST)); const plan = readPlan(root);
-  check(plan.execution_scope_status === 'NONE' && !journal(root), 'ACTIVE_SCOPE', 'Сначала пользователь должен закрыть активный scope.');
+  check(listPlans(root).every(e => e.plan.execution_scope_status === 'NONE') && !journal(root), 'ACTIVE_SCOPE', 'Сначала пользователь должен закрыть активный scope.');
   const removals = []; const edits = []; const preserved = []; const conflicts = [];
   for (const e of manifest.files) {
     const file = manifestTarget(root, e);

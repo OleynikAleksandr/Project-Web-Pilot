@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 609,
+  "plan_revision": 612,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-owned-plans-028",
@@ -102,7 +102,9 @@
       "tests/workspace-setup.test.mjs",
       "tests/electron-smoke.mjs",
       "package.json",
-      "package-lock.json"
+      "package-lock.json",
+      "resources/workspace-setup-worker.mjs",
+      "resources/project-doctor/core.mjs"
     ],
     "max_functional_files_per_task": 3
   },
@@ -600,8 +602,8 @@
       "why": "Новая модель должна работать в следующих проектах и сессиях без старых требований приёмки."
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-owned-plans-028",
         "task_id": "T011",
@@ -622,7 +624,15 @@
         "resources/workflow-kit/lib/installation-files.mjs",
         ".harness/kit-manifest.json",
         "tests/project-doctor.test.mjs",
-        "tests/workspace-setup.test.mjs"
+        "tests/workspace-setup.test.mjs",
+        "resources/workspace-setup-worker.mjs",
+        "resources/project-doctor/core.mjs",
+        ".harness/kit/lib/session-plans.mjs",
+        "resources/workflow-kit/lib/session-plans.mjs",
+        ".harness/kit/lib/git-hooks.mjs",
+        "resources/workflow-kit/lib/git-hooks.mjs",
+        ".harness/kit/cli.mjs",
+        "resources/workflow-kit/cli.mjs"
       ],
       "documentation_paths": [
         "docs/modules/session-owned-plans.md",
@@ -819,7 +829,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-owned-plans-028
 Current Task: нет
-Revision: 609
+Revision: 612
 
 ## Цель
 
@@ -876,10 +886,10 @@ Revision: 609
   - Git Commit: [DONE] docs: align agent instructions and templates with session plans
   - Reference: session-owned-plans-028 / T010 / implementation
   - Файлы: docs/modules/session-owned-plans.md, AGENTS.md, docs/WORKFLOW_START.md, docs/CONTEXT_DELIVERY.md, docs/modules/workflow-kit-recovery.md, .harness/kit/WORKFLOW.md, resources/workflow-kit/WORKFLOW.md, .harness/kit/templates/AGENTS.md, resources/workflow-kit/templates/AGENTS.md, .harness/kit/templates/START.md, resources/workflow-kit/templates/START.md, .harness/kit/templates/PLAN.md, resources/workflow-kit/templates/PLAN.md, .harness/plans/todo-plan.template.md
-- [TODO] T011: Согласовать установку, обновление и Doctor с новой моделью — Ожидает
-  - Git Commit: [PENDING] fix: migrate workflow installation and doctor for session plans
+- [DONE] T011: Согласовать установку, обновление и Doctor с новой моделью — Завершено
+  - Git Commit: [DONE] fix: migrate workflow installation and doctor for session plans
   - Reference: session-owned-plans-028 / T011 / implementation
-  - Файлы: .harness/kit/lib/installer.mjs, resources/workflow-kit/lib/installer.mjs, src/workspace-setup.mjs, src/project-doctor.mjs, tests/workflow-kit-source.test.mjs, .harness/kit/lib/common.mjs, resources/workflow-kit/lib/common.mjs, .harness/kit/lib/installation-files.mjs, resources/workflow-kit/lib/installation-files.mjs, .harness/kit-manifest.json, tests/project-doctor.test.mjs, tests/workspace-setup.test.mjs, docs/modules/session-owned-plans.md, docs/WORKSPACE_SETUP.md, docs/modules/project-doctor.md, docs/modules/workflow-kit-recovery.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+  - Файлы: .harness/kit/lib/installer.mjs, resources/workflow-kit/lib/installer.mjs, src/workspace-setup.mjs, src/project-doctor.mjs, tests/workflow-kit-source.test.mjs, .harness/kit/lib/common.mjs, resources/workflow-kit/lib/common.mjs, .harness/kit/lib/installation-files.mjs, resources/workflow-kit/lib/installation-files.mjs, .harness/kit-manifest.json, tests/project-doctor.test.mjs, tests/workspace-setup.test.mjs, resources/workspace-setup-worker.mjs, resources/project-doctor/core.mjs, .harness/kit/lib/session-plans.mjs, resources/workflow-kit/lib/session-plans.mjs, .harness/kit/lib/git-hooks.mjs, resources/workflow-kit/lib/git-hooks.mjs, .harness/kit/cli.mjs, resources/workflow-kit/cli.mjs, docs/modules/session-owned-plans.md, docs/WORKSPACE_SETUP.md, docs/modules/project-doctor.md, docs/modules/workflow-kit-recovery.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T012: Проверить полный сценарий сессий и продолжения — Ожидает
   - Git Commit: [PENDING] test: verify session plan continuity and manual creation
   - Reference: session-owned-plans-028 / T012 / implementation

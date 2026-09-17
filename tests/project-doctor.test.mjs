@@ -97,3 +97,26 @@ test('interrupted commit is finished only when the exact commit already exists',
   const fixed=repairProject(root);assert.equal(fixed.issues.length,0,JSON.stringify(fixed.issues));assert.ok(fixed.backupPath);
   assert.equal(fs.existsSync(gitPath(root,'workflow-kit/transaction.json')),false);assert.deepEqual(execFileSync('git',['rev-parse','HEAD'],{cwd:root}),before);
 });
+
+import { withSessionPlan, listPlans } from '../resources/workflow-kit/lib/session-plans.mjs';
+import { createScope, preparePlan } from '../resources/workflow-kit/lib/actions.mjs';
+test('doctor and readiness preserve all session plans and repair only their projections', async t => {
+  const root=fixture(t);
+  const definition=id=>({scope_id:id,objective:id,approval_note:'Approved isolated fixture',acceptance_criteria:['done'],
+    approved_scope:{functional_paths:[],documentation_paths:['docs/architecture/OVERVIEW.md'],max_functional_files_per_task:3},
+    tasks:[{id:'T1',title:'Fixture',why:'Check ownership',dependencies:[],functional_paths:[],documentation_paths:['docs/architecture/OVERVIEW.md'],acceptance_criteria:['done'],verification_ids:[],expected_commit_message:'docs: fixture'}]});
+  withSessionPlan(root,{sessionId:'source'},()=>createScope(root,definition('source-plan')));
+  const ownBefore=text(root,'.harness/plans/by-id/source-plan.md');
+  withSessionPlan(root,{sessionId:'source'},selected=>preparePlan(root,definition('future-plan'),selected.plan.plan_revision));
+  const plans=listPlans(root),future=plans.find(e=>e.plan.scope_id==='future-plan');
+  const original=text(root,future.file);fs.appendFileSync(path.join(root,future.file),'\nwrong readable projection\n');
+  const repaired=repairProject(root);
+  assert.deepEqual(repaired.issues,[]);assert.ok(repaired.backupPath);
+  assert.equal(text(root,future.file),original);assert.equal(text(root,'.harness/plans/by-id/source-plan.md'),ownBefore);
+  const backup=JSON.parse(text(repaired.backupPath,'repair.json'));
+  for(const plan of plans) assert.ok(backup.entries.some(e=>e.file===path.join(root,plan.file)));
+  const health=await new WorkspaceSetup({environment:env}).preview({mode:'existing',workspace:root});
+  assert.equal(health.ready,true,JSON.stringify(health));
+  assert.equal(listPlans(root).find(e=>e.plan.scope_id==='future-plan').plan.prepared_in_session_id,'source');
+  assert.equal(repairProject(root).repaired,false);
+});

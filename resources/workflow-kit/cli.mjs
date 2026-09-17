@@ -36,7 +36,7 @@ export async function main(argv = process.argv.slice(2)) {
       const { installerCommand } = await import('./lib/installer.mjs');
       return { value: await installerCommand(command, opts), json: true };
     }
-    if (command === 'help') return { value: 'Project Workflow Kit\n\n./scripts/workflow status\n./scripts/workflow recover --format text\n./scripts/workflow scope:create --input scope.json\n./scripts/workflow task:start T001\n./scripts/workflow commit --task T001\n./scripts/workflow plan:apply --input changes.json --expected-revision N\n./scripts/workflow config:apply --input config.json\n./scripts/workflow repair --dry-run\n./scripts/workflow archive --scope ID --approval-note "Прямая команда пользователя"\n\nПолный протокол: .harness/kit/WORKFLOW.md', json: false };
+    if (command === 'help') return { value: 'Project Workflow Kit\n\nВсе команды плана: --session <sessionId>; другой план: --plan <planId>.\nplan:view / plan:prepare / plan:bind / plan:adopt — см. WORKFLOW.md.\n\n./scripts/workflow status\n./scripts/workflow recover --format text\n./scripts/workflow scope:create --input scope.json\n./scripts/workflow task:start T001\n./scripts/workflow commit --task T001\n./scripts/workflow plan:apply --input changes.json --expected-revision N\n./scripts/workflow config:apply --input config.json\n./scripts/workflow repair --dry-run\n./scripts/workflow archive --scope ID --approval-note "Прямая команда пользователя"\n\nПолный протокол: .harness/kit/WORKFLOW.md', json: false };
     let event; if (isHook) event = JSON.parse(fs.readFileSync(0, 'utf8'));
     const root = repoRoot(opts.project || event?.cwd || process.cwd());
     let result;

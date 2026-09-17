@@ -9,14 +9,14 @@ export const validIdentity = (value, label = 'ID') => {
   return value;
 };
 export const ownedPlanPath = planId => PLANS_DIRECTORY + '/' + validIdentity(planId, 'planId') + '.md';
-export function listPlans(root) {
+export function listPlans(root, { projection = true } = {}) {
   const files = fs.existsSync(safePath(root, PLAN)) ? [PLAN] : [];
   const directory = safePath(root, PLANS_DIRECTORY);
   if (fs.existsSync(directory)) for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
     check(!entry.isSymbolicLink(), 'SYMLINK_PATH', 'Планы не могут быть символическими ссылками.');
     if (entry.isFile() && entry.name.endsWith('.md')) files.push(PLANS_DIRECTORY + '/' + entry.name);
   }
-  const result = files.map(file => ({ file, plan: parsePlan(textFile(root, file)) }));
+  const result = files.map(file => ({ file, plan: parsePlan(textFile(root, file), { projection }) }));
   const ids = result.filter(r => r.plan.scope_id).map(r => r.plan.scope_id);
   const owners = result.filter(r => r.plan.owner_session_id).map(r => r.plan.owner_session_id);
   check(new Set(ids).size === ids.length && new Set(owners).size === owners.length, 'PLAN_OWNERSHIP_CONFLICT', 'Обнаружена неоднозначная принадлежность плана. Данные сохранены.');

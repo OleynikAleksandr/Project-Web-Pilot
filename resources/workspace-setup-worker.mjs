@@ -3,9 +3,10 @@ import path from 'node:path';
 import { inspect, install, doctor } from './workflow-kit/lib/installer.mjs';
 import { check, hash, json, MANIFEST, VERSION, errorResult } from './workflow-kit/lib/common.mjs';
 import { hooksDirectory, BLOCK_START, BLOCK_END } from './workflow-kit/lib/installation-files.mjs';
+import { listPlans } from './workflow-kit/lib/session-plans.mjs';
 import { run } from './workflow-kit/lib/git.mjs';
 
-const supported = new Set(['1.0.0', '1.1.0', '1.2.0', VERSION]);
+const supported = new Set(['1.0.0', '1.1.0', '1.2.0', '1.3.0', VERSION]);
 function options(input) {
   check(input && ['inspect', 'apply'].includes(input.action), 'SETUP_ACTION', 'Неизвестное действие подготовки.');
   check(['new', 'existing'].includes(input.mode), 'SETUP_MODE', 'Выберите создание или подключение проекта.');
@@ -25,7 +26,7 @@ function inspectProject(opts) {
   if (!supported.has(p.version)) result.issues.push({ path: MANIFEST, reason: `Версия ${p.version} пока не поддерживается. Автоматическое обновление не выполняется.` });
   const anchors = ['.harness/workflow.json', '.harness/plans/todo-plan.md', '.harness/plans/todo-plan.template.md',
     'docs/DOCUMENTATION_INDEX.md', 'docs/WORKFLOW_START.md', 'docs/PRODUCT.md', 'docs/architecture/ARCHITECTURE.md'];
-  if (['1.2.0', VERSION].includes(p.version)) anchors.push('docs/MODULES.md', 'docs/architecture/OVERVIEW.md');
+  if (['1.2.0', '1.3.0', VERSION].includes(p.version)) anchors.push('docs/MODULES.md', 'docs/architecture/OVERVIEW.md');
   const manifest = JSON.parse(fs.readFileSync(path.join(p.project_path, MANIFEST), 'utf8'));
   anchors.push(...manifest.files.filter(f => f.kind === 'managed' && /^AGENTS(?:\.override)?\.md$/.test(f.path)).map(f => f.path));
   if (!anchors.some(f => /^AGENTS/.test(f))) result.issues.push({ path: 'AGENTS.md', reason: 'Не найдены зарегистрированные инструкции проекта.' });
@@ -61,11 +62,15 @@ function inspectProject(opts) {
     { label: 'Команды проекта', ok: launcher?.status === 'OK' },
     { label: 'Проверки изменений', ok: !hookErrors.length && !hookConflict });
   if (!p.state?.ok) result.issues.push({ path: '.harness/plans/todo-plan.md', reason: p.state?.message ?? 'План и история требуют проверки.' });
-  const recovered = run(process.execPath, [path.join(p.project_path, 'scripts/workflow.mjs'), 'recover', '--format', 'json'], p.project_path, { allowFailure: true });
-  let packet; try { packet = JSON.parse(recovered.stdout); } catch {}
-  const complete = recovered.status === 0 && packet?.ok === true && packet.completeness === 'COMPLETE';
-  result.checks.push({ label: 'Полный контекст проекта', ok: complete });
-  if (!complete) result.issues.push({ path: 'Контекст проекта', reason: packet?.message ?? 'Не удалось собрать полный пакет контекста.' });
+  const plans = p.version === VERSION ? listPlans(p.project_path) : [{ file: '.harness/plans/todo-plan.md', plan: {} }];
+  for (const { file, plan } of plans) {
+    const address = p.version !== VERSION ? [] : plan.scope_id ? ['--plan', plan.scope_id] : ['--session', plan.owner_session_id ?? 'workflow-readiness-navigation'];
+    const recovered = run(process.execPath, [path.join(p.project_path, 'scripts/workflow.mjs'), 'recover', '--format', 'json', ...address], p.project_path, { allowFailure: true });
+    let packet; try { packet = JSON.parse(recovered.stdout); } catch {}
+    const complete = recovered.status === 0 && packet?.ok === true && packet.completeness === 'COMPLETE';
+    result.checks.push({ label: 'Полный контекст: ' + (plan.objective || 'навигация проекта'), ok: complete });
+    if (!complete) result.issues.push({ path: file, reason: packet?.message ?? 'Не удалось собрать полный пакет контекста.' });
+  }
   if (d.installation?.bootstrap_pending) result.warnings.push('Файлы комплекта подготовлены. Их первая фиксация в истории ещё ожидает команды install:commit; исходные изменения сохранены.');
   if (p.version !== VERSION) result.warnings.push(`Установлен Workflow Kit ${p.version}. Рабочая версия сохраняется без обновления.`);
   const repairable = !result.issues.length && p.compatible && (hookErrors.length || launcher?.status === 'ERROR');
