@@ -71,3 +71,5 @@
 - Project-Web-Pilot-0.6.28-Windows-x64.zip: SHA-256 f61492cc74bc2c560412a2a0adb6cfa54469232f0c21fd7bf25f5c9fe0f6c222; 318057661 bytes.
 
 Evidence: .harness/runtime/releases/0.6.28/{mac-release.json,source-verification.json,release-manifest.json,SHA256SUMS.txt}. Реальный ChatGPT, чистая установка в UTM и native Windows этим выпуском не проверялись. Работающее приложение не перезапускалось: для применения нужен полный выход и повторный запуск через постоянный app/алиас.
+
+Для 0.6.28 происхождение исходников уточнено: единственное различие src установленного 0.6.27 относительно исходного 0.6.26 было в index.html. Его обводка/линии сохранены в новом UI; пакет не заменён старой реализацией.

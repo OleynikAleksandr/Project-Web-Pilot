@@ -1,5 +1,15 @@
 # Module Specification — Workspace & Sessions
 
+## Действующая модель — 0.6.28 / schema v6
+
+Сессия имеет собственный planId либо NONE, originSessionId и состояние подтверждения legacy-связи. Полные задачи в session store не копируются: readWorkspace(workspace, sessionId) читает их через фасад установленного Workflow Kit. prepared_in_session_id связывает исходную сессию с каноническим будущим планом; после bind обе сессии видят один файл.
+
+Facade SessionPlans выполняет адресованные recover/bind/adopt через существующий Node launcher. WorkspaceSessions.fromPrepared сначала идемпотентно привязывает план, затем атомарно сохраняет запись сессии. После сбоя записи повтор использует уже назначенные sessionId/experience. Новый Chat/Work из меню имеет NONE; автоматического перехода после завершения задач нет.
+
+Миграция schema v1–v5 создаёт backup. Единственная доказанная связь по facts доставленного пакета может быть принята через plan:adopt; совпадения названия/даты недостаточно. Неоднозначные планы сохраняются без автоматического владельца, UI объясняет это. Архивы и Git-история сохраняются.
+
+Подробный совместный контракт — session-owned-plans.md. Версионные разделы ниже сохраняют историю; scope 014 с кнопкой приёмки и scopeTransition больше не действует.
+
 ## Назначение
 
 Хранить локальную связь проекта Web Pilot с облачными разговорами ChatGPT и управлять созданием/выбором сессий проекта. Одна сессия проекта соответствует одному облачному разговору и с момента создания имеет явный experience: обычный Chat либо Work.
@@ -27,6 +37,9 @@
 
 ```text
 sessionId
+planId: string | null
+originSessionId: string | null
+planBinding / legacyPlanId
 experience: "chat" | "work"
 chatUrl: string | null
 title
@@ -104,7 +117,7 @@ Web Pilot выбирает только верхнеуровневый experienc
 
 ## Recovery Contract
 
-Context Recovery не различает Chat и Work. После того как Workspace & Sessions создал/выбрал сессию и открыл правильный experience, существующий `ContextSession` передаёт тот же Recovery Capsule тем же протоколом.
+Context Recovery не различает Chat и Work. После того как Workspace & Sessions создал/выбрал сессию и открыл правильный experience, существующий `ContextSession` передаёт адресованный Recovery Capsule выбранного sessionId/planId тем же протоколом.
 
 Для обеих разновидностей обязательны те же свойства:
 - не перезаписывать пользовательский draft;
@@ -340,7 +353,7 @@ CDP подключается на пустой служебной страниц
 
 ### Persisted naming model — scope 013 / T001
 
-Project record хранит optional `displayName` отдельно от канонического `name`, а session — optional `titleSource=page|manual|scope`; проект также запоминает `lastNamedScopeId`. Старые schema v5 записи остаются валидными без миграции. Page title обновляет только fallback-имя, ручное и scope-имя защищены. `applyScopeTitle` атомарно закрепляет новый scope за текущей session и не переносит тот же scope на другую session после переключения.
+Project record хранит optional `displayName` отдельно от канонического `name`, а session — optional `titleSource=page|manual|scope`; в исторической schema v5 проект также запоминал `lastNamedScopeId`; в schema v6 автоимя и этот маркер принадлежат сессии. Старые schema v5 записи остаются валидными без миграции. Page title обновляет только fallback-имя, ручное и scope-имя защищены. `applyScopeTitle` атомарно закрепляет новый scope за текущей session и не переносит тот же scope на другую session после переключения.
 
 
 ### Ручное переименование в sidebar — scope 013 / T002
@@ -360,7 +373,7 @@ Electron smoke проверяет наличие обеих команд «Пе�
 
 Сборка 0.6.13 выполнена для macOS arm64 и Windows x64. Проверка обоих `app.asar` подтвердила package version 0.6.13 и наличие rename IPC/menu и scope-driven title logic.
 
-## Новая сессия после приёмки плана — scope 014
+## История: новая сессия после приёмки — scope 014, заменён scope 028
 
 Поручение пользователя 15.09.2026: после принятия результата агент штатно архивирует текущий plan через Workflow Kit; затем Web Pilot спрашивает, открыть новую сессию Chat или Work. Это развитие существующих приёмки и session facade, без нового управляющего MCP или счётчика контекста.
 

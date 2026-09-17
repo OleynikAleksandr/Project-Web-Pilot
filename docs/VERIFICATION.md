@@ -944,3 +944,9 @@ T012: интеграционный Electron fixture проверяет собс�
 - Project-Web-Pilot-0.6.28-Windows-x64.zip: SHA-256 f61492cc74bc2c560412a2a0adb6cfa54469232f0c21fd7bf25f5c9fe0f6c222; 318057661 bytes.
 
 Evidence: .harness/runtime/releases/0.6.28/{mac-release.json,source-verification.json,release-manifest.json,SHA256SUMS.txt}. Реальный ChatGPT, чистая установка в UTM и native Windows этим выпуском не проверялись. Работающее приложение не перезапускалось: для применения нужен полный выход и повторный запуск через постоянный app/алиас.
+
+## Финальная сверка scope session-owned-plans-028
+
+Проверен полный действующий DOCUMENTATION_INDEX: навигация, продукт/архитектура, инструкции и шаблоны, контракты сессий/recovery, setup/doctor/archive, выпуск и перенос Windows, provenance и CLEAN_INSTALL. Нормативные описания глобального плана и обязательной кнопки приёмки заменены; версионная история сохранена и обозначена как историческая. Runtime Lifecycle не менялся и оставлен без бессмысленных правок. Две копии ядра совпадают. Собственный план текущей сессии привязан по доказанному исходному recovery, история коммитов сохранена. Scope остаётся ACTIVE до решения пользователя.
+
+Итоговый gate T013: Node suite — 181 тест, 179 passed, 2 platform skips, 0 failures; Electron smoke — passed (59.6 s). Коммит выпуска 72a164f5b652e0b256db32ed8eac9a9412fb5e4a. Полная evidence и снимки двух тем скопированы в .harness/runtime/releases/0.6.28/. После выпуска менялась только документация и доказанная принадлежность плана. Проверено документов по индексу: 37.

@@ -8,10 +8,10 @@
 | .harness/kit/WORKFLOW.md | Канонический протокол Workflow Kit |
 | .harness/kit/templates/AGENTS.md | Шаблон управляемых инструкций нового проекта |
 | .harness/kit/templates/ARCHITECTURE.md | Универсальный шаблон глобальной структуры проекта |
-| .harness/kit/templates/PLAN.md | Обязательный шаблон входа ToDo-plan: project navigation, DOCS и пользовательская приёмка |
+| .harness/kit/templates/PLAN.md | Шаблон собственного/подготовленного плана: project navigation, задачи и финальная DOCS |
 | .harness/kit/templates/PRODUCT.md | Универсальный шаблон общего замысла проекта |
 | .harness/kit/templates/START.md | Шаблон правил начала новой сессии |
-| .harness/plans/todo-plan.md | Единственный текущий ToDo-plan; при `NONE` сохраняет project navigation |
+| .harness/plans/todo-plan.md | Совместимый legacy-путь текущего проекта; принадлежность задана sessionId, новые планы — в .harness/plans/by-id/ |
 | .harness/plans/todo-plan.template.md | Доступный агенту шаблон следующего рабочего scope |
 | AGENTS.md | Управляемые инструкции Workflow Kit и границы Project Web Pilot |
 | docs/PRODUCT.md | Действующий продуктовый контракт Project Web Pilot |
@@ -43,7 +43,7 @@
 
 ## Обязательная навигация проекта
 
-Каждый текущий ToDo-plan, включая состояние `NONE`, содержит required-ссылки на:
+Каждый канонический план сессии, включая состояние `NONE`, содержит required-ссылки на:
 1. `docs/architecture/OVERVIEW.md` — что это за проект и как он устроен в целом;
 2. `docs/MODULES.md` — из каких самостоятельных частей он состоит и где их спецификации;
 3. `docs/DOCUMENTATION_INDEX.md` — какие документы существуют и что в них находится.
@@ -52,7 +52,7 @@
 
 ## Порядок чтения новой сессией
 
-Новая сессия начинает с recovery capsule. При `NONE` capsule уже содержит Workflow Core и три обязательных навигационных документа и предлагает обсудить следующий этап проекта. При активном scope дополнительно передаются цель, текущая задача, релевантные specification/planning documents, рабочие изменения и только необходимые dependency diffs.
+Новая сессия начинает с recovery capsule. При `NONE` capsule уже содержит Workflow Core и три обязательных навигационных документа и предлагает обсудить следующий этап проекта. При активном scope дополнительно передаются sessionId/planId, цель, текущая и оставшиеся задачи, релевантные specification/planning documents, рабочие изменения и только необходимые dependency diffs.
 
 Большие исторические `PRODUCT`, `ARCHITECTURE`, `VERIFICATION`, `DECISIONS` и другие профильные документы читаются по этому индексу только когда нужны для конкретного этапа. Завершённые планы находятся в `.harness/plans/archive/` и являются историей, а не действующим контрактом.
 
@@ -70,9 +70,9 @@
 Установленный `.harness/kit` и `resources/workflow-kit` должны совпадать для файлов ядра; это проверяется автоматическим regression test.
 
 
-## Подготовленный этап — планы сессий
+## Действующий контракт — планы сессий
 
 | Документ | Назначение |
 | --- | --- |
-| docs/modules/session-owned-plans.md | Согласованный 17.09.2026 целевой контракт собственных планов сессий, будущего плана и передачи контекста; реализация в scope session-owned-plans-028 ещё не начата |
+| docs/modules/session-owned-plans.md | Реализованный в 0.6.28 контракт собственных планов сессий, подготовки продолжения, адресации и безопасной миграции |
 | docs/design/session-plan-navigation.md | Принятый интерактивный пример сайдбара: без + Задача и приёмки, существующий выбор Chat/Work для подготовленного плана, меню проекта для NONE |
