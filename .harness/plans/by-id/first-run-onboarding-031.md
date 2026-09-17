@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 77,
+  "plan_revision": 78,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-onboarding-031",
@@ -1431,11 +1431,47 @@
       }
     },
     {
-      "id": "B005",
-      "title": "Собрать 0.6.36 для проверки прямого входа на обеих платформах",
-      "why": "Собрать 0.6.36 для проверки прямого входа на обеих платформах",
+      "id": "C010",
+      "title": "Показывать установщик Apple поверх Web Pilot",
+      "why": "Подтверждение установки Command Line Tools скрыто под окном приложения на чистой macOS.",
       "dependencies": [
         "C009"
+      ],
+      "functional_paths": [
+        "src/startup-readiness.mjs",
+        "tests/startup-readiness.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/first-run-onboarding.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/VERIFICATION.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/DECISIONS.md"
+      ],
+      "verification_ids": [
+        "suite"
+      ],
+      "acceptance_criteria": [
+        "После успешного xcode-select --install приложение штатно активирует окно системного установщика без дополнительных разрешений Automation/Accessibility.",
+        "Ошибка запуска и ошибка показа различимы, пользователь получает понятный следующий шаг; Git не считается установленным до проверки.",
+        "Повторные нажатия сериализованы; тесты не запускают установщик на основном Mac.",
+        "Наблюдения 0.6.35: чистые клоны созданы до экспериментов; сайт и вход успешны на другом клоне, причина прежнего сетевого сбоя не объявлена устранённой."
+      ],
+      "expected_commit_message": "fix: bring Apple command line tools installer to front",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "first-run-onboarding-031",
+        "task_id": "C010",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "B005",
+      "title": "Собрать 0.6.36 с исправлением показа установщика",
+      "why": "Передать проверяемое исправление скрытого окна Apple на обеих платформах.",
+      "dependencies": [
+        "C010"
       ],
       "functional_paths": [
         "package.json",
@@ -1469,7 +1505,7 @@
         "Постоянный Mac app обновлён с сохранением identity и рабочего процесса.",
         "Устранение гостевого дефекта ожидает ручной проверки, нативная Windows не объявлена проверенной."
       ],
-      "expected_commit_message": "build: release direct sign-in startup",
+      "expected_commit_message": "build: release visible Apple installer handoff",
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
@@ -1507,10 +1543,10 @@
       ],
       "verification_ids": [],
       "acceptance_criteria": [
-        "Действующая документация описывает прямую страницу входа и фактические результаты 0.6.35.",
-        "Инструкция повторной проверки и полный T017 сохранены; DOCS остаётся последней."
+        "Документы описывают показ установщика Apple, фактический успех 0.6.35 на чистом клоне и границы проверки 0.6.36.",
+        "Инструкция повтора и полный T017 сохранены; DOCS остаётся последней."
       ],
-      "expected_commit_message": "docs: deliver direct sign-in startup check",
+      "expected_commit_message": "docs: deliver installer visibility check",
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
@@ -1521,7 +1557,7 @@
     },
     {
       "id": "T017",
-      "title": "Проверить прямой вход и полный чистый путь macOS",
+      "title": "Проверить показ установщика и полный чистый путь macOS",
       "why": "Проверить прямой вход и полный чистый путь macOS",
       "dependencies": [
         "R005"
@@ -1766,6 +1802,7 @@
         "R004",
         "T016",
         "C009",
+        "C010",
         "B005",
         "R005",
         "T017",
@@ -1843,6 +1880,11 @@
       "id": "stepwise-releases",
       "recorded_at": "2026-09-17T14:56:50.242259+00:00",
       "text": "Пользователь поручил сейчас реализовать исправления первого запуска и выпустить новый релиз, затем проверить его в чистом госте и перейти к следующему наблюдаемому препятствию. Работа выполняется итерациями в этом же плане; недостающие доказательства базовой VM сохраняются в T009, не выдаются за проверенные и не блокируют исправление подтверждённых кодом проблем."
+    },
+    {
+      "id": "apple-installer-visibility",
+      "recorded_at": "2026-09-17T18:45:00Z",
+      "text": "Пользователь подтвердил: все клоны созданы до экспериментов. На другом чистом клоне 0.6.35 открыл ChatGPT без Chrome и перезагрузки, вход подтверждён. Следующее препятствие: окно подтверждения установки Apple оказалось под Web Pilot; пользователь поручил исправить. Релиз теперь готовится для проверки этой конкретной проблемы, сетевой дефект не считается устранённым."
     }
   ],
   "owner_session_id": "web-pilot-ee60a2b3-bdde-4d7f-83cd-a4e25767fcbe",
@@ -1857,7 +1899,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-onboarding-031
 Current Task: нет
-Revision: 77
+Revision: 78
 
 ## Цель
 
@@ -2004,15 +2046,19 @@ Revision: 77
   - Git Commit: [DONE] fix: open the sign-in page directly during onboarding
   - Reference: first-run-onboarding-031 / C009 / implementation
   - Файлы: src/chatgpt-experience.mjs, src/main.mjs, tests/electron-smoke.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
-- [TODO] B005: Собрать 0.6.36 для проверки прямого входа на обеих платформах — Ожидает
-  - Git Commit: [PENDING] build: release direct sign-in startup
+- [TODO] C010: Показывать установщик Apple поверх Web Pilot — Ожидает
+  - Git Commit: [PENDING] fix: bring Apple command line tools installer to front
+  - Reference: first-run-onboarding-031 / C010 / implementation
+  - Файлы: src/startup-readiness.mjs, tests/startup-readiness.test.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, docs/DECISIONS.md
+- [TODO] B005: Собрать 0.6.36 с исправлением показа установщика — Ожидает
+  - Git Commit: [PENDING] build: release visible Apple installer handoff
   - Reference: first-run-onboarding-031 / B005 / implementation
   - Файлы: package.json, package-lock.json, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
 - [TODO] R005: Обновить документы и передать проверку 0.6.36 — Ожидает
-  - Git Commit: [PENDING] docs: deliver direct sign-in startup check
+  - Git Commit: [PENDING] docs: deliver installer visibility check
   - Reference: first-run-onboarding-031 / R005 / implementation
   - Файлы: docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
-- [TODO] T017: Проверить прямой вход и полный чистый путь macOS — Ожидает
+- [TODO] T017: Проверить показ установщика и полный чистый путь macOS — Ожидает
   - Git Commit: [PENDING] docs: verify clean macOS guided startup
   - Reference: first-run-onboarding-031 / T017 / implementation
   - Файлы: docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
