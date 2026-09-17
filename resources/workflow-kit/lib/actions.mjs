@@ -1,12 +1,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { VERSION, PLAN, CONFIG, MANIFEST, check, readJSON, atomic, json, hash, id, textFile } from './common.mjs';
+import { VERSION, PLAN, planPath, CONFIG, MANIFEST, check, readJSON, atomic, json, hash, id, textFile, currentPlanSelection, withPlanFile } from './common.mjs';
 import { emptyPlan, readPlan, parsePlan, renderPlan, writePlan, validatePlan, nextTask, projectContextPack, projectContextPaths,
   FINAL_DOCUMENTATION_TASK_ID, FINAL_DOCUMENTATION_TASK_TITLE, isDocumentationFinalizationTask } from './plan.mjs';
 import { validate, validateConfig, journal, resolveReferences, taskChecks } from './validate.mjs';
 import { git, head, localPath, allChanges, identityReady, paths, gitPath } from './git.mjs';
 import { locked, commitCandidate, completedTransaction, finishTransaction } from './transaction.mjs';
 import { recover } from './recovery.mjs';
+import { ownedPlanPath, listPlans, assertSingleWriter, validIdentity, selectPlan } from './session-plans.mjs';
 
 const noTransaction = root => check(!journal(root), 'TRANSACTION_PENDING', 'Сначала завершите текущую транзакцию commit/repair.');
 const acknowledgementsPath = root => path.join(root, '.harness/runtime/worktrees', hash(gitPath(root, 'index')).slice(0, 20), 'hook-acknowledgements.json');
@@ -49,8 +50,17 @@ function service(root, plan, role, selected, message) {
   return commitCandidate(root, { plan, role, selected, message, beforeHead: head(root) });
 }
 export function createScope(root, input, expectedRevision) {
+  const selection = currentPlanSelection();
+  if (selection?.sessionId && !selection.newPlan) {
+    const previous = readPlan(root);
+    check(previous.execution_scope_status === 'NONE', 'SCOPE_EXISTS', 'У этой сессии уже есть план; используйте plan:apply или plan:prepare.');
+    const scopeId = input.scope_id || 'scope-' + id();
+    check(!listPlans(root).some(r => r.plan.scope_id === scopeId), 'SCOPE_EXISTS', 'Идентификатор плана уже занят.');
+    return withPlanFile(root, ownedPlanPath(scopeId), { ...selection, newPlan: true, virtualPlan: previous }, () => createScope(root, { ...input, scope_id: scopeId }, expectedRevision));
+  }
+  const PLAN = planPath(root);
   return locked(root, () => {
-    noTransaction(root); const { plan: previous } = validate(root); revision(previous, expectedRevision);
+    noTransaction(root); assertSingleWriter(root, PLAN); const { plan: previous } = validate(root); revision(previous, expectedRevision);
     check(previous.execution_scope_status === 'NONE', 'SCOPE_EXISTS', 'Текущий scope ещё не закрыт пользователем.');
     check(head(root), 'NO_BASELINE', 'Сначала завершите bootstrap-коммит установки.');
     check(typeof input.approval_note === 'string' && input.approval_note.trim().length >= 10, 'SCOPE_APPROVAL', 'Запишите согласованное пользователем содержание scope в approval_note.');
@@ -58,6 +68,10 @@ export function createScope(root, input, expectedRevision) {
       project_name: previous.project_name, plan_revision: previous.plan_revision + 1, scope_id: input.scope_id || 'scope-' + id(),
       execution_scope_status: 'ACTIVE', delivery_status: 'IN_PROGRESS', baseline_commit: head(root), current_task_id: null, blocked_reason: null };
     delete plan.approval_note;
+    if (selection?.sessionId) {
+      plan.owner_session_id = selection.draft ? null : selection.sessionId;
+      plan.prepared_in_session_id = selection.draft ? selection.sessionId : null;
+    }
     check(Array.isArray(input.tasks), 'PLAN_SCHEMA', 'Нужен список микрозадач.');
     plan.tasks = input.tasks.map((t, i) => {
       check(!t.implementation_status || t.implementation_status === 'TODO', 'PLAN_SCHEMA', 'Новый scope не может начинаться с завершённых задач.');
@@ -77,8 +91,9 @@ export function createScope(root, input, expectedRevision) {
   });
 }
 export function startTask(root, taskId, expectedRevision) {
+  const PLAN = planPath(root);
   return locked(root, () => {
-    noTransaction(root); const { plan, config } = validate(root); revision(plan, expectedRevision);
+    noTransaction(root); assertSingleWriter(root, PLAN); const { plan, config } = validate(root); revision(plan, expectedRevision);
     check(plan.execution_scope_status === 'ACTIVE', 'SCOPE_NOT_ACTIVE', 'Реализация разрешена только в ACTIVE scope.');
     const task = plan.tasks.find(t => t.id === taskId);
     check(task, 'UNKNOWN_TASK', 'Задача не найдена: ' + taskId);
@@ -91,6 +106,7 @@ export function startTask(root, taskId, expectedRevision) {
   });
 }
 export function applyPlan(root, input, expectedRevision) {
+  const PLAN = planPath(root);
   return locked(root, () => {
     noTransaction(root); const { plan: original } = validate(root);
     check(expectedRevision !== undefined, 'EXPECTED_REVISION_REQUIRED', 'Укажите --expected-revision из status.'); revision(original, expectedRevision);
@@ -130,6 +146,7 @@ export function applyPlan(root, input, expectedRevision) {
   });
 }
 export function applyConfig(root, input) {
+  const PLAN = planPath(root);
   return locked(root, () => {
     noTransaction(root); const { plan } = validate(root);
     check(plan.current_task_id === null, 'TASK_ACTIVE', 'Настройку стека фиксируйте между микрозадачами.');
@@ -141,6 +158,7 @@ export function applyConfig(root, input) {
   });
 }
 export function archive(root, scope, approvalNote) {
+  const PLAN = planPath(root);
   return locked(root, () => {
     noTransaction(root); const { plan } = validate(root);
     check(scope && plan.scope_id === scope, 'SCOPE_ID', 'Укажите точный --scope.');
@@ -151,11 +169,13 @@ export function archive(root, scope, approvalNote) {
     check(!fs.existsSync(path.join(root, destination)), 'ARCHIVE_EXISTS', 'Архив с таким ID уже существует.');
     atomic(path.join(root, destination), renderPlan(plan));
     const empty = emptyPlan(plan.project_name); empty.project_id = plan.project_id; empty.plan_revision = plan.plan_revision + 1;
+    empty.owner_session_id = plan.owner_session_id ?? null; empty.prepared_in_session_id = plan.prepared_in_session_id ?? null;
     empty.archived_scope_id = scope; empty.user_decisions = [{ id: id(), text: approvalNote, recorded_at: new Date().toISOString() }];
     return service(root, empty, 'archive', [PLAN, destination], 'docs: архивировать scope ' + scope);
   });
 }
 export function repair(root, applyId) {
+  const PLAN = planPath(root);
   const pending = journal(root); const raw = textFile(root, PLAN); let operation;
   if (pending) {
     const completed = completedTransaction(root, pending);
@@ -201,4 +221,55 @@ export function status(root) {
     last_hook_execution: fs.existsSync(receiptFile) ? readJSON(receiptFile) : null,
     recovery_size: recovery.size, recovery_text: recovery.text,
     git_identity_ready: identityReady(root), manifest_present: fs.existsSync(path.join(root, MANIFEST)) };
+}
+
+export function preparePlan(root, input, expectedRevision) {
+  const selected = currentPlanSelection();
+  check(selected?.sessionId, 'SESSION_REQUIRED', 'Для подготовки укажите исходную --session.');
+  const source = readPlan(root); revision(source, expectedRevision);
+  check(expectedRevision !== undefined, 'EXPECTED_REVISION_REQUIRED', 'Укажите revision исходного плана.');
+  const scopeId = input.scope_id || 'scope-' + id(); validIdentity(scopeId);
+  const existing = listPlans(root).find(r => r.plan.scope_id === scopeId);
+  if (existing) {
+    check(existing.plan.prepared_in_session_id === selected.sessionId, 'SCOPE_EXISTS', 'Этот planId уже используется.');
+    return { ok: true, plan_id: scopeId, already_prepared: true };
+  }
+  const empty = { ...emptyPlan(source.project_name), project_id: source.project_id };
+  return withPlanFile(root, ownedPlanPath(scopeId), { sessionId: selected.sessionId, virtualPlan: empty, newPlan: true, draft: true },
+    () => createScope(root, { ...input, scope_id: scopeId }, empty.plan_revision));
+}
+export function bindPlan(root, targetSession, experience, expectedRevision) {
+  const PLAN = planPath(root), selected = currentPlanSelection();
+  validIdentity(targetSession, 'sessionId');
+  check(['chat', 'work'].includes(experience), 'SESSION_EXPERIENCE', 'Выберите Chat или Work.');
+  return locked(root, () => {
+    noTransaction(root); assertSingleWriter(root, PLAN);
+    const { plan } = validate(root);
+    check(plan.prepared_in_session_id === selected?.sessionId, 'PLAN_OWNER_MISMATCH', 'План подготовлен в другой сессии.');
+    if (plan.owner_session_id) return { ok: true, session_id: plan.owner_session_id, experience: plan.session_experience, plan_id: plan.scope_id, already_bound: true };
+    check(expectedRevision !== undefined, 'EXPECTED_REVISION_REQUIRED', 'Укажите revision подготовленного плана.'); revision(plan, expectedRevision);
+    check(!listPlans(root).some(r => r.plan.owner_session_id === targetSession), 'SESSION_HAS_PLAN', 'У целевой сессии уже есть план.');
+    check(targetSession !== selected.sessionId, 'SESSION_HAS_PLAN', 'Продолжению нужна новая сессия.');
+    check(plan.current_task_id === null, 'TASK_ACTIVE', 'Нельзя привязать выполняемую задачу.');
+    plan.owner_session_id = targetSession; plan.session_experience = experience; plan.plan_revision++;
+    const result = service(root, plan, 'plan-adjustment', [PLAN], 'docs: привязать подготовленный план ' + plan.scope_id);
+    return { ...result, session_id: targetSession, experience, plan_id: plan.scope_id };
+  });
+}
+export function adoptPlan(root, evidence, expectedRevision) {
+  const PLAN = planPath(root), selected = currentPlanSelection();
+  return locked(root, () => {
+    noTransaction(root); const { plan } = validate(root);
+    check(selected?.sessionId && evidence?.session_id === selected.sessionId && evidence?.project_id === plan.project_id
+      && evidence?.scope_id === plan.scope_id && typeof evidence.reason === 'string' && evidence.reason.trim().length >= 10,
+      'PLAN_EVIDENCE_REQUIRED', 'Нужны доказанные session_id/project_id/scope_id и источник связи.');
+    if (plan.owner_session_id === selected.sessionId) return { ok: true, already_adopted: true, plan_id: plan.scope_id };
+    check(!plan.owner_session_id && !plan.prepared_in_session_id, 'PLAN_OWNER_MISMATCH', 'У плана уже есть принадлежность.');
+    check(expectedRevision !== undefined, 'EXPECTED_REVISION_REQUIRED', 'Укажите revision исторического плана.'); revision(plan, expectedRevision);
+    check(!listPlans(root).some(r => r.plan.owner_session_id === selected.sessionId), 'SESSION_HAS_PLAN', 'У сессии уже есть свой план.');
+    check(plan.current_task_id === null, 'TASK_ACTIVE', 'Привязка legacy выполняется между микрозадачами.');
+    plan.owner_session_id = selected.sessionId; plan.plan_revision++;
+    plan.ownership_evidence = { reason: evidence.reason, recorded_at: new Date().toISOString() };
+    return service(root, plan, 'plan-adjustment', [PLAN], 'docs: сохранить подтверждённую принадлежность плана ' + plan.scope_id);
+  });
 }

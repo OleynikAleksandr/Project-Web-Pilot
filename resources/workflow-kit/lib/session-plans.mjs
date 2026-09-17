@@ -22,7 +22,7 @@ export function listPlans(root) {
   check(new Set(ids).size === ids.length && new Set(owners).size === owners.length, 'PLAN_OWNERSHIP_CONFLICT', 'Обнаружена неоднозначная принадлежность плана. Данные сохранены.');
   return result;
 }
-export function selectPlan(root, { sessionId, planId, allowDraft = false, legacy = false } = {}) {
+export function selectPlan(root, { sessionId, planId, allowDraft = false, allowUnowned = false, legacy = false } = {}) {
   if (sessionId !== undefined && sessionId !== null) validIdentity(sessionId, 'sessionId');
   if (planId !== undefined && planId !== null) validIdentity(planId, 'planId');
   const plans = listPlans(root);
@@ -38,7 +38,8 @@ export function selectPlan(root, { sessionId, planId, allowDraft = false, legacy
   if (planId) check(selected, 'PLAN_NOT_FOUND', 'План не найден: ' + planId);
   if (selected) {
     if (sessionId) check(selected.plan.owner_session_id === sessionId
-      || (allowDraft && selected.plan.prepared_in_session_id === sessionId), 'PLAN_OWNER_MISMATCH', 'Этот план не принадлежит данной сессии.');
+      || (allowDraft && selected.plan.prepared_in_session_id === sessionId)
+      || (allowUnowned && !selected.plan.owner_session_id && !selected.plan.prepared_in_session_id), 'PLAN_OWNER_MISMATCH', 'Этот план не принадлежит данной сессии.');
     return { ...selected, sessionId: sessionId ?? selected.plan.owner_session_id ?? null };
   }
   const plan = { ...emptyPlan(base.project_name), project_id: base.project_id, owner_session_id: sessionId };

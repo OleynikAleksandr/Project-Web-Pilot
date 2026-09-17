@@ -12,6 +12,7 @@ export function validateStaged(root) {
   check(t.before_head === head(root), 'HEAD_CHANGED', 'HEAD изменился во время транзакции.');
   const selected = paths(root, 'staged');
   check(selected.length > 0 && selected.every(p => t.selected.includes(p)), 'CANDIDATE_SCOPE', 'Index содержит файлы вне разрешённого кандидата.');
+  const PLAN = t.plan_path ?? ' .harness/plans/todo-plan.md'.trim();
   const planText = git(root, ['show', ':' + PLAN]).stdout;
   check(hash(planText) === t.candidate_hash, 'CANDIDATE_PLAN', 'Index содержит другой план.');
   check(git(root, ['write-tree']).stdout.trim() === t.candidate_tree, 'CANDIDATE_CHANGED', 'Index изменён после подготовки кандидата.');
@@ -25,7 +26,7 @@ export function validateStaged(root) {
       check(r.status === 0, 'DOCUMENTATION_INDEX', 'Документ отсутствует в index: ' + p); return r.stdout;
     });
     resolveReferences(root, plan, t);
-  } else checkServicePaths(t.role, selected);
+  } else checkServicePaths(t.role, selected, PLAN);
   return t;
 }
 export function preCommit(root) {

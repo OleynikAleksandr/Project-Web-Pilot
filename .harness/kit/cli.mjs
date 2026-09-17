@@ -2,9 +2,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { errorResult, check, readJSON, json } from './lib/common.mjs';
+import { errorResult, check, readJSON, json, withPlanFile, PLAN } from './lib/common.mjs';
 import { repoRoot } from './lib/git.mjs';
-import { status, createScope, startTask, applyPlan, applyConfig, archive, repair, acknowledgeHook } from './lib/actions.mjs';
+import { status, createScope, startTask, applyPlan, applyConfig, archive, repair, acknowledgeHook, preparePlan, bindPlan, adoptPlan } from './lib/actions.mjs';
+import { journal } from './lib/validate.mjs';
+import { withSessionPlan, sessionPlanView } from './lib/session-plans.mjs';
 import { validate } from './lib/validate.mjs';
 import { recover, sessionStart } from './lib/recovery.mjs';
 import { commitTask } from './lib/transaction.mjs';
@@ -39,10 +41,15 @@ export async function main(argv = process.argv.slice(2)) {
     const root = repoRoot(opts.project || event?.cwd || process.cwd());
     let result;
     const input = () => { check(opts.input, 'INPUT_REQUIRED', 'Укажите --input <JSON-файл>.'); return readJSON(path.resolve(opts.input)); };
+    const execute = () => {
     switch (command) {
       case 'status': result = status(root); break;
       case 'validate': { const r = validate(root); result = { ok: true, message: 'План и Git согласованы.', plan_revision: r.plan.plan_revision, resolved: r.resolved, transaction_pending: !!r.transaction }; break; }
       case 'recover': { const p = recover(root); return { value: opts.format === 'json' || opts.json ? p : p.text, json: opts.format === 'json' || !!opts.json }; }
+      case 'plan:view': check(opts.session, 'SESSION_REQUIRED', 'Укажите --session.'); result = sessionPlanView(root, opts.session); break;
+      case 'plan:prepare': result = preparePlan(root, input(), opts['expected-revision']); break;
+      case 'plan:bind': result = bindPlan(root, opts['target-session'], opts.experience, opts['expected-revision']); break;
+      case 'plan:adopt': result = adoptPlan(root, input(), opts['expected-revision']); break;
       case 'scope:create': result = createScope(root, input(), opts['expected-revision']); break;
       case 'task:start': result = startTask(root, rest[0], opts['expected-revision']); break;
       case 'plan:apply': result = applyPlan(root, input(), opts['expected-revision']); break;
@@ -59,6 +66,16 @@ export async function main(argv = process.argv.slice(2)) {
       default: check(false, 'UNKNOWN_COMMAND', 'Неизвестная команда: ' + command);
     }
     return { value: result, json: true };
+    };
+    if (command === 'plan:view') return execute();
+    if (command === 'git-hook') {
+      const pending = journal(root);
+      return withPlanFile(root, pending?.plan_path ?? PLAN, {}, execute);
+    }
+    const mutating = ['scope:create', 'task:start', 'plan:apply', 'commit', 'archive', 'repair', 'plan:prepare', 'plan:bind', 'plan:adopt', 'config:apply'].includes(command);
+    if (mutating && opts.plan) check(opts.session, 'SESSION_REQUIRED', 'Запись требует явной --session.');
+    return withSessionPlan(root, { sessionId: opts.session, planId: opts.plan,
+      allowDraft: ['plan:bind', 'plan:apply'].includes(command), allowUnowned: command === 'plan:adopt' }, execute);
   } catch (e) {
     if (isHook) return { value: { continue: false, stopReason: e.code ?? 'HOOK_ERROR', systemMessage: e.message + ' Диагностика: ./scripts/workflow doctor' }, json: true };
     return { value: errorResult(e), json: true, exitCode: 1 };

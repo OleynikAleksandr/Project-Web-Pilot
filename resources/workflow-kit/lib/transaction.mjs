@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { PLAN, check, hash, id, json, atomic, withLock, safePath } from './common.mjs';
+import { PLAN, planPath, check, hash, id, json, atomic, withLock, safePath } from './common.mjs';
 import { readPlan, renderPlan, parsePlan, isDocumentationFinalizationTask } from './plan.mjs';
 import { validate, journal, taskChecks } from './validate.mjs';
 import { git, head, paths, localPath, gitPath, allChanges, ensureIdleGit, identityReady, snapshot } from './git.mjs';
@@ -8,11 +8,11 @@ import { git, head, paths, localPath, gitPath, allChanges, ensureIdleGit, identi
 export const saveJournal = (root, data) => atomic(localPath(root, 'transaction.json'), json(data));
 export const messageFor = t => t.message + '\n\nWorkflow-Scope: ' + (t.scope_id ?? 'NONE') + '\nWorkflow-Task: ' + (t.task_id ?? t.id) + '\nWorkflow-Role: ' + t.role + (t.role === 'implementation' ? '\nWorkflow-Iteration: ' + (t.task?.commit_ref?.iteration ?? 1) : '') + '\nWorkflow-Transaction: ' + t.id;
 export const locked = (root, fn) => withLock(localPath(root, 'operation.lock'), fn);
-export function checkServicePaths(role, files) {
+export function checkServicePaths(role, files, PLAN = ' .harness/plans/todo-plan.md'.trim()) {
   const patterns = {
     'scope-plan': p => p === PLAN || p.startsWith('docs/') && /\.(md|markdown)$/.test(p),
     'plan-adjustment': p => p === PLAN || p === '.harness/workflow.json' || p.startsWith('docs/') && /\.(md|markdown)$/.test(p),
-    repair: p => p === PLAN,
+    repair: p => p === PLAN, planPath,
     archive: p => p === PLAN || p.startsWith('.harness/plans/archive/') && p.endsWith('.md'),
     bootstrap: p => p.startsWith('.harness/') || p.startsWith('docs/') || ['AGENTS.md', 'AGENTS.override.md', '.gitignore', '.gitattributes', '.codex/hooks.json', 'scripts/workflow', 'scripts/workflow.mjs', 'scripts/workflow.cmd'].includes(p) || p.startsWith('.husky/'),
     'kit-update': p => p === PLAN || p.startsWith('.harness/kit/') || ['.harness/kit-manifest.json', '.harness/plans/todo-plan.template.md', 'scripts/workflow', 'scripts/workflow.mjs', 'scripts/workflow.cmd', 'AGENTS.md', 'AGENTS.override.md', 'docs/DOCUMENTATION_INDEX.md', 'docs/MODULES.md', 'docs/architecture/OVERVIEW.md'].includes(p),
@@ -44,6 +44,7 @@ export function finishTransaction(root, t, sha) {
   return { ok: true, sha, task_id: t.task_id, role: t.role, message: 'Коммит создан и подтверждён.' };
 }
 export function commitCandidate(root, { plan, role, task = null, selected, message, beforeHead, checks = [] }) {
+  const PLAN = planPath(root);
   ensureIdleGit(root); check(identityReady(root), 'GIT_IDENTITY', 'Git не знает автора. Настройте user.name и user.email; файлы сохранены.');
   let t = journal(root);
   if (t) {
@@ -55,7 +56,7 @@ export function commitCandidate(root, { plan, role, task = null, selected, messa
   }
   const files = [...new Set([...selected, PLAN])].sort();
   for (const p of files) { const f = safePath(root, p); check(!fs.existsSync(f) || fs.statSync(f).isFile(), 'PATH_NOT_FILE', 'В задаче перечисляются файлы, а не каталоги: ' + p); }
-  if (role !== 'implementation') checkServicePaths(role, files);
+  if (role !== 'implementation') checkServicePaths(role, files, PLAN);
   const staged = paths(root, 'staged');
   check(staged.every(p => files.includes(p)), 'FOREIGN_STAGED', 'В index есть посторонние файлы. Они не будут включены и не будут сняты со staging.', { paths: staged.filter(p => !files.includes(p)) });
   if (role === 'implementation' && checks.length) {
@@ -67,8 +68,8 @@ export function commitCandidate(root, { plan, role, task = null, selected, messa
     check(head(root) === beforeHead, 'HEAD_CHANGED', 'HEAD изменился перед подготовкой коммита.');
     const index = gitPath(root, 'index');
     if (fs.existsSync(index)) atomic(localPath(root, 'index-before'), fs.readFileSync(index), 0o600);
-    const original = fs.readFileSync(path.join(root, PLAN), 'utf8');
-    t = { schema_version: 1, id: id(), role, scope_id: role === 'archive' ? plan.archived_scope_id : plan.scope_id,
+    const original = fs.existsSync(path.join(root, PLAN)) ? fs.readFileSync(path.join(root, PLAN), 'utf8') : renderPlan(readPlan(root));
+    t = { schema_version: 1, id: id(), plan_path: PLAN, role, scope_id: role === 'archive' ? plan.archived_scope_id : plan.scope_id,
       task_id: task?.id ?? null, task, message, before_head: beforeHead, original_plan: original,
       original_hash: hash(original), candidate_hash: hash(candidateText), selected: files, checks, phase: 'PREPARING' };
     saveJournal(root, t);

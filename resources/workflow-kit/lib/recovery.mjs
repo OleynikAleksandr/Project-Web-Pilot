@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { VERSION, PLAN, CONFIG, check, contextPath, textFile, atomic, json, hash, id, errorResult } from './common.mjs';
+import { VERSION, PLAN, planPath, CONFIG, check, contextPath, textFile, atomic, json, hash, id, errorResult } from './common.mjs';
 import { validate } from './validate.mjs';
 import { nextTask, PROJECT_CONTINUATION_OBJECTIVE, isDocumentationFinalizationTask } from './plan.mjs';
 import { snapshot, diff, git, localPath, head, fileFingerprint } from './git.mjs';
@@ -56,6 +56,7 @@ function relevantEvidence(root, beforeHead, neededShas, transaction) {
 }
 
 export function recover(root, reason = 'manual', options = {}) {
+  const PLAN = planPath(root);
   for (let attempt = 0; attempt < 2; attempt++) {
     const started = Date.now(); const marker = options.receipt ? id() : null;
     const initialHead = head(root);

@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 590,
+  "plan_revision": 593,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-owned-plans-028",
@@ -70,12 +70,12 @@
       "resources/workflow-kit/lib/validate.mjs",
       ".harness/kit/lib/git-hooks.mjs",
       "resources/workflow-kit/lib/git-hooks.mjs",
+      ".harness/kit/lib/recovery.mjs",
+      "resources/workflow-kit/lib/recovery.mjs",
       "tests/workflow-kit-source.test.mjs",
       "src/workspace-session.mjs",
       "tests/workspace-session.test.mjs",
       "src/session-plans.mjs",
-      ".harness/kit/lib/recovery.mjs",
-      "resources/workflow-kit/lib/recovery.mjs",
       "tests/workflow-kit-recovery.test.mjs",
       "src/context-session.mjs",
       "src/context-cache.mjs",
@@ -257,8 +257,8 @@
       "file_limit_exception": "Единый контракт явной адресации и его проверки; синхронное изменение установленной и поставляемой копий ядра."
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-owned-plans-028",
         "task_id": "T003",
@@ -274,7 +274,17 @@
         "resources/workflow-kit/cli.mjs",
         ".harness/kit/lib/plan.mjs",
         "resources/workflow-kit/lib/plan.mjs",
-        "tests/session-plans.test.mjs"
+        "tests/session-plans.test.mjs",
+        ".harness/kit/lib/transaction.mjs",
+        "resources/workflow-kit/lib/transaction.mjs",
+        ".harness/kit/lib/validate.mjs",
+        "resources/workflow-kit/lib/validate.mjs",
+        ".harness/kit/lib/git-hooks.mjs",
+        "resources/workflow-kit/lib/git-hooks.mjs",
+        ".harness/kit/lib/recovery.mjs",
+        "resources/workflow-kit/lib/recovery.mjs",
+        ".harness/kit/lib/session-plans.mjs",
+        "resources/workflow-kit/lib/session-plans.mjs"
       ],
       "documentation_paths": [
         "docs/modules/session-owned-plans.md",
@@ -803,7 +813,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-owned-plans-028
 Current Task: нет
-Revision: 590
+Revision: 593
 
 ## Цель
 
@@ -828,10 +838,10 @@ Revision: 590
   - Git Commit: [DONE] feat: persist session plans and continuation drafts
   - Reference: session-owned-plans-028 / T002 / implementation
   - Файлы: .harness/kit/lib/session-plans.mjs, resources/workflow-kit/lib/session-plans.mjs, tests/session-plans.test.mjs, .harness/kit/lib/common.mjs, resources/workflow-kit/lib/common.mjs, .harness/kit/lib/plan.mjs, resources/workflow-kit/lib/plan.mjs, docs/modules/session-owned-plans.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/workflow-kit-recovery.md
-- [TODO] T003: Добавить команды подготовки и продолжения планов — Ожидает
-  - Git Commit: [PENDING] feat: add session scoped plan lifecycle commands
+- [DONE] T003: Добавить команды подготовки и продолжения планов — Завершено
+  - Git Commit: [DONE] feat: add session scoped plan lifecycle commands
   - Reference: session-owned-plans-028 / T003 / implementation
-  - Файлы: .harness/kit/lib/actions.mjs, resources/workflow-kit/lib/actions.mjs, .harness/kit/cli.mjs, resources/workflow-kit/cli.mjs, .harness/kit/lib/plan.mjs, resources/workflow-kit/lib/plan.mjs, tests/session-plans.test.mjs, docs/modules/session-owned-plans.md, docs/modules/workflow-kit-recovery.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+  - Файлы: .harness/kit/lib/actions.mjs, resources/workflow-kit/lib/actions.mjs, .harness/kit/cli.mjs, resources/workflow-kit/cli.mjs, .harness/kit/lib/plan.mjs, resources/workflow-kit/lib/plan.mjs, tests/session-plans.test.mjs, .harness/kit/lib/transaction.mjs, resources/workflow-kit/lib/transaction.mjs, .harness/kit/lib/validate.mjs, resources/workflow-kit/lib/validate.mjs, .harness/kit/lib/git-hooks.mjs, resources/workflow-kit/lib/git-hooks.mjs, .harness/kit/lib/recovery.mjs, resources/workflow-kit/lib/recovery.mjs, .harness/kit/lib/session-plans.mjs, resources/workflow-kit/lib/session-plans.mjs, docs/modules/session-owned-plans.md, docs/modules/workflow-kit-recovery.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T004: Сохранить проверки и транзакции для нескольких планов — Ожидает
   - Git Commit: [PENDING] fix: bind plan transactions to their owning session
   - Reference: session-owned-plans-028 / T004 / implementation

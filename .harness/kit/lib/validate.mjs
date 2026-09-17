@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { check, CONFIG, PLAN, INDEX, readJSON, textFile, hash, contextPath, relativePath } from './common.mjs';
+import { check, CONFIG, PLAN, planPath, INDEX, readJSON, textFile, hash, contextPath, relativePath } from './common.mjs';
 import { readPlan, parsePlan, renderPlan } from './plan.mjs';
 import { commitHistory, commitPaths, git, head, localPath } from './git.mjs';
 
@@ -39,6 +39,7 @@ export function matches(pattern, value) {
   return new RegExp('^' + pieces.join('.*') + '$').test(value);
 }
 export function validateDocs(root, changed, task, config, reader = p => textFile(root, p)) {
+  const PLAN = planPath(root);
   const docsChanged = changed.filter(p => /\.(md|markdown)$/.test(p) && p !== PLAN);
   const codeChanged = changed.filter(p => task.functional_paths.includes(p));
   if (codeChanged.length) {
@@ -72,6 +73,7 @@ function commitIteration(commit) {
   return Number(values[0]);
 }
 export function resolveReferences(root, p, pending = journal(root)) {
+  const PLAN = planPath(root);
   const history = p.scope_id ? commitHistory(root, p.baseline_commit) : [];
   const resolved = {};
   for (const task of p.tasks) {
