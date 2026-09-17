@@ -17,25 +17,25 @@ async function fixture(t, startup = {}) {
   const view = createStartupView({ document, api });
   const emit = patch => { state = { ...state, startup: { ...state.startup, ...patch } }; view.render(state); };
   view.render(state);
-  return { document, calls, emit, settle: () => new Promise(r => setImmediate(r)) };
+  return { document, api, calls, emit, settle: () => new Promise(r => setImmediate(r)) };
 }
 test('new account route is explicit and cannot pass as authenticated guest chat', async t => {
   const f = await fixture(t);
   assert.equal(f.document.querySelector('#startup-panel').hidden, false);
   const signup = f.document.querySelector('[data-startup=signup]');
   assert.match(signup.textContent, /нет аккаунта/); signup.click(); await f.settle();
-  assert.deepEqual(f.calls, ['signup']);
+  assert.deepEqual(f.calls, [], 'explaining registration must not reload an already visible login page');
   assert.equal(f.document.querySelector('#startup-signup-help').hidden, false);
   assert.equal(f.document.querySelector('#startup-continue').disabled, true);
   assert.equal(f.document.querySelector('#startup-project-body').hidden, true);
 });
 test('slow or failed web load retains a working retry while runtime is busy', async t => {
   const f = await fixture(t, { page: 'slow', busy: true });
-  assert.match(f.document.querySelector('#startup-account-status').textContent, /дольше обычного/);
+  assert.match(f.document.querySelector('#startup-account-status').textContent, /ChatGPT пока не открылся/);
   assert.equal(f.document.querySelector('[data-startup=chat]').disabled, false);
   f.document.querySelector('[data-startup=chat]').click(); await f.settle();
   assert.deepEqual(f.calls, ['chat']);
-  f.emit({ page: 'failed' }); assert.match(f.document.querySelector('#startup-account-status').textContent, /не открылась/);
+  f.emit({ page: 'failed' }); assert.match(f.document.querySelector('#startup-account-status').textContent, /Не удалось открыть сайт ChatGPT/);
 });
 test('missing Apple component has one installation action and keeps later steps unavailable', async t => {
   const f = await fixture(t, { account: 'signed-in' });
@@ -63,4 +63,42 @@ test('only confirmed login and local readiness expose the first project; transit
   f.document.querySelector('#startup-continue').click(); await f.settle();
   assert.deepEqual(f.calls, ['continue', 'beginCreate']);
   assert.equal(f.document.querySelector('#startup-panel').hidden, true);
+});
+
+test('blank pages never direct the user to missing login controls and expose a copyable report', async t => {
+  const f = await fixture(t, { page: 'loading', account: 'unknown' });
+  for (const page of ['idle', 'loading', 'slow', 'failed', 'loaded']) {
+    f.emit({ page, account: 'unknown' });
+    assert.equal(f.document.querySelector('#startup-account-instructions').hidden, true);
+    assert.equal(f.document.querySelector('#startup-signup').hidden, true);
+    assert.equal(f.document.querySelector('#startup-account-check').hidden, true);
+  }
+  const copy = f.document.querySelector('#startup-copy-diagnostics');
+  assert.equal(copy.hidden, false); assert.equal(copy.disabled, false);
+  copy.click(); await f.settle();
+  assert.deepEqual(f.calls, ['copy-diagnostics']);
+  assert.equal(f.document.querySelector('#startup-diagnostics-copied').hidden, false);
+  f.emit({ page: 'loaded', account: 'signed-out' });
+  assert.equal(f.document.querySelector('#startup-account-instructions').hidden, false);
+  assert.equal(f.document.querySelector('#startup-signup').hidden, false);
+  assert.equal(f.document.querySelector('#startup-account-check').hidden, false);
+  assert.equal(copy.hidden, true);
+});
+test('specific browser error is explained and report failures never claim successful copying', async t => {
+  const f = await fixture(t, { page: 'failed', account: 'unknown', pageError: 'ERR_NAME_NOT_RESOLVED' });
+  assert.match(f.document.querySelector('#startup-account-status').textContent, /Не удалось найти адрес/);
+  f.api.startup = async () => ({ ok: false, error: { message: 'Не удалось прочитать журнал.' } });
+  f.document.querySelector('#startup-copy-diagnostics').click(); await f.settle();
+  assert.equal(f.document.querySelector('#startup-diagnostics-copied').hidden, true);
+  assert.match(f.document.querySelector('#startup-error').textContent, /Не удалось прочитать журнал/);
+});
+test('diagnostics stay available while retry is waiting for a network response', async t => {
+  const f = await fixture(t, { page: 'slow', account: 'unknown' });
+  let finish;
+  f.api.startup = action => action === 'chat' ? new Promise(resolve => { finish = resolve; }) : Promise.resolve({ ok: true });
+  f.document.querySelector('#startup-open-chat').click();
+  const copy = f.document.querySelector('#startup-copy-diagnostics');
+  assert.equal(copy.disabled, false); copy.click(); await f.settle();
+  assert.equal(f.document.querySelector('#startup-diagnostics-copied').hidden, false);
+  finish({ ok: true }); await f.settle();
 });

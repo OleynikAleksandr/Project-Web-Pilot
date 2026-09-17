@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 37,
+  "plan_revision": 39,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-onboarding-031",
@@ -636,8 +636,8 @@
       "id": "C003",
       "title": "Показывать вход только после появления страницы ChatGPT",
       "why": "Пользователь не должен искать кнопки на пустой правой панели.",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-onboarding-031",
         "task_id": "C003",
@@ -1125,7 +1125,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-onboarding-031
 Current Task: нет
-Revision: 37
+Revision: 39
 
 ## Цель
 
@@ -1200,8 +1200,8 @@ Revision: 37
   - Git Commit: [DONE] fix: capture browser diagnostics before first navigation
   - Reference: first-run-onboarding-031 / C002 / implementation
   - Файлы: src/main.mjs, src/chromium-diagnostics.mjs, tests/electron-smoke.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
-- [TODO] C003: Показывать вход только после появления страницы ChatGPT — Ожидает
-  - Git Commit: [PENDING] fix: guide users when ChatGPT has not opened
+- [DONE] C003: Показывать вход только после появления страницы ChatGPT — Завершено
+  - Git Commit: [DONE] fix: guide users when ChatGPT has not opened
   - Reference: first-run-onboarding-031 / C003 / implementation
   - Файлы: src/ui/startup.mjs, src/ui/index.html, tests/startup-ui.test.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
 - [TODO] V002: Проверить ранний журнал и повтор неудачной загрузки — Ожидает

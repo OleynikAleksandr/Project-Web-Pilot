@@ -154,14 +154,15 @@ SOFTWARE.
         <p class="startup-intro">Мы поможем войти в ChatGPT и подготовим компьютер для ваших проектов.</p>
         <p id="startup-error" class="error-banner" role="alert" hidden></p>
         <section class="startup-step" id="startup-account-step">
-          <h3><span class="startup-number">1</span> Аккаунт ChatGPT</h3>
+          <h3><span class="startup-number">1</span> <span id="startup-account-title">Открытие ChatGPT</span></h3>
           <p id="startup-account-status" class="startup-status" role="status"></p>
           <div id="startup-account-body">
-            <p>Есть аккаунт? Нажмите «Войти» на странице справа. Нет аккаунта? Выберите там «Зарегистрироваться» / «Sign up» и следуйте шагам OpenAI.</p>
-            <p>Отдельное приложение ChatGPT устанавливать не нужно. Вход или регистрация выполняются здесь, в веб-версии.</p>
-            <div class="actions"><button class="primary" data-startup="chat">Открыть вход в ChatGPT</button><button class="secondary" data-startup="signup">У меня ещё нет аккаунта</button></div>
+            <p id="startup-account-instructions" hidden>Есть аккаунт? Нажмите «Войти» на странице справа. Нет аккаунта? Выберите там «Зарегистрироваться» / «Sign up» и следуйте шагам OpenAI.</p>
+            <p>Вход или создание аккаунта выполняются в этом окне после открытия сайта. Отдельно устанавливать ChatGPT не нужно.</p>
+            <div class="actions"><button id="startup-open-chat" class="primary" data-startup="chat">Открыть сайт ChatGPT</button><button id="startup-signup" class="secondary" data-startup="signup" hidden>У меня ещё нет аккаунта</button><button id="startup-copy-diagnostics" class="secondary" data-startup="copy-diagnostics" hidden>Скопировать диагностику</button></div>
+            <p id="startup-diagnostics-copied" class="startup-status" role="status" hidden>Диагностика скопирована. Вставьте её в сообщение разработчику.</p>
             <p id="startup-signup-help" hidden>На странице справа выберите «Sign up» / «Зарегистрироваться». Создайте аккаунт, подтвердите почту, если это потребуется, и завершите вход. Затем нажмите «Проверить вход» ниже.</p>
-            <button class="text-button" data-startup="check">Проверить вход и продолжить</button>
+            <button id="startup-account-check" class="text-button" data-startup="check" hidden>Проверить вход и продолжить</button>
           </div>
         </section>
         <section class="startup-step">
