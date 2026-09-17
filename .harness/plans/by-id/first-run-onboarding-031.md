@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 48,
+  "plan_revision": 50,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-onboarding-031",
@@ -851,8 +851,8 @@
       "id": "C004",
       "title": "Ограничить первый запуск браузера и восстановить зависшее соединение",
       "why": "Первый документ не должен ждать бесконечно, а дополнительные ресурсы не должны блокировать уже открытый экран входа.",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-onboarding-031",
         "task_id": "C004",
@@ -1299,7 +1299,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-onboarding-031
 Current Task: нет
-Revision: 48
+Revision: 50
 
 ## Цель
 
@@ -1394,8 +1394,8 @@ Revision: 48
   - Git Commit: [DONE] docs: record first browser response investigation
   - Reference: first-run-onboarding-031 / T014 / implementation
   - Файлы: docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md
-- [TODO] C004: Ограничить первый запуск браузера и восстановить зависшее соединение — Ожидает
-  - Git Commit: [PENDING] fix: recover stalled initial browser navigation
+- [DONE] C004: Ограничить первый запуск браузера и восстановить зависшее соединение — Завершено
+  - Git Commit: [DONE] fix: recover stalled initial browser navigation
   - Reference: first-run-onboarding-031 / C004 / implementation
   - Файлы: src/browser-startup.mjs, src/main.mjs, tests/browser-startup.test.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
 - [TODO] B003: Выпустить 0.6.34 для macOS и Windows — Ожидает

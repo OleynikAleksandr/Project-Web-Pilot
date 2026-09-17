@@ -22,6 +22,7 @@ import { WorkspaceDeletion } from './workspace-deletion.mjs';
 import { WorkspaceSetup } from './workspace-setup.mjs';
 import { ProjectDoctor } from './project-doctor.mjs';
 import { ChromiumDiagnostics, safeUrl } from './chromium-diagnostics.mjs';
+import { openStartupPage } from './browser-startup.mjs';
 import { defaultRuntimeFolder, bundledWindowsRuntimeFolder, bundledMacNode, nodeExecutableCandidates } from './platform.mjs';
 import { WindowsRuntimeBootstrap, WINDOWS_RUNTIME_ARCHIVE } from './windows-runtime.mjs';
 import { MacRuntimeBootstrap } from './mac-runtime.mjs';
@@ -458,7 +459,20 @@ async function navigate(project = store.selected(), { refresh = false, generatio
   waiting.unref?.();
   try {
     const alreadyOpen = resume && !browser.webContents.isLoading() && browser.webContents.getURL() === target;
-    if (!alreadyOpen) await browser.webContents.loadURL(target);
+    if (!alreadyOpen) {
+      const firstOpening = !project && !browser.webContents.getURL();
+      if (firstOpening) await openStartupPage(browser.webContents, target, {
+        isCurrent: () => navigationCurrent(ownNavigation),
+        onRecovery: () => {
+          chromiumDiagnostics?.log.record('app', 'navigation-waiting', {
+            generation: ownNavigation, phase: 'connection-recovery', attempt: 2,
+            elapsedMs: Date.now() - began, url: safeUrl(target),
+          });
+          startupFlow?.beginPage(ownNavigation); publish();
+        },
+      });
+      else await browser.webContents.loadURL(target);
+    }
     if (!navigationCurrent(ownNavigation)) return;
     pageLoading = false; startupFlow?.finishPage(ownNavigation);
     void observeStartupAccount();
@@ -471,7 +485,7 @@ async function navigate(project = store.selected(), { refresh = false, generatio
     if (!navigationCurrent(ownNavigation)) return;
     chromiumDiagnostics?.log.record('app', 'load-url-failed', { generation: ownNavigation, url: safeUrl(target),
       elapsedMs: Date.now() - began, errorCode: Number.isFinite(error.errno) ? error.errno : null,
-      errorName: /^ERR_[A-Z0-9_]+$/.test(error.code ?? '') ? error.code : null });
+      errorName: /^(?:ERR|PAGE)_[A-Z0-9_]+$/.test(error.code ?? '') ? error.code : null });
     pageLoading = false; startupFlow?.finishPage(ownNavigation, error.code ?? 'PAGE_LOAD_FAILED');
     report(Object.assign(new Error('Не удалось открыть сайт ChatGPT. Повторите открытие страницы.'), { code: 'PAGE_LOAD_FAILED' }));
   } finally { clearTimeout(waiting); }
@@ -631,9 +645,9 @@ async function observeStartupAccount() {
   observingAccount = true;
   const generation = navigationId;
   try {
-    if (!isChatGPTOrigin(browser.webContents.getURL()) || browser.webContents.isLoading()) return;
+    if (!isChatGPTOrigin(browser.webContents.getURL())) return;
     if (['loading', 'slow', 'idle'].includes(startupFlow.snapshot().page)) startupFlow.finishPage(generation);
-    const observation = await browser.webContents.executeJavaScript('(' + accountObservation.toString() + ')()');
+    const observation = await browser.webContents.mainFrame.executeJavaScript('(' + accountObservation.toString() + ')()');
     if (navigationCurrent(generation)) startupFlow.observe(generation, observation);
   } catch { /* Unknown remains unverified; a later visible document can be inspected. */ }
   finally { observingAccount = false; }
