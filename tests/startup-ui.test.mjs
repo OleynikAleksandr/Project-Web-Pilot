@@ -29,13 +29,17 @@ test('new account route is explicit and cannot pass as authenticated guest chat'
   assert.equal(f.document.querySelector('#startup-continue').disabled, true);
   assert.equal(f.document.querySelector('#startup-project-body').hidden, true);
 });
-test('slow or failed web load retains a working retry while runtime is busy', async t => {
-  const f = await fixture(t, { page: 'slow', busy: true });
-  assert.match(f.document.querySelector('#startup-account-status').textContent, /ChatGPT пока не открылся/);
-  assert.equal(f.document.querySelector('[data-startup=chat]').disabled, false);
-  f.document.querySelector('[data-startup=chat]').click(); await f.settle();
+test('pending first connection cannot be restarted but final failure can be retried', async t => {
+  const f = await fixture(t, { page: 'slow', busy: true, account: 'unknown' });
+  assert.match(f.document.querySelector('#startup-account-status').textContent, /двух минут/);
+  const button = f.document.querySelector('[data-startup=chat]');
+  assert.equal(button.disabled, true); button.click(); await f.settle();
+  assert.deepEqual(f.calls, []);
+  assert.equal(f.document.querySelector('#startup-copy-diagnostics').disabled, false);
+  f.emit({ page: 'failed', pageError: 'PAGE_RESPONSE_TIMEOUT' });
+  assert.match(f.document.querySelector('#startup-account-status').textContent, /не ответил за две минуты/);
+  assert.equal(button.disabled, false); button.click(); await f.settle();
   assert.deepEqual(f.calls, ['chat']);
-  f.emit({ page: 'failed' }); assert.match(f.document.querySelector('#startup-account-status').textContent, /Не удалось открыть сайт ChatGPT/);
 });
 test('missing Apple component has one installation action and keeps later steps unavailable', async t => {
   const f = await fixture(t, { account: 'signed-in' });
@@ -82,7 +86,7 @@ test('blank pages never direct the user to missing login controls and expose a c
   assert.equal(f.document.querySelector('#startup-account-instructions').hidden, false);
   assert.equal(f.document.querySelector('#startup-signup').hidden, false);
   assert.equal(f.document.querySelector('#startup-account-check').hidden, false);
-  assert.equal(copy.hidden, true);
+  assert.equal(copy.hidden, false, 'success must still allow copying the first-request report');
 });
 test('specific browser error is explained and report failures never claim successful copying', async t => {
   const f = await fixture(t, { page: 'failed', account: 'unknown', pageError: 'ERR_NAME_NOT_RESOLVED' });
@@ -93,7 +97,7 @@ test('specific browser error is explained and report failures never claim succes
   assert.match(f.document.querySelector('#startup-error').textContent, /Не удалось прочитать журнал/);
 });
 test('diagnostics stay available while retry is waiting for a network response', async t => {
-  const f = await fixture(t, { page: 'slow', account: 'unknown' });
+  const f = await fixture(t, { page: 'failed', account: 'unknown' });
   let finish;
   f.api.startup = action => action === 'chat' ? new Promise(resolve => { finish = resolve; }) : Promise.resolve({ ok: true });
   f.document.querySelector('#startup-open-chat').click();
@@ -101,4 +105,13 @@ test('diagnostics stay available while retry is waiting for a network response',
   assert.equal(copy.disabled, false); copy.click(); await f.settle();
   assert.equal(f.document.querySelector('#startup-diagnostics-copied').hidden, false);
   finish({ ok: true }); await f.settle();
+});
+
+test('loading copy remains available and a loaded unknown screen is not described as absent', async t => {
+  const f = await fixture(t, { page: 'loading', account: 'unknown' });
+  assert.equal(f.document.querySelector('#startup-copy-diagnostics').hidden, false);
+  assert.equal(f.document.querySelector('#startup-open-chat').disabled, true);
+  f.emit({ page: 'loaded' });
+  assert.match(f.document.querySelector('#startup-account-status').textContent, /Страница открыта/);
+  assert.equal(f.document.querySelector('#startup-open-chat').disabled, false);
 });

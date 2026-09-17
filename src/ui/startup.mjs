@@ -10,8 +10,11 @@ export function createStartupView({ document, api }) {
     if (!s) return;
     const logged = s.account === 'signed-in', loginVisible = s.page === 'loaded' && s.account === 'signed-out';
     const local = s.node && s.git && s.runtime, ready = local && s.tunnel;
+    const opening = ['loading', 'slow'].includes(s.page);
     const retry = ['slow', 'failed'].includes(s.page), unknown = s.page === 'loaded' && !logged && !loginVisible;
     const errors = {
+      PAGE_RESPONSE_TIMEOUT: 'ChatGPT не ответил за две минуты.',
+      PAGE_DOCUMENT_TIMEOUT: 'Ответ сайта получен, но страница не подготовилась за две минуты.',
       ERR_INTERNET_DISCONNECTED: 'Компьютер не подключён к интернету.',
       ERR_NAME_NOT_RESOLVED: 'Не удалось найти адрес сайта ChatGPT.',
       ERR_CONNECTION_TIMED_OUT: 'Сайт ChatGPT не ответил на подключение.',
@@ -21,21 +24,21 @@ export function createStartupView({ document, api }) {
     };
     const pageMessages = {
       idle: 'Открываем сайт chatgpt.com в правой части окна.',
-      loading: 'Открываем сайт chatgpt.com в правой части окна.',
-      slow: 'Сайт ChatGPT пока не открылся в правой части окна. Нажмите «Повторить открытие». Если справа снова пусто, скопируйте диагностику и передайте её разработчику.',
+      loading: 'Открываем ChatGPT. Проверка первого подключения может занять до двух минут. Дождитесь результата — повторять нажатие не нужно.',
+      slow: 'Продолжаем ждать ответ ChatGPT. Первый запрос не прерывается; общий срок ожидания — до двух минут. Затем можно скопировать диагностику.',
       failed: (errors[s.pageError] || 'Не удалось открыть сайт ChatGPT.') + ' Нажмите «Повторить открытие». Если это не помогает, скопируйте диагностику и передайте её разработчику.',
     };
     $('startup-account-title').textContent = logged || loginVisible ? 'Аккаунт ChatGPT' : 'Открытие ChatGPT';
     $('startup-account-status').textContent = pageMessages[s.page] ?? (logged ? 'Вход подтверждён' : loginVisible
       ? 'Теперь можно войти или создать аккаунт'
-      : 'Ожидаем экран ChatGPT в правой части окна. Если справа пусто, повторите открытие или скопируйте диагностику.');
+      : 'Страница открыта. Состояние входа пока не определено.');
     $('startup-account-body').hidden = logged;
     $('startup-account-instructions').hidden = !loginVisible;
     $('startup-account-check').hidden = !loginVisible;
     $('startup-signup').hidden = !loginVisible;
     $('startup-signup-help').hidden = !signup || !loginVisible;
-    $('startup-open-chat').textContent = retry || unknown ? 'Повторить открытие' : 'Открыть сайт ChatGPT';
-    $('startup-copy-diagnostics').hidden = !retry && !unknown;
+    $('startup-open-chat').textContent = opening ? 'Открываем ChatGPT…' : retry || unknown ? 'Повторить открытие' : 'Открыть сайт ChatGPT';
+    $('startup-copy-diagnostics').hidden = s.page === 'idle';
     $('startup-diagnostics-copied').hidden = !copied;
     $('startup-components-status').textContent = local ? 'Компоненты готовы' : s.busy ? 'Проверяем и подготавливаем…' : !s.node ? 'Проверяем комплект приложения' : !s.git ? 'Нужен компонент Apple' : 'Готовим локальные инструменты';
     $('startup-components-body').hidden = !logged || local;
@@ -51,7 +54,8 @@ export function createStartupView({ document, api }) {
     $('startup-error').textContent = localError || s.error || '';
     for (const button of panel.querySelectorAll('[data-startup]')) {
       const action = button.dataset.startup;
-      button.disabled = (pending && !INDEPENDENT.has(action))
+      button.disabled = ((opening || pending) && ['chat', 'signup', 'plugins'].includes(action))
+        || (pending && !INDEPENDENT.has(action))
         || (s.busy && ['check', 'install-git', 'configure-tunnel', 'continue'].includes(action));
     }
     $('startup-continue').disabled ||= !logged || !ready;
