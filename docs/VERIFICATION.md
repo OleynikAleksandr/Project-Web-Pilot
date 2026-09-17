@@ -1119,3 +1119,9 @@ C001: дополнительные проверки различают гост�
 V001: UI-регрессии покрывают регистрацию нового аккаунта, долгую/неуспешную загрузку с доступным повтором, установку Apple, инструкции доступа к tunnel, отсутствие ввода ключа в renderer и переход к форме проекта. Electron smoke рендерит production startup view в изолированном состоянии и сохраняет startup-account.png / startup-components.png; настоящие аккаунты, установки и ключи не используются.
 
 В V001 выполнен отдельный Electron smoke: `guidedFirstRun: true`, полный сценарий fixture завершён. Визуально просмотрены `startup-account.png` и `startup-components.png` из `/var/folders/1q/8qyn0wpj7yl_wygsb861rj_c0000gn/T/web-pilot-electron-smoke-AFi03U/`: при ширине sidebar 312 px тексты и кнопки читаемы, есть самостоятельный путь без аккаунта и штатная установка компонента Apple. Проверка использует изолированные состояния, не подтверждает реальный вход или чистую VM.
+
+## First-run T008 — поставка macOS 0.6.32
+
+`npm run build:mac` завершился успешно. Проверены версия Info.plist/package.json, неизменная identity постоянного app, совпадение app.asar между установленным app, staging и ZIP, все 35 исходных файлов src и 32 resources, четыре bundled mac-tools и исполнение bundled Node (`v22.17.0 arm64`). ZIP и копия в Downloads имеют SHA-256 `2e0d816182e60ecba94088cbb7f0bda5415f079a9269045653b58cc229528d8a`. Служебный Finder `.DS_Store` не относится к исходникам и не используется для сравнения source.
+
+Node suite и Electron smoke прошли в managed commit V001; T008 повторяет обязательные проверки release-задачи. Снимки изолированного UI сохранены в `.harness/runtime/releases/0.6.32/startup-{account,components}.png`; факты упаковки — `source-verification.json` и `mac-release.json` рядом. Логи — `.harness/runtime/iteration-{build,verify}-032.log`. Повторный чистый прогон, реальная регистрация/вход и первое действие с файлом гостя ещё не выполнялись.

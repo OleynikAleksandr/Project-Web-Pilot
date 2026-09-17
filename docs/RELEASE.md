@@ -108,3 +108,13 @@ Scope 029 / T010: после выпуска все изменения наход
 - `Project-Web-Pilot-0.6.31-Windows-x64.zip`: SHA-256 `00b4a80973718d137bc733df2937858fe12b9dbeba7230a302b00213f34ff5b5`, 315992040 bytes.
 
 Оба ZIP прошли integrity/app.asar verification и скопированы в `~/Downloads/WebPilot-0.6.31/`; `SHA256SUMS.txt` лежит рядом. Evidence: `.harness/runtime/releases/0.6.31/`. Native Windows и чистые VM в этом коротком дополнении не запускались. Уже открытое окно не перезапускалось автоматически.
+
+## Выпуск 0.6.32 — первая итерация сопровождения macOS
+
+17.09.2026 штатный `npm run build:mac` собрал macOS arm64. Новый профиль получает мастер входа/создания аккаунта, подготовки компонентов, подключения файлов и первого проекта. Включён официальный Node.js 22.17.0 arm64; Git устанавливается штатным диалогом Apple по кнопке, Python/MCP — существующим bootstrap. Настройка туннеля сопровождается инструкцией и нативным вводом личных данных. Запуск вне Applications на новом профиле предлагает штатное перемещение приложения.
+
+Постоянный app имеет версию 0.6.32 и сохранил device `16777232` / inode `398344301`; backup Contents — `.harness/runtime/release-backups/mac-Wo08g7`. Все 35 файлов src, 32 файла resources и четыре файла mac-tools сверены с готовой поставкой. app.asar установленного app, staging и ZIP совпадает: `d06b59da4f702e0583e2f962c64aac272b1e693aef8010a2ca04dc315b02fac2`. Проверены ZIP integrity, встроенная версия Node и соответствие копии в Downloads.
+
+`Project-Web-Pilot-0.6.32-macOS-arm64.zip`: 181068519 байт, SHA-256 `2e0d816182e60ecba94088cbb7f0bda5415f079a9269045653b58cc229528d8a`. Копия, `SHA256SUMS.txt` и короткий `INSTALL.txt` находятся в `~/Downloads/WebPilot-0.6.32/`. Evidence: `.harness/runtime/releases/0.6.32/{mac-release.json,source-verification.json,SHA256SUMS.txt,startup-account.png,startup-components.png}`.
+
+Это macOS-итерация для повторного ручного испытания на свежем клоне, а не подтверждение чистого полного запуска. Причина пустой веб-панели прежнего запуска пока не установлена. Windows 0.6.32 не собиралась; последний Windows ZIP остаётся 0.6.31. Основное работающее приложение и runtime не перезапускались.

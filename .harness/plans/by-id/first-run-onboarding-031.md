@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 28,
+  "plan_revision": 30,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-onboarding-031",
@@ -477,8 +477,8 @@
       "expected_commit_message": "test: verify guided startup and retries"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-onboarding-031",
         "task_id": "T008",
@@ -855,7 +855,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-onboarding-031
 Current Task: нет
-Revision: 28
+Revision: 30
 
 ## Цель
 
@@ -914,8 +914,8 @@ Revision: 28
   - Git Commit: [DONE] test: verify guided startup and retries
   - Reference: first-run-onboarding-031 / V001 / implementation
   - Файлы: tests/startup-ui.test.mjs, tests/electron-smoke.mjs, src/ui/startup.mjs, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, docs/modules/first-run-onboarding.md
-- [TODO] T008: Собрать проверенную macOS-поставку после исправлений — Ожидает
-  - Git Commit: [PENDING] build: package guided macOS first run
+- [DONE] T008: Собрать проверенную macOS-поставку после исправлений — Завершено
+  - Git Commit: [DONE] build: package guided macOS first run
   - Reference: first-run-onboarding-031 / T008 / implementation
   - Файлы: package.json, package-lock.json, scripts/release-mac.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md
 - [TODO] R001: Обновить документы первой итерации и передать релиз на проверку — Ожидает
