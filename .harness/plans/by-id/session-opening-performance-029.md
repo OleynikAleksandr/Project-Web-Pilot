@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 2,
+  "plan_revision": 3,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-opening-performance-029",
@@ -123,18 +123,19 @@
         "revision": "WORKTREE"
       },
       {
-        "path": "docs/modules/workflow-kit-recovery.md",
         "heading_path": [
           "Module Specification — Workflow Kit / Context Recovery"
         ],
+        "path": "docs/modules/workflow-kit-recovery.md",
         "required": true,
         "revision": "WORKTREE"
       },
       {
-        "path": "docs/modules/workspace-sessions.md",
         "heading_path": [
+          "Module Specification — Workspace & Sessions",
           "Действующая модель — 0.6.28 / schema v6"
         ],
+        "path": "docs/modules/workspace-sessions.md",
         "required": true,
         "revision": "WORKTREE"
       },
@@ -609,7 +610,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-opening-performance-029
 Current Task: нет
-Revision: 2
+Revision: 3
 
 ## Цель
 
@@ -673,7 +674,7 @@ Revision: 2
 - docs/MODULES.md → Модули проекта
 - docs/DOCUMENTATION_INDEX.md → Каталог документации
 - docs/modules/workflow-kit-recovery.md → Module Specification — Workflow Kit / Context Recovery
-- docs/modules/workspace-sessions.md → Действующая модель — 0.6.28 / schema v6
+- docs/modules/workspace-sessions.md → Module Specification — Workspace & Sessions / Действующая модель — 0.6.28 / schema v6
 - docs/modules/session-owned-plans.md
 - docs/WORKSPACE_SETUP.md
 - docs/CONTEXT_DELIVERY.md
