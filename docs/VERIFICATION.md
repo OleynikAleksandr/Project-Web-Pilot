@@ -1147,3 +1147,14 @@ JSDOM tests проверяют отсутствие указаний на нев
 ## Диагностическая итерация / V002
 
 V002: unit tests покрывают безопасные коды ошибок, удаление query/fragment, ограничение отчёта текущей сессией и 61 событием, исключение chat telemetry и неблокирующий старт native logging при ожидающем CDP. Electron smoke проверяет скрытые указания на невидимые controls и сохраняет startup-login.png отдельно от пустой панели.
+
+## Выпуск 0.6.33 — ранняя диагностика первой загрузки
+
+Обе платформы собраны штатным npm run build. Постоянный macOS app обновлён с сохранением device 16777232 / inode 398344301; резервная копия Contents — .harness/runtime/release-backups/mac-p6IC2n. Работающий Web Pilot не перезапускался. Ранняя диагностика входит в обе поставки; macOS-мастер получил корректные подсказки и копирование отчёта, Windows-мастер остаётся отдельной задачей.
+
+- macOS arm64: Project-Web-Pilot-0.6.33-macOS-arm64.zip, 181070160 байт, SHA-256 7de3f296b58bb3109ec241344569eae690b67ebbf9585cde7492132232b10e1a.
+- Windows x64: Project-Web-Pilot-0.6.33-Windows-x64.zip, 317787260 байт, SHA-256 7349ac662782aada96a420397f6bff34f9b8a82fa041ef6be9de6a598775dded.
+
+ZIP проверены и скопированы в ~/Downloads/WebPilot-0.6.33/ вместе с SHA256SUMS.txt и INSTALL.txt. Все 35 файлов src и 32 файла resources совпали с source в обеих поставках и постоянном app; app.asar установленного Mac, staging и ZIP совпадает. Проверены четыре bundled mac-tools и исполнение Node v22.17.0 arm64. Windows verifier подтвердил PE, portable Node и runtime SHA; нативного Windows-запуска не было.
+
+Evidence — .harness/runtime/releases/0.6.33/{mac-release.json,source-verification.json,release-manifest.json}. Этот выпуск устраняет доказанный диагностический пробел, но причина пустой панели гостя остаётся неизвестной. Проверка в госте и весь чистый путь ещё впереди.

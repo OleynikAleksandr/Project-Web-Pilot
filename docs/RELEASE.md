@@ -118,3 +118,14 @@ Scope 029 / T010: после выпуска все изменения наход
 `Project-Web-Pilot-0.6.32-macOS-arm64.zip`: 181068519 байт, SHA-256 `2e0d816182e60ecba94088cbb7f0bda5415f079a9269045653b58cc229528d8a`. Копия, `SHA256SUMS.txt` и короткий `INSTALL.txt` находятся в `~/Downloads/WebPilot-0.6.32/`. Evidence: `.harness/runtime/releases/0.6.32/{mac-release.json,source-verification.json,SHA256SUMS.txt,startup-account.png,startup-components.png}`.
 
 Это macOS-итерация для повторного ручного испытания на свежем клоне, а не подтверждение чистого полного запуска. Причина пустой веб-панели прежнего запуска пока не установлена. Windows 0.6.32 не собиралась; последний Windows ZIP остаётся 0.6.31. Основное работающее приложение и runtime не перезапускались.
+
+## Выпуск 0.6.33 — ранняя диагностика первой загрузки
+
+Обе платформы собраны штатным npm run build. Постоянный macOS app обновлён с сохранением device 16777232 / inode 398344301; резервная копия Contents — .harness/runtime/release-backups/mac-p6IC2n. Работающий Web Pilot не перезапускался. Ранняя диагностика входит в обе поставки; macOS-мастер получил корректные подсказки и копирование отчёта, Windows-мастер остаётся отдельной задачей.
+
+- macOS arm64: Project-Web-Pilot-0.6.33-macOS-arm64.zip, 181070160 байт, SHA-256 7de3f296b58bb3109ec241344569eae690b67ebbf9585cde7492132232b10e1a.
+- Windows x64: Project-Web-Pilot-0.6.33-Windows-x64.zip, 317787260 байт, SHA-256 7349ac662782aada96a420397f6bff34f9b8a82fa041ef6be9de6a598775dded.
+
+ZIP проверены и скопированы в ~/Downloads/WebPilot-0.6.33/ вместе с SHA256SUMS.txt и INSTALL.txt. Все 35 файлов src и 32 файла resources совпали с source в обеих поставках и постоянном app; app.asar установленного Mac, staging и ZIP совпадает. Проверены четыре bundled mac-tools и исполнение Node v22.17.0 arm64. Windows verifier подтвердил PE, portable Node и runtime SHA; нативного Windows-запуска не было.
+
+Evidence — .harness/runtime/releases/0.6.33/{mac-release.json,source-verification.json,release-manifest.json}. Этот выпуск устраняет доказанный диагностический пробел, но причина пустой панели гостя остаётся неизвестной. Проверка в госте и весь чистый путь ещё впереди.

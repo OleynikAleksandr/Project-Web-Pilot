@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 41,
+  "plan_revision": 43,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-onboarding-031",
@@ -732,8 +732,8 @@
       "id": "B002",
       "title": "Собрать обе платформы с ранней диагностикой загрузки",
       "why": "Общие исправления браузера должны попасть в обе поставки одного выпуска.",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-onboarding-031",
         "task_id": "B002",
@@ -1125,7 +1125,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-onboarding-031
 Current Task: нет
-Revision: 41
+Revision: 43
 
 ## Цель
 
@@ -1208,8 +1208,8 @@ Revision: 41
   - Git Commit: [DONE] test: verify first navigation failure diagnostics
   - Reference: first-run-onboarding-031 / V002 / implementation
   - Файлы: tests/chromium-diagnostics.test.mjs, tests/electron-smoke.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
-- [TODO] B002: Собрать обе платформы с ранней диагностикой загрузки — Ожидает
-  - Git Commit: [PENDING] build: release early browser diagnostics for both platforms
+- [DONE] B002: Собрать обе платформы с ранней диагностикой загрузки — Завершено
+  - Git Commit: [DONE] build: release early browser diagnostics for both platforms
   - Reference: first-run-onboarding-031 / B002 / implementation
   - Файлы: package.json, package-lock.json, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
 - [TODO] R002: Обновить документы и передать диагностический релиз — Ожидает
