@@ -142,3 +142,12 @@ test('own completed plan stays visible and prepared choice can be cancelled with
   assert.equal(f.document.querySelector('.prepared-action').textContent,'Перейти к сессии');
   f.document.querySelector('.prepared-action').click();await f.settle();assert.deepEqual(f.calls.at(-1),['openPreparedSession','/demo','s4','future']);
 });
+
+test('unresolved migration explains the empty session without assigning a historical plan', async t => {
+  const f=await fixture(t),state=f.state;
+  state.selected={...state.selected,planBinding:'unresolved',planView:{state:'not-created',completed:0,total:0,tasks:[]},unassignedPlans:[{plan_id:'legacy',objective:'Сохранённый план'}]};
+  f.emit(state);
+  assert.equal(f.document.getElementById('plan-note').hidden,false);
+  assert.match(f.document.getElementById('plan-note').textContent,/Связь с прежним планом не подтверждена/);
+  assert.equal(f.document.querySelectorAll('#plan-tasks .plan-task').length,0);
+});

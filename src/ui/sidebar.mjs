@@ -296,8 +296,10 @@ function render(state) {
       } else $('plan-origin').append(document.createTextNode('прежней сессии'));
     }
     $('plan-status').textContent = statusText; $('plan-status').dataset.state = plan.state;
-    $('plan-note').hidden = plan.state !== 'closed';
-    $('plan-note').textContent = plan.state === 'closed' ? 'Проект готов к следующему новому плану.' : '';
+    const unresolved = plan.state === 'not-created' && (selected.planBinding === 'unresolved' || selected.unassignedPlans?.length);
+    $('plan-note').hidden = plan.state !== 'closed' && !unresolved;
+    $('plan-note').textContent = unresolved ? 'Связь с прежним планом не подтверждена. План сохранён в истории проекта; обсудите с агентом его привязку.'
+      : plan.state === 'closed' ? 'Проект готов к следующему новому плану.' : '';
     $('plan-reason').hidden = !plan.blockedReason; $('plan-reason').textContent = plan.blockedReason ?? '';
     $('plan-tasks').replaceChildren(...plan.tasks.map(task => {
       const item = document.createElement('li'); item.className = 'plan-task'; item.dataset.status = task.status;

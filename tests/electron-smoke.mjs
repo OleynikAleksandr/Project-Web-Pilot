@@ -5,7 +5,10 @@ import { createHash } from 'node:crypto';
 import { nativeTheme, clipboard, BrowserWindow } from 'electron';
 import { ChatColors } from '../src/chatgpt-colors.mjs';
 import { readWorkspace, WorkspaceSessions } from '../src/workspace-session.mjs';
-import { createScope, startTask, archive as archiveScope } from '../resources/workflow-kit/lib/actions.mjs';
+import { createScope, startTask, preparePlan } from '../resources/workflow-kit/lib/actions.mjs';
+import { withSessionPlan } from '../resources/workflow-kit/lib/session-plans.mjs';
+import { readPlan, renderPlan } from '../resources/workflow-kit/lib/plan.mjs';
+import { sessionSelection } from '../src/context-session.mjs';
 import { commitTask } from '../resources/workflow-kit/lib/transaction.mjs';
 
 let packetLoads = 0;
@@ -55,14 +58,14 @@ export async function createRuntime({ browser, session }) {
   });
   return {
     ensure: async () => ({ mcp: { ready: true }, tunnel: { ready: true }, fixture: true }),
-    loadContext: async workspace => {
+    loadContext: async (workspace, selection = {}) => {
       packetLoads++;
       await new Promise(resolve => setTimeout(resolve, 650)); // Observable fixture preparation, not a performance benchmark.
-      const info = await readWorkspace(workspace);
+      const info = await readWorkspace(workspace, selection.sessionId);
       const facts = { project_id: info.projectId, project_name: info.name, plan_revision: info.planRevision,
         scope_id: info.scopeId, execution_scope_status: info.scopeStatus, delivery_status: info.deliveryStatus,
         task_id: info.nextTaskId, task_title: info.nextTaskTitle };
-      return { workspace, facts, delivery_protocol: 'inline-context-v1', ack_required: false,
+      return { workspace, facts, session_id: selection.sessionId, plan_id: info.scopeId, delivery_protocol: 'inline-context-v1', ack_required: false,
         status: 'ready', completeness: 'COMPLETE', signature: 'fixture-snapshot', head: 'fixture-head',
         generated_at_ms: Date.now(), context: fixtureContext, context_bytes: Buffer.byteLength(fixtureContext),
         context_sha256: createHash('sha256').update(fixtureContext).digest('hex') };
@@ -196,20 +199,24 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   })`).then(value => JSON.stringify(value)), JSON.stringify({ planCard: true, detailsVisible: true, oldPlanText: false, revisionVisible: false }));
   assert.equal(await sidebar.executeJavaScript('document.getElementById("plan-status").textContent'), 'План ещё не создан');
   assert.equal(await sidebar.executeJavaScript('document.querySelectorAll("#plan-tasks .plan-task").length'), 0);
-  assert.equal(await sidebar.executeJavaScript('document.getElementById("accept-plan").disabled'), true);
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("accept-plan") === null'), true);
 
   const planFile = path.join(workspace, '.harness/plans/todo-plan.md');
   const originalPlanText = await fs.readFile(planFile, 'utf8');
   const block = originalPlanText.match(/<!-- workflow-state:begin -->\s*```json\s*([\s\S]*?)```\s*<!-- workflow-state:end -->/);
   const activePlan = JSON.parse(block[1]);
-  Object.assign(activePlan, { plan_revision: activePlan.plan_revision + 1, scope_id: 'fixture-plan-ui', objective: 'Автоимя scope fixture', execution_scope_status: 'ACTIVE',
+  Object.assign(activePlan, { plan_revision: activePlan.plan_revision + 1, scope_id: 'fixture-plan-ui', owner_session_id: first.sessionId, baseline_commit: 'a'.repeat(40), acceptance_criteria: ['Fixture'], objective: 'Автоимя scope fixture', execution_scope_status: 'ACTIVE',
     delivery_status: 'IN_PROGRESS', current_task_id: 'T002', archived_scope_id: undefined, tasks: [
       { id: 'T001', title: 'Подготовить модель', implementation_status: 'DONE', commit_status: 'DONE' },
       { id: 'T002', title: 'Сделать интерфейс', implementation_status: 'IN_PROGRESS', commit_status: 'PENDING' },
       { id: 'T003', title: 'Собрать релиз', implementation_status: 'TODO', commit_status: 'PENDING' },
     ] });
   delete activePlan.archived_scope_id;
-  const writeFixturePlan = async plan => fs.writeFile(planFile, '<!-- workflow-state:begin -->\n```json\n' + JSON.stringify(plan) + '\n```\n<!-- workflow-state:end -->');
+  activePlan.approved_scope.documentation_paths = ['docs/PRODUCT.md'];
+  activePlan.tasks = activePlan.tasks.map(task => ({ ...task, why: 'Isolated rendering fixture', dependencies: [],
+    functional_paths: [], documentation_paths: ['docs/PRODUCT.md'], acceptance_criteria: ['Fixture'], verification_ids: [],
+    expected_commit_message: 'docs: rendering fixture', commit_ref: {scope_id: activePlan.scope_id, task_id: task.id, role: 'implementation'} }));
+  const writeFixturePlan = async plan => fs.writeFile(planFile, renderPlan(plan));
   await writeFixturePlan(activePlan); controller.attach(store.selected()); await controller.tick();
   await waitFor(() => sidebar.executeJavaScript('document.getElementById("plan-status").textContent === "В работе · 1 из 3 выполнено"'), 'working plan UI', snapshot);
   await waitFor(() => store.selected()?.title === 'Автоимя scope fixture', 'scope automatically names current session', snapshot);
@@ -220,43 +227,21 @@ export async function run({ app, window, browser, sidebar, store, controller, se
     { status: 'pending', title: 'Собрать релиз', mark: '○' },
   ]);
   assert.equal(await sidebar.executeJavaScript('document.getElementById("plan-card").textContent.includes("Revision") || document.getElementById("plan-card").textContent.includes("версия")'), false);
-  assert.equal(await sidebar.executeJavaScript('document.getElementById("accept-plan").disabled'), true);
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("accept-plan") === null'), true);
 
   const readyPlan = { ...activePlan, plan_revision: activePlan.plan_revision + 1, delivery_status: 'READY_FOR_ACCEPTANCE', current_task_id: null,
     tasks: activePlan.tasks.map(task => ({ ...task, implementation_status: 'DONE', commit_status: 'DONE' })) };
   await writeFixturePlan(readyPlan); controller.attach(store.selected()); await controller.tick();
-  await waitFor(() => sidebar.executeJavaScript('document.getElementById(\"plan-status\").textContent.includes(\"ожидается ваша приёмка\")'), 'ready for acceptance plan UI', snapshot);
-  assert.equal(await sidebar.executeJavaScript('document.querySelectorAll(\"#plan-tasks .plan-task[data-status=done]\").length'), 3);
-  await waitFor(() => sidebar.executeJavaScript('!document.getElementById("accept-plan").disabled'), 'accept plan enabled', snapshot);
-  await sidebar.executeJavaScript('document.getElementById("accept-plan").click()');
-  await waitFor(() => browser.executeJavaScript('window.fixtureMessages.length === 2'), 'acceptance user message', snapshot);
-  assert.equal(await browser.executeJavaScript('window.fixtureMessages[1].text'), 'Принимаю текущий план и результат работы. Это моя явная команда закрыть текущий scope: штатно архивируй его через Workflow Kit и оставь проект без активного scope (NONE). Новый scope автоматически не создавай. После закрытия коротко подтверди результат и предложи выбрать Chat или Work в блоке «План»: Web Pilot откроет новую сессию с актуальным контекстом после моего выбора.');
-  await waitFor(() => snapshot().planAcceptance === 'sent', 'acceptance send confirmed', snapshot);
-  assert.equal(await sidebar.executeJavaScript('document.getElementById("accept-plan").textContent'), 'Отправлено');
-  assert.equal(await sidebar.executeJavaScript('document.getElementById("accept-plan").disabled'), true);
-
-  const closedPlan = { ...readyPlan, plan_revision: readyPlan.plan_revision + 1, scope_id: null, execution_scope_status: 'NONE',
-    delivery_status: 'IN_PROGRESS', archived_scope_id: 'fixture-plan-ui', current_task_id: null, tasks: [] };
-  await writeFixturePlan(closedPlan); controller.attach(store.selected()); await controller.tick();
-  await waitFor(() => sidebar.executeJavaScript('document.getElementById("plan-status").textContent === "Scope завершён и архивирован"'), 'closed plan UI', snapshot);
-  assert.equal(await sidebar.executeJavaScript('document.getElementById("plan-note").textContent'), 'Проект готов к следующему новому плану.');
-  assert.equal(await sidebar.executeJavaScript('document.getElementById("plan-note").hidden'), false);
-  assert.equal(await sidebar.executeJavaScript('document.getElementById("accept-plan").disabled'), true);
-  assert.equal(snapshot().planAcceptance, null);
-
-  const nextReadyPlan = { ...readyPlan, plan_revision: closedPlan.plan_revision + 1, scope_id: 'fixture-plan-ui-b',
-    execution_scope_status: 'ACTIVE', delivery_status: 'READY_FOR_ACCEPTANCE', archived_scope_id: 'fixture-plan-ui', current_task_id: null };
-  await writeFixturePlan(nextReadyPlan); controller.attach(store.selected()); await controller.tick();
-  await waitFor(() => sidebar.executeJavaScript('document.getElementById(\"plan-status\").textContent.includes(\"ожидается ваша приёмка\")'), 'next scope ready UI', snapshot);
-  assert.equal(snapshot().planAcceptance, null, 'Acceptance state from previous scope must not leak into the next scope');
-  assert.equal(await sidebar.executeJavaScript('document.getElementById(\"accept-plan\").textContent'), 'Принять');
-  assert.equal(await sidebar.executeJavaScript('document.getElementById(\"accept-plan\").disabled'), false);
-
+  await waitFor(() => sidebar.executeJavaScript('document.getElementById("plan-status").dataset.state === "awaiting-acceptance"'), 'completed plan remains visible', snapshot);
+  assert.equal(await sidebar.executeJavaScript('document.querySelectorAll("#plan-tasks .plan-task[data-status=done]").length'), 3);
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("accept-plan") === null'), true);
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("next-session-choice").hidden'), true);
+  assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 1, 'completion never sends an acceptance message');
+  assert.equal(store.selected().sessionId, first.sessionId);
   await fs.writeFile(planFile, originalPlanText); controller.attach(store.selected()); await controller.tick();
   await waitFor(() => sidebar.executeJavaScript('document.getElementById("plan-status").textContent === "План ещё не создан"'), 'restore fixture plan', snapshot);
   assert.equal(await sidebar.executeJavaScript('document.getElementById("plan-note").hidden'), true);
-  assert.equal(snapshot().planAcceptance, null);
-  assert.equal(await sidebar.executeJavaScript('document.getElementById("accept-plan").disabled'), true);
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("accept-plan") === null'), true);
   await clipboard.clear();
   await waitFor(() => sidebar.executeJavaScript('!document.querySelector(".project-menu-button").disabled'), 'project menu enabled', snapshot);
   await sidebar.executeJavaScript(`document.querySelector('.project-menu-button').click(); document.querySelector('.copy-workspace-path').click()`);
@@ -274,7 +259,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   const restored = new WorkspaceSessions(store.file); await restored.load();
   assert.equal(restored.selected().sessionId, first.sessionId); assert.equal(restored.selected().chatUrl, first.chatUrl);
   controller.attach(store.selected()); await controller.tick();
-  await controller.contextCache.load(workspace);
+  await controller.contextCache.load(workspace, sessionSelection(store.selected()));
   const warmPacketLoads = packetLoads;
   assert.deepEqual(await sidebar.executeJavaScript(`(() => { document.querySelector('.project-menu-button').click(); return Array.from(document.querySelectorAll('.project-menu button')).map(button => button.textContent); })()`),
     ['Новый Chat', 'Новый Work', 'Переименовать', 'Скопировать полный путь', 'Перенести в архив']);
@@ -291,22 +276,23 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(store.selected().title, 'Сессия Smoke Rename', 'page title cannot overwrite manual session name');
   await sidebar.executeJavaScript('document.querySelector(".new-project-chat").click()');
   await waitFor(() => store.selected()?.sessionId !== first.sessionId && snapshot().context.phase === 'delivered', 'new Chat via project menu IPC', snapshot);
-  assert.equal(packetLoads, warmPacketLoads, 'packet loads at line 289');
+  assert.equal(packetLoads, warmPacketLoads + 1, 'new Chat receives its own addressed packet');
   assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 1);
   const second = store.selected();
-  assert.equal(second.attempt.packet.cacheHit, true);
+  assert.equal(second.attempt.packet.session_id, second.sessionId);
+  assert.equal(second.attempt.packet.plan_id, null);
   assert.equal(second.attempt.packet.contextSha256, first.attempt.packet.contextSha256);
   assert.notEqual(second.attempt.requestId, first.attempt.requestId);
   assert.ok(Number.isFinite(second.attempt.packet.preparationMs));
   assert.ok(Number.isFinite(second.attempt.packet.deliveryMs));
-  assert.match(await sidebar.executeJavaScript('document.getElementById(\"session-detail\").textContent'), /пакет готов заранее/);
+  assert.match(await sidebar.executeJavaScript('document.getElementById(\"session-detail\").textContent'), /Подготовка:/);
   assert.equal(second.experience, 'chat');
   assert.equal(store.snapshot().projects[0].sessions.length, 2);
   assert.deepEqual(await sidebar.executeJavaScript('Array.from(document.querySelectorAll(".session-experience")).map(e=>e.textContent)'), ['Chat', 'Chat']);
   assert.equal(snapshot().projects[0].sessions[0].attempt, undefined, 'Session tree only receives metadata');
   await sidebar.executeJavaScript(`document.querySelector('.project-menu-button').click(); document.querySelector('.new-project-work').click()`);
   await waitFor(() => store.selected()?.experience === 'work' && snapshot().context.phase === 'delivered', 'new Work via project menu IPC', snapshot);
-  assert.equal(packetLoads, warmPacketLoads, 'packet loads at line 304');
+  assert.equal(packetLoads, warmPacketLoads + 2, 'new Work receives its own addressed packet');
   const third = store.selected();
   assert.equal(third.experience, 'work');
   assert.ok(third.chatUrl.startsWith('https://chatgpt.com/c/'));
@@ -318,7 +304,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await sidebar.executeJavaScript(`document.querySelector('.project-menu-button').click(); document.querySelector('.new-project-chat').click()`);
   await waitFor(() => store.selected()?.experience === 'chat' && store.selected()?.sessionId !== second.sessionId
     && snapshot().context.phase === 'delivered', 'new Chat after Work remembers browser preference', snapshot);
-  assert.equal(packetLoads, warmPacketLoads, 'packet loads at line 325');
+  assert.equal(packetLoads, warmPacketLoads + 3, 'each independent session starts with NONE');
   assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 1);
   assert.equal(await browser.executeJavaScript('window.fixtureMessages[0].mode'), 'chatgpt');
   assert.equal(await browser.executeJavaScript('window.fixtureModeClicks'), 1);
@@ -368,8 +354,8 @@ export async function run({ app, window, browser, sidebar, store, controller, se
     && browser.getURL() === first.chatUrl, 'select earlier session via tree', snapshot);
   assert.equal(await sidebar.executeJavaScript('document.querySelector(".sessions").scrollTop'), oldScroll.scroll, 'old session keeps scroll after state refresh');
   assert.deepEqual(snapshot().projects[0].sessions.map(s => s.sessionId), [fourth.sessionId, third.sessionId, second.sessionId, first.sessionId]);
-  assert.equal(packetLoads, warmPacketLoads, 'Earlier chat does not receive another context packet');
-  assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 2);
+  assert.equal(packetLoads, warmPacketLoads + 3, 'Earlier chat does not receive another context packet');
+  assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 1);
   assert.ok(await browser.executeJavaScript(`window.fixtureMessages[0].text.includes('${first.attempt.requestId}')`));
   assert.equal(store.selected().attempt.requestId, first.attempt.requestId);
   assert.equal(store.snapshot().projects[0].sessions[1].sessionId, second.sessionId);
@@ -627,7 +613,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await assert.rejects(fs.stat(auxF.workspace), { code: 'ENOENT' });
   assert.ok(store.project(auxE.workspace)?.archivedAt, 'unselected archived project is untouched');
   await browser.loadURL(first.chatUrl);
-  assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 2, 'Web conversation remains after archive operations');
+  assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 1, 'Web conversation remains after archive operations');
   firstArchiveWindow.close();
 
   assert.equal(await sidebar.executeJavaScript('document.getElementById("context-window-card")'), null, 'context window indicator is absent');
@@ -657,79 +643,79 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(diagnosticText.includes('PRIVATE-COMPACTION-ID'), false, 'SSE item identifiers are never logged');
 
 
-  // Exercise the real local IPC and navigation after all legacy fixture assertions.
+  // Genuine session plans and real IPC; source work remains unfinished during manual creation.
   await sidebar.executeJavaScript('window.webPilot.closeSettings()');
   await selectWorkspace(workspace);
-  await waitFor(() => snapshot().context.phase === 'delivered', 'transition fixture initial context', snapshot);
-  assert.equal(snapshot().scopeTransition, null, 'historical NONE does not ask for a new session');
+  await waitFor(() => snapshot().context.phase === 'delivered', 'continuation fixture initial context', snapshot);
+  assert.equal(snapshot().preparedChoice, null);
   await sidebar.executeJavaScript('window.webPilot.setSidebarWidth(312)');
-  for (const experience of ['chat', 'work']) {
-    const scopeId = 'fixture-continue-' + experience;
-    const source = store.selected(), beforeCount = store.snapshot().projects.find(p => p.workspace === workspace).sessions.length;
-    // Use a genuine Kit plan and archive so workspace review validates real history.
-    createScope(workspace, {
-      scope_id: scopeId, objective: 'Следующая сессия ' + experience, approval_note: 'Изолированный smoke fixture, разрешённый проверкой перехода.',
-      acceptance_criteria: ['Fixture завершён'], approved_scope: { functional_paths: [], documentation_paths: ['docs/PRODUCT.md'], max_functional_files_per_task: 3 },
-      context_pack: { documents: [], include_last_completed_task: false, dependency_task_ids: [] },
-      tasks: [{ id: 'T001', title: 'Записать fixture', why: 'Проверить lifecycle', dependencies: [],
-        functional_paths: [], documentation_paths: ['docs/PRODUCT.md'], acceptance_criteria: ['Запись добавлена'],
-        verification_ids: [], expected_commit_message: 'docs: transition fixture' }],
-    });
-    startTask(workspace, 'T001');
-    await fs.appendFile(path.join(workspace, 'docs/PRODUCT.md'), '\nTransition fixture ' + experience + '\n');
-    assert.equal(commitTask(workspace, 'T001').ok, true);
-    const beforeDocs = await readWorkspace(workspace);
-    assert.equal(beforeDocs.planView.state, 'working', 'implementation alone cannot reach user acceptance');
-    assert.equal(beforeDocs.nextTaskId, 'DOCS');
-    startTask(workspace, 'DOCS');
-    assert.equal(commitTask(workspace, 'DOCS').ok, true);
-    assert.equal((await readWorkspace(workspace)).planView.state, 'awaiting-acceptance', 'DOCS completion enables user acceptance');
-    controller.attach(store.selected()); await controller.tick();
-    await waitFor(() => store.selected().scopeTransition?.scopeId === scopeId, 'watch scope before closing', snapshot);
-    assert.equal(snapshot().scopeTransition, null, 'READY alone cannot open a session');
-    assert.equal(await sidebar.executeJavaScript('document.getElementById("next-session-choice").hidden'), true);
-    if (experience === 'chat') {
-      await waitFor(() => sidebar.executeJavaScript('!document.getElementById("accept-plan").disabled'), 'transition accept button enabled', snapshot);
-      await sidebar.executeJavaScript('document.getElementById("accept-plan").click()');
-      await waitFor(() => snapshot().planAcceptance === 'sent', 'transition acceptance sent', snapshot);
+  const source = store.selected();
+  const definition = id => ({
+    scope_id: id, objective: 'План ' + id, approval_note: 'Изолированный smoke fixture.',
+    acceptance_criteria: ['Fixture завершён'], approved_scope: {functional_paths:[],documentation_paths:['docs/PRODUCT.md'],max_functional_files_per_task:3},
+    tasks: [{id:'T001',title:'Записать результат',why:'Проверить lifecycle',dependencies:[],functional_paths:[],
+      documentation_paths:['docs/PRODUCT.md'],acceptance_criteria:['Запись добавлена'],verification_ids:[],expected_commit_message:'docs: session fixture'}]
+  });
+  withSessionPlan(workspace,{sessionId:source.sessionId},()=>createScope(workspace,definition('fixture-source')));
+  const sourcePlanFile = path.join(workspace,'.harness/plans/by-id/fixture-source.md');
+  for (const experience of ['chat','work']) {
+    const scopeId='fixture-continue-'+experience;
+    const beforeCount=store.snapshot().projects.find(p=>p.workspace===workspace).sessions.length;
+    const sourceBytes=await fs.readFile(sourcePlanFile,'utf8');
+    withSessionPlan(workspace,{sessionId:source.sessionId},()=>preparePlan(workspace,definition(scopeId),readPlan(workspace).plan_revision));
+    assert.equal(await fs.readFile(sourcePlanFile,'utf8'),sourceBytes);
+    controller.attach(store.selected());await controller.tick();
+    await waitFor(()=>sidebar.executeJavaScript('document.querySelectorAll(".prepared-item").length === '+(experience==='chat'?1:2)), 'prepared card '+experience,snapshot);
+    const choose=()=>sidebar.executeJavaScript('document.querySelector(\'[data-plan-id="'+scopeId+'"] .prepared-action\').click()');
+    await choose();
+    await waitFor(()=>sidebar.executeJavaScript('!document.getElementById("next-session-choice").hidden'),'manual Chat Work choice',snapshot);
+    await sidebar.executeJavaScript('document.getElementById("cancel-prepared-choice").click()');
+    await waitFor(()=>!snapshot().preparedChoice,'cancel prepared choice',snapshot);
+    assert.equal(store.snapshot().projects.find(p=>p.workspace===workspace).sessions.length,beforeCount);
+    assert.equal(store.selected().sessionId,source.sessionId);
+    await choose();
+    await waitFor(()=>sidebar.executeJavaScript('!document.getElementById("next-session-choice").hidden'),'choice reopened',snapshot);
+    const bounds=await sidebar.executeJavaScript('(()=>{const e=document.getElementById("next-session-choice");return {width:e.clientWidth,scroll:e.scrollWidth,buttons:[...e.querySelectorAll("button")].map(b=>b.textContent)}})()');
+    assert.ok(bounds.scroll<=bounds.width+1);assert.deepEqual(bounds.buttons,['Chat','Work','Отмена']);
+    if(experience==='chat') for(const theme of ['light','dark']){
+      await sidebar.executeJavaScript('window.webPilot.setTheme('+JSON.stringify(theme)+')');
+      await waitFor(()=>sidebar.executeJavaScript('document.documentElement.dataset.theme === '+JSON.stringify(theme)),'plan theme '+theme,snapshot);
+      await fs.writeFile(path.join(dataDir,'session-plans-'+theme+'.png'),(await sidebar.capturePage()).toPNG());
     }
-    // Chat models a button-triggered archive; Work models a direct agent archive.
-    assert.equal(archiveScope(workspace, scopeId, 'Прямая команда закрыть изолированный проверочный scope.').ok, true);
-    const archivedInfo = await readWorkspace(workspace);
-    controller.attach(store.selected()); await controller.tick();
-    await waitFor(() => snapshot().scopeTransition?.scopeId === scopeId, 'choice after archive', snapshot);
-    await waitFor(() => sidebar.executeJavaScript('!document.getElementById("next-session-choice").hidden'), 'visible Chat Work question', snapshot);
-    assert.equal(store.selected().sessionId, source.sessionId, 'no navigation before explicit mode choice');
-    const resumedTransition = new WorkspaceSessions(store.file); await resumedTransition.load();
-    assert.equal(resumedTransition.selected().scopeTransition.state, 'choice');
-    const questionBounds = await sidebar.executeJavaScript(`(() => {
-      const e=document.getElementById('next-session-choice'); const r=e.getBoundingClientRect();
-      return { width:r.width, scroll:e.scrollWidth, buttons:Array.from(e.querySelectorAll('button')).map(b=>b.textContent) };
-    })()`);
-    assert.ok(questionBounds.width >= questionBounds.scroll - 1, 'question fits minimum sidebar width');
-    assert.deepEqual(questionBounds.buttons, ['Chat', 'Work']);
-    if (experience === 'chat') await fs.writeFile(path.join(dataDir, 'next-session-choice.png'), (await sidebar.capturePage()).toPNG());
-    await sidebar.executeJavaScript(`document.getElementById('next-session-${experience}').click(); document.getElementById('next-session-${experience}').click()`);
-    await waitFor(() => store.selected().sessionId !== source.sessionId && snapshot().context.phase === 'delivered',
-      'post-archive ' + experience + ' context delivered', snapshot);
-    const next = store.selected();
-    assert.equal(next.experience, experience); assert.equal(next.attempt.packet.facts.scope_id, null);
-    assert.equal(next.attempt.packet.facts.execution_scope_status, 'NONE');
-    assert.equal(next.attempt.packet.facts.plan_revision, archivedInfo.planRevision);
-    assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 1);
-    assert.equal(await browser.executeJavaScript('window.fixtureMessages[0].mode'), experience === 'chat' ? 'chatgpt' : 'work');
-    assert.equal(snapshot().scopeTransition, null);
-    assert.equal(store.snapshot().projects.find(p => p.workspace === workspace).sessions.length, beforeCount + 1);
-    assert.equal(store.snapshot().projects.find(p => p.workspace === workspace).sessions.find(s => s.sessionId === source.sessionId).chatUrl, source.chatUrl);
-    const reopened = new WorkspaceSessions(store.file); await reopened.load();
-    assert.equal(reopened.selected().sessionId, next.sessionId);
-    assert.equal(reopened.selected().scopeTransition.state, 'opened');
-    const duplicate = await sidebar.executeJavaScript(`window.webPilot.continueAfterScope(${JSON.stringify(workspace)}, ${JSON.stringify(scopeId)}, ${JSON.stringify(experience)})`);
-    assert.equal(duplicate.ok, true);
-    await waitFor(() => snapshot().context.phase === 'delivered', 'repeat reopens existing session', snapshot);
-    assert.equal(store.selected().sessionId, next.sessionId);
-    assert.equal(store.snapshot().projects.find(p => p.workspace === workspace).sessions.length, beforeCount + 1);
-    assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 1);
+    if(experience==='chat')await fs.writeFile(path.join(dataDir,'next-session-choice.png'),(await sidebar.capturePage()).toPNG());
+    await sidebar.executeJavaScript('document.getElementById("next-session-'+experience+'").click();document.getElementById("next-session-'+experience+'").click()');
+    await waitFor(()=>store.selected().sessionId!==source.sessionId&&snapshot().context.phase==='delivered','prepared '+experience+' delivered',snapshot);
+    const next=store.selected();
+    assert.equal(next.experience,experience);assert.equal(next.planId,scopeId);assert.equal(next.originSessionId,source.sessionId);
+    assert.equal(next.attempt.packet.session_id,next.sessionId);assert.equal(next.attempt.packet.plan_id,scopeId);
+    assert.equal(next.attempt.packet.facts.scope_id,scopeId);assert.equal(next.attempt.packet.facts.execution_scope_status,'ACTIVE');
+    assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'),1);
+    assert.equal(await browser.executeJavaScript('window.fixtureMessages[0].mode'),experience==='chat'?'chatgpt':'work');
+    assert.equal(store.snapshot().projects.find(p=>p.workspace===workspace).sessions.length,beforeCount+1);
+    assert.equal(await fs.readFile(sourcePlanFile,'utf8'),sourceBytes,'source plan unchanged after bind');
+    const reopened=new WorkspaceSessions(store.file);await reopened.load();
+    assert.equal(reopened.selected().sessionId,next.sessionId);assert.equal(reopened.selected().planId,scopeId);
+    assert.equal((await reopened.inspect(workspace,source.sessionId)).preparedPlans.find(p=>p.planId===scopeId).sessionId,next.sessionId);
+    await sidebar.executeJavaScript('document.querySelector("#plan-origin button").click()');
+    await waitFor(()=>store.selected().sessionId===source.sessionId&&snapshot().selected.planId==='fixture-source','origin navigation',snapshot);
+    const beforeRead=store.selected().sessionId;
+    await sidebar.executeJavaScript('document.querySelector(\'[data-plan-id="'+scopeId+'"] summary\').click()');
+    assert.equal(store.selected().sessionId,beforeRead,'preview never changes command owner');
+    await choose();
+    await waitFor(()=>store.selected().sessionId===next.sessionId&&snapshot().context.phase==='delivered','linked existing session',snapshot);
+    assert.equal(store.snapshot().projects.find(p=>p.workspace===workspace).sessions.length,beforeCount+1);
+    // Complete this plan with real hooks; it stays attached and visible.
+    withSessionPlan(workspace,{sessionId:next.sessionId},()=>startTask(workspace,'T001'));
+    await fs.appendFile(path.join(workspace,'docs/PRODUCT.md'),'\nSession fixture '+experience+'\n');
+    assert.equal(withSessionPlan(workspace,{sessionId:next.sessionId},()=>commitTask(workspace,'T001')).ok,true);
+    withSessionPlan(workspace,{sessionId:next.sessionId},()=>startTask(workspace,'DOCS'));
+    assert.equal(withSessionPlan(workspace,{sessionId:next.sessionId},()=>commitTask(workspace,'DOCS')).ok,true);
+    controller.attach(store.selected());await controller.tick();
+    await waitFor(()=>sidebar.executeJavaScript('document.getElementById("plan-status").dataset.state === "awaiting-acceptance"'),'completed own plan',snapshot);
+    assert.equal(store.selected().planId,scopeId);assert.equal(snapshot().preparedChoice,null);
+    assert.equal(await sidebar.executeJavaScript('document.getElementById("next-session-choice").hidden'),true);
+    await sidebar.executeJavaScript('document.querySelector("#plan-origin button").click()');
+    await waitFor(()=>store.selected().sessionId===source.sessionId,'return to unfinished source',snapshot);
   }
 
   // Doctor scenarios begin after prior background recovery work has settled.
@@ -756,7 +742,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   const doctorReport = snapshot().doctor;
   assert.equal(doctorReport.projectReady, true, JSON.stringify(doctorReport));
   assert.equal(doctorReport.servicesReady, true); assert.deepEqual(doctorReport.issues, []);
-  assert.ok(doctorReport.backupPath); assert.equal(JSON.parse(await fs.readFile(doctorManifest)).version, '1.3.0');
+  assert.ok(doctorReport.backupPath); assert.equal(JSON.parse(await fs.readFile(doctorManifest)).version, '1.4.0');
   assert.equal(store.selected().sessionId, doctorSession, 'repair never starts a session');
   await fs.stat(path.join(doctorReport.backupPath,'repair.json'));
   await waitFor(() => sidebar.executeJavaScript('!document.getElementById("doctor-open").disabled'), 'doctor success actions ready', snapshot);
@@ -770,7 +756,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
     assert.equal(await sidebar.executeJavaScript('document.getElementById("doctor-panel").scrollWidth <= document.getElementById("doctor-panel").clientWidth + 1'), true, 'doctor fits minimum width');
   }
   await sidebar.executeJavaScript('document.getElementById("doctor-open").click()');
-  await waitFor(() => !snapshot().settings && !snapshot().setup && snapshot().context.phase === 'delivered', 'repaired session opens', snapshot);
+  await waitFor(() => !snapshot().settings && !snapshot().setup && ['delivered','stale'].includes(snapshot().context.phase), 'repaired session opens', snapshot);
   assert.equal(store.selected().sessionId, doctorSession);
   await waitFor(() => controller.contextCache.pending.size === 0, 'background preparation before repeat Doctor', snapshot);
   await sidebar.executeJavaScript('window.webPilot.openSettings()');
@@ -791,7 +777,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   const result = { liveChatColors: true, composerBackground: true, streamingAssistantColor: true, chatColorsPersistence: true, chatColorsReset: true, colorScreenshots, projectDoctor: true, doctorBackup: true, doctorOpen: true, doctorRefresh: true, doctorNewSession: true, doctorScreenshots, newestSessionFirst: true, projectSelectsNewest: true, threeSessionViewport: true, sessionScrollPreserved: true, visibleSessionScrollbar: true, nativeProjectsDisclosure: true, treePopover: true, treeScreenshots, scopeContinuationChat: true, scopeContinuationWork: true, scopeContinuationRestart: true, scopeContinuationNoDuplicates: true,
     transitionScreenshot: path.join(dataDir, 'next-session-choice.png'), mode: 'isolated-fixture', electron: process.versions.electron, chromium: process.versions.chrome,
     views: window.contentView.children.length, secureRemote: true, sidebarIpc: true, archiveRestore: true, archiveRestart: true, deleteCancel: true, localDeletion: true, cloudChatPreserved: true, workspaceCreation: true, workspaceValidation: true, cancelPreservesSession: true, startupMessages: 4, canonicalPacketLoads: packetLoads, recoveryCache: true, operationProgress: true, progressScreenshot: path.join(dataDir, 'progress-ui.png'),
-    tokenCounterRemoved: true, projectRename: true, sessionRename: true, scopeSessionRename: true, restartKeepsSession: true, newChatCreatesSession: true, sessionTree: true, selectsEarlierSession: true, compactWorkspaceDetails: true, projectPathClipboard: true, planAcceptanceButton: true, chromiumDiagnostics: true, contextWindowIndicatorRemoved: true, resizableSidebar: true, separateArchiveWindow: true, archiveMultiSelect: true, archiveForgetKeepsFolder: true, shellTheme: true, nativeTitlebarTheme: nativeTheme.shouldUseDarkColors, toolCallFilter: true, microphonePermission: true, geolocationPermission: true, cameraPermission: false, fullContextBytes: Buffer.byteLength(fixtureContext), liveChatGPT: false, agentToolsRequired: false };
+    tokenCounterRemoved: true, projectRename: true, sessionRename: true, scopeSessionRename: true, restartKeepsSession: true, newChatCreatesSession: true, sessionTree: true, selectsEarlierSession: true, compactWorkspaceDetails: true, projectPathClipboard: true, sessionPlans: true, preparedPlans: true, manualChatWorkChoice: true, noAcceptanceButton: true, chromiumDiagnostics: true, contextWindowIndicatorRemoved: true, resizableSidebar: true, separateArchiveWindow: true, archiveMultiSelect: true, archiveForgetKeepsFolder: true, shellTheme: true, nativeTitlebarTheme: nativeTheme.shouldUseDarkColors, toolCallFilter: true, microphonePermission: true, geolocationPermission: true, cameraPermission: false, fullContextBytes: Buffer.byteLength(fixtureContext), liveChatGPT: false, agentToolsRequired: false };
   await fs.writeFile(path.join(dataDir, 'smoke-result.json'), JSON.stringify(result, null, 2));
   console.log(JSON.stringify(result));
 }
