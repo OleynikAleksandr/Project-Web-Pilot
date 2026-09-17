@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 13,
+  "plan_revision": 15,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-onboarding-031",
@@ -252,8 +252,8 @@
       "why": "Устранить зависимость готовой поставки от инструментов компьютера разработчика."
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-onboarding-031",
         "task_id": "T005",
@@ -818,7 +818,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-onboarding-031
 Current Task: нет
-Revision: 13
+Revision: 15
 
 ## Цель
 
@@ -853,8 +853,8 @@ Revision: 13
   - Git Commit: [DONE] fix: prepare dependencies for clean macOS
   - Reference: first-run-onboarding-031 / T004 / implementation
   - Файлы: scripts/prepare-mac-toolchain.mjs, src/platform.mjs, tests/mac-toolchain.test.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md
-- [TODO] T005: Реализовать проверку и последовательную подготовку чистого окружения — Ожидает
-  - Git Commit: [PENDING] fix: bootstrap first workspace on clean macOS
+- [DONE] T005: Реализовать проверку и последовательную подготовку чистого окружения — Завершено
+  - Git Commit: [DONE] fix: bootstrap first workspace on clean macOS
   - Reference: first-run-onboarding-031 / T005 / implementation
   - Файлы: src/startup-readiness.mjs, tests/startup-readiness.test.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, docs/WORKSPACE_SETUP.md, docs/modules/runtime-lifecycle.md
 - [TODO] F001: Проверять готовность чистой системы перед началом работы — Ожидает

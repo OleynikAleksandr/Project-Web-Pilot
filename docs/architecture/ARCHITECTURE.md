@@ -884,3 +884,8 @@ Production ContextCache использует readinessContextKey: WorkspaceSetup
 ## Первый запуск / T004
 
 T004: mac-tools содержит проверенный официальный Node.js 22.17.0 arm64 (bin, LICENSE, manifest), alongside uv. Подключение к WorkspaceSetup выполняется F001; Electron под видом Node не копируется.
+
+
+## Первый запуск / T005
+
+StartupReadiness координирует независимые проверки Node/Git, MCP/tunnel и видимой страницы ChatGPT через переданные функции. Чтение Git readiness использует xcode-select -p перед git, не вызывает установщик. Явная установка использует штатный Apple dialog; ошибки не раскрывают argv/stderr. Старая навигация и завершение после dispose не меняют снимок.
