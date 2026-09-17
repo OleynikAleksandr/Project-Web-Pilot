@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 607,
+  "plan_revision": 609,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-owned-plans-028",
@@ -558,8 +558,8 @@
       "file_limit_exception": "Единый контракт явной адресации и его проверки; синхронное изменение установленной и поставляемой копий ядра."
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-owned-plans-028",
         "task_id": "T010",
@@ -819,7 +819,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-owned-plans-028
 Current Task: нет
-Revision: 607
+Revision: 609
 
 ## Цель
 
@@ -872,8 +872,8 @@ Revision: 607
   - Git Commit: [DONE] feat: show session plans and prepared continuations in sidebar
   - Reference: session-owned-plans-028 / T009 / implementation
   - Файлы: src/ui/sidebar.mjs, src/ui/index.html, src/ui/progress.mjs, tests/sidebar.test.mjs, tests/progress.test.mjs, docs/modules/session-owned-plans.md, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/design/session-plan-navigation.md
-- [TODO] T010: Обновить инструкции агента и шаблоны Workflow Kit — Ожидает
-  - Git Commit: [PENDING] docs: align agent instructions and templates with session plans
+- [DONE] T010: Обновить инструкции агента и шаблоны Workflow Kit — Завершено
+  - Git Commit: [DONE] docs: align agent instructions and templates with session plans
   - Reference: session-owned-plans-028 / T010 / implementation
   - Файлы: docs/modules/session-owned-plans.md, AGENTS.md, docs/WORKFLOW_START.md, docs/CONTEXT_DELIVERY.md, docs/modules/workflow-kit-recovery.md, .harness/kit/WORKFLOW.md, resources/workflow-kit/WORKFLOW.md, .harness/kit/templates/AGENTS.md, resources/workflow-kit/templates/AGENTS.md, .harness/kit/templates/START.md, resources/workflow-kit/templates/START.md, .harness/kit/templates/PLAN.md, resources/workflow-kit/templates/PLAN.md, .harness/plans/todo-plan.template.md
 - [TODO] T011: Согласовать установку, обновление и Doctor с новой моделью — Ожидает

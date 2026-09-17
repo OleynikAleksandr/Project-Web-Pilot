@@ -22,7 +22,7 @@
 
 ## Формат MCP
 
-Единственный контекстный tool — workflow_context_recover с абсолютным workspace. Он возвращает delivery_protocol, status=ready, completeness=COMPLETE, workspace, facts, objective, head, signature, context, context_bytes, context_sha256, generated_at_ms, ack_required=false. Facts включают project_id, project_name, plan_revision, scope_id, execution_scope_status, delivery_status, task_id и task_title; последние два могут быть null.
+Для адресованных сессий Web Pilot вызывает установленный Workflow Kit через существующий Node launcher: recover --session <sessionId> --format packet. Прежний workflow_context_recover с абсолютным workspace сохраняет совместимость неадресованных вызовов. Канонический builder возвращает delivery_protocol, status=ready, completeness=COMPLETE, workspace, facts, objective, head, signature, context, context_bytes, context_sha256, generated_at_ms, ack_required=false. Facts включают project_id, project_name, plan_revision, scope_id, execution_scope_status, delivery_status, task_id и task_title; последние два могут быть null.
 
 Локальный клиент Web Pilot может вызывать только этот read-only tool, initialize и tools/list. Модельные API отсутствуют. Пакет ограничен 180000 UTF-8 байт; чрезмерный пакет даёт явную ошибку, без скрытого усечения. Полный текст и состав пакета определяет Workflow Kit, а не самостоятельно собранная подборка файлов.
 
@@ -105,9 +105,9 @@ Builder Workflow Kit больше не использует большой `Об
 
 На текущем workspace одинаковый полный пакет 69 556 bytes: median штатной подготовки 691.55 ms, из готового кэша 17.98 ms; вместе с дополнительной проверкой перед Send 36.07 ms (~19.17x). В packaged Electron macOS load+validation 40.24 ms. Подготовка в фоне сохраняет полный текст; сборка после изменения происходит штатным builder. Время страницы/ответа модели не входит в эти показатели. Пакет хранится в памяти; после restart прогрев начинается заново. Полный анализ вариантов и границы измерения приведены выше.
 
-## Правило после приёмки — scope 014
+## Историческое правило после приёмки — scope 014 (заменено scope 028)
 
-Стартовый envelope дополнен постоянным поручением пользователя: после явного принятия завершённого плана агент штатно архивирует scope через Workflow Kit и сообщает о выборе Chat/Work в блоке плана. До фактической приёмки закрытия нет. Первый ответ остаётся коротким подтверждением без инструментов. Сам recovery capsule, его hash/facts и единый протокол Chat/Work не меняются. Новая сессия после закрытия получает live capsule NONE.
+Прежний envelope предписывал archive после принятия и переход Chat/Work. В модели планов сессий этот общий автоматический переход удалён: выполненный план остаётся, продолжение готовится отдельно, выбор Chat/Work вызывается пользователем. Личные поручения пользователя о закрытии конкретного scope сохраняют силу. Первый ответ остаётся кратким подтверждением без инструментов.
 
 ## Восстановление перед доставкой — Project Doctor 0.6.20
 
@@ -115,7 +115,7 @@ Builder Workflow Kit больше не использует большой `Об
 
 ## Post-doctor correction — 0.6.21
 
-16.09.2026 пользователь реально выполнил Project Doctor на текущем workspace; после успешного reconcile manifest соответствует Workflow Kit 1.3.0. Доставка контекста не меняет протокол: новая/обновлённая session по-прежнему получает COMPLETE capsule через `workflow_context_recover`. Correction-round Workflow Kit позволяет ACTIVE scope после `READY_FOR_ACCEPTANCE` вернуться в `IN_PROGRESS` по явному новому поручению пользователя и повторно пройти финальную `DOCS` до следующей приёмки.
+16.09.2026 пользователь реально выполнил Project Doctor на текущем workspace; после успешного reconcile manifest соответствует Workflow Kit 1.3.0. Доставка контекста не меняет протокол: новая/обновлённая session получает COMPLETE capsule через канонический builder Workflow Kit. Correction-round Workflow Kit позволяет ACTIVE scope после `READY_FOR_ACCEPTANCE` вернуться в `IN_PROGRESS` по явному новому поручению пользователя и повторно пройти финальную `DOCS` до следующей приёмки.
 
 
 Scope 028 / T006: CLI recover --session <id> --format packet — каноническая точка получения выбранного plan. Envelope сохраняет inline-context-v1, добавляет session_id/plan_id; восемь прежних facts совместимы. Пакет содержит адрес команд агента и незавершённые микрозадачи.
@@ -125,3 +125,5 @@ T007: session identity сохраняется в attempt metadata. Старые 
 
 
 T008: контекст готовится после canonical bind и сохранения выбранной сессии. Snapshot UI принимает projectInfo только при совпадающем inspectedSessionId.
+
+T010: установленный и поставляемый Workflow Core и шаблоны синхронно обновлены для адресованных планов сессий. Во всех командах используется sessionId из пакета; старый безадресный CLI разрешён только до появления связей. Подготовка продолжения не заменяет собственный план, выполнение DOCS не архивирует его. Продолжение сохраняет прежние commit references и повторно открывает DOCS.
