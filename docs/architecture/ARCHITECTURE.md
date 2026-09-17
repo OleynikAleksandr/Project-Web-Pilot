@@ -968,3 +968,9 @@ V003 выявил интеграционный дефект нового netLog 
 - Project-Web-Pilot-0.6.35-Windows-x64.zip: 317790975 bytes; SHA-256 75d2d4daadfbda5417268b181e11f64753af27edd49d868e43a76f679ea1136c.
 
 Пакеты, SHA256SUMS.txt и INSTALL.txt: ~/Downloads/WebPilot-0.6.35/. Evidence: .harness/runtime/releases/0.6.35/{mac-release.json,source-verification.json,release-manifest.json,SHA256SUMS.txt}. Рабочий процесс Web Pilot, профили и runtime не перезапускались. Нативная Windows и результат гостевой проверки 0.6.35 не подтверждены. Следующая задача T016 сохраняет полный чистый путь, финальная DOCS остаётся последней.
+
+## C009 — прямой вход при запуске без проекта
+
+Единая константа CHATGPT_SIGNIN_ENTRYPOINT в chatgpt-experience.mjs задаёт https://chatgpt.com/auth/login. Facade navigate при отсутствии проекта открывает этот адрес, сохраняя приоритет явного entryUrl. Для проекта остаются сохранённый chatUrl и прежний Chat/Work entrypoint. Повтор и регистрация без проекта используют тот же прямой вход. Срок ожидания и сбор диагностики сохранены, нового сетевого механизма нет.
+
+Electron smoke использует реальный navigate(null) после первого отказа и проверяет фактический URL страницы входа; существующие сценарии Chat/Work и сохранённых чатов остаются частью проверки. Изолированные публичные пробы основного Mac дали DOM прямого входа за 464/439 мс, но не являются подтверждением исправления в Test macOS 01.

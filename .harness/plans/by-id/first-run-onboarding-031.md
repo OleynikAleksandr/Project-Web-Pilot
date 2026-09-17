@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 75,
+  "plan_revision": 77,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-onboarding-031",
@@ -1422,8 +1422,8 @@
         "Electron fixture подтверждает фактический адрес первого открытия без проекта; защита, заголовки, cookies и диагностика не меняются."
       ],
       "expected_commit_message": "fix: open the sign-in page directly during onboarding",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-onboarding-031",
         "task_id": "C009",
@@ -1857,7 +1857,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-onboarding-031
 Current Task: нет
-Revision: 75
+Revision: 77
 
 ## Цель
 
@@ -2000,8 +2000,8 @@ Revision: 75
   - Git Commit: [DONE] docs: record repeated startup timeout and login route probes
   - Reference: first-run-onboarding-031 / T016 / implementation
   - Файлы: docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md
-- [TODO] C009: Открывать страницу входа напрямую при запуске без проекта — Ожидает
-  - Git Commit: [PENDING] fix: open the sign-in page directly during onboarding
+- [DONE] C009: Открывать страницу входа напрямую при запуске без проекта — Завершено
+  - Git Commit: [DONE] fix: open the sign-in page directly during onboarding
   - Reference: first-run-onboarding-031 / C009 / implementation
   - Файлы: src/chatgpt-experience.mjs, src/main.mjs, tests/electron-smoke.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
 - [TODO] B005: Собрать 0.6.36 для проверки прямого входа на обеих платформах — Ожидает

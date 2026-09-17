@@ -1,4 +1,5 @@
 export const CHATGPT_CHAT_ENTRYPOINT = 'https://chatgpt.com/';
+export const CHATGPT_SIGNIN_ENTRYPOINT = 'https://chatgpt.com/auth/login';
 export const CHATGPT_WORK_ENTRYPOINT = 'https://chatgpt.com/work/';
 
 function parsedChatGPTUrl(input) {

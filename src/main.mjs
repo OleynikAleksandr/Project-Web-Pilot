@@ -17,7 +17,7 @@ const contextCache = new ContextCache({ load: (workspace, selection) => runtime.
   inputKey: (workspace, selection) => readinessContextKey(workspaceSetup, workspace, selection), onChange: () => publish() });
 import { SessionPlans } from './session-plans.mjs';
 import { ContextSession, sessionSelection } from './context-session.mjs';
-import { chatGPTEntrypoint } from './chatgpt-experience.mjs';
+import { chatGPTEntrypoint, CHATGPT_SIGNIN_ENTRYPOINT } from './chatgpt-experience.mjs';
 import { WorkspaceDeletion } from './workspace-deletion.mjs';
 import { WorkspaceSetup } from './workspace-setup.mjs';
 import { ProjectDoctor } from './project-doctor.mjs';
@@ -447,7 +447,8 @@ async function navigate(project = store.selected(), { refresh = false, generatio
   preparedChoice = null;
   controller?.cancel();
   pageLoading = true; startupFlow?.beginPage(ownNavigation); publish();
-  const target = entryUrl ?? project?.chatUrl ?? chatGPTEntrypoint(project?.experience ?? 'chat');
+  const target = entryUrl ?? project?.chatUrl
+    ?? (project ? chatGPTEntrypoint(project.experience ?? 'chat') : CHATGPT_SIGNIN_ENTRYPOINT);
   const began = Date.now();
   chromiumDiagnostics?.log.record('app', 'navigation-requested', { generation: ownNavigation, url: safeUrl(target),
     browserBounds: browser.getBounds(), windowSize: window.getContentSize() });
@@ -1171,7 +1172,7 @@ else {
     installMenu();
     await createWindow();
   }).catch(error => {
-    console.error('Project Web Pilot:', error.message);
+    console.error('Project Web Pilot:', smoke ? (error.stack || error) : error.message);
     if (!smoke) dialog.showErrorBox('Project Web Pilot', error.message);
     app.exit(1);
   });
