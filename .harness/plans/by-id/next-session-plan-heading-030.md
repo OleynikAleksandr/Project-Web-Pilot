@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 12,
+  "plan_revision": 14,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "next-session-plan-heading-030",
@@ -192,8 +192,8 @@
       "documentation_exception": "T003 реализует согласованный контракт Workspace & Sessions; итоговое описание поведения и проверок обновляется обязательной повторной задачей DOCS."
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "next-session-plan-heading-030",
         "task_id": "T004",
@@ -287,7 +287,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: next-session-plan-heading-030
 Current Task: нет
-Revision: 12
+Revision: 14
 
 ## Цель
 
@@ -316,8 +316,8 @@ Revision: 12
   - Git Commit: [DONE] feat: persist main window geometry
   - Reference: next-session-plan-heading-030 / T003 / implementation
   - Файлы: src/main.mjs, tests/electron-smoke.mjs
-- [TODO] T004: Собрать релиз 0.6.31 — Ожидает
-  - Git Commit: [PENDING] build: release 0.6.31
+- [DONE] T004: Собрать релиз 0.6.31 — Завершено
+  - Git Commit: [DONE] build: release 0.6.31
   - Reference: next-session-plan-heading-030 / T004 / implementation
   - Файлы: package.json, package-lock.json
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
