@@ -839,3 +839,6 @@ T005: SessionPlans — тонкий адаптер установленного 
 
 
 T006: подготовка полного пакета и транспортного envelope принадлежит Workflow Kit; оболочка не собирает контекст повторно.
+
+
+T007: ContextCache разделяет pending/entries/warm по сессии и planId. McpRuntime использует SessionPlans для адресованного recovery; внешний runtime не меняется.

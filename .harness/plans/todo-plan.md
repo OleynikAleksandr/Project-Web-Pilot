@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 600,
+  "plan_revision": 602,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-owned-plans-028",
@@ -430,8 +430,8 @@
       "file_limit_exception": "Единый контракт явной адресации и его проверки; синхронное изменение установленной и поставляемой копий ядра."
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-owned-plans-028",
         "task_id": "T007",
@@ -817,7 +817,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-owned-plans-028
 Current Task: нет
-Revision: 600
+Revision: 602
 
 ## Цель
 
@@ -858,8 +858,8 @@ Revision: 600
   - Git Commit: [DONE] feat: recover context for the selected session plan
   - Reference: session-owned-plans-028 / T006 / implementation
   - Файлы: .harness/kit/lib/recovery.mjs, resources/workflow-kit/lib/recovery.mjs, tests/workflow-kit-recovery.test.mjs, .harness/kit/cli.mjs, resources/workflow-kit/cli.mjs, docs/modules/session-owned-plans.md, docs/modules/workflow-kit-recovery.md, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T007: Привязать доставку и кэш контекста к сессии и плану — Ожидает
-  - Git Commit: [PENDING] fix: isolate context delivery and cache by session plan
+- [DONE] T007: Привязать доставку и кэш контекста к сессии и плану — Завершено
+  - Git Commit: [DONE] fix: isolate context delivery and cache by session plan
   - Reference: session-owned-plans-028 / T007 / implementation
   - Файлы: src/context-session.mjs, src/context-cache.mjs, src/context-inputs.mjs, src/mcp-runtime.mjs, tests/context-cache.test.mjs, tests/context-session.test.mjs, tests/mcp-runtime.test.mjs, docs/modules/session-owned-plans.md, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T008: Подключить два сценария ручного создания сессии — Ожидает

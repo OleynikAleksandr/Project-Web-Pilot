@@ -12,7 +12,7 @@ const facts={project_id:project.projectId,project_name:project.name,plan_revisio
 const now=2000000;
 function packet(){
   const context='ПОЛНЫЙ КОНТЕКСТ\nОписание проекта\nПлан\n\nНезавершённые изменения\nКОНЕЦ';
-  return {delivery_protocol:'inline-context-v1',ack_required:false,status:'ready',completeness:'COMPLETE',workspace:project.workspace,
+  return {delivery_protocol:'inline-context-v1',ack_required:false,status:'ready',completeness:'COMPLETE',workspace:project.workspace,session_id:project.sessionId,plan_id:project.scopeId,
     context,context_bytes:Buffer.byteLength(context),context_sha256:createHash('sha256').update(context).digest('hex'),
     generated_at_ms:now,signature:'signature',head:'head',facts:{...facts}};
 }
@@ -211,7 +211,7 @@ test('pending WEB conversation before any send never receives project context', 
 test('prepared cache removes recover from explicit refresh and records timings',async()=>{
   const f=controllerFixture();
   const cache=new ContextCache({load:async()=>({...packet(),generated_at_ms:1}),inputKey:async()=> 'unchanged'});
-  await cache.load(project.workspace);f.controller.contextCache=cache;
+  await cache.load(project.workspace,{sessionId:project.sessionId,planId:project.scopeId});f.controller.contextCache=cache;
   await f.controller.tick();assert.equal(f.sends(),1);assert.equal(f.loads(),0);
   assert.equal(f.saved.attempt.packet.cacheHit,true);assert.equal(f.saved.attempt.packet.generatedAtMs,1);
   assert.ok(Number.isFinite(f.saved.attempt.packet.preparationMs));assert.ok(Number.isFinite(f.saved.attempt.packet.deliveryMs));
@@ -220,8 +220,14 @@ test('prepared cache removes recover from explicit refresh and records timings',
 test('source edit after fill blocks send even when plan revision is unchanged',async()=>{
   const f=controllerFixture();let key='before';
   const cache=new ContextCache({load:async()=>packet(),inputKey:async()=>key});
-  await cache.load(project.workspace);f.controller.contextCache=cache;
+  await cache.load(project.workspace,{sessionId:project.sessionId,planId:project.scopeId});f.controller.contextCache=cache;
   const deliver=f.composer.deliver;f.composer.deliver=async options=>{key='after';return deliver(options);};
   await f.controller.tick();assert.equal(f.sends(),0);assert.equal(f.controller.state.phase,'prepared-stale');
   assert.equal(f.saved.attempt.state,'prepared');assert.equal(f.saved.attempt.sendStartedAtMs,null);
+});
+
+test('matching project facts cannot authorize a packet prepared for another session', async()=>{
+  const f=controllerFixture();f.runtime.loadContext=async()=>({...packet(),session_id:'other-session'});
+  await f.controller.tick();assert.equal(f.sends(),0);assert.equal(f.saved.attempt,null);
+  assert.equal(f.controller.state.error.code,'MCP_CONTEXT_SESSION_MISMATCH');
 });

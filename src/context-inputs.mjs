@@ -3,6 +3,7 @@ import path from 'node:path';
 import { execFile as callback } from 'node:child_process';
 import { promisify } from 'node:util';
 import { createHash } from 'node:crypto';
+import { readSessionPlans } from './session-plans.mjs';
 
 const execFile = promisify(callback);
 const digest = data => createHash('sha256').update(data).digest('hex');
@@ -37,7 +38,7 @@ function safeInput(root, relative) {
       || relative.split(/[\\/]/).includes('..')) throw inputError('Invalid recovery input path');
   return path.join(root, relative);
 }
-export async function contextInputKey(workspace) {
+export async function contextInputKey(workspace, selection = {}) {
   const root = await fs.realpath(workspace);
   if (root !== workspace) throw inputError('Workspace must be canonical');
   let executable = process.platform === 'win32' ? 'git.exe' : 'git';
@@ -65,11 +66,19 @@ export async function contextInputKey(workspace) {
   if (!gitDir || !commonDir || !/^[a-f0-9]{40,64}$/.test(head)) throw inputError('Git snapshot unavailable');
   const planText = await fs.readFile(path.join(root, '.harness/plans/todo-plan.md'), 'utf8');
   const block = planText.match(/<!-- workflow-state:begin -->\s*```json\s*([\s\S]*?)```/);
-  const plan = JSON.parse(block?.[1] ?? '');
+  let plan = JSON.parse(block?.[1] ?? '');
+  let selectedPlanPath = '.harness/plans/todo-plan.md';
+  if (selection.sessionId) {
+    const view = await readSessionPlans(root, selection.sessionId);
+    if (!view || view.plan_id !== (selection.planId ?? null)) throw inputError('Session plan changed');
+    plan = view.plan; selectedPlanPath = view.plan_path;
+  }
   if (plan.schema_version !== 1 || !Array.isArray(plan.tasks) || !Array.isArray(plan.context_pack?.documents)) throw inputError('Unsupported recovery plan');
   const config = JSON.parse(await fs.readFile(path.join(root, '.harness/workflow.json'), 'utf8'));
   const relative = new Set(['.harness/plans/todo-plan.md', '.harness/workflow.json', '.harness/kit/WORKFLOW.md',
     'scripts/workflow', 'scripts/workflow.cmd', 'scripts/workflow.mjs', config.documentation?.index]);
+  if (selectedPlanPath) relative.add(selectedPlanPath);
+  if (selection.sessionId) for (const file of await treeFiles(root, '.harness/plans/by-id')) relative.add(file);
   for (const doc of plan.context_pack.documents) relative.add(doc.path);
   for (const task of plan.tasks) {
     for (const file of [...task.functional_paths, ...task.documentation_paths]) relative.add(file);
@@ -105,5 +114,5 @@ export async function contextInputKey(workspace) {
   }
   const transaction = states.find(([file]) => file === path.join(gitDir, 'workflow-kit/transaction.json'));
   if (transaction?.[1]) throw inputError('Commit transaction active');
-  return digest(JSON.stringify({ version: 1, root, head, status, replacements, index, states }));
+  return digest(JSON.stringify({ version: 2, root, selection, planRevision: plan.plan_revision, head, status, replacements, index, states }));
 }

@@ -1,5 +1,6 @@
 import { execFile as execFileCallback } from 'node:child_process';
 import { promisify } from 'node:util';
+import { SessionPlans } from './session-plans.mjs';
 import { createHash } from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -13,11 +14,13 @@ export class RuntimeError extends Error {
   constructor(code, message) { super(message); this.code = code; }
 }
 
-export function validateContextPacket(packet, workspace) {
+export function validateContextPacket(packet, workspace, selection = {}) {
   if (packet?.delivery_protocol !== CONTEXT_PROTOCOL || packet.ack_required !== false) {
     throw new RuntimeError('MCP_UPDATE_REQUIRED', 'Нужна обновлённая версия Codex Local Mac с прямой передачей контекста.');
   }
   if (packet.workspace !== workspace) throw new RuntimeError('MCP_CONTEXT_MISMATCH', 'Получен контекст другой папки.');
+  if (selection.sessionId && (packet.session_id !== selection.sessionId || packet.plan_id !== (selection.planId ?? null)))
+    throw new RuntimeError('MCP_CONTEXT_SESSION_MISMATCH', 'Получен пакет другого плана или сессии.');
   const facts = packet.facts;
   const factNames = ['project_id', 'project_name', 'plan_revision', 'scope_id', 'execution_scope_status', 'delivery_status', 'task_id', 'task_title'];
   if (packet.status !== 'ready' || packet.completeness !== 'COMPLETE' || typeof packet.context !== 'string'
@@ -181,8 +184,9 @@ export async function findRuntimeFolder(input, { platform = process.platform } =
 
 export class McpRuntime {
   constructor(folder, { execute = execFile, clientFactory = null, platform = process.platform,
-    expectedServerName = platform === 'win32' ? 'Codex Local Windows' : 'Codex Local Mac', ensureRuntime = null } = {}) {
+    expectedServerName = platform === 'win32' ? 'Codex Local Windows' : 'Codex Local Mac', ensureRuntime = null, sessionPlans = new SessionPlans() } = {}) {
     this.folder = folder;
+    this.sessionPlans = sessionPlans;
     this.execute = execute;
     this.expectedServerName = expectedServerName;
     this.clientFactory = clientFactory ?? (endpoint => new LocalMcpClient(endpoint, { expectedServerName: this.expectedServerName }));
@@ -259,7 +263,8 @@ export class McpRuntime {
     return { ...status, connection };
   }
 
-  async loadContext(workspace) {
+  async loadContext(workspace, selection = {}) {
+    if (selection.sessionId) return validateContextPacket(await this.sessionPlans.loadContext(workspace, selection), workspace, selection);
     if (!this.client) await this.ensure();
     return this.client.loadContext(workspace);
   }

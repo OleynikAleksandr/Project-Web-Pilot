@@ -96,3 +96,16 @@ test('worktree metadata is independent and symlink inputs disable reuse',async t
   await fs.rm(path.join(canonical,'code.txt'));await fs.symlink(path.join(root,'code.txt'),path.join(canonical,'code.txt'));
   await assert.rejects(contextInputKey(canonical),{code:'CONTEXT_INPUTS_UNAVAILABLE'});
 });
+
+test('two sessions with identical revisions never share a packet or pending build', async () => {
+  let loads=0;
+  const cache=new ContextCache({inputKey:async()=> 'identical-revision',load:async(w,s)=>{
+    loads++;return {...packet(w,s.sessionId),session_id:s.sessionId,plan_id:s.planId};
+  }});
+  const a={sessionId:'a',planId:'plan-a'},b={sessionId:'b',planId:'plan-b'};
+  const [first,second]=await Promise.all([cache.load('/project',a),cache.load('/project',b)]);
+  assert.equal(first.context,'a');assert.equal(second.context,'b');assert.equal(loads,2);
+  assert.equal((await cache.load('/project',a)).preparation.cacheHit,true);
+  cache.clear();cache.loadPacket=async w=>({...packet(w),session_id:'b',plan_id:'plan-b'});
+  await assert.rejects(cache.load('/project',a),{code:'MCP_CONTEXT_SESSION_MISMATCH'});
+});

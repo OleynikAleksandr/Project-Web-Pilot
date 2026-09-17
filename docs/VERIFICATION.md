@@ -922,3 +922,6 @@ T005: workspace fixtures проверяют резервную копию v5, у
 
 
 T006: временные Git fixtures проверяют разные owning sessions и чистый NONE, точные packet facts, отсутствующий required документ и transport budget существующими recovery tests.
+
+
+T007: проверяются одинаковые revision разных планов, неправильный session_id, изменение исходников при неизменной revision, устаревшие ответы и прежние защиты отправки.

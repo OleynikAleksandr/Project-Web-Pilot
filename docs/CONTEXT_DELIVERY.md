@@ -119,3 +119,6 @@ Builder Workflow Kit больше не использует большой `Об
 
 
 Scope 028 / T006: CLI recover --session <id> --format packet — каноническая точка получения выбранного plan. Envelope сохраняет inline-context-v1, добавляет session_id/plan_id; восемь прежних facts совместимы. Пакет содержит адрес команд агента и незавершённые микрозадачи.
+
+
+T007: session identity сохраняется в attempt metadata. Старые отправленные пакеты без неё показываются устаревшими, без автоматической повторной отправки. Ручное обновление получает canonical CLI packet.
