@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 25,
+  "plan_revision": 29,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-opening-performance-029",
@@ -520,8 +520,8 @@
       "file_limit_exception": "Совместимое обновление одного комплекта: installed/bundled, worker/Doctor version gates, manifest через Doctor и regression текущей версии."
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-opening-performance-029",
         "task_id": "T008",
@@ -534,12 +534,17 @@
         "tests/session-opening-performance.test.mjs",
         "tests/electron-smoke.mjs",
         "tests/workspace-readiness.test.mjs",
-        "tests/session-plans.test.mjs"
+        "tests/session-plans.test.mjs",
+        ".harness/kit/lib/git.mjs",
+        "resources/workflow-kit/lib/git.mjs",
+        ".harness/kit-manifest.json"
       ],
       "documentation_paths": [
         "docs/modules/session-opening-performance.md",
         "docs/VERIFICATION.md",
-        "docs/CONTEXT_DELIVERY.md"
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/modules/workflow-kit-recovery.md",
+        "docs/WORKSPACE_SETUP.md"
       ],
       "verification_ids": [
         "suite",
@@ -553,7 +558,8 @@
         "Цели на текущем Mac: p95 от клика до свежего своего плана и начала loadURL не более 1с; после готовности оболочки до выбранного плана/начала loadURL не более 2с при каждом из 5 запусков; полное preview не менее чем на 60% быстрее сопоставимого baseline 16.1–16.5с. Измерить также полный app-start-to-plan, чтобы не скрыть задержку до shell-ready. Сетевую готовность ChatGPT указать отдельно.",
         "Fixtures покрывают разные workspace, два незавершённых и выполненный/подготовленный планы, NONE, A→B→A во время проверки, закрытие окна, изменения файлов/HEAD/index/планов/транзакции во время проверки и перед Send, отказ stale cache, повтор ошибки, отсутствие дубликатов и неверного владельца.",
         "Проверить масштабирование истории/числа планов и повторные переключения: они не создают очередь одинаковых проверок. Тайминги тестов в CI не выдавать за замеры реального packaged приложения.",
-        "Полные Node suite и Electron smoke проходят; проверки повреждений используют только изолированные fixtures. При недостижении целей продолжить оптимизацию подтверждённого узкого места в этом плане, не выдавать цель за результат."
+        "Полные Node suite и Electron smoke проходят; проверки повреждений используют только изолированные fixtures. При недостижении целей продолжить оптимизацию подтверждённого узкого места в этом плане, не выдавать цель за результат.",
+        "Профиль подтвердил собственную запись Git diff в index и лишние retry при первом чтении. Использовать штатный diff.autoRefreshIndex=false для предотвращения stat-cache refresh, сохранив обязательные lock/write и обнаружение реальных изменений index; повторить холодные замеры."
       ],
       "expected_commit_message": "test: verify fast session opening and stale result isolation",
       "file_limit_exception": "Одна проверяемая часть существующего фасада: синхронные installed/bundled копии, интеграция вызова и профильные regression. Новые файлы служат только общей проверке актуальности; отдельного менеджера/сервиса нет."
@@ -726,7 +732,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-opening-performance-029
 Current Task: нет
-Revision: 25
+Revision: 29
 
 ## Цель
 
@@ -771,10 +777,10 @@ Revision: 25
   - Git Commit: [DONE] fix: preserve kit upgrade and diagnostics after performance changes
   - Reference: session-opening-performance-029 / T007 / implementation
   - Файлы: .harness/kit/lib/common.mjs, resources/workflow-kit/lib/common.mjs, .harness/kit/lib/installer.mjs, resources/workflow-kit/lib/installer.mjs, resources/project-doctor/core.mjs, tests/workspace-setup.test.mjs, tests/project-doctor.test.mjs, tests/workflow-kit-source.test.mjs, resources/workspace-setup-worker.mjs, tests/electron-smoke.mjs, .harness/kit-manifest.json, docs/modules/session-opening-performance.md, docs/WORKSPACE_SETUP.md, docs/modules/project-doctor.md, docs/modules/workflow-kit-recovery.md, docs/SOURCE_WORKSPACES.md, docs/VERIFICATION.md
-- [TODO] T008: Проверить корректность и достигнутую скорость — Ожидает
-  - Git Commit: [PENDING] test: verify fast session opening and stale result isolation
+- [DONE] T008: Проверить корректность и достигнутую скорость — Завершено
+  - Git Commit: [DONE] test: verify fast session opening and stale result isolation
   - Reference: session-opening-performance-029 / T008 / implementation
-  - Файлы: tests/session-opening-performance.test.mjs, tests/electron-smoke.mjs, tests/workspace-readiness.test.mjs, tests/session-plans.test.mjs, docs/modules/session-opening-performance.md, docs/VERIFICATION.md, docs/CONTEXT_DELIVERY.md
+  - Файлы: tests/session-opening-performance.test.mjs, tests/electron-smoke.mjs, tests/workspace-readiness.test.mjs, tests/session-plans.test.mjs, .harness/kit/lib/git.mjs, resources/workflow-kit/lib/git.mjs, .harness/kit-manifest.json, docs/modules/session-opening-performance.md, docs/VERIFICATION.md, docs/CONTEXT_DELIVERY.md, docs/modules/workflow-kit-recovery.md, docs/WORKSPACE_SETUP.md
 - [TODO] T009: Собрать и проверить релиз для пользователя — Ожидает
   - Git Commit: [PENDING] build: release faster session and plan opening
   - Reference: session-opening-performance-029 / T009 / implementation

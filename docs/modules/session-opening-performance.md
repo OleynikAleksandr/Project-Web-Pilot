@@ -86,3 +86,9 @@ WorkspaceReadiness хранит до четырёх готовых резуль�
 ## T007 — совместимый Workflow Kit 1.4.1
 
 Patch-версия сохраняет схемы планов и публичные CLI-ответы. Fresh install использует 1.4.1; целая 1.4.0 обновляется штатным upgrade с backup. Worker и Doctor явно поддерживают прежнюю 1.4.0. Doctor также проверяет required-документы отдельных задач всех канонических планов; отсутствие файла не исправляется догадкой. Installed/bundled синхронны, manifest текущего проекта согласован штатным Doctor после проверки полного совпадения.
+
+## T008 — проверка и дополнительное устранение повторов
+
+Trace2 первого холодного прохода выявил запись stat-cache индекса из Git diff, несмотря на GIT_OPTIONAL_LOCKS=0. Это вызывало повтор recovery и полной инспекции. Общий Git facade использует штатный `-c diff.autoRefreshIndex=false`; явные stage/commit и обязательные locks сохраняются. Пустое изменение только mtime проверяется без записи index, реальные HEAD/index/plan/document/transaction после вставки по-прежнему блокируют Send. См. [Git diff.autoRefreshIndex](https://git-scm.com/docs/git-config#Documentation/git-config.txt-diffautoRefreshIndex).
+
+Финальный полный preview сопоставимого проекта (340 commits, два плана с 14/13 задачами, revisions 622/474): 3246.1 / 3357.1 / 3268.9 мс, медиана 3268.9 мс, на 79.6% быстрее baseline 15998.36 мс. Во всех трёх вызовах 213 Git-процессов и два log. Добавление 200 commits: 3726.7 мс и те же 213 процессов; четыре плана и 542 commits: 4607.9 мс, 301 процесс/четыре log. 30 одновременных readiness-запросов дают одну инспекцию и максимум один worker. Полные raw samples и UI/startup evidence — docs/VERIFICATION.md и локальная папка T008-profile.

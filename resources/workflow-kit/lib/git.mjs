@@ -14,7 +14,7 @@ export function run(executable, args, cwd, options = {}) {
   }
   return result;
 }
-export const git = (root, args, options) => run(gitExecutable(root), ['--literal-pathspecs', '-c', 'core.quotePath=false', '-c', 'diff.external=', ...args], root, options);
+export const git = (root, args, options) => run(gitExecutable(root), ['--literal-pathspecs', '-c', 'core.quotePath=false', '-c', 'diff.external=', '-c', 'diff.autoRefreshIndex=false', ...args], root, options);
 export const output = (root, args, options) => git(root, args, options).stdout.trim();
 export function repoRoot(cwd) {
   const r = git(cwd, ['rev-parse', '--show-toplevel'], { allowFailure: true });
