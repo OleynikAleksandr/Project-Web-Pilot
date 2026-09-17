@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 32,
+  "plan_revision": 35,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-onboarding-031",
@@ -69,7 +69,9 @@
       "tests/mac-first-run.test.mjs",
       "tests/startup-ui.test.mjs",
       "tests/sidebar.test.mjs",
-      "tests/electron-smoke.mjs"
+      "tests/electron-smoke.mjs",
+      "src/chromium-diagnostics.mjs",
+      "tests/chromium-diagnostics.test.mjs"
     ],
     "max_functional_files_per_task": 3
   },
@@ -554,8 +556,8 @@
       "expected_commit_message": "docs: deliver first-run iteration for clean testing"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-onboarding-031",
         "task_id": "T009",
@@ -572,6 +574,268 @@
       ],
       "verification_ids": [],
       "acceptance_criteria": [
+        "Зафиксирован повторный запуск, снимок пустой панели и переданные пользователем две строки diagnostics.jsonl.",
+        "Первый путь остановлен на загрузке ChatGPT; причина неизвестна, полный результат и недостающие baseline-факты перенесены в T014.",
+        "Добавлены конкретные исправления ранней диагностики и сопровождения, новая сборка и повтор в том же плане."
+      ],
+      "expected_commit_message": "docs: record blank first page after macOS retest",
+      "id": "T009",
+      "title": "Зафиксировать повторный запуск 0.6.32 и полученный журнал",
+      "why": "Доказать самостоятельный первый запуск исправленной поставки."
+    },
+    {
+      "id": "C002",
+      "title": "Записывать загрузку браузера с первого обращения к сайту",
+      "why": "Текущий журнал запускается после успешной загрузки и не объясняет пустую панель.",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "first-run-onboarding-031",
+        "task_id": "C002",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "T009"
+      ],
+      "functional_paths": [
+        "src/main.mjs",
+        "src/chromium-diagnostics.mjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/first-run-onboarding.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/VERIFICATION.md",
+        "docs/PRODUCT.md",
+        "docs/DECISIONS.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/RELEASE.md",
+        "docs/modules/runtime-lifecycle.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/modules/workspace-sessions.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "README.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/MODULES.md",
+        "docs/DOCUMENTATION_INDEX.md"
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "acceptance_criteria": [
+        "Существующий журнал включается до первой навигации; фиксирует запрос, длительное ожидание, HTTP-статус главного документа, ошибки навигации и падение renderer.",
+        "Диагностика содержит только безопасные коды/адреса без секретов и содержимого чата; неизвестная причина не подменяется предположением.",
+        "Локальная команда копирует краткий отчёт текущего запуска для передачи через буфер; реальная ошибка первой загрузки проверена в Electron fixture."
+      ],
+      "expected_commit_message": "fix: capture browser diagnostics before first navigation"
+    },
+    {
+      "id": "C003",
+      "title": "Показывать вход только после появления страницы ChatGPT",
+      "why": "Пользователь не должен искать кнопки на пустой правой панели.",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "first-run-onboarding-031",
+        "task_id": "C003",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "C002"
+      ],
+      "functional_paths": [
+        "src/ui/startup.mjs",
+        "src/ui/index.html",
+        "tests/startup-ui.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/first-run-onboarding.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/VERIFICATION.md",
+        "docs/PRODUCT.md",
+        "docs/DECISIONS.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/RELEASE.md",
+        "docs/modules/runtime-lifecycle.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/modules/workspace-sessions.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "README.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/MODULES.md",
+        "docs/DOCUMENTATION_INDEX.md"
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "acceptance_criteria": [
+        "Первый экран объясняет, что Web Pilot открывает сайт ChatGPT справа; при отсутствии страницы видны повтор и копирование диагностики.",
+        "Инструкции входа и регистрации не ссылаются на отсутствующие элементы; ожидается фактическое наблюдение экрана входа.",
+        "Подсказка копирования позволяет передать журнал без двусторонней общей папки; проверены сбой и восстановление UI."
+      ],
+      "expected_commit_message": "fix: guide users when ChatGPT has not opened"
+    },
+    {
+      "id": "V002",
+      "title": "Проверить ранний журнал и повтор неудачной загрузки",
+      "why": "Нужна воспроизводимая проверка случая, когда первая страница не загрузилась.",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "first-run-onboarding-031",
+        "task_id": "V002",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "C003"
+      ],
+      "functional_paths": [
+        "tests/chromium-diagnostics.test.mjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/first-run-onboarding.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/VERIFICATION.md",
+        "docs/PRODUCT.md",
+        "docs/DECISIONS.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/RELEASE.md",
+        "docs/modules/runtime-lifecycle.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/modules/workspace-sessions.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "README.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/MODULES.md",
+        "docs/DOCUMENTATION_INDEX.md"
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "acceptance_criteria": [
+        "Тесты подтверждают HTTP/сетевую ошибку до первого успешного load, безопасное содержимое отчёта и последующую успешную загрузку.",
+        "Визуально проверен новый экран задержки; fixture не объявляется результатом чистой VM."
+      ],
+      "expected_commit_message": "test: verify first navigation failure diagnostics"
+    },
+    {
+      "id": "B002",
+      "title": "Собрать обе платформы с ранней диагностикой загрузки",
+      "why": "Общие исправления браузера должны попасть в обе поставки одного выпуска.",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "first-run-onboarding-031",
+        "task_id": "B002",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "V002"
+      ],
+      "functional_paths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "documentation_paths": [
+        "docs/modules/first-run-onboarding.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/VERIFICATION.md",
+        "docs/PRODUCT.md",
+        "docs/DECISIONS.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/RELEASE.md",
+        "docs/modules/runtime-lifecycle.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/modules/workspace-sessions.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "README.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/MODULES.md",
+        "docs/DOCUMENTATION_INDEX.md"
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "acceptance_criteria": [
+        "Выпущены macOS arm64 и Windows x64 0.6.33 с совпадающим source, checksum и проверкой ZIP.",
+        "Постоянный app обновлён с сохранением identity; рабочий процесс не перезапускается.",
+        "Windows получает общую диагностику; перенос мастера на Windows остаётся отдельной незавершённой задачей, его готовность не заявляется."
+      ],
+      "expected_commit_message": "build: release early browser diagnostics for both platforms"
+    },
+    {
+      "id": "R002",
+      "title": "Обновить документы и передать диагностический релиз",
+      "why": "Сохранить факты повторного прогона и простой следующий шаг пользователя.",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "first-run-onboarding-031",
+        "task_id": "R002",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "B002"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/modules/first-run-onboarding.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/VERIFICATION.md",
+        "docs/PRODUCT.md",
+        "docs/DECISIONS.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/RELEASE.md",
+        "docs/modules/runtime-lifecycle.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/modules/workspace-sessions.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "README.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/MODULES.md",
+        "docs/DOCUMENTATION_INDEX.md"
+      ],
+      "verification_ids": [],
+      "acceptance_criteria": [
+        "Документы отражают 0.6.33, неизвестную причину пустой страницы, кнопку копирования и незавершённый полный прогон.",
+        "План продолжает ту же сессию и сохраняет единственную финальную DOCS."
+      ],
+      "expected_commit_message": "docs: deliver browser startup diagnostic iteration"
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "first-run-onboarding-031",
+        "task_id": "T014",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "R002"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/modules/first-run-onboarding.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [],
+      "acceptance_criteria": [
         "На новом клоне Base пройден путь от пакета до проекта, доставки контекста и разрешённого действия агента с тестовым файлом гостя.",
         "Для подтверждения готовности достаточно подсказок поставки и приложения; помощь агента в обход недостающего UI считается проблемой.",
         "Каждый оставшийся дефект добавляет задачи исправления, сборки и нового прохода до последующих проверок и DOCS; число циклов не ограничивается.",
@@ -579,8 +843,8 @@
         "Перед повторным испытанием подтвердить сборку/архитектуру гостя, отсутствие предустановленных зависимостей/профиля в Base и версию/происхождение гостевого app; ранее отсутствовавшие данные T001 не считать подтверждёнными."
       ],
       "expected_commit_message": "docs: verify clean macOS guided startup",
-      "id": "T009",
-      "title": "Повторять полный путь macOS на свежих клонах до успеха",
+      "id": "T014",
+      "title": "Повторять чистый macOS-прогон после диагностической итерации",
       "why": "Доказать самостоятельный первый запуск исправленной поставки."
     },
     {
@@ -592,7 +856,7 @@
         "role": "implementation"
       },
       "dependencies": [
-        "T009"
+        "T014"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -767,6 +1031,12 @@
         "T008",
         "R001",
         "T009",
+        "C002",
+        "C003",
+        "V002",
+        "B002",
+        "R002",
+        "T014",
         "T010",
         "T011",
         "T012",
@@ -855,7 +1125,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-onboarding-031
 Current Task: нет
-Revision: 32
+Revision: 35
 
 ## Цель
 
@@ -922,9 +1192,33 @@ Revision: 32
   - Git Commit: [DONE] docs: deliver first-run iteration for clean testing
   - Reference: first-run-onboarding-031 / R001 / implementation
   - Файлы: docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
-- [TODO] T009: Повторять полный путь macOS на свежих клонах до успеха — Ожидает
-  - Git Commit: [PENDING] docs: verify clean macOS guided startup
+- [DONE] T009: Зафиксировать повторный запуск 0.6.32 и полученный журнал — Завершено
+  - Git Commit: [DONE] docs: record blank first page after macOS retest
   - Reference: first-run-onboarding-031 / T009 / implementation
+  - Файлы: docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md
+- [TODO] C002: Записывать загрузку браузера с первого обращения к сайту — Ожидает
+  - Git Commit: [PENDING] fix: capture browser diagnostics before first navigation
+  - Reference: first-run-onboarding-031 / C002 / implementation
+  - Файлы: src/main.mjs, src/chromium-diagnostics.mjs, tests/electron-smoke.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
+- [TODO] C003: Показывать вход только после появления страницы ChatGPT — Ожидает
+  - Git Commit: [PENDING] fix: guide users when ChatGPT has not opened
+  - Reference: first-run-onboarding-031 / C003 / implementation
+  - Файлы: src/ui/startup.mjs, src/ui/index.html, tests/startup-ui.test.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
+- [TODO] V002: Проверить ранний журнал и повтор неудачной загрузки — Ожидает
+  - Git Commit: [PENDING] test: verify first navigation failure diagnostics
+  - Reference: first-run-onboarding-031 / V002 / implementation
+  - Файлы: tests/chromium-diagnostics.test.mjs, tests/electron-smoke.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
+- [TODO] B002: Собрать обе платформы с ранней диагностикой загрузки — Ожидает
+  - Git Commit: [PENDING] build: release early browser diagnostics for both platforms
+  - Reference: first-run-onboarding-031 / B002 / implementation
+  - Файлы: package.json, package-lock.json, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
+- [TODO] R002: Обновить документы и передать диагностический релиз — Ожидает
+  - Git Commit: [PENDING] docs: deliver browser startup diagnostic iteration
+  - Reference: first-run-onboarding-031 / R002 / implementation
+  - Файлы: docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
+- [TODO] T014: Повторять чистый macOS-прогон после диагностической итерации — Ожидает
+  - Git Commit: [PENDING] docs: verify clean macOS guided startup
+  - Reference: first-run-onboarding-031 / T014 / implementation
   - Файлы: docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md
 - [TODO] T010: Пройти первый запуск Windows и выявить отличия — Ожидает
   - Git Commit: [PENDING] docs: record Windows first-run findings
