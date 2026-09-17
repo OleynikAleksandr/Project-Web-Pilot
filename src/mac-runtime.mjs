@@ -9,6 +9,8 @@ const execFile=promisify(execFileCallback);
 
 export const MAC_RUNTIME_CONTRACT=2;
 export const MAC_RUNTIME_FOLDER='Codex-Local-Mac';
+// control.py shipped in resources/mac-runtime.zip; adapt only this exact known version.
+export const MAC_BUNDLED_CONTROL_SHA256='84a68f87448cfc10090752e4e4b15c6e4120ea53ad8ec70038408051b85358f9';
 export const MAC_LEGACY_CONTROL_SHA256='6c5c14972774ece2a9820059b3953fe2fe968c186bb6e17af074c7752dc294be';
 
 export class MacRuntimeError extends Error { constructor(code,message){super(message);this.code=code;} }
@@ -21,7 +23,7 @@ export function macRuntimePaths(dataDir,payloadFile=''){
 export function macRuntimeFolderPaths(folder){return {folder,control:path.join(folder,'control.py'),python:path.join(folder,'.venv','bin','python3')};}
 
 export class MacRuntimeBootstrap {
- constructor({payloadFile,controlSourceFile,dataDir,preferredFolder=null,defaultFolder=null,execute=execFile,environment=process.env,platform=process.platform,onState=null,legacyControlHashes=[MAC_LEGACY_CONTROL_SHA256]}={}){
+ constructor({payloadFile,controlSourceFile,dataDir,preferredFolder=null,defaultFolder=null,execute=execFile,environment=process.env,platform=process.platform,onState=null,legacyControlHashes=[MAC_LEGACY_CONTROL_SHA256,MAC_BUNDLED_CONTROL_SHA256]}={}){
   if(!payloadFile||!controlSourceFile||!dataDir)throw new TypeError('MacRuntimeBootstrap requires payload/control/dataDir');
   this.payloadFile=payloadFile;this.controlSourceFile=controlSourceFile;this.paths=macRuntimePaths(dataDir,payloadFile);this.preferredFolder=preferredFolder&&path.isAbsolute(preferredFolder)?preferredFolder:null;this.defaultFolder=defaultFolder&&path.isAbsolute(defaultFolder)?defaultFolder:null;this.execute=execute;this.environment=environment;this.platform=platform;this.onState=typeof onState==='function'?onState:null;this.legacyControlHashes=new Set(legacyControlHashes);this.pending=null;this.state={phase:platform==='darwin'?'embedded':'unavailable',folder:this.paths.folder};
  }
@@ -34,12 +36,15 @@ export class MacRuntimeBootstrap {
   if(this.platform!=='darwin')return this.snapshot();
   const seen=new Set();
   for(const folder of [this.preferredFolder,this.defaultFolder]){
-   if(!folder)continue;const key=path.resolve(folder);if(seen.has(key))continue;seen.add(key);const c=await this.#candidate(folder);if(!c)continue;
+   if(!folder)continue;const key=path.resolve(folder);if(key===path.resolve(this.paths.folder)||seen.has(key))continue;seen.add(key);const c=await this.#candidate(folder);if(!c)continue;
    if(c.compatible||c.overlayable){this.#publish({phase:'installed',installed:true,source:'external',folder:c.folder,needsOverlay:!c.compatible,error:null});return this.snapshot();}
    if(this.preferredFolder&&path.resolve(this.preferredFolder)===key){this.#publish({phase:'error',installed:true,source:'external',folder:c.folder,error:'MAC_RUNTIME_EXTERNAL_MODIFIED'});return this.snapshot();}
   }
   const marker=await this.#marker();const bundled=await this.#candidate(this.paths.folder);
-  if(bundled&&marker?.payloadSha256===await sha256(this.payloadFile)){this.#publish({phase:'installed',installed:true,source:'bundled',folder:this.paths.folder,needsOverlay:!bundled.compatible,error:null});return this.snapshot();}
+  if(bundled&&marker?.payloadSha256===await sha256(this.payloadFile)){
+   const trusted=bundled.compatible||bundled.overlayable;
+   this.#publish({phase:trusted?'installed':'error',installed:true,source:'bundled',folder:this.paths.folder,needsOverlay:!bundled.compatible,error:trusted?null:'MAC_RUNTIME_EXTERNAL_MODIFIED'});return this.snapshot();
+  }
   this.#publish({phase:'embedded',installed:false,source:'embedded',folder:this.paths.folder,error:null});return this.snapshot();
  }
  async #controlFor(folder){
@@ -63,7 +68,7 @@ export class MacRuntimeBootstrap {
   const entries=await fs.readdir(this.paths.staging);if(entries.length!==1||entries[0]!==MAC_RUNTIME_FOLDER)throw new MacRuntimeError('MAC_RUNTIME_ARCHIVE_INVALID','Bundled Mac runtime имеет неожиданную структуру.');
   const extracted=path.join(this.paths.staging,MAC_RUNTIME_FOLDER);await fs.rm(this.paths.folder,{recursive:true,force:true});await fs.rename(extracted,this.paths.folder);await fs.rm(this.paths.staging,{recursive:true,force:true});
   const uv=await this.#findUv();const layout=macRuntimeFolderPaths(this.paths.folder);
-  if(uv){await this.execute(uv,['venv','--python','3.13',path.join(this.paths.folder,'.venv')],{cwd:this.paths.folder,timeout:120000,maxBuffer:2*1024*1024});}
+  if(uv){await this.execute(uv,['venv','--python','3.13',path.join(this.paths.folder,'.venv')],{cwd:this.paths.folder,timeout:120000,maxBuffer:2*1024*1024,env:this.environment});}
   const bootstrapPython=await exists(layout.python)?layout.python:await this.#findPython();if(!bootstrapPython)throw new MacRuntimeError('MAC_RUNTIME_BOOTSTRAP_TOOL_MISSING','Для первой установки Mac runtime нужен uv или Python 3.13+.');
   const env={...this.environment,PYTHONDONTWRITEBYTECODE:'1',...(uv?{WEB_PILOT_UV:uv}:{})};
   try{await this.execute(bootstrapPython,['-B',layout.control,'setup','--workspace',workspace],{cwd:this.paths.folder,timeout:15*60*1000,maxBuffer:8*1024*1024,env});}catch(error){throw new MacRuntimeError('MAC_RUNTIME_SETUP_FAILED',String(error.stderr||error.stdout||error.message).slice(-1600));}
@@ -101,6 +106,6 @@ export class MacRuntimeBootstrap {
   const current=await this.inspect();let folder=current.folder,source=current.source;
   if(current.error==='MAC_RUNTIME_EXTERNAL_MODIFIED')throw new MacRuntimeError(current.error,'Выбранный Codex Local Mac изменён; автоматический overlay остановлен.');
   if(current.installed){const control=await this.#controlFor(folder);const service=await this.#status(folder);this.#publish({phase:'installed',installed:true,source,folder,service,needsOverlay:false,error:null});return {...this.snapshot(),service,control,reused:true};}
-  this.#publish({phase:'installing',installed:false,source:'bundled',folder:this.paths.folder,error:null});folder=await this.#install(workspace);const service=await this.#status(folder);this.#publish({phase:'installed',installed:true,source:'bundled',folder,service,error:null});return {...this.snapshot(),service,reused:false};
+  this.#publish({phase:'installing',installed:false,source:'bundled',folder:this.paths.folder,error:null});folder=await this.#install(workspace);const service=await this.#status(folder);this.#publish({phase:'installed',installed:true,source:'bundled',folder,service,error:null});return {...this.snapshot(),service,control:await this.#controlFor(folder),reused:false};
  }
 }

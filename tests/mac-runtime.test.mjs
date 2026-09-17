@@ -82,3 +82,57 @@ test('Mac bootstrap installs bundled payload when no external runtime exists',as
  assert.ok(calls.some(c=>c.file==='/usr/bin/ditto'));assert.ok(calls.some(c=>c.file===fakeUv&&c.args[0]==='venv'));assert.ok(calls.some(c=>c.args.includes('setup')));
  const marker=JSON.parse(await fs.readFile(path.join(data,'runtime','mac-runtime.json'),'utf8'));assert.equal(marker.schemaVersion,1);
 });
+
+test('shipped Mac archive installs through adapter and recovers after restart without reinstall', {skip:process.platform!=='darwin'}, async t=>{
+ const root=await fixture(t),data=path.join(root,'app');
+ const payload=fileURLToPath(new URL('../resources/mac-runtime.zip',import.meta.url));
+ const fakeUv=path.join(root,'uv');await fs.writeFile(fakeUv,'fixture');
+ const calls=[];const environment={WEB_PILOT_UV:fakeUv,CODEX_LOCAL_MAC_STATE_DIR:path.join(root,'private-state')};
+ const run=async(file,args,options={})=>{
+  calls.push({file,args,options});
+  if(file==='/usr/bin/ditto')return execute(file,args,options);
+  if(file===fakeUv){
+   assert.equal(options.env,environment,'managed Python uses the isolated environment');
+   await fs.mkdir(path.join(args.at(-1),'bin'),{recursive:true});
+   await fs.writeFile(path.join(args.at(-1),'bin','python3'),'fixture');return {stdout:''};
+  }
+  if(args.includes('setup'))return {stdout:'{}'};
+  if(args.at(-1)==='status'){
+   assert.equal(args[1],control,'shipped archive uses the current facade');
+   assert.equal(options.env.WEB_PILOT_RUNTIME_ROOT,options.cwd);
+   return {stdout:JSON.stringify({runtime_contract:2,package_root:options.cwd,mcp_url:'http://127.0.0.1:17842/mcp'})};
+  }
+  throw new Error('Unexpected command');
+ };
+ const options={payloadFile:payload,controlSourceFile:control,dataDir:data,execute:run,environment,platform:'darwin'};
+ const b=new MacRuntimeBootstrap(options);
+ const installed=await b.ensure(root);
+ assert.equal(installed.source,'bundled');assert.equal(installed.reused,false);assert.equal(installed.control,control);
+ const shipped=await fs.readFile(path.join(installed.folder,'control.py'));
+ assert.notDeepEqual(shipped,await fs.readFile(control),'regression uses the actual old archive, not a current facade fixture');
+ const marker=await fs.readFile(b.paths.marker);
+ calls.length=0;
+ const restart=new MacRuntimeBootstrap({...options,preferredFolder:installed.folder});
+ assert.equal((await restart.inspect()).source,'bundled','own registered folder is not external');
+ const recovered=await restart.ensure(root);
+ assert.equal(recovered.reused,true);assert.equal(recovered.control,control);
+ assert.equal(calls.length,1);assert.equal(calls[0].args.at(-1),'status','no setup or downloads after restart');
+ assert.deepEqual(await fs.readFile(restart.paths.marker),marker);
+ assert.deepEqual(await fs.readFile(path.join(installed.folder,'control.py')),shipped,'adapter leaves payload untouched');
+ await fs.appendFile(path.join(installed.folder,'control.py'),'# changed');
+ calls.length=0;
+ await assert.rejects(restart.ensure(root),{code:'MAC_RUNTIME_EXTERNAL_MODIFIED'});
+ assert.equal(calls.length,0,'a valid install marker does not authorize changed code');
+});
+
+test('unknown preferred external Mac runtime remains untouched and never executes',async t=>{
+ const root=await fixture(t),folder=path.join(root,'external');
+ await fs.mkdir(path.join(folder,'.venv','bin'),{recursive:true});
+ await fs.writeFile(path.join(folder,'.venv','bin','python3'),'fixture');
+ await fs.writeFile(path.join(folder,'control.py'),'unknown custom control');
+ let calls=0;
+ const b=new MacRuntimeBootstrap({payloadFile:path.join(root,'missing.zip'),controlSourceFile:control,dataDir:path.join(root,'app'),
+  preferredFolder:folder,platform:'darwin',execute:async()=>{calls++;throw new Error('must not execute');}});
+ await assert.rejects(b.ensure(root),{code:'MAC_RUNTIME_EXTERNAL_MODIFIED'});
+ assert.equal(calls,0);assert.equal(await fs.readFile(path.join(folder,'control.py'),'utf8'),'unknown custom control');
+});
