@@ -73,3 +73,14 @@
 Evidence: .harness/runtime/releases/0.6.28/{mac-release.json,source-verification.json,release-manifest.json,SHA256SUMS.txt}. Реальный ChatGPT, чистая установка в UTM и native Windows этим выпуском не проверялись. Работающее приложение не перезапускалось: для применения нужен полный выход и повторный запуск через постоянный app/алиас.
 
 Для 0.6.28 происхождение исходников уточнено: единственное различие src установленного 0.6.27 относительно исходного 0.6.26 было в index.html. Его обводка/линии сохранены в новом UI; пакет не заменён старой реализацией.
+
+## Выпуск 0.6.29 — быстрое открытие / scope 029
+
+17.09.2026 штатно собраны macOS arm64 и Windows x64 с Workflow Kit 1.4.1. Постоянный корневой app обновлён; device 16777232 / inode 398344301 сохранены, прежний Contents находится в release-backups/mac-K8QmyO. Все 33 файла src и 31 файл resources совпадают с source в обеих поставках и установленном app; app.asar установленного app совпадает со staging и ZIP (`11fdfee96de9ff163e2f80c907e1a4847bc4466d1ff905b7cf7a83dd309f8970`). Вложенного старого app нет.
+
+- macOS ZIP: `bf01bfb8d576d9a63311ec51abbc58aa5b4693817826022aca038852b237169e`, 145219226 bytes.
+- Windows ZIP: `f902693319d1c6ec644e96ebadac423f5735a1508cb4c55c028085e59d3a8859`, 315992003 bytes.
+
+Оба ZIP прошли integrity/asar проверку; копии и SHA256SUMS.txt находятся в ~/Downloads/WebPilot-0.6.29/. Evidence: .harness/runtime/releases/0.6.29/{mac-release.json,source-verification.json,release-manifest.json}. Установленный macOS app измерен на отдельном профиле: 30 переключений, p95 обоих локальных endpoints 14.3 мс; пять запусков shell→план 14–19 мс, полный spawn→план 389–1682 мс, включая inspector setup. Подробные границы — docs/VERIFICATION.md. Native Windows и чистые VM не запускались.
+
+Короткая пользовательская проверка: полностью выйти из работающего Web Pilot и открыть постоянный app/алиас; несколько раз переключить сессии и проверить собственный план/NONE; затем создать Chat/Work или явно обновить контекст и проверить доставку после готовности. Рабочий профиль и чаты сохраняются, приложение не перезапускалось автоматически.

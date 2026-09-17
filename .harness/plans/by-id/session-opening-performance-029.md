@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 29,
+  "plan_revision": 32,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-opening-performance-029",
@@ -565,8 +565,8 @@
       "file_limit_exception": "Одна проверяемая часть существующего фасада: синхронные installed/bundled копии, интеграция вызова и профильные regression. Новые файлы служат только общей проверке актуальности; отдельного менеджера/сервиса нет."
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-opening-performance-029",
         "task_id": "T009",
@@ -584,7 +584,8 @@
         "docs/RELEASE.md",
         "docs/TRANSFER_TO_WINDOWS.md",
         "docs/SOURCE_WORKSPACES.md",
-        "docs/VERIFICATION.md"
+        "docs/VERIFICATION.md",
+        "docs/architecture/ARCHITECTURE.md"
       ],
       "verification_ids": [
         "suite",
@@ -732,7 +733,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-opening-performance-029
 Current Task: нет
-Revision: 29
+Revision: 32
 
 ## Цель
 
@@ -781,10 +782,10 @@ Revision: 29
   - Git Commit: [DONE] test: verify fast session opening and stale result isolation
   - Reference: session-opening-performance-029 / T008 / implementation
   - Файлы: tests/session-opening-performance.test.mjs, tests/electron-smoke.mjs, tests/workspace-readiness.test.mjs, tests/session-plans.test.mjs, .harness/kit/lib/git.mjs, resources/workflow-kit/lib/git.mjs, .harness/kit-manifest.json, docs/modules/session-opening-performance.md, docs/VERIFICATION.md, docs/CONTEXT_DELIVERY.md, docs/modules/workflow-kit-recovery.md, docs/WORKSPACE_SETUP.md
-- [TODO] T009: Собрать и проверить релиз для пользователя — Ожидает
-  - Git Commit: [PENDING] build: release faster session and plan opening
+- [DONE] T009: Собрать и проверить релиз для пользователя — Завершено
+  - Git Commit: [DONE] build: release faster session and plan opening
   - Reference: session-opening-performance-029 / T009 / implementation
-  - Файлы: package.json, package-lock.json, docs/modules/session-opening-performance.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md, docs/SOURCE_WORKSPACES.md, docs/VERIFICATION.md
+  - Файлы: package.json, package-lock.json, docs/modules/session-opening-performance.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md, docs/SOURCE_WORKSPACES.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 - [TODO] T010: Объединить изменения и удалить лишние рабочие деревья и ветки — Ожидает
   - Git Commit: [PENDING] chore: consolidate main and remove temporary worktrees
   - Reference: session-opening-performance-029 / T010 / implementation
