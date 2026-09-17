@@ -32,6 +32,10 @@ async function fixture(t) {
     async selectSession(workspace, sessionId) { calls.push(['selectSession', workspace, sessionId]); state.selected = { workspace, sessionId }; return { state: structuredClone(state) }; },
     async selectWorkspace(workspace) { calls.push(['selectWorkspace', workspace]); state.selected = { workspace, sessionId: state.projects[0].sessions[0].sessionId }; state.projects[0].expanded = true; return { state: structuredClone(state) }; },
     async setExpanded(workspace, expanded) { calls.push(['setExpanded', workspace, expanded]); state.projects.find(p => p.workspace === workspace).expanded = expanded; return { state: structuredClone(state) }; },
+    async choosePreparedPlan(workspace, sourceSessionId, planId) { calls.push(['choosePreparedPlan', workspace, sourceSessionId, planId]); state.preparedChoice = { workspace, sourceSessionId, planId, title: 'Продолжение' }; return { state: structuredClone(state) }; },
+    async cancelPreparedChoice() { calls.push(['cancelPreparedChoice']); state.preparedChoice = null; return { state: structuredClone(state) }; },
+    async createPreparedSession(experience) { calls.push(['createPreparedSession',experience]); return { state: structuredClone(state) }; },
+    async openPreparedSession(...args) { calls.push(['openPreparedSession',...args]); return { state: structuredClone(state) }; },
     async chooseWorkspace() { calls.push(['chooseWorkspace']); return { state: structuredClone(state) }; },
   };
   window.webPilot = api;
@@ -78,12 +82,12 @@ test('active session outline continues the accent project tree around the full r
   const activeRow = f.document.querySelector('.session.active').closest('.session-row');
   assert.ok(activeRow.querySelector('.session-experience'), 'outline row contains Chat/Work badge');
   assert.ok(activeRow.querySelector('.session-menu-button'), 'outline row contains session menu');
-  assert.ok(css.includes('#projects .expand-project{border:0;background:transparent;width:51px;align-self:stretch;flex:0 0 51px;display:grid;place-items:center;padding:0;border-radius:10px;color:var(--tree-accent)}'));
-  assert.ok(css.includes('#projects .expand-project .tree-icon{width:20px;height:20px;stroke-width:1.2;transition:transform .16s}'));
-  assert.ok(css.includes('background:var(--tree-accent);pointer-events:none}'), 'project trunk uses accent');
-  assert.ok(css.includes('width:23.5px;height:1px;background:var(--tree-accent)}'), 'session branch uses one-pixel accent line');
-  assert.ok(css.includes('#projects .session-row{position:relative;display:flex;align-items:center;gap:1px;flex:1;min-width:0;border:1px solid transparent;border-radius:8px;padding-right:4px}'));
-  assert.ok(css.includes('#projects .session-row:has(.session.active){background:var(--tree-selected);border-color:var(--tree-accent)}'));
+  assert.ok(css.includes('#projects .expand-project{border:0;background:transparent;width:51px;align-self:stretch;flex:0 0 51px;display:grid;place-items:center;padding:0;border-radius:10px;color:var(--tree-guide)}'));
+  assert.ok(css.includes('#projects .expand-project .tree-icon{width:20px;height:20px;stroke-width:.5;transition:transform .16s}'));
+  assert.ok(css.includes('background:var(--tree-guide);pointer-events:none}'), 'project trunk uses accent');
+  assert.ok(css.includes('width:23.5px;height:.5px;background:var(--tree-guide)}'), 'session branch uses half-pixel muted line');
+  assert.ok(css.includes('#projects .session-row{position:relative;display:flex;align-items:center;gap:1px;flex:1;min-width:0;border:.5px solid transparent;border-radius:8px;padding-right:4px}'));
+  assert.ok(css.includes('#projects .session-row:has(.session.active){background:var(--tree-selected);border-color:var(--tree-guide)}'));
   assert.ok(!css.includes('.session-row:has(.session.active)::before'), 'legacy vertical active marker is removed');
 });
 
@@ -115,4 +119,26 @@ test('temporary workspace validation preserves scroll across hidden and replaced
   assert.equal(f.document.getElementById('projects').hidden, false);
   assert.equal(list().scrollTop, 144, 'hidden browser scroll reset is ignored');
   assert.equal(f.document.querySelector('.session.active').dataset.sessionId, 's1');
+});
+
+test('own completed plan stays visible and prepared choice can be cancelled without creating a session', async t => {
+  const f=await fixture(t),state=f.state;
+  state.selected={...state.selected,scopeId:'own',objective:'Мой выполненный план',planView:{state:'awaiting-acceptance',completed:1,total:1,tasks:[{id:'T1',title:'Сохранённый результат',status:'done'}]},preparedPlans:[{
+    planId:'future',objective:'Продолжение',revision:3,sessionId:null,documents:['docs/next.md'],
+    planView:{state:'working',completed:0,total:1,tasks:[{id:'N1',title:'Следующая работа',status:'pending'}]}
+  }]};f.emit(state);
+  assert.equal(f.document.querySelector('#accept-plan'),null);assert.equal(f.document.getElementById('plan-title').textContent,'Мой выполненный план');
+  assert.equal(f.document.getElementById('plan-status').textContent.includes('приёмк'),false);
+  assert.equal(f.document.querySelector('#plan-tasks strong').textContent,'Сохранённый результат');
+  f.document.querySelector('.prepared-preview summary').click();await f.settle();assert.equal(f.calls.length,0);
+  f.document.querySelector('.prepared-action').click();await f.settle();
+  assert.deepEqual(f.calls[0],['choosePreparedPlan','/demo','s4','future']);assert.equal(f.document.getElementById('next-session-choice').hidden,false);
+  f.document.getElementById('cancel-prepared-choice').click();await f.settle();
+  assert.equal(f.document.getElementById('next-session-choice').hidden,true);assert.equal(f.calls.some(c=>c[0]==='createPreparedSession'),false);
+  assert.equal(f.document.querySelector('#plan-tasks strong').textContent,'Сохранённый результат');
+  f.document.querySelector('.prepared-action').click();await f.settle();f.document.getElementById('next-session-work').click();await f.settle();
+  assert.deepEqual(f.calls.at(-1),['createPreparedSession','work']);
+  const linked=f.state;linked.preparedChoice=null;linked.selected.preparedPlans[0].sessionId='s1';linked.selected.preparedPlans[0].experience='work';f.emit(linked);
+  assert.equal(f.document.querySelector('.prepared-action').textContent,'Перейти к сессии');
+  f.document.querySelector('.prepared-action').click();await f.settle();assert.deepEqual(f.calls.at(-1),['openPreparedSession','/demo','s4','future']);
 });

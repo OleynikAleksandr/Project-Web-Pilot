@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 605,
+  "plan_revision": 607,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-owned-plans-028",
@@ -517,8 +517,8 @@
       "file_limit_exception": "Единый контракт явной адресации и его проверки; синхронное изменение установленной и поставляемой копий ядра."
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-owned-plans-028",
         "task_id": "T009",
@@ -819,7 +819,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-owned-plans-028
 Current Task: нет
-Revision: 605
+Revision: 607
 
 ## Цель
 
@@ -868,8 +868,8 @@ Revision: 605
   - Git Commit: [DONE] feat: create sessions from prepared plans or empty scope
   - Reference: session-owned-plans-028 / T008 / implementation
   - Файлы: src/main.mjs, src/preload.cjs, src/workspace-session.mjs, src/session-plans.mjs, tests/workspace-session.test.mjs, .harness/kit/lib/actions.mjs, resources/workflow-kit/lib/actions.mjs, docs/modules/session-owned-plans.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T009: Обновить сайдбар по принятому макету — Ожидает
-  - Git Commit: [PENDING] feat: show session plans and prepared continuations in sidebar
+- [DONE] T009: Обновить сайдбар по принятому макету — Завершено
+  - Git Commit: [DONE] feat: show session plans and prepared continuations in sidebar
   - Reference: session-owned-plans-028 / T009 / implementation
   - Файлы: src/ui/sidebar.mjs, src/ui/index.html, src/ui/progress.mjs, tests/sidebar.test.mjs, tests/progress.test.mjs, docs/modules/session-owned-plans.md, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/design/session-plan-navigation.md
 - [TODO] T010: Обновить инструкции агента и шаблоны Workflow Kit — Ожидает

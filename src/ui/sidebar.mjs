@@ -10,6 +10,7 @@ const progress = createProgress($('operation-progress'));
 window.addEventListener('pagehide', () => progress.destroy());
 let contextExpanded = false;
 const sessionScroll = new Map();
+const preparedExpansion = new Map();
 function treeIcon(name) {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('class', 'tree-icon'); svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('aria-hidden', 'true');
@@ -120,6 +121,41 @@ async function action(method, ...args) {
     $('error-banner').hidden = false;
     $('error-banner').textContent = error.message;
   } finally { actionPending = false; pendingAction = null; render(currentState); }
+}
+
+function renderPrepared(state) {
+  const selected = state.selected, plans = selected?.preparedPlans ?? [];
+  $('prepared-card').hidden = !plans.length;
+  const fragments = plans.map(plan => {
+    const item = document.createElement('article'); item.className = 'prepared-item'; item.dataset.planId = plan.planId;
+    const title = document.createElement('h3'); title.className = 'prepared-title'; title.textContent = plan.objective;
+    const status = document.createElement('p'); status.className = 'prepared-state';
+    const view = plan.planView;
+    status.textContent = plan.sessionId ? 'Продолжение · ' + (plan.experience === 'work' ? 'Work' : 'Chat') + ' · ' + view.completed + ' из ' + view.total + ' выполнено' : 'Подготовлен · без сессии';
+    const details = document.createElement('details'); details.className = 'prepared-preview';
+    const key = JSON.stringify([selected.workspace, selected.sessionId, plan.planId]);
+    details.open = preparedExpansion.get(key) ?? !plan.sessionId;
+    const summary = document.createElement('summary'); summary.textContent = details.open ? 'Свернуть план' : 'Посмотреть план здесь';
+    details.addEventListener('toggle', () => {
+      if (!details.isConnected) return;
+      preparedExpansion.set(key, details.open); summary.textContent = details.open ? 'Свернуть план' : 'Посмотреть план здесь';
+    });
+    const tasks = document.createElement('ul'); tasks.className = 'plan-tasks';
+    for (const task of view.tasks) {
+      const row = document.createElement('li'); row.className = 'plan-task'; row.dataset.status = task.status;
+      const mark = document.createElement('span'); mark.className = 'plan-task-state'; mark.setAttribute('aria-hidden','true');
+      mark.textContent = task.status === 'done' ? '✓' : task.status === 'current' ? '●' : '○';
+      const text = document.createElement('strong'); text.textContent = task.title; row.append(mark,text); tasks.append(row);
+    }
+    const docs = document.createElement('div'); docs.className = 'prepared-docs'; docs.textContent = 'Документы к плану';
+    for (const file of plan.documents ?? []) { const text = document.createElement('span'); text.textContent = file; docs.append(text); }
+    details.append(summary,tasks,docs);
+    const button = document.createElement('button'); button.type = 'button'; button.className = 'primary prepared-action';
+    button.textContent = plan.sessionId ? 'Перейти к сессии' : 'Создать сессию с этим планом';
+    button.addEventListener('click', () => action(plan.sessionId ? 'openPreparedSession' : 'choosePreparedPlan', selected.workspace, selected.sessionId, plan.planId));
+    item.append(title,status,details,button); return item;
+  });
+  $('prepared-plans').replaceChildren(...fragments);
 }
 
 function render(state) {
@@ -244,11 +280,21 @@ function render(state) {
   if (selected) {
     const plural = count => count % 10 === 1 && count % 100 !== 11 ? 'задача'
       : count % 10 >= 2 && count % 10 <= 4 && !(count % 100 >= 12 && count % 100 <= 14) ? 'задачи' : 'задач';
-    const statusText = plan.state === 'awaiting-acceptance' ? `Все ${plan.total} ${plural(plan.total)} выполнены · ожидается ваша приёмка`
+    const statusText = plan.state === 'awaiting-acceptance' ? `Все ${plan.total} ${plural(plan.total)} выполнены`
       : plan.state === 'blocked' ? `План заблокирован · ${plan.completed} из ${plan.total} выполнено`
         : plan.state === 'closed' ? 'Scope завершён и архивирован'
           : plan.state === 'not-created' ? 'План ещё не создан'
             : `В работе · ${plan.completed} из ${plan.total} выполнено`;
+    $('plan-title').textContent = selected.scopeId ? selected.objective : 'План ещё не создан';
+    const origin = state.projects.find(p => p.workspace === selected.workspace)?.sessions.find(s => s.sessionId === selected.originSessionId);
+    $('plan-origin').replaceChildren(); $('plan-origin').hidden = !selected.originSessionId;
+    if (selected.originSessionId) {
+      $('plan-origin').append(document.createTextNode('Подготовлен в '));
+      if (origin) {
+        const button = document.createElement('button'); button.type = 'button'; button.textContent = '«' + (origin.title || 'предыдущая сессия') + '»';
+        button.addEventListener('click', () => action('selectSession', selected.workspace, origin.sessionId)); $('plan-origin').append(button);
+      } else $('plan-origin').append(document.createTextNode('прежней сессии'));
+    }
     $('plan-status').textContent = statusText; $('plan-status').dataset.state = plan.state;
     $('plan-note').hidden = plan.state !== 'closed';
     $('plan-note').textContent = plan.state === 'closed' ? 'Проект готов к следующему новому плану.' : '';
@@ -258,9 +304,10 @@ function render(state) {
       const mark = document.createElement('span'); mark.className = 'plan-task-state'; mark.setAttribute('aria-hidden', 'true');
       mark.textContent = task.status === 'done' ? '✓' : task.status === 'current' ? '●' : '○';
       const body = document.createElement('div'), title = document.createElement('strong'), id = document.createElement('small');
-      title.textContent = task.title; id.textContent = task.id; body.append(title, id); item.append(mark, body); return item;
+      title.textContent = task.title; body.append(title); item.append(mark, body); return item;
     }));
   } else { $('plan-tasks').replaceChildren(); $('plan-note').hidden = true; $('plan-reason').hidden = true; }
+  renderPrepared(state);
   const [title, detail, tone] = phases[context.phase] ?? phases.selected;
   $('context-title').textContent = state.pageLoading ? 'Открываем ChatGPT' : title;
   $('context-details').hidden = !contextExpanded;
@@ -290,11 +337,8 @@ function render(state) {
   for (const button of document.querySelectorAll('button')) {
     button.disabled = actionPending || (state.storageError && ['create-workspace', 'add-workspace', 'retry-context'].includes(button.id));
   }
-  $('next-session-choice').hidden = !state.scopeTransition;
-  const acceptance = state.planAcceptance;
-  $('accept-plan').textContent = acceptance === 'sending' ? 'Отправляем…' : acceptance === 'sent' ? 'Отправлено'
-    : acceptance === 'unknown' ? 'Проверьте чат' : 'Принять';
-  $('accept-plan').disabled = actionPending || !selected || plan.state !== 'awaiting-acceptance' || !!acceptance;
+  $('next-session-choice').hidden = !state.preparedChoice;
+  $('next-session-title').textContent = state.preparedChoice ? 'Открыть «' + state.preparedChoice.title + '» в новой сессии:' : '';
   setupView.render(state, actionPending);
   archiveView.render(state, actionPending);
   // Setup briefly hides the tree while checking a folder. Restore only after it is visible.
@@ -309,11 +353,8 @@ function render(state) {
 }
 
 $('context-toggle').addEventListener('click', () => { contextExpanded = !contextExpanded; render(currentState); });
-$('accept-plan').addEventListener('click', () => action('acceptPlan'));
-for (const experience of ['chat', 'work']) $('next-session-' + experience).addEventListener('click', () => {
-  const transition = currentState?.scopeTransition;
-  if (transition) action('continueAfterScope', transition.workspace, transition.scopeId, experience);
-});
+for (const experience of ['chat', 'work']) $('next-session-' + experience).addEventListener('click', () => action('createPreparedSession', experience));
+$('cancel-prepared-choice').addEventListener('click', () => action('cancelPreparedChoice'));
 $('add-workspace').addEventListener('click', () => action('chooseWorkspace'));
 $('reload-chat').addEventListener('click', () => action('reload'));
 $('retry-context').addEventListener('click', () => action('retry'));

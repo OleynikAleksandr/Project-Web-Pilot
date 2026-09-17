@@ -845,3 +845,6 @@ T007: ContextCache разделяет pending/entries/warm по сессии и 
 
 
 T008: IPC choose/create/open prepared continuation переиспользует выбор Chat/Work. Metadata bind допустим при незавершённом текущем плане; task:start по-прежнему допускает одного писателя.
+
+
+T009: sidebar отображает session-scoped view, локальное раскрытие linked plan не вызывает IPC; выбор режима переиспользует next-session-choice.

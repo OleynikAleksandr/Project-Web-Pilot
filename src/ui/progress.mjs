@@ -2,7 +2,7 @@ const actionLabels = {
   runDoctor: 'Проверяем и восстанавливаем проект', continueDoctor: 'Возвращаемся к работе', reviewDoctorProject: 'Проверяем папку',
   newSession: 'Создаём сессию', selectSession: 'Открываем сессию', selectWorkspace: 'Открываем проект',
   reload: 'Обновляем ChatGPT', retry: 'Обновляем контекст', returnToChat: 'Возвращаемся к чату',
-  acceptPlan: 'Отправляем подтверждение плана', previewNew: 'Проверяем новый проект',
+  choosePreparedPlan: 'Открываем выбор сессии', createPreparedSession: 'Создаём сессию с планом', openPreparedSession: 'Открываем продолжение', cancelPreparedChoice: 'Закрываем выбор', previewNew: 'Проверяем новый проект',
   applySetup: 'Подготавливаем проект', refreshSetup: 'Проверяем папку',
   archiveProject: 'Архивируем проект', archiveSession: 'Архивируем сессию',
   openArchive: 'Открываем архив', restore: 'Восстанавливаем проекты', restoreSessions: 'Восстанавливаем сессии',
