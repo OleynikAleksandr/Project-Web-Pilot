@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 602,
+  "plan_revision": 605,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-owned-plans-028",
@@ -471,8 +471,8 @@
       "file_limit_exception": "Единый контракт явной адресации и его проверки; синхронное изменение установленной и поставляемой копий ядра."
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-owned-plans-028",
         "task_id": "T008",
@@ -486,7 +486,9 @@
         "src/preload.cjs",
         "src/workspace-session.mjs",
         "src/session-plans.mjs",
-        "tests/workspace-session.test.mjs"
+        "tests/workspace-session.test.mjs",
+        ".harness/kit/lib/actions.mjs",
+        "resources/workflow-kit/lib/actions.mjs"
       ],
       "documentation_paths": [
         "docs/modules/session-owned-plans.md",
@@ -817,7 +819,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-owned-plans-028
 Current Task: нет
-Revision: 602
+Revision: 605
 
 ## Цель
 
@@ -862,10 +864,10 @@ Revision: 602
   - Git Commit: [DONE] fix: isolate context delivery and cache by session plan
   - Reference: session-owned-plans-028 / T007 / implementation
   - Файлы: src/context-session.mjs, src/context-cache.mjs, src/context-inputs.mjs, src/mcp-runtime.mjs, tests/context-cache.test.mjs, tests/context-session.test.mjs, tests/mcp-runtime.test.mjs, docs/modules/session-owned-plans.md, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T008: Подключить два сценария ручного создания сессии — Ожидает
-  - Git Commit: [PENDING] feat: create sessions from prepared plans or empty scope
+- [DONE] T008: Подключить два сценария ручного создания сессии — Завершено
+  - Git Commit: [DONE] feat: create sessions from prepared plans or empty scope
   - Reference: session-owned-plans-028 / T008 / implementation
-  - Файлы: src/main.mjs, src/preload.cjs, src/workspace-session.mjs, src/session-plans.mjs, tests/workspace-session.test.mjs, docs/modules/session-owned-plans.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+  - Файлы: src/main.mjs, src/preload.cjs, src/workspace-session.mjs, src/session-plans.mjs, tests/workspace-session.test.mjs, .harness/kit/lib/actions.mjs, resources/workflow-kit/lib/actions.mjs, docs/modules/session-owned-plans.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T009: Обновить сайдбар по принятому макету — Ожидает
   - Git Commit: [PENDING] feat: show session plans and prepared continuations in sidebar
   - Reference: session-owned-plans-028 / T009 / implementation

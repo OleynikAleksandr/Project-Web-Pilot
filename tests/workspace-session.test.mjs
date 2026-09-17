@@ -443,66 +443,6 @@ async function changeScopePlan(folder, patch) {
   await fs.writeFile(file, '<!-- workflow-state:begin -->\n```json\n' + JSON.stringify(plan) + '\n```\n<!-- workflow-state:end -->');
 }
 
-for (const experience of ['chat', 'work']) test('scope transition survives restart and opens exactly one ' + experience, async t => {
-  const { project, store } = await fixture(t);
-  const first = await store.select(await project('Transition ' + experience));
-  await store.bindChat(first.workspace, first.sessionId, 'https://chatgpt.com/c/original-session');
-  await store.observeScope(first.workspace, first.sessionId, await readWorkspace(first.workspace));
-  assert.equal(store.selected().scopeTransition.state, 'watching');
-  await changeScopePlan(first.workspace, { delivery_status: 'READY_FOR_ACCEPTANCE',
-    tasks: [{ id: 'T001', title: 'Готово', implementation_status: 'DONE', commit_status: 'DONE' }] });
-  await store.observeScope(first.workspace, first.sessionId, await readWorkspace(first.workspace));
-  assert.equal(store.selected().scopeTransition.state, 'watching', 'readiness alone never closes');
-  await assert.rejects(store.continueAfterScope(first.workspace, 'fixture-scope', experience), { code: 'SCOPE_CHANGED' });
-
-  const restarted = new WorkspaceSessions(store.file); await restarted.load();
-  await changeScopePlan(first.workspace, { scope_id: null, execution_scope_status: 'NONE', archived_scope_id: 'fixture-scope', tasks: [] });
-  await restarted.observeScope(first.workspace, first.sessionId, await readWorkspace(first.workspace));
-  assert.equal(restarted.selected().scopeTransition.state, 'choice');
-  const resumed = new WorkspaceSessions(store.file); await resumed.load();
-  assert.equal(resumed.selected().scopeTransition.state, 'choice');
-  const [next, duplicate] = await Promise.all([
-    resumed.continueAfterScope(first.workspace, 'fixture-scope', experience),
-    resumed.continueAfterScope(first.workspace, 'fixture-scope', experience),
-  ]);
-  assert.equal(next.sessionId, duplicate.sessionId);
-  assert.notEqual(next.sessionId, first.sessionId); assert.equal(next.experience, experience);
-  assert.equal(next.chatUrl, null); assert.equal(next.scopeStatus, 'NONE');
-  assert.equal(resumed.snapshot().projects[0].sessions.length, 2);
-  assert.equal(resumed.snapshot().projects[0].sessions[0].chatUrl, 'https://chatgpt.com/c/original-session');
-  const final = new WorkspaceSessions(store.file); await final.load();
-  await final.observeScope(first.workspace, next.sessionId, await readWorkspace(first.workspace));
-  assert.equal(final.selected().scopeTransition.state, 'opened');
-  assert.equal((await final.continueAfterScope(first.workspace, 'fixture-scope', experience)).sessionId, next.sessionId);
-  assert.equal(final.snapshot().projects[0].sessions.length, 2);
-});
-
-test('historical archives, other projects and changed plans cannot trigger a stale continuation', async t => {
-  const { project, store } = await fixture(t);
-  let folder = await project('Old archive');
-  await changeScopePlan(folder, { scope_id: null, execution_scope_status: 'NONE', archived_scope_id: 'old', tasks: [] });
-  const old = await store.select(folder); folder = old.workspace;
-  await store.observeScope(folder, old.sessionId, await readWorkspace(folder));
-  assert.equal(store.selected().scopeTransition, undefined);
-
-  await changeScopePlan(folder, { scope_id: 'next', execution_scope_status: 'ACTIVE' });
-  await store.observeScope(folder, old.sessionId, await readWorkspace(folder));
-  await changeScopePlan(folder, { scope_id: null, execution_scope_status: 'NONE', archived_scope_id: 'next' });
-  await store.observeScope(folder, old.sessionId, await readWorkspace(folder));
-  const other = await store.select(await project('Other project'));
-  assert.equal(await store.observeScope(folder, old.sessionId, await readWorkspace(folder)), false);
-  await assert.rejects(store.continueAfterScope(folder, 'next', 'chat'), { code: 'SESSION_CHANGED' });
-  assert.equal(store.selected().sessionId, other.sessionId);
-  await store.select(folder);
-  await changeScopePlan(folder, { project_id: randomUUID() });
-  await assert.rejects(store.continueAfterScope(folder, 'next', 'work'), { code: 'SCOPE_CHANGED' });
-  await changeScopePlan(folder, { project_id: old.projectId, scope_id: 'newer', execution_scope_status: 'ACTIVE' });
-  await assert.rejects(store.continueAfterScope(folder, 'next', 'chat'), { code: 'SCOPE_CHANGED' });
-  await store.observeScope(folder, old.sessionId, await readWorkspace(folder));
-  assert.deepEqual(store.selected().scopeTransition, { scopeId: 'newer', state: 'watching', sessionId: null });
-  assert.equal(store.snapshot().projects.find(p => p.workspace === folder).sessions.length, 1);
-});
-
 test('project selection chooses newest created active session without reordering stored history or reload selection', async t => {
   const { store, project } = await fixture(t);
   let time = 100;
@@ -555,4 +495,28 @@ test('v5 migration backs up evidence and never guesses when several chats receiv
   assert.equal(sessions[1].planBinding, 'unresolved');
   assert.deepEqual(sessions.map(s => [s.sessionId,s.experience,s.chatUrl,s.title,s.archivedAt]), old.projects[0].sessions.map(s => [s.sessionId,s.experience,s.chatUrl,s.title,s.archivedAt]));
   assert.equal('planView' in JSON.parse(await fs.readFile(store.file,'utf8')).projects[0],false);
+});
+
+for (const experience of ['chat','work']) test('prepared '+experience+' session survives a failed store save and repeated creation', async t => {
+  const { project, store: initial }=await fixture(t);let folder=await project('Prepared '+experience);
+  const owners=new Map();let binding=null,sourceId;
+  const inspect=async(w,sid)=>{const base=await readWorkspace(w);const planId=owners.get(sid)??null;return {...base,inspectedSessionId:sid,planId,scopeId:planId,
+    scopeStatus:planId?'ACTIVE':'NONE',objective:planId??'NONE',originSessionId:planId==='future'?sourceId:null,
+    planView:{state:planId?'working':'not-created',completed:0,total:0,tasks:[]}};};
+  const planService={bind:async(_w,input)=>{binding??={session_id:'stable-continuation',experience:input.experience,plan_id:input.planId};owners.set(binding.session_id,'future');return binding;}};
+  const store=new WorkspaceSessions(initial.file,{inspect,planService});const source=await store.select(folder);folder=source.workspace;sourceId=source.sessionId;
+  owners.set(sourceId,'original');await store.selectSession(folder,sourceId);
+  const save=store.save.bind(store);let fail=true;
+  store.save=async data=>{if(fail&&data.projects[0].sessions.some(s=>s.sessionId==='stable-continuation')){fail=false;throw new Error('simulated storage interruption');}return save(data);};
+  await assert.rejects(store.fromPrepared(folder,sourceId,'future',1,experience),/storage interruption/);
+  assert.equal(store.snapshot().projects[0].sessions.length,1);
+  const [created,repeated]=await Promise.all([store.fromPrepared(folder,sourceId,'future',1,experience),store.fromPrepared(folder,sourceId,'future',1,experience)]);
+  assert.equal(created.sessionId,repeated.sessionId);assert.equal(created.experience,experience);assert.equal(created.planId,'future');
+  assert.equal(store.snapshot().projects[0].sessions.length,2);assert.equal(created.originSessionId,sourceId);
+  const restarted=new WorkspaceSessions(store.file,{inspect,planService});await restarted.load();
+  assert.equal((await restarted.selectSession(folder,sourceId)).planId,'original');
+  assert.equal((await restarted.fromPrepared(folder,sourceId,'future',1,experience)).sessionId,created.sessionId);
+  const empty=await restarted.newSession(folder,experience);assert.equal(empty.planId,null);assert.equal(empty.scopeStatus,'NONE');
+  assert.equal(restarted.snapshot().projects[0].scopeTransition,undefined);
+  const saved=JSON.parse(await fs.readFile(store.file,'utf8'));assert.equal('planView' in saved.projects[0],false);
 });

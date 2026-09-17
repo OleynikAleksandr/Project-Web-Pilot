@@ -122,3 +122,6 @@ Scope 028 / T006: CLI recover --session <id> --format packet — канонич�
 
 
 T007: session identity сохраняется в attempt metadata. Старые отправленные пакеты без неё показываются устаревшими, без автоматической повторной отправки. Ручное обновление получает canonical CLI packet.
+
+
+T008: контекст готовится после canonical bind и сохранения выбранной сессии. Snapshot UI принимает projectInfo только при совпадающем inspectedSessionId.

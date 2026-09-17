@@ -243,7 +243,7 @@ export function bindPlan(root, targetSession, experience, expectedRevision) {
   validIdentity(targetSession, 'sessionId');
   check(['chat', 'work'].includes(experience), 'SESSION_EXPERIENCE', 'Выберите Chat или Work.');
   return locked(root, () => {
-    noTransaction(root); assertSingleWriter(root, PLAN);
+    noTransaction(root);
     const { plan } = validate(root);
     check(plan.prepared_in_session_id === selected?.sessionId, 'PLAN_OWNER_MISMATCH', 'План подготовлен в другой сессии.');
     if (plan.owner_session_id) return { ok: true, session_id: plan.owner_session_id, experience: plan.session_experience, plan_id: plan.scope_id, already_bound: true };

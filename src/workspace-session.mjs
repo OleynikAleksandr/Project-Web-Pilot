@@ -256,8 +256,8 @@ function currentView(project) {
 }
 
 export class WorkspaceSessions {
-  constructor(file, { inspect = readWorkspace, uuid = randomUUID, now = Date.now } = {}) {
-    Object.assign(this, { file, uuid, now });
+  constructor(file, { inspect = readWorkspace, uuid = randomUUID, now = Date.now, planService = null } = {}) {
+    Object.assign(this, { file, uuid, now, planService });
     this.inspect = (workspace, sessionId = this.project(workspace)?.sessionId) => inspect(workspace, sessionId);
     this.saveTail = Promise.resolve();
     this.mutationTail = Promise.resolve();
@@ -409,49 +409,48 @@ export class WorkspaceSessions {
 
   newChat(workspace) { return this.newSession(workspace, 'chat'); }
 
-  observeScope(workspace, sessionId, info) {
-    return this.mutate(data => {
-      if (data.selectedWorkspace !== workspace) return false;
-      const { project } = this.activeRecord(workspace, sessionId, data);
-      if (info?.workspace !== workspace || info.projectId !== project.projectId) return false;
-      const previous = project.scopeTransition;
-      if (['ACTIVE', 'BLOCKED'].includes(info.scopeStatus) && typeof info.scopeId === 'string' && info.scopeId) {
-        if (previous?.scopeId === info.scopeId) return false;
-        project.scopeTransition = { scopeId: info.scopeId, state: 'watching', sessionId: null };
-        return true;
+  async reconcilePlanBindings(workspace) {
+    if (!this.planService) return;
+    const project = this.data.projects.find(p => p.workspace === workspace);
+    if (!project || !project.sessions.some(s => s.legacyPlanId && s.planBinding === 'evidence')) return;
+    return this.mutate(async data => {
+      const project = data.projects.find(p => p.workspace === workspace);
+      for (const session of project.sessions.filter(s => s.legacyPlanId && s.planBinding === 'evidence')) {
+        try {
+          const planId = await this.planService.adoptEvidence(workspace, session, project.projectId);
+          if (planId) { session.planId = planId; session.planBinding = 'bound'; session.lastNamedScopeId ??= planId; }
+          else session.planBinding = 'unresolved';
+        } catch (error) {
+          if (['TASK_ACTIVE','PLAN_WRITER_BUSY','WORKFLOW_LOCKED','TRANSACTION_PENDING'].includes(error.code)) continue;
+          session.planBinding = 'unresolved'; session.planBindingError = error.code ?? 'PLAN_ADOPTION_FAILED';
+        }
       }
-      if (info.scopeStatus === 'NONE' && info.scopeId === null && info.archivedScopeId
-          && previous?.scopeId === info.archivedScopeId && previous.state === 'watching') {
-        project.scopeTransition = { ...previous, state: 'choice' };
-        return true;
-      }
-      return false;
     });
   }
 
-  continueAfterScope(workspace, scopeId, experience) {
+  fromPrepared(workspace, sourceSessionId, planId, revision, experience) {
     return this.mutate(async data => {
-      experience = sessionExperience(experience);
+      sessionExperience(experience);
       const project = data.projects.find(p => p.workspace === workspace);
-      if (!project || project.archivedAt || data.selectedWorkspace !== workspace)
-        throw new WorkspaceError('SESSION_CHANGED', 'Сначала выберите активный проект.');
-      const info = await this.inspect(workspace, null);
-      if (info.projectId !== project.projectId || info.scopeStatus !== 'NONE' || info.scopeId !== null
-          || info.archivedScopeId !== scopeId || project.scopeTransition?.scopeId !== scopeId)
-        throw new WorkspaceError('SCOPE_CHANGED', 'Состояние плана изменилось. Проверьте текущий план.');
-      const transition = project.scopeTransition;
-      if (transition.state === 'opened') {
-        const existing = project.sessions.find(s => s.sessionId === transition.sessionId && !s.archivedAt);
-        if (!existing) throw new WorkspaceError('SESSION_NOT_FOUND', 'Созданная сессия уже убрана из активных.');
-        project.selectedSessionId = existing.sessionId;
-        return currentView(project);
+      if (!project || project.archivedAt || data.selectedWorkspace !== workspace) throw new WorkspaceError('SESSION_CHANGED', 'Выбран другой проект.');
+      const source = project.sessions.find(s => s.sessionId === sourceSessionId);
+      if (!source || source.archivedAt) throw new WorkspaceError('SESSION_CHANGED', 'Исходная сессия недоступна.');
+      if (!this.planService) throw new WorkspaceError('PLAN_SERVICE_REQUIRED', 'Нужен актуальный Workflow Kit.');
+      const requested = this.createSession(experience);
+      const bound = await this.planService.bind(workspace, { sourceSessionId, planId, sessionId: requested.sessionId, experience, revision });
+      let session = project.sessions.find(s => s.sessionId === bound.session_id);
+      if (session?.archivedAt) throw new WorkspaceError('SESSION_ARCHIVED', 'Продолжение находится в архиве. Верните его через окно архива.');
+      if (!session) {
+        const info = await this.inspect(workspace, bound.session_id);
+        if (info.projectId !== project.projectId || info.planId !== planId) throw new WorkspaceError('PLAN_BINDING_CHANGED', 'Принадлежность подготовленного плана изменилась.');
+        session = { ...requested, sessionId: bound.session_id, experience: bound.experience,
+          planId, originSessionId: sourceSessionId, planBinding: 'bound', lastNamedScopeId: planId,
+          title: info.objective, titleSource: 'scope' };
+        project.sessions.push(session);
       }
-      if (transition.state !== 'choice')
-        throw new WorkspaceError('SCOPE_NOT_CLOSED', 'Дождитесь архивирования принятого плана.');
-      const session = this.createSession(experience);
-      Object.assign(project, info, { selectedSessionId: session.sessionId, expanded: true,
-        scopeTransition: { scopeId, state: 'opened', sessionId: session.sessionId } });
-      project.sessions.push(session);
+      project.selectedSessionId = session.sessionId; project.expanded = true;
+      session.lastOpenedAt = this.now();
+      Object.assign(project, await this.inspect(workspace, session.sessionId));
       return currentView(project);
     });
   }

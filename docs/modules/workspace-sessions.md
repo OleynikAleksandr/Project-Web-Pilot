@@ -466,3 +466,6 @@ assistantText дополнительно охватывает markdown/prose о�
 
 
 Scope 028 / T005: версия store 6; URL, Chat/Work, имена, порядок и архивы сохранены. Auto-title принадлежит session, ранее глобальный lastNamedScopeId больше не выбирает владельца. Данные планов читаются по явному sessionId.
+
+
+Scope 028 / T008: fromPrepared восстанавливает прежнюю связь при повторе, сохраняет источник и тип Chat/Work. newSession создаёт NONE. Наблюдение завершения scope больше не создаёт choice.
