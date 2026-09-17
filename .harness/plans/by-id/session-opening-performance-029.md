@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 4,
+  "plan_revision": 7,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-opening-performance-029",
@@ -56,7 +56,9 @@
       "tests/session-opening-performance.test.mjs",
       "tests/session-plans.test.mjs",
       "package.json",
-      "package-lock.json"
+      "package-lock.json",
+      ".harness/kit/lib/inspection-inputs.mjs",
+      "resources/workflow-kit/lib/inspection-inputs.mjs"
     ],
     "documentation_paths": [
       "docs/modules/session-opening-performance.md",
@@ -168,6 +170,14 @@
         "path": "docs/VERIFICATION.md",
         "required": false,
         "revision": "WORKTREE"
+      },
+      {
+        "path": "docs/modules/session-opening-performance.md",
+        "heading_path": [
+          "Быстрое открытие сессий и планов"
+        ],
+        "required": true,
+        "revision": "WORKTREE"
       }
     ],
     "include_last_completed_task": false,
@@ -175,8 +185,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-opening-performance-029",
         "task_id": "T001",
@@ -221,7 +231,9 @@
       "functional_paths": [
         ".harness/kit/lib/git.mjs",
         "resources/workflow-kit/lib/git.mjs",
-        "tests/workflow-kit-recovery.test.mjs"
+        "tests/workflow-kit-recovery.test.mjs",
+        ".harness/kit/lib/validate.mjs",
+        "resources/workflow-kit/lib/validate.mjs"
       ],
       "documentation_paths": [
         "docs/modules/session-opening-performance.md",
@@ -239,7 +251,8 @@
         "Сократить повторные чтения объектов/путей и проверки ancestry только там, где это подтверждает профиль; сохранять baseline, нелинейную историю, замену refs/объектов и корректность legacy plan paths. Не заменять Git самодельным парсером истории.",
         "Сохраняются отказы при неоднозначных ссылках, неверном составе коммита и порядке зависимостей; обе копии ядра совпадают. Профиль показывает реальное уменьшение процессов и времени."
       ],
-      "expected_commit_message": "perf: batch workflow git history reads"
+      "expected_commit_message": "perf: batch workflow git history reads",
+      "file_limit_exception": "Одна проверяемая часть существующего фасада: синхронные installed/bundled копии, интеграция вызова и профильные regression. Новые файлы служат только общей проверке актуальности; отдельного менеджера/сервиса нет."
     },
     {
       "implementation_status": "TODO",
@@ -263,7 +276,9 @@
         "resources/workflow-kit/lib/installer.mjs",
         "resources/workspace-setup-worker.mjs",
         "tests/workspace-setup.test.mjs",
-        "tests/workflow-kit-recovery.test.mjs"
+        "tests/workflow-kit-recovery.test.mjs",
+        ".harness/kit/lib/inspection-inputs.mjs",
+        "resources/workflow-kit/lib/inspection-inputs.mjs"
       ],
       "documentation_paths": [
         "docs/modules/session-opening-performance.md",
@@ -284,7 +299,7 @@
         "Профиль и regression подтверждают неизменность смысловых ошибок, COMPLETE и commit references при значительном уменьшении работы."
       ],
       "expected_commit_message": "perf: reuse workflow validation within workspace inspection",
-      "file_limit_exception": "Одна проверяемая часть изменения фасада; установленные и поставляемые файлы ядра меняются синхронно вместе с профильными проверками. Пути уточнить через plan:apply до правок."
+      "file_limit_exception": "Одна проверяемая часть существующего фасада: синхронные installed/bundled копии, интеграция вызова и профильные regression. Новые файлы служат только общей проверке актуальности; отдельного менеджера/сервиса нет."
     },
     {
       "implementation_status": "TODO",
@@ -300,13 +315,15 @@
       "functional_paths": [
         "src/workspace-readiness.mjs",
         "src/workspace-setup.mjs",
-        "tests/workspace-readiness.test.mjs"
+        "tests/workspace-readiness.test.mjs",
+        "resources/workspace-setup-worker.mjs"
       ],
       "documentation_paths": [
         "docs/modules/session-opening-performance.md",
         "docs/WORKSPACE_SETUP.md",
         "docs/modules/workspace-sessions.md",
-        "docs/VERIFICATION.md"
+        "docs/VERIFICATION.md",
+        "docs/architecture/ARCHITECTURE.md"
       ],
       "verification_ids": [
         "suite"
@@ -320,7 +337,8 @@
         "Создание, bind, archive, удаление плана, upgrade/Doctor, изменения файлов и перезапуск сбрасывают соответствующее состояние; ошибки допускают повтор. Проверка завершившегося старого состояния не заполняет кэш для нового.",
         "Кэш readiness не подменяет адресованный кэш recovery. Объём памяти и фоновых процессов ограничен, просроченные работы не накапливаются. Первое подключение/установка/repair продолжают полный строгий путь."
       ],
-      "expected_commit_message": "perf: reuse unchanged workspace readiness"
+      "expected_commit_message": "perf: reuse unchanged workspace readiness",
+      "file_limit_exception": "Одна проверяемая часть существующего фасада: синхронные installed/bundled копии, интеграция вызова и профильные regression. Новые файлы служат только общей проверке актуальности; отдельного менеджера/сервиса нет."
     },
     {
       "implementation_status": "TODO",
@@ -338,13 +356,16 @@
         "src/workspace-session.mjs",
         "src/ui/index.html",
         "tests/workspace-session.test.mjs",
-        "tests/electron-smoke.mjs"
+        "tests/electron-smoke.mjs",
+        "src/session-plans.mjs",
+        "tests/session-plans.test.mjs"
       ],
       "documentation_paths": [
         "docs/modules/session-opening-performance.md",
         "docs/modules/workspace-sessions.md",
         "docs/WORKSPACE_SETUP.md",
-        "docs/VERIFICATION.md"
+        "docs/VERIFICATION.md",
+        "docs/architecture/ARCHITECTURE.md"
       ],
       "verification_ids": [
         "workspace",
@@ -360,7 +381,7 @@
         "Сохраняются Chat/Work, NONE, подготовленные планы, отмена выбора, порядок дерева, три строки/прокрутка, темы и тонкие линии релиза 0.6.28; профиль/реальные чаты не сбрасываются."
       ],
       "expected_commit_message": "perf: show selected sessions before background verification",
-      "file_limit_exception": "Одна проверяемая часть изменения фасада; установленные и поставляемые файлы ядра меняются синхронно вместе с профильными проверками. Пути уточнить через plan:apply до правок."
+      "file_limit_exception": "Одна проверяемая часть существующего фасада: синхронные installed/bundled копии, интеграция вызова и профильные regression. Новые файлы служат только общей проверке актуальности; отдельного менеджера/сервиса нет."
     },
     {
       "implementation_status": "TODO",
@@ -402,7 +423,7 @@
         "Устранить подтверждённые повторные вычисления ключа warm/load, если они ещё заметны; не создавать второй сборщик контекста в оболочке, не менять внешний Codex Local runtime."
       ],
       "expected_commit_message": "fix: gate context delivery on current session readiness",
-      "file_limit_exception": "Одна проверяемая часть изменения фасада; установленные и поставляемые файлы ядра меняются синхронно вместе с профильными проверками. Пути уточнить через plan:apply до правок."
+      "file_limit_exception": "Одна проверяемая часть существующего фасада: синхронные installed/bundled копии, интеграция вызова и профильные regression. Новые файлы служат только общей проверке актуальности; отдельного менеджера/сервиса нет."
     },
     {
       "implementation_status": "TODO",
@@ -446,7 +467,7 @@
         "Проверить macOS launcher и Windows portable Node/Git; никаких правок WF001, внешнего MCP/tunnel, профилей или пользовательских VM."
       ],
       "expected_commit_message": "fix: preserve kit upgrade and diagnostics after performance changes",
-      "file_limit_exception": "Одна проверяемая часть изменения фасада; установленные и поставляемые файлы ядра меняются синхронно вместе с профильными проверками. Пути уточнить через plan:apply до правок."
+      "file_limit_exception": "Одна проверяемая часть существующего фасада: синхронные installed/bundled копии, интеграция вызова и профильные regression. Новые файлы служат только общей проверке актуальности; отдельного менеджера/сервиса нет."
     },
     {
       "implementation_status": "TODO",
@@ -485,7 +506,7 @@
         "Полные Node suite и Electron smoke проходят; проверки повреждений используют только изолированные fixtures. При недостижении целей продолжить оптимизацию подтверждённого узкого места в этом плане, не выдавать цель за результат."
       ],
       "expected_commit_message": "test: verify fast session opening and stale result isolation",
-      "file_limit_exception": "Одна проверяемая часть изменения фасада; установленные и поставляемые файлы ядра меняются синхронно вместе с профильными проверками. Пути уточнить через plan:apply до правок."
+      "file_limit_exception": "Одна проверяемая часть существующего фасада: синхронные installed/bundled копии, интеграция вызова и профильные regression. Новые файлы служат только общей проверке актуальности; отдельного менеджера/сервиса нет."
     },
     {
       "implementation_status": "TODO",
@@ -596,6 +617,11 @@
       "id": "bea9c638-731f-4ebb-8a9a-1f81fa2cfb14",
       "text": "17.09.2026 пользователь одобрил результаты диагностики задержки проверки проекта и прямо поручил подготовить отдельный план следующей сессии с микрозадачами для существенного сокращения времени отображения выбранной сессии и её плана. Сейчас разрешена только подготовка через plan:prepare; реализация и сборка — в следующей сессии. Собственный завершённый план исходной сессии сохраняется, не архивируется и не заменяется. Создание следующей Chat/Work выполняет пользователь вручную через карточку подготовленного плана.",
       "recorded_at": "2026-09-17T10:08:58.792Z"
+    },
+    {
+      "id": "scope029-first-five",
+      "text": "Пользователь новой сессии поручил выполнить текущий план до T005 включительно, отчитать результат и ждать следующего поручения. T006–T009 и DOCS сейчас не начинать.",
+      "recorded_at": "2026-09-17T12:00:00.000Z"
     }
   ],
   "owner_session_id": "web-pilot-3d7ee647-735e-489d-a331-84905a11e25a",
@@ -611,7 +637,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-opening-performance-029
 Current Task: нет
-Revision: 4
+Revision: 7
 
 ## Цель
 
@@ -628,26 +654,26 @@ Revision: 4
 
 ## Микрозадачи
 
-- [TODO] T001: Уточнить контракт ускорения и зафиксировать исходные замеры — Ожидает
-  - Git Commit: [PENDING] docs: specify fast session opening and performance targets
+- [DONE] T001: Уточнить контракт ускорения и зафиксировать исходные замеры — Завершено
+  - Git Commit: [DONE] docs: specify fast session opening and performance targets
   - Reference: session-opening-performance-029 / T001 / implementation
   - Файлы: docs/modules/session-opening-performance.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/modules/workflow-kit-recovery.md, docs/VERIFICATION.md
 - [TODO] T002: Сократить число процессов Git при проверке истории — Ожидает
   - Git Commit: [PENDING] perf: batch workflow git history reads
   - Reference: session-opening-performance-029 / T002 / implementation
-  - Файлы: .harness/kit/lib/git.mjs, resources/workflow-kit/lib/git.mjs, tests/workflow-kit-recovery.test.mjs, docs/modules/session-opening-performance.md, docs/modules/workflow-kit-recovery.md, docs/VERIFICATION.md
+  - Файлы: .harness/kit/lib/git.mjs, resources/workflow-kit/lib/git.mjs, tests/workflow-kit-recovery.test.mjs, .harness/kit/lib/validate.mjs, resources/workflow-kit/lib/validate.mjs, docs/modules/session-opening-performance.md, docs/modules/workflow-kit-recovery.md, docs/VERIFICATION.md
 - [TODO] T003: Устранить повторную полную валидацию в одной проверке — Ожидает
   - Git Commit: [PENDING] perf: reuse workflow validation within workspace inspection
   - Reference: session-opening-performance-029 / T003 / implementation
-  - Файлы: .harness/kit/lib/actions.mjs, resources/workflow-kit/lib/actions.mjs, .harness/kit/lib/validate.mjs, resources/workflow-kit/lib/validate.mjs, .harness/kit/lib/recovery.mjs, resources/workflow-kit/lib/recovery.mjs, .harness/kit/lib/installer.mjs, resources/workflow-kit/lib/installer.mjs, resources/workspace-setup-worker.mjs, tests/workspace-setup.test.mjs, tests/workflow-kit-recovery.test.mjs, docs/modules/session-opening-performance.md, docs/WORKSPACE_SETUP.md, docs/modules/workflow-kit-recovery.md, docs/VERIFICATION.md
+  - Файлы: .harness/kit/lib/actions.mjs, resources/workflow-kit/lib/actions.mjs, .harness/kit/lib/validate.mjs, resources/workflow-kit/lib/validate.mjs, .harness/kit/lib/recovery.mjs, resources/workflow-kit/lib/recovery.mjs, .harness/kit/lib/installer.mjs, resources/workflow-kit/lib/installer.mjs, resources/workspace-setup-worker.mjs, tests/workspace-setup.test.mjs, tests/workflow-kit-recovery.test.mjs, .harness/kit/lib/inspection-inputs.mjs, resources/workflow-kit/lib/inspection-inputs.mjs, docs/modules/session-opening-performance.md, docs/WORKSPACE_SETUP.md, docs/modules/workflow-kit-recovery.md, docs/VERIFICATION.md
 - [TODO] T004: Переиспользовать готовность неизменившегося проекта — Ожидает
   - Git Commit: [PENDING] perf: reuse unchanged workspace readiness
   - Reference: session-opening-performance-029 / T004 / implementation
-  - Файлы: src/workspace-readiness.mjs, src/workspace-setup.mjs, tests/workspace-readiness.test.mjs, docs/modules/session-opening-performance.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/VERIFICATION.md
+  - Файлы: src/workspace-readiness.mjs, src/workspace-setup.mjs, tests/workspace-readiness.test.mjs, resources/workspace-setup-worker.mjs, docs/modules/session-opening-performance.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 - [TODO] T005: Ускорить показ плана и открытие выбранного чата — Ожидает
   - Git Commit: [PENDING] perf: show selected sessions before background verification
   - Reference: session-opening-performance-029 / T005 / implementation
-  - Файлы: src/main.mjs, src/workspace-session.mjs, src/ui/index.html, tests/workspace-session.test.mjs, tests/electron-smoke.mjs, docs/modules/session-opening-performance.md, docs/modules/workspace-sessions.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md
+  - Файлы: src/main.mjs, src/workspace-session.mjs, src/ui/index.html, tests/workspace-session.test.mjs, tests/electron-smoke.mjs, src/session-plans.mjs, tests/session-plans.test.mjs, docs/modules/session-opening-performance.md, docs/modules/workspace-sessions.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 - [TODO] T006: Согласовать фоновую готовность и доставку контекста — Ожидает
   - Git Commit: [PENDING] fix: gate context delivery on current session readiness
   - Reference: session-opening-performance-029 / T006 / implementation
@@ -682,5 +708,6 @@ Revision: 4
 - docs/modules/project-doctor.md
 - docs/RELEASE.md
 - docs/VERIFICATION.md
+- docs/modules/session-opening-performance.md → Быстрое открытие сессий и планов
 
 Служебные состояния меняются только командами workflow. Приёмка не архивирует scope.

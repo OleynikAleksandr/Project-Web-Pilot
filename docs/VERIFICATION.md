@@ -950,3 +950,23 @@ Evidence: .harness/runtime/releases/0.6.28/{mac-release.json,source-verification
 Проверен полный действующий DOCUMENTATION_INDEX: навигация, продукт/архитектура, инструкции и шаблоны, контракты сессий/recovery, setup/doctor/archive, выпуск и перенос Windows, provenance и CLEAN_INSTALL. Нормативные описания глобального плана и обязательной кнопки приёмки заменены; версионная история сохранена и обозначена как историческая. Runtime Lifecycle не менялся и оставлен без бессмысленных правок. Две копии ядра совпадают. Собственный план текущей сессии привязан по доказанному исходному recovery, история коммитов сохранена. Scope остаётся ACTIVE до решения пользователя.
 
 Итоговый gate T013: Node suite — 181 тест, 179 passed, 2 platform skips, 0 failures; Electron smoke — passed (59.6 s). Коммит выпуска 72a164f5b652e0b256db32ed8eac9a9412fb5e4a. Полная evidence и снимки двух тем скопированы в .harness/runtime/releases/0.6.28/. После выпуска менялась только документация и доказанная принадлежность плана. Проверено документов по индексу: 37.
+
+## Scope 029 / T001 — исходные измерения 17.09.2026
+
+Checkout и постоянный macOS app — 0.6.28; Kit 1.4.0, Node 22.17.0, Apple Git 2.50.1, macOS 26.6.2 arm64. Windows payload содержит MinGit 2.55.0.windows.5 (проверен vendor manifest ZIP); pretty trailers доступны в обеих версиях, native Windows пока не запускался.
+
+Контрольные копии d07ac2c получены через git clone --no-hardlinks в /private/tmp; 340 коммитов, два плана: session-owned-plans-028 revision 622 (14 задач) и workflow-project-continuity-021 revision 474 (13 задач). Изменений исходного рабочего дерева/профиля/облачных чатов нет. Временные clones получили копии четырёх исходных Git hooks.
+
+| Сценарий source driver | Полное preview, мс | До свежего плана / точки навигации, мс | Git processes |
+| --- | ---: | ---: | ---: |
+| Переключение внутри проекта в NONE | 16139.02 | 16153.62 | 1283 |
+| Переключение внутри проекта в собственный план | 15743.49 | 15756.02 | 1283 |
+| Переключение в другую папку | 15998.36 | 16013.29 | 1283 |
+
+Current checkout уже содержит третий план 029: preview 17113.72 мс, 1417 процессов Git, ready=true/без ошибок. Эти данные не смешиваются с baseline двух планов. Trace2 считает также вложенные recover; исходные 1019 процессов предыдущей диагностики их не включали.
+
+Отдельные readWorkspace: 4.33 / 3.50 / 3.52 мс. contextInputKey: 34.71 / 33.16 / 31.56 мс. Fresh Node-driver startup до точки навигации: 15827.35 / 15787.97 мс; это не запуск Electron или packaged app.
+
+Локальные perf_hooks замеры исключают MCP round trip и сетевую загрузку ChatGPT. Driver воспроизводит preview → reconcilePlanBindings → select/selectSession, останавливаясь непосредственно перед loadURL. Сетевых запросов и доставки контекста нет. Raw samples/trace2/драйвер: .harness/runtime/performance-029/T001-baseline/. Полные 30 переключений/5 стартов и packaged проверка остаются T008/T009.
+
+Дополнительно два изолированных source Electron startup (44.3.0 / Chromium 152.0.7977.78, Node Electron 24.20.0, worker 22.17.0): shell-ready → публикация своего плана / точка до loadURL 15165.6 / 15165.8 мс; полный spawn → эта точка 15766 / 15392 мс. Временная копия main использует отдельный userData, скрытое окно, отключённые runtime bootstrap/tick и выход перед loadURL; ни одного сетевого запроса. Это измеряет Electron shell + локальный путь выбора, но не неизменённый packaged startup и не сетевую загрузку. Постоянный app и пользовательский профиль сохранены.
