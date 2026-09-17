@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 2,
+  "plan_revision": 3,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-onboarding-031",
@@ -562,6 +562,32 @@
       "why": "Достичь согласованного результата, а не только технического открытия окна."
     },
     {
+      "id": "D001",
+      "title": "Зафиксировать пробу Computer Use и возврат к скриншотам",
+      "why": "Сохранить фактические задержки короткого опыта и действующий способ управления стендом без продолжения диагностики.",
+      "dependencies": [],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/CLEAN_INSTALL.md",
+        "docs/VERIFICATION.md",
+        "docs/modules/first-run-onboarding.md"
+      ],
+      "acceptance_criteria": [
+        "Записаны полученные внешние задержки: обычные вызовы около 1.8–2.3 с, первый снимок 3.311 с, клик запуска VM 34.038 с, снимок VM 56.566 с; причины задержек не объявлены установленными.",
+        "Две ошибки INVALID_ARGUMENT команды activate_window и прерванная пользователем последняя операция отмечены отдельно от успешных измерений.",
+        "Пользователь отменил продолжение Computer Use; сохранён режим его скриншотов и подсказок агента. Приложение в госте в ходе опыта не запускалось агентом."
+      ],
+      "verification_ids": [],
+      "expected_commit_message": "docs: record Computer Use trial and manual test mode",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "first-run-onboarding-031",
+        "task_id": "D001",
+        "role": "implementation"
+      }
+    },
+    {
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
@@ -582,7 +608,8 @@
         "T010",
         "T011",
         "T012",
-        "T013"
+        "T013",
+        "D001"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -637,6 +664,11 @@
       "id": "6127a658-c9c4-4ac2-b8c3-c7aff17c7444",
       "text": "17.09.2026 пользователь подтвердил создание подготовленной Base и тестовых клонов и прямо поручил создать план этой сессии: запускать приложение на чистой системе, выявлять затруднения, устранять, пересобирать и повторять до полностью устраивающего результата. Приложение должно само провести пользователя от инсталляции до начала работы с понятными действиями на каждом шаге. Сначала macOS, затем Windows по восстановленному согласованному порядку. Текущее поручение — создание плана; дальнейшее выполнение начинается с T001.",
       "recorded_at": "2026-09-17T14:23:39.281Z"
+    },
+    {
+      "id": "computer-use-trial-stopped",
+      "text": "17.09.2026 пользователь временно разрешил Computer Use только для запуска Test macOS 01, просмотра папки обмена и замера задержек. После задержек 34 и 57 секунд он остановил опыт и поручил вернуться к своим скриншотам и подсказкам агента; диагностика отложена.",
+      "recorded_at": "2026-09-17T14:33:51.217455+00:00"
     }
   ],
   "owner_session_id": "web-pilot-ee60a2b3-bdde-4d7f-83cd-a4e25767fcbe",
@@ -651,7 +683,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-onboarding-031
 Current Task: нет
-Revision: 2
+Revision: 3
 
 ## Цель
 
@@ -722,6 +754,10 @@ Revision: 2
   - Git Commit: [PENDING] docs: confirm complete first-run experience
   - Reference: first-run-onboarding-031 / T013 / implementation
   - Файлы: docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md
+- [TODO] D001: Зафиксировать пробу Computer Use и возврат к скриншотам — Ожидает
+  - Git Commit: [PENDING] docs: record Computer Use trial and manual test mode
+  - Reference: first-run-onboarding-031 / D001 / implementation
+  - Файлы: docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: update first-run project documentation
   - Reference: first-run-onboarding-031 / DOCS / implementation
