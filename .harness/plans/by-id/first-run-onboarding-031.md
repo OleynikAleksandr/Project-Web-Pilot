@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 61,
+  "plan_revision": 63,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-onboarding-031",
@@ -1156,8 +1156,8 @@
         "Диагностика не блокирует навигацию и удаляет временный сырой журнал после сводки."
       ],
       "expected_commit_message": "feat: capture first-request network stages",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-onboarding-031",
         "task_id": "C007",
@@ -1621,7 +1621,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-onboarding-031
 Current Task: нет
-Revision: 61
+Revision: 63
 
 ## Цель
 
@@ -1740,8 +1740,8 @@ Revision: 61
   - Git Commit: [DONE] fix: guide uninterrupted startup observation
   - Reference: first-run-onboarding-031 / C006 / implementation
   - Файлы: src/ui/startup.mjs, tests/startup-ui.test.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
-- [TODO] C007: Записать сетевые этапы первого запроса штатным netLog — Ожидает
-  - Git Commit: [PENDING] feat: capture first-request network stages
+- [DONE] C007: Записать сетевые этапы первого запроса штатным netLog — Завершено
+  - Git Commit: [DONE] feat: capture first-request network stages
   - Reference: first-run-onboarding-031 / C007 / implementation
   - Файлы: src/startup-network-trace.mjs, tests/startup-network-trace.test.mjs, src/chromium-diagnostics.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
 - [TODO] V003: Проверить сохранение начала отчёта и диагностический первый запуск — Ожидает

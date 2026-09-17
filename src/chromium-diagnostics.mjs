@@ -1,6 +1,12 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
+import { StartupNetworkTrace } from './startup-network-trace.mjs';
+
+const STARTUP_EVENTS = new Set(['session-start', 'navigation-requested', 'navigation-waiting', 'load-url-failed',
+      'did-start-navigation', 'did-start-loading', 'dom-ready', 'main-document-response', 'did-finish-load',
+      'did-stop-loading', 'did-fail-load', 'did-fail-provisional-load', 'render-process-gone',
+      'unresponsive', 'responsive', 'attach-failed', 'attached', 'loading-failed']);
 
 const SAFE_SIGNAL_KEYS = new Set(['type', 'event', 'event_type', 'eventType', 'method', 'kind', 'op', 'action']);
 const TOKEN_USAGE_KEYS = new Set([
@@ -292,6 +298,7 @@ export class DiagnosticJsonl {
     this.sessionId = sessionId;
     this.size = 0;
     this.sequence = 0;
+    this.startupBeginning = []; this.startupRecent = []; this.startupCount = 0;
     this.tail = Promise.resolve();
   }
 
@@ -302,6 +309,12 @@ export class DiagnosticJsonl {
 
   record(source, event, fields = {}) {
     const entry = { ts: this.now().toISOString(), seq: ++this.sequence, diagnosticSession: this.sessionId, source, event, ...fields };
+    if (STARTUP_EVENTS.has(event)) {
+      this.startupCount++;
+      if (this.startupBeginning.length < 31) this.startupBeginning.push(entry);
+      this.startupRecent.push(entry);
+      if (this.startupRecent.length > 30) this.startupRecent.shift();
+    }
     const line = JSON.stringify(entry) + '\n';
     this.tail = this.tail.then(() => this.#append(line)).catch(() => {});
     return entry;
@@ -329,12 +342,13 @@ const IGNORED_CDP = new Set([
 ]);
 
 export class ChromiumDiagnostics {
-  constructor(contents, { file, maxBytes, sampleIntervalMs = 5000, allowFixture = false } = {}) {
+  constructor(contents, { file, maxBytes, sampleIntervalMs = 5000, allowFixture = false, startupNetwork = false } = {}) {
     if (!contents || !file) throw new TypeError('ChromiumDiagnostics requires contents and file');
     this.contents = contents;
     this.allowFixture = allowFixture;
     this.sampleIntervalMs = sampleIntervalMs;
     this.log = new DiagnosticJsonl(file, { maxBytes });
+    this.networkTrace = startupNetwork ? new StartupNetworkTrace(contents.session?.netLog, path.join(path.dirname(file), 'startup-network.json')) : null;
     this.handlers = [];
     this.sampleTimer = null;
     this.attachedByUs = false;
@@ -353,6 +367,7 @@ export class ChromiumDiagnostics {
     await this.log.init();
     this.log.record('diagnostics', 'session-start', metadata);
     this.#listenNative();
+    await this.networkTrace?.start();
     // CDP may wait for the first renderer; it must never delay that navigation.
     void this.#attachDebugger();
     this.sampleTimer = setInterval(() => { void this.sampleDom(); }, this.sampleIntervalMs);
@@ -371,12 +386,17 @@ export class ChromiumDiagnostics {
       url: safeUrl(event.url ?? url), isMainFrame: event.isMainFrame ?? isMainFrame,
       isSameDocument: event.isSameDocument ?? isInPlace,
     }));
-    this.#on('dom-ready', () => this.log.record('webContents', 'dom-ready', { url: safeUrl(this.contents.getURL()) }));
+    this.#on('dom-ready', () => {
+      const url = this.contents.getURL();
+      this.log.record('webContents', 'dom-ready', { url: safeUrl(url) });
+      if (url && url !== 'about:blank') void this.networkTrace?.finish('dom-ready');
+    });
     this.#on('did-frame-navigate', (_event, url, status, _statusText, isMainFrame) => {
       if (isMainFrame) this.log.record('webContents', 'main-document-response', { url: safeUrl(url), status });
     });
     for (const name of ['did-fail-load', 'did-fail-provisional-load']) this.#on(name, (_event, code, description, url, isMainFrame) => {
       this.log.record('webContents', name, { url: safeUrl(url), errorCode: code, errorName: networkError(description), isMainFrame });
+      if (isMainFrame && name === 'did-fail-load') void this.networkTrace?.finish('load-failed');
     });
     this.#on('did-start-loading', () => this.log.record('webContents', 'did-start-loading', { url: safeUrl(this.contents.getURL()) }));
     this.#on('did-stop-loading', () => this.log.record('webContents', 'did-stop-loading', { url: safeUrl(this.contents.getURL()) }));
@@ -591,23 +611,18 @@ export class ChromiumDiagnostics {
       try { debug.detach(); } catch {}
       this.attachedByUs = false;
     }
+    void this.networkTrace?.finish('closed');
     this.log.record('diagnostics', 'session-stop');
     await this.log.flush();
   }
 
   async startupReport() {
     await this.log.flush();
-    const names = new Set(['session-start', 'navigation-requested', 'navigation-waiting', 'load-url-failed',
-      'did-start-navigation', 'did-start-loading', 'dom-ready', 'main-document-response', 'did-finish-load',
-      'did-stop-loading', 'did-fail-load', 'did-fail-provisional-load', 'render-process-gone',
-      'unresponsive', 'responsive', 'attach-failed', 'attached', 'loading-failed']);
-    const entries = (await fs.readFile(this.log.file, 'utf8')).trim().split('\n').flatMap(line => {
-      try { const entry = JSON.parse(line); return entry.diagnosticSession === this.log.sessionId && names.has(entry.event) ? [entry] : []; }
-      catch { return []; }
-    });
-    const first = entries.find(entry => entry.event === 'session-start');
-    const recent = entries.filter(entry => entry !== first).slice(-60);
-    return JSON.stringify({ report: 'Web Pilot browser startup', events: [...(first ? [first] : []), ...recent] }, null, 2);
+    const events = [...new Map([...this.log.startupBeginning, ...this.log.startupRecent].map(e => [e.seq, e])).values()]
+      .sort((a, b) => a.seq - b.seq);
+    const network = await this.networkTrace?.snapshot();
+    return JSON.stringify({ report: 'Web Pilot browser startup', eventsOmitted: this.log.startupCount - events.length,
+      events, ...(network ? { network } : {}) }, null, 2);
   }
 
   async flush() { await this.log.flush(); }
