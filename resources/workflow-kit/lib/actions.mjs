@@ -6,7 +6,7 @@ import { emptyPlan, readPlan, parsePlan, renderPlan, writePlan, validatePlan, ne
 import { validate, validateConfig, journal, resolveReferences, taskChecks } from './validate.mjs';
 import { git, head, localPath, allChanges, identityReady, paths, gitPath } from './git.mjs';
 import { locked, commitCandidate, completedTransaction, finishTransaction } from './transaction.mjs';
-import { recover } from './recovery.mjs';
+import { recover, recoverState } from './recovery.mjs';
 import { ownedPlanPath, listPlans, assertSingleWriter, validIdentity, selectPlan } from './session-plans.mjs';
 
 const noTransaction = root => check(!journal(root), 'TRANSACTION_PENDING', 'Сначала завершите текущую транзакцию commit/repair.');
@@ -204,22 +204,24 @@ export function acknowledgeHook(root, marker, client = 'Codex') {
   atomic(file, json(records)); return { ok: true, message: 'Получение контекста агентом отмечено для события ' + receipt.reason + '.' };
 }
 export function status(root) {
-  const { plan, config, resolved, transaction } = validate(root);
+  const state = recoverState(root);
+  const { plan, config, resolved, transaction } = state.validation;
   const receiptFile = localPath(root, 'recovery.json'); const ackFile = acknowledgementsPath(root);
   const hooksFile = path.join(root, '.codex/hooks.json'); const hooksHash = fs.existsSync(hooksFile) ? hash(fs.readFileSync(hooksFile)) : null;
   const receipts = fs.existsSync(ackFile) ? readJSON(ackFile) : {};
   const acknowledged = Object.fromEntries(Object.entries(receipts).filter(([, r]) => r.hooks_hash === hooksHash && r.kit_version === VERSION));
-  const recovery = recover(root);
+  const recovery = state.packet;
   return { ok: true, project_path: root, project_name: plan.project_name, version: VERSION, project_id: plan.project_id,
     scope_status: plan.execution_scope_status, delivery_status: plan.delivery_status, scope_id: plan.scope_id, objective: plan.objective,
     current_task_id: plan.current_task_id, next_task_id: nextTask(plan)?.id ?? null, plan_revision: plan.plan_revision,
     tasks_done: plan.tasks.filter(t => t.commit_status === 'DONE').length, tasks_total: plan.tasks.length,
-    profile: config.profile, stack: config.stack, head: head(root), changes: allChanges(root), resolved,
+    profile: config.profile, stack: config.stack, head: state.snapshot.head,
+    changes: [...new Set([...state.snapshot.staged, ...state.snapshot.unstaged, ...state.snapshot.untracked])].sort(), resolved,
     transaction: transaction ? { id: transaction.id, phase: transaction.phase, task: transaction.task_id } : null,
     integration_status: !hooksHash ? 'HOOK_MISSING' : acknowledged.startup ? 'HOOK_VERIFIED' : 'HOOK_TRUST_PENDING',
     hook_events: acknowledged, auto_compact_status: 'AUTO_COMPACT_UNVERIFIED',
     last_hook_execution: fs.existsSync(receiptFile) ? readJSON(receiptFile) : null,
-    recovery_size: recovery.size, recovery_text: recovery.text,
+    recovery_size: recovery.size, recovery_text: recovery.text, recovery_completeness: recovery.completeness,
     git_identity_ready: identityReady(root), manifest_present: fs.existsSync(path.join(root, MANIFEST)) };
 }
 

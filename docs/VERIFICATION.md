@@ -974,3 +974,9 @@ Current checkout уже содержит третий план 029: preview 1711
 ## Scope 029 / T002 — Git
 
 Focused regression: 2/2 — equivalence с interpret-trailers для Unicode/continuation/дубликатов/пустых trailers/Workflow-Iteration/patch divider, NUL framing с record separator в body; merge graph и изменение refs/replace. На отдельном clone d07ac2c с двумя прежними планами полный preview: 8127.5 / 7689.2 / 7663.3 мс (медиана 7689.2 против 15998.4 мс, −51.9%). Git processes 1283→583; interpret-trailers 585→0; merge-base 250→125 плюс 10 rev-list. Все ready=true, issues=[]. Manifest тестового clone согласован штатным ProjectDoctor с backup, без ручных хешей. Raw/trace2/driver: .harness/runtime/performance-029/T002-profile/. Это source preview, не packaged acceptance; цель −60% ещё не достигнута на T002.
+
+## Scope 029 / T003 — полная проверка
+
+Existing focused recovery/setup: 29/29. Новые regression: 2/2, включая bytes при прежнем mtime/размере, index, внешние attributes, chmod hooks, pending transaction и посторонний большой файл/symlink; три canonical plans (owned + prepared + NONE), ровно два git log для двух active plans; изменение документа при обоих проходах вызывает CONCURRENT_CHANGE после единственного повтора.
+
+Сопоставимый d07ac2c baseline двух планов: preview 3292.95 / 3020.55 / 3054.24 мс; медиана 3054.24 против 15998.36 мс (−80.9%). Git processes 1283→213, log 10→2, diff-tree/show 135→27. Все ready=true/issues=[], COMPLETE сохранён. inspectionInputs 143.40 / 132.87 / 134.86 мс, ключи совпадают с preview inputKey. Штатный Doctor с backup зарегистрировал новый модуль в manifest изолированного fixture. Evidence: .harness/runtime/performance-029/T003-profile/. Это source full preview, packaged цели проверяются позднее.

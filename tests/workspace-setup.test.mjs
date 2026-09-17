@@ -268,3 +268,61 @@ test('1.3 upgrade installs newly introduced core files with a backup and preserv
   await fs.stat(path.join(workspace,'.harness/kit/lib/session-plans.mjs'));
   assert.ok(JSON.parse(await fs.readFile(manifestFile)).files.some(e=>e.path==='.harness/kit/lib/session-plans.mjs'));
 });
+
+test('inspection fingerprints cover content, hooks, index, external attributes and pending transactions', async t => {
+  const { workspace } = await create(t);
+  const { inspectionInputs } = await import('../resources/workflow-kit/lib/inspection-inputs.mjs');
+  const key = () => inspectionInputs(workspace).key;
+  const doc = path.join(workspace, 'docs/architecture/OVERVIEW.md');
+  const before = key(), st = await fs.stat(doc), body = await fs.readFile(doc, 'utf8');
+  await fs.writeFile(doc, body.replace('проект', 'Проект'));
+  await fs.utimes(doc, st.atime, st.mtime);
+  assert.notEqual(key(), before, 'content changes with unchanged size/mtime');
+  const beforeIndex = key(); git(workspace, 'add', 'docs/architecture/OVERVIEW.md');
+  assert.notEqual(key(), beforeIndex, 'index-only transition');
+  const attributes = path.join(workspace, '.harness/runtime/global-attributes');
+  await fs.writeFile(attributes, '* -diff\n'); git(workspace, 'config', 'core.attributesFile', attributes);
+  const firstAttributes = key(); await fs.writeFile(attributes, '* +diff\n');
+  assert.notEqual(key(), firstAttributes, 'external attributes bytes');
+  const hook = path.join(workspace, '.git/hooks/pre-commit'), mode = (await fs.stat(hook)).mode;
+  const firstHook = key(); await fs.chmod(hook, mode ^ 0o100);
+  assert.notEqual(key(), firstHook, 'hook execute mode'); await fs.chmod(hook, mode);
+  // Foreign contents are not part of recovery, only their names/status.
+  const large = path.join(workspace, 'unrelated-large.bin');
+  const handle = await fs.open(large, 'w'); await handle.truncate(20 * 1024 * 1024); await handle.close();
+  await fs.symlink('unrelated-large.bin', path.join(workspace, 'unrelated-link'));
+  assert.equal(typeof key(), 'string');
+  const transaction = path.join(workspace, '.git/workflow-kit/transaction.json');
+  const beforeTransaction = key(); await fs.writeFile(transaction, '{}');
+  assert.equal(inspectionInputs(workspace).transaction, true);
+  assert.notEqual(key(), beforeTransaction);
+});
+
+test('one inspection recovers each canonical plan once and refuses concurrent input changes', async t => {
+  const { workspace, setup } = await create(t);
+  const { createScope, preparePlan } = await import('../resources/workflow-kit/lib/actions.mjs');
+  const { withSessionPlan } = await import('../resources/workflow-kit/lib/session-plans.mjs');
+  const { readPlan } = await import('../resources/workflow-kit/lib/plan.mjs');
+  const { inspectWithDiagnostics } = await import('../resources/workflow-kit/lib/installer.mjs');
+  const input = id => ({ scope_id: id, objective: 'Inspection fixture', approval_note: 'Fixture contract',
+    acceptance_criteria: ['Complete'], approved_scope: { functional_paths: [], documentation_paths: ['docs/PRODUCT.md'], max_functional_files_per_task: 3 },
+    context_pack: { documents: [], dependency_task_ids: [], include_last_completed_task: false },
+    tasks: [{ id: 'T001', title: 'Document fixture', why: 'Verify', dependencies: [], functional_paths: [],
+      documentation_paths: ['docs/PRODUCT.md'], verification_ids: [], acceptance_criteria: ['Documented'], expected_commit_message: 'docs: fixture' }] });
+  withSessionPlan(workspace, { sessionId: 'inspection-owner' }, () => createScope(workspace, input('inspection-own')));
+  withSessionPlan(workspace, { sessionId: 'inspection-owner' }, () => preparePlan(workspace, input('inspection-draft'), readPlan(workspace).plan_revision));
+  const trace = path.join(workspace, '.harness/runtime/inspection.trace2');
+  const traced = new WorkspaceSetup({ environment: { ...environment, GIT_TRACE2_EVENT: trace } });
+  const result = await traced.preview({ mode: 'existing', workspace });
+  assert.equal(result.ready, true, JSON.stringify(result));
+  assert.equal(result.checks.filter(c => c.label.startsWith('Полный контекст:')).length, 3);
+  const events = (await fs.readFile(trace, 'utf8')).trim().split('\n').map(line => JSON.parse(line));
+  assert.equal(events.filter(e => e.event === 'start' && e.argv?.includes('log')).length, 2, 'one history scan per active plan, NONE needs none');
+  let changes = 0;
+  assert.throws(() => inspectWithDiagnostics({ project: workspace, mode: 'existing', beforeRecheck() {
+    changes++;
+    execFileSync(process.execPath, ['-e', 'require("fs").appendFileSync(process.argv[1],"\\nchanged")', path.join(workspace, 'docs/architecture/OVERVIEW.md')]);
+  } }), { code: 'CONCURRENT_CHANGE' });
+  assert.equal(changes, 2, 'at most one retry');
+});
+

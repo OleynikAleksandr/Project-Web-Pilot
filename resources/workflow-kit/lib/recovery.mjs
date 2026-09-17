@@ -5,6 +5,7 @@ import { validate } from './validate.mjs';
 import { nextTask, PROJECT_CONTINUATION_OBJECTIVE, isDocumentationFinalizationTask } from './plan.mjs';
 import { sessionPlanView } from './session-plans.mjs';
 import { snapshot, diff, git, localPath, head, fileFingerprint } from './git.mjs';
+import { inspectionInputs } from './inspection-inputs.mjs';
 
 export const TRANSPORT_HARD_BYTES = 180000;
 
@@ -57,15 +58,22 @@ function relevantEvidence(root, beforeHead, neededShas, transaction) {
 }
 
 export function recover(root, reason = 'manual', options = {}) {
+  return recoverState(root, reason, options).packet;
+}
+
+// The state is produced here, never accepted from a caller as a validation bypass.
+export function recoverState(root, reason = 'manual', options = {}) {
   const PLAN = planPath(root);
   for (let attempt = 0; attempt < 2; attempt++) {
     const started = Date.now(); const marker = options.receipt ? id() : null;
+    const initialInputs = inspectionInputs(root).key;
     const initialHead = head(root);
     const initialPlan = fileFingerprint(root, PLAN);
     const initialConfig = fileFingerprint(root, CONFIG);
     const journalFile = localPath(root, 'transaction.json');
     const initialJournal = fs.existsSync(journalFile) ? hash(fs.readFileSync(journalFile)) : null;
-    const { plan, config, resolved, transaction } = validate(root);
+    const validation = validate(root);
+    const { plan, config, resolved, transaction } = validation;
     const task = transaction?.task ?? nextTask(plan);
     const rulesPath = '.harness/kit/WORKFLOW.md';
     const documents = uniqueDocuments([...plan.context_pack.documents, ...(task?.context_pack?.documents ?? [])]);
@@ -164,7 +172,7 @@ export function recover(root, reason = 'manual', options = {}) {
     options.beforeRecheck?.(attempt);
     const after = snapshot(root, relevant);
     const finalJournal = fs.existsSync(journalFile) ? hash(fs.readFileSync(journalFile)) : null;
-    if (after.fingerprint !== before.fingerprint || finalJournal !== initialJournal) {
+    if (after.fingerprint !== before.fingerprint || finalJournal !== initialJournal || inspectionInputs(root).key !== initialInputs) {
       if (attempt === 0) continue;
       check(false, 'CONCURRENT_CHANGE', 'Проект меняется во время восстановления. Повторите после завершения другой операции.');
     }
@@ -175,7 +183,7 @@ export function recover(root, reason = 'manual', options = {}) {
       budget: effectiveBudget, soft_exceeded: size.tokens > config.budget.soft_tokens,
       token_method: 'ceil(UTF-8 bytes / 2), conservative estimate', elapsed_ms: Date.now() - started };
     if (options.receipt) atomic(localPath(root, 'recovery.json'), json({ ...packet, text: undefined, worktree: root, created_at: new Date().toISOString() }));
-    return packet;
+    return { validation, snapshot: before, packet };
   }
 }
 

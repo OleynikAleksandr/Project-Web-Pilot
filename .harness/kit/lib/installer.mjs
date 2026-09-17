@@ -9,6 +9,7 @@ import { journal } from './validate.mjs';
 import { commitCandidate, locked } from './transaction.mjs';
 import { payload, hooksDirectory, hookContent, installationManifest, HOOK_COMMAND, BLOCK_START, BLOCK_END, MD_START, MD_END } from './installation-files.mjs';
 import { prepareRuntime, launcherCommand, windows } from './platform.mjs';
+import { inspectionInputs } from './inspection-inputs.mjs';
 
 const hookNames = ['pre-commit', 'commit-msg', 'post-commit', 'pre-push'];
 const hookName = entry => path.posix.basename(entry.path.replaceAll('\\', '/'));
@@ -95,6 +96,39 @@ function fingerprint(root, entries, isGit) {
   return hash(json(state));
 }
 export function inspect(opts) {
+  return stableInspection(opts, false).preview;
+}
+export function inspectWithDiagnostics(opts) {
+  return stableInspection(opts, true);
+}
+function stableInspection(opts, diagnostics) {
+  const { root } = selectedProject(opts);
+  if (!fs.existsSync(path.join(root, MANIFEST))) {
+    const preview = inspectOnce(opts);
+    return { preview, doctor: { ...publicPreview(preview), diagnostics: [] } };
+  }
+  for (let attempt = 0; attempt < 2; attempt++) {
+    let before;
+    try { before = inspectionInputs(root); }
+    catch (error) {
+      const preview = inspectOnce(opts);
+      preview.state = errorResult(error);
+      return { preview, doctor: { ...publicPreview(preview), diagnostics: [], healthy: false } };
+    }
+    const preview = inspectOnce(opts);
+    const diagnosed = diagnostics && !preview.upgradeable ? collectDiagnostics(root, publicPreview(preview)) : null;
+    opts.beforeRecheck?.(attempt);
+    const after = inspectionInputs(root);
+    if (before.key !== after.key || root !== preview.project_path) {
+      if (attempt === 0) continue;
+      check(false, 'CONCURRENT_CHANGE', 'Проект меняется во время полной проверки. Повторите проверку.');
+    }
+    preview.inspection_key = after.key;
+    preview.transaction_pending = after.transaction;
+    return { preview, doctor: diagnosed ?? { ...publicPreview(preview), diagnostics: [] } };
+  }
+}
+function inspectOnce(opts) {
   const selected = selectedProject(opts); const { root, isGit } = selected;
   const manifestFile = path.join(root, MANIFEST);
   if (fs.existsSync(manifestFile)) {
@@ -280,7 +314,9 @@ export function finalizeInstallation(root) {
   });
 }
 export function doctor(root) {
-  const inspected = publicPreview(inspect({ project: root, mode: 'existing' }));
+  return inspectWithDiagnostics({ project: root, mode: 'existing' }).doctor;
+}
+function collectDiagnostics(root, inspected) {
   if (!inspected.installed) return { ...inspected, message: 'Комплект не установлен.' };
   const diagnostics = [];
   const hooksFile = path.join(root, '.codex/hooks.json');
@@ -295,7 +331,9 @@ export function doctor(root) {
     diagnostics.push({ name: f, status: ready ? 'OK' : 'ERROR', detail: ready ? 'Проверка подключена.' : 'Проверка отсутствует или не исполняется.' });
   }
   const command = launcherCommand(root);
-  const launcher = run(command.executable, [...command.args, 'help'], root, { allowFailure: true });
+  // Never execute workspace code if its owned installation is damaged.
+  const launcher = inspected.conflicts.length ? { status: 1, stderr: 'Целостность runtime не подтверждена.' }
+    : run(command.executable, [...command.args, 'help'], root, { allowFailure: true });
   diagnostics.push({ name: 'Launcher', status: launcher.status === 0 ? 'OK' : 'ERROR', detail: launcher.status === 0 ? 'Команды проекта запускаются.' : String(launcher.stderr || launcher.stdout || launcher.error?.message).slice(-2000) });
   diagnostics.push({ name: 'Codex', status: inspected.state?.integration_status === 'HOOK_VERIFIED' ? 'OK' : 'PENDING', detail: 'Фактическая доставка подтверждается маркером из новой сессии; файл конфигурации сам по себе её не доказывает.' });
   const recordFile = localPath(root, 'installation.json');

@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 9,
+  "plan_revision": 12,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-opening-performance-029",
@@ -58,7 +58,9 @@
       "package.json",
       "package-lock.json",
       ".harness/kit/lib/inspection-inputs.mjs",
-      "resources/workflow-kit/lib/inspection-inputs.mjs"
+      "resources/workflow-kit/lib/inspection-inputs.mjs",
+      "src/ui/sidebar.mjs",
+      "tests/sidebar.test.mjs"
     ],
     "documentation_paths": [
       "docs/modules/session-opening-performance.md",
@@ -255,8 +257,8 @@
       "file_limit_exception": "Одна проверяемая часть существующего фасада: синхронные installed/bundled копии, интеграция вызова и профильные regression. Новые файлы служат только общей проверке актуальности; отдельного менеджера/сервиса нет."
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-opening-performance-029",
         "task_id": "T003",
@@ -358,7 +360,9 @@
         "tests/workspace-session.test.mjs",
         "tests/electron-smoke.mjs",
         "src/session-plans.mjs",
-        "tests/session-plans.test.mjs"
+        "tests/session-plans.test.mjs",
+        "src/ui/sidebar.mjs",
+        "tests/sidebar.test.mjs"
       ],
       "documentation_paths": [
         "docs/modules/session-opening-performance.md",
@@ -637,7 +641,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-opening-performance-029
 Current Task: нет
-Revision: 9
+Revision: 12
 
 ## Цель
 
@@ -662,8 +666,8 @@ Revision: 9
   - Git Commit: [DONE] perf: batch workflow git history reads
   - Reference: session-opening-performance-029 / T002 / implementation
   - Файлы: .harness/kit/lib/git.mjs, resources/workflow-kit/lib/git.mjs, tests/workflow-kit-recovery.test.mjs, .harness/kit/lib/validate.mjs, resources/workflow-kit/lib/validate.mjs, docs/modules/session-opening-performance.md, docs/modules/workflow-kit-recovery.md, docs/VERIFICATION.md
-- [TODO] T003: Устранить повторную полную валидацию в одной проверке — Ожидает
-  - Git Commit: [PENDING] perf: reuse workflow validation within workspace inspection
+- [DONE] T003: Устранить повторную полную валидацию в одной проверке — Завершено
+  - Git Commit: [DONE] perf: reuse workflow validation within workspace inspection
   - Reference: session-opening-performance-029 / T003 / implementation
   - Файлы: .harness/kit/lib/actions.mjs, resources/workflow-kit/lib/actions.mjs, .harness/kit/lib/validate.mjs, resources/workflow-kit/lib/validate.mjs, .harness/kit/lib/recovery.mjs, resources/workflow-kit/lib/recovery.mjs, .harness/kit/lib/installer.mjs, resources/workflow-kit/lib/installer.mjs, resources/workspace-setup-worker.mjs, tests/workspace-setup.test.mjs, tests/workflow-kit-recovery.test.mjs, .harness/kit/lib/inspection-inputs.mjs, resources/workflow-kit/lib/inspection-inputs.mjs, docs/modules/session-opening-performance.md, docs/WORKSPACE_SETUP.md, docs/modules/workflow-kit-recovery.md, docs/VERIFICATION.md
 - [TODO] T004: Переиспользовать готовность неизменившегося проекта — Ожидает
@@ -673,7 +677,7 @@ Revision: 9
 - [TODO] T005: Ускорить показ плана и открытие выбранного чата — Ожидает
   - Git Commit: [PENDING] perf: show selected sessions before background verification
   - Reference: session-opening-performance-029 / T005 / implementation
-  - Файлы: src/main.mjs, src/workspace-session.mjs, src/ui/index.html, tests/workspace-session.test.mjs, tests/electron-smoke.mjs, src/session-plans.mjs, tests/session-plans.test.mjs, docs/modules/session-opening-performance.md, docs/modules/workspace-sessions.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
+  - Файлы: src/main.mjs, src/workspace-session.mjs, src/ui/index.html, tests/workspace-session.test.mjs, tests/electron-smoke.mjs, src/session-plans.mjs, tests/session-plans.test.mjs, src/ui/sidebar.mjs, tests/sidebar.test.mjs, docs/modules/session-opening-performance.md, docs/modules/workspace-sessions.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 - [TODO] T006: Согласовать фоновую готовность и доставку контекста — Ожидает
   - Git Commit: [PENDING] fix: gate context delivery on current session readiness
   - Reference: session-opening-performance-029 / T006 / implementation

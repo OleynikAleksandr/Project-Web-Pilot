@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { inspect, install, doctor } from './workflow-kit/lib/installer.mjs';
+import { inspectWithDiagnostics, install } from './workflow-kit/lib/installer.mjs';
+import { inspectionInputs } from './workflow-kit/lib/inspection-inputs.mjs';
 import { check, hash, json, MANIFEST, VERSION, errorResult } from './workflow-kit/lib/common.mjs';
 import { hooksDirectory, BLOCK_START, BLOCK_END } from './workflow-kit/lib/installation-files.mjs';
 import { listPlans } from './workflow-kit/lib/session-plans.mjs';
@@ -14,7 +15,8 @@ function options(input) {
   return { project: input.project, mode: input.mode, name: input.name };
 }
 function inspectProject(opts) {
-  const p = inspect(opts);
+  const inspection = inspectWithDiagnostics(opts);
+  const p = inspection.preview;
   const result = { workspace: p.project_path, name: p.project_name, version: p.version, installed: p.installed,
     ready: false, action: null, issues: [...p.conflicts], checks: [], files: p.files,
     gitIdentityReady: p.git_identity_ready, initializeGit: p.initialize_git,
@@ -42,7 +44,7 @@ function inspectProject(opts) {
     result.fingerprint = hash(json({ root: p.project_path, version: p.version, manifest: hash(fs.readFileSync(path.join(p.project_path, MANIFEST))), state: [p.state?.head, p.state?.plan_revision, p.state?.changes] }));
     return result;
   }
-  const d = doctor(p.project_path);
+  const d = inspection.doctor;
   const checks = d.diagnostics.filter(c => !['Codex', 'SessionStart', 'Первый коммит'].includes(c.name));
   // Verify owned Git-hook sections too: presence of a marker is insufficient.
   const hookFolder = hooksDirectory(p.project_path).folder;
@@ -64,10 +66,14 @@ function inspectProject(opts) {
   if (!p.state?.ok) result.issues.push({ path: '.harness/plans/todo-plan.md', reason: p.state?.message ?? 'План и история требуют проверки.' });
   const plans = p.version === VERSION ? listPlans(p.project_path) : [{ file: '.harness/plans/todo-plan.md', plan: {} }];
   for (const { file, plan } of plans) {
-    const address = p.version !== VERSION ? [] : plan.scope_id ? ['--plan', plan.scope_id] : ['--session', plan.owner_session_id ?? 'workflow-readiness-navigation'];
-    const recovered = run(process.execPath, [path.join(p.project_path, 'scripts/workflow.mjs'), 'recover', '--format', 'json', ...address], p.project_path, { allowFailure: true });
-    let packet; try { packet = JSON.parse(recovered.stdout); } catch {}
-    const complete = recovered.status === 0 && packet?.ok === true && packet.completeness === 'COMPLETE';
+    const state = p.state?.plans?.find(item => item.plan_path === file);
+    let packet = state && { ok: state.ok, completeness: state.recovery_completeness };
+    if (p.version !== VERSION) {
+      const recovered = run(process.execPath, [path.join(p.project_path, 'scripts/workflow.mjs'), 'recover', '--format', 'json'], p.project_path, { allowFailure: true });
+      try { packet = JSON.parse(recovered.stdout); } catch {}
+      if (recovered.status !== 0) packet = null;
+    }
+    const complete = packet?.ok === true && packet.completeness === 'COMPLETE';
     result.checks.push({ label: 'Полный контекст: ' + (plan.objective || 'навигация проекта'), ok: complete });
     if (!complete) result.issues.push({ path: file, reason: packet?.message ?? 'Не удалось собрать полный пакет контекста.' });
   }
@@ -83,6 +89,15 @@ function inspectProject(opts) {
   if (repairable) result.warnings.push('Нужно восстановить локальные команды и отсутствующие проверки. План и файлы проекта сохранятся.');
   result.fingerprint = hash(json({ root: p.project_path, version: p.version, manifest: hash(fs.readFileSync(path.join(p.project_path, MANIFEST))),
     state: [p.state?.head, p.state?.plan_revision, p.state?.changes], checks: result.checks, issues: result.issues }));
+  if (p.inspection_key) {
+    const current = inspectionInputs(p.project_path);
+    check(current.key === p.inspection_key, 'CONCURRENT_CHANGE', 'Проект изменился во время проверки. Повторите проверку.');
+    result.inputKey = current.key;
+    if (current.transaction) {
+      result.ready = false; result.action = null;
+      result.issues.push({ path: 'Workflow Kit', reason: 'Ожидается завершение транзакции проекта. Повторите проверку.' });
+    }
+  }
   return result;
 }
 try {
