@@ -892,3 +892,12 @@ composer-color-025 / DOCS: проверены 34 indexed documents и сущес
 `release-manifest.json` фиксирует source HEAD, permanent app identity, package version, exact verified UI/runtime files и hashes; `SHA256SUMS.txt` лежит рядом с ZIP и в Downloads. Native Windows и визуальная приёмка реального ChatGPT остаются за пользователем. Scope не архивирован.
 
 session-tree-outline-026 / DOCS: проверены все документы текущего индекса и актуальные version/release ссылки. Обновлены README, PRODUCT, WORKFLOW_START, DECISIONS, RELEASE, Windows transfer, Workspace & Sessions, Project Doctor current version, ARCHITECTURE и эта verification evidence; OVERVIEW, MODULES, DOCUMENTATION_INDEX, Context Delivery, Workflow Kit/Runtime/Archive/Workspace Setup остаются актуальными без содержательных изменений. После DOCS scope должен быть предъявлен пользователю в `READY_FOR_ACCEPTANCE`; archive требует отдельной прямой команды.
+
+
+## Clean installation lab — T005/T006, 17.09.2026
+
+Подготовлены Clean/Test macOS и Windows ARM64. Скриншот пользователя подтверждает копирование и распаковку Project-Web-Pilot-0.6.27-macOS-arm64.zip в Downloads гостевой Test-macOS. Первый запуск Web Pilot, bootstrap и Windows-поставка ещё не проверены; по поручению пользователя эта работа передана следующему scope.
+
+Диагностика Computer Use: состояние/окна через loopback — 7–31 мс, через чат — около 2 с; снимок окна 1600 px — 369 мс локально и 3753 мс через чат. Подтверждены PNG/base64 overhead, отдельные round trips, синхронные desktop handlers в event loop установленного MCP SDK 1.28.1. Журналы содержат сетевые poll/backoff failures и ошибки закрытого Streamable HTTP stream. Один обычный командный запрос в этой сессии завершился HTTP 504, не создав ожидаемый файл; повтор после проверки состояния прошёл. Общая причина всех прежних задержек не доказана, runtime не изменён. Подробные измерения, ограничения и следующий диагностический шаг — docs/CLEAN_INSTALL.md.
+
+Изменения документальные. Application suite и Electron smoke в этом scope не запускались; замеры MCP и проверки схемы/кандидата Workflow Kit не заменяют испытание приложения на чистой ОС.

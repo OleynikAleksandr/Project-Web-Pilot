@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 579,
+  "plan_revision": 581,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "clean-install-lab-027",
@@ -244,8 +244,8 @@
       ],
       "verification_ids": [],
       "expected_commit_message": "docs: diagnose Computer Use latency across MCP transport",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "clean-install-lab-027",
         "task_id": "T006",
@@ -322,7 +322,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: clean-install-lab-027
 Current Task: нет
-Revision: 579
+Revision: 581
 
 ## Цель
 
@@ -357,8 +357,8 @@ Revision: 579
   - Git Commit: [DONE] docs: record lab handoff and defer first-launch checks
   - Reference: clean-install-lab-027 / T005 / implementation
   - Файлы: docs/CLEAN_INSTALL.md, docs/VERIFICATION.md
-- [TODO] T006: Диагностировать задержки Computer Use через MCP — Ожидает
-  - Git Commit: [PENDING] docs: diagnose Computer Use latency across MCP transport
+- [DONE] T006: Диагностировать задержки Computer Use через MCP — Завершено
+  - Git Commit: [DONE] docs: diagnose Computer Use latency across MCP transport
   - Reference: clean-install-lab-027 / T006 / implementation
   - Файлы: docs/CLEAN_INSTALL.md, docs/VERIFICATION.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
