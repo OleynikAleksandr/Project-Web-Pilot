@@ -51,6 +51,7 @@ export async function createRuntime({ browser, session }) {
   // Explicit isolated test mode only. No request is sent to a real service.
   await session.protocol.handle('https', request => {
     const url = new URL(request.url);
+    if (url.pathname === '/fixture-first-load-failure') return Response.error();
     if (url.hostname === 'chatgpt.com' && url.pathname === '/backend-api/f/conversation') {
       return new Response(fixtureTelemetrySse, { headers: { 'content-type': 'text/event-stream; charset=utf-8' } });
     }
@@ -102,6 +103,21 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   const workspace = path.join(await fs.realpath(dataDir + '-projects'), 'Тестовый проект с пробелами');
   await waitFor(() => sidebar.executeJavaScript('typeof window.webPilot === "object"'), 'local IPC ready', snapshot);
 
+  await chromiumDiagnostics.flush();
+  let firstLoadEvents = (await fs.readFile(chromiumDiagnosticsFile, 'utf8')).trim().split('\n').map(line => JSON.parse(line));
+  assert.ok(firstLoadEvents.some(entry => entry.event === 'session-start'), 'journal exists before first navigation');
+  assert.equal(firstLoadEvents.some(entry => entry.event === 'did-finish-load'), false);
+  await assert.rejects(browser.loadURL('https://chatgpt.com/fixture-first-load-failure?token=PRIVATE-FIRST-LOAD'));
+  await chromiumDiagnostics.flush();
+  firstLoadEvents = (await fs.readFile(chromiumDiagnosticsFile, 'utf8')).trim().split('\n').map(line => JSON.parse(line));
+  assert.ok(firstLoadEvents.some(entry => entry.event === 'did-fail-load' && entry.isMainFrame && entry.errorCode < 0), 'first failed document is recorded');
+  const earlyReport = await chromiumDiagnostics.startupReport();
+  assert.match(earlyReport, /did-fail-load/);
+  assert.equal(earlyReport.includes('PRIVATE-FIRST-LOAD'), false, 'report excludes query values');
+  await browser.loadURL('https://chatgpt.com/');
+  await chromiumDiagnostics.flush();
+  assert.match(await chromiumDiagnostics.startupReport(), /main-document-response/, 'retry reaches a document');
+
   // Render the real startup UI with isolated state; never install host components or use real credentials.
   await sidebar.executeJavaScript('import("./startup.mjs").then(() => window.webPilot.getState()).then(() => true)');
   const startupFixture = { ...snapshot(), setup: null, settings: null, selected: null, projects: [],
@@ -118,7 +134,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
     continueDisabled: document.getElementById('startup-continue').disabled,
   })`);
   assert.match(firstRun.signup, /нет аккаунта/);
-  assert.match(firstRun.slow, /дольше обычного/);
+  assert.match(firstRun.slow, /ChatGPT/);
   assert.equal(firstRun.retry, true); assert.equal(firstRun.noSecretInput, true);
   assert.equal(firstRun.projectsHidden, true); assert.equal(firstRun.continueDisabled, true);
   await fs.writeFile(path.join(dataDir, 'startup-account.png'), (await sidebar.capturePage()).toPNG());
@@ -855,7 +871,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(store.selected().experience, 'work');
   assert.equal(store.snapshot().projects.find(p => p.workspace === workspace).sessions.length, beforeDoctorNew + 1);
 
-  const result = { guidedFirstRun: true, firstRunScreenshots: [path.join(dataDir, "startup-account.png"), path.join(dataDir, "startup-components.png")], fastSavedNavigation: true, lastNavigationWins: true, readinessBeforeOrAfterLoad: true, backgroundFailureRetry: true, liveChatColors: true, composerBackground: true, streamingAssistantColor: true, chatColorsPersistence: true, chatColorsReset: true, colorScreenshots, projectDoctor: true, doctorBackup: true, doctorOpen: true, doctorRefresh: true, doctorNewSession: true, doctorScreenshots, newestSessionFirst: true, projectSelectsNewest: true, threeSessionViewport: true, sessionScrollPreserved: true, visibleSessionScrollbar: true, nativeProjectsDisclosure: true, treePopover: true, treeScreenshots, scopeContinuationChat: true, scopeContinuationWork: true, scopeContinuationRestart: true, scopeContinuationNoDuplicates: true,
+  const result = { earlyFirstLoadDiagnostics: true, guidedFirstRun: true, firstRunScreenshots: [path.join(dataDir, "startup-account.png"), path.join(dataDir, "startup-components.png")], fastSavedNavigation: true, lastNavigationWins: true, readinessBeforeOrAfterLoad: true, backgroundFailureRetry: true, liveChatColors: true, composerBackground: true, streamingAssistantColor: true, chatColorsPersistence: true, chatColorsReset: true, colorScreenshots, projectDoctor: true, doctorBackup: true, doctorOpen: true, doctorRefresh: true, doctorNewSession: true, doctorScreenshots, newestSessionFirst: true, projectSelectsNewest: true, threeSessionViewport: true, sessionScrollPreserved: true, visibleSessionScrollbar: true, nativeProjectsDisclosure: true, treePopover: true, treeScreenshots, scopeContinuationChat: true, scopeContinuationWork: true, scopeContinuationRestart: true, scopeContinuationNoDuplicates: true,
     transitionScreenshot: path.join(dataDir, 'next-session-choice.png'), mode: 'isolated-fixture', electron: process.versions.electron, chromium: process.versions.chrome,
     views: window.contentView.children.length, secureRemote: true, sidebarIpc: true, archiveRestore: true, archiveRestart: true, deleteCancel: true, localDeletion: true, cloudChatPreserved: true, workspaceCreation: true, workspaceValidation: true, cancelPreservesSession: true, startupMessages: 4, canonicalPacketLoads: packetLoads, recoveryCache: true, operationProgress: true, progressScreenshot: path.join(dataDir, 'progress-ui.png'),
     tokenCounterRemoved: true, projectRename: true, sessionRename: true, scopeSessionRename: true, restartKeepsSession: true, newChatCreatesSession: true, sessionTree: true, selectsEarlierSession: true, compactWorkspaceDetails: true, projectPathClipboard: true, sessionPlans: true, preparedPlans: true, manualChatWorkChoice: true, noAcceptanceButton: true, chromiumDiagnostics: true, contextWindowIndicatorRemoved: true, resizableSidebar: true, separateArchiveWindow: true, archiveMultiSelect: true, archiveForgetKeepsFolder: true, shellTheme: true, nativeTitlebarTheme: nativeTheme.shouldUseDarkColors, toolCallFilter: true, microphonePermission: true, geolocationPermission: true, cameraPermission: false, fullContextBytes: Buffer.byteLength(fixtureContext), liveChatGPT: false, agentToolsRequired: false };

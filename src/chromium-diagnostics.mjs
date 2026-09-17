@@ -45,6 +45,10 @@ export function safeUrl(input) {
   }
 }
 
+function networkError(value) {
+  return typeof value === 'string' && /^(?:net::)?ERR_[A-Z0-9_]+$/.test(value) ? value : null;
+}
+
 function safeSignal(value) {
   return typeof value === 'string' && SAFE_IDENTIFIER.test(value) ? value : null;
 }
@@ -349,7 +353,8 @@ export class ChromiumDiagnostics {
     await this.log.init();
     this.log.record('diagnostics', 'session-start', metadata);
     this.#listenNative();
-    await this.#attachDebugger();
+    // CDP may wait for the first renderer; it must never delay that navigation.
+    void this.#attachDebugger();
     this.sampleTimer = setInterval(() => { void this.sampleDom(); }, this.sampleIntervalMs);
     this.sampleTimer.unref?.();
     await this.sampleDom();
@@ -362,6 +367,17 @@ export class ChromiumDiagnostics {
   }
 
   #listenNative() {
+    this.#on('did-start-navigation', (event, url, isInPlace, isMainFrame) => this.log.record('webContents', 'did-start-navigation', {
+      url: safeUrl(event.url ?? url), isMainFrame: event.isMainFrame ?? isMainFrame,
+      isSameDocument: event.isSameDocument ?? isInPlace,
+    }));
+    this.#on('dom-ready', () => this.log.record('webContents', 'dom-ready', { url: safeUrl(this.contents.getURL()) }));
+    this.#on('did-frame-navigate', (_event, url, status, _statusText, isMainFrame) => {
+      if (isMainFrame) this.log.record('webContents', 'main-document-response', { url: safeUrl(url), status });
+    });
+    for (const name of ['did-fail-load', 'did-fail-provisional-load']) this.#on(name, (_event, code, description, url, isMainFrame) => {
+      this.log.record('webContents', name, { url: safeUrl(url), errorCode: code, errorName: networkError(description), isMainFrame });
+    });
     this.#on('did-start-loading', () => this.log.record('webContents', 'did-start-loading', { url: safeUrl(this.contents.getURL()) }));
     this.#on('did-stop-loading', () => this.log.record('webContents', 'did-stop-loading', { url: safeUrl(this.contents.getURL()) }));
     this.#on('did-finish-load', () => this.log.record('webContents', 'did-finish-load', { url: safeUrl(this.contents.getURL()) }));
@@ -442,7 +458,7 @@ export class ChromiumDiagnostics {
       this.streamResponses.delete(params.requestId);
       this.serviceResponses.delete(params.requestId);
       return this.log.record('cdp', 'loading-failed', { ...base, requestId: params.requestId, errorType: safeSignal(params.type) ?? null,
-        canceled: !!params.canceled, blockedReason: safeSignal(params.blockedReason) ?? null });
+        errorName: networkError(params.errorText), canceled: !!params.canceled, blockedReason: safeSignal(params.blockedReason) ?? null });
     }
     if (method === 'Network.webSocketCreated') {
       return this.log.record('cdp', 'websocket-created', { ...base, requestId: params.requestId, url: safeUrl(params.url) });
@@ -541,6 +557,7 @@ export class ChromiumDiagnostics {
   async sampleDom() {
     if (!this.started || this.contents.isDestroyed?.()) return;
     const current = this.contents.getURL();
+    if (!current || current === 'about:blank') return;
     let url;
     try { url = new URL(current); } catch { return; }
     if (!(url.hostname === 'chatgpt.com' && url.protocol === 'https:') && !this.allowFixture) return;
@@ -576,6 +593,21 @@ export class ChromiumDiagnostics {
     }
     this.log.record('diagnostics', 'session-stop');
     await this.log.flush();
+  }
+
+  async startupReport() {
+    await this.log.flush();
+    const names = new Set(['session-start', 'navigation-requested', 'navigation-waiting', 'load-url-failed',
+      'did-start-navigation', 'did-start-loading', 'dom-ready', 'main-document-response', 'did-finish-load',
+      'did-stop-loading', 'did-fail-load', 'did-fail-provisional-load', 'render-process-gone',
+      'unresponsive', 'responsive', 'attach-failed', 'attached', 'loading-failed']);
+    const entries = (await fs.readFile(this.log.file, 'utf8')).trim().split('\n').flatMap(line => {
+      try { const entry = JSON.parse(line); return entry.diagnosticSession === this.log.sessionId && names.has(entry.event) ? [entry] : []; }
+      catch { return []; }
+    });
+    const first = entries.find(entry => entry.event === 'session-start');
+    const recent = entries.filter(entry => entry !== first).slice(-60);
+    return JSON.stringify({ report: 'Web Pilot browser startup', events: [...(first ? [first] : []), ...recent] }, null, 2);
   }
 
   async flush() { await this.log.flush(); }

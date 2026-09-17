@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 35,
+  "plan_revision": 37,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-onboarding-031",
@@ -587,8 +587,8 @@
       "id": "C002",
       "title": "Записывать загрузку браузера с первого обращения к сайту",
       "why": "Текущий журнал запускается после успешной загрузки и не объясняет пустую панель.",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-onboarding-031",
         "task_id": "C002",
@@ -1125,7 +1125,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-onboarding-031
 Current Task: нет
-Revision: 35
+Revision: 37
 
 ## Цель
 
@@ -1196,8 +1196,8 @@ Revision: 35
   - Git Commit: [DONE] docs: record blank first page after macOS retest
   - Reference: first-run-onboarding-031 / T009 / implementation
   - Файлы: docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md
-- [TODO] C002: Записывать загрузку браузера с первого обращения к сайту — Ожидает
-  - Git Commit: [PENDING] fix: capture browser diagnostics before first navigation
+- [DONE] C002: Записывать загрузку браузера с первого обращения к сайту — Завершено
+  - Git Commit: [DONE] fix: capture browser diagnostics before first navigation
   - Reference: first-run-onboarding-031 / C002 / implementation
   - Файлы: src/main.mjs, src/chromium-diagnostics.mjs, tests/electron-smoke.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
 - [TODO] C003: Показывать вход только после появления страницы ChatGPT — Ожидает

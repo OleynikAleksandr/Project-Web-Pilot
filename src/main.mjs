@@ -21,7 +21,7 @@ import { chatGPTEntrypoint } from './chatgpt-experience.mjs';
 import { WorkspaceDeletion } from './workspace-deletion.mjs';
 import { WorkspaceSetup } from './workspace-setup.mjs';
 import { ProjectDoctor } from './project-doctor.mjs';
-import { ChromiumDiagnostics } from './chromium-diagnostics.mjs';
+import { ChromiumDiagnostics, safeUrl } from './chromium-diagnostics.mjs';
 import { defaultRuntimeFolder, bundledWindowsRuntimeFolder, bundledMacNode, nodeExecutableCandidates } from './platform.mjs';
 import { WindowsRuntimeBootstrap, WINDOWS_RUNTIME_ARCHIVE } from './windows-runtime.mjs';
 import { MacRuntimeBootstrap } from './mac-runtime.mjs';
@@ -247,7 +247,8 @@ function publish() {
   const state = snapshot();
   const record = { phase: state.context.phase, workspace: state.selected?.workspace, sessionId: state.selected?.sessionId,
     requestId: state.selected?.attempt?.requestId, contextSha256: state.context.delivery?.contextSha256,
-    planRevision: state.context.projectInfo?.planRevision, errorCode: state.context.error?.code ?? startupError?.code };
+    planRevision: state.context.projectInfo?.planRevision, errorCode: state.context.error?.code ?? startupError?.code,
+    appVersion: app.getVersion(), page: state.startup?.page, pageError: state.startup?.pageError };
   const signature = JSON.stringify(record);
   if (signature !== lastDiagnostic) {
     lastDiagnostic = signature;
@@ -445,6 +446,16 @@ async function navigate(project = store.selected(), { refresh = false, generatio
   controller?.cancel();
   pageLoading = true; startupFlow?.beginPage(ownNavigation); publish();
   const target = entryUrl ?? project?.chatUrl ?? chatGPTEntrypoint(project?.experience ?? 'chat');
+  const began = Date.now();
+  chromiumDiagnostics?.log.record('app', 'navigation-requested', { generation: ownNavigation, url: safeUrl(target),
+    browserBounds: browser.getBounds(), windowSize: window.getContentSize() });
+  const waiting = setTimeout(() => {
+    if (navigationCurrent(ownNavigation) && pageLoading) chromiumDiagnostics?.log.record('app', 'navigation-waiting', {
+      generation: ownNavigation, elapsedMs: Date.now() - began, url: safeUrl(target),
+      currentUrl: safeUrl(browser.webContents.getURL()), loading: browser.webContents.isLoading(),
+    });
+  }, 15000);
+  waiting.unref?.();
   try {
     const alreadyOpen = resume && !browser.webContents.isLoading() && browser.webContents.getURL() === target;
     if (!alreadyOpen) await browser.webContents.loadURL(target);
@@ -458,9 +469,12 @@ async function navigate(project = store.selected(), { refresh = false, generatio
     publish();
   } catch (error) {
     if (!navigationCurrent(ownNavigation)) return;
+    chromiumDiagnostics?.log.record('app', 'load-url-failed', { generation: ownNavigation, url: safeUrl(target),
+      elapsedMs: Date.now() - began, errorCode: Number.isFinite(error.errno) ? error.errno : null,
+      errorName: /^ERR_[A-Z0-9_]+$/.test(error.code ?? '') ? error.code : null });
     pageLoading = false; startupFlow?.finishPage(ownNavigation, error.code ?? 'PAGE_LOAD_FAILED');
-    report(Object.assign(new Error('Не удалось открыть ChatGPT. Проверьте интернет и нажмите обновление рядом с проектами.'), { code: 'PAGE_LOAD_FAILED' }));
-  }
+    report(Object.assign(new Error('Не удалось открыть сайт ChatGPT. Повторите открытие страницы.'), { code: 'PAGE_LOAD_FAILED' }));
+  } finally { clearTimeout(waiting); }
 }
 
 function pauseForSetup() {
@@ -633,6 +647,10 @@ async function startupAction(action) {
     return startupFlow.check();
   }
   if (!startupActive) throw new Error('Сначала откройте начальную настройку.');
+  if (action === 'copy-diagnostics') {
+    clipboard.writeText(await chromiumDiagnostics.startupReport());
+    return true;
+  }
   if (action === 'check') { void observeStartupAccount(); return startupFlow.check({ prepare: true }); }
   if (action === 'install-git') return startupFlow.install();
   if (action === 'configure-tunnel') return startupFlow.configure();
@@ -1022,11 +1040,12 @@ async function createWindow() {
   browser.webContents.on('page-title-updated', rememberSessionTitle);
   browser.webContents.on('did-navigate-in-page', () => { void applyToolCallVisibility(); void installChatGPTAutoScroll(browser.webContents); publish(); if (!pageLoading && !setupState && !settingsState) void controller?.tick(); });
   browser.webContents.on('did-finish-load', () => {
-    if (!chromiumDiagnostics.started) void chromiumDiagnostics.start({ appVersion: app.getVersion(), electron: process.versions.electron,
-      chromium: process.versions.chrome, fixture: smoke }).catch(() => {});
     void applyToolCallVisibility(); void installChatGPTAutoScroll(browser.webContents, { forceFollow: true }); publish(); if (!pageLoading && !setupState && !settingsState) void controller?.tick();
   });
-  browser.webContents.on('render-process-gone', () => { controller?.cancel(); report(new Error('Страница ChatGPT закрылась. Нажмите обновление.')); });
+  browser.webContents.on('render-process-gone', () => {
+    pageLoading = false; startupFlow?.finishPage(navigationId, 'RENDER_PROCESS_GONE');
+    controller?.cancel(); report(new Error('Страница ChatGPT закрылась. Повторите открытие страницы.'));
+  });
   window.on('resize', layout);
   window.on('closed', () => {
     ++navigationId; startupFlow?.dispose(); startupFlow = null; controller?.cancel(); clearInterval(interval); contextCache.clear(); workspaceSetup.invalidateReadiness();
@@ -1037,6 +1056,9 @@ async function createWindow() {
     window = null;
   });
   layout();
+  // Observe the first request, including failure before a document ever loads.
+  await chromiumDiagnostics.start({ appVersion: app.getVersion(), platform: process.platform, electron: process.versions.electron,
+    chromium: process.versions.chrome, fixture: smoke }).catch(() => {});
   if (smoke) {
     await fsp.mkdir(dataDir + '-projects', { recursive: true });
     fixture = await import('../tests/electron-smoke.mjs');
