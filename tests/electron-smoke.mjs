@@ -208,6 +208,10 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(layoutSettings.sidebarWidth, 420);
   await sidebar.executeJavaScript('window.webPilot.setSidebarWidth(100)');
   await waitFor(() => snapshot().sidebarWidth === 312, 'sidebar legacy minimum', snapshot);
+  // IPC resolves in main before the state-changed event is rendered.
+  // Dragging uses renderer currentState, so wait for the displayed starting width.
+  await waitFor(() => sidebar.executeJavaScript('document.getElementById("sidebar-splitter").getAttribute("aria-valuenow") === "312"'),
+    'sidebar rendered minimum before drag', snapshot);
   await sidebar.executeJavaScript(`{
     const splitter=document.getElementById('sidebar-splitter');
     splitter.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,pointerId:7,button:0,screenX:312}));
@@ -216,6 +220,8 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   }`);
   await waitFor(() => snapshot().sidebarWidth === 432, 'drag sidebar splitter', snapshot);
   assert.equal(window.contentView.children[0].getBounds().width, 432); assert.equal(window.contentView.children[1].getBounds().x, 432);
+  await waitFor(() => sidebar.executeJavaScript('document.getElementById("sidebar-splitter").getAttribute("aria-valuenow") === "432"'),
+    'sidebar rendered drag width before keyboard', snapshot);
   await sidebar.executeJavaScript(`document.getElementById('sidebar-splitter').dispatchEvent(new KeyboardEvent('keydown',{bubbles:true,key:'ArrowLeft'}))`);
   await waitFor(() => snapshot().sidebarWidth === 408, 'keyboard sidebar resize', snapshot);
   const disclosure = await sidebar.executeJavaScript(`(() => {

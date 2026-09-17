@@ -1281,3 +1281,7 @@ Electron smoke использует реальный navigate(null) после �
 - Project-Web-Pilot-0.6.36-Windows-x64.zip: 316322177 bytes; SHA-256 733c28af4853e3bf8b7a2259cd84d3e5ceec31ef9cc511fbb9941f4a0d2c835e.
 
 Изменения: после запроса установки Apple активируется штатное окно через open; ошибки запуска и показа различимы. Ранее подготовленная C009 добавляет прямой /auth/login для открытия без выбранного проекта. Сетевой дефект не объявляется устранённым: новый исходный клон 0.6.35 работал без изменения маршрута, тогда как прежний давал таймауты. Рабочий процесс и профиль основного Mac не перезапускались. Видимость системного окна и полный путь в госте ожидают T017. Evidence: .harness/runtime/installer-focus-{build,verify}-036.log, releases/0.6.36/{mac-release.json,source-verification.json,release-manifest.json,SHA256SUMS.txt}.
+
+## Синхронизация smoke-проверки сайдбара — V004
+
+Во время B005 обязательный Electron smoke завершился SMOKE_TIMEOUT: drag sidebar splitter. Смена ширины через IPC уже обновила main snapshot до 312, но асинхронный pilot:state-changed мог ещё не обновить renderer currentState; pointerdown тогда использовал прежние 420. Перед симуляцией перетягивания тест теперь ждёт aria-valuenow=312 в renderer, а перед клавиатурой — aria-valuenow=432. Проверки итоговых 432/408 и границ WebContentsView сохранены. Это исправление порядка теста, код приложения и подготовленные 0.6.36 ZIP не меняются. Evidence: installer-focus-B005.log, installer-focus-B005-retry.log и installer-focus-V004.log.
