@@ -31,7 +31,7 @@ Project ID нового проекта: `cf944136-d1fc-4bd5-9ea0-e46d1fe230e7`. 
 
 Связанные исходники: `kit/lib/plan.mjs`, `validate.mjs`, `transaction.mjs`, `git.mjs`, `git-hooks.mjs`, `common.mjs`, `platform.mjs`, `installation-files.mjs`, `kit/schemas/`, `kit/templates/`. Регрессии: `tests/install.test.mjs`, `workflow.test.mjs`, `recovery.test.mjs`, `windows.test.mjs` и `scripts/demo-workflow.mjs`.
 
-Источник переносимого runtime — **WF001/kit**, версия 1.1.0 по common.mjs. Собственная установленная WF001/.harness/kit имеет manifest 1.0.0: не перепутать установленный экземпляр с исходным комплектом. Это историческое происхождение комплекта. Текущий installed/bundled Workflow Kit в Web Pilot — 1.4.0; он развивает прежнее ядро собственным фасадом планов сессий без изменения WF001 или внешнего Codex runtime. Реальный Project Web Pilot manifest был reconciled Доктором 16.09.2026 (`doctor_reconciled_at=2026-09-16T07:28:22.983Z`) и затем синхронизирован с correction-round bytes. 17.09.2026 штатный Doctor согласовал его с полным проверенным комплектом 1.4.0 с новой резервной копией; намеренно возвращать stale-состояние нельзя.
+Источник переносимого runtime — **WF001/kit**, версия 1.1.0 по common.mjs. Собственная установленная WF001/.harness/kit имеет manifest 1.0.0: не перепутать установленный экземпляр с исходным комплектом. Это историческое происхождение комплекта. Текущий installed/bundled Workflow Kit в Web Pilot — 1.4.1; он развивает прежнее ядро собственным фасадом планов сессий без изменения WF001 или внешнего Codex runtime. Реальный Project Web Pilot manifest был reconciled Доктором 16.09.2026 (`doctor_reconciled_at=2026-09-16T07:28:22.983Z`) и затем синхронизирован с correction-round bytes. 17.09.2026 штатный Doctor согласовал его с полным проверенным комплектом 1.4.0 с новой резервной копией; намеренно возвращать stale-состояние нельзя.
 
 ## Codex Local Mac: откуда брать локальное подключение
 
@@ -110,3 +110,5 @@ Payload не содержит пользовательского tunnel ID/API k
 ## Portable Node.js для Windows — scope 008 / T014
 
 Чистая Windows-машина не должна иметь системный Node.js. Build pipeline использует официальный архив Node.js `node-v22.17.0-win-x64.zip` с `https://nodejs.org/dist/v22.17.0/`; ожидаемый SHA-256 — `721ab118a3aac8584348b132767eadf51379e0616f0db802cc1e66d7f0d98f85`. В Git хранится только `windows-runtime/node-v22.17.0-win-x64.zip.sha256`; сам 35.5 MiB архив и распакованный runtime находятся в ignored `.harness/runtime/windows-payload` / `.harness/runtime/windows-node` и физически попадают только в Windows distribution.
+
+Scope 029 / T007: 17.09.2026 штатный Doctor согласовал manifest с byte-identical installed/bundled Kit 1.4.1, создав backup всех канонических планов и manifest. Переход с замороженного исходника 1.4.0 проверен отдельной временной установкой; WF001 и внешний Codex runtime не изменялись.

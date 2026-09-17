@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "version": "1.4.0",
+  "version": "1.4.1",
   "initialized_git": true,
   "hook_mechanism": "git",
   "node_runtime": "system",
@@ -162,7 +162,7 @@
       "kind": "owned",
       "mode": 420,
       "original_hash": "3c1bdd4fc8c796d96060216b2369f33f47cfc429fa6c768e6e54765ab05e25d1",
-      "hash": "7f3198614e45196ac188be2490a0669d75b4beae5f8e3023d6edb6ee4db16ea2",
+      "hash": "f60bed45f358489a14fa868daedfbce7087510cc49e60a013a741d960da76e87",
       "existed": true
     },
     {
@@ -198,7 +198,7 @@
       "kind": "owned",
       "mode": 420,
       "original_hash": "5bfee2a88c3f2bb308576414955caf7df7075893e2e901bb09fb270dfe4f94aa",
-      "hash": "9045de7cc6c281bdc19952d6806571ff5e55132afcc14f668135b4c8d7f691ce",
+      "hash": "25864c6576d920cd22f676ee21ecbdcd48c1c3a6d36b17f211ae72f897b363c6",
       "existed": true
     },
     {
@@ -405,5 +405,5 @@
   "upgraded_from": "1.1.0",
   "upgraded_at": "2026-09-14T07:20:35.583Z",
   "installed_at": "2026-09-14T07:20:35.583Z",
-  "doctor_reconciled_at": "2026-09-17T10:55:35.290Z"
+  "doctor_reconciled_at": "2026-09-17T11:25:46.388Z"
 }

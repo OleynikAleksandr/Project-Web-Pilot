@@ -796,7 +796,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   const doctorReport = snapshot().doctor;
   assert.equal(doctorReport.projectReady, true, JSON.stringify(doctorReport));
   assert.equal(doctorReport.servicesReady, true); assert.deepEqual(doctorReport.issues, []);
-  assert.ok(doctorReport.backupPath); assert.equal(JSON.parse(await fs.readFile(doctorManifest)).version, '1.4.0');
+  assert.ok(doctorReport.backupPath); assert.equal(JSON.parse(await fs.readFile(doctorManifest)).version, '1.4.1');
   assert.equal(store.selected().sessionId, doctorSession, 'repair never starts a session');
   await fs.stat(path.join(doctorReport.backupPath,'repair.json'));
   await waitFor(() => sidebar.executeJavaScript('!document.getElementById("doctor-open").disabled'), 'doctor success actions ready', snapshot);

@@ -13,7 +13,7 @@ import { inspectionInputs } from './inspection-inputs.mjs';
 
 const hookNames = ['pre-commit', 'commit-msg', 'post-commit', 'pre-push'];
 const hookName = entry => path.posix.basename(entry.path.replaceAll('\\', '/'));
-const upgradeFrom = new Set(['1.1.0', '1.2.0', '1.3.0']);
+const upgradeFrom = new Set(['1.1.0', '1.2.0', '1.3.0', '1.4.0']);
 function migrateNonePlanForContinuity(root) {
   const file = path.join(root, PLAN);
   if (!fs.existsSync(file)) return false;

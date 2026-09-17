@@ -42,7 +42,7 @@ export function inspectProject(workspace) {
     const manifestBytes = read(MANIFEST);
     if (!manifestBytes) throw fail('DOCTOR_MANIFEST', 'Установочная запись отсутствует. Откройте папку проекта через обычную подготовку; доктор не угадывает состав установки.');
     let manifest; try { manifest = JSON.parse(manifestBytes.content); } catch { throw fail('DOCTOR_MANIFEST', 'Установочная запись повреждена. Нужна её резервная копия.'); }
-    if (manifest.schema_version !== 1 || !Array.isArray(manifest.files) || !['1.1.0', '1.2.0', '1.3.0', VERSION].includes(manifest.version)) throw fail('DOCTOR_VERSION', 'Версия или формат установки неизвестны. Нужен совместимый выпуск приложения.');
+    if (manifest.schema_version !== 1 || !Array.isArray(manifest.files) || !['1.1.0', '1.2.0', '1.3.0', '1.4.0', VERSION].includes(manifest.version)) throw fail('DOCTOR_VERSION', 'Версия или формат установки неизвестны. Нужен совместимый выпуск приложения.');
     result.version = manifest.version;
     const trusted = trustedFiles(), trustedMap = new Map(trusted.map(e => [e.path, e]));
     const owned = manifest.files.filter(e => e.kind === 'owned');
@@ -106,7 +106,7 @@ export function inspectProject(workspace) {
       withPlanFile(root, name, {}, () => resolveReferences(root, plan, pending?.plan_path === name || !pending?.plan_path && name === PLAN ? pending : null));
       if (renderPlan(plan) !== raw) changes.push({ file: file(name), content: renderPlan(plan), mode: readFile(file(name)).mode, label: 'Восстановлено читаемое представление: ' + name });
     }
-    const required = new Set(['docs/DOCUMENTATION_INDEX.md','docs/WORKFLOW_START.md','docs/PRODUCT.md','docs/architecture/ARCHITECTURE.md','docs/MODULES.md','docs/architecture/OVERVIEW.md','.harness/plans/todo-plan.template.md', ...plans.flatMap(({plan}) => (plan.context_pack.documents ?? []).filter(e => e.required).map(e => e.path))]);
+    const required = new Set(['docs/DOCUMENTATION_INDEX.md','docs/WORKFLOW_START.md','docs/PRODUCT.md','docs/architecture/ARCHITECTURE.md','docs/MODULES.md','docs/architecture/OVERVIEW.md','.harness/plans/todo-plan.template.md', ...plans.flatMap(({plan}) => [plan.context_pack, ...plan.tasks.map(task => task.context_pack)].flatMap(pack => (pack?.documents ?? []).filter(e => e.required).map(e => e.path)))]);
     for (const name of required) {
       if (typeof name !== 'string' || path.isAbsolute(name) || name.split(/[\\/]/).includes('..')) throw fail('DOCTOR_PATH','Недопустимый путь документа.');
       if (!read(name)) result.issues.push(issue(name, 'Обязательный документ отсутствует. Восстановите его из своей резервной копии или истории проекта.'));

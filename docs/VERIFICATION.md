@@ -1015,3 +1015,9 @@ Source Electron 44.3.0 / Chromium 152.0.7977.78, macOS arm64, тот же дву
 ## Scope 029 / T006 — адресованная готовность доставки (17.09.2026)
 
 Focused context-session/context-cache: 32/32 passed. Покрыты saved sent/legacy/unknown без ensure/warm/builder/Send; ошибка readiness до сборки и после вставки; отказ unkeyed attempt даже в пределах старого TTL; A→B→A во время ожидания ключа; отдельные адреса/NONE/чужой workspace; два key-read холодного warm и один готового cache-hit. Evidence: `.harness/runtime/performance-029/T006-focused.log`. Финальные Node suite/Electron smoke выполняются управляемым commit; результат записан в его evidence. Эти fixtures проверяют guards, не являются замером сетевой доставки или native Windows.
+
+## Scope 029 / T007 — Workflow Kit 1.4.1 (17.09.2026)
+
+Focused setup/Doctor/source parity: 36/36 passed. Добавлены patch-upgrade 1.4.0→1.4.1 с сохранением канонических планов, доверенное согласование manifest 1.4.0 и отказ ремонта при отсутствии task-required документа. Отдельный реальный frozen-source fixture использовал Kit из d07ac2cc2dd25dd39e7cbc56d5bb8b8dbd8b043b: fresh install 1.4.0, собственный session-plan, штатный preview/apply до 1.4.1; оба плана побайтово сохранены, создан kit-upgrade backup. Evidence: `.harness/runtime/performance-029/T007-{focused.log,upgrade-real.json,doctor.json}`.
+
+Корневой manifest обновлён штатным Doctor с backup; hashes вручную не менялись. macOS launcher проверяется реальными CLI/gates; Windows Node candidates, environment и package layout покрывают существующие fixtures. Native Windows portable Node/Git запуск на Mac не выполнялся; проверка поставки повторяется в T009. T006 managed result: suite 199 tests /197 passed /2 skipped, Electron smoke 67.476 с, commit d439ff7.

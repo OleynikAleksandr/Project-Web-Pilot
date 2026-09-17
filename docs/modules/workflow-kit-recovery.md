@@ -187,3 +187,7 @@ Scope 029 / T003: recoverState формирует проверенные validat
 ## Интеграция readiness и recovery — scope 029 / T006
 
 Web Pilot использует полный content-key WorkspaceSetup.ready и адрес sessionId/planId для отдельного RecoveryCache. Общий fingerprint учитывает все канонические планы, integrity и transaction; COMPLETE packet по-прежнему создаёт только Workflow Kit. Невозможность подтвердить ключ блокирует подготовку и Send, без обхода по возрасту пакета. Просмотр уже существующего чата не вызывает новый recover.
+
+## Поставка 1.4.1 — scope 029 / T007
+
+Installed/bundled ядро синхронно обновлено до patch-версии 1.4.1. Формат планов, адресация и recovery остаются совместимыми с 1.4.0. Обычный upgrade поддерживает 1.4.0 и сохраняет планы/commit references; штатный Doctor согласует manifest только при полном совпадении доверенного комплекта, с backup. Ускорение не отключает hooks или полную проверку планов.

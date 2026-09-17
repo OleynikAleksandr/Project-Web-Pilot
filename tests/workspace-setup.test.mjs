@@ -111,7 +111,7 @@ test('compatible 1.2 NONE installation upgrades to 1.4 with project continuity a
   const manifestFile = path.join(workspace, '.harness/kit-manifest.json');
   const manifest = JSON.parse(await fs.readFile(manifestFile, 'utf8')); manifest.version = '1.2.0';
   const commonPath = path.join(workspace, '.harness/kit/lib/common.mjs');
-  const legacyCommon = (await fs.readFile(commonPath, 'utf8')).replace("VERSION = '1.4.0'", "VERSION = '1.2.0'");
+  const legacyCommon = (await fs.readFile(commonPath, 'utf8')).replace("VERSION = '1.4.1'", "VERSION = '1.2.0'");
   await fs.writeFile(commonPath, legacyCommon);
   const commonEntry = manifest.files.find(entry => entry.path === '.harness/kit/lib/common.mjs'); commonEntry.hash = sha(legacyCommon);
   await fs.writeFile(manifestFile, JSON.stringify(manifest, null, 2) + '\n');
@@ -135,8 +135,8 @@ test('compatible 1.2 NONE installation upgrades to 1.4 with project continuity a
   const preview = await setup.preview({ mode: 'existing', workspace });
   assert.equal(preview.action, 'upgrade', JSON.stringify(preview));
   const result = await setup.apply(preview.token);
-  assert.equal(result.ready, true, JSON.stringify(result)); assert.equal(result.version, '1.4.0');
-  assert.match(await fs.readFile(commonPath, 'utf8'), /VERSION = '1\.4\.0'/);
+  assert.equal(result.ready, true, JSON.stringify(result)); assert.equal(result.version, '1.4.1');
+  assert.match(await fs.readFile(commonPath, 'utf8'), /VERSION = '1\.4\.1'/);
   assert.match(await fs.readFile(path.join(workspace, 'docs/architecture/OVERVIEW.md'), 'utf8'), /CUSTOM_OVERVIEW_STAYS/);
   assert.equal(await fs.readFile(path.join(workspace, 'docs/PRODUCT.md'), 'utf8'), '# User product stays\n');
   const upgradedIndex = await fs.readFile(indexFile, 'utf8'); assert.match(upgradedIndex, /docs\/custom\.md/); assert.match(upgradedIndex, /docs\/MODULES\.md/); assert.match(upgradedIndex, /docs\/architecture\/OVERVIEW\.md/);
@@ -262,7 +262,7 @@ test('1.3 upgrade installs newly introduced core files with a backup and preserv
   const preview=await setup.preview({mode:'existing',workspace});
   assert.equal(preview.action,'upgrade',JSON.stringify(preview));
   const result=await setup.apply(preview.token);
-  assert.equal(result.ready,true,JSON.stringify(result));assert.equal(result.version,'1.4.0');
+  assert.equal(result.ready,true,JSON.stringify(result));assert.equal(result.version,'1.4.1');
   assert.deepEqual(await fs.readFile(path.join(workspace,'.harness/plans/todo-plan.md')),original);
   assert.ok((await fs.readdir(path.join(workspace,'.harness/runtime'))).some(n=>n.startsWith('kit-upgrade-')));
   await fs.stat(path.join(workspace,'.harness/kit/lib/session-plans.mjs'));
@@ -326,3 +326,30 @@ test('one inspection recovers each canonical plan once and refuses concurrent in
   assert.equal(changes, 2, 'at most one retry');
 });
 
+
+test('compatible 1.4.0 upgrades to 1.4.1 and preserves canonical session plans', async t => {
+  const { setup, workspace } = await create(t);
+  const { createScope } = await import('../resources/workflow-kit/lib/actions.mjs');
+  const { withSessionPlan, listPlans } = await import('../resources/workflow-kit/lib/session-plans.mjs');
+  withSessionPlan(workspace, { sessionId: 'patch-upgrade-session' }, () => createScope(workspace, {
+    scope_id: 'patch-upgrade', objective: 'Upgrade fixture', approval_note: 'Approved fixture', acceptance_criteria: ['Preserved'],
+    approved_scope: { functional_paths: [], documentation_paths: ['docs/PRODUCT.md'], max_functional_files_per_task: 3 },
+    tasks: [{ id: 'T1', title: 'Fixture', why: 'Upgrade', dependencies: [], functional_paths: [], documentation_paths: ['docs/PRODUCT.md'], acceptance_criteria: ['Preserved'], verification_ids: [], expected_commit_message: 'docs: fixture' }],
+  }));
+  const originals = await Promise.all(listPlans(workspace).map(async p => [p.file, await fs.readFile(path.join(workspace, p.file))]));
+  const manifestFile = path.join(workspace, '.harness/kit-manifest.json');
+  const manifest = JSON.parse(await fs.readFile(manifestFile, 'utf8')); manifest.version = '1.4.0';
+  const commonPath = path.join(workspace, '.harness/kit/lib/common.mjs');
+  const oldCommon = (await fs.readFile(commonPath, 'utf8')).replace("VERSION = '1.4.1'", "VERSION = '1.4.0'");
+  await fs.writeFile(commonPath, oldCommon);
+  manifest.files.find(entry => entry.path === '.harness/kit/lib/common.mjs').hash = sha(oldCommon);
+  await fs.writeFile(manifestFile, JSON.stringify(manifest, null, 2) + '\n');
+  git(workspace, 'add', '.'); git(workspace, '-c', 'core.hooksPath=/dev/null', 'commit', '-m', 'isolated patch upgrade input');
+  const preview = await setup.preview({ mode: 'existing', workspace });
+  assert.equal(preview.action, 'upgrade', JSON.stringify(preview));
+  const result = await setup.apply(preview.token);
+  assert.equal(result.ready, true, JSON.stringify(result)); assert.equal(result.version, '1.4.1');
+  for (const [file, bytes] of originals) assert.deepEqual(await fs.readFile(path.join(workspace, file)), bytes);
+  assert.ok((await fs.readdir(path.join(workspace, '.harness/runtime'))).some(n => n.startsWith('kit-upgrade-')));
+  assert.equal(git(workspace, 'status', '--porcelain'), '');
+});

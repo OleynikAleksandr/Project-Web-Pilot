@@ -120,3 +120,24 @@ test('doctor and readiness preserve all session plans and repair only their proj
   assert.equal(listPlans(root).find(e=>e.plan.scope_id==='future-plan').plan.prepared_in_session_id,'source');
   assert.equal(repairProject(root).repaired,false);
 });
+
+test('1.4.0 manifest reconciles to trusted 1.4.1 and missing task-required documents block repair', t => {
+  const root = fixture(t), manifestFile = path.join(root, '.harness/kit-manifest.json');
+  const manifest = JSON.parse(text(root, '.harness/kit-manifest.json')); manifest.version = '1.4.0';
+  fs.writeFileSync(manifestFile, JSON.stringify(manifest));
+  const repaired = repairProject(root);
+  assert.deepEqual(repaired.issues, []); assert.ok(repaired.backupPath);
+  assert.equal(JSON.parse(text(root, '.harness/kit-manifest.json')).version, '1.4.1');
+  const required = 'docs/task-required.md'; fs.writeFileSync(path.join(root, required), '# Task required\n');
+  withSessionPlan(root, { sessionId: 'task-document' }, () => createScope(root, {
+    scope_id: 'task-document', objective: 'Task document fixture', approval_note: 'Approved fixture', acceptance_criteria: ['Checked'],
+    approved_scope: { functional_paths: [], documentation_paths: [required], max_functional_files_per_task: 3 },
+    tasks: [{ id: 'T1', title: 'Fixture', why: 'Required context', dependencies: [], functional_paths: [], documentation_paths: [required],
+      context_pack: { documents: [{ path: required, required: true, revision: 'WORKTREE' }] },
+      acceptance_criteria: ['Checked'], verification_ids: [], expected_commit_message: 'docs: fixture' }],
+  }));
+  fs.unlinkSync(path.join(root, required));
+  const before = fs.readFileSync(manifestFile), result = repairProject(root);
+  assert.ok(result.issues.some(issue => issue.path === required));
+  assert.equal(result.backupPath, undefined); assert.deepEqual(fs.readFileSync(manifestFile), before);
+});

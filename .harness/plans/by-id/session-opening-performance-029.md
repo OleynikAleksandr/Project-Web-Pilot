@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 22,
+  "plan_revision": 25,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-opening-performance-029",
@@ -473,8 +473,8 @@
       "file_limit_exception": "Одна проверяемая часть существующего фасада: синхронные installed/bundled копии, интеграция вызова и профильные regression. Новые файлы служат только общей проверке актуальности; отдельного менеджера/сервиса нет."
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-opening-performance-029",
         "task_id": "T007",
@@ -491,7 +491,10 @@
         "resources/project-doctor/core.mjs",
         "tests/workspace-setup.test.mjs",
         "tests/project-doctor.test.mjs",
-        "tests/workflow-kit-source.test.mjs"
+        "tests/workflow-kit-source.test.mjs",
+        "resources/workspace-setup-worker.mjs",
+        "tests/electron-smoke.mjs",
+        ".harness/kit-manifest.json"
       ],
       "documentation_paths": [
         "docs/modules/session-opening-performance.md",
@@ -514,7 +517,7 @@
         "Проверить macOS launcher и Windows portable Node/Git; никаких правок WF001, внешнего MCP/tunnel, профилей или пользовательских VM."
       ],
       "expected_commit_message": "fix: preserve kit upgrade and diagnostics after performance changes",
-      "file_limit_exception": "Одна проверяемая часть существующего фасада: синхронные installed/bundled копии, интеграция вызова и профильные regression. Новые файлы служат только общей проверке актуальности; отдельного менеджера/сервиса нет."
+      "file_limit_exception": "Совместимое обновление одного комплекта: installed/bundled, worker/Doctor version gates, manifest через Doctor и regression текущей версии."
     },
     {
       "implementation_status": "TODO",
@@ -723,7 +726,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-opening-performance-029
 Current Task: нет
-Revision: 22
+Revision: 25
 
 ## Цель
 
@@ -764,10 +767,10 @@ Revision: 22
   - Git Commit: [DONE] fix: gate context delivery on current session readiness
   - Reference: session-opening-performance-029 / T006 / implementation
   - Файлы: src/context-session.mjs, src/context-cache.mjs, src/context-inputs.mjs, src/session-plans.mjs, tests/context-session.test.mjs, tests/context-cache.test.mjs, src/main.mjs, tests/electron-smoke.mjs, docs/modules/session-opening-performance.md, docs/CONTEXT_DELIVERY.md, docs/modules/workspace-sessions.md, docs/modules/workflow-kit-recovery.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
-- [TODO] T007: Сохранить установку и диагностику обновлённого Workflow Kit — Ожидает
-  - Git Commit: [PENDING] fix: preserve kit upgrade and diagnostics after performance changes
+- [DONE] T007: Сохранить установку и диагностику обновлённого Workflow Kit — Завершено
+  - Git Commit: [DONE] fix: preserve kit upgrade and diagnostics after performance changes
   - Reference: session-opening-performance-029 / T007 / implementation
-  - Файлы: .harness/kit/lib/common.mjs, resources/workflow-kit/lib/common.mjs, .harness/kit/lib/installer.mjs, resources/workflow-kit/lib/installer.mjs, resources/project-doctor/core.mjs, tests/workspace-setup.test.mjs, tests/project-doctor.test.mjs, tests/workflow-kit-source.test.mjs, docs/modules/session-opening-performance.md, docs/WORKSPACE_SETUP.md, docs/modules/project-doctor.md, docs/modules/workflow-kit-recovery.md, docs/SOURCE_WORKSPACES.md, docs/VERIFICATION.md
+  - Файлы: .harness/kit/lib/common.mjs, resources/workflow-kit/lib/common.mjs, .harness/kit/lib/installer.mjs, resources/workflow-kit/lib/installer.mjs, resources/project-doctor/core.mjs, tests/workspace-setup.test.mjs, tests/project-doctor.test.mjs, tests/workflow-kit-source.test.mjs, resources/workspace-setup-worker.mjs, tests/electron-smoke.mjs, .harness/kit-manifest.json, docs/modules/session-opening-performance.md, docs/WORKSPACE_SETUP.md, docs/modules/project-doctor.md, docs/modules/workflow-kit-recovery.md, docs/SOURCE_WORKSPACES.md, docs/VERIFICATION.md
 - [TODO] T008: Проверить корректность и достигнутую скорость — Ожидает
   - Git Commit: [PENDING] test: verify fast session opening and stale result isolation
   - Reference: session-opening-performance-029 / T008 / implementation
