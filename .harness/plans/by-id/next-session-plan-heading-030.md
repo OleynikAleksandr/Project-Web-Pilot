@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 14,
+  "plan_revision": 15,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "next-session-plan-heading-030",
@@ -248,18 +248,20 @@
         "docs/modules/session-owned-plans.md",
         "docs/design/session-plan-navigation.md",
         "docs/VERIFICATION.md",
-        "docs/RELEASE.md"
+        "docs/RELEASE.md",
+        "docs/modules/workspace-sessions.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
       "title": "Актуализация всех документов проекта",
-      "why": "После изменения пользовательского термина и выпуска проверить весь действующий комплект документации и обновить только устаревшие сведения.",
+      "why": "После сохранения геометрии интерфейса и выпуска 0.6.31 проверить весь действующий комплект документации и обновить только устаревшие сведения.",
       "acceptance_criteria": [
         "Все документы из docs/DOCUMENTATION_INDEX.md проверены на актуальность этого изменения.",
-        "Текущее название блока в действующих контрактах — «План следующей сессии»; исторические цитаты/сведения не переписываются без необходимости.",
-        "Release/verification документы содержат фактические сведения о 0.6.30; актуальные документы оставлены без бессмысленных правок."
+        "Контракт Workspace & Sessions описывает сохранение position/size основного окна через native Electron persistence и существующее сохранение ширины сайдбара в userData.",
+        "Release/verification документы содержат фактические сведения, checksums и границы проверки 0.6.31; исторические записи сохранены.",
+        "Актуальные документы оставлены без бессмысленных правок; локальные ссылки и две копии Workflow Kit согласованы."
       ],
-      "expected_commit_message": "docs: document next session plan heading release"
+      "expected_commit_message": "docs: document persistent window geometry release"
     }
   ],
   "blocked_reason": null,
@@ -287,7 +289,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: next-session-plan-heading-030
 Current Task: нет
-Revision: 14
+Revision: 15
 
 ## Цель
 
@@ -321,9 +323,9 @@ Revision: 14
   - Reference: next-session-plan-heading-030 / T004 / implementation
   - Файлы: package.json, package-lock.json
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: document next session plan heading release
+  - Git Commit: [PENDING] docs: document persistent window geometry release
   - Reference: next-session-plan-heading-030 / DOCS / implementation
-  - Файлы: README.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/OVERVIEW.md, docs/architecture/ARCHITECTURE.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/modules/session-owned-plans.md, docs/design/session-plan-navigation.md, docs/VERIFICATION.md, docs/RELEASE.md
+  - Файлы: README.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/OVERVIEW.md, docs/architecture/ARCHITECTURE.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/modules/session-owned-plans.md, docs/design/session-plan-navigation.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/modules/workspace-sessions.md
 
 ## Context Pack For This Cycle
 
