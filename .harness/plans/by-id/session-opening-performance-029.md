@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 3,
+  "plan_revision": 4,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-opening-performance-029",
@@ -598,8 +598,9 @@
       "recorded_at": "2026-09-17T10:08:58.792Z"
     }
   ],
-  "owner_session_id": null,
-  "prepared_in_session_id": "web-pilot-7e2e05c8-d094-4e09-b7a9-21ecb50c51b4"
+  "owner_session_id": "web-pilot-3d7ee647-735e-489d-a331-84905a11e25a",
+  "prepared_in_session_id": "web-pilot-7e2e05c8-d094-4e09-b7a9-21ecb50c51b4",
+  "session_experience": "work"
 }
 ```
 <!-- workflow-state:end -->
@@ -610,7 +611,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-opening-performance-029
 Current Task: нет
-Revision: 3
+Revision: 4
 
 ## Цель
 
