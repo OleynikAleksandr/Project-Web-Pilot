@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 7,
+  "plan_revision": 9,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-onboarding-031",
@@ -157,8 +157,8 @@
       "why": "Зафиксировать воспроизводимую исходную точку без скрытых зависимостей разработчика."
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-onboarding-031",
         "task_id": "T002",
@@ -818,7 +818,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-onboarding-031
 Current Task: нет
-Revision: 7
+Revision: 9
 
 ## Цель
 
@@ -841,8 +841,8 @@ Revision: 7
   - Git Commit: [DONE] docs: record clean first-run baseline
   - Reference: first-run-onboarding-031 / T001 / implementation
   - Файлы: docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md
-- [TODO] T002: Пройти первый запуск macOS и зафиксировать затруднения пользователя — Ожидает
-  - Git Commit: [PENDING] docs: record initial macOS first-run findings
+- [DONE] T002: Пройти первый запуск macOS и зафиксировать затруднения пользователя — Завершено
+  - Git Commit: [DONE] docs: record initial macOS first-run findings
   - Reference: first-run-onboarding-031 / T002 / implementation
   - Файлы: docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md
 - [TODO] T003: Уточнить последовательность первого запуска по наблюдениям — Ожидает
