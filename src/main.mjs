@@ -923,8 +923,9 @@ function registerIpc() {
 }
 
 async function createWindow() {
-  window = new BaseWindow({ title: smoke ? 'Project Web Pilot — TEST FIXTURE' : 'Project Web Pilot',
-    width: 1440, height: 940, minWidth: 980, minHeight: 700, backgroundColor: shellBackground[shellTheme] });
+  window = new BaseWindow({ name: 'main-window', title: smoke ? 'Project Web Pilot — TEST FIXTURE' : 'Project Web Pilot',
+    width: 1440, height: 940, minWidth: 980, minHeight: 700, backgroundColor: shellBackground[shellTheme],
+    windowStatePersistence: { bounds: true, displayMode: false } });
   sidebar = new WebContentsView({ webPreferences: { preload: path.join(sourceDir, 'preload.cjs'),
     nodeIntegration: false, contextIsolation: true, sandbox: true, webSecurity: true } });
   browser = new WebContentsView({ webPreferences: remotePreferences() });

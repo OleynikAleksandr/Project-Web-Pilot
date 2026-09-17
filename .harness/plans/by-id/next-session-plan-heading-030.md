@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 10,
+  "plan_revision": 12,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "next-session-plan-heading-030",
@@ -160,8 +160,8 @@
       "documentation_exception": "T002 меняет только version/package metadata и выполняет уже согласованную поставку; фактическая версия, checksums и release evidence фиксируются обязательной финальной задачей DOCS."
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "next-session-plan-heading-030",
         "task_id": "T003",
@@ -287,7 +287,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: next-session-plan-heading-030
 Current Task: нет
-Revision: 10
+Revision: 12
 
 ## Цель
 
@@ -312,8 +312,8 @@ Revision: 10
   - Git Commit: [DONE] build: release 0.6.30
   - Reference: next-session-plan-heading-030 / T002 / implementation
   - Файлы: package.json, package-lock.json
-- [TODO] T003: Сохранять геометрию окна и сайдбара — Ожидает
-  - Git Commit: [PENDING] feat: persist main window geometry
+- [DONE] T003: Сохранять геометрию окна и сайдбара — Завершено
+  - Git Commit: [DONE] feat: persist main window geometry
   - Reference: next-session-plan-heading-030 / T003 / implementation
   - Файлы: src/main.mjs, tests/electron-smoke.mjs
 - [TODO] T004: Собрать релиз 0.6.31 — Ожидает
