@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 3,
+  "plan_revision": 7,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-onboarding-031",
@@ -59,7 +59,17 @@
       "scripts/release-mac.mjs",
       "src/windows-runtime.mjs",
       "tests/windows-runtime.test.mjs",
-      "scripts/verify-windows-package.mjs"
+      "scripts/verify-windows-package.mjs",
+      "src/startup-readiness.mjs",
+      "tests/startup-readiness.test.mjs",
+      "tests/mac-toolchain.test.mjs",
+      "src/ui/startup.mjs",
+      "src/ui/sidebar.mjs",
+      "resources/runtime-control/mac-first-run.py",
+      "tests/mac-first-run.test.mjs",
+      "tests/startup-ui.test.mjs",
+      "tests/sidebar.test.mjs",
+      "tests/electron-smoke.mjs"
     ],
     "max_functional_files_per_task": 3
   },
@@ -121,8 +131,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-onboarding-031",
         "task_id": "T001",
@@ -137,13 +147,13 @@
       ],
       "verification_ids": [],
       "acceptance_criteria": [
-        "Записаны реальные имена Base/Test, сборки гостевых ОС, архитектуры и отсутствие предварительной установки зависимостей/профиля Web Pilot.",
-        "Выбрана актуальная завершённая поставка; записаны версия, SHA-256 и происхождение. Старая 0.6.27 в госте не выбирается автоматически.",
-        "Base не используется для испытаний; общий каталог только передаёт пакеты, приложение и проекты находятся на диске гостя."
+        "Записаны подтверждённые имена Base/Test, выбранная завершённая поставка с SHA-256 и её происхождение.",
+        "Неподтверждённые версия/чистота гостя явно отмечены и сохранены обязательными проверками T009; они не выдаются за результат и не блокируют исправление установленного аудитом дефекта.",
+        "Base не используется для испытаний; файлы и проекты гостя не подменяются рабочими профилями основного Mac."
       ],
       "expected_commit_message": "docs: record clean first-run baseline",
       "id": "T001",
-      "title": "Подтвердить подготовленный эталон и выбрать пакет для первого запуска",
+      "title": "Зафиксировать исходную поставку и известные границы стенда",
       "why": "Зафиксировать воспроизводимую исходную точку без скрытых зависимостей разработчика."
     },
     {
@@ -219,7 +229,7 @@
       "functional_paths": [
         "scripts/prepare-mac-toolchain.mjs",
         "src/platform.mjs",
-        "tests/mac-runtime.test.mjs"
+        "tests/mac-toolchain.test.mjs"
       ],
       "documentation_paths": [
         "docs/modules/first-run-onboarding.md",
@@ -233,9 +243,8 @@
         "suite"
       ],
       "acceptance_criteria": [
-        "Нужные Node/Git и средства bootstrap доступны через проверенную поставку или автоматическую подготовку; пользователь не устанавливает их вручную.",
-        "Выбор готового решения, целостность компонентов и поведение при отсутствии/ошибке проверены; нет зависимости от Homebrew рабочего Mac.",
-        "Конкретный состав изменения уточнён по T002/T003 через plan:apply до правок; дополнительные файлы вынесены в отдельные микрозадачи."
+        "Официальный Node.js 22.17.0 arm64 включён в mac-tools с проверенным SHA-256 и лицензией; используется существующий packaging extra-resource.",
+        "Выбор bundled Node не зависит от Homebrew пользователя; его подключение к WorkspaceSetup выполняется F001. Git проверяется и устанавливается штатным механизмом Apple в T005/F001."
       ],
       "expected_commit_message": "fix: prepare dependencies for clean macOS",
       "id": "T004",
@@ -254,9 +263,8 @@
         "T004"
       ],
       "functional_paths": [
-        "src/mac-runtime.mjs",
-        "src/workspace-setup.mjs",
-        "tests/workspace-setup.test.mjs"
+        "src/startup-readiness.mjs",
+        "tests/startup-readiness.test.mjs"
       ],
       "documentation_paths": [
         "docs/modules/first-run-onboarding.md",
@@ -270,14 +278,53 @@
         "suite"
       ],
       "acceptance_criteria": [
-        "Первый проект и локальный runtime готовятся без ручных команд и копирования внешнего рабочего runtime.",
-        "Ошибки подготовки сохраняют понятное состояние и возможность повтора; повтор не создаёт дубликатов и не теряет введённые данные.",
-        "Используются прежние facade и изолированный профиль гостя; изменения основного MCP/tunnel или секретов не требуются."
+        "Узкий facade проверяет Node и Git без вызова установочных диалогов при чтении, повторяет проверки после явного действия пользователя.",
+        "Установка Git запускается штатным диалогом Apple по кнопке с объяснением; существующая подготовка Python/MCP вызывается через переданный facade с понятным прогрессом и ошибкой.",
+        "Загрузка сайта, вход, локальные компоненты и tunnel имеют отдельные состояния; ошибка/повтор/закрытие не принимают старые результаты за готовность."
       ],
       "expected_commit_message": "fix: bootstrap first workspace on clean macOS",
       "id": "T005",
-      "title": "Довести автоматическую подготовку runtime и первого проекта",
+      "title": "Реализовать проверку и последовательную подготовку чистого окружения",
       "why": "Соединить доступные компоненты с реальной подготовкой чистого пользовательского окружения."
+    },
+    {
+      "id": "F001",
+      "title": "Проверять готовность чистой системы перед началом работы",
+      "why": "Первый запуск не должен предполагать прежний вход в ChatGPT или наличие компонентов, локальной службы и туннеля.",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "first-run-onboarding-031",
+        "task_id": "F001",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "T005"
+      ],
+      "functional_paths": [
+        "src/main.mjs",
+        "src/preload.cjs",
+        "src/ui/progress.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/first-run-onboarding.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/VERIFICATION.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/modules/runtime-lifecycle.md"
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "acceptance_criteria": [
+        "При запуске проверяются нужные локальные компоненты, состояние MCP и туннеля; вход в ChatGPT и подключение инструментов проверяются отдельными состояниями.",
+        "Каждое отсутствующее условие переводит приложение в понятный шаг подготовки, входа или настройки с проверяемым результатом; отсутствие прежнего профиля является нормальным первым запуском.",
+        "Затяжная загрузка сайта, отсутствие сети, неготовый компонент и требуемое личное действие не объединяются одним индикатором; доступны понятные действия и повтор.",
+        "Приложение ChatGPT отдельно не устанавливается; пользователь проходит штатный вход или создание аккаунта во встроенной веб-версии.",
+        "Успехи чужого runtime, старого профиля или только локальной службы не разрешают объявлять полный путь готовым; повтор и перезапуск сохраняют безопасное состояние."
+      ],
+      "expected_commit_message": "feat: check first-run readiness on startup"
     },
     {
       "implementation_status": "TODO",
@@ -288,12 +335,13 @@
         "role": "implementation"
       },
       "dependencies": [
-        "T005"
+        "T005",
+        "F001"
       ],
       "functional_paths": [
-        "src/main.mjs",
-        "src/preload.cjs",
-        "src/ui/workspace-setup.mjs"
+        "src/ui/startup.mjs",
+        "src/ui/index.html",
+        "src/ui/sidebar.mjs"
       ],
       "documentation_paths": [
         "docs/modules/first-run-onboarding.md",
@@ -331,9 +379,9 @@
         "T006"
       ],
       "functional_paths": [
-        "src/mcp-runtime.mjs",
-        "src/ui/index.html",
-        "src/ui/progress.mjs"
+        "resources/runtime-control/mac-first-run.py",
+        "src/mac-runtime.mjs",
+        "tests/mac-first-run.test.mjs"
       ],
       "documentation_paths": [
         "docs/modules/first-run-onboarding.md",
@@ -349,15 +397,48 @@
         "electron-smoke"
       ],
       "acceptance_criteria": [
-        "Каждое обязательное личное действие имеет точное объяснение, кнопку/ссылку и проверку результата после возврата.",
-        "Настройка подключения объясняет, где получить необходимые данные и что с ними сделать; штатный путь не требует Terminal/PowerShell.",
-        "Отмена, неверные данные и ошибка соединения позволяют повторить шаг без потери прогресса; секреты не попадают в отчёты или сообщения.",
-        "Подтверждена готовность гостевого MCP/tunnel, а не только вход в ChatGPT."
+        "macOS получает нативный последовательный ввод tunnel_id и ключа по кнопке; ключ обрабатывается только дочерним локальным worker и private runtime store, не попадает в renderer/argv/диагностику.",
+        "Инструкция мастера объясняет создание туннеля/ключа, связывание ChatGPT workspace и подключение плагина с официальными ссылками; личные действия выполняет пользователь.",
+        "Отмена не меняет конфигурацию; после настройки выполняется реальная проверка служб; успешный локальный статус не выдаётся за выполненное агентом действие с файлом."
       ],
       "expected_commit_message": "feat: guide initial connection setup",
       "id": "T007",
       "title": "Сопроводить вход и первичную настройку подключения",
       "why": "Устранить необходимость самостоятельно разбираться с аккаунтом, туннелем и разрешениями."
+    },
+    {
+      "id": "V001",
+      "title": "Проверить мастер в интерфейсе и сценарии отказов",
+      "why": "Нужны доказательства наблюдаемого исправления первого экрана до выпуска.",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "first-run-onboarding-031",
+        "task_id": "V001",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "T007"
+      ],
+      "functional_paths": [
+        "tests/startup-ui.test.mjs",
+        "tests/sidebar.test.mjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "docs/VERIFICATION.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/modules/first-run-onboarding.md"
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "acceptance_criteria": [
+        "Изолированно проверены новый профиль, долгий/неудачный load, повтор, вход, отсутствие компонентов, отмена и возврат; существующие сессии не нарушены.",
+        "Снимок локального мастера подтверждает читаемость следующего действия; это не подменяет реальный чистый прогон пользователя."
+      ],
+      "expected_commit_message": "test: verify guided startup and retries"
     },
     {
       "implementation_status": "TODO",
@@ -368,7 +449,7 @@
         "role": "implementation"
       },
       "dependencies": [
-        "T007"
+        "V001"
       ],
       "functional_paths": [
         "package.json",
@@ -397,6 +478,46 @@
       "why": "Передать для испытания готовое приложение с прослеживаемым составом."
     },
     {
+      "id": "R001",
+      "title": "Обновить документы первой итерации и передать релиз на проверку",
+      "why": "Релизная итерация должна иметь актуальные инструкции и честные границы до ручного прогона.",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "first-run-onboarding-031",
+        "task_id": "R001",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "T008"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/modules/first-run-onboarding.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/VERIFICATION.md",
+        "docs/PRODUCT.md",
+        "docs/DECISIONS.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/RELEASE.md",
+        "docs/modules/runtime-lifecycle.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/modules/workspace-sessions.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "README.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/MODULES.md",
+        "docs/DOCUMENTATION_INDEX.md"
+      ],
+      "verification_ids": [],
+      "acceptance_criteria": [
+        "Обновлены документы первой итерации, состав/доставка релиза и точка повторного запуска; будущие задачи остаются в текущем плане до единственной финальной DOCS."
+      ],
+      "expected_commit_message": "docs: deliver first-run iteration for clean testing"
+    },
+    {
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
@@ -405,7 +526,7 @@
         "role": "implementation"
       },
       "dependencies": [
-        "T008"
+        "R001"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -418,7 +539,8 @@
         "На новом клоне Base пройден путь от пакета до проекта, доставки контекста и разрешённого действия агента с тестовым файлом гостя.",
         "Для подтверждения готовности достаточно подсказок поставки и приложения; помощь агента в обход недостающего UI считается проблемой.",
         "Каждый оставшийся дефект добавляет задачи исправления, сборки и нового прохода до последующих проверок и DOCS; число циклов не ограничивается.",
-        "После перезапуска приложения и гостя настройки сохраняются и подготовка не начинается заново."
+        "После перезапуска приложения и гостя настройки сохраняются и подготовка не начинается заново.",
+        "Перед повторным испытанием подтвердить сборку/архитектуру гостя, отсутствие предустановленных зависимостей/профиля в Base и версию/происхождение гостевого app; ранее отсутствовавшие данные T001 не считать подтверждёнными."
       ],
       "expected_commit_message": "docs: verify clean macOS guided startup",
       "id": "T009",
@@ -601,9 +723,12 @@
         "T003",
         "T004",
         "T005",
+        "F001",
         "T006",
         "T007",
+        "V001",
         "T008",
+        "R001",
         "T009",
         "T010",
         "T011",
@@ -669,6 +794,16 @@
       "id": "computer-use-trial-stopped",
       "text": "17.09.2026 пользователь временно разрешил Computer Use только для запуска Test macOS 01, просмотра папки обмена и замера задержек. После задержек 34 и 57 секунд он остановил опыт и поручил вернуться к своим скриншотам и подсказкам агента; диагностика отложена.",
       "recorded_at": "2026-09-17T14:33:51.217455+00:00"
+    },
+    {
+      "id": "zero-prerequisites-startup",
+      "recorded_at": "2026-09-17T14:50:36.992191+00:00",
+      "text": "Пользователь уточнил: на чистой системе может не быть аккаунта или прежнего входа в ChatGPT, локального bridge/MCP и туннеля. Web Pilot обязан проверять необходимые условия при запуске, автоматически готовить технические компоненты и полностью сопровождать обязательные личные действия. Внешние диагностические подсказки агента не заменяют этот путь."
+    },
+    {
+      "id": "stepwise-releases",
+      "recorded_at": "2026-09-17T14:56:50.242259+00:00",
+      "text": "Пользователь поручил сейчас реализовать исправления первого запуска и выпустить новый релиз, затем проверить его в чистом госте и перейти к следующему наблюдаемому препятствию. Работа выполняется итерациями в этом же плане; недостающие доказательства базовой VM сохраняются в T009, не выдаются за проверенные и не блокируют исправление подтверждённых кодом проблем."
     }
   ],
   "owner_session_id": "web-pilot-ee60a2b3-bdde-4d7f-83cd-a4e25767fcbe",
@@ -683,7 +818,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-onboarding-031
 Current Task: нет
-Revision: 3
+Revision: 7
 
 ## Цель
 
@@ -702,8 +837,8 @@ Revision: 3
 
 ## Микрозадачи
 
-- [TODO] T001: Подтвердить подготовленный эталон и выбрать пакет для первого запуска — Ожидает
-  - Git Commit: [PENDING] docs: record clean first-run baseline
+- [DONE] T001: Зафиксировать исходную поставку и известные границы стенда — Завершено
+  - Git Commit: [DONE] docs: record clean first-run baseline
   - Reference: first-run-onboarding-031 / T001 / implementation
   - Файлы: docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md
 - [TODO] T002: Пройти первый запуск macOS и зафиксировать затруднения пользователя — Ожидает
@@ -717,23 +852,35 @@ Revision: 3
 - [TODO] T004: Обеспечить доступность компонентов для чистой macOS — Ожидает
   - Git Commit: [PENDING] fix: prepare dependencies for clean macOS
   - Reference: first-run-onboarding-031 / T004 / implementation
-  - Файлы: scripts/prepare-mac-toolchain.mjs, src/platform.mjs, tests/mac-runtime.test.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md
-- [TODO] T005: Довести автоматическую подготовку runtime и первого проекта — Ожидает
+  - Файлы: scripts/prepare-mac-toolchain.mjs, src/platform.mjs, tests/mac-toolchain.test.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md
+- [TODO] T005: Реализовать проверку и последовательную подготовку чистого окружения — Ожидает
   - Git Commit: [PENDING] fix: bootstrap first workspace on clean macOS
   - Reference: first-run-onboarding-031 / T005 / implementation
-  - Файлы: src/mac-runtime.mjs, src/workspace-setup.mjs, tests/workspace-setup.test.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, docs/WORKSPACE_SETUP.md, docs/modules/runtime-lifecycle.md
+  - Файлы: src/startup-readiness.mjs, tests/startup-readiness.test.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, docs/WORKSPACE_SETUP.md, docs/modules/runtime-lifecycle.md
+- [TODO] F001: Проверять готовность чистой системы перед началом работы — Ожидает
+  - Git Commit: [PENDING] feat: check first-run readiness on startup
+  - Reference: first-run-onboarding-031 / F001 / implementation
+  - Файлы: src/main.mjs, src/preload.cjs, src/ui/progress.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, docs/modules/runtime-lifecycle.md
 - [TODO] T006: Встроить понятное сопровождение первого запуска — Ожидает
   - Git Commit: [PENDING] feat: guide users through first startup
   - Reference: first-run-onboarding-031 / T006 / implementation
-  - Файлы: src/main.mjs, src/preload.cjs, src/ui/workspace-setup.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, docs/PRODUCT.md, docs/modules/workspace-sessions.md, docs/WORKSPACE_SETUP.md
+  - Файлы: src/ui/startup.mjs, src/ui/index.html, src/ui/sidebar.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, docs/PRODUCT.md, docs/modules/workspace-sessions.md, docs/WORKSPACE_SETUP.md
 - [TODO] T007: Сопроводить вход и первичную настройку подключения — Ожидает
   - Git Commit: [PENDING] feat: guide initial connection setup
   - Reference: first-run-onboarding-031 / T007 / implementation
-  - Файлы: src/mcp-runtime.mjs, src/ui/index.html, src/ui/progress.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, docs/modules/runtime-lifecycle.md, docs/CONTEXT_DELIVERY.md, docs/PRODUCT.md
+  - Файлы: resources/runtime-control/mac-first-run.py, src/mac-runtime.mjs, tests/mac-first-run.test.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, docs/modules/runtime-lifecycle.md, docs/CONTEXT_DELIVERY.md, docs/PRODUCT.md
+- [TODO] V001: Проверить мастер в интерфейсе и сценарии отказов — Ожидает
+  - Git Commit: [PENDING] test: verify guided startup and retries
+  - Reference: first-run-onboarding-031 / V001 / implementation
+  - Файлы: tests/startup-ui.test.mjs, tests/sidebar.test.mjs, tests/electron-smoke.mjs, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, docs/modules/first-run-onboarding.md
 - [TODO] T008: Собрать проверенную macOS-поставку после исправлений — Ожидает
   - Git Commit: [PENDING] build: package guided macOS first run
   - Reference: first-run-onboarding-031 / T008 / implementation
   - Файлы: package.json, package-lock.json, scripts/release-mac.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md
+- [TODO] R001: Обновить документы первой итерации и передать релиз на проверку — Ожидает
+  - Git Commit: [PENDING] docs: deliver first-run iteration for clean testing
+  - Reference: first-run-onboarding-031 / R001 / implementation
+  - Файлы: docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
 - [TODO] T009: Повторять полный путь macOS на свежих клонах до успеха — Ожидает
   - Git Commit: [PENDING] docs: verify clean macOS guided startup
   - Reference: first-run-onboarding-031 / T009 / implementation
