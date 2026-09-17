@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 89,
+  "plan_revision": 91,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-onboarding-031",
@@ -1644,8 +1644,8 @@
       "id": "B006",
       "title": "Собрать 0.6.37 для проверки подготовки после установки Apple",
       "why": "Передать исправления комплектного runtime, показа установщика и ожидания в обе поставки.",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-onboarding-031",
         "task_id": "B006",
@@ -2077,7 +2077,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-onboarding-031
 Current Task: нет
-Revision: 89
+Revision: 91
 
 ## Цель
 
@@ -2244,8 +2244,8 @@ Revision: 89
   - Git Commit: [DONE] fix: explain setup failures and installation waiting
   - Reference: first-run-onboarding-031 / C012 / implementation
   - Файлы: src/startup-readiness.mjs, src/ui/startup.mjs, tests/startup-readiness.test.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
-- [TODO] B006: Собрать 0.6.37 для проверки подготовки после установки Apple — Ожидает
-  - Git Commit: [PENDING] build: release bundled runtime setup recovery
+- [DONE] B006: Собрать 0.6.37 для проверки подготовки после установки Apple — Завершено
+  - Git Commit: [DONE] build: release bundled runtime setup recovery
   - Reference: first-run-onboarding-031 / B006 / implementation
   - Файлы: package.json, package-lock.json, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
 - [TODO] R005: Обновить документы и передать проверку 0.6.37 — Ожидает

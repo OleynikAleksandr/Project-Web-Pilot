@@ -162,3 +162,14 @@ Evidence: .harness/runtime/releases/0.6.34/{mac-release.json,source-verification
 - Project-Web-Pilot-0.6.36-Windows-x64.zip: 316322177 bytes; SHA-256 733c28af4853e3bf8b7a2259cd84d3e5ceec31ef9cc511fbb9941f4a0d2c835e.
 
 Изменения: после запроса установки Apple активируется штатное окно через open; ошибки запуска и показа различимы. Ранее подготовленная C009 добавляет прямой /auth/login для открытия без выбранного проекта. Сетевой дефект не объявляется устранённым: новый исходный клон 0.6.35 работал без изменения маршрута, тогда как прежний давал таймауты. Рабочий процесс и профиль основного Mac не перезапускались. Видимость системного окна и полный путь в госте ожидают T017. Evidence: .harness/runtime/installer-focus-{build,verify}-036.log, releases/0.6.36/{mac-release.json,source-verification.json,release-manifest.json,SHA256SUMS.txt}.
+
+## Выпуск 0.6.37 — восстановление подготовки runtime
+
+Выпущены macOS arm64 и Windows x64. Включены C010 (показ установщика Apple), C011 (точный известный комплектный control.py, facade после первой установки и восстановление собственной папки) и C012 (понятные ожидания/ошибки без обещания нескольких минут). Прямой вход C009 сохранён. Windows-мастер и гостевой полный путь этим выпуском не объявляются проверенными.
+
+Постоянный корневой app обновлён с сохранением device 16777232 / inode 398344301. Версия Info.plist/ASAR — 0.6.37; ASAR установленного app равен staging. Все 37 исходных и 32 ресурсных файлов совпали в обеих поставках и установленном app; 4 Mac tools сверены. Вложенного старого app нет; Windows verifier пройден. ZIP integrity, содержимое ASAR и SHA доставки проверены.
+
+- Project-Web-Pilot-0.6.37-macOS-arm64.zip: 181075090 bytes; SHA-256 b8be44db63dce0ee17e8e2f444c94add5a8772ba59c57b47caeb408bbe83d967; ASAR 2b977c2f5073ce9b093ae7ec599a88834b5cd53613914d2d5317e364621635f5.
+- Project-Web-Pilot-0.6.37-Windows-x64.zip: 316323066 bytes; SHA-256 37d725c782895af44bde82d86df169231dd43ffe5a341d730b6ad3745cfd781c; ASAR 003c8512e9378819d409a7cdb6bc49e520f03e120369af76e6aa55cf6c4a0a45.
+
+ZIP, INSTALL.txt и SHA256SUMS.txt находятся в ~/Downloads/WebPilot-0.6.37/. Evidence — .harness/runtime/releases/0.6.37/{mac-release.json,source-verification.json,release-manifest.json}. Изолированная установка из реального ZIP прошла за 33.671 с; ранее упавшая установка восстановлена без переустановки и изменения bridge_config. Результат в госте ожидает T017. Рабочий процесс и профиль основного Mac не перезапускались.
