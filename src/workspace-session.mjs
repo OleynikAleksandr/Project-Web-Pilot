@@ -73,6 +73,8 @@ export async function readWorkspace(input, sessionId = null) {
   let sessionView = null;
   if (sessionId) {
     sessionView = await readSessionPlans(workspace, sessionId);
+    if (sessionView && [sessionView.plan, ...sessionView.prepared.map(item => item.plan)].some(item => item.project_id !== plan.project_id))
+      throw new WorkspaceError('PROJECT_REPLACED', 'План относится к другому проекту. Сохранённые чаты оставлены без изменений.');
     plan = sessionView?.plan ?? { ...plan, scope_id: null, execution_scope_status: 'NONE', delivery_status: 'IN_PROGRESS',
       objective: 'Обсудите следующий этап проекта с пользователем.', current_task_id: null, tasks: [], archived_scope_id: null };
   }
@@ -261,6 +263,7 @@ export class WorkspaceSessions {
     this.inspect = (workspace, sessionId = this.project(workspace)?.sessionId) => inspect(workspace, sessionId);
     this.saveTail = Promise.resolve();
     this.mutationTail = Promise.resolve();
+    this.selectionGeneration = 0;
     this.data = { schemaVersion: 6, selectedWorkspace: null, projects: [] };
   }
 
@@ -307,14 +310,16 @@ export class WorkspaceSessions {
     return { project, session: project.sessions.find(s => s.sessionId === sessionId) };
   }
 
-  save(data = this.data) {
+  save(data = this.data, isCurrent = () => true) {
     const transient = new Set(['planView', 'preparedPlans', 'unassignedPlans']);
     const text = JSON.stringify(data, (key, value) => transient.has(key) ? undefined : value, 2) + '\n';
     const operation = this.saveTail.catch(() => {}).then(async () => {
       await fs.mkdir(path.dirname(this.file), { recursive: true, mode: 0o700 });
       const temporary = this.file + '.tmp-' + this.uuid();
       await fs.writeFile(temporary, text, { mode: 0o600 });
+      if (!isCurrent()) { await fs.unlink(temporary); return false; }
       await fs.rename(temporary, this.file);
+      return true;
     });
     this.saveTail = operation;
     return operation;
@@ -326,11 +331,15 @@ export class WorkspaceSessions {
       createdAt: this.now(), lastOpenedAt: this.now(), archivedAt: null, attempt: null, receipt: null };
   }
 
-  mutate(change) {
+  mutate(change, isCurrent = () => true) {
     const operation = this.mutationTail.catch(() => {}).then(async () => {
+      if (!isCurrent()) return null;
       const draft = copy(this.data);
       const result = await change(draft);
-      await this.save(draft);
+      if (!isCurrent() || !await this.save(draft, isCurrent)) return null;
+      // Selection can change during the atomic rename. Restore the previous snapshot
+      // within the same mutation queue before another writer is allowed to proceed.
+      if (!isCurrent()) { await this.save(this.data); return null; }
       this.data = draft;
       return result;
     });
@@ -338,7 +347,7 @@ export class WorkspaceSessions {
     return operation;
   }
 
-  select(input, { experience = 'chat', latest = false } = {}) {
+  select(input, { experience = 'chat', latest = false, isCurrent = () => true } = {}) {
     return this.mutate(async data => {
       const info = await this.inspect(input);
       let project = data.projects.find(p => p.workspace === info.workspace);
@@ -359,23 +368,25 @@ export class WorkspaceSessions {
       selected.lastOpenedAt = this.now();
       data.selectedWorkspace = project.workspace;
       return currentView(project);
-    });
+    }, isCurrent);
   }
 
-  selectSession(input, sessionId) {
-    return this.mutate(async data => {
-      const info = await this.inspect(input, sessionId);
+  async selectSession(input, sessionId, { isCurrent = () => true, expand = true } = {}) {
+    const generation = ++this.selectionGeneration;
+    const current = () => generation === this.selectionGeneration && isCurrent();
+    const info = await this.inspect(input, sessionId);
+    return this.mutate(data => {
       const project = data.projects.find(p => p.workspace === info.workspace);
       if (!project || !project.sessions.some(s => s.sessionId === sessionId)) throw new WorkspaceError('SESSION_NOT_FOUND', 'Эта сессия не принадлежит выбранному проекту.');
       if (project.sessions.find(s => s.sessionId === sessionId)?.archivedAt) throw new WorkspaceError('SESSION_ARCHIVED', 'Сначала верните сессию из архива.');
       if (project.archivedAt) throw new WorkspaceError('PROJECT_ARCHIVED', 'Сначала верните проект из архива.');
       if (project.projectId !== info.projectId) throw new WorkspaceError('PROJECT_REPLACED', 'В этой папке теперь другой проект. Сохранённые чаты оставлены без изменений.');
-      Object.assign(project, info, { selectedSessionId: sessionId, expanded: true });
+      Object.assign(project, info, { selectedSessionId: sessionId, expanded: expand || project.expanded });
       Object.assign(project.sessions.find(s => s.sessionId === sessionId), {
         lastOpenedAt: this.now(), planId: info.planId ?? null, originSessionId: info.originSessionId ?? null });
       data.selectedWorkspace = project.workspace;
       return currentView(project);
-    });
+    }, current);
   }
 
   bindChat(workspace, sessionId, input) {

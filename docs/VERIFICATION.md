@@ -986,3 +986,28 @@ Existing focused recovery/setup: 29/29. Новые regression: 2/2, включа
 Focused tests 4/4: coalescing, свежий ключ при hit, независимость возвращаемых объектов, memory bound, изменение во время работы/явная invalidate, error retry, transaction rejection, latest pending workspace и настоящий worker с изменением required-документа.
 
 На неизменном двухплановом T003 fixture cold ready 3413.57 мс (1 inspect + 2 fingerprint, 233 Git-процесса). Cached ready: 174.35 / 173.64 / 173.99 / 174.83 / 172.71 мс; медиана 173.99. Каждый hit — 0 inspect, 1 fingerprint и 10 Git-процессов; ready=true, issues=[], inputKey совпадают, cache size=1, fixture не изменён. Это latency readiness, не UI/packaged startup. Raw/driver: .harness/runtime/performance-029/T004-profile/.
+
+## Scope 029 / T005 — проекция до фоновой проверки (17.09.2026)
+
+Первые четыре задачи завершены отдельными commits de9abc6 / ecb593a / 4a3a986 / f6cada4 и перенесены fast-forward в main. По поручению пользователя T005 также завершается в main. Старое дерево webpilot-line-027 уже содержится в истории и оформлении main; перенесён его единственный дополнительный assert скругления ветви без возврата версии 0.6.27. Временные деревья не являются источником активного плана.
+
+Source Electron 44.3.0 / Chromium 152.0.7977.78, macOS arm64, тот же двухплановый fixture baseline. Отдельная копия исходников main SHA256 e02f35edbbba9aad35f97a62d9e961d3f9897699eafb286418f415515004ff47; штатный readiness worker. Настоящий sidebar renderer/IPC; loadURL заменён записывающим stub, сеть, внешний runtime и tick отключены только в измерительной копии. Обычный userData и постоянный app не менялись.
+
+| Измерение | Raw samples / результат |
+| --- | --- |
+| Один startup, shell-ready → вызов loadURL | 9.44 мс |
+| Тот же startup, shell-ready → проверенная свежая проекция DOM | 12.75 мс |
+| Полный spawn → вызов loadURL | 305 мс |
+| Пять переключений, renderer IPC → вызов loadURL | 5.58 / 7.35 / 5.37 / 4.87 / 4.96 мс |
+| Проверенная проекция DOM после переключений | 6.83–10.61 мс |
+| Фоновая работа всей серии | Один inspect 3215.9 мс и два fingerprint |
+
+Все переходы завершились до полной проверки. Проверены два собственных плана и NONE: sessionId/planId, revision, число задач, заголовок и задачи DOM. Последний ready принадлежит последнему поколению выбора; issues пуст, fixture git status неизменён. Это небольшая серия source-измерений, не packaged p95 и не выполнение полной T008/T009. Она не измеряет сетевую загрузку ChatGPT, paint экрана или реальные пользовательские ответы. Evidence и воспроизводимые драйверы: .harness/runtime/performance-029/T005-profile/.
+
+Профильные Node проверки подтверждают доверенное чтение без исполнения подменённого installed facade, запрет чужого project identity, A→B→A с отложенными чтениями, независимую мутацию во время чтения, сохранённый JSON и отмену во время atomic rename; sidebar принимает три быстрых клика и игнорирует старые ответы. Electron smoke использует реальные isolated Chat/Work fixtures: план/URL до readiness, ready до окончания loadURL, поздний результат после Settings, ошибка фона/повтор/Doctor, подготовленные планы, NONE, темы и прокрутка. Дополнительно проверяются сохранение загруженного DOM при закрытии Settings и видимость актуальной ошибки async prepared action.
+
+Первая попытка итогового commit прошла Node suite, но smoke обнаружил слишком узкое ожидание нового теста после изменения исходного плана: фактический штатный статус stale при ready=true вместо ожидавшегося delivered. Тест теперь принимает оба корректных состояния, не инициируя повторную отправку; проверки приложения не ослаблялись.
+
+Итоговые обязательные ворота T005 — полный Node suite и Electron smoke в управляемом commit; синтаксис обязателен глобально. Evidence привязана Workflow Kit к candidate tree и SHA; отдельный запуск smoke до последнего уточнения async action также прошёл. Логи: .harness/runtime/performance-029/T005-targeted.log, T005-smoke.log и T005-commit.json.
+
+После интеграции в main штатный доверенный Doctor подтвердил полное совпадение installed/bundled ядра и согласовал только .harness/kit-manifest.json, без ручного изменения хешей. Backup: .harness/runtime/doctor/2026-09-17T10-55-35-318Z-1e5daa6d-f5c4-42ec-894e-1ca8a5630b89; issues отсутствуют. Выбор новой версии Kit, upgrade compatibility и релиз остаются T007/T009. Постоянный app и ZIP пока версии 0.6.28.

@@ -867,3 +867,7 @@ Evidence: .harness/runtime/releases/0.6.28/{mac-release.json,source-verification
 ## Scope 029 — readiness cache
 
 Существующий WorkspaceSetup worker дополнен read-only fingerprint, использующим общий Workflow Kit inspectionInputs. Узкий WorkspaceReadiness ограничивает память четырьмя ready-результатами, worker-нагрузку одной активной и одной последней ожидающей проверкой, объединяет одинаковые запросы и отбрасывает stale/transaction/error. Контекст по-прежнему строит только Workflow Kit; кэш recovery не объединён с readiness.
+
+## Scope 029 / T005 — выбранная сессия до полной диагностики
+
+Main использует общий openConnectedSession и поколения навигации; WorkspaceSessions сохраняет атомарность записей, вынося чтение проекции из mutation queue. Проекцию читает доверенный bundled фасад Workflow Kit. Readiness в существующем worker завершается независимо от loadURL; controller активируется только при совпадении текущих workspace/session/generation и готовности обоих. Изменения пока относятся к исходникам; постоянный релиз 0.6.28 не заменён.

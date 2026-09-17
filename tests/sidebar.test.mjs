@@ -82,6 +82,7 @@ test('active session outline continues the accent project tree around the full r
   const activeRow = f.document.querySelector('.session.active').closest('.session-row');
   assert.ok(activeRow.querySelector('.session-experience'), 'outline row contains Chat/Work badge');
   assert.ok(activeRow.querySelector('.session-menu-button'), 'outline row contains session menu');
+  assert.ok(css.includes('border-left:.5px solid var(--tree-guide);border-bottom:.5px solid var(--tree-guide);border-bottom-left-radius:6px'), 'last branch is rounded');
   assert.ok(css.includes('#projects .expand-project{border:0;background:transparent;width:51px;align-self:stretch;flex:0 0 51px;display:grid;place-items:center;padding:0;border-radius:10px;color:var(--tree-guide)}'));
   assert.ok(css.includes('#projects .expand-project .tree-icon{width:20px;height:20px;stroke-width:.5;transition:transform .16s}'));
   assert.ok(css.includes('background:var(--tree-guide);pointer-events:none}'), 'project trunk uses accent');
@@ -150,4 +151,20 @@ test('unresolved migration explains the empty session without assigning a histor
   assert.equal(f.document.getElementById('plan-note').hidden,false);
   assert.match(f.document.getElementById('plan-note').textContent,/Связь с прежним планом не подтверждена/);
   assert.equal(f.document.querySelectorAll('#plan-tasks .plan-task').length,0);
+});
+
+test('rapid A-B-A navigation reaches IPC immediately and ignores obsolete responses', async t => {
+  const f = await fixture(t), pending = [];
+  f.window.webPilot.selectSession = (workspace, sessionId) => new Promise(resolve => pending.push({ workspace, sessionId, resolve }));
+  for (const id of ['s1', 's2', 's1']) f.document.querySelector(`[data-session-id=${id}]`).click();
+  assert.deepEqual(pending.map(p => p.sessionId), ['s1', 's2', 's1']);
+  const response = (i, title) => {
+    const state = f.state; state.selected.sessionId = pending[i].sessionId;
+    state.projects[0].sessions.find(s => s.sessionId === pending[i].sessionId).title = title;
+    pending[i].resolve({ state });
+  };
+  response(2, 'Самый свежий план'); await f.settle();
+  response(1, 'Старый B'); response(0, 'Старый A'); await f.settle();
+  assert.equal(f.document.querySelector('.session.active').dataset.sessionId, 's1');
+  assert.match(f.document.querySelector('.session.active').textContent, /Самый свежий план/);
 });

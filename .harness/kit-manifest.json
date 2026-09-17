@@ -153,7 +153,7 @@
       "kind": "owned",
       "mode": 420,
       "original_hash": "9e7f1d2c4fc15a40e5bd0e5514ae11661ae3b93d7fbb4b6fcbebf8cd53b44d46",
-      "hash": "984f18d0e8a426d33cc6802404dbf50f14bfb7b300e12ada010748d191774524",
+      "hash": "9213b678a91fcbc583f9d9f54b4802d65adcc02eede000d2daa623c73931990b",
       "existed": true
     },
     {
@@ -180,7 +180,7 @@
       "kind": "owned",
       "mode": 420,
       "original_hash": "226ba1ee0935fcefb38dd343282c720baba096fb9349d34ab349ca6be35fa44b",
-      "hash": "226ba1ee0935fcefb38dd343282c720baba096fb9349d34ab349ca6be35fa44b",
+      "hash": "5b3c06f10c58983286a175fd10c5d64b2a0f3da54739a1062a186d1c27e33f1a",
       "existed": true
     },
     {
@@ -198,7 +198,7 @@
       "kind": "owned",
       "mode": 420,
       "original_hash": "5bfee2a88c3f2bb308576414955caf7df7075893e2e901bb09fb270dfe4f94aa",
-      "hash": "2fadc4292145684e570f32d198e2e69ec6a646ac6b9feb45b5f352516491f513",
+      "hash": "9045de7cc6c281bdc19952d6806571ff5e55132afcc14f668135b4c8d7f691ce",
       "existed": true
     },
     {
@@ -225,7 +225,7 @@
       "kind": "owned",
       "mode": 420,
       "original_hash": "13e96bf800d8c464e1e76692d5df71618f2092888fc3a508dd419ca14fd980cb",
-      "hash": "dd9a3b6d45e0a948e366443100621c889b877ca464be95aac063e46b0756809e",
+      "hash": "6aac6c156e3553b5b3bfb48932490d2614d277a7d5da9ac7896f4d3d5abf2011",
       "existed": true
     },
     {
@@ -243,7 +243,7 @@
       "kind": "owned",
       "mode": 420,
       "original_hash": "a4f0edc04213a47f4ea0cda03b8178d0ec51a792cbd384ff93022e5542435689",
-      "hash": "94cf729f673c259c01c6a2d492770bda2e48aec1d18d3ade470723cd6ef8cc43",
+      "hash": "773ec8433b96df6e1d1d99a423eb75c31664565b6482aef2fea24b6c52ff5257",
       "existed": true
     },
     {
@@ -391,10 +391,19 @@
       "original_hash": null,
       "hash": "9c3e3425f23943d9c8f88ef805c07179e7256a400c8053e1d1f9aeff539d1590",
       "existed": false
+    },
+    {
+      "path": ".harness/kit/lib/inspection-inputs.mjs",
+      "external": false,
+      "kind": "owned",
+      "mode": 420,
+      "original_hash": null,
+      "hash": "b085098af30eefeed235d9b048b8ee503751f2257d97d23944066aef56f90006",
+      "existed": false
     }
   ],
   "upgraded_from": "1.1.0",
   "upgraded_at": "2026-09-14T07:20:35.583Z",
   "installed_at": "2026-09-14T07:20:35.583Z",
-  "doctor_reconciled_at": "2026-09-17T08:51:35.980Z"
+  "doctor_reconciled_at": "2026-09-17T10:55:35.290Z"
 }

@@ -5,7 +5,8 @@ const $ = id => document.getElementById(id);
 const api = window.webPilot;
 let lastProjects = '';
 let currentState;
-let actionPending = false, pendingAction = null;
+let actionPending = false, pendingAction = null, actionGeneration = 0;
+const navigationActions = new Set(['selectWorkspace', 'selectSession', 'reload', 'returnToChat']);
 const progress = createProgress($('operation-progress'));
 window.addEventListener('pagehide', () => progress.destroy());
 let contextExpanded = false;
@@ -112,15 +113,21 @@ async function action(method, ...args) {
     sessionScroll.set(args[0], 0);
     for (const list of $('projects').querySelectorAll('.sessions')) if (list.dataset.workspace === args[0]) list.scrollTop = 0;
   }
-  actionPending = true; pendingAction = method;
+  const generation = ++actionGeneration, navigation = navigationActions.has(method);
+  if (!navigation) { actionPending = true; pendingAction = method; }
   render(currentState);
   try {
     const result = await api[method](...args);
-    if (result?.state) render(result.state);
+    if (generation === actionGeneration && result?.state) render(result.state);
   } catch (error) {
-    $('error-banner').hidden = false;
-    $('error-banner').textContent = error.message;
-  } finally { actionPending = false; pendingAction = null; render(currentState); }
+    if (generation === actionGeneration) {
+      $('error-banner').hidden = false;
+      $('error-banner').textContent = error.message;
+    }
+  } finally {
+    if (!navigation) { actionPending = false; pendingAction = null; }
+    if (generation === actionGeneration) render(currentState);
+  }
 }
 
 function renderPrepared(state) {
@@ -333,6 +340,12 @@ function render(state) {
     + (Number.isFinite(delivery?.preparationMs) ? `\nПодготовка: ${Math.round(delivery.preparationMs)} мс${delivery.cacheHit ? ' · пакет готов заранее' : ''}` : '')
     + (Number.isFinite(delivery?.deliveryMs) ? `\nОтправка: ${(delivery.deliveryMs / 1000).toFixed(2)} с` : '') : '';
   if (state.fixture) $('connection-detail').textContent = 'TEST FIXTURE · без реального аккаунта и MCP';
+  const health = state.workspaceHealth;
+  const checking = health?.phase === 'checking', unhealthy = health?.phase === 'error';
+  $('workspace-health').hidden = !checking && !unhealthy;
+  $('workspace-health-message').textContent = checking ? 'Проверяем проект в фоне…'
+    : unhealthy ? (health.error?.message ?? health.issues?.[0]?.reason ?? 'Проверка проекта не пройдена. Чат доступен для просмотра.') : '';
+  $('workspace-health-actions').hidden = !unhealthy;
   const error = state.startupError ?? context.error;
   $('error-banner').hidden = !error;
   $('error-banner').textContent = error ? `${error.message} (${error.code})` : '';
@@ -359,6 +372,8 @@ for (const experience of ['chat', 'work']) $('next-session-' + experience).addEv
 $('cancel-prepared-choice').addEventListener('click', () => action('cancelPreparedChoice'));
 $('add-workspace').addEventListener('click', () => action('chooseWorkspace'));
 $('reload-chat').addEventListener('click', () => action('reload'));
+$('workspace-health-retry').addEventListener('click', () => action('reload'));
+$('workspace-health-doctor').addEventListener('click', () => action('openDoctor'));
 $('retry-context').addEventListener('click', () => action('retry'));
 $('return-chat').addEventListener('click', () => action('returnToChat'));
 $('choose-runtime').addEventListener('click', () => action('chooseRuntime'));

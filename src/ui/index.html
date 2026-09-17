@@ -136,6 +136,13 @@ SOFTWARE.
     </section>
     <div class="scroll">
       <div id="error-banner" class="error-banner" role="alert" hidden></div>
+      <section id="workspace-health" class="notice" aria-live="polite" hidden>
+        <span id="workspace-health-message"></span>
+        <div id="workspace-health-actions" class="actions" hidden>
+          <button id="workspace-health-retry" class="secondary">Повторить проверку</button>
+          <button id="workspace-health-doctor" class="secondary">Доктор проекта</button>
+        </div>
+      </section>
       <section id="settings-panel" class="setup" hidden>
         <div class="heading"><h2>Настройки</h2><button id="close-settings" class="icon-button" title="Вернуться к проектам" aria-label="Закрыть настройки">✕</button></div>
         <section id="doctor-panel" class="settings-section" aria-label="Доктор проекта">

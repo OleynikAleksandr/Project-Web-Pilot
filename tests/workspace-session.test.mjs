@@ -520,3 +520,40 @@ for (const experience of ['chat','work']) test('prepared '+experience+' session 
   assert.equal(restarted.snapshot().projects[0].scopeTransition,undefined);
   const saved=JSON.parse(await fs.readFile(store.file,'utf8'));assert.equal('planView' in saved.projects[0],false);
 });
+
+test('slow projections do not hold mutations; A-B-A selects and persists only the newest generation', async t => {
+  const { project, store } = await fixture(t);
+  const first = await store.select(await project('A')), second = await store.select(await project('B'));
+  const a = first.workspace, b = second.workspace;
+  const read = store.inspect, requests = [];
+  store.inspect = (workspace, sessionId) => new Promise(resolve => requests.push({ workspace, sessionId, resolve }));
+  const a1 = store.selectSession(a, first.sessionId), b1 = store.selectSession(b, second.sessionId), a2 = store.selectSession(a, first.sessionId);
+  await store.setProjectDisplayName(b, 'B переименован'); // Must finish while all three reads are still pending.
+  assert.equal(requests.length, 3);
+  const resolve = async (i, revision) => requests[i].resolve({ ...await read(requests[i].workspace, requests[i].sessionId), planRevision: revision });
+  await resolve(2, 102); await a2;
+  await resolve(1, 101); assert.equal(await b1, null);
+  await resolve(0, 100); assert.equal(await a1, null);
+  assert.equal(store.selected().workspace, a); assert.equal(store.selected().planRevision, 102);
+  assert.equal(store.selected().sessionId, first.sessionId);
+  const disk = new WorkspaceSessions(store.file); await disk.load();
+  assert.equal(disk.selected().workspace, a); assert.equal(disk.selected().planRevision, 102);
+  assert.equal(disk.project(b).displayName, 'B переименован');
+});
+
+test('selection cancelled during an atomic save restores the previous disk snapshot', async t => {
+  const { project, store } = await fixture(t);
+  const a = await project('A'), b = await project('B');
+  const first = await store.select(a), second = await store.select(b);
+  let current = true, renamed;
+  const afterRename = new Promise(resolve => { renamed = resolve; });
+  let release;
+  const hold = new Promise(resolve => { release = resolve; });
+  const save = store.save.bind(store);
+  store.save = async (...args) => { const result = await save(...args); if (args.length === 2) { renamed(); await hold; } return result; };
+  const selecting = store.selectSession(a, first.sessionId, { isCurrent: () => current });
+  await afterRename; current = false; release();
+  assert.equal(await selecting, null);
+  const disk = new WorkspaceSessions(store.file); await disk.load();
+  assert.equal(store.selected().sessionId, second.sessionId); assert.equal(disk.selected().sessionId, second.sessionId);
+});

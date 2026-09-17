@@ -3,6 +3,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import os from 'node:os';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { WorkspaceSessions, normalizeChatUrl, activeSessionsNewestFirst } from './workspace-session.mjs';
 import { McpRuntime, findRuntimeFolder } from './mcp-runtime.mjs';
@@ -49,6 +50,7 @@ const BROWSER_MIN_WIDTH = 600;
 let sidebarWidth = SIDEBAR_MIN_WIDTH;
 let window, browser, sidebar, archiveWindow, runtime, controller, interval, fixture, chromiumDiagnostics, windowsRuntimeBootstrap;
 let navigationId = 0;
+const actionContext = new AsyncLocalStorage();
 let pageLoading = false;
 let startupError = null;
 let storageError = false;
@@ -180,7 +182,7 @@ function openSettings(workspace = null) {
 }
 function closeSettings() {
   deletion.clear(); settingsState = null; startupError = null;
-  const current = store.selected(); if (current) controller.attach(current);
+  const current = store.selected(); if (current) void selectWorkspace(current.workspace, { resume: true }).catch(report);
 }
 
 function publicError(error) { return { code: error.code ?? 'APP_ERROR', message: String(error.message ?? error).slice(0, 700) }; }
@@ -369,13 +371,22 @@ function registerArchiveAction(channel, action) {
   });
 }
 
-function registerAction(channel, action) {
+function registerAction(channel, action, { navigation = false } = {}) {
   ipcMain.handle(channel, (event, input) => {
     assertLocalSender(event);
-    const operation = actionTail.catch(() => {}).then(async () => {
-      try { const result = await action(input); publish(); return { ok: true, state: snapshot(), result }; }
-      catch (error) { report(error); return { ok: false, error: publicError(error), state: snapshot() }; }
+    const run = () => actionContext.run({ generation: navigationId }, async () => {
+      const owner = actionContext.getStore();
+      try {
+        const result = await action(input);
+        if (navigationCurrent(owner.generation)) publish();
+        return { ok: true, state: snapshot(), result };
+      } catch (error) {
+        if (navigationCurrent(owner.generation)) report(error);
+        return { ok: false, error: publicError(error), state: snapshot() };
+      }
     });
+    if (navigation) return run();
+    const operation = actionTail.catch(() => {}).then(run);
     actionTail = operation;
     return operation;
   });
@@ -395,58 +406,139 @@ async function openArchiveWindow(workspace = null) {
   await archiveWindow.loadURL(archiveUrl);
 }
 
-async function navigate(project = store.selected(), { refresh = false } = {}) {
-  const ownNavigation = ++navigationId;
+function nextNavigation() {
+  const owner = actionContext.getStore();
+  // An older async action cannot reclaim navigation after a newer user selection.
+  if (owner && owner.generation !== navigationId) return owner.generation;
+  const generation = ++navigationId;
+  if (owner) owner.generation = generation;
+  return generation;
+}
+function navigationCurrent(generation) {
+  return generation === navigationId && window && !window.isDestroyed() && browser && !browser.webContents.isDestroyed();
+}
+function attachController(project) {
+  const selected = store.selected();
+  if (!project || !navigationCurrent(workspaceHealth?.generation) || !workspaceHealth?.ready
+      || workspaceHealth.workspace !== project.workspace || workspaceHealth.sessionId !== project.sessionId
+      || selected?.workspace !== project.workspace || selected.sessionId !== project.sessionId
+      || pageLoading || setupState || settingsState) return false;
+  if (controller.active?.workspace !== project.workspace || controller.active?.sessionId !== project.sessionId) controller.attach(project);
+  return true;
+}
+
+async function navigate(project = store.selected(), { refresh = false, generation = null, resume = false } = {}) {
+  const ownNavigation = generation ?? nextNavigation();
+  if (!navigationCurrent(ownNavigation)) return;
+  if (workspaceHealth?.ready && workspaceHealth.workspace === project?.workspace
+      && (generation === null || workspaceHealth.generation === ownNavigation))
+    workspaceHealth = { ...workspaceHealth, generation: ownNavigation, sessionId: project.sessionId };
   preparedChoice = null;
   controller?.cancel();
   pageLoading = true; publish();
   const target = project?.chatUrl ?? chatGPTEntrypoint(project?.experience ?? 'chat');
   try {
-    await browser.webContents.loadURL(target);
-    if (ownNavigation !== navigationId) return;
+    const alreadyOpen = resume && !browser.webContents.isLoading() && browser.webContents.getURL() === target;
+    if (!alreadyOpen) await browser.webContents.loadURL(target);
+    if (!navigationCurrent(ownNavigation)) return;
     pageLoading = false;
-    if (project) {
-      controller.attach(store.project(project.workspace));
+    if (attachController(project && store.project(project.workspace))) {
       if (refresh) await controller.retry();
       else void controller.tick();
     }
     publish();
   } catch (error) {
-    if (ownNavigation !== navigationId) return;
+    if (!navigationCurrent(ownNavigation)) return;
     pageLoading = false;
     report(Object.assign(new Error('Не удалось открыть ChatGPT. Проверьте интернет и нажмите обновление рядом с проектами.'), { code: 'PAGE_LOAD_FAILED' }));
   }
 }
 
 function pauseForSetup() {
-  controller?.cancel(); ++navigationId; pageLoading = false; startupError = null;
+  const generation = nextNavigation();
+  if (!navigationCurrent(generation)) return false;
+  controller?.cancel(); pageLoading = false; startupError = null;
+  return true;
 }
 function cancelSetup() {
   workspaceSetup.clear(); setupState = null; startupError = null;
-  const current = store.selected(); if (current) controller.attach(current);
+  const current = store.selected(); if (current) void selectWorkspace(current.workspace, { resume: true }).catch(report);
   publish();
 }
-async function reviewWorkspace(workspace, openReady = false) {
+async function reviewWorkspace(workspace, openReady = false, { generation = null } = {}) {
   if (storageError) throw new Error('Сначала нужно восстановить сохранённый список проектов. Исходный файл оставлен без изменений.');
+  const ownNavigation = generation ?? nextNavigation();
+  if (!navigationCurrent(ownNavigation)) return false;
+  controller?.cancel(); pageLoading = false; startupError = null;
   const canonical = await fsp.realpath(workspace).catch(() => workspace);
+  if (!navigationCurrent(ownNavigation)) return false;
   if (store.project(canonical)?.archivedAt) { await openArchiveWindow(canonical); publish(); return false; }
   settingsState = null; deletion.clear();
   const firstSessionExperience = 'chat';
-  pauseForSetup(); setupState = { phase: 'checking', mode: 'existing', workspace, firstSessionExperience }; publish();
+  setupState = { phase: 'checking', mode: 'existing', workspace, firstSessionExperience }; publish();
   const preview = await workspaceSetup.preview({ mode: 'existing', workspace });
+  if (!navigationCurrent(ownNavigation)) return false;
   const firstSessionRequired = !store.project(preview.workspace);
   setupState = { ...preview, phase: 'preview', firstSessionRequired, firstSessionExperience: firstSessionRequired ? firstSessionExperience : 'chat' };
   if (preview.ready && openReady) {
-    workspaceHealth = preview; setupState = null; workspaceSetup.clear();
     await store.reconcilePlanBindings(preview.workspace);
+    if (!navigationCurrent(ownNavigation)) return false;
+    workspaceHealth = { ...preview, phase: 'ready', generation: ownNavigation }; setupState = null; workspaceSetup.clear();
     return true;
   }
   publish(); return false;
 }
-async function selectWorkspace(input, { latest = false } = {}) {
-  if (!await reviewWorkspace(input, true)) return;
-  const project = await store.select(workspaceHealth.workspace, { latest });
-  publish(); void navigate(project); return project;
+async function openConnectedSession(input, sessionId = null, { latest = false, resume = false } = {}) {
+  const explicitSession = sessionId !== null;
+  const generation = nextNavigation();
+  const current = () => navigationCurrent(generation);
+  if (!current()) return null;
+  if (storageError) throw new Error('Сначала нужно восстановить сохранённый список проектов.');
+  controller.cancel(); preparedChoice = null; settingsState = null; setupState = null;
+  startupError = null; pageLoading = true;
+  workspaceHealth = { workspace: input, sessionId, generation, phase: 'checking', ready: false }; publish();
+  try {
+    if (typeof input !== 'string' || !path.isAbsolute(input)) throw new Error('Выберите папку проекта.');
+    const workspace = await fsp.realpath(input);
+    if (!current()) return null;
+    const record = store.snapshot().projects.find(p => p.workspace === workspace);
+    if (record?.archivedAt) { pageLoading = false; workspaceHealth = null; await openArchiveWindow(workspace); return null; }
+    // First connection and legacy adoption retain the complete strict path.
+    if (!record || record.sessions.some(s => s.legacyPlanId && s.planBinding === 'evidence')) {
+      if (!await reviewWorkspace(workspace, true, { generation })) return null;
+      const project = explicitSession && record
+        ? await store.selectSession(workspace, sessionId, { isCurrent: current })
+        : await store.select(workspace, { latest, isCurrent: current });
+      if (!current()) return null;
+      workspaceHealth = { ...workspaceHealth, sessionId: project.sessionId };
+      publish(); void navigate(project, { generation, resume }); return project;
+    }
+    sessionId ??= latest ? activeSessionsNewestFirst(record.sessions)[0]?.sessionId : record.selectedSessionId;
+    workspaceHealth = { workspace, sessionId, generation, phase: 'checking', ready: false };
+    const project = await store.selectSession(workspace, sessionId, { isCurrent: current, expand: latest || explicitSession });
+    if (!current() || !project) return null;
+    publish();
+    void navigate(project, { generation, resume });
+    // Inspection runs in the existing worker and never holds the IPC or store queue.
+    void workspaceSetup.ready(workspace).then(result => {
+      if (!current()) return;
+      workspaceHealth = { ...result, workspace, sessionId, generation, phase: result.ready ? 'ready' : 'error' };
+      if (attachController(project)) void controller.tick();
+      publish();
+    }).catch(error => {
+      if (!current()) return;
+      workspaceHealth = { workspace, sessionId, generation, phase: 'error', ready: false, error: publicError(error) }; publish();
+    });
+    return project;
+  } catch (error) {
+    if (!current()) return null;
+    pageLoading = false;
+    workspaceHealth = { ...workspaceHealth, phase: 'error', ready: false, error: publicError(error) };
+    report(error); return null;
+  }
+}
+async function selectWorkspace(input, { latest = false, resume = false } = {}) {
+  return openConnectedSession(input, null, { latest, resume });
 }
 
 function runtimeRegistrationFrom(result) {
@@ -496,7 +588,7 @@ function registerIpc() {
   registerAction('pilot:open-archive-window', input => openArchiveWindow(typeof input === 'string' ? input : null));
   registerAction('pilot:open-settings', () => openSettings());
   registerAction('pilot:open-chat-colors', () => colorEditor.open());
-  registerAction('pilot:open-doctor', () => openSettings(setupState?.workspace ?? store.selected()?.workspace));
+  registerAction('pilot:open-doctor', () => openSettings(setupState?.workspace ?? (workspaceHealth?.phase === 'error' ? workspaceHealth.workspace : null) ?? store.selected()?.workspace));
   const doctorWorkspace = input => {
     if (typeof input !== 'string' || (!store.project(input) && input !== doctorState?.workspace)) throw new Error('Выберите проект в настройках.');
     return input;
@@ -525,11 +617,13 @@ function registerIpc() {
     if (!['open','chat','work','refresh'].includes(mode) || doctorState?.phase !== 'done' || !doctorState.projectReady || !doctorState.servicesReady || doctorState.issues.length) throw new Error('Сначала завершите проверку проекта.');
     const workspace = doctorState.workspace;
     if (!await reviewWorkspace(workspace, true)) return;
-    const existing = store.project(workspace);
-    let project = await store.select(workspace, { experience: mode === 'work' ? 'work' : 'chat' });
+    const generation = navigationId, existing = store.project(workspace);
+    let project = await store.select(workspace, { experience: mode === 'work' ? 'work' : 'chat', isCurrent: () => navigationCurrent(generation) });
+    if (!navigationCurrent(generation) || !project) return;
     if (['chat','work'].includes(mode) && existing) project = await store.newSession(workspace, mode);
+    if (!navigationCurrent(generation)) return;
     // Navigation attaches the selected session. Refresh is requested only after it loaded.
-    await navigate(project, { refresh: mode === 'refresh' });
+    await navigate(project, { refresh: mode === 'refresh', generation });
   });
   registerAction('pilot:close-settings', closeSettings);
   registerAction('pilot:set-sidebar-width', async input => {
@@ -583,19 +677,24 @@ function registerIpc() {
     const project = store.project(input);
     if (!project || project.archivedAt || storageError) throw new Error('Выберите активный проект.');
     const selected = store.selected()?.workspace === input;
-    if (selected) { controller.cancel(); ++navigationId; }
-    try { await store.setArchived(input, true); } catch (error) { if (selected) controller.attach(project); throw error; }
+    if (selected) { controller.cancel(); nextNavigation(); }
+    const generation = navigationId;
+    try { await store.setArchived(input, true); }
+    catch (error) { if (selected && navigationCurrent(generation)) await selectWorkspace(project.workspace, { resume: true }); throw error; }
+    if (!navigationCurrent(generation)) return;
     startupError = null;
-    if (selected) { workspaceHealth = null; await navigate(null); }
+    if (selected) { workspaceHealth = null; await navigate(null, { generation }); }
   });
   registerAction('pilot:archive-session', async input => {
     if (typeof input?.workspace !== 'string' || typeof input?.sessionId !== 'string') throw new Error('Выберите сессию проекта.');
     const current = store.selected(); const selected = current?.workspace === input.workspace && current.sessionId === input.sessionId;
-    if (selected) { controller.cancel(); ++navigationId; }
+    if (selected) { controller.cancel(); nextNavigation(); }
+    const generation = navigationId;
     try { await store.setSessionArchived(input.workspace, input.sessionId, true); }
-    catch (error) { if (selected && current) controller.attach(current); throw error; }
+    catch (error) { if (selected && current && navigationCurrent(generation)) await selectWorkspace(current.workspace, { resume: true }); throw error; }
+    if (!navigationCurrent(generation)) return;
     startupError = null;
-    if (selected) { const fallback = store.selected(); if (fallback) await navigate(fallback); }
+    if (selected) { const fallback = store.selected(); if (fallback) await selectWorkspace(fallback.workspace); }
   });
   registerAction('pilot:select-archive', input => {
     if (!settingsState || !store.project(input)?.archivedAt) throw new Error('Выберите проект из архива.');
@@ -668,12 +767,16 @@ function registerIpc() {
     const firstSessionRequired = !!setupState.firstSessionRequired;
     const firstSessionExperience = firstSessionRequired && setupState.firstSessionExperience === 'work' ? 'work' : 'chat';
     setupState = { ...setupState, phase: 'applying', error: null }; startupError = null; publish();
+    const generation = navigationId;
     const result = await workspaceSetup.apply(input.token, { gitName: input.gitName, gitEmail: input.gitEmail });
+    if (!navigationCurrent(generation)) return;
     setupState = { ...result, phase: 'preview', mode: 'existing', firstSessionRequired, firstSessionExperience };
     if (!result.ready) return;
     workspaceHealth = result;
-    const project = await store.select(result.workspace, { experience: firstSessionExperience });
-    setupState = null; publish(); void navigate(project);
+    const project = await store.select(result.workspace, { experience: firstSessionExperience, isCurrent: () => navigationCurrent(generation) });
+    if (!navigationCurrent(generation) || !project) return;
+    workspaceHealth = { ...workspaceHealth, generation };
+    setupState = null; publish(); void navigate(project, { generation });
   });
   registerAction('pilot:choose-workspace', async () => {
     pauseForSetup();
@@ -685,14 +788,12 @@ function registerIpc() {
   registerAction('pilot:select-workspace', input => {
     if (typeof input !== 'string' || !store.project(input)) throw new Error('Выберите проект из списка.');
     return selectWorkspace(input, { latest: true });
-  });
+  }, { navigation: true });
   registerAction('pilot:select-session', async input => {
     if (storageError) throw new Error('Сначала нужно восстановить сохранённый список проектов.');
     if (typeof input?.workspace !== 'string' || typeof input?.sessionId !== 'string') throw new Error('Выберите сессию из дерева проекта.');
-    if (!await reviewWorkspace(input.workspace, true)) return;
-    const project = await store.selectSession(input.workspace, input.sessionId);
-    startupError = null; void navigate(project);
-  });
+    return openConnectedSession(input.workspace, input.sessionId);
+  }, { navigation: true });
   registerAction('pilot:set-expanded', input => {
     if (storageError) throw new Error('Сначала нужно восстановить сохранённый список проектов.');
     return store.setExpanded(input?.workspace, input?.expanded);
@@ -701,7 +802,9 @@ function registerIpc() {
     const current = store.selected();
     if (!current || current.workspace !== input?.workspace || current.sessionId !== input?.sourceSessionId)
       throw new Error('Выбрана другая сессия.');
+    const readGeneration = navigationId;
     const info = await store.inspect(current.workspace, current.sessionId);
+    if (!navigationCurrent(readGeneration)) return;
     const plan = info.preparedPlans.find(p => p.planId === input.planId);
     if (!plan) throw new Error('Подготовленный план больше не доступен в этой сессии.');
     preparedChoice = { workspace: current.workspace, sourceSessionId: current.sessionId, planId: plan.planId,
@@ -712,34 +815,46 @@ function registerIpc() {
     const choice = preparedChoice, current = store.selected();
     if (!choice || current?.workspace !== choice.workspace || current.sessionId !== choice.sourceSessionId)
       throw new Error('Сначала выберите подготовленный план.');
+    if (!await reviewWorkspace(choice.workspace, true)) return;
+    const generation = navigationId;
     const project = await store.fromPrepared(choice.workspace, choice.sourceSessionId, choice.planId, choice.revision, experience);
-    preparedChoice = null; startupError = null; contextCache.clear(); await navigate(project);
+    if (!navigationCurrent(generation)) return;
+    preparedChoice = null; startupError = null; contextCache.clear(); await navigate(project, { generation });
   });
   registerAction('pilot:open-prepared-session', async input => {
     const current = store.selected();
     if (current?.workspace !== input?.workspace || current.sessionId !== input?.sourceSessionId) throw new Error('Выбрана другая сессия.');
+    const readGeneration = navigationId;
     const info = await store.inspect(current.workspace, current.sessionId);
+    if (!navigationCurrent(readGeneration)) return;
     const plan = info.preparedPlans.find(p => p.planId === input.planId);
     if (!plan?.sessionId || !plan.experience) throw new Error('Для этого плана сначала выберите Chat или Work.');
+    if (!await reviewWorkspace(current.workspace, true)) return;
+    const generation = navigationId;
     const project = await store.fromPrepared(current.workspace, current.sessionId, plan.planId, plan.revision, plan.experience);
-    startupError = null; await navigate(project);
+    if (!navigationCurrent(generation)) return;
+    startupError = null; await navigate(project, { generation });
   });
   registerAction('pilot:new-session', async input => {
     if (typeof input?.workspace !== 'string' || !['chat', 'work'].includes(input?.experience)) throw new Error('Выберите проект и тип новой сессии.');
     if (!store.project(input.workspace)) throw new Error('Выберите активный проект.');
     if (!await reviewWorkspace(input.workspace, true)) return;
-    await store.select(input.workspace);
+    const generation = navigationId;
+    await store.select(input.workspace, { isCurrent: () => navigationCurrent(generation) });
+    if (!navigationCurrent(generation)) return;
     const project = await store.newSession(input.workspace, input.experience);
-    startupError = null; void navigate(project);
+    if (!navigationCurrent(generation)) return;
+    startupError = null; void navigate(project, { generation });
   });
-  registerAction('pilot:return-chat', async () => { const current = store.selected(); if (current) await selectWorkspace(current.workspace); });
+  registerAction('pilot:return-chat', async () => { const current = store.selected(); if (current) await selectWorkspace(current.workspace); }, { navigation: true });
   registerAction('pilot:retry', async () => {
     const selected = store.selected(); if (selected && !await reviewWorkspace(selected.workspace, true)) return;
     startupError = null;
-    if (!controller.active) { const current = store.selected(); if (current) controller.attach(current); }
-    await controller.retry();
+    const current = store.selected();
+    if (current) workspaceHealth = { ...workspaceHealth, sessionId: current.sessionId };
+    if (attachController(current)) await controller.retry();
   });
-  registerAction('pilot:reload', async () => { startupError = null; const current = store.selected(); if (current) await selectWorkspace(current.workspace); else void navigate(); });
+  registerAction('pilot:reload', async () => { startupError = null; const current = store.selected(); if (current) await selectWorkspace(current.workspace); else void navigate(); }, { navigation: true });
   registerAction('pilot:choose-runtime', async () => {
     if (process.platform === 'win32') throw new Error('Windows-версия использует встроенный Codex Local Windows runtime.');
     const result = await dialog.showOpenDialog(window, { title: 'Выбрать Codex Local Mac', buttonLabel: 'Подключить',
@@ -753,7 +868,7 @@ function registerIpc() {
     runtime = createLocalRuntime();
     connectController();
     startupError = null;
-    const current = store.selected(); if (current) controller.attach(current);
+    const current = store.selected(); if (current) attachController(current);
   });
 
   ipcMain.handle('archive:get-state', event => { assertArchiveSender(event); return archiveSnapshot(); });
@@ -835,7 +950,7 @@ async function createWindow() {
   browser.webContents.on('render-process-gone', () => { controller?.cancel(); report(new Error('Страница ChatGPT закрылась. Нажмите обновление.')); });
   window.on('resize', layout);
   window.on('closed', () => {
-    controller?.cancel(); clearInterval(interval); contextCache.clear();
+    ++navigationId; controller?.cancel(); clearInterval(interval); contextCache.clear(); workspaceSetup.invalidateReadiness();
     colorEditor?.close(); chatColorStyles?.dispose();
     void chromiumDiagnostics?.stop(); chromiumDiagnostics = null;
     if (archiveWindow && !archiveWindow.isDestroyed()) archiveWindow.close();
@@ -856,7 +971,7 @@ async function createWindow() {
   }, 1500);
   if (smoke) {
     await fixture.run({ app, window, browser: browser.webContents, sidebar: sidebar.webContents,
-      store, controller, selectWorkspace, snapshot, assertLocalSender, permissionAllowed, dataDir,
+      store, controller, selectWorkspace, workspaceSetup, snapshot, assertLocalSender, permissionAllowed, dataDir,
       chromiumDiagnostics, chromiumDiagnosticsFile, openArchiveWindow, getArchiveWindow: () => archiveWindow,
       getColorWindow: () => colorEditor.window, chatColorStyles });
     await chromiumDiagnostics.stop(); chromiumDiagnostics = null;

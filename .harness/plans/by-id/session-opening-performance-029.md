@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 14,
+  "plan_revision": 18,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-opening-performance-029",
@@ -60,7 +60,8 @@
       ".harness/kit/lib/inspection-inputs.mjs",
       "resources/workflow-kit/lib/inspection-inputs.mjs",
       "src/ui/sidebar.mjs",
-      "tests/sidebar.test.mjs"
+      "tests/sidebar.test.mjs",
+      ".harness/kit-manifest.json"
     ],
     "documentation_paths": [
       "docs/modules/session-opening-performance.md",
@@ -131,7 +132,7 @@
           "Module Specification — Workflow Kit / Context Recovery"
         ],
         "path": "docs/modules/workflow-kit-recovery.md",
-        "required": true,
+        "required": false,
         "revision": "WORKTREE"
       },
       {
@@ -178,6 +179,42 @@
         "heading_path": [
           "Быстрое открытие сессий и планов"
         ],
+        "required": true,
+        "revision": "WORKTREE"
+      },
+      {
+        "heading_path": [
+          "Module Specification — Workflow Kit / Context Recovery",
+          "Facade"
+        ],
+        "path": "docs/modules/workflow-kit-recovery.md",
+        "required": true,
+        "revision": "WORKTREE"
+      },
+      {
+        "heading_path": [
+          "Module Specification — Workflow Kit / Context Recovery",
+          "Инварианты"
+        ],
+        "path": "docs/modules/workflow-kit-recovery.md",
+        "required": true,
+        "revision": "WORKTREE"
+      },
+      {
+        "heading_path": [
+          "Module Specification — Workflow Kit / Context Recovery",
+          "Recovery Capsule v2"
+        ],
+        "path": "docs/modules/workflow-kit-recovery.md",
+        "required": true,
+        "revision": "WORKTREE"
+      },
+      {
+        "heading_path": [
+          "Module Specification — Workflow Kit / Context Recovery",
+          "Предварительная подготовка полного контекста — scope 012 / T005"
+        ],
+        "path": "docs/modules/workflow-kit-recovery.md",
         "required": true,
         "revision": "WORKTREE"
       }
@@ -343,8 +380,8 @@
       "file_limit_exception": "Одна проверяемая часть существующего фасада: синхронные installed/bundled копии, интеграция вызова и профильные regression. Новые файлы служат только общей проверке актуальности; отдельного менеджера/сервиса нет."
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-opening-performance-029",
         "task_id": "T005",
@@ -362,7 +399,8 @@
         "src/session-plans.mjs",
         "tests/session-plans.test.mjs",
         "src/ui/sidebar.mjs",
-        "tests/sidebar.test.mjs"
+        "tests/sidebar.test.mjs",
+        ".harness/kit-manifest.json"
       ],
       "documentation_paths": [
         "docs/modules/session-opening-performance.md",
@@ -372,7 +410,7 @@
         "docs/architecture/ARCHITECTURE.md"
       ],
       "verification_ids": [
-        "workspace",
+        "suite",
         "electron-smoke"
       ],
       "id": "T005",
@@ -382,7 +420,8 @@
         "У подключённого проекта быстро проверить путь, project identity и выбранный session/plan, показать свежую каноническую проекцию и начать открытие сохранённого URL до окончания тяжёлой диагностики. Быстрый путь не исполняет непроверенный код workspace; использует доверенный фасад или проверенную целостность.",
         "Запуск приложения, переход между сессиями и смена проекта используют один согласованный путь. Полная проверка имеет ненавязчивый фоновый статус; ошибка показывается явно с возможностью повтора/Доктора, чужой план не подставляется.",
         "Последний выбор побеждает при A→B→A, смене workspace и закрытии окна. Старые проверки не меняют текущие sessionId, план, URL, health или recovery. Долгие чтения не удерживают общую очередь; атомарность записей session store сохраняется.",
-        "Сохраняются Chat/Work, NONE, подготовленные планы, отмена выбора, порядок дерева, три строки/прокрутка, темы и тонкие линии релиза 0.6.28; профиль/реальные чаты не сбрасываются."
+        "Сохраняются Chat/Work, NONE, подготовленные планы, отмена выбора, порядок дерева, три строки/прокрутка, темы и тонкие линии релиза 0.6.28; профиль/реальные чаты не сбрасываются.",
+        "После возврата разработки в main согласовать текущий установленный manifest штатным Doctor только при полном совпадении installed/bundled файлов, с backup; версию Kit и релиз оставить для T007/T009."
       ],
       "expected_commit_message": "perf: show selected sessions before background verification",
       "file_limit_exception": "Одна проверяемая часть существующего фасада: синхронные installed/bundled копии, интеграция вызова и профильные regression. Новые файлы служат только общей проверке актуальности; отдельного менеджера/сервиса нет."
@@ -626,6 +665,11 @@
       "id": "scope029-first-five",
       "text": "Пользователь новой сессии поручил выполнить текущий план до T005 включительно, отчитать результат и ждать следующего поручения. T006–T009 и DOCS сейчас не начинать.",
       "recorded_at": "2026-09-17T12:00:00.000Z"
+    },
+    {
+      "id": "073a3874-2e22-4c15-a72c-af12e7bd2b2e",
+      "text": "17.09.2026 пользователь удалил посторонние файлы и прямо поручил вернуться в main и объединить изменения остальных рабочих деревьев. Первые четыре коммита уже fast-forward в main; T005 продолжается там. Старое дерево 027 содержит уже включённое оформление и один дополнительный assert, переносимый в T005 без отката версии.",
+      "recorded_at": "2026-09-17T10:55:27.228Z"
     }
   ],
   "owner_session_id": "web-pilot-3d7ee647-735e-489d-a331-84905a11e25a",
@@ -641,7 +685,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-opening-performance-029
 Current Task: нет
-Revision: 14
+Revision: 18
 
 ## Цель
 
@@ -674,10 +718,10 @@ Revision: 14
   - Git Commit: [DONE] perf: reuse unchanged workspace readiness
   - Reference: session-opening-performance-029 / T004 / implementation
   - Файлы: src/workspace-readiness.mjs, src/workspace-setup.mjs, tests/workspace-readiness.test.mjs, resources/workspace-setup-worker.mjs, docs/modules/session-opening-performance.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
-- [TODO] T005: Ускорить показ плана и открытие выбранного чата — Ожидает
-  - Git Commit: [PENDING] perf: show selected sessions before background verification
+- [DONE] T005: Ускорить показ плана и открытие выбранного чата — Завершено
+  - Git Commit: [DONE] perf: show selected sessions before background verification
   - Reference: session-opening-performance-029 / T005 / implementation
-  - Файлы: src/main.mjs, src/workspace-session.mjs, src/ui/index.html, tests/workspace-session.test.mjs, tests/electron-smoke.mjs, src/session-plans.mjs, tests/session-plans.test.mjs, src/ui/sidebar.mjs, tests/sidebar.test.mjs, docs/modules/session-opening-performance.md, docs/modules/workspace-sessions.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
+  - Файлы: src/main.mjs, src/workspace-session.mjs, src/ui/index.html, tests/workspace-session.test.mjs, tests/electron-smoke.mjs, src/session-plans.mjs, tests/session-plans.test.mjs, src/ui/sidebar.mjs, tests/sidebar.test.mjs, .harness/kit-manifest.json, docs/modules/session-opening-performance.md, docs/modules/workspace-sessions.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 - [TODO] T006: Согласовать фоновую готовность и доставку контекста — Ожидает
   - Git Commit: [PENDING] fix: gate context delivery on current session readiness
   - Reference: session-opening-performance-029 / T006 / implementation
@@ -713,5 +757,9 @@ Revision: 14
 - docs/RELEASE.md
 - docs/VERIFICATION.md
 - docs/modules/session-opening-performance.md → Быстрое открытие сессий и планов
+- docs/modules/workflow-kit-recovery.md → Module Specification — Workflow Kit / Context Recovery / Facade
+- docs/modules/workflow-kit-recovery.md → Module Specification — Workflow Kit / Context Recovery / Инварианты
+- docs/modules/workflow-kit-recovery.md → Module Specification — Workflow Kit / Context Recovery / Recovery Capsule v2
+- docs/modules/workflow-kit-recovery.md → Module Specification — Workflow Kit / Context Recovery / Предварительная подготовка полного контекста — scope 012 / T005
 
 Служебные состояния меняются только командами workflow. Приёмка не архивирует scope.

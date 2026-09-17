@@ -84,7 +84,7 @@ async function waitFor(predicate, description, snapshot) {
   throw new Error(`SMOKE_TIMEOUT: ${description}; context=${JSON.stringify(timedOutState?.context)}; waiting for: ${description}`);
 }
 
-export async function run({ app, window, browser, sidebar, store, controller, selectWorkspace, snapshot, assertLocalSender, permissionAllowed, dataDir, chromiumDiagnostics, chromiumDiagnosticsFile, getArchiveWindow, getColorWindow }) {
+export async function run({ app, window, browser, sidebar, store, controller, selectWorkspace, workspaceSetup, snapshot, assertLocalSender, permissionAllowed, dataDir, chromiumDiagnostics, chromiumDiagnosticsFile, getArchiveWindow, getColorWindow }) {
   smokeDataDir = dataDir;
   assert.equal(app.isPackaged, false, 'Fixtures never run from a packaged app');
   assert.equal(permissionAllowed('media', 'https://chatgpt.com', { mediaTypes: ['audio'] }), true);
@@ -416,16 +416,57 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(history.snapshot().projects[0].sessions.length, 3);
   assert.ok(history.snapshot().projects[0].sessions.find(session => session.sessionId === second.sessionId).archivedAt);
   assert.equal(history.snapshot().projects[0].expanded, true);
+  // A saved chat and its fresh plan open while full readiness is deliberately held.
+  await waitFor(() => controller.contextCache.pending.size === 0, 'settle before navigation races', snapshot);
+  const realReady = workspaceSetup.ready.bind(workspaceSetup), readiness = [];
+  const readyResult = await realReady(workspace), loadsBeforeNavigation = packetLoads;
+  workspaceSetup.ready = () => new Promise((resolve, reject) => readiness.push({ resolve, reject }));
+  const choose = sessionId => sidebar.executeJavaScript(`window.webPilot.selectSession(${JSON.stringify(workspace)}, ${JSON.stringify(sessionId)})`);
+  await choose(first.sessionId); await choose(fourth.sessionId); await choose(first.sessionId);
+  await waitFor(() => !snapshot().pageLoading, 'saved chat before readiness', snapshot);
+  assert.equal(readiness.length, 3); assert.equal(snapshot().workspaceHealth.phase, 'checking');
+  assert.equal(snapshot().selected.sessionId, first.sessionId); assert.ok(snapshot().selected.planView);
+  assert.equal(controller.active, null); assert.equal(packetLoads, loadsBeforeNavigation);
+  readiness[1].reject(new Error('obsolete B')); readiness[0].resolve({ ...readyResult, ready: false });
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(snapshot().workspaceHealth.phase, 'checking'); assert.equal(snapshot().startupError, null);
+  readiness[2].resolve(readyResult);
+  await waitFor(() => snapshot().workspaceHealth.ready && snapshot().context.phase === 'delivered', 'newest A readiness', snapshot);
+  // Readiness can also finish first; attachment still waits for the current loadURL.
+  workspaceSetup.ready = async () => readyResult;
+  const loadURL = browser.loadURL.bind(browser);
+  let releaseLoad;
+  const heldLoad = new Promise(resolve => { releaseLoad = resolve; });
+  browser.loadURL = async (...args) => { await loadURL(...args); await heldLoad; };
+  await choose(first.sessionId);
+  await waitFor(() => snapshot().workspaceHealth.ready, 'readiness before navigation completes', snapshot);
+  assert.equal(snapshot().pageLoading, true); assert.equal(controller.active, null);
+  releaseLoad(); browser.loadURL = loadURL;
+  await waitFor(() => snapshot().context.phase === 'delivered', 'attach after both prerequisites', snapshot);
+  workspaceSetup.ready = () => new Promise((resolve, reject) => readiness.push({ resolve, reject }));
+  await choose(first.sessionId); await sidebar.executeJavaScript('window.webPilot.openSettings()');
+  const healthBeforeLateResult = snapshot().workspaceHealth;
+  readiness.at(-1).reject(new Error('obsolete after settings'));
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(controller.active, null); assert.deepEqual(snapshot().workspaceHealth, healthBeforeLateResult);
+  assert.equal(snapshot().startupError, null);
+  workspaceSetup.ready = realReady;
+  await browser.executeJavaScript('window.fixtureResumeMarker = 29');
+  await sidebar.executeJavaScript('window.webPilot.closeSettings()');
+  await waitFor(() => snapshot().context.phase === 'delivered', 'return after navigation races', snapshot);
+  assert.equal(await browser.executeJavaScript('window.fixtureResumeMarker'), 29, 'closing settings preserves the loaded DOM');
   const startFile = path.join(workspace, 'docs/WORKFLOW_START.md');
   const startText = await fs.readFile(startFile); await fs.unlink(startFile);
   const urlBefore = browser.getURL();
   await selectWorkspace(workspace);
-  assert.equal(snapshot().setup.ready, false);
-  assert.ok(snapshot().setup.issues.some(i => i.path === 'docs/WORKFLOW_START.md'));
+  await waitFor(() => snapshot().workspaceHealth?.phase === 'error' && !snapshot().pageLoading, 'background failure preserves chat', snapshot);
+  assert.equal(snapshot().setup, null); assert.equal(snapshot().workspaceHealth.ready, false);
+  assert.ok(snapshot().workspaceHealth.issues.some(i => i.path === 'docs/WORKFLOW_START.md'));
+  assert.equal(controller.active, null);
   assert.equal(store.selected().sessionId, first.sessionId); assert.equal(browser.getURL(), urlBefore);
   await fs.writeFile(startFile, startText);
-  await sidebar.executeJavaScript('document.getElementById("setup-cancel").click()');
-  await waitFor(() => !snapshot().setup, 'cancel blocked open keeps current session', snapshot);
+  await sidebar.executeJavaScript('document.getElementById("workspace-health-retry").click()');
+  await waitFor(() => snapshot().workspaceHealth?.ready, 'retry background failure', snapshot);
   const archiveCurrent = async () => {
     await sidebar.executeJavaScript('document.querySelector(".project-menu-button").click(); document.querySelector(".archive-project").click()');
     await waitFor(() => snapshot().archives.some(project => project.workspace === workspace) && !snapshot().selected && !snapshot().pageLoading, 'archive current project', snapshot);
@@ -719,6 +760,17 @@ export async function run({ app, window, browser, sidebar, store, controller, se
     await waitFor(()=>store.selected().sessionId===source.sessionId,'return to unfinished source',snapshot);
   }
 
+  // A prepared action issues its navigation generation after an asynchronous read.
+  // Its own preview error must remain visible, while older navigation errors stay ignored.
+  const preparedForFailure = (await store.inspect(workspace, source.sessionId)).preparedPlans.find(plan => plan.sessionId);
+  const strictPreview = workspaceSetup.preview.bind(workspaceSetup);
+  workspaceSetup.preview = async () => { throw Object.assign(new Error('fixture preview failure'), { code: 'FIXTURE_PREVIEW' }); };
+  const failedOpen = await sidebar.executeJavaScript(`window.webPilot.openPreparedSession(${JSON.stringify(workspace)}, ${JSON.stringify(source.sessionId)}, ${JSON.stringify(preparedForFailure.planId)})`);
+  assert.equal(failedOpen.ok, false); assert.equal(snapshot().startupError.code, 'FIXTURE_PREVIEW');
+  workspaceSetup.preview = strictPreview;
+  await selectWorkspace(workspace);
+  await waitFor(() => ['delivered', 'stale'].includes(snapshot().context.phase), 'return after current preview error', snapshot);
+
   // Doctor scenarios begin after prior background recovery work has settled.
   await waitFor(() => controller.contextCache.pending.size === 0, 'background preparation before Doctor', snapshot);
   // Doctor operates on the isolated fixture only; the real workspace is never damaged.
@@ -730,11 +782,12 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   const damagedBytes = await fs.readFile(doctorManifest);
   const doctorSession = store.selected().sessionId;
   await sidebar.executeJavaScript(`window.webPilot.selectSession(${JSON.stringify(workspace)}, ${JSON.stringify(doctorSession)})`);
-  assert.equal(snapshot().setup.ready, false);
-  assert.ok(snapshot().setup.issues.length > 0);
-  assert.equal(await sidebar.executeJavaScript('document.getElementById("setup-doctor").hidden'), false);
+  await waitFor(() => snapshot().workspaceHealth?.phase === 'error', 'stale manifest in background', snapshot);
+  assert.equal(snapshot().workspaceHealth.ready, false);
+  assert.ok(snapshot().workspaceHealth.issues.length > 0);
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("workspace-health-doctor").hidden'), false);
   assert.equal(await sidebar.executeJavaScript('document.getElementById("open-settings").disabled'), false);
-  await sidebar.executeJavaScript('document.getElementById("setup-doctor").click()');
+  await sidebar.executeJavaScript('document.getElementById("workspace-health-doctor").click()');
   await waitFor(() => snapshot().settings && !snapshot().setup, 'doctor from setup failure', snapshot);
   assert.deepEqual(await fs.readFile(doctorManifest), damagedBytes, 'opening doctor does not repair');
   await waitFor(() => sidebar.executeJavaScript('!document.getElementById("doctor-run").disabled'), 'doctor button ready', snapshot);
@@ -775,7 +828,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(store.selected().experience, 'work');
   assert.equal(store.snapshot().projects.find(p => p.workspace === workspace).sessions.length, beforeDoctorNew + 1);
 
-  const result = { liveChatColors: true, composerBackground: true, streamingAssistantColor: true, chatColorsPersistence: true, chatColorsReset: true, colorScreenshots, projectDoctor: true, doctorBackup: true, doctorOpen: true, doctorRefresh: true, doctorNewSession: true, doctorScreenshots, newestSessionFirst: true, projectSelectsNewest: true, threeSessionViewport: true, sessionScrollPreserved: true, visibleSessionScrollbar: true, nativeProjectsDisclosure: true, treePopover: true, treeScreenshots, scopeContinuationChat: true, scopeContinuationWork: true, scopeContinuationRestart: true, scopeContinuationNoDuplicates: true,
+  const result = { fastSavedNavigation: true, lastNavigationWins: true, readinessBeforeOrAfterLoad: true, backgroundFailureRetry: true, liveChatColors: true, composerBackground: true, streamingAssistantColor: true, chatColorsPersistence: true, chatColorsReset: true, colorScreenshots, projectDoctor: true, doctorBackup: true, doctorOpen: true, doctorRefresh: true, doctorNewSession: true, doctorScreenshots, newestSessionFirst: true, projectSelectsNewest: true, threeSessionViewport: true, sessionScrollPreserved: true, visibleSessionScrollbar: true, nativeProjectsDisclosure: true, treePopover: true, treeScreenshots, scopeContinuationChat: true, scopeContinuationWork: true, scopeContinuationRestart: true, scopeContinuationNoDuplicates: true,
     transitionScreenshot: path.join(dataDir, 'next-session-choice.png'), mode: 'isolated-fixture', electron: process.versions.electron, chromium: process.versions.chrome,
     views: window.contentView.children.length, secureRemote: true, sidebarIpc: true, archiveRestore: true, archiveRestart: true, deleteCancel: true, localDeletion: true, cloudChatPreserved: true, workspaceCreation: true, workspaceValidation: true, cancelPreservesSession: true, startupMessages: 4, canonicalPacketLoads: packetLoads, recoveryCache: true, operationProgress: true, progressScreenshot: path.join(dataDir, 'progress-ui.png'),
     tokenCounterRemoved: true, projectRename: true, sessionRename: true, scopeSessionRename: true, restartKeepsSession: true, newChatCreatesSession: true, sessionTree: true, selectsEarlierSession: true, compactWorkspaceDetails: true, projectPathClipboard: true, sessionPlans: true, preparedPlans: true, manualChatWorkChoice: true, noAcceptanceButton: true, chromiumDiagnostics: true, contextWindowIndicatorRemoved: true, resizableSidebar: true, separateArchiveWindow: true, archiveMultiSelect: true, archiveForgetKeepsFolder: true, shellTheme: true, nativeTitlebarTheme: nativeTheme.shouldUseDarkColors, toolCallFilter: true, microphonePermission: true, geolocationPermission: true, cameraPermission: false, fullContextBytes: Buffer.byteLength(fixtureContext), liveChatGPT: false, agentToolsRequired: false };

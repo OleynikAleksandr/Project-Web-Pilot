@@ -141,3 +141,21 @@ test('a failed transaction cannot be resumed by another owner and both failpoint
   ok(cli('scope:create','--session','a','--input',input(scope('a-second')),'--expected-revision',String(none.plan.plan_revision)));
   assert.equal(ok(cli('plan:view','--session','a')).plan_id,'a-second');
 });
+
+test('fast projection reads canonical data without executing the installed facade', async t => {
+  const { root, put } = fixture(t); put('alpha', 'session-a'); put('beta', 'session-b');
+  fs.mkdirSync(path.join(root, '.harness/kit/lib'), { recursive: true });
+  fs.mkdirSync(path.join(root, 'scripts'), { recursive: true });
+  fs.writeFileSync(path.join(root, 'scripts/workflow.mjs'), 'throw new Error("untrusted launcher");');
+  const marker = path.join(root, 'executed');
+  fs.writeFileSync(path.join(root, '.harness/kit/lib/session-plans.mjs'),
+    `import fs from 'node:fs'; fs.writeFileSync(${JSON.stringify(marker)}, 'bad'); throw new Error('untrusted facade');`);
+  const { readWorkspace } = await import('../src/workspace-session.mjs');
+  assert.equal((await readWorkspace(root, 'session-a')).planId, 'alpha');
+  assert.equal((await readWorkspace(root, 'session-b')).planId, 'beta');
+  assert.equal((await readWorkspace(root, 'session-empty')).scopeStatus, 'NONE');
+  assert.equal(fs.existsSync(marker), false);
+  const invalid = put('alpha', 'session-a'); invalid.project_id = 'another-project';
+  fs.writeFileSync(path.join(root, ownedPlanPath('alpha')), renderPlan(invalid));
+  await assert.rejects(readWorkspace(root, 'session-a'), { code: 'PROJECT_REPLACED' });
+});
