@@ -231,3 +231,54 @@ test('matching project facts cannot authorize a packet prepared for another sess
   await f.controller.tick();assert.equal(f.sends(),0);assert.equal(f.saved.attempt,null);
   assert.equal(f.controller.state.error.code,'MCP_CONTEXT_SESSION_MISMATCH');
 });
+
+test('saved sent, legacy and unknown chats are observed without services or recovery warmup', async () => {
+  const original = controllerFixture(); await original.controller.tick();
+  for (const state of ['sent', 'unknown', 'legacy']) {
+    const attempt = state === 'legacy' ? { requestId: 'old', text: 'old', state: 'acknowledged', sendStartedAtMs: now - 1000 }
+      : { ...original.saved.attempt, state };
+    const f = controllerFixture({ savedAttempt: attempt });
+    let ensures = 0, warms = 0;
+    f.runtime.ensure = async () => { ensures++; throw Error('MCP unavailable'); };
+    f.controller.contextCache = { warm: async () => { warms++; throw Error('unexpected warm'); } };
+    await f.controller.tick();
+    assert.equal(f.controller.state.phase, state === 'sent' ? 'delivered' : state === 'unknown' ? 'send-unknown' : 'legacy-session');
+    assert.equal(ensures, 0); assert.equal(warms, 0); assert.equal(f.loads(), 0); assert.equal(f.sends(), 0);
+  }
+});
+
+test('readiness failure before preparation and changed readiness before Send cannot authorize a packet', async () => {
+  for (const changedAfterFill of [false, true]) {
+    const f = controllerFixture(); let ready = changedAfterFill, builds = 0;
+    const cache = new ContextCache({ inputKey: async () => { if (!ready) throw Error('hooks changed or transaction active'); return 'ready-key'; },
+      load: async () => { builds++; return packet(); } });
+    f.controller.contextCache = cache;
+    if (changedAfterFill) {
+      const deliver = f.composer.deliver;
+      f.composer.deliver = async options => { ready = false; return deliver(options); };
+    }
+    await f.controller.tick();
+    assert.equal(f.sends(), 0); assert.equal(builds, changedAfterFill ? 1 : 0);
+    assert.equal(f.controller.state.phase, changedAfterFill ? 'prepared-stale' : 'error');
+  }
+});
+
+test('a prepared packet without a fingerprint is not authorized by its recent age', async () => {
+  const f = controllerFixture(); await f.controller.tick();
+  await f.store.updateSession('', '', { attempt: { ...f.saved.attempt, state: 'prepared', sendStartedAtMs: null } });
+  f.controller.contextCache = new ContextCache({ inputKey: async () => 'current', load: async () => packet() });
+  f.inspection.draftLength = 10; f.inspection.draftMatches = true;
+  f.controller.attach(f.saved); await f.controller.tick();
+  assert.equal(f.controller.state.phase, 'prepared-stale'); assert.equal(f.sends(), 1);
+});
+
+test('a readiness result for an earlier A generation cannot send after A-B-A', async () => {
+  const f = controllerFixture(); let release;
+  f.controller.contextCache = new ContextCache({ inputKey: () => new Promise(resolve => { release = resolve; }), load: async () => packet() });
+  const running = f.controller.tick();
+  while (!release) await new Promise(resolve => setImmediate(resolve));
+  f.controller.cancel(); f.controller.attach(f.saved);
+  // Subsequent key reads complete normally; only the first readiness belongs to old A.
+  f.controller.contextCache.inputKey = async () => 'ready'; release('ready'); await running;
+  assert.equal(f.sends(), 0); assert.equal(f.saved.attempt, null);
+});

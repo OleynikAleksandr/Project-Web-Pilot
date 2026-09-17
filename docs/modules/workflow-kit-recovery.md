@@ -183,3 +183,7 @@ T011: Workflow Kit 1.4.0 добавляет upgrade с 1.3.0, предварит
 Scope 029 / T002: историю и unfolded trailers читает штатный git log. Для commit message с patch divider --- сохраняется прежний interpret-trailers --parse; дубликаты и Workflow-Iteration не теряются. Несколько dependencies проверяет один git rev-list по графу, поэтому merge/replace refs не подменяются линейным порядком log. Семантика ошибок baseline, неоднозначных references, состава коммита и dependency order сохранена.
 
 Scope 029 / T003: recoverState формирует проверенные validation/snapshot/COMPLETE одним проходом; status не запускает validate повторно. Полная инспекция переиспользует этот результат для диагностики и COMPLETE checks всех канонических планов. Публичного параметра skipValidate или injected validated object нет. Общий отпечаток входов до/после включает все планы/документы и Git/runtime metadata; изменение отклоняет устаревший успех. Повреждённый owned runtime не запускается для launcher probe.
+
+## Интеграция readiness и recovery — scope 029 / T006
+
+Web Pilot использует полный content-key WorkspaceSetup.ready и адрес sessionId/planId для отдельного RecoveryCache. Общий fingerprint учитывает все канонические планы, integrity и transaction; COMPLETE packet по-прежнему создаёт только Workflow Kit. Невозможность подтвердить ключ блокирует подготовку и Send, без обхода по возрасту пакета. Просмотр уже существующего чата не вызывает новый recover.

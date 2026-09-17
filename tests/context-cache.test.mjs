@@ -6,7 +6,7 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { ContextCache } from '../src/context-cache.mjs';
-import { contextInputKey } from '../src/context-inputs.mjs';
+import { contextInputKey, readinessContextKey } from '../src/context-inputs.mjs';
 
 function packet(workspace, context = 'полный пакет') {
   return { delivery_protocol: 'inline-context-v1', ack_required: false, status: 'ready', completeness: 'COMPLETE',
@@ -45,11 +45,11 @@ test('changing inputs during build are retried; unstable build is never cached',
   cache.clear();cache.loadPacket=async w=>{key+='x';return packet(w);};
   await assert.rejects(cache.load('/p'),{code:'CONTEXT_CHANGED'});assert.equal(cache.entries.size,0);
 });
-test('unavailable inputs defer warm; foreground falls back; corrupt packets fail',async()=>{
+test('unavailable inputs block warm and foreground instead of falling back to age; corrupt packets fail',async()=>{
   let loads=0;
   const cache=new ContextCache({inputKey:async()=>{throw Error('unavailable');},load:async w=>{loads++;return packet(w);}});
   await cache.warm('/p');assert.equal(loads,0);
-  assert.equal((await cache.load('/p')).preparation.inputKey,undefined);
+  await assert.rejects(cache.load('/p'),{code:'CONTEXT_INPUTS_UNAVAILABLE'});assert.equal(loads,0);
   assert.equal(await cache.isCurrent('/p','key'),false);
   cache.inputKey=async()=> 'key';cache.loadPacket=async w=>({...packet(w),context:'corrupt'});
   await assert.rejects(cache.load('/p'),{code:'MCP_CONTEXT_DAMAGED'});
@@ -108,4 +108,23 @@ test('two sessions with identical revisions never share a packet or pending buil
   assert.equal((await cache.load('/project',a)).preparation.cacheHit,true);
   cache.clear();cache.loadPacket=async w=>({...packet(w),session_id:'b',plan_id:'plan-b'});
   await assert.rejects(cache.load('/project',a),{code:'MCP_CONTEXT_SESSION_MISMATCH'});
+});
+
+test('warm uses one input check on a cache hit and two around a cold build', async () => {
+  let keys = 0, loads = 0, clock = 0;
+  const cache = new ContextCache({ now: () => clock, inputKey: async () => { keys++; return 'key'; }, load: async w => { loads++; return packet(w); } });
+  await cache.warm('/project'); assert.equal(keys, 2); assert.equal(loads, 1);
+  clock = 6000; keys = 0; await cache.warm('/project'); assert.equal(keys, 1); assert.equal(loads, 1);
+});
+
+test('addressed recovery key incorporates complete readiness and rejects failed or foreign readiness', async () => {
+  let inputKey = 'all-inputs-a', ready = true, workspace = '/project';
+  const setup = { ready: async () => ({ ready, inputKey, workspace }) };
+  const a = { sessionId: 'a', planId: 'plan-a' }, b = { sessionId: 'b', planId: null };
+  const key = await readinessContextKey(setup, '/project', a);
+  assert.notEqual(key, await readinessContextKey(setup, '/project', b));
+  inputKey = 'changed-hooks-config-or-required-document';
+  assert.notEqual(key, await readinessContextKey(setup, '/project', a));
+  ready = false; await assert.rejects(readinessContextKey(setup, '/project', a), { code: 'CONTEXT_INPUTS_UNAVAILABLE' });
+  ready = true; workspace = '/other'; await assert.rejects(readinessContextKey(setup, '/project', a), { code: 'CONTEXT_INPUTS_UNAVAILABLE' });
 });

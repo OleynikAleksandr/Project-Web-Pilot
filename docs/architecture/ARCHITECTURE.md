@@ -871,3 +871,7 @@ Evidence: .harness/runtime/releases/0.6.28/{mac-release.json,source-verification
 ## Scope 029 / T005 — выбранная сессия до полной диагностики
 
 Main использует общий openConnectedSession и поколения навигации; WorkspaceSessions сохраняет атомарность записей, вынося чтение проекции из mutation queue. Проекцию читает доверенный bundled фасад Workflow Kit. Readiness в существующем worker завершается независимо от loadURL; controller активируется только при совпадении текущих workspace/session/generation и готовности обоих. Изменения пока относятся к исходникам; постоянный релиз 0.6.28 не заменён.
+
+## Scope 029 / T006 — готовность перед доставкой
+
+Production ContextCache использует readinessContextKey: WorkspaceSetup.ready подтверждает полное текущее состояние, затем ключ включает workspace и нормализованный адрес sessionId/planId. Проверки до/после builder и перед Send используют один фасад. Ошибка inputKey больше не разрешает unkeyed пакет с TTL. ContextSession сначала обрабатывает сохранённый sent/legacy/unknown чат; эти ветви не запускают runtime.ensure или warm. Прогрев остаётся только при ожидании composer/черновика новой передачи, без лишнего предварительного key-read. Existing generation/identity/draft/duplicate guards сохранены.

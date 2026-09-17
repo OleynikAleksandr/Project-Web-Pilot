@@ -33,10 +33,10 @@ export class ContextCache {
     for (let attempt = 0; attempt < 2; attempt++) {
       let key;
       try { key = await this.inputKey(workspace, selection); }
-      catch {
+      catch (error) {
         this.entries.delete(address);
-        const packet = validateContextPacket(await this.build(workspace, selection), workspace, selection);
-        return { ...packet, preparation: { cacheHit: false, ms: performance.now() - started } };
+        throw Object.assign(new Error('Не удалось подтвердить актуальность проекта. Повторите проверку перед отправкой контекста.', { cause: error }),
+          { code: 'CONTEXT_INPUTS_UNAVAILABLE' });
       }
       const cached = this.entries.get(address);
       if (cached?.key === key) {
@@ -63,6 +63,6 @@ export class ContextCache {
     if (this.pending.has(address) || this.now() < (this.nextWarm.get(address) ?? 0)) return;
     this.nextWarm.set(address, this.now() + this.intervalMs);
     while (this.nextWarm.size > this.limit) this.nextWarm.delete(this.nextWarm.keys().next().value);
-    try { await this.inputKey(workspace, selection); await this.load(workspace, selection); } catch {}
+    try { await this.load(workspace, selection); } catch {}
   }
 }

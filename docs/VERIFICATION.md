@@ -1011,3 +1011,7 @@ Source Electron 44.3.0 / Chromium 152.0.7977.78, macOS arm64, тот же дву
 Итоговые обязательные ворота T005 — полный Node suite и Electron smoke в управляемом commit; синтаксис обязателен глобально. Evidence привязана Workflow Kit к candidate tree и SHA; отдельный запуск smoke до последнего уточнения async action также прошёл. Логи: .harness/runtime/performance-029/T005-targeted.log, T005-smoke.log и T005-commit.json.
 
 После интеграции в main штатный доверенный Doctor подтвердил полное совпадение installed/bundled ядра и согласовал только .harness/kit-manifest.json, без ручного изменения хешей. Backup: .harness/runtime/doctor/2026-09-17T10-55-35-318Z-1e5daa6d-f5c4-42ec-894e-1ca8a5630b89; issues отсутствуют. Выбор новой версии Kit, upgrade compatibility и релиз остаются T007/T009. Постоянный app и ZIP пока версии 0.6.28.
+
+## Scope 029 / T006 — адресованная готовность доставки (17.09.2026)
+
+Focused context-session/context-cache: 32/32 passed. Покрыты saved sent/legacy/unknown без ensure/warm/builder/Send; ошибка readiness до сборки и после вставки; отказ unkeyed attempt даже в пределах старого TTL; A→B→A во время ожидания ключа; отдельные адреса/NONE/чужой workspace; два key-read холодного warm и один готового cache-hit. Evidence: `.harness/runtime/performance-029/T006-focused.log`. Финальные Node suite/Electron smoke выполняются управляемым commit; результат записан в его evidence. Эти fixtures проверяют guards, не являются замером сетевой доставки или native Windows.

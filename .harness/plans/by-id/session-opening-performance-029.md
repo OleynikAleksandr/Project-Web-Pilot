@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 18,
+  "plan_revision": 22,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-opening-performance-029",
@@ -427,8 +427,8 @@
       "file_limit_exception": "Одна проверяемая часть существующего фасада: синхронные installed/bundled копии, интеграция вызова и профильные regression. Новые файлы служат только общей проверке актуальности; отдельного менеджера/сервиса нет."
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-opening-performance-029",
         "task_id": "T006",
@@ -443,18 +443,22 @@
         "src/context-inputs.mjs",
         "src/session-plans.mjs",
         "tests/context-session.test.mjs",
-        "tests/context-cache.test.mjs"
+        "tests/context-cache.test.mjs",
+        "src/main.mjs",
+        "tests/electron-smoke.mjs"
       ],
       "documentation_paths": [
         "docs/modules/session-opening-performance.md",
         "docs/CONTEXT_DELIVERY.md",
         "docs/modules/workspace-sessions.md",
         "docs/modules/workflow-kit-recovery.md",
-        "docs/VERIFICATION.md"
+        "docs/VERIFICATION.md",
+        "docs/architecture/ARCHITECTURE.md"
       ],
       "verification_ids": [
         "context",
-        "suite"
+        "suite",
+        "electron-smoke"
       ],
       "id": "T006",
       "title": "Согласовать фоновую готовность и доставку контекста",
@@ -589,6 +593,34 @@
       "expected_commit_message": "build: release faster session and plan opening"
     },
     {
+      "id": "T010",
+      "title": "Объединить изменения и удалить лишние рабочие деревья и ветки",
+      "why": "Пользователь прямо поручил завершить работу в main и убрать временные деревья и ветки после сохранения всех нужных изменений.",
+      "dependencies": [
+        "T009"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/VERIFICATION.md",
+        "docs/RELEASE.md",
+        "docs/modules/session-opening-performance.md"
+      ],
+      "acceptance_criteria": [
+        "Повторно проверить каждое дерево, ветку и незавершённые изменения; уникальные нужные изменения включены в main, временные результаты и evidence сохранены перед удалением.",
+        "Удалить лишние worktree и локальные ветки штатными git-командами после подтверждения интеграции; main, origin/main, приложение, зависимости и пользовательские профили сохранены.",
+        "git worktree list оставляет только основной workspace, локальная рабочая ветка main и чистый status; финальная DOCS остаётся последней, scope не архивируется."
+      ],
+      "verification_ids": [],
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "session-opening-performance-029",
+        "task_id": "T010",
+        "role": "implementation"
+      },
+      "expected_commit_message": "chore: consolidate main and remove temporary worktrees"
+    },
+    {
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
@@ -605,7 +637,8 @@
         "T006",
         "T007",
         "T008",
-        "T009"
+        "T009",
+        "T010"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -670,6 +703,11 @@
       "id": "073a3874-2e22-4c15-a72c-af12e7bd2b2e",
       "text": "17.09.2026 пользователь удалил посторонние файлы и прямо поручил вернуться в main и объединить изменения остальных рабочих деревьев. Первые четыре коммита уже fast-forward в main; T005 продолжается там. Старое дерево 027 содержит уже включённое оформление и один дополнительный assert, переносимый в T005 без отката версии.",
       "recorded_at": "2026-09-17T10:55:27.228Z"
+    },
+    {
+      "id": "3e31d99a-0030-4bf5-b47f-0442e59e84b2",
+      "text": "17.09.2026 пользователь проверил первые пять задач, подтвердил результат и прямо поручил продолжать текущий план вплоть до нового релиза. Также поручил объединить все нужные изменения в main и удалить лишние деревья и ветки. Финальная DOCS выполняется после этого; архивирование не поручено.",
+      "recorded_at": "2026-09-17T11:13:15.826Z"
     }
   ],
   "owner_session_id": "web-pilot-3d7ee647-735e-489d-a331-84905a11e25a",
@@ -685,7 +723,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-opening-performance-029
 Current Task: нет
-Revision: 18
+Revision: 22
 
 ## Цель
 
@@ -722,10 +760,10 @@ Revision: 18
   - Git Commit: [DONE] perf: show selected sessions before background verification
   - Reference: session-opening-performance-029 / T005 / implementation
   - Файлы: src/main.mjs, src/workspace-session.mjs, src/ui/index.html, tests/workspace-session.test.mjs, tests/electron-smoke.mjs, src/session-plans.mjs, tests/session-plans.test.mjs, src/ui/sidebar.mjs, tests/sidebar.test.mjs, .harness/kit-manifest.json, docs/modules/session-opening-performance.md, docs/modules/workspace-sessions.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
-- [TODO] T006: Согласовать фоновую готовность и доставку контекста — Ожидает
-  - Git Commit: [PENDING] fix: gate context delivery on current session readiness
+- [DONE] T006: Согласовать фоновую готовность и доставку контекста — Завершено
+  - Git Commit: [DONE] fix: gate context delivery on current session readiness
   - Reference: session-opening-performance-029 / T006 / implementation
-  - Файлы: src/context-session.mjs, src/context-cache.mjs, src/context-inputs.mjs, src/session-plans.mjs, tests/context-session.test.mjs, tests/context-cache.test.mjs, docs/modules/session-opening-performance.md, docs/CONTEXT_DELIVERY.md, docs/modules/workspace-sessions.md, docs/modules/workflow-kit-recovery.md, docs/VERIFICATION.md
+  - Файлы: src/context-session.mjs, src/context-cache.mjs, src/context-inputs.mjs, src/session-plans.mjs, tests/context-session.test.mjs, tests/context-cache.test.mjs, src/main.mjs, tests/electron-smoke.mjs, docs/modules/session-opening-performance.md, docs/CONTEXT_DELIVERY.md, docs/modules/workspace-sessions.md, docs/modules/workflow-kit-recovery.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 - [TODO] T007: Сохранить установку и диагностику обновлённого Workflow Kit — Ожидает
   - Git Commit: [PENDING] fix: preserve kit upgrade and diagnostics after performance changes
   - Reference: session-opening-performance-029 / T007 / implementation
@@ -738,6 +776,10 @@ Revision: 18
   - Git Commit: [PENDING] build: release faster session and plan opening
   - Reference: session-opening-performance-029 / T009 / implementation
   - Файлы: package.json, package-lock.json, docs/modules/session-opening-performance.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md, docs/SOURCE_WORKSPACES.md, docs/VERIFICATION.md
+- [TODO] T010: Объединить изменения и удалить лишние рабочие деревья и ветки — Ожидает
+  - Git Commit: [PENDING] chore: consolidate main and remove temporary worktrees
+  - Reference: session-opening-performance-029 / T010 / implementation
+  - Файлы: docs/VERIFICATION.md, docs/RELEASE.md, docs/modules/session-opening-performance.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: update project documentation for fast session opening
   - Reference: session-opening-performance-029 / DOCS / implementation

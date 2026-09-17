@@ -116,3 +116,13 @@ export async function contextInputKey(workspace, selection = {}) {
   if (transaction?.[1]) throw inputError('Commit transaction active');
   return digest(JSON.stringify({ version: 2, root, selection, planRevision: plan.plan_revision, head, status, replacements, index, states }));
 }
+
+// The application shares readiness's complete input inventory with its addressed
+// recovery cache. It still obtains every packet from the canonical CLI builder.
+export async function readinessContextKey(setup, workspace, selection = {}) {
+  const result = await setup.ready(workspace);
+  if (result.ready !== true || result.workspace !== workspace || typeof result.inputKey !== 'string' || !result.inputKey)
+    throw inputError('Workspace readiness could not be confirmed');
+  const address = { sessionId: selection.sessionId ?? null, planId: selection.planId ?? null };
+  return digest(JSON.stringify({ version: 3, workspace, selection: address, readiness: result.inputKey }));
+}

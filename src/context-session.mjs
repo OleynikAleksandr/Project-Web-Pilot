@@ -88,7 +88,7 @@ export class ContextSession {
 
   async packetIsCurrent(packet, project) {
     if (!packetMatchesProject(packet, project)) return false;
-    if (packet.cacheKey && this.contextCache) return this.contextCache.isCurrent(project.workspace, packet.cacheKey, sessionSelection(project));
+    if (this.contextCache) return this.contextCache.isCurrent(project.workspace, packet.cacheKey, sessionSelection(project));
     return this.now() - packet.generatedAtMs <= 300000;
   }
 
@@ -117,13 +117,6 @@ export class ContextSession {
       if (!this.current(generation)) return;
       if (info.projectId !== project.projectId) throw failure('PROJECT_REPLACED', 'В этой папке теперь другой проект. Старый чат сохранён.');
       project = { ...project, ...info };
-      if (!this.servicesReady) {
-        this.emit({ phase: 'preparing', projectInfo: info });
-        await this.runtime.ensure();
-        if (!this.current(generation)) return;
-        this.servicesReady = true;
-      }
-      if (this.contextCache) void this.contextCache.warm(project.workspace, sessionSelection(project));
       let attempt = project.attempt;
       let observation = await this.composer.inspect({ requestId: attempt?.requestId, text: attempt?.text });
       if (!this.current(generation)) return;
@@ -196,9 +189,18 @@ export class ContextSession {
           delivery: { ...attempt.packet, sentAtMs: attempt.sentAtMs ?? attempt.sendStartedAtMs }, error: null });
         return;
       }
-      if (!observation.editorAvailable || !observation.writable) { this.emit({ phase: 'waiting-composer', projectInfo: info }); return; }
-      if (observation.busy) { this.emit({ phase: 'waiting-generation', projectInfo: info }); return; }
-      if (observation.draftLength && !observation.draftMatches) { this.emit({ phase: 'waiting-draft', projectInfo: info }); return; }
+      if (!this.servicesReady) {
+        this.emit({ phase: 'preparing', projectInfo: info });
+        await this.runtime.ensure();
+        if (!this.current(generation)) return;
+        this.servicesReady = true;
+      }
+      const deferred = !observation.editorAvailable || !observation.writable ? 'waiting-composer'
+        : observation.busy ? 'waiting-generation' : observation.draftLength && !observation.draftMatches ? 'waiting-draft' : null;
+      if (deferred) {
+        if (this.contextCache) void this.contextCache.warm(project.workspace, sessionSelection(project));
+        this.emit({ phase: deferred, projectInfo: info }); return;
+      }
       if (attempt && !await this.packetIsCurrent(attempt.packet, project)) {
         if (observation.draftLength) { this.emit({ phase: 'prepared-stale', projectInfo: info }); return; }
         attempt = null;

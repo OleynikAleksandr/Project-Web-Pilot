@@ -12,7 +12,9 @@ import { installChatGPTAutoScroll } from './chatgpt-auto-scroll.mjs';
 import { ChatColors, normalizeChatColors, validateColorChange, DEFAULT_COLORS } from './chatgpt-colors.mjs';
 import { ChatColorsWindow } from './chat-colors-window.mjs';
 import { ContextCache } from './context-cache.mjs';
-const contextCache = new ContextCache({ load: (workspace, selection) => runtime.loadContext(workspace, selection), onChange: () => publish() });
+import { readinessContextKey } from './context-inputs.mjs';
+const contextCache = new ContextCache({ load: (workspace, selection) => runtime.loadContext(workspace, selection),
+  inputKey: (workspace, selection) => readinessContextKey(workspaceSetup, workspace, selection), onChange: () => publish() });
 import { SessionPlans } from './session-plans.mjs';
 import { ContextSession, sessionSelection } from './context-session.mjs';
 import { chatGPTEntrypoint } from './chatgpt-experience.mjs';
