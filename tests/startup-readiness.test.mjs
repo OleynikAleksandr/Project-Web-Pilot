@@ -61,3 +61,35 @@ test('raw runtime errors never leak commands or secrets into public state', asyn
   await f.flow.check(); assert.equal(f.flow.snapshot().phase, 'error');
   assert.doesNotMatch(JSON.stringify(f.flow.snapshot()), /sk-example-value/);
 });
+
+import { JSDOM } from 'jsdom';
+import { accountObservation, offerMacInstallation } from '../src/startup-readiness.mjs';
+test('guest composer is not proof of login; visible account marker is required', () => {
+  const dom = new JSDOM('<textarea id="prompt-textarea"></textarea>', { runScripts: 'outside-only' });
+  dom.window.HTMLElement.prototype.getClientRects = function() { return this.hidden ? [] : [{}]; };
+  const inspect = () => JSON.parse(JSON.stringify(dom.window.eval('(' + accountObservation.toString() + ')()')));
+  assert.deepEqual(inspect(), { login: false, authenticated: false });
+  dom.window.document.body.insertAdjacentHTML('beforeend', '<button aria-label="Open Profile Menu"></button>');
+  assert.equal(inspect().authenticated, true);
+  dom.window.document.body.insertAdjacentHTML('beforeend', '<button data-testid="login-button"></button>');
+  assert.equal(inspect().authenticated, false);
+  dom.window.close();
+});
+test('existing profile and installation cancellation never move the app', async () => {
+  let moved = 0, prompted = 0;
+  const app = { isInApplicationsFolder: () => false, moveToApplicationsFolder: () => { moved++; return true; } };
+  const dialog = { showMessageBox: async () => { prompted++; return { response: 1 }; } };
+  assert.equal(await offerMacInstallation({ app, dialog, fresh: false }), false);
+  assert.equal(prompted, 0);
+  assert.equal(await offerMacInstallation({ app, dialog, fresh: true }), false);
+  assert.equal(prompted, 1); assert.equal(moved, 0);
+});
+test('an installation conflict cannot silently replace another app', async () => {
+  let replaced = false;
+  const app = { isInApplicationsFolder: () => false, moveToApplicationsFolder: ({ conflictHandler }) => {
+    replaced = conflictHandler('exists'); return replaced;
+  } };
+  const dialog = { showMessageBox: async () => ({ response: 0 }), showMessageBoxSync: () => 1 };
+  assert.equal(await offerMacInstallation({ app, dialog, fresh: true }), false);
+  assert.equal(replaced, false);
+});

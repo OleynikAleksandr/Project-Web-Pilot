@@ -15,7 +15,7 @@ export async function inspectMacGit(run = execute) {
 }
 export async function installMacGit(run = execute) {
   try { await run('/usr/bin/xcode-select', ['--install'], { timeout: 10000 }); }
-  catch { throw new Error('Не удалось открыть установку Apple. Проверьте «Системные настройки → Основные → Обновление ПО» и повторите проверку.'); }
+  catch { throw Object.assign(new Error('Не удалось открыть установку Apple.'), { publicMessage: 'Не удалось открыть установку Apple. Проверьте «Системные настройки → Основные → Обновление ПО» и повторите проверку.' }); }
 }
 
 // No cookies, account APIs, tokens, or page internals.
@@ -23,7 +23,7 @@ export function accountObservation() {
   const visible = e => !!e && !e.hidden && e.getClientRects().length > 0;
   const has = selector => [...document.querySelectorAll(selector)].some(visible);
   const login = has('[data-testid="login-button"],[data-testid="signup-button"],a[href="/auth/login"]');
-  const profile = has('[data-testid="profile-button"],[data-testid="accounts-profile-button"],[data-testid="user-menu-button"]');
+  const profile = has('[data-testid="profile-button"],[data-testid="accounts-profile-button"],[data-testid="user-menu-button"],button[aria-label="Open Profile Menu"],button[aria-label="Открыть меню профиля"]');
   return { login, authenticated: !login && profile };
 }
 
@@ -107,4 +107,27 @@ export class StartupReadiness {
     this.publish({ account: observation?.authenticated ? 'signed-in' : observation?.login ? 'signed-out' : 'unknown' });
   }
   dispose() { this.live = false; if (this.timer !== null) this.cancel(this.timer); this.timer = null; }
+}
+
+
+export async function offerMacInstallation({ app, dialog, fresh }) {
+  if (!fresh || app.isInApplicationsFolder()) return false;
+  const choice = await dialog.showMessageBox({
+    type: 'question', title: 'Установка Project Web Pilot',
+    message: 'Установить Web Pilot в «Программы»?',
+    detail: 'Приложение само переместится в папку Applications и откроется снова. Перетаскивать файлы вручную не нужно.',
+    buttons: ['Установить', 'Пока пропустить'], defaultId: 0, cancelId: 1,
+  });
+  if (choice.response !== 0) return false;
+  try {
+    return app.moveToApplicationsFolder({ conflictHandler: () => dialog.showMessageBoxSync({
+      type: 'question', title: 'Project Web Pilot',
+      message: 'В «Программах» уже есть Project Web Pilot.',
+      detail: 'Заменить его этой версией? Существующие проекты и настройки сохранятся.',
+      buttons: ['Заменить', 'Отмена'], defaultId: 1, cancelId: 1,
+    }) === 0 });
+  } catch {
+    dialog.showErrorBox('Перемещение не выполнено', 'Web Pilot продолжит работу из текущей папки. Позже скопируйте полное приложение в Applications через Finder.');
+    return false;
+  }
 }

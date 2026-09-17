@@ -25,7 +25,7 @@ import { ChromiumDiagnostics } from './chromium-diagnostics.mjs';
 import { defaultRuntimeFolder, bundledWindowsRuntimeFolder, bundledMacNode, nodeExecutableCandidates } from './platform.mjs';
 import { WindowsRuntimeBootstrap, WINDOWS_RUNTIME_ARCHIVE } from './windows-runtime.mjs';
 import { MacRuntimeBootstrap } from './mac-runtime.mjs';
-import { StartupReadiness, inspectMacGit, installMacGit, accountObservation } from './startup-readiness.mjs';
+import { StartupReadiness, inspectMacGit, installMacGit, accountObservation, offerMacInstallation } from './startup-readiness.mjs';
 
 const smoke = !app.isPackaged && process.argv.includes('--smoke');
 const sourceDir = path.dirname(fileURLToPath(import.meta.url));
@@ -189,6 +189,7 @@ function openSettings(workspace = null) {
 function closeSettings() {
   deletion.clear(); settingsState = null; startupError = null;
   const current = store.selected(); if (current) void selectWorkspace(current.workspace, { resume: true }).catch(report);
+  else if (startupFlow) { startupActive = true; void navigate(null); }
 }
 
 function publicError(error) { return { code: error.code ?? 'APP_ERROR', message: String(error.message ?? error).slice(0, 700) }; }
@@ -466,11 +467,14 @@ function pauseForSetup() {
   const generation = nextNavigation();
   if (!navigationCurrent(generation)) return false;
   controller?.cancel(); pageLoading = false; startupError = null;
+  startupFlow?.beginPage(generation);
+  if (!browser.webContents.isLoading()) startupFlow?.finishPage(generation);
   return true;
 }
 function cancelSetup() {
   workspaceSetup.clear(); setupState = null; startupError = null;
   const current = store.selected(); if (current) void selectWorkspace(current.workspace, { resume: true }).catch(report);
+  else if (startupFlow) { startupActive = true; void navigate(null); }
   publish();
 }
 async function reviewWorkspace(workspace, openReady = false, { generation = null } = {}) {
@@ -613,7 +617,8 @@ async function observeStartupAccount() {
   observingAccount = true;
   const generation = navigationId;
   try {
-    if (!isChatGPTOrigin(browser.webContents.getURL())) return;
+    if (!isChatGPTOrigin(browser.webContents.getURL()) || browser.webContents.isLoading()) return;
+    if (['loading', 'slow', 'idle'].includes(startupFlow.snapshot().page)) startupFlow.finishPage(generation);
     const observation = await browser.webContents.executeJavaScript('(' + accountObservation.toString() + ')()');
     if (navigationCurrent(generation)) startupFlow.observe(generation, observation);
   } catch { /* Unknown remains unverified; a later visible document can be inspected. */ }
@@ -621,7 +626,12 @@ async function observeStartupAccount() {
 }
 async function startupAction(action) {
   if (!startupFlow) throw new Error('Начальная настройка недоступна на этой платформе.');
-  if (action === 'show') { startupActive = true; return startupFlow.check(); }
+  if (action === 'show') {
+    settingsState = null; setupState = null; workspaceSetup.clear(); startupError = null; startupActive = true;
+    if (!store.selected()) void navigate(null);
+    else void observeStartupAccount();
+    return startupFlow.check();
+  }
   if (!startupActive) throw new Error('Сначала откройте начальную настройку.');
   if (action === 'check') { void observeStartupAccount(); return startupFlow.check({ prepare: true }); }
   if (action === 'install-git') return startupFlow.install();
@@ -635,6 +645,8 @@ async function startupAction(action) {
   };
   if (Object.hasOwn(pages, action)) return shell.openExternal(pages[action]);
   if (action === 'continue') {
+    await startupFlow.check();
+    await observeStartupAccount();
     const state = startupFlow.snapshot();
     if (state.busy || !state.node || !state.git || !state.runtime || !state.tunnel || state.account !== 'signed-in')
       throw new Error('Завершите вход и проверку подключения перед созданием проекта.');
@@ -1089,6 +1101,8 @@ else {
     } catch (error) { if (error.code !== 'ENOENT') startupError = { code: 'SETTINGS_INVALID', message: 'Не удалось прочитать локальные настройки Web Pilot. Проверьте настройки подключения.' }; }
     applyShellTheme(shellTheme);
     try { await store.load(); } catch (error) { startupError = publicError(error); storageError = true; }
+    if (!smoke && app.isPackaged && process.platform === 'darwin' && !storageError
+        && await offerMacInstallation({ app, dialog, fresh: store.snapshot().projects.length === 0 })) return;
     if (process.platform === 'win32') {
       const payloadFile = app.isPackaged
         ? path.join(process.resourcesPath, 'windows-payload', WINDOWS_RUNTIME_ARCHIVE)
