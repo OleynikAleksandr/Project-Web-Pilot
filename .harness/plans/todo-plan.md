@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 596,
+  "plan_revision": 598,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-owned-plans-028",
@@ -354,8 +354,8 @@
       "why": "При смене сессии агент не должен изменить чужую задачу или потерять коммит."
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-owned-plans-028",
         "task_id": "T005",
@@ -817,7 +817,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-owned-plans-028
 Current Task: нет
-Revision: 596
+Revision: 598
 
 ## Цель
 
@@ -850,8 +850,8 @@ Revision: 596
   - Git Commit: [DONE] fix: bind plan transactions to their owning session
   - Reference: session-owned-plans-028 / T004 / implementation
   - Файлы: .harness/kit/lib/transaction.mjs, resources/workflow-kit/lib/transaction.mjs, .harness/kit/lib/validate.mjs, resources/workflow-kit/lib/validate.mjs, tests/session-plans.test.mjs, .harness/kit/lib/git-hooks.mjs, resources/workflow-kit/lib/git-hooks.mjs, tests/workflow-kit-source.test.mjs, .harness/kit/lib/actions.mjs, resources/workflow-kit/lib/actions.mjs, .harness/kit/lib/session-plans.mjs, resources/workflow-kit/lib/session-plans.mjs, docs/modules/session-owned-plans.md, docs/modules/workflow-kit-recovery.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T005: Связать сессии с планами и мигрировать сохранённые данные — Ожидает
-  - Git Commit: [PENDING] feat: bind persisted sessions to their plans
+- [DONE] T005: Связать сессии с планами и мигрировать сохранённые данные — Завершено
+  - Git Commit: [DONE] feat: bind persisted sessions to their plans
   - Reference: session-owned-plans-028 / T005 / implementation
   - Файлы: src/workspace-session.mjs, tests/workspace-session.test.mjs, src/session-plans.mjs, docs/modules/session-owned-plans.md, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T006: Формировать recovery по плану выбранной сессии — Ожидает

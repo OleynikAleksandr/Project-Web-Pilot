@@ -74,7 +74,7 @@ test('canonical folder with spaces and Cyrillic survives restart with its conver
   const link = path.join(root, 'ссылка'); await directoryLink(folder, link);
   const a = await store.select(link);
   assert.equal(a.workspace, await fs.realpath(folder));
-  assert.equal(a.nextTaskId, 'T001');
+  assert.equal(a.nextTaskId, null, 'a new session does not inherit the global legacy task');
   const chat = 'https://chatgpt.com/c/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
   await store.bindChat(a.workspace, a.sessionId, chat + '?utm_source=x#bottom');
   const next = new WorkspaceSessions(store.file); await next.load();
@@ -134,7 +134,7 @@ test('page titles are fallback and each scope names only the session selected on
   assert.equal(store.selected().title, 'Третий scope'); assert.equal(store.selected().titleSource, 'scope');
 
   const restarted = new WorkspaceSessions(store.file); await restarted.load();
-  assert.equal(restarted.snapshot().projects[0].lastNamedScopeId, 'scope-c');
+  assert.equal(restarted.snapshot().projects[0].sessions.find(s => s.sessionId === second.sessionId).lastNamedScopeId, 'scope-c');
   assert.equal(restarted.selected().title, 'Третий scope');
 });
 
@@ -191,7 +191,7 @@ test('session experience persists, migrates from v3, and rejects cross-experienc
   for (const session of v3.projects[0].sessions) delete session.experience;
   const original = JSON.stringify(v3); await fs.writeFile(store.file, original);
   const migrated = new WorkspaceSessions(store.file); await migrated.load();
-  assert.equal(migrated.snapshot().schemaVersion, 5);
+  assert.equal(migrated.snapshot().schemaVersion, 6);
   assert.deepEqual(migrated.snapshot().projects[0].sessions.map(session => session.experience), ['chat', 'work']);
   assert.equal(await fs.readFile(store.file + '.v3-backup', 'utf8'), original);
   assert.equal(conversationExperience('https://chatgpt.com/c/aaaaaaaa'), 'chat');
@@ -223,7 +223,7 @@ test('session archive switches selection, blocks the last active session, restor
   await store.setSessionArchived(first.workspace, third.sessionId, true);
   await assert.rejects(store.setSessionArchived(first.workspace, first.sessionId, true), { code: 'SESSION_LAST_ACTIVE' });
   const restarted = new WorkspaceSessions(store.file); await restarted.load();
-  assert.equal(restarted.snapshot().schemaVersion, 5);
+  assert.equal(restarted.snapshot().schemaVersion, 6);
   assert.equal(restarted.snapshot().projects[0].sessions.filter(session => session.archivedAt === null).length, 1);
 });
 
@@ -306,7 +306,7 @@ test('legacy storage migrates intact with an exclusive backup and is not migrate
   const text = JSON.stringify(legacy);
   await fs.writeFile(store.file, text);
   const restored = new WorkspaceSessions(store.file); await restored.load();
-  assert.equal(restored.snapshot().schemaVersion, 5);
+  assert.equal(restored.snapshot().schemaVersion, 6);
   assert.equal(restored.snapshot().projects[0].sessions.length, 1);
   assert.equal(restored.selected().attempt.text, 'Точный старый текст');
   assert.equal(restored.selected().chatUrl, legacy.projects[0].chatUrl);
@@ -362,7 +362,7 @@ test('version two history migrates with an exact backup and starts active', asyn
   const old = store.snapshot(); old.schemaVersion = 2; delete old.projects[0].archivedAt;
   const original = JSON.stringify(old); await fs.writeFile(store.file, original);
   const next = new WorkspaceSessions(store.file); await next.load();
-  assert.equal(next.snapshot().schemaVersion, 5); assert.equal(next.selected().archivedAt, null);
+  assert.equal(next.snapshot().schemaVersion, 6); assert.equal(next.selected().archivedAt, null);
   assert.deepEqual(next.snapshot().projects[0].sessions, old.projects[0].sessions.map(session => ({ ...session, experience: conversationExperience(session.chatUrl) ?? 'chat', archivedAt: null })));
   assert.equal(await fs.readFile(store.file + '.v2-backup', 'utf8'), original);
 });
@@ -534,4 +534,25 @@ test('project selection chooses newest created active session without reordering
   assert.equal(restarted.selected().chatUrl, firstUrl);
   assert.equal((await restarted.select(folder, { latest: true })).sessionId, second.sessionId);
   assert.deepEqual(activeSessionsNewestFirst([]), []);
+});
+
+test('v5 migration backs up evidence and never guesses when several chats received the same scope', async t => {
+  const { project, store } = await fixture(t);
+  const first = await store.select(await project('Evidence'));
+  const second = await store.newSession(first.workspace, 'work');
+  const third = await store.newSession(first.workspace, 'chat');
+  const old = store.snapshot(); old.schemaVersion = 5;
+  for (const session of old.projects[0].sessions) {
+    delete session.planId; delete session.originSessionId; delete session.legacyPlanId; delete session.planBinding;
+    session.attempt = { state: 'sent', packet: { facts: { project_id: first.projectId, scope_id: session.sessionId === first.sessionId ? 'unique' : 'ambiguous' } } };
+  }
+  const text = JSON.stringify(old); await fs.writeFile(store.file, text);
+  const migrated = new WorkspaceSessions(store.file); await migrated.load();
+  assert.equal(await fs.readFile(store.file + '.v5-backup', 'utf8'), text);
+  const sessions = migrated.snapshot().projects[0].sessions;
+  assert.equal(sessions[0].legacyPlanId, 'unique'); assert.equal(sessions[0].planId, null);
+  assert.equal(sessions[1].legacyPlanId, null); assert.equal(sessions[2].legacyPlanId, null);
+  assert.equal(sessions[1].planBinding, 'unresolved');
+  assert.deepEqual(sessions.map(s => [s.sessionId,s.experience,s.chatUrl,s.title,s.archivedAt]), old.projects[0].sessions.map(s => [s.sessionId,s.experience,s.chatUrl,s.title,s.archivedAt]));
+  assert.equal('planView' in JSON.parse(await fs.readFile(store.file,'utf8')).projects[0],false);
 });

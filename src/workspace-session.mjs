@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
+import { readSessionPlans } from './session-plans.mjs';
 
 export class WorkspaceError extends Error {
   constructor(code, message) { super(message); this.code = code; }
@@ -46,7 +47,7 @@ function sessionExperience(value) {
   return value;
 }
 
-export async function readWorkspace(input) {
+export async function readWorkspace(input, sessionId = null) {
   if (typeof input !== 'string' || !path.isAbsolute(input)) {
     throw new WorkspaceError('WORKSPACE_REQUIRED', 'Выберите папку проекта.');
   }
@@ -69,6 +70,21 @@ export async function readWorkspace(input) {
       || !Array.isArray(plan.tasks)) {
     throw new WorkspaceError('WORKFLOW_PLAN_INVALID', 'План проекта имеет неподдерживаемый формат.');
   }
+  let sessionView = null;
+  if (sessionId) {
+    sessionView = await readSessionPlans(workspace, sessionId);
+    plan = sessionView?.plan ?? { ...plan, scope_id: null, execution_scope_status: 'NONE', delivery_status: 'IN_PROGRESS',
+      objective: 'Обсудите следующий этап проекта с пользователем.', current_task_id: null, tasks: [], archived_scope_id: null };
+  }
+  const view = projectPlan(plan);
+  return { workspace, ...view, inspectedSessionId: sessionId, planId: plan.scope_id,
+    originSessionId: plan.prepared_in_session_id ?? null,
+    preparedPlans: (sessionView?.prepared ?? []).map(item => ({ planId: item.plan_id, revision: item.plan.plan_revision,
+      sessionId: item.plan.owner_session_id ?? null, experience: item.plan.session_experience ?? null,
+      ...projectPlan(item.plan), documents: item.plan.context_pack.documents.map(doc => doc.path) })),
+    unassignedPlans: sessionView?.unassigned ?? [] };
+}
+function projectPlan(plan) {
   const tasks = plan.tasks.map(task => {
     if (!task || typeof task.id !== 'string' || !task.id || typeof task.title !== 'string' || !task.title
         || !['TODO', 'IN_PROGRESS', 'DONE'].includes(task.implementation_status)
@@ -85,7 +101,7 @@ export async function readWorkspace(input) {
     : plan.execution_scope_status === 'ACTIVE' && plan.delivery_status === 'READY_FOR_ACCEPTANCE' && completed === tasks.length && tasks.length > 0 ? 'awaiting-acceptance'
       : plan.execution_scope_status === 'ACTIVE' ? 'working'
         : typeof plan.archived_scope_id === 'string' && plan.archived_scope_id ? 'closed' : 'not-created';
-  return { workspace, projectId: plan.project_id, name: plan.project_name,
+  return { projectId: plan.project_id, name: plan.project_name,
     planRevision: plan.plan_revision, scopeId: plan.scope_id, objective: typeof plan.objective === 'string' ? plan.objective : '',
     scopeStatus: plan.execution_scope_status, deliveryStatus: plan.delivery_status,
     archivedScopeId: typeof plan.archived_scope_id === 'string' ? plan.archived_scope_id : null,
@@ -95,8 +111,9 @@ export async function readWorkspace(input) {
 }
 
 const copy = value => structuredClone(value);
+const persistent = data => JSON.parse(JSON.stringify(data, (key, value) => ['planView', 'preparedPlans', 'unassignedPlans'].includes(key) ? undefined : value));
 const invalid = () => new WorkspaceError('SESSIONS_INVALID', 'Формат сохранённых проектов не поддерживается. Исходный файл сохранён.');
-const sessionFields = ['sessionId', 'experience', 'chatUrl', 'attempt', 'receipt', 'title', 'titleSource', 'createdAt', 'lastOpenedAt', 'archivedAt'];
+const sessionFields = ['planId', 'originSessionId', 'legacyPlanId', 'lastNamedScopeId', 'sessionId', 'experience', 'chatUrl', 'attempt', 'receipt', 'title', 'titleSource', 'createdAt', 'lastOpenedAt', 'archivedAt'];
 const explicitTitleSources = new Set(['manual', 'scope']);
 
 function localName(value, { empty = 'Нужно непустое название.', code = 'TITLE_INVALID' } = {}) {
@@ -107,7 +124,7 @@ function localName(value, { empty = 'Нужно непустое названи�
 }
 
 function validate(data) {
-  if (data?.schemaVersion !== 5 || !Array.isArray(data.projects)) throw invalid();
+  if (data?.schemaVersion !== 6 || !Array.isArray(data.projects)) throw invalid();
   const urls = [], ids = [], workspaces = [];
   for (const p of data.projects) {
     if (!p || typeof p.workspace !== 'string' || !path.isAbsolute(p.workspace)
@@ -134,6 +151,9 @@ function validate(data) {
           || (s.archivedAt !== null && (!Number.isFinite(s.archivedAt) || s.archivedAt <= 0))
           || (s.chatUrl !== null && (!normalizeChatUrl(s.chatUrl) || normalizeChatUrl(s.chatUrl) !== s.chatUrl
             || !conversationUrlCompatibleWithExperience(s.chatUrl, s.experience)))) throw invalid();
+      for (const key of ['planId','originSessionId','legacyPlanId','lastNamedScopeId']) {
+        if (s[key] !== undefined && s[key] !== null && (typeof s[key] !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,180}$/.test(s[key]))) throw invalid();
+      }
       ids.push(s.sessionId);
       if (s.chatUrl) urls.push(s.chatUrl);
     }
@@ -161,9 +181,28 @@ function migrate(data) {
     data = { ...data, schemaVersion: 4, projects: data.projects.map(p => ({ ...p,
       sessions: p.sessions.map(session => ({ ...session, experience: conversationExperience(session.chatUrl) ?? 'chat' })) })) };
   }
-  if (data?.schemaVersion !== 4 || !Array.isArray(data.projects)) throw invalid();
-  return { ...data, schemaVersion: 5, projects: data.projects.map(p => ({ ...p,
+  if (data?.schemaVersion === 4 && Array.isArray(data.projects)) data = { ...data, schemaVersion: 5, projects: data.projects.map(p => ({ ...p,
     sessions: p.sessions.map(session => ({ ...session, archivedAt: null })) })) };
+  if (data?.schemaVersion !== 5 || !Array.isArray(data.projects)) throw invalid();
+  return { ...data, schemaVersion: 6, projects: data.projects.map(project => {
+    const candidates = new Map();
+    for (const session of project.sessions) {
+      const facts = session.attempt?.packet?.facts;
+      if (['sent','acknowledged'].includes(session.attempt?.state) && facts?.project_id === project.projectId
+          && typeof facts.scope_id === 'string' && /^[A-Za-z0-9][A-Za-z0-9._-]{0,180}$/.test(facts.scope_id)) {
+        const list = candidates.get(facts.scope_id) ?? []; list.push(session.sessionId); candidates.set(facts.scope_id, list);
+      }
+    }
+    const sessions = project.sessions.map(session => {
+      const scopeId = session.attempt?.packet?.facts?.scope_id;
+      const legacyPlanId = candidates.get(scopeId)?.length === 1 ? scopeId : null;
+      return { ...session, planId: null, originSessionId: null, legacyPlanId,
+        planBinding: legacyPlanId ? 'evidence' : scopeId ? 'unresolved' : 'none', lastNamedScopeId: null };
+    });
+    const { planView, preparedPlans, unassignedPlans, scopeTransition, ...info } = project;
+    return { ...info, sessions };
+  }) };
+
 }
 
 async function fileExists(file) {
@@ -177,7 +216,7 @@ async function writeJsonAtomic(file, data) {
 }
 
 async function purgeSessionCopies(storeFile, workspace, sessionId) {
-  for (const version of [1, 2, 3, 4]) {
+  for (const version of [1, 2, 3, 4, 5]) {
     const file = storeFile + `.v${version}-backup`;
     if (!await fileExists(file)) continue;
     const data = JSON.parse(await fs.readFile(file, 'utf8'));
@@ -213,15 +252,16 @@ function currentView(project) {
   if (!project) return null;
   const { sessions, archivedAt: projectArchivedAt, ...info } = project;
   const session = sessions.find(s => s.sessionId === project.selectedSessionId);
-  return copy({ ...info, ...session, archivedAt: projectArchivedAt, sessionArchivedAt: session.archivedAt });
+  return copy({ ...info, ...session, planId: info.inspectedSessionId === session.sessionId ? info.scopeId : session.planId ?? null, archivedAt: projectArchivedAt, sessionArchivedAt: session.archivedAt });
 }
 
 export class WorkspaceSessions {
   constructor(file, { inspect = readWorkspace, uuid = randomUUID, now = Date.now } = {}) {
-    Object.assign(this, { file, inspect, uuid, now });
+    Object.assign(this, { file, uuid, now });
+    this.inspect = (workspace, sessionId = this.project(workspace)?.sessionId) => inspect(workspace, sessionId);
     this.saveTail = Promise.resolve();
     this.mutationTail = Promise.resolve();
-    this.data = { schemaVersion: 5, selectedWorkspace: null, projects: [] };
+    this.data = { schemaVersion: 6, selectedWorkspace: null, projects: [] };
   }
 
   async load() {
@@ -232,7 +272,7 @@ export class WorkspaceSessions {
     }
     let parsed;
     try { parsed = JSON.parse(text); } catch { throw invalid(); }
-    const legacy = [1, 2, 3, 4].includes(parsed.schemaVersion);
+    const legacy = [1, 2, 3, 4, 5].includes(parsed.schemaVersion);
     const data = validate(legacy ? migrate(parsed) : parsed);
     if (legacy) {
       try { await fs.writeFile(this.file + `.v${parsed.schemaVersion}-backup`, text, { mode: 0o600, flag: 'wx' }); }
@@ -254,7 +294,7 @@ export class WorkspaceSessions {
     return this.snapshot();
   }
 
-  snapshot() { return copy(this.data); }
+  snapshot() { return persistent(this.data); }
   selected() { return this.project(this.data.selectedWorkspace); }
   project(workspace) { return currentView(this.data.projects.find(p => p.workspace === workspace)); }
 
@@ -268,7 +308,8 @@ export class WorkspaceSessions {
   }
 
   save(data = this.data) {
-    const text = JSON.stringify(data, null, 2) + '\n';
+    const transient = new Set(['planView', 'preparedPlans', 'unassignedPlans']);
+    const text = JSON.stringify(data, (key, value) => transient.has(key) ? undefined : value, 2) + '\n';
     const operation = this.saveTail.catch(() => {}).then(async () => {
       await fs.mkdir(path.dirname(this.file), { recursive: true, mode: 0o700 });
       const temporary = this.file + '.tmp-' + this.uuid();
@@ -281,7 +322,7 @@ export class WorkspaceSessions {
 
   createSession(experience = 'chat') {
     experience = sessionExperience(experience);
-    return { sessionId: 'web-pilot-' + this.uuid(), experience, chatUrl: null, title: '', titleSource: null,
+    return { sessionId: 'web-pilot-' + this.uuid(), planId: null, originSessionId: null, legacyPlanId: null, planBinding: 'none', lastNamedScopeId: null, experience, chatUrl: null, title: '', titleSource: null,
       createdAt: this.now(), lastOpenedAt: this.now(), archivedAt: null, attempt: null, receipt: null };
   }
 
@@ -312,7 +353,10 @@ export class WorkspaceSessions {
         project.selectedSessionId = activeSessionsNewestFirst(project.sessions)[0].sessionId;
         project.expanded = true;
       }
-      project.sessions.find(s => s.sessionId === project.selectedSessionId).lastOpenedAt = this.now();
+      const selected = project.sessions.find(s => s.sessionId === project.selectedSessionId);
+      const owned = await this.inspect(project.workspace, selected.sessionId);
+      Object.assign(project, owned); selected.planId = owned.planId ?? null; selected.originSessionId = owned.originSessionId ?? null;
+      selected.lastOpenedAt = this.now();
       data.selectedWorkspace = project.workspace;
       return currentView(project);
     });
@@ -320,14 +364,15 @@ export class WorkspaceSessions {
 
   selectSession(input, sessionId) {
     return this.mutate(async data => {
-      const info = await this.inspect(input);
+      const info = await this.inspect(input, sessionId);
       const project = data.projects.find(p => p.workspace === info.workspace);
       if (!project || !project.sessions.some(s => s.sessionId === sessionId)) throw new WorkspaceError('SESSION_NOT_FOUND', 'Эта сессия не принадлежит выбранному проекту.');
       if (project.sessions.find(s => s.sessionId === sessionId)?.archivedAt) throw new WorkspaceError('SESSION_ARCHIVED', 'Сначала верните сессию из архива.');
       if (project.archivedAt) throw new WorkspaceError('PROJECT_ARCHIVED', 'Сначала верните проект из архива.');
       if (project.projectId !== info.projectId) throw new WorkspaceError('PROJECT_REPLACED', 'В этой папке теперь другой проект. Сохранённые чаты оставлены без изменений.');
       Object.assign(project, info, { selectedSessionId: sessionId, expanded: true });
-      project.sessions.find(s => s.sessionId === sessionId).lastOpenedAt = this.now();
+      Object.assign(project.sessions.find(s => s.sessionId === sessionId), {
+        lastOpenedAt: this.now(), planId: info.planId ?? null, originSessionId: info.originSessionId ?? null });
       data.selectedWorkspace = project.workspace;
       return currentView(project);
     });
@@ -350,13 +395,14 @@ export class WorkspaceSessions {
   }
 
   newSession(workspace, experience) {
-    return this.mutate(data => {
+    return this.mutate(async data => {
       experience = sessionExperience(experience);
       const project = data.projects.find(p => p.workspace === workspace);
       if (!project) throw new WorkspaceError('WORKSPACE_REQUIRED', 'Сначала выберите проект.');
       if (project.archivedAt) throw new WorkspaceError('PROJECT_ARCHIVED', 'Сначала верните проект из архива.');
       const session = this.createSession(experience);
       project.sessions.push(session); project.selectedSessionId = session.sessionId; project.expanded = true;
+      Object.assign(project, await this.inspect(workspace, session.sessionId));
       return currentView(project);
     });
   }
@@ -389,7 +435,7 @@ export class WorkspaceSessions {
       const project = data.projects.find(p => p.workspace === workspace);
       if (!project || project.archivedAt || data.selectedWorkspace !== workspace)
         throw new WorkspaceError('SESSION_CHANGED', 'Сначала выберите активный проект.');
-      const info = await this.inspect(workspace);
+      const info = await this.inspect(workspace, null);
       if (info.projectId !== project.projectId || info.scopeStatus !== 'NONE' || info.scopeId !== null
           || info.archivedScopeId !== scopeId || project.scopeTransition?.scopeId !== scopeId)
         throw new WorkspaceError('SCOPE_CHANGED', 'Состояние плана изменилось. Проверьте текущий план.');
@@ -454,13 +500,14 @@ export class WorkspaceSessions {
     });
   }
 
-  applyScopeTitle(workspace, sessionId, { scopeId, objective, scopeStatus } = {}) {
+  applyScopeTitle(workspace, sessionId, { scopeId, objective, scopeStatus, inspectedSessionId = sessionId, originSessionId = null } = {}) {
     return this.mutate(data => {
       const { project, session } = this.activeRecord(workspace, sessionId, data);
       if (!['ACTIVE', 'BLOCKED'].includes(scopeStatus) || typeof scopeId !== 'string' || !scopeId) return false;
-      if (project.lastNamedScopeId === scopeId) return false;
+      if (inspectedSessionId !== sessionId || project.sessions.some(other => other.sessionId !== sessionId && other.planId === scopeId)) return false;
+      if (session.lastNamedScopeId === scopeId) return false;
       const title = localName(objective, { empty: 'У scope нет названия для сессии.' });
-      session.title = title; session.titleSource = 'scope'; project.lastNamedScopeId = scopeId;
+      session.title = title; session.titleSource = 'scope'; session.lastNamedScopeId = scopeId; session.planId = scopeId; session.originSessionId = originSessionId;
       return true;
     });
   }
