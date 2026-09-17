@@ -19,3 +19,5 @@ Project Workflow Kit предназначен для проектов любог
 
 Подробная карта частей проекта находится в `docs/MODULES.md`, полный перечень пополняемых документов — в `docs/DOCUMENTATION_INDEX.md`. Полная историческая архитектура остаётся в `docs/architecture/ARCHITECTURE.md` и не является обязательным recovery-контекстом.
 Постоянный путь запуска macOS — `Project Web Pilot.app` в корне workspace. Каждый macOS-релиз обновляет этот app с сохранением Finder-алиаса; версионированный ZIP создаётся отдельно. Обязательный контракт выпуска: `docs/RELEASE.md`.
+
+Стенд Clean/Test macOS и Windows ARM64 подготовлен в UTM. Чистая установка Web Pilot ещё не подтверждена; её продолжение перенесено в следующий согласуемый scope. Диагностика задержек Computer Use отделяет локальный backend от внешней доставки MCP и не меняет runtime. Точка продолжения — docs/CLEAN_INSTALL.md.

@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 581,
+  "plan_revision": 583,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "clean-install-lab-027",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Готовый стенд macOS/Windows и диагностика задержек Computer Use",
   "acceptance_criteria": [
     "Подготовлены изолированные Clean/Test macOS и Windows.",
@@ -253,8 +253,8 @@
       }
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "clean-install-lab-027",
         "task_id": "DOCS",
@@ -319,10 +319,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: clean-install-lab-027
 Current Task: нет
-Revision: 581
+Revision: 583
 
 ## Цель
 
@@ -361,8 +361,8 @@ Revision: 581
   - Git Commit: [DONE] docs: diagnose Computer Use latency across MCP transport
   - Reference: clean-install-lab-027 / T006 / implementation
   - Файлы: docs/CLEAN_INSTALL.md, docs/VERIFICATION.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: update project documentation for clean installation lab
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: update project documentation for clean installation lab
   - Reference: clean-install-lab-027 / DOCS / implementation
   - Файлы: docs/CLEAN_INSTALL.md, docs/RELEASE.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/DECISIONS.md, docs/WORKFLOW_START.md, docs/VERIFICATION.md, docs/architecture/OVERVIEW.md, docs/architecture/ARCHITECTURE.md, docs/PRODUCT.md, docs/TRANSFER_TO_WINDOWS.md, README.md
 

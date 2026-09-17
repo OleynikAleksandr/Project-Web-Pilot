@@ -36,7 +36,7 @@
 | docs/SOURCE_WORKSPACES.md | Исходные проекты, пути, версии и официальные ссылки |
 | docs/VERIFICATION.md | Проверки, release evidence и границы пользовательской приёмки |
 | docs/RELEASE.md | Постоянный macOS app, Finder-алиас, отдельный ZIP и обязательная проверка доставки |
-| docs/CLEAN_INSTALL.md | Стенд чистых виртуальных macOS/Windows, исходная проверка поставок и будущие подсказки установки |
+| docs/CLEAN_INSTALL.md | Готовый стенд Clean/Test macOS/Windows, перенос первого запуска в следующий scope, диагностика задержек Computer Use/MCP и границы доказательств |
 | docs/TRANSFER_TO_WINDOWS.md | Актуальная Windows x64 поставка и порядок физической проверки |
 | docs/WORKSPACE_SETUP.md | Создание/подключение workspace и install/upgrade Workflow Kit |
 | docs/PROJECT_ARCHIVE.md | Архив workspace, возврат и безопасное локальное удаление; веб-чаты сохраняются |
