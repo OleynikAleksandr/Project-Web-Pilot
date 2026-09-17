@@ -49,7 +49,7 @@ MCP и tunnel health/UI используют разные порты. При и�
 
 ## Bundled bootstrap
 
-macOS package содержит чистый runtime source snapshot и bootstrap tool (`uv`) для arm64-сборки. При отсутствии external runtime source разворачивается в writable `userData/runtime/Codex-Local-Mac`, после чего выполняется setup для выбранного workspace. Python environment и tunnel-client устанавливаются runtime setup. Если tunnel credentials ещё не настроены, приложение завершает локальный MCP bootstrap и показывает единственное необходимое действие пользователя для первичной настройки tunnel.
+macOS package содержит чистый runtime source snapshot и bootstrap tool (`uv`) для arm64-сборки. Начиная с 0.6.32 в mac-tools также включён официальный Node.js 22.17.0 arm64 с проверенным SHA-256 и лицензией для WorkspaceSetup. При отсутствии external runtime source разворачивается в writable `userData/runtime/Codex-Local-Mac`, после чего выполняется setup для выбранного workspace. Python environment и tunnel-client устанавливаются runtime setup. Если tunnel credentials ещё не настроены, приложение завершает локальный MCP bootstrap и показывает единственное необходимое действие пользователя для первичной настройки tunnel.
 
 Windows продолжает использовать встроенный payload/portable Node и существующий setup path.
 
@@ -102,3 +102,9 @@ Windows Web Pilot использует тот же runtime contract v2 чере�
 macOS release bundles pinned `uv 0.9.13` (arm64 SHA-256 `11609c939296348c7cc1e1231b3fbf7ca90a603a4c494ec72b59d7ceafa695e1`) under `Contents/Resources/mac-tools/uv`, so first-time bundled runtime bootstrap does not depend on a preinstalled uv. Runtime source payload SHA-256 is `7313094f06d17e78624362a398e4d12d4be81434fd83f9a8ff2d946ec8c1f64d`. Packaged lifecycle adapters are separate resources and external runtime source remains untouched.
 
 Release verification used the packaged Mac adapter against the current external Codex Local Mac: contract 2, MCP/tunnel ready, tunnel configured, 47 tools. External repo/control SHA remained unchanged. Full suite: 89 total, 87 passed, 0 failed, 2 native-Windows skipped; Electron smoke passed. Both macOS arm64 and Windows x64 packages were built from the same checkout.
+
+## Первый запуск macOS — 0.6.32
+
+StartupReadiness (`src/startup-readiness.mjs`) координирует probe Node/Git, inspect/status, существующий runtime start и несекретные события страницы через callbacks. Сайт, вход в аккаунт, локальный MCP и туннель имеют отдельные состояния. Неизвестный профиль или гостевой composer не подтверждает вход; устаревшая generation не меняет текущую страницу. Повторные операции объединяются, закрытие отменяет публикацию поздних результатов.
+
+`MacRuntimeBootstrap.configureTunnel()` запускает отдельный `resources/runtime-control/mac-first-run.py` рядом с прежним control. Worker получает tunnel ID и скрытый ключ через нативные диалоги macOS, после обоих подтверждений вызывает существующий configure_tunnel под operation lock. Ключ остаётся в private store с mode 0600, не передаётся в argv, renderer или диагностический ответ; отмена не меняет конфигурацию. Живой tunnel не заменяется автоматически. Статус локальных служб не доказывает подключение плагина в ChatGPT: полный путь проверяется отдельным действием агента с файлом гостя.

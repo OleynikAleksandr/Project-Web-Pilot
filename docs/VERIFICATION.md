@@ -1124,4 +1124,8 @@ V001: UI-регрессии покрывают регистрацию новог
 
 `npm run build:mac` завершился успешно. Проверены версия Info.plist/package.json, неизменная identity постоянного app, совпадение app.asar между установленным app, staging и ZIP, все 35 исходных файлов src и 32 resources, четыре bundled mac-tools и исполнение bundled Node (`v22.17.0 arm64`). ZIP и копия в Downloads имеют SHA-256 `2e0d816182e60ecba94088cbb7f0bda5415f079a9269045653b58cc229528d8a`. Служебный Finder `.DS_Store` не относится к исходникам и не используется для сравнения source.
 
-Node suite и Electron smoke прошли в managed commit V001; T008 повторяет обязательные проверки release-задачи. Снимки изолированного UI сохранены в `.harness/runtime/releases/0.6.32/startup-{account,components}.png`; факты упаковки — `source-verification.json` и `mac-release.json` рядом. Логи — `.harness/runtime/iteration-{build,verify}-032.log`. Повторный чистый прогон, реальная регистрация/вход и первое действие с файлом гостя ещё не выполнялись.
+Node suite и Electron smoke прошли в managed commit V001 и повторно в managed commit T008; обе задачи зафиксированы штатным Workflow Kit. Снимки изолированного UI сохранены в `.harness/runtime/releases/0.6.32/startup-{account,components}.png`; факты упаковки — `source-verification.json` и `mac-release.json` рядом. Логи — `.harness/runtime/iteration-{build,verify}-032.log`. Повторный чистый прогон, реальная регистрация/вход и первое действие с файлом гостя ещё не выполнялись.
+
+### Передача первой итерации — R001
+
+Актуализированы вводные README/PRODUCT/OVERVIEW, навигация, контракты компонентов/первого запуска/доставки и реестр наблюдений. macOS 0.6.32 готова для ручного T009; Windows 0.6.31 остаётся последней упакованной Windows-поставкой. Недостающие baseline-факты гостя и полный end-to-end остаются незавершёнными в текущем плане. R001 не подменяет финальную DOCS и не завершает scope.

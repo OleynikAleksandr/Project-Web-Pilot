@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 30,
+  "plan_revision": 32,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-onboarding-031",
@@ -517,8 +517,8 @@
       "id": "R001",
       "title": "Обновить документы первой итерации и передать релиз на проверку",
       "why": "Релизная итерация должна иметь актуальные инструкции и честные границы до ручного прогона.",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-onboarding-031",
         "task_id": "R001",
@@ -855,7 +855,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-onboarding-031
 Current Task: нет
-Revision: 30
+Revision: 32
 
 ## Цель
 
@@ -918,8 +918,8 @@ Revision: 30
   - Git Commit: [DONE] build: package guided macOS first run
   - Reference: first-run-onboarding-031 / T008 / implementation
   - Файлы: package.json, package-lock.json, scripts/release-mac.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md
-- [TODO] R001: Обновить документы первой итерации и передать релиз на проверку — Ожидает
-  - Git Commit: [PENDING] docs: deliver first-run iteration for clean testing
+- [DONE] R001: Обновить документы первой итерации и передать релиз на проверку — Завершено
+  - Git Commit: [DONE] docs: deliver first-run iteration for clean testing
   - Reference: first-run-onboarding-031 / R001 / implementation
   - Файлы: docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
 - [TODO] T009: Повторять полный путь macOS на свежих клонах до успеха — Ожидает
