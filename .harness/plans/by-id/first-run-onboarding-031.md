@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 52,
+  "plan_revision": 54,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-onboarding-031",
@@ -950,8 +950,8 @@
       "id": "R003",
       "title": "Актуализировать документы итерации 0.6.34",
       "why": "Передать факты и следующий пользовательский повтор; сохранить финальную DOCS.",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-onboarding-031",
         "task_id": "R003",
@@ -1299,7 +1299,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-onboarding-031
 Current Task: нет
-Revision: 52
+Revision: 54
 
 ## Цель
 
@@ -1402,8 +1402,8 @@ Revision: 52
   - Git Commit: [DONE] build: release bounded initial browser navigation
   - Reference: first-run-onboarding-031 / B003 / implementation
   - Файлы: package.json, package-lock.json, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
-- [TODO] R003: Актуализировать документы итерации 0.6.34 — Ожидает
-  - Git Commit: [PENDING] docs: deliver first navigation recovery iteration
+- [DONE] R003: Актуализировать документы итерации 0.6.34 — Завершено
+  - Git Commit: [DONE] docs: deliver first navigation recovery iteration
   - Reference: first-run-onboarding-031 / R003 / implementation
   - Файлы: docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
 - [TODO] T015: Повторить полный чистый macOS-проход после восстановления первой загрузки — Ожидает

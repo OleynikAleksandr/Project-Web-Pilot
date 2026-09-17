@@ -1190,3 +1190,7 @@ C004 native evidence: изолированный Electron 44.3.0 с локаль
 Все 36 файлов src и 32 файла resources побайтово совпали с source в обеих поставках и установленном app. app.asar установленного Mac, staging и ZIP совпадает; проверены целостность обоих ZIP, четыре mac-tools и запуск встроенного Node v22.17.0 arm64. Windows verifier подтвердил portable Node/runtime и структуру EXE-поставки. Архивы, SHA256SUMS.txt и INSTALL.txt находятся в ~/Downloads/WebPilot-0.6.34/.
 
 Evidence: .harness/runtime/releases/0.6.34/{mac-release.json,source-verification.json,release-manifest.json,browser-recovery-native.log}. Локальный native Electron fixture подтвердил один recovery, чтение DOM при незавершённом изображении и сохранение cookie. Повтор в Test macOS 01 ещё не выполнен; причина сети гостя не установлена, MAC-002 остаётся открытым. Нативный Windows-запуск и Windows-мастер не объявлены проверенными.
+
+## Передача итерации 0.6.34 — R003
+
+C004 и B003 завершены управляемыми commit с полным Node suite и Electron smoke. Нативный локальный HTTP fixture отдельно подтвердил один recovery, готовый DOM при незавершённом изображении и сохранение cookie. Источники/пакеты/ZIP обеих платформ сверены. Это локальные доказательства; 0.6.34 в госте ещё не подтверждена, нативный Windows-запуск не выполнен. Документы текущего состояния обновлены; T015 сохраняет весь пользовательский путь, финальная DOCS остаётся последней. Диагноз MAC-002 не заменён догадкой о графике, аккаунте или единственной причине сетевого ожидания.
