@@ -172,3 +172,6 @@ T003: команды принимают --session/--plan; journal сохраня
 
 
 T004: resolver различает scope/path/iteration; план другой сессии читается без присвоения pending-коммита. Один IN_PROGRESS писатель сохраняется для всех адресованных операций.
+
+
+T006: canonical contextPacket формируется внутри Workflow Kit из одного проверенного snapshot. Web Pilot больше не нуждается в workspace-only выборе внешнего runtime для контекста сессии.

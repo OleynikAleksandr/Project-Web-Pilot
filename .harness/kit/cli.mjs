@@ -8,7 +8,7 @@ import { status, createScope, startTask, applyPlan, applyConfig, archive, repair
 import { journal } from './lib/validate.mjs';
 import { withSessionPlan, sessionPlanView } from './lib/session-plans.mjs';
 import { validate } from './lib/validate.mjs';
-import { recover, sessionStart } from './lib/recovery.mjs';
+import { recover, sessionStart, contextPacket } from './lib/recovery.mjs';
 import { commitTask } from './lib/transaction.mjs';
 import { preCommit, commitMessage, postCommit, prePush } from './lib/git-hooks.mjs';
 
@@ -45,7 +45,7 @@ export async function main(argv = process.argv.slice(2)) {
     switch (command) {
       case 'status': result = status(root); break;
       case 'validate': { const r = validate(root); result = { ok: true, message: 'План и Git согласованы.', plan_revision: r.plan.plan_revision, resolved: r.resolved, transaction_pending: !!r.transaction }; break; }
-      case 'recover': { const p = recover(root); return { value: opts.format === 'json' || opts.json ? p : p.text, json: opts.format === 'json' || !!opts.json }; }
+      case 'recover': { if (opts.format === 'packet') return { value: contextPacket(root), json: true }; const p = recover(root); return { value: opts.format === 'json' || opts.json ? p : p.text, json: opts.format === 'json' || !!opts.json }; }
       case 'plan:view': check(opts.session, 'SESSION_REQUIRED', 'Укажите --session.'); result = sessionPlanView(root, opts.session); break;
       case 'plan:prepare': result = preparePlan(root, input(), opts['expected-revision']); break;
       case 'plan:bind': result = bindPlan(root, opts['target-session'], opts.experience, opts['expected-revision']); break;

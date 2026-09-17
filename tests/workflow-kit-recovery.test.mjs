@@ -209,3 +209,21 @@ test('Recovery v2 reports largest sections when required context exceeds transpo
     return true;
   });
 });
+
+test('session recovery carries its own pending tasks and transport identity while a blank chat receives navigation only', async t => {
+  const { withSessionPlan } = await import('../resources/workflow-kit/lib/session-plans.mjs');
+  const { contextPacket } = await import('../resources/workflow-kit/lib/recovery.mjs');
+  const root = await fixture(t);
+  for (const session of ['session-a','session-b']) withSessionPlan(root, { sessionId: session }, () =>
+    createScope(root, { ...continuityScopeInput(), scope_id: session, objective: 'ONLY_' + session }));
+  for (const session of ['session-a','session-b']) {
+    const packet = withSessionPlan(root, { sessionId: session }, () => contextPacket(root));
+    assert.equal(packet.session_id,session); assert.equal(packet.plan_id,session); assert.equal(packet.facts.scope_id,session);
+    assert.match(packet.context,new RegExp('--session ' + session)); assert.match(packet.context,/НЕВЫПОЛНЕННЫЕ МИКРОЗАДАЧИ/);
+    assert.equal(packet.context.includes('ONLY_' + (session === 'session-a' ? 'session-b' : 'session-a')),false);
+    assert.equal(packet.context_bytes,Buffer.byteLength(packet.context));
+  }
+  const empty = withSessionPlan(root,{sessionId:'empty'},()=>contextPacket(root));
+  assert.equal(empty.plan_id,null); assert.equal(empty.facts.execution_scope_status,'NONE');
+  assert.match(empty.context,/OVERVIEW_REQUIRED/); assert.doesNotMatch(empty.context,/ONLY_session/);
+});

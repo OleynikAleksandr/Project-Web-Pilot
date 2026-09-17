@@ -1,8 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { VERSION, PLAN, planPath, CONFIG, check, contextPath, textFile, atomic, json, hash, id, errorResult } from './common.mjs';
+import { VERSION, PLAN, planPath, CONFIG, check, contextPath, textFile, atomic, json, hash, id, errorResult, currentPlanSelection } from './common.mjs';
 import { validate } from './validate.mjs';
 import { nextTask, PROJECT_CONTINUATION_OBJECTIVE, isDocumentationFinalizationTask } from './plan.mjs';
+import { sessionPlanView } from './session-plans.mjs';
 import { snapshot, diff, git, localPath, head, fileFingerprint } from './git.mjs';
 
 export const TRANSPORT_HARD_BYTES = 180000;
@@ -90,19 +91,30 @@ export function recover(root, reason = 'manual', options = {}) {
     if (transaction) continuation = 'Есть незавершённый журнал commit. Сначала status и повтор commit/repair; новую задачу не начинать.';
     else if (plan.execution_scope_status === 'NONE') continuation = PROJECT_CONTINUATION_OBJECTIVE + ' Постоянная навигация проекта: docs/architecture/OVERVIEW.md, docs/MODULES.md и docs/DOCUMENTATION_INDEX.md. Новый scope создавать только после согласования следующего этапа.';
     else if (plan.execution_scope_status === 'BLOCKED') continuation = 'Разрешены обсуждение и диагностика. Причина: ' + plan.blocked_reason;
-    else if (plan.delivery_status === 'READY_FOR_ACCEPTANCE') continuation = 'Финальная актуализация документации завершена. Предъявить результат пользователю на приёмку. Scope остаётся ACTIVE; архивирование требует отдельной прямой команды пользователя.';
+    else if (plan.delivery_status === 'READY_FOR_ACCEPTANCE') continuation = 'Финальная актуализация документации завершена. Все задачи выполнены, план остаётся видимым. Новое поручение добавляется через plan:apply с повторной DOCS; архивирование требует отдельной прямой команды пользователя.';
     else continuation = (plan.current_task_id ? 'Продолжить ' : 'Начать через task:start ') + (task?.id ?? 'задачу после уточнения зависимостей') + '. Проверки и фиксация выполняются управляемой командой commit.';
 
     const parts = [];
     const add = (label, text) => parts.push({ label, text });
     add('header', 'WORKFLOW RECOVERY / schema 2 / kit ' + VERSION + (marker ? '\nDELIVERY-MARKER: ' + marker : ''));
     add('identity', 'Причина: ' + reason + '\nПроект: ' + plan.project_name + '\nProject ID: ' + plan.project_id + '\nScope: ' + (plan.scope_id ?? 'NONE') + '\nWorktree: ' + root);
+    const sessionId = currentPlanSelection()?.sessionId ?? plan.owner_session_id ?? null;
+    if (sessionId) {
+      add('session-address', 'СЕССИЯ И КОМАНДЫ\nSession ID: ' + sessionId + '\nPlan ID: ' + (plan.scope_id ?? 'NONE') + '\nКанонический путь: ' + PLAN
+        + '\nКаждую команду Workflow Kit адресовать явно: ./scripts/workflow <команда> --session ' + sessionId
+        + '\nДля plan:apply/plan:prepare указывать --expected-revision ' + plan.plan_revision + '. Не использовать выбранную в UI сессию как адрес команды.'
+        + '\nЗадачи добавляет агент по поручению пользователя. Полностью выполненный план продолжается; приёмка не является обязательным переходом. Подготовка будущего плана: plan:prepare; создание сессии — вручную кнопкой Chat/Work.');
+      const prepared = sessionPlanView(root, sessionId).prepared;
+      if (prepared.length) add('prepared-plans', 'ПОДГОТОВЛЕНО ЗДЕСЬ\n' + json(prepared.map(item => ({ plan_id: item.plan_id,
+        objective: item.plan.objective, plan_revision: item.plan.plan_revision, owner_session_id: item.plan.owner_session_id ?? null }))));
+    }
     add('snapshot', 'HEAD: ' + (before.head ?? 'первого коммита ещё нет') + '\nPlan revision: ' + plan.plan_revision + '\nSnapshot: ' + before.fingerprint);
     add('state', 'Состояние: ' + plan.execution_scope_status + ' / ' + plan.delivery_status + (pending ? ' / COMMIT_PENDING' : ''));
     add('workflow-core', core);
     add('objective', 'ЦЕЛЬ\n' + (plan.objective || PROJECT_CONTINUATION_OBJECTIVE) + '\nКритерии:\n' + plan.acceptance_criteria.map(c => '- ' + c).join('\n'));
     add('user-decisions', 'РЕШЕНИЯ ПОЛЬЗОВАТЕЛЯ\n' + json(plan.user_decisions));
     add('current-task', 'ТЕКУЩАЯ ЗАДАЧА\n' + (task ? json(task) : 'Активной микрозадачи нет.'));
+    if (sessionId) add('remaining-tasks', 'НЕВЫПОЛНЕННЫЕ МИКРОЗАДАЧИ\n' + json(plan.tasks.filter(t => t.commit_status !== 'DONE').map(t => ({ id: t.id, title: t.title, why: t.why, dependencies: t.dependencies, acceptance_criteria: t.acceptance_criteria }))));
     add('progress', 'ПРОГРЕСС\n' + plan.tasks.map(t => t.id + ': ' + t.implementation_status + (resolved[t.id]?.sha ? ' / ' + resolved[t.id].sha : resolved[t.id]?.pending ? ' / COMMIT_PENDING' : '')).join('\n'));
 
     const included = [PLAN, CONFIG, rulesPath]; const omitted = [];
@@ -156,7 +168,9 @@ export function recover(root, reason = 'manual', options = {}) {
       if (attempt === 0) continue;
       check(false, 'CONCURRENT_CHANGE', 'Проект меняется во время восстановления. Повторите после завершения другой операции.');
     }
-    const packet = { ok: true, text: body, marker, signature: hash(body), completeness: 'COMPLETE', reason, head: before.head, plan_revision: plan.plan_revision,
+    const packet = { ok: true, session_id: sessionId, plan_id: plan.scope_id, plan_path: PLAN,
+      facts: { project_id: plan.project_id, project_name: plan.project_name, plan_revision: plan.plan_revision, scope_id: plan.scope_id,
+        execution_scope_status: plan.execution_scope_status, delivery_status: plan.delivery_status, task_id: task?.id ?? null, task_title: task?.title ?? null }, text: body, marker, signature: hash(body), completeness: 'COMPLETE', reason, head: before.head, plan_revision: plan.plan_revision,
       scope_id: plan.scope_id, task_id: plan.current_task_id, next_task_id: task?.id ?? null, included, omitted, size,
       budget: effectiveBudget, soft_exceeded: size.tokens > config.budget.soft_tokens,
       token_method: 'ceil(UTF-8 bytes / 2), conservative estimate', elapsed_ms: Date.now() - started };
@@ -171,4 +185,12 @@ export function sessionStart(root, event) {
     const result = recover(root, event.source, { receipt: true });
     return { continue: true, hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: result.text } };
   } catch (e) { const error = errorResult(e); return { continue: false, stopReason: error.code, systemMessage: error.message + ' Диагностика: ./scripts/workflow status' }; }
+}
+
+export function contextPacket(root) {
+  const packet = recover(root);
+  return { ok: true, delivery_protocol: 'inline-context-v1', ack_required: false, status: 'ready', completeness: packet.completeness,
+    workspace: root, session_id: packet.session_id, plan_id: packet.plan_id, plan_path: packet.plan_path,
+    context: packet.text, context_bytes: Buffer.byteLength(packet.text, 'utf8'), context_sha256: hash(packet.text),
+    signature: packet.signature, generated_at_ms: Date.now(), head: packet.head, facts: packet.facts };
 }

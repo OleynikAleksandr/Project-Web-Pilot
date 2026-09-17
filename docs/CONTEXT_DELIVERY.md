@@ -116,3 +116,6 @@ Builder Workflow Kit больше не использует большой `Об
 ## Post-doctor correction — 0.6.21
 
 16.09.2026 пользователь реально выполнил Project Doctor на текущем workspace; после успешного reconcile manifest соответствует Workflow Kit 1.3.0. Доставка контекста не меняет протокол: новая/обновлённая session по-прежнему получает COMPLETE capsule через `workflow_context_recover`. Correction-round Workflow Kit позволяет ACTIVE scope после `READY_FOR_ACCEPTANCE` вернуться в `IN_PROGRESS` по явному новому поручению пользователя и повторно пройти финальную `DOCS` до следующей приёмки.
+
+
+Scope 028 / T006: CLI recover --session <id> --format packet — каноническая точка получения выбранного plan. Envelope сохраняет inline-context-v1, добавляет session_id/plan_id; восемь прежних facts совместимы. Пакет содержит адрес команд агента и незавершённые микрозадачи.

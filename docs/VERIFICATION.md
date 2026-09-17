@@ -919,3 +919,6 @@ T004: детерминированные failpoint fixtures проверяют �
 
 
 T005: workspace fixtures проверяют резервную копию v5, уникальные/неоднозначные свидетельства и независимость plan ownership, а также прежние сценарии сессий.
+
+
+T006: временные Git fixtures проверяют разные owning sessions и чистый NONE, точные packet facts, отсутствующий required документ и transport budget существующими recovery tests.
