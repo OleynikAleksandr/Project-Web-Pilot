@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 45,
+  "plan_revision": 48,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-onboarding-031",
@@ -71,7 +71,9 @@
       "tests/sidebar.test.mjs",
       "tests/electron-smoke.mjs",
       "src/chromium-diagnostics.mjs",
-      "tests/chromium-diagnostics.test.mjs"
+      "tests/chromium-diagnostics.test.mjs",
+      "src/browser-startup.mjs",
+      "tests/browser-startup.test.mjs"
     ],
     "max_functional_files_per_task": 3
   },
@@ -818,8 +820,8 @@
       "expected_commit_message": "docs: deliver browser startup diagnostic iteration"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-onboarding-031",
         "task_id": "T014",
@@ -836,6 +838,174 @@
       ],
       "verification_ids": [],
       "acceptance_criteria": [
+        "Зафиксированы отчёт 0.6.33 и открытие ChatGPT без входа в Safari гостя.",
+        "Описаны воспроизводимые локальные пробы и их границы: нет доказанного диагноза гостевой сети.",
+        "Выявлены ожидание первого документа без предела и зависимость мастера от полной загрузки ресурсов; полная приёмка сохранена в T015."
+      ],
+      "expected_commit_message": "docs: record first browser response investigation",
+      "id": "T014",
+      "title": "Зафиксировать повтор 0.6.33 и локализовать ожидание Chromium",
+      "why": "Сохранить фактический остановленный проход; полные критерии перенесены в T015 без объявления успешной установки."
+    },
+    {
+      "id": "C004",
+      "title": "Ограничить первый запуск браузера и восстановить зависшее соединение",
+      "why": "Первый документ не должен ждать бесконечно, а дополнительные ресурсы не должны блокировать уже открытый экран входа.",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "first-run-onboarding-031",
+        "task_id": "C004",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "T014"
+      ],
+      "functional_paths": [
+        "src/browser-startup.mjs",
+        "src/main.mjs",
+        "tests/browser-startup.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/first-run-onboarding.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/VERIFICATION.md",
+        "docs/PRODUCT.md",
+        "docs/DECISIONS.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/RELEASE.md",
+        "docs/modules/runtime-lifecycle.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/modules/workspace-sessions.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "README.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/MODULES.md",
+        "docs/DOCUMENTATION_INDEX.md"
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "acceptance_criteria": [
+        "Новый пустой browser получает ограниченное ожидание DOM и не более одного автоматического восстановления только до появления документа.",
+        "Восстановление использует штатные closeAllConnections/clearHostResolverCache, без удаления cookies, смены IP, отключения TLS/sandbox/GPU.",
+        "Старая generation не останавливает и не перезаписывает новую навигацию; постоянный отказ ограничен по времени.",
+        "На первом экране вход может определяться после DOM-ready, не ожидая завершения всех ресурсов.",
+        "Поведение проверено на зависшей загрузке, успешном восстановлении, отказе, cancellation и уже появившемся документе."
+      ],
+      "expected_commit_message": "fix: recover stalled initial browser navigation"
+    },
+    {
+      "id": "B003",
+      "title": "Выпустить 0.6.34 для macOS и Windows",
+      "why": "Передать проверяемое исправление общего первого открытия в обе поставки.",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "first-run-onboarding-031",
+        "task_id": "B003",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "C004"
+      ],
+      "functional_paths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "documentation_paths": [
+        "docs/modules/first-run-onboarding.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/VERIFICATION.md",
+        "docs/PRODUCT.md",
+        "docs/DECISIONS.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/RELEASE.md",
+        "docs/modules/runtime-lifecycle.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/modules/workspace-sessions.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "README.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/MODULES.md",
+        "docs/DOCUMENTATION_INDEX.md"
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "acceptance_criteria": [
+        "Обе платформы собраны из одного source; ZIP, содержимое и контрольные суммы проверены.",
+        "Постоянный macOS app обновлён с сохранением identity; рабочий процесс не перезапускается.",
+        "Гостевой результат и Windows-мастер не объявлены проверенными."
+      ],
+      "expected_commit_message": "build: release bounded initial browser navigation"
+    },
+    {
+      "id": "R003",
+      "title": "Актуализировать документы итерации 0.6.34",
+      "why": "Передать факты и следующий пользовательский повтор; сохранить финальную DOCS.",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "first-run-onboarding-031",
+        "task_id": "R003",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "B003"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/modules/first-run-onboarding.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/VERIFICATION.md",
+        "docs/PRODUCT.md",
+        "docs/DECISIONS.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/RELEASE.md",
+        "docs/modules/runtime-lifecycle.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/modules/workspace-sessions.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "README.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/MODULES.md",
+        "docs/DOCUMENTATION_INDEX.md"
+      ],
+      "verification_ids": [],
+      "acceptance_criteria": [
+        "Документы отражают фактическое исправление и границы локальных/гостевых проверок.",
+        "Полный пользовательский проход остаётся T015, план не архивируется."
+      ],
+      "expected_commit_message": "docs: deliver first navigation recovery iteration"
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "first-run-onboarding-031",
+        "task_id": "T015",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "R003"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/modules/first-run-onboarding.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [],
+      "acceptance_criteria": [
         "На новом клоне Base пройден путь от пакета до проекта, доставки контекста и разрешённого действия агента с тестовым файлом гостя.",
         "Для подтверждения готовности достаточно подсказок поставки и приложения; помощь агента в обход недостающего UI считается проблемой.",
         "Каждый оставшийся дефект добавляет задачи исправления, сборки и нового прохода до последующих проверок и DOCS; число циклов не ограничивается.",
@@ -843,8 +1013,8 @@
         "Перед повторным испытанием подтвердить сборку/архитектуру гостя, отсутствие предустановленных зависимостей/профиля в Base и версию/происхождение гостевого app; ранее отсутствовавшие данные T001 не считать подтверждёнными."
       ],
       "expected_commit_message": "docs: verify clean macOS guided startup",
-      "id": "T014",
-      "title": "Повторять чистый macOS-прогон после диагностической итерации",
+      "id": "T015",
+      "title": "Повторить полный чистый macOS-проход после восстановления первой загрузки",
       "why": "Доказать самостоятельный первый запуск исправленной поставки."
     },
     {
@@ -856,7 +1026,7 @@
         "role": "implementation"
       },
       "dependencies": [
-        "T014"
+        "T015"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -1037,6 +1207,10 @@
         "B002",
         "R002",
         "T014",
+        "C004",
+        "B003",
+        "R003",
+        "T015",
         "T010",
         "T011",
         "T012",
@@ -1125,7 +1299,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-onboarding-031
 Current Task: нет
-Revision: 45
+Revision: 48
 
 ## Цель
 
@@ -1216,9 +1390,25 @@ Revision: 45
   - Git Commit: [DONE] docs: deliver browser startup diagnostic iteration
   - Reference: first-run-onboarding-031 / R002 / implementation
   - Файлы: docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
-- [TODO] T014: Повторять чистый macOS-прогон после диагностической итерации — Ожидает
-  - Git Commit: [PENDING] docs: verify clean macOS guided startup
+- [DONE] T014: Зафиксировать повтор 0.6.33 и локализовать ожидание Chromium — Завершено
+  - Git Commit: [DONE] docs: record first browser response investigation
   - Reference: first-run-onboarding-031 / T014 / implementation
+  - Файлы: docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md
+- [TODO] C004: Ограничить первый запуск браузера и восстановить зависшее соединение — Ожидает
+  - Git Commit: [PENDING] fix: recover stalled initial browser navigation
+  - Reference: first-run-onboarding-031 / C004 / implementation
+  - Файлы: src/browser-startup.mjs, src/main.mjs, tests/browser-startup.test.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
+- [TODO] B003: Выпустить 0.6.34 для macOS и Windows — Ожидает
+  - Git Commit: [PENDING] build: release bounded initial browser navigation
+  - Reference: first-run-onboarding-031 / B003 / implementation
+  - Файлы: package.json, package-lock.json, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
+- [TODO] R003: Актуализировать документы итерации 0.6.34 — Ожидает
+  - Git Commit: [PENDING] docs: deliver first navigation recovery iteration
+  - Reference: first-run-onboarding-031 / R003 / implementation
+  - Файлы: docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
+- [TODO] T015: Повторить полный чистый macOS-проход после восстановления первой загрузки — Ожидает
+  - Git Commit: [PENDING] docs: verify clean macOS guided startup
+  - Reference: first-run-onboarding-031 / T015 / implementation
   - Файлы: docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md
 - [TODO] T010: Пройти первый запуск Windows и выявить отличия — Ожидает
   - Git Commit: [PENDING] docs: record Windows first-run findings
