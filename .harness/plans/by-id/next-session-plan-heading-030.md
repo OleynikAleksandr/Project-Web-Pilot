@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 5,
+  "plan_revision": 7,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "next-session-plan-heading-030",
@@ -118,8 +118,8 @@
       "expected_commit_message": "fix: rename next session plan heading"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "next-session-plan-heading-030",
         "task_id": "T002",
@@ -205,7 +205,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: next-session-plan-heading-030
 Current Task: нет
-Revision: 5
+Revision: 7
 
 ## Цель
 
@@ -225,8 +225,8 @@ Revision: 5
   - Git Commit: [DONE] fix: rename next session plan heading
   - Reference: next-session-plan-heading-030 / T001 / implementation
   - Файлы: src/ui/index.html, tests/sidebar.test.mjs
-- [TODO] T002: Собрать релиз 0.6.30 — Ожидает
-  - Git Commit: [PENDING] build: release 0.6.30
+- [DONE] T002: Собрать релиз 0.6.30 — Завершено
+  - Git Commit: [DONE] build: release 0.6.30
   - Reference: next-session-plan-heading-030 / T002 / implementation
   - Файлы: package.json, package-lock.json
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
