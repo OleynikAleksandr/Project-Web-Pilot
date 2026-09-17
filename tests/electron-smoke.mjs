@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import http from 'node:http';
 import { openStartupPage } from '../src/browser-startup.mjs';
-import { summarizeStartupNetwork } from '../src/startup-network-trace.mjs';
+import { StartupNetworkTrace } from '../src/startup-network-trace.mjs';
 import { createHash } from 'node:crypto';
 import { nativeTheme, clipboard, BrowserWindow } from 'electron';
 import { ChatColors } from '../src/chatgpt-colors.mjs';
@@ -102,29 +102,25 @@ async function verifyUninterruptedRequest(dataDir) {
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   const url = 'http://127.0.0.1:' + server.address().port + '/';
   const probe = new BrowserWindow({ show: false, webPreferences: { partition: 'startup-network-fixture', sandbox: true, contextIsolation: true } });
-  const nativeLog = probe.webContents.session.netLog;
   const rawFile = path.join(dataDir, 'native-network-raw.json');
+  const trace = new StartupNetworkTrace(probe.webContents.session.netLog, rawFile, { origin: new URL(url).origin });
   try {
-    // Verify the native journal independently: Chromium's bounded capture currently
-    // rejects this sandboxed fixture; the application adapter is corrected next.
-    await nativeLog.startLogging(rawFile, { captureMode: 'default' });
+    await trace.start();
+    assert.equal(trace.summary.state, 'recording', JSON.stringify(trace.summary));
     const began = Date.now();
     await openStartupPage(probe.webContents, url);
     const elapsedMs = Date.now() - began;
     assert.equal(requests, 1); assert.ok(elapsedMs >= 15000);
     assert.equal(await probe.webContents.mainFrame.executeJavaScript('document.title'), 'First document');
     assert.equal(probe.webContents.isLoading(), true, 'DOM-ready does not wait for the held image');
-    await nativeLog.stopLogging();
-    const network = summarizeStartupNetwork(JSON.parse(await fs.readFile(rawFile, 'utf8')), { origin: new URL(url).origin });
-    await fs.rm(rawFile, { force: true });
+    const network = await trace.finish('dom-ready');
     assert.equal(network.state, 'complete', JSON.stringify(network)); assert.ok(network.matchedRequests >= 1);
     assert.ok(network.events.some(e => e.stage === 'TCP_CONNECT'));
     assert.ok(network.events.some(e => e.status === 200 && e.tMs >= 15000));
     await assert.rejects(fs.stat(path.join(dataDir, 'native-network-raw.json')), { code: 'ENOENT' });
     await fs.writeFile(path.join(dataDir, 'startup-network-native.json'), JSON.stringify({ requests, elapsedMs, network }, null, 2));
   } finally {
-    if (nativeLog.currentlyLogging) await nativeLog.stopLogging();
-    await fs.rm(rawFile, { force: true });
+    await trace.finish('fixture-cleanup');
     probe.destroy(); clearTimeout(responseTimer); server.closeAllConnections(); server.close();
   }
 }

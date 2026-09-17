@@ -42,7 +42,7 @@ test('netLog capture uses default mode, finishes once, and removes the raw file'
   const file = path.join(dir, 'raw.json'); let stops = 0;
   const trace = new StartupNetworkTrace({
     currentlyLogging: false,
-    startLogging: async (p, options) => { assert.equal(p, file); assert.equal(options.captureMode, 'default'); assert.ok(options.maxFileSize > 0); },
+    startLogging: async (p, options) => { assert.equal(p, file); assert.equal(options.captureMode, 'default'); assert.equal(options.maxFileSize, undefined); },
     stopLogging: async () => { stops++; await fs.writeFile(file, JSON.stringify(data)); },
   }, file);
   await trace.start(); await Promise.all([trace.finish('dom-ready'), trace.snapshot()]);
@@ -64,4 +64,23 @@ test('late netLog startup does not block navigation and is cleaned up when it fi
   await trace.start(); assert.equal(stops, 0);
   resolve(); await trace.finish();
   assert.equal(stops, 1); await assert.rejects(fs.stat(file), { code: 'ENOENT' });
+});
+
+test('application size guard stops capture once and removes the raw journal', async t => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pilot-netlog-size-'));
+  t.after(() => fs.rm(dir, { recursive: true, force: true }));
+  const file = path.join(dir, 'raw.json'); let stops = 0;
+  const trace = new StartupNetworkTrace({ currentlyLogging: false,
+    startLogging: async () => { await fs.writeFile(file, JSON.stringify(data)); },
+    stopLogging: async () => { stops++; },
+  }, file, { maxBytes: 100, sizePollMs: 5 });
+  t.after(() => trace.finish('cleanup'));
+  await trace.start();
+  const end = Date.now() + 2000;
+  while (!trace.stopping && Date.now() < end) await new Promise(r => setTimeout(r, 5));
+  assert.ok(trace.stopping, 'size guard must initiate shutdown');
+  await trace.stopping;
+  assert.equal(stops, 1); assert.equal(trace.summary.stopReason, 'size-limit');
+  assert.equal(trace.summary.state, 'complete');
+  await assert.rejects(fs.stat(file), { code: 'ENOENT' });
 });

@@ -75,8 +75,8 @@ async function within(promise, ms) {
 }
 
 export class StartupNetworkTrace {
-  constructor(netLog, file, { durationMs = 125000, startWaitMs = 1000, origin } = {}) {
-    Object.assign(this, { netLog, file, durationMs, startWaitMs, origin });
+  constructor(netLog, file, { durationMs = 125000, startWaitMs = 1000, maxBytes = 4 * 1024 * 1024, sizePollMs = 250, origin } = {}) {
+    Object.assign(this, { netLog, file, durationMs, startWaitMs, maxBytes, sizePollMs, origin });
     this.summary = { state: 'idle' }; this.owned = false;
   }
   async start() {
@@ -88,17 +88,29 @@ export class StartupNetworkTrace {
     this.summary = { state: 'starting', startedAt: this.startedAt };
     this.starting = (async () => {
       await fs.writeFile(this.file, '', { mode: 0o600 });
-      await this.netLog.startLogging(this.file, { captureMode: 'default', maxFileSize: 4 * 1024 * 1024 });
+      // Chromium's bounded exporter needs a scratch directory unavailable in the
+      // sandboxed network service. Keep the sandbox and enforce limits here.
+      await this.netLog.startLogging(this.file, { captureMode: 'default' });
       this.owned = true; this.summary = { state: 'recording', startedAt: this.startedAt };
     })().catch(() => { this.summary = { state: 'unavailable', reason: 'start-failed' }; });
     if (!await within(this.starting, this.startWaitMs)) { void this.finish('start-pending'); return; }
-    if (this.owned) { this.timer = setTimeout(() => { void this.finish('capture-limit'); }, this.durationMs); this.timer.unref?.(); }
+    if (this.owned && !this.stopping) {
+      this.timer = setTimeout(() => { void this.finish('capture-limit'); }, this.durationMs); this.timer.unref?.();
+      this.sizeTimer = setInterval(async () => {
+        if (this.checkingSize || this.stopping) return;
+        this.checkingSize = true;
+        try { if ((await fs.stat(this.file)).size >= this.maxBytes) void this.finish('size-limit'); }
+        catch { /* File can disappear during finish. */ }
+        finally { this.checkingSize = false; }
+      }, this.sizePollMs);
+      this.sizeTimer.unref?.();
+    }
     else await fs.rm(this.file, { force: true }).catch(() => {});
   }
   finish(reason = 'report-requested') {
     if (this.stopping) return this.stopping;
     if (!this.starting) return Promise.resolve(this.summary);
-    clearTimeout(this.timer);
+    clearTimeout(this.timer); clearInterval(this.sizeTimer);
     this.stopping = (async () => {
       try {
         await this.starting;
