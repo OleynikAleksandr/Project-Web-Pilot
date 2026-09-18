@@ -118,3 +118,35 @@ test('worker reports only a safe prompt error code when the native dialog cannot
   ].join('\n'));
   assert.deepEqual(JSON.parse(stdout), { sanitized: true });
 });
+
+
+test('private stdin values skip dialogs and partial ID still permits hidden key input', async t => {
+  const { stdout, stderr } = await run(t, [
+    'import io',
+    'secret="sk-fixture_secret_1234567890"',
+    'data=h["read_input"](io.StringIO(json.dumps({"tunnel_id":"tunnel_fixture1234567890123456","api_key":secret})))',
+    'def forbidden(*a,**kw): raise AssertionError("unexpected dialog")',
+    'assert h["configure"](c, forbidden, data)=={"configured":True}',
+    'assert c["KEY_FILE"].read_text().strip()==secret',
+    'assert c["KEY_FILE"].stat().st_mode & 0o777 == 0o600',
+    'def only_key(message,hidden=False):',
+    '    assert hidden',
+    '    return secret',
+    'assert h["configure"](c,only_key,{"tunnel_id":"tunnel_fixture1234567890123456"})=={"configured":True}',
+    'print(json.dumps({"configured":True}))',
+  ].join('\n'));
+  assert.deepEqual(JSON.parse(stdout), { configured: true });
+  assert.doesNotMatch(stdout + stderr, /sk-fixture/);
+});
+test('stdin rejects oversized, unknown and non-string data before private writes', async t => {
+  const { stdout } = await run(t, [
+    'import io',
+    'for raw in ["x"*8193,"[]","null",json.dumps({"api_key":7}),json.dumps({"unknown":"secret"})]:',
+    '    try: h["read_input"](io.StringIO(raw))',
+    '    except ValueError: pass',
+    '    else: raise AssertionError("invalid input accepted")',
+    'assert not c["KEY_FILE"].exists() and not c["PROFILE"].exists()',
+    'print(json.dumps({"untouched":True}))',
+  ].join('\n'));
+  assert.deepEqual(JSON.parse(stdout), { untouched: true });
+});

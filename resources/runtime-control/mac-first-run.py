@@ -28,10 +28,29 @@ def prompt(message, hidden=False):
         raise PromptFailure()
     return result.stdout.strip()
 
-def configure(control, ask=prompt):
+def read_input(stream):
+    raw = stream.read(8193)
+    if len(raw) > 8192:
+        raise ValueError('Invalid input')
+    value = json.loads(raw)
+    if not isinstance(value, dict) or set(value) - {'tunnel_id', 'api_key'}:
+        raise ValueError('Invalid input')
+    if any(not isinstance(v, str) for v in value.values()):
+        raise ValueError('Invalid input')
+    return value
+
+
+def configure(control, ask=prompt, supplied=None):
     # Collect both values before taking the runtime lock or modifying any file.
-    tunnel_id = ask('Вставьте tunnel_id, полученный в OpenAI Platform → Tunnels.')
-    key = ask('Вставьте личный ключ OpenAI с правами Tunnels: Read и Use. Он сохранится только на этом компьютере.', hidden=True)
+    supplied = supplied if supplied is not None else {}
+    tunnel_id = supplied.get('tunnel_id')
+    if tunnel_id is None:
+        tunnel_id = ask('Вставьте tunnel_id, полученный в OpenAI Platform → Tunnels.')
+    key = supplied.get('api_key')
+    if key is None:
+        key = ask('Вставьте личный ключ OpenAI с правами Tunnels: Read и Use. Он сохранится только на этом компьютере.', hidden=True)
+    if not isinstance(tunnel_id, str) or not isinstance(key, str):
+        raise ValueError('Invalid input')
     if len(tunnel_id) > 150 or len(key) > 4096:
         raise ValueError('Проверьте длину введённых данных.')
     with control['operation_lock']():
@@ -41,9 +60,10 @@ def configure(control, ask=prompt):
 def main():
     if sys.platform != 'darwin':
         raise RuntimeError('Нативная настройка доступна только на macOS.')
+    supplied = read_input(sys.stdin) if sys.argv[1:] == ['--stdin'] else None
     control = runpy.run_path(str(Path(__file__).with_name('mac-control.py')), run_name='web_pilot_control')
     try:
-        result = configure(control)
+        result = configure(control, supplied=supplied)
     except Cancelled:
         result = {'cancelled': True}
     print(json.dumps(result))

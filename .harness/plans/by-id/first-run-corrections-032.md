@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 22,
+  "plan_revision": 24,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-corrections-032",
@@ -351,8 +351,8 @@
         "suite"
       ],
       "expected_commit_message": "feat: accept tunnel credentials through private worker stdin",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-corrections-032",
         "task_id": "A001",
@@ -722,7 +722,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-corrections-032
 Current Task: нет
-Revision: 22
+Revision: 24
 
 ## Цель
 
@@ -764,8 +764,8 @@ Revision: 22
   - Git Commit: [DONE] fix: remove duplicate empty plan label
   - Reference: first-run-corrections-032 / U002 / implementation
   - Файлы: src/ui/sidebar.mjs, tests/electron-smoke.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
-- [TODO] A001: Принимать данные туннеля через защищённый канал worker — Ожидает
-  - Git Commit: [PENDING] feat: accept tunnel credentials through private worker stdin
+- [DONE] A001: Принимать данные туннеля через защищённый канал worker — Завершено
+  - Git Commit: [DONE] feat: accept tunnel credentials through private worker stdin
   - Reference: first-run-corrections-032 / A001 / implementation
   - Файлы: resources/runtime-control/mac-first-run.py, tests/mac-first-run.test.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 - [TODO] A002: Передавать скопированные данные в существующий runtime — Ожидает
