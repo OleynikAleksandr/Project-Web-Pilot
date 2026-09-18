@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 12,
+  "plan_revision": 14,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
@@ -265,8 +265,8 @@
       "expected_commit_message": "feat: Включить Windows мастер и окружение создания проектов"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "windows-onboarding-033",
         "task_id": "W005",
@@ -473,7 +473,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 12
+Revision: 14
 
 ## Цель
 
@@ -508,8 +508,8 @@ Revision: 12
   - Git Commit: [DONE] feat: Включить Windows мастер и окружение создания проектов
   - Reference: windows-onboarding-033 / W004 / implementation
   - Файлы: src/main.mjs, src/workspace-setup.mjs, tests/workspace-setup.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md
-- [TODO] W005: Адаптировать шаги и подписи Windows интерфейса — Ожидает
-  - Git Commit: [PENDING] feat: Адаптировать шаги и подписи Windows интерфейса
+- [DONE] W005: Адаптировать шаги и подписи Windows интерфейса — Завершено
+  - Git Commit: [DONE] feat: Адаптировать шаги и подписи Windows интерфейса
   - Reference: windows-onboarding-033 / W005 / implementation
   - Файлы: src/ui/startup.mjs, src/ui/index.html, tests/startup-ui.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md
 - [TODO] R001: Добавить единый выпуск macOS и Windows версии 0.6.41 — Ожидает

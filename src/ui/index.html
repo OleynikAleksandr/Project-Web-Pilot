@@ -194,6 +194,7 @@ SOFTWARE.
             <p>Теперь можно создать первый проект. Если подключение к этому компьютеру уже добавлено в ChatGPT, повторно добавлять его не нужно.</p>
             <button id="startup-continue" class="primary" data-startup="continue">Создать первый проект</button>
             <details id="startup-plugin-help"><summary>Нужно добавить или проверить подключение в ChatGPT</summary><p>В разделе Plugins найдите своё подключение. Если оно уже есть, проверьте, что оно использует туннель этого компьютера. Одно название плагина этого не подтверждает.</p><p>Если подключения нет: Plugins → «+» → Connection: Tunnel. Выберите созданный туннель; для этого локального подключения — No Auth. Если «+» недоступен, включите developer mode в настройках ChatGPT.</p><button class="secondary" data-startup="plugins">Открыть Plugins в ChatGPT</button></details>
+            <p id="startup-plugin-platform" hidden>Для этой Windows укажите имя «Codex Local Windows MCP» и выберите туннель этой виртуальной машины. Подключение вашего Mac остаётся отдельным. Настройку в ChatGPT нужно проверить, даже если служба туннеля уже работает.</p>
             <p class="settings-help">Доступ к файлам проекта проверим первым действием агента.</p>
           </div>
           <p id="startup-project-wait" class="startup-status">Завершите предыдущие шаги.</p>
@@ -238,7 +239,7 @@ SOFTWARE.
         <div id="windows-runtime-section" class="settings-section" hidden>
           <p class="eyebrow">Локальные инструменты Windows</p>
           <p id="windows-runtime-status" class="description" data-state="embedded">Встроенный runtime готов к установке.</p>
-          <p class="settings-help">Web Pilot сам установит локальный Python, Git, MCP и tunnel-client в профиль Windows. Для tunnel откроется отдельная консоль: API key вводится только там и сохраняется через DPAPI.</p>
+          <p class="settings-help">Web Pilot подготовит локальные компоненты в профиле Windows. Мастер проведёт через настройку туннеля и подключение Codex Local Windows MCP в ChatGPT. При ручном вводе ключа откроется защищённое системное окно Windows.</p>
           <div class="actions" style="margin-top:10px"><button id="configure-windows-tunnel" type="button" class="primary">Установить и настроить tunnel…</button><button id="refresh-windows-runtime" type="button" class="secondary">Проверить</button></div>
         </div>
         <p class="eyebrow">Архив проектов</p>
@@ -311,7 +312,7 @@ SOFTWARE.
     </div>
     <footer class="footer">
       <button id="open-startup" class="text-button" hidden>Начальная настройка</button>
-      <div class="footer-line"><span>На вашем Mac</span><span class="badge">ПРОТОТИП 0.6</span></div>
+      <div class="footer-line"><span id="host-platform-label">На вашем Mac</span><span class="badge">ПРОТОТИП 0.6</span></div>
       <div class="footer-controls"><details><summary>Подробности подключения</summary><p id="connection-detail">Codex Local Mac · существующее подключение</p><p id="session-detail"></p><button id="choose-runtime" class="secondary">Выбрать папку Codex Local Mac</button></details><button id="open-settings" class="icon-button settings-button" title="Настройки и архив проектов" aria-label="Настройки и архив проектов" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m9 3-.6 2.3-2 .9L4.3 5.5 2.5 8.6l1.7 1.6-.2 2.2-1.6 1.8L4.3 18l2.2-.6 1.8 1.1.7 2.5h4l.7-2.5 1.8-1.1 2.2.6 1.9-3.8-1.6-1.8-.2-2.2 1.7-1.6-1.8-3.1-2.1.7-2-.9L13 3Z"/><circle cx="11" cy="12" r="3.2"/></svg></button></div>
     </footer>
     <div id="sidebar-splitter" class="sidebar-splitter" role="separator" aria-orientation="vertical" aria-label="Изменить ширину панели проектов" tabindex="0"></div>

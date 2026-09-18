@@ -18,7 +18,7 @@ async function fixture(t, startup = {}) {
   const view = createStartupView({ document, api });
   const emit = patch => { state = { ...state, startup: { ...state.startup, ...patch } }; view.render(state); };
   view.render(state);
-  return { document, api, calls, emit, settle: () => new Promise(r => setImmediate(r)) };
+  return { document, api, calls, emit, render: view.render, settle: () => new Promise(r => setImmediate(r)) };
 }
 test('new account route is explicit and cannot pass as authenticated guest chat', async t => {
   const f = await fixture(t);
@@ -206,4 +206,38 @@ test('an existing plugin does not force another setup; optional help is collapse
   assert.match(f.document.querySelector('#startup-project-body').textContent, /повторно добавлять его не нужно/);
   f.document.querySelector('#startup-continue').click(); await f.settle();
   assert.deepEqual(f.calls, ['continue', 'beginCreate']);
+});
+
+test('Windows prepares bundled components without an Apple installation action', async t => {
+  const f = await fixture(t, { platform: 'win32', account: 'signed-in' });
+  const install = f.document.querySelector('#startup-install-git');
+  assert.equal(install.hidden, true); assert.equal(install.disabled, true);
+  install.click(); await f.settle(); assert.deepEqual(f.calls, []);
+  assert.match(f.document.querySelector('#startup-components-help').textContent, /комплектные Python, Git и Codex Local Windows MCP/);
+  assert.doesNotMatch(f.document.querySelector('#startup-components-status').textContent, /Apple/);
+  f.emit({ busy: true, phase: 'preparing-components' });
+  assert.match(f.document.querySelector('#startup-components-help').textContent, /профиль/);
+  f.emit({ busy: false, phase: 'error', error: 'Комплект повреждён.' });
+  assert.equal(f.document.querySelector('#startup-error').textContent, 'Комплект повреждён.');
+  assert.equal(f.document.querySelector('[data-startup=check]').disabled, false);
+  f.document.querySelector('[data-startup=check]').click(); await f.settle();
+  assert.deepEqual(f.calls, ['check']);
+  f.emit({ git: true, runtime: true, phase: 'tunnel', error: null });
+  assert.equal(f.document.querySelector('#startup-tunnel-body').hidden, false);
+});
+test('Windows connection guidance is visible after tunnel startup and never claims plugin verification', async t => {
+  const f = await fixture(t, { platform: 'win32', account: 'signed-in', git: true, runtime: true, tunnel: true });
+  const help = f.document.querySelector('#startup-plugin-help');
+  assert.equal(help.open, true);
+  assert.equal(f.document.querySelector('#startup-plugin-platform').hidden, false);
+  assert.match(f.document.querySelector('#startup-plugin-platform').textContent, /Codex Local Windows MCP/);
+  assert.match(f.document.querySelector('#startup-plugin-platform').textContent, /нужно проверить/);
+  help.open = false; f.emit({}); assert.equal(help.open, false, 'status updates preserve a manually collapsed guide');
+  f.document.querySelector('[data-startup=plugins]').click(); await f.settle();
+  assert.deepEqual(f.calls, ['plugins']);
+  f.render({ platform: 'win32', startup: null });
+  assert.equal(f.document.querySelector('#host-platform-label').textContent, 'На вашем Windows PC');
+  assert.equal(f.document.querySelector('#startup-panel').hidden, true);
+  f.render({ platform: 'darwin', startup: null });
+  assert.equal(f.document.querySelector('#host-platform-label').textContent, 'На вашем Mac');
 });

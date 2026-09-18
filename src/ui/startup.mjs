@@ -5,12 +5,14 @@ export function createStartupView({ document, api }) {
   function render(state) {
     current = state;
     const s = state?.startup;
+    const windows = (s?.platform ?? state?.platform) === 'win32';
+    $('host-platform-label').textContent = windows ? 'На вашем Windows PC' : 'На вашем Mac';
     panel.hidden = !s?.active || !!state.setup || !!state.settings;
     $('open-startup').hidden = !s;
     if (!s) return;
     const logged = s.account === 'signed-in', loginVisible = s.page === 'loaded' && s.account === 'signed-out';
     const local = s.node && s.git && s.runtime, ready = local && s.tunnel;
-    const waitingApple = !s.git && (!!s.gitInstallationRequested || s.phase === 'git-installing');
+    const waitingApple = !windows && !s.git && (!!s.gitInstallationRequested || s.phase === 'git-installing');
     const opening = ['loading', 'slow'].includes(s.page);
     const retry = ['slow', 'failed'].includes(s.page), unknown = s.page === 'loaded' && !logged && !loginVisible;
     const errors = {
@@ -41,16 +43,21 @@ export function createStartupView({ document, api }) {
     $('startup-open-chat').textContent = opening ? 'Открываем ChatGPT…' : retry || unknown ? 'Повторить открытие' : 'Открыть сайт ChatGPT';
     $('startup-copy-diagnostics').hidden = s.page === 'idle';
     $('startup-diagnostics-copied').hidden = !copied;
-    $('startup-components-status').textContent = local ? 'Компоненты готовы' : waitingApple ? 'Ожидаем завершения установки Apple' : s.phase === 'error' ? 'Подготовка остановлена' : s.busy ? 'Проверяем и подготавливаем…' : !s.node ? 'Проверяем комплект приложения' : !s.git ? 'Нужен компонент Apple' : 'Компонент Apple установлен';
+    $('startup-components-status').textContent = local ? 'Компоненты готовы' : waitingApple ? 'Ожидаем завершения установки Apple' : s.phase === 'error' ? 'Подготовка остановлена' : s.busy ? 'Проверяем и подготавливаем…' : !s.node ? 'Проверяем комплект приложения' : windows ? 'Нужна подготовка компонентов Windows' : !s.git ? 'Нужен компонент Apple' : 'Компонент Apple установлен';
     $('startup-components-body').hidden = !logged || local;
-    $('startup-components-help').textContent = waitingApple
+    $('startup-components-help').textContent = windows
+      ? (s.busy
+        ? 'Устанавливаем комплектные компоненты Windows в ваш профиль и запускаем Codex Local Windows MCP. Оставьте Web Pilot открытым; результат появится здесь.'
+        : 'Нажмите «Проверить и продолжить». Web Pilot подготовит комплектные Python, Git и Codex Local Windows MCP. Приложение нужно запускать из полностью распакованной папки ZIP. Уже готовые компоненты сохранятся.')
+      : waitingApple
       ? 'Подтвердите установку и примите условия в системном окне Apple. Если его не видно, сверните Web Pilot жёлтой кнопкой. Загрузка и установка могут занять десятки минут. Web Pilot сам проверит завершение; затем нажмите «Проверить и продолжить».'
       : !s.git
       ? 'Для истории проектов нужен Git из набора Apple Command Line Tools. Нажмите кнопку, затем «Установить» в системном окне и примите условия Apple. Загрузка и установка могут занять десятки минут; ход установки показывает системное окно Apple. Если его не видно, сверните Web Pilot жёлтой кнопкой. После завершения нажмите «Проверить и продолжить».'
       : (s.busy
         ? 'Загружаем и проверяем необходимые локальные компоненты. Время зависит от скорости загрузки и компьютера. Оставьте Web Pilot открытым; результат появится здесь.'
         : 'Нажмите «Проверить и продолжить». Web Pilot проверит установленные компоненты и подготовит недостающие. Повторно устанавливать уже готовый компонент Apple не нужно.');
-    $('startup-install-git').hidden = !!s.git || waitingApple;
+    $('startup-install-git').hidden = windows || !!s.git || waitingApple;
+    $('startup-plugin-platform').hidden = !windows;
     $('startup-tunnel-status').textContent = s.tunnel ? 'Служба подключения работает' : !local ? 'После подготовки компьютера' : 'Нужна однократная настройка';
     $('startup-tunnel-body').hidden = !logged || !local || s.tunnel;
     const tunnelStep = s.clipboard?.step ?? 'tunnel';
@@ -73,10 +80,11 @@ export function createStartupView({ document, api }) {
         || (pending && !INDEPENDENT.has(action))
         || (s.busy && ['check', 'install-git', 'configure-tunnel', 'continue'].includes(action))
         || (action === 'configure-tunnel' && tunnelStep === 'connecting')
-        || (action === 'install-git' && (!!s.git || waitingApple));
+        || (action === 'install-git' && (windows || !!s.git || waitingApple));
     }
     $('startup-continue').disabled ||= !logged || !ready;
     const visibleStep = panel.hidden || !logged ? null : ready ? 'project' : local ? tunnelStep : null;
+    if (windows && visibleStep === 'project' && lastVisibleStep !== 'project') $('startup-plugin-help').open = true;
     if (lastVisibleStep && visibleStep && visibleStep !== lastVisibleStep) {
       const target = visibleStep === 'project' ? $('startup-project-body') : $('startup-tunnel-progress');
       target.scrollIntoView?.({ block: 'nearest' });

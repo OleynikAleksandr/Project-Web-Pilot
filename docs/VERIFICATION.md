@@ -1507,3 +1507,8 @@ W002: 14 Windows runtime checks: 12 PASS, 2 platform skips на Mac. Новые 
 W003: 26/26 startup-platform + startup-readiness PASS. Покрыты реальные правила включения обеих платформ, чистая Windows → компоненты → MCP → tunnel, повтор после ошибки, read-only inspection, отказ неполного Node-пакета и сохранение порядка macOS. Это тесты общего production adapter с контролируемыми платформенными зависимостями.
 
 W004: 25/25 workspace-setup checks PASS, включая нормализацию Path и отказ неподдерживаемых переменных, подготовку окружения до первого реального worker-процесса и запрет записи при ошибке Git. src/main.mjs прошёл syntax check; production factory теперь разрешает Windows и macOS, smoke не запускает реальные bootstrap.
+
+W005: `node --test tests/startup-ui.test.mjs` — 16 PASS. Проверены Windows
+подготовка/ошибка/повтор, отсутствие действия Apple, переход к туннелю, видимая
+инструкция Codex Local Windows MCP, сохранение ручного сворачивания справки и
+правильная платформа footer при закрытом мастере; прежние macOS UI проверки PASS.
