@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 26,
+  "plan_revision": 28,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-corrections-032",
@@ -417,8 +417,8 @@
         "suite"
       ],
       "expected_commit_message": "feat: recognize tunnel clipboard changes within onboarding",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-corrections-032",
         "task_id": "A003",
@@ -722,7 +722,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-corrections-032
 Current Task: нет
-Revision: 26
+Revision: 28
 
 ## Цель
 
@@ -772,8 +772,8 @@ Revision: 26
   - Git Commit: [DONE] feat: pass clipboard credentials to the native runtime facade
   - Reference: first-run-corrections-032 / A002 / implementation
   - Файлы: src/mac-runtime.mjs, tests/mac-runtime.test.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
-- [TODO] A003: Распознавать ID и ключ в буфере на шаге настройки — Ожидает
-  - Git Commit: [PENDING] feat: recognize tunnel clipboard changes within onboarding
+- [DONE] A003: Распознавать ID и ключ в буфере на шаге настройки — Завершено
+  - Git Commit: [DONE] feat: recognize tunnel clipboard changes within onboarding
   - Reference: first-run-corrections-032 / A003 / implementation
   - Файлы: src/tunnel-clipboard.mjs, tests/tunnel-clipboard.test.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 - [TODO] A004: Связать автоматическое подключение с готовностью и закрытием мастера — Ожидает
