@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 8,
+  "plan_revision": 10,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
@@ -196,8 +196,8 @@
       "expected_commit_message": "feat: Подключить настройку туннеля и комплектный Git к Windows bootstrap"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "windows-onboarding-033",
         "task_id": "W003",
@@ -473,7 +473,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 8
+Revision: 10
 
 ## Цель
 
@@ -500,8 +500,8 @@ Revision: 8
   - Git Commit: [DONE] feat: Подключить настройку туннеля и комплектный Git к Windows bootstrap
   - Reference: windows-onboarding-033 / W002 / implementation
   - Файлы: src/windows-runtime.mjs, tests/windows-runtime.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md, docs/modules/runtime-lifecycle.md
-- [TODO] W003: Объединить первый запуск через платформенные адаптеры — Ожидает
-  - Git Commit: [PENDING] feat: Объединить первый запуск через платформенные адаптеры
+- [DONE] W003: Объединить первый запуск через платформенные адаптеры — Завершено
+  - Git Commit: [DONE] feat: Объединить первый запуск через платформенные адаптеры
   - Reference: windows-onboarding-033 / W003 / implementation
   - Файлы: src/startup-platform.mjs, src/startup-readiness.mjs, tests/startup-platform.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md
 - [TODO] W004: Включить Windows мастер и окружение создания проектов — Ожидает

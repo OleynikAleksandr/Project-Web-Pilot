@@ -3,6 +3,15 @@ import { promisify } from 'node:util';
 import path from 'node:path';
 const execute = promisify(execFile);
 const PREPARATION_ERRORS = {
+  WINDOWS_RUNTIME_PAYLOAD_MISSING: 'В комплекте отсутствуют локальные инструменты Windows. Заново распакуйте всю папку приложения.',
+  WINDOWS_RUNTIME_PAYLOAD_DAMAGED: 'Архив локальных компонентов повреждён. Скопируйте и распакуйте Windows ZIP заново.',
+  WINDOWS_RUNTIME_ARCHIVE_INVALID: 'Архив локальных компонентов имеет неверную структуру. Заново распакуйте всю поставку.',
+  WINDOWS_RUNTIME_SETUP_FAILED: 'Не удалось подготовить компоненты Windows. Проверьте доступ к интернету и разрешение Windows на запуск, затем нажмите «Проверить и продолжить».',
+  WINDOWS_RUNTIME_SETUP_INCOMPLETE: 'Установка компонентов Windows не завершилась. Нажмите «Проверить и продолжить».',
+  WINDOWS_RUNTIME_EXTERNAL_INCOMPATIBLE: 'Установленные локальные инструменты Windows изменены. Автоматическая замена остановлена; передайте этот код разработчику.',
+  WINDOWS_GIT_LAYOUT_INVALID: 'Комплектный Git не соответствует установленным компонентам. Повторите подготовку; если ошибка сохраняется, передайте этот код разработчику.',
+  WINDOWS_GIT_INCOMPLETE: 'Комплектный Git неполон. Заново распакуйте полный Windows ZIP и повторите подготовку.',
+  WINDOWS_GIT_START_FAILED: 'Windows не запустила комплектный Git. Проверьте разрешение на запуск приложения и повторите подготовку.',
   MAC_RUNTIME_EXTERNAL_MODIFIED: 'Локальный компонент отличается от поддерживаемой версии. Обновите Web Pilot. Если ошибка повторяется, передайте этот код разработчику; удалять настройки не нужно.',
   MAC_RUNTIME_SETUP_FAILED: 'Не удалось загрузить или установить локальные компоненты. Нажмите «Проверить и продолжить», чтобы повторить подготовку. Если ошибка повторяется, передайте этот код разработчику.',
   MAC_RUNTIME_STATUS_FAILED: 'Не удалось проверить локальные компоненты. Нажмите «Проверить и продолжить». Если ошибка повторяется, передайте этот код разработчику.',
@@ -48,12 +57,12 @@ export function accountObservation() {
 }
 
 export class StartupReadiness {
-  constructor({ probeNode, probeGit, inspectRuntime, prepareRuntime, installGit, configureTunnel, onChange = () => {},
+  constructor({ platform = 'darwin', prepareComponents, probeNode, probeGit, inspectRuntime, prepareRuntime, installGit, configureTunnel, onChange = () => {},
     schedule = setTimeout, cancel = clearTimeout, scheduleGit = setTimeout, cancelGit = clearTimeout,
     gitPollInterval = 5000, gitPollLimit = 720 } = {}) {
-    Object.assign(this, { probeNode, probeGit, inspectRuntime, prepareRuntime, installGit, configureTunnel, onChange, schedule, cancel,
+    Object.assign(this, { platform, prepareComponents, probeNode, probeGit, inspectRuntime, prepareRuntime, installGit, configureTunnel, onChange, schedule, cancel,
       scheduleGit, cancelGit, gitPollInterval, gitPollLimit });
-    this.state = { phase: 'checking', busy: false, node: false, git: false, runtime: false, tunnel: false,
+    this.state = { platform, phase: 'checking', busy: false, node: false, git: false, runtime: false, tunnel: false,
       gitInstallationRequested: false, account: 'unknown', page: 'idle', pageError: null, error: null };
     this.live = true; this.pending = null; this.pageGeneration = 0; this.timer = null;
     this.gitTimer = null; this.gitWatchGeneration = 0;
@@ -71,14 +80,22 @@ export class StartupReadiness {
     }).finally(() => { this.pending = null; this.publish({ busy: false }); });
     return this.pending;
   }
-  async probe() {
+  async probe({ prepare = false } = {}) {
     this.stopGitWatch();
     this.publish({ phase: 'checking', runtime: false, tunnel: false });
     const node = await this.probeNode().then(() => true, () => false);
-    const git = await this.probeGit().catch(() => false);
+    if (node && prepare && this.prepareComponents && this.live) {
+      this.publish({ node, phase: 'preparing-components' });
+      await this.prepareComponents();
+    }
+    if (!this.live) return false;
+    // Windows errors need their specific retry message; macOS absence is an install step.
+    const git = this.platform === 'win32' ? await this.probeGit() : await this.probeGit().catch(() => false);
     if (!this.live) return false;
     this.publish({ node, git, ...(git ? { gitInstallationRequested: false } : {}) });
-    if (!node) { this.publish({ phase: 'package', error: 'В приложении не запускается встроенный компонент. Скопируйте полное приложение в Applications и откройте его снова.' }); return false; }
+    if (!node) { this.publish({ phase: 'package', error: this.platform === 'win32'
+      ? 'Не запускается встроенный компонент приложения. Полностью распакуйте Windows ZIP на локальный диск и откройте Project Web Pilot.exe снова.'
+      : 'В приложении не запускается встроенный компонент. Скопируйте полное приложение в Applications и откройте его снова.' }); return false; }
     if (!git) {
       this.publish({ phase: this.state.gitInstallationRequested ? 'git-installing' : 'git' });
       if (this.state.gitInstallationRequested) this.watchGitInstallation();
@@ -90,7 +107,7 @@ export class StartupReadiness {
   }
   check({ prepare = false } = {}) {
     return this.serial(async () => {
-      if (!await this.probe() || !this.live) return;
+      if (!await this.probe({ prepare }) || !this.live) return;
       if (prepare && (!this.state.runtime || !this.state.tunnel)) await this.prepare();
       else this.publish({ phase: this.state.runtime ? (this.state.tunnel ? 'connected' : 'tunnel') : 'prepare' });
     });
