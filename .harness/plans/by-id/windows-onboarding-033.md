@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 16,
+  "plan_revision": 19,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
@@ -333,8 +333,8 @@
       "expected_commit_message": "feat: Добавить единый выпуск macOS и Windows версии 0.6.41"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "windows-onboarding-033",
         "task_id": "V001",
@@ -388,17 +388,14 @@
         "docs/CLEAN_INSTALL.md",
         "docs/TRANSFER_TO_WINDOWS.md"
       ],
-      "verification_ids": [
-        "suite",
-        "electron-smoke"
-      ],
+      "verification_ids": [],
       "id": "R002",
       "title": "Собрать и проверить обе поставки 0.6.41",
       "why": "Собрать и проверить обе поставки 0.6.41",
       "acceptance_criteria": [
         "npm run build успешно создаёт обе поставки одной версии",
         "Постоянный macOS app сохраняет identity",
-        "Проверены packaged fixture и доступные проверки Windows, физическая приёмка указана отдельно"
+        "Состав ZIP и source сверены; пользователь оставил запуск и проверки в Windows/macOS себе, Computer Use и VM не применяются"
       ],
       "expected_commit_message": "docs: Собрать и проверить обе поставки 0.6.41"
     },
@@ -473,7 +470,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 16
+Revision: 19
 
 ## Цель
 
@@ -516,8 +513,8 @@ Revision: 16
   - Git Commit: [DONE] feat: Добавить единый выпуск macOS и Windows версии 0.6.41
   - Reference: windows-onboarding-033 / R001 / implementation
   - Файлы: scripts/release-all.mjs, package.json, package-lock.json, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md, docs/RELEASE.md
-- [TODO] V001: Проверить Windows мастер и выпуск в изолированных сценариях — Ожидает
-  - Git Commit: [PENDING] feat: Проверить Windows мастер и выпуск в изолированных сценариях
+- [DONE] V001: Проверить Windows мастер и выпуск в изолированных сценариях — Завершено
+  - Git Commit: [DONE] feat: Проверить Windows мастер и выпуск в изолированных сценариях
   - Reference: windows-onboarding-033 / V001 / implementation
   - Файлы: tests/electron-smoke.mjs, tests/release-all.test.mjs, scripts/verify-windows-package.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md, docs/RELEASE.md
 - [TODO] R002: Собрать и проверить обе поставки 0.6.41 — Ожидает

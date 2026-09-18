@@ -1142,3 +1142,8 @@ R001: `scripts/release-all.mjs` — единый фасад парного вы�
 external resources, версию постоянного app и его filesystem identity. Проверяет
 ZIP и копии, затем выдаёт общий release-manifest и SHA256SUMS. Блокировка исключает
 второго publisher; завершённый номер повторно не публикуется.
+
+V001: Windows package verifier дополнительно проверяет нативный helper/control и
+совпадение упакованных исходников и ресурсов. Electron fixture использует тот же
+startupPlatformOptions, что production, с изолированными Windows-компонентами;
+системные установщики и личные ключи в этом сценарии не используются.

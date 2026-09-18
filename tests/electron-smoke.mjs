@@ -5,6 +5,8 @@ import http from 'node:http';
 import { openStartupPage } from '../src/browser-startup.mjs';
 import { TunnelClipboard } from '../src/tunnel-clipboard.mjs';
 import { StartupNetworkTrace } from '../src/startup-network-trace.mjs';
+import { StartupReadiness } from '../src/startup-readiness.mjs';
+import { startupPlatformOptions, startupSupported } from '../src/startup-platform.mjs';
 import { createHash } from 'node:crypto';
 import { nativeTheme, clipboard, BrowserWindow, dialog } from 'electron';
 import { ChatColors } from '../src/chatgpt-colors.mjs';
@@ -232,6 +234,37 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await sidebar.executeJavaScript('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
   await fs.writeFile(path.join(dataDir, 'startup-first-project.png'), (await sidebar.capturePage()).toPNG());
   clipboardFlow.dispose();
+  // Exercise the Windows production adapter against the real Chromium renderer.
+  assert.equal(startupSupported('win32'), true);
+  let winInstalled = false, winMcp = false, winConfigured = false, winTunnel = false;
+  const winActions = [];
+  const winFlow = new StartupReadiness({
+    ...startupPlatformOptions({ platform: 'win32',
+      setup: { node: async () => {}, setRuntimeEnvironment: () => winActions.push('git') },
+      bootstrap: { inspect: async () => ({ installed: winInstalled }), workflowEnvironment: async () => ({ WORKFLOW_GIT_BIN: 'fixture' }),
+        configureTunnel: async () => { winConfigured = true; return { configured: true }; } },
+      ensureRuntime: async () => { winActions.push('prepare'); winInstalled = true; },
+      control: async action => {
+        if (action === 'start') { winMcp = true; winTunnel = winConfigured; }
+        return { mcp: { ready: winMcp }, tunnel: { configured: winConfigured, ready: winTunnel } };
+      },
+      inspectGit: () => { throw new Error('Apple probe must not run in Windows'); },
+      installGit: () => { throw new Error('Apple installer must not run in Windows'); },
+    }),
+    onChange: state => sidebar.send('pilot:state-changed', { ...startupFixture, platform: 'win32',
+      startup: { ...state, active: true, account: 'signed-in', page: 'loaded' } }),
+  });
+  await winFlow.check({ prepare: true });
+  await waitFor(() => sidebar.executeJavaScript('!document.getElementById("startup-tunnel-body").hidden && document.getElementById("startup-install-git").hidden && document.getElementById("host-platform-label").textContent.includes("Windows")'), 'Windows prepared components and tunnel step', snapshot);
+  assert.deepEqual(winActions, ['prepare', 'git']);
+  await sidebar.executeJavaScript('document.getElementById("startup-tunnel-body").scrollIntoView({block:"start"})');
+  await fs.writeFile(path.join(dataDir, 'startup-windows-tunnel.png'), (await sidebar.capturePage()).toPNG());
+  await winFlow.configure({ tunnel_id: 'tunnel_fixture', api_key: 'sk-fixture-only' });
+  await waitFor(() => sidebar.executeJavaScript('!document.getElementById("startup-project-body").hidden && document.getElementById("startup-plugin-help").open && !document.getElementById("startup-plugin-platform").hidden'), 'Windows connection guidance and first project', snapshot);
+  assert.equal(await sidebar.executeJavaScript('document.body.innerText.includes("sk-fixture")'), false);
+  await sidebar.executeJavaScript('document.getElementById("startup-project-body").scrollIntoView({block:"start"})');
+  await fs.writeFile(path.join(dataDir, 'startup-windows-project.png'), (await sidebar.capturePage()).toPNG());
+  winFlow.dispose();
   sidebar.send('pilot:state-changed', snapshot());
   await waitFor(() => sidebar.executeJavaScript('document.getElementById("startup-panel").hidden'), 'normal sidebar after startup fixture', snapshot);
   assert.equal(snapshot().sidebarWidth, 312);

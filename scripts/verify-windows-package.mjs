@@ -5,6 +5,7 @@ import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { WINDOWS_RUNTIME_ARCHIVE, WINDOWS_RUNTIME_SHA256 } from '../src/windows-runtime.mjs';
 import { NODE_FOLDER, NODE_SHA256 } from './prepare-windows-toolchain.mjs';
+import { verifyPackagedSources } from './release-all.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -34,6 +35,7 @@ async function requirePe(file, label) {
 }
 
 export async function verifyWindowsPackage(packageDir = path.join(ROOT, '.harness', 'runtime', 'build', 'Project Web Pilot-win32-x64')) {
+  const { version } = JSON.parse(await fs.readFile(path.join(ROOT, 'package.json'), 'utf8'));
   const resources = path.join(packageDir, 'resources');
   const executable = path.join(packageDir, 'Project Web Pilot.exe');
   const appAsar = path.join(resources, 'app.asar');
@@ -49,6 +51,9 @@ export async function verifyWindowsPackage(packageDir = path.join(ROOT, '.harnes
   const nodeStat = await requireFile(nodeExe, 'portable node.exe');
   await requireFile(workflow, 'Workflow Kit');
   await requireFile(setupWorker, 'workspace setup worker');
+  await requireFile(path.join(resources, 'resources/runtime-control/windows-first-run.py'), 'Windows native tunnel dialog');
+  await requireFile(path.join(resources, 'resources/runtime-control/windows-control.py'), 'Windows lifecycle control');
+  const sourceProof = await verifyPackagedSources({ root: ROOT, resources, version });
   await requirePe(executable, 'Project Web Pilot.exe');
   await requirePe(nodeExe, 'portable node.exe');
   const runtimeSha256 = await hashFile(runtimeArchive);
@@ -58,6 +63,8 @@ export async function verifyWindowsPackage(packageDir = path.join(ROOT, '.harnes
   if (fsSync.existsSync(path.join(packageDir, 'Contents', 'Info.plist'))) throw new Error('macOS bundle structure leaked into Windows package');
   if (exeStat.size < 1024 * 1024 || nodeStat.size < 10 * 1024 * 1024) throw new Error('Windows executable payload is unexpectedly small');
   return {
+    ...sourceProof,
+    firstRun: true,
     packageDir,
     executable,
     executableSha256: await hashFile(executable),
