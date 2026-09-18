@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 41,
+  "plan_revision": 43,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-corrections-032",
@@ -662,8 +662,8 @@
         "electron-smoke"
       ],
       "expected_commit_message": "fix: release onboarding usability improvements 0.6.39",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-corrections-032",
         "task_id": "U007",
@@ -760,7 +760,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-corrections-032
 Current Task: нет
-Revision: 41
+Revision: 43
 
 ## Цель
 
@@ -838,8 +838,8 @@ Revision: 41
   - Git Commit: [DONE] fix: preserve local readiness after tunnel connection failure
   - Reference: first-run-corrections-032 / A005 / implementation
   - Файлы: src/startup-readiness.mjs, src/ui/startup.mjs, tests/startup-readiness.test.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
-- [TODO] U007: Собрать и проверить 0.6.39 для пользовательского повтора — Ожидает
-  - Git Commit: [PENDING] fix: release onboarding usability improvements 0.6.39
+- [DONE] U007: Собрать и проверить 0.6.39 для пользовательского повтора — Завершено
+  - Git Commit: [DONE] fix: release onboarding usability improvements 0.6.39
   - Reference: first-run-corrections-032 / U007 / implementation
   - Файлы: package.json, package-lock.json, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md, docs/architecture/ARCHITECTURE.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
