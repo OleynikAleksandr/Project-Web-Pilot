@@ -6,6 +6,16 @@ import { createHash } from 'node:crypto';
 import { execFile as execFileCallback } from 'node:child_process';
 import { promisify } from 'node:util';
 const execFile=promisify(execFileCallback);
+// Secrets enter the worker through its pipe, never argv or environment.
+export function executePrivateInput(file, args, options, input) {
+ return new Promise((resolve, reject) => {
+  const child = execFileCallback(file, args, options, (error, stdout, stderr) => {
+   if (error) { error.stderr = stderr; reject(error); } else resolve({ stdout, stderr });
+  });
+  child.stdin.on('error', () => {}); // The process callback owns early-exit failure.
+  child.stdin.end(input);
+ });
+}
 const TUNNEL_SETUP_ERRORS = {
  MAC_TUNNEL_PROMPT_FAILED: 'Не удалось открыть окно ввода подключения. Обновите Web Pilot и повторите ввод. Данные подключения не сохранены.',
  MAC_TUNNEL_INVALID_DATA: 'Проверьте формат tunnel_id и ключа и повторите ввод. Данные подключения не сохранены.',
@@ -28,9 +38,9 @@ export function macRuntimePaths(dataDir,payloadFile=''){
 export function macRuntimeFolderPaths(folder){return {folder,control:path.join(folder,'control.py'),python:path.join(folder,'.venv','bin','python3')};}
 
 export class MacRuntimeBootstrap {
- constructor({payloadFile,controlSourceFile,dataDir,preferredFolder=null,defaultFolder=null,execute=execFile,environment=process.env,platform=process.platform,onState=null,legacyControlHashes=[MAC_LEGACY_CONTROL_SHA256,MAC_BUNDLED_CONTROL_SHA256]}={}){
+ constructor({payloadFile,controlSourceFile,dataDir,preferredFolder=null,defaultFolder=null,execute=execFile,executeInput=executePrivateInput,environment=process.env,platform=process.platform,onState=null,legacyControlHashes=[MAC_LEGACY_CONTROL_SHA256,MAC_BUNDLED_CONTROL_SHA256]}={}){
   if(!payloadFile||!controlSourceFile||!dataDir)throw new TypeError('MacRuntimeBootstrap requires payload/control/dataDir');
-  this.payloadFile=payloadFile;this.controlSourceFile=controlSourceFile;this.paths=macRuntimePaths(dataDir,payloadFile);this.preferredFolder=preferredFolder&&path.isAbsolute(preferredFolder)?preferredFolder:null;this.defaultFolder=defaultFolder&&path.isAbsolute(defaultFolder)?defaultFolder:null;this.execute=execute;this.environment=environment;this.platform=platform;this.onState=typeof onState==='function'?onState:null;this.legacyControlHashes=new Set(legacyControlHashes);this.pending=null;this.state={phase:platform==='darwin'?'embedded':'unavailable',folder:this.paths.folder};
+  this.payloadFile=payloadFile;this.controlSourceFile=controlSourceFile;this.paths=macRuntimePaths(dataDir,payloadFile);this.preferredFolder=preferredFolder&&path.isAbsolute(preferredFolder)?preferredFolder:null;this.defaultFolder=defaultFolder&&path.isAbsolute(defaultFolder)?defaultFolder:null;this.execute=execute;this.executeInput=executeInput;this.environment=environment;this.platform=platform;this.onState=typeof onState==='function'?onState:null;this.legacyControlHashes=new Set(legacyControlHashes);this.pending=null;this.state={phase:platform==='darwin'?'embedded':'unavailable',folder:this.paths.folder};
  }
  snapshot(){return {...this.state};}
  #publish(next){this.state={...this.state,...next,folder:next?.folder??this.state.folder??this.paths.folder};try{this.onState?.(this.snapshot());}catch{}}
@@ -80,22 +90,32 @@ export class MacRuntimeBootstrap {
   await fs.mkdir(this.paths.root,{recursive:true});await fs.writeFile(this.paths.marker+'.tmp',JSON.stringify({schemaVersion:1,payloadSha256:payloadSha,installedAt:new Date().toISOString(),folder:this.paths.folder},null,2)+'\n',{mode:0o600});await fs.rename(this.paths.marker+'.tmp',this.paths.marker);
   return this.paths.folder;
  }
- configureTunnel() {
+ configureTunnel(credentials) {
   if (this.configurePending) return this.configurePending;
-  this.configurePending = this.#configureTunnel().finally(() => { this.configurePending = null; });
+  this.configurePending = this.#configureTunnel(credentials).finally(() => { this.configurePending = null; });
   return this.configurePending;
  }
- async #configureTunnel() {
+ async #configureTunnel(credentials) {
   const current = await this.inspect();
   if (!current.installed) throw new MacRuntimeError('MAC_RUNTIME_NOT_FOUND', 'Сначала подготовьте локальные компоненты.');
   await this.#controlFor(current.folder);
   const layout = macRuntimeFolderPaths(current.folder);
   const helper = path.join(path.dirname(this.controlSourceFile), 'mac-first-run.py');
   try {
-   const result = await this.execute(layout.python, ['-B', helper], {
+   const options = {
     cwd: current.folder, timeout: 16 * 60 * 1000, maxBuffer: 64 * 1024,
     env: { ...this.environment, PYTHONDONTWRITEBYTECODE: '1', WEB_PILOT_RUNTIME_ROOT: current.folder },
-   });
+   };
+   let result;
+   if (credentials === undefined) result = await this.execute(layout.python, ['-B', helper], options);
+   else {
+    if (!credentials || typeof credentials.tunnelId !== 'string' || credentials.tunnelId.length > 150
+        || (credentials.key !== undefined && (typeof credentials.key !== 'string' || credentials.key.length > 4096))) {
+     throw { stderr: JSON.stringify({ ok: false, code: 'MAC_TUNNEL_INVALID_DATA' }) };
+    }
+    result = await this.executeInput(layout.python, ['-B', helper, '--stdin'], options,
+      JSON.stringify({ tunnel_id: credentials.tunnelId, ...(credentials.key === undefined ? {} : { api_key: credentials.key }) }));
+   }
    const value = JSON.parse(result.stdout);
    if (value.cancelled === true) return { cancelled: true };
    if (value.configured === true) return { configured: true };

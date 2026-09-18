@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 24,
+  "plan_revision": 26,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-corrections-032",
@@ -383,8 +383,8 @@
         "suite"
       ],
       "expected_commit_message": "feat: pass clipboard credentials to the native runtime facade",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-corrections-032",
         "task_id": "A002",
@@ -722,7 +722,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-corrections-032
 Current Task: нет
-Revision: 24
+Revision: 26
 
 ## Цель
 
@@ -768,8 +768,8 @@ Revision: 24
   - Git Commit: [DONE] feat: accept tunnel credentials through private worker stdin
   - Reference: first-run-corrections-032 / A001 / implementation
   - Файлы: resources/runtime-control/mac-first-run.py, tests/mac-first-run.test.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
-- [TODO] A002: Передавать скопированные данные в существующий runtime — Ожидает
-  - Git Commit: [PENDING] feat: pass clipboard credentials to the native runtime facade
+- [DONE] A002: Передавать скопированные данные в существующий runtime — Завершено
+  - Git Commit: [DONE] feat: pass clipboard credentials to the native runtime facade
   - Reference: first-run-corrections-032 / A002 / implementation
   - Файлы: src/mac-runtime.mjs, tests/mac-runtime.test.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 - [TODO] A003: Распознавать ID и ключ в буфере на шаге настройки — Ожидает

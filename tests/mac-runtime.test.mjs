@@ -166,3 +166,32 @@ test('tunnel setup distinguishes native prompt failures, invalid input and unkno
  failure=null;result={cancelled:true};assert.deepEqual(await b.configureTunnel(),{cancelled:true});
  result={configured:true};assert.deepEqual(await b.configureTunnel(),{configured:true});
 });
+
+
+test('copied credentials use only the worker stdin and permit ID-only manual fallback', async t => {
+ const root=await fixture(t),folder=path.join(root,'runtime');
+ await fs.mkdir(path.join(folder,'.venv','bin'),{recursive:true});
+ await fs.copyFile(control,path.join(folder,'control.py'));
+ await fs.writeFile(path.join(folder,'.venv','bin','python3'),'fixture');
+ const credentials={tunnelId:'tunnel_fixture1234567890123456',key:'sk-fixture-private-1234567890'};
+ const received=[];
+ const b=new MacRuntimeBootstrap({payloadFile:path.join(root,'unused.zip'),controlSourceFile:control,dataDir:path.join(root,'app'),
+  preferredFolder:folder,platform:'darwin',environment:{FIXTURE:'true'},
+  execute:async()=>{throw new Error('interactive process not expected');},
+  executeInput:async(file,args,options,input)=>{
+   assert.equal(args.at(-1),'--stdin');
+   assert.doesNotMatch(JSON.stringify({file,args,options}),/sk-fixture|tunnel_fixture/);
+   received.push(JSON.parse(input));return {stdout:'{"configured":true}'};
+  }});
+ assert.deepEqual(await b.configureTunnel(credentials),{configured:true});
+ assert.deepEqual(received.pop(),{tunnel_id:credentials.tunnelId,api_key:credentials.key});
+ assert.deepEqual(await b.configureTunnel({tunnelId:credentials.tunnelId}),{configured:true});
+ assert.deepEqual(received.pop(),{tunnel_id:credentials.tunnelId});
+ await assert.rejects(b.configureTunnel({tunnelId:credentials.tunnelId,key:7}),{code:'MAC_TUNNEL_INVALID_DATA'});
+ assert.equal(received.length,0);
+});
+test('private process input arrives over a pipe rather than command arguments', async () => {
+ const { executePrivateInput }=await import('../src/mac-runtime.mjs');
+ const r=await executePrivateInput(process.execPath,['-e',"process.stdin.setEncoding('utf8');let s='';process.stdin.on('data',c=>s+=c);process.stdin.on('end',()=>process.stdout.write(JSON.stringify({received:s==='fixture-secret',argvClean:!process.argv.some(x=>x.includes('fixture-secret-value'))})))"],{timeout:5000},'fixture-secret');
+ assert.deepEqual(JSON.parse(r.stdout),{received:true,argvClean:true});
+});
