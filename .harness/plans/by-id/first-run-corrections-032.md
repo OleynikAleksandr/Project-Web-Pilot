@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 21,
+  "plan_revision": 22,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-corrections-032",
@@ -328,7 +328,7 @@
     },
     {
       "id": "A001",
-      "title": "accept tunnel credentials through private worker stdin",
+      "title": "Принимать данные туннеля через защищённый канал worker",
       "why": "accept tunnel credentials through private worker stdin",
       "dependencies": [
         "U002"
@@ -361,7 +361,7 @@
     },
     {
       "id": "A002",
-      "title": "pass clipboard credentials to the native runtime facade",
+      "title": "Передавать скопированные данные в существующий runtime",
       "why": "pass clipboard credentials to the native runtime facade",
       "dependencies": [
         "A001"
@@ -393,7 +393,7 @@
     },
     {
       "id": "A003",
-      "title": "recognize tunnel clipboard changes within onboarding",
+      "title": "Распознавать ID и ключ в буфере на шаге настройки",
       "why": "recognize tunnel clipboard changes within onboarding",
       "dependencies": [
         "A002"
@@ -427,7 +427,7 @@
     },
     {
       "id": "A004",
-      "title": "connect clipboard onboarding to readiness and lifecycle",
+      "title": "Связать автоматическое подключение с готовностью и закрытием мастера",
       "why": "connect clipboard onboarding to readiness and lifecycle",
       "dependencies": [
         "A003"
@@ -722,7 +722,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-corrections-032
 Current Task: нет
-Revision: 21
+Revision: 22
 
 ## Цель
 
@@ -764,19 +764,19 @@ Revision: 21
   - Git Commit: [DONE] fix: remove duplicate empty plan label
   - Reference: first-run-corrections-032 / U002 / implementation
   - Файлы: src/ui/sidebar.mjs, tests/electron-smoke.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
-- [TODO] A001: accept tunnel credentials through private worker stdin — Ожидает
+- [TODO] A001: Принимать данные туннеля через защищённый канал worker — Ожидает
   - Git Commit: [PENDING] feat: accept tunnel credentials through private worker stdin
   - Reference: first-run-corrections-032 / A001 / implementation
   - Файлы: resources/runtime-control/mac-first-run.py, tests/mac-first-run.test.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
-- [TODO] A002: pass clipboard credentials to the native runtime facade — Ожидает
+- [TODO] A002: Передавать скопированные данные в существующий runtime — Ожидает
   - Git Commit: [PENDING] feat: pass clipboard credentials to the native runtime facade
   - Reference: first-run-corrections-032 / A002 / implementation
   - Файлы: src/mac-runtime.mjs, tests/mac-runtime.test.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
-- [TODO] A003: recognize tunnel clipboard changes within onboarding — Ожидает
+- [TODO] A003: Распознавать ID и ключ в буфере на шаге настройки — Ожидает
   - Git Commit: [PENDING] feat: recognize tunnel clipboard changes within onboarding
   - Reference: first-run-corrections-032 / A003 / implementation
   - Файлы: src/tunnel-clipboard.mjs, tests/tunnel-clipboard.test.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
-- [TODO] A004: connect clipboard onboarding to readiness and lifecycle — Ожидает
+- [TODO] A004: Связать автоматическое подключение с готовностью и закрытием мастера — Ожидает
   - Git Commit: [PENDING] feat: connect clipboard onboarding to readiness and lifecycle
   - Reference: first-run-corrections-032 / A004 / implementation
   - Файлы: src/main.mjs, src/startup-readiness.mjs, tests/startup-readiness.test.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
