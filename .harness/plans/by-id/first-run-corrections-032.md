@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 8,
+  "plan_revision": 10,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-corrections-032",
@@ -186,8 +186,8 @@
       "expected_commit_message": "fix: observe Apple component installation readiness"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-corrections-032",
         "task_id": "T004",
@@ -321,7 +321,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-corrections-032
 Current Task: нет
-Revision: 8
+Revision: 10
 
 ## Цель
 
@@ -346,8 +346,8 @@ Revision: 8
   - Git Commit: [DONE] fix: observe Apple component installation readiness
   - Reference: first-run-corrections-032 / T003 / implementation
   - Файлы: src/startup-readiness.mjs, tests/startup-readiness.test.mjs, docs/modules/first-run-onboarding.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T004: Скрывать повторную установку Apple и показывать следующий шаг — Ожидает
-  - Git Commit: [PENDING] fix: keep Apple installer action out of the next step
+- [DONE] T004: Скрывать повторную установку Apple и показывать следующий шаг — Завершено
+  - Git Commit: [DONE] fix: keep Apple installer action out of the next step
   - Reference: first-run-corrections-032 / T004 / implementation
   - Файлы: src/ui/startup.mjs, tests/startup-ui.test.mjs, docs/modules/first-run-onboarding.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T005: Собрать и проверить релиз 0.6.38 — Ожидает

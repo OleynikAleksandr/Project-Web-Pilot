@@ -10,6 +10,7 @@ export function createStartupView({ document, api }) {
     if (!s) return;
     const logged = s.account === 'signed-in', loginVisible = s.page === 'loaded' && s.account === 'signed-out';
     const local = s.node && s.git && s.runtime, ready = local && s.tunnel;
+    const waitingApple = !s.git && (!!s.gitInstallationRequested || s.phase === 'git-installing');
     const opening = ['loading', 'slow'].includes(s.page);
     const retry = ['slow', 'failed'].includes(s.page), unknown = s.page === 'loaded' && !logged && !loginVisible;
     const errors = {
@@ -40,14 +41,16 @@ export function createStartupView({ document, api }) {
     $('startup-open-chat').textContent = opening ? 'Открываем ChatGPT…' : retry || unknown ? 'Повторить открытие' : 'Открыть сайт ChatGPT';
     $('startup-copy-diagnostics').hidden = s.page === 'idle';
     $('startup-diagnostics-copied').hidden = !copied;
-    $('startup-components-status').textContent = local ? 'Компоненты готовы' : s.phase === 'git-installing' ? 'Ожидаем завершения установки Apple' : s.phase === 'error' ? 'Подготовка остановлена' : s.busy ? 'Проверяем и подготавливаем…' : !s.node ? 'Проверяем комплект приложения' : !s.git ? 'Нужен компонент Apple' : 'Нужно подготовить локальные инструменты';
+    $('startup-components-status').textContent = local ? 'Компоненты готовы' : waitingApple ? 'Ожидаем завершения установки Apple' : s.phase === 'error' ? 'Подготовка остановлена' : s.busy ? 'Проверяем и подготавливаем…' : !s.node ? 'Проверяем комплект приложения' : !s.git ? 'Нужен компонент Apple' : 'Компонент Apple установлен';
     $('startup-components-body').hidden = !logged || local;
-    $('startup-components-help').textContent = !s.git
+    $('startup-components-help').textContent = waitingApple
+      ? 'Подтвердите установку и примите условия в системном окне Apple. Если его не видно, сверните Web Pilot жёлтой кнопкой. Загрузка и установка могут занять десятки минут. Web Pilot сам проверит завершение; затем нажмите «Проверить и продолжить».'
+      : !s.git
       ? 'Для истории проектов нужен Git из набора Apple Command Line Tools. Нажмите кнопку, затем «Установить» в системном окне и примите условия Apple. Загрузка и установка могут занять десятки минут; ход установки показывает системное окно Apple. Если его не видно, сверните Web Pilot жёлтой кнопкой. После завершения нажмите «Проверить и продолжить».'
       : (s.busy
         ? 'Загружаем и проверяем необходимые локальные компоненты. Время зависит от скорости загрузки и компьютера. Оставьте Web Pilot открытым; результат появится здесь.'
         : 'Нажмите «Проверить и продолжить». Web Pilot проверит установленные компоненты и подготовит недостающие. Повторно устанавливать уже готовый компонент Apple не нужно.');
-    $('startup-install-git').hidden = !!s.git || s.phase === 'git-installing';
+    $('startup-install-git').hidden = !!s.git || waitingApple;
     $('startup-tunnel-status').textContent = s.tunnel ? 'Служба подключения работает' : !local ? 'После подготовки компьютера' : 'Нужна однократная настройка';
     $('startup-tunnel-body').hidden = !logged || !local || s.tunnel;
     $('startup-project-body').hidden = !logged || !ready;
@@ -58,7 +61,8 @@ export function createStartupView({ document, api }) {
       const action = button.dataset.startup;
       button.disabled = ((opening || pending) && ['chat', 'signup', 'plugins'].includes(action))
         || (pending && !INDEPENDENT.has(action))
-        || (s.busy && ['check', 'install-git', 'configure-tunnel', 'continue'].includes(action));
+        || (s.busy && ['check', 'install-git', 'configure-tunnel', 'continue'].includes(action))
+        || (action === 'install-git' && (!!s.git || waitingApple));
     }
     $('startup-continue').disabled ||= !logged || !ready;
   }

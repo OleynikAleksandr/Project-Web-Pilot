@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import { JSDOM } from 'jsdom';
+import { StartupReadiness } from '../src/startup-readiness.mjs';
 import { createStartupView } from '../src/ui/startup.mjs';
 async function fixture(t, startup = {}) {
   const html = await fs.readFile(new URL('../src/ui/index.html', import.meta.url), 'utf8');
@@ -114,4 +115,49 @@ test('loading copy remains available and a loaded unknown screen is not describe
   f.emit({ page: 'loaded' });
   assert.match(f.document.querySelector('#startup-account-status').textContent, /Страница открыта/);
   assert.equal(f.document.querySelector('#startup-open-chat').disabled, false);
+});
+
+
+test('Apple completion updates the actual view without another install or automatic preparation', async t => {
+  const f = await fixture(t, { account: 'signed-in' });
+  let installed = false, installs = 0, prepares = 0, next;
+  const controller = new StartupReadiness({
+    probeNode: async () => {}, probeGit: async () => installed,
+    inspectRuntime: async () => ({ mcp: { ready: false } }),
+    prepareRuntime: async () => { prepares++; return { mcp: { ready: true } }; },
+    installGit: async () => { installs++; return { warning: 'Установка запущена, окно не удалось вывести вперёд.' }; },
+    scheduleGit: fn => { next = fn; return 1; }, cancelGit: () => { next = null; },
+    onChange: state => f.emit({ ...state, active: true, account: 'signed-in', page: 'loaded' }),
+  });
+  t.after(() => controller.dispose());
+  f.api.startup = async action => {
+    if (action === 'install-git') await controller.install();
+    if (action === 'check') await controller.check({ prepare: true });
+    return { ok: true };
+  };
+  await controller.check();
+  const install = f.document.querySelector('#startup-install-git');
+  const check = f.document.querySelector('[data-startup=check]');
+  install.click(); await f.settle();
+  assert.equal(installs, 1); assert.equal(install.hidden, true); assert.equal(install.disabled, true);
+  assert.match(f.document.querySelector('#startup-components-help').textContent, /сам проверит/);
+  install.click(); await f.settle(); assert.equal(installs, 1);
+  installed = true; await next();
+  assert.equal(install.hidden, true); assert.equal(install.disabled, true);
+  assert.equal(f.document.querySelector('#startup-components-status').textContent, 'Компонент Apple установлен');
+  assert.equal(f.document.querySelector('#startup-error').hidden, true);
+  assert.equal(prepares, 0); assert.equal(check.disabled, false);
+  check.click(); await f.settle();
+  assert.equal(prepares, 1); assert.equal(installs, 1);
+  assert.equal(f.document.querySelector('#startup-components-status').textContent, 'Компоненты готовы');
+  assert.equal(f.document.querySelector('#startup-tunnel-body').hidden, false);
+});
+test('accepted Apple request remains protected across errors and a failed launch permits retry', async t => {
+  const f = await fixture(t, { account: 'signed-in', phase: 'error', gitInstallationRequested: true });
+  const install = f.document.querySelector('#startup-install-git');
+  assert.equal(install.hidden, true); assert.equal(install.disabled, true);
+  install.click(); await f.settle(); assert.deepEqual(f.calls, []);
+  f.emit({ gitInstallationRequested: false });
+  assert.equal(install.hidden, false); assert.equal(install.disabled, false);
+  install.click(); await f.settle(); assert.deepEqual(f.calls, ['install-git']);
 });
