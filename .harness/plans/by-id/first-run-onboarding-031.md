@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 107,
+  "plan_revision": 109,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-onboarding-031",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Закрыть first-run-onboarding-031 по прямому поручению пользователя: зафиксировать достигнутый результат macOS, передать невыполненные проверки Windows 11 другому агенту, согласовать README и весь комплект документации с релизом 0.6.40 и обновить GitHub.",
   "acceptance_criteria": [
     "Сохранены все выполненные задачи и их commits, принятые пользователем результаты macOS и ограничения доказательств.",
@@ -1957,8 +1957,8 @@
       }
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-onboarding-031",
         "task_id": "DOCS",
@@ -2108,10 +2108,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: first-run-onboarding-031
 Current Task: нет
-Revision: 107
+Revision: 109
 
 ## Цель
 
@@ -2306,8 +2306,8 @@ Revision: 107
   - Git Commit: [DONE] docs: record computer use trial and later authorization
   - Reference: first-run-onboarding-031 / D001 / implementation
   - Файлы: docs/CLEAN_INSTALL.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: update first-run project documentation
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: update first-run project documentation
   - Reference: first-run-onboarding-031 / DOCS / implementation
   - Файлы: README.md, AGENTS.md, docs/CLEAN_INSTALL.md, docs/CONTEXT_DELIVERY.md, docs/DECISIONS.md, docs/DOCUMENTATION_INDEX.md, docs/MODULES.md, docs/PRODUCT.md, docs/PROJECT_ARCHIVE.md, docs/RELEASE.md, docs/SOURCE_WORKSPACES.md, docs/TRANSFER_TO_WINDOWS.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/WORKSPACE_SETUP.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/design/session-plan-navigation.md, docs/modules/first-run-onboarding.md, docs/modules/project-doctor.md, docs/modules/runtime-lifecycle.md, docs/modules/session-opening-performance.md, docs/modules/session-owned-plans.md, docs/modules/workflow-kit-recovery.md, docs/modules/workspace-sessions.md
 

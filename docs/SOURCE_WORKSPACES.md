@@ -16,18 +16,18 @@ Project ID нового проекта: `cf944136-d1fc-4bd5-9ea0-e46d1fe230e7`. 
 
 | Материал | Для чего читать |
 | --- | --- |
-| [AGENTS.md](/Users/oleksandroliinyk/VSCODE/WF001/AGENTS.md) | Границы работы с исходным проектом |
-| [Спецификация](/Users/oleksandroliinyk/VSCODE/WF001/project-workflow-kit-specification.md) | Полные требования к установке, планам, Git и восстановлению |
-| [Продукт](/Users/oleksandroliinyk/VSCODE/WF001/docs/PRODUCT.md) | Создание проекта, подключение существующего, UI-состояния |
-| [Архитектура](/Users/oleksandroliinyk/VSCODE/WF001/docs/architecture/ARCHITECTURE.md) | Ядро, JSON-ответы, транзакции и recovery |
-| [Проверки](/Users/oleksandroliinyk/VSCODE/WF001/docs/VERIFICATION.md) | Что проверялось и где нужны реальные пользовательские подтверждения |
-| [Исходный протокол kit](/Users/oleksandroliinyk/VSCODE/WF001/kit/WORKFLOW.md) | Канонические правила переносимого комплекта |
-| [CLI](/Users/oleksandroliinyk/VSCODE/WF001/kit/cli.mjs) | inspect/install/status/doctor/recover и управляемые команды |
-| [Установщик](/Users/oleksandroliinyk/VSCODE/WF001/kit/lib/installer.mjs) | Конфликты, сохранение существующих файлов, установка и переподключение |
-| [Recovery](/Users/oleksandroliinyk/VSCODE/WF001/kit/lib/recovery.mjs) | Полный пакет из выбранных документов, плана и Git |
-| [Состояния и действия](/Users/oleksandroliinyk/VSCODE/WF001/kit/lib/actions.mjs) | Scope, task:start, изменение плана и конфигурации |
-| [SwiftUI AppModel](/Users/oleksandroliinyk/VSCODE/WF001/Sources/WorkflowStudio/AppModel.swift) | Пример подключения UI к ядру; не обязательный стек нового UI |
-| [Windows](/Users/oleksandroliinyk/VSCODE/WF001/docs/WINDOWS.md) | Прежняя упаковка для Windows и ограничения её проверки |
+| AGENTS.md — `/Users/oleksandroliinyk/VSCODE/WF001/AGENTS.md` | Границы работы с исходным проектом |
+| Спецификация — `/Users/oleksandroliinyk/VSCODE/WF001/project-workflow-kit-specification.md` | Полные требования к установке, планам, Git и восстановлению |
+| Продукт — `/Users/oleksandroliinyk/VSCODE/WF001/docs/PRODUCT.md` | Создание проекта, подключение существующего, UI-состояния |
+| Архитектура — `/Users/oleksandroliinyk/VSCODE/WF001/docs/architecture/ARCHITECTURE.md` | Ядро, JSON-ответы, транзакции и recovery |
+| Проверки — `/Users/oleksandroliinyk/VSCODE/WF001/docs/VERIFICATION.md` | Что проверялось и где нужны реальные пользовательские подтверждения |
+| Исходный протокол kit — `/Users/oleksandroliinyk/VSCODE/WF001/kit/WORKFLOW.md` | Канонические правила переносимого комплекта |
+| CLI — `/Users/oleksandroliinyk/VSCODE/WF001/kit/cli.mjs` | inspect/install/status/doctor/recover и управляемые команды |
+| Установщик — `/Users/oleksandroliinyk/VSCODE/WF001/kit/lib/installer.mjs` | Конфликты, сохранение существующих файлов, установка и переподключение |
+| Recovery — `/Users/oleksandroliinyk/VSCODE/WF001/kit/lib/recovery.mjs` | Полный пакет из выбранных документов, плана и Git |
+| Состояния и действия — `/Users/oleksandroliinyk/VSCODE/WF001/kit/lib/actions.mjs` | Scope, task:start, изменение плана и конфигурации |
+| SwiftUI AppModel — `/Users/oleksandroliinyk/VSCODE/WF001/Sources/WorkflowStudio/AppModel.swift` | Пример подключения UI к ядру; не обязательный стек нового UI |
+| Windows — `/Users/oleksandroliinyk/VSCODE/WF001/docs/WINDOWS.md` | Прежняя упаковка для Windows и ограничения её проверки |
 
 Связанные исходники: `kit/lib/plan.mjs`, `validate.mjs`, `transaction.mjs`, `git.mjs`, `git-hooks.mjs`, `common.mjs`, `platform.mjs`, `installation-files.mjs`, `kit/schemas/`, `kit/templates/`. Регрессии: `tests/install.test.mjs`, `workflow.test.mjs`, `recovery.test.mjs`, `windows.test.mjs` и `scripts/demo-workflow.mjs`.
 
@@ -37,18 +37,18 @@ Project ID нового проекта: `cf944136-d1fc-4bd5-9ea0-e46d1fe230e7`. 
 
 | Материал | Для чего читать |
 | --- | --- |
-| [AGENTS.md](</Users/oleksandroliinyk/VSCODE/Codex Local Mac/AGENTS.md>) | Инструкции исходного workspace |
-| [Архитектура](</Users/oleksandroliinyk/VSCODE/Codex Local Mac/docs/architecture/ARCHITECTURE.md>) | Python MCP, loopback и secure tunnel |
-| [Настройка Mac](</Users/oleksandroliinyk/VSCODE/Codex Local Mac/docs/MACOS_SETUP.md>) | Зависимости, подключение ChatGPT, управление службами |
-| [Приёмка](</Users/oleksandroliinyk/VSCODE/Codex Local Mac/docs/ACCEPTANCE.md>) | Реальные локальные и Safari-проверки |
-| [Проверка контекста](</Users/oleksandroliinyk/VSCODE/Codex Local Mac/docs/CONTEXT_PROBE.md>) | Полный read-only пакет и история отменённой диагностики |
-| [Канонический MCP skill](</Users/oleksandroliinyk/VSCODE/Codex Local Mac/mac-codex-local/skills/local-computer/SKILL.md>) | Последовательность действий агента и пределы доказательств |
-| [Управление службами](</Users/oleksandroliinyk/VSCODE/Codex Local Mac/mac-codex-local/control.py>) | setup/start/status/stop, readiness и владение процессами |
-| [MCP tools](</Users/oleksandroliinyk/VSCODE/Codex Local Mac/mac-codex-local/mcp/bridge_mcp.py>) | Сервер, tool schemas, instructions и read-only контекст |
-| [ContextPacket](</Users/oleksandroliinyk/VSCODE/Codex Local Mac/mac-codex-local/server/context_packet.py>) | Полный пакет, facts, размер и SHA-256 без журнала ACK |
-| [Файлы и процессы](</Users/oleksandroliinyk/VSCODE/Codex Local Mac/mac-codex-local/server/bridge_server.py>) | Основной bridge runtime |
-| [Локальные исправления workflow](</Users/oleksandroliinyk/VSCODE/Codex Local Mac/docs/WORKFLOW_FIXES.md>) | История исправления plan:apply и незавершённых транзакций |
-| [Windows-комплект](</Users/oleksandroliinyk/VSCODE/Codex Local Mac/Windows-Codex-Local/START_HERE.md>) | Отдельный переносимый источник для будущего Windows-этапа |
+| AGENTS.md — `/Users/oleksandroliinyk/VSCODE/Codex Local Mac/AGENTS.md` | Инструкции исходного workspace |
+| Архитектура — `/Users/oleksandroliinyk/VSCODE/Codex Local Mac/docs/architecture/ARCHITECTURE.md` | Python MCP, loopback и secure tunnel |
+| Настройка Mac — `/Users/oleksandroliinyk/VSCODE/Codex Local Mac/docs/MACOS_SETUP.md` | Зависимости, подключение ChatGPT, управление службами |
+| Приёмка — `/Users/oleksandroliinyk/VSCODE/Codex Local Mac/docs/ACCEPTANCE.md` | Реальные локальные и Safari-проверки |
+| Проверка контекста — `/Users/oleksandroliinyk/VSCODE/Codex Local Mac/docs/CONTEXT_PROBE.md` | Полный read-only пакет и история отменённой диагностики |
+| Канонический MCP skill — `/Users/oleksandroliinyk/VSCODE/Codex Local Mac/mac-codex-local/skills/local-computer/SKILL.md` | Последовательность действий агента и пределы доказательств |
+| Управление службами — `/Users/oleksandroliinyk/VSCODE/Codex Local Mac/mac-codex-local/control.py` | setup/start/status/stop, readiness и владение процессами |
+| MCP tools — `/Users/oleksandroliinyk/VSCODE/Codex Local Mac/mac-codex-local/mcp/bridge_mcp.py` | Сервер, tool schemas, instructions и read-only контекст |
+| ContextPacket — `/Users/oleksandroliinyk/VSCODE/Codex Local Mac/mac-codex-local/server/context_packet.py` | Полный пакет, facts, размер и SHA-256 без журнала ACK |
+| Файлы и процессы — `/Users/oleksandroliinyk/VSCODE/Codex Local Mac/mac-codex-local/server/bridge_server.py` | Основной bridge runtime |
+| Локальные исправления workflow — `/Users/oleksandroliinyk/VSCODE/Codex Local Mac/docs/WORKFLOW_FIXES.md` | История исправления plan:apply и незавершённых транзакций |
+| Windows-комплект — `/Users/oleksandroliinyk/VSCODE/Codex Local Mac/Windows-Codex-Local/START_HERE.md` | Отдельный переносимый источник для будущего Windows-этапа |
 
 В снимке 11.09.2026 macOS MCP публиковал 47 tools: 46 основных и read-only workflow_context_recover. Экспериментальные ACK/status/hook tools удалены по поручению пользователя 11.09.2026. Ранние разделы с числами 46 и 50 описывают прежние этапы. Перед реализацией проверить текущий tools/list. Python-окружение находится в `mac-codex-local/.venv`, требования — `mac-codex-local/requirements.txt`; их не копировать целиком в Git.
 
