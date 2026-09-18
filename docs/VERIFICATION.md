@@ -1528,3 +1528,12 @@ probe/install запрещены в fixture. Результаты общего s
 R003: release-all.test.mjs — 4 PASS, включая реальную форму package.json после
 pruning и отказ при неверном main. Полный suite и Electron smoke задачи V001
 завершились успешно; исходный smoke также завершился с exit 0.
+
+R002 / 0.6.41: `npm run build` завершился с exit 0 и последовательно выпустил
+macOS arm64 и Windows x64. Проверены PE/Node/runtime SHA Windows, нативный helper,
+все упакованные src/resources, runtime package.json, целостность обоих ZIP,
+app.asar внутри ZIP и контрольные суммы копий в Downloads. Постоянный Mac app
+сохранил device 16777230 / inode 398344301 и получил версию 0.6.41.
+Evidence: `.harness/runtime/033-build.log`,
+`.harness/runtime/releases/0.6.41/release-manifest.json`.
+Запуск новой сборки и пользовательские проверки в госте не выполнялись.

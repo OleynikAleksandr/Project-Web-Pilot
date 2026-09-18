@@ -250,3 +250,9 @@ source-verification.json,release-manifest.json}. Работающее прило
 состав и версия сверяются до общего manifest. Промежуточный macOS ZIP от
 build:mac ещё не означает готовность пары. Итог: два ZIP, SHA256SUMS.txt,
 INSTALL.txt и release-manifest.json в ~/Downloads/WebPilot-<version>/.
+
+R002 завершён: единый парный выпуск 0.6.41 создан командой `npm run build`.
+Оба ZIP доставлены в ~/Downloads/WebPilot-0.6.41/ и сверены. Windows включает
+native first-run worker, общий мастер и комплектный Git; macOS app обновлён
+по постоянному пути с сохранением identity. Общий manifest фиксирует отсутствие
+native Windows/clean VM приёмки; пользователь выполняет её самостоятельно.

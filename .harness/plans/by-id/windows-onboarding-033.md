@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 22,
+  "plan_revision": 24,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
@@ -400,8 +400,8 @@
       }
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "windows-onboarding-033",
         "task_id": "R002",
@@ -502,7 +502,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 22
+Revision: 24
 
 ## Цель
 
@@ -553,8 +553,8 @@ Revision: 22
   - Git Commit: [DONE] fix: сверять runtime manifest после нормализации упаковщиком
   - Reference: windows-onboarding-033 / R003 / implementation
   - Файлы: scripts/release-all.mjs, tests/release-all.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/RELEASE.md
-- [TODO] R002: Собрать и проверить обе поставки 0.6.41 — Ожидает
-  - Git Commit: [PENDING] docs: Собрать и проверить обе поставки 0.6.41
+- [DONE] R002: Собрать и проверить обе поставки 0.6.41 — Завершено
+  - Git Commit: [DONE] docs: Собрать и проверить обе поставки 0.6.41
   - Reference: windows-onboarding-033 / R002 / implementation
   - Файлы: docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md, docs/RELEASE.md, docs/CLEAN_INSTALL.md, docs/TRANSFER_TO_WINDOWS.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
