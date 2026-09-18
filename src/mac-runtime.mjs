@@ -6,6 +6,11 @@ import { createHash } from 'node:crypto';
 import { execFile as execFileCallback } from 'node:child_process';
 import { promisify } from 'node:util';
 const execFile=promisify(execFileCallback);
+const TUNNEL_SETUP_ERRORS = {
+ MAC_TUNNEL_PROMPT_FAILED: 'Не удалось открыть окно ввода подключения. Обновите Web Pilot и повторите ввод. Данные подключения не сохранены.',
+ MAC_TUNNEL_INVALID_DATA: 'Проверьте формат tunnel_id и ключа и повторите ввод. Данные подключения не сохранены.',
+ MAC_TUNNEL_SETUP_FAILED: 'Не удалось завершить настройку подключения. Повторите ввод. Если ошибка повторяется, сообщите разработчику. Действующее подключение автоматически не заменяется.',
+};
 
 export const MAC_RUNTIME_CONTRACT=2;
 export const MAC_RUNTIME_FOLDER='Codex-Local-Mac';
@@ -95,8 +100,13 @@ export class MacRuntimeBootstrap {
    if (value.cancelled === true) return { cancelled: true };
    if (value.configured === true) return { configured: true };
    throw new Error('Unexpected setup result');
-  } catch {
-   const error = new MacRuntimeError('MAC_TUNNEL_SETUP_FAILED', 'Не удалось сохранить подключение. Проверьте tunnel_id и ключ и повторите ввод. Действующее подключение автоматически не заменяется.');
+  } catch (failure) {
+   let code = 'MAC_TUNNEL_SETUP_FAILED';
+   try {
+    const report = JSON.parse(failure.stderr);
+    if (report?.ok === false && Object.hasOwn(TUNNEL_SETUP_ERRORS, report.code)) code = report.code;
+   } catch { /* Only the worker's known codes may cross the secret-input boundary. */ }
+   const error = new MacRuntimeError(code, TUNNEL_SETUP_ERRORS[code]);
    error.publicMessage = error.message; throw error;
   }
  }

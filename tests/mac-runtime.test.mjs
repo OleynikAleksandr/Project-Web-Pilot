@@ -136,3 +136,33 @@ test('unknown preferred external Mac runtime remains untouched and never execute
  await assert.rejects(b.ensure(root),{code:'MAC_RUNTIME_EXTERNAL_MODIFIED'});
  assert.equal(calls,0);assert.equal(await fs.readFile(path.join(folder,'control.py'),'utf8'),'unknown custom control');
 });
+
+test('tunnel setup distinguishes native prompt failures, invalid input and unknown errors without exposing secrets', async t => {
+ const root=await fixture(t),folder=path.join(root,'runtime');
+ await fs.mkdir(path.join(folder,'.venv','bin'),{recursive:true});
+ await fs.copyFile(control,path.join(folder,'control.py'));
+ await fs.writeFile(path.join(folder,'.venv','bin','python3'),'fixture');
+ let result, failure;
+ const b=new MacRuntimeBootstrap({payloadFile:path.join(root,'unused.zip'),controlSourceFile:control,dataDir:path.join(root,'app'),
+  preferredFolder:folder,platform:'darwin',environment:{FIXTURE:'true'},execute:async(file,args,options)=>{
+   assert.equal(args.at(-1),fileURLToPath(new URL('../resources/runtime-control/mac-first-run.py',import.meta.url)));
+   assert.equal(options.env.WEB_PILOT_RUNTIME_ROOT,folder);
+   if(failure)throw failure;
+   return {stdout:JSON.stringify(result)};
+  }});
+ for(const [stderr,code,copy] of [
+  [JSON.stringify({ok:false,code:'MAC_TUNNEL_PROMPT_FAILED'}),'MAC_TUNNEL_PROMPT_FAILED',/открыть окно/],
+  [JSON.stringify({ok:false,code:'MAC_TUNNEL_INVALID_DATA'}),'MAC_TUNNEL_INVALID_DATA',/формат tunnel_id/],
+  ['private-command sk-fixture-secret','MAC_TUNNEL_SETUP_FAILED',/завершить настройку/],
+  [JSON.stringify({ok:false,code:'sk-fixture-secret',error:'private-command'}),'MAC_TUNNEL_SETUP_FAILED',/завершить настройку/],
+  [JSON.stringify({ok:true,code:'MAC_TUNNEL_PROMPT_FAILED'}),'MAC_TUNNEL_SETUP_FAILED',/завершить настройку/],
+ ]){
+  failure=Object.assign(new Error('private-command'),{stderr,stdout:'sk-fixture-secret'});
+  await assert.rejects(b.configureTunnel(),error=>{
+   assert.equal(error.code,code);assert.match(error.publicMessage,copy);
+   assert.doesNotMatch(error.publicMessage,/sk-fixture|private-command/);return true;
+  });
+ }
+ failure=null;result={cancelled:true};assert.deepEqual(await b.configureTunnel(),{cancelled:true});
+ result={configured:true};assert.deepEqual(await b.configureTunnel(),{configured:true});
+});
