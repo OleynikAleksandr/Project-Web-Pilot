@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 30,
+  "plan_revision": 32,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-corrections-032",
@@ -486,8 +486,8 @@
         "suite"
       ],
       "expected_commit_message": "fix: guide tunnel setup through completed steps",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-corrections-032",
         "task_id": "U003",
@@ -722,7 +722,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-corrections-032
 Current Task: нет
-Revision: 30
+Revision: 32
 
 ## Цель
 
@@ -780,8 +780,8 @@ Revision: 30
   - Git Commit: [DONE] feat: connect clipboard onboarding to readiness and lifecycle
   - Reference: first-run-corrections-032 / A004 / implementation
   - Файлы: src/main.mjs, src/startup-readiness.mjs, tests/startup-readiness.test.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
-- [TODO] U003: Сделать шаги туннеля последовательными и объяснить копирование — Ожидает
-  - Git Commit: [PENDING] fix: guide tunnel setup through completed steps
+- [DONE] U003: Сделать шаги туннеля последовательными и объяснить копирование — Завершено
+  - Git Commit: [DONE] fix: guide tunnel setup through completed steps
   - Reference: first-run-corrections-032 / U003 / implementation
   - Файлы: src/ui/index.html, src/ui/startup.mjs, tests/startup-ui.test.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 - [TODO] U004: Показывать добавление плагина как помощь по необходимости — Ожидает

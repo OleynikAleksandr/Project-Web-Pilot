@@ -1,7 +1,7 @@
 const INDEPENDENT = new Set(['chat', 'signup', 'help', 'keys', 'tunnels', 'plugins', 'copy-diagnostics']);
 export function createStartupView({ document, api }) {
   const $ = id => document.getElementById(id), panel = $('startup-panel');
-  let current = null, pending = false, signup = false, localError = null, copied = false;
+  let current = null, pending = false, signup = false, localError = null, copied = false, lastVisibleStep = null;
   function render(state) {
     current = state;
     const s = state?.startup;
@@ -53,18 +53,35 @@ export function createStartupView({ document, api }) {
     $('startup-install-git').hidden = !!s.git || waitingApple;
     $('startup-tunnel-status').textContent = s.tunnel ? 'Служба подключения работает' : !local ? 'После подготовки компьютера' : 'Нужна однократная настройка';
     $('startup-tunnel-body').hidden = !logged || !local || s.tunnel;
+    const tunnelStep = s.clipboard?.step ?? 'tunnel';
+    $('startup-tunnel-create').hidden = tunnelStep !== 'tunnel';
+    $('startup-tunnel-key').hidden = tunnelStep !== 'key';
+    $('startup-tunnel-progress').textContent = {
+      tunnel: 'Скопируйте tunnel_id — следующий шаг откроется автоматически.',
+      key: 'Идентификатор получен. Теперь нужен личный ключ.',
+      connecting: 'Данные получены. Проверяем подключение…',
+      done: 'Подключение проверено.',
+    }[tunnelStep] ?? '';
+    $('startup-tunnel-input-help').hidden = tunnelStep === 'connecting';
     $('startup-project-body').hidden = !logged || !ready;
     $('startup-project-wait').hidden = logged && ready;
-    $('startup-error').hidden = !(localError || s.error);
-    $('startup-error').textContent = localError || s.error || '';
+    $('startup-error').hidden = !(localError || s.error || s.clipboard?.error);
+    $('startup-error').textContent = localError || s.error || s.clipboard?.error || '';
     for (const button of panel.querySelectorAll('[data-startup]')) {
       const action = button.dataset.startup;
       button.disabled = ((opening || pending) && ['chat', 'signup', 'plugins'].includes(action))
         || (pending && !INDEPENDENT.has(action))
         || (s.busy && ['check', 'install-git', 'configure-tunnel', 'continue'].includes(action))
+        || (action === 'configure-tunnel' && tunnelStep === 'connecting')
         || (action === 'install-git' && (!!s.git || waitingApple));
     }
     $('startup-continue').disabled ||= !logged || !ready;
+    const visibleStep = panel.hidden || !logged ? null : ready ? 'project' : local ? tunnelStep : null;
+    if (lastVisibleStep && visibleStep && visibleStep !== lastVisibleStep) {
+      const target = visibleStep === 'project' ? $('startup-project-body') : $('startup-tunnel-progress');
+      target.scrollIntoView?.({ block: 'nearest' });
+    }
+    lastVisibleStep = visibleStep;
   }
   async function perform(action) {
     if (pending && !INDEPENDENT.has(action)) return;

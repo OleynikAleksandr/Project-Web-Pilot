@@ -161,3 +161,37 @@ test('accepted Apple request remains protected across errors and a failed launch
   assert.equal(install.hidden, false); assert.equal(install.disabled, false);
   install.click(); await f.settle(); assert.deepEqual(f.calls, ['install-git']);
 });
+
+
+test('copied credentials advance the visible tunnel instructions without completion buttons', async t => {
+  const f = await fixture(t, { account: 'signed-in', git: true, runtime: true });
+  const create = f.document.querySelector('#startup-tunnel-create'), key = f.document.querySelector('#startup-tunnel-key');
+  const input = f.document.querySelector('[data-startup=configure-tunnel]');
+  assert.equal(create.hidden, false); assert.equal(key.hidden, true);
+  assert.match(create.textContent, /Command\+C.*Ctrl\+C/s);
+  f.emit({ clipboard: { step: 'key', hasTunnelId: true } });
+  assert.equal(create.hidden, true); assert.equal(key.hidden, false); assert.equal(input.disabled, false);
+  assert.match(key.textContent, /API keys/); assert.match(key.textContent, /ID уже сохранён/);
+  f.emit({ clipboard: { step: 'connecting', hasTunnelId: true }, busy: true });
+  assert.equal(create.hidden, true); assert.equal(key.hidden, true); assert.equal(input.disabled, true);
+  f.emit({ clipboard: { step: 'key', hasTunnelId: true, error: 'Проверьте ключ.' }, busy: false });
+  assert.equal(key.hidden, false); assert.equal(input.disabled, false);
+  assert.equal(f.document.querySelector('#startup-error').textContent, 'Проверьте ключ.');
+  input.click(); await f.settle(); assert.deepEqual(f.calls, ['configure-tunnel']);
+  assert.equal(f.document.querySelectorAll('#startup-panel input').length, 0);
+  f.emit({ tunnel: true, clipboard: { step: 'done' } });
+  assert.equal(f.document.querySelector('#startup-tunnel-body').hidden, true);
+  assert.equal(f.document.querySelector('#startup-project-body').hidden, false);
+});
+
+
+test('automatic step transition keeps its next instruction visible without repeated scrolling', async t => {
+  const f = await fixture(t, { account: 'signed-in', git: true, runtime: true });
+  const scrolled = [];
+  f.document.querySelector('#startup-tunnel-progress').scrollIntoView = () => scrolled.push('key');
+  f.document.querySelector('#startup-project-body').scrollIntoView = () => scrolled.push('project');
+  f.emit({ clipboard: { step: 'key' } }); f.emit({ clipboard: { step: 'key' } });
+  f.emit({ tunnel: true, clipboard: { step: 'done' } });
+  assert.deepEqual(scrolled, ['key', 'project']);
+  assert.equal(f.document.querySelector('#startup-tunnel-input').closest('ol'), null);
+});
