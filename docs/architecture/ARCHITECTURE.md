@@ -1117,3 +1117,7 @@ Info.plist и app.asar подтверждают версию. Filesystem identit
 source-verification.json,release-manifest.json}. Работающее приложение не
 перезапускалось; для применения требуется полный выход и новый запуск.
 Пользовательская проверка этого изменения и нативный Windows-запуск ещё предстоят.
+
+## Windows native tunnel worker — 0.6.41 / W001
+
+resources/runtime-control/windows-first-run.py собирает ввод в отдельных WinForms-диалогах либо принимает ограниченный JSON через stdin. До изменения служб проверяет оба значения; блокировка и управление процессами принадлежат существующему Windows control. Сохранение использует DPAPI CurrentUser, при ошибке записи прежние private files восстанавливаются. Renderer получает только configured/cancelled либо известный код ошибки.
