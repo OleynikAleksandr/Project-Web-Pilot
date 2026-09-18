@@ -25,7 +25,7 @@
 
 ## Первый запуск на чистой системе — scope 031
 
-Согласован контракт [Первый запуск Web Pilot на чистой системе](modules/first-run-onboarding.md): владелец Release & Local Installation, смежные части Runtime Lifecycle, Workspace Setup и Workspace & Sessions. 18.09.2026 выпущена **0.6.40** для macOS arm64 и Windows x64; ZIP находятся в ~/Downloads/WebPilot-0.6.40/. Пользователь подтвердил успешную проверку 0.6.39. При первом создании проекта папка не задана: сначала «Выбрать расположение папки для проектов», затем имя. Явно выбранная папка сохраняется для следующих проектов и перезапусков; «Изменить расположение папки для проектов» заменяет её. Отмена сохраняет прежний выбор. Source, Electron fixture и упаковки проверены; пользовательская проверка нового изменения, Windows 11 ARM64 с x64-эмуляцией и нативная Windows x64 остаются отдельными шагами. Прочие мелкие замечания отложены по поручению пользователя. Исправления 0.6.38–0.6.40 — first-run-corrections-032; реестр — docs/CLEAN_INSTALL.md.
+Согласован контракт [Первый запуск Web Pilot на чистой системе](modules/first-run-onboarding.md): владелец Release & Local Installation, смежные части Runtime Lifecycle, Workspace Setup и Workspace & Sessions. 18.09.2026 выпущена **0.6.41** для macOS arm64 и Windows x64 одной командой `npm run build`; ZIP находятся в ~/Downloads/WebPilot-0.6.41/. Windows теперь получает общий мастер первого запуска: комплектные Python/Git/MCP, туннель, инструкция Codex Local Windows MCP в ChatGPT и первый проект. Секреты сохраняются в существующем защищённом хранилище Windows; ручной ввод использует системный диалог. macOS сохраняет прежний путь, номер синхронизирован. Выбор расположения проектов из 0.6.40 сохранён. Исходники и упаковки сверены; реальный запуск, подключение и все проверки в гостевых системах пользователь проводит сам. Computer Use и запуск VM агентом прекращены по его прямому поручению. Исправления 0.6.38–0.6.40 — first-run-corrections-032; реестр — docs/CLEAN_INSTALL.md.
 
 ## Подготовка компонентов — актуальное исправление 0.6.37
 
@@ -39,3 +39,5 @@
 ## Передача дальнейшей проверки Windows
 
 18.09.2026 пользователь поручил закрыть план first-run-onboarding-031 и передал испытания Windows 11 другому агенту. Итог macOS и границы доказательств — docs/CLEAN_INSTALL.md; условия и оставшиеся критерии Windows — docs/TRANSFER_TO_WINDOWS.md. План first-run-corrections-032 принадлежит другой сессии и этим закрытием не изменяется.
+
+Scope windows-onboarding-033: общий `startup-platform.mjs` связывает WindowsRuntimeBootstrap, StartupReadiness и WorkspaceSetup; Windows получает комплектный Git. Release & Local Installation владеет `scripts/release-all.mjs`, сверкой пары и общим manifest. Контракт — docs/modules/first-run-onboarding.md.

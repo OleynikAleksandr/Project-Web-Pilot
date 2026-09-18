@@ -35,7 +35,7 @@
 | docs/modules/workspace-sessions.md | Specification проектов, Chat/Work sessions, session tree, переходов после scope, оформления и сохранения геометрии интерфейса |
 | docs/SOURCE_WORKSPACES.md | Исходные проекты, пути, версии и официальные ссылки |
 | docs/VERIFICATION.md | Проверки, release evidence и границы пользовательской приёмки |
-| docs/RELEASE.md | Постоянный macOS app, Finder-алиас, отдельный ZIP и обязательная проверка доставки |
+| docs/RELEASE.md | Парный выпуск macOS/Windows, постоянный macOS app, Finder-алиас, ZIP и проверка доставки |
 | docs/CLEAN_INSTALL.md | Стенд Clean/Test macOS/Windows, реестр наблюдений первого запуска, принятый чистый путь 0.6.38, принятая 0.6.39, поставка 0.6.40 и границы доказательств |
 | docs/TRANSFER_TO_WINDOWS.md | Актуальная Windows x64 поставка и передача испытаний Windows 11 другому агенту |
 | docs/WORKSPACE_SETUP.md | Создание/подключение workspace и install/upgrade Workflow Kit |

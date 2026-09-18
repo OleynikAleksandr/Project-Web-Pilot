@@ -1533,7 +1533,7 @@ R002 / 0.6.41: `npm run build` завершился с exit 0 и последо�
 macOS arm64 и Windows x64. Проверены PE/Node/runtime SHA Windows, нативный helper,
 все упакованные src/resources, runtime package.json, целостность обоих ZIP,
 app.asar внутри ZIP и контрольные суммы копий в Downloads. Постоянный Mac app
-сохранил device 16777230 / inode 398344301 и получил версию 0.6.41.
+сохранил identity текущего build host: device 16777234 / inode 398344301; версия 0.6.41.
 Evidence: `.harness/runtime/033-build.log`,
 `.harness/runtime/releases/0.6.41/release-manifest.json`.
 Запуск новой сборки и пользовательские проверки в госте не выполнялись.
