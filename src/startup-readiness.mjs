@@ -97,7 +97,15 @@ export class StartupReadiness {
   }
   async prepare() {
     this.publish({ phase: 'preparing', runtime: false, tunnel: false });
-    const service = await this.prepareRuntime();
+    let service;
+    try { service = await this.prepareRuntime(); }
+    catch (error) {
+      // A tunnel start can fail while the local MCP keeps running. Re-observe it.
+      let current = null;
+      try { current = await this.inspectRuntime(); } catch { /* Unknown is not ready. */ }
+      this.publish({ runtime: !!current?.mcp?.ready, tunnel: false });
+      throw error;
+    }
     this.publish({ runtime: !!service?.mcp?.ready, tunnel: !!service?.tunnel?.ready && !!service?.tunnel?.configured,
       phase: !service?.mcp?.ready ? 'prepare' : service?.tunnel?.ready && service?.tunnel?.configured ? 'connected' : 'tunnel' });
   }

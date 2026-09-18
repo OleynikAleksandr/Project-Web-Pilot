@@ -66,7 +66,7 @@ export function createStartupView({ document, api }) {
     $('startup-project-body').hidden = !logged || !ready;
     $('startup-project-wait').hidden = logged && ready;
     $('startup-error').hidden = !(localError || s.error || s.clipboard?.error);
-    $('startup-error').textContent = localError || s.error || s.clipboard?.error || '';
+    $('startup-error').textContent = localError || s.clipboard?.error || s.error || '';
     for (const button of panel.querySelectorAll('[data-startup]')) {
       const action = button.dataset.startup;
       button.disabled = ((opening || pending) && ['chat', 'signup', 'plugins'].includes(action))

@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 39,
+  "plan_revision": 41,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-corrections-032",
@@ -624,8 +624,8 @@
         "suite"
       ],
       "expected_commit_message": "fix: preserve local readiness after tunnel connection failure",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-corrections-032",
         "task_id": "A005",
@@ -760,7 +760,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-corrections-032
 Current Task: нет
-Revision: 39
+Revision: 41
 
 ## Цель
 
@@ -834,8 +834,8 @@ Revision: 39
   - Git Commit: [DONE] fix: create first session directly from Chat or Work
   - Reference: first-run-corrections-032 / U006 / implementation
   - Файлы: src/ui/workspace-setup.mjs, tests/electron-smoke.mjs, tests/project-doctor-ui.test.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
-- [TODO] A005: Сохранять готовность компонентов после отказа туннеля — Ожидает
-  - Git Commit: [PENDING] fix: preserve local readiness after tunnel connection failure
+- [DONE] A005: Сохранять готовность компонентов после отказа туннеля — Завершено
+  - Git Commit: [DONE] fix: preserve local readiness after tunnel connection failure
   - Reference: first-run-corrections-032 / A005 / implementation
   - Файлы: src/startup-readiness.mjs, src/ui/startup.mjs, tests/startup-readiness.test.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 - [TODO] U007: Собрать и проверить 0.6.39 для пользовательского повтора — Ожидает

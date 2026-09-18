@@ -227,3 +227,49 @@ test('automatic credentials stay out of readiness state and success still requir
   assert.doesNotMatch(JSON.stringify(states), /sk-fixture|tunnel_fixture/);
   f.dispose();
 });
+
+
+test('failed automatic tunnel retains working MCP, captured ID and a usable next attempt', async t => {
+  const { TunnelClipboard } = await import('../src/tunnel-clipboard.mjs');
+  const { createStartupView } = await import('../src/ui/startup.mjs');
+  const { JSDOM } = await import('jsdom');
+  const fs = await import('node:fs/promises');
+  const dom = new JSDOM(await fs.readFile(new URL('../src/ui/index.html', import.meta.url), 'utf8'));
+  t.after(() => dom.window.close());
+  let copied = '', succeed = false;
+  const f = new StartupReadiness({ probeNode: async () => {}, probeGit: async () => true,
+    inspectRuntime: async () => ({ mcp: { ready: true }, tunnel: { configured: true, ready: false } }),
+    configureTunnel: async () => ({ configured: true }),
+    prepareRuntime: async () => { if (!succeed) throw new Error('fixture connection failed');
+      return { mcp: { ready: true }, tunnel: { configured: true, ready: true } }; },
+  });
+  const c = new TunnelClipboard({ readText: () => copied, configure: async input => {
+    await f.configure(input); if (!f.snapshot().tunnel) throw new Error('not ready');
+  } });
+  t.after(() => { c.dispose(); f.dispose(); });
+  await c.tick({ active: true });
+  copied = 'tunnel_fixture1234567890123456'; await c.tick({ active: true });
+  copied = 'sk-fixture-invalid1234567890'; await c.tick({ active: true });
+  assert.equal(f.snapshot().runtime, true); assert.equal(f.snapshot().tunnel, false);
+  await c.tick({ active: true, ready: f.snapshot().runtime });
+  assert.equal(c.snapshot().step, 'key'); assert.equal(c.snapshot().hasTunnelId, true);
+  const view = createStartupView({ document: dom.window.document, api: {} });
+  view.render({ startup: { ...f.snapshot(), active: true, account: 'signed-in', page: 'loaded', clipboard: c.snapshot() } });
+  assert.equal(dom.window.document.querySelector('#startup-tunnel-body').hidden, false);
+  assert.equal(dom.window.document.querySelector('[data-startup=configure-tunnel]').disabled, false);
+  assert.equal(dom.window.document.querySelector('#startup-error').textContent, c.snapshot().error);
+  succeed = true; copied = 'sk-fixture-correct1234567890'; await c.tick({ active: true });
+  assert.equal(f.snapshot().tunnel, true); assert.equal(c.snapshot().step, 'done');
+});
+
+test('failed post-error inspection cannot claim local or tunnel readiness', async () => {
+  let inspections = 0;
+  const f = new StartupReadiness({ probeNode: async () => {}, probeGit: async () => true,
+    inspectRuntime: async () => { if (++inspections > 1) throw new Error('unavailable');
+      return { mcp: { ready: true }, tunnel: { configured: false, ready: false } }; },
+    configureTunnel: async () => ({ configured: true }),
+    prepareRuntime: async () => { throw new Error('unavailable'); },
+  });
+  await f.configure(); assert.equal(f.snapshot().runtime, false); assert.equal(f.snapshot().tunnel, false);
+  f.dispose();
+});
