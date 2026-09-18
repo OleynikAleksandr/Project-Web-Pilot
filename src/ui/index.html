@@ -259,9 +259,9 @@ SOFTWARE.
       <section id="setup-panel" class="setup" aria-live="polite" hidden>
         <h2 id="setup-title">Новый проект</h2><p id="setup-intro" class="description"></p>
         <form id="setup-form">
-          <label for="setup-name">Имя проекта</label><input id="setup-name" autocomplete="off" maxlength="120" placeholder="Мой проект" required>
-          <label>Где создать папку</label><p id="setup-parent" class="path"></p><button id="setup-parent-button" type="button" class="secondary">Выбрать расположение…</button>
-          <button id="setup-preview" type="submit" class="primary">Продолжить</button>
+          <button id="setup-parent-button" type="button" class="secondary">Выбрать расположение папки для проектов</button><p id="setup-parent" class="path" hidden></p>
+          <label id="setup-name-label" for="setup-name" hidden>Имя проекта</label><input id="setup-name" autocomplete="off" maxlength="120" placeholder="Мой проект" required hidden disabled>
+          <button id="setup-preview" type="submit" class="primary" hidden>Продолжить</button>
         </form>
         <p id="setup-path" class="setup-path" hidden></p>
         <ul id="setup-checks" class="setup-checks"></ul><ul id="setup-issues" class="setup-issues"></ul>

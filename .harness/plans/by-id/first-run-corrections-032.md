@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 46,
+  "plan_revision": 48,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-corrections-032",
@@ -698,8 +698,8 @@
         "suite"
       ],
       "expected_commit_message": "fix: ask for projects location before project name",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-corrections-032",
         "task_id": "P001",
@@ -874,7 +874,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-corrections-032
 Current Task: нет
-Revision: 46
+Revision: 48
 
 ## Цель
 
@@ -958,8 +958,8 @@ Revision: 46
   - Git Commit: [DONE] fix: release onboarding usability improvements 0.6.39
   - Reference: first-run-corrections-032 / U007 / implementation
   - Файлы: package.json, package-lock.json, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md, docs/architecture/ARCHITECTURE.md
-- [TODO] P001: Сначала показывать выбор расположения папки для проектов, затем имя — Ожидает
-  - Git Commit: [PENDING] fix: ask for projects location before project name
+- [DONE] P001: Сначала показывать выбор расположения папки для проектов, затем имя — Завершено
+  - Git Commit: [DONE] fix: ask for projects location before project name
   - Reference: first-run-corrections-032 / P001 / implementation
   - Файлы: src/ui/index.html, src/ui/workspace-setup.mjs, tests/project-doctor-ui.test.mjs, docs/WORKSPACE_SETUP.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md
 - [TODO] P002: Убрать неявную папку и проверить создание через выбранное расположение — Ожидает

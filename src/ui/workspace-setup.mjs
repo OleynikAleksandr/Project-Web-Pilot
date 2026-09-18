@@ -1,9 +1,12 @@
 export function workspaceSetupView(action) {
   const $ = id => document.getElementById(id);
-  let last = null, pending = false, formKey = '', submitting = false;
+  let last = null, pending = false, formKey = '', submitting = false, focusForm = false;
   $('create-workspace').addEventListener('click', () => action('beginCreate'));
   $('setup-parent-button').addEventListener('click', () => action('chooseParent', $('setup-name').value));
-  $('setup-form').addEventListener('submit', event => { event.preventDefault(); action('previewNew', $('setup-name').value); });
+  $('setup-form').addEventListener('submit', event => {
+    event.preventDefault();
+    if (last?.setup?.parent && !pending) action('previewNew', $('setup-name').value);
+  });
   $('setup-cancel').addEventListener('click', () => action('cancelSetup'));
   $('setup-doctor').addEventListener('click', () => action('openDoctor'));
   $('setup-refresh').addEventListener('click', () => action('refreshSetup'));
@@ -27,13 +30,13 @@ export function workspaceSetupView(action) {
     $('projects').hidden = !!setup;
     $('context-card').hidden = !!setup;
     $('workspace-details').hidden = !!setup || !state.selected;
-    if (!setup) { formKey = ''; return; }
+    if (!setup) { formKey = ''; focusForm = false; return; }
     const busy = ['checking', 'applying'].includes(setup.phase);
     const form = setup.mode === 'new' && !setup.token && !setup.installed;
     $('setup-title').textContent = busy ? (setup.phase === 'checking' ? 'Проверяем папку' : 'Подготавливаем проект')
       : setup.ready ? 'Проект готов к открытию' : setup.mode === 'new' ? 'Новый проект' : 'Подключение проекта';
     $('setup-intro').textContent = busy ? 'Проверяем структуру, команды и контекст проекта. Это может занять несколько секунд.'
-      : form ? 'Начните с имени и места для новой папки.'
+      : form ? (setup.parent ? 'Теперь укажите имя проекта.' : 'Сначала выберите папку, в которой будут храниться проекты.')
       : setup.action === 'install' ? 'Добавим инструкции, документацию и план. Существующие файлы сохранятся.'
       : setup.action === 'reconnect' ? 'Восстановим локальные команды и проверки. План проекта сохранится.'
       : setup.action === 'upgrade' ? 'Обновим Workflow Kit до новой совместимой версии. План и пользовательские документы сохранятся.'
@@ -42,10 +45,20 @@ export function workspaceSetupView(action) {
     $('setup-form').hidden = !form;
     if (form) {
       const key = `${setup.parent}\n${setup.name ?? ''}`;
-      if (formKey !== key) { $('setup-name').value = setup.name ?? ''; formKey = key; }
-      $('setup-parent').textContent = setup.parent;
-      $('setup-name').disabled = busy || actionPending;
-      if (setup.phase === 'form' && document.activeElement === document.body) queueMicrotask(() => $('setup-name').focus());
+      const changed = formKey !== key, located = !!setup.parent;
+      if (changed) { $('setup-name').value = setup.name ?? ''; formKey = key; focusForm = true; }
+      $('setup-parent').textContent = setup.parent ?? '';
+      $('setup-parent').hidden = !located;
+      $('setup-name-label').hidden = !located;
+      $('setup-name').hidden = !located;
+      $('setup-name').disabled = !located || busy || actionPending;
+      $('setup-preview').hidden = !located;
+      $('setup-preview').disabled = !located || busy || actionPending;
+      $('setup-parent-button').disabled = busy || actionPending;
+      if (setup.phase === 'form' && !actionPending && (focusForm || document.activeElement === document.body)) {
+        focusForm = false;
+        queueMicrotask(() => $(located ? 'setup-name' : 'setup-parent-button').focus());
+      }
     }
     $('setup-path').hidden = !setup.workspace;
     $('setup-path').textContent = setup.workspace ?? '';

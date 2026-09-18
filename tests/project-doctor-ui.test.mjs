@@ -14,6 +14,22 @@ async function fixture(t, factory=projectDoctorView) {
   return {view,calls,$:id=>dom.window.document.getElementById(id)};
 }
 const state=()=>({projects:[{workspace:'/one',name:'Первый'},{workspace:'/two',name:'Второй'}],selected:{workspace:'/one'},settings:{workspace:'/one'},context:{},archives:[]});
+test('project form requests a location before exposing the name and continuation', async t => {
+  const f=await fixture(t,workspaceSetupView),s=state();
+  s.setup={phase:'form',mode:'new',parent:null,name:''};
+  f.view.render(s,false);
+  assert.equal(f.$('setup-parent-button').textContent,'Выбрать расположение папки для проектов');
+  assert.equal(f.$('setup-parent').textContent,'');assert.equal(f.$('setup-parent').hidden,true);
+  assert.equal(f.$('setup-name').hidden,true);assert.equal(f.$('setup-preview').hidden,true);
+  const Event=f.$('setup-form').ownerDocument.defaultView.Event;
+  f.$('setup-form').dispatchEvent(new Event('submit',{cancelable:true}));
+  assert.deepEqual(f.calls,[]);
+  f.$('setup-parent-button').click();assert.deepEqual(f.calls,[['chooseParent','']]);
+  s.setup.parent='/chosen/projects';f.view.render(s,false);await Promise.resolve();
+  assert.equal(f.$('setup-parent').textContent,'/chosen/projects');assert.equal(f.$('setup-name').hidden,false);
+  assert.equal(f.$('setup-name').disabled,false);assert.equal(f.$('setup-preview').hidden,false);
+  assert.equal(f.$('setup-name').ownerDocument.activeElement,f.$('setup-name'));
+});
 test('doctor waits for explicit action, selects exact project and reports successful recovery',async t=>{
   const f=await fixture(t);const s=state();f.view.render(s,false);assert.equal(f.calls.length,0);assert.equal(f.$('doctor-actions').hidden,true);
   f.$('doctor-run').click();assert.deepEqual(f.calls,[['runDoctor','/one']]);
