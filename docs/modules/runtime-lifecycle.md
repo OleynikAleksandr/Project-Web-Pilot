@@ -123,3 +123,7 @@ MacRuntimeBootstrap принимает эту точную поставляем�
 ## Автоматическое подключение — 0.6.39
 
 Во время активного macOS onboarding TunnelClipboard распознаёт новый ID, затем ключ. Начальное содержимое буфера игнорируется. MacRuntimeBootstrap.configureTunnel(credentials) передаёт ограниченный JSON в mac-first-run.py через stdin. Переданные поля не спрашиваются повторно; ручной ввод без credentials сохраняет нативные окна. Renderer и snapshot получают только прогресс, не ID/ключ. Живой рабочий tunnel автоматически не заменяется; configured без ready не завершает шаг. Выход из мастера прекращает чтение буфера. Runtime и profile форматы сохранены.
+
+## Windows first-run facade — scope 033
+
+Согласован Windows-мастер поверх существующего WindowsRuntimeBootstrap. Новый worker windows-first-run.py использует существующий Windows control и DPAPI; bootstrap передаёт секреты только приватным stdin, публикует несекретный результат и выдаёт проверенное окружение комплектного Git для Workflow Kit. Ввод собирается и проверяется до блокировки/остановки принадлежащих установке процессов. Чужие процессы не останавливаются. Платформенный StartupReadiness adapter оркестрирует ensure/status/start; второй runtime manager не создаётся.

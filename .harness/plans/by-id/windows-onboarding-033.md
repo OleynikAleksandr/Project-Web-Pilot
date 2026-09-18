@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 2,
+  "plan_revision": 4,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
@@ -103,8 +103,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "windows-onboarding-033",
         "task_id": "P001",
@@ -473,7 +473,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 2
+Revision: 4
 
 ## Цель
 
@@ -488,8 +488,8 @@ Revision: 2
 
 ## Микрозадачи
 
-- [TODO] P001: Уточнить контракт Windows первого запуска и парного релиза — Ожидает
-  - Git Commit: [PENDING] docs: Уточнить контракт Windows первого запуска и парного релиза
+- [DONE] P001: Уточнить контракт Windows первого запуска и парного релиза — Завершено
+  - Git Commit: [DONE] docs: Уточнить контракт Windows первого запуска и парного релиза
   - Reference: windows-onboarding-033 / P001 / implementation
   - Файлы: docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md, docs/DECISIONS.md, docs/modules/runtime-lifecycle.md, docs/RELEASE.md, docs/CLEAN_INSTALL.md
 - [TODO] W001: Добавить нативный защищённый ввод подключения Windows — Ожидает
