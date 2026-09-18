@@ -4,13 +4,13 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 51,
+  "plan_revision": 54,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-corrections-032",
   "execution_scope_status": "ACTIVE",
   "delivery_status": "IN_PROGRESS",
-  "objective": "После принятой 0.6.39 изменить создание проекта: явный выбор расположения папки для проектов перед именем; выпустить 0.6.40.",
+  "objective": "После принятой 0.6.39 убрать неявную папку при первом создании, затем запоминать последний явный выбор расположения для всех следующих проектов; выпустить 0.6.40.",
   "acceptance_criteria": [
     "Первый запуск 0.6.38 принят пользователем на абсолютно чистой macOS.",
     "Устранены повтор плана, неясные и лишние шаги туннеля/плагина/создания первого проекта.",
@@ -743,15 +743,52 @@
     },
     {
       "id": "P003",
-      "title": "Собрать и проверить 0.6.40 для macOS и Windows",
-      "why": "Собрать и проверить 0.6.40 для macOS и Windows",
+      "title": "Запоминать выбранную пользователем папку для всех следующих проектов",
+      "why": "Уточнение пользователя: выбор требуется только до первого сохранения, последующее изменение запоминается.",
       "dependencies": [
         "P002"
       ],
       "functional_paths": [
-        "package.json",
-        "package-lock.json",
+        "src/main.mjs",
+        "src/ui/workspace-setup.mjs",
         "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "docs/WORKSPACE_SETUP.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md",
+        "docs/modules/first-run-onboarding.md",
+        "docs/RELEASE.md",
+        "docs/TRANSFER_TO_WINDOWS.md"
+      ],
+      "acceptance_criteria": [
+        "До первого явного выбора parent пуст; после выбора он сохраняется в настройках и используется для следующих проектов и после перезапуска.",
+        "Кнопка изменения расположения обновляет общую папку; отмена сохраняет прежний выбор.",
+        "Выбор существующего проекта не переопределяет сохранённую папку; успешные Chat/Work создаются в последнем выборе."
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "expected_commit_message": "fix: remember explicitly selected projects location",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
+      "commit_ref": {
+        "scope_id": "first-run-corrections-032",
+        "task_id": "P003",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "P004",
+      "title": "Собрать и проверить 0.6.40 для macOS и Windows",
+      "why": "Собрать и проверить 0.6.40 для macOS и Windows",
+      "dependencies": [
+        "P003"
+      ],
+      "functional_paths": [
+        "package.json",
+        "package-lock.json"
       ],
       "documentation_paths": [
         "docs/WORKSPACE_SETUP.md",
@@ -773,7 +810,7 @@
       "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "first-run-corrections-032",
-        "task_id": "P003",
+        "task_id": "P004",
         "role": "implementation"
       }
     },
@@ -806,7 +843,8 @@
         "U007",
         "P001",
         "P002",
-        "P003"
+        "P003",
+        "P004"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -861,6 +899,11 @@
       "id": "b69c741a-4892-459c-be79-4a838826c874",
       "text": "18.09.2026 пользователь сообщил об успешной проверке 0.6.39. Поручил только короткое исправление: убрать заранее выбранную /Users/pilot/VSCODE, сначала одна опция «Выбрать расположение папки для проектов», затем ввод имени; собрать новый релиз. Прочие мелкие замечания отложены.",
       "recorded_at": "2026-09-18T08:38:04.235117+00:00"
+    },
+    {
+      "id": "58d57931-1d08-4b7f-a69f-89e1b115ddd0",
+      "text": "Уточнение 18.09.2026: пустая папка только до первого выбора. Явно выбранное расположение запоминается для всех новых проектов. Пользователь может изменить его кнопкой; все последующие проекты используют новое место.",
+      "recorded_at": "2026-09-18T08:45:52.917983+00:00"
     }
   ],
   "owner_session_id": "01a0b318-cc66-7743-9de7-696f05fff6e6",
@@ -875,11 +918,11 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-corrections-032
 Current Task: нет
-Revision: 51
+Revision: 54
 
 ## Цель
 
-После принятой 0.6.39 изменить создание проекта: явный выбор расположения папки для проектов перед именем; выпустить 0.6.40.
+После принятой 0.6.39 убрать неявную папку при первом создании, затем запоминать последний явный выбор расположения для всех следующих проектов; выпустить 0.6.40.
 
 ## Критерии приёмки
 
@@ -967,10 +1010,14 @@ Revision: 51
   - Git Commit: [DONE] fix: require an explicit projects folder selection
   - Reference: first-run-corrections-032 / P002 / implementation
   - Файлы: src/main.mjs, tests/electron-smoke.mjs, docs/WORKSPACE_SETUP.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md
-- [TODO] P003: Собрать и проверить 0.6.40 для macOS и Windows — Ожидает
-  - Git Commit: [PENDING] release: publish project location flow 0.6.40
+- [DONE] P003: Запоминать выбранную пользователем папку для всех следующих проектов — Завершено
+  - Git Commit: [DONE] fix: remember explicitly selected projects location
   - Reference: first-run-corrections-032 / P003 / implementation
-  - Файлы: package.json, package-lock.json, tests/electron-smoke.mjs, docs/WORKSPACE_SETUP.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md
+  - Файлы: src/main.mjs, src/ui/workspace-setup.mjs, tests/electron-smoke.mjs, docs/WORKSPACE_SETUP.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md
+- [TODO] P004: Собрать и проверить 0.6.40 для macOS и Windows — Ожидает
+  - Git Commit: [PENDING] release: publish project location flow 0.6.40
+  - Reference: first-run-corrections-032 / P004 / implementation
+  - Файлы: package.json, package-lock.json, docs/WORKSPACE_SETUP.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: document project location release 0.6.40
   - Reference: first-run-corrections-032 / DOCS / implementation

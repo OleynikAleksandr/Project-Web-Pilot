@@ -128,6 +128,8 @@ async function verifyUninterruptedRequest(dataDir) {
 
 export async function run({ app, window, browser, sidebar, store, controller, selectWorkspace, workspaceSetup, snapshot, assertLocalSender, permissionAllowed, dataDir, chromiumDiagnostics, chromiumDiagnosticsFile, navigate, getArchiveWindow, getColorWindow }) {
   smokeDataDir = dataDir;
+  // Keep frame-based fixture checks running when another desktop window covers this one.
+  sidebar.setBackgroundThrottling(false);
   await verifyUninterruptedRequest(dataDir);
   assert.equal(app.isPackaged, false, 'Fixtures never run from a packaged app');
   assert.equal(permissionAllowed('media', 'https://chatgpt.com', { mediaTypes: ['audio'] }), true);
@@ -263,35 +265,43 @@ export async function run({ app, window, browser, sidebar, store, controller, se
     summary.click(); document.body.click(); return {initially,opened,closed,outsideClosed:!details.open};
   })()`);
   assert.deepEqual(disclosure, {initially:false,opened:true,closed:true,outsideClosed:true});
-  const chooseProjectsFolder = async (canceled = false) => {
+  const chooseProjectsFolder = async (canceled = false, folder = path.dirname(workspace)) => {
     const showOpenDialog = dialog.showOpenDialog;
+    const previous = snapshot().setup.parent;
     let options;
     dialog.showOpenDialog = async (_window, input) => {
       options = input;
-      return { canceled, filePaths: canceled ? [] : [path.dirname(workspace)] };
+      return { canceled, filePaths: canceled ? [] : [folder] };
     };
     try { await sidebar.executeJavaScript('window.webPilot.chooseParent("")'); }
     finally { dialog.showOpenDialog = showOpenDialog; }
     assert.equal(options.title, 'Выбрать расположение папки для проектов');
-    assert.equal(Object.hasOwn(options, 'defaultPath'), false, 'no implicit initial folder');
+    assert.equal(options.defaultPath, previous ?? undefined, 'only the explicit previous choice may be preselected');
   };
+  let firstProjectForm = true;
   const previewNew = async () => {
     await sidebar.executeJavaScript('document.getElementById("create-workspace").click()');
     await waitFor(() => snapshot().setup?.phase === 'form', 'new workspace form', snapshot);
-    assert.equal(snapshot().setup.parent, null);
-    await waitFor(() => sidebar.executeJavaScript('document.getElementById("setup-name").hidden && document.getElementById("setup-preview").hidden'), 'location before project name', snapshot);
-    const missingParent = await sidebar.executeJavaScript('window.webPilot.previewNew("Тестовый проект с пробелами")');
-    assert.equal(missingParent.ok, false);
-    assert.match(missingParent.error.message, /Сначала выберите расположение/);
-    await chooseProjectsFolder(true);
-    assert.equal(snapshot().setup.parent, null, 'cancel does not select a default folder');
-    await sidebar.executeJavaScript('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
-    await fs.writeFile(path.join(dataDir, 'new-project-location.png'), (await sidebar.capturePage()).toPNG());
-    await chooseProjectsFolder();
+    if (firstProjectForm) { assert.equal(snapshot().setup.parent, null, 'fresh settings have no projects folder'); firstProjectForm = false; }
+    if (snapshot().setup.parent === null) {
+      await waitFor(() => sidebar.executeJavaScript('document.getElementById("setup-name").hidden && document.getElementById("setup-preview").hidden'), 'location before project name', snapshot);
+      const missingParent = await sidebar.executeJavaScript('window.webPilot.previewNew("Тестовый проект с пробелами")');
+      assert.equal(missingParent.ok, false);
+      assert.match(missingParent.error.message, /Сначала выберите расположение/);
+      // Return to a fresh form after the deliberate invalid IPC request.
+      await sidebar.executeJavaScript('window.webPilot.beginCreate()');
+      await chooseProjectsFolder(true);
+      assert.equal(snapshot().setup.parent, null, 'cancel does not select a default folder');
+      await sidebar.executeJavaScript('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
+      await fs.writeFile(path.join(dataDir, 'new-project-location.png'), (await sidebar.capturePage()).toPNG());
+      await chooseProjectsFolder();
+    }
     assert.equal(snapshot().setup.parent, path.dirname(workspace));
+    assert.equal(JSON.parse(await fs.readFile(path.join(dataDir, 'settings.json'), 'utf8')).projectsParent, path.dirname(workspace), 'explicit folder saved on disk');
     await waitFor(() => sidebar.executeJavaScript('!document.getElementById("setup-name").hidden && document.activeElement.id === "setup-name"'), 'selected folder reveals and focuses name', snapshot);
     await sidebar.executeJavaScript('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
     await fs.writeFile(path.join(dataDir, 'new-project-name.png'), (await sidebar.capturePage()).toPNG());
+    assert.equal(await sidebar.executeJavaScript('document.getElementById("setup-parent-button").textContent'), 'Изменить расположение папки для проектов');
     await sidebar.executeJavaScript(`document.getElementById('setup-name').value='Тестовый проект с пробелами'; document.getElementById('setup-preview').click()`);
     await waitFor(() => snapshot().setup?.phase === 'preview', 'new workspace preview', snapshot);
   };
@@ -346,7 +356,8 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.deepEqual(await browser.executeJavaScript('({ require:typeof require, process:typeof process, bridge:typeof window.webPilot })'),
     { require: 'undefined', process: 'undefined', bridge: 'undefined' });
   await clipboard.clear();
-  await browser.executeJavaScript("navigator.clipboard.writeText('REMOTE_CHATGPT_CLIPBOARD_FIXTURE')");
+  window.focus(); browser.focus();
+  await browser.executeJavaScript("navigator.clipboard.writeText('REMOTE_CHATGPT_CLIPBOARD_FIXTURE').catch(error => { throw new Error('Fixture clipboard: ' + error.name + ': ' + error.message); })", true);
   await waitFor(async () => await clipboard.readText() === 'REMOTE_CHATGPT_CLIPBOARD_FIXTURE', 'remote ChatGPT clipboard write', snapshot);
 
   assert.equal(await sidebar.executeJavaScript('document.querySelector(".session-tokens") === null'), true);
@@ -997,12 +1008,20 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   // A new project's first Work session uses the same one-click path and real IPC.
   await sidebar.executeJavaScript('window.webPilot.beginCreate()');
   await waitFor(() => snapshot().setup?.phase === 'form', 'first Work project form', snapshot);
-  assert.equal(snapshot().setup.parent, null, 'existing projects do not prefill the next location');
-  await chooseProjectsFolder();
+  assert.equal(snapshot().setup.parent, path.dirname(workspace), 'next project reuses the explicit choice');
+  await chooseProjectsFolder(true);
+  assert.equal(snapshot().setup.parent, path.dirname(workspace), 'cancel keeps the remembered folder');
+  const changedParent = path.join(path.dirname(workspace), 'Другое расположение');
+  await fs.mkdir(changedParent);
+  await chooseProjectsFolder(false, changedParent);
+  assert.equal(JSON.parse(await fs.readFile(path.join(dataDir, 'settings.json'), 'utf8')).projectsParent, changedParent, 'replacement saved on disk');
+  await sidebar.executeJavaScript('window.webPilot.beginCreate()');
+  assert.equal(snapshot().setup.parent, changedParent, 'all following projects use the replacement');
   await waitFor(() => sidebar.executeJavaScript('!document.getElementById("setup-name").hidden'), 'first Work location selected', snapshot);
   await sidebar.executeJavaScript(`document.getElementById('setup-name').value='Первый Work'; document.getElementById('setup-preview').click()`);
   await waitFor(() => snapshot().setup?.phase === 'preview', 'first Work project preview', snapshot);
   const workTarget = snapshot().setup.workspace;
+  assert.equal(workTarget, path.join(changedParent, 'Первый Work'));
   const invalidMode = await sidebar.executeJavaScript('window.webPilot.applySetup(' + JSON.stringify(snapshot().setup.token) + ', "", "", "invalid")');
   assert.equal(invalidMode.ok, false); await assert.rejects(fs.stat(workTarget), { code: 'ENOENT' });
   await sidebar.executeJavaScript('window.webPilot.refreshSetup()');

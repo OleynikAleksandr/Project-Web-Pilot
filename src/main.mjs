@@ -53,6 +53,7 @@ let settingsSaveTail = Promise.resolve();
 const SIDEBAR_MIN_WIDTH = 312;
 const BROWSER_MIN_WIDTH = 600;
 let sidebarWidth = SIDEBAR_MIN_WIDTH;
+let projectsParent = null;
 let window, browser, sidebar, archiveWindow, runtime, controller, interval, fixture, chromiumDiagnostics, windowsRuntimeBootstrap;
 let navigationId = 0;
 const actionContext = new AsyncLocalStorage();
@@ -166,7 +167,7 @@ async function applyToolCallVisibility() {
 }
 
 function saveSettings(overrides = {}) {
-  const settings = { runtimeFolder, runtimeRegistration, shellTheme, hideToolCalls, sidebarWidth, chatColors, ...overrides };
+  const settings = { runtimeFolder, runtimeRegistration, shellTheme, hideToolCalls, sidebarWidth, chatColors, projectsParent, ...overrides };
   const operation = settingsSaveTail.catch(() => {}).then(async () => {
     await fsp.mkdir(dataDir, { recursive: true, mode: 0o700 });
     await fsp.writeFile(settingsFile + '.tmp', JSON.stringify(settings, null, 2) + '\n', { mode: 0o600 });
@@ -857,14 +858,20 @@ function registerIpc() {
   registerAction('pilot:begin-create', () => {
     if (storageError) throw new Error('Сначала нужно восстановить сохранённый список проектов.');
     settingsState = null; deletion.clear(); pauseForSetup(); workspaceSetup.clear();
-    setupState = { phase: 'form', mode: 'new', name: '', firstSessionRequired: true, firstSessionExperience: 'chat', parent: null };
+    setupState = { phase: 'form', mode: 'new', name: '', firstSessionRequired: true, firstSessionExperience: 'chat', parent: projectsParent };
   });
   registerAction('pilot:choose-parent', async input => {
     if (setupState?.mode !== 'new') return;
     const name = typeof input?.name === 'string' ? input.name.slice(0, 120) : setupState.name;
     const result = await dialog.showOpenDialog(window, { title: 'Выбрать расположение папки для проектов', buttonLabel: 'Выбрать папку',
       properties: ['openDirectory'], ...(setupState.parent ? { defaultPath: setupState.parent } : {}) });
-    setupState = { phase: 'form', mode: 'new', name, firstSessionRequired: true, firstSessionExperience: setupState.firstSessionExperience ?? 'chat', parent: result.canceled ? setupState.parent : result.filePaths[0] };
+    const parent = result.canceled ? setupState.parent : result.filePaths[0];
+    if (!result.canceled) {
+      if (typeof parent !== 'string' || !path.isAbsolute(parent)) throw new Error('Выберите папку для проектов.');
+      await saveSettings({ projectsParent: parent });
+      projectsParent = parent;
+    }
+    setupState = { phase: 'form', mode: 'new', name, firstSessionRequired: true, firstSessionExperience: setupState.firstSessionExperience ?? 'chat', parent };
   });
   registerAction('pilot:preview-new', async input => {
     if (setupState?.mode !== 'new') throw new Error('Сначала нажмите «Создать проект».');
@@ -1155,6 +1162,7 @@ else {
       if (typeof settings.hideToolCalls === 'boolean') hideToolCalls = settings.hideToolCalls;
       chatColors = normalizeChatColors(settings.chatColors);
       if (Number.isFinite(settings.sidebarWidth)) sidebarWidth = Math.max(SIDEBAR_MIN_WIDTH, Math.round(settings.sidebarWidth));
+      if (typeof settings.projectsParent === 'string' && path.isAbsolute(settings.projectsParent)) projectsParent = settings.projectsParent;
     } catch (error) { if (error.code !== 'ENOENT') startupError = { code: 'SETTINGS_INVALID', message: 'Не удалось прочитать локальные настройки Web Pilot. Проверьте настройки подключения.' }; }
     applyShellTheme(shellTheme);
     try { await store.load(); } catch (error) { startupError = publicError(error); storageError = true; }

@@ -54,6 +54,7 @@ export function workspaceSetupView(action) {
       $('setup-name').disabled = !located || busy || actionPending;
       $('setup-preview').hidden = !located;
       $('setup-preview').disabled = !located || busy || actionPending;
+      $('setup-parent-button').textContent = located ? 'Изменить расположение папки для проектов' : 'Выбрать расположение папки для проектов';
       $('setup-parent-button').disabled = busy || actionPending;
       if (setup.phase === 'form' && !actionPending && (focusForm || document.activeElement === document.body)) {
         focusForm = false;
