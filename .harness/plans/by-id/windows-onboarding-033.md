@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 19,
+  "plan_revision": 20,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
@@ -369,6 +369,37 @@
       "expected_commit_message": "feat: Проверить Windows мастер и выпуск в изолированных сценариях"
     },
     {
+      "id": "R003",
+      "title": "Учесть нормализацию package.json упаковщиком",
+      "why": "Packager штатно удаляет private, scripts и devDependencies; сравнивать итоговый runtime manifest с тем же представлением source",
+      "dependencies": [
+        "V001"
+      ],
+      "functional_paths": [
+        "scripts/release-all.mjs",
+        "tests/release-all.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md",
+        "docs/RELEASE.md"
+      ],
+      "acceptance_criteria": [
+        "Pruned package manifest принят, несогласованные runtime поля отклонены"
+      ],
+      "verification_ids": [
+        "suite"
+      ],
+      "expected_commit_message": "fix: сверять runtime manifest после нормализации упаковщиком",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "windows-onboarding-033",
+        "task_id": "R003",
+        "role": "implementation"
+      }
+    },
+    {
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
@@ -377,7 +408,7 @@
         "role": "implementation"
       },
       "dependencies": [
-        "V001"
+        "R003"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -416,6 +447,7 @@
         "W005",
         "R001",
         "V001",
+        "R003",
         "R002"
       ],
       "functional_paths": [],
@@ -470,7 +502,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 19
+Revision: 20
 
 ## Цель
 
@@ -517,6 +549,10 @@ Revision: 19
   - Git Commit: [DONE] feat: Проверить Windows мастер и выпуск в изолированных сценариях
   - Reference: windows-onboarding-033 / V001 / implementation
   - Файлы: tests/electron-smoke.mjs, tests/release-all.test.mjs, scripts/verify-windows-package.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md, docs/RELEASE.md
+- [TODO] R003: Учесть нормализацию package.json упаковщиком — Ожидает
+  - Git Commit: [PENDING] fix: сверять runtime manifest после нормализации упаковщиком
+  - Reference: windows-onboarding-033 / R003 / implementation
+  - Файлы: scripts/release-all.mjs, tests/release-all.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/RELEASE.md
 - [TODO] R002: Собрать и проверить обе поставки 0.6.41 — Ожидает
   - Git Commit: [PENDING] docs: Собрать и проверить обе поставки 0.6.41
   - Reference: windows-onboarding-033 / R002 / implementation
