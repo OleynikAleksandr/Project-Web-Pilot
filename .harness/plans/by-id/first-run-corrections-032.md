@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 35,
+  "plan_revision": 37,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-corrections-032",
@@ -552,8 +552,8 @@
         "suite"
       ],
       "expected_commit_message": "fix: accept first session mode in one setup operation",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-corrections-032",
         "task_id": "U005",
@@ -760,7 +760,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-corrections-032
 Current Task: нет
-Revision: 35
+Revision: 37
 
 ## Цель
 
@@ -826,8 +826,8 @@ Revision: 35
   - Git Commit: [DONE] fix: make plugin setup help conditional
   - Reference: first-run-corrections-032 / U004 / implementation
   - Файлы: src/ui/index.html, tests/startup-ui.test.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
-- [TODO] U005: Передавать выбранный Chat или Work вместе с применением проекта — Ожидает
-  - Git Commit: [PENDING] fix: accept first session mode in one setup operation
+- [DONE] U005: Передавать выбранный Chat или Work вместе с применением проекта — Завершено
+  - Git Commit: [DONE] fix: accept first session mode in one setup operation
   - Reference: first-run-corrections-032 / U005 / implementation
   - Файлы: src/main.mjs, src/preload.cjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 - [TODO] U006: Создавать первую сессию одним нажатием и показывать диагностику по причине — Ожидает

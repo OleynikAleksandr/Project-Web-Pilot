@@ -890,8 +890,11 @@ function registerIpc() {
   registerAction('pilot:cancel-setup', cancelSetup);
   registerAction('pilot:apply-setup', async input => {
     if (!setupState?.token || input?.token !== setupState.token) throw new Error('Сначала проверьте выбранную папку.');
+    if (input.experience !== undefined && !['chat', 'work'].includes(input.experience))
+      throw new Error('Выберите Chat или Work для первой сессии.');
     const firstSessionRequired = !!setupState.firstSessionRequired;
-    const firstSessionExperience = firstSessionRequired && setupState.firstSessionExperience === 'work' ? 'work' : 'chat';
+    const requestedExperience = input.experience ?? setupState.firstSessionExperience;
+    const firstSessionExperience = firstSessionRequired && requestedExperience === 'work' ? 'work' : 'chat';
     setupState = { ...setupState, phase: 'applying', error: null }; startupError = null; publish();
     const generation = navigationId;
     const result = await workspaceSetup.apply(input.token, { gitName: input.gitName, gitEmail: input.gitEmail });
