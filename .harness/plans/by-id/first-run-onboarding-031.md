@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 110,
+  "plan_revision": 112,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-onboarding-031",
@@ -1971,8 +1971,8 @@
         "Обязательные документы и заголовки всех канонических планов доступны; чужие планы не меняются."
       ],
       "expected_commit_message": "docs: preserve recovery section links for existing sessions",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-onboarding-031",
         "task_id": "C013",
@@ -2136,7 +2136,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-onboarding-031
 Current Task: нет
-Revision: 110
+Revision: 112
 
 ## Цель
 
@@ -2331,8 +2331,8 @@ Revision: 110
   - Git Commit: [DONE] docs: record computer use trial and later authorization
   - Reference: first-run-onboarding-031 / D001 / implementation
   - Файлы: docs/CLEAN_INSTALL.md
-- [TODO] C013: Сохранить ссылки recovery прежних сессий при обновлении документации — Ожидает
-  - Git Commit: [PENDING] docs: preserve recovery section links for existing sessions
+- [DONE] C013: Сохранить ссылки recovery прежних сессий при обновлении документации — Завершено
+  - Git Commit: [DONE] docs: preserve recovery section links for existing sessions
   - Reference: first-run-onboarding-031 / C013 / implementation
   - Файлы: docs/modules/workspace-sessions.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает

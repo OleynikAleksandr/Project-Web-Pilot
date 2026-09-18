@@ -1,6 +1,6 @@
 # Module Specification — Workspace & Sessions
 
-## Действующая модель — 0.6.40 / schema v6
+## Действующая модель — 0.6.29 / schema v6
 
 Сессия имеет собственный planId либо NONE, originSessionId и состояние подтверждения legacy-связи. Полные задачи в session store не копируются: readWorkspace(workspace, sessionId) читает их через доверенный bundled фасад Workflow Kit. prepared_in_session_id связывает исходную сессию с каноническим будущим планом; после bind обе сессии видят один файл.
 
