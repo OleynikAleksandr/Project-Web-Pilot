@@ -49,3 +49,27 @@ test('coordinator reconnects missing local commands and rejects duplicate runs',
   let release;const {doctor,calls}=coordinator({health:{ready:false,action:'reconnect'},worker:()=>new Promise(resolve=>{release=resolve;})});
   const first=doctor.run('/one');await assert.rejects(doctor.run('/one'),/уже работает/);release({workspace:'/one',repairs:[],issues:[]});const r=await first;assert.equal(r.projectReady,true);assert.equal(r.servicesReady,true);assert.deepEqual(calls,['verify','reconnect']);
 });
+
+
+test('healthy first-project preview offers only direct Chat and Work with one submission', async t => {
+  const f=await fixture(t,workspaceSetupView),s=state();
+  s.setup={phase:'preview',mode:'new',workspace:'/new',token:'preview-1',action:'install',firstSessionRequired:true,gitIdentityReady:true,checks:[]};
+  f.view.render(s,false);
+  assert.equal(f.$('setup-experience').hidden,false); assert.equal(f.$('setup-apply').hidden,true);
+  assert.equal(f.$('setup-doctor').hidden,true); assert.equal(f.$('setup-refresh').hidden,true);
+  f.$('setup-experience-work').click(); f.$('setup-experience-chat').click();
+  await new Promise(r=>setImmediate(r));
+  assert.deepEqual(f.calls,[['applySetup','preview-1','','','work']]);
+});
+test('missing identity blocks both modes and diagnosed problems expose recovery', async t => {
+  const f=await fixture(t,workspaceSetupView),s=state();
+  s.setup={phase:'preview',mode:'new',workspace:'/new',token:'preview-2',action:'install',firstSessionRequired:true,gitIdentityReady:false};
+  f.view.render(s,false); assert.equal(f.$('setup-experience-chat').disabled,true); assert.equal(f.$('setup-experience-work').disabled,true);
+  f.$('setup-git-name').value='Fixture'; f.$('setup-git-email').value='fixture@example.invalid';f.view.render(s,false);
+  assert.equal(f.$('setup-experience-chat').disabled,false);
+  s.setup.error={message:'Папка изменилась'};f.view.render(s,false);
+  assert.equal(f.$('setup-experience').hidden,true);assert.equal(f.$('setup-doctor').hidden,false);assert.equal(f.$('setup-refresh').hidden,false);
+  s.setup={phase:'preview',mode:'existing',workspace:'/existing',token:'preview-3',action:'open',ready:true,firstSessionRequired:false};
+  f.view.render(s,false);assert.equal(f.$('setup-experience').hidden,true);assert.equal(f.$('setup-apply').hidden,false);
+  assert.equal(f.$('setup-doctor').hidden,true);assert.equal(f.$('setup-refresh').hidden,true);
+});

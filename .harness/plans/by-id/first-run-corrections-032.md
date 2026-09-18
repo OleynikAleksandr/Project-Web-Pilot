@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 37,
+  "plan_revision": 39,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-corrections-032",
@@ -588,8 +588,8 @@
         "electron-smoke"
       ],
       "expected_commit_message": "fix: create first session directly from Chat or Work",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-corrections-032",
         "task_id": "U006",
@@ -760,7 +760,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-corrections-032
 Current Task: нет
-Revision: 37
+Revision: 39
 
 ## Цель
 
@@ -830,8 +830,8 @@ Revision: 37
   - Git Commit: [DONE] fix: accept first session mode in one setup operation
   - Reference: first-run-corrections-032 / U005 / implementation
   - Файлы: src/main.mjs, src/preload.cjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
-- [TODO] U006: Создавать первую сессию одним нажатием и показывать диагностику по причине — Ожидает
-  - Git Commit: [PENDING] fix: create first session directly from Chat or Work
+- [DONE] U006: Создавать первую сессию одним нажатием и показывать диагностику по причине — Завершено
+  - Git Commit: [DONE] fix: create first session directly from Chat or Work
   - Reference: first-run-corrections-032 / U006 / implementation
   - Файлы: src/ui/workspace-setup.mjs, tests/electron-smoke.mjs, tests/project-doctor-ui.test.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 - [TODO] A005: Сохранять готовность компонентов после отказа туннеля — Ожидает

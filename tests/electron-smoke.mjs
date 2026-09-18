@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import http from 'node:http';
 import { openStartupPage } from '../src/browser-startup.mjs';
+import { TunnelClipboard } from '../src/tunnel-clipboard.mjs';
 import { StartupNetworkTrace } from '../src/startup-network-trace.mjs';
 import { createHash } from 'node:crypto';
 import { nativeTheme, clipboard, BrowserWindow } from 'electron';
@@ -198,6 +199,37 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await waitFor(() => sidebar.executeJavaScript('!document.getElementById("startup-components-body").hidden'), 'first-run components', snapshot);
   assert.equal(await sidebar.executeJavaScript('document.getElementById("startup-install-git").hidden'), false);
   await fs.writeFile(path.join(dataDir, 'startup-components.png'), (await sidebar.capturePage()).toPNG());
+  let copied = '', finishClipboard;
+  const clipboardFixture = { ...startupFixture, startup: { ...startupFixture.startup,
+    page: 'loaded', account: 'signed-in', git: true, runtime: true, phase: 'tunnel' } };
+  const copiedValues = [];
+  const clipboardFlow = new TunnelClipboard({ readText: () => copied,
+    configure: data => { copiedValues.push({ ...data }); return new Promise(r => { finishClipboard = r; }); },
+    onChange: progress => sidebar.send('pilot:state-changed', { ...clipboardFixture,
+      startup: { ...clipboardFixture.startup, clipboard: progress, tunnel: progress.step === 'done', busy: progress.step === 'connecting' } }),
+  });
+  sidebar.send('pilot:state-changed', clipboardFixture);
+  await clipboardFlow.tick({ active: true });
+  await waitFor(() => sidebar.executeJavaScript('!document.getElementById("startup-tunnel-body").hidden'), 'clipboard tunnel step', snapshot);
+  await sidebar.executeJavaScript('document.getElementById("startup-tunnel-body").scrollIntoView({block:"start"})');
+  await sidebar.executeJavaScript('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
+  await fs.writeFile(path.join(dataDir, 'startup-tunnel-id.png'), (await sidebar.capturePage()).toPNG());
+  copied = 'tunnel_fixture1234567890123456'; await clipboardFlow.tick({ active: true });
+  await waitFor(() => sidebar.executeJavaScript('!document.getElementById("startup-tunnel-key").hidden && document.getElementById("startup-tunnel-create").hidden'), 'copied ID advances UI', snapshot);
+  await sidebar.executeJavaScript('document.getElementById("startup-tunnel-progress").scrollIntoView({block:"start"})');
+  await sidebar.executeJavaScript('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
+  await fs.writeFile(path.join(dataDir, 'startup-tunnel-key.png'), (await sidebar.capturePage()).toPNG());
+  copied = 'sk-fixture-private-1234567890'; const connecting = clipboardFlow.tick({ active: true });
+  await waitFor(() => sidebar.executeJavaScript('document.getElementById("startup-tunnel-key").hidden && document.querySelector("[data-startup=configure-tunnel]").disabled'), 'copied key starts automatic connection', snapshot);
+  assert.equal(copiedValues.length, 1);
+  assert.equal(await sidebar.executeJavaScript('document.body.innerText.includes("sk-fixture") || document.body.innerText.includes("tunnel_fixture")'), false);
+  finishClipboard(); await connecting;
+  await waitFor(() => sidebar.executeJavaScript('!document.getElementById("startup-project-body").hidden'), 'automatic connection reaches project', snapshot);
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("startup-plugin-help").open'), false);
+  await sidebar.executeJavaScript('document.getElementById("startup-project-body").scrollIntoView({block:"start"})');
+  await sidebar.executeJavaScript('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
+  await fs.writeFile(path.join(dataDir, 'startup-first-project.png'), (await sidebar.capturePage()).toPNG());
+  clipboardFlow.dispose();
   sidebar.send('pilot:state-changed', snapshot());
   await waitFor(() => sidebar.executeJavaScript('document.getElementById("startup-panel").hidden'), 'normal sidebar after startup fixture', snapshot);
   assert.equal(snapshot().sidebarWidth, 312);
@@ -241,10 +273,10 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(snapshot().setup.action, 'install'); assert.equal(packetLoads, 0); assert.equal(store.selected(), null);
   assert.equal(snapshot().setup.firstSessionRequired, true); assert.equal(snapshot().setup.firstSessionExperience, 'chat');
   assert.equal(await sidebar.executeJavaScript('document.getElementById("setup-experience").hidden'), false);
-  assert.equal(await sidebar.executeJavaScript('document.getElementById("setup-experience-chat").getAttribute("aria-pressed")'), 'true');
-  await sidebar.executeJavaScript('document.getElementById("setup-experience-work").click()');
-  await waitFor(() => snapshot().setup?.firstSessionExperience === 'work', 'choose Work as first session', snapshot);
-  assert.equal(await sidebar.executeJavaScript('document.getElementById("setup-experience-work").getAttribute("aria-pressed")'), 'true');
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("setup-apply").hidden'), true);
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("setup-doctor").hidden'), true);
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("setup-refresh").hidden'), true);
+  await fs.writeFile(path.join(dataDir, 'first-project-choice.png'), (await sidebar.capturePage()).toPNG());
   await assert.rejects(fs.stat(workspace), { code: 'ENOENT' });
   assert.ok(snapshot().setup.files.some(f => f.path === 'AGENTS.md'));
   await sidebar.executeJavaScript('document.getElementById("setup-cancel").click()');
@@ -252,7 +284,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await assert.rejects(fs.stat(workspace), { code: 'ENOENT' });
   await previewNew();
   assert.equal(snapshot().setup.firstSessionExperience, 'chat', 'choice is not remembered globally after cancel');
-  await sidebar.executeJavaScript('document.getElementById("setup-apply").click()');
+  await sidebar.executeJavaScript('document.getElementById("setup-experience-chat").click(); document.getElementById("setup-experience-work").click()');
   await waitFor(() => sidebar.executeJavaScript(`(() => { const e=document.getElementById('operation-progress'); return !e.hidden && e.querySelector('.operation-label').textContent.length > 0; })()`), 'visible recovery spinner', snapshot);
   assert.equal(await sidebar.executeJavaScript("getComputedStyle(document.querySelector('.operation-spinner')).animationName"), 'operation-spin');
   assert.equal(await sidebar.executeJavaScript("document.getElementById('operation-progress').getAttribute('role')"), 'status');
@@ -936,7 +968,23 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(store.selected().experience, 'work');
   assert.equal(store.snapshot().projects.find(p => p.workspace === workspace).sessions.length, beforeDoctorNew + 1);
 
-  const result = { startupLoginEntrypoint: true, uninterruptedFirstRequest: true, firstRequestNetworkTrace: true, duplicateStartupBlocked: true, earlyFirstLoadDiagnostics: true, guidedFirstRun: true, firstRunScreenshots: [path.join(dataDir, "startup-account.png"), path.join(dataDir, "startup-login.png"), path.join(dataDir, "startup-components.png")], fastSavedNavigation: true, lastNavigationWins: true, readinessBeforeOrAfterLoad: true, backgroundFailureRetry: true, liveChatColors: true, composerBackground: true, streamingAssistantColor: true, chatColorsPersistence: true, chatColorsReset: true, colorScreenshots, projectDoctor: true, doctorBackup: true, doctorOpen: true, doctorRefresh: true, doctorNewSession: true, doctorScreenshots, newestSessionFirst: true, projectSelectsNewest: true, threeSessionViewport: true, sessionScrollPreserved: true, visibleSessionScrollbar: true, nativeProjectsDisclosure: true, treePopover: true, treeScreenshots, scopeContinuationChat: true, scopeContinuationWork: true, scopeContinuationRestart: true, scopeContinuationNoDuplicates: true,
+  // A new project's first Work session uses the same one-click path and real IPC.
+  await sidebar.executeJavaScript('window.webPilot.beginCreate()');
+  await waitFor(() => snapshot().setup?.phase === 'form', 'first Work project form', snapshot);
+  await sidebar.executeJavaScript(`document.getElementById('setup-name').value='Первый Work'; document.getElementById('setup-preview').click()`);
+  await waitFor(() => snapshot().setup?.phase === 'preview', 'first Work project preview', snapshot);
+  const workTarget = snapshot().setup.workspace;
+  const invalidMode = await sidebar.executeJavaScript('window.webPilot.applySetup(' + JSON.stringify(snapshot().setup.token) + ', "", "", "invalid")');
+  assert.equal(invalidMode.ok, false); await assert.rejects(fs.stat(workTarget), { code: 'ENOENT' });
+  await sidebar.executeJavaScript('window.webPilot.refreshSetup()');
+  await waitFor(() => snapshot().setup?.phase === 'preview' && !snapshot().setup.error, 'recover rejected mode', snapshot);
+  await waitFor(() => sidebar.executeJavaScript('!document.getElementById("setup-experience-work").disabled'), 'first Work button ready', snapshot);
+  await sidebar.executeJavaScript('document.getElementById("setup-experience-work").click(); document.getElementById("setup-experience-work").click()');
+  await waitFor(() => store.selected()?.workspace === workTarget && snapshot().context.phase === 'delivered', 'first Work opens directly', snapshot);
+  assert.equal(store.selected().experience, 'work');
+  assert.equal(store.snapshot().projects.find(p => p.workspace === workTarget).sessions.length, 1);
+
+  const result = { directFirstChat: true, directFirstWork: true, startupLoginEntrypoint: true, uninterruptedFirstRequest: true, firstRequestNetworkTrace: true, duplicateStartupBlocked: true, earlyFirstLoadDiagnostics: true, guidedFirstRun: true, firstRunScreenshots: [path.join(dataDir, "startup-account.png"), path.join(dataDir, "startup-login.png"), path.join(dataDir, "startup-components.png")], fastSavedNavigation: true, lastNavigationWins: true, readinessBeforeOrAfterLoad: true, backgroundFailureRetry: true, liveChatColors: true, composerBackground: true, streamingAssistantColor: true, chatColorsPersistence: true, chatColorsReset: true, colorScreenshots, projectDoctor: true, doctorBackup: true, doctorOpen: true, doctorRefresh: true, doctorNewSession: true, doctorScreenshots, newestSessionFirst: true, projectSelectsNewest: true, threeSessionViewport: true, sessionScrollPreserved: true, visibleSessionScrollbar: true, nativeProjectsDisclosure: true, treePopover: true, treeScreenshots, scopeContinuationChat: true, scopeContinuationWork: true, scopeContinuationRestart: true, scopeContinuationNoDuplicates: true,
     transitionScreenshot: path.join(dataDir, 'next-session-choice.png'), mode: 'isolated-fixture', electron: process.versions.electron, chromium: process.versions.chrome,
     views: window.contentView.children.length, secureRemote: true, sidebarIpc: true, archiveRestore: true, archiveRestart: true, deleteCancel: true, localDeletion: true, cloudChatPreserved: true, workspaceCreation: true, workspaceValidation: true, cancelPreservesSession: true, startupMessages: 4, canonicalPacketLoads: packetLoads, recoveryCache: true, operationProgress: true, progressScreenshot: path.join(dataDir, 'progress-ui.png'),
     tokenCounterRemoved: true, projectRename: true, sessionRename: true, scopeSessionRename: true, restartKeepsSession: true, newChatCreatesSession: true, sessionTree: true, selectsEarlierSession: true, compactWorkspaceDetails: true, projectPathClipboard: true, sessionPlans: true, preparedPlans: true, manualChatWorkChoice: true, noAcceptanceButton: true, chromiumDiagnostics: true, contextWindowIndicatorRemoved: true, resizableSidebar: true, separateArchiveWindow: true, archiveMultiSelect: true, archiveForgetKeepsFolder: true, shellTheme: true, nativeTitlebarTheme: nativeTheme.shouldUseDarkColors, toolCallFilter: true, microphonePermission: true, geolocationPermission: true, cameraPermission: false, fullContextBytes: Buffer.byteLength(fixtureContext), liveChatGPT: false, agentToolsRequired: false };
