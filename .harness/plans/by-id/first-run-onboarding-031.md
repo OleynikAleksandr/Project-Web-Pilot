@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 101,
+  "plan_revision": 103,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-onboarding-031",
@@ -1882,8 +1882,8 @@
       "why": "18.09.2026 пользователь поручил закрыть этот план и передать Windows 11 другому агенту; завершается фиксация результата и передача оставшейся работы, а не невыполненное испытание."
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-onboarding-031",
         "task_id": "T012",
@@ -2111,7 +2111,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-onboarding-031
 Current Task: нет
-Revision: 101
+Revision: 103
 
 ## Цель
 
@@ -2294,8 +2294,8 @@ Revision: 101
   - Git Commit: [DONE] docs: hand off Windows startup diagnosis and fixes
   - Reference: first-run-onboarding-031 / T011 / implementation
   - Файлы: docs/TRANSFER_TO_WINDOWS.md
-- [TODO] T012: Сверить готовые пакеты 0.6.40 для передачи дальнейших испытаний — Ожидает
-  - Git Commit: [PENDING] docs: verify current release artifacts for handoff
+- [DONE] T012: Сверить готовые пакеты 0.6.40 для передачи дальнейших испытаний — Завершено
+  - Git Commit: [DONE] docs: verify current release artifacts for handoff
   - Reference: first-run-onboarding-031 / T012 / implementation
   - Файлы: docs/RELEASE.md, docs/VERIFICATION.md
 - [TODO] T013: Сохранить невыполненные критерии полного пути для следующего агента — Ожидает
