@@ -1121,3 +1121,5 @@ source-verification.json,release-manifest.json}. Работающее прило
 ## Windows native tunnel worker — 0.6.41 / W001
 
 resources/runtime-control/windows-first-run.py собирает ввод в отдельных WinForms-диалогах либо принимает ограниченный JSON через stdin. До изменения служб проверяет оба значения; блокировка и управление процессами принадлежат существующему Windows control. Сохранение использует DPAPI CurrentUser, при ошибке записи прежние private files восстанавливаются. Renderer получает только configured/cancelled либо известный код ошибки.
+
+WindowsRuntimeBootstrap.configureTunnel теперь запускает windows-first-run worker через тот же приватный процессный канал, что использует macOS. Коды ошибок ограничены allowlist; сырые stdout/stderr не попадают в UI. workflowEnvironment проверяет принадлежность locations.json, MinGit cmd/git.exe и usr/bin/sh.exe, запускает git --version и возвращает WORKFLOW_GIT_BIN/HOME и единый Path.

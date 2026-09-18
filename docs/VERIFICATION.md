@@ -1501,3 +1501,5 @@ Electron smoke PASSED (88.783 s). Evidence сохранён отдельно в
 ## Windows onboarding 0.6.41 — W001
 
 Четыре изолированные проверки windows-first-run.test.mjs подтвердили отсутствие изменений при отмене/неверном вводе, приватный stdin и частичный ручной ввод, отказ для чужих процессов, rollback private files и параметры Unicode/hidden WinForms. Это unit-проверки worker через контролируемый facade; фактический Windows-диалог и DPAPI в госте проверяются отдельно.
+
+W002: 14 Windows runtime checks: 12 PASS, 2 platform skips на Mac. Новые проверки подтверждают приватность stdin/ошибок, отмену и partial ID, а также правильный Git home/PATH и отказ для перенесённой либо чужой установки. Сетевые ключи и реальные службы при unit-проверке не использовались.

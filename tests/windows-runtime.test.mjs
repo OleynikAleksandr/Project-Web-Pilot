@@ -193,3 +193,47 @@ test('Windows lifecycle adapter cleans stale PID and moves occupied persisted en
   const updated=JSON.parse(await fs.readFile(path.join(profileDir,'windows-local.yaml'),'utf8'));assert.equal(updated.control_plane.tunnel_id,profile.control_plane.tunnel_id);assert.equal(updated.control_plane.api_key,profile.control_plane.api_key);assert.equal(updated.mcp.server_urls[0].url,`http://127.0.0.1:${moved.mcp_port}/mcp`);
   await closeLocal(a);ao=false;await closeLocal(b);bo=false;
 });
+
+// First-run worker boundaries are checked with fixture values only.
+import { configureWindowsTunnel, windowsWorkflowEnvironment } from '../src/windows-runtime.mjs';
+test('Windows first run passes credentials only over stdin and strips worker failures', async () => {
+  const secret = 'sk-fixture_only_1234567890', id = 'tunnel_fixture1234567890123456';
+  const calls = [];
+  const options = { folder: 'C:\\Pilot\\runtime', controlSourceFile: '/fixture/windows-control.py', environment: {},
+    credentials: { tunnelId: id, key: secret },
+    executeInput: async (file, args, settings, input) => {
+      calls.push({ file, args, settings });
+      assert.deepEqual(JSON.parse(input), { tunnel_id: id, api_key: secret });
+      assert.equal(settings.windowsHide, true);
+      assert.equal(settings.env.WEB_PILOT_RUNTIME_ROOT, 'C:\\Pilot\\runtime');
+      return { stdout: '{"configured":true}' };
+    } };
+  assert.deepEqual(await configureWindowsTunnel(options), { configured: true });
+  assert.doesNotMatch(JSON.stringify(calls), /sk-fixture|tunnel_fixture/);
+  await assert.rejects(configureWindowsTunnel({ ...options, executeInput: async () => {
+    throw { message: secret, stderr: secret, stdout: secret };
+  } }), error => error.code === 'WINDOWS_TUNNEL_SETUP_FAILED' && !JSON.stringify(error).includes(secret));
+  await assert.rejects(configureWindowsTunnel({ ...options, credentials: { tunnelId: 42 } }), { code: 'WINDOWS_TUNNEL_INVALID_DATA' });
+});
+test('Windows first run supports cancellation and manual key entry with an already copied ID', async () => {
+  let inputs = 0;
+  const base = { folder: 'C:\\Pilot', controlSourceFile: '/fixture/windows-control.py', environment: {},
+    execute: async (file, args) => { assert.equal(args.includes('--stdin'), false); return { stdout: '{"cancelled":true}' }; },
+    executeInput: async (file, args, settings, input) => {
+      inputs++; assert.deepEqual(JSON.parse(input), { tunnel_id: 'tunnel_fixture1234567890123456' });
+      return { stdout: '{"cancelled":true}' };
+    } };
+  assert.deepEqual(await configureWindowsTunnel(base), { cancelled: true });
+  assert.deepEqual(await configureWindowsTunnel({ ...base, credentials: { tunnelId: 'tunnel_fixture1234567890123456' } }), { cancelled: true });
+  assert.equal(inputs, 1);
+});
+test('Windows workflow receives a complete portable Git environment and rejects moved or foreign tools', () => {
+  const folder = 'C:\\Users\\Pilot\\App Data\\runtime';
+  const locations = { package_root: folder, git: folder + '\\tools\\git\\cmd\\git.exe' };
+  const env = windowsWorkflowEnvironment(folder, locations, { Path: 'C:\\Windows\\System32' });
+  assert.equal(env.WORKFLOW_GIT_BIN, locations.git);
+  assert.equal(env.WORKFLOW_GIT_HOME, folder + '\\tools\\git');
+  assert.equal(env.Path, `${folder}\\tools\\git\\cmd;${folder}\\tools\\git\\usr\\bin;C:\\Windows\\System32`);
+  assert.throws(() => windowsWorkflowEnvironment(folder, { ...locations, git: 'C:\\foreign\\git.exe' }), { code: 'WINDOWS_GIT_LAYOUT_INVALID' });
+  assert.throws(() => windowsWorkflowEnvironment(folder, { ...locations, package_root: 'D:\\Moved' }), { code: 'WINDOWS_GIT_LAYOUT_INVALID' });
+});

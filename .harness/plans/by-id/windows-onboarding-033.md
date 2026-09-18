@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 6,
+  "plan_revision": 8,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
@@ -163,8 +163,8 @@
       "expected_commit_message": "feat: Добавить нативный защищённый ввод подключения Windows"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "windows-onboarding-033",
         "task_id": "W002",
@@ -473,7 +473,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 6
+Revision: 8
 
 ## Цель
 
@@ -496,8 +496,8 @@ Revision: 6
   - Git Commit: [DONE] feat: Добавить нативный защищённый ввод подключения Windows
   - Reference: windows-onboarding-033 / W001 / implementation
   - Файлы: resources/runtime-control/windows-first-run.py, tests/windows-first-run.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md
-- [TODO] W002: Подключить настройку туннеля и комплектный Git к Windows bootstrap — Ожидает
-  - Git Commit: [PENDING] feat: Подключить настройку туннеля и комплектный Git к Windows bootstrap
+- [DONE] W002: Подключить настройку туннеля и комплектный Git к Windows bootstrap — Завершено
+  - Git Commit: [DONE] feat: Подключить настройку туннеля и комплектный Git к Windows bootstrap
   - Reference: windows-onboarding-033 / W002 / implementation
   - Файлы: src/windows-runtime.mjs, tests/windows-runtime.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md, docs/modules/runtime-lifecycle.md
 - [TODO] W003: Объединить первый запуск через платформенные адаптеры — Ожидает

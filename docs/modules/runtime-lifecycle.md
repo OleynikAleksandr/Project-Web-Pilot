@@ -127,3 +127,5 @@ MacRuntimeBootstrap принимает эту точную поставляем�
 ## Windows first-run facade — scope 033
 
 Согласован Windows-мастер поверх существующего WindowsRuntimeBootstrap. Новый worker windows-first-run.py использует существующий Windows control и DPAPI; bootstrap передаёт секреты только приватным stdin, публикует несекретный результат и выдаёт проверенное окружение комплектного Git для Workflow Kit. Ввод собирается и проверяется до блокировки/остановки принадлежащих установке процессов. Чужие процессы не останавливаются. Платформенный StartupReadiness adapter оркестрирует ensure/status/start; второй runtime manager не создаётся.
+
+W002: Windows bootstrap проверяет control provenance перед нативной настройкой, сериализует configure и передаёт ключ только stdin. Bundled Git environment проверяется отдельно от установки runtime; неправильный root, неполный Git или отказ запуска имеют самостоятельные коды. Существующий launchTunnelSetup остаётся для совместимости настроек до подключения общего мастера.

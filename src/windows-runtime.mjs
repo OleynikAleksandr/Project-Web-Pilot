@@ -4,6 +4,7 @@ import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { execFile as execFileCallback } from 'node:child_process';
 import { promisify } from 'node:util';
+import { executePrivateInput } from './mac-runtime.mjs';
 
 const execFile = promisify(execFileCallback);
 export const WINDOWS_RUNTIME_ARCHIVE = 'Windows-Codex-Local-2026-09-10.zip';
@@ -174,6 +175,57 @@ export function windowsCommandFailureText(error, fallback = 'Windows runtime com
   return fallback;
 }
 
+const TUNNEL_ERRORS = {
+  WINDOWS_TUNNEL_PROMPT_FAILED: 'Не удалось открыть окно ввода подключения. Повторите ввод.',
+  WINDOWS_TUNNEL_INVALID_DATA: 'Проверьте формат ID туннеля и личного ключа. Данные не сохранены.',
+  WINDOWS_TUNNEL_SETUP_FAILED: 'Не удалось сохранить подключение Windows. Нажмите «Проверить и продолжить», затем повторите ввод.',
+};
+
+export function windowsWorkflowEnvironment(folder, locations, environment = {}) {
+  const api = path.win32, root = api.resolve(folder), gitHome = api.join(root, 'tools', 'git');
+  const git = api.join(gitHome, 'cmd', 'git.exe');
+  if (!locations || typeof locations.package_root !== 'string' || typeof locations.git !== 'string'
+      || api.resolve(locations.package_root).toLowerCase() !== root.toLowerCase()
+      || api.resolve(locations.git).toLowerCase() !== git.toLowerCase()) {
+    throw new WindowsRuntimeError('WINDOWS_GIT_LAYOUT_INVALID', 'Комплект Git не соответствует установленным компонентам Windows. Повторите подготовку.');
+  }
+  const oldPath = Object.entries(environment).find(([key]) => key.toLowerCase() === 'path')?.[1] ?? '';
+  return { WORKFLOW_GIT_BIN: git, WORKFLOW_GIT_HOME: gitHome,
+    Path: [api.join(gitHome, 'cmd'), api.join(gitHome, 'usr', 'bin'), oldPath].filter(Boolean).join(';') };
+}
+
+export async function configureWindowsTunnel({ folder, controlSourceFile, credentials, environment,
+  execute = execFile, executeInput = executePrivateInput }) {
+  const layout = windowsRuntimeFolderPaths(folder);
+  const helper = path.join(path.dirname(controlSourceFile), 'windows-first-run.py');
+  try {
+    const options = { cwd: folder, timeout: 16 * 60 * 1000, maxBuffer: 64 * 1024, windowsHide: true,
+      env: { ...environment, PYTHONUTF8: '1', PYTHONDONTWRITEBYTECODE: '1', WEB_PILOT_RUNTIME_ROOT: folder } };
+    let result;
+    if (credentials === undefined) result = await execute(layout.python, ['-B', helper], options);
+    else {
+      if (!credentials || typeof credentials.tunnelId !== 'string' || credentials.tunnelId.length > 150
+          || (credentials.key !== undefined && (typeof credentials.key !== 'string' || credentials.key.length > 4096))) {
+        throw { stderr: JSON.stringify({ ok: false, code: 'WINDOWS_TUNNEL_INVALID_DATA' }) };
+      }
+      result = await executeInput(layout.python, ['-B', helper, '--stdin'], options,
+        JSON.stringify({ tunnel_id: credentials.tunnelId, ...(credentials.key === undefined ? {} : { api_key: credentials.key }) }));
+    }
+    const value = JSON.parse(result.stdout);
+    if (value.cancelled === true) return { cancelled: true };
+    if (value.configured === true) return { configured: true };
+    throw new Error('Invalid worker response');
+  } catch (failure) {
+    let code = 'WINDOWS_TUNNEL_SETUP_FAILED';
+    try {
+      const value = JSON.parse(failure.stderr);
+      if (value?.ok === false && Object.hasOwn(TUNNEL_ERRORS, value.code)) code = value.code;
+    } catch { /* Never surface command output from a secret-input worker. */ }
+    const error = new WindowsRuntimeError(code, TUNNEL_ERRORS[code]);
+    error.publicMessage = error.message; throw error;
+  }
+}
+
 export function windowsExpandInvocation(payloadFile, destination) {
   return {
     executable: 'powershell.exe',
@@ -217,11 +269,12 @@ async function exists(file) {
 export class WindowsRuntimeBootstrap {
   constructor({ payloadFile, dataDir, execute = execFile, environment = process.env, platform = process.platform,
     expectedSha256 = WINDOWS_RUNTIME_SHA256, onState = null, preferredFolder = null, stateDir = null,
-    controlSourceFile = null, legacyControlHashes = [WINDOWS_LEGACY_CONTROL_SHA256] } = {}) {
+    controlSourceFile = null, executeInput = executePrivateInput, legacyControlHashes = [WINDOWS_LEGACY_CONTROL_SHA256] } = {}) {
     if (!payloadFile || !dataDir) throw new TypeError('WindowsRuntimeBootstrap requires payloadFile and dataDir');
     this.platform = platform;
     this.environment = environment;
     this.execute = execute;
+    this.executeInput = executeInput;
     this.expectedSha256 = expectedSha256;
     this.paths = windowsRuntimePaths(dataDir, payloadFile);
     this.preferredFolder = typeof preferredFolder === 'string' && path.win32.isAbsolute(preferredFolder) ? preferredFolder : null;
@@ -317,6 +370,39 @@ export class WindowsRuntimeBootstrap {
     if (this.pending) return this.pending;
     this.pending = this.#ensure(workspace).finally(() => { this.pending = null; });
     return this.pending;
+  }
+
+  async workflowEnvironment() {
+    const current = await this.inspect();
+    if (!current.installed) throw new WindowsRuntimeError('WINDOWS_RUNTIME_NOT_INSTALLED', 'Сначала подготовьте локальные компоненты Windows.');
+    const layout = windowsRuntimeFolderPaths(current.folder);
+    let locations;
+    try { locations = JSON.parse((await fs.readFile(layout.locations, 'utf8')).replace(/^\uFEFF/, '')); }
+    catch { throw new WindowsRuntimeError('WINDOWS_GIT_LAYOUT_INVALID', 'Не удалось прочитать сведения о комплектном Git. Повторите подготовку.'); }
+    const environment = windowsWorkflowEnvironment(current.folder, locations, this.environment);
+    if (!await exists(path.win32.join(environment.WORKFLOW_GIT_HOME, 'usr', 'bin', 'sh.exe')))
+      throw new WindowsRuntimeError('WINDOWS_GIT_INCOMPLETE', 'Комплект Git неполон. Распакуйте всю Windows-поставку и повторите подготовку.');
+    let version;
+    try { version = await this.execute(environment.WORKFLOW_GIT_BIN, ['--version'], { timeout: 10000, windowsHide: true }); }
+    catch { throw new WindowsRuntimeError('WINDOWS_GIT_START_FAILED', 'Не удалось запустить комплектный Git. Проверьте разрешение Windows на запуск и повторите подготовку.'); }
+    if (!/^git version \d+\./.test(version.stdout)) throw new WindowsRuntimeError('WINDOWS_GIT_START_FAILED', 'Комплектный Git не подтвердил готовность.');
+    return environment;
+  }
+
+  configureTunnel(credentials) {
+    if (this.configurePending) return this.configurePending;
+    this.configurePending = this.#configureTunnel(credentials).finally(() => { this.configurePending = null; });
+    return this.configurePending;
+  }
+
+  async #configureTunnel(credentials) {
+    if (this.platform !== 'win32' || !this.controlSourceFile)
+      throw new WindowsRuntimeError('WINDOWS_ONLY', 'Настройка подключения Windows недоступна.');
+    const current = await this.inspect();
+    if (!current.installed) throw new WindowsRuntimeError('WINDOWS_RUNTIME_NOT_INSTALLED', 'Сначала подготовьте локальные компоненты Windows.');
+    await this.#controlFor(current.folder);
+    return configureWindowsTunnel({ folder: current.folder, controlSourceFile: this.controlSourceFile, credentials,
+      environment: this.environment, execute: this.execute, executeInput: this.executeInput });
   }
 
   async #externalControl(folder, command, extraArgs = []) { return this.#runControl(folder, command, extraArgs); }
