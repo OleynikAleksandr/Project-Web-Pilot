@@ -121,19 +121,22 @@ test('failed Apple installation request does not activate the helper', async () 
   }), error => /Не удалось открыть установку Apple/.test(error.publicMessage));
   assert.deepEqual(calls, ['/usr/bin/xcode-select']);
 });
-test('failed installer activation offers visible recovery and a fresh retry', async () => {
-  let failed = true;
+test('failed installer activation remains an accepted installation with visible recovery and no duplicate launch', async () => {
+  let launches = 0;
   const f = fixture({ probeGit: async () => false, installGit: () => installMacGit(async command => {
-    if (command === '/usr/bin/open' && failed) throw new Error('private launch error');
+    if (command === '/usr/bin/xcode-select') launches++;
+    if (command === '/usr/bin/open') throw new Error('private launch error');
   }) });
   await f.flow.check(); await f.flow.install();
-  assert.equal(f.flow.snapshot().phase, 'error');
+  assert.equal(f.flow.snapshot().phase, 'git-installing');
+  assert.equal(f.flow.snapshot().gitInstallationRequested, true);
   assert.match(f.flow.snapshot().error, /Сверните Web Pilot жёлтой кнопкой/);
   assert.doesNotMatch(f.flow.snapshot().error, /private launch error/);
   assert.equal(f.flow.snapshot().git, false);
-  failed = false; await f.flow.install();
+  await f.flow.install();
   assert.equal(f.flow.snapshot().phase, 'git-installing');
-  assert.equal(f.flow.snapshot().error, null);
+  assert.equal(launches, 1);
+  f.flow.dispose();
 });
 
 test('known setup error explains the cause, preserves installed Git and supports retry without leaking stderr', async () => {
@@ -157,4 +160,53 @@ test('unknown preparation errors do not blame the network or publish an arbitrar
  await f.flow.check();
  assert.match(f.flow.snapshot().error,/Проверить и продолжить/);
  assert.doesNotMatch(f.flow.snapshot().error,/private|интернет/);
+});
+
+function gitWatchFixture(overrides = {}) {
+ const timers = new Map(); let id = 0;
+ const f = fixture({ gitPollLimit: 3, scheduleGit: callback => { timers.set(++id,callback); return id; },
+  cancelGit: token => timers.delete(token), ...overrides });
+ return { ...f, timers, tick: async () => {
+  const next=timers.entries().next().value; assert.ok(next,'expected a scheduled Git check');
+  timers.delete(next[0]); await next[1]();
+ } };
+}
+test('Apple completion is detected automatically after a focus warning without preparing or reinstalling', async () => {
+ let installed=false;
+ const f=gitWatchFixture({probeGit:async()=>installed,installGit:async()=>({warning:'Installer stays behind the app'})});
+ await f.flow.check(); await f.flow.install();
+ await f.tick(); assert.equal(f.flow.snapshot().git,false);assert.equal(f.timers.size,1);
+ installed=true; await f.tick();
+ assert.equal(f.flow.snapshot().git,true);assert.equal(f.flow.snapshot().phase,'prepare');
+ assert.equal(f.flow.snapshot().gitInstallationRequested,false);assert.equal(f.flow.snapshot().error,null);
+ assert.equal(f.timers.size,0);assert.deepEqual(f.calls,[],'preparation requires the next explicit action');
+ await f.flow.install();assert.deepEqual(f.calls,[]);
+ await f.flow.check({prepare:true});assert.deepEqual(f.calls,['prepare']);
+ f.flow.dispose();
+});
+test('Git watcher has no overlapping probes and ignores results after disposal', async () => {
+ let finish;
+ const f=gitWatchFixture({probeGit:()=>new Promise(resolve=>{finish=resolve;})});
+ await f.flow.install();
+ const inFlight=f.tick(); assert.equal(f.timers.size,0);
+ const before=f.updates.length; f.flow.dispose();finish(true);await inFlight;
+ assert.equal(f.updates.length,before);assert.equal(f.flow.snapshot().git,false);assert.equal(f.timers.size,0);
+});
+test('manual verification invalidates a stale watcher and keeps one watcher while installation is pending', async () => {
+ let pendingProbe,call=0;
+ const f=gitWatchFixture({probeGit:async()=>++call===1 ? new Promise(resolve=>{pendingProbe=resolve;}) : false});
+ await f.flow.install();const stale=f.tick();
+ await f.flow.check();assert.equal(f.flow.snapshot().phase,'git-installing');assert.equal(f.timers.size,1);
+ pendingProbe(true);await stale;
+ assert.equal(f.flow.snapshot().git,false,'obsolete completion cannot overwrite a fresh manual result');
+ assert.equal(f.timers.size,1);f.flow.dispose();assert.equal(f.timers.size,0);
+});
+test('bounded Git polling offers manual recovery and never marks missing Git ready', async () => {
+ const f=gitWatchFixture({probeGit:async()=>{throw new Error('private probe failure');},gitPollLimit:2});
+ await f.flow.install();await f.tick();await f.tick();
+ assert.equal(f.timers.size,0);assert.equal(f.flow.snapshot().git,false);
+ assert.equal(f.flow.snapshot().gitInstallationRequested,false);
+ assert.match(f.flow.snapshot().error,/Проверить и продолжить/);
+ assert.doesNotMatch(f.flow.snapshot().error,/private probe/);
+ f.flow.dispose();
 });

@@ -1022,3 +1022,5 @@ ZIP, INSTALL.txt и SHA256SUMS.txt находятся в ~/Downloads/WebPilot-0.
 Facade mac-first-run.py остаётся владельцем системных окон и секретного ввода. Русский текст передаётся в AppleScript как UTF-8; JSON Unicode escapes не используются. Worker различает MAC_TUNNEL_PROMPT_FAILED, MAC_TUNNEL_INVALID_DATA и MAC_TUNNEL_SETUP_FAILED; наружу выходит только код, отмена возвращает cancelled. Сохранение выполняется после получения обоих значений через существующий runtime facade.
 
 MacRuntimeBootstrap принимает от worker только allowlist из трёх кодов ошибки при ok=false. Любой иной вывод становится общей ошибкой настройки. Поле publicMessage формируется локально и не включает stderr, stdout или значение секрета.
+
+StartupReadiness отдельно хранит факт принятого запроса установки Apple и владеет ограниченным Git watcher. Проверка выполняется существующим inspectMacGit, без запуска системного Git shim до готовности developer directory. Таймер не удерживает приложение; поколения отсеивают устаревший результат после ручной проверки/dispose. Установка и подготовка runtime остаются отдельными действиями. Отказ foreground-активации не отменяет уже принятый запрос Apple.

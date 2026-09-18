@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 6,
+  "plan_revision": 8,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-corrections-032",
@@ -153,8 +153,8 @@
       "expected_commit_message": "fix: distinguish tunnel prompt and save failures"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-corrections-032",
         "task_id": "T003",
@@ -321,7 +321,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-corrections-032
 Current Task: нет
-Revision: 6
+Revision: 8
 
 ## Цель
 
@@ -342,8 +342,8 @@ Revision: 6
   - Git Commit: [DONE] fix: distinguish tunnel prompt and save failures
   - Reference: first-run-corrections-032 / T002 / implementation
   - Файлы: src/mac-runtime.mjs, tests/mac-runtime.test.mjs, docs/modules/first-run-onboarding.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T003: Проверять завершение установки Apple автоматически — Ожидает
-  - Git Commit: [PENDING] fix: observe Apple component installation readiness
+- [DONE] T003: Проверять завершение установки Apple автоматически — Завершено
+  - Git Commit: [DONE] fix: observe Apple component installation readiness
   - Reference: first-run-corrections-032 / T003 / implementation
   - Файлы: src/startup-readiness.mjs, tests/startup-readiness.test.mjs, docs/modules/first-run-onboarding.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T004: Скрывать повторную установку Apple и показывать следующий шаг — Ожидает

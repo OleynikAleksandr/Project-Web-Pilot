@@ -33,10 +33,9 @@ export async function installMacGit(run = execute) {
   try {
     await run('/usr/bin/open', ['-a', '/System/Library/CoreServices/Install Command Line Developer Tools.app'], { timeout: 10000 });
   } catch {
-    throw Object.assign(new Error('Не удалось показать окно установки Apple.'), {
-      publicMessage: 'Установка Apple запущена, но её окно не удалось вывести вперёд. Сверните Web Pilot жёлтой кнопкой и подтвердите установку. После завершения вернитесь и нажмите «Проверить и продолжить».',
-    });
+    return { warning: 'Установка Apple запущена, но её окно не удалось вывести вперёд. Сверните Web Pilot жёлтой кнопкой и подтвердите установку. После завершения вернитесь и нажмите «Проверить и продолжить».' };
   }
+  return { warning: null };
 }
 
 // No cookies, account APIs, tokens, or page internals.
@@ -50,11 +49,14 @@ export function accountObservation() {
 
 export class StartupReadiness {
   constructor({ probeNode, probeGit, inspectRuntime, prepareRuntime, installGit, configureTunnel, onChange = () => {},
-    schedule = setTimeout, cancel = clearTimeout } = {}) {
-    Object.assign(this, { probeNode, probeGit, inspectRuntime, prepareRuntime, installGit, configureTunnel, onChange, schedule, cancel });
+    schedule = setTimeout, cancel = clearTimeout, scheduleGit = setTimeout, cancelGit = clearTimeout,
+    gitPollInterval = 5000, gitPollLimit = 720 } = {}) {
+    Object.assign(this, { probeNode, probeGit, inspectRuntime, prepareRuntime, installGit, configureTunnel, onChange, schedule, cancel,
+      scheduleGit, cancelGit, gitPollInterval, gitPollLimit });
     this.state = { phase: 'checking', busy: false, node: false, git: false, runtime: false, tunnel: false,
-      account: 'unknown', page: 'idle', pageError: null, error: null };
+      gitInstallationRequested: false, account: 'unknown', page: 'idle', pageError: null, error: null };
     this.live = true; this.pending = null; this.pageGeneration = 0; this.timer = null;
+    this.gitTimer = null; this.gitWatchGeneration = 0;
   }
   snapshot() { return { ...this.state }; }
   publish(patch) { if (!this.live) return; Object.assign(this.state, patch); this.onChange(this.snapshot()); }
@@ -70,13 +72,18 @@ export class StartupReadiness {
     return this.pending;
   }
   async probe() {
+    this.stopGitWatch();
     this.publish({ phase: 'checking', runtime: false, tunnel: false });
     const node = await this.probeNode().then(() => true, () => false);
     const git = await this.probeGit().catch(() => false);
     if (!this.live) return false;
-    this.publish({ node, git });
+    this.publish({ node, git, ...(git ? { gitInstallationRequested: false } : {}) });
     if (!node) { this.publish({ phase: 'package', error: 'В приложении не запускается встроенный компонент. Скопируйте полное приложение в Applications и откройте его снова.' }); return false; }
-    if (!git) { this.publish({ phase: 'git' }); return false; }
+    if (!git) {
+      this.publish({ phase: this.state.gitInstallationRequested ? 'git-installing' : 'git' });
+      if (this.state.gitInstallationRequested) this.watchGitInstallation();
+      return false;
+    }
     const service = await this.inspectRuntime();
     this.publish({ runtime: !!service?.mcp?.ready, tunnel: !!service?.tunnel?.ready && !!service?.tunnel?.configured });
     return true;
@@ -95,10 +102,45 @@ export class StartupReadiness {
       phase: !service?.mcp?.ready ? 'prepare' : service?.tunnel?.ready && service?.tunnel?.configured ? 'connected' : 'tunnel' });
   }
   install() {
+    if (this.state.git || this.state.gitInstallationRequested) return this.pending ?? Promise.resolve();
     return this.serial(async () => {
-      await this.installGit();
-      this.publish({ phase: 'git-installing' });
+      const result = await this.installGit();
+      this.publish({ phase: 'git-installing', gitInstallationRequested: true, error: result?.warning ?? null });
+      this.watchGitInstallation();
     });
+  }
+  stopGitWatch() {
+    this.gitWatchGeneration++;
+    if (this.gitTimer !== null) this.cancelGit(this.gitTimer);
+    this.gitTimer = null;
+  }
+  watchGitInstallation() {
+    this.stopGitWatch();
+    if (!this.live || this.state.git || !this.state.gitInstallationRequested) return;
+    const generation = this.gitWatchGeneration;
+    let attempts = 0;
+    const current = () => this.live && generation === this.gitWatchGeneration;
+    const scheduleNext = () => {
+      if (!current()) return;
+      this.gitTimer = this.scheduleGit(async () => {
+        this.gitTimer = null;
+        if (!current()) return;
+        if (this.pending) { scheduleNext(); return; }
+        const ready = await this.probeGit().catch(() => false);
+        if (!current()) return;
+        if (ready) {
+          this.stopGitWatch();
+          this.publish({ git: true, gitInstallationRequested: false, phase: 'prepare', error: null });
+        } else if (++attempts < this.gitPollLimit) scheduleNext();
+        else {
+          this.stopGitWatch();
+          this.publish({ phase: 'git', gitInstallationRequested: false,
+            error: 'Автоматическая проверка пока не подтвердила установку Apple. Если она ещё идёт, дождитесь завершения и нажмите «Проверить и продолжить». Если установка отменена, её можно запустить снова.' });
+        }
+      }, this.gitPollInterval);
+      this.gitTimer?.unref?.();
+    };
+    scheduleNext();
   }
   configure() {
     return this.serial(async () => {
@@ -128,7 +170,7 @@ export class StartupReadiness {
     if (generation !== this.pageGeneration || !this.live || ['loading', 'slow', 'failed'].includes(this.state.page)) return;
     this.publish({ account: observation?.authenticated ? 'signed-in' : observation?.login ? 'signed-out' : 'unknown' });
   }
-  dispose() { this.live = false; if (this.timer !== null) this.cancel(this.timer); this.timer = null; }
+  dispose() { this.live = false; this.stopGitWatch(); if (this.timer !== null) this.cancel(this.timer); this.timer = null; }
 }
 
 
