@@ -5,6 +5,7 @@ import os from 'node:os';
 import { createHash } from 'node:crypto';
 import { execFileSync, spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { isDeepStrictEqual } from 'node:util';
 import { extractFile, listPackage, uncache } from '@electron/asar';
 
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -31,8 +32,11 @@ export async function verifyPackagedSources({ root, resources, version, sources 
   uncache(asar);
   const pkg = JSON.parse(extractFile(asar, 'package.json'));
   if (pkg.name !== 'project-web-pilot' || pkg.version !== version) throw new Error('Package version mismatch: ' + resources);
+  const expectedPackage = JSON.parse(await fs.readFile(path.join(root, 'package.json'), 'utf8'));
+  for (const field of ['private', 'scripts', 'devDependencies']) delete expectedPackage[field];
+  if (!isDeepStrictEqual(pkg, expectedPackage)) throw new Error('Packaged runtime manifest mismatch');
   for (const [file, expected] of Object.entries(sources)) {
-    if (file === 'package-lock.json') continue; // Packager intentionally prunes the development lockfile.
+    if (file === 'package-lock.json' || file === 'package.json') continue; // Development metadata is pruned; runtime fields are checked above.
     const actual = file.startsWith('resources/') ? await hashFile(path.join(resources, file)) : digest(extractFile(asar, file));
     if (actual !== expected) throw new Error('Packaged source mismatch: ' + file);
   }

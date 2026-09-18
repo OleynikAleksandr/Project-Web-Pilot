@@ -55,3 +55,15 @@ test('paired build is sequential and propagates failure before the next platform
   await assert.rejects(buildPlatforms('/fixture', async (_, args) => { failed.push(args[1]); throw new Error('fixture failure'); }), /fixture failure/);
   assert.deepEqual(failed, ['build:mac']);
 });
+
+test('packager prunes development metadata while preserving every runtime field', async t => {
+  const f = await fixture(t);
+  const production = { name: 'project-web-pilot', version: '1.0.0', main: 'src/startup.mjs', type: 'module' };
+  await fs.writeFile(path.join(f.root, 'package.json'), JSON.stringify({ ...production, private: true, scripts: { build: 'fixture' }, devDependencies: { fixture: '1.0.0' } }));
+  await fs.writeFile(path.join(f.input, 'package.json'), JSON.stringify(production));
+  await createPackage(f.input, path.join(f.resources, 'app.asar'));
+  assert.equal((await verifyPackagedSources(f)).version, '1.0.0');
+  await fs.writeFile(path.join(f.input, 'package.json'), JSON.stringify({ ...production, main: 'wrong.mjs' }));
+  await createPackage(f.input, path.join(f.resources, 'app.asar'));
+  await assert.rejects(verifyPackagedSources(f), /runtime manifest mismatch/);
+});

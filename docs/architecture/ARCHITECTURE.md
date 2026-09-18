@@ -1147,3 +1147,7 @@ V001: Windows package verifier дополнительно проверяет н�
 совпадение упакованных исходников и ресурсов. Electron fixture использует тот же
 startupPlatformOptions, что production, с изолированными Windows-компонентами;
 системные установщики и личные ключи в этом сценарии не используются.
+
+R003: сверка package.json учитывает штатное удаление private, scripts и
+devDependencies Electron Packager. Все остальные runtime-поля сверяются
+структурно; исходный manifest целиком входит в snapshot неизменности сборки.
