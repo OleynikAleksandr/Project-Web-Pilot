@@ -1028,3 +1028,7 @@ StartupReadiness отдельно хранит факт принятого за�
 T004 correction: startup renderer использует `gitInstallationRequested` вместе
 с фактическим `git`. Скрытая кнопка установки также disabled. Подтверждение Git
 меняет следующий шаг UI, но само не запускает подготовку runtime.
+
+Поставка 0.6.38 содержит изменения native prompt, безопасного контракта ошибок,
+StartupReadiness и startup renderer. Source и resources сверены с обеими
+платформами и постоянным macOS app; новый чистый проход остаётся отдельным gate.

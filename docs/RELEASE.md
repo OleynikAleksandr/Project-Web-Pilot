@@ -173,3 +173,28 @@ Evidence: .harness/runtime/releases/0.6.34/{mac-release.json,source-verification
 - Project-Web-Pilot-0.6.37-Windows-x64.zip: 316323066 bytes; SHA-256 37d725c782895af44bde82d86df169231dd43ffe5a341d730b6ad3745cfd781c; ASAR 003c8512e9378819d409a7cdb6bc49e520f03e120369af76e6aa55cf6c4a0a45.
 
 ZIP, INSTALL.txt и SHA256SUMS.txt находятся в ~/Downloads/WebPilot-0.6.37/. Evidence — .harness/runtime/releases/0.6.37/{mac-release.json,source-verification.json,release-manifest.json}. Изолированная установка из реального ZIP прошла за 33.671 с; ранее упавшая установка восстановлена без переустановки и изменения bridge_config. Результат в госте ожидает T017. Рабочий процесс и профиль основного Mac не перезапускались.
+
+## Выпуск 0.6.38 — ввод туннеля и готовность Apple
+
+18.09.2026 обе платформы собраны штатным `npm run build`. Русские тексты
+системных окон больше не превращаются в неподдерживаемые AppleScript escapes;
+ошибка окна отделена от отмены и ошибки данных. Принятый запрос установки Apple
+запускает фоновую проверку Git; повторная установка скрыта, после готовности
+остаётся явное «Проверить и продолжить».
+
+Постоянный macOS app обновлён до 0.6.38; inode 398344301 сохранён. Текущий device
+16777230 проверен в операции обновления; старый receipt 0.6.37 содержит прежний
+номер device 16777232, который не используется как постоянный идентификатор
+между монтированиями. Backup Contents: `.harness/runtime/release-backups/mac-5FGCxT`.
+Совпали все 37 src, 32 resources и четыре mac-tools; установленный app.asar
+совпадает со staging и Mac ZIP. Оба ZIP проверены и скопированы в
+`~/Downloads/WebPilot-0.6.38/` вместе с SHA256SUMS.txt и INSTALL.txt.
+
+- macOS arm64: 181076010 байт; SHA-256 `f74b0c7885e8890391bd3e2ee2d2856aabad3e29784040d1d6911b02741e40da`.
+- Windows x64: 316323993 байт; SHA-256 `039eac9640a4e862aed236f9d44d61ae870ce8ed337bb6182fbbad18dbf00e05`.
+
+Evidence: `.harness/runtime/releases/0.6.38/`. Оба точных выражения диалогов из
+поставки прошли osacompile. Визуальное открытие через Computer Use на хосте не
+подтверждено: отдельный osascript не адресуется, редактор остался в Running без
+доступного окна; тест остановлен. Личные данные не вводились. Новый чистый клон,
+весь путь до файла проекта и native Windows пока не проверены.

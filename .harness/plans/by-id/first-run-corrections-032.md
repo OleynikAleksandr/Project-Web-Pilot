@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 10,
+  "plan_revision": 12,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-corrections-032",
@@ -219,8 +219,8 @@
       "expected_commit_message": "fix: keep Apple installer action out of the next step"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-corrections-032",
         "task_id": "T005",
@@ -321,7 +321,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-corrections-032
 Current Task: нет
-Revision: 10
+Revision: 12
 
 ## Цель
 
@@ -350,8 +350,8 @@ Revision: 10
   - Git Commit: [DONE] fix: keep Apple installer action out of the next step
   - Reference: first-run-corrections-032 / T004 / implementation
   - Файлы: src/ui/startup.mjs, tests/startup-ui.test.mjs, docs/modules/first-run-onboarding.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T005: Собрать и проверить релиз 0.6.38 — Ожидает
-  - Git Commit: [PENDING] build: release first-run prompt and Apple readiness fixes
+- [DONE] T005: Собрать и проверить релиз 0.6.38 — Завершено
+  - Git Commit: [DONE] build: release first-run prompt and Apple readiness fixes
   - Reference: first-run-corrections-032 / T005 / implementation
   - Файлы: package.json, package-lock.json, docs/modules/first-run-onboarding.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
