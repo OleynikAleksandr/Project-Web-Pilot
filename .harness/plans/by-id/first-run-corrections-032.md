@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 28,
+  "plan_revision": 30,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-corrections-032",
@@ -451,8 +451,8 @@
         "suite"
       ],
       "expected_commit_message": "feat: connect clipboard onboarding to readiness and lifecycle",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-corrections-032",
         "task_id": "A004",
@@ -722,7 +722,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-corrections-032
 Current Task: нет
-Revision: 28
+Revision: 30
 
 ## Цель
 
@@ -776,8 +776,8 @@ Revision: 28
   - Git Commit: [DONE] feat: recognize tunnel clipboard changes within onboarding
   - Reference: first-run-corrections-032 / A003 / implementation
   - Файлы: src/tunnel-clipboard.mjs, tests/tunnel-clipboard.test.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
-- [TODO] A004: Связать автоматическое подключение с готовностью и закрытием мастера — Ожидает
-  - Git Commit: [PENDING] feat: connect clipboard onboarding to readiness and lifecycle
+- [DONE] A004: Связать автоматическое подключение с готовностью и закрытием мастера — Завершено
+  - Git Commit: [DONE] feat: connect clipboard onboarding to readiness and lifecycle
   - Reference: first-run-corrections-032 / A004 / implementation
   - Файлы: src/main.mjs, src/startup-readiness.mjs, tests/startup-readiness.test.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 - [TODO] U003: Сделать шаги туннеля последовательными и объяснить копирование — Ожидает

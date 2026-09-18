@@ -26,6 +26,7 @@ import { openStartupPage } from './browser-startup.mjs';
 import { defaultRuntimeFolder, bundledWindowsRuntimeFolder, bundledMacNode, nodeExecutableCandidates } from './platform.mjs';
 import { WindowsRuntimeBootstrap, WINDOWS_RUNTIME_ARCHIVE } from './windows-runtime.mjs';
 import { MacRuntimeBootstrap } from './mac-runtime.mjs';
+import { TunnelClipboard } from './tunnel-clipboard.mjs';
 import { StartupReadiness, inspectMacGit, installMacGit, accountObservation, offerMacInstallation } from './startup-readiness.mjs';
 
 const smoke = !app.isPackaged && process.argv.includes('--smoke');
@@ -56,6 +57,7 @@ let window, browser, sidebar, archiveWindow, runtime, controller, interval, fixt
 let navigationId = 0;
 const actionContext = new AsyncLocalStorage();
 let pageLoading = false;
+let startupClipboard = null;
 let startupFlow = null, startupActive = false, observingAccount = false;
 let startupError = null;
 let storageError = false;
@@ -236,7 +238,7 @@ function snapshot() {
         tunnelConfigured: !!runtime.lastStatus.tunnel?.configured,
       } : null,
     } : null,
-    startup: startupFlow ? { ...startupFlow.snapshot(), active: startupActive } : null,
+    startup: startupFlow ? { ...startupFlow.snapshot(), clipboard: startupClipboard?.snapshot(), active: startupActive } : null,
     theme: shellTheme, hideToolCalls, sidebarWidth, sidebarMinWidth: SIDEBAR_MIN_WIDTH, pageLoading, startupError, storageError, setup: setupState, workspaceHealth, version: app.getVersion(), fixture: smoke };
 }
 
@@ -631,11 +633,27 @@ function createStartupFlow() {
         status = await runtime.control('start', { mcpOnly: !status.tunnel.configured });
       return status;
     },
-    configureTunnel: async () => {
+    configureTunnel: async credentials => {
       await ensurePlatformRuntime();
-      return macRuntimeBootstrap.configureTunnel();
+      return macRuntimeBootstrap.configureTunnel(credentials);
     },
     onChange: publish,
+  });
+  startupClipboard = new TunnelClipboard({
+    readText: () => clipboard.readText(),
+    configure: async credentials => {
+      await startupFlow.configure(credentials);
+      if (!startupFlow.snapshot().tunnel) throw new Error('Tunnel not ready');
+    },
+    onChange: publish,
+  });
+}
+function observeStartupClipboard() {
+  if (!startupClipboard || !startupFlow) return;
+  const s = startupFlow.snapshot();
+  void startupClipboard.tick({
+    active: startupActive && !settingsState && !setupState && s.account === 'signed-in' && !s.tunnel,
+    ready: s.node && s.git && s.runtime, busy: s.busy,
   });
 }
 async function observeStartupAccount() {
@@ -665,7 +683,7 @@ async function startupAction(action) {
   }
   if (action === 'check') { void observeStartupAccount(); return startupFlow.check({ prepare: true }); }
   if (action === 'install-git') return startupFlow.install();
-  if (action === 'configure-tunnel') return startupFlow.configure();
+  if (action === 'configure-tunnel') return startupFlow.configure(startupClipboard?.manualInput());
   if (action === 'chat' || action === 'signup') { startupError = null; return navigate(null); }
   if (action === 'plugins') { startupError = null; return navigate(null, { entryUrl: 'https://chatgpt.com/plugins' }); }
   const pages = {
@@ -1061,7 +1079,7 @@ async function createWindow() {
   });
   window.on('resize', layout);
   window.on('closed', () => {
-    ++navigationId; startupFlow?.dispose(); startupFlow = null; controller?.cancel(); clearInterval(interval); contextCache.clear(); workspaceSetup.invalidateReadiness();
+    ++navigationId; startupClipboard?.dispose(); startupClipboard = null; startupFlow?.dispose(); startupFlow = null; controller?.cancel(); clearInterval(interval); contextCache.clear(); workspaceSetup.invalidateReadiness();
     colorEditor?.close(); chatColorStyles?.dispose();
     void chromiumDiagnostics?.stop(); chromiumDiagnostics = null;
     if (archiveWindow && !archiveWindow.isDestroyed()) archiveWindow.close();
@@ -1083,7 +1101,7 @@ async function createWindow() {
   await sidebar.webContents.loadURL(sidebarUrl);
   if (startupFlow) void startupFlow.check({ prepare: startupActive });
   interval = setInterval(() => {
-    void observeStartupAccount();
+    void observeStartupAccount(); observeStartupClipboard();
     if (!pageLoading && !setupState && !settingsState) { void controller.tick(); }
   }, 1500);
   if (smoke) {

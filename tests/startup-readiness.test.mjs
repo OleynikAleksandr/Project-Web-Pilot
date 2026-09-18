@@ -210,3 +210,20 @@ test('bounded Git polling offers manual recovery and never marks missing Git rea
  assert.doesNotMatch(f.flow.snapshot().error,/private probe/);
  f.flow.dispose();
 });
+
+
+test('automatic credentials stay out of readiness state and success still requires ready tunnel', async () => {
+  const received = [], states = [], data = { tunnelId: 'tunnel_fixture1234567890123456', key: 'sk-fixture-private-1234567890' };
+  let ready = false;
+  const f = new StartupReadiness({ probeNode: async () => {}, probeGit: async () => true,
+    inspectRuntime: async () => ({ mcp: { ready: true }, tunnel: { configured: false, ready: false } }),
+    configureTunnel: async input => { received.push({ ...input }); return { configured: true }; },
+    prepareRuntime: async () => ({ mcp: { ready: true }, tunnel: { configured: true, ready } }),
+    onChange: state => states.push(state),
+  });
+  await f.configure(data); assert.equal(f.snapshot().tunnel, false);
+  ready = true; await f.configure(data); assert.equal(f.snapshot().tunnel, true);
+  assert.deepEqual(received, [data, data]);
+  assert.doesNotMatch(JSON.stringify(states), /sk-fixture|tunnel_fixture/);
+  f.dispose();
+});

@@ -142,11 +142,11 @@ export class StartupReadiness {
     };
     scheduleNext();
   }
-  configure() {
+  configure(credentials) {
     return this.serial(async () => {
       if (!await this.probe() || !this.live) return;
       this.publish({ phase: 'configuring' });
-      const result = await this.configureTunnel();
+      const result = await this.configureTunnel(credentials);
       if (result?.cancelled) { this.publish({ phase: 'tunnel' }); return; }
       await this.prepare();
     });
