@@ -191,10 +191,10 @@ SOFTWARE.
         <section class="startup-step">
           <h3><span class="startup-number">4</span> Первый проект</h3>
           <div id="startup-project-body">
-            <p>Сначала добавьте это подключение в ChatGPT: Plugins → «+» → Connection: Tunnel. Выберите созданный туннель. Для локального подключения выберите No Auth. Если «+» недоступен, включите developer mode в настройках ChatGPT.</p>
-            <button class="secondary" data-startup="plugins">Открыть Plugins в ChatGPT</button>
-            <p>Затем создайте проект. Доступ к его файлам проверим первым действием агента — работа локальных служб сама по себе этого не подтверждает.</p>
+            <p>Теперь можно создать первый проект. Если подключение к этому компьютеру уже добавлено в ChatGPT, повторно добавлять его не нужно.</p>
             <button id="startup-continue" class="primary" data-startup="continue">Создать первый проект</button>
+            <details id="startup-plugin-help"><summary>Нужно добавить или проверить подключение в ChatGPT</summary><p>В разделе Plugins найдите своё подключение. Если оно уже есть, проверьте, что оно использует туннель этого компьютера. Одно название плагина этого не подтверждает.</p><p>Если подключения нет: Plugins → «+» → Connection: Tunnel. Выберите созданный туннель; для этого локального подключения — No Auth. Если «+» недоступен, включите developer mode в настройках ChatGPT.</p><button class="secondary" data-startup="plugins">Открыть Plugins в ChatGPT</button></details>
+            <p class="settings-help">Доступ к файлам проекта проверим первым действием агента.</p>
           </div>
           <p id="startup-project-wait" class="startup-status">Завершите предыдущие шаги.</p>
         </section>
@@ -269,7 +269,7 @@ SOFTWARE.
         <p id="setup-notes" class="setup-notes" hidden></p>
         <details id="setup-files" hidden><summary id="setup-file-summary"></summary><ul id="setup-file-list" class="setup-file-list"></ul></details>
         <div id="setup-identity" hidden><p class="description">Для истории изменений укажите автора. Эти данные сохранятся только в настройках этого проекта.</p><label for="setup-git-name">Имя автора</label><input id="setup-git-name" autocomplete="off"><label for="setup-git-email">Email автора</label><input id="setup-git-email" type="email" autocomplete="off"></div>
-        <div id="setup-experience" hidden><p class="eyebrow">Первая сессия проекта</p><div class="session-choice" role="group" aria-label="Тип первой сессии"><button id="setup-experience-chat" type="button" class="secondary" aria-pressed="true">Chat</button><button id="setup-experience-work" type="button" class="secondary" aria-pressed="false">Work</button></div><p class="settings-help">Chat — обычный разговор. Work — рабочий experience ChatGPT; модель выбирается уже внутри ChatGPT.</p></div>
+        <div id="setup-experience" hidden><p class="eyebrow">Первая сессия проекта</p><div class="session-choice" role="group" aria-label="Тип первой сессии"><button id="setup-experience-chat" type="button" class="secondary">Chat</button><button id="setup-experience-work" type="button" class="secondary">Work</button></div><p class="settings-help">Нажмите Chat или Work — проект будет создан и сразу откроется первая сессия. Chat — обычный разговор, Work — рабочий режим ChatGPT. Модель выбирается внутри ChatGPT.</p></div>
         <div class="actions"><button id="setup-apply" class="primary" hidden>Создать и открыть</button><button id="setup-doctor" type="button" class="primary" hidden>Доктор проекта</button><button id="setup-refresh" class="secondary" hidden>Проверить ещё раз</button><button id="setup-cancel" class="text-button">Отмена</button></div>
       </section>
       <section id="workspace-details" hidden>

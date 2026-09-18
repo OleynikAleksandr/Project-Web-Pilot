@@ -195,3 +195,15 @@ test('automatic step transition keeps its next instruction visible without repea
   assert.deepEqual(scrolled, ['key', 'project']);
   assert.equal(f.document.querySelector('#startup-tunnel-input').closest('ol'), null);
 });
+
+
+test('an existing plugin does not force another setup; optional help is collapsed', async t => {
+  const f = await fixture(t, { account: 'signed-in', git: true, runtime: true, tunnel: true });
+  const help = f.document.querySelector('#startup-plugin-help');
+  assert.equal(help.open, false);
+  assert.equal(f.document.querySelector('[data-startup=plugins]').closest('details'), help);
+  assert.equal(f.document.querySelector('#startup-continue').disabled, false);
+  assert.match(f.document.querySelector('#startup-project-body').textContent, /повторно добавлять его не нужно/);
+  f.document.querySelector('#startup-continue').click(); await f.settle();
+  assert.deepEqual(f.calls, ['continue', 'beginCreate']);
+});

@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 32,
+  "plan_revision": 34,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-corrections-032",
@@ -519,8 +519,8 @@
         "suite"
       ],
       "expected_commit_message": "fix: make plugin setup help conditional",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-corrections-032",
         "task_id": "U004",
@@ -722,7 +722,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-corrections-032
 Current Task: нет
-Revision: 32
+Revision: 34
 
 ## Цель
 
@@ -784,8 +784,8 @@ Revision: 32
   - Git Commit: [DONE] fix: guide tunnel setup through completed steps
   - Reference: first-run-corrections-032 / U003 / implementation
   - Файлы: src/ui/index.html, src/ui/startup.mjs, tests/startup-ui.test.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
-- [TODO] U004: Показывать добавление плагина как помощь по необходимости — Ожидает
-  - Git Commit: [PENDING] fix: make plugin setup help conditional
+- [DONE] U004: Показывать добавление плагина как помощь по необходимости — Завершено
+  - Git Commit: [DONE] fix: make plugin setup help conditional
   - Reference: first-run-corrections-032 / U004 / implementation
   - Файлы: src/ui/index.html, tests/startup-ui.test.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 - [TODO] U005: Передавать выбранный Chat или Work вместе с применением проекта — Ожидает
