@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 97,
+  "plan_revision": 99,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-onboarding-031",
@@ -1832,8 +1832,8 @@
       }
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-onboarding-031",
         "task_id": "T010",
@@ -2111,7 +2111,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-onboarding-031
 Current Task: нет
-Revision: 97
+Revision: 99
 
 ## Цель
 
@@ -2286,8 +2286,8 @@ Revision: 97
   - Git Commit: [DONE] docs: record accepted macOS startup and evidence limits
   - Reference: first-run-onboarding-031 / T017 / implementation
   - Файлы: docs/CLEAN_INSTALL.md
-- [TODO] T010: Передать исходные условия проверки Windows 11 другому агенту — Ожидает
-  - Git Commit: [PENDING] docs: hand off Windows 11 clean test baseline
+- [DONE] T010: Передать исходные условия проверки Windows 11 другому агенту — Завершено
+  - Git Commit: [DONE] docs: hand off Windows 11 clean test baseline
   - Reference: first-run-onboarding-031 / T010 / implementation
   - Файлы: docs/TRANSFER_TO_WINDOWS.md
 - [TODO] T011: Передать порядок диагностики и исправлений первого запуска Windows — Ожидает
