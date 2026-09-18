@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 15,
+  "plan_revision": 16,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-corrections-032",
@@ -34,7 +34,9 @@
       "src/main.mjs",
       "src/preload.cjs",
       "src/ui/workspace-setup.mjs",
-      "tests/project-doctor-ui.test.mjs"
+      "tests/project-doctor-ui.test.mjs",
+      "src/tunnel-clipboard.mjs",
+      "tests/tunnel-clipboard.test.mjs"
     ],
     "documentation_paths": [
       "docs/modules/first-run-onboarding.md",
@@ -324,11 +326,140 @@
       }
     },
     {
+      "id": "A001",
+      "title": "accept tunnel credentials through private worker stdin",
+      "why": "accept tunnel credentials through private worker stdin",
+      "dependencies": [
+        "U002"
+      ],
+      "functional_paths": [
+        "resources/runtime-control/mac-first-run.py",
+        "tests/mac-first-run.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/first-run-onboarding.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/VERIFICATION.md"
+      ],
+      "acceptance_criteria": [
+        "JSON stdin ограничен; секрет не попадает в argv/environment/stdout/errors.",
+        "Оба значения применяются без диалогов; ручной ввод и отмена сохранены."
+      ],
+      "verification_ids": [
+        "suite"
+      ],
+      "expected_commit_message": "feat: accept tunnel credentials through private worker stdin",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "first-run-corrections-032",
+        "task_id": "A001",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "A002",
+      "title": "pass clipboard credentials to the native runtime facade",
+      "why": "pass clipboard credentials to the native runtime facade",
+      "dependencies": [
+        "A001"
+      ],
+      "functional_paths": [
+        "src/mac-runtime.mjs",
+        "tests/mac-runtime.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/first-run-onboarding.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/VERIFICATION.md"
+      ],
+      "acceptance_criteria": [
+        "Credentials идут только в stdin дочернего процесса; ошибки allowlist."
+      ],
+      "verification_ids": [
+        "suite"
+      ],
+      "expected_commit_message": "feat: pass clipboard credentials to the native runtime facade",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "first-run-corrections-032",
+        "task_id": "A002",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "A003",
+      "title": "recognize tunnel clipboard changes within onboarding",
+      "why": "recognize tunnel clipboard changes within onboarding",
+      "dependencies": [
+        "A002"
+      ],
+      "functional_paths": [
+        "src/tunnel-clipboard.mjs",
+        "tests/tunnel-clipboard.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/first-run-onboarding.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/VERIFICATION.md"
+      ],
+      "acceptance_criteria": [
+        "ID и ключ распознаются последовательно; старый буфер при активации игнорируется.",
+        "Ключ не хранится в состоянии/renderer; закрытие шага прекращает чтение.",
+        "Повтор не запускает вторую настройку; ошибка позволяет новое копирование."
+      ],
+      "verification_ids": [
+        "suite"
+      ],
+      "expected_commit_message": "feat: recognize tunnel clipboard changes within onboarding",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "first-run-corrections-032",
+        "task_id": "A003",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "A004",
+      "title": "connect clipboard onboarding to readiness and lifecycle",
+      "why": "connect clipboard onboarding to readiness and lifecycle",
+      "dependencies": [
+        "A003"
+      ],
+      "functional_paths": [
+        "src/main.mjs",
+        "src/startup-readiness.mjs",
+        "tests/startup-readiness.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/first-run-onboarding.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/VERIFICATION.md"
+      ],
+      "acceptance_criteria": [
+        "Монитор работает только в открытом шаге подключения, после входа и готовности компонентов.",
+        "Успех проверяет реально запущенный tunnel; ручной ввод доступен."
+      ],
+      "verification_ids": [
+        "suite"
+      ],
+      "expected_commit_message": "feat: connect clipboard onboarding to readiness and lifecycle",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "first-run-corrections-032",
+        "task_id": "A004",
+        "role": "implementation"
+      }
+    },
+    {
       "id": "U003",
       "title": "Сделать шаги туннеля последовательными и объяснить копирование",
       "why": "Сделать шаги туннеля последовательными и объяснить копирование",
       "dependencies": [
-        "U002"
+        "A004"
       ],
       "functional_paths": [
         "src/ui/index.html",
@@ -341,9 +472,9 @@
         "docs/VERIFICATION.md"
       ],
       "acceptance_criteria": [
-        "Понятны вход Platform, кнопка создания ключа и копирование/вставка на Mac и Windows.",
-        "Завершённые шаги скрываются по явному подтверждению; ввод доступен, есть возврат. Буфер/ключ не читаются renderer.",
-        "Ошибки и отмена не теряют текущий шаг."
+        "Инструкции объясняют создание ID/ключа и Command C/V или Ctrl C/V.",
+        "Шаги сменяются по автоматически распознанным данным и результату подключения, без кнопок подтверждения.",
+        "Ручной ввод остаётся резервом; ключ не попадает в renderer."
       ],
       "verification_ids": [
         "suite"
@@ -509,6 +640,10 @@
         "T005",
         "U001",
         "U002",
+        "A001",
+        "A002",
+        "A003",
+        "A004",
         "U003",
         "U004",
         "U005",
@@ -558,6 +693,11 @@
       "id": "9d277bf8-8257-49bd-8f04-f42e76ab1be8",
       "text": "18.09.2026 пользователь подтвердил полный первый запуск 0.6.38 на абсолютно чистой macOS без ошибок. Затем поручил добавить в текущий план и выполнить UI-микрозадачи по четырём скриншотам: дубль NONE, последовательные шаги туннеля и копирование, необязательное добавление уже имеющегося плагина, немедленное создание по Chat/Work, диагностические кнопки только по проблеме; собрать новый релиз.",
       "recorded_at": "2026-09-18T07:15:23.626662+00:00"
+    },
+    {
+      "id": "773ad7d2-ee46-4c2e-a960-1fb7463d19aa",
+      "text": "Пользователь отверг подтверждения завершения: всё автоматизируемое должно происходить автоматически. Прямо разрешил определять скопированные ID/ключ из буфера, распознавать tunnel_ и подставлять данные, переходя дальше без вопросов. Чтение ограничено активным этапом подключения; ключ не публикуется в renderer/логи.",
+      "recorded_at": "2026-09-18T07:16:47.960846+00:00"
     }
   ],
   "owner_session_id": "01a0b318-cc66-7743-9de7-696f05fff6e6",
@@ -572,7 +712,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-corrections-032
 Current Task: нет
-Revision: 15
+Revision: 16
 
 ## Цель
 
@@ -614,6 +754,22 @@ Revision: 15
   - Git Commit: [PENDING] fix: remove duplicate empty plan label
   - Reference: first-run-corrections-032 / U002 / implementation
   - Файлы: src/ui/sidebar.mjs, tests/electron-smoke.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md
+- [TODO] A001: accept tunnel credentials through private worker stdin — Ожидает
+  - Git Commit: [PENDING] feat: accept tunnel credentials through private worker stdin
+  - Reference: first-run-corrections-032 / A001 / implementation
+  - Файлы: resources/runtime-control/mac-first-run.py, tests/mac-first-run.test.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md
+- [TODO] A002: pass clipboard credentials to the native runtime facade — Ожидает
+  - Git Commit: [PENDING] feat: pass clipboard credentials to the native runtime facade
+  - Reference: first-run-corrections-032 / A002 / implementation
+  - Файлы: src/mac-runtime.mjs, tests/mac-runtime.test.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md
+- [TODO] A003: recognize tunnel clipboard changes within onboarding — Ожидает
+  - Git Commit: [PENDING] feat: recognize tunnel clipboard changes within onboarding
+  - Reference: first-run-corrections-032 / A003 / implementation
+  - Файлы: src/tunnel-clipboard.mjs, tests/tunnel-clipboard.test.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md
+- [TODO] A004: connect clipboard onboarding to readiness and lifecycle — Ожидает
+  - Git Commit: [PENDING] feat: connect clipboard onboarding to readiness and lifecycle
+  - Reference: first-run-corrections-032 / A004 / implementation
+  - Файлы: src/main.mjs, src/startup-readiness.mjs, tests/startup-readiness.test.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md
 - [TODO] U003: Сделать шаги туннеля последовательными и объяснить копирование — Ожидает
   - Git Commit: [PENDING] fix: guide tunnel setup through completed steps
   - Reference: first-run-corrections-032 / U003 / implementation
