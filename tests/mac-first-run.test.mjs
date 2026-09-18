@@ -55,3 +55,66 @@ test('invalid tunnel identity does not leave a key behind', async t => {
   ].join('\n'));
   assert.deepEqual(JSON.parse(stdout), { key: false, profile: false });
 });
+
+test('both real native prompt scripts compile with Unicode and hidden key input', { skip: process.platform !== 'darwin' }, async t => {
+  const { stdout } = await run(t, [
+    'import subprocess,tempfile',
+    'from unittest.mock import patch',
+    'scripts=[]',
+    'def capture(args, **kwargs):',
+    '    scripts.append(args[-1])',
+    '    answer="fixture-only-secret-value" if "with hidden answer" in args[-1] else "tunnel_fixture1234567890123456"',
+    '    return subprocess.CompletedProcess(args,0,stdout=answer,stderr="")',
+    'with patch("subprocess.run",capture):',
+    '    h["configure"](c)',
+    'assert len(scripts)==2',
+    'assert "Вставьте tunnel_id" in scripts[0]',
+    'assert "with hidden answer" not in scripts[0]',
+    'assert "with hidden answer" in scripts[1]',
+    'with tempfile.TemporaryDirectory() as folder:',
+    '    for i,script in enumerate(scripts):',
+    '        compiled=subprocess.run(["/usr/bin/osacompile","-o",str(pathlib.Path(folder)/f"{i}.scpt"),"-"],input=script,capture_output=True,text=True,timeout=10)',
+    '        assert compiled.returncode==0, compiled.stderr',
+    'print(json.dumps({"compiled":len(scripts)}))',
+  ].join('\n'));
+  assert.deepEqual(JSON.parse(stdout), { compiled: 2 });
+});
+
+test('native prompt failure is distinct from cancellation and changes no configuration', async t => {
+  const { stdout } = await run(t, [
+    'import subprocess',
+    'from unittest.mock import patch',
+    'def reject(args, **kwargs):',
+    '    return subprocess.CompletedProcess(args,1,stdout="private-output",stderr="private-command (-2741)")',
+    'with patch("subprocess.run",reject):',
+    '    try: h["configure"](c)',
+    '    except h["PromptFailure"]: pass',
+    '    else: raise AssertionError("missing prompt failure")',
+    'assert not c["KEY_FILE"].exists() and not c["PROFILE"].exists()',
+    'def cancel(args, **kwargs):',
+    '    return subprocess.CompletedProcess(args,1,stdout="",stderr="User canceled. (-128)")',
+    'with patch("subprocess.run",cancel):',
+    '    try: h["prompt"]("Cancel fixture")',
+    '    except h["Cancelled"]: pass',
+    '    else: raise AssertionError("missing cancellation")',
+    'print(json.dumps({"untouched":True}))',
+  ].join('\n'));
+  assert.deepEqual(JSON.parse(stdout), { untouched: true });
+});
+
+test('worker reports only a safe prompt error code when the native dialog cannot open', async t => {
+  const { stdout } = await run(t, [
+    'import subprocess,io,contextlib',
+    'from unittest.mock import patch',
+    'def reject(args, **kwargs):',
+    '    return subprocess.CompletedProcess(args,1,stdout="fixture-secret",stderr="private-command (-2741)")',
+    'out,err=io.StringIO(),io.StringIO()',
+    'with patch("subprocess.run",reject),patch("sys.platform","darwin"),contextlib.redirect_stdout(out),contextlib.redirect_stderr(err):',
+    '    try: runpy.run_path(' + JSON.stringify(helper) + ',run_name="__main__")',
+    '    except SystemExit as stopped: assert stopped.code==1',
+    'assert out.getvalue()==""',
+    'assert json.loads(err.getvalue())=={"ok":False,"code":"MAC_TUNNEL_PROMPT_FAILED"}',
+    'print(json.dumps({"sanitized":True}))',
+  ].join('\n'));
+  assert.deepEqual(JSON.parse(stdout), { sanitized: true });
+});

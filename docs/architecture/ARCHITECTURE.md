@@ -1016,3 +1016,7 @@ StartupReadiness отображает безопасные заранее зад
 - Project-Web-Pilot-0.6.37-Windows-x64.zip: 316323066 bytes; SHA-256 37d725c782895af44bde82d86df169231dd43ffe5a341d730b6ad3745cfd781c; ASAR 003c8512e9378819d409a7cdb6bc49e520f03e120369af76e6aa55cf6c4a0a45.
 
 ZIP, INSTALL.txt и SHA256SUMS.txt находятся в ~/Downloads/WebPilot-0.6.37/. Evidence — .harness/runtime/releases/0.6.37/{mac-release.json,source-verification.json,release-manifest.json}. Изолированная установка из реального ZIP прошла за 33.671 с; ранее упавшая установка восстановлена без переустановки и изменения bridge_config. Результат в госте ожидает T017. Рабочий процесс и профиль основного Mac не перезапускались.
+
+## Нативный ввод подключения — correction 0.6.38
+
+Facade mac-first-run.py остаётся владельцем системных окон и секретного ввода. Русский текст передаётся в AppleScript как UTF-8; JSON Unicode escapes не используются. Worker различает MAC_TUNNEL_PROMPT_FAILED, MAC_TUNNEL_INVALID_DATA и MAC_TUNNEL_SETUP_FAILED; наружу выходит только код, отмена возвращает cancelled. Сохранение выполняется после получения обоих значений через существующий runtime facade.

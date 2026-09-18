@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 2,
+  "plan_revision": 4,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-corrections-032",
@@ -91,8 +91,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-corrections-032",
         "task_id": "T001",
@@ -321,7 +321,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-corrections-032
 Current Task: нет
-Revision: 2
+Revision: 4
 
 ## Цель
 
@@ -334,8 +334,8 @@ Revision: 2
 
 ## Микрозадачи
 
-- [TODO] T001: Исправить русские системные окна ввода туннеля — Ожидает
-  - Git Commit: [PENDING] fix: preserve Unicode in native tunnel prompts
+- [DONE] T001: Исправить русские системные окна ввода туннеля — Завершено
+  - Git Commit: [DONE] fix: preserve Unicode in native tunnel prompts
   - Reference: first-run-corrections-032 / T001 / implementation
   - Файлы: resources/runtime-control/mac-first-run.py, tests/mac-first-run.test.mjs, docs/modules/first-run-onboarding.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T002: Показывать точную причину отказа настройки подключения — Ожидает
