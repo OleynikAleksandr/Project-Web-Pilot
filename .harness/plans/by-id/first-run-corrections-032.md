@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 50,
+  "plan_revision": 51,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-corrections-032",
@@ -750,7 +750,8 @@
       ],
       "functional_paths": [
         "package.json",
-        "package-lock.json"
+        "package-lock.json",
+        "tests/electron-smoke.mjs"
       ],
       "documentation_paths": [
         "docs/WORKSPACE_SETUP.md",
@@ -836,7 +837,7 @@
         "Успех компонентов в Test macOS 02, дефект фокуса Apple и ожидаемый чистый повтор 0.6.38 указаны раздельно.",
         "План прежней сессии сохранён; текущий план завершается без архивирования."
       ],
-      "expected_commit_message": "docs: deliver first-run correction release 0.6.38"
+      "expected_commit_message": "docs: document project location release 0.6.40"
     }
   ],
   "blocked_reason": null,
@@ -874,7 +875,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-corrections-032
 Current Task: нет
-Revision: 50
+Revision: 51
 
 ## Цель
 
@@ -969,9 +970,9 @@ Revision: 50
 - [TODO] P003: Собрать и проверить 0.6.40 для macOS и Windows — Ожидает
   - Git Commit: [PENDING] release: publish project location flow 0.6.40
   - Reference: first-run-corrections-032 / P003 / implementation
-  - Файлы: package.json, package-lock.json, docs/WORKSPACE_SETUP.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md
+  - Файлы: package.json, package-lock.json, tests/electron-smoke.mjs, docs/WORKSPACE_SETUP.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: deliver first-run correction release 0.6.38
+  - Git Commit: [PENDING] docs: document project location release 0.6.40
   - Reference: first-run-corrections-032 / DOCS / implementation
   - Файлы: docs/modules/first-run-onboarding.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, AGENTS.md, README.md, docs/WORKFLOW_START.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/CLEAN_INSTALL.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/CONTEXT_DELIVERY.md
 
