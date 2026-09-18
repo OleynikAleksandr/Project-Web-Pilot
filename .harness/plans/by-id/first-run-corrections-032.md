@@ -4,16 +4,17 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 14,
+  "plan_revision": 15,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-corrections-032",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
-  "objective": "Исправить отказ ввода туннеля и повторную кнопку установки Apple, выпустить 0.6.38 для нового чистого клона.",
+  "delivery_status": "IN_PROGRESS",
+  "objective": "Довести интерфейс первого запуска и создания проекта по замечаниям после успешной чистой проверки 0.6.38; выпустить 0.6.39.",
   "acceptance_criteria": [
-    "Два подтверждённых дефекта исправлены и проверены.",
-    "Новый релиз доступен для чистого пользовательского повтора; полный гостевой путь не объявляется пройденным до проверки."
+    "Первый запуск 0.6.38 принят пользователем на абсолютно чистой macOS.",
+    "Устранены повтор плана, неясные и лишние шаги туннеля/плагина/создания первого проекта.",
+    "0.6.39 собрана и проверена для пользовательского повтора."
   ],
   "approved_scope": {
     "functional_paths": [
@@ -26,7 +27,14 @@
       "src/ui/startup.mjs",
       "tests/startup-ui.test.mjs",
       "package.json",
-      "package-lock.json"
+      "package-lock.json",
+      "src/ui/sidebar.mjs",
+      "tests/electron-smoke.mjs",
+      "src/ui/index.html",
+      "src/main.mjs",
+      "src/preload.cjs",
+      "src/ui/workspace-setup.mjs",
+      "tests/project-doctor-ui.test.mjs"
     ],
     "documentation_paths": [
       "docs/modules/first-run-onboarding.md",
@@ -255,19 +263,257 @@
       "expected_commit_message": "build: release first-run prompt and Apple readiness fixes"
     },
     {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
+      "id": "U001",
+      "title": "Зафиксировать успешный чистый запуск и контракт интерфейсных исправлений",
+      "why": "Зафиксировать успешный чистый запуск и контракт интерфейсных исправлений",
+      "dependencies": [
+        "T005"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/modules/first-run-onboarding.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/VERIFICATION.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/MODULES.md"
+      ],
+      "acceptance_criteria": [
+        "Приёмка 0.6.38 зафиксирована по сообщению пользователя и скриншотам.",
+        "Замечания сопоставлены с First Run, Workspace Setup и Workspace & Sessions."
+      ],
+      "verification_ids": [],
+      "expected_commit_message": "fix: record clean macOS acceptance and onboarding UI contract",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "first-run-corrections-032",
+        "task_id": "U001",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "U002",
+      "title": "Убрать повтор «План ещё не создан»",
+      "why": "Убрать повтор «План ещё не создан»",
+      "dependencies": [
+        "U001"
+      ],
+      "functional_paths": [
+        "src/ui/sidebar.mjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/first-run-onboarding.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/VERIFICATION.md"
+      ],
+      "acceptance_criteria": [
+        "В NONE одна видимая строка; состояние настоящего плана восстанавливает заголовок."
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "expected_commit_message": "fix: remove duplicate empty plan label",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "first-run-corrections-032",
+        "task_id": "U002",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "U003",
+      "title": "Сделать шаги туннеля последовательными и объяснить копирование",
+      "why": "Сделать шаги туннеля последовательными и объяснить копирование",
+      "dependencies": [
+        "U002"
+      ],
+      "functional_paths": [
+        "src/ui/index.html",
+        "src/ui/startup.mjs",
+        "tests/startup-ui.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/first-run-onboarding.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/VERIFICATION.md"
+      ],
+      "acceptance_criteria": [
+        "Понятны вход Platform, кнопка создания ключа и копирование/вставка на Mac и Windows.",
+        "Завершённые шаги скрываются по явному подтверждению; ввод доступен, есть возврат. Буфер/ключ не читаются renderer.",
+        "Ошибки и отмена не теряют текущий шаг."
+      ],
+      "verification_ids": [
+        "suite"
+      ],
+      "expected_commit_message": "fix: guide tunnel setup through completed steps",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "first-run-corrections-032",
+        "task_id": "U003",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "U004",
+      "title": "Показывать добавление плагина как помощь по необходимости",
+      "why": "Показывать добавление плагина как помощь по необходимости",
+      "dependencies": [
+        "U003"
+      ],
+      "functional_paths": [
+        "src/ui/index.html",
+        "tests/startup-ui.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/first-run-onboarding.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/VERIFICATION.md"
+      ],
+      "acceptance_criteria": [
+        "Создание первого проекта — основное действие; подробности Plugins свернуты.",
+        "Существующий плагин не предлагается создавать повторно; его связь с новым туннелем не объявляется проверенной по одному названию."
+      ],
+      "verification_ids": [
+        "suite"
+      ],
+      "expected_commit_message": "fix: make plugin setup help conditional",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "first-run-corrections-032",
+        "task_id": "U004",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "U005",
+      "title": "Передавать выбранный Chat или Work вместе с применением проекта",
+      "why": "Передавать выбранный Chat или Work вместе с применением проекта",
+      "dependencies": [
+        "U004"
+      ],
+      "functional_paths": [
+        "src/main.mjs",
+        "src/preload.cjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/first-run-onboarding.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/VERIFICATION.md"
+      ],
+      "acceptance_criteria": [
+        "Один IPC передаёт token, identity и experience; неверный режим отклоняется до записи.",
+        "Существующий preview fingerprint и блокировка действий сохраняются."
+      ],
+      "verification_ids": [
+        "suite"
+      ],
+      "expected_commit_message": "fix: accept first session mode in one setup operation",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "first-run-corrections-032",
+        "task_id": "U005",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "U006",
+      "title": "Создавать первую сессию одним нажатием и показывать диагностику по причине",
+      "why": "Создавать первую сессию одним нажатием и показывать диагностику по причине",
+      "dependencies": [
+        "U005"
+      ],
+      "functional_paths": [
+        "src/ui/workspace-setup.mjs",
+        "tests/electron-smoke.mjs",
+        "tests/project-doctor-ui.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/first-run-onboarding.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/VERIFICATION.md"
+      ],
+      "acceptance_criteria": [
+        "Chat/Work сразу применяет подтверждённый preview; повторная кнопка отсутствует.",
+        "Успешный preview не содержит Доктора/повторной проверки; ошибка сохраняет нужные действия.",
+        "Недостающая Git identity блокирует оба режима; повторные клики не создают вторую сессию."
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "expected_commit_message": "fix: create first session directly from Chat or Work",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "first-run-corrections-032",
+        "task_id": "U006",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "U007",
+      "title": "Собрать и проверить 0.6.39 для пользовательского повтора",
+      "why": "Собрать и проверить 0.6.39 для пользовательского повтора",
+      "dependencies": [
+        "U006"
+      ],
+      "functional_paths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "documentation_paths": [
+        "docs/modules/first-run-onboarding.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/VERIFICATION.md",
+        "docs/RELEASE.md",
+        "docs/TRANSFER_TO_WINDOWS.md"
+      ],
+      "acceptance_criteria": [
+        "Собраны обе платформы, исходники и ресурсы совпадают, ZIP проверены.",
+        "Постоянный app обновлён с сохранением identity; доставка в Downloads/WebPilot-0.6.39.",
+        "Новые UI состояния проверены в изолированном Electron."
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "expected_commit_message": "fix: release onboarding usability improvements 0.6.39",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "first-run-corrections-032",
+        "task_id": "U007",
+        "role": "implementation"
+      }
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "first-run-corrections-032",
         "task_id": "DOCS",
-        "role": "implementation"
+        "role": "implementation",
+        "iteration": 2
       },
       "dependencies": [
         "T001",
         "T002",
         "T003",
         "T004",
-        "T005"
+        "T005",
+        "U001",
+        "U002",
+        "U003",
+        "U004",
+        "U005",
+        "U006",
+        "U007"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -307,6 +553,11 @@
       "id": "27fd19a3-6f82-4f02-a708-d2bfa92a67ac",
       "text": "18.09.2026 пользователь поручил добавить микрозадачу, исправить ошибку окна ввода туннеля и собрать новый релиз; отдельным сообщением включил оставшуюся кнопку установки Apple. Эта новая сессия имела NONE; исправления продолжают контракт first-run-onboarding-031 в собственном плане без изменения владельца прежнего плана.",
       "recorded_at": "2026-09-18T06:26:33.094Z"
+    },
+    {
+      "id": "9d277bf8-8257-49bd-8f04-f42e76ab1be8",
+      "text": "18.09.2026 пользователь подтвердил полный первый запуск 0.6.38 на абсолютно чистой macOS без ошибок. Затем поручил добавить в текущий план и выполнить UI-микрозадачи по четырём скриншотам: дубль NONE, последовательные шаги туннеля и копирование, необязательное добавление уже имеющегося плагина, немедленное создание по Chat/Work, диагностические кнопки только по проблеме; собрать новый релиз.",
+      "recorded_at": "2026-09-18T07:15:23.626662+00:00"
     }
   ],
   "owner_session_id": "01a0b318-cc66-7743-9de7-696f05fff6e6",
@@ -318,19 +569,20 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: first-run-corrections-032
 Current Task: нет
-Revision: 14
+Revision: 15
 
 ## Цель
 
-Исправить отказ ввода туннеля и повторную кнопку установки Apple, выпустить 0.6.38 для нового чистого клона.
+Довести интерфейс первого запуска и создания проекта по замечаниям после успешной чистой проверки 0.6.38; выпустить 0.6.39.
 
 ## Критерии приёмки
 
-- Два подтверждённых дефекта исправлены и проверены.
-- Новый релиз доступен для чистого пользовательского повтора; полный гостевой путь не объявляется пройденным до проверки.
+- Первый запуск 0.6.38 принят пользователем на абсолютно чистой macOS.
+- Устранены повтор плана, неясные и лишние шаги туннеля/плагина/создания первого проекта.
+- 0.6.39 собрана и проверена для пользовательского повтора.
 
 ## Микрозадачи
 
@@ -354,8 +606,36 @@ Revision: 14
   - Git Commit: [DONE] build: release first-run prompt and Apple readiness fixes
   - Reference: first-run-corrections-032 / T005 / implementation
   - Файлы: package.json, package-lock.json, docs/modules/first-run-onboarding.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: deliver first-run correction release 0.6.38
+- [TODO] U001: Зафиксировать успешный чистый запуск и контракт интерфейсных исправлений — Ожидает
+  - Git Commit: [PENDING] fix: record clean macOS acceptance and onboarding UI contract
+  - Reference: first-run-corrections-032 / U001 / implementation
+  - Файлы: docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/CLEAN_INSTALL.md, docs/MODULES.md
+- [TODO] U002: Убрать повтор «План ещё не создан» — Ожидает
+  - Git Commit: [PENDING] fix: remove duplicate empty plan label
+  - Reference: first-run-corrections-032 / U002 / implementation
+  - Файлы: src/ui/sidebar.mjs, tests/electron-smoke.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md
+- [TODO] U003: Сделать шаги туннеля последовательными и объяснить копирование — Ожидает
+  - Git Commit: [PENDING] fix: guide tunnel setup through completed steps
+  - Reference: first-run-corrections-032 / U003 / implementation
+  - Файлы: src/ui/index.html, src/ui/startup.mjs, tests/startup-ui.test.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md
+- [TODO] U004: Показывать добавление плагина как помощь по необходимости — Ожидает
+  - Git Commit: [PENDING] fix: make plugin setup help conditional
+  - Reference: first-run-corrections-032 / U004 / implementation
+  - Файлы: src/ui/index.html, tests/startup-ui.test.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md
+- [TODO] U005: Передавать выбранный Chat или Work вместе с применением проекта — Ожидает
+  - Git Commit: [PENDING] fix: accept first session mode in one setup operation
+  - Reference: first-run-corrections-032 / U005 / implementation
+  - Файлы: src/main.mjs, src/preload.cjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md
+- [TODO] U006: Создавать первую сессию одним нажатием и показывать диагностику по причине — Ожидает
+  - Git Commit: [PENDING] fix: create first session directly from Chat or Work
+  - Reference: first-run-corrections-032 / U006 / implementation
+  - Файлы: src/ui/workspace-setup.mjs, tests/electron-smoke.mjs, tests/project-doctor-ui.test.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md
+- [TODO] U007: Собрать и проверить 0.6.39 для пользовательского повтора — Ожидает
+  - Git Commit: [PENDING] fix: release onboarding usability improvements 0.6.39
+  - Reference: first-run-corrections-032 / U007 / implementation
+  - Файлы: package.json, package-lock.json, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: deliver first-run correction release 0.6.38
   - Reference: first-run-corrections-032 / DOCS / implementation
   - Файлы: docs/modules/first-run-onboarding.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, AGENTS.md, README.md, docs/WORKFLOW_START.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/CLEAN_INSTALL.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/CONTEXT_DELIVERY.md
 
