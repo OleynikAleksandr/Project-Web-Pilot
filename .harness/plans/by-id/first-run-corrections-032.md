@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 54,
+  "plan_revision": 56,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-corrections-032",
@@ -806,8 +806,8 @@
         "electron-smoke"
       ],
       "expected_commit_message": "release: publish project location flow 0.6.40",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-corrections-032",
         "task_id": "P004",
@@ -918,7 +918,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-corrections-032
 Current Task: нет
-Revision: 54
+Revision: 56
 
 ## Цель
 
@@ -1014,8 +1014,8 @@ Revision: 54
   - Git Commit: [DONE] fix: remember explicitly selected projects location
   - Reference: first-run-corrections-032 / P003 / implementation
   - Файлы: src/main.mjs, src/ui/workspace-setup.mjs, tests/electron-smoke.mjs, docs/WORKSPACE_SETUP.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md
-- [TODO] P004: Собрать и проверить 0.6.40 для macOS и Windows — Ожидает
-  - Git Commit: [PENDING] release: publish project location flow 0.6.40
+- [DONE] P004: Собрать и проверить 0.6.40 для macOS и Windows — Завершено
+  - Git Commit: [DONE] release: publish project location flow 0.6.40
   - Reference: first-run-corrections-032 / P004 / implementation
   - Файлы: package.json, package-lock.json, docs/WORKSPACE_SETUP.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
