@@ -119,3 +119,7 @@ MacRuntimeBootstrap принимает эту точную поставляем�
 ## Уточнение первого запуска — 0.6.38
 
 Нативный worker передаёт русский текст без JSON Unicode escapes, различает отмену, отказ окна и отказ данных. MacRuntimeBootstrap публикует только известный безопасный код/сообщение без сырого stderr. Фоновый Git watcher принадлежит StartupReadiness, после успеха ждёт явной подготовки. Контракт — docs/modules/first-run-onboarding.md; runtime lifecycle и сохранение секретов остаются прежними.
+
+## Автоматическое подключение — 0.6.39
+
+Во время активного macOS onboarding TunnelClipboard распознаёт новый ID, затем ключ. Начальное содержимое буфера игнорируется. MacRuntimeBootstrap.configureTunnel(credentials) передаёт ограниченный JSON в mac-first-run.py через stdin. Переданные поля не спрашиваются повторно; ручной ввод без credentials сохраняет нативные окна. Renderer и snapshot получают только прогресс, не ID/ключ. Живой рабочий tunnel автоматически не заменяется; configured без ready не завершает шаг. Выход из мастера прекращает чтение буфера. Runtime и profile форматы сохранены.

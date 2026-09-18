@@ -1409,3 +1409,12 @@ Unit и Electron проверяют оба первых режима, двойн
 Оба ZIP прошли integrity и проверку app.asar. Копии с SHA256SUMS.txt и INSTALL.txt находятся в ~/Downloads/WebPilot-0.6.39/. Evidence — .harness/runtime/releases/0.6.39/{mac-release.json,source-verification.json,release-manifest.json}. Сборка не перезапускала рабочее приложение и не меняла профиль/ключи.
 
 В 0.6.39 macOS-мастер автоматически распознаёт новый скопированный ID, затем ключ; завершённые шаги скрываются. Plugins — помощь по необходимости. Chat/Work применяют preview сразу, healthy preview не показывает Doctor/Recheck, NONE не дублируется. 0.6.38 принята пользователем на абсолютно чистой macOS; новый реальный проход 0.6.39 и native Windows пока не подтверждены. На Windows общие изменения UI упакованы, но платформенный мастер и его автоматический tunnel flow не заявляются проверенными.
+
+### Итоговые проверки 0.6.39
+
+U007 зафиксирована ce31be205c207f5ed623282988d3e3289c58cc48 после syntax,
+полной Node suite (281 тест: 279 passed, 0 failed, 2 platform skips) и Electron
+smoke (89.854 с). Smoke подтверждает первый Chat/Work, отсутствие дублей,
+автоматические стадии clipboard на fixtures и условную помощь Plugins.
+Секреты и реальный clipboard пользователя в этих проверках не читались.
+Evidence: .harness/runtime/releases/0.6.39/managed-verification.json.

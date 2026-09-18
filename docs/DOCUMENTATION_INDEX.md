@@ -36,7 +36,7 @@
 | docs/SOURCE_WORKSPACES.md | Исходные проекты, пути, версии и официальные ссылки |
 | docs/VERIFICATION.md | Проверки, release evidence и границы пользовательской приёмки |
 | docs/RELEASE.md | Постоянный macOS app, Finder-алиас, отдельный ZIP и обязательная проверка доставки |
-| docs/CLEAN_INSTALL.md | Стенд Clean/Test macOS/Windows, реестр наблюдений первого запуска, текущий повтор 0.6.38 через разрешённый Computer Use и границы доказательств |
+| docs/CLEAN_INSTALL.md | Стенд Clean/Test macOS/Windows, реестр наблюдений первого запуска, принятый чистый путь 0.6.38, поставка 0.6.39 и границы доказательств |
 | docs/TRANSFER_TO_WINDOWS.md | Актуальная Windows x64 поставка и порядок физической проверки |
 | docs/WORKSPACE_SETUP.md | Создание/подключение workspace и install/upgrade Workflow Kit |
 | docs/PROJECT_ARCHIVE.md | Архив workspace, возврат и безопасное локальное удаление; веб-чаты сохраняются |
@@ -87,4 +87,4 @@
 
 | Документ | Назначение |
 | --- | --- |
-| docs/modules/first-run-onboarding.md | Путь первого запуска 0.6.38: исправление русских окон туннеля, автоматическая проверка Apple, наблюдения 0.6.37 в UTM и ожидаемый чистый повтор; планы 031/032, границы facade и критерии полного результата |
+| docs/modules/first-run-onboarding.md | Первый запуск 0.6.39: автоматические шаги clipboard, условная помощь Plugins, один клик Chat/Work; принятая чистая 0.6.38, планы 031/032 и границы проверки |

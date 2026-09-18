@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 43,
+  "plan_revision": 45,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-corrections-032",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Довести интерфейс первого запуска и создания проекта по замечаниям после успешной чистой проверки 0.6.38; выпустить 0.6.39.",
   "acceptance_criteria": [
     "Первый запуск 0.6.38 принят пользователем на абсолютно чистой macOS.",
@@ -671,8 +671,8 @@
       }
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-corrections-032",
         "task_id": "DOCS",
@@ -757,10 +757,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: first-run-corrections-032
 Current Task: нет
-Revision: 43
+Revision: 45
 
 ## Цель
 
@@ -842,8 +842,8 @@ Revision: 43
   - Git Commit: [DONE] fix: release onboarding usability improvements 0.6.39
   - Reference: first-run-corrections-032 / U007 / implementation
   - Файлы: package.json, package-lock.json, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md, docs/architecture/ARCHITECTURE.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: deliver first-run correction release 0.6.38
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: deliver first-run correction release 0.6.38
   - Reference: first-run-corrections-032 / DOCS / implementation
   - Файлы: docs/modules/first-run-onboarding.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, AGENTS.md, README.md, docs/WORKFLOW_START.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/CLEAN_INSTALL.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/CONTEXT_DELIVERY.md
 
