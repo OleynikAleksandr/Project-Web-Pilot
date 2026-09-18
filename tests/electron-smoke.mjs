@@ -304,6 +304,8 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   })`).then(value => JSON.stringify(value)), JSON.stringify({ planCard: true, detailsVisible: true, oldPlanText: false, revisionVisible: false }));
   assert.equal(await sidebar.executeJavaScript('document.getElementById("plan-status").textContent'), 'План ещё не создан');
   assert.equal(await sidebar.executeJavaScript('document.querySelectorAll("#plan-tasks .plan-task").length'), 0);
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("plan-title").hidden'), true);
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("plan-card").innerText.match(/План ещё не создан/g)?.length'), 1);
   assert.equal(await sidebar.executeJavaScript('document.getElementById("accept-plan") === null'), true);
 
   const planFile = path.join(workspace, '.harness/plans/todo-plan.md');
@@ -324,6 +326,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   const writeFixturePlan = async plan => fs.writeFile(planFile, renderPlan(plan));
   await writeFixturePlan(activePlan); controller.attach(store.selected()); await controller.tick();
   await waitFor(() => sidebar.executeJavaScript('document.getElementById("plan-status").textContent === "В работе · 1 из 3 выполнено"'), 'working plan UI', snapshot);
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("plan-title").hidden'), false);
   await waitFor(() => store.selected()?.title === 'Автоимя scope fixture', 'scope automatically names current session', snapshot);
   assert.equal(store.selected().titleSource, 'scope');
   assert.deepEqual(await sidebar.executeJavaScript(`Array.from(document.querySelectorAll('#plan-tasks .plan-task')).map(e=>({status:e.dataset.status,title:e.querySelector('strong').textContent,mark:e.querySelector('.plan-task-state').textContent}))`), [

@@ -292,7 +292,8 @@ function render(state) {
         : plan.state === 'closed' ? 'Scope завершён и архивирован'
           : plan.state === 'not-created' ? 'План ещё не создан'
             : `В работе · ${plan.completed} из ${plan.total} выполнено`;
-    $('plan-title').textContent = selected.scopeId ? selected.objective : 'План ещё не создан';
+    $('plan-title').hidden = !selected.scopeId;
+    $('plan-title').textContent = selected.scopeId ? selected.objective : '';
     const origin = state.projects.find(p => p.workspace === selected.workspace)?.sessions.find(s => s.sessionId === selected.originSessionId);
     $('plan-origin').replaceChildren(); $('plan-origin').hidden = !selected.originSessionId;
     if (selected.originSessionId) {

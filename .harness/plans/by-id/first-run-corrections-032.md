@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 18,
+  "plan_revision": 21,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-corrections-032",
@@ -307,7 +307,8 @@
       "documentation_paths": [
         "docs/modules/first-run-onboarding.md",
         "docs/WORKSPACE_SETUP.md",
-        "docs/VERIFICATION.md"
+        "docs/VERIFICATION.md",
+        "docs/architecture/ARCHITECTURE.md"
       ],
       "acceptance_criteria": [
         "В NONE одна видимая строка; состояние настоящего плана восстанавливает заголовок."
@@ -317,8 +318,8 @@
         "electron-smoke"
       ],
       "expected_commit_message": "fix: remove duplicate empty plan label",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-corrections-032",
         "task_id": "U002",
@@ -339,7 +340,8 @@
       "documentation_paths": [
         "docs/modules/first-run-onboarding.md",
         "docs/WORKSPACE_SETUP.md",
-        "docs/VERIFICATION.md"
+        "docs/VERIFICATION.md",
+        "docs/architecture/ARCHITECTURE.md"
       ],
       "acceptance_criteria": [
         "JSON stdin ограничен; секрет не попадает в argv/environment/stdout/errors.",
@@ -371,7 +373,8 @@
       "documentation_paths": [
         "docs/modules/first-run-onboarding.md",
         "docs/WORKSPACE_SETUP.md",
-        "docs/VERIFICATION.md"
+        "docs/VERIFICATION.md",
+        "docs/architecture/ARCHITECTURE.md"
       ],
       "acceptance_criteria": [
         "Credentials идут только в stdin дочернего процесса; ошибки allowlist."
@@ -402,7 +405,8 @@
       "documentation_paths": [
         "docs/modules/first-run-onboarding.md",
         "docs/WORKSPACE_SETUP.md",
-        "docs/VERIFICATION.md"
+        "docs/VERIFICATION.md",
+        "docs/architecture/ARCHITECTURE.md"
       ],
       "acceptance_criteria": [
         "ID и ключ распознаются последовательно; старый буфер при активации игнорируется.",
@@ -436,7 +440,8 @@
       "documentation_paths": [
         "docs/modules/first-run-onboarding.md",
         "docs/WORKSPACE_SETUP.md",
-        "docs/VERIFICATION.md"
+        "docs/VERIFICATION.md",
+        "docs/architecture/ARCHITECTURE.md"
       ],
       "acceptance_criteria": [
         "Монитор работает только в открытом шаге подключения, после входа и готовности компонентов.",
@@ -469,7 +474,8 @@
       "documentation_paths": [
         "docs/modules/first-run-onboarding.md",
         "docs/WORKSPACE_SETUP.md",
-        "docs/VERIFICATION.md"
+        "docs/VERIFICATION.md",
+        "docs/architecture/ARCHITECTURE.md"
       ],
       "acceptance_criteria": [
         "Инструкции объясняют создание ID/ключа и Command C/V или Ctrl C/V.",
@@ -502,7 +508,8 @@
       "documentation_paths": [
         "docs/modules/first-run-onboarding.md",
         "docs/WORKSPACE_SETUP.md",
-        "docs/VERIFICATION.md"
+        "docs/VERIFICATION.md",
+        "docs/architecture/ARCHITECTURE.md"
       ],
       "acceptance_criteria": [
         "Создание первого проекта — основное действие; подробности Plugins свернуты.",
@@ -534,7 +541,8 @@
       "documentation_paths": [
         "docs/modules/first-run-onboarding.md",
         "docs/WORKSPACE_SETUP.md",
-        "docs/VERIFICATION.md"
+        "docs/VERIFICATION.md",
+        "docs/architecture/ARCHITECTURE.md"
       ],
       "acceptance_criteria": [
         "Один IPC передаёт token, identity и experience; неверный режим отклоняется до записи.",
@@ -567,7 +575,8 @@
       "documentation_paths": [
         "docs/modules/first-run-onboarding.md",
         "docs/WORKSPACE_SETUP.md",
-        "docs/VERIFICATION.md"
+        "docs/VERIFICATION.md",
+        "docs/architecture/ARCHITECTURE.md"
       ],
       "acceptance_criteria": [
         "Chat/Work сразу применяет подтверждённый preview; повторная кнопка отсутствует.",
@@ -603,7 +612,8 @@
         "docs/WORKSPACE_SETUP.md",
         "docs/VERIFICATION.md",
         "docs/RELEASE.md",
-        "docs/TRANSFER_TO_WINDOWS.md"
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "docs/architecture/ARCHITECTURE.md"
       ],
       "acceptance_criteria": [
         "Собраны обе платформы, исходники и ресурсы совпадают, ZIP проверены.",
@@ -712,7 +722,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-corrections-032
 Current Task: нет
-Revision: 18
+Revision: 21
 
 ## Цель
 
@@ -750,46 +760,46 @@ Revision: 18
   - Git Commit: [DONE] fix: record clean macOS acceptance and onboarding UI contract
   - Reference: first-run-corrections-032 / U001 / implementation
   - Файлы: docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/CLEAN_INSTALL.md, docs/MODULES.md
-- [TODO] U002: Убрать повтор «План ещё не создан» — Ожидает
-  - Git Commit: [PENDING] fix: remove duplicate empty plan label
+- [DONE] U002: Убрать повтор «План ещё не создан» — Завершено
+  - Git Commit: [DONE] fix: remove duplicate empty plan label
   - Reference: first-run-corrections-032 / U002 / implementation
-  - Файлы: src/ui/sidebar.mjs, tests/electron-smoke.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md
+  - Файлы: src/ui/sidebar.mjs, tests/electron-smoke.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 - [TODO] A001: accept tunnel credentials through private worker stdin — Ожидает
   - Git Commit: [PENDING] feat: accept tunnel credentials through private worker stdin
   - Reference: first-run-corrections-032 / A001 / implementation
-  - Файлы: resources/runtime-control/mac-first-run.py, tests/mac-first-run.test.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md
+  - Файлы: resources/runtime-control/mac-first-run.py, tests/mac-first-run.test.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 - [TODO] A002: pass clipboard credentials to the native runtime facade — Ожидает
   - Git Commit: [PENDING] feat: pass clipboard credentials to the native runtime facade
   - Reference: first-run-corrections-032 / A002 / implementation
-  - Файлы: src/mac-runtime.mjs, tests/mac-runtime.test.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md
+  - Файлы: src/mac-runtime.mjs, tests/mac-runtime.test.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 - [TODO] A003: recognize tunnel clipboard changes within onboarding — Ожидает
   - Git Commit: [PENDING] feat: recognize tunnel clipboard changes within onboarding
   - Reference: first-run-corrections-032 / A003 / implementation
-  - Файлы: src/tunnel-clipboard.mjs, tests/tunnel-clipboard.test.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md
+  - Файлы: src/tunnel-clipboard.mjs, tests/tunnel-clipboard.test.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 - [TODO] A004: connect clipboard onboarding to readiness and lifecycle — Ожидает
   - Git Commit: [PENDING] feat: connect clipboard onboarding to readiness and lifecycle
   - Reference: first-run-corrections-032 / A004 / implementation
-  - Файлы: src/main.mjs, src/startup-readiness.mjs, tests/startup-readiness.test.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md
+  - Файлы: src/main.mjs, src/startup-readiness.mjs, tests/startup-readiness.test.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 - [TODO] U003: Сделать шаги туннеля последовательными и объяснить копирование — Ожидает
   - Git Commit: [PENDING] fix: guide tunnel setup through completed steps
   - Reference: first-run-corrections-032 / U003 / implementation
-  - Файлы: src/ui/index.html, src/ui/startup.mjs, tests/startup-ui.test.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md
+  - Файлы: src/ui/index.html, src/ui/startup.mjs, tests/startup-ui.test.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 - [TODO] U004: Показывать добавление плагина как помощь по необходимости — Ожидает
   - Git Commit: [PENDING] fix: make plugin setup help conditional
   - Reference: first-run-corrections-032 / U004 / implementation
-  - Файлы: src/ui/index.html, tests/startup-ui.test.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md
+  - Файлы: src/ui/index.html, tests/startup-ui.test.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 - [TODO] U005: Передавать выбранный Chat или Work вместе с применением проекта — Ожидает
   - Git Commit: [PENDING] fix: accept first session mode in one setup operation
   - Reference: first-run-corrections-032 / U005 / implementation
-  - Файлы: src/main.mjs, src/preload.cjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md
+  - Файлы: src/main.mjs, src/preload.cjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 - [TODO] U006: Создавать первую сессию одним нажатием и показывать диагностику по причине — Ожидает
   - Git Commit: [PENDING] fix: create first session directly from Chat or Work
   - Reference: first-run-corrections-032 / U006 / implementation
-  - Файлы: src/ui/workspace-setup.mjs, tests/electron-smoke.mjs, tests/project-doctor-ui.test.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md
+  - Файлы: src/ui/workspace-setup.mjs, tests/electron-smoke.mjs, tests/project-doctor-ui.test.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 - [TODO] U007: Собрать и проверить 0.6.39 для пользовательского повтора — Ожидает
   - Git Commit: [PENDING] fix: release onboarding usability improvements 0.6.39
   - Reference: first-run-corrections-032 / U007 / implementation
-  - Файлы: package.json, package-lock.json, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md
+  - Файлы: package.json, package-lock.json, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md, docs/architecture/ARCHITECTURE.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: deliver first-run correction release 0.6.38
   - Reference: first-run-corrections-032 / DOCS / implementation
