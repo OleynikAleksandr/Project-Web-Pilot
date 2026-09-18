@@ -245,3 +245,8 @@ source-verification.json,release-manifest.json}. Работающее прило
 ## Парный выпуск — поручение 18.09.2026 / scope 033
 
 Начиная с 0.6.41 единый npm run build должен последовательно собрать обе платформы, проверить общий номер версии и соответствие исходникам, обновить постоянный macOS app и подготовить оба ZIP с SHA256SUMS.txt и INSTALL.txt в ~/Downloads/WebPilot-<version>/. Если одна платформа не собрана или не прошла проверку, полный комплект не объявляется готовым. Платформенные build:mac/build:win остаются узкими операциями; публичный результат задачи — парный комплект.
+
+Парный publisher реализован: `npm run build` собирает обе платформы 0.6.41;
+состав и версия сверяются до общего manifest. Промежуточный macOS ZIP от
+build:mac ещё не означает готовность пары. Итог: два ZIP, SHA256SUMS.txt,
+INSTALL.txt и release-manifest.json в ~/Downloads/WebPilot-<version>/.

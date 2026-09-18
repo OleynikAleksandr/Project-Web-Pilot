@@ -1136,3 +1136,9 @@ Windows вместо установки Apple; footer получает platform 
 Codex Local Windows MCP и туннелем этой машины. Состояние службы не выдаётся за
 подтверждение доступа ChatGPT к проекту. macOS сохраняет прежние шаги и свёрнутую
 справку существующего подключения.
+
+R001: `scripts/release-all.mjs` — единый фасад парного выпуска. Последовательно
+вызывает существующие build:mac/build:win, сверяет snapshot исходников, asar и
+external resources, версию постоянного app и его filesystem identity. Проверяет
+ZIP и копии, затем выдаёт общий release-manifest и SHA256SUMS. Блокировка исключает
+второго publisher; завершённый номер повторно не публикуется.

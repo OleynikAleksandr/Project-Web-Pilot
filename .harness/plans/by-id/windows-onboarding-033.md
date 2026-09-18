@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 14,
+  "plan_revision": 16,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
@@ -299,8 +299,8 @@
       "expected_commit_message": "feat: Адаптировать шаги и подписи Windows интерфейса"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "windows-onboarding-033",
         "task_id": "R001",
@@ -473,7 +473,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 14
+Revision: 16
 
 ## Цель
 
@@ -512,8 +512,8 @@ Revision: 14
   - Git Commit: [DONE] feat: Адаптировать шаги и подписи Windows интерфейса
   - Reference: windows-onboarding-033 / W005 / implementation
   - Файлы: src/ui/startup.mjs, src/ui/index.html, tests/startup-ui.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md
-- [TODO] R001: Добавить единый выпуск macOS и Windows версии 0.6.41 — Ожидает
-  - Git Commit: [PENDING] feat: Добавить единый выпуск macOS и Windows версии 0.6.41
+- [DONE] R001: Добавить единый выпуск macOS и Windows версии 0.6.41 — Завершено
+  - Git Commit: [DONE] feat: Добавить единый выпуск macOS и Windows версии 0.6.41
   - Reference: windows-onboarding-033 / R001 / implementation
   - Файлы: scripts/release-all.mjs, package.json, package-lock.json, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md, docs/RELEASE.md
 - [TODO] V001: Проверить Windows мастер и выпуск в изолированных сценариях — Ожидает
