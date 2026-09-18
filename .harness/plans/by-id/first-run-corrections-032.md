@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 34,
+  "plan_revision": 35,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-corrections-032",
@@ -597,11 +597,48 @@
       }
     },
     {
+      "id": "A005",
+      "title": "Сохранять готовность компонентов после отказа туннеля",
+      "why": "Воспроизведено: prepareRuntime бросает ошибку туннеля, а работающий MCP отображается как неготовый; автоматический ввод теряет свой шаг.",
+      "dependencies": [
+        "A004",
+        "U003"
+      ],
+      "functional_paths": [
+        "src/startup-readiness.mjs",
+        "src/ui/startup.mjs",
+        "tests/startup-readiness.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/first-run-onboarding.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/VERIFICATION.md",
+        "docs/architecture/ARCHITECTURE.md"
+      ],
+      "acceptance_criteria": [
+        "После отказа запуска повторно прочитать состояние, не объявлять туннель готовым; рабочий MCP сохраняет доступность ввода и полученный ID.",
+        "Неуспех дополнительной проверки не объявляет готовность; сообщение автоматического ввода имеет приоритет над общей ошибкой.",
+        "Регрессия связывает реальные facade readiness и clipboard на fixtures."
+      ],
+      "verification_ids": [
+        "suite"
+      ],
+      "expected_commit_message": "fix: preserve local readiness after tunnel connection failure",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "first-run-corrections-032",
+        "task_id": "A005",
+        "role": "implementation"
+      }
+    },
+    {
       "id": "U007",
       "title": "Собрать и проверить 0.6.39 для пользовательского повтора",
       "why": "Собрать и проверить 0.6.39 для пользовательского повтора",
       "dependencies": [
-        "U006"
+        "U006",
+        "A005"
       ],
       "functional_paths": [
         "package.json",
@@ -658,6 +695,7 @@
         "U004",
         "U005",
         "U006",
+        "A005",
         "U007"
       ],
       "functional_paths": [],
@@ -722,7 +760,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-corrections-032
 Current Task: нет
-Revision: 34
+Revision: 35
 
 ## Цель
 
@@ -796,6 +834,10 @@ Revision: 34
   - Git Commit: [PENDING] fix: create first session directly from Chat or Work
   - Reference: first-run-corrections-032 / U006 / implementation
   - Файлы: src/ui/workspace-setup.mjs, tests/electron-smoke.mjs, tests/project-doctor-ui.test.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
+- [TODO] A005: Сохранять готовность компонентов после отказа туннеля — Ожидает
+  - Git Commit: [PENDING] fix: preserve local readiness after tunnel connection failure
+  - Reference: first-run-corrections-032 / A005 / implementation
+  - Файлы: src/startup-readiness.mjs, src/ui/startup.mjs, tests/startup-readiness.test.mjs, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 - [TODO] U007: Собрать и проверить 0.6.39 для пользовательского повтора — Ожидает
   - Git Commit: [PENDING] fix: release onboarding usability improvements 0.6.39
   - Reference: first-run-corrections-032 / U007 / implementation
