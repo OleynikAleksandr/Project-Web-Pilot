@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 105,
+  "plan_revision": 107,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-onboarding-031",
@@ -1948,8 +1948,8 @@
       ],
       "verification_ids": [],
       "expected_commit_message": "docs: record computer use trial and later authorization",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-onboarding-031",
         "task_id": "D001",
@@ -2111,7 +2111,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-onboarding-031
 Current Task: нет
-Revision: 105
+Revision: 107
 
 ## Цель
 
@@ -2302,8 +2302,8 @@ Revision: 105
   - Git Commit: [DONE] docs: preserve remaining clean install acceptance criteria
   - Reference: first-run-onboarding-031 / T013 / implementation
   - Файлы: docs/TRANSFER_TO_WINDOWS.md, docs/CLEAN_INSTALL.md
-- [TODO] D001: Зафиксировать историческую пробу Computer Use и последующее разрешение — Ожидает
-  - Git Commit: [PENDING] docs: record computer use trial and later authorization
+- [DONE] D001: Зафиксировать историческую пробу Computer Use и последующее разрешение — Завершено
+  - Git Commit: [DONE] docs: record computer use trial and later authorization
   - Reference: first-run-onboarding-031 / D001 / implementation
   - Файлы: docs/CLEAN_INSTALL.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
