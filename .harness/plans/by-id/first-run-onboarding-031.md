@@ -4,42 +4,46 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 94,
+  "plan_revision": 95,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-onboarding-031",
   "execution_scope_status": "ACTIVE",
   "delivery_status": "IN_PROGRESS",
-  "objective": "Довести первый запуск Web Pilot на чистых macOS и Windows от установки до начала работы: приложение само подготавливает компоненты и понятно сопровождает каждое необходимое действие пользователя. Исправлять, пересобирать и повторять проверки на свежих клонах, пока весь путь полностью не устроит пользователя.",
+  "objective": "Закрыть first-run-onboarding-031 по прямому поручению пользователя: зафиксировать достигнутый результат macOS, передать невыполненные проверки Windows 11 другому агенту, согласовать README и весь комплект документации с релизом 0.6.40 и обновить GitHub.",
   "acceptance_criteria": [
-    "На свежем клоне пользователь проходит от готового пакета до первого проекта и реального действия агента с тестовым файлом по подсказкам самого приложения.",
-    "Технические компоненты готовятся автоматически; пользователь не выполняет команды, не устанавливает инструменты разработчика вручную и не должен понимать MCP, порты или runtime.",
-    "Неизбежные личные действия, внешние входы, разрешения и получение данных подключения объяснены на нужном шаге и проверяются после выполнения.",
-    "Ошибки, ожидание, повтор и перезапуск имеют понятное поведение, сохранение прогресса и настроек.",
-    "Исправление → проверки → сборка → новый клон → повтор образуют неограниченный цикл внутри этого плана; завершение определяется полным пользовательским результатом.",
-    "macOS и Windows ARM64 с x64-эмуляцией проверены отдельно; нативная Windows x64 имеет честно указанный статус.",
-    "Base сохраняется; основной Mac, рабочие runtime и профили не используются как скрытые предварительные условия.",
-    "Каждая микрозадача имеет отдельный проверенный commit; единственная последняя DOCS актуализирует документацию; пользователь подтверждает пригодность полного пути."
+    "Сохранены все выполненные задачи и их commits, принятые пользователем результаты macOS и ограничения доказательств.",
+    "Оставшиеся Windows-испытания и критерии полного пути переданы другому агенту без объявления их выполненными.",
+    "Существующая поставка 0.6.40 сверена, документация актуализирована; финальная DOCS проверена.",
+    "По прямому поручению архивирован только план этой сессии; main отправлен на GitHub, другая сессия и её план сохранены."
   ],
   "approved_scope": {
     "documentation_paths": [
-      "docs/modules/first-run-onboarding.md",
-      "docs/CLEAN_INSTALL.md",
-      "docs/VERIFICATION.md",
-      "docs/PRODUCT.md",
-      "docs/DECISIONS.md",
-      "docs/architecture/ARCHITECTURE.md",
-      "docs/RELEASE.md",
-      "docs/modules/runtime-lifecycle.md",
-      "docs/WORKSPACE_SETUP.md",
-      "docs/modules/workspace-sessions.md",
-      "docs/CONTEXT_DELIVERY.md",
-      "docs/TRANSFER_TO_WINDOWS.md",
       "README.md",
-      "docs/WORKFLOW_START.md",
-      "docs/architecture/OVERVIEW.md",
+      "AGENTS.md",
+      "docs/CLEAN_INSTALL.md",
+      "docs/CONTEXT_DELIVERY.md",
+      "docs/DECISIONS.md",
+      "docs/DOCUMENTATION_INDEX.md",
       "docs/MODULES.md",
-      "docs/DOCUMENTATION_INDEX.md"
+      "docs/PRODUCT.md",
+      "docs/PROJECT_ARCHIVE.md",
+      "docs/RELEASE.md",
+      "docs/SOURCE_WORKSPACES.md",
+      "docs/TRANSFER_TO_WINDOWS.md",
+      "docs/VERIFICATION.md",
+      "docs/WORKFLOW_START.md",
+      "docs/WORKSPACE_SETUP.md",
+      "docs/architecture/ARCHITECTURE.md",
+      "docs/architecture/OVERVIEW.md",
+      "docs/design/session-plan-navigation.md",
+      "docs/modules/first-run-onboarding.md",
+      "docs/modules/project-doctor.md",
+      "docs/modules/runtime-lifecycle.md",
+      "docs/modules/session-opening-performance.md",
+      "docs/modules/session-owned-plans.md",
+      "docs/modules/workflow-kit-recovery.md",
+      "docs/modules/workspace-sessions.md"
     ],
     "functional_paths": [
       "scripts/prepare-mac-toolchain.mjs",
@@ -1804,40 +1808,21 @@
     },
     {
       "id": "T017",
-      "title": "Проверить показ установщика и полный чистый путь macOS",
-      "why": "Проверить прямой вход и полный чистый путь macOS",
+      "title": "Зафиксировать принятый результат macOS и границы проверки при закрытии",
+      "why": "18.09.2026 пользователь поручил закрыть этот план и передать Windows 11 другому агенту; завершается фиксация результата и передача оставшейся работы, а не невыполненное испытание.",
       "dependencies": [
         "R005"
       ],
       "functional_paths": [],
       "documentation_paths": [
-        "docs/modules/first-run-onboarding.md",
-        "docs/CLEAN_INSTALL.md",
-        "docs/VERIFICATION.md",
-        "docs/PRODUCT.md",
-        "docs/DECISIONS.md",
-        "docs/architecture/ARCHITECTURE.md",
-        "docs/RELEASE.md",
-        "docs/modules/runtime-lifecycle.md",
-        "docs/WORKSPACE_SETUP.md",
-        "docs/modules/workspace-sessions.md",
-        "docs/CONTEXT_DELIVERY.md",
-        "docs/TRANSFER_TO_WINDOWS.md",
-        "README.md",
-        "docs/WORKFLOW_START.md",
-        "docs/architecture/OVERVIEW.md",
-        "docs/MODULES.md",
-        "docs/DOCUMENTATION_INDEX.md"
+        "docs/CLEAN_INSTALL.md"
       ],
       "verification_ids": [],
       "acceptance_criteria": [
-        "На новом клоне Base пройден путь от пакета до проекта, доставки контекста и разрешённого действия агента с тестовым файлом гостя.",
-        "Для подтверждения готовности достаточно подсказок поставки и приложения; помощь агента в обход недостающего UI считается проблемой.",
-        "Каждый оставшийся дефект добавляет задачи исправления, сборки и нового прохода до последующих проверок и DOCS; число циклов не ограничивается.",
-        "После перезапуска приложения и гостя настройки сохраняются и подготовка не начинается заново.",
-        "Перед повторным испытанием подтвердить сборку/архитектуру гостя, отсутствие предустановленных зависимостей/профиля в Base и версию/происхождение гостевого app; ранее отсутствовавшие данные T001 не считать подтверждёнными."
+        "Сохранены подтверждения пользователя о чистом запуске 0.6.38 и проверке 0.6.39.",
+        "Новые изменения 0.6.40, отдельное действие с файлом и неполные исходные сведения о госте не объявлены проверенными."
       ],
-      "expected_commit_message": "docs: verify clean macOS guided startup",
+      "expected_commit_message": "docs: record accepted macOS startup and evidence limits",
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
@@ -1859,21 +1844,17 @@
       ],
       "functional_paths": [],
       "documentation_paths": [
-        "docs/modules/first-run-onboarding.md",
-        "docs/CLEAN_INSTALL.md",
-        "docs/VERIFICATION.md",
         "docs/TRANSFER_TO_WINDOWS.md"
       ],
       "verification_ids": [],
       "acceptance_criteria": [
-        "Подтверждён чистый эталон Windows; испытание проводится на отдельной копии с полной распакованной папкой поставки.",
-        "Записаны ОС, ARM64 и запуск x64-приложения через эмуляцию; нативная Windows x64 не объявляется проверенной.",
-        "Пройден обычный путь до первого блокера либо работы; отдельно записаны платформенные ошибки, запросы разрешений и неясные действия."
+        "По поручению пользователя Windows 11 вынесена из исполнения этой сессии; описаны чистый клон, архитектура и отсутствие предварительных зависимостей.",
+        "Windows ARM64 с x64-эмуляцией и native x64 имеют отдельные непроверенные статусы."
       ],
-      "expected_commit_message": "docs: record Windows first-run findings",
+      "expected_commit_message": "docs: hand off Windows 11 clean test baseline",
       "id": "T010",
-      "title": "Пройти первый запуск Windows и выявить отличия",
-      "why": "Проверить тот же пользовательский путь во второй поддерживаемой ОС."
+      "title": "Передать исходные условия проверки Windows 11 другому агенту",
+      "why": "18.09.2026 пользователь поручил закрыть этот план и передать Windows 11 другому агенту; завершается фиксация результата и передача оставшейся работы, а не невыполненное испытание."
     },
     {
       "implementation_status": "TODO",
@@ -1886,32 +1867,19 @@
       "dependencies": [
         "T010"
       ],
-      "functional_paths": [
-        "src/windows-runtime.mjs",
-        "src/platform.mjs",
-        "tests/windows-runtime.test.mjs"
-      ],
+      "functional_paths": [],
       "documentation_paths": [
-        "docs/modules/first-run-onboarding.md",
-        "docs/CLEAN_INSTALL.md",
-        "docs/VERIFICATION.md",
-        "docs/architecture/ARCHITECTURE.md",
-        "docs/TRANSFER_TO_WINDOWS.md",
-        "docs/modules/runtime-lifecycle.md",
-        "docs/WORKSPACE_SETUP.md"
+        "docs/TRANSFER_TO_WINDOWS.md"
       ],
-      "verification_ids": [
-        "suite"
-      ],
+      "verification_ids": [],
       "acceptance_criteria": [
-        "Подтверждённые проблемы portable Node/Git, runtime и настройки подключения устранены без ручной установки компонентов пользователем.",
-        "Сохраняются профиль, введённые данные, ошибки и повтор; изменения совместимы с macOS.",
-        "Каждая независимая причина оформлена узкой микрозадачей и проверкой до изменения; при отсутствии дефекта фиксируется результат без искусственных правок."
+        "Сохранены критерии автоматической подготовки компонентов, подключения и понятных ошибок; фактические дефекты должен выявить следующий агент.",
+        "Исправления Windows в этой задаче не объявляются реализованными, обязательность наблюдения и повторного выпуска сохранена."
       ],
-      "expected_commit_message": "fix: complete guided Windows preparation",
+      "expected_commit_message": "docs: hand off Windows startup diagnosis and fixes",
       "id": "T011",
-      "title": "Устранить подтверждённые проблемы подготовки Windows",
-      "why": "Обеспечить тот же понятный путь на Windows с учётом её окружения."
+      "title": "Передать порядок диагностики и исправлений первого запуска Windows",
+      "why": "18.09.2026 пользователь поручил закрыть этот план и передать Windows 11 другому агенту; завершается фиксация результата и передача оставшейся работы, а не невыполненное испытание."
     },
     {
       "implementation_status": "TODO",
@@ -1924,32 +1892,20 @@
       "dependencies": [
         "T011"
       ],
-      "functional_paths": [
-        "package.json",
-        "package-lock.json",
-        "scripts/verify-windows-package.mjs"
-      ],
+      "functional_paths": [],
       "documentation_paths": [
-        "docs/modules/first-run-onboarding.md",
-        "docs/CLEAN_INSTALL.md",
-        "docs/VERIFICATION.md",
-        "docs/architecture/ARCHITECTURE.md",
         "docs/RELEASE.md",
-        "docs/TRANSFER_TO_WINDOWS.md"
+        "docs/VERIFICATION.md"
       ],
-      "verification_ids": [
-        "suite",
-        "electron-smoke"
-      ],
+      "verification_ids": [],
       "acceptance_criteria": [
-        "Собраны macOS arm64 и Windows x64; пройдены suite, Electron smoke и проверки состава пакетов.",
-        "Версии, SHA-256, исходники и установленный macOS app согласованы по RELEASE; файлы доставлены для испытаний.",
-        "После дальнейшего исправления выпуск и чистое прохождение повторяются новыми микрозадачами этого же плана."
+        "Проверены фактические версии и SHA-256 обоих ZIP, установленный macOS app и отсутствие изменений функционального source после проверенного release commit.",
+        "Существующие suite и Electron smoke привязаны к релизу; повторная сборка без изменения приложения не требуется."
       ],
-      "expected_commit_message": "build: release guided first-run packages",
+      "expected_commit_message": "docs: verify current release artifacts for handoff",
       "id": "T012",
-      "title": "Выпустить согласованные пакеты обеих платформ",
-      "why": "Подготовить финальные поставки одного source для завершающего прохождения."
+      "title": "Сверить готовые пакеты 0.6.40 для передачи дальнейших испытаний",
+      "why": "18.09.2026 пользователь поручил закрыть этот план и передать Windows 11 другому агенту; завершается фиксация результата и передача оставшейся работы, а не невыполненное испытание."
     },
     {
       "implementation_status": "TODO",
@@ -1964,42 +1920,34 @@
       ],
       "functional_paths": [],
       "documentation_paths": [
-        "docs/modules/first-run-onboarding.md",
-        "docs/CLEAN_INSTALL.md",
-        "docs/VERIFICATION.md",
-        "docs/RELEASE.md",
-        "docs/TRANSFER_TO_WINDOWS.md"
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "docs/CLEAN_INSTALL.md"
       ],
       "verification_ids": [],
       "acceptance_criteria": [
-        "Финальные пакеты пройдены на свежих клонах обеих ОС от установки до реального действия с файлом тестового проекта.",
-        "Проверены фактически обнаруженные ошибки, повтор, отмена/возврат, перезапуск приложения и ОС; подсказки понятны без технического сопровождения.",
-        "Пользователь подтвердил, что весь путь его устраивает; незавершённые проверки не получают DONE.",
-        "Границы Windows ARM64 и нативной x64 зафиксированы отдельно; все подтверждённые препятствия согласованного пути устранены."
+        "Описаны дальнейшие действия до тестового файла и повторных запусков, ограничения помощи извне и критерии пользовательской оценки.",
+        "Закрытие по прямому поручению отделено от подтверждения Windows и новой пользовательской проверки 0.6.40."
       ],
-      "expected_commit_message": "docs: confirm complete first-run experience",
+      "expected_commit_message": "docs: preserve remaining clean install acceptance criteria",
       "id": "T013",
-      "title": "Подтвердить весь путь пользователя и восстановление после ошибок",
-      "why": "Достичь согласованного результата, а не только технического открытия окна."
+      "title": "Сохранить невыполненные критерии полного пути для следующего агента",
+      "why": "18.09.2026 пользователь поручил закрыть этот план и передать Windows 11 другому агенту; завершается фиксация результата и передача оставшейся работы, а не невыполненное испытание."
     },
     {
       "id": "D001",
-      "title": "Зафиксировать пробу Computer Use и возврат к скриншотам",
-      "why": "Сохранить фактические задержки короткого опыта и действующий способ управления стендом без продолжения диагностики.",
+      "title": "Зафиксировать историческую пробу Computer Use и последующее разрешение",
+      "why": "18.09.2026 пользователь поручил закрыть этот план и передать Windows 11 другому агенту; завершается фиксация результата и передача оставшейся работы, а не невыполненное испытание.",
       "dependencies": [],
       "functional_paths": [],
       "documentation_paths": [
-        "docs/CLEAN_INSTALL.md",
-        "docs/VERIFICATION.md",
-        "docs/modules/first-run-onboarding.md"
+        "docs/CLEAN_INSTALL.md"
       ],
       "acceptance_criteria": [
-        "Записаны полученные внешние задержки: обычные вызовы около 1.8–2.3 с, первый снимок 3.311 с, клик запуска VM 34.038 с, снимок VM 56.566 с; причины задержек не объявлены установленными.",
-        "Две ошибки INVALID_ARGUMENT команды activate_window и прерванная пользователем последняя операция отмечены отдельно от успешных измерений.",
-        "Пользователь отменил продолжение Computer Use; сохранён режим его скриншотов и подсказок агента. Приложение в госте в ходе опыта не запускалось агентом."
+        "Сохранены известные задержки, ошибки activate_window, прерывание и отсутствие запуска приложения агентом в опыте 17.09.2026.",
+        "Возврат к скриншотам 17.09 и новое разрешение Computer Use 18.09 различены; новых испытаний в этом закрытии нет."
       ],
       "verification_ids": [],
-      "expected_commit_message": "docs: record Computer Use trial and manual test mode",
+      "expected_commit_message": "docs: record computer use trial and later authorization",
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
@@ -2066,28 +2014,36 @@
       "functional_paths": [],
       "documentation_paths": [
         "README.md",
-        "docs/PRODUCT.md",
-        "docs/DECISIONS.md",
-        "docs/WORKFLOW_START.md",
-        "docs/architecture/OVERVIEW.md",
-        "docs/architecture/ARCHITECTURE.md",
-        "docs/MODULES.md",
-        "docs/DOCUMENTATION_INDEX.md",
+        "AGENTS.md",
         "docs/CLEAN_INSTALL.md",
-        "docs/VERIFICATION.md",
-        "docs/RELEASE.md",
-        "docs/TRANSFER_TO_WINDOWS.md",
-        "docs/WORKSPACE_SETUP.md",
         "docs/CONTEXT_DELIVERY.md",
+        "docs/DECISIONS.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/PROJECT_ARCHIVE.md",
+        "docs/RELEASE.md",
+        "docs/SOURCE_WORKSPACES.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/design/session-plan-navigation.md",
         "docs/modules/first-run-onboarding.md",
+        "docs/modules/project-doctor.md",
         "docs/modules/runtime-lifecycle.md",
+        "docs/modules/session-opening-performance.md",
+        "docs/modules/session-owned-plans.md",
+        "docs/modules/workflow-kit-recovery.md",
         "docs/modules/workspace-sessions.md"
       ],
       "verification_ids": [],
       "acceptance_criteria": [
-        "Пройдены все документы по DOCUMENTATION_INDEX; устаревшие сведения исправлены, актуальные оставлены без бессмысленных правок.",
-        "Инструкции установки соответствуют проверенному поведению; статусы испытаний и платформенные ограничения не преувеличены.",
-        "План остаётся в своей сессии; архивирование и новая сессия автоматически не выполняются."
+        "Просмотрен весь действующий комплект по DOCUMENTATION_INDEX, README и документы согласованы с 0.6.40 и фактическими границами проверки.",
+        "Зафиксирована команда пользователя на закрытие 031 и передачу Windows 11; другой план 032 не изменяется.",
+        "После проверенного DOCS выполнено штатное архивирование по прямой команде пользователя и отправка main на GitHub без новой сессии или автоматического будущего плана."
       ],
       "expected_commit_message": "docs: update first-run project documentation",
       "id": "DOCS",
@@ -2136,6 +2092,11 @@
       "id": "apple-installer-visibility",
       "recorded_at": "2026-09-17T18:45:00Z",
       "text": "Пользователь подтвердил: все клоны созданы до экспериментов. На другом чистом клоне 0.6.35 открыл ChatGPT без Chrome и перезагрузки, вход подтверждён. Следующее препятствие: окно подтверждения установки Apple оказалось под Web Pilot; пользователь поручил исправить. Релиз теперь готовится для проверки этой конкретной проблемы, сетевой дефект не считается устранённым."
+    },
+    {
+      "id": "user-close-and-windows-handoff-2026-09-18",
+      "recorded_at": "2026-09-18T10:41:20.016650+00:00",
+      "text": "18.09.2026 пользователь прямо поручил закрыть данный план, проверить README и все документы текущего релиза, обновить GitHub; проверки виртуальной Windows 11 он выполнит с другим агентом. Оставшиеся T017/T010–T013 переопределены как фиксация имеющихся доказательств и передача невыполненных критериев; DONE этих документальных задач не означает выполненных Windows-испытаний или реализации Windows onboarding. Исходные требования и TODO сохранены в истории плана на commit 05c50a07091634a279f5f1dab08dd83dbcd2407a. D001 фиксирует исторический опыт; финальная DOCS сохраняется. После неё штатный archive только 031; план 032 другой сессии не меняется."
     }
   ],
   "owner_session_id": "web-pilot-ee60a2b3-bdde-4d7f-83cd-a4e25767fcbe",
@@ -2150,22 +2111,18 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-onboarding-031
 Current Task: нет
-Revision: 94
+Revision: 95
 
 ## Цель
 
-Довести первый запуск Web Pilot на чистых macOS и Windows от установки до начала работы: приложение само подготавливает компоненты и понятно сопровождает каждое необходимое действие пользователя. Исправлять, пересобирать и повторять проверки на свежих клонах, пока весь путь полностью не устроит пользователя.
+Закрыть first-run-onboarding-031 по прямому поручению пользователя: зафиксировать достигнутый результат macOS, передать невыполненные проверки Windows 11 другому агенту, согласовать README и весь комплект документации с релизом 0.6.40 и обновить GitHub.
 
 ## Критерии приёмки
 
-- На свежем клоне пользователь проходит от готового пакета до первого проекта и реального действия агента с тестовым файлом по подсказкам самого приложения.
-- Технические компоненты готовятся автоматически; пользователь не выполняет команды, не устанавливает инструменты разработчика вручную и не должен понимать MCP, порты или runtime.
-- Неизбежные личные действия, внешние входы, разрешения и получение данных подключения объяснены на нужном шаге и проверяются после выполнения.
-- Ошибки, ожидание, повтор и перезапуск имеют понятное поведение, сохранение прогресса и настроек.
-- Исправление → проверки → сборка → новый клон → повтор образуют неограниченный цикл внутри этого плана; завершение определяется полным пользовательским результатом.
-- macOS и Windows ARM64 с x64-эмуляцией проверены отдельно; нативная Windows x64 имеет честно указанный статус.
-- Base сохраняется; основной Mac, рабочие runtime и профили не используются как скрытые предварительные условия.
-- Каждая микрозадача имеет отдельный проверенный commit; единственная последняя DOCS актуализирует документацию; пользователь подтверждает пригодность полного пути.
+- Сохранены все выполненные задачи и их commits, принятые пользователем результаты macOS и ограничения доказательств.
+- Оставшиеся Windows-испытания и критерии полного пути переданы другому агенту без объявления их выполненными.
+- Существующая поставка 0.6.40 сверена, документация актуализирована; финальная DOCS проверена.
+- По прямому поручению архивирован только план этой сессии; main отправлен на GitHub, другая сессия и её план сохранены.
 
 ## Микрозадачи
 
@@ -2325,34 +2282,34 @@ Revision: 94
   - Git Commit: [DONE] docs: deliver installer visibility check
   - Reference: first-run-onboarding-031 / R005 / implementation
   - Файлы: docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
-- [TODO] T017: Проверить показ установщика и полный чистый путь macOS — Ожидает
-  - Git Commit: [PENDING] docs: verify clean macOS guided startup
+- [TODO] T017: Зафиксировать принятый результат macOS и границы проверки при закрытии — Ожидает
+  - Git Commit: [PENDING] docs: record accepted macOS startup and evidence limits
   - Reference: first-run-onboarding-031 / T017 / implementation
-  - Файлы: docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
-- [TODO] T010: Пройти первый запуск Windows и выявить отличия — Ожидает
-  - Git Commit: [PENDING] docs: record Windows first-run findings
+  - Файлы: docs/CLEAN_INSTALL.md
+- [TODO] T010: Передать исходные условия проверки Windows 11 другому агенту — Ожидает
+  - Git Commit: [PENDING] docs: hand off Windows 11 clean test baseline
   - Reference: first-run-onboarding-031 / T010 / implementation
-  - Файлы: docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/TRANSFER_TO_WINDOWS.md
-- [TODO] T011: Устранить подтверждённые проблемы подготовки Windows — Ожидает
-  - Git Commit: [PENDING] fix: complete guided Windows preparation
+  - Файлы: docs/TRANSFER_TO_WINDOWS.md
+- [TODO] T011: Передать порядок диагностики и исправлений первого запуска Windows — Ожидает
+  - Git Commit: [PENDING] docs: hand off Windows startup diagnosis and fixes
   - Reference: first-run-onboarding-031 / T011 / implementation
-  - Файлы: src/windows-runtime.mjs, src/platform.mjs, tests/windows-runtime.test.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, docs/TRANSFER_TO_WINDOWS.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md
-- [TODO] T012: Выпустить согласованные пакеты обеих платформ — Ожидает
-  - Git Commit: [PENDING] build: release guided first-run packages
+  - Файлы: docs/TRANSFER_TO_WINDOWS.md
+- [TODO] T012: Сверить готовые пакеты 0.6.40 для передачи дальнейших испытаний — Ожидает
+  - Git Commit: [PENDING] docs: verify current release artifacts for handoff
   - Reference: first-run-onboarding-031 / T012 / implementation
-  - Файлы: package.json, package-lock.json, scripts/verify-windows-package.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md
-- [TODO] T013: Подтвердить весь путь пользователя и восстановление после ошибок — Ожидает
-  - Git Commit: [PENDING] docs: confirm complete first-run experience
+  - Файлы: docs/RELEASE.md, docs/VERIFICATION.md
+- [TODO] T013: Сохранить невыполненные критерии полного пути для следующего агента — Ожидает
+  - Git Commit: [PENDING] docs: preserve remaining clean install acceptance criteria
   - Reference: first-run-onboarding-031 / T013 / implementation
-  - Файлы: docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md
-- [TODO] D001: Зафиксировать пробу Computer Use и возврат к скриншотам — Ожидает
-  - Git Commit: [PENDING] docs: record Computer Use trial and manual test mode
+  - Файлы: docs/TRANSFER_TO_WINDOWS.md, docs/CLEAN_INSTALL.md
+- [TODO] D001: Зафиксировать историческую пробу Computer Use и последующее разрешение — Ожидает
+  - Git Commit: [PENDING] docs: record computer use trial and later authorization
   - Reference: first-run-onboarding-031 / D001 / implementation
-  - Файлы: docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md
+  - Файлы: docs/CLEAN_INSTALL.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: update first-run project documentation
   - Reference: first-run-onboarding-031 / DOCS / implementation
-  - Файлы: README.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/architecture/ARCHITECTURE.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKSPACE_SETUP.md, docs/CONTEXT_DELIVERY.md, docs/modules/first-run-onboarding.md, docs/modules/runtime-lifecycle.md, docs/modules/workspace-sessions.md
+  - Файлы: README.md, AGENTS.md, docs/CLEAN_INSTALL.md, docs/CONTEXT_DELIVERY.md, docs/DECISIONS.md, docs/DOCUMENTATION_INDEX.md, docs/MODULES.md, docs/PRODUCT.md, docs/PROJECT_ARCHIVE.md, docs/RELEASE.md, docs/SOURCE_WORKSPACES.md, docs/TRANSFER_TO_WINDOWS.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/WORKSPACE_SETUP.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/design/session-plan-navigation.md, docs/modules/first-run-onboarding.md, docs/modules/project-doctor.md, docs/modules/runtime-lifecycle.md, docs/modules/session-opening-performance.md, docs/modules/session-owned-plans.md, docs/modules/workflow-kit-recovery.md, docs/modules/workspace-sessions.md
 
 ## Context Pack For This Cycle
 
