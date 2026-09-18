@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 16,
+  "plan_revision": 18,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-corrections-032",
@@ -285,8 +285,8 @@
       ],
       "verification_ids": [],
       "expected_commit_message": "fix: record clean macOS acceptance and onboarding UI contract",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-corrections-032",
         "task_id": "U001",
@@ -712,7 +712,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-corrections-032
 Current Task: нет
-Revision: 16
+Revision: 18
 
 ## Цель
 
@@ -746,8 +746,8 @@ Revision: 16
   - Git Commit: [DONE] build: release first-run prompt and Apple readiness fixes
   - Reference: first-run-corrections-032 / T005 / implementation
   - Файлы: package.json, package-lock.json, docs/modules/first-run-onboarding.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md
-- [TODO] U001: Зафиксировать успешный чистый запуск и контракт интерфейсных исправлений — Ожидает
-  - Git Commit: [PENDING] fix: record clean macOS acceptance and onboarding UI contract
+- [DONE] U001: Зафиксировать успешный чистый запуск и контракт интерфейсных исправлений — Завершено
+  - Git Commit: [DONE] fix: record clean macOS acceptance and onboarding UI contract
   - Reference: first-run-corrections-032 / U001 / implementation
   - Файлы: docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/VERIFICATION.md, docs/CLEAN_INSTALL.md, docs/MODULES.md
 - [TODO] U002: Убрать повтор «План ещё не создан» — Ожидает
