@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 95,
+  "plan_revision": 97,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-onboarding-031",
@@ -1823,8 +1823,8 @@
         "Новые изменения 0.6.40, отдельное действие с файлом и неполные исходные сведения о госте не объявлены проверенными."
       ],
       "expected_commit_message": "docs: record accepted macOS startup and evidence limits",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-onboarding-031",
         "task_id": "T017",
@@ -2111,7 +2111,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-onboarding-031
 Current Task: нет
-Revision: 95
+Revision: 97
 
 ## Цель
 
@@ -2282,8 +2282,8 @@ Revision: 95
   - Git Commit: [DONE] docs: deliver installer visibility check
   - Reference: first-run-onboarding-031 / R005 / implementation
   - Файлы: docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/VERIFICATION.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/modules/runtime-lifecycle.md, docs/WORKSPACE_SETUP.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
-- [TODO] T017: Зафиксировать принятый результат macOS и границы проверки при закрытии — Ожидает
-  - Git Commit: [PENDING] docs: record accepted macOS startup and evidence limits
+- [DONE] T017: Зафиксировать принятый результат macOS и границы проверки при закрытии — Завершено
+  - Git Commit: [DONE] docs: record accepted macOS startup and evidence limits
   - Reference: first-run-onboarding-031 / T017 / implementation
   - Файлы: docs/CLEAN_INSTALL.md
 - [TODO] T010: Передать исходные условия проверки Windows 11 другому агенту — Ожидает
