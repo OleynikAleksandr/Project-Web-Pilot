@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 10,
+  "plan_revision": 12,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
@@ -230,8 +230,8 @@
       "expected_commit_message": "feat: Объединить первый запуск через платформенные адаптеры"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "windows-onboarding-033",
         "task_id": "W004",
@@ -473,7 +473,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 10
+Revision: 12
 
 ## Цель
 
@@ -504,8 +504,8 @@ Revision: 10
   - Git Commit: [DONE] feat: Объединить первый запуск через платформенные адаптеры
   - Reference: windows-onboarding-033 / W003 / implementation
   - Файлы: src/startup-platform.mjs, src/startup-readiness.mjs, tests/startup-platform.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md
-- [TODO] W004: Включить Windows мастер и окружение создания проектов — Ожидает
-  - Git Commit: [PENDING] feat: Включить Windows мастер и окружение создания проектов
+- [DONE] W004: Включить Windows мастер и окружение создания проектов — Завершено
+  - Git Commit: [DONE] feat: Включить Windows мастер и окружение создания проектов
   - Reference: windows-onboarding-033 / W004 / implementation
   - Файлы: src/main.mjs, src/workspace-setup.mjs, tests/workspace-setup.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md
 - [TODO] W005: Адаптировать шаги и подписи Windows интерфейса — Ожидает

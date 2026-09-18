@@ -1127,3 +1127,5 @@ WindowsRuntimeBootstrap.configureTunnel теперь запускает windows-
 ## Общий coordinator первого запуска — W003
 
 startup-platform.mjs задаёт единые production/fixture правила включения и зависимости StartupReadiness. Для Windows prepareComponents выполняется до Git probe; комплектное окружение передаётся WorkspaceSetup. Для macOS остаются прежние Apple probes. Состояние содержит platform, ошибки Windows преобразуются в ограниченные сообщения, отсутствующий Node не запускает установку. При готовых службах повторная проверка не перенастраивает tunnel и не перезапускает MCP.
+
+W004: production main включает startupPlatformOptions для darwin и win32; настройки Windows возвращают в общий мастер. WorkspaceSetup получает prepareEnvironment перед первым worker-вызовом и принимает только Git/Node-license/Path поля. Регистр Path нормализуется без наследования NODE_OPTIONS. Любой вход в создание/проверку проекта на Windows подготавливает комплектные компоненты через существующий bootstrap; собственные проекты не требуют системного Git.

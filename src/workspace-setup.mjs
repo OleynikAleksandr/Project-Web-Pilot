@@ -11,10 +11,11 @@ const fail = (code, message) => Object.assign(new Error(message), { code });
 
 export class WorkspaceSetup {
   constructor({ resourceDir = fileURLToPath(new URL('../resources/', import.meta.url)), nodeCandidates,
-    environment = process.env, platform = process.platform, executeNode = execute } = {}) {
+    environment = process.env, platform = process.platform, executeNode = execute, prepareEnvironment } = {}) {
     this.resourceDir = resourceDir;
     this.platform = platform;
     this.executeNode = executeNode;
+    this.prepareEnvironment = prepareEnvironment;
     this.nodeCandidates = nodeCandidates ?? nodeExecutableCandidates({
       platform,
       environment,
@@ -34,6 +35,19 @@ export class WorkspaceSetup {
       fingerprint: workspace => this.call({ action: 'fingerprint', mode: 'existing', project: workspace }),
       inspect: workspace => this.call({ action: 'inspect', mode: 'existing', project: workspace }),
     });
+  }
+  setRuntimeEnvironment(values) {
+    const allowed = new Set(['WORKFLOW_GIT_BIN', 'WORKFLOW_GIT_HOME', 'WORKFLOW_NODE_LICENSE']);
+    for (const [key, value] of Object.entries(values ?? {})) {
+      if ((!allowed.has(key) && key.toLowerCase() !== 'path') || typeof value !== 'string' || /[\r\n\0]/.test(value))
+        throw fail('RUNTIME_ENVIRONMENT', 'Некорректное окружение локальных компонентов.');
+    }
+    for (const [key, value] of Object.entries(values ?? {})) {
+      if (key.toLowerCase() === 'path') {
+        for (const existing of Object.keys(this.environment)) if (existing.toLowerCase() === 'path') delete this.environment[existing];
+        this.environment[this.platform === 'win32' ? 'Path' : 'PATH'] = value;
+      } else this.environment[key] = value;
+    }
   }
   async node() {
     if (this.nodeExecutable) return this.nodeExecutable;
@@ -68,6 +82,7 @@ export class WorkspaceSetup {
     throw fail('NODE_MISSING', 'Для подготовки проектов нужен Node.js 22 или новее. Установите его и повторите проверку.');
   }
   async call(input) {
+    if (this.prepareEnvironment) this.setRuntimeEnvironment(await this.prepareEnvironment());
     const node = await this.node();
     const child = execFile(node, [path.join(this.resourceDir, 'workspace-setup-worker.mjs')],
       { env: this.environment, timeout: 120000, maxBuffer: 4 * 1024 * 1024, encoding: 'utf8',

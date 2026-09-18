@@ -28,6 +28,7 @@ import { WindowsRuntimeBootstrap, WINDOWS_RUNTIME_ARCHIVE } from './windows-runt
 import { MacRuntimeBootstrap } from './mac-runtime.mjs';
 import { TunnelClipboard } from './tunnel-clipboard.mjs';
 import { StartupReadiness, inspectMacGit, installMacGit, accountObservation, offerMacInstallation } from './startup-readiness.mjs';
+import { startupPlatformOptions, startupSupported } from './startup-platform.mjs';
 
 const smoke = !app.isPackaged && process.argv.includes('--smoke');
 const sourceDir = path.dirname(fileURLToPath(import.meta.url));
@@ -76,6 +77,10 @@ const workspaceSetup = new WorkspaceSetup({
     : process.platform === 'darwin'
       ? [bundledMacNode(app.isPackaged ? process.resourcesPath : path.join(sourceDir, '../.harness/runtime')), ...nodeExecutableCandidates()]
       : undefined,
+  prepareEnvironment: process.platform === 'win32' && !smoke ? async () => {
+    await ensurePlatformRuntime();
+    return windowsRuntimeBootstrap.workflowEnvironment();
+  } : undefined,
 });
 const sessionPlans = new SessionPlans({ setup: workspaceSetup });
 store.planService = sessionPlans;
@@ -608,6 +613,7 @@ async function ensurePlatformRuntime() {
     if (deletion) deletion.protectedPaths = [app.getAppPath(), runtimeFolder];
     await saveSettings({ runtimeFolder, runtimeRegistration });
   }
+  if (windowsRuntimeBootstrap) workspaceSetup.setRuntimeEnvironment(await windowsRuntimeBootstrap.workflowEnvironment());
   return result;
 }
 function createLocalRuntime() {
@@ -620,24 +626,13 @@ function createLocalRuntime() {
 }
 
 function createStartupFlow() {
-  if (process.platform !== 'darwin' || smoke) return;
+  if (!startupSupported(process.platform, smoke)) return;
   startupActive = store.snapshot().projects.length === 0;
   startupFlow = new StartupReadiness({
-    probeNode: () => workspaceSetup.node(), probeGit: () => inspectMacGit(), installGit: () => installMacGit(),
-    inspectRuntime: async () => {
-      const current = await macRuntimeBootstrap.inspect();
-      return current.installed ? runtime.control('status') : null;
-    },
-    prepareRuntime: async () => {
-      let status = await runtime.control('status');
-      if (!status.mcp.ready || (status.tunnel.configured && !status.tunnel.ready))
-        status = await runtime.control('start', { mcpOnly: !status.tunnel.configured });
-      return status;
-    },
-    configureTunnel: async credentials => {
-      await ensurePlatformRuntime();
-      return macRuntimeBootstrap.configureTunnel(credentials);
-    },
+    ...startupPlatformOptions({ platform: process.platform, setup: workspaceSetup,
+      bootstrap: windowsRuntimeBootstrap ?? macRuntimeBootstrap,
+      ensureRuntime: ensurePlatformRuntime, control: (...args) => runtime.control(...args),
+      inspectGit: () => inspectMacGit(), installGit: () => installMacGit() }),
     onChange: publish,
   });
   startupClipboard = new TunnelClipboard({
@@ -675,7 +670,7 @@ async function startupAction(action) {
     settingsState = null; setupState = null; workspaceSetup.clear(); startupError = null; startupActive = true;
     if (!store.selected()) void navigate(null);
     else void observeStartupAccount();
-    return startupFlow.check();
+    return startupFlow.check({ prepare: process.platform === 'win32' });
   }
   if (!startupActive) throw new Error('Сначала откройте начальную настройку.');
   if (action === 'copy-diagnostics') {
@@ -776,8 +771,7 @@ function registerIpc() {
   });
   registerAction('pilot:configure-windows-tunnel', async () => {
     if (process.platform !== 'win32' || !windowsRuntimeBootstrap) throw new Error('Настройка Windows tunnel недоступна на этой платформе.');
-    await windowsRuntimeBootstrap.ensure(store.selected()?.workspace ?? os.homedir());
-    return windowsRuntimeBootstrap.launchTunnelSetup();
+    return startupAction('show');
   });
   registerAction('pilot:refresh-windows-runtime', async () => {
     if (process.platform !== 'win32' || !windowsRuntimeBootstrap) throw new Error('Windows runtime недоступен на этой платформе.');

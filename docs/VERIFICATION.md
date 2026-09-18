@@ -1505,3 +1505,5 @@ Electron smoke PASSED (88.783 s). Evidence сохранён отдельно в
 W002: 14 Windows runtime checks: 12 PASS, 2 platform skips на Mac. Новые проверки подтверждают приватность stdin/ошибок, отмену и partial ID, а также правильный Git home/PATH и отказ для перенесённой либо чужой установки. Сетевые ключи и реальные службы при unit-проверке не использовались.
 
 W003: 26/26 startup-platform + startup-readiness PASS. Покрыты реальные правила включения обеих платформ, чистая Windows → компоненты → MCP → tunnel, повтор после ошибки, read-only inspection, отказ неполного Node-пакета и сохранение порядка macOS. Это тесты общего production adapter с контролируемыми платформенными зависимостями.
+
+W004: 25/25 workspace-setup checks PASS, включая нормализацию Path и отказ неподдерживаемых переменных, подготовку окружения до первого реального worker-процесса и запрет записи при ошибке Git. src/main.mjs прошёл syntax check; production factory теперь разрешает Windows и macOS, smoke не запускает реальные bootstrap.

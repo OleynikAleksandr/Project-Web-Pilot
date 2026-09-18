@@ -353,3 +353,29 @@ test('compatible 1.4.0 upgrades to 1.4.1 and preserves canonical session plans',
   assert.ok((await fs.readdir(path.join(workspace, '.harness/runtime'))).some(n => n.startsWith('kit-upgrade-')));
   assert.equal(git(workspace, 'status', '--porcelain'), '');
 });
+
+test('Windows runtime environment replaces duplicate Path casing and accepts only runtime fields', () => {
+  const setup = new WorkspaceSetup({ platform: 'win32', environment: { PATH: 'old-a', Path: 'old-b', NODE_OPTIONS: '--bad' } });
+  setup.setRuntimeEnvironment({ WORKFLOW_GIT_BIN: 'C:\\Pilot\\git\\cmd\\git.exe', WORKFLOW_GIT_HOME: 'C:\\Pilot\\git', Path: 'C:\\Pilot\\git\\cmd;C:\\Windows' });
+  assert.deepEqual(Object.keys(setup.environment).filter(k => k.toLowerCase() === 'path'), ['Path']);
+  assert.equal(setup.environment.WORKFLOW_GIT_HOME, 'C:\\Pilot\\git');
+  assert.equal(setup.environment.NODE_OPTIONS, undefined);
+  const previous = { ...setup.environment };
+  assert.throws(() => setup.setRuntimeEnvironment({ WORKFLOW_GIT_BIN: 'changed', NODE_OPTIONS: 'bad' }), { code: 'RUNTIME_ENVIRONMENT' });
+  assert.deepEqual(setup.environment, previous);
+});
+test('workspace worker receives prepared Git environment before its first inspection', async t => {
+  const folder = await fs.mkdtemp(path.join(os.tmpdir(), 'pilot-environment-'));
+  t.after(() => fs.rm(folder, { recursive: true, force: true }));
+  await fs.writeFile(path.join(folder, 'workspace-setup-worker.mjs'), `
+    let input=''; for await (const chunk of process.stdin) input+=chunk;
+    process.stdout.write(JSON.stringify({ok:true,action:JSON.parse(input).action,git:process.env.WORKFLOW_GIT_BIN,home:process.env.WORKFLOW_GIT_HOME}));
+  `);
+  let preparation = 0;
+  const setup = new WorkspaceSetup({ resourceDir: folder, nodeCandidates: [process.execPath], environment,
+    prepareEnvironment: async () => { preparation++; return { WORKFLOW_GIT_BIN: '/fixture/git', WORKFLOW_GIT_HOME: '/fixture/git-home' }; } });
+  assert.deepEqual(await setup.call({ action: 'inspect' }), { ok: true, action: 'inspect', git: '/fixture/git', home: '/fixture/git-home' });
+  assert.equal(preparation, 1);
+  setup.prepareEnvironment = async () => { throw Object.assign(new Error('not ready'), { code: 'WINDOWS_GIT_INCOMPLETE' }); };
+  await assert.rejects(setup.call({ action: 'apply' }), { code: 'WINDOWS_GIT_INCOMPLETE' });
+});
