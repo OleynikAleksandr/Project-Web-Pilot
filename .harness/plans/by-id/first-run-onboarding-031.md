@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 109,
+  "plan_revision": 110,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-onboarding-031",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Закрыть first-run-onboarding-031 по прямому поручению пользователя: зафиксировать достигнутый результат macOS, передать невыполненные проверки Windows 11 другому агенту, согласовать README и весь комплект документации с релизом 0.6.40 и обновить GitHub.",
   "acceptance_criteria": [
     "Сохранены все выполненные задачи и их commits, принятые пользователем результаты macOS и ограничения доказательств.",
@@ -1957,12 +1957,36 @@
       }
     },
     {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
+      "id": "C013",
+      "title": "Сохранить ссылки recovery прежних сессий при обновлении документации",
+      "why": "Дополнительная проверка нашла ссылку плана 029 на прежний версионный заголовок; новая документация должна сохранять восстановление всех сессий.",
+      "dependencies": [],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/modules/workspace-sessions.md"
+      ],
+      "verification_ids": [],
+      "acceptance_criteria": [
+        "Сохранён адресуемый заголовок действующей модели schema v6, на который ссылается план 029; актуальное поведение 0.6.40 описано отдельно.",
+        "Обязательные документы и заголовки всех канонических планов доступны; чужие планы не меняются."
+      ],
+      "expected_commit_message": "docs: preserve recovery section links for existing sessions",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "first-run-onboarding-031",
+        "task_id": "C013",
+        "role": "implementation"
+      }
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "first-run-onboarding-031",
         "task_id": "DOCS",
-        "role": "implementation"
+        "role": "implementation",
+        "iteration": 2
       },
       "dependencies": [
         "T001",
@@ -2009,7 +2033,8 @@
         "T011",
         "T012",
         "T013",
-        "D001"
+        "D001",
+        "C013"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -2108,10 +2133,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: first-run-onboarding-031
 Current Task: нет
-Revision: 109
+Revision: 110
 
 ## Цель
 
@@ -2306,8 +2331,12 @@ Revision: 109
   - Git Commit: [DONE] docs: record computer use trial and later authorization
   - Reference: first-run-onboarding-031 / D001 / implementation
   - Файлы: docs/CLEAN_INSTALL.md
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: update first-run project documentation
+- [TODO] C013: Сохранить ссылки recovery прежних сессий при обновлении документации — Ожидает
+  - Git Commit: [PENDING] docs: preserve recovery section links for existing sessions
+  - Reference: first-run-onboarding-031 / C013 / implementation
+  - Файлы: docs/modules/workspace-sessions.md
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: update first-run project documentation
   - Reference: first-run-onboarding-031 / DOCS / implementation
   - Файлы: README.md, AGENTS.md, docs/CLEAN_INSTALL.md, docs/CONTEXT_DELIVERY.md, docs/DECISIONS.md, docs/DOCUMENTATION_INDEX.md, docs/MODULES.md, docs/PRODUCT.md, docs/PROJECT_ARCHIVE.md, docs/RELEASE.md, docs/SOURCE_WORKSPACES.md, docs/TRANSFER_TO_WINDOWS.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/WORKSPACE_SETUP.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/design/session-plan-navigation.md, docs/modules/first-run-onboarding.md, docs/modules/project-doctor.md, docs/modules/runtime-lifecycle.md, docs/modules/session-opening-performance.md, docs/modules/session-owned-plans.md, docs/modules/workflow-kit-recovery.md, docs/modules/workspace-sessions.md
 
