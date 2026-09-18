@@ -6,7 +6,7 @@ import { openStartupPage } from '../src/browser-startup.mjs';
 import { TunnelClipboard } from '../src/tunnel-clipboard.mjs';
 import { StartupNetworkTrace } from '../src/startup-network-trace.mjs';
 import { createHash } from 'node:crypto';
-import { nativeTheme, clipboard, BrowserWindow } from 'electron';
+import { nativeTheme, clipboard, BrowserWindow, dialog } from 'electron';
 import { ChatColors } from '../src/chatgpt-colors.mjs';
 import { readWorkspace, WorkspaceSessions } from '../src/workspace-session.mjs';
 import { createScope, startTask, preparePlan } from '../resources/workflow-kit/lib/actions.mjs';
@@ -263,9 +263,35 @@ export async function run({ app, window, browser, sidebar, store, controller, se
     summary.click(); document.body.click(); return {initially,opened,closed,outsideClosed:!details.open};
   })()`);
   assert.deepEqual(disclosure, {initially:false,opened:true,closed:true,outsideClosed:true});
+  const chooseProjectsFolder = async (canceled = false) => {
+    const showOpenDialog = dialog.showOpenDialog;
+    let options;
+    dialog.showOpenDialog = async (_window, input) => {
+      options = input;
+      return { canceled, filePaths: canceled ? [] : [path.dirname(workspace)] };
+    };
+    try { await sidebar.executeJavaScript('window.webPilot.chooseParent("")'); }
+    finally { dialog.showOpenDialog = showOpenDialog; }
+    assert.equal(options.title, 'Выбрать расположение папки для проектов');
+    assert.equal(Object.hasOwn(options, 'defaultPath'), false, 'no implicit initial folder');
+  };
   const previewNew = async () => {
     await sidebar.executeJavaScript('document.getElementById("create-workspace").click()');
     await waitFor(() => snapshot().setup?.phase === 'form', 'new workspace form', snapshot);
+    assert.equal(snapshot().setup.parent, null);
+    await waitFor(() => sidebar.executeJavaScript('document.getElementById("setup-name").hidden && document.getElementById("setup-preview").hidden'), 'location before project name', snapshot);
+    const missingParent = await sidebar.executeJavaScript('window.webPilot.previewNew("Тестовый проект с пробелами")');
+    assert.equal(missingParent.ok, false);
+    assert.match(missingParent.error.message, /Сначала выберите расположение/);
+    await chooseProjectsFolder(true);
+    assert.equal(snapshot().setup.parent, null, 'cancel does not select a default folder');
+    await sidebar.executeJavaScript('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
+    await fs.writeFile(path.join(dataDir, 'new-project-location.png'), (await sidebar.capturePage()).toPNG());
+    await chooseProjectsFolder();
+    assert.equal(snapshot().setup.parent, path.dirname(workspace));
+    await waitFor(() => sidebar.executeJavaScript('!document.getElementById("setup-name").hidden && document.activeElement.id === "setup-name"'), 'selected folder reveals and focuses name', snapshot);
+    await sidebar.executeJavaScript('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
+    await fs.writeFile(path.join(dataDir, 'new-project-name.png'), (await sidebar.capturePage()).toPNG());
     await sidebar.executeJavaScript(`document.getElementById('setup-name').value='Тестовый проект с пробелами'; document.getElementById('setup-preview').click()`);
     await waitFor(() => snapshot().setup?.phase === 'preview', 'new workspace preview', snapshot);
   };
@@ -971,6 +997,9 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   // A new project's first Work session uses the same one-click path and real IPC.
   await sidebar.executeJavaScript('window.webPilot.beginCreate()');
   await waitFor(() => snapshot().setup?.phase === 'form', 'first Work project form', snapshot);
+  assert.equal(snapshot().setup.parent, null, 'existing projects do not prefill the next location');
+  await chooseProjectsFolder();
+  await waitFor(() => sidebar.executeJavaScript('!document.getElementById("setup-name").hidden'), 'first Work location selected', snapshot);
   await sidebar.executeJavaScript(`document.getElementById('setup-name').value='Первый Work'; document.getElementById('setup-preview').click()`);
   await waitFor(() => snapshot().setup?.phase === 'preview', 'first Work project preview', snapshot);
   const workTarget = snapshot().setup.workspace;

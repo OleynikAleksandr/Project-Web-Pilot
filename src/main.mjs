@@ -857,18 +857,19 @@ function registerIpc() {
   registerAction('pilot:begin-create', () => {
     if (storageError) throw new Error('Сначала нужно восстановить сохранённый список проектов.');
     settingsState = null; deletion.clear(); pauseForSetup(); workspaceSetup.clear();
-    setupState = { phase: 'form', mode: 'new', name: '', firstSessionRequired: true, firstSessionExperience: 'chat', parent: smoke ? dataDir + '-projects' : path.dirname(store.selected()?.workspace ?? path.join(os.homedir(), 'VSCODE/Project')) };
+    setupState = { phase: 'form', mode: 'new', name: '', firstSessionRequired: true, firstSessionExperience: 'chat', parent: null };
   });
   registerAction('pilot:choose-parent', async input => {
     if (setupState?.mode !== 'new') return;
     const name = typeof input?.name === 'string' ? input.name.slice(0, 120) : setupState.name;
-    const result = await dialog.showOpenDialog(window, { title: 'Где создать проект', buttonLabel: 'Выбрать папку',
-      properties: ['openDirectory'], defaultPath: setupState.parent });
+    const result = await dialog.showOpenDialog(window, { title: 'Выбрать расположение папки для проектов', buttonLabel: 'Выбрать папку',
+      properties: ['openDirectory'], ...(setupState.parent ? { defaultPath: setupState.parent } : {}) });
     setupState = { phase: 'form', mode: 'new', name, firstSessionRequired: true, firstSessionExperience: setupState.firstSessionExperience ?? 'chat', parent: result.canceled ? setupState.parent : result.filePaths[0] };
   });
   registerAction('pilot:preview-new', async input => {
     if (setupState?.mode !== 'new') throw new Error('Сначала нажмите «Создать проект».');
     const parent = setupState.parent, name = input?.name, firstSessionExperience = setupState.firstSessionExperience ?? 'chat';
+    if (typeof parent !== 'string' || !path.isAbsolute(parent)) throw new Error('Сначала выберите расположение папки для проектов.');
     setupState = { phase: 'checking', mode: 'new', parent, name, firstSessionRequired: true, firstSessionExperience }; publish();
     const preview = await workspaceSetup.preview({ mode: 'new', parent, name });
     setupState = { ...preview, phase: 'preview', parent, name, firstSessionRequired: true, firstSessionExperience };

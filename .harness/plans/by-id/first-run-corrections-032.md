@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 48,
+  "plan_revision": 50,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "first-run-corrections-032",
@@ -733,8 +733,8 @@
         "electron-smoke"
       ],
       "expected_commit_message": "fix: require an explicit projects folder selection",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "first-run-corrections-032",
         "task_id": "P002",
@@ -874,7 +874,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: first-run-corrections-032
 Current Task: нет
-Revision: 48
+Revision: 50
 
 ## Цель
 
@@ -962,8 +962,8 @@ Revision: 48
   - Git Commit: [DONE] fix: ask for projects location before project name
   - Reference: first-run-corrections-032 / P001 / implementation
   - Файлы: src/ui/index.html, src/ui/workspace-setup.mjs, tests/project-doctor-ui.test.mjs, docs/WORKSPACE_SETUP.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md
-- [TODO] P002: Убрать неявную папку и проверить создание через выбранное расположение — Ожидает
-  - Git Commit: [PENDING] fix: require an explicit projects folder selection
+- [DONE] P002: Убрать неявную папку и проверить создание через выбранное расположение — Завершено
+  - Git Commit: [DONE] fix: require an explicit projects folder selection
   - Reference: first-run-corrections-032 / P002 / implementation
   - Файлы: src/main.mjs, tests/electron-smoke.mjs, docs/WORKSPACE_SETUP.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md
 - [TODO] P003: Собрать и проверить 0.6.40 для macOS и Windows — Ожидает
