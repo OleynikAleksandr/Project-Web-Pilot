@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 7,
+  "plan_revision": 9,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-app-server-mcp-035",
@@ -106,8 +106,8 @@
       "expected_commit_message": "docs: зафиксировать контракт Codex App Server MCP"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "codex-app-server-mcp-035",
         "task_id": "T002",
@@ -296,7 +296,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: codex-app-server-mcp-035
 Current Task: нет
-Revision: 7
+Revision: 9
 
 ## Цель
 
@@ -317,8 +317,8 @@ Revision: 7
   - Git Commit: [DONE] docs: зафиксировать контракт Codex App Server MCP
   - Reference: codex-app-server-mcp-035 / T001 / implementation
   - Файлы: docs/modules/codex-app-server-executor.md, docs/modules/runtime-lifecycle.md
-- [TODO] T002: Реализовать клиент Codex App Server — Ожидает
-  - Git Commit: [PENDING] feat: добавить клиент Codex App Server
+- [DONE] T002: Реализовать клиент Codex App Server — Завершено
+  - Git Commit: [DONE] feat: добавить клиент Codex App Server
   - Reference: codex-app-server-mcp-035 / T002 / implementation
   - Файлы: tools/codex-app-server-mcp/app_server_client.py, tests/codex-app-server-mcp.test.mjs, docs/modules/codex-app-server-executor.md, docs/DOCUMENTATION_INDEX.md
 - [TODO] T003: Реализовать ChatGPT-facing MCP facade — Ожидает
