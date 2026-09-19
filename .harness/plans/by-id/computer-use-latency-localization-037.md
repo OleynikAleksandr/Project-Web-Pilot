@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 16,
+  "plan_revision": 17,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "computer-use-latency-localization-037",
@@ -30,7 +30,8 @@
       "docs/VERIFICATION.md",
       "docs/architecture/OVERVIEW.md",
       "docs/MODULES.md",
-      "docs/DOCUMENTATION_INDEX.md"
+      "docs/DOCUMENTATION_INDEX.md",
+      "docs/evidence/mcp-tunnel-read-20260919.json"
     ],
     "max_functional_files_per_task": 3
   },
@@ -318,6 +319,35 @@
       "expected_commit_message": "docs: сравнить Web и Work Desktop через один MCP connector"
     },
     {
+      "id": "T009",
+      "title": "Измерить метрики туннеля на 15 чтениях и сопоставить с direct loopback",
+      "why": "Пользователь поручил предложенный тест метрик туннеля и просит остановиться после него перед следующей собственной идеей.",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "computer-use-latency-localization-037",
+        "task_id": "T009",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "T005",
+        "T008"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/design/computer-use-latency-investigation.md",
+        "docs/VERIFICATION.md",
+        "docs/evidence/mcp-tunnel-read-20260919.json"
+      ],
+      "verification_ids": [],
+      "acceptance_criteria": [
+        "Выполнены один прогрев и 15 последовательных read_file через connector и 15 через тот же локальный MCP; проверены точное содержимое и checksum.",
+        "Локальный наблюдатель сохранил redacted metrics до/после серии и подтвердил отсутствие пограничных диагностических tools в 15 измеряемых вызовах; служебные MCP initialize/notifications учтены отдельно.",
+        "Сохранены raw samples, статистика, воспроизводимая методика и честные границы атрибуции времени; production runtime не менялся, следующие тесты автоматически не начаты."
+      ],
+      "expected_commit_message": "docs: измерить tunnel metrics и direct MCP чтение"
+    },
+    {
       "id": "DOCS",
       "title": "Актуализация всех документов проекта",
       "why": "Проверить весь действующий комплект документации по docs/DOCUMENTATION_INDEX.md и обновить только устаревшие сведения после выполнения scope.",
@@ -329,7 +359,8 @@
         "T002",
         "T003",
         "T004",
-        "T008"
+        "T008",
+        "T009"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -376,7 +407,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: computer-use-latency-localization-037
 Current Task: нет
-Revision: 16
+Revision: 17
 
 ## Цель
 
@@ -423,6 +454,10 @@ Revision: 16
   - Git Commit: [DONE] docs: сравнить Web и Work Desktop через один MCP connector
   - Reference: computer-use-latency-localization-037 / T008 / implementation
   - Файлы: docs/design/computer-use-latency-investigation.md, docs/VERIFICATION.md
+- [TODO] T009: Измерить метрики туннеля на 15 чтениях и сопоставить с direct loopback — Ожидает
+  - Git Commit: [PENDING] docs: измерить tunnel metrics и direct MCP чтение
+  - Reference: computer-use-latency-localization-037 / T009 / implementation
+  - Файлы: docs/design/computer-use-latency-investigation.md, docs/VERIFICATION.md, docs/evidence/mcp-tunnel-read-20260919.json
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать документацию проекта
   - Reference: computer-use-latency-localization-037 / DOCS / implementation
