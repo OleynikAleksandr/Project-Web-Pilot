@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 32,
+  "plan_revision": 33,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-app-server-mcp-035",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Создать отдельный экспериментальный MCP для macOS, который предоставляет модели ChatGPT Web локальные инструменты через Codex App Server как исполнитель без запуска второго модельного агента, включая Computer Use, и подготовить безопасное A/B-сравнение с существующим Codex Local Mac.",
   "acceptance_criteria": [
     "Экспериментальный MCP запускается отдельно от штатного Codex Local Mac и не требует изменения кода Web Pilot для подключения в ChatGPT.",
@@ -316,13 +316,116 @@
       "expected_commit_message": "fix: перевести Computer Use actions на Sky"
     },
     {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "codex-app-server-mcp-035",
+        "task_id": "T008",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "T007"
+      ],
+      "functional_paths": [
+        "src/mac-runtime-switch.mjs",
+        "src/mcp-runtime.mjs",
+        "src/main.mjs",
+        "tests/mac-runtime-switch.test.mjs"
+      ],
+      "file_limit_exception": "Переключение runtime требует одного узкого backend facade, существующего McpRuntime stop action, интеграции main и отдельного regression test; функционально это одна атомарная lifecycle-задача.",
+      "documentation_paths": [
+        "docs/modules/runtime-lifecycle.md",
+        "docs/modules/codex-app-server-executor.md"
+      ],
+      "verification_ids": [
+        "suite"
+      ],
+      "id": "T008",
+      "title": "Добавить эксклюзивное переключение macOS runtime",
+      "why": "Гарантировать, что старый и новый MCP/tunnel не работают параллельно и выбранный runtime сохраняется между запусками.",
+      "acceptance_criteria": [
+        "Сохраняется mode local/app-server; при переключении невыбранный runtime останавливается до запуска выбранного.",
+        "LaunchAgent старого Codex Local Mac и нового WebPilotCodexExecutor включаются/отключаются взаимоисключающе, поэтому выбор переживает login/reboot.",
+        "Новый App Server MCP запускается из установленной копии resources в private state, а не зависит от исходного workspace.",
+        "После switch пересоздаются runtime/client/context controller и выбранный MCP проходит initialize."
+      ],
+      "expected_commit_message": "feat: добавить переключение macOS MCP runtime"
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "codex-app-server-mcp-035",
+        "task_id": "T009",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "T008"
+      ],
+      "functional_paths": [
+        "src/ui/index.html",
+        "src/ui/project-archive.mjs",
+        "src/preload.cjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/runtime-lifecycle.md"
+      ],
+      "verification_ids": [
+        "suite"
+      ],
+      "id": "T009",
+      "title": "Добавить переключатель MCP в Settings",
+      "why": "Дать пользователю явный выбор между Codex Local Mac и Codex App Server Local Mac без Terminal.",
+      "acceptance_criteria": [
+        "В macOS Settings виден двухпозиционный выбор с понятными названиями старого и нового MCP.",
+        "Выбор вызывает backend switch, показывает текущий active mode/status и блокируется на время операции.",
+        "Windows UI и существующие настройки не меняют поведение."
+      ],
+      "expected_commit_message": "feat: добавить выбор MCP runtime в Settings"
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "codex-app-server-mcp-035",
+        "task_id": "T010",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "T009"
+      ],
+      "functional_paths": [
+        "package.json",
+        "package-lock.json",
+        "scripts/release-all.mjs"
+      ],
+      "documentation_paths": [
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [
+        "suite",
+        "smoke"
+      ],
+      "id": "T010",
+      "title": "Собрать релиз 0.6.47 с новым MCP resource",
+      "why": "Поставить переключатель как самодостаточный релиз macOS/Windows и проверить physical resource нового MCP.",
+      "acceptance_criteria": [
+        "Версия поднята до 0.6.47 одинаково для package/lock и обеих платформ.",
+        "codex-app-server-mcp физически упакован как extra-resource, а release verification сверяет его с исходниками.",
+        "Полный test suite и Electron smoke проходят; npm run build создаёт macOS arm64 и Windows x64 package и обновляет постоянный macOS app.",
+        "Артефакты 0.6.47 лежат в ~/Downloads/WebPilot-0.6.47/ с manifest и SHA256."
+      ],
+      "expected_commit_message": "release: собрать Project Web Pilot 0.6.47"
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "codex-app-server-mcp-035",
         "task_id": "DOCS",
         "role": "implementation",
-        "iteration": 3
+        "iteration": 4
       },
       "dependencies": [
         "T001",
@@ -331,7 +434,10 @@
         "T004",
         "T005",
         "T006",
-        "T007"
+        "T007",
+        "T008",
+        "T009",
+        "T010"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -376,10 +482,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: codex-app-server-mcp-035
 Current Task: нет
-Revision: 32
+Revision: 33
 
 ## Цель
 
@@ -424,8 +530,20 @@ Revision: 32
   - Git Commit: [DONE] fix: перевести Computer Use actions на Sky
   - Reference: codex-app-server-mcp-035 / T007 / implementation
   - Файлы: tools/codex-app-server-mcp/server.py, tests/codex-app-server-mcp.test.mjs, docs/modules/codex-app-server-executor.md, docs/VERIFICATION.md
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: актуализировать документацию Codex App Server MCP
+- [TODO] T008: Добавить эксклюзивное переключение macOS runtime — Ожидает
+  - Git Commit: [PENDING] feat: добавить переключение macOS MCP runtime
+  - Reference: codex-app-server-mcp-035 / T008 / implementation
+  - Файлы: src/mac-runtime-switch.mjs, src/mcp-runtime.mjs, src/main.mjs, tests/mac-runtime-switch.test.mjs, docs/modules/runtime-lifecycle.md, docs/modules/codex-app-server-executor.md
+- [TODO] T009: Добавить переключатель MCP в Settings — Ожидает
+  - Git Commit: [PENDING] feat: добавить выбор MCP runtime в Settings
+  - Reference: codex-app-server-mcp-035 / T009 / implementation
+  - Файлы: src/ui/index.html, src/ui/project-archive.mjs, src/preload.cjs, docs/modules/runtime-lifecycle.md
+- [TODO] T010: Собрать релиз 0.6.47 с новым MCP resource — Ожидает
+  - Git Commit: [PENDING] release: собрать Project Web Pilot 0.6.47
+  - Reference: codex-app-server-mcp-035 / T010 / implementation
+  - Файлы: package.json, package-lock.json, scripts/release-all.mjs, docs/RELEASE.md, docs/VERIFICATION.md
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: актуализировать документацию Codex App Server MCP
   - Reference: codex-app-server-mcp-035 / DOCS / implementation
   - Файлы: docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/modules/runtime-lifecycle.md, docs/modules/codex-app-server-executor.md, docs/VERIFICATION.md
 
