@@ -4,13 +4,13 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 38,
+  "plan_revision": 39,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
-  "objective": "Сохранить выполненный Windows onboarding и исправить последовательный ввод ID туннеля и API key на обеих платформах с парным выпуском 0.6.42.",
+  "delivery_status": "IN_PROGRESS",
+  "objective": "Сохранить выполненный Windows onboarding и последовательные шаги ID/API key; исправить кнопку ID на настоящий системный диалог и выпустить macOS/Windows 0.6.43.",
   "acceptance_criteria": [
     "Windows показывает и выполняет шаги компонентов, туннеля и создания проекта после входа",
     "Данные подключения проходят существующее защищённое хранилище Windows; настройки сохраняются",
@@ -18,7 +18,10 @@
     "Source, tests, packaged fixtures и состав ZIP проверены; реальное подключение и приёмка в госте отдельно подтверждаются пользователем",
     "В Mac и Windows ID туннеля и API key оформлены двумя последовательными шагами; ссылка API keys и инструкция создания/копирования/вставки видимы без раскрытия подсказок",
     "Ручной путь не открывает два диалога подряд; перед вводом ключа показана инструкция",
-    "Один парный выпуск 0.6.42 в Downloads, постоянный Mac app обновлён с сохранением identity; VM и Computer Use не используются"
+    "Один парный выпуск 0.6.42 в Downloads, постоянный Mac app обновлён с сохранением identity; VM и Computer Use не используются",
+    "Кнопка вставки ID всегда открывает отдельное системное поле на Mac и Windows; пустой/несвязанный буфер не вызывает ошибку до ввода",
+    "Отмена не меняет настройки; подтверждённый ID ведёт к инструкции API key без второго немедленного диалога",
+    "Обе платформы выпущены как 0.6.43; пользователь сам проверяет VM"
   ],
   "approved_scope": {
     "functional_paths": [
@@ -42,7 +45,11 @@
       "tests/release-all.test.mjs",
       "scripts/verify-windows-package.mjs",
       "src/tunnel-clipboard.mjs",
-      "tests/tunnel-clipboard.test.mjs"
+      "tests/tunnel-clipboard.test.mjs",
+      "resources/runtime-control/mac-first-run.py",
+      "tests/tunnel-id-prompt.test.mjs",
+      "src/mac-runtime.mjs",
+      "tests/tunnel-id-runtime.test.mjs"
     ],
     "documentation_paths": [
       "AGENTS.md",
@@ -560,13 +567,193 @@
       "expected_commit_message": "fix: Собрать и сверить парный выпуск 0.6.42"
     },
     {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
+      "id": "D001",
+      "title": "Добавить отдельный нативный диалог ID без изменения служб",
+      "why": "Добавить отдельный нативный диалог ID без изменения служб",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "windows-onboarding-033",
+        "task_id": "D001",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "C004"
+      ],
+      "functional_paths": [
+        "resources/runtime-control/mac-first-run.py",
+        "resources/runtime-control/windows-first-run.py",
+        "tests/tunnel-id-prompt.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md",
+        "docs/modules/first-run-onboarding.md"
+      ],
+      "verification_ids": [],
+      "acceptance_criteria": [
+        "Добавить отдельный нативный диалог ID без изменения служб"
+      ],
+      "expected_commit_message": "fix: Добавить отдельный нативный диалог ID без изменения служб"
+    },
+    {
+      "id": "D002",
+      "title": "Подключить безопасный диалог ID к обеим runtime facade",
+      "why": "Подключить безопасный диалог ID к обеим runtime facade",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "windows-onboarding-033",
+        "task_id": "D002",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "D001"
+      ],
+      "functional_paths": [
+        "src/mac-runtime.mjs",
+        "src/windows-runtime.mjs",
+        "tests/tunnel-id-runtime.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md",
+        "docs/modules/first-run-onboarding.md"
+      ],
+      "verification_ids": [],
+      "acceptance_criteria": [
+        "Подключить безопасный диалог ID к обеим runtime facade"
+      ],
+      "expected_commit_message": "fix: Подключить безопасный диалог ID к обеим runtime facade"
+    },
+    {
+      "id": "D003",
+      "title": "Открывать диалог ID вместо чтения буфера по кнопке",
+      "why": "Открывать диалог ID вместо чтения буфера по кнопке",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "windows-onboarding-033",
+        "task_id": "D003",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "D002"
+      ],
+      "functional_paths": [
+        "src/tunnel-clipboard.mjs",
+        "src/main.mjs",
+        "tests/tunnel-clipboard.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md",
+        "docs/modules/first-run-onboarding.md"
+      ],
+      "verification_ids": [],
+      "acceptance_criteria": [
+        "Открывать диалог ID вместо чтения буфера по кнопке"
+      ],
+      "expected_commit_message": "fix: Открывать диалог ID вместо чтения буфера по кнопке"
+    },
+    {
+      "id": "D004",
+      "title": "Проверить ручной путь ID и уточнить подсказки мастера",
+      "why": "Проверить ручной путь ID и уточнить подсказки мастера",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "windows-onboarding-033",
+        "task_id": "D004",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "D003"
+      ],
+      "functional_paths": [
+        "src/ui/index.html",
+        "tests/startup-ui.test.mjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md",
+        "docs/modules/first-run-onboarding.md"
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "acceptance_criteria": [
+        "Проверить ручной путь ID и уточнить подсказки мастера"
+      ],
+      "expected_commit_message": "fix: Проверить ручной путь ID и уточнить подсказки мастера"
+    },
+    {
+      "id": "D005",
+      "title": "Синхронизировать обе платформы на версии 0.6.43",
+      "why": "Синхронизировать обе платформы на версии 0.6.43",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "windows-onboarding-033",
+        "task_id": "D005",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "D004"
+      ],
+      "functional_paths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "documentation_paths": [
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md",
+        "docs/modules/first-run-onboarding.md",
+        "docs/RELEASE.md"
+      ],
+      "verification_ids": [],
+      "acceptance_criteria": [
+        "Синхронизировать обе платформы на версии 0.6.43"
+      ],
+      "expected_commit_message": "fix: Синхронизировать обе платформы на версии 0.6.43"
+    },
+    {
+      "id": "D006",
+      "title": "Выпустить и сверить оба архива 0.6.43",
+      "why": "Выпустить и сверить оба архива 0.6.43",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "windows-onboarding-033",
+        "task_id": "D006",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "D005"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md",
+        "docs/modules/first-run-onboarding.md",
+        "docs/RELEASE.md"
+      ],
+      "verification_ids": [],
+      "acceptance_criteria": [
+        "Выпустить и сверить оба архива 0.6.43"
+      ],
+      "expected_commit_message": "fix: Выпустить и сверить оба архива 0.6.43"
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "windows-onboarding-033",
         "task_id": "DOCS",
         "role": "implementation",
-        "iteration": 2
+        "iteration": 3
       },
       "dependencies": [
         "P001",
@@ -582,7 +769,13 @@
         "C001",
         "C002",
         "C003",
-        "C004"
+        "C004",
+        "D001",
+        "D002",
+        "D003",
+        "D004",
+        "D005",
+        "D006"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -627,6 +820,11 @@
       "id": "tunnel-key-steps-042",
       "text": "19.09.2026 пользователь поручил исправить обе платформы: отдельный последовательный шаг API key с кнопкой страницы и инструкцией; собрать новый парный релиз. Все реальные проверки выполняет пользователь; VM и Computer Use запрещены.",
       "recorded_at": "2026-09-19T07:00:00.000Z"
+    },
+    {
+      "id": "native-id-dialog-043",
+      "text": "19.09.2026 пользователь сообщил, что кнопка ID вместо ожидаемого окна показывает ошибку, и передал скриншот 08.36.22. Исправление продолжает авторизованный парный выпуск; VM и Computer Use запрещены.",
+      "recorded_at": "2026-09-19T06:38:20.057576+00:00"
     }
   ],
   "owner_session_id": "01a0b501-9a29-7b30-87a1-036ded275092",
@@ -638,14 +836,14 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 38
+Revision: 39
 
 ## Цель
 
-Сохранить выполненный Windows onboarding и исправить последовательный ввод ID туннеля и API key на обеих платформах с парным выпуском 0.6.42.
+Сохранить выполненный Windows onboarding и последовательные шаги ID/API key; исправить кнопку ID на настоящий системный диалог и выпустить macOS/Windows 0.6.43.
 
 ## Критерии приёмки
 
@@ -656,6 +854,9 @@ Revision: 38
 - В Mac и Windows ID туннеля и API key оформлены двумя последовательными шагами; ссылка API keys и инструкция создания/копирования/вставки видимы без раскрытия подсказок
 - Ручной путь не открывает два диалога подряд; перед вводом ключа показана инструкция
 - Один парный выпуск 0.6.42 в Downloads, постоянный Mac app обновлён с сохранением identity; VM и Computer Use не используются
+- Кнопка вставки ID всегда открывает отдельное системное поле на Mac и Windows; пустой/несвязанный буфер не вызывает ошибку до ввода
+- Отмена не меняет настройки; подтверждённый ID ведёт к инструкции API key без второго немедленного диалога
+- Обе платформы выпущены как 0.6.43; пользователь сам проверяет VM
 
 ## Микрозадачи
 
@@ -715,8 +916,32 @@ Revision: 38
   - Git Commit: [DONE] fix: Собрать и сверить парный выпуск 0.6.42
   - Reference: windows-onboarding-033 / C004 / implementation
   - Файлы: docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md, docs/RELEASE.md
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: актуализировать документы парного выпуска 0.6.42
+- [TODO] D001: Добавить отдельный нативный диалог ID без изменения служб — Ожидает
+  - Git Commit: [PENDING] fix: Добавить отдельный нативный диалог ID без изменения служб
+  - Reference: windows-onboarding-033 / D001 / implementation
+  - Файлы: resources/runtime-control/mac-first-run.py, resources/runtime-control/windows-first-run.py, tests/tunnel-id-prompt.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md
+- [TODO] D002: Подключить безопасный диалог ID к обеим runtime facade — Ожидает
+  - Git Commit: [PENDING] fix: Подключить безопасный диалог ID к обеим runtime facade
+  - Reference: windows-onboarding-033 / D002 / implementation
+  - Файлы: src/mac-runtime.mjs, src/windows-runtime.mjs, tests/tunnel-id-runtime.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md
+- [TODO] D003: Открывать диалог ID вместо чтения буфера по кнопке — Ожидает
+  - Git Commit: [PENDING] fix: Открывать диалог ID вместо чтения буфера по кнопке
+  - Reference: windows-onboarding-033 / D003 / implementation
+  - Файлы: src/tunnel-clipboard.mjs, src/main.mjs, tests/tunnel-clipboard.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md
+- [TODO] D004: Проверить ручной путь ID и уточнить подсказки мастера — Ожидает
+  - Git Commit: [PENDING] fix: Проверить ручной путь ID и уточнить подсказки мастера
+  - Reference: windows-onboarding-033 / D004 / implementation
+  - Файлы: src/ui/index.html, tests/startup-ui.test.mjs, tests/electron-smoke.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md
+- [TODO] D005: Синхронизировать обе платформы на версии 0.6.43 — Ожидает
+  - Git Commit: [PENDING] fix: Синхронизировать обе платформы на версии 0.6.43
+  - Reference: windows-onboarding-033 / D005 / implementation
+  - Файлы: package.json, package-lock.json, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md, docs/RELEASE.md
+- [TODO] D006: Выпустить и сверить оба архива 0.6.43 — Ожидает
+  - Git Commit: [PENDING] fix: Выпустить и сверить оба архива 0.6.43
+  - Reference: windows-onboarding-033 / D006 / implementation
+  - Файлы: docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md, docs/RELEASE.md
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: актуализировать документы парного выпуска 0.6.42
   - Reference: windows-onboarding-033 / DOCS / implementation
   - Файлы: AGENTS.md, README.md, docs/WORKFLOW_START.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/CLEAN_INSTALL.md, docs/TRANSFER_TO_WINDOWS.md, docs/RELEASE.md, docs/WORKSPACE_SETUP.md, docs/CONTEXT_DELIVERY.md, docs/modules/runtime-lifecycle.md, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md
 
