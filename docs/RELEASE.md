@@ -303,3 +303,11 @@ cd9569e50dd6347a8b7047480e781d940ca33a75; все 74 файла snapshot совп
 обеими упаковками и постоянным Mac app. Архивы прошли integrity/ASAR и проверку
 копий в Downloads/WebPilot-0.6.44. Версия постоянного app — 0.6.44, inode
 398344301 сохранён. Manifest: .harness/runtime/releases/0.6.44/release-manifest.json.
+
+0.6.44 / E006: подготовлена публикация в существующий origin
+https://github.com/OleynikAleksandr/Project-Web-Pilot. Доступ подтверждён через
+существующую Git-авторизацию; репозиторий публичный. Тег v0.6.44 свободен.
+После финальной DOCS выполняются обычный push main/tag, загрузка обоих ZIP,
+INSTALL.txt, SHA256SUMS.txt, release-manifest.json в draft, сверка размеров и
+серверных SHA-256, затем публикация релиза. Локальные runtime/key/profile и app
+bundle не входят в исходный Git push.
