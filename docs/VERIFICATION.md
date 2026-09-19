@@ -1823,3 +1823,22 @@ Computer Use permission probe показал: App Server MCP-thread `read-only` 
 - click/scroll/release прошли через Sky, move_mouse — через compatibility CoreGraphics.
 
 Targeted suite после correction: **5 passed, 0 failed**. Regression проверяет, что click/scroll/type/key/hotkey route используют Sky и не вызывают Swift helper.
+
+
+### T008 — exclusive macOS runtime switch
+
+Targeted regression: 13/13 passed (`mac-runtime-switch.test.mjs` + `mcp-runtime.test.mjs`). Проверены:
+- release source → stable private state copy без `__pycache__`;
+- точный порядок disable/stop/enable/start для обоих modes;
+- App Server LaunchAgent содержит только private state source и `RunAtLoad`;
+- `McpRuntime.control("stop")` принимает lifecycle result без status payload и очищает client/status.
+
+Реальный Mac smoke через новый backend facade:
+- новый mode: `app-server`;
+- `com.oleynik.CodexLocalMac => disabled`;
+- old MCP/tunnel: running=false, ready=false;
+- `com.oleynik.WebPilotCodexExecutor => enabled`;
+- new MCP/tunnel: running=true, owned=true, ready=true;
+- initialize: `Codex App Server Local Mac`, 47 tools, MCP protocol 2025-03-26.
+
+После smoke старый runtime оставлен временно отключённым, как запросил пользователь.

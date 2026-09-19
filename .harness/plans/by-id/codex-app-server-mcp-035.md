@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 36,
+  "plan_revision": 40,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-app-server-mcp-035",
@@ -36,7 +36,8 @@
       "src/preload.cjs",
       "package.json",
       "package-lock.json",
-      "scripts/release-all.mjs"
+      "scripts/release-all.mjs",
+      "tests/mcp-runtime.test.mjs"
     ],
     "documentation_paths": [
       "docs/architecture/OVERVIEW.md",
@@ -45,7 +46,9 @@
       "docs/modules/runtime-lifecycle.md",
       "docs/modules/codex-app-server-executor.md",
       "docs/VERIFICATION.md",
-      "docs/RELEASE.md"
+      "docs/RELEASE.md",
+      "docs/architecture/ARCHITECTURE.md",
+      "README.md"
     ],
     "max_functional_files_per_task": 3
   },
@@ -316,8 +319,8 @@
       "expected_commit_message": "fix: перевести Computer Use actions на Sky"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "codex-app-server-mcp-035",
         "task_id": "T008",
@@ -330,12 +333,15 @@
         "src/mac-runtime-switch.mjs",
         "src/mcp-runtime.mjs",
         "src/main.mjs",
-        "tests/mac-runtime-switch.test.mjs"
+        "tests/mac-runtime-switch.test.mjs",
+        "tests/mcp-runtime.test.mjs"
       ],
-      "file_limit_exception": "Переключение runtime требует одного узкого backend facade, существующего McpRuntime stop action, интеграции main и отдельного regression test; функционально это одна атомарная lifecycle-задача.",
+      "file_limit_exception": "Backend switch затрагивает facade, McpRuntime stop, main integration и два узких regression-файла; пять файлов образуют один атомарный lifecycle-контракт без отдельной продуктовой функции.",
       "documentation_paths": [
         "docs/modules/runtime-lifecycle.md",
-        "docs/modules/codex-app-server-executor.md"
+        "docs/modules/codex-app-server-executor.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
       ],
       "verification_ids": [
         "suite"
@@ -368,7 +374,8 @@
         "src/preload.cjs"
       ],
       "documentation_paths": [
-        "docs/modules/runtime-lifecycle.md"
+        "docs/modules/runtime-lifecycle.md",
+        "docs/architecture/ARCHITECTURE.md"
       ],
       "verification_ids": [
         "suite"
@@ -401,7 +408,9 @@
       ],
       "documentation_paths": [
         "docs/RELEASE.md",
-        "docs/VERIFICATION.md"
+        "docs/VERIFICATION.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "README.md"
       ],
       "verification_ids": [
         "suite",
@@ -485,7 +494,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: codex-app-server-mcp-035
 Current Task: нет
-Revision: 36
+Revision: 40
 
 ## Цель
 
@@ -530,18 +539,18 @@ Revision: 36
   - Git Commit: [DONE] fix: перевести Computer Use actions на Sky
   - Reference: codex-app-server-mcp-035 / T007 / implementation
   - Файлы: tools/codex-app-server-mcp/server.py, tests/codex-app-server-mcp.test.mjs, docs/modules/codex-app-server-executor.md, docs/VERIFICATION.md
-- [TODO] T008: Добавить эксклюзивное переключение macOS runtime — Ожидает
-  - Git Commit: [PENDING] feat: добавить переключение macOS MCP runtime
+- [DONE] T008: Добавить эксклюзивное переключение macOS runtime — Завершено
+  - Git Commit: [DONE] feat: добавить переключение macOS MCP runtime
   - Reference: codex-app-server-mcp-035 / T008 / implementation
-  - Файлы: src/mac-runtime-switch.mjs, src/mcp-runtime.mjs, src/main.mjs, tests/mac-runtime-switch.test.mjs, docs/modules/runtime-lifecycle.md, docs/modules/codex-app-server-executor.md
+  - Файлы: src/mac-runtime-switch.mjs, src/mcp-runtime.mjs, src/main.mjs, tests/mac-runtime-switch.test.mjs, tests/mcp-runtime.test.mjs, docs/modules/runtime-lifecycle.md, docs/modules/codex-app-server-executor.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T009: Добавить переключатель MCP в Settings — Ожидает
   - Git Commit: [PENDING] feat: добавить выбор MCP runtime в Settings
   - Reference: codex-app-server-mcp-035 / T009 / implementation
-  - Файлы: src/ui/index.html, src/ui/project-archive.mjs, src/preload.cjs, docs/modules/runtime-lifecycle.md
+  - Файлы: src/ui/index.html, src/ui/project-archive.mjs, src/preload.cjs, docs/modules/runtime-lifecycle.md, docs/architecture/ARCHITECTURE.md
 - [TODO] T010: Собрать релиз 0.6.47 с новым MCP resource — Ожидает
   - Git Commit: [PENDING] release: собрать Project Web Pilot 0.6.47
   - Reference: codex-app-server-mcp-035 / T010 / implementation
-  - Файлы: package.json, package-lock.json, scripts/release-all.mjs, docs/RELEASE.md, docs/VERIFICATION.md
+  - Файлы: package.json, package-lock.json, scripts/release-all.mjs, docs/RELEASE.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, README.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать документацию Codex App Server MCP
   - Reference: codex-app-server-mcp-035 / DOCS / implementation

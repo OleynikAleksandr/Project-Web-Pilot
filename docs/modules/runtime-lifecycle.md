@@ -176,3 +176,16 @@ Codex binary выбирается детерминированно и всегд
 
 T007 подтвердил end-to-end использование именно через ChatGPT connector: все 47 experimental tools были реально вызваны. Computer Use actions переведены с Swift/CGEvent на bundled `node_repl -> @oai/sky`; TextEdit smoke доказал фактический ввод и capture. Это остаётся экспериментальным runtime рядом с production Codex Local Mac; решение о замене lifecycle не принимается автоматически.
 
+
+
+## 0.6.47 — эксклюзивный выбор macOS MCP runtime
+
+Web Pilot хранит `macRuntimeMode = local | app-server` в локальных settings. `MacRuntimeSwitcher` является единственным facade переключения: перед запуском выбранного runtime он отключает LaunchAgent и останавливает невыбранный runtime. Одновременная штатная работа Codex Local Mac и Codex App Server Local Mac не допускается.
+
+Для `app-server` source из release resource копируется в стабильный private state `~/Library/Application Support/WebPilotCodexExecutor/source`; LaunchAgent `com.oleynik.WebPilotCodexExecutor` запускает только эту стабильную копию. Поэтому автозапуск не зависит от workspace или пути текущего app bundle. Старый LaunchAgent `com.oleynik.CodexLocalMac` не удаляется: переключатель использует `launchctl enable/disable gui/<uid>/<label>`, что сохраняет выбор после login/reboot.
+
+При переходе в новый mode порядок: disable старого LaunchAgent → stop Codex Local Mac → enable нового LaunchAgent → start/initialize App Server MCP. Обратный переход симметричен. `McpRuntime` получил разрешённую lifecycle-команду `stop`, после которой сбрасывает client/status. После успешного пользовательского switch main пересоздаёт runtime/context controller, сохраняет mode и выполняет `app.relaunch()`; при ошибке делает best-effort rollback на прежний mode.
+
+Миграция 0.6.46→0.6.47: если `macRuntimeMode` ещё не сохранён, но private tunnel App Server уже настроен, выбирается `app-server`; иначе сохраняется прежний `local`.
+
+Реальная проверка 19.09.2026: `com.oleynik.CodexLocalMac => disabled`, старые MCP/tunnel остановлены; `com.oleynik.WebPilotCodexExecutor => enabled`, новый MCP/tunnel ready=true, initialize вернул server `Codex App Server Local Mac` и 47 tools.

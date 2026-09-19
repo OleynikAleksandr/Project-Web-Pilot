@@ -26,6 +26,7 @@ import { openStartupPage } from './browser-startup.mjs';
 import { defaultRuntimeFolder, bundledWindowsRuntimeFolder, bundledMacNode, nodeExecutableCandidates } from './platform.mjs';
 import { WindowsRuntimeBootstrap, WINDOWS_RUNTIME_ARCHIVE } from './windows-runtime.mjs';
 import { MacRuntimeBootstrap } from './mac-runtime.mjs';
+import { CodexAppServerRuntime, MacRuntimeSwitcher, MAC_RUNTIME_LOCAL, MAC_RUNTIME_APP_SERVER, MAC_RUNTIME_MODES } from './mac-runtime-switch.mjs';
 import { TunnelClipboard } from './tunnel-clipboard.mjs';
 import { StartupReadiness, inspectMacGit, installMacGit, accountObservation, offerMacInstallation } from './startup-readiness.mjs';
 import { startupPlatformOptions, startupSupported } from './startup-platform.mjs';
@@ -46,6 +47,8 @@ let runtimeFolder = bundledWindowsRuntimeFolder(dataDir, process.platform) ?? de
 let configuredRuntimeFolder = null;
 let runtimeRegistration = null;
 let macRuntimeBootstrap = null;
+let macRuntimeMode = MAC_RUNTIME_LOCAL;
+let localRuntime = null, appServerRuntime = null, macRuntimeSwitcher = null;
 let shellTheme = 'light';
 let hideToolCalls = true;
 let chatColors = normalizeChatColors();
@@ -173,7 +176,7 @@ async function applyToolCallVisibility() {
 }
 
 function saveSettings(overrides = {}) {
-  const settings = { runtimeFolder, runtimeRegistration, shellTheme, hideToolCalls, sidebarWidth, chatColors, projectsParent, ...overrides };
+  const settings = { runtimeFolder, runtimeRegistration, macRuntimeMode, shellTheme, hideToolCalls, sidebarWidth, chatColors, projectsParent, ...overrides };
   const operation = settingsSaveTail.catch(() => {}).then(async () => {
     await fsp.mkdir(dataDir, { recursive: true, mode: 0o700 });
     await fsp.writeFile(settingsFile + '.tmp', JSON.stringify(settings, null, 2) + '\n', { mode: 0o600 });
@@ -237,7 +240,17 @@ function snapshot() {
     selected, context: controller?.state ?? { phase: 'selected', servicesReady: false, messageSent: false },
     contextPreparation: { busy: selected ? contextCache.isBuilding(selected.workspace, sessionSelection(selected)) : false },
     preparedChoice: preparedChoice?.workspace === selected?.workspace && preparedChoice?.sourceSessionId === selected?.sessionId ? preparedChoice : null,
-    runtimeFolder, platform: process.platform, windowsRuntime: windowsRuntimeBootstrap ? {
+    runtimeFolder, platform: process.platform,
+    macRuntime: process.platform === 'darwin' ? {
+      mode: macRuntimeMode,
+      label: macRuntimeMode === MAC_RUNTIME_APP_SERVER ? 'Codex App Server Local Mac' : 'Codex Local Mac',
+      service: runtime?.lastStatus ? {
+        mcpReady: !!runtime.lastStatus.mcp?.ready,
+        tunnelReady: !!runtime.lastStatus.tunnel?.ready,
+        tunnelConfigured: !!runtime.lastStatus.tunnel?.configured,
+      } : null,
+    } : null,
+    windowsRuntime: windowsRuntimeBootstrap ? {
       ...windowsRuntimeBootstrap.snapshot(),
       service: runtime?.lastStatus ? {
         mcpReady: !!runtime.lastStatus.mcp?.ready,
@@ -626,6 +639,34 @@ function createLocalRuntime() {
   });
 }
 
+function appServerSourceFolder() {
+  return app.isPackaged ? path.join(process.resourcesPath, 'codex-app-server-mcp')
+    : path.join(sourceDir, '../tools/codex-app-server-mcp');
+}
+
+function ensureMacRuntimeSwitcher() {
+  if (process.platform !== 'darwin' || smoke) return null;
+  localRuntime ??= createLocalRuntime();
+  appServerRuntime ??= new CodexAppServerRuntime({
+    sourceDir: appServerSourceFolder(), sessionPlans,
+    stateDir: path.join(os.homedir(), 'Library/Application Support/WebPilotCodexExecutor'),
+    tunnelClientCandidate: path.join(runtimeFolder, 'tools', 'tunnel-client'),
+  });
+  macRuntimeSwitcher ??= new MacRuntimeSwitcher({ appServerRuntime });
+  return macRuntimeSwitcher;
+}
+
+async function activateMacRuntimeMode(mode = macRuntimeMode) {
+  if (process.platform !== 'darwin' || smoke) return null;
+  if (!MAC_RUNTIME_MODES.includes(mode)) throw new Error('Неизвестный режим локальных инструментов macOS.');
+  const switcher = ensureMacRuntimeSwitcher();
+  const result = await switcher.activate(mode, { localRuntime });
+  macRuntimeMode = mode;
+  runtime = result.runtime;
+  contextCache.clear();
+  return result.status;
+}
+
 function createStartupFlow() {
   if (!startupSupported(process.platform, smoke)) return;
   startupActive = store.snapshot().projects.length === 0;
@@ -776,6 +817,28 @@ function registerIpc() {
     await saveSettings({ hideToolCalls: input });
     hideToolCalls = input;
     await applyToolCallVisibility();
+  });
+  registerAction('pilot:set-mac-runtime-mode', async input => {
+    if (process.platform !== 'darwin' || smoke) throw new Error('Переключение MCP runtime доступно только в macOS.');
+    if (!MAC_RUNTIME_MODES.includes(input)) throw new Error('Неизвестный режим MCP runtime.');
+    if (input === macRuntimeMode) return { mode: macRuntimeMode, status: runtime?.lastStatus ?? null, restarting: false };
+    const previous = macRuntimeMode;
+    controller?.cancel();
+    try {
+      const status = await activateMacRuntimeMode(input);
+      await saveSettings({ macRuntimeMode: input });
+      connectController();
+      const current = store.selected();
+      if (current) attachController(current);
+      setTimeout(() => { app.relaunch(); app.exit(0); }, 700);
+      return { mode: input, status, restarting: true };
+    } catch (error) {
+      try { await activateMacRuntimeMode(previous); } catch { /* Preserve the original switch error. */ }
+      connectController();
+      const current = store.selected();
+      if (current) attachController(current);
+      throw error;
+    }
   });
   registerAction('pilot:configure-windows-tunnel', async () => {
     if (process.platform !== 'win32' || !windowsRuntimeBootstrap) throw new Error('Настройка Windows tunnel недоступна на этой платформе.');
@@ -1004,10 +1067,13 @@ function registerIpc() {
     runtimeFolder = selected; runtimeRegistration = null; macRuntimeBootstrap = macBootstrap(selected);
     await saveSettings({ runtimeFolder: selected, runtimeRegistration: null });
     deletion.protectedPaths = [app.getAppPath(), runtimeFolder];
-    runtime = createLocalRuntime();
-    connectController();
+    localRuntime = createLocalRuntime();
+    if (macRuntimeMode === MAC_RUNTIME_LOCAL) {
+      runtime = localRuntime;
+      connectController();
+      const current = store.selected(); if (current) attachController(current);
+    }
     startupError = null;
-    const current = store.selected(); if (current) attachController(current);
   });
 
   ipcMain.handle('archive:get-state', event => { assertArchiveSender(event); return archiveSnapshot(); });
@@ -1107,6 +1173,10 @@ async function createWindow() {
     await fsp.mkdir(dataDir + '-projects', { recursive: true });
     fixture = await import('../tests/electron-smoke.mjs');
     runtime = await fixture.createRuntime({ browser: browser.webContents, session: session.fromPartition(partition), dataDir });
+  } else if (process.platform === 'darwin') {
+    localRuntime = createLocalRuntime();
+    await activateMacRuntimeMode(macRuntimeMode);
+    await saveSettings({ macRuntimeMode });
   } else runtime = createLocalRuntime();
   connectController();
   createStartupFlow();
@@ -1143,6 +1213,7 @@ else {
   app.on('second-instance', () => { if (window?.isMinimized()) window.restore(); window?.focus(); });
   app.on('window-all-closed', () => app.quit());
   app.whenReady().then(async () => {
+    let loadedMacRuntimeMode = false;
     try {
       const settings = JSON.parse(await fsp.readFile(settingsFile, 'utf8'));
       if (typeof settings.runtimeFolder === 'string' && path.isAbsolute(settings.runtimeFolder)) {
@@ -1160,12 +1231,24 @@ else {
           verifiedAt: typeof settings.runtimeRegistration.verifiedAt === 'string' ? settings.runtimeRegistration.verifiedAt : null };
         if (process.platform === 'darwin') runtimeFolder = runtimeRegistration.folder;
       }
+      if (process.platform === 'darwin' && MAC_RUNTIME_MODES.includes(settings.macRuntimeMode)) {
+        macRuntimeMode = settings.macRuntimeMode;
+        loadedMacRuntimeMode = true;
+      }
       if (['light', 'dark'].includes(settings.shellTheme)) shellTheme = settings.shellTheme;
       if (typeof settings.hideToolCalls === 'boolean') hideToolCalls = settings.hideToolCalls;
       chatColors = normalizeChatColors(settings.chatColors);
       if (Number.isFinite(settings.sidebarWidth)) sidebarWidth = Math.max(SIDEBAR_MIN_WIDTH, Math.round(settings.sidebarWidth));
       if (typeof settings.projectsParent === 'string' && path.isAbsolute(settings.projectsParent)) projectsParent = settings.projectsParent;
     } catch (error) { if (error.code !== 'ENOENT') startupError = { code: 'SETTINGS_INVALID', message: 'Не удалось прочитать локальные настройки Web Pilot. Проверьте настройки подключения.' }; }
+    if (process.platform === 'darwin' && !loadedMacRuntimeMode) {
+      const appServerPrivate = path.join(os.homedir(), 'Library/Application Support/WebPilotCodexExecutor/private');
+      const configured = await Promise.all([
+        fsp.access(path.join(appServerPrivate, 'tunnel-key')).then(() => true).catch(() => false),
+        fsp.access(path.join(appServerPrivate, 'tunnel-profile/codex-executor.yaml')).then(() => true).catch(() => false),
+      ]);
+      if (configured.every(Boolean)) macRuntimeMode = MAC_RUNTIME_APP_SERVER;
+    }
     applyShellTheme(shellTheme);
     try { await store.load(); } catch (error) { startupError = publicError(error); storageError = true; }
     if (!smoke && app.isPackaged && process.platform === 'darwin' && !storageError

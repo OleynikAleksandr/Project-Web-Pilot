@@ -200,7 +200,7 @@ export class McpRuntime {
   }
 
   async control(command, { mcpOnly = false } = {}) {
-    if (!['status', 'start'].includes(command)) throw new RuntimeError('RUNTIME_ACTION_DENIED', 'Эта операция не поддерживается оболочкой.');
+    if (!['status', 'start', 'stop'].includes(command)) throw new RuntimeError('RUNTIME_ACTION_DENIED', 'Эта операция не поддерживается оболочкой.');
     let runtimeFolder = this.folder;
     if (this.ensureRuntime && !this.runtimePrepared) {
       const ensured = await this.ensureRuntime();
@@ -230,6 +230,11 @@ export class McpRuntime {
     let status;
     try { status = JSON.parse(output.stdout); } catch {
       throw new RuntimeError('RUNTIME_STATUS_INVALID', 'Служба вернула непонятный статус.');
+    }
+    if (command === 'stop') {
+      this.client = null;
+      this.lastStatus = null;
+      return status;
     }
     if (!status?.mcp || !status?.tunnel || !status.mcp_url) throw new RuntimeError('RUNTIME_STATUS_INVALID', 'Служба вернула неполный статус.');
     validateEndpoint(status.mcp_url);

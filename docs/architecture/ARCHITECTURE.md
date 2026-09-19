@@ -1228,3 +1228,8 @@ package и обеих платформ синхронизирована на 0.6
 ## 0.6.45 — общий мастер подключения и разрешений
 
 Парная поставка 0.6.45 сверена с исходниками; установленный Mac app обновлён с сохранением identity. Изменение ограничено общим текстом мастера и версией. Подключение MCP на новом Mac описано явно; сведения о ранее созданном подключении пользователя не используются как предположение для других аккаунтов.
+
+
+### 0.6.47: macOS runtime selector
+
+macOS main process хранит один активный runtime facade. `MacRuntimeSwitcher` переключает `McpRuntime(Codex Local Mac)` и `CodexAppServerRuntime` эксклюзивно, управляя LaunchAgent enable/disable и stop/start до замены runtime в `ContextSession`. App Server runtime работает из private installed source; release bundle является только доверенным источником обновления этой копии. После UI switch приложение relaunch-ится, чтобы embedded ChatGPT получил свежий connector/tool catalog.

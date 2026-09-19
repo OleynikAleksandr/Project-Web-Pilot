@@ -51,7 +51,11 @@ test('ready shared services are reused, with explicit arguments and one concurre
   assert.equal(calls[0][0], layout.python);
   assert.deepEqual(calls[0][1], ['-B',layout.control,'status']);
   assert.equal(calls[0][2].cwd,root); assert.equal(calls[0][2].shell,undefined);
-  await assert.rejects(runtime.control('stop'), { code:'RUNTIME_ACTION_DENIED' });
+  await runtime.control('stop');
+  assert.equal(calls.length,2);
+  assert.deepEqual(calls[1][1], ['-B',layout.control,'stop']);
+  assert.equal(runtime.client, null);
+  assert.equal(runtime.lastStatus, null);
 });
 
 test('ensureRuntime can replace a stale runtime path with the actual prepared folder', async t => {

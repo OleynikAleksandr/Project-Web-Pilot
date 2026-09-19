@@ -302,3 +302,10 @@ Regression подменяет `subprocess.run` и подтверждает пе�
 Direct probe подтвердил, что JavaScript literals проходят через App Server/node_repl без искажения. При этом текущий bundled `sky.type_text` на TextEdit воспроизводимо оставлял только whitespace, тогда как `sky.paste({format:"text"})` вставлял строку точно и восстанавливал clipboard. Поэтому внешний `computer_type_text` использует `sky.paste`, сохраняя семантику ввода текста. Горячие клавиши переводятся в xdotool-style Sky notation, например `["cmd","a"] -> "super+a"`.
 
 Реальный smoke после перезапуска experimental runtime подтвердил фактический эффект: TextEdit получил точный буфер `MCP_UI_TYPED\nSECOND_LINE\n`, а последующий `computer_capture_window` вернул тот же AX Value и image. После correction все 47 tool names нового connector-а были реально вызваны из Web ChatGPT; временный TextEdit закрыт без сохранения, test fixture в `/tmp` удалён, recoverable test-trash восстановлен/очищен.
+
+
+## T008 — интеграция выбора runtime в Web Pilot
+
+Эксперимент перестаёт требовать параллельного запуска двух локальных MCP. В macOS Web Pilot управляет взаимоисключающими mode `local` и `app-server` через `MacRuntimeSwitcher`. App Server source копируется из release resource в private state, после чего стабильный LaunchAgent может запускать его независимо от исходного репозитория и обновляемого app bundle.
+
+Переключение не удаляет старый Codex Local Mac и не меняет его tunnel credentials: старый runtime только останавливается и его LaunchAgent disable-ится. Возврат в `local` делает обратную операцию. Это обеспечивает мгновенный rollback без восстановления файлов.
