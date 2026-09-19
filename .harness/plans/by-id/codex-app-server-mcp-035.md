@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 4,
+  "plan_revision": 6,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-app-server-mcp-035",
@@ -80,8 +80,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "codex-app-server-mcp-035",
         "task_id": "T001",
@@ -295,7 +295,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: codex-app-server-mcp-035
 Current Task: нет
-Revision: 4
+Revision: 6
 
 ## Цель
 
@@ -312,8 +312,8 @@ Revision: 4
 
 ## Микрозадачи
 
-- [TODO] T001: Зафиксировать контракт Codex App Server executor — Ожидает
-  - Git Commit: [PENDING] docs: зафиксировать контракт Codex App Server MCP
+- [DONE] T001: Зафиксировать контракт Codex App Server executor — Завершено
+  - Git Commit: [DONE] docs: зафиксировать контракт Codex App Server MCP
   - Reference: codex-app-server-mcp-035 / T001 / implementation
   - Файлы: docs/modules/codex-app-server-executor.md, docs/modules/runtime-lifecycle.md
 - [TODO] T002: Реализовать клиент Codex App Server — Ожидает

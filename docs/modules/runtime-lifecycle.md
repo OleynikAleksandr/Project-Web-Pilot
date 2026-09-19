@@ -159,3 +159,16 @@ bootstrap.promptTunnelId и worker --tunnel-id. ID-only worker не загруж
 ## 0.6.45 — общий мастер подключения и разрешений
 
 Видимый блок Permissions в общем мастере объясняет режимы подтверждений ChatGPT. Он не вызывает runtime-команд и не меняет права подключения, хранилище ключей, службы или транспорт.
+
+## Эксперимент Codex App Server executor — scope 035
+
+Scope `codex-app-server-mcp-035` не меняет production Runtime Lifecycle этого документа. Рядом с ним создаётся отдельный macOS-only MCP adapter с собственным state, портами и tunnel profile для A/B против Codex Local Mac. Контракт эксперимента — `docs/modules/codex-app-server-executor.md`.
+
+Эксперимент использует Codex App Server как локальный executor без `turn/start`: direct `command/exec` и `fs/readFile`, `fs/writeFile`, `fs/readDirectory` для базовых операций, MCP manager только для local-only downstream capabilities. Для обращения к MCP допускается служебный ephemeral `thread/start`; модельный turn не запускается. Computer Use обязателен для паритета и маршрутизируется по актуальному bundled пути `node_repl + @oai/sky`. Общий каталог Codex не экспортируется автоматически: публичные и уже доступные ChatGPT capabilities остаются за Web ChatGPT.
+
+Facade эксперимента должен быть не уже текущего Codex Local Mac по локальным возможностям: файлы, поиск, Git, команды/процессы, recoverable file operations, Workflow Kit recovery и Computer Use. Downstream MCP публикуются только по явному allowlist. Любая недоступная локальная capability фиксируется как ограничение A/B, а не скрывается сокращением каталога.
+
+Codex binary выбирается детерминированно и всегда показывается в status вместе с версией: явный `CODEX_APP_SERVER_BIN`, затем user-installed Codex, затем bundled ChatGPT binary только после проверки требуемого protocol. Это важно, потому что на одном Mac могут одновременно существовать разные версии Codex.
+
+Экспериментальный runtime использует отдельные state и endpoints (по умолчанию MCP 17852, tunnel health 17853) и собственный tunnel profile/private credentials. До пользовательского A/B старый runtime 17842/17843, его credentials, service ownership и Web Pilot `McpRuntime` остаются неизменными. Новый executor не считается production runtime и не включается в release package.
+
