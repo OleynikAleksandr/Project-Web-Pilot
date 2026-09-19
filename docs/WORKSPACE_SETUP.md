@@ -128,3 +128,6 @@ Facade WorkspaceSetup.apply принимает только preview token; worke
 worker передаёт стандартному installer нейтральные локальные значения. Существующая
 полная подпись сохраняется, при частичной настройке сохраняется заданная часть.
 Fingerprint, preview, исходный staging и правила bootstrap-коммита не меняются.
+
+0.6.44 / E002: renderer вызывает applySetup(token, experience); имя/email не входят
+в IPC или worker request. Явный тип первой сессии сохраняется.

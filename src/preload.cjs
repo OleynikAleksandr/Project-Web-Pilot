@@ -27,7 +27,7 @@ contextBridge.exposeInMainWorld('webPilot', Object.freeze({
   previewNew: name => ipcRenderer.invoke('pilot:preview-new', { name }),
   refreshSetup: () => ipcRenderer.invoke('pilot:refresh-setup'),
   cancelSetup: () => ipcRenderer.invoke('pilot:cancel-setup'),
-  applySetup: (token, gitName, gitEmail, experience) => ipcRenderer.invoke('pilot:apply-setup', { token, gitName, gitEmail, experience }),
+  applySetup: (token, experience) => ipcRenderer.invoke('pilot:apply-setup', { token, experience }),
   setFirstSessionExperience: experience => ipcRenderer.invoke('pilot:set-first-session-experience', experience),
   chooseWorkspace: () => ipcRenderer.invoke('pilot:choose-workspace'),
   selectWorkspace: workspace => ipcRenderer.invoke('pilot:select-workspace', workspace),

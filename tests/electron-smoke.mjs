@@ -1060,7 +1060,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await waitFor(() => snapshot().setup?.phase === 'preview', 'first Work project preview', snapshot);
   const workTarget = snapshot().setup.workspace;
   assert.equal(workTarget, path.join(changedParent, 'Первый Work'));
-  const invalidMode = await sidebar.executeJavaScript('window.webPilot.applySetup(' + JSON.stringify(snapshot().setup.token) + ', "", "", "invalid")');
+  const invalidMode = await sidebar.executeJavaScript('window.webPilot.applySetup(' + JSON.stringify(snapshot().setup.token) + ', "invalid")');
   assert.equal(invalidMode.ok, false); await assert.rejects(fs.stat(workTarget), { code: 'ENOENT' });
   await sidebar.executeJavaScript('window.webPilot.refreshSetup()');
   await waitFor(() => snapshot().setup?.phase === 'preview' && !snapshot().setup.error, 'recover rejected mode', snapshot);

@@ -906,7 +906,7 @@ function registerIpc() {
     const firstSessionExperience = firstSessionRequired && requestedExperience === 'work' ? 'work' : 'chat';
     setupState = { ...setupState, phase: 'applying', error: null }; startupError = null; publish();
     const generation = navigationId;
-    const result = await workspaceSetup.apply(input.token, { gitName: input.gitName, gitEmail: input.gitEmail });
+    const result = await workspaceSetup.apply(input.token);
     if (!navigationCurrent(generation)) return;
     setupState = { ...result, phase: 'preview', mode: 'existing', firstSessionRequired, firstSessionExperience };
     if (!result.ready) return;

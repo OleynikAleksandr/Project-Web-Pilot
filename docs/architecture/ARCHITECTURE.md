@@ -1193,3 +1193,7 @@ pasteTunnelId открывает диалог без чтения буфера �
 gitIdentityReady из public preview. При install localHistoryDefaults выбирает
 готовую Git-подпись либо восполняет только отсутствующие имя/email локальной
 служебной записью. Vendored Workflow Kit и его общий CLI не изменены.
+
+0.6.44 / E002: applySetup IPC имеет только token и experience. Main передаёт в
+WorkspaceSetup только token. Параметры автора удалены из renderer bridge и main.
+Неверный Chat/Work по-прежнему отклоняется до изменения выбранной папки.
