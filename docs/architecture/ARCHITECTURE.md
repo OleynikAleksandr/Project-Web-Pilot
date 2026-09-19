@@ -1167,3 +1167,7 @@ TunnelClipboard добавляет явную вставку ID и отдель�
 
 0.6.42 / C003: package.json, lock и оба packager app-version синхронизированы на
 0.6.42. Единый publisher собирает ту же реализацию мастера для macOS и Windows.
+
+0.6.43 / D001: mac-first-run и windows-first-run добавляют collect_tunnel_id и
+--tunnel-id, возвращающий только ID или cancelled. Некорректный ID даёт отдельный
+allowlisted TUNNEL_ID_INVALID. Этот read-only путь не загружает runtime control.

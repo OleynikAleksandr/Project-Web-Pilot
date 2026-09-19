@@ -2,6 +2,7 @@
 """Native first-run prompts. Secrets stay in this worker and the private runtime store."""
 import json
 from pathlib import Path
+import re
 import runpy
 import subprocess
 import sys
@@ -27,6 +28,17 @@ def prompt(message, hidden=False):
             raise Cancelled()
         raise PromptFailure()
     return result.stdout.strip()
+
+class TunnelIdError(ValueError):
+    pass
+
+
+def collect_tunnel_id(ask=prompt):
+    value = ask('Шаг 1 из 2. Вставьте ID туннеля из OpenAI Platform → Tunnels. Он начинается с tunnel_. Подтвердите ввод; инструкция API key откроется следующим шагом.')
+    if not isinstance(value, str) or len(value) > 150 or not re.fullmatch(r'tunnel_[A-Za-z0-9_-]{16,100}', value.strip()):
+        raise TunnelIdError('Invalid tunnel ID')
+    return {'tunnel_id': value.strip()}
+
 
 def read_input(stream):
     raw = stream.read(8193)
@@ -61,9 +73,12 @@ def main():
     if sys.platform != 'darwin':
         raise RuntimeError('Нативная настройка доступна только на macOS.')
     supplied = read_input(sys.stdin) if sys.argv[1:] == ['--stdin'] else None
-    control = runpy.run_path(str(Path(__file__).with_name('mac-control.py')), run_name='web_pilot_control')
     try:
-        result = configure(control, supplied=supplied)
+        if sys.argv[1:] == ['--tunnel-id']:
+            result = collect_tunnel_id()
+        else:
+            control = runpy.run_path(str(Path(__file__).with_name('mac-control.py')), run_name='web_pilot_control')
+            result = configure(control, supplied=supplied)
     except Cancelled:
         result = {'cancelled': True}
     print(json.dumps(result))
@@ -73,7 +88,8 @@ if __name__ == '__main__':
         main()
     except Exception as error:
         # Never surface captured native dialog stdout, keys, or command arguments.
-        code = ('MAC_TUNNEL_PROMPT_FAILED' if isinstance(error, PromptFailure) else
+        code = ('MAC_TUNNEL_ID_INVALID' if isinstance(error, TunnelIdError) else
+                'MAC_TUNNEL_PROMPT_FAILED' if isinstance(error, PromptFailure) else
                 'MAC_TUNNEL_INVALID_DATA' if isinstance(error, ValueError) else
                 'MAC_TUNNEL_SETUP_FAILED')
         print(json.dumps({'ok': False, 'code': code}), file=sys.stderr)

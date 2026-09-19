@@ -1557,3 +1557,8 @@ commit 0e5a9966e3d21f9cbd2bcb02d7d06c75a93668ab. Снимок startup-tunnel-key
 0.6.42 / C003: корневая и lock-версия, оба packager app-version равны 0.6.42.
 
 0.6.42 / C004: парная сборка npm run build завершилась успешно. В manifest recorded source commit e93db24548b824900a7523e192f4e3e8f2dddd79, 74 файлов snapshot; совпадение source/resources, ZIP integrity, версий, asar и Downloads SHA подтверждены. Постоянный Mac app 0.6.42 сохраняет inode 398344301. C003 назначенный suite PASS. Native Windows/clean VM — NOT RUN по поручению пользователя. Артефакты и хеши — docs/RELEASE.md.
+
+0.6.43 / D001: node --test tests/tunnel-id-prompt.test.mjs tests/mac-first-run.test.mjs
+tests/windows-first-run.test.mjs — 14/14 PASS. Проверена реальная CLI-ветка обоих
+worker с подменённым native process: один ID prompt, без загрузки control/запроса
+ключа; отмена, пробелы, неверный ID. Native UI Windows не запускался.

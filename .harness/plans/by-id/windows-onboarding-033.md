@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 39,
+  "plan_revision": 41,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
@@ -570,8 +570,8 @@
       "id": "D001",
       "title": "Добавить отдельный нативный диалог ID без изменения служб",
       "why": "Добавить отдельный нативный диалог ID без изменения служб",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "windows-onboarding-033",
         "task_id": "D001",
@@ -839,7 +839,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 39
+Revision: 41
 
 ## Цель
 
@@ -916,8 +916,8 @@ Revision: 39
   - Git Commit: [DONE] fix: Собрать и сверить парный выпуск 0.6.42
   - Reference: windows-onboarding-033 / C004 / implementation
   - Файлы: docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md, docs/RELEASE.md
-- [TODO] D001: Добавить отдельный нативный диалог ID без изменения служб — Ожидает
-  - Git Commit: [PENDING] fix: Добавить отдельный нативный диалог ID без изменения служб
+- [DONE] D001: Добавить отдельный нативный диалог ID без изменения служб — Завершено
+  - Git Commit: [DONE] fix: Добавить отдельный нативный диалог ID без изменения служб
   - Reference: windows-onboarding-033 / D001 / implementation
   - Файлы: resources/runtime-control/mac-first-run.py, resources/runtime-control/windows-first-run.py, tests/tunnel-id-prompt.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md
 - [TODO] D002: Подключить безопасный диалог ID к обеим runtime facade — Ожидает

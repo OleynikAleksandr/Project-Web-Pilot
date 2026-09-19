@@ -3,6 +3,7 @@
 import base64
 import json
 from pathlib import Path
+import re
 import runpy
 import subprocess
 import sys
@@ -81,6 +82,17 @@ def prompt(message, hidden=False):
         raise PromptFailure() from error
 
 
+class TunnelIdError(ValueError):
+    pass
+
+
+def collect_tunnel_id(ask=prompt):
+    value = ask('Шаг 1 из 2. Вставьте ID туннеля из OpenAI Platform → Tunnels. Он начинается с tunnel_. Подтвердите ввод; инструкция API key откроется следующим шагом.')
+    if not isinstance(value, str) or len(value) > 150 or not re.fullmatch(r'tunnel_[A-Za-z0-9_-]{16,100}', value.strip()):
+        raise TunnelIdError('Invalid tunnel ID')
+    return {'tunnel_id': value.strip()}
+
+
 def read_input(stream):
     raw = stream.read(8193)
     if len(raw) > 8192:
@@ -136,9 +148,12 @@ def main():
     if sys.platform != 'win32':
         raise RuntimeError('Windows only')
     supplied = read_input(sys.stdin) if sys.argv[1:] == ['--stdin'] else None
-    control = runpy.run_path(str(Path(__file__).with_name('windows-control.py')), run_name='web_pilot_control')
     try:
-        result = configure(control, supplied=supplied)
+        if sys.argv[1:] == ['--tunnel-id']:
+            result = collect_tunnel_id()
+        else:
+            control = runpy.run_path(str(Path(__file__).with_name('windows-control.py')), run_name='web_pilot_control')
+            result = configure(control, supplied=supplied)
     except Cancelled:
         result = {'cancelled': True}
     print(json.dumps(result))
@@ -148,7 +163,8 @@ if __name__ == '__main__':
     try:
         main()
     except Exception as error:
-        code = ('WINDOWS_TUNNEL_PROMPT_FAILED' if isinstance(error, PromptFailure) else
+        code = ('WINDOWS_TUNNEL_ID_INVALID' if isinstance(error, TunnelIdError) else
+                'WINDOWS_TUNNEL_PROMPT_FAILED' if isinstance(error, PromptFailure) else
                 'WINDOWS_TUNNEL_INVALID_DATA' if isinstance(error, ValueError) else
                 'WINDOWS_TUNNEL_SETUP_FAILED')
         print(json.dumps({'ok': False, 'code': code}), file=sys.stderr)
