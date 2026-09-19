@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 11,
+  "plan_revision": 13,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "computer-use-latency-localization-037",
@@ -176,8 +176,8 @@
       "id": "T007",
       "title": "Исправить среду и критерий сопоставимости файлового теста",
       "why": "Пользователь уточнил ChatGPT Work Desktop и потребовал стандартные native write/read вместо exec_command/shell.",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "computer-use-latency-localization-037",
         "task_id": "T007",
@@ -346,7 +346,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: computer-use-latency-localization-037
 Current Task: нет
-Revision: 11
+Revision: 13
 
 ## Цель
 
@@ -373,8 +373,8 @@ Revision: 11
   - Git Commit: [PENDING] test: добавить direct loopback latency benchmark
   - Reference: computer-use-latency-localization-037 / T001 / implementation
   - Файлы: scripts/benchmark-mcp-latency.mjs, docs/design/computer-use-latency-investigation.md, docs/VERIFICATION.md
-- [TODO] T007: Исправить среду и критерий сопоставимости файлового теста — Ожидает
-  - Git Commit: [PENDING] docs: уточнить среду и методику native write read теста
+- [DONE] T007: Исправить среду и критерий сопоставимости файлового теста — Завершено
+  - Git Commit: [DONE] docs: уточнить среду и методику native write read теста
   - Reference: computer-use-latency-localization-037 / T007 / implementation
   - Файлы: docs/design/computer-use-latency-investigation.md, docs/VERIFICATION.md
 - [TODO] T002: Добавить opt-in segment tracing в App Server MCP — Ожидает
