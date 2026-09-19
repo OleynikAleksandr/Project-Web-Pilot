@@ -297,3 +297,9 @@ fixture прошли; версия обеих платформ и packager си�
 
 0.6.44 / E004: подготовлены общие package/lock и app-version для обеих платформ,
 персональный author пакета удалён. Следующий шаг — штатный парный npm run build.
+
+0.6.44 / E005: npm run build завершён. macOS arm64 и Windows x64 собраны из
+cd9569e50dd6347a8b7047480e781d940ca33a75; все 74 файла snapshot совпали с
+обеими упаковками и постоянным Mac app. Архивы прошли integrity/ASAR и проверку
+копий в Downloads/WebPilot-0.6.44. Версия постоянного app — 0.6.44, inode
+398344301 сохранён. Manifest: .harness/runtime/releases/0.6.44/release-manifest.json.

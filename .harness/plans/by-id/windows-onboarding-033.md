@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 67,
+  "plan_revision": 69,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
@@ -915,8 +915,8 @@
       "id": "E005",
       "title": "Собрать и сверить парный релиз 0.6.44",
       "why": "Собрать и сверить парный релиз 0.6.44",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "windows-onboarding-033",
         "task_id": "E005",
@@ -1077,7 +1077,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 67
+Revision: 69
 
 ## Цель
 
@@ -1201,8 +1201,8 @@ Revision: 67
   - Git Commit: [DONE] feat: Подготовить 0.6.44 без персонального автора пакета
   - Reference: windows-onboarding-033 / E004 / implementation
   - Файлы: package.json, package-lock.json, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/WORKSPACE_SETUP.md, docs/RELEASE.md, docs/DECISIONS.md
-- [TODO] E005: Собрать и сверить парный релиз 0.6.44 — Ожидает
-  - Git Commit: [PENDING] feat: Собрать и сверить парный релиз 0.6.44
+- [DONE] E005: Собрать и сверить парный релиз 0.6.44 — Завершено
+  - Git Commit: [DONE] feat: Собрать и сверить парный релиз 0.6.44
   - Reference: windows-onboarding-033 / E005 / implementation
   - Файлы: docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/WORKSPACE_SETUP.md, docs/RELEASE.md, docs/DECISIONS.md
 - [TODO] E006: Подготовить публикацию GitHub после финального DOCS commit — Ожидает
