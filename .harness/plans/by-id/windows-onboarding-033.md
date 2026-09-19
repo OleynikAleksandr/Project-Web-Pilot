@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 62,
+  "plan_revision": 63,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
@@ -869,15 +869,14 @@
         "docs/modules/first-run-onboarding.md",
         "docs/CLEAN_INSTALL.md",
         "docs/CONTEXT_DELIVERY.md",
-        "docs/VERIFICATION.md"
+        "docs/VERIFICATION.md",
+        "docs/architecture/ARCHITECTURE.md"
       ],
-      "verification_ids": [
-        "suite",
-        "electron-smoke"
-      ],
+      "verification_ids": [],
       "acceptance_criteria": [
         "Общий мастер показывает отдельный шаг подключения MCP перед первым проектом, объясняет выбор туннеля компьютера, проверку списка tools и добавление подключения в новый чат; не заявляет автоматическую проверку аккаунта.",
-        "Существующие project/tunnel actions сохраняются; Windows и macOS получают правильные названия."
+        "Существующие project/tunnel actions сохраняются; Windows и macOS получают правильные названия.",
+        "Полные suite/smoke уже прошли для тех же исходников в локальном проверенном commit 94d9d36; после исправления списка документов повторяется сверка исходников, проверки не выдаются за Windows-приёмку."
       ],
       "expected_commit_message": "fix: Выделить подключение MCP в ChatGPT перед первым проектом"
     },
@@ -1078,7 +1077,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 62
+Revision: 63
 
 ## Цель
 
@@ -1197,7 +1196,7 @@ Revision: 62
 - [TODO] F001: Показать подключение MCP в ChatGPT отдельным шагом — Ожидает
   - Git Commit: [PENDING] fix: Выделить подключение MCP в ChatGPT перед первым проектом
   - Reference: windows-onboarding-033 / F001 / implementation
-  - Файлы: src/ui/index.html, src/ui/startup.mjs, tests/startup-ui.test.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md
+  - Файлы: src/ui/index.html, src/ui/startup.mjs, tests/startup-ui.test.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 - [TODO] E004: Подготовить 0.6.44 без персонального автора пакета — Ожидает
   - Git Commit: [PENDING] feat: Подготовить 0.6.44 без персонального автора пакета
   - Reference: windows-onboarding-033 / E004 / implementation
