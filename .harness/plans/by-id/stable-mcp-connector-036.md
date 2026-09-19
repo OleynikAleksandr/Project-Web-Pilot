@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 9,
+  "plan_revision": 10,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "stable-mcp-connector-036",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Завершить перенос двух macOS MCP backend на один стабильный Secure MCP Tunnel, пересобрать исправленный релиз 0.6.47 и привести документацию проекта в соответствие с фактической реализацией.",
   "acceptance_criteria": [
     "Один стабильный Secure MCP Tunnel обслуживает оба macOS backend и Settings переключает только backend за тем же ChatGPT connector.",
@@ -37,7 +37,8 @@
       "docs/PRODUCT.md",
       "docs/WORKFLOW_START.md",
       "docs/CLEAN_INSTALL.md",
-      "docs/TRANSFER_TO_WINDOWS.md"
+      "docs/TRANSFER_TO_WINDOWS.md",
+      "docs/design/computer-use-latency-investigation.md"
     ],
     "max_functional_files_per_task": 5
   },
@@ -162,19 +163,48 @@
       "expected_commit_message": "release: пересобрать 0.6.47 с одним MCP connector"
     },
     {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
+      "id": "T003",
+      "title": "Зафиксировать исследование задержек Computer Use и MCP",
+      "why": "Сохранить результаты A/B тестов Codex Local Mac, Codex App Server MCP и нативного ChatGPT Work, а также сформулировать проверяемые гипотезы следующего этапа.",
+      "dependencies": [
+        "T001",
+        "T002"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/design/computer-use-latency-investigation.md"
+      ],
+      "verification_ids": [],
+      "acceptance_criteria": [
+        "Документ содержит методику и численные результаты всех проведённых тестов.",
+        "Отделены факты от гипотез о месте задержки и перечислены измеримые точки следующего этапа.",
+        "Документ пригоден как основной контекст подготовленного плана следующей сессии."
+      ],
+      "expected_commit_message": "docs: зафиксировать исследование задержек Computer Use",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "stable-mcp-connector-036",
+        "task_id": "T003",
+        "role": "implementation"
+      }
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "stable-mcp-connector-036",
         "task_id": "DOCS",
-        "role": "implementation"
+        "role": "implementation",
+        "iteration": 2
       },
       "id": "DOCS",
       "title": "Актуализация всех документов проекта",
       "why": "Проверить весь действующий комплект документации по docs/DOCUMENTATION_INDEX.md и обновить только устаревшие сведения после выполнения scope.",
       "dependencies": [
         "T001",
-        "T002"
+        "T002",
+        "T003"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -200,7 +230,8 @@
       "id": "8f0a9bf4-fb95-4274-8106-aca6bfc8a09b",
       "text": "Пользователь прямо поручил создать новый план с теми же оставшимися пунктами предыдущей оборвавшейся сессии.",
       "recorded_at": "2026-09-19T14:58:42.781Z"
-    }
+    },
+    "Пользователь поручил перед закрытием scope зафиксировать проведённые тесты задержек Computer Use/MCP и подготовить следующий план расследования."
   ],
   "owner_session_id": "web-pilot-67675492-8406-46a8-89bc-0f8c21fdb300",
   "prepared_in_session_id": null
@@ -211,10 +242,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: stable-mcp-connector-036
 Current Task: нет
-Revision: 9
+Revision: 10
 
 ## Цель
 
@@ -236,8 +267,12 @@ Revision: 9
   - Git Commit: [DONE] release: пересобрать 0.6.47 с одним MCP connector
   - Reference: stable-mcp-connector-036 / T002 / implementation
   - Файлы: docs/RELEASE.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, README.md
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: актуализировать документацию проекта
+- [TODO] T003: Зафиксировать исследование задержек Computer Use и MCP — Ожидает
+  - Git Commit: [PENDING] docs: зафиксировать исследование задержек Computer Use
+  - Reference: stable-mcp-connector-036 / T003 / implementation
+  - Файлы: docs/design/computer-use-latency-investigation.md
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: актуализировать документацию проекта
   - Reference: stable-mcp-connector-036 / DOCS / implementation
   - Файлы: docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/PRODUCT.md, docs/WORKFLOW_START.md, docs/CLEAN_INSTALL.md, docs/TRANSFER_TO_WINDOWS.md
 
