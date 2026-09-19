@@ -55,3 +55,42 @@ test('failure does not echo secret or retry unchanged data; corrected key can re
   await f.tick(); assert.equal(attempts, 1);
   f.copy(key + '2'); await f.tick(); assert.equal(attempts, 2); assert.equal(f.flow.snapshot().step, 'done');
 });
+
+test('explicit paste accepts an unchanged ID but stops at the key instructions without configuring', async () => {
+  const f = fixture(); f.copy(id); await f.tick();
+  assert.equal(f.flow.snapshot().step, 'tunnel');
+  f.flow.pasteTunnelId();
+  assert.equal(f.flow.snapshot().step, 'key');
+  assert.deepEqual(f.flow.manualInput(), { tunnelId: id });
+  assert.deepEqual(f.calls, []);
+  assert.doesNotMatch(JSON.stringify(f.states), /tunnel_fixture|sk-fixture/);
+});
+
+test('explicit ID paste rejects keys, invalid data and clipboard failures without leaking content', () => {
+  const f = fixture();
+  for (const value of [key, 'tunnel_short', 'x'.repeat(9000), '']) {
+    f.copy(value); f.flow.pasteTunnelId();
+    assert.equal(f.flow.snapshot().step, 'tunnel');
+    assert.match(f.flow.snapshot().error, /Copy tunnel ID/);
+    assert.equal(f.flow.manualInput(), undefined);
+  }
+  const failed = fixture({ readText: () => { throw new Error(key); } });
+  failed.flow.pasteTunnelId();
+  assert.doesNotMatch(JSON.stringify([...f.states, ...failed.states]), /sk-fixture/);
+});
+
+test('manual route separates ID and key actions, retains ID on cancel and excludes clipboard races', async () => {
+  const f = fixture(), prompts = [];
+  const configure = async values => { prompts.push(values); };
+  f.copy(id); await f.flow.configureManually(configure);
+  assert.equal(f.flow.snapshot().step, 'key'); assert.deepEqual(prompts, []);
+  await f.flow.configureManually(configure);
+  assert.deepEqual(prompts, [{ tunnelId: id }]);
+  assert.deepEqual(f.flow.manualInput(), { tunnelId: id });
+  let finish;
+  const pending = f.flow.configureManually(() => new Promise(resolve => { finish = resolve; }));
+  const reads = f.reads(); f.copy(key); await f.tick();
+  await f.flow.configureManually(configure);
+  assert.equal(f.reads(), reads); assert.equal(prompts.length, 1); assert.deepEqual(f.calls, []);
+  finish(); await pending;
+});

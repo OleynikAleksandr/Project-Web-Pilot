@@ -12,6 +12,25 @@ export class TunnelClipboard {
   }
   snapshot() { return { ...this.state }; }
   manualInput() { return this.#id ? { tunnelId: this.#id } : undefined; }
+  pasteTunnelId() {
+    if (this.#pending || this.state.step !== 'tunnel') return;
+    let value;
+    try { value = this.readText(); } catch { /* Show the same safe instruction below. */ }
+    if (typeof value !== 'string' || value.length > 8192 || !tunnelPattern.test(value.trim())) {
+      this.publish({ error: 'Скопируйте ID с кнопки Copy tunnel ID в Tunnels, затем нажмите «Вставить ID туннеля». ID начинается с tunnel_.' });
+      return;
+    }
+    this.#active = true; this.#last = digest(value); this.#id = value.trim();
+    this.publish({ step: 'key', hasTunnelId: true, error: null });
+  }
+  async configureManually(configure) {
+    if (this.#pending) return;
+    // Stop after collecting the ID so the user sees the API-key instructions first.
+    if (!this.#id) { this.pasteTunnelId(); return; }
+    this.#pending = true;
+    try { return await configure({ tunnelId: this.#id }); }
+    finally { this.#pending = false; }
+  }
   publish(patch) { Object.assign(this.state, patch); this.onChange(this.snapshot()); }
   reset() {
     this.#generation++; this.#id = null; this.#last = null; this.#active = false;

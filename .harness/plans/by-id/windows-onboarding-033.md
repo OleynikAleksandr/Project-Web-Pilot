@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 27,
+  "plan_revision": 29,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
@@ -439,8 +439,8 @@
       "id": "C001",
       "title": "Разделить вставку ID и защищённый ввод ключа",
       "why": "Разделить вставку ID и защищённый ввод ключа",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "windows-onboarding-033",
         "task_id": "C001",
@@ -641,7 +641,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 27
+Revision: 29
 
 ## Цель
 
@@ -699,8 +699,8 @@ Revision: 27
   - Git Commit: [DONE] docs: Собрать и проверить обе поставки 0.6.41
   - Reference: windows-onboarding-033 / R002 / implementation
   - Файлы: docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md, docs/RELEASE.md, docs/CLEAN_INSTALL.md, docs/TRANSFER_TO_WINDOWS.md
-- [TODO] C001: Разделить вставку ID и защищённый ввод ключа — Ожидает
-  - Git Commit: [PENDING] fix: Разделить вставку ID и защищённый ввод ключа
+- [DONE] C001: Разделить вставку ID и защищённый ввод ключа — Завершено
+  - Git Commit: [DONE] fix: Разделить вставку ID и защищённый ввод ключа
   - Reference: windows-onboarding-033 / C001 / implementation
   - Файлы: src/tunnel-clipboard.mjs, src/main.mjs, tests/tunnel-clipboard.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md
 - [TODO] C002: Показать отдельный шаг API key с явной ссылкой и инструкцией — Ожидает

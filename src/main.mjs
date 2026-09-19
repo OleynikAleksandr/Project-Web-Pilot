@@ -679,7 +679,13 @@ async function startupAction(action) {
   }
   if (action === 'check') { void observeStartupAccount(); return startupFlow.check({ prepare: true }); }
   if (action === 'install-git') return startupFlow.install();
-  if (action === 'configure-tunnel') return startupFlow.configure(startupClipboard?.manualInput());
+  if (action === 'paste-tunnel-id' || action === 'configure-tunnel') {
+    const s = startupFlow.snapshot();
+    if (s.busy || !s.node || !s.git || !s.runtime || s.tunnel || s.account !== 'signed-in')
+      throw new Error('Завершите вход и подготовку компьютера перед настройкой подключения.');
+    if (action === 'paste-tunnel-id') return startupClipboard.pasteTunnelId();
+    return startupClipboard.configureManually(credentials => startupFlow.configure(credentials));
+  }
   if (action === 'chat' || action === 'signup') { startupError = null; return navigate(null); }
   if (action === 'plugins') { startupError = null; return navigate(null, { entryUrl: 'https://chatgpt.com/plugins' }); }
   const pages = {
