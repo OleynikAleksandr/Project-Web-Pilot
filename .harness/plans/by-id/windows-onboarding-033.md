@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 47,
+  "plan_revision": 48,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
@@ -806,7 +806,7 @@
         "Документы по индексу актуализированы, подтверждения отделены от ещё не выполненной приёмки Windows",
         "План сохраняется в собственной сессии; 031 и 032 не изменяются"
       ],
-      "expected_commit_message": "docs: актуализировать документы парного выпуска 0.6.42"
+      "expected_commit_message": "docs: актуализировать выпуск 0.6.43 с системным вводом ID"
     }
   ],
   "blocked_reason": null,
@@ -839,7 +839,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 47
+Revision: 48
 
 ## Цель
 
@@ -941,7 +941,7 @@ Revision: 47
   - Reference: windows-onboarding-033 / D006 / implementation
   - Файлы: docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md, docs/RELEASE.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать документы парного выпуска 0.6.42
+  - Git Commit: [PENDING] docs: актуализировать выпуск 0.6.43 с системным вводом ID
   - Reference: windows-onboarding-033 / DOCS / implementation
   - Файлы: AGENTS.md, README.md, docs/WORKFLOW_START.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/CLEAN_INSTALL.md, docs/TRANSFER_TO_WINDOWS.md, docs/RELEASE.md, docs/WORKSPACE_SETUP.md, docs/CONTEXT_DELIVERY.md, docs/modules/runtime-lifecycle.md, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md
 
