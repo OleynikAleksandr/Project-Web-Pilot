@@ -139,9 +139,10 @@ async function applyToolCallVisibility() {
       const message = element.closest(messageSelector);
       const ownText = normalize(element.textContent);
       let result = element;
-      for (let parent = element.parentElement; parent && parent !== document.body && parent !== message; parent = parent.parentElement) {
+      for (let parent = element.parentElement; parent && parent !== document.body; parent = parent.parentElement) {
         if (normalize(parent.textContent) !== ownText) break;
         result = parent;
+        if (parent === message) break;
       }
       return result;
     };

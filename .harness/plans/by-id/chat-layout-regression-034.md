@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 6,
+  "plan_revision": 9,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "chat-layout-regression-034",
@@ -123,8 +123,8 @@
       "expected_commit_message": "docs: спланировать исправление layout скрытых tool calls"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "chat-layout-regression-034",
         "task_id": "T002",
@@ -138,7 +138,9 @@
         "tests/electron-smoke.mjs"
       ],
       "documentation_paths": [
-        "docs/modules/workspace-sessions.md"
+        "docs/modules/workspace-sessions.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
       ],
       "verification_ids": [
         "syntax",
@@ -260,7 +262,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: chat-layout-regression-034
 Current Task: нет
-Revision: 6
+Revision: 9
 
 ## Цель
 
@@ -281,10 +283,10 @@ Revision: 6
   - Git Commit: [DONE] docs: спланировать исправление layout скрытых tool calls
   - Reference: chat-layout-regression-034 / T001 / implementation
   - Файлы: docs/design/chat-message-layout-regression.md, docs/DOCUMENTATION_INDEX.md
-- [TODO] T002: Убрать footprint tool-only message wrappers — Ожидает
-  - Git Commit: [PENDING] fix(chat): убрать пустоту tool-only message wrappers
+- [DONE] T002: Убрать footprint tool-only message wrappers — Завершено
+  - Git Commit: [DONE] fix(chat): убрать пустоту tool-only message wrappers
   - Reference: chat-layout-regression-034 / T002 / implementation
-  - Файлы: src/main.mjs, tests/electron-smoke.mjs, docs/modules/workspace-sessions.md
+  - Файлы: src/main.mjs, tests/electron-smoke.mjs, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T003: Подготовить и собрать релиз 0.6.46 — Ожидает
   - Git Commit: [PENDING] build: выпустить Project Web Pilot 0.6.46
   - Reference: chat-layout-regression-034 / T003 / implementation

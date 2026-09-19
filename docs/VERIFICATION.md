@@ -797,6 +797,10 @@ Regression расширяет существующий Electron smoke: tool-call
 
 T001B: `node --check src/main.mjs` — PASSED. Прямой `npm run smoke` на Electron 44.3.0 / Chromium 152.0.7977.78 — PASSED в isolated fixture; итоговый smoke-result сообщает `toolCallFilter=true`. Реальный DOM текущего ChatGPT остаётся пользовательской приёмкой после package-сборки 0.6.22.
 
+### Regression chat-layout-regression-034
+
+В 0.6.46 fixture расширен двумя актуальными вариантами DOM: отдельный tool-only message boundary с собственными `min-height/padding` обязан скрываться целиком, а mixed assistant message с полезным текстом обязан сохранять корень и скрывать только вложенную tool-only строку. Hide/show/hide дополнительно проверяет полное восстановление marker и layout. Production-код по-прежнему вызывает только `refresh()` существующей автопрокрутки и не включает follow принудительно.
+
 ## Release 0.6.22 — scope hidden-tool-scroll-023 / T003
 
 Перед выпуском `npm test` на версии 0.6.22 завершился: 162 tests, 160 passed, 0 failed, 2 platform-specific skipped. Финальный `npm run smoke` на Electron 44.3.0 / Chromium 152.0.7977.78 прошёл в isolated fixture; результат включает `toolCallFilter=true` с новым regression на удаление layout-footprint.
