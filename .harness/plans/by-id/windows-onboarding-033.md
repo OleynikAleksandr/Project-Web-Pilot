@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 34,
+  "plan_revision": 36,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
@@ -536,8 +536,8 @@
       "id": "C004",
       "title": "Собрать и сверить парный выпуск 0.6.42",
       "why": "Собрать и сверить парный выпуск 0.6.42",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "windows-onboarding-033",
         "task_id": "C004",
@@ -641,7 +641,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 34
+Revision: 36
 
 ## Цель
 
@@ -711,8 +711,8 @@ Revision: 34
   - Git Commit: [DONE] fix: Подготовить единый номер версии 0.6.42
   - Reference: windows-onboarding-033 / C003 / implementation
   - Файлы: package.json, package-lock.json, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md, docs/RELEASE.md
-- [TODO] C004: Собрать и сверить парный выпуск 0.6.42 — Ожидает
-  - Git Commit: [PENDING] fix: Собрать и сверить парный выпуск 0.6.42
+- [DONE] C004: Собрать и сверить парный выпуск 0.6.42 — Завершено
+  - Git Commit: [DONE] fix: Собрать и сверить парный выпуск 0.6.42
   - Reference: windows-onboarding-033 / C004 / implementation
   - Файлы: docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md, docs/RELEASE.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает

@@ -268,10 +268,17 @@ native Windows/clean VM приёмки; пользователь выполня�
 
 Запуск новой готовой сборки на пользовательских Mac/Windows и подключение аккаунта не выполнялись агентом по последнему поручению. Packaged source verification не считается приёмкой. Ранее начатый локальный изолированный Electron fixture завершился успешно; это не Windows guest test.
 
-## Подготовка 0.6.42 — 19.09.2026
+## Парный выпуск 0.6.42 — 19.09.2026
 
 Общий мастер Mac/Windows исправлен: последовательные шаги ID туннеля и API key,
 видимая кнопка API keys, инструкция создания/копирования/вставки ключа. ID принимается
 отдельно; ручной путь больше не запрашивает оба значения двумя окнами подряд.
 C002 suite и Electron TEST FIXTURE smoke прошли. Пакетные версии подняты совместно;
-фактические архивы и контрольные суммы будут зафиксированы после npm run build.
+фактические архивы и контрольные суммы после npm run build приведены ниже.
+
+- Project-Web-Pilot-0.6.42-macOS-arm64.zip: 181061334 bytes; SHA-256 `feb5ab274b55c920b2742e6c025254fd00cec85187ba196040f785f8bb9cb2e9`.
+- Project-Web-Pilot-0.6.42-Windows-x64.zip: 316333671 bytes; SHA-256 `91308bae3a9f76db1f33cff21df1443db5faaea415362bd01b6b9eea8c645796`.
+
+Каталог выдачи: `~/Downloads/WebPilot-0.6.42/`. Manifest: `.harness/runtime/releases/0.6.42/release-manifest.json`. Лог сборки: `.harness/runtime/033-build-042.log`.
+
+Source commit `e93db24548b824900a7523e192f4e3e8f2dddd79`; 74 файлов зафиксированы, src/resources и runtime manifest совпадают в обеих упаковках. ZIP integrity и asar внутри архивов проверены, SHA копий в Downloads совпадают. Постоянный app версии 0.6.42 совпадает со staging; сохранена identity: device 16777232, inode 398344301. Native Windows и чистые VM не запускались, новый реальный проход выполняет пользователь.
