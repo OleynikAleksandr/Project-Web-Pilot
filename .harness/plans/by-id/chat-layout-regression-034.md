@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 9,
+  "plan_revision": 10,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "chat-layout-regression-034",
@@ -174,7 +174,8 @@
       ],
       "documentation_paths": [
         "docs/VERIFICATION.md",
-        "docs/RELEASE.md"
+        "docs/RELEASE.md",
+        "docs/architecture/ARCHITECTURE.md"
       ],
       "verification_ids": [
         "suite",
@@ -262,7 +263,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: chat-layout-regression-034
 Current Task: нет
-Revision: 9
+Revision: 10
 
 ## Цель
 
@@ -290,7 +291,7 @@ Revision: 9
 - [TODO] T003: Подготовить и собрать релиз 0.6.46 — Ожидает
   - Git Commit: [PENDING] build: выпустить Project Web Pilot 0.6.46
   - Reference: chat-layout-regression-034 / T003 / implementation
-  - Файлы: package.json, package-lock.json, docs/VERIFICATION.md, docs/RELEASE.md
+  - Файлы: package.json, package-lock.json, docs/VERIFICATION.md, docs/RELEASE.md, docs/architecture/ARCHITECTURE.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать документацию 0.6.46
   - Reference: chat-layout-regression-034 / DOCS / implementation
