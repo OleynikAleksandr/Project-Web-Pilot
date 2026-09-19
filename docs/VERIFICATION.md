@@ -1784,3 +1784,22 @@ Computer Use permission probe показал: App Server MCP-thread `read-only` 
 Известная граница: experimental `computer_list_windows` использует app-level inventory Sky вместо Quartz top-level window inventory production MCP. Это не скрывается в критериях A/B и должно быть оценено пользователем до production replacement.
 
 Новый Secure MCP Tunnel не запускался без пользовательских credentials; локальный MCP 17852 остаётся ready для подключения после `configure-tunnel`.
+
+
+### T006 — Terminal ownership regression и реальный tunnel start
+
+Пользователь дважды воспроизвёл `Recorded MCP PID belongs to another process` из Terminal после успешной настройки отдельного tunnel. При диагностике PID 1951, сохранённая command identity и listener 17852 соответствовали experimental MCP.
+
+Исправление: `pid_identity` фиксирует `LC_ALL=C` и `LANG=C` для `/bin/ps`, поскольку macOS `lstart` зависит от locale. Targeted suite после изменения: **4 passed, 0 failed**; новый regression явно проверяет child environment.
+
+Реальная проверка с `LANG=ru_RU.UTF-8 LC_ALL=ru_RU.UTF-8`:
+- MCP PID 1951: owned=true, ready=true;
+- tunnel configured=true.
+
+Следующий реальный `control.py start` успешно запустил tunnel PID 36091:
+- MCP: running=true, owned=true, ready=true;
+- tunnel: running=true, owned=true, ready=true, configured=true;
+- MCP URL: `http://127.0.0.1:17852/mcp`;
+- tunnel UI/health: `http://127.0.0.1:17853`.
+
+До исправления пользовательский Tunnel ID/API key уже были проверены `tunnel-client doctor`: result=ok, profile/tunnel_id/API key reference/MCP target/reachability/health listener — PASS. Секретное значение ключа в evidence не записывается.

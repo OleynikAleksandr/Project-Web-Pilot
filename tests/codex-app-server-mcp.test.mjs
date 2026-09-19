@@ -273,3 +273,34 @@ test('experimental lifecycle keeps independent state, ports and tunnel credentia
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test('pid identity forces C locale for stable Terminal ownership checks', async () => {
+  const root = await mkdtemp(path.join(tmpdir(), 'web-pilot-codex-identity-'));
+  const probe = path.join(root, 'probe.py');
+  const control = path.join(repoRoot, 'tools', 'codex-app-server-mcp', 'control.py');
+  await writeFile(probe, `import importlib.util, json, sys
+spec=importlib.util.spec_from_file_location("ctl", sys.argv[1])
+ctl=importlib.util.module_from_spec(spec); spec.loader.exec_module(ctl)
+seen={}
+class Result:
+    returncode=0
+    stdout="Sat Sep 19 13:39:39 2026     /tmp/fake-process\\n"
+def fake_run(*args, **kwargs):
+    seen.update(kwargs.get("env") or {})
+    return Result()
+ctl.subprocess.run=fake_run
+identity=ctl.pid_identity(123)
+print(json.dumps({"identity":identity,"LC_ALL":seen.get("LC_ALL"),"LANG":seen.get("LANG")}))
+`);
+  try {
+    const result = await runPython(probe, [control], { LANG: 'ru_RU.UTF-8', LC_ALL: 'ru_RU.UTF-8' });
+    assert.equal(result.code, 0, result.stderr || result.stdout);
+    const data = JSON.parse(result.stdout.trim());
+    assert.equal(data.LC_ALL, 'C');
+    assert.equal(data.LANG, 'C');
+    assert.match(data.identity, /^Sat Sep 19/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+

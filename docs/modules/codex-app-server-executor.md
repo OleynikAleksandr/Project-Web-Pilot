@@ -280,3 +280,14 @@ Computer Use: внутренний ephemeral App Server thread использу�
 9. Rollback: отключить новый connector, снова включить Codex Local Mac. При желании остановить experimental runtime командой `python3 tools/codex-app-server-mcp/control.py stop`. Web Pilot не пересобирается.
 
 Решение о замене production MCP принимается только после этого пользовательского A/B.
+
+
+## T006 — стабильная process identity из Terminal
+
+После пользовательской проверки 19.09.2026 обычный Terminal дважды возвращал `Recorded MCP PID belongs to another process`, хотя PID 1951 действительно принадлежал experimental MCP. Диагностика показала, что сохранённая identity использует вывод macOS `ps -o lstart,command`; поле `lstart` locale-sensitive, поэтому одна и та же process identity могла форматироваться по-разному в разных средах запуска.
+
+`control.py::pid_identity` теперь всегда запускает `/bin/ps` с `LC_ALL=C` и `LANG=C`. Это сохраняет защиту от PID reuse, но делает строковую identity независимой от locale Finder/Codex/Terminal.
+
+Regression подменяет `subprocess.run` и подтверждает передачу обоих значений `C` даже когда родительская среда имеет `ru_RU.UTF-8`. Дополнительно реальный status с `LANG=LC_ALL=ru_RU.UTF-8` распознал существующий PID 1951 как `owned=true, ready=true`.
+
+После исправления `control.py start` с уже сохранёнными пользователем credentials успешно запустил отдельный Secure MCP Tunnel: MCP PID 1951 и tunnel PID 36091 имели `running=true, owned=true, ready=true`. Production Codex Local Mac этим запуском не изменялся.

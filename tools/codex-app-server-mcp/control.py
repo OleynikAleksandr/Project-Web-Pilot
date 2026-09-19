@@ -213,9 +213,15 @@ def configure_tunnel(tunnel_id: str, key: str) -> dict[str, object]:
 def pid_identity(pid: object) -> str | None:
     if not isinstance(pid, int) or pid <= 1:
         return None
+    # `ps -o lstart` is locale-sensitive on macOS.  Persisted process identity
+    # must compare identically whether control.py is called from Finder, Codex,
+    # or a user's Terminal with another LANG/LC_* environment.
+    stable_env = os.environ.copy()
+    stable_env["LC_ALL"] = "C"
+    stable_env["LANG"] = "C"
     result = subprocess.run(
         ["/bin/ps", "-p", str(pid), "-o", "lstart=", "-o", "command="],
-        capture_output=True, text=True, timeout=3,
+        capture_output=True, text=True, timeout=3, env=stable_env,
     )
     return result.stdout.strip() if result.returncode == 0 and result.stdout.strip() else None
 

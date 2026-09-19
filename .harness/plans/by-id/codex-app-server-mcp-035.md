@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 22,
+  "plan_revision": 24,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-app-server-mcp-035",
@@ -241,8 +241,8 @@
       "file_limit_exception": "T005 одновременно проверяет facade, benchmark и внутренний App Server MCP-thread; app_server_client.py нужен только для подтверждённой настройки Computer Use thread sandbox и не образует отдельный продуктовый scope."
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "codex-app-server-mcp-035",
         "task_id": "T006",
@@ -335,7 +335,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: codex-app-server-mcp-035
 Current Task: нет
-Revision: 22
+Revision: 24
 
 ## Цель
 
@@ -372,8 +372,8 @@ Revision: 22
   - Git Commit: [DONE] test: сравнить Codex App Server MCP с Codex Local
   - Reference: codex-app-server-mcp-035 / T005 / implementation
   - Файлы: scripts/benchmark-codex-app-server-mcp.mjs, tests/codex-app-server-mcp.test.mjs, tools/codex-app-server-mcp/server.py, tools/codex-app-server-mcp/app_server_client.py, docs/VERIFICATION.md, docs/modules/codex-app-server-executor.md
-- [TODO] T006: Стабилизировать process identity между Terminal и runtime — Ожидает
-  - Git Commit: [PENDING] fix: стабилизировать identity experimental MCP процесса
+- [DONE] T006: Стабилизировать process identity между Terminal и runtime — Завершено
+  - Git Commit: [DONE] fix: стабилизировать identity experimental MCP процесса
   - Reference: codex-app-server-mcp-035 / T006 / implementation
   - Файлы: tools/codex-app-server-mcp/control.py, tests/codex-app-server-mcp.test.mjs, docs/modules/codex-app-server-executor.md, docs/VERIFICATION.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
