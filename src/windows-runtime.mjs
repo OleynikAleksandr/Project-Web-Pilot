@@ -176,6 +176,7 @@ export function windowsCommandFailureText(error, fallback = 'Windows runtime com
 }
 
 const TUNNEL_ERRORS = {
+  WINDOWS_TUNNEL_ID_INVALID: 'Вставьте полный ID туннеля, начинающийся с tunnel_, и подтвердите ввод ещё раз.',
   WINDOWS_TUNNEL_PROMPT_FAILED: 'Не удалось открыть окно ввода подключения. Повторите ввод.',
   WINDOWS_TUNNEL_INVALID_DATA: 'Проверьте формат ID туннеля и личного ключа. Данные не сохранены.',
   WINDOWS_TUNNEL_SETUP_FAILED: 'Не удалось сохранить подключение Windows. Нажмите «Проверить и продолжить», затем повторите ввод.',
@@ -194,7 +195,7 @@ export function windowsWorkflowEnvironment(folder, locations, environment = {}) 
     Path: [api.join(gitHome, 'cmd'), api.join(gitHome, 'usr', 'bin'), oldPath].filter(Boolean).join(';') };
 }
 
-export async function configureWindowsTunnel({ folder, controlSourceFile, credentials, environment,
+export async function configureWindowsTunnel({ folder, controlSourceFile, credentials, environment, idOnly = false,
   execute = execFile, executeInput = executePrivateInput }) {
   const layout = windowsRuntimeFolderPaths(folder);
   const helper = path.join(path.dirname(controlSourceFile), 'windows-first-run.py');
@@ -202,7 +203,7 @@ export async function configureWindowsTunnel({ folder, controlSourceFile, creden
     const options = { cwd: folder, timeout: 16 * 60 * 1000, maxBuffer: 64 * 1024, windowsHide: true,
       env: { ...environment, PYTHONUTF8: '1', PYTHONDONTWRITEBYTECODE: '1', WEB_PILOT_RUNTIME_ROOT: folder } };
     let result;
-    if (credentials === undefined) result = await execute(layout.python, ['-B', helper], options);
+    if (credentials === undefined) result = await execute(layout.python, ['-B', helper, ...(idOnly ? ['--tunnel-id'] : [])], options);
     else {
       if (!credentials || typeof credentials.tunnelId !== 'string' || credentials.tunnelId.length > 150
           || (credentials.key !== undefined && (typeof credentials.key !== 'string' || credentials.key.length > 4096))) {
@@ -213,7 +214,9 @@ export async function configureWindowsTunnel({ folder, controlSourceFile, creden
     }
     const value = JSON.parse(result.stdout);
     if (value.cancelled === true) return { cancelled: true };
-    if (value.configured === true) return { configured: true };
+    if (idOnly && typeof value.tunnel_id === 'string' && /^tunnel_[A-Za-z0-9_-]{16,100}$/.test(value.tunnel_id))
+      return { tunnelId: value.tunnel_id };
+    if (!idOnly && value.configured === true) return { configured: true };
     throw new Error('Invalid worker response');
   } catch (failure) {
     let code = 'WINDOWS_TUNNEL_SETUP_FAILED';
@@ -389,19 +392,21 @@ export class WindowsRuntimeBootstrap {
     return environment;
   }
 
-  configureTunnel(credentials) {
+  promptTunnelId() { return this.configureTunnel(undefined, { idOnly: true }); }
+
+  configureTunnel(credentials, { idOnly = false } = {}) {
     if (this.configurePending) return this.configurePending;
-    this.configurePending = this.#configureTunnel(credentials).finally(() => { this.configurePending = null; });
+    this.configurePending = this.#configureTunnel(credentials, idOnly).finally(() => { this.configurePending = null; });
     return this.configurePending;
   }
 
-  async #configureTunnel(credentials) {
+  async #configureTunnel(credentials, idOnly = false) {
     if (this.platform !== 'win32' || !this.controlSourceFile)
       throw new WindowsRuntimeError('WINDOWS_ONLY', 'Настройка подключения Windows недоступна.');
     const current = await this.inspect();
     if (!current.installed) throw new WindowsRuntimeError('WINDOWS_RUNTIME_NOT_INSTALLED', 'Сначала подготовьте локальные компоненты Windows.');
     await this.#controlFor(current.folder);
-    return configureWindowsTunnel({ folder: current.folder, controlSourceFile: this.controlSourceFile, credentials,
+    return configureWindowsTunnel({ folder: current.folder, controlSourceFile: this.controlSourceFile, credentials, idOnly,
       environment: this.environment, execute: this.execute, executeInput: this.executeInput });
   }
 

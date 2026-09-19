@@ -17,6 +17,7 @@ export function executePrivateInput(file, args, options, input) {
  });
 }
 const TUNNEL_SETUP_ERRORS = {
+ MAC_TUNNEL_ID_INVALID: 'Вставьте полный ID туннеля, начинающийся с tunnel_, и подтвердите ввод ещё раз.',
  MAC_TUNNEL_PROMPT_FAILED: 'Не удалось открыть окно ввода подключения. Обновите Web Pilot и повторите ввод. Данные подключения не сохранены.',
  MAC_TUNNEL_INVALID_DATA: 'Проверьте формат tunnel_id и ключа и повторите ввод. Данные подключения не сохранены.',
  MAC_TUNNEL_SETUP_FAILED: 'Не удалось завершить настройку подключения. Повторите ввод. Если ошибка повторяется, сообщите разработчику. Действующее подключение автоматически не заменяется.',
@@ -90,12 +91,13 @@ export class MacRuntimeBootstrap {
   await fs.mkdir(this.paths.root,{recursive:true});await fs.writeFile(this.paths.marker+'.tmp',JSON.stringify({schemaVersion:1,payloadSha256:payloadSha,installedAt:new Date().toISOString(),folder:this.paths.folder},null,2)+'\n',{mode:0o600});await fs.rename(this.paths.marker+'.tmp',this.paths.marker);
   return this.paths.folder;
  }
- configureTunnel(credentials) {
+ promptTunnelId() { return this.configureTunnel(undefined, { idOnly: true }); }
+ configureTunnel(credentials, { idOnly = false } = {}) {
   if (this.configurePending) return this.configurePending;
-  this.configurePending = this.#configureTunnel(credentials).finally(() => { this.configurePending = null; });
+  this.configurePending = this.#configureTunnel(credentials, idOnly).finally(() => { this.configurePending = null; });
   return this.configurePending;
  }
- async #configureTunnel(credentials) {
+ async #configureTunnel(credentials, idOnly = false) {
   const current = await this.inspect();
   if (!current.installed) throw new MacRuntimeError('MAC_RUNTIME_NOT_FOUND', 'Сначала подготовьте локальные компоненты.');
   await this.#controlFor(current.folder);
@@ -107,7 +109,7 @@ export class MacRuntimeBootstrap {
     env: { ...this.environment, PYTHONDONTWRITEBYTECODE: '1', WEB_PILOT_RUNTIME_ROOT: current.folder },
    };
    let result;
-   if (credentials === undefined) result = await this.execute(layout.python, ['-B', helper], options);
+   if (credentials === undefined) result = await this.execute(layout.python, ['-B', helper, ...(idOnly ? ['--tunnel-id'] : [])], options);
    else {
     if (!credentials || typeof credentials.tunnelId !== 'string' || credentials.tunnelId.length > 150
         || (credentials.key !== undefined && (typeof credentials.key !== 'string' || credentials.key.length > 4096))) {
@@ -118,7 +120,9 @@ export class MacRuntimeBootstrap {
    }
    const value = JSON.parse(result.stdout);
    if (value.cancelled === true) return { cancelled: true };
-   if (value.configured === true) return { configured: true };
+   if (idOnly && typeof value.tunnel_id === 'string' && /^tunnel_[A-Za-z0-9_-]{16,100}$/.test(value.tunnel_id))
+    return { tunnelId: value.tunnel_id };
+   if (!idOnly && value.configured === true) return { configured: true };
    throw new Error('Unexpected setup result');
   } catch (failure) {
    let code = 'MAC_TUNNEL_SETUP_FAILED';

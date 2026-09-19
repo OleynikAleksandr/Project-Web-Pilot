@@ -1171,3 +1171,8 @@ TunnelClipboard добавляет явную вставку ID и отдель�
 0.6.43 / D001: mac-first-run и windows-first-run добавляют collect_tunnel_id и
 --tunnel-id, возвращающий только ID или cancelled. Некорректный ID даёт отдельный
 allowlisted TUNNEL_ID_INVALID. Этот read-only путь не загружает runtime control.
+
+0.6.43 / D002: обе bootstrap facade добавляют promptTunnelId, использующий прежнюю
+проверку installed/trusted runtime и общий single-flight с настройкой. Worker
+запускается в --tunnel-id; принимается только валидный ID либо cancelled. Секреты,
+raw stdout/stderr и неизвестные ответы не выходят за прежнюю allowlist ошибок.

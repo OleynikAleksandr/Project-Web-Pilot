@@ -1562,3 +1562,7 @@ commit 0e5a9966e3d21f9cbd2bcb02d7d06c75a93668ab. Снимок startup-tunnel-key
 tests/windows-first-run.test.mjs — 14/14 PASS. Проверена реальная CLI-ветка обоих
 worker с подменённым native process: один ID prompt, без загрузки control/запроса
 ключа; отмена, пробелы, неверный ID. Native UI Windows не запускался.
+
+0.6.43 / D002: tunnel-id-runtime + mac-runtime + windows-runtime — 23 PASS,
+2 platform skips, 0 failures. Для обеих платформ проверены --tunnel-id, cancellation,
+отказ на configured вместо ID/неверный ID, безопасные ошибки без raw output.

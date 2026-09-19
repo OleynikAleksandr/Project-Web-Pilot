@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 41,
+  "plan_revision": 43,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
@@ -600,8 +600,8 @@
       "id": "D002",
       "title": "Подключить безопасный диалог ID к обеим runtime facade",
       "why": "Подключить безопасный диалог ID к обеим runtime facade",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "windows-onboarding-033",
         "task_id": "D002",
@@ -839,7 +839,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 41
+Revision: 43
 
 ## Цель
 
@@ -920,8 +920,8 @@ Revision: 41
   - Git Commit: [DONE] fix: Добавить отдельный нативный диалог ID без изменения служб
   - Reference: windows-onboarding-033 / D001 / implementation
   - Файлы: resources/runtime-control/mac-first-run.py, resources/runtime-control/windows-first-run.py, tests/tunnel-id-prompt.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md
-- [TODO] D002: Подключить безопасный диалог ID к обеим runtime facade — Ожидает
-  - Git Commit: [PENDING] fix: Подключить безопасный диалог ID к обеим runtime facade
+- [DONE] D002: Подключить безопасный диалог ID к обеим runtime facade — Завершено
+  - Git Commit: [DONE] fix: Подключить безопасный диалог ID к обеим runtime facade
   - Reference: windows-onboarding-033 / D002 / implementation
   - Файлы: src/mac-runtime.mjs, src/windows-runtime.mjs, tests/tunnel-id-runtime.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md
 - [TODO] D003: Открывать диалог ID вместо чтения буфера по кнопке — Ожидает

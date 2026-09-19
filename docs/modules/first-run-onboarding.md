@@ -339,3 +339,6 @@ ID/API key. Сборка выполняется прежним npm run build; п
 подтверждение ведёт только к инструкции API key. Оба first-run worker принимают
 --tunnel-id: один нативный prompt, проверка tunnel_ и ответ только с tunnel_id.
 В этой ветке control.py не загружается, службы и private store не изменяются.
+
+0.6.43 / D002: promptTunnelId возвращает main-процессу tunnelId/cancelled; готовность
+подключения этим не объявляется. Отдельная ошибка неверного ID объясняет только ID.
