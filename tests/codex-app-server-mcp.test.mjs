@@ -205,3 +205,58 @@ test('Codex App Server MCP facade exposes local parity and excludes cloud duplic
     assert.doesNotMatch(source, new RegExp(`def ${duplicate}\\(`));
   }
 });
+
+test('experimental lifecycle keeps independent state, ports and tunnel credentials', { timeout: 20_000 }, async () => {
+  const root = await mkdtemp(path.join(tmpdir(), 'web-pilot-codex-control-'));
+  const state = path.join(root, 'state');
+  const control = path.join(repoRoot, 'tools', 'codex-app-server-mcp', 'control.py');
+  const env = {
+    WEB_PILOT_CODEX_EXECUTOR_STATE_DIR: state,
+    WEB_PILOT_CODEX_EXECUTOR_PORT: '27852',
+    WEB_PILOT_CODEX_EXECUTOR_TUNNEL_PORT: '27853',
+  };
+
+  try {
+    const status = await runPython(control, ['status'], env);
+    assert.equal(status.code, 0, status.stderr || status.stdout);
+    const statusJson = JSON.parse(status.stdout);
+    assert.equal(statusJson.ok, true);
+    assert.equal(statusJson.mcp_url, 'http://127.0.0.1:27852/mcp');
+    assert.equal(statusJson.tunnel.ready, false);
+    assert.equal(statusJson.production_runtime_touched, false);
+
+    const configured = await new Promise((resolve, reject) => {
+      const child = spawn(
+        'python3',
+        [control, 'configure-tunnel', '--tunnel-id', 'tunnel_abcdefghijklmnop', '--key-stdin'],
+        { cwd: repoRoot, env: { ...process.env, ...env }, stdio: ['pipe', 'pipe', 'pipe'] },
+      );
+      let stdout = '';
+      let stderr = '';
+      child.stdout.on('data', chunk => { stdout += chunk; });
+      child.stderr.on('data', chunk => { stderr += chunk; });
+      child.on('error', reject);
+      child.on('close', code => resolve({ code, stdout, stderr }));
+      child.stdin.end('0123456789abcdefghijklmnop\n');
+    });
+    assert.equal(configured.code, 0, configured.stderr || configured.stdout);
+    assert.equal(JSON.parse(configured.stdout).configured, true);
+
+    const profilePath = path.join(state, 'private', 'tunnel-profile', 'codex-executor.yaml');
+    const keyPath = path.join(state, 'private', 'tunnel-key');
+    const profile = await (await import('node:fs/promises')).readFile(profilePath, 'utf8');
+    const key = await (await import('node:fs/promises')).readFile(keyPath, 'utf8');
+    const keyMode = (await (await import('node:fs/promises')).stat(keyPath)).mode & 0o777;
+
+    assert.match(profile, /127\.0\.0\.1:27852\/mcp/);
+    assert.match(profile, /127\.0\.0\.1:27853/);
+    assert.match(profile, /WEB_PILOT_CODEX_EXECUTOR_TUNNEL_API_KEY/);
+    assert.doesNotMatch(profile, /0123456789abcdefghijklmnop/);
+    assert.equal(key.trim(), '0123456789abcdefghijklmnop');
+    assert.equal(keyMode, 0o600);
+    assert.equal(profile.includes('17842'), false);
+    assert.equal(profile.includes('17843'), false);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

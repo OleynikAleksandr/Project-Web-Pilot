@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 13,
+  "plan_revision": 15,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-app-server-mcp-035",
@@ -172,8 +172,8 @@
       "expected_commit_message": "feat: добавить MCP facade поверх Codex App Server"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "codex-app-server-mcp-035",
         "task_id": "T004",
@@ -298,7 +298,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: codex-app-server-mcp-035
 Current Task: нет
-Revision: 13
+Revision: 15
 
 ## Цель
 
@@ -327,8 +327,8 @@ Revision: 13
   - Git Commit: [DONE] feat: добавить MCP facade поверх Codex App Server
   - Reference: codex-app-server-mcp-035 / T003 / implementation
   - Файлы: tools/codex-app-server-mcp/server.py, tools/codex-app-server-mcp/requirements.txt, tests/codex-app-server-mcp.test.mjs, docs/modules/codex-app-server-executor.md, docs/VERIFICATION.md
-- [TODO] T004: Добавить автономный lifecycle и отдельный tunnel — Ожидает
-  - Git Commit: [PENDING] feat: добавить lifecycle экспериментального Codex MCP
+- [DONE] T004: Добавить автономный lifecycle и отдельный tunnel — Завершено
+  - Git Commit: [DONE] feat: добавить lifecycle экспериментального Codex MCP
   - Reference: codex-app-server-mcp-035 / T004 / implementation
   - Файлы: tools/codex-app-server-mcp/control.py, tests/codex-app-server-mcp.test.mjs, docs/modules/codex-app-server-executor.md, docs/VERIFICATION.md
 - [TODO] T005: Проверить совместимость и измерить оба пути — Ожидает

@@ -211,3 +211,30 @@ Credentials принимаются только через stdin/private file с
 - собственная новая реализация Computer Use;
 - оптимизация Programmatic Tool Calling;
 - автоматическое включение всех MCP из общего каталога Codex.
+
+## Реализованный lifecycle T004
+
+Экспериментальный control находится в `tools/codex-app-server-mcp/control.py` и использует только собственный namespace:
+
+- state: `~/Library/Application Support/WebPilotCodexExecutor`;
+- runtime venv: `state/runtime/venv`;
+- copied/verified tunnel-client: `state/runtime/tunnel-client`;
+- MCP: `127.0.0.1:17852/mcp`;
+- tunnel health/UI: `127.0.0.1:17853`;
+- private profile/key: `state/private/**`.
+
+Команды:
+
+```bash
+python3 tools/codex-app-server-mcp/control.py setup
+python3 tools/codex-app-server-mcp/control.py configure-tunnel
+python3 tools/codex-app-server-mcp/control.py start
+python3 tools/codex-app-server-mcp/control.py status
+python3 tools/codex-app-server-mcp/control.py stop
+```
+
+`configure-tunnel` спрашивает runtime key через скрытый `getpass`; для автоматизированного теста есть `--key-stdin`. Ключ хранится mode 0600, в profile находится только ссылка на отдельную environment variable. Status и diagnostics ключ не возвращают.
+
+Control хранит PID + process identity и перед signal повторно сверяет identity. Чужой PID/занятый port не завершается. Readiness MCP проверяется собственным runtime Python, поэтому системный Python не обязан иметь пакет `mcp`.
+
+19.09.2026 реальный `setup` создал отдельный Python 3.13 venv и установил `mcp==1.28.1`; tunnel-client 0.0.14 скопирован как отдельный runtime executable. `start --mcp-only` подтвердил ready=true на 17852. Production Codex Local Mac одновременно сохранил ready=true на 17842 и его tunnel ready=true; его state/credentials не менялись.

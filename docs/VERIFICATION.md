@@ -1732,3 +1732,24 @@ Live smoke T003 поднял экспериментальный FastMCP на `12
 Красная legacy-запись `computer-use` в Codex не используется новым facade. Реальный bundled Computer Use path — connected `node_repl` + `@oai/sky`; отсутствие разрешения конкретному приложению возвращается как явная ошибка и не обходится.
 
 Это local/source evidence. End-to-end Secure MCP Tunnel и пользовательское A/B выполняются после T004/T005.
+
+
+### T004 — автономный lifecycle
+
+Targeted regression добавил изолированный временный state и проверил:
+
+- status использует отдельные MCP/tunnel ports;
+- `configure-tunnel --key-stdin` пишет отдельный profile с MCP URL тестового порта;
+- runtime key отсутствует в profile и хранится отдельным mode 0600 файлом;
+- profile не содержит production ports 17842/17843;
+- status явно сообщает `production_runtime_touched=false`.
+
+Реальная установка затем выполнена в `~/Library/Application Support/WebPilotCodexExecutor`:
+
+- Python runtime: 3.13 venv в отдельном state;
+- `mcp==1.28.1` установлен в этот venv;
+- tunnel-client: 0.0.14, отдельная копия в experimental state;
+- experimental MCP: PID 77484 на момент проверки, `http://127.0.0.1:17852/mcp`, ready=true;
+- experimental tunnel: ещё не configured, так как отдельные пользовательские tunnel credentials не запрашивались в чате.
+
+До и после установки production Codex Local Mac оставался: MCP ready=true на 17842, tunnel ready=true/configured=true на 17843. Старый runtime не останавливался и не перенастраивался.
