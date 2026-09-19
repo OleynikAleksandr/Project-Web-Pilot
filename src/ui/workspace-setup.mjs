@@ -10,11 +10,11 @@ export function workspaceSetupView(action) {
   $('setup-cancel').addEventListener('click', () => action('cancelSetup'));
   $('setup-doctor').addEventListener('click', () => action('openDoctor'));
   $('setup-refresh').addEventListener('click', () => action('refreshSetup'));
-  $('setup-apply').addEventListener('click', () => action('applySetup', last?.setup?.token, $('setup-git-name').value, $('setup-git-email').value));
+  $('setup-apply').addEventListener('click', () => action('applySetup', last?.setup?.token));
   function createFirst(experience) {
     const button = $('setup-experience-' + experience);
     if (button.disabled || $('setup-experience').hidden || submitting) return;
-    const args = [last.setup.token, $('setup-git-name').value, $('setup-git-email').value, experience];
+    const args = [last.setup.token, experience];
     submitting = true; render(last, pending);
     void Promise.resolve().then(() => action('applySetup', ...args)).finally(() => {
       submitting = false; if (last) render(last, pending);
@@ -22,7 +22,6 @@ export function workspaceSetupView(action) {
   }
   $('setup-experience-chat').addEventListener('click', () => createFirst('chat'));
   $('setup-experience-work').addEventListener('click', () => createFirst('work'));
-  for (const id of ['setup-git-name', 'setup-git-email']) $(id).addEventListener('input', () => render(last, pending));
   function render(state, actionPending) {
     last = state; pending = actionPending;
     const setup = state.setup;
@@ -80,21 +79,18 @@ export function workspaceSetupView(action) {
     $('setup-files').hidden = !files.length;
     $('setup-file-summary').textContent = `Изменения в папке · ${files.length} файлов`;
     $('setup-file-list').replaceChildren(...files.map(file => { const item = document.createElement('li'); item.textContent = `${file.action}: ${file.path}`; return item; }));
-    const identity = setup.action === 'install' && !setup.gitIdentityReady;
-    $('setup-identity').hidden = !identity;
     const problem = !!setup.error || !!setup.issues?.length || setup.phase === 'error'
       || (!setup.action && setup.checks?.some(check => !check.ok));
     const firstSession = !!setup.firstSessionRequired;
     const canApply = !!setup.action && !!setup.token && !problem;
-    const missingIdentity = identity && (!$('setup-git-name').value.trim() || !$('setup-git-email').value.trim());
     $('setup-experience').hidden = !firstSession || form || busy || !canApply;
     for (const mode of ['chat', 'work']) {
       $('setup-experience-' + mode).removeAttribute('aria-pressed');
-      $('setup-experience-' + mode).disabled = busy || actionPending || submitting || missingIdentity || !canApply;
+      $('setup-experience-' + mode).disabled = busy || actionPending || submitting || !canApply;
     }
     $('setup-apply').hidden = firstSession || !canApply || busy;
     $('setup-apply').textContent = { install: setup.mode === 'new' ? 'Создать и открыть' : 'Подготовить и открыть', reconnect: 'Восстановить и открыть', upgrade: 'Обновить и открыть', open: 'Открыть проект' }[setup.action] ?? 'Открыть проект';
-    $('setup-apply').disabled = actionPending || submitting || missingIdentity;
+    $('setup-apply').disabled = actionPending || submitting;
     $('setup-refresh').hidden = busy || form || !problem || (!setup.installed && !setup.workspace);
     $('setup-refresh').disabled = actionPending || submitting;
     $('setup-doctor').hidden = busy || form || !problem || !setup.workspace;

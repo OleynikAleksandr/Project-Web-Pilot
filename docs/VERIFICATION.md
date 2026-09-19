@@ -1592,3 +1592,8 @@ config не меняется, новый экземпляр приложения
 
 0.6.44 / E002: syntax main/preload/Electron smoke PASS; интеграционный сценарий
 недопустимого experience обновлён под новый API. Полный проход — в E003.
+
+0.6.44 / E003: project-doctor-ui — 9/9 PASS, включая отсутствие полей автора/email,
+прямой Chat/Work без них, один submit и сохранённое recovery при проблеме.
+Поиск gitName/gitEmail/gitIdentityReady/setup-git/setup-identity в src и worker
+не даёт совпадений. Назначены общий suite и Electron smoke на fixtures.

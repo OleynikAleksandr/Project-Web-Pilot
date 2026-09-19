@@ -1197,3 +1197,7 @@ gitIdentityReady из public preview. При install localHistoryDefaults выб
 0.6.44 / E002: applySetup IPC имеет только token и experience. Main передаёт в
 WorkspaceSetup только token. Параметры автора удалены из renderer bridge и main.
 Неверный Chat/Work по-прежнему отклоняется до изменения выбранной папки.
+
+0.6.44 / E003: WorkspaceSetupView удаляет личные поля, listeners и missingIdentity
+condition; renderer отправляет только token/experience. Пользовательские данные
+автора не хранятся и не передаются этим сценарием. Preview и one-shot guard сохранены.

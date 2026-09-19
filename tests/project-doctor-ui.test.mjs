@@ -69,19 +69,19 @@ test('coordinator reconnects missing local commands and rejects duplicate runs',
 
 test('healthy first-project preview offers only direct Chat and Work with one submission', async t => {
   const f=await fixture(t,workspaceSetupView),s=state();
-  s.setup={phase:'preview',mode:'new',workspace:'/new',token:'preview-1',action:'install',firstSessionRequired:true,gitIdentityReady:true,checks:[]};
+  s.setup={phase:'preview',mode:'new',workspace:'/new',token:'preview-1',action:'install',firstSessionRequired:true,checks:[]};
   f.view.render(s,false);
   assert.equal(f.$('setup-experience').hidden,false); assert.equal(f.$('setup-apply').hidden,true);
   assert.equal(f.$('setup-doctor').hidden,true); assert.equal(f.$('setup-refresh').hidden,true);
   f.$('setup-experience-work').click(); f.$('setup-experience-chat').click();
   await new Promise(r=>setImmediate(r));
-  assert.deepEqual(f.calls,[['applySetup','preview-1','','','work']]);
+  assert.deepEqual(f.calls,[['applySetup','preview-1','work']]);
 });
-test('missing identity blocks both modes and diagnosed problems expose recovery', async t => {
+test('first project needs no personal fields and diagnosed problems still expose recovery', async t => {
   const f=await fixture(t,workspaceSetupView),s=state();
-  s.setup={phase:'preview',mode:'new',workspace:'/new',token:'preview-2',action:'install',firstSessionRequired:true,gitIdentityReady:false};
-  f.view.render(s,false); assert.equal(f.$('setup-experience-chat').disabled,true); assert.equal(f.$('setup-experience-work').disabled,true);
-  f.$('setup-git-name').value='Fixture'; f.$('setup-git-email').value='fixture@example.invalid';f.view.render(s,false);
+  s.setup={phase:'preview',mode:'new',workspace:'/new',token:'preview-2',action:'install',firstSessionRequired:true};
+  f.view.render(s,false); assert.equal(f.$('setup-experience-chat').disabled,false); assert.equal(f.$('setup-experience-work').disabled,false);
+  assert.equal(f.$('setup-identity'),null); assert.equal(f.$('setup-git-name'),null); assert.equal(f.$('setup-git-email'),null);
   assert.equal(f.$('setup-experience-chat').disabled,false);
   s.setup.error={message:'Папка изменилась'};f.view.render(s,false);
   assert.equal(f.$('setup-experience').hidden,true);assert.equal(f.$('setup-doctor').hidden,false);assert.equal(f.$('setup-refresh').hidden,false);

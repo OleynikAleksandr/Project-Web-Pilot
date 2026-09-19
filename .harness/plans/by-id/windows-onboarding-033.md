@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 59,
+  "plan_revision": 61,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
@@ -816,8 +816,8 @@
       "id": "E003",
       "title": "Удалить поля автора и ограничение создания проекта",
       "why": "Удалить поля автора и ограничение создания проекта",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "windows-onboarding-033",
         "task_id": "E003",
@@ -1036,7 +1036,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 59
+Revision: 61
 
 ## Цель
 
@@ -1147,8 +1147,8 @@ Revision: 59
   - Git Commit: [DONE] feat: Убрать имя и email из IPC создания проекта
   - Reference: windows-onboarding-033 / E002 / implementation
   - Файлы: src/main.mjs, src/preload.cjs, tests/electron-smoke.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/WORKSPACE_SETUP.md
-- [TODO] E003: Удалить поля автора и ограничение создания проекта — Ожидает
-  - Git Commit: [PENDING] feat: Удалить поля автора и ограничение создания проекта
+- [DONE] E003: Удалить поля автора и ограничение создания проекта — Завершено
+  - Git Commit: [DONE] feat: Удалить поля автора и ограничение создания проекта
   - Reference: windows-onboarding-033 / E003 / implementation
   - Файлы: src/ui/index.html, src/ui/workspace-setup.mjs, tests/project-doctor-ui.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/WORKSPACE_SETUP.md
 - [TODO] E004: Подготовить 0.6.44 без персонального автора пакета — Ожидает
