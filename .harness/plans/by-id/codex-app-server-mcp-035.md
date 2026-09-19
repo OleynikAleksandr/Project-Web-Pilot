@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 34,
+  "plan_revision": 35,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-app-server-mcp-035",
@@ -405,7 +405,7 @@
       ],
       "verification_ids": [
         "suite",
-        "smoke"
+        "electron-smoke"
       ],
       "id": "T010",
       "title": "Собрать релиз 0.6.47 с новым MCP resource",
@@ -485,7 +485,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: codex-app-server-mcp-035
 Current Task: нет
-Revision: 34
+Revision: 35
 
 ## Цель
 
