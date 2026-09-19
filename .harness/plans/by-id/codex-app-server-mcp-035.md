@@ -1,0 +1,340 @@
+# Активный план — Project Web Pilot
+
+<!-- workflow-state:begin -->
+```json
+{
+  "schema_version": 1,
+  "plan_revision": 2,
+  "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
+  "project_name": "Project Web Pilot",
+  "scope_id": "codex-app-server-mcp-035",
+  "execution_scope_status": "ACTIVE",
+  "delivery_status": "IN_PROGRESS",
+  "objective": "Создать отдельный экспериментальный MCP для macOS, который предоставляет модели ChatGPT Web локальные инструменты через Codex App Server как исполнитель без запуска второго модельного агента, и подготовить безопасное A/B-сравнение с существующим Codex Local Mac.",
+  "acceptance_criteria": [
+    "Экспериментальный MCP запускается отдельно от штатного Codex Local Mac и не требует изменения кода Web Pilot для подключения в ChatGPT.",
+    "Локальные команды, файлы, поиск, Git и вызов подключённых к Codex MCP выполняются через Codex App Server; Computer Use в scope не входит.",
+    "Интеграционные проверки доказывают, что исполнительный путь не запускает turn/start и не обращается к модельному endpoint.",
+    "Существующий Codex Local Mac, его private state, tunnel credentials и текущий Runtime Lifecycle не модифицируются и могут быть возвращены в использование без восстановления из backup.",
+    "Подготовлены воспроизводимые замеры и инструкция для A/B-переключения старого и нового MCP в ChatGPT; решение о замене штатного MCP принимается только после пользовательского сравнения."
+  ],
+  "approved_scope": {
+    "functional_paths": [
+      "tools/codex-app-server-mcp/app_server_client.py",
+      "tools/codex-app-server-mcp/server.py",
+      "tools/codex-app-server-mcp/control.py",
+      "tools/codex-app-server-mcp/requirements.txt",
+      "tests/codex-app-server-mcp.test.mjs",
+      "scripts/benchmark-codex-app-server-mcp.mjs"
+    ],
+    "documentation_paths": [
+      "docs/architecture/OVERVIEW.md",
+      "docs/MODULES.md",
+      "docs/DOCUMENTATION_INDEX.md",
+      "docs/modules/runtime-lifecycle.md",
+      "docs/modules/codex-app-server-executor.md",
+      "docs/VERIFICATION.md"
+    ],
+    "max_functional_files_per_task": 3
+  },
+  "baseline_commit": "f2fb5e9cf62ad724acc8f3d69d981488ac78ca10",
+  "current_task_id": null,
+  "context_pack": {
+    "documents": [
+      {
+        "path": "docs/architecture/OVERVIEW.md",
+        "heading_path": [
+          "Краткая архитектура проекта"
+        ],
+        "required": true,
+        "revision": "WORKTREE"
+      },
+      {
+        "path": "docs/MODULES.md",
+        "heading_path": [
+          "Модули проекта"
+        ],
+        "required": true,
+        "revision": "WORKTREE"
+      },
+      {
+        "path": "docs/DOCUMENTATION_INDEX.md",
+        "heading_path": [
+          "Каталог документации"
+        ],
+        "required": true,
+        "revision": "WORKTREE"
+      },
+      {
+        "path": "docs/modules/runtime-lifecycle.md",
+        "heading_path": [
+          "Module Specification — Runtime Lifecycle"
+        ],
+        "required": true,
+        "revision": "WORKTREE"
+      }
+    ],
+    "include_last_completed_task": false,
+    "dependency_task_ids": []
+  },
+  "tasks": [
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "codex-app-server-mcp-035",
+        "task_id": "T001",
+        "role": "implementation"
+      },
+      "dependencies": [],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/modules/codex-app-server-executor.md",
+        "docs/modules/runtime-lifecycle.md"
+      ],
+      "verification_ids": [],
+      "id": "T001",
+      "title": "Зафиксировать контракт Codex App Server executor",
+      "why": "Отделить экспериментальный исполнитель от штатного runtime и заранее закрепить facade, границы безопасности и критерии A/B.",
+      "acceptance_criteria": [
+        "Спецификация фиксирует схему ChatGPT MCP → adapter → Codex App Server, discovery бинарника, lifecycle, границы состояния и запрет turn/start.",
+        "Определён минимальный совместимый facade локальных файлов, команд/процессов, Git и passthrough к подключённым Codex MCP без Computer Use.",
+        "Зафиксировано, что эксперимент не изменяет старый MCP, его tunnel credentials и production Runtime Lifecycle."
+      ],
+      "expected_commit_message": "docs: зафиксировать контракт Codex App Server MCP"
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "codex-app-server-mcp-035",
+        "task_id": "T002",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "T001"
+      ],
+      "functional_paths": [
+        "tools/codex-app-server-mcp/app_server_client.py",
+        "tests/codex-app-server-mcp.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/codex-app-server-executor.md"
+      ],
+      "verification_ids": [
+        "suite"
+      ],
+      "id": "T002",
+      "title": "Реализовать клиент Codex App Server",
+      "why": "Получить узкий проверяемый facade JSON-RPC вместо копирования внутреннего исполнителя Codex.",
+      "acceptance_criteria": [
+        "Клиент запускает найденный codex app-server по stdio, выполняет initialize и корректно завершает/перезапускает дочерний процесс.",
+        "Поддержаны необходимые прямые методы command/exec, fs/readFile и методы каталога/вызова MCP без запуска модельного turn.",
+        "Тест с заблокированным модельным endpoint подтверждает ноль модельных запросов и отсутствие turn/start."
+      ],
+      "expected_commit_message": "feat: добавить клиент Codex App Server"
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "codex-app-server-mcp-035",
+        "task_id": "T003",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "T002"
+      ],
+      "functional_paths": [
+        "tools/codex-app-server-mcp/server.py",
+        "tools/codex-app-server-mcp/requirements.txt",
+        "tests/codex-app-server-mcp.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/codex-app-server-executor.md"
+      ],
+      "verification_ids": [
+        "suite"
+      ],
+      "id": "T003",
+      "title": "Реализовать ChatGPT-facing MCP facade",
+      "why": "Дать веб-модели компактный набор локальных инструментов, сохранив привычные операции и передав исполнение Codex.",
+      "acceptance_criteria": [
+        "Streamable HTTP MCP публикует инструменты для чтения/записи/поиска файлов, коротких и длительных команд, Git и вызова подключённых в Codex MCP.",
+        "Для эквивалентных операций сохраняются знакомые имена/семантика Codex Local, но дубли и Computer Use не переносятся механически.",
+        "Аннотации read-only/destructive соответствуют реальному поведению; чувствительные параметры не логируются и не возвращаются модели."
+      ],
+      "expected_commit_message": "feat: добавить MCP facade поверх Codex App Server"
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "codex-app-server-mcp-035",
+        "task_id": "T004",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "T003"
+      ],
+      "functional_paths": [
+        "tools/codex-app-server-mcp/control.py",
+        "tests/codex-app-server-mcp.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/codex-app-server-executor.md"
+      ],
+      "verification_ids": [
+        "suite"
+      ],
+      "id": "T004",
+      "title": "Добавить автономный lifecycle и отдельный tunnel",
+      "why": "Новый MCP должен работать рядом со старым и переключаться без пересборки Web Pilot или повреждения текущей установки.",
+      "acceptance_criteria": [
+        "Control запускает/останавливает только экспериментальный MCP и использует собственные state/ports/profile.",
+        "Secure MCP Tunnel может быть настроен отдельно от существующего Codex Local Mac; ключи не попадают в Git, argv, diagnostics или ChatGPT.",
+        "Запуск/остановка эксперимента не меняет процессы, private state и профиль старого Codex Local Mac."
+      ],
+      "expected_commit_message": "feat: добавить lifecycle экспериментального Codex MCP"
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "codex-app-server-mcp-035",
+        "task_id": "T005",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "T004"
+      ],
+      "functional_paths": [
+        "scripts/benchmark-codex-app-server-mcp.mjs",
+        "tests/codex-app-server-mcp.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/VERIFICATION.md",
+        "docs/modules/codex-app-server-executor.md"
+      ],
+      "verification_ids": [
+        "suite"
+      ],
+      "id": "T005",
+      "title": "Проверить совместимость и измерить оба пути",
+      "why": "Отделить фактический выигрыш Codex App Server от предположений и подготовить объективное A/B-сравнение.",
+      "acceptance_criteria": [
+        "Автоматические проверки покрывают initialize, файлы, команды, процессы, Git, каталог/вызов downstream MCP, отмену и восстановление App Server.",
+        "Benchmark одинаковых локальных операций сравнивает старый MCP и новый adapter по времени и объёму ответа без Computer Use.",
+        "Подготовлена короткая процедура пользовательского A/B: зарегистрировать новый connector, отключить старый, выполнить одинаковые задачи и вернуть прежний connector без изменений Web Pilot."
+      ],
+      "expected_commit_message": "test: сравнить Codex App Server MCP с Codex Local"
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "codex-app-server-mcp-035",
+        "task_id": "DOCS",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "T001",
+        "T002",
+        "T003",
+        "T004",
+        "T005"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/architecture/OVERVIEW.md",
+        "docs/MODULES.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/modules/runtime-lifecycle.md",
+        "docs/modules/codex-app-server-executor.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [],
+      "id": "DOCS",
+      "title": "Актуализация всех документов проекта",
+      "why": "После эксперимента согласовать действующую документацию с фактическими границами и не объявлять новый MCP штатным до пользовательского A/B.",
+      "acceptance_criteria": [
+        "Все документы из индекса проверены; актуальные оставлены без бессмысленных правок; новые сведения описывают эксперимент как альтернативный, а не production runtime.",
+        "Документация явно оставляет решение о замене штатного Codex Local Mac за результатом пользовательского A/B."
+      ],
+      "expected_commit_message": "docs: актуализировать документацию Codex App Server MCP"
+    }
+  ],
+  "blocked_reason": null,
+  "user_decisions": [
+    "Использовать Codex App Server именно как локальный исполнитель команд внешней модели ChatGPT Web, а не как второй агент; путь turn/start в экспериментальном MCP запрещён.",
+    "Создать новый MCP отдельно от Codex Local Mac, чтобы можно было вручную отключать один connector и включать другой для сравнения.",
+    "Computer Use полностью исключён из этого scope и будет исследоваться отдельно.",
+    "На этапе эксперимента не менять штатный Runtime Lifecycle Web Pilot и не выпускать новый релиз только ради этого MCP.",
+    "Сначала реализовать и измерить macOS-вариант; Windows переносить только после решения по результатам A/B.",
+    {
+      "id": "2bcfe5d6-79cb-4a58-b07d-f5dffaa2d53b",
+      "text": "19.09.2026 пользователь прямо поручил создать новый scope и ToDo Plan для реализации отдельного MCP поверх Codex App Server после завершения предыдущего scope.",
+      "recorded_at": "2026-09-19T10:39:21.681Z"
+    }
+  ],
+  "owner_session_id": "web-pilot-361efaed-f824-4ab6-bc15-df56586093de",
+  "prepared_in_session_id": null
+}
+```
+<!-- workflow-state:end -->
+
+## Состояние
+
+Execution Scope Status: ACTIVE
+Delivery Status: IN_PROGRESS
+Scope: codex-app-server-mcp-035
+Current Task: нет
+Revision: 2
+
+## Цель
+
+Создать отдельный экспериментальный MCP для macOS, который предоставляет модели ChatGPT Web локальные инструменты через Codex App Server как исполнитель без запуска второго модельного агента, и подготовить безопасное A/B-сравнение с существующим Codex Local Mac.
+
+## Критерии приёмки
+
+- Экспериментальный MCP запускается отдельно от штатного Codex Local Mac и не требует изменения кода Web Pilot для подключения в ChatGPT.
+- Локальные команды, файлы, поиск, Git и вызов подключённых к Codex MCP выполняются через Codex App Server; Computer Use в scope не входит.
+- Интеграционные проверки доказывают, что исполнительный путь не запускает turn/start и не обращается к модельному endpoint.
+- Существующий Codex Local Mac, его private state, tunnel credentials и текущий Runtime Lifecycle не модифицируются и могут быть возвращены в использование без восстановления из backup.
+- Подготовлены воспроизводимые замеры и инструкция для A/B-переключения старого и нового MCP в ChatGPT; решение о замене штатного MCP принимается только после пользовательского сравнения.
+
+## Микрозадачи
+
+- [TODO] T001: Зафиксировать контракт Codex App Server executor — Ожидает
+  - Git Commit: [PENDING] docs: зафиксировать контракт Codex App Server MCP
+  - Reference: codex-app-server-mcp-035 / T001 / implementation
+  - Файлы: docs/modules/codex-app-server-executor.md, docs/modules/runtime-lifecycle.md
+- [TODO] T002: Реализовать клиент Codex App Server — Ожидает
+  - Git Commit: [PENDING] feat: добавить клиент Codex App Server
+  - Reference: codex-app-server-mcp-035 / T002 / implementation
+  - Файлы: tools/codex-app-server-mcp/app_server_client.py, tests/codex-app-server-mcp.test.mjs, docs/modules/codex-app-server-executor.md
+- [TODO] T003: Реализовать ChatGPT-facing MCP facade — Ожидает
+  - Git Commit: [PENDING] feat: добавить MCP facade поверх Codex App Server
+  - Reference: codex-app-server-mcp-035 / T003 / implementation
+  - Файлы: tools/codex-app-server-mcp/server.py, tools/codex-app-server-mcp/requirements.txt, tests/codex-app-server-mcp.test.mjs, docs/modules/codex-app-server-executor.md
+- [TODO] T004: Добавить автономный lifecycle и отдельный tunnel — Ожидает
+  - Git Commit: [PENDING] feat: добавить lifecycle экспериментального Codex MCP
+  - Reference: codex-app-server-mcp-035 / T004 / implementation
+  - Файлы: tools/codex-app-server-mcp/control.py, tests/codex-app-server-mcp.test.mjs, docs/modules/codex-app-server-executor.md
+- [TODO] T005: Проверить совместимость и измерить оба пути — Ожидает
+  - Git Commit: [PENDING] test: сравнить Codex App Server MCP с Codex Local
+  - Reference: codex-app-server-mcp-035 / T005 / implementation
+  - Файлы: scripts/benchmark-codex-app-server-mcp.mjs, tests/codex-app-server-mcp.test.mjs, docs/VERIFICATION.md, docs/modules/codex-app-server-executor.md
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: актуализировать документацию Codex App Server MCP
+  - Reference: codex-app-server-mcp-035 / DOCS / implementation
+  - Файлы: docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/modules/runtime-lifecycle.md, docs/modules/codex-app-server-executor.md, docs/VERIFICATION.md
+
+## Context Pack For This Cycle
+
+- docs/architecture/OVERVIEW.md → Краткая архитектура проекта
+- docs/MODULES.md → Модули проекта
+- docs/DOCUMENTATION_INDEX.md → Каталог документации
+- docs/modules/runtime-lifecycle.md → Module Specification — Runtime Lifecycle
+
+Служебные состояния меняются только командами workflow. Приёмка не архивирует scope.
