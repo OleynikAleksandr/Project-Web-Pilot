@@ -142,3 +142,12 @@ TunnelClipboard.pasteTunnelId принимает только ID в main, вкл
 platform worker и открывает только защищённое поле ключа. Опрос при ручном вводе
 приостановлен. main проверяет вход, компоненты и busy; UI не получает credentials.
 Сохранение ключа, доверие runtime и запуск служб используют прежние механизмы.
+
+## 0.6.43 — отдельный системный ID prompt
+
+Предыдущий pasteTunnelId из 0.6.42 заменён асинхронным native prompt через
+bootstrap.promptTunnelId и worker --tunnel-id. ID-only worker не загружает control
+и не пишет credentials. Отмена/ошибка не меняют private store. Main сохраняет ID
+для последующего ключа; renderer получает только stage/hasTunnelId/error.
+На время диалога опрос остановлен, поздний ответ после выхода отбрасывается;
+копирование внутри отменённого диалога не запускает подключение после закрытия.

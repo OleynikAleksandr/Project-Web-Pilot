@@ -36,8 +36,8 @@
 | docs/SOURCE_WORKSPACES.md | Исходные проекты, пути, версии и официальные ссылки |
 | docs/VERIFICATION.md | Проверки, release evidence и границы пользовательской приёмки |
 | docs/RELEASE.md | Парный выпуск macOS/Windows, постоянный macOS app, Finder-алиас, ZIP и проверка доставки |
-| docs/CLEAN_INSTALL.md | Стенд Clean/Test macOS/Windows, реестр наблюдений первого запуска, принятый macOS-путь, ошибки Windows 0.6.41, выпуск 0.6.42 и границы доказательств |
-| docs/TRANSFER_TO_WINDOWS.md | Актуальная Windows x64 поставка 0.6.42 и самостоятельная проверка пользователем |
+| docs/CLEAN_INSTALL.md | Стенд Clean/Test macOS/Windows, реестр наблюдений первого запуска, принятый macOS-путь, ошибки Windows 0.6.41, выпуск 0.6.43 и границы доказательств |
+| docs/TRANSFER_TO_WINDOWS.md | Актуальная Windows x64 поставка 0.6.43 и самостоятельная проверка пользователем |
 | docs/WORKSPACE_SETUP.md | Создание/подключение workspace и install/upgrade Workflow Kit |
 | docs/PROJECT_ARCHIVE.md | Архив workspace, возврат и безопасное локальное удаление; веб-чаты сохраняются |
 
@@ -97,3 +97,7 @@
 приёмки нового выпуска. Workspace Setup, Context Delivery и Workspace Sessions
 сохраняют существующий контракт: изменение касается ввода подключения перед ними.
 Планы 031/032, локальный архив и правила полного контекста не изменялись.
+
+0.6.43: первый запуск, runtime, release и передача Windows дополнены настоящим
+системным диалогом ID; CLEAN_INSTALL хранит наблюдение 08.36.22. Контракты
+Workspace Setup, Context Delivery, Workspace Sessions и архивирования не менялись.
