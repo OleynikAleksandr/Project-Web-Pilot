@@ -16,12 +16,19 @@ Project Workflow Kit предназначен для проектов любог
 - Workspace/session слой schema v6 хранит связь проекта, сессии и плана, а также происхождение продолжения; задачи не дублирует. «План следующей сессии» показывает отдельные канонические планы и ссылки; пользователь открывает их через Chat/Work. Меню проекта создаёт самостоятельные сессии с NONE. Выполнение DOCS не создаёт сессию и не архивирует план. Локальный редактор цветов в Settings меняет пять цветов отображения ChatGPT, включая фон блока ввода и текст потокового ответа, через отдельный CSS facade, сохраняя палитру между запусками. Начиная с 0.6.31 размер/позиция главного окна сохраняются штатным Electron bounds persistence, а ширина сайдбара — существующими локальными settings; оба состояния находятся вне app bundle и переживают обновление.
 - Project Doctor проверяет и чинит известные служебные неисправности через доверенный локальный worker, с backup и повторной readiness; не зависит от рабочего ChatGPT/MCP для файлового ремонта.
 - Runtime lifecycle поднимает или переиспользует MCP+tunnel и должен оставаться отделён от plan/recovery semantics.
+- Scope `codex-app-server-mcp-035` добавил отдельный macOS-only экспериментальный local executor поверх Codex App Server. Он не меняет production Runtime Lifecycle/Web Pilot, публикует те же 47 локальных tool names, не экспортирует публичные/облачные дубли и использует `node_repl -> @oai/sky` для Computer Use. Экспериментальный MCP работает на 17852 с отдельным state; внешний tunnel 17853 настраивается отдельными пользовательскими credentials перед A/B.
 - macOS и Windows используют один Git source of truth; platform runtime/build state остаётся локальным.
 
 Подробная карта частей проекта находится в `docs/MODULES.md`, полный перечень пополняемых документов — в `docs/DOCUMENTATION_INDEX.md`. Полная историческая архитектура остаётся в `docs/architecture/ARCHITECTURE.md` и не является обязательным recovery-контекстом.
 Постоянный путь запуска macOS — `Project Web Pilot.app` в корне workspace. Каждый macOS-релиз обновляет этот app с сохранением Finder-алиаса; версионированный ZIP создаётся отдельно. Обязательный контракт выпуска: `docs/RELEASE.md`.
 
 19.09.2026 собрана **0.6.46** для macOS arm64 и Windows x64 одной командой `npm run build`; ZIP находятся в `~/Downloads/WebPilot-0.6.46/`. Scope `chat-layout-regression-034` адаптирует визуальный фильтр скрытых tool calls к message/turn boundary: tool-only корень полностью исключается из layout, а mixed user/assistant message сохраняется. Автопрокрутка по-прежнему получает только `refresh()` и не выводит пользователя из ручного чтения истории. Source commit, обе упаковки и постоянный macOS app сверены; реальный DOM текущего ChatGPT остаётся пользовательской приёмкой после перезапуска 0.6.46. Первый запуск и MCP Permissions сохраняют контракт 0.6.45 без функциональных изменений.
+
+## Эксперимент Codex App Server MCP — scope 035
+
+19.09.2026 реализован отдельный MCP в `tools/codex-app-server-mcp/` без изменений `src/**`, package version и release Web Pilot. Codex App Server используется как локальный executor без `turn/start`; интеграционный тест с намеренно недоступным model endpoint подтвердил ноль модельных запросов. Новый MCP имеет тот же local tool catalog 47/47, Computer Use через `node_repl -> @oai/sky`, отдельный lifecycle/state и loopback endpoint 17852. Production Codex Local Mac и его tunnel 17842/17843 остаются неизменными и готовы к rollback.
+
+Loopback A/B подтвердил полный каталог без cloud duplicates; file/read/git/search/command задержки сопоставимы со старым runtime. Известная граница перед production-решением: experimental `computer_list_windows` использует app-level inventory Sky, тогда как старый MCP возвращает Quartz top-level windows. Пользовательский A/B через второй Secure MCP Tunnel ещё требуется; до него эксперимент не является production Runtime Lifecycle.
 
 ## Подготовка компонентов — актуальное исправление 0.6.37
 

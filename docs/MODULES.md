@@ -9,6 +9,7 @@
 | Workflow Kit / Context Recovery | `docs/modules/workflow-kit-recovery.md` | Канонические планы сессий, lifecycle scope, адресованный recovery capsule, dependency context и continuity |
 | Project Doctor | `docs/modules/project-doctor.md` | Автономная диагностика, резервная копия и безопасное исправление известных проблем открытия проекта |
 | Runtime Lifecycle | `docs/modules/runtime-lifecycle.md` | MCP/tunnel discovery, bootstrap, process identity, persisted endpoints и self-healing startup |
+| Codex App Server Local Executor (experimental) | `docs/modules/codex-app-server-executor.md` | macOS A/B local-only MCP facade поверх Codex App Server: паритет 47 локальных tools, Computer Use, отдельные state/ports/tunnel без замены production runtime |
 | Workspace & Sessions | `docs/modules/workspace-sessions.md` | Проекты, Chat/Work sessions, session tree, experience routing, оформление и сохранение геометрии интерфейса |
 | Release & Local Installation | `docs/RELEASE.md` | Постоянный macOS app, сохранение Finder-алиаса, отдельные ZIP и доставка релиза; стенд чистых ОС, точка передачи проверки установки и диагностика Computer Use/MCP — `docs/CLEAN_INSTALL.md` |
 
@@ -26,6 +27,12 @@
 ## Layout встроенного ChatGPT — scope 034
 
 Workspace & Sessions дополнен planning document [Регрессия layout скрытых tool calls](design/chat-message-layout-regression.md). В 0.6.46 визуальный DOM-adapter разрешает скрывать ближайший message/turn boundary только когда он целиком tool-only; mixed user/assistant message с полезным текстом сохраняется. Существующая автопрокрутка получает `refresh()` без принудительного возобновления follow. Node suite, Electron smoke и парная упаковка macOS arm64 / Windows x64 проверены; реальный DOM ChatGPT подтверждается пользователем после перезапуска новой версии.
+
+## Экспериментальный Codex App Server executor — scope 035
+
+Контракт — [Codex App Server Local Executor](modules/codex-app-server-executor.md). T001–T005 реализованы как отдельный macOS-only runtime, не входящий в release Web Pilot: App Server выполняет direct local operations без модельного `turn/start`, а Computer Use идёт через bundled `node_repl -> @oai/sky`. Каталог нового MCP совпадает со старым Codex Local Mac 47/47 и не содержит публичных/облачных дублей ChatGPT.
+
+Отдельный state использует MCP 17852 и tunnel health 17853; локальный MCP проверен `ready=true`. Production Codex Local Mac 17842/17843 во время реализации оставался `ready=true` и не изменялся. Benchmark и Computer Use evidence находятся в `docs/VERIFICATION.md`. До пользовательского A/B через отдельный Secure MCP Tunnel эксперимент не заменяет Runtime Lifecycle; отдельно отмечена разница app-level Sky inventory против Quartz top-level window inventory старого MCP.
 
 ## Первый запуск на чистой системе — scope 031
 

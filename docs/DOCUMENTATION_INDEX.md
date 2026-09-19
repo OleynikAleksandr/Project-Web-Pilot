@@ -121,3 +121,7 @@ message/turn wrappers без изменения MCP, conversation state или �
 прошли. Обе платформы собраны из source commit `ba9819ab5b241a979afcd543671d2c2fb09252f0`;
 локальные ZIP находятся в `~/Downloads/WebPilot-0.6.46/`. GitHub 0.6.46 не публикуется
 без отдельного поручения пользователя.
+
+## Экспериментальный контракт — Codex App Server executor / scope 035
+
+`docs/modules/codex-app-server-executor.md` описывает отдельный macOS-only local MCP facade поверх Codex App Server. Scope не меняет `src/**`, версию или release Web Pilot и не заменяет production Runtime Lifecycle до пользовательского A/B. Экспериментальный каталог совпадает с Codex Local Mac 47/47, исключает cloud/public duplicates, Computer Use использует `node_repl -> @oai/sky`, а lifecycle хранит отдельные state/ports/tunnel credentials. Проверки и benchmark — `docs/VERIFICATION.md`; production README/PRODUCT/RELEASE/CLEAN_INSTALL/TRANSFER_TO_WINDOWS остаются без изменений, потому что приложение и поставка 0.6.46 этим scope не менялись.
