@@ -410,7 +410,7 @@ class AppServerClient:
             {
                 "cwd": self._absolute(cwd) if cwd else self.cwd,
                 "ephemeral": True,
-                "sandbox": "read-only",
+                # The thread is never used for turn/start. Full local access is required so\n                # bundled Computer Use (node_repl -> @oai/sky) can inspect/control apps.\n                "sandbox": "danger-full-access",
             },
             timeout=max(self.request_timeout, 20.0),
         )

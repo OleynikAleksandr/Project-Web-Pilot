@@ -126,7 +126,7 @@ class LocalFacade:
             cwd=str(cwd) if cwd else self.client.cwd,
             timeout_ms=timeout_ms,
             output_bytes_cap=output_cap,
-            sandbox_policy={"type": "dangerFullAccess"} if write else {"type": "readOnly"},
+            # Fixed internal argv are constrained by this facade; readOnly sandbox on macOS\n            # blocks harmless tool caches (notably /usr/bin/git via xcrun) and adds ~600 ms.\n            sandbox_policy={"type": "dangerFullAccess"},
         )
         return {
             "ok": result.get("exitCode") == 0,
@@ -596,7 +596,7 @@ class LocalFacade:
         record = self._window(window_id)
         app = json.dumps(record["app_id"])
         result = self._sky(
-            f"var s=await sky.get_app_state({{app:{app}}}); if(s.screenshot) await nodeRepl.emitImage(s.screenshot); nodeRepl.write(JSON.stringify({{app:s.app,text:s.text}}));",
+            f"var fs=await import(\"node:fs/promises\"); var u=await import(\"node:url\"); var s=await sky.get_app_state({{app:{app}}}); if(s.screenshot) await nodeRepl.emitImage({{bytes:await fs.readFile(u.fileURLToPath(s.screenshot.url)),mimeType:\"image/png\"}}); nodeRepl.write(JSON.stringify({{app:s.app,text:s.text}}));",
             "Capture local application",
         )
         output: list[Any] = []

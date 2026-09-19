@@ -238,3 +238,45 @@ python3 tools/codex-app-server-mcp/control.py stop
 Control хранит PID + process identity и перед signal повторно сверяет identity. Чужой PID/занятый port не завершается. Readiness MCP проверяется собственным runtime Python, поэтому системный Python не обязан иметь пакет `mcp`.
 
 19.09.2026 реальный `setup` создал отдельный Python 3.13 venv и установил `mcp==1.28.1`; tunnel-client 0.0.14 скопирован как отдельный runtime executable. `start --mcp-only` подтвердил ready=true на 17852. Production Codex Local Mac одновременно сохранил ready=true на 17842 и его tunnel ready=true; его state/credentials не менялись.
+
+
+## T005 — A/B contract и фактический benchmark
+
+Финальный локальный benchmark запускается командой:
+
+```bash
+node scripts/benchmark-codex-app-server-mcp.mjs --iterations 10
+```
+
+19.09.2026 на одном Mac, при одновременно работающих loopback MCP:
+
+| Операция | Codex Local Mac median | Codex App Server MCP median |
+| --- | ---: | ---: |
+| file_info | 2.15 ms | 3.11 ms |
+| read_file | 2.18 ms | 3.01 ms |
+| git_status | 16.85 ms | 16.93 ms |
+| search_text | 11.95 ms | 10.92 ms |
+| run_command_batch | 19.58 ms | 18.68 ms |
+| computer_status | 4.95 ms | 23.80 ms |
+
+Каталог: **47 / 47** одинаковых tool names; missing=0, extra=0, cloud duplicates=0. Ранний вариант давал ~620 ms для `git_status` из-за App Server read-only sandbox/Xcode cache; fixed internal argv переведены на `dangerFullAccess`, после чего Git сравнялся со старым runtime. Это не расширяет внешний tool surface: generic App Server command или `node_repl` наружу не публикуются.
+
+Computer Use: внутренний ephemeral App Server thread использует `sandbox=danger-full-access`, но `turn/start` жёстко запрещён клиентом. Именно этот режим нужен bundled `node_repl -> @oai/sky`: read-only thread позволял `list_apps`, но отклонял `get_app_state`. После исправления внешний `computer_capture_window` успешно получил Finder state и image через канонический Sky screenshot flow `file:// -> bytes -> nodeRepl.emitImage`, без UI action.
+
+Ограничение A/B: `computer_list_windows` в experimental facade сейчас отображает Sky applications как стабильные compatibility IDs, а production Codex Local Mac возвращает реальные Quartz top-level windows. Поэтому tool catalog полностью совпадает, Computer Use функционально работает, но точный window-granularity contract требует пользовательской проверки до решения о production replacement.
+
+### Пользовательское A/B переключение
+
+1. В OpenAI Platform создать **второй** Secure MCP Tunnel, связанный с тем же ChatGPT workspace. Старый tunnel Codex Local Mac не менять.
+2. Для runtime нового tunnel использовать отдельный key с требуемыми Secure MCP Tunnel permissions. Key не передавать в чат.
+3. В Terminal из корня Project Web Pilot выполнить:
+   `python3 tools/codex-app-server-mcp/control.py configure-tunnel`.
+   Ввести новый `tunnel_id`, затем hidden runtime key.
+4. Выполнить `python3 tools/codex-app-server-mcp/control.py start`, затем `python3 tools/codex-app-server-mcp/control.py status`. У нового MCP и tunnel должно быть `ready=true`.
+5. В ChatGPT: основной sidebar → Plugins → `+` → Connection: Tunnel → выбрать новый tunnel → No authentication. Дождаться списка **47 tools**.
+6. Отключить connector **Codex Local Mac** и оставить включённым новый connector. Старый локальный процесс останавливать для A/B не требуется.
+7. Перезапустить Web Pilot или открыть новую Chat/Work-сессию, чтобы гарантированно получить свежий tool catalog.
+8. Выполнить одинаковые локальные задания через старый и новый connector, отдельно проверить Computer Use.
+9. Rollback: отключить новый connector, снова включить Codex Local Mac. При желании остановить experimental runtime командой `python3 tools/codex-app-server-mcp/control.py stop`. Web Pilot не пересобирается.
+
+Решение о замене production MCP принимается только после этого пользовательского A/B.

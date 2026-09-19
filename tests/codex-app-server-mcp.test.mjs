@@ -111,7 +111,7 @@ tool_timeout_sec = 5
   await writeFile(path.join(codexHome, 'config.toml'), config);
 
   const probe = path.join(root, 'probe.py');
-  await writeFile(probe, `import json, os, sys, tempfile
+  await writeFile(probe, `import json, os, sys, tempfile, time
 sys.path.insert(0, ${JSON.stringify(clientDir)})
 from app_server_client import AppServerClient, AppServerError
 
@@ -124,6 +124,11 @@ cmd = c.command_exec(["/bin/echo", "APP_SERVER_DIRECT_OK"], sandbox_policy={"typ
 c.fs_write_file(target, b"hello-from-app-server")
 readback = c.fs_read_file(target).decode("utf-8")
 listing = c.fs_read_directory(root)
+git_init = c.command_exec(["/usr/bin/git", "init", "-q"], cwd=root, sandbox_policy={"type":"dangerFullAccess"}, timeout_ms=5000)
+git_status = c.command_exec(["/usr/bin/git", "status", "--short"], cwd=root, sandbox_policy={"type":"dangerFullAccess"}, timeout_ms=5000)
+process = c.start_command(["/bin/sh", "-c", "printf PROCESS_START; sleep 10; printf PROCESS_END"], cwd=root, sandbox_policy={"type":"dangerFullAccess"})
+chunk = c.read_process_output(process["process_id"], wait_ms=2000)
+stopped = c.stop_process(process["process_id"])
 forbidden = False
 try:
     c.request("turn/start", {})
@@ -145,6 +150,10 @@ print(json.dumps({
     "exitCode": cmd.get("exitCode"),
     "readback": readback,
     "directoryHasData": any((entry.get("fileName") == "data.txt") for entry in listing.get("entries", [])),
+    "gitInit": git_init.get("exitCode"),
+    "gitStatus": git_status.get("exitCode"),
+    "processChunk": chunk.get("stdout"),
+    "processStopped": not stopped.get("running", True),
     "forbidden": forbidden,
     "thread": bool(thread_id),
     "mcpStatus": probe_server.get("runtimeStatus"),
@@ -163,6 +172,10 @@ print(json.dumps({
     assert.match(data.stdout, /APP_SERVER_DIRECT_OK/);
     assert.equal(data.readback, 'hello-from-app-server');
     assert.equal(data.directoryHasData, true);
+    assert.equal(data.gitInit, 0);
+    assert.equal(data.gitStatus, 0);
+    assert.match(data.processChunk, /PROCESS_START/);
+    assert.equal(data.processStopped, true);
     assert.equal(data.forbidden, true);
     assert.equal(data.thread, true);
     assert.equal(data.mcpStatus, 'connected');

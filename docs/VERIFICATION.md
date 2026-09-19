@@ -1753,3 +1753,34 @@ Targeted regression добавил изолированный временный
 - experimental tunnel: ещё не configured, так как отдельные пользовательские tunnel credentials не запрашивались в чате.
 
 До и после установки production Codex Local Mac оставался: MCP ready=true на 17842, tunnel ready=true/configured=true на 17843. Старый runtime не останавливался и не перенастраивался.
+
+
+### T005 — catalog parity, Computer Use и benchmark
+
+Автоматизированные проверки T005 расширены:
+
+- direct App Server client: file I/O, `git init/status`, streaming process output, terminate, restart generation, downstream MCP call;
+- `turn/start` локально запрещён и model endpoint получает 0 requests;
+- lifecycle private state/tunnel profile проверены отдельно;
+- catalog test подтверждает обязательные local tools и отсутствие публичных duplicates;
+- benchmark script сравнивает оба живых loopback MCP одинаковыми arguments;
+- read-only Computer Use проверен через настоящий `node_repl -> @oai/sky`.
+
+Финальный benchmark (10 повторов; Computer Use 5):
+
+| Case | Old median / p95 | New median / p95 |
+| --- | ---: | ---: |
+| file_info | 2.150 / 2.732 ms | 3.111 / 3.420 ms |
+| read_file | 2.184 / 2.508 ms | 3.005 / 3.129 ms |
+| git_status | 16.847 / 18.103 ms | 16.925 / 19.705 ms |
+| search_text | 11.947 / 13.400 ms | 10.916 / 12.004 ms |
+| run_command_batch | 19.575 / 62.733 ms | 18.677 / 20.752 ms |
+| computer_status | 4.945 / 6.667 ms | 23.802 / 34.628 ms |
+
+Catalog comparison: old=47, new=47, missing=0, extra=0, cloud_duplicates=0, local_parity=true.
+
+Computer Use permission probe показал: App Server MCP-thread `read-only` отклоняет `get_app_state(Finder)`, `danger-full-access` успешно возвращает text+screenshot; model turn при этом не запускается. После настройки клиента и исправления image conversion внешний `computer_capture_window` вернул text + image, `isError=false`.
+
+Известная граница: experimental `computer_list_windows` использует app-level inventory Sky вместо Quartz top-level window inventory production MCP. Это не скрывается в критериях A/B и должно быть оценено пользователем до production replacement.
+
+Новый Secure MCP Tunnel не запускался без пользовательских credentials; локальный MCP 17852 остаётся ready для подключения после `configure-tunnel`.

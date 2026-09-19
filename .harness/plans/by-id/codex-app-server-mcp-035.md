@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 15,
+  "plan_revision": 19,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-app-server-mcp-035",
@@ -204,8 +204,8 @@
       "expected_commit_message": "feat: добавить lifecycle экспериментального Codex MCP"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "codex-app-server-mcp-035",
         "task_id": "T005",
@@ -216,7 +216,9 @@
       ],
       "functional_paths": [
         "scripts/benchmark-codex-app-server-mcp.mjs",
-        "tests/codex-app-server-mcp.test.mjs"
+        "tests/codex-app-server-mcp.test.mjs",
+        "tools/codex-app-server-mcp/server.py",
+        "tools/codex-app-server-mcp/app_server_client.py"
       ],
       "documentation_paths": [
         "docs/VERIFICATION.md",
@@ -235,7 +237,8 @@
         "Benchmark одинаковых локальных операций сравнивает старый MCP и новый adapter по времени и объёму ответа; Computer Use оценивается отдельным одинаковым пользовательским сценарием.",
         "Подготовлена короткая процедура пользовательского A/B: зарегистрировать новый connector, отключить старый, выполнить одинаковые задачи и вернуть прежний connector без изменений Web Pilot."
       ],
-      "expected_commit_message": "test: сравнить Codex App Server MCP с Codex Local"
+      "expected_commit_message": "test: сравнить Codex App Server MCP с Codex Local",
+      "file_limit_exception": "T005 одновременно проверяет facade, benchmark и внутренний App Server MCP-thread; app_server_client.py нужен только для подтверждённой настройки Computer Use thread sandbox и не образует отдельный продуктовый scope."
     },
     {
       "implementation_status": "TODO",
@@ -298,7 +301,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: codex-app-server-mcp-035
 Current Task: нет
-Revision: 15
+Revision: 19
 
 ## Цель
 
@@ -331,10 +334,10 @@ Revision: 15
   - Git Commit: [DONE] feat: добавить lifecycle экспериментального Codex MCP
   - Reference: codex-app-server-mcp-035 / T004 / implementation
   - Файлы: tools/codex-app-server-mcp/control.py, tests/codex-app-server-mcp.test.mjs, docs/modules/codex-app-server-executor.md, docs/VERIFICATION.md
-- [TODO] T005: Проверить совместимость и измерить оба пути — Ожидает
-  - Git Commit: [PENDING] test: сравнить Codex App Server MCP с Codex Local
+- [DONE] T005: Проверить совместимость и измерить оба пути — Завершено
+  - Git Commit: [DONE] test: сравнить Codex App Server MCP с Codex Local
   - Reference: codex-app-server-mcp-035 / T005 / implementation
-  - Файлы: scripts/benchmark-codex-app-server-mcp.mjs, tests/codex-app-server-mcp.test.mjs, docs/VERIFICATION.md, docs/modules/codex-app-server-executor.md
+  - Файлы: scripts/benchmark-codex-app-server-mcp.mjs, tests/codex-app-server-mcp.test.mjs, tools/codex-app-server-mcp/server.py, tools/codex-app-server-mcp/app_server_client.py, docs/VERIFICATION.md, docs/modules/codex-app-server-executor.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать документацию Codex App Server MCP
   - Reference: codex-app-server-mcp-035 / DOCS / implementation
