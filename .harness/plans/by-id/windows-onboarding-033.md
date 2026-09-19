@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 29,
+  "plan_revision": 31,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
@@ -471,8 +471,8 @@
       "id": "C002",
       "title": "Показать отдельный шаг API key с явной ссылкой и инструкцией",
       "why": "Показать отдельный шаг API key с явной ссылкой и инструкцией",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "windows-onboarding-033",
         "task_id": "C002",
@@ -641,7 +641,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 29
+Revision: 31
 
 ## Цель
 
@@ -703,8 +703,8 @@ Revision: 29
   - Git Commit: [DONE] fix: Разделить вставку ID и защищённый ввод ключа
   - Reference: windows-onboarding-033 / C001 / implementation
   - Файлы: src/tunnel-clipboard.mjs, src/main.mjs, tests/tunnel-clipboard.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md
-- [TODO] C002: Показать отдельный шаг API key с явной ссылкой и инструкцией — Ожидает
-  - Git Commit: [PENDING] fix: Показать отдельный шаг API key с явной ссылкой и инструкцией
+- [DONE] C002: Показать отдельный шаг API key с явной ссылкой и инструкцией — Завершено
+  - Git Commit: [DONE] fix: Показать отдельный шаг API key с явной ссылкой и инструкцией
   - Reference: windows-onboarding-033 / C002 / implementation
   - Файлы: src/ui/index.html, src/ui/startup.mjs, tests/startup-ui.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md
 - [TODO] C003: Подготовить единый номер версии 0.6.42 — Ожидает

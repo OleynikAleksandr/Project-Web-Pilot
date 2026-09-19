@@ -181,10 +181,25 @@ SOFTWARE.
             <p>Нужно личное защищённое подключение между ChatGPT и этим компьютером. Оно называется туннелем. Для нового компьютера создайте отдельное подключение.</p>
             <p id="startup-tunnel-progress" class="startup-status" role="status"></p>
             <ol class="startup-instructions">
-              <li id="startup-tunnel-create" value="1"><strong>Создайте туннель и скопируйте его ID.</strong><p>На сайте OpenAI Platform войдите в свой аккаунт или завершите регистрацию. В разделе Tunnels создайте туннель и свяжите его со своим пространством ChatGPT.</p><p>Выделите ID, начинающийся с <code>tunnel_</code>, и скопируйте: <strong>Command+C на Mac</strong> или <strong>Ctrl+C в Windows</strong>. Web Pilot сам подставит ID и покажет следующий шаг.</p><button class="secondary" data-startup="tunnels">Открыть Tunnels в OpenAI Platform ↗</button></li>
-              <li id="startup-tunnel-key" value="2" hidden><strong>Создайте личный ключ и скопируйте его.</strong><p>В OpenAI Platform нажмите кнопку создания нового ключа в разделе <strong>API keys</strong>. Используйте ту же организацию, что и для туннеля. Выберите ограниченные права: <strong>Tunnels → Read и Use</strong>. Права на модели не нужны.</p><p>В окне с готовым ключом нажмите кнопку копирования или выделите весь ключ и нажмите <strong>Command+C на Mac</strong> / <strong>Ctrl+C в Windows</strong>. Web Pilot сам получит ключ и проверит подключение. ID уже сохранён для этого шага.</p><details><summary>Не вижу создание ключа</summary><p>Откройте раздел API keys, затем нажмите кнопку создания нового личного ключа.</p><button class="secondary" data-startup="keys">Открыть раздел API keys ↗</button></details></li>
+              <li id="startup-tunnel-create" value="1">
+                <strong>ID туннеля — шаг 1 из 2</strong>
+                <p>На сайте OpenAI Platform войдите в свой аккаунт или завершите регистрацию. В разделе Tunnels создайте туннель и свяжите его со своим пространством ChatGPT.</p>
+                <button class="secondary" data-startup="tunnels">Открыть Tunnels в OpenAI Platform ↗</button>
+                <p>Нажмите <strong>Copy tunnel ID</strong> рядом с созданным туннелем. Можно выделить ID, начинающийся с <code>tunnel_</code>, и скопировать: <strong>Command+C на Mac</strong> или <strong>Ctrl+C в Windows</strong>.</p>
+                <p>Вернитесь в Web Pilot. Он примет ID и откроет шаг API key. Если шаг не переключился, нажмите кнопку ниже.</p>
+                <button class="secondary" data-startup="paste-tunnel-id" data-runtime-action>Вставить ID туннеля</button>
+              </li>
+              <li id="startup-tunnel-key" value="2" hidden>
+                <strong>Личный API key — шаг 2 из 2</strong>
+                <p>ID уже сохранён для этого шага. Теперь создайте секретный ключ OpenAI: он начинается с <code>sk-</code> и разрешает подключение к вашему туннелю.</p>
+                <button class="secondary" data-startup="keys">Открыть API keys в OpenAI Platform ↗</button>
+                <p>На открывшейся странице выберите ту же организацию, что и для туннеля. Нажмите <strong>Create new secret key</strong> («Создать новый секретный ключ»), задайте имя, например <strong>Web Pilot</strong>, выберите проект, если сайт его запрашивает, и подтвердите создание ключа.</p>
+                <p>В появившемся окне нажмите <strong>Copy</strong> и скопируйте <strong>весь секретный ключ sk-…</strong>. Здесь нужен сам ключ, а не его имя или ID туннеля. Если полное значение уже недоступно, создайте новый ключ.</p>
+                <p>Вернитесь в Web Pilot: он получит скопированный ключ и начнёт подключение. Если этого не произошло, нажмите <strong>«Ввести API key»</strong> ниже и вставьте ключ в открывшееся защищённое поле: <strong>Command+V на Mac</strong> / <strong>Ctrl+V в Windows</strong>. Подтвердите ввод. ID туннеля повторно вводить не нужно.</p>
+                <p>Для работы вашему аккаунту нужны права <strong>Tunnels: Read + Use</strong> в организации туннеля. Если доступа нет, их выдаёт владелец организации или администратор.</p>
+              </li>
             </ol>
-            <div id="startup-tunnel-input"><p id="startup-tunnel-input-help" class="settings-help">Web Pilot читает буфер только на этом шаге. Если данные не распознаны, введите их вручную: Command+V на Mac / Ctrl+V в Windows.</p><button class="secondary" data-startup="configure-tunnel" data-runtime-action>Ввести данные подключения вручную</button></div>
+            <div id="startup-tunnel-input" hidden><p id="startup-tunnel-input-help" class="settings-help">Ключ сохраняется в защищённом хранилище этого компьютера. Ввод открывается отдельным системным окном.</p><button class="secondary" data-startup="configure-tunnel" data-runtime-action>Ввести API key</button></div>
             <details><summary>Нет раздела Tunnels или доступа?</summary><p>Проверьте выбранную организацию OpenAI. Для создания нужны права Tunnels Read + Manage, для использования — Read + Use. Доступ к developer mode в ChatGPT проверяется отдельно; в управляемом пространстве его выдаёт администратор.</p><button class="secondary" data-startup="help">Официальная инструкция ↗</button></details>
           </div>
         </section>

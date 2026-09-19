@@ -64,12 +64,12 @@ export function createStartupView({ document, api }) {
     $('startup-tunnel-create').hidden = tunnelStep !== 'tunnel';
     $('startup-tunnel-key').hidden = tunnelStep !== 'key';
     $('startup-tunnel-progress').textContent = {
-      tunnel: 'Скопируйте tunnel_id — следующий шаг откроется автоматически.',
-      key: 'Идентификатор получен. Теперь нужен личный ключ.',
+      tunnel: 'Сначала — ID туннеля. Затем — отдельный API key.',
+      key: 'ID туннеля получен. Шаг 2 из 2: создайте API key.',
       connecting: 'Данные получены. Проверяем подключение…',
       done: 'Подключение проверено.',
     }[tunnelStep] ?? '';
-    $('startup-tunnel-input-help').hidden = tunnelStep === 'connecting';
+    $('startup-tunnel-input').hidden = tunnelStep !== 'key';
     $('startup-project-body').hidden = !logged || !ready;
     $('startup-project-wait').hidden = logged && ready;
     $('startup-error').hidden = !(localError || s.error || s.clipboard?.error);
@@ -78,8 +78,9 @@ export function createStartupView({ document, api }) {
       const action = button.dataset.startup;
       button.disabled = ((opening || pending) && ['chat', 'signup', 'plugins'].includes(action))
         || (pending && !INDEPENDENT.has(action))
-        || (s.busy && ['check', 'install-git', 'configure-tunnel', 'continue'].includes(action))
-        || (action === 'configure-tunnel' && tunnelStep === 'connecting')
+        || (s.busy && ['check', 'install-git', 'paste-tunnel-id', 'configure-tunnel', 'continue'].includes(action))
+        || (action === 'configure-tunnel' && (tunnelStep !== 'key' || !s.clipboard?.hasTunnelId))
+        || (action === 'paste-tunnel-id' && tunnelStep !== 'tunnel')
         || (action === 'install-git' && (windows || !!s.git || waitingApple));
     }
     $('startup-continue').disabled ||= !logged || !ready;

@@ -57,8 +57,8 @@ test('tunnel instructions include account access and never ask for a key in the 
   assert.match(f.document.querySelector('#startup-tunnel-body').textContent, /завершите регистрацию/);
   assert.match(f.document.querySelector('#startup-tunnel-body').textContent, /Read.*Manage/);
   assert.equal(f.document.querySelectorAll('#startup-panel input').length, 0);
-  f.document.querySelector('[data-startup=configure-tunnel]').click(); await f.settle();
-  assert.deepEqual(f.calls, ['configure-tunnel']);
+  f.document.querySelector('[data-startup=paste-tunnel-id]').click(); await f.settle();
+  assert.deepEqual(f.calls, ['paste-tunnel-id']);
 });
 test('only confirmed login and local readiness expose the first project; transition preserves setup', async t => {
   const f = await fixture(t, { account: 'unknown', git: true, runtime: true, tunnel: true });
@@ -240,4 +240,33 @@ test('Windows connection guidance is visible after tunnel startup and never clai
   assert.equal(f.document.querySelector('#startup-panel').hidden, true);
   f.render({ platform: 'darwin', startup: null });
   assert.equal(f.document.querySelector('#host-platform-label').textContent, 'На вашем Mac');
+});
+
+for (const platform of ['darwin', 'win32']) test(`${platform}: ID and API key have separate actions and a visible key-page button`, async t => {
+  const f = await fixture(t, { platform, account: 'signed-in', git: true, runtime: true });
+  const byId = id => f.document.getElementById(id);
+  const keyPage = f.document.querySelector('[data-startup=keys]');
+  const paste = f.document.querySelector('[data-startup=paste-tunnel-id]');
+  const manual = f.document.querySelector('[data-startup=configure-tunnel]');
+  assert.equal(byId('startup-tunnel-input').hidden, true);
+  assert.equal(manual.disabled, true);
+  manual.click(); await f.settle(); assert.deepEqual(f.calls, []);
+  paste.click(); await f.settle(); assert.deepEqual(f.calls, ['paste-tunnel-id']);
+  f.emit({ clipboard: { step: 'key', hasTunnelId: true } });
+  assert.equal(byId('startup-tunnel-create').hidden, true);
+  assert.equal(byId('startup-tunnel-key').hidden, false);
+  assert.equal(byId('startup-tunnel-input').hidden, false);
+  assert.equal(paste.disabled, true);
+  assert.equal(keyPage.closest('details'), null, 'key page must not be hidden in a disclosure');
+  assert.equal(keyPage.closest('li'), byId('startup-tunnel-key'));
+  assert.match(byId('startup-tunnel-key').textContent, /Create new secret key/);
+  assert.match(byId('startup-tunnel-key').textContent, /весь секретный ключ sk-/);
+  assert.match(byId('startup-tunnel-key').textContent, /Ввести API key.*Command\+V.*Ctrl\+V/s);
+  keyPage.click(); await f.settle();
+  manual.click(); await f.settle();
+  assert.deepEqual(f.calls, ['paste-tunnel-id', 'keys', 'configure-tunnel']);
+  f.emit({ busy: true, clipboard: { step: 'connecting', hasTunnelId: true } });
+  assert.equal(byId('startup-tunnel-input').hidden, true); assert.equal(manual.disabled, true);
+  f.emit({ busy: false, clipboard: { step: 'key', hasTunnelId: true, error: 'Повторите ввод.' } });
+  assert.equal(keyPage.closest('li').hidden, false); assert.equal(manual.disabled, false);
 });
