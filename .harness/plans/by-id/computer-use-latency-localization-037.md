@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 3,
+  "plan_revision": 4,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "computer-use-latency-localization-037",
@@ -249,8 +249,9 @@
       "recorded_at": "2026-09-19T17:18:32.590Z"
     }
   ],
-  "owner_session_id": null,
-  "prepared_in_session_id": "web-pilot-67675492-8406-46a8-89bc-0f8c21fdb300"
+  "owner_session_id": "web-pilot-c638c8e7-37a3-4e58-b5d7-a4c92206dfb0",
+  "prepared_in_session_id": "web-pilot-67675492-8406-46a8-89bc-0f8c21fdb300",
+  "session_experience": "work"
 }
 ```
 <!-- workflow-state:end -->
@@ -261,7 +262,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: computer-use-latency-localization-037
 Current Task: нет
-Revision: 3
+Revision: 4
 
 ## Цель
 
