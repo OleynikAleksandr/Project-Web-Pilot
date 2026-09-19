@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 10,
+  "plan_revision": 11,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "computer-use-latency-localization-037",
@@ -173,6 +173,33 @@
       }
     },
     {
+      "id": "T007",
+      "title": "Исправить среду и критерий сопоставимости файлового теста",
+      "why": "Пользователь уточнил ChatGPT Work Desktop и потребовал стандартные native write/read вместо exec_command/shell.",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "computer-use-latency-localization-037",
+        "task_id": "T007",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "T006"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/design/computer-use-latency-investigation.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [],
+      "acceptance_criteria": [
+        "Среда уточнена как ChatGPT Work Desktop по прямому сообщению пользователя; ошибочная атрибуция Codex Desktop в отчёте отмечена.",
+        "Shell-замеры сохранены как отдельный контроль и не выдаются за нужное сравнение native write/read.",
+        "В задании явно требуются стандартные встроенные write/read без MCP и exec_command; при отсутствии инструментов запрещена молчаливая подмена."
+      ],
+      "expected_commit_message": "docs: уточнить среду и методику native write read теста"
+    },
+    {
       "id": "T002",
       "title": "Добавить opt-in segment tracing в App Server MCP",
       "why": "Разделить время local server orchestration и фактического Computer Use/Sky исполнения, не меняя обычное production поведение.",
@@ -269,6 +296,7 @@
         "T005",
         "T006",
         "T001",
+        "T007",
         "T002",
         "T003",
         "T004"
@@ -302,7 +330,8 @@
       "text": "Пользователь прямо поручил подготовить следующий план исследования задержек Compute Use, Secure MCP Tunnel и Web ChatGPT на основе проведённых сравнительных тестов.",
       "recorded_at": "2026-09-19T17:18:32.590Z"
     },
-    "19.09.2026: сначала выполнить простой тест записи/чтения через Web MCP и подготовить идентичное задание локальному ChatGPT; дальнейшее сравнение после получения результата пользователя."
+    "19.09.2026: сначала выполнить простой тест записи/чтения через Web MCP и подготовить идентичное задание локальному ChatGPT; дальнейшее сравнение после получения результата пользователя.",
+    "Пользователь уточнил: локальное приложение — ChatGPT Work Desktop. Для сравнения нужны стандартные native write/read без MCP, а не exec_command/shell."
   ],
   "owner_session_id": "web-pilot-c638c8e7-37a3-4e58-b5d7-a4c92206dfb0",
   "prepared_in_session_id": "web-pilot-67675492-8406-46a8-89bc-0f8c21fdb300",
@@ -317,7 +346,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: computer-use-latency-localization-037
 Current Task: нет
-Revision: 10
+Revision: 11
 
 ## Цель
 
@@ -344,6 +373,10 @@ Revision: 10
   - Git Commit: [PENDING] test: добавить direct loopback latency benchmark
   - Reference: computer-use-latency-localization-037 / T001 / implementation
   - Файлы: scripts/benchmark-mcp-latency.mjs, docs/design/computer-use-latency-investigation.md, docs/VERIFICATION.md
+- [TODO] T007: Исправить среду и критерий сопоставимости файлового теста — Ожидает
+  - Git Commit: [PENDING] docs: уточнить среду и методику native write read теста
+  - Reference: computer-use-latency-localization-037 / T007 / implementation
+  - Файлы: docs/design/computer-use-latency-investigation.md, docs/VERIFICATION.md
 - [TODO] T002: Добавить opt-in segment tracing в App Server MCP — Ожидает
   - Git Commit: [PENDING] test: добавить безопасный latency trace MCP
   - Reference: computer-use-latency-localization-037 / T002 / implementation
