@@ -1164,3 +1164,6 @@ TunnelClipboard добавляет явную вставку ID и отдель�
 находится вне details, paste-tunnel-id — только в первом подшаге, configure-tunnel
 доступен только во втором при hasTunnelId. При connecting ручной ввод скрыт.
 Обе платформы используют одинаковые инструкции и существующие системные диалоги.
+
+0.6.42 / C003: package.json, lock и оба packager app-version синхронизированы на
+0.6.42. Единый publisher собирает ту же реализацию мастера для macOS и Windows.

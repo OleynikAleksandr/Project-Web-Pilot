@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 32,
+  "plan_revision": 34,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
@@ -504,8 +504,8 @@
       "id": "C003",
       "title": "Подготовить единый номер версии 0.6.42",
       "why": "Подготовить единый номер версии 0.6.42",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "windows-onboarding-033",
         "task_id": "C003",
@@ -641,7 +641,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 32
+Revision: 34
 
 ## Цель
 
@@ -707,8 +707,8 @@ Revision: 32
   - Git Commit: [DONE] fix: Показать отдельный шаг API key с явной ссылкой и инструкцией
   - Reference: windows-onboarding-033 / C002 / implementation
   - Файлы: src/ui/index.html, src/ui/startup.mjs, tests/startup-ui.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md
-- [TODO] C003: Подготовить единый номер версии 0.6.42 — Ожидает
-  - Git Commit: [PENDING] fix: Подготовить единый номер версии 0.6.42
+- [DONE] C003: Подготовить единый номер версии 0.6.42 — Завершено
+  - Git Commit: [DONE] fix: Подготовить единый номер версии 0.6.42
   - Reference: windows-onboarding-033 / C003 / implementation
   - Файлы: package.json, package-lock.json, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md, docs/RELEASE.md
 - [TODO] C004: Собрать и сверить парный выпуск 0.6.42 — Ожидает

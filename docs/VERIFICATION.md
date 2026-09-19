@@ -1550,3 +1550,8 @@ platform darwin и win32: кнопка API keys вне details, инструкц
 key/полный sk-/Command+V/Ctrl+V, разные действия ID и ключа, запрет преждевременного
 ввода, блокировка во время подключения и восстановление инструкции после ошибки.
 Назначены общий suite и Electron TEST FIXTURE smoke; native Windows не запускается.
+
+0.6.42 / C002: назначенные suite и Electron smoke завершились PASS в workflow
+commit 0e5a9966e3d21f9cbd2bcb02d7d06c75a93668ab. Снимок startup-tunnel-key.png
+из Electron TEST FIXTURE подтверждает видимость ссылки API keys после ID.
+0.6.42 / C003: корневая и lock-версия, оба packager app-version равны 0.6.42.
