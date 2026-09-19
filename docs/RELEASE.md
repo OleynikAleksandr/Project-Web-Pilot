@@ -335,3 +335,26 @@ GitHub: [v0.6.44](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases
 обычный push main, тег v0.6.44 и оба ZIP с сопроводительными файлами. Тег указывает
 на финальный DOCS commit; отличие от source build commit — только документы и
 план. Публикация выполняется после DOCS, затем проверяются main, tag и assets.
+
+## Парный выпуск 0.6.45 — 19.09.2026
+
+В общем мастере Mac/Windows добавлен видимый блок режимов Permissions. Отдельный
+шаг создания MCP в ChatGPT присутствует на обеих платформах, включая новый Mac.
+
+- Project-Web-Pilot-0.6.45-macOS-arm64.zip: 181063158 bytes; SHA-256 `445dd534e7f3c57af0d5c8c2f5dd79afe80c671d9b67aa741e644cb479ef1fdd`.
+- Project-Web-Pilot-0.6.45-Windows-x64.zip: 316335461 bytes; SHA-256 `2cea4843ecf24e5154ea27c05326ec0eadfd286f995ca66ee6392949117bfb1e`.
+
+Source build commit: `3f77599e5281b60e0e34fbb104785e83bebf52f5`. Все 74 файла snapshot
+сверены с обоими пакетами и установленным Mac app. Проверены ZIP integrity, ASAR
+и копии в ~/Downloads/WebPilot-0.6.45/. Постоянный Mac app имеет версию 0.6.45;
+device 16777232 / inode 398344301 сохранены. Evidence:
+.harness/runtime/releases/0.6.45/release-manifest.json.
+
+Пользователь считает план завершённым. Скриншот 09.53.24 показывает Windows MCP
+в настройках аккаунта. Проверки сборки не подменяют отдельное испытание записи
+файла в Windows; агент VM не запускал и Computer Use не использовал.
+
+Публикация: [v0.6.45](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.45).
+По прямому поручению пользователя main, тег и оба ZIP публикуются после DOCS.
+Тег указывает на финальный DOCS commit; отличие от source build commit — только
+документы и план. После загрузки проверяются серверные SHA-256 и набор assets.

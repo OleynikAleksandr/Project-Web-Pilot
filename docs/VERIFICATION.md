@@ -1646,3 +1646,32 @@ release-manifest.json находятся в ~/Downloads/WebPilot-0.6.44/. Лок
 Пользователь выполняет Windows-проверку сам. В прежнем тестовом чате был доступен
 только Mac-коннектор; отдельное подключение Windows не было создано. Работа
 Windows-туннеля и запись файла не объявляются подтверждёнными по упаковке.
+
+## Автоматическая проверка 0.6.45
+
+- syntax: PASSED, 21 ms.
+- suite: PASSED, 51035 ms.
+- electron-smoke: PASSED, 89376 ms.
+
+Suite: 317 tests, 315 passed, 0 failed, 2 native-Windows skipped. Electron smoke
+прошёл на изолированном Mac fixture. Evidence: .harness/runtime/033-checks-045.json.
+Новых тестов для статического пояснения не добавляли; существующие проверки
+порядка шагов, Mac/Windows имен, видимости основной инструкции и workflow прошли.
+
+## Парный выпуск 0.6.45 — 19.09.2026
+
+В общем мастере Mac/Windows добавлен видимый блок режимов Permissions. Отдельный
+шаг создания MCP в ChatGPT присутствует на обеих платформах, включая новый Mac.
+
+- Project-Web-Pilot-0.6.45-macOS-arm64.zip: 181063158 bytes; SHA-256 `445dd534e7f3c57af0d5c8c2f5dd79afe80c671d9b67aa741e644cb479ef1fdd`.
+- Project-Web-Pilot-0.6.45-Windows-x64.zip: 316335461 bytes; SHA-256 `2cea4843ecf24e5154ea27c05326ec0eadfd286f995ca66ee6392949117bfb1e`.
+
+Source build commit: `3f77599e5281b60e0e34fbb104785e83bebf52f5`. Все 74 файла snapshot
+сверены с обоими пакетами и установленным Mac app. Проверены ZIP integrity, ASAR
+и копии в ~/Downloads/WebPilot-0.6.45/. Постоянный Mac app имеет версию 0.6.45;
+device 16777232 / inode 398344301 сохранены. Evidence:
+.harness/runtime/releases/0.6.45/release-manifest.json.
+
+Пользователь считает план завершённым. Скриншот 09.53.24 показывает Windows MCP
+в настройках аккаунта. Проверки сборки не подменяют отдельное испытание записи
+файла в Windows; агент VM не запускал и Computer Use не использовал.

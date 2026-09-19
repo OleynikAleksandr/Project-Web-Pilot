@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 77,
+  "plan_revision": 79,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
@@ -1006,8 +1006,8 @@
       "id": "G002",
       "title": "Собрать и сверить парную поставку инструкции 0.6.45",
       "why": "Собрать и сверить парную поставку инструкции 0.6.45",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "windows-onboarding-033",
         "task_id": "G002",
@@ -1149,7 +1149,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 77
+Revision: 79
 
 ## Цель
 
@@ -1287,8 +1287,8 @@ Revision: 77
   - Git Commit: [DONE] feat: Объяснить разрешения MCP в общем мастере 0.6.45
   - Reference: windows-onboarding-033 / G001 / implementation
   - Файлы: src/ui/index.html, package.json, package-lock.json, docs/architecture/ARCHITECTURE.md, docs/modules/first-run-onboarding.md, docs/DECISIONS.md
-- [TODO] G002: Собрать и сверить парную поставку инструкции 0.6.45 — Ожидает
-  - Git Commit: [PENDING] docs: Собрать и сверить парную поставку инструкции 0.6.45
+- [DONE] G002: Собрать и сверить парную поставку инструкции 0.6.45 — Завершено
+  - Git Commit: [DONE] docs: Собрать и сверить парную поставку инструкции 0.6.45
   - Reference: windows-onboarding-033 / G002 / implementation
   - Файлы: docs/RELEASE.md, docs/VERIFICATION.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
