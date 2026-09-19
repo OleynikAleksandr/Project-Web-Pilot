@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 13,
+  "plan_revision": 14,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "computer-use-latency-localization-037",
@@ -289,6 +289,35 @@
       }
     },
     {
+      "id": "T008",
+      "title": "Сопоставить повторный Desktop MCP тест с Web MCP и shell-контролем",
+      "why": "Пользователь передал 15 пар вызовов тех же MCP write_file/read_file из ChatGPT Work Desktop.",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "computer-use-latency-localization-037",
+        "task_id": "T008",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "T005",
+        "T006",
+        "T007"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/design/computer-use-latency-investigation.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [],
+      "acceptance_criteria": [
+        "Сохранены пользовательские raw samples, прогрев, точные имена MCP tools и явное отсутствие проверки внутреннего транспорта.",
+        "Из raw samples проверена статистика и сравнены Web MCP, Work Desktop MCP и отдельный shell-контроль.",
+        "Близость Web/Desktop MCP результатов отделена от недоказанной атрибуции туннелю; следующим измерением остаётся прямой вызов тех же MCP tools на Mac."
+      ],
+      "expected_commit_message": "docs: сравнить Web и Work Desktop через один MCP connector"
+    },
+    {
       "id": "DOCS",
       "title": "Актуализация всех документов проекта",
       "why": "Проверить весь действующий комплект документации по docs/DOCUMENTATION_INDEX.md и обновить только устаревшие сведения после выполнения scope.",
@@ -299,7 +328,8 @@
         "T007",
         "T002",
         "T003",
-        "T004"
+        "T004",
+        "T008"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -346,7 +376,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: computer-use-latency-localization-037
 Current Task: нет
-Revision: 13
+Revision: 14
 
 ## Цель
 
@@ -389,6 +419,10 @@ Revision: 13
   - Git Commit: [PENDING] docs: локализовать bottleneck Computer Use
   - Reference: computer-use-latency-localization-037 / T004 / implementation
   - Файлы: docs/design/computer-use-latency-investigation.md, docs/modules/runtime-lifecycle.md, docs/VERIFICATION.md
+- [TODO] T008: Сопоставить повторный Desktop MCP тест с Web MCP и shell-контролем — Ожидает
+  - Git Commit: [PENDING] docs: сравнить Web и Work Desktop через один MCP connector
+  - Reference: computer-use-latency-localization-037 / T008 / implementation
+  - Файлы: docs/design/computer-use-latency-investigation.md, docs/VERIFICATION.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать документацию проекта
   - Reference: computer-use-latency-localization-037 / DOCS / implementation
