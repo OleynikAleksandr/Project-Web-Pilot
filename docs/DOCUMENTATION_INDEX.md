@@ -33,6 +33,7 @@
 | docs/modules/project-doctor.md | Контракт автономного Доктора проекта и границы автоматического ремонта |
 | docs/modules/runtime-lifecycle.md | Specification self-healing MCP/tunnel lifecycle |
 | docs/modules/workspace-sessions.md | Specification проектов, Chat/Work sessions, session tree, переходов после scope, оформления и сохранения геометрии интерфейса |
+| docs/design/chat-message-layout-regression.md | Planning исправления пустого layout скрытых tool-call message/turn wrappers и regression coverage |
 | docs/SOURCE_WORKSPACES.md | Исходные проекты, пути, версии и официальные ссылки |
 | docs/VERIFICATION.md | Проверки, release evidence и границы пользовательской приёмки |
 | docs/RELEASE.md | Парный выпуск macOS/Windows, постоянный macOS app, Finder-алиас, ZIP, GitHub Release и проверка доставки |

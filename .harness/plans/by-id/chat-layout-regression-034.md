@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 3,
+  "plan_revision": 6,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "chat-layout-regression-034",
@@ -98,8 +98,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "chat-layout-regression-034",
         "task_id": "T001",
@@ -108,7 +108,8 @@
       "dependencies": [],
       "functional_paths": [],
       "documentation_paths": [
-        "docs/design/chat-message-layout-regression.md"
+        "docs/design/chat-message-layout-regression.md",
+        "docs/DOCUMENTATION_INDEX.md"
       ],
       "verification_ids": [],
       "id": "T001",
@@ -259,7 +260,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: chat-layout-regression-034
 Current Task: нет
-Revision: 3
+Revision: 6
 
 ## Цель
 
@@ -276,10 +277,10 @@ Revision: 3
 
 ## Микрозадачи
 
-- [TODO] T001: Зафиксировать причину регрессии и план исправления — Ожидает
-  - Git Commit: [PENDING] docs: спланировать исправление layout скрытых tool calls
+- [DONE] T001: Зафиксировать причину регрессии и план исправления — Завершено
+  - Git Commit: [DONE] docs: спланировать исправление layout скрытых tool calls
   - Reference: chat-layout-regression-034 / T001 / implementation
-  - Файлы: docs/design/chat-message-layout-regression.md
+  - Файлы: docs/design/chat-message-layout-regression.md, docs/DOCUMENTATION_INDEX.md
 - [TODO] T002: Убрать footprint tool-only message wrappers — Ожидает
   - Git Commit: [PENDING] fix(chat): убрать пустоту tool-only message wrappers
   - Reference: chat-layout-regression-034 / T002 / implementation
