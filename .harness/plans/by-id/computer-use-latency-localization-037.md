@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 17,
+  "plan_revision": 19,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "computer-use-latency-localization-037",
@@ -322,8 +322,8 @@
       "id": "T009",
       "title": "Измерить метрики туннеля на 15 чтениях и сопоставить с direct loopback",
       "why": "Пользователь поручил предложенный тест метрик туннеля и просит остановиться после него перед следующей собственной идеей.",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "computer-use-latency-localization-037",
         "task_id": "T009",
@@ -407,7 +407,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: computer-use-latency-localization-037
 Current Task: нет
-Revision: 17
+Revision: 19
 
 ## Цель
 
@@ -454,8 +454,8 @@ Revision: 17
   - Git Commit: [DONE] docs: сравнить Web и Work Desktop через один MCP connector
   - Reference: computer-use-latency-localization-037 / T008 / implementation
   - Файлы: docs/design/computer-use-latency-investigation.md, docs/VERIFICATION.md
-- [TODO] T009: Измерить метрики туннеля на 15 чтениях и сопоставить с direct loopback — Ожидает
-  - Git Commit: [PENDING] docs: измерить tunnel metrics и direct MCP чтение
+- [DONE] T009: Измерить метрики туннеля на 15 чтениях и сопоставить с direct loopback — Завершено
+  - Git Commit: [DONE] docs: измерить tunnel metrics и direct MCP чтение
   - Reference: computer-use-latency-localization-037 / T009 / implementation
   - Файлы: docs/design/computer-use-latency-investigation.md, docs/VERIFICATION.md, docs/evidence/mcp-tunnel-read-20260919.json
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
