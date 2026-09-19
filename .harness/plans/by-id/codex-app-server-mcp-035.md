@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 6,
+  "plan_revision": 7,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-app-server-mcp-035",
@@ -121,7 +121,8 @@
         "tests/codex-app-server-mcp.test.mjs"
       ],
       "documentation_paths": [
-        "docs/modules/codex-app-server-executor.md"
+        "docs/modules/codex-app-server-executor.md",
+        "docs/DOCUMENTATION_INDEX.md"
       ],
       "verification_ids": [
         "suite"
@@ -295,7 +296,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: codex-app-server-mcp-035
 Current Task: нет
-Revision: 6
+Revision: 7
 
 ## Цель
 
@@ -319,7 +320,7 @@ Revision: 6
 - [TODO] T002: Реализовать клиент Codex App Server — Ожидает
   - Git Commit: [PENDING] feat: добавить клиент Codex App Server
   - Reference: codex-app-server-mcp-035 / T002 / implementation
-  - Файлы: tools/codex-app-server-mcp/app_server_client.py, tests/codex-app-server-mcp.test.mjs, docs/modules/codex-app-server-executor.md
+  - Файлы: tools/codex-app-server-mcp/app_server_client.py, tests/codex-app-server-mcp.test.mjs, docs/modules/codex-app-server-executor.md, docs/DOCUMENTATION_INDEX.md
 - [TODO] T003: Реализовать ChatGPT-facing MCP facade — Ожидает
   - Git Commit: [PENDING] feat: добавить MCP facade поверх Codex App Server
   - Reference: codex-app-server-mcp-035 / T003 / implementation
