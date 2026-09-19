@@ -1188,3 +1188,8 @@ pasteTunnelId открывает диалог без чтения буфера �
 
 0.6.43 / D005: общая версия, lock и оба packager app-version синхронизированы.
 Оба ZIP включают обновлённые native workers, runtime facade и общий мастер.
+
+0.6.44 / E001: Workspace Setup удаляет gitName/gitEmail из apply и worker input,
+gitIdentityReady из public preview. При install localHistoryDefaults выбирает
+готовую Git-подпись либо восполняет только отсутствующие имя/email локальной
+служебной записью. Vendored Workflow Kit и его общий CLI не изменены.

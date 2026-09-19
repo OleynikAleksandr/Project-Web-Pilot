@@ -379,3 +379,41 @@ test('workspace worker receives prepared Git environment before its first inspec
   setup.prepareEnvironment = async () => { throw Object.assign(new Error('not ready'), { code: 'WINDOWS_GIT_INCOMPLETE' }); };
   await assert.rejects(setup.call({ action: 'apply' }), { code: 'WINDOWS_GIT_INCOMPLETE' });
 });
+
+async function anonymousEnvironment(t) {
+  const { parent } = await fixture(t);
+  const config = path.join(parent, 'gitconfig');
+  await fs.writeFile(config, '[user]\n\tuseConfigOnly = true\n');
+  const env = { ...environment, GIT_CONFIG_GLOBAL: config, GIT_CONFIG_NOSYSTEM: '1' };
+  for (const key of ['GIT_AUTHOR_NAME', 'GIT_AUTHOR_EMAIL', 'GIT_COMMITTER_NAME', 'GIT_COMMITTER_EMAIL', 'EMAIL']) delete env[key];
+  return { parent, config, env, setup: new WorkspaceSetup({ environment: env }) };
+}
+test('a clean machine creates committed local history without personal attributes or global Git changes', async t => {
+  const f = await anonymousEnvironment(t), original = await fs.readFile(f.config, 'utf8');
+  const preview = await f.setup.preview({ mode: 'new', parent: f.parent, name: 'Без личных данных' });
+  assert.equal(Object.hasOwn(preview, 'gitIdentityReady'), false);
+  const result = await f.setup.apply(preview.token);
+  assert.equal(result.ready, true, JSON.stringify(result));
+  const local = (...args) => execFileSync('git', args, { cwd: result.workspace, env: f.env, encoding: 'utf8' }).trim();
+  assert.equal(local('config', '--local', 'user.name'), 'Web Pilot');
+  assert.equal(local('config', '--local', 'user.email'), 'web-pilot@localhost');
+  assert.equal(local('log', '-1', '--format=%an <%ae>'), 'Web Pilot <web-pilot@localhost>');
+  assert.equal(await fs.readFile(f.config, 'utf8'), original);
+  assert.equal(JSON.stringify(result).includes('web-pilot@localhost'), false);
+  const reloaded = new WorkspaceSetup({ environment: f.env });
+  assert.equal((await reloaded.ready(result.workspace)).ready, true);
+});
+test('existing complete Git identity is preserved and partial identity gets only the missing value', async t => {
+  const f = await anonymousEnvironment(t);
+  for (const complete of [true, false]) {
+    const workspace = path.join(f.parent, complete ? 'configured' : 'partial');
+    await fs.mkdir(workspace);
+    const local = (...args) => execFileSync('git', args, { cwd: workspace, env: f.env, encoding: 'utf8' }).trim();
+    local('init', '-b', 'main'); local('config', '--local', 'user.name', 'Existing User');
+    if (complete) local('config', '--local', 'user.email', 'existing@example.invalid');
+    const preview = await f.setup.preview({ mode: 'existing', workspace });
+    assert.equal((await f.setup.apply(preview.token)).ready, true);
+    assert.equal(local('config', '--local', 'user.name'), 'Existing User');
+    assert.equal(local('config', '--local', 'user.email'), complete ? 'existing@example.invalid' : 'web-pilot@localhost');
+  }
+});

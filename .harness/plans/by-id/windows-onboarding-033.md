@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 55,
+  "plan_revision": 57,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
@@ -756,8 +756,8 @@
       "id": "E001",
       "title": "Убрать атрибуты автора из подготовки проекта и настроить служебную историю",
       "why": "Убрать атрибуты автора из подготовки проекта и настроить служебную историю",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "windows-onboarding-033",
         "task_id": "E001",
@@ -1036,7 +1036,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 55
+Revision: 57
 
 ## Цель
 
@@ -1139,8 +1139,8 @@ Revision: 55
   - Git Commit: [DONE] fix: Выпустить и сверить оба архива 0.6.43
   - Reference: windows-onboarding-033 / D006 / implementation
   - Файлы: docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md, docs/RELEASE.md
-- [TODO] E001: Убрать атрибуты автора из подготовки проекта и настроить служебную историю — Ожидает
-  - Git Commit: [PENDING] feat: Убрать атрибуты автора из подготовки проекта и настроить служебную историю
+- [DONE] E001: Убрать атрибуты автора из подготовки проекта и настроить служебную историю — Завершено
+  - Git Commit: [DONE] feat: Убрать атрибуты автора из подготовки проекта и настроить служебную историю
   - Reference: windows-onboarding-033 / E001 / implementation
   - Файлы: src/workspace-setup.mjs, resources/workspace-setup-worker.mjs, tests/workspace-setup.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/WORKSPACE_SETUP.md
 - [TODO] E002: Убрать имя и email из IPC создания проекта — Ожидает

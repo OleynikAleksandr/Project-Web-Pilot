@@ -5,7 +5,7 @@ import { inspectionInputs } from './workflow-kit/lib/inspection-inputs.mjs';
 import { check, hash, json, MANIFEST, VERSION, errorResult } from './workflow-kit/lib/common.mjs';
 import { hooksDirectory, BLOCK_START, BLOCK_END } from './workflow-kit/lib/installation-files.mjs';
 import { listPlans } from './workflow-kit/lib/session-plans.mjs';
-import { run } from './workflow-kit/lib/git.mjs';
+import { run, git, identityReady } from './workflow-kit/lib/git.mjs';
 
 const supported = new Set(['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.4.0', VERSION]);
 function options(input) {
@@ -14,12 +14,20 @@ function options(input) {
   check(typeof input.project === 'string' && path.isAbsolute(input.project) && !/[\r\n\0]/.test(input.project), 'PROJECT_PATH', 'Нужен полный путь к папке проекта.');
   return { project: input.project, mode: input.mode, name: input.name };
 }
+function localHistoryDefaults(workspace) {
+  const cwd = fs.existsSync(workspace) ? workspace : path.dirname(workspace);
+  if (identityReady(cwd)) return {};
+  const configured = key => git(cwd, ['config', '--get', key], { allowFailure: true }).stdout.trim();
+  // Git requires a signature; personal project attributes are not collected by the app.
+  return { 'git-name': configured('user.name') || 'Web Pilot',
+    'git-email': configured('user.email') || 'web-pilot@localhost' };
+}
 function inspectProject(opts) {
   const inspection = inspectWithDiagnostics(opts);
   const p = inspection.preview;
   const result = { workspace: p.project_path, name: p.project_name, version: p.version, installed: p.installed,
     ready: false, action: null, issues: [...p.conflicts], checks: [], files: p.files,
-    gitIdentityReady: p.git_identity_ready, initializeGit: p.initialize_git,
+    initializeGit: p.initialize_git,
     existingChanges: p.existing_changes ?? [], warnings: [], fingerprint: p.preview_fingerprint };
   if (!p.installed) {
     result.action = p.can_install ? 'install' : null;
@@ -111,7 +119,7 @@ try {
     check(result.action, 'SETUP_BLOCKED', 'Сначала устраните показанные проблемы. Файлы сохранены.');
     if (['install', 'reconnect', 'upgrade'].includes(result.action)) {
       const installed = install({ ...opts, ...(result.action === 'upgrade' ? { update: true } : {}), 'expected-fingerprint': input.fingerprint,
-        ...(input.gitName || input.gitEmail ? { 'git-name': input.gitName, 'git-email': input.gitEmail } : {}) });
+        ...(result.action === 'install' ? localHistoryDefaults(result.workspace) : {}) });
       result = inspectProject({ project: installed.project_path, mode: 'existing' });
     }
   }

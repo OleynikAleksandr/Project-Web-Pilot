@@ -1583,3 +1583,9 @@ syntax PASS в commit a63623e61f0510540eaeae33db3557a13b867d46. Evidence сох�
 в .harness/runtime/033-checks-043.json. Версии пакетов и lock подняты совместно.
 
 0.6.43 / D006: npm run build PASS; оба ZIP в Downloads, 74 source files, версии/asar/ресурсы/хеши сверены publisher. Постоянный Mac app 0.6.43 и его identity проверены. Manifest и контрольные суммы — docs/RELEASE.md. Native Windows и clean VM — NOT RUN по прямому поручению пользователя.
+
+0.6.44 / E001: две изолированные проверки Workspace Setup PASS: чистый Git с
+user.useConfigOnly создаёт первый commit без персональных полей, глобальный
+config не меняется, новый экземпляр приложения открывает готовый проект;
+полная и частичная существующая подпись сохраняются. Evidence:
+.harness/runtime/033-no-author-044.log. Полный suite назначен на E003.

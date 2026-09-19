@@ -116,12 +116,11 @@ export class WorkspaceSetup {
     this.tickets.clear(); this.tickets.set(token, { request, fingerprint: result.fingerprint });
     return { ...result, token, mode };
   }
-  async apply(token, { gitName, gitEmail } = {}) {
+  async apply(token) {
     const ticket = this.tickets.get(token);
     if (!ticket) throw fail('PREVIEW_REQUIRED', 'Сначала проверьте выбранную папку.');
     this.readiness.clear(ticket.request.project);
-    if ((gitName || gitEmail) && [gitName, gitEmail].some(v => typeof v !== 'string' || !v.trim() || /[\r\n\0]/.test(v))) throw fail('GIT_IDENTITY', 'Укажите имя и email для истории этого проекта.');
-    const result = await this.call({ ...ticket.request, action: 'apply', fingerprint: ticket.fingerprint, gitName, gitEmail });
+    const result = await this.call({ ...ticket.request, action: 'apply', fingerprint: ticket.fingerprint });
     this.tickets.delete(token);
     return result;
   }
