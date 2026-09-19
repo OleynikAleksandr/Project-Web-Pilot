@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 5,
+  "plan_revision": 7,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "computer-use-latency-localization-037",
@@ -108,8 +108,8 @@
         "Подготовлено задание локальному ChatGPT на ту же папку и последовательность с измерением внешнего времени каждого native tool call; результаты локального агента пока не предполагаются."
       ],
       "expected_commit_message": "docs: измерить Web MCP запись и чтение файла",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "computer-use-latency-localization-037",
         "task_id": "T005",
@@ -289,7 +289,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: computer-use-latency-localization-037
 Current Task: нет
-Revision: 5
+Revision: 7
 
 ## Цель
 
@@ -304,8 +304,8 @@ Revision: 5
 
 ## Микрозадачи
 
-- [TODO] T005: Простой Web MCP тест записи и чтения для сравнения с локальным ChatGPT — Ожидает
-  - Git Commit: [PENDING] docs: измерить Web MCP запись и чтение файла
+- [DONE] T005: Простой Web MCP тест записи и чтения для сравнения с локальным ChatGPT — Завершено
+  - Git Commit: [DONE] docs: измерить Web MCP запись и чтение файла
   - Reference: computer-use-latency-localization-037 / T005 / implementation
   - Файлы: docs/design/computer-use-latency-investigation.md, docs/VERIFICATION.md
 - [TODO] T001: Собрать воспроизводимый direct-loopback benchmark — Ожидает

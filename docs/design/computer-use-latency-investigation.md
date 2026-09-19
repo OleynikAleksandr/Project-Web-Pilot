@@ -175,3 +175,180 @@ ChatGPT tool dispatch, plugin routing и Secure MCP Tunnel могут добав
 ## Неправильный следующий шаг
 
 Не следует заранее переписывать Computer Use backend, менять Sky или строить ещё один executor без измерения сегментов. Проведённые тесты показывают, что Local и App Server backend практически равны по end-to-end latency через один и тот же Web/MCP путь.
+
+
+## Простой тест write_file/read_file — T005 / 19.09.2026
+По новому поручению пользователя выполнен предварительный простой файловый тест перед T001–T004: один пробный и 15 измеряемых последовательных циклов записи/чтения файла 1024 байт. Использован действующий stable connector; bridge_status подтвердил именно backend Codex Local Mac, несмотря на имя namespace Codex App Server Local Mac.
+
+Папка: `/Users/oleksandroliinyk/Desktop/TMP/WebPilot-RW-Test-20260919`. Измеряемые записи перезаписывают один существующий probe.txt, encoding=utf-8, create_parent_directories=false, overwrite=true. Чтение: read_file(path, include_line_numbers=false). Для NN=00 (проба), 01…15 записывается ASCII-заголовок `WEBPILOT_RW_NN\n`, затем символы x до общей длины 1024 байта, без завершающего перевода строки. Каждый вызов write/read выполнен отдельно, последовательно, через Web MCP; время фиксируется в вызывающей functions.exec непосредственно вокруг await инструмента. Цикл автоматизирован на стороне вызывающего агента, без модельных пауз внутри серий; между блоками 1–5 и 6–15 был переход orchestration cell. Никакого параллельного исполнения. Сумма write+read образует cycle_ms.
+
+Timer: Date.now(), wall clock с разрешением 1 мс; monotonic performance.now в этой среде отсутствует. Поэтому это предварительный round-trip тест, не segment trace. Подготовка папки/файла и исправление пробной длины 1025→1024 байта исключены из статистики. Проба уже прогретая, cold-start не измерен. Во всех 15 измерениях подтверждены длина 1024, точное возвращённое содержимое и совпадение SHA-256 записи/чтения.
+
+| Операция | min, ms | median, ms | mean, ms | p95/max, ms |
+| --- | ---: | ---: | ---: | ---: |
+| write_ms | 1406 | 1702 | 1690.33 | 1833 |
+| read_ms | 1428 | 1688 | 1689.20 | 1915 |
+| cycle_ms | 3130 | 3342 | 3379.53 | 3748 |
+
+p95: nearest rank; при n=15 совпадает с max. Пробный цикл: запись 1609 мс, чтение 1729 мс, сумма 3338 мс. Сумма 30 измеряемых tool calls — 50693 мс.
+
+Вывод: секундная задержка наблюдается и на простых файловых инструментах, без Computer Use. Результат не разделяет cloud tool dispatch, Secure MCP Tunnel, local MCP и обработку ответа. Сравнение с локальным ChatGPT ещё не проведено; различие native tools тоже может влиять. T001–T004 этим тестом не закрываются, runtime не менялся.
+
+Raw samples:
+
+```json
+{
+  "date": "2026-09-19",
+  "started_at": "2026-09-19T17:36:25.304Z",
+  "path": "/Users/oleksandroliinyk/Desktop/TMP/WebPilot-RW-Test-20260919/probe.txt",
+  "file_bytes": 1024,
+  "backend": "Codex Local Mac (bridge_status.codex_local; stable namespace Codex App Server Local Mac)",
+  "tools": [
+    "write_file",
+    "read_file"
+  ],
+  "clock": "Date.now(), caller-side wall clock, integer milliseconds; performance.now unavailable",
+  "trial": {
+    "iteration": 0,
+    "write_ms": 1609,
+    "read_ms": 1729,
+    "cycle_ms": 3338,
+    "verified": true
+  },
+  "samples": [
+    {
+      "iteration": 1,
+      "write_ms": 1665,
+      "read_ms": 1658,
+      "cycle_ms": 3323,
+      "verified": true
+    },
+    {
+      "iteration": 2,
+      "write_ms": 1833,
+      "read_ms": 1915,
+      "cycle_ms": 3748,
+      "verified": true
+    },
+    {
+      "iteration": 3,
+      "write_ms": 1651,
+      "read_ms": 1830,
+      "cycle_ms": 3481,
+      "verified": true
+    },
+    {
+      "iteration": 4,
+      "write_ms": 1639,
+      "read_ms": 1622,
+      "cycle_ms": 3261,
+      "verified": true
+    },
+    {
+      "iteration": 5,
+      "write_ms": 1647,
+      "read_ms": 1666,
+      "cycle_ms": 3313,
+      "verified": true
+    },
+    {
+      "iteration": 6,
+      "write_ms": 1702,
+      "read_ms": 1428,
+      "cycle_ms": 3130,
+      "verified": true
+    },
+    {
+      "iteration": 7,
+      "write_ms": 1705,
+      "read_ms": 1724,
+      "cycle_ms": 3429,
+      "verified": true
+    },
+    {
+      "iteration": 8,
+      "write_ms": 1761,
+      "read_ms": 1457,
+      "cycle_ms": 3218,
+      "verified": true
+    },
+    {
+      "iteration": 9,
+      "write_ms": 1686,
+      "read_ms": 1695,
+      "cycle_ms": 3381,
+      "verified": true
+    },
+    {
+      "iteration": 10,
+      "write_ms": 1406,
+      "read_ms": 1822,
+      "cycle_ms": 3228,
+      "verified": true
+    },
+    {
+      "iteration": 11,
+      "write_ms": 1816,
+      "read_ms": 1855,
+      "cycle_ms": 3671,
+      "verified": true
+    },
+    {
+      "iteration": 12,
+      "write_ms": 1722,
+      "read_ms": 1873,
+      "cycle_ms": 3595,
+      "verified": true
+    },
+    {
+      "iteration": 13,
+      "write_ms": 1721,
+      "read_ms": 1455,
+      "cycle_ms": 3176,
+      "verified": true
+    },
+    {
+      "iteration": 14,
+      "write_ms": 1747,
+      "read_ms": 1650,
+      "cycle_ms": 3397,
+      "verified": true
+    },
+    {
+      "iteration": 15,
+      "write_ms": 1654,
+      "read_ms": 1688,
+      "cycle_ms": 3342,
+      "verified": true
+    }
+  ],
+  "stats": {
+    "write_ms": {
+      "min": 1406,
+      "median": 1702,
+      "mean": 1690.3333333333333,
+      "p95": 1833,
+      "max": 1833
+    },
+    "read_ms": {
+      "min": 1428,
+      "median": 1688,
+      "mean": 1689.2,
+      "p95": 1915,
+      "max": 1915
+    },
+    "cycle_ms": {
+      "min": 3130,
+      "median": 3342,
+      "mean": 3379.5333333333333,
+      "p95": 3748,
+      "max": 3748
+    }
+  },
+  "note": "Preparation created directory and file with a 1025-byte draft, then corrected to 1024 before trial; preparation excluded. Trial is warmed, not a true cold-start measurement. All measured writes overwrite an existing file; all reads verified content and matching SHA-256."
+}
+```
+
+### Задание локальному ChatGPT для сопоставления
+
+На этом же Mac использовать существующий `/Users/oleksandroliinyk/Desktop/TMP/WebPilot-RW-Test-20260919/probe.txt`. Выполнить один прогревочный цикл NN=00 и 15 измеряемых NN=01…15 с тем же ASCII-содержимым 1024 байт и без финального newline. Использовать встроенные локальные инструменты ChatGPT, без Web Pilot MCP и Secure MCP Tunnel. Каждая запись и каждое чтение — отдельный последовательный вызов native tool. Замерять в вызывающем runtime полное время await каждого инструмента, а не время fs.writeFile/readFile внутри одного локального скрипта; это разные метрики. Оркестратор может содержать цикл отдельных tool calls. Между записью и чтением никаких дополнительных действий. Проверять содержимое после чтения, не менять настройки, не перезапускать приложения и не трогать код проекта. Вернуть фактический путь исполнения, имена инструментов, timer, пробные времена, все 15 пар write/read, min/median/mean/p95/max и суммарное время. Если внешние времена вызовов недоступны, прямо сообщить это; внутренние файловые времена можно привести только как отдельную, несопоставимую метрику. Сохранять результаты вне измеряемой серии. Второму агенту не поручается менять Workflow Kit или коммитить проект.

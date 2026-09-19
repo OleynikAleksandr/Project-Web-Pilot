@@ -1885,3 +1885,8 @@ Final artifacts:
 - Windows x64: 316367350 bytes; SHA-256 `8fcdd36743ef91e3eb89951f4267eebd3d22fb10f6fb4149100f0cf489ffcce4`; ASAR `7435d127206a8e2b54f65c5872e7d9bbee04ccf353027fff51e25064d5d13e3b`.
 
 Delivery `~/Downloads/WebPilot-0.6.47/` was replaced. The old candidate is retained only in ignored local backup `.harness/runtime/release-backups/paired-0.6.47-pre-stable`. The packaged macOS contract is one ChatGPT connector / one Secure MCP Tunnel with Settings switching only the local MCP backend.
+
+
+## T005 — простой Web MCP file round-trip / 19.09.2026
+
+По поручению пользователя выполнены один пробный и 15 измеряемых последовательных циклов write_file/read_file для существующего файла 1024 байт; все 15 проверок содержимого и matching SHA-256 успешны. Действующий backend: Codex Local Mac за stable connector. Caller-side Date.now вокруг await каждого tool call, без model thinking в интервалах. Медианы: запись 1702 мс, чтение 1688 мс, пара 3342 мс. Raw samples, условия, предварительная подготовка и задание локальному ChatGPT — docs/design/computer-use-latency-investigation.md, раздел «Простой тест write_file/read_file». Native сравнение ожидается, bottleneck по сегментам пока не локализован. Production код и runtime не изменялись; suite приложения для этого документального теста не запускалась. T001–T004 и финальная DOCS остаются в текущем плане.
