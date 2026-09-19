@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 74,
+  "plan_revision": 76,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
@@ -973,8 +973,8 @@
       "id": "G001",
       "title": "Объяснить разрешения MCP в общем мастере 0.6.45",
       "why": "Объяснить разрешения MCP в общем мастере 0.6.45",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "windows-onboarding-033",
         "task_id": "G001",
@@ -1144,7 +1144,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 74
+Revision: 76
 
 ## Цель
 
@@ -1278,8 +1278,8 @@ Revision: 74
   - Git Commit: [DONE] feat: Подготовить публикацию GitHub после финального DOCS commit
   - Reference: windows-onboarding-033 / E006 / implementation
   - Файлы: docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/WORKSPACE_SETUP.md, docs/RELEASE.md, docs/DECISIONS.md
-- [TODO] G001: Объяснить разрешения MCP в общем мастере 0.6.45 — Ожидает
-  - Git Commit: [PENDING] feat: Объяснить разрешения MCP в общем мастере 0.6.45
+- [DONE] G001: Объяснить разрешения MCP в общем мастере 0.6.45 — Завершено
+  - Git Commit: [DONE] feat: Объяснить разрешения MCP в общем мастере 0.6.45
   - Reference: windows-onboarding-033 / G001 / implementation
   - Файлы: src/ui/index.html, package.json, package-lock.json, docs/architecture/ARCHITECTURE.md, docs/modules/first-run-onboarding.md, docs/DECISIONS.md
 - [TODO] G002: Собрать и сверить парную поставку инструкции 0.6.45 — Ожидает

@@ -216,6 +216,18 @@ SOFTWARE.
             <p>Если подключение к этому компьютеру уже есть, повторно добавлять его не нужно. Проверьте его туннель и список инструментов; одно название не подтверждает доступ.</p>
             <button class="secondary" data-startup="plugins">Открыть Plugins в ChatGPT</button>
             <p id="startup-plugin-platform" hidden>Для этой Windows используйте «Codex Local Windows MCP» и туннель этой виртуальной машины. Подключение Mac остаётся отдельным. Windows-подключение нужно проверить, даже если служба туннеля уже работает.</p>
+            <div id="startup-plugin-permissions">
+              <h4>Разрешения MCP</h4>
+              <p>После создания подключения откройте в ChatGPT <strong>Settings → Plugins → ваше подключение → Permissions</strong>. Выберите имя, которое вы задали для этого компьютера.</p>
+              <ul>
+                <li><strong>Always ask</strong> — спрашивать перед чтением и изменениями.</li>
+                <li><strong>Allow read actions</strong> — читать без подтверждения, спрашивать перед изменениями.</li>
+                <li><strong>Allow low-risk actions</strong> — автоматически разрешать действия низкого риска; действия с чувствительными данными могут быть отклонены. Это режим по умолчанию.</li>
+                <li><strong>Allow all actions</strong> — читать и выполнять действия без повторных запросов подтверждения.</li>
+              </ul>
+              <p>Для удобной работы агента без постоянных подтверждений можно выбрать <strong>Allow all actions</strong>. Агент сможет в том числе изменять файлы через это MCP без отдельного вопроса. Режим выбираете вы; изменить его можно здесь же в любой момент.</p>
+              <p class="settings-help">Эта настройка управляет подтверждениями. Права самого подключения и ограничения ChatGPT сохраняются.</p>
+            </div>
             <details id="startup-plugin-help"><summary>Нет кнопки «+» или подключение не работает?</summary><p>В ChatGPT откройте Settings → Security and login → Developer mode. Доступ зависит от настроек аккаунта и пространства. После изменения подключения обновите его список инструментов через Refresh.</p></details>
           </div>
           <p id="startup-plugin-wait" class="startup-status">После настройки туннеля.</p>
