@@ -4,18 +4,21 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 26,
+  "plan_revision": 27,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
-  "objective": "Довести Windows-мастер до согласованного macOS-пути и выпустить обе платформы одним комплектом 0.6.41.",
+  "delivery_status": "IN_PROGRESS",
+  "objective": "Сохранить выполненный Windows onboarding и исправить последовательный ввод ID туннеля и API key на обеих платформах с парным выпуском 0.6.42.",
   "acceptance_criteria": [
     "Windows показывает и выполняет шаги компонентов, туннеля и создания проекта после входа",
     "Данные подключения проходят существующее защищённое хранилище Windows; настройки сохраняются",
     "macOS сохраняет рабочее поведение, обе платформы выпущены как 0.6.41",
-    "Source, tests, packaged fixtures и состав ZIP проверены; реальное подключение и приёмка в госте отдельно подтверждаются пользователем"
+    "Source, tests, packaged fixtures и состав ZIP проверены; реальное подключение и приёмка в госте отдельно подтверждаются пользователем",
+    "В Mac и Windows ID туннеля и API key оформлены двумя последовательными шагами; ссылка API keys и инструкция создания/копирования/вставки видимы без раскрытия подсказок",
+    "Ручной путь не открывает два диалога подряд; перед вводом ключа показана инструкция",
+    "Один парный выпуск 0.6.42 в Downloads, постоянный Mac app обновлён с сохранением identity; VM и Computer Use не используются"
   ],
   "approved_scope": {
     "functional_paths": [
@@ -37,7 +40,9 @@
       "package-lock.json",
       "tests/electron-smoke.mjs",
       "tests/release-all.test.mjs",
-      "scripts/verify-windows-package.mjs"
+      "scripts/verify-windows-package.mjs",
+      "src/tunnel-clipboard.mjs",
+      "tests/tunnel-clipboard.test.mjs"
     ],
     "documentation_paths": [
       "AGENTS.md",
@@ -431,12 +436,137 @@
       "expected_commit_message": "docs: Собрать и проверить обе поставки 0.6.41"
     },
     {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
+      "id": "C001",
+      "title": "Разделить вставку ID и защищённый ввод ключа",
+      "why": "Разделить вставку ID и защищённый ввод ключа",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "windows-onboarding-033",
+        "task_id": "C001",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "R002"
+      ],
+      "functional_paths": [
+        "src/tunnel-clipboard.mjs",
+        "src/main.mjs",
+        "tests/tunnel-clipboard.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md",
+        "docs/modules/first-run-onboarding.md"
+      ],
+      "verification_ids": [
+        "suite"
+      ],
+      "acceptance_criteria": [
+        "Разделить вставку ID и защищённый ввод ключа"
+      ],
+      "expected_commit_message": "fix: Разделить вставку ID и защищённый ввод ключа"
+    },
+    {
+      "id": "C002",
+      "title": "Показать отдельный шаг API key с явной ссылкой и инструкцией",
+      "why": "Показать отдельный шаг API key с явной ссылкой и инструкцией",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "windows-onboarding-033",
+        "task_id": "C002",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "C001"
+      ],
+      "functional_paths": [
+        "src/ui/index.html",
+        "src/ui/startup.mjs",
+        "tests/startup-ui.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md",
+        "docs/modules/first-run-onboarding.md"
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "acceptance_criteria": [
+        "Показать отдельный шаг API key с явной ссылкой и инструкцией"
+      ],
+      "expected_commit_message": "fix: Показать отдельный шаг API key с явной ссылкой и инструкцией"
+    },
+    {
+      "id": "C003",
+      "title": "Подготовить единый номер версии 0.6.42",
+      "why": "Подготовить единый номер версии 0.6.42",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "windows-onboarding-033",
+        "task_id": "C003",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "C002"
+      ],
+      "functional_paths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "documentation_paths": [
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md",
+        "docs/modules/first-run-onboarding.md",
+        "docs/RELEASE.md"
+      ],
+      "verification_ids": [
+        "suite"
+      ],
+      "acceptance_criteria": [
+        "Подготовить единый номер версии 0.6.42"
+      ],
+      "expected_commit_message": "fix: Подготовить единый номер версии 0.6.42"
+    },
+    {
+      "id": "C004",
+      "title": "Собрать и сверить парный выпуск 0.6.42",
+      "why": "Собрать и сверить парный выпуск 0.6.42",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "windows-onboarding-033",
+        "task_id": "C004",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "C003"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md",
+        "docs/modules/first-run-onboarding.md",
+        "docs/RELEASE.md"
+      ],
+      "verification_ids": [],
+      "acceptance_criteria": [
+        "Собрать и сверить парный выпуск 0.6.42"
+      ],
+      "expected_commit_message": "fix: Собрать и сверить парный выпуск 0.6.42"
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "windows-onboarding-033",
         "task_id": "DOCS",
-        "role": "implementation"
+        "role": "implementation",
+        "iteration": 2
       },
       "dependencies": [
         "P001",
@@ -448,7 +578,11 @@
         "R001",
         "V001",
         "R003",
-        "R002"
+        "R002",
+        "C001",
+        "C002",
+        "C003",
+        "C004"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -488,6 +622,11 @@
       "id": "68c54bb2-473e-43c5-af70-3f7f761cb0d1",
       "text": "18.09.2026 пользователь прямо поручил догнать Windows по первому запуску, аккуратно встроить всё необходимое и пакетно выпустить Mac и Windows с единым новым номером.",
       "recorded_at": "2026-09-18T15:10:54.734Z"
+    },
+    {
+      "id": "tunnel-key-steps-042",
+      "text": "19.09.2026 пользователь поручил исправить обе платформы: отдельный последовательный шаг API key с кнопкой страницы и инструкцией; собрать новый парный релиз. Все реальные проверки выполняет пользователь; VM и Computer Use запрещены.",
+      "recorded_at": "2026-09-19T07:00:00.000Z"
     }
   ],
   "owner_session_id": "01a0b501-9a29-7b30-87a1-036ded275092",
@@ -499,14 +638,14 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 26
+Revision: 27
 
 ## Цель
 
-Довести Windows-мастер до согласованного macOS-пути и выпустить обе платформы одним комплектом 0.6.41.
+Сохранить выполненный Windows onboarding и исправить последовательный ввод ID туннеля и API key на обеих платформах с парным выпуском 0.6.42.
 
 ## Критерии приёмки
 
@@ -514,6 +653,9 @@ Revision: 26
 - Данные подключения проходят существующее защищённое хранилище Windows; настройки сохраняются
 - macOS сохраняет рабочее поведение, обе платформы выпущены как 0.6.41
 - Source, tests, packaged fixtures и состав ZIP проверены; реальное подключение и приёмка в госте отдельно подтверждаются пользователем
+- В Mac и Windows ID туннеля и API key оформлены двумя последовательными шагами; ссылка API keys и инструкция создания/копирования/вставки видимы без раскрытия подсказок
+- Ручной путь не открывает два диалога подряд; перед вводом ключа показана инструкция
+- Один парный выпуск 0.6.42 в Downloads, постоянный Mac app обновлён с сохранением identity; VM и Computer Use не используются
 
 ## Микрозадачи
 
@@ -557,8 +699,24 @@ Revision: 26
   - Git Commit: [DONE] docs: Собрать и проверить обе поставки 0.6.41
   - Reference: windows-onboarding-033 / R002 / implementation
   - Файлы: docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md, docs/RELEASE.md, docs/CLEAN_INSTALL.md, docs/TRANSFER_TO_WINDOWS.md
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: актуализировать документы Windows onboarding 0.6.41
+- [TODO] C001: Разделить вставку ID и защищённый ввод ключа — Ожидает
+  - Git Commit: [PENDING] fix: Разделить вставку ID и защищённый ввод ключа
+  - Reference: windows-onboarding-033 / C001 / implementation
+  - Файлы: src/tunnel-clipboard.mjs, src/main.mjs, tests/tunnel-clipboard.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md
+- [TODO] C002: Показать отдельный шаг API key с явной ссылкой и инструкцией — Ожидает
+  - Git Commit: [PENDING] fix: Показать отдельный шаг API key с явной ссылкой и инструкцией
+  - Reference: windows-onboarding-033 / C002 / implementation
+  - Файлы: src/ui/index.html, src/ui/startup.mjs, tests/startup-ui.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md
+- [TODO] C003: Подготовить единый номер версии 0.6.42 — Ожидает
+  - Git Commit: [PENDING] fix: Подготовить единый номер версии 0.6.42
+  - Reference: windows-onboarding-033 / C003 / implementation
+  - Файлы: package.json, package-lock.json, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md, docs/RELEASE.md
+- [TODO] C004: Собрать и сверить парный выпуск 0.6.42 — Ожидает
+  - Git Commit: [PENDING] fix: Собрать и сверить парный выпуск 0.6.42
+  - Reference: windows-onboarding-033 / C004 / implementation
+  - Файлы: docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md, docs/RELEASE.md
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: актуализировать документы Windows onboarding 0.6.41
   - Reference: windows-onboarding-033 / DOCS / implementation
   - Файлы: AGENTS.md, README.md, docs/WORKFLOW_START.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/CLEAN_INSTALL.md, docs/TRANSFER_TO_WINDOWS.md, docs/RELEASE.md, docs/WORKSPACE_SETUP.md, docs/CONTEXT_DELIVERY.md, docs/modules/runtime-lifecycle.md, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md
 
