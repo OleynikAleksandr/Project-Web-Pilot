@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 31,
+  "plan_revision": 32,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-app-server-mcp-035",
@@ -26,7 +26,17 @@
       "tools/codex-app-server-mcp/control.py",
       "tools/codex-app-server-mcp/requirements.txt",
       "tests/codex-app-server-mcp.test.mjs",
-      "scripts/benchmark-codex-app-server-mcp.mjs"
+      "scripts/benchmark-codex-app-server-mcp.mjs",
+      "src/mac-runtime-switch.mjs",
+      "src/mcp-runtime.mjs",
+      "src/main.mjs",
+      "tests/mac-runtime-switch.test.mjs",
+      "src/ui/index.html",
+      "src/ui/project-archive.mjs",
+      "src/preload.cjs",
+      "package.json",
+      "package-lock.json",
+      "scripts/release-all.mjs"
     ],
     "documentation_paths": [
       "docs/architecture/OVERVIEW.md",
@@ -34,7 +44,8 @@
       "docs/DOCUMENTATION_INDEX.md",
       "docs/modules/runtime-lifecycle.md",
       "docs/modules/codex-app-server-executor.md",
-      "docs/VERIFICATION.md"
+      "docs/VERIFICATION.md",
+      "docs/RELEASE.md"
     ],
     "max_functional_files_per_task": 3
   },
@@ -368,7 +379,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: READY_FOR_ACCEPTANCE
 Scope: codex-app-server-mcp-035
 Current Task: нет
-Revision: 31
+Revision: 32
 
 ## Цель
 
