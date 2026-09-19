@@ -1,12 +1,11 @@
 {
   "name": "project-web-pilot",
   "productName": "Project Web Pilot",
-  "version": "0.6.43",
+  "version": "0.6.44",
   "description": "Локальный проект и ChatGPT в одном окне",
   "private": true,
   "type": "module",
   "main": "src/main.mjs",
-  "author": "Oleksandr Oliinyk",
   "license": "UNLICENSED",
   "scripts": {
     "start": "electron .",
@@ -16,10 +15,10 @@
     "build:mac": "npm run prepare:mac && npm run build:mac:package && npm run release:mac",
     "build:win": "npm run prepare:win && npm run build:win:package && npm run verify:win",
     "prepare:win": "node scripts/prepare-windows-toolchain.mjs",
-    "build:win:package": "electron-packager . \"Project Web Pilot\" --platform=win32 --arch=x64 --out=.harness/runtime/build --overwrite --app-version=0.6.43 --asar --extra-resource=resources --extra-resource=.harness/runtime/windows-payload --extra-resource=.harness/runtime/windows-node --ignore=\"^/(Project Web Pilot\\.app|\\.web-pilot-install-|resources|docs|tests|scripts|\\.harness|\\.git|\\.codex|AGENTS\\.md|README\\.md|windows-app|BUILD_WINDOWS\\.cmd|RUN_WINDOWS\\.cmd)\"",
+    "build:win:package": "electron-packager . \"Project Web Pilot\" --platform=win32 --arch=x64 --out=.harness/runtime/build --overwrite --app-version=0.6.44 --asar --extra-resource=resources --extra-resource=.harness/runtime/windows-payload --extra-resource=.harness/runtime/windows-node --ignore=\"^/(Project Web Pilot\\.app|\\.web-pilot-install-|resources|docs|tests|scripts|\\.harness|\\.git|\\.codex|AGENTS\\.md|README\\.md|windows-app|BUILD_WINDOWS\\.cmd|RUN_WINDOWS\\.cmd)\"",
     "verify:win": "node scripts/verify-windows-package.mjs",
     "prepare:mac": "node scripts/prepare-mac-toolchain.mjs",
-    "build:mac:package": "electron-packager . \"Project Web Pilot\" --platform=darwin --arch=arm64 --out=.harness/runtime/build --overwrite --app-bundle-id=com.oleynik.ProjectWebPilot --app-version=0.6.43 --extend-info=resources/mac-permissions.plist --asar --extra-resource=resources --extra-resource=.harness/runtime/mac-tools --ignore=\"^/(Project Web Pilot\\.app|\\.web-pilot-install-|resources|docs|tests|scripts|\\.harness|\\.git|\\.codex|AGENTS\\.md|README\\.md|windows-runtime|windows-app|BUILD_WINDOWS\\.cmd|RUN_WINDOWS\\.cmd)\"",
+    "build:mac:package": "electron-packager . \"Project Web Pilot\" --platform=darwin --arch=arm64 --out=.harness/runtime/build --overwrite --app-bundle-id=com.oleynik.ProjectWebPilot --app-version=0.6.44 --extend-info=resources/mac-permissions.plist --asar --extra-resource=resources --extra-resource=.harness/runtime/mac-tools --ignore=\"^/(Project Web Pilot\\.app|\\.web-pilot-install-|resources|docs|tests|scripts|\\.harness|\\.git|\\.codex|AGENTS\\.md|README\\.md|windows-runtime|windows-app|BUILD_WINDOWS\\.cmd|RUN_WINDOWS\\.cmd)\"",
     "release:mac": "node scripts/release-mac.mjs"
   },
   "engines": {

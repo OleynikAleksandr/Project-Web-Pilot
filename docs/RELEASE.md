@@ -294,3 +294,6 @@ fixture прошли; версия обеих платформ и packager си�
 - Project-Web-Pilot-0.6.43-Windows-x64.zip: 316334779 bytes; SHA-256 `7b3c0e12a509ee2cca688e33460ae5768a0eeb0b76410f39f83250cfda08f66c`.
 
 Единая сборка npm run build завершена. Каталог: `~/Downloads/WebPilot-0.6.43/`; manifest: `.harness/runtime/releases/0.6.43/release-manifest.json`; журнал: `.harness/runtime/033-build-043.log`. Source commit `3981d61b1ac3aebfcb50eeb247f8e81c069a6f59`, 74 файлов snapshot; исходники/resources обеих платформ, версии, ZIP integrity, app.asar архивов и хеши копий сверены. Постоянный Mac app 0.6.43 совпадает со staging, identity сохранена: device 16777232, inode 398344301. Native Windows/чистые VM не запускались; новый ручной проход выполняет пользователь.
+
+0.6.44 / E004: подготовлены общие package/lock и app-version для обеих платформ,
+персональный author пакета удалён. Следующий шаг — штатный парный npm run build.
