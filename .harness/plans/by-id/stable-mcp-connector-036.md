@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 4,
+  "plan_revision": 6,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "stable-mcp-connector-036",
@@ -125,8 +125,8 @@
       "file_limit_exception": "Один stable-connector contract требует target/tunnel lifecycle в control.py, backend switch facade, mcp-only runtime path и два узких regression-файла; это единая correction обнаруженного end-to-end дефекта."
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "stable-mcp-connector-036",
         "task_id": "T002",
@@ -206,7 +206,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: stable-mcp-connector-036
 Current Task: нет
-Revision: 4
+Revision: 6
 
 ## Цель
 
@@ -224,8 +224,8 @@ Revision: 4
   - Git Commit: [DONE] fix: использовать один tunnel для обоих macOS MCP backend
   - Reference: stable-mcp-connector-036 / T001 / implementation
   - Файлы: tools/codex-app-server-mcp/control.py, src/mac-runtime-switch.mjs, src/mcp-runtime.mjs, tests/mac-runtime-switch.test.mjs, tests/codex-app-server-mcp.test.mjs, docs/modules/runtime-lifecycle.md, docs/modules/codex-app-server-executor.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
-- [TODO] T002: Пересобрать 0.6.47 после stable-connector correction — Ожидает
-  - Git Commit: [PENDING] release: пересобрать 0.6.47 с одним MCP connector
+- [DONE] T002: Пересобрать 0.6.47 после stable-connector correction — Завершено
+  - Git Commit: [DONE] release: пересобрать 0.6.47 с одним MCP connector
   - Reference: stable-mcp-connector-036 / T002 / implementation
   - Файлы: docs/RELEASE.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, README.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает

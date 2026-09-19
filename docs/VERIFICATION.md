@@ -1866,11 +1866,22 @@ Build result:
 - installed resource hashes equal source for app_server_client.py, control.py, requirements.txt and server.py.
 
 Artifacts:
-- macOS arm64: 181093490 bytes; SHA-256 `0306ecd177e2954fe9ade401aae61fe2c2ec39287c7c98ae87560f641f378ff0`; ASAR `aa3242820b27b22eed950798b419e852d4e0756426076392f56c4177c1ad015c`; codexExecutorFiles=4.
-- Windows x64: 316363643 bytes; SHA-256 `d5ce9cdfb507005efc6d949820f30a81fec85e90f78bb838d3dac9db2512fa3b`; ASAR `9a6123dec83ec2033a3f2c342dcefc9f7930f03ecd64843da11c1451d0462204`; codexExecutorFiles=4.
+- macOS arm64: 181097186 bytes; SHA-256 `c82554c36d553ef92a03649ddcd5ccc82315c34e935dc7d23673f674e7b660e6`; ASAR `b72c7adea0aec363d0fd51f152b388bf77a40aeb30bb318a18116e7b9d3f1b32`; codexExecutorFiles=4.
+- Windows x64: 316367350 bytes; SHA-256 `8fcdd36743ef91e3eb89951f4267eebd3d22fb10f6fb4149100f0cf489ffcce4`; ASAR `7435d127206a8e2b54f65c5872e7d9bbee04ccf353027fff51e25064d5d13e3b`; codexExecutorFiles=4.
 
 Delivery: `~/Downloads/WebPilot-0.6.47/` contains both ZIP, INSTALL.txt, SHA256SUMS.txt and release-manifest.json. Native Windows and clean VM were not run.
 
 ### Scope 036 / T001 — один stable connector
 
 Targeted regression после stable-connector correction: `node --test tests/mac-runtime-switch.test.mjs tests/mcp-runtime.test.mjs tests/codex-app-server-mcp.test.mjs` — 19/19 passed. Покрыты один shared tunnel при обоих modes, `selector-start` в стабильном LaunchAgent, retarget tunnel profile, MCP-only backend start, составной runtime facade и fail-closed cleanup legacy listeners: известный process identity сигналится только после двух совпадающих `ps` проверок, foreign listener остаётся нетронутым.
+
+
+### Scope 036 / T002 — rebuilt 0.6.47 with one stable connector
+
+Final packaging source commit: `acde362fc75645dff20f2e494604d9b2b5289403`. Electron isolated smoke after stable-connector correction exited 0 and returned the complete fixture result. `npm run build` exited 0, preserved permanent Mac app device/inode 16777234/398344301, verified sourceFiles=79 and `packagedSourceMatches=true`, and verified all four Codex executor resource files directly in both ZIPs.
+
+Final artifacts:
+- macOS arm64: 181097186 bytes; SHA-256 `c82554c36d553ef92a03649ddcd5ccc82315c34e935dc7d23673f674e7b660e6`; ASAR `b72c7adea0aec363d0fd51f152b388bf77a40aeb30bb318a18116e7b9d3f1b32`.
+- Windows x64: 316367350 bytes; SHA-256 `8fcdd36743ef91e3eb89951f4267eebd3d22fb10f6fb4149100f0cf489ffcce4`; ASAR `7435d127206a8e2b54f65c5872e7d9bbee04ccf353027fff51e25064d5d13e3b`.
+
+Delivery `~/Downloads/WebPilot-0.6.47/` was replaced. The old candidate is retained only in ignored local backup `.harness/runtime/release-backups/paired-0.6.47-pre-stable`. The packaged macOS contract is one ChatGPT connector / one Secure MCP Tunnel with Settings switching only the local MCP backend.

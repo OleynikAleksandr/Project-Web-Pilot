@@ -1251,3 +1251,8 @@ Paired release verification treats the four executor files as first-class source
 macOS runtime selector использует один внешний Secure MCP Tunnel и два взаимоисключающих local backend. Старый Codex Local Mac LaunchAgent всегда disabled; стабильный `WebPilotCodexExecutor` LaunchAgent хранится вне app bundle и выполняет `selector-start`. Settings сохраняет `local | app-server`, выбранный backend запускается MCP-only, а стабильный private tunnel меняет только loopback target. Если private stable tunnel ещё не существует, его credentials однократно импортируются из существующего Codex Local Mac private state внутри local worker без публикации секрета. Main работает через `MacSelectedRuntime`, который объединяет readiness выбранного MCP и общего tunnel в прежний runtime facade.
 
 Переход fail-closed: local orphan listener завершается только после совпадения известного runtime path/executable/port и повторной проверки command identity непосредственно перед signal. Чужие процессы не останавливаются.
+
+
+### 0.6.47 final stable-connector release evidence
+
+Исправленная парная поставка собрана из commit `acde362fc75645dff20f2e494604d9b2b5289403`. Постоянный Mac app сохранил device/inode 16777234/398344301. macOS ZIP SHA-256 `c82554c36d553ef92a03649ddcd5ccc82315c34e935dc7d23673f674e7b660e6`, ASAR `b72c7adea0aec363d0fd51f152b388bf77a40aeb30bb318a18116e7b9d3f1b32`; Windows ZIP SHA-256 `8fcdd36743ef91e3eb89951f4267eebd3d22fb10f6fb4149100f0cf489ffcce4`, ASAR `7435d127206a8e2b54f65c5872e7d9bbee04ccf353027fff51e25064d5d13e3b`. Оба ZIP содержат четыре физически проверенных файла Codex App Server MCP resource.
