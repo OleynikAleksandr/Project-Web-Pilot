@@ -1176,3 +1176,8 @@ allowlisted TUNNEL_ID_INVALID. Этот read-only путь не загружае
 проверку installed/trusted runtime и общий single-flight с настройкой. Worker
 запускается в --tunnel-id; принимается только валидный ID либо cancelled. Секреты,
 raw stdout/stderr и неизвестные ответы не выходят за прежнюю allowlist ошибок.
+
+0.6.43 / D003: main инъецирует bootstrap.promptTunnelId в TunnelClipboard.
+pasteTunnelId открывает диалог без чтения буфера до подтверждения. Single-flight
+приостанавливает наблюдение; generation отбрасывает ответ после выхода из мастера.
+После закрытия диалога буфер становится baseline, предотвращая повтор после отмены.

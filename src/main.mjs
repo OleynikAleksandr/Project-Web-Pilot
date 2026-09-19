@@ -637,6 +637,7 @@ function createStartupFlow() {
   });
   startupClipboard = new TunnelClipboard({
     readText: () => clipboard.readText(),
+    promptTunnelId: () => (windowsRuntimeBootstrap ?? macRuntimeBootstrap).promptTunnelId(),
     configure: async credentials => {
       await startupFlow.configure(credentials);
       if (!startupFlow.snapshot().tunnel) throw new Error('Tunnel not ready');

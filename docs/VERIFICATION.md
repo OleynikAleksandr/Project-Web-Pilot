@@ -1566,3 +1566,8 @@ worker с подменённым native process: один ID prompt, без за
 0.6.43 / D002: tunnel-id-runtime + mac-runtime + windows-runtime — 23 PASS,
 2 platform skips, 0 failures. Для обеих платформ проверены --tunnel-id, cancellation,
 отказ на configured вместо ID/неверный ID, безопасные ошибки без raw output.
+
+0.6.43 / D003: tests/tunnel-clipboard.test.mjs — 8/8 PASS. Проверены открытие окна
+с пустым/несвязанным/недоступным буфером, ожидание подтверждения, один диалог,
+отмена, неверный ID, скрытие raw ошибок, поздний ответ после выхода и отсутствие
+автоподключения по скопированному внутри отменённого диалога ключу.

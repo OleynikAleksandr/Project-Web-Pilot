@@ -5,7 +5,7 @@ const id = 'tunnel_fixture1234567890123456', key = 'sk-fixture-private-123456789
 function fixture(options = {}) {
   let text = '', reads = 0; const calls = [], states = [];
   const flow = new TunnelClipboard({ readText: () => { reads++; return text; },
-    configure: async values => { calls.push({ ...values }); }, onChange: s => states.push(s), ...options });
+    configure: async values => { calls.push({ ...values }); }, promptTunnelId: async () => ({ tunnelId: id }), onChange: s => states.push(s), ...options });
   return { flow, calls, states, copy: value => { text = value; }, reads: () => reads,
     tick: patch => flow.tick({ active: true, ...patch }) };
 }
@@ -56,27 +56,39 @@ test('failure does not echo secret or retry unchanged data; corrected key can re
   f.copy(key + '2'); await f.tick(); assert.equal(attempts, 2); assert.equal(f.flow.snapshot().step, 'done');
 });
 
-test('explicit paste accepts an unchanged ID but stops at the key instructions without configuring', async () => {
-  const f = fixture(); f.copy(id); await f.tick();
-  assert.equal(f.flow.snapshot().step, 'tunnel');
-  f.flow.pasteTunnelId();
-  assert.equal(f.flow.snapshot().step, 'key');
-  assert.deepEqual(f.flow.manualInput(), { tunnelId: id });
-  assert.deepEqual(f.calls, []);
-  assert.doesNotMatch(JSON.stringify(f.states), /tunnel_fixture|sk-fixture/);
+test('ID button opens a dialog even with empty, unrelated or inaccessible clipboard and waits for confirmation', async () => {
+  for (const copied of ['', 'unrelated text', key]) {
+    let finish, dialogs = 0;
+    const f = fixture({ promptTunnelId: () => { dialogs++; return new Promise(r => { finish = r; }); } });
+    f.copy(copied);
+    const pending = f.flow.pasteTunnelId();
+    assert.equal(dialogs, 1); assert.equal(f.flow.snapshot().error, null);
+    assert.equal(f.flow.snapshot().step, 'tunnel'); assert.equal(f.reads(), 0);
+    await f.flow.pasteTunnelId(); await f.tick(); assert.equal(dialogs, 1); assert.equal(f.reads(), 0);
+    finish({ tunnelId: id }); await pending;
+    assert.equal(f.flow.snapshot().step, 'key'); assert.deepEqual(f.calls, []);
+    assert.deepEqual(f.flow.manualInput(), { tunnelId: id });
+    await f.tick(); assert.deepEqual(f.calls, [], 'clipboard content copied in dialog must not configure automatically');
+    assert.doesNotMatch(JSON.stringify(f.states), /tunnel_fixture|sk-fixture/);
+  }
+  const denied = fixture({ readText: () => { throw new Error('denied'); } });
+  await denied.flow.pasteTunnelId(); assert.equal(denied.flow.snapshot().step, 'key');
 });
 
-test('explicit ID paste rejects keys, invalid data and clipboard failures without leaking content', () => {
-  const f = fixture();
-  for (const value of [key, 'tunnel_short', 'x'.repeat(9000), '']) {
-    f.copy(value); f.flow.pasteTunnelId();
-    assert.equal(f.flow.snapshot().step, 'tunnel');
-    assert.match(f.flow.snapshot().error, /Copy tunnel ID/);
-    assert.equal(f.flow.manualInput(), undefined);
-  }
-  const failed = fixture({ readText: () => { throw new Error(key); } });
-  failed.flow.pasteTunnelId();
-  assert.doesNotMatch(JSON.stringify([...f.states, ...failed.states]), /sk-fixture/);
+test('native ID cancellation, invalid input, errors and late results never configure or leak data', async () => {
+  const f = fixture({ promptTunnelId: async () => ({ cancelled: true }) });
+  await f.flow.pasteTunnelId(); assert.equal(f.flow.snapshot().error, null);
+  assert.equal(f.flow.snapshot().step, 'tunnel'); assert.equal(f.flow.manualInput(), undefined);
+  f.flow.promptTunnelId = async () => ({ tunnelId: key });
+  await f.flow.pasteTunnelId(); assert.match(f.flow.snapshot().error, /полный ID туннеля/);
+  f.flow.promptTunnelId = async () => { throw new Error(key); };
+  await f.flow.pasteTunnelId(); assert.match(f.flow.snapshot().error, /открыть окно/);
+  let finish;
+  f.flow.promptTunnelId = () => new Promise(r => { finish = r; });
+  const pending = f.flow.pasteTunnelId();
+  await f.tick({ active: false }); finish({ tunnelId: id }); await pending;
+  assert.equal(f.flow.snapshot().step, 'tunnel'); assert.equal(f.flow.manualInput(), undefined);
+  assert.doesNotMatch(JSON.stringify(f.states), /tunnel_fixture|sk-fixture/); assert.deepEqual(f.calls, []);
 });
 
 test('manual route separates ID and key actions, retains ID on cancel and excludes clipboard races', async () => {
@@ -93,4 +105,5 @@ test('manual route separates ID and key actions, retains ID on cancel and exclud
   await f.flow.configureManually(configure);
   assert.equal(f.reads(), reads); assert.equal(prompts.length, 1); assert.deepEqual(f.calls, []);
   finish(); await pending;
+  await f.tick(); assert.deepEqual(f.calls, [], 'cancelled native key input must not retry from clipboard');
 });

@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 43,
+  "plan_revision": 45,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
@@ -630,8 +630,8 @@
       "id": "D003",
       "title": "Открывать диалог ID вместо чтения буфера по кнопке",
       "why": "Открывать диалог ID вместо чтения буфера по кнопке",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "windows-onboarding-033",
         "task_id": "D003",
@@ -839,7 +839,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 43
+Revision: 45
 
 ## Цель
 
@@ -924,8 +924,8 @@ Revision: 43
   - Git Commit: [DONE] fix: Подключить безопасный диалог ID к обеим runtime facade
   - Reference: windows-onboarding-033 / D002 / implementation
   - Файлы: src/mac-runtime.mjs, src/windows-runtime.mjs, tests/tunnel-id-runtime.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md
-- [TODO] D003: Открывать диалог ID вместо чтения буфера по кнопке — Ожидает
-  - Git Commit: [PENDING] fix: Открывать диалог ID вместо чтения буфера по кнопке
+- [DONE] D003: Открывать диалог ID вместо чтения буфера по кнопке — Завершено
+  - Git Commit: [DONE] fix: Открывать диалог ID вместо чтения буфера по кнопке
   - Reference: windows-onboarding-033 / D003 / implementation
   - Файлы: src/tunnel-clipboard.mjs, src/main.mjs, tests/tunnel-clipboard.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md
 - [TODO] D004: Проверить ручной путь ID и уточнить подсказки мастера — Ожидает

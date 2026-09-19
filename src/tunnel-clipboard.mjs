@@ -6,30 +6,51 @@ const keyPattern = /^sk-[A-Za-z0-9_-]{16,4093}$/;
 // Main-process facade: only progress crosses the renderer boundary.
 export class TunnelClipboard {
   #id = null; #last = null; #active = false; #generation = 0; #pending = false;
-  constructor({ readText, configure, onChange = () => {} }) {
-    Object.assign(this, { readText, configure, onChange });
+  constructor({ readText, configure, promptTunnelId, onChange = () => {} }) {
+    Object.assign(this, { readText, configure, promptTunnelId, onChange });
     this.state = { step: 'tunnel', hasTunnelId: false, error: null };
   }
   snapshot() { return { ...this.state }; }
   manualInput() { return this.#id ? { tunnelId: this.#id } : undefined; }
-  pasteTunnelId() {
+  #rememberClipboard() {
+    try { const value = this.readText(); if (typeof value === 'string') this.#last = digest(value); }
+    catch { /* Clipboard access is optional when using native input. */ }
+  }
+  async pasteTunnelId() {
     if (this.#pending || this.state.step !== 'tunnel') return;
-    let value;
-    try { value = this.readText(); } catch { /* Show the same safe instruction below. */ }
-    if (typeof value !== 'string' || value.length > 8192 || !tunnelPattern.test(value.trim())) {
-      this.publish({ error: 'Скопируйте ID с кнопки Copy tunnel ID в Tunnels, затем нажмите «Вставить ID туннеля». ID начинается с tunnel_.' });
-      return;
+    const generation = this.#generation;
+    this.#pending = true; this.#active = true; this.publish({ error: null });
+    try {
+      const result = await this.promptTunnelId();
+      if (generation !== this.#generation || result?.cancelled) return;
+      if (typeof result?.tunnelId !== 'string' || !tunnelPattern.test(result.tunnelId)) {
+        this.publish({ error: 'Вставьте полный ID туннеля, начинающийся с tunnel_, и подтвердите ввод ещё раз.' });
+        return;
+      }
+      this.#id = result.tunnelId;
+      this.publish({ step: 'key', hasTunnelId: true, error: null });
+    } catch (error) {
+      if (generation === this.#generation) this.publish({ error:
+        ['MAC_TUNNEL_ID_INVALID', 'WINDOWS_TUNNEL_ID_INVALID'].includes(error?.code)
+          ? 'Вставьте полный ID туннеля, начинающийся с tunnel_, и подтвердите ввод ещё раз.'
+          : 'Не удалось открыть окно ввода ID туннеля. Повторите попытку.' });
+    } finally {
+      // Copy/paste inside a native dialog must not trigger another action on close/cancel.
+      if (generation === this.#generation) this.#rememberClipboard();
+      this.#pending = false;
     }
-    this.#active = true; this.#last = digest(value); this.#id = value.trim();
-    this.publish({ step: 'key', hasTunnelId: true, error: null });
   }
   async configureManually(configure) {
     if (this.#pending) return;
     // Stop after collecting the ID so the user sees the API-key instructions first.
-    if (!this.#id) { this.pasteTunnelId(); return; }
+    if (!this.#id) { await this.pasteTunnelId(); return; }
+    const generation = this.#generation;
     this.#pending = true;
     try { return await configure({ tunnelId: this.#id }); }
-    finally { this.#pending = false; }
+    finally {
+      if (generation === this.#generation) this.#rememberClipboard();
+      this.#pending = false;
+    }
   }
   publish(patch) { Object.assign(this.state, patch); this.onChange(this.snapshot()); }
   reset() {
