@@ -203,11 +203,12 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await waitFor(() => sidebar.executeJavaScript('!document.getElementById("startup-components-body").hidden'), 'first-run components', snapshot);
   assert.equal(await sidebar.executeJavaScript('document.getElementById("startup-install-git").hidden'), false);
   await fs.writeFile(path.join(dataDir, 'startup-components.png'), (await sidebar.capturePage()).toPNG());
-  let copied = '', finishClipboard;
+  let copied = '', finishClipboard, nativeIdPrompts = 0;
   const clipboardFixture = { ...startupFixture, startup: { ...startupFixture.startup,
     page: 'loaded', account: 'signed-in', git: true, runtime: true, phase: 'tunnel' } };
   const copiedValues = [];
   const clipboardFlow = new TunnelClipboard({ readText: () => copied,
+    promptTunnelId: async () => { nativeIdPrompts++; return { tunnelId: 'tunnel_fixture1234567890123456' }; },
     configure: data => { copiedValues.push({ ...data }); return new Promise(r => { finishClipboard = r; }); },
     onChange: progress => sidebar.send('pilot:state-changed', { ...clipboardFixture,
       startup: { ...clipboardFixture.startup, clipboard: progress, tunnel: progress.step === 'done', busy: progress.step === 'connecting' } }),
@@ -218,6 +219,10 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await sidebar.executeJavaScript('document.getElementById("startup-tunnel-body").scrollIntoView({block:"start"})');
   await sidebar.executeJavaScript('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
   await fs.writeFile(path.join(dataDir, 'startup-tunnel-id.png'), (await sidebar.capturePage()).toPNG());
+  await clipboardFlow.pasteTunnelId(); // Empty clipboard: the native entry route still advances after confirmation.
+  assert.equal(nativeIdPrompts, 1); assert.equal(copiedValues.length, 0);
+  await waitFor(() => sidebar.executeJavaScript('!document.getElementById("startup-tunnel-key").hidden'), 'native ID confirmation shows key instructions', snapshot);
+  clipboardFlow.reset(); await clipboardFlow.tick({ active: true });
   copied = 'tunnel_fixture1234567890123456'; await clipboardFlow.tick({ active: true });
   await waitFor(() => sidebar.executeJavaScript('!document.getElementById("startup-tunnel-key").hidden && document.getElementById("startup-tunnel-create").hidden'), 'copied ID advances UI', snapshot);
   await sidebar.executeJavaScript('document.getElementById("startup-tunnel-progress").scrollIntoView({block:"start"})');

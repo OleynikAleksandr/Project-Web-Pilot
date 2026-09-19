@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import { JSDOM } from 'jsdom';
+import { TunnelClipboard } from '../src/tunnel-clipboard.mjs';
 import { StartupReadiness } from '../src/startup-readiness.mjs';
 import { createStartupView } from '../src/ui/startup.mjs';
 async function fixture(t, startup = {}) {
@@ -269,4 +270,33 @@ for (const platform of ['darwin', 'win32']) test(`${platform}: ID and API key ha
   assert.equal(byId('startup-tunnel-input').hidden, true); assert.equal(manual.disabled, true);
   f.emit({ busy: false, clipboard: { step: 'key', hasTunnelId: true, error: 'Повторите ввод.' } });
   assert.equal(keyPage.closest('li').hidden, false); assert.equal(manual.disabled, false);
+});
+
+for (const platform of ['darwin', 'win32']) test(`${platform}: clicking ID with empty clipboard waits for a native dialog before showing API key`, async t => {
+  const f = await fixture(t, { platform, account: 'signed-in', git: true, runtime: true });
+  let confirm, prompts = 0; const configured = [];
+  const flow = new TunnelClipboard({ readText: () => '',
+    promptTunnelId: () => { prompts++; return new Promise(resolve => { confirm = resolve; }); },
+    configure: async values => configured.push(values),
+    onChange: clipboard => f.emit({ clipboard }),
+  });
+  f.api.startup = async action => {
+    if (action === 'paste-tunnel-id') await flow.pasteTunnelId();
+    else if (action === 'configure-tunnel') await flow.configureManually(async values => configured.push(values));
+  };
+  const paste = f.document.querySelector('[data-startup=paste-tunnel-id]');
+  assert.match(f.document.getElementById('startup-tunnel-create').textContent, /системном окне.*Command\+V.*Ctrl\+V/s);
+  paste.click(); await f.settle();
+  assert.equal(prompts, 1); assert.equal(paste.disabled, true);
+  assert.equal(f.document.getElementById('startup-error').hidden, true);
+  assert.equal(f.document.getElementById('startup-tunnel-key').hidden, true);
+  confirm({ cancelled: true }); await f.settle();
+  assert.equal(paste.disabled, false); assert.equal(f.document.getElementById('startup-error').hidden, true);
+  paste.click(); await f.settle();
+  confirm({ tunnelId: 'tunnel_fixture1234567890123456' }); await f.settle();
+  assert.equal(prompts, 2); assert.deepEqual(configured, []);
+  assert.equal(f.document.getElementById('startup-tunnel-key').hidden, false);
+  f.document.querySelector('[data-startup=configure-tunnel]').click(); await f.settle();
+  assert.deepEqual(configured, [{ tunnelId: 'tunnel_fixture1234567890123456' }]);
+  flow.dispose();
 });

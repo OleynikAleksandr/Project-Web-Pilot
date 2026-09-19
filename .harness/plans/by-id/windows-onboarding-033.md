@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 45,
+  "plan_revision": 47,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
@@ -660,8 +660,8 @@
       "id": "D004",
       "title": "Проверить ручной путь ID и уточнить подсказки мастера",
       "why": "Проверить ручной путь ID и уточнить подсказки мастера",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "windows-onboarding-033",
         "task_id": "D004",
@@ -839,7 +839,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 45
+Revision: 47
 
 ## Цель
 
@@ -928,8 +928,8 @@ Revision: 45
   - Git Commit: [DONE] fix: Открывать диалог ID вместо чтения буфера по кнопке
   - Reference: windows-onboarding-033 / D003 / implementation
   - Файлы: src/tunnel-clipboard.mjs, src/main.mjs, tests/tunnel-clipboard.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md
-- [TODO] D004: Проверить ручной путь ID и уточнить подсказки мастера — Ожидает
-  - Git Commit: [PENDING] fix: Проверить ручной путь ID и уточнить подсказки мастера
+- [DONE] D004: Проверить ручной путь ID и уточнить подсказки мастера — Завершено
+  - Git Commit: [DONE] fix: Проверить ручной путь ID и уточнить подсказки мастера
   - Reference: windows-onboarding-033 / D004 / implementation
   - Файлы: src/ui/index.html, tests/startup-ui.test.mjs, tests/electron-smoke.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md
 - [TODO] D005: Синхронизировать обе платформы на версии 0.6.43 — Ожидает
