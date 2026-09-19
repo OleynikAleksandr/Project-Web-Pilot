@@ -4,13 +4,13 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 61,
+  "plan_revision": 62,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
   "execution_scope_status": "ACTIVE",
   "delivery_status": "IN_PROGRESS",
-  "objective": "Зафиксировать пользовательский полный проход 0.6.43, убрать атрибуты автора/email из создания проекта и приложения, выпустить 0.6.44 для Mac/Windows и опубликовать исходники и бинарный релиз на GitHub.",
+  "objective": "Убрать атрибуты автора/email из создания проекта и приложения, отдельно объяснить подключение нужного MCP в ChatGPT, выпустить 0.6.44 для Mac/Windows и опубликовать исходники и бинарный релиз на GitHub; реальная запись файла в Windows остаётся на пользовательской проверке.",
   "acceptance_criteria": [
     "Windows показывает и выполняет шаги компонентов, туннеля и создания проекта после входа",
     "Данные подключения проходят существующее защищённое хранилище Windows; настройки сохраняются",
@@ -23,7 +23,8 @@
     "Отмена не меняет настройки; подтверждённый ID ведёт к инструкции API key без второго немедленного диалога",
     "Обе платформы выпущены как 0.6.43; пользователь сам проверяет VM",
     "Создание проекта не запрашивает и не передаёт имя/email; служебная Git история создаётся при отсутствии пользовательской настройки без изменения глобального Git",
-    "Новый парный релиз 0.6.44, README и документация актуальны; GitHub main и release с обоими ZIP опубликованы и проверены после финального DOCS commit"
+    "Новый парный релиз 0.6.44, README и документация актуальны; GitHub main и release с обоими ZIP опубликованы и проверены после финального DOCS commit",
+    "Отчёт 09.13.31 о наличии только Mac-коннектора в Windows-чате учтён; локальная готовность туннеля не выдается за доступ агента к файлам Windows."
   ],
   "approved_scope": {
     "functional_paths": [
@@ -846,6 +847,41 @@
       "expected_commit_message": "feat: Удалить поля автора и ограничение создания проекта"
     },
     {
+      "id": "F001",
+      "title": "Показать подключение MCP в ChatGPT отдельным шагом",
+      "why": "В Windows-чате агент видит только Mac MCP; локальная готовность туннеля не подключает инструмент к разговору.",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "windows-onboarding-033",
+        "task_id": "F001",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "E003"
+      ],
+      "functional_paths": [
+        "src/ui/index.html",
+        "src/ui/startup.mjs",
+        "tests/startup-ui.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/first-run-onboarding.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "acceptance_criteria": [
+        "Общий мастер показывает отдельный шаг подключения MCP перед первым проектом, объясняет выбор туннеля компьютера, проверку списка tools и добавление подключения в новый чат; не заявляет автоматическую проверку аккаунта.",
+        "Существующие project/tunnel actions сохраняются; Windows и macOS получают правильные названия."
+      ],
+      "expected_commit_message": "fix: Выделить подключение MCP в ChatGPT перед первым проектом"
+    },
+    {
       "id": "E004",
       "title": "Подготовить 0.6.44 без персонального автора пакета",
       "why": "Подготовить 0.6.44 без персонального автора пакета",
@@ -857,7 +893,7 @@
         "role": "implementation"
       },
       "dependencies": [
-        "E003"
+        "F001"
       ],
       "functional_paths": [
         "package.json",
@@ -965,6 +1001,7 @@
         "E001",
         "E002",
         "E003",
+        "F001",
         "E004",
         "E005",
         "E006"
@@ -998,7 +1035,7 @@
         "Документы по индексу актуализированы, подтверждения отделены от ещё не выполненной приёмки Windows",
         "План сохраняется в собственной сессии; 031 и 032 не изменяются"
       ],
-      "expected_commit_message": "docs: актуализировать выпуск 0.6.43 с системным вводом ID"
+      "expected_commit_message": "docs: актуализировать парный выпуск 0.6.44 и подключение Windows MCP"
     }
   ],
   "blocked_reason": null,
@@ -1022,6 +1059,11 @@
       "id": "no-author-release-044",
       "text": "19.09.2026 пользователь подтвердил полный успешный проход, поручил удалить атрибуты автора/email, собрать новый релиз, актуализировать все документы и README и залить локальный релиз на GitHub. Авторизованы обычный push main и GitHub Release с обоими ZIP в существующий origin. Публикация выполняется после последнего DOCS commit и проверяется до итогового ответа.",
       "recorded_at": "2026-09-19T07:08:54.705466+00:00"
+    },
+    {
+      "id": "windows-chat-mcp-044",
+      "text": "19.09.2026 пользователь уточнил, что полный Windows-проход не был проверен, и показал 09.13.31: агент видит только Codex Local Mac, его вызовы возвращают Session terminated, Windows MCP отсутствует. Это не доказательство отказа Windows-туннеля. Добавляем явный шаг подключения в ChatGPT; фактическая запись Windows остаётся не подтверждена. Исходное поручение удалить автора, собрать обе платформы и опубликовать GitHub сохраняется. Пользователь также подтвердил: в Plugins есть только Mac; создание Windows-подключения ещё не выполнено.",
+      "recorded_at": "2026-09-19T07:16:45.280956+00:00"
     }
   ],
   "owner_session_id": "01a0b501-9a29-7b30-87a1-036ded275092",
@@ -1036,11 +1078,11 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 61
+Revision: 62
 
 ## Цель
 
-Зафиксировать пользовательский полный проход 0.6.43, убрать атрибуты автора/email из создания проекта и приложения, выпустить 0.6.44 для Mac/Windows и опубликовать исходники и бинарный релиз на GitHub.
+Убрать атрибуты автора/email из создания проекта и приложения, отдельно объяснить подключение нужного MCP в ChatGPT, выпустить 0.6.44 для Mac/Windows и опубликовать исходники и бинарный релиз на GitHub; реальная запись файла в Windows остаётся на пользовательской проверке.
 
 ## Критерии приёмки
 
@@ -1056,6 +1098,7 @@ Revision: 61
 - Обе платформы выпущены как 0.6.43; пользователь сам проверяет VM
 - Создание проекта не запрашивает и не передаёт имя/email; служебная Git история создаётся при отсутствии пользовательской настройки без изменения глобального Git
 - Новый парный релиз 0.6.44, README и документация актуальны; GitHub main и release с обоими ZIP опубликованы и проверены после финального DOCS commit
+- Отчёт 09.13.31 о наличии только Mac-коннектора в Windows-чате учтён; локальная готовность туннеля не выдается за доступ агента к файлам Windows.
 
 ## Микрозадачи
 
@@ -1151,6 +1194,10 @@ Revision: 61
   - Git Commit: [DONE] feat: Удалить поля автора и ограничение создания проекта
   - Reference: windows-onboarding-033 / E003 / implementation
   - Файлы: src/ui/index.html, src/ui/workspace-setup.mjs, tests/project-doctor-ui.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/WORKSPACE_SETUP.md
+- [TODO] F001: Показать подключение MCP в ChatGPT отдельным шагом — Ожидает
+  - Git Commit: [PENDING] fix: Выделить подключение MCP в ChatGPT перед первым проектом
+  - Reference: windows-onboarding-033 / F001 / implementation
+  - Файлы: src/ui/index.html, src/ui/startup.mjs, tests/startup-ui.test.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md
 - [TODO] E004: Подготовить 0.6.44 без персонального автора пакета — Ожидает
   - Git Commit: [PENDING] feat: Подготовить 0.6.44 без персонального автора пакета
   - Reference: windows-onboarding-033 / E004 / implementation
@@ -1164,7 +1211,7 @@ Revision: 61
   - Reference: windows-onboarding-033 / E006 / implementation
   - Файлы: docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/WORKSPACE_SETUP.md, docs/RELEASE.md, docs/DECISIONS.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать выпуск 0.6.43 с системным вводом ID
+  - Git Commit: [PENDING] docs: актуализировать парный выпуск 0.6.44 и подключение Windows MCP
   - Reference: windows-onboarding-033 / DOCS / implementation
   - Файлы: AGENTS.md, README.md, docs/WORKFLOW_START.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/CLEAN_INSTALL.md, docs/TRANSFER_TO_WINDOWS.md, docs/RELEASE.md, docs/WORKSPACE_SETUP.md, docs/CONTEXT_DELIVERY.md, docs/modules/runtime-lifecycle.md, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md
 
