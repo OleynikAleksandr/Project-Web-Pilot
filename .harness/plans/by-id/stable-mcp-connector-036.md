@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 2,
+  "plan_revision": 4,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "stable-mcp-connector-036",
@@ -87,8 +87,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "stable-mcp-connector-036",
         "task_id": "T001",
@@ -206,7 +206,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: stable-mcp-connector-036
 Current Task: нет
-Revision: 2
+Revision: 4
 
 ## Цель
 
@@ -220,8 +220,8 @@ Revision: 2
 
 ## Микрозадачи
 
-- [TODO] T001: Свести два backend к одному Secure MCP Tunnel — Ожидает
-  - Git Commit: [PENDING] fix: использовать один tunnel для обоих macOS MCP backend
+- [DONE] T001: Свести два backend к одному Secure MCP Tunnel — Завершено
+  - Git Commit: [DONE] fix: использовать один tunnel для обоих macOS MCP backend
   - Reference: stable-mcp-connector-036 / T001 / implementation
   - Файлы: tools/codex-app-server-mcp/control.py, src/mac-runtime-switch.mjs, src/mcp-runtime.mjs, tests/mac-runtime-switch.test.mjs, tests/codex-app-server-mcp.test.mjs, docs/modules/runtime-lifecycle.md, docs/modules/codex-app-server-executor.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 - [TODO] T002: Пересобрать 0.6.47 после stable-connector correction — Ожидает

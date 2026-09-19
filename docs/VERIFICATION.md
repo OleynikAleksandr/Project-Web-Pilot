@@ -1870,3 +1870,7 @@ Artifacts:
 - Windows x64: 316363643 bytes; SHA-256 `d5ce9cdfb507005efc6d949820f30a81fec85e90f78bb838d3dac9db2512fa3b`; ASAR `9a6123dec83ec2033a3f2c342dcefc9f7930f03ecd64843da11c1451d0462204`; codexExecutorFiles=4.
 
 Delivery: `~/Downloads/WebPilot-0.6.47/` contains both ZIP, INSTALL.txt, SHA256SUMS.txt and release-manifest.json. Native Windows and clean VM were not run.
+
+### Scope 036 / T001 — один stable connector
+
+Targeted regression после stable-connector correction: `node --test tests/mac-runtime-switch.test.mjs tests/mcp-runtime.test.mjs tests/codex-app-server-mcp.test.mjs` — 19/19 passed. Покрыты один shared tunnel при обоих modes, `selector-start` в стабильном LaunchAgent, retarget tunnel profile, MCP-only backend start, составной runtime facade и fail-closed cleanup legacy listeners: известный process identity сигналится только после двух совпадающих `ps` проверок, foreign listener остаётся нетронутым.

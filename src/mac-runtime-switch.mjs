@@ -38,6 +38,7 @@ export class CodexAppServerRuntime {
     this.expectedServerName = 'Codex App Server Local Mac';
     this.client = null;
     this.pending = null;
+    this.mcpOnlyPending = null;
     this.lastStatus = null;
   }
 
@@ -51,9 +52,9 @@ export class CodexAppServerRuntime {
     return this.installedSource;
   }
 
-  async control(command, { mcpOnly = false } = {}) {
-    if (!['setup', 'status', 'start', 'stop'].includes(command)) throw new RuntimeError('RUNTIME_ACTION_DENIED', 'Эта операция не поддерживается оболочкой.');
-    if (!await exists(path.join(this.installedSource, 'control.py')) || ['setup', 'start'].includes(command)) await this.syncSource();
+  async control(command, { mcpOnly = false, tunnelOnly = false } = {}) {
+    if (!['setup', 'status', 'start', 'stop', 'selector-start'].includes(command)) throw new RuntimeError('RUNTIME_ACTION_DENIED', 'Эта операция не поддерживается оболочкой.');
+    if (!await exists(path.join(this.installedSource, 'control.py')) || command === 'setup') await this.syncSource();
     const control = path.join(this.installedSource, 'control.py');
     const env = {
       ...this.environment,
@@ -63,7 +64,9 @@ export class CodexAppServerRuntime {
     };
     let output;
     try {
-      output = await this.execute(this.python, ['-B', control, command, ...(command === 'start' && mcpOnly ? ['--mcp-only'] : [])],
+      output = await this.execute(this.python, ['-B', control, command,
+        ...(command === 'start' && mcpOnly ? ['--mcp-only'] : []),
+        ...(command === 'start' && tunnelOnly ? ['--tunnel-only'] : [])],
         { cwd: this.installedSource, timeout: command === 'setup' ? 10 * 60_000 : command === 'start' ? 90_000 : 20_000,
           maxBuffer: 2 * 1024 * 1024, env });
     } catch (error) {
@@ -94,6 +97,56 @@ export class CodexAppServerRuntime {
     return this.pending;
   }
 
+  ensureMcpOnly() {
+    if (this.mcpOnlyPending) return this.mcpOnlyPending;
+    this.mcpOnlyPending = this.prepareMcpOnly().finally(() => { this.mcpOnlyPending = null; });
+    return this.mcpOnlyPending;
+  }
+
+  async prepareMcpOnly() {
+    let status = await this.control('status');
+    if (!await exists(status.runtime_python) || !await exists(status.tunnel_client)) {
+      await this.control('setup');
+      status = await this.control('status');
+    }
+    if (!status.mcp.ready) status = await this.control('start', { mcpOnly: true });
+    if (!status.mcp.ready || !status.mcp.owned) {
+      throw new RuntimeError('RUNTIME_NOT_READY', 'Codex App Server MCP ещё не готов.');
+    }
+    this.client = new LocalMcpClient(status.mcp_url, { expectedServerName: this.expectedServerName });
+    const connection = await this.client.initialize();
+    this.lastStatus = status;
+    return { ...status, connection };
+  }
+
+  async configureSelector(mode, mcpUrl, localDescriptor, localState) {
+    await this.syncSource();
+    const control = path.join(this.installedSource, 'control.py');
+    let output;
+    try {
+      output = await this.execute(this.python, ['-B', control, 'configure-selector',
+        '--mode', mode, '--mcp-url', mcpUrl,
+        '--local-python', localDescriptor.python,
+        '--local-control', localDescriptor.control,
+        '--local-root', localDescriptor.runtimeRoot,
+        '--local-state', localState],
+      { cwd: this.installedSource, timeout: 20_000, maxBuffer: 2 * 1024 * 1024,
+        env: { ...this.environment, PYTHONDONTWRITEBYTECODE: '1',
+          WEB_PILOT_CODEX_EXECUTOR_STATE_DIR: this.stateDir,
+          ...(this.tunnelClientCandidate ? { WEB_PILOT_CODEX_TUNNEL_CLIENT: this.tunnelClientCandidate } : {}) } });
+    } catch (error) {
+      let message = 'Не удалось настроить стабильный MCP connector.';
+      try { message = JSON.parse(error.stdout || error.stderr).error ?? message; } catch { /* bounded public error */ }
+      throw new RuntimeError('APP_SERVER_SELECTOR_CONFIG_FAILED', message);
+    }
+    let result;
+    try { result = JSON.parse(output.stdout); } catch {
+      throw new RuntimeError('RUNTIME_STATUS_INVALID', 'Selector вернул непонятный результат.');
+    }
+    if (result?.ok === false) throw new RuntimeError('APP_SERVER_SELECTOR_CONFIG_FAILED', String(result.error ?? 'Selector error'));
+    return result;
+  }
+
   async prepare() {
     let status = await this.control('status');
     if (!await exists(status.runtime_python) || !await exists(status.tunnel_client)) {
@@ -117,6 +170,59 @@ export class CodexAppServerRuntime {
     if (selection.sessionId) return validateContextPacket(await this.sessionPlans.loadContext(workspace, selection), workspace, selection);
     if (!this.client) await this.ensure();
     return this.client.loadContext(workspace);
+  }
+}
+
+export class MacSelectedRuntime {
+  constructor({ backendRuntime, stableRuntime, status }) {
+    this.backendRuntime = backendRuntime;
+    this.stableRuntime = stableRuntime;
+    this.lastStatus = status;
+  }
+
+  combine(backend, stable) {
+    const status = {
+      ...backend,
+      tunnel: stable.tunnel,
+      tunnel_ui: stable.tunnel_ui,
+      stable_tunnel_target: stable.tunnel_target,
+    };
+    this.lastStatus = status;
+    this.backendRuntime.lastStatus = status;
+    return status;
+  }
+
+  async ensure() {
+    const backend = await this.backendRuntime.ensureMcpOnly();
+    let stable = await this.stableRuntime.control('status');
+    if (!stable.tunnel?.ready) stable = await this.stableRuntime.control('start', { tunnelOnly: true });
+    if (!stable.tunnel?.ready || !stable.tunnel?.owned || !stable.tunnel?.configured) {
+      throw new RuntimeError('RUNTIME_NOT_READY', 'Стабильный Secure MCP Tunnel ещё не готов.');
+    }
+    return this.combine(backend, stable);
+  }
+
+  async control(command) {
+    if (command === 'status') {
+      const backend = await this.backendRuntime.control('status');
+      const stable = this.backendRuntime === this.stableRuntime
+        ? backend
+        : await this.stableRuntime.control('status');
+      return this.combine(backend, stable);
+    }
+    if (command === 'start') return this.ensure();
+    if (command === 'stop') {
+      const stable = await this.stableRuntime.control('stop');
+      const backend = this.backendRuntime === this.stableRuntime ? stable : await this.backendRuntime.control('stop');
+      this.lastStatus = null;
+      return { ok: true, stable, backend };
+    }
+    throw new RuntimeError('RUNTIME_ACTION_DENIED', 'Эта операция не поддерживается оболочкой.');
+  }
+
+  async loadContext(workspace, selection = {}) {
+    await this.ensure();
+    return this.backendRuntime.loadContext(workspace, selection);
   }
 }
 
@@ -144,7 +250,7 @@ export class MacRuntimeSwitcher {
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
 <key>Label</key><string>${xml(this.appServerLabel)}</string>
-<key>ProgramArguments</key><array><string>/usr/bin/python3</string><string>-B</string><string>${xml(control)}</string><string>start</string></array>
+<key>ProgramArguments</key><array><string>/usr/bin/python3</string><string>-B</string><string>${xml(control)}</string><string>selector-start</string></array>
 <key>WorkingDirectory</key><string>${xml(this.appServerRuntime.installedSource)}</string>
 <key>LimitLoadToSessionType</key><string>Aqua</string>
 <key>RunAtLoad</key><true/>
@@ -163,21 +269,89 @@ export class MacRuntimeSwitcher {
     await this.execute('/bin/launchctl', [action, `gui/${this.uid}/${label}`], { timeout: 10_000, maxBuffer: 64 * 1024 });
   }
 
+  async listenerPids(port) {
+    if (!Number.isSafeInteger(port) || port < 1024 || port > 65535) return [];
+    try {
+      const { stdout = '' } = await this.execute('/usr/sbin/lsof',
+        ['-nP', `-iTCP:${port}`, '-sTCP:LISTEN', '-t'], { timeout: 5_000, maxBuffer: 64 * 1024 });
+      return [...new Set(stdout.split(/\s+/).filter(Boolean).map(Number).filter(pid => Number.isSafeInteger(pid) && pid > 1))];
+    } catch {
+      return [];
+    }
+  }
+
+  async processCommand(pid) {
+    try {
+      const { stdout = '' } = await this.execute('/bin/ps', ['-p', String(pid), '-o', 'command='],
+        { timeout: 5_000, maxBuffer: 64 * 1024, env: { ...process.env, LC_ALL: 'C', LANG: 'C' } });
+      return stdout.trim();
+    } catch {
+      return '';
+    }
+  }
+
+  async stopLegacyOrphans(descriptor, status) {
+    const root = descriptor.runtimeRoot;
+    const python = descriptor.python;
+    const bridge = path.join(root, 'mcp', 'bridge_mcp.py');
+    const tunnel = path.join(root, 'tools', 'tunnel-client');
+    const candidates = [];
+    for (const [kind, value] of [['mcp', status?.mcp_url], ['tunnel', status?.tunnel_ui]]) {
+      let port = null;
+      try { port = Number(new URL(value).port); } catch { /* no known listener */ }
+      for (const pid of await this.listenerPids(port)) candidates.push({ kind, pid, port });
+    }
+    const signalled = [];
+    for (const candidate of candidates) {
+      const matches = command => candidate.kind === 'mcp'
+        ? command.includes(python) && command.includes(bridge) && command.includes(`--port ${candidate.port}`)
+        : command.startsWith(tunnel + ' ') && command.includes(' run ') && command.includes('--profile mac-local');
+      const first = await this.processCommand(candidate.pid);
+      if (!first || !matches(first)) continue;
+      const second = await this.processCommand(candidate.pid);
+      if (second !== first || !matches(second)) continue;
+      await this.execute('/bin/kill', ['-TERM', `-${candidate.pid}`], { timeout: 5_000, maxBuffer: 64 * 1024 });
+      signalled.push(candidate.pid);
+    }
+    return signalled;
+  }
+
   async activate(mode, { localRuntime } = {}) {
     if (!MAC_RUNTIME_MODES.includes(mode)) throw new RuntimeError('MAC_RUNTIME_MODE_INVALID', 'Неизвестный режим локальных инструментов.');
     if (!localRuntime) throw new TypeError('activate requires localRuntime');
     await this.ensureAppServerLaunchAgent();
-    if (mode === MAC_RUNTIME_APP_SERVER) {
-      await this.setLaunchAgentEnabled(this.localLabel, false);
-      await localRuntime.control('stop');
-      await this.setLaunchAgentEnabled(this.appServerLabel, true);
-      const status = await this.appServerRuntime.ensure();
-      return { mode, runtime: this.appServerRuntime, status };
-    }
+
+    // The historical Codex Local Mac LaunchAgent must never own a second tunnel.
+    // It stays disabled in both modes; the WebPilot selector is the only login item.
+    await this.setLaunchAgentEnabled(this.localLabel, false);
     await this.setLaunchAgentEnabled(this.appServerLabel, false);
+
+    const localDescriptor = await localRuntime.commandDescriptor();
+    const localStatus = await localRuntime.control('status');
+    const targetStatus = mode === MAC_RUNTIME_APP_SERVER
+      ? await this.appServerRuntime.control('status')
+      : localStatus;
+
+    await localRuntime.control('stop');
+    await this.stopLegacyOrphans(localDescriptor, localStatus);
     await this.appServerRuntime.control('stop');
-    await this.setLaunchAgentEnabled(this.localLabel, true);
-    const status = await localRuntime.ensure();
-    return { mode, runtime: localRuntime, status };
+    await this.appServerRuntime.configureSelector(mode, targetStatus.mcp_url, localDescriptor, localStatus.state_directory);
+
+    const backendRuntime = mode === MAC_RUNTIME_APP_SERVER ? this.appServerRuntime : localRuntime;
+    const backendStatus = await backendRuntime.ensureMcpOnly();
+    const stableStatus = await this.appServerRuntime.control('start', { tunnelOnly: true });
+    if (!stableStatus.tunnel?.ready || !stableStatus.tunnel?.owned || !stableStatus.tunnel?.configured) {
+      throw new RuntimeError('RUNTIME_NOT_READY', 'Стабильный Secure MCP Tunnel ещё не готов.');
+    }
+
+    const status = {
+      ...backendStatus,
+      tunnel: stableStatus.tunnel,
+      tunnel_ui: stableStatus.tunnel_ui,
+      stable_tunnel_target: stableStatus.tunnel_target,
+    };
+    await this.setLaunchAgentEnabled(this.appServerLabel, true);
+    const runtime = new MacSelectedRuntime({ backendRuntime, stableRuntime: this.appServerRuntime, status });
+    return { mode, runtime, status };
   }
 }

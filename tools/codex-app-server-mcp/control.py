@@ -21,6 +21,7 @@ import subprocess
 import sys
 import time
 import urllib.request
+from urllib.parse import urlparse
 import zipfile
 
 ROOT = Path(__file__).resolve().parent
@@ -35,6 +36,7 @@ PROFILE_DIR = PRIVATE / "tunnel-profile"
 PROFILE_NAME = "codex-executor"
 PROFILE = PROFILE_DIR / f"{PROFILE_NAME}.yaml"
 KEY_FILE = PRIVATE / "tunnel-key"
+SELECTOR_FILE = PRIVATE / "selector.json"
 MCP_PORT = int(os.environ.get("WEB_PILOT_CODEX_EXECUTOR_PORT", "17852"))
 TUNNEL_PORT = int(os.environ.get("WEB_PILOT_CODEX_EXECUTOR_TUNNEL_PORT", "17853"))
 TUNNEL_KEY_ENV = "WEB_PILOT_CODEX_EXECUTOR_TUNNEL_API_KEY"
@@ -210,6 +212,172 @@ def configure_tunnel(tunnel_id: str, key: str) -> dict[str, object]:
     }
 
 
+def normalize_mcp_url(value: str) -> str:
+    try:
+        parsed = urlparse(value)
+        port = parsed.port
+    except (TypeError, ValueError):
+        raise ValueError("A valid loopback MCP URL is required") from None
+    if (
+        parsed.scheme != "http"
+        or parsed.hostname != "127.0.0.1"
+        or port is None
+        or not 1024 <= port <= 65535
+        or parsed.path != "/mcp"
+        or parsed.params
+        or parsed.query
+        or parsed.fragment
+        or parsed.username
+        or parsed.password
+    ):
+        raise ValueError("A valid loopback MCP URL is required")
+    return f"http://127.0.0.1:{port}/mcp"
+
+
+def tunnel_target() -> str | None:
+    if not PROFILE.is_file():
+        return None
+    try:
+        profile = json.loads(PROFILE.read_text())
+        urls = profile.get("mcp", {}).get("server_urls", [])
+        if len(urls) != 1 or urls[0].get("channel") != "main":
+            return None
+        return normalize_mcp_url(urls[0].get("url"))
+    except (OSError, json.JSONDecodeError, ValueError, TypeError):
+        return None
+
+
+def set_tunnel_target(mcp_url: str) -> str:
+    target = normalize_mcp_url(mcp_url)
+    if not PROFILE.is_file() or not KEY_FILE.is_file():
+        raise RuntimeError("Configure the stable Secure MCP Tunnel before selecting a backend")
+    current = tunnel_target()
+    tunnel = managed_process("tunnel")
+    if tunnel["running"] and not tunnel["owned"]:
+        raise RuntimeError("Recorded tunnel PID belongs to another process")
+    if tunnel["owned"] and current != target:
+        stop_one("tunnel")
+    profile = json.loads(PROFILE.read_text())
+    profile.setdefault("mcp", {})["server_urls"] = [{"channel": "main", "url": target}]
+    private_write(PROFILE, json.dumps(profile, ensure_ascii=False, indent=2) + "\n")
+    return target
+
+
+def _absolute_existing_path(value: str, *, directory: bool = False) -> str:
+    path = Path(value).expanduser()
+    if not path.is_absolute():
+        raise ValueError("Selector paths must be absolute")
+    if directory:
+        if not path.is_dir():
+            raise ValueError(f"Selector directory does not exist: {path}")
+    elif not path.is_file():
+        raise ValueError(f"Selector file does not exist: {path}")
+    return str(path.resolve())
+
+
+def adopt_tunnel_from_local(local_state: str) -> bool:
+    if PROFILE.is_file() and KEY_FILE.is_file():
+        return False
+    state = Path(_absolute_existing_path(local_state, directory=True))
+    local_profile = state / "private" / "tunnel-profile" / "mac-local.yaml"
+    local_key = state / "private" / "tunnel-key"
+    if not local_profile.is_file() or not local_key.is_file():
+        raise RuntimeError("No configured Secure MCP Tunnel is available for the stable connector")
+    try:
+        profile = json.loads(local_profile.read_text())
+        tunnel_id = profile["control_plane"]["tunnel_id"]
+        key = local_key.read_text().strip()
+    except (OSError, json.JSONDecodeError, KeyError, TypeError):
+        raise RuntimeError("Existing Secure MCP Tunnel configuration is invalid") from None
+    configure_tunnel(str(tunnel_id), key)
+    return True
+
+
+def configure_selector(
+    mode: str,
+    mcp_url: str,
+    *,
+    local_python: str,
+    local_control: str,
+    local_root: str,
+    local_state: str,
+) -> dict[str, object]:
+    if mode not in {"local", "app-server"}:
+        raise ValueError("Selector mode must be local or app-server")
+    local = {
+        "python": _absolute_existing_path(local_python),
+        "control": _absolute_existing_path(local_control),
+        "runtime_root": _absolute_existing_path(local_root, directory=True),
+        "state_directory": _absolute_existing_path(local_state, directory=True),
+    }
+    adopted_tunnel = adopt_tunnel_from_local(local["state_directory"])
+    target = set_tunnel_target(mcp_url)
+    selector = {
+        "schema_version": 1,
+        "mode": mode,
+        "mcp_url": target,
+        "local": local,
+    }
+    private_write(SELECTOR_FILE, json.dumps(selector, ensure_ascii=False, indent=2) + "\n")
+    return {"configured": True, "mode": mode, "mcp_url": target, "adopted_tunnel": adopted_tunnel}
+
+
+def load_selector() -> dict[str, object]:
+    if not SELECTOR_FILE.is_file():
+        raise RuntimeError("MCP backend selector is not configured")
+    try:
+        selector = json.loads(SELECTOR_FILE.read_text())
+    except (OSError, json.JSONDecodeError):
+        raise RuntimeError("MCP backend selector is damaged") from None
+    if selector.get("schema_version") != 1 or selector.get("mode") not in {"local", "app-server"}:
+        raise RuntimeError("MCP backend selector is invalid")
+    selector["mcp_url"] = normalize_mcp_url(selector.get("mcp_url"))
+    return selector
+
+
+def selector_public() -> dict[str, object] | None:
+    try:
+        selector = load_selector()
+    except RuntimeError:
+        return None
+    return {"mode": selector["mode"], "mcp_url": selector["mcp_url"]}
+
+
+def run_local_control(selector: dict[str, object], command: str, *extra: str) -> dict[str, object]:
+    local = selector.get("local")
+    if not isinstance(local, dict):
+        raise RuntimeError("Local runtime selector details are missing")
+    python = _absolute_existing_path(str(local.get("python") or ""))
+    control = _absolute_existing_path(str(local.get("control") or ""))
+    runtime_root = _absolute_existing_path(str(local.get("runtime_root") or ""), directory=True)
+    env = os.environ.copy()
+    env["PYTHONDONTWRITEBYTECODE"] = "1"
+    env["WEB_PILOT_RUNTIME_ROOT"] = runtime_root
+    result = subprocess.run(
+        [python, "-B", control, command, *extra],
+        cwd=runtime_root,
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=90 if command == "start" else 20,
+        check=False,
+    )
+    if result.returncode != 0:
+        message = "Local runtime command failed"
+        for raw in (result.stderr, result.stdout):
+            try:
+                parsed = json.loads(raw)
+                message = parsed.get("error") or message
+                break
+            except (json.JSONDecodeError, TypeError):
+                continue
+        raise RuntimeError(message)
+    try:
+        return json.loads(result.stdout)
+    except json.JSONDecodeError:
+        raise RuntimeError("Local runtime returned an invalid lifecycle response") from None
+
+
 def pid_identity(pid: object) -> str | None:
     if not isinstance(pid, int) or pid <= 1:
         return None
@@ -317,6 +485,8 @@ def status() -> dict[str, object]:
         "tunnel": tunnel,
         "mcp_url": f"http://127.0.0.1:{MCP_PORT}/mcp",
         "tunnel_ui": f"http://127.0.0.1:{TUNNEL_PORT}/ui",
+        "tunnel_target": tunnel_target(),
+        "selector": selector_public(),
         "state_directory": str(STATE),
         "runtime_python": str(PYTHON),
         "tunnel_client": str(TUNNEL_CLIENT),
@@ -324,7 +494,38 @@ def status() -> dict[str, object]:
     }
 
 
-def start(*, mcp_only: bool = False) -> dict[str, object]:
+def start_tunnel() -> dict[str, object]:
+    if not (PROFILE.is_file() and KEY_FILE.is_file()):
+        raise RuntimeError("Configure the stable Secure MCP Tunnel first")
+    if not TUNNEL_CLIENT.is_file():
+        raise RuntimeError("tunnel-client is missing; run setup again")
+    target = tunnel_target()
+    if target is None:
+        raise RuntimeError("Stable tunnel profile has no valid MCP target")
+    env = environment()
+    tunnel = managed_process("tunnel")
+    if tunnel["running"] and not tunnel["owned"]:
+        raise RuntimeError("Recorded tunnel PID belongs to another process")
+    if not tunnel["owned"]:
+        if port_open(TUNNEL_PORT):
+            raise RuntimeError(f"Port {TUNNEL_PORT} belongs to another process; it will not be stopped")
+        env[TUNNEL_KEY_ENV] = KEY_FILE.read_text().strip()
+        launch(
+            "tunnel",
+            [str(TUNNEL_CLIENT), "run", "--profile", PROFILE_NAME, "--profile-dir", str(PROFILE_DIR)],
+            env,
+        )
+    deadline = time.monotonic() + 45
+    while not tunnel_ready():
+        if time.monotonic() > deadline or not managed_process("tunnel")["owned"]:
+            raise RuntimeError(f"Tunnel did not become ready; see {STATE / 'tunnel.err.log'}")
+        time.sleep(0.5)
+    return status()
+
+
+def start(*, mcp_only: bool = False, tunnel_only: bool = False) -> dict[str, object]:
+    if tunnel_only:
+        return start_tunnel()
     if not PYTHON.is_file():
         raise RuntimeError("Run control.py setup first")
     env = environment()
@@ -352,32 +553,14 @@ def start(*, mcp_only: bool = False) -> dict[str, object]:
     if mcp_only or not (PROFILE.is_file() and KEY_FILE.is_file()):
         result = status()
         result["next"] = (
-            "Local MCP is ready; configure a separate OpenAI Secure MCP Tunnel."
+            "Local MCP is ready; configure the stable OpenAI Secure MCP Tunnel."
             if not result["tunnel"]["configured"]
             else "Local MCP started without tunnel."
         )
         return result
 
-    if not TUNNEL_CLIENT.is_file():
-        raise RuntimeError("tunnel-client is missing; run setup again")
-    tunnel = managed_process("tunnel")
-    if tunnel["running"] and not tunnel["owned"]:
-        raise RuntimeError("Recorded tunnel PID belongs to another process")
-    if not tunnel["owned"]:
-        if port_open(TUNNEL_PORT):
-            raise RuntimeError(f"Port {TUNNEL_PORT} belongs to another process; it will not be stopped")
-        env[TUNNEL_KEY_ENV] = KEY_FILE.read_text().strip()
-        launch(
-            "tunnel",
-            [str(TUNNEL_CLIENT), "run", "--profile", PROFILE_NAME, "--profile-dir", str(PROFILE_DIR)],
-            env,
-        )
-    deadline = time.monotonic() + 45
-    while not tunnel_ready():
-        if time.monotonic() > deadline or not managed_process("tunnel")["owned"]:
-            raise RuntimeError(f"Tunnel did not become ready; see {STATE / 'tunnel.err.log'}")
-        time.sleep(0.5)
-    return status()
+    set_tunnel_target(f"http://127.0.0.1:{MCP_PORT}/mcp")
+    return start_tunnel()
 
 
 def stop_one(name: str) -> dict[str, object]:
@@ -407,14 +590,58 @@ def stop() -> dict[str, object]:
     return {"services": [stop_one("tunnel"), stop_one("mcp")]}
 
 
+def selector_start() -> dict[str, object]:
+    selector = load_selector()
+    local = selector.get("local")
+    if isinstance(local, dict):
+        # The legacy runtime owns its own PID records and re-checks process identity
+        # immediately before signalling.  A stale/foreign PID therefore fails closed.
+        run_local_control(selector, "stop")
+
+    if selector["mode"] == "local":
+        app_mcp = managed_process("mcp")
+        if app_mcp["running"]:
+            stop_one("mcp")
+        backend = run_local_control(selector, "start", "--mcp-only")
+        mcp = backend.get("mcp") if isinstance(backend, dict) else None
+        if not isinstance(mcp, dict) or not mcp.get("ready") or not mcp.get("owned"):
+            raise RuntimeError("Codex Local Mac MCP did not become ready")
+        target = normalize_mcp_url(str(backend.get("mcp_url") or ""))
+    else:
+        backend = start(mcp_only=True)
+        target = normalize_mcp_url(str(backend.get("mcp_url") or ""))
+
+    if selector.get("mcp_url") != target:
+        selector["mcp_url"] = target
+        private_write(SELECTOR_FILE, json.dumps(selector, ensure_ascii=False, indent=2) + "\n")
+    set_tunnel_target(target)
+    stable = start_tunnel()
+    stable["selected_backend"] = {
+        "mode": selector["mode"],
+        "mcp_url": target,
+        "mcp": backend.get("mcp"),
+    }
+    return stable
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Lifecycle for the experimental Codex App Server MCP")
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("setup")
     sub.add_parser("status")
     start_parser = sub.add_parser("start")
-    start_parser.add_argument("--mcp-only", action="store_true")
+    start_group = start_parser.add_mutually_exclusive_group()
+    start_group.add_argument("--mcp-only", action="store_true")
+    start_group.add_argument("--tunnel-only", action="store_true")
     sub.add_parser("stop")
+    sub.add_parser("selector-start")
+    selector = sub.add_parser("configure-selector")
+    selector.add_argument("--mode", required=True, choices=["local", "app-server"])
+    selector.add_argument("--mcp-url", required=True)
+    selector.add_argument("--local-python", required=True)
+    selector.add_argument("--local-control", required=True)
+    selector.add_argument("--local-root", required=True)
+    selector.add_argument("--local-state", required=True)
     configure = sub.add_parser("configure-tunnel")
     configure.add_argument("--tunnel-id")
     configure.add_argument(
@@ -433,9 +660,20 @@ def main() -> int:
             elif args.command == "status":
                 result = status()
             elif args.command == "start":
-                result = start(mcp_only=args.mcp_only)
+                result = start(mcp_only=args.mcp_only, tunnel_only=args.tunnel_only)
             elif args.command == "stop":
                 result = stop()
+            elif args.command == "configure-selector":
+                result = configure_selector(
+                    args.mode,
+                    args.mcp_url,
+                    local_python=args.local_python,
+                    local_control=args.local_control,
+                    local_root=args.local_root,
+                    local_state=args.local_state,
+                )
+            elif args.command == "selector-start":
+                result = selector_start()
             elif args.command == "configure-tunnel":
                 tunnel_id = args.tunnel_id or input("OpenAI tunnel_id: ").strip()
                 key = (

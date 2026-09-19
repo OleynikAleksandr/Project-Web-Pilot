@@ -196,11 +196,11 @@ export class McpRuntime {
     this.controlFile = null;
     this.runtimePrepared = false;
     this.pending = null;
+    this.mcpOnlyPending = null;
     this.lastStatus = null;
   }
 
-  async control(command, { mcpOnly = false } = {}) {
-    if (!['status', 'start', 'stop'].includes(command)) throw new RuntimeError('RUNTIME_ACTION_DENIED', 'Эта операция не поддерживается оболочкой.');
+  async commandDescriptor() {
     let runtimeFolder = this.folder;
     if (this.ensureRuntime && !this.runtimePrepared) {
       const ensured = await this.ensureRuntime();
@@ -214,14 +214,18 @@ export class McpRuntime {
     }
     const folder = await findRuntimeFolder(runtimeFolder, { platform: this.platform });
     const layout = runtimeLayout(folder, this.platform);
-    const controlFile = this.controlFile ?? layout.control;
+    return { folder, python: layout.python, control: this.controlFile ?? layout.control, runtimeRoot: folder };
+  }
+
+  async control(command, { mcpOnly = false } = {}) {
+    if (!['status', 'start', 'stop'].includes(command)) throw new RuntimeError('RUNTIME_ACTION_DENIED', 'Эта операция не поддерживается оболочкой.');
+    const descriptor = await this.commandDescriptor();
     let output;
     try {
-      const args = ['-B', controlFile, command, ...(command === 'start' && mcpOnly ? ['--mcp-only'] : [])];
-      output = await this.execute(layout.python, args,
-        { cwd: folder, timeout: command === 'start' ? 75000 : 12000, maxBuffer: 1024 * 1024,
-          env: { ...process.env, PYTHONDONTWRITEBYTECODE: '1',
-            ...(this.controlFile ? { WEB_PILOT_RUNTIME_ROOT: folder } : {}) } });
+      const args = ['-B', descriptor.control, command, ...(command === 'start' && mcpOnly ? ['--mcp-only'] : [])];
+      output = await this.execute(descriptor.python, args,
+        { cwd: descriptor.folder, timeout: command === 'start' ? 75000 : 12000, maxBuffer: 1024 * 1024,
+          env: { ...process.env, PYTHONDONTWRITEBYTECODE: '1', WEB_PILOT_RUNTIME_ROOT: descriptor.runtimeRoot } });
     } catch (error) {
       let message = 'Не удалось запустить локальные инструменты. Проверьте локальный Codex runtime.';
       try { message = JSON.parse(error.stderr).error ?? message; } catch { /* Keep a bounded public error. */ }
@@ -249,6 +253,24 @@ export class McpRuntime {
     if (this.pending) return this.pending;
     this.pending = this.prepare().finally(() => { this.pending = null; });
     return this.pending;
+  }
+
+  ensureMcpOnly() {
+    if (this.mcpOnlyPending) return this.mcpOnlyPending;
+    this.mcpOnlyPending = this.prepareMcpOnly().finally(() => { this.mcpOnlyPending = null; });
+    return this.mcpOnlyPending;
+  }
+
+  async prepareMcpOnly() {
+    let status = await this.control('status');
+    if (!status.mcp.ready) status = await this.control('start', { mcpOnly: true });
+    if (!status.mcp.ready || !status.mcp.owned) {
+      throw new RuntimeError('RUNTIME_NOT_READY', 'Локальный MCP ещё не готов.');
+    }
+    this.client = this.clientFactory(status.mcp_url);
+    const connection = await this.client.initialize();
+    this.lastStatus = status;
+    return { ...status, connection };
   }
 
   async prepare() {

@@ -269,6 +269,81 @@ test('experimental lifecycle keeps independent state, ports and tunnel credentia
     assert.equal(keyMode, 0o600);
     assert.equal(profile.includes('17842'), false);
     assert.equal(profile.includes('17843'), false);
+
+    const localRoot = path.join(root, 'local-runtime');
+    const localPython = path.join(root, 'local-python');
+    const localControl = path.join(root, 'local-control.py');
+    await mkdir(localRoot, { recursive: true });
+    await writeFile(localPython, '#!/bin/sh\n');
+    await writeFile(localControl, '# control\n');
+    const selected = await runPython(control, [
+      'configure-selector',
+      '--mode', 'local',
+      '--mcp-url', 'http://127.0.0.1:27842/mcp',
+      '--local-python', localPython,
+      '--local-control', localControl,
+      '--local-root', localRoot,
+      '--local-state', state,
+    ], env);
+    assert.equal(selected.code, 0, selected.stderr || selected.stdout);
+    assert.equal(JSON.parse(selected.stdout).mode, 'local');
+    const retargetedProfile = await (await import('node:fs/promises')).readFile(profilePath, 'utf8');
+    const selector = JSON.parse(await (await import('node:fs/promises')).readFile(path.join(state, 'private', 'selector.json'), 'utf8'));
+    assert.match(retargetedProfile, /127\.0\.0\.1:27842\/mcp/);
+    assert.equal(selector.mode, 'local');
+    assert.equal(selector.mcp_url, 'http://127.0.0.1:27842/mcp');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('stable selector adopts an existing local tunnel without exposing its key', async () => {
+  const root = await mkdtemp(path.join(tmpdir(), 'web-pilot-stable-tunnel-adopt-'));
+  const state = path.join(root, 'app-state');
+  const localState = path.join(root, 'local-state');
+  const localPrivate = path.join(localState, 'private');
+  const localProfileDir = path.join(localPrivate, 'tunnel-profile');
+  const localRoot = path.join(root, 'local-runtime');
+  const localPython = path.join(localRoot, '.venv', 'bin', 'python3');
+  const localControl = path.join(localRoot, 'control.py');
+  const control = path.join(repoRoot, 'tools', 'codex-app-server-mcp', 'control.py');
+  const secret = 'stable-local-key-abcdefghijklmnop';
+  await mkdir(localProfileDir, { recursive: true });
+  await mkdir(path.dirname(localPython), { recursive: true });
+  await writeFile(localPython, '#!/bin/sh\n');
+  await writeFile(localControl, '# control\n');
+  await writeFile(path.join(localPrivate, 'tunnel-key'), secret + '\n');
+  await writeFile(path.join(localProfileDir, 'mac-local.yaml'), JSON.stringify({
+    config_version: 1,
+    control_plane: { base_url: 'https://api.openai.com', tunnel_id: 'tunnel_abcdefghijklmnop', api_key: 'env:LOCAL_KEY' },
+    health: { listen_addr: '127.0.0.1:17843' },
+    mcp: { server_urls: [{ channel: 'main', url: 'http://127.0.0.1:17842/mcp' }] },
+  }, null, 2));
+  try {
+    const result = await runPython(control, [
+      'configure-selector',
+      '--mode', 'local',
+      '--mcp-url', 'http://127.0.0.1:17842/mcp',
+      '--local-python', localPython,
+      '--local-control', localControl,
+      '--local-root', localRoot,
+      '--local-state', localState,
+    ], {
+      WEB_PILOT_CODEX_EXECUTOR_STATE_DIR: state,
+      WEB_PILOT_CODEX_EXECUTOR_PORT: '27852',
+      WEB_PILOT_CODEX_EXECUTOR_TUNNEL_PORT: '27853',
+    });
+    assert.equal(result.code, 0, result.stderr || result.stdout);
+    const data = JSON.parse(result.stdout);
+    assert.equal(data.adopted_tunnel, true);
+    assert.equal(data.mcp_url, 'http://127.0.0.1:17842/mcp');
+    assert.equal(result.stdout.includes(secret), false);
+    const copiedKey = await (await import('node:fs/promises')).readFile(path.join(state, 'private', 'tunnel-key'), 'utf8');
+    const profile = await (await import('node:fs/promises')).readFile(path.join(state, 'private', 'tunnel-profile', 'codex-executor.yaml'), 'utf8');
+    assert.equal(copiedKey.trim(), secret);
+    assert.match(profile, /tunnel_abcdefghijklmnop/);
+    assert.match(profile, /127\.0\.0\.1:17842\/mcp/);
+    assert.doesNotMatch(profile, new RegExp(secret));
   } finally {
     await rm(root, { recursive: true, force: true });
   }

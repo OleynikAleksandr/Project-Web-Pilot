@@ -309,3 +309,11 @@ Direct probe подтвердил, что JavaScript literals проходят �
 Эксперимент перестаёт требовать параллельного запуска двух локальных MCP. В macOS Web Pilot управляет взаимоисключающими mode `local` и `app-server` через `MacRuntimeSwitcher`. App Server source копируется из release resource в private state, после чего стабильный LaunchAgent может запускать его независимо от исходного репозитория и обновляемого app bundle.
 
 Переключение не удаляет старый Codex Local Mac и не меняет его tunnel credentials: старый runtime только останавливается и его LaunchAgent disable-ится. Возврат в `local` делает обратную операцию. Это обеспечивает мгновенный rollback без восстановления файлов.
+
+## Stable connector correction — scope 036
+
+Предварительный A/B с двумя ChatGPT connector-ами остаётся историей эксперимента. В поставляемом Web Pilot 0.6.47 конечный контракт другой: в ChatGPT сохраняется один connector одного нового Secure MCP Tunnel, а Settings переключает только локальный backend за этим tunnel — `Codex Local Mac` или `Codex App Server Local Mac`.
+
+Private state App Server runtime теперь также владеет selector. При отсутствии уже настроенного experimental tunnel он безопасно принимает существующие credentials Codex Local Mac локально, не выводя key в stdout/renderer/argv; это сохраняет рабочий единственный connector на обычном upgrade. `configure-selector` атомарно сохраняет mode и retarget-ит единственный tunnel profile на проверенный `http://127.0.0.1:<port>/mcp`; `selector-start` после login/reboot останавливает старый local lifecycle через его собственный control, поднимает только выбранный MCP и затем общий tunnel. Старый `com.oleynik.CodexLocalMac` LaunchAgent не удаляется, но остаётся disabled; rollback выполняется тем же Settings control без изменения ChatGPT connector.
+
+Local backend работает `--mcp-only`; App Server backend также отделяет MCP start от `--tunnel-only`. Один внешний catalog из 47 tools остаётся привязан к одному tunnel, поэтому relaunch Web Pilot нужен лишь для обновления tool catalog после смены backend, а не для ручного включения второго connector.

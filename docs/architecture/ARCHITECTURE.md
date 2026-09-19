@@ -1245,3 +1245,9 @@ Settings использует существующий UI action facade: `projec
 The App Server MCP source is shipped outside ASAR as `codex-app-server-mcp/` in Electron Resources on both platforms. macOS runtime switching copies this immutable release source into `~/Library/Application Support/WebPilotCodexExecutor/source` before enabling its stable LaunchAgent. This separates release provenance from mutable private state, tunnel credentials, venv and PID records.
 
 Paired release verification treats the four executor files as first-class source snapshot entries. It checks physical staging/installed resources and extracts the same members directly from both ZIP files before publishing delivery hashes. The `tools/**` source tree is excluded from ASAR, so the packaged runtime has one canonical physical copy.
+
+### 0.6.47 stable MCP connector correction
+
+macOS runtime selector использует один внешний Secure MCP Tunnel и два взаимоисключающих local backend. Старый Codex Local Mac LaunchAgent всегда disabled; стабильный `WebPilotCodexExecutor` LaunchAgent хранится вне app bundle и выполняет `selector-start`. Settings сохраняет `local | app-server`, выбранный backend запускается MCP-only, а стабильный private tunnel меняет только loopback target. Если private stable tunnel ещё не существует, его credentials однократно импортируются из существующего Codex Local Mac private state внутри local worker без публикации секрета. Main работает через `MacSelectedRuntime`, который объединяет readiness выбранного MCP и общего tunnel в прежний runtime facade.
+
+Переход fail-closed: local orphan listener завершается только после совпадения известного runtime path/executable/port и повторной проверки command identity непосредственно перед signal. Чужие процессы не останавливаются.
