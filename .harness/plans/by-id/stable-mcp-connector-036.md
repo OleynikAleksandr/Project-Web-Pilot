@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 10,
+  "plan_revision": 11,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "stable-mcp-connector-036",
@@ -172,7 +172,8 @@
       ],
       "functional_paths": [],
       "documentation_paths": [
-        "docs/design/computer-use-latency-investigation.md"
+        "docs/design/computer-use-latency-investigation.md",
+        "docs/DOCUMENTATION_INDEX.md"
       ],
       "verification_ids": [],
       "acceptance_criteria": [
@@ -245,7 +246,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: stable-mcp-connector-036
 Current Task: нет
-Revision: 10
+Revision: 11
 
 ## Цель
 
@@ -270,7 +271,7 @@ Revision: 10
 - [TODO] T003: Зафиксировать исследование задержек Computer Use и MCP — Ожидает
   - Git Commit: [PENDING] docs: зафиксировать исследование задержек Computer Use
   - Reference: stable-mcp-connector-036 / T003 / implementation
-  - Файлы: docs/design/computer-use-latency-investigation.md
+  - Файлы: docs/design/computer-use-latency-investigation.md, docs/DOCUMENTATION_INDEX.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать документацию проекта
   - Reference: stable-mcp-connector-036 / DOCS / implementation
