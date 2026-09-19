@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 2,
+  "plan_revision": 3,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "computer-use-latency-localization-037",
@@ -73,7 +73,7 @@
       {
         "path": "docs/modules/codex-app-server-executor.md",
         "heading_path": [
-          "Codex App Server Local Executor"
+          "Module Specification — Codex App Server Local Executor"
         ],
         "required": true,
         "revision": "WORKTREE"
@@ -261,7 +261,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: computer-use-latency-localization-037
 Current Task: нет
-Revision: 2
+Revision: 3
 
 ## Цель
 
@@ -303,7 +303,7 @@ Revision: 2
 - docs/MODULES.md → Модули проекта
 - docs/DOCUMENTATION_INDEX.md → Каталог документации
 - docs/modules/runtime-lifecycle.md → Module Specification — Runtime Lifecycle
-- docs/modules/codex-app-server-executor.md → Codex App Server Local Executor
+- docs/modules/codex-app-server-executor.md → Module Specification — Codex App Server Local Executor
 - docs/design/computer-use-latency-investigation.md → Исследование задержек Computer Use и MCP
 
 Служебные состояния меняются только командами workflow. Приёмка не архивирует scope.
