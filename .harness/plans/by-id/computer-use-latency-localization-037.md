@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 8,
+  "plan_revision": 10,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "computer-use-latency-localization-037",
@@ -120,8 +120,8 @@
       "id": "T006",
       "title": "Сопоставить Web MCP и полученный тест Codex Desktop",
       "why": "Сохранить присланные пользователем raw samples и корректно отделить сравнение путей от локализации туннеля.",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "computer-use-latency-localization-037",
         "task_id": "T006",
@@ -317,7 +317,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: computer-use-latency-localization-037
 Current Task: нет
-Revision: 8
+Revision: 10
 
 ## Цель
 
@@ -336,8 +336,8 @@ Revision: 8
   - Git Commit: [DONE] docs: измерить Web MCP запись и чтение файла
   - Reference: computer-use-latency-localization-037 / T005 / implementation
   - Файлы: docs/design/computer-use-latency-investigation.md, docs/VERIFICATION.md
-- [TODO] T006: Сопоставить Web MCP и полученный тест Codex Desktop — Ожидает
-  - Git Commit: [PENDING] docs: сравнить задержки Web MCP и Codex Desktop
+- [DONE] T006: Сопоставить Web MCP и полученный тест Codex Desktop — Завершено
+  - Git Commit: [DONE] docs: сравнить задержки Web MCP и Codex Desktop
   - Reference: computer-use-latency-localization-037 / T006 / implementation
   - Файлы: docs/design/computer-use-latency-investigation.md, docs/VERIFICATION.md
 - [TODO] T001: Собрать воспроизводимый direct-loopback benchmark — Ожидает
