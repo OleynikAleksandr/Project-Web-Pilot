@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 47,
+  "plan_revision": 48,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-app-server-mcp-035",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Создать отдельный экспериментальный MCP для macOS, который предоставляет модели ChatGPT Web локальные инструменты через Codex App Server как исполнитель без запуска второго модельного агента, включая Computer Use, и подготовить безопасное A/B-сравнение с существующим Codex Local Mac.",
   "acceptance_criteria": [
     "Экспериментальный MCP запускается отдельно от штатного Codex Local Mac и не требует изменения кода Web Pilot для подключения в ChatGPT.",
@@ -431,13 +431,86 @@
       "file_limit_exception": "Release task меняет version/package scripts, release verifier и его один fixture/regression; четыре функциональных файла образуют один атомарный packaging contract."
     },
     {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "codex-app-server-mcp-035",
+        "task_id": "T011",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "T010"
+      ],
+      "functional_paths": [
+        "tools/codex-app-server-mcp/control.py",
+        "src/mac-runtime-switch.mjs",
+        "src/mcp-runtime.mjs",
+        "tests/mac-runtime-switch.test.mjs",
+        "tests/codex-app-server-mcp.test.mjs"
+      ],
+      "file_limit_exception": "Один stable-connector contract требует target/tunnel lifecycle в control.py, backend switch facade, mcp-only runtime path и два узких regression-файла; это единая correction обнаруженного end-to-end дефекта.",
+      "documentation_paths": [
+        "docs/modules/runtime-lifecycle.md",
+        "docs/modules/codex-app-server-executor.md",
+        "docs/VERIFICATION.md",
+        "docs/architecture/ARCHITECTURE.md"
+      ],
+      "verification_ids": [
+        "suite"
+      ],
+      "id": "T011",
+      "title": "Свести два backend к одному Secure MCP Tunnel",
+      "why": "Исключить два одновременно видимых connector/tool catalog и гарантировать, что Settings меняет backend за одним стабильным ChatGPT connector.",
+      "acceptance_criteria": [
+        "Новый Secure MCP Tunnel остаётся единственным tunnel для обоих modes; его profile target переключается между старым MCP URL и App Server MCP URL.",
+        "В режиме local старый runtime запускает только MCP (--mcp-only), старый tunnel/LaunchAgent остаются disabled; в app-server режиме старый MCP также остановлен.",
+        "Стабильный LaunchAgent нового selector восстанавливает выбранный backend+tunnel после login/reboot без запуска старого tunnel.",
+        "Orphan-процессы старого runtime на известных executable/path/ports обнаруживаются и завершаются только после строгой identity-проверки; чужие процессы не сигналятся.",
+        "После switch один ChatGPT connector предоставляет один каталог tools; backend initialize соответствует выбранному mode."
+      ],
+      "expected_commit_message": "fix: использовать один tunnel для обоих macOS MCP backend"
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "codex-app-server-mcp-035",
+        "task_id": "T012",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "T011"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "README.md"
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "id": "T012",
+      "title": "Пересобрать 0.6.47 после stable-connector correction",
+      "why": "Заменить предварительную 0.6.47 исправленной поставкой из T011 и обновить delivery hashes/evidence.",
+      "acceptance_criteria": [
+        "Полный suite и Electron smoke проходят после stable-connector correction.",
+        "npm run build повторно создаёт macOS/Windows 0.6.47 из T011 HEAD и проверяет четыре MCP resource files в обоих ZIP.",
+        "Постоянный Mac app обновлён, delivery ~/Downloads/WebPilot-0.6.47 перезаписан, manifest sourceCommit указывает на T011 commit.",
+        "RELEASE/README/VERIFICATION содержат финальные SHA-256 исправленной 0.6.47 и правило одного стабильного connector."
+      ],
+      "expected_commit_message": "release: пересобрать 0.6.47 с одним MCP connector"
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "codex-app-server-mcp-035",
         "task_id": "DOCS",
         "role": "implementation",
-        "iteration": 4
+        "iteration": 5
       },
       "dependencies": [
         "T001",
@@ -449,7 +522,9 @@
         "T007",
         "T008",
         "T009",
-        "T010"
+        "T010",
+        "T011",
+        "T012"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -494,10 +569,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: codex-app-server-mcp-035
 Current Task: нет
-Revision: 47
+Revision: 48
 
 ## Цель
 
@@ -554,8 +629,16 @@ Revision: 47
   - Git Commit: [DONE] release: собрать Project Web Pilot 0.6.47
   - Reference: codex-app-server-mcp-035 / T010 / implementation
   - Файлы: package.json, package-lock.json, scripts/release-all.mjs, tests/release-all.test.mjs, docs/RELEASE.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, README.md
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: актуализировать документацию Codex App Server MCP
+- [TODO] T011: Свести два backend к одному Secure MCP Tunnel — Ожидает
+  - Git Commit: [PENDING] fix: использовать один tunnel для обоих macOS MCP backend
+  - Reference: codex-app-server-mcp-035 / T011 / implementation
+  - Файлы: tools/codex-app-server-mcp/control.py, src/mac-runtime-switch.mjs, src/mcp-runtime.mjs, tests/mac-runtime-switch.test.mjs, tests/codex-app-server-mcp.test.mjs, docs/modules/runtime-lifecycle.md, docs/modules/codex-app-server-executor.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
+- [TODO] T012: Пересобрать 0.6.47 после stable-connector correction — Ожидает
+  - Git Commit: [PENDING] release: пересобрать 0.6.47 с одним MCP connector
+  - Reference: codex-app-server-mcp-035 / T012 / implementation
+  - Файлы: docs/RELEASE.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, README.md
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: актуализировать документацию Codex App Server MCP
   - Reference: codex-app-server-mcp-035 / DOCS / implementation
   - Файлы: docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/modules/runtime-lifecycle.md, docs/modules/codex-app-server-executor.md, docs/VERIFICATION.md
 
