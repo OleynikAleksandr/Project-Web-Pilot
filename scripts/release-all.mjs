@@ -21,8 +21,11 @@ async function files(folder) {
 }
 export async function sourceSnapshot(root) {
   const result = {};
+  const codexExecutor = await files(path.join(root, 'tools', 'codex-app-server-mcp'))
+    .then(list => list.filter(file => !file.includes('__pycache__') && !file.endsWith('.pyc'))
+      .map(file => 'tools/codex-app-server-mcp/' + file));
   for (const file of ['package.json', 'package-lock.json', ...await files(path.join(root, 'src')).then(a => a.map(f => 'src/' + f)),
-    ...await files(path.join(root, 'resources')).then(a => a.map(f => 'resources/' + f))])
+    ...await files(path.join(root, 'resources')).then(a => a.map(f => 'resources/' + f)), ...codexExecutor])
     result[file] = await hashFile(path.join(root, file));
   return result;
 }
@@ -37,7 +40,12 @@ export async function verifyPackagedSources({ root, resources, version, sources 
   if (!isDeepStrictEqual(pkg, expectedPackage)) throw new Error('Packaged runtime manifest mismatch');
   for (const [file, expected] of Object.entries(sources)) {
     if (file === 'package-lock.json' || file === 'package.json') continue; // Development metadata is pruned; runtime fields are checked above.
-    const actual = file.startsWith('resources/') ? await hashFile(path.join(resources, file)) : digest(extractFile(asar, file));
+    let actual;
+    if (file.startsWith('resources/')) actual = await hashFile(path.join(resources, file));
+    else if (file.startsWith('tools/codex-app-server-mcp/')) {
+      const relative = file.slice('tools/codex-app-server-mcp/'.length);
+      actual = await hashFile(path.join(resources, 'codex-app-server-mcp', relative));
+    } else actual = digest(extractFile(asar, file));
     if (actual !== expected) throw new Error('Packaged source mismatch: ' + file);
   }
   if (listPackage(asar).some(f => f.includes('Project Web Pilot.app'))) throw new Error('Nested app in package');
@@ -101,14 +109,23 @@ export async function releaseAll({ root = fileURLToPath(new URL('..', import.met
       await fs.rename(zip, winZip);
     } finally { await fs.rm(zipStage, { recursive: true, force: true }); }
     const artifacts = [];
-    for (const [platform, zip, member, proof] of [
-      ['macOS arm64', macZip, 'Project Web Pilot.app/Contents/Resources/app.asar', mac],
-      ['Windows x64', winZip, 'Project Web Pilot-win32-x64/resources/app.asar', windows],
+    const codexExecutorSources = Object.entries(sources)
+      .filter(([file]) => file.startsWith('tools/codex-app-server-mcp/'));
+    for (const [platform, zip, member, resourceRoot, proof] of [
+      ['macOS arm64', macZip, 'Project Web Pilot.app/Contents/Resources/app.asar', 'Project Web Pilot.app/Contents/Resources/codex-app-server-mcp', mac],
+      ['Windows x64', winZip, 'Project Web Pilot-win32-x64/resources/app.asar', 'Project Web Pilot-win32-x64/resources/codex-app-server-mcp', windows],
     ]) {
       await run('/usr/bin/unzip', ['-tq', zip], root);
       const packed = execFileSync('/usr/bin/unzip', ['-p', zip, member], { maxBuffer: 128 * 1024 * 1024, timeout: 180_000 });
       if (digest(packed) !== proof.asarSha256) throw new Error('ZIP differs from staging: ' + platform);
-      artifacts.push({ platform, file: path.basename(zip), bytes: (await fs.stat(zip)).size, sha256: await hashFile(zip), asarSha256: proof.asarSha256 });
+      for (const [sourceFile, expected] of codexExecutorSources) {
+        const relative = sourceFile.slice('tools/codex-app-server-mcp/'.length);
+        const resource = execFileSync('/usr/bin/unzip', ['-p', zip, resourceRoot + '/' + relative],
+          { maxBuffer: 16 * 1024 * 1024, timeout: 180_000 });
+        if (digest(resource) !== expected) throw new Error('ZIP Codex executor resource mismatch: ' + platform + ' / ' + relative);
+      }
+      artifacts.push({ platform, file: path.basename(zip), bytes: (await fs.stat(zip)).size, sha256: await hashFile(zip),
+        asarSha256: proof.asarSha256, codexExecutorFiles: codexExecutorSources.length });
     }
     const evidence = { version, sourceCommit, sourceFiles: Object.keys(sources).length, packagedSourceMatches: true,
       identity: { device: identity.dev, inode: identity.ino }, artifacts, nativeWindowsTested: false, cleanVmTested: false };

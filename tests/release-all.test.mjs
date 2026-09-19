@@ -12,15 +12,20 @@ async function fixture(t) {
   const input = path.join(root, 'input'), resources = path.join(root, 'package/resources');
   await fs.mkdir(path.join(root, 'src'), { recursive: true });
   await fs.mkdir(path.join(root, 'resources/runtime-control'), { recursive: true });
+  await fs.mkdir(path.join(root, 'tools/codex-app-server-mcp'), { recursive: true });
   await fs.writeFile(path.join(root, 'package.json'), JSON.stringify({ name: 'project-web-pilot', version: '1.0.0' }));
   await fs.writeFile(path.join(root, 'package-lock.json'), '{}');
   await fs.writeFile(path.join(root, 'src/startup.mjs'), 'export const platform = "win32";');
   await fs.writeFile(path.join(root, 'resources/runtime-control/windows-first-run.py'), 'print("fixture")');
+  await fs.writeFile(path.join(root, 'tools/codex-app-server-mcp/control.py'), 'print("codex executor fixture")');
   await fs.mkdir(input, { recursive: true });
   await fs.mkdir(resources, { recursive: true });
+  await fs.mkdir(path.join(resources, 'codex-app-server-mcp'), { recursive: true });
   await fs.cp(path.join(root, 'src'), path.join(input, 'src'), { recursive: true });
   await fs.copyFile(path.join(root, 'package.json'), path.join(input, 'package.json'));
   await fs.cp(path.join(root, 'resources'), path.join(resources, 'resources'), { recursive: true });
+  await fs.copyFile(path.join(root, 'tools/codex-app-server-mcp/control.py'),
+    path.join(resources, 'codex-app-server-mcp/control.py'));
   await createPackage(input, path.join(resources, 'app.asar'));
   return { root, input, resources, version: '1.0.0' };
 }
@@ -28,6 +33,10 @@ test('release refuses mismatched versions, omitted helper and stale source despi
   const f = await fixture(t);
   const proof = await verifyPackagedSources(f);
   assert.equal(proof.version, '1.0.0'); assert.match(proof.asarSha256, /^[a-f0-9]{64}$/);
+  const executor = path.join(f.resources, 'codex-app-server-mcp/control.py');
+  await fs.rm(executor);
+  await assert.rejects(verifyPackagedSources(f), { code: 'ENOENT' });
+  await fs.copyFile(path.join(f.root, 'tools/codex-app-server-mcp/control.py'), executor);
   await assert.rejects(verifyPackagedSources({ ...f, version: '1.0.1' }), /version mismatch/);
   const helper = path.join(f.resources, 'resources/runtime-control/windows-first-run.py');
   await fs.rm(helper);

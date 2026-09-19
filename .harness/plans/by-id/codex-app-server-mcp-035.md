@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 42,
+  "plan_revision": 45,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-app-server-mcp-035",
@@ -37,7 +37,8 @@
       "package.json",
       "package-lock.json",
       "scripts/release-all.mjs",
-      "tests/mcp-runtime.test.mjs"
+      "tests/mcp-runtime.test.mjs",
+      "tests/release-all.test.mjs"
     ],
     "documentation_paths": [
       "docs/architecture/OVERVIEW.md",
@@ -391,8 +392,8 @@
       "expected_commit_message": "feat: добавить выбор MCP runtime в Settings"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "codex-app-server-mcp-035",
         "task_id": "T010",
@@ -404,7 +405,8 @@
       "functional_paths": [
         "package.json",
         "package-lock.json",
-        "scripts/release-all.mjs"
+        "scripts/release-all.mjs",
+        "tests/release-all.test.mjs"
       ],
       "documentation_paths": [
         "docs/RELEASE.md",
@@ -425,7 +427,8 @@
         "Полный test suite и Electron smoke проходят; npm run build создаёт macOS arm64 и Windows x64 package и обновляет постоянный macOS app.",
         "Артефакты 0.6.47 лежат в ~/Downloads/WebPilot-0.6.47/ с manifest и SHA256."
       ],
-      "expected_commit_message": "release: собрать Project Web Pilot 0.6.47"
+      "expected_commit_message": "release: собрать Project Web Pilot 0.6.47",
+      "file_limit_exception": "Release task меняет version/package scripts, release verifier и его один fixture/regression; четыре функциональных файла образуют один атомарный packaging contract."
     },
     {
       "implementation_status": "TODO",
@@ -494,7 +497,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: codex-app-server-mcp-035
 Current Task: нет
-Revision: 42
+Revision: 45
 
 ## Цель
 
@@ -547,10 +550,10 @@ Revision: 42
   - Git Commit: [DONE] feat: добавить выбор MCP runtime в Settings
   - Reference: codex-app-server-mcp-035 / T009 / implementation
   - Файлы: src/ui/index.html, src/ui/project-archive.mjs, src/preload.cjs, docs/modules/runtime-lifecycle.md, docs/architecture/ARCHITECTURE.md
-- [TODO] T010: Собрать релиз 0.6.47 с новым MCP resource — Ожидает
-  - Git Commit: [PENDING] release: собрать Project Web Pilot 0.6.47
+- [DONE] T010: Собрать релиз 0.6.47 с новым MCP resource — Завершено
+  - Git Commit: [DONE] release: собрать Project Web Pilot 0.6.47
   - Reference: codex-app-server-mcp-035 / T010 / implementation
-  - Файлы: package.json, package-lock.json, scripts/release-all.mjs, docs/RELEASE.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, README.md
+  - Файлы: package.json, package-lock.json, scripts/release-all.mjs, tests/release-all.test.mjs, docs/RELEASE.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, README.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать документацию Codex App Server MCP
   - Reference: codex-app-server-mcp-035 / DOCS / implementation

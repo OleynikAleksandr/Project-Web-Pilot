@@ -1238,3 +1238,10 @@ macOS main process хранит один активный runtime facade. `MacRu
 #### Settings runtime selector
 
 Settings использует существующий UI action facade: `project-archive.mjs -> preload.setMacRuntimeMode -> pilot:set-mac-runtime-mode`. Renderer видит только несекретный `state.macRuntime { mode, label, service readiness }`; paths, tunnel keys и lifecycle commands остаются в main/private runtime. macOS control рендерится только при `platform === darwin`; Windows branch остаётся без изменений.
+
+
+### 0.6.47 release packaging for Codex App Server MCP
+
+The App Server MCP source is shipped outside ASAR as `codex-app-server-mcp/` in Electron Resources on both platforms. macOS runtime switching copies this immutable release source into `~/Library/Application Support/WebPilotCodexExecutor/source` before enabling its stable LaunchAgent. This separates release provenance from mutable private state, tunnel credentials, venv and PID records.
+
+Paired release verification treats the four executor files as first-class source snapshot entries. It checks physical staging/installed resources and extracts the same members directly from both ZIP files before publishing delivery hashes. The `tools/**` source tree is excluded from ASAR, so the packaged runtime has one canonical physical copy.

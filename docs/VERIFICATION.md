@@ -1842,3 +1842,31 @@ Targeted regression: 13/13 passed (`mac-runtime-switch.test.mjs` + `mcp-runtime.
 - initialize: `Codex App Server Local Mac`, 47 tools, MCP protocol 2025-03-26.
 
 После smoke старый runtime оставлен временно отключённым, как запросил пользователь.
+
+
+### T010 — Project Web Pilot 0.6.47 release
+
+Candidate version: `0.6.47` in package.json, package-lock.json and both packager `--app-version` targets.
+
+Pre-build verification:
+- release-specific tests: 7/7 passed;
+- full `npm test`: 325 tests, 323 passed, 0 failed, 2 Windows-only skipped;
+- `npm run smoke`: exit 0; isolated Electron result confirms navigation, startup, context delivery, settings, tool-call filter, archive/doctor/session-plan flows and permissions fixtures.
+
+Packaging contract:
+- `tools/codex-app-server-mcp` is an explicit extra-resource on macOS and Windows and is ignored from ASAR to avoid duplication;
+- release source snapshot includes all four MCP files;
+- packaged verification hashes physical MCP files in staging and installed Mac app;
+- ZIP verification extracts and hashes each physical MCP file directly from both delivery archives.
+
+Build result:
+- `npm run build`: exit 0;
+- sourceFiles=79, packagedSourceMatches=true;
+- permanent Mac app version 0.6.47, device 16777234 / inode 398344301 preserved;
+- installed resource hashes equal source for app_server_client.py, control.py, requirements.txt and server.py.
+
+Artifacts:
+- macOS arm64: 181093490 bytes; SHA-256 `0306ecd177e2954fe9ade401aae61fe2c2ec39287c7c98ae87560f641f378ff0`; ASAR `aa3242820b27b22eed950798b419e852d4e0756426076392f56c4177c1ad015c`; codexExecutorFiles=4.
+- Windows x64: 316363643 bytes; SHA-256 `d5ce9cdfb507005efc6d949820f30a81fec85e90f78bb838d3dac9db2512fa3b`; ASAR `9a6123dec83ec2033a3f2c342dcefc9f7930f03ecd64843da11c1451d0462204`; codexExecutorFiles=4.
+
+Delivery: `~/Downloads/WebPilot-0.6.47/` contains both ZIP, INSTALL.txt, SHA256SUMS.txt and release-manifest.json. Native Windows and clean VM were not run.

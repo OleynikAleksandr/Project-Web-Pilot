@@ -377,3 +377,24 @@ Source build commit: `ba9819ab5b241a979afcd543671d2c2fb09252f0`; 74 source files
 Native Windows и clean VM для 0.6.46 не запускались; изменение проверено автоматическими
 fixtures, а реальный текущий DOM ChatGPT остаётся пользовательской приёмкой. GitHub
 Release 0.6.46 не создавался: публикация требует отдельного поручения пользователя.
+
+
+## Парный выпуск 0.6.47 — выбор macOS MCP runtime / 19.09.2026
+
+В macOS Settings добавлен взаимоисключающий выбор **Codex Local Mac / Codex App Server Local Mac**. При переключении Web Pilot отключает LaunchAgent и останавливает невыбранный runtime, запускает выбранный, сохраняет mode и автоматически relaunch-ится. Старый runtime не удаляется, поэтому возврат не требует восстановления файлов. На текущем Mac после T008 старый Codex Local Mac оставлен disabled/stopped, новый Codex App Server Local Mac — enabled/ready.
+
+Codex App Server MCP теперь является физическим extra-resource релиза: `Contents/Resources/codex-app-server-mcp` на macOS и `resources/codex-app-server-mcp` на Windows. Release verifier сравнивает четыре файла resource с source SHA-256 в staging, установленном Mac app и непосредственно внутри обоих ZIP. Внутрь ASAR этот каталог не дублируется.
+
+Проверки перед сборкой:
+- полный Node suite: **325 tests / 323 passed / 0 failed / 2 Windows-only skipped**;
+- Electron isolated fixture: exit 0, полный smoke result получен;
+- release regression: 7/7 passed.
+
+`npm run build` завершён успешно; 79 source files сверены с обеими упаковками и постоянным Mac app (`packagedSourceMatches=true`).
+
+- Project-Web-Pilot-0.6.47-macOS-arm64.zip: 181093490 bytes; SHA-256 `0306ecd177e2954fe9ade401aae61fe2c2ec39287c7c98ae87560f641f378ff0`.
+- Project-Web-Pilot-0.6.47-Windows-x64.zip: 316363643 bytes; SHA-256 `d5ce9cdfb507005efc6d949820f30a81fec85e90f78bb838d3dac9db2512fa3b`.
+
+Source build commit в manifest: `1d5b344d7a771b2ae0967aedb301b48499d51abf`; последующие T010/DOCS commits содержат release evidence и plan metadata, не меняя упакованный runtime candidate. Постоянный `Project Web Pilot.app` имеет версию 0.6.47 и сохранил identity: device 16777234 / inode 398344301. macOS ASAR SHA-256: `aa3242820b27b22eed950798b419e852d4e0756426076392f56c4177c1ad015c`; Windows ASAR SHA-256: `9a6123dec83ec2033a3f2c342dcefc9f7930f03ecd64843da11c1451d0462204`.
+
+Каталог выдачи: `~/Downloads/WebPilot-0.6.47/`. Manifest: `.harness/runtime/releases/0.6.47/release-manifest.json`. GitHub Release 0.6.47 не публикуется без отдельного поручения пользователя. Native Windows и clean VM для 0.6.47 не запускались; Windows package verification выполнен на macOS build host.
