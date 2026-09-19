@@ -358,3 +358,12 @@ device 16777232 / inode 398344301 сохранены. Evidence:
 По прямому поручению пользователя main, тег и оба ZIP публикуются после DOCS.
 Тег указывает на финальный DOCS commit; отличие от source build commit — только
 документы и план. После загрузки проверяются серверные SHA-256 и набор assets.
+
+## Кандидат 0.6.46 — chat-layout-regression-034
+
+Версия `package.json`, `package-lock.json` и оба `--app-version` синхронизированы
+на 0.6.46. Функциональное исправление находится в commit `e1760c49166cf906eb0cb3db7b6aab39830540e5`:
+tool-only message/turn boundary теперь может целиком исключаться из layout, а mixed
+assistant message сохраняет содержательный корень. После проверенного T003 commit
+парный `npm run build` выполняется из чистого source HEAD; фактические ZIP, SHA-256,
+manifest и identity постоянного Mac app фиксируются финальной DOCS.

@@ -1679,3 +1679,12 @@ device 16777232 / inode 398344301 сохранены. Evidence:
 Пользователь считает план завершённым. Скриншот 09.53.24 показывает Windows MCP
 в настройках аккаунта. Проверки сборки не подменяют отдельное испытание записи
 файла в Windows; агент VM не запускал и Computer Use не использовал.
+
+## Кандидат 0.6.46 — chat-layout-regression-034
+
+T002 commit `e1760c49166cf906eb0cb3db7b6aab39830540e5` прошёл обязательные syntax и
+Electron smoke. До workflow commit дополнительно был выполнен прямой isolated-fixture
+`npm run smoke`: dedicated tool-only message boundary полностью исчезает из layout,
+mixed assistant message сохраняет полезный текст, show/hide обратимо восстанавливает
+и повторно скрывает оба вида оболочек. T003 повторно запускает полный `npm test` и
+Electron smoke; результаты парной package-сборки 0.6.46 фиксируются после `npm run build`.

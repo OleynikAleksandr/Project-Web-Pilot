@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 10,
+  "plan_revision": 12,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "chat-layout-regression-034",
@@ -158,8 +158,8 @@
       "expected_commit_message": "fix(chat): убрать пустоту tool-only message wrappers"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "chat-layout-regression-034",
         "task_id": "T003",
@@ -263,7 +263,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: chat-layout-regression-034
 Current Task: нет
-Revision: 10
+Revision: 12
 
 ## Цель
 
@@ -288,8 +288,8 @@ Revision: 10
   - Git Commit: [DONE] fix(chat): убрать пустоту tool-only message wrappers
   - Reference: chat-layout-regression-034 / T002 / implementation
   - Файлы: src/main.mjs, tests/electron-smoke.mjs, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T003: Подготовить и собрать релиз 0.6.46 — Ожидает
-  - Git Commit: [PENDING] build: выпустить Project Web Pilot 0.6.46
+- [DONE] T003: Подготовить и собрать релиз 0.6.46 — Завершено
+  - Git Commit: [DONE] build: выпустить Project Web Pilot 0.6.46
   - Reference: chat-layout-regression-034 / T003 / implementation
   - Файлы: package.json, package-lock.json, docs/VERIFICATION.md, docs/RELEASE.md, docs/architecture/ARCHITECTURE.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
