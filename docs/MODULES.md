@@ -9,7 +9,7 @@
 | Workflow Kit / Context Recovery | `docs/modules/workflow-kit-recovery.md` | Канонические планы сессий, lifecycle scope, адресованный recovery capsule, dependency context и continuity |
 | Project Doctor | `docs/modules/project-doctor.md` | Автономная диагностика, резервная копия и безопасное исправление известных проблем открытия проекта |
 | Runtime Lifecycle | `docs/modules/runtime-lifecycle.md` | MCP/tunnel discovery, bootstrap, process identity, persisted endpoints и self-healing startup |
-| Codex App Server Local Executor (experimental) | `docs/modules/codex-app-server-executor.md` | macOS A/B local-only MCP facade поверх Codex App Server: паритет 47 локальных tools, Computer Use, отдельные state/ports/tunnel без замены production runtime |
+| Codex App Server Local Executor | `docs/modules/codex-app-server-executor.md` | macOS local-only MCP facade поверх Codex App Server: паритет 47 локальных tools, Computer Use и альтернативный backend за единым stable connector |
 | Workspace & Sessions | `docs/modules/workspace-sessions.md` | Проекты, Chat/Work sessions, session tree, experience routing, оформление и сохранение геометрии интерфейса |
 | Release & Local Installation | `docs/RELEASE.md` | Постоянный macOS app, сохранение Finder-алиаса, отдельные ZIP и доставка релиза; стенд чистых ОС, точка передачи проверки установки и диагностика Computer Use/MCP — `docs/CLEAN_INSTALL.md` |
 
@@ -32,7 +32,11 @@ Workspace & Sessions дополнен planning document [Регрессия layo
 
 Контракт — [Codex App Server Local Executor](modules/codex-app-server-executor.md). T001–T005 реализованы как отдельный macOS-only runtime, не входящий в release Web Pilot: App Server выполняет direct local operations без модельного `turn/start`, а Computer Use идёт через bundled `node_repl -> @oai/sky`. Каталог нового MCP совпадает со старым Codex Local Mac 47/47 и не содержит публичных/облачных дублей ChatGPT.
 
-Отдельный state использует MCP 17852 и tunnel health 17853; после пользовательской настройки оба сервиса проверены `ready=true`. Production Codex Local Mac 17842/17843 во время реализации оставался `ready=true` и не изменялся. Benchmark и Computer Use evidence находятся в `docs/VERIFICATION.md`. Live A/B connector уже подключён в ChatGPT: все 47 tools реально вызваны, T007 перевёл Computer Use actions на поддерживаемый `node_repl -> @oai/sky` и реальный TextEdit smoke подтвердил ввод/capture. Эксперимент всё ещё не заменяет Runtime Lifecycle без отдельного решения пользователя; остаётся семантическая разница app-level Sky inventory против Quartz top-level window inventory старого MCP. T006 устраняет locale-зависимую ложную потерю process ownership в Terminal.
+Отдельный state использует MCP 17852 и tunnel health 17853; первоначальный A/B с отдельным tunnel и двумя ChatGPT connector-ами сохранён как историческое evidence. Benchmark и Computer Use evidence находятся в `docs/VERIFICATION.md`: все 47 tools нового backend реально вызваны из ChatGPT, T007 перевёл Computer Use actions на `node_repl -> @oai/sky`, TextEdit smoke подтвердил ввод/capture. Семантическая разница app-level Sky inventory против Quartz top-level window inventory старого MCP остаётся известным ограничением backend. T006 устраняет locale-зависимую ложную потерю process ownership в Terminal.
+
+## Один стабильный macOS connector — scope 036
+
+В исправленной 0.6.47 Runtime Lifecycle и Codex App Server executor объединены через один Secure MCP Tunnel/ChatGPT connector. `MacRuntimeSwitcher` оставляет старый `com.oleynik.CodexLocalMac` LaunchAgent disabled в обоих modes, запускает выбранный backend MCP-only и retarget-ит стабильный private tunnel Web Pilot на его фактический loopback endpoint. Settings сохраняет `local | app-server`, после switch приложение relaunch-ится; `selector-start` восстанавливает выбор после login/reboot. Обычная установка без прежнего A/B однократно переносит существующие local tunnel credentials только внутри private worker без вывода key. Финальный 0.6.47 собран из T001 commit `acde362fc75645dff20f2e494604d9b2b5289403`; delivery — `~/Downloads/WebPilot-0.6.47/`.
 
 ## Первый запуск на чистой системе — scope 031
 

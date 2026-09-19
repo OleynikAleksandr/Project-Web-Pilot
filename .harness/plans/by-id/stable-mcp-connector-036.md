@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 6,
+  "plan_revision": 9,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "stable-mcp-connector-036",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Завершить перенос двух macOS MCP backend на один стабильный Secure MCP Tunnel, пересобрать исправленный релиз 0.6.47 и привести документацию проекта в соответствие с фактической реализацией.",
   "acceptance_criteria": [
     "Один стабильный Secure MCP Tunnel обслуживает оба macOS backend и Settings переключает только backend за тем же ChatGPT connector.",
@@ -33,7 +33,11 @@
       "docs/VERIFICATION.md",
       "docs/RELEASE.md",
       "docs/architecture/ARCHITECTURE.md",
-      "README.md"
+      "README.md",
+      "docs/PRODUCT.md",
+      "docs/WORKFLOW_START.md",
+      "docs/CLEAN_INSTALL.md",
+      "docs/TRANSFER_TO_WINDOWS.md"
     ],
     "max_functional_files_per_task": 5
   },
@@ -158,8 +162,8 @@
       "expected_commit_message": "release: пересобрать 0.6.47 с одним MCP connector"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "stable-mcp-connector-036",
         "task_id": "DOCS",
@@ -176,7 +180,11 @@
       "documentation_paths": [
         "docs/architecture/OVERVIEW.md",
         "docs/MODULES.md",
-        "docs/DOCUMENTATION_INDEX.md"
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/PRODUCT.md",
+        "docs/WORKFLOW_START.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/TRANSFER_TO_WINDOWS.md"
       ],
       "acceptance_criteria": [
         "Все документы из индекса проверены; устаревшие сведения и ссылки исправлены; после этого результат готов только к пользовательской приёмке."
@@ -203,10 +211,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: stable-mcp-connector-036
 Current Task: нет
-Revision: 6
+Revision: 9
 
 ## Цель
 
@@ -228,10 +236,10 @@ Revision: 6
   - Git Commit: [DONE] release: пересобрать 0.6.47 с одним MCP connector
   - Reference: stable-mcp-connector-036 / T002 / implementation
   - Файлы: docs/RELEASE.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, README.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать документацию проекта
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать документацию проекта
   - Reference: stable-mcp-connector-036 / DOCS / implementation
-  - Файлы: docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
+  - Файлы: docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/PRODUCT.md, docs/WORKFLOW_START.md, docs/CLEAN_INSTALL.md, docs/TRANSFER_TO_WINDOWS.md
 
 ## Context Pack For This Cycle
 

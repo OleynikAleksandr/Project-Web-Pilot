@@ -32,14 +32,14 @@
 | docs/modules/workflow-kit-recovery.md | Specification Workflow Kit / Context Recovery / project continuity |
 | docs/modules/project-doctor.md | Контракт автономного Доктора проекта и границы автоматического ремонта |
 | docs/modules/runtime-lifecycle.md | Specification self-healing MCP/tunnel lifecycle |
-| docs/modules/codex-app-server-executor.md | Экспериментальный local-only MCP facade поверх Codex App Server, паритет Codex Local Mac, Computer Use и A/B |
+| docs/modules/codex-app-server-executor.md | Local-only MCP facade поверх Codex App Server: паритет Codex Local Mac, Computer Use, исторический A/B и stable-connector integration 0.6.47 |
 | docs/modules/workspace-sessions.md | Specification проектов, Chat/Work sessions, session tree, переходов после scope, оформления и сохранения геометрии интерфейса |
 | docs/design/chat-message-layout-regression.md | Planning исправления пустого layout скрытых tool-call message/turn wrappers и regression coverage |
 | docs/SOURCE_WORKSPACES.md | Исходные проекты, пути, версии и официальные ссылки |
 | docs/VERIFICATION.md | Проверки, release evidence и границы пользовательской приёмки |
 | docs/RELEASE.md | Парный выпуск macOS/Windows, постоянный macOS app, Finder-алиас, ZIP, GitHub Release и проверка доставки |
-| docs/CLEAN_INSTALL.md | Стенд Clean/Test macOS/Windows, evidence первого запуска до 0.6.45 и границы повторной проверки визуального релиза 0.6.46 |
-| docs/TRANSFER_TO_WINDOWS.md | Актуальная локальная Windows x64 поставка 0.6.46 и самостоятельная проверка пользователем |
+| docs/CLEAN_INSTALL.md | Стенд Clean/Test macOS/Windows, evidence первого запуска до 0.6.45 и границы проверки текущей поставки 0.6.47 |
+| docs/TRANSFER_TO_WINDOWS.md | Актуальная локальная Windows x64 поставка 0.6.47 и самостоятельная проверка пользователем |
 | docs/WORKSPACE_SETUP.md | Создание/подключение workspace и install/upgrade Workflow Kit |
 | docs/PROJECT_ARCHIVE.md | Архив workspace, возврат и безопасное локальное удаление; веб-чаты сохраняются |
 
@@ -124,4 +124,8 @@ message/turn wrappers без изменения MCP, conversation state или �
 
 ## Экспериментальный контракт — Codex App Server executor / scope 035
 
-`docs/modules/codex-app-server-executor.md` описывает отдельный macOS-only local MCP facade поверх Codex App Server. Scope не меняет `src/**`, версию или release Web Pilot и не заменяет production Runtime Lifecycle до пользовательского A/B. Экспериментальный каталог совпадает с Codex Local Mac 47/47, исключает cloud/public duplicates, Computer Use использует `node_repl -> @oai/sky`, а lifecycle хранит отдельные state/ports/tunnel credentials. Проверки и benchmark — `docs/VERIFICATION.md`; production README/PRODUCT/RELEASE/CLEAN_INSTALL/TRANSFER_TO_WINDOWS остаются без изменений, потому что приложение и поставка 0.6.46 этим scope не менялись. T006 стабилизировал process identity между Terminal/runtime; второй Secure MCP Tunnel после пользовательской настройки подтверждён `ready=true`. T007 завершил live A/B connector smoke: все 47 tools вызваны из ChatGPT, Computer Use actions переведены на Sky и подтверждены реальным TextEdit input/capture. Production replacement требует отдельного решения пользователя.
+`docs/modules/codex-app-server-executor.md` сохраняет историю macOS A/B Codex App Server facade: каталог совпадает с Codex Local Mac 47/47, cloud/public duplicates исключены, Computer Use использует `node_repl -> @oai/sky`; T006 стабилизировал process identity, T007 завершил live smoke всех 47 tools и TextEdit input/capture. Первоначальная схема двух tunnel/connector остаётся историческим evidence.
+
+## Действующий контракт — один macOS MCP connector / 0.6.47
+
+Scope `stable-mcp-connector-036` завершает интеграцию scope 035: в ChatGPT используется один стабильный Secure MCP Tunnel/connector, а macOS Settings переключает только backend `Codex Local Mac | Codex App Server Local Mac`. Старый local LaunchAgent остаётся disabled, выбранный backend запускается MCP-only, стабильный WebPilot selector retarget-ит tunnel и восстанавливает выбор после login/reboot. Existing Codex Local Mac tunnel credentials при необходимости импортируются внутри private worker без вывода секрета. Финальная поставка 0.6.47 собрана из `acde362fc75645dff20f2e494604d9b2b5289403`; артефакты и hashes — `docs/RELEASE.md` и `docs/VERIFICATION.md`. GitHub 0.6.47 не публикуется без отдельного поручения пользователя.
