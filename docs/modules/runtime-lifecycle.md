@@ -174,3 +174,5 @@ Codex binary выбирается детерминированно и всегд
 
 После пользовательской настройки второго tunnel T006 зафиксировал `LC_ALL=C`/`LANG=C` для `ps -o lstart,command`: process identity больше не зависит от locale Terminal. Реальный повторный `start` распознал MCP как owned и поднял отдельный tunnel; оба experimental сервиса подтверждены `ready=true`. Production runtime не останавливался и не перенастраивался.
 
+T007 подтвердил end-to-end использование именно через ChatGPT connector: все 47 experimental tools были реально вызваны. Computer Use actions переведены с Swift/CGEvent на bundled `node_repl -> @oai/sky`; TextEdit smoke доказал фактический ввод и capture. Это остаётся экспериментальным runtime рядом с production Codex Local Mac; решение о замене lifecycle не принимается автоматически.
+

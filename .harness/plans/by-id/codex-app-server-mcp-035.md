@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 29,
+  "plan_revision": 31,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-app-server-mcp-035",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Создать отдельный экспериментальный MCP для macOS, который предоставляет модели ChatGPT Web локальные инструменты через Codex App Server как исполнитель без запуска второго модельного агента, включая Computer Use, и подготовить безопасное A/B-сравнение с существующим Codex Local Mac.",
   "acceptance_criteria": [
     "Экспериментальный MCP запускается отдельно от штатного Codex Local Mac и не требует изменения кода Web Pilot для подключения в ChatGPT.",
@@ -305,8 +305,8 @@
       "expected_commit_message": "fix: перевести Computer Use actions на Sky"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "codex-app-server-mcp-035",
         "task_id": "DOCS",
@@ -365,10 +365,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: codex-app-server-mcp-035
 Current Task: нет
-Revision: 29
+Revision: 31
 
 ## Цель
 
@@ -413,8 +413,8 @@ Revision: 29
   - Git Commit: [DONE] fix: перевести Computer Use actions на Sky
   - Reference: codex-app-server-mcp-035 / T007 / implementation
   - Файлы: tools/codex-app-server-mcp/server.py, tests/codex-app-server-mcp.test.mjs, docs/modules/codex-app-server-executor.md, docs/VERIFICATION.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать документацию Codex App Server MCP
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать документацию Codex App Server MCP
   - Reference: codex-app-server-mcp-035 / DOCS / implementation
   - Файлы: docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/modules/runtime-lifecycle.md, docs/modules/codex-app-server-executor.md, docs/VERIFICATION.md
 
