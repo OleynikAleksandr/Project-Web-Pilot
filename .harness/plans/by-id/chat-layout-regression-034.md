@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 2,
+  "plan_revision": 3,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "chat-layout-regression-034",
@@ -86,6 +86,7 @@
       {
         "path": "docs/modules/workspace-sessions.md",
         "heading_path": [
+          "Module Specification — Workspace & Sessions",
           "Скрытые tool-call строки и автопрокрутка — scope hidden-tool-scroll-023"
         ],
         "required": true,
@@ -258,7 +259,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: chat-layout-regression-034
 Current Task: нет
-Revision: 2
+Revision: 3
 
 ## Цель
 
@@ -297,6 +298,6 @@ Revision: 2
 - docs/architecture/OVERVIEW.md → Краткая архитектура проекта
 - docs/MODULES.md → Модули проекта
 - docs/DOCUMENTATION_INDEX.md → Каталог документации
-- docs/modules/workspace-sessions.md → Скрытые tool-call строки и автопрокрутка — scope hidden-tool-scroll-023
+- docs/modules/workspace-sessions.md → Module Specification — Workspace & Sessions / Скрытые tool-call строки и автопрокрутка — scope hidden-tool-scroll-023
 
 Служебные состояния меняются только командами workflow. Приёмка не архивирует scope.
