@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 76,
+  "plan_revision": 77,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
@@ -1096,7 +1096,7 @@
         "Документы по индексу актуализированы, подтверждения отделены от ещё не выполненной приёмки Windows",
         "План сохраняется в собственной сессии; 031 и 032 не изменяются"
       ],
-      "expected_commit_message": "docs: актуализировать парный выпуск 0.6.44 и подключение Windows MCP"
+      "expected_commit_message": "docs: актуализировать выпуск 0.6.45 и инструкцию MCP для обеих платформ"
     }
   ],
   "blocked_reason": null,
@@ -1130,6 +1130,11 @@
       "id": "mcp-permissions-045",
       "text": "19.09.2026 пользователь считает план законченным и просит последнее дополнение к инструкции подключения MCP: отдельно описать режимы разрешений, удобство полного доступа и место настройки. Скриншот 09.53.24 показывает Codex Local Win MCP и четыре режима Permissions. Это не поручение менять разрешения аккаунта. Доставка сохраняет ранее заданный порядок парных выпусков Mac/Windows и GitHub. План не архивировать автоматически.",
       "recorded_at": "2026-09-19T08:01:07.908371+00:00"
+    },
+    {
+      "id": "paired-publish-045",
+      "text": "19.09.2026 пользователь повторно подтвердил: отдельный блок подключения MCP должен быть и в Mac-релизе для новых пользователей; собрать новый парный релиз, актуализировать всю документацию и README и залить всё на GitHub.",
+      "recorded_at": "2026-09-19T08:04:22.068358+00:00"
     }
   ],
   "owner_session_id": "01a0b501-9a29-7b30-87a1-036ded275092",
@@ -1144,7 +1149,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 76
+Revision: 77
 
 ## Цель
 
@@ -1287,7 +1292,7 @@ Revision: 76
   - Reference: windows-onboarding-033 / G002 / implementation
   - Файлы: docs/RELEASE.md, docs/VERIFICATION.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать парный выпуск 0.6.44 и подключение Windows MCP
+  - Git Commit: [PENDING] docs: актуализировать выпуск 0.6.45 и инструкцию MCP для обеих платформ
   - Reference: windows-onboarding-033 / DOCS / implementation
   - Файлы: AGENTS.md, README.md, docs/WORKFLOW_START.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/CLEAN_INSTALL.md, docs/TRANSFER_TO_WINDOWS.md, docs/RELEASE.md, docs/WORKSPACE_SETUP.md, docs/CONTEXT_DELIVERY.md, docs/modules/runtime-lifecycle.md, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md
 
