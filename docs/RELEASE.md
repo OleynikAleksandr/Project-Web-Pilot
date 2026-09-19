@@ -359,11 +359,21 @@ device 16777232 / inode 398344301 сохранены. Evidence:
 Тег указывает на финальный DOCS commit; отличие от source build commit — только
 документы и план. После загрузки проверяются серверные SHA-256 и набор assets.
 
-## Кандидат 0.6.46 — chat-layout-regression-034
+## Парный выпуск 0.6.46 — chat-layout-regression-034 / 19.09.2026
 
-Версия `package.json`, `package-lock.json` и оба `--app-version` синхронизированы
-на 0.6.46. Функциональное исправление находится в commit `e1760c49166cf906eb0cb3db7b6aab39830540e5`:
-tool-only message/turn boundary теперь может целиком исключаться из layout, а mixed
-assistant message сохраняет содержательный корень. После проверенного T003 commit
-парный `npm run build` выполняется из чистого source HEAD; фактические ZIP, SHA-256,
-manifest и identity постоянного Mac app фиксируются финальной DOCS.
+Исправление `e1760c49166cf906eb0cb3db7b6aab39830540e5` адаптирует скрытие tool calls:
+tool-only message/turn boundary исключается из layout целиком, а mixed assistant/user
+message сохраняет содержательный корень. Версия package/lock и обеих платформ — 0.6.46.
+
+- Project-Web-Pilot-0.6.46-macOS-arm64.zip: 181063171 bytes; SHA-256 `7d511780464ac809adef2e0d6a47a58c78ceeb12e7c445804e615bd3bba3c41a`.
+- Project-Web-Pilot-0.6.46-Windows-x64.zip: 316335471 bytes; SHA-256 `a2e5a544b1345a5b178329a11f691f6f905ed7471d646502e9cff47584c00c96`.
+
+Source build commit: `ba9819ab5b241a979afcd543671d2c2fb09252f0`; 74 source files сверены
+с обеими упаковками (`packagedSourceMatches=true`). ZIP integrity и ASAR внутри
+архивов проверены. Постоянный Mac app обновлён до 0.6.46 и сохранил device
+16777232 / inode 398344301. Manifest: `.harness/runtime/releases/0.6.46/release-manifest.json`;
+копии для передачи: `~/Downloads/WebPilot-0.6.46/`.
+
+Native Windows и clean VM для 0.6.46 не запускались; изменение проверено автоматическими
+fixtures, а реальный текущий DOM ChatGPT остаётся пользовательской приёмкой. GitHub
+Release 0.6.46 не создавался: публикация требует отдельного поручения пользователя.

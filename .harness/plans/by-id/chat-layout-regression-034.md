@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 12,
+  "plan_revision": 14,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "chat-layout-regression-034",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Восстановить компактное расположение последних сообщений ChatGPT: скрытые tool-call элементы не должны оставлять layout-footprint между последним видимым ответом и composer; сохранить ручную прокрутку и выпустить Project Web Pilot 0.6.46 для macOS и Windows.",
   "acceptance_criteria": [
     "При включённом скрытии tool calls служебный tool-only turn/message wrapper полностью исключается из layout, если он не содержит пользовательского или содержательного assistant-текста.",
@@ -192,8 +192,8 @@
       "expected_commit_message": "build: выпустить Project Web Pilot 0.6.46"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "chat-layout-regression-034",
         "task_id": "DOCS",
@@ -260,10 +260,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: chat-layout-regression-034
 Current Task: нет
-Revision: 12
+Revision: 14
 
 ## Цель
 
@@ -292,8 +292,8 @@ Revision: 12
   - Git Commit: [DONE] build: выпустить Project Web Pilot 0.6.46
   - Reference: chat-layout-regression-034 / T003 / implementation
   - Файлы: package.json, package-lock.json, docs/VERIFICATION.md, docs/RELEASE.md, docs/architecture/ARCHITECTURE.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать документацию 0.6.46
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать документацию 0.6.46
   - Reference: chat-layout-regression-034 / DOCS / implementation
   - Файлы: README.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/architecture/ARCHITECTURE.md, docs/WORKFLOW_START.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/CLEAN_INSTALL.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKSPACE_SETUP.md, docs/PROJECT_ARCHIVE.md, docs/SOURCE_WORKSPACES.md, docs/modules/workflow-kit-recovery.md, docs/modules/project-doctor.md, docs/modules/runtime-lifecycle.md, docs/modules/workspace-sessions.md, docs/modules/session-owned-plans.md, docs/modules/session-opening-performance.md, docs/modules/first-run-onboarding.md, docs/design/session-plan-navigation.md, docs/design/chat-message-layout-regression.md
 

@@ -37,8 +37,8 @@
 | docs/SOURCE_WORKSPACES.md | Исходные проекты, пути, версии и официальные ссылки |
 | docs/VERIFICATION.md | Проверки, release evidence и границы пользовательской приёмки |
 | docs/RELEASE.md | Парный выпуск macOS/Windows, постоянный macOS app, Finder-алиас, ZIP, GitHub Release и проверка доставки |
-| docs/CLEAN_INSTALL.md | Стенд Clean/Test macOS/Windows, реестр наблюдений первого запуска, принятый macOS-путь, ошибки Windows 0.6.41, выпуск 0.6.45, появление Windows MCP в аккаунте и границы доказательств |
-| docs/TRANSFER_TO_WINDOWS.md | Актуальная Windows x64 поставка 0.6.45 и самостоятельная проверка пользователем |
+| docs/CLEAN_INSTALL.md | Стенд Clean/Test macOS/Windows, evidence первого запуска до 0.6.45 и границы повторной проверки визуального релиза 0.6.46 |
+| docs/TRANSFER_TO_WINDOWS.md | Актуальная локальная Windows x64 поставка 0.6.46 и самостоятельная проверка пользователем |
 | docs/WORKSPACE_SETUP.md | Создание/подключение workspace и install/upgrade Workflow Kit |
 | docs/PROJECT_ARCHIVE.md | Архив workspace, возврат и безопасное локальное удаление; веб-чаты сохраняются |
 
@@ -113,3 +113,10 @@ Workspace Setup, Context Delivery, Workspace Sessions и архивирован�
 принятие плана пользователем, наблюдение Windows MCP 09.53.24, проверки и парный
 выпуск. Документы по индексу пересмотрены; неизменённые контракты Workflow Kit,
 архива и Доктора проекта сохраняются.
+
+0.6.46: scope `chat-layout-regression-034` исправляет пустую высоту скрытых tool-call
+message/turn wrappers без изменения MCP, conversation state или ручной прокрутки.
+Добавлен planning document, расширен Electron regression fixture, полный suite и smoke
+прошли. Обе платформы собраны из source commit `ba9819ab5b241a979afcd543671d2c2fb09252f0`;
+локальные ZIP находятся в `~/Downloads/WebPilot-0.6.46/`. GitHub 0.6.46 не публикуется
+без отдельного поручения пользователя.

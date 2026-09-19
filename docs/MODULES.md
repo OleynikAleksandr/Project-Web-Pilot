@@ -23,6 +23,10 @@
 
 Совместный контракт Workspace & Sessions и Workflow Kit / Context Recovery: [Быстрое открытие сессий и планов](modules/session-opening-performance.md). Контракт реализован и проверен в 0.6.29 / Kit 1.4.1: пакетные операции Git, единая validation, ограниченный readiness-кэш, ранний показ собственного плана и строгая доставка контекста. Source и packaged замеры подтверждены; все изменения находятся в main, лишние worktrees/ветка удалены. План остаётся в своей сессии.
 
+## Layout встроенного ChatGPT — scope 034
+
+Workspace & Sessions дополнен planning document [Регрессия layout скрытых tool calls](design/chat-message-layout-regression.md). В 0.6.46 визуальный DOM-adapter разрешает скрывать ближайший message/turn boundary только когда он целиком tool-only; mixed user/assistant message с полезным текстом сохраняется. Существующая автопрокрутка получает `refresh()` без принудительного возобновления follow. Node suite, Electron smoke и парная упаковка macOS arm64 / Windows x64 проверены; реальный DOM ChatGPT подтверждается пользователем после перезапуска новой версии.
+
 ## Первый запуск на чистой системе — scope 031
 
 Согласован контракт [Первый запуск Web Pilot на чистой системе](modules/first-run-onboarding.md): владелец Release & Local Installation, смежные части Runtime Lifecycle, Workspace Setup и Workspace & Sessions. 19.09.2026 выпущена **0.6.45** для macOS arm64 и Windows x64 одной командой `npm run build`; ZIP находятся в ~/Downloads/WebPilot-0.6.45/. В общем мастере обеих платформ есть отдельный шаг подключения MCP к ChatGPT и видимый блок «Разрешения MCP»: путь к настройкам, четыре режима и добровольный выбор Allow all actions для работы без повторных подтверждений. На новом Mac подключение также нужно создать; оно не появляется автоматически. Создание проекта не запрашивает автора и email. Исходники, установленное приложение и обе упаковки сверены. Пользователь считает план завершённым с этим дополнением; агент не запускает VM и не использует Computer Use.

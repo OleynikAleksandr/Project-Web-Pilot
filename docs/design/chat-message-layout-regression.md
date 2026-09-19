@@ -71,3 +71,9 @@ Electron smoke должен моделировать три формы DOM:
 - внутренние API ChatGPT.
 
 Исправление остаётся визуальным DOM-adapter и выпускается отдельной версией 0.6.46 для macOS arm64 и Windows x64.
+
+## Результат 0.6.46
+
+Planning зафиксирован commit `41ddd9bc4bd9cabfbfdb5d2d05ec42c57756f395`; реализация и regression fixture — `e1760c49166cf906eb0cb3db7b6aab39830540e5`; release source — `ba9819ab5b241a979afcd543671d2c2fb09252f0`. Workflow Kit перед выпуском подтвердил syntax, полный Node suite и Electron smoke. Парный `npm run build` сверил 74 source files с обоими packages и обновил постоянный Mac app без смены identity.
+
+Архивы находятся в `~/Downloads/WebPilot-0.6.46/`: macOS arm64 — 181063171 bytes, SHA-256 `7d511780464ac809adef2e0d6a47a58c78ceeb12e7c445804e615bd3bba3c41a`; Windows x64 — 316335471 bytes, SHA-256 `a2e5a544b1345a5b178329a11f691f6f905ed7471d646502e9cff47584c00c96`. Следующее доказательство — пользовательская проверка этой живой ChatGPT-сессии после полного перезапуска 0.6.46.

@@ -1680,11 +1680,27 @@ device 16777232 / inode 398344301 сохранены. Evidence:
 в настройках аккаунта. Проверки сборки не подменяют отдельное испытание записи
 файла в Windows; агент VM не запускал и Computer Use не использовал.
 
-## Кандидат 0.6.46 — chat-layout-regression-034
+## Автоматическая проверка и парный выпуск 0.6.46 — chat-layout-regression-034
 
-T002 commit `e1760c49166cf906eb0cb3db7b6aab39830540e5` прошёл обязательные syntax и
-Electron smoke. До workflow commit дополнительно был выполнен прямой isolated-fixture
-`npm run smoke`: dedicated tool-only message boundary полностью исчезает из layout,
-mixed assistant message сохраняет полезный текст, show/hide обратимо восстанавливает
-и повторно скрывает оба вида оболочек. T003 повторно запускает полный `npm test` и
-Electron smoke; результаты парной package-сборки 0.6.46 фиксируются после `npm run build`.
+T002 commit `e1760c49166cf906eb0cb3db7b6aab39830540e5` расширил fixture: dedicated
+tool-only message boundary полностью исчезает из layout, mixed assistant message
+сохраняет полезный текст, show/hide обратимо восстанавливает и повторно скрывает оба
+вида оболочек. Существующий controller получает только `refresh()`, без принудительного
+возобновления follow.
+
+Перед release commit `ba9819ab5b241a979afcd543671d2c2fb09252f0` Workflow Kit выполнил:
+- syntax: PASSED, 20 ms;
+- suite: PASSED, 47060 ms;
+- electron-smoke: PASSED, 86663 ms.
+
+Парный `npm run build` завершился успешно из чистого source commit `ba9819ab5b241a979afcd543671d2c2fb09252f0`.
+Все 74 source files совпали с macOS arm64 и Windows x64 packages; постоянный Mac app
+совпал со staging и сохранил device 16777232 / inode 398344301. ZIP integrity и
+вложенные ASAR проверены.
+
+- macOS arm64: 181063171 bytes; SHA-256 `7d511780464ac809adef2e0d6a47a58c78ceeb12e7c445804e615bd3bba3c41a`.
+- Windows x64: 316335471 bytes; SHA-256 `a2e5a544b1345a5b178329a11f691f6f905ed7471d646502e9cff47584c00c96`.
+
+Evidence: `.harness/runtime/releases/0.6.46/release-manifest.json`; delivery:
+`~/Downloads/WebPilot-0.6.46/`. Native Windows/clean VM не запускались. Автоматические
+fixtures доказывают алгоритм, но не подменяют проверку реального DOM ChatGPT пользователем.
