@@ -58,6 +58,9 @@ export function createStartupView({ document, api }) {
         : 'Нажмите «Проверить и продолжить». Web Pilot проверит установленные компоненты и подготовит недостающие. Повторно устанавливать уже готовый компонент Apple не нужно.');
     $('startup-install-git').hidden = windows || !!s.git || waitingApple;
     $('startup-plugin-platform').hidden = !windows;
+    $('startup-plugin-name').textContent = windows ? 'Codex Local Windows MCP' : 'Codex Local Mac';
+    $('startup-plugin-body').hidden = !logged || !ready;
+    $('startup-plugin-wait').hidden = logged && ready;
     $('startup-tunnel-status').textContent = s.tunnel ? 'Служба подключения работает' : !local ? 'После подготовки компьютера' : 'Нужна однократная настройка';
     $('startup-tunnel-body').hidden = !logged || !local || s.tunnel;
     const tunnelStep = s.clipboard?.step ?? 'tunnel';
@@ -67,7 +70,7 @@ export function createStartupView({ document, api }) {
       tunnel: 'Сначала — ID туннеля. Затем — отдельный API key.',
       key: 'ID туннеля получен. Шаг 2 из 2: создайте API key.',
       connecting: 'Данные получены. Проверяем подключение…',
-      done: 'Подключение проверено.',
+      done: 'Служба туннеля готова.',
     }[tunnelStep] ?? '';
     $('startup-tunnel-input').hidden = tunnelStep !== 'key';
     $('startup-project-body').hidden = !logged || !ready;
@@ -87,7 +90,7 @@ export function createStartupView({ document, api }) {
     const visibleStep = panel.hidden || !logged ? null : ready ? 'project' : local ? tunnelStep : null;
     if (windows && visibleStep === 'project' && lastVisibleStep !== 'project') $('startup-plugin-help').open = true;
     if (lastVisibleStep && visibleStep && visibleStep !== lastVisibleStep) {
-      const target = visibleStep === 'project' ? $('startup-project-body') : $('startup-tunnel-progress');
+      const target = visibleStep === 'project' ? $('startup-plugin-body') : $('startup-tunnel-progress');
       target.scrollIntoView?.({ block: 'nearest' });
     }
     lastVisibleStep = visibleStep;

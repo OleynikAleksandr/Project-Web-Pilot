@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 63,
+  "plan_revision": 65,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
@@ -850,8 +850,8 @@
       "id": "F001",
       "title": "Показать подключение MCP в ChatGPT отдельным шагом",
       "why": "В Windows-чате агент видит только Mac MCP; локальная готовность туннеля не подключает инструмент к разговору.",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "windows-onboarding-033",
         "task_id": "F001",
@@ -1077,7 +1077,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 63
+Revision: 65
 
 ## Цель
 
@@ -1193,8 +1193,8 @@ Revision: 63
   - Git Commit: [DONE] feat: Удалить поля автора и ограничение создания проекта
   - Reference: windows-onboarding-033 / E003 / implementation
   - Файлы: src/ui/index.html, src/ui/workspace-setup.mjs, tests/project-doctor-ui.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/WORKSPACE_SETUP.md
-- [TODO] F001: Показать подключение MCP в ChatGPT отдельным шагом — Ожидает
-  - Git Commit: [PENDING] fix: Выделить подключение MCP в ChatGPT перед первым проектом
+- [DONE] F001: Показать подключение MCP в ChatGPT отдельным шагом — Завершено
+  - Git Commit: [DONE] fix: Выделить подключение MCP в ChatGPT перед первым проектом
   - Reference: windows-onboarding-033 / F001 / implementation
   - Файлы: src/ui/index.html, src/ui/startup.mjs, tests/startup-ui.test.mjs, docs/modules/first-run-onboarding.md, docs/CLEAN_INSTALL.md, docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 - [TODO] E004: Подготовить 0.6.44 без персонального автора пакета — Ожидает

@@ -190,21 +190,22 @@ test('automatic step transition keeps its next instruction visible without repea
   const f = await fixture(t, { account: 'signed-in', git: true, runtime: true });
   const scrolled = [];
   f.document.querySelector('#startup-tunnel-progress').scrollIntoView = () => scrolled.push('key');
-  f.document.querySelector('#startup-project-body').scrollIntoView = () => scrolled.push('project');
+  f.document.querySelector('#startup-plugin-body').scrollIntoView = () => scrolled.push('plugin');
   f.emit({ clipboard: { step: 'key' } }); f.emit({ clipboard: { step: 'key' } });
   f.emit({ tunnel: true, clipboard: { step: 'done' } });
-  assert.deepEqual(scrolled, ['key', 'project']);
+  assert.deepEqual(scrolled, ['key', 'plugin']);
   assert.equal(f.document.querySelector('#startup-tunnel-input').closest('ol'), null);
 });
 
 
-test('an existing plugin does not force another setup; optional help is collapsed', async t => {
+test('connection instructions stay visible while optional troubleshooting is collapsed', async t => {
   const f = await fixture(t, { account: 'signed-in', git: true, runtime: true, tunnel: true });
   const help = f.document.querySelector('#startup-plugin-help');
   assert.equal(help.open, false);
-  assert.equal(f.document.querySelector('[data-startup=plugins]').closest('details'), help);
+  assert.equal(f.document.querySelector('[data-startup=plugins]').closest('details'), null);
+  assert.equal(f.document.querySelector('#startup-plugin-body').hidden, false);
   assert.equal(f.document.querySelector('#startup-continue').disabled, false);
-  assert.match(f.document.querySelector('#startup-project-body').textContent, /повторно добавлять его не нужно/);
+  assert.match(f.document.querySelector('#startup-plugin-body').textContent, /повторно добавлять его не нужно/);
   f.document.querySelector('#startup-continue').click(); await f.settle();
   assert.deepEqual(f.calls, ['continue', 'beginCreate']);
 });
@@ -299,4 +300,20 @@ for (const platform of ['darwin', 'win32']) test(`${platform}: clicking ID with 
   f.document.querySelector('[data-startup=configure-tunnel]').click(); await f.settle();
   assert.deepEqual(configured, [{ tunnelId: 'tunnel_fixture1234567890123456' }]);
   flow.dispose();
+});
+
+for (const platform of ['darwin', 'win32']) test(`${platform}: explicit ChatGPT connection step precedes project and is not a file-access receipt`, async t => {
+  const f = await fixture(t, { platform, account: 'signed-in', git: true, runtime: true });
+  const guide = f.document.querySelector('#startup-plugin-body');
+  const project = f.document.querySelector('#startup-project-body');
+  assert.equal(guide.hidden, true);
+  f.emit({ tunnel: true, clipboard: { step: 'done' } });
+  assert.equal(guide.hidden, false);
+  assert.equal(guide.compareDocumentPosition(project) & 4, 4);
+  assert.equal(f.document.querySelector('#startup-plugin-name').textContent, platform === 'win32' ? 'Codex Local Windows MCP' : 'Codex Local Mac');
+  assert.match(project.textContent, /меню инструментов/);
+  assert.match(project.textContent, /ещё не подтверждают доступ/);
+  f.document.querySelector('[data-startup=plugins]').click(); await f.settle();
+  assert.deepEqual(f.calls, ['plugins']);
+  f.emit({ account: 'signed-out' }); assert.equal(guide.hidden, true);
 });

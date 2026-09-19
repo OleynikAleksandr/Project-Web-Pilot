@@ -204,13 +204,29 @@ SOFTWARE.
           </div>
         </section>
         <section class="startup-step">
-          <h3><span class="startup-number">4</span> Первый проект</h3>
+          <h3><span class="startup-number">4</span> Подключение в ChatGPT</h3>
+          <div id="startup-plugin-body" hidden>
+            <p>Туннель готов. Теперь добавьте подключение к этому компьютеру в ChatGPT — оно не появляется автоматически.</p>
+            <ol>
+              <li>Откройте <strong>Plugins в основном сайдбаре ChatGPT</strong>. Список Plugins в настройках показывает уже установленные подключения.</li>
+              <li>Нажмите <strong>«+»</strong>, укажите имя <strong id="startup-plugin-name">Codex Local Mac</strong> и описание «Доступ к проектам на этом компьютере».</li>
+              <li>Выберите <strong>Connection: Tunnel</strong> и туннель этого компьютера. Для этого локального подключения выберите <strong>No authentication</strong> и создайте подключение.</li>
+              <li>Дождитесь списка инструментов. Если он не появился, проверьте выбранный туннель и его связь с вашим пространством ChatGPT.</li>
+            </ol>
+            <p>Если подключение к этому компьютеру уже есть, повторно добавлять его не нужно. Проверьте его туннель и список инструментов; одно название не подтверждает доступ.</p>
+            <button class="secondary" data-startup="plugins">Открыть Plugins в ChatGPT</button>
+            <p id="startup-plugin-platform" hidden>Для этой Windows используйте «Codex Local Windows MCP» и туннель этой виртуальной машины. Подключение Mac остаётся отдельным. Windows-подключение нужно проверить, даже если служба туннеля уже работает.</p>
+            <details id="startup-plugin-help"><summary>Нет кнопки «+» или подключение не работает?</summary><p>В ChatGPT откройте Settings → Security and login → Developer mode. Доступ зависит от настроек аккаунта и пространства. После изменения подключения обновите его список инструментов через Refresh.</p></details>
+          </div>
+          <p id="startup-plugin-wait" class="startup-status">После настройки туннеля.</p>
+        </section>
+        <section class="startup-step">
+          <h3><span class="startup-number">5</span> Первый проект</h3>
           <div id="startup-project-body">
-            <p>Теперь можно создать первый проект. Если подключение к этому компьютеру уже добавлено в ChatGPT, повторно добавлять его не нужно.</p>
+            <p>После добавления подключения создайте первый проект. В новом чате откройте меню инструментов и добавьте подключение к этому компьютеру.</p>
+            <p>Попросите агента прочитать и изменить тестовый файл в папке проекта. Если он видит только подключение другого компьютера, выберите нужное подключение и начните новый чат с ним.</p>
             <button id="startup-continue" class="primary" data-startup="continue">Создать первый проект</button>
-            <details id="startup-plugin-help"><summary>Нужно добавить или проверить подключение в ChatGPT</summary><p>В разделе Plugins найдите своё подключение. Если оно уже есть, проверьте, что оно использует туннель этого компьютера. Одно название плагина этого не подтверждает.</p><p>Если подключения нет: Plugins → «+» → Connection: Tunnel. Выберите созданный туннель; для этого локального подключения — No Auth. Если «+» недоступен, включите developer mode в настройках ChatGPT.</p><button class="secondary" data-startup="plugins">Открыть Plugins в ChatGPT</button></details>
-            <p id="startup-plugin-platform" hidden>Для этой Windows укажите имя «Codex Local Windows MCP» и выберите туннель этой виртуальной машины. Подключение вашего Mac остаётся отдельным. Настройку в ChatGPT нужно проверить, даже если служба туннеля уже работает.</p>
-            <p class="settings-help">Доступ к файлам проекта проверим первым действием агента.</p>
+            <p class="settings-help">Готовность туннеля и передача контекста ещё не подтверждают доступ агента к файлам. Результат проверяется по сохранённому файлу.</p>
           </div>
           <p id="startup-project-wait" class="startup-status">Завершите предыдущие шаги.</p>
         </section>
