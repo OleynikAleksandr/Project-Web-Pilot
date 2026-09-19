@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 13,
+  "plan_revision": 15,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "stable-mcp-connector-036",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Завершить перенос двух macOS MCP backend на один стабильный Secure MCP Tunnel, пересобрать исправленный релиз 0.6.47 и привести документацию проекта в соответствие с фактической реализацией.",
   "acceptance_criteria": [
     "Один стабильный Secure MCP Tunnel обслуживает оба macOS backend и Settings переключает только backend за тем же ChatGPT connector.",
@@ -191,8 +191,8 @@
       }
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "stable-mcp-connector-036",
         "task_id": "DOCS",
@@ -243,10 +243,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: stable-mcp-connector-036
 Current Task: нет
-Revision: 13
+Revision: 15
 
 ## Цель
 
@@ -272,8 +272,8 @@ Revision: 13
   - Git Commit: [DONE] docs: зафиксировать исследование задержек Computer Use
   - Reference: stable-mcp-connector-036 / T003 / implementation
   - Файлы: docs/design/computer-use-latency-investigation.md, docs/DOCUMENTATION_INDEX.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать документацию проекта
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать документацию проекта
   - Reference: stable-mcp-connector-036 / DOCS / implementation
   - Файлы: docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/PRODUCT.md, docs/WORKFLOW_START.md, docs/CLEAN_INSTALL.md, docs/TRANSFER_TO_WINDOWS.md
 
