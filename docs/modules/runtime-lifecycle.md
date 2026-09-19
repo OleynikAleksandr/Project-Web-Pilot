@@ -189,3 +189,10 @@ Web Pilot хранит `macRuntimeMode = local | app-server` в локальны
 Миграция 0.6.46→0.6.47: если `macRuntimeMode` ещё не сохранён, но private tunnel App Server уже настроен, выбирается `app-server`; иначе сохраняется прежний `local`.
 
 Реальная проверка 19.09.2026: `com.oleynik.CodexLocalMac => disabled`, старые MCP/tunnel остановлены; `com.oleynik.WebPilotCodexExecutor => enabled`, новый MCP/tunnel ready=true, initialize вернул server `Codex App Server Local Mac` и 47 tools.
+
+
+## 0.6.47 — переключатель runtime в Settings
+
+В macOS Settings появился двухпозиционный control **Codex Local Mac / Codex App Server Local Mac**. Он отображает сохранённый `macRuntime.mode` и readiness активного MCP/tunnel из main-process snapshot. На Windows секция скрыта, существующий Windows runtime UI не меняется.
+
+Renderer не управляет процессами напрямую: preload публикует только `setMacRuntimeMode(mode)`, а main-process action выполняет эксклюзивный switch T008. Пока операция выполняется, Settings controls блокируются. После успешного switch Web Pilot сохраняет mode и автоматически relaunch-ится, поэтому embedded ChatGPT получает заново каталог подключений/инструментов.

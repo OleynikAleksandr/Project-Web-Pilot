@@ -15,6 +15,8 @@ export function projectArchiveView(action) {
   $('theme-dark').addEventListener('click', () => action('setTheme', 'dark'));
   $('tool-calls-hide').addEventListener('click', () => action('setHideToolCalls', true));
   $('tool-calls-show').addEventListener('click', () => action('setHideToolCalls', false));
+  $('mac-runtime-local').addEventListener('click', () => action('setMacRuntimeMode', 'local'));
+  $('mac-runtime-app-server').addEventListener('click', () => action('setMacRuntimeMode', 'app-server'));
   $('configure-windows-tunnel').addEventListener('click', () => action('configureWindowsTunnel'));
   $('refresh-windows-runtime').addEventListener('click', () => action('refreshWindowsRuntime'));
   let state;
@@ -29,6 +31,22 @@ export function projectArchiveView(action) {
     $('tool-calls-hide').setAttribute('aria-pressed', String(state.hideToolCalls));
     $('tool-calls-show').setAttribute('aria-pressed', String(!state.hideToolCalls));
     $('tool-calls-hide').disabled = pending; $('tool-calls-show').disabled = pending;
+    const isMac = state.platform === 'darwin';
+    const macSection = $('mac-runtime-section');
+    macSection.hidden = !isMac;
+    if (isMac) {
+      const macRuntime = state.macRuntime ?? { mode: 'local', label: 'Codex Local Mac', service: null };
+      const appServer = macRuntime.mode === 'app-server';
+      $('mac-runtime-local').setAttribute('aria-pressed', String(!appServer));
+      $('mac-runtime-app-server').setAttribute('aria-pressed', String(appServer));
+      $('mac-runtime-local').disabled = pending;
+      $('mac-runtime-app-server').disabled = pending;
+      const service = macRuntime.service;
+      const ready = !!service?.mcpReady && !!service?.tunnelReady && !!service?.tunnelConfigured;
+      $('mac-runtime-status').textContent = ready
+        ? `Активен: ${macRuntime.label}. MCP и Secure MCP Tunnel готовы.`
+        : `Выбран: ${macRuntime.label}. Службы ещё не подтвердили полную готовность.`;
+    }
     const isWindows = state.platform === 'win32';
     const windowsSection = $('windows-runtime-section');
     windowsSection.hidden = !isWindows;

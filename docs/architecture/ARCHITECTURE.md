@@ -1233,3 +1233,8 @@ package и обеих платформ синхронизирована на 0.6
 ### 0.6.47: macOS runtime selector
 
 macOS main process хранит один активный runtime facade. `MacRuntimeSwitcher` переключает `McpRuntime(Codex Local Mac)` и `CodexAppServerRuntime` эксклюзивно, управляя LaunchAgent enable/disable и stop/start до замены runtime в `ContextSession`. App Server runtime работает из private installed source; release bundle является только доверенным источником обновления этой копии. После UI switch приложение relaunch-ится, чтобы embedded ChatGPT получил свежий connector/tool catalog.
+
+
+#### Settings runtime selector
+
+Settings использует существующий UI action facade: `project-archive.mjs -> preload.setMacRuntimeMode -> pilot:set-mac-runtime-mode`. Renderer видит только несекретный `state.macRuntime { mode, label, service readiness }`; paths, tunnel keys и lifecycle commands остаются в main/private runtime. macOS control рендерится только при `platform === darwin`; Windows branch остаётся без изменений.

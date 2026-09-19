@@ -279,6 +279,15 @@ SOFTWARE.
           <div class="theme-choice" role="group" aria-label="Отображение вызовов инструментов"><button id="tool-calls-hide" type="button" class="secondary" aria-pressed="true">Скрывать</button><button id="tool-calls-show" type="button" class="secondary" aria-pressed="false">Показывать</button></div>
           <p class="settings-help">Скрывает только служебные строки «Вызываемый инструмент» в диалоге. Сами инструменты и MCP продолжают работать.</p>
         </div>
+        <div id="mac-runtime-section" class="settings-section" hidden>
+          <p class="eyebrow">Локальные инструменты macOS</p>
+          <div class="theme-choice" role="group" aria-label="Активный MCP runtime">
+            <button id="mac-runtime-local" type="button" class="secondary" aria-pressed="false">Codex Local Mac</button>
+            <button id="mac-runtime-app-server" type="button" class="secondary" aria-pressed="false">Codex App Server Local Mac</button>
+          </div>
+          <p id="mac-runtime-status" class="description" role="status" aria-live="polite"></p>
+          <p class="settings-help">Работает только выбранный runtime. При переключении Web Pilot остановит текущий MCP и tunnel, запустит выбранный и автоматически перезапустится. Выбор сохраняется после входа в macOS.</p>
+        </div>
         <div id="windows-runtime-section" class="settings-section" hidden>
           <p class="eyebrow">Локальные инструменты Windows</p>
           <p id="windows-runtime-status" class="description" data-state="embedded">Встроенный runtime готов к установке.</p>

@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 40,
+  "plan_revision": 42,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-app-server-mcp-035",
@@ -358,8 +358,8 @@
       "expected_commit_message": "feat: добавить переключение macOS MCP runtime"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "codex-app-server-mcp-035",
         "task_id": "T009",
@@ -494,7 +494,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: codex-app-server-mcp-035
 Current Task: нет
-Revision: 40
+Revision: 42
 
 ## Цель
 
@@ -543,8 +543,8 @@ Revision: 40
   - Git Commit: [DONE] feat: добавить переключение macOS MCP runtime
   - Reference: codex-app-server-mcp-035 / T008 / implementation
   - Файлы: src/mac-runtime-switch.mjs, src/mcp-runtime.mjs, src/main.mjs, tests/mac-runtime-switch.test.mjs, tests/mcp-runtime.test.mjs, docs/modules/runtime-lifecycle.md, docs/modules/codex-app-server-executor.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T009: Добавить переключатель MCP в Settings — Ожидает
-  - Git Commit: [PENDING] feat: добавить выбор MCP runtime в Settings
+- [DONE] T009: Добавить переключатель MCP в Settings — Завершено
+  - Git Commit: [DONE] feat: добавить выбор MCP runtime в Settings
   - Reference: codex-app-server-mcp-035 / T009 / implementation
   - Файлы: src/ui/index.html, src/ui/project-archive.mjs, src/preload.cjs, docs/modules/runtime-lifecycle.md, docs/architecture/ARCHITECTURE.md
 - [TODO] T010: Собрать релиз 0.6.47 с новым MCP resource — Ожидает
