@@ -85,6 +85,18 @@
       "required": false,
       "timeout_ms": 120000,
       "stage": "commit"
+    },
+    {
+      "id": "smoke",
+      "executable": "npm",
+      "args": [
+        "run",
+        "smoke"
+      ],
+      "cwd": ".",
+      "required": false,
+      "timeout_ms": 120000,
+      "stage": "commit"
     }
   ],
   "budget": {
