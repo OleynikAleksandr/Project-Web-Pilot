@@ -1704,3 +1704,31 @@ tool-only message boundary полностью исчезает из layout, mixe
 Evidence: `.harness/runtime/releases/0.6.46/release-manifest.json`; delivery:
 `~/Downloads/WebPilot-0.6.46/`. Native Windows/clean VM не запускались. Автоматические
 fixtures доказывают алгоритм, но не подменяют проверку реального DOM ChatGPT пользователем.
+
+
+## Codex App Server MCP — T002/T003
+
+Scope `codex-app-server-mcp-035` проверяет отдельный macOS-only local executor без изменений `src/**` Web Pilot и без модельного turn Codex.
+
+T002 real integration probe использует user-installed `~/.npm-global/bin/codex` и временный `CODEX_HOME` с модельным endpoint, который намеренно отвечает 503 и считает обращения. Проверено:
+
+- `command/exec` выполняет локальную команду;
+- `fs/writeFile`, `fs/readFile`, `fs/readDirectory` работают через App Server;
+- клиент локально блокирует `turn/start`;
+- ephemeral `thread/start` используется только для `mcpServerStatus/list` / `mcpServer/tool/call`;
+- тестовый downstream MCP подключается и вызов `add(17,25)` возвращает 42;
+- после принудительного завершения App Server следующий direct file call поднимает новую generation;
+- число обращений к заблокированному модельному endpoint — **0**.
+
+Targeted Node test перед T003: 2 passed, 0 failed. Второй test проверяет local-only catalog source: обязательные 47 совместимых локальных tools присутствуют; публичные `openaiDeveloperDocs`, `codex_apps`, `playwright` наружу не объявлены.
+
+Live smoke T003 поднял экспериментальный FastMCP на `127.0.0.1:17852/mcp` и получил через настоящий MCP client:
+
+- `tools/list`: **47 tools**;
+- `bridge_status`: executor binary `/Users/oleksandroliinyk/.npm-global/bin/codex`, version `codex-cli 0.155.1`;
+- `computer_status`: `Codex App Server -> node_repl -> @oai/sky`, available=true, обнаружено 28 приложений, 7 running в момент smoke;
+- Computer Use inspection не запускал пользовательских UI actions.
+
+Красная legacy-запись `computer-use` в Codex не используется новым facade. Реальный bundled Computer Use path — connected `node_repl` + `@oai/sky`; отсутствие разрешения конкретному приложению возвращается как явная ошибка и не обходится.
+
+Это local/source evidence. End-to-end Secure MCP Tunnel и пользовательское A/B выполняются после T004/T005.

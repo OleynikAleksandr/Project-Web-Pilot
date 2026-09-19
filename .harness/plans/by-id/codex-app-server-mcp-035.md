@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 10,
+  "plan_revision": 12,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-app-server-mcp-035",
@@ -138,8 +138,8 @@
       "expected_commit_message": "feat: добавить клиент Codex App Server"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "codex-app-server-mcp-035",
         "task_id": "T003",
@@ -297,7 +297,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: codex-app-server-mcp-035
 Current Task: нет
-Revision: 10
+Revision: 12
 
 ## Цель
 
@@ -322,8 +322,8 @@ Revision: 10
   - Git Commit: [DONE] feat: добавить клиент Codex App Server
   - Reference: codex-app-server-mcp-035 / T002 / implementation
   - Файлы: tools/codex-app-server-mcp/app_server_client.py, tests/codex-app-server-mcp.test.mjs, docs/modules/codex-app-server-executor.md, docs/DOCUMENTATION_INDEX.md
-- [TODO] T003: Реализовать ChatGPT-facing MCP facade — Ожидает
-  - Git Commit: [PENDING] feat: добавить MCP facade поверх Codex App Server
+- [DONE] T003: Реализовать ChatGPT-facing MCP facade — Завершено
+  - Git Commit: [DONE] feat: добавить MCP facade поверх Codex App Server
   - Reference: codex-app-server-mcp-035 / T003 / implementation
   - Файлы: tools/codex-app-server-mcp/server.py, tools/codex-app-server-mcp/requirements.txt, tests/codex-app-server-mcp.test.mjs, docs/modules/codex-app-server-executor.md, docs/VERIFICATION.md
 - [TODO] T004: Добавить автономный lifecycle и отдельный tunnel — Ожидает
