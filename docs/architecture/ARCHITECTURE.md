@@ -1185,3 +1185,6 @@ pasteTunnelId открывает диалог без чтения буфера �
 0.6.43 / D004: общий UI сохраняет две отдельные стадии; действие paste-tunnel-id
 теперь ждёт native prompt. Проверки связывают реальные DOM-клики с TunnelClipboard
 и подменяют только системный диалог. Electron fixture проверяет переход после ID.
+
+0.6.43 / D005: общая версия, lock и оба packager app-version синхронизированы.
+Оба ZIP включают обновлённые native workers, runtime facade и общий мастер.

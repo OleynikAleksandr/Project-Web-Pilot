@@ -282,3 +282,10 @@ C002 suite и Electron TEST FIXTURE smoke прошли. Пакетные вер�
 Каталог выдачи: `~/Downloads/WebPilot-0.6.42/`. Manifest: `.harness/runtime/releases/0.6.42/release-manifest.json`. Лог сборки: `.harness/runtime/033-build-042.log`.
 
 Source commit `e93db24548b824900a7523e192f4e3e8f2dddd79`; 74 файлов зафиксированы, src/resources и runtime manifest совпадают в обеих упаковках. ZIP integrity и asar внутри архивов проверены, SHA копий в Downloads совпадают. Постоянный app версии 0.6.42 совпадает со staging; сохранена identity: device 16777232, inode 398344301. Native Windows и чистые VM не запускались, новый реальный проход выполняет пользователь.
+
+## Подготовка 0.6.43 — системный ввод ID
+
+Кнопка «Вставить ID туннеля» открывает отдельное системное поле на Mac и Windows.
+Пустой/недоступный буфер не вызывает предварительную ошибку; отмена не меняет
+настройки, подтверждение открывает инструкцию API key. Полные suite и Electron
+fixture прошли; версия обеих платформ и packager синхронизирована на 0.6.43.

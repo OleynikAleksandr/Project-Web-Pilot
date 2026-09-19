@@ -1577,3 +1577,7 @@ worker с подменённым native process: один ID prompt, без за
 ожидание, отмена без ошибки, следующий клик/подтверждение открывают API keys,
 ключ запрашивается только отдельным действием. Electron TEST FIXTURE дополнен
 переходом по ID-only диалогу. Назначены suite и electron-smoke; это не native VM.
+
+0.6.43: полный suite PASS (41.8 s), Electron TEST FIXTURE smoke PASS (88.1 s),
+syntax PASS в commit a63623e61f0510540eaeae33db3557a13b867d46. Evidence сохранён
+в .harness/runtime/033-checks-043.json. Версии пакетов и lock подняты совместно.
