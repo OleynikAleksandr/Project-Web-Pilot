@@ -1581,3 +1581,5 @@ worker с подменённым native process: один ID prompt, без за
 0.6.43: полный suite PASS (41.8 s), Electron TEST FIXTURE smoke PASS (88.1 s),
 syntax PASS в commit a63623e61f0510540eaeae33db3557a13b867d46. Evidence сохранён
 в .harness/runtime/033-checks-043.json. Версии пакетов и lock подняты совместно.
+
+0.6.43 / D006: npm run build PASS; оба ZIP в Downloads, 74 source files, версии/asar/ресурсы/хеши сверены publisher. Постоянный Mac app 0.6.43 и его identity проверены. Manifest и контрольные суммы — docs/RELEASE.md. Native Windows и clean VM — NOT RUN по прямому поручению пользователя.

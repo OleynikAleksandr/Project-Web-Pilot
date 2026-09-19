@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 50,
+  "plan_revision": 52,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
@@ -723,8 +723,8 @@
       "id": "D006",
       "title": "Выпустить и сверить оба архива 0.6.43",
       "why": "Выпустить и сверить оба архива 0.6.43",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "windows-onboarding-033",
         "task_id": "D006",
@@ -839,7 +839,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 50
+Revision: 52
 
 ## Цель
 
@@ -936,8 +936,8 @@ Revision: 50
   - Git Commit: [DONE] fix: Синхронизировать обе платформы на версии 0.6.43
   - Reference: windows-onboarding-033 / D005 / implementation
   - Файлы: package.json, package-lock.json, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md, docs/RELEASE.md
-- [TODO] D006: Выпустить и сверить оба архива 0.6.43 — Ожидает
-  - Git Commit: [PENDING] fix: Выпустить и сверить оба архива 0.6.43
+- [DONE] D006: Выпустить и сверить оба архива 0.6.43 — Завершено
+  - Git Commit: [DONE] fix: Выпустить и сверить оба архива 0.6.43
   - Reference: windows-onboarding-033 / D006 / implementation
   - Файлы: docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md, docs/RELEASE.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
