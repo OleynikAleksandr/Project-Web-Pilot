@@ -36,8 +36,8 @@
 | docs/SOURCE_WORKSPACES.md | Исходные проекты, пути, версии и официальные ссылки |
 | docs/VERIFICATION.md | Проверки, release evidence и границы пользовательской приёмки |
 | docs/RELEASE.md | Парный выпуск macOS/Windows, постоянный macOS app, Finder-алиас, ZIP, GitHub Release и проверка доставки |
-| docs/CLEAN_INSTALL.md | Стенд Clean/Test macOS/Windows, реестр наблюдений первого запуска, принятый macOS-путь, ошибки Windows 0.6.41, выпуск 0.6.44, отсутствие Windows-коннектора в аккаунте и границы доказательств |
-| docs/TRANSFER_TO_WINDOWS.md | Актуальная Windows x64 поставка 0.6.44 и самостоятельная проверка пользователем |
+| docs/CLEAN_INSTALL.md | Стенд Clean/Test macOS/Windows, реестр наблюдений первого запуска, принятый macOS-путь, ошибки Windows 0.6.41, выпуск 0.6.45, появление Windows MCP в аккаунте и границы доказательств |
+| docs/TRANSFER_TO_WINDOWS.md | Актуальная Windows x64 поставка 0.6.45 и самостоятельная проверка пользователем |
 | docs/WORKSPACE_SETUP.md | Создание/подключение workspace и install/upgrade Workflow Kit |
 | docs/PROJECT_ARCHIVE.md | Архив workspace, возврат и безопасное локальное удаление; веб-чаты сохраняются |
 
@@ -107,3 +107,8 @@ Workspace Setup, Context Delivery, Workspace Sessions и архивирован�
 актуальные требования вводить автора/email; отражена отдельная регистрация MCP
 в ChatGPT. Исторические записи прежних выпусков сохранены. Остальные контракты
 по индексу этим изменением не затронуты.
+
+0.6.45: согласованы README, инструкции Mac/Windows, четыре режима Permissions,
+принятие плана пользователем, наблюдение Windows MCP 09.53.24, проверки и парный
+выпуск. Документы по индексу пересмотрены; неизменённые контракты Workflow Kit,
+архива и Доктора проекта сохраняются.
