@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 4,
+  "plan_revision": 5,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "computer-use-latency-localization-037",
@@ -92,13 +92,34 @@
   },
   "tasks": [
     {
+      "id": "T005",
+      "title": "Простой Web MCP тест записи и чтения для сравнения с локальным ChatGPT",
+      "why": "По поручению пользователя сначала сравнить задержку простых файловых вызовов без Computer Use и изменений runtime.",
+      "dependencies": [],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/design/computer-use-latency-investigation.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [],
+      "acceptance_criteria": [
+        "В одной временной папке выполнены один пробный и 15 измеряемых последовательных циклов записи и чтения файла 1024 байт через существующий Web MCP.",
+        "Сохранены raw timings каждого tool call, статистика, фактический backend и проверка точного содержимого.",
+        "Подготовлено задание локальному ChatGPT на ту же папку и последовательность с измерением внешнего времени каждого native tool call; результаты локального агента пока не предполагаются."
+      ],
+      "expected_commit_message": "docs: измерить Web MCP запись и чтение файла",
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "computer-use-latency-localization-037",
-        "task_id": "T001",
+        "task_id": "T005",
         "role": "implementation"
-      },
+      }
+    },
+    {
+      "id": "T001",
+      "title": "Собрать воспроизводимый direct-loopback benchmark",
+      "why": "Отделить локальный MCP/backend от Secure MCP Tunnel и Web ChatGPT tool dispatch на одинаковых сериях вызовов.",
       "dependencies": [],
       "functional_paths": [
         "scripts/benchmark-mcp-latency.mjs"
@@ -110,24 +131,24 @@
       "verification_ids": [
         "suite"
       ],
-      "id": "T001",
-      "title": "Собрать воспроизводимый direct-loopback benchmark",
-      "why": "Отделить локальный MCP/backend от Secure MCP Tunnel и Web ChatGPT tool dispatch на одинаковых сериях вызовов.",
       "acceptance_criteria": [
         "Benchmark напрямую вызывает локальный MCP endpoint без Secure MCP Tunnel и без модельного turn.",
         "Есть серии для lightweight read/control tool и как минимум capture/click/scroll, raw samples и min/median/mean/p95/max.",
         "Warm-up и steady-state измеряются отдельно; методика не меняется между сравниваемыми сериями."
       ],
-      "expected_commit_message": "test: добавить direct loopback latency benchmark"
-    },
-    {
+      "expected_commit_message": "test: добавить direct loopback latency benchmark",
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "computer-use-latency-localization-037",
-        "task_id": "T002",
+        "task_id": "T001",
         "role": "implementation"
-      },
+      }
+    },
+    {
+      "id": "T002",
+      "title": "Добавить opt-in segment tracing в App Server MCP",
+      "why": "Разделить время local server orchestration и фактического Computer Use/Sky исполнения, не меняя обычное production поведение.",
       "dependencies": [
         "T001"
       ],
@@ -142,25 +163,25 @@
       "verification_ids": [
         "suite"
       ],
-      "id": "T002",
-      "title": "Добавить opt-in segment tracing в App Server MCP",
-      "why": "Разделить время local server orchestration и фактического Computer Use/Sky исполнения, не меняя обычное production поведение.",
       "acceptance_criteria": [
         "Trace включается только явным benchmark flag/env и по умолчанию выключен.",
         "Записываются только monotonic timestamps, correlation id и имя операции; secrets, tool arguments, clipboard, screenshots и ChatGPT content не логируются.",
         "Для Computer Use видны request/handler ingress, before/after Sky и response completion timestamps.",
         "Regression подтверждает отсутствие изменения публичного tool catalog и поведения при выключенном trace."
       ],
-      "expected_commit_message": "test: добавить безопасный latency trace MCP"
-    },
-    {
+      "expected_commit_message": "test: добавить безопасный latency trace MCP",
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "computer-use-latency-localization-037",
-        "task_id": "T003",
+        "task_id": "T002",
         "role": "implementation"
-      },
+      }
+    },
+    {
+      "id": "T003",
+      "title": "Снять синхронные loopback и Web/tunnel серии",
+      "why": "Связать внешнее end-to-end время Web ChatGPT с локальными trace timestamps и вычислить внешний residual.",
       "dependencies": [
         "T001",
         "T002"
@@ -171,24 +192,24 @@
         "docs/VERIFICATION.md"
       ],
       "verification_ids": [],
-      "id": "T003",
-      "title": "Снять синхронные loopback и Web/tunnel серии",
-      "why": "Связать внешнее end-to-end время Web ChatGPT с локальными trace timestamps и вычислить внешний residual.",
       "acceptance_criteria": [
         "Для lightweight tool и Computer Use сняты сопоставимые серии direct loopback и через стабильный ChatGPT connector.",
         "Для каждой серии сохранены raw samples и статистика; отдельно отмечены first-call/warm-up выбросы.",
         "Вычислены T_web_total, T_local_total, T_sky и residual = T_web_total - T_local_total с оговоркой о доступной точности синхронизации."
       ],
-      "expected_commit_message": "docs: зафиксировать segment latency evidence"
-    },
-    {
+      "expected_commit_message": "docs: зафиксировать segment latency evidence",
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "computer-use-latency-localization-037",
-        "task_id": "T004",
+        "task_id": "T003",
         "role": "implementation"
-      },
+      }
+    },
+    {
+      "id": "T004",
+      "title": "Локализовать bottleneck и выбрать следующий путь",
+      "why": "Не начинать оптимизацию до количественного понимания, где находится основная задержка.",
       "dependencies": [
         "T003"
       ],
@@ -199,28 +220,26 @@
         "docs/VERIFICATION.md"
       ],
       "verification_ids": [],
-      "id": "T004",
-      "title": "Локализовать bottleneck и выбрать следующий путь",
-      "why": "Не начинать оптимизацию до количественного понимания, где находится основная задержка.",
       "acceptance_criteria": [
         "Для типичного ~3-секундного Web tool call указано, какая доля времени находится внутри local MCP/Sky и какая остаётся во внешнем Web/tunnel path.",
         "Если local часть существенна, перечислены конкретные локальные узкие места; если доминирует внешний round-trip, описан минимальный вариант compound/sequence operation для сокращения числа round-trips.",
         "Никакое ускорение production runtime не реализуется до явного решения пользователя по итогам измерений."
       ],
-      "expected_commit_message": "docs: локализовать bottleneck Computer Use"
-    },
-    {
+      "expected_commit_message": "docs: локализовать bottleneck Computer Use",
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "computer-use-latency-localization-037",
-        "task_id": "DOCS",
+        "task_id": "T004",
         "role": "implementation"
-      },
+      }
+    },
+    {
       "id": "DOCS",
       "title": "Актуализация всех документов проекта",
       "why": "Проверить весь действующий комплект документации по docs/DOCUMENTATION_INDEX.md и обновить только устаревшие сведения после выполнения scope.",
       "dependencies": [
+        "T005",
         "T001",
         "T002",
         "T003",
@@ -232,11 +251,18 @@
         "docs/MODULES.md",
         "docs/DOCUMENTATION_INDEX.md"
       ],
+      "verification_ids": [],
       "acceptance_criteria": [
         "Все документы из индекса проверены; устаревшие сведения и ссылки исправлены; после этого результат готов только к пользовательской приёмке."
       ],
-      "verification_ids": [],
-      "expected_commit_message": "docs: актуализировать документацию проекта"
+      "expected_commit_message": "docs: актуализировать документацию проекта",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "computer-use-latency-localization-037",
+        "task_id": "DOCS",
+        "role": "implementation"
+      }
     }
   ],
   "blocked_reason": null,
@@ -247,7 +273,8 @@
       "id": "e6c03fbb-aaad-4086-9c08-1c32a94238ac",
       "text": "Пользователь прямо поручил подготовить следующий план исследования задержек Compute Use, Secure MCP Tunnel и Web ChatGPT на основе проведённых сравнительных тестов.",
       "recorded_at": "2026-09-19T17:18:32.590Z"
-    }
+    },
+    "19.09.2026: сначала выполнить простой тест записи/чтения через Web MCP и подготовить идентичное задание локальному ChatGPT; дальнейшее сравнение после получения результата пользователя."
   ],
   "owner_session_id": "web-pilot-c638c8e7-37a3-4e58-b5d7-a4c92206dfb0",
   "prepared_in_session_id": "web-pilot-67675492-8406-46a8-89bc-0f8c21fdb300",
@@ -262,7 +289,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: computer-use-latency-localization-037
 Current Task: нет
-Revision: 4
+Revision: 5
 
 ## Цель
 
@@ -277,6 +304,10 @@ Revision: 4
 
 ## Микрозадачи
 
+- [TODO] T005: Простой Web MCP тест записи и чтения для сравнения с локальным ChatGPT — Ожидает
+  - Git Commit: [PENDING] docs: измерить Web MCP запись и чтение файла
+  - Reference: computer-use-latency-localization-037 / T005 / implementation
+  - Файлы: docs/design/computer-use-latency-investigation.md, docs/VERIFICATION.md
 - [TODO] T001: Собрать воспроизводимый direct-loopback benchmark — Ожидает
   - Git Commit: [PENDING] test: добавить direct loopback latency benchmark
   - Reference: computer-use-latency-localization-037 / T001 / implementation
