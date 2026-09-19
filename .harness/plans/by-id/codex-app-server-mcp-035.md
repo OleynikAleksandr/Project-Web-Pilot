@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 21,
+  "plan_revision": 22,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-app-server-mcp-035",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Создать отдельный экспериментальный MCP для macOS, который предоставляет модели ChatGPT Web локальные инструменты через Codex App Server как исполнитель без запуска второго модельного агента, включая Computer Use, и подготовить безопасное A/B-сравнение с существующим Codex Local Mac.",
   "acceptance_criteria": [
     "Экспериментальный MCP запускается отдельно от штатного Codex Local Mac и не требует изменения кода Web Pilot для подключения в ChatGPT.",
@@ -241,19 +241,53 @@
       "file_limit_exception": "T005 одновременно проверяет facade, benchmark и внутренний App Server MCP-thread; app_server_client.py нужен только для подтверждённой настройки Computer Use thread sandbox и не образует отдельный продуктовый scope."
     },
     {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "codex-app-server-mcp-035",
+        "task_id": "T006",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "T005"
+      ],
+      "functional_paths": [
+        "tools/codex-app-server-mcp/control.py",
+        "tests/codex-app-server-mcp.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/codex-app-server-executor.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [
+        "suite"
+      ],
+      "id": "T006",
+      "title": "Стабилизировать process identity между Terminal и runtime",
+      "why": "Исключить ложный Recorded MCP PID belongs to another process при одинаковом PID из-за locale-зависимого вывода macOS ps.",
+      "acceptance_criteria": [
+        "pid_identity запускает /bin/ps с принудительным стабильным C locale независимо от окружения вызывающего Terminal.",
+        "Regression проверяет, что LC_ALL/LANG передаются в ps как C и сохранённая identity остаётся сопоставимой между средами.",
+        "Повторный start из обычного Terminal распознаёт уже работающий experimental MCP как owned и запускает tunnel вместо ложного отказа."
+      ],
+      "expected_commit_message": "fix: стабилизировать identity experimental MCP процесса"
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "codex-app-server-mcp-035",
         "task_id": "DOCS",
-        "role": "implementation"
+        "role": "implementation",
+        "iteration": 2
       },
       "dependencies": [
         "T001",
         "T002",
         "T003",
         "T004",
-        "T005"
+        "T005",
+        "T006"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -298,10 +332,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: codex-app-server-mcp-035
 Current Task: нет
-Revision: 21
+Revision: 22
 
 ## Цель
 
@@ -338,8 +372,12 @@ Revision: 21
   - Git Commit: [DONE] test: сравнить Codex App Server MCP с Codex Local
   - Reference: codex-app-server-mcp-035 / T005 / implementation
   - Файлы: scripts/benchmark-codex-app-server-mcp.mjs, tests/codex-app-server-mcp.test.mjs, tools/codex-app-server-mcp/server.py, tools/codex-app-server-mcp/app_server_client.py, docs/VERIFICATION.md, docs/modules/codex-app-server-executor.md
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: актуализировать документацию Codex App Server MCP
+- [TODO] T006: Стабилизировать process identity между Terminal и runtime — Ожидает
+  - Git Commit: [PENDING] fix: стабилизировать identity experimental MCP процесса
+  - Reference: codex-app-server-mcp-035 / T006 / implementation
+  - Файлы: tools/codex-app-server-mcp/control.py, tests/codex-app-server-mcp.test.mjs, docs/modules/codex-app-server-executor.md, docs/VERIFICATION.md
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: актуализировать документацию Codex App Server MCP
   - Reference: codex-app-server-mcp-035 / DOCS / implementation
   - Файлы: docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/modules/runtime-lifecycle.md, docs/modules/codex-app-server-executor.md, docs/VERIFICATION.md
 
