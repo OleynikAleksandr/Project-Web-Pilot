@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 26,
+  "plan_revision": 27,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-app-server-mcp-035",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Создать отдельный экспериментальный MCP для macOS, который предоставляет модели ChatGPT Web локальные инструменты через Codex App Server как исполнитель без запуска второго модельного агента, включая Computer Use, и подготовить безопасное A/B-сравнение с существующим Codex Local Mac.",
   "acceptance_criteria": [
     "Экспериментальный MCP запускается отдельно от штатного Codex Local Mac и не требует изменения кода Web Pilot для подключения в ChatGPT.",
@@ -273,13 +273,45 @@
       "expected_commit_message": "fix: стабилизировать identity experimental MCP процесса"
     },
     {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "codex-app-server-mcp-035",
+        "task_id": "T007",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "T006"
+      ],
+      "functional_paths": [
+        "tools/codex-app-server-mcp/server.py",
+        "tests/codex-app-server-mcp.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/codex-app-server-executor.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [
+        "suite"
+      ],
+      "id": "T007",
+      "title": "Перевести Computer Use actions на Sky",
+      "why": "Устранить ложный success Swift/CGEvent и использовать поддерживаемый Codex путь node_repl -> @oai/sky для UI-действий.",
+      "acceptance_criteria": [
+        "computer_click/type_text/key_press/hotkey/scroll используют @oai/sky через node_repl для активного app, а не Swift CGEvent.",
+        "Facade хранит явно активированный app id и возвращает ошибку, если app не выбран для app-scoped action.",
+        "Regression и реальный TextEdit smoke подтверждают фактическое изменение UI через последующий get_app_state; capture остаётся рабочим."
+      ],
+      "expected_commit_message": "fix: перевести Computer Use actions на Sky"
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "codex-app-server-mcp-035",
         "task_id": "DOCS",
         "role": "implementation",
-        "iteration": 2
+        "iteration": 3
       },
       "dependencies": [
         "T001",
@@ -287,7 +319,8 @@
         "T003",
         "T004",
         "T005",
-        "T006"
+        "T006",
+        "T007"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -332,10 +365,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: codex-app-server-mcp-035
 Current Task: нет
-Revision: 26
+Revision: 27
 
 ## Цель
 
@@ -376,8 +409,12 @@ Revision: 26
   - Git Commit: [DONE] fix: стабилизировать identity experimental MCP процесса
   - Reference: codex-app-server-mcp-035 / T006 / implementation
   - Файлы: tools/codex-app-server-mcp/control.py, tests/codex-app-server-mcp.test.mjs, docs/modules/codex-app-server-executor.md, docs/VERIFICATION.md
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: актуализировать документацию Codex App Server MCP
+- [TODO] T007: Перевести Computer Use actions на Sky — Ожидает
+  - Git Commit: [PENDING] fix: перевести Computer Use actions на Sky
+  - Reference: codex-app-server-mcp-035 / T007 / implementation
+  - Файлы: tools/codex-app-server-mcp/server.py, tests/codex-app-server-mcp.test.mjs, docs/modules/codex-app-server-executor.md, docs/VERIFICATION.md
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: актуализировать документацию Codex App Server MCP
   - Reference: codex-app-server-mcp-035 / DOCS / implementation
   - Файлы: docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/modules/runtime-lifecycle.md, docs/modules/codex-app-server-executor.md, docs/VERIFICATION.md
 
