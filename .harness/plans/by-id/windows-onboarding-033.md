@@ -4,13 +4,13 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 54,
+  "plan_revision": 55,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
-  "objective": "Сохранить выполненный Windows onboarding и последовательные шаги ID/API key; исправить кнопку ID на настоящий системный диалог и выпустить macOS/Windows 0.6.43.",
+  "delivery_status": "IN_PROGRESS",
+  "objective": "Зафиксировать пользовательский полный проход 0.6.43, убрать атрибуты автора/email из создания проекта и приложения, выпустить 0.6.44 для Mac/Windows и опубликовать исходники и бинарный релиз на GitHub.",
   "acceptance_criteria": [
     "Windows показывает и выполняет шаги компонентов, туннеля и создания проекта после входа",
     "Данные подключения проходят существующее защищённое хранилище Windows; настройки сохраняются",
@@ -21,7 +21,9 @@
     "Один парный выпуск 0.6.42 в Downloads, постоянный Mac app обновлён с сохранением identity; VM и Computer Use не используются",
     "Кнопка вставки ID всегда открывает отдельное системное поле на Mac и Windows; пустой/несвязанный буфер не вызывает ошибку до ввода",
     "Отмена не меняет настройки; подтверждённый ID ведёт к инструкции API key без второго немедленного диалога",
-    "Обе платформы выпущены как 0.6.43; пользователь сам проверяет VM"
+    "Обе платформы выпущены как 0.6.43; пользователь сам проверяет VM",
+    "Создание проекта не запрашивает и не передаёт имя/email; служебная Git история создаётся при отсутствии пользовательской настройки без изменения глобального Git",
+    "Новый парный релиз 0.6.44, README и документация актуальны; GitHub main и release с обоими ZIP опубликованы и проверены после финального DOCS commit"
   ],
   "approved_scope": {
     "functional_paths": [
@@ -49,7 +51,11 @@
       "resources/runtime-control/mac-first-run.py",
       "tests/tunnel-id-prompt.test.mjs",
       "src/mac-runtime.mjs",
-      "tests/tunnel-id-runtime.test.mjs"
+      "tests/tunnel-id-runtime.test.mjs",
+      "resources/workspace-setup-worker.mjs",
+      "src/preload.cjs",
+      "src/ui/workspace-setup.mjs",
+      "tests/project-doctor-ui.test.mjs"
     ],
     "documentation_paths": [
       "AGENTS.md",
@@ -747,13 +753,193 @@
       "expected_commit_message": "fix: Выпустить и сверить оба архива 0.6.43"
     },
     {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
+      "id": "E001",
+      "title": "Убрать атрибуты автора из подготовки проекта и настроить служебную историю",
+      "why": "Убрать атрибуты автора из подготовки проекта и настроить служебную историю",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "windows-onboarding-033",
+        "task_id": "E001",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "D006"
+      ],
+      "functional_paths": [
+        "src/workspace-setup.mjs",
+        "resources/workspace-setup-worker.mjs",
+        "tests/workspace-setup.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKSPACE_SETUP.md"
+      ],
+      "verification_ids": [],
+      "acceptance_criteria": [
+        "Убрать атрибуты автора из подготовки проекта и настроить служебную историю"
+      ],
+      "expected_commit_message": "feat: Убрать атрибуты автора из подготовки проекта и настроить служебную историю"
+    },
+    {
+      "id": "E002",
+      "title": "Убрать имя и email из IPC создания проекта",
+      "why": "Убрать имя и email из IPC создания проекта",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "windows-onboarding-033",
+        "task_id": "E002",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "E001"
+      ],
+      "functional_paths": [
+        "src/main.mjs",
+        "src/preload.cjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKSPACE_SETUP.md"
+      ],
+      "verification_ids": [],
+      "acceptance_criteria": [
+        "Убрать имя и email из IPC создания проекта"
+      ],
+      "expected_commit_message": "feat: Убрать имя и email из IPC создания проекта"
+    },
+    {
+      "id": "E003",
+      "title": "Удалить поля автора и ограничение создания проекта",
+      "why": "Удалить поля автора и ограничение создания проекта",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "windows-onboarding-033",
+        "task_id": "E003",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "E002"
+      ],
+      "functional_paths": [
+        "src/ui/index.html",
+        "src/ui/workspace-setup.mjs",
+        "tests/project-doctor-ui.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKSPACE_SETUP.md"
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "acceptance_criteria": [
+        "Удалить поля автора и ограничение создания проекта"
+      ],
+      "expected_commit_message": "feat: Удалить поля автора и ограничение создания проекта"
+    },
+    {
+      "id": "E004",
+      "title": "Подготовить 0.6.44 без персонального автора пакета",
+      "why": "Подготовить 0.6.44 без персонального автора пакета",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "windows-onboarding-033",
+        "task_id": "E004",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "E003"
+      ],
+      "functional_paths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "documentation_paths": [
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/RELEASE.md",
+        "docs/DECISIONS.md"
+      ],
+      "verification_ids": [],
+      "acceptance_criteria": [
+        "Подготовить 0.6.44 без персонального автора пакета"
+      ],
+      "expected_commit_message": "feat: Подготовить 0.6.44 без персонального автора пакета"
+    },
+    {
+      "id": "E005",
+      "title": "Собрать и сверить парный релиз 0.6.44",
+      "why": "Собрать и сверить парный релиз 0.6.44",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "windows-onboarding-033",
+        "task_id": "E005",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "E004"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/RELEASE.md",
+        "docs/DECISIONS.md"
+      ],
+      "verification_ids": [],
+      "acceptance_criteria": [
+        "Собрать и сверить парный релиз 0.6.44"
+      ],
+      "expected_commit_message": "feat: Собрать и сверить парный релиз 0.6.44"
+    },
+    {
+      "id": "E006",
+      "title": "Подготовить публикацию GitHub после финального DOCS commit",
+      "why": "Подготовить публикацию GitHub после финального DOCS commit",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "windows-onboarding-033",
+        "task_id": "E006",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "E005"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/RELEASE.md",
+        "docs/DECISIONS.md"
+      ],
+      "verification_ids": [],
+      "acceptance_criteria": [
+        "Подготовить публикацию GitHub после финального DOCS commit"
+      ],
+      "expected_commit_message": "feat: Подготовить публикацию GitHub после финального DOCS commit"
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "windows-onboarding-033",
         "task_id": "DOCS",
         "role": "implementation",
-        "iteration": 3
+        "iteration": 4
       },
       "dependencies": [
         "P001",
@@ -775,7 +961,13 @@
         "D003",
         "D004",
         "D005",
-        "D006"
+        "D006",
+        "E001",
+        "E002",
+        "E003",
+        "E004",
+        "E005",
+        "E006"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -825,6 +1017,11 @@
       "id": "native-id-dialog-043",
       "text": "19.09.2026 пользователь сообщил, что кнопка ID вместо ожидаемого окна показывает ошибку, и передал скриншот 08.36.22. Исправление продолжает авторизованный парный выпуск; VM и Computer Use запрещены.",
       "recorded_at": "2026-09-19T06:38:20.057576+00:00"
+    },
+    {
+      "id": "no-author-release-044",
+      "text": "19.09.2026 пользователь подтвердил полный успешный проход, поручил удалить атрибуты автора/email, собрать новый релиз, актуализировать все документы и README и залить локальный релиз на GitHub. Авторизованы обычный push main и GitHub Release с обоими ZIP в существующий origin. Публикация выполняется после последнего DOCS commit и проверяется до итогового ответа.",
+      "recorded_at": "2026-09-19T07:08:54.705466+00:00"
     }
   ],
   "owner_session_id": "01a0b501-9a29-7b30-87a1-036ded275092",
@@ -836,14 +1033,14 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 54
+Revision: 55
 
 ## Цель
 
-Сохранить выполненный Windows onboarding и последовательные шаги ID/API key; исправить кнопку ID на настоящий системный диалог и выпустить macOS/Windows 0.6.43.
+Зафиксировать пользовательский полный проход 0.6.43, убрать атрибуты автора/email из создания проекта и приложения, выпустить 0.6.44 для Mac/Windows и опубликовать исходники и бинарный релиз на GitHub.
 
 ## Критерии приёмки
 
@@ -857,6 +1054,8 @@ Revision: 54
 - Кнопка вставки ID всегда открывает отдельное системное поле на Mac и Windows; пустой/несвязанный буфер не вызывает ошибку до ввода
 - Отмена не меняет настройки; подтверждённый ID ведёт к инструкции API key без второго немедленного диалога
 - Обе платформы выпущены как 0.6.43; пользователь сам проверяет VM
+- Создание проекта не запрашивает и не передаёт имя/email; служебная Git история создаётся при отсутствии пользовательской настройки без изменения глобального Git
+- Новый парный релиз 0.6.44, README и документация актуальны; GitHub main и release с обоими ZIP опубликованы и проверены после финального DOCS commit
 
 ## Микрозадачи
 
@@ -940,8 +1139,32 @@ Revision: 54
   - Git Commit: [DONE] fix: Выпустить и сверить оба архива 0.6.43
   - Reference: windows-onboarding-033 / D006 / implementation
   - Файлы: docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md, docs/RELEASE.md
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: актуализировать выпуск 0.6.43 с системным вводом ID
+- [TODO] E001: Убрать атрибуты автора из подготовки проекта и настроить служебную историю — Ожидает
+  - Git Commit: [PENDING] feat: Убрать атрибуты автора из подготовки проекта и настроить служебную историю
+  - Reference: windows-onboarding-033 / E001 / implementation
+  - Файлы: src/workspace-setup.mjs, resources/workspace-setup-worker.mjs, tests/workspace-setup.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/WORKSPACE_SETUP.md
+- [TODO] E002: Убрать имя и email из IPC создания проекта — Ожидает
+  - Git Commit: [PENDING] feat: Убрать имя и email из IPC создания проекта
+  - Reference: windows-onboarding-033 / E002 / implementation
+  - Файлы: src/main.mjs, src/preload.cjs, tests/electron-smoke.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/WORKSPACE_SETUP.md
+- [TODO] E003: Удалить поля автора и ограничение создания проекта — Ожидает
+  - Git Commit: [PENDING] feat: Удалить поля автора и ограничение создания проекта
+  - Reference: windows-onboarding-033 / E003 / implementation
+  - Файлы: src/ui/index.html, src/ui/workspace-setup.mjs, tests/project-doctor-ui.test.mjs, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/WORKSPACE_SETUP.md
+- [TODO] E004: Подготовить 0.6.44 без персонального автора пакета — Ожидает
+  - Git Commit: [PENDING] feat: Подготовить 0.6.44 без персонального автора пакета
+  - Reference: windows-onboarding-033 / E004 / implementation
+  - Файлы: package.json, package-lock.json, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/WORKSPACE_SETUP.md, docs/RELEASE.md, docs/DECISIONS.md
+- [TODO] E005: Собрать и сверить парный релиз 0.6.44 — Ожидает
+  - Git Commit: [PENDING] feat: Собрать и сверить парный релиз 0.6.44
+  - Reference: windows-onboarding-033 / E005 / implementation
+  - Файлы: docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/WORKSPACE_SETUP.md, docs/RELEASE.md, docs/DECISIONS.md
+- [TODO] E006: Подготовить публикацию GitHub после финального DOCS commit — Ожидает
+  - Git Commit: [PENDING] feat: Подготовить публикацию GitHub после финального DOCS commit
+  - Reference: windows-onboarding-033 / E006 / implementation
+  - Файлы: docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/WORKSPACE_SETUP.md, docs/RELEASE.md, docs/DECISIONS.md
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: актуализировать выпуск 0.6.43 с системным вводом ID
   - Reference: windows-onboarding-033 / DOCS / implementation
   - Файлы: AGENTS.md, README.md, docs/WORKFLOW_START.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/CLEAN_INSTALL.md, docs/TRANSFER_TO_WINDOWS.md, docs/RELEASE.md, docs/WORKSPACE_SETUP.md, docs/CONTEXT_DELIVERY.md, docs/modules/runtime-lifecycle.md, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md
 
