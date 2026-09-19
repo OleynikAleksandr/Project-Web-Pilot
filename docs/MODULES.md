@@ -32,7 +32,7 @@ Workspace & Sessions дополнен planning document [Регрессия layo
 
 Контракт — [Codex App Server Local Executor](modules/codex-app-server-executor.md). T001–T005 реализованы как отдельный macOS-only runtime, не входящий в release Web Pilot: App Server выполняет direct local operations без модельного `turn/start`, а Computer Use идёт через bundled `node_repl -> @oai/sky`. Каталог нового MCP совпадает со старым Codex Local Mac 47/47 и не содержит публичных/облачных дублей ChatGPT.
 
-Отдельный state использует MCP 17852 и tunnel health 17853; локальный MCP проверен `ready=true`. Production Codex Local Mac 17842/17843 во время реализации оставался `ready=true` и не изменялся. Benchmark и Computer Use evidence находятся в `docs/VERIFICATION.md`. До пользовательского A/B через отдельный Secure MCP Tunnel эксперимент не заменяет Runtime Lifecycle; отдельно отмечена разница app-level Sky inventory против Quartz top-level window inventory старого MCP.
+Отдельный state использует MCP 17852 и tunnel health 17853; после пользовательской настройки оба сервиса проверены `ready=true`. Production Codex Local Mac 17842/17843 во время реализации оставался `ready=true` и не изменялся. Benchmark и Computer Use evidence находятся в `docs/VERIFICATION.md`. До пользовательского A/B переключения connector-а в ChatGPT эксперимент не заменяет Runtime Lifecycle; отдельно отмечена разница app-level Sky inventory против Quartz top-level window inventory старого MCP. T006 устраняет locale-зависимую ложную потерю process ownership в Terminal.
 
 ## Первый запуск на чистой системе — scope 031
 

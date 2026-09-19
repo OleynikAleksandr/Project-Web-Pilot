@@ -172,3 +172,5 @@ Codex binary выбирается детерминированно и всегд
 
 Экспериментальный runtime использует отдельные state и endpoints (по умолчанию MCP 17852, tunnel health 17853) и собственный tunnel profile/private credentials. До пользовательского A/B старый runtime 17842/17843, его credentials, service ownership и Web Pilot `McpRuntime` остаются неизменными. Новый executor не считается production runtime и не включается в release package.
 
+После пользовательской настройки второго tunnel T006 зафиксировал `LC_ALL=C`/`LANG=C` для `ps -o lstart,command`: process identity больше не зависит от locale Terminal. Реальный повторный `start` распознал MCP как owned и поднял отдельный tunnel; оба experimental сервиса подтверждены `ready=true`. Production runtime не останавливался и не перенастраивался.
+
