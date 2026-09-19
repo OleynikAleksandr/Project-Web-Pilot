@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 7,
+  "plan_revision": 8,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "computer-use-latency-localization-037",
@@ -115,6 +115,33 @@
         "task_id": "T005",
         "role": "implementation"
       }
+    },
+    {
+      "id": "T006",
+      "title": "Сопоставить Web MCP и полученный тест Codex Desktop",
+      "why": "Сохранить присланные пользователем raw samples и корректно отделить сравнение путей от локализации туннеля.",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "computer-use-latency-localization-037",
+        "task_id": "T006",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "T005"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/design/computer-use-latency-investigation.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [],
+      "acceptance_criteria": [
+        "Сохранены 15 пользовательских пар Codex Desktop, прогрев, путь исполнения и проверка содержимого с указанием источника.",
+        "Статистика пересчитана из raw samples, отношение задержек и разница рассчитаны для одинаковых метрик.",
+        "Явно указано, что desktop использовал exec_command и shell, Web использовал MCP file tools; разница не приписана целиком туннелю, следующий минимальный контроль — loopback того же MCP."
+      ],
+      "expected_commit_message": "docs: сравнить задержки Web MCP и Codex Desktop"
     },
     {
       "id": "T001",
@@ -240,6 +267,7 @@
       "why": "Проверить весь действующий комплект документации по docs/DOCUMENTATION_INDEX.md и обновить только устаревшие сведения после выполнения scope.",
       "dependencies": [
         "T005",
+        "T006",
         "T001",
         "T002",
         "T003",
@@ -289,7 +317,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: computer-use-latency-localization-037
 Current Task: нет
-Revision: 7
+Revision: 8
 
 ## Цель
 
@@ -307,6 +335,10 @@ Revision: 7
 - [DONE] T005: Простой Web MCP тест записи и чтения для сравнения с локальным ChatGPT — Завершено
   - Git Commit: [DONE] docs: измерить Web MCP запись и чтение файла
   - Reference: computer-use-latency-localization-037 / T005 / implementation
+  - Файлы: docs/design/computer-use-latency-investigation.md, docs/VERIFICATION.md
+- [TODO] T006: Сопоставить Web MCP и полученный тест Codex Desktop — Ожидает
+  - Git Commit: [PENDING] docs: сравнить задержки Web MCP и Codex Desktop
+  - Reference: computer-use-latency-localization-037 / T006 / implementation
   - Файлы: docs/design/computer-use-latency-investigation.md, docs/VERIFICATION.md
 - [TODO] T001: Собрать воспроизводимый direct-loopback benchmark — Ожидает
   - Git Commit: [PENDING] test: добавить direct loopback latency benchmark
