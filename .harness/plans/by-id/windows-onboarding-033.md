@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 71,
+  "plan_revision": 73,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Убрать атрибуты автора/email из создания проекта и приложения, отдельно объяснить подключение нужного MCP в ChatGPT, выпустить 0.6.44 для Mac/Windows и опубликовать исходники и бинарный релиз на GitHub; реальная запись файла в Windows остаётся на пользовательской проверке.",
   "acceptance_criteria": [
     "Windows показывает и выполняет шаги компонентов, туннеля и создания проекта после входа",
@@ -968,8 +968,8 @@
       "expected_commit_message": "feat: Подготовить публикацию GitHub после финального DOCS commit"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "windows-onboarding-033",
         "task_id": "DOCS",
@@ -1074,10 +1074,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 71
+Revision: 73
 
 ## Цель
 
@@ -1209,8 +1209,8 @@ Revision: 71
   - Git Commit: [DONE] feat: Подготовить публикацию GitHub после финального DOCS commit
   - Reference: windows-onboarding-033 / E006 / implementation
   - Файлы: docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/WORKSPACE_SETUP.md, docs/RELEASE.md, docs/DECISIONS.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать парный выпуск 0.6.44 и подключение Windows MCP
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать парный выпуск 0.6.44 и подключение Windows MCP
   - Reference: windows-onboarding-033 / DOCS / implementation
   - Файлы: AGENTS.md, README.md, docs/WORKFLOW_START.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/CLEAN_INSTALL.md, docs/TRANSFER_TO_WINDOWS.md, docs/RELEASE.md, docs/WORKSPACE_SETUP.md, docs/CONTEXT_DELIVERY.md, docs/modules/runtime-lifecycle.md, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md
 

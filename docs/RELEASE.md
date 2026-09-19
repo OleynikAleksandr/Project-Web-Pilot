@@ -311,3 +311,27 @@ https://github.com/OleynikAleksandr/Project-Web-Pilot. Доступ подтве
 INSTALL.txt, SHA256SUMS.txt, release-manifest.json в draft, сверка размеров и
 серверных SHA-256, затем публикация релиза. Локальные runtime/key/profile и app
 bundle не входят в исходный Git push.
+
+## Парный выпуск 0.6.44 — 19.09.2026
+
+Удалены автор/email из создания проекта и персональный author пакета. Мастер
+обеих платформ выделяет подключение MCP в ChatGPT перед первым проектом.
+
+- Project-Web-Pilot-0.6.44-macOS-arm64.zip: 181062714 bytes, SHA-256 `0b186bcecb3138be24cda924463dd62bb43c82a137cf8951d3056ddcfdd05db1`.
+- Project-Web-Pilot-0.6.44-Windows-x64.zip: 316335016 bytes, SHA-256 `bdc66bd4c8beb4f366c3450d6a120e0d43b81b6dd6f723a97306c564c7484f14`.
+
+Source build commit: `cd9569e50dd6347a8b7047480e781d940ca33a75`. Все 74 файлов snapshot
+совпали с обеими поставками и установленным Mac app; ZIP integrity и ASAR
+подтверждены. Постоянный app имеет версию 0.6.44 и сохранил device
+16777232 / inode 398344301. Архивы, INSTALL.txt, SHA256SUMS.txt и
+release-manifest.json находятся в ~/Downloads/WebPilot-0.6.44/. Локальные evidence:
+.harness/runtime/releases/0.6.44/.
+
+Пользователь выполняет Windows-проверку сам. В прежнем тестовом чате был доступен
+только Mac-коннектор; отдельное подключение Windows не было создано. Работа
+Windows-туннеля и запись файла не объявляются подтверждёнными по упаковке.
+
+GitHub: [v0.6.44](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.44). По прямому поручению пользователя публикуются
+обычный push main, тег v0.6.44 и оба ZIP с сопроводительными файлами. Тег указывает
+на финальный DOCS commit; отличие от source build commit — только документы и
+план. Публикация выполняется после DOCS, затем проверяются main, tag и assets.

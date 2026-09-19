@@ -1617,3 +1617,32 @@ resources, tests, scripts, package и lock с проверенным канди�
 diff; evidence .harness/runtime/033-checks-044-source-match.json. Функциональные
 исходники повторно не менялись. Версия и удаление author затем проверены отдельно
 и упаковщиком. Гостевая Windows не запускалась агентом.
+
+## Итоговая автоматическая проверка 0.6.44
+
+- syntax: PASSED, 22 ms.
+- suite: PASSED, 52541 ms.
+- electron-smoke: PASSED, 88494 ms.
+
+Полный suite: 317 tests, 315 passed, 0 failed, 2 native-Windows skipped.
+Electron smoke выполнен на изолированном профиле без VM/Computer Use. Evidence:
+.harness/runtime/033-checks-044.json.
+
+## Парный выпуск 0.6.44 — 19.09.2026
+
+Удалены автор/email из создания проекта и персональный author пакета. Мастер
+обеих платформ выделяет подключение MCP в ChatGPT перед первым проектом.
+
+- Project-Web-Pilot-0.6.44-macOS-arm64.zip: 181062714 bytes, SHA-256 `0b186bcecb3138be24cda924463dd62bb43c82a137cf8951d3056ddcfdd05db1`.
+- Project-Web-Pilot-0.6.44-Windows-x64.zip: 316335016 bytes, SHA-256 `bdc66bd4c8beb4f366c3450d6a120e0d43b81b6dd6f723a97306c564c7484f14`.
+
+Source build commit: `cd9569e50dd6347a8b7047480e781d940ca33a75`. Все 74 файлов snapshot
+совпали с обеими поставками и установленным Mac app; ZIP integrity и ASAR
+подтверждены. Постоянный app имеет версию 0.6.44 и сохранил device
+16777232 / inode 398344301. Архивы, INSTALL.txt, SHA256SUMS.txt и
+release-manifest.json находятся в ~/Downloads/WebPilot-0.6.44/. Локальные evidence:
+.harness/runtime/releases/0.6.44/.
+
+Пользователь выполняет Windows-проверку сам. В прежнем тестовом чате был доступен
+только Mac-коннектор; отдельное подключение Windows не было создано. Работа
+Windows-туннеля и запись файла не объявляются подтверждёнными по упаковке.

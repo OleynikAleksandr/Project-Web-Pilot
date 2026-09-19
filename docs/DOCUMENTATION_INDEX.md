@@ -35,9 +35,9 @@
 | docs/modules/workspace-sessions.md | Specification проектов, Chat/Work sessions, session tree, переходов после scope, оформления и сохранения геометрии интерфейса |
 | docs/SOURCE_WORKSPACES.md | Исходные проекты, пути, версии и официальные ссылки |
 | docs/VERIFICATION.md | Проверки, release evidence и границы пользовательской приёмки |
-| docs/RELEASE.md | Парный выпуск macOS/Windows, постоянный macOS app, Finder-алиас, ZIP и проверка доставки |
-| docs/CLEAN_INSTALL.md | Стенд Clean/Test macOS/Windows, реестр наблюдений первого запуска, принятый macOS-путь, ошибки Windows 0.6.41, выпуск 0.6.43 и границы доказательств |
-| docs/TRANSFER_TO_WINDOWS.md | Актуальная Windows x64 поставка 0.6.43 и самостоятельная проверка пользователем |
+| docs/RELEASE.md | Парный выпуск macOS/Windows, постоянный macOS app, Finder-алиас, ZIP, GitHub Release и проверка доставки |
+| docs/CLEAN_INSTALL.md | Стенд Clean/Test macOS/Windows, реестр наблюдений первого запуска, принятый macOS-путь, ошибки Windows 0.6.41, выпуск 0.6.44, отсутствие Windows-коннектора в аккаунте и границы доказательств |
+| docs/TRANSFER_TO_WINDOWS.md | Актуальная Windows x64 поставка 0.6.44 и самостоятельная проверка пользователем |
 | docs/WORKSPACE_SETUP.md | Создание/подключение workspace и install/upgrade Workflow Kit |
 | docs/PROJECT_ARCHIVE.md | Архив workspace, возврат и безопасное локальное удаление; веб-чаты сохраняются |
 
@@ -101,3 +101,9 @@
 0.6.43: первый запуск, runtime, release и передача Windows дополнены настоящим
 системным диалогом ID; CLEAN_INSTALL хранит наблюдение 08.36.22. Контракты
 Workspace Setup, Context Delivery, Workspace Sessions и архивирования не менялись.
+
+0.6.44: актуализированы README, входные документы, Workspace Setup, первый запуск,
+доставка контекста, runtime/sessions, реестр Windows-проверок и выпуск. Удалены
+актуальные требования вводить автора/email; отражена отдельная регистрация MCP
+в ChatGPT. Исторические записи прежних выпусков сохранены. Остальные контракты
+по индексу этим изменением не затронуты.
