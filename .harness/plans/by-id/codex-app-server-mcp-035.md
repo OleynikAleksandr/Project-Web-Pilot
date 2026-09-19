@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 2,
+  "plan_revision": 3,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-app-server-mcp-035",
@@ -275,7 +275,8 @@
       "id": "2bcfe5d6-79cb-4a58-b07d-f5dffaa2d53b",
       "text": "19.09.2026 пользователь прямо поручил создать новый scope и ToDo Plan для реализации отдельного MCP поверх Codex App Server после завершения предыдущего scope.",
       "recorded_at": "2026-09-19T10:39:21.681Z"
-    }
+    },
+    "Codex может видеть общий набор MCP экосистемы OpenAI/ChatGPT, но наш внешний MCP через туннель экспортирует модели только возможности, которым нужен доступ именно к локальному компьютеру пользователя. Публичные, облачные и уже доступные Web ChatGPT инструменты не дублируются; downstream MCP публикуются только через явный allowlist локальных capabilities."
   ],
   "owner_session_id": "web-pilot-361efaed-f824-4ab6-bc15-df56586093de",
   "prepared_in_session_id": null
@@ -289,7 +290,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: codex-app-server-mcp-035
 Current Task: нет
-Revision: 2
+Revision: 3
 
 ## Цель
 
