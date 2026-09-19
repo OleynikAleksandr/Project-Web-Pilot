@@ -98,6 +98,7 @@ class LocalFacade:
         self._window_ids: dict[str, int] = {}
         self._next_window_id = 1
         self._window_lock = threading.Lock()
+        self._active_app_id: str | None = None
         self._watch_lock = threading.Lock()
         self._watch: dict[str, tuple[int, threading.Timer]] = {}
 
@@ -590,7 +591,19 @@ class LocalFacade:
         result = self._command(["/usr/bin/open", "-b", record["app_id"]], write=True)
         if not result["ok"]:
             raise ValueError(result["stderr"])
-        return {"window_id": window_id, "activated": True, "app_id": record["app_id"], "restore": bool(restore)}
+        app_id = record["app_id"]
+        self._sky(
+            f"var s=await sky.get_app_state({{app:{json.dumps(app_id)},disableDiff:true}}); nodeRepl.write(JSON.stringify({{app:s.app}}));",
+            "Activate local application",
+        )
+        self._active_app_id = app_id
+        return {
+            "window_id": window_id,
+            "activated": True,
+            "app_id": app_id,
+            "restore": bool(restore),
+            "backend": "Codex App Server -> node_repl -> @oai/sky",
+        }
 
     def computer_capture_window(self, window_id: int) -> Any:
         record = self._window(window_id)
@@ -643,81 +656,99 @@ class LocalFacade:
         self._swift(source)
         return {"x": x, "y": y, "duration_ms": max(0, int(duration_ms)), "backend": "Codex command/exec -> CoreGraphics"}
 
+    def _active_app(self) -> str:
+        if not self._active_app_id:
+            raise ValueError("No active app; call computer_list_windows and computer_activate_window first")
+        return self._active_app_id
+
+    @staticmethod
+    def _sky_key(key: str) -> str:
+        mapping = {
+            "enter": "Return", "return": "Return", "escape": "Escape", "esc": "Escape",
+            "tab": "Tab", "left": "Left", "right": "Right", "up": "Up", "down": "Down",
+            "home": "Home", "end": "End", "pageup": "Page_Up", "pagedown": "Page_Down",
+            "backspace": "BackSpace", "delete": "Delete", "space": "space",
+        }
+        return mapping.get(key.lower(), key)
+
     def computer_click(self, x: int | None = None, y: int | None = None, button: str = "left", clicks: int = 1, interval_ms: int = 100) -> dict[str, Any]:
         if x is None or y is None:
             raise ValueError("x and y are required by the Codex executor compatibility facade")
-        button_map = {"left": "left", "right": "right", "middle": "center"}
+        button_map = {"left": "left", "right": "right", "middle": "middle"}
         if button not in button_map:
             raise ValueError("button must be left, right, or middle")
-        b = button_map[button]
-        source = f'''import CoreGraphics
-let p=CGPoint(x:{float(x)},y:{float(y)})
-let down=CGEvent(mouseEventSource:nil,mouseType:.{b}MouseDown,mouseCursorPosition:p,mouseButton:.{b})!
-let up=CGEvent(mouseEventSource:nil,mouseType:.{b}MouseUp,mouseCursorPosition:p,mouseButton:.{b})!
-for _ in 0..<max(1,{int(clicks)}) {{ down.post(tap:.cghidEventTap); up.post(tap:.cghidEventTap); usleep(useconds_t(max(0,{int(interval_ms)})*1000)) }}
-'''
-        self._swift(source)
-        return {"clicked": True, "x": x, "y": y, "button": button, "clicks": clicks}
+        count = max(1, min(int(clicks), 5))
+        app = self._active_app()
+        self._sky(
+            f"await sky.click({{app:{json.dumps(app)},x:{int(x)},y:{int(y)},mouse_button:{json.dumps(button_map[button])},click_count:{count}}}); nodeRepl.write(JSON.stringify({{ok:true}}));",
+            "Click local application",
+        )
+        return {"clicked": True, "x": x, "y": y, "button": button, "clicks": count, "backend": "node_repl -> @oai/sky"}
 
     def computer_scroll(self, delta: int, x: int | None = None, y: int | None = None, horizontal: bool = False) -> dict[str, Any]:
-        axis1 = 0 if horizontal else int(delta / 4)
-        axis2 = int(delta / 4) if horizontal else 0
-        source = f'''import CoreGraphics
-let e=CGEvent(scrollWheelEvent2Source:nil,units:.pixel,wheelCount:2,wheel1:{axis1},wheel2:{axis2},wheel3:0)!
-e.post(tap:.cghidEventTap)
-'''
-        self._swift(source)
-        return {"scrolled": True, "delta": delta, "horizontal": horizontal, "x": x, "y": y}
+        value = int(delta)
+        if value == 0:
+            raise ValueError("delta must be non-zero")
+        app = self._active_app()
+        direction = ("right" if value > 0 else "left") if horizontal else ("up" if value > 0 else "down")
+        pages = max(1, min(round(abs(value) / 120), 10))
+        coords = ""
+        if x is not None and y is not None:
+            coords = f",x:{int(x)},y:{int(y)}"
+        self._sky(
+            f"await sky.scroll({{app:{json.dumps(app)},direction:{json.dumps(direction)},pages:{pages}{coords}}}); nodeRepl.write(JSON.stringify({{ok:true}}));",
+            "Scroll local application",
+        )
+        return {"scrolled": True, "delta": value, "horizontal": horizontal, "x": x, "y": y, "backend": "node_repl -> @oai/sky"}
 
     def computer_type_text(self, text: str, interval_ms: int = 0) -> dict[str, Any]:
-        encoded = base64.b64encode(text.encode("utf-8")).decode("ascii")
-        source = f'''import CoreGraphics
-import Foundation
-let data=Data(base64Encoded:"{encoded}")!
-let s=String(data:data,encoding:.utf8)!
-var units=Array(s.utf16)
-let down=CGEvent(keyboardEventSource:nil,virtualKey:0,keyDown:true)!
-down.keyboardSetUnicodeString(stringLength:units.count,unicodeString:&units)
-down.post(tap:.cghidEventTap)
-let up=CGEvent(keyboardEventSource:nil,virtualKey:0,keyDown:false)!
-up.post(tap:.cghidEventTap)
-'''
-        self._swift(source)
-        return {"typed": True, "characters": len(text), "interval_ms": interval_ms}
+        if len(text) > 10000:
+            raise ValueError("text is limited to 10000 characters")
+        app = self._active_app()
+        self._sky(
+            f"await sky.paste({{app:{json.dumps(app)},text:{json.dumps(text)},format:\"text\"}}); nodeRepl.write(JSON.stringify({{ok:true}}));",
+            "Type in local application",
+        )
+        return {
+            "typed": True,
+            "characters": len(text),
+            "interval_ms": interval_ms,
+            "backend": "node_repl -> @oai/sky",
+            "mode": "paste",
+        }
 
     def computer_key_press(self, key: str, presses: int = 1, interval_ms: int = 50) -> dict[str, Any]:
-        code = self._keycode(key)
-        source = f'''import CoreGraphics
-for _ in 0..<max(1,{int(presses)}) {{
- let d=CGEvent(keyboardEventSource:nil,virtualKey:{code},keyDown:true)!; d.post(tap:.cghidEventTap)
- let u=CGEvent(keyboardEventSource:nil,virtualKey:{code},keyDown:false)!; u.post(tap:.cghidEventTap)
- usleep(useconds_t(max(0,{int(interval_ms)})*1000))
-}}
-'''
-        self._swift(source)
-        return {"pressed": True, "key": key, "presses": presses}
+        count = max(1, min(int(presses), 100))
+        app = self._active_app()
+        sky_key = self._sky_key(key)
+        self._sky(
+            f"for(let i=0;i<{count};i++) await sky.press_key({{app:{json.dumps(app)},key:{json.dumps(sky_key)}}}); nodeRepl.write(JSON.stringify({{ok:true}}));",
+            "Press key in local application",
+        )
+        return {"pressed": True, "key": key, "presses": count, "interval_ms": interval_ms, "backend": "node_repl -> @oai/sky"}
 
     def computer_hotkey(self, keys: list[str]) -> dict[str, Any]:
         if len(keys) < 2 or len(keys) > 8:
             raise ValueError("keys must contain 2-8 items")
-        modifiers = {"cmd": ".maskCommand", "command": ".maskCommand", "shift": ".maskShift", "option": ".maskAlternate", "alt": ".maskAlternate", "control": ".maskControl", "ctrl": ".maskControl"}
-        flags = [modifiers[k.lower()] for k in keys[:-1] if k.lower() in modifiers]
-        code = self._keycode(keys[-1])
-        flag_expr = " | ".join(flags) if flags else "[]"
-        source = f'''import CoreGraphics
-let flags:CGEventFlags={flag_expr}
-let d=CGEvent(keyboardEventSource:nil,virtualKey:{code},keyDown:true)!; d.flags=flags; d.post(tap:.cghidEventTap)
-let u=CGEvent(keyboardEventSource:nil,virtualKey:{code},keyDown:false)!; u.flags=flags; u.post(tap:.cghidEventTap)
-'''
-        self._swift(source)
-        return {"pressed": True, "keys": keys}
+        modifier_map = {
+            "cmd": "super", "command": "super", "shift": "shift",
+            "option": "alt", "alt": "alt", "control": "ctrl", "ctrl": "ctrl",
+        }
+        translated = [modifier_map.get(key.lower(), self._sky_key(key)) for key in keys]
+        chord = "+".join(translated)
+        app = self._active_app()
+        self._sky(
+            f"await sky.press_key({{app:{json.dumps(app)},key:{json.dumps(chord)}}}); nodeRepl.write(JSON.stringify({{ok:true}}));",
+            "Press shortcut in local application",
+        )
+        return {"pressed": True, "keys": keys, "sky_key": chord, "backend": "node_repl -> @oai/sky"}
 
     def computer_release_inputs(self) -> dict[str, Any]:
-        source = '''import CoreGraphics
-for k:CGKeyCode in [55,56,58,59,60,61,62] { if let e=CGEvent(keyboardEventSource:nil,virtualKey:k,keyDown:false) { e.post(tap:.cghidEventTap) } }
-'''
-        self._swift(source)
-        return {"released": True}
+        return {
+            "released": True,
+            "backend": "node_repl -> @oai/sky",
+            "note": "Sky input actions are atomic and do not retain held key/button state.",
+        }
 
     def _window(self, window_id: int) -> dict[str, Any]:
         with self._window_lock:

@@ -291,3 +291,14 @@ Computer Use: внутренний ephemeral App Server thread использу�
 Regression подменяет `subprocess.run` и подтверждает передачу обоих значений `C` даже когда родительская среда имеет `ru_RU.UTF-8`. Дополнительно реальный status с `LANG=LC_ALL=ru_RU.UTF-8` распознал существующий PID 1951 как `owned=true, ready=true`.
 
 После исправления `control.py start` с уже сохранёнными пользователем credentials успешно запустил отдельный Secure MCP Tunnel: MCP PID 1951 и tunnel PID 36091 имели `running=true, owned=true, ready=true`. Production Codex Local Mac этим запуском не изменялся.
+
+
+## T007 — Computer Use actions через Sky
+
+Живой A/B через новый ChatGPT connector выявил дефекты прежнего action facade: `computer_hotkey` падал на сгенерированном Swift, а CGEvent-based `computer_type_text` и `computer_key_press` могли вернуть success без фактического изменения приложения. Bundled `computer-use` skill требует выполнять Computer Use через `node_repl + @oai/sky`, поэтому `computer_click`, `computer_scroll`, `computer_type_text`, `computer_key_press` и `computer_hotkey` переведены на Sky.
+
+`computer_activate_window` фиксирует активный app id; app-scoped action без предварительной активации возвращает ошибку. `computer_release_inputs` является compatibility no-op: Sky actions атомарны и не оставляют held key/button state. `computer_move_mouse` остаётся compatibility CoreGraphics operation, потому что Sky API не предоставляет hover-only pointer move.
+
+Direct probe подтвердил, что JavaScript literals проходят через App Server/node_repl без искажения. При этом текущий bundled `sky.type_text` на TextEdit воспроизводимо оставлял только whitespace, тогда как `sky.paste({format:"text"})` вставлял строку точно и восстанавливал clipboard. Поэтому внешний `computer_type_text` использует `sky.paste`, сохраняя семантику ввода текста. Горячие клавиши переводятся в xdotool-style Sky notation, например `["cmd","a"] -> "super+a"`.
+
+Реальный smoke после перезапуска experimental runtime подтвердил фактический эффект: TextEdit получил точный буфер `MCP_UI_TYPED\nSECOND_LINE\n`, а последующий `computer_capture_window` вернул тот же AX Value и image. После correction все 47 tool names нового connector-а были реально вызваны из Web ChatGPT; временный TextEdit закрыт без сохранения, test fixture в `/tmp` удалён, recoverable test-trash восстановлен/очищен.

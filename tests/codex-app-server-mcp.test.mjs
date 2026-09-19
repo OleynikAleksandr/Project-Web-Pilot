@@ -304,3 +304,20 @@ print(json.dumps({"identity":identity,"LC_ALL":seen.get("LC_ALL"),"LANG":seen.ge
   }
 });
 
+
+
+test('Computer Use actions route through Sky instead of Swift CGEvent', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const source = await readFile(path.join(repoRoot, 'tools', 'codex-app-server-mcp', 'server.py'), 'utf8');
+  const start = source.indexOf('    def computer_click(');
+  const end = source.indexOf('    def _window(', start);
+  const actions = source.slice(start, end);
+  assert.ok(start > 0 && end > start);
+  assert.match(source, /self\._active_app_id: str \| None = None/);
+  assert.match(actions, /sky\.click/);
+  assert.match(actions, /sky\.scroll/);
+  assert.match(actions, /sky\.paste/);
+  assert.match(actions, /sky\.press_key/);
+  assert.match(actions, /node_repl -> @oai\/sky/);
+  assert.doesNotMatch(actions, /self\._swift/);
+});

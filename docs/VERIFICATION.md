@@ -1803,3 +1803,23 @@ Computer Use permission probe показал: App Server MCP-thread `read-only` 
 - tunnel UI/health: `http://127.0.0.1:17853`.
 
 До исправления пользовательский Tunnel ID/API key уже были проверены `tunnel-client doctor`: result=ok, profile/tunnel_id/API key reference/MCP target/reachability/health listener — PASS. Секретное значение ключа в evidence не записывается.
+
+
+### T007 — live connector smoke всех 47 tools
+
+После регистрации нового ChatGPT connector namespace `Codex_App_Server_Local_Mac` стал доступен модели с 47 tools. После штатного запуска experimental MCP/tunnel реальный `bridge_status` через новый connector подтвердил Codex 0.155.1, local-only facade и Computer Use backend `Codex App Server -> node_repl -> @oai/sky`.
+
+В живой ChatGPT-сессии успешно вызваны все 47 tools: lifecycle/context; файловые операции, включая recoverable delete/restore и binary patch; commands/processes; repository/Git; все Computer Use tools. Файловые mutations выполнялись только в `/tmp/webpilot-codex-app-server-live-test`; временный TextEdit закрыт без сохранения, fixture удалён.
+
+Первый UI-smoke обнаружил два реальных дефекта action-path: Swift hotkey syntax error и ложный success CGEvent-based text/key actions. Bundled Computer Use contract был перечитан через новый MCP и action facade переведён на Sky. Direct App Server literal probe показал, что node_repl не искажает строки; отдельный probe выявил bundled `sky.type_text` whitespace-only на TextEdit, тогда как `sky.paste` вставляет текст дословно.
+
+Финальный TextEdit smoke через новый connector:
+- `computer_hotkey(["cmd","a"])` -> Sky `super+a`;
+- `computer_type_text("MCP_UI_TYPED")`;
+- `computer_key_press("enter")`;
+- `computer_type_text("SECOND_LINE")`;
+- независимое чтение буфера вернуло `MCP_UI_TYPED\nSECOND_LINE\n`;
+- `computer_capture_window` вернул тот же текст в AX tree и image;
+- click/scroll/release прошли через Sky, move_mouse — через compatibility CoreGraphics.
+
+Targeted suite после correction: **5 passed, 0 failed**. Regression проверяет, что click/scroll/type/key/hotkey route используют Sky и не вызывают Swift helper.

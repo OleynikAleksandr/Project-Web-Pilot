@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 27,
+  "plan_revision": 29,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-app-server-mcp-035",
@@ -273,8 +273,8 @@
       "expected_commit_message": "fix: стабилизировать identity experimental MCP процесса"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "codex-app-server-mcp-035",
         "task_id": "T007",
@@ -368,7 +368,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: codex-app-server-mcp-035
 Current Task: нет
-Revision: 27
+Revision: 29
 
 ## Цель
 
@@ -409,8 +409,8 @@ Revision: 27
   - Git Commit: [DONE] fix: стабилизировать identity experimental MCP процесса
   - Reference: codex-app-server-mcp-035 / T006 / implementation
   - Файлы: tools/codex-app-server-mcp/control.py, tests/codex-app-server-mcp.test.mjs, docs/modules/codex-app-server-executor.md, docs/VERIFICATION.md
-- [TODO] T007: Перевести Computer Use actions на Sky — Ожидает
-  - Git Commit: [PENDING] fix: перевести Computer Use actions на Sky
+- [DONE] T007: Перевести Computer Use actions на Sky — Завершено
+  - Git Commit: [DONE] fix: перевести Computer Use actions на Sky
   - Reference: codex-app-server-mcp-035 / T007 / implementation
   - Файлы: tools/codex-app-server-mcp/server.py, tests/codex-app-server-mcp.test.mjs, docs/modules/codex-app-server-executor.md, docs/VERIFICATION.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
