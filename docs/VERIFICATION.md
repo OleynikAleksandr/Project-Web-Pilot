@@ -1900,3 +1900,10 @@ Delivery `~/Downloads/WebPilot-0.6.47/` was replaced. The old candidate is retai
 ## T007 — исправление атрибуции и методики / 19.09.2026
 
 По прямому уточнению пользователя исправлена среда на ChatGPT Work Desktop и снята ошибочная атрибуция Codex Desktop. Shell raw samples и арифметика T006 сохранены как отдельный контроль; желаемый native write/read тест ещё не выполнен. В исследовании зафиксировано повторное задание с требованием стандартных встроенных файловых инструментов и запретом подменять их exec_command/shell/MCP. При отсутствии нужных инструментов агент должен сообщить ограничение. Production код не менялся.
+
+
+## T008 — Work Desktop через тот же MCP connector / 19.09.2026
+
+Пользователь передал 15 пар стандартных connector tools codex_app_server_local_mac_write_file/read_file из ChatGPT Work Desktop. Пересчёт raw samples подтвердил mean write=1753.13, read=1720.47, pair=3473.60 мс; median pair=3546 мс; total 30 calls=52104 мс. Прогрев 1558+1543=3101 мс исключён. По отчёту все 16/16 проверок точного содержимого 1024 байт и SHA-256 успешны. Raw samples и методика — раздел T008 в docs/design/computer-use-latency-investigation.md.
+
+Mean pair на 94.07 мс (+2.78%) выше Web MCP T005 и в 46.94x больше отдельного desktop shell-контроля T006. Название приложения исправлено на ChatGPT Work Desktop. Наличие tunnel и фактический backend в desktop-прогоне отдельно не подтверждались; одинаковый namespace не доказывает транспорт. Результат указывает на общий connector/MCP путь для дальнейшего исследования, но не измеряет вклад туннеля. Код/runtime не изменены; следующий контроль — direct loopback тех же MCP file tools, T001–T004 и DOCS остаются TODO.

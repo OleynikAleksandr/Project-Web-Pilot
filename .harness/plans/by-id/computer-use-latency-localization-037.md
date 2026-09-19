@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 14,
+  "plan_revision": 16,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "computer-use-latency-localization-037",
@@ -292,8 +292,8 @@
       "id": "T008",
       "title": "Сопоставить повторный Desktop MCP тест с Web MCP и shell-контролем",
       "why": "Пользователь передал 15 пар вызовов тех же MCP write_file/read_file из ChatGPT Work Desktop.",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "computer-use-latency-localization-037",
         "task_id": "T008",
@@ -376,7 +376,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: computer-use-latency-localization-037
 Current Task: нет
-Revision: 14
+Revision: 16
 
 ## Цель
 
@@ -419,8 +419,8 @@ Revision: 14
   - Git Commit: [PENDING] docs: локализовать bottleneck Computer Use
   - Reference: computer-use-latency-localization-037 / T004 / implementation
   - Файлы: docs/design/computer-use-latency-investigation.md, docs/modules/runtime-lifecycle.md, docs/VERIFICATION.md
-- [TODO] T008: Сопоставить повторный Desktop MCP тест с Web MCP и shell-контролем — Ожидает
-  - Git Commit: [PENDING] docs: сравнить Web и Work Desktop через один MCP connector
+- [DONE] T008: Сопоставить повторный Desktop MCP тест с Web MCP и shell-контролем — Завершено
+  - Git Commit: [DONE] docs: сравнить Web и Work Desktop через один MCP connector
   - Reference: computer-use-latency-localization-037 / T008 / implementation
   - Файлы: docs/design/computer-use-latency-investigation.md, docs/VERIFICATION.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
