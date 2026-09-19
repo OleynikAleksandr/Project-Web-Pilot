@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 11,
+  "plan_revision": 13,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "stable-mcp-connector-036",
@@ -182,8 +182,8 @@
         "Документ пригоден как основной контекст подготовленного плана следующей сессии."
       ],
       "expected_commit_message": "docs: зафиксировать исследование задержек Computer Use",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "stable-mcp-connector-036",
         "task_id": "T003",
@@ -246,7 +246,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: stable-mcp-connector-036
 Current Task: нет
-Revision: 11
+Revision: 13
 
 ## Цель
 
@@ -268,8 +268,8 @@ Revision: 11
   - Git Commit: [DONE] release: пересобрать 0.6.47 с одним MCP connector
   - Reference: stable-mcp-connector-036 / T002 / implementation
   - Файлы: docs/RELEASE.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md, README.md
-- [TODO] T003: Зафиксировать исследование задержек Computer Use и MCP — Ожидает
-  - Git Commit: [PENDING] docs: зафиксировать исследование задержек Computer Use
+- [DONE] T003: Зафиксировать исследование задержек Computer Use и MCP — Завершено
+  - Git Commit: [DONE] docs: зафиксировать исследование задержек Computer Use
   - Reference: stable-mcp-connector-036 / T003 / implementation
   - Файлы: docs/design/computer-use-latency-investigation.md, docs/DOCUMENTATION_INDEX.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
