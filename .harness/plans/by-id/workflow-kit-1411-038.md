@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 6,
+  "plan_revision": 7,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-kit-1411-038",
@@ -216,9 +216,7 @@
         "task_id": "T002",
         "role": "implementation"
       },
-      "dependencies": [
-        "T001"
-      ],
+      "dependencies": [],
       "functional_paths": [
         "package.json",
         "package-lock.json"
@@ -319,7 +317,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-kit-1411-038
 Current Task: нет
-Revision: 6
+Revision: 7
 
 ## Цель
 
