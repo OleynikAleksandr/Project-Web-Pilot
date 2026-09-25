@@ -74,3 +74,7 @@ ChatColors выбирает data-composer-body, владеющий видимы�
 ## Первый проект из папки — 0.6.51
 
 Общий startup UI предлагает chooseWorkspace после той же проверки, что beginCreate. Контракты: `docs/modules/first-run-onboarding.md` и `docs/WORKSPACE_SETUP.md`. Backend установки не менялся.
+
+## Поставляемый Workflow Kit 1.4.11 — 0.6.52
+
+Workflow Kit / Context Recovery: `resources/workflow-kit` = 1.4.11, контракт — [workflow-kit-recovery](modules/workflow-kit-recovery.md); открытие и upgrade проектов 1.4.1–1.4.3 — [WORKSPACE_SETUP](WORKSPACE_SETUP.md). Собственный `.harness/kit` репозитория — 1.4.1.

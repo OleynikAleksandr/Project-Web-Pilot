@@ -114,3 +114,7 @@ Payload не содержит пользовательского tunnel ID/API k
 Scope 029 / T007: 17.09.2026 штатный Doctor согласовал manifest с byte-identical installed/bundled Kit 1.4.1, создав backup всех канонических планов и manifest. Переход с замороженного исходника 1.4.0 проверен отдельной временной установкой; WF001 и внешний Codex runtime не изменялись.
 
 Scope 029 / T009: 0.6.29 собран из main 5028241 с изменением только package version для выпуска. Все 33 src и 31 resources совпадают побайтово между source, macOS/Windows staging и постоянным Mac app. Workflow Kit 1.4.1 — собственное развитие этого репозитория; внешние WF001/Codex runtime не редактировались. Полный receipt и SHA — .harness/runtime/releases/0.6.29/source-verification.json.
+
+## Источник поставляемого Workflow Kit 1.4.11 — 0.6.52
+
+С 0.6.52 `resources/workflow-kit` взят не из WF001 (там 1.4.9), а из `/Users/oleksandroliinyk/VSCODE/CodeAppServer+WebChatGPT`, ветка `codex/gpt-provider-names`, коммит `badcf20` (`resources/workflow-kit`, tree `1fe409fbc804a565ef850f830ceb83aaa43e7a0b`). Та же копия установлена в тестовом проекте `/Users/oleksandroliinyk/VSCODE/02_Chat`. Содержимое 35 файлов закреплено SHA-256 `49dd163e025739d93eddd7603ac16c45bae1bae762b14fac69f7d42c111746e9` в `tests/workflow-kit-source.test.mjs`. Ветка ещё не слита в main CodeAppServer.
