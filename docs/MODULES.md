@@ -58,3 +58,7 @@ Workspace & Sessions дополнен planning document [Регрессия layo
 18.09.2026 пользователь поручил закрыть план first-run-onboarding-031 и передал испытания Windows 11 другому агенту. Итог macOS и границы доказательств — docs/CLEAN_INSTALL.md; условия и оставшиеся критерии Windows — docs/TRANSFER_TO_WINDOWS.md. План first-run-corrections-032 принадлежит другой сессии и этим закрытием не изменяется.
 
 Scope windows-onboarding-033: общий `startup-platform.mjs` связывает WindowsRuntimeBootstrap, StartupReadiness и WorkspaceSetup; Windows получает комплектный Git. Release & Local Installation владеет `scripts/release-all.mjs`, сверкой пары и общим manifest. Контракт — docs/modules/first-run-onboarding.md.
+
+## Совместимость ChatGPT DOM — 0.6.48
+
+Контракт: [ChatGPT DOM](modules/chatgpt-dom-compatibility.md). Фасад `createChatGPTDOM` объединяет селекторы режима, composer, сообщений, busy и прокрутки; потребители — composer/context, диагностика, цвета, фильтр и автопрокрутка. Новый переходный URL не является ошибкой и не вызывает повторную отправку. Lifecycle UI и autostart служб описаны в [runtime-lifecycle](modules/runtime-lifecycle.md).
