@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 126,
+  "plan_revision": 128,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
@@ -1481,8 +1481,8 @@
       "id": "K002",
       "title": "Парный выпуск 0.6.51",
       "why": "Парный выпуск 0.6.51",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "windows-onboarding-033",
         "task_id": "K002",
@@ -1647,7 +1647,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 126
+Revision: 128
 
 ## Цель
 
@@ -1841,8 +1841,8 @@ Revision: 126
   - Git Commit: [DONE] feat: Выбор существующей папки на первом шаге проекта, 0.6.51
   - Reference: windows-onboarding-033 / K001 / implementation
   - Файлы: src/ui/index.html, src/ui/startup.mjs, tests/startup-ui.test.mjs, package.json, package-lock.json, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/RELEASE.md
-- [TODO] K002: Парный выпуск 0.6.51 — Ожидает
-  - Git Commit: [PENDING] feat: Парный выпуск 0.6.51
+- [DONE] K002: Парный выпуск 0.6.51 — Завершено
+  - Git Commit: [DONE] feat: Парный выпуск 0.6.51
   - Reference: windows-onboarding-033 / K002 / implementation
   - Файлы: docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/RELEASE.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает

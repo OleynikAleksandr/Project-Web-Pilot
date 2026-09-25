@@ -459,3 +459,16 @@ Workflow Kit остаётся 1.4.1; изменения относятся к о
 (inode 406538347), сверкой bundle и резервной копией прежнего Contents.
 Живые Chat/Work изображения просмотрены до сборки, packaged source совпадает.
 Kit 1.4.1. Native Windows не запускалась, GitHub не публиковался.
+
+## Локальный парный выпуск 0.6.51 — 25.09.2026
+
+`npm run build` прошла, source commit `efaae0bfcf49c836b3eac8d289e15ada57057711`.
+Оба пакета сверены с исходниками, ZIP integrity и ASAR подтверждены.
+Корневой app и /Applications/Project Web Pilot.app обновлены с сохранением
+identity; предыдущий Contents установленной копии сохранён в backup.
+Поставка: `~/Downloads/WebPilot-0.6.51/`. Kit 1.4.1, GitHub не публиковался.
+
+| Платформа | Размер, байт | SHA-256 ZIP |
+| --- | ---: | --- |
+| macOS arm64 | 181156393 | `e577a2b0fe333b0c3589038fd081b917d9cf936cecf1a93782e0b67ac4eb2726` |
+| Windows x64 | 316424573 | `c6ca825b3e07de3154548e6d07f60e0bb8c57307078f3995e24376e7fa2b9a87` |
