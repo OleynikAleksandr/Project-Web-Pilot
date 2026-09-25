@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 115,
+  "plan_revision": 116,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Совместимость с новым ChatGPT DOM, плавная автопрокрутка, полная версия сайдбара, независимые MCP/tunnel и парный выпуск 0.6.48",
   "acceptance_criteria": [
     "Windows показывает и выполняет шаги компонентов, туннеля и создания проекта после входа",
@@ -1379,13 +1379,75 @@
       "expected_commit_message": "fix: Сверить парный выпуск 0.6.49"
     },
     {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
+      "id": "J001",
+      "title": "Заливка всей округлой плашки composer, версия 0.6.50",
+      "why": "Заливка всей округлой плашки composer, версия 0.6.50",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "windows-onboarding-033",
+        "task_id": "J001",
+        "role": "implementation"
+      },
+      "functional_paths": [
+        "src/chatgpt-colors.mjs",
+        "tests/electron-smoke.mjs",
+        "package.json",
+        "package-lock.json"
+      ],
+      "documentation_paths": [
+        "docs/modules/workspace-sessions.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md",
+        "docs/RELEASE.md"
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "dependencies": [
+        "I002"
+      ],
+      "acceptance_criteria": [
+        "Заливка всей округлой плашки composer, версия 0.6.50"
+      ],
+      "expected_commit_message": "fix: Заливка всей округлой плашки composer, версия 0.6.50"
+    },
+    {
+      "id": "J002",
+      "title": "Парная сборка 0.6.50 и визуальная проверка",
+      "why": "Парная сборка 0.6.50 и визуальная проверка",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "windows-onboarding-033",
+        "task_id": "J002",
+        "role": "implementation"
+      },
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/modules/workspace-sessions.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md",
+        "docs/RELEASE.md"
+      ],
+      "verification_ids": [],
+      "dependencies": [
+        "J001"
+      ],
+      "acceptance_criteria": [
+        "Парная сборка 0.6.50 и визуальная проверка"
+      ],
+      "expected_commit_message": "fix: Парная сборка 0.6.50 и визуальная проверка"
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "windows-onboarding-033",
         "task_id": "DOCS",
         "role": "implementation",
-        "iteration": 7
+        "iteration": 8
       },
       "dependencies": [
         "P001",
@@ -1426,7 +1488,9 @@
         "H006",
         "I001",
         "I003",
-        "I002"
+        "I002",
+        "J001",
+        "J002"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -1513,10 +1577,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 115
+Revision: 116
 
 ## Цель
 
@@ -1698,8 +1762,16 @@ Revision: 115
   - Git Commit: [DONE] fix: Сверить парный выпуск 0.6.49
   - Reference: windows-onboarding-033 / I002 / implementation
   - Файлы: docs/RELEASE.md, docs/VERIFICATION.md
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: актуализировать выпуск 0.6.49
+- [TODO] J001: Заливка всей округлой плашки composer, версия 0.6.50 — Ожидает
+  - Git Commit: [PENDING] fix: Заливка всей округлой плашки composer, версия 0.6.50
+  - Reference: windows-onboarding-033 / J001 / implementation
+  - Файлы: src/chatgpt-colors.mjs, tests/electron-smoke.mjs, package.json, package-lock.json, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/RELEASE.md
+- [TODO] J002: Парная сборка 0.6.50 и визуальная проверка — Ожидает
+  - Git Commit: [PENDING] fix: Парная сборка 0.6.50 и визуальная проверка
+  - Reference: windows-onboarding-033 / J002 / implementation
+  - Файлы: docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/RELEASE.md
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: актуализировать выпуск 0.6.49
   - Reference: windows-onboarding-033 / DOCS / implementation
   - Файлы: AGENTS.md, README.md, docs/WORKFLOW_START.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/CLEAN_INSTALL.md, docs/TRANSFER_TO_WINDOWS.md, docs/RELEASE.md, docs/WORKSPACE_SETUP.md, docs/CONTEXT_DELIVERY.md, docs/modules/runtime-lifecycle.md, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md, docs/modules/chatgpt-dom-compatibility.md
 
