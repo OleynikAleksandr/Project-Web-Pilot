@@ -39,7 +39,7 @@ test('follows new messages while the conversation is at the bottom', async () =>
   assert.equal(f.window.__webPilotConversationAutoScroll.snapshot().following, true);
 });
 
-test('programmatic startup scroll restoration does not suspend following', async () => {
+test('native programmatic scrolling does not trigger a competing corrective scroll', async () => {
   const f = fixture();
   f.window.eval(autoScrollPageScript({ forceFollow: true }));
   await waitFrames(f.window);
@@ -49,7 +49,7 @@ test('programmatic startup scroll restoration does not suspend following', async
   f.scroller.dispatchEvent(new f.window.Event('scroll'));
   assert.equal(f.window.__webPilotConversationAutoScroll.snapshot().following, true, 'programmatic restore must not look like manual reading');
   await waitFrames(f.window);
-  assert.equal(f.scroller.scrollTop, 800, 'startup restore is corrected back to the latest message');
+  assert.equal(f.scroller.scrollTop, 260, 'scroll events cannot create a scroll feedback loop');
 });
 
 test('manual scroll up suspends following until the user returns to the bottom', async () => {
@@ -129,4 +129,26 @@ test('Electron wrapper runs only on chatgpt.com and passes forceFollow', async (
   assert.deepEqual(await installChatGPTAutoScroll(view, { forceFollow: true }), { installed: true });
   assert.match(scripts[0], /forceFollow/);
   assert.equal(await installChatGPTAutoScroll({ ...view, getURL: () => 'https://example.com/' }), null);
+});
+
+
+test('reverse layout follows zero, respects negative manual position, and does not strobe', async () => {
+  const f = fixture(); f.scroller.style.flexDirection = 'column-reverse';
+  let writes = 0;
+  f.scroller.scrollTo = ({top}) => { writes++; f.scroller.scrollTop = Math.min(0, Math.max(-2000, top)); f.scroller.dispatchEvent(new f.window.Event('scroll')); };
+  f.scroller.scrollTop = -500;
+  f.window.eval(autoScrollPageScript({forceFollow:true})); await waitFrames(f.window);
+  assert.equal(f.scroller.scrollTop,0); assert.equal(writes,1); assert.equal(f.window.__webPilotConversationAutoScroll.snapshot().atBottom,true);
+  for(let i=0;i<20;i++) f.mutate(); await waitFrames(f.window);
+  assert.equal(writes,1,'mutations at the reverse bottom must not generate more scroll writes');
+  // Wheel pauses before the next frame, even if the native scroll event has not fired yet.
+  f.mutate();f.scroller.dispatchEvent(new f.window.WheelEvent('wheel',{bubbles:true,deltaY:-100}));f.scroller.scrollTop=-300;
+  await waitFrames(f.window);assert.equal(f.scroller.scrollTop,-300);assert.equal(writes,1);
+  f.scroller.scrollTop=0;f.scroller.dispatchEvent(new f.window.Event('scroll'));assert.equal(f.window.__webPilotConversationAutoScroll.snapshot().following,true);
+  f.window.__webPilotConversationAutoScroll.disconnect();f.window.close();
+});
+test('disconnect cancels queued scroll frames', async()=>{
+ const f=fixture();let writes=0;f.scroller.scrollTo=()=>writes++;
+ f.window.eval(autoScrollPageScript({forceFollow:true}));f.window.__webPilotConversationAutoScroll.disconnect();
+ await waitFrames(f.window);assert.equal(writes,0);f.window.close();
 });

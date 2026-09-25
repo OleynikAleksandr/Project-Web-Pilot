@@ -1262,3 +1262,5 @@ macOS runtime selector использует один внешний Secure MCP T
 Общий `src/chatgpt-dom.mjs` используется composer и диагностикой. Распознавание режима основано на выбранной кнопке, а `/` и `/work/` допускают переключение без навигации. Новые semantic message wrappers и stop labels поддерживаются вместе с прежними. Контракт: [Совместимость ChatGPT](../modules/chatgpt-dom-compatibility.md).
 
 Служебные строки обрабатывает `chatgpt-tool-filter.mjs`: новый структурный activity header и legacy text fallback. Фильтр сохраняет inline display для восстановления и уведомляет прокрутку только при фактическом изменении. Цвета используют общий каталог semantic message selectors.
+
+Автопрокрутка v3 использует нулевой низ column-reverse, мгновенные совместно запланированные записи и отменяемый animation frame. Scroll event не вызывает корректирующий scroll; ручное колесо вверх приостанавливает follow до следующего кадра. Resize/content изменяют позицию только при активном follow и реальном расстоянии до низа.

@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 89,
+  "plan_revision": 91,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
@@ -1143,8 +1143,8 @@
         "Автопрокрутка без обратной связи и рывков; реальная DOM структура 25.09.2026, сохранение защит от повторной отправки и фоновых служб"
       ],
       "expected_commit_message": "fix: Автопрокрутка без обратной связи и рывков",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "windows-onboarding-033",
         "task_id": "H003",
@@ -1379,7 +1379,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 89
+Revision: 91
 
 ## Цель
 
@@ -1529,8 +1529,8 @@ Revision: 89
   - Git Commit: [DONE] fix: Структурный фильтр карточек и оформление
   - Reference: windows-onboarding-033 / H002 / implementation
   - Файлы: src/chatgpt-tool-filter.mjs, src/main.mjs, src/chatgpt-colors.mjs, tests/chatgpt-tool-filter.test.mjs, tests/chatgpt-colors.test.mjs, docs/modules/chatgpt-dom-compatibility.md, docs/architecture/ARCHITECTURE.md, docs/DOCUMENTATION_INDEX.md, docs/VERIFICATION.md, docs/RELEASE.md
-- [TODO] H003: Автопрокрутка без обратной связи и рывков — Ожидает
-  - Git Commit: [PENDING] fix: Автопрокрутка без обратной связи и рывков
+- [DONE] H003: Автопрокрутка без обратной связи и рывков — Завершено
+  - Git Commit: [DONE] fix: Автопрокрутка без обратной связи и рывков
   - Reference: windows-onboarding-033 / H003 / implementation
   - Файлы: src/chatgpt-auto-scroll.mjs, tests/chatgpt-auto-scroll.test.mjs, docs/modules/chatgpt-dom-compatibility.md, docs/architecture/ARCHITECTURE.md, docs/DOCUMENTATION_INDEX.md, docs/VERIFICATION.md, docs/RELEASE.md
 - [TODO] H003W: Автозапуск Windows MCP и туннеля при входе — Ожидает

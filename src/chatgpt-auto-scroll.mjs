@@ -1,10 +1,11 @@
+import { chatGPTDOMScript, createChatGPTDOM, CHATGPT_SELECTORS } from './chatgpt-dom.mjs';
 const CHATGPT_ORIGIN = 'https://chatgpt.com';
 
 // Runs inside the visible ChatGPT document. It uses only DOM scrolling/events and does not call ChatGPT internals.
-export function installAutoScrollPage({ forceFollow = false } = {}) {
+export function installAutoScrollPage({ forceFollow = false } = {}, dom = createChatGPTDOM(CHATGPT_SELECTORS)) {
   const stateKey = '__webPilotConversationAutoScroll';
   const previous = window[stateKey];
-  if (previous?.version === 2 && typeof previous.refresh === 'function') {
+  if (previous?.version === 3 && typeof previous.refresh === 'function') {
     if (forceFollow) previous.resume();
     else previous.refresh();
     return previous.snapshot();
@@ -12,19 +13,20 @@ export function installAutoScrollPage({ forceFollow = false } = {}) {
   previous?.disconnect?.();
 
   const threshold = 32;
-  const editorSelector = '#prompt-textarea,textarea[data-testid="prompt-textarea"],[data-testid="composer-text-input"],[contenteditable="true"][role="textbox"]';
-  const sendSelector = '[data-testid="send-button"],button[aria-label="Send prompt"],button[aria-label="Send message"],button[aria-label="Отправить сообщение"],button[aria-label="Отправить"]';
-  const messageSelector = '[data-message-author-role="user"],[data-message-author-role="assistant"],[data-testid="user-message"],[data-testid="assistant-message"]';
+  const editorSelector = dom.selectors.editor;
+  const sendSelector = dom.selectors.send;
   let following = true;
   let target = null;
   let scheduled = false;
-  let observer = null;
+  let observer = null, resizeObserver = null, frame = null;
+  let disconnected = false;
   let routeKey = location.pathname;
   let userScrollIntentUntil = 0;
 
   const rootScroller = () => document.scrollingElement || document.documentElement;
   const maxScrollTop = element => Math.max(0, (element?.scrollHeight ?? 0) - (element?.clientHeight ?? 0));
-  const atBottom = element => !!element && maxScrollTop(element) - (element.scrollTop ?? 0) <= threshold;
+  const bottomTop = element => getComputedStyle(element).flexDirection === 'column-reverse' ? 0 : maxScrollTop(element);
+  const atBottom = element => !!element && Math.abs(bottomTop(element) - (element.scrollTop ?? 0)) <= threshold;
   const scrollable = element => {
     if (!element) return false;
     if (element === rootScroller()) return true;
@@ -38,10 +40,9 @@ export function installAutoScrollPage({ forceFollow = false } = {}) {
     return null;
   };
   const findTarget = () => {
-    const messages = document.querySelectorAll(messageSelector);
+    const messages = [...dom.messages('user'), ...dom.messages('assistant')];
     const lastMessage = messages[messages.length - 1] ?? null;
-    const editor = document.querySelector(editorSelector);
-    return nearestScroller(lastMessage) || nearestScroller(editor) || rootScroller();
+    return dom.first(dom.selectors.scroller) || nearestScroller(lastMessage) || nearestScroller(dom.editor()) || rootScroller();
   };
 
   const markUserScrollIntent = () => { userScrollIntentUntil = Date.now() + 1500; };
@@ -56,33 +57,35 @@ export function installAutoScrollPage({ forceFollow = false } = {}) {
       following = false;
       return;
     }
-    // ChatGPT may restore a remembered scrollTop after load. That is not a request to read history.
-    if (following) scheduleFollow();
+    // Never correct a scroll event with another scroll: ChatGPT owns its animations.
+    // Content/layout changes and explicit Send are the only follow triggers.
   };
   const bindTarget = () => {
     const next = findTarget();
     if (next === target) return target;
     target?.removeEventListener('scroll', onScroll);
+    resizeObserver?.disconnect();
     target = next;
+    if (target && resizeObserver) resizeObserver.observe(target);
     target?.addEventListener('scroll', onScroll, { passive: true });
     return target;
   };
   const scrollNow = () => {
-    scheduled = false;
-    if (!following) return;
+    scheduled = false; frame = null;
+    if (!following || disconnected) return;
     const element = bindTarget();
     if (!element) return;
-    const top = maxScrollTop(element);
+    const top = bottomTop(element);
     if (Math.abs((element.scrollTop ?? 0) - top) <= 1) return;
     try {
-      if (typeof element.scrollTo === 'function') element.scrollTo({ top, left: element.scrollLeft ?? 0, behavior: 'auto' });
+      if (typeof element.scrollTo === 'function') element.scrollTo({ top, left: element.scrollLeft ?? 0, behavior: 'instant' });
       else element.scrollTop = top;
     } catch { element.scrollTop = top; }
   };
   const scheduleFollow = () => {
-    if (scheduled || !following) return;
+    if (scheduled || !following || disconnected) return;
     scheduled = true;
-    requestAnimationFrame(() => requestAnimationFrame(scrollNow));
+    frame = requestAnimationFrame(() => { frame = requestAnimationFrame(scrollNow); });
   };
   const resume = () => {
     userScrollIntentUntil = 0;
@@ -115,7 +118,11 @@ export function installAutoScrollPage({ forceFollow = false } = {}) {
     if (!isComposerTarget(event.target)
         && ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '].includes(event.key)) markUserScrollIntent();
   };
-  const onWheel = () => markUserScrollIntent();
+  const onWheel = event => {
+    if (event.target?.closest?.(editorSelector)) return;
+    markUserScrollIntent();
+    if (event.deltaY < 0) following = false;
+  };
   const onTouch = () => markUserScrollIntent();
   const onPointerDown = event => {
     const element = bindTarget();
@@ -127,6 +134,7 @@ export function installAutoScrollPage({ forceFollow = false } = {}) {
   };
   const onResize = () => { if (following) scheduleFollow(); };
 
+  if (typeof ResizeObserver === 'function') resizeObserver = new ResizeObserver(() => { if (following) scheduleFollow(); });
   observer = new MutationObserver(() => {
     bindTarget();
     if (following) scheduleFollow();
@@ -143,12 +151,14 @@ export function installAutoScrollPage({ forceFollow = false } = {}) {
   window.addEventListener('resize', onResize, { passive: true });
 
   const controller = {
-    version: 2,
+    version: 3,
     resume,
     refresh,
     snapshot,
     disconnect: () => {
-      observer?.disconnect();
+      disconnected = true;
+      observer?.disconnect(); resizeObserver?.disconnect();
+      if (frame !== null) cancelAnimationFrame(frame);
       target?.removeEventListener('scroll', onScroll);
       document.removeEventListener('click', onClick, true);
       document.removeEventListener('keydown', onKeyDown, true);
@@ -170,7 +180,7 @@ export function installAutoScrollPage({ forceFollow = false } = {}) {
 }
 
 export function autoScrollPageScript(options = {}) {
-  return `(${installAutoScrollPage.toString()})(${JSON.stringify(options)})`;
+  return `(${installAutoScrollPage.toString()})(${JSON.stringify(options)}, ${chatGPTDOMScript()})`;
 }
 
 export async function installChatGPTAutoScroll(contents, { forceFollow = false } = {}) {
