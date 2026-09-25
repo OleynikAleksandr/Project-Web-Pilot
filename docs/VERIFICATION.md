@@ -2010,3 +2010,10 @@ Electron inspector: `[data-composer-body]`, radius 26px, содержит editor
 и `.harness/runtime/filter-review-20260925/capsule-050.png` (локально).
 Electron smoke использует эту вложенность и отдельно проверяет capsule,
 наружный фон, editor, радиус, кнопку, legacy, reset и восстановление палитры.
+
+Дополнительно визуально проверен живой Work: body имеет radius 28px и четыре
+кнопки, заливка #541212 охватывает всю плашку; нижняя панель выбора проекта и
+плагинов не меняется. Снимок `capsule-work-050.png` просмотрен. После проверки
+возвращён Chat, диагностическое приложение закрыто; сохранённые цвета не менялись.
+Финальные syntax, Node suite (338 PASS, 2 SKIP) и Electron smoke прошли на commit
+`e6a71a6256f7e3936738be793d16122cb3df2b9d`. Native Windows не запускалась.
