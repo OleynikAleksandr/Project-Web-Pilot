@@ -2036,3 +2036,7 @@ continue → chooseWorkspace без beginCreate и переход к preview. О
 ## Workflow Kit 1.4.11 — scope 038 / T001
 
 Проверено в Linux VM Cowork на рабочем дереве (Node 22.23.2): полный `node --test tests/*.test.mjs` — 346 тестов, 338 PASS, 8 SKIP, 0 FAIL (baseline до изменений: 344 / 336 / 8 / 0). Новый тест устанавливает настоящий проект собственным Kit репозитория 1.4.1, создаёт план сессии, затем обновляет его через WorkspaceSetup с поставляемым 1.4.11: preview `upgrade`, apply → ready, версия 1.4.11, файлы планов побайтно сохранены, шаблоны PROTOTYPE/PLAN/SPEC/CONTINUE/STAGES установлены, рабочее дерево чистое. Поставляемый комплект закреплён SHA-256 `49dd163e…746e9`. Electron smoke в этой среде не запускался (macOS-сборка Electron); он выполняется при парном выпуске на Mac.
+
+## Парный выпуск 0.6.52 — scope 038 / T003
+
+На Mac (Node 22.17.0, arm64) последовательно: `npm test` — 346 тестов, 344 PASS, 2 SKIP, 0 FAIL (повторный чистый прогон, 84 с); `npm run smoke` — PASSED на TEST FIXTURE (liveChatGPT=false, fullContextBytes 75092); `npm run build` — exit 0, 16:20–16:23 UTC. Корневой app: CFBundleShortVersionString 0.6.52, `Contents/Resources/resources/workflow-kit` — VERSION 1.4.11, 35 файлов, SHA-256 содержимого `49dd163e…746e9` как у источника. Установка Kit из собранного app в пустой Git-проект дала 1.4.11, recovery `kit 1.4.11`, шаблоны PROTOTYPE/PLAN/SPEC/CONTINUE/STAGES на месте. Живой ChatGPT, обновление реального пользовательского проекта 1.4.1 через интерфейс и native Windows в этой итерации не проверялись.

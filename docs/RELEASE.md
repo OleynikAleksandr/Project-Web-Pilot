@@ -472,3 +472,14 @@ identity; предыдущий Contents установленной копии с
 | --- | ---: | --- |
 | macOS arm64 | 181156393 | `e577a2b0fe333b0c3589038fd081b917d9cf936cecf1a93782e0b67ac4eb2726` |
 | Windows x64 | 316424573 | `c6ca825b3e07de3154548e6d07f60e0bb8c57307078f3995e24376e7fa2b9a87` |
+
+## Локальный парный выпуск 0.6.52 — 25.09.2026
+
+Поставляемый Workflow Kit обновлён до **1.4.11** (новые и подключаемые проекты); собственный Kit репозитория — 1.4.1. `npm run build` прошла на Mac, source commit `55b3b5cebe241d577d4c1dd755b1ee4504696c8e`, 94 исходных файла совпали с упакованными. ZIP integrity и ASAR подтверждены. Корневой `Project Web Pilot.app` обновлён с сохранением identity (inode 406600483); штатным installMacBundle обновлена и фактически используемая `/Applications/Project Web Pilot.app` (inode 406571340 сохранён, прежний Contents — в `.harness/runtime/release-backups/mac-HQlclI`). Поставка: `~/Downloads/WebPilot-0.6.52/`, `shasum -c SHA256SUMS.txt` — OK. Native Windows не запускалась, GitHub не публиковался.
+
+| Платформа | Размер, байт | SHA-256 ZIP |
+| --- | ---: | --- |
+| macOS arm64 | 181201009 | `bbe2bb203044f8d48e9983beb9eb24856bd85f0a9a23d70636c6786bb97555e0` |
+| Windows x64 | 316463282 | `cb7586160c020dc2dccd2719afc47861c9024692a745f399db208289172ec839` |
+
+ASAR: macOS `07fa66abf30614d04053cc5b257423a5653f78ff77875f936bc324ddf4ff0212`, Windows `21459b07b0ec3eafbd399687356acd11f47b14e4568ff15669c107fad7be7fb0`.
