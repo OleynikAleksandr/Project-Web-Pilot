@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 101,
+  "plan_revision": 102,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
@@ -1347,7 +1347,8 @@
         "docs/modules/workspace-sessions.md",
         "docs/architecture/ARCHITECTURE.md",
         "docs/VERIFICATION.md",
-        "docs/modules/first-run-onboarding.md"
+        "docs/modules/first-run-onboarding.md",
+        "docs/modules/chatgpt-dom-compatibility.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -1357,7 +1358,7 @@
         "Документы по индексу актуализированы, подтверждения отделены от ещё не выполненной приёмки Windows",
         "План сохраняется в собственной сессии; 031 и 032 не изменяются"
       ],
-      "expected_commit_message": "docs: актуализировать выпуск 0.6.45 и инструкцию MCP для обеих платформ"
+      "expected_commit_message": "docs: актуализировать выпуск 0.6.48 и результаты живых проверок"
     }
   ],
   "blocked_reason": null,
@@ -1415,7 +1416,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 101
+Revision: 102
 
 ## Цель
 
@@ -1586,9 +1587,9 @@ Revision: 101
   - Reference: windows-onboarding-033 / H006 / implementation
   - Файлы: docs/RELEASE.md, docs/VERIFICATION.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать выпуск 0.6.45 и инструкцию MCP для обеих платформ
+  - Git Commit: [PENDING] docs: актуализировать выпуск 0.6.48 и результаты живых проверок
   - Reference: windows-onboarding-033 / DOCS / implementation
-  - Файлы: AGENTS.md, README.md, docs/WORKFLOW_START.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/CLEAN_INSTALL.md, docs/TRANSFER_TO_WINDOWS.md, docs/RELEASE.md, docs/WORKSPACE_SETUP.md, docs/CONTEXT_DELIVERY.md, docs/modules/runtime-lifecycle.md, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md
+  - Файлы: AGENTS.md, README.md, docs/WORKFLOW_START.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/CLEAN_INSTALL.md, docs/TRANSFER_TO_WINDOWS.md, docs/RELEASE.md, docs/WORKSPACE_SETUP.md, docs/CONTEXT_DELIVERY.md, docs/modules/runtime-lifecycle.md, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md, docs/modules/chatgpt-dom-compatibility.md
 
 ## Context Pack For This Cycle
 
