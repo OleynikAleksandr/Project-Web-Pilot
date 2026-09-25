@@ -398,3 +398,30 @@ Codex App Server MCP теперь является физическим extra-re
 Source build commit в manifest: `acde362fc75645dff20f2e494604d9b2b5289403` (stable-connector T001). Постоянный `Project Web Pilot.app` имеет версию 0.6.47 и сохранил identity: device 16777234 / inode 398344301. macOS ASAR SHA-256: `b72c7adea0aec363d0fd51f152b388bf77a40aeb30bb318a18116e7b9d3f1b32`; Windows ASAR SHA-256: `7435d127206a8e2b54f65c5872e7d9bbee04ccf353027fff51e25064d5d13e3b`. Предварительная 0.6.47 сохранена локально только как backup `.harness/runtime/release-backups/paired-0.6.47-pre-stable`; текущая delivery полностью заменена исправленной сборкой.
 
 Каталог выдачи: `~/Downloads/WebPilot-0.6.47/`. Manifest: `.harness/runtime/releases/0.6.47/release-manifest.json`. GitHub Release 0.6.47 не публикуется без отдельного поручения пользователя. Native Windows и clean VM для 0.6.47 не запускались; Windows package verification выполнен на macOS build host.
+
+## Локальный парный выпуск 0.6.48 — 25.09.2026
+
+Окончательная `npm run build` завершилась успешно после исправления переходного
+URL в живой проверке. Source commit: `377d5c42377c590ffa6a3eb7035d80cf32553b2c`.
+Сверены 81 исходный файл, обе упаковки и установленный корневой Mac app;
+версия app — 0.6.48, filesystem identity сохранена (device 16777234,
+inode 406420885). ZIP прошли проверку целостности; ASAR и комплектный executor
+соответствуют staging. Предварительная внутренняя сборка до H005 убрана
+из поставки в локальный backup и не является финальным релизом.
+
+Поставка: `~/Downloads/WebPilot-0.6.48/` — два ZIP, `INSTALL.txt`,
+`SHA256SUMS.txt`, `release-manifest.json`.
+
+| Платформа | Размер, байт | SHA-256 ZIP |
+| --- | ---: | --- |
+| macOS arm64 | 181155569 | `8dba85eebb9e3ee3de9807a617e0ab341015f7c3711532deb64c57486458d0f3` |
+| Windows x64 | 316423743 | `05bee11b5cbf0a9d4d27a9d36ec1620949cdf1f09e08b9ac5eba287e86b6a6d5` |
+
+Изменения: общий адаптер нового ChatGPT DOM, Chat/Work и переходные URL,
+структурный фильтр служебных карточек, цвета новых сообщений, стабильная
+автопрокрутка, полный номер в sidebar, завершение UI без остановки MCP/tunnel,
+постоянный Windows autostart при входе пользователя. Результаты живых проверок
+и границы Windows/login описаны в VERIFICATION.md. Публикация на GitHub в этом
+поручении не выполнялась. Постоянный путь запуска — корневой
+`Project Web Pilot.app`; отдельные физические копии, например на Desktop,
+этой сборкой не обновляются.

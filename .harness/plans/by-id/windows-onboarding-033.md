@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 99,
+  "plan_revision": 101,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
@@ -1260,8 +1260,8 @@
       "id": "H006",
       "title": "Окончательная парная сборка 0.6.48",
       "why": "Выдать исправленный результат живой проверки",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "windows-onboarding-033",
         "task_id": "H006",
@@ -1415,7 +1415,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 99
+Revision: 101
 
 ## Цель
 
@@ -1581,8 +1581,8 @@ Revision: 99
   - Git Commit: [DONE] fix: распознавать временный local-chatgpt URL после отправки
   - Reference: windows-onboarding-033 / H005 / implementation
   - Файлы: src/chatgpt-experience.mjs, tests/chatgpt-experience.test.mjs, tests/context-session.test.mjs, docs/RELEASE.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
-- [TODO] H006: Окончательная парная сборка 0.6.48 — Ожидает
-  - Git Commit: [PENDING] docs: сверить финальную парную сборку 0.6.48
+- [DONE] H006: Окончательная парная сборка 0.6.48 — Завершено
+  - Git Commit: [DONE] docs: сверить финальную парную сборку 0.6.48
   - Reference: windows-onboarding-033 / H006 / implementation
   - Файлы: docs/RELEASE.md, docs/VERIFICATION.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
