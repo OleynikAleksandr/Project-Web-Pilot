@@ -14,6 +14,7 @@ async function fixture(t, startup = {}) {
     tunnel: false, busy: false, account: 'signed-out', page: 'loaded', ...startup } };
   const api = {
     startup: async action => { calls.push(action); return { ok: true, state }; },
+    chooseWorkspace: async () => { calls.push('chooseWorkspace'); return { ok: true, state: { ...state, setup: { phase: 'preview', mode: 'existing' } } }; },
     beginCreate: async () => { calls.push('beginCreate'); return { ok: true, state: { ...state, setup: { phase: 'form' } } }; },
   };
   const view = createStartupView({ document, api });
@@ -316,4 +317,36 @@ for (const platform of ['darwin', 'win32']) test(`${platform}: explicit ChatGPT 
   f.document.querySelector('[data-startup=plugins]').click(); await f.settle();
   assert.deepEqual(f.calls, ['plugins']);
   f.emit({ account: 'signed-out' }); assert.equal(guide.hidden, true);
+});
+
+for (const platform of ['darwin', 'win32']) {
+  test(`first project can connect an existing folder on ${platform}`, async t => {
+    const f = await fixture(t, { platform, account: 'signed-in', git: true, runtime: true, tunnel: false });
+    const button = f.document.querySelector('#startup-existing');
+    assert.equal(button.disabled, true);
+    button.click(); await f.settle(); assert.deepEqual(f.calls, []);
+    f.emit({ tunnel: true });
+    assert.equal(button.disabled, false);
+    button.click(); await f.settle();
+    assert.deepEqual(f.calls, ['continue', 'chooseWorkspace']);
+    assert.equal(f.document.querySelector('#startup-panel').hidden, true, 'existing-folder preview replaces onboarding');
+  });
+}
+test('readiness rejection keeps onboarding and never opens a folder dialog', async t => {
+  const f = await fixture(t, { account: 'signed-in', git: true, runtime: true, tunnel: true });
+  f.api.startup = async () => ({ ok: false, error: { message: 'Подключение потеряно' } });
+  f.document.querySelector('#startup-existing').click(); await f.settle();
+  assert.deepEqual(f.calls, []);
+  assert.equal(f.document.querySelector('#startup-error').textContent, 'Подключение потеряно');
+});
+test('existing folder cancellation returns to onboarding and retry is available', async t => {
+  const f = await fixture(t, { account: 'signed-in', git: true, runtime: true, tunnel: true });
+  let resolve;
+  f.api.chooseWorkspace = () => new Promise(r => { resolve = r; });
+  f.document.querySelector('#startup-existing').click(); await f.settle();
+  assert.equal(f.document.querySelector('#startup-existing').disabled, true);
+  assert.equal(f.document.querySelector('#startup-continue').disabled, true);
+  resolve({ ok: true }); await f.settle();
+  assert.equal(f.document.querySelector('#startup-panel').hidden, false);
+  assert.equal(f.document.querySelector('#startup-existing').disabled, false);
 });

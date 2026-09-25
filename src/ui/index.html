@@ -235,9 +235,11 @@ SOFTWARE.
         <section class="startup-step">
           <h3><span class="startup-number">5</span> Первый проект</h3>
           <div id="startup-project-body">
-            <p>После добавления подключения создайте первый проект. В новом чате откройте меню инструментов и добавьте подключение к этому компьютеру.</p>
+            <p>После добавления подключения создайте новый проект или выберите существующую папку. В новом чате откройте меню инструментов и добавьте подключение к этому компьютеру.</p>
             <p>Попросите агента прочитать и изменить тестовый файл в папке проекта. Если он видит только подключение другого компьютера, выберите нужное подключение и начните новый чат с ним.</p>
-            <button id="startup-continue" class="primary" data-startup="continue">Создать первый проект</button>
+            <div class="actions"><button id="startup-continue" class="primary" data-startup="continue">Создать новый проект</button>
+            <button id="startup-existing" class="secondary" data-startup="existing">Добавить существующую папку</button></div>
+            <p class="settings-help">Мы проверим выбранную папку и покажем, что нужно добавить для работы с проектом.</p>
             <p class="settings-help">Готовность туннеля и передача контекста ещё не подтверждают доступ агента к файлам. Результат проверяется по сохранённому файлу.</p>
           </div>
           <p id="startup-project-wait" class="startup-status">Завершите предыдущие шаги.</p>

@@ -81,12 +81,13 @@ export function createStartupView({ document, api }) {
       const action = button.dataset.startup;
       button.disabled = ((opening || pending) && ['chat', 'signup', 'plugins'].includes(action))
         || (pending && !INDEPENDENT.has(action))
-        || (s.busy && ['check', 'install-git', 'paste-tunnel-id', 'configure-tunnel', 'continue'].includes(action))
+        || (s.busy && ['check', 'install-git', 'paste-tunnel-id', 'configure-tunnel', 'continue', 'existing'].includes(action))
         || (action === 'configure-tunnel' && (tunnelStep !== 'key' || !s.clipboard?.hasTunnelId))
         || (action === 'paste-tunnel-id' && tunnelStep !== 'tunnel')
         || (action === 'install-git' && (windows || !!s.git || waitingApple));
     }
     $('startup-continue').disabled ||= !logged || !ready;
+    $('startup-existing').disabled ||= !logged || !ready;
     const visibleStep = panel.hidden || !logged ? null : ready ? 'project' : local ? tunnelStep : null;
     if (windows && visibleStep === 'project' && lastVisibleStep !== 'project') $('startup-plugin-help').open = true;
     if (lastVisibleStep && visibleStep && visibleStep !== lastVisibleStep) {
@@ -102,13 +103,13 @@ export function createStartupView({ document, api }) {
     }
     pending = true; localError = null; copied = false; if (current) render(current);
     try {
-      const result = await api.startup(action);
+      const result = await api.startup(action === 'existing' ? 'continue' : action);
       if (result?.ok === false) { localError = result.error?.message || 'Не удалось выполнить шаг. Повторите попытку.'; return; }
       if (result?.state) render(result.state);
       if (action === 'copy-diagnostics') copied = true;
-      if (action === 'continue') {
-        const project = await api.beginCreate();
-        if (project?.ok === false) localError = project.error?.message || 'Не удалось открыть создание проекта.';
+      if (action === 'continue' || action === 'existing') {
+        const project = action === 'existing' ? await api.chooseWorkspace() : await api.beginCreate();
+        if (project?.ok === false) localError = project.error?.message || 'Не удалось открыть подготовку проекта.';
         if (project?.state) render(project.state);
       }
     } catch { localError = 'Действие не завершилось. Повторите попытку.'; }

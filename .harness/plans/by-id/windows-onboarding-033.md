@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 124,
+  "plan_revision": 126,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
@@ -1444,8 +1444,8 @@
       "id": "K001",
       "title": "Выбор существующей папки на первом шаге проекта, 0.6.51",
       "why": "Выбор существующей папки на первом шаге проекта, 0.6.51",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "windows-onboarding-033",
         "task_id": "K001",
@@ -1647,7 +1647,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 124
+Revision: 126
 
 ## Цель
 
@@ -1837,8 +1837,8 @@ Revision: 124
   - Git Commit: [DONE] fix: Парная сборка 0.6.50 и визуальная проверка
   - Reference: windows-onboarding-033 / J002 / implementation
   - Файлы: docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/RELEASE.md
-- [TODO] K001: Выбор существующей папки на первом шаге проекта, 0.6.51 — Ожидает
-  - Git Commit: [PENDING] feat: Выбор существующей папки на первом шаге проекта, 0.6.51
+- [DONE] K001: Выбор существующей папки на первом шаге проекта, 0.6.51 — Завершено
+  - Git Commit: [DONE] feat: Выбор существующей папки на первом шаге проекта, 0.6.51
   - Reference: windows-onboarding-033 / K001 / implementation
   - Файлы: src/ui/index.html, src/ui/startup.mjs, tests/startup-ui.test.mjs, package.json, package-lock.json, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/RELEASE.md
 - [TODO] K002: Парный выпуск 0.6.51 — Ожидает

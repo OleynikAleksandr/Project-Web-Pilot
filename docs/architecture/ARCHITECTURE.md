@@ -1285,3 +1285,7 @@ DOM adapter. Прежние surface-токены и принудительная
 ChatColors красит body с editor, editor внутри делает прозрачным. Legacy
 surface поддерживается только без вложенного modern body; общий фон, кнопки
 и радиусы не меняются. Это заменяет узкое правило editor из 0.6.49.
+
+0.6.51: startup UI добавляет existing как альтернативу continue. Оба действия
+проверяют готовность через существующий IPC startup('continue'), затем вызывают
+chooseWorkspace либо beginCreate. Новых backend-операций и обхода preview нет.
