@@ -69,8 +69,13 @@
 | resources/workflow-kit/templates/PLAN.md | Поставляемый шаблон ToDo-plan |
 | resources/workflow-kit/templates/PRODUCT.md | Поставляемый универсальный шаблон общего замысла |
 | resources/workflow-kit/templates/START.md | Поставляемый шаблон начала работы |
+| resources/workflow-kit/templates/PROTOTYPE.md | Поставляемые правила быстрого прототипа и Git (Kit 1.4.11) |
+| resources/workflow-kit/templates/SPEC.md | Поставляемая форма короткого контракта результата |
+| resources/workflow-kit/templates/CONTINUE.md | Поставляемые примеры продолжения плана: plan:extend, task:update |
+| resources/workflow-kit/templates/STAGES.md | Поставляемые формы проверки и финальной документации |
+| resources/workflow-kit/examples/PACKAGING.md | Поставляемый пример безопасной упаковки и проверки |
 
-Установленный `.harness/kit` и `resources/workflow-kit` должны совпадать для файлов ядра; это проверяется автоматическим regression test.
+С 0.6.52 поставляемый `resources/workflow-kit` — Workflow Kit 1.4.11, закреплённый по источнику и SHA-256 автоматическим regression test; собственный `.harness/kit` репозитория остаётся 1.4.1 и обновляется отдельно.
 
 
 ## Действующий контракт — планы сессий

@@ -7,7 +7,8 @@ import { hooksDirectory, BLOCK_START, BLOCK_END } from './workflow-kit/lib/insta
 import { listPlans } from './workflow-kit/lib/session-plans.mjs';
 import { run, git, identityReady } from './workflow-kit/lib/git.mjs';
 
-const supported = new Set(['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.4.0', VERSION]);
+// Versions the bundled installer can open or upgrade (1.4.11 upgrades 1.1.0–1.4.3).
+const supported = new Set(['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.4.0', '1.4.1', '1.4.2', '1.4.3', VERSION]);
 function options(input) {
   check(input && ['inspect', 'apply', 'fingerprint'].includes(input.action), 'SETUP_ACTION', 'Неизвестное действие подготовки.');
   check(['new', 'existing'].includes(input.mode), 'SETUP_MODE', 'Выберите создание или подключение проекта.');
@@ -25,7 +26,7 @@ function localHistoryDefaults(workspace) {
 function inspectProject(opts) {
   const inspection = inspectWithDiagnostics(opts);
   const p = inspection.preview;
-  const result = { workspace: p.project_path, name: p.project_name, version: p.version, installed: p.installed,
+  const result = { workspace: p.project_path, name: p.project_name, version: p.version, kitVersion: VERSION, installed: p.installed,
     ready: false, action: null, issues: [...p.conflicts], checks: [], files: p.files,
     initializeGit: p.initialize_git,
     existingChanges: p.existing_changes ?? [], warnings: [], fingerprint: p.preview_fingerprint };
@@ -36,7 +37,7 @@ function inspectProject(opts) {
   if (!supported.has(p.version)) result.issues.push({ path: MANIFEST, reason: `Версия ${p.version} пока не поддерживается. Автоматическое обновление не выполняется.` });
   const anchors = ['.harness/workflow.json', '.harness/plans/todo-plan.md', '.harness/plans/todo-plan.template.md',
     'docs/DOCUMENTATION_INDEX.md', 'docs/WORKFLOW_START.md', 'docs/PRODUCT.md', 'docs/architecture/ARCHITECTURE.md'];
-  if (['1.2.0', '1.3.0', '1.4.0', VERSION].includes(p.version)) anchors.push('docs/MODULES.md', 'docs/architecture/OVERVIEW.md');
+  if (!['1.0.0', '1.1.0'].includes(p.version)) anchors.push('docs/MODULES.md', 'docs/architecture/OVERVIEW.md');
   const manifest = JSON.parse(fs.readFileSync(path.join(p.project_path, MANIFEST), 'utf8'));
   anchors.push(...manifest.files.filter(f => f.kind === 'managed' && /^AGENTS(?:\.override)?\.md$/.test(f.path)).map(f => f.path));
   if (!anchors.some(f => /^AGENTS/.test(f))) result.issues.push({ path: 'AGENTS.md', reason: 'Не найдены зарегистрированные инструкции проекта.' });

@@ -9,6 +9,10 @@ import { journal } from './lib/validate.mjs';
 import { withSessionPlan, sessionPlanView } from './lib/session-plans.mjs';
 import { validate } from './lib/validate.mjs';
 import { recover, sessionStart, contextPacket } from './lib/recovery.mjs';
+import { updateTask } from './lib/task-update.mjs';
+import { extendPlan } from './lib/extend-plan.mjs';
+import { commandHelp } from './lib/command-help.mjs';
+import { createSimplePlan } from './lib/simple-workflow.mjs';
 import { commitTask } from './lib/transaction.mjs';
 import { preCommit, commitMessage, postCommit, prePush } from './lib/git-hooks.mjs';
 
@@ -19,7 +23,7 @@ export function argumentsOf(argv) {
     if (!value.startsWith('--')) { args.push(value); continue; }
     const key = value.slice(2);
     check(!Object.hasOwn(opts, key), 'ARGUMENTS', 'Параметр повторяется: ' + value);
-    if (['json', 'dry-run', 'update'].includes(key)) opts[key] = true;
+    if (['json', 'dry-run', 'update', 'help', 'full'].includes(key)) opts[key] = true;
     else { check(i + 1 < argv.length && !argv[i + 1].startsWith('--'), 'ARGUMENTS', 'Не задано значение: ' + value); opts[key] = argv[++i]; }
   }
   return { opts, args };
@@ -32,30 +36,37 @@ export async function main(argv = process.argv.slice(2)) {
     const aliases = { 'plan:status': 'status', 'plan:validate': 'validate', 'plan:commit': 'commit', 'plan:repair': 'repair', 'plan:archive': 'archive' };
     const command = aliases[raw] ?? raw;
     check(Number(process.versions.node.split('.')[0]) >= 22, 'NODE_VERSION', 'Требуется Node.js 22 или новее.');
+    if (command === 'help' || opts.help || rest.includes('help')) return { value: commandHelp(command === 'help' ? (aliases[rest[0]] ?? rest[0] ?? 'help') : command), json: false };
     if (['install', 'install:commit', 'inspect', 'remove', 'doctor'].includes(command)) {
       const { installerCommand } = await import('./lib/installer.mjs');
       return { value: await installerCommand(command, opts), json: true };
     }
-    if (command === 'help') return { value: 'Project Workflow Kit\n\nВсе команды плана: --session <sessionId>; другой план: --plan <planId>.\nplan:view / plan:prepare / plan:bind / plan:adopt — см. WORKFLOW.md.\n\n./scripts/workflow status\n./scripts/workflow recover --format text\n./scripts/workflow scope:create --input scope.json\n./scripts/workflow task:start T001\n./scripts/workflow commit --task T001\n./scripts/workflow plan:apply --input changes.json --expected-revision N\n./scripts/workflow config:apply --input config.json\n./scripts/workflow repair --dry-run\n./scripts/workflow archive --scope ID --approval-note "Прямая команда пользователя"\n\nПолный протокол: .harness/kit/WORKFLOW.md', json: false };
+
     let event; if (isHook) event = JSON.parse(fs.readFileSync(0, 'utf8'));
     const root = repoRoot(opts.project || event?.cwd || process.cwd());
     let result;
     const input = () => { check(opts.input, 'INPUT_REQUIRED', 'Укажите --input <JSON-файл>.'); return readJSON(path.resolve(opts.input)); };
     const execute = () => {
     switch (command) {
-      case 'status': result = status(root); break;
+      case 'status': { result = status(root); if (!opts.full) { delete result.recovery_text; delete result.last_hook_execution; delete result.resolved; } break; }
       case 'validate': { const r = validate(root); result = { ok: true, message: 'План и Git согласованы.', plan_revision: r.plan.plan_revision, resolved: r.resolved, transaction_pending: !!r.transaction }; break; }
       case 'recover': { if (opts.format === 'packet') return { value: contextPacket(root), json: true }; const p = recover(root); return { value: opts.format === 'json' || opts.json ? p : p.text, json: opts.format === 'json' || !!opts.json }; }
       case 'plan:view': check(opts.session, 'SESSION_REQUIRED', 'Укажите --session.'); result = sessionPlanView(root, opts.session); break;
       case 'plan:prepare': result = preparePlan(root, input(), opts['expected-revision']); break;
       case 'plan:bind': result = bindPlan(root, opts['target-session'], opts.experience, opts['expected-revision']); break;
       case 'plan:adopt': result = adoptPlan(root, input(), opts['expected-revision']); break;
+      case 'plan:extend': result = extendPlan(root,input(),opts['expected-revision']); break;
+      case 'plan:create': result = createSimplePlan(root,input()); break;
       case 'scope:create': result = createScope(root, input(), opts['expected-revision']); break;
+      case 'task:update': result = updateTask(root,opts.task,input(),opts['expected-revision']); break;
       case 'task:start': result = startTask(root, rest[0], opts['expected-revision']); break;
       case 'plan:apply': result = applyPlan(root, input(), opts['expected-revision']); break;
       case 'config:apply': result = applyConfig(root, input()); break;
-      case 'commit': { check(opts.task, 'TASK_REQUIRED', 'Укажите --task <id>.'); result = commitTask(root, opts.task); result.state = recover(root); break; }
-      case 'repair': result = repair(root, opts.apply); break;
+      case 'commit': { check(opts.task, 'TASK_REQUIRED', 'Укажите --task <id>.'); check(!(opts.files&&opts.input),'COMMIT_FILES','Используйте --files или --input, не оба.'); let files;
+        if(opts.files!==undefined){try{files=JSON.parse(opts.files);}catch{check(false,'COMMIT_FILES','--files: нужен JSON-массив путей.',{example:['src/main.mjs','package.json']});}}
+        else if(opts.input){const data=input();check(data&&Array.isArray(data.files),'COMMIT_FILES','--input: нужен объект с массивом files.',{example:{files:['src/main.mjs','package.json']}});files=data.files;}
+         result = commitTask(root, opts.task, files); result.state = recover(root); break; }
+      case 'repair': result = repair(root, opts.apply, opts.cancel); break;
       case 'archive': result = archive(root, opts.scope, opts['approval-note']); break;
       case 'hook:ack': result = acknowledgeHook(root, opts.marker, opts.client); break;
       case 'hook': check(rest[0] === 'session-start', 'HOOK_COMMAND', 'Неизвестный hook.'); return { value: sessionStart(root, event), json: true };
@@ -65,6 +76,8 @@ export async function main(argv = process.argv.slice(2)) {
       }
       default: check(false, 'UNKNOWN_COMMAND', 'Неизвестная команда: ' + command);
     }
+    if (result?.state?.text) result = {...result,state:{...result.state.facts,next_task_id:result.state.next_task_id}};
+    if (result?.text && result?.facts) result = {ok:true,...result.facts,next_task_id:result.next_task_id};
     return { value: result, json: true };
     };
     if (command === 'plan:view') return execute();
@@ -72,7 +85,7 @@ export async function main(argv = process.argv.slice(2)) {
       const pending = journal(root);
       return withPlanFile(root, pending?.plan_path ?? PLAN, {}, execute);
     }
-    const mutating = ['scope:create', 'task:start', 'plan:apply', 'commit', 'archive', 'repair', 'plan:prepare', 'plan:bind', 'plan:adopt', 'config:apply'].includes(command);
+    const mutating = ['task:update', 'plan:extend', 'plan:create', 'scope:create', 'task:start', 'plan:apply', 'commit', 'archive', 'repair', 'plan:prepare', 'plan:bind', 'plan:adopt', 'config:apply'].includes(command);
     if (mutating && opts.plan) check(opts.session, 'SESSION_REQUIRED', 'Запись требует явной --session.');
     return withSessionPlan(root, { sessionId: opts.session, planId: opts.plan,
       allowDraft: ['plan:bind', 'plan:apply'].includes(command), allowUnowned: command === 'plan:adopt' }, execute);

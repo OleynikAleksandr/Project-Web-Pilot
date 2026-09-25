@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { install } from '../resources/workflow-kit/lib/installer.mjs';
+import { VERSION } from '../resources/workflow-kit/lib/common.mjs';
 import { inspectProject, repairProject } from '../resources/project-doctor/core.mjs';
 import { backupAndWrite, readFile } from '../resources/project-doctor/files.mjs';
 import { WorkspaceSetup } from '../src/workspace-setup.mjs';
@@ -121,13 +122,13 @@ test('doctor and readiness preserve all session plans and repair only their proj
   assert.equal(repairProject(root).repaired,false);
 });
 
-test('1.4.0 manifest reconciles to trusted 1.4.1 and missing task-required documents block repair', t => {
+test('1.4.0 manifest reconciles to the trusted bundled Kit and missing task-required documents block repair', t => {
   const root = fixture(t), manifestFile = path.join(root, '.harness/kit-manifest.json');
   const manifest = JSON.parse(text(root, '.harness/kit-manifest.json')); manifest.version = '1.4.0';
   fs.writeFileSync(manifestFile, JSON.stringify(manifest));
   const repaired = repairProject(root);
   assert.deepEqual(repaired.issues, []); assert.ok(repaired.backupPath);
-  assert.equal(JSON.parse(text(root, '.harness/kit-manifest.json')).version, '1.4.1');
+  assert.equal(JSON.parse(text(root, '.harness/kit-manifest.json')).version, VERSION);
   const required = 'docs/task-required.md'; fs.writeFileSync(path.join(root, required), '# Task required\n');
   withSessionPlan(root, { sessionId: 'task-document' }, () => createScope(root, {
     scope_id: 'task-document', objective: 'Task document fixture', approval_note: 'Approved fixture', acceptance_criteria: ['Checked'],

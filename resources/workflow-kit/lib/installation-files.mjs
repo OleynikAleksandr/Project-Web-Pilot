@@ -16,9 +16,9 @@ export const MD_END = '<!-- workflow-kit:end -->';
 
 const MODULES_TEMPLATE = `# Модули проекта
 
-Карта самостоятельных частей проекта и их владельцев. Проект может быть программным, исследовательским, проектным, творческим или прикладным. Перед новым scope найдите существующую часть; если её нет, сначала создайте и согласуйте соответствующий specification/planning document.
+Карта самостоятельных частей проекта и их владельцев. Проект может быть программным, исследовательским, проектным, творческим или прикладным. При новом поручении найдите затрагиваемую часть; для новой запишите короткий контракт результата, запуска и проверки. Ясное поручение не требует повторного согласования.
 
-Для программных проектов фиксируйте границы модуля, facade, входы/выходы и инварианты; взаимодействие кластеров ведите через фасады, внутреннюю реализацию дробите на узкие классы/микроклассы.
+Используйте достаточную для текущей задачи структуру. Обязательного дробления на слои, фасады и классы нет. Подробности храните в одном документе; здесь достаточно ссылки.
 
 | Модуль / часть проекта | Спецификация | Ответственность |
 | --- | --- | --- |
@@ -88,7 +88,7 @@ export function payload(root, name, hookLocation) {
   const indexOld = fs.existsSync(path.join(root, INDEX)) ? fs.readFileSync(path.join(root, INDEX), 'utf8') : '# Каталог документации\n';
   add(INDEX, addSection(indexOld, '## Документы проекта\n\n| Документ | Назначение |\n| --- | --- |\n' + inventory.map(p => '| ' + p + ' | ' + (p === PLAN ? 'Прежний план и навигация; планы сессий — .harness/plans/by-id/' : p.includes('/kit/') ? 'Протокол и шаблон комплекта' : 'Контракт проекта; уточняется при обсуждении') + ' |').join('\n')), 'managed');
   const ignore = fs.existsSync(path.join(root, '.gitignore')) ? fs.readFileSync(path.join(root, '.gitignore'), 'utf8') : '';
-  add('.gitignore', addSection(ignore, '.harness/runtime/\n', BLOCK_START, BLOCK_END), 'managed');
+  add('.gitignore', addSection(ignore, '.harness/runtime/\n.harness/sessions/\n.harness/settings/settings.json\nnode_modules/\ndist/\n', BLOCK_START, BLOCK_END), 'managed');
   const attributes = fs.existsSync(path.join(root, '.gitattributes')) ? fs.readFileSync(path.join(root, '.gitattributes'), 'utf8') : '';
   add('.gitattributes', addSection(attributes, '/.harness/** -text\n/scripts/workflow* -text\n', BLOCK_START, BLOCK_END), 'managed');
   const hooksFile = path.join(root, '.codex/hooks.json');

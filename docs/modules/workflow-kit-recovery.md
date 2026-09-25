@@ -193,3 +193,9 @@ Web Pilot использует полный content-key WorkspaceSetup.ready и 
 Installed/bundled ядро синхронно обновлено до patch-версии 1.4.1. Формат планов, адресация и recovery остаются совместимыми с 1.4.0. Обычный upgrade поддерживает 1.4.0 и сохраняет планы/commit references; штатный Doctor согласует manifest только при полном совпадении доверенного комплекта, с backup. Ускорение не отключает hooks или полную проверку планов.
 
 T008: общий Git facade отключает только автоматическую запись stat-cache из porcelain diff через `diff.autoRefreshIndex=false`. Это устраняет повтор полной проверки из-за её собственного чтения индекса. GIT_OPTIONAL_LOCKS=0 уже присутствовал и сам по себе этот случай не устранял. Индекс продолжает входить в fingerprint целиком; явные записи и hooks сохранены.
+
+## Поставка 1.4.11 — scope 038
+
+Поставляемый комплект `resources/workflow-kit` заменён на Workflow Kit 1.4.11 из CodeAppServer+WebChatGPT, ветка `codex/gpt-provider-names`, коммит `badcf20` (tree `1fe409fb`). Тест закрепляет его версию и SHA-256 содержимого 35 файлов. Собственный Kit этого репозитория (`.harness/kit`) остаётся 1.4.1 и больше не обязан совпадать с поставляемым.
+
+Recovery 1.4.11 передаёт вместе с Workflow Core правила `PROTOTYPE.md` и формы `PLAN`, `SPEC`, `CONTINUE`, `STAGES`. Ясное поручение разрешает короткий контракт и `plan:create`; добавлены `plan:extend`, `task:update`, адресная справка `--help` и сводка среды. Формат канонических планов (`schema_version 1`) и адресация `--session/--plan` не изменились, поэтому Web Pilot читает планы проектов 1.4.1 и 1.4.11 одним кодом.

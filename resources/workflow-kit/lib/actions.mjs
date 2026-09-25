@@ -1,9 +1,10 @@
 import fs from 'node:fs';
+import {beginTaskFiles,handoffTaskFiles} from './task-files.mjs';
 import path from 'node:path';
 import { VERSION, PLAN, planPath, CONFIG, MANIFEST, check, readJSON, atomic, json, hash, id, textFile, currentPlanSelection, withPlanFile } from './common.mjs';
 import { emptyPlan, readPlan, parsePlan, renderPlan, writePlan, validatePlan, nextTask, projectContextPack, projectContextPaths,
   FINAL_DOCUMENTATION_TASK_ID, FINAL_DOCUMENTATION_TASK_TITLE, isDocumentationFinalizationTask } from './plan.mjs';
-import { validate, validateConfig, journal, resolveReferences, taskChecks } from './validate.mjs';
+import { validate, validateConfig, validatePlanConfiguration, readConfig, journal, resolveReferences, taskChecks } from './validate.mjs';
 import { git, head, localPath, allChanges, identityReady, paths, gitPath } from './git.mjs';
 import { locked, commitCandidate, completedTransaction, finishTransaction } from './transaction.mjs';
 import { recover, recoverState } from './recovery.mjs';
@@ -17,7 +18,7 @@ function requireModuleContext(planLike) {
   if (!(planLike.tasks ?? []).some(t => (t.functional_paths ?? []).length)) return;
   const docs = requiredDocuments(planLike.context_pack);
   check(docs.some(d => d.path === 'docs/architecture/OVERVIEW.md'), 'MODULE_CONTEXT_REQUIRED', 'Функциональному scope нужен required compact project overview: docs/architecture/OVERVIEW.md.');
-  check(docs.some(d => /^docs\/modules\/.+\.md$/i.test(d.path)), 'MODULE_CONTEXT_REQUIRED', 'Функциональному scope нужна required module specification в docs/modules/. Сначала согласуйте контракт модуля.');
+  check(docs.some(d => /^docs\/(modules|planning)\/.+\.md$/i.test(d.path)), 'MODULE_CONTEXT_REQUIRED', 'Укажите планировочный документ в context_pack.documents с required:true (docs/planning/ или docs/modules/).');
 }
 function normalizeCompletionContract(plan) {
   const foundation = projectContextPaths();
@@ -42,7 +43,7 @@ function normalizeCompletionContract(plan) {
   check(finalTask.commit_status !== 'DONE' || ordinary.every(task => task.commit_status === 'DONE'),
     'DOCUMENTATION_FINAL_TASK', 'Завершённую DOCS-задачу нельзя ставить перед незавершёнными задачами.');
   finalTask = { ...finalTask, dependencies: ordinary.map(task => task.id), functional_paths: [],
-    documentation_paths: [...new Set([...(finalTask.documentation_paths ?? []), ...foundation])] };
+    documentation_paths: [...new Set([...(finalTask.documentation_paths ?? []), ...ordinary.flatMap(t=>t.documentation_paths ?? []), ...foundation])] };
   plan.tasks = [...ordinary, finalTask];
   return plan;
 }
@@ -84,7 +85,7 @@ export function createScope(root, input, expectedRevision) {
       commit_ref: { scope_id: plan.scope_id, task_id: task.id, role: 'implementation' }, ...task }));
     requireModuleContext(plan);
     plan.user_decisions = [...(input.user_decisions ?? []), { id: id(), text: input.approval_note, recorded_at: new Date().toISOString() }];
-    validatePlan(plan);
+    validatePlan(plan); validatePlanConfiguration(root, plan, readConfig(root));
     const selected = [PLAN, ...allChanges(root).filter(p => plan.approved_scope.documentation_paths.includes(p))];
     const result = service(root, plan, 'scope-plan', selected, 'docs: согласовать scope ' + plan.scope_id);
     return { ...result, state: recover(root) };
@@ -101,6 +102,7 @@ export function startTask(root, taskId, expectedRevision) {
     check(plan.current_task_id === null && task.implementation_status === 'TODO', 'TASK_ALREADY_ACTIVE', 'Другую или завершённую задачу начать нельзя.');
     check(task.dependencies.every(d => plan.tasks.find(t => t.id === d)?.commit_status === 'DONE'), 'DEPENDENCY_PENDING', 'Зависимости задачи ещё не завершены.');
     taskChecks(task, config);
+    beginTaskFiles(root,plan,task);
     task.implementation_status = 'IN_PROGRESS'; plan.current_task_id = taskId; plan.plan_revision++;
     writePlan(root, plan); return recover(root);
   });
@@ -116,6 +118,7 @@ export function applyPlan(root, input, expectedRevision) {
     check(['ACTIVE', 'BLOCKED'].includes(plan.execution_scope_status) && original.execution_scope_status !== 'NONE', 'SCOPE_LIFECYCLE', 'Создание/архивирование scope выполняются отдельными командами.');
     const added = plan.tasks.filter(t => !original.tasks.some(old => old.id === t.id));
     const originalFinal = original.tasks.find(isDocumentationFinalizationTask);
+    const deferDocs = original.current_task_id === 'DOCS' && added.length > 0;
     const correctionRound = original.execution_scope_status === 'ACTIVE' && original.delivery_status === 'READY_FOR_ACCEPTANCE'
       && original.current_task_id === null && originalFinal?.commit_status === 'DONE' && added.length > 0;
     for (const old of original.tasks) {
@@ -126,10 +129,23 @@ export function applyPlan(root, input, expectedRevision) {
           check(JSON.stringify(current) === JSON.stringify(old), 'COMPLETED_TASK_IMMUTABLE', 'Перед повторным открытием DOCS её запись не меняется вручную.');
         else check(JSON.stringify(current) === JSON.stringify(old), 'COMPLETED_TASK_IMMUTABLE', 'Запись завершённой задачи неизменяема.');
       } else {
-        check(current.implementation_status === old.implementation_status && current.commit_status === old.commit_status && JSON.stringify(current.commit_ref) === JSON.stringify(old.commit_ref), 'MANAGED_FIELDS', 'Статусы и references меняются командами task:start/commit.');
+        check(current.implementation_status === old.implementation_status && current.commit_status === old.commit_status && JSON.stringify(current.commit_ref) === JSON.stringify(old.commit_ref), 'MANAGED_FIELDS', 'Статусы и references меняются командами task:start/commit; для уточнения используйте task:update.', { task_id: old.id, field: 'task state', expected: { implementation_status: old.implementation_status, commit_status: old.commit_status, commit_ref: old.commit_ref }, received: { implementation_status: current.implementation_status, commit_status: current.commit_status, commit_ref: current.commit_ref }, next_action: 'task:update --task '+old.id+' --input changes.json --expected-revision '+original.plan_revision });
       }
     }
     for (const t of added) check(t.implementation_status === 'TODO' && t.commit_status === 'PENDING', 'MANAGED_FIELDS', 'Новая задача должна быть TODO/PENDING.');
+    let deferredTransfer;
+    if (deferDocs) {
+      // Move only pending documentation owned by DOCS into the first runnable correction.
+      // Its normal checked commit will preserve those edits; DOCS remains unfinished.
+      const pendingDocs = allChanges(root).filter(p => originalFinal.documentation_paths.includes(p));
+      const recipient = added.find(t => t.dependencies.every(id => original.tasks.find(old => old.id === id)?.commit_status === 'DONE'));
+      check(recipient, 'DEPENDENCY_PENDING', 'Исправлению нужна задача без незавершённых зависимостей.');
+      const transferred=handoffTaskFiles(root,original,originalFinal,recipient,pendingDocs,false);
+      deferredTransfer={from:originalFinal,to:recipient,files:transferred};
+      recipient.documentation_paths = [...new Set([...recipient.documentation_paths, ...transferred])];
+      plan.tasks.find(isDocumentationFinalizationTask).implementation_status = 'TODO';
+      plan.current_task_id = null;
+    }
     if (correctionRound) {
       const currentFinal = plan.tasks.find(isDocumentationFinalizationTask);
       const iteration = currentFinal.commit_ref?.iteration ?? 1;
@@ -139,8 +155,9 @@ export function applyPlan(root, input, expectedRevision) {
     } else if (originalFinal?.commit_status !== 'DONE' || (!originalFinal && added.length)) normalizeCompletionContract(plan);
     if (added.some(t => t.functional_paths.length) || (input.context_pack && plan.tasks.some(t => t.functional_paths.length && t.commit_status !== 'DONE'))) requireModuleContext(plan);
     plan.delivery_status = plan.tasks.length && plan.tasks.every(t => t.commit_status === 'DONE') ? 'READY_FOR_ACCEPTANCE' : 'IN_PROGRESS';
-    validatePlan(plan); resolveReferences(root, plan);
-    if (plan.current_task_id) writePlan(root, plan);
+    validatePlan(plan); validatePlanConfiguration(root, plan, readConfig(root)); resolveReferences(root, plan);
+    if(deferredTransfer)handoffTaskFiles(root,original,deferredTransfer.from,deferredTransfer.to,deferredTransfer.files);
+    if (plan.current_task_id || deferDocs) writePlan(root, plan);
     else service(root, plan, 'plan-adjustment', [PLAN], 'docs: уточнить план ' + plan.scope_id);
     return recover(root);
   });
@@ -148,9 +165,8 @@ export function applyPlan(root, input, expectedRevision) {
 export function applyConfig(root, input) {
   const PLAN = planPath(root);
   return locked(root, () => {
-    noTransaction(root); const { plan } = validate(root);
-    check(plan.current_task_id === null, 'TASK_ACTIVE', 'Настройку стека фиксируйте между микрозадачами.');
-    const config = validateConfig(input); const before = fs.readFileSync(path.join(root, CONFIG), 'utf8');
+    noTransaction(root); const candidateConfig = validateConfig(input); const { plan } = validate(root, candidateConfig);
+    const config = candidateConfig; const before = fs.readFileSync(path.join(root, CONFIG), 'utf8');
     check(paths(root, 'staged').every(p => p === CONFIG), 'FOREIGN_STAGED', 'Сначала отделите посторонние staged-изменения.');
     atomic(path.join(root, CONFIG), json(config)); plan.plan_revision++;
     try { return service(root, plan, 'plan-adjustment', [CONFIG, PLAN], 'chore: настроить профиль разработки'); }
@@ -174,7 +190,7 @@ export function archive(root, scope, approvalNote) {
     return service(root, empty, 'archive', [PLAN, destination], 'docs: архивировать scope ' + scope);
   });
 }
-export function repair(root, applyId) {
+export function repair(root, applyId, cancelId) {
   const PLAN = planPath(root);
   const pending = journal(root); const raw = textFile(root, PLAN); let operation;
   if (pending) {
@@ -182,14 +198,36 @@ export function repair(root, applyId) {
     operation = { kind: completed ? 'finish-commit' : 'retry-commit', sha: completed, message: completed ? 'Завершить технический журнал подтверждённого коммита.' : 'Повторить управляемую транзакцию с сохранением изменений.' };
   } else {
     const p = parsePlan(raw, { projection: false }); resolveReferences(root, p);
+    try { validatePlanConfiguration(root, p, readConfig(root)); } catch (error) {
+      if (error.code !== "NOT_CONFIGURED") throw error;
+      check(!applyId, "CONFIG_REPAIR_REQUIRED", "Используйте config:apply с полной согласованной конфигурацией проверок.");
+      return {ok:false, kind:"configuration", code:error.code, message:error.message, next_action:"config:apply --input <config.json>", dry_run:true};
+    }
     operation = { kind: renderPlan(p) === raw ? 'none' : 'projection', message: renderPlan(p) === raw ? 'Повреждение не обнаружено.' : 'Восстановить читаемую проекцию из канонического JSON.' };
+    const active=p.tasks.find(t=>t.id===p.current_task_id);
+    if(active&&isDocumentationFinalizationTask(active)&&active.implementation_status==='IN_PROGRESS'&&active.dependencies.some(id=>p.tasks.find(t=>t.id===id)?.commit_status!=='DONE'))operation={kind:'defer-docs',message:'Отложить DOCS до завершения добавленных исправлений; сохранить рабочие файлы и историю.'};
   }
   const repairId = hash(json({ operation, head: head(root), raw, pending })).slice(0, 24);
+  if (cancelId) return locked(root, () => {
+    check(cancelId === repairId, 'REPAIR_CHANGED', 'Состояние изменилось. Повторите repair --dry-run.');
+    check(pending && !completedTransaction(root, pending), 'NO_PREPARATION', 'Нет незавершённой подготовки коммита.');
+    check(head(root) === pending.before_head, 'HEAD_CHANGED', 'HEAD изменён; отмена запрещена.');
+    check(hash(textFile(root, PLAN)) === pending.candidate_hash, 'PLAN_CHANGED', 'План изменён после подготовки.');
+    check(git(root, ['write-tree']).stdout.trim() === pending.candidate_tree, 'INDEX_CHANGED', 'Index изменён после подготовки.');
+    const before = localPath(root, 'index-before');
+    check(fs.existsSync(before), 'INDEX_BACKUP_MISSING', 'Нет сохранённого исходного index.');
+    atomic(localPath(root, 'cancelled-' + pending.id + '.json'), json(pending), 0o600);
+    atomic(gitPath(root, 'index'), fs.readFileSync(before), 0o600);
+    atomic(path.join(root, PLAN), pending.original_plan);
+    fs.unlinkSync(localPath(root, 'transaction.json'));
+    return {ok:true, message:'Подготовка отменена; рабочие файлы сохранены, задача снова открыта.'};
+  });
   if (!applyId) return { ok: true, repair_id: repairId, ...operation, dry_run: true };
   check(repairId === applyId, 'REPAIR_CHANGED', 'Состояние изменилось. Повторите repair --dry-run.');
   return locked(root, () => {
     if (operation.kind === 'finish-commit') return finishTransaction(root, pending, operation.sha);
     if (operation.kind === 'retry-commit') return commitCandidate(root, { plan: readPlan(root), role: pending.role, task: pending.task, selected: pending.selected, message: pending.message, checks: pending.checks, beforeHead: pending.before_head });
+    if(operation.kind==='defer-docs'){const p=readPlan(root);p.tasks.find(t=>t.id===p.current_task_id).implementation_status='TODO';p.current_task_id=null;p.plan_revision++;writePlan(root,p);return {ok:true,message:operation.message};}
     if (operation.kind === 'projection') { const p = parsePlan(raw, { projection: false }); writePlan(root, p); return { ok: true, message: 'Проекция восстановлена. Изменения не коммитились автоматически.' }; }
     return { ok: true, message: operation.message };
   });

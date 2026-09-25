@@ -1289,3 +1289,9 @@ surface поддерживается только без вложенного mo
 0.6.51: startup UI добавляет existing как альтернативу continue. Оба действия
 проверяют готовность через существующий IPC startup('continue'), затем вызывают
 chooseWorkspace либо beginCreate. Новых backend-операций и обхода preview нет.
+
+0.6.52: resources/workflow-kit — Workflow Kit 1.4.11. workspace-setup-worker
+поддерживает установки 1.4.1–1.4.3 и возвращает kitVersion; project-doctor
+принимает их manifest. Sidebar при action upgrade показывает версии и ведёт
+кнопку уведомления в штатный retry → preview upgrade. Собственный .harness/kit
+репозитория остаётся 1.4.1.

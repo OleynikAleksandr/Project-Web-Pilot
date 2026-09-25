@@ -166,6 +166,10 @@ function renderPrepared(state) {
   $('prepared-plans').replaceChildren(...fragments);
 }
 
+function kitUpgradeNeeded(health) {
+  return health?.phase === 'error' && health.action === 'upgrade' && !health.error && !health.issues?.length;
+}
+
 function render(state) {
   progress.show(operationLabel(state ?? {}, pendingAction));
   if (!state) return;
@@ -346,8 +350,12 @@ function render(state) {
   const health = state.workspaceHealth;
   const checking = health?.phase === 'checking', unhealthy = health?.phase === 'error';
   $('workspace-health').hidden = !checking && !unhealthy;
+  const kitUpgrade = kitUpgradeNeeded(health);
   $('workspace-health-message').textContent = checking ? 'Проверяем проект в фоне…'
-    : unhealthy ? (health.error?.message ?? health.issues?.[0]?.reason ?? 'Проверка проекта не пройдена. Чат доступен для просмотра.') : '';
+    : unhealthy ? (health.error?.message ?? health.issues?.[0]?.reason ?? (kitUpgrade
+      ? `Проект использует Workflow Kit ${health.version}. Обновите его до ${health.kitVersion}: планы и документы сохранятся, перед заменой создаётся резервная копия. До обновления чат доступен только для просмотра.`
+      : 'Проверка проекта не пройдена. Чат доступен для просмотра.')) : '';
+  $('workspace-health-retry').textContent = kitUpgrade ? 'Обновить Workflow Kit' : 'Повторить проверку';
   $('workspace-health-actions').hidden = !unhealthy;
   const error = state.startupError ?? context.error;
   $('error-banner').hidden = !error;
@@ -380,7 +388,8 @@ for (const experience of ['chat', 'work']) $('next-session-' + experience).addEv
 $('cancel-prepared-choice').addEventListener('click', () => action('cancelPreparedChoice'));
 $('add-workspace').addEventListener('click', () => action('chooseWorkspace'));
 $('reload-chat').addEventListener('click', () => action('reload'));
-$('workspace-health-retry').addEventListener('click', () => action('reload'));
+// An outdated Kit opens the regular upgrade preview; the user confirms it there.
+$('workspace-health-retry').addEventListener('click', () => action(kitUpgradeNeeded(currentState?.workspaceHealth) ? 'retry' : 'reload'));
 $('workspace-health-doctor').addEventListener('click', () => action('openDoctor'));
 $('retry-context').addEventListener('click', () => action('retry'));
 $('return-chat').addEventListener('click', () => action('returnToChat'));

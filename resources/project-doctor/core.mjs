@@ -42,7 +42,7 @@ export function inspectProject(workspace) {
     const manifestBytes = read(MANIFEST);
     if (!manifestBytes) throw fail('DOCTOR_MANIFEST', 'Установочная запись отсутствует. Откройте папку проекта через обычную подготовку; доктор не угадывает состав установки.');
     let manifest; try { manifest = JSON.parse(manifestBytes.content); } catch { throw fail('DOCTOR_MANIFEST', 'Установочная запись повреждена. Нужна её резервная копия.'); }
-    if (manifest.schema_version !== 1 || !Array.isArray(manifest.files) || !['1.1.0', '1.2.0', '1.3.0', '1.4.0', VERSION].includes(manifest.version)) throw fail('DOCTOR_VERSION', 'Версия или формат установки неизвестны. Нужен совместимый выпуск приложения.');
+    if (manifest.schema_version !== 1 || !Array.isArray(manifest.files) || !['1.1.0', '1.2.0', '1.3.0', '1.4.0', '1.4.1', '1.4.2', '1.4.3', VERSION].includes(manifest.version)) throw fail('DOCTOR_VERSION', 'Версия или формат установки неизвестны. Нужен совместимый выпуск приложения.');
     result.version = manifest.version;
     const trusted = trustedFiles(), trustedMap = new Map(trusted.map(e => [e.path, e]));
     const owned = manifest.files.filter(e => e.kind === 'owned');

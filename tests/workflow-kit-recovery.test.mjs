@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import { execFileSync } from 'node:child_process';
-import { emptyPlan, writePlan, readPlan, FINAL_DOCUMENTATION_TASK_TITLE } from '../resources/workflow-kit/lib/plan.mjs';
+import { emptyPlan, writePlan, readPlan, FINAL_DOCUMENTATION_TASK_TITLE, PROJECT_CONTINUATION_OBJECTIVE } from '../resources/workflow-kit/lib/plan.mjs';
 import { defaultConfig } from '../resources/workflow-kit/lib/validate.mjs';
 import { createScope, startTask, applyPlan, archive } from '../resources/workflow-kit/lib/actions.mjs';
 import { commitTask } from '../resources/workflow-kit/lib/transaction.mjs';
@@ -23,6 +23,8 @@ async function fixture(t) {
   await fs.mkdir(path.join(root, 'docs/architecture'), { recursive: true });
   await fs.mkdir(path.join(root, 'src'), { recursive: true });
   await fs.copyFile(new URL('../resources/workflow-kit/WORKFLOW.md', import.meta.url), path.join(root, '.harness/kit/WORKFLOW.md'));
+  // Recovery delivers the canonical work rules and stage forms together with WORKFLOW.md.
+  await fs.cp(new URL('../resources/workflow-kit/templates/', import.meta.url), path.join(root, '.harness/kit/templates'), { recursive: true });
   await fs.writeFile(path.join(root, '.harness/workflow.json'), JSON.stringify(defaultConfig(), null, 2) + '\n');
   writePlan(root, emptyPlan('Recovery Fixture'));
   await fs.writeFile(path.join(root, 'docs/architecture/OVERVIEW.md'), '# Краткая архитектура проекта\n\nOVERVIEW_REQUIRED\n');
@@ -67,7 +69,7 @@ function continuityScopeInput() {
 test('NONE plan keeps project navigation and scope:create appends the mandatory documentation finalizer', async t => {
   const root = await fixture(t);
   const none = readPlan(root);
-  assert.equal(none.objective, 'Обсудите следующий этап проекта с пользователем.');
+  assert.equal(none.objective, PROJECT_CONTINUATION_OBJECTIVE);
   assert.deepEqual(none.context_pack.documents.slice(0, 3).map(doc => doc.path), [
     'docs/architecture/OVERVIEW.md', 'docs/MODULES.md', 'docs/DOCUMENTATION_INDEX.md',
   ]);
@@ -113,7 +115,7 @@ test('READY_FOR_ACCEPTANCE requires DOCS and archive returns a contextual NONE p
   const none = readPlan(root);
   assert.equal(none.execution_scope_status, 'NONE');
   assert.equal(none.archived_scope_id, 'continuity-acceptance-001');
-  assert.equal(none.objective, 'Обсудите следующий этап проекта с пользователем.');
+  assert.equal(none.objective, PROJECT_CONTINUATION_OBJECTIVE);
   assert.deepEqual(none.tasks, []);
   for (const required of ['docs/architecture/OVERVIEW.md', 'docs/MODULES.md', 'docs/DOCUMENTATION_INDEX.md']) {
     assert.ok(none.context_pack.documents.some(doc => doc.path === required && doc.required));
@@ -121,7 +123,7 @@ test('READY_FOR_ACCEPTANCE requires DOCS and archive returns a contextual NONE p
   const packet = recover(root, 'startup');
   assert.match(packet.text, /OVERVIEW_REQUIRED/);
   assert.match(packet.text, /Fixture module map/);
-  assert.match(packet.text, /Обсудите следующий этап проекта с пользователем/);
+  assert.ok(packet.text.includes(PROJECT_CONTINUATION_OBJECTIVE));
   assert.equal(git(root, 'status', '--porcelain'), '');
 });
 
