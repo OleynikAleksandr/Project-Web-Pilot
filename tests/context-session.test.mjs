@@ -176,14 +176,14 @@ test('unconfirmed native mode prevents packet preparation, then confirmed Chat s
   assert.equal(f.sends(),1); assert.equal(f.controller.state.phase,'delivered');
 });
 test('pending WEB conversation after Send waits for its permanent URL for Chat and Work', async () => {
-  for (const experience of ['chat','work']) {
+  for (const prefix of ['WEB:', 'local-chatgpt%3A']) for (const experience of ['chat','work']) {
     const f=controllerFixture({chatUrl:null}); f.saved.experience=experience;
     f.inspection.url=experience==='work'?'https://chatgpt.com/work/':'https://chatgpt.com/';
     let clicks=0;
     f.composer.deliver=async options=>{
       assert.equal(options.expectedExperience,experience);
       await options.onBeforeSend(); clicks++;
-      f.inspection.url='https://chatgpt.com/c/WEB:12345678-1234-1234-1234-123456789abc';
+      f.inspection.url='https://chatgpt.com/c/'+prefix+'12345678-1234-1234-1234-123456789abc';
       assert.equal(options.canContinue(),true);
       return {state:'unknown'};
     };

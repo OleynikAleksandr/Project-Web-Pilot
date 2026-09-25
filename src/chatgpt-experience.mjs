@@ -32,8 +32,8 @@ export function chatGPTUrlMatchesExperience(input, experience) {
   return chatGPTExperienceForUrl(input) === experience;
 }
 
-// ChatGPT briefly uses this optimistic URL after clicking Send; it is never a persisted chatUrl.
+// ChatGPT briefly uses these optimistic URLs after clicking Send; it is never a persisted chatUrl.
 export function isPendingChatGPTConversation(input) {
   const url = parsedChatGPTUrl(input);
-  return !!url && /^\/c\/WEB(?::|%3A)[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/?$/i.test(url.pathname);
+  return !!url && /^\/c\/(?:WEB|local-chatgpt)(?::|%3A)[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/?$/i.test(url.pathname);
 }

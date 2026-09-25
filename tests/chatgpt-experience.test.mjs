@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { CHATGPT_CHAT_ENTRYPOINT, CHATGPT_WORK_ENTRYPOINT, chatGPTEntrypoint,
-  chatGPTExperienceForUrl, chatGPTUrlMatchesExperience } from '../src/chatgpt-experience.mjs';
+  isPendingChatGPTConversation, chatGPTExperienceForUrl, chatGPTUrlMatchesExperience } from '../src/chatgpt-experience.mjs';
 
 test('Chat and Work use explicit top-level entrypoints', () => {
   assert.equal(chatGPTEntrypoint('chat'), CHATGPT_CHAT_ENTRYPOINT);
@@ -34,4 +34,13 @@ test('optimistic WEB URLs are pending only on the exact HTTPS ChatGPT origin', a
   }
   assert.equal(chatGPTUrlMatchesExperience('https://chatgpt.com/?surface=work', 'chat'), false);
   assert.equal(chatGPTUrlMatchesExperience('https://chatgpt.com/?surface=tpp', 'chat'), false);
+});
+
+test('September optimistic local-chatgpt URL is pending, never a confirmed experience', () => {
+  for (const colon of [':','%3A']) {
+    const url = 'https://chatgpt.com/c/local-chatgpt' + colon + '21abfec7-868e-4077-8cfd-c0a399a8757f';
+    assert.equal(isPendingChatGPTConversation(url), true);
+    assert.equal(chatGPTExperienceForUrl(url), null);
+  }
+  assert.equal(isPendingChatGPTConversation('https://example.com/c/local-chatgpt:21abfec7-868e-4077-8cfd-c0a399a8757f'), false);
 });

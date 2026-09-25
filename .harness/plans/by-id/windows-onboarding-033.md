@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 95,
+  "plan_revision": 99,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
@@ -74,7 +74,9 @@
       "tests/chatgpt-auto-scroll.test.mjs",
       "src/ui/sidebar.mjs",
       "resources/runtime-control/windows-control.py",
-      "tests/windows-autostart.test.mjs"
+      "tests/windows-autostart.test.mjs",
+      "src/chatgpt-experience.mjs",
+      "tests/chatgpt-experience.test.mjs"
     ],
     "documentation_paths": [
       "AGENTS.md",
@@ -1223,10 +1225,50 @@
     },
     {
       "id": "H005",
-      "title": "Парная сборка и сверка 0.6.48",
+      "title": "Переходный URL после реальной отправки",
       "why": "Парная сборка и сверка 0.6.48",
       "dependencies": [
         "H004"
+      ],
+      "functional_paths": [
+        "src/chatgpt-experience.mjs",
+        "tests/chatgpt-experience.test.mjs",
+        "tests/context-session.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md",
+        "docs/architecture/ARCHITECTURE.md"
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "acceptance_criteria": [
+        "Новый provisional URL ожидается без ошибки и повторной отправки; сохранённые guards и старый WEB поддержаны"
+      ],
+      "expected_commit_message": "fix: распознавать временный local-chatgpt URL после отправки",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
+      "commit_ref": {
+        "scope_id": "windows-onboarding-033",
+        "task_id": "H005",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "H006",
+      "title": "Окончательная парная сборка 0.6.48",
+      "why": "Выдать исправленный результат живой проверки",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "windows-onboarding-033",
+        "task_id": "H006",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "H005"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -1235,16 +1277,9 @@
       ],
       "verification_ids": [],
       "acceptance_criteria": [
-        "Парная сборка и сверка 0.6.48; реальная DOM структура 25.09.2026, сохранение защит от повторной отправки и фоновых служб"
+        "Пара ZIP и постоянный app сверены с финальным source commit; Downloads актуален"
       ],
-      "expected_commit_message": "fix: Парная сборка и сверка 0.6.48",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
-      "commit_ref": {
-        "scope_id": "windows-onboarding-033",
-        "task_id": "H005",
-        "role": "implementation"
-      }
+      "expected_commit_message": "docs: сверить финальную парную сборку 0.6.48"
     },
     {
       "implementation_status": "TODO",
@@ -1290,7 +1325,8 @@
         "H003",
         "H003W",
         "H004",
-        "H005"
+        "H005",
+        "H006"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -1379,7 +1415,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 95
+Revision: 99
 
 ## Цель
 
@@ -1541,9 +1577,13 @@ Revision: 95
   - Git Commit: [DONE] fix: Версия сайдбара и lifecycle интерфейса
   - Reference: windows-onboarding-033 / H004 / implementation
   - Файлы: src/ui/index.html, src/ui/sidebar.mjs, src/main.mjs, tests/electron-smoke.mjs, package.json, package-lock.json, docs/modules/chatgpt-dom-compatibility.md, docs/architecture/ARCHITECTURE.md, docs/DOCUMENTATION_INDEX.md, docs/VERIFICATION.md, docs/RELEASE.md
-- [TODO] H005: Парная сборка и сверка 0.6.48 — Ожидает
-  - Git Commit: [PENDING] fix: Парная сборка и сверка 0.6.48
+- [DONE] H005: Переходный URL после реальной отправки — Завершено
+  - Git Commit: [DONE] fix: распознавать временный local-chatgpt URL после отправки
   - Reference: windows-onboarding-033 / H005 / implementation
+  - Файлы: src/chatgpt-experience.mjs, tests/chatgpt-experience.test.mjs, tests/context-session.test.mjs, docs/RELEASE.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
+- [TODO] H006: Окончательная парная сборка 0.6.48 — Ожидает
+  - Git Commit: [PENDING] docs: сверить финальную парную сборку 0.6.48
+  - Reference: windows-onboarding-033 / H006 / implementation
   - Файлы: docs/RELEASE.md, docs/VERIFICATION.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать выпуск 0.6.45 и инструкцию MCP для обеих платформ
