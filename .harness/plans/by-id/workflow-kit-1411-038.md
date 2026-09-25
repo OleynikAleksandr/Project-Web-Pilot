@@ -4,13 +4,13 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 13,
+  "plan_revision": 14,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-kit-1411-038",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
-  "objective": "Поставлять в новых и подключаемых проектах Workflow Kit 1.4.11 и выпустить парный релиз 0.6.52",
+  "delivery_status": "IN_PROGRESS",
+  "objective": "Поставлять в новых и подключаемых проектах Workflow Kit 1.4.11 и выпустить парный релиз 0.6.52; затем Kit 1.4.12 с видимыми планами by-session и выпуск 0.6.53",
   "acceptance_criteria": [
     "resources/workflow-kit побайтно совпадает с Workflow Kit 1.4.11 из CodeAppServer badcf20 (tree 1fe409fb)",
     "Новый проект получает Workflow Kit 1.4.11; проект 1.4.1 предлагается к обновлению и обновляется с сохранением планов сессий",
@@ -64,7 +64,11 @@
       "tests/electron-smoke.mjs",
       "package.json",
       "package-lock.json",
-      "tests/workflow-kit-recovery.test.mjs"
+      "tests/workflow-kit-recovery.test.mjs",
+      "src/context-inputs.mjs",
+      "src/context-session.mjs",
+      "tests/session-plans.test.mjs",
+      "tests/context-session.test.mjs"
     ],
     "documentation_paths": [
       "docs/architecture/OVERVIEW.md",
@@ -79,7 +83,9 @@
       "docs/SOURCE_WORKSPACES.md",
       "docs/architecture/ARCHITECTURE.md",
       "docs/PRODUCT.md",
-      "docs/modules/project-doctor.md"
+      "docs/modules/project-doctor.md",
+      "resources/workflow-kit/WORKFLOW.md",
+      "docs/modules/session-owned-plans.md"
     ],
     "max_functional_files_per_task": 3
   },
@@ -261,17 +267,120 @@
       "expected_commit_message": "feat: Парный выпуск 0.6.52"
     },
     {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
+      "id": "T004",
+      "title": "Kit 1.4.12: планы by-session и полная интеграция в приложение",
+      "why": "Планы, созданные plan:create --session с проверками, лежат в by-session и не видны сайдбару, Доктору и проверке готовности",
+      "dependencies": [],
+      "functional_paths": [
+        "resources/workflow-kit/lib/session-plans.mjs",
+        "resources/workflow-kit/lib/inspection-inputs.mjs",
+        "resources/workflow-kit/lib/common.mjs",
+        "resources/workflow-kit/lib/installer.mjs",
+        "resources/workspace-setup-worker.mjs",
+        "resources/project-doctor/core.mjs",
+        "src/context-inputs.mjs",
+        "src/context-session.mjs",
+        "tests/workflow-kit-source.test.mjs",
+        "tests/session-plans.test.mjs",
+        "tests/context-session.test.mjs",
+        "tests/workspace-setup.test.mjs",
+        "tests/project-doctor.test.mjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "resources/workflow-kit/WORKFLOW.md",
+        "docs/modules/workflow-kit-recovery.md",
+        "docs/modules/session-owned-plans.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "file_limit_exception": "Исправление Kit и все его потребители в приложении (сайдбар, Доктор, готовность, кэш контекста) меняются согласованно одной задачей с общими тестами",
+      "acceptance_criteria": [
+        "plan:create --session с проверками создаёт план, который видят sessionPlanView, listPlans, readiness и Доктор",
+        "Проект 1.4.11 предлагается к обновлению до 1.4.12",
+        "Статус «Локальные инструменты» проверяется и для уже доставленной сессии",
+        "npm test проходит"
+      ],
+      "verification_ids": [
+        "suite"
+      ],
+      "expected_commit_message": "fix: Workflow Kit 1.4.12 и полная интеграция планов сессий",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "workflow-kit-1411-038",
+        "task_id": "T004",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T005",
+      "title": "Версия 0.6.53",
+      "why": "Новый парный выпуск",
+      "dependencies": [],
+      "functional_paths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "documentation_paths": [],
+      "documentation_exception": "Меняется только номер версии выпуска; архитектура и зависимости не меняются.",
+      "acceptance_criteria": [
+        "package.json, package-lock.json и build-скрипты — 0.6.53"
+      ],
+      "verification_ids": [
+        "syntax"
+      ],
+      "expected_commit_message": "chore: версия 0.6.53",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "workflow-kit-1411-038",
+        "task_id": "T005",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T006",
+      "title": "Парный выпуск 0.6.53",
+      "why": "Собрать и проверить macOS + Windows",
+      "dependencies": [
+        "T005"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "acceptance_criteria": [
+        "npm test, smoke и npm run build прошли на Mac",
+        "Корневой и /Applications app — 0.6.53; план 02WebPilot виден в собранном app"
+      ],
+      "verification_ids": [],
+      "expected_commit_message": "feat: Парный выпуск 0.6.53",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "workflow-kit-1411-038",
+        "task_id": "T006",
+        "role": "implementation"
+      }
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "workflow-kit-1411-038",
         "task_id": "DOCS",
-        "role": "implementation"
+        "role": "implementation",
+        "iteration": 2
       },
       "dependencies": [
         "T001",
         "T002",
-        "T003"
+        "T003",
+        "T004",
+        "T005",
+        "T006"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -314,14 +423,14 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: workflow-kit-1411-038
 Current Task: нет
-Revision: 13
+Revision: 14
 
 ## Цель
 
-Поставлять в новых и подключаемых проектах Workflow Kit 1.4.11 и выпустить парный релиз 0.6.52
+Поставлять в новых и подключаемых проектах Workflow Kit 1.4.11 и выпустить парный релиз 0.6.52; затем Kit 1.4.12 с видимыми планами by-session и выпуск 0.6.53
 
 ## Критерии приёмки
 
@@ -345,8 +454,20 @@ Revision: 13
   - Git Commit: [DONE] feat: Парный выпуск 0.6.52
   - Reference: workflow-kit-1411-038 / T003 / implementation
   - Файлы: docs/RELEASE.md, docs/VERIFICATION.md
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: актуализировать документацию проекта
+- [TODO] T004: Kit 1.4.12: планы by-session и полная интеграция в приложение — Ожидает
+  - Git Commit: [PENDING] fix: Workflow Kit 1.4.12 и полная интеграция планов сессий
+  - Reference: workflow-kit-1411-038 / T004 / implementation
+  - Файлы: resources/workflow-kit/lib/session-plans.mjs, resources/workflow-kit/lib/inspection-inputs.mjs, resources/workflow-kit/lib/common.mjs, resources/workflow-kit/lib/installer.mjs, resources/workspace-setup-worker.mjs, resources/project-doctor/core.mjs, src/context-inputs.mjs, src/context-session.mjs, tests/workflow-kit-source.test.mjs, tests/session-plans.test.mjs, tests/context-session.test.mjs, tests/workspace-setup.test.mjs, tests/project-doctor.test.mjs, tests/electron-smoke.mjs, resources/workflow-kit/WORKFLOW.md, docs/modules/workflow-kit-recovery.md, docs/modules/session-owned-plans.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+- [TODO] T005: Версия 0.6.53 — Ожидает
+  - Git Commit: [PENDING] chore: версия 0.6.53
+  - Reference: workflow-kit-1411-038 / T005 / implementation
+  - Файлы: package.json, package-lock.json
+- [TODO] T006: Парный выпуск 0.6.53 — Ожидает
+  - Git Commit: [PENDING] feat: Парный выпуск 0.6.53
+  - Reference: workflow-kit-1411-038 / T006 / implementation
+  - Файлы: docs/RELEASE.md, docs/VERIFICATION.md
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: актуализировать документацию проекта
   - Reference: workflow-kit-1411-038 / DOCS / implementation
   - Файлы: docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, README.md, AGENTS.md, docs/SOURCE_WORKSPACES.md, docs/architecture/ARCHITECTURE.md, docs/PRODUCT.md, docs/modules/project-doctor.md, docs/modules/workflow-kit-recovery.md, docs/WORKSPACE_SETUP.md
 
