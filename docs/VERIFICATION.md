@@ -1929,3 +1929,7 @@ Raw samples, redacted metrics, timeline, исходник временного �
 <!-- tunnel-read-20260919-payload:end -->
 
 Для восстановления: извлечь JSON между этими маркерами, декодировать поле data через base64.b64decode, затем gzip.decompress; проверить SHA-256 и uncompressed_bytes. Итог — исходный mcp-tunnel-read-20260919.json со всеми samples, metrics и collector_source.
+
+## 0.6.48 — DOM compatibility regression
+
+Добавлены проверки структуры 25.09: группа режима с aria-pressed, новые сообщения пользователя/агента, исключение цитат агента из подтверждения доставки, вложенные wrappers без двойного счёта, stop button «Остановить» и смена режима без смены URL. Полный suite и Electron fixture запускаются управляемым commit; это не приёмка Windows.

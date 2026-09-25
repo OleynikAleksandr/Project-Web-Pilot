@@ -1256,3 +1256,7 @@ macOS runtime selector использует один внешний Secure MCP T
 ### 0.6.47 final stable-connector release evidence
 
 Исправленная парная поставка собрана из commit `acde362fc75645dff20f2e494604d9b2b5289403`. Постоянный Mac app сохранил device/inode 16777234/398344301. macOS ZIP SHA-256 `c82554c36d553ef92a03649ddcd5ccc82315c34e935dc7d23673f674e7b660e6`, ASAR `b72c7adea0aec363d0fd51f152b388bf77a40aeb30bb318a18116e7b9d3f1b32`; Windows ZIP SHA-256 `8fcdd36743ef91e3eb89951f4267eebd3d22fb10f6fb4149100f0cf489ffcce4`, ASAR `7435d127206a8e2b54f65c5872e7d9bbee04ccf353027fff51e25064d5d13e3b`. Оба ZIP содержат четыре физически проверенных файла Codex App Server MCP resource.
+
+## Совместимость DOM 0.6.48
+
+Общий `src/chatgpt-dom.mjs` используется composer и диагностикой. Распознавание режима основано на выбранной кнопке, а `/` и `/work/` допускают переключение без навигации. Новые semantic message wrappers и stop labels поддерживаются вместе с прежними. Контракт: [Совместимость ChatGPT](../modules/chatgpt-dom-compatibility.md).

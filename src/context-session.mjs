@@ -35,11 +35,12 @@ export function startupMessage(project, requestId, packet) {
 }
 
 const phaseForReason = reason => ({ LOGIN_REQUIRED: 'waiting-login', GENERATION_ACTIVE: 'waiting-generation',
-  DRAFT_PRESENT: 'waiting-draft', DRAFT_CHANGED: 'waiting-draft' })[reason] ?? 'waiting-composer';
+  DRAFT_PRESENT: 'waiting-draft', DRAFT_CHANGED: 'waiting-draft', EXPERIENCE_UNCONFIRMED: 'waiting-experience' })[reason] ?? 'waiting-composer';
 const metadata = packet => ({ workspace: packet.workspace, session_id: packet.session_id, plan_id: packet.plan_id, plan_path: packet.plan_path, facts: packet.facts, signature: packet.signature,
   head: packet.head, contextBytes: packet.context_bytes, contextSha256: packet.context_sha256,
   generatedAtMs: packet.generated_at_ms, cacheKey: packet.preparation?.inputKey,
   preparationMs: packet.preparation?.ms, cacheHit: packet.preparation?.cacheHit });
+const isModeEntrypoint = value => /^https:\/\/chatgpt\.com\/(?:work\/?)?(?:[?#].*)?$/.test(value);
 const failure = (code, message) => Object.assign(new Error(message), { code });
 
 export class ContextSession {
@@ -82,7 +83,7 @@ export class ContextSession {
     const url = normalizeChatUrl(current);
     if (project.chatUrl) return project.chatUrl === url;
     if (!url) return (!!attempt?.sendStartedAtMs && isPendingChatGPTConversation(current))
-      || chatGPTUrlMatchesExperience(current, project.experience ?? 'chat');
+      || isModeEntrypoint(current);
     return !!attempt?.sendStartedAtMs && conversationUrlCompatibleWithExperience(url, project.experience ?? 'chat');
   }
 
@@ -152,7 +153,8 @@ export class ContextSession {
         }
         this.emit({ phase: sent ? 'waiting-chat' : 'send-unknown', projectInfo: info, messageSent: sent, error: null });
         return;
-      } else if (!chatGPTUrlMatchesExperience(observation.url, experience)) {
+      } else if (!chatGPTUrlMatchesExperience(observation.url, experience)
+          && !isModeEntrypoint(observation.url)) {
         throw failure('CHATGPT_EXPERIENCE_MISMATCH', experience === 'work'
           ? 'Work-сессия не открыта в режиме Work. Recovery не отправлен.'
           : 'Chat-сессия не открыта в обычном Chat. Recovery не отправлен.');

@@ -1,3 +1,4 @@
+import { createChatGPTDOM, CHATGPT_SELECTORS, chatGPTDOMScript } from './chatgpt-dom.mjs';
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 export class ComposerError extends Error {
@@ -5,43 +6,24 @@ export class ComposerError extends Error {
 }
 
 // Runs only in the visible ChatGPT document. No page internals, cookies or API requests.
-export function pageOperation({ action = 'inspect', text = '', requestId = '', expectedExperience = null } = {}) {
-  const visible = element => !!element && !element.hidden && element.getAttribute('aria-hidden') !== 'true'
-    && getComputedStyle(element).display !== 'none' && getComputedStyle(element).visibility !== 'hidden'
-    && element.getClientRects().length > 0;
-  const first = selector => [...document.querySelectorAll(selector)].find(visible);
-  const editor = first('#prompt-textarea,textarea[data-testid="prompt-textarea"],[data-testid="composer-text-input"],[contenteditable="true"][role="textbox"]');
-  const busy = !!first('[data-testid="stop-button"],button[aria-label="Stop streaming"],button[aria-label="Остановить генерацию"],button[aria-label="Stop generating"]');
+export function pageOperation({ action = 'inspect', text = '', requestId = '', expectedExperience = null } = {}, dom = createChatGPTDOM(CHATGPT_SELECTORS)) {
+  const { first } = dom;
+  const editor = dom.editor();
+  const busy = dom.busy();
   const login = !!first('[data-testid="login-button"],a[href="/auth/login"],a[href="https://chatgpt.com/auth/login"]');
   const draft = () => editor ? (editor.tagName === 'TEXTAREA' || editor.tagName === 'INPUT'
     ? editor.value : editor.innerText ?? editor.textContent ?? '') : '';
   const normalized = value => value.replace(/\r\n/g, '\n').replace(/\n+/g, '\n').replace(/\u00a0/g, ' ').trim();
-  const messages = [...document.querySelectorAll('[data-message-author-role="user"],[data-testid="user-message"]')];
+  const messages = dom.messages('user');
   const messageSeen = !!requestId && messages.some(message => (message.innerText ?? message.textContent ?? '').includes(requestId));
-  const button = first('[data-testid="send-button"],button[aria-label="Send prompt"],button[aria-label="Send message"],button[aria-label="Отправить сообщение"],button[aria-label="Отправить"]')
-    ?? [...(editor?.closest('form')?.querySelectorAll('button[type="submit"]') ?? [])].find(visible);
+  const button = dom.sendButton();
   const draftLength = normalized(draft()).length;
   const draftMatches = !!text && normalized(draft()) === normalized(text);
   const writable = !!editor && !editor.disabled && !editor.readOnly && editor.getAttribute('contenteditable') !== 'false';
   const sendEnabled = !!button && !button.disabled && button.getAttribute('aria-disabled') !== 'true';
-  // Native ChatGPT toggle, verified in the production web bundle on 2026-09-14.
-  // Restrict the fallback to the labelled surface group; never match message text or model names.
-  let modeButtons = [...document.querySelectorAll('button[data-tpp-toggle-value]')].filter(visible);
-  if (!modeButtons.length) {
-    const group = first('[aria-label="Select chat surface"],[aria-label="Выберите режим чата"]');
-    modeButtons = [...(group?.querySelectorAll('button') ?? [])].filter(visible);
-  }
-  const modeOf = element => {
-    const value = element.getAttribute('data-tpp-toggle-value');
-    if (value === 'chatgpt') return 'chat';
-    if (value === 'work') return 'work';
-    const label = (element.innerText ?? element.textContent ?? '').trim();
-    return /^(Chat|Чат)$/.test(label) ? 'chat' : /^(Work|Работа)$/.test(label) ? 'work' : null;
-  };
-  const selectedModes = [...new Set(modeButtons.filter(element => element.getAttribute('data-state') === 'on'
-    || element.getAttribute('aria-checked') === 'true' || element.getAttribute('aria-pressed') === 'true')
-    .map(modeOf).filter(Boolean))];
-  const experience = selectedModes.length === 1 ? selectedModes[0] : null;
+  const modeButtons = dom.modeButtons();
+  const modeOf = dom.modeOf;
+  const experience = dom.experience();
   const result = { url: location.href, editorAvailable: !!editor, writable, login, busy,
     draftLength, draftMatches, sendEnabled, messageSeen, userMessageCount: messages.length, experience };
   if (action === 'inspect') return result;
@@ -50,8 +32,7 @@ export function pageOperation({ action = 'inspect', text = '', requestId = '', e
   if (busy) return { ...result, action: 'deferred', reason: 'GENERATION_ACTIVE' };
   if (expectedExperience) {
     const entry = location.pathname.replace(/\/+$/, '') || '/';
-    const atEntrypoint = expectedExperience === 'chat' ? entry === '/'
-      && !['work', 'tpp'].includes(new URLSearchParams(location.search).get('surface')) : entry === '/work';
+    const atEntrypoint = entry === '/' || entry === '/work';
     if (!atEntrypoint || messages.length) return { ...result, action: 'deferred', reason: 'CHAT_CHANGED' };
     if (action === 'select-experience') {
       if (experience === expectedExperience) return { ...result, action: 'experience-confirmed' };
@@ -92,7 +73,7 @@ export function pageOperation({ action = 'inspect', text = '', requestId = '', e
   throw new Error('INVALID_COMPOSER_ACTION');
 }
 
-export function pageScript(args) { return `(${pageOperation.toString()})(${JSON.stringify(args)})`; }
+export function pageScript(args) { return `(${pageOperation.toString()})(${JSON.stringify(args)}, ${chatGPTDOMScript()})`; }
 
 export class ChatGPTComposer {
   constructor(contents, { wait = pause, now = Date.now, settleMs = 200, timeoutMs = 12000,

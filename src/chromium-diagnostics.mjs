@@ -1,3 +1,4 @@
+import { chatGPTDOMScript } from './chatgpt-dom.mjs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
@@ -582,13 +583,11 @@ export class ChromiumDiagnostics {
     try { url = new URL(current); } catch { return; }
     if (!(url.hostname === 'chatgpt.com' && url.protocol === 'https:') && !this.allowFixture) return;
     try {
-      const sample = await this.contents.executeJavaScript(`(() => ({
-        userMessages: document.querySelectorAll('[data-message-author-role="user"],[data-testid="user-message"]').length,
-        assistantMessages: document.querySelectorAll('[data-message-author-role="assistant"],[data-testid="assistant-message"]').length,
-        busy: !!document.querySelector('[data-testid="stop-button"],button[aria-label="Stop streaming"],button[aria-label="Остановить генерацию"],button[aria-label="Stop generating"]'),
-        composer: !!document.querySelector('#prompt-textarea,textarea[data-testid="prompt-textarea"],[data-testid="composer-text-input"],[contenteditable="true"][role="textbox"]'),
-        visibility: document.visibilityState
-      }))()`, false);
+      const sample = await this.contents.executeJavaScript(`(() => {
+        const dom = ${chatGPTDOMScript()};
+        return { userMessages: dom.messages('user').length, assistantMessages: dom.messages('assistant').length,
+          busy: dom.busy(), composer: !!dom.editor(), visibility: document.visibilityState };
+      })()`, false);
       this.log.record('dom', 'pulse', { url: safeUrl(current), ...sample });
     } catch (error) {
       this.log.record('dom', 'pulse-failed', { name: error?.name ?? 'Error' });

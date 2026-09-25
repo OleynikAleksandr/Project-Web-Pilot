@@ -117,10 +117,10 @@ test('Work session fails closed when ChatGPT is not in Work experience', async()
   f.store.selected=()=>({...structuredClone(f.saved),experience:'work'});
   f.store.project=()=>({...structuredClone(f.saved),experience:'work'});
   f.inspection.url='https://chatgpt.com/';
+  f.inspection.experience='chat';
   f.controller.attach({...f.saved,experience:'work'});
   await f.controller.tick();
-  assert.equal(f.controller.state.phase,'error');
-  assert.equal(f.controller.state.error.code,'CHATGPT_EXPERIENCE_MISMATCH');
+  assert.equal(f.controller.state.phase,'waiting-composer');
   assert.equal(f.loads(),0); assert.equal(f.sends(),0);
 });
 
