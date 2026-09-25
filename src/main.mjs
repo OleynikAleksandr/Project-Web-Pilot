@@ -1,3 +1,4 @@
+import { PlanMonitor } from './plan-monitor.mjs';
 import { toolFilterScript } from './chatgpt-tool-filter.mjs';
 import { app, BaseWindow, BrowserWindow, WebContentsView, Menu, session, ipcMain, dialog, nativeTheme, clipboard, shell } from 'electron';
 import path from 'node:path';
@@ -43,6 +44,8 @@ const dataDir = app.getPath('userData');
 const settingsFile = path.join(dataDir, 'settings.json');
 const chromiumDiagnosticsFile = path.join(dataDir, 'diagnostics', 'chromium-events.jsonl');
 const store = new WorkspaceSessions(path.join(dataDir, 'workspaces.json'));
+const planMonitor = new PlanMonitor({ selected: () => store.selected(),
+  inspect: (workspace, sessionId) => store.inspect(workspace, sessionId), onChange: () => publish() });
 const partition = smoke ? 'web-pilot-smoke' : 'persist:chatgpt';
 let runtimeFolder = bundledWindowsRuntimeFolder(dataDir, process.platform) ?? defaultRuntimeFolder(os.homedir(), process.platform);
 let configuredRuntimeFolder = null;
@@ -165,7 +168,7 @@ function publishArchive() {
 }
 function snapshot() {
   const saved = store.selected();
-  const info = controller?.state.projectInfo;
+  const info = planMonitor.view(saved, controller?.state.projectInfo);
   const selected = saved && { ...saved, attempt: saved.attempt && { protocol: saved.attempt.protocol,
     requestId: saved.attempt.requestId, state: saved.attempt.state }, receipt: undefined,
     ...(info?.workspace === saved.workspace && info.inspectedSessionId === saved.sessionId ? info : {}) };
@@ -231,7 +234,7 @@ function rememberSessionTitle() {
 
 function rememberScopeTitle() {
   const selected = store.selected();
-  const info = controller?.state?.projectInfo;
+  const info = planMonitor.view(selected, controller?.state?.projectInfo);
   if (!selected || !info || info.workspace !== selected.workspace || info.inspectedSessionId !== selected.sessionId || selected.lastNamedScopeId === info.scopeId
       || !['ACTIVE', 'BLOCKED'].includes(info.scopeStatus) || typeof info.scopeId !== 'string' || !info.scopeId
       || typeof info.objective !== 'string' || !info.objective.trim()) return;
@@ -1097,7 +1100,7 @@ async function createWindow() {
   window.on('closed', () => {
     try {
       ++navigationId; startupClipboard?.dispose(); startupClipboard = null; startupFlow?.dispose(); startupFlow = null;
-      controller?.cancel(); clearInterval(interval); contextCache.clear(); workspaceSetup.invalidateReadiness();
+      controller?.cancel(); planMonitor.close(); clearInterval(interval); contextCache.clear(); workspaceSetup.invalidateReadiness();
       chatColorStyles?.dispose();
       void chromiumDiagnostics?.stop().catch(() => {}); chromiumDiagnostics = null;
     } finally {
@@ -1130,6 +1133,7 @@ async function createWindow() {
   await sidebar.webContents.loadURL(sidebarUrl);
   if (startupFlow) void startupFlow.check({ prepare: startupActive });
   interval = setInterval(() => {
+    void planMonitor.tick();
     void observeStartupAccount(); observeStartupClipboard();
     if (!pageLoading && !setupState && !settingsState) { void controller.tick(); }
   }, 1500);

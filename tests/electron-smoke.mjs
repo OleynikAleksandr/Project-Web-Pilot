@@ -938,7 +938,6 @@ export async function run({ app, window, browser, sidebar, store, controller, se
     const sourceBytes=await fs.readFile(sourcePlanFile,'utf8');
     withSessionPlan(workspace,{sessionId:source.sessionId},()=>preparePlan(workspace,definition(scopeId),readPlan(workspace).plan_revision));
     assert.equal(await fs.readFile(sourcePlanFile,'utf8'),sourceBytes);
-    controller.attach(store.selected());await controller.tick();
     await waitFor(()=>sidebar.executeJavaScript('document.querySelectorAll(".prepared-item").length === '+(experience==='chat'?1:2)), 'prepared card '+experience,snapshot);
     const choose=()=>sidebar.executeJavaScript('document.querySelector(\'[data-plan-id="'+scopeId+'"] .prepared-action\').click()');
     await choose();
@@ -979,14 +978,20 @@ export async function run({ app, window, browser, sidebar, store, controller, se
     await choose();
     await waitFor(()=>store.selected().sessionId===next.sessionId&&snapshot().context.phase==='delivered','linked existing session',snapshot);
     assert.equal(store.snapshot().projects.find(p=>p.workspace===workspace).sessions.length,beforeCount+1);
+    // Read-only monitoring must keep working after delivery is cancelled.
+    controller.cancel();
+    const loadsBeforeProgress = packetLoads;
     // Complete this plan with real hooks; it stays attached and visible.
     withSessionPlan(workspace,{sessionId:next.sessionId},()=>startTask(workspace,'T001'));
+    await waitFor(()=>snapshot().selected?.planView?.tasks.find(t=>t.id==='T001')?.status==='current','task started without delivery controller',snapshot);
     await fs.appendFile(path.join(workspace,'docs/PRODUCT.md'),'\nSession fixture '+experience+'\n');
     assert.equal(withSessionPlan(workspace,{sessionId:next.sessionId},()=>commitTask(workspace,'T001')).ok,true);
+    await waitFor(()=>snapshot().selected?.planView?.completed===1,'commit updates progress without reopening chat',snapshot);
     withSessionPlan(workspace,{sessionId:next.sessionId},()=>startTask(workspace,'DOCS'));
     assert.equal(withSessionPlan(workspace,{sessionId:next.sessionId},()=>commitTask(workspace,'DOCS')).ok,true);
-    controller.attach(store.selected());await controller.tick();
     await waitFor(()=>sidebar.executeJavaScript('document.getElementById("plan-status").dataset.state === "awaiting-acceptance"'),'completed own plan',snapshot);
+    assert.equal(controller.active,null);
+    assert.equal(packetLoads,loadsBeforeProgress,'plan monitoring never prepares or sends recovery');
     assert.equal(store.selected().planId,scopeId);assert.equal(snapshot().preparedChoice,null);
     assert.equal(await sidebar.executeJavaScript('document.getElementById("next-session-choice").hidden'),true);
     await sidebar.executeJavaScript('document.querySelector("#plan-origin button").click()');

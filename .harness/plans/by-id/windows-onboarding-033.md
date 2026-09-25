@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 105,
+  "plan_revision": 107,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
@@ -1287,8 +1287,8 @@
       "id": "I001",
       "title": "Независимое обновление плана сессии и версия 0.6.49",
       "why": "Независимое обновление плана сессии и версия 0.6.49",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "windows-onboarding-033",
         "task_id": "I001",
@@ -1482,7 +1482,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 105
+Revision: 107
 
 ## Цель
 
@@ -1652,8 +1652,8 @@ Revision: 105
   - Git Commit: [DONE] docs: сверить финальную парную сборку 0.6.48
   - Reference: windows-onboarding-033 / H006 / implementation
   - Файлы: docs/RELEASE.md, docs/VERIFICATION.md
-- [TODO] I001: Независимое обновление плана сессии и версия 0.6.49 — Ожидает
-  - Git Commit: [PENDING] fix: Независимое обновление плана сессии и версия 0.6.49
+- [DONE] I001: Независимое обновление плана сессии и версия 0.6.49 — Завершено
+  - Git Commit: [DONE] fix: Независимое обновление плана сессии и версия 0.6.49
   - Reference: windows-onboarding-033 / I001 / implementation
   - Файлы: src/plan-monitor.mjs, tests/plan-monitor.test.mjs, src/main.mjs, tests/electron-smoke.mjs, package.json, package-lock.json, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/RELEASE.md
 - [TODO] I002: Сверить парный выпуск 0.6.49 — Ожидает
