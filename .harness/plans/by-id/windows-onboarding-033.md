@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 123,
+  "plan_revision": 124,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Совместимость с новым ChatGPT DOM, плавная автопрокрутка, полная версия сайдбара, независимые MCP/tunnel и парный выпуск 0.6.48",
   "acceptance_criteria": [
     "Windows показывает и выполняет шаги компонентов, туннеля и создания проекта после входа",
@@ -1441,13 +1441,78 @@
       "expected_commit_message": "fix: Парная сборка 0.6.50 и визуальная проверка"
     },
     {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
+      "id": "K001",
+      "title": "Выбор существующей папки на первом шаге проекта, 0.6.51",
+      "why": "Выбор существующей папки на первом шаге проекта, 0.6.51",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "windows-onboarding-033",
+        "task_id": "K001",
+        "role": "implementation"
+      },
+      "functional_paths": [
+        "src/ui/index.html",
+        "src/ui/startup.mjs",
+        "tests/startup-ui.test.mjs",
+        "package.json",
+        "package-lock.json"
+      ],
+      "documentation_paths": [
+        "docs/modules/first-run-onboarding.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md",
+        "docs/RELEASE.md"
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "dependencies": [
+        "J002"
+      ],
+      "acceptance_criteria": [
+        "Выбор существующей папки на первом шаге проекта, 0.6.51"
+      ],
+      "expected_commit_message": "feat: Выбор существующей папки на первом шаге проекта, 0.6.51"
+    },
+    {
+      "id": "K002",
+      "title": "Парный выпуск 0.6.51",
+      "why": "Парный выпуск 0.6.51",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "windows-onboarding-033",
+        "task_id": "K002",
+        "role": "implementation"
+      },
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/modules/first-run-onboarding.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md",
+        "docs/RELEASE.md"
+      ],
+      "verification_ids": [],
+      "dependencies": [
+        "K001"
+      ],
+      "acceptance_criteria": [
+        "Парный выпуск 0.6.51"
+      ],
+      "expected_commit_message": "feat: Парный выпуск 0.6.51"
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "windows-onboarding-033",
         "task_id": "DOCS",
         "role": "implementation",
-        "iteration": 8
+        "iteration": 9
       },
       "dependencies": [
         "P001",
@@ -1490,7 +1555,9 @@
         "I003",
         "I002",
         "J001",
-        "J002"
+        "J002",
+        "K001",
+        "K002"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -1577,10 +1644,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 123
+Revision: 124
 
 ## Цель
 
@@ -1770,8 +1837,16 @@ Revision: 123
   - Git Commit: [DONE] fix: Парная сборка 0.6.50 и визуальная проверка
   - Reference: windows-onboarding-033 / J002 / implementation
   - Файлы: docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/RELEASE.md
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: актуализировать выпуск 0.6.50
+- [TODO] K001: Выбор существующей папки на первом шаге проекта, 0.6.51 — Ожидает
+  - Git Commit: [PENDING] feat: Выбор существующей папки на первом шаге проекта, 0.6.51
+  - Reference: windows-onboarding-033 / K001 / implementation
+  - Файлы: src/ui/index.html, src/ui/startup.mjs, tests/startup-ui.test.mjs, package.json, package-lock.json, docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/RELEASE.md
+- [TODO] K002: Парный выпуск 0.6.51 — Ожидает
+  - Git Commit: [PENDING] feat: Парный выпуск 0.6.51
+  - Reference: windows-onboarding-033 / K002 / implementation
+  - Файлы: docs/modules/first-run-onboarding.md, docs/WORKSPACE_SETUP.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/RELEASE.md
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: актуализировать выпуск 0.6.50
   - Reference: windows-onboarding-033 / DOCS / implementation
   - Файлы: AGENTS.md, README.md, docs/WORKFLOW_START.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/CLEAN_INSTALL.md, docs/TRANSFER_TO_WINDOWS.md, docs/RELEASE.md, docs/WORKSPACE_SETUP.md, docs/CONTEXT_DELIVERY.md, docs/modules/runtime-lifecycle.md, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md, docs/modules/chatgpt-dom-compatibility.md
 
