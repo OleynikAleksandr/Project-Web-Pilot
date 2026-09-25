@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 108,
+  "plan_revision": 110,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
@@ -1324,8 +1324,8 @@
       "id": "I003",
       "title": "Закрашивать поле ввода вместо внешней подложки",
       "why": "Уточнение пользователя",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "windows-onboarding-033",
         "task_id": "I003",
@@ -1516,7 +1516,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 108
+Revision: 110
 
 ## Цель
 
@@ -1690,8 +1690,8 @@ Revision: 108
   - Git Commit: [DONE] fix: Независимое обновление плана сессии и версия 0.6.49
   - Reference: windows-onboarding-033 / I001 / implementation
   - Файлы: src/plan-monitor.mjs, tests/plan-monitor.test.mjs, src/main.mjs, tests/electron-smoke.mjs, package.json, package-lock.json, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/RELEASE.md
-- [TODO] I003: Закрашивать поле ввода вместо внешней подложки — Ожидает
-  - Git Commit: [PENDING] fix: закрашивать поле ввода вместо подложки
+- [DONE] I003: Закрашивать поле ввода вместо внешней подложки — Завершено
+  - Git Commit: [DONE] fix: закрашивать поле ввода вместо подложки
   - Reference: windows-onboarding-033 / I003 / implementation
   - Файлы: src/chatgpt-colors.mjs, tests/electron-smoke.mjs, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] I002: Сверить парный выпуск 0.6.49 — Ожидает

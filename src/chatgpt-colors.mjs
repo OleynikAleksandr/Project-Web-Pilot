@@ -19,7 +19,6 @@ export function validateColorChange(input) {
 }
 const role = name => ':is(' + CHATGPT_SELECTORS[name] + ')';
 const composerEditor = ':is(' + CHATGPT_SELECTORS.editor + ')';
-const composerSurface = ':is(#composer-background,[data-testid="composer"],[class*="bg-(--composer-surface-primary)"],[class*="ComposerModeSurface-"]):has(' + composerEditor + ')';
 const userContent = role('user') + ',' + role('user') + ' *,.user-message-bubble,.user-message-bubble *,.user-message-bubble-color,.user-message-bubble-color *';
 const editableContent = '[contenteditable="true"],[contenteditable="true"] *,#prompt-textarea,#prompt-textarea *';
 const assistantContent = ':is(' + role('assistant') + ',main :is(.markdown,.prose,[class*="markdown-new-styling"]):not(:where(' + userContent + ',' + editableContent + ')))';
@@ -36,8 +35,8 @@ export function chatColorsCSS(input) {
   }
   if (colors.composerBackground) {
     const c = colors.composerBackground;
-    rules.push(composerSurface + '{--composer-surface:' + c + '!important;--composer-surface-primary:' + c + '!important;background:' + c + '!important}');
-    rules.push(composerSurface + ' ' + composerEditor + '{background:transparent!important}');
+    // Color the editable field itself, never the surrounding surface or controls.
+    rules.push(composerEditor + '{background:' + c + '!important}');
   }
   for (const name of ['user', 'assistant']) {
     const c = colors[name + 'Text'];
