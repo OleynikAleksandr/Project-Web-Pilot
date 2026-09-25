@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 116,
+  "plan_revision": 118,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
@@ -1382,8 +1382,8 @@
       "id": "J001",
       "title": "Заливка всей округлой плашки composer, версия 0.6.50",
       "why": "Заливка всей округлой плашки composer, версия 0.6.50",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "windows-onboarding-033",
         "task_id": "J001",
@@ -1580,7 +1580,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 116
+Revision: 118
 
 ## Цель
 
@@ -1762,8 +1762,8 @@ Revision: 116
   - Git Commit: [DONE] fix: Сверить парный выпуск 0.6.49
   - Reference: windows-onboarding-033 / I002 / implementation
   - Файлы: docs/RELEASE.md, docs/VERIFICATION.md
-- [TODO] J001: Заливка всей округлой плашки composer, версия 0.6.50 — Ожидает
-  - Git Commit: [PENDING] fix: Заливка всей округлой плашки composer, версия 0.6.50
+- [DONE] J001: Заливка всей округлой плашки composer, версия 0.6.50 — Завершено
+  - Git Commit: [DONE] fix: Заливка всей округлой плашки composer, версия 0.6.50
   - Reference: windows-onboarding-033 / J001 / implementation
   - Файлы: src/chatgpt-colors.mjs, tests/electron-smoke.mjs, package.json, package-lock.json, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/RELEASE.md
 - [TODO] J002: Парная сборка 0.6.50 и визуальная проверка — Ожидает

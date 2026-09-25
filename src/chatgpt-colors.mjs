@@ -19,6 +19,9 @@ export function validateColorChange(input) {
 }
 const role = name => ':is(' + CHATGPT_SELECTORS[name] + ')';
 const composerEditor = ':is(' + CHATGPT_SELECTORS.editor + ')';
+// data-composer-body owns the visible rounded capsule; ModeSurface is its backdrop.
+// Legacy surfaces are used only when they do not wrap a modern capsule.
+const composerSurface = ':is([data-composer-body],#composer-background,[data-testid="composer"],[class*="bg-(--composer-surface-primary)"]):has(' + composerEditor + '):not(:has([data-composer-body]))';
 const userContent = role('user') + ',' + role('user') + ' *,.user-message-bubble,.user-message-bubble *,.user-message-bubble-color,.user-message-bubble-color *';
 const editableContent = '[contenteditable="true"],[contenteditable="true"] *,#prompt-textarea,#prompt-textarea *';
 const assistantContent = ':is(' + role('assistant') + ',main :is(.markdown,.prose,[class*="markdown-new-styling"]):not(:where(' + userContent + ',' + editableContent + ')))';
@@ -35,8 +38,8 @@ export function chatColorsCSS(input) {
   }
   if (colors.composerBackground) {
     const c = colors.composerBackground;
-    // Color the editable field itself, never the surrounding surface or controls.
-    rules.push(composerEditor + '{background:' + c + '!important}');
+    rules.push(composerSurface + '{background:' + c + '!important}');
+    rules.push(composerSurface + ' ' + composerEditor + '{background:transparent!important}');
   }
   for (const name of ['user', 'assistant']) {
     const c = colors[name + 'Text'];
