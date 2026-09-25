@@ -2044,3 +2044,9 @@ continue → chooseWorkspace без beginCreate и переход к preview. О
 ## Workflow Kit 1.4.12 — scope 038 / T004
 
 Linux VM Cowork, Node 22.23.2: полный `node --test tests/*.test.mjs` — 350 тестов, 342 PASS, 8 SKIP, 0 FAIL. Новый тест повторяет путь агента: `plan:create --session` с проверкой создаёт план в `by-session`; `readSessionPlans` показывает plan_id и задачи, `task:start`/`commit` работают, WorkspaceSetup.ready даёт ready с проверкой полного контекста этого плана, Доктор без замечаний, дерево чистое. На коде 1.4.11 тот же тест падает (plan_id = null) — это воспроизведение живого дефекта 0.6.52. Симулированный upgrade проверен для 1.4.0 и 1.4.11. Тесты сайдбара: уведомление об устаревшем Kit ведёт в retry/preview, статус инструментов доставленного чата берётся из последнего статуса runtime.
+
+## Парный выпуск 0.6.53 — scope 038 / T006
+
+На Mac (Node 22.17.0, arm64) последовательно: `npm test` — 350 тестов, 348 PASS, 2 SKIP, 0 FAIL (108 с); `npm run smoke` — PASSED на TEST FIXTURE (liveChatGPT=false, sessionPlans/preparedPlans/projectDoctor true, fullContextBytes 75092); `npm run build` — exit 0. Корневой и установленный app: CFBundleShortVersionString 0.6.53; `Contents/Resources/resources/workflow-kit` — VERSION 1.4.12, 35 файлов, SHA-256 содержимого `5464b2c1…f5f119` как у источника.
+
+Проверка упакованной копии (Linux VM, Kit и project-doctor скопированы из собранного `.app`): установка в пустой Git-проект — 1.4.12, recovery `kit 1.4.12`; `plan:create --session` → `.harness/plans/by-session/<сессия>.md`, `listPlans` возвращает todo-plan и план сессии, `sessionPlanView` показывает scope `visible-plan-001` ACTIVE, `task:start`/`commit` T001 → DONE, дерево чистое, Доктор — 0 замечаний. Тестовый проект 02WebPilot к моменту проверки был очищен пользователем, поэтому живое повторение исходной сессии не выполнялось. Живой ChatGPT, обновление реального проекта 1.4.11 через интерфейс и native Windows не проверялись.

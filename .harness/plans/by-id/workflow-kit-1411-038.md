@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 19,
+  "plan_revision": 21,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-kit-1411-038",
@@ -360,8 +360,8 @@
       ],
       "verification_ids": [],
       "expected_commit_message": "feat: Парный выпуск 0.6.53",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workflow-kit-1411-038",
         "task_id": "T006",
@@ -429,7 +429,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-kit-1411-038
 Current Task: нет
-Revision: 19
+Revision: 21
 
 ## Цель
 
@@ -465,8 +465,8 @@ Revision: 19
   - Git Commit: [DONE] chore: версия 0.6.53
   - Reference: workflow-kit-1411-038 / T005 / implementation
   - Файлы: package.json, package-lock.json
-- [TODO] T006: Парный выпуск 0.6.53 — Ожидает
-  - Git Commit: [PENDING] feat: Парный выпуск 0.6.53
+- [DONE] T006: Парный выпуск 0.6.53 — Завершено
+  - Git Commit: [DONE] feat: Парный выпуск 0.6.53
   - Reference: workflow-kit-1411-038 / T006 / implementation
   - Файлы: docs/RELEASE.md, docs/VERIFICATION.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает

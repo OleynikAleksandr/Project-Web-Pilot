@@ -483,3 +483,16 @@ identity; предыдущий Contents установленной копии с
 | Windows x64 | 316463282 | `cb7586160c020dc2dccd2719afc47861c9024692a745f399db208289172ec839` |
 
 ASAR: macOS `07fa66abf30614d04053cc5b257423a5653f78ff77875f936bc324ddf4ff0212`, Windows `21459b07b0ec3eafbd399687356acd11f47b14e4568ff15669c107fad7be7fb0`.
+
+## Локальный парный выпуск 0.6.53 — 25.09.2026
+
+Поставляемый Workflow Kit — **1.4.12** (1.4.11 из CodeAppServer `badcf20` + исправление планов сессий): план, созданный `plan:create --session` из NONE, хранится в `.harness/plans/by-session/<сессия>.md` и теперь виден `listPlans`, сайдбару, готовности проекта, полному контексту и Доктору. Приложение принимает проекты 1.4.11 как обновляемые: уведомление в сайдбаре предлагает «Обновить Workflow Kit» (preview → резервная копия → upgrade). Статус локальных инструментов в уже доставленном чате берётся из фактического состояния runtime (MCP + туннель), а не только из флага сессии. Собственный Kit репозитория по-прежнему 1.4.1.
+
+`npm run build` прошла на Mac 18:04–18:08 UTC, source commit `f8c11a8`, 94 исходных файла совпали с упакованными. Корневой `Project Web Pilot.app` — 0.6.53 (inode 406600483 сохранён); `/Applications/Project Web Pilot.app` обновлена штатным installMacBundle (inode 406571340 сохранён, прежний Contents — в `.harness/runtime/release-backups/mac-K3LhAA`). Поставка: `~/Downloads/WebPilot-0.6.53/`, `shasum -c SHA256SUMS.txt` — OK. Native Windows не запускалась, GitHub не публиковался.
+
+| Платформа | Размер, байт | SHA-256 ZIP |
+| --- | ---: | --- |
+| macOS arm64 | 181201503 | `d3629f05b263b498297c76ee179731310957b0ef25a560b40dc1ee036116abaa` |
+| Windows x64 | 316463768 | `bb09b89a0a5a6669326dbf176a3fe56df2f77d6c78f6c52bb68576e703e0f7b4` |
+
+ASAR: macOS `2de04d7ce060c6e557de38ad1402fe5946a08f8c9587cec8ed2a31492255c523`, Windows `8681534787590d7516e030ada82b8daaa852fc610db2f61482730246a8deb995`.
