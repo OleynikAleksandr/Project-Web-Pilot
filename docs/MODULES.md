@@ -62,3 +62,7 @@ Scope windows-onboarding-033: общий `startup-platform.mjs` связывае
 ## Совместимость ChatGPT DOM — 0.6.48
 
 Контракт: [ChatGPT DOM](modules/chatgpt-dom-compatibility.md). Фасад `createChatGPTDOM` объединяет селекторы режима, composer, сообщений, busy и прокрутки; потребители — composer/context, диагностика, цвета, фильтр и автопрокрутка. Новый переходный URL не является ошибкой и не вызывает повторную отправку. Lifecycle UI и autostart служб описаны в [runtime-lifecycle](modules/runtime-lifecycle.md).
+
+## PlanMonitor и цвет editor — 0.6.49
+
+Read-only PlanMonitor входит в модуль сессий: `docs/modules/workspace-sessions.md`. Вывод плана отделён от контроллера доставки; смена задач не отправляет recovery. В ChatColors composerBackground применён к editor, а не внешнему контейнеру.

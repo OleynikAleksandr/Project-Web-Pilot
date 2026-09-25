@@ -57,3 +57,7 @@ Scope session-opening-performance-029 реализован в 0.6.29 / Workflow 
 ## Текущий локальный выпуск — 0.6.48 / 25.09.2026
 
 Парная сборка macOS arm64 / Windows x64: `~/Downloads/WebPilot-0.6.48/`; постоянный корневой app обновлён, отдельные Desktop-копии не обновлялись. Общий контракт — `docs/modules/chatgpt-dom-compatibility.md`: новый ChatGPT DOM, переходные URL, фильтр, цвета, автопрокрутка и lifecycle. Живые Chat/Work recovery и MCP hide/show проверены на macOS; Node 335 PASS / 2 SKIP, Electron smoke PASSED. Закрытие UI сохраняет MCP/tunnel; службы стартуют при login. Windows native/reboot не проверены; VM и Computer Use не запускать. План 033 продолжен адресованно; завершение DOCS не архивирует его. GitHub в этом поручении не публиковался.
+
+## Текущий локальный выпуск — 0.6.49
+
+Поставка Mac/Windows — `~/Downloads/WebPilot-0.6.49/`. Kit остаётся 1.4.1. PlanMonitor читает план независимо от ContextSession; composerBackground красит editor, а не внешнюю поверхность. Реальные task:start/commit на fixture проверены Electron smoke при отменённом контроллере доставки, без дополнительного recovery. Формат сессий/проектов и службы не изменены. Native Windows и пользовательская приёмка текущей сборки отдельно; VM не запускать.
