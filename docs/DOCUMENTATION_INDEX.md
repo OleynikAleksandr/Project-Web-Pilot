@@ -135,3 +135,5 @@ Scope `stable-mcp-connector-036` завершает интеграцию scope 0
 Текущая локальная поставка 0.6.48: [RELEASE](RELEASE.md); живые проверки и ограничения Windows/login — [VERIFICATION](VERIFICATION.md); контракт DOM — [chatgpt-dom-compatibility](modules/chatgpt-dom-compatibility.md). Исторические версии в документах сохраняются как evidence, а не текущая поставка.
 
 Текущий выпуск 0.6.49: RELEASE.md и VERIFICATION.md. Контракт независимого прогресса и цвета поля — `docs/modules/workspace-sessions.md`. Workflow Kit 1.4.1 сохраняется.
+
+Текущий выпуск — 0.6.50: RELEASE.md, VERIFICATION.md. Контракт полной плашки — `docs/modules/workspace-sessions.md`; история 0.6.49 сохраняет причины исправления.

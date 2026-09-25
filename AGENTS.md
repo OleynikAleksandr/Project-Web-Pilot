@@ -61,3 +61,7 @@ Scope session-opening-performance-029 реализован в 0.6.29 / Workflow 
 ## Текущий локальный выпуск — 0.6.49
 
 Поставка Mac/Windows — `~/Downloads/WebPilot-0.6.49/`. Kit остаётся 1.4.1. PlanMonitor читает план независимо от ContextSession; composerBackground красит editor, а не внешнюю поверхность. Реальные task:start/commit на fixture проверены Electron smoke при отменённом контроллере доставки, без дополнительного recovery. Формат сессий/проектов и службы не изменены. Native Windows и пользовательская приёмка текущей сборки отдельно; VM не запускать.
+
+## Текущий локальный выпуск — 0.6.50
+
+Парные ZIP — `~/Downloads/WebPilot-0.6.50/`. Исправлена полная скруглённая composer-плашка через data-composer-body; редактор внутри прозрачный, внешний ModeSurface не закрашивается. Живые Chat и Work визуально проверены. Kit 1.4.1, PlanMonitor сохранён. Обновлены корневой app и установленная копия /Applications/Project Web Pilot.app с сохранением identity. Windows native не запускалась.

@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 121,
+  "plan_revision": 123,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Совместимость с новым ChatGPT DOM, плавная автопрокрутка, полная версия сайдбара, независимые MCP/tunnel и парный выпуск 0.6.48",
   "acceptance_criteria": [
     "Windows показывает и выполняет шаги компонентов, туннеля и создания проекта после входа",
@@ -1441,8 +1441,8 @@
       "expected_commit_message": "fix: Парная сборка 0.6.50 и визуальная проверка"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "windows-onboarding-033",
         "task_id": "DOCS",
@@ -1577,10 +1577,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 121
+Revision: 123
 
 ## Цель
 
@@ -1770,8 +1770,8 @@ Revision: 121
   - Git Commit: [DONE] fix: Парная сборка 0.6.50 и визуальная проверка
   - Reference: windows-onboarding-033 / J002 / implementation
   - Файлы: docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/RELEASE.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать выпуск 0.6.50
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать выпуск 0.6.50
   - Reference: windows-onboarding-033 / DOCS / implementation
   - Файлы: AGENTS.md, README.md, docs/WORKFLOW_START.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/CLEAN_INSTALL.md, docs/TRANSFER_TO_WINDOWS.md, docs/RELEASE.md, docs/WORKSPACE_SETUP.md, docs/CONTEXT_DELIVERY.md, docs/modules/runtime-lifecycle.md, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md, docs/modules/chatgpt-dom-compatibility.md
 

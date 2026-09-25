@@ -66,3 +66,7 @@ Scope windows-onboarding-033: общий `startup-platform.mjs` связывае
 ## PlanMonitor и цвет editor — 0.6.49
 
 Read-only PlanMonitor входит в модуль сессий: `docs/modules/workspace-sessions.md`. Вывод плана отделён от контроллера доставки; смена задач не отправляет recovery. В ChatColors composerBackground применён к editor, а не внешнему контейнеру.
+
+## Плашка ввода — 0.6.50
+
+ChatColors выбирает data-composer-body, владеющий видимым фоном и скруглением; editor прозрачен, внешняя подложка не затронута. Контракт в `docs/modules/workspace-sessions.md`, живые доказательства в VERIFICATION.md.
