@@ -1939,3 +1939,5 @@ H002: проверяются вставка streaming activity, hide/show, со�
 H003: reverse-layout regression проверяет отрицательные координаты ручного чтения, один scroll write для возврата вниз, 20 изменений контента без дополнительных записей, остановку до queued frame и отмену кадров при disconnect. Прежний тест принудительного исправления native scroll заменён проверкой отсутствия обратной связи scroll → scroll.
 
 H003W: проверка Python-функции регистрации на временной папке с пробелами и mock winreg подтверждает HKCU, кавычки, стабильную копию control, повторную регистрацию, отсутствие ключей в launcher и отказ без pythonw. Фактическая регистрация и reboot на Windows этим тестом не подтверждаются.
+
+H004: Electron smoke дополнен реальным Chromium computed-style для новых user/assistant/composer wrappers, hide/show структурной карточки, полной версией badge и column-reverse scroll probe. Probe проверяет 20 изменений без лишних scroll writes и сохранение отрицательной позиции ручного чтения.

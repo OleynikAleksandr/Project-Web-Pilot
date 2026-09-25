@@ -50,6 +50,7 @@ const phases = {
   preparing: ['Подготавливаем подключение', 'Проверяем локальные инструменты и связь с ChatGPT.', 'working'],
   'loading-context': ['Получаем контекст проекта', 'Готовим полный пакет для первого сообщения.', 'working'],
   'waiting-login': ['Войдите в ChatGPT', 'После входа полный контекст отправится автоматически.', 'working'],
+  'waiting-experience': ['Не удалось определить режим ChatGPT', 'Откройте новый Chat или Work. Web Pilot ожидает подтверждения выбранного режима.', 'working'],
   'waiting-composer': ['Ожидаем поле сообщения', 'Откройте доступное поле ChatGPT. Старт продолжится автоматически.', 'working'],
   'waiting-draft': ['В поле есть черновик', 'Закончите или уберите свой черновик. Стартовое сообщение подождёт.', 'working'],
   'waiting-generation': ['Ждём завершения ответа', 'ChatGPT отвечает. Передача контекста начнётся, когда поле освободится.', 'working'],
@@ -168,6 +169,7 @@ function renderPrepared(state) {
 function render(state) {
   progress.show(operationLabel(state ?? {}, pendingAction));
   if (!state) return;
+  $('prototype-version').textContent = `ПРОТОТИП ${state.version ?? ''}`.trim();
   for (const list of $('projects').querySelectorAll('.sessions')) {
     if (!list.closest('[hidden]')) sessionScroll.set(list.dataset.workspace, list.scrollTop);
   }

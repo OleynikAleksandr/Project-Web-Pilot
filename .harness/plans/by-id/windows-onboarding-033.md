@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 93,
+  "plan_revision": 95,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
@@ -1213,8 +1213,8 @@
         "Версия сайдбара и lifecycle интерфейса; реальная DOM структура 25.09.2026, сохранение защит от повторной отправки и фоновых служб"
       ],
       "expected_commit_message": "fix: Версия сайдбара и lifecycle интерфейса",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "windows-onboarding-033",
         "task_id": "H004",
@@ -1379,7 +1379,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 93
+Revision: 95
 
 ## Цель
 
@@ -1537,8 +1537,8 @@ Revision: 93
   - Git Commit: [DONE] fix: автозапуск Windows MCP и туннеля при входе
   - Reference: windows-onboarding-033 / H003W / implementation
   - Файлы: resources/runtime-control/windows-control.py, tests/windows-autostart.test.mjs, docs/modules/chatgpt-dom-compatibility.md, docs/modules/runtime-lifecycle.md, docs/VERIFICATION.md
-- [TODO] H004: Версия сайдбара и lifecycle интерфейса — Ожидает
-  - Git Commit: [PENDING] fix: Версия сайдбара и lifecycle интерфейса
+- [DONE] H004: Версия сайдбара и lifecycle интерфейса — Завершено
+  - Git Commit: [DONE] fix: Версия сайдбара и lifecycle интерфейса
   - Reference: windows-onboarding-033 / H004 / implementation
   - Файлы: src/ui/index.html, src/ui/sidebar.mjs, src/main.mjs, tests/electron-smoke.mjs, package.json, package-lock.json, docs/modules/chatgpt-dom-compatibility.md, docs/architecture/ARCHITECTURE.md, docs/DOCUMENTATION_INDEX.md, docs/VERIFICATION.md, docs/RELEASE.md
 - [TODO] H005: Парная сборка и сверка 0.6.48 — Ожидает

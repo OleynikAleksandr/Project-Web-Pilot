@@ -1095,12 +1095,21 @@ async function createWindow() {
   });
   window.on('resize', layout);
   window.on('closed', () => {
-    ++navigationId; startupClipboard?.dispose(); startupClipboard = null; startupFlow?.dispose(); startupFlow = null; controller?.cancel(); clearInterval(interval); contextCache.clear(); workspaceSetup.invalidateReadiness();
-    colorEditor?.close(); chatColorStyles?.dispose();
-    void chromiumDiagnostics?.stop(); chromiumDiagnostics = null;
-    if (archiveWindow && !archiveWindow.isDestroyed()) archiveWindow.close();
-    for (const view of [sidebar, browser]) if (!view.webContents.isDestroyed()) view.webContents.close();
-    window = null;
+    try {
+      ++navigationId; startupClipboard?.dispose(); startupClipboard = null; startupFlow?.dispose(); startupFlow = null;
+      controller?.cancel(); clearInterval(interval); contextCache.clear(); workspaceSetup.invalidateReadiness();
+      chatColorStyles?.dispose();
+      void chromiumDiagnostics?.stop().catch(() => {}); chromiumDiagnostics = null;
+    } finally {
+      // Auth/help popups and hidden auxiliary windows must not keep the UI alive.
+      // Independent MCP/tunnel processes are deliberately not stopped here.
+      for (const child of BrowserWindow.getAllWindows()) if (!child.isDestroyed()) child.destroy();
+      for (const view of [sidebar, browser]) if (view && !view.webContents.isDestroyed())
+        view.webContents.close({ waitForBeforeUnload: false });
+      window = null;
+      if (!smoke) app.quit();
+    }
+
   });
   layout();
   // Observe the first request, including failure before a document ever loads.
