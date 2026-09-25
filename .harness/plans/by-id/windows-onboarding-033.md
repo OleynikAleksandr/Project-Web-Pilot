@@ -4,13 +4,13 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 81,
+  "plan_revision": 82,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
-  "objective": "Завершить принятый пользователем план последним дополнением: отдельно объяснить режимы разрешений MCP и путь Settings → Plugins → своё подключение → Permissions в общем мастере Mac/Windows; доставить обновлённую инструкцию парным выпуском 0.6.45 и актуализировать документы.",
+  "delivery_status": "IN_PROGRESS",
+  "objective": "Совместимость с новым ChatGPT DOM, плавная автопрокрутка, полная версия сайдбара, независимые MCP/tunnel и парный выпуск 0.6.48",
   "acceptance_criteria": [
     "Windows показывает и выполняет шаги компонентов, туннеля и создания проекта после входа",
     "Данные подключения проходят существующее защищённое хранилище Windows; настройки сохраняются",
@@ -58,7 +58,21 @@
       "resources/workspace-setup-worker.mjs",
       "src/preload.cjs",
       "src/ui/workspace-setup.mjs",
-      "tests/project-doctor-ui.test.mjs"
+      "tests/project-doctor-ui.test.mjs",
+      "src/chatgpt-dom.mjs",
+      "src/chatgpt-composer.mjs",
+      "src/context-session.mjs",
+      "src/chromium-diagnostics.mjs",
+      "tests/chatgpt-dom.test.mjs",
+      "tests/chatgpt-composer.test.mjs",
+      "tests/context-session.test.mjs",
+      "src/chatgpt-tool-filter.mjs",
+      "src/chatgpt-colors.mjs",
+      "tests/chatgpt-tool-filter.test.mjs",
+      "tests/chatgpt-colors.test.mjs",
+      "src/chatgpt-auto-scroll.mjs",
+      "tests/chatgpt-auto-scroll.test.mjs",
+      "src/ui/sidebar.mjs"
     ],
     "documentation_paths": [
       "AGENTS.md",
@@ -78,9 +92,10 @@
       "docs/modules/workspace-sessions.md",
       "docs/architecture/ARCHITECTURE.md",
       "docs/VERIFICATION.md",
-      "docs/modules/first-run-onboarding.md"
+      "docs/modules/first-run-onboarding.md",
+      "docs/modules/chatgpt-dom-compatibility.md"
     ],
-    "max_functional_files_per_task": 3
+    "max_functional_files_per_task": 7
   },
   "baseline_commit": "3d5ece83f1b1a5565bf419b1da3502ed29e58891",
   "current_task_id": null,
@@ -1028,13 +1043,168 @@
       "expected_commit_message": "docs: Собрать и сверить парную поставку инструкции 0.6.45"
     },
     {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
+      "id": "H001",
+      "title": "Единый DOM adapter и доставка контекста",
+      "why": "Единый DOM adapter и доставка контекста",
+      "dependencies": [],
+      "functional_paths": [
+        "src/chatgpt-dom.mjs",
+        "src/chatgpt-composer.mjs",
+        "src/context-session.mjs",
+        "src/chromium-diagnostics.mjs",
+        "tests/chatgpt-dom.test.mjs",
+        "tests/chatgpt-composer.test.mjs",
+        "tests/context-session.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/chatgpt-dom-compatibility.md"
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "acceptance_criteria": [
+        "Единый DOM adapter и доставка контекста; реальная DOM структура 25.09.2026, сохранение защит от повторной отправки и фоновых служб"
+      ],
+      "expected_commit_message": "fix: Единый DOM adapter и доставка контекста",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "windows-onboarding-033",
+        "task_id": "H001",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "H002",
+      "title": "Структурный фильтр карточек и оформление",
+      "why": "Структурный фильтр карточек и оформление",
+      "dependencies": [
+        "H001"
+      ],
+      "functional_paths": [
+        "src/chatgpt-tool-filter.mjs",
+        "src/main.mjs",
+        "src/chatgpt-colors.mjs",
+        "tests/chatgpt-tool-filter.test.mjs",
+        "tests/chatgpt-colors.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/chatgpt-dom-compatibility.md"
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "acceptance_criteria": [
+        "Структурный фильтр карточек и оформление; реальная DOM структура 25.09.2026, сохранение защит от повторной отправки и фоновых служб"
+      ],
+      "expected_commit_message": "fix: Структурный фильтр карточек и оформление",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "windows-onboarding-033",
+        "task_id": "H002",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "H003",
+      "title": "Автопрокрутка без обратной связи и рывков",
+      "why": "Автопрокрутка без обратной связи и рывков",
+      "dependencies": [
+        "H002"
+      ],
+      "functional_paths": [
+        "src/chatgpt-auto-scroll.mjs",
+        "tests/chatgpt-auto-scroll.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/chatgpt-dom-compatibility.md"
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "acceptance_criteria": [
+        "Автопрокрутка без обратной связи и рывков; реальная DOM структура 25.09.2026, сохранение защит от повторной отправки и фоновых служб"
+      ],
+      "expected_commit_message": "fix: Автопрокрутка без обратной связи и рывков",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "windows-onboarding-033",
+        "task_id": "H003",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "H004",
+      "title": "Версия сайдбара и lifecycle интерфейса",
+      "why": "Версия сайдбара и lifecycle интерфейса",
+      "dependencies": [
+        "H003"
+      ],
+      "functional_paths": [
+        "src/ui/index.html",
+        "src/ui/sidebar.mjs",
+        "src/main.mjs",
+        "tests/electron-smoke.mjs",
+        "package.json",
+        "package-lock.json"
+      ],
+      "documentation_paths": [
+        "docs/modules/chatgpt-dom-compatibility.md"
+      ],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "acceptance_criteria": [
+        "Версия сайдбара и lifecycle интерфейса; реальная DOM структура 25.09.2026, сохранение защит от повторной отправки и фоновых служб"
+      ],
+      "expected_commit_message": "fix: Версия сайдбара и lifecycle интерфейса",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "windows-onboarding-033",
+        "task_id": "H004",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "H005",
+      "title": "Парная сборка и сверка 0.6.48",
+      "why": "Парная сборка и сверка 0.6.48",
+      "dependencies": [
+        "H004"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [],
+      "acceptance_criteria": [
+        "Парная сборка и сверка 0.6.48; реальная DOM структура 25.09.2026, сохранение защит от повторной отправки и фоновых служб"
+      ],
+      "expected_commit_message": "fix: Парная сборка и сверка 0.6.48",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "windows-onboarding-033",
+        "task_id": "H005",
+        "role": "implementation"
+      }
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "windows-onboarding-033",
         "task_id": "DOCS",
         "role": "implementation",
-        "iteration": 5
+        "iteration": 6
       },
       "dependencies": [
         "P001",
@@ -1065,7 +1235,12 @@
         "E005",
         "E006",
         "G001",
-        "G002"
+        "G002",
+        "H001",
+        "H002",
+        "H003",
+        "H004",
+        "H005"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -1135,6 +1310,11 @@
       "id": "paired-publish-045",
       "text": "19.09.2026 пользователь повторно подтвердил: отдельный блок подключения MCP должен быть и в Mac-релизе для новых пользователей; собрать новый парный релиз, актуализировать всю документацию и README и залить всё на GitHub.",
       "recorded_at": "2026-09-19T08:04:22.068358+00:00"
+    },
+    {
+      "id": "chatgpt-dom-048",
+      "text": "25.09.2026 пользователь утвердил реализацию предложенного DOM adapter, фильтра, цветов, доставки; дополнительно устранить стробирование прокрутки, показать ревизию, собрать Mac/Windows. Закрытие UI не останавливает фоновые MCP/tunnel, автозапуск сохраняется.",
+      "recorded_at": "2026-09-25T12:00:00.000Z"
     }
   ],
   "owner_session_id": "01a0b501-9a29-7b30-87a1-036ded275092",
@@ -1146,14 +1326,14 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 81
+Revision: 82
 
 ## Цель
 
-Завершить принятый пользователем план последним дополнением: отдельно объяснить режимы разрешений MCP и путь Settings → Plugins → своё подключение → Permissions в общем мастере Mac/Windows; доставить обновлённую инструкцию парным выпуском 0.6.45 и актуализировать документы.
+Совместимость с новым ChatGPT DOM, плавная автопрокрутка, полная версия сайдбара, независимые MCP/tunnel и парный выпуск 0.6.48
 
 ## Критерии приёмки
 
@@ -1291,8 +1471,28 @@ Revision: 81
   - Git Commit: [DONE] docs: Собрать и сверить парную поставку инструкции 0.6.45
   - Reference: windows-onboarding-033 / G002 / implementation
   - Файлы: docs/RELEASE.md, docs/VERIFICATION.md
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: актуализировать выпуск 0.6.45 и инструкцию MCP для обеих платформ
+- [TODO] H001: Единый DOM adapter и доставка контекста — Ожидает
+  - Git Commit: [PENDING] fix: Единый DOM adapter и доставка контекста
+  - Reference: windows-onboarding-033 / H001 / implementation
+  - Файлы: src/chatgpt-dom.mjs, src/chatgpt-composer.mjs, src/context-session.mjs, src/chromium-diagnostics.mjs, tests/chatgpt-dom.test.mjs, tests/chatgpt-composer.test.mjs, tests/context-session.test.mjs, docs/modules/chatgpt-dom-compatibility.md
+- [TODO] H002: Структурный фильтр карточек и оформление — Ожидает
+  - Git Commit: [PENDING] fix: Структурный фильтр карточек и оформление
+  - Reference: windows-onboarding-033 / H002 / implementation
+  - Файлы: src/chatgpt-tool-filter.mjs, src/main.mjs, src/chatgpt-colors.mjs, tests/chatgpt-tool-filter.test.mjs, tests/chatgpt-colors.test.mjs, docs/modules/chatgpt-dom-compatibility.md
+- [TODO] H003: Автопрокрутка без обратной связи и рывков — Ожидает
+  - Git Commit: [PENDING] fix: Автопрокрутка без обратной связи и рывков
+  - Reference: windows-onboarding-033 / H003 / implementation
+  - Файлы: src/chatgpt-auto-scroll.mjs, tests/chatgpt-auto-scroll.test.mjs, docs/modules/chatgpt-dom-compatibility.md
+- [TODO] H004: Версия сайдбара и lifecycle интерфейса — Ожидает
+  - Git Commit: [PENDING] fix: Версия сайдбара и lifecycle интерфейса
+  - Reference: windows-onboarding-033 / H004 / implementation
+  - Файлы: src/ui/index.html, src/ui/sidebar.mjs, src/main.mjs, tests/electron-smoke.mjs, package.json, package-lock.json, docs/modules/chatgpt-dom-compatibility.md
+- [TODO] H005: Парная сборка и сверка 0.6.48 — Ожидает
+  - Git Commit: [PENDING] fix: Парная сборка и сверка 0.6.48
+  - Reference: windows-onboarding-033 / H005 / implementation
+  - Файлы: docs/RELEASE.md, docs/VERIFICATION.md
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: актуализировать выпуск 0.6.45 и инструкцию MCP для обеих платформ
   - Reference: windows-onboarding-033 / DOCS / implementation
   - Файлы: AGENTS.md, README.md, docs/WORKFLOW_START.md, docs/PRODUCT.md, docs/DECISIONS.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/CLEAN_INSTALL.md, docs/TRANSFER_TO_WINDOWS.md, docs/RELEASE.md, docs/WORKSPACE_SETUP.md, docs/CONTEXT_DELIVERY.md, docs/modules/runtime-lifecycle.md, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/first-run-onboarding.md
 
