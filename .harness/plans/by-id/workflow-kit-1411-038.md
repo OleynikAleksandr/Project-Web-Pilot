@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 7,
+  "plan_revision": 9,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-kit-1411-038",
@@ -209,8 +209,8 @@
       "expected_commit_message": "feat: поставлять Workflow Kit 1.4.11"
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workflow-kit-1411-038",
         "task_id": "T002",
@@ -317,7 +317,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-kit-1411-038
 Current Task: нет
-Revision: 7
+Revision: 9
 
 ## Цель
 
@@ -337,8 +337,8 @@ Revision: 7
   - Git Commit: [DONE] feat: поставлять Workflow Kit 1.4.11
   - Reference: workflow-kit-1411-038 / T001 / implementation
   - Файлы: resources/workflow-kit/WORKFLOW.md, resources/workflow-kit/cli.mjs, resources/workflow-kit/examples/PACKAGING.md, resources/workflow-kit/examples/verify-package.mjs, resources/workflow-kit/install.mjs, resources/workflow-kit/lib/actions.mjs, resources/workflow-kit/lib/command-help.mjs, resources/workflow-kit/lib/common.mjs, resources/workflow-kit/lib/extend-plan.mjs, resources/workflow-kit/lib/git-hooks.mjs, resources/workflow-kit/lib/git.mjs, resources/workflow-kit/lib/inspection-inputs.mjs, resources/workflow-kit/lib/installation-files.mjs, resources/workflow-kit/lib/installer.mjs, resources/workflow-kit/lib/plan.mjs, resources/workflow-kit/lib/platform.mjs, resources/workflow-kit/lib/project-facts.mjs, resources/workflow-kit/lib/recovery.mjs, resources/workflow-kit/lib/session-plans.mjs, resources/workflow-kit/lib/simple-workflow.mjs, resources/workflow-kit/lib/task-files.mjs, resources/workflow-kit/lib/task-update.mjs, resources/workflow-kit/lib/transaction.mjs, resources/workflow-kit/lib/validate.mjs, resources/workflow-kit/schemas/plan.schema.json, resources/workflow-kit/schemas/workflow.schema.json, resources/workflow-kit/templates/AGENTS.md, resources/workflow-kit/templates/ARCHITECTURE.md, resources/workflow-kit/templates/CONTINUE.md, resources/workflow-kit/templates/PLAN.md, resources/workflow-kit/templates/PRODUCT.md, resources/workflow-kit/templates/PROTOTYPE.md, resources/workflow-kit/templates/SPEC.md, resources/workflow-kit/templates/STAGES.md, resources/workflow-kit/templates/START.md, resources/workspace-setup-worker.mjs, resources/project-doctor/core.mjs, src/ui/sidebar.mjs, tests/workflow-kit-source.test.mjs, tests/workspace-setup.test.mjs, tests/project-doctor.test.mjs, tests/electron-smoke.mjs, tests/workflow-kit-recovery.test.mjs, docs/modules/workflow-kit-recovery.md, docs/WORKSPACE_SETUP.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/DOCUMENTATION_INDEX.md
-- [TODO] T002: Версия 0.6.52 — Ожидает
-  - Git Commit: [PENDING] chore: версия 0.6.52
+- [DONE] T002: Версия 0.6.52 — Завершено
+  - Git Commit: [DONE] chore: версия 0.6.52
   - Reference: workflow-kit-1411-038 / T002 / implementation
   - Файлы: package.json, package-lock.json
 - [TODO] T003: Парный выпуск 0.6.52 — Ожидает
