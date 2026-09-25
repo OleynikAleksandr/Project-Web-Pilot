@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 88,
+  "plan_revision": 89,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
@@ -72,7 +72,9 @@
       "tests/chatgpt-colors.test.mjs",
       "src/chatgpt-auto-scroll.mjs",
       "tests/chatgpt-auto-scroll.test.mjs",
-      "src/ui/sidebar.mjs"
+      "src/ui/sidebar.mjs",
+      "resources/runtime-control/windows-control.py",
+      "tests/windows-autostart.test.mjs"
     ],
     "documentation_paths": [
       "AGENTS.md",
@@ -1135,8 +1137,7 @@
         "docs/RELEASE.md"
       ],
       "verification_ids": [
-        "suite",
-        "electron-smoke"
+        "suite"
       ],
       "acceptance_criteria": [
         "Автопрокрутка без обратной связи и рывков; реальная DOM структура 25.09.2026, сохранение защит от повторной отправки и фоновых служб"
@@ -1151,11 +1152,43 @@
       }
     },
     {
+      "id": "H003W",
+      "title": "Автозапуск Windows MCP и туннеля при входе",
+      "why": "В payload отсутствовал постоянный автозапуск",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "windows-onboarding-033",
+        "task_id": "H003W",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "H003"
+      ],
+      "functional_paths": [
+        "resources/runtime-control/windows-control.py",
+        "tests/windows-autostart.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/chatgpt-dom-compatibility.md",
+        "docs/modules/runtime-lifecycle.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [
+        "suite"
+      ],
+      "acceptance_criteria": [
+        "HKCU автозапуск без admin/секретов, стабильный private launcher, закрытие UI не вызывает stop"
+      ],
+      "expected_commit_message": "fix: автозапуск Windows MCP и туннеля при входе"
+    },
+    {
       "id": "H004",
       "title": "Версия сайдбара и lifecycle интерфейса",
       "why": "Версия сайдбара и lifecycle интерфейса",
       "dependencies": [
-        "H003"
+        "H003",
+        "H003W"
       ],
       "functional_paths": [
         "src/ui/index.html",
@@ -1255,6 +1288,7 @@
         "H001",
         "H002",
         "H003",
+        "H003W",
         "H004",
         "H005"
       ],
@@ -1345,7 +1379,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 88
+Revision: 89
 
 ## Цель
 
@@ -1499,6 +1533,10 @@ Revision: 88
   - Git Commit: [PENDING] fix: Автопрокрутка без обратной связи и рывков
   - Reference: windows-onboarding-033 / H003 / implementation
   - Файлы: src/chatgpt-auto-scroll.mjs, tests/chatgpt-auto-scroll.test.mjs, docs/modules/chatgpt-dom-compatibility.md, docs/architecture/ARCHITECTURE.md, docs/DOCUMENTATION_INDEX.md, docs/VERIFICATION.md, docs/RELEASE.md
+- [TODO] H003W: Автозапуск Windows MCP и туннеля при входе — Ожидает
+  - Git Commit: [PENDING] fix: автозапуск Windows MCP и туннеля при входе
+  - Reference: windows-onboarding-033 / H003W / implementation
+  - Файлы: resources/runtime-control/windows-control.py, tests/windows-autostart.test.mjs, docs/modules/chatgpt-dom-compatibility.md, docs/modules/runtime-lifecycle.md, docs/VERIFICATION.md
 - [TODO] H004: Версия сайдбара и lifecycle интерфейса — Ожидает
   - Git Commit: [PENDING] fix: Версия сайдбара и lifecycle интерфейса
   - Reference: windows-onboarding-033 / H004 / implementation
