@@ -10,6 +10,8 @@ import { nodeExecutableCandidates } from '../src/platform.mjs';
 import { VERSION } from '../resources/workflow-kit/lib/common.mjs';
 import { PROJECT_CONTINUATION_OBJECTIVE } from '../resources/workflow-kit/lib/plan.mjs';
 import { fileURLToPath } from 'node:url';
+import { readSessionPlans } from '../src/session-plans.mjs';
+import { inspectProject as inspectDoctor } from '../resources/project-doctor/core.mjs';
 const environment = { ...process.env, GIT_AUTHOR_NAME: 'Web Pilot Test', GIT_AUTHOR_EMAIL: 'test@example.invalid', GIT_COMMITTER_NAME: 'Web Pilot Test', GIT_COMMITTER_EMAIL: 'test@example.invalid' };
 for (const key of ['GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_COMMON_DIR', 'GIT_OBJECT_DIRECTORY', 'GIT_ALTERNATE_OBJECT_DIRECTORIES', 'GIT_PREFIX']) delete environment[key];
 async function fixture(t) {
@@ -330,7 +332,7 @@ test('one inspection recovers each canonical plan once and refuses concurrent in
 });
 
 
-test('compatible 1.4.0 upgrades to the bundled Kit and preserves canonical session plans', async t => {
+for (const legacy of ['1.4.0', '1.4.11']) test(`compatible ${legacy} upgrades to the bundled Kit and preserves canonical session plans`, async t => {
   const { setup, workspace } = await create(t);
   const { createScope } = await import('../resources/workflow-kit/lib/actions.mjs');
   const { withSessionPlan, listPlans } = await import('../resources/workflow-kit/lib/session-plans.mjs');
@@ -341,9 +343,9 @@ test('compatible 1.4.0 upgrades to the bundled Kit and preserves canonical sessi
   }));
   const originals = await Promise.all(listPlans(workspace).map(async p => [p.file, await fs.readFile(path.join(workspace, p.file))]));
   const manifestFile = path.join(workspace, '.harness/kit-manifest.json');
-  const manifest = JSON.parse(await fs.readFile(manifestFile, 'utf8')); manifest.version = '1.4.0';
+  const manifest = JSON.parse(await fs.readFile(manifestFile, 'utf8')); manifest.version = legacy;
   const commonPath = path.join(workspace, '.harness/kit/lib/common.mjs');
-  const oldCommon = (await fs.readFile(commonPath, 'utf8')).replace(`VERSION = '${VERSION}'`, "VERSION = '1.4.0'");
+  const oldCommon = (await fs.readFile(commonPath, 'utf8')).replace(`VERSION = '${VERSION}'`, `VERSION = '${legacy}'`);
   await fs.writeFile(commonPath, oldCommon);
   manifest.files.find(entry => entry.path === '.harness/kit/lib/common.mjs').hash = sha(oldCommon);
   await fs.writeFile(manifestFile, JSON.stringify(manifest, null, 2) + '\n');
@@ -383,6 +385,37 @@ test('real installation of the development Kit upgrades to the bundled Kit and k
   assert.equal(result.ready, true, JSON.stringify(result)); assert.equal(result.version, VERSION);
   for (const [file, bytes] of originals) assert.deepEqual(await fs.readFile(path.join(workspace, file)), bytes, file);
   for (const template of ['PROTOTYPE', 'PLAN', 'SPEC', 'CONTINUE', 'STAGES']) await fs.stat(path.join(workspace, '.harness/kit/templates', template + '.md'));
+  assert.equal(git(workspace, 'status', '--porcelain'), '');
+});
+
+test('plan:create for an addressed session is visible to the sidebar, readiness and Doctor', async t => {
+  const { setup, workspace } = await create(t);
+  const sessionId = 'web-pilot-plan-create-session';
+  const run = (...args) => JSON.parse(execFileSync(process.execPath, ['scripts/workflow.mjs', ...args, '--session', sessionId],
+    { cwd: workspace, env: environment, encoding: 'utf8' }));
+  await fs.mkdir(path.join(workspace, 'docs/planning'), { recursive: true });
+  await fs.writeFile(path.join(workspace, 'docs/planning/prototype.md'), '# Прототип\n\n## Результат\nФайл result.txt.\n');
+  await fs.mkdir(path.join(workspace, '.harness/runtime'), { recursive: true });
+  await fs.writeFile(path.join(workspace, '.harness/runtime/plan.json'), JSON.stringify({
+    id: 'visible-plan-001', spec: 'docs/planning/prototype.md', objective: 'Проверить видимость плана сессии', stack: 'Node.js',
+    checks: [{ id: 'node', executable: 'node', args: ['--version'] }],
+    tasks: [{ id: 'T001', title: 'Создать результат', files: ['result.txt'], checks: ['node'], acceptance: ['result.txt создан'] }],
+  }));
+  // The real agent path: configuration is applied first, so the plan lives at the session address.
+  assert.equal(run('plan:create', '--input', '.harness/runtime/plan.json').ok, true);
+  const planFile = `.harness/plans/by-session/${sessionId}.md`;
+  await fs.stat(path.join(workspace, planFile));
+  const view = await readSessionPlans(workspace, sessionId);
+  assert.equal(view.plan_id, 'visible-plan-001'); assert.equal(view.plan_path, planFile);
+  assert.deepEqual(view.plan.tasks.map(task => task.id), ['T001', 'DOCS']);
+  run('task:start', 'T001'); await fs.writeFile(path.join(workspace, 'result.txt'), 'ok\n');
+  assert.equal(run('commit', '--task', 'T001').ok, true);
+  const after = await readSessionPlans(workspace, sessionId);
+  assert.equal(after.plan.tasks.find(task => task.id === 'T001').commit_status, 'DONE');
+  const ready = await setup.ready(workspace);
+  assert.equal(ready.ready, true, JSON.stringify(ready));
+  assert.ok(ready.checks.some(check => check.ok && check.label.includes('Проверить видимость плана сессии')), JSON.stringify(ready.checks));
+  assert.deepEqual(inspectDoctor(workspace).issues, []);
   assert.equal(git(workspace, 'status', '--porcelain'), '');
 });
 

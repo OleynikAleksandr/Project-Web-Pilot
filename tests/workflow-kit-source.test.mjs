@@ -16,12 +16,13 @@ async function snapshot(rootUrl) {
   return { files, contents };
 }
 
-// The bundled Kit is pinned to its source: CodeAppServer+WebChatGPT, branch codex/gpt-provider-names,
-// commit badcf20 (tree 1fe409fb). The repository's own development Kit (.harness/kit) is versioned separately.
-const BUNDLED_KIT_VERSION = '1.4.11';
-const BUNDLED_KIT_SHA256 = '49dd163e025739d93eddd7603ac16c45bae1bae762b14fac69f7d42c111746e9';
+// The bundled Kit 1.4.12 = 1.4.11 from CodeAppServer+WebChatGPT, branch codex/gpt-provider-names, commit badcf20
+// (tree 1fe409fb) plus the by-session plan fix (listPlans, inspection inputs, upgrade from 1.4.4–1.4.11).
+// The repository's own development Kit (.harness/kit) is versioned separately.
+const BUNDLED_KIT_VERSION = '1.4.12';
+const BUNDLED_KIT_SHA256 = '5464b2c1528eef1de740af50558bc8db1d39cfa7838f9c032d23650fb4f5f119';
 
-test('bundled Workflow Kit exactly matches the pinned 1.4.11 source', async () => {
+test('bundled Workflow Kit exactly matches the pinned 1.4.12 source', async () => {
   const bundled = await snapshot(new URL('../resources/workflow-kit/', import.meta.url));
   assert.equal(bundled.files.length, 35);
   assert.ok(bundled.contents.get('lib/common.mjs').includes(`VERSION = '${BUNDLED_KIT_VERSION}'`));

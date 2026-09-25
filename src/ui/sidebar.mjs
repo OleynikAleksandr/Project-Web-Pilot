@@ -331,8 +331,11 @@ function render(state) {
   $('context-toggle').setAttribute('aria-label', `${contextExpanded ? 'Скрыть' : 'Показать'} подробности состояния контекста`);
   $('context-detail').textContent = state.pageLoading ? 'Загружаем чат выбранного проекта.' : detail;
   $('context-card').dataset.tone = state.pageLoading ? 'working' : tone;
-  $('state-service').textContent = context.servicesReady ? 'Готовы' : context.phase === 'preparing' ? 'Проверка…' : 'Не проверены';
-  $('state-service').dataset.ready = String(context.servicesReady);
+  // A delivered chat is reopened without restarting services; the last confirmed runtime status still applies.
+  const runtimeService = state.macRuntime?.service ?? state.windowsRuntime?.service;
+  const servicesReady = !!context.servicesReady || !!(runtimeService?.mcpReady && runtimeService?.tunnelReady);
+  $('state-service').textContent = servicesReady ? 'Готовы' : context.phase === 'preparing' ? 'Проверка…' : 'Не проверены';
+  $('state-service').dataset.ready = String(servicesReady);
   $('state-message').textContent = context.messageSent ? 'Отправлено' : context.phase === 'sending' ? 'Отправка…' : context.phase === 'send-unknown' ? 'Уточняем' : 'Ожидание';
   $('state-message').dataset.ready = String(!!context.messageSent);
   $('state-context').textContent = context.phase === 'delivered' ? 'Передан целиком' : ['stale', 'prepared-stale'].includes(context.phase) ? 'Устарел' : context.phase === 'loading-context' ? 'Подготовка…' : context.phase === 'legacy-session' ? 'Прежняя сессия' : 'Ожидание';

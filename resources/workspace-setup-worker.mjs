@@ -7,8 +7,9 @@ import { hooksDirectory, BLOCK_START, BLOCK_END } from './workflow-kit/lib/insta
 import { listPlans } from './workflow-kit/lib/session-plans.mjs';
 import { run, git, identityReady } from './workflow-kit/lib/git.mjs';
 
-// Versions the bundled installer can open or upgrade (1.4.11 upgrades 1.1.0–1.4.3).
-const supported = new Set(['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.4.0', '1.4.1', '1.4.2', '1.4.3', VERSION]);
+// Versions the bundled installer can open or upgrade (1.4.12 upgrades 1.1.0–1.4.11).
+const supported = new Set(['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.4.0', '1.4.1', '1.4.2', '1.4.3', '1.4.4', '1.4.5',
+  '1.4.6', '1.4.7', '1.4.8', '1.4.9', '1.4.10', '1.4.11', VERSION]);
 function options(input) {
   check(input && ['inspect', 'apply', 'fingerprint'].includes(input.action), 'SETUP_ACTION', 'Неизвестное действие подготовки.');
   check(['new', 'existing'].includes(input.mode), 'SETUP_MODE', 'Выберите создание или подключение проекта.');

@@ -78,7 +78,8 @@ export async function contextInputKey(workspace, selection = {}) {
   const relative = new Set(['.harness/plans/todo-plan.md', '.harness/workflow.json', '.harness/kit/WORKFLOW.md',
     'scripts/workflow', 'scripts/workflow.cmd', 'scripts/workflow.mjs', config.documentation?.index]);
   if (selectedPlanPath) relative.add(selectedPlanPath);
-  if (selection.sessionId) for (const file of await treeFiles(root, '.harness/plans/by-id')) relative.add(file);
+  if (selection.sessionId) for (const directory of ['.harness/plans/by-id', '.harness/plans/by-session'])
+    for (const file of await treeFiles(root, directory)) relative.add(file);
   for (const doc of plan.context_pack.documents) relative.add(doc.path);
   for (const task of plan.tasks) {
     for (const file of [...task.functional_paths, ...task.documentation_paths]) relative.add(file);

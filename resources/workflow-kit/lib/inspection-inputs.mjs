@@ -82,6 +82,7 @@ export function inspectionInputs(workspace) {
   files.add(external['core.excludesfile'] ? path.resolve(root, external['core.excludesfile']) : path.join(globalGit, 'ignore'));
   treeFiles(root, '.harness/kit', files);
   treeFiles(root, '.harness/plans/by-id', files);
+  treeFiles(root, '.harness/plans/by-session', files);
   // Include the trusted version used by this process, even during a source upgrade.
   treeFiles(kitRoot, '', files);
   const hookFolder = hooksDirectory(root).folder;

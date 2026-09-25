@@ -2040,3 +2040,7 @@ continue → chooseWorkspace без beginCreate и переход к preview. О
 ## Парный выпуск 0.6.52 — scope 038 / T003
 
 На Mac (Node 22.17.0, arm64) последовательно: `npm test` — 346 тестов, 344 PASS, 2 SKIP, 0 FAIL (повторный чистый прогон, 84 с); `npm run smoke` — PASSED на TEST FIXTURE (liveChatGPT=false, fullContextBytes 75092); `npm run build` — exit 0, 16:20–16:23 UTC. Корневой app: CFBundleShortVersionString 0.6.52, `Contents/Resources/resources/workflow-kit` — VERSION 1.4.11, 35 файлов, SHA-256 содержимого `49dd163e…746e9` как у источника. Установка Kit из собранного app в пустой Git-проект дала 1.4.11, recovery `kit 1.4.11`, шаблоны PROTOTYPE/PLAN/SPEC/CONTINUE/STAGES на месте. Живой ChatGPT, обновление реального пользовательского проекта 1.4.1 через интерфейс и native Windows в этой итерации не проверялись.
+
+## Workflow Kit 1.4.12 — scope 038 / T004
+
+Linux VM Cowork, Node 22.23.2: полный `node --test tests/*.test.mjs` — 350 тестов, 342 PASS, 8 SKIP, 0 FAIL. Новый тест повторяет путь агента: `plan:create --session` с проверкой создаёт план в `by-session`; `readSessionPlans` показывает plan_id и задачи, `task:start`/`commit` работают, WorkspaceSetup.ready даёт ready с проверкой полного контекста этого плана, Доктор без замечаний, дерево чистое. На коде 1.4.11 тот же тест падает (plan_id = null) — это воспроизведение живого дефекта 0.6.52. Симулированный upgrade проверен для 1.4.0 и 1.4.11. Тесты сайдбара: уведомление об устаревшем Kit ведёт в retry/preview, статус инструментов доставленного чата берётся из последнего статуса runtime.

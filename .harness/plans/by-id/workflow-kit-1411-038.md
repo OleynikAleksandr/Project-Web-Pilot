@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 14,
+  "plan_revision": 17,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-kit-1411-038",
@@ -68,7 +68,8 @@
       "src/context-inputs.mjs",
       "src/context-session.mjs",
       "tests/session-plans.test.mjs",
-      "tests/context-session.test.mjs"
+      "tests/context-session.test.mjs",
+      "tests/sidebar.test.mjs"
     ],
     "documentation_paths": [
       "docs/architecture/OVERVIEW.md",
@@ -285,7 +286,9 @@
         "tests/context-session.test.mjs",
         "tests/workspace-setup.test.mjs",
         "tests/project-doctor.test.mjs",
-        "tests/electron-smoke.mjs"
+        "tests/electron-smoke.mjs",
+        "src/ui/sidebar.mjs",
+        "tests/sidebar.test.mjs"
       ],
       "documentation_paths": [
         "resources/workflow-kit/WORKFLOW.md",
@@ -305,8 +308,8 @@
         "suite"
       ],
       "expected_commit_message": "fix: Workflow Kit 1.4.12 и полная интеграция планов сессий",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workflow-kit-1411-038",
         "task_id": "T004",
@@ -426,7 +429,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-kit-1411-038
 Current Task: нет
-Revision: 14
+Revision: 17
 
 ## Цель
 
@@ -454,10 +457,10 @@ Revision: 14
   - Git Commit: [DONE] feat: Парный выпуск 0.6.52
   - Reference: workflow-kit-1411-038 / T003 / implementation
   - Файлы: docs/RELEASE.md, docs/VERIFICATION.md
-- [TODO] T004: Kit 1.4.12: планы by-session и полная интеграция в приложение — Ожидает
-  - Git Commit: [PENDING] fix: Workflow Kit 1.4.12 и полная интеграция планов сессий
+- [DONE] T004: Kit 1.4.12: планы by-session и полная интеграция в приложение — Завершено
+  - Git Commit: [DONE] fix: Workflow Kit 1.4.12 и полная интеграция планов сессий
   - Reference: workflow-kit-1411-038 / T004 / implementation
-  - Файлы: resources/workflow-kit/lib/session-plans.mjs, resources/workflow-kit/lib/inspection-inputs.mjs, resources/workflow-kit/lib/common.mjs, resources/workflow-kit/lib/installer.mjs, resources/workspace-setup-worker.mjs, resources/project-doctor/core.mjs, src/context-inputs.mjs, src/context-session.mjs, tests/workflow-kit-source.test.mjs, tests/session-plans.test.mjs, tests/context-session.test.mjs, tests/workspace-setup.test.mjs, tests/project-doctor.test.mjs, tests/electron-smoke.mjs, resources/workflow-kit/WORKFLOW.md, docs/modules/workflow-kit-recovery.md, docs/modules/session-owned-plans.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+  - Файлы: resources/workflow-kit/lib/session-plans.mjs, resources/workflow-kit/lib/inspection-inputs.mjs, resources/workflow-kit/lib/common.mjs, resources/workflow-kit/lib/installer.mjs, resources/workspace-setup-worker.mjs, resources/project-doctor/core.mjs, src/context-inputs.mjs, src/context-session.mjs, tests/workflow-kit-source.test.mjs, tests/session-plans.test.mjs, tests/context-session.test.mjs, tests/workspace-setup.test.mjs, tests/project-doctor.test.mjs, tests/electron-smoke.mjs, src/ui/sidebar.mjs, tests/sidebar.test.mjs, resources/workflow-kit/WORKFLOW.md, docs/modules/workflow-kit-recovery.md, docs/modules/session-owned-plans.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T005: Версия 0.6.53 — Ожидает
   - Git Commit: [PENDING] chore: версия 0.6.53
   - Reference: workflow-kit-1411-038 / T005 / implementation

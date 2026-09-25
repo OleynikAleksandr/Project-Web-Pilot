@@ -42,7 +42,7 @@ export function inspectProject(workspace) {
     const manifestBytes = read(MANIFEST);
     if (!manifestBytes) throw fail('DOCTOR_MANIFEST', 'Установочная запись отсутствует. Откройте папку проекта через обычную подготовку; доктор не угадывает состав установки.');
     let manifest; try { manifest = JSON.parse(manifestBytes.content); } catch { throw fail('DOCTOR_MANIFEST', 'Установочная запись повреждена. Нужна её резервная копия.'); }
-    if (manifest.schema_version !== 1 || !Array.isArray(manifest.files) || !['1.1.0', '1.2.0', '1.3.0', '1.4.0', '1.4.1', '1.4.2', '1.4.3', VERSION].includes(manifest.version)) throw fail('DOCTOR_VERSION', 'Версия или формат установки неизвестны. Нужен совместимый выпуск приложения.');
+    if (manifest.schema_version !== 1 || !Array.isArray(manifest.files) || !['1.1.0', '1.2.0', '1.3.0', '1.4.0', '1.4.1', '1.4.2', '1.4.3', '1.4.4', '1.4.5', '1.4.6', '1.4.7', '1.4.8', '1.4.9', '1.4.10', '1.4.11', VERSION].includes(manifest.version)) throw fail('DOCTOR_VERSION', 'Версия или формат установки неизвестны. Нужен совместимый выпуск приложения.');
     result.version = manifest.version;
     const trusted = trustedFiles(), trustedMap = new Map(trusted.map(e => [e.path, e]));
     const owned = manifest.files.filter(e => e.kind === 'owned');
@@ -92,7 +92,7 @@ export function inspectProject(workspace) {
       if (current && content.includes(BLOCK_START) && process.platform !== 'win32' && !(current.mode & 0o111)) changes.push({ file: target, content, mode: current.mode | 0o111, label: 'Восстановлено право запуска проверки: ' + name });
     }
     if (!read(PLAN)) throw fail('DOCTOR_PLAN', 'Навигационный план отсутствует. Нужна его резервная копия.');
-    scanTree(file('.harness/plans/by-id'));
+    scanTree(file('.harness/plans/by-id')); scanTree(file('.harness/plans/by-session'));
     const plans = listPlans(root, { projection: false });
     read('.harness/workflow.json'); readConfig(root);
     regularPath(localPath(root, 'transaction.json')); pending = journal(root);

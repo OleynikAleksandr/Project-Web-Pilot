@@ -169,3 +169,30 @@ test('rapid A-B-A navigation reaches IPC immediately and ignores obsolete respon
   assert.equal(f.document.querySelector('.session.active').dataset.sessionId, 's1');
   assert.match(f.document.querySelector('.session.active').textContent, /Самый свежий план/);
 });
+
+test('outdated Workflow Kit notice names both versions and opens the regular upgrade preview', async t => {
+  const f = await fixture(t);
+  f.window.webPilot.retry = async () => { f.calls.push(['retry']); return {}; };
+  f.window.webPilot.reload = async () => { f.calls.push(['reload']); return {}; };
+  f.emit({ ...f.state, workspaceHealth: { phase: 'error', ready: false, action: 'upgrade', version: '1.4.11', kitVersion: '1.4.12', issues: [], workspace: '/demo' } });
+  const message = f.document.getElementById('workspace-health-message').textContent;
+  assert.match(message, /Workflow Kit 1\.4\.11/); assert.match(message, /1\.4\.12/);
+  assert.equal(f.document.getElementById('workspace-health-retry').textContent, 'Обновить Workflow Kit');
+  f.document.getElementById('workspace-health-retry').click(); await f.settle();
+  assert.deepEqual(f.calls, [['retry']]);
+  f.emit({ ...f.state, workspaceHealth: { phase: 'error', ready: false, issues: [{ reason: 'Нет файла' }], workspace: '/demo' } });
+  assert.equal(f.document.getElementById('workspace-health-retry').textContent, 'Повторить проверку');
+  f.document.getElementById('workspace-health-retry').click(); await f.settle();
+  assert.deepEqual(f.calls, [['retry'], ['reload']]);
+});
+
+test('delivered chat shows local tools from the last confirmed runtime status without restarting services', async t => {
+  const f = await fixture(t);
+  f.emit({ ...f.state, context: { phase: 'delivered', servicesReady: false, messageSent: true } });
+  assert.equal(f.document.getElementById('state-service').textContent, 'Не проверены');
+  f.emit({ ...f.state, context: { phase: 'delivered', servicesReady: false, messageSent: true },
+    macRuntime: { mode: 'x', label: 'Codex Local Mac', service: { mcpReady: true, tunnelReady: true, tunnelConfigured: true } } });
+  assert.equal(f.document.getElementById('state-service').textContent, 'Готовы');
+  f.emit({ ...f.state, macRuntime: { mode: 'x', label: 'Codex Local Mac', service: { mcpReady: true, tunnelReady: false, tunnelConfigured: true } } });
+  assert.equal(f.document.getElementById('state-service').textContent, 'Не проверены');
+});
