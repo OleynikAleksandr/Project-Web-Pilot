@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 86,
+  "plan_revision": 88,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
@@ -1108,8 +1108,8 @@
         "Структурный фильтр карточек и оформление; реальная DOM структура 25.09.2026, сохранение защит от повторной отправки и фоновых служб"
       ],
       "expected_commit_message": "fix: Структурный фильтр карточек и оформление",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "windows-onboarding-033",
         "task_id": "H002",
@@ -1345,7 +1345,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 86
+Revision: 88
 
 ## Цель
 
@@ -1491,8 +1491,8 @@ Revision: 86
   - Git Commit: [DONE] fix: Единый DOM adapter и доставка контекста
   - Reference: windows-onboarding-033 / H001 / implementation
   - Файлы: src/chatgpt-dom.mjs, src/chatgpt-composer.mjs, src/context-session.mjs, src/chromium-diagnostics.mjs, tests/chatgpt-dom.test.mjs, tests/chatgpt-composer.test.mjs, tests/context-session.test.mjs, docs/modules/chatgpt-dom-compatibility.md, docs/architecture/ARCHITECTURE.md, docs/DOCUMENTATION_INDEX.md, docs/VERIFICATION.md, docs/RELEASE.md
-- [TODO] H002: Структурный фильтр карточек и оформление — Ожидает
-  - Git Commit: [PENDING] fix: Структурный фильтр карточек и оформление
+- [DONE] H002: Структурный фильтр карточек и оформление — Завершено
+  - Git Commit: [DONE] fix: Структурный фильтр карточек и оформление
   - Reference: windows-onboarding-033 / H002 / implementation
   - Файлы: src/chatgpt-tool-filter.mjs, src/main.mjs, src/chatgpt-colors.mjs, tests/chatgpt-tool-filter.test.mjs, tests/chatgpt-colors.test.mjs, docs/modules/chatgpt-dom-compatibility.md, docs/architecture/ARCHITECTURE.md, docs/DOCUMENTATION_INDEX.md, docs/VERIFICATION.md, docs/RELEASE.md
 - [TODO] H003: Автопрокрутка без обратной связи и рывков — Ожидает

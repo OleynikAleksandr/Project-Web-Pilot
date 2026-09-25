@@ -1,3 +1,4 @@
+import { CHATGPT_SELECTORS } from './chatgpt-dom.mjs';
 export const COLOR_KEYS = Object.freeze(['background', 'userBackground', 'userText', 'assistantText', 'composerBackground']);
 export const DEFAULT_COLORS = Object.freeze({
   light: Object.freeze({ background: '#ffffff', userBackground: '#f4f4f4', userText: '#0d0d0d', assistantText: '#0d0d0d', composerBackground: '#ffffff' }),
@@ -16,9 +17,9 @@ export function validateColorChange(input) {
     throw new TypeError('Выберите цвет или укажите HEX в формате #RRGGBB.');
   return { key: input.key, value: input.value?.toLowerCase() ?? null };
 }
-const role = name => ':is([data-message-author-role="' + name + '"],[data-testid="' + name + '-message"])';
-const composerEditor = ':is(#prompt-textarea,textarea[data-testid="prompt-textarea"],[data-testid="composer-text-input"])';
-const composerSurface = ':is(#composer-background,[data-testid="composer"],[class*="bg-(--composer-surface-primary)"]):has(' + composerEditor + ')';
+const role = name => ':is(' + CHATGPT_SELECTORS[name] + ')';
+const composerEditor = ':is(' + CHATGPT_SELECTORS.editor + ')';
+const composerSurface = ':is(#composer-background,[data-testid="composer"],[class*="bg-(--composer-surface-primary)"],[class*="ComposerModeSurface-"]):has(' + composerEditor + ')';
 const userContent = role('user') + ',' + role('user') + ' *,.user-message-bubble,.user-message-bubble *,.user-message-bubble-color,.user-message-bubble-color *';
 const editableContent = '[contenteditable="true"],[contenteditable="true"] *,#prompt-textarea,#prompt-textarea *';
 const assistantContent = ':is(' + role('assistant') + ',main :is(.markdown,.prose,[class*="markdown-new-styling"]):not(:where(' + userContent + ',' + editableContent + ')))';
@@ -31,7 +32,7 @@ export function chatColorsCSS(input) {
   }
   if (colors.userBackground) {
     // The role element spans the row; only the inner bubble owns the rounded fill.
-    rules.push('.user-message-bubble-color,.user-message-bubble{background:' + colors.userBackground + '!important}');
+    rules.push(CHATGPT_SELECTORS.userBubble + '{background:' + colors.userBackground + '!important}');
   }
   if (colors.composerBackground) {
     const c = colors.composerBackground;

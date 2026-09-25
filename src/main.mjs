@@ -1,3 +1,4 @@
+import { toolFilterScript } from './chatgpt-tool-filter.mjs';
 import { app, BaseWindow, BrowserWindow, WebContentsView, Menu, session, ipcMain, dialog, nativeTheme, clipboard, shell } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
@@ -108,71 +109,7 @@ async function applyToolCallVisibility() {
   if (!browser || browser.webContents.isDestroyed()) return;
   const url = browser.webContents.getURL();
   if (!url.startsWith('https://chatgpt.com/')) return;
-  const hide = hideToolCalls;
-  await browser.webContents.executeJavaScript(`(() => {
-    const attr = 'data-web-pilot-tool-call-hidden';
-    const footprintAttr = 'data-web-pilot-tool-call-footprint-hidden';
-    const stateKey = '__webPilotToolCallFilter';
-    const labels = ['вызываемый инструмент', 'called tool', 'tool call'];
-    const messageSelector = '[data-message-author-role],[data-testid="user-message"],[data-testid="assistant-message"]';
-    const normalize = value => String(value ?? '').replace(/\\s+/g, ' ').trim().toLocaleLowerCase();
-    const restore = () => {
-      for (const element of document.querySelectorAll('[' + footprintAttr + ']')) {
-        element.style.removeProperty('display');
-        element.removeAttribute(footprintAttr);
-      }
-      for (const element of document.querySelectorAll('[' + attr + ']')) {
-        element.style.removeProperty('display');
-        element.removeAttribute(attr);
-      }
-    };
-    const refreshAutoScroll = () => window.__webPilotConversationAutoScroll?.refresh?.();
-    restore();
-    window[stateKey]?.disconnect?.();
-    delete window[stateKey];
-    if (!${hide ? 'true' : 'false'}) {
-      refreshAutoScroll();
-      return 0;
-    }
-    const matches = element => {
-      const text = normalize(element.textContent);
-      return labels.some(label => text === label || text.startsWith(label + ' '));
-    };
-    const footprint = element => {
-      const message = element.closest(messageSelector);
-      const ownText = normalize(element.textContent);
-      let result = element;
-      for (let parent = element.parentElement; parent && parent !== document.body; parent = parent.parentElement) {
-        if (normalize(parent.textContent) !== ownText) break;
-        result = parent;
-        if (parent === message) break;
-      }
-      return result;
-    };
-    const apply = () => {
-      let changed = false;
-      for (const element of document.querySelectorAll('button,[role="button"],summary')) {
-        if (!matches(element)) continue;
-        const layout = footprint(element);
-        element.setAttribute(attr, 'true');
-        element.style.setProperty('display', 'none', 'important');
-        layout.setAttribute(footprintAttr, 'true');
-        layout.style.setProperty('display', 'none', 'important');
-        changed = true;
-      }
-      if (changed) refreshAutoScroll();
-    };
-    let queued = false;
-    const observer = new MutationObserver(() => {
-      if (queued) return;
-      queued = true;
-      requestAnimationFrame(() => { queued = false; apply(); });
-    });
-    observer.observe(document.documentElement, { childList: true, subtree: true, characterData: true });
-    window[stateKey] = { disconnect: () => observer.disconnect(), apply };
-    apply();
-    return document.querySelectorAll('[' + attr + ']').length;
-  })()`, true).catch(() => {});
+  await browser.webContents.executeJavaScript(toolFilterScript(hideToolCalls), true).catch(() => {});
 }
 
 function saveSettings(overrides = {}) {

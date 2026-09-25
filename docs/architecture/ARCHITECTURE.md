@@ -1260,3 +1260,5 @@ macOS runtime selector использует один внешний Secure MCP T
 ## Совместимость DOM 0.6.48
 
 Общий `src/chatgpt-dom.mjs` используется composer и диагностикой. Распознавание режима основано на выбранной кнопке, а `/` и `/work/` допускают переключение без навигации. Новые semantic message wrappers и stop labels поддерживаются вместе с прежними. Контракт: [Совместимость ChatGPT](../modules/chatgpt-dom-compatibility.md).
+
+Служебные строки обрабатывает `chatgpt-tool-filter.mjs`: новый структурный activity header и legacy text fallback. Фильтр сохраняет inline display для восстановления и уведомляет прокрутку только при фактическом изменении. Цвета используют общий каталог semantic message selectors.
