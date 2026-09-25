@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 110,
+  "plan_revision": 112,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
@@ -1356,8 +1356,8 @@
       "id": "I002",
       "title": "Сверить парный выпуск 0.6.49",
       "why": "Сверить парный выпуск 0.6.49",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "windows-onboarding-033",
         "task_id": "I002",
@@ -1516,7 +1516,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 110
+Revision: 112
 
 ## Цель
 
@@ -1694,8 +1694,8 @@ Revision: 110
   - Git Commit: [DONE] fix: закрашивать поле ввода вместо подложки
   - Reference: windows-onboarding-033 / I003 / implementation
   - Файлы: src/chatgpt-colors.mjs, tests/electron-smoke.mjs, docs/modules/workspace-sessions.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] I002: Сверить парный выпуск 0.6.49 — Ожидает
-  - Git Commit: [PENDING] fix: Сверить парный выпуск 0.6.49
+- [DONE] I002: Сверить парный выпуск 0.6.49 — Завершено
+  - Git Commit: [DONE] fix: Сверить парный выпуск 0.6.49
   - Reference: windows-onboarding-033 / I002 / implementation
   - Файлы: docs/RELEASE.md, docs/VERIFICATION.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
