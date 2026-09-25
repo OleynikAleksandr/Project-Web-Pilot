@@ -204,3 +204,7 @@ Correction scope `stable-mcp-connector-036` заменяет предварит�
 При переключении Web Pilot останавливает оба принадлежащих ему backend, выбранный MCP запускает в `--mcp-only`, после чего один App Server private tunnel перенаправляется на фактический loopback endpoint выбранного MCP и запускается отдельно. `MacSelectedRuntime` представляет main/context layer составной status «выбранный MCP + общий tunnel», поэтому существующие `ensure/status/loadContext` не создают второй tunnel. После login/reboot тот же LaunchAgent читает selector и восстанавливает выбранный MCP и общий tunnel до запуска Web Pilot.
 
 Старый local runtime дополнительно проверяется на оставшиеся listeners по его фактическим MCP/tunnel ports. Процесс получает TERM только если `/bin/ps` дважды подряд подтверждает тот же известный executable/path и ожидаемый port/profile; чужой listener или изменившаяся command line не сигналится.
+
+## Независимый lifecycle — 0.6.48
+
+Закрытие Web Pilot завершает только UI и дочерние окна, не MCP и tunnel. На macOS действующий пользовательский LaunchAgent запускает selector-start при входе (RunAtLoad). В Windows полный start дополнительно регистрирует HKCU Run ProjectWebPilotMCP: pythonw запускает стабильную private-копию control.py с явным ROOT и STATE, а не файл из распакованного ZIP. Ключи остаются в DPAPI/private; реестр и launcher не содержат секретов. Повторная регистрация идемпотентна. Автозапуск относится к входу пользователя, а не к системному сервису до входа. Первый reboot Windows должен проверить пользователь; агент VM не запускает.

@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 91,
+  "plan_revision": 93,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "windows-onboarding-033",
@@ -1155,8 +1155,8 @@
       "id": "H003W",
       "title": "Автозапуск Windows MCP и туннеля при входе",
       "why": "В payload отсутствовал постоянный автозапуск",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "windows-onboarding-033",
         "task_id": "H003W",
@@ -1379,7 +1379,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: windows-onboarding-033
 Current Task: нет
-Revision: 91
+Revision: 93
 
 ## Цель
 
@@ -1533,8 +1533,8 @@ Revision: 91
   - Git Commit: [DONE] fix: Автопрокрутка без обратной связи и рывков
   - Reference: windows-onboarding-033 / H003 / implementation
   - Файлы: src/chatgpt-auto-scroll.mjs, tests/chatgpt-auto-scroll.test.mjs, docs/modules/chatgpt-dom-compatibility.md, docs/architecture/ARCHITECTURE.md, docs/DOCUMENTATION_INDEX.md, docs/VERIFICATION.md, docs/RELEASE.md
-- [TODO] H003W: Автозапуск Windows MCP и туннеля при входе — Ожидает
-  - Git Commit: [PENDING] fix: автозапуск Windows MCP и туннеля при входе
+- [DONE] H003W: Автозапуск Windows MCP и туннеля при входе — Завершено
+  - Git Commit: [DONE] fix: автозапуск Windows MCP и туннеля при входе
   - Reference: windows-onboarding-033 / H003W / implementation
   - Файлы: resources/runtime-control/windows-control.py, tests/windows-autostart.test.mjs, docs/modules/chatgpt-dom-compatibility.md, docs/modules/runtime-lifecycle.md, docs/VERIFICATION.md
 - [TODO] H004: Версия сайдбара и lifecycle интерфейса — Ожидает

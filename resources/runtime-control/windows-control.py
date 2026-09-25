@@ -373,12 +373,39 @@ def wait_ready(name: str, probe, seconds: int):
     raise RuntimeError(f'{name} is not ready. Inspect {STATE / (name + ".err.log")}; use 5_STOP.cmd before retrying setup.')
 
 
+def install_autostart() -> None:
+    """Keep the personal bridge alive independently of the Web Pilot window."""
+    import winreg
+    pythonw = PYTHON.with_name('pythonw.exe')
+    if not pythonw.is_file():
+        raise RuntimeError('Windows background Python is missing; repair the runtime installation.')
+    target = PRIVATE / 'autostart-control.py'
+    launcher = PRIVATE / 'autostart.pyw'
+    write_private(target, Path(__file__).read_bytes())
+    # The copied controller must use the installed runtime, never its private directory
+    # or a removable release ZIP as ROOT. No credentials appear in this launcher.
+    script = ('import os, runpy, sys\n'
+              + 'os.environ["WEB_PILOT_RUNTIME_ROOT"] = ' + repr(str(ROOT)) + '\n'
+              + 'os.environ["CODEX_LOCAL_WINDOWS_STATE_DIR"] = ' + repr(str(STATE)) + '\n'
+              + 'os.environ["PYTHONUTF8"] = "1"\n'
+              + 'sys.argv = [' + repr(str(target)) + ', "start"]\n'
+              + 'runpy.run_path(' + repr(str(target)) + ', run_name="__main__")\n')
+    write_private(launcher, script)
+    command = subprocess.list2cmdline([str(pythonw), '-B', str(launcher)])
+    with winreg.CreateKeyEx(winreg.HKEY_CURRENT_USER,
+                            r'Software\Microsoft\Windows\CurrentVersion\Run', 0,
+                            winreg.KEY_SET_VALUE) as key:
+        winreg.SetValueEx(key, 'ProjectWebPilotMCP', 0, winreg.REG_SZ, command)
+
+
 def start(*, mcp_only: bool = False) -> dict:
     require_windows()
     if not CONFIG.is_file() or not PYTHON.is_file():
         raise RuntimeError('Run 1_INSTALL.cmd first.')
     if not mcp_only and not (PROFILE.is_file() and KEY_FILE.is_file()):
         raise RuntimeError('Run 2_CONNECT_TUNNEL.cmd before starting the full connection.')
+    if not mcp_only:
+        install_autostart()
     env = environment(); ports = reconcile_endpoints()
     if not managed_process('mcp')['owned']:
         launch('mcp', [str(PYTHON), '-B', str(ROOT / 'mcp' / 'bridge_mcp.py'), '--transport', 'streamable-http', '--host', '127.0.0.1', '--port', str(ports['mcp_port']), '--config', str(CONFIG)], env)
