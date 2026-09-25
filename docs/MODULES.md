@@ -70,3 +70,7 @@ Read-only PlanMonitor входит в модуль сессий: `docs/modules/w
 ## Плашка ввода — 0.6.50
 
 ChatColors выбирает data-composer-body, владеющий видимым фоном и скруглением; editor прозрачен, внешняя подложка не затронута. Контракт в `docs/modules/workspace-sessions.md`, живые доказательства в VERIFICATION.md.
+
+## Первый проект из папки — 0.6.51
+
+Общий startup UI предлагает chooseWorkspace после той же проверки, что beginCreate. Контракты: `docs/modules/first-run-onboarding.md` и `docs/WORKSPACE_SETUP.md`. Backend установки не менялся.

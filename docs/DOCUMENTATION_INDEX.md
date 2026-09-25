@@ -137,3 +137,5 @@ Scope `stable-mcp-connector-036` завершает интеграцию scope 0
 Текущий выпуск 0.6.49: RELEASE.md и VERIFICATION.md. Контракт независимого прогресса и цвета поля — `docs/modules/workspace-sessions.md`. Workflow Kit 1.4.1 сохраняется.
 
 Текущий выпуск — 0.6.50: RELEASE.md, VERIFICATION.md. Контракт полной плашки — `docs/modules/workspace-sessions.md`; история 0.6.49 сохраняет причины исправления.
+
+Текущий выпуск 0.6.51: RELEASE.md, VERIFICATION.md. Выбор первого проекта описан в `docs/modules/first-run-onboarding.md` и WORKSPACE_SETUP.md.

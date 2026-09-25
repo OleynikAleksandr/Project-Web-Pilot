@@ -65,3 +65,7 @@ Scope session-opening-performance-029 реализован в 0.6.29 / Workflow 
 ## Текущий локальный выпуск — 0.6.50
 
 Парные ZIP — `~/Downloads/WebPilot-0.6.50/`. Исправлена полная скруглённая composer-плашка через data-composer-body; редактор внутри прозрачный, внешний ModeSurface не закрашивается. Живые Chat и Work визуально проверены. Kit 1.4.1, PlanMonitor сохранён. Обновлены корневой app и установленная копия /Applications/Project Web Pilot.app с сохранением identity. Windows native не запускалась.
+
+## Текущий локальный выпуск — 0.6.51
+
+На шаге «Первый проект» доступны создание нового и добавление существующей папки. Повторная готовность, preview/apply и сохранение файлов используют прежний путь. Kit 1.4.1. Парная поставка — `~/Downloads/WebPilot-0.6.51/`; обновляются root app и /Applications. Native Windows не запускалась.
