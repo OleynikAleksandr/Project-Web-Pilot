@@ -1,8 +1,36 @@
 {
   "schema_version": 1,
-  "profile": "DISCOVERY",
-  "stack": null,
-  "checks": [],
+  "profile": "DEVELOPMENT",
+  "stack": "Node.js 22 / ESM",
+  "checks": [
+    {
+      "required": false,
+      "timeout_ms": 120000,
+      "id": "package",
+      "executable": "node",
+      "args": [
+        "scripts/check-package.mjs"
+      ]
+    },
+    {
+      "required": false,
+      "timeout_ms": 120000,
+      "id": "runtime",
+      "executable": "node",
+      "args": [
+        "scripts/check-runtime-fixture.mjs"
+      ]
+    },
+    {
+      "required": false,
+      "timeout_ms": 120000,
+      "id": "consumer-contract",
+      "executable": "node",
+      "args": [
+        "scripts/check-consumer-contract.mjs"
+      ]
+    }
+  ],
   "budget": {
     "soft_tokens": 16000,
     "hard_tokens": 90000,
