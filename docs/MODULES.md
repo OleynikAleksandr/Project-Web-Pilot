@@ -75,6 +75,10 @@ ChatColors выбирает data-composer-body, владеющий видимы�
 
 Общий startup UI предлагает chooseWorkspace после той же проверки, что beginCreate. Контракты: `docs/modules/first-run-onboarding.md` и `docs/WORKSPACE_SETUP.md`. Backend установки не менялся.
 
+## Плашка поля ввода — 0.6.55
+
+Палитра ChatGPT (`src/chatgpt-colors.mjs`): цвет поля ввода закрашивает скруглённую плашку, найденную по геометрии — [workspace-sessions](modules/workspace-sessions.md), [chatgpt-dom-compatibility](modules/chatgpt-dom-compatibility.md).
+
 ## Таймер работы агента — 0.6.54
 
 Workspace & Sessions: `src/agent-timer.mjs` (замер по видимому Stop), поле сессии `agentTime` и отображение `mm:ss · Σ mm:ss` в карточке плана — [workspace-sessions](modules/workspace-sessions.md), признак работы ChatGPT — [chatgpt-dom-compatibility](modules/chatgpt-dom-compatibility.md).
