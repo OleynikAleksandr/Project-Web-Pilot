@@ -2,7 +2,7 @@
 
 ## Статус
 
-DRAFT / AWAITING USER APPROVAL
+IMPLEMENTED / READY FOR WEBPILOT MIGRATION
 
 Дата: 2026-09-26
 
@@ -121,6 +121,22 @@ WorkflowKit/
 - не удаляем working runtime `.harness/kit`, пока не доказан безопасный self-host path;
 - не делаем широкую переработку WebPilot одновременно с package extraction.
 
-## Approval gate
+## Результат этой сессии
 
-До подтверждения пользователя код package и WebPilot не изменяется. После подтверждения начинаем с baseline/extraction без функциональных изменений.
+Этап A завершён: создан самостоятельный `@webpilot/workflow-kit` 1.4.12 с единственным canonical source в `src/`, package API/CLI, installer и проверенным consumer contract.
+
+Подтверждено:
+
+- canonical `src/` содержит исходные 35 файлов Workflow Kit 1.4.12 с baseline SHA-256 `5464b2c1528eef1de740af50558bc8db1d39cfa7838f9c032d23650fb4f5f119`;
+- package устанавливает рабочий `.harness/kit` в изолированный проект;
+- session-owned plan и recovery работают через установленный runtime;
+- package подключается через локальную `file:` dependency;
+- tarball package работает в изолированном consumer без зависимости от canonical workspace;
+- `getRuntimeRoot()` даёт runtime payload для автоматического Electron staging.
+
+## Следующий approval gate
+
+Пользователь подтвердил текущий этап 2026-09-26. Следующая работа выполняется отдельной сессией в Project Web Pilot: заменить tracked duplicate `resources/workflow-kit` на dependency `@webpilot/workflow-kit`, сохранить generated staging для external worker/package там, где он фактически нужен, и пройти проверки WebPilot/macOS/Windows packaging.
+
+ChatGPT MCP App adapter не начинать до успешной миграции WebPilot.
+

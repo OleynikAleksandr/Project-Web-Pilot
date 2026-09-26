@@ -1,9 +1,7 @@
 # Модули проекта
 
-Карта самостоятельных частей проекта и их владельцев. Проект может быть программным, исследовательским, проектным, творческим или прикладным. При новом поручении найдите затрагиваемую часть; для новой запишите короткий контракт результата, запуска и проверки. Ясное поручение не требует повторного согласования.
-
-Используйте достаточную для текущей задачи структуру. Обязательного дробления на слои, фасады и классы нет. Подробности храните в одном документе; здесь достаточно ссылки.
-
 | Модуль / часть проекта | Спецификация | Ответственность |
 | --- | --- | --- |
-| Первая часть | docs/modules/<part>.md | Уточняется перед первым рабочим scope |
+| Canonical Workflow Kit package | [docs/modules/workflow-kit-package.md](modules/workflow-kit-package.md) | Единственный редактируемый исходник Kit, package API/CLI, installer, schemas/templates и runtime resource contract |
+| Installed project runtime | [docs/modules/workflow-kit-package.md](modules/workflow-kit-package.md) | Производный `.harness/kit` конкретного проекта; создаётся и обновляется canonical installer-ом |
+| Consumer integration | [docs/modules/workflow-kit-package.md](modules/workflow-kit-package.md) | Package imports и `getRuntimeRoot()` для WebPilot и будущих клиентов |

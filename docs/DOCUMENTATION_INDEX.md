@@ -5,24 +5,26 @@
 
 | Документ | Назначение |
 | --- | --- |
-| .harness/kit/WORKFLOW.md | Протокол и шаблон комплекта |
-| .harness/kit/examples/PACKAGING.md | Протокол и шаблон комплекта |
-| .harness/kit/templates/AGENTS.md | Протокол и шаблон комплекта |
-| .harness/kit/templates/ARCHITECTURE.md | Протокол и шаблон комплекта |
-| .harness/kit/templates/CONTINUE.md | Протокол и шаблон комплекта |
-| .harness/kit/templates/PLAN.md | Протокол и шаблон комплекта |
-| .harness/kit/templates/PRODUCT.md | Протокол и шаблон комплекта |
-| .harness/kit/templates/PROTOTYPE.md | Протокол и шаблон комплекта |
-| .harness/kit/templates/SPEC.md | Протокол и шаблон комплекта |
-| .harness/kit/templates/STAGES.md | Протокол и шаблон комплекта |
-| .harness/kit/templates/START.md | Протокол и шаблон комплекта |
-| .harness/plans/todo-plan.md | Прежний план и навигация; планы сессий — .harness/plans/by-id/ |
-| .harness/plans/todo-plan.template.md | Контракт проекта; уточняется при обсуждении |
-| AGENTS.md | Контракт проекта; уточняется при обсуждении |
-| docs/PRODUCT.md | Контракт проекта; уточняется при обсуждении |
-| docs/architecture/ARCHITECTURE.md | Контракт проекта; уточняется при обсуждении |
-| docs/WORKFLOW_START.md | Контракт проекта; уточняется при обсуждении |
-| docs/MODULES.md | Контракт проекта; уточняется при обсуждении |
-| docs/architecture/OVERVIEW.md | Контракт проекта; уточняется при обсуждении |
-| docs/DOCUMENTATION_INDEX.md | Контракт проекта; уточняется при обсуждении |
+| .harness/kit/WORKFLOW.md | Установленный протокол Workflow Kit этого проекта |
+| .harness/kit/examples/PACKAGING.md | Протокол локальной упаковки |
+| .harness/kit/templates/AGENTS.md | Шаблон инструкций проекта |
+| .harness/kit/templates/ARCHITECTURE.md | Шаблон архитектурного документа |
+| .harness/kit/templates/CONTINUE.md | Продолжение существующего плана |
+| .harness/kit/templates/PLAN.md | Форма нового плана |
+| .harness/kit/templates/PRODUCT.md | Шаблон описания продукта |
+| .harness/kit/templates/PROTOTYPE.md | Правила прототипирования и Git |
+| .harness/kit/templates/SPEC.md | Короткий контракт результата |
+| .harness/kit/templates/STAGES.md | Формы этапов Workflow Kit |
+| .harness/kit/templates/START.md | Стартовый шаблон |
+| .harness/plans/todo-plan.md | Навигационный план проекта |
+| .harness/plans/todo-plan.template.md | Шаблон нового плана |
+| AGENTS.md | Инструкции проекта |
+| docs/PRODUCT.md | Назначение canonical WorkflowKit package |
+| docs/architecture/ARCHITECTURE.md | Архитектура «один package — несколько потребителей» |
+| docs/architecture/OVERVIEW.md | Компактный recovery-обзор текущей архитектуры |
+| docs/MODULES.md | Карта модулей проекта |
+| docs/modules/workflow-kit-package.md | Техническая спецификация package, runtime и consumer contract |
+| docs/planning/canonical-workflow-kit-package.md | План выделения package и следующей миграции Project Web Pilot |
+| docs/WORKFLOW_START.md | Общий контракт старта Workflow Kit |
+| docs/DOCUMENTATION_INDEX.md | Этот индекс |
 <!-- workflow-kit:end -->
