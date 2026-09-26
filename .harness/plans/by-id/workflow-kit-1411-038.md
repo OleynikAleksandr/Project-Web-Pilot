@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 27,
+  "plan_revision": 29,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-kit-1411-038",
@@ -437,8 +437,8 @@
         "syntax"
       ],
       "expected_commit_message": "chore: версия 0.6.54",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workflow-kit-1411-038",
         "task_id": "T008",
@@ -540,7 +540,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-kit-1411-038
 Current Task: нет
-Revision: 27
+Revision: 29
 
 ## Цель
 
@@ -585,8 +585,8 @@ Revision: 27
   - Git Commit: [DONE] feat: таймер работы агента в карточке плана
   - Reference: workflow-kit-1411-038 / T007 / implementation
   - Файлы: src/agent-timer.mjs, src/main.mjs, src/workspace-session.mjs, src/ui/sidebar.mjs, src/ui/index.html, tests/agent-timer.test.mjs, tests/workspace-session.test.mjs, tests/sidebar.test.mjs, docs/modules/workspace-sessions.md, docs/modules/chatgpt-dom-compatibility.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T008: Версия 0.6.54 — Ожидает
-  - Git Commit: [PENDING] chore: версия 0.6.54
+- [DONE] T008: Версия 0.6.54 — Завершено
+  - Git Commit: [DONE] chore: версия 0.6.54
   - Reference: workflow-kit-1411-038 / T008 / implementation
   - Файлы: package.json, package-lock.json
 - [TODO] T009: Парный выпуск 0.6.54 — Ожидает
