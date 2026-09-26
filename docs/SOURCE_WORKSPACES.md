@@ -31,7 +31,7 @@ Project ID нового проекта: `cf944136-d1fc-4bd5-9ea0-e46d1fe230e7`. 
 
 Связанные исходники: `kit/lib/plan.mjs`, `validate.mjs`, `transaction.mjs`, `git.mjs`, `git-hooks.mjs`, `common.mjs`, `platform.mjs`, `installation-files.mjs`, `kit/schemas/`, `kit/templates/`. Регрессии: `tests/install.test.mjs`, `workflow.test.mjs`, `recovery.test.mjs`, `windows.test.mjs` и `scripts/demo-workflow.mjs`.
 
-Источник переносимого runtime — **WF001/kit**, версия 1.1.0 по common.mjs. Собственная установленная WF001/.harness/kit имеет manifest 1.0.0: не перепутать установленный экземпляр с исходным комплектом. Это историческое происхождение комплекта. Текущий installed/bundled Workflow Kit в Web Pilot — 1.4.1; он развивает прежнее ядро собственным фасадом планов сессий без изменения WF001 или внешнего Codex runtime. Реальный Project Web Pilot manifest был reconciled Доктором 16.09.2026 (`doctor_reconciled_at=2026-09-16T07:28:22.983Z`) и затем синхронизирован с correction-round bytes. 17.09.2026 штатный Doctor согласовал его с полным проверенным комплектом 1.4.0 с новой резервной копией; намеренно возвращать stale-состояние нельзя.
+Источник переносимого runtime на исходном этапе был **WF001/kit**, версия 1.1.0 по common.mjs. Собственная установленная WF001/.harness/kit имела manifest 1.0.0: не перепутать установленный экземпляр с исходным комплектом. Это только историческое происхождение комплекта; с 0.6.56 текущий source of truth описан в разделе canonical package ниже. Реальный Project Web Pilot manifest был reconciled Доктором 16.09.2026 (`doctor_reconciled_at=2026-09-16T07:28:22.983Z`) и затем синхронизирован с correction-round bytes. 17.09.2026 штатный Doctor согласовал его с полным проверенным комплектом 1.4.0 с новой резервной копией; намеренно возвращать stale-состояние нельзя.
 
 ## Codex Local Mac: откуда брать локальное подключение
 
@@ -115,7 +115,11 @@ Scope 029 / T007: 17.09.2026 штатный Doctor согласовал manifest
 
 Scope 029 / T009: 0.6.29 собран из main 5028241 с изменением только package version для выпуска. Все 33 src и 31 resources совпадают побайтово между source, macOS/Windows staging и постоянным Mac app. Workflow Kit 1.4.1 — собственное развитие этого репозитория; внешние WF001/Codex runtime не редактировались. Полный receipt и SHA — .harness/runtime/releases/0.6.29/source-verification.json.
 
-## Поставляемый Workflow Kit 1.4.12 — 0.6.53
+## Canonical Workflow Kit package — 0.6.56
+
+Текущий source of truth: `/Users/oleksandroliinyk/VSCODE/WorkflowKit`, package `@webpilot/workflow-kit@1.4.12`; исходный package extraction commit — `7efe0ef2b61b3eef1d84f57cf7a198ccb7163111`. Runtime `src/` содержит 35 файлов с digest `5464b2c1528eef1de740af50558bc8db1d39cfa7838f9c032d23650fb4f5f119`. Project Web Pilot подключает его как `file:../WorkflowKit`, а `resources/workflow-kit` создаёт автоматически и игнорирует в Git. Исторические разделы 0.6.53/0.6.52 ниже описывают происхождение содержимого до выделения canonical package и больше не задают текущего владельца source.
+
+## Поставляемый Workflow Kit 1.4.12 — 0.6.53 (история)
 
 С 0.6.53 `resources/workflow-kit` = 1.4.11 из CodeAppServer (`badcf20`, описан ниже) плюс локальное исправление в этом репозитории: `lib/session-plans.mjs` читает `.harness/plans/by-session/`, `lib/inspection-inputs.mjs` включает его в входы проверки, VERSION 1.4.12, upgrade принимает 1.4.11. Содержимое 35 файлов закреплено SHA-256 `5464b2c1528eef1de740af50558bc8db1d39cfa7838f9c032d23650fb4f5f119`. В исходный Kit CodeAppServer исправление не переносилось — это нужно сделать отдельно, иначе следующая синхронизация вернёт дефект.
 

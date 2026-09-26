@@ -1,6 +1,6 @@
 # Продукт
 
-Текущий локальный выпуск — **0.6.55**, macOS arm64 / Windows x64. Цвет поля ввода из настроек закрашивает только скруглённую плашку (ближайший скруглённый предок поля ввода), а не прямоугольную подложку. Справа в заголовке карточки «План этой сессии» — таймер работы агента `mm:ss · Σ mm:ss`. Поставляемый Workflow Kit — **1.4.12**, собственный Kit этого репозитория — 1.4.1. Поставка: `~/Downloads/WebPilot-0.6.55/`; корневой и `/Applications/Project Web Pilot.app` обновлены.
+Текущий локальный выпуск — **0.6.56**, macOS arm64 / Windows x64. Project Web Pilot использует canonical package `@webpilot/workflow-kit@1.4.12` из `/Users/oleksandroliinyk/VSCODE/WorkflowKit`; `resources/workflow-kit` создаётся автоматически как generated runtime staging и не хранится в Git как исходник. Собственный `.harness/kit` репозитория — установленный runtime проекта Workflow Kit 1.4.12, а не source of truth. Парная поставка: `~/Downloads/WebPilot-0.6.56/`; постоянный корневой `Project Web Pilot.app` обновлён.
 
 Предыдущий локальный выпуск — **0.6.54**: таймер работы агента в карточке плана. Поставка: `~/Downloads/WebPilot-0.6.54/`.
 

@@ -19,3 +19,7 @@ Development использует package exports. Перед start/test/smoke/bu
 ## Границы
 
 Не менять Workflow Kit business logic, Plan/Session/Recovery formats, WebPilot UI/UX, Secure MCP Tunnel, Codex App Server integration и собственный `.harness/kit` Project Web Pilot. Не начинать ChatGPT MCP App. Исторические archived plans не переписывать. Каждая техническая задача завершается отдельным managed commit.
+
+## Фактический результат — 0.6.56
+
+Миграция завершена: T001 `2327c5ed`, T002 `d9a9b070`, T003 `f959dcee`, T004 `a581e250`. В Git WebPilot нет tracked `resources/workflow-kit`; staging восстанавливает 35 файлов canonical package с ожидаемым digest. После удаления duplicate полный Node suite: 358 tests / 355 PASS / 3 SKIP / 0 FAIL. Electron smoke и парный package check прошли. Финальный post-commit `npm run build` собрал macOS arm64 и Windows x64 из `a581e250f9baf3e79ff688381fc44fe1c8e4e849`; delivery — `~/Downloads/WebPilot-0.6.56/`.

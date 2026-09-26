@@ -2,7 +2,7 @@
 
 ## Действующая модель — 0.6.29 / schema v6
 
-Сессия имеет собственный planId либо NONE, originSessionId и состояние подтверждения legacy-связи. Полные задачи в session store не копируются: readWorkspace(workspace, sessionId) читает их через доверенный bundled фасад Workflow Kit. prepared_in_session_id связывает исходную сессию с каноническим будущим планом; после bind обе сессии видят один файл.
+Сессия имеет собственный planId либо NONE, originSessionId и состояние подтверждения legacy-связи. Полные задачи в session store не копируются: readWorkspace(workspace, sessionId) читает их через доверенный фасад Workflow Kit — package export в development и generated staged runtime в packaged app. prepared_in_session_id связывает исходную сессию с каноническим будущим планом; после bind обе сессии видят один файл.
 
 Facade SessionPlans выполняет адресованные recover/bind/adopt через существующий Node launcher. WorkspaceSessions.fromPrepared сначала идемпотентно привязывает план, затем атомарно сохраняет запись сессии. После сбоя записи повтор использует уже назначенные sessionId/experience. Новый Chat/Work из меню имеет NONE; автоматического перехода после завершения задач нет.
 
@@ -504,7 +504,7 @@ Scope 029 / T004: готовность workspace может переисполь
 
 ## Быстрый выбор — 0.6.29 / scope 029
 
-Подключённые проекты показывают адресованную проекцию через доверенный bundled SessionPlans и начинают loadURL до полной фоновой проверки. Последнее поколение навигации определяет store, план, URL, health и controller; чтения не удерживают очередь записей или общую очередь IPC. Ошибка фона не закрывает сохранённый чат и предлагает повтор/Доктора. Отмена Settings/выбора сохраняет загруженный DOM. Первое подключение и legacy adoption остаются строгими. Подробности, замеры и границы поставки — session-opening-performance.md.
+Подключённые проекты показывают адресованную проекцию через доверенный SessionPlans из canonical package/generated packaged runtime и начинают loadURL до полной фоновой проверки. Последнее поколение навигации определяет store, план, URL, health и controller; чтения не удерживают очередь записей или общую очередь IPC. Ошибка фона не закрывает сохранённый чат и предлагает повтор/Доктора. Отмена Settings/выбора сохраняет загруженный DOM. Первое подключение и legacy adoption остаются строгими. Подробности, замеры и границы поставки — session-opening-performance.md.
 
 ## Готовность доставки — scope 029 / T006
 

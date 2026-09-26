@@ -83,7 +83,11 @@ ChatColors выбирает data-composer-body, владеющий видимы�
 
 Workspace & Sessions: `src/agent-timer.mjs` (замер по видимому Stop), поле сессии `agentTime` и отображение `mm:ss · Σ mm:ss` в карточке плана — [workspace-sessions](modules/workspace-sessions.md), признак работы ChatGPT — [chatgpt-dom-compatibility](modules/chatgpt-dom-compatibility.md).
 
-## Поставляемый Workflow Kit 1.4.12 — 0.6.53
+## Canonical Workflow Kit package — 0.6.56
+
+Workflow Kit / Context Recovery: единственный editable source — `/Users/oleksandroliinyk/VSCODE/WorkflowKit/src`, package — `@webpilot/workflow-kit@1.4.12`. Development использует package exports; external Workspace Setup / Project Doctor и Electron package используют ignored generated `resources/workflow-kit`, автоматически staged из `getRuntimeRoot()`. Контракт — [workflow-kit-recovery](modules/workflow-kit-recovery.md), [session-owned-plans](modules/session-owned-plans.md), [WORKSPACE_SETUP](WORKSPACE_SETUP.md).
+
+## Поставляемый Workflow Kit 1.4.12 — 0.6.53 (история)
 
 `resources/workflow-kit` = 1.4.12: канонические планы — `.harness/plans/by-id/` и `.harness/plans/by-session/`; их читают Kit (listPlans, inspection inputs), полный контекст (`src/context-inputs.mjs`), Доктор (`resources/project-doctor`) и Workspace Setup (upgrade 1.1.0–1.4.11). Контракт — [workflow-kit-recovery](modules/workflow-kit-recovery.md) и [session-owned-plans](modules/session-owned-plans.md).
 

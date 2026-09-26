@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 13,
+  "plan_revision": 15,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-kit-package-migration-039",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Перевести Project Web Pilot на canonical @webpilot/workflow-kit с generated runtime staging и выпустить парный macOS arm64 / Windows x64 релиз.",
   "acceptance_criteria": [
     "@webpilot/workflow-kit@1.4.12 является development dependency и единственным editable source остаётся /Users/oleksandroliinyk/VSCODE/WorkflowKit/src",
@@ -91,7 +91,9 @@
       "docs/WORKSPACE_SETUP.md",
       "docs/SOURCE_WORKSPACES.md",
       "README.md",
-      "AGENTS.md"
+      "AGENTS.md",
+      "docs/CLEAN_INSTALL.md",
+      "docs/WORKFLOW_START.md"
     ]
   },
   "baseline_commit": "8fc40c986cc4c7b02bc71f66fc4737a70da2868a",
@@ -389,8 +391,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workflow-kit-package-migration-039",
         "task_id": "DOCS",
@@ -430,7 +432,9 @@
         "docs/WORKSPACE_SETUP.md",
         "docs/SOURCE_WORKSPACES.md",
         "README.md",
-        "AGENTS.md"
+        "AGENTS.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/WORKFLOW_START.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -443,7 +447,27 @@
         "Зафиксирован парный релиз 0.6.56 macOS arm64 + Windows x64 и его проверки",
         "Исторические записи прошлых релизов сохранены как история"
       ],
-      "expected_commit_message": "docs: актуализировать контекст проекта"
+      "expected_commit_message": "docs: актуализировать контекст проекта",
+      "actual_files": [
+        "AGENTS.md",
+        "README.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/RELEASE.md",
+        "docs/SOURCE_WORKSPACES.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/session-opening-performance.md",
+        "docs/modules/session-owned-plans.md",
+        "docs/modules/workflow-kit-recovery.md",
+        "docs/modules/workspace-sessions.md",
+        "docs/planning/workflow-kit-package-migration.md"
+      ]
     }
   ],
   "blocked_reason": null,
@@ -463,10 +487,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: workflow-kit-package-migration-039
 Current Task: нет
-Revision: 13
+Revision: 15
 
 ## Цель
 
@@ -500,10 +524,10 @@ Revision: 13
   - Git Commit: [DONE] build: выпустить WebPilot с canonical Workflow Kit package
   - Reference: workflow-kit-package-migration-039 / T004 / implementation
   - Файлы: package.json, package-lock.json, scripts/verify-windows-package.mjs, scripts/release-all.mjs, scripts/release-mac.mjs, docs/planning/workflow-kit-package-migration.md, docs/RELEASE.md, docs/VERIFICATION.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать контекст проекта
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать контекст проекта
   - Reference: workflow-kit-package-migration-039 / DOCS / implementation
-  - Файлы: docs/planning/workflow-kit-package-migration.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, resources/workflow-kit/WORKFLOW.md, resources/workflow-kit/examples/PACKAGING.md, resources/workflow-kit/templates/AGENTS.md, resources/workflow-kit/templates/ARCHITECTURE.md, resources/workflow-kit/templates/CONTINUE.md, resources/workflow-kit/templates/PLAN.md, resources/workflow-kit/templates/PRODUCT.md, resources/workflow-kit/templates/PROTOTYPE.md, resources/workflow-kit/templates/SPEC.md, resources/workflow-kit/templates/STAGES.md, resources/workflow-kit/templates/START.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/modules/workflow-kit-recovery.md, docs/modules/workspace-sessions.md, docs/modules/session-owned-plans.md, docs/modules/session-opening-performance.md, docs/WORKSPACE_SETUP.md, docs/SOURCE_WORKSPACES.md, README.md, AGENTS.md
+  - Файлы: docs/planning/workflow-kit-package-migration.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, resources/workflow-kit/WORKFLOW.md, resources/workflow-kit/examples/PACKAGING.md, resources/workflow-kit/templates/AGENTS.md, resources/workflow-kit/templates/ARCHITECTURE.md, resources/workflow-kit/templates/CONTINUE.md, resources/workflow-kit/templates/PLAN.md, resources/workflow-kit/templates/PRODUCT.md, resources/workflow-kit/templates/PROTOTYPE.md, resources/workflow-kit/templates/SPEC.md, resources/workflow-kit/templates/STAGES.md, resources/workflow-kit/templates/START.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/modules/workflow-kit-recovery.md, docs/modules/workspace-sessions.md, docs/modules/session-owned-plans.md, docs/modules/session-opening-performance.md, docs/WORKSPACE_SETUP.md, docs/SOURCE_WORKSPACES.md, README.md, AGENTS.md, docs/CLEAN_INSTALL.md, docs/WORKFLOW_START.md
 
 ## Context Pack For This Cycle
 

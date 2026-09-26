@@ -741,7 +741,7 @@ macOS arm64 и Windows x64 повторно упакованы после restar
 
 ## Project Doctor — T010
 
-Автономный Node worker `resources/project-doctor-worker.mjs` использует bundled Workflow Kit, проверяет known payload и выполняет допустимые файловые операции под общей блокировкой. `resources/project-doctor/core.mjs` формирует план ремонта; `files.mjs` отвечает за пути, snapshot, backup, atomic writes и осторожный rollback. Канонический контракт — `docs/modules/project-doctor.md`.
+Автономный Node worker `resources/project-doctor-worker.mjs` использует generated staged Workflow Kit runtime, проверяет known payload и выполняет допустимые файловые операции под общей блокировкой. `resources/project-doctor/core.mjs` формирует план ремонта; `files.mjs` отвечает за пути, snapshot, backup, atomic writes и осторожный rollback. Канонический контракт — `docs/modules/project-doctor.md`.
 
 ### Desktop integration Project Doctor — T011
 
@@ -1311,3 +1311,9 @@ context-inputs включает by-session в ключ контекста; proje
 0.6.55: ChatColors перед вставкой CSS выполняет в странице `installComposerCapsule`
 (ближайший скруглённый предок поля ввода → `data-web-pilot-composer-capsule`,
 обёртки внутри → `data-web-pilot-composer-inner`); цвет поля ввода относится только к этой метке.
+
+## 0.6.56 — canonical Workflow Kit package
+
+`@webpilot/workflow-kit@1.4.12` из `/Users/oleksandroliinyk/VSCODE/WorkflowKit` стал единственным владельцем editable Workflow Kit source. Development code и tests импортируют package/subpath exports. `scripts/stage-workflow-kit.mjs` перед start/test/smoke/build копирует `getRuntimeRoot()` в ignored `resources/workflow-kit`; относительные imports external Workspace Setup и Project Doctor сохранены, поэтому packaged layout не менялся. `src/session-plans.mjs` в development использует package export, а packaged app — staged trusted projection из `process.resourcesPath`.
+
+Release pipeline stage-ит runtime до `sourceSnapshot()`. Windows verifier и общий release manifest утверждают VERSION, 35-файловый fileset и digest `5464b2c1528eef1de740af50558bc8db1d39cfa7838f9c032d23650fb4f5f119`. `.harness/kit` Project Web Pilot остаётся установленным runtime проекта и не является source of truth.

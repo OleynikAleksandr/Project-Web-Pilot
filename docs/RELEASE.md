@@ -522,3 +522,16 @@ ASAR: macOS `4ea68c0ac2a16691e07fb97a7ba74c60fbf1ce258086ab482434a75c5122dec6`, 
 | Windows x64 | 316466837 | `08a0af2f396c2fa6067200f4837b6ffe7bb9775ed751c9344aad25e5eecd4c36` |
 
 ASAR: macOS `6206d848870ea871138a40cdc008aac1928154c1541b311de42677abfcdf32a5`, Windows `0772fef3a6c784247d30602b33a9003daa1caa61dec872455c3af1708c5d215e`.
+
+## Локальный парный выпуск 0.6.56 — 26.09.2026
+
+Workflow Kit переведён на canonical `@webpilot/workflow-kit@1.4.12`; tracked duplicate удалён, packaged runtime автоматически stage-ится из package. После managed package commit `a581e250f9baf3e79ff688381fc44fe1c8e4e849` парный `npm run build` повторён из уже зафиксированного HEAD: `sourceCommit` в финальном manifest совпадает с этим commit, `packagedSourceMatches: true`. Runtime Kit в обеих поставках: 35 файлов, SHA-256 `5464b2c1528eef1de740af50558bc8db1d39cfa7838f9c032d23650fb4f5f119`.
+
+Корневой `Project Web Pilot.app` обновлён до 0.6.56 с сохранением inode `406600483`. Поставка: `~/Downloads/WebPilot-0.6.56/`; оба ZIP прошли integrity check.
+
+| Платформа | Размер, байт | SHA-256 ZIP | ASAR SHA-256 |
+| --- | ---: | --- | --- |
+| macOS arm64 | 181302932 | `5bdda7cb444b19dd581bef122812077fed75585d8b5f533be54994fa24ec36bb` | `b135d03e2833f5802852d1f38813f831392f354090d5cd9880cc4333844d0ee7` |
+| Windows x64 | 316565254 | `57b5e226ee3db64db653e78379ddb7b25aac7c749dd2e0229b6888e2e268811e` | `5fda451f7bfc3650883457018a5d5dc5cb0932f48d6bc938a5452a8bc70513fd` |
+
+Windows package verifier подтвердил PE, portable Node, Windows runtime и Workflow Kit 1.4.12 / 35 files / expected digest. Native Windows и clean VM в этом выпуске не запускались; это остаётся пользовательской проверкой.

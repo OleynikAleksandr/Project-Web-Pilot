@@ -203,3 +203,7 @@ Recovery 1.4.11 передаёт вместе с Workflow Core правила `P
 ## Workflow Kit 1.4.12 — планы по адресу сессии (0.6.53)
 
 Живой прогон 0.6.52 показал: `plan:create --session <id>` с проверками сначала сохраняет конфигурацию, поэтому виртуальный план сессии записывается в `.harness/plans/by-session/<id>.md`, и `createScope` оставляет его там. Команды агента этот файл находили, а `listPlans` читал только `by-id`, поэтому сайдбар, Доктор и проверка готовности видели NONE. В 1.4.12 оба каталога канонические: `listPlans` и входы инспекции читают `by-id` и `by-session`, установщик обновляет установки 1.1.0–1.4.11. Остальной код 1.4.11 не менялся; исправление нужно перенести в исходный Kit (CodeAppServer, ветка `codex/gpt-provider-names`).
+
+## Canonical package и staging — 0.6.56
+
+Исторические поставки 1.4.1–1.4.12 выше сохраняют происхождение изменений, но текущий владелец исходника один: `/Users/oleksandroliinyk/VSCODE/WorkflowKit/src`, package `@webpilot/workflow-kit@1.4.12`. WebPilot programmatic imports используют package exports. External Workspace Setup/Project Doctor и packaged trusted projection получают byte-identical generated runtime из `getRuntimeRoot()` в `resources/workflow-kit`; этот каталог ignored и не является source. Canonical и staged runtime подтверждаются 35 файлами и SHA-256 `5464b2c1528eef1de740af50558bc8db1d39cfa7838f9c032d23650fb4f5f119`.

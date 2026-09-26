@@ -59,23 +59,17 @@
 
 Большие исторические `PRODUCT`, `ARCHITECTURE`, `VERIFICATION`, `DECISIONS` и другие профильные документы читаются по этому индексу только когда нужны для конкретного этапа. Только явно архивированные планы находятся в `.harness/plans/archive/` и являются историей. Выполненный, но не архивированный план остаётся в своей сессии и может быть продолжен.
 
-## Поставляемое ядро Workspace Setup
+## Workflow Kit package и generated runtime
 
-| Документ | Назначение |
+| Документ / файл | Назначение |
 | --- | --- |
-| resources/workflow-kit/WORKFLOW.md | Поставляемая копия протокола Workflow Kit |
-| resources/workflow-kit/templates/AGENTS.md | Поставляемый шаблон AGENTS |
-| resources/workflow-kit/templates/ARCHITECTURE.md | Поставляемый универсальный шаблон структуры проекта |
-| resources/workflow-kit/templates/PLAN.md | Поставляемый шаблон ToDo-plan |
-| resources/workflow-kit/templates/PRODUCT.md | Поставляемый универсальный шаблон общего замысла |
-| resources/workflow-kit/templates/START.md | Поставляемый шаблон начала работы |
-| resources/workflow-kit/templates/PROTOTYPE.md | Поставляемые правила быстрого прототипа и Git (Kit 1.4.11) |
-| resources/workflow-kit/templates/SPEC.md | Поставляемая форма короткого контракта результата |
-| resources/workflow-kit/templates/CONTINUE.md | Поставляемые примеры продолжения плана: plan:extend, task:update |
-| resources/workflow-kit/templates/STAGES.md | Поставляемые формы проверки и финальной документации |
-| resources/workflow-kit/examples/PACKAGING.md | Поставляемый пример безопасной упаковки и проверки |
+| `/Users/oleksandroliinyk/VSCODE/WorkflowKit/docs/modules/workflow-kit-package.md` | Canonical contract package `@webpilot/workflow-kit` |
+| `docs/planning/workflow-kit-package-migration.md` | Контракт миграции WebPilot на package + staging |
+| `scripts/check-workflow-kit-dependency.mjs` | Проверка resolved package, версии, exports, 35-файлового fileset и digest |
+| `scripts/stage-workflow-kit.mjs` | Детерминированный generated staging в `resources/workflow-kit` |
+| `scripts/check-workflow-kit-staging.mjs` | Проверка равенства generated runtime canonical package и идемпотентности |
 
-С 0.6.52 поставляемый `resources/workflow-kit` — Workflow Kit 1.4.11, закреплённый по источнику и SHA-256 автоматическим regression test; собственный `.harness/kit` репозитория остаётся 1.4.1 и обновляется отдельно.
+С 0.6.56 `resources/workflow-kit` не является source tree и не хранится в Git: это generated runtime для external workers и Electron packaging. Единственный editable source — `/Users/oleksandroliinyk/VSCODE/WorkflowKit/src`; `.harness/kit` Project Web Pilot — отдельная installed runtime самого проекта.
 
 
 ## Действующий контракт — планы сессий
@@ -137,10 +131,12 @@ message/turn wrappers без изменения MCP, conversation state или �
 Scope `stable-mcp-connector-036` завершает интеграцию scope 035: в ChatGPT используется один стабильный Secure MCP Tunnel/connector, а macOS Settings переключает только backend `Codex Local Mac | Codex App Server Local Mac`. Старый local LaunchAgent остаётся disabled, выбранный backend запускается MCP-only, стабильный WebPilot selector retarget-ит tunnel и восстанавливает выбор после login/reboot. Existing Codex Local Mac tunnel credentials при необходимости импортируются внутри private worker без вывода секрета. Финальная поставка 0.6.47 собрана из `acde362fc75645dff20f2e494604d9b2b5289403`; артефакты и hashes — `docs/RELEASE.md` и `docs/VERIFICATION.md`. GitHub 0.6.47 не публикуется без отдельного поручения пользователя.
 - `docs/modules/chatgpt-dom-compatibility.md` — общий DOM adapter, фильтр, оформление и автопрокрутка, контракт 0.6.48.
 
-Текущая локальная поставка 0.6.48: [RELEASE](RELEASE.md); живые проверки и ограничения Windows/login — [VERIFICATION](VERIFICATION.md); контракт DOM — [chatgpt-dom-compatibility](modules/chatgpt-dom-compatibility.md). Исторические версии в документах сохраняются как evidence, а не текущая поставка.
+Историческая локальная поставка 0.6.48: [RELEASE](RELEASE.md); живые проверки и ограничения Windows/login — [VERIFICATION](VERIFICATION.md); контракт DOM — [chatgpt-dom-compatibility](modules/chatgpt-dom-compatibility.md). Исторические версии в документах сохраняются как evidence, а не текущая поставка.
 
-Текущий выпуск 0.6.49: RELEASE.md и VERIFICATION.md. Контракт независимого прогресса и цвета поля — `docs/modules/workspace-sessions.md`. Workflow Kit 1.4.1 сохраняется.
+Исторический выпуск 0.6.49: RELEASE.md и VERIFICATION.md. Контракт независимого прогресса и цвета поля — `docs/modules/workspace-sessions.md`. Workflow Kit 1.4.1 сохраняется.
 
-Текущий выпуск — 0.6.50: RELEASE.md, VERIFICATION.md. Контракт полной плашки — `docs/modules/workspace-sessions.md`; история 0.6.49 сохраняет причины исправления.
+Исторический выпуск — 0.6.50: RELEASE.md, VERIFICATION.md. Контракт полной плашки — `docs/modules/workspace-sessions.md`; история 0.6.49 сохраняет причины исправления.
 
-Текущий выпуск 0.6.51: RELEASE.md, VERIFICATION.md. Выбор первого проекта описан в `docs/modules/first-run-onboarding.md` и WORKSPACE_SETUP.md.
+Исторический выпуск 0.6.51: RELEASE.md, VERIFICATION.md. Выбор первого проекта описан в `docs/modules/first-run-onboarding.md` и WORKSPACE_SETUP.md.
+
+Текущий выпуск 0.6.56: [RELEASE](RELEASE.md), [VERIFICATION](VERIFICATION.md), canonical package/staging — `docs/planning/workflow-kit-package-migration.md`; парная поставка macOS arm64 / Windows x64 находится в `~/Downloads/WebPilot-0.6.56/`.

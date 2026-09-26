@@ -2066,3 +2066,11 @@ Linux VM Cowork, Node 22.23.2: `tests/agent-timer.test.mjs` — начало с 
 ## Парный выпуск 0.6.55 — scope 038 / T012
 
 На Mac: `npm test` — 357 тестов, 355 PASS, 2 SKIP, 0 FAIL; `npm run smoke` — PASSED (включая вариант «скруглённый root + прямоугольный body» и мгновенную заливку нового поля ввода); `npm run build` — exit 0, `packagedSourceMatches: true`. Собранный корневой app 0.6.55 запущен с временным локальным отладочным портом на реальном чате пользователя: помечен и закрашен (#2b2b2b) только `ComposerLayoutRoot` со скруглением 26px, `data-composer-body` прозрачен, на снимке плашка с радиусными краями. После проверки приложение перезапущено обычным способом, порт закрыт, снимки удалены. Native Windows не проверялся.
+
+## Canonical Workflow Kit migration и парный выпуск 0.6.56 — scope 039
+
+Package contract: resolved `@webpilot/workflow-kit@1.4.12`, runtime 35 файлов, digest `5464b2c1528eef1de740af50558bc8db1d39cfa7838f9c032d23650fb4f5f119`; `git ls-files 'resources/workflow-kit/**'` возвращает 0, generated staging ignored и совпадает с `getRuntimeRoot()`. После T003 `npm test`: 358 tests, 355 PASS, 3 SKIP, 0 FAIL.
+
+Managed T004 проверил `npm run smoke` — PASSED и `npm run build` — PASSED. После commit `a581e250f9baf3e79ff688381fc44fe1c8e4e849` generated artifacts первой pre-commit сборки удалены и `npm run build` повторён из зафиксированного HEAD, чтобы release provenance была однозначной. Финальный manifest: `sourceCommit=a581e250f9baf3e79ff688381fc44fe1c8e4e849`, `sourceFiles=95`, `packagedSourceMatches=true`, Workflow Kit 1.4.12 / 35 / expected digest.
+
+Финальные ZIP: macOS `5bdda7cb444b19dd581bef122812077fed75585d8b5f533be54994fa24ec36bb` (181302932 bytes), Windows `57b5e226ee3db64db653e78379ddb7b25aac7c749dd2e0229b6888e2e268811e` (316565254 bytes). Windows verifier дополнительно подтвердил `Project Web Pilot.exe`, portable Node SHA `721ab118a3aac8584348b132767eadf51379e0616f0db802cc1e66d7f0d98f85`, Windows runtime SHA `1f041488ad97d8abf1984fd3521afb8abe15f50b8df3d3e11f1cc4248e019d98` и packaged Workflow Kit. Native Windows/clean VM не проверялись.
