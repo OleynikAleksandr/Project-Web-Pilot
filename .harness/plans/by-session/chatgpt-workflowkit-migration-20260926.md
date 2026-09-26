@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 12,
+  "plan_revision": 13,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-kit-package-migration-039",
@@ -83,7 +83,15 @@
       "docs/architecture/ARCHITECTURE.md",
       "docs/architecture/OVERVIEW.md",
       "docs/MODULES.md",
-      "docs/DOCUMENTATION_INDEX.md"
+      "docs/DOCUMENTATION_INDEX.md",
+      "docs/modules/workflow-kit-recovery.md",
+      "docs/modules/workspace-sessions.md",
+      "docs/modules/session-owned-plans.md",
+      "docs/modules/session-opening-performance.md",
+      "docs/WORKSPACE_SETUP.md",
+      "docs/SOURCE_WORKSPACES.md",
+      "README.md",
+      "AGENTS.md"
     ]
   },
   "baseline_commit": "8fc40c986cc4c7b02bc71f66fc4737a70da2868a",
@@ -414,14 +422,26 @@
         "docs/VERIFICATION.md",
         "docs/architecture/OVERVIEW.md",
         "docs/MODULES.md",
-        "docs/DOCUMENTATION_INDEX.md"
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/modules/workflow-kit-recovery.md",
+        "docs/modules/workspace-sessions.md",
+        "docs/modules/session-owned-plans.md",
+        "docs/modules/session-opening-performance.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/SOURCE_WORKSPACES.md",
+        "README.md",
+        "AGENTS.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
       "title": "Актуализация всех документов проекта",
       "why": "Сохранить актуальный контекст для следующего агента",
       "acceptance_criteria": [
-        "Документы соответствуют результату"
+        "Документы соответствуют результату",
+        "Текущая документация называет единственным editable source /Users/oleksandroliinyk/VSCODE/WorkflowKit/src и package @webpilot/workflow-kit@1.4.12",
+        "resources/workflow-kit описан только как generated staging/build runtime",
+        "Зафиксирован парный релиз 0.6.56 macOS arm64 + Windows x64 и его проверки",
+        "Исторические записи прошлых релизов сохранены как история"
       ],
       "expected_commit_message": "docs: актуализировать контекст проекта"
     }
@@ -446,7 +466,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-kit-package-migration-039
 Current Task: нет
-Revision: 12
+Revision: 13
 
 ## Цель
 
@@ -483,7 +503,7 @@ Revision: 12
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: workflow-kit-package-migration-039 / DOCS / implementation
-  - Файлы: docs/planning/workflow-kit-package-migration.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, resources/workflow-kit/WORKFLOW.md, resources/workflow-kit/examples/PACKAGING.md, resources/workflow-kit/templates/AGENTS.md, resources/workflow-kit/templates/ARCHITECTURE.md, resources/workflow-kit/templates/CONTINUE.md, resources/workflow-kit/templates/PLAN.md, resources/workflow-kit/templates/PRODUCT.md, resources/workflow-kit/templates/PROTOTYPE.md, resources/workflow-kit/templates/SPEC.md, resources/workflow-kit/templates/STAGES.md, resources/workflow-kit/templates/START.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
+  - Файлы: docs/planning/workflow-kit-package-migration.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, resources/workflow-kit/WORKFLOW.md, resources/workflow-kit/examples/PACKAGING.md, resources/workflow-kit/templates/AGENTS.md, resources/workflow-kit/templates/ARCHITECTURE.md, resources/workflow-kit/templates/CONTINUE.md, resources/workflow-kit/templates/PLAN.md, resources/workflow-kit/templates/PRODUCT.md, resources/workflow-kit/templates/PROTOTYPE.md, resources/workflow-kit/templates/SPEC.md, resources/workflow-kit/templates/STAGES.md, resources/workflow-kit/templates/START.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/modules/workflow-kit-recovery.md, docs/modules/workspace-sessions.md, docs/modules/session-owned-plans.md, docs/modules/session-opening-performance.md, docs/WORKSPACE_SETUP.md, docs/SOURCE_WORKSPACES.md, README.md, AGENTS.md
 
 ## Context Pack For This Cycle
 
