@@ -4,20 +4,21 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 33,
+  "plan_revision": 34,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-kit-1411-038",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
-  "objective": "Поставлять в новых и подключаемых проектах Workflow Kit 1.4.11 и выпустить парный релиз 0.6.52; затем Kit 1.4.12 с видимыми планами by-session и выпуск 0.6.53; затем таймер работы агента в карточке плана и выпуск 0.6.54",
+  "delivery_status": "IN_PROGRESS",
+  "objective": "Поставлять в новых и подключаемых проектах Workflow Kit 1.4.11 и выпустить парный релиз 0.6.52; затем Kit 1.4.12 с видимыми планами by-session и выпуск 0.6.53; затем таймер работы агента в карточке плана и выпуск 0.6.54; затем заливка только скруглённой плашки поля ввода и выпуск 0.6.55",
   "acceptance_criteria": [
     "resources/workflow-kit побайтно совпадает с Workflow Kit 1.4.11 из CodeAppServer badcf20 (tree 1fe409fb)",
     "Новый проект получает Workflow Kit 1.4.11; проект 1.4.1 предлагается к обновлению и обновляется с сохранением планов сессий",
     "Доктор и подготовка принимают установки 1.4.1; сайдбар объясняет необходимость обновления Kit",
     "Полный Node suite проходит",
     "Парный выпуск 0.6.52 собран npm run build: ZIP macOS arm64 и Windows x64 в ~/Downloads/WebPilot-0.6.52/, корневой Project Web Pilot.app обновлён",
-    "Таймер работы агента (текущее задание и сумма за сессию) виден в карточке плана; парный выпуск 0.6.54 собран"
+    "Таймер работы агента (текущее задание и сумма за сессию) виден в карточке плана; парный выпуск 0.6.54 собран",
+    "Цвет поля ввода закрашивает только скруглённую плашку; парный выпуск 0.6.55 собран"
   ],
   "approved_scope": {
     "functional_paths": [
@@ -76,7 +77,9 @@
       "src/workspace-session.mjs",
       "src/ui/index.html",
       "tests/agent-timer.test.mjs",
-      "tests/workspace-session.test.mjs"
+      "tests/workspace-session.test.mjs",
+      "src/chatgpt-colors.mjs",
+      "tests/chatgpt-colors.test.mjs"
     ],
     "documentation_paths": [
       "docs/architecture/OVERVIEW.md",
@@ -472,13 +475,101 @@
       }
     },
     {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
+      "id": "T010",
+      "title": "Заливка только скруглённой плашки поля ввода",
+      "why": "Цвет поля ввода закрашивает прямоугольную подложку: в текущем ChatGPT скруглённую плашку рисует то data-composer-body, то внешний ComposerLayoutRoot",
+      "dependencies": [],
+      "functional_paths": [
+        "src/chatgpt-colors.mjs",
+        "tests/chatgpt-colors.test.mjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/workspace-sessions.md",
+        "docs/modules/chatgpt-dom-compatibility.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "acceptance_criteria": [
+        "Закрашивается ближайший скруглённый предок видимого поля ввода (плашка с радиусными краями), прямоугольные обёртки внутри неё прозрачны",
+        "Сброс цвета снимает разметку и возвращает исходный вид",
+        "Проверено на реальном DOM ChatGPT: чат в Web Pilot и новая страница после входа",
+        "npm test проходит"
+      ],
+      "verification_ids": [
+        "suite"
+      ],
+      "expected_commit_message": "fix: заливка только скруглённой плашки поля ввода",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "workflow-kit-1411-038",
+        "task_id": "T010",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T011",
+      "title": "Версия 0.6.55",
+      "why": "Новый парный выпуск",
+      "dependencies": [
+        "T010"
+      ],
+      "functional_paths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "documentation_paths": [],
+      "documentation_exception": "Меняется только номер версии выпуска; архитектура и зависимости не меняются.",
+      "acceptance_criteria": [
+        "package.json, package-lock.json и build-скрипты — 0.6.55"
+      ],
+      "verification_ids": [
+        "syntax"
+      ],
+      "expected_commit_message": "chore: версия 0.6.55",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "workflow-kit-1411-038",
+        "task_id": "T011",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T012",
+      "title": "Парный выпуск 0.6.55",
+      "why": "Собрать и проверить macOS + Windows",
+      "dependencies": [
+        "T011"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "acceptance_criteria": [
+        "npm test, smoke и npm run build прошли на Mac",
+        "Корневой и /Applications app — 0.6.55, плашка поля ввода закрашена по скруглённому контуру"
+      ],
+      "verification_ids": [],
+      "expected_commit_message": "feat: Парный выпуск 0.6.55",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "workflow-kit-1411-038",
+        "task_id": "T012",
+        "role": "implementation"
+      }
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "workflow-kit-1411-038",
         "task_id": "DOCS",
         "role": "implementation",
-        "iteration": 3
+        "iteration": 4
       },
       "dependencies": [
         "T001",
@@ -489,7 +580,10 @@
         "T006",
         "T007",
         "T008",
-        "T009"
+        "T009",
+        "T010",
+        "T011",
+        "T012"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -526,6 +620,11 @@
       "id": "ea6a7e07-81eb-4610-a560-cec9317982e1",
       "text": "Пользователь 26.09.2026 поручил сделать таймер времени, которое агент тратит на обработку задания: абсолютное время в минутах и секундах, справа вверху карточки «План этой сессии», показывать и текущее задание, и сумму за сессию; затем собрать релиз 0.6.54 macOS + Windows.",
       "recorded_at": "2026-09-26T07:44:14.603Z"
+    },
+    {
+      "id": "0ce1ba2a-9720-47d5-96aa-b8c15d6ab187",
+      "text": "Пользователь 26.09.2026: цвет поля ввода из настроек должен закрашивать только плашку с радиусными краями слева и справа, а не прямоугольную подложку и не только текстовую зону. Проверять на реальном DOM ChatGPT в Web Pilot после входа.",
+      "recorded_at": "2026-09-26T12:14:30.649Z"
     }
   ],
   "owner_session_id": "cowork-kit-1411",
@@ -537,14 +636,14 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: workflow-kit-1411-038
 Current Task: нет
-Revision: 33
+Revision: 34
 
 ## Цель
 
-Поставлять в новых и подключаемых проектах Workflow Kit 1.4.11 и выпустить парный релиз 0.6.52; затем Kit 1.4.12 с видимыми планами by-session и выпуск 0.6.53; затем таймер работы агента в карточке плана и выпуск 0.6.54
+Поставлять в новых и подключаемых проектах Workflow Kit 1.4.11 и выпустить парный релиз 0.6.52; затем Kit 1.4.12 с видимыми планами by-session и выпуск 0.6.53; затем таймер работы агента в карточке плана и выпуск 0.6.54; затем заливка только скруглённой плашки поля ввода и выпуск 0.6.55
 
 ## Критерии приёмки
 
@@ -554,6 +653,7 @@ Revision: 33
 - Полный Node suite проходит
 - Парный выпуск 0.6.52 собран npm run build: ZIP macOS arm64 и Windows x64 в ~/Downloads/WebPilot-0.6.52/, корневой Project Web Pilot.app обновлён
 - Таймер работы агента (текущее задание и сумма за сессию) виден в карточке плана; парный выпуск 0.6.54 собран
+- Цвет поля ввода закрашивает только скруглённую плашку; парный выпуск 0.6.55 собран
 
 ## Микрозадачи
 
@@ -593,8 +693,20 @@ Revision: 33
   - Git Commit: [DONE] feat: Парный выпуск 0.6.54
   - Reference: workflow-kit-1411-038 / T009 / implementation
   - Файлы: docs/RELEASE.md, docs/VERIFICATION.md
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: актуализировать документацию проекта
+- [TODO] T010: Заливка только скруглённой плашки поля ввода — Ожидает
+  - Git Commit: [PENDING] fix: заливка только скруглённой плашки поля ввода
+  - Reference: workflow-kit-1411-038 / T010 / implementation
+  - Файлы: src/chatgpt-colors.mjs, tests/chatgpt-colors.test.mjs, tests/electron-smoke.mjs, docs/modules/workspace-sessions.md, docs/modules/chatgpt-dom-compatibility.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+- [TODO] T011: Версия 0.6.55 — Ожидает
+  - Git Commit: [PENDING] chore: версия 0.6.55
+  - Reference: workflow-kit-1411-038 / T011 / implementation
+  - Файлы: package.json, package-lock.json
+- [TODO] T012: Парный выпуск 0.6.55 — Ожидает
+  - Git Commit: [PENDING] feat: Парный выпуск 0.6.55
+  - Reference: workflow-kit-1411-038 / T012 / implementation
+  - Файлы: docs/RELEASE.md, docs/VERIFICATION.md
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: актуализировать документацию проекта
   - Reference: workflow-kit-1411-038 / DOCS / implementation
   - Файлы: docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, README.md, AGENTS.md, docs/SOURCE_WORKSPACES.md, docs/architecture/ARCHITECTURE.md, docs/PRODUCT.md, docs/modules/project-doctor.md, docs/modules/workflow-kit-recovery.md, docs/WORKSPACE_SETUP.md
 
