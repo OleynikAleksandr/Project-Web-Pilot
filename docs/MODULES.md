@@ -75,6 +75,10 @@ ChatColors выбирает data-composer-body, владеющий видимы�
 
 Общий startup UI предлагает chooseWorkspace после той же проверки, что beginCreate. Контракты: `docs/modules/first-run-onboarding.md` и `docs/WORKSPACE_SETUP.md`. Backend установки не менялся.
 
+## Таймер работы агента — 0.6.54
+
+Workspace & Sessions: `src/agent-timer.mjs` (замер по видимому Stop), поле сессии `agentTime` и отображение `mm:ss · Σ mm:ss` в карточке плана — [workspace-sessions](modules/workspace-sessions.md), признак работы ChatGPT — [chatgpt-dom-compatibility](modules/chatgpt-dom-compatibility.md).
+
 ## Поставляемый Workflow Kit 1.4.12 — 0.6.53
 
 `resources/workflow-kit` = 1.4.12: канонические планы — `.harness/plans/by-id/` и `.harness/plans/by-session/`; их читают Kit (listPlans, inspection inputs), полный контекст (`src/context-inputs.mjs`), Доктор (`resources/project-doctor`) и Workspace Setup (upgrade 1.1.0–1.4.11). Контракт — [workflow-kit-recovery](modules/workflow-kit-recovery.md) и [session-owned-plans](modules/session-owned-plans.md).

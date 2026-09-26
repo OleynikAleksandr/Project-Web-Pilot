@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 31,
+  "plan_revision": 33,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-kit-1411-038",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Поставлять в новых и подключаемых проектах Workflow Kit 1.4.11 и выпустить парный релиз 0.6.52; затем Kit 1.4.12 с видимыми планами by-session и выпуск 0.6.53; затем таймер работы агента в карточке плана и выпуск 0.6.54",
   "acceptance_criteria": [
     "resources/workflow-kit побайтно совпадает с Workflow Kit 1.4.11 из CodeAppServer badcf20 (tree 1fe409fb)",
@@ -472,8 +472,8 @@
       }
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workflow-kit-1411-038",
         "task_id": "DOCS",
@@ -537,10 +537,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: workflow-kit-1411-038
 Current Task: нет
-Revision: 31
+Revision: 33
 
 ## Цель
 
@@ -593,8 +593,8 @@ Revision: 31
   - Git Commit: [DONE] feat: Парный выпуск 0.6.54
   - Reference: workflow-kit-1411-038 / T009 / implementation
   - Файлы: docs/RELEASE.md, docs/VERIFICATION.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать документацию проекта
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать документацию проекта
   - Reference: workflow-kit-1411-038 / DOCS / implementation
   - Файлы: docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, README.md, AGENTS.md, docs/SOURCE_WORKSPACES.md, docs/architecture/ARCHITECTURE.md, docs/PRODUCT.md, docs/modules/project-doctor.md, docs/modules/workflow-kit-recovery.md, docs/WORKSPACE_SETUP.md
 

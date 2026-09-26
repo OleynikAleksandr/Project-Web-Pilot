@@ -70,10 +70,14 @@ Scope session-opening-performance-029 реализован в 0.6.29 / Workflow 
 
 На шаге «Первый проект» доступны создание нового и добавление существующей папки. Повторная готовность, preview/apply и сохранение файлов используют прежний путь. Kit 1.4.1. Парная поставка — `~/Downloads/WebPilot-0.6.51/`; обновляются root app и /Applications. Native Windows не запускалась.
 
-## Текущий локальный выпуск — 0.6.53
+## Текущий локальный выпуск — 0.6.54
+
+Таймер работы агента в карточке плана: `src/agent-timer.mjs` (main опрашивает видимый Stop выбранной сессии раз в секунду, паузы до 5 с — то же задание), завершённые задания суммируются в session store (`agentTime`), идущее передаётся как `selected.agentRun`. Остальное — как в 0.6.53. Парная поставка — `~/Downloads/WebPilot-0.6.54/`; обновлены корневой app и `/Applications/Project Web Pilot.app`.
+
+## Предыдущий локальный выпуск — 0.6.53
 
 Поставляемый `resources/workflow-kit` — Workflow Kit 1.4.12 = 1.4.11 (CodeAppServer, ветка codex/gpt-provider-names, badcf20) + исправление: план из `plan:create --session` в `.harness/plans/by-session/` канонический и читается listPlans, сайдбаром, готовностью, полным контекстом и Доктором. Тест закрепляет SHA-256 `5464b2c1…f5f119`. Проекты 1.4.11 получают уведомление «Обновить Workflow Kit» (штатный upgrade с резервной копией). Исправление ещё не перенесено в исходный Kit CodeAppServer. Парная поставка — `~/Downloads/WebPilot-0.6.53/`; обновлены корневой app и `/Applications/Project Web Pilot.app`. План scope 038 принадлежит сессии cowork-kit-1411.
 
-## Предыдущий локальный выпуск — 0.6.52
+## Выпуск 0.6.52
 
 Поставляемый `resources/workflow-kit` — Workflow Kit 1.4.11 (источник: CodeAppServer+WebChatGPT, ветка codex/gpt-provider-names, коммит badcf20; тест закрепляет SHA-256). Собственный `.harness/kit` репозитория остаётся 1.4.1 и обновляется только отдельным поручением. Проекты 1.4.1 открываются через штатный upgrade с резервной копией. Парная поставка — `~/Downloads/WebPilot-0.6.52/`; обновлены корневой app и `/Applications/Project Web Pilot.app`. План scope 038 принадлежит сессии cowork-kit-1411.
