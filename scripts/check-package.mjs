@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+import os from 'node:os';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
@@ -30,6 +31,13 @@ async function digestFiles(root, files) {
   return digest.digest('hex');
 }
 
+async function copyPackageSnapshot(destination) {
+  await fs.mkdir(destination, { recursive: true });
+  await fs.copyFile(path.join(ROOT, 'package.json'), path.join(destination, 'package.json'));
+  await fs.copyFile(path.join(ROOT, 'index.mjs'), path.join(destination, 'index.mjs'));
+  await fs.cp(SRC, path.join(destination, 'src'), { recursive: true });
+}
+
 const pkg = JSON.parse(await fs.readFile(path.join(ROOT, 'package.json'), 'utf8'));
 assert.equal(pkg.name, '@webpilot/workflow-kit');
 assert.equal(pkg.version, BASELINE_VERSION);
@@ -50,33 +58,41 @@ assert.equal(typeof api.plan.readPlan, 'function');
 assert.equal(typeof api.sessionPlans.sessionPlanView, 'function');
 assert.equal(typeof api.recovery.contextPacket, 'function');
 assert.equal(typeof api.installer.install, 'function');
+assert.equal(typeof api.getRuntimeRoot, 'function');
 
 for (const subpath of ['actions', 'plan', 'session-plans', 'recovery', 'installer', 'installation-files', 'common']) {
   const module = await import('@webpilot/workflow-kit/lib/' + subpath);
   assert.ok(Object.keys(module).length > 0, 'empty export: ' + subpath);
 }
 
-const packed = JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json'], {
-  cwd: ROOT,
-  encoding: 'utf8',
-  stdio: ['ignore', 'pipe', 'pipe'],
-}))[0];
-const packedFiles = new Set(packed.files.map(entry => entry.path));
-for (const required of ['package.json', 'index.mjs', 'src/WORKFLOW.md', 'src/cli.mjs', 'src/lib/common.mjs', 'src/schemas/plan.schema.json', 'src/templates/PLAN.md']) {
-  assert.ok(packedFiles.has(required), 'package missing ' + required);
-}
-for (const file of packedFiles) {
-  assert.ok(!file.startsWith('.harness/'), 'runtime state leaked into package: ' + file);
-  assert.ok(!file.startsWith('.git/'), 'Git internals leaked into package: ' + file);
-  assert.ok(!file.startsWith('docs/'), 'project docs leaked into package: ' + file);
-}
+const temp = await fs.mkdtemp(path.join(os.tmpdir(), 'workflow-kit-pack-check-'));
+try {
+  const snapshot = path.join(temp, 'package');
+  await copyPackageSnapshot(snapshot);
+  const packed = JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json'], {
+    cwd: snapshot,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  }))[0];
+  const packedFiles = new Set(packed.files.map(entry => entry.path));
+  for (const required of ['package.json', 'index.mjs', 'src/WORKFLOW.md', 'src/cli.mjs', 'src/lib/common.mjs', 'src/schemas/plan.schema.json', 'src/templates/PLAN.md']) {
+    assert.ok(packedFiles.has(required), 'package missing ' + required);
+  }
+  for (const file of packedFiles) {
+    assert.ok(!file.startsWith('.harness/'), 'runtime state leaked into package: ' + file);
+    assert.ok(!file.startsWith('.git/'), 'Git internals leaked into package: ' + file);
+    assert.ok(!file.startsWith('docs/'), 'project docs leaked into package: ' + file);
+  }
 
-process.stdout.write(JSON.stringify({
-  ok: true,
-  name: pkg.name,
-  version: pkg.version,
-  canonicalFiles: sourceFiles.length,
-  canonicalSha256: BASELINE_SHA256,
-  packageFiles: packed.files.length,
-  exports: Object.keys(pkg.exports),
-}, null, 2) + '\n');
+  process.stdout.write(JSON.stringify({
+    ok: true,
+    name: pkg.name,
+    version: pkg.version,
+    canonicalFiles: sourceFiles.length,
+    canonicalSha256: BASELINE_SHA256,
+    packageFiles: packed.files.length,
+    exports: Object.keys(pkg.exports),
+  }, null, 2) + '\n');
+} finally {
+  await fs.rm(temp, { recursive: true, force: true });
+}

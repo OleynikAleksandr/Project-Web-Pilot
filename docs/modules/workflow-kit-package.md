@@ -184,3 +184,62 @@ Staged runtime — build artifact. Он не является вторым sourc
 Будущий ChatGPT MCP App adapter импортирует canonical package через тот же dependency contract.
 
 Он не получает `resources/workflow-kit` и не содержит business logic Workflow Kit.
+
+## 13. Consumer contract v1
+
+Canonical package предоставляет два уровня подключения.
+
+### Programmatic imports
+
+Основные клиенты используют package name и subpath exports:
+
+```js
+import { VERSION, getRuntimeRoot } from '@webpilot/workflow-kit';
+import { sessionPlanView } from '@webpilot/workflow-kit/lib/session-plans';
+import { contextPacket } from '@webpilot/workflow-kit/lib/recovery';
+```
+
+Для миграции WebPilot подтверждены subpath exports, которые покрывают его текущие прямые зависимости: `common`, `actions`, `session-plans`, `plan`, `transaction`, `installer`, `inspection-inputs`, `installation-files`, `git`.
+
+### Runtime resource
+
+`getRuntimeRoot()` возвращает абсолютный путь к 35-файловому runtime payload текущей версии. Этот каталог можно автоматически скопировать в staging Electron resources:
+
+```js
+import fs from 'node:fs/promises';
+import { getRuntimeRoot } from '@webpilot/workflow-kit';
+
+await fs.cp(getRuntimeRoot(), stageDirectory, { recursive: true });
+```
+
+Копия в staging/package является build artifact. В Git WebPilot она не является редактируемым исходником.
+
+### Development dependency WebPilot
+
+Для следующей сессии допускается локальная dependency:
+
+```json
+{
+  "dependencies": {
+    "@webpilot/workflow-kit": "file:../WorkflowKit"
+  }
+}
+```
+
+Это решение выбрано для локальной разработки без npm registry. Если позже понадобится независимый clean-clone build на другой машине, transport package можно заменить на Git/npm source без изменения consumer API.
+
+### Packaging rule WebPilot
+
+Перед `start/test/build`, где нужен relative runtime resource, WebPilot должен автоматически stage-ить текущий `getRuntimeRoot()` в свой generated resources path. Перед Electron packaging staging выполняется обязательно, а verifier проверяет VERSION и runtime digest/fileset.
+
+Исходная папка `resources/workflow-kit` после миграции не должна оставаться tracked source. Если этот путь нужен существующему worker-у, он используется только как generated staging directory.
+
+### Проверенная переносимость
+
+`scripts/check-consumer-contract.mjs` проверяет два режима:
+
+1. установка package через локальную `file:` dependency и imports по package name;
+2. `npm pack` → установка tarball в изолированный consumer → import без доступа к sibling WorkflowKit workspace → staging 35-файлового runtime.
+
+Это доказывает, что package можно использовать локально как always-current dependency и выдавать как self-contained artifact.
+

@@ -90,9 +90,10 @@ WorkflowKit/
 2. Перевести direct imports тестов/runtime с `resources/workflow-kit/...` на package exports.
 3. Изменить workspace setup worker так, чтобы он использовал тот же package.
 4. Удалить tracked source duplicate `resources/workflow-kit`.
-5. Для Electron packaging автоматически stage-ить runtime Kit из resolved package в packaged resources.
-6. Проверить dev tests, Electron smoke и фактическое наличие/работу Workflow Kit в macOS/Windows package.
-7. Проверить установку/upgrade Workflow Kit в тестовом проекте через пользовательский путь WebPilot.
+5. Подключить `@webpilot/workflow-kit` как `file:../WorkflowKit`; programmatic imports перевести на package exports. Для существующего external workspace worker автоматически stage-ить `getRuntimeRoot()` в generated `resources/workflow-kit` перед запуском/сборкой, если относительный layout всё ещё нужен.
+6. Для Electron packaging автоматически stage-ить тот же runtime Kit из resolved package в packaged resources и проверять version/fileset.
+7. Проверить dev tests, Electron smoke и фактическое наличие/работу Workflow Kit в macOS/Windows package.
+8. Проверить установку/upgrade Workflow Kit в тестовом проекте через пользовательский путь WebPilot.
 
 ### Этап C — новый ChatGPT MCP App adapter
 
