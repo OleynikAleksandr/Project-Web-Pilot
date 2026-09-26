@@ -5,6 +5,7 @@
 
 # Project Web Pilot
 node_modules/
+/resources/workflow-kit/
 .DS_Store
 *.log
 windows-app/

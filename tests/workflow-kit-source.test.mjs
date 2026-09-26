@@ -5,6 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { VERSION, getRuntimeRoot } from '@webpilot/workflow-kit';
+import { DEFAULT_STAGE } from '../scripts/stage-workflow-kit.mjs';
 
 const EXPECTED_VERSION = '1.4.12';
 const EXPECTED_FILES = 35;
@@ -44,6 +45,14 @@ test('canonical Workflow Kit package resolves to the sibling package and matches
     const module = await import('@webpilot/workflow-kit/lib/' + subpath);
     assert.ok(Object.keys(module).length > 0, 'empty package export: ' + subpath);
   }
+});
+
+test('generated Workflow Kit runtime staging matches the canonical package', async () => {
+  const canonical = await snapshot(getRuntimeRoot());
+  const staged = await snapshot(DEFAULT_STAGE);
+  assert.deepEqual(staged.files, canonical.files);
+  assert.equal(staged.files.length, EXPECTED_FILES);
+  assert.equal(digestSnapshot(staged), EXPECTED_SHA256);
 });
 
 test('installed Workflow Kit of this repository stays a complete separate installation', async () => {

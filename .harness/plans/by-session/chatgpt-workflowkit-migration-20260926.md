@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 7,
+  "plan_revision": 10,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-kit-package-migration-039",
@@ -222,8 +222,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workflow-kit-package-migration-039",
         "task_id": "T003",
@@ -262,7 +262,8 @@
         "resources/workflow-kit/lib/transaction.mjs",
         "resources/workflow-kit/lib/validate.mjs",
         "resources/workflow-kit/schemas/plan.schema.json",
-        "resources/workflow-kit/schemas/workflow.schema.json"
+        "resources/workflow-kit/schemas/workflow.schema.json",
+        "scripts/check-workflow-kit-staging.mjs"
       ],
       "documentation_paths": [
         "docs/planning/workflow-kit-package-migration.md",
@@ -279,9 +280,7 @@
         "resources/workflow-kit/templates/START.md"
       ],
       "verification_ids": [
-        "workflow-kit-contract",
-        "workflow-kit-stage",
-        "suite"
+        "workflow-kit-contract"
       ],
       "id": "T003",
       "title": "Удалить tracked Workflow Kit duplicate и закрепить generated contract",
@@ -293,7 +292,47 @@
         "Workspace Setup и Project Doctor используют generated layout",
         "скрытой второй editable реализации нет"
       ],
-      "expected_commit_message": "refactor: удалить bundled source duplicate Workflow Kit"
+      "expected_commit_message": "refactor: удалить bundled source duplicate Workflow Kit",
+      "actual_files": [
+        ".gitignore",
+        "resources/workflow-kit/WORKFLOW.md",
+        "resources/workflow-kit/cli.mjs",
+        "resources/workflow-kit/examples/PACKAGING.md",
+        "resources/workflow-kit/examples/verify-package.mjs",
+        "resources/workflow-kit/install.mjs",
+        "resources/workflow-kit/lib/actions.mjs",
+        "resources/workflow-kit/lib/command-help.mjs",
+        "resources/workflow-kit/lib/common.mjs",
+        "resources/workflow-kit/lib/extend-plan.mjs",
+        "resources/workflow-kit/lib/git-hooks.mjs",
+        "resources/workflow-kit/lib/git.mjs",
+        "resources/workflow-kit/lib/inspection-inputs.mjs",
+        "resources/workflow-kit/lib/installation-files.mjs",
+        "resources/workflow-kit/lib/installer.mjs",
+        "resources/workflow-kit/lib/plan.mjs",
+        "resources/workflow-kit/lib/platform.mjs",
+        "resources/workflow-kit/lib/project-facts.mjs",
+        "resources/workflow-kit/lib/recovery.mjs",
+        "resources/workflow-kit/lib/session-plans.mjs",
+        "resources/workflow-kit/lib/simple-workflow.mjs",
+        "resources/workflow-kit/lib/task-files.mjs",
+        "resources/workflow-kit/lib/task-update.mjs",
+        "resources/workflow-kit/lib/transaction.mjs",
+        "resources/workflow-kit/lib/validate.mjs",
+        "resources/workflow-kit/schemas/plan.schema.json",
+        "resources/workflow-kit/schemas/workflow.schema.json",
+        "resources/workflow-kit/templates/AGENTS.md",
+        "resources/workflow-kit/templates/ARCHITECTURE.md",
+        "resources/workflow-kit/templates/CONTINUE.md",
+        "resources/workflow-kit/templates/PLAN.md",
+        "resources/workflow-kit/templates/PRODUCT.md",
+        "resources/workflow-kit/templates/PROTOTYPE.md",
+        "resources/workflow-kit/templates/SPEC.md",
+        "resources/workflow-kit/templates/STAGES.md",
+        "resources/workflow-kit/templates/START.md",
+        "scripts/check-workflow-kit-staging.mjs",
+        "tests/workflow-kit-source.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -401,7 +440,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-kit-package-migration-039
 Current Task: нет
-Revision: 7
+Revision: 10
 
 ## Цель
 
@@ -427,10 +466,10 @@ Revision: 7
   - Git Commit: [DONE] build: stage Workflow Kit runtime from package
   - Reference: workflow-kit-package-migration-039 / T002 / implementation
   - Файлы: package.json, scripts/stage-workflow-kit.mjs, scripts/check-workflow-kit-staging.mjs, scripts/release-all.mjs, tests/workflow-kit-source.test.mjs, docs/planning/workflow-kit-package-migration.md
-- [TODO] T003: Удалить tracked Workflow Kit duplicate и закрепить generated contract — Ожидает
-  - Git Commit: [PENDING] refactor: удалить bundled source duplicate Workflow Kit
+- [DONE] T003: Удалить tracked Workflow Kit duplicate и закрепить generated contract — Завершено
+  - Git Commit: [DONE] refactor: удалить bundled source duplicate Workflow Kit
   - Reference: workflow-kit-package-migration-039 / T003 / implementation
-  - Файлы: .gitignore, tests/workflow-kit-source.test.mjs, tests/project-doctor.test.mjs, tests/workspace-setup.test.mjs, tests/session-opening-performance.test.mjs, tests/electron-smoke.mjs, resources/workflow-kit/cli.mjs, resources/workflow-kit/examples/verify-package.mjs, resources/workflow-kit/install.mjs, resources/workflow-kit/lib/actions.mjs, resources/workflow-kit/lib/command-help.mjs, resources/workflow-kit/lib/common.mjs, resources/workflow-kit/lib/extend-plan.mjs, resources/workflow-kit/lib/git-hooks.mjs, resources/workflow-kit/lib/git.mjs, resources/workflow-kit/lib/inspection-inputs.mjs, resources/workflow-kit/lib/installation-files.mjs, resources/workflow-kit/lib/installer.mjs, resources/workflow-kit/lib/plan.mjs, resources/workflow-kit/lib/platform.mjs, resources/workflow-kit/lib/project-facts.mjs, resources/workflow-kit/lib/recovery.mjs, resources/workflow-kit/lib/session-plans.mjs, resources/workflow-kit/lib/simple-workflow.mjs, resources/workflow-kit/lib/task-files.mjs, resources/workflow-kit/lib/task-update.mjs, resources/workflow-kit/lib/transaction.mjs, resources/workflow-kit/lib/validate.mjs, resources/workflow-kit/schemas/plan.schema.json, resources/workflow-kit/schemas/workflow.schema.json, docs/planning/workflow-kit-package-migration.md, resources/workflow-kit/WORKFLOW.md, resources/workflow-kit/examples/PACKAGING.md, resources/workflow-kit/templates/AGENTS.md, resources/workflow-kit/templates/ARCHITECTURE.md, resources/workflow-kit/templates/CONTINUE.md, resources/workflow-kit/templates/PLAN.md, resources/workflow-kit/templates/PRODUCT.md, resources/workflow-kit/templates/PROTOTYPE.md, resources/workflow-kit/templates/SPEC.md, resources/workflow-kit/templates/STAGES.md, resources/workflow-kit/templates/START.md
+  - Файлы: .gitignore, tests/workflow-kit-source.test.mjs, tests/project-doctor.test.mjs, tests/workspace-setup.test.mjs, tests/session-opening-performance.test.mjs, tests/electron-smoke.mjs, resources/workflow-kit/cli.mjs, resources/workflow-kit/examples/verify-package.mjs, resources/workflow-kit/install.mjs, resources/workflow-kit/lib/actions.mjs, resources/workflow-kit/lib/command-help.mjs, resources/workflow-kit/lib/common.mjs, resources/workflow-kit/lib/extend-plan.mjs, resources/workflow-kit/lib/git-hooks.mjs, resources/workflow-kit/lib/git.mjs, resources/workflow-kit/lib/inspection-inputs.mjs, resources/workflow-kit/lib/installation-files.mjs, resources/workflow-kit/lib/installer.mjs, resources/workflow-kit/lib/plan.mjs, resources/workflow-kit/lib/platform.mjs, resources/workflow-kit/lib/project-facts.mjs, resources/workflow-kit/lib/recovery.mjs, resources/workflow-kit/lib/session-plans.mjs, resources/workflow-kit/lib/simple-workflow.mjs, resources/workflow-kit/lib/task-files.mjs, resources/workflow-kit/lib/task-update.mjs, resources/workflow-kit/lib/transaction.mjs, resources/workflow-kit/lib/validate.mjs, resources/workflow-kit/schemas/plan.schema.json, resources/workflow-kit/schemas/workflow.schema.json, scripts/check-workflow-kit-staging.mjs, docs/planning/workflow-kit-package-migration.md, resources/workflow-kit/WORKFLOW.md, resources/workflow-kit/examples/PACKAGING.md, resources/workflow-kit/templates/AGENTS.md, resources/workflow-kit/templates/ARCHITECTURE.md, resources/workflow-kit/templates/CONTINUE.md, resources/workflow-kit/templates/PLAN.md, resources/workflow-kit/templates/PRODUCT.md, resources/workflow-kit/templates/PROTOTYPE.md, resources/workflow-kit/templates/SPEC.md, resources/workflow-kit/templates/STAGES.md, resources/workflow-kit/templates/START.md
 - [TODO] T004: Собрать и проверить парный macOS Windows релиз — Ожидает
   - Git Commit: [PENDING] build: выпустить WebPilot с canonical Workflow Kit package
   - Reference: workflow-kit-package-migration-039 / T004 / implementation

@@ -19,6 +19,7 @@ async function compare(left, right) {
 }
 
 try {
+  const statusBefore = execFileSync('git', ['status', '--porcelain', '--', 'resources/workflow-kit'], { cwd: PROJECT_ROOT, encoding: 'utf8' });
   await fs.rm(scratch, { recursive: true, force: true });
   const first = await stageWorkflowKit({ target: scratch });
   assert.equal(first.changed, true, 'fresh staging must create the target');
@@ -28,8 +29,8 @@ try {
 
   const production = await stageWorkflowKit();
   await compare(getRuntimeRoot(), DEFAULT_STAGE);
-  const status = execFileSync('git', ['status', '--porcelain', '--', 'resources/workflow-kit'], { cwd: PROJECT_ROOT, encoding: 'utf8' });
-  assert.equal(status.trim(), '', 'generated Workflow Kit staging changed Git status');
+  const statusAfter = execFileSync('git', ['status', '--porcelain', '--', 'resources/workflow-kit'], { cwd: PROJECT_ROOT, encoding: 'utf8' });
+  assert.equal(statusAfter, statusBefore, 'generated Workflow Kit staging changed Git status');
 
   process.stdout.write(JSON.stringify({
     ok: true,
