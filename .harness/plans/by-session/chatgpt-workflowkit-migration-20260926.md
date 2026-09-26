@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 10,
+  "plan_revision": 12,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-kit-package-migration-039",
@@ -335,8 +335,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workflow-kit-package-migration-039",
         "task_id": "T004",
@@ -372,7 +372,13 @@
         "оба ZIP одной новой версии лежат в ~/Downloads/WebPilot-<version>/",
         "packaged Workflow Kit = canonical 1.4.12 и runtime self-contained"
       ],
-      "expected_commit_message": "build: выпустить WebPilot с canonical Workflow Kit package"
+      "expected_commit_message": "build: выпустить WebPilot с canonical Workflow Kit package",
+      "actual_files": [
+        "package-lock.json",
+        "package.json",
+        "scripts/release-all.mjs",
+        "scripts/verify-windows-package.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -440,7 +446,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-kit-package-migration-039
 Current Task: нет
-Revision: 10
+Revision: 12
 
 ## Цель
 
@@ -470,8 +476,8 @@ Revision: 10
   - Git Commit: [DONE] refactor: удалить bundled source duplicate Workflow Kit
   - Reference: workflow-kit-package-migration-039 / T003 / implementation
   - Файлы: .gitignore, tests/workflow-kit-source.test.mjs, tests/project-doctor.test.mjs, tests/workspace-setup.test.mjs, tests/session-opening-performance.test.mjs, tests/electron-smoke.mjs, resources/workflow-kit/cli.mjs, resources/workflow-kit/examples/verify-package.mjs, resources/workflow-kit/install.mjs, resources/workflow-kit/lib/actions.mjs, resources/workflow-kit/lib/command-help.mjs, resources/workflow-kit/lib/common.mjs, resources/workflow-kit/lib/extend-plan.mjs, resources/workflow-kit/lib/git-hooks.mjs, resources/workflow-kit/lib/git.mjs, resources/workflow-kit/lib/inspection-inputs.mjs, resources/workflow-kit/lib/installation-files.mjs, resources/workflow-kit/lib/installer.mjs, resources/workflow-kit/lib/plan.mjs, resources/workflow-kit/lib/platform.mjs, resources/workflow-kit/lib/project-facts.mjs, resources/workflow-kit/lib/recovery.mjs, resources/workflow-kit/lib/session-plans.mjs, resources/workflow-kit/lib/simple-workflow.mjs, resources/workflow-kit/lib/task-files.mjs, resources/workflow-kit/lib/task-update.mjs, resources/workflow-kit/lib/transaction.mjs, resources/workflow-kit/lib/validate.mjs, resources/workflow-kit/schemas/plan.schema.json, resources/workflow-kit/schemas/workflow.schema.json, scripts/check-workflow-kit-staging.mjs, docs/planning/workflow-kit-package-migration.md, resources/workflow-kit/WORKFLOW.md, resources/workflow-kit/examples/PACKAGING.md, resources/workflow-kit/templates/AGENTS.md, resources/workflow-kit/templates/ARCHITECTURE.md, resources/workflow-kit/templates/CONTINUE.md, resources/workflow-kit/templates/PLAN.md, resources/workflow-kit/templates/PRODUCT.md, resources/workflow-kit/templates/PROTOTYPE.md, resources/workflow-kit/templates/SPEC.md, resources/workflow-kit/templates/STAGES.md, resources/workflow-kit/templates/START.md
-- [TODO] T004: Собрать и проверить парный macOS Windows релиз — Ожидает
-  - Git Commit: [PENDING] build: выпустить WebPilot с canonical Workflow Kit package
+- [DONE] T004: Собрать и проверить парный macOS Windows релиз — Завершено
+  - Git Commit: [DONE] build: выпустить WebPilot с canonical Workflow Kit package
   - Reference: workflow-kit-package-migration-039 / T004 / implementation
   - Файлы: package.json, package-lock.json, scripts/verify-windows-package.mjs, scripts/release-all.mjs, scripts/release-mac.mjs, docs/planning/workflow-kit-package-migration.md, docs/RELEASE.md, docs/VERIFICATION.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает

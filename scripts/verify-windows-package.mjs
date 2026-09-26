@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { WINDOWS_RUNTIME_ARCHIVE, WINDOWS_RUNTIME_SHA256 } from '../src/windows-runtime.mjs';
 import { NODE_FOLDER, NODE_SHA256 } from './prepare-windows-toolchain.mjs';
 import { verifyPackagedSources } from './release-all.mjs';
+import { EXPECTED_WORKFLOW_KIT_FILES, EXPECTED_WORKFLOW_KIT_SHA256, runtimeFiles, runtimeDigest } from './check-workflow-kit-dependency.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -42,7 +43,8 @@ export async function verifyWindowsPackage(packageDir = path.join(ROOT, '.harnes
   const runtimeArchive = path.join(resources, 'windows-payload', WINDOWS_RUNTIME_ARCHIVE);
   const nodeArchive = path.join(resources, 'windows-payload', `node-v22.17.0-win-x64.zip`);
   const nodeExe = path.join(resources, 'windows-node', NODE_FOLDER, 'node.exe');
-  const workflow = path.join(resources, 'resources', 'workflow-kit', 'WORKFLOW.md');
+  const workflowRoot = path.join(resources, 'resources', 'workflow-kit');
+  const workflow = path.join(workflowRoot, 'WORKFLOW.md');
   const setupWorker = path.join(resources, 'resources', 'workspace-setup-worker.mjs');
   const exeStat = await requireFile(executable, 'Project Web Pilot.exe');
   await requireFile(appAsar, 'app.asar');
@@ -56,6 +58,12 @@ export async function verifyWindowsPackage(packageDir = path.join(ROOT, '.harnes
   const sourceProof = await verifyPackagedSources({ root: ROOT, resources, version });
   await requirePe(executable, 'Project Web Pilot.exe');
   await requirePe(nodeExe, 'portable node.exe');
+  const workflowFiles = await runtimeFiles(workflowRoot);
+  if (workflowFiles.length !== EXPECTED_WORKFLOW_KIT_FILES) throw new Error(`Workflow Kit fileset mismatch: ${workflowFiles.length}`);
+  const workflowSha256 = await runtimeDigest(workflowRoot, workflowFiles);
+  if (workflowSha256 !== EXPECTED_WORKFLOW_KIT_SHA256) throw new Error(`Workflow Kit SHA mismatch: ${workflowSha256}`);
+  const workflowCommon = await fs.readFile(path.join(workflowRoot, 'lib', 'common.mjs'), 'utf8');
+  if (!workflowCommon.includes("VERSION = '1.4.12'")) throw new Error('Workflow Kit version mismatch');
   const runtimeSha256 = await hashFile(runtimeArchive);
   if (runtimeSha256 !== WINDOWS_RUNTIME_SHA256) throw new Error(`Codex Local Windows SHA mismatch: ${runtimeSha256}`);
   const nodeSha256 = await hashFile(nodeArchive);
@@ -71,7 +79,7 @@ export async function verifyWindowsPackage(packageDir = path.join(ROOT, '.harnes
     runtimeSha256,
     nodeSha256,
     nodeExecutableBytes: nodeStat.size,
-    workflowKit: true,
+    workflowKit: { version: '1.4.12', files: workflowFiles.length, sha256: workflowSha256 },
     macBundle: false,
   };
 }

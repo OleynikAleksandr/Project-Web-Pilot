@@ -7,7 +7,7 @@ import { execFileSync, spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { isDeepStrictEqual } from 'node:util';
 import { extractFile, listPackage, uncache } from '@electron/asar';
-import { stageWorkflowKit } from './stage-workflow-kit.mjs';
+import { stageWorkflowKit, verifyWorkflowKitRuntime } from './stage-workflow-kit.mjs';
 
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
 export async function hashFile(file) {
@@ -77,6 +77,7 @@ export async function releaseAll({ root = fileURLToPath(new URL('..', import.met
     if (await fs.stat(path.join(release, 'release-manifest.json')).catch(e => { if (e.code !== 'ENOENT') throw e; }))
       throw new Error('This paired release already exists; use a new version');
     await stageWorkflowKit({ root });
+    const workflowKit = await verifyWorkflowKitRuntime(path.join(root, 'resources', 'workflow-kit'));
     const sources = await sourceSnapshot(root);
     const sourceCommit = exec('git', ['-C', root, 'rev-parse', 'HEAD']).trim();
     const target = path.join(root, 'Project Web Pilot.app');
@@ -130,6 +131,7 @@ export async function releaseAll({ root = fileURLToPath(new URL('..', import.met
         asarSha256: proof.asarSha256, codexExecutorFiles: codexExecutorSources.length });
     }
     const evidence = { version, sourceCommit, sourceFiles: Object.keys(sources).length, packagedSourceMatches: true,
+      workflowKit: { version: workflowKit.version, files: workflowKit.files, sha256: workflowKit.sha256 },
       identity: { device: identity.dev, inode: identity.ino }, artifacts, nativeWindowsTested: false, cleanVmTested: false };
     await fs.mkdir(delivery, { recursive: true });
     for (const artifact of artifacts) {
