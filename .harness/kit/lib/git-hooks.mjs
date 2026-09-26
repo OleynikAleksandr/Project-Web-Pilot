@@ -20,7 +20,6 @@ export function validateStaged(root) {
   const plan = parsePlan(planText);
   if (t.role === 'implementation') {
     check(t.task?.id === t.task_id && plan.tasks.find(task => task.id === t.task_id)?.commit_status === 'DONE', 'CANDIDATE_TASK', 'Кандидат не завершает нужную задачу.');
-    if (!isDocumentationFinalizationTask(t.task)) check(selected.some(p => p !== PLAN), 'EMPTY_TASK', 'Микрозадача не содержит изменений.');
     const config = readConfig(root);
     validateDocs(root, selected, t.task, config, p => {
       const r = git(root, ['show', ':' + p], { allowFailure: true });
@@ -38,17 +37,17 @@ export function preCommit(root) {
     const start = Date.now();
     const cwd = !test.cwd || test.cwd === '.' ? root : safePath(root, test.cwd);
     const result = run(test.executable, test.args, cwd, { allowFailure: true, timeout: test.timeout_ms });
-    const record = { id: test.id, status: result.status === 0 && !result.error ? 'PASSED' : 'FAILED', exit_code: result.status,
+    const record = { id: test.id, kind: test.kind ?? 'unspecified', evidence: test.evidence ?? null, command: [test.executable,...test.args], status: result.status === 0 && !result.error ? 'PASSED' : 'FAILED', exit_code: result.status,
       elapsed_ms: Date.now() - start, output: String(result.stderr || result.stdout || result.error?.message || '').slice(-1200) };
     results.push(record);
-    atomic(localPath(root, 'last-verification.json'), json({ transaction_id: t.id, candidate_tree: t.candidate_tree, commit: null, checks: results }));
+    atomic(localPath(root, 'last-verification.json'), json({ transaction_id: t.id, candidate_tree: t.candidate_tree, verification_scope: 'worktree', excluded_changes: t.excluded_changes ?? [], commit: null, checks: results }));
     check(record.status === 'PASSED', 'CHECK_FAILED', 'Не пройдена проверка ' + test.id, { result: record });
   }
   const after = snapshot(root, t.selected);
   check(after.fingerprint === before.fingerprint, 'CHECK_MODIFIED_CANDIDATE', 'Проверка изменила файлы или index. Подготовьте новый кандидат повтором commit.');
   validateStaged(root);
   t.phase = 'CHECKED'; t.checked_snapshot = after.fingerprint; saveJournal(root, t);
-  if (!results.length) atomic(localPath(root, 'last-verification.json'), json({ transaction_id: t.id, candidate_tree: t.candidate_tree, commit: null, checks: [], note: 'Документальная или служебная операция: проверены схема и кандидат; suite приложения не запускалась.' }));
+  if (!results.length) atomic(localPath(root, 'last-verification.json'), json({ transaction_id: t.id, candidate_tree: t.candidate_tree, verification_scope: 'worktree', excluded_changes: t.excluded_changes ?? [], commit: null, checks: [], note: 'Документальная или служебная операция: проверены схема и кандидат; suite приложения не запускалась.' }));
   return { ok: true, message: 'Кандидат проверен.', checks: results };
 }
 export function commitMessage(root, file) {

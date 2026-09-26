@@ -4,6 +4,9 @@ import { PLAN, check, safePath, textFile, withPlanFile, currentPlanSelection } f
 import { parsePlan, emptyPlan } from './plan.mjs';
 
 export const PLANS_DIRECTORY = '.harness/plans/by-id';
+// A session plan created from NONE is materialized at its session address; it is canonical too.
+export const SESSION_PLANS_DIRECTORY = '.harness/plans/by-session';
+export const PLAN_DIRECTORIES = [PLANS_DIRECTORY, SESSION_PLANS_DIRECTORY];
 export const validIdentity = (value, label = 'ID') => {
   check(typeof value === 'string' && /^[A-Za-z0-9][A-Za-z0-9._-]{0,180}$/.test(value), 'PLAN_ID', 'Некорректный ' + label);
   return value;
@@ -11,10 +14,12 @@ export const validIdentity = (value, label = 'ID') => {
 export const ownedPlanPath = planId => PLANS_DIRECTORY + '/' + validIdentity(planId, 'planId') + '.md';
 export function listPlans(root, { projection = true } = {}) {
   const files = fs.existsSync(safePath(root, PLAN)) ? [PLAN] : [];
-  const directory = safePath(root, PLANS_DIRECTORY);
-  if (fs.existsSync(directory)) for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
-    check(!entry.isSymbolicLink(), 'SYMLINK_PATH', 'Планы не могут быть символическими ссылками.');
-    if (entry.isFile() && entry.name.endsWith('.md')) files.push(PLANS_DIRECTORY + '/' + entry.name);
+  for (const relative of PLAN_DIRECTORIES) {
+    const directory = safePath(root, relative);
+    if (fs.existsSync(directory)) for (const entry of fs.readdirSync(directory, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+      check(!entry.isSymbolicLink(), 'SYMLINK_PATH', 'Планы не могут быть символическими ссылками.');
+      if (entry.isFile() && entry.name.endsWith('.md')) files.push(relative + '/' + entry.name);
+    }
   }
   const result = files.map(file => ({ file, plan: parsePlan(textFile(root, file), { projection }) }));
   const ids = result.filter(r => r.plan.scope_id).map(r => r.plan.scope_id);
@@ -47,7 +52,7 @@ export function selectPlan(root, { sessionId, planId, allowDraft = false, allowU
     return { ...selected, sessionId: sessionId ?? selected.plan.owner_session_id ?? null };
   }
   const plan = { ...emptyPlan(base.project_name), project_id: base.project_id, owner_session_id: sessionId };
-  return { file: '.harness/plans/by-session/' + sessionId + '.md', plan, sessionId, virtual: true };
+  return { file: SESSION_PLANS_DIRECTORY + '/' + sessionId + '.md', plan, sessionId, virtual: true };
 }
 export function withSessionPlan(root, selector, fn) {
   const selected = selectPlan(root, selector);

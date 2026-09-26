@@ -18,6 +18,8 @@ export function validateConfig(c) {
     check(typeof test.id === 'string' && test.id && !ids.has(test.id), 'CONFIG_SCHEMA', 'Нужны уникальные ID проверок.'); ids.add(test.id);
     check(typeof test.executable === 'string' && test.executable && Array.isArray(test.args) && test.args.every(a => typeof a === 'string'), 'CONFIG_SCHEMA', 'Проверка задаётся исполняемым файлом и массивом аргументов.');
     check(typeof test.required === 'boolean' && Number.isInteger(test.timeout_ms) && test.timeout_ms > 0 && test.timeout_ms <= 600000, 'CONFIG_SCHEMA', 'У проверки нужны required и timeout_ms до 600000.');
+    check(test.kind === undefined || ['syntax','test','package','installed'].includes(test.kind), 'CONFIG_SCHEMA', 'kind проверки: syntax, test, package или installed.');
+    if (['package','installed'].includes(test.kind)) check(typeof test.evidence === 'string' && test.evidence.trim(), 'CONFIG_SCHEMA', 'Для package/installed опишите проверяемый артефакт и сценарий в evidence.', {field:'checks.'+test.id+'.evidence'});
     if (test.cwd && test.cwd !== '.') relativePath(test.cwd);
     check(!test.stage || ['commit', 'push'].includes(test.stage), 'CONFIG_SCHEMA', 'Неизвестный этап проверки.');
   }
@@ -29,7 +31,7 @@ export function validateConfig(c) {
     check(typeof m.code === 'string' && m.code.length > 0 && !m.code.startsWith('/') && !m.code.includes('..'), 'CONFIG_SCHEMA', 'Некорректный селектор документации.');
     check(Array.isArray(m.documents), 'CONFIG_SCHEMA', 'Нужен список документов.'); m.documents.forEach(relativePath);
   }
-  if (c.profile === 'DEVELOPMENT') check(typeof c.stack === 'string' && c.stack.trim(), 'CONFIG_SCHEMA', 'Укажите согласованный стек.');
+  if (c.profile === 'DEVELOPMENT') check(typeof c.stack === 'string' && c.stack.trim(), 'CONFIG_SCHEMA', 'Укажите выбранный стек.');
   return c;
 }
 export const readConfig = root => validateConfig(readJSON(path.join(root, CONFIG)));
@@ -40,30 +42,26 @@ export function matches(pattern, value) {
 }
 export function validateDocs(root, changed, task, config, reader = p => textFile(root, p)) {
   const PLAN = planPath(root);
-  const docsChanged = changed.filter(p => /\.(md|markdown)$/.test(p) && p !== PLAN);
-  const codeChanged = changed.filter(p => task.functional_paths.includes(p));
-  if (codeChanged.length) {
-    check(docsChanged.length > 0 || (typeof task.documentation_exception === 'string' && task.documentation_exception.trim().length >= 15), 'DOCS_SYNC', 'Изменение кода требует связанных документов в том же коммите или обоснования documentation_exception.');
-    if (!task.documentation_exception) for (const p of codeChanged) {
-      for (const mapping of config.documentation.mappings.filter(m => matches(m.code, p))) for (const doc of mapping.documents) {
-        check(changed.includes(doc), 'DOCS_SYNC', 'Обновите связанный документ: ' + doc, { code: p });
-      }
-    }
-  }
-  const index = reader(config.documentation.index);
-  for (const p of [...task.documentation_paths, ...docsChanged]) {
-    if (p === config.documentation.index) continue;
-    if (fs.existsSync(path.join(root, p))) check(index.includes(p), 'DOCUMENTATION_INDEX', 'Документ отсутствует в каталоге: ' + p);
-  }
+  // Required context documents are validated by recovery; documentation mappings
+  // are guidance, not an obligation to manufacture a text edit for every commit.
+  for (const document of (task.context_pack?.documents ?? []).filter(d=>d.required)) reader(document.path);
+
   return true;
 }
 export function taskChecks(task, config, stage = 'commit') {
   for (const key of task.verification_ids) check(config.checks.some(c => c.id === key), 'NOT_CONFIGURED', 'Проверка ещё не настроена: ' + key);
-  const checks = config.checks.filter(c => (c.stage ?? 'commit') === stage && (c.required || task.verification_ids.includes(c.id)));
-  if (task.functional_paths.length && stage === 'commit') {
-    check(config.profile === 'DEVELOPMENT', 'STACK_NOT_CONFIGURED', 'Сначала согласуйте стек и подключите проверки через config:apply.');
+  const checks = config.checks.filter(c => (c.stage ?? 'commit') === stage && (stage === 'push' ? c.required : task.verification_ids.includes(c.id)));
+  const actual = task.actual_files ?? task.functional_paths;
+  const functional = actual.filter(p => !p.endsWith('.md'));
+  const ignoreOnly = functional.length > 0 && functional.every(p => p === '.gitignore' || p.endsWith('/.gitignore'));
+  if (functional.length && !ignoreOnly && stage === 'commit') {
+    check(config.profile === 'DEVELOPMENT', 'STACK_NOT_CONFIGURED', 'Укажите выбранный стек и подключите применимые проверки через config:apply или plan:create.');
     check(checks.length > 0, 'NOT_CONFIGURED', 'Для изменения функционального кода нужна хотя бы одна настроенная проверка.');
   }
+  if (stage === 'commit' && task.verification_kind && task.verification_kind !== 'code') {
+    check(checks.some(c=>c.kind===task.verification_kind), 'VERIFICATION_KIND', 'Нужна проверка '+task.verification_kind+'; синтаксис не подтверждает готовность артефакта.', {task_id:task.id,field:'checks',expected:task.verification_kind,received:checks.map(c=>({id:c.id,kind:c.kind??'unspecified'})),next_action:'Настройте соответствующую проверку через config:apply и добавьте её через task:update.'});
+  }
+  if (stage === 'commit' && ignoreOnly && checks.length === 0) return [{id:'gitignore-format',kind:'code',executable:'git',args:['diff','--cached','--check'],timeout_ms:10000}];
   return checks;
 }
 function commitIteration(commit) {
@@ -118,8 +116,15 @@ export function resolveReferences(root, p, pending = journal(root)) {
   }
   return resolved;
 }
-export function validate(root) {
-  const plan = readPlan(root); const config = readConfig(root); const pendingJournal = journal(root);
+export function validatePlanConfiguration(root, plan, config) {
+  validateConfig(config);
+  for (const task of plan.tasks) {
+    for (const p of [...task.functional_paths, ...task.documentation_paths]) contextPath(root, p);
+    for (const test of task.verification_ids) check(config.checks.some(c => c.id === test), 'NOT_CONFIGURED', 'Нет конфигурации проверки ' + test);
+  }
+}
+export function validate(root, candidateConfig) {
+  const plan = readPlan(root); const config = candidateConfig ?? readConfig(root); const pendingJournal = journal(root);
   const pending = pendingJournal && (pendingJournal.plan_path ?? '.harness/plans/todo-plan.md') === planPath(root) ? pendingJournal : null;
   const resolved = resolveReferences(root, plan, pending);
   for (const task of plan.tasks) {

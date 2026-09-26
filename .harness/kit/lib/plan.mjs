@@ -8,7 +8,7 @@ const label = { TODO: 'Ожидает', IN_PROGRESS: 'В работе', DONE: '�
 const string = (v, field) => check(typeof v === 'string' && v.trim().length > 0, 'PLAN_SCHEMA', 'Нужно непустое поле: ' + field);
 const array = (v, field) => check(Array.isArray(v), 'PLAN_SCHEMA', 'Нужен массив: ' + field);
 const unique = (values, field) => check(new Set(values).size === values.length, 'PLAN_SCHEMA', 'Повторяющиеся значения: ' + field);
-export const PROJECT_CONTINUATION_OBJECTIVE = 'Обсудите следующий этап проекта с пользователем.';
+export const PROJECT_CONTINUATION_OBJECTIVE = 'Если поручение уже ясно, создайте короткий план и приступайте; иначе обсудите следующий этап проекта.';
 export const FINAL_DOCUMENTATION_TASK_ID = 'DOCS';
 export const FINAL_DOCUMENTATION_TASK_TITLE = 'Актуализация всех документов проекта';
 export const PROJECT_CONTEXT_DOCUMENTS = Object.freeze([
@@ -30,7 +30,7 @@ export const isDocumentationFinalizationTask = task => task?.id === FINAL_DOCUME
 export function emptyPlan(name) {
   return { schema_version: 1, plan_revision: 1, project_id: id(), project_name: name, scope_id: null,
     execution_scope_status: 'NONE', delivery_status: 'IN_PROGRESS', objective: PROJECT_CONTINUATION_OBJECTIVE, acceptance_criteria: [],
-    approved_scope: { functional_paths: [], documentation_paths: [], max_functional_files_per_task: 3 },
+    approved_scope: { functional_paths: [], documentation_paths: [] },
     baseline_commit: null, current_task_id: null, context_pack: projectContextPack(),
     tasks: [], blocked_reason: null, user_decisions: [] };
 }
@@ -48,7 +48,7 @@ export function validatePlan(p) {
   for (const f of ['functional_paths', 'documentation_paths']) {
     array(p.approved_scope?.[f], f); unique(p.approved_scope[f], f); p.approved_scope[f].forEach(relativePath);
   }
-  check(Number.isInteger(p.approved_scope.max_functional_files_per_task) && p.approved_scope.max_functional_files_per_task > 0, 'PLAN_SCHEMA', 'Некорректный лимит файлов.');
+
   array(p.context_pack?.documents, 'context_pack.documents'); array(p.context_pack?.dependency_task_ids, 'context_pack.dependency_task_ids');
   check(typeof p.context_pack.include_last_completed_task === 'boolean', 'PLAN_SCHEMA', 'include_last_completed_task должен быть boolean.');
   const validateContext = pack => {
@@ -76,6 +76,7 @@ export function validatePlan(p) {
   unique(p.tasks.map(t => t.id), 'task IDs');
   const byId = new Map(p.tasks.map(t => [t.id, t]));
   for (const t of p.tasks) {
+    check(t.verification_kind === undefined || ['code','package','installed'].includes(t.verification_kind), 'PLAN_SCHEMA', 'verification_kind задачи: code, package или installed.', {task_id:t.id,field:'verification_kind',received:t.verification_kind});
     for (const f of ['id', 'title', 'why', 'expected_commit_message']) string(t[f], f);
     check(/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(t.id), 'PLAN_SCHEMA', 'Некорректный task ID.');
     check(!/[\r\n]/.test(t.expected_commit_message), 'PLAN_SCHEMA', 'Ожидаемое сообщение коммита должно занимать одну строку.');
@@ -88,7 +89,7 @@ export function validatePlan(p) {
     }
     check(t.functional_paths.length + t.documentation_paths.length > 0, 'PLAN_SCHEMA', 'У задачи нет файлов.');
     check(!t.functional_paths.some(f => t.documentation_paths.includes(f)), 'PLAN_SCHEMA', 'Файл не может быть одновременно функциональным и документационным.');
-    if (t.functional_paths.length > p.approved_scope.max_functional_files_per_task) string(t.file_limit_exception, 'file_limit_exception');
+
     for (const dep of t.dependencies) check(dep !== t.id && byId.has(dep), 'PLAN_SCHEMA', 'Неизвестная или циклическая зависимость: ' + dep);
     check(t.commit_ref?.scope_id === p.scope_id && t.commit_ref?.task_id === t.id && t.commit_ref?.role === 'implementation', 'PLAN_SCHEMA', 'Некорректная ссылка коммита: ' + t.id);
     validateContext(t.context_pack);
