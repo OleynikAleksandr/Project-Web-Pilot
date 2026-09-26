@@ -4,12 +4,12 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { install } from '../resources/workflow-kit/lib/installer.mjs';
-import { VERSION } from '../resources/workflow-kit/lib/common.mjs';
+import { install } from '@webpilot/workflow-kit/lib/installer';
+import { VERSION } from '@webpilot/workflow-kit/lib/common';
 import { inspectProject, repairProject } from '../resources/project-doctor/core.mjs';
 import { backupAndWrite, readFile } from '../resources/project-doctor/files.mjs';
 import { WorkspaceSetup } from '../src/workspace-setup.mjs';
-import { gitPath } from '../resources/workflow-kit/lib/git.mjs';
+import { gitPath } from '@webpilot/workflow-kit/lib/git';
 const env = { ...process.env, GIT_AUTHOR_NAME: 'Doctor Test', GIT_AUTHOR_EMAIL: 'doctor@example.invalid', GIT_COMMITTER_NAME: 'Doctor Test', GIT_COMMITTER_EMAIL: 'doctor@example.invalid' };
 function fixture(t) {
   const parent = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'web-pilot-doctor-test-')));
@@ -99,8 +99,8 @@ test('interrupted commit is finished only when the exact commit already exists',
   assert.equal(fs.existsSync(gitPath(root,'workflow-kit/transaction.json')),false);assert.deepEqual(execFileSync('git',['rev-parse','HEAD'],{cwd:root}),before);
 });
 
-import { withSessionPlan, listPlans } from '../resources/workflow-kit/lib/session-plans.mjs';
-import { createScope, preparePlan } from '../resources/workflow-kit/lib/actions.mjs';
+import { withSessionPlan, listPlans } from '@webpilot/workflow-kit/lib/session-plans';
+import { createScope, preparePlan } from '@webpilot/workflow-kit/lib/actions';
 test('doctor and readiness preserve all session plans and repair only their projections', async t => {
   const root=fixture(t);
   const definition=id=>({scope_id:id,objective:id,approval_note:'Approved isolated fixture',acceptance_criteria:['done'],

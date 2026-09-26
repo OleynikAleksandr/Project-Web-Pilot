@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 3,
+  "plan_revision": 5,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-kit-package-migration-039",
@@ -124,8 +124,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workflow-kit-package-migration-039",
         "task_id": "T001",
@@ -162,7 +162,20 @@
         "trusted packaged projection semantics сохранена",
         "package version/fileset/digest утверждаются автоматически"
       ],
-      "expected_commit_message": "refactor: подключить canonical Workflow Kit package"
+      "expected_commit_message": "refactor: подключить canonical Workflow Kit package",
+      "actual_files": [
+        "package.json",
+        "package-lock.json",
+        "src/session-plans.mjs",
+        "scripts/check-workflow-kit-dependency.mjs",
+        "tests/workflow-kit-source.test.mjs",
+        "tests/session-plans.test.mjs",
+        "tests/workflow-kit-recovery.test.mjs",
+        "tests/electron-smoke.mjs",
+        "tests/project-doctor.test.mjs",
+        "tests/workspace-setup.test.mjs",
+        "tests/session-opening-performance.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -382,7 +395,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-kit-package-migration-039
 Current Task: нет
-Revision: 3
+Revision: 5
 
 ## Цель
 
@@ -400,8 +413,8 @@ Revision: 3
 
 ## Микрозадачи
 
-- [TODO] T001: Подключить canonical Workflow Kit package и development imports — Ожидает
-  - Git Commit: [PENDING] refactor: подключить canonical Workflow Kit package
+- [DONE] T001: Подключить canonical Workflow Kit package и development imports — Завершено
+  - Git Commit: [DONE] refactor: подключить canonical Workflow Kit package
   - Reference: workflow-kit-package-migration-039 / T001 / implementation
   - Файлы: package.json, package-lock.json, src/session-plans.mjs, scripts/check-workflow-kit-dependency.mjs, tests/workflow-kit-source.test.mjs, tests/session-plans.test.mjs, tests/workflow-kit-recovery.test.mjs, tests/electron-smoke.mjs, tests/project-doctor.test.mjs, tests/workspace-setup.test.mjs, tests/session-opening-performance.test.mjs, docs/planning/workflow-kit-package-migration.md
 - [TODO] T002: Добавить deterministic generated runtime staging — Ожидает

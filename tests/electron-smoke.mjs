@@ -1,5 +1,5 @@
 import { autoScrollPageScript } from '../src/chatgpt-auto-scroll.mjs';
-import { VERSION as BUNDLED_KIT_VERSION } from '../resources/workflow-kit/lib/common.mjs';
+import { VERSION as BUNDLED_KIT_VERSION } from '@webpilot/workflow-kit/lib/common';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -13,11 +13,11 @@ import { createHash } from 'node:crypto';
 import { nativeTheme, clipboard, BrowserWindow, dialog } from 'electron';
 import { ChatColors } from '../src/chatgpt-colors.mjs';
 import { readWorkspace, WorkspaceSessions } from '../src/workspace-session.mjs';
-import { createScope, startTask, preparePlan } from '../resources/workflow-kit/lib/actions.mjs';
-import { withSessionPlan } from '../resources/workflow-kit/lib/session-plans.mjs';
-import { readPlan, renderPlan } from '../resources/workflow-kit/lib/plan.mjs';
+import { createScope, startTask, preparePlan } from '@webpilot/workflow-kit/lib/actions';
+import { withSessionPlan } from '@webpilot/workflow-kit/lib/session-plans';
+import { readPlan, renderPlan } from '@webpilot/workflow-kit/lib/plan';
 import { sessionSelection } from '../src/context-session.mjs';
-import { commitTask } from '../resources/workflow-kit/lib/transaction.mjs';
+import { commitTask } from '@webpilot/workflow-kit/lib/transaction';
 
 let packetLoads = 0;
 let smokeDataDir;

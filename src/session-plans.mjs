@@ -12,13 +12,12 @@ const fail = (code, message) => Object.assign(new Error(message), { code });
 // Installed workspace code is executed only by the strict command path.
 let projectionFacade;
 async function trustedProjection() {
-  const development = new URL('../resources/workflow-kit/lib/session-plans.mjs', import.meta.url);
   const packaged = process.resourcesPath && path.join(process.resourcesPath, 'resources/workflow-kit/lib/session-plans.mjs');
   if (packaged) {
     try { await fs.access(packaged); return import(pathToFileURL(packaged).href); }
     catch (error) { if (error.code !== 'ENOENT') throw error; }
   }
-  return import(development.href);
+  return import('@webpilot/workflow-kit/lib/session-plans');
 }
 export async function readSessionPlans(workspace, sessionId) {
   const file = path.join(workspace, '.harness/kit/lib/session-plans.mjs');

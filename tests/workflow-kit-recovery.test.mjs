@@ -4,11 +4,12 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import { execFileSync } from 'node:child_process';
-import { emptyPlan, writePlan, readPlan, FINAL_DOCUMENTATION_TASK_TITLE, PROJECT_CONTINUATION_OBJECTIVE } from '../resources/workflow-kit/lib/plan.mjs';
-import { defaultConfig } from '../resources/workflow-kit/lib/validate.mjs';
-import { createScope, startTask, applyPlan, archive } from '../resources/workflow-kit/lib/actions.mjs';
-import { commitTask } from '../resources/workflow-kit/lib/transaction.mjs';
-import { recover } from '../resources/workflow-kit/lib/recovery.mjs';
+import { getRuntimeRoot } from '@webpilot/workflow-kit';
+import { emptyPlan, writePlan, readPlan, FINAL_DOCUMENTATION_TASK_TITLE, PROJECT_CONTINUATION_OBJECTIVE } from '@webpilot/workflow-kit/lib/plan';
+import { defaultConfig } from '@webpilot/workflow-kit/lib/validate';
+import { createScope, startTask, applyPlan, archive } from '@webpilot/workflow-kit/lib/actions';
+import { commitTask } from '@webpilot/workflow-kit/lib/transaction';
+import { recover } from '@webpilot/workflow-kit/lib/recovery';
 
 const env = { ...process.env, GIT_AUTHOR_NAME: 'Workflow Test', GIT_AUTHOR_EMAIL: 'workflow@example.invalid',
   GIT_COMMITTER_NAME: 'Workflow Test', GIT_COMMITTER_EMAIL: 'workflow@example.invalid' };
@@ -22,9 +23,9 @@ async function fixture(t) {
   await fs.mkdir(path.join(root, 'docs/modules'), { recursive: true });
   await fs.mkdir(path.join(root, 'docs/architecture'), { recursive: true });
   await fs.mkdir(path.join(root, 'src'), { recursive: true });
-  await fs.copyFile(new URL('../resources/workflow-kit/WORKFLOW.md', import.meta.url), path.join(root, '.harness/kit/WORKFLOW.md'));
+  await fs.copyFile(path.join(getRuntimeRoot(), 'WORKFLOW.md'), path.join(root, '.harness/kit/WORKFLOW.md'));
   // Recovery delivers the canonical work rules and stage forms together with WORKFLOW.md.
-  await fs.cp(new URL('../resources/workflow-kit/templates/', import.meta.url), path.join(root, '.harness/kit/templates'), { recursive: true });
+  await fs.cp(path.join(getRuntimeRoot(), 'templates'), path.join(root, '.harness/kit/templates'), { recursive: true });
   await fs.writeFile(path.join(root, '.harness/workflow.json'), JSON.stringify(defaultConfig(), null, 2) + '\n');
   writePlan(root, emptyPlan('Recovery Fixture'));
   await fs.writeFile(path.join(root, 'docs/architecture/OVERVIEW.md'), '# Краткая архитектура проекта\n\nOVERVIEW_REQUIRED\n');
@@ -213,8 +214,8 @@ test('Recovery v2 reports largest sections when required context exceeds transpo
 });
 
 test('session recovery carries its own pending tasks and transport identity while a blank chat receives navigation only', async t => {
-  const { withSessionPlan } = await import('../resources/workflow-kit/lib/session-plans.mjs');
-  const { contextPacket } = await import('../resources/workflow-kit/lib/recovery.mjs');
+  const { withSessionPlan } = await import('@webpilot/workflow-kit/lib/session-plans');
+  const { contextPacket } = await import('@webpilot/workflow-kit/lib/recovery');
   const root = await fixture(t);
   for (const session of ['session-a','session-b']) withSessionPlan(root, { sessionId: session }, () =>
     createScope(root, { ...continuityScopeInput(), scope_id: session, objective: 'ONLY_' + session }));
@@ -232,7 +233,7 @@ test('session recovery carries its own pending tasks and transport identity whil
 
 test('batched Git trailers retain parse semantics, Unicode, duplicates, unfolding and patch dividers', async t => {
   const root = await fixture(t);
-  const { commitHistory } = await import('../resources/workflow-kit/lib/git.mjs');
+  const { commitHistory } = await import('@webpilot/workflow-kit/lib/git');
   const messages = [
     'plain message without trailers',
     'subject\n\nWorkflow-Scope: scope-α\nWorkflow-Task: T001\nWorkflow-Task: T002\nWorkflow-Iteration: 2\n',
@@ -260,7 +261,7 @@ test('batched Git trailers retain parse semantics, Unicode, duplicates, unfoldin
 
 test('batched ancestry follows merge graph and changed replacement refs', async t => {
   const root = await fixture(t);
-  const { areAncestors, commitHistory } = await import('../resources/workflow-kit/lib/git.mjs');
+  const { areAncestors, commitHistory } = await import('@webpilot/workflow-kit/lib/git');
   const base = git(root, 'rev-parse', 'HEAD');
   git(root, 'checkout', '-b', 'side');
   git(root, 'commit', '--allow-empty', '-m', 'side'); const side = git(root, 'rev-parse', 'HEAD');

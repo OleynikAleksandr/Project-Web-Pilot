@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { emptyPlan, renderPlan, readPlan, writePlan } from '../resources/workflow-kit/lib/plan.mjs';
-import { sessionPlanView, selectPlan, withSessionPlan, ownedPlanPath } from '../resources/workflow-kit/lib/session-plans.mjs';
+import { emptyPlan, renderPlan, readPlan, writePlan } from '@webpilot/workflow-kit/lib/plan';
+import { sessionPlanView, selectPlan, withSessionPlan, ownedPlanPath } from '@webpilot/workflow-kit/lib/session-plans';
 
 function fixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'session-plans-'));

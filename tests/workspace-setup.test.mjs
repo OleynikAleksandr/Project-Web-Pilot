@@ -7,8 +7,8 @@ import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { WorkspaceSetup } from '../src/workspace-setup.mjs';
 import { nodeExecutableCandidates } from '../src/platform.mjs';
-import { VERSION } from '../resources/workflow-kit/lib/common.mjs';
-import { PROJECT_CONTINUATION_OBJECTIVE } from '../resources/workflow-kit/lib/plan.mjs';
+import { VERSION } from '@webpilot/workflow-kit/lib/common';
+import { PROJECT_CONTINUATION_OBJECTIVE } from '@webpilot/workflow-kit/lib/plan';
 import { fileURLToPath } from 'node:url';
 import { readSessionPlans } from '../src/session-plans.mjs';
 import { inspectProject as inspectDoctor } from '../resources/project-doctor/core.mjs';
@@ -276,7 +276,7 @@ test('1.3 upgrade installs newly introduced core files with a backup and preserv
 
 test('inspection fingerprints cover content, hooks, index, external attributes and pending transactions', async t => {
   const { workspace } = await create(t);
-  const { inspectionInputs } = await import('../resources/workflow-kit/lib/inspection-inputs.mjs');
+  const { inspectionInputs } = await import('@webpilot/workflow-kit/lib/inspection-inputs');
   const key = () => inspectionInputs(workspace).key;
   const doc = path.join(workspace, 'docs/architecture/OVERVIEW.md');
   const before = key(), st = await fs.stat(doc), body = await fs.readFile(doc, 'utf8');
@@ -305,10 +305,10 @@ test('inspection fingerprints cover content, hooks, index, external attributes a
 
 test('one inspection recovers each canonical plan once and refuses concurrent input changes', async t => {
   const { workspace, setup } = await create(t);
-  const { createScope, preparePlan } = await import('../resources/workflow-kit/lib/actions.mjs');
-  const { withSessionPlan } = await import('../resources/workflow-kit/lib/session-plans.mjs');
-  const { readPlan } = await import('../resources/workflow-kit/lib/plan.mjs');
-  const { inspectWithDiagnostics } = await import('../resources/workflow-kit/lib/installer.mjs');
+  const { createScope, preparePlan } = await import('@webpilot/workflow-kit/lib/actions');
+  const { withSessionPlan } = await import('@webpilot/workflow-kit/lib/session-plans');
+  const { readPlan } = await import('@webpilot/workflow-kit/lib/plan');
+  const { inspectWithDiagnostics } = await import('@webpilot/workflow-kit/lib/installer');
   const input = id => ({ scope_id: id, objective: 'Inspection fixture', approval_note: 'Fixture contract',
     acceptance_criteria: ['Complete'], approved_scope: { functional_paths: [], documentation_paths: ['docs/PRODUCT.md'], max_functional_files_per_task: 3 },
     context_pack: { documents: [], dependency_task_ids: [], include_last_completed_task: false },
@@ -334,8 +334,8 @@ test('one inspection recovers each canonical plan once and refuses concurrent in
 
 for (const legacy of ['1.4.0', '1.4.11']) test(`compatible ${legacy} upgrades to the bundled Kit and preserves canonical session plans`, async t => {
   const { setup, workspace } = await create(t);
-  const { createScope } = await import('../resources/workflow-kit/lib/actions.mjs');
-  const { withSessionPlan, listPlans } = await import('../resources/workflow-kit/lib/session-plans.mjs');
+  const { createScope } = await import('@webpilot/workflow-kit/lib/actions');
+  const { withSessionPlan, listPlans } = await import('@webpilot/workflow-kit/lib/session-plans');
   withSessionPlan(workspace, { sessionId: 'patch-upgrade-session' }, () => createScope(workspace, {
     scope_id: 'patch-upgrade', objective: 'Upgrade fixture', approval_note: 'Approved fixture', acceptance_criteria: ['Preserved'],
     approved_scope: { functional_paths: [], documentation_paths: ['docs/PRODUCT.md'], max_functional_files_per_task: 3 },
