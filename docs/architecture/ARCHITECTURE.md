@@ -1307,3 +1307,7 @@ context-inputs включает by-session в ключ контекста; proje
 Завершённое задание добавляется в session store (`agentTime`), идущее —
 передаётся в snapshot как `selected.agentRun`; сайдбар рисует `mm:ss · Σ mm:ss`
 в заголовке карточки плана.
+
+0.6.55: ChatColors перед вставкой CSS выполняет в странице `installComposerCapsule`
+(ближайший скруглённый предок поля ввода → `data-web-pilot-composer-capsule`,
+обёртки внутри → `data-web-pilot-composer-inner`); цвет поля ввода относится только к этой метке.

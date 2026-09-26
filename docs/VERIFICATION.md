@@ -2058,3 +2058,7 @@ Linux VM Cowork, Node 22.23.2: `tests/agent-timer.test.mjs` — начало с 
 ## Парный выпуск 0.6.54 — scope 038 / T009
 
 На Mac (Node 22.17.0, arm64) последовательно: `npm test` — 355 тестов, 353 PASS, 2 SKIP, 0 FAIL; `npm run smoke` — PASSED на TEST FIXTURE (liveChatGPT=false, sessionPlans/preparedPlans true, fullContextBytes 75092); `npm run build` — exit 0, `packagedSourceMatches: true`, ZIP integrity подтверждена. Корневой и установленный app — CFBundleShortVersionString 0.6.54; в `app.asar` из `/Applications` есть `src/agent-timer.mjs`, элемент `agent-time` в `ui/index.html` и `agentRun` в snapshot main. Работа таймера с живым ChatGPT (Chat и Work, ожидание подтверждения инструмента) и native Windows не проверялись.
+
+## Плашка поля ввода — scope 038 / T010
+
+Реальный DOM после входа снят через временно включённый локальный отладочный порт Web Pilot 0.6.54 и во встроенном браузере Claude: в чате `/c/…` старое правило красило прямоугольный `data-composer-body` (снимок — прямоугольник с острыми углами), скруглённым был `ComposerLayoutRoot`; на `/` скруглён сам `data-composer-body`. Новый скрипт и CSS применены вживую в обоих вариантах: помечен ровно один элемент со скруглением 26px, обёртки прозрачны, на снимках плашка закрашена с радиусными краями; после перехода между чатами метка переставлена автоматически. `tests/chatgpt-colors.test.mjs` — оба варианта вёрстки, форма без скругления не закрашивается, сброс снимает метки, CSS не ссылается на классы вёрстки; electron smoke дополнен вариантом «скруглённый root + прямоугольный body».

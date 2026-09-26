@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 34,
+  "plan_revision": 36,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-kit-1411-038",
@@ -500,8 +500,8 @@
         "suite"
       ],
       "expected_commit_message": "fix: заливка только скруглённой плашки поля ввода",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workflow-kit-1411-038",
         "task_id": "T010",
@@ -639,7 +639,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-kit-1411-038
 Current Task: нет
-Revision: 34
+Revision: 36
 
 ## Цель
 
@@ -693,8 +693,8 @@ Revision: 34
   - Git Commit: [DONE] feat: Парный выпуск 0.6.54
   - Reference: workflow-kit-1411-038 / T009 / implementation
   - Файлы: docs/RELEASE.md, docs/VERIFICATION.md
-- [TODO] T010: Заливка только скруглённой плашки поля ввода — Ожидает
-  - Git Commit: [PENDING] fix: заливка только скруглённой плашки поля ввода
+- [DONE] T010: Заливка только скруглённой плашки поля ввода — Завершено
+  - Git Commit: [DONE] fix: заливка только скруглённой плашки поля ввода
   - Reference: workflow-kit-1411-038 / T010 / implementation
   - Файлы: src/chatgpt-colors.mjs, tests/chatgpt-colors.test.mjs, tests/electron-smoke.mjs, docs/modules/workspace-sessions.md, docs/modules/chatgpt-dom-compatibility.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T011: Версия 0.6.55 — Ожидает

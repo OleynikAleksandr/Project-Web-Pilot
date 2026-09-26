@@ -18,10 +18,8 @@ export function validateColorChange(input) {
   return { key: input.key, value: input.value?.toLowerCase() ?? null };
 }
 const role = name => ':is(' + CHATGPT_SELECTORS[name] + ')';
-const composerEditor = ':is(' + CHATGPT_SELECTORS.editor + ')';
-// data-composer-body owns the visible rounded capsule; ModeSurface is its backdrop.
-// Legacy surfaces are used only when they do not wrap a modern capsule.
-const composerSurface = ':is([data-composer-body],#composer-background,[data-testid="composer"],[class*="bg-(--composer-surface-primary)"]):has(' + composerEditor + '):not(:has([data-composer-body]))';
+export const COMPOSER_CAPSULE_ATTR = 'data-web-pilot-composer-capsule';
+export const COMPOSER_INNER_ATTR = 'data-web-pilot-composer-inner';
 const userContent = role('user') + ',' + role('user') + ' *,.user-message-bubble,.user-message-bubble *,.user-message-bubble-color,.user-message-bubble-color *';
 const editableContent = '[contenteditable="true"],[contenteditable="true"] *,#prompt-textarea,#prompt-textarea *';
 const assistantContent = ':is(' + role('assistant') + ',main :is(.markdown,.prose,[class*="markdown-new-styling"]):not(:where(' + userContent + ',' + editableContent + ')))';
@@ -37,9 +35,10 @@ export function chatColorsCSS(input) {
     rules.push(CHATGPT_SELECTORS.userBubble + '{background:' + colors.userBackground + '!important}');
   }
   if (colors.composerBackground) {
-    const c = colors.composerBackground;
-    rules.push(composerSurface + '{background:' + c + '!important}');
-    rules.push(composerSurface + ' ' + composerEditor + '{background:transparent!important}');
+    // The page marker (installComposerCapsule) tags the rounded capsule and the rectangular wrappers inside it.
+    const capsule = '[' + COMPOSER_CAPSULE_ATTR + ']';
+    rules.push(capsule + '{background:' + colors.composerBackground + '!important}');
+    rules.push(capsule + ' :is([' + COMPOSER_INNER_ATTR + '],' + CHATGPT_SELECTORS.editor + '){background:transparent!important}');
   }
   for (const name of ['user', 'assistant']) {
     const c = colors[name + 'Text'];
@@ -49,6 +48,53 @@ export function chatColorsCSS(input) {
   }
   return rules.join('\n');
 }
+// Runs in the ChatGPT page. ChatGPT builds differ in which wrapper draws the rounded capsule
+// (data-composer-body itself, ComposerLayoutRoot around a rectangular body, or the form for guests),
+// so the capsule is found by geometry: the nearest rounded ancestor of every visible editor, never above its form.
+export function installComposerCapsule(enabled, editorSelector, capsuleAttr, innerAttr) {
+  const key = '__webPilotComposerCapsule';
+  window[key]?.disconnect();
+  const tagged = () => document.querySelectorAll('[' + capsuleAttr + '],[' + innerAttr + ']');
+  if (!enabled) { for (const e of tagged()) { e.removeAttribute(capsuleAttr); e.removeAttribute(innerAttr); } return 0; }
+  const MIN_RADIUS = 12, MAX_DEPTH = 14, SAFETY_MS = 1000;
+  const visible = e => e.getClientRects().length > 0 && getComputedStyle(e).visibility !== 'hidden';
+  const radius = e => {
+    const s = getComputedStyle(e);
+    const corners = [s.borderTopLeftRadius, s.borderTopRightRadius, s.borderBottomRightRadius, s.borderBottomLeftRadius].filter(Boolean);
+    const values = corners.length === 4 ? corners : String(s.borderRadius || '0').split(/[\s/]+/);
+    return Math.min(...values.map(value => parseFloat(value) || 0));
+  };
+  let marked = new Set();
+  const apply = () => {
+    const capsules = new Set(), inner = new Set();
+    for (const editor of document.querySelectorAll(editorSelector)) {
+      if (!visible(editor)) continue;
+      const chain = [];
+      for (let e = editor.parentElement, depth = 0; e && e !== document.body && depth < MAX_DEPTH; e = e.parentElement, depth++) {
+        if (radius(e) >= MIN_RADIUS) { capsules.add(e); for (const wrapper of chain) inner.add(wrapper); break; }
+        if (e.tagName === 'FORM') break;
+        chain.push(e);
+      }
+    }
+    for (const e of document.querySelectorAll('[' + capsuleAttr + ']')) if (!capsules.has(e)) e.removeAttribute(capsuleAttr);
+    for (const e of document.querySelectorAll('[' + innerAttr + ']')) if (!inner.has(e)) e.removeAttribute(innerAttr);
+    for (const e of capsules) if (!e.hasAttribute(capsuleAttr)) e.setAttribute(capsuleAttr, '');
+    for (const e of inner) if (!e.hasAttribute(innerAttr)) e.setAttribute(innerAttr, '');
+    marked = capsules;
+    return capsules.size;
+  };
+  // Mark synchronously (before paint) only when an editor appears or a marked capsule leaves the DOM,
+  // so streaming answers do not trigger style reads; a slow safety pass follows class-only layout changes.
+  const addsEditor = node => node.nodeType === 1 && (node.matches(editorSelector) || !!node.querySelector(editorSelector));
+  const observer = new MutationObserver(mutations => {
+    if ([...marked].some(e => !e.isConnected) || mutations.some(m => [...m.addedNodes].some(addsEditor))) apply();
+  });
+  const safety = setInterval(apply, SAFETY_MS);
+  window[key] = { apply, disconnect: () => { observer.disconnect(); clearInterval(safety); delete window[key]; } };
+  observer.observe(document.documentElement, { childList: true, subtree: true });
+  return apply();
+}
+export const composerCapsuleScript = enabled => `(${installComposerCapsule.toString()})(${!!enabled}, ${JSON.stringify(CHATGPT_SELECTORS.editor)}, ${JSON.stringify(COMPOSER_CAPSULE_ATTR)}, ${JSON.stringify(COMPOSER_INNER_ATTR)})`;
 export function isChatColorsURL(value) {
   try { const url = new URL(value); return url.origin === 'https://chatgpt.com'; } catch { return false; }
 }
@@ -81,6 +127,9 @@ export class ChatColors {
       const doc = this.document, contents = this.contents;
       if (contents.isDestroyed() || !isChatColorsURL(contents.getURL())) return;
       const previous = this.key, css = chatColorsCSS(this.colors);
+      // Tag the capsule before the sheet arrives so the color never lands on a rectangular wrapper.
+      await contents.executeJavaScript(composerCapsuleScript(!!this.colors.composerBackground), true).catch(() => {});
+      if (doc !== this.document || contents.isDestroyed()) continue;
       // Electron 44.3.0 removes author sheets reliably; !important wins over site styles.
       const next = css ? await contents.insertCSS(css, { cssOrigin: 'author' }) : null;
       if (doc !== this.document || contents.isDestroyed()) {
