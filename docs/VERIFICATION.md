@@ -2054,3 +2054,7 @@ Linux VM Cowork, Node 22.23.2: полный `node --test tests/*.test.mjs` — 3
 ## Таймер работы агента — scope 038 / T007
 
 Linux VM Cowork, Node 22.23.2: `tests/agent-timer.test.mjs` — начало с первого busy, пауза короче 5 с продолжает задание, завершение на последнем busy после 5 с простоя, смена сессии завершает замер и не показывает его чужой сессии, неверный grace отклоняется. `tests/workspace-session.test.mjs` — `recordAgentTime` суммирует по своей сессии даже после переключения, не меняет выбор, переживает перезапуск, отвергает отрицательные/дробные/несогласованные значения в файле. `tests/sidebar.test.mjs` — `00:00 · Σ 00:00` по умолчанию, `01:05 · Σ 62:05` после сохранённых заданий, живой счёт через секунду, заморозка паузы, role=timer и aria-label. Живой ChatGPT (Chat/Work, ожидание подтверждения инструмента) в VM не проверялся.
+
+## Парный выпуск 0.6.54 — scope 038 / T009
+
+На Mac (Node 22.17.0, arm64) последовательно: `npm test` — 355 тестов, 353 PASS, 2 SKIP, 0 FAIL; `npm run smoke` — PASSED на TEST FIXTURE (liveChatGPT=false, sessionPlans/preparedPlans true, fullContextBytes 75092); `npm run build` — exit 0, `packagedSourceMatches: true`, ZIP integrity подтверждена. Корневой и установленный app — CFBundleShortVersionString 0.6.54; в `app.asar` из `/Applications` есть `src/agent-timer.mjs`, элемент `agent-time` в `ui/index.html` и `agentRun` в snapshot main. Работа таймера с живым ChatGPT (Chat и Work, ожидание подтверждения инструмента) и native Windows не проверялись.

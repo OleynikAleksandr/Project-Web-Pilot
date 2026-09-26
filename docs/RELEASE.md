@@ -496,3 +496,16 @@ ASAR: macOS `07fa66abf30614d04053cc5b257423a5653f78ff77875f936bc324ddf4ff0212`, 
 | Windows x64 | 316463768 | `bb09b89a0a5a6669326dbf176a3fe56df2f77d6c78f6c52bb68576e703e0f7b4` |
 
 ASAR: macOS `2de04d7ce060c6e557de38ad1402fe5946a08f8c9587cec8ed2a31492255c523`, Windows `8681534787590d7516e030ada82b8daaa852fc610db2f61482730246a8deb995`.
+
+## Локальный парный выпуск 0.6.54 — 26.09.2026
+
+Таймер работы агента: справа в заголовке карточки «План этой сессии» — `mm:ss · Σ mm:ss`, время текущего (или последнего) задания и сумма за сессию. Замер идёт, пока ChatGPT показывает кнопку Stop; паузы до 5 с — то же задание. Сумма хранится в session store и переживает перезапуск. Поставляемый Workflow Kit — 1.4.12, собственный Kit репозитория — 1.4.1.
+
+`npm run build` прошла на Mac 07:50–07:55 UTC, source commit `0fa62de`, исходные файлы совпали с упакованными. Корневой `Project Web Pilot.app` — 0.6.54 (inode 406600483 сохранён); `/Applications/Project Web Pilot.app` обновлена штатным installMacBundle (inode 406571340 сохранён, прежний Contents — в `.harness/runtime/release-backups/mac-aZY2Vh`). Поставка: `~/Downloads/WebPilot-0.6.54/`, `shasum -c SHA256SUMS.txt` — OK. Native Windows не запускалась, GitHub не публиковался.
+
+| Платформа | Размер, байт | SHA-256 ZIP |
+| --- | ---: | --- |
+| macOS arm64 | 181203572 | `f0a522f78743f533ebbde895bc8cf497d8b1465b1037f2fb147508e8e401e3fe` |
+| Windows x64 | 316465854 | `1b11f152cf5a68f492c446714402192461ae1d1354db9c153b178eeab5613c9e` |
+
+ASAR: macOS `4ea68c0ac2a16691e07fb97a7ba74c60fbf1ce258086ab482434a75c5122dec6`, Windows `13512313090468dfee7ef63eba8e01a1bf141f0be802f5a47e83c617dcc2560d`.
