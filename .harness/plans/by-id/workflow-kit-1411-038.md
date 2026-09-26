@@ -4,19 +4,20 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 23,
+  "plan_revision": 24,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-kit-1411-038",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
-  "objective": "Поставлять в новых и подключаемых проектах Workflow Kit 1.4.11 и выпустить парный релиз 0.6.52; затем Kit 1.4.12 с видимыми планами by-session и выпуск 0.6.53",
+  "delivery_status": "IN_PROGRESS",
+  "objective": "Поставлять в новых и подключаемых проектах Workflow Kit 1.4.11 и выпустить парный релиз 0.6.52; затем Kit 1.4.12 с видимыми планами by-session и выпуск 0.6.53; затем таймер работы агента в карточке плана и выпуск 0.6.54",
   "acceptance_criteria": [
     "resources/workflow-kit побайтно совпадает с Workflow Kit 1.4.11 из CodeAppServer badcf20 (tree 1fe409fb)",
     "Новый проект получает Workflow Kit 1.4.11; проект 1.4.1 предлагается к обновлению и обновляется с сохранением планов сессий",
     "Доктор и подготовка принимают установки 1.4.1; сайдбар объясняет необходимость обновления Kit",
     "Полный Node suite проходит",
-    "Парный выпуск 0.6.52 собран npm run build: ZIP macOS arm64 и Windows x64 в ~/Downloads/WebPilot-0.6.52/, корневой Project Web Pilot.app обновлён"
+    "Парный выпуск 0.6.52 собран npm run build: ZIP macOS arm64 и Windows x64 в ~/Downloads/WebPilot-0.6.52/, корневой Project Web Pilot.app обновлён",
+    "Таймер работы агента (текущее задание и сумма за сессию) виден в карточке плана; парный выпуск 0.6.54 собран"
   ],
   "approved_scope": {
     "functional_paths": [
@@ -69,7 +70,13 @@
       "src/context-session.mjs",
       "tests/session-plans.test.mjs",
       "tests/context-session.test.mjs",
-      "tests/sidebar.test.mjs"
+      "tests/sidebar.test.mjs",
+      "src/agent-timer.mjs",
+      "src/main.mjs",
+      "src/workspace-session.mjs",
+      "src/ui/index.html",
+      "tests/agent-timer.test.mjs",
+      "tests/workspace-session.test.mjs"
     ],
     "documentation_paths": [
       "docs/architecture/OVERVIEW.md",
@@ -86,7 +93,9 @@
       "docs/PRODUCT.md",
       "docs/modules/project-doctor.md",
       "resources/workflow-kit/WORKFLOW.md",
-      "docs/modules/session-owned-plans.md"
+      "docs/modules/session-owned-plans.md",
+      "docs/modules/workspace-sessions.md",
+      "docs/modules/chatgpt-dom-compatibility.md"
     ],
     "max_functional_files_per_task": 3
   },
@@ -130,6 +139,14 @@
         "path": "docs/WORKSPACE_SETUP.md",
         "heading_path": [
           "Создание и подключение workspace"
+        ],
+        "required": true,
+        "revision": "WORKTREE"
+      },
+      {
+        "path": "docs/modules/workspace-sessions.md",
+        "heading_path": [
+          "Module Specification — Workspace & Sessions"
         ],
         "required": true,
         "revision": "WORKTREE"
@@ -369,13 +386,107 @@
       }
     },
     {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
+      "id": "T007",
+      "title": "Таймер работы агента в карточке плана",
+      "why": "Пользователь хочет видеть, сколько времени агент тратит на задание, чтобы настраивать Web Pilot на скорость",
+      "dependencies": [],
+      "functional_paths": [
+        "src/agent-timer.mjs",
+        "src/main.mjs",
+        "src/workspace-session.mjs",
+        "src/ui/sidebar.mjs",
+        "src/ui/index.html",
+        "tests/agent-timer.test.mjs",
+        "tests/workspace-session.test.mjs",
+        "tests/sidebar.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/workspace-sessions.md",
+        "docs/modules/chatgpt-dom-compatibility.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "file_limit_exception": "Счётчик по состоянию ChatGPT, его сохранение в session store и отображение в сайдбаре — один сквозной сценарий с общими тестами",
+      "acceptance_criteria": [
+        "Время считается от начала до конца работы ChatGPT над сообщением по видимой кнопке Stop, короткие паузы до 5 с не завершают задание",
+        "Справа в заголовке карточки «План этой сессии» показано mm:ss текущего/последнего задания и Σ mm:ss за сессию; во время работы значение идёт каждую секунду",
+        "Сумма за сессию сохраняется в session store и переживает перезапуск; переключение сессии завершает текущий замер",
+        "npm test проходит"
+      ],
+      "verification_ids": [
+        "suite"
+      ],
+      "expected_commit_message": "feat: таймер работы агента в карточке плана",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "workflow-kit-1411-038",
+        "task_id": "T007",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T008",
+      "title": "Версия 0.6.54",
+      "why": "Новый парный выпуск",
+      "dependencies": [
+        "T007"
+      ],
+      "functional_paths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "documentation_paths": [],
+      "documentation_exception": "Меняется только номер версии выпуска; архитектура и зависимости не меняются.",
+      "acceptance_criteria": [
+        "package.json, package-lock.json и build-скрипты — 0.6.54"
+      ],
+      "verification_ids": [
+        "syntax"
+      ],
+      "expected_commit_message": "chore: версия 0.6.54",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "workflow-kit-1411-038",
+        "task_id": "T008",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T009",
+      "title": "Парный выпуск 0.6.54",
+      "why": "Собрать и проверить macOS + Windows",
+      "dependencies": [
+        "T008"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "acceptance_criteria": [
+        "npm test, smoke и npm run build прошли на Mac",
+        "Корневой и /Applications app — 0.6.54, таймер есть в упакованном интерфейсе"
+      ],
+      "verification_ids": [],
+      "expected_commit_message": "feat: Парный выпуск 0.6.54",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "workflow-kit-1411-038",
+        "task_id": "T009",
+        "role": "implementation"
+      }
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "workflow-kit-1411-038",
         "task_id": "DOCS",
         "role": "implementation",
-        "iteration": 2
+        "iteration": 3
       },
       "dependencies": [
         "T001",
@@ -383,7 +494,10 @@
         "T003",
         "T004",
         "T005",
-        "T006"
+        "T006",
+        "T007",
+        "T008",
+        "T009"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -415,6 +529,11 @@
       "id": "f73e8fd4-0669-4473-8410-65bcfe4dcf00",
       "text": "Пользователь 25.09.2026 поручил обновить поставляемый Workflow Kit Project Web Pilot до 1.4.11 и собрать новый релиз macOS + Windows. Собственный Kit репозитория остаётся 1.4.1. Существующие проекты 1.4.1 обновляются как раньше: явной кнопкой «Обновить и открыть» с резервной копией. Источник 1.4.11 — CodeAppServer, ветка codex/gpt-provider-names, коммит badcf20.",
       "recorded_at": "2026-09-25T15:54:35.700Z"
+    },
+    {
+      "id": "ea6a7e07-81eb-4610-a560-cec9317982e1",
+      "text": "Пользователь 26.09.2026 поручил сделать таймер времени, которое агент тратит на обработку задания: абсолютное время в минутах и секундах, справа вверху карточки «План этой сессии», показывать и текущее задание, и сумму за сессию; затем собрать релиз 0.6.54 macOS + Windows.",
+      "recorded_at": "2026-09-26T07:44:14.603Z"
     }
   ],
   "owner_session_id": "cowork-kit-1411",
@@ -426,14 +545,14 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: workflow-kit-1411-038
 Current Task: нет
-Revision: 23
+Revision: 24
 
 ## Цель
 
-Поставлять в новых и подключаемых проектах Workflow Kit 1.4.11 и выпустить парный релиз 0.6.52; затем Kit 1.4.12 с видимыми планами by-session и выпуск 0.6.53
+Поставлять в новых и подключаемых проектах Workflow Kit 1.4.11 и выпустить парный релиз 0.6.52; затем Kit 1.4.12 с видимыми планами by-session и выпуск 0.6.53; затем таймер работы агента в карточке плана и выпуск 0.6.54
 
 ## Критерии приёмки
 
@@ -442,6 +561,7 @@ Revision: 23
 - Доктор и подготовка принимают установки 1.4.1; сайдбар объясняет необходимость обновления Kit
 - Полный Node suite проходит
 - Парный выпуск 0.6.52 собран npm run build: ZIP macOS arm64 и Windows x64 в ~/Downloads/WebPilot-0.6.52/, корневой Project Web Pilot.app обновлён
+- Таймер работы агента (текущее задание и сумма за сессию) виден в карточке плана; парный выпуск 0.6.54 собран
 
 ## Микрозадачи
 
@@ -469,8 +589,20 @@ Revision: 23
   - Git Commit: [DONE] feat: Парный выпуск 0.6.53
   - Reference: workflow-kit-1411-038 / T006 / implementation
   - Файлы: docs/RELEASE.md, docs/VERIFICATION.md
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: актуализировать документацию проекта
+- [TODO] T007: Таймер работы агента в карточке плана — Ожидает
+  - Git Commit: [PENDING] feat: таймер работы агента в карточке плана
+  - Reference: workflow-kit-1411-038 / T007 / implementation
+  - Файлы: src/agent-timer.mjs, src/main.mjs, src/workspace-session.mjs, src/ui/sidebar.mjs, src/ui/index.html, tests/agent-timer.test.mjs, tests/workspace-session.test.mjs, tests/sidebar.test.mjs, docs/modules/workspace-sessions.md, docs/modules/chatgpt-dom-compatibility.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
+- [TODO] T008: Версия 0.6.54 — Ожидает
+  - Git Commit: [PENDING] chore: версия 0.6.54
+  - Reference: workflow-kit-1411-038 / T008 / implementation
+  - Файлы: package.json, package-lock.json
+- [TODO] T009: Парный выпуск 0.6.54 — Ожидает
+  - Git Commit: [PENDING] feat: Парный выпуск 0.6.54
+  - Reference: workflow-kit-1411-038 / T009 / implementation
+  - Файлы: docs/RELEASE.md, docs/VERIFICATION.md
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: актуализировать документацию проекта
   - Reference: workflow-kit-1411-038 / DOCS / implementation
   - Файлы: docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, README.md, AGENTS.md, docs/SOURCE_WORKSPACES.md, docs/architecture/ARCHITECTURE.md, docs/PRODUCT.md, docs/modules/project-doctor.md, docs/modules/workflow-kit-recovery.md, docs/WORKSPACE_SETUP.md
 
@@ -481,5 +613,6 @@ Revision: 23
 - docs/DOCUMENTATION_INDEX.md → Каталог документации
 - docs/modules/workflow-kit-recovery.md → Module Specification — Workflow Kit / Context Recovery
 - docs/WORKSPACE_SETUP.md → Создание и подключение workspace
+- docs/modules/workspace-sessions.md → Module Specification — Workspace & Sessions
 
 Служебные состояния меняются только командами workflow. Приёмка не архивирует scope.
