@@ -4,6 +4,8 @@
   "stack": "Electron 44.3.0 / Chromium, JavaScript ESM, Node.js 22.17.0; macOS arm64",
   "checks": [
     {
+      "required": true,
+      "timeout_ms": 30000,
       "id": "syntax",
       "executable": "node",
       "args": [
@@ -11,11 +13,11 @@
         "src/main.mjs"
       ],
       "cwd": ".",
-      "required": true,
-      "timeout_ms": 30000,
       "stage": "commit"
     },
     {
+      "required": false,
+      "timeout_ms": 60000,
       "id": "workspace",
       "executable": "node",
       "args": [
@@ -23,11 +25,11 @@
         "tests/workspace-session.test.mjs"
       ],
       "cwd": ".",
-      "required": false,
-      "timeout_ms": 60000,
       "stage": "commit"
     },
     {
+      "required": false,
+      "timeout_ms": 60000,
       "id": "runtime",
       "executable": "node",
       "args": [
@@ -35,11 +37,11 @@
         "tests/mcp-runtime.test.mjs"
       ],
       "cwd": ".",
-      "required": false,
-      "timeout_ms": 60000,
       "stage": "commit"
     },
     {
+      "required": false,
+      "timeout_ms": 60000,
       "id": "composer",
       "executable": "node",
       "args": [
@@ -47,11 +49,11 @@
         "tests/chatgpt-composer.test.mjs"
       ],
       "cwd": ".",
-      "required": false,
-      "timeout_ms": 60000,
       "stage": "commit"
     },
     {
+      "required": false,
+      "timeout_ms": 60000,
       "id": "context",
       "executable": "node",
       "args": [
@@ -59,22 +61,22 @@
         "tests/context-session.test.mjs"
       ],
       "cwd": ".",
-      "required": false,
-      "timeout_ms": 60000,
       "stage": "commit"
     },
     {
+      "required": false,
+      "timeout_ms": 120000,
       "id": "suite",
       "executable": "npm",
       "args": [
         "test"
       ],
       "cwd": ".",
-      "required": false,
-      "timeout_ms": 120000,
       "stage": "commit"
     },
     {
+      "required": false,
+      "timeout_ms": 120000,
       "id": "electron-smoke",
       "executable": "npm",
       "args": [
@@ -82,9 +84,45 @@
         "smoke"
       ],
       "cwd": ".",
+      "stage": "commit"
+    },
+    {
       "required": false,
       "timeout_ms": 120000,
-      "stage": "commit"
+      "id": "workflow-kit-contract",
+      "executable": "node",
+      "args": [
+        "scripts/check-workflow-kit-dependency.mjs"
+      ],
+      "cwd": ".",
+      "stage": "commit",
+      "kind": "test"
+    },
+    {
+      "required": false,
+      "timeout_ms": 120000,
+      "id": "workflow-kit-stage",
+      "executable": "node",
+      "args": [
+        "scripts/check-workflow-kit-staging.mjs"
+      ],
+      "cwd": ".",
+      "stage": "commit",
+      "kind": "test"
+    },
+    {
+      "required": false,
+      "timeout_ms": 600000,
+      "id": "paired-release",
+      "executable": "npm",
+      "args": [
+        "run",
+        "build"
+      ],
+      "cwd": ".",
+      "stage": "commit",
+      "kind": "package",
+      "evidence": "Парный релиз одной версии: macOS arm64 + Windows x64 ZIP, source/package verifiers и release-manifest."
     }
   ],
   "budget": {
