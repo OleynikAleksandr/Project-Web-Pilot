@@ -125,6 +125,10 @@ function localName(value, { empty = 'Нужно непустое названи�
   return name;
 }
 
+const validDuration = value => Number.isSafeInteger(value) && value >= 0;
+const validAgentTime = value => typeof value === 'object' && !Array.isArray(value)
+  && validDuration(value.totalMs) && validDuration(value.lastMs) && value.lastMs <= value.totalMs;
+
 function validate(data) {
   if (data?.schemaVersion !== 6 || !Array.isArray(data.projects)) throw invalid();
   const urls = [], ids = [], workspaces = [];
@@ -153,6 +157,7 @@ function validate(data) {
           || (s.archivedAt !== null && (!Number.isFinite(s.archivedAt) || s.archivedAt <= 0))
           || (s.chatUrl !== null && (!normalizeChatUrl(s.chatUrl) || normalizeChatUrl(s.chatUrl) !== s.chatUrl
             || !conversationUrlCompatibleWithExperience(s.chatUrl, s.experience)))) throw invalid();
+      if (s.agentTime !== undefined && s.agentTime !== null && !validAgentTime(s.agentTime)) throw invalid();
       for (const key of ['planId','originSessionId','legacyPlanId','lastNamedScopeId']) {
         if (s[key] !== undefined && s[key] !== null && (typeof s[key] !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,180}$/.test(s[key]))) throw invalid();
       }
@@ -518,6 +523,20 @@ export class WorkspaceSessions {
       if (session.lastNamedScopeId === scopeId) return false;
       const title = localName(objective, { empty: 'У scope нет названия для сессии.' });
       session.title = title; session.titleSource = 'scope'; session.lastNamedScopeId = scopeId; session.planId = scopeId; session.originSessionId = originSessionId;
+      return true;
+    });
+  }
+
+  // Adds one finished agent request to its session, even if another session is selected by now.
+  async recordAgentTime(workspace, sessionId, durationMs) {
+    if (!Number.isFinite(durationMs) || durationMs < 0) throw new RangeError('INVALID_AGENT_TIME');
+    const lastMs = Math.round(durationMs);
+    return this.mutate(data => {
+      const session = data.projects.find(p => p.workspace === workspace)?.sessions.find(s => s.sessionId === sessionId);
+      if (!session) return false;
+      const totalMs = (session.agentTime?.totalMs ?? 0) + lastMs;
+      if (!Number.isSafeInteger(totalMs)) throw new RangeError('INVALID_AGENT_TIME');
+      session.agentTime = { totalMs, lastMs };
       return true;
     });
   }

@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 24,
+  "plan_revision": 27,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-kit-1411-038",
@@ -139,14 +139,6 @@
         "path": "docs/WORKSPACE_SETUP.md",
         "heading_path": [
           "Создание и подключение workspace"
-        ],
-        "required": true,
-        "revision": "WORKTREE"
-      },
-      {
-        "path": "docs/modules/workspace-sessions.md",
-        "heading_path": [
-          "Module Specification — Workspace & Sessions"
         ],
         "required": true,
         "revision": "WORKTREE"
@@ -417,8 +409,8 @@
         "suite"
       ],
       "expected_commit_message": "feat: таймер работы агента в карточке плана",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workflow-kit-1411-038",
         "task_id": "T007",
@@ -548,7 +540,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-kit-1411-038
 Current Task: нет
-Revision: 24
+Revision: 27
 
 ## Цель
 
@@ -589,8 +581,8 @@ Revision: 24
   - Git Commit: [DONE] feat: Парный выпуск 0.6.53
   - Reference: workflow-kit-1411-038 / T006 / implementation
   - Файлы: docs/RELEASE.md, docs/VERIFICATION.md
-- [TODO] T007: Таймер работы агента в карточке плана — Ожидает
-  - Git Commit: [PENDING] feat: таймер работы агента в карточке плана
+- [DONE] T007: Таймер работы агента в карточке плана — Завершено
+  - Git Commit: [DONE] feat: таймер работы агента в карточке плана
   - Reference: workflow-kit-1411-038 / T007 / implementation
   - Файлы: src/agent-timer.mjs, src/main.mjs, src/workspace-session.mjs, src/ui/sidebar.mjs, src/ui/index.html, tests/agent-timer.test.mjs, tests/workspace-session.test.mjs, tests/sidebar.test.mjs, docs/modules/workspace-sessions.md, docs/modules/chatgpt-dom-compatibility.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
 - [TODO] T008: Версия 0.6.54 — Ожидает
@@ -613,6 +605,5 @@ Revision: 24
 - docs/DOCUMENTATION_INDEX.md → Каталог документации
 - docs/modules/workflow-kit-recovery.md → Module Specification — Workflow Kit / Context Recovery
 - docs/WORKSPACE_SETUP.md → Создание и подключение workspace
-- docs/modules/workspace-sessions.md → Module Specification — Workspace & Sessions
 
 Служебные состояния меняются только командами workflow. Приёмка не архивирует scope.

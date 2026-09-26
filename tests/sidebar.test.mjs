@@ -196,3 +196,26 @@ test('delivered chat shows local tools from the last confirmed runtime status wi
   f.emit({ ...f.state, macRuntime: { mode: 'x', label: 'Codex Local Mac', service: { mcpReady: true, tunnelReady: false, tunnelConfigured: true } } });
   assert.equal(f.document.getElementById('state-service').textContent, 'Не проверены');
 });
+
+test('plan card shows current and total agent time in minutes and seconds without live announcements', async t => {
+  const f = await fixture(t), state = f.state, timer = f.document.getElementById('agent-time');
+  assert.equal(timer.getAttribute('role'), 'timer', 'role=timer is not announced every second');
+  assert.equal(timer.closest('.plan-head').querySelector('.eyebrow').textContent, 'План этой сессии');
+  assert.equal(timer.hidden, false);
+  assert.equal(timer.textContent, '00:00 · Σ 00:00');
+  state.selected = { ...state.selected, agentTime: { totalMs: 3_725_000, lastMs: 65_900 } }; f.emit(state);
+  assert.equal(timer.textContent, '01:05 · Σ 62:05');
+  assert.equal(timer.dataset.running, 'false');
+  assert.match(timer.getAttribute('aria-label'), /последнее задание 1 мин 5 с, всего за сессию 62 мин 5 с/);
+  const now = f.window.Date.now();
+  state.selected = { ...state.selected, agentTime: { totalMs: 60_000, lastMs: 60_000 }, agentRun: { startedAt: now - 3_400, lastBusyAt: now, paused: false } }; f.emit(state);
+  assert.equal(timer.dataset.running, 'true');
+  assert.equal(timer.textContent, '00:03 · Σ 01:03');
+  await new Promise(resolve => setTimeout(resolve, 1100));
+  assert.equal(timer.textContent, '00:04 · Σ 01:04', 'running value advances every second');
+  state.selected = { ...state.selected, agentRun: { startedAt: now - 90_000, lastBusyAt: now - 20_000, paused: true } }; f.emit(state);
+  assert.equal(timer.dataset.running, 'false', 'a pause freezes the value at the last busy moment');
+  assert.equal(timer.textContent, '01:10 · Σ 02:10');
+  state.selected = null; f.emit(state);
+  assert.equal(timer.hidden, true);
+});

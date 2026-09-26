@@ -1,4 +1,6 @@
 import { PlanMonitor } from './plan-monitor.mjs';
+import { AgentTimer } from './agent-timer.mjs';
+import { chatGPTDOMScript } from './chatgpt-dom.mjs';
 import { toolFilterScript } from './chatgpt-tool-filter.mjs';
 import { app, BaseWindow, BrowserWindow, WebContentsView, Menu, session, ipcMain, dialog, nativeTheme, clipboard, shell } from 'electron';
 import path from 'node:path';
@@ -91,6 +93,25 @@ const workspaceSetup = new WorkspaceSetup({
 });
 const sessionPlans = new SessionPlans({ setup: workspaceSetup });
 store.planService = sessionPlans;
+// Agent time: wall clock while ChatGPT shows its Stop control; each finished request is added to its own session.
+const agentTimer = new AgentTimer({ onFinish: ({ workspace, sessionId }, durationMs) => {
+  void store.recordAgentTime(workspace, sessionId, durationMs).then(() => publish(),
+    error => console.error('Project Web Pilot: agent time not saved:', error?.message ?? error));
+} });
+const agentBusyScript = chatGPTDOMScript() + '.busy()';
+let agentTimerInterval = null, agentProbe = false;
+async function observeAgent() {
+  if (agentProbe) return;
+  agentProbe = true;
+  try {
+    const selected = store.selected();
+    const target = selected && !selected.sessionArchivedAt ? { workspace: selected.workspace, sessionId: selected.sessionId } : null;
+    let busy = false;
+    if (target && !pageLoading && browser && !browser.webContents.isDestroyed() && browser.webContents.getURL().startsWith('https://chatgpt.com/'))
+      busy = await browser.webContents.executeJavaScript(agentBusyScript, true).then(value => value === true, () => false);
+    if (agentTimer.observe(target, busy)) publish();
+  } finally { agentProbe = false; }
+}
 let setupState = null;
 let workspaceHealth = null;
 let settingsState = null;
@@ -171,7 +192,8 @@ function snapshot() {
   const info = planMonitor.view(saved, controller?.state.projectInfo);
   const selected = saved && { ...saved, attempt: saved.attempt && { protocol: saved.attempt.protocol,
     requestId: saved.attempt.requestId, state: saved.attempt.state }, receipt: undefined,
-    ...(info?.workspace === saved.workspace && info.inspectedSessionId === saved.sessionId ? info : {}) };
+    ...(info?.workspace === saved.workspace && info.inspectedSessionId === saved.sessionId ? info : {}),
+    agentRun: agentTimer.view(saved) };
   return { projects: store.snapshot().projects.filter(p => !p.archivedAt).map(({ workspace, projectId, name, displayName, selectedSessionId, expanded, sessions }) => ({
     workspace, projectId, name: displayName || name, selectedSessionId, expanded,
     sessions: activeSessionsNewestFirst(sessions).map(({ sessionId, experience, chatUrl, title, createdAt }) => ({ sessionId, experience, chatUrl, title, createdAt })),
@@ -1100,7 +1122,7 @@ async function createWindow() {
   window.on('closed', () => {
     try {
       ++navigationId; startupClipboard?.dispose(); startupClipboard = null; startupFlow?.dispose(); startupFlow = null;
-      controller?.cancel(); planMonitor.close(); clearInterval(interval); contextCache.clear(); workspaceSetup.invalidateReadiness();
+      controller?.cancel(); planMonitor.close(); clearInterval(interval); clearInterval(agentTimerInterval); agentTimer.finish(); contextCache.clear(); workspaceSetup.invalidateReadiness();
       chatColorStyles?.dispose();
       void chromiumDiagnostics?.stop().catch(() => {}); chromiumDiagnostics = null;
     } finally {
@@ -1137,6 +1159,7 @@ async function createWindow() {
     void observeStartupAccount(); observeStartupClipboard();
     if (!pageLoading && !setupState && !settingsState) { void controller.tick(); }
   }, 1500);
+  agentTimerInterval = setInterval(() => { void observeAgent(); }, 1000);
   if (smoke) {
     await fixture.run({ app, window, browser: browser.webContents, sidebar: sidebar.webContents,
       store, controller, selectWorkspace, workspaceSetup, snapshot, assertLocalSender, permissionAllowed, dataDir,

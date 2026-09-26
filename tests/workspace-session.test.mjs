@@ -557,3 +557,29 @@ test('selection cancelled during an atomic save restores the previous disk snaps
   const disk = new WorkspaceSessions(store.file); await disk.load();
   assert.equal(store.selected().sessionId, second.sessionId); assert.equal(disk.selected().sessionId, second.sessionId);
 });
+
+test('agent time accumulates per session, survives restart and rejects malformed values', async t => {
+  const { store, project } = await fixture(t);
+  const folder = await fs.realpath(await project('Agent time'));
+  await store.load();
+  await store.select(folder);
+  const first = store.selected().sessionId;
+  assert.equal(await store.recordAgentTime(folder, first, 65400.4), true);
+  await store.newSession(folder, 'chat');
+  const second = store.selected().sessionId;
+  assert.equal(await store.recordAgentTime(folder, first, 1000), true, 'a request finishing after a switch still belongs to its own session');
+  assert.equal(await store.recordAgentTime(folder, 'missing-session', 1000), false);
+  await assert.rejects(store.recordAgentTime(folder, first, -1), RangeError);
+  await assert.rejects(store.recordAgentTime(folder, first, Number.NaN), RangeError);
+  const sessions = () => store.snapshot().projects[0].sessions;
+  assert.deepEqual(sessions().find(s => s.sessionId === first).agentTime, { totalMs: 66400, lastMs: 1000 });
+  assert.equal(sessions().find(s => s.sessionId === second).agentTime, undefined);
+  assert.equal(store.selected().sessionId, second, 'recording never changes the selection');
+  const reopened = new WorkspaceSessions(store.file); await reopened.load();
+  assert.deepEqual(reopened.snapshot().projects[0].sessions.find(s => s.sessionId === first).agentTime, { totalMs: 66400, lastMs: 1000 });
+  for (const agentTime of [{ totalMs: 5, lastMs: 6 }, { totalMs: -1, lastMs: 0 }, { totalMs: 1.5, lastMs: 0 }, [], 'x']) {
+    const broken = store.snapshot(); broken.projects[0].sessions[0].agentTime = agentTime;
+    await fs.writeFile(store.file, JSON.stringify(broken));
+    await assert.rejects(new WorkspaceSessions(store.file).load(), { code: 'SESSIONS_INVALID' });
+  }
+});

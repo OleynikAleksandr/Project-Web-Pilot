@@ -166,6 +166,28 @@ function renderPrepared(state) {
   $('prepared-plans').replaceChildren(...fragments);
 }
 
+// Agent time: current (or last) request and the session total, in minutes and seconds.
+let agentTicker = null;
+const agentClock = ms => { const seconds = Math.max(0, Math.floor(ms / 1000)); return String(Math.floor(seconds / 60)).padStart(2, '0') + ':' + String(seconds % 60).padStart(2, '0'); };
+const agentSpoken = ms => { const seconds = Math.max(0, Math.floor(ms / 1000)); return Math.floor(seconds / 60) + ' мин ' + seconds % 60 + ' с'; };
+function renderAgentTime(selected) {
+  const node = $('agent-time'), run = selected?.agentRun ?? null;
+  const saved = selected?.agentTime ?? { totalMs: 0, lastMs: 0 };
+  clearInterval(agentTicker); agentTicker = null;
+  node.hidden = !selected;
+  if (!selected) return;
+  const running = !!run && !run.paused;
+  const paint = () => {
+    const current = run ? Math.max(0, (running ? Date.now() : run.lastBusyAt) - run.startedAt) : saved.lastMs;
+    const total = saved.totalMs + (run ? current : 0);
+    node.textContent = agentClock(current) + ' · Σ ' + agentClock(total);
+    node.setAttribute('aria-label', 'Время работы агента: ' + (run ? 'текущее' : 'последнее') + ' задание ' + agentSpoken(current) + ', всего за сессию ' + agentSpoken(total));
+  };
+  node.dataset.running = String(running);
+  node.title = 'Время, которое агент работает над заданием (идёт, пока ChatGPT отвечает). Σ — сумма за эту сессию.';
+  paint();
+  if (running) agentTicker = setInterval(paint, 1000);
+}
 function kitUpgradeNeeded(health) {
   return health?.phase === 'error' && health.action === 'upgrade' && !health.error && !health.issues?.length;
 }
@@ -288,6 +310,7 @@ function render(state) {
   $('toggle-projects').title = collapseAll ? 'Свернуть все проекты' : 'Раскрыть все проекты';
   $('toggle-projects').setAttribute('aria-label', $('toggle-projects').title);
   $('plan-card').hidden = !selected;
+  renderAgentTime(selected);
   $('session-actions').hidden = !selected;
   const plan = selected?.planView ?? { state: 'not-created', completed: 0, total: 0, tasks: [], blockedReason: null };
   if (selected) {
