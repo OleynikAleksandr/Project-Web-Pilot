@@ -4,9 +4,9 @@
   "private": true,
   "description": "Canonical Workflow Kit package for project plans, recovery, installation and session-owned workflows",
   "type": "module",
-  "main": "./src/index.mjs",
+  "main": "./index.mjs",
   "exports": {
-    ".": "./src/index.mjs",
+    ".": "./index.mjs",
     "./cli": "./src/cli.mjs",
     "./install": "./src/install.mjs",
     "./lib/*": "./src/lib/*.mjs",
@@ -19,6 +19,7 @@
     "workflow": "./src/cli.mjs"
   },
   "files": [
+    "index.mjs",
     "src/"
   ],
   "engines": {

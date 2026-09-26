@@ -34,14 +34,14 @@ const pkg = JSON.parse(await fs.readFile(path.join(ROOT, 'package.json'), 'utf8'
 assert.equal(pkg.name, '@webpilot/workflow-kit');
 assert.equal(pkg.version, BASELINE_VERSION);
 assert.equal(pkg.type, 'module');
+assert.equal(pkg.main, './index.mjs');
 assert.equal(pkg.bin?.workflow, './src/cli.mjs');
 assert.equal(pkg.engines?.node, '>=22');
-assert.deepEqual(pkg.files, ['src/']);
+assert.deepEqual(pkg.files, ['index.mjs', 'src/']);
 
 const sourceFiles = await filesBelow(SRC);
-const baselineFiles = sourceFiles.filter(file => file !== 'index.mjs');
-assert.equal(baselineFiles.length, BASELINE_FILE_COUNT, 'baseline Workflow Kit file count changed');
-assert.equal(await digestFiles(SRC, baselineFiles), BASELINE_SHA256, 'baseline Workflow Kit 1.4.12 source changed during extraction');
+assert.equal(sourceFiles.length, BASELINE_FILE_COUNT, 'canonical Workflow Kit file count changed');
+assert.equal(await digestFiles(SRC, sourceFiles), BASELINE_SHA256, 'canonical Workflow Kit 1.4.12 baseline changed');
 
 const api = await import('@webpilot/workflow-kit');
 assert.equal(api.VERSION, pkg.version);
@@ -62,7 +62,7 @@ const packed = JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json'], {
   stdio: ['ignore', 'pipe', 'pipe'],
 }))[0];
 const packedFiles = new Set(packed.files.map(entry => entry.path));
-for (const required of ['package.json', 'src/WORKFLOW.md', 'src/cli.mjs', 'src/lib/common.mjs', 'src/schemas/plan.schema.json', 'src/templates/PLAN.md']) {
+for (const required of ['package.json', 'index.mjs', 'src/WORKFLOW.md', 'src/cli.mjs', 'src/lib/common.mjs', 'src/schemas/plan.schema.json', 'src/templates/PLAN.md']) {
   assert.ok(packedFiles.has(required), 'package missing ' + required);
 }
 for (const file of packedFiles) {
@@ -75,8 +75,8 @@ process.stdout.write(JSON.stringify({
   ok: true,
   name: pkg.name,
   version: pkg.version,
-  baselineFiles: baselineFiles.length,
-  baselineSha256: BASELINE_SHA256,
+  canonicalFiles: sourceFiles.length,
+  canonicalSha256: BASELINE_SHA256,
   packageFiles: packed.files.length,
   exports: Object.keys(pkg.exports),
 }, null, 2) + '\n');
