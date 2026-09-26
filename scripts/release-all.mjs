@@ -7,6 +7,7 @@ import { execFileSync, spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { isDeepStrictEqual } from 'node:util';
 import { extractFile, listPackage, uncache } from '@electron/asar';
+import { stageWorkflowKit } from './stage-workflow-kit.mjs';
 
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
 export async function hashFile(file) {
@@ -75,6 +76,7 @@ export async function releaseAll({ root = fileURLToPath(new URL('..', import.met
   try {
     if (await fs.stat(path.join(release, 'release-manifest.json')).catch(e => { if (e.code !== 'ENOENT') throw e; }))
       throw new Error('This paired release already exists; use a new version');
+    await stageWorkflowKit({ root });
     const sources = await sourceSnapshot(root);
     const sourceCommit = exec('git', ['-C', root, 'rev-parse', 'HEAD']).trim();
     const target = path.join(root, 'Project Web Pilot.app');

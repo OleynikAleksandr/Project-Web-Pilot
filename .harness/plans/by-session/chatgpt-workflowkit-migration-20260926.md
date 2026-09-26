@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 5,
+  "plan_revision": 7,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "workflow-kit-package-migration-039",
@@ -178,8 +178,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "workflow-kit-package-migration-039",
         "task_id": "T002",
@@ -213,7 +213,13 @@
         "version/fileset/digest совпадают",
         "release snapshot не меняется в середине build"
       ],
-      "expected_commit_message": "build: stage Workflow Kit runtime from package"
+      "expected_commit_message": "build: stage Workflow Kit runtime from package",
+      "actual_files": [
+        "package.json",
+        "scripts/check-workflow-kit-staging.mjs",
+        "scripts/release-all.mjs",
+        "scripts/stage-workflow-kit.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -395,7 +401,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: workflow-kit-package-migration-039
 Current Task: нет
-Revision: 5
+Revision: 7
 
 ## Цель
 
@@ -417,8 +423,8 @@ Revision: 5
   - Git Commit: [DONE] refactor: подключить canonical Workflow Kit package
   - Reference: workflow-kit-package-migration-039 / T001 / implementation
   - Файлы: package.json, package-lock.json, src/session-plans.mjs, scripts/check-workflow-kit-dependency.mjs, tests/workflow-kit-source.test.mjs, tests/session-plans.test.mjs, tests/workflow-kit-recovery.test.mjs, tests/electron-smoke.mjs, tests/project-doctor.test.mjs, tests/workspace-setup.test.mjs, tests/session-opening-performance.test.mjs, docs/planning/workflow-kit-package-migration.md
-- [TODO] T002: Добавить deterministic generated runtime staging — Ожидает
-  - Git Commit: [PENDING] build: stage Workflow Kit runtime from package
+- [DONE] T002: Добавить deterministic generated runtime staging — Завершено
+  - Git Commit: [DONE] build: stage Workflow Kit runtime from package
   - Reference: workflow-kit-package-migration-039 / T002 / implementation
   - Файлы: package.json, scripts/stage-workflow-kit.mjs, scripts/check-workflow-kit-staging.mjs, scripts/release-all.mjs, tests/workflow-kit-source.test.mjs, docs/planning/workflow-kit-package-migration.md
 - [TODO] T003: Удалить tracked Workflow Kit duplicate и закрепить generated contract — Ожидает
