@@ -509,3 +509,16 @@ ASAR: macOS `2de04d7ce060c6e557de38ad1402fe5946a08f8c9587cec8ed2a31492255c523`, 
 | Windows x64 | 316465854 | `1b11f152cf5a68f492c446714402192461ae1d1354db9c153b178eeab5613c9e` |
 
 ASAR: macOS `4ea68c0ac2a16691e07fb97a7ba74c60fbf1ce258086ab482434a75c5122dec6`, Windows `13512313090468dfee7ef63eba8e01a1bf141f0be802f5a47e83c617dcc2560d`.
+
+## Локальный парный выпуск 0.6.55 — 26.09.2026
+
+Цвет поля ввода из настроек закрашивает только скруглённую плашку (радиусные края слева и справа): плашка находится по скруглению ближайшего предка поля ввода, прямоугольные обёртки внутри неё прозрачны. Раньше в чатах `/c/…` закрашивался прямоугольный `data-composer-body`.
+
+`npm run build` прошла на Mac 12:24–12:28 UTC, source commit `ca577f2`, исходные файлы совпали с упакованными. Корневой `Project Web Pilot.app` — 0.6.55 (inode 406600483 сохранён); `/Applications/Project Web Pilot.app` обновлена штатным installMacBundle (inode 406571340 сохранён, прежний Contents — в `.harness/runtime/release-backups/mac-DYMCHn`). Поставка: `~/Downloads/WebPilot-0.6.55/`, `shasum -c SHA256SUMS.txt` — OK. Native Windows не запускалась, GitHub не публиковался.
+
+| Платформа | Размер, байт | SHA-256 ZIP |
+| --- | ---: | --- |
+| macOS arm64 | 181204557 | `a04b4b62668034a97bc198a15fc8180e0525b1df933e1ce6d7d49814221a1b08` |
+| Windows x64 | 316466837 | `08a0af2f396c2fa6067200f4837b6ffe7bb9775ed751c9344aad25e5eecd4c36` |
+
+ASAR: macOS `6206d848870ea871138a40cdc008aac1928154c1541b311de42677abfcdf32a5`, Windows `0772fef3a6c784247d30602b33a9003daa1caa61dec872455c3af1708c5d215e`.
