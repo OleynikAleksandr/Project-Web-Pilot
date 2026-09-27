@@ -99,7 +99,7 @@ Node.js: >= 22, как у текущего Workflow Kit.
 
 ## 7. Подключение WebPilot
 
-Текущее состояние подтверждено:
+Исходное состояние перед выделением package подтверждено:
 
 - WebPilot `resources/workflow-kit` и текущий Kit 1.4.12 побайтно/структурно совпадают по `diff -qr`;
 - обе директории содержат 35 файлов;
@@ -243,3 +243,8 @@ await fs.cp(getRuntimeRoot(), stageDirectory, { recursive: true });
 
 Это доказывает, что package можно использовать локально как always-current dependency и выдавать как self-contained artifact.
 
+## 14. Patch 1.4.13
+
+Версия 1.4.13 исправляет чтение prepared-plan до `plan:bind`: read-only команды `status`, `validate` и `recover` принимают исходную `--session` и явный `--plan` подготовленного continuation. Mutating task/commit команды по-прежнему требуют владельца плана.
+
+Runtime fixture создаёт prepared-plan, проверяет COMPLETE recovery до bind и тем самым фиксирует regression contract. Installer поддерживает безопасное обновление установленного Workflow Kit 1.4.12 → 1.4.13 без изменения plan state.
