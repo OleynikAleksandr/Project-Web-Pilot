@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 2,
+  "plan_revision": 3,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "single-active-plan-migration-002",
@@ -380,8 +380,9 @@
       "recorded_at": "2026-09-27T13:49:50.362Z"
     }
   ],
-  "owner_session_id": null,
-  "prepared_in_session_id": "web-pilot-17b338f4-79ec-4097-a18d-5b6b903a2e24"
+  "owner_session_id": "web-pilot-0543a4f6-84a3-4269-be1a-3868edce135b",
+  "prepared_in_session_id": "web-pilot-17b338f4-79ec-4097-a18d-5b6b903a2e24",
+  "session_experience": "chat"
 }
 ```
 <!-- workflow-state:end -->
@@ -392,7 +393,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: single-active-plan-migration-002
 Current Task: нет
-Revision: 2
+Revision: 3
 
 ## Цель
 
