@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 630,
+  "plan_revision": 632,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-owned-plans-028",
@@ -863,7 +863,9 @@
         "tests/workspace-session.test.mjs",
         "tests/session-plans.test.mjs"
       ],
-      "documentation_paths": [],
+      "documentation_paths": [
+        "docs/planning/single-active-plan-adaptation.md"
+      ],
       "verification_ids": [
         "workspace"
       ],
@@ -874,13 +876,18 @@
         "Legacy plan metadata не выбирает runtime plan"
       ],
       "expected_commit_message": "refactor: project sessions use current checkout plan",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-owned-plans-028",
         "task_id": "T016",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "docs/planning/single-active-plan-adaptation.md",
+        "src/workspace-session.mjs",
+        "tests/workspace-session.test.mjs"
+      ]
     },
     {
       "id": "T017",
@@ -1124,7 +1131,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-owned-plans-028
 Current Task: нет
-Revision: 630
+Revision: 632
 
 ## Цель
 
@@ -1201,10 +1208,10 @@ Revision: 630
   - Git Commit: [DONE] docs: plan single active plan adaptation
   - Reference: session-owned-plans-028 / T015 / implementation
   - Файлы: docs/planning/single-active-plan-adaptation.md
-- [TODO] T016: Проецировать один current plan во все sessions — Ожидает
-  - Git Commit: [PENDING] refactor: project sessions use current checkout plan
+- [DONE] T016: Проецировать один current plan во все sessions — Завершено
+  - Git Commit: [DONE] refactor: project sessions use current checkout plan
   - Reference: session-owned-plans-028 / T016 / implementation
-  - Файлы: src/session-plans.mjs, src/workspace-session.mjs, tests/workspace-session.test.mjs, tests/session-plans.test.mjs
+  - Файлы: src/session-plans.mjs, src/workspace-session.mjs, tests/workspace-session.test.mjs, tests/session-plans.test.mjs, docs/planning/single-active-plan-adaptation.md
 - [TODO] T017: Отвязать recovery и cache от session-owned plan — Ожидает
   - Git Commit: [PENDING] refactor: recover current checkout context
   - Reference: session-owned-plans-028 / T017 / implementation

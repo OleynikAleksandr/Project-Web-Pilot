@@ -74,7 +74,7 @@ test('canonical folder with spaces and Cyrillic survives restart with its conver
   const link = path.join(root, 'ссылка'); await directoryLink(folder, link);
   const a = await store.select(link);
   assert.equal(a.workspace, await fs.realpath(folder));
-  assert.equal(a.nextTaskId, null, 'a new session does not inherit the global legacy task');
+  assert.equal(a.nextTaskId, 'T001', 'a new session projects the current checkout plan');
   const chat = 'https://chatgpt.com/c/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
   await store.bindChat(a.workspace, a.sessionId, chat + '?utm_source=x#bottom');
   const next = new WorkspaceSessions(store.file); await next.load();
@@ -84,6 +84,30 @@ test('canonical folder with spaces and Cyrillic survives restart with its conver
   if (process.platform !== 'win32') assert.equal((await fs.stat(store.file)).mode & 0o777, 0o600);
 });
 
+
+
+test('old and new sessions keep their chats while projecting one current checkout plan', async t => {
+  const { project, store } = await fixture(t);
+  const first = await store.select(await project('Single current plan'));
+  const firstUrl = 'https://chatgpt.com/c/aaaaaaaa-1111-2222-3333-eeeeeeeeeeee';
+  await store.bindChat(first.workspace, first.sessionId, firstUrl);
+  const second = await store.newSession(first.workspace, 'work');
+  const secondUrl = 'https://chatgpt.com/c/bbbbbbbb-1111-2222-3333-eeeeeeeeeeee';
+  await store.bindChat(first.workspace, second.sessionId, secondUrl);
+
+  const a = await store.selectSession(first.workspace, first.sessionId);
+  const b = await store.selectSession(first.workspace, second.sessionId);
+  assert.equal(a.scopeId, 'fixture-scope'); assert.equal(b.scopeId, 'fixture-scope');
+  assert.equal(a.planRevision, 7); assert.equal(b.planRevision, 7);
+  assert.deepEqual(a.planView, b.planView);
+  assert.equal(a.chatUrl, firstUrl); assert.equal(b.chatUrl, secondUrl);
+
+  const third = await store.newSession(first.workspace, 'chat');
+  assert.equal(third.scopeId, 'fixture-scope');
+  assert.equal(third.nextTaskId, 'T001');
+  assert.equal(third.chatUrl, null);
+  assert.deepEqual(store.snapshot().projects[0].sessions.map(s => s.chatUrl), [firstUrl, secondUrl, null]);
+});
 
 
 test('local project alias and explicit session titles persist without changing canonical workflow identity', async t => {
@@ -512,7 +536,7 @@ for (const experience of ['chat','work']) test('prepared '+experience+' session 
   assert.equal(store.snapshot().projects[0].sessions.length,1);
   const [created,repeated]=await Promise.all([store.fromPrepared(folder,sourceId,'future',1,experience),store.fromPrepared(folder,sourceId,'future',1,experience)]);
   assert.equal(created.sessionId,repeated.sessionId);assert.equal(created.experience,experience);assert.equal(created.planId,'future');
-  assert.equal(store.snapshot().projects[0].sessions.length,2);assert.equal(created.originSessionId,sourceId);
+  assert.equal(store.snapshot().projects[0].sessions.length,2);assert.equal(created.originSessionId,null);
   const restarted=new WorkspaceSessions(store.file,{inspect,planService});await restarted.load();
   assert.equal((await restarted.selectSession(folder,sourceId)).planId,'original');
   assert.equal((await restarted.fromPrepared(folder,sourceId,'future',1,experience)).sessionId,created.sessionId);

@@ -1,7 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
-import { readSessionPlans } from './session-plans.mjs';
 
 export class WorkspaceError extends Error {
   constructor(code, message) { super(message); this.code = code; }
@@ -70,21 +69,9 @@ export async function readWorkspace(input, sessionId = null) {
       || !Array.isArray(plan.tasks)) {
     throw new WorkspaceError('WORKFLOW_PLAN_INVALID', 'План проекта имеет неподдерживаемый формат.');
   }
-  let sessionView = null;
-  if (sessionId) {
-    sessionView = await readSessionPlans(workspace, sessionId);
-    if (sessionView && [sessionView.plan, ...sessionView.prepared.map(item => item.plan)].some(item => item.project_id !== plan.project_id))
-      throw new WorkspaceError('PROJECT_REPLACED', 'План относится к другому проекту. Сохранённые чаты оставлены без изменений.');
-    plan = sessionView?.plan ?? { ...plan, scope_id: null, execution_scope_status: 'NONE', delivery_status: 'IN_PROGRESS',
-      objective: 'Обсудите следующий этап проекта с пользователем.', current_task_id: null, tasks: [], archived_scope_id: null };
-  }
   const view = projectPlan(plan);
   return { workspace, ...view, inspectedSessionId: sessionId, planId: plan.scope_id,
-    originSessionId: plan.prepared_in_session_id ?? null,
-    preparedPlans: (sessionView?.prepared ?? []).map(item => ({ planId: item.plan_id, revision: item.plan.plan_revision,
-      sessionId: item.plan.owner_session_id ?? null, experience: item.plan.session_experience ?? null,
-      ...projectPlan(item.plan), documents: item.plan.context_pack.documents.map(doc => doc.path) })),
-    unassignedPlans: sessionView?.unassigned ?? [] };
+    originSessionId: null, preparedPlans: [], unassignedPlans: [] };
 }
 function projectPlan(plan) {
   const tasks = plan.tasks.map(task => {
@@ -259,7 +246,8 @@ function currentView(project) {
   if (!project) return null;
   const { sessions, archivedAt: projectArchivedAt, ...info } = project;
   const session = sessions.find(s => s.sessionId === project.selectedSessionId);
-  return copy({ ...info, ...session, planId: info.inspectedSessionId === session.sessionId ? info.scopeId : session.planId ?? null, archivedAt: projectArchivedAt, sessionArchivedAt: session.archivedAt });
+  return copy({ ...info, ...session, planId: info.scopeId ?? null, originSessionId: null,
+    archivedAt: projectArchivedAt, sessionArchivedAt: session.archivedAt });
 }
 
 export class WorkspaceSessions {
@@ -369,7 +357,7 @@ export class WorkspaceSessions {
       }
       const selected = project.sessions.find(s => s.sessionId === project.selectedSessionId);
       const owned = await this.inspect(project.workspace, selected.sessionId);
-      Object.assign(project, owned); selected.planId = owned.planId ?? null; selected.originSessionId = owned.originSessionId ?? null;
+      Object.assign(project, owned);
       selected.lastOpenedAt = this.now();
       data.selectedWorkspace = project.workspace;
       return currentView(project);
@@ -387,8 +375,7 @@ export class WorkspaceSessions {
       if (project.archivedAt) throw new WorkspaceError('PROJECT_ARCHIVED', 'Сначала верните проект из архива.');
       if (project.projectId !== info.projectId) throw new WorkspaceError('PROJECT_REPLACED', 'В этой папке теперь другой проект. Сохранённые чаты оставлены без изменений.');
       Object.assign(project, info, { selectedSessionId: sessionId, expanded: expand || project.expanded });
-      Object.assign(project.sessions.find(s => s.sessionId === sessionId), {
-        lastOpenedAt: this.now(), planId: info.planId ?? null, originSessionId: info.originSessionId ?? null });
+      Object.assign(project.sessions.find(s => s.sessionId === sessionId), { lastOpenedAt: this.now() });
       data.selectedWorkspace = project.workspace;
       return currentView(project);
     }, current);
