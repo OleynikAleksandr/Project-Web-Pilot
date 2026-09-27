@@ -1,8 +1,8 @@
 {
   "name": "@webpilot/workflow-kit",
-  "version": "1.4.13",
+  "version": "1.5.0",
   "private": true,
-  "description": "Canonical Workflow Kit package for project plans, recovery, installation and session-owned workflows",
+  "description": "Canonical Workflow Kit package for checkout-scoped plans, recovery, installation and consumer integrations",
   "type": "module",
   "main": "./index.mjs",
   "exports": {

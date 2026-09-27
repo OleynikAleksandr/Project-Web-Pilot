@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 13,
+  "plan_revision": 15,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "single-active-plan-migration-002",
@@ -332,8 +332,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "single-active-plan-migration-002",
         "task_id": "T006",
@@ -369,7 +369,15 @@
         "Package/runtime/consumer-contract checks проходят на candidate tree.",
         "WebPilot agent получает точный новый version/contract handoff."
       ],
-      "expected_commit_message": "release: подготовить single-active Workflow Kit"
+      "expected_commit_message": "release: подготовить single-active Workflow Kit",
+      "actual_files": [
+        "package.json",
+        "scripts/check-consumer-contract.mjs",
+        "scripts/check-package.mjs",
+        "scripts/check-runtime-fixture.mjs",
+        "src/lib/common.mjs",
+        "src/lib/installer.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -433,7 +441,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: single-active-plan-migration-002
 Current Task: нет
-Revision: 13
+Revision: 15
 
 ## Цель
 
@@ -470,8 +478,8 @@ Revision: 13
   - Git Commit: [DONE] feat: обновить consumer contract для single-active plan
   - Reference: single-active-plan-migration-002 / T005 / implementation
   - Файлы: index.mjs, src/lib/session-plans.mjs, scripts/check-consumer-contract.mjs, docs/modules/workflow-kit-package.md, docs/planning/single-active-plan-migration.md
-- [TODO] T006: Выпустить новую версию Workflow Kit и проверить upgrade с 1.4.13 — Ожидает
-  - Git Commit: [PENDING] release: подготовить single-active Workflow Kit
+- [DONE] T006: Выпустить новую версию Workflow Kit и проверить upgrade с 1.4.13 — Завершено
+  - Git Commit: [DONE] release: подготовить single-active Workflow Kit
   - Reference: single-active-plan-migration-002 / T006 / implementation
   - Файлы: package.json, src/lib/common.mjs, src/lib/installer.mjs, scripts/check-package.mjs, scripts/check-runtime-fixture.mjs, scripts/check-consumer-contract.mjs, docs/modules/workflow-kit-package.md, docs/planning/single-active-plan-migration.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает

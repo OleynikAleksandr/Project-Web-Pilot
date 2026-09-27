@@ -8,8 +8,9 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = path.join(ROOT, 'src');
-const BASELINE_VERSION = '1.4.13';
+const BASELINE_VERSION = '1.5.0';
 const BASELINE_FILE_COUNT = 35;
+const BASELINE_SHA256 = '0db567df6f0c8f68f3119a7322b4c1c6d28cd06bf57b267993b792097bbb2c75';
 
 async function filesBelow(directory, prefix = '') {
   const result = [];
@@ -49,13 +50,15 @@ assert.deepEqual(pkg.files, ['index.mjs', 'src/']);
 const sourceFiles = await filesBelow(SRC);
 assert.equal(sourceFiles.length, BASELINE_FILE_COUNT, 'canonical Workflow Kit file count changed');
 const sourceSha256 = await digestFiles(SRC, sourceFiles);
-assert.match(sourceSha256, /^[a-f0-9]{64}$/, 'canonical Workflow Kit digest is invalid');
+assert.equal(sourceSha256, BASELINE_SHA256, 'canonical Workflow Kit 1.5.0 baseline changed');
 
 const api = await import('@webpilot/workflow-kit');
 assert.equal(api.VERSION, pkg.version);
 assert.equal(typeof api.actions.status, 'function');
 assert.equal(typeof api.plan.readPlan, 'function');
 assert.equal(typeof api.sessionPlans.sessionPlanView, 'function');
+assert.equal(typeof api.currentPlanView, 'function');
+assert.equal(typeof api.sessionPlanView, 'function');
 assert.equal(typeof api.recovery.contextPacket, 'function');
 assert.equal(typeof api.installer.install, 'function');
 assert.equal(typeof api.getRuntimeRoot, 'function');

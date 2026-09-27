@@ -7,8 +7,9 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const EXPECTED_VERSION = '1.4.13';
+const EXPECTED_VERSION = '1.5.0';
 const EXPECTED_FILES = 35;
+const EXPECTED_SHA256 = '0db567df6f0c8f68f3119a7322b4c1c6d28cd06bf57b267993b792097bbb2c75';
 const REQUIRED_SUBPATHS = [
   'common',
   'actions',
@@ -84,6 +85,7 @@ try {
   const sourceRuntimeFiles = await filesBelow(sourceRuntime);
   assert.equal(sourceRuntimeFiles.length, EXPECTED_FILES);
   const expectedRuntimeSha256 = await digestFiles(sourceRuntime, sourceRuntimeFiles);
+  assert.equal(expectedRuntimeSha256, EXPECTED_SHA256);
 
   const dev = path.join(temp, 'dev-consumer');
   await fs.mkdir(dev, { recursive: true });

@@ -6,6 +6,9 @@ import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { installer, sessionPlans, plan as planApi, VERSION } from '@webpilot/workflow-kit';
 
+const EXPECTED_VERSION = '1.5.0';
+const EXPECTED_RUNTIME_SHA256 = '0db567df6f0c8f68f3119a7322b4c1c6d28cd06bf57b267993b792097bbb2c75';
+
 function run(executable, args, cwd) {
   return execFileSync(executable, args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 }
@@ -75,8 +78,9 @@ try {
   const runtimeRoot = path.join(root, '.harness/kit');
   const runtimeFiles = await filesBelow(runtimeRoot);
   const runtimeSha256 = await digestFiles(runtimeRoot, runtimeFiles);
-  assert.ok(runtimeFiles.length > 0);
-  assert.match(runtimeSha256, /^[a-f0-9]{64}$/);
+  assert.equal(VERSION, EXPECTED_VERSION);
+  assert.equal(runtimeFiles.length, 35);
+  assert.equal(runtimeSha256, EXPECTED_RUNTIME_SHA256);
 
   const inspected = installer.inspect({ project: root, mode: 'existing' });
   assert.equal(inspected.installed, true);
@@ -226,6 +230,85 @@ try {
   assert.equal(removed.code, 'COMMAND_REMOVED');
   const wrongPlan = workflowFailure(root, 'status', '--plan', 'historical-plan');
   assert.equal(wrongPlan.code, 'PLAN_NOT_CURRENT');
+
+  // Synthetic but structurally faithful 1.4.13 upgrade fixture: the manifest,
+  // owned runtime and legacy plan files are committed as an old installation,
+  // then upgraded through the public installer path.
+  const upgradeRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'workflow-kit-upgrade-1413-'));
+  try {
+    git(upgradeRoot, 'init', '-b', 'main');
+    git(upgradeRoot, 'config', 'user.name', 'Workflow Kit Upgrade Test');
+    git(upgradeRoot, 'config', 'user.email', 'workflow-kit-upgrade@test.local');
+    await fs.mkdir(path.join(upgradeRoot, 'docs/planning'), { recursive: true });
+    await fs.writeFile(path.join(upgradeRoot, 'docs/planning/fixture.md'), '# Upgrade fixture\n');
+    await fs.writeFile(path.join(upgradeRoot, 'README.md'), '# Upgrade fixture\n');
+    git(upgradeRoot, 'add', 'README.md', 'docs/planning/fixture.md');
+    git(upgradeRoot, 'commit', '-m', 'test: upgrade fixture baseline');
+
+    const installedCurrent = installer.install({ project: upgradeRoot, mode: 'existing' });
+    assert.equal(installedCurrent.version, VERSION);
+    const upgradeInput = path.join(upgradeRoot, '.harness/runtime/upgrade-plan.json');
+    await fs.writeFile(upgradeInput, JSON.stringify({ ...planInput, id: 'upgrade-current-plan' }));
+    workflow(upgradeRoot, 'plan:create', '--input', upgradeInput);
+
+    const legacyCurrent = planApi.readPlan(upgradeRoot);
+    legacyCurrent.owner_session_id = 'old-webpilot-session';
+    legacyCurrent.prepared_in_session_id = 'old-origin-session';
+    legacyCurrent.session_experience = 'chat';
+    await fs.writeFile(path.join(upgradeRoot, '.harness/plans/todo-plan.md'), planApi.renderPlan(legacyCurrent));
+
+    const oldSessionPlan = structuredClone(legacyCurrent);
+    oldSessionPlan.scope_id = 'old-session-plan';
+    oldSessionPlan.owner_session_id = 'old-webpilot-session-2';
+    for (const task of oldSessionPlan.tasks) task.commit_ref.scope_id = oldSessionPlan.scope_id;
+    const oldSessionText = planApi.renderPlan(oldSessionPlan);
+    const oldSessionFile = path.join(upgradeRoot, '.harness/plans/by-session/old-session.md');
+    await fs.mkdir(path.dirname(oldSessionFile), { recursive: true });
+    await fs.writeFile(oldSessionFile, oldSessionText);
+
+    const runtimeWorkflow = path.join(upgradeRoot, '.harness/kit/WORKFLOW.md');
+    const legacyRuntimeText = await fs.readFile(runtimeWorkflow, 'utf8') + '\n<!-- synthetic-1.4.13 -->\n';
+    await fs.writeFile(runtimeWorkflow, legacyRuntimeText);
+    const oldManifestFile = path.join(upgradeRoot, '.harness/kit-manifest.json');
+    const oldManifest = JSON.parse(await fs.readFile(oldManifestFile, 'utf8'));
+    oldManifest.version = '1.4.13';
+    const workflowEntry = oldManifest.files.find(entry => entry.path === '.harness/kit/WORKFLOW.md');
+    assert.ok(workflowEntry, 'old manifest missing WORKFLOW entry');
+    workflowEntry.hash = createHash('sha256').update(legacyRuntimeText).digest('hex');
+    await fs.writeFile(oldManifestFile, JSON.stringify(oldManifest, null, 2) + '\n');
+
+    git(upgradeRoot, 'add', '.harness/kit-manifest.json', '.harness/kit/WORKFLOW.md',
+      '.harness/plans/todo-plan.md', '.harness/plans/by-session/old-session.md');
+    git(upgradeRoot, 'commit', '--no-verify', '-m', 'test: synthesize Workflow Kit 1.4.13 installation');
+
+    const upgradePreview = installer.inspect({ project: upgradeRoot, mode: 'existing' });
+    assert.equal(upgradePreview.version, '1.4.13');
+    assert.equal(upgradePreview.upgradeable, true);
+    const upgraded = installer.install({ project: upgradeRoot, mode: 'existing', update: true });
+    assert.equal(upgraded.upgraded, true);
+    assert.equal(upgraded.version, VERSION);
+    const upgradedManifest = JSON.parse(await fs.readFile(oldManifestFile, 'utf8'));
+    assert.equal(upgradedManifest.version, VERSION);
+    assert.equal(upgradedManifest.upgraded_from, '1.4.13');
+    assert.equal(upgradedManifest.legacy_plan_migration?.archived_count, 1);
+    const upgradedCurrent = planApi.readPlan(upgradeRoot);
+    assert.equal(upgradedCurrent.scope_id, 'upgrade-current-plan');
+    assert.equal(Object.hasOwn(upgradedCurrent, 'owner_session_id'), false);
+    assert.equal(Object.hasOwn(upgradedCurrent, 'prepared_in_session_id'), false);
+    const archivedOldSession = path.join(upgradeRoot,
+      '.harness/plans/archive/legacy-session-plans/by-session/old-session.md');
+    assert.equal(await fs.readFile(archivedOldSession, 'utf8'), oldSessionText);
+    await assert.rejects(fs.access(oldSessionFile));
+    assert.equal((await fs.readFile(runtimeWorkflow, 'utf8')).includes('synthetic-1.4.13'), false);
+
+    const headAfterUpgrade = git(upgradeRoot, 'rev-parse', 'HEAD');
+    const repeatedUpdate = installer.install({ project: upgradeRoot, mode: 'existing', update: true });
+    assert.equal(repeatedUpdate.version, VERSION);
+    assert.equal(git(upgradeRoot, 'rev-parse', 'HEAD'), headAfterUpgrade,
+      'same-version reconnect after 1.4.13 upgrade unexpectedly committed changes');
+  } finally {
+    await fs.rm(upgradeRoot, { recursive: true, force: true });
+  }
 
   process.stdout.write(JSON.stringify({
     ok: true,
