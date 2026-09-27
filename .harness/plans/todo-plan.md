@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 623,
+  "plan_revision": 625,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-owned-plans-028",
@@ -755,7 +755,10 @@
         "scripts/check-workflow-kit-dependency.mjs",
         "scripts/verify-windows-package.mjs",
         "tests/workflow-kit-source.test.mjs",
-        "tests/sidebar.test.mjs"
+        "tests/sidebar.test.mjs",
+        "resources/project-doctor/core.mjs",
+        "resources/workspace-setup-worker.mjs",
+        "tests/workspace-setup.test.mjs"
       ],
       "documentation_paths": [
         "README.md",
@@ -771,7 +774,8 @@
         "docs/RELEASE.md",
         "docs/VERIFICATION.md",
         "docs/modules/project-doctor.md",
-        "docs/modules/workflow-kit-recovery.md"
+        "docs/modules/workflow-kit-recovery.md",
+        "docs/DOCUMENTATION_INDEX.md"
       ],
       "verification_ids": [
         "workflow-kit-contract",
@@ -789,13 +793,37 @@
         "Корневой Project Web Pilot.app обновлён до 0.6.57 и доставка создана в ~/Downloads/WebPilot-0.6.57/."
       ],
       "expected_commit_message": "release: Web Pilot 0.6.57 с Workflow Kit 1.4.13",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-owned-plans-028",
         "task_id": "T014",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "AGENTS.md",
+        "README.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/SOURCE_WORKSPACES.md",
+        "docs/WORKFLOW_START.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/project-doctor.md",
+        "docs/modules/workflow-kit-recovery.md",
+        "package-lock.json",
+        "package.json",
+        "resources/project-doctor/core.mjs",
+        "resources/workspace-setup-worker.mjs",
+        "scripts/check-workflow-kit-dependency.mjs",
+        "scripts/verify-windows-package.mjs",
+        "tests/sidebar.test.mjs",
+        "tests/workflow-kit-source.test.mjs",
+        "tests/workspace-setup.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -897,7 +925,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-owned-plans-028
 Current Task: нет
-Revision: 623
+Revision: 625
 
 ## Цель
 
@@ -966,10 +994,10 @@ Revision: 623
   - Git Commit: [DONE] build: release session owned plans for user verification
   - Reference: session-owned-plans-028 / T013 / implementation
   - Файлы: package.json, package-lock.json, tests/sidebar.test.mjs, tests/electron-smoke.mjs, docs/modules/session-owned-plans.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [TODO] T014: Workflow Kit 1.4.13 и парный релиз Web Pilot 0.6.57 — Ожидает
-  - Git Commit: [PENDING] release: Web Pilot 0.6.57 с Workflow Kit 1.4.13
+- [DONE] T014: Workflow Kit 1.4.13 и парный релиз Web Pilot 0.6.57 — Завершено
+  - Git Commit: [DONE] release: Web Pilot 0.6.57 с Workflow Kit 1.4.13
   - Reference: session-owned-plans-028 / T014 / implementation
-  - Файлы: package.json, package-lock.json, scripts/check-workflow-kit-dependency.mjs, scripts/verify-windows-package.mjs, tests/workflow-kit-source.test.mjs, tests/sidebar.test.mjs, README.md, AGENTS.md, docs/PRODUCT.md, docs/CLEAN_INSTALL.md, docs/WORKFLOW_START.md, docs/WORKSPACE_SETUP.md, docs/SOURCE_WORKSPACES.md, docs/architecture/OVERVIEW.md, docs/architecture/ARCHITECTURE.md, docs/MODULES.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/modules/project-doctor.md, docs/modules/workflow-kit-recovery.md
+  - Файлы: package.json, package-lock.json, scripts/check-workflow-kit-dependency.mjs, scripts/verify-windows-package.mjs, tests/workflow-kit-source.test.mjs, tests/sidebar.test.mjs, resources/project-doctor/core.mjs, resources/workspace-setup-worker.mjs, tests/workspace-setup.test.mjs, README.md, AGENTS.md, docs/PRODUCT.md, docs/CLEAN_INSTALL.md, docs/WORKFLOW_START.md, docs/WORKSPACE_SETUP.md, docs/SOURCE_WORKSPACES.md, docs/architecture/OVERVIEW.md, docs/architecture/ARCHITECTURE.md, docs/MODULES.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/modules/project-doctor.md, docs/modules/workflow-kit-recovery.md, docs/DOCUMENTATION_INDEX.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: update all project documentation for session plans
   - Reference: session-owned-plans-028 / DOCS / implementation

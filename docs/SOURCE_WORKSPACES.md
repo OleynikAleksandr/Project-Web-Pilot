@@ -115,9 +115,9 @@ Scope 029 / T007: 17.09.2026 штатный Doctor согласовал manifest
 
 Scope 029 / T009: 0.6.29 собран из main 5028241 с изменением только package version для выпуска. Все 33 src и 31 resources совпадают побайтово между source, macOS/Windows staging и постоянным Mac app. Workflow Kit 1.4.1 — собственное развитие этого репозитория; внешние WF001/Codex runtime не редактировались. Полный receipt и SHA — .harness/runtime/releases/0.6.29/source-verification.json.
 
-## Canonical Workflow Kit package — 0.6.56
+## Canonical Workflow Kit package — 0.6.57
 
-Текущий source of truth: `/Users/oleksandroliinyk/VSCODE/WorkflowKit`, package `@webpilot/workflow-kit@1.4.12`; исходный package extraction commit — `7efe0ef2b61b3eef1d84f57cf7a198ccb7163111`. Runtime `src/` содержит 35 файлов с digest `5464b2c1528eef1de740af50558bc8db1d39cfa7838f9c032d23650fb4f5f119`. Project Web Pilot подключает его как `file:../WorkflowKit`, а `resources/workflow-kit` создаёт автоматически и игнорирует в Git. Исторические разделы 0.6.53/0.6.52 ниже описывают происхождение содержимого до выделения canonical package и больше не задают текущего владельца source.
+Текущий source of truth: `/Users/oleksandroliinyk/VSCODE/WorkflowKit`, package `@webpilot/workflow-kit@1.4.13`; исходный package extraction commit — `7efe0ef2b61b3eef1d84f57cf7a198ccb7163111`, patch 1.4.13 — `6d6da2402cbc0157fc9ef9bd23e2fd0724e7be61`. Runtime `src/` содержит 35 файлов с digest `da763a50c32583553b6ca06e29c975766ab092890bbf9787bd2a6aca87be44c4`. Project Web Pilot подключает его как `file:../WorkflowKit`, а `resources/workflow-kit` создаёт автоматически и игнорирует в Git. Исторические разделы 0.6.53/0.6.52 ниже описывают происхождение содержимого до выделения canonical package и больше не задают текущего владельца source.
 
 ## Поставляемый Workflow Kit 1.4.12 — 0.6.53 (история)
 

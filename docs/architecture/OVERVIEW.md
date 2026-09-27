@@ -1,6 +1,6 @@
 # Краткая архитектура проекта
 
-Текущий локальный выпуск — **0.6.56**, macOS arm64 / Windows x64. Project Web Pilot использует canonical package `@webpilot/workflow-kit@1.4.12` из `/Users/oleksandroliinyk/VSCODE/WorkflowKit`; `resources/workflow-kit` создаётся автоматически как generated runtime staging и не хранится в Git как исходник. Собственный `.harness/kit` репозитория — установленный runtime проекта Workflow Kit 1.4.12, а не source of truth. Парная поставка: `~/Downloads/WebPilot-0.6.56/`; постоянный корневой `Project Web Pilot.app` обновлён.
+Текущий локальный выпуск — **0.6.57**, macOS arm64 / Windows x64. Project Web Pilot использует canonical package `@webpilot/workflow-kit@1.4.13` из `/Users/oleksandroliinyk/VSCODE/WorkflowKit`; `resources/workflow-kit` создаётся автоматически как generated runtime staging и не хранится в Git как исходник. Собственный `.harness/kit` репозитория — установленный runtime проекта Workflow Kit 1.4.13, а не source of truth. Парная поставка: `~/Downloads/WebPilot-0.6.57/`; постоянный корневой `Project Web Pilot.app` обновлён.
 
 Предыдущий локальный выпуск — **0.6.54**: таймер работы агента в карточке плана. Поставка: `~/Downloads/WebPilot-0.6.54/`.
 

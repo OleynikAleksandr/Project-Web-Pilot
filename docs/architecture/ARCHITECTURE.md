@@ -1312,8 +1312,8 @@ context-inputs включает by-session в ключ контекста; proje
 (ближайший скруглённый предок поля ввода → `data-web-pilot-composer-capsule`,
 обёртки внутри → `data-web-pilot-composer-inner`); цвет поля ввода относится только к этой метке.
 
-## 0.6.56 — canonical Workflow Kit package
+## 0.6.57 — canonical Workflow Kit package
 
-`@webpilot/workflow-kit@1.4.12` из `/Users/oleksandroliinyk/VSCODE/WorkflowKit` стал единственным владельцем editable Workflow Kit source. Development code и tests импортируют package/subpath exports. `scripts/stage-workflow-kit.mjs` перед start/test/smoke/build копирует `getRuntimeRoot()` в ignored `resources/workflow-kit`; относительные imports external Workspace Setup и Project Doctor сохранены, поэтому packaged layout не менялся. `src/session-plans.mjs` в development использует package export, а packaged app — staged trusted projection из `process.resourcesPath`.
+`@webpilot/workflow-kit@1.4.13` из `/Users/oleksandroliinyk/VSCODE/WorkflowKit` является единственным владельцем editable Workflow Kit source. Development code и tests импортируют package/subpath exports. `scripts/stage-workflow-kit.mjs` перед start/test/smoke/build копирует `getRuntimeRoot()` в ignored `resources/workflow-kit`; относительные imports external Workspace Setup и Project Doctor сохранены, поэтому packaged layout не менялся. `src/session-plans.mjs` в development использует package export, а packaged app — staged trusted projection из `process.resourcesPath`.
 
-Release pipeline stage-ит runtime до `sourceSnapshot()`. Windows verifier и общий release manifest утверждают VERSION, 35-файловый fileset и digest `5464b2c1528eef1de740af50558bc8db1d39cfa7838f9c032d23650fb4f5f119`. `.harness/kit` Project Web Pilot остаётся установленным runtime проекта и не является source of truth.
+Release pipeline stage-ит runtime до `sourceSnapshot()`. Windows verifier и общий release manifest утверждают VERSION, 35-файловый fileset и digest `da763a50c32583553b6ca06e29c975766ab092890bbf9787bd2a6aca87be44c4`. `.harness/kit` Project Web Pilot остаётся установленным runtime проекта и не является source of truth.

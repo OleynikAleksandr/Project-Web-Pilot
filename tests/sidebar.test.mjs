@@ -174,9 +174,9 @@ test('outdated Workflow Kit notice names both versions and opens the regular upg
   const f = await fixture(t);
   f.window.webPilot.retry = async () => { f.calls.push(['retry']); return {}; };
   f.window.webPilot.reload = async () => { f.calls.push(['reload']); return {}; };
-  f.emit({ ...f.state, workspaceHealth: { phase: 'error', ready: false, action: 'upgrade', version: '1.4.11', kitVersion: '1.4.12', issues: [], workspace: '/demo' } });
+  f.emit({ ...f.state, workspaceHealth: { phase: 'error', ready: false, action: 'upgrade', version: '1.4.12', kitVersion: '1.4.13', issues: [], workspace: '/demo' } });
   const message = f.document.getElementById('workspace-health-message').textContent;
-  assert.match(message, /Workflow Kit 1\.4\.11/); assert.match(message, /1\.4\.12/);
+  assert.match(message, /Workflow Kit 1\.4\.12/); assert.match(message, /1\.4\.13/);
   assert.equal(f.document.getElementById('workspace-health-retry').textContent, 'Обновить Workflow Kit');
   f.document.getElementById('workspace-health-retry').click(); await f.settle();
   assert.deepEqual(f.calls, [['retry']]);

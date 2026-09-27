@@ -139,4 +139,4 @@ Scope `stable-mcp-connector-036` завершает интеграцию scope 0
 
 Исторический выпуск 0.6.51: RELEASE.md, VERIFICATION.md. Выбор первого проекта описан в `docs/modules/first-run-onboarding.md` и WORKSPACE_SETUP.md.
 
-Текущий выпуск 0.6.56: [RELEASE](RELEASE.md), [VERIFICATION](VERIFICATION.md), canonical package/staging — `docs/planning/workflow-kit-package-migration.md`; парная поставка macOS arm64 / Windows x64 находится в `~/Downloads/WebPilot-0.6.56/`.
+Текущий выпуск 0.6.57: [RELEASE](RELEASE.md), [VERIFICATION](VERIFICATION.md), canonical package/staging — `docs/planning/workflow-kit-package-migration.md`; парная поставка macOS arm64 / Windows x64 находится в `~/Downloads/WebPilot-0.6.57/`.

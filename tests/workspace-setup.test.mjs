@@ -332,7 +332,7 @@ test('one inspection recovers each canonical plan once and refuses concurrent in
 });
 
 
-for (const legacy of ['1.4.0', '1.4.11']) test(`compatible ${legacy} upgrades to the bundled Kit and preserves canonical session plans`, async t => {
+for (const legacy of ['1.4.0', '1.4.11', '1.4.12']) test(`compatible ${legacy} upgrades to the bundled Kit and preserves canonical session plans`, async t => {
   const { setup, workspace } = await create(t);
   const { createScope } = await import('@webpilot/workflow-kit/lib/actions');
   const { withSessionPlan, listPlans } = await import('@webpilot/workflow-kit/lib/session-plans');

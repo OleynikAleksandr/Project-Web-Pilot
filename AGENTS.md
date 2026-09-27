@@ -27,7 +27,7 @@
 - Профиль DEVELOPMENT и verification_ids уже настроены управляемо. Реальные проверки: актуальный Node suite и Electron smoke; smoke использует TEST FIXTURE; реальный первый ответ проверяется отдельно. Проверять назначенные команды перед commit; пустые либо не запущенные checks не означают успех.
 - После каждого этапа обновлять связанные документы и собственный план сессии управляемыми командами. Не создавать параллельный TODO.md. Новые пути сначала включать в план. Сборка и локальные проверки не заменяют пользовательский результат.
 
-- Создание нового workspace и подключение существующего используют canonical `@webpilot/workflow-kit@1.4.12`; external workers получают generated `resources/workflow-kit`, а не tracked source. Канонический контракт — `docs/WORKSPACE_SETUP.md`; перед новым изменением этого поведения прочитать его. Исторический WF001 остаётся отдельным проектом только для чтения.
+- Создание нового workspace и подключение существующего используют canonical `@webpilot/workflow-kit@1.4.13`; external workers получают generated `resources/workflow-kit`, а не tracked source. Канонический контракт — `docs/WORKSPACE_SETUP.md`; перед новым изменением этого поведения прочитать его. Исторический WF001 остаётся отдельным проектом только для чтения.
 - Архивирование workspace, возврат и удаление локальной папки реализованы в T025–T028 по поручению пользователя. Канонический контракт — `docs/PROJECT_ARCHIVE.md`. Архив приложения не меняет execution_scope_status. Облачные чаты удалять не разрешено. Физическое удаление реального проекта требует его явного выбора и подтверждения в интерфейсе; автоматические проверки удаляют только собственные временные fixtures.
 
 - В 0.6.20 добавлен автономный Доктор проекта: `docs/modules/project-doctor.md`. 16.09.2026 пользователь реально запустил его на текущем проекте; `.harness/kit-manifest.json` успешно reconciled до Workflow Kit 1.3.0. Намеренно возвращать stale-состояние нельзя; дальнейшие сценарии повреждения проверяются только на временных fixtures.
@@ -66,9 +66,9 @@ Scope session-opening-performance-029 реализован в 0.6.29 / Workflow 
 
 На шаге «Первый проект» доступны создание нового и добавление существующей папки. Повторная готовность, preview/apply и сохранение файлов используют прежний путь. Kit 1.4.1. Парная поставка — `~/Downloads/WebPilot-0.6.51/`; обновляются root app и /Applications. Native Windows не запускалась.
 
-## Текущий локальный выпуск — 0.6.56
+## Текущий локальный выпуск — 0.6.57
 
-Workflow Kit мигрирован на canonical `@webpilot/workflow-kit@1.4.12` из `/Users/oleksandroliinyk/VSCODE/WorkflowKit`. Development imports используют package exports; `resources/workflow-kit` — ignored generated staging из `getRuntimeRoot()` для external workers и Electron package. Tracked duplicate удалён. Парная поставка macOS arm64 / Windows x64 — `~/Downloads/WebPilot-0.6.56/`; package verifier подтверждает Kit 1.4.12, 35 файлов и digest `5464b2c1528eef1de740af50558bc8db1d39cfa7838f9c032d23650fb4f5f119`. Native Windows не запускалась.
+Workflow Kit подключён как canonical `@webpilot/workflow-kit@1.4.13` из `/Users/oleksandroliinyk/VSCODE/WorkflowKit`. Development imports используют package exports; `resources/workflow-kit` — ignored generated staging из `getRuntimeRoot()` для external workers и Electron package. Tracked duplicate отсутствует. Парная поставка macOS arm64 / Windows x64 — `~/Downloads/WebPilot-0.6.57/`; package verifier подтверждает Kit 1.4.13, 35 файлов и digest `da763a50c32583553b6ca06e29c975766ab092890bbf9787bd2a6aca87be44c4`. Native Windows не запускалась.
 
 ## Предыдущий локальный выпуск — 0.6.55
 
