@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 647,
+  "plan_revision": 649,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-owned-plans-028",
@@ -1121,13 +1121,16 @@
         "Действующий раздел документа однозначно описывает single-active model 0.6.58"
       ],
       "expected_commit_message": "docs: preserve plan contract compatibility heading",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-owned-plans-028",
         "task_id": "T022",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "docs/modules/session-owned-plans.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -1261,7 +1264,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-owned-plans-028
 Current Task: нет
-Revision: 647
+Revision: 649
 
 ## Цель
 
@@ -1362,8 +1365,8 @@ Revision: 647
   - Git Commit: [DONE] chore: prepare Web Pilot 0.6.58 for Workflow Kit 1.5.0
   - Reference: session-owned-plans-028 / T021 / implementation
   - Файлы: package.json, package-lock.json, tests/session-plans.test.mjs, tests/workflow-kit-recovery.test.mjs, tests/workflow-kit-source.test.mjs
-- [TODO] T022: Сохранить compatibility heading документа single-active plan — Ожидает
-  - Git Commit: [PENDING] docs: preserve plan contract compatibility heading
+- [DONE] T022: Сохранить compatibility heading документа single-active plan — Завершено
+  - Git Commit: [DONE] docs: preserve plan contract compatibility heading
   - Reference: session-owned-plans-028 / T022 / implementation
   - Файлы: docs/modules/session-owned-plans.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
