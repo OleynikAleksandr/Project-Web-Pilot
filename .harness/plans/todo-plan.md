@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 639,
+  "plan_revision": 641,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-owned-plans-028",
@@ -1053,13 +1053,16 @@
         "Regression-фаза не собирает release; упаковка выполняется отдельной последующей задачей по новому поручению пользователя"
       ],
       "expected_commit_message": "test: cover single active plan sessions",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-owned-plans-028",
         "task_id": "T020",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "tests/electron-smoke.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -1172,7 +1175,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-owned-plans-028
 Current Task: нет
-Revision: 639
+Revision: 641
 
 ## Цель
 
@@ -1265,8 +1268,8 @@ Revision: 639
   - Git Commit: [DONE] refactor: validate only current workflow plan
   - Reference: session-owned-plans-028 / T019 / implementation
   - Файлы: resources/workspace-setup-worker.mjs, resources/project-doctor/core.mjs, tests/workspace-setup.test.mjs, tests/project-doctor.test.mjs, package-lock.json, scripts/check-workflow-kit-dependency.mjs, scripts/verify-windows-package.mjs
-- [TODO] T020: Закрепить single-plan migration интеграционными тестами — Ожидает
-  - Git Commit: [PENDING] test: cover single active plan sessions
+- [DONE] T020: Закрепить single-plan migration интеграционными тестами — Завершено
+  - Git Commit: [DONE] test: cover single active plan sessions
   - Reference: session-owned-plans-028 / T020 / implementation
   - Файлы: tests/workspace-session.test.mjs, tests/context-session.test.mjs, tests/sidebar.test.mjs, tests/electron-smoke.mjs, tests/session-plans.test.mjs, tests/workflow-kit-recovery.test.mjs, tests/workflow-kit-source.test.mjs
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает

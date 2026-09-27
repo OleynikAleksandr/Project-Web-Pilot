@@ -13,9 +13,9 @@ import { createHash } from 'node:crypto';
 import { nativeTheme, clipboard, BrowserWindow, dialog } from 'electron';
 import { ChatColors } from '../src/chatgpt-colors.mjs';
 import { readWorkspace, WorkspaceSessions } from '../src/workspace-session.mjs';
-import { createScope, startTask, preparePlan } from '@webpilot/workflow-kit/lib/actions';
+import { createScope, startTask } from '@webpilot/workflow-kit/lib/actions';
 import { withSessionPlan } from '@webpilot/workflow-kit/lib/session-plans';
-import { readPlan, renderPlan } from '@webpilot/workflow-kit/lib/plan';
+import { renderPlan } from '@webpilot/workflow-kit/lib/plan';
 import { sessionSelection } from '../src/context-session.mjs';
 import { commitTask } from '@webpilot/workflow-kit/lib/transaction';
 
@@ -424,7 +424,8 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   const originalPlanText = await fs.readFile(planFile, 'utf8');
   const block = originalPlanText.match(/<!-- workflow-state:begin -->\s*```json\s*([\s\S]*?)```\s*<!-- workflow-state:end -->/);
   const activePlan = JSON.parse(block[1]);
-  Object.assign(activePlan, { plan_revision: activePlan.plan_revision + 1, scope_id: 'fixture-plan-ui', owner_session_id: first.sessionId, baseline_commit: 'a'.repeat(40), acceptance_criteria: ['Fixture'], objective: 'Автоимя scope fixture', execution_scope_status: 'ACTIVE',
+  const sessionTitleBeforePlan = store.selected().title;
+  Object.assign(activePlan, { plan_revision: activePlan.plan_revision + 1, scope_id: 'fixture-plan-ui', baseline_commit: 'a'.repeat(40), acceptance_criteria: ['Fixture'], objective: 'Автоимя scope fixture', execution_scope_status: 'ACTIVE',
     delivery_status: 'IN_PROGRESS', current_task_id: 'T002', archived_scope_id: undefined, tasks: [
       { id: 'T001', title: 'Подготовить модель', implementation_status: 'DONE', commit_status: 'DONE' },
       { id: 'T002', title: 'Сделать интерфейс', implementation_status: 'IN_PROGRESS', commit_status: 'PENDING' },
@@ -439,8 +440,8 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await writeFixturePlan(activePlan); controller.attach(store.selected()); await controller.tick();
   await waitFor(() => sidebar.executeJavaScript('document.getElementById("plan-status").textContent === "В работе · 1 из 3 выполнено"'), 'working plan UI', snapshot);
   assert.equal(await sidebar.executeJavaScript('document.getElementById("plan-title").hidden'), false);
-  await waitFor(() => store.selected()?.title === 'Автоимя scope fixture', 'scope automatically names current session', snapshot);
-  assert.equal(store.selected().titleSource, 'scope');
+  assert.equal(store.selected().title, sessionTitleBeforePlan, 'project plan never renames the selected chat');
+  assert.equal(await sidebar.executeJavaScript('document.querySelector("#plan-card .eyebrow").textContent'), 'Текущий план проекта');
   assert.deepEqual(await sidebar.executeJavaScript(`Array.from(document.querySelectorAll('#plan-tasks .plan-task')).map(e=>({status:e.dataset.status,title:e.querySelector('strong').textContent,mark:e.querySelector('.plan-task-state').textContent}))`), [
     { status: 'done', title: 'Подготовить модель', mark: '✓' },
     { status: 'current', title: 'Сделать интерфейс', mark: '●' },
@@ -455,7 +456,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await waitFor(() => sidebar.executeJavaScript('document.getElementById("plan-status").dataset.state === "awaiting-acceptance"'), 'completed plan remains visible', snapshot);
   assert.equal(await sidebar.executeJavaScript('document.querySelectorAll("#plan-tasks .plan-task[data-status=done]").length'), 3);
   assert.equal(await sidebar.executeJavaScript('document.getElementById("accept-plan") === null'), true);
-  assert.equal(await sidebar.executeJavaScript('document.getElementById("next-session-choice").hidden'), true);
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("next-session-choice") === null'), true);
   assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 1, 'completion never sends an acceptance message');
   assert.equal(store.selected().sessionId, first.sessionId);
   await fs.writeFile(planFile, originalPlanText); controller.attach(store.selected()); await controller.tick();
@@ -496,10 +497,10 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(store.selected().title, 'Сессия Smoke Rename', 'page title cannot overwrite manual session name');
   await sidebar.executeJavaScript('document.querySelector(".new-project-chat").click()');
   await waitFor(() => store.selected()?.sessionId !== first.sessionId && snapshot().context.phase === 'delivered', 'new Chat via project menu IPC', snapshot);
-  assert.equal(packetLoads, warmPacketLoads + 1, 'new Chat receives its own addressed packet');
+  assert.equal(packetLoads, warmPacketLoads, 'new Chat reuses the checkout-scoped recovery packet');
   assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 1);
   const second = store.selected();
-  assert.equal(second.attempt.packet.session_id, second.sessionId);
+  assert.equal(second.attempt.packet.session_id, undefined);
   assert.equal(second.attempt.packet.plan_id, null);
   assert.equal(second.attempt.packet.contextSha256, first.attempt.packet.contextSha256);
   assert.notEqual(second.attempt.requestId, first.attempt.requestId);
@@ -512,7 +513,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(snapshot().projects[0].sessions[0].attempt, undefined, 'Session tree only receives metadata');
   await sidebar.executeJavaScript(`document.querySelector('.project-menu-button').click(); document.querySelector('.new-project-work').click()`);
   await waitFor(() => store.selected()?.experience === 'work' && snapshot().context.phase === 'delivered', 'new Work via project menu IPC', snapshot);
-  assert.equal(packetLoads, warmPacketLoads + 2, 'new Work receives its own addressed packet');
+  assert.equal(packetLoads, warmPacketLoads, 'new Work reuses the same checkout-scoped recovery packet');
   const third = store.selected();
   assert.equal(third.experience, 'work');
   assert.ok(third.chatUrl.startsWith('https://chatgpt.com/c/'));
@@ -524,7 +525,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await sidebar.executeJavaScript(`document.querySelector('.project-menu-button').click(); document.querySelector('.new-project-chat').click()`);
   await waitFor(() => store.selected()?.experience === 'chat' && store.selected()?.sessionId !== second.sessionId
     && snapshot().context.phase === 'delivered', 'new Chat after Work remembers browser preference', snapshot);
-  assert.equal(packetLoads, warmPacketLoads + 3, 'each independent session starts with NONE');
+  assert.equal(packetLoads, warmPacketLoads, 'chat navigation does not duplicate checkout recovery');
   assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 1);
   assert.equal(await browser.executeJavaScript('window.fixtureMessages[0].mode'), 'chatgpt');
   assert.equal(await browser.executeJavaScript('window.fixtureModeClicks'), 1);
@@ -574,7 +575,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
     && browser.getURL() === first.chatUrl, 'select earlier session via tree', snapshot);
   assert.equal(await sidebar.executeJavaScript('document.querySelector(".sessions").scrollTop'), oldScroll.scroll, 'old session keeps scroll after state refresh');
   assert.deepEqual(snapshot().projects[0].sessions.map(s => s.sessionId), [fourth.sessionId, third.sessionId, second.sessionId, first.sessionId]);
-  assert.equal(packetLoads, warmPacketLoads + 3, 'Earlier chat does not receive another context packet');
+  assert.equal(packetLoads, warmPacketLoads, 'Earlier chat does not receive another context packet');
   assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 1);
   assert.ok(await browser.executeJavaScript(`window.fixtureMessages[0].text.includes('${first.attempt.requestId}')`));
   assert.equal(store.selected().attempt.requestId, first.attempt.requestId);
@@ -923,97 +924,100 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(diagnosticText.includes('PRIVATE-COMPACTION-ID'), false, 'SSE item identifiers are never logged');
 
 
-  // Genuine session plans and real IPC; source work remains unfinished during manual creation.
+  // Single-active-plan integration: old chats keep their URLs while every chat projects one current checkout plan.
   await sidebar.executeJavaScript('window.webPilot.closeSettings()');
   await selectWorkspace(workspace);
-  await waitFor(() => snapshot().context.phase === 'delivered', 'continuation fixture initial context', snapshot);
-  assert.equal(snapshot().preparedChoice, null);
-  await sidebar.executeJavaScript('window.webPilot.setSidebarWidth(312)');
-  const source = store.selected();
-  const definition = id => ({
-    scope_id: id, objective: 'План ' + id, approval_note: 'Изолированный smoke fixture.',
-    acceptance_criteria: ['Fixture завершён'], approved_scope: {functional_paths:[],documentation_paths:['docs/PRODUCT.md'],max_functional_files_per_task:3},
-    tasks: [{id:'T001',title:'Записать результат',why:'Проверить lifecycle',dependencies:[],functional_paths:[],
-      documentation_paths:['docs/PRODUCT.md'],acceptance_criteria:['Запись добавлена'],verification_ids:[],expected_commit_message:'docs: session fixture'}]
-  });
-  withSessionPlan(workspace,{sessionId:source.sessionId},()=>createScope(workspace,definition('fixture-source')));
-  const sourcePlanFile = path.join(workspace,'.harness/plans/by-id/fixture-source.md');
-  for (const experience of ['chat','work']) {
-    const scopeId='fixture-continue-'+experience;
-    const beforeCount=store.snapshot().projects.find(p=>p.workspace===workspace).sessions.length;
-    const sourceBytes=await fs.readFile(sourcePlanFile,'utf8');
-    withSessionPlan(workspace,{sessionId:source.sessionId},()=>preparePlan(workspace,definition(scopeId),readPlan(workspace).plan_revision));
-    assert.equal(await fs.readFile(sourcePlanFile,'utf8'),sourceBytes);
-    await waitFor(()=>sidebar.executeJavaScript('document.querySelectorAll(".prepared-item").length === '+(experience==='chat'?1:2)), 'prepared card '+experience,snapshot);
-    const choose=()=>sidebar.executeJavaScript('document.querySelector(\'[data-plan-id="'+scopeId+'"] .prepared-action\').click()');
-    await choose();
-    await waitFor(()=>sidebar.executeJavaScript('!document.getElementById("next-session-choice").hidden'),'manual Chat Work choice',snapshot);
-    await sidebar.executeJavaScript('document.getElementById("cancel-prepared-choice").click()');
-    await waitFor(()=>!snapshot().preparedChoice,'cancel prepared choice',snapshot);
-    assert.equal(store.snapshot().projects.find(p=>p.workspace===workspace).sessions.length,beforeCount);
-    assert.equal(store.selected().sessionId,source.sessionId);
-    await choose();
-    await waitFor(()=>sidebar.executeJavaScript('!document.getElementById("next-session-choice").hidden'),'choice reopened',snapshot);
-    const bounds=await sidebar.executeJavaScript('(()=>{const e=document.getElementById("next-session-choice");return {width:e.clientWidth,scroll:e.scrollWidth,buttons:[...e.querySelectorAll("button")].map(b=>b.textContent)}})()');
-    assert.ok(bounds.scroll<=bounds.width+1);assert.deepEqual(bounds.buttons,['Chat','Work','Отмена']);
-    if(experience==='chat') for(const theme of ['light','dark']){
-      await sidebar.executeJavaScript('window.webPilot.setTheme('+JSON.stringify(theme)+')');
-      await waitFor(()=>sidebar.executeJavaScript('document.documentElement.dataset.theme === '+JSON.stringify(theme)),'plan theme '+theme,snapshot);
-      await sidebar.executeJavaScript('document.getElementById("next-session-choice").scrollIntoView({block:"center"});new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');
-      await fs.writeFile(path.join(dataDir,'session-plans-'+theme+'.png'),(await sidebar.capturePage()).toPNG());
-    }
-    if(experience==='chat')await fs.writeFile(path.join(dataDir,'next-session-choice.png'),(await sidebar.capturePage()).toPNG());
-    await sidebar.executeJavaScript('document.getElementById("next-session-'+experience+'").click();document.getElementById("next-session-'+experience+'").click()');
-    await waitFor(()=>store.selected().sessionId!==source.sessionId&&snapshot().context.phase==='delivered','prepared '+experience+' delivered',snapshot);
-    const next=store.selected();
-    assert.equal(next.experience,experience);assert.equal(next.planId,scopeId);assert.equal(next.originSessionId,source.sessionId);
-    assert.equal(next.attempt.packet.session_id,next.sessionId);assert.equal(next.attempt.packet.plan_id,scopeId);
-    assert.equal(next.attempt.packet.facts.scope_id,scopeId);assert.equal(next.attempt.packet.facts.execution_scope_status,'ACTIVE');
-    assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'),1);
-    assert.equal(await browser.executeJavaScript('window.fixtureMessages[0].mode'),experience==='chat'?'chatgpt':'work');
-    assert.equal(store.snapshot().projects.find(p=>p.workspace===workspace).sessions.length,beforeCount+1);
-    assert.equal(await fs.readFile(sourcePlanFile,'utf8'),sourceBytes,'source plan unchanged after bind');
-    const reopened=new WorkspaceSessions(store.file);await reopened.load();
-    assert.equal(reopened.selected().sessionId,next.sessionId);assert.equal(reopened.selected().planId,scopeId);
-    assert.equal((await reopened.inspect(workspace,source.sessionId)).preparedPlans.find(p=>p.planId===scopeId).sessionId,next.sessionId);
-    await sidebar.executeJavaScript('document.querySelector("#plan-origin button").click()');
-    await waitFor(()=>store.selected().sessionId===source.sessionId&&snapshot().selected.planId==='fixture-source','origin navigation',snapshot);
-    const beforeRead=store.selected().sessionId;
-    await sidebar.executeJavaScript('document.querySelector(\'[data-plan-id="'+scopeId+'"] summary\').click()');
-    assert.equal(store.selected().sessionId,beforeRead,'preview never changes command owner');
-    await choose();
-    await waitFor(()=>store.selected().sessionId===next.sessionId&&snapshot().context.phase==='delivered','linked existing session',snapshot);
-    assert.equal(store.snapshot().projects.find(p=>p.workspace===workspace).sessions.length,beforeCount+1);
-    // Read-only monitoring must keep working after delivery is cancelled.
-    controller.cancel();
-    const loadsBeforeProgress = packetLoads;
-    // Complete this plan with real hooks; it stays attached and visible.
-    withSessionPlan(workspace,{sessionId:next.sessionId},()=>startTask(workspace,'T001'));
-    await waitFor(()=>snapshot().selected?.planView?.tasks.find(t=>t.id==='T001')?.status==='current','task started without delivery controller',snapshot);
-    await fs.appendFile(path.join(workspace,'docs/PRODUCT.md'),'\nSession fixture '+experience+'\n');
-    assert.equal(withSessionPlan(workspace,{sessionId:next.sessionId},()=>commitTask(workspace,'T001')).ok,true);
-    await waitFor(()=>snapshot().selected?.planView?.completed===1,'commit updates progress without reopening chat',snapshot);
-    withSessionPlan(workspace,{sessionId:next.sessionId},()=>startTask(workspace,'DOCS'));
-    assert.equal(withSessionPlan(workspace,{sessionId:next.sessionId},()=>commitTask(workspace,'DOCS')).ok,true);
-    await waitFor(()=>sidebar.executeJavaScript('document.getElementById("plan-status").dataset.state === "awaiting-acceptance"'),'completed own plan',snapshot);
-    assert.equal(controller.active,null);
-    assert.equal(packetLoads,loadsBeforeProgress,'plan monitoring never prepares or sends recovery');
-    assert.equal(store.selected().planId,scopeId);assert.equal(snapshot().preparedChoice,null);
-    assert.equal(await sidebar.executeJavaScript('document.getElementById("next-session-choice").hidden'),true);
-    await sidebar.executeJavaScript('document.querySelector("#plan-origin button").click()');
-    await waitFor(()=>store.selected().sessionId===source.sessionId,'return to unfinished source',snapshot);
+  await waitFor(() => snapshot().context.phase === 'delivered', 'single-active fixture initial context', snapshot);
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("prepared-card") === null'), true);
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("plan-origin") === null'), true);
+
+  let projectRecordBeforePlan = store.snapshot().projects.find(p => p.workspace === workspace);
+  if (projectRecordBeforePlan.sessions.filter(session => !session.archivedAt && session.chatUrl).length < 2) {
+    await sidebar.executeJavaScript(`window.webPilot.newSession(${JSON.stringify(workspace)}, "chat")`);
+    await waitFor(() => snapshot().context.phase === 'delivered', 'second pre-plan chat', snapshot);
+    projectRecordBeforePlan = store.snapshot().projects.find(p => p.workspace === workspace);
+  }
+  const legacyChats = projectRecordBeforePlan.sessions.filter(session => !session.archivedAt && session.chatUrl).slice(0, 2)
+    .map(session => ({ sessionId: session.sessionId, chatUrl: session.chatUrl, title: session.title }));
+  assert.equal(legacyChats.length, 2, 'fixture has two chats created before the current plan');
+
+  const definition = {
+    scope_id: 'fixture-current-plan', objective: 'Единый current plan smoke', approval_note: 'Изолированный single-active smoke fixture.',
+    acceptance_criteria: ['Fixture завершён'],
+    approved_scope: { functional_paths: [], documentation_paths: ['docs/PRODUCT.md'], max_functional_files_per_task: 3 },
+    tasks: [{ id: 'T001', title: 'Записать общий результат', why: 'Проверить один plan на несколько chats', dependencies: [],
+      functional_paths: [], documentation_paths: ['docs/PRODUCT.md'], acceptance_criteria: ['Запись добавлена'],
+      verification_ids: [], expected_commit_message: 'docs: single active smoke fixture' }],
+  };
+  withSessionPlan(workspace, { sessionId: legacyChats[0].sessionId }, () => createScope(workspace, definition));
+  await waitFor(() => snapshot().selected?.scopeId === 'fixture-current-plan'
+    && sidebar.executeJavaScript('document.getElementById("plan-title").textContent === "Единый current plan smoke"'),
+    'current checkout plan visible', snapshot);
+
+  for (const legacy of legacyChats) {
+    await sidebar.executeJavaScript(`window.webPilot.selectSession(${JSON.stringify(workspace)}, ${JSON.stringify(legacy.sessionId)})`);
+    await waitFor(() => store.selected()?.sessionId === legacy.sessionId
+      && snapshot().selected?.scopeId === 'fixture-current-plan'
+      && browser.getURL() === legacy.chatUrl, 'old chat projects current plan', snapshot);
+    assert.equal(store.selected().chatUrl, legacy.chatUrl);
+    assert.equal(store.selected().title, legacy.title);
+    assert.equal(store.selected().planId, 'fixture-current-plan');
   }
 
-  // A prepared action issues its navigation generation after an asynchronous read.
-  // Its own preview error must remain visible, while older navigation errors stay ignored.
-  const preparedForFailure = (await store.inspect(workspace, source.sessionId)).preparedPlans.find(plan => plan.sessionId);
-  const strictPreview = workspaceSetup.preview.bind(workspaceSetup);
-  workspaceSetup.preview = async () => { throw Object.assign(new Error('fixture preview failure'), { code: 'FIXTURE_PREVIEW' }); };
-  const failedOpen = await sidebar.executeJavaScript(`window.webPilot.openPreparedSession(${JSON.stringify(workspace)}, ${JSON.stringify(source.sessionId)}, ${JSON.stringify(preparedForFailure.planId)})`);
-  assert.equal(failedOpen.ok, false); assert.equal(snapshot().startupError.code, 'FIXTURE_PREVIEW');
-  workspaceSetup.preview = strictPreview;
-  await selectWorkspace(workspace);
-  await waitFor(() => ['delivered', 'stale'].includes(snapshot().context.phase), 'return after current preview error', snapshot);
+  const loadsBeforeNewCurrentChat = packetLoads;
+  await sidebar.executeJavaScript(`window.webPilot.newSession(${JSON.stringify(workspace)}, "chat")`);
+  await waitFor(() => !legacyChats.some(item => item.sessionId === store.selected()?.sessionId)
+    && snapshot().context.phase === 'delivered' && snapshot().selected?.scopeId === 'fixture-current-plan',
+    'new Chat continues current checkout plan', snapshot);
+  const currentChat = store.selected();
+  assert.equal(currentChat.planId, 'fixture-current-plan');
+  assert.equal(currentChat.attempt.packet.facts.scope_id, 'fixture-current-plan');
+  assert.equal(currentChat.attempt.packet.session_id, undefined);
+  assert.ok(packetLoads <= loadsBeforeNewCurrentChat + 1, 'at most one checkout recovery build is needed after plan creation');
+  const currentPlanPacketLoads = packetLoads;
+
+  await sidebar.executeJavaScript(`window.webPilot.newSession(${JSON.stringify(workspace)}, "work")`);
+  await waitFor(() => store.selected()?.experience === 'work' && snapshot().context.phase === 'delivered'
+    && snapshot().selected?.scopeId === 'fixture-current-plan', 'new Work continues current checkout plan', snapshot);
+  const currentWork = store.selected();
+  assert.equal(currentWork.planId, 'fixture-current-plan');
+  assert.equal(currentWork.attempt.packet.facts.scope_id, 'fixture-current-plan');
+  assert.equal(packetLoads, currentPlanPacketLoads, 'second new chat reuses the same current-plan packet');
+
+  for (const directory of ['.harness/plans/by-id', '.harness/plans/by-session']) {
+    const entries = await fs.readdir(path.join(workspace, directory)).catch(error => error.code === 'ENOENT' ? [] : Promise.reject(error));
+    assert.equal(entries.some(name => name.endsWith('.md')), false, directory + ' is not runtime plan storage');
+  }
+
+  controller.cancel();
+  const loadsBeforeProgress = packetLoads;
+  withSessionPlan(workspace, { sessionId: currentWork.sessionId }, () => startTask(workspace, 'T001'));
+  await waitFor(() => snapshot().selected?.planView?.tasks.find(task => task.id === 'T001')?.status === 'current',
+    'single current task visible without delivery controller', snapshot);
+  await fs.appendFile(path.join(workspace, 'docs/PRODUCT.md'), '\nSingle active fixture result\n');
+  assert.equal(withSessionPlan(workspace, { sessionId: currentChat.sessionId }, () => commitTask(workspace, 'T001')).ok, true);
+  withSessionPlan(workspace, { sessionId: legacyChats[0].sessionId }, () => startTask(workspace, 'DOCS'));
+  assert.equal(withSessionPlan(workspace, { sessionId: legacyChats[1].sessionId }, () => commitTask(workspace, 'DOCS')).ok, true);
+  await waitFor(() => snapshot().selected?.planView?.state === 'awaiting-acceptance', 'single current plan completed', snapshot);
+  assert.equal(packetLoads, loadsBeforeProgress, 'plan monitoring never sends recovery');
+
+  for (const legacy of legacyChats) {
+    await sidebar.executeJavaScript(`window.webPilot.selectSession(${JSON.stringify(workspace)}, ${JSON.stringify(legacy.sessionId)})`);
+    await waitFor(() => store.selected()?.sessionId === legacy.sessionId
+      && snapshot().selected?.planView?.state === 'awaiting-acceptance'
+      && browser.getURL() === legacy.chatUrl, 'completed current plan visible in old chat', snapshot);
+    assert.equal(store.selected().planId, 'fixture-current-plan');
+    assert.equal(store.selected().chatUrl, legacy.chatUrl);
+  }
+
+  const reopenedSingle = new WorkspaceSessions(store.file); await reopenedSingle.load();
+  const savedProject = reopenedSingle.snapshot().projects.find(project => project.workspace === workspace);
+  for (const legacy of legacyChats) {
+    const saved = savedProject.sessions.find(session => session.sessionId === legacy.sessionId);
+    assert.equal(saved.chatUrl, legacy.chatUrl); assert.equal(saved.title, legacy.title);
+  }
+  const singleActivePlanScreenshot = path.join(dataDir, 'single-active-plan.png');
+  await fs.writeFile(singleActivePlanScreenshot, (await sidebar.capturePage()).toPNG());
 
   // Doctor scenarios begin after prior background recovery work has settled.
   await waitFor(() => controller.contextCache.pending.size === 0, 'background preparation before Doctor', snapshot);
@@ -1110,10 +1114,10 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(await browser.executeJavaScript('document.getElementById("reverse-probe").scrollTop'),-200,'manual history stays still');
   await browser.executeJavaScript('document.getElementById("reverse-probe").remove();window.__webPilotConversationAutoScroll.refresh()');
   assert.equal(await sidebar.executeJavaScript('document.getElementById("prototype-version").textContent'), 'ПРОТОТИП ' + app.getVersion());
-  const result = { fullVersionBadge: true, septemberDOM: true, reverseScroll: true, directFirstChat: true, directFirstWork: true, startupLoginEntrypoint: true, uninterruptedFirstRequest: true, firstRequestNetworkTrace: true, duplicateStartupBlocked: true, earlyFirstLoadDiagnostics: true, guidedFirstRun: true, firstRunScreenshots: [path.join(dataDir, "startup-account.png"), path.join(dataDir, "startup-login.png"), path.join(dataDir, "startup-components.png")], fastSavedNavigation: true, lastNavigationWins: true, readinessBeforeOrAfterLoad: true, backgroundFailureRetry: true, liveChatColors: true, composerBackground: true, streamingAssistantColor: true, chatColorsPersistence: true, chatColorsReset: true, colorScreenshots, projectDoctor: true, doctorBackup: true, doctorOpen: true, doctorRefresh: true, doctorNewSession: true, doctorScreenshots, newestSessionFirst: true, projectSelectsNewest: true, threeSessionViewport: true, sessionScrollPreserved: true, visibleSessionScrollbar: true, nativeProjectsDisclosure: true, treePopover: true, treeScreenshots, scopeContinuationChat: true, scopeContinuationWork: true, scopeContinuationRestart: true, scopeContinuationNoDuplicates: true,
-    transitionScreenshot: path.join(dataDir, 'next-session-choice.png'), mode: 'isolated-fixture', electron: process.versions.electron, chromium: process.versions.chrome,
+  const result = { fullVersionBadge: true, septemberDOM: true, reverseScroll: true, directFirstChat: true, directFirstWork: true, startupLoginEntrypoint: true, uninterruptedFirstRequest: true, firstRequestNetworkTrace: true, duplicateStartupBlocked: true, earlyFirstLoadDiagnostics: true, guidedFirstRun: true, firstRunScreenshots: [path.join(dataDir, "startup-account.png"), path.join(dataDir, "startup-login.png"), path.join(dataDir, "startup-components.png")], fastSavedNavigation: true, lastNavigationWins: true, readinessBeforeOrAfterLoad: true, backgroundFailureRetry: true, liveChatColors: true, composerBackground: true, streamingAssistantColor: true, chatColorsPersistence: true, chatColorsReset: true, colorScreenshots, projectDoctor: true, doctorBackup: true, doctorOpen: true, doctorRefresh: true, doctorNewSession: true, doctorScreenshots, newestSessionFirst: true, projectSelectsNewest: true, threeSessionViewport: true, sessionScrollPreserved: true, visibleSessionScrollbar: true, nativeProjectsDisclosure: true, treePopover: true, treeScreenshots, singleActivePlanSessions: true, checkoutPlanAcrossOldChats: true, checkoutRecoveryShared: true, noPreparedPlanUi: true,
+    singleActivePlanScreenshot, mode: 'isolated-fixture', electron: process.versions.electron, chromium: process.versions.chrome,
     views: window.contentView.children.length, secureRemote: true, sidebarIpc: true, archiveRestore: true, archiveRestart: true, deleteCancel: true, localDeletion: true, cloudChatPreserved: true, workspaceCreation: true, workspaceValidation: true, cancelPreservesSession: true, startupMessages: 4, canonicalPacketLoads: packetLoads, recoveryCache: true, operationProgress: true, progressScreenshot: path.join(dataDir, 'progress-ui.png'),
-    tokenCounterRemoved: true, projectRename: true, sessionRename: true, scopeSessionRename: true, restartKeepsSession: true, newChatCreatesSession: true, sessionTree: true, selectsEarlierSession: true, compactWorkspaceDetails: true, projectPathClipboard: true, sessionPlans: true, preparedPlans: true, manualChatWorkChoice: true, noAcceptanceButton: true, chromiumDiagnostics: true, contextWindowIndicatorRemoved: true, resizableSidebar: true, separateArchiveWindow: true, archiveMultiSelect: true, archiveForgetKeepsFolder: true, shellTheme: true, nativeTitlebarTheme: nativeTheme.shouldUseDarkColors, toolCallFilter: true, microphonePermission: true, geolocationPermission: true, cameraPermission: false, fullContextBytes: Buffer.byteLength(fixtureContext), liveChatGPT: false, agentToolsRequired: false };
+    tokenCounterRemoved: true, projectRename: true, sessionRename: true, projectPlanDoesNotRenameChat: true, restartKeepsSession: true, newChatCreatesSession: true, sessionTree: true, selectsEarlierSession: true, compactWorkspaceDetails: true, projectPathClipboard: true, sessionPlans: true, singleCurrentPlan: true, manualChatWorkChoice: true, noAcceptanceButton: true, chromiumDiagnostics: true, contextWindowIndicatorRemoved: true, resizableSidebar: true, separateArchiveWindow: true, archiveMultiSelect: true, archiveForgetKeepsFolder: true, shellTheme: true, nativeTitlebarTheme: nativeTheme.shouldUseDarkColors, toolCallFilter: true, microphonePermission: true, geolocationPermission: true, cameraPermission: false, fullContextBytes: Buffer.byteLength(fixtureContext), liveChatGPT: false, agentToolsRequired: false };
   await fs.writeFile(path.join(dataDir, 'smoke-result.json'), JSON.stringify(result, null, 2));
   console.log(JSON.stringify(result));
 }
