@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 642,
+  "plan_revision": 644,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-owned-plans-028",
@@ -1090,13 +1090,20 @@
         "После commit рабочее дерево чистое и этот HEAD используется как source парной macOS/Windows сборки"
       ],
       "expected_commit_message": "chore: prepare Web Pilot 0.6.58 for Workflow Kit 1.5.0",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-owned-plans-028",
         "task_id": "T021",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "package.json",
+        "package-lock.json",
+        "tests/session-plans.test.mjs",
+        "tests/workflow-kit-recovery.test.mjs",
+        "tests/workflow-kit-source.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -1210,7 +1217,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-owned-plans-028
 Current Task: нет
-Revision: 642
+Revision: 644
 
 ## Цель
 
@@ -1307,8 +1314,8 @@ Revision: 642
   - Git Commit: [DONE] test: cover single active plan sessions
   - Reference: session-owned-plans-028 / T020 / implementation
   - Файлы: tests/workspace-session.test.mjs, tests/context-session.test.mjs, tests/sidebar.test.mjs, tests/electron-smoke.mjs, tests/session-plans.test.mjs, tests/workflow-kit-recovery.test.mjs, tests/workflow-kit-source.test.mjs
-- [TODO] T021: Подготовить Web Pilot 0.6.58 к парному релизу — Ожидает
-  - Git Commit: [PENDING] chore: prepare Web Pilot 0.6.58 for Workflow Kit 1.5.0
+- [DONE] T021: Подготовить Web Pilot 0.6.58 к парному релизу — Завершено
+  - Git Commit: [DONE] chore: prepare Web Pilot 0.6.58 for Workflow Kit 1.5.0
   - Reference: session-owned-plans-028 / T021 / implementation
   - Файлы: package.json, package-lock.json, tests/session-plans.test.mjs, tests/workflow-kit-recovery.test.mjs, tests/workflow-kit-source.test.mjs
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает

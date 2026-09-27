@@ -213,22 +213,23 @@ test('Recovery v2 reports largest sections when required context exceeds transpo
   });
 });
 
-test('session recovery carries its own pending tasks and transport identity while a blank chat receives navigation only', async t => {
+test('all chat identities recover the same current checkout plan without session ownership', async t => {
   const { withSessionPlan } = await import('@webpilot/workflow-kit/lib/session-plans');
   const { contextPacket } = await import('@webpilot/workflow-kit/lib/recovery');
   const root = await fixture(t);
-  for (const session of ['session-a','session-b']) withSessionPlan(root, { sessionId: session }, () =>
-    createScope(root, { ...continuityScopeInput(), scope_id: session, objective: 'ONLY_' + session }));
-  for (const session of ['session-a','session-b']) {
+  createScope(root, { ...continuityScopeInput(), scope_id: 'current-checkout', objective: 'ONLY_CURRENT_CHECKOUT' });
+
+  for (const session of ['session-a','session-b','empty']) {
     const packet = withSessionPlan(root, { sessionId: session }, () => contextPacket(root));
-    assert.equal(packet.session_id,session); assert.equal(packet.plan_id,session); assert.equal(packet.facts.scope_id,session);
-    assert.match(packet.context,new RegExp('--session ' + session)); assert.match(packet.context,/НЕВЫПОЛНЕННЫЕ МИКРОЗАДАЧИ/);
-    assert.equal(packet.context.includes('ONLY_' + (session === 'session-a' ? 'session-b' : 'session-a')),false);
-    assert.equal(packet.context_bytes,Buffer.byteLength(packet.context));
+    assert.equal(packet.session_id, null);
+    assert.equal(packet.plan_id, 'current-checkout');
+    assert.equal(packet.facts.scope_id, 'current-checkout');
+    assert.equal(packet.facts.execution_scope_status, 'ACTIVE');
+    assert.match(packet.context, /ONLY_CURRENT_CHECKOUT/);
+    assert.match(packet.context, /Новый chat\/client продолжает этот же checkout plan/);
+    assert.doesNotMatch(packet.context, new RegExp('--session ' + session));
+    assert.equal(packet.context_bytes, Buffer.byteLength(packet.context));
   }
-  const empty = withSessionPlan(root,{sessionId:'empty'},()=>contextPacket(root));
-  assert.equal(empty.plan_id,null); assert.equal(empty.facts.execution_scope_status,'NONE');
-  assert.match(empty.context,/OVERVIEW_REQUIRED/); assert.doesNotMatch(empty.context,/ONLY_session/);
 });
 
 test('batched Git trailers retain parse semantics, Unicode, duplicates, unfolding and patch dividers', async t => {
@@ -279,4 +280,3 @@ test('batched ancestry follows merge graph and changed replacement refs', async 
   git(root, 'replace', '-d', merged);
   assert.equal(areAncestors(root, [base, side], merged), true);
 });
-
