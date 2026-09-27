@@ -88,7 +88,7 @@ export async function main(argv = process.argv.slice(2)) {
     const mutating = ['task:update', 'plan:extend', 'plan:create', 'scope:create', 'task:start', 'plan:apply', 'commit', 'archive', 'repair', 'plan:prepare', 'plan:bind', 'plan:adopt', 'config:apply'].includes(command);
     if (mutating && opts.plan) check(opts.session, 'SESSION_REQUIRED', 'Запись требует явной --session.');
     return withSessionPlan(root, { sessionId: opts.session, planId: opts.plan,
-      allowDraft: ['plan:bind', 'plan:apply'].includes(command), allowUnowned: command === 'plan:adopt' }, execute);
+      allowDraft: ['status', 'validate', 'recover', 'plan:bind', 'plan:apply'].includes(command), allowUnowned: command === 'plan:adopt' }, execute);
   } catch (e) {
     if (isHook) return { value: { continue: false, stopReason: e.code ?? 'HOOK_ERROR', systemMessage: e.message + ' Диагностика: ./scripts/workflow doctor' }, json: true };
     return { value: errorResult(e), json: true, exitCode: 1 };
