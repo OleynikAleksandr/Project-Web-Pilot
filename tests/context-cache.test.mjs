@@ -97,17 +97,17 @@ test('worktree metadata is independent and symlink inputs disable reuse',async t
   await assert.rejects(contextInputKey(canonical),{code:'CONTEXT_INPUTS_UNAVAILABLE'});
 });
 
-test('two sessions with identical revisions never share a packet or pending build', async () => {
+test('sessions of one checkout share one packet and legacy session echo does not route context', async () => {
   let loads=0;
-  const cache=new ContextCache({inputKey:async()=> 'identical-revision',load:async(w,s)=>{
-    loads++;return {...packet(w,s.sessionId),session_id:s.sessionId,plan_id:s.planId};
+  const cache=new ContextCache({inputKey:async()=> 'identical-revision',load:async w=>{
+    loads++;return {...packet(w,'current'),session_id:'legacy-owner',plan_id:'legacy-plan'};
   }});
   const a={sessionId:'a',planId:'plan-a'},b={sessionId:'b',planId:'plan-b'};
   const [first,second]=await Promise.all([cache.load('/project',a),cache.load('/project',b)]);
-  assert.equal(first.context,'a');assert.equal(second.context,'b');assert.equal(loads,2);
-  assert.equal((await cache.load('/project',a)).preparation.cacheHit,true);
-  cache.clear();cache.loadPacket=async w=>({...packet(w),session_id:'b',plan_id:'plan-b'});
-  await assert.rejects(cache.load('/project',a),{code:'MCP_CONTEXT_SESSION_MISMATCH'});
+  assert.equal(first.context,'current');assert.equal(second.context,'current');assert.equal(loads,1);
+  assert.equal((await cache.load('/project',b)).preparation.cacheHit,true);assert.equal(loads,1);
+  cache.clear();cache.loadPacket=async w=>({...packet(w,'current'),session_id:'different-legacy-session',plan_id:'historical-plan'});
+  assert.equal((await cache.load('/project',a)).context,'current');
 });
 
 test('warm uses one input check on a cache hit and two around a cold build', async () => {
@@ -117,12 +117,12 @@ test('warm uses one input check on a cache hit and two around a cold build', asy
   clock = 6000; keys = 0; await cache.warm('/project'); assert.equal(keys, 1); assert.equal(loads, 1);
 });
 
-test('addressed recovery key incorporates complete readiness and rejects failed or foreign readiness', async () => {
+test('checkout recovery key ignores chat address and rejects failed or foreign readiness', async () => {
   let inputKey = 'all-inputs-a', ready = true, workspace = '/project';
   const setup = { ready: async () => ({ ready, inputKey, workspace }) };
   const a = { sessionId: 'a', planId: 'plan-a' }, b = { sessionId: 'b', planId: null };
   const key = await readinessContextKey(setup, '/project', a);
-  assert.notEqual(key, await readinessContextKey(setup, '/project', b));
+  assert.equal(key, await readinessContextKey(setup, '/project', b));
   inputKey = 'changed-hooks-config-or-required-document';
   assert.notEqual(key, await readinessContextKey(setup, '/project', a));
   ready = false; await assert.rejects(readinessContextKey(setup, '/project', a), { code: 'CONTEXT_INPUTS_UNAVAILABLE' });

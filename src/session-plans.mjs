@@ -53,9 +53,19 @@ export class SessionPlans {
     return this.call(workspace, 'plan:bind', ['--session', sourceSessionId, '--plan', planId,
       '--target-session', sessionId, '--experience', experience, '--expected-revision', String(revision)]);
   }
-  loadContext(workspace, { sessionId, planId } = {}) {
-    if (!sessionId) throw fail('SESSION_REQUIRED', 'Контекст требует выбранную сессию.');
-    return this.call(workspace, 'recover', ['--session', sessionId, ...(planId ? ['--plan', planId] : []), '--format', 'packet']);
+  async loadContext(workspace) {
+    try {
+      return await this.call(workspace, 'recover', ['--format', 'packet']);
+    } catch (error) {
+      if (error.code !== 'SESSION_REQUIRED') throw error;
+      const text = await fs.readFile(path.join(workspace, '.harness/plans/todo-plan.md'), 'utf8');
+      const raw = text.match(/<!-- workflow-state:begin -->\s*```json\s*([\s\S]*?)```/)?.[1];
+      let plan;
+      try { plan = JSON.parse(raw ?? ''); } catch { throw fail('WORKFLOW_PLAN_INVALID', 'Не удалось прочитать current plan для совместимости со старым Workflow Kit.'); }
+      const sessionId = plan.owner_session_id ?? null;
+      if (!sessionId) throw error;
+      return this.call(workspace, 'recover', ['--session', sessionId, ...(plan.scope_id ? ['--plan', plan.scope_id] : []), '--format', 'packet']);
+    }
   }
   async adoptEvidence(workspace, session, projectId) {
     if (!session.legacyPlanId) return null;

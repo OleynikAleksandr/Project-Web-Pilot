@@ -19,8 +19,6 @@ export function validateContextPacket(packet, workspace, selection = {}) {
     throw new RuntimeError('MCP_UPDATE_REQUIRED', 'Нужна обновлённая версия Codex Local Mac с прямой передачей контекста.');
   }
   if (packet.workspace !== workspace) throw new RuntimeError('MCP_CONTEXT_MISMATCH', 'Получен контекст другой папки.');
-  if (selection.sessionId && (packet.session_id !== selection.sessionId || packet.plan_id !== (selection.planId ?? null)))
-    throw new RuntimeError('MCP_CONTEXT_SESSION_MISMATCH', 'Получен пакет другого плана или сессии.');
   const facts = packet.facts;
   const factNames = ['project_id', 'project_name', 'plan_revision', 'scope_id', 'execution_scope_status', 'delivery_status', 'task_id', 'task_title'];
   if (packet.status !== 'ready' || packet.completeness !== 'COMPLETE' || typeof packet.context !== 'string'
@@ -290,9 +288,7 @@ export class McpRuntime {
     return { ...status, connection };
   }
 
-  async loadContext(workspace, selection = {}) {
-    if (selection.sessionId) return validateContextPacket(await this.sessionPlans.loadContext(workspace, selection), workspace, selection);
-    if (!this.client) await this.ensure();
-    return this.client.loadContext(workspace);
+  async loadContext(workspace) {
+    return validateContextPacket(await this.sessionPlans.loadContext(workspace), workspace);
   }
 }

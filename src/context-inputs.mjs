@@ -3,7 +3,6 @@ import path from 'node:path';
 import { execFile as callback } from 'node:child_process';
 import { promisify } from 'node:util';
 import { createHash } from 'node:crypto';
-import { readSessionPlans } from './session-plans.mjs';
 
 const execFile = promisify(callback);
 const digest = data => createHash('sha256').update(data).digest('hex');
@@ -66,20 +65,11 @@ export async function contextInputKey(workspace, selection = {}) {
   if (!gitDir || !commonDir || !/^[a-f0-9]{40,64}$/.test(head)) throw inputError('Git snapshot unavailable');
   const planText = await fs.readFile(path.join(root, '.harness/plans/todo-plan.md'), 'utf8');
   const block = planText.match(/<!-- workflow-state:begin -->\s*```json\s*([\s\S]*?)```/);
-  let plan = JSON.parse(block?.[1] ?? '');
-  let selectedPlanPath = '.harness/plans/todo-plan.md';
-  if (selection.sessionId) {
-    const view = await readSessionPlans(root, selection.sessionId);
-    if (!view || view.plan_id !== (selection.planId ?? null)) throw inputError('Session plan changed');
-    plan = view.plan; selectedPlanPath = view.plan_path;
-  }
+  const plan = JSON.parse(block?.[1] ?? '');
   if (plan.schema_version !== 1 || !Array.isArray(plan.tasks) || !Array.isArray(plan.context_pack?.documents)) throw inputError('Unsupported recovery plan');
   const config = JSON.parse(await fs.readFile(path.join(root, '.harness/workflow.json'), 'utf8'));
   const relative = new Set(['.harness/plans/todo-plan.md', '.harness/workflow.json', '.harness/kit/WORKFLOW.md',
     'scripts/workflow', 'scripts/workflow.cmd', 'scripts/workflow.mjs', config.documentation?.index]);
-  if (selectedPlanPath) relative.add(selectedPlanPath);
-  if (selection.sessionId) for (const directory of ['.harness/plans/by-id', '.harness/plans/by-session'])
-    for (const file of await treeFiles(root, directory)) relative.add(file);
   for (const doc of plan.context_pack.documents) relative.add(doc.path);
   for (const task of plan.tasks) {
     for (const file of [...task.functional_paths, ...task.documentation_paths]) relative.add(file);
@@ -115,7 +105,7 @@ export async function contextInputKey(workspace, selection = {}) {
   }
   const transaction = states.find(([file]) => file === path.join(gitDir, 'workflow-kit/transaction.json'));
   if (transaction?.[1]) throw inputError('Commit transaction active');
-  return digest(JSON.stringify({ version: 2, root, selection, planRevision: plan.plan_revision, head, status, replacements, index, states }));
+  return digest(JSON.stringify({ version: 3, root, planRevision: plan.plan_revision, head, status, replacements, index, states }));
 }
 
 // The application shares readiness's complete input inventory with its addressed
@@ -124,6 +114,5 @@ export async function readinessContextKey(setup, workspace, selection = {}) {
   const result = await setup.ready(workspace);
   if (result.ready !== true || result.workspace !== workspace || typeof result.inputKey !== 'string' || !result.inputKey)
     throw inputError('Workspace readiness could not be confirmed');
-  const address = { sessionId: selection.sessionId ?? null, planId: selection.planId ?? null };
-  return digest(JSON.stringify({ version: 3, workspace, selection: address, readiness: result.inputKey }));
+  return digest(JSON.stringify({ version: 4, workspace, readiness: result.inputKey }));
 }

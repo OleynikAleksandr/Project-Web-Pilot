@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 632,
+  "plan_revision": 634,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-owned-plans-028",
@@ -902,7 +902,8 @@
         "src/mac-runtime-switch.mjs",
         "tests/context-session.test.mjs",
         "tests/context-cache.test.mjs",
-        "tests/mcp-runtime.test.mjs"
+        "tests/mcp-runtime.test.mjs",
+        "src/session-plans.mjs"
       ],
       "documentation_paths": [],
       "verification_ids": [
@@ -916,13 +917,23 @@
         "Startup message описывает общий current plan, а не session ownership"
       ],
       "expected_commit_message": "refactor: recover current checkout context",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-owned-plans-028",
         "task_id": "T017",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "src/context-cache.mjs",
+        "src/context-inputs.mjs",
+        "src/context-session.mjs",
+        "src/mac-runtime-switch.mjs",
+        "src/mcp-runtime.mjs",
+        "src/session-plans.mjs",
+        "tests/context-cache.test.mjs",
+        "tests/context-session.test.mjs"
+      ]
     },
     {
       "id": "T018",
@@ -1131,7 +1142,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-owned-plans-028
 Current Task: нет
-Revision: 632
+Revision: 634
 
 ## Цель
 
@@ -1212,10 +1223,10 @@ Revision: 632
   - Git Commit: [DONE] refactor: project sessions use current checkout plan
   - Reference: session-owned-plans-028 / T016 / implementation
   - Файлы: src/session-plans.mjs, src/workspace-session.mjs, tests/workspace-session.test.mjs, tests/session-plans.test.mjs, docs/planning/single-active-plan-adaptation.md
-- [TODO] T017: Отвязать recovery и cache от session-owned plan — Ожидает
-  - Git Commit: [PENDING] refactor: recover current checkout context
+- [DONE] T017: Отвязать recovery и cache от session-owned plan — Завершено
+  - Git Commit: [DONE] refactor: recover current checkout context
   - Reference: session-owned-plans-028 / T017 / implementation
-  - Файлы: src/context-session.mjs, src/context-cache.mjs, src/context-inputs.mjs, src/mcp-runtime.mjs, src/mac-runtime-switch.mjs, tests/context-session.test.mjs, tests/context-cache.test.mjs, tests/mcp-runtime.test.mjs
+  - Файлы: src/context-session.mjs, src/context-cache.mjs, src/context-inputs.mjs, src/mcp-runtime.mjs, src/mac-runtime-switch.mjs, tests/context-session.test.mjs, tests/context-cache.test.mjs, tests/mcp-runtime.test.mjs, src/session-plans.mjs
 - [TODO] T018: Удалить prepared-plan и ownership routing из UI — Ожидает
   - Git Commit: [PENDING] refactor: remove session plan handoff UI
   - Reference: session-owned-plans-028 / T018 / implementation

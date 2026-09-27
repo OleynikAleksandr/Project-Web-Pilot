@@ -45,7 +45,10 @@ test('the first message contains the exact complete packet and asks for a short 
   for(const item of ['"/Projects/Мой проект"','session-1','unique-request','коротко подтверди','опиши назначение проекта','не вызывай инструменты'])assert.ok(text.includes(item));
   for(const name of ['workflow_context_recover','workflow_context_ack','workflow_context_hook'])assert.ok(!text.includes(name));
   assert.equal(packetMatchesProject(p,project),true);
+  assert.equal(packetMatchesProject({...p,session_id:'legacy-other',plan_id:'historical-plan'},project),true);
   assert.equal(packetMatchesProject(p,{...project,planRevision:8}),false);
+  assert.ok(text.includes('текущему checkout/worktree'));
+  assert.ok(text.includes('только для навигации разговора'));
 });
 
 test('loads once, saves full message before send, and reopens the same chat without another recovery or send',async()=>{
@@ -226,10 +229,10 @@ test('source edit after fill blocks send even when plan revision is unchanged',a
   assert.equal(f.saved.attempt.state,'prepared');assert.equal(f.saved.attempt.sendStartedAtMs,null);
 });
 
-test('matching project facts cannot authorize a packet prepared for another session', async()=>{
-  const f=controllerFixture();f.runtime.loadContext=async()=>({...packet(),session_id:'other-session'});
-  await f.controller.tick();assert.equal(f.sends(),0);assert.equal(f.saved.attempt,null);
-  assert.equal(f.controller.state.error.code,'MCP_CONTEXT_SESSION_MISMATCH');
+test('legacy session echo does not route a packet with matching current checkout facts', async()=>{
+  const f=controllerFixture();f.runtime.loadContext=async()=>({...packet(),session_id:'other-session',plan_id:'historical-plan'});
+  await f.controller.tick();assert.equal(f.sends(),1);assert.equal(f.saved.attempt.state,'sent');
+  await f.controller.tick();assert.equal(f.controller.state.phase,'delivered');assert.equal(f.controller.state.error,null);
 });
 
 test('saved sent, legacy and unknown chats are observed without services or recovery warmup', async () => {

@@ -166,10 +166,8 @@ export class CodexAppServerRuntime {
     return { ...status, connection };
   }
 
-  async loadContext(workspace, selection = {}) {
-    if (selection.sessionId) return validateContextPacket(await this.sessionPlans.loadContext(workspace, selection), workspace, selection);
-    if (!this.client) await this.ensure();
-    return this.client.loadContext(workspace);
+  async loadContext(workspace) {
+    return validateContextPacket(await this.sessionPlans.loadContext(workspace), workspace);
   }
 }
 
