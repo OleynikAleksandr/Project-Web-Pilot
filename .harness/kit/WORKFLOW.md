@@ -124,3 +124,7 @@ Kit 1.4.5: plan:extend при активной DOCS откладывает её 
 ## Планы сессий 1.4.12
 
 План сессии, созданный из NONE командой с `--session`, хранится по адресу сессии `.harness/plans/by-session/<sessionId>.md`; подготовленные и прежние планы — в `.harness/plans/by-id/`. Оба каталога канонические: их читают status, recovery, pre-push, установщик, проверка готовности и интерфейс приложения. Обновление поддерживает установки 1.1.0–1.4.11.
+
+## Prepared-plan recovery 1.4.13
+
+Read-only commands `status`, `validate` and `recover` may address a prepared plan with the originating `--session` plus explicit `--plan` before `plan:bind`. Mutating task/commit commands remain owner-only. Installer upgrade supports 1.4.12 → 1.4.13.
