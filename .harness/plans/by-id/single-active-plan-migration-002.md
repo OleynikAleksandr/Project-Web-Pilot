@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 7,
+  "plan_revision": 9,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "single-active-plan-migration-002",
@@ -196,8 +196,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "single-active-plan-migration-002",
         "task_id": "T003",
@@ -212,7 +212,8 @@
         "src/lib/installation-files.mjs",
         "src/lib/command-help.mjs",
         "src/schemas/plan.schema.json",
-        "src/schemas/workflow.schema.json"
+        "src/schemas/workflow.schema.json",
+        "scripts/check-package.mjs"
       ],
       "documentation_paths": [
         "src/WORKFLOW.md",
@@ -237,7 +238,18 @@
         "Templates учат one checkout = one current plan и Git worktree для параллельности.",
         "Fresh install не требует by-id/by-session routing."
       ],
-      "expected_commit_message": "docs: закрепить single-active workflow contract"
+      "expected_commit_message": "docs: закрепить single-active workflow contract",
+      "actual_files": [
+        "scripts/check-package.mjs",
+        "src/WORKFLOW.md",
+        "src/lib/command-help.mjs",
+        "src/lib/recovery.mjs",
+        "src/templates/AGENTS.md",
+        "src/templates/CONTINUE.md",
+        "src/templates/PLAN.md",
+        "src/templates/STAGES.md",
+        "src/templates/START.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -411,7 +423,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: single-active-plan-migration-002
 Current Task: нет
-Revision: 7
+Revision: 9
 
 ## Цель
 
@@ -436,10 +448,10 @@ Revision: 7
   - Git Commit: [DONE] feat: мигрировать legacy session plans в историю
   - Reference: single-active-plan-migration-002 / T002 / implementation
   - Файлы: src/lib/installer.mjs, src/lib/session-plans.mjs, src/lib/installation-files.mjs, src/lib/inspection-inputs.mjs, src/lib/common.mjs, src/lib/plan.mjs, scripts/check-runtime-fixture.mjs, src/lib/transaction.mjs, docs/planning/single-active-plan-migration.md
-- [TODO] T003: Сделать recovery, inspection и generated instructions sessionless — Ожидает
-  - Git Commit: [PENDING] docs: закрепить single-active workflow contract
+- [DONE] T003: Сделать recovery, inspection и generated instructions sessionless — Завершено
+  - Git Commit: [DONE] docs: закрепить single-active workflow contract
   - Reference: single-active-plan-migration-002 / T003 / implementation
-  - Файлы: src/lib/recovery.mjs, src/lib/inspection-inputs.mjs, src/lib/installation-files.mjs, src/lib/command-help.mjs, src/schemas/plan.schema.json, src/schemas/workflow.schema.json, src/WORKFLOW.md, src/templates/AGENTS.md, src/templates/START.md, src/templates/PLAN.md, src/templates/CONTINUE.md, src/templates/STAGES.md, src/templates/PROTOTYPE.md, docs/planning/single-active-plan-migration.md
+  - Файлы: src/lib/recovery.mjs, src/lib/inspection-inputs.mjs, src/lib/installation-files.mjs, src/lib/command-help.mjs, src/schemas/plan.schema.json, src/schemas/workflow.schema.json, scripts/check-package.mjs, src/WORKFLOW.md, src/templates/AGENTS.md, src/templates/START.md, src/templates/PLAN.md, src/templates/CONTINUE.md, src/templates/STAGES.md, src/templates/PROTOTYPE.md, docs/planning/single-active-plan-migration.md
 - [TODO] T004: Закрепить regression coverage для legacy sessions и Git worktrees — Ожидает
   - Git Commit: [PENDING] test: закрепить single-active plan regressions
   - Reference: single-active-plan-migration-002 / T004 / implementation

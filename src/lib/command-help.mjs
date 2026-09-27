@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 
 const template = name => fs.readFileSync(new URL('../templates/' + name + '.md', import.meta.url), 'utf8');
-const address = 'Для общего плана адрес не нужен. Если recovery содержит sessionId, добавляй --session <sessionId>; для другого плана также --plan <planId>. N — текущая plan_revision из recovery/status.';
+const address = 'Один checkout/worktree имеет один current plan в .harness/plans/todo-plan.md. Команды не требуют session selector; N — текущая plan_revision из recovery/status. Для независимой параллельной работы используй отдельный Git worktree.';
 const topics = {
   'plan:create': () => template('PLAN') + '\n\n' + template('SPEC'),
   'plan:extend': () => template('CONTINUE'),
@@ -11,7 +11,7 @@ const topics = {
   status: () => './scripts/workflow status\nСвежие состояние плана, задачи, Git, revision и незавершённая транзакция. Не заменяет проверку файлов перед записью.',
   recover: () => './scripts/workflow recover --format text\nПолный стартовый контекст. Для машинного чтения --format json; для inline-контракта --format packet. Не перечитывай уже доставленный неизменившийся пакет.',
   validate: () => './scripts/workflow validate\nПроверяет согласованность плана и Git, не выполняет продуктовые тесты.',
-  'plan:view': () => './scripts/workflow plan:view --session <sessionId>\nСобственный план и подготовленные в этой сессии планы.',
+  'plan:view': () => './scripts/workflow plan:view\nПоказывает единственный current plan этого checkout. --session временно принимается только как compatibility metadata.',
   'plan:apply': () => './scripts/workflow plan:apply --input changes.json --expected-revision N\nУточняет текущий план. Для добавления задач проще plan:extend. Сохраняй DONE-задачи и машинные статусы; пример разрешённого изменения: {"acceptance_criteria":["Проверяемый результат"]}.',
   'config:apply': () => './scripts/workflow config:apply --input config.json\nПолная конфигурация проверок, не частичный patch. Прочитай .harness/workflow.json и сохрани остальные поля. Для нового прототипа plan:create настраивает проверки из checks.',
   repair: () => './scripts/workflow repair --dry-run\nПолучить конкретный repair_id, затем --apply <repair_id>. --cancel <repair_id> отменяет неподтверждённую подготовку commit, сохраняя рабочие файлы. Не удаляй журнал вручную.',
