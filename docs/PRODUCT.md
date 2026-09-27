@@ -1,9 +1,25 @@
 # WorkflowKit
 
-WorkflowKit — самостоятельный локальный Node.js package `@webpilot/workflow-kit`, который владеет единственным редактируемым исходником Workflow Kit.
+WorkflowKit — самостоятельный локальный Node.js package `@webpilot/workflow-kit`, который является единственным редактируемым источником Workflow Kit.
 
-Основной сценарий: разработчик меняет Kit только в этом репозитории; проекты получают installed runtime через installer, а приложения подключают package как dependency. Ручное копирование исходника Workflow Kit между WebPilot, будущим ChatGPT adapter и другими клиентами не требуется.
+Текущий release: **1.5.0**. Требуется Node.js 22+.
 
-Текущая версия package: **1.4.13**. Требуется Node.js 22+.
+## Основная модель
 
-Для следующего этапа Project Web Pilot подключает этот package в отдельной сессии и удаляет собственный tracked duplicate `resources/workflow-kit`. Подробный контракт: [docs/modules/workflow-kit-package.md](modules/workflow-kit-package.md).
+Один Git checkout/worktree имеет один current plan:
+
+```text
+.harness/plans/todo-plan.md
+```
+
+Chat, WebPilot session и другой клиент не владеют plan. Новый chat продолжает current state checkout; независимая параллельная работа выполняется в отдельном Git worktree.
+
+Legacy `by-id/by-session` сохраняются только как read-only history при upgrade. Старый `--session` временно поддерживается как compatibility/no-op, но не выбирает project state.
+
+## Использование
+
+Разработчик меняет Kit только в этом репозитории. Проекты получают installed runtime через installer в `.harness/kit`, а приложения подключают package как dependency. `getRuntimeRoot()` предоставляет self-contained runtime payload для staging в готовые приложения.
+
+Project Web Pilot должен использовать checkout-scoped consumer contract: `currentPlanView(root)` для нового кода и временный `sessionPlanView(root, sessionId)` для чтения старых chat records без session ownership.
+
+Подробный контракт: [Workflow Kit Package](modules/workflow-kit-package.md).

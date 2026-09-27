@@ -2,9 +2,11 @@
 
 ## Статус
 
-IMPLEMENTED / READY FOR WEBPILOT MIGRATION
+HISTORICAL BASELINE / SUPERSEDED BY WORKFLOW KIT 1.5.0
 
 Дата: 2026-09-26
+
+Этот документ сохраняет фактическую историю выделения canonical package из baseline 1.4.12. Он не является текущим workflow contract. Актуальная модель single-active plan описана в [Workflow Kit Package](../modules/workflow-kit-package.md) и [Single Active Plan Migration](single-active-plan-migration.md).
 
 ## Зачем меняем устройство
 

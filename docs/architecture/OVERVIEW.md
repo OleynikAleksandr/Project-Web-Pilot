@@ -2,26 +2,28 @@
 
 ## Назначение
 
-WorkflowKit — canonical Node.js package существующего Workflow Kit. Репозиторий `/Users/oleksandroliinyk/VSCODE/WorkflowKit` является единственным местом разработки кода Kit; текущая версия package — 1.4.13.
+WorkflowKit — canonical Node.js package `@webpilot/workflow-kit`. Репозиторий `/Users/oleksandroliinyk/VSCODE/WorkflowKit` является единственным местом разработки кода Kit. Текущий release — **1.5.0**.
 
 ## Устройство
 
 ```text
 @webpilot/workflow-kit
-├── index.mjs          # public package API
-├── src/               # canonical 35-файловый Workflow Kit runtime source
+├── index.mjs          # public package API и consumer facade
+├── src/               # canonical 35-файловый runtime source
 ├── scripts/           # package/runtime/consumer проверки
-└── .harness/kit/      # установленный self-host runtime этого проекта, не source
+└── .harness/kit/      # self-host installed runtime, производный от package
 ```
 
-Обычный проект по-прежнему получает собственный installed runtime `.harness/kit` через installer. Такой runtime является производным snapshot, а не отдельной версией исходника.
+Project state принадлежит Git checkout/worktree. Единственный runtime current plan — `.harness/plans/todo-plan.md`. Chat/session не выбирает plan; старый `--session` — только transition metadata. Параллельный независимый state требует отдельного Git worktree.
 
-Внешние клиенты используют package imports. Для приложений, которым нужен физический runtime resource, `getRuntimeRoot()` возвращает canonical runtime payload для автоматического staging в build/resources.
+Upgrade со старой session-owned установки оставляет valid `todo-plan.md` current winner и переносит `by-id/by-session` в read-only history без merge. Historical recovery не участвует в normal readiness; strict transport limit применяется к current recovery.
 
-## Следующий потребитель
+Внешние клиенты используют package imports. `currentPlanView(root)` — основной consumer API; `sessionPlanView(root, sessionId)` временно сохраняется для старых WebPilot chat records. `getRuntimeRoot()` даёт runtime payload для автоматического staging.
 
-Project Web Pilot должен быть мигрирован в своём workspace: tracked `resources/workflow-kit` заменяется dependency `@webpilot/workflow-kit`; физический `resources/workflow-kit`, если он нужен существующему external worker, становится только generated staging/build artifact.
+## Проверка
 
-После успешной миграции WebPilot тот же package будет использовать ChatGPT MCP App adapter.
+Canonical runtime: 35 файлов; SHA-256 `0db567df6f0c8f68f3119a7322b4c1c6d28cd06bf57b267993b792097bbb2c75`.
 
-Подробный контракт: [Workflow Kit Package](../modules/workflow-kit-package.md). План миграции: [Canonical Workflow Kit Package](../planning/canonical-workflow-kit-package.md).
+Проверки: `node scripts/check-package.mjs`, `node scripts/check-runtime-fixture.mjs`, `node scripts/check-consumer-contract.mjs`.
+
+Подробный контракт: [Workflow Kit Package](../modules/workflow-kit-package.md). История package extraction: [Canonical Workflow Kit Package](../planning/canonical-workflow-kit-package.md). Спецификация миграции state: [Single Active Plan Migration](../planning/single-active-plan-migration.md).

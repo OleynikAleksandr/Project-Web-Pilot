@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 15,
+  "plan_revision": 18,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "single-active-plan-migration-002",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Перевести Workflow Kit с session-owned plans на один active todo-plan.md для каждого Git checkout/worktree, безопасно мигрировать legacy plans и подготовить совместимый consumer contract для Project Web Pilot.",
   "acceptance_criteria": [
     "Один checkout/worktree имеет ровно один current plan в .harness/plans/todo-plan.md.",
@@ -59,7 +59,8 @@
       "src/templates/PLAN.md",
       "src/templates/CONTINUE.md",
       "src/templates/STAGES.md",
-      "src/templates/PROTOTYPE.md"
+      "src/templates/PROTOTYPE.md",
+      "docs/WORKFLOW_START.md"
     ]
   },
   "baseline_commit": "b895149436ca3d2a390bced85e275196a3e76530",
@@ -380,8 +381,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "single-active-plan-migration-002",
         "task_id": "DOCS",
@@ -411,13 +412,25 @@
         "src/templates/CONTINUE.md",
         "src/templates/STAGES.md",
         "src/templates/PROTOTYPE.md",
-        "docs/modules/workflow-kit-package.md"
+        "docs/modules/workflow-kit-package.md",
+        "docs/PRODUCT.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/planning/canonical-workflow-kit-package.md",
+        "docs/WORKFLOW_START.md"
       ],
       "acceptance_criteria": [
         "Все документы из индекса проверены; устаревшие сведения и ссылки исправлены; после этого результат готов только к пользовательской приёмке."
       ],
       "verification_ids": [],
-      "expected_commit_message": "docs: актуализировать документацию проекта"
+      "expected_commit_message": "docs: актуализировать документацию проекта",
+      "actual_files": [
+        "docs/PRODUCT.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/MODULES.md",
+        "docs/planning/canonical-workflow-kit-package.md"
+      ]
     }
   ],
   "blocked_reason": null,
@@ -438,10 +451,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: single-active-plan-migration-002
 Current Task: нет
-Revision: 15
+Revision: 18
 
 ## Цель
 
@@ -482,10 +495,10 @@ Revision: 15
   - Git Commit: [DONE] release: подготовить single-active Workflow Kit
   - Reference: single-active-plan-migration-002 / T006 / implementation
   - Файлы: package.json, src/lib/common.mjs, src/lib/installer.mjs, scripts/check-package.mjs, scripts/check-runtime-fixture.mjs, scripts/check-consumer-contract.mjs, docs/modules/workflow-kit-package.md, docs/planning/single-active-plan-migration.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать документацию проекта
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать документацию проекта
   - Reference: single-active-plan-migration-002 / DOCS / implementation
-  - Файлы: docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/planning/single-active-plan-migration.md, src/WORKFLOW.md, src/templates/AGENTS.md, src/templates/START.md, src/templates/PLAN.md, src/templates/CONTINUE.md, src/templates/STAGES.md, src/templates/PROTOTYPE.md, docs/modules/workflow-kit-package.md
+  - Файлы: docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/planning/single-active-plan-migration.md, src/WORKFLOW.md, src/templates/AGENTS.md, src/templates/START.md, src/templates/PLAN.md, src/templates/CONTINUE.md, src/templates/STAGES.md, src/templates/PROTOTYPE.md, docs/modules/workflow-kit-package.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/planning/canonical-workflow-kit-package.md, docs/WORKFLOW_START.md
 
 ## Context Pack For This Cycle
 
