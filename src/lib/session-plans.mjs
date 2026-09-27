@@ -1,77 +1,71 @@
 import fs from 'node:fs';
-import path from 'node:path';
-import { PLAN, check, safePath, textFile, withPlanFile, currentPlanSelection } from './common.mjs';
-import { parsePlan, emptyPlan } from './plan.mjs';
+import { PLAN, check, safePath, textFile, withPlanFile } from './common.mjs';
+import { parsePlan } from './plan.mjs';
 
+// Legacy locations are retained only as compatibility/migration constants.
+// They are not part of normal runtime plan selection.
 export const PLANS_DIRECTORY = '.harness/plans/by-id';
-// A session plan created from NONE is materialized at its session address; it is canonical too.
 export const SESSION_PLANS_DIRECTORY = '.harness/plans/by-session';
 export const PLAN_DIRECTORIES = [PLANS_DIRECTORY, SESSION_PLANS_DIRECTORY];
+
 export const validIdentity = (value, label = 'ID') => {
   check(typeof value === 'string' && /^[A-Za-z0-9][A-Za-z0-9._-]{0,180}$/.test(value), 'PLAN_ID', 'Некорректный ' + label);
   return value;
 };
+
+// Kept for legacy tooling that needs to identify the old path layout.
 export const ownedPlanPath = planId => PLANS_DIRECTORY + '/' + validIdentity(planId, 'planId') + '.md';
-export function listPlans(root, { projection = true } = {}) {
-  const files = fs.existsSync(safePath(root, PLAN)) ? [PLAN] : [];
-  for (const relative of PLAN_DIRECTORIES) {
-    const directory = safePath(root, relative);
-    if (fs.existsSync(directory)) for (const entry of fs.readdirSync(directory, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
-      check(!entry.isSymbolicLink(), 'SYMLINK_PATH', 'Планы не могут быть символическими ссылками.');
-      if (entry.isFile() && entry.name.endsWith('.md')) files.push(relative + '/' + entry.name);
-    }
-  }
-  const result = files.map(file => ({ file, plan: parsePlan(textFile(root, file), { projection }) }));
-  const ids = result.filter(r => r.plan.scope_id).map(r => r.plan.scope_id);
-  const owners = result.filter(r => r.plan.owner_session_id).map(r => r.plan.owner_session_id);
-  check(new Set(ids).size === ids.length && new Set(owners).size === owners.length, 'PLAN_OWNERSHIP_CONFLICT', 'Обнаружена неоднозначная принадлежность плана. Данные сохранены.');
-  return result;
+
+function currentPlan(root, { projection = true } = {}) {
+  const file = safePath(root, PLAN);
+  check(fs.existsSync(file), 'MISSING_FILE', 'Отсутствует навигационный план проекта.');
+  return { file: PLAN, plan: parsePlan(textFile(root, PLAN), { projection }) };
 }
-export function selectPlan(root, { sessionId, planId, allowDraft = false, allowUnowned = false, legacy = false } = {}) {
+
+// Public compatibility: normal enumeration now exposes exactly one
+// checkout-scoped current plan.
+export function listPlans(root, options = {}) {
+  return [currentPlan(root, options)];
+}
+
+export function selectPlan(root, { sessionId, planId } = {}) {
   if (sessionId !== undefined && sessionId !== null) validIdentity(sessionId, 'sessionId');
   if (planId !== undefined && planId !== null) validIdentity(planId, 'planId');
-  const plans = listPlans(root);
-  const base = plans.find(r => r.file === PLAN)?.plan;
-  check(base, 'MISSING_FILE', 'Отсутствует навигационный план проекта.');
-  const addressed = plans.some(r => r.plan.owner_session_id || r.plan.prepared_in_session_id);
-  if (!sessionId && !planId) {
-    check(legacy || !addressed, 'SESSION_REQUIRED', 'Укажите --session из контекста этого чата. Выбор в интерфейсе не адресует команды.');
-    return { file: PLAN, plan: base, sessionId: null };
+  const selected = currentPlan(root);
+  if (planId !== undefined && planId !== null) {
+    check(selected.plan.scope_id === planId, 'PLAN_NOT_CURRENT',
+      'Указанный planId не является текущим plan этого checkout. Historical plans доступны только для чтения истории.',
+      { requested_plan_id: planId, current_plan_id: selected.plan.scope_id });
   }
-  let selected = planId ? plans.find(r => r.plan.scope_id === planId)
-    : plans.find(r => r.plan.owner_session_id === sessionId);
-  if (!selected && planId && allowUnowned) {
-    const archived = '.harness/plans/archive/' + planId + '.md';
-    if (fs.existsSync(safePath(root, archived))) selected = { file: ownedPlanPath(planId), plan: parsePlan(textFile(root, archived)), virtual: true };
-  }
-  if (planId) check(selected, 'PLAN_NOT_FOUND', 'План не найден: ' + planId);
-  if (selected) {
-    if (sessionId) check(selected.plan.owner_session_id === sessionId
-      || (allowDraft && selected.plan.prepared_in_session_id === sessionId)
-      || (allowUnowned && !selected.plan.owner_session_id && !selected.plan.prepared_in_session_id), 'PLAN_OWNER_MISMATCH', 'Этот план не принадлежит данной сессии.');
-    return { ...selected, sessionId: sessionId ?? selected.plan.owner_session_id ?? null };
-  }
-  const plan = { ...emptyPlan(base.project_name), project_id: base.project_id, owner_session_id: sessionId };
-  return { file: SESSION_PLANS_DIRECTORY + '/' + sessionId + '.md', plan, sessionId, virtual: true };
+  return { ...selected, sessionId: sessionId ?? null };
 }
+
+// Transitional facade for old WebPilot callers. Session metadata is echoed
+// but never selects or owns project state.
 export function withSessionPlan(root, selector, fn) {
   const selected = selectPlan(root, selector);
-  return withPlanFile(root, selected.file, { sessionId: selected.sessionId, virtualPlan: selected.virtual ? selected.plan : null }, () => fn(selected));
+  return withPlanFile(root, PLAN, { sessionId: selected.sessionId }, () => fn(selected));
 }
+
 export function sessionPlanView(root, sessionId) {
-  const own = selectPlan(root, { sessionId });
-  const prepared = listPlans(root).filter(r => r.plan.prepared_in_session_id === sessionId);
-  return { ok: true, session_id: sessionId, plan_id: own.plan.scope_id, plan_path: own.virtual ? null : own.file,
-    plan: own.plan, prepared: prepared.map(r => ({ plan_id: r.plan.scope_id, plan_path: r.file, plan: r.plan })),
-    unassigned: listPlans(root).filter(r => r.plan.scope_id && !r.plan.owner_session_id && !r.plan.prepared_in_session_id)
-      .map(r => ({ plan_id: r.plan.scope_id, objective: r.plan.objective, plan_path: r.file })) };
+  if (sessionId !== undefined && sessionId !== null) validIdentity(sessionId, 'sessionId');
+  const current = currentPlan(root);
+  return {
+    ok: true,
+    session_id: sessionId ?? null,
+    plan_id: current.plan.scope_id,
+    plan_path: PLAN,
+    plan: current.plan,
+    prepared: [],
+    unassigned: [],
+  };
 }
-export function assertSingleWriter(root, targetFile) {
-  const busy = listPlans(root).find(r => r.file !== targetFile && r.plan.current_task_id);
-  check(!busy, 'PLAN_WRITER_BUSY', 'Сначала завершите начатую микрозадачу другого плана.', { plan_id: busy?.plan.scope_id, task_id: busy?.plan.current_task_id });
+
+// Single current plan means there is no second runtime writer to arbitrate.
+export function assertSingleWriter(_root, targetFile) {
+  check(targetFile === PLAN, 'PLAN_NOT_CURRENT', 'Runtime operations may modify only the current checkout plan.');
 }
-export function assertSelectionOwner(plan) {
-  const selection = currentPlanSelection();
-  if (selection?.sessionId && plan.owner_session_id)
-    check(plan.owner_session_id === selection.sessionId, 'PLAN_OWNER_MISMATCH', 'Владелец плана изменился; перечитайте контекст.');
-}
+
+// Ownership no longer exists. Kept as a no-op export for package consumers
+// during the compatibility window.
+export function assertSelectionOwner() {}

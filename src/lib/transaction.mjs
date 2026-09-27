@@ -116,7 +116,7 @@ export function commitTask(root, taskId, actualFiles) {
   return locked(root, () => {
     const pending = journal(root);
     if (pending) {
-      check((pending.plan_path ?? '.harness/plans/todo-plan.md') === planPath(root), 'TRANSACTION_TARGET_MISMATCH', 'Незавершённый commit принадлежит другой сессии.');
+      check((pending.plan_path ?? '.harness/plans/todo-plan.md') === planPath(root), 'TRANSACTION_TARGET_MISMATCH', 'Незавершённый commit относится к другому plan path.');
       check(pending.task_id === taskId, 'TRANSACTION_PENDING', 'Другая задача ожидает завершения commit.');
       const done = completedTransaction(root, pending); if (done) return finishTransaction(root, pending, done);
       const plan = parsePlan(pending.candidate_plan);

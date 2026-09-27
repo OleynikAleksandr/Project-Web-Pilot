@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 3,
+  "plan_revision": 5,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "single-active-plan-migration-002",
@@ -101,8 +101,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "single-active-plan-migration-002",
         "task_id": "T001",
@@ -119,7 +119,8 @@
         "src/lib/extend-plan.mjs",
         "src/lib/transaction.mjs",
         "src/lib/validate.mjs",
-        "src/lib/command-help.mjs"
+        "src/lib/command-help.mjs",
+        "scripts/check-runtime-fixture.mjs"
       ],
       "documentation_paths": [
         "docs/planning/single-active-plan-migration.md"
@@ -137,7 +138,15 @@
         "Новые current plans не получают owner_session_id/prepared_in_session_id.",
         "plan:prepare/plan:bind не создают новую постоянную session-owned semantics."
       ],
-      "expected_commit_message": "feat: перейти на один active plan checkout"
+      "expected_commit_message": "feat: перейти на один active plan checkout",
+      "actual_files": [
+        "scripts/check-runtime-fixture.mjs",
+        "src/cli.mjs",
+        "src/lib/actions.mjs",
+        "src/lib/command-help.mjs",
+        "src/lib/session-plans.mjs",
+        "src/lib/transaction.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -393,7 +402,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: single-active-plan-migration-002
 Current Task: нет
-Revision: 3
+Revision: 5
 
 ## Цель
 
@@ -410,10 +419,10 @@ Revision: 3
 
 ## Микрозадачи
 
-- [TODO] T001: Перевести core routing и CLI на один active plan checkout — Ожидает
-  - Git Commit: [PENDING] feat: перейти на один active plan checkout
+- [DONE] T001: Перевести core routing и CLI на один active plan checkout — Завершено
+  - Git Commit: [DONE] feat: перейти на один active plan checkout
   - Reference: single-active-plan-migration-002 / T001 / implementation
-  - Файлы: src/cli.mjs, src/lib/session-plans.mjs, src/lib/common.mjs, src/lib/plan.mjs, src/lib/actions.mjs, src/lib/task-update.mjs, src/lib/extend-plan.mjs, src/lib/transaction.mjs, src/lib/validate.mjs, src/lib/command-help.mjs, docs/planning/single-active-plan-migration.md
+  - Файлы: src/cli.mjs, src/lib/session-plans.mjs, src/lib/common.mjs, src/lib/plan.mjs, src/lib/actions.mjs, src/lib/task-update.mjs, src/lib/extend-plan.mjs, src/lib/transaction.mjs, src/lib/validate.mjs, src/lib/command-help.mjs, scripts/check-runtime-fixture.mjs, docs/planning/single-active-plan-migration.md
 - [TODO] T002: Реализовать безопасную legacy migration и single-plan readiness — Ожидает
   - Git Commit: [PENDING] feat: мигрировать legacy session plans в историю
   - Reference: single-active-plan-migration-002 / T002 / implementation
