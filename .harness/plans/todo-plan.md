@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 638,
+  "plan_revision": 639,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-owned-plans-028",
@@ -1033,7 +1033,10 @@
         "tests/workspace-session.test.mjs",
         "tests/context-session.test.mjs",
         "tests/sidebar.test.mjs",
-        "tests/electron-smoke.mjs"
+        "tests/electron-smoke.mjs",
+        "tests/session-plans.test.mjs",
+        "tests/workflow-kit-recovery.test.mjs",
+        "tests/workflow-kit-source.test.mjs"
       ],
       "documentation_paths": [],
       "verification_ids": [
@@ -1045,7 +1048,9 @@
         "Old Session A/B сохраняют разные chats и показывают один current plan P",
         "New Session C получает тот же current plan P без отдельного Workflow Kit plan",
         "Node suite и Electron smoke проходят",
-        "Release/build не запускается"
+        "Release/build не запускается",
+        "Single-active regressions Workflow Kit 1.5.0 покрывают no-op --session, один current plan и удалённый plan handoff",
+        "Regression-фаза не собирает release; упаковка выполняется отдельной последующей задачей по новому поручению пользователя"
       ],
       "expected_commit_message": "test: cover single active plan sessions",
       "implementation_status": "TODO",
@@ -1167,7 +1172,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-owned-plans-028
 Current Task: нет
-Revision: 638
+Revision: 639
 
 ## Цель
 
@@ -1263,7 +1268,7 @@ Revision: 638
 - [TODO] T020: Закрепить single-plan migration интеграционными тестами — Ожидает
   - Git Commit: [PENDING] test: cover single active plan sessions
   - Reference: session-owned-plans-028 / T020 / implementation
-  - Файлы: tests/workspace-session.test.mjs, tests/context-session.test.mjs, tests/sidebar.test.mjs, tests/electron-smoke.mjs
+  - Файлы: tests/workspace-session.test.mjs, tests/context-session.test.mjs, tests/sidebar.test.mjs, tests/electron-smoke.mjs, tests/session-plans.test.mjs, tests/workflow-kit-recovery.test.mjs, tests/workflow-kit-source.test.mjs
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: update all project documentation for session plans
   - Reference: session-owned-plans-028 / DOCS / implementation
