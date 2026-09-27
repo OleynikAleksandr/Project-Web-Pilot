@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 646,
+  "plan_revision": 647,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-owned-plans-028",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Планы сессий и подготовка продолжения",
   "acceptance_criteria": [
     "Каждая сессия показывает собственный сохраняемый план либо NONE; выполненный план продолжается по новому поручению агенту.",
@@ -1106,13 +1106,37 @@
       ]
     },
     {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
+      "id": "T022",
+      "title": "Сохранить compatibility heading документа single-active plan",
+      "why": "Старый self-hosted Workflow Kit текущего workspace адресует этот документ по исходному H1; сохранить anchor до upgrade самого workspace на 1.5.0.",
+      "dependencies": [],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/modules/session-owned-plans.md"
+      ],
+      "verification_ids": [],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Исходный H1 Планы сессий и подготовка продолжения сохранён как compatibility anchor",
+        "Действующий раздел документа однозначно описывает single-active model 0.6.58"
+      ],
+      "expected_commit_message": "docs: preserve plan contract compatibility heading",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "session-owned-plans-028",
+        "task_id": "T022",
+        "role": "implementation"
+      }
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "session-owned-plans-028",
         "task_id": "DOCS",
         "role": "implementation",
-        "iteration": 3
+        "iteration": 4
       },
       "dependencies": [
         "T001",
@@ -1135,7 +1159,8 @@
         "T018",
         "T019",
         "T020",
-        "T021"
+        "T021",
+        "T022"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -1233,10 +1258,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: session-owned-plans-028
 Current Task: нет
-Revision: 646
+Revision: 647
 
 ## Цель
 
@@ -1337,8 +1362,12 @@ Revision: 646
   - Git Commit: [DONE] chore: prepare Web Pilot 0.6.58 for Workflow Kit 1.5.0
   - Reference: session-owned-plans-028 / T021 / implementation
   - Файлы: package.json, package-lock.json, tests/session-plans.test.mjs, tests/workflow-kit-recovery.test.mjs, tests/workflow-kit-source.test.mjs
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: update all project documentation for session plans
+- [TODO] T022: Сохранить compatibility heading документа single-active plan — Ожидает
+  - Git Commit: [PENDING] docs: preserve plan contract compatibility heading
+  - Reference: session-owned-plans-028 / T022 / implementation
+  - Файлы: docs/modules/session-owned-plans.md
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: update all project documentation for session plans
   - Reference: session-owned-plans-028 / DOCS / implementation
   - Файлы: docs/modules/session-owned-plans.md, docs/design/session-plan-navigation.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/DECISIONS.md, docs/WORKFLOW_START.md, docs/PRODUCT.md, docs/CONTEXT_DELIVERY.md, docs/modules/workspace-sessions.md, docs/modules/workflow-kit-recovery.md, docs/modules/project-doctor.md, docs/PROJECT_ARCHIVE.md, docs/WORKSPACE_SETUP.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md, docs/CLEAN_INSTALL.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, README.md, AGENTS.md, .harness/kit/WORKFLOW.md, resources/workflow-kit/WORKFLOW.md, .harness/kit/templates/AGENTS.md, resources/workflow-kit/templates/AGENTS.md, .harness/kit/templates/START.md, resources/workflow-kit/templates/START.md, .harness/kit/templates/PLAN.md, resources/workflow-kit/templates/PLAN.md, .harness/plans/todo-plan.template.md, docs/SOURCE_WORKSPACES.md, docs/planning/single-active-plan-adaptation.md
 
