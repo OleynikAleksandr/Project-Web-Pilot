@@ -63,7 +63,7 @@ export async function verifyWindowsPackage(packageDir = path.join(ROOT, '.harnes
   const workflowSha256 = await runtimeDigest(workflowRoot, workflowFiles);
   if (workflowSha256 !== EXPECTED_WORKFLOW_KIT_SHA256) throw new Error(`Workflow Kit SHA mismatch: ${workflowSha256}`);
   const workflowCommon = await fs.readFile(path.join(workflowRoot, 'lib', 'common.mjs'), 'utf8');
-  if (!workflowCommon.includes("VERSION = '1.4.13'")) throw new Error('Workflow Kit version mismatch');
+  if (!workflowCommon.includes("VERSION = '1.5.0'")) throw new Error('Workflow Kit version mismatch');
   const runtimeSha256 = await hashFile(runtimeArchive);
   if (runtimeSha256 !== WINDOWS_RUNTIME_SHA256) throw new Error(`Codex Local Windows SHA mismatch: ${runtimeSha256}`);
   const nodeSha256 = await hashFile(nodeArchive);
@@ -79,7 +79,7 @@ export async function verifyWindowsPackage(packageDir = path.join(ROOT, '.harnes
     runtimeSha256,
     nodeSha256,
     nodeExecutableBytes: nodeStat.size,
-    workflowKit: { version: '1.4.13', files: workflowFiles.length, sha256: workflowSha256 },
+    workflowKit: { version: '1.5.0', files: workflowFiles.length, sha256: workflowSha256 },
     macBundle: false,
   };
 }

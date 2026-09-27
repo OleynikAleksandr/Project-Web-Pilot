@@ -4,7 +4,6 @@ import path from 'node:path';
 import { payload, hooksDirectory, hookContent, BLOCK_START, BLOCK_END, MD_START, MD_END, installationManifest } from '../workflow-kit/lib/installation-files.mjs';
 import { VERSION, MANIFEST, PLAN, withPlanFile, json, hash } from '../workflow-kit/lib/common.mjs';
 import { repoRoot, head, gitPath, ensureIdleGit, localPath } from '../workflow-kit/lib/git.mjs';
-import { listPlans } from '../workflow-kit/lib/session-plans.mjs';
 import { parsePlan, renderPlan } from '../workflow-kit/lib/plan.mjs';
 import { journal, resolveReferences, readConfig } from '../workflow-kit/lib/validate.mjs';
 import { locked, completedTransaction, finishTransaction } from '../workflow-kit/lib/transaction.mjs';
@@ -91,9 +90,10 @@ export function inspectProject(workspace) {
       } else changes.push({ file: target, content: hookContent(content, name), mode: (current?.mode ?? 0o644) | 0o111, label: 'Восстановлена проверка изменений: ' + name });
       if (current && content.includes(BLOCK_START) && process.platform !== 'win32' && !(current.mode & 0o111)) changes.push({ file: target, content, mode: current.mode | 0o111, label: 'Восстановлено право запуска проверки: ' + name });
     }
-    if (!read(PLAN)) throw fail('DOCTOR_PLAN', 'Навигационный план отсутствует. Нужна его резервная копия.');
-    scanTree(file('.harness/plans/by-id')); scanTree(file('.harness/plans/by-session'));
-    const plans = listPlans(root, { projection: false });
+    const currentPlanFile = read(PLAN);
+    if (!currentPlanFile) throw fail('DOCTOR_PLAN', 'Текущий plan отсутствует. Нужна его резервная копия.');
+    const currentRaw = currentPlanFile.content.toString();
+    const currentPlan = parsePlan(currentRaw, { projection: false });
     read('.harness/workflow.json'); readConfig(root);
     regularPath(localPath(root, 'transaction.json')); pending = journal(root);
     observed.add(localPath(root, 'transaction.json'));
@@ -101,12 +101,10 @@ export function inspectProject(workspace) {
       completed = completedTransaction(root, pending);
       if (!completed) throw fail('DOCTOR_PENDING', 'Осталась незавершённая операция фиксации. Продолжите её исходную задачу; доктор не фиксирует работу автоматически.');
     }
-    for (const { file: name, plan } of plans) {
-      const raw = read(name).content.toString();
-      withPlanFile(root, name, {}, () => resolveReferences(root, plan, pending?.plan_path === name || !pending?.plan_path && name === PLAN ? pending : null));
-      if (renderPlan(plan) !== raw) changes.push({ file: file(name), content: renderPlan(plan), mode: readFile(file(name)).mode, label: 'Восстановлено читаемое представление: ' + name });
-    }
-    const required = new Set(['docs/DOCUMENTATION_INDEX.md','docs/WORKFLOW_START.md','docs/PRODUCT.md','docs/architecture/ARCHITECTURE.md','docs/MODULES.md','docs/architecture/OVERVIEW.md','.harness/plans/todo-plan.template.md', ...plans.flatMap(({plan}) => [plan.context_pack, ...plan.tasks.map(task => task.context_pack)].flatMap(pack => (pack?.documents ?? []).filter(e => e.required).map(e => e.path)))]);
+    withPlanFile(root, PLAN, {}, () => resolveReferences(root, currentPlan, pending));
+    if (renderPlan(currentPlan) !== currentRaw) changes.push({ file: file(PLAN), content: renderPlan(currentPlan), mode: currentPlanFile.mode, label: 'Восстановлено читаемое представление текущего plan' });
+    const required = new Set(['docs/DOCUMENTATION_INDEX.md','docs/WORKFLOW_START.md','docs/PRODUCT.md','docs/architecture/ARCHITECTURE.md','docs/MODULES.md','docs/architecture/OVERVIEW.md','.harness/plans/todo-plan.template.md',
+      ...[currentPlan.context_pack, ...currentPlan.tasks.map(task => task.context_pack)].flatMap(pack => (pack?.documents ?? []).filter(e => e.required).map(e => e.path))]);
     for (const name of required) {
       if (typeof name !== 'string' || path.isAbsolute(name) || name.split(/[\\/]/).includes('..')) throw fail('DOCTOR_PATH','Недопустимый путь документа.');
       if (!read(name)) result.issues.push(issue(name, 'Обязательный документ отсутствует. Восстановите его из своей резервной копии или истории проекта.'));
@@ -135,7 +133,7 @@ export function repairProject(workspace, expectedFingerprint) {
     let changes = next.changes;
     // A confirmed commit journal is backed up before its metadata is finalized.
     if (next.completed && !changes.length) changes = [{ file: path.join(root, next.pending.plan_path ?? PLAN), content: readFile(path.join(root, next.pending.plan_path ?? PLAN)).content, mode: readFile(path.join(root, next.pending.plan_path ?? PLAN)).mode, label: 'Сохранён план перед завершением журнала' }];
-    const backupPath = backupAndWrite(root, changes, [...listPlans(root, { projection: false }).map(e => path.join(root, e.file)), path.join(root, MANIFEST), ...(next.pending ? ['transaction.json','index-before','last-verification.json','last-commit.json'].map(name => localPath(root,name)) : [])]);
+    const backupPath = backupAndWrite(root, changes, [path.join(root, PLAN), path.join(root, MANIFEST), ...(next.pending ? ['transaction.json','index-before','last-verification.json','last-commit.json'].map(name => localPath(root,name)) : [])]);
     if (next.completed) withPlanFile(root, next.pending.plan_path ?? PLAN, {}, () => finishTransaction(root, next.pending, next.completed));
     return { ...publicReport(inspectProject(root)), repairs: next.repairs, backupPath, repaired: Boolean(changes.length || next.completed) };
   });

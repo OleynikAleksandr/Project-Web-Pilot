@@ -111,7 +111,7 @@ test('legacy compatible version opens unchanged and unsupported version is expli
   const unsupported = await setup.preview({ mode: 'existing', workspace }); assert.equal(unsupported.action, null); assert.match(unsupported.issues[0].reason, /9.0.0/);
 });
 
-test('compatible 1.2 NONE installation upgrades to 1.4 with project continuity and preserves user documents', async t => {
+test('compatible 1.2 installation upgrades to the current Kit and preserves user documents', async t => {
   const { setup, workspace } = await create(t);
   const manifestFile = path.join(workspace, '.harness/kit-manifest.json');
   const manifest = JSON.parse(await fs.readFile(manifestFile, 'utf8')); manifest.version = '1.2.0';
@@ -122,13 +122,6 @@ test('compatible 1.2 NONE installation upgrades to 1.4 with project continuity a
   await fs.writeFile(manifestFile, JSON.stringify(manifest, null, 2) + '\n');
 
   const planFile = path.join(workspace, '.harness/plans/todo-plan.md');
-  let planText = await fs.readFile(planFile, 'utf8');
-  const block = planText.match(/<!-- workflow-state:begin -->\s*```json\s*([\s\S]*?)```\s*<!-- workflow-state:end -->/);
-  const legacyPlan = JSON.parse(block[1]); legacyPlan.objective = '';
-  legacyPlan.context_pack = { documents: [], include_last_completed_task: false, dependency_task_ids: [] };
-  const legacyBlock = '<!-- workflow-state:begin -->\n```json\n' + JSON.stringify(legacyPlan, null, 2) + '\n```\n<!-- workflow-state:end -->';
-  planText = planText.slice(0, block.index) + legacyBlock + planText.slice(block.index + block[0].length);
-  await fs.writeFile(planFile, planText);
 
   await fs.writeFile(path.join(workspace, 'docs/architecture/OVERVIEW.md'), '# Краткая архитектура проекта\n\nCUSTOM_OVERVIEW_STAYS\n');
   await fs.writeFile(path.join(workspace, 'docs/PRODUCT.md'), '# User product stays\n');
@@ -147,10 +140,8 @@ test('compatible 1.2 NONE installation upgrades to 1.4 with project continuity a
   const upgradedIndex = await fs.readFile(indexFile, 'utf8'); assert.match(upgradedIndex, /docs\/custom\.md/); assert.match(upgradedIndex, /docs\/MODULES\.md/); assert.match(upgradedIndex, /docs\/architecture\/OVERVIEW\.md/);
   const upgradedPlanText = await fs.readFile(planFile, 'utf8');
   const upgradedPlan = JSON.parse(upgradedPlanText.match(/```json\n([\s\S]*?)\n```/)[1]);
-  assert.equal(upgradedPlan.objective, PROJECT_CONTINUATION_OBJECTIVE);
-  for (const required of ['docs/architecture/OVERVIEW.md', 'docs/MODULES.md', 'docs/DOCUMENTATION_INDEX.md']) {
-    assert.ok(upgradedPlan.context_pack.documents.some(doc => doc.path === required && doc.required));
-  }
+  assert.equal(upgradedPlan.execution_scope_status, 'NONE');
+  assert.ok(upgradedPlan.context_pack.documents.some(doc => doc.path === 'docs/architecture/OVERVIEW.md' && doc.required));
   assert.equal(git(workspace, 'status', '--porcelain'), '');
 });
 
@@ -303,26 +294,19 @@ test('inspection fingerprints cover content, hooks, index, external attributes a
   assert.notEqual(key(), beforeTransaction);
 });
 
-test('one inspection recovers each canonical plan once and refuses concurrent input changes', async t => {
-  const { workspace, setup } = await create(t);
-  const { createScope, preparePlan } = await import('@webpilot/workflow-kit/lib/actions');
-  const { withSessionPlan } = await import('@webpilot/workflow-kit/lib/session-plans');
-  const { readPlan } = await import('@webpilot/workflow-kit/lib/plan');
-  const { inspectWithDiagnostics } = await import('@webpilot/workflow-kit/lib/installer');
-  const input = id => ({ scope_id: id, objective: 'Inspection fixture', approval_note: 'Fixture contract',
-    acceptance_criteria: ['Complete'], approved_scope: { functional_paths: [], documentation_paths: ['docs/PRODUCT.md'], max_functional_files_per_task: 3 },
-    context_pack: { documents: [], dependency_task_ids: [], include_last_completed_task: false },
-    tasks: [{ id: 'T001', title: 'Document fixture', why: 'Verify', dependencies: [], functional_paths: [],
-      documentation_paths: ['docs/PRODUCT.md'], verification_ids: [], acceptance_criteria: ['Documented'], expected_commit_message: 'docs: fixture' }] });
-  withSessionPlan(workspace, { sessionId: 'inspection-owner' }, () => createScope(workspace, input('inspection-own')));
-  withSessionPlan(workspace, { sessionId: 'inspection-owner' }, () => preparePlan(workspace, input('inspection-draft'), readPlan(workspace).plan_revision));
+test('one inspection validates only the current plan and historical payloads do not block readiness', async t => {
+  const { workspace } = await create(t);
+  const historyDir = path.join(workspace, '.harness/plans/archive/legacy-session-plans/by-session');
+  await fs.mkdir(historyDir, { recursive: true });
+  await fs.writeFile(path.join(historyDir, 'oversized.md'), 'invalid historical plan\n' + 'x'.repeat(220000));
   const trace = path.join(workspace, '.harness/runtime/inspection.trace2');
   const traced = new WorkspaceSetup({ environment: { ...environment, GIT_TRACE2_EVENT: trace } });
   const result = await traced.preview({ mode: 'existing', workspace });
   assert.equal(result.ready, true, JSON.stringify(result));
-  assert.equal(result.checks.filter(c => c.label.startsWith('Полный контекст:')).length, 3);
-  const events = (await fs.readFile(trace, 'utf8')).trim().split('\n').map(line => JSON.parse(line));
-  assert.equal(events.filter(e => e.event === 'start' && e.argv?.includes('log')).length, 2, 'one history scan per active plan, NONE needs none');
+  assert.equal(result.checks.filter(c => c.label === 'Текущий plan проекта').length, 1);
+  assert.equal(result.checks.some(c => c.label.startsWith('Полный контекст:')), false);
+
+  const { inspectWithDiagnostics } = await import('@webpilot/workflow-kit/lib/installer');
   let changes = 0;
   assert.throws(() => inspectWithDiagnostics({ project: workspace, mode: 'existing', beforeRecheck() {
     changes++;
@@ -332,7 +316,7 @@ test('one inspection recovers each canonical plan once and refuses concurrent in
 });
 
 
-for (const legacy of ['1.4.0', '1.4.11', '1.4.12']) test(`compatible ${legacy} upgrades to the bundled Kit and preserves canonical session plans`, async t => {
+for (const legacy of ['1.4.0', '1.4.11', '1.4.12', '1.4.13']) test(`compatible ${legacy} upgrades to the bundled Kit and migrates legacy plan data safely`, async t => {
   const { setup, workspace } = await create(t);
   const { createScope } = await import('@webpilot/workflow-kit/lib/actions');
   const { withSessionPlan, listPlans } = await import('@webpilot/workflow-kit/lib/session-plans');
@@ -359,7 +343,7 @@ for (const legacy of ['1.4.0', '1.4.11', '1.4.12']) test(`compatible ${legacy} u
   assert.equal(git(workspace, 'status', '--porcelain'), '');
 });
 
-test('real installation of the development Kit upgrades to the bundled Kit and keeps session plans', async t => {
+test('real installation of the development Kit upgrades to the bundled Kit and archives legacy session plans', async t => {
   const development = await import('../.harness/kit/lib/common.mjs');
   if (development.VERSION === VERSION) return t.skip('development and bundled Kit are the same version');
   const { parent, setup } = await fixture(t);
@@ -383,12 +367,19 @@ test('real installation of the development Kit upgrades to the bundled Kit and k
   assert.equal(preview.version, development.VERSION); assert.equal(preview.kitVersion, VERSION);
   const result = await setup.apply(preview.token);
   assert.equal(result.ready, true, JSON.stringify(result)); assert.equal(result.version, VERSION);
-  for (const [file, bytes] of originals) assert.deepEqual(await fs.readFile(path.join(workspace, file)), bytes, file);
+  for (const [file, bytes] of originals) {
+    if (file === '.harness/plans/todo-plan.md') assert.deepEqual(await fs.readFile(path.join(workspace, file)), bytes, file);
+    else {
+      const archived = path.join(workspace, '.harness/plans/archive/legacy-session-plans', file.slice('.harness/plans/'.length));
+      assert.deepEqual(await fs.readFile(archived), bytes, archived);
+      await assert.rejects(fs.stat(path.join(workspace, file)), { code: 'ENOENT' });
+    }
+  }
   for (const template of ['PROTOTYPE', 'PLAN', 'SPEC', 'CONTINUE', 'STAGES']) await fs.stat(path.join(workspace, '.harness/kit/templates', template + '.md'));
   assert.equal(git(workspace, 'status', '--porcelain'), '');
 });
 
-test('plan:create for an addressed session is visible to the sidebar, readiness and Doctor', async t => {
+test('plan:create with a legacy session argument updates the one current plan for sidebar, readiness and Doctor', async t => {
   const { setup, workspace } = await create(t);
   const sessionId = 'web-pilot-plan-create-session';
   const run = (...args) => JSON.parse(execFileSync(process.execPath, ['scripts/workflow.mjs', ...args, '--session', sessionId],
@@ -401,9 +392,9 @@ test('plan:create for an addressed session is visible to the sidebar, readiness 
     checks: [{ id: 'node', executable: 'node', args: ['--version'] }],
     tasks: [{ id: 'T001', title: 'Создать результат', files: ['result.txt'], checks: ['node'], acceptance: ['result.txt создан'] }],
   }));
-  // The real agent path: configuration is applied first, so the plan lives at the session address.
+  // Compatibility --session is accepted but does not select or own project state.
   assert.equal(run('plan:create', '--input', '.harness/runtime/plan.json').ok, true);
-  const planFile = `.harness/plans/by-session/${sessionId}.md`;
+  const planFile = '.harness/plans/todo-plan.md';
   await fs.stat(path.join(workspace, planFile));
   const view = await readSessionPlans(workspace, sessionId);
   assert.equal(view.plan_id, 'visible-plan-001'); assert.equal(view.plan_path, planFile);
@@ -414,7 +405,7 @@ test('plan:create for an addressed session is visible to the sidebar, readiness 
   assert.equal(after.plan.tasks.find(task => task.id === 'T001').commit_status, 'DONE');
   const ready = await setup.ready(workspace);
   assert.equal(ready.ready, true, JSON.stringify(ready));
-  assert.ok(ready.checks.some(check => check.ok && check.label.includes('Проверить видимость плана сессии')), JSON.stringify(ready.checks));
+  assert.ok(ready.checks.some(check => check.ok && check.label === 'Текущий plan проекта'), JSON.stringify(ready.checks));
   assert.deepEqual(inspectDoctor(workspace).issues, []);
   assert.equal(git(workspace, 'status', '--porcelain'), '');
 });

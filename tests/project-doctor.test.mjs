@@ -101,25 +101,23 @@ test('interrupted commit is finished only when the exact commit already exists',
 
 import { withSessionPlan, listPlans } from '@webpilot/workflow-kit/lib/session-plans';
 import { createScope, preparePlan } from '@webpilot/workflow-kit/lib/actions';
-test('doctor and readiness preserve all session plans and repair only their projections', async t => {
+test('Doctor and readiness ignore historical plan payloads and preserve them byte-for-byte', async t => {
   const root=fixture(t);
-  const definition=id=>({scope_id:id,objective:id,approval_note:'Approved isolated fixture',acceptance_criteria:['done'],
-    approved_scope:{functional_paths:[],documentation_paths:['docs/architecture/OVERVIEW.md'],max_functional_files_per_task:3},
-    tasks:[{id:'T1',title:'Fixture',why:'Check ownership',dependencies:[],functional_paths:[],documentation_paths:['docs/architecture/OVERVIEW.md'],acceptance_criteria:['done'],verification_ids:[],expected_commit_message:'docs: fixture'}]});
-  withSessionPlan(root,{sessionId:'source'},()=>createScope(root,definition('source-plan')));
-  const ownBefore=text(root,'.harness/plans/by-id/source-plan.md');
-  withSessionPlan(root,{sessionId:'source'},selected=>preparePlan(root,definition('future-plan'),selected.plan.plan_revision));
-  const plans=listPlans(root),future=plans.find(e=>e.plan.scope_id==='future-plan');
-  const original=text(root,future.file);fs.appendFileSync(path.join(root,future.file),'\nwrong readable projection\n');
+  const historyDir=path.join(root,'.harness/plans/archive/legacy-session-plans/by-session');
+  fs.mkdirSync(historyDir,{recursive:true});
+  const historical=path.join(historyDir,'oversized-legacy.md');
+  const bytes='invalid historical plan\n'+'x'.repeat(220000);
+  fs.writeFileSync(historical,bytes);
+
+  const inspected=inspectProject(root);
+  assert.deepEqual(inspected.issues,[],JSON.stringify(inspected.issues));
+  assert.equal(fs.readFileSync(historical,'utf8'),bytes);
   const repaired=repairProject(root);
-  assert.deepEqual(repaired.issues,[]);assert.ok(repaired.backupPath);
-  assert.equal(text(root,future.file),original);assert.equal(text(root,'.harness/plans/by-id/source-plan.md'),ownBefore);
-  const backup=JSON.parse(text(repaired.backupPath,'repair.json'));
-  for(const plan of plans) assert.ok(backup.entries.some(e=>e.file===path.join(root,plan.file)));
+  assert.deepEqual(repaired.issues,[],JSON.stringify(repaired.issues));
+  assert.equal(fs.readFileSync(historical,'utf8'),bytes);
   const health=await new WorkspaceSetup({environment:env}).preview({mode:'existing',workspace:root});
   assert.equal(health.ready,true,JSON.stringify(health));
-  assert.equal(listPlans(root).find(e=>e.plan.scope_id==='future-plan').plan.prepared_in_session_id,'source');
-  assert.equal(repairProject(root).repaired,false);
+  assert.equal(fs.readFileSync(historical,'utf8'),bytes);
 });
 
 test('1.4.0 manifest reconciles to the trusted bundled Kit and missing task-required documents block repair', t => {

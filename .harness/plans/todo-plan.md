@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 636,
+  "plan_revision": 638,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-owned-plans-028",
@@ -991,7 +991,10 @@
         "resources/workspace-setup-worker.mjs",
         "resources/project-doctor/core.mjs",
         "tests/workspace-setup.test.mjs",
-        "tests/project-doctor.test.mjs"
+        "tests/project-doctor.test.mjs",
+        "package-lock.json",
+        "scripts/check-workflow-kit-dependency.mjs",
+        "scripts/verify-windows-package.mjs"
       ],
       "documentation_paths": [],
       "verification_ids": [
@@ -1004,13 +1007,22 @@
         "Current plan failure отображается адресно"
       ],
       "expected_commit_message": "refactor: validate only current workflow plan",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-owned-plans-028",
         "task_id": "T019",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "package-lock.json",
+        "resources/project-doctor/core.mjs",
+        "resources/workspace-setup-worker.mjs",
+        "scripts/check-workflow-kit-dependency.mjs",
+        "scripts/verify-windows-package.mjs",
+        "tests/project-doctor.test.mjs",
+        "tests/workspace-setup.test.mjs"
+      ]
     },
     {
       "id": "T020",
@@ -1155,7 +1167,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-owned-plans-028
 Current Task: нет
-Revision: 636
+Revision: 638
 
 ## Цель
 
@@ -1244,10 +1256,10 @@ Revision: 636
   - Git Commit: [DONE] refactor: remove session plan handoff UI
   - Reference: session-owned-plans-028 / T018 / implementation
   - Файлы: src/main.mjs, src/preload.cjs, src/ui/sidebar.mjs, src/ui/index.html, src/ui/progress.mjs, src/workspace-session.mjs, tests/sidebar.test.mjs, tests/electron-smoke.mjs, src/session-plans.mjs, tests/workspace-session.test.mjs
-- [TODO] T019: Ограничить readiness и Doctor текущим plan — Ожидает
-  - Git Commit: [PENDING] refactor: validate only current workflow plan
+- [DONE] T019: Ограничить readiness и Doctor текущим plan — Завершено
+  - Git Commit: [DONE] refactor: validate only current workflow plan
   - Reference: session-owned-plans-028 / T019 / implementation
-  - Файлы: resources/workspace-setup-worker.mjs, resources/project-doctor/core.mjs, tests/workspace-setup.test.mjs, tests/project-doctor.test.mjs
+  - Файлы: resources/workspace-setup-worker.mjs, resources/project-doctor/core.mjs, tests/workspace-setup.test.mjs, tests/project-doctor.test.mjs, package-lock.json, scripts/check-workflow-kit-dependency.mjs, scripts/verify-windows-package.mjs
 - [TODO] T020: Закрепить single-plan migration интеграционными тестами — Ожидает
   - Git Commit: [PENDING] test: cover single active plan sessions
   - Reference: session-owned-plans-028 / T020 / implementation

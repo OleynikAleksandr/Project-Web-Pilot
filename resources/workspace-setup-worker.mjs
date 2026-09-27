@@ -4,12 +4,11 @@ import { inspectWithDiagnostics, install } from './workflow-kit/lib/installer.mj
 import { inspectionInputs } from './workflow-kit/lib/inspection-inputs.mjs';
 import { check, hash, json, MANIFEST, VERSION, errorResult } from './workflow-kit/lib/common.mjs';
 import { hooksDirectory, BLOCK_START, BLOCK_END } from './workflow-kit/lib/installation-files.mjs';
-import { listPlans } from './workflow-kit/lib/session-plans.mjs';
 import { run, git, identityReady } from './workflow-kit/lib/git.mjs';
 
-// Versions the bundled installer can open or upgrade (1.4.13 upgrades 1.1.0–1.4.12).
+// Versions the bundled installer can open or upgrade. Historical 1.4.13 is the last session-owned release.
 const supported = new Set(['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.4.0', '1.4.1', '1.4.2', '1.4.3', '1.4.4', '1.4.5',
-  '1.4.6', '1.4.7', '1.4.8', '1.4.9', '1.4.10', '1.4.11', '1.4.12', VERSION]);
+  '1.4.6', '1.4.7', '1.4.8', '1.4.9', '1.4.10', '1.4.11', '1.4.12', '1.4.13', VERSION]);
 function options(input) {
   check(input && ['inspect', 'apply', 'fingerprint'].includes(input.action), 'SETUP_ACTION', 'Неизвестное действие подготовки.');
   check(['new', 'existing'].includes(input.mode), 'SETUP_MODE', 'Выберите создание или подключение проекта.');
@@ -23,6 +22,26 @@ function localHistoryDefaults(workspace) {
   // Git requires a signature; personal project attributes are not collected by the app.
   return { 'git-name': configured('user.name') || 'Web Pilot',
     'git-email': configured('user.email') || 'web-pilot@localhost' };
+}
+function recoverCurrentPlan(root) {
+  const workflow = path.join(root, 'scripts/workflow.mjs');
+  const execute = args => run(process.execPath, [workflow, 'recover', ...args, '--format', 'json'], root, { allowFailure: true });
+  const parse = result => {
+    try { return JSON.parse(result.stdout); } catch { return null; }
+  };
+  let result = execute([]), packet = parse(result);
+  if (result.status !== 0 && packet?.code === 'SESSION_REQUIRED') {
+    let plan;
+    try {
+      const text = fs.readFileSync(path.join(root, '.harness/plans/todo-plan.md'), 'utf8');
+      plan = JSON.parse(text.match(/<!-- workflow-state:begin -->\s*```json\s*([\s\S]*?)```/)?.[1] ?? '');
+    } catch {}
+    if (plan?.owner_session_id) {
+      result = execute(['--session', plan.owner_session_id, ...(plan.scope_id ? ['--plan', plan.scope_id] : [])]);
+      packet = parse(result);
+    }
+  }
+  return result.status === 0 ? packet : packet ?? null;
 }
 function inspectProject(opts) {
   const inspection = inspectWithDiagnostics(opts);
@@ -70,23 +89,13 @@ function inspectProject(opts) {
   }
   const launcher = checks.find(c => c.name === 'Launcher');
   const hookErrors = checks.filter(c => c.name !== 'Launcher' && c.status === 'ERROR');
-  result.checks.push({ label: 'План и история проекта', ok: p.state?.ok === true },
+  const currentPacket = recoverCurrentPlan(p.project_path);
+  const currentComplete = currentPacket?.ok === true && currentPacket.completeness === 'COMPLETE';
+  result.checks.push({ label: 'Текущий plan проекта', ok: currentComplete },
     { label: 'Команды проекта', ok: launcher?.status === 'OK' },
     { label: 'Проверки изменений', ok: !hookErrors.length && !hookConflict });
-  if (!p.state?.ok) result.issues.push({ path: '.harness/plans/todo-plan.md', reason: p.state?.message ?? 'План и история требуют проверки.' });
-  const plans = p.version === VERSION ? listPlans(p.project_path) : [{ file: '.harness/plans/todo-plan.md', plan: {} }];
-  for (const { file, plan } of plans) {
-    const state = p.state?.plans?.find(item => item.plan_path === file);
-    let packet = state && { ok: state.ok, completeness: state.recovery_completeness };
-    if (p.version !== VERSION) {
-      const recovered = run(process.execPath, [path.join(p.project_path, 'scripts/workflow.mjs'), 'recover', '--format', 'json'], p.project_path, { allowFailure: true });
-      try { packet = JSON.parse(recovered.stdout); } catch {}
-      if (recovered.status !== 0) packet = null;
-    }
-    const complete = packet?.ok === true && packet.completeness === 'COMPLETE';
-    result.checks.push({ label: 'Полный контекст: ' + (plan.objective || 'навигация проекта'), ok: complete });
-    if (!complete) result.issues.push({ path: file, reason: packet?.message ?? 'Не удалось собрать полный пакет контекста.' });
-  }
+  if (!currentComplete) result.issues.push({ path: '.harness/plans/todo-plan.md',
+    reason: currentPacket?.message ?? 'Не удалось собрать полный пакет контекста текущего plan.' });
   if (d.installation?.bootstrap_pending) result.warnings.push('Файлы комплекта подготовлены. Их первая фиксация в истории ещё ожидает команды install:commit; исходные изменения сохранены.');
   if (p.version !== VERSION) result.warnings.push(`Установлен Workflow Kit ${p.version}. Рабочая версия сохраняется без обновления.`);
   const repairable = !result.issues.length && p.compatible && (hookErrors.length || launcher?.status === 'ERROR');
