@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { installer, sessionPlans, VERSION } from '@webpilot/workflow-kit';
+import { installer, sessionPlans, plan as planApi, VERSION } from '@webpilot/workflow-kit';
 
 function run(executable, args, cwd) {
   return execFileSync(executable, args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
@@ -129,6 +129,73 @@ try {
   assert.deepEqual(viewB.prepared, []);
   assert.equal(Object.hasOwn(viewA.plan, 'owner_session_id'), false);
   assert.equal(Object.hasOwn(viewA.plan, 'prepared_in_session_id'), false);
+
+  // Legacy migration: valid todo-plan.md always wins, even when several old
+  // session plans are ACTIVE. Historical size must not affect normal readiness.
+  const planFile = path.join(root, '.harness/plans/todo-plan.md');
+  const currentBeforeLegacy = planApi.readPlan(root);
+  const ownedCurrent = structuredClone(currentBeforeLegacy);
+  ownedCurrent.owner_session_id = 'legacy-current-owner';
+  ownedCurrent.prepared_in_session_id = 'legacy-origin';
+  ownedCurrent.session_experience = 'chat';
+  await fs.writeFile(planFile, planApi.renderPlan(ownedCurrent));
+
+  function legacyPlan(scopeId, owner, objective = 'Legacy unfinished session plan') {
+    const candidate = structuredClone(currentBeforeLegacy);
+    candidate.scope_id = scopeId;
+    candidate.objective = objective;
+    candidate.owner_session_id = owner;
+    candidate.prepared_in_session_id = 'legacy-origin';
+    candidate.session_experience = 'chat';
+    for (const task of candidate.tasks) task.commit_ref.scope_id = scopeId;
+    return planApi.renderPlan(candidate);
+  }
+
+  const bySession = path.join(root, '.harness/plans/by-session');
+  const byId = path.join(root, '.harness/plans/by-id');
+  await fs.mkdir(bySession, { recursive: true });
+  await fs.mkdir(byId, { recursive: true });
+  const legacyA = legacyPlan('legacy-active-a', 'legacy-session-a');
+  const legacyB = legacyPlan('legacy-active-b', 'legacy-session-b');
+  const oversizedHistory = legacyPlan('legacy-oversized', 'legacy-session-big', 'X'.repeat(190000));
+  await fs.writeFile(path.join(bySession, 'session-a.md'), legacyA);
+  await fs.writeFile(path.join(bySession, 'session-b.md'), legacyB);
+  await fs.writeFile(path.join(byId, 'oversized.md'), oversizedHistory);
+
+  const inspectedWithHistory = installer.inspect({ project: root, mode: 'existing' });
+  assert.equal(inspectedWithHistory.state?.ok, true, 'historical plans unexpectedly block readiness');
+  assert.equal(workflow(root, 'status').scope_id, 'fixture-current-plan');
+
+  const migrated = sessionPlans.migrateLegacyPlans(root);
+  assert.equal(migrated.archived.length, 3);
+  assert.equal(migrated.current_normalized, true);
+  const migratedCurrent = planApi.readPlan(root);
+  assert.equal(migratedCurrent.scope_id, 'fixture-current-plan');
+  assert.equal(migratedCurrent.plan_revision, ownedCurrent.plan_revision + 1);
+  assert.equal(Object.hasOwn(migratedCurrent, 'owner_session_id'), false);
+  assert.equal(Object.hasOwn(migratedCurrent, 'prepared_in_session_id'), false);
+  for (const record of migrated.archived) {
+    assert.equal(await fs.readFile(path.join(root, record.archive_path), 'utf8'),
+      record.path.endsWith('session-a.md') ? legacyA : record.path.endsWith('session-b.md') ? legacyB : oversizedHistory);
+    await assert.rejects(fs.access(path.join(root, record.path)));
+  }
+
+  const repeatedMigration = sessionPlans.migrateLegacyPlans(root);
+  assert.equal(repeatedMigration.archived.length, 0);
+  assert.deepEqual(repeatedMigration.changed_paths, []);
+
+  // Invalid canonical current state is a hard stop before any legacy write.
+  await fs.mkdir(bySession, { recursive: true });
+  const preservedSource = path.join(bySession, 'must-stay.md');
+  await fs.writeFile(preservedSource, legacyA);
+  const validCurrentText = await fs.readFile(planFile, 'utf8');
+  await fs.writeFile(planFile, '# broken current plan\n');
+  assert.throws(() => sessionPlans.migrateLegacyPlans(root));
+  assert.equal(await fs.readFile(preservedSource, 'utf8'), legacyA);
+  await fs.writeFile(planFile, validCurrentText);
+  const finalMigration = sessionPlans.migrateLegacyPlans(root);
+  assert.equal(finalMigration.archived.length, 1);
+  assert.equal(await fs.readFile(path.join(root, finalMigration.archived[0].archive_path), 'utf8'), legacyA);
 
   const removed = workflowFailure(root, 'plan:prepare', '--input', inputFile, '--session', 'legacy-session-a');
   assert.equal(removed.code, 'COMMAND_REMOVED');
