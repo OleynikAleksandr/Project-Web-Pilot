@@ -197,6 +197,31 @@ try {
   assert.equal(finalMigration.archived.length, 1);
   assert.equal(await fs.readFile(path.join(root, finalMigration.archived[0].archive_path), 'utf8'), legacyA);
 
+  // The hard transport limit still applies to the current plan. History is
+  // excluded, but an oversized current execution context must fail explicitly.
+  const strictCurrent = planApi.readPlan(root);
+  strictCurrent.objective = 'Y'.repeat(190000);
+  await fs.writeFile(planFile, planApi.renderPlan(strictCurrent));
+  const oversizedCurrent = workflowFailure(root, 'recover', '--format', 'json');
+  assert.equal(oversizedCurrent.code, 'CONTEXT_TOO_LARGE');
+  await fs.writeFile(planFile, validCurrentText);
+  assert.equal(workflow(root, 'recover', '--format', 'json').completeness, 'COMPLETE');
+
+  // A second Git worktree has an independent todo-plan.md filesystem state.
+  const worktreePath = root + '-isolation-worktree';
+  git(root, 'worktree', 'add', '-b', 'fixture-isolation', worktreePath);
+  try {
+    const mainRevision = planApi.readPlan(root).plan_revision;
+    const isolatedPlan = planApi.readPlan(worktreePath);
+    isolatedPlan.plan_revision += 100;
+    await fs.writeFile(path.join(worktreePath, '.harness/plans/todo-plan.md'), planApi.renderPlan(isolatedPlan));
+    const isolatedStatus = workflow(worktreePath, 'status');
+    assert.equal(isolatedStatus.plan_revision, isolatedPlan.plan_revision);
+    assert.equal(workflow(root, 'status').plan_revision, mainRevision);
+  } finally {
+    git(root, 'worktree', 'remove', '--force', worktreePath);
+  }
+
   const removed = workflowFailure(root, 'plan:prepare', '--input', inputFile, '--session', 'legacy-session-a');
   assert.equal(removed.code, 'COMMAND_REMOVED');
   const wrongPlan = workflowFailure(root, 'status', '--plan', 'historical-plan');

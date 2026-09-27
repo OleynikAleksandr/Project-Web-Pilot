@@ -9,7 +9,6 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const EXPECTED_VERSION = '1.4.13';
 const EXPECTED_FILES = 35;
-const EXPECTED_SHA256 = 'da763a50c32583553b6ca06e29c975766ab092890bbf9787bd2a6aca87be44c4';
 const REQUIRED_SUBPATHS = [
   'common',
   'actions',
@@ -80,6 +79,10 @@ const temp = await fs.mkdtemp(path.join(os.tmpdir(), 'workflow-kit-consumer-'));
 try {
   const packageSource = path.join(temp, 'package-source');
   await copyPackageSnapshot(packageSource);
+  const sourceRuntime = path.join(packageSource, 'src');
+  const sourceRuntimeFiles = await filesBelow(sourceRuntime);
+  assert.equal(sourceRuntimeFiles.length, EXPECTED_FILES);
+  const expectedRuntimeSha256 = await digestFiles(sourceRuntime, sourceRuntimeFiles);
 
   const dev = path.join(temp, 'dev-consumer');
   await fs.mkdir(dev, { recursive: true });
@@ -111,7 +114,7 @@ try {
   await fs.cp(packagedProbe.runtimeRoot, staged, { recursive: true });
   const stagedFiles = await filesBelow(staged);
   assert.equal(stagedFiles.length, EXPECTED_FILES);
-  assert.equal(await digestFiles(staged, stagedFiles), EXPECTED_SHA256);
+  assert.equal(await digestFiles(staged, stagedFiles), expectedRuntimeSha256);
 
   process.stdout.write(JSON.stringify({
     ok: true,
@@ -120,7 +123,7 @@ try {
     packedConsumerStandalone: true,
     requiredSubpaths: REQUIRED_SUBPATHS,
     stagedRuntimeFiles: stagedFiles.length,
-    stagedRuntimeSha256: EXPECTED_SHA256
+    stagedRuntimeSha256: expectedRuntimeSha256
   }, null, 2) + '\n');
 } finally {
   await fs.rm(temp, { recursive: true, force: true });

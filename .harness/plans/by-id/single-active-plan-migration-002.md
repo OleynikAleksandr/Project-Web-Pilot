@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 9,
+  "plan_revision": 11,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "single-active-plan-migration-002",
@@ -252,8 +252,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "single-active-plan-migration-002",
         "task_id": "T004",
@@ -284,7 +284,11 @@
         "Historical oversized plan не блокирует current recovery.",
         "Отдельные Git worktrees имеют независимые todo-plan.md."
       ],
-      "expected_commit_message": "test: закрепить single-active plan regressions"
+      "expected_commit_message": "test: закрепить single-active plan regressions",
+      "actual_files": [
+        "scripts/check-consumer-contract.mjs",
+        "scripts/check-runtime-fixture.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -423,7 +427,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: single-active-plan-migration-002
 Current Task: нет
-Revision: 9
+Revision: 11
 
 ## Цель
 
@@ -452,8 +456,8 @@ Revision: 9
   - Git Commit: [DONE] docs: закрепить single-active workflow contract
   - Reference: single-active-plan-migration-002 / T003 / implementation
   - Файлы: src/lib/recovery.mjs, src/lib/inspection-inputs.mjs, src/lib/installation-files.mjs, src/lib/command-help.mjs, src/schemas/plan.schema.json, src/schemas/workflow.schema.json, scripts/check-package.mjs, src/WORKFLOW.md, src/templates/AGENTS.md, src/templates/START.md, src/templates/PLAN.md, src/templates/CONTINUE.md, src/templates/STAGES.md, src/templates/PROTOTYPE.md, docs/planning/single-active-plan-migration.md
-- [TODO] T004: Закрепить regression coverage для legacy sessions и Git worktrees — Ожидает
-  - Git Commit: [PENDING] test: закрепить single-active plan regressions
+- [DONE] T004: Закрепить regression coverage для legacy sessions и Git worktrees — Завершено
+  - Git Commit: [DONE] test: закрепить single-active plan regressions
   - Reference: single-active-plan-migration-002 / T004 / implementation
   - Файлы: scripts/check-runtime-fixture.mjs, scripts/check-consumer-contract.mjs, scripts/check-package.mjs, docs/planning/single-active-plan-migration.md
 - [TODO] T005: Обновить consumer contract для адаптации Project Web Pilot — Ожидает
