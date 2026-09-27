@@ -7,7 +7,7 @@ import { execFileSync } from 'node:child_process';
 import { installer, sessionPlans, VERSION } from '@webpilot/workflow-kit';
 
 const BASELINE_FILE_COUNT = 35;
-const BASELINE_SHA256 = '5464b2c1528eef1de740af50558bc8db1d39cfa7838f9c032d23650fb4f5f119';
+const BASELINE_SHA256 = 'da763a50c32583553b6ca06e29c975766ab092890bbf9787bd2a6aca87be44c4';
 
 function run(executable, args, cwd) {
   return execFileSync(executable, args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
@@ -111,6 +111,76 @@ try {
   const directView = sessionPlans.sessionPlanView(root, 'fixture-session');
   assert.equal(directView.plan_id, 'fixture-session-plan');
 
+  const preparedInput = {
+    scope_id: 'fixture-prepared-plan',
+    approval_note: 'Prepare a future fixture plan for recovery testing.',
+    objective: 'Verify prepared plan recovery before bind',
+    acceptance_criteria: ['Prepared plan can be read before it is bound to a new session'],
+    approved_scope: {
+      functional_paths: [],
+      documentation_paths: ['docs/planning/fixture.md'],
+    },
+    tasks: [{
+      id: 'T001',
+      title: 'Prepared fixture task',
+      why: 'Verify prepared-plan read access before binding',
+      functional_paths: [],
+      documentation_paths: ['docs/planning/fixture.md'],
+      verification_ids: [],
+      acceptance_criteria: ['Prepared plan remains readable before bind'],
+      expected_commit_message: 'test: prepared fixture task',
+    }],
+  };
+  const preparedInputFile = path.join(root, '.harness/runtime/fixture-prepared-plan.json');
+  await fs.writeFile(preparedInputFile, JSON.stringify(preparedInput));
+
+  const prepared = workflow(
+    root,
+    'plan:prepare',
+    '--session',
+    'fixture-session',
+    '--input',
+    preparedInputFile,
+    '--expected-revision',
+    String(status.plan_revision),
+  );
+  assert.equal(prepared.state?.scope_id, 'fixture-prepared-plan');
+
+  const preparedStatus = workflow(
+    root,
+    'status',
+    '--session',
+    'fixture-session',
+    '--plan',
+    'fixture-prepared-plan',
+  );
+  assert.equal(preparedStatus.scope_id, 'fixture-prepared-plan');
+  assert.equal(preparedStatus.recovery_completeness, 'COMPLETE');
+
+  const preparedValidate = workflow(
+    root,
+    'validate',
+    '--session',
+    'fixture-session',
+    '--plan',
+    'fixture-prepared-plan',
+  );
+  assert.equal(preparedValidate.plan_revision, preparedStatus.plan_revision);
+
+  const preparedRecovered = workflow(
+    root,
+    'recover',
+    '--session',
+    'fixture-session',
+    '--plan',
+    'fixture-prepared-plan',
+    '--format',
+    'json',
+  );
+  assert.equal(preparedRecovered.completeness, 'COMPLETE');
+  assert.equal(preparedRecovered.plan_id, 'fixture-prepared-plan');
+  assert.equal(preparedRecovered.session_id, 'fixture-session');
+
   process.stdout.write(JSON.stringify({
     ok: true,
     version: VERSION,
@@ -118,6 +188,8 @@ try {
     installedRuntimeSha256: BASELINE_SHA256,
     sessionPlan: view.plan_id,
     recovery: recovered.completeness,
+    preparedPlan: preparedRecovered.plan_id,
+    preparedRecovery: preparedRecovered.completeness,
     reconnectHeadStable: true
   }, null, 2) + '\n');
 } finally {

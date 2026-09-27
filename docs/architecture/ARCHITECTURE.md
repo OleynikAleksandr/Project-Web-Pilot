@@ -11,7 +11,7 @@ WorkflowKit/src
       └── installer ────────> <project>/.harness/kit
 ```
 
-`src/` содержит canonical 35-файловый runtime source Workflow Kit 1.4.12. Root `index.mjs` предоставляет package API и `getRuntimeRoot()`; package `bin` предоставляет CLI `workflow`.
+`src/` содержит canonical 35-файловый runtime source Workflow Kit 1.4.13. Root `index.mjs` предоставляет package API и `getRuntimeRoot()`; package `bin` предоставляет CLI `workflow`.
 
 Installed `.harness/kit` и staged Electron resources — физические производные копии, но не source of truth. Они должны получаться автоматически из package и проверяться по версии/fileset.
 

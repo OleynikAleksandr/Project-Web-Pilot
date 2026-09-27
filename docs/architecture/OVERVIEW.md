@@ -2,7 +2,7 @@
 
 ## Назначение
 
-WorkflowKit — canonical Node.js package существующего Workflow Kit. Репозиторий `/Users/oleksandroliinyk/VSCODE/WorkflowKit` является единственным местом разработки кода Kit; текущая версия package — 1.4.12.
+WorkflowKit — canonical Node.js package существующего Workflow Kit. Репозиторий `/Users/oleksandroliinyk/VSCODE/WorkflowKit` является единственным местом разработки кода Kit; текущая версия package — 1.4.13.
 
 ## Устройство
 

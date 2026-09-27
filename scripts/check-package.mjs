@@ -8,9 +8,9 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = path.join(ROOT, 'src');
-const BASELINE_VERSION = '1.4.12';
+const BASELINE_VERSION = '1.4.13';
 const BASELINE_FILE_COUNT = 35;
-const BASELINE_SHA256 = '5464b2c1528eef1de740af50558bc8db1d39cfa7838f9c032d23650fb4f5f119';
+const BASELINE_SHA256 = 'da763a50c32583553b6ca06e29c975766ab092890bbf9787bd2a6aca87be44c4';
 
 async function filesBelow(directory, prefix = '') {
   const result = [];
@@ -49,7 +49,7 @@ assert.deepEqual(pkg.files, ['index.mjs', 'src/']);
 
 const sourceFiles = await filesBelow(SRC);
 assert.equal(sourceFiles.length, BASELINE_FILE_COUNT, 'canonical Workflow Kit file count changed');
-assert.equal(await digestFiles(SRC, sourceFiles), BASELINE_SHA256, 'canonical Workflow Kit 1.4.12 baseline changed');
+assert.equal(await digestFiles(SRC, sourceFiles), BASELINE_SHA256, 'canonical Workflow Kit 1.4.13 baseline changed');
 
 const api = await import('@webpilot/workflow-kit');
 assert.equal(api.VERSION, pkg.version);
