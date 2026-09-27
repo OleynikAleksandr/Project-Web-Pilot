@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 622,
+  "plan_revision": 623,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-owned-plans-028",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Планы сессий и подготовка продолжения",
   "acceptance_criteria": [
     "Каждая сессия показывает собственный сохраняемый план либо NONE; выполненный план продолжается по новому поручению агенту.",
@@ -105,7 +105,9 @@
       "package.json",
       "package-lock.json",
       "resources/workspace-setup-worker.mjs",
-      "resources/project-doctor/core.mjs"
+      "resources/project-doctor/core.mjs",
+      "scripts/check-workflow-kit-dependency.mjs",
+      "scripts/verify-windows-package.mjs"
     ],
     "max_functional_files_per_task": 3
   },
@@ -743,12 +745,66 @@
       "file_limit_exception": "Версия поставки и обязательная проверка снимков двух тем перед выпуском."
     },
     {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
+      "id": "T014",
+      "title": "Workflow Kit 1.4.13 и парный релиз Web Pilot 0.6.57",
+      "why": "Workflow Kit 1.4.13 и парный релиз Web Pilot 0.6.57",
+      "dependencies": [],
+      "functional_paths": [
+        "package.json",
+        "package-lock.json",
+        "scripts/check-workflow-kit-dependency.mjs",
+        "scripts/verify-windows-package.mjs",
+        "tests/workflow-kit-source.test.mjs",
+        "tests/sidebar.test.mjs"
+      ],
+      "documentation_paths": [
+        "README.md",
+        "AGENTS.md",
+        "docs/PRODUCT.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/WORKFLOW_START.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/SOURCE_WORKSPACES.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/MODULES.md",
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md",
+        "docs/modules/project-doctor.md",
+        "docs/modules/workflow-kit-recovery.md"
+      ],
+      "verification_ids": [
+        "workflow-kit-contract",
+        "workflow-kit-stage",
+        "suite",
+        "electron-smoke",
+        "paired-release"
+      ],
+      "verification_kind": "package",
+      "acceptance_criteria": [
+        "Web Pilot принимает и обслуживает проекты Workflow Kit 1.4.13; установки 1.4.12 предлагаются к штатному upgrade.",
+        "Development dependency и generated resources/workflow-kit совпадают с canonical @webpilot/workflow-kit 1.4.13 / 35 files / current digest.",
+        "Полный npm test и Electron smoke проходят.",
+        "Парный release 0.6.57 содержит macOS arm64 и Windows x64, оба package verifier подтверждают Workflow Kit 1.4.13.",
+        "Корневой Project Web Pilot.app обновлён до 0.6.57 и доставка создана в ~/Downloads/WebPilot-0.6.57/."
+      ],
+      "expected_commit_message": "release: Web Pilot 0.6.57 с Workflow Kit 1.4.13",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "session-owned-plans-028",
+        "task_id": "T014",
+        "role": "implementation"
+      }
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "session-owned-plans-028",
         "task_id": "DOCS",
-        "role": "implementation"
+        "role": "implementation",
+        "iteration": 2
       },
       "dependencies": [
         "T001",
@@ -763,7 +819,8 @@
         "T010",
         "T011",
         "T012",
-        "T013"
+        "T013",
+        "T014"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -837,10 +894,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: session-owned-plans-028
 Current Task: нет
-Revision: 622
+Revision: 623
 
 ## Цель
 
@@ -909,8 +966,12 @@ Revision: 622
   - Git Commit: [DONE] build: release session owned plans for user verification
   - Reference: session-owned-plans-028 / T013 / implementation
   - Файлы: package.json, package-lock.json, tests/sidebar.test.mjs, tests/electron-smoke.mjs, docs/modules/session-owned-plans.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: update all project documentation for session plans
+- [TODO] T014: Workflow Kit 1.4.13 и парный релиз Web Pilot 0.6.57 — Ожидает
+  - Git Commit: [PENDING] release: Web Pilot 0.6.57 с Workflow Kit 1.4.13
+  - Reference: session-owned-plans-028 / T014 / implementation
+  - Файлы: package.json, package-lock.json, scripts/check-workflow-kit-dependency.mjs, scripts/verify-windows-package.mjs, tests/workflow-kit-source.test.mjs, tests/sidebar.test.mjs, README.md, AGENTS.md, docs/PRODUCT.md, docs/CLEAN_INSTALL.md, docs/WORKFLOW_START.md, docs/WORKSPACE_SETUP.md, docs/SOURCE_WORKSPACES.md, docs/architecture/OVERVIEW.md, docs/architecture/ARCHITECTURE.md, docs/MODULES.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/modules/project-doctor.md, docs/modules/workflow-kit-recovery.md
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: update all project documentation for session plans
   - Reference: session-owned-plans-028 / DOCS / implementation
   - Файлы: docs/modules/session-owned-plans.md, docs/design/session-plan-navigation.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/DECISIONS.md, docs/WORKFLOW_START.md, docs/PRODUCT.md, docs/CONTEXT_DELIVERY.md, docs/modules/workspace-sessions.md, docs/modules/workflow-kit-recovery.md, docs/modules/project-doctor.md, docs/PROJECT_ARCHIVE.md, docs/WORKSPACE_SETUP.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md, docs/CLEAN_INSTALL.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, README.md, AGENTS.md, .harness/kit/WORKFLOW.md, resources/workflow-kit/WORKFLOW.md, .harness/kit/templates/AGENTS.md, resources/workflow-kit/templates/AGENTS.md, .harness/kit/templates/START.md, resources/workflow-kit/templates/START.md, .harness/kit/templates/PLAN.md, resources/workflow-kit/templates/PLAN.md, .harness/plans/todo-plan.template.md, docs/SOURCE_WORKSPACES.md
 
