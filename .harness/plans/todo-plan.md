@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 641,
+  "plan_revision": 642,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-owned-plans-028",
@@ -1065,6 +1065,40 @@
       ]
     },
     {
+      "id": "T021",
+      "title": "Подготовить Web Pilot 0.6.58 к парному релизу",
+      "why": "Зафиксировать готовый consumer contract Workflow Kit 1.5.0 и версию приложения до воспроизводимой сборки.",
+      "dependencies": [],
+      "functional_paths": [
+        "package.json",
+        "package-lock.json",
+        "tests/session-plans.test.mjs",
+        "tests/workflow-kit-recovery.test.mjs",
+        "tests/workflow-kit-source.test.mjs"
+      ],
+      "documentation_paths": [],
+      "verification_ids": [
+        "suite",
+        "workflow-kit-contract",
+        "workflow-kit-stage"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Project Web Pilot имеет версию 0.6.58 во всех package/app-version полях",
+        "Canonical dependency и generated staging подтверждают Workflow Kit 1.5.0 / 35 files / expected digest",
+        "Оставшиеся single-active regression tests входят в Git history",
+        "После commit рабочее дерево чистое и этот HEAD используется как source парной macOS/Windows сборки"
+      ],
+      "expected_commit_message": "chore: prepare Web Pilot 0.6.58 for Workflow Kit 1.5.0",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "session-owned-plans-028",
+        "task_id": "T021",
+        "role": "implementation"
+      }
+    },
+    {
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
@@ -1093,7 +1127,8 @@
         "T017",
         "T018",
         "T019",
-        "T020"
+        "T020",
+        "T021"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -1175,7 +1210,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-owned-plans-028
 Current Task: нет
-Revision: 641
+Revision: 642
 
 ## Цель
 
@@ -1272,6 +1307,10 @@ Revision: 641
   - Git Commit: [DONE] test: cover single active plan sessions
   - Reference: session-owned-plans-028 / T020 / implementation
   - Файлы: tests/workspace-session.test.mjs, tests/context-session.test.mjs, tests/sidebar.test.mjs, tests/electron-smoke.mjs, tests/session-plans.test.mjs, tests/workflow-kit-recovery.test.mjs, tests/workflow-kit-source.test.mjs
+- [TODO] T021: Подготовить Web Pilot 0.6.58 к парному релизу — Ожидает
+  - Git Commit: [PENDING] chore: prepare Web Pilot 0.6.58 for Workflow Kit 1.5.0
+  - Reference: session-owned-plans-028 / T021 / implementation
+  - Файлы: package.json, package-lock.json, tests/session-plans.test.mjs, tests/workflow-kit-recovery.test.mjs, tests/workflow-kit-source.test.mjs
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: update all project documentation for session plans
   - Reference: session-owned-plans-028 / DOCS / implementation
