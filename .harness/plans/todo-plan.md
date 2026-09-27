@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 627,
+  "plan_revision": 628,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-owned-plans-028",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Планы сессий и подготовка продолжения",
   "acceptance_criteria": [
     "Каждая сессия показывает собственный сохраняемый план либо NONE; выполненный план продолжается по новому поручению агенту.",
@@ -51,7 +51,8 @@
       "docs/PROJECT_ARCHIVE.md",
       "docs/CLEAN_INSTALL.md",
       "README.md",
-      "docs/SOURCE_WORKSPACES.md"
+      "docs/SOURCE_WORKSPACES.md",
+      "docs/planning/single-active-plan-adaptation.md"
     ],
     "functional_paths": [
       ".harness/kit/lib/session-plans.mjs",
@@ -107,7 +108,8 @@
       "resources/workspace-setup-worker.mjs",
       "resources/project-doctor/core.mjs",
       "scripts/check-workflow-kit-dependency.mjs",
-      "scripts/verify-windows-package.mjs"
+      "scripts/verify-windows-package.mjs",
+      "src/mac-runtime-switch.mjs"
     ],
     "max_functional_files_per_task": 3
   },
@@ -826,13 +828,198 @@
       ]
     },
     {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
+      "id": "T015",
+      "title": "Зафиксировать consumer contract single active plan",
+      "why": "Зафиксировать consumer contract single active plan",
+      "dependencies": [],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/planning/single-active-plan-adaptation.md"
+      ],
+      "verification_ids": [],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Planning document фиксирует one checkout/worktree = one current plan",
+        "Границы Web Pilot и Workflow Kit, backward compatibility и отсутствие release на этой фазе зафиксированы"
+      ],
+      "expected_commit_message": "docs: plan single active plan adaptation",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "session-owned-plans-028",
+        "task_id": "T015",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T016",
+      "title": "Проецировать один current plan во все sessions",
+      "why": "Проецировать один current plan во все sessions",
+      "dependencies": [],
+      "functional_paths": [
+        "src/session-plans.mjs",
+        "src/workspace-session.mjs",
+        "tests/workspace-session.test.mjs",
+        "tests/session-plans.test.mjs"
+      ],
+      "documentation_paths": [],
+      "verification_ids": [
+        "workspace"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Две sessions одного workspace получают одинаковые scope/revision/tasks из todo-plan.md",
+        "Chat URL/title/history остаются session-specific",
+        "Legacy plan metadata не выбирает runtime plan"
+      ],
+      "expected_commit_message": "refactor: project sessions use current checkout plan",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "session-owned-plans-028",
+        "task_id": "T016",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T017",
+      "title": "Отвязать recovery и cache от session-owned plan",
+      "why": "Отвязать recovery и cache от session-owned plan",
+      "dependencies": [],
+      "functional_paths": [
+        "src/context-session.mjs",
+        "src/context-cache.mjs",
+        "src/context-inputs.mjs",
+        "src/mcp-runtime.mjs",
+        "src/mac-runtime-switch.mjs",
+        "tests/context-session.test.mjs",
+        "tests/context-cache.test.mjs",
+        "tests/mcp-runtime.test.mjs"
+      ],
+      "documentation_paths": [],
+      "verification_ids": [
+        "context",
+        "runtime"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Recovery предпочитает current checkout без session selector",
+        "Cache/input key не зависит от session-owned plan directories",
+        "Startup message описывает общий current plan, а не session ownership"
+      ],
+      "expected_commit_message": "refactor: recover current checkout context",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "session-owned-plans-028",
+        "task_id": "T017",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T018",
+      "title": "Удалить prepared-plan и ownership routing из UI",
+      "why": "Удалить prepared-plan и ownership routing из UI",
+      "dependencies": [],
+      "functional_paths": [
+        "src/main.mjs",
+        "src/preload.cjs",
+        "src/ui/sidebar.mjs",
+        "src/ui/index.html",
+        "src/ui/progress.mjs",
+        "src/workspace-session.mjs",
+        "tests/sidebar.test.mjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [],
+      "verification_ids": [
+        "syntax"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Web Pilot больше не вызывает plan:prepare/plan:bind/adoption для chat lifecycle",
+        "Prepared-plan choice и origin UI удалены",
+        "Новая session создаётся как chat navigation и продолжает current plan"
+      ],
+      "expected_commit_message": "refactor: remove session plan handoff UI",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "session-owned-plans-028",
+        "task_id": "T018",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T019",
+      "title": "Ограничить readiness и Doctor текущим plan",
+      "why": "Ограничить readiness и Doctor текущим plan",
+      "dependencies": [],
+      "functional_paths": [
+        "resources/workspace-setup-worker.mjs",
+        "resources/project-doctor/core.mjs",
+        "tests/workspace-setup.test.mjs",
+        "tests/project-doctor.test.mjs"
+      ],
+      "documentation_paths": [],
+      "verification_ids": [
+        "suite"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Historical plans не являются dependency обычного Workspace Setup",
+        "Doctor не требует full recovery historical plans",
+        "Current plan failure отображается адресно"
+      ],
+      "expected_commit_message": "refactor: validate only current workflow plan",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "session-owned-plans-028",
+        "task_id": "T019",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T020",
+      "title": "Закрепить single-plan migration интеграционными тестами",
+      "why": "Закрепить single-plan migration интеграционными тестами",
+      "dependencies": [],
+      "functional_paths": [
+        "tests/workspace-session.test.mjs",
+        "tests/context-session.test.mjs",
+        "tests/sidebar.test.mjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [],
+      "verification_ids": [
+        "suite",
+        "electron-smoke"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Old Session A/B сохраняют разные chats и показывают один current plan P",
+        "New Session C получает тот же current plan P без отдельного Workflow Kit plan",
+        "Node suite и Electron smoke проходят",
+        "Release/build не запускается"
+      ],
+      "expected_commit_message": "test: cover single active plan sessions",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "session-owned-plans-028",
+        "task_id": "T020",
+        "role": "implementation"
+      }
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "session-owned-plans-028",
         "task_id": "DOCS",
         "role": "implementation",
-        "iteration": 2
+        "iteration": 3
       },
       "dependencies": [
         "T001",
@@ -848,7 +1035,13 @@
         "T011",
         "T012",
         "T013",
-        "T014"
+        "T014",
+        "T015",
+        "T016",
+        "T017",
+        "T018",
+        "T019",
+        "T020"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -882,7 +1075,8 @@
         ".harness/kit/templates/PLAN.md",
         "resources/workflow-kit/templates/PLAN.md",
         ".harness/plans/todo-plan.template.md",
-        "docs/SOURCE_WORKSPACES.md"
+        "docs/SOURCE_WORKSPACES.md",
+        "docs/planning/single-active-plan-adaptation.md"
       ],
       "verification_ids": [],
       "acceptance_criteria": [
@@ -926,10 +1120,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: session-owned-plans-028
 Current Task: нет
-Revision: 627
+Revision: 628
 
 ## Цель
 
@@ -1002,10 +1196,34 @@ Revision: 627
   - Git Commit: [DONE] release: Web Pilot 0.6.57 с Workflow Kit 1.4.13
   - Reference: session-owned-plans-028 / T014 / implementation
   - Файлы: package.json, package-lock.json, scripts/check-workflow-kit-dependency.mjs, scripts/verify-windows-package.mjs, tests/workflow-kit-source.test.mjs, tests/sidebar.test.mjs, resources/project-doctor/core.mjs, resources/workspace-setup-worker.mjs, tests/workspace-setup.test.mjs, README.md, AGENTS.md, docs/PRODUCT.md, docs/CLEAN_INSTALL.md, docs/WORKFLOW_START.md, docs/WORKSPACE_SETUP.md, docs/SOURCE_WORKSPACES.md, docs/architecture/OVERVIEW.md, docs/architecture/ARCHITECTURE.md, docs/MODULES.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/modules/project-doctor.md, docs/modules/workflow-kit-recovery.md, docs/DOCUMENTATION_INDEX.md
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: update all project documentation for session plans
+- [TODO] T015: Зафиксировать consumer contract single active plan — Ожидает
+  - Git Commit: [PENDING] docs: plan single active plan adaptation
+  - Reference: session-owned-plans-028 / T015 / implementation
+  - Файлы: docs/planning/single-active-plan-adaptation.md
+- [TODO] T016: Проецировать один current plan во все sessions — Ожидает
+  - Git Commit: [PENDING] refactor: project sessions use current checkout plan
+  - Reference: session-owned-plans-028 / T016 / implementation
+  - Файлы: src/session-plans.mjs, src/workspace-session.mjs, tests/workspace-session.test.mjs, tests/session-plans.test.mjs
+- [TODO] T017: Отвязать recovery и cache от session-owned plan — Ожидает
+  - Git Commit: [PENDING] refactor: recover current checkout context
+  - Reference: session-owned-plans-028 / T017 / implementation
+  - Файлы: src/context-session.mjs, src/context-cache.mjs, src/context-inputs.mjs, src/mcp-runtime.mjs, src/mac-runtime-switch.mjs, tests/context-session.test.mjs, tests/context-cache.test.mjs, tests/mcp-runtime.test.mjs
+- [TODO] T018: Удалить prepared-plan и ownership routing из UI — Ожидает
+  - Git Commit: [PENDING] refactor: remove session plan handoff UI
+  - Reference: session-owned-plans-028 / T018 / implementation
+  - Файлы: src/main.mjs, src/preload.cjs, src/ui/sidebar.mjs, src/ui/index.html, src/ui/progress.mjs, src/workspace-session.mjs, tests/sidebar.test.mjs, tests/electron-smoke.mjs
+- [TODO] T019: Ограничить readiness и Doctor текущим plan — Ожидает
+  - Git Commit: [PENDING] refactor: validate only current workflow plan
+  - Reference: session-owned-plans-028 / T019 / implementation
+  - Файлы: resources/workspace-setup-worker.mjs, resources/project-doctor/core.mjs, tests/workspace-setup.test.mjs, tests/project-doctor.test.mjs
+- [TODO] T020: Закрепить single-plan migration интеграционными тестами — Ожидает
+  - Git Commit: [PENDING] test: cover single active plan sessions
+  - Reference: session-owned-plans-028 / T020 / implementation
+  - Файлы: tests/workspace-session.test.mjs, tests/context-session.test.mjs, tests/sidebar.test.mjs, tests/electron-smoke.mjs
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: update all project documentation for session plans
   - Reference: session-owned-plans-028 / DOCS / implementation
-  - Файлы: docs/modules/session-owned-plans.md, docs/design/session-plan-navigation.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/DECISIONS.md, docs/WORKFLOW_START.md, docs/PRODUCT.md, docs/CONTEXT_DELIVERY.md, docs/modules/workspace-sessions.md, docs/modules/workflow-kit-recovery.md, docs/modules/project-doctor.md, docs/PROJECT_ARCHIVE.md, docs/WORKSPACE_SETUP.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md, docs/CLEAN_INSTALL.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, README.md, AGENTS.md, .harness/kit/WORKFLOW.md, resources/workflow-kit/WORKFLOW.md, .harness/kit/templates/AGENTS.md, resources/workflow-kit/templates/AGENTS.md, .harness/kit/templates/START.md, resources/workflow-kit/templates/START.md, .harness/kit/templates/PLAN.md, resources/workflow-kit/templates/PLAN.md, .harness/plans/todo-plan.template.md, docs/SOURCE_WORKSPACES.md
+  - Файлы: docs/modules/session-owned-plans.md, docs/design/session-plan-navigation.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/DECISIONS.md, docs/WORKFLOW_START.md, docs/PRODUCT.md, docs/CONTEXT_DELIVERY.md, docs/modules/workspace-sessions.md, docs/modules/workflow-kit-recovery.md, docs/modules/project-doctor.md, docs/PROJECT_ARCHIVE.md, docs/WORKSPACE_SETUP.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md, docs/CLEAN_INSTALL.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, README.md, AGENTS.md, .harness/kit/WORKFLOW.md, resources/workflow-kit/WORKFLOW.md, .harness/kit/templates/AGENTS.md, resources/workflow-kit/templates/AGENTS.md, .harness/kit/templates/START.md, resources/workflow-kit/templates/START.md, .harness/kit/templates/PLAN.md, resources/workflow-kit/templates/PLAN.md, .harness/plans/todo-plan.template.md, docs/SOURCE_WORKSPACES.md, docs/planning/single-active-plan-adaptation.md
 
 ## Context Pack For This Cycle
 
