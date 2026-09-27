@@ -4,7 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { errorResult, check, readJSON, json, withPlanFile, PLAN } from './lib/common.mjs';
 import { repoRoot } from './lib/git.mjs';
-import { status, createScope, startTask, applyPlan, applyConfig, archive, repair, acknowledgeHook, preparePlan, bindPlan, adoptPlan } from './lib/actions.mjs';
+import { status, createScope, startTask, applyPlan, applyConfig, archive, repair, acknowledgeHook } from './lib/actions.mjs';
 import { journal } from './lib/validate.mjs';
 import { withSessionPlan, sessionPlanView } from './lib/session-plans.mjs';
 import { validate } from './lib/validate.mjs';
@@ -51,10 +51,12 @@ export async function main(argv = process.argv.slice(2)) {
       case 'status': { result = status(root); if (!opts.full) { delete result.recovery_text; delete result.last_hook_execution; delete result.resolved; } break; }
       case 'validate': { const r = validate(root); result = { ok: true, message: 'План и Git согласованы.', plan_revision: r.plan.plan_revision, resolved: r.resolved, transaction_pending: !!r.transaction }; break; }
       case 'recover': { if (opts.format === 'packet') return { value: contextPacket(root), json: true }; const p = recover(root); return { value: opts.format === 'json' || opts.json ? p : p.text, json: opts.format === 'json' || !!opts.json }; }
-      case 'plan:view': check(opts.session, 'SESSION_REQUIRED', 'Укажите --session.'); result = sessionPlanView(root, opts.session); break;
-      case 'plan:prepare': result = preparePlan(root, input(), opts['expected-revision']); break;
-      case 'plan:bind': result = bindPlan(root, opts['target-session'], opts.experience, opts['expected-revision']); break;
-      case 'plan:adopt': result = adoptPlan(root, input(), opts['expected-revision']); break;
+      case 'plan:view': result = sessionPlanView(root, opts.session); break;
+      case 'plan:prepare':
+      case 'plan:bind':
+      case 'plan:adopt':
+        check(false, 'COMMAND_REMOVED', command + ' удалена из single-active-plan workflow. Новый chat продолжает текущий checkout plan; для независимой работы используйте Git worktree.');
+        break;
       case 'plan:extend': result = extendPlan(root,input(),opts['expected-revision']); break;
       case 'plan:create': result = createSimplePlan(root,input()); break;
       case 'scope:create': result = createScope(root, input(), opts['expected-revision']); break;
@@ -85,10 +87,7 @@ export async function main(argv = process.argv.slice(2)) {
       const pending = journal(root);
       return withPlanFile(root, pending?.plan_path ?? PLAN, {}, execute);
     }
-    const mutating = ['task:update', 'plan:extend', 'plan:create', 'scope:create', 'task:start', 'plan:apply', 'commit', 'archive', 'repair', 'plan:prepare', 'plan:bind', 'plan:adopt', 'config:apply'].includes(command);
-    if (mutating && opts.plan) check(opts.session, 'SESSION_REQUIRED', 'Запись требует явной --session.');
-    return withSessionPlan(root, { sessionId: opts.session, planId: opts.plan,
-      allowDraft: ['status', 'validate', 'recover', 'plan:bind', 'plan:apply'].includes(command), allowUnowned: command === 'plan:adopt' }, execute);
+    return withSessionPlan(root, { sessionId: opts.session, planId: opts.plan }, execute);
   } catch (e) {
     if (isHook) return { value: { continue: false, stopReason: e.code ?? 'HOOK_ERROR', systemMessage: e.message + ' Диагностика: ./scripts/workflow doctor' }, json: true };
     return { value: errorResult(e), json: true, exitCode: 1 };

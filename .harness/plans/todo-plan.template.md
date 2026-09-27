@@ -19,6 +19,6 @@
 }
 ```
 
-Сохрани JSON в `.harness/runtime/plan.json` и выполни `./scripts/workflow plan:create --input .harness/runtime/plan.json && ./scripts/workflow task:start T001` (T001 замени на первый ID своего плана; адрес сессии добавь в обе команды, если он указан в recovery). verification_kind по умолчанию code. Если задача включает упаковку или установку, укажи соответственно package или installed и проверку с таким kind и evidence, называющим артефакт и реальный сценарий. Отдельная задача на каждый технический шаг не нужна. Проверка должна выполнять утверждения о результате, а не просто печатать успех.
+Сохрани JSON в `.harness/runtime/plan.json` и выполни `./scripts/workflow plan:create --input .harness/runtime/plan.json && ./scripts/workflow task:start T001` (T001 замени на первый ID своего плана). Команды всегда работают с current plan этого checkout/worktree; session selector не нужен. verification_kind по умолчанию code. Если задача включает упаковку или установку, укажи соответственно package или installed и проверку с таким kind и evidence, называющим артефакт и реальный сценарий. Отдельная задача на каждый технический шаг не нужна. Проверка должна выполнять утверждения о результате, а не просто печатать успех.
 
 files — предполагаемые пути без лимита: commit сохраняет фактический состав. checks — ID перечисленных проверок; acceptance, why, commit, dependencies уточняются при необходимости. Статусы и DOCS создаёт Kit. Git и прототипирование описаны в переданном PROTOTYPE.md; пример локальной упаковки Electron — `.harness/kit/examples/PACKAGING.md`.

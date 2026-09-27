@@ -1,9 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { VERSION, PLAN, planPath, CONFIG, check, contextPath, textFile, atomic, json, hash, id, errorResult, currentPlanSelection } from './common.mjs';
+import { VERSION, PLAN, planPath, CONFIG, check, contextPath, textFile, atomic, json, hash, id, errorResult } from './common.mjs';
 import { validate } from './validate.mjs';
 import { nextTask, PROJECT_CONTINUATION_OBJECTIVE, isDocumentationFinalizationTask } from './plan.mjs';
-import { sessionPlanView } from './session-plans.mjs';
 import { snapshot, diff, git, localPath, head, fileFingerprint } from './git.mjs';
 import { projectFacts, projectFactPaths } from './project-facts.mjs';
 import { inspectionInputs } from './inspection-inputs.mjs';
@@ -50,7 +49,7 @@ function relevantEvidence(root, beforeHead, neededShas, transaction, lastChecked
   try {
     let evidence = JSON.parse(fs.readFileSync(file, 'utf8'));
     // A documentation/service commit has no product checks. Retrieve the last
-    // checked task of this plan, never a global latest task from another session.
+    // checked task of this plan, never a global latest task from another checkout state.
     if (!transaction && !evidence.checks?.length && lastCheckedSha && /^[a-f0-9]{40,64}$/.test(lastCheckedSha)) {
       const archived = localPath(root, 'verification/by-commit/' + lastCheckedSha + '.json');
       if (fs.existsSync(archived)) {
@@ -127,16 +126,11 @@ export function recoverState(root, reason = 'manual', options = {}) {
     const add = (label, text) => parts.push({ label, text });
     add('header', 'WORKFLOW RECOVERY / schema 2 / kit ' + VERSION + (marker ? '\nDELIVERY-MARKER: ' + marker : ''));
     add('identity', 'Причина: ' + reason + '\nПроект: ' + plan.project_name + '\nProject ID: ' + plan.project_id + '\nScope: ' + (plan.scope_id ?? 'NONE') + '\nWorktree: ' + root);
-    const sessionId = currentPlanSelection()?.sessionId ?? plan.owner_session_id ?? null;
-    if (sessionId) {
-      add('session-address', 'СЕССИЯ И КОМАНДЫ\nSession ID: ' + sessionId + '\nPlan ID: ' + (plan.scope_id ?? 'NONE') + '\nКанонический путь: ' + PLAN
-        + '\nКаждую команду Workflow Kit адресовать явно: ./scripts/workflow <команда> --session ' + sessionId
-        + '\nДля plan:apply/plan:prepare указывать --expected-revision ' + plan.plan_revision + '. Не использовать выбранную в UI сессию как адрес команды.'
-        + '\nЗадачи добавляет агент по поручению пользователя. Полностью выполненный план продолжается; приёмка не является обязательным переходом. Подготовка будущего плана: plan:prepare; создание сессии — вручную кнопкой Chat/Work.');
-      const prepared = sessionPlanView(root, sessionId).prepared;
-      if (prepared.length) add('prepared-plans', 'ПОДГОТОВЛЕНО ЗДЕСЬ\n' + json(prepared.map(item => ({ plan_id: item.plan_id,
-        objective: item.plan.objective, plan_revision: item.plan.plan_revision, owner_session_id: item.plan.owner_session_id ?? null }))));
-    }
+    add('current-plan', 'ТЕКУЩИЙ PLAN И КОМАНДЫ\nCurrent plan: ' + PLAN
+      + '\nCurrent worktree: ' + root
+      + '\nCommands: ./scripts/workflow <команда>'
+      + '\nТекущая plan_revision: ' + plan.plan_revision
+      + '\nНовый chat/client продолжает этот же checkout plan. Для независимой параллельной работы используй отдельный Git worktree.');
     add('snapshot', 'HEAD: ' + (before.head ?? 'первого коммита ещё нет') + '\nPlan revision: ' + plan.plan_revision + '\nSnapshot: ' + before.fingerprint);
     add('state', 'Состояние: ' + plan.execution_scope_status + ' / ' + plan.delivery_status + (pending ? ' / COMMIT_PENDING' : ''));
     add('workflow-core', core);
@@ -146,7 +140,7 @@ export function recoverState(root, reason = 'manual', options = {}) {
     add('objective', 'ЦЕЛЬ\n' + (plan.objective || PROJECT_CONTINUATION_OBJECTIVE) + '\nКритерии:\n' + plan.acceptance_criteria.map(c => '- ' + c).join('\n'));
     add('user-decisions', 'РЕШЕНИЯ ПОЛЬЗОВАТЕЛЯ\n' + json(plan.user_decisions));
     add('current-task', 'ТЕКУЩАЯ ЗАДАЧА\n' + (task ? json(task) : 'Активной микрозадачи нет.'));
-    if (sessionId) add('remaining-tasks', 'НЕВЫПОЛНЕННЫЕ МИКРОЗАДАЧИ\n' + json(plan.tasks.filter(t => t.commit_status !== 'DONE').map(t => ({ id: t.id, title: t.title, why: t.why, dependencies: t.dependencies, acceptance_criteria: t.acceptance_criteria }))));
+    add('remaining-tasks', 'НЕВЫПОЛНЕННЫЕ МИКРОЗАДАЧИ\n' + json(plan.tasks.filter(t => t.commit_status !== 'DONE').map(t => ({ id: t.id, title: t.title, why: t.why, dependencies: t.dependencies, acceptance_criteria: t.acceptance_criteria }))));
     add('progress', 'ПРОГРЕСС\n' + plan.tasks.map(t => t.id + ': ' + t.implementation_status + (resolved[t.id]?.sha ? ' / ' + resolved[t.id].sha : resolved[t.id]?.pending ? ' / COMMIT_PENDING' : '')).join('\n'));
 
     const included = [PLAN, CONFIG, rulesPath, policyPath, ...templatePaths]; const omitted = [];
@@ -219,7 +213,7 @@ export function recoverState(root, reason = 'manual', options = {}) {
       if (attempt === 0) continue;
       check(false, 'CONCURRENT_CHANGE', 'Проект меняется во время восстановления. Повторите после завершения другой операции.');
     }
-    const packet = { ok: true, transaction_pending: Boolean(transaction), session_id: sessionId, plan_id: plan.scope_id, plan_path: PLAN,
+    const packet = { ok: true, transaction_pending: Boolean(transaction), session_id: null, plan_id: plan.scope_id, plan_path: PLAN,
       facts: { project_id: plan.project_id, project_name: plan.project_name, plan_revision: plan.plan_revision, scope_id: plan.scope_id,
         execution_scope_status: plan.execution_scope_status, delivery_status: plan.delivery_status, task_id: task?.id ?? null, task_title: task?.title ?? null }, text: body, marker, signature: hash(body), completeness: 'COMPLETE', reason, head: before.head, plan_revision: plan.plan_revision,
       scope_id: plan.scope_id, task_id: plan.current_task_id, next_task_id: task?.id ?? null, included, omitted, size,
