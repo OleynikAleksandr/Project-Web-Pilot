@@ -7,7 +7,7 @@
 ## Владелец функционала
 
 Модуль владеет:
-- каноническими планами сессий в `.harness/plans/by-id/` и совместимым legacy-путём `.harness/plans/todo-plan.md`;
+- единственным current plan checkout/worktree в `.harness/plans/todo-plan.md` и read-only migration/history legacy session plans;
 - правилами формирования recovery capsule;
 - выбором обязательных документов и dependency commits;
 - continuity текущей микрозадачи через Git references и worktree diff;
@@ -23,7 +23,7 @@
 
 В каждую сессию передаётся только компактный неизменяемый core правил:
 1. Пользователь определяет продуктовый результат, scope, приёмку и закрытие.
-2. Собственный план каждой сессии либо NONE; команды явно адресованы --session/--plan, machine-managed поля меняются только Workflow Kit.
+2. Один checkout/worktree имеет один current plan либо NONE; session ID не выбирает state. Transitional `--session` — compatibility/no-op, а `--plan` допускает только current scope.
 3. Новый запрос сначала сопоставляется с архитектурным модулем.
 4. Для существующего модуля сначала согласуется изменение его specification; при отсутствии владельца сначала создаётся новая specification.
 5. Todo-plan реализует уже согласованный контракт, а не проектирует архитектуру по ходу микрозадач.
@@ -86,7 +86,7 @@
 ## Facade
 
 Внешний контракт модуля:
-- `scope:create / plan:apply / task:start / commit / archive` управляют lifecycle выбранной сессии; `plan:view / plan:prepare / plan:bind / plan:adopt` читают планы и управляют связями;
+- `plan:create / scope:create / plan:extend / task:start / commit / archive` управляют lifecycle единственного current plan checkout; `status / recover / currentPlanView / sessionPlanView` читают current state; legacy `plan:prepare / plan:bind / plan:adopt` удалены из normal workflow;
 - `recover`/SessionStart возвращают COMPLETE capsule, детерминированный текущим worktree;
 - Web Pilot получает capsule read-only и проверяет bytes/hash/facts;
 - новая сессия, manual refresh и compact используют один builder; различается только `reason`.
@@ -204,6 +204,8 @@ Recovery 1.4.11 передаёт вместе с Workflow Core правила `P
 
 Живой прогон 0.6.52 показал: `plan:create --session <id>` с проверками сначала сохраняет конфигурацию, поэтому виртуальный план сессии записывается в `.harness/plans/by-session/<id>.md`, и `createScope` оставляет его там. Команды агента этот файл находили, а `listPlans` читал только `by-id`, поэтому сайдбар, Доктор и проверка готовности видели NONE. В 1.4.12 оба каталога канонические: `listPlans` и входы инспекции читают `by-id` и `by-session`, установщик обновляет установки 1.1.0–1.4.11. Остальной код 1.4.11 не менялся; исправление нужно перенести в исходный Kit (CodeAppServer, ветка `codex/gpt-provider-names`).
 
-## Canonical package и staging — 0.6.57
+## Canonical package и staging — 0.6.58 / Workflow Kit 1.5.0
 
-Исторические поставки 1.4.1–1.4.12 выше сохраняют происхождение изменений, но текущий владелец исходника один: `/Users/oleksandroliinyk/VSCODE/WorkflowKit/src`, package `@webpilot/workflow-kit@1.4.13`. WebPilot programmatic imports используют package exports. External Workspace Setup/Project Doctor и packaged trusted projection получают byte-identical generated runtime из `getRuntimeRoot()` в `resources/workflow-kit`; этот каталог ignored и не является source. Canonical и staged runtime подтверждаются 35 файлами и SHA-256 `da763a50c32583553b6ca06e29c975766ab092890bbf9787bd2a6aca87be44c4`.
+Исторические поставки 1.4.x выше сохраняют происхождение изменений. Текущий владелец source один: `/Users/oleksandroliinyk/VSCODE/WorkflowKit/src`, package `@webpilot/workflow-kit@1.5.0`. WebPilot programmatic imports используют package exports; external Workspace Setup/Project Doctor и Electron package получают generated runtime из `getRuntimeRoot()` в ignored `resources/workflow-kit`. Canonical и staged runtime подтверждены: 35 файлов, SHA-256 `0db567df6f0c8f68f3119a7322b4c1c6d28cd06bf57b267993b792097bbb2c75`.
+
+1.5.0 делает `.harness/plans/todo-plan.md` единственным runtime current plan. `listPlans` и `sessionPlanView` transitional facade возвращают тот же current plan для любой session; prepared/unassigned пусты. Legacy `by-id`/`by-session` обнаруживаются только migration code и переносятся в `.harness/plans/archive/legacy-session-plans/`.

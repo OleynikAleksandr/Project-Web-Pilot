@@ -1,4 +1,23 @@
-# Планы сессий и подготовка продолжения
+# Single active plan и чаты
+
+## Действующий контракт — 0.6.58 / Workflow Kit 1.5.0
+
+Название файла сохранено для стабильности старых ссылок. Прежняя модель session-owned plans **заменена**.
+
+- Один Git checkout/worktree имеет ровно один current plan: `.harness/plans/todo-plan.md`.
+- Web Pilot session хранит ChatGPT conversation: `sessionId`, `chatUrl`, title, Chat/Work experience, даты, archive и delivery metadata. Она не владеет и не выбирает Workflow Kit plan.
+- Открытие любой старой session сохраняет её прежний разговор, но карточка «Текущий план проекта» показывает актуальный scope/revision/tasks checkout.
+- Новый Chat/Work создаёт только новый разговор и получает recovery того же current plan. Второй plan в том же checkout не создаётся.
+- `plan:prepare`, `plan:bind` и ownership-adoption удалены из normal lifecycle. Transitional `--session` в Workflow Kit 1.5.0 — compatibility/no-op; historical `--plan` не может переключить runtime state.
+- Legacy `planId`, `originSessionId`, `legacyPlanId`, `owner_session_id`, `prepared_in_session_id` могут сохраняться в старых данных/history, но не участвуют в selection.
+- Upgrade переносит legacy `.harness/plans/by-id` / `by-session` в read-only archive. Historical payload не блокирует Workspace Setup или Project Doctor.
+- Независимая параллельная работа — отдельный Git branch/worktree, у которого собственный `todo-plan.md`.
+
+Связанные действующие контракты: [Workspace & Sessions](workspace-sessions.md), [Workflow Kit / Context Recovery](workflow-kit-recovery.md), [CONTEXT_DELIVERY](../CONTEXT_DELIVERY.md), [WORKSPACE_SETUP](../WORKSPACE_SETUP.md).
+
+## История прежней session-owned модели
+
+### Планы сессий и подготовка продолжения — 0.6.28–0.6.57
 
 ## Статус реализации
 

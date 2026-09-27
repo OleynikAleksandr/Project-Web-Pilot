@@ -1,10 +1,10 @@
 # Архитектура
 
-Действующие компактные контракты: docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/modules/session-owned-plans.md и docs/modules/session-opening-performance.md. Версионные разделы ниже — история; глобальный план, scopeTransition и обязательная кнопка приёмки заменены в 0.6.28 собственными планами сессий и ручным выбором продолжения.
+Действующие компактные контракты: `docs/architecture/OVERVIEW.md`, `docs/MODULES.md`, `docs/modules/session-owned-plans.md` (stable filename, теперь single-active contract), `docs/modules/workspace-sessions.md`, `docs/modules/workflow-kit-recovery.md` и `docs/modules/session-opening-performance.md`. Версионные разделы ниже — история. С 0.6.58 / Workflow Kit 1.5.0 один checkout/worktree имеет один current plan; Web Pilot sessions являются chats, а prepared/session-owned lifecycle удалён.
 
 ## Состояние
 
-На 18.09.2026 текущий выпуск — Project Web Pilot **0.6.40**, Workflow Kit **1.4.1**. Установленный macOS app и обе поставки соответствуют проверенному release commit 978e6613e6ff4285083911a6d137cb12d37660cb. Новое поведение — явное первое расположение проектов с сохранением выбора; планы сессий, быстрый показ чата и строгая доставка сохраняются. Контрольные суммы и доказательства — docs/RELEASE.md и docs/VERIFICATION.md.
+На 27.09.2026 текущий локальный выпуск — Project Web Pilot **0.6.58**, canonical Workflow Kit **1.5.0**. Парная сборка macOS arm64 / Windows x64 выполнена из source commit `c135f1a523bdd5dc1c26a5e8ca72327866a093e0`; `packagedSourceMatches=true`. Single-active plan, быстрый показ сохранённого чата и строгая доставка current recovery работают совместно. Контрольные суммы и доказательства — `docs/RELEASE.md` и `docs/VERIFICATION.md`.
 
 Пользователь принял чистый macOS-путь 0.6.38 и проверку 0.6.39. Пользовательское испытание нового изменения 0.6.40 и Windows остаются отдельными. 18.09.2026 пользователь поручил закрыть план first-run-onboarding-031 и передал испытания Windows 11 другому агенту. Итог macOS и границы доказательств — docs/CLEAN_INSTALL.md; условия и оставшиеся критерии Windows — docs/TRANSFER_TO_WINDOWS.md. План first-run-corrections-032 принадлежит другой сессии и этим закрытием не изменяется.
 
@@ -1312,7 +1312,15 @@ context-inputs включает by-session в ключ контекста; proje
 (ближайший скруглённый предок поля ввода → `data-web-pilot-composer-capsule`,
 обёртки внутри → `data-web-pilot-composer-inner`); цвет поля ввода относится только к этой метке.
 
-## 0.6.57 — canonical Workflow Kit package
+## 0.6.58 — single active plan / Workflow Kit 1.5.0
+
+`@webpilot/workflow-kit@1.5.0` делает `.harness/plans/todo-plan.md` единственным runtime current plan checkout. `src/workspace-session.mjs` проецирует этот plan во все Web Pilot chats; session store сохраняет URL/title/experience/history и читает legacy plan fields, но не использует их для routing. `src/context-cache.mjs` имеет один cache address на workspace, `src/context-inputs.mjs` не включает historical plan directories, а ContextSession авторизует packet по current project/plan facts, не по session echo.
+
+Prepared-plan IPC/UI, `fromPrepared`, bind/adopt и scope-to-chat-title coupling удалены. Workspace Setup/Doctor валидируют current plan; upgrade 1.1.0–1.4.13 сохраняет legacy plans в history. Electron smoke закрепляет A/B/C: старые chats A/B сохраняют разные URL и показывают current plan P, новый Chat/Work получает P без нового Workflow Kit plan.
+
+Canonical/staged Kit: 35 files, SHA-256 `0db567df6f0c8f68f3119a7322b4c1c6d28cd06bf57b267993b792097bbb2c75`.
+
+## 0.6.57 — canonical Workflow Kit package (история)
 
 `@webpilot/workflow-kit@1.4.13` из `/Users/oleksandroliinyk/VSCODE/WorkflowKit` является единственным владельцем editable Workflow Kit source. Development code и tests импортируют package/subpath exports. `scripts/stage-workflow-kit.mjs` перед start/test/smoke/build копирует `getRuntimeRoot()` в ignored `resources/workflow-kit`; относительные imports external Workspace Setup и Project Doctor сохранены, поэтому packaged layout не менялся. `src/session-plans.mjs` в development использует package export, а packaged app — staged trusted projection из `process.resourcesPath`.
 

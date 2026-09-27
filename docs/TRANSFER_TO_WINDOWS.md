@@ -1,13 +1,13 @@
 # Перенос на Windows 10/11
 
-Текущая поставка — **Project Web Pilot 0.6.47, Windows x64**, собранная вместе с macOS arm64 из одного source commit. Исходный проект Win Project Web Pilot не нужен. Изменение 0.6.47 по runtime selector относится к macOS; Windows onboarding не менялся, но Windows package пересобран и сверён вместе с финальной парой.
+Текущая поставка — **Project Web Pilot 0.6.58, Windows x64**, собранная вместе с macOS arm64 из source commit `c135f1a523bdd5dc1c26a5e8ca72327866a093e0`. Package содержит Workflow Kit 1.5.0 и single-active-plan consumer. Windows package verifier прошёл; физический запуск на native Windows/clean VM для 0.6.58 не выполнялся.
 
 ## Файл для переноса
 
-`~/Downloads/WebPilot-0.6.47/Project-Web-Pilot-0.6.47-Windows-x64.zip`
+`~/Downloads/WebPilot-0.6.58/Project-Web-Pilot-0.6.58-Windows-x64.zip`
 
-- Project-Web-Pilot-0.6.47-macOS-arm64.zip: 181097186 bytes; SHA-256 `c82554c36d553ef92a03649ddcd5ccc82315c34e935dc7d23673f674e7b660e6`.
-- Project-Web-Pilot-0.6.47-Windows-x64.zip: 316367350 bytes; SHA-256 `8fcdd36743ef91e3eb89951f4267eebd3d22fb10f6fb4149100f0cf489ffcce4`.
+- Project-Web-Pilot-0.6.58-macOS-arm64.zip: 181471570 bytes; SHA-256 `a80df450f37d92dc682ca8b085eeeae2b6024bbd16a01c67c7fb26fcd02dab4f`.
+- Project-Web-Pilot-0.6.58-Windows-x64.zip: 316733865 bytes; SHA-256 `bd338add3a7d24520ee1fe5722b932580e78118de15ac7f11b48f72200c96f2a`.
 
 Контрольные суммы, инструкция и общий manifest лежат рядом. Полностью распакуйте ZIP на локальный диск Windows; запускайте `Project Web Pilot.exe` из полученной папки. Не переносите один EXE отдельно от resources. Для обновления завершите старое приложение и распакуйте новую поставку в отдельную папку; данные аккаунта и проектов в пользовательском профиле сохраняются.
 

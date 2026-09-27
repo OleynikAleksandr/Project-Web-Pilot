@@ -1,6 +1,6 @@
 # Продукт
 
-Текущий локальный выпуск — **0.6.57**, macOS arm64 / Windows x64. Project Web Pilot использует canonical package `@webpilot/workflow-kit@1.4.13` из `/Users/oleksandroliinyk/VSCODE/WorkflowKit`; `resources/workflow-kit` создаётся автоматически как generated runtime staging и не хранится в Git как исходник. Собственный `.harness/kit` репозитория — установленный runtime проекта Workflow Kit 1.4.13, а не source of truth. Парная поставка: `~/Downloads/WebPilot-0.6.57/`; постоянный корневой `Project Web Pilot.app` обновлён.
+Текущий локальный выпуск — **0.6.58**, macOS arm64 / Windows x64. Canonical package — `@webpilot/workflow-kit@1.5.0` из `/Users/oleksandroliinyk/VSCODE/WorkflowKit`; generated `resources/workflow-kit` содержит 35 файлов, SHA-256 `0db567df6f0c8f68f3119a7322b4c1c6d28cd06bf57b267993b792097bbb2c75`. Действующая модель: один checkout/worktree = один current plan; Web Pilot sessions — только chats/navigation. Парная поставка: `~/Downloads/WebPilot-0.6.58/`; корневой и `/Applications` app обновлены до 0.6.58.
 
 Предыдущий локальный выпуск — **0.6.54**: таймер работы агента в карточке плана. Поставка: `~/Downloads/WebPilot-0.6.54/`.
 
@@ -16,11 +16,11 @@
 
 Контракт совместимости — `docs/modules/chatgpt-dom-compatibility.md`. Версионные разделы ниже сохраняют историю.
 
-## Действующий контракт — macOS / Windows 0.6.51
+## Действующий контракт — macOS / Windows 0.6.58
 
-Каждая сессия показывает свой сохраняемый план либо NONE. Выполненный план можно продолжить новым поручением агенту; прежние задачи и коммиты сохраняются, DOCS выполняется снова после новых задач. В блоке «План следующей сессии» создаётся отдельный будущий план. Пользователь открывает его существующим выбором Chat/Work; отмена сохраняет план, исходная сессия сохраняет ссылку на него. Меню проекта создаёт самостоятельные сессии с NONE. Обязательные кнопки приёмки и + Задача отсутствуют; завершение задач не архивирует план и не создаёт сессию.
+Один Git checkout/worktree имеет один current Workflow Kit plan `.harness/plans/todo-plan.md`. Web Pilot хранит несколько Chat/Work sessions с собственными URL, title, датами и UI metadata, но выбор session **не выбирает plan**. Открытие старого чата сохраняет его разговор и одновременно показывает актуальный current plan checkout. Новый Chat/Work получает recovery того же plan; второй canonical plan не создаётся.
 
-Согласованные подробные контракты — docs/modules/session-owned-plans.md и docs/modules/session-opening-performance.md. Ниже версионные разделы описывают историю продукта; их прежние требования глобального плана и перехода после приёмки заменены этим контрактом.
+Workflow Kit 1.5.0 удаляет normal lifecycle `plan:prepare`/`plan:bind` и переносит legacy `.harness/plans/by-id` / `by-session` в read-only history при upgrade. Legacy session/plan fields читаются backward-compatible, но не маршрутизируют runtime state. Истинная параллельная работа изолируется отдельным Git worktree. Подробные контракты — `docs/modules/session-owned-plans.md` (файл сохранён для стабильности ссылок, содержание заменено single-active model), `docs/modules/workspace-sessions.md` и `docs/modules/workflow-kit-recovery.md`.
 
 19.09.2026 собрана исправленная **0.6.47** для macOS arm64 и Windows x64; ZIP находятся в `~/Downloads/WebPilot-0.6.47/`. На macOS пользователь выбирает в Settings **Codex Local Mac** либо **Codex App Server Local Mac**, но ChatGPT должен работать через один стабильный Secure MCP Tunnel/connector: переключается только локальный backend за ним, выбор сохраняется после login/reboot и Web Pilot relaunch-ится после switch. Первый запуск и Permissions сохраняют контракт 0.6.45, а layout hidden tool calls — исправление 0.6.46. Windows onboarding этим macOS selector не меняется.
 

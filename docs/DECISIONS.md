@@ -178,7 +178,15 @@ T005 управляемо уточнена до фиксации готовог�
 Постоянное поручение пользователя: после явного принятия завершённого плана штатно архивировать scope, оставить NONE без нового scope; затем предложить Chat/Work в блоке «План». Готовность к приёмке без принятия не разрешает закрытие.
 
 
-## 17.09.2026 — собственный план каждой сессии и ручное продолжение
+## 27.09.2026 — один checkout/worktree = один current plan
+
+Пользователь признал модель «каждый Web Pilot chat имеет собственный plan» архитектурной ошибкой. Новый постоянный принцип: **project state принадлежит Git checkout/worktree, а не чату**. В одном checkout существует один current `.harness/plans/todo-plan.md`; истинная независимая параллельная работа создаётся отдельным Git branch/worktree.
+
+Project Web Pilot продолжает хранить старые и новые Chat/Work sessions, их URL/title/history. Открытие старой session не восстанавливает её historical plan как editable state: sidebar проецирует current plan workspace. Legacy `planId`, `originSessionId`, `legacyPlanId`, ownership metadata сохраняются backward-readable, но не маршрутизируют runtime. `plan:prepare` / `plan:bind` / adoption ownership удалены из normal flow.
+
+Workflow Kit 1.5.0 реализует single-active contract и migration legacy `by-id` / `by-session` в read-only history. Project Web Pilot 0.6.58 адаптирован к нему; Context Delivery сохраняет реальный ChatGPT composer, но recovery/cache адресуется checkout. Workspace Setup/Doctor проверяют current plan и не блокируются historical payloads.
+
+## 17.09.2026 — собственный план каждой сессии и ручное продолжение (история, заменено 27.09.2026)
 
 Пользователь согласовал постоянную принадлежность плана сессии: при возврате видны её задачи, даже незавершённые или ранее выполненные. Новое поручение агенту добавляет микрозадачи; кнопка «+ Задача» не нужна. Обязательная приёмка и автоматическое предложение новой сессии исключаются из целевого workflow.
 

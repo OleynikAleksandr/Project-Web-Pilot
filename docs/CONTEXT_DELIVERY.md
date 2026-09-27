@@ -4,13 +4,13 @@
 
 ## Каноническая последовательность
 
-1. Выбрать канонический абсолютный workspace и прочитать идентичность проекта и собственный план сессии. Подключённый проект показывает свежую проекцию и начинает открывать сохранённый URL до полной фоновой проверки. Первое подключение/установка/ремонт сохраняют строгий WORKSPACE_SETUP. Связь папка/чат и session_id сохраняются.
-2. Только новая сессия или явное обновление контекста ждут актуальной полной готовности и при необходимости запускают существующий MCP/tunnel. Локальный клиент получает канонический COMPLETE packet через установленный Workflow Kit: recover --session <sessionId> --format packet и существующий Node launcher. Просмотр sent/legacy/unknown чата не запускает ensure/warm/recover. Это вызов приложения до сообщения, а не дополнительный ход агента.
-3. Проверить protocol=inline-context-v1, COMPLETE, workspace, session_id, plan_id, восемь facts, точный UTF-8 размер и SHA-256 всего context. Старый probe/ACK формат, неполный ответ, чужая папка и повреждённый текст отклоняются. Пакет берётся штатным workflow recover; обязательные разделы не сокращаются.
-4. Подготовить первое обычное пользовательское сообщение: назначение старта, явный проект/папка/сессия, идентификатор отправки, весь context и инструкция ответа. Агент должен прочитать уже переданный пакет, кратко подтвердить восстановление и в одном-двух предложениях описать проект и текущее состояние. Для этого ответа tools и изменение файлов не требуются.
-5. Дождаться входа и свободного поля. Сохранить подготовленную попытку до ввода, а sending — до click. Существующий черновик и активный ответ задерживают автоматический старт. Непосредственно перед Send перепроверить текущую папку/план и полный текст поля.
-6. Подтвердить появление своего пользовательского сообщения. Приложение показывает «Контекст передан», его проект, версию и время. Это подтверждение доставки сообщения; отдельного машинного ACK от модели нет.
-7. Агент отвечает коротким подтверждением и описанием проекта. Дальнейшие поручения выполняются в выбранной папке по её плану; дополнительные файлы читаются по потребности самой задачи.
+1. Выбрать канонический абсолютный workspace, прочитать идентичность проекта и **current plan checkout**. Подключённый проект начинает открывать сохранённый URL выбранной chat session до полной фоновой проверки. Первое подключение/установка/ремонт сохраняют строгий WORKSPACE_SETUP. Связь папка/чат и session_id остаются навигационными данными Web Pilot.
+2. Только новая сессия или явное обновление контекста ждут актуальной готовности и при необходимости запускают MCP/tunnel. Локальный клиент получает канонический COMPLETE packet Workflow Kit 1.5.0 через `recover --format packet`. Все sessions одного workspace используют один checkout-scoped cache address. Просмотр sent/legacy/unknown чата не запускает ensure/warm/recover.
+3. Проверить `protocol=inline-context-v1`, COMPLETE, workspace, восемь current-plan facts, точный UTF-8 размер и SHA-256 context. `session_id`/legacy `plan_id` в transitional packet не являются authorization boundary и не могут выбрать другой plan. Неполный ответ, чужая папка, изменившиеся facts и повреждённый текст отклоняются.
+4. Подготовить первое обычное пользовательское сообщение: проект, точная папка, Session ID **для навигации разговора**, request ID, весь context и инструкция ответа. Агент должен кратко подтвердить восстановление и описать проект; отдельно recover-ить уже доставленный пакет не нужно.
+5. Дождаться входа и свободного поля. Сохранить подготовленную попытку до ввода, а sending — до click. Существующий черновик и активный ответ задерживают автоматический старт. Непосредственно перед Send перепроверить current checkout inputs/facts и полный текст поля.
+6. Подтвердить появление своего пользовательского сообщения. Приложение показывает «Контекст передан», проект, размер/версию и время. Отдельного машинного ACK от модели нет.
+7. Агент отвечает коротким подтверждением. Дальнейшие поручения выполняются в выбранном workspace по его current plan; переключение Web Pilot chat не меняет project state.
 
 ## Повторное открытие и обновление
 
@@ -22,9 +22,9 @@
 
 ## Канонический формат пакета и совместимость MCP
 
-Для адресованных сессий Web Pilot вызывает установленный Workflow Kit через существующий Node launcher: recover --session <sessionId> --format packet. Прежний workflow_context_recover с абсолютным workspace сохраняет совместимость неадресованных вызовов. Канонический builder возвращает delivery_protocol, status=ready, completeness=COMPLETE, workspace, session_id, plan_id, plan_path, facts, objective, head, signature, context, context_bytes, context_sha256, generated_at_ms, ack_required=false. Facts включают project_id, project_name, plan_revision, scope_id, execution_scope_status, delivery_status, task_id и task_title; последние два могут быть null.
+Web Pilot вызывает установленный Workflow Kit через Node launcher: `recover --format packet`. Для старых установок до upgrade consumer имеет ограниченный fallback к legacy owner **current todo-plan**, но выбранный Web Pilot chat никогда не используется как selector. Workflow Kit 1.5.0 принимает legacy `--session` как no-op compatibility. Канонический builder возвращает delivery_protocol, status=ready, completeness=COMPLETE, workspace, plan_path, facts, head, signature, context, context_bytes, context_sha256, generated_at_ms, ack_required=false; transitional session/plan fields могут присутствовать, но не маршрутизируют state. Facts включают project_id, project_name, plan_revision, scope_id, execution_scope_status, delivery_status, task_id и task_title.
 
-Через MCP локальный клиент использует только прежний read-only recover, initialize и tools/list. Адресованный recover и bind/adopt выполняются фасадом установленного Kit через отдельный процесс Node; внешний MCP-протокол не менялся. Модельные API отсутствуют. Пакет ограничен 180000 UTF-8 байт; чрезмерный пакет даёт явную ошибку, без скрытого усечения. Полный текст и состав пакета определяет Workflow Kit, а не самостоятельно собранная подборка файлов.
+Через MCP локальный клиент использует read-only `workflow_context_recover(workspace)`, initialize и tools/list. Ownership bind/adopt path больше не нужен. Модельные API отсутствуют. Пакет ограничен 180000 UTF-8 байт; чрезмерный пакет даёт явную ошибку, без скрытого усечения. Полный текст и состав пакета определяет Workflow Kit, а не самостоятельно собранная подборка файлов.
 
 
 ## Recovery Capsule v2 — согласованный контракт 14.09.2026

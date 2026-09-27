@@ -72,12 +72,14 @@
 С 0.6.56 `resources/workflow-kit` не является source tree и не хранится в Git: это generated runtime для external workers и Electron packaging. Единственный editable source — `/Users/oleksandroliinyk/VSCODE/WorkflowKit/src`; `.harness/kit` Project Web Pilot — отдельная installed runtime самого проекта.
 
 
-## Действующий контракт — планы сессий
+## Действующий контракт — single active plan и чаты
 
 | Документ | Назначение |
 | --- | --- |
-| docs/modules/session-owned-plans.md | Реализованный в 0.6.28 контракт собственных планов сессий, подготовки продолжения, адресации и безопасной миграции |
-| docs/design/session-plan-navigation.md | Принятый интерактивный пример сайдбара: «План следующей сессии», без + Задача и приёмки, существующий выбор Chat/Work для подготовленного плана, меню проекта для NONE |
+| docs/modules/session-owned-plans.md | Stable filename действующего 0.6.58 контракта: один current plan на checkout/worktree; sessions — chats, legacy ownership только history |
+| docs/modules/workspace-sessions.md | Session store, Chat/Work navigation, backward-compatible legacy fields и проекция current plan |
+| docs/modules/workflow-kit-recovery.md | Workflow Kit 1.5.0, checkout-scoped recovery/cache и migration legacy session plans |
+| docs/design/session-plan-navigation.md | Исторический макет 0.6.28 прежней prepared/session-owned модели; не действующий UI-контракт |
 
 ## Действующий контракт — скорость открытия
 
@@ -139,4 +141,4 @@ Scope `stable-mcp-connector-036` завершает интеграцию scope 0
 
 Исторический выпуск 0.6.51: RELEASE.md, VERIFICATION.md. Выбор первого проекта описан в `docs/modules/first-run-onboarding.md` и WORKSPACE_SETUP.md.
 
-Текущий выпуск 0.6.57: [RELEASE](RELEASE.md), [VERIFICATION](VERIFICATION.md), canonical package/staging — `docs/planning/workflow-kit-package-migration.md`; парная поставка macOS arm64 / Windows x64 находится в `~/Downloads/WebPilot-0.6.57/`.
+Текущий выпуск 0.6.58: [RELEASE](RELEASE.md), [VERIFICATION](VERIFICATION.md), single-active planning — `docs/planning/single-active-plan-adaptation.md`; canonical Workflow Kit 1.5.0 / 35 files / digest `0db567df…bbb2c75`; парная поставка находится в `~/Downloads/WebPilot-0.6.58/`.

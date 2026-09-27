@@ -6,7 +6,7 @@
 
 | Модуль / часть проекта | Спецификация | Ответственность |
 | --- | --- | --- |
-| Workflow Kit / Context Recovery | `docs/modules/workflow-kit-recovery.md` | Канонические планы сессий, lifecycle scope, адресованный recovery capsule, dependency context и continuity |
+| Workflow Kit / Context Recovery | `docs/modules/workflow-kit-recovery.md` | Единственный current plan checkout/worktree, lifecycle scope, recovery capsule, dependency context, migration legacy session plans и continuity |
 | Project Doctor | `docs/modules/project-doctor.md` | Автономная диагностика, резервная копия и безопасное исправление известных проблем открытия проекта |
 | Runtime Lifecycle | `docs/modules/runtime-lifecycle.md` | MCP/tunnel discovery, bootstrap, process identity, persisted endpoints и self-healing startup |
 | Codex App Server Local Executor | `docs/modules/codex-app-server-executor.md` | macOS local-only MCP facade поверх Codex App Server: паритет 47 локальных tools, Computer Use и альтернативный backend за единым stable connector |
@@ -16,13 +16,13 @@
 Этот файл является маршрутизатором. Общая архитектура находится в `docs/architecture/OVERVIEW.md`, полный перечень документов — в `docs/DOCUMENTATION_INDEX.md`, детали частей проекта — в их спецификациях.
 
 
-## Планы сессий — действующий совместный контракт
+## Single active plan — действующий совместный контракт
 
-В 0.6.28 / Workflow Kit 1.4.0 реализован scope `session-owned-plans-028`, совместно принадлежащий Workflow Kit / Context Recovery и Workspace & Sessions. Канонический контракт — [Планы сессий и подготовка продолжения](modules/session-owned-plans.md), принятый пример — [Сайдбар планов](design/session-plan-navigation.md). Каждая сессия имеет собственный план либо NONE; будущий план готовится отдельно и получает сессию только после ручного выбора Chat/Work. Нового параллельного менеджера задач нет. В 0.6.30 пользовательский заголовок блока будущего плана уточнён до «План следующей сессии» без изменения механики.
+В 0.6.58 / Workflow Kit 1.5.0 прежний `session-owned-plans-028` переработан: **один checkout/worktree = один current plan**, sessions — только Chat/Work conversations. Канонический compatibility-документ — [Single active plan и чаты](modules/session-owned-plans.md); прежний [макет session-plan navigation](design/session-plan-navigation.md) сохранён как исторический дизайн 0.6.28. `plan:prepare`/`plan:bind` и prepared-plan UI удалены. Legacy session plan metadata не участвует в runtime selection; параллельная независимая работа — через Git worktree.
 
 ## Ускорение открытия — scope 029
 
-Совместный контракт Workspace & Sessions и Workflow Kit / Context Recovery: [Быстрое открытие сессий и планов](modules/session-opening-performance.md). Контракт реализован и проверен в 0.6.29 / Kit 1.4.1: пакетные операции Git, единая validation, ограниченный readiness-кэш, ранний показ собственного плана и строгая доставка контекста. Source и packaged замеры подтверждены; все изменения находятся в main, лишние worktrees/ветка удалены. План остаётся в своей сессии.
+Совместный контракт Workspace & Sessions и Workflow Kit / Context Recovery: [Быстрое открытие сессий и планов](modules/session-opening-performance.md). Контракт реализован в 0.6.29 и сохранён после migration 0.6.58: пакетные операции Git, единая validation, ограниченный readiness-кэш и строгая доставка контекста остаются; session-specific plan projection заменена checkout-scoped current plan. Source и packaged замеры прошлых версий сохранены как история.
 
 ## Layout встроенного ChatGPT — scope 034
 
@@ -83,9 +83,9 @@ ChatColors выбирает data-composer-body, владеющий видимы�
 
 Workspace & Sessions: `src/agent-timer.mjs` (замер по видимому Stop), поле сессии `agentTime` и отображение `mm:ss · Σ mm:ss` в карточке плана — [workspace-sessions](modules/workspace-sessions.md), признак работы ChatGPT — [chatgpt-dom-compatibility](modules/chatgpt-dom-compatibility.md).
 
-## Canonical Workflow Kit package — 0.6.57
+## Canonical Workflow Kit package — 0.6.58
 
-Workflow Kit / Context Recovery: единственный editable source — `/Users/oleksandroliinyk/VSCODE/WorkflowKit/src`, package — `@webpilot/workflow-kit@1.4.13`. Development использует package exports; external Workspace Setup / Project Doctor и Electron package используют ignored generated `resources/workflow-kit`, автоматически staged из `getRuntimeRoot()`. Контракт — [workflow-kit-recovery](modules/workflow-kit-recovery.md), [session-owned-plans](modules/session-owned-plans.md), [WORKSPACE_SETUP](WORKSPACE_SETUP.md).
+Workflow Kit / Context Recovery: единственный editable source — `/Users/oleksandroliinyk/VSCODE/WorkflowKit/src`, package — `@webpilot/workflow-kit@1.5.0`. Development использует package exports; external Workspace Setup / Project Doctor и Electron package используют ignored generated `resources/workflow-kit`, автоматически staged из `getRuntimeRoot()`. Runtime: 35 files, SHA-256 `0db567df6f0c8f68f3119a7322b4c1c6d28cd06bf57b267993b792097bbb2c75`. Контракт — [workflow-kit-recovery](modules/workflow-kit-recovery.md), [single-active plan](modules/session-owned-plans.md), [WORKSPACE_SETUP](WORKSPACE_SETUP.md).
 
 ## Поставляемый Workflow Kit 1.4.12 — 0.6.53 (история)
 

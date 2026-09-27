@@ -2083,3 +2083,16 @@ Managed T004 проверил `npm run smoke` — PASSED и `npm run build` — 
 Dependency/staging contract: `@webpilot/workflow-kit@1.4.13`, 35 runtime files, SHA-256 `da763a50c32583553b6ca06e29c975766ab092890bbf9787bd2a6aca87be44c4`; generated `resources/workflow-kit` совпадает с canonical `getRuntimeRoot()`. Workspace Setup и Project Doctor явно включают 1.4.12 в набор поддерживаемых upgrade sources.
 
 T014 commit: `c0545f53828291a3b652a590aa35852085f10884`. После него парная сборка повторена из зафиксированного HEAD. Финальный manifest: `sourceCommit=c0545f53828291a3b652a590aa35852085f10884`, `sourceFiles=95`, `packagedSourceMatches=true`. ZIP SHA-256: macOS `22db6f3876bcbb2524a50c80fae41601588a7ce27aea21df6bd39cfb7cdd6f96`; Windows `edeafce525d30f5c7d92c49206873acc02641e979fa447948b28a1a533cc5989`. Корневой и /Applications bundles имеют CFBundleShortVersionString 0.6.57 и одинаковый macOS ASAR `533e2036be402edd3be20d365d13eee99a9a0db62234ecc7de49536154fb1996`. Native Windows/clean VM не проверялись.
+
+## Single active plan / Workflow Kit 1.5.0 / выпуск 0.6.58
+
+Финальный managed verification T021 на source commit `c135f1a523bdd5dc1c26a5e8ca72327866a093e0`: `npm test` — **357 tests, 355 PASS, 2 SKIP, 0 FAIL**; `workflow-kit-contract` — PASSED; `workflow-kit-stage` — PASSED и idempotent. Canonical/staged Workflow Kit: 1.5.0, 35 files, SHA-256 `0db567df6f0c8f68f3119a7322b4c1c6d28cd06bf57b267993b792097bbb2c75`.
+
+Electron smoke — **PASSED** на isolated fixture (Electron 44.3.0 / Chromium 152.0.7977.78, `liveChatGPT=false`, `fullContextBytes=75092`). Single-active assertions: `singleActivePlanSessions=true`, `checkoutPlanAcrossOldChats=true`, `checkoutRecoveryShared=true`, `noPreparedPlanUi=true`, `singleCurrentPlan=true`. Сценарий проверяет два старых chat URL одного workspace, новые Chat/Work и единый current plan; session creation не создаёт runtime plan в `by-id`/`by-session`. Project Doctor/архив/navigation/DOM regressions также прошли в smoke.
+
+Адресные regressions перед финальным suite: Project Doctor 12/12; critical Workspace Setup/upgrade 5/5, включая 1.4.13 → 1.5.0 и oversized historical payload; `session-plans` 4/4; `workflow-kit-recovery` 9/9; `workflow-kit-source` 3/3. Historical plan payloads сохраняются и не блокируют readiness current workspace.
+
+Парный `npm run build` — exit 0. Release manifest: `sourceCommit=c135f1a523bdd5dc1c26a5e8ca72327866a093e0`, `sourceFiles=95`, `packagedSourceMatches=true`. ZIP integrity — PASSED. macOS ZIP: `a80df450f37d92dc682ca8b085eeeae2b6024bbd16a01c67c7fb26fcd02dab4f` (181471570 bytes), ASAR `960269dc66032aafdf51ca2f29f1abcd4de851902265b9a115aafcaf3d70f968`. Windows ZIP: `bd338add3a7d24520ee1fe5722b932580e78118de15ac7f11b48f72200c96f2a` (316733865 bytes), ASAR `d3db825afed890281eec2515c74e32a6040dfedfc879415ebdc8221215b9bfa7`.
+
+Корневой и `/Applications/Project Web Pilot.app` проверены после build: версия 0.6.58, macOS ASAR одинаковый. Windows package verifier подтвердил PE/package layout, portable Node и Windows runtime; **native Windows и clean VM не запускались**.
+

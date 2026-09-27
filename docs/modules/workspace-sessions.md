@@ -1,16 +1,16 @@
 # Module Specification — Workspace & Sessions
 
-## Действующая модель — 0.6.29 / schema v6
+## Действующая модель — 0.6.58 / schema v6
 
-Сессия имеет собственный planId либо NONE, originSessionId и состояние подтверждения legacy-связи. Полные задачи в session store не копируются: readWorkspace(workspace, sessionId) читает их через доверенный фасад Workflow Kit — package export в development и generated staged runtime в packaged app. prepared_in_session_id связывает исходную сессию с каноническим будущим планом; после bind обе сессии видят один файл.
+Session store остаётся schema v6 и backward-compatible: старые поля `planId`, `originSessionId`, `legacyPlanId`, `planBinding` могут присутствовать на диске, но runtime их не использует для выбора plan. Полные задачи в session store не копируются.
 
-Facade SessionPlans выполняет адресованные recover/bind/adopt через существующий Node launcher. WorkspaceSessions.fromPrepared сначала идемпотентно привязывает план, затем атомарно сохраняет запись сессии. После сбоя записи повтор использует уже назначенные sessionId/experience. Новый Chat/Work из меню имеет NONE; автоматического перехода после завершения задач нет.
+`readWorkspace(workspace, sessionId)` всегда проецирует current `.harness/plans/todo-plan.md`. Поэтому две старые sessions одного workspace сохраняют разные `chatUrl`/title/Chat|Work, но получают одинаковые scope/revision/tasks. `currentView` также использует project current scope, а не сохранённый legacy `session.planId`.
 
-Миграция schema v1–v5 создаёт backup. Единственная доказанная связь по facts доставленного пакета может быть принята через plan:adopt; совпадения названия/даты недостаточно. Неоднозначные планы сохраняются без автоматического владельца, UI объясняет это. Архивы и Git-история сохраняются.
+Новый Chat/Work добавляет session record и открывает новый ChatGPT conversation. Он не вызывает bind/adopt/prepare и получает checkout-scoped recovery. Старый session store не очищается разрушительно; исторические поля остаются для forensic/history compatibility.
 
-Быстрый выбор начинает открывать сохранённый URL до фоновой полной проверки. Адрес и поколение защищают plan/URL/health; отправка нового recovery ждёт актуальной готовности и повторного before-Send.
+Быстрый выбор по-прежнему начинает открывать сохранённый URL до фоновой полной проверки. Поколение навигации защищает URL/health, а отправка нового recovery ждёт актуальной current-checkout readiness и повторной before-Send.
 
-Подробные совместные контракты — session-owned-plans.md и session-opening-performance.md. Версионные разделы ниже сохраняют историю; scope 014 с кнопкой приёмки и scopeTransition больше не действует.
+Подробные совместные контракты — [single active plan](session-owned-plans.md), [session opening performance](session-opening-performance.md) и [Context Delivery](../CONTEXT_DELIVERY.md). Версионные разделы ниже сохраняют историю прежней модели.
 
 
 ## Текущее создание проекта и первый запуск

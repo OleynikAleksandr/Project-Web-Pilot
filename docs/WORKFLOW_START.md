@@ -1,6 +1,6 @@
 # Начало работы
 
-Текущий локальный выпуск — **0.6.57**, macOS arm64 / Windows x64, canonical Workflow Kit **1.4.13**. Поставка: `~/Downloads/WebPilot-0.6.57/`. Workflow Kit source находится в отдельном canonical package; WebPilot stage-ит generated runtime автоматически. На шаге 5 «Первый проект» можно создать новый проект либо добавить существующую папку; подключение использует штатные preview и подтверждение подготовки. Native Windows и clean VM для 0.6.57 остаются пользовательской проверкой.
+Текущий локальный выпуск — **0.6.58**, macOS arm64 / Windows x64, canonical Workflow Kit **1.5.0**. Поставка: `~/Downloads/WebPilot-0.6.58/`. Действующий workflow: один checkout/worktree имеет один current plan `.harness/plans/todo-plan.md`; Web Pilot sessions являются чатами и не владеют plan. Workspace Setup/Doctor валидируют current plan, historical plans не блокируют readiness. Native Windows и clean VM для 0.6.58 не запускались.
 
 Предыдущий локальный выпуск — **0.6.50**, macOS arm64 и Windows x64, Workflow Kit **1.4.1**. Поставка: `~/Downloads/WebPilot-0.6.50/`. Исправлена заливка всей скруглённой плашки ввода: от «+» до голосовой кнопки. Реальный ChatGPT проверен визуально в Chat и Work; окружающая подложка и цвета кнопок сохраняются. Это заменяет поведение 0.6.49, окрашивавшее только editor. Независимое обновление задач из 0.6.49 сохранено.
 
@@ -8,16 +8,16 @@
 
 Текущий контракт DOM и lifecycle — `docs/modules/chatgpt-dom-compatibility.md`. В 0.6.48 живые Chat/Work recovery и hide/show проверены; native Windows и reboot не проверялись. Закрытие окна завершает UI, сохраняя MCP/tunnel. Итог выпуска — `docs/RELEASE.md`, доказательства — `docs/VERIFICATION.md`.
 
-Project Web Pilot использует адресованный recovery Workflow Kit: пакет принадлежит sessionId и planId выбранной сессии. Прочитайте доставленный контекст и кратко подтвердите восстановление. Для первого ответа повторно запрашивать пакет не нужно.
+Project Web Pilot передаёт recovery **текущего checkout**, а не plan выбранной Web Pilot session. Session ID в стартовом сообщении нужен приложению для навигации чата. Для первого ответа повторно запрашивать пакет не нужно.
 
-Если пакета нет, используйте `./scripts/workflow recover --session <sessionId> --format text`. Во всех дальнейших командах сохраняйте адрес из своего пакета; выбранный в UI чат не меняет владельца команд.
+Если пакета нет, используйте `./scripts/workflow recover --format text`. Workflow Kit 1.5.0 временно принимает legacy `--session` как compatibility/no-op, но session не выбирает plan; `--plan` допустим только для current scope.
 
 1. При NONE обсудите следующий этап по OVERVIEW, MODULES и DOCUMENTATION_INDEX.
-2. Сопоставьте запрос с существующей частью проекта и её контрактом. При отсутствии контракта сначала согласуйте specification/planning document.
-3. Создайте собственный план через scope:create либо продолжите его через plan:apply. Завершённые задачи и commit references сохраняются.
-4. Перед изменениями выполните task:start; каждую микрозадачу завершите управляемым commit с применимыми проверками. Одновременно пишет один агент.
-5. Единственная последняя DOCS актуализирует весь комплект документов. Выполненный план остаётся в сессии до прямой команды на archive.
-6. Будущий план готовится через plan:prepare; пользователь вручную создаёт сессию через Chat/Work. Автоматического перехода после DOCS нет.
+2. Сопоставьте запрос с существующей частью проекта и её контрактом. При отсутствии контракта сначала создайте краткий planning/spec document.
+3. Создайте current plan через plan:create/scope:create либо расширьте его через plan:extend. Завершённые задачи и commit references сохраняются.
+4. Перед изменениями выполните task:start; каждую микрозадачу завершите управляемым commit с применимыми проверками. Один checkout имеет одного текущего писателя.
+5. Единственная последняя DOCS актуализирует действующие документы. Архивирование current plan выполняется только по прямому поручению пользователя.
+6. Новый Chat/Work Web Pilot автоматически продолжает этот же current plan. `plan:prepare`/`plan:bind` удалены; независимая параллельная работа создаётся отдельным Git worktree.
 
 ## Состояние проекта — 25.09.2026
 

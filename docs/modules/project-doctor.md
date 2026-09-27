@@ -15,7 +15,7 @@ Project Doctor координирует штатные Workflow Kit и Runtime L
 - Устаревшая установочная запись: все owned-файлы обязаны совпасть с известным bundled комплектом. Только тогда manifest приводится к этой версии; произвольные изменённые файлы не легализуются пересчётом hashes.
 - Отсутствующие owned-файлы текущего комплекта восстанавливаются из bundled payload. Неизвестная версия/изменённые или лишние runtime-файлы требуют разбирательства; downgrade не выполняется.
 - Отсутствующие Git hooks и утраченные executable bits восстанавливаются штатным содержимым с сохранением чужих частей; изменённая управляемая секция не перезаписывается.
-- Читаемая проекция каждого канонического плана восстанавливается из валидного канонического JSON через Workflow Kit repair. Семантика задач не угадывается.
+- Читаемая проекция **current plan** восстанавливается из валидного canonical JSON через Workflow Kit repair. Historical plan payloads не нормализуются и не становятся readiness dependency; они сохраняются как history.
 - Завершённый Git commit с незакрытым техническим журналом завершается штатным repair. Незавершённая/неподтверждённая транзакция требует продолжения своей исходной задачи и не коммитится доктором автоматически.
 - Runtime Lifecycle выполняет существующий ensure/self-healing: запуск отсутствующих служб, stale PID и динамические endpoints. Неизвестные процессы, credentials и настройки аккаунта не изменяются.
 
@@ -58,8 +58,10 @@ T011: Workflow Kit 1.4.0 добавляет upgrade с 1.3.0, предварит
 
 ## Workflow Kit 1.4.12 — 0.6.53
 
-Доктор принимает manifest установок 1.1.0–1.4.11 и 1.4.12 и проверяет планы в `.harness/plans/by-id/` и `.harness/plans/by-session/`. Проект 1.4.11 направляется в обычную подготовку, где выполняется штатный upgrade до 1.4.12 с резервной копией.
+Исторические Doctor-поставки до 0.6.57 проверяли session-plan directories; это поведение заменено.
 
-## Workflow Kit 1.4.13 — 0.6.57
+## Workflow Kit 1.5.0 — 0.6.58
 
-Workspace Setup и Доктор используют canonical installer 1.4.13. Целостная установка 1.4.12 распознаётся как штатно обновляемая и проходит preview/apply с резервной копией. Prepared-plan теперь читается через status/validate/recover до plan:bind, поэтому Web Pilot может собрать полный контекст будущей сессии до её создания. Неизвестный или изменённый runtime по-прежнему не перезаписывается.
+Workspace Setup и Doctor используют canonical installer 1.5.0 и признают 1.1.0–1.4.13 совместимыми upgrade sources. После migration runtime semantic check относится только к `.harness/plans/todo-plan.md` и required documents current plan. Большой, повреждённый или неизвестный historical payload в read-only archive не блокирует открытие проекта и не переписывается Doctor-ом.
+
+Upgrade legacy session-owned установки создаёт backup, архивирует `.harness/plans/by-id` / `by-session`, нормализует current plan и затем проверяет только current recovery. Неизвестный/изменённый runtime по-прежнему не перезаписывается.

@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 644,
+  "plan_revision": 646,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-owned-plans-028",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Планы сессий и подготовка продолжения",
   "acceptance_criteria": [
     "Каждая сессия показывает собственный сохраняемый план либо NONE; выполненный план продолжается по новому поручению агенту.",
@@ -1106,8 +1106,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-owned-plans-028",
         "task_id": "DOCS",
@@ -1184,8 +1184,27 @@
       "title": "Актуализация всех документов проекта",
       "why": "Сверить полный индекс после реализации, сохранив новый план доступным для дальнейших поручений.",
       "actual_files": [
+        "AGENTS.md",
+        "README.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/DECISIONS.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
         "docs/RELEASE.md",
-        "docs/VERIFICATION.md"
+        "docs/SOURCE_WORKSPACES.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/design/session-plan-navigation.md",
+        "docs/modules/project-doctor.md",
+        "docs/modules/session-owned-plans.md",
+        "docs/modules/workflow-kit-recovery.md",
+        "docs/modules/workspace-sessions.md"
       ]
     }
   ],
@@ -1214,10 +1233,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: session-owned-plans-028
 Current Task: нет
-Revision: 644
+Revision: 646
 
 ## Цель
 
@@ -1318,8 +1337,8 @@ Revision: 644
   - Git Commit: [DONE] chore: prepare Web Pilot 0.6.58 for Workflow Kit 1.5.0
   - Reference: session-owned-plans-028 / T021 / implementation
   - Файлы: package.json, package-lock.json, tests/session-plans.test.mjs, tests/workflow-kit-recovery.test.mjs, tests/workflow-kit-source.test.mjs
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: update all project documentation for session plans
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: update all project documentation for session plans
   - Reference: session-owned-plans-028 / DOCS / implementation
   - Файлы: docs/modules/session-owned-plans.md, docs/design/session-plan-navigation.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/DECISIONS.md, docs/WORKFLOW_START.md, docs/PRODUCT.md, docs/CONTEXT_DELIVERY.md, docs/modules/workspace-sessions.md, docs/modules/workflow-kit-recovery.md, docs/modules/project-doctor.md, docs/PROJECT_ARCHIVE.md, docs/WORKSPACE_SETUP.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md, docs/CLEAN_INSTALL.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, README.md, AGENTS.md, .harness/kit/WORKFLOW.md, resources/workflow-kit/WORKFLOW.md, .harness/kit/templates/AGENTS.md, resources/workflow-kit/templates/AGENTS.md, .harness/kit/templates/START.md, resources/workflow-kit/templates/START.md, .harness/kit/templates/PLAN.md, resources/workflow-kit/templates/PLAN.md, .harness/plans/todo-plan.template.md, docs/SOURCE_WORKSPACES.md, docs/planning/single-active-plan-adaptation.md
 

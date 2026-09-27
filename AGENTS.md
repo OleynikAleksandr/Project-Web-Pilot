@@ -25,9 +25,9 @@
 - Переключение workspace не меняет cwd уже работающего чата. Все локальные действия привязаны к явной папке. Новая сессия или явное обновление инициирует доставку полного пакета приложением; просмотр сохранённого чата не запускает новую подготовку или отправку; не добавлять экспериментальные проверки hooks в пользовательский ответ.
 - Успех определяют полный пакет в реальном первом сообщении и короткий ответ агента о выбранном проекте. Сайдбар подтверждает передачу сообщения. Машинный ACK не используется; сборка и HTTP отдельно не являются пользовательской приёмкой.
 - Профиль DEVELOPMENT и verification_ids уже настроены управляемо. Реальные проверки: актуальный Node suite и Electron smoke; smoke использует TEST FIXTURE; реальный первый ответ проверяется отдельно. Проверять назначенные команды перед commit; пустые либо не запущенные checks не означают успех.
-- После каждого этапа обновлять связанные документы и собственный план сессии управляемыми командами. Не создавать параллельный TODO.md. Новые пути сначала включать в план. Сборка и локальные проверки не заменяют пользовательский результат.
+- После каждого этапа обновлять связанные документы и current plan checkout управляемыми командами. Не создавать параллельный TODO.md и не связывать project state с выбранным chat. Новые пути сначала включать в plan. Сборка и локальные проверки не заменяют пользовательский результат.
 
-- Создание нового workspace и подключение существующего используют canonical `@webpilot/workflow-kit@1.4.13`; external workers получают generated `resources/workflow-kit`, а не tracked source. Канонический контракт — `docs/WORKSPACE_SETUP.md`; перед новым изменением этого поведения прочитать его. Исторический WF001 остаётся отдельным проектом только для чтения.
+- Создание нового workspace и подключение существующего используют canonical `@webpilot/workflow-kit@1.5.0`; external workers получают generated `resources/workflow-kit`, а не tracked source. Один checkout/worktree имеет один current plan; Web Pilot sessions — chats/navigation. Канонический контракт — `docs/WORKSPACE_SETUP.md`; перед новым изменением этого поведения прочитать его. Исторический WF001 остаётся отдельным проектом только для чтения.
 - Архивирование workspace, возврат и удаление локальной папки реализованы в T025–T028 по поручению пользователя. Канонический контракт — `docs/PROJECT_ARCHIVE.md`. Архив приложения не меняет execution_scope_status. Облачные чаты удалять не разрешено. Физическое удаление реального проекта требует его явного выбора и подтверждения в интерфейсе; автоматические проверки удаляют только собственные временные fixtures.
 
 - В 0.6.20 добавлен автономный Доктор проекта: `docs/modules/project-doctor.md`. 16.09.2026 пользователь реально запустил его на текущем проекте; `.harness/kit-manifest.json` успешно reconciled до Workflow Kit 1.3.0. Намеренно возвращать stale-состояние нельзя; дальнейшие сценарии повреждения проверяются только на временных fixtures.
@@ -35,7 +35,7 @@
 
 ## Завершённый этап — быстрое открытие сессий
 
-Scope session-opening-performance-029 реализован в 0.6.29 / Workflow Kit 1.4.1. Контракт — docs/modules/session-opening-performance.md; проверки и пределы измерений — docs/VERIFICATION.md. Все изменения находятся в main, лишние worktrees/временная ветка удалены с backup. План принадлежит сессии из доставленного recovery; команды явно адресуются её --session. Завершение сохраняет план и prepared link, не архивирует его и не создаёт сессию. Новое поручение продолжается через plan:apply с повторной DOCS; archive только по отдельной прямой команде.
+Scope session-opening-performance-029 реализован в 0.6.29 / Workflow Kit 1.4.1; его performance/readiness механика сохранена. Историческая session-owned адресация из этого scope заменена в 0.6.58 / Workflow Kit 1.5.0: plan относится к checkout, `--session` не выбирает state, prepared link удалён. Контракт скорости — docs/modules/session-opening-performance.md; актуальная plan-модель — docs/modules/session-owned-plans.md.
 
 
 ## Текущий выпуск — подключение и разрешения MCP / 0.6.45
@@ -66,9 +66,9 @@ Scope session-opening-performance-029 реализован в 0.6.29 / Workflow 
 
 На шаге «Первый проект» доступны создание нового и добавление существующей папки. Повторная готовность, preview/apply и сохранение файлов используют прежний путь. Kit 1.4.1. Парная поставка — `~/Downloads/WebPilot-0.6.51/`; обновляются root app и /Applications. Native Windows не запускалась.
 
-## Текущий локальный выпуск — 0.6.57
+## Текущий локальный выпуск — 0.6.58
 
-Workflow Kit подключён как canonical `@webpilot/workflow-kit@1.4.13` из `/Users/oleksandroliinyk/VSCODE/WorkflowKit`. Development imports используют package exports; `resources/workflow-kit` — ignored generated staging из `getRuntimeRoot()` для external workers и Electron package. Tracked duplicate отсутствует. Парная поставка macOS arm64 / Windows x64 — `~/Downloads/WebPilot-0.6.57/`; package verifier подтверждает Kit 1.4.13, 35 файлов и digest `da763a50c32583553b6ca06e29c975766ab092890bbf9787bd2a6aca87be44c4`. Native Windows не запускалась.
+Workflow Kit подключён как canonical `@webpilot/workflow-kit@1.5.0` из `/Users/oleksandroliinyk/VSCODE/WorkflowKit`. Single-active contract: один checkout/worktree = один `.harness/plans/todo-plan.md`; Web Pilot sessions не владеют plan. Generated `resources/workflow-kit`: 35 файлов, digest `0db567df6f0c8f68f3119a7322b4c1c6d28cd06bf57b267993b792097bbb2c75`. Парная поставка macOS arm64 / Windows x64 — `~/Downloads/WebPilot-0.6.58/`; source commit `c135f1a523bdd5dc1c26a5e8ca72327866a093e0`, `packagedSourceMatches=true`. Native Windows и clean VM не запускались.
 
 ## Предыдущий локальный выпуск — 0.6.55
 

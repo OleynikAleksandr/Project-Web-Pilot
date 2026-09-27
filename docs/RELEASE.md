@@ -548,3 +548,17 @@ Project Web Pilot обновлён до canonical `@webpilot/workflow-kit@1.4.13
 | Windows x64 | 316585724 | `edeafce525d30f5c7d92c49206873acc02641e979fa447948b28a1a533cc5989` | `395e696d76e1684101782eddcee4c75255dcf513c812d1bc3935284d8a07e02b` |
 
 Оба ZIP прошли integrity check. Windows package verifier подтвердил PE, portable Node, Windows runtime и Workflow Kit 1.4.13. Native Windows и clean VM не запускались.
+
+## Локальный парный выпуск 0.6.58 — 27.09.2026
+
+Главное изменение — переход на **single active plan**: один Git checkout/worktree = один current `.harness/plans/todo-plan.md`. Web Pilot sessions сохраняют chat URL/title/Chat|Work/history, но больше не владеют и не выбирают Workflow Kit plan. Prepared-plan/bind/adopt UI/lifecycle удалены; Workflow Kit 1.5.0 архивирует legacy `by-id` / `by-session` и сохраняет compatibility `--session` как no-op.
+
+Canonical `@webpilot/workflow-kit@1.5.0`: 35 runtime files, SHA-256 `0db567df6f0c8f68f3119a7322b4c1c6d28cd06bf57b267993b792097bbb2c75`. Финальный `npm run build` выполнен из чистого source commit `c135f1a523bdd5dc1c26a5e8ca72327866a093e0`; release manifest: `sourceFiles=95`, `packagedSourceMatches=true`. Поставка: `~/Downloads/WebPilot-0.6.58/`.
+
+| Платформа | Размер, байт | SHA-256 ZIP | ASAR SHA-256 |
+| --- | ---: | --- | --- |
+| macOS arm64 | 181471570 | `a80df450f37d92dc682ca8b085eeeae2b6024bbd16a01c67c7fb26fcd02dab4f` | `960269dc66032aafdf51ca2f29f1abcd4de851902265b9a115aafcaf3d70f968` |
+| Windows x64 | 316733865 | `bd338add3a7d24520ee1fe5722b932580e78118de15ac7f11b48f72200c96f2a` | `d3db825afed890281eec2515c74e32a6040dfedfc879415ebdc8221215b9bfa7` |
+
+Оба ZIP прошли integrity check. Корневой `Project Web Pilot.app` и `/Applications/Project Web Pilot.app` имеют CFBundleShortVersionString 0.6.58 и одинаковый ASAR; inode постоянного root app сохранён: `406600483`. Windows verifier подтвердил `Project Web Pilot.exe` SHA-256 `7662af0bd92befccd9217ca67ecdbf43bd3c16a46de76c31ece373da3269fe50`, portable Node SHA-256 `721ab118a3aac8584348b132767eadf51379e0616f0db802cc1e66d7f0d98f85` и Windows runtime SHA-256 `1f041488ad97d8abf1984fd3521afb8abe15f50b8df3d3e11f1cc4248e019d98`. Native Windows и clean VM не запускались.
+
