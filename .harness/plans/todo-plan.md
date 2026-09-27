@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 628,
+  "plan_revision": 630,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-owned-plans-028",
@@ -843,13 +843,14 @@
         "Границы Web Pilot и Workflow Kit, backward compatibility и отсутствие release на этой фазе зафиксированы"
       ],
       "expected_commit_message": "docs: plan single active plan adaptation",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-owned-plans-028",
         "task_id": "T015",
         "role": "implementation"
-      }
+      },
+      "actual_files": []
     },
     {
       "id": "T016",
@@ -1123,7 +1124,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-owned-plans-028
 Current Task: нет
-Revision: 628
+Revision: 630
 
 ## Цель
 
@@ -1196,8 +1197,8 @@ Revision: 628
   - Git Commit: [DONE] release: Web Pilot 0.6.57 с Workflow Kit 1.4.13
   - Reference: session-owned-plans-028 / T014 / implementation
   - Файлы: package.json, package-lock.json, scripts/check-workflow-kit-dependency.mjs, scripts/verify-windows-package.mjs, tests/workflow-kit-source.test.mjs, tests/sidebar.test.mjs, resources/project-doctor/core.mjs, resources/workspace-setup-worker.mjs, tests/workspace-setup.test.mjs, README.md, AGENTS.md, docs/PRODUCT.md, docs/CLEAN_INSTALL.md, docs/WORKFLOW_START.md, docs/WORKSPACE_SETUP.md, docs/SOURCE_WORKSPACES.md, docs/architecture/OVERVIEW.md, docs/architecture/ARCHITECTURE.md, docs/MODULES.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/modules/project-doctor.md, docs/modules/workflow-kit-recovery.md, docs/DOCUMENTATION_INDEX.md
-- [TODO] T015: Зафиксировать consumer contract single active plan — Ожидает
-  - Git Commit: [PENDING] docs: plan single active plan adaptation
+- [DONE] T015: Зафиксировать consumer contract single active plan — Завершено
+  - Git Commit: [DONE] docs: plan single active plan adaptation
   - Reference: session-owned-plans-028 / T015 / implementation
   - Файлы: docs/planning/single-active-plan-adaptation.md
 - [TODO] T016: Проецировать один current plan во все sessions — Ожидает
