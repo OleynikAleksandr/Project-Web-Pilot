@@ -1,11 +1,13 @@
 # Workflow Kit — Single Active Plan Migration
-## Проектная спецификация следующей сессии
+## Проектная спецификация и результат миграции
 
-Статус: READY FOR NEXT SESSION
+Статус: IMPLEMENTED — @webpilot/workflow-kit 1.5.0
 Дата: 2026-09-27
 Целевой workspace: /Users/oleksandroliinyk/VSCODE/WorkflowKit
 Canonical package на момент подготовки: @webpilot/workflow-kit 1.4.13
 Текущий HEAD на момент подготовки: b895149436ca3d2a390bced85e275196a3e76530
+
+Документ сохранён как implementation record. Формулировки «следующая сессия» ниже описывают исходный план до выполнения; действующий контракт после реализации — Workflow Kit 1.5.0 и [Workflow Kit Package](../modules/workflow-kit-package.md).
 
 ---
 
@@ -1198,3 +1200,19 @@ Agent can change.
 The current plan remains one.
 
 Parallel state requires a parallel Git worktree.
+
+---
+
+## 44. Release result
+
+Scope реализован в **@webpilot/workflow-kit 1.5.0**.
+
+Release runtime:
+
+- canonical source files: 35;
+- SHA-256: `0db567df6f0c8f68f3119a7322b4c1c6d28cd06bf57b267993b792097bbb2c75`;
+- fresh install использует один current `.harness/plans/todo-plan.md`;
+- installer поддерживает upgrade from 1.4.13 и переносит `by-id/by-session` в read-only history;
+- legacy `--session` остаётся compatibility/no-op, а historical `--plan` не становится runtime selector;
+- package, runtime и consumer-contract проверки прошли в управляемом T006 commit `adc38a21c111edc718f0652093a627d824b71c3c`;
+- self-host cutover выполняется после финального DOCS commit согласно разделу 34, без создания prepared future plan.

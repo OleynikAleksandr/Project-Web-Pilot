@@ -1,5 +1,7 @@
 # Workflow Kit Package — техническая спецификация
 
+Текущий release contract: `@webpilot/workflow-kit` **1.5.0**. Canonical runtime: 35 файлов, SHA-256 `0db567df6f0c8f68f3119a7322b4c1c6d28cd06bf57b267993b792097bbb2c75`.
+
 ## Назначение
 
 `@webpilot/workflow-kit` — единственный canonical Node.js package Workflow Kit. Он предоставляет CLI, installer/upgrade, programmatic imports для доверенных локальных клиентов и self-contained runtime payload для упаковки приложений.
@@ -111,4 +113,4 @@ Workspace Setup и project readiness проверяют только current che
 
 `scripts/check-package.mjs` проверяет package identity/fileset/exports и отсутствие project/runtime state в tarball.
 
-Финальная release version и digest фиксируются в release-задаче T006.
+Release **@webpilot/workflow-kit 1.5.0**: canonical runtime — **35 файлов**, SHA-256 **0db567df6f0c8f68f3119a7322b4c1c6d28cd06bf57b267993b792097bbb2c75**. Installer принимает upgrade с 1.4.13; runtime regression проверяет этот переход, архивирование legacy session plans, strict current recovery budget и Git worktree isolation.
