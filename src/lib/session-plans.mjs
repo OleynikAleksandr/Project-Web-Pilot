@@ -151,15 +151,21 @@ export function withSessionPlan(root, selector, fn) {
   return withPlanFile(root, PLAN, { sessionId: selected.sessionId }, () => fn(selected));
 }
 
-export function sessionPlanView(root, sessionId) {
-  if (sessionId !== undefined && sessionId !== null) validIdentity(sessionId, 'sessionId');
+export function currentPlanView(root) {
   const current = currentPlan(root);
   return {
     ok: true,
-    session_id: sessionId ?? null,
     plan_id: current.plan.scope_id,
     plan_path: PLAN,
     plan: current.plan,
+  };
+}
+
+export function sessionPlanView(root, sessionId) {
+  if (sessionId !== undefined && sessionId !== null) validIdentity(sessionId, 'sessionId');
+  return {
+    ...currentPlanView(root),
+    session_id: sessionId ?? null,
     prepared: [],
     unassigned: [],
   };

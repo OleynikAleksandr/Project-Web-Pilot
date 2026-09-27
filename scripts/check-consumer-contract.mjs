@@ -60,7 +60,7 @@ function consumerProbe(cwd) {
   const code = `
     import fs from 'node:fs';
     import path from 'node:path';
-    import { VERSION, getRuntimeRoot } from '@webpilot/workflow-kit';
+    import { VERSION, getRuntimeRoot, currentPlanView, sessionPlanView } from '@webpilot/workflow-kit';
     const required = ${JSON.stringify(REQUIRED_SUBPATHS)};
     const imported = [];
     for (const name of required) {
@@ -70,7 +70,8 @@ function consumerProbe(cwd) {
     }
     const runtimeRoot = getRuntimeRoot();
     if (!fs.existsSync(path.join(runtimeRoot, 'WORKFLOW.md'))) throw new Error('Runtime root has no WORKFLOW.md');
-    process.stdout.write(JSON.stringify({ version: VERSION, runtimeRoot, imported }));
+    if (typeof currentPlanView !== 'function' || typeof sessionPlanView !== 'function') throw new Error('Missing single-active consumer facade');
+    process.stdout.write(JSON.stringify({ version: VERSION, runtimeRoot, imported, currentPlanView: true, sessionPlanView: true }));
   `;
   return JSON.parse(run(process.execPath, ['--input-type=module', '-e', code], cwd));
 }

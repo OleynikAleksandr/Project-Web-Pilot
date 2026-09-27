@@ -1,209 +1,86 @@
 # Workflow Kit Package — техническая спецификация
 
-## 1. Назначение
+## Назначение
 
-`@webpilot/workflow-kit` — canonical Node.js package существующего Workflow Kit.
+`@webpilot/workflow-kit` — единственный canonical Node.js package Workflow Kit. Он предоставляет CLI, installer/upgrade, programmatic imports для доверенных локальных клиентов и self-contained runtime payload для упаковки приложений.
 
-Он должен одновременно поддерживать:
+Source of truth: `src/`. Установленный `<project>/.harness/kit/` — производный snapshot installer-а, а не второй редактируемый исходник.
 
-- CLI Workflow Kit;
-- installer/upgrade в обычный project workspace;
-- programmatic imports для доверенных локальных клиентов, прежде всего WebPilot и будущего ChatGPT MCP App adapter;
-- получение self-contained runtime payload для упаковки приложений.
+## Current plan contract
 
-Package не меняет модель данных Workflow Kit и не становится отдельным сервисом.
-
-## 2. Canonical layout
-
-Целевая структура первого этапа:
+Project state принадлежит Git checkout/worktree:
 
 ```text
-WorkflowKit/
-├── package.json
-├── src/
-│   ├── WORKFLOW.md
-│   ├── cli.mjs
-│   ├── install.mjs
-│   ├── lib/
-│   ├── schemas/
-│   ├── templates/
-│   └── examples/
-├── scripts/
-├── tests/
-└── docs/
+one checkout/worktree
+        =
+one current plan
+        =
+.harness/plans/todo-plan.md
 ```
 
-Первичный `src/` создаётся из текущего Workflow Kit 1.4.12 без изменения поведения.
+Chat/WebPilot session не владеет plan и не выбирает его. Обычные `status/validate/recover/task/commit` работают без session selector.
 
-## 3. Package identity
+Legacy `--session` временно принимается только как compatibility metadata. Legacy `--plan` не может переключить runtime на historical plan: допускается только current scope ID, иначе возвращается `PLAN_NOT_CURRENT`.
 
-Начальное имя: `@webpilot/workflow-kit`.
+`plan:prepare`, `plan:bind` и ownership-`plan:adopt` удалены из постоянного workflow contract.
 
-Начальная версия package: `1.4.12`.
+## Consumer API
 
-На первом этапе package остаётся private/local и не требует npm publication.
-
-Node.js: >= 22, как у текущего Workflow Kit.
-
-## 4. Public surface v1
-
-Цель первого выделения — совместимость, а не немедленное скрытие всех внутренних модулей.
-
-Обязательные точки:
-
-- CLI/bin `workflow`;
-- package root / version;
-- installer;
-- session plans;
-- plan read/projection;
-- recovery/context packet;
-- actions, необходимые существующему WebPilot;
-- schemas/templates как package resources.
-
-Допускаются subpath exports, которые отображают существующие модули `src/lib/*.mjs`, чтобы WebPilot можно было мигрировать без переписывания Workflow Kit.
-
-После успешной миграции public API можно сузить отдельной задачей.
-
-## 5. Installed runtime
-
-Обычный подключённый проект по-прежнему получает:
-
-```text
-<project>/.harness/kit/
-<project>/scripts/workflow*
-<project>/.harness/kit-manifest.json
-```
-
-Это installed runtime snapshot, созданный installer-ом canonical package.
-
-Инварианты:
-
-- runtime содержит версию package;
-- runtime не редактируется вручную как source;
-- upgrade выполняется существующей безопасной логикой manifest/hash;
-- canonical package остаётся единственным местом разработки.
-
-## 6. Self-hosting репозитория WorkflowKit
-
-Текущий репозиторий сам использует Workflow Kit и поэтому имеет `.harness/kit`.
-
-На первой миграции не удалять этот runtime. Сначала package должен доказать эквивалентность и возможность безопасно генерировать/update установленный runtime.
-
-Разрешается временное физическое сосуществование `src/` и `.harness/kit`, но:
-
-- source of truth только `src/`;
-- проверка должна ловить случайное расхождение;
-- изменение `.harness/kit` напрямую не считается разработкой package.
-
-Удаление или специальный self-host режим допускается только отдельным последующим решением, если это реально упрощает систему.
-
-## 7. Подключение WebPilot
-
-Исходное состояние перед выделением package подтверждено:
-
-- WebPilot `resources/workflow-kit` и текущий Kit 1.4.12 побайтно/структурно совпадают по `diff -qr`;
-- обе директории содержат 35 файлов;
-- WebPilot напрямую импортирует `resources/workflow-kit` из `src/session-plans.mjs` и нескольких тестов;
-- `resources/workspace-setup-worker.mjs` импортирует installer и другие модули из `./workflow-kit/lib/*`;
-- Electron packaging включает весь `resources` каталог, а Windows verifier проверяет наличие `resources/resources/workflow-kit/WORKFLOW.md`.
-
-Целевое состояние:
-
-### Development
-
-WebPilot подключает `@webpilot/workflow-kit` из canonical local package.
-
-Runtime-код и тесты импортируют package exports, а не repository-owned copy.
-
-### Packaged application
-
-Готовое приложение обязано быть self-contained и не зависеть от соседней папки `/VSCODE/WorkflowKit`.
-
-Перед Electron packaging build step получает runtime payload из resolved package и stage-ит его в resources сборки.
-
-Staged runtime — build artifact. Он не является вторым source repository.
-
-### Version check
-
-Сборка/тест должны падать, если staged Workflow Kit version не равна resolved package version.
-
-## 8. Способ локальной зависимости
-
-Для первой миграции предпочтителен простой local file dependency на canonical repo/package.
-
-Точный npm-механизм фиксируется во время T001 после минимального package spike с учётом Electron packager и Windows build.
-
-Критерий выбора важнее синтаксиса:
-
-- один editable source;
-- обычный `npm install`/подготовка development environment;
-- self-contained release;
-- отсутствие ручного copy step;
-- воспроизводимая проверка версии.
-
-Не вводить registry только ради этой миграции.
-
-## 9. Проверки canonical package
-
-Минимально обязательны:
-
-1. baseline digest/fileset 1.4.12;
-2. импорт package exports под Node 22;
-3. CLI `status/recover` на fixture repo;
-4. installer создаёт ожидаемый `.harness/kit`;
-5. installed runtime version совпадает с package;
-6. session-owned plan view/recovery работает;
-7. upgrade/inspect существующей 1.4.12 установки не повреждает state;
-8. package tarball/fileset не включает секреты, `.git`, runtime state или лишние project docs.
-
-## 10. Проверки WebPilot после миграции
-
-В workspace Project Web Pilot:
-
-1. unit suite;
-2. session plan tests;
-3. workflow-kit recovery/source tests, переписанные на package contract;
-4. Electron smoke;
-5. Workspace Setup: inspect/install/upgrade реального test workspace;
-6. macOS package verification;
-7. Windows package verification;
-8. проверка, что готовый package содержит Workflow Kit нужной версии и запускает workspace setup без sibling WorkflowKit repo.
-
-## 11. Rollback
-
-До удаления WebPilot duplicate:
-
-- canonical package должен пройти собственные проверки;
-- WebPilot dependency path должен быть подтверждён в development;
-- packaging staging должен быть подтверждён.
-
-Миграция WebPilot выполняется отдельным коммитом/серией микрозадач его собственного плана. При отказе WebPilot остаётся на последнем рабочем commit с bundled 1.4.12.
-
-## 12. Future consumer
-
-Будущий ChatGPT MCP App adapter импортирует canonical package через тот же dependency contract.
-
-Он не получает `resources/workflow-kit` и не содержит business logic Workflow Kit.
-
-## 13. Consumer contract v1
-
-Canonical package предоставляет два уровня подключения.
-
-### Programmatic imports
-
-Основные клиенты используют package name и subpath exports:
+Основные импорты:
 
 ```js
-import { VERSION, getRuntimeRoot } from '@webpilot/workflow-kit';
-import { sessionPlanView } from '@webpilot/workflow-kit/lib/session-plans';
+import {
+  VERSION,
+  getRuntimeRoot,
+  currentPlanView,
+  sessionPlanView,
+} from '@webpilot/workflow-kit';
+
 import { contextPacket } from '@webpilot/workflow-kit/lib/recovery';
+import { install, inspect } from '@webpilot/workflow-kit/lib/installer';
 ```
 
-Для миграции WebPilot подтверждены subpath exports, которые покрывают его текущие прямые зависимости: `common`, `actions`, `session-plans`, `plan`, `transaction`, `installer`, `inspection-inputs`, `installation-files`, `git`.
+Также сохраняются subpath exports для `common`, `actions`, `session-plans`, `plan`, `transaction`, `installer`, `inspection-inputs`, `installation-files`, `git` и других существующих lib-модулей.
 
-### Runtime resource
+### currentPlanView
 
-`getRuntimeRoot()` возвращает абсолютный путь к 35-файловому runtime payload текущей версии. Этот каталог можно автоматически скопировать в staging Electron resources:
+`currentPlanView(root)` — основной checkout-scoped consumer view. Он возвращает current `todo-plan.md`, его `plan_id`/scope и parsed plan.
+
+### sessionPlanView — transition facade
+
+`sessionPlanView(root, anySessionId)` временно сохраняется для адаптации старого Project Web Pilot.
+
+Его семантика:
+
+- любой syntactically valid session ID видит один и тот же current plan checkout;
+- `session_id` может echo-иться обратно consumer-у;
+- `prepared` и `unassigned` пусты;
+- session ID не выбирает plan и не создаёт owner;
+- historical `planId` не является runtime selector.
+
+После адаптации Web Pilot новый код должен предпочитать `currentPlanView`; compatibility facade можно удалить отдельным breaking change.
+
+## Legacy migration
+
+Upgrade session-owned установки:
+
+1. сначала строго валидирует existing `.harness/plans/todo-plan.md`;
+2. valid current plan всегда остаётся winner, даже если legacy directories содержат ACTIVE plans;
+3. invalid/missing current plan останавливает migration до любых destructive writes;
+4. `.harness/plans/by-id/*.md` и `.harness/plans/by-session/*.md` сохраняются в `.harness/plans/archive/legacy-session-plans/` с digest verification и collision-safe именами;
+5. только после подтверждённых archive copies исходные legacy files удаляются;
+6. owner/prepared/session ownership fields удаляются из current plan;
+7. повторный upgrade/migration идемпотентен.
+
+Historical archive не участвует в normal readiness, inspection key или current recovery. Oversized history поэтому не блокирует проект; hard transport limit остаётся строгим для current recovery.
+
+## Git worktrees
+
+Workflow Kit не создаёт worktrees автоматически. Если требуется независимая параллельная работа, consumer создаёт отдельный Git branch/worktree обычными средствами Git. Каждый worktree получает свой tracked `.harness/plans/todo-plan.md` и поэтому имеет независимое current state без глобального registry.
+
+## Runtime resource
+
+`getRuntimeRoot()` возвращает абсолютный путь к canonical runtime payload текущей package version. Consumer может stage его как build artifact:
 
 ```js
 import fs from 'node:fs/promises';
@@ -212,39 +89,26 @@ import { getRuntimeRoot } from '@webpilot/workflow-kit';
 await fs.cp(getRuntimeRoot(), stageDirectory, { recursive: true });
 ```
 
-Копия в staging/package является build artifact. В Git WebPilot она не является редактируемым исходником.
+Готовое приложение обязано быть self-contained и не зависеть от соседнего `/VSCODE/WorkflowKit`.
 
-### Development dependency WebPilot
+## Project Web Pilot adaptation
 
-Для следующей сессии допускается локальная dependency:
+Web Pilot сохраняет старые chat/session records и их chat URL/title/history, но больше не использует legacy `planId`, `originSessionId` или binding metadata для выбора Workflow Kit state.
 
-```json
-{
-  "dependencies": {
-    "@webpilot/workflow-kit": "file:../WorkflowKit"
-  }
-}
-```
+Правило UI:
 
-Это решение выбрано для локальной разработки без npm registry. Если позже понадобится независимый clean-clone build на другой машине, transport package можно заменить на Git/npm source без изменения consumer API.
+> Открыть любой старый или новый chat = открыть его conversation history и показать актуальный current plan выбранного project checkout.
 
-### Packaging rule WebPilot
+Если нужен старый plan, связанный с прежним разговором, он показывается отдельным read-only history view.
 
-Перед `start/test/build`, где нужен relative runtime resource, WebPilot должен автоматически stage-ить текущий `getRuntimeRoot()` в свой generated resources path. Перед Electron packaging staging выполняется обязательно, а verifier проверяет VERSION и runtime digest/fileset.
+Workspace Setup и project readiness проверяют только current checkout state и не full-recover-ят historical plans.
 
-Исходная папка `resources/workflow-kit` после миграции не должна оставаться tracked source. Если этот путь нужен существующему worker-у, он используется только как generated staging directory.
+## Проверки package contract
 
-### Проверенная переносимость
+`scripts/check-runtime-fixture.mjs` проверяет single-active runtime, compatibility session IDs, legacy migration, strict current recovery budget и Git worktree isolation.
 
-`scripts/check-consumer-contract.mjs` проверяет два режима:
+`scripts/check-consumer-contract.mjs` проверяет local `file:` dependency, package/subpath imports, `currentPlanView/sessionPlanView`, `npm pack` standalone consumer и staging runtime без sibling repository.
 
-1. установка package через локальную `file:` dependency и imports по package name;
-2. `npm pack` → установка tarball в изолированный consumer → import без доступа к sibling WorkflowKit workspace → staging 35-файлового runtime.
+`scripts/check-package.mjs` проверяет package identity/fileset/exports и отсутствие project/runtime state в tarball.
 
-Это доказывает, что package можно использовать локально как always-current dependency и выдавать как self-contained artifact.
-
-## 14. Patch 1.4.13
-
-Версия 1.4.13 исправляет чтение prepared-plan до `plan:bind`: read-only команды `status`, `validate` и `recover` принимают исходную `--session` и явный `--plan` подготовленного continuation. Mutating task/commit команды по-прежнему требуют владельца плана.
-
-Runtime fixture создаёт prepared-plan, проверяет COMPLETE recovery до bind и тем самым фиксирует regression contract. Installer поддерживает безопасное обновление установленного Workflow Kit 1.4.12 → 1.4.13 без изменения plan state.
+Финальная release version и digest фиксируются в release-задаче T006.

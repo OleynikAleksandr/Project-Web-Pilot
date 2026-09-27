@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 11,
+  "plan_revision": 13,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "single-active-plan-migration-002",
@@ -291,8 +291,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "single-active-plan-migration-002",
         "task_id": "T005",
@@ -323,7 +323,13 @@
         "Legacy planId не используется как runtime selector.",
         "Packed standalone consumer работает без sibling WorkflowKit repo."
       ],
-      "expected_commit_message": "feat: обновить consumer contract для single-active plan"
+      "expected_commit_message": "feat: обновить consumer contract для single-active plan",
+      "actual_files": [
+        "docs/modules/workflow-kit-package.md",
+        "index.mjs",
+        "scripts/check-consumer-contract.mjs",
+        "src/lib/session-plans.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -427,7 +433,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: single-active-plan-migration-002
 Current Task: нет
-Revision: 11
+Revision: 13
 
 ## Цель
 
@@ -460,8 +466,8 @@ Revision: 11
   - Git Commit: [DONE] test: закрепить single-active plan regressions
   - Reference: single-active-plan-migration-002 / T004 / implementation
   - Файлы: scripts/check-runtime-fixture.mjs, scripts/check-consumer-contract.mjs, scripts/check-package.mjs, docs/planning/single-active-plan-migration.md
-- [TODO] T005: Обновить consumer contract для адаптации Project Web Pilot — Ожидает
-  - Git Commit: [PENDING] feat: обновить consumer contract для single-active plan
+- [DONE] T005: Обновить consumer contract для адаптации Project Web Pilot — Завершено
+  - Git Commit: [DONE] feat: обновить consumer contract для single-active plan
   - Reference: single-active-plan-migration-002 / T005 / implementation
   - Файлы: index.mjs, src/lib/session-plans.mjs, scripts/check-consumer-contract.mjs, docs/modules/workflow-kit-package.md, docs/planning/single-active-plan-migration.md
 - [TODO] T006: Выпустить новую версию Workflow Kit и проверить upgrade с 1.4.13 — Ожидает
