@@ -131,35 +131,21 @@ test('local project alias and explicit session titles persist without changing c
   assert.equal(raw.sessions[0].title, 'Ручное имя'); assert.equal(raw.sessions[0].titleSource, 'manual');
 });
 
-test('page titles are fallback and each scope names only the session selected on first observation', async t => {
+test('session titles remain chat metadata independent of the current project plan', async t => {
   const { project, store } = await fixture(t);
-  const first = await store.select(await project('Scope titles'));
-  assert.equal(await store.setSessionTitle(first.workspace, first.sessionId, 'ChatGPT title'), true);
-  assert.equal(store.selected().titleSource, 'page');
-  assert.equal(await store.applyScopeTitle(first.workspace, first.sessionId,
-    { scopeId: 'scope-a', objective: '  Первый   scope  ', scopeStatus: 'ACTIVE' }), true);
-  assert.equal(store.selected().title, 'Первый scope'); assert.equal(store.selected().titleSource, 'scope');
-  assert.equal(await store.setSessionTitle(first.workspace, first.sessionId, 'Поздний page title'), false);
-
+  const first = await store.select(await project('Chat titles'));
+  assert.equal(await store.setSessionTitle(first.workspace, first.sessionId, 'Первый ChatGPT title'), true);
   const second = await store.newSession(first.workspace, 'chat');
-  assert.equal(await store.applyScopeTitle(first.workspace, second.sessionId,
-    { scopeId: 'scope-a', objective: 'Первый scope', scopeStatus: 'ACTIVE' }), false,
-    'the same scope must not move its title to another session');
-  assert.equal(store.selected().title, '');
-  assert.equal(await store.applyScopeTitle(first.workspace, second.sessionId,
-    { scopeId: 'scope-b', objective: 'Второй scope', scopeStatus: 'BLOCKED' }), true);
-  await store.renameSession(first.workspace, second.sessionId, 'Моё имя');
-  assert.equal(await store.applyScopeTitle(first.workspace, second.sessionId,
-    { scopeId: 'scope-b', objective: 'Второй scope', scopeStatus: 'ACTIVE' }), false);
-  assert.equal(store.selected().title, 'Моё имя');
-  assert.equal(await store.applyScopeTitle(first.workspace, second.sessionId,
-    { scopeId: 'scope-c', objective: 'Третий scope', scopeStatus: 'ACTIVE' }), true,
-    'a later scope may rename the current session again');
-  assert.equal(store.selected().title, 'Третий scope'); assert.equal(store.selected().titleSource, 'scope');
+  await store.renameSession(first.workspace, second.sessionId, 'Ручное имя второй сессии');
 
-  const restarted = new WorkspaceSessions(store.file); await restarted.load();
-  assert.equal(restarted.snapshot().projects[0].sessions.find(s => s.sessionId === second.sessionId).lastNamedScopeId, 'scope-c');
-  assert.equal(restarted.selected().title, 'Третий scope');
+  const reopenedFirst = await store.selectSession(first.workspace, first.sessionId);
+  assert.equal(reopenedFirst.title, 'Первый ChatGPT title');
+  assert.equal(reopenedFirst.scopeId, 'fixture-scope');
+
+  const reopenedSecond = await store.selectSession(first.workspace, second.sessionId);
+  assert.equal(reopenedSecond.title, 'Ручное имя второй сессии');
+  assert.equal(reopenedSecond.scopeId, 'fixture-scope');
+  assert.deepEqual(reopenedSecond.planView, reopenedFirst.planView);
 });
 
 test('switching project cannot mutate another chat or accept late session results', async t => {
@@ -521,28 +507,25 @@ test('v5 migration backs up evidence and never guesses when several chats receiv
   assert.equal('planView' in JSON.parse(await fs.readFile(store.file,'utf8')).projects[0],false);
 });
 
-for (const experience of ['chat','work']) test('prepared '+experience+' session survives a failed store save and repeated creation', async t => {
-  const { project, store: initial }=await fixture(t);let folder=await project('Prepared '+experience);
-  const owners=new Map();let binding=null,sourceId;
-  const inspect=async(w,sid)=>{const base=await readWorkspace(w);const planId=owners.get(sid)??null;return {...base,inspectedSessionId:sid,planId,scopeId:planId,
-    scopeStatus:planId?'ACTIVE':'NONE',objective:planId??'NONE',originSessionId:planId==='future'?sourceId:null,
-    planView:{state:planId?'working':'not-created',completed:0,total:0,tasks:[]}};};
-  const planService={bind:async(_w,input)=>{binding??={session_id:'stable-continuation',experience:input.experience,plan_id:input.planId};owners.set(binding.session_id,'future');return binding;}};
-  const store=new WorkspaceSessions(initial.file,{inspect,planService});const source=await store.select(folder);folder=source.workspace;sourceId=source.sessionId;
-  owners.set(sourceId,'original');await store.selectSession(folder,sourceId);
-  const save=store.save.bind(store);let fail=true;
-  store.save=async data=>{if(fail&&data.projects[0].sessions.some(s=>s.sessionId==='stable-continuation')){fail=false;throw new Error('simulated storage interruption');}return save(data);};
-  await assert.rejects(store.fromPrepared(folder,sourceId,'future',1,experience),/storage interruption/);
-  assert.equal(store.snapshot().projects[0].sessions.length,1);
-  const [created,repeated]=await Promise.all([store.fromPrepared(folder,sourceId,'future',1,experience),store.fromPrepared(folder,sourceId,'future',1,experience)]);
-  assert.equal(created.sessionId,repeated.sessionId);assert.equal(created.experience,experience);assert.equal(created.planId,'future');
-  assert.equal(store.snapshot().projects[0].sessions.length,2);assert.equal(created.originSessionId,null);
-  const restarted=new WorkspaceSessions(store.file,{inspect,planService});await restarted.load();
-  assert.equal((await restarted.selectSession(folder,sourceId)).planId,'original');
-  assert.equal((await restarted.fromPrepared(folder,sourceId,'future',1,experience)).sessionId,created.sessionId);
-  const empty=await restarted.newSession(folder,experience);assert.equal(empty.planId,null);assert.equal(empty.scopeStatus,'NONE');
-  assert.equal(restarted.snapshot().projects[0].scopeTransition,undefined);
-  const saved=JSON.parse(await fs.readFile(store.file,'utf8'));assert.equal('planView' in saved.projects[0],false);
+test('legacy plan metadata remains readable but cannot select the runtime plan', async t => {
+  const { project, store } = await fixture(t);
+  const selected = await store.select(await project('Legacy metadata'));
+  const saved = store.snapshot();
+  const session = saved.projects[0].sessions[0];
+  session.planId = 'historical-plan';
+  session.originSessionId = 'historical-origin';
+  session.legacyPlanId = 'historical-plan';
+  session.planBinding = 'bound';
+  await fs.writeFile(store.file, JSON.stringify(saved, null, 2) + '\n');
+
+  const restarted = new WorkspaceSessions(store.file); await restarted.load();
+  const raw = restarted.snapshot().projects[0].sessions[0];
+  assert.equal(raw.legacyPlanId, 'historical-plan');
+  assert.equal(raw.planId, 'historical-plan');
+  const projected = await restarted.selectSession(selected.workspace, selected.sessionId);
+  assert.equal(projected.planId, 'fixture-scope');
+  assert.equal(projected.originSessionId, null);
+  assert.equal(projected.scopeId, 'fixture-scope');
 });
 
 test('slow projections do not hold mutations; A-B-A selects and persists only the newest generation', async t => {

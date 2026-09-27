@@ -118,7 +118,6 @@ let settingsState = null;
 let doctorState = null;
 const projectDoctor = new ProjectDoctor({ setup: workspaceSetup, ensureServices: () => runtime.ensure() });
 let archiveState = { deletion: null, notice: null, focusWorkspace: null };
-let preparedChoice = null;
 let deletion;
 const shellBackground = { light: '#f4f6f8', dark: '#1b1d22' };
 
@@ -201,7 +200,6 @@ function snapshot() {
     archives: projectedArchives(), settings: settingsState, doctor: doctorState,
     selected, context: controller?.state ?? { phase: 'selected', servicesReady: false, messageSent: false },
     contextPreparation: { busy: selected ? contextCache.isBuilding(selected.workspace, sessionSelection(selected)) : false },
-    preparedChoice: preparedChoice?.workspace === selected?.workspace && preparedChoice?.sourceSessionId === selected?.sessionId ? preparedChoice : null,
     runtimeFolder, platform: process.platform,
     macRuntime: process.platform === 'darwin' ? {
       mode: macRuntimeMode,
@@ -226,7 +224,6 @@ function snapshot() {
 
 function publish() {
   rememberSessionTitle();
-  rememberScopeTitle();
   if (sidebar && !sidebar.webContents.isDestroyed()) sidebar.webContents.send('pilot:state-changed', snapshot());
   publishArchive();
   const state = snapshot();
@@ -251,16 +248,6 @@ function rememberSessionTitle() {
   const title = browser.webContents.getTitle().replace(/\s*[-–—|]\s*ChatGPT$/i, '').trim();
   if (!title || /^(ChatGPT|New chat|Новый чат)$/i.test(title) || selected.title === title) return;
   void store.setSessionTitle(selected.workspace, selected.sessionId, title)
-    .then(changed => { if (changed) publish(); }).catch(() => {});
-}
-
-function rememberScopeTitle() {
-  const selected = store.selected();
-  const info = planMonitor.view(selected, controller?.state?.projectInfo);
-  if (!selected || !info || info.workspace !== selected.workspace || info.inspectedSessionId !== selected.sessionId || selected.lastNamedScopeId === info.scopeId
-      || !['ACTIVE', 'BLOCKED'].includes(info.scopeStatus) || typeof info.scopeId !== 'string' || !info.scopeId
-      || typeof info.objective !== 'string' || !info.objective.trim()) return;
-  void store.applyScopeTitle(selected.workspace, selected.sessionId, info)
     .then(changed => { if (changed) publish(); }).catch(() => {});
 }
 
@@ -428,7 +415,6 @@ async function navigate(project = store.selected(), { refresh = false, generatio
   if (workspaceHealth?.ready && workspaceHealth.workspace === project?.workspace
       && (generation === null || workspaceHealth.generation === ownNavigation))
     workspaceHealth = { ...workspaceHealth, generation: ownNavigation, sessionId: project.sessionId };
-  preparedChoice = null;
   controller?.cancel();
   pageLoading = true; startupFlow?.beginPage(ownNavigation); publish();
   const target = entryUrl ?? project?.chatUrl
@@ -503,8 +489,6 @@ async function reviewWorkspace(workspace, openReady = false, { generation = null
   const firstSessionRequired = !store.project(preview.workspace);
   setupState = { ...preview, phase: 'preview', firstSessionRequired, firstSessionExperience: firstSessionRequired ? firstSessionExperience : 'chat' };
   if (preview.ready && openReady) {
-    await store.reconcilePlanBindings(preview.workspace);
-    if (!navigationCurrent(ownNavigation)) return false;
     workspaceHealth = { ...preview, phase: 'ready', generation: ownNavigation }; setupState = null; workspaceSetup.clear();
     return true;
   }
@@ -516,7 +500,7 @@ async function openConnectedSession(input, sessionId = null, { latest = false, r
   const current = () => navigationCurrent(generation);
   if (!current()) return null;
   if (storageError) throw new Error('Сначала нужно восстановить сохранённый список проектов.');
-  controller.cancel(); preparedChoice = null; settingsState = null; setupState = null;
+  controller.cancel(); settingsState = null; setupState = null;
   startupError = null; pageLoading = true;
   workspaceHealth = { workspace: input, sessionId, generation, phase: 'checking', ready: false }; publish();
   try {
@@ -525,8 +509,8 @@ async function openConnectedSession(input, sessionId = null, { latest = false, r
     if (!current()) return null;
     const record = store.snapshot().projects.find(p => p.workspace === workspace);
     if (record?.archivedAt) { pageLoading = false; workspaceHealth = null; await openArchiveWindow(workspace); return null; }
-    // First connection and legacy adoption retain the complete strict path.
-    if (!record || record.sessions.some(s => s.legacyPlanId && s.planBinding === 'evidence')) {
+    // Only the first connection needs the complete strict setup path.
+    if (!record) {
       if (!await reviewWorkspace(workspace, true, { generation })) return null;
       const project = explicitSession && record
         ? await store.selectSession(workspace, sessionId, { isCurrent: current })
@@ -961,43 +945,6 @@ function registerIpc() {
   registerAction('pilot:set-expanded', input => {
     if (storageError) throw new Error('Сначала нужно восстановить сохранённый список проектов.');
     return store.setExpanded(input?.workspace, input?.expanded);
-  });
-  registerAction('pilot:choose-prepared-plan', async input => {
-    const current = store.selected();
-    if (!current || current.workspace !== input?.workspace || current.sessionId !== input?.sourceSessionId)
-      throw new Error('Выбрана другая сессия.');
-    const readGeneration = navigationId;
-    const info = await store.inspect(current.workspace, current.sessionId);
-    if (!navigationCurrent(readGeneration)) return;
-    const plan = info.preparedPlans.find(p => p.planId === input.planId);
-    if (!plan) throw new Error('Подготовленный план больше не доступен в этой сессии.');
-    preparedChoice = { workspace: current.workspace, sourceSessionId: current.sessionId, planId: plan.planId,
-      revision: plan.revision, title: plan.objective };
-  });
-  registerAction('pilot:cancel-prepared-choice', () => { preparedChoice = null; });
-  registerAction('pilot:create-prepared-session', async experience => {
-    const choice = preparedChoice, current = store.selected();
-    if (!choice || current?.workspace !== choice.workspace || current.sessionId !== choice.sourceSessionId)
-      throw new Error('Сначала выберите подготовленный план.');
-    if (!await reviewWorkspace(choice.workspace, true)) return;
-    const generation = navigationId;
-    const project = await store.fromPrepared(choice.workspace, choice.sourceSessionId, choice.planId, choice.revision, experience);
-    if (!navigationCurrent(generation)) return;
-    preparedChoice = null; startupError = null; contextCache.clear(); await navigate(project, { generation });
-  });
-  registerAction('pilot:open-prepared-session', async input => {
-    const current = store.selected();
-    if (current?.workspace !== input?.workspace || current.sessionId !== input?.sourceSessionId) throw new Error('Выбрана другая сессия.');
-    const readGeneration = navigationId;
-    const info = await store.inspect(current.workspace, current.sessionId);
-    if (!navigationCurrent(readGeneration)) return;
-    const plan = info.preparedPlans.find(p => p.planId === input.planId);
-    if (!plan?.sessionId || !plan.experience) throw new Error('Для этого плана сначала выберите Chat или Work.');
-    if (!await reviewWorkspace(current.workspace, true)) return;
-    const generation = navigationId;
-    const project = await store.fromPrepared(current.workspace, current.sessionId, plan.planId, plan.revision, plan.experience);
-    if (!navigationCurrent(generation)) return;
-    startupError = null; await navigate(project, { generation });
   });
   registerAction('pilot:new-session', async input => {
     if (typeof input?.workspace !== 'string' || !['chat', 'work'].includes(input?.experience)) throw new Error('Выберите проект и тип новой сессии.');

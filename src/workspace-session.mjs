@@ -412,52 +412,6 @@ export class WorkspaceSessions {
 
   newChat(workspace) { return this.newSession(workspace, 'chat'); }
 
-  async reconcilePlanBindings(workspace) {
-    if (!this.planService) return;
-    const project = this.data.projects.find(p => p.workspace === workspace);
-    if (!project || !project.sessions.some(s => s.legacyPlanId && s.planBinding === 'evidence')) return;
-    return this.mutate(async data => {
-      const project = data.projects.find(p => p.workspace === workspace);
-      for (const session of project.sessions.filter(s => s.legacyPlanId && s.planBinding === 'evidence')) {
-        try {
-          const planId = await this.planService.adoptEvidence(workspace, session, project.projectId);
-          if (planId) { session.planId = planId; session.planBinding = 'bound'; session.lastNamedScopeId ??= planId; }
-          else session.planBinding = 'unresolved';
-        } catch (error) {
-          if (['TASK_ACTIVE','PLAN_WRITER_BUSY','WORKFLOW_LOCKED','TRANSACTION_PENDING'].includes(error.code)) continue;
-          session.planBinding = 'unresolved'; session.planBindingError = error.code ?? 'PLAN_ADOPTION_FAILED';
-        }
-      }
-    });
-  }
-
-  fromPrepared(workspace, sourceSessionId, planId, revision, experience) {
-    return this.mutate(async data => {
-      sessionExperience(experience);
-      const project = data.projects.find(p => p.workspace === workspace);
-      if (!project || project.archivedAt || data.selectedWorkspace !== workspace) throw new WorkspaceError('SESSION_CHANGED', 'Выбран другой проект.');
-      const source = project.sessions.find(s => s.sessionId === sourceSessionId);
-      if (!source || source.archivedAt) throw new WorkspaceError('SESSION_CHANGED', 'Исходная сессия недоступна.');
-      if (!this.planService) throw new WorkspaceError('PLAN_SERVICE_REQUIRED', 'Нужен актуальный Workflow Kit.');
-      const requested = this.createSession(experience);
-      const bound = await this.planService.bind(workspace, { sourceSessionId, planId, sessionId: requested.sessionId, experience, revision });
-      let session = project.sessions.find(s => s.sessionId === bound.session_id);
-      if (session?.archivedAt) throw new WorkspaceError('SESSION_ARCHIVED', 'Продолжение находится в архиве. Верните его через окно архива.');
-      if (!session) {
-        const info = await this.inspect(workspace, bound.session_id);
-        if (info.projectId !== project.projectId || info.planId !== planId) throw new WorkspaceError('PLAN_BINDING_CHANGED', 'Принадлежность подготовленного плана изменилась.');
-        session = { ...requested, sessionId: bound.session_id, experience: bound.experience,
-          planId, originSessionId: sourceSessionId, planBinding: 'bound', lastNamedScopeId: planId,
-          title: info.objective, titleSource: 'scope' };
-        project.sessions.push(session);
-      }
-      project.selectedSessionId = session.sessionId; project.expanded = true;
-      session.lastOpenedAt = this.now();
-      Object.assign(project, await this.inspect(workspace, session.sessionId));
-      return currentView(project);
-    });
-  }
-
   setExpanded(workspace, expanded) {
     return this.mutate(data => {
       const project = data.projects.find(p => p.workspace === workspace);
@@ -499,18 +453,6 @@ export class WorkspaceSessions {
       if (!title || explicitTitleSources.has(session.titleSource)) return false;
       if (session.title === title && session.titleSource === 'page') return false;
       session.title = title; session.titleSource = 'page'; return true;
-    });
-  }
-
-  applyScopeTitle(workspace, sessionId, { scopeId, objective, scopeStatus, inspectedSessionId = sessionId, originSessionId = null } = {}) {
-    return this.mutate(data => {
-      const { project, session } = this.activeRecord(workspace, sessionId, data);
-      if (!['ACTIVE', 'BLOCKED'].includes(scopeStatus) || typeof scopeId !== 'string' || !scopeId) return false;
-      if (inspectedSessionId !== sessionId || project.sessions.some(other => other.sessionId !== sessionId && other.planId === scopeId)) return false;
-      if (session.lastNamedScopeId === scopeId) return false;
-      const title = localName(objective, { empty: 'У scope нет названия для сессии.' });
-      session.title = title; session.titleSource = 'scope'; session.lastNamedScopeId = scopeId; session.planId = scopeId; session.originSessionId = originSessionId;
-      return true;
     });
   }
 

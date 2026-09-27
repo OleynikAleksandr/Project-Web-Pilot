@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 634,
+  "plan_revision": 636,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-owned-plans-028",
@@ -948,7 +948,9 @@
         "src/ui/progress.mjs",
         "src/workspace-session.mjs",
         "tests/sidebar.test.mjs",
-        "tests/electron-smoke.mjs"
+        "tests/electron-smoke.mjs",
+        "src/session-plans.mjs",
+        "tests/workspace-session.test.mjs"
       ],
       "documentation_paths": [],
       "verification_ids": [
@@ -961,13 +963,24 @@
         "Новая session создаётся как chat navigation и продолжает current plan"
       ],
       "expected_commit_message": "refactor: remove session plan handoff UI",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-owned-plans-028",
         "task_id": "T018",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "src/main.mjs",
+        "src/preload.cjs",
+        "src/session-plans.mjs",
+        "src/ui/index.html",
+        "src/ui/progress.mjs",
+        "src/ui/sidebar.mjs",
+        "src/workspace-session.mjs",
+        "tests/sidebar.test.mjs",
+        "tests/workspace-session.test.mjs"
+      ]
     },
     {
       "id": "T019",
@@ -1142,7 +1155,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-owned-plans-028
 Current Task: нет
-Revision: 634
+Revision: 636
 
 ## Цель
 
@@ -1227,10 +1240,10 @@ Revision: 634
   - Git Commit: [DONE] refactor: recover current checkout context
   - Reference: session-owned-plans-028 / T017 / implementation
   - Файлы: src/context-session.mjs, src/context-cache.mjs, src/context-inputs.mjs, src/mcp-runtime.mjs, src/mac-runtime-switch.mjs, tests/context-session.test.mjs, tests/context-cache.test.mjs, tests/mcp-runtime.test.mjs, src/session-plans.mjs
-- [TODO] T018: Удалить prepared-plan и ownership routing из UI — Ожидает
-  - Git Commit: [PENDING] refactor: remove session plan handoff UI
+- [DONE] T018: Удалить prepared-plan и ownership routing из UI — Завершено
+  - Git Commit: [DONE] refactor: remove session plan handoff UI
   - Reference: session-owned-plans-028 / T018 / implementation
-  - Файлы: src/main.mjs, src/preload.cjs, src/ui/sidebar.mjs, src/ui/index.html, src/ui/progress.mjs, src/workspace-session.mjs, tests/sidebar.test.mjs, tests/electron-smoke.mjs
+  - Файлы: src/main.mjs, src/preload.cjs, src/ui/sidebar.mjs, src/ui/index.html, src/ui/progress.mjs, src/workspace-session.mjs, tests/sidebar.test.mjs, tests/electron-smoke.mjs, src/session-plans.mjs, tests/workspace-session.test.mjs
 - [TODO] T019: Ограничить readiness и Doctor текущим plan — Ожидает
   - Git Commit: [PENDING] refactor: validate only current workflow plan
   - Reference: session-owned-plans-028 / T019 / implementation

@@ -49,10 +49,6 @@ export class SessionPlans {
       return result;
     } finally { if (inputFile) await fs.unlink(inputFile).catch(() => {}); }
   }
-  bind(workspace, { sourceSessionId, planId, sessionId, experience, revision }) {
-    return this.call(workspace, 'plan:bind', ['--session', sourceSessionId, '--plan', planId,
-      '--target-session', sessionId, '--experience', experience, '--expected-revision', String(revision)]);
-  }
   async loadContext(workspace) {
     try {
       return await this.call(workspace, 'recover', ['--format', 'packet']);
@@ -67,28 +63,5 @@ export class SessionPlans {
       return this.call(workspace, 'recover', ['--session', sessionId, ...(plan.scope_id ? ['--plan', plan.scope_id] : []), '--format', 'packet']);
     }
   }
-  async adoptEvidence(workspace, session, projectId) {
-    if (!session.legacyPlanId) return null;
-    const view = await readSessionPlans(workspace, session.sessionId);
-    if (!view) return null;
-    if (view.plan_id) return view.plan_id;
-    // The command validates historical references and preserves an archived source.
-    let candidate = view.unassigned.find(p => p.plan_id === session.legacyPlanId);
-    if (!candidate) {
-      try {
-        const file = await fs.readFile(path.join(workspace, '.harness/plans/archive', session.legacyPlanId + '.md'), 'utf8');
-        const plan = JSON.parse(file.match(/<!-- workflow-state:begin -->\s*```json\s*([\s\S]*?)```/)?.[1] ?? '');
-        candidate = { plan_id: plan.scope_id, revision: plan.plan_revision };
-      } catch (error) { if (error.code === 'ENOENT') return null; throw error; }
-    }
-    if (candidate && candidate.revision === undefined) {
-      const data = await this.call(workspace, 'status', ['--plan', candidate.plan_id]);
-      candidate.revision = data.plan_revision;
-    }
-    if (!candidate) return null;
-    await this.call(workspace, 'plan:adopt', ['--session', session.sessionId, '--plan', candidate.plan_id,
-      '--expected-revision', String(candidate.revision)], { session_id: session.sessionId, project_id: projectId,
-      scope_id: candidate.plan_id, reason: 'Уникальная связь из сохранённого доставленного recovery packet этой сессии.' });
-    return candidate.plan_id;
-  }
+
 }

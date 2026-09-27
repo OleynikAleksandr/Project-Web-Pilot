@@ -131,41 +131,6 @@ async function action(method, ...args) {
   }
 }
 
-function renderPrepared(state) {
-  const selected = state.selected, plans = selected?.preparedPlans ?? [];
-  $('prepared-card').hidden = !plans.length;
-  const fragments = plans.map(plan => {
-    const item = document.createElement('article'); item.className = 'prepared-item'; item.dataset.planId = plan.planId;
-    const title = document.createElement('h3'); title.className = 'prepared-title'; title.textContent = plan.objective;
-    const status = document.createElement('p'); status.className = 'prepared-state';
-    const view = plan.planView;
-    status.textContent = plan.sessionId ? 'Продолжение · ' + (plan.experience === 'work' ? 'Work' : 'Chat') + ' · ' + view.completed + ' из ' + view.total + ' выполнено' : 'Подготовлен · без сессии';
-    const details = document.createElement('details'); details.className = 'prepared-preview';
-    const key = JSON.stringify([selected.workspace, selected.sessionId, plan.planId]);
-    details.open = preparedExpansion.get(key) ?? !plan.sessionId;
-    const summary = document.createElement('summary'); summary.textContent = details.open ? 'Свернуть план' : 'Посмотреть план здесь';
-    details.addEventListener('toggle', () => {
-      if (!details.isConnected) return;
-      preparedExpansion.set(key, details.open); summary.textContent = details.open ? 'Свернуть план' : 'Посмотреть план здесь';
-    });
-    const tasks = document.createElement('ul'); tasks.className = 'plan-tasks';
-    for (const task of view.tasks) {
-      const row = document.createElement('li'); row.className = 'plan-task'; row.dataset.status = task.status;
-      const mark = document.createElement('span'); mark.className = 'plan-task-state'; mark.setAttribute('aria-hidden','true');
-      mark.textContent = task.status === 'done' ? '✓' : task.status === 'current' ? '●' : '○';
-      const text = document.createElement('strong'); text.textContent = task.title; row.append(mark,text); tasks.append(row);
-    }
-    const docs = document.createElement('div'); docs.className = 'prepared-docs'; docs.textContent = 'Документы к плану';
-    for (const file of plan.documents ?? []) { const text = document.createElement('span'); text.textContent = file; docs.append(text); }
-    details.append(summary,tasks,docs);
-    const button = document.createElement('button'); button.type = 'button'; button.className = 'primary prepared-action';
-    button.textContent = plan.sessionId ? 'Перейти к сессии' : 'Создать сессию с этим планом';
-    button.addEventListener('click', () => action(plan.sessionId ? 'openPreparedSession' : 'choosePreparedPlan', selected.workspace, selected.sessionId, plan.planId));
-    item.append(title,status,details,button); return item;
-  });
-  $('prepared-plans').replaceChildren(...fragments);
-}
-
 // Agent time: current (or last) request and the session total, in minutes and seconds.
 let agentTicker = null;
 const agentClock = ms => { const seconds = Math.max(0, Math.floor(ms / 1000)); return String(Math.floor(seconds / 60)).padStart(2, '0') + ':' + String(seconds % 60).padStart(2, '0'); };
@@ -323,20 +288,9 @@ function render(state) {
             : `В работе · ${plan.completed} из ${plan.total} выполнено`;
     $('plan-title').hidden = !selected.scopeId;
     $('plan-title').textContent = selected.scopeId ? selected.objective : '';
-    const origin = state.projects.find(p => p.workspace === selected.workspace)?.sessions.find(s => s.sessionId === selected.originSessionId);
-    $('plan-origin').replaceChildren(); $('plan-origin').hidden = !selected.originSessionId;
-    if (selected.originSessionId) {
-      $('plan-origin').append(document.createTextNode('Подготовлен в '));
-      if (origin) {
-        const button = document.createElement('button'); button.type = 'button'; button.textContent = '«' + (origin.title || 'предыдущая сессия') + '»';
-        button.addEventListener('click', () => action('selectSession', selected.workspace, origin.sessionId)); $('plan-origin').append(button);
-      } else $('plan-origin').append(document.createTextNode('прежней сессии'));
-    }
     $('plan-status').textContent = statusText; $('plan-status').dataset.state = plan.state;
-    const unresolved = plan.state === 'not-created' && (selected.planBinding === 'unresolved' || selected.unassignedPlans?.length);
-    $('plan-note').hidden = plan.state !== 'closed' && !unresolved;
-    $('plan-note').textContent = unresolved ? 'Связь с прежним планом не подтверждена. План сохранён в истории проекта; обсудите с агентом его привязку.'
-      : plan.state === 'closed' ? 'Проект готов к следующему новому плану.' : '';
+    $('plan-note').hidden = plan.state !== 'closed';
+    $('plan-note').textContent = plan.state === 'closed' ? 'Проект готов к следующему новому плану.' : '';
     $('plan-reason').hidden = !plan.blockedReason; $('plan-reason').textContent = plan.blockedReason ?? '';
     $('plan-tasks').replaceChildren(...plan.tasks.map(task => {
       const item = document.createElement('li'); item.className = 'plan-task'; item.dataset.status = task.status;
@@ -346,7 +300,6 @@ function render(state) {
       title.textContent = task.title; body.append(title); item.append(mark, body); return item;
     }));
   } else { $('plan-tasks').replaceChildren(); $('plan-note').hidden = true; $('plan-reason').hidden = true; }
-  renderPrepared(state);
   const [title, detail, tone] = phases[context.phase] ?? phases.selected;
   $('context-title').textContent = state.pageLoading ? 'Открываем ChatGPT' : title;
   $('context-details').hidden = !contextExpanded;
@@ -390,8 +343,6 @@ function render(state) {
     if (button.closest('#startup-panel') || button.id === 'open-startup') continue;
     button.disabled = actionPending || (state.storageError && ['create-workspace', 'add-workspace', 'retry-context'].includes(button.id));
   }
-  $('next-session-choice').hidden = !state.preparedChoice;
-  $('next-session-title').textContent = state.preparedChoice ? 'Открыть «' + state.preparedChoice.title + '» в новой сессии:' : '';
   setupView.render(state, actionPending);
   archiveView.render(state, actionPending);
   const guidedStartup = !!state.startup?.active && !state.setup && !state.settings;
@@ -410,8 +361,6 @@ function render(state) {
 }
 
 $('context-toggle').addEventListener('click', () => { contextExpanded = !contextExpanded; render(currentState); });
-for (const experience of ['chat', 'work']) $('next-session-' + experience).addEventListener('click', () => action('createPreparedSession', experience));
-$('cancel-prepared-choice').addEventListener('click', () => action('cancelPreparedChoice'));
 $('add-workspace').addEventListener('click', () => action('chooseWorkspace'));
 $('reload-chat').addEventListener('click', () => action('reload'));
 // An outdated Kit opens the regular upgrade preview; the user confirms it there.

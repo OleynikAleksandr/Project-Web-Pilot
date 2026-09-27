@@ -32,10 +32,6 @@ async function fixture(t) {
     async selectSession(workspace, sessionId) { calls.push(['selectSession', workspace, sessionId]); state.selected = { workspace, sessionId }; return { state: structuredClone(state) }; },
     async selectWorkspace(workspace) { calls.push(['selectWorkspace', workspace]); state.selected = { workspace, sessionId: state.projects[0].sessions[0].sessionId }; state.projects[0].expanded = true; return { state: structuredClone(state) }; },
     async setExpanded(workspace, expanded) { calls.push(['setExpanded', workspace, expanded]); state.projects.find(p => p.workspace === workspace).expanded = expanded; return { state: structuredClone(state) }; },
-    async choosePreparedPlan(workspace, sourceSessionId, planId) { calls.push(['choosePreparedPlan', workspace, sourceSessionId, planId]); state.preparedChoice = { workspace, sourceSessionId, planId, title: 'Продолжение' }; return { state: structuredClone(state) }; },
-    async cancelPreparedChoice() { calls.push(['cancelPreparedChoice']); state.preparedChoice = null; return { state: structuredClone(state) }; },
-    async createPreparedSession(experience) { calls.push(['createPreparedSession',experience]); return { state: structuredClone(state) }; },
-    async openPreparedSession(...args) { calls.push(['openPreparedSession',...args]); return { state: structuredClone(state) }; },
     async chooseWorkspace() { calls.push(['chooseWorkspace']); return { state: structuredClone(state) }; },
   };
   window.webPilot = api;
@@ -122,36 +118,19 @@ test('temporary workspace validation preserves scroll across hidden and replaced
   assert.equal(f.document.querySelector('.session.active').dataset.sessionId, 's1');
 });
 
-test('own completed plan stays visible and prepared choice can be cancelled without creating a session', async t => {
+test('one project plan stays visible for the selected chat and legacy ownership metadata has no UI', async t => {
   const f=await fixture(t),state=f.state;
-  state.selected={...state.selected,scopeId:'own',objective:'Мой выполненный план',planView:{state:'awaiting-acceptance',completed:1,total:1,tasks:[{id:'T1',title:'Сохранённый результат',status:'done'}]},preparedPlans:[{
-    planId:'future',objective:'Продолжение',revision:3,sessionId:null,documents:['docs/next.md'],
-    planView:{state:'working',completed:0,total:1,tasks:[{id:'N1',title:'Следующая работа',status:'pending'}]}
-  }]};f.emit(state);
-  assert.equal(f.document.querySelector('#prepared-card .eyebrow').textContent,'План следующей сессии');
-  assert.equal(f.document.querySelector('#accept-plan'),null);assert.equal(f.document.getElementById('plan-title').textContent,'Мой выполненный план');
-  assert.equal(f.document.getElementById('plan-status').textContent.includes('приёмк'),false);
-  assert.equal(f.document.querySelector('#plan-tasks strong').textContent,'Сохранённый результат');
-  f.document.querySelector('.prepared-preview summary').click();await f.settle();assert.equal(f.calls.length,0);
-  f.document.querySelector('.prepared-action').click();await f.settle();
-  assert.deepEqual(f.calls[0],['choosePreparedPlan','/demo','s4','future']);assert.equal(f.document.getElementById('next-session-choice').hidden,false);
-  f.document.getElementById('cancel-prepared-choice').click();await f.settle();
-  assert.equal(f.document.getElementById('next-session-choice').hidden,true);assert.equal(f.calls.some(c=>c[0]==='createPreparedSession'),false);
-  assert.equal(f.document.querySelector('#plan-tasks strong').textContent,'Сохранённый результат');
-  f.document.querySelector('.prepared-action').click();await f.settle();f.document.getElementById('next-session-work').click();await f.settle();
-  assert.deepEqual(f.calls.at(-1),['createPreparedSession','work']);
-  const linked=f.state;linked.preparedChoice=null;linked.selected.preparedPlans[0].sessionId='s1';linked.selected.preparedPlans[0].experience='work';f.emit(linked);
-  assert.equal(f.document.querySelector('.prepared-action').textContent,'Перейти к сессии');
-  f.document.querySelector('.prepared-action').click();await f.settle();assert.deepEqual(f.calls.at(-1),['openPreparedSession','/demo','s4','future']);
-});
-
-test('unresolved migration explains the empty session without assigning a historical plan', async t => {
-  const f=await fixture(t),state=f.state;
-  state.selected={...state.selected,planBinding:'unresolved',planView:{state:'not-created',completed:0,total:0,tasks:[]},unassignedPlans:[{plan_id:'legacy',objective:'Сохранённый план'}]};
+  state.selected={...state.selected,scopeId:'current',objective:'Текущий план проекта',
+    planBinding:'unresolved',originSessionId:'old-session',preparedPlans:[{planId:'legacy-future'}],
+    unassignedPlans:[{plan_id:'legacy'}],
+    planView:{state:'awaiting-acceptance',completed:1,total:1,tasks:[{id:'T1',title:'Сохранённый результат',status:'done'}]}};
   f.emit(state);
-  assert.equal(f.document.getElementById('plan-note').hidden,false);
-  assert.match(f.document.getElementById('plan-note').textContent,/Связь с прежним планом не подтверждена/);
-  assert.equal(f.document.querySelectorAll('#plan-tasks .plan-task').length,0);
+  assert.equal(f.document.querySelector('#plan-card .eyebrow').textContent,'Текущий план проекта');
+  assert.equal(f.document.getElementById('plan-title').textContent,'Текущий план проекта');
+  assert.equal(f.document.querySelector('#plan-tasks strong').textContent,'Сохранённый результат');
+  assert.equal(f.document.getElementById('prepared-card'),null);
+  assert.equal(f.document.getElementById('plan-origin'),null);
+  assert.equal(f.document.getElementById('plan-note').hidden,true);
 });
 
 test('rapid A-B-A navigation reaches IPC immediately and ignores obsolete responses', async t => {
@@ -200,7 +179,7 @@ test('delivered chat shows local tools from the last confirmed runtime status wi
 test('plan card shows current and total agent time in minutes and seconds without live announcements', async t => {
   const f = await fixture(t), state = f.state, timer = f.document.getElementById('agent-time');
   assert.equal(timer.getAttribute('role'), 'timer', 'role=timer is not announced every second');
-  assert.equal(timer.closest('.plan-head').querySelector('.eyebrow').textContent, 'План этой сессии');
+  assert.equal(timer.closest('.plan-head').querySelector('.eyebrow').textContent, 'Текущий план проекта');
   assert.equal(timer.hidden, false);
   assert.equal(timer.textContent, '00:00 · Σ 00:00');
   state.selected = { ...state.selected, agentTime: { totalMs: 3_725_000, lastMs: 65_900 } }; f.emit(state);
