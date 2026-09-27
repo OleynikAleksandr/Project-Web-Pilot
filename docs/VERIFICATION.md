@@ -2074,3 +2074,12 @@ Package contract: resolved `@webpilot/workflow-kit@1.4.12`, runtime 35 файл�
 Managed T004 проверил `npm run smoke` — PASSED и `npm run build` — PASSED. После commit `a581e250f9baf3e79ff688381fc44fe1c8e4e849` generated artifacts первой pre-commit сборки удалены и `npm run build` повторён из зафиксированного HEAD, чтобы release provenance была однозначной. Финальный manifest: `sourceCommit=a581e250f9baf3e79ff688381fc44fe1c8e4e849`, `sourceFiles=95`, `packagedSourceMatches=true`, Workflow Kit 1.4.12 / 35 / expected digest.
 
 Финальные ZIP: macOS `5bdda7cb444b19dd581bef122812077fed75585d8b5f533be54994fa24ec36bb` (181302932 bytes), Windows `57b5e226ee3db64db653e78379ddb7b25aac7c749dd2e0229b6888e2e268811e` (316565254 bytes). Windows verifier дополнительно подтвердил `Project Web Pilot.exe`, portable Node SHA `721ab118a3aac8584348b132767eadf51379e0616f0db802cc1e66d7f0d98f85`, Windows runtime SHA `1f041488ad97d8abf1984fd3521afb8abe15f50b8df3d3e11f1cc4248e019d98` и packaged Workflow Kit. Native Windows/clean VM не проверялись.
+
+
+## Workflow Kit 1.4.13 и парный выпуск 0.6.57
+
+На macOS arm64 / Node 22.17.0 полный `npm test`: 358 тестов, 355 PASS, 3 SKIP, 0 FAIL. Electron smoke: PASSED; `sessionPlans=true`, `preparedPlans=true`, `projectDoctor=true`, `liveChatGPT=false`. Отдельный адресный regression `compatible 1.4.12 upgrades to the bundled Kit and preserves canonical session plans` — PASS.
+
+Dependency/staging contract: `@webpilot/workflow-kit@1.4.13`, 35 runtime files, SHA-256 `da763a50c32583553b6ca06e29c975766ab092890bbf9787bd2a6aca87be44c4`; generated `resources/workflow-kit` совпадает с canonical `getRuntimeRoot()`. Workspace Setup и Project Doctor явно включают 1.4.12 в набор поддерживаемых upgrade sources.
+
+T014 commit: `c0545f53828291a3b652a590aa35852085f10884`. После него парная сборка повторена из зафиксированного HEAD. Финальный manifest: `sourceCommit=c0545f53828291a3b652a590aa35852085f10884`, `sourceFiles=95`, `packagedSourceMatches=true`. ZIP SHA-256: macOS `22db6f3876bcbb2524a50c80fae41601588a7ce27aea21df6bd39cfb7cdd6f96`; Windows `edeafce525d30f5c7d92c49206873acc02641e979fa447948b28a1a533cc5989`. Корневой и /Applications bundles имеют CFBundleShortVersionString 0.6.57 и одинаковый macOS ASAR `533e2036be402edd3be20d365d13eee99a9a0db62234ecc7de49536154fb1996`. Native Windows/clean VM не проверялись.

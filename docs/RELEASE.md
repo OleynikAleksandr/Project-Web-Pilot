@@ -535,3 +535,16 @@ Workflow Kit переведён на canonical `@webpilot/workflow-kit@1.4.12`; 
 | Windows x64 | 316565254 | `57b5e226ee3db64db653e78379ddb7b25aac7c749dd2e0229b6888e2e268811e` | `5fda451f7bfc3650883457018a5d5dc5cb0932f48d6bc938a5452a8bc70513fd` |
 
 Windows package verifier подтвердил PE, portable Node, Windows runtime и Workflow Kit 1.4.12 / 35 files / expected digest. Native Windows и clean VM в этом выпуске не запускались; это остаётся пользовательской проверкой.
+
+## Локальный парный выпуск 0.6.57 — 27.09.2026
+
+Project Web Pilot обновлён до canonical `@webpilot/workflow-kit@1.4.13`. Workspace Setup и Project Doctor принимают целостную установку 1.4.12 как штатно обновляемую до 1.4.13; prepared-plan recovery до `plan:bind` поддерживается новым Kit. Адресный regression `1.4.12 → 1.4.13` сохраняет canonical session plans и завершает upgrade с чистым Git-деревом.
+
+Финальный парный `npm run build` выполнен из подтверждённого source commit `c0545f53828291a3b652a590aa35852085f10884`; `packagedSourceMatches: true`. Workflow Kit в обеих поставках: 1.4.13, 35 файлов, SHA-256 `da763a50c32583553b6ca06e29c975766ab092890bbf9787bd2a6aca87be44c4`. Корневой app и `/Applications/Project Web Pilot.app` обновлены до 0.6.57 с сохранением inode. Поставка: `~/Downloads/WebPilot-0.6.57/`.
+
+| Платформа | Размер, байт | SHA-256 ZIP | ASAR SHA-256 |
+| --- | ---: | --- | --- |
+| macOS arm64 | 181323407 | `22db6f3876bcbb2524a50c80fae41601588a7ce27aea21df6bd39cfb7cdd6f96` | `533e2036be402edd3be20d365d13eee99a9a0db62234ecc7de49536154fb1996` |
+| Windows x64 | 316585724 | `edeafce525d30f5c7d92c49206873acc02641e979fa447948b28a1a533cc5989` | `395e696d76e1684101782eddcee4c75255dcf513c812d1bc3935284d8a07e02b` |
+
+Оба ZIP прошли integrity check. Windows package verifier подтвердил PE, portable Node, Windows runtime и Workflow Kit 1.4.13. Native Windows и clean VM не запускались.
