@@ -4,29 +4,19 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 663,
+  "plan_revision": 664,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
-  "scope_id": "remote-project-ui-research-20260928",
-  "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
-  "objective": "Исследовать удалённую панель проекта через ChatGPT MCP UI и мобильный Web Pilot; подготовить сравнительный отчёт и рекомендуемый следующий шаг",
-  "acceptance_criteria": [
-    "Исследовать удалённую панель проекта через ChatGPT MCP UI и мобильный Web Pilot; подготовить сравнительный отчёт и рекомендуемый следующий шаг"
-  ],
+  "scope_id": null,
+  "execution_scope_status": "NONE",
+  "delivery_status": "IN_PROGRESS",
+  "objective": "Если поручение уже ясно, создайте короткий план и приступайте; иначе обсудите следующий этап проекта.",
+  "acceptance_criteria": [],
   "approved_scope": {
     "functional_paths": [],
-    "documentation_paths": [
-      "docs/planning/remote-project-ui-research.md",
-      "docs/research/remote-project-ui-options-2026-09-28.md",
-      "docs/PRODUCT.md",
-      "docs/architecture/ARCHITECTURE.md",
-      "docs/architecture/OVERVIEW.md",
-      "docs/MODULES.md",
-      "docs/DOCUMENTATION_INDEX.md"
-    ]
+    "documentation_paths": []
   },
-  "baseline_commit": "2c87c9addfc3378911279688cc8ba35da7be363a",
+  "baseline_commit": null,
   "current_task_id": null,
   "context_pack": {
     "documents": [
@@ -53,200 +43,47 @@
         ],
         "required": true,
         "revision": "WORKTREE"
-      },
-      {
-        "path": "docs/planning/remote-project-ui-research.md",
-        "required": true
       }
     ],
     "include_last_completed_task": false,
     "dependency_task_ids": []
   },
-  "tasks": [
-    {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
-      "commit_ref": {
-        "scope_id": "remote-project-ui-research-20260928",
-        "task_id": "T001",
-        "role": "implementation"
-      },
-      "dependencies": [],
-      "functional_paths": [],
-      "documentation_paths": [
-        "docs/planning/remote-project-ui-research.md",
-        "docs/research/remote-project-ui-options-2026-09-28.md"
-      ],
-      "verification_ids": [
-        "research-report"
-      ],
-      "id": "T001",
-      "title": "Исследовать MCP UI, PiP и совместимость клиентов ChatGPT",
-      "why": "Исследовать MCP UI, PiP и совместимость клиентов ChatGPT",
-      "verification_kind": "code",
-      "acceptance_criteria": [
-        "Приведены официальные источники и host matrix с явными неизвестными",
-        "Отделены snapshot, живое обновление и навигация разговоров; учтён прежний adapter"
-      ],
-      "expected_commit_message": "feat: Исследовать MCP UI, PiP и совместимость клиентов ChatGPT",
-      "actual_files": [
-        "docs/research/remote-project-ui-options-2026-09-28.md"
-      ]
-    },
-    {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
-      "commit_ref": {
-        "scope_id": "remote-project-ui-research-20260928",
-        "task_id": "T002",
-        "role": "implementation"
-      },
-      "dependencies": [
-        "T001"
-      ],
-      "functional_paths": [],
-      "documentation_paths": [
-        "docs/planning/remote-project-ui-research.md",
-        "docs/research/remote-project-ui-options-2026-09-28.md"
-      ],
-      "verification_ids": [
-        "research-report"
-      ],
-      "id": "T002",
-      "title": "Оценить мобильный Web Pilot для iOS/Android и готовые open-source основы",
-      "why": "Оценить мобильный Web Pilot для iOS/Android и готовые open-source основы",
-      "verification_kind": "code",
-      "acceptance_criteria": [
-        "Разобраны перенос Electron, embedded ChatGPT, мобильная оболочка и безопасный доступ к Mac",
-        "Проверены первичные источники и существующие решения вместо новой архитектуры с нуля"
-      ],
-      "expected_commit_message": "feat: Оценить мобильный Web Pilot для iOS/Android и готовые open-source основы",
-      "actual_files": [
-        "docs/research/remote-project-ui-options-2026-09-28.md"
-      ]
-    },
-    {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
-      "commit_ref": {
-        "scope_id": "remote-project-ui-research-20260928",
-        "task_id": "T003",
-        "role": "implementation"
-      },
-      "dependencies": [
-        "T002"
-      ],
-      "functional_paths": [],
-      "documentation_paths": [
-        "docs/planning/remote-project-ui-research.md",
-        "docs/research/remote-project-ui-options-2026-09-28.md"
-      ],
-      "verification_ids": [
-        "research-report"
-      ],
-      "id": "T003",
-      "title": "Сопоставить варианты и завершить исследовательский отчёт",
-      "why": "Сопоставить варианты и завершить исследовательский отчёт",
-      "verification_kind": "code",
-      "acceptance_criteria": [
-        "Даны сравнительная таблица, рекомендация, минимальный следующий эксперимент и stop conditions",
-        "Зафиксированы границы безопасности, single current plan и реальные ограничения доказательств"
-      ],
-      "expected_commit_message": "feat: Сопоставить варианты и завершить исследовательский отчёт",
-      "actual_files": [
-        "docs/research/remote-project-ui-options-2026-09-28.md"
-      ]
-    },
-    {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
-      "commit_ref": {
-        "scope_id": "remote-project-ui-research-20260928",
-        "task_id": "DOCS",
-        "role": "implementation"
-      },
-      "dependencies": [
-        "T001",
-        "T002",
-        "T003"
-      ],
-      "functional_paths": [],
-      "documentation_paths": [
-        "docs/planning/remote-project-ui-research.md",
-        "docs/PRODUCT.md",
-        "docs/architecture/ARCHITECTURE.md",
-        "docs/research/remote-project-ui-options-2026-09-28.md",
-        "docs/architecture/OVERVIEW.md",
-        "docs/MODULES.md",
-        "docs/DOCUMENTATION_INDEX.md"
-      ],
-      "verification_ids": [],
-      "id": "DOCS",
-      "title": "Актуализация всех документов проекта",
-      "why": "Сохранить актуальный контекст для следующего агента",
-      "acceptance_criteria": [
-        "Документы соответствуют результату"
-      ],
-      "expected_commit_message": "docs: актуализировать контекст проекта",
-      "actual_files": [
-        "docs/MODULES.md",
-        "docs/DOCUMENTATION_INDEX.md",
-        "docs/architecture/OVERVIEW.md"
-      ]
-    }
-  ],
+  "tasks": [],
   "blocked_reason": null,
   "user_decisions": [
     {
-      "id": "c51ffba8-89fc-4421-8844-471a5c246a33",
-      "text": "Пользователь поручил выполнить описанную задачу и план.",
-      "recorded_at": "2026-09-28T05:41:34.951Z"
+      "id": "15c120eb-1067-4300-bd35-e2552fd7ff82",
+      "text": "Пользователь завершил исследовательский план, принял отчёт и прямо поручил закрыть scope перед началом новой сессии.",
+      "recorded_at": "2026-09-28T06:03:41.097Z"
     }
-  ]
+  ],
+  "archived_scope_id": "remote-project-ui-research-20260928"
 }
 ```
 <!-- workflow-state:end -->
 
 ## Состояние
 
-Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
-Scope: remote-project-ui-research-20260928
+Execution Scope Status: NONE
+Delivery Status: IN_PROGRESS
+Scope: не создан
 Current Task: нет
-Revision: 663
+Revision: 664
 
 ## Цель
 
-Исследовать удалённую панель проекта через ChatGPT MCP UI и мобильный Web Pilot; подготовить сравнительный отчёт и рекомендуемый следующий шаг
+Если поручение уже ясно, создайте короткий план и приступайте; иначе обсудите следующий этап проекта.
 
 ## Критерии приёмки
 
-- Исследовать удалённую панель проекта через ChatGPT MCP UI и мобильный Web Pilot; подготовить сравнительный отчёт и рекомендуемый следующий шаг
 
 ## Микрозадачи
 
-- [DONE] T001: Исследовать MCP UI, PiP и совместимость клиентов ChatGPT — Завершено
-  - Git Commit: [DONE] feat: Исследовать MCP UI, PiP и совместимость клиентов ChatGPT
-  - Reference: remote-project-ui-research-20260928 / T001 / implementation
-  - Файлы: docs/planning/remote-project-ui-research.md, docs/research/remote-project-ui-options-2026-09-28.md
-- [DONE] T002: Оценить мобильный Web Pilot для iOS/Android и готовые open-source основы — Завершено
-  - Git Commit: [DONE] feat: Оценить мобильный Web Pilot для iOS/Android и готовые open-source основы
-  - Reference: remote-project-ui-research-20260928 / T002 / implementation
-  - Файлы: docs/planning/remote-project-ui-research.md, docs/research/remote-project-ui-options-2026-09-28.md
-- [DONE] T003: Сопоставить варианты и завершить исследовательский отчёт — Завершено
-  - Git Commit: [DONE] feat: Сопоставить варианты и завершить исследовательский отчёт
-  - Reference: remote-project-ui-research-20260928 / T003 / implementation
-  - Файлы: docs/planning/remote-project-ui-research.md, docs/research/remote-project-ui-options-2026-09-28.md
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: актуализировать контекст проекта
-  - Reference: remote-project-ui-research-20260928 / DOCS / implementation
-  - Файлы: docs/planning/remote-project-ui-research.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/research/remote-project-ui-options-2026-09-28.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
 
 ## Context Pack For This Cycle
 
 - docs/architecture/OVERVIEW.md → Краткая архитектура проекта
 - docs/MODULES.md → Модули проекта
 - docs/DOCUMENTATION_INDEX.md → Каталог документации
-- docs/planning/remote-project-ui-research.md
 
 Служебные состояния меняются только командами workflow. Приёмка не архивирует scope.
