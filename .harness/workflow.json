@@ -1,19 +1,38 @@
 {
   "schema_version": 1,
   "profile": "DEVELOPMENT",
-  "stack": "Electron 44.3.0 / JavaScript ESM; исследование MCP UI и мобильных платформ без реализации",
+  "stack": "Electron 44 / Node.js 22 / existing Workflow Kit 1.5.0",
   "checks": [
     {
       "required": false,
       "timeout_ms": 120000,
-      "id": "research-report",
-      "executable": "node",
+      "id": "unit",
+      "executable": "npm",
       "args": [
-        "-e",
-        "const fs=require('node:fs'),a=require('node:assert/strict'); const s=fs.readFileSync('docs/research/remote-project-ui-options-2026-09-28.md','utf8'); a.ok(s.length>1500); for(const h of ['2026-09-28','## Основания и границы','## Вариант A','## Источники']) a.ok(s.includes(h),h); a.ok((s.match(/https:\\/\\//g)||[]).length>=4); require('node:child_process').execFileSync('git',['diff','--check'],{stdio:'inherit'}); console.log('Research document structure and whitespace checked; device UI is not tested.');"
+        "test"
+      ]
+    },
+    {
+      "required": false,
+      "timeout_ms": 120000,
+      "id": "smoke",
+      "executable": "npm",
+      "args": [
+        "run",
+        "smoke"
+      ]
+    },
+    {
+      "required": false,
+      "timeout_ms": 120000,
+      "id": "package",
+      "executable": "npm",
+      "args": [
+        "run",
+        "build"
       ],
-      "kind": "test",
-      "evidence": "docs/research/remote-project-ui-options-2026-09-28.md; structure/source presence only, not host UI verification"
+      "kind": "package",
+      "evidence": "Парный локальный релиз macOS arm64 + Windows x64; versioned delivery и постоянный macOS app формируются штатным release pipeline."
     }
   ],
   "budget": {
