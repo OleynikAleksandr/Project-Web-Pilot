@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 15,
+  "plan_revision": 17,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "release-1.5.0-docs-finalization-001",
@@ -134,13 +134,16 @@
         "MIT LICENSE из существующего GitHub main присутствует в локальной истории WorkflowKit без изменения содержимого."
       ],
       "expected_commit_message": "chore: add repository LICENSE",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "release-1.5.0-docs-finalization-001",
         "task_id": "T004",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "LICENSE"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -194,7 +197,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: release-1.5.0-docs-finalization-001
 Current Task: нет
-Revision: 15
+Revision: 17
 
 ## Цель
 
@@ -214,8 +217,8 @@ Revision: 15
   - Git Commit: [DONE] docs: index README
   - Reference: release-1.5.0-docs-finalization-001 / T003 / implementation
   - Файлы: docs/DOCUMENTATION_INDEX.md
-- [TODO] T004: Сохранить GitHub LICENSE в локальной истории — Ожидает
-  - Git Commit: [PENDING] chore: add repository LICENSE
+- [DONE] T004: Сохранить GitHub LICENSE в локальной истории — Завершено
+  - Git Commit: [DONE] chore: add repository LICENSE
   - Reference: release-1.5.0-docs-finalization-001 / T004 / implementation
   - Файлы: LICENSE
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
