@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 760,
+  "plan_revision": 762,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-1-20260928",
@@ -604,13 +604,17 @@
         "Планировочный документ указывает фазу 2 как следующий этап, сохраняет исходный контракт и историю."
       ],
       "expected_commit_message": "feat: Зафиксировать завершение фазы 1 и переход к фазе 2",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "event-driven-runtime-phase-1-20260928",
         "task_id": "P001",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "docs/VERIFICATION.md",
+        "docs/planning/event-driven-runtime.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -693,7 +697,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-phase-1-20260928
 Current Task: нет
-Revision: 760
+Revision: 762
 
 ## Цель
 
@@ -744,8 +748,8 @@ Revision: 760
   - Git Commit: [DONE] feat: Распознать Resume stream unavailable и выпустить 0.6.65 для macOS/Windows
   - Reference: event-driven-runtime-phase-1-20260928 / T009 / implementation
   - Файлы: src/chatgpt-dom.mjs, tests/page-state.test.mjs, tests/electron-smoke.mjs, tests/installed-observer-fixture.cjs, scripts/check-event-runtime-release.mjs, package.json, package-lock.json, docs/planning/event-driven-runtime.md
-- [TODO] P001: Зафиксировать завершение фазы 1 и переход к фазе 2 — Ожидает
-  - Git Commit: [PENDING] feat: Зафиксировать завершение фазы 1 и переход к фазе 2
+- [DONE] P001: Зафиксировать завершение фазы 1 и переход к фазе 2 — Завершено
+  - Git Commit: [DONE] feat: Зафиксировать завершение фазы 1 и переход к фазе 2
   - Reference: event-driven-runtime-phase-1-20260928 / P001 / implementation
   - Файлы: docs/planning/event-driven-runtime.md, docs/VERIFICATION.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
