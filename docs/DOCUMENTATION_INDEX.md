@@ -142,3 +142,12 @@ Scope `stable-mcp-connector-036` завершает интеграцию scope 0
 Исторический выпуск 0.6.51: RELEASE.md, VERIFICATION.md. Выбор первого проекта описан в `docs/modules/first-run-onboarding.md` и WORKSPACE_SETUP.md.
 
 Текущий выпуск 0.6.58: [RELEASE](RELEASE.md), [VERIFICATION](VERIFICATION.md), single-active planning — `docs/planning/single-active-plan-adaptation.md`; canonical Workflow Kit 1.5.0 / 35 files / digest `0db567df…bbb2c75`; парная поставка находится в `~/Downloads/WebPilot-0.6.58/`.
+
+## Удалённый интерфейс — исследование 2026-09-28
+
+| Документ | Назначение |
+| --- | --- |
+| [Контракт исследования](planning/remote-project-ui-research.md) | Границы сравнения MCP UI и мобильного клиента; без реализации и изменения runtime |
+| [Сравнительный отчёт](research/remote-project-ui-options-2026-09-28.md) | Первичные источники, предыдущий adapter, ограничения клиентов/PiP, мобильные основы, рекомендация и критерии следующего эксперимента |
+
+Исследовательский scope `remote-project-ui-research-20260928` не меняет поставку 0.6.58 и не подтверждает ещё не выполненные проверки мобильного UI.

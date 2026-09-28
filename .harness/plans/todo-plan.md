@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 661,
+  "plan_revision": 663,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "remote-project-ui-research-20260928",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Исследовать удалённую панель проекта через ChatGPT MCP UI и мобильный Web Pilot; подготовить сравнительный отчёт и рекомендуемый следующий шаг",
   "acceptance_criteria": [
     "Исследовать удалённую панель проекта через ChatGPT MCP UI и мобильный Web Pilot; подготовить сравнительный отчёт и рекомендуемый следующий шаг"
@@ -158,8 +158,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "remote-project-ui-research-20260928",
         "task_id": "DOCS",
@@ -187,7 +187,12 @@
       "acceptance_criteria": [
         "Документы соответствуют результату"
       ],
-      "expected_commit_message": "docs: актуализировать контекст проекта"
+      "expected_commit_message": "docs: актуализировать контекст проекта",
+      "actual_files": [
+        "docs/MODULES.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/architecture/OVERVIEW.md"
+      ]
     }
   ],
   "blocked_reason": null,
@@ -205,10 +210,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: remote-project-ui-research-20260928
 Current Task: нет
-Revision: 661
+Revision: 663
 
 ## Цель
 
@@ -232,8 +237,8 @@ Revision: 661
   - Git Commit: [DONE] feat: Сопоставить варианты и завершить исследовательский отчёт
   - Reference: remote-project-ui-research-20260928 / T003 / implementation
   - Файлы: docs/planning/remote-project-ui-research.md, docs/research/remote-project-ui-options-2026-09-28.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать контекст проекта
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать контекст проекта
   - Reference: remote-project-ui-research-20260928 / DOCS / implementation
   - Файлы: docs/planning/remote-project-ui-research.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/research/remote-project-ui-options-2026-09-28.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
 

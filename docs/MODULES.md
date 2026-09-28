@@ -94,3 +94,7 @@ Workflow Kit / Context Recovery: единственный editable source — `/
 ## Поставляемый Workflow Kit 1.4.11 — 0.6.52
 
 Workflow Kit / Context Recovery: `resources/workflow-kit` = 1.4.11, контракт — [workflow-kit-recovery](modules/workflow-kit-recovery.md); открытие и upgrade проектов 1.4.1–1.4.3 — [WORKSPACE_SETUP](WORKSPACE_SETUP.md). Собственный `.harness/kit` репозитория — 1.4.1.
+
+## Удалённая панель проекта — исследование 2026-09-28
+
+Совместная область Workspace & Sessions, Workflow Kit / Context Recovery и Runtime Lifecycle. [Контракт исследования](planning/remote-project-ui-research.md); [сравнительный отчёт](research/remote-project-ui-options-2026-09-28.md) — MCP UI/PiP, host compatibility, мобильный Web Pilot и облегчённая панель. Рекомендован отдельный read-only UI spike с проверкой реальных клиентов; реализация не выполнялась. Новый store планов не создаётся; текущий продукт остаётся 0.6.58.
