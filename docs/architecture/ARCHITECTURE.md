@@ -1353,3 +1353,8 @@ Regression smoke намеренно портит server title, заставля�
 ## 0.6.62 — event-driven title sync
 
 Title sync исключён из generic `ContextSession.onChange`; retry timers/backoff удалены. `ContextSession` имеет отдельный `onChatBound` для единственного late-bind события. Manual rename сохраняется локально внутри IPC и запускает native sync fire-and-forget, поэтому сеть не блокирует sidebar action queue.
+
+
+## 0.6.63 — built-in rename dialog
+
+Sidebar владеет собственным `<dialog>` для rename вместо browser-native `window.prompt()`, который в embedded Electron UI не показывался надёжно. Rename IPC и event-driven native title sync не меняются.

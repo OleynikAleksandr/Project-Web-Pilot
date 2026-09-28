@@ -99,6 +99,6 @@ Workflow Kit / Context Recovery: `resources/workflow-kit` = 1.4.11, контра
 
 Совместная область Workspace & Sessions, Workflow Kit / Context Recovery и Runtime Lifecycle. [Контракт исследования](planning/remote-project-ui-research.md); [сравнительный отчёт](research/remote-project-ui-options-2026-09-28.md) — MCP UI/PiP, host compatibility, мобильный Web Pilot и облегчённая панель. Рекомендован отдельный read-only UI spike с проверкой реальных клиентов; реализация не выполнялась. Новый store планов не создаётся; текущий продукт остаётся 0.6.58.
 
-## Синхронизация названий sessions — 0.6.62
+## Синхронизация названий sessions — 0.6.63
 
 Workspace & Sessions использует planning contract [session-title-sync](planning/session-title-sync.md). Workflow Kit 1.5.0 не менялся. В 0.6.61 `readWorkspace()` берёт canonical auto-title из H1 required planning/spec документа; objective остаётся fallback. Session title проходит 80-char/200-byte normalizer, manual title имеет приоритет. `src/chatgpt-title.mjs` выполняет GET-before-PATCH reconciliation desired title с exact bound native ChatGPT conversation; post-load/late-bind retry из 0.6.60 сохранён. Live probe и release evidence — `docs/VERIFICATION.md`.

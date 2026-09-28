@@ -2139,3 +2139,10 @@ T007 commit `6a42f6ffa36f2b53ad6165d259ecb6b2b8386163`: `npm test` — **366 tes
 T009 commit `899623004825a30dfd1ed0b85be4b347fee3c2fe`: `npm test` — **366 tests, 363 PASS, 3 SKIP, 0 FAIL**; Electron smoke — PASSED. Smoke подтверждает, что slow native API не задерживает manual rename IPC; 429 приводит ровно к одной failed attempt без автоматических повторов; следующий natural reopen синхронизирует pending local title. `onChatBound` regression подтверждает один bind event и отсутствие повторов при reopen already-bound chat.
 
 Финальная 0.6.62 собрана из `a2be84b59ed611040aba3f685719176c68911b07`; `packagedSourceMatches=true`.
+
+
+## Built-in rename dialog — 0.6.63
+
+T011 commit `db847f808a5950527556a6a07a4db82ecbe2522c`: `npm test` — **366 tests, 363 PASS, 3 SKIP, 0 FAIL**; Electron smoke — PASSED. Smoke больше не monkeypatch-ит `window.prompt`: он реально открывает sidebar modal, проверяет prefilled current title, сохраняет project кнопкой, session — Enter, и проверяет, что Cancel не меняет title.
+
+Финальная 0.6.63 собрана из release commit `f9bfbe0ea2442be2ae8b6922fd7775e595a53aed`; `packagedSourceMatches=true`, обе ZIP прошли integrity check.

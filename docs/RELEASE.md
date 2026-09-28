@@ -608,3 +608,10 @@ Canonical session auto-title теперь берётся из H1 обязате�
 Убран циклический native title retry. Sync выполняется только одноразово на естественных событиях: изменение local scope-title, manual rename, поздний bindChat новой session и reopen/navigation bound conversation. Ошибка 429/5xx не запускает автоматический повтор. Manual rename сохраняет local title и возвращает UI результат до любого сетевого title request.
 
 Финальный `npm run build` выполнен из source commit `a2be84b59ed611040aba3f685719176c68911b07`; `sourceFiles=96`, `packagedSourceMatches=true`. Поставка: `~/Downloads/WebPilot-0.6.62/`; ZIP integrity — OK. macOS ZIP `82a43d6671cdc5f9310f3dd14899d054d83ece6ad3fbca5239292f42d33f155e`; Windows ZIP `60c607631f3916351be93bd2d9d494cdc2cbf3467133184cc5eb24c862845b0f`. macOS ASAR `537fe82b51bbd08d41d53314fc92bba0a9ea653f3b8c2efce150317311f25a06`.
+
+
+## Локальный парный выпуск 0.6.63 — 28.09.2026
+
+Ручное переименование больше не использует `window.prompt()`. В sidebar есть собственный modal с текущим именем, полем ввода, Enter/«Сохранить» и «Отмена». Один и тот же dialog используется для проекта и session. Native ChatGPT sync остаётся отдельной одноразовой best-effort операцией и не блокирует ввод.
+
+Финальный `npm run build` выполнен из source commit `f9bfbe0ea2442be2ae8b6922fd7775e595a53aed`; `sourceFiles=96`, `packagedSourceMatches=true`. Поставка: `~/Downloads/WebPilot-0.6.63/`; ZIP integrity — OK. macOS ZIP `60571569d2790a52632a0944d6924e5044e2f078c8c0b9eb18b7bdb7639404f9`; Windows ZIP `3d52fc53573c509cc8dc4ae0f02b609d733629d1d15b5649a458b94012a428ef`. macOS ASAR `dce3e5edad72df49b6a394d44378fd7d6743674f14a32f9274afd148d63c48ff`.

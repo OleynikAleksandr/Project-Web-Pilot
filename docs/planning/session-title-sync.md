@@ -137,3 +137,8 @@ Windows package должен содержать ту же application logic; liv
 ## Приёмочный hotfix 0.6.62
 
 0.6.61 выявил request storm: общий `ContextSession.onChange` запускал frequent title sync и при 429 обходил backoff. 0.6.62 полностью удаляет timer/retry loop. Native sync теперь event-driven и одноразовый; manual rename local-first и не ждёт сеть.
+
+
+## Приёмочный hotfix 0.6.63
+
+Пункт «Переименовать» больше не зависит от `window.prompt()` Electron. В sidebar реализован собственный modal с prefilled input, Enter/«Сохранить» и «Отмена»; тот же компонент используется для проекта.
