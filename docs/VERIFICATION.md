@@ -2110,3 +2110,14 @@ T003 managed verification: `npm test` — 363 tests, 360 PASS, 3 SKIP, 0 FAIL; E
 T004 package-check создал парную 0.6.59; затем release был намеренно пересобран из уже зафиксированного HEAD `eabeea2359821a34c380a1904f902f18474adfd6`, чтобы manifest provenance совпадал с source commit. Финальный manifest: `sourceFiles=96`, `packagedSourceMatches=true`, Workflow Kit 1.5.0 / 35 files / `0db567df…bbb2c75`. ZIP integrity через `shasum -c` — OK. macOS ZIP `9dd4f0f5ca8e4983d13066f7b578e255eb215a4dae47ea66f1371924f398e0a2`; Windows ZIP `045247f12bda051c77531d00472a0ad80a2e0c354467ca6109c182c3969428ce`. Root и `/Applications` 0.6.59 имеют одинаковый ASAR `0b532240fe717f3428eff65a12eeae4a769b1e896850c0f25bb0954aa5b6c5b5`.
 
 Live ChatGPT evidence приведён выше в разделе `Session title sync / live ChatGPT — 0.6.59`: server-side rename и readback после новой загрузки подтверждены. Native Windows/clean VM не запускались.
+
+
+## Restart title reconciliation — 0.6.60
+
+Реальная пользовательская проверка 0.6.59 выявила mismatch: local Web Pilot session имела explicit scope title, server readback того же conversation возвращал прежнее `Автопереименование сессий Web Pilot и ChatGPT`. Это исключило гипотезу о простом кеше ChatGPT Desktop.
+
+T005 commit `efb5e882b49f703d4d712ad8c906bd92c6c86074`: `npm test` — **364 tests, 361 PASS, 3 SKIP, 0 FAIL**; Electron smoke — PASSED. Новый smoke regression: server title намеренно заменяется на `Устаревшее имя native ChatGPT`, первый `/api/auth/session` возвращает 503, затем `navigate()` повторно открывает exact conversation; ожидаемый local title автоматически восстанавливается server-side без UI-действия. Дополнительно проверены GET-before-PATCH и no-op без PATCH при уже совпадающем server title.
+
+Финальная 0.6.60 пересобрана из release commit `7cf1299a70633bb620f18e8db857ed1d552eb401`; manifest: `sourceFiles=96`, `packagedSourceMatches=true`, Workflow Kit 1.5.0 / 35 files / `0db567df…bbb2c75`. ZIP integrity — OK. macOS ZIP `66ae4e3a95b5485396ce333d4d88d89ff39b77ca317be663b714710666fe725b`; Windows ZIP `f7a24c6dca6193c929193887a487d9fb26c2967f1d14f685347d6bdabdcd77e8`. Root и `/Applications` bundles имеют version 0.6.60 и одинаковый ASAR `cc2df5380de32c76461cf0e2e90f2e393ae4895808181c6fa7d339198f54b564`.
+
+Видимую проверку ChatGPT Desktop/Recents после запуска 0.6.60 выполняет пользователь; Computer Use для этого scope не используется.

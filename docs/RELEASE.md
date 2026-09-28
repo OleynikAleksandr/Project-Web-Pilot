@@ -575,3 +575,17 @@ Session title стал chat-owned metadata поверх сохранённой s
 | Windows x64 | 316735943 | `045247f12bda051c77531d00472a0ad80a2e0c354467ca6109c182c3969428ce` | `937a23b034b2a949d4d4a2847857da2c9d56cf6f31075d68be9623bb2f778522` |
 
 Windows package verifier подтвердил executable, portable Node, bundled Windows runtime и Workflow Kit 1.5.0. Native Windows и clean VM не запускались; это остаётся пользовательской проверкой.
+
+
+## Локальный парный выпуск 0.6.60 — 28.09.2026
+
+Hotfix restart/reopen title reconciliation. Native ChatGPT title сначала читается; PATCH выполняется только при расхождении с local explicit session title, после чего результат подтверждается GET. Post-load и late-bind triggers не теряются, force-reconcile переживает debounce, transient readiness/auth failures получают bounded retry. Workflow Kit остаётся 1.5.0.
+
+Финальный `npm run build` выполнен из source commit `7cf1299a70633bb620f18e8db857ed1d552eb401`; `sourceFiles=96`, `packagedSourceMatches=true`. Поставка: `~/Downloads/WebPilot-0.6.60/`; `shasum -c SHA256SUMS.txt` — OK. Корневой и `/Applications/Project Web Pilot.app` — 0.6.60, одинаковый macOS ASAR `cc2df5380de32c76461cf0e2e90f2e393ae4895808181c6fa7d339198f54b564`.
+
+| Платформа | Размер, байт | SHA-256 ZIP | ASAR SHA-256 |
+| --- | ---: | --- | --- |
+| macOS arm64 | 181474464 | `66ae4e3a95b5485396ce333d4d88d89ff39b77ca317be663b714710666fe725b` | `cc2df5380de32c76461cf0e2e90f2e393ae4895808181c6fa7d339198f54b564` |
+| Windows x64 | 316736763 | `f7a24c6dca6193c929193887a487d9fb26c2967f1d14f685347d6bdabdcd77e8` | `0b578e6e680330890668ac27c7a25964d26c76ea3a6418bf341627aede173d0a` |
+
+Windows package verifier подтвердил executable, portable Node, bundled Windows runtime и Workflow Kit 1.5.0. Native Windows/clean VM не запускались.

@@ -4,7 +4,7 @@
 
 ## Состояние
 
-На 28.09.2026 текущий локальный выпуск — Project Web Pilot **0.6.59**, canonical Workflow Kit **1.5.0**. Парная сборка macOS arm64 / Windows x64 выполнена из source commit `eabeea2359821a34c380a1904f902f18474adfd6`; `packagedSourceMatches=true`. Single-active plan сохранён; session title теперь принадлежит chat session и синхронизируется с exact bound native ChatGPT conversation. Контрольные суммы и доказательства — `docs/RELEASE.md` и `docs/VERIFICATION.md`.
+На 28.09.2026 текущий локальный выпуск — Project Web Pilot **0.6.60**, canonical Workflow Kit **1.5.0**. Парная сборка macOS arm64 / Windows x64 выполнена из source commit `7cf1299a70633bb620f18e8db857ed1d552eb401`; `packagedSourceMatches=true`. Single-active plan сохранён; session title принадлежит chat session, а reopen выполняет GET-before-PATCH reconciliation exact bound native ChatGPT conversation. Контрольные суммы и доказательства — `docs/RELEASE.md` и `docs/VERIFICATION.md`.
 
 Пользователь принял чистый macOS-путь 0.6.38 и проверку 0.6.39. Пользовательское испытание нового изменения 0.6.40 и Windows остаются отдельными. 18.09.2026 пользователь поручил закрыть план first-run-onboarding-031 и передал испытания Windows 11 другому агенту. Итог macOS и границы доказательств — docs/CLEAN_INSTALL.md; условия и оставшиеся критерии Windows — docs/TRANSFER_TO_WINDOWS.md. План first-run-corrections-032 принадлежит другой сессии и этим закрытием не изменяется.
 
@@ -1334,3 +1334,10 @@ Release pipeline stage-ит runtime до `sourceSnapshot()`. Windows verifier и
 `src/chatgpt-title.mjs` — узкий fail-closed facade для server-side title exact bound conversation. Выполнение происходит внутри authenticated ChatGPT renderer: session access token читается и потребляется там же, наружу не возвращается. Перед PATCH проверяется exact текущий URL; после PATCH выполняется GET и сверяется server title. Main сериализует sync одного selected conversation, повторяет его при безопасном открытии и не считает изменение `document.title` подтверждением native Recents.
 
 Live probe 28.09.2026 на текущем conversation подтвердил rename, восстановление итогового имени и readback после повторной загрузки. Релиз 0.6.59 собран из commit `eabeea2359821a34c380a1904f902f18474adfd6`; root и `/Applications` bundles имеют один macOS ASAR `0b532240fe717f3428eff65a12eeae4a769b1e896850c0f25bb0954aa5b6c5b5`.
+
+
+## 0.6.60 — restart title reconciliation hotfix
+
+Приёмка 0.6.59 показала lifecycle gap: local `scope` title сохранялся, а server title после restart оставался прежним. 0.6.60 заменяет write-only подход на reconciliation: GET server title, PATCH только при mismatch, второй GET для проверки. Reopen trigger имеет `force=true`; debounce не может понизить его обычным `ContextSession.onChange`. Late `bindChat` новой session запускает отдельный sync; transient auth/readiness errors получают bounded retry. Chromium diagnostics сохраняет только sessionId/result code/status/attempt и changed/matched — без access token, title text и сообщений.
+
+Regression smoke намеренно портит server title, заставляет первый `/api/auth/session` ответить 503, затем повторно открывает exact conversation и требует автоматического восстановления local title. Full suite и smoke прошли в T005 commit `efb5e882b49f703d4d712ad8c906bd92c6c86074`.
