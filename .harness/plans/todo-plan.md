@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 722,
+  "plan_revision": 724,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-planning-20260928",
@@ -111,13 +111,16 @@
         "Зафиксированы draftRevision, односторонние уведомления сообщений и фактически проверенная версия Node встроенного Electron"
       ],
       "expected_commit_message": "feat: Уточнить границы фаз, ревизии черновика, подтверждение requestId и Node Electron",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "event-driven-runtime-planning-20260928",
         "task_id": "T002",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "docs/planning/event-driven-runtime.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -170,7 +173,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-planning-20260928
 Current Task: нет
-Revision: 722
+Revision: 724
 
 ## Цель
 
@@ -186,8 +189,8 @@ Revision: 722
   - Git Commit: [DONE] feat: Подготовить и проверить контракт перехода на события и три компактные фазы
   - Reference: event-driven-runtime-planning-20260928 / T001 / implementation
   - Файлы: docs/planning/event-driven-runtime.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/architecture/OVERVIEW.md
-- [TODO] T002: Уточнить границы фаз, ревизии черновика, подтверждение requestId и Node Electron — Ожидает
-  - Git Commit: [PENDING] feat: Уточнить границы фаз, ревизии черновика, подтверждение requestId и Node Electron
+- [DONE] T002: Уточнить границы фаз, ревизии черновика, подтверждение requestId и Node Electron — Завершено
+  - Git Commit: [DONE] feat: Уточнить границы фаз, ревизии черновика, подтверждение requestId и Node Electron
   - Reference: event-driven-runtime-planning-20260928 / T002 / implementation
   - Файлы: docs/planning/event-driven-runtime.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
