@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 792,
+  "plan_revision": 794,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-2-20260928",
@@ -63,7 +63,7 @@
     ]
   },
   "baseline_commit": "b8dc62aa4b469c63e82cc9ee27f791fc0870af91",
-  "current_task_id": null,
+  "current_task_id": "T010",
   "context_pack": {
     "documents": [
       {
@@ -693,7 +693,7 @@
         "После фиксации релиза старый scope архивируется с исходными статусами; T001–T003 и DOCS продолжаются в новом current plan с прежним planning document."
       ],
       "expected_commit_message": "feat: Workflow Kit 1.5.1: перенос остатка плана и парный выпуск 0.6.72",
-      "implementation_status": "TODO",
+      "implementation_status": "IN_PROGRESS",
       "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "event-driven-runtime-phase-2-20260928",
@@ -766,8 +766,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-phase-2-20260928
-Current Task: нет
-Revision: 792
+Current Task: T010
+Revision: 794
 
 ## Цель
 
@@ -815,7 +815,7 @@ Revision: 792
   - Git Commit: [DONE] feat: Убрать общий индикатор проверки после Send; финальный выпуск 0.6.71
   - Reference: event-driven-runtime-phase-2-20260928 / T009 / implementation
   - Файлы: src/ui/progress.mjs, tests/progress.test.mjs, package.json, package-lock.json, scripts/check-event-runtime-release.mjs, docs/planning/event-driven-runtime.md, docs/RELEASE.md, README.md, docs/CONTEXT_DELIVERY.md, docs/DOCUMENTATION_INDEX.md, docs/MODULES.md, docs/PRODUCT.md, docs/TRANSFER_TO_WINDOWS.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/modules/workspace-sessions.md
-- [TODO] T010: Workflow Kit 1.5.1: перенос остатка плана и парный выпуск 0.6.72 — Ожидает
+- [IN_PROGRESS] T010: Workflow Kit 1.5.1: перенос остатка плана и парный выпуск 0.6.72 — В работе
   - Git Commit: [PENDING] feat: Workflow Kit 1.5.1: перенос остатка плана и парный выпуск 0.6.72
   - Reference: event-driven-runtime-phase-2-20260928 / T010 / implementation
   - Файлы: scripts/check-workflow-kit-dependency.mjs, scripts/check-event-runtime-release.mjs, package.json, package-lock.json, README.md, docs/planning/event-driven-runtime.md, docs/modules/workflow-kit-recovery.md, docs/RELEASE.md
