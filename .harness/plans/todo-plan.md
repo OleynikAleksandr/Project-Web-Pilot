@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 759,
+  "plan_revision": 760,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-1-20260928",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Фаза 1 из 3 по docs/planning/event-driven-runtime.md: событийное продолжение доставки, секундомер и диагностика; дополнительно — сохранение ручных разговоров, ограниченное восстановление связи и заказанный промежуточный парный выпуск 0.6.64.",
   "acceptance_criteria": [
     "Фаза 1 реализована и проверена без периодической DOM-подстраховки контроллера.",
@@ -588,13 +588,38 @@
       ]
     },
     {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
+      "id": "P001",
+      "title": "Зафиксировать завершение фазы 1 и переход к фазе 2",
+      "why": "Зафиксировать завершение фазы 1 и переход к фазе 2",
+      "dependencies": [],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/planning/event-driven-runtime.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Записано наблюдение пользователя о 0.6.65 без объявления воспроизведения всех сетевых сбоев.",
+        "Планировочный документ указывает фазу 2 как следующий этап, сохраняет исходный контракт и историю."
+      ],
+      "expected_commit_message": "feat: Зафиксировать завершение фазы 1 и переход к фазе 2",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "event-driven-runtime-phase-1-20260928",
+        "task_id": "P001",
+        "role": "implementation"
+      }
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "event-driven-runtime-phase-1-20260928",
         "task_id": "DOCS",
         "role": "implementation",
-        "iteration": 2
+        "iteration": 3
       },
       "dependencies": [
         "T001",
@@ -605,7 +630,8 @@
         "T006",
         "T007",
         "T008",
-        "T009"
+        "T009",
+        "P001"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -664,10 +690,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-phase-1-20260928
 Current Task: нет
-Revision: 759
+Revision: 760
 
 ## Цель
 
@@ -718,8 +744,12 @@ Revision: 759
   - Git Commit: [DONE] feat: Распознать Resume stream unavailable и выпустить 0.6.65 для macOS/Windows
   - Reference: event-driven-runtime-phase-1-20260928 / T009 / implementation
   - Файлы: src/chatgpt-dom.mjs, tests/page-state.test.mjs, tests/electron-smoke.mjs, tests/installed-observer-fixture.cjs, scripts/check-event-runtime-release.mjs, package.json, package-lock.json, docs/planning/event-driven-runtime.md
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: актуализировать контекст проекта
+- [TODO] P001: Зафиксировать завершение фазы 1 и переход к фазе 2 — Ожидает
+  - Git Commit: [PENDING] feat: Зафиксировать завершение фазы 1 и переход к фазе 2
+  - Reference: event-driven-runtime-phase-1-20260928 / P001 / implementation
+  - Файлы: docs/planning/event-driven-runtime.md, docs/VERIFICATION.md
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: event-driven-runtime-phase-1-20260928 / DOCS / implementation
   - Файлы: docs/planning/event-driven-runtime.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/workspace-sessions.md, docs/modules/chatgpt-dom-compatibility.md, docs/CONTEXT_DELIVERY.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/RELEASE.md, AGENTS.md, README.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKFLOW_START.md
 
