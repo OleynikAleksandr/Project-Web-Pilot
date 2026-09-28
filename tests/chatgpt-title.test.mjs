@@ -82,6 +82,18 @@ test('title page adapter reports server refusal and verification mismatch', asyn
   assert.equal(calls.length, 4);
 });
 
+test('title page adapter applies the same concise server-safe title limit', async () => {
+  const calls = [];
+  const url = 'https://chatgpt.com/c/aaaaaaaa-bbbb-cccc-dddd';
+  const source = 'Я'.repeat(120);
+  const expected = 'Я'.repeat(80);
+  const dom = page(url, calls, { initialTitle: 'Старое имя', verifyTitle: expected });
+  const result = await dom.window.eval(chatGPTTitleScript({ expectedUrl: url, title: source }));
+  assert.equal(result.title, expected);
+  assert.equal(Array.from(result.title).length, 80);
+  assert.ok(new TextEncoder().encode(result.title).length <= 200);
+});
+
 test('title script normalizes whitespace and rejects invalid targets before renderer execution', () => {
   const script = chatGPTTitleScript({
     expectedUrl: 'https://chatgpt.com/c/aaaaaaaa-bbbb-cccc-dddd',

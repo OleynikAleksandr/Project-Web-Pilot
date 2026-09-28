@@ -69,11 +69,28 @@ export async function readWorkspace(input, sessionId = null) {
       || !Array.isArray(plan.tasks)) {
     throw new WorkspaceError('WORKFLOW_PLAN_INVALID', 'План проекта имеет неподдерживаемый формат.');
   }
-  const view = projectPlan(plan);
+  const scopeTitle = await readScopeTitle(workspace, plan);
+  const view = projectPlan(plan, scopeTitle);
   return { workspace, ...view, inspectedSessionId: sessionId, planId: plan.scope_id,
     originSessionId: null, preparedPlans: [], unassignedPlans: [] };
 }
-function projectPlan(plan) {
+
+async function readScopeTitle(workspace, plan) {
+  const documents = Array.isArray(plan.context_pack?.documents) ? plan.context_pack.documents : [];
+  const candidates = documents.filter(document => document?.required === true && typeof document.path === 'string'
+      && /^docs\/(?:planning|modules)\/[A-Za-z0-9._/-]+\.md$/i.test(document.path))
+    .sort((a, b) => Number(!a.path.startsWith('docs/planning/')) - Number(!b.path.startsWith('docs/planning/')));
+  for (const document of candidates) {
+    const file = path.resolve(workspace, document.path);
+    if (!file.startsWith(workspace + path.sep)) continue;
+    const text = await fs.readFile(file, 'utf8').catch(() => '');
+    const heading = text.match(/^#\s+(.+?)\s*$/m)?.[1];
+    if (heading) return sessionName(heading, { empty: 'У scope нет названия для сессии.' });
+  }
+  return '';
+}
+
+function projectPlan(plan, scopeTitle = '') {
   const tasks = plan.tasks.map(task => {
     if (!task || typeof task.id !== 'string' || !task.id || typeof task.title !== 'string' || !task.title
         || !['TODO', 'IN_PROGRESS', 'DONE'].includes(task.implementation_status)
@@ -91,7 +108,7 @@ function projectPlan(plan) {
       : plan.execution_scope_status === 'ACTIVE' ? 'working'
         : typeof plan.archived_scope_id === 'string' && plan.archived_scope_id ? 'closed' : 'not-created';
   return { projectId: plan.project_id, name: plan.project_name,
-    planRevision: plan.plan_revision, scopeId: plan.scope_id, objective: typeof plan.objective === 'string' ? plan.objective : '',
+    planRevision: plan.plan_revision, scopeId: plan.scope_id, scopeTitle, objective: typeof plan.objective === 'string' ? plan.objective : '',
     scopeStatus: plan.execution_scope_status, deliveryStatus: plan.delivery_status,
     archivedScopeId: typeof plan.archived_scope_id === 'string' ? plan.archived_scope_id : null,
     nextTaskId: current?.id ?? null, nextTaskTitle: current?.title ?? null,
@@ -100,7 +117,7 @@ function projectPlan(plan) {
 }
 
 const copy = value => structuredClone(value);
-const persistent = data => JSON.parse(JSON.stringify(data, (key, value) => ['planView', 'preparedPlans', 'unassignedPlans'].includes(key) ? undefined : value));
+const persistent = data => JSON.parse(JSON.stringify(data, (key, value) => ['planView', 'preparedPlans', 'unassignedPlans', 'scopeTitle'].includes(key) ? undefined : value));
 const invalid = () => new WorkspaceError('SESSIONS_INVALID', 'Формат сохранённых проектов не поддерживается. Исходный файл сохранён.');
 const sessionFields = ['planId', 'originSessionId', 'legacyPlanId', 'lastNamedScopeId', 'sessionId', 'experience', 'chatUrl', 'attempt', 'receipt', 'title', 'titleSource', 'createdAt', 'lastOpenedAt', 'archivedAt'];
 const explicitTitleSources = new Set(['manual', 'scope']);
@@ -112,11 +129,25 @@ function localName(value, { empty = 'Нужно непустое названи�
   return name;
 }
 
-function scopeSessionTitle(objective, nextTaskTitle = '') {
-  const base = localName(objective, { empty: 'У scope нет названия для сессии.' });
-  const task = typeof nextTaskTitle === 'string' ? nextTaskTitle.replace(/\s+/g, ' ').trim() : '';
-  if (!task || base.toLocaleLowerCase().includes(task.toLocaleLowerCase())) return base;
-  return localName(`${base} — ${task}`, { empty: 'У scope нет названия для сессии.' });
+const SESSION_TITLE_MAX_CHARS = 80;
+const SESSION_TITLE_MAX_BYTES = 200;
+function sessionName(value, { empty = 'Нужно непустое название.', code = 'TITLE_INVALID' } = {}) {
+  if (typeof value !== 'string') throw new WorkspaceError(code, empty);
+  const normalized = value.replace(/\s+/g, ' ').trim();
+  const result = []; let bytes = 0;
+  for (const character of normalized) {
+    const size = Buffer.byteLength(character, 'utf8');
+    if (result.length >= SESSION_TITLE_MAX_CHARS || bytes + size > SESSION_TITLE_MAX_BYTES) break;
+    result.push(character); bytes += size;
+  }
+  const name = result.join('').trim().replace(/[\s—–-]+$/u, '').trim();
+  if (!name) throw new WorkspaceError(code, empty);
+  return name;
+}
+
+function scopeSessionTitle(scopeTitle, objective) {
+  const preferred = typeof scopeTitle === 'string' && scopeTitle.trim() ? scopeTitle : objective;
+  return sessionName(preferred, { empty: 'У scope нет названия для сессии.' });
 }
 
 const validDuration = value => Number.isSafeInteger(value) && value >= 0;
@@ -312,7 +343,7 @@ export class WorkspaceSessions {
   }
 
   save(data = this.data, isCurrent = () => true) {
-    const transient = new Set(['planView', 'preparedPlans', 'unassignedPlans']);
+    const transient = new Set(['planView', 'preparedPlans', 'unassignedPlans', 'scopeTitle']);
     const text = JSON.stringify(data, (key, value) => transient.has(key) ? undefined : value, 2) + '\n';
     const operation = this.saveTail.catch(() => {}).then(async () => {
       await fs.mkdir(path.dirname(this.file), { recursive: true, mode: 0o700 });
@@ -418,7 +449,7 @@ export class WorkspaceSessions {
       if (['ACTIVE', 'BLOCKED'].includes(info.scopeStatus) && typeof info.scopeId === 'string' && info.scopeId
           && typeof info.objective === 'string' && info.objective.trim()) {
         session.lastNamedScopeId = info.scopeId;
-        session.title = scopeSessionTitle(info.objective, info.nextTaskTitle);
+        session.title = scopeSessionTitle(info.scopeTitle, info.objective);
         session.titleSource = 'scope';
         project.lastNamedScopeId = info.scopeId;
       }
@@ -455,7 +486,7 @@ export class WorkspaceSessions {
       const session = project.sessions.find(item => item.sessionId === sessionId);
       if (!session) throw new WorkspaceError('SESSION_NOT_FOUND', 'Сессия не найдена.');
       if (session.archivedAt) throw new WorkspaceError('SESSION_ARCHIVED', 'Сначала верните сессию из архива.');
-      const title = localName(value, { empty: 'Введите название сессии.' });
+      const title = sessionName(value, { empty: 'Введите название сессии.' });
       if (session.title === title && session.titleSource === 'manual') return false;
       session.title = title; session.titleSource = 'manual'; return true;
     });
@@ -465,22 +496,27 @@ export class WorkspaceSessions {
     return this.mutate(data => {
       const { session } = this.activeRecord(workspace, sessionId, data);
       if (typeof value !== 'string') throw new WorkspaceError('TITLE_INVALID', 'Неверное название сессии.');
-      const title = value.replace(/\s+/g, ' ').trim().slice(0, 160);
+      const title = sessionName(value, { empty: 'Неверное название сессии.' });
       if (!title || explicitTitleSources.has(session.titleSource)) return false;
       if (session.title === title && session.titleSource === 'page') return false;
       session.title = title; session.titleSource = 'page'; return true;
     });
   }
 
-  applyScopeTitle(workspace, sessionId, { scopeId, objective, scopeStatus, nextTaskTitle } = {}) {
+  applyScopeTitle(workspace, sessionId, { scopeId, scopeTitle, objective, scopeStatus } = {}) {
     return this.mutate(data => {
       const { project, session } = this.activeRecord(workspace, sessionId, data);
       if (!['ACTIVE', 'BLOCKED'].includes(scopeStatus) || typeof scopeId !== 'string' || !scopeId) return false;
-      if (session.lastNamedScopeId === scopeId || project.lastNamedScopeId === scopeId) return false;
+      const desired = scopeSessionTitle(scopeTitle, objective);
+      if (session.lastNamedScopeId === scopeId) {
+        if (session.titleSource === 'scope' && session.title !== desired) { session.title = desired; return true; }
+        return false;
+      }
+      if (project.lastNamedScopeId === scopeId) return false;
       project.lastNamedScopeId = scopeId;
       session.lastNamedScopeId = scopeId;
       if (session.titleSource === 'manual') return true;
-      session.title = scopeSessionTitle(objective, nextTaskTitle);
+      session.title = desired;
       session.titleSource = 'scope';
       return true;
     });

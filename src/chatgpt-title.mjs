@@ -2,7 +2,14 @@ import { normalizeChatUrl } from './workspace-session.mjs';
 
 function normalizeTitle(value) {
   if (typeof value !== 'string') throw new TypeError('TITLE_INVALID');
-  const title = value.replace(/\s+/g, ' ').trim().slice(0, 160);
+  const normalized = value.replace(/\s+/g, ' ').trim();
+  const result = []; let bytes = 0;
+  for (const character of normalized) {
+    const size = new TextEncoder().encode(character).length;
+    if (result.length >= 80 || bytes + size > 200) break;
+    result.push(character); bytes += size;
+  }
+  const title = result.join('').trim().replace(/[\s—–-]+$/u, '').trim();
   if (!title) throw new TypeError('TITLE_INVALID');
   return title;
 }

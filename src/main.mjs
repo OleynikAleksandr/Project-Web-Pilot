@@ -262,7 +262,6 @@ function rememberScopeTitle() {
   const selected = store.selected();
   const info = planMonitor.view(selected, controller?.state?.projectInfo);
   if (!selected || !info || info.workspace !== selected.workspace || info.inspectedSessionId !== selected.sessionId
-      || selected.lastNamedScopeId === info.scopeId || selected.projectLastNamedScopeId === info.scopeId
       || !['ACTIVE', 'BLOCKED'].includes(info.scopeStatus)
       || typeof info.scopeId !== 'string' || !info.scopeId || typeof info.objective !== 'string' || !info.objective.trim()) return;
   void store.applyScopeTitle(selected.workspace, selected.sessionId, info)

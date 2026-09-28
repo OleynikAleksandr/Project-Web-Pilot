@@ -461,7 +461,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await writeFixturePlan(activePlan); controller.attach(store.selected()); await controller.tick();
   await waitFor(() => sidebar.executeJavaScript('document.getElementById("plan-status").textContent === "В работе · 1 из 3 выполнено"'), 'working plan UI', snapshot);
   assert.equal(await sidebar.executeJavaScript('document.getElementById("plan-title").hidden'), false);
-  const firstScopeTitle = 'Автоимя scope fixture — Сделать интерфейс';
+  const firstScopeTitle = 'Автоимя scope fixture';
   await waitFor(() => store.selected().title === firstScopeTitle && store.selected().titleSource === 'scope',
     'new scope gives the selected session a stable local title', snapshot);
   const firstConversationId = new URL(store.selected().chatUrl).pathname.split('/').at(-1);
@@ -989,7 +989,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
       verification_ids: [], expected_commit_message: 'docs: single active smoke fixture' }],
   };
   withSessionPlan(workspace, { sessionId: scopeOwner.sessionId }, () => createScope(workspace, definition));
-  const currentScopeTitle = 'Единый current plan smoke — Записать общий результат';
+  const currentScopeTitle = 'Единый current plan smoke';
   await waitFor(() => snapshot().selected?.scopeId === 'fixture-current-plan'
     && sidebar.executeJavaScript('document.getElementById("plan-title").textContent === "Единый current plan smoke"')
     && store.selected()?.title === currentScopeTitle,

@@ -33,8 +33,11 @@ test('readWorkspace exposes user plan lifecycle without using plan revision as U
   const folder = await project('Plan view');
   const file = path.join(folder, '.harness/plans/todo-plan.md');
   const write = async plan => fs.writeFile(file, '<!-- workflow-state:begin -->\n```json\n' + JSON.stringify(plan) + '\n```\n<!-- workflow-state:end -->');
+  await fs.mkdir(path.join(folder, 'docs/planning'), { recursive: true });
+  await fs.writeFile(path.join(folder, 'docs/planning/plan-view.md'), '# Короткий заголовок этапа\n\nКонтракт.\n');
   const base = { schema_version: 1, project_id: randomUUID(), project_name: 'Plan view', plan_revision: 99,
     scope_id: 'scope-1', objective: 'Проверить отображение плана', execution_scope_status: 'ACTIVE', delivery_status: 'IN_PROGRESS', blocked_reason: null,
+    context_pack: { documents: [{ path: 'docs/planning/plan-view.md', required: true }], include_last_completed_task: false, dependency_task_ids: [] },
     current_task_id: 'T002', tasks: [
       { id: 'T001', title: 'Готовая задача', implementation_status: 'DONE', commit_status: 'DONE' },
       { id: 'T002', title: 'Текущая задача', implementation_status: 'IN_PROGRESS', commit_status: 'PENDING' },
@@ -48,7 +51,8 @@ test('readWorkspace exposes user plan lifecycle without using plan revision as U
     { id: 'T003', title: 'Следующая задача', status: 'pending' },
   ] });
   assert.equal(info.planRevision, 99, 'revision remains available only for protocol matching');
-  assert.equal(info.objective, 'Проверить отображение плана', 'scope objective is available for local session naming');
+  assert.equal(info.objective, 'Проверить отображение плана', 'scope objective remains available as fallback');
+  assert.equal(info.scopeTitle, 'Короткий заголовок этапа', 'required planning H1 is the canonical session title source');
 
   await write({ ...base, current_task_id: null, delivery_status: 'READY_FOR_ACCEPTANCE',
     tasks: base.tasks.map(t => ({ ...t, implementation_status: 'DONE', commit_status: 'DONE' })) });
@@ -158,12 +162,16 @@ test('scope naming belongs to one session, while newly created sessions may inhe
     nextTaskTitle: 'Добавить локальное автоимя', scopeStatus: 'ACTIVE' };
   assert.equal(await store.applyScopeTitle(first.workspace, first.sessionId, info), true);
   let session = store.snapshot().projects[0].sessions.find(item => item.sessionId === first.sessionId);
-  assert.equal(session.title, 'Синхронизация названий — Добавить локальное автоимя');
+  assert.equal(session.title, 'Синхронизация названий');
   assert.equal(session.titleSource, 'scope');
   assert.equal(session.lastNamedScopeId, first.scopeId);
   assert.equal(await store.setSessionTitle(first.workspace, first.sessionId, 'Поздний заголовок страницы'), false);
-  assert.equal(await store.applyScopeTitle(first.workspace, first.sessionId, { ...info, nextTaskTitle: 'Другая задача' }), false,
-    'plan revisions and task changes inside one scope do not rename the session');
+  assert.equal(await store.applyScopeTitle(first.workspace, first.sessionId, { ...info, scopeTitle: 'Короткое имя planning' }), true,
+    'same-scope legacy scope title migrates to the canonical planning heading');
+  session = store.snapshot().projects[0].sessions.find(item => item.sessionId === first.sessionId);
+  assert.equal(session.title, 'Короткое имя planning');
+  assert.equal(await store.applyScopeTitle(first.workspace, first.sessionId, { ...info, scopeTitle: 'Короткое имя planning', nextTaskTitle: 'Другая задача' }), false,
+    'plan revisions and task changes inside one scope do not rename a canonical session title');
 
   await store.selectSession(first.workspace, second.sessionId);
   assert.equal(await store.applyScopeTitle(first.workspace, second.sessionId, info), false,
@@ -178,7 +186,7 @@ test('scope naming belongs to one session, while newly created sessions may inhe
   const plan = JSON.parse(block[1]); plan.objective = info.objective;
   await fs.writeFile(planFile, '<!-- workflow-state:begin -->\n```json\n' + JSON.stringify(plan) + '\n```\n<!-- workflow-state:end -->');
   const third = await store.newSession(first.workspace, 'chat');
-  assert.equal(third.title, 'Синхронизация названий — Задача');
+  assert.equal(third.title, 'Синхронизация названий');
   assert.equal(third.titleSource, 'scope');
   assert.equal(third.lastNamedScopeId, first.scopeId);
   assert.equal(await store.renameSession(first.workspace, third.sessionId, 'Моё название'), true);
@@ -186,6 +194,15 @@ test('scope naming belongs to one session, while newly created sessions may inhe
   session = store.snapshot().projects[0].sessions.find(item => item.sessionId === third.sessionId);
   assert.equal(session.title, 'Моё название');
   assert.equal(session.titleSource, 'manual');
+});
+
+test('session titles use one concise Unicode and UTF-8 safe limit', async t => {
+  const { project, store } = await fixture(t);
+  const first = await store.select(await project('Safe session title'));
+  assert.equal(await store.renameSession(first.workspace, first.sessionId, 'Я'.repeat(120)), true);
+  const title = store.selected().title;
+  assert.equal(Array.from(title).length, 80);
+  assert.ok(Buffer.byteLength(title, 'utf8') <= 200);
 });
 
 test('switching project cannot mutate another chat or accept late session results', async t => {

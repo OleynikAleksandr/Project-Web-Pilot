@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 684,
+  "plan_revision": 686,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-title-sync-20260928",
@@ -329,7 +329,9 @@
         "src/workspace-session.mjs",
         "src/main.mjs",
         "tests/workspace-session.test.mjs",
-        "tests/electron-smoke.mjs"
+        "tests/electron-smoke.mjs",
+        "src/chatgpt-title.mjs",
+        "tests/chatgpt-title.test.mjs"
       ],
       "documentation_paths": [
         "docs/planning/session-title-sync.md"
@@ -346,13 +348,21 @@
         "После обновления local scope title существующий native ChatGPT conversation автоматически reconciles тем же sync path."
       ],
       "expected_commit_message": "fix: use concise server-safe session titles",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-title-sync-20260928",
         "task_id": "T007",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "src/chatgpt-title.mjs",
+        "src/main.mjs",
+        "src/workspace-session.mjs",
+        "tests/chatgpt-title.test.mjs",
+        "tests/electron-smoke.mjs",
+        "tests/workspace-session.test.mjs"
+      ]
     },
     {
       "id": "T008",
@@ -457,7 +467,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-title-sync-20260928
 Current Task: нет
-Revision: 684
+Revision: 686
 
 ## Цель
 
@@ -493,10 +503,10 @@ Revision: 684
   - Git Commit: [DONE] release: Project Web Pilot 0.6.60
   - Reference: session-title-sync-20260928 / T006 / implementation
   - Файлы: package.json, package-lock.json, docs/RELEASE.md, docs/VERIFICATION.md
-- [TODO] T007: Использовать короткий planning title и server-safe лимит session name — Ожидает
-  - Git Commit: [PENDING] fix: use concise server-safe session titles
+- [DONE] T007: Использовать короткий planning title и server-safe лимит session name — Завершено
+  - Git Commit: [DONE] fix: use concise server-safe session titles
   - Reference: session-title-sync-20260928 / T007 / implementation
-  - Файлы: src/workspace-session.mjs, src/main.mjs, tests/workspace-session.test.mjs, tests/electron-smoke.mjs, docs/planning/session-title-sync.md
+  - Файлы: src/workspace-session.mjs, src/main.mjs, tests/workspace-session.test.mjs, tests/electron-smoke.mjs, src/chatgpt-title.mjs, tests/chatgpt-title.test.mjs, docs/planning/session-title-sync.md
 - [TODO] T008: Собрать исправленный парный релиз Project Web Pilot 0.6.61 — Ожидает
   - Git Commit: [PENDING] release: Project Web Pilot 0.6.61
   - Reference: session-title-sync-20260928 / T008 / implementation
