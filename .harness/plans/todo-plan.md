@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 677,
+  "plan_revision": 679,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-title-sync-20260928",
@@ -266,13 +266,20 @@
         "Результаты sync наблюдаемы в безопасной диагностике без access token и без содержимого сообщений."
       ],
       "expected_commit_message": "fix: reconcile session title after ChatGPT load",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-title-sync-20260928",
         "task_id": "T005",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "docs/planning/session-title-sync.md",
+        "src/chatgpt-title.mjs",
+        "src/main.mjs",
+        "tests/chatgpt-title.test.mjs",
+        "tests/electron-smoke.mjs"
+      ]
     },
     {
       "id": "T006",
@@ -375,7 +382,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-title-sync-20260928
 Current Task: нет
-Revision: 677
+Revision: 679
 
 ## Цель
 
@@ -403,8 +410,8 @@ Revision: 677
   - Git Commit: [DONE] release: Project Web Pilot 0.6.59
   - Reference: session-title-sync-20260928 / T004 / implementation
   - Файлы: package.json, package-lock.json, docs/planning/session-title-sync.md, docs/RELEASE.md, docs/VERIFICATION.md
-- [TODO] T005: Исправить startup reconciliation названия session и native ChatGPT — Ожидает
-  - Git Commit: [PENDING] fix: reconcile session title after ChatGPT load
+- [DONE] T005: Исправить startup reconciliation названия session и native ChatGPT — Завершено
+  - Git Commit: [DONE] fix: reconcile session title after ChatGPT load
   - Reference: session-title-sync-20260928 / T005 / implementation
   - Файлы: src/chatgpt-title.mjs, src/main.mjs, tests/chatgpt-title.test.mjs, tests/electron-smoke.mjs, docs/planning/session-title-sync.md
 - [TODO] T006: Собрать исправленный парный релиз Project Web Pilot 0.6.60 — Ожидает

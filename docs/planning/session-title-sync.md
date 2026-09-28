@@ -120,3 +120,8 @@ Windows package должен содержать ту же application logic; liv
 ## Результат реализации
 
 Реализовано в 0.6.59 без изменения Workflow Kit 1.5.0. Session-scoped auto-name, manual precedence, native ChatGPT title adapter и единый sync path покрыты unit/Electron smoke. Live current-account probe подтвердил server-side persistence после reload. Парный релиз macOS arm64 / Windows x64 собран из commit `eabeea2359821a34c380a1904f902f18474adfd6`; native Windows остаётся пользовательской проверкой.
+
+
+## Приёмочный hotfix 0.6.60
+
+Реальная проверка 0.6.59 выявила расхождение после restart: local explicit scope title сохранялся, а server-side ChatGPT title оставался прежним. Hotfix переводит sync в reconciliation: GET до PATCH, no-op при совпадении, PATCH + GET при расхождении, bounded retry после загрузки/auth readiness и безопасная диагностика результата. UI automation для проверки не используется; финальную видимую проверку выполняет пользователь.

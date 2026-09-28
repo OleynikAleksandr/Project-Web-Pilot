@@ -77,7 +77,9 @@ let lastDiagnostic = '';
 let actionTail = Promise.resolve();
 const titleSyncSuccess = new Map();
 const titleSyncPending = new Map();
-const titleSyncRetryAfter = new Map();
+const titleSyncAttempts = new Map();
+const titleSyncTimers = new Map();
+const TITLE_SYNC_RETRY_DELAYS = [750, 2500, 7500, 20000];
 const windowsPortableNode = process.platform === 'win32'
   ? (app.isPackaged
       ? path.join(process.resourcesPath, 'windows-node', 'node-v22.17.0-win-x64', 'node.exe')
@@ -229,7 +231,6 @@ function snapshot() {
 function publish() {
   rememberSessionTitle();
   rememberScopeTitle();
-  void syncSelectedSessionTitle();
   if (sidebar && !sidebar.webContents.isDestroyed()) sidebar.webContents.send('pilot:state-changed', snapshot());
   publishArchive();
   const state = snapshot();
@@ -265,32 +266,86 @@ function rememberScopeTitle() {
       || !['ACTIVE', 'BLOCKED'].includes(info.scopeStatus)
       || typeof info.scopeId !== 'string' || !info.scopeId || typeof info.objective !== 'string' || !info.objective.trim()) return;
   void store.applyScopeTitle(selected.workspace, selected.sessionId, info)
-    .then(changed => { if (changed) publish(); }).catch(() => {});
+    .then(changed => {
+      if (!changed) return;
+      publish();
+      scheduleSelectedSessionTitleSync(250, { force: true });
+    }).catch(() => {});
 }
 
-function selectedTitleSyncTarget() {
-  if (!browser || browser.webContents.isDestroyed() || pageLoading) return null;
+function selectedTitleCandidate() {
   const selected = store.selected();
   if (!selected?.chatUrl || !selected.title || !['manual', 'scope'].includes(selected.titleSource)) return null;
-  if (normalizeChatUrl(browser.webContents.getURL()) !== selected.chatUrl) return null;
   return { workspace: selected.workspace, sessionId: selected.sessionId, chatUrl: selected.chatUrl, title: selected.title };
 }
 
-function deferTitleSync(target, delayMs) {
-  const retryAt = Date.now() + delayMs;
-  titleSyncRetryAfter.set(target.sessionId, retryAt);
-  const timer = setTimeout(() => {
-    const current = selectedTitleSyncTarget();
-    if (current?.sessionId === target.sessionId && current.title === target.title) void syncSelectedSessionTitle();
-  }, delayMs + 25);
-  timer.unref?.();
+function selectedTitleSyncTarget(candidate = selectedTitleCandidate()) {
+  if (!candidate || !browser || browser.webContents.isDestroyed() || pageLoading) return null;
+  if (normalizeChatUrl(browser.webContents.getURL()) !== candidate.chatUrl) return null;
+  return candidate;
+}
+
+function recordTitleSync(target, result, attempt = 0) {
+  chromiumDiagnostics?.log.record('app', 'title-sync', {
+    sessionId: target?.sessionId ?? null,
+    ok: result?.ok === true,
+    code: typeof result?.code === 'string' ? result.code : null,
+    status: Number.isInteger(result?.status) ? result.status : null,
+    changed: result?.changed === true,
+    matched: result?.matched === true,
+    attempt,
+  });
+}
+
+function clearTitleSyncRetry(target) {
+  titleSyncAttempts.delete(target.sessionId);
+  const scheduled = titleSyncTimers.get(target.sessionId);
+  if (scheduled?.timer) clearTimeout(scheduled.timer);
+  titleSyncTimers.delete(target.sessionId);
+}
+
+function scheduleTitleSync(target, delayMs = 0, { force = false } = {}) {
+  if (!target) return false;
+  const previous = titleSyncTimers.get(target.sessionId);
+  const effectiveForce = force || (previous?.title === target.title && previous.force === true);
+  if (previous?.timer) clearTimeout(previous.timer);
+  const scheduled = { timer: null, force: effectiveForce, title: target.title };
+  scheduled.timer = setTimeout(() => {
+    if (titleSyncTimers.get(target.sessionId) === scheduled) titleSyncTimers.delete(target.sessionId);
+    const current = selectedTitleCandidate();
+    if (current?.sessionId === target.sessionId && current.title === target.title)
+      void syncSelectedSessionTitle({ force: effectiveForce });
+  }, Math.max(0, delayMs));
+  scheduled.timer.unref?.();
+  titleSyncTimers.set(target.sessionId, scheduled);
+  return true;
+}
+
+function scheduleSelectedSessionTitleSync(delayMs = 0, options = {}) {
+  return scheduleTitleSync(selectedTitleCandidate(), delayMs, options);
+}
+
+function deferTitleSync(target, result) {
+  if (result?.code === 'CHAT_CHANGED') return;
+  const previous = titleSyncAttempts.get(target.sessionId);
+  const attempt = previous?.title === target.title ? previous.attempt + 1 : 1;
+  titleSyncAttempts.set(target.sessionId, { title: target.title, attempt });
+  if (attempt > TITLE_SYNC_RETRY_DELAYS.length) return;
+  const base = TITLE_SYNC_RETRY_DELAYS[attempt - 1];
+  const delay = result?.code === 'RATE_LIMITED' ? Math.max(60_000, base) : base;
+  scheduleTitleSync(target, delay, { force: true });
 }
 
 async function syncSelectedSessionTitle({ force = false } = {}) {
-  const target = selectedTitleSyncTarget();
-  if (!target) return { ok: false, code: 'TITLE_SYNC_NOT_READY' };
-  const retryAt = titleSyncRetryAfter.get(target.sessionId) ?? 0;
-  if (Date.now() < retryAt) return { ok: false, code: 'TITLE_SYNC_RETRY_LATER' };
+  const candidate = selectedTitleCandidate();
+  if (!candidate) return { ok: false, code: 'TITLE_SYNC_NO_EXPLICIT_TITLE' };
+  const target = selectedTitleSyncTarget(candidate);
+  if (!target) {
+    const result = { ok: false, code: 'TITLE_SYNC_NOT_READY' };
+    recordTitleSync(candidate, result, titleSyncAttempts.get(candidate.sessionId)?.attempt ?? 0);
+    deferTitleSync(candidate, result);
+    return result;
+  }
   if (!force && titleSyncSuccess.get(target.sessionId) === target.title) return { ok: true, skipped: true, title: target.title };
   const pending = titleSyncPending.get(target.sessionId);
   if (pending) return pending;
@@ -298,21 +353,25 @@ async function syncSelectedSessionTitle({ force = false } = {}) {
   const operation = browser.webContents.executeJavaScript(chatGPTTitleScript({
     expectedUrl: target.chatUrl, title: target.title,
   }), true).then(result => {
-    if (result?.ok) {
+    const value = result ?? { ok: false, code: 'TITLE_SYNC_FAILED' };
+    const attempt = titleSyncAttempts.get(target.sessionId)?.attempt ?? 0;
+    recordTitleSync(target, value, attempt);
+    if (value.ok) {
       titleSyncSuccess.set(target.sessionId, target.title);
-      titleSyncRetryAfter.delete(target.sessionId);
-      return result;
-    }
-    if (result?.code !== 'CHAT_CHANGED') deferTitleSync(target, result?.code === 'RATE_LIMITED' ? 60_000 : 15_000);
-    return result ?? { ok: false, code: 'TITLE_SYNC_FAILED' };
+      clearTitleSyncRetry(target);
+    } else deferTitleSync(target, value);
+    return value;
   }, () => {
-    deferTitleSync(target, 15_000);
-    return { ok: false, code: 'TITLE_SYNC_EXECUTION_FAILED' };
+    const value = { ok: false, code: 'TITLE_SYNC_EXECUTION_FAILED' };
+    recordTitleSync(target, value, titleSyncAttempts.get(target.sessionId)?.attempt ?? 0);
+    deferTitleSync(target, value);
+    return value;
   }).finally(() => {
     if (titleSyncPending.get(target.sessionId) === operation) titleSyncPending.delete(target.sessionId);
     queueMicrotask(() => {
-      const current = selectedTitleSyncTarget();
-      if (current?.sessionId === target.sessionId && current.title !== target.title) void syncSelectedSessionTitle();
+      const current = selectedTitleCandidate();
+      if (current?.sessionId === target.sessionId && current.title !== target.title)
+        scheduleSelectedSessionTitleSync(0, { force: true });
     });
   });
   titleSyncPending.set(target.sessionId, operation);
@@ -514,6 +573,7 @@ async function navigate(project = store.selected(), { refresh = false, generatio
       else void controller.tick();
     }
     publish();
+    scheduleSelectedSessionTitleSync(250, { force: true });
   } catch (error) {
     if (!navigationCurrent(ownNavigation)) return;
     chromiumDiagnostics?.log.record('app', 'load-url-failed', { generation: ownNavigation, url: safeUrl(target),
@@ -764,7 +824,8 @@ async function startupAction(action) {
 
 function connectController() {
   controller?.cancel();
-  controller = new ContextSession({ store, runtime, contextCache, composer: new ChatGPTComposer(browser.webContents), onChange: publish });
+  controller = new ContextSession({ store, runtime, contextCache, composer: new ChatGPTComposer(browser.webContents),
+    onChange: () => { publish(); scheduleSelectedSessionTitleSync(250); } });
 }
 
 function registerIpc() {
@@ -1128,10 +1189,14 @@ async function createWindow() {
   sidebar.webContents.on('will-navigate', event => event.preventDefault());
   sidebar.webContents.on('did-finish-load', publish);
   browser.webContents.on('page-title-updated', rememberSessionTitle);
-  browser.webContents.on('did-navigate-in-page', () => { void applyToolCallVisibility(); void installChatGPTAutoScroll(browser.webContents); publish(); if (!pageLoading && !setupState && !settingsState) void controller?.tick(); });
+  browser.webContents.on('did-navigate-in-page', () => {
+    void applyToolCallVisibility(); void installChatGPTAutoScroll(browser.webContents); publish();
+    if (!pageLoading) scheduleSelectedSessionTitleSync(250, { force: true });
+    if (!pageLoading && !setupState && !settingsState) void controller?.tick();
+  });
   browser.webContents.on('did-finish-load', () => {
     void applyToolCallVisibility(); void installChatGPTAutoScroll(browser.webContents, { forceFollow: true }); publish();
-    void syncSelectedSessionTitle({ force: true });
+    scheduleSelectedSessionTitleSync(500, { force: true });
     if (!pageLoading && !setupState && !settingsState) void controller?.tick();
   });
   browser.webContents.on('render-process-gone', () => {
@@ -1143,6 +1208,7 @@ async function createWindow() {
     try {
       ++navigationId; startupClipboard?.dispose(); startupClipboard = null; startupFlow?.dispose(); startupFlow = null;
       controller?.cancel(); planMonitor.close(); clearInterval(interval); clearInterval(agentTimerInterval); agentTimer.finish(); contextCache.clear(); workspaceSetup.invalidateReadiness();
+      for (const scheduled of titleSyncTimers.values()) if (scheduled?.timer) clearTimeout(scheduled.timer); titleSyncTimers.clear();
       chatColorStyles?.dispose();
       void chromiumDiagnostics?.stop().catch(() => {}); chromiumDiagnostics = null;
     } finally {

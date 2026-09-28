@@ -9,13 +9,15 @@ const response = (status, data) => ({
   json: async () => data,
 });
 
-function page(url, calls, { patchStatus = 200, verifyTitle = null } = {}) {
+function page(url, calls, { patchStatus = 200, initialTitle = 'Старое имя', verifyTitle = null, authStatus = 200 } = {}) {
   const dom = new JSDOM('', { url, runScripts: 'outside-only' });
+  let reads = 0;
   dom.window.fetch = async (path, options = {}) => {
     calls.push({ path, options: structuredClone(options) });
-    if (path === '/api/auth/session') return response(200, { accessToken: 'renderer-only-token' });
+    if (path === '/api/auth/session') return response(authStatus, authStatus < 300 ? { accessToken: 'renderer-only-token' } : {});
     if (options.method === 'PATCH') return response(patchStatus, { success: patchStatus < 300 });
-    return response(200, { title: verifyTitle });
+    const title = reads++ === 0 ? initialTitle : (verifyTitle ?? initialTitle);
+    return response(200, { title });
   };
   return dom;
 }
@@ -27,21 +29,33 @@ test('conversation id follows the same concrete ChatGPT URL contract', () => {
   assert.equal(conversationIdFromChatUrl('https://chatgpt.com/'), null);
 });
 
-test('title page adapter patches only the exact current conversation and verifies server title', async () => {
+test('title page adapter reads before patching and verifies a changed server title', async () => {
   const calls = [];
   const url = 'https://chatgpt.com/c/aaaaaaaa-bbbb-cccc-dddd';
   const title = 'Автоназвания Web Pilot';
-  const dom = page(url, calls, { verifyTitle: title });
+  const dom = page(url, calls, { initialTitle: 'Старое имя', verifyTitle: title });
   const result = await dom.window.eval(chatGPTTitleScript({ expectedUrl: url, title }));
-  assert.deepEqual({ ...result }, { ok: true, title });
-  assert.equal(calls.length, 3);
+  assert.deepEqual({ ...result }, { ok: true, title, matched: false, changed: true });
+  assert.equal(calls.length, 4);
   assert.equal(calls[0].path, '/api/auth/session');
   assert.equal(calls[1].path, '/backend-api/conversation/aaaaaaaa-bbbb-cccc-dddd');
-  assert.equal(calls[1].options.method, 'PATCH');
-  assert.deepEqual(JSON.parse(calls[1].options.body), { title });
-  assert.match(calls[1].options.headers.Authorization, /^Bearer /);
-  assert.equal(calls[2].options.method, 'GET');
+  assert.equal(calls[1].options.method, 'GET');
+  assert.equal(calls[2].options.method, 'PATCH');
+  assert.deepEqual(JSON.parse(calls[2].options.body), { title });
+  assert.match(calls[2].options.headers.Authorization, /^Bearer /);
+  assert.equal(calls[3].options.method, 'GET');
   assert.equal(JSON.stringify(result).includes('renderer-only-token'), false, 'access token never leaves the page adapter');
+});
+
+test('title page adapter skips PATCH when native ChatGPT already has the desired title', async () => {
+  const calls = [];
+  const url = 'https://chatgpt.com/c/aaaaaaaa-bbbb-cccc-dddd';
+  const title = 'Уже совпадает';
+  const dom = page(url, calls, { initialTitle: title });
+  const result = await dom.window.eval(chatGPTTitleScript({ expectedUrl: url, title }));
+  assert.deepEqual({ ...result }, { ok: true, title, matched: true, changed: false });
+  assert.equal(calls.length, 2);
+  assert.equal(calls.some(call => call.options.method === 'PATCH'), false);
 });
 
 test('title page adapter fails closed on another conversation and never sends a request', async () => {
@@ -56,16 +70,16 @@ test('title page adapter fails closed on another conversation and never sends a 
 test('title page adapter reports server refusal and verification mismatch', async () => {
   const url = 'https://chatgpt.com/c/aaaaaaaa-bbbb-cccc-dddd';
   let calls = [];
-  let dom = page(url, calls, { patchStatus: 429, verifyTitle: 'ignored' });
+  let dom = page(url, calls, { patchStatus: 429, initialTitle: 'Старое имя' });
   let result = await dom.window.eval(chatGPTTitleScript({ expectedUrl: url, title: 'Заголовок' }));
   assert.equal(result.code, 'RATE_LIMITED'); assert.equal(result.status, 429);
-  assert.equal(calls.length, 2);
+  assert.equal(calls.length, 3);
 
   calls = [];
-  dom = page(url, calls, { verifyTitle: 'Старое имя' });
+  dom = page(url, calls, { initialTitle: 'Старое имя', verifyTitle: 'Всё ещё старое' });
   result = await dom.window.eval(chatGPTTitleScript({ expectedUrl: url, title: 'Заголовок' }));
   assert.equal(result.code, 'VERIFY_MISMATCH');
-  assert.equal(calls.length, 3);
+  assert.equal(calls.length, 4);
 });
 
 test('title script normalizes whitespace and rejects invalid targets before renderer execution', () => {

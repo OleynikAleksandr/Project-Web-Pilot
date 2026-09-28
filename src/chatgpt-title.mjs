@@ -34,18 +34,28 @@ export async function renameChatGPTConversationPage({ expectedUrl, title }) {
 
     const headers = { Authorization: `Bearer ${session.accessToken}`, 'Content-Type': 'application/json' };
     const endpoint = `/backend-api/conversation/${encodeURIComponent(id)}`;
+    const readTitle = async (code) => {
+      const response = await fetch(endpoint, {
+        method: 'GET', headers: { Authorization: headers.Authorization }, credentials: 'include',
+      });
+      if (!response.ok) return { error: fail(code, response.status) };
+      const data = await response.json().catch(() => null);
+      return { title: typeof data?.title === 'string' ? data.title : null };
+    };
+
+    const before = await readTitle('READ_FAILED');
+    if (before.error) return before.error;
+    if (before.title === title) return { ok: true, title, matched: true, changed: false };
+
     const patch = await fetch(endpoint, {
       method: 'PATCH', headers, credentials: 'include', body: JSON.stringify({ title }),
     });
     if (!patch.ok) return fail(patch.status === 429 ? 'RATE_LIMITED' : 'RENAME_FAILED', patch.status);
 
-    const verify = await fetch(endpoint, {
-      method: 'GET', headers: { Authorization: headers.Authorization }, credentials: 'include',
-    });
-    if (!verify.ok) return fail('VERIFY_FAILED', verify.status);
-    const data = await verify.json().catch(() => null);
-    if (data?.title !== title) return fail('VERIFY_MISMATCH', verify.status);
-    return { ok: true, title };
+    const after = await readTitle('VERIFY_FAILED');
+    if (after.error) return after.error;
+    if (after.title !== title) return fail('VERIFY_MISMATCH');
+    return { ok: true, title, matched: false, changed: true };
   } catch {
     return fail('NETWORK_OR_PAGE_ERROR');
   }
