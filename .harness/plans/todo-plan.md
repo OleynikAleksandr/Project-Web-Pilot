@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 55,
+  "plan_revision": 57,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "release-1.5.0-docs-finalization-001",
@@ -350,13 +350,16 @@
         "README указывает итоговый выпуск 0.6.71 без проверки и общего индикатора после Send; ссылки сохранены."
       ],
       "expected_commit_message": "feat: README: итоговый клиент Web Pilot 0.6.71",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "release-1.5.0-docs-finalization-001",
         "task_id": "R008",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "README.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -418,7 +421,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: release-1.5.0-docs-finalization-001
 Current Task: нет
-Revision: 55
+Revision: 57
 
 ## Цель
 
@@ -470,8 +473,8 @@ Revision: 55
   - Git Commit: [DONE] feat: README: завершение Send в Web Pilot 0.6.70
   - Reference: release-1.5.0-docs-finalization-001 / R007 / implementation
   - Файлы: README.md
-- [TODO] R008: README: итоговый клиент Web Pilot 0.6.71 — Ожидает
-  - Git Commit: [PENDING] feat: README: итоговый клиент Web Pilot 0.6.71
+- [DONE] R008: README: итоговый клиент Web Pilot 0.6.71 — Завершено
+  - Git Commit: [DONE] feat: README: итоговый клиент Web Pilot 0.6.71
   - Reference: release-1.5.0-docs-finalization-001 / R008 / implementation
   - Файлы: README.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
