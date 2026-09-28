@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 44,
+  "plan_revision": 45,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "release-1.5.0-docs-finalization-001",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Зафиксировать актуальные release-документы Workflow Kit 1.5.0 после self-host cutover.",
   "acceptance_criteria": [
     "Release-документы отражают фактический single-active contract 1.5.0 и завершённый self-host cutover."
@@ -284,13 +284,36 @@
       ]
     },
     {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
+      "id": "R006",
+      "title": "README: Paste в клиенте Web Pilot 0.6.69",
+      "why": "README: Paste в клиенте Web Pilot 0.6.69",
+      "dependencies": [],
+      "functional_paths": [],
+      "documentation_paths": [
+        "README.md"
+      ],
+      "verification_ids": [],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "README отражает тестовый Paste клиента 0.6.69, неизменённый runtime Kit и взаимную ссылку."
+      ],
+      "expected_commit_message": "feat: README: Paste в клиенте Web Pilot 0.6.69",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "release-1.5.0-docs-finalization-001",
+        "task_id": "R006",
+        "role": "implementation"
+      }
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "release-1.5.0-docs-finalization-001",
         "task_id": "DOCS",
         "role": "implementation",
-        "iteration": 9
+        "iteration": 10
       },
       "dependencies": [
         "T002",
@@ -300,7 +323,8 @@
         "R002",
         "R003",
         "R004",
-        "R005"
+        "R005",
+        "R006"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -337,10 +361,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: release-1.5.0-docs-finalization-001
 Current Task: нет
-Revision: 44
+Revision: 45
 
 ## Цель
 
@@ -384,8 +408,12 @@ Revision: 44
   - Git Commit: [DONE] feat: README: быстрая вставка клиента Web Pilot 0.6.68
   - Reference: release-1.5.0-docs-finalization-001 / R005 / implementation
   - Файлы: README.md
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: завершить release-документацию 1.5.0
+- [TODO] R006: README: Paste в клиенте Web Pilot 0.6.69 — Ожидает
+  - Git Commit: [PENDING] feat: README: Paste в клиенте Web Pilot 0.6.69
+  - Reference: release-1.5.0-docs-finalization-001 / R006 / implementation
+  - Файлы: README.md
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: завершить release-документацию 1.5.0
   - Reference: release-1.5.0-docs-finalization-001 / DOCS / implementation
   - Файлы: docs/DOCUMENTATION_INDEX.md, docs/modules/workflow-kit-package.md, docs/planning/single-active-plan-migration.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, README.md
 
