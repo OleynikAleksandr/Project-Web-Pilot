@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 779,
+  "plan_revision": 780,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-2-20260928",
@@ -441,6 +441,40 @@
       ]
     },
     {
+      "id": "T007",
+      "title": "Paste для контекста и парный выпуск 0.6.69",
+      "why": "Paste для контекста и парный выпуск 0.6.69",
+      "dependencies": [],
+      "functional_paths": [
+        "src/chatgpt-composer.mjs",
+        "tests/chatgpt-composer.test.mjs",
+        "tests/installed-observer-fixture.cjs"
+      ],
+      "documentation_paths": [
+        "docs/planning/event-driven-runtime.md",
+        "README.md"
+      ],
+      "verification_ids": [
+        "unit",
+        "smoke",
+        "release-pair"
+      ],
+      "verification_kind": "installed",
+      "acceptance_criteria": [
+        "Contenteditable получает полный пакет через ClipboardEvent paste с text/plain и безопасным text/html; системный clipboard не меняется.",
+        "Send не зависит от совпадения текста; обработчик без поддержки Paste выдаёт явную ошибку без медленного fallback и дублей.",
+        "Проверены сохранность большого многострочного текста в настоящем ProseMirror, установленный composer и обе упаковки 0.6.69. Живой ChatGPT проверяет пользователь."
+      ],
+      "expected_commit_message": "feat: Paste для контекста и парный выпуск 0.6.69",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "event-driven-runtime-phase-2-20260928",
+        "task_id": "T007",
+        "role": "implementation"
+      }
+    },
+    {
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
@@ -454,7 +488,8 @@
         "T003",
         "T004",
         "T005",
-        "T006"
+        "T006",
+        "T007"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -501,7 +536,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-phase-2-20260928
 Current Task: нет
-Revision: 779
+Revision: 780
 
 ## Цель
 
@@ -537,6 +572,10 @@ Revision: 779
   - Git Commit: [DONE] feat: Быстрая массовая вставка и Send без сверки черновика, выпуск 0.6.68
   - Reference: event-driven-runtime-phase-2-20260928 / T006 / implementation
   - Файлы: src/chatgpt-composer.mjs, src/context-session.mjs, tests/chatgpt-composer.test.mjs, tests/context-session.test.mjs, tests/installed-observer-fixture.cjs, package-lock.json, package.json, scripts/check-event-runtime-release.mjs, tests/session-opening-performance.test.mjs, docs/planning/event-driven-runtime.md, README.md, docs/CONTEXT_DELIVERY.md, docs/DOCUMENTATION_INDEX.md, docs/MODULES.md, docs/PRODUCT.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/modules/chatgpt-dom-compatibility.md, docs/modules/workspace-sessions.md
+- [TODO] T007: Paste для контекста и парный выпуск 0.6.69 — Ожидает
+  - Git Commit: [PENDING] feat: Paste для контекста и парный выпуск 0.6.69
+  - Reference: event-driven-runtime-phase-2-20260928 / T007 / implementation
+  - Файлы: src/chatgpt-composer.mjs, tests/chatgpt-composer.test.mjs, tests/installed-observer-fixture.cjs, docs/planning/event-driven-runtime.md, README.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: event-driven-runtime-phase-2-20260928 / DOCS / implementation
