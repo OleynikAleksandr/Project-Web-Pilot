@@ -80,16 +80,29 @@ test('bridge rejects wrong senders, frames, origins and late hello from former d
   stop(); assert.equal(ipc.listenerCount(PAGE_STATE_CHANNEL), 0);
 });
 
-test('connection error comes from visible error UI and cannot be triggered by quoted prose', async () => {
-  const dom = new JSDOM('<div id="prompt-textarea" contenteditable="true"></div><article data-message-author-role="user"><div role="alert">ChatGPT stream recovery polling timed out</div></article><article data-message-author-role="assistant">ChatGPT stream recovery polling timed out</article>',
-    { url: 'https://chatgpt.com/c/one', runScripts: 'outside-only' });
-  const w = dom.window; w.HTMLElement.prototype.getClientRects = function () { return this.hidden ? [] : [{}]; };
-  const messages = []; w.reportObservation = m => messages.push(m);
-  const dispose = w.eval('(' + installPageObserver.toString() + ')(' + chatGPTDOMScript() + ', reportObservation)');
-  assert.equal(messages.at(-1).state.connectionError, null);
-  const alert = w.document.createElement('div'); alert.setAttribute('role', 'alert');
-  alert.textContent = 'ChatGPT stream recovery polling timed out'; w.document.body.append(alert); await turn();
-  assert.equal(messages.at(-1).state.connectionError, 'stream-interrupted');
-  alert.remove(); await turn(); assert.equal(messages.at(-1).state.connectionError, null);
-  dispose(); w.close();
-});
+for (const errorText of ['ChatGPT stream recovery polling timed out', 'Resume stream unavailable']) {
+  for (const errorUI of ['alert', 'retry']) {
+    test(errorText + ': ' + errorUI + ' UI signals an error, quoted prose does not', async () => {
+      const dom = new JSDOM('<div id="prompt-textarea" contenteditable="true"></div>'
+        + '<article data-message-author-role="user"><div role="alert">' + errorText + '</div></article>'
+        + '<article data-message-author-role="assistant">' + errorText + '</article>'
+        + '<pre><div role="alert">' + errorText + '</div></pre>'
+        + '<blockquote><div role="alert">' + errorText + '</div></blockquote>',
+        { url: 'https://chatgpt.com/c/one', runScripts: 'outside-only' });
+      const w = dom.window; w.HTMLElement.prototype.getClientRects = function () { return this.hidden ? [] : [{}]; };
+      const messages = []; w.reportObservation = m => messages.push(m);
+      const dispose = w.eval('(' + installPageObserver.toString() + ')(' + chatGPTDOMScript() + ', reportObservation)');
+      assert.equal(messages.at(-1).state.connectionError, null);
+      const alert = w.document.createElement('div');
+      if (errorUI === 'alert') alert.setAttribute('role', 'alert');
+      alert.textContent = errorText;
+      if (errorUI === 'retry') {
+        const button = w.document.createElement('button'); button.textContent = 'Повторить'; alert.append(button);
+      }
+      w.document.body.append(alert); await turn();
+      assert.equal(messages.at(-1).state.connectionError, 'stream-interrupted');
+      alert.remove(); await turn(); assert.equal(messages.at(-1).state.connectionError, null);
+      dispose(); w.close();
+    });
+  }
+}

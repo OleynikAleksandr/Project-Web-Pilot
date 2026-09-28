@@ -53,7 +53,7 @@ export function createChatGPTDOM(selectors) {
       if (!visible(node) || node.closest(selectors.user + ',pre,code,blockquote,[contenteditable="true"]')) continue;
       const text = (node.innerText ?? node.textContent ?? '').trim();
       if (text.length > 1200) continue;
-      if (/ChatGPT stream recovery polling timed out|network error|connection (?:was )?(?:lost|interrupted)|ошибка сети|соединение (?:прервано|потеряно)/i.test(text))
+      if (/ChatGPT stream recovery polling timed out|resume stream unavailable|network error|connection (?:was )?(?:lost|interrupted)|ошибка сети|соединение (?:прервано|потеряно)/i.test(text))
         return 'stream-interrupted';
     }
     return null;

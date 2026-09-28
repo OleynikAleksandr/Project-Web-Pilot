@@ -33,13 +33,19 @@ app.whenReady().then(async () => {
     const text = 'Полный пакет проверки. '.repeat(10000) + 'wp-request-installed-fixture';
     assert.equal((await composer.deliver({ text, requestId: 'wp-request-installed-fixture' })).state, 'sent');
     assert.equal(await view.webContents.executeJavaScript('document.querySelectorAll("article").length'), 1);
+    const errorVersion = source.version;
+    await view.webContents.executeJavaScript("(()=>{const e=document.createElement('div');e.setAttribute('role','alert');e.textContent='Resume stream unavailable';document.body.append(e)})()");
+    if (source.current?.state.connectionError !== 'stream-interrupted')
+      await source.waitForChange(errorVersion, { timeoutMs: 3000 });
+    assert.equal(source.current.state.connectionError, 'stream-interrupted');
+    assert.equal((await composer.inspect()).connectionError, 'stream-interrupted');
     const documentId = source.current.documentId;
     await view.loadURL('https://chatgpt.com/c/installed-fixture');
     if (!source.current) await source.waitForChange(source.version, { timeoutMs: 3000 });
     assert.notEqual(source.current.documentId, documentId);
     assert.equal((await composer.inspect({ requestId: 'wp-request-installed-fixture' })).messageSeen, true);
     assert.equal(await view.webContents.executeJavaScript('document.querySelectorAll("article").length'), 1);
-    console.log(JSON.stringify({ installedPreload: resourceRoot, scenario: 'sandbox observer, large Send, same conversation reload without duplicate',
+    console.log(JSON.stringify({ installedPreload: resourceRoot, scenario: 'sandbox observer, large Send, Resume stream unavailable detected, same conversation reload without duplicate',
       electron: process.versions.electron, node: process.versions.node, liveChatGPT: false }));
   } finally { disconnect(); view.destroy(); clearTimeout(deadline); }
   app.quit();

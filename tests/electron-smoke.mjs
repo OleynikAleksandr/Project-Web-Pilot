@@ -573,7 +573,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   // Native error UI must reopen this exact persisted conversation once, without Send.
   const boundUrl = store.selected().chatUrl;
   const previousDocument = pageState.current.documentId;
-  const injectError = "(()=>{const e=document.createElement('div');e.setAttribute('role','alert');e.textContent='ChatGPT stream recovery polling timed out';document.body.append(e)})()";
+  const injectError = "(()=>{const e=document.createElement('div');e.setAttribute('role','alert');e.textContent='Resume stream unavailable';document.body.append(e)})()";
   await browser.executeJavaScript(injectError);
   await waitFor(() => snapshot().conversationRecovery.phase === 'restored', 'safe stream reconnection', snapshot);
   assert.equal(browser.getURL(), boundUrl); assert.notEqual(pageState.current.documentId, previousDocument);

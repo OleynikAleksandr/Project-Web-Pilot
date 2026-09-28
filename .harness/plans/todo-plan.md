@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 756,
+  "plan_revision": 757,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-1-20260928",
@@ -73,7 +73,7 @@
     ]
   },
   "baseline_commit": "e97af3fa61baef8686206a1c18aee6b1a3c237b7",
-  "current_task_id": "T009",
+  "current_task_id": null,
   "context_pack": {
     "documents": [
       {
@@ -569,13 +569,23 @@
         "Обе платформы 0.6.65 собраны и сверены; корневой app и /Applications обновлены с сохранением identity."
       ],
       "expected_commit_message": "feat: Распознать Resume stream unavailable и выпустить 0.6.65 для macOS/Windows",
-      "implementation_status": "IN_PROGRESS",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "event-driven-runtime-phase-1-20260928",
         "task_id": "T009",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "docs/planning/event-driven-runtime.md",
+        "package-lock.json",
+        "package.json",
+        "scripts/check-event-runtime-release.mjs",
+        "src/chatgpt-dom.mjs",
+        "tests/electron-smoke.mjs",
+        "tests/installed-observer-fixture.cjs",
+        "tests/page-state.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -658,8 +668,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-phase-1-20260928
-Current Task: T009
-Revision: 756
+Current Task: нет
+Revision: 757
 
 ## Цель
 
@@ -706,8 +716,8 @@ Revision: 756
   - Git Commit: [DONE] feat: Сохранить разговор после обычного ручного первого сообщения без ложной доставки контекста
   - Reference: event-driven-runtime-phase-1-20260928 / T008 / implementation
   - Файлы: src/chatgpt-page-observer.mjs, src/page-state.mjs, src/main.mjs, src/context-session.mjs, src/workspace-session.mjs, tests/page-state.test.mjs, tests/context-session.test.mjs, tests/electron-smoke.mjs, src/conversation-recovery.mjs, src/ui/sidebar.mjs, tests/conversation-recovery.test.mjs, tests/workspace-session.test.mjs, docs/planning/event-driven-runtime.md, docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md
-- [IN_PROGRESS] T009: Распознать Resume stream unavailable и выпустить 0.6.65 для macOS/Windows — В работе
-  - Git Commit: [PENDING] feat: Распознать Resume stream unavailable и выпустить 0.6.65 для macOS/Windows
+- [DONE] T009: Распознать Resume stream unavailable и выпустить 0.6.65 для macOS/Windows — Завершено
+  - Git Commit: [DONE] feat: Распознать Resume stream unavailable и выпустить 0.6.65 для macOS/Windows
   - Reference: event-driven-runtime-phase-1-20260928 / T009 / implementation
   - Файлы: src/chatgpt-dom.mjs, tests/page-state.test.mjs, tests/electron-smoke.mjs, tests/installed-observer-fixture.cjs, scripts/check-event-runtime-release.mjs, package.json, package-lock.json, docs/planning/event-driven-runtime.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает

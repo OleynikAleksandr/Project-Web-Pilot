@@ -10,7 +10,7 @@ import { hashFile, sourceSnapshot, verifyPackagedSources } from './release-all.m
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const { version } = JSON.parse(await fs.readFile(path.join(root, 'package.json'), 'utf8'));
-assert.equal(version, '0.6.64');
+assert.equal(version, '0.6.65');
 const planText = await fs.readFile(path.join(root, '.harness/plans/todo-plan.md'), 'utf8');
 const plan = JSON.parse(planText.match(/\x60\x60\x60json\s*([\s\S]*?)\x60\x60\x60/)[1]);
 for (const id of ['T001','T002','T003','T004','T006','T007','T008']) {
@@ -35,7 +35,7 @@ for (const app of [rootApp, appsApp]) {
   assert.equal((await fs.lstat(app)).isSymbolicLink(), false);
   assert.equal(execFileSync('/usr/libexec/PlistBuddy', ['-c', 'Print :CFBundleShortVersionString', path.join(app, 'Contents/Info.plist')], { encoding: 'utf8' }).trim(), version);
 }
-const preflight = JSON.parse(await fs.readFile(path.join(root, '.harness/runtime/release-064-preflight.json'), 'utf8'));
+const preflight = JSON.parse(await fs.readFile(path.join(root, '.harness/runtime/release-065-preflight.json'), 'utf8'));
 const appsBefore = preflight.find(item => item.path === appsApp);
 const appsAfter = await fs.stat(appsApp);
 assert.equal(appsAfter.dev, appsBefore.device); assert.equal(appsAfter.ino, appsBefore.inode);
