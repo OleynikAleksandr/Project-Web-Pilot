@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 49,
+  "plan_revision": 50,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "release-1.5.0-docs-finalization-001",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Зафиксировать актуальные release-документы Workflow Kit 1.5.0 после self-host cutover.",
   "acceptance_criteria": [
     "Release-документы отражают фактический single-active contract 1.5.0 и завершённый self-host cutover."
@@ -310,13 +310,36 @@
       ]
     },
     {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
+      "id": "R007",
+      "title": "README: завершение Send в Web Pilot 0.6.70",
+      "why": "README: завершение Send в Web Pilot 0.6.70",
+      "dependencies": [],
+      "functional_paths": [],
+      "documentation_paths": [
+        "README.md"
+      ],
+      "verification_ids": [],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "README указывает актуальный клиент и завершение локальной передачи без проверки DOM; взаимные ссылки сохранены."
+      ],
+      "expected_commit_message": "feat: README: завершение Send в Web Pilot 0.6.70",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "release-1.5.0-docs-finalization-001",
+        "task_id": "R007",
+        "role": "implementation"
+      }
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "release-1.5.0-docs-finalization-001",
         "task_id": "DOCS",
         "role": "implementation",
-        "iteration": 10
+        "iteration": 11
       },
       "dependencies": [
         "T002",
@@ -327,7 +350,8 @@
         "R003",
         "R004",
         "R005",
-        "R006"
+        "R006",
+        "R007"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -364,10 +388,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: release-1.5.0-docs-finalization-001
 Current Task: нет
-Revision: 49
+Revision: 50
 
 ## Цель
 
@@ -415,8 +439,12 @@ Revision: 49
   - Git Commit: [DONE] feat: README: Paste в клиенте Web Pilot 0.6.69
   - Reference: release-1.5.0-docs-finalization-001 / R006 / implementation
   - Файлы: README.md
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: завершить release-документацию 1.5.0
+- [TODO] R007: README: завершение Send в Web Pilot 0.6.70 — Ожидает
+  - Git Commit: [PENDING] feat: README: завершение Send в Web Pilot 0.6.70
+  - Reference: release-1.5.0-docs-finalization-001 / R007 / implementation
+  - Файлы: README.md
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: завершить release-документацию 1.5.0
   - Reference: release-1.5.0-docs-finalization-001 / DOCS / implementation
   - Файлы: docs/DOCUMENTATION_INDEX.md, docs/modules/workflow-kit-package.md, docs/planning/single-active-plan-migration.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, README.md
 
