@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 767,
+  "plan_revision": 768,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-2-20260928",
@@ -29,7 +29,13 @@
       "src/chatgpt-page-observer.mjs",
       "src/page-state.mjs",
       "src/chromium-diagnostics.mjs",
-      "src/chatgpt-colors.mjs"
+      "src/chatgpt-colors.mjs",
+      "src/chatgpt-composer.mjs",
+      "tests/chatgpt-composer.test.mjs",
+      "tests/installed-observer-fixture.cjs",
+      "scripts/check-event-runtime-release.mjs",
+      "package.json",
+      "package-lock.json"
     ],
     "documentation_paths": [
       "docs/planning/event-driven-runtime.md",
@@ -39,7 +45,9 @@
       "docs/architecture/ARCHITECTURE.md",
       "docs/architecture/OVERVIEW.md",
       "docs/MODULES.md",
-      "docs/DOCUMENTATION_INDEX.md"
+      "docs/DOCUMENTATION_INDEX.md",
+      "README.md",
+      "docs/RELEASE.md"
     ]
   },
   "baseline_commit": "b8dc62aa4b469c63e82cc9ee27f791fc0870af91",
@@ -195,6 +203,50 @@
       "expected_commit_message": "feat: Убрать секундный обход цветов и проверить событийное оформление"
     },
     {
+      "id": "T004",
+      "title": "Чистое поле нового Chat/Work и парное исправление 0.6.66",
+      "why": "Новый Chat остановился на чужом восстановленном черновике до создания собственной attempt. Очистка разрешена явным созданием нового разговора, не его обычным открытием.",
+      "dependencies": [],
+      "functional_paths": [
+        "src/main.mjs",
+        "src/context-session.mjs",
+        "src/chatgpt-composer.mjs",
+        "tests/chatgpt-composer.test.mjs",
+        "tests/context-session.test.mjs",
+        "tests/electron-smoke.mjs",
+        "tests/installed-observer-fixture.cjs",
+        "scripts/check-event-runtime-release.mjs",
+        "package.json",
+        "package-lock.json"
+      ],
+      "documentation_paths": [
+        "docs/planning/event-driven-runtime.md",
+        "README.md",
+        "docs/VERIFICATION.md",
+        "docs/RELEASE.md"
+      ],
+      "verification_ids": [
+        "unit",
+        "smoke",
+        "release-pair"
+      ],
+      "verification_kind": "installed",
+      "acceptance_criteria": [
+        "Новый Chat/Work очищает восстановленный черновик через нативный путь редактора перед новым recovery; предыдущая archived attempt не отправляется.",
+        "Очистка ограничена созданной сессией и документом, отменяется при смене выбора, не затрагивает существующий разговор, unknown Send или ввод пользователя после подготовки нового поля.",
+        "Обе платформы 0.6.66 сверены с исходниками; установленный observer/composer проверен на старом черновике и новой отправке без дубля.",
+        "Обновлены связанные документы; задачи основной фазы 2 остаются ожидающими."
+      ],
+      "expected_commit_message": "feat: Чистое поле нового Chat/Work и парное исправление 0.6.66",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "event-driven-runtime-phase-2-20260928",
+        "task_id": "T004",
+        "role": "implementation"
+      }
+    },
+    {
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
@@ -205,7 +257,8 @@
       "dependencies": [
         "T001",
         "T002",
-        "T003"
+        "T003",
+        "T004"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -216,7 +269,9 @@
         "docs/VERIFICATION.md",
         "docs/architecture/OVERVIEW.md",
         "docs/MODULES.md",
-        "docs/DOCUMENTATION_INDEX.md"
+        "docs/DOCUMENTATION_INDEX.md",
+        "README.md",
+        "docs/RELEASE.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -246,7 +301,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-phase-2-20260928
 Current Task: нет
-Revision: 767
+Revision: 768
 
 ## Цель
 
@@ -270,10 +325,14 @@ Revision: 767
   - Git Commit: [PENDING] feat: Убрать секундный обход цветов и проверить событийное оформление
   - Reference: event-driven-runtime-phase-2-20260928 / T003 / implementation
   - Файлы: src/chatgpt-colors.mjs, tests/electron-smoke.mjs, docs/planning/event-driven-runtime.md, docs/modules/chatgpt-dom-compatibility.md, docs/VERIFICATION.md
+- [TODO] T004: Чистое поле нового Chat/Work и парное исправление 0.6.66 — Ожидает
+  - Git Commit: [PENDING] feat: Чистое поле нового Chat/Work и парное исправление 0.6.66
+  - Reference: event-driven-runtime-phase-2-20260928 / T004 / implementation
+  - Файлы: src/main.mjs, src/context-session.mjs, src/chatgpt-composer.mjs, tests/chatgpt-composer.test.mjs, tests/context-session.test.mjs, tests/electron-smoke.mjs, tests/installed-observer-fixture.cjs, scripts/check-event-runtime-release.mjs, package.json, package-lock.json, docs/planning/event-driven-runtime.md, README.md, docs/VERIFICATION.md, docs/RELEASE.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: event-driven-runtime-phase-2-20260928 / DOCS / implementation
-  - Файлы: docs/planning/event-driven-runtime.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/modules/chatgpt-dom-compatibility.md, docs/VERIFICATION.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
+  - Файлы: docs/planning/event-driven-runtime.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/modules/chatgpt-dom-compatibility.md, docs/VERIFICATION.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, README.md, docs/RELEASE.md
 
 ## Context Pack For This Cycle
 
