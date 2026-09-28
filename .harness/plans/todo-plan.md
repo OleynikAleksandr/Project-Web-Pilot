@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 794,
+  "plan_revision": 795,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-2-20260928",
@@ -42,7 +42,9 @@
       "src/ui/sidebar.mjs",
       "src/ui/progress.mjs",
       "tests/progress.test.mjs",
-      "scripts/check-workflow-kit-dependency.mjs"
+      "scripts/check-workflow-kit-dependency.mjs",
+      "scripts/verify-windows-package.mjs",
+      "tests/workflow-kit-source.test.mjs"
     ],
     "documentation_paths": [
       "docs/planning/event-driven-runtime.md",
@@ -59,11 +61,12 @@
       "docs/TRANSFER_TO_WINDOWS.md",
       "docs/WORKFLOW_START.md",
       "docs/modules/workspace-sessions.md",
-      "docs/modules/workflow-kit-recovery.md"
+      "docs/modules/workflow-kit-recovery.md",
+      "docs/modules/session-owned-plans.md"
     ]
   },
   "baseline_commit": "b8dc62aa4b469c63e82cc9ee27f791fc0870af91",
-  "current_task_id": "T010",
+  "current_task_id": null,
   "context_pack": {
     "documents": [
       {
@@ -673,13 +676,24 @@
         "scripts/check-workflow-kit-dependency.mjs",
         "scripts/check-event-runtime-release.mjs",
         "package.json",
-        "package-lock.json"
+        "package-lock.json",
+        "scripts/verify-windows-package.mjs",
+        "tests/workflow-kit-source.test.mjs"
       ],
       "documentation_paths": [
         "README.md",
         "docs/planning/event-driven-runtime.md",
         "docs/modules/workflow-kit-recovery.md",
-        "docs/RELEASE.md"
+        "docs/RELEASE.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/session-owned-plans.md"
       ],
       "verification_ids": [
         "unit",
@@ -693,13 +707,34 @@
         "После фиксации релиза старый scope архивируется с исходными статусами; T001–T003 и DOCS продолжаются в новом current plan с прежним planning document."
       ],
       "expected_commit_message": "feat: Workflow Kit 1.5.1: перенос остатка плана и парный выпуск 0.6.72",
-      "implementation_status": "IN_PROGRESS",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "event-driven-runtime-phase-2-20260928",
         "task_id": "T010",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "README.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/RELEASE.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/session-owned-plans.md",
+        "docs/modules/workflow-kit-recovery.md",
+        "docs/planning/event-driven-runtime.md",
+        "package-lock.json",
+        "package.json",
+        "scripts/check-event-runtime-release.mjs",
+        "scripts/check-workflow-kit-dependency.mjs",
+        "scripts/verify-windows-package.mjs",
+        "tests/workflow-kit-source.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -737,7 +772,8 @@
         "docs/TRANSFER_TO_WINDOWS.md",
         "docs/WORKFLOW_START.md",
         "docs/modules/workspace-sessions.md",
-        "docs/modules/workflow-kit-recovery.md"
+        "docs/modules/workflow-kit-recovery.md",
+        "docs/modules/session-owned-plans.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -766,8 +802,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-phase-2-20260928
-Current Task: T010
-Revision: 794
+Current Task: нет
+Revision: 795
 
 ## Цель
 
@@ -815,14 +851,14 @@ Revision: 794
   - Git Commit: [DONE] feat: Убрать общий индикатор проверки после Send; финальный выпуск 0.6.71
   - Reference: event-driven-runtime-phase-2-20260928 / T009 / implementation
   - Файлы: src/ui/progress.mjs, tests/progress.test.mjs, package.json, package-lock.json, scripts/check-event-runtime-release.mjs, docs/planning/event-driven-runtime.md, docs/RELEASE.md, README.md, docs/CONTEXT_DELIVERY.md, docs/DOCUMENTATION_INDEX.md, docs/MODULES.md, docs/PRODUCT.md, docs/TRANSFER_TO_WINDOWS.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/modules/workspace-sessions.md
-- [IN_PROGRESS] T010: Workflow Kit 1.5.1: перенос остатка плана и парный выпуск 0.6.72 — В работе
-  - Git Commit: [PENDING] feat: Workflow Kit 1.5.1: перенос остатка плана и парный выпуск 0.6.72
+- [DONE] T010: Workflow Kit 1.5.1: перенос остатка плана и парный выпуск 0.6.72 — Завершено
+  - Git Commit: [DONE] feat: Workflow Kit 1.5.1: перенос остатка плана и парный выпуск 0.6.72
   - Reference: event-driven-runtime-phase-2-20260928 / T010 / implementation
-  - Файлы: scripts/check-workflow-kit-dependency.mjs, scripts/check-event-runtime-release.mjs, package.json, package-lock.json, README.md, docs/planning/event-driven-runtime.md, docs/modules/workflow-kit-recovery.md, docs/RELEASE.md
+  - Файлы: scripts/check-workflow-kit-dependency.mjs, scripts/check-event-runtime-release.mjs, package.json, package-lock.json, scripts/verify-windows-package.mjs, tests/workflow-kit-source.test.mjs, README.md, docs/planning/event-driven-runtime.md, docs/modules/workflow-kit-recovery.md, docs/RELEASE.md, docs/DOCUMENTATION_INDEX.md, docs/MODULES.md, docs/PRODUCT.md, docs/TRANSFER_TO_WINDOWS.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/modules/session-owned-plans.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: event-driven-runtime-phase-2-20260928 / DOCS / implementation
-  - Файлы: docs/planning/event-driven-runtime.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/modules/chatgpt-dom-compatibility.md, docs/VERIFICATION.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, README.md, docs/RELEASE.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKFLOW_START.md, docs/modules/workspace-sessions.md, docs/modules/workflow-kit-recovery.md
+  - Файлы: docs/planning/event-driven-runtime.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/modules/chatgpt-dom-compatibility.md, docs/VERIFICATION.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, README.md, docs/RELEASE.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKFLOW_START.md, docs/modules/workspace-sessions.md, docs/modules/workflow-kit-recovery.md, docs/modules/session-owned-plans.md
 
 ## Context Pack For This Cycle
 

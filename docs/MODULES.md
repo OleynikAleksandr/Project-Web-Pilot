@@ -126,3 +126,7 @@ Workspace & Sessions: ClipboardEvent.paste в composer, безопасный HTM
 Workspace & Sessions: автоматический recovery завершается после клика без проверки DOM вложения; старые неизвестные попытки нейтральны. Контракты — [доставка](CONTEXT_DELIVERY.md), [T008](planning/event-driven-runtime.md).
 
 0.6.71 / T009: общий src/ui/progress.mjs больше не считает waiting-chat/send-unknown активной операцией; контракт — [T009](planning/event-driven-runtime.md).
+
+## Workflow Kit 1.5.1 / Web Pilot 0.6.72
+
+Команда plan:carryover по прямому поручению архивирует исходный scope с сохранением реальных статусов и создаёт новый current plan из незавершённых задач, включая DOCS. Критерии, проверки, ссылки на planning/module документы сохраняются; перенос — один Git-коммит. Обычный archive требует всех DONE. Canonical runtime: 35 файлов, SHA-256 93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33. Общий контракт фазы 2 — docs/planning/event-driven-runtime.md; перенос не означает её завершения.

@@ -1373,3 +1373,7 @@ Title sync исключён из generic `ContextSession.onChange`; retry timers
 ## 0.6.63 — built-in rename dialog
 
 Sidebar владеет собственным `<dialog>` для rename вместо browser-native `window.prompt()`, который в embedded Electron UI не показывался надёжно. Rename IPC и event-driven native title sync не меняются.
+
+## Workflow Kit 1.5.1 / Web Pilot 0.6.72
+
+Команда plan:carryover по прямому поручению архивирует исходный scope с сохранением реальных статусов и создаёт новый current plan из незавершённых задач, включая DOCS. Критерии, проверки, ссылки на planning/module документы сохраняются; перенос — один Git-коммит. Обычный archive требует всех DONE. Canonical runtime: 35 файлов, SHA-256 93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33. Общий контракт фазы 2 — docs/planning/event-driven-runtime.md; перенос не означает её завершения.

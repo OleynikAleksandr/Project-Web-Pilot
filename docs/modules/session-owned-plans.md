@@ -1,6 +1,6 @@
 # Планы сессий и подготовка продолжения
 
-## Действующий контракт — 0.6.58 / Workflow Kit 1.5.0
+## Действующий контракт — 0.6.72 / Workflow Kit 1.5.1
 
 Название файла сохранено для стабильности старых ссылок. Прежняя модель session-owned plans **заменена**.
 
@@ -147,3 +147,7 @@ Evidence: .harness/runtime/releases/0.6.28/{mac-release.json,source-verification
 ## План по адресу сессии — 0.6.53
 
 Собственный план сессии может лежать в `.harness/plans/by-id/<planId>.md` (scope:create, подготовленные планы) или в `.harness/plans/by-session/<sessionId>.md` (plan:create из NONE, Kit 1.4.12). Сайдбар получает его через доверенный `sessionPlanView` canonical package/generated packaged runtime; ключ кэша контекста учитывает оба каталога, поэтому изменения плана сразу видны в блоке «План этой сессии».
+
+## Workflow Kit 1.5.1 / Web Pilot 0.6.72
+
+Команда plan:carryover по прямому поручению архивирует исходный scope с сохранением реальных статусов и создаёт новый current plan из незавершённых задач, включая DOCS. Критерии, проверки, ссылки на planning/module документы сохраняются; перенос — один Git-коммит. Обычный archive требует всех DONE. Canonical runtime: 35 файлов, SHA-256 93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33. Общий контракт фазы 2 — docs/planning/event-driven-runtime.md; перенос не означает её завершения.

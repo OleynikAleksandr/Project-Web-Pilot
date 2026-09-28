@@ -142,7 +142,7 @@ Scope `stable-mcp-connector-036` завершает интеграцию scope 0
 
 Исторический выпуск 0.6.51: RELEASE.md, VERIFICATION.md. Выбор первого проекта описан в `docs/modules/first-run-onboarding.md` и WORKSPACE_SETUP.md.
 
-Текущий выпуск 0.6.71: [RELEASE](RELEASE.md), [VERIFICATION](VERIFICATION.md), naming planning — `docs/planning/session-title-sync.md`; single-active contract сохраняется в `docs/planning/single-active-plan-adaptation.md`. Canonical Workflow Kit 1.5.0 / 35 files / digest `0db567df…bbb2c75`; парная поставка находится в `~/Downloads/WebPilot-0.6.71/`.
+Текущий выпуск 0.6.72: [RELEASE](RELEASE.md), [VERIFICATION](VERIFICATION.md), naming planning — `docs/planning/session-title-sync.md`; single-active contract сохраняется в `docs/planning/single-active-plan-adaptation.md`. Canonical Workflow Kit 1.5.0 / 35 files / digest `0db567df…bbb2c75`; парная поставка находится в `~/Downloads/WebPilot-0.6.71/`.
 
 ## Удалённый интерфейс — исследование 2026-09-28
 
@@ -158,3 +158,7 @@ Scope `stable-mcp-connector-036` завершает интеграцию scope 0
 | Документ | Назначение |
 | --- | --- |
 | [Событийная обработка состояния Web Pilot](planning/event-driven-runtime.md) | Согласованный контракт трёх этапов; фаза 1 реализована в 0.6.64, включая ручной Send и восстановление разговора; 0.6.65 добавляет Resume stream unavailable, 0.6.66 — чистое поле нового Chat/Work, 0.6.67 — диагностику Send, 0.6.68 — Send без сверки черновика, 0.6.69 — Paste; 0.6.70 — завершение recovery сразу после Send; 0.6.71 — отключение общего индикатора проверки; фазы 2/3 ожидают отдельного продолжения |
+
+## Workflow Kit 1.5.1 / Web Pilot 0.6.72
+
+Команда plan:carryover по прямому поручению архивирует исходный scope с сохранением реальных статусов и создаёт новый current plan из незавершённых задач, включая DOCS. Критерии, проверки, ссылки на planning/module документы сохраняются; перенос — один Git-коммит. Обычный archive требует всех DONE. Canonical runtime: 35 файлов, SHA-256 93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33. Общий контракт фазы 2 — docs/planning/event-driven-runtime.md; перенос не означает её завершения.

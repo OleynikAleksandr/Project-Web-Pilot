@@ -209,3 +209,7 @@ Recovery 1.4.11 передаёт вместе с Workflow Core правила `P
 Исторические поставки 1.4.x выше сохраняют происхождение изменений. Текущий владелец source один: `/Users/oleksandroliinyk/VSCODE/WorkflowKit/src`, package `@webpilot/workflow-kit@1.5.0`. WebPilot programmatic imports используют package exports; external Workspace Setup/Project Doctor и Electron package получают generated runtime из `getRuntimeRoot()` в ignored `resources/workflow-kit`. Canonical и staged runtime подтверждены: 35 файлов, SHA-256 `0db567df6f0c8f68f3119a7322b4c1c6d28cd06bf57b267993b792097bbb2c75`.
 
 1.5.0 делает `.harness/plans/todo-plan.md` единственным runtime current plan. `listPlans` и `sessionPlanView` transitional facade возвращают тот же current plan для любой session; prepared/unassigned пусты. Legacy `by-id`/`by-session` обнаруживаются только migration code и переносятся в `.harness/plans/archive/legacy-session-plans/`.
+
+## Workflow Kit 1.5.1 / Web Pilot 0.6.72
+
+Команда plan:carryover по прямому поручению архивирует исходный scope с сохранением реальных статусов и создаёт новый current plan из незавершённых задач, включая DOCS. Критерии, проверки, ссылки на planning/module документы сохраняются; перенос — один Git-коммит. Обычный archive требует всех DONE. Canonical runtime: 35 файлов, SHA-256 93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33. Общий контракт фазы 2 — docs/planning/event-driven-runtime.md; перенос не означает её завершения.
