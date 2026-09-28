@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 697,
+  "plan_revision": 698,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-title-sync-20260928",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Автоматически давать каждой рабочей session Project Web Pilot осмысленное имя по текущей работе и синхронизировать это же server-side имя с соответствующим native conversation ChatGPT.",
   "acceptance_criteria": [
     "Автоматически давать каждой рабочей session Project Web Pilot осмысленное имя по текущей работе и синхронизировать это же server-side имя с соответствующим native conversation ChatGPT."
@@ -30,7 +30,8 @@
       "package.json",
       "package-lock.json",
       "src/context-session.mjs",
-      "tests/context-session.test.mjs"
+      "tests/context-session.test.mjs",
+      "src/ui/index.html"
     ],
     "documentation_paths": [
       "docs/planning/session-title-sync.md",
@@ -485,13 +486,81 @@
       ]
     },
     {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
+      "id": "T011",
+      "title": "Заменить window.prompt на встроенный диалог переименования",
+      "why": "В Electron sidebar системный window.prompt не появляется у пользователя; нужен управляемый input внутри Web Pilot.",
+      "dependencies": [
+        "T010"
+      ],
+      "functional_paths": [
+        "src/ui/index.html",
+        "src/ui/sidebar.mjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "docs/planning/session-title-sync.md"
+      ],
+      "verification_ids": [
+        "unit",
+        "smoke"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Пункт Переименовать сессии открывает modal внутри sidebar с текущим именем в input.",
+        "Пользователь может ввести новое имя и подтвердить Enter или кнопкой Сохранить; Отмена ничего не меняет.",
+        "Проект использует тот же диалог вместо window.prompt.",
+        "Smoke выполняет реальный DOM-сценарий открытия, ввода и submit, без monkeypatch window.prompt."
+      ],
+      "expected_commit_message": "fix: add reliable rename dialog",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "session-title-sync-20260928",
+        "task_id": "T011",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T012",
+      "title": "Собрать парный релиз Project Web Pilot 0.6.63",
+      "why": "Нужен проверяемый релиз с работающим пользовательским вводом имени.",
+      "dependencies": [
+        "T011"
+      ],
+      "functional_paths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "documentation_paths": [
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [
+        "package"
+      ],
+      "verification_kind": "package",
+      "acceptance_criteria": [
+        "0.6.63 собран для macOS arm64 и Windows x64.",
+        "Финальный manifest соответствует release commit и packagedSourceMatches=true.",
+        "Корневая и /Applications macOS app обновлены до 0.6.63."
+      ],
+      "expected_commit_message": "release: Project Web Pilot 0.6.63",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "session-title-sync-20260928",
+        "task_id": "T012",
+        "role": "implementation"
+      }
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "session-title-sync-20260928",
         "task_id": "DOCS",
         "role": "implementation",
-        "iteration": 4
+        "iteration": 5
       },
       "dependencies": [
         "T001",
@@ -503,7 +572,9 @@
         "T007",
         "T008",
         "T009",
-        "T010"
+        "T010",
+        "T011",
+        "T012"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -553,10 +624,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: session-title-sync-20260928
 Current Task: нет
-Revision: 697
+Revision: 698
 
 ## Цель
 
@@ -608,8 +679,16 @@ Revision: 697
   - Git Commit: [DONE] release: Project Web Pilot 0.6.62
   - Reference: session-title-sync-20260928 / T010 / implementation
   - Файлы: package.json, package-lock.json, docs/RELEASE.md, docs/VERIFICATION.md
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: актуализировать контекст проекта
+- [TODO] T011: Заменить window.prompt на встроенный диалог переименования — Ожидает
+  - Git Commit: [PENDING] fix: add reliable rename dialog
+  - Reference: session-title-sync-20260928 / T011 / implementation
+  - Файлы: src/ui/index.html, src/ui/sidebar.mjs, tests/electron-smoke.mjs, docs/planning/session-title-sync.md
+- [TODO] T012: Собрать парный релиз Project Web Pilot 0.6.63 — Ожидает
+  - Git Commit: [PENDING] release: Project Web Pilot 0.6.63
+  - Reference: session-title-sync-20260928 / T012 / implementation
+  - Файлы: package.json, package-lock.json, docs/RELEASE.md, docs/VERIFICATION.md
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: session-title-sync-20260928 / DOCS / implementation
   - Файлы: docs/planning/session-title-sync.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/modules/workspace-sessions.md
 
