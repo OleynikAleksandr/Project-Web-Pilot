@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 686,
+  "plan_revision": 688,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-title-sync-20260928",
@@ -389,13 +389,17 @@
         "Корневой и /Applications macOS app обновлены до 0.6.61; native Windows остаётся пользовательской проверкой."
       ],
       "expected_commit_message": "release: Project Web Pilot 0.6.61",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-title-sync-20260928",
         "task_id": "T008",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "package-lock.json",
+        "package.json"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -467,7 +471,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-title-sync-20260928
 Current Task: нет
-Revision: 686
+Revision: 688
 
 ## Цель
 
@@ -507,8 +511,8 @@ Revision: 686
   - Git Commit: [DONE] fix: use concise server-safe session titles
   - Reference: session-title-sync-20260928 / T007 / implementation
   - Файлы: src/workspace-session.mjs, src/main.mjs, tests/workspace-session.test.mjs, tests/electron-smoke.mjs, src/chatgpt-title.mjs, tests/chatgpt-title.test.mjs, docs/planning/session-title-sync.md
-- [TODO] T008: Собрать исправленный парный релиз Project Web Pilot 0.6.61 — Ожидает
-  - Git Commit: [PENDING] release: Project Web Pilot 0.6.61
+- [DONE] T008: Собрать исправленный парный релиз Project Web Pilot 0.6.61 — Завершено
+  - Git Commit: [DONE] release: Project Web Pilot 0.6.61
   - Reference: session-title-sync-20260928 / T008 / implementation
   - Файлы: package.json, package-lock.json, docs/RELEASE.md, docs/VERIFICATION.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
