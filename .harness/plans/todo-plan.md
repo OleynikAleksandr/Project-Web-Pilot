@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 35,
+  "plan_revision": 37,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "release-1.5.0-docs-finalization-001",
@@ -246,13 +246,16 @@
         "README отражает диагностический выпуск; runtime Kit остаётся 1.5.0."
       ],
       "expected_commit_message": "feat: README: диагностический клиент Web Pilot 0.6.67",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "release-1.5.0-docs-finalization-001",
         "task_id": "R004",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "README.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -310,7 +313,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: release-1.5.0-docs-finalization-001
 Current Task: нет
-Revision: 35
+Revision: 37
 
 ## Цель
 
@@ -346,8 +349,8 @@ Revision: 35
   - Git Commit: [DONE] feat: README: чистое поле нового Chat/Work в клиенте 0.6.66
   - Reference: release-1.5.0-docs-finalization-001 / R003 / implementation
   - Файлы: docs/modules/workflow-kit-package.md, README.md
-- [TODO] R004: README: диагностический клиент Web Pilot 0.6.67 — Ожидает
-  - Git Commit: [PENDING] feat: README: диагностический клиент Web Pilot 0.6.67
+- [DONE] R004: README: диагностический клиент Web Pilot 0.6.67 — Завершено
+  - Git Commit: [DONE] feat: README: диагностический клиент Web Pilot 0.6.67
   - Reference: release-1.5.0-docs-finalization-001 / R004 / implementation
   - Файлы: README.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
