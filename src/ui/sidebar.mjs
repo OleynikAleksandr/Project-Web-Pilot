@@ -105,15 +105,15 @@ const phases = {
   'waiting-composer': ['Ожидаем поле сообщения', 'Откройте доступное поле ChatGPT. Старт продолжится автоматически.', 'working'],
   'waiting-draft': ['В поле есть черновик', 'Закончите или уберите свой черновик. Стартовое сообщение подождёт.', 'working'],
   'waiting-generation': ['Ждём завершения ответа', 'ChatGPT отвечает. Передача контекста начнётся, когда поле освободится.', 'working'],
-  'preparing-message': ['Вставляем контекст в сообщение', 'Проверяем полный текст перед отправкой.', 'working'],
+  'preparing-message': ['Вставляем контекст', 'Передаём подготовленный пакет редактору ChatGPT.', 'working'],
   sending: ['Передаём контекст', 'Отправляем полный контекст проекта одним сообщением.', 'working'],
-  'waiting-chat': ['Контекст отправлен', 'Сохраняем связь проекта с этим чатом.', 'working'],
+  'waiting-chat': ['Контекст отправлен', 'Можно продолжать разговор. Адрес чата сохранится при его появлении.', 'success'],
   delivered: ['Контекст передан', 'Полный пакет отправлен в этот чат. Агент кратко подтвердит получение и опишет проект.', 'success'],
   stale: ['Контекст нужно обновить', 'План изменился после отправки. Нажмите «Обновить контекст», чтобы передать актуальную версию.', 'working'],
   'prepared-stale': ['Пакет в поле устарел', 'Уберите подготовленный черновик и нажмите «Обновить контекст». Отправка приостановлена.', 'working'],
   'manual-session': ['Разговор сохранён', 'Вы отправили сообщение вручную. Контекст проекта ещё не передан; при необходимости нажмите «Обновить контекст».', 'neutral'],
   'legacy-session': ['Сохранённый чат проекта', 'Чат открыт. Для передачи полного пакета нажмите «Обновить контекст» или создайте новую сессию через меню проекта.', 'neutral'],
-  'send-unknown': ['Проверяем результат отправки', 'Результат пока неизвестен. Проверяем появление сообщения перед повторной отправкой.', 'working'],
+  'send-unknown': ['Можно продолжать разговор', 'Прежняя попытка отправки не подтверждена. Автоматических проверок и повторной отправки нет.', 'neutral'],
   'chat-changed': ['Открыт другой чат', 'Этот чат пока не связан с проектом. Вернитесь к сессии проекта или создайте новую через меню проекта.', 'working'],
   error: ['Не удалось передать контекст', 'Подробности ошибки показаны выше. После исправления нажмите «Проверить контекст».', 'error'],
 };
@@ -362,7 +362,7 @@ function render(state) {
   const servicesReady = !!context.servicesReady || !!(runtimeService?.mcpReady && runtimeService?.tunnelReady);
   $('state-service').textContent = servicesReady ? 'Готовы' : context.phase === 'preparing' ? 'Проверка…' : 'Не проверены';
   $('state-service').dataset.ready = String(servicesReady);
-  $('state-message').textContent = context.messageSent ? 'Отправлено' : context.phase === 'sending' ? 'Отправка…' : context.phase === 'send-unknown' ? 'Уточняем' : 'Ожидание';
+  $('state-message').textContent = context.messageSent ? 'Отправлено' : context.phase === 'sending' ? 'Отправка…' : context.phase === 'send-unknown' ? 'Без подтверждения' : 'Ожидание';
   $('state-message').dataset.ready = String(!!context.messageSent);
   $('state-context').textContent = context.phase === 'delivered' ? 'Передан целиком' : ['stale', 'prepared-stale'].includes(context.phase) ? 'Устарел' : context.phase === 'loading-context' ? 'Подготовка…' : context.phase === 'legacy-session' ? 'Прежняя сессия' : 'Ожидание';
   $('state-context').dataset.ready = String(context.phase === 'delivered');

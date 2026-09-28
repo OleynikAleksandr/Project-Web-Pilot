@@ -120,3 +120,7 @@ Workspace & Sessions: штатный webContents.insertText, актуально�
 ## Paste для recovery — 0.6.69
 
 Workspace & Sessions: ClipboardEvent.paste в composer, безопасный HTML и неизменённый plain text; диагностика принятия/времени. Контракт — [доставка](CONTEXT_DELIVERY.md), [T007](planning/event-driven-runtime.md). TXT и runtime Workflow Kit не меняются.
+
+## Завершение Send — 0.6.70
+
+Workspace & Sessions: автоматический recovery завершается после клика без проверки DOM вложения; старые неизвестные попытки нейтральны. Контракты — [доставка](CONTEXT_DELIVERY.md), [T008](planning/event-driven-runtime.md).

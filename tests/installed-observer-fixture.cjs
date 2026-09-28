@@ -11,7 +11,7 @@ const html = `<!doctype html><html><body><div id="messages"></div><form>
 <div id="editor-host"></div><button data-testid="send-button" disabled>Send</button></form>
 <script>
 const sent=JSON.parse(sessionStorage.getItem('sent')||'[]');
-function show(text){const el=document.createElement('article');el.dataset.messageAuthorRole='user';el.textContent=text;document.querySelector('#messages').append(el)}
+function show(text){const el=document.createElement('article');el.dataset.messageAuthorRole='user';el.textContent='Вставленный Markdown.md';document.querySelector('#messages').append(el)}
 sent.forEach(show);
 document.querySelector('form').onsubmit=e=>{e.preventDefault();const text=fixtureReadModel();sent.push(text);sessionStorage.setItem('sent',JSON.stringify(sent));show(text);history.replaceState({},'', '/c/installed-fixture');fixtureClearModel();document.querySelector('#prompt-textarea').dispatchEvent(new Event('input',{bubbles:true}))};
 setTimeout(()=>document.querySelector('button').disabled=false,350);
@@ -43,7 +43,14 @@ app.whenReady().then(async () => {
     // Comparable to the incident: ~100k characters with hundreds of lines.
     const text = '\n\n  <script>not executable</script> & \\ literal\n' + ('Полный пакет проверки. Отступы  и путь /My  Folder. '.repeat(3) + '\n').repeat(700)
       + '\n\tТабуляция\nКод: \\n и \\t\nwp-request-installed-fixture';
-    assert.equal((await composer.deliver({ text, requestId: 'wp-request-installed-fixture' })).state, 'sent');
+    const delivery=await composer.deliver({ text, requestId: 'wp-request-installed-fixture' });
+    assert.equal(delivery.state, 'sent');assert.equal(delivery.completion, 'send-dispatched');
+    const clickIndex=trace.findIndex(r=>r.outcome==='clicked');
+    assert.ok(clickIndex>=0);
+    assert.equal(trace.slice(clickIndex+1).some(r=>r.event==='observation'),false,
+      'no post-Send DOM inspection or confirmation wait');
+    assert.equal((await composer.inspect({requestId:'wp-request-installed-fixture'})).messageSeen,false,
+      'attachment UI contains no recovery marker');
     assert.equal(await view.webContents.executeJavaScript('document.querySelectorAll("article").length'), 1);
     const insertion=trace.find(r=>r.insertionMethod==='ClipboardEvent.paste');
     assert.ok(insertion, 'installed composer uses paste pipeline');
@@ -69,11 +76,11 @@ app.whenReady().then(async () => {
     await view.webContents.executeJavaScript(fixtureBundle);
     if (!source.current?.state.editorAvailable) await source.waitForChange(source.version, { timeoutMs: 3000 });
     assert.notEqual(source.current.documentId, documentId);
-    assert.equal((await composer.inspect({ requestId: 'wp-request-installed-fixture' })).messageSeen, true);
+    assert.equal((await composer.inspect({ requestId: 'wp-request-installed-fixture' })).messageSeen, false);
     assert.equal(await view.webContents.executeJavaScript('document.querySelector("#prompt-textarea").innerText'), 'Контекст архивной сессии wp-request-old-draft');
 
     assert.equal(await view.webContents.executeJavaScript('document.querySelectorAll("article").length'), 1);
-    console.log(JSON.stringify({ installedPreload: resourceRoot, scenario: 'sandbox observer, restored draft cleared, real ProseMirror paste, exact multiline model, Send with diagnostics, Resume stream unavailable detected, same conversation reload without duplicate',
+    console.log(JSON.stringify({ installedPreload: resourceRoot, scenario: 'sandbox observer, restored draft cleared, real ProseMirror paste, exact multiline model, immediate Send completion without marker or extra message, Resume stream unavailable detected, same conversation reload without duplicate',
       electron: process.versions.electron, node: process.versions.node, insertionMethod: insertion.insertionMethod, insertionMs: insertion.elapsedMs, chars: text.length, liveChatGPT: false }));
   } finally { disconnect(); view.destroy(); clearTimeout(deadline); }
   app.quit();

@@ -306,6 +306,8 @@ export class ChatGPTComposer {
     let clicked = false;
     try {
       if (!canContinue()) return { state: 'cancelled' };
+      if (this.dispatchedRequestId === requestId)
+        return { state: 'sent', completion: 'send-dispatched', recovered: true };
       let observation = await this.inspect({ text, requestId });
       if (observation.messageSeen) return { state: 'sent', recovered: true, observation };
       if (!canContinue()) return { state: 'cancelled' };
@@ -335,18 +337,10 @@ export class ChatGPTComposer {
       if (observation.action === 'already-sent') return { state: 'sent', recovered: true, observation };
       if (observation.action !== 'clicked') return { state: 'deferred', reason: observation.reason, observation };
       clicked = true;
-      const deadline = this.now() + this.timeoutMs;
-      let observedVersion = this.pageState?.version ?? 0;
-      do {
-        if (!canContinue()) return { state: 'unknown', reason: 'CHAT_CHANGED' };
-        observation = await this.inspect({ requestId });
-        if (observation.messageSeen) return { state: 'sent', observation };
-        const signal = await this.waitForObservedChange(observedVersion, deadline, canContinue);
-        observedVersion = signal.version ?? observedVersion;
-        if (signal.cancelled) return { state: 'unknown', reason: 'CHAT_CHANGED' };
-        if (signal.timeout) break;
-      } while (this.now() < deadline);
-      return { state: 'unknown', reason: 'SEND_NOT_OBSERVED' };
+      this.dispatchedRequestId = requestId;
+      // Send dispatch completes recovery. The site may render it as an attachment,
+      // so neither DOM marker discovery nor an agent response is a completion gate.
+      return { state: 'sent', completion: 'send-dispatched', observation };
     } catch (error) {
       if (clicked) return { state: 'unknown', reason: 'PAGE_UNAVAILABLE' };
       throw error;

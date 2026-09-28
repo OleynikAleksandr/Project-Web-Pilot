@@ -148,14 +148,19 @@ export class ContextSession {
       if (info.projectId !== project.projectId) throw failure('PROJECT_REPLACED', 'В этой папке теперь другой проект. Старый чат сохранён.');
       project = { ...project, ...info };
       let attempt = project.attempt;
-      let observation = await this.composer.inspect({ requestId: attempt?.requestId, text: attempt?.text });
+      const sendAttempted = attempt?.protocol === CONTEXT_PROTOCOL
+        && (attempt.state === 'sent' || !!attempt.sendStartedAtMs);
+      // Once Send was attempted, only page/navigation state is relevant.
+      // Never search a dispatched packet inside message text or attachments.
+      let observation = await this.composer.inspect(sendAttempted ? {}
+        : { requestId: attempt?.requestId, text: attempt?.text });
       if (!this.current(generation)) return;
       if (observation.login) { this.emit({ phase: 'waiting-login', projectInfo: info }); return; }
       const experience = project.experience ?? 'chat';
       const currentUrl = normalizeChatUrl(observation.url);
       // A manual Send can bypass onBeforeSend. The persisted marker in a user
       // message proves delivery; a URL, message count or assistant quote cannot.
-      const ownMessageSeen = attempt?.protocol === CONTEXT_PROTOCOL && !!attempt.requestId
+      const ownMessageSeen = !sendAttempted && attempt?.protocol === CONTEXT_PROTOCOL && !!attempt.requestId
         && attempt.text?.includes(attempt.requestId) && attempt.packet?.workspace === project.workspace
         && observation.messageSeen;
       const sameConversation = project.chatUrl ? currentUrl === project.chatUrl
@@ -182,14 +187,14 @@ export class ContextSession {
             ? 'Work-сессия перешла в неподдерживаемый разговор. Recovery не привязан.'
             : 'Chat-сессия перешла в неподдерживаемый разговор. Recovery не привязан.');
         }
-        if (!observation.messageSeen) { this.emit({ phase: 'send-unknown', projectInfo: info, messageSent: false }); return; }
+        if (!sendAttempted && !ownMessageSeen) { this.emit({ phase: 'chat-changed', projectInfo: info }); return; }
         project = { ...await this.store.bindChat(project.workspace, project.sessionId, currentUrl), ...info };
         if (!this.current(generation)) return;
         this.onChatBound({ workspace: project.workspace, sessionId: project.sessionId, chatUrl: currentUrl });
       } else if (isPendingChatGPTConversation(observation.url)) {
         if (!attempt?.sendStartedAtMs && attempt?.state !== 'sent') { this.emit({ phase: 'chat-changed', projectInfo: info }); return; }
-        const sent = observation.messageSeen || attempt.state === 'sent';
-        if (observation.messageSeen && attempt.state !== 'sent') {
+        const sent = ownMessageSeen || attempt.state === 'sent';
+        if (ownMessageSeen && attempt.state !== 'sent') {
           attempt = { ...attempt, state: 'sent', sentAtMs: this.now() };
           await this.store.updateSession(project.workspace, project.sessionId, { attempt });
           if (!this.current(generation)) return;
@@ -236,13 +241,10 @@ export class ContextSession {
         return;
       }
       if (attempt && ['sending', 'unknown', 'sent'].includes(attempt.state)) {
-        if (!observation.messageSeen && attempt.state !== 'sent') {
-          this.emit({ phase: 'send-unknown', projectInfo: info, messageSent: false }); return;
-        }
         if (attempt.state !== 'sent') {
-          attempt = { ...attempt, state: 'sent', sentAtMs: this.now() };
-          await this.store.updateSession(project.workspace, project.sessionId, { attempt });
-          if (!this.current(generation)) return;
+          // Old interrupted attempts remain explicitly unconfirmed, but idle.
+          // Keep their conversation and allow normal use without replay or polling.
+          this.emit({ phase: 'send-unknown', projectInfo: info, messageSent: false, error: null }); return;
         }
         const phase = !project.chatUrl ? 'waiting-chat' : packetMatchesProject(attempt.packet, project) ? 'delivered' : 'stale';
         this.emit({ phase, projectInfo: info, messageSent: true,
@@ -305,7 +307,7 @@ export class ContextSession {
         } });
       if (!this.current(generation)) return;
       if (result.state === 'sent') {
-        attempt = { ...attempt, packet: { ...attempt.packet, deliveryMs: performance.now() - deliveryStarted }, state: 'sent', sentAtMs: this.now(), sendStartedAtMs: attempt.sendStartedAtMs ?? attempt.createdAtMs };
+        attempt = { ...attempt, packet: { ...attempt.packet, deliveryMs: performance.now() - deliveryStarted }, state: 'sent', completion: result.completion ?? 'observed', sentAtMs: this.now(), sendStartedAtMs: attempt.sendStartedAtMs ?? attempt.createdAtMs };
         await this.store.updateSession(project.workspace, project.sessionId, { attempt });
         if (this.current(generation)) this.emit({ phase: 'waiting-chat', messageSent: true, projectInfo: info, delivery: { ...attempt.packet, sentAtMs: attempt.sentAtMs } });
       } else if (result.state === 'unknown') {

@@ -127,6 +127,7 @@ export async function createRuntime({ browser, session }) {
 }
 
 async function waitFor(predicate, description, snapshot) {
+  if (smokeDataDir) await fs.writeFile(path.join(smokeDataDir, 'stage.json'), JSON.stringify({ description, startedAt: new Date().toISOString() }));
   const end = Date.now() + 60000;
   while (Date.now() < end) {
     if (await predicate()) return;
@@ -404,7 +405,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await previewNew();
   assert.equal(snapshot().setup.firstSessionExperience, 'chat', 'choice is not remembered globally after cancel');
   const deliverNormally = controller.composer.deliver.bind(controller.composer);
-  let manualDeliveryArmed = !eventBaseline;
+  let manualDeliveryArmed = !eventBaseline, manualDeliveryClicked = false;
   if (manualDeliveryArmed) controller.composer.deliver = async options => {
     await controller.composer.inspect({ action: 'fill', text: options.text, requestId: options.requestId });
     return { state: 'deferred', reason: 'DRAFT_CHANGED' };
@@ -419,13 +420,15 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await waitFor(async () => {
     if (snapshot().context.phase === 'waiting-draft') {
       if (manualDeliveryArmed) {
-        manualDeliveryArmed = false;
+        manualDeliveryArmed = false; manualDeliveryClicked = true;
         assert.equal(store.selected().chatUrl, null);
         assert.equal(store.selected().attempt.sendStartedAtMs, null);
         controller.composer.deliver = deliverNormally;
         await browser.executeJavaScript("document.querySelector('[data-testid=send-button]').click()", true);
         return false;
       }
+      // Send already cleared the field; allow the asynchronous session update to finish.
+      if (manualDeliveryClicked) return false;
       const actual = await browser.executeJavaScript('document.getElementById("prompt-textarea").innerText');
       const expected = store.selected().attempt?.text ?? '';
       let offset = 0; while (offset < Math.min(actual.length, expected.length) && actual[offset] === expected[offset]) offset++;

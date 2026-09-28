@@ -26,7 +26,7 @@ function fixture({ draft = '', stop = false, emitMessage = true } = {}) {
 const message='Read project context. Request: opaque-request-123';
 const request={text:message,requestId:'opaque-request-123'};
 
-test('inserts and sends exactly once, after persisting uncertainty and observing the user message',async()=>{
+test('inserts and dispatches Send once, after persisting the attempt',async()=>{
   const f=fixture();let persisted=false;
   const result=await f.composer.deliver({...request,onBeforeSend:async()=>{assert.equal(f.sends(),0);persisted=true;}});
   assert.equal(result.state,'sent');assert.equal(persisted,true);assert.equal(f.sends(),1);
@@ -46,9 +46,18 @@ test('user additions after insertion are sent immediately with recovery',async()
   assert.equal(f.document.querySelector('[data-message-author-role="user"]').textContent,message+'Новая мысль пользователя');
 });
 
-test('an uncertain send is returned without a second click',async()=>{
-  const f=fixture({emitMessage:false});const result=await f.composer.deliver(request);
-  assert.equal(result.state,'unknown');assert.equal(f.sends(),1);
+test('attachment Send completes immediately without a DOM marker, waiting or duplicate click',async()=>{
+  const f=fixture({emitMessage:false});
+  f.composer.waitForObservedChange=()=>{throw Error('post-Send wait forbidden');};
+  const execute=f.view.executeJavaScript;
+  f.view.executeJavaScript=async script=>{
+    assert.equal(f.sends(),0,'no DOM reads after Send');
+    return execute(script);
+  };
+  const result=await f.composer.deliver(request);
+  assert.equal(result.state,'sent');assert.equal(result.completion,'send-dispatched');assert.equal(f.sends(),1);
+  assert.equal((await f.composer.deliver(request)).state,'sent');assert.equal(f.sends(),1);
+  assert.equal(f.composer.inFlight,false);
 });
 
 test('serializes sends and cancels before mutation when the project changes',async()=>{

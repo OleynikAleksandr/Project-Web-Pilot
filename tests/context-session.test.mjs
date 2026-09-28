@@ -61,12 +61,15 @@ test('loads once, saves full message before send, and reopens the same chat with
   assert.equal(f.boundLog.length,1,'reopening an already bound chat does not emit another bind event');
 });
 
-test('unknown send after restart only observes, including explicit retry, then recognizes the late message',async()=>{
+test('unknown send after restart remains idle without verification or automatic replay',async()=>{
   const f=controllerFixture();await f.controller.tick();
   const unknown={...f.saved.attempt,state:'unknown'};await f.store.updateSession('', '',{attempt:unknown});f.inspection.messageSeen=false;
   f.controller.attach(f.saved);await f.controller.tick();assert.equal(f.controller.state.phase,'send-unknown');
   await f.controller.retry();assert.equal(f.sends(),1);assert.equal(f.loads(),1);
-  f.inspection.messageSeen=true;await f.controller.tick();assert.equal(f.controller.state.phase,'delivered');
+  const inspect=f.composer.inspect;
+  f.composer.inspect=async options=>{assert.equal(options.requestId,undefined);assert.equal(options.text,undefined);return inspect(options);};
+  f.inspection.messageSeen=true;await f.controller.tick();assert.equal(f.controller.state.phase,'send-unknown');
+  assert.equal(f.controller.state.messageSent,false);
 });
 
 test('legacy sessions stay bound and only explicit refresh sends the new protocol',async()=>{
@@ -199,11 +202,11 @@ test('pending WEB conversation after Send waits for its permanent URL for Chat a
     await f.controller.tick(); assert.equal(f.controller.state.phase,'send-unknown');
     assert.equal(f.saved.chatUrl,null);
     f.inspection.messageSeen=true;
-    await f.controller.tick(); assert.equal(f.controller.state.phase,'waiting-chat');
-    assert.equal(f.controller.state.messageSent,true); assert.equal(f.saved.attempt.state,'sent');
+    await f.controller.tick(); assert.equal(f.controller.state.phase,'send-unknown');
+    assert.equal(f.controller.state.messageSent,false); assert.equal(f.saved.attempt.state,'unknown');
     assert.equal(f.saved.chatUrl,null);
     f.inspection.url='https://chatgpt.com/c/permanent-conversation';
-    await f.controller.tick(); assert.equal(f.controller.state.phase,'delivered');
+    await f.controller.tick(); assert.equal(f.controller.state.phase,'send-unknown');
     assert.equal(f.saved.chatUrl,f.inspection.url); assert.equal(clicks,1);
     f.controller.attach(f.saved);await f.controller.tick();assert.equal(clicks,1);
   }
@@ -466,4 +469,19 @@ test('already inserted attempt with edited draft continues without preparation o
   f.composer.deliver=async options=>{await options.onBeforeSend(); delivered++;return {state:'sent'};};
   await f.controller.tick();
   assert.equal(delivered,1);assert.equal(f.loads(),1);assert.equal(f.saved.attempt.state,'sent');
+});
+
+test('dispatched recovery binds and reopens an attachment-only chat without looking for packet text', async () => {
+  const f=controllerFixture({chatUrl:null});
+  await f.controller.tick();
+  f.inspection.messageSeen=false;f.inspection.userMessageCount=0;
+  const inspect=f.composer.inspect;
+  f.composer.inspect=async options=>{
+    assert.equal(options.requestId,undefined);assert.equal(options.text,undefined);
+    return inspect(options);
+  };
+  await f.controller.tick();
+  assert.equal(f.saved.chatUrl,project.chatUrl);assert.equal(f.controller.state.phase,'delivered');
+  f.controller.attach(f.saved);await f.controller.tick();
+  assert.equal(f.sends(),1);assert.equal(f.loads(),1);assert.equal(f.controller.state.phase,'delivered');
 });
