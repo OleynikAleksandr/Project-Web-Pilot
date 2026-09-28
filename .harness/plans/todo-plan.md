@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 783,
+  "plan_revision": 784,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-2-20260928",
@@ -38,7 +38,8 @@
       "package-lock.json",
       "tests/chromium-diagnostics.test.mjs",
       "tests/session-opening-performance.test.mjs",
-      "tests/prosemirror-composer-fixture.mjs"
+      "tests/prosemirror-composer-fixture.mjs",
+      "src/ui/sidebar.mjs"
     ],
     "documentation_paths": [
       "docs/planning/event-driven-runtime.md",
@@ -515,6 +516,43 @@
       ]
     },
     {
+      "id": "T008",
+      "title": "Завершать передачу сразу после Send; выпуск 0.6.70",
+      "why": "Завершать передачу сразу после Send; выпуск 0.6.70",
+      "dependencies": [],
+      "functional_paths": [
+        "src/chatgpt-composer.mjs",
+        "src/context-session.mjs",
+        "src/ui/sidebar.mjs",
+        "tests/chatgpt-composer.test.mjs",
+        "tests/context-session.test.mjs",
+        "tests/installed-observer-fixture.cjs",
+        "package.json"
+      ],
+      "documentation_paths": [
+        "docs/planning/event-driven-runtime.md"
+      ],
+      "verification_ids": [
+        "unit",
+        "smoke",
+        "release-pair"
+      ],
+      "verification_kind": "installed",
+      "acceptance_criteria": [
+        "После успешного вызова Send нет ожидания requestId в DOM или ответа агента; вложение отправляется без добавочного сообщения.",
+        "Сохранённый sent связывает URL без проверки содержимого; прежний unknown не запускает проверку, повтор или бесконечный индикатор и сохраняет разговор.",
+        "Тест установленного composer моделирует вложение без requestId в DOM; обе платформы 0.6.70 собраны, README обоих проектов актуальны."
+      ],
+      "expected_commit_message": "feat: Завершать передачу сразу после Send; выпуск 0.6.70",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "event-driven-runtime-phase-2-20260928",
+        "task_id": "T008",
+        "role": "implementation"
+      }
+    },
+    {
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
@@ -529,7 +567,8 @@
         "T004",
         "T005",
         "T006",
-        "T007"
+        "T007",
+        "T008"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -576,7 +615,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-phase-2-20260928
 Current Task: нет
-Revision: 783
+Revision: 784
 
 ## Цель
 
@@ -616,6 +655,10 @@ Revision: 783
   - Git Commit: [DONE] feat: Paste для контекста и парный выпуск 0.6.69
   - Reference: event-driven-runtime-phase-2-20260928 / T007 / implementation
   - Файлы: src/chatgpt-composer.mjs, tests/chatgpt-composer.test.mjs, tests/installed-observer-fixture.cjs, package-lock.json, package.json, scripts/check-event-runtime-release.mjs, tests/electron-smoke.mjs, tests/prosemirror-composer-fixture.mjs, docs/planning/event-driven-runtime.md, README.md, docs/CONTEXT_DELIVERY.md, docs/DOCUMENTATION_INDEX.md, docs/MODULES.md, docs/PRODUCT.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/modules/chatgpt-dom-compatibility.md
+- [TODO] T008: Завершать передачу сразу после Send; выпуск 0.6.70 — Ожидает
+  - Git Commit: [PENDING] feat: Завершать передачу сразу после Send; выпуск 0.6.70
+  - Reference: event-driven-runtime-phase-2-20260928 / T008 / implementation
+  - Файлы: src/chatgpt-composer.mjs, src/context-session.mjs, src/ui/sidebar.mjs, tests/chatgpt-composer.test.mjs, tests/context-session.test.mjs, tests/installed-observer-fixture.cjs, package.json, docs/planning/event-driven-runtime.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: event-driven-runtime-phase-2-20260928 / DOCS / implementation
