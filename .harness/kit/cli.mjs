@@ -4,7 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { errorResult, check, readJSON, json, withPlanFile, PLAN } from './lib/common.mjs';
 import { repoRoot } from './lib/git.mjs';
-import { status, createScope, startTask, applyPlan, applyConfig, archive, repair, acknowledgeHook } from './lib/actions.mjs';
+import { status, createScope, startTask, applyPlan, applyConfig, archive, carryoverPlan, repair, acknowledgeHook } from './lib/actions.mjs';
 import { journal } from './lib/validate.mjs';
 import { withSessionPlan, sessionPlanView } from './lib/session-plans.mjs';
 import { validate } from './lib/validate.mjs';
@@ -58,6 +58,7 @@ export async function main(argv = process.argv.slice(2)) {
         check(false, 'COMMAND_REMOVED', command + ' удалена из single-active-plan workflow. Новый chat продолжает текущий checkout plan; для независимой работы используйте Git worktree.');
         break;
       case 'plan:extend': result = extendPlan(root,input(),opts['expected-revision']); break;
+      case 'plan:carryover': result = carryoverPlan(root,input(),opts['expected-revision']); break;
       case 'plan:create': result = createSimplePlan(root,input()); break;
       case 'scope:create': result = createScope(root, input(), opts['expected-revision']); break;
       case 'task:update': result = updateTask(root,opts.task,input(),opts['expected-revision']); break;

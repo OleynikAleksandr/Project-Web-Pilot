@@ -101,3 +101,7 @@ SessionStart hook доставляет current checkout recovery. Git hooks пр
 Старый WebPilot может продолжать хранить session ID/chat metadata. `sessionPlanView(root, anySessionId)` временно возвращает один current checkout plan для любого session ID, `prepared: []`; session не является owner.
 
 Публичные package subpaths сохраняются там, где это разумно. Physical runtime consumers получают `getRuntimeRoot()` и могут stage payload без зависимости от sibling repository.
+
+## Закрытие с переносом незавершённых задач
+
+По прямому поручению пользователя используйте `plan:carryover --input carryover.json --expected-revision N`. Вход: `{"scope":"old-scope","id":"new-scope","approval_note":"Прямое поручение пользователя"}`; optional `objective`. Требуется чистый checkout без активной микрозадачи. Архив получает точную копию прежнего плана с исходными статусами; новый current plan содержит только незавершённые задачи и DOCS, сохраняет критерии, проверки и planning/module ссылки. Выполненные зависимости остаются в архиве и provenance нового плана. Оба файла фиксируются одним служебным Git-коммитом; история не объявляется полностью выполненной. Повтор после успеха безопасен; при прерывании используйте status и штатный repair. Обычный archive по-прежнему доступен только после всех DONE. Новый чат сам по себе не требует переноса.

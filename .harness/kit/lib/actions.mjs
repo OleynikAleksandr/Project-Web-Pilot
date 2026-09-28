@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import {beginTaskFiles,handoffTaskFiles} from './task-files.mjs';
 import path from 'node:path';
-import { VERSION, PLAN, planPath, CONFIG, MANIFEST, check, readJSON, atomic, json, hash, id, textFile } from './common.mjs';
+import { VERSION, PLAN, planPath, safePath, CONFIG, MANIFEST, check, readJSON, atomic, json, hash, id, textFile } from './common.mjs';
 import { emptyPlan, readPlan, parsePlan, renderPlan, writePlan, validatePlan, nextTask, projectContextPack, projectContextPaths,
   FINAL_DOCUMENTATION_TASK_ID, FINAL_DOCUMENTATION_TASK_TITLE, isDocumentationFinalizationTask } from './plan.mjs';
 import { validate, validateConfig, validatePlanConfiguration, readConfig, journal, resolveReferences, taskChecks } from './validate.mjs';
@@ -161,6 +161,82 @@ export function applyConfig(root, input) {
     catch (e) { if (!journal(root)) atomic(path.join(root, CONFIG), before); throw e; }
   });
 }
+
+// Explicit scope rollover: the archived bytes retain truthful task states.
+export function carryoverPlan(root, input, expectedRevision) {
+  const PLAN = planPath(root);
+  return locked(root, () => {
+    noTransaction(root); assertSingleWriter(root, PLAN);
+    const { plan: previous, config } = validate(root);
+    check(input && Object.keys(input).every(k => ['scope','id','objective','approval_note'].includes(k)),
+      'PLAN_SCHEMA', 'Допустимы scope, id, objective, approval_note.');
+    check(typeof input.approval_note === 'string' && input.approval_note.trim().length >= 10,
+      'USER_CLOSE_REQUIRED', 'Перенос требует прямого поручения пользователя.');
+    check(typeof input.scope === 'string' && /^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(input.scope)
+      && typeof input.id === 'string' && /^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(input.id) && input.id !== input.scope,
+      'SCOPE_ID', 'Нужны разные корректные исходный scope и новый id.');
+    check(expectedRevision !== undefined, 'EXPECTED_REVISION_REQUIRED', 'Укажите --expected-revision.');
+    // Retry after a confirmed commit is harmless, including after a lost response.
+    if (previous.scope_id === input.id && previous.carryover?.from_scope === input.scope
+        && previous.carryover.source_revision === Number(expectedRevision)) {
+      const archived = safePath(root, previous.carryover.archive_path);
+      check(hash(fs.readFileSync(archived)) === previous.carryover.archive_sha256,
+        'ARCHIVE_CHANGED', 'Архив переноса изменился.');
+      return { ok:true, already_transferred:true, scope_id:previous.scope_id,
+        archive:previous.carryover.archive_path, task_ids:previous.carryover.task_ids };
+    }
+    revision(previous, expectedRevision);
+    check(previous.scope_id === input.scope && previous.execution_scope_status !== 'NONE',
+      'SCOPE_ID', 'Исходный scope не является текущим.');
+    check(previous.current_task_id === null, 'TASK_ALREADY_ACTIVE', 'Сначала завершите текущую микрозадачу.');
+    const remaining = previous.tasks.filter(t => t.commit_status !== 'DONE');
+    check(remaining.length > 0, 'NOTHING_TO_TRANSFER', 'Нет незавершённых задач; используйте archive.');
+    const destination = '.harness/plans/archive/' + previous.scope_id + '.md';
+    const archiveFile = safePath(root, destination);
+    const original = textFile(root, PLAN);
+    // An untracked exact copy may remain after a failed commit or an interrupted
+    // preparation. A tracked archive or different bytes must never be overwritten.
+    const exists = fs.existsSync(archiveFile);
+    if (exists) check(git(root, ['ls-files','--error-unmatch','--',destination], {allowFailure:true}).status !== 0
+        && fs.lstatSync(archiveFile).isFile() && fs.readFileSync(archiveFile,'utf8') === original,
+      'ARCHIVE_EXISTS', 'Архив уже существует и не является незавершённой точной копией.');
+    check(allChanges(root).every(p => exists && p === destination), 'DIRTY_WORKTREE',
+      'Перенос требует чистого рабочего дерева.');
+    const ids = new Set(remaining.map(t => t.id));
+    const tasks = remaining.map(t => {
+      const next = structuredClone(t);
+      next.dependencies = t.dependencies.filter(dep => ids.has(dep));
+      if (next.context_pack) next.context_pack.dependency_task_ids =
+        (next.context_pack.dependency_task_ids ?? []).filter(dep => ids.has(dep));
+      next.commit_ref = {scope_id:input.id, task_id:t.id, role:'implementation'};
+      delete next.actual_files;
+      return next;
+    });
+    const plan = { ...emptyPlan(previous.project_name), project_id:previous.project_id,
+      scope_id:input.id, plan_revision:previous.plan_revision + 1, execution_scope_status:previous.execution_scope_status,
+      delivery_status:'IN_PROGRESS', objective:input.objective ?? previous.objective,
+      acceptance_criteria:structuredClone(previous.acceptance_criteria), baseline_commit:head(root),
+      blocked_reason:previous.blocked_reason, context_pack:structuredClone(previous.context_pack),
+      approved_scope:{functional_paths:[...new Set(tasks.flatMap(t=>t.functional_paths))],
+        documentation_paths:[...new Set(tasks.flatMap(t=>t.documentation_paths))]}, tasks,
+      user_decisions:[{id:id(),text:input.approval_note,recorded_at:new Date().toISOString()}],
+      carryover:{from_scope:previous.scope_id, source_revision:previous.plan_revision,
+        source_commit:head(root), archive_path:destination, archive_sha256:hash(original),
+        task_ids:remaining.map(t=>t.id),
+        completed_dependencies:Object.fromEntries(remaining.map(t=>[t.id,t.dependencies.filter(dep=>!ids.has(dep))]))} };
+    plan.context_pack.dependency_task_ids = plan.context_pack.dependency_task_ids.filter(dep=>ids.has(dep));
+    normalizeCompletionContract(plan); requireModuleContext(plan);
+    validatePlan(plan); validatePlanConfiguration(root,plan,config); resolveReferences(root,plan);
+    if (!exists) {
+      fs.mkdirSync(path.dirname(archiveFile),{recursive:true});
+      fs.writeFileSync(archiveFile,original,{flag:'wx'});
+    }
+    const result = service(root,plan,'plan-carryover',[PLAN,destination],
+      'docs: перенести незавершённые задачи ' + previous.scope_id + ' → ' + input.id);
+    return {...result, archive:destination, task_ids:remaining.map(t=>t.id), state:recover(root)};
+  });
+}
+
 export function archive(root, scope, approvalNote) {
   const PLAN = planPath(root);
   return locked(root, () => {
