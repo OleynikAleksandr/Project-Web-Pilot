@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 659,
+  "plan_revision": 661,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "remote-project-ui-research-20260928",
@@ -126,8 +126,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "remote-project-ui-research-20260928",
         "task_id": "T003",
@@ -152,7 +152,10 @@
         "Даны сравнительная таблица, рекомендация, минимальный следующий эксперимент и stop conditions",
         "Зафиксированы границы безопасности, single current plan и реальные ограничения доказательств"
       ],
-      "expected_commit_message": "feat: Сопоставить варианты и завершить исследовательский отчёт"
+      "expected_commit_message": "feat: Сопоставить варианты и завершить исследовательский отчёт",
+      "actual_files": [
+        "docs/research/remote-project-ui-options-2026-09-28.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -205,7 +208,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: remote-project-ui-research-20260928
 Current Task: нет
-Revision: 659
+Revision: 661
 
 ## Цель
 
@@ -225,8 +228,8 @@ Revision: 659
   - Git Commit: [DONE] feat: Оценить мобильный Web Pilot для iOS/Android и готовые open-source основы
   - Reference: remote-project-ui-research-20260928 / T002 / implementation
   - Файлы: docs/planning/remote-project-ui-research.md, docs/research/remote-project-ui-options-2026-09-28.md
-- [TODO] T003: Сопоставить варианты и завершить исследовательский отчёт — Ожидает
-  - Git Commit: [PENDING] feat: Сопоставить варианты и завершить исследовательский отчёт
+- [DONE] T003: Сопоставить варианты и завершить исследовательский отчёт — Завершено
+  - Git Commit: [DONE] feat: Сопоставить варианты и завершить исследовательский отчёт
   - Reference: remote-project-ui-research-20260928 / T003 / implementation
   - Файлы: docs/planning/remote-project-ui-research.md, docs/research/remote-project-ui-options-2026-09-28.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
