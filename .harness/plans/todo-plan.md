@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 668,
+  "plan_revision": 670,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-title-sync-20260928",
@@ -117,8 +117,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-title-sync-20260928",
         "task_id": "T002",
@@ -148,7 +148,11 @@
         "Один live probe подтверждает реальное server-side rename: после reload название сохраняется в native Recents.",
         "Реализация не хранит ChatGPT credentials/token вне существующего browser partition и не добавляет внешний сервис."
       ],
-      "expected_commit_message": "feat: add native ChatGPT conversation title adapter"
+      "expected_commit_message": "feat: add native ChatGPT conversation title adapter",
+      "actual_files": [
+        "src/chatgpt-title.mjs",
+        "tests/chatgpt-title.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -275,7 +279,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-title-sync-20260928
 Current Task: нет
-Revision: 668
+Revision: 670
 
 ## Цель
 
@@ -291,8 +295,8 @@ Revision: 668
   - Git Commit: [DONE] feat: restore session-scoped automatic titles
   - Reference: session-title-sync-20260928 / T001 / implementation
   - Файлы: src/workspace-session.mjs, src/plan-monitor.mjs, src/main.mjs, tests/workspace-session.test.mjs, tests/plan-monitor.test.mjs, docs/planning/session-title-sync.md
-- [TODO] T002: Реализовать узкий adapter server-side переименования native ChatGPT conversation — Ожидает
-  - Git Commit: [PENDING] feat: add native ChatGPT conversation title adapter
+- [DONE] T002: Реализовать узкий adapter server-side переименования native ChatGPT conversation — Завершено
+  - Git Commit: [DONE] feat: add native ChatGPT conversation title adapter
   - Reference: session-title-sync-20260928 / T002 / implementation
   - Файлы: src/chatgpt-title.mjs, src/chatgpt-dom.mjs, tests/chatgpt-title.test.mjs, tests/chatgpt-dom.test.mjs, docs/planning/session-title-sync.md
 - [TODO] T003: Связать auto/manual local title с native ChatGPT и закрыть регрессии — Ожидает
