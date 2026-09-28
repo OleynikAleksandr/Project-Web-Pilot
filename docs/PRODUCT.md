@@ -2,7 +2,7 @@
 
 WorkflowKit — самостоятельный локальный Node.js package `@webpilot/workflow-kit`, который является единственным редактируемым источником Workflow Kit.
 
-Текущий release: **1.5.0**. Требуется Node.js 22+.
+Текущий release: **1.5.1**. Требуется Node.js 22+.
 
 ## Основная модель
 
@@ -23,3 +23,5 @@ Legacy `by-id/by-session` сохраняются только как read-only h
 Project Web Pilot должен использовать checkout-scoped consumer contract: `currentPlanView(root)` для нового кода и временный `sessionPlanView(root, sessionId)` для чтения старых chat records без session ownership.
 
 Подробный контракт: [Workflow Kit Package](modules/workflow-kit-package.md).
+
+Команда plan:carryover закрывает scope переносом незавершённых задач в новый current plan; точная исходная копия остаётся в архиве. Контракт и проверки — docs/modules/workflow-kit-package.md.

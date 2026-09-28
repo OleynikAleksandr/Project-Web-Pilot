@@ -15,7 +15,7 @@ WorkflowKit/src
       └── .harness/plans/todo-plan.md   # единственный runtime current plan
 ```
 
-`src/` содержит canonical 35-файловый runtime source Workflow Kit **1.5.0**. Root `index.mjs` предоставляет package API, `currentPlanView/sessionPlanView` и `getRuntimeRoot()`; package `bin` предоставляет CLI `workflow`.
+`src/` содержит canonical 35-файловый runtime source Workflow Kit **1.5.1**. Root `index.mjs` предоставляет package API, `currentPlanView/sessionPlanView` и `getRuntimeRoot()`; package `bin` предоставляет CLI `workflow`.
 
 Installed `.harness/kit` и staged Electron resources — физические производные копии, но не source of truth. Они создаются автоматически из package и проверяются по версии/fileset.
 
@@ -24,3 +24,5 @@ Legacy `.harness/plans/by-id` и `.harness/plans/by-session` не являютс
 Session ID остаётся только метаданными consumer-а. Для независимого параллельного state используется отдельный Git branch/worktree, а не скрытый router или global registry.
 
 Никакой отдельный daemon, database или synchronization service этой архитектуре не нужен. Детали: [Workflow Kit Package](../modules/workflow-kit-package.md).
+
+Команда plan:carryover закрывает scope переносом незавершённых задач в новый current plan; точная исходная копия остаётся в архиве. Контракт и проверки — docs/modules/workflow-kit-package.md.

@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 62,
+  "plan_revision": 64,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "release-1.5.0-docs-finalization-001",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Зафиксировать актуальные release-документы Workflow Kit 1.5.0 после self-host cutover.",
   "acceptance_criteria": [
     "Release-документы отражают фактический single-active contract 1.5.0 и завершённый self-host cutover."
@@ -37,7 +37,10 @@
       "docs/MODULES.md",
       "README.md",
       "src/templates/CONTINUE.md",
-      "src/WORKFLOW.md"
+      "src/WORKFLOW.md",
+      "docs/PRODUCT.md",
+      "docs/WORKFLOW_START.md",
+      "docs/architecture/ARCHITECTURE.md"
     ]
   },
   "baseline_commit": "62fa4f5ef06d6f9e6541c3a7b280adf5a631aee1",
@@ -440,8 +443,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "release-1.5.0-docs-finalization-001",
         "task_id": "DOCS",
@@ -471,7 +474,10 @@
         "docs/MODULES.md",
         "README.md",
         "src/templates/CONTINUE.md",
-        "src/WORKFLOW.md"
+        "src/WORKFLOW.md",
+        "docs/PRODUCT.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/ARCHITECTURE.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -481,7 +487,11 @@
         "Release docs согласованы с Workflow Kit 1.5.0 и self-host cutover."
       ],
       "expected_commit_message": "docs: завершить release-документацию 1.5.0",
-      "actual_files": []
+      "actual_files": [
+        "docs/PRODUCT.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/ARCHITECTURE.md"
+      ]
     }
   ],
   "blocked_reason": null,
@@ -499,10 +509,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: release-1.5.0-docs-finalization-001
 Current Task: нет
-Revision: 62
+Revision: 64
 
 ## Цель
 
@@ -562,10 +572,10 @@ Revision: 62
   - Git Commit: [DONE] feat: Перенос незавершённых задач одним коммитом; Workflow Kit 1.5.1
   - Reference: release-1.5.0-docs-finalization-001 / R009 / implementation
   - Файлы: src/lib/actions.mjs, src/cli.mjs, src/lib/transaction.mjs, src/lib/command-help.mjs, scripts/check-runtime-fixture.mjs, package.json, scripts/check-carryover-fixture.mjs, scripts/check-consumer-contract.mjs, scripts/check-package.mjs, src/lib/common.mjs, src/lib/installer.mjs, src/templates/CONTINUE.md, src/WORKFLOW.md, docs/modules/workflow-kit-package.md, README.md, docs/DOCUMENTATION_INDEX.md, docs/architecture/OVERVIEW.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: завершить release-документацию 1.5.0
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: завершить release-документацию 1.5.0
   - Reference: release-1.5.0-docs-finalization-001 / DOCS / implementation
-  - Файлы: docs/DOCUMENTATION_INDEX.md, docs/modules/workflow-kit-package.md, docs/planning/single-active-plan-migration.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, README.md, src/templates/CONTINUE.md, src/WORKFLOW.md
+  - Файлы: docs/DOCUMENTATION_INDEX.md, docs/modules/workflow-kit-package.md, docs/planning/single-active-plan-migration.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, README.md, src/templates/CONTINUE.md, src/WORKFLOW.md, docs/PRODUCT.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md
 
 ## Context Pack For This Cycle
 
