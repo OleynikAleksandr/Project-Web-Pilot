@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 733,
+  "plan_revision": 735,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-1-20260928",
@@ -48,7 +48,7 @@
     ]
   },
   "baseline_commit": "e97af3fa61baef8686206a1c18aee6b1a3c237b7",
-  "current_task_id": null,
+  "current_task_id": "T003",
   "context_pack": {
     "documents": [
       {
@@ -188,7 +188,7 @@
       ]
     },
     {
-      "implementation_status": "TODO",
+      "implementation_status": "IN_PROGRESS",
       "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "event-driven-runtime-phase-1-20260928",
@@ -290,8 +290,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-phase-1-20260928
-Current Task: нет
-Revision: 733
+Current Task: T003
+Revision: 735
 
 ## Цель
 
@@ -311,7 +311,7 @@ Revision: 733
   - Git Commit: [DONE] feat: Обеспечить продолжение операций без потери событий и исправить секундомер
   - Reference: event-driven-runtime-phase-1-20260928 / T002 / implementation
   - Файлы: src/plan-monitor.mjs, src/context-session.mjs, src/agent-timer.mjs, tests/electron-smoke.mjs, src/main.mjs, src/ui/sidebar.mjs, tests/agent-timer.test.mjs, tests/context-session.test.mjs, tests/plan-monitor.test.mjs, docs/planning/event-driven-runtime.md, docs/modules/workspace-sessions.md, docs/VERIFICATION.md
-- [TODO] T003: Подключить preload и проверить доставку без периодических DOM-опросов — Ожидает
+- [IN_PROGRESS] T003: Подключить preload и проверить доставку без периодических DOM-опросов — В работе
   - Git Commit: [PENDING] feat: Подключить preload и проверить доставку без периодических DOM-опросов
   - Reference: event-driven-runtime-phase-1-20260928 / T003 / implementation
   - Файлы: src/main.mjs, src/chatgpt-dom.mjs, src/chatgpt-composer.mjs, src/context-session.mjs, src/plan-monitor.mjs, src/chromium-diagnostics.mjs, src/agent-timer.mjs, src/chatgpt-state-preload.cjs, tests/electron-smoke.mjs, docs/planning/event-driven-runtime.md, docs/modules/chatgpt-dom-compatibility.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md
