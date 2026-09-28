@@ -4,13 +4,13 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 795,
+  "plan_revision": 796,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
-  "scope_id": "event-driven-runtime-phase-2-20260928",
+  "scope_id": "event-driven-runtime-phase-2-continuation-20260928",
   "execution_scope_status": "ACTIVE",
   "delivery_status": "IN_PROGRESS",
-  "objective": "Фаза 2 из 3 по docs/planning/event-driven-runtime.md: файловые события, событийный прогрев, удаление общего пульса 1500 мс и секундного обхода цветов; сохранить доставку, разговоры и ограниченное восстановление 0.6.65.",
+  "objective": "Продолжить фазу 2 из 3 по docs/planning/event-driven-runtime.md: файловые события, событийный прогрев, удаление общего пульса 1500 мс и секундного обхода цветов. Сохранить доставку Paste/Send 0.6.72 и ограниченное восстановление разговоров. Перенесены незавершённые T001–T003 и DOCS; реализация сейчас не начинается.",
   "acceptance_criteria": [
     "Фаза 2 из 3 по docs/planning/event-driven-runtime.md: файловые события, событийный прогрев, удаление общего пульса 1500 мс и секундного обхода цветов; сохранить доставку, разговоры и ограниченное восстановление 0.6.65."
   ],
@@ -29,22 +29,7 @@
       "src/chatgpt-page-observer.mjs",
       "src/page-state.mjs",
       "src/chromium-diagnostics.mjs",
-      "src/chatgpt-colors.mjs",
-      "src/chatgpt-composer.mjs",
-      "tests/chatgpt-composer.test.mjs",
-      "tests/installed-observer-fixture.cjs",
-      "scripts/check-event-runtime-release.mjs",
-      "package.json",
-      "package-lock.json",
-      "tests/chromium-diagnostics.test.mjs",
-      "tests/session-opening-performance.test.mjs",
-      "tests/prosemirror-composer-fixture.mjs",
-      "src/ui/sidebar.mjs",
-      "src/ui/progress.mjs",
-      "tests/progress.test.mjs",
-      "scripts/check-workflow-kit-dependency.mjs",
-      "scripts/verify-windows-package.mjs",
-      "tests/workflow-kit-source.test.mjs"
+      "src/chatgpt-colors.mjs"
     ],
     "documentation_paths": [
       "docs/planning/event-driven-runtime.md",
@@ -65,7 +50,7 @@
       "docs/modules/session-owned-plans.md"
     ]
   },
-  "baseline_commit": "b8dc62aa4b469c63e82cc9ee27f791fc0870af91",
+  "baseline_commit": "812f646ba47d4eaed5b5f67cacb9f629007554df",
   "current_task_id": null,
   "context_pack": {
     "documents": [
@@ -106,7 +91,7 @@
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
-        "scope_id": "event-driven-runtime-phase-2-20260928",
+        "scope_id": "event-driven-runtime-phase-2-continuation-20260928",
         "task_id": "T001",
         "role": "implementation"
       },
@@ -146,7 +131,7 @@
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
-        "scope_id": "event-driven-runtime-phase-2-20260928",
+        "scope_id": "event-driven-runtime-phase-2-continuation-20260928",
         "task_id": "T002",
         "role": "implementation"
       },
@@ -185,7 +170,7 @@
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
-        "scope_id": "event-driven-runtime-phase-2-20260928",
+        "scope_id": "event-driven-runtime-phase-2-continuation-20260928",
         "task_id": "T003",
         "role": "implementation"
       },
@@ -218,543 +203,17 @@
       "expected_commit_message": "feat: Убрать секундный обход цветов и проверить событийное оформление"
     },
     {
-      "id": "T004",
-      "title": "Чистое поле нового Chat/Work и парное исправление 0.6.66",
-      "why": "Новый Chat остановился на чужом восстановленном черновике до создания собственной attempt. Очистка разрешена явным созданием нового разговора, не его обычным открытием.",
-      "dependencies": [],
-      "functional_paths": [
-        "src/main.mjs",
-        "src/context-session.mjs",
-        "src/chatgpt-composer.mjs",
-        "tests/chatgpt-composer.test.mjs",
-        "tests/context-session.test.mjs",
-        "tests/electron-smoke.mjs",
-        "tests/installed-observer-fixture.cjs",
-        "scripts/check-event-runtime-release.mjs",
-        "package.json",
-        "package-lock.json"
-      ],
-      "documentation_paths": [
-        "docs/planning/event-driven-runtime.md",
-        "README.md",
-        "docs/VERIFICATION.md",
-        "docs/RELEASE.md",
-        "docs/CONTEXT_DELIVERY.md",
-        "docs/DOCUMENTATION_INDEX.md",
-        "docs/MODULES.md",
-        "docs/PRODUCT.md",
-        "docs/TRANSFER_TO_WINDOWS.md",
-        "docs/WORKFLOW_START.md",
-        "docs/architecture/ARCHITECTURE.md",
-        "docs/architecture/OVERVIEW.md",
-        "docs/modules/chatgpt-dom-compatibility.md",
-        "docs/modules/workspace-sessions.md"
-      ],
-      "verification_ids": [
-        "unit",
-        "smoke",
-        "release-pair"
-      ],
-      "verification_kind": "installed",
-      "acceptance_criteria": [
-        "Новый Chat/Work очищает восстановленный черновик через нативный путь редактора перед новым recovery; предыдущая archived attempt не отправляется.",
-        "Очистка ограничена созданной сессией и документом, отменяется при смене выбора, не затрагивает существующий разговор, unknown Send или ввод пользователя после подготовки нового поля.",
-        "Обе платформы 0.6.66 сверены с исходниками; установленный observer/composer проверен на старом черновике и новой отправке без дубля.",
-        "Обновлены связанные документы; задачи основной фазы 2 остаются ожидающими."
-      ],
-      "expected_commit_message": "feat: Чистое поле нового Chat/Work и парное исправление 0.6.66",
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
-      "commit_ref": {
-        "scope_id": "event-driven-runtime-phase-2-20260928",
-        "task_id": "T004",
-        "role": "implementation"
-      },
-      "actual_files": [
-        "README.md",
-        "docs/CONTEXT_DELIVERY.md",
-        "docs/DOCUMENTATION_INDEX.md",
-        "docs/MODULES.md",
-        "docs/PRODUCT.md",
-        "docs/RELEASE.md",
-        "docs/TRANSFER_TO_WINDOWS.md",
-        "docs/VERIFICATION.md",
-        "docs/WORKFLOW_START.md",
-        "docs/architecture/ARCHITECTURE.md",
-        "docs/architecture/OVERVIEW.md",
-        "docs/modules/chatgpt-dom-compatibility.md",
-        "docs/modules/workspace-sessions.md",
-        "docs/planning/event-driven-runtime.md",
-        "package-lock.json",
-        "package.json",
-        "scripts/check-event-runtime-release.mjs",
-        "src/chatgpt-composer.mjs",
-        "src/context-session.mjs",
-        "src/main.mjs",
-        "tests/chatgpt-composer.test.mjs",
-        "tests/context-session.test.mjs",
-        "tests/electron-smoke.mjs",
-        "tests/installed-observer-fixture.cjs"
-      ]
-    },
-    {
-      "id": "T005",
-      "title": "Причина блокировки Send: сравнение черновика, диагностика и парный выпуск 0.6.67",
-      "why": "Причина блокировки Send: сравнение черновика, диагностика и парный выпуск 0.6.67",
-      "dependencies": [],
-      "functional_paths": [
-        "src/chatgpt-composer.mjs",
-        "src/main.mjs",
-        "tests/chatgpt-composer.test.mjs",
-        "tests/installed-observer-fixture.cjs",
-        "package-lock.json",
-        "package.json",
-        "scripts/check-event-runtime-release.mjs",
-        "src/chromium-diagnostics.mjs",
-        "tests/chromium-diagnostics.test.mjs"
-      ],
-      "documentation_paths": [
-        "docs/planning/event-driven-runtime.md",
-        "docs/VERIFICATION.md",
-        "README.md",
-        "docs/CONTEXT_DELIVERY.md",
-        "docs/DOCUMENTATION_INDEX.md",
-        "docs/MODULES.md",
-        "docs/PRODUCT.md",
-        "docs/RELEASE.md",
-        "docs/TRANSFER_TO_WINDOWS.md",
-        "docs/WORKFLOW_START.md",
-        "docs/architecture/ARCHITECTURE.md",
-        "docs/architecture/OVERVIEW.md",
-        "docs/modules/chatgpt-dom-compatibility.md"
-      ],
-      "verification_ids": [
-        "unit",
-        "smoke",
-        "release-pair"
-      ],
-      "verification_kind": "installed",
-      "acceptance_criteria": [
-        "По этапам отправки различимы блокировка до клика, фактический клик и отсутствие подтверждения без сохранения текста.",
-        "Большой многострочный контекст проходит реальный contenteditable; изменённый пользователем текст защищён.",
-        "Обе платформы собраны и Mac-копии обновлены; документы описывают доказательства и ограничения."
-      ],
-      "expected_commit_message": "feat: Причина блокировки Send: сравнение черновика, диагностика и парный выпуск 0.6.67",
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
-      "commit_ref": {
-        "scope_id": "event-driven-runtime-phase-2-20260928",
-        "task_id": "T005",
-        "role": "implementation"
-      },
-      "actual_files": [
-        "README.md",
-        "docs/CONTEXT_DELIVERY.md",
-        "docs/DOCUMENTATION_INDEX.md",
-        "docs/MODULES.md",
-        "docs/PRODUCT.md",
-        "docs/RELEASE.md",
-        "docs/TRANSFER_TO_WINDOWS.md",
-        "docs/VERIFICATION.md",
-        "docs/WORKFLOW_START.md",
-        "docs/architecture/ARCHITECTURE.md",
-        "docs/architecture/OVERVIEW.md",
-        "docs/modules/chatgpt-dom-compatibility.md",
-        "docs/planning/event-driven-runtime.md",
-        "package-lock.json",
-        "package.json",
-        "scripts/check-event-runtime-release.mjs",
-        "src/chatgpt-composer.mjs",
-        "src/chromium-diagnostics.mjs",
-        "src/main.mjs",
-        "tests/chatgpt-composer.test.mjs",
-        "tests/chromium-diagnostics.test.mjs",
-        "tests/installed-observer-fixture.cjs"
-      ]
-    },
-    {
-      "id": "T006",
-      "title": "Быстрая массовая вставка и Send без сверки черновика, выпуск 0.6.68",
-      "why": "Быстрая массовая вставка и Send без сверки черновика, выпуск 0.6.68",
-      "dependencies": [],
-      "functional_paths": [
-        "src/chatgpt-composer.mjs",
-        "src/context-session.mjs",
-        "tests/chatgpt-composer.test.mjs",
-        "tests/context-session.test.mjs",
-        "tests/installed-observer-fixture.cjs",
-        "package-lock.json",
-        "package.json",
-        "scripts/check-event-runtime-release.mjs",
-        "tests/session-opening-performance.test.mjs"
-      ],
-      "documentation_paths": [
-        "docs/planning/event-driven-runtime.md",
-        "README.md",
-        "docs/CONTEXT_DELIVERY.md",
-        "docs/DOCUMENTATION_INDEX.md",
-        "docs/MODULES.md",
-        "docs/PRODUCT.md",
-        "docs/RELEASE.md",
-        "docs/TRANSFER_TO_WINDOWS.md",
-        "docs/VERIFICATION.md",
-        "docs/WORKFLOW_START.md",
-        "docs/architecture/ARCHITECTURE.md",
-        "docs/architecture/OVERVIEW.md",
-        "docs/modules/chatgpt-dom-compatibility.md",
-        "docs/modules/workspace-sessions.md"
-      ],
-      "verification_ids": [
-        "unit",
-        "smoke",
-        "release-pair"
-      ],
-      "verification_kind": "installed",
-      "acceptance_criteria": [
-        "После вставки Send не зависит от совпадения/изменения текста; ожидание DRAFT_CHANGED удалено.",
-        "Массовая вставка проверена на большом многострочном пакете с измерением времени; системный clipboard не изменяется.",
-        "Навигация и неопределённая предыдущая отправка не создают дублей; собраны обе платформы."
-      ],
-      "expected_commit_message": "feat: Быстрая массовая вставка и Send без сверки черновика, выпуск 0.6.68",
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
-      "commit_ref": {
-        "scope_id": "event-driven-runtime-phase-2-20260928",
-        "task_id": "T006",
-        "role": "implementation"
-      },
-      "actual_files": [
-        "README.md",
-        "docs/CONTEXT_DELIVERY.md",
-        "docs/DOCUMENTATION_INDEX.md",
-        "docs/MODULES.md",
-        "docs/PRODUCT.md",
-        "docs/RELEASE.md",
-        "docs/TRANSFER_TO_WINDOWS.md",
-        "docs/VERIFICATION.md",
-        "docs/WORKFLOW_START.md",
-        "docs/architecture/ARCHITECTURE.md",
-        "docs/architecture/OVERVIEW.md",
-        "docs/modules/chatgpt-dom-compatibility.md",
-        "docs/modules/workspace-sessions.md",
-        "docs/planning/event-driven-runtime.md",
-        "package-lock.json",
-        "package.json",
-        "scripts/check-event-runtime-release.mjs",
-        "src/chatgpt-composer.mjs",
-        "src/context-session.mjs",
-        "tests/chatgpt-composer.test.mjs",
-        "tests/context-session.test.mjs",
-        "tests/installed-observer-fixture.cjs",
-        "tests/session-opening-performance.test.mjs"
-      ]
-    },
-    {
-      "id": "T007",
-      "title": "Paste для контекста и парный выпуск 0.6.69",
-      "why": "Paste для контекста и парный выпуск 0.6.69",
-      "dependencies": [],
-      "functional_paths": [
-        "src/chatgpt-composer.mjs",
-        "tests/chatgpt-composer.test.mjs",
-        "tests/installed-observer-fixture.cjs",
-        "package-lock.json",
-        "package.json",
-        "scripts/check-event-runtime-release.mjs",
-        "tests/electron-smoke.mjs",
-        "tests/prosemirror-composer-fixture.mjs"
-      ],
-      "documentation_paths": [
-        "docs/planning/event-driven-runtime.md",
-        "README.md",
-        "docs/CONTEXT_DELIVERY.md",
-        "docs/DOCUMENTATION_INDEX.md",
-        "docs/MODULES.md",
-        "docs/PRODUCT.md",
-        "docs/RELEASE.md",
-        "docs/TRANSFER_TO_WINDOWS.md",
-        "docs/VERIFICATION.md",
-        "docs/WORKFLOW_START.md",
-        "docs/architecture/ARCHITECTURE.md",
-        "docs/architecture/OVERVIEW.md",
-        "docs/modules/chatgpt-dom-compatibility.md"
-      ],
-      "verification_ids": [
-        "unit",
-        "smoke",
-        "release-pair"
-      ],
-      "verification_kind": "installed",
-      "acceptance_criteria": [
-        "Contenteditable получает полный пакет через ClipboardEvent paste с text/plain и безопасным text/html; системный clipboard не меняется.",
-        "Send не зависит от совпадения текста; обработчик без поддержки Paste выдаёт явную ошибку без медленного fallback и дублей.",
-        "Проверены сохранность большого многострочного текста в настоящем ProseMirror, установленный composer и обе упаковки 0.6.69. Живой ChatGPT проверяет пользователь."
-      ],
-      "expected_commit_message": "feat: Paste для контекста и парный выпуск 0.6.69",
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
-      "commit_ref": {
-        "scope_id": "event-driven-runtime-phase-2-20260928",
-        "task_id": "T007",
-        "role": "implementation"
-      },
-      "actual_files": [
-        "README.md",
-        "docs/CONTEXT_DELIVERY.md",
-        "docs/DOCUMENTATION_INDEX.md",
-        "docs/MODULES.md",
-        "docs/PRODUCT.md",
-        "docs/RELEASE.md",
-        "docs/TRANSFER_TO_WINDOWS.md",
-        "docs/VERIFICATION.md",
-        "docs/WORKFLOW_START.md",
-        "docs/architecture/ARCHITECTURE.md",
-        "docs/architecture/OVERVIEW.md",
-        "docs/modules/chatgpt-dom-compatibility.md",
-        "docs/planning/event-driven-runtime.md",
-        "package-lock.json",
-        "package.json",
-        "scripts/check-event-runtime-release.mjs",
-        "src/chatgpt-composer.mjs",
-        "tests/chatgpt-composer.test.mjs",
-        "tests/electron-smoke.mjs",
-        "tests/installed-observer-fixture.cjs",
-        "tests/prosemirror-composer-fixture.mjs"
-      ]
-    },
-    {
-      "id": "T008",
-      "title": "Завершать передачу сразу после Send; выпуск 0.6.70",
-      "why": "Завершать передачу сразу после Send; выпуск 0.6.70",
-      "dependencies": [],
-      "functional_paths": [
-        "src/chatgpt-composer.mjs",
-        "src/context-session.mjs",
-        "src/ui/sidebar.mjs",
-        "tests/chatgpt-composer.test.mjs",
-        "tests/context-session.test.mjs",
-        "tests/installed-observer-fixture.cjs",
-        "package.json",
-        "package-lock.json",
-        "scripts/check-event-runtime-release.mjs",
-        "tests/electron-smoke.mjs"
-      ],
-      "documentation_paths": [
-        "docs/planning/event-driven-runtime.md",
-        "README.md",
-        "docs/CONTEXT_DELIVERY.md",
-        "docs/DOCUMENTATION_INDEX.md",
-        "docs/MODULES.md",
-        "docs/PRODUCT.md",
-        "docs/RELEASE.md",
-        "docs/TRANSFER_TO_WINDOWS.md",
-        "docs/VERIFICATION.md",
-        "docs/WORKFLOW_START.md",
-        "docs/architecture/ARCHITECTURE.md",
-        "docs/architecture/OVERVIEW.md",
-        "docs/modules/chatgpt-dom-compatibility.md",
-        "docs/modules/workspace-sessions.md"
-      ],
-      "verification_ids": [
-        "unit",
-        "smoke",
-        "release-pair"
-      ],
-      "verification_kind": "installed",
-      "acceptance_criteria": [
-        "После успешного вызова Send нет ожидания requestId в DOM или ответа агента; вложение отправляется без добавочного сообщения.",
-        "Сохранённый sent связывает URL без проверки содержимого; прежний unknown не запускает проверку, повтор или бесконечный индикатор и сохраняет разговор.",
-        "Тест установленного composer моделирует вложение без requestId в DOM; обе платформы 0.6.70 собраны, README обоих проектов актуальны."
-      ],
-      "expected_commit_message": "feat: Завершать передачу сразу после Send; выпуск 0.6.70",
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
-      "commit_ref": {
-        "scope_id": "event-driven-runtime-phase-2-20260928",
-        "task_id": "T008",
-        "role": "implementation"
-      },
-      "actual_files": [
-        "README.md",
-        "docs/CONTEXT_DELIVERY.md",
-        "docs/DOCUMENTATION_INDEX.md",
-        "docs/MODULES.md",
-        "docs/PRODUCT.md",
-        "docs/RELEASE.md",
-        "docs/TRANSFER_TO_WINDOWS.md",
-        "docs/VERIFICATION.md",
-        "docs/WORKFLOW_START.md",
-        "docs/architecture/ARCHITECTURE.md",
-        "docs/architecture/OVERVIEW.md",
-        "docs/modules/chatgpt-dom-compatibility.md",
-        "docs/modules/workspace-sessions.md",
-        "docs/planning/event-driven-runtime.md",
-        "package-lock.json",
-        "package.json",
-        "scripts/check-event-runtime-release.mjs",
-        "src/chatgpt-composer.mjs",
-        "src/context-session.mjs",
-        "src/ui/sidebar.mjs",
-        "tests/chatgpt-composer.test.mjs",
-        "tests/context-session.test.mjs",
-        "tests/installed-observer-fixture.cjs",
-        "tests/electron-smoke.mjs"
-      ]
-    },
-    {
-      "id": "T009",
-      "title": "Убрать общий индикатор проверки после Send; финальный выпуск 0.6.71",
-      "why": "Убрать общий индикатор проверки после Send; финальный выпуск 0.6.71",
-      "dependencies": [],
-      "functional_paths": [
-        "src/ui/progress.mjs",
-        "tests/progress.test.mjs",
-        "package.json",
-        "package-lock.json",
-        "scripts/check-event-runtime-release.mjs"
-      ],
-      "documentation_paths": [
-        "docs/planning/event-driven-runtime.md",
-        "docs/RELEASE.md",
-        "README.md",
-        "docs/CONTEXT_DELIVERY.md",
-        "docs/DOCUMENTATION_INDEX.md",
-        "docs/MODULES.md",
-        "docs/PRODUCT.md",
-        "docs/TRANSFER_TO_WINDOWS.md",
-        "docs/VERIFICATION.md",
-        "docs/WORKFLOW_START.md",
-        "docs/architecture/ARCHITECTURE.md",
-        "docs/architecture/OVERVIEW.md",
-        "docs/modules/workspace-sessions.md"
-      ],
-      "verification_ids": [
-        "progress-ui",
-        "release-pair"
-      ],
-      "verification_kind": "installed",
-      "acceptance_criteria": [
-        "waiting-chat/send-unknown не показывают спиннер и не держат секундомер после Send.",
-        "0.6.71 включает проверенную T008 и завершение общего индикатора; root app, /Applications и парные ZIP обновлены.",
-        "Документация и README обоих проектов отражают финальный выпуск."
-      ],
-      "expected_commit_message": "feat: Убрать общий индикатор проверки после Send; финальный выпуск 0.6.71",
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
-      "commit_ref": {
-        "scope_id": "event-driven-runtime-phase-2-20260928",
-        "task_id": "T009",
-        "role": "implementation"
-      },
-      "actual_files": [
-        "README.md",
-        "docs/CONTEXT_DELIVERY.md",
-        "docs/DOCUMENTATION_INDEX.md",
-        "docs/MODULES.md",
-        "docs/PRODUCT.md",
-        "docs/RELEASE.md",
-        "docs/TRANSFER_TO_WINDOWS.md",
-        "docs/VERIFICATION.md",
-        "docs/WORKFLOW_START.md",
-        "docs/architecture/ARCHITECTURE.md",
-        "docs/architecture/OVERVIEW.md",
-        "docs/modules/workspace-sessions.md",
-        "docs/planning/event-driven-runtime.md",
-        "package-lock.json",
-        "package.json",
-        "scripts/check-event-runtime-release.mjs",
-        "src/ui/progress.mjs",
-        "tests/progress.test.mjs"
-      ]
-    },
-    {
-      "id": "T010",
-      "title": "Workflow Kit 1.5.1: перенос остатка плана и парный выпуск 0.6.72",
-      "why": "Workflow Kit 1.5.1: перенос остатка плана и парный выпуск 0.6.72",
-      "dependencies": [],
-      "functional_paths": [
-        "scripts/check-workflow-kit-dependency.mjs",
-        "scripts/check-event-runtime-release.mjs",
-        "package.json",
-        "package-lock.json",
-        "scripts/verify-windows-package.mjs",
-        "tests/workflow-kit-source.test.mjs"
-      ],
-      "documentation_paths": [
-        "README.md",
-        "docs/planning/event-driven-runtime.md",
-        "docs/modules/workflow-kit-recovery.md",
-        "docs/RELEASE.md",
-        "docs/DOCUMENTATION_INDEX.md",
-        "docs/MODULES.md",
-        "docs/PRODUCT.md",
-        "docs/TRANSFER_TO_WINDOWS.md",
-        "docs/VERIFICATION.md",
-        "docs/WORKFLOW_START.md",
-        "docs/architecture/ARCHITECTURE.md",
-        "docs/architecture/OVERVIEW.md",
-        "docs/modules/session-owned-plans.md"
-      ],
-      "verification_ids": [
-        "unit",
-        "smoke",
-        "release-pair"
-      ],
-      "verification_kind": "installed",
-      "acceptance_criteria": [
-        "Обе упаковки и установленные приложения содержат проверенный Kit 1.5.1 с командой plan:carryover.",
-        "Сохранены Paste и завершение сразу после Send; README обоих проектов актуальны.",
-        "После фиксации релиза старый scope архивируется с исходными статусами; T001–T003 и DOCS продолжаются в новом current plan с прежним planning document."
-      ],
-      "expected_commit_message": "feat: Workflow Kit 1.5.1: перенос остатка плана и парный выпуск 0.6.72",
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
-      "commit_ref": {
-        "scope_id": "event-driven-runtime-phase-2-20260928",
-        "task_id": "T010",
-        "role": "implementation"
-      },
-      "actual_files": [
-        "README.md",
-        "docs/DOCUMENTATION_INDEX.md",
-        "docs/MODULES.md",
-        "docs/PRODUCT.md",
-        "docs/RELEASE.md",
-        "docs/TRANSFER_TO_WINDOWS.md",
-        "docs/VERIFICATION.md",
-        "docs/WORKFLOW_START.md",
-        "docs/architecture/ARCHITECTURE.md",
-        "docs/architecture/OVERVIEW.md",
-        "docs/modules/session-owned-plans.md",
-        "docs/modules/workflow-kit-recovery.md",
-        "docs/planning/event-driven-runtime.md",
-        "package-lock.json",
-        "package.json",
-        "scripts/check-event-runtime-release.mjs",
-        "scripts/check-workflow-kit-dependency.mjs",
-        "scripts/verify-windows-package.mjs",
-        "tests/workflow-kit-source.test.mjs"
-      ]
-    },
-    {
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
-        "scope_id": "event-driven-runtime-phase-2-20260928",
+        "scope_id": "event-driven-runtime-phase-2-continuation-20260928",
         "task_id": "DOCS",
         "role": "implementation"
       },
       "dependencies": [
         "T001",
         "T002",
-        "T003",
-        "T004",
-        "T005",
-        "T006",
-        "T007",
-        "T008",
-        "T009",
-        "T010"
+        "T003"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -788,11 +247,38 @@
   "blocked_reason": null,
   "user_decisions": [
     {
-      "id": "f8e18068-c30f-4669-aebd-b60f9564affd",
-      "text": "Пользователь поручил выполнить описанную задачу и план.",
-      "recorded_at": "2026-09-28T14:49:31.004Z"
+      "id": "dd268382-280c-4459-bc93-940c1cda2f11",
+      "text": "Пользователь 28.09.2026 прямо поручил закрыть текущий scope и создать новый из незавершённых задач, затем разрешил добавить штатную команду переноса и собрать парный релиз.",
+      "recorded_at": "2026-09-28T18:23:05.556Z"
     }
-  ]
+  ],
+  "carryover": {
+    "from_scope": "event-driven-runtime-phase-2-20260928",
+    "source_revision": 795,
+    "source_commit": "812f646ba47d4eaed5b5f67cacb9f629007554df",
+    "archive_path": ".harness/plans/archive/event-driven-runtime-phase-2-20260928.md",
+    "archive_sha256": "888701b9325a3ced29136e764f956257ec0e30655ba4b719d1263b8701ddc11e",
+    "task_ids": [
+      "T001",
+      "T002",
+      "T003",
+      "DOCS"
+    ],
+    "completed_dependencies": {
+      "T001": [],
+      "T002": [],
+      "T003": [],
+      "DOCS": [
+        "T004",
+        "T005",
+        "T006",
+        "T007",
+        "T008",
+        "T009",
+        "T010"
+      ]
+    }
+  }
 }
 ```
 <!-- workflow-state:end -->
@@ -801,13 +287,13 @@
 
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
-Scope: event-driven-runtime-phase-2-20260928
+Scope: event-driven-runtime-phase-2-continuation-20260928
 Current Task: нет
-Revision: 795
+Revision: 796
 
 ## Цель
 
-Фаза 2 из 3 по docs/planning/event-driven-runtime.md: файловые события, событийный прогрев, удаление общего пульса 1500 мс и секундного обхода цветов; сохранить доставку, разговоры и ограниченное восстановление 0.6.65.
+Продолжить фазу 2 из 3 по docs/planning/event-driven-runtime.md: файловые события, событийный прогрев, удаление общего пульса 1500 мс и секундного обхода цветов. Сохранить доставку Paste/Send 0.6.72 и ограниченное восстановление разговоров. Перенесены незавершённые T001–T003 и DOCS; реализация сейчас не начинается.
 
 ## Критерии приёмки
 
@@ -817,47 +303,19 @@ Revision: 795
 
 - [TODO] T001: События проекта, прогрев контекста и ограниченный опрос буфера — Ожидает
   - Git Commit: [PENDING] feat: События проекта, прогрев контекста и ограниченный опрос буфера
-  - Reference: event-driven-runtime-phase-2-20260928 / T001 / implementation
+  - Reference: event-driven-runtime-phase-2-continuation-20260928 / T001 / implementation
   - Файлы: src/plan-monitor.mjs, src/main.mjs, src/context-session.mjs, src/context-cache.mjs, src/context-inputs.mjs, src/tunnel-clipboard.mjs, tests/plan-monitor.test.mjs, tests/context-session.test.mjs, tests/electron-smoke.mjs, docs/planning/event-driven-runtime.md
 - [TODO] T002: Перевести вход в аккаунт на события и удалить общий пульс — Ожидает
   - Git Commit: [PENDING] feat: Перевести вход в аккаунт на события и удалить общий пульс
-  - Reference: event-driven-runtime-phase-2-20260928 / T002 / implementation
+  - Reference: event-driven-runtime-phase-2-continuation-20260928 / T002 / implementation
   - Файлы: src/main.mjs, src/startup-flow.mjs, src/chatgpt-page-observer.mjs, src/page-state.mjs, src/chromium-diagnostics.mjs, tests/electron-smoke.mjs, docs/planning/event-driven-runtime.md
 - [TODO] T003: Убрать секундный обход цветов и проверить событийное оформление — Ожидает
   - Git Commit: [PENDING] feat: Убрать секундный обход цветов и проверить событийное оформление
-  - Reference: event-driven-runtime-phase-2-20260928 / T003 / implementation
+  - Reference: event-driven-runtime-phase-2-continuation-20260928 / T003 / implementation
   - Файлы: src/chatgpt-colors.mjs, tests/electron-smoke.mjs, docs/planning/event-driven-runtime.md, docs/modules/chatgpt-dom-compatibility.md, docs/VERIFICATION.md
-- [DONE] T004: Чистое поле нового Chat/Work и парное исправление 0.6.66 — Завершено
-  - Git Commit: [DONE] feat: Чистое поле нового Chat/Work и парное исправление 0.6.66
-  - Reference: event-driven-runtime-phase-2-20260928 / T004 / implementation
-  - Файлы: src/main.mjs, src/context-session.mjs, src/chatgpt-composer.mjs, tests/chatgpt-composer.test.mjs, tests/context-session.test.mjs, tests/electron-smoke.mjs, tests/installed-observer-fixture.cjs, scripts/check-event-runtime-release.mjs, package.json, package-lock.json, docs/planning/event-driven-runtime.md, README.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/CONTEXT_DELIVERY.md, docs/DOCUMENTATION_INDEX.md, docs/MODULES.md, docs/PRODUCT.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/modules/chatgpt-dom-compatibility.md, docs/modules/workspace-sessions.md
-- [DONE] T005: Причина блокировки Send: сравнение черновика, диагностика и парный выпуск 0.6.67 — Завершено
-  - Git Commit: [DONE] feat: Причина блокировки Send: сравнение черновика, диагностика и парный выпуск 0.6.67
-  - Reference: event-driven-runtime-phase-2-20260928 / T005 / implementation
-  - Файлы: src/chatgpt-composer.mjs, src/main.mjs, tests/chatgpt-composer.test.mjs, tests/installed-observer-fixture.cjs, package-lock.json, package.json, scripts/check-event-runtime-release.mjs, src/chromium-diagnostics.mjs, tests/chromium-diagnostics.test.mjs, docs/planning/event-driven-runtime.md, docs/VERIFICATION.md, README.md, docs/CONTEXT_DELIVERY.md, docs/DOCUMENTATION_INDEX.md, docs/MODULES.md, docs/PRODUCT.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/modules/chatgpt-dom-compatibility.md
-- [DONE] T006: Быстрая массовая вставка и Send без сверки черновика, выпуск 0.6.68 — Завершено
-  - Git Commit: [DONE] feat: Быстрая массовая вставка и Send без сверки черновика, выпуск 0.6.68
-  - Reference: event-driven-runtime-phase-2-20260928 / T006 / implementation
-  - Файлы: src/chatgpt-composer.mjs, src/context-session.mjs, tests/chatgpt-composer.test.mjs, tests/context-session.test.mjs, tests/installed-observer-fixture.cjs, package-lock.json, package.json, scripts/check-event-runtime-release.mjs, tests/session-opening-performance.test.mjs, docs/planning/event-driven-runtime.md, README.md, docs/CONTEXT_DELIVERY.md, docs/DOCUMENTATION_INDEX.md, docs/MODULES.md, docs/PRODUCT.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/modules/chatgpt-dom-compatibility.md, docs/modules/workspace-sessions.md
-- [DONE] T007: Paste для контекста и парный выпуск 0.6.69 — Завершено
-  - Git Commit: [DONE] feat: Paste для контекста и парный выпуск 0.6.69
-  - Reference: event-driven-runtime-phase-2-20260928 / T007 / implementation
-  - Файлы: src/chatgpt-composer.mjs, tests/chatgpt-composer.test.mjs, tests/installed-observer-fixture.cjs, package-lock.json, package.json, scripts/check-event-runtime-release.mjs, tests/electron-smoke.mjs, tests/prosemirror-composer-fixture.mjs, docs/planning/event-driven-runtime.md, README.md, docs/CONTEXT_DELIVERY.md, docs/DOCUMENTATION_INDEX.md, docs/MODULES.md, docs/PRODUCT.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/modules/chatgpt-dom-compatibility.md
-- [DONE] T008: Завершать передачу сразу после Send; выпуск 0.6.70 — Завершено
-  - Git Commit: [DONE] feat: Завершать передачу сразу после Send; выпуск 0.6.70
-  - Reference: event-driven-runtime-phase-2-20260928 / T008 / implementation
-  - Файлы: src/chatgpt-composer.mjs, src/context-session.mjs, src/ui/sidebar.mjs, tests/chatgpt-composer.test.mjs, tests/context-session.test.mjs, tests/installed-observer-fixture.cjs, package.json, package-lock.json, scripts/check-event-runtime-release.mjs, tests/electron-smoke.mjs, docs/planning/event-driven-runtime.md, README.md, docs/CONTEXT_DELIVERY.md, docs/DOCUMENTATION_INDEX.md, docs/MODULES.md, docs/PRODUCT.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/modules/chatgpt-dom-compatibility.md, docs/modules/workspace-sessions.md
-- [DONE] T009: Убрать общий индикатор проверки после Send; финальный выпуск 0.6.71 — Завершено
-  - Git Commit: [DONE] feat: Убрать общий индикатор проверки после Send; финальный выпуск 0.6.71
-  - Reference: event-driven-runtime-phase-2-20260928 / T009 / implementation
-  - Файлы: src/ui/progress.mjs, tests/progress.test.mjs, package.json, package-lock.json, scripts/check-event-runtime-release.mjs, docs/planning/event-driven-runtime.md, docs/RELEASE.md, README.md, docs/CONTEXT_DELIVERY.md, docs/DOCUMENTATION_INDEX.md, docs/MODULES.md, docs/PRODUCT.md, docs/TRANSFER_TO_WINDOWS.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/modules/workspace-sessions.md
-- [DONE] T010: Workflow Kit 1.5.1: перенос остатка плана и парный выпуск 0.6.72 — Завершено
-  - Git Commit: [DONE] feat: Workflow Kit 1.5.1: перенос остатка плана и парный выпуск 0.6.72
-  - Reference: event-driven-runtime-phase-2-20260928 / T010 / implementation
-  - Файлы: scripts/check-workflow-kit-dependency.mjs, scripts/check-event-runtime-release.mjs, package.json, package-lock.json, scripts/verify-windows-package.mjs, tests/workflow-kit-source.test.mjs, README.md, docs/planning/event-driven-runtime.md, docs/modules/workflow-kit-recovery.md, docs/RELEASE.md, docs/DOCUMENTATION_INDEX.md, docs/MODULES.md, docs/PRODUCT.md, docs/TRANSFER_TO_WINDOWS.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/modules/session-owned-plans.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
-  - Reference: event-driven-runtime-phase-2-20260928 / DOCS / implementation
+  - Reference: event-driven-runtime-phase-2-continuation-20260928 / DOCS / implementation
   - Файлы: docs/planning/event-driven-runtime.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/modules/chatgpt-dom-compatibility.md, docs/VERIFICATION.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, README.md, docs/RELEASE.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKFLOW_START.md, docs/modules/workspace-sessions.md, docs/modules/workflow-kit-recovery.md, docs/modules/session-owned-plans.md
 
 ## Context Pack For This Cycle
