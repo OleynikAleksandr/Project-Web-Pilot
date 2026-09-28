@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 709,
+  "plan_revision": 710,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-title-sync-20260928",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Автоматически давать каждой рабочей session Project Web Pilot осмысленное имя по текущей работе и синхронизировать это же server-side имя с соответствующим native conversation ChatGPT.",
   "acceptance_criteria": [
     "Автоматически давать каждой рабочей session Project Web Pilot осмысленное имя по текущей работе и синхронизировать это же server-side имя с соответствующим native conversation ChatGPT."
@@ -42,7 +42,8 @@
       "docs/architecture/OVERVIEW.md",
       "docs/MODULES.md",
       "docs/DOCUMENTATION_INDEX.md",
-      "docs/modules/workspace-sessions.md"
+      "docs/modules/workspace-sessions.md",
+      "README.md"
     ]
   },
   "baseline_commit": "65927edb26cedee23affc6505918ed22dff2009a",
@@ -592,13 +593,37 @@
       ]
     },
     {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
+      "id": "T014",
+      "title": "Актуализировать README и связать Project Web Pilot с WorkflowKit",
+      "why": "Актуализировать README и связать Project Web Pilot с WorkflowKit",
+      "dependencies": [],
+      "functional_paths": [],
+      "documentation_paths": [
+        "README.md"
+      ],
+      "verification_ids": [],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "README отражает текущий Project Web Pilot 0.6.63 и Workflow Kit 1.5.0.",
+        "README содержит прямую ссылку на https://github.com/OleynikAleksandr/WorkflowKit."
+      ],
+      "expected_commit_message": "docs: update README and link WorkflowKit",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "session-title-sync-20260928",
+        "task_id": "T014",
+        "role": "implementation"
+      }
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "session-title-sync-20260928",
         "task_id": "DOCS",
         "role": "implementation",
-        "iteration": 6
+        "iteration": 7
       },
       "dependencies": [
         "T001",
@@ -613,7 +638,8 @@
         "T010",
         "T011",
         "T012",
-        "T013"
+        "T013",
+        "T014"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -625,7 +651,8 @@
         "docs/architecture/OVERVIEW.md",
         "docs/MODULES.md",
         "docs/DOCUMENTATION_INDEX.md",
-        "docs/modules/workspace-sessions.md"
+        "docs/modules/workspace-sessions.md",
+        "README.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -653,10 +680,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: session-title-sync-20260928
 Current Task: нет
-Revision: 709
+Revision: 710
 
 ## Цель
 
@@ -720,10 +747,14 @@ Revision: 709
   - Git Commit: [DONE] docs: record final 0.6.63 release provenance
   - Reference: session-title-sync-20260928 / T013 / implementation
   - Файлы: docs/RELEASE.md, docs/VERIFICATION.md
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: актуализировать контекст проекта
+- [TODO] T014: Актуализировать README и связать Project Web Pilot с WorkflowKit — Ожидает
+  - Git Commit: [PENDING] docs: update README and link WorkflowKit
+  - Reference: session-title-sync-20260928 / T014 / implementation
+  - Файлы: README.md
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: session-title-sync-20260928 / DOCS / implementation
-  - Файлы: docs/planning/session-title-sync.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/modules/workspace-sessions.md
+  - Файлы: docs/planning/session-title-sync.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/modules/workspace-sessions.md, README.md
 
 ## Context Pack For This Cycle
 
