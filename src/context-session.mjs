@@ -151,10 +151,23 @@ export class ContextSession {
       if (observation.login) { this.emit({ phase: 'waiting-login', projectInfo: info }); return; }
       const experience = project.experience ?? 'chat';
       const currentUrl = normalizeChatUrl(observation.url);
+      // A manual Send can bypass onBeforeSend. The persisted marker in a user
+      // message proves delivery; a URL, message count or assistant quote cannot.
+      const ownMessageSeen = attempt?.protocol === CONTEXT_PROTOCOL && !!attempt.requestId
+        && attempt.text?.includes(attempt.requestId) && attempt.packet?.workspace === project.workspace
+        && observation.messageSeen;
+      const sameConversation = project.chatUrl ? currentUrl === project.chatUrl
+        : conversationUrlCompatibleWithExperience(currentUrl, experience) || isPendingChatGPTConversation(observation.url);
+      if (ownMessageSeen && sameConversation && attempt.state !== 'sent') {
+        attempt = { ...attempt, state: 'sent', sentAtMs: this.now() };
+        await this.store.updateSession(project.workspace, project.sessionId, { attempt });
+        if (!this.current(generation)) return;
+      }
+
       if (project.chatUrl) {
         if (currentUrl !== project.chatUrl) { this.emit({ phase: 'chat-changed', projectInfo: info }); return; }
       } else if (currentUrl) {
-        if (!attempt?.sendStartedAtMs) {
+        if (!attempt?.sendStartedAtMs && attempt?.state !== 'sent') {
           if (!chatGPTUrlMatchesExperience(observation.url, experience)) {
             throw failure('CHATGPT_EXPERIENCE_MISMATCH', experience === 'work'
               ? 'Work-сессия не открыта в режиме Work. Recovery не отправлен.'
@@ -172,7 +185,7 @@ export class ContextSession {
         if (!this.current(generation)) return;
         this.onChatBound({ workspace: project.workspace, sessionId: project.sessionId, chatUrl: currentUrl });
       } else if (isPendingChatGPTConversation(observation.url)) {
-        if (!attempt?.sendStartedAtMs) { this.emit({ phase: 'chat-changed', projectInfo: info }); return; }
+        if (!attempt?.sendStartedAtMs && attempt?.state !== 'sent') { this.emit({ phase: 'chat-changed', projectInfo: info }); return; }
         const sent = observation.messageSeen || attempt.state === 'sent';
         if (observation.messageSeen && attempt.state !== 'sent') {
           attempt = { ...attempt, state: 'sent', sentAtMs: this.now() };

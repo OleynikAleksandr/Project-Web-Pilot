@@ -394,6 +394,12 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await assert.rejects(fs.stat(workspace), { code: 'ENOENT' });
   await previewNew();
   assert.equal(snapshot().setup.firstSessionExperience, 'chat', 'choice is not remembered globally after cancel');
+  const deliverNormally = controller.composer.deliver.bind(controller.composer);
+  let manualDeliveryArmed = !eventBaseline;
+  if (manualDeliveryArmed) controller.composer.deliver = async options => {
+    await controller.composer.inspect({ action: 'fill', text: options.text, requestId: options.requestId });
+    return { state: 'deferred', reason: 'DRAFT_CHANGED' };
+  };
   await sidebar.executeJavaScript('document.getElementById("setup-experience-chat").click(); document.getElementById("setup-experience-work").click()');
   await waitFor(() => sidebar.executeJavaScript(`(() => { const e=document.getElementById('operation-progress'); return !e.hidden && e.querySelector('.operation-label').textContent.length > 0; })()`), 'visible recovery spinner', snapshot);
   assert.equal(await sidebar.executeJavaScript("getComputedStyle(document.querySelector('.operation-spinner')).animationName"), 'operation-spin');
@@ -403,6 +409,14 @@ export async function run({ app, window, browser, sidebar, store, controller, se
 
   await waitFor(async () => {
     if (snapshot().context.phase === 'waiting-draft') {
+      if (manualDeliveryArmed) {
+        manualDeliveryArmed = false;
+        assert.equal(store.selected().chatUrl, null);
+        assert.equal(store.selected().attempt.sendStartedAtMs, null);
+        controller.composer.deliver = deliverNormally;
+        await browser.executeJavaScript("document.querySelector('[data-testid=send-button]').click()", true);
+        return false;
+      }
       const actual = await browser.executeJavaScript('document.getElementById("prompt-textarea").innerText');
       const expected = store.selected().attempt?.text ?? '';
       let offset = 0; while (offset < Math.min(actual.length, expected.length) && actual[offset] === expected[offset]) offset++;
@@ -455,6 +469,8 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await waitFor(() => !controller.pending, 'finish page events', snapshot);
   controller.tick = originalTick;
   assert.equal(first.receipt, null);
+
+
   assert.equal(packetLoads, 1, 'packet loads at line 158');
   if (eventBaseline) {
     await measureEventRuntimeBaseline({ app, browser, controller, snapshot, dataDir, chromiumDiagnostics,
@@ -549,6 +565,10 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.ok(disclosureSize.button >= 32); assert.ok(disclosureSize.icon >= 18); assert.equal(disclosureSize.expanded, 'false');
   const restored = new WorkspaceSessions(store.file); await restored.load();
   assert.equal(restored.selected().sessionId, first.sessionId); assert.equal(restored.selected().chatUrl, first.chatUrl);
+  await navigate(restored.selected());
+  await waitFor(() => snapshot().context.phase === 'delivered', 'reopen manually sent conversation', snapshot);
+  assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 1, 'manual Send never duplicates on reopen');
+
   controller.attach(store.selected()); await controller.tick();
   await controller.contextCache.load(workspace, sessionSelection(store.selected()));
   const warmPacketLoads = packetLoads;

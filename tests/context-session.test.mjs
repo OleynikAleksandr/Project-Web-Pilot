@@ -272,7 +272,7 @@ test('a prepared packet without a fingerprint is not authorized by its recent ag
   const f = controllerFixture(); await f.controller.tick();
   await f.store.updateSession('', '', { attempt: { ...f.saved.attempt, state: 'prepared', sendStartedAtMs: null } });
   f.controller.contextCache = new ContextCache({ inputKey: async () => 'current', load: async () => packet() });
-  f.inspection.draftLength = 10; f.inspection.draftMatches = true;
+  f.inspection.draftLength = 10; f.inspection.draftMatches = true; f.inspection.messageSeen = false;
   f.controller.attach(f.saved); await f.controller.tick();
   assert.equal(f.controller.state.phase, 'prepared-stale'); assert.equal(f.sends(), 1);
 });
@@ -342,4 +342,42 @@ test('generation change cancels a delayed project-read recovery without publishi
   assert.equal(calls, 1);
   assert.equal(f.controller.state.phase, 'selected');
   assert.equal(f.controller.state.error, null);
+});
+test('manual recovery Send binds only its own observed marker, including optimistic URL and restart', async () => {
+  for (const optimistic of [false, true]) {
+    const f = controllerFixture({ chatUrl: null });
+    f.composer.deliver = async () => ({ state: 'deferred', reason: 'DRAFT_CHANGED' });
+    await f.controller.tick();
+    assert.equal(f.saved.attempt.state, 'prepared');
+    assert.equal(f.saved.attempt.sendStartedAtMs, null);
+    f.inspection.url = optimistic ? 'https://chatgpt.com/c/local-chatgpt%3A12345678-1234-1234-1234-123456789abc' : project.chatUrl;
+    f.inspection.messageSeen = true;
+    await f.controller.tick();
+    assert.equal(f.saved.attempt.state, 'sent');
+    if (optimistic) {
+      assert.equal(f.saved.chatUrl, null);
+      assert.equal(f.controller.state.phase, 'waiting-chat');
+      f.inspection.url = project.chatUrl;
+      await f.controller.tick();
+    }
+    assert.equal(f.saved.chatUrl, project.chatUrl);
+    assert.equal(f.controller.state.phase, 'delivered');
+    const restored = controllerFixture({ savedAttempt: f.saved.attempt, chatUrl: f.saved.chatUrl });
+    restored.inspection.messageSeen = true;
+    await restored.controller.tick();
+    assert.equal(restored.loads(), 0); assert.equal(restored.sends(), 0);
+    assert.equal(restored.controller.state.phase, 'delivered');
+  }
+});
+
+test('an unregistered attempt cannot bind a foreign conversation without its user marker', async () => {
+  const f = controllerFixture({ chatUrl: null });
+  f.composer.deliver = async () => ({ state: 'deferred', reason: 'DRAFT_CHANGED' });
+  await f.controller.tick();
+  f.inspection.url = project.chatUrl; f.inspection.messageSeen = false;
+  f.inspection.userMessageCount = 8;
+  await f.controller.tick();
+  assert.equal(f.saved.chatUrl, null);
+  assert.equal(f.saved.attempt.state, 'prepared');
+  assert.equal(f.controller.state.phase, 'chat-changed');
 });

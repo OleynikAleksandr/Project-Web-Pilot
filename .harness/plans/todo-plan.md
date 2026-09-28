@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 738,
+  "plan_revision": 741,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-1-20260928",
@@ -292,7 +292,8 @@
       ],
       "documentation_paths": [
         "docs/planning/event-driven-runtime.md",
-        "docs/CONTEXT_DELIVERY.md"
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/VERIFICATION.md"
       ],
       "verification_ids": [
         "unit",
@@ -305,13 +306,20 @@
         "Сбой подтверждения не вызывает повторный Send; незавершённые правки T003 сохранены"
       ],
       "expected_commit_message": "feat: Сохранить привязку разговора после ручной отправки и проверить повторное открытие",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "event-driven-runtime-phase-1-20260928",
         "task_id": "T004",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/VERIFICATION.md",
+        "src/context-session.mjs",
+        "tests/context-session.test.mjs",
+        "tests/electron-smoke.mjs"
+      ]
     },
     {
       "id": "T005",
@@ -388,6 +396,41 @@
       }
     },
     {
+      "id": "T007",
+      "title": "Проверить и исправить автоматическую отправку большого recovery",
+      "why": "docs/planning/event-driven-runtime.md; поручение 28.09 о причине ручного Send и росте контекста",
+      "dependencies": [
+        "T004"
+      ],
+      "functional_paths": [
+        "src/chatgpt-composer.mjs",
+        "tests/chatgpt-composer.test.mjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "docs/planning/event-driven-runtime.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [
+        "unit",
+        "smoke"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Причина остановки на черновике воспроизведена либо явно указана граница диагностики",
+        "Большой recovery автоматически отправляется после подтверждённой готовности composer без порчи пользовательских правок",
+        "Размер актуального recovery разобран по составляющим; изменение политики объёма не вносится без отдельного обсуждения"
+      ],
+      "expected_commit_message": "feat: Проверить и исправить автоматическую отправку большого recovery",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "event-driven-runtime-phase-1-20260928",
+        "task_id": "T007",
+        "role": "implementation"
+      }
+    },
+    {
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
@@ -401,7 +444,8 @@
         "T003",
         "T004",
         "T005",
-        "T006"
+        "T006",
+        "T007"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -445,7 +489,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-phase-1-20260928
 Current Task: нет
-Revision: 738
+Revision: 741
 
 ## Цель
 
@@ -469,10 +513,10 @@ Revision: 738
   - Git Commit: [DONE] feat: Подключить preload и проверить доставку без периодических DOM-опросов
   - Reference: event-driven-runtime-phase-1-20260928 / T003 / implementation
   - Файлы: src/main.mjs, src/chatgpt-dom.mjs, src/chatgpt-composer.mjs, src/context-session.mjs, src/plan-monitor.mjs, src/chromium-diagnostics.mjs, src/agent-timer.mjs, src/chatgpt-state-preload.cjs, tests/electron-smoke.mjs, .gitignore, package.json, src/page-state.mjs, src/page-state-bridge.mjs, src/chatgpt-page-observer.mjs, scripts/stage-page-observer.mjs, tests/page-state.test.mjs, tests/chatgpt-composer.test.mjs, tests/chromium-diagnostics.test.mjs, docs/planning/event-driven-runtime.md, docs/modules/chatgpt-dom-compatibility.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md
-- [TODO] T004: Сохранить привязку разговора после ручной отправки и проверить повторное открытие — Ожидает
-  - Git Commit: [PENDING] feat: Сохранить привязку разговора после ручной отправки и проверить повторное открытие
+- [DONE] T004: Сохранить привязку разговора после ручной отправки и проверить повторное открытие — Завершено
+  - Git Commit: [DONE] feat: Сохранить привязку разговора после ручной отправки и проверить повторное открытие
   - Reference: event-driven-runtime-phase-1-20260928 / T004 / implementation
-  - Файлы: src/context-session.mjs, src/chatgpt-composer.mjs, tests/context-session.test.mjs, tests/electron-smoke.mjs, docs/planning/event-driven-runtime.md, docs/CONTEXT_DELIVERY.md
+  - Файлы: src/context-session.mjs, src/chatgpt-composer.mjs, tests/context-session.test.mjs, tests/electron-smoke.mjs, docs/planning/event-driven-runtime.md, docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md
 - [TODO] T005: Собрать и проверить исправленный парный релиз 0.6.64 — Ожидает
   - Git Commit: [PENDING] feat: Собрать и проверить исправленный парный релиз 0.6.64
   - Reference: event-driven-runtime-phase-1-20260928 / T005 / implementation
@@ -481,6 +525,10 @@ Revision: 738
   - Git Commit: [PENDING] feat: Распознавать обрыв ответа и безопасно восстанавливать сохранённый разговор
   - Reference: event-driven-runtime-phase-1-20260928 / T006 / implementation
   - Файлы: src/chatgpt-page-observer.mjs, src/page-state.mjs, src/main.mjs, src/conversation-recovery.mjs, src/ui/sidebar.mjs, tests/conversation-recovery.test.mjs, tests/electron-smoke.mjs, docs/planning/event-driven-runtime.md
+- [TODO] T007: Проверить и исправить автоматическую отправку большого recovery — Ожидает
+  - Git Commit: [PENDING] feat: Проверить и исправить автоматическую отправку большого recovery
+  - Reference: event-driven-runtime-phase-1-20260928 / T007 / implementation
+  - Файлы: src/chatgpt-composer.mjs, tests/chatgpt-composer.test.mjs, tests/electron-smoke.mjs, docs/planning/event-driven-runtime.md, docs/VERIFICATION.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: event-driven-runtime-phase-1-20260928 / DOCS / implementation
