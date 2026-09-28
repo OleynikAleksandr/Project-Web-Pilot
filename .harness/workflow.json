@@ -31,7 +31,7 @@
         "scripts/check-event-runtime-release.mjs"
       ],
       "kind": "installed",
-      "evidence": "Project Web Pilot.app, /Applications/Project Web Pilot.app и ~/Downloads/WebPilot-0.6.68: обе упаковки равны исходникам; установленный composer вставляет большой пакет через webContents.insertText, автоматически нажимает Send, не дублирует сообщение. Native Windows и реальный ChatGPT отдельно."
+      "evidence": "Project Web Pilot.app, /Applications/Project Web Pilot.app и ~/Downloads/WebPilot-0.6.69: обе упаковки совпадают с исходниками; установленный composer передаёт полный текст через ClipboardEvent.paste в настоящий ProseMirror одной transaction, затем Send без дубля. Live ChatGPT и native Windows отдельно."
     }
   ],
   "budget": {
