@@ -31,7 +31,7 @@
         "scripts/check-event-runtime-release.mjs"
       ],
       "kind": "installed",
-      "evidence": "Project Web Pilot.app, /Applications/Project Web Pilot.app и ~/Downloads/WebPilot-0.6.66: совпадение исходников обеих упаковок; installed composer очищает старый черновик перед новым Send, reload сохраняет черновик и не дублирует сообщение. Native Windows проверяет пользователь."
+      "evidence": "Project Web Pilot.app, /Applications/Project Web Pilot.app и ~/Downloads/WebPilot-0.6.67: совпадение обеих упаковок; installed contenteditable принимает большой многострочный пакет, Send и подтверждение попадают в диагностику без текста. Native Windows и реальный ChatGPT отдельно."
     }
   ],
   "budget": {
