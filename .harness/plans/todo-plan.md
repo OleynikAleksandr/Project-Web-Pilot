@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 700,
+  "plan_revision": 702,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-title-sync-20260928",
@@ -550,13 +550,17 @@
         "Корневая и /Applications macOS app обновлены до 0.6.63."
       ],
       "expected_commit_message": "release: Project Web Pilot 0.6.63",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-title-sync-20260928",
         "task_id": "T012",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "package-lock.json",
+        "package.json"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -632,7 +636,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-title-sync-20260928
 Current Task: нет
-Revision: 700
+Revision: 702
 
 ## Цель
 
@@ -688,8 +692,8 @@ Revision: 700
   - Git Commit: [DONE] fix: add reliable rename dialog
   - Reference: session-title-sync-20260928 / T011 / implementation
   - Файлы: src/ui/index.html, src/ui/sidebar.mjs, tests/electron-smoke.mjs, docs/planning/session-title-sync.md
-- [TODO] T012: Собрать парный релиз Project Web Pilot 0.6.63 — Ожидает
-  - Git Commit: [PENDING] release: Project Web Pilot 0.6.63
+- [DONE] T012: Собрать парный релиз Project Web Pilot 0.6.63 — Завершено
+  - Git Commit: [DONE] release: Project Web Pilot 0.6.63
   - Reference: session-title-sync-20260928 / T012 / implementation
   - Файлы: package.json, package-lock.json, docs/RELEASE.md, docs/VERIFICATION.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
