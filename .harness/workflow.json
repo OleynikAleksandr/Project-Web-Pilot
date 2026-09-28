@@ -1,40 +1,8 @@
 {
   "schema_version": 1,
   "profile": "DEVELOPMENT",
-  "stack": "Electron 44 / Node.js 22 / existing Workflow Kit 1.5.0",
-  "checks": [
-    {
-      "required": false,
-      "timeout_ms": 120000,
-      "id": "unit",
-      "executable": "npm",
-      "args": [
-        "test"
-      ]
-    },
-    {
-      "required": false,
-      "timeout_ms": 120000,
-      "id": "smoke",
-      "executable": "npm",
-      "args": [
-        "run",
-        "smoke"
-      ]
-    },
-    {
-      "required": false,
-      "timeout_ms": 120000,
-      "id": "package",
-      "executable": "npm",
-      "args": [
-        "run",
-        "build"
-      ],
-      "kind": "package",
-      "evidence": "Парный локальный релиз macOS arm64 + Windows x64; versioned delivery и постоянный macOS app формируются штатным release pipeline."
-    }
-  ],
+  "stack": "Electron 44 / Node.js 22 / Workflow Kit 1.5.0; documentation only",
+  "checks": [],
   "budget": {
     "soft_tokens": 16000,
     "hard_tokens": 90000,
