@@ -1,6 +1,6 @@
 # Начало работы
 
-Используй доставленный recovery; если его нет — `./scripts/workflow recover --format json`. Сохраняй адрес плана и сессии из пакета. Не выбирай план по глобальному последнему указателю.
+Используй доставленный recovery; если его нет — `./scripts/workflow recover --format json`. Current state всегда берётся из `.harness/plans/todo-plan.md` текущего checkout/worktree. Session ID может оставаться метаданными клиента, но не выбирает plan.
 
 Правила работы и Git: `.harness/kit/templates/PROTOTYPE.md`, включённый в recovery. Используй сводку среды и проекта, не запрашивай неизменившиеся сведения повторно.
 

@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 
 const template = name => fs.readFileSync(new URL('../templates/' + name + '.md', import.meta.url), 'utf8');
-const address = 'Для общего плана адрес не нужен. Если recovery содержит sessionId, добавляй --session <sessionId>; для другого плана также --plan <planId>. N — текущая plan_revision из recovery/status.';
+const address = 'Один checkout/worktree имеет один current plan в .harness/plans/todo-plan.md. Команды не требуют session selector; N — текущая plan_revision из recovery/status. Для независимой параллельной работы используй отдельный Git worktree.';
 const topics = {
   'plan:create': () => template('PLAN') + '\n\n' + template('SPEC'),
   'plan:extend': () => template('CONTINUE'),
@@ -11,14 +11,14 @@ const topics = {
   status: () => './scripts/workflow status\nСвежие состояние плана, задачи, Git, revision и незавершённая транзакция. Не заменяет проверку файлов перед записью.',
   recover: () => './scripts/workflow recover --format text\nПолный стартовый контекст. Для машинного чтения --format json; для inline-контракта --format packet. Не перечитывай уже доставленный неизменившийся пакет.',
   validate: () => './scripts/workflow validate\nПроверяет согласованность плана и Git, не выполняет продуктовые тесты.',
-  'plan:view': () => './scripts/workflow plan:view --session <sessionId>\nСобственный план и подготовленные в этой сессии планы.',
+  'plan:view': () => './scripts/workflow plan:view\nПоказывает единственный current plan этого checkout. --session временно принимается только как compatibility metadata.',
   'plan:apply': () => './scripts/workflow plan:apply --input changes.json --expected-revision N\nУточняет текущий план. Для добавления задач проще plan:extend. Сохраняй DONE-задачи и машинные статусы; пример разрешённого изменения: {"acceptance_criteria":["Проверяемый результат"]}.',
   'config:apply': () => './scripts/workflow config:apply --input config.json\nПолная конфигурация проверок, не частичный patch. Прочитай .harness/workflow.json и сохрани остальные поля. Для нового прототипа plan:create настраивает проверки из checks.',
   repair: () => './scripts/workflow repair --dry-run\nПолучить конкретный repair_id, затем --apply <repair_id>. --cancel <repair_id> отменяет неподтверждённую подготовку commit, сохраняя рабочие файлы. Не удаляй журнал вручную.',
   archive: () => './scripts/workflow archive --scope <scopeId> --approval-note "Прямое поручение пользователя"\nТолько по отдельному поручению, после завершения всех задач. Завершённый план не требует архивирования.',
-  'plan:prepare': () => './scripts/workflow plan:prepare --session <sessionId> --input draft.json --expected-revision N\nСоздаёт отдельный будущий план, сохраняя текущий. Формат draft — WORKFLOW.md, раздел подготовленных планов.',
-  'plan:bind': () => './scripts/workflow plan:bind --session <sessionId> --plan <planId> --target-session <targetId> --experience chat --expected-revision N\nПривязка подготовленного плана к созданной пользователем сессии; experience: chat или work.',
-  'plan:adopt': () => './scripts/workflow plan:adopt --session <sessionId> --plan <planId> --input evidence.json --expected-revision N\nПринимает legacy-план только по доказанной связи; контракт evidence — WORKFLOW.md.',
+  'plan:prepare': () => 'Команда удалена. Новый chat продолжает текущий plan этого checkout; независимая работа ведётся в отдельном Git worktree.',
+  'plan:bind': () => 'Команда удалена. Chat session больше не является владельцем Workflow Kit plan.',
+  'plan:adopt': () => 'Команда удалена. Legacy plans остаются read-only history и не выбирают runtime state.',
   'scope:create': () => './scripts/workflow scope:create --input scope.json\nНизкоуровневый полный контракт scope. Для нового прототипа используй plan:create --help: Kit сам сформирует служебные поля.',
   install: () => './scripts/workflow install --project <absolute-path> --mode new\nУстановка Kit в новый проект; mode connect — существующий проект. --update обновляет принадлежащие Kit файлы с проверкой конфликтов.',
   'install:commit': () => './scripts/workflow install:commit --project <absolute-path>\nЗавершение bootstrap после настройки Git identity.',

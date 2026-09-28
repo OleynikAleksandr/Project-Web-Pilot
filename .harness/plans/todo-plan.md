@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 651,
+  "plan_revision": 652,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-owned-plans-028",
@@ -1226,12 +1226,7 @@
       "text": "17.09.2026 в новой сессии пользователь прямо поручил начать реализацию текущего согласованного плана и подготовку релиза.",
       "recorded_at": "2026-09-17T08:08:19.630Z"
     }
-  ],
-  "owner_session_id": "web-pilot-7e2e05c8-d094-4e09-b7a9-21ecb50c51b4",
-  "ownership_evidence": {
-    "reason": "Прямой стартовый recovery-пакет пользователя wp-request-127daa4d-4cb5-4eda-bbca-8a7363bbfd3d связывает эту сессию и session-owned-plans-028; в этой сессии пользователь поручил реализацию.",
-    "recorded_at": "2026-09-17T09:07:46.061Z"
-  }
+  ]
 }
 ```
 <!-- workflow-state:end -->
@@ -1242,7 +1237,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: READY_FOR_ACCEPTANCE
 Scope: session-owned-plans-028
 Current Task: нет
-Revision: 651
+Revision: 652
 
 ## Цель
 
