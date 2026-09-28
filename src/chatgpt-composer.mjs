@@ -99,9 +99,23 @@ export class ChatGPTComposer {
     return this.contents.executeJavaScript(pageScript({ action, text, requestId, expectedExperience }), action !== 'inspect');
   }
 
-  async waitAfterMutation(version, canContinue) {
-    if (!this.pageState) { await this.wait(this.settleMs); return; }
-    await this.pageState.waitForChange(version, { timeoutMs: Math.min(1000, this.timeoutMs), canContinue });
+  async waitForDraft(args, version, canContinue) {
+    if (!this.pageState) {
+      await this.wait(this.settleMs);
+      return this.inspect(args);
+    }
+    const deadline = this.now() + this.timeoutMs;
+    let observation;
+    do {
+      if (!canContinue()) return observation ?? {};
+      observation = await this.inspect(args);
+      if (observation.messageSeen || observation.login || observation.busy
+          || (observation.draftMatches && observation.sendEnabled && observation.writable)) return observation;
+      const signal = await this.waitForObservedChange(version, deadline, canContinue);
+      version = signal.version ?? version;
+      if (signal.cancelled || signal.timeout) return observation;
+    } while (this.now() < deadline);
+    return observation;
   }
 
   async waitForObservedChange(version, deadline, canContinue) {
@@ -129,9 +143,8 @@ export class ChatGPTComposer {
       const fillVersion = this.pageState?.version ?? 0;
       observation = await this.inspect({ action: 'fill', text });
       if (observation.action !== 'filled') return { state: 'deferred', reason: observation.reason ?? 'SEND_UNAVAILABLE', observation };
-      await this.waitAfterMutation(fillVersion, canContinue);
+      observation = await this.waitForDraft({ text }, fillVersion, canContinue);
       if (!canContinue()) return { state: 'cancelled' };
-      observation = await this.inspect({ text });
       if (!observation.draftMatches || !observation.sendEnabled || observation.busy) {
         return { state: 'deferred', reason: observation.busy ? 'GENERATION_ACTIVE' : !observation.draftMatches ? 'DRAFT_CHANGED' : 'SEND_UNAVAILABLE', observation };
       }
@@ -170,9 +183,9 @@ export class ChatGPTComposer {
       observation = await this.inspect({ action: 'fill', text, requestId, expectedExperience });
       if (observation.action === 'already-sent') return { state: 'sent', recovered: true, observation };
       if (observation.action !== 'filled') return { state: 'deferred', reason: observation.reason ?? 'LOGIN_REQUIRED', observation };
-      await this.waitAfterMutation(fillVersion, canContinue);
+      observation = await this.waitForDraft({ text, requestId }, fillVersion, canContinue);
       if (!canContinue()) return { state: 'cancelled' };
-      observation = await this.inspect({ text, requestId });
+      if (observation.messageSeen) return { state: 'sent', recovered: true, observation };
       if (!observation.draftMatches || !observation.sendEnabled || observation.busy) {
         return { state: 'deferred', reason: observation.busy ? 'GENERATION_ACTIVE' : !observation.draftMatches ? 'DRAFT_CHANGED' : 'SEND_UNAVAILABLE', observation };
       }

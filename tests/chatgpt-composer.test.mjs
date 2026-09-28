@@ -172,3 +172,37 @@ test('event-driven composer confirms its marker without using the polling wait',
     assert.equal(f.sends(), 1);
   } finally { dispose(); f.dom.window.close(); }
 });
+
+test('event-driven Send waits for late editor readiness instead of assuming a fixed settle delay', async () => {
+  const f = fixture(), source = new PageStateSource();
+  f.dom.window.reportObservation = message => source.accept(message);
+  const dispose = f.dom.window.eval('(' + installPageObserver.toString() + ')(' + chatGPTDOMScript() + ', reportObservation)');
+  const button = f.document.querySelector('button'); button.disabled = true;
+  const composer = new ChatGPTComposer(f.view, { pageState: source, timeoutMs: 3000,
+    wait: () => { throw Error('No polling'); } });
+  const ready = setTimeout(() => { button.disabled = false; }, 300);
+  try {
+    const result = await composer.deliver(request);
+    assert.equal(result.state, 'sent'); assert.equal(f.sends(), 1);
+  } finally { clearTimeout(ready); dispose(); f.dom.window.close(); }
+});
+
+test('event-driven readiness timeout preserves a changed draft and never clicks Send', async () => {
+  const f = fixture(), source = new PageStateSource();
+  f.dom.window.reportObservation = message => source.accept(message);
+  const dispose = f.dom.window.eval('(' + installPageObserver.toString() + ')(' + chatGPTDOMScript() + ', reportObservation)');
+  const execute = f.view.executeJavaScript;
+  f.view.executeJavaScript = async script => {
+    const result = await execute(script);
+    if (result.action === 'filled') f.editor.value = 'Текст пользователя';
+    return result;
+  };
+  const composer = new ChatGPTComposer(f.view, { pageState: source, timeoutMs: 30 });
+  // Keep the test alive; production has its Electron event loop.
+  const keepAlive = setTimeout(() => {}, 100);
+  try {
+    const result = await composer.deliver(request);
+    assert.equal(result.state, 'deferred'); assert.equal(result.reason, 'DRAFT_CHANGED');
+    assert.equal(f.sends(), 0); assert.equal(f.editor.value, 'Текст пользователя');
+  } finally { clearTimeout(keepAlive); dispose(); f.dom.window.close(); }
+});

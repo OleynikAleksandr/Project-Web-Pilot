@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 741,
+  "plan_revision": 743,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-1-20260928",
@@ -422,13 +422,19 @@
         "Размер актуального recovery разобран по составляющим; изменение политики объёма не вносится без отдельного обсуждения"
       ],
       "expected_commit_message": "feat: Проверить и исправить автоматическую отправку большого recovery",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "event-driven-runtime-phase-1-20260928",
         "task_id": "T007",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "docs/VERIFICATION.md",
+        "src/chatgpt-composer.mjs",
+        "tests/chatgpt-composer.test.mjs",
+        "tests/electron-smoke.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -489,7 +495,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-phase-1-20260928
 Current Task: нет
-Revision: 741
+Revision: 743
 
 ## Цель
 
@@ -525,8 +531,8 @@ Revision: 741
   - Git Commit: [PENDING] feat: Распознавать обрыв ответа и безопасно восстанавливать сохранённый разговор
   - Reference: event-driven-runtime-phase-1-20260928 / T006 / implementation
   - Файлы: src/chatgpt-page-observer.mjs, src/page-state.mjs, src/main.mjs, src/conversation-recovery.mjs, src/ui/sidebar.mjs, tests/conversation-recovery.test.mjs, tests/electron-smoke.mjs, docs/planning/event-driven-runtime.md
-- [TODO] T007: Проверить и исправить автоматическую отправку большого recovery — Ожидает
-  - Git Commit: [PENDING] feat: Проверить и исправить автоматическую отправку большого recovery
+- [DONE] T007: Проверить и исправить автоматическую отправку большого recovery — Завершено
+  - Git Commit: [DONE] feat: Проверить и исправить автоматическую отправку большого recovery
   - Reference: event-driven-runtime-phase-1-20260928 / T007 / implementation
   - Файлы: src/chatgpt-composer.mjs, tests/chatgpt-composer.test.mjs, tests/electron-smoke.mjs, docs/planning/event-driven-runtime.md, docs/VERIFICATION.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает

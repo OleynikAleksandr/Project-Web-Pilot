@@ -1,3 +1,4 @@
+import { ChatGPTComposer } from '../src/chatgpt-composer.mjs';
 import { autoScrollPageScript } from '../src/chatgpt-auto-scroll.mjs';
 import { VERSION as BUNDLED_KIT_VERSION } from '@webpilot/workflow-kit/lib/common';
 import assert from 'node:assert/strict';
@@ -568,6 +569,27 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await navigate(restored.selected());
   await waitFor(() => snapshot().context.phase === 'delivered', 'reopen manually sent conversation', snapshot);
   assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 1, 'manual Send never duplicates on reopen');
+
+  // A large prompt and a delayed Send button are verified through the native fixture composer.
+  // Use a separate isolated view so session-count and packet-cache assertions stay independent.
+  const largeView = new BrowserWindow({ show: false, webPreferences: {
+    partition: 'web-pilot-smoke', sandbox: true, contextIsolation: true, nodeIntegration: false,
+    preload: browser.getLastWebPreferences().preload } });
+  const { PageStateSource } = await import('../src/page-state.mjs');
+  const { connectPageState } = await import('../src/page-state-bridge.mjs');
+  const { ipcMain } = await import('electron');
+  const largeSource = new PageStateSource();
+  const disconnect = connectPageState(largeView.webContents, ipcMain, largeSource);
+  try {
+    await largeView.loadURL('https://chatgpt.com/');
+    await largeView.webContents.executeJavaScript("document.querySelector('[data-testid=send-button]').disabled=true; setTimeout(()=>document.querySelector('[data-testid=send-button]').disabled=false,700)");
+    const largeComposer = new ChatGPTComposer(largeView.webContents, { pageState: largeSource });
+    const largeText = fixtureContext.repeat(3) + '\nwp-request-large-autosend';
+    assert.ok(Buffer.byteLength(largeText) > 200000);
+    assert.equal((await largeComposer.deliver({ text: largeText, requestId: 'wp-request-large-autosend' })).state, 'sent');
+    assert.equal(await largeView.webContents.executeJavaScript('window.fixtureMessages.length'), 1);
+    assert.equal((await largeComposer.inspect({ text: largeText, requestId: 'wp-request-large-autosend' })).messageSeen, true);
+  } finally { disconnect(); largeView.destroy(); }
 
   controller.attach(store.selected()); await controller.tick();
   await controller.contextCache.load(workspace, sessionSelection(store.selected()));
