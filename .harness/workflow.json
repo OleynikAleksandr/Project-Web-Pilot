@@ -29,7 +29,7 @@
         "scripts/check-event-runtime-release.mjs"
       ],
       "kind": "installed",
-      "evidence": "Project Web Pilot.app и ~/Downloads/WebPilot-0.6.64: совпадение исходников обеих упаковок и проверка preload в установленной macOS копии на изолированном fixture. Native Windows проверяет пользователь.",
+      "evidence": "Project Web Pilot.app и ~/Downloads/WebPilot-0.6.65: совпадение исходников обеих упаковок и проверка preload в установленной macOS копии на изолированном fixture. Native Windows проверяет пользователь. Распознавание Resume stream unavailable и reload без дубля.",
       "required": false,
       "timeout_ms": 120000
     }
