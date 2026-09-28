@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 60,
+  "plan_revision": 62,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "release-1.5.0-docs-finalization-001",
@@ -21,7 +21,13 @@
       "src/cli.mjs",
       "src/lib/transaction.mjs",
       "src/lib/command-help.mjs",
-      "scripts/check-runtime-fixture.mjs"
+      "scripts/check-runtime-fixture.mjs",
+      "package.json",
+      "scripts/check-carryover-fixture.mjs",
+      "scripts/check-consumer-contract.mjs",
+      "scripts/check-package.mjs",
+      "src/lib/common.mjs",
+      "src/lib/installer.mjs"
     ],
     "documentation_paths": [
       "docs/DOCUMENTATION_INDEX.md",
@@ -378,13 +384,21 @@
         "src/cli.mjs",
         "src/lib/transaction.mjs",
         "src/lib/command-help.mjs",
-        "scripts/check-runtime-fixture.mjs"
+        "scripts/check-runtime-fixture.mjs",
+        "package.json",
+        "scripts/check-carryover-fixture.mjs",
+        "scripts/check-consumer-contract.mjs",
+        "scripts/check-package.mjs",
+        "src/lib/common.mjs",
+        "src/lib/installer.mjs"
       ],
       "documentation_paths": [
         "src/templates/CONTINUE.md",
         "src/WORKFLOW.md",
         "docs/modules/workflow-kit-package.md",
-        "README.md"
+        "README.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/architecture/OVERVIEW.md"
       ],
       "verification_ids": [
         "package",
@@ -398,13 +412,32 @@
         "Ошибки revision, занятой задачи, чужих изменений, коллизии архива и повтор команды не теряют задачи; прерывание восстанавливается штатным repair."
       ],
       "expected_commit_message": "feat: Перенос незавершённых задач одним коммитом; Workflow Kit 1.5.1",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "release-1.5.0-docs-finalization-001",
         "task_id": "R009",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "README.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/workflow-kit-package.md",
+        "package.json",
+        "scripts/check-carryover-fixture.mjs",
+        "scripts/check-consumer-contract.mjs",
+        "scripts/check-package.mjs",
+        "scripts/check-runtime-fixture.mjs",
+        "src/WORKFLOW.md",
+        "src/cli.mjs",
+        "src/lib/actions.mjs",
+        "src/lib/command-help.mjs",
+        "src/lib/common.mjs",
+        "src/lib/installer.mjs",
+        "src/lib/transaction.mjs",
+        "src/templates/CONTINUE.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -469,7 +502,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: release-1.5.0-docs-finalization-001
 Current Task: нет
-Revision: 60
+Revision: 62
 
 ## Цель
 
@@ -525,10 +558,10 @@ Revision: 60
   - Git Commit: [DONE] feat: README: итоговый клиент Web Pilot 0.6.71
   - Reference: release-1.5.0-docs-finalization-001 / R008 / implementation
   - Файлы: README.md
-- [TODO] R009: Перенос незавершённых задач одним коммитом; Workflow Kit 1.5.1 — Ожидает
-  - Git Commit: [PENDING] feat: Перенос незавершённых задач одним коммитом; Workflow Kit 1.5.1
+- [DONE] R009: Перенос незавершённых задач одним коммитом; Workflow Kit 1.5.1 — Завершено
+  - Git Commit: [DONE] feat: Перенос незавершённых задач одним коммитом; Workflow Kit 1.5.1
   - Reference: release-1.5.0-docs-finalization-001 / R009 / implementation
-  - Файлы: src/lib/actions.mjs, src/cli.mjs, src/lib/transaction.mjs, src/lib/command-help.mjs, scripts/check-runtime-fixture.mjs, src/templates/CONTINUE.md, src/WORKFLOW.md, docs/modules/workflow-kit-package.md, README.md
+  - Файлы: src/lib/actions.mjs, src/cli.mjs, src/lib/transaction.mjs, src/lib/command-help.mjs, scripts/check-runtime-fixture.mjs, package.json, scripts/check-carryover-fixture.mjs, scripts/check-consumer-contract.mjs, scripts/check-package.mjs, src/lib/common.mjs, src/lib/installer.mjs, src/templates/CONTINUE.md, src/WORKFLOW.md, docs/modules/workflow-kit-package.md, README.md, docs/DOCUMENTATION_INDEX.md, docs/architecture/OVERVIEW.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: завершить release-документацию 1.5.0
   - Reference: release-1.5.0-docs-finalization-001 / DOCS / implementation

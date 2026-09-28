@@ -2,7 +2,7 @@
 
 ## Назначение
 
-WorkflowKit — canonical Node.js package `@webpilot/workflow-kit`. Репозиторий `/Users/oleksandroliinyk/VSCODE/WorkflowKit` является единственным местом разработки кода Kit. Текущий release — **1.5.0**.
+WorkflowKit — canonical Node.js package `@webpilot/workflow-kit`. Репозиторий `/Users/oleksandroliinyk/VSCODE/WorkflowKit` является единственным местом разработки кода Kit. Текущий release — **1.5.1**.
 
 ## Устройство
 
@@ -22,8 +22,14 @@ Upgrade со старой session-owned установки оставляет va
 
 ## Проверка
 
-Canonical runtime: 35 файлов; SHA-256 `0db567df6f0c8f68f3119a7322b4c1c6d28cd06bf57b267993b792097bbb2c75`.
+Canonical runtime: 35 файлов; SHA-256 `93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33`.
 
 Проверки: `node scripts/check-package.mjs`, `node scripts/check-runtime-fixture.mjs`, `node scripts/check-consumer-contract.mjs`.
 
 Подробный контракт: [Workflow Kit Package](../modules/workflow-kit-package.md). История package extraction: [Canonical Workflow Kit Package](../planning/canonical-workflow-kit-package.md). Спецификация миграции state: [Single Active Plan Migration](../planning/single-active-plan-migration.md).
+
+## Workflow Kit 1.5.1 — перенос остатка scope
+
+По поручению пользователя 28.09.2026 добавлена plan:carryover: архив содержит точную исходную копию со статусами TODO/DONE; новый current plan — только незавершённые задачи и DOCS. Критерии, проверки, planning/module ссылки и зависимости между оставшимися задачами сохраняются. Ссылки на выполненные зависимости хранятся в carryover metadata и архиве. Оба плана фиксируются одним Git-коммитом. Нужны чистый checkout, отсутствие активной микрозадачи, точная revision и прямое поручение. Повтор после успеха безопасен; прерывания обслуживает штатный repair. Обычный archive сохраняет требование всех DONE. Runtime: 35 файлов; SHA-256 93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33.
+
+Проверка — scripts/check-carryover-fixture.mjs через установленный CLI: точный архив, сохранность задач, зависимости, отказы без изменения плана, повтор и прерывания до/после коммита. Входит в runtime gate. Интеграция и парная поставка — Project Web Pilot 0.6.72.

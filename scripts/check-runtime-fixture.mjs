@@ -6,8 +6,8 @@ import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { installer, sessionPlans, plan as planApi, VERSION } from '@webpilot/workflow-kit';
 
-const EXPECTED_VERSION = '1.5.0';
-const EXPECTED_RUNTIME_SHA256 = '0db567df6f0c8f68f3119a7322b4c1c6d28cd06bf57b267993b792097bbb2c75';
+const EXPECTED_VERSION = '1.5.1';
+const EXPECTED_RUNTIME_SHA256 = '93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33';
 
 function run(executable, args, cwd) {
   return execFileSync(executable, args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
@@ -324,3 +324,5 @@ try {
 } finally {
   await fs.rm(root, { recursive: true, force: true });
 }
+
+await import('./check-carryover-fixture.mjs');

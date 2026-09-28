@@ -30,3 +30,4 @@
 | docs/WORKFLOW_START.md | Общий контракт старта Workflow Kit |
 | docs/DOCUMENTATION_INDEX.md | Этот индекс |
 <!-- workflow-kit:end -->
+Перенос незавершённых scope описан в docs/modules/workflow-kit-package.md; установленный CLI проверяет scripts/check-carryover-fixture.mjs.
