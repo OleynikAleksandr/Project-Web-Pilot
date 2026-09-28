@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 787,
+  "plan_revision": 788,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-2-20260928",
@@ -657,7 +657,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-phase-2-20260928
 Current Task: нет
-Revision: 787
+Revision: 788
 
 ## Цель
 

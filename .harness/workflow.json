@@ -31,7 +31,17 @@
         "scripts/check-event-runtime-release.mjs"
       ],
       "kind": "installed",
-      "evidence": "Project Web Pilot.app, /Applications/Project Web Pilot.app и ~/Downloads/WebPilot-0.6.70: обе упаковки равны исходникам; установленный composer выполняет Paste в ProseMirror и завершает Send без поиска requestId в DOM вложения, без лишнего сообщения и ожидания ответа. Live ChatGPT и native Windows отдельно."
+      "evidence": "Project Web Pilot.app, /Applications/Project Web Pilot.app и ~/Downloads/WebPilot-0.6.71: обе упаковки равны исходникам; установленный composer выполняет Paste в ProseMirror и завершает Send без поиска requestId в DOM вложения, без лишнего сообщения и ожидания ответа. Live ChatGPT и native Windows отдельно. Индикатор sending выключается для waiting-chat и send-unknown."
+    },
+    {
+      "id": "progress-ui",
+      "executable": "node",
+      "args": [
+        "--test",
+        "tests/progress.test.mjs"
+      ],
+      "timeout_ms": 30000,
+      "required": false
     }
   ],
   "budget": {
