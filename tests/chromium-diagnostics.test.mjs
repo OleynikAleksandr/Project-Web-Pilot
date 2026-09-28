@@ -298,3 +298,8 @@ test('identical page events are recorded once without executing DOM code', async
   const records = (await fs.readFile(file, 'utf8')).trim().split('\n').map(JSON.parse);
   assert.equal(records.filter(entry => entry.source === 'dom' && entry.event === 'state').length, 1);
 });
+
+test('data URL payloads never reach diagnostic logs', () => {
+  const result = safeUrl('data:text/plain;base64,UFJJVkFURV9DT05URU5U');
+  assert.deepEqual(result, { origin: 'data://', path: '[redacted]', queryKeys: [] });
+});

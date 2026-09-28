@@ -835,7 +835,11 @@ async function startupAction(action) {
 
 function connectController() {
   controller?.cancel();
-  controller = new ContextSession({ store, runtime, contextCache, composer: new ChatGPTComposer(browser.webContents, { pageState }),
+  controller = new ContextSession({ store, runtime, contextCache, composer: new ChatGPTComposer(browser.webContents, { pageState,
+      onDiagnostic: ({ event, ...fields }) => chromiumDiagnostics?.log.record('composer', event, {
+        sessionId: store.selected()?.sessionId ?? null, ...fields,
+      }),
+    }),
     onChange: publish,
     onChatBound: () => { void syncSelectedSessionTitle({ force: true, reason: 'chat-bound' }); },
   });

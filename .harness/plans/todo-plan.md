@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 774,
+  "plan_revision": 775,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-2-20260928",
@@ -35,7 +35,8 @@
       "tests/installed-observer-fixture.cjs",
       "scripts/check-event-runtime-release.mjs",
       "package.json",
-      "package-lock.json"
+      "package-lock.json",
+      "tests/chromium-diagnostics.test.mjs"
     ],
     "documentation_paths": [
       "docs/planning/event-driven-runtime.md",
@@ -55,7 +56,7 @@
     ]
   },
   "baseline_commit": "b8dc62aa4b469c63e82cc9ee27f791fc0870af91",
-  "current_task_id": "T005",
+  "current_task_id": null,
   "context_pack": {
     "documents": [
       {
@@ -295,11 +296,27 @@
         "src/chatgpt-composer.mjs",
         "src/main.mjs",
         "tests/chatgpt-composer.test.mjs",
-        "tests/installed-observer-fixture.cjs"
+        "tests/installed-observer-fixture.cjs",
+        "package-lock.json",
+        "package.json",
+        "scripts/check-event-runtime-release.mjs",
+        "src/chromium-diagnostics.mjs",
+        "tests/chromium-diagnostics.test.mjs"
       ],
       "documentation_paths": [
         "docs/planning/event-driven-runtime.md",
-        "docs/VERIFICATION.md"
+        "docs/VERIFICATION.md",
+        "README.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/RELEASE.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/chatgpt-dom-compatibility.md"
       ],
       "verification_ids": [
         "unit",
@@ -313,13 +330,37 @@
         "Обе платформы собраны и Mac-копии обновлены; документы описывают доказательства и ограничения."
       ],
       "expected_commit_message": "feat: Причина блокировки Send: сравнение черновика, диагностика и парный выпуск 0.6.67",
-      "implementation_status": "IN_PROGRESS",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "event-driven-runtime-phase-2-20260928",
         "task_id": "T005",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "README.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/RELEASE.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/chatgpt-dom-compatibility.md",
+        "docs/planning/event-driven-runtime.md",
+        "package-lock.json",
+        "package.json",
+        "scripts/check-event-runtime-release.mjs",
+        "src/chatgpt-composer.mjs",
+        "src/chromium-diagnostics.mjs",
+        "src/main.mjs",
+        "tests/chatgpt-composer.test.mjs",
+        "tests/chromium-diagnostics.test.mjs",
+        "tests/installed-observer-fixture.cjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -380,8 +421,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-phase-2-20260928
-Current Task: T005
-Revision: 774
+Current Task: нет
+Revision: 775
 
 ## Цель
 
@@ -409,10 +450,10 @@ Revision: 774
   - Git Commit: [DONE] feat: Чистое поле нового Chat/Work и парное исправление 0.6.66
   - Reference: event-driven-runtime-phase-2-20260928 / T004 / implementation
   - Файлы: src/main.mjs, src/context-session.mjs, src/chatgpt-composer.mjs, tests/chatgpt-composer.test.mjs, tests/context-session.test.mjs, tests/electron-smoke.mjs, tests/installed-observer-fixture.cjs, scripts/check-event-runtime-release.mjs, package.json, package-lock.json, docs/planning/event-driven-runtime.md, README.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/CONTEXT_DELIVERY.md, docs/DOCUMENTATION_INDEX.md, docs/MODULES.md, docs/PRODUCT.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/modules/chatgpt-dom-compatibility.md, docs/modules/workspace-sessions.md
-- [IN_PROGRESS] T005: Причина блокировки Send: сравнение черновика, диагностика и парный выпуск 0.6.67 — В работе
-  - Git Commit: [PENDING] feat: Причина блокировки Send: сравнение черновика, диагностика и парный выпуск 0.6.67
+- [DONE] T005: Причина блокировки Send: сравнение черновика, диагностика и парный выпуск 0.6.67 — Завершено
+  - Git Commit: [DONE] feat: Причина блокировки Send: сравнение черновика, диагностика и парный выпуск 0.6.67
   - Reference: event-driven-runtime-phase-2-20260928 / T005 / implementation
-  - Файлы: src/chatgpt-composer.mjs, src/main.mjs, tests/chatgpt-composer.test.mjs, tests/installed-observer-fixture.cjs, docs/planning/event-driven-runtime.md, docs/VERIFICATION.md
+  - Файлы: src/chatgpt-composer.mjs, src/main.mjs, tests/chatgpt-composer.test.mjs, tests/installed-observer-fixture.cjs, package-lock.json, package.json, scripts/check-event-runtime-release.mjs, src/chromium-diagnostics.mjs, tests/chromium-diagnostics.test.mjs, docs/planning/event-driven-runtime.md, docs/VERIFICATION.md, README.md, docs/CONTEXT_DELIVERY.md, docs/DOCUMENTATION_INDEX.md, docs/MODULES.md, docs/PRODUCT.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/modules/chatgpt-dom-compatibility.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: event-driven-runtime-phase-2-20260928 / DOCS / implementation

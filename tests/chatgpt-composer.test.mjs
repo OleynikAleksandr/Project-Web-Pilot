@@ -240,3 +240,38 @@ test('new conversation clearing preserves active generation and messages at entr
     assert.equal(f.editor.value, 'Сохранить'); f.dom.window.close();
   }
 });
+
+test('diagnostics distinguish draft guards and actual clicks without logging text', async () => {
+  for (const changed of [false, true]) {
+    const f=fixture(), records=[]; f.composer.onDiagnostic=r=>records.push(r);
+    const text='PRIVATE_RECOVERY_TEXT /private/two  spaces\nwp-request-trace';
+    const result=await f.composer.deliver({text,requestId:'wp-request-trace',
+      onBeforeSend:async()=>{if(changed)f.editor.value='PRIVATE_USER_EDIT';}});
+    assert.equal(result.state,changed?'deferred':'sent');
+    assert.equal(records.some(r=>r.outcome==='clicked'),!changed);
+    assert.ok(records.some(r=>r.event==='delivery-result'&&r.state===result.state));
+    if(changed)assert.ok(records.some(r=>r.reason==='DRAFT_CHANGED'&&r.diagnostic?.mismatchIndex===8));
+    for(const value of ['PRIVATE_RECOVERY_TEXT','PRIVATE_USER_EDIT','/private/two'])assert.equal(JSON.stringify(records).includes(value),false);
+  }
+});
+test('whitespace diagnostics do not relax exact matching or change delivery', async () => {
+  const f=fixture(),records=[];f.composer.onDiagnostic=r=>records.push(r);
+  f.editor.value='Workspace: /My Folder\nwp-request-space';
+  const result=await f.composer.deliver({text:'Workspace: /My  Folder\nwp-request-space',requestId:'wp-request-space'});
+  assert.equal(result.reason,'DRAFT_PRESENT');assert.equal(f.sends(),0);
+  const d=records.find(r=>r.diagnostic).diagnostic;
+  assert.equal(d.nonWhitespaceMatches,true);assert.equal(d.expectedKind,'space');assert.equal(d.actualKind,'text');
+});
+test('diagnostics distinguish absent Send and failed before-send validation', async () => {
+  const f=fixture(),records=[];f.composer.onDiagnostic=r=>records.push(r);f.document.querySelector('button').remove();
+  assert.equal((await f.composer.deliver(request)).reason,'SEND_UNAVAILABLE');
+  assert.ok(records.some(r=>r.diagnostic?.button.found===false));assert.equal(records.some(r=>r.action==='send'),false);
+  const g=fixture(),errors=[];g.composer.onDiagnostic=r=>errors.push(r);
+  await assert.rejects(g.composer.deliver({...request,onBeforeSend:()=>{throw Object.assign(new Error('SECRET exception text'),{code:'CONTEXT_CHANGED_BEFORE_SEND'});}}),{code:'CONTEXT_CHANGED_BEFORE_SEND'});
+  assert.equal(g.sends(),0);assert.ok(errors.some(r=>r.event==='delivery-error'&&r.code==='CONTEXT_CHANGED_BEFORE_SEND'));assert.equal(JSON.stringify(errors).includes('SECRET'),false);
+});
+test('duplicate observations are deduplicated and logger errors never block Send', async () => {
+  const f=fixture(),records=[];f.composer.onDiagnostic=r=>records.push(r);
+  await f.composer.inspect(request);await f.composer.inspect(request);assert.equal(records.length,1);
+  f.composer.onDiagnostic=()=>{throw Error('logger failed');};assert.equal((await f.composer.deliver(request)).state,'sent');
+});

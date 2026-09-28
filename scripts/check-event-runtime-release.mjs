@@ -10,7 +10,7 @@ import { hashFile, sourceSnapshot, verifyPackagedSources } from './release-all.m
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const { version } = JSON.parse(await fs.readFile(path.join(root, 'package.json'), 'utf8'));
-assert.equal(version, '0.6.66');
+assert.equal(version, '0.6.67');
 const delivery = path.join(os.homedir(), 'Downloads', 'WebPilot-' + version);
 const manifest = JSON.parse(await fs.readFile(path.join(delivery, 'release-manifest.json'), 'utf8'));
 assert.equal(manifest.version, version); assert.equal(manifest.packagedSourceMatches, true);
@@ -28,7 +28,7 @@ for (const app of [rootApp, appsApp]) {
   assert.equal((await fs.lstat(app)).isSymbolicLink(), false);
   assert.equal(execFileSync('/usr/libexec/PlistBuddy', ['-c', 'Print :CFBundleShortVersionString', path.join(app, 'Contents/Info.plist')], { encoding: 'utf8' }).trim(), version);
 }
-const preflight = JSON.parse(await fs.readFile(path.join(root, '.harness/runtime/release-066-preflight.json'), 'utf8'));
+const preflight = JSON.parse(await fs.readFile(path.join(root, '.harness/runtime/release-067-preflight.json'), 'utf8'));
 const appsBefore = preflight.find(item => item.path === appsApp);
 const appsAfter = await fs.stat(appsApp);
 assert.equal(appsAfter.dev, appsBefore.device); assert.equal(appsAfter.ino, appsBefore.inode);

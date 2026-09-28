@@ -5,15 +5,16 @@ const { pathToFileURL } = require('node:url');
 const [resourceRoot, moduleRoot, profile] = process.argv.slice(2);
 app.setPath('userData', profile);
 const html = `<!doctype html><html><body><div id="messages"></div><form>
-<textarea id="prompt-textarea">Контекст архивной сессии wp-request-old-draft</textarea><button data-testid="send-button" disabled>Send</button></form>
+<div id="prompt-textarea" contenteditable="true" style="white-space:pre-wrap">Контекст архивной сессии wp-request-old-draft</div><button data-testid="send-button" disabled>Send</button></form>
 <script>
 const sent=JSON.parse(sessionStorage.getItem('sent')||'[]');
 function show(text){const el=document.createElement('article');el.dataset.messageAuthorRole='user';el.textContent=text;document.querySelector('#messages').append(el)}
 sent.forEach(show);
-document.querySelector('form').onsubmit=e=>{e.preventDefault();const text=document.querySelector('textarea').value;sent.push(text);sessionStorage.setItem('sent',JSON.stringify(sent));show(text);history.replaceState({},'', '/c/installed-fixture');document.querySelector('textarea').value='';document.querySelector('textarea').dispatchEvent(new Event('input',{bubbles:true}))};
+document.querySelector('form').onsubmit=e=>{e.preventDefault();const text=document.querySelector('#prompt-textarea').innerText;sent.push(text);sessionStorage.setItem('sent',JSON.stringify(sent));show(text);history.replaceState({},'', '/c/installed-fixture');document.querySelector('#prompt-textarea').innerText='';document.querySelector('#prompt-textarea').dispatchEvent(new Event('input',{bubbles:true}))};
 setTimeout(()=>document.querySelector('button').disabled=false,350);
 </script></body></html>`;
-const deadline = setTimeout(() => { console.error('Installed fixture deadline'); app.exit(1); }, 20000);
+let fixtureStage = 'boot', trace = [];
+const deadline = setTimeout(() => { console.error('Installed fixture deadline', fixtureStage, JSON.stringify(trace.slice(-4))); app.exit(1); }, 20000);
 app.whenReady().then(async () => {
   const { PageStateSource } = await import(pathToFileURL(path.join(moduleRoot, 'page-state.mjs')));
   const { connectPageState } = await import(pathToFileURL(path.join(moduleRoot, 'page-state-bridge.mjs')));
@@ -25,16 +26,26 @@ app.whenReady().then(async () => {
     preload: path.join(resourceRoot, 'resources/chatgpt-page-observer-preload.cjs') } });
   const source = new PageStateSource(), disconnect = connectPageState(view.webContents, ipcMain, source);
   try {
+    fixtureStage = 'load';
     await view.loadURL('https://chatgpt.com/');
     if (!source.current) await source.waitForChange(source.version, { timeoutMs: 3000 });
     assert.ok(source.current?.state.editorAvailable);
     assert.equal(await view.webContents.executeJavaScript('typeof window.require + ":" + typeof window.webPilot'), 'undefined:undefined');
-    const composer = new ChatGPTComposer(view.webContents, { pageState: source });
+    fixtureStage = 'clear';
+    const composer = new ChatGPTComposer(view.webContents, { pageState: source, onDiagnostic: r => trace.push(r) });
     assert.equal((await composer.clearNewSessionDraft()).action, 'draft-cleared');
     assert.equal((await composer.inspect()).draftLength, 0);
-    const text = 'Полный пакет проверки. '.repeat(10000) + 'wp-request-installed-fixture';
+    fixtureStage = 'deliver';
+    // Comparable to the incident: ~100k characters with hundreds of lines.
+    const text = ('Полный пакет проверки. Отступы  и путь /My  Folder. '.repeat(3) + '\n').repeat(700)
+      + '\n\tТабуляция\nКод: \\n и \\t\nwp-request-installed-fixture';
     assert.equal((await composer.deliver({ text, requestId: 'wp-request-installed-fixture' })).state, 'sent');
     assert.equal(await view.webContents.executeJavaScript('document.querySelectorAll("article").length'), 1);
+    assert.ok(trace.some(r => r.outcome === 'clicked'));
+    assert.ok(trace.some(r => r.event === 'delivery-result' && r.state === 'sent'));
+    assert.ok(trace.some(r => r.diagnostic?.editorKind === 'contenteditable'));
+    assert.equal(JSON.stringify(trace).includes('Полный пакет проверки'), false);
+    fixtureStage = 'error-observer';
     const errorVersion = source.version;
     await view.webContents.executeJavaScript("(()=>{const e=document.createElement('div');e.setAttribute('role','alert');e.textContent='Resume stream unavailable';document.body.append(e)})()");
     if (source.current?.state.connectionError !== 'stream-interrupted')
@@ -46,10 +57,10 @@ app.whenReady().then(async () => {
     if (!source.current) await source.waitForChange(source.version, { timeoutMs: 3000 });
     assert.notEqual(source.current.documentId, documentId);
     assert.equal((await composer.inspect({ requestId: 'wp-request-installed-fixture' })).messageSeen, true);
-    assert.equal(await view.webContents.executeJavaScript('document.querySelector("textarea").value'), 'Контекст архивной сессии wp-request-old-draft');
+    assert.equal(await view.webContents.executeJavaScript('document.querySelector("#prompt-textarea").innerText'), 'Контекст архивной сессии wp-request-old-draft');
 
     assert.equal(await view.webContents.executeJavaScript('document.querySelectorAll("article").length'), 1);
-    console.log(JSON.stringify({ installedPreload: resourceRoot, scenario: 'sandbox observer, restored draft cleared, large Send, Resume stream unavailable detected, same conversation reload without duplicate',
+    console.log(JSON.stringify({ installedPreload: resourceRoot, scenario: 'sandbox observer, restored draft cleared, multiline contenteditable Send with diagnostics, Resume stream unavailable detected, same conversation reload without duplicate',
       electron: process.versions.electron, node: process.versions.node, liveChatGPT: false }));
   } finally { disconnect(); view.destroy(); clearTimeout(deadline); }
   app.quit();

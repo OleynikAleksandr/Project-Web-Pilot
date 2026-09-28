@@ -6,7 +6,7 @@ export class ComposerError extends Error {
 }
 
 // Runs only in the visible ChatGPT document. No page internals, cookies or API requests.
-export function pageOperation({ action = 'inspect', text = '', requestId = '', expectedExperience = null } = {}, dom = createChatGPTDOM(CHATGPT_SELECTORS)) {
+export function pageOperation({ action = 'inspect', text = '', requestId = '', expectedExperience = null, diagnose = false } = {}, dom = createChatGPTDOM(CHATGPT_SELECTORS)) {
   const { first } = dom;
   const editor = dom.editor();
   const busy = dom.busy();
@@ -18,8 +18,9 @@ export function pageOperation({ action = 'inspect', text = '', requestId = '', e
   const messages = dom.messages('user');
   const messageSeen = !!requestId && messages.some(message => (message.innerText ?? message.textContent ?? '').includes(requestId));
   const button = dom.sendButton();
-  const draftLength = normalized(draft()).length;
-  const draftMatches = !!text && normalized(draft()) === normalized(text);
+  const draftText = draft(), actual = normalized(draftText), expected = normalized(text);
+  const draftLength = actual.length;
+  const draftMatches = !!text && actual === expected;
   const writable = !!editor && !editor.disabled && !editor.readOnly && editor.getAttribute('contenteditable') !== 'false';
   const sendEnabled = !!button && !button.disabled && button.getAttribute('aria-disabled') !== 'true';
   const modeButtons = dom.modeButtons();
@@ -27,6 +28,31 @@ export function pageOperation({ action = 'inspect', text = '', requestId = '', e
   const experience = dom.experience();
   const result = { connectionError, url: location.href, editorAvailable: !!editor, writable, login, busy,
     draftLength, draftMatches, sendEnabled, messageSeen, userMessageCount: messages.length, experience };
+  if (diagnose) {
+    let mismatchIndex = 0;
+    while (mismatchIndex < Math.min(actual.length, expected.length) && actual[mismatchIndex] === expected[mismatchIndex]) mismatchIndex++;
+    const kind = (value, index) => index >= value.length ? 'end' : value[index] === ' ' ? 'space'
+      : value[index] === '\n' ? 'newline' : value[index] === '\t' ? 'tab'
+      : /\s/.test(value[index]) ? 'whitespace' : /[\u200b-\u200d\ufeff]/.test(value[index]) ? 'invisible' : 'text';
+    const counts = value => ({ newlines: (value.match(/\n/g) ?? []).length, tabs: (value.match(/\t/g) ?? []).length,
+      nbsp: (value.match(/\u00a0/g) ?? []).length, invisible: (value.match(/[\u200b-\u200d\ufeff]/g) ?? []).length });
+    const whiteSpace = editor ? getComputedStyle(editor).whiteSpace : '';
+    result.diagnostic = {
+      editorKind: !editor ? 'missing' : editor.tagName === 'TEXTAREA' ? 'textarea' : editor.tagName === 'INPUT' ? 'input' : 'contenteditable',
+      whiteSpace: ['normal','nowrap','pre','pre-wrap','pre-line','break-spaces'].includes(whiteSpace) ? whiteSpace : 'other',
+      expectedLength: expected.length, actualLength: actual.length,
+      expectedRawLength: text.length, actualRawLength: draftText.length,
+      mismatchIndex: actual === expected ? null : mismatchIndex,
+      expectedKind: actual === expected ? null : kind(expected, mismatchIndex),
+      actualKind: actual === expected ? null : kind(actual, mismatchIndex),
+      nonWhitespaceMatches: !!text && actual.replace(/\s/g, '') === expected.replace(/\s/g, ''),
+      textContentMatches: !!text && !!editor && normalized(editor.textContent ?? '') === expected,
+      expectedCounts: counts(text), actualCounts: counts(draftText),
+      button: { found: !!button, connected: !!button?.isConnected, disabled: !!button?.disabled,
+        ariaDisabled: button?.getAttribute('aria-disabled') === 'true',
+        submit: button?.type === 'submit' },
+    };
+  }
   if (action === 'inspect') return result;
   if (messageSeen) return { ...result, action: 'already-sent' };
   if (connectionError) return { ...result, action: 'deferred', reason: 'CONNECTION_INTERRUPTED' };
@@ -100,7 +126,7 @@ export function pageScript(args) { return `(${pageOperation.toString()})(${JSON.
 
 export class ChatGPTComposer {
   constructor(contents, { wait = pause, now = Date.now, settleMs = 200, timeoutMs = 12000,
-    allowFixture = false, pageState = null } = {}) {
+    allowFixture = false, pageState = null, onDiagnostic = null } = {}) {
     this.contents = contents;
     this.wait = wait;
     this.pageState = pageState;
@@ -109,6 +135,8 @@ export class ChatGPTComposer {
     this.timeoutMs = timeoutMs;
     this.allowFixture = allowFixture;
     this.inFlight = false;
+    this.onDiagnostic = onDiagnostic;
+    this.lastDiagnostic = '';
   }
 
   async inspect({ text = '', requestId = '', action = 'inspect', expectedExperience = null } = {}) {
@@ -119,8 +147,46 @@ export class ChatGPTComposer {
     if (!isChat && !(this.allowFixture && url.protocol === 'file:')) {
       return { login: true, editorAvailable: false, url: current };
     }
-    return this.contents.executeJavaScript(pageScript({ action, text, requestId, expectedExperience }), action !== 'inspect');
+    const diagnose = typeof this.onDiagnostic === 'function' && !!text;
+    const started = this.now();
+    if (diagnose && action !== 'inspect') this.trace('action-start', { action, requestId });
+    const observation = await this.contents.executeJavaScript(pageScript({ action, text, requestId, expectedExperience, diagnose }), action !== 'inspect');
+    if (diagnose) {
+      const { diagnostic, editorAvailable, writable, login, busy, draftLength, draftMatches, sendEnabled,
+        messageSeen, userMessageCount, experience, connectionError, action: outcome, reason } = observation;
+      this.trace('observation', { action, requestId, diagnostic, editorAvailable, writable, login, busy,
+        draftLength, draftMatches, sendEnabled, messageSeen, userMessageCount, experience, connectionError, outcome, reason },
+        Math.max(0, this.now() - started));
+    }
+    return observation;
   }
+
+  trace(event, fields = {}, elapsedMs) {
+    if (!this.onDiagnostic) return;
+    // Only fixed metadata is passed here. Never log arguments, draft text, HTML or exception messages.
+    const signature = JSON.stringify({ event, ...fields });
+    if (event === 'observation' && signature === this.lastDiagnostic) return;
+    this.lastDiagnostic = signature;
+    try { this.onDiagnostic({ event, ...fields, ...(elapsedMs === undefined ? {} : { elapsedMs }) }); } catch {}
+  }
+
+  async traceDelivery(operation, args, run) {
+    const started = this.now(), requestId = args.requestId ?? null;
+    this.trace('delivery-start', { operation, requestId, textLength: args.text?.length ?? 0 });
+    try {
+      const result = await run();
+      this.trace('delivery-result', { operation, requestId, state: result.state, reason: result.reason ?? null,
+        recovered: !!result.recovered }, Math.max(0, this.now() - started));
+      return result;
+    } catch (error) {
+      this.trace('delivery-error', { operation, requestId,
+        code: /^[A-Z_]{1,80}$/.test(error.code ?? '') ? error.code : 'UNCLASSIFIED' }, Math.max(0, this.now() - started));
+      throw error;
+    }
+  }
+
+  sendUserMessage(args) { return this.traceDelivery('user-message', args, () => this.sendUserMessageInternal(args)); }
+  deliver(args) { return this.traceDelivery('recovery', args, () => this.deliverInternal(args)); }
 
   async clearNewSessionDraft({ canContinue = () => true } = {}) {
     if (!canContinue()) return { action: 'deferred', reason: 'CHAT_CHANGED' };
@@ -166,7 +232,7 @@ export class ChatGPTComposer {
     return this.pageState.waitForChange(version, { timeoutMs: remaining, canContinue });
   }
 
-  async sendUserMessage({ text, canContinue = () => true }) {
+  async sendUserMessageInternal({ text, canContinue = () => true }) {
     if (this.inFlight) throw new ComposerError('SEND_IN_PROGRESS', 'Другая отправка ещё не завершилась.');
     if (typeof text !== 'string' || !text.trim()) throw new ComposerError('MESSAGE_INVALID', 'Не подготовлено пользовательское сообщение.');
     this.inFlight = true;
@@ -207,7 +273,7 @@ export class ChatGPTComposer {
     } finally { this.inFlight = false; }
   }
 
-  async deliver({ text, requestId, expectedExperience = null, canContinue = () => true, onBeforeSend = async () => {} }) {
+  async deliverInternal({ text, requestId, expectedExperience = null, canContinue = () => true, onBeforeSend = async () => {} }) {
     if (this.inFlight) throw new ComposerError('SEND_IN_PROGRESS', 'Другая отправка ещё не завершилась.');
     if (typeof text !== 'string' || !text || !requestId || !text.includes(requestId)) throw new ComposerError('MESSAGE_INVALID', 'Не подготовлено стартовое сообщение.');
     this.inFlight = true;
@@ -228,7 +294,9 @@ export class ChatGPTComposer {
         return { state: 'deferred', reason: observation.busy ? 'GENERATION_ACTIVE' : !observation.draftMatches ? 'DRAFT_CHANGED' : 'SEND_UNAVAILABLE', observation };
       }
       // Persist an uncertain attempt BEFORE the click, so a crash never triggers a second send.
+      this.trace('before-send-start', { requestId });
       await onBeforeSend();
+      this.trace('before-send-complete', { requestId });
       if (!canContinue()) return { state: 'cancelled' };
       observation = await this.inspect({ action: 'send', text, requestId, expectedExperience });
       if (observation.action === 'already-sent') return { state: 'sent', recovered: true, observation };

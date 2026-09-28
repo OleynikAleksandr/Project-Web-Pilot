@@ -41,6 +41,7 @@ function redactPathname(pathname) {
 export function safeUrl(input) {
   try {
     const url = new URL(input);
+    if (url.protocol === 'data:') return { origin: 'data://', path: '[redacted]', queryKeys: [] };
     return {
       origin: url.origin === 'null' ? `${url.protocol}//` : url.origin,
       path: redactPathname(url.pathname),
