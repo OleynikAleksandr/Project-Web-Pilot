@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 683,
+  "plan_revision": 684,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-title-sync-20260928",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Автоматически давать каждой рабочей session Project Web Pilot осмысленное имя по текущей работе и синхронизировать это же server-side имя с соответствующим native conversation ChatGPT.",
   "acceptance_criteria": [
     "Автоматически давать каждой рабочей session Project Web Pilot осмысленное имя по текущей работе и синхронизировать это же server-side имя с соответствующим native conversation ChatGPT."
@@ -319,13 +319,82 @@
       ]
     },
     {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
+      "id": "T007",
+      "title": "Использовать короткий planning title и server-safe лимит session name",
+      "why": "Приёмка 0.6.60 показала HTTP 422: auto-title из objective имеет 160 символов / 262 UTF-8 байта, тогда как короткий 59-символьный title тем же endpoint сохраняется успешно.",
+      "dependencies": [
+        "T006"
+      ],
+      "functional_paths": [
+        "src/workspace-session.mjs",
+        "src/main.mjs",
+        "tests/workspace-session.test.mjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "docs/planning/session-title-sync.md"
+      ],
+      "verification_ids": [
+        "unit",
+        "smoke"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Auto-title берётся из H1 обязательного docs/planning (fallback docs/modules), а не из полного objective, когда такой документ доступен.",
+        "Session title ограничен 80 Unicode-символами и 200 UTF-8 байтами; manual/page/scope используют один safe normalizer.",
+        "Existing titleSource=scope того же scope автоматически обновляется на новый canonical short title; manual title не меняется.",
+        "После обновления local scope title существующий native ChatGPT conversation автоматически reconciles тем же sync path."
+      ],
+      "expected_commit_message": "fix: use concise server-safe session titles",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "session-title-sync-20260928",
+        "task_id": "T007",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T008",
+      "title": "Собрать исправленный парный релиз Project Web Pilot 0.6.61",
+      "why": "Нужен новый restart-test пользователя уже с коротким canonical title и подтверждённой синхронизацией.",
+      "dependencies": [
+        "T007"
+      ],
+      "functional_paths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "documentation_paths": [
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [
+        "package"
+      ],
+      "verification_kind": "package",
+      "acceptance_criteria": [
+        "0.6.61 собран для macOS arm64 и Windows x64.",
+        "Финальный release manifest соответствует зафиксированному source commit, packagedSourceMatches=true.",
+        "Корневой и /Applications macOS app обновлены до 0.6.61; native Windows остаётся пользовательской проверкой."
+      ],
+      "expected_commit_message": "release: Project Web Pilot 0.6.61",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "session-title-sync-20260928",
+        "task_id": "T008",
+        "role": "implementation"
+      }
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "session-title-sync-20260928",
         "task_id": "DOCS",
         "role": "implementation",
-        "iteration": 2
+        "iteration": 3
       },
       "dependencies": [
         "T001",
@@ -333,7 +402,9 @@
         "T003",
         "T004",
         "T005",
-        "T006"
+        "T006",
+        "T007",
+        "T008"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -383,10 +454,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: session-title-sync-20260928
 Current Task: нет
-Revision: 683
+Revision: 684
 
 ## Цель
 
@@ -422,8 +493,16 @@ Revision: 683
   - Git Commit: [DONE] release: Project Web Pilot 0.6.60
   - Reference: session-title-sync-20260928 / T006 / implementation
   - Файлы: package.json, package-lock.json, docs/RELEASE.md, docs/VERIFICATION.md
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: актуализировать контекст проекта
+- [TODO] T007: Использовать короткий planning title и server-safe лимит session name — Ожидает
+  - Git Commit: [PENDING] fix: use concise server-safe session titles
+  - Reference: session-title-sync-20260928 / T007 / implementation
+  - Файлы: src/workspace-session.mjs, src/main.mjs, tests/workspace-session.test.mjs, tests/electron-smoke.mjs, docs/planning/session-title-sync.md
+- [TODO] T008: Собрать исправленный парный релиз Project Web Pilot 0.6.61 — Ожидает
+  - Git Commit: [PENDING] release: Project Web Pilot 0.6.61
+  - Reference: session-title-sync-20260928 / T008 / implementation
+  - Файлы: package.json, package-lock.json, docs/RELEASE.md, docs/VERIFICATION.md
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: session-title-sync-20260928 / DOCS / implementation
   - Файлы: docs/planning/session-title-sync.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/modules/workspace-sessions.md
 
