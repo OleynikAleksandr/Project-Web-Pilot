@@ -118,6 +118,29 @@ const agentTimer = new AgentTimer({ onFinish: ({ workspace, sessionId }, duratio
 } });
 const pageState = new PageStateSource();
 let disconnectPageState = null;
+let manualDocumentOwner = null;
+function observeManualConversation(state) {
+  const selected = store.selected(), documentId = pageState.current?.documentId;
+  if (!selected || selected.chatUrl || !documentId) return false;
+  if (!manualDocumentOwner && /^https:\/\/chatgpt\.com\/(?:work\/?)?$/.test(state.url) && state.userMessageCount === 0) {
+    manualDocumentOwner = { documentId, workspace: selected.workspace, sessionId: selected.sessionId, generation: navigationId, binding: false };
+  }
+  const owner = manualDocumentOwner;
+  if (!owner || owner.documentId !== documentId || owner.workspace !== selected.workspace
+      || owner.sessionId !== selected.sessionId || owner.generation !== navigationId || !state.manualSendRevision) return false;
+  const ownRecovery = selected.attempt?.state === 'sent' || selected.attempt?.sendStartedAtMs;
+  if (ownRecovery) return false;
+  const url = normalizeChatUrl(state.url);
+  controller?.cancel();
+  if (!url || owner.binding) return true;
+  owner.binding = true;
+  void store.bindChat(owner.workspace, owner.sessionId, url, { manual: true }).then(() => {
+    if (manualDocumentOwner !== owner || !navigationCurrent(owner.generation)) return;
+    attachController(store.selected()); void controller.tick(); publish();
+    void syncSelectedSessionTitle({ force: true, reason: 'manual-chat-bound' });
+  }, error => { if (manualDocumentOwner === owner) { owner.binding = false; report(error); } });
+  return true;
+}
 const conversationRecovery = new ConversationRecovery({
   selected: () => store.selected(),
   available: () => !pageLoading && !setupState && !settingsState && !controller?.composer.inFlight,
@@ -133,9 +156,10 @@ const conversationRecovery = new ConversationRecovery({
   onChange: () => publish(),
 });
 function applyObservedPage(event) {
-  if (event.reset) { agentTimer.finish(); return; }
+  if (event.reset) { manualDocumentOwner = null; agentTimer.finish(); return; }
   chromiumDiagnostics?.observePage(event.state);
   if (pageLoading || setupState || settingsState) return;
+  if (observeManualConversation(event.state)) return;
   conversationRecovery.observe(event.state);
   const selected = store.selected();
   const target = selected && !selected.sessionArchivedAt
@@ -503,7 +527,7 @@ function nextNavigation() {
   // An older async action cannot reclaim navigation after a newer user selection.
   if (owner && owner.generation !== navigationId) return owner.generation;
   agentTimer.finish();
-  conversationRecovery.reset();
+  conversationRecovery.reset(); manualDocumentOwner = null;
   const generation = ++navigationId;
   if (owner) owner.generation = generation;
   return generation;

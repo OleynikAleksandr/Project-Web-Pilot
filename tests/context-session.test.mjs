@@ -381,3 +381,16 @@ test('an unregistered attempt cannot bind a foreign conversation without its use
   assert.equal(f.saved.attempt.state, 'prepared');
   assert.equal(f.controller.state.phase, 'chat-changed');
 });
+
+test('ordinary manually started conversation is view-only until explicit context refresh', async () => {
+  const f = controllerFixture();
+  await f.store.updateSession('', '', { manualStart: true });
+  await f.controller.tick();
+  assert.equal(f.controller.state.phase, 'manual-session');
+  assert.equal(f.controller.state.messageSent, false);
+  assert.equal(f.loads(), 0); assert.equal(f.sends(), 0);
+  await f.controller.retry();
+  await f.controller.tick();
+  assert.equal(f.saved.manualStart, false);
+  assert.equal(f.sends(), 1); assert.equal(f.controller.state.phase, 'delivered');
+});

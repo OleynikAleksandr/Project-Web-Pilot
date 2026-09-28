@@ -56,7 +56,7 @@ document.querySelector('form').addEventListener('submit',event=>{
  event.preventDefault(); const editor=document.getElementById('prompt-textarea');const text=editor.innerText;
  const message={text,at:Date.now(),mode:window.fixtureMode};window.fixtureMessages.push(message);
  showMessage(text);
- editor.textContent='';const match=text.match(/wp-request-[a-zA-Z0-9-]+/);
+ editor.textContent='';const match=text.match(/wp-request-[a-zA-Z0-9-]+/) || ['manual-'+crypto.randomUUID()];
  if(match && !location.pathname.startsWith('/c/')){
    const target='/c/'+match[0];history.pushState({},'', '/c/WEB:12345678-1234-1234-1234-123456789abc');
    sessionStorage.setItem(target,JSON.stringify(window.fixtureMessages));
@@ -1314,7 +1314,35 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await waitFor(() => sidebar.executeJavaScript('typeof window.webPilot === "object" && document.getElementById("prototype-version")?.textContent === "ПРОТОТИП " + ' + JSON.stringify(app.getVersion())), 'sidebar reload receives initial state', snapshot);
   assert.equal(await sidebar.executeJavaScript('document.getElementById("plan-card").hidden'), false);
   assert.equal(snapshot().selected?.sessionId, beforeSidebarReload.selected?.sessionId, 'sidebar reload does not change selected session');
-  const result = { fullVersionBadge: true, septemberDOM: true, reverseScroll: true, directFirstChat: true, directFirstWork: true, startupLoginEntrypoint: true, uninterruptedFirstRequest: true, firstRequestNetworkTrace: true, duplicateStartupBlocked: true, earlyFirstLoadDiagnostics: true, guidedFirstRun: true, firstRunScreenshots: [path.join(dataDir, "startup-account.png"), path.join(dataDir, "startup-login.png"), path.join(dataDir, "startup-components.png")], fastSavedNavigation: true, lastNavigationWins: true, readinessBeforeOrAfterLoad: true, backgroundFailureRetry: true, liveChatColors: true, composerBackground: true, streamingAssistantColor: true, chatColorsPersistence: true, chatColorsReset: true, colorScreenshots, projectDoctor: true, doctorBackup: true, doctorOpen: true, doctorRefresh: true, doctorNewSession: true, doctorScreenshots, newestSessionFirst: true, projectSelectsNewest: true, threeSessionViewport: true, sessionScrollPreserved: true, visibleSessionScrollbar: true, nativeProjectsDisclosure: true, treePopover: true, treeScreenshots, singleActivePlanSessions: true, checkoutPlanAcrossOldChats: true, checkoutRecoveryShared: true, noPreparedPlanUi: true,
+  // Ordinary first message: actual trusted input, persisted URL, no recovery acknowledgement.
+  const deliverBeforeManual = controller.composer.deliver;
+  controller.composer.deliver = async () => {
+    await controller.composer.inspect({ action: 'fill', text: 'Моё обычное ручное сообщение' });
+    return { state: 'deferred', reason: 'DRAFT_PRESENT' };
+  };
+  await sidebar.executeJavaScript('window.webPilot.newSession(' + JSON.stringify(workTarget) + ', "chat")');
+  await waitFor(() => snapshot().context.phase === 'waiting-draft', 'ordinary manual draft', snapshot);
+  controller.composer.deliver = deliverBeforeManual;
+  await browser.executeJavaScript("document.querySelector('[data-testid=send-button]').scrollIntoView({block:'center'})");
+  const point = await browser.executeJavaScript("(()=>{const r=document.querySelector('[data-testid=send-button]').getBoundingClientRect();return {x:Math.round(r.x+r.width/2),y:Math.round(r.y+r.height/2)}})()");
+  window.focus(); browser.focus();
+  browser.sendInputEvent({ type: 'mouseDown', button: 'left', clickCount: 1, ...point });
+  browser.sendInputEvent({ type: 'mouseUp', button: 'left', clickCount: 1, ...point });
+  await waitFor(() => snapshot().context.phase === 'manual-session' && !!store.selected().chatUrl, 'ordinary Send binds its own conversation', snapshot);
+  const manualSession = store.selected();
+  assert.equal(snapshot().context.messageSent, false);
+  assert.notEqual(manualSession.attempt?.state, 'sent');
+  assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 1);
+  const reopenedManual = new WorkspaceSessions(store.file); await reopenedManual.load();
+  assert.equal(reopenedManual.selected().manualStart, true);
+  assert.equal(reopenedManual.selected().chatUrl, manualSession.chatUrl);
+  const loadsBeforeManualReopen = packetLoads;
+  await navigate(reopenedManual.selected());
+  await waitFor(() => snapshot().context.phase === 'manual-session', 'ordinary conversation after restart', snapshot);
+  assert.equal(browser.getURL(), manualSession.chatUrl);
+  assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 1);
+  assert.equal(packetLoads, loadsBeforeManualReopen);
+  const result = { ordinaryManualSend: true, manualRecoverySend: true, boundedReconnect: true, largeAutomaticSend: true, fullVersionBadge: true, septemberDOM: true, reverseScroll: true, directFirstChat: true, directFirstWork: true, startupLoginEntrypoint: true, uninterruptedFirstRequest: true, firstRequestNetworkTrace: true, duplicateStartupBlocked: true, earlyFirstLoadDiagnostics: true, guidedFirstRun: true, firstRunScreenshots: [path.join(dataDir, "startup-account.png"), path.join(dataDir, "startup-login.png"), path.join(dataDir, "startup-components.png")], fastSavedNavigation: true, lastNavigationWins: true, readinessBeforeOrAfterLoad: true, backgroundFailureRetry: true, liveChatColors: true, composerBackground: true, streamingAssistantColor: true, chatColorsPersistence: true, chatColorsReset: true, colorScreenshots, projectDoctor: true, doctorBackup: true, doctorOpen: true, doctorRefresh: true, doctorNewSession: true, doctorScreenshots, newestSessionFirst: true, projectSelectsNewest: true, threeSessionViewport: true, sessionScrollPreserved: true, visibleSessionScrollbar: true, nativeProjectsDisclosure: true, treePopover: true, treeScreenshots, singleActivePlanSessions: true, checkoutPlanAcrossOldChats: true, checkoutRecoveryShared: true, noPreparedPlanUi: true,
     singleActivePlanScreenshot, mode: 'isolated-fixture', electron: process.versions.electron, chromium: process.versions.chrome,
     views: window.contentView.children.length, secureRemote: true, sidebarIpc: true, archiveRestore: true, archiveRestart: true, deleteCancel: true, localDeletion: true, cloudChatPreserved: true, workspaceCreation: true, workspaceValidation: true, cancelPreservesSession: true, startupMessages: 4, canonicalPacketLoads: packetLoads, recoveryCache: true, operationProgress: true, progressScreenshot: path.join(dataDir, 'progress-ui.png'),
     tokenCounterRemoved: true, projectRename: true, sessionRename: true, sessionScopedTitleSync: true, restartKeepsSession: true, newChatCreatesSession: true, sessionTree: true, selectsEarlierSession: true, compactWorkspaceDetails: true, projectPathClipboard: true, sessionPlans: true, singleCurrentPlan: true, manualChatWorkChoice: true, noAcceptanceButton: true, chromiumDiagnostics: true, contextWindowIndicatorRemoved: true, resizableSidebar: true, separateArchiveWindow: true, archiveMultiSelect: true, archiveForgetKeepsFolder: true, shellTheme: true, nativeTitlebarTheme: nativeTheme.shouldUseDarkColors, toolCallFilter: true, microphonePermission: true, geolocationPermission: true, cameraPermission: false, fullContextBytes: Buffer.byteLength(fixtureContext), liveChatGPT: false, agentToolsRequired: false };

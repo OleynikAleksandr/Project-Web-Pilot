@@ -2,11 +2,28 @@
 export function installPageObserver(dom, send) {
   const documentId = crypto.randomUUID();
   Object.defineProperty(globalThis, '__webPilotObserverDocumentId', { value: documentId });
+  let manualSendRevision = 0, manualCandidate = null;
   let seq = 0, draftRevision = 0, userMessagesRevision = 0, editorRevision = 0;
   let editorIdentity = null, pending = false, lastSignature = '', live = true;
   const loginSelector = '[data-testid="login-button"],[data-testid="signup-button"],a[href="/auth/login"],a[href="https://chatgpt.com/auth/login"]';
   const profileSelector = '[data-testid="profile-button"],[data-testid="accounts-profile-button"],[data-testid="user-menu-button"],button[aria-label="Open Profile Menu"],button[aria-label="Открыть меню профиля"]';
+  const normalize = text => text.replace(/\s+/g, ' ').trim();
+  const editorText = editor => editor ? normalize(editor.value ?? editor.innerText ?? editor.textContent ?? '') : '';
+  const captureManualSend = event => {
+    if (!event.isTrusted || !/^\/(?:work\/?)?$/.test(location.pathname) || dom.messages('user').length) return;
+    const editor = dom.editor(), button = dom.sendButton(), target = event.target;
+    const click = event.type === 'click' && button && (target === button || button.contains(target));
+    const enter = event.type === 'keydown' && event.key === 'Enter' && !event.shiftKey && !event.isComposing
+      && editor && (target === editor || editor.contains(target));
+    const text = editorText(editor);
+    if ((click || enter) && text && !dom.busy() && button && !button.disabled)
+      manualCandidate = { text, editor };
+  };
   const snapshot = () => {
+    if (manualCandidate && !editorText(dom.editor()) && dom.messages('user').some(message =>
+        normalize(message.innerText ?? message.textContent ?? '') === manualCandidate.text)) {
+      manualSendRevision++; manualCandidate = null;
+    }
     const editor = dom.editor() ?? null;
     if (editor !== editorIdentity) { editorIdentity = editor; editorRevision++; draftRevision++; }
     const button = dom.sendButton();
@@ -18,7 +35,7 @@ export function installPageObserver(dom, send) {
       writable: !!editor && !editor.disabled && !editor.readOnly && editor.getAttribute('contenteditable') !== 'false',
       connectionError: dom.connectionError(),
       busy: dom.busy(), sendEnabled: !!button && !button.disabled && button.getAttribute('aria-disabled') !== 'true',
-      draftRevision, userMessageCount: dom.messages('user').length, userMessagesRevision,
+      manualSendRevision, draftRevision, userMessageCount: dom.messages('user').length, userMessagesRevision,
     };
   };
   const emit = () => {
@@ -54,7 +71,10 @@ export function installPageObserver(dom, send) {
     observer.observe(document.documentElement, { subtree: true, childList: true, characterData: true, attributes: true,
       attributeFilter: ['disabled', 'readonly', 'contenteditable', 'aria-disabled', 'aria-hidden', 'hidden',
         'data-state', 'aria-checked', 'aria-pressed', 'class', 'style', 'data-testid', 'data-message-author-role'] });
+    document.addEventListener('click', captureManualSend, true);
+    document.addEventListener('keydown', captureManualSend, true);
     document.addEventListener('input', event => {
+      if (manualCandidate && editorText(manualCandidate.editor) && editorText(manualCandidate.editor) !== manualCandidate.text) manualCandidate = null;
       if (editorIdentity && (event.target === editorIdentity || editorIdentity.contains(event.target))) { draftRevision++; schedule(); }
     }, true);
     document.addEventListener('change', schedule, true);

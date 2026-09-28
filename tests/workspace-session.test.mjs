@@ -647,3 +647,14 @@ test('agent time accumulates per session, survives restart and rejects malformed
     await assert.rejects(new WorkspaceSessions(store.file).load(), { code: 'SESSIONS_INVALID' });
   }
 });
+test('manual conversation binding persists independently of context delivery', async t => {
+  const { store, project } = await fixture(t);
+  const folder = await fs.realpath(await project('Manual chat')); await store.select(folder);
+  const id = store.selected().sessionId;
+  await store.bindChat(folder, id, 'https://chatgpt.com/c/manual-one', { manual: true });
+  const reopened = new WorkspaceSessions(store.file); await reopened.load();
+  assert.equal(reopened.selected().manualStart, true);
+  assert.equal(reopened.selected().attempt, null);
+  assert.equal(reopened.selected().chatUrl, 'https://chatgpt.com/c/manual-one');
+  await assert.rejects(store.bindChat(folder, id, 'https://chatgpt.com/c/foreign-other', { manual: true }), { code: 'CHAT_CHANGED' });
+});

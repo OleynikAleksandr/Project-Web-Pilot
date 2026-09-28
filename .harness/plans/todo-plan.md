@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 746,
+  "plan_revision": 748,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-1-20260928",
@@ -47,7 +47,8 @@
       "tests/chatgpt-composer.test.mjs",
       "src/workspace-session.mjs",
       "src/preload.cjs",
-      "src/ui/index.html"
+      "src/ui/index.html",
+      "tests/workspace-session.test.mjs"
     ],
     "documentation_paths": [
       "docs/planning/event-driven-runtime.md",
@@ -479,10 +480,16 @@
         "src/workspace-session.mjs",
         "tests/page-state.test.mjs",
         "tests/context-session.test.mjs",
-        "tests/electron-smoke.mjs"
+        "tests/electron-smoke.mjs",
+        "src/conversation-recovery.mjs",
+        "src/ui/sidebar.mjs",
+        "tests/conversation-recovery.test.mjs",
+        "tests/workspace-session.test.mjs"
       ],
       "documentation_paths": [
-        "docs/planning/event-driven-runtime.md"
+        "docs/planning/event-driven-runtime.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/VERIFICATION.md"
       ],
       "verification_ids": [
         "unit",
@@ -495,13 +502,29 @@
         "Чужая навигация без подтверждённого ручного Send не привязывается."
       ],
       "expected_commit_message": "feat: Сохранить разговор после обычного ручного первого сообщения без ложной доставки контекста",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "event-driven-runtime-phase-1-20260928",
         "task_id": "T008",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/VERIFICATION.md",
+        "docs/planning/event-driven-runtime.md",
+        "src/chatgpt-page-observer.mjs",
+        "src/context-session.mjs",
+        "src/conversation-recovery.mjs",
+        "src/main.mjs",
+        "src/page-state.mjs",
+        "src/ui/sidebar.mjs",
+        "src/workspace-session.mjs",
+        "tests/context-session.test.mjs",
+        "tests/conversation-recovery.test.mjs",
+        "tests/electron-smoke.mjs",
+        "tests/workspace-session.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -563,7 +586,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-phase-1-20260928
 Current Task: нет
-Revision: 746
+Revision: 748
 
 ## Цель
 
@@ -603,10 +626,10 @@ Revision: 746
   - Git Commit: [DONE] feat: Проверить и исправить автоматическую отправку большого recovery
   - Reference: event-driven-runtime-phase-1-20260928 / T007 / implementation
   - Файлы: src/chatgpt-composer.mjs, tests/chatgpt-composer.test.mjs, tests/electron-smoke.mjs, docs/planning/event-driven-runtime.md, docs/VERIFICATION.md
-- [TODO] T008: Сохранить разговор после обычного ручного первого сообщения без ложной доставки контекста — Ожидает
-  - Git Commit: [PENDING] feat: Сохранить разговор после обычного ручного первого сообщения без ложной доставки контекста
+- [DONE] T008: Сохранить разговор после обычного ручного первого сообщения без ложной доставки контекста — Завершено
+  - Git Commit: [DONE] feat: Сохранить разговор после обычного ручного первого сообщения без ложной доставки контекста
   - Reference: event-driven-runtime-phase-1-20260928 / T008 / implementation
-  - Файлы: src/chatgpt-page-observer.mjs, src/page-state.mjs, src/main.mjs, src/context-session.mjs, src/workspace-session.mjs, tests/page-state.test.mjs, tests/context-session.test.mjs, tests/electron-smoke.mjs, docs/planning/event-driven-runtime.md
+  - Файлы: src/chatgpt-page-observer.mjs, src/page-state.mjs, src/main.mjs, src/context-session.mjs, src/workspace-session.mjs, tests/page-state.test.mjs, tests/context-session.test.mjs, tests/electron-smoke.mjs, src/conversation-recovery.mjs, src/ui/sidebar.mjs, tests/conversation-recovery.test.mjs, tests/workspace-session.test.mjs, docs/planning/event-driven-runtime.md, docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: event-driven-runtime-phase-1-20260928 / DOCS / implementation

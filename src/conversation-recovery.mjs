@@ -1,7 +1,8 @@
+import { normalizeChatUrl } from './workspace-session.mjs';
 // Reopen a known conversation once. Never sends a message or retries generation.
 const keyOf = p => p ? JSON.stringify([p.workspace, p.sessionId, p.chatUrl]) : '';
-const known = p => p?.chatUrl && /^https:\/\/chatgpt\.com\/c\/[^/?#]+$/.test(p.chatUrl)
-  && ['sent', 'acknowledged'].includes(p.attempt?.state);
+const known = p => p?.chatUrl && normalizeChatUrl(p.chatUrl) === p.chatUrl
+  && (p.manualStart || ['sent', 'acknowledged'].includes(p.attempt?.state));
 export class ConversationRecovery {
   constructor({ selected, inspect, reopen, available = () => true, onChange = () => {},
     schedule = setTimeout, cancel = clearTimeout, delayMs = 3000, now = Date.now }) {
@@ -40,7 +41,7 @@ export class ConversationRecovery {
   }
   rateLimited(conversationId, retryAfter = 60) {
     const p = this.selected();
-    if (!p?.chatUrl || new URL(p.chatUrl).pathname !== '/c/' + conversationId) return;
+    if (!p?.chatUrl || new URL(p.chatUrl).pathname.split('/').at(-1) !== conversationId) return;
     const key = keyOf(p);
     this.cooldowns.set(key, this.now() + Math.max(60000, Math.min(300000, retryAfter * 1000)));
     if (this.key === key) this.cooldown();

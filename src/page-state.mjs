@@ -35,6 +35,7 @@ export function normalizePageObservation(message) {
       writable: state.writable,
       busy: state.busy,
       sendEnabled: state.sendEnabled,
+      manualSendRevision: integer(state.manualSendRevision) ? state.manualSendRevision : 0,
       draftRevision: state.draftRevision,
       userMessageCount: state.userMessageCount,
       userMessagesRevision: state.userMessagesRevision,

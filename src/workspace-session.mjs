@@ -119,7 +119,7 @@ function projectPlan(plan, scopeTitle = '') {
 const copy = value => structuredClone(value);
 const persistent = data => JSON.parse(JSON.stringify(data, (key, value) => ['planView', 'preparedPlans', 'unassignedPlans', 'scopeTitle'].includes(key) ? undefined : value));
 const invalid = () => new WorkspaceError('SESSIONS_INVALID', 'Формат сохранённых проектов не поддерживается. Исходный файл сохранён.');
-const sessionFields = ['planId', 'originSessionId', 'legacyPlanId', 'lastNamedScopeId', 'sessionId', 'experience', 'chatUrl', 'attempt', 'receipt', 'title', 'titleSource', 'createdAt', 'lastOpenedAt', 'archivedAt'];
+const sessionFields = ['planId', 'originSessionId', 'legacyPlanId', 'lastNamedScopeId', 'sessionId', 'experience', 'chatUrl', 'manualStart', 'attempt', 'receipt', 'title', 'titleSource', 'createdAt', 'lastOpenedAt', 'archivedAt'];
 const explicitTitleSources = new Set(['manual', 'scope']);
 
 function localName(value, { empty = 'Нужно непустое название.', code = 'TITLE_INVALID' } = {}) {
@@ -182,6 +182,7 @@ function validate(data) {
           || (s.archivedAt !== null && (!Number.isFinite(s.archivedAt) || s.archivedAt <= 0))
           || (s.chatUrl !== null && (!normalizeChatUrl(s.chatUrl) || normalizeChatUrl(s.chatUrl) !== s.chatUrl
             || !conversationUrlCompatibleWithExperience(s.chatUrl, s.experience)))) throw invalid();
+      if (s.manualStart !== undefined && typeof s.manualStart !== 'boolean') throw invalid();
       if (s.agentTime !== undefined && s.agentTime !== null && !validAgentTime(s.agentTime)) throw invalid();
       for (const key of ['planId','originSessionId','legacyPlanId','lastNamedScopeId']) {
         if (s[key] !== undefined && s[key] !== null && (typeof s[key] !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,180}$/.test(s[key]))) throw invalid();
@@ -420,7 +421,7 @@ export class WorkspaceSessions {
     }, current);
   }
 
-  bindChat(workspace, sessionId, input) {
+  bindChat(workspace, sessionId, input, { manual = false } = {}) {
     return this.mutate(data => {
       const url = normalizeChatUrl(input);
       if (!url) throw new WorkspaceError('CHAT_URL_INVALID', 'Откройте конкретный чат ChatGPT.');
@@ -432,6 +433,7 @@ export class WorkspaceSessions {
       if (session.chatUrl && session.chatUrl !== url) throw new WorkspaceError('CHAT_CHANGED', 'Открыт другой чат. Выберите его в дереве или вернитесь к сессии проекта.');
       if (data.projects.some(p => p.sessions.some(s => s.sessionId !== sessionId && s.chatUrl === url))) throw new WorkspaceError('CHAT_IN_USE', 'Этот чат уже связан с другой сессией.');
       session.chatUrl = url;
+      if (manual && !['sent', 'acknowledged'].includes(session.attempt?.state)) session.manualStart = true;
       return currentView(data.projects.find(p => p.workspace === workspace));
     });
   }
@@ -539,7 +541,8 @@ export class WorkspaceSessions {
   updateSession(workspace, sessionId, patch) {
     return this.mutate(data => {
       const { project, session } = this.activeRecord(workspace, sessionId, data);
-      if (Object.keys(patch).some(k => !['attempt', 'receipt'].includes(k))) throw new Error('INVALID_SESSION_PATCH');
+      if (Object.keys(patch).some(k => !['attempt', 'receipt', 'manualStart'].includes(k))) throw new Error('INVALID_SESSION_PATCH');
+      if (patch.manualStart !== undefined && typeof patch.manualStart !== 'boolean') throw new Error('INVALID_SESSION_PATCH');
       Object.assign(session, copy(patch)); return currentView(project);
     });
   }

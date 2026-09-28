@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { ConversationRecovery } from '../src/conversation-recovery.mjs';
 
 function fixture() {
-  const project = { workspace: '/project', sessionId: 'one', chatUrl: 'https://chatgpt.com/c/one', attempt: { state: 'sent' } };
+  const project = { workspace: '/project', sessionId: 'one', chatUrl: 'https://chatgpt.com/c/conversation-one', attempt: { state: 'sent' } };
   const page = { url: project.chatUrl, editorAvailable: true, draftLength: 0, connectionError: 'stream-interrupted' };
   let selected = project, calls = 0, finish;
   const timers = new Map(); let n = 0;
@@ -35,7 +35,7 @@ test('switching session during inspection discards delayed recovery', async () =
   assert.equal(f.calls(), 0); assert.equal(f.recovery.view().phase, 'idle');
 });
 test('429 cooldown stops automatic requests and only enables an explicit retry afterwards', async () => {
-  const f = fixture(); f.recovery.observe(f.page); f.recovery.rateLimited('one', 120);
+  const f = fixture(); f.recovery.observe(f.page); f.recovery.rateLimited('conversation-one', 120);
   assert.equal(f.recovery.view().phase, 'cooldown'); assert.equal(await f.recovery.retry(), false);
   await f.fire(); assert.equal(f.calls(), 0); assert.equal(f.recovery.view().canRetry, true);
 });

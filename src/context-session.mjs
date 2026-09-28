@@ -102,6 +102,7 @@ export class ContextSession {
     if (this.pending) { this.rerunRequested = true; return; }
     const project = this.store.project(this.active.workspace);
     const attempt = project?.attempt;
+    if (project?.manualStart) await this.store.updateSession(project.workspace, project.sessionId, { manualStart: false, attempt: null, receipt: null });
     // Only an observed send or a never-sent draft can be replaced by an explicit refresh.
     if (attempt && (['sent', 'acknowledged'].includes(attempt.state) || !attempt.sendStartedAtMs)) {
       await this.store.updateSession(project.workspace, project.sessionId, { attempt: null, receipt: null });
@@ -160,7 +161,7 @@ export class ContextSession {
         : conversationUrlCompatibleWithExperience(currentUrl, experience) || isPendingChatGPTConversation(observation.url);
       if (ownMessageSeen && sameConversation && attempt.state !== 'sent') {
         attempt = { ...attempt, state: 'sent', sentAtMs: this.now() };
-        await this.store.updateSession(project.workspace, project.sessionId, { attempt });
+        await this.store.updateSession(project.workspace, project.sessionId, { attempt, manualStart: false });
         if (!this.current(generation)) return;
       }
 
@@ -199,6 +200,9 @@ export class ContextSession {
         throw failure('CHATGPT_EXPERIENCE_MISMATCH', experience === 'work'
           ? 'Work-сессия не открыта в режиме Work. Recovery не отправлен.'
           : 'Chat-сессия не открыта в обычном Chat. Recovery не отправлен.');
+      }
+      if (project.manualStart && !ownMessageSeen) {
+        this.emit({ phase: 'manual-session', projectInfo: info, messageSent: false, delivery: null, error: null }); return;
       }
       if (!project.chatUrl && !attempt?.sendStartedAtMs) {
         observation = await this.composer.inspect({ action: 'select-experience', expectedExperience: experience,
