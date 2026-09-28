@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 771,
+  "plan_revision": 772,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-2-20260928",
@@ -287,6 +287,41 @@
       ]
     },
     {
+      "id": "T005",
+      "title": "Причина блокировки Send: сравнение черновика, диагностика и парный выпуск 0.6.67",
+      "why": "Причина блокировки Send: сравнение черновика, диагностика и парный выпуск 0.6.67",
+      "dependencies": [],
+      "functional_paths": [
+        "src/chatgpt-composer.mjs",
+        "src/main.mjs",
+        "tests/chatgpt-composer.test.mjs",
+        "tests/installed-observer-fixture.cjs"
+      ],
+      "documentation_paths": [
+        "docs/planning/event-driven-runtime.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [
+        "unit",
+        "smoke",
+        "release-pair"
+      ],
+      "verification_kind": "installed",
+      "acceptance_criteria": [
+        "По этапам отправки различимы блокировка до клика, фактический клик и отсутствие подтверждения без сохранения текста.",
+        "Большой многострочный контекст проходит реальный contenteditable; изменённый пользователем текст защищён.",
+        "Обе платформы собраны и Mac-копии обновлены; документы описывают доказательства и ограничения."
+      ],
+      "expected_commit_message": "feat: Причина блокировки Send: сравнение черновика, диагностика и парный выпуск 0.6.67",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "event-driven-runtime-phase-2-20260928",
+        "task_id": "T005",
+        "role": "implementation"
+      }
+    },
+    {
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
@@ -298,7 +333,8 @@
         "T001",
         "T002",
         "T003",
-        "T004"
+        "T004",
+        "T005"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -345,7 +381,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-phase-2-20260928
 Current Task: нет
-Revision: 771
+Revision: 772
 
 ## Цель
 
@@ -373,6 +409,10 @@ Revision: 771
   - Git Commit: [DONE] feat: Чистое поле нового Chat/Work и парное исправление 0.6.66
   - Reference: event-driven-runtime-phase-2-20260928 / T004 / implementation
   - Файлы: src/main.mjs, src/context-session.mjs, src/chatgpt-composer.mjs, tests/chatgpt-composer.test.mjs, tests/context-session.test.mjs, tests/electron-smoke.mjs, tests/installed-observer-fixture.cjs, scripts/check-event-runtime-release.mjs, package.json, package-lock.json, docs/planning/event-driven-runtime.md, README.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/CONTEXT_DELIVERY.md, docs/DOCUMENTATION_INDEX.md, docs/MODULES.md, docs/PRODUCT.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/modules/chatgpt-dom-compatibility.md, docs/modules/workspace-sessions.md
+- [TODO] T005: Причина блокировки Send: сравнение черновика, диагностика и парный выпуск 0.6.67 — Ожидает
+  - Git Commit: [PENDING] feat: Причина блокировки Send: сравнение черновика, диагностика и парный выпуск 0.6.67
+  - Reference: event-driven-runtime-phase-2-20260928 / T005 / implementation
+  - Файлы: src/chatgpt-composer.mjs, src/main.mjs, tests/chatgpt-composer.test.mjs, tests/installed-observer-fixture.cjs, docs/planning/event-driven-runtime.md, docs/VERIFICATION.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: event-driven-runtime-phase-2-20260928 / DOCS / implementation
