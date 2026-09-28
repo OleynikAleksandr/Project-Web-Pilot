@@ -4,28 +4,19 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 726,
+  "plan_revision": 727,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
-  "scope_id": "event-driven-runtime-planning-20260928",
-  "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
-  "objective": "Подготовить согласованный планировочный документ событийной обработки и предложить три компактные фазы реализации; код и релиз в этом поручении не менять",
-  "acceptance_criteria": [
-    "Подготовить согласованный планировочный документ событийной обработки и предложить три компактные фазы реализации; код и релиз в этом поручении не менять"
-  ],
+  "scope_id": null,
+  "execution_scope_status": "NONE",
+  "delivery_status": "IN_PROGRESS",
+  "objective": "Если поручение уже ясно, создайте короткий план и приступайте; иначе обсудите следующий этап проекта.",
+  "acceptance_criteria": [],
   "approved_scope": {
     "functional_paths": [],
-    "documentation_paths": [
-      "docs/planning/event-driven-runtime.md",
-      "docs/MODULES.md",
-      "docs/DOCUMENTATION_INDEX.md",
-      "docs/architecture/OVERVIEW.md",
-      "docs/PRODUCT.md",
-      "docs/architecture/ARCHITECTURE.md"
-    ]
+    "documentation_paths": []
   },
-  "baseline_commit": "821d67d4a73a657e6b7c7af42d4b1600e1c2775b",
+  "baseline_commit": null,
   "current_task_id": null,
   "context_pack": {
     "documents": [
@@ -52,157 +43,47 @@
         ],
         "required": true,
         "revision": "WORKTREE"
-      },
-      {
-        "path": "docs/planning/event-driven-runtime.md",
-        "required": true
       }
     ],
     "include_last_completed_task": false,
     "dependency_task_ids": []
   },
-  "tasks": [
-    {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
-      "commit_ref": {
-        "scope_id": "event-driven-runtime-planning-20260928",
-        "task_id": "T001",
-        "role": "implementation"
-      },
-      "dependencies": [],
-      "functional_paths": [],
-      "documentation_paths": [
-        "docs/planning/event-driven-runtime.md",
-        "docs/MODULES.md",
-        "docs/DOCUMENTATION_INDEX.md",
-        "docs/architecture/OVERVIEW.md"
-      ],
-      "verification_ids": [],
-      "id": "T001",
-      "title": "Подготовить и проверить контракт перехода на события и три компактные фазы",
-      "why": "Подготовить и проверить контракт перехода на события и три компактные фазы",
-      "verification_kind": "code",
-      "acceptance_criteria": [
-        "Документ содержит решения аудита, карту 18 состояний, три фазы и критерии приёмки",
-        "Навигация связывает документ с существующими модулями; реализация не начата"
-      ],
-      "expected_commit_message": "feat: Подготовить и проверить контракт перехода на события и три компактные фазы",
-      "actual_files": [
-        "docs/planning/event-driven-runtime.md",
-        "docs/MODULES.md",
-        "docs/DOCUMENTATION_INDEX.md",
-        "docs/architecture/OVERVIEW.md"
-      ]
-    },
-    {
-      "id": "T002",
-      "title": "Уточнить границы фаз, ревизии черновика, подтверждение requestId и Node Electron",
-      "why": "Уточнить границы фаз, ревизии черновика, подтверждение requestId и Node Electron",
-      "dependencies": [],
-      "functional_paths": [],
-      "documentation_paths": [
-        "docs/planning/event-driven-runtime.md"
-      ],
-      "verification_ids": [],
-      "verification_kind": "code",
-      "acceptance_criteria": [
-        "Фаза 1 проверяется без периодического DOM вызова controller.tick и отдельных busy/diagnostic интервалов",
-        "Зафиксированы draftRevision, односторонние уведомления сообщений и фактически проверенная версия Node встроенного Electron"
-      ],
-      "expected_commit_message": "feat: Уточнить границы фаз, ревизии черновика, подтверждение requestId и Node Electron",
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
-      "commit_ref": {
-        "scope_id": "event-driven-runtime-planning-20260928",
-        "task_id": "T002",
-        "role": "implementation"
-      },
-      "actual_files": [
-        "docs/planning/event-driven-runtime.md"
-      ]
-    },
-    {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
-      "commit_ref": {
-        "scope_id": "event-driven-runtime-planning-20260928",
-        "task_id": "DOCS",
-        "role": "implementation",
-        "iteration": 2
-      },
-      "dependencies": [
-        "T001",
-        "T002"
-      ],
-      "functional_paths": [],
-      "documentation_paths": [
-        "docs/planning/event-driven-runtime.md",
-        "docs/PRODUCT.md",
-        "docs/architecture/ARCHITECTURE.md",
-        "docs/MODULES.md",
-        "docs/DOCUMENTATION_INDEX.md",
-        "docs/architecture/OVERVIEW.md"
-      ],
-      "verification_ids": [],
-      "id": "DOCS",
-      "title": "Актуализация всех документов проекта",
-      "why": "Сохранить актуальный контекст для следующего агента",
-      "acceptance_criteria": [
-        "Документы соответствуют результату"
-      ],
-      "expected_commit_message": "docs: актуализировать контекст проекта",
-      "actual_files": []
-    }
-  ],
+  "tasks": [],
   "blocked_reason": null,
   "user_decisions": [
     {
-      "id": "ea5f17a3-354c-4506-9765-0376880ea0bb",
-      "text": "Пользователь поручил выполнить описанную задачу и план.",
-      "recorded_at": "2026-09-28T11:52:54.643Z"
+      "id": "18a9d0f0-fedc-4fef-b6e9-bcdb7a57c856",
+      "text": "Пользователь согласовал документ и прямо поручил закрыть текущий план и создать новый для первой фазы (28.09.2026).",
+      "recorded_at": "2026-09-28T12:08:04.940Z"
     }
-  ]
+  ],
+  "archived_scope_id": "event-driven-runtime-planning-20260928"
 }
 ```
 <!-- workflow-state:end -->
 
 ## Состояние
 
-Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
-Scope: event-driven-runtime-planning-20260928
+Execution Scope Status: NONE
+Delivery Status: IN_PROGRESS
+Scope: не создан
 Current Task: нет
-Revision: 726
+Revision: 727
 
 ## Цель
 
-Подготовить согласованный планировочный документ событийной обработки и предложить три компактные фазы реализации; код и релиз в этом поручении не менять
+Если поручение уже ясно, создайте короткий план и приступайте; иначе обсудите следующий этап проекта.
 
 ## Критерии приёмки
 
-- Подготовить согласованный планировочный документ событийной обработки и предложить три компактные фазы реализации; код и релиз в этом поручении не менять
 
 ## Микрозадачи
 
-- [DONE] T001: Подготовить и проверить контракт перехода на события и три компактные фазы — Завершено
-  - Git Commit: [DONE] feat: Подготовить и проверить контракт перехода на события и три компактные фазы
-  - Reference: event-driven-runtime-planning-20260928 / T001 / implementation
-  - Файлы: docs/planning/event-driven-runtime.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/architecture/OVERVIEW.md
-- [DONE] T002: Уточнить границы фаз, ревизии черновика, подтверждение requestId и Node Electron — Завершено
-  - Git Commit: [DONE] feat: Уточнить границы фаз, ревизии черновика, подтверждение requestId и Node Electron
-  - Reference: event-driven-runtime-planning-20260928 / T002 / implementation
-  - Файлы: docs/planning/event-driven-runtime.md
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: актуализировать контекст проекта
-  - Reference: event-driven-runtime-planning-20260928 / DOCS / implementation
-  - Файлы: docs/planning/event-driven-runtime.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/architecture/OVERVIEW.md
 
 ## Context Pack For This Cycle
 
 - docs/architecture/OVERVIEW.md → Краткая архитектура проекта
 - docs/MODULES.md → Модули проекта
 - docs/DOCUMENTATION_INDEX.md → Каталог документации
-- docs/planning/event-driven-runtime.md
 
 Служебные состояния меняются только командами workflow. Приёмка не архивирует scope.
