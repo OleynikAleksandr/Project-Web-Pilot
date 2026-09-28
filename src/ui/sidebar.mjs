@@ -12,6 +12,57 @@ window.addEventListener('pagehide', () => progress.destroy());
 let contextExpanded = false;
 const sessionScroll = new Map();
 const preparedExpansion = new Map();
+const renameDialog = $('rename-dialog');
+const renameInput = $('rename-dialog-input');
+const renameDialogTitle = $('rename-dialog-title');
+const renameDialogLabel = $('rename-dialog-label');
+const renameSave = $('rename-dialog-save');
+const renameCancel = $('rename-dialog-cancel');
+let renameRequest = null, renameSaving = false;
+
+function openRenameDialog({ kind, workspace, sessionId = null, value }) {
+  closeTreeMenus();
+  renameRequest = { kind, workspace, sessionId };
+  renameDialogTitle.textContent = kind === 'session' ? 'Переименовать сессию' : 'Переименовать проект';
+  renameDialogLabel.textContent = kind === 'session' ? 'Название сессии' : 'Название проекта в Web Pilot';
+  renameInput.value = value ?? '';
+  renameSave.disabled = false; renameCancel.disabled = false; renameSaving = false;
+  renameDialog.showModal();
+  requestAnimationFrame(() => { renameInput.focus(); renameInput.select(); });
+}
+
+function closeRenameDialog() {
+  if (renameDialog.open) renameDialog.close();
+  renameRequest = null; renameSaving = false; renameSave.disabled = false; renameCancel.disabled = false;
+}
+
+async function submitRenameDialog() {
+  if (!renameRequest || renameSaving) return;
+  const value = renameInput.value.trim();
+  if (!value) { renameInput.setCustomValidity('Введите название.'); renameInput.reportValidity(); return; }
+  renameInput.setCustomValidity(''); renameSaving = true; renameSave.disabled = true; renameCancel.disabled = true;
+  try {
+    const response = renameRequest.kind === 'session'
+      ? await api.renameSession(renameRequest.workspace, renameRequest.sessionId, value)
+      : await api.renameProject(renameRequest.workspace, value);
+    if (!response?.ok) throw new Error(response?.error?.message || 'Не удалось переименовать.');
+    if (response.state) render(response.state);
+    closeRenameDialog();
+  } catch (error) {
+    $('error-banner').hidden = false; $('error-banner').textContent = error.message;
+    renameSaving = false; renameSave.disabled = false; renameCancel.disabled = false; renameInput.focus();
+  }
+}
+
+renameSave.addEventListener('click', submitRenameDialog);
+renameCancel.addEventListener('click', closeRenameDialog);
+renameDialog.addEventListener('cancel', event => { event.preventDefault(); closeRenameDialog(); });
+renameInput.addEventListener('input', () => renameInput.setCustomValidity(''));
+renameInput.addEventListener('keydown', event => {
+  if (event.key === 'Enter') { event.preventDefault(); void submitRenameDialog(); }
+  if (event.key === 'Escape') { event.preventDefault(); closeRenameDialog(); }
+});
+
 function treeIcon(name) {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('class', 'tree-icon'); svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('aria-hidden', 'true');
@@ -216,10 +267,9 @@ function render(state) {
       menuAction('new-project-chat', 'Новый Chat', () => action('newSession', project.workspace, 'chat'));
       menuAction('new-project-work', 'Новый Work', () => action('newSession', project.workspace, 'work'));
       const separator = document.createElement('div'); separator.className = 'menu-separator'; separator.setAttribute('aria-hidden', 'true'); menu.append(separator);
-      menuAction('rename-project', 'Переименовать', () => {
-        const value = window.prompt('Название проекта в Web Pilot', project.name);
-        if (value !== null) action('renameProject', project.workspace, value);
-      });
+      menuAction('rename-project', 'Переименовать', () => openRenameDialog({
+        kind: 'project', workspace: project.workspace, value: project.name,
+      }));
       menuAction('copy-workspace-path', 'Скопировать полный путь', () => action('copyWorkspacePath', project.workspace));
       menuAction('archive-project', 'Перенести в архив', () => action('archiveProject', project.workspace));
       row.append(arrow, button, menuButton); item.append(row, menu);
@@ -251,11 +301,9 @@ function render(state) {
         const menu = document.createElement('div'); menu.className = 'session-menu';
         bindTreeMenu(menuButton, menu, `Меню сессии ${session.title || 'Новая сессия'}`);
         const rename = document.createElement('button'); rename.className = 'secondary rename-session'; rename.textContent = 'Переименовать';
-        rename.addEventListener('click', () => {
-          closeTreeMenus();
-          const value = window.prompt('Название сессии', session.title || 'Новая сессия');
-          if (value !== null) action('renameSession', project.workspace, session.sessionId, value);
-        });
+        rename.addEventListener('click', () => openRenameDialog({
+          kind: 'session', workspace: project.workspace, sessionId: session.sessionId, value: session.title || 'Новая сессия',
+        }));
         const archive = document.createElement('button'); archive.className = 'secondary archive-session'; archive.textContent = 'Перенести в архив';
         archive.addEventListener('click', () => { closeTreeMenus(); action('archiveSession', project.workspace, session.sessionId); });
         menu.append(rename, archive);

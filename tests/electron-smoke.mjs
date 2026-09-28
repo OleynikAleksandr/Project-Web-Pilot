@@ -519,14 +519,23 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   const warmPacketLoads = packetLoads;
   assert.deepEqual(await sidebar.executeJavaScript(`(() => { document.querySelector('.project-menu-button').click(); return Array.from(document.querySelectorAll('.project-menu button')).map(button => button.textContent); })()`),
     ['Новый Chat', 'Новый Work', 'Переименовать', 'Скопировать полный путь', 'Перенести в архив']);
-  await sidebar.executeJavaScript(`window.prompt=()=>"Проект Smoke Rename"; document.querySelector('.project-menu-button').click(); document.querySelector('.rename-project').click()`);
-  await waitFor(() => snapshot().projects[0].name === 'Проект Smoke Rename', 'project rename menu IPC', snapshot);
+  await sidebar.executeJavaScript(`document.querySelector('.project-menu-button').click(); document.querySelector('.rename-project').click()`);
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("rename-dialog").open'), true);
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("rename-dialog-input").value'), 'Тестовый проект с пробелами');
+  await sidebar.executeJavaScript(`document.getElementById('rename-dialog-input').value='Проект Smoke Rename'; document.getElementById('rename-dialog-save').click()`);
+  await waitFor(() => snapshot().projects[0].name === 'Проект Smoke Rename', 'project rename dialog IPC', snapshot);
   assert.equal(store.project(workspace).name, 'Тестовый проект с пробелами', 'project rename keeps canonical workflow name');
   await sidebar.executeJavaScript('document.querySelector(".expand-project").click()');
   await waitFor(() => sidebar.executeJavaScript('!document.querySelector(".sessions").hidden && !document.querySelector(".session").disabled'), 'expand before session actions', snapshot);
-  await sidebar.executeJavaScript(`window.prompt=()=>"Сессия Smoke Rename"; { const li=document.querySelector('[data-session-id="${first.sessionId}"]').closest('li'); li.querySelector('.session-menu-button').click(); li.querySelector('.rename-session').click(); }`);
-  await waitFor(() => store.selected()?.title === 'Сессия Smoke Rename', 'session rename menu IPC', snapshot);
+  await sidebar.executeJavaScript(`{ const li=document.querySelector('[data-session-id="${first.sessionId}"]').closest('li'); li.querySelector('.session-menu-button').click(); li.querySelector('.rename-session').click(); }`);
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("rename-dialog").open'), true);
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("rename-dialog-input").value'), store.selected().title);
+  await sidebar.executeJavaScript(`(()=>{const input=document.getElementById('rename-dialog-input');input.value='Сессия Smoke Rename';input.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));})()`);
+  await waitFor(() => store.selected()?.title === 'Сессия Smoke Rename', 'session rename dialog Enter IPC', snapshot);
   assert.equal(store.selected().titleSource, 'manual');
+  await sidebar.executeJavaScript(`{ const li=document.querySelector('[data-session-id="${first.sessionId}"]').closest('li'); li.querySelector('.session-menu-button').click(); li.querySelector('.rename-session').click(); document.getElementById('rename-dialog-input').value='Не сохранять'; document.getElementById('rename-dialog-cancel').click(); }`);
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("rename-dialog").open'), false);
+  assert.equal(store.selected().title, 'Сессия Smoke Rename', 'rename dialog cancel preserves title');
   const firstTitleId = new URL(first.chatUrl).pathname.split('/').at(-1);
   await waitFor(() => fixtureConversationTitles.get(firstTitleId) === 'Сессия Smoke Rename',
     'manual local rename uses the same native ChatGPT sync path', snapshot);

@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 698,
+  "plan_revision": 700,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-title-sync-20260928",
@@ -512,13 +512,18 @@
         "Smoke выполняет реальный DOM-сценарий открытия, ввода и submit, без monkeypatch window.prompt."
       ],
       "expected_commit_message": "fix: add reliable rename dialog",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-title-sync-20260928",
         "task_id": "T011",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "src/ui/index.html",
+        "src/ui/sidebar.mjs",
+        "tests/electron-smoke.mjs"
+      ]
     },
     {
       "id": "T012",
@@ -627,7 +632,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-title-sync-20260928
 Current Task: нет
-Revision: 698
+Revision: 700
 
 ## Цель
 
@@ -679,8 +684,8 @@ Revision: 698
   - Git Commit: [DONE] release: Project Web Pilot 0.6.62
   - Reference: session-title-sync-20260928 / T010 / implementation
   - Файлы: package.json, package-lock.json, docs/RELEASE.md, docs/VERIFICATION.md
-- [TODO] T011: Заменить window.prompt на встроенный диалог переименования — Ожидает
-  - Git Commit: [PENDING] fix: add reliable rename dialog
+- [DONE] T011: Заменить window.prompt на встроенный диалог переименования — Завершено
+  - Git Commit: [DONE] fix: add reliable rename dialog
   - Reference: session-title-sync-20260928 / T011 / implementation
   - Файлы: src/ui/index.html, src/ui/sidebar.mjs, tests/electron-smoke.mjs, docs/planning/session-title-sync.md
 - [TODO] T012: Собрать парный релиз Project Web Pilot 0.6.63 — Ожидает
