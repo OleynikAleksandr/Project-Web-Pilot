@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 721,
+  "plan_revision": 722,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-planning-20260928",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Подготовить согласованный планировочный документ событийной обработки и предложить три компактные фазы реализации; код и релиз в этом поручении не менять",
   "acceptance_criteria": [
     "Подготовить согласованный планировочный документ событийной обработки и предложить три компактные фазы реализации; код и релиз в этом поручении не менять"
@@ -96,15 +96,41 @@
       ]
     },
     {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
+      "id": "T002",
+      "title": "Уточнить границы фаз, ревизии черновика, подтверждение requestId и Node Electron",
+      "why": "Уточнить границы фаз, ревизии черновика, подтверждение requestId и Node Electron",
+      "dependencies": [],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/planning/event-driven-runtime.md"
+      ],
+      "verification_ids": [],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Фаза 1 проверяется без периодического DOM вызова controller.tick и отдельных busy/diagnostic интервалов",
+        "Зафиксированы draftRevision, односторонние уведомления сообщений и фактически проверенная версия Node встроенного Electron"
+      ],
+      "expected_commit_message": "feat: Уточнить границы фаз, ревизии черновика, подтверждение requestId и Node Electron",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "event-driven-runtime-planning-20260928",
+        "task_id": "T002",
+        "role": "implementation"
+      }
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "event-driven-runtime-planning-20260928",
         "task_id": "DOCS",
-        "role": "implementation"
+        "role": "implementation",
+        "iteration": 2
       },
       "dependencies": [
-        "T001"
+        "T001",
+        "T002"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -141,10 +167,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-planning-20260928
 Current Task: нет
-Revision: 721
+Revision: 722
 
 ## Цель
 
@@ -160,8 +186,12 @@ Revision: 721
   - Git Commit: [DONE] feat: Подготовить и проверить контракт перехода на события и три компактные фазы
   - Reference: event-driven-runtime-planning-20260928 / T001 / implementation
   - Файлы: docs/planning/event-driven-runtime.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/architecture/OVERVIEW.md
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: актуализировать контекст проекта
+- [TODO] T002: Уточнить границы фаз, ревизии черновика, подтверждение requestId и Node Electron — Ожидает
+  - Git Commit: [PENDING] feat: Уточнить границы фаз, ревизии черновика, подтверждение requestId и Node Electron
+  - Reference: event-driven-runtime-planning-20260928 / T002 / implementation
+  - Файлы: docs/planning/event-driven-runtime.md
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: event-driven-runtime-planning-20260928 / DOCS / implementation
   - Файлы: docs/planning/event-driven-runtime.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/architecture/OVERVIEW.md
 
