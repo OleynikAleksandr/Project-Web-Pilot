@@ -116,3 +116,7 @@ Windows package должен содержать ту же application logic; liv
 - возвращение session-owned plans.
 
 Если live probe покажет, что native rename невозможно устойчиво выполнить из текущего embedded ChatGPT без использования недокументированного server endpoint, это фиксируется как отдельное техническое решение внутри T002; внешний API/token не вводится.
+
+## Результат реализации
+
+Реализовано в 0.6.59 без изменения Workflow Kit 1.5.0. Session-scoped auto-name, manual precedence, native ChatGPT title adapter и единый sync path покрыты unit/Electron smoke. Live current-account probe подтвердил server-side persistence после reload. Парный релиз macOS arm64 / Windows x64 собран из commit `eabeea2359821a34c380a1904f902f18474adfd6`; native Windows остаётся пользовательской проверкой.

@@ -562,3 +562,16 @@ Canonical `@webpilot/workflow-kit@1.5.0`: 35 runtime files, SHA-256 `0db567df6f0
 
 Оба ZIP прошли integrity check. Корневой `Project Web Pilot.app` и `/Applications/Project Web Pilot.app` имеют CFBundleShortVersionString 0.6.58 и одинаковый ASAR; inode постоянного root app сохранён: `406600483`. Windows verifier подтвердил `Project Web Pilot.exe` SHA-256 `7662af0bd92befccd9217ca67ecdbf43bd3c16a46de76c31ece373da3269fe50`, portable Node SHA-256 `721ab118a3aac8584348b132767eadf51379e0616f0db802cc1e66d7f0d98f85` и Windows runtime SHA-256 `1f041488ad97d8abf1984fd3521afb8abe15f50b8df3d3e11f1cc4248e019d98`. Native Windows и clean VM не запускались.
 
+
+## Локальный парный выпуск 0.6.59 — 28.09.2026
+
+Session title стал chat-owned metadata поверх сохранённой single-active plan модели. Auto-name использует `objective`/`nextTaskTitle`, manual rename имеет приоритет, а exact bound conversation получает то же server-side имя в native ChatGPT. Workflow Kit остаётся 1.5.0.
+
+Финальный `npm run build` повторён из чистого source commit `eabeea2359821a34c380a1904f902f18474adfd6`; release manifest: `sourceFiles=96`, `packagedSourceMatches=true`. Поставка: `~/Downloads/WebPilot-0.6.59/`; `shasum -c SHA256SUMS.txt` — OK. Корневой и `/Applications/Project Web Pilot.app` — 0.6.59, одинаковый macOS ASAR `0b532240fe717f3428eff65a12eeae4a769b1e896850c0f25bb0954aa5b6c5b5`; обе app-directory identity сохранены.
+
+| Платформа | Размер, байт | SHA-256 ZIP | ASAR SHA-256 |
+| --- | ---: | --- | --- |
+| macOS arm64 | 181473642 | `9dd4f0f5ca8e4983d13066f7b578e255eb215a4dae47ea66f1371924f398e0a2` | `0b532240fe717f3428eff65a12eeae4a769b1e896850c0f25bb0954aa5b6c5b5` |
+| Windows x64 | 316735943 | `045247f12bda051c77531d00472a0ad80a2e0c354467ca6109c182c3969428ce` | `937a23b034b2a949d4d4a2847857da2c9d56cf6f31075d68be9623bb2f778522` |
+
+Windows package verifier подтвердил executable, portable Node, bundled Windows runtime и Workflow Kit 1.5.0. Native Windows и clean VM не запускались; это остаётся пользовательской проверкой.

@@ -2101,3 +2101,12 @@ Electron smoke — **PASSED** на isolated fixture (Electron 44.3.0 / Chromium 
 ## Session title sync / live ChatGPT — 0.6.59
 
 28.09.2026 на текущем авторизованном профиле Project Web Pilot выполнен live probe exact bound conversation `https://chatgpt.com/c/6aba037d-f788-83eb-b519-a4f86dce23bb`. Узкий title adapter сначала server-side переименовал conversation в диагностическое `WP title sync live probe 2026-09-28`; PATCH был подтверждён последующим GET того же conversation (`ok=true`). Затем тем же путём установлено итоговое имя `Автопереименование сессий Web Pilot и ChatGPT`; отдельный новый Electron/WebContents повторно загрузил conversation и GET-readback вернул то же имя (`ok=true`). Access token использовался только внутри authenticated renderer и не возвращался в приложение/лог. Это подтверждает server-side сохранение native ChatGPT title для текущего Web UI; устойчивость к будущим изменениям недокументированного backend endpoint обеспечивается fail-closed adapter и regression tests.
+
+
+### Final package evidence — 0.6.59
+
+T003 managed verification: `npm test` — 363 tests, 360 PASS, 3 SKIP, 0 FAIL; Electron smoke — PASSED с `sessionScopedTitleSync=true`, включая auto title, отсутствие переноса имени в старый chat, новые Chat/Work того же scope и manual local/native rename на fixture.
+
+T004 package-check создал парную 0.6.59; затем release был намеренно пересобран из уже зафиксированного HEAD `eabeea2359821a34c380a1904f902f18474adfd6`, чтобы manifest provenance совпадал с source commit. Финальный manifest: `sourceFiles=96`, `packagedSourceMatches=true`, Workflow Kit 1.5.0 / 35 files / `0db567df…bbb2c75`. ZIP integrity через `shasum -c` — OK. macOS ZIP `9dd4f0f5ca8e4983d13066f7b578e255eb215a4dae47ea66f1371924f398e0a2`; Windows ZIP `045247f12bda051c77531d00472a0ad80a2e0c354467ca6109c182c3969428ce`. Root и `/Applications` 0.6.59 имеют одинаковый ASAR `0b532240fe717f3428eff65a12eeae4a769b1e896850c0f25bb0954aa5b6c5b5`.
+
+Live ChatGPT evidence приведён выше в разделе `Session title sync / live ChatGPT — 0.6.59`: server-side rename и readback после новой загрузки подтверждены. Native Windows/clean VM не запускались.

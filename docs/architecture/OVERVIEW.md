@@ -1,6 +1,6 @@
 # Краткая архитектура проекта
 
-Текущий локальный выпуск — **0.6.58**, macOS arm64 / Windows x64. Canonical package — `@webpilot/workflow-kit@1.5.0` из `/Users/oleksandroliinyk/VSCODE/WorkflowKit`; generated `resources/workflow-kit` содержит 35 файлов, SHA-256 `0db567df6f0c8f68f3119a7322b4c1c6d28cd06bf57b267993b792097bbb2c75`. Действующая модель: один checkout/worktree = один current plan; Web Pilot sessions — только chats/navigation. Парная поставка: `~/Downloads/WebPilot-0.6.58/`; корневой и `/Applications` app обновлены до 0.6.58.
+Текущий локальный выпуск — **0.6.59**, macOS arm64 / Windows x64. Canonical package — `@webpilot/workflow-kit@1.5.0` из `/Users/oleksandroliinyk/VSCODE/WorkflowKit`; generated `resources/workflow-kit` содержит 35 файлов, SHA-256 `0db567df6f0c8f68f3119a7322b4c1c6d28cd06bf57b267993b792097bbb2c75`. Действующая модель: один checkout/worktree = один current plan; Web Pilot sessions — chats/navigation с собственным title. 0.6.59 синхронизирует стабильное session title между локальным деревом и exact bound native ChatGPT conversation. Парная поставка: `~/Downloads/WebPilot-0.6.59/`; корневой и `/Applications` app обновлены до 0.6.59.
 
 Предыдущий локальный выпуск — **0.6.54**: таймер работы агента в карточке плана. Поставка: `~/Downloads/WebPilot-0.6.54/`.
 
@@ -28,6 +28,7 @@ Project Workflow Kit предназначен для проектов любог
 - Каждый рабочий scope заканчивается задачей `DOCS`; после неё `READY_FOR_ACCEPTANCE` означает завершённые задачи, но обязательной кнопки приёмки нет. Архивирование current plan требует отдельного прямого поручения пользователя.
 - Новое поручение после `READY_FOR_ACCEPTANCE` расширяет тот же current plan через `plan:extend`, сохраняя DONE/commit history и переоткрывая DOCS.
 - Выбор Web Pilot session открывает её собственный сохранённый ChatGPT URL, но sidebar всегда проецирует current plan workspace. Быстрое открытие чата и строгая before-Send readiness сохраняются; контракт и замеры — `docs/modules/session-opening-performance.md`.
+- 0.6.59: auto/manual title принадлежит конкретной session. Current scope служит только источником initial имени; переключение на старый chat не переносит title, а exact bound ChatGPT conversation получает то же server-side имя.
 - Web Pilot доставляет уже сформированный checkout-scoped recovery packet в ChatGPT и не собирает проектный контекст самостоятельно.
 - Workspace/session layer schema v6 хранит проекты, chat sessions и legacy plan metadata backward-compatible. Legacy `planId`/`originSessionId`/`legacyPlanId` не участвуют в runtime plan selection. Prepared-plan UI и bind/adopt lifecycle удалены. Локальные UI metadata, архив, таймер и настройки сохраняются как прежде.
 - Project Doctor проверяет и чинит известные служебные неисправности через доверенный worker, но с 0.6.58 semantic/readiness dependency ограничена current plan; historical plan payloads не блокируют открытие проекта.

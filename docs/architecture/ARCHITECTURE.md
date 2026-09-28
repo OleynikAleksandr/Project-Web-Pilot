@@ -4,7 +4,7 @@
 
 ## Состояние
 
-На 27.09.2026 текущий локальный выпуск — Project Web Pilot **0.6.58**, canonical Workflow Kit **1.5.0**. Парная сборка macOS arm64 / Windows x64 выполнена из source commit `c135f1a523bdd5dc1c26a5e8ca72327866a093e0`; `packagedSourceMatches=true`. Single-active plan, быстрый показ сохранённого чата и строгая доставка current recovery работают совместно. Контрольные суммы и доказательства — `docs/RELEASE.md` и `docs/VERIFICATION.md`.
+На 28.09.2026 текущий локальный выпуск — Project Web Pilot **0.6.59**, canonical Workflow Kit **1.5.0**. Парная сборка macOS arm64 / Windows x64 выполнена из source commit `eabeea2359821a34c380a1904f902f18474adfd6`; `packagedSourceMatches=true`. Single-active plan сохранён; session title теперь принадлежит chat session и синхронизируется с exact bound native ChatGPT conversation. Контрольные суммы и доказательства — `docs/RELEASE.md` и `docs/VERIFICATION.md`.
 
 Пользователь принял чистый macOS-путь 0.6.38 и проверку 0.6.39. Пользовательское испытание нового изменения 0.6.40 и Windows остаются отдельными. 18.09.2026 пользователь поручил закрыть план first-run-onboarding-031 и передал испытания Windows 11 другому агенту. Итог macOS и границы доказательств — docs/CLEAN_INSTALL.md; условия и оставшиеся критерии Windows — docs/TRANSFER_TO_WINDOWS.md. План first-run-corrections-032 принадлежит другой сессии и этим закрытием не изменяется.
 
@@ -1325,3 +1325,12 @@ Canonical/staged Kit: 35 files, SHA-256 `0db567df6f0c8f68f3119a7322b4c1c6d28cd06
 `@webpilot/workflow-kit@1.4.13` из `/Users/oleksandroliinyk/VSCODE/WorkflowKit` является единственным владельцем editable Workflow Kit source. Development code и tests импортируют package/subpath exports. `scripts/stage-workflow-kit.mjs` перед start/test/smoke/build копирует `getRuntimeRoot()` в ignored `resources/workflow-kit`; относительные imports external Workspace Setup и Project Doctor сохранены, поэтому packaged layout не менялся. `src/session-plans.mjs` в development использует package export, а packaged app — staged trusted projection из `process.resourcesPath`.
 
 Release pipeline stage-ит runtime до `sourceSnapshot()`. Windows verifier и общий release manifest утверждают VERSION, 35-файловый fileset и digest `da763a50c32583553b6ca06e29c975766ab092890bbf9787bd2a6aca87be44c4`. `.harness/kit` Project Web Pilot остаётся установленным runtime проекта и не является source of truth.
+
+
+## 0.6.59 — session-scoped title и native ChatGPT sync
+
+`WorkspaceSessions` сохраняет `lastNamedScopeId` на каждой session и формирует initial scope title из `objective` плюс содержательного `nextTaskTitle`. Переход на уже существующий chat не переносит в него title current plan; новая session, созданная во время активного scope, может получить собственное initial имя. `manual` и `scope` являются explicit title sources, поэтому `page-title-updated` остаётся только fallback.
+
+`src/chatgpt-title.mjs` — узкий fail-closed facade для server-side title exact bound conversation. Выполнение происходит внутри authenticated ChatGPT renderer: session access token читается и потребляется там же, наружу не возвращается. Перед PATCH проверяется exact текущий URL; после PATCH выполняется GET и сверяется server title. Main сериализует sync одного selected conversation, повторяет его при безопасном открытии и не считает изменение `document.title` подтверждением native Recents.
+
+Live probe 28.09.2026 на текущем conversation подтвердил rename, восстановление итогового имени и readback после повторной загрузки. Релиз 0.6.59 собран из commit `eabeea2359821a34c380a1904f902f18474adfd6`; root и `/Applications` bundles имеют один macOS ASAR `0b532240fe717f3428eff65a12eeae4a769b1e896850c0f25bb0954aa5b6c5b5`.

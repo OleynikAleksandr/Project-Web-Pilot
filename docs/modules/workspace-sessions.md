@@ -1,6 +1,6 @@
 # Module Specification — Workspace & Sessions
 
-## Действующая модель — 0.6.58 / schema v6
+## Действующая модель — 0.6.59 / schema v6
 
 Session store остаётся schema v6 и backward-compatible: старые поля `planId`, `originSessionId`, `legacyPlanId`, `planBinding` могут присутствовать на диске, но runtime их не использует для выбора plan. Полные задачи в session store не копируются.
 
@@ -12,6 +12,12 @@ Session store остаётся schema v6 и backward-compatible: старые п
 
 Подробные совместные контракты — [single active plan](session-owned-plans.md), [session opening performance](session-opening-performance.md) и [Context Delivery](../CONTEXT_DELIVERY.md). Версионные разделы ниже сохраняют историю прежней модели.
 
+
+## Session title synchronization — 0.6.59
+
+Single-active plan остаётся checkout-scoped; naming не возвращает session-owned plan. Каждая session хранит собственные `title`, `titleSource` и `lastNamedScopeId`. Active/blocked current scope может один раз дать этой session auto-name из `objective` и `nextTaskTitle`; переключение на ранее существующий chat не переносит title, а новая session того же scope может получить собственное initial имя. `manual|scope` имеют приоритет над `page`.
+
+Main поддерживает единый desired-title sync для автоматического и ручного rename. Если selected session имеет exact bound `chatUrl` и WebContents действительно открыт на нём, `ChatGPTTitleAdapter` выполняет server-side rename внутри authenticated renderer и проверяет GET-readback. Navigation race, другой URL, отказ auth/backend и verify mismatch fail closed; локальное имя не теряется. Удалённый ChatGPT не получает local IPC/preload privileges, access token не покидает renderer.
 
 ## Текущее создание проекта и первый запуск
 

@@ -34,6 +34,7 @@
 | docs/modules/runtime-lifecycle.md | Specification self-healing MCP/tunnel lifecycle |
 | docs/modules/codex-app-server-executor.md | Local-only MCP facade поверх Codex App Server: паритет Codex Local Mac, Computer Use, исторический A/B и stable-connector integration 0.6.47 |
 | docs/modules/workspace-sessions.md | Specification проектов, Chat/Work sessions, session tree, переходов после scope, оформления и сохранения геометрии интерфейса |
+| docs/planning/session-title-sync.md | Контракт auto/manual session title и server-side синхронизации с native ChatGPT Recents |
 | docs/design/chat-message-layout-regression.md | Planning исправления пустого layout скрытых tool-call message/turn wrappers и regression coverage |
 | docs/design/computer-use-latency-investigation.md | Planning и evidence исследования end-to-end задержек Computer Use, MCP, Secure MCP Tunnel и Web ChatGPT |
 | docs/SOURCE_WORKSPACES.md | Исходные проекты, пути, версии и официальные ссылки |
@@ -141,7 +142,7 @@ Scope `stable-mcp-connector-036` завершает интеграцию scope 0
 
 Исторический выпуск 0.6.51: RELEASE.md, VERIFICATION.md. Выбор первого проекта описан в `docs/modules/first-run-onboarding.md` и WORKSPACE_SETUP.md.
 
-Текущий выпуск 0.6.58: [RELEASE](RELEASE.md), [VERIFICATION](VERIFICATION.md), single-active planning — `docs/planning/single-active-plan-adaptation.md`; canonical Workflow Kit 1.5.0 / 35 files / digest `0db567df…bbb2c75`; парная поставка находится в `~/Downloads/WebPilot-0.6.58/`.
+Текущий выпуск 0.6.59: [RELEASE](RELEASE.md), [VERIFICATION](VERIFICATION.md), naming planning — `docs/planning/session-title-sync.md`; single-active contract сохраняется в `docs/planning/single-active-plan-adaptation.md`. Canonical Workflow Kit 1.5.0 / 35 files / digest `0db567df…bbb2c75`; парная поставка находится в `~/Downloads/WebPilot-0.6.59/`.
 
 ## Удалённый интерфейс — исследование 2026-09-28
 
