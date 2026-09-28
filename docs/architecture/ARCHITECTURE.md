@@ -4,7 +4,7 @@
 
 ## Состояние
 
-На 28.09.2026 текущий локальный выпуск — Project Web Pilot **0.6.60**, canonical Workflow Kit **1.5.0**. Парная сборка macOS arm64 / Windows x64 выполнена из source commit `7cf1299a70633bb620f18e8db857ed1d552eb401`; `packagedSourceMatches=true`. Single-active plan сохранён; session title принадлежит chat session, а reopen выполняет GET-before-PATCH reconciliation exact bound native ChatGPT conversation. Контрольные суммы и доказательства — `docs/RELEASE.md` и `docs/VERIFICATION.md`.
+На 28.09.2026 текущий локальный выпуск — Project Web Pilot **0.6.61**, canonical Workflow Kit **1.5.0**. Парная сборка macOS arm64 / Windows x64 выполнена из source commit `320e9fd8ae59d477097b09de9d116e34aca1e756`; `packagedSourceMatches=true`. Session auto-title берётся из planning/spec H1, ограничен server-safe лимитом и reconciles с exact bound native ChatGPT conversation. Контрольные суммы и доказательства — `docs/RELEASE.md` и `docs/VERIFICATION.md`.
 
 Пользователь принял чистый macOS-путь 0.6.38 и проверку 0.6.39. Пользовательское испытание нового изменения 0.6.40 и Windows остаются отдельными. 18.09.2026 пользователь поручил закрыть план first-run-onboarding-031 и передал испытания Windows 11 другому агенту. Итог macOS и границы доказательств — docs/CLEAN_INSTALL.md; условия и оставшиеся критерии Windows — docs/TRANSFER_TO_WINDOWS.md. План first-run-corrections-032 принадлежит другой сессии и этим закрытием не изменяется.
 
@@ -1341,3 +1341,10 @@ Live probe 28.09.2026 на текущем conversation подтвердил rena
 Приёмка 0.6.59 показала lifecycle gap: local `scope` title сохранялся, а server title после restart оставался прежним. 0.6.60 заменяет write-only подход на reconciliation: GET server title, PATCH только при mismatch, второй GET для проверки. Reopen trigger имеет `force=true`; debounce не может понизить его обычным `ContextSession.onChange`. Late `bindChat` новой session запускает отдельный sync; transient auth/readiness errors получают bounded retry. Chromium diagnostics сохраняет только sessionId/result code/status/attempt и changed/matched — без access token, title text и сообщений.
 
 Regression smoke намеренно портит server title, заставляет первый `/api/auth/session` ответить 503, затем повторно открывает exact conversation и требует автоматического восстановления local title. Full suite и smoke прошли в T005 commit `efb5e882b49f703d4d712ad8c906bd92c6c86074`.
+
+
+## 0.6.61 — concise canonical session title
+
+Реальная 0.6.60 диагностика показала `RENAME_FAILED` HTTP 422 для auto-title длиной 160 символов / 262 UTF-8 байта. Тем же authenticated endpoint 59-символьное имя сохранилось успешно. Поэтому 0.6.61 исправляет источник и контракт длины, а не retry.
+
+`readWorkspace()` извлекает H1 первого required `docs/planning/*` из current plan context pack (fallback required `docs/modules/*`, затем objective). Этот `scopeTitle` transient: в persisted project/session state не записывается. Session names нормализуются до 80 Unicode-символов и 200 UTF-8 байт. Existing `titleSource=scope` того же scope обновляется на canonical title; manual title не меняется. Для текущего проекта canonical title — `Автоматические названия сессий Web Pilot и ChatGPT`.

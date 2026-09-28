@@ -1,6 +1,6 @@
 # Продукт
 
-Текущий локальный выпуск — **0.6.60**, macOS arm64 / Windows x64. Canonical package — `@webpilot/workflow-kit@1.5.0` из `/Users/oleksandroliinyk/VSCODE/WorkflowKit`; generated `resources/workflow-kit` содержит 35 файлов, SHA-256 `0db567df6f0c8f68f3119a7322b4c1c6d28cd06bf57b267993b792097bbb2c75`. Действующая модель: один checkout/worktree = один current plan; Web Pilot sessions — chats/navigation с собственным стабильным title. 0.6.60 выполняет reconciliation local explicit title с exact bound native ChatGPT conversation при open/reopen: GET до PATCH, PATCH только при расхождении, затем GET-readback и bounded retry при ранней неготовности. Парная поставка: `~/Downloads/WebPilot-0.6.60/`; корневой и `/Applications` app обновлены до 0.6.60.
+Текущий локальный выпуск — **0.6.61**, macOS arm64 / Windows x64. Canonical package — `@webpilot/workflow-kit@1.5.0` из `/Users/oleksandroliinyk/VSCODE/WorkflowKit`; generated `resources/workflow-kit` содержит 35 файлов, SHA-256 `0db567df6f0c8f68f3119a7322b4c1c6d28cd06bf57b267993b792097bbb2c75`. Действующая модель: один checkout/worktree = один current plan; Web Pilot sessions — chats/navigation с собственным стабильным title. 0.6.61 берёт canonical session title из H1 обязательного planning/spec документа, использует server-safe лимит 80 Unicode-символов / 200 UTF-8 байт и автоматически мигрирует прежний длинный `scope`-title того же scope; native ChatGPT reconciliation сохраняется. Парная поставка: `~/Downloads/WebPilot-0.6.61/`; корневой и `/Applications` app обновлены до 0.6.61.
 
 Предыдущий локальный выпуск — **0.6.54**: таймер работы агента в карточке плана. Поставка: `~/Downloads/WebPilot-0.6.54/`.
 
@@ -16,7 +16,7 @@
 
 Контракт совместимости — `docs/modules/chatgpt-dom-compatibility.md`. Версионные разделы ниже сохраняют историю.
 
-## Действующий контракт — macOS / Windows 0.6.60
+## Действующий контракт — macOS / Windows 0.6.61
 
 Один Git checkout/worktree имеет один current Workflow Kit plan `.harness/plans/todo-plan.md`. Web Pilot хранит несколько Chat/Work sessions с собственными URL, title, датами и UI metadata, но выбор session **не выбирает plan**. Открытие старого чата сохраняет его разговор и одновременно показывает актуальный current plan checkout. Новый Chat/Work получает recovery того же plan; второй canonical plan не создаётся.
 
@@ -150,7 +150,7 @@ Windows 10/11 x64 версия использует встроенный Codex L
 Начиная с объединения 13.09.2026 macOS и Windows больше не рассматриваются как отдельные кодовые проекты. `Project Web Pilot` является единым source of truth: общий `src`, Workflow Kit, tests, docs и планы синхронизируются через Git; `node_modules`, `.harness/runtime`, `windows-app` и пользовательские runtime/settings остаются локальными на каждом компьютере. Версия общей кодовой базы синхронизирована на 0.6.2.
 
 
-## Переименование проектов и сессий — 0.6.60
+## Переименование проектов и сессий — 0.6.61
 
 Меню `⋯` проекта по-прежнему меняет только локальный `displayName`, не имя папки и не `project_name` Workflow Kit. Название Chat/Work session принадлежит самой session. Ручное «Переименовать» сохраняет `titleSource=manual`; автоматическое имя — `titleSource=scope`; заголовок страницы ChatGPT используется только как fallback и не перетирает explicit title.
 
@@ -159,6 +159,8 @@ Windows 10/11 x64 версия использует встроенный Codex L
 Для bound conversation локальное desired title синхронизируется с native ChatGPT server-side title через authenticated renderer текущего `chatgpt.com`; exact URL/ID проверяется перед запросом. Ручное и автоматическое переименование используют один sync path. При navigation mismatch или изменении web contract adapter fail-closed: локальное имя сохраняется, а native sync можно повторить при следующем открытии exact conversation. Внешний OpenAI API key, новый MCP tool и отдельный сервис для этого не используются.
 
 0.6.60 исправляет restart/reopen lifecycle: reconciliation запускается после фактической загрузки exact conversation и после поздней привязки `chatUrl` у новой session. Force-reconcile не может быть понижен обычным `ContextSession.onChange`; transient auth/load failure получает ограниченный retry. Server title сначала читается: если уже совпадает, PATCH не выполняется.
+
+0.6.61 исправляет источник автоимени: canonical title берётся из H1 обязательного `docs/planning/*` (fallback `docs/modules/*`), а при отсутствии — из objective. Session title ограничен 80 Unicode-символами и 200 UTF-8 байтами. Existing `titleSource=scope` того же scope автоматически обновляется на canonical short title; `manual` не изменяется.
 
 ## Новая сессия после приёмки плана — scope 014
 

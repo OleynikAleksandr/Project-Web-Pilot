@@ -127,3 +127,8 @@ Windows package должен содержать ту же application logic; liv
 Реальная проверка 0.6.59 выявила расхождение после restart: local explicit scope title сохранялся, а server-side ChatGPT title оставался прежним. Hotfix переводит sync в reconciliation: GET до PATCH, no-op при совпадении, PATCH + GET при расхождении, bounded retry после загрузки/auth readiness и безопасная диагностика результата. UI automation для проверки не используется; финальную видимую проверку выполняет пользователь.
 
 Реализовано в 0.6.60: post-load и late-bind triggers, force-preserving debounce, bounded retry и GET-before-PATCH regression. T005 suite/smoke прошли; финальная парная поставка собрана из `7cf1299a70633bb620f18e8db857ed1d552eb401`.
+
+
+## Приёмочный hotfix 0.6.61
+
+0.6.60 доказал, что lifecycle reconciliation запускается, но ChatGPT возвращает HTTP 422 на 160-символьный / 262-byte objective-title. 0.6.61 использует H1 planning/spec как canonical short title и общий лимит 80 Unicode chars / 200 UTF-8 bytes; existing scope-title того же scope мигрируется автоматически, manual title сохраняется.

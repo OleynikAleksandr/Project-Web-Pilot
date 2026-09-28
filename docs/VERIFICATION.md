@@ -2121,3 +2121,12 @@ T005 commit `efb5e882b49f703d4d712ad8c906bd92c6c86074`: `npm test` — **364 tes
 Финальная 0.6.60 пересобрана из release commit `7cf1299a70633bb620f18e8db857ed1d552eb401`; manifest: `sourceFiles=96`, `packagedSourceMatches=true`, Workflow Kit 1.5.0 / 35 files / `0db567df…bbb2c75`. ZIP integrity — OK. macOS ZIP `66ae4e3a95b5485396ce333d4d88d89ff39b77ca317be663b714710666fe725b`; Windows ZIP `f7a24c6dca6193c929193887a487d9fb26c2967f1d14f685347d6bdabdcd77e8`. Root и `/Applications` bundles имеют version 0.6.60 и одинаковый ASAR `cc2df5380de32c76461cf0e2e90f2e393ae4895808181c6fa7d339198f54b564`.
 
 Видимую проверку ChatGPT Desktop/Recents после запуска 0.6.60 выполняет пользователь; Computer Use для этого scope не используется.
+
+
+## Concise canonical session title — 0.6.61
+
+Приёмка 0.6.60: current local title имел 160 символов / 262 UTF-8 байта, а реальные `title-sync` diagnostics возвращали `RENAME_FAILED`, HTTP 422. Контрольный 59-символьный title тем же authenticated renderer path сохранился server-side успешно (`changed=true`).
+
+T007 commit `6a42f6ffa36f2b53ad6165d259ecb6b2b8386163`: `npm test` — **366 tests, 363 PASS, 3 SKIP, 0 FAIL**; Electron smoke — PASSED. Unit regressions проверяют planning H1 source, same-scope migration, 80 Unicode chars / 200 UTF-8 bytes и общий adapter limit. Отдельный прогон на копии реального `workspaces.json` преобразовал длинный current scope title в `Автоматические названия сессий Web Pilot и ChatGPT`, сохранив `titleSource=scope` и `lastNamedScopeId`.
+
+Финальная 0.6.61 собрана из release commit `320e9fd8ae59d477097b09de9d116e34aca1e756`; manifest: `sourceFiles=96`, `packagedSourceMatches=true`. ZIP integrity — OK. macOS ZIP `67ed9741e004f6fbdf9029fc310822cd181b06b0ef610fcba86cc636f00b67fc`; Windows ZIP `f53880165665274b0248ed6378e7a129ab98e8918d53083ff21bb661c7828b68`.

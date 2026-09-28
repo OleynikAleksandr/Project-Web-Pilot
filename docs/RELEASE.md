@@ -589,3 +589,15 @@ Hotfix restart/reopen title reconciliation. Native ChatGPT title сначала 
 | Windows x64 | 316736763 | `f7a24c6dca6193c929193887a487d9fb26c2967f1d14f685347d6bdabdcd77e8` | `0b578e6e680330890668ac27c7a25964d26c76ea3a6418bf341627aede173d0a` |
 
 Windows package verifier подтвердил executable, portable Node, bundled Windows runtime и Workflow Kit 1.5.0. Native Windows/clean VM не запускались.
+
+
+## Локальный парный выпуск 0.6.61 — 28.09.2026
+
+Canonical session auto-title теперь берётся из H1 обязательного planning/spec документа; objective используется только как fallback. Все session titles ограничены 80 Unicode-символами и 200 UTF-8 байтами, чтобы local и native ChatGPT names имели один безопасный контракт. 0.6.60 GET-before-PATCH reconciliation сохранён. Workflow Kit — 1.5.0.
+
+Финальный `npm run build` выполнен из source commit `320e9fd8ae59d477097b09de9d116e34aca1e756`; `sourceFiles=96`, `packagedSourceMatches=true`. Поставка: `~/Downloads/WebPilot-0.6.61/`; `shasum -c SHA256SUMS.txt` — OK. Корневой и `/Applications/Project Web Pilot.app` — 0.6.61, одинаковый macOS ASAR `478d63635904ec13708a53b79ecbfce577937e2b0c48487afacc3d32cf390947`.
+
+| Платформа | Размер, байт | SHA-256 ZIP | ASAR SHA-256 |
+| --- | ---: | --- | --- |
+| macOS arm64 | 181475006 | `67ed9741e004f6fbdf9029fc310822cd181b06b0ef610fcba86cc636f00b67fc` | `478d63635904ec13708a53b79ecbfce577937e2b0c48487afacc3d32cf390947` |
+| Windows x64 | 316737303 | `f53880165665274b0248ed6378e7a129ab98e8918d53083ff21bb661c7828b68` | `bd413c5b79a5aa99ca1d166f57a1feef175b88b854cbca0430d89b4a91bccf03` |
