@@ -21,6 +21,7 @@ import { commitTask } from '@webpilot/workflow-kit/lib/transaction';
 
 let packetLoads = 0;
 let smokeDataDir;
+const fixtureConversationTitles = new Map();
 const fixtureContext = Array.from({ length: 400 }, (_, i) => `Раздел ${i + 1}: полный контекст проекта, включая кириллицу и точные пути.\n  Файл: /Projects/Мой проект/src/модуль.mjs\n\n`).join('');
 const fixtureTelemetrySse = [
   'data: {"type":"event_msg","payload":{"type":"token_count","info":{"last_token_usage":{"input_tokens":229043,"cached_input_tokens":220000,"total_tokens":229153},"model_context_window":258400},"message":"PRIVATE STREAM TEXT"}}',
@@ -66,6 +67,21 @@ export async function createRuntime({ browser, session }) {
     if (url.pathname === '/fixture-first-load-failure') return Response.error();
     if (url.hostname === 'chatgpt.com' && url.pathname === '/backend-api/f/conversation') {
       return new Response(fixtureTelemetrySse, { headers: { 'content-type': 'text/event-stream; charset=utf-8' } });
+    }
+    if (url.hostname === 'chatgpt.com' && url.pathname === '/api/auth/session') {
+      return new Response(JSON.stringify({ accessToken: 'fixture-renderer-only-token' }),
+        { headers: { 'content-type': 'application/json; charset=utf-8' } });
+    }
+    const titleMatch = url.hostname === 'chatgpt.com' && url.pathname.match(/^\/backend-api\/conversation\/([^/]+)$/);
+    if (titleMatch) {
+      const id = decodeURIComponent(titleMatch[1]);
+      if (request.method === 'PATCH') {
+        const body = await request.json();
+        fixtureConversationTitles.set(id, body.title);
+        return new Response(JSON.stringify({ success: true }), { headers: { 'content-type': 'application/json; charset=utf-8' } });
+      }
+      return new Response(JSON.stringify({ id, title: fixtureConversationTitles.get(id) ?? '' }),
+        { headers: { 'content-type': 'application/json; charset=utf-8' } });
     }
     return new Response(html, { headers: { 'content-type': 'text/html; charset=utf-8' } });
   });
@@ -424,7 +440,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   const originalPlanText = await fs.readFile(planFile, 'utf8');
   const block = originalPlanText.match(/<!-- workflow-state:begin -->\s*```json\s*([\s\S]*?)```\s*<!-- workflow-state:end -->/);
   const activePlan = JSON.parse(block[1]);
-  const sessionTitleBeforePlan = store.selected().title;
+
   Object.assign(activePlan, { plan_revision: activePlan.plan_revision + 1, scope_id: 'fixture-plan-ui', baseline_commit: 'a'.repeat(40), acceptance_criteria: ['Fixture'], objective: 'Автоимя scope fixture', execution_scope_status: 'ACTIVE',
     delivery_status: 'IN_PROGRESS', current_task_id: 'T002', archived_scope_id: undefined, tasks: [
       { id: 'T001', title: 'Подготовить модель', implementation_status: 'DONE', commit_status: 'DONE' },
@@ -440,7 +456,12 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await writeFixturePlan(activePlan); controller.attach(store.selected()); await controller.tick();
   await waitFor(() => sidebar.executeJavaScript('document.getElementById("plan-status").textContent === "В работе · 1 из 3 выполнено"'), 'working plan UI', snapshot);
   assert.equal(await sidebar.executeJavaScript('document.getElementById("plan-title").hidden'), false);
-  assert.equal(store.selected().title, sessionTitleBeforePlan, 'project plan never renames the selected chat');
+  const firstScopeTitle = 'Автоимя scope fixture — Сделать интерфейс';
+  await waitFor(() => store.selected().title === firstScopeTitle && store.selected().titleSource === 'scope',
+    'new scope gives the selected session a stable local title', snapshot);
+  const firstConversationId = new URL(store.selected().chatUrl).pathname.split('/').at(-1);
+  await waitFor(() => fixtureConversationTitles.get(firstConversationId) === firstScopeTitle,
+    'new scope title is stored by native ChatGPT fixture', snapshot);
   assert.equal(await sidebar.executeJavaScript('document.querySelector("#plan-card .eyebrow").textContent'), 'Текущий план проекта');
   assert.deepEqual(await sidebar.executeJavaScript(`Array.from(document.querySelectorAll('#plan-tasks .plan-task')).map(e=>({status:e.dataset.status,title:e.querySelector('strong').textContent,mark:e.querySelector('.plan-task-state').textContent}))`), [
     { status: 'done', title: 'Подготовить модель', mark: '✓' },
@@ -492,6 +513,8 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await sidebar.executeJavaScript(`window.prompt=()=>"Сессия Smoke Rename"; { const li=document.querySelector('[data-session-id="${first.sessionId}"]').closest('li'); li.querySelector('.session-menu-button').click(); li.querySelector('.rename-session').click(); }`);
   await waitFor(() => store.selected()?.title === 'Сессия Smoke Rename', 'session rename menu IPC', snapshot);
   assert.equal(store.selected().titleSource, 'manual');
+  await waitFor(() => fixtureConversationTitles.get(new URL(first.chatUrl).pathname.split('/').at(-1)) === 'Сессия Smoke Rename',
+    'manual local rename uses the same native ChatGPT sync path', snapshot);
   await browser.executeJavaScript(`document.title='Поздний заголовок ChatGPT'`);
   await new Promise(resolve => setTimeout(resolve, 150));
   assert.equal(store.selected().title, 'Сессия Smoke Rename', 'page title cannot overwrite manual session name');
@@ -938,8 +961,13 @@ export async function run({ app, window, browser, sidebar, store, controller, se
     projectRecordBeforePlan = store.snapshot().projects.find(p => p.workspace === workspace);
   }
   const legacyChats = projectRecordBeforePlan.sessions.filter(session => !session.archivedAt && session.chatUrl).slice(0, 2)
-    .map(session => ({ sessionId: session.sessionId, chatUrl: session.chatUrl, title: session.title }));
+    .map(session => ({ sessionId: session.sessionId, chatUrl: session.chatUrl, title: session.title, titleSource: session.titleSource }));
   assert.equal(legacyChats.length, 2, 'fixture has two chats created before the current plan');
+  const scopeOwner = legacyChats.find(session => session.titleSource !== 'manual') ?? legacyChats[0];
+  const untouchedLegacy = legacyChats.find(session => session.sessionId !== scopeOwner.sessionId);
+  await sidebar.executeJavaScript(`window.webPilot.selectSession(${JSON.stringify(workspace)}, ${JSON.stringify(scopeOwner.sessionId)})`);
+  await waitFor(() => store.selected()?.sessionId === scopeOwner.sessionId && browser.getURL() === scopeOwner.chatUrl,
+    'select scope owner before creating current plan', snapshot);
 
   const definition = {
     scope_id: 'fixture-current-plan', objective: 'Единый current plan smoke', approval_note: 'Изолированный single-active smoke fixture.',
@@ -949,20 +977,24 @@ export async function run({ app, window, browser, sidebar, store, controller, se
       functional_paths: [], documentation_paths: ['docs/PRODUCT.md'], acceptance_criteria: ['Запись добавлена'],
       verification_ids: [], expected_commit_message: 'docs: single active smoke fixture' }],
   };
-  withSessionPlan(workspace, { sessionId: legacyChats[0].sessionId }, () => createScope(workspace, definition));
+  withSessionPlan(workspace, { sessionId: scopeOwner.sessionId }, () => createScope(workspace, definition));
+  const currentScopeTitle = 'Единый current plan smoke — Записать общий результат';
   await waitFor(() => snapshot().selected?.scopeId === 'fixture-current-plan'
-    && sidebar.executeJavaScript('document.getElementById("plan-title").textContent === "Единый current plan smoke"'),
-    'current checkout plan visible', snapshot);
+    && sidebar.executeJavaScript('document.getElementById("plan-title").textContent === "Единый current plan smoke"')
+    && store.selected()?.title === currentScopeTitle,
+    'current checkout plan visible and owning session named', snapshot);
+  const scopeOwnerId = new URL(scopeOwner.chatUrl).pathname.split('/').at(-1);
+  await waitFor(() => fixtureConversationTitles.get(scopeOwnerId) === currentScopeTitle,
+    'scope owner title is synchronized to native ChatGPT fixture', snapshot);
 
-  for (const legacy of legacyChats) {
-    await sidebar.executeJavaScript(`window.webPilot.selectSession(${JSON.stringify(workspace)}, ${JSON.stringify(legacy.sessionId)})`);
-    await waitFor(() => store.selected()?.sessionId === legacy.sessionId
-      && snapshot().selected?.scopeId === 'fixture-current-plan'
-      && browser.getURL() === legacy.chatUrl, 'old chat projects current plan', snapshot);
-    assert.equal(store.selected().chatUrl, legacy.chatUrl);
-    assert.equal(store.selected().title, legacy.title);
-    assert.equal(store.selected().planId, 'fixture-current-plan');
-  }
+  await sidebar.executeJavaScript(`window.webPilot.selectSession(${JSON.stringify(workspace)}, ${JSON.stringify(untouchedLegacy.sessionId)})`);
+  await waitFor(() => store.selected()?.sessionId === untouchedLegacy.sessionId
+    && snapshot().selected?.scopeId === 'fixture-current-plan'
+    && browser.getURL() === untouchedLegacy.chatUrl, 'old chat projects current plan without inheriting its title', snapshot);
+  assert.equal(store.selected().chatUrl, untouchedLegacy.chatUrl);
+  assert.equal(store.selected().title, untouchedLegacy.title, 'switching to an old chat never copies the current plan title');
+  assert.equal(store.selected().planId, 'fixture-current-plan');
+  assert.notEqual(fixtureConversationTitles.get(new URL(untouchedLegacy.chatUrl).pathname.split('/').at(-1)), currentScopeTitle);
 
   const loadsBeforeNewCurrentChat = packetLoads;
   await sidebar.executeJavaScript(`window.webPilot.newSession(${JSON.stringify(workspace)}, "chat")`);
@@ -973,6 +1005,10 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(currentChat.planId, 'fixture-current-plan');
   assert.equal(currentChat.attempt.packet.facts.scope_id, 'fixture-current-plan');
   assert.equal(currentChat.attempt.packet.session_id, undefined);
+  assert.equal(currentChat.title, currentScopeTitle, 'new Chat in the same scope receives its own session title');
+  assert.equal(currentChat.titleSource, 'scope');
+  await waitFor(() => fixtureConversationTitles.get(new URL(currentChat.chatUrl).pathname.split('/').at(-1)) === currentScopeTitle,
+    'new Chat title is synchronized to native ChatGPT fixture', snapshot);
   assert.ok(packetLoads <= loadsBeforeNewCurrentChat + 1, 'at most one checkout recovery build is needed after plan creation');
   const currentPlanPacketLoads = packetLoads;
 
@@ -982,7 +1018,15 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   const currentWork = store.selected();
   assert.equal(currentWork.planId, 'fixture-current-plan');
   assert.equal(currentWork.attempt.packet.facts.scope_id, 'fixture-current-plan');
+  assert.equal(currentWork.title, currentScopeTitle, 'new Work in the same scope receives its own session title');
+  await waitFor(() => fixtureConversationTitles.get(new URL(currentWork.chatUrl).pathname.split('/').at(-1)) === currentScopeTitle,
+    'new Work title is synchronized to native ChatGPT fixture', snapshot);
   assert.equal(packetLoads, currentPlanPacketLoads, 'second new chat reuses the same current-plan packet');
+  await sidebar.executeJavaScript(`window.webPilot.renameSession(${JSON.stringify(workspace)}, ${JSON.stringify(currentWork.sessionId)}, "Ручное имя current Work")`);
+  await waitFor(() => store.selected()?.title === 'Ручное имя current Work'
+    && fixtureConversationTitles.get(new URL(currentWork.chatUrl).pathname.split('/').at(-1)) === 'Ручное имя current Work',
+    'manual rename updates local and native titles together', snapshot);
+  assert.equal(store.selected().titleSource, 'manual');
 
   for (const directory of ['.harness/plans/by-id', '.harness/plans/by-session']) {
     const entries = await fs.readdir(path.join(workspace, directory)).catch(error => error.code === 'ENOENT' ? [] : Promise.reject(error));
@@ -1014,7 +1058,8 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   const savedProject = reopenedSingle.snapshot().projects.find(project => project.workspace === workspace);
   for (const legacy of legacyChats) {
     const saved = savedProject.sessions.find(session => session.sessionId === legacy.sessionId);
-    assert.equal(saved.chatUrl, legacy.chatUrl); assert.equal(saved.title, legacy.title);
+    assert.equal(saved.chatUrl, legacy.chatUrl);
+    assert.equal(saved.title, legacy.sessionId === scopeOwner.sessionId ? currentScopeTitle : legacy.title);
   }
   const singleActivePlanScreenshot = path.join(dataDir, 'single-active-plan.png');
   await fs.writeFile(singleActivePlanScreenshot, (await sidebar.capturePage()).toPNG());
@@ -1117,7 +1162,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   const result = { fullVersionBadge: true, septemberDOM: true, reverseScroll: true, directFirstChat: true, directFirstWork: true, startupLoginEntrypoint: true, uninterruptedFirstRequest: true, firstRequestNetworkTrace: true, duplicateStartupBlocked: true, earlyFirstLoadDiagnostics: true, guidedFirstRun: true, firstRunScreenshots: [path.join(dataDir, "startup-account.png"), path.join(dataDir, "startup-login.png"), path.join(dataDir, "startup-components.png")], fastSavedNavigation: true, lastNavigationWins: true, readinessBeforeOrAfterLoad: true, backgroundFailureRetry: true, liveChatColors: true, composerBackground: true, streamingAssistantColor: true, chatColorsPersistence: true, chatColorsReset: true, colorScreenshots, projectDoctor: true, doctorBackup: true, doctorOpen: true, doctorRefresh: true, doctorNewSession: true, doctorScreenshots, newestSessionFirst: true, projectSelectsNewest: true, threeSessionViewport: true, sessionScrollPreserved: true, visibleSessionScrollbar: true, nativeProjectsDisclosure: true, treePopover: true, treeScreenshots, singleActivePlanSessions: true, checkoutPlanAcrossOldChats: true, checkoutRecoveryShared: true, noPreparedPlanUi: true,
     singleActivePlanScreenshot, mode: 'isolated-fixture', electron: process.versions.electron, chromium: process.versions.chrome,
     views: window.contentView.children.length, secureRemote: true, sidebarIpc: true, archiveRestore: true, archiveRestart: true, deleteCancel: true, localDeletion: true, cloudChatPreserved: true, workspaceCreation: true, workspaceValidation: true, cancelPreservesSession: true, startupMessages: 4, canonicalPacketLoads: packetLoads, recoveryCache: true, operationProgress: true, progressScreenshot: path.join(dataDir, 'progress-ui.png'),
-    tokenCounterRemoved: true, projectRename: true, sessionRename: true, projectPlanDoesNotRenameChat: true, restartKeepsSession: true, newChatCreatesSession: true, sessionTree: true, selectsEarlierSession: true, compactWorkspaceDetails: true, projectPathClipboard: true, sessionPlans: true, singleCurrentPlan: true, manualChatWorkChoice: true, noAcceptanceButton: true, chromiumDiagnostics: true, contextWindowIndicatorRemoved: true, resizableSidebar: true, separateArchiveWindow: true, archiveMultiSelect: true, archiveForgetKeepsFolder: true, shellTheme: true, nativeTitlebarTheme: nativeTheme.shouldUseDarkColors, toolCallFilter: true, microphonePermission: true, geolocationPermission: true, cameraPermission: false, fullContextBytes: Buffer.byteLength(fixtureContext), liveChatGPT: false, agentToolsRequired: false };
+    tokenCounterRemoved: true, projectRename: true, sessionRename: true, sessionScopedTitleSync: true, restartKeepsSession: true, newChatCreatesSession: true, sessionTree: true, selectsEarlierSession: true, compactWorkspaceDetails: true, projectPathClipboard: true, sessionPlans: true, singleCurrentPlan: true, manualChatWorkChoice: true, noAcceptanceButton: true, chromiumDiagnostics: true, contextWindowIndicatorRemoved: true, resizableSidebar: true, separateArchiveWindow: true, archiveMultiSelect: true, archiveForgetKeepsFolder: true, shellTheme: true, nativeTitlebarTheme: nativeTheme.shouldUseDarkColors, toolCallFilter: true, microphonePermission: true, geolocationPermission: true, cameraPermission: false, fullContextBytes: Buffer.byteLength(fixtureContext), liveChatGPT: false, agentToolsRequired: false };
   await fs.writeFile(path.join(dataDir, 'smoke-result.json'), JSON.stringify(result, null, 2));
   console.log(JSON.stringify(result));
 }

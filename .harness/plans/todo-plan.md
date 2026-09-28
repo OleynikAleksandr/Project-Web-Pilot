@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 670,
+  "plan_revision": 672,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-title-sync-20260928",
@@ -155,8 +155,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-title-sync-20260928",
         "task_id": "T003",
@@ -190,7 +190,13 @@
         "Временная ошибка native rename не теряет локальное имя; безопасный retry возможен после повторного открытия exact conversation.",
         "Electron smoke закрепляет отсутствие прежней регрессии project plan never renames the selected chat и заменяет её новым session-scoped контрактом."
       ],
-      "expected_commit_message": "feat: synchronize Web Pilot and ChatGPT session titles"
+      "expected_commit_message": "feat: synchronize Web Pilot and ChatGPT session titles",
+      "actual_files": [
+        "src/main.mjs",
+        "src/workspace-session.mjs",
+        "tests/electron-smoke.mjs",
+        "tests/workspace-session.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -279,7 +285,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-title-sync-20260928
 Current Task: нет
-Revision: 670
+Revision: 672
 
 ## Цель
 
@@ -299,8 +305,8 @@ Revision: 670
   - Git Commit: [DONE] feat: add native ChatGPT conversation title adapter
   - Reference: session-title-sync-20260928 / T002 / implementation
   - Файлы: src/chatgpt-title.mjs, src/chatgpt-dom.mjs, tests/chatgpt-title.test.mjs, tests/chatgpt-dom.test.mjs, docs/planning/session-title-sync.md
-- [TODO] T003: Связать auto/manual local title с native ChatGPT и закрыть регрессии — Ожидает
-  - Git Commit: [PENDING] feat: synchronize Web Pilot and ChatGPT session titles
+- [DONE] T003: Связать auto/manual local title с native ChatGPT и закрыть регрессии — Завершено
+  - Git Commit: [DONE] feat: synchronize Web Pilot and ChatGPT session titles
   - Reference: session-title-sync-20260928 / T003 / implementation
   - Файлы: src/main.mjs, src/workspace-session.mjs, src/ui/sidebar.mjs, tests/electron-smoke.mjs, tests/workspace-session.test.mjs, docs/planning/session-title-sync.md
 - [TODO] T004: Собрать и проверить парный релиз Project Web Pilot 0.6.59 — Ожидает

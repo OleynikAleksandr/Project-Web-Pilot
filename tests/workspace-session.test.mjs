@@ -148,13 +148,16 @@ test('session titles remain chat metadata independent of the current project pla
   assert.deepEqual(reopenedSecond.planView, reopenedFirst.planView);
 });
 
-test('scope naming belongs to one session and manual titles win over automatic naming', async t => {
+test('scope naming belongs to one session, while newly created sessions may inherit the active scope', async t => {
   const { project, store } = await fixture(t);
-  const first = await store.select(await project('Scope titles'));
+  const folder = await project('Scope titles');
+  const first = await store.select(folder);
+  const second = await store.newSession(first.workspace, 'chat');
+  await store.selectSession(first.workspace, first.sessionId);
   const info = { scopeId: first.scopeId, objective: 'Синхронизация названий',
     nextTaskTitle: 'Добавить локальное автоимя', scopeStatus: 'ACTIVE' };
   assert.equal(await store.applyScopeTitle(first.workspace, first.sessionId, info), true);
-  let session = store.snapshot().projects[0].sessions[0];
+  let session = store.snapshot().projects[0].sessions.find(item => item.sessionId === first.sessionId);
   assert.equal(session.title, 'Синхронизация названий — Добавить локальное автоимя');
   assert.equal(session.titleSource, 'scope');
   assert.equal(session.lastNamedScopeId, first.scopeId);
@@ -162,14 +165,27 @@ test('scope naming belongs to one session and manual titles win over automatic n
   assert.equal(await store.applyScopeTitle(first.workspace, first.sessionId, { ...info, nextTaskTitle: 'Другая задача' }), false,
     'plan revisions and task changes inside one scope do not rename the session');
 
-  const second = await store.newSession(first.workspace, 'chat');
-  assert.equal(await store.renameSession(first.workspace, second.sessionId, 'Моё название'), true);
-  assert.equal(await store.applyScopeTitle(first.workspace, second.sessionId, info), true,
-    'the same scope is observed independently by a newly selected session');
+  await store.selectSession(first.workspace, second.sessionId);
+  assert.equal(await store.applyScopeTitle(first.workspace, second.sessionId, info), false,
+    'switching to an existing chat never transfers the current scope title');
   session = store.snapshot().projects[0].sessions.find(item => item.sessionId === second.sessionId);
+  assert.equal(session.title, '');
+  assert.equal(session.lastNamedScopeId, null);
+
+  const planFile = path.join(folder, '.harness/plans/todo-plan.md');
+  const text = await fs.readFile(planFile, 'utf8');
+  const block = text.match(/<!-- workflow-state:begin -->\s*```json\s*([\s\S]*?)```\s*<!-- workflow-state:end -->/);
+  const plan = JSON.parse(block[1]); plan.objective = info.objective;
+  await fs.writeFile(planFile, '<!-- workflow-state:begin -->\n```json\n' + JSON.stringify(plan) + '\n```\n<!-- workflow-state:end -->');
+  const third = await store.newSession(first.workspace, 'chat');
+  assert.equal(third.title, 'Синхронизация названий — Задача');
+  assert.equal(third.titleSource, 'scope');
+  assert.equal(third.lastNamedScopeId, first.scopeId);
+  assert.equal(await store.renameSession(first.workspace, third.sessionId, 'Моё название'), true);
+  assert.equal(await store.setSessionTitle(first.workspace, third.sessionId, 'Поздний заголовок страницы'), false);
+  session = store.snapshot().projects[0].sessions.find(item => item.sessionId === third.sessionId);
   assert.equal(session.title, 'Моё название');
   assert.equal(session.titleSource, 'manual');
-  assert.equal(session.lastNamedScopeId, first.scopeId);
 });
 
 test('switching project cannot mutate another chat or accept late session results', async t => {

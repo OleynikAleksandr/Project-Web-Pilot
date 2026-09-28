@@ -1,6 +1,7 @@
 import { PlanMonitor } from './plan-monitor.mjs';
 import { AgentTimer } from './agent-timer.mjs';
 import { chatGPTDOMScript } from './chatgpt-dom.mjs';
+import { chatGPTTitleScript } from './chatgpt-title.mjs';
 import { toolFilterScript } from './chatgpt-tool-filter.mjs';
 import { app, BaseWindow, BrowserWindow, WebContentsView, Menu, session, ipcMain, dialog, nativeTheme, clipboard, shell } from 'electron';
 import path from 'node:path';
@@ -74,6 +75,9 @@ let startupError = null;
 let storageError = false;
 let lastDiagnostic = '';
 let actionTail = Promise.resolve();
+const titleSyncSuccess = new Map();
+const titleSyncPending = new Map();
+const titleSyncRetryAfter = new Map();
 const windowsPortableNode = process.platform === 'win32'
   ? (app.isPackaged
       ? path.join(process.resourcesPath, 'windows-node', 'node-v22.17.0-win-x64', 'node.exe')
@@ -225,6 +229,7 @@ function snapshot() {
 function publish() {
   rememberSessionTitle();
   rememberScopeTitle();
+  void syncSelectedSessionTitle();
   if (sidebar && !sidebar.webContents.isDestroyed()) sidebar.webContents.send('pilot:state-changed', snapshot());
   publishArchive();
   const state = snapshot();
@@ -256,10 +261,62 @@ function rememberScopeTitle() {
   const selected = store.selected();
   const info = planMonitor.view(selected, controller?.state?.projectInfo);
   if (!selected || !info || info.workspace !== selected.workspace || info.inspectedSessionId !== selected.sessionId
-      || selected.lastNamedScopeId === info.scopeId || !['ACTIVE', 'BLOCKED'].includes(info.scopeStatus)
+      || selected.lastNamedScopeId === info.scopeId || selected.projectLastNamedScopeId === info.scopeId
+      || !['ACTIVE', 'BLOCKED'].includes(info.scopeStatus)
       || typeof info.scopeId !== 'string' || !info.scopeId || typeof info.objective !== 'string' || !info.objective.trim()) return;
   void store.applyScopeTitle(selected.workspace, selected.sessionId, info)
     .then(changed => { if (changed) publish(); }).catch(() => {});
+}
+
+function selectedTitleSyncTarget() {
+  if (!browser || browser.webContents.isDestroyed() || pageLoading) return null;
+  const selected = store.selected();
+  if (!selected?.chatUrl || !selected.title || !['manual', 'scope'].includes(selected.titleSource)) return null;
+  if (normalizeChatUrl(browser.webContents.getURL()) !== selected.chatUrl) return null;
+  return { workspace: selected.workspace, sessionId: selected.sessionId, chatUrl: selected.chatUrl, title: selected.title };
+}
+
+function deferTitleSync(target, delayMs) {
+  const retryAt = Date.now() + delayMs;
+  titleSyncRetryAfter.set(target.sessionId, retryAt);
+  const timer = setTimeout(() => {
+    const current = selectedTitleSyncTarget();
+    if (current?.sessionId === target.sessionId && current.title === target.title) void syncSelectedSessionTitle();
+  }, delayMs + 25);
+  timer.unref?.();
+}
+
+async function syncSelectedSessionTitle({ force = false } = {}) {
+  const target = selectedTitleSyncTarget();
+  if (!target) return { ok: false, code: 'TITLE_SYNC_NOT_READY' };
+  const retryAt = titleSyncRetryAfter.get(target.sessionId) ?? 0;
+  if (Date.now() < retryAt) return { ok: false, code: 'TITLE_SYNC_RETRY_LATER' };
+  if (!force && titleSyncSuccess.get(target.sessionId) === target.title) return { ok: true, skipped: true, title: target.title };
+  const pending = titleSyncPending.get(target.sessionId);
+  if (pending) return pending;
+
+  const operation = browser.webContents.executeJavaScript(chatGPTTitleScript({
+    expectedUrl: target.chatUrl, title: target.title,
+  }), true).then(result => {
+    if (result?.ok) {
+      titleSyncSuccess.set(target.sessionId, target.title);
+      titleSyncRetryAfter.delete(target.sessionId);
+      return result;
+    }
+    if (result?.code !== 'CHAT_CHANGED') deferTitleSync(target, result?.code === 'RATE_LIMITED' ? 60_000 : 15_000);
+    return result ?? { ok: false, code: 'TITLE_SYNC_FAILED' };
+  }, () => {
+    deferTitleSync(target, 15_000);
+    return { ok: false, code: 'TITLE_SYNC_EXECUTION_FAILED' };
+  }).finally(() => {
+    if (titleSyncPending.get(target.sessionId) === operation) titleSyncPending.delete(target.sessionId);
+    queueMicrotask(() => {
+      const current = selectedTitleSyncTarget();
+      if (current?.sessionId === target.sessionId && current.title !== target.title) void syncSelectedSessionTitle();
+    });
+  });
+  titleSyncPending.set(target.sessionId, operation);
+  return operation;
 }
 
 function report(error) { startupError = publicError(error); if (settingsState) settingsState = { ...settingsState, notice: null }; if (setupState) setupState = { ...setupState, phase: 'error', error: startupError }; publish(); }
@@ -820,7 +877,10 @@ function registerIpc() {
   });
   registerAction('pilot:rename-session', async input => {
     if (typeof input?.workspace !== 'string' || typeof input?.sessionId !== 'string') throw new Error('Выберите сессию проекта.');
-    return store.renameSession(input.workspace, input.sessionId, input.name);
+    const changed = await store.renameSession(input.workspace, input.sessionId, input.name);
+    if (changed && store.selected()?.workspace === input.workspace && store.selected()?.sessionId === input.sessionId)
+      await syncSelectedSessionTitle({ force: true });
+    return changed;
   });
   registerAction('pilot:archive-project', async input => {
     const project = store.project(input);
@@ -1070,7 +1130,9 @@ async function createWindow() {
   browser.webContents.on('page-title-updated', rememberSessionTitle);
   browser.webContents.on('did-navigate-in-page', () => { void applyToolCallVisibility(); void installChatGPTAutoScroll(browser.webContents); publish(); if (!pageLoading && !setupState && !settingsState) void controller?.tick(); });
   browser.webContents.on('did-finish-load', () => {
-    void applyToolCallVisibility(); void installChatGPTAutoScroll(browser.webContents, { forceFollow: true }); publish(); if (!pageLoading && !setupState && !settingsState) void controller?.tick();
+    void applyToolCallVisibility(); void installChatGPTAutoScroll(browser.webContents, { forceFollow: true }); publish();
+    void syncSelectedSessionTitle({ force: true });
+    if (!pageLoading && !setupState && !settingsState) void controller?.tick();
   });
   browser.webContents.on('render-process-gone', () => {
     pageLoading = false; startupFlow?.finishPage(navigationId, 'RENDER_PROCESS_GONE');

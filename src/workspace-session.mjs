@@ -253,7 +253,8 @@ function currentView(project) {
   if (!project) return null;
   const { sessions, archivedAt: projectArchivedAt, ...info } = project;
   const session = sessions.find(s => s.sessionId === project.selectedSessionId);
-  return copy({ ...info, ...session, planId: info.scopeId ?? null, originSessionId: null,
+  return copy({ ...info, ...session, projectLastNamedScopeId: info.lastNamedScopeId ?? null,
+    planId: info.scopeId ?? null, originSessionId: null,
     archivedAt: projectArchivedAt, sessionArchivedAt: session.archivedAt });
 }
 
@@ -412,7 +413,15 @@ export class WorkspaceSessions {
       if (project.archivedAt) throw new WorkspaceError('PROJECT_ARCHIVED', 'Сначала верните проект из архива.');
       const session = this.createSession(experience);
       project.sessions.push(session); project.selectedSessionId = session.sessionId; project.expanded = true;
-      Object.assign(project, await this.inspect(workspace, session.sessionId));
+      const info = await this.inspect(workspace, session.sessionId);
+      Object.assign(project, info);
+      if (['ACTIVE', 'BLOCKED'].includes(info.scopeStatus) && typeof info.scopeId === 'string' && info.scopeId
+          && typeof info.objective === 'string' && info.objective.trim()) {
+        session.lastNamedScopeId = info.scopeId;
+        session.title = scopeSessionTitle(info.objective, info.nextTaskTitle);
+        session.titleSource = 'scope';
+        project.lastNamedScopeId = info.scopeId;
+      }
       return currentView(project);
     });
   }
@@ -465,9 +474,10 @@ export class WorkspaceSessions {
 
   applyScopeTitle(workspace, sessionId, { scopeId, objective, scopeStatus, nextTaskTitle } = {}) {
     return this.mutate(data => {
-      const { session } = this.activeRecord(workspace, sessionId, data);
+      const { project, session } = this.activeRecord(workspace, sessionId, data);
       if (!['ACTIVE', 'BLOCKED'].includes(scopeStatus) || typeof scopeId !== 'string' || !scopeId) return false;
-      if (session.lastNamedScopeId === scopeId) return false;
+      if (session.lastNamedScopeId === scopeId || project.lastNamedScopeId === scopeId) return false;
+      project.lastNamedScopeId = scopeId;
       session.lastNamedScopeId = scopeId;
       if (session.titleSource === 'manual') return true;
       session.title = scopeSessionTitle(objective, nextTaskTitle);
