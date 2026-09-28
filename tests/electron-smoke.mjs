@@ -23,6 +23,9 @@ let packetLoads = 0;
 let smokeDataDir;
 const fixtureConversationTitles = new Map();
 let fixtureTitleAuthFailures = 0;
+let fixtureTitleReadFailures = 0;
+let fixtureTitleDelayMs = 0;
+let fixtureTitleRequests = 0;
 const fixtureContext = Array.from({ length: 400 }, (_, i) => `Раздел ${i + 1}: полный контекст проекта, включая кириллицу и точные пути.\n  Файл: /Projects/Мой проект/src/модуль.mjs\n\n`).join('');
 const fixtureTelemetrySse = [
   'data: {"type":"event_msg","payload":{"type":"token_count","info":{"last_token_usage":{"input_tokens":229043,"cached_input_tokens":220000,"total_tokens":229153},"model_context_window":258400},"message":"PRIVATE STREAM TEXT"}}',
@@ -80,10 +83,16 @@ export async function createRuntime({ browser, session }) {
     const titleMatch = url.hostname === 'chatgpt.com' && url.pathname.match(/^\/backend-api\/conversation\/([^/]+)$/);
     if (titleMatch) {
       const id = decodeURIComponent(titleMatch[1]);
+      fixtureTitleRequests++;
+      if (fixtureTitleDelayMs) await new Promise(resolve => setTimeout(resolve, fixtureTitleDelayMs));
       if (request.method === 'PATCH') {
         const body = await request.json();
         fixtureConversationTitles.set(id, body.title);
         return new Response(JSON.stringify({ success: true }), { headers: { 'content-type': 'application/json; charset=utf-8' } });
+      }
+      if (fixtureTitleReadFailures > 0) {
+        fixtureTitleReadFailures--;
+        return new Response('{}', { status: 429, headers: { 'content-type': 'application/json; charset=utf-8' } });
       }
       return new Response(JSON.stringify({ id, title: fixtureConversationTitles.get(id) ?? '' }),
         { headers: { 'content-type': 'application/json; charset=utf-8' } });
@@ -521,14 +530,36 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   const firstTitleId = new URL(first.chatUrl).pathname.split('/').at(-1);
   await waitFor(() => fixtureConversationTitles.get(firstTitleId) === 'Сессия Smoke Rename',
     'manual local rename uses the same native ChatGPT sync path', snapshot);
-  fixtureConversationTitles.set(firstTitleId, 'Устаревшее имя native ChatGPT');
-  fixtureTitleAuthFailures = 1;
+
+  fixtureTitleDelayMs = 1200;
+  const slowRenameStarted = Date.now();
+  const slowRename = await sidebar.executeJavaScript(`window.webPilot.renameSession(${JSON.stringify(workspace)}, ${JSON.stringify(first.sessionId)}, 'Локальное имя без ожидания сети')`);
+  const slowRenameElapsed = Date.now() - slowRenameStarted;
+  assert.equal(slowRename.ok, true);
+  assert.ok(slowRenameElapsed < 700, `manual IPC waited for native title sync: ${slowRenameElapsed}ms`);
+  assert.equal(store.selected().title, 'Локальное имя без ожидания сети');
+  fixtureTitleDelayMs = 0;
+  await waitFor(() => fixtureConversationTitles.get(firstTitleId) === 'Локальное имя без ожидания сети',
+    'detached manual sync eventually updates native title', snapshot);
+
+  fixtureTitleReadFailures = 1;
+  const requestsBefore429 = fixtureTitleRequests;
+  const refusedRename = await sidebar.executeJavaScript(`window.webPilot.renameSession(${JSON.stringify(workspace)}, ${JSON.stringify(first.sessionId)}, 'Имя после 429')`);
+  assert.equal(refusedRename.ok, true);
+  assert.equal(store.selected().title, 'Имя после 429');
+  await waitFor(() => fixtureTitleReadFailures === 0, 'one native title read receives 429', snapshot);
+  const requestsAfter429 = fixtureTitleRequests;
+  assert.ok(requestsAfter429 > requestsBefore429);
+  await new Promise(resolve => setTimeout(resolve, 1500));
+  assert.equal(fixtureTitleRequests, requestsAfter429, '429 never starts an automatic title retry loop');
+  assert.equal(fixtureConversationTitles.get(firstTitleId), 'Локальное имя без ожидания сети');
+
   await navigate(store.selected());
-  await waitFor(() => fixtureConversationTitles.get(firstTitleId) === 'Сессия Smoke Rename',
-    'reopening exact conversation reconciles stale server title after transient auth failure', snapshot);
+  await waitFor(() => fixtureConversationTitles.get(firstTitleId) === 'Имя после 429',
+    'next natural reopen reconciles the unsynced manual title once', snapshot);
   await browser.executeJavaScript(`document.title='Поздний заголовок ChatGPT'`);
   await new Promise(resolve => setTimeout(resolve, 150));
-  assert.equal(store.selected().title, 'Сессия Smoke Rename', 'page title cannot overwrite manual session name');
+  assert.equal(store.selected().title, 'Имя после 429', 'page title cannot overwrite manual session name');
   await sidebar.executeJavaScript('document.querySelector(".new-project-chat").click()');
   await waitFor(() => store.selected()?.sessionId !== first.sessionId && snapshot().context.phase === 'delivered', 'new Chat via project menu IPC', snapshot);
   assert.equal(packetLoads, warmPacketLoads, 'new Chat reuses the checkout-scoped recovery packet');

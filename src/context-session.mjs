@@ -44,8 +44,8 @@ const isModeEntrypoint = value => /^https:\/\/chatgpt\.com\/(?:work\/?)?(?:[?#].
 const failure = (code, message) => Object.assign(new Error(message), { code });
 
 export class ContextSession {
-  constructor({ store, runtime, composer, contextCache = null, onChange = () => {}, now = Date.now, uuid = randomUUID }) {
-    Object.assign(this, { store, runtime, composer, contextCache, onChange, now, uuid });
+  constructor({ store, runtime, composer, contextCache = null, onChange = () => {}, onChatBound = () => {}, now = Date.now, uuid = randomUUID }) {
+    Object.assign(this, { store, runtime, composer, contextCache, onChange, onChatBound, now, uuid });
     this.generation = 0;
     this.active = null;
     this.pending = false;
@@ -143,6 +143,7 @@ export class ContextSession {
         if (!observation.messageSeen) { this.emit({ phase: 'send-unknown', projectInfo: info, messageSent: false }); return; }
         project = { ...await this.store.bindChat(project.workspace, project.sessionId, currentUrl), ...info };
         if (!this.current(generation)) return;
+        this.onChatBound({ workspace: project.workspace, sessionId: project.sessionId, chatUrl: currentUrl });
       } else if (isPendingChatGPTConversation(observation.url)) {
         if (!attempt?.sendStartedAtMs) { this.emit({ phase: 'chat-changed', projectInfo: info }); return; }
         const sent = observation.messageSeen || attempt.state === 'sent';

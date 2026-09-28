@@ -19,7 +19,7 @@ function packet(){
 function controllerFixture({ savedAttempt=null, chatUrl=project.chatUrl }={}){
   let saved={...structuredClone(project),chatUrl,attempt:savedAttempt};let sends=0,loads=0;
   let info={...project};let inspection={url:chatUrl??'https://chatgpt.com/',editorAvailable:true,writable:true,draftLength:0,busy:false,login:false,messageSeen:false};
-  const stateLog=[];
+  const stateLog=[];const boundLog=[];
   const store={selected:()=>structuredClone(saved),project:()=>structuredClone(saved),inspect:async()=>{
     const {sessionId,experience,chatUrl,attempt,receipt,...result}=info;return structuredClone(result);},
     updateSession:async(_w,_s,patch)=>{saved={...saved,...structuredClone(patch)};return structuredClone(saved);},
@@ -34,9 +34,9 @@ function controllerFixture({ savedAttempt=null, chatUrl=project.chatUrl }={}){
     assert.equal(saved.attempt.state,'sending');sends++;inspection.messageSeen=true;
     inspection.url=project.chatUrl;return {state:'sent'};
   }};
-  const controller=new ContextSession({store,runtime,composer,onChange:s=>stateLog.push(s),now:()=>now,uuid:()=> 'test-request'});
+  const controller=new ContextSession({store,runtime,composer,onChange:s=>stateLog.push(s),onChatBound:event=>boundLog.push(event),now:()=>now,uuid:()=> 'test-request'});
   controller.attach(saved);
-  return {controller,store,runtime,composer,stateLog,sends:()=>sends,loads:()=>loads,get saved(){return saved;},inspection,info};
+  return {controller,store,runtime,composer,stateLog,boundLog,sends:()=>sends,loads:()=>loads,get saved(){return saved;},inspection,info};
 }
 
 test('the first message contains the exact complete packet and asks for a short project reply without tools',()=>{
@@ -55,7 +55,9 @@ test('loads once, saves full message before send, and reopens the same chat with
   const f=controllerFixture({chatUrl:null});await f.controller.tick();assert.equal(f.sends(),1);assert.equal(f.loads(),1);
   assert.equal(f.saved.attempt.state,'sent');await f.controller.tick();assert.equal(f.controller.state.phase,'delivered');
   assert.equal(f.saved.chatUrl,project.chatUrl);assert.equal(f.controller.state.delivery.contextBytes,packet().context_bytes);
+  assert.deepEqual(f.boundLog,[{workspace:project.workspace,sessionId:project.sessionId,chatUrl:project.chatUrl}], 'late bind emits one natural title-sync event');
   f.controller.attach(f.saved);await f.controller.tick();assert.equal(f.sends(),1);assert.equal(f.loads(),1);
+  assert.equal(f.boundLog.length,1,'reopening an already bound chat does not emit another bind event');
 });
 
 test('unknown send after restart only observes, including explicit retry, then recognizes the late message',async()=>{

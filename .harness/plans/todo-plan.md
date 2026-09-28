@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 691,
+  "plan_revision": 693,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-title-sync-20260928",
@@ -433,13 +433,19 @@
         "Regression smoke подтверждает ограниченное число title-sync запросов и отсутствие блокировки sidebar action queue."
       ],
       "expected_commit_message": "fix: make title sync event-driven and non-blocking",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-title-sync-20260928",
         "task_id": "T009",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "src/context-session.mjs",
+        "src/main.mjs",
+        "tests/context-session.test.mjs",
+        "tests/electron-smoke.mjs"
+      ]
     },
     {
       "id": "T010",
@@ -546,7 +552,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-title-sync-20260928
 Current Task: нет
-Revision: 691
+Revision: 693
 
 ## Цель
 
@@ -590,8 +596,8 @@ Revision: 691
   - Git Commit: [DONE] release: Project Web Pilot 0.6.61
   - Reference: session-title-sync-20260928 / T008 / implementation
   - Файлы: package.json, package-lock.json, docs/RELEASE.md, docs/VERIFICATION.md
-- [TODO] T009: Убрать циклический title-sync и восстановить мгновенное ручное переименование — Ожидает
-  - Git Commit: [PENDING] fix: make title sync event-driven and non-blocking
+- [DONE] T009: Убрать циклический title-sync и восстановить мгновенное ручное переименование — Завершено
+  - Git Commit: [DONE] fix: make title sync event-driven and non-blocking
   - Reference: session-title-sync-20260928 / T009 / implementation
   - Файлы: src/main.mjs, src/context-session.mjs, src/ui/sidebar.mjs, tests/electron-smoke.mjs, tests/context-session.test.mjs, docs/planning/session-title-sync.md
 - [TODO] T010: Собрать парный релиз Project Web Pilot 0.6.62 — Ожидает
