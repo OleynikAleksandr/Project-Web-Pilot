@@ -3,10 +3,10 @@ import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
 import { operationLabel, createProgress } from '../src/ui/progress.mjs';
 test('operations show stages; idle, errors and user input waits never spin',()=>{
-  for(const phase of ['preparing','loading-context','preparing-message','sending','waiting-chat','send-unknown']) {
+  for(const phase of ['preparing','loading-context','preparing-message','sending']) {
     assert.ok(operationLabel({context:{phase}}));
   }
-  for(const phase of ['delivered','waiting-login','waiting-draft','prepared-stale','error','chat-changed']) {
+  for(const phase of ['delivered','waiting-login','waiting-draft','prepared-stale','error','chat-changed','waiting-chat','send-unknown']) {
     assert.equal(operationLabel({context:{phase}}),null);
   }
   assert.equal(operationLabel({pageLoading:true}),'Открываем ChatGPT');
@@ -31,4 +31,20 @@ test('progress persists timer across re-renders and clears it on completion or d
   p.show(null);assert.equal(element.hidden,true);assert.equal(cancelled,2);
   p.show('Проверяем папку');p.destroy();assert.equal(cancelled,3);assert.equal(element.hidden,true);
   dom.window.close();
+});
+
+test('Send completion and old unknown attempts hide the progress bar and stop its clock',()=>{
+  for(const phase of ['waiting-chat','send-unknown']){
+    const dom=new JSDOM('<div id="progress"></div>');
+    const element=dom.window.document.getElementById('progress');
+    let cancelled=0;
+    const progress=createProgress(element,{schedule:()=>1,cancel:()=>cancelled++});
+    progress.show(operationLabel({context:{phase:'sending'}}));
+    assert.equal(element.hidden,false);
+    progress.show(operationLabel({context:{phase},contextPreparation:{busy:true}}));
+    assert.equal(element.hidden,true);assert.equal(cancelled,1);
+    assert.equal(element.querySelector('.operation-label').textContent,'');
+    assert.equal(element.querySelector('.operation-elapsed').textContent,'');
+    progress.destroy();dom.window.close();
+  }
 });

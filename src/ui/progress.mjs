@@ -18,7 +18,6 @@ const actionLabels = {
 const phaseLabels = {
   preparing: 'Проверяем подключение и службы', 'loading-context': 'Подготавливаем контекст',
   'preparing-message': 'Вставляем контекст в сообщение', sending: 'Отправляем контекст',
-  'waiting-chat': 'Сохраняем связь с чатом', 'send-unknown': 'Проверяем результат отправки',
   'waiting-generation': 'Ждём завершения ответа ChatGPT',
 };
 export function operationLabel(state = {}, action = null) {
@@ -30,7 +29,7 @@ export function operationLabel(state = {}, action = null) {
   if (action && phaseLabels[state.context?.phase] && !state.context?.error) return phaseLabels[state.context.phase];
   if (action) return actionLabels[action] ?? null; // Native file dialogs already show what they await.
   if (state.startupError || state.context?.error || state.setup || state.settings) return null;
-  if (['waiting-login','waiting-draft','waiting-composer','prepared-stale','error','chat-changed'].includes(state.context?.phase)) return null;
+  if (['waiting-login','waiting-draft','waiting-composer','prepared-stale','error','chat-changed','waiting-chat','send-unknown'].includes(state.context?.phase)) return null;
   if (phaseLabels[state.context?.phase]) return phaseLabels[state.context.phase];
   if (state.contextPreparation?.busy) return 'Подготавливаем контекст заранее';
   return null;

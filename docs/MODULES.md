@@ -124,3 +124,5 @@ Workspace & Sessions: ClipboardEvent.paste в composer, безопасный HTM
 ## Завершение Send — 0.6.70
 
 Workspace & Sessions: автоматический recovery завершается после клика без проверки DOM вложения; старые неизвестные попытки нейтральны. Контракты — [доставка](CONTEXT_DELIVERY.md), [T008](planning/event-driven-runtime.md).
+
+0.6.71 / T009: общий src/ui/progress.mjs больше не считает waiting-chat/send-unknown активной операцией; контракт — [T009](planning/event-driven-runtime.md).

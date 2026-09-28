@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import assert from 'node:assert/strict';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import { execFileSync } from 'node:child_process';
 import { extractFile } from '@electron/asar';
@@ -10,7 +10,7 @@ import { hashFile, sourceSnapshot, verifyPackagedSources } from './release-all.m
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const { version } = JSON.parse(await fs.readFile(path.join(root, 'package.json'), 'utf8'));
-assert.equal(version, '0.6.70');
+assert.equal(version, '0.6.71');
 const delivery = path.join(os.homedir(), 'Downloads', 'WebPilot-' + version);
 const manifest = JSON.parse(await fs.readFile(path.join(delivery, 'release-manifest.json'), 'utf8'));
 assert.equal(manifest.version, version); assert.equal(manifest.packagedSourceMatches, true);
@@ -28,7 +28,7 @@ for (const app of [rootApp, appsApp]) {
   assert.equal((await fs.lstat(app)).isSymbolicLink(), false);
   assert.equal(execFileSync('/usr/libexec/PlistBuddy', ['-c', 'Print :CFBundleShortVersionString', path.join(app, 'Contents/Info.plist')], { encoding: 'utf8' }).trim(), version);
 }
-const preflight = JSON.parse(await fs.readFile(path.join(root, '.harness/runtime/release-070-preflight.json'), 'utf8'));
+const preflight = JSON.parse(await fs.readFile(path.join(root, '.harness/runtime/release-071-preflight.json'), 'utf8'));
 const appsBefore = preflight.find(item => item.path === appsApp);
 const appsAfter = await fs.stat(appsApp);
 assert.equal(appsAfter.dev, appsBefore.device); assert.equal(appsAfter.ino, appsBefore.inode);
@@ -46,6 +46,11 @@ const temporary = await fs.mkdtemp(path.join(os.tmpdir(), 'web-pilot-installed-o
 try {
   for (const file of ['page-state.mjs','page-state-bridge.mjs','chatgpt-dom.mjs','chatgpt-composer.mjs'])
     await fs.writeFile(path.join(temporary, file), extractFile(path.join(targets[0], 'app.asar'), 'src/' + file));
+  await fs.writeFile(path.join(temporary, 'progress.mjs'), extractFile(path.join(targets[0], 'app.asar'), 'src/ui/progress.mjs'));
+  const { operationLabel } = await import(pathToFileURL(path.join(temporary, 'progress.mjs')).href);
+  for (const phase of ['waiting-chat', 'send-unknown'])
+    assert.equal(operationLabel({ context: { phase }, contextPreparation: { busy: true } }), null,
+      'installed UI has no post-Send progress indicator');
   const require = createRequire(import.meta.url);
   const environment = { ...process.env }; delete environment.ELECTRON_RUN_AS_NODE;
   const result = execFileSync(require('electron'), [path.join(root, 'tests/installed-observer-fixture.cjs'),
