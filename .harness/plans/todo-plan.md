@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 717,
+  "plan_revision": 719,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-planning-20260928",
@@ -63,8 +63,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "event-driven-runtime-planning-20260928",
         "task_id": "T001",
@@ -87,7 +87,13 @@
         "Документ содержит решения аудита, карту 18 состояний, три фазы и критерии приёмки",
         "Навигация связывает документ с существующими модулями; реализация не начата"
       ],
-      "expected_commit_message": "feat: Подготовить и проверить контракт перехода на события и три компактные фазы"
+      "expected_commit_message": "feat: Подготовить и проверить контракт перехода на события и три компактные фазы",
+      "actual_files": [
+        "docs/planning/event-driven-runtime.md",
+        "docs/MODULES.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/architecture/OVERVIEW.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -137,7 +143,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-planning-20260928
 Current Task: нет
-Revision: 717
+Revision: 719
 
 ## Цель
 
@@ -149,8 +155,8 @@ Revision: 717
 
 ## Микрозадачи
 
-- [TODO] T001: Подготовить и проверить контракт перехода на события и три компактные фазы — Ожидает
-  - Git Commit: [PENDING] feat: Подготовить и проверить контракт перехода на события и три компактные фазы
+- [DONE] T001: Подготовить и проверить контракт перехода на события и три компактные фазы — Завершено
+  - Git Commit: [DONE] feat: Подготовить и проверить контракт перехода на события и три компактные фазы
   - Reference: event-driven-runtime-planning-20260928 / T001 / implementation
   - Файлы: docs/planning/event-driven-runtime.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/architecture/OVERVIEW.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает

@@ -102,3 +102,7 @@ Workflow Kit / Context Recovery: `resources/workflow-kit` = 1.4.11, контра
 ## Синхронизация названий sessions — 0.6.63
 
 Workspace & Sessions использует planning contract [session-title-sync](planning/session-title-sync.md). Workflow Kit 1.5.0 не менялся. В 0.6.61 `readWorkspace()` берёт canonical auto-title из H1 required planning/spec документа; objective остаётся fallback. Session title проходит 80-char/200-byte normalizer, manual title имеет приоритет. `src/chatgpt-title.mjs` выполняет GET-before-PATCH reconciliation desired title с exact bound native ChatGPT conversation; post-load/late-bind retry из 0.6.60 сохранён. Live probe и release evidence — `docs/VERIFICATION.md`.
+
+## Планирование событийной обработки — 2026-09-28
+
+Workspace & Sessions совместно с Workflow Kit / Context Recovery: [контракт перехода на события](planning/event-driven-runtime.md). Три будущие фазы: основа и preload; файловые события и удаление постоянных опросов; итоговая проверка и парный релиз. Документ подготовлен, реализация не начата; текущая поставка 0.6.63 и canonical Kit 1.5.0 сохраняются.
