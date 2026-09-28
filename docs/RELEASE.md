@@ -1,6 +1,19 @@
 # Выпуск и постоянный путь запуска
 
-## Текущая локальная поставка — 0.6.64 / 28.09.2026
+## Текущая локальная поставка — 0.6.65 / 28.09.2026
+
+Исправление T009 добавляет распознавание «Resume stream unavailable». Существующие ограничения восстановления, запрет повторного Send и защита черновика сохранены.
+
+Парный `npm run build`: базовый commit `d7731f3aa061921d1e8cb86fb1e7355e4a4b09a7`, изменения версии и адаптера входят в T009. Все 101 source/resource файлов сверены с обеими упаковками. Корневой app и `/Applications/Project Web Pilot.app` обновлены с сохранением inode 406600483 и 406571340. Работающий процесс не перезапускался.
+
+Доставка: `~/Downloads/WebPilot-0.6.65/`, включая `SHA256SUMS.txt`, `INSTALL.txt`, `release-manifest.json`.
+
+- `Project-Web-Pilot-0.6.65-macOS-arm64.zip` — 181492068 bytes; SHA-256 `b7e43ce33125a83a562723ca92a7de4c69aa56479d6b5b3888e3a78de341a5f2`.
+- `Project-Web-Pilot-0.6.65-Windows-x64.zip` — 316753921 bytes; SHA-256 `b8b621a00e7f1bc29ae577db550d358ff0b983b1747a87f11b5e9819301e36b9`.
+
+Проверки T009: Node suite, Electron smoke и installed/package gate; installed observer/composer распознают новую ошибку и сохраняют единственное сообщение при reload в изолированном fixture. Native Windows, live ChatGPT и clean VM не проверялись. Workflow Kit остаётся 1.5.0; фазы 2/3 не выполнялись. Новый GitHub Release не публиковался.
+
+## Предыдущая локальная поставка — 0.6.64 / 28.09.2026
 
 `npm run build` выпустил macOS arm64 и Windows x64 из одной версии исходников; базовый commit `884e8818364709691c4f2b8a3349b4a7dfad6de8`, версия package/lock обновлена до 0.6.64 в задаче выпуска. Все 101 source/resource файла сверены с обеими упаковками. Root app и `/Applications/Project Web Pilot.app` обновлены с прежними inode 406600483 и 406571340 соответственно. Сборка не перезапускает открытый пользовательский процесс.
 

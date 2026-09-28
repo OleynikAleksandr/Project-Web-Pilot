@@ -4,6 +4,8 @@
 
 `chatgpt-page-observer.mjs` вместе с общим `chatgpt-dom.mjs` генерирует ignored `resources/chatgpt-page-observer-preload.cjs`. `page-state-bridge.mjs` проверяет односторонний IPC основного sandboxed view; origin, frame, isolated-world document ID и sequence обязательны. Popup/auth не получают этот preload и API страницы не публикуется. `PageStateSource` передаёт изменения ContextSession, AgentTimer и ChromiumDiagnostics; ожидания composer событийные с дедлайном. Пульс оставлен для PlanMonitor/startup, одинаковая проекция не запускает DOM-проверку.
 
+В 0.6.65 общий DOM adapter распознаёт также «Resume stream unavailable»; это использует тот же механизм без нового таймера или повторной отправки.
+
 `ConversationRecovery` владеет одной автоматической попыткой открыть тот же известный URL, проверкой черновика/отправки, отменой при выборе другого чата и паузой после 429. Обычный ручной первый Send подтверждается trusted gesture и собственным пользовательским текстом внутри страницы; наружу идёт счётчик. `manualStart` — необязательный boolean schema v6, отдельный от attempt.sent; явное обновление контекста снимает его. Фаза manual-session не отправляет recovery при reopen.
 
 Фазы 2/3 остаются по `docs/planning/event-driven-runtime.md`; runtime Workflow Kit не менялся. Версионные разделы ниже сохраняют историю.
@@ -13,7 +15,7 @@
 
 ## Состояние
 
-Текущий локальный выпуск — **0.6.64**, macOS arm64 / Windows x64; Workflow Kit остаётся **1.5.0**. Реализована первая фаза событийной обработки: общий наблюдатель страницы, сохранение разговора после ручного Send и ограниченное восстановление связи с ChatGPT. Парная поставка — `~/Downloads/WebPilot-0.6.64/`. Обновлены постоянный `Project Web Pilot.app` в корне проекта и копия в `/Applications`; для применения нужен полный выход и повторный запуск. Состав, контрольные суммы и границы проверки — `docs/RELEASE.md` и `docs/VERIFICATION.md`.
+Текущий локальный выпуск — **0.6.65**, macOS arm64 / Windows x64; Workflow Kit остаётся **1.5.0**. Реализована первая фаза событийной обработки: общий наблюдатель страницы, сохранение разговора после ручного Send и ограниченное восстановление связи с ChatGPT. Парная поставка — `~/Downloads/WebPilot-0.6.65/`. Обновлены постоянный `Project Web Pilot.app` в корне проекта и копия в `/Applications`; для применения нужен полный выход и повторный запуск. Состав, контрольные суммы и границы проверки — `docs/RELEASE.md` и `docs/VERIFICATION.md`.
 
 Пользователь принял чистый macOS-путь 0.6.38 и проверку 0.6.39. Пользовательское испытание нового изменения 0.6.40 и Windows остаются отдельными. 18.09.2026 пользователь поручил закрыть план first-run-onboarding-031 и передал испытания Windows 11 другому агенту. Итог macOS и границы доказательств — docs/CLEAN_INSTALL.md; условия и оставшиеся критерии Windows — docs/TRANSFER_TO_WINDOWS.md. План first-run-corrections-032 принадлежит другой сессии и этим закрытием не изменяется.
 

@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 757,
+  "plan_revision": 759,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-1-20260928",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Фаза 1 из 3 по docs/planning/event-driven-runtime.md: событийное продолжение доставки, секундомер и диагностика; дополнительно — сохранение ручных разговоров, ограниченное восстановление связи и заказанный промежуточный парный выпуск 0.6.64.",
   "acceptance_criteria": [
     "Фаза 1 реализована и проверена без периодической DOM-подстраховки контроллера.",
@@ -588,8 +588,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "event-driven-runtime-phase-1-20260928",
         "task_id": "DOCS",
@@ -634,7 +634,6 @@
       ],
       "expected_commit_message": "docs: актуализировать контекст проекта",
       "actual_files": [
-        "AGENTS.md",
         "README.md",
         "docs/DOCUMENTATION_INDEX.md",
         "docs/MODULES.md",
@@ -646,8 +645,7 @@
         "docs/architecture/ARCHITECTURE.md",
         "docs/architecture/OVERVIEW.md",
         "docs/modules/chatgpt-dom-compatibility.md",
-        "docs/modules/workspace-sessions.md",
-        "docs/planning/event-driven-runtime.md"
+        "docs/modules/workspace-sessions.md"
       ]
     }
   ],
@@ -666,10 +664,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: event-driven-runtime-phase-1-20260928
 Current Task: нет
-Revision: 757
+Revision: 759
 
 ## Цель
 
@@ -720,8 +718,8 @@ Revision: 757
   - Git Commit: [DONE] feat: Распознать Resume stream unavailable и выпустить 0.6.65 для macOS/Windows
   - Reference: event-driven-runtime-phase-1-20260928 / T009 / implementation
   - Файлы: src/chatgpt-dom.mjs, tests/page-state.test.mjs, tests/electron-smoke.mjs, tests/installed-observer-fixture.cjs, scripts/check-event-runtime-release.mjs, package.json, package-lock.json, docs/planning/event-driven-runtime.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать контекст проекта
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать контекст проекта
   - Reference: event-driven-runtime-phase-1-20260928 / DOCS / implementation
   - Файлы: docs/planning/event-driven-runtime.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/workspace-sessions.md, docs/modules/chatgpt-dom-compatibility.md, docs/CONTEXT_DELIVERY.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/RELEASE.md, AGENTS.md, README.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKFLOW_START.md
 
