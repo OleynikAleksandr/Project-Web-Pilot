@@ -21,7 +21,7 @@ Chat, Web Pilot session или другой клиент не владеют pla
 
 Legacy `by-id/by-session` после upgrade сохраняются только как read-only history и не участвуют в normal runtime selection.
 
-## Пакет
+## Исходники и пакет
 
 ```text
 @webpilot/workflow-kit
@@ -30,6 +30,8 @@ Legacy `by-id/by-session` после upgrade сохраняются только
 ├── scripts/
 └── .harness/kit/
 ```
+
+Дерево выше описывает репозиторий. Публичный runtime пакета — `index.mjs` и `src/`; `scripts/` служит проверкам разработки, а `.harness/kit/` — производная self-host установка. Они не являются второй редактируемой копией runtime.
 
 Основные consumer API:
 
@@ -47,7 +49,7 @@ node scripts/check-runtime-fixture.mjs
 node scripts/check-consumer-contract.mjs
 ```
 
-Canonical runtime 1.5.0 содержит 35 файлов.
+Canonical runtime 1.5.0 содержит 35 файлов; SHA-256: `0db567df6f0c8f68f3119a7322b4c1c6d28cd06bf57b267993b792097bbb2c75`.
 
 ## Документация
 
@@ -62,4 +64,8 @@ Canonical runtime 1.5.0 содержит 35 файлов.
 
 Project Web Pilot подключает WorkflowKit как локальную dependency `@webpilot/workflow-kit` и автоматически staging-ит runtime для packaged macOS/Windows build. Изменения WorkflowKit должны вноситься здесь, а не в generated `resources/workflow-kit` внутри Web Pilot.
 
-См. [Project Web Pilot](https://github.com/OleynikAleksandr/Project-Web-Pilot).
+На 28.09.2026 локальная парная поставка Web Pilot **0.6.64** использует неизменённый Kit **1.5.0**. Наблюдатель страницы, автоматическая/ручная отправка сообщений, сохранение URL разговора и восстановление связи с ChatGPT реализованы в клиенте Web Pilot. Они не меняют current plan и не входят в runtime Kit.
+
+Исторические планы исключены из обычного recovery. Размер текущего пакета зависит от включённых документов и рабочих изменений; transport budget ограничивает выдачу, но не сокращает автоматически накопленную историю внутри обязательных документов. Политика компактного контекста требует отдельного изменения контракта.
+
+Инструкции запуска и результаты проверки клиента — в [README Web Pilot](https://github.com/OleynikAleksandr/Project-Web-Pilot/blob/main/README.md).

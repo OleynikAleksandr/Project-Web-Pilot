@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 20,
+  "plan_revision": 22,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "release-1.5.0-docs-finalization-001",
@@ -166,13 +166,16 @@
         "Ссылки и команды сверены с существующими файлами; runtime, версия и digest Kit не меняются."
       ],
       "expected_commit_message": "feat: Актуализировать README для интеграции с Web Pilot 0.6.64",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "release-1.5.0-docs-finalization-001",
         "task_id": "R001",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "README.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -227,7 +230,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: release-1.5.0-docs-finalization-001
 Current Task: нет
-Revision: 20
+Revision: 22
 
 ## Цель
 
@@ -251,8 +254,8 @@ Revision: 20
   - Git Commit: [DONE] chore: add repository LICENSE
   - Reference: release-1.5.0-docs-finalization-001 / T004 / implementation
   - Файлы: LICENSE
-- [TODO] R001: Актуализировать README для интеграции с Web Pilot 0.6.64 — Ожидает
-  - Git Commit: [PENDING] feat: Актуализировать README для интеграции с Web Pilot 0.6.64
+- [DONE] R001: Актуализировать README для интеграции с Web Pilot 0.6.64 — Завершено
+  - Git Commit: [DONE] feat: Актуализировать README для интеграции с Web Pilot 0.6.64
   - Reference: release-1.5.0-docs-finalization-001 / R001 / implementation
   - Файлы: docs/modules/workflow-kit-package.md, README.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
