@@ -1,128 +1,19 @@
 {
   "schema_version": 1,
   "profile": "DEVELOPMENT",
-  "stack": "Electron 44.3.0 / Chromium, JavaScript ESM, Node.js 22.17.0; macOS arm64",
+  "stack": "Electron 44.3.0 / JavaScript ESM; исследование MCP UI и мобильных платформ без реализации",
   "checks": [
     {
-      "required": true,
-      "timeout_ms": 30000,
-      "id": "syntax",
-      "executable": "node",
-      "args": [
-        "--check",
-        "src/main.mjs"
-      ],
-      "cwd": ".",
-      "stage": "commit"
-    },
-    {
-      "required": false,
-      "timeout_ms": 60000,
-      "id": "workspace",
-      "executable": "node",
-      "args": [
-        "--test",
-        "tests/workspace-session.test.mjs"
-      ],
-      "cwd": ".",
-      "stage": "commit"
-    },
-    {
-      "required": false,
-      "timeout_ms": 60000,
-      "id": "runtime",
-      "executable": "node",
-      "args": [
-        "--test",
-        "tests/mcp-runtime.test.mjs"
-      ],
-      "cwd": ".",
-      "stage": "commit"
-    },
-    {
-      "required": false,
-      "timeout_ms": 60000,
-      "id": "composer",
-      "executable": "node",
-      "args": [
-        "--test",
-        "tests/chatgpt-composer.test.mjs"
-      ],
-      "cwd": ".",
-      "stage": "commit"
-    },
-    {
-      "required": false,
-      "timeout_ms": 60000,
-      "id": "context",
-      "executable": "node",
-      "args": [
-        "--test",
-        "tests/context-session.test.mjs"
-      ],
-      "cwd": ".",
-      "stage": "commit"
-    },
-    {
       "required": false,
       "timeout_ms": 120000,
-      "id": "suite",
-      "executable": "npm",
-      "args": [
-        "test"
-      ],
-      "cwd": ".",
-      "stage": "commit"
-    },
-    {
-      "required": false,
-      "timeout_ms": 120000,
-      "id": "electron-smoke",
-      "executable": "npm",
-      "args": [
-        "run",
-        "smoke"
-      ],
-      "cwd": ".",
-      "stage": "commit"
-    },
-    {
-      "required": false,
-      "timeout_ms": 120000,
-      "id": "workflow-kit-contract",
+      "id": "research-report",
       "executable": "node",
       "args": [
-        "scripts/check-workflow-kit-dependency.mjs"
+        "-e",
+        "const fs=require('node:fs'),a=require('node:assert/strict'); const s=fs.readFileSync('docs/research/remote-project-ui-options-2026-09-28.md','utf8'); a.ok(s.length>1500); for(const h of ['2026-09-28','## Основания и границы','## Вариант A','## Источники']) a.ok(s.includes(h),h); a.ok((s.match(/https:\\/\\//g)||[]).length>=4); require('node:child_process').execFileSync('git',['diff','--check'],{stdio:'inherit'}); console.log('Research document structure and whitespace checked; device UI is not tested.');"
       ],
-      "cwd": ".",
-      "stage": "commit",
-      "kind": "test"
-    },
-    {
-      "required": false,
-      "timeout_ms": 120000,
-      "id": "workflow-kit-stage",
-      "executable": "node",
-      "args": [
-        "scripts/check-workflow-kit-staging.mjs"
-      ],
-      "cwd": ".",
-      "stage": "commit",
-      "kind": "test"
-    },
-    {
-      "required": false,
-      "timeout_ms": 600000,
-      "id": "paired-release",
-      "executable": "npm",
-      "args": [
-        "run",
-        "build"
-      ],
-      "cwd": ".",
-      "stage": "commit",
-      "kind": "package",
-      "evidence": "Парный релиз одной версии: macOS arm64 + Windows x64 ZIP, source/package verifiers и release-manifest."
+      "kind": "test",
+      "evidence": "docs/research/remote-project-ui-options-2026-09-28.md; structure/source presence only, not host UI verification"
     }
   ],
   "budget": {
