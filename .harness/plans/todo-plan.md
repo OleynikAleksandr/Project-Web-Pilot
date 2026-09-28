@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 657,
+  "plan_revision": 659,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "remote-project-ui-research-20260928",
@@ -94,8 +94,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "remote-project-ui-research-20260928",
         "task_id": "T002",
@@ -120,7 +120,10 @@
         "Разобраны перенос Electron, embedded ChatGPT, мобильная оболочка и безопасный доступ к Mac",
         "Проверены первичные источники и существующие решения вместо новой архитектуры с нуля"
       ],
-      "expected_commit_message": "feat: Оценить мобильный Web Pilot для iOS/Android и готовые open-source основы"
+      "expected_commit_message": "feat: Оценить мобильный Web Pilot для iOS/Android и готовые open-source основы",
+      "actual_files": [
+        "docs/research/remote-project-ui-options-2026-09-28.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -202,7 +205,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: remote-project-ui-research-20260928
 Current Task: нет
-Revision: 657
+Revision: 659
 
 ## Цель
 
@@ -218,8 +221,8 @@ Revision: 657
   - Git Commit: [DONE] feat: Исследовать MCP UI, PiP и совместимость клиентов ChatGPT
   - Reference: remote-project-ui-research-20260928 / T001 / implementation
   - Файлы: docs/planning/remote-project-ui-research.md, docs/research/remote-project-ui-options-2026-09-28.md
-- [TODO] T002: Оценить мобильный Web Pilot для iOS/Android и готовые open-source основы — Ожидает
-  - Git Commit: [PENDING] feat: Оценить мобильный Web Pilot для iOS/Android и готовые open-source основы
+- [DONE] T002: Оценить мобильный Web Pilot для iOS/Android и готовые open-source основы — Завершено
+  - Git Commit: [DONE] feat: Оценить мобильный Web Pilot для iOS/Android и готовые open-source основы
   - Reference: remote-project-ui-research-20260928 / T002 / implementation
   - Файлы: docs/planning/remote-project-ui-research.md, docs/research/remote-project-ui-options-2026-09-28.md
 - [TODO] T003: Сопоставить варианты и завершить исследовательский отчёт — Ожидает
