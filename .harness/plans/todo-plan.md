@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 768,
+  "plan_revision": 770,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-2-20260928",
@@ -51,7 +51,7 @@
     ]
   },
   "baseline_commit": "b8dc62aa4b469c63e82cc9ee27f791fc0870af91",
-  "current_task_id": null,
+  "current_task_id": "T004",
   "context_pack": {
     "documents": [
       {
@@ -238,7 +238,7 @@
         "Обновлены связанные документы; задачи основной фазы 2 остаются ожидающими."
       ],
       "expected_commit_message": "feat: Чистое поле нового Chat/Work и парное исправление 0.6.66",
-      "implementation_status": "TODO",
+      "implementation_status": "IN_PROGRESS",
       "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "event-driven-runtime-phase-2-20260928",
@@ -300,8 +300,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-phase-2-20260928
-Current Task: нет
-Revision: 768
+Current Task: T004
+Revision: 770
 
 ## Цель
 
@@ -325,7 +325,7 @@ Revision: 768
   - Git Commit: [PENDING] feat: Убрать секундный обход цветов и проверить событийное оформление
   - Reference: event-driven-runtime-phase-2-20260928 / T003 / implementation
   - Файлы: src/chatgpt-colors.mjs, tests/electron-smoke.mjs, docs/planning/event-driven-runtime.md, docs/modules/chatgpt-dom-compatibility.md, docs/VERIFICATION.md
-- [TODO] T004: Чистое поле нового Chat/Work и парное исправление 0.6.66 — Ожидает
+- [IN_PROGRESS] T004: Чистое поле нового Chat/Work и парное исправление 0.6.66 — В работе
   - Git Commit: [PENDING] feat: Чистое поле нового Chat/Work и парное исправление 0.6.66
   - Reference: event-driven-runtime-phase-2-20260928 / T004 / implementation
   - Файлы: src/main.mjs, src/context-session.mjs, src/chatgpt-composer.mjs, tests/chatgpt-composer.test.mjs, tests/context-session.test.mjs, tests/electron-smoke.mjs, tests/installed-observer-fixture.cjs, scripts/check-event-runtime-release.mjs, package.json, package-lock.json, docs/planning/event-driven-runtime.md, README.md, docs/VERIFICATION.md, docs/RELEASE.md
