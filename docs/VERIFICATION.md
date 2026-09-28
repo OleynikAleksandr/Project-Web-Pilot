@@ -2145,4 +2145,4 @@ T009 commit `899623004825a30dfd1ed0b85be4b347fee3c2fe`: `npm test` — **366 tes
 
 T011 commit `db847f808a5950527556a6a07a4db82ecbe2522c`: `npm test` — **366 tests, 363 PASS, 3 SKIP, 0 FAIL**; Electron smoke — PASSED. Smoke больше не monkeypatch-ит `window.prompt`: он реально открывает sidebar modal, проверяет prefilled current title, сохраняет project кнопкой, session — Enter, и проверяет, что Cancel не меняет title.
 
-Финальная 0.6.63 собрана из release commit `f9bfbe0ea2442be2ae8b6922fd7775e595a53aed`; `packagedSourceMatches=true`, обе ZIP прошли integrity check.
+Финальная 0.6.63 пересобрана из финального HEAD `243e250a0f75d4480e7cdc2b25c58d36bf11a3fb`; `packagedSourceMatches=true`, обе ZIP прошли integrity check. macOS ZIP `fdaf6f4ab0a08d462401ac472ad4f7145a8085137db9e3ecb2750a97ad3c3660`; Windows ZIP `cbf6133dae0490689c61702e2334ba5d34e1e4af362fe0273d1bec1e6e979b1e`.

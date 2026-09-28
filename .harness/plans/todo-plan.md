@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 705,
+  "plan_revision": 707,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-title-sync-20260928",
@@ -579,13 +579,17 @@
         "Исторические данные первой сборки не выдаются за финальную поставку."
       ],
       "expected_commit_message": "docs: record final 0.6.63 release provenance",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-title-sync-20260928",
         "task_id": "T013",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -662,7 +666,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-title-sync-20260928
 Current Task: нет
-Revision: 705
+Revision: 707
 
 ## Цель
 
@@ -722,8 +726,8 @@ Revision: 705
   - Git Commit: [DONE] release: Project Web Pilot 0.6.63
   - Reference: session-title-sync-20260928 / T012 / implementation
   - Файлы: package.json, package-lock.json, docs/RELEASE.md, docs/VERIFICATION.md
-- [TODO] T013: Зафиксировать финальный provenance релиза 0.6.63 — Ожидает
-  - Git Commit: [PENDING] docs: record final 0.6.63 release provenance
+- [DONE] T013: Зафиксировать финальный provenance релиза 0.6.63 — Завершено
+  - Git Commit: [DONE] docs: record final 0.6.63 release provenance
   - Reference: session-title-sync-20260928 / T013 / implementation
   - Файлы: docs/RELEASE.md, docs/VERIFICATION.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
