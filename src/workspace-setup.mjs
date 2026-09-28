@@ -11,10 +11,12 @@ const fail = (code, message) => Object.assign(new Error(message), { code });
 
 export class WorkspaceSetup {
   constructor({ resourceDir = fileURLToPath(new URL('../resources/', import.meta.url)), nodeCandidates,
-    environment = process.env, platform = process.platform, executeNode = execute, prepareEnvironment } = {}) {
+    environment = process.env, platform = process.platform, executeNode = execute, prepareEnvironment,
+    onWorkerStart = () => {} } = {}) {
     this.resourceDir = resourceDir;
     this.platform = platform;
     this.executeNode = executeNode;
+    this.onWorkerStart = onWorkerStart;
     this.prepareEnvironment = prepareEnvironment;
     this.nodeCandidates = nodeCandidates ?? nodeExecutableCandidates({
       platform,
@@ -84,6 +86,7 @@ export class WorkspaceSetup {
   async call(input) {
     if (this.prepareEnvironment) this.setRuntimeEnvironment(await this.prepareEnvironment());
     const node = await this.node();
+    this.onWorkerStart('workspace-setup');
     const child = execFile(node, [path.join(this.resourceDir, 'workspace-setup-worker.mjs')],
       { env: this.environment, timeout: 120000, maxBuffer: 4 * 1024 * 1024, encoding: 'utf8',
         ...(this.platform === 'win32' ? { windowsHide: true } : {}) });

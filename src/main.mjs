@@ -36,7 +36,8 @@ import { TunnelClipboard } from './tunnel-clipboard.mjs';
 import { StartupReadiness, inspectMacGit, installMacGit, accountObservation, offerMacInstallation } from './startup-readiness.mjs';
 import { startupPlatformOptions, startupSupported } from './startup-platform.mjs';
 
-const smoke = !app.isPackaged && process.argv.includes('--smoke');
+const eventBaseline = !app.isPackaged && process.argv.includes('--event-runtime-baseline');
+const smoke = !app.isPackaged && (process.argv.includes('--smoke') || eventBaseline);
 const sourceDir = path.dirname(fileURLToPath(import.meta.url));
 const sidebarUrl = pathToFileURL(path.join(sourceDir, 'ui/index.html')).href;
 const archiveUrl = pathToFileURL(path.join(sourceDir, 'ui/archive.html')).href;
@@ -66,7 +67,13 @@ const BROWSER_MIN_WIDTH = 600;
 let sidebarWidth = SIDEBAR_MIN_WIDTH;
 let projectsParent = null;
 let window, browser, sidebar, archiveWindow, runtime, controller, interval, fixture, chromiumDiagnostics, windowsRuntimeBootstrap;
+let sidebarReady = false, lastSidebarStateSignature = null;
 let navigationId = 0;
+const runtimeMetrics = {
+  executeJavaScript: 0, ipcSnapshots: 0, workerNodeStarts: 0,
+  reset() { this.executeJavaScript = 0; this.ipcSnapshots = 0; this.workerNodeStarts = 0; },
+  snapshot() { return { executeJavaScript: this.executeJavaScript, ipcSnapshots: this.ipcSnapshots, workerNodeStarts: this.workerNodeStarts }; },
+};
 const actionContext = new AsyncLocalStorage();
 let pageLoading = false;
 let startupClipboard = null;
@@ -93,8 +100,10 @@ const workspaceSetup = new WorkspaceSetup({
     await ensurePlatformRuntime();
     return windowsRuntimeBootstrap.workflowEnvironment();
   } : undefined,
+  onWorkerStart: () => { if (eventBaseline) runtimeMetrics.workerNodeStarts++; },
 });
-const sessionPlans = new SessionPlans({ setup: workspaceSetup });
+const sessionPlans = new SessionPlans({ setup: workspaceSetup,
+  onWorkerStart: () => { if (eventBaseline) runtimeMetrics.workerNodeStarts++; } });
 store.planService = sessionPlans;
 // Agent time: wall clock while ChatGPT shows its Stop control; each finished request is added to its own session.
 const agentTimer = new AgentTimer({ onFinish: ({ workspace, sessionId }, durationMs) => {
@@ -228,9 +237,16 @@ function snapshot() {
 function publish() {
   rememberSessionTitle();
   rememberScopeTitle();
-  if (sidebar && !sidebar.webContents.isDestroyed()) sidebar.webContents.send('pilot:state-changed', snapshot());
-  publishArchive();
   const state = snapshot();
+  if (sidebarReady && sidebar && !sidebar.webContents.isDestroyed()) {
+    const signature = JSON.stringify(state);
+    if (signature !== lastSidebarStateSignature) {
+      lastSidebarStateSignature = signature;
+      if (eventBaseline) runtimeMetrics.ipcSnapshots++;
+      sidebar.webContents.send('pilot:state-changed', state);
+    }
+  }
+  publishArchive();
   const record = { phase: state.context.phase, workspace: state.selected?.workspace, sessionId: state.selected?.sessionId,
     requestId: state.selected?.attempt?.requestId, contextSha256: state.context.delivery?.contextSha256,
     planRevision: state.context.projectInfo?.planRevision, errorCode: state.context.error?.code ?? startupError?.code,
@@ -1121,6 +1137,13 @@ async function createWindow() {
   sidebar = new WebContentsView({ webPreferences: { preload: path.join(sourceDir, 'preload.cjs'),
     nodeIntegration: false, contextIsolation: true, sandbox: true, webSecurity: true } });
   browser = new WebContentsView({ webPreferences: remotePreferences() });
+  if (eventBaseline) {
+    const executeJavaScript = browser.webContents.executeJavaScript.bind(browser.webContents);
+    browser.webContents.executeJavaScript = (...args) => {
+      runtimeMetrics.executeJavaScript++;
+      return executeJavaScript(...args);
+    };
+  }
   chatColorStyles = new ChatColors(browser.webContents, chatColors);
   colorEditor = new ChatColorsWindow({
     sourceDir, getBounds: () => window?.getBounds(),
@@ -1131,11 +1154,12 @@ async function createWindow() {
   window.contentView.addChildView(sidebar); window.contentView.addChildView(browser);
   secureRemote(browser.webContents);
   chromiumDiagnostics = new ChromiumDiagnostics(browser.webContents, { file: chromiumDiagnosticsFile,
-    sampleIntervalMs: smoke ? 250 : 5000, allowFixture: smoke,
+    sampleIntervalMs: eventBaseline ? 5000 : smoke ? 250 : 5000, allowFixture: smoke,
     startupNetwork: !smoke && store.snapshot().projects.length === 0 });
   sidebar.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   sidebar.webContents.on('will-navigate', event => event.preventDefault());
-  sidebar.webContents.on('did-finish-load', publish);
+  sidebar.webContents.on('did-start-loading', () => { sidebarReady = false; lastSidebarStateSignature = null; });
+  sidebar.webContents.on('did-finish-load', () => { sidebarReady = true; lastSidebarStateSignature = null; publish(); });
   browser.webContents.on('page-title-updated', rememberSessionTitle);
   browser.webContents.on('did-navigate-in-page', () => {
     void applyToolCallVisibility(); void installChatGPTAutoScroll(browser.webContents); publish();
@@ -1195,7 +1219,7 @@ async function createWindow() {
     await fixture.run({ app, window, browser: browser.webContents, sidebar: sidebar.webContents,
       store, controller, selectWorkspace, workspaceSetup, snapshot, assertLocalSender, permissionAllowed, dataDir,
       chromiumDiagnostics, chromiumDiagnosticsFile, navigate, openArchiveWindow, getArchiveWindow: () => archiveWindow,
-      getColorWindow: () => colorEditor.window, chatColorStyles });
+      getColorWindow: () => colorEditor.window, chatColorStyles, eventBaseline, runtimeMetrics });
     await chromiumDiagnostics.stop(); chromiumDiagnostics = null;
     window.close(); app.quit();
   } else { const current = store.selected(); if (current && !storageError && !settingsState) void selectWorkspace(current.workspace).catch(report); else void navigate(); }

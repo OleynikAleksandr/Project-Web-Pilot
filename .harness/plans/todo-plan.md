@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 729,
+  "plan_revision": 731,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-1-20260928",
@@ -24,7 +24,11 @@
       "src/agent-timer.mjs",
       "src/chatgpt-dom.mjs",
       "src/chatgpt-composer.mjs",
-      "src/chatgpt-state-preload.cjs"
+      "src/chatgpt-state-preload.cjs",
+      "src/session-plans.mjs",
+      "src/workspace-setup.mjs",
+      "tests/chromium-diagnostics.test.mjs",
+      "tests/event-runtime-baseline.mjs"
     ],
     "documentation_paths": [
       "docs/planning/event-driven-runtime.md",
@@ -77,8 +81,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "event-driven-runtime-phase-1-20260928",
         "task_id": "T001",
@@ -88,7 +92,11 @@
       "functional_paths": [
         "src/main.mjs",
         "src/chromium-diagnostics.mjs",
-        "tests/electron-smoke.mjs"
+        "tests/electron-smoke.mjs",
+        "src/session-plans.mjs",
+        "src/workspace-setup.mjs",
+        "tests/chromium-diagnostics.test.mjs",
+        "tests/event-runtime-baseline.mjs"
       ],
       "documentation_paths": [
         "docs/planning/event-driven-runtime.md",
@@ -108,7 +116,17 @@
         "Одинаковые записи DOM pulse исключены; baseline снят до изменения поведения, без записи содержимого чатов или секретов",
         "Результаты и методика сохранены в docs/VERIFICATION.md; проверены пользовательские входы и существенные регрессии"
       ],
-      "expected_commit_message": "feat: Измерить исходное состояние и устранить дублирование снимков"
+      "expected_commit_message": "feat: Измерить исходное состояние и устранить дублирование снимков",
+      "actual_files": [
+        "docs/VERIFICATION.md",
+        "src/chromium-diagnostics.mjs",
+        "src/main.mjs",
+        "src/session-plans.mjs",
+        "src/workspace-setup.mjs",
+        "tests/chromium-diagnostics.test.mjs",
+        "tests/electron-smoke.mjs",
+        "tests/event-runtime-baseline.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -253,7 +271,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-phase-1-20260928
 Current Task: нет
-Revision: 729
+Revision: 731
 
 ## Цель
 
@@ -265,10 +283,10 @@ Revision: 729
 
 ## Микрозадачи
 
-- [TODO] T001: Измерить исходное состояние и устранить дублирование снимков — Ожидает
-  - Git Commit: [PENDING] feat: Измерить исходное состояние и устранить дублирование снимков
+- [DONE] T001: Измерить исходное состояние и устранить дублирование снимков — Завершено
+  - Git Commit: [DONE] feat: Измерить исходное состояние и устранить дублирование снимков
   - Reference: event-driven-runtime-phase-1-20260928 / T001 / implementation
-  - Файлы: src/main.mjs, src/chromium-diagnostics.mjs, tests/electron-smoke.mjs, docs/planning/event-driven-runtime.md, docs/VERIFICATION.md
+  - Файлы: src/main.mjs, src/chromium-diagnostics.mjs, tests/electron-smoke.mjs, src/session-plans.mjs, src/workspace-setup.mjs, tests/chromium-diagnostics.test.mjs, tests/event-runtime-baseline.mjs, docs/planning/event-driven-runtime.md, docs/VERIFICATION.md
 - [TODO] T002: Обеспечить продолжение операций без потери событий и исправить секундомер — Ожидает
   - Git Commit: [PENDING] feat: Обеспечить продолжение операций без потери событий и исправить секундомер
   - Reference: event-driven-runtime-phase-1-20260928 / T002 / implementation

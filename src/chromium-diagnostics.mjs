@@ -352,6 +352,7 @@ export class ChromiumDiagnostics {
     this.networkTrace = startupNetwork ? new StartupNetworkTrace(contents.session?.netLog, path.join(path.dirname(file), 'startup-network.json')) : null;
     this.handlers = [];
     this.sampleTimer = null;
+    this.lastDomPulse = null;
     this.attachedByUs = false;
     this.started = false;
     this.streamResponses = new Map();
@@ -588,7 +589,12 @@ export class ChromiumDiagnostics {
         return { userMessages: dom.messages('user').length, assistantMessages: dom.messages('assistant').length,
           busy: dom.busy(), composer: !!dom.editor(), visibility: document.visibilityState };
       })()`, false);
-      this.log.record('dom', 'pulse', { url: safeUrl(current), ...sample });
+      const pulse = { url: safeUrl(current), ...sample };
+      const signature = JSON.stringify(pulse);
+      if (signature !== this.lastDomPulse) {
+        this.lastDomPulse = signature;
+        this.log.record('dom', 'pulse', pulse);
+      }
     } catch (error) {
       this.log.record('dom', 'pulse-failed', { name: error?.name ?? 'Error' });
     }
@@ -599,6 +605,7 @@ export class ChromiumDiagnostics {
     this.started = false;
     if (this.sampleTimer) clearInterval(this.sampleTimer);
     this.sampleTimer = null;
+    this.lastDomPulse = null;
     this.streamResponses.clear();
     this.serviceResponses.clear();
     for (const [name, handler] of this.handlers) this.contents.removeListener(name, handler);

@@ -26,7 +26,9 @@ export async function readSessionPlans(workspace, sessionId) {
   return facade.sessionPlanView(workspace, sessionId);
 }
 export class SessionPlans {
-  constructor({ setup = new WorkspaceSetup(), run = execute } = {}) { Object.assign(this, { setup, run }); }
+  constructor({ setup = new WorkspaceSetup(), run = execute, onWorkerStart = () => {} } = {}) {
+    Object.assign(this, { setup, run, onWorkerStart });
+  }
   async call(workspace, command, args = [], input = null) {
     if (!path.isAbsolute(workspace)) throw fail('WORKSPACE_REQUIRED', 'Нужна абсолютная папка проекта.');
     const node = await this.setup.node();
@@ -40,8 +42,11 @@ export class SessionPlans {
         args = [...args, '--input', inputFile];
       }
       let stdout;
-      try { ({ stdout } = await this.run(node, [path.join(workspace, 'scripts/workflow.mjs'), command, ...args],
-        { cwd: workspace, env: this.setup.environment, timeout: 120000, maxBuffer: 4 * 1024 * 1024, windowsHide: true, encoding: 'utf8' })); }
+      try {
+        this.onWorkerStart('workflow');
+        ({ stdout } = await this.run(node, [path.join(workspace, 'scripts/workflow.mjs'), command, ...args],
+          { cwd: workspace, env: this.setup.environment, timeout: 120000, maxBuffer: 4 * 1024 * 1024, windowsHide: true, encoding: 'utf8' }));
+      }
       catch (error) { if (!error.stdout) throw error; stdout = error.stdout; }
       let result;
       try { result = JSON.parse(stdout); } catch { throw fail('PLAN_COMMAND_FAILED', 'Workflow Kit вернул неполный ответ.'); }

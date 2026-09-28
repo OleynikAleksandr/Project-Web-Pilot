@@ -18,6 +18,7 @@ import { withSessionPlan } from '@webpilot/workflow-kit/lib/session-plans';
 import { renderPlan } from '@webpilot/workflow-kit/lib/plan';
 import { sessionSelection } from '../src/context-session.mjs';
 import { commitTask } from '@webpilot/workflow-kit/lib/transaction';
+import { measureEventRuntimeBaseline } from './event-runtime-baseline.mjs';
 
 let packetLoads = 0;
 let smokeDataDir;
@@ -163,7 +164,7 @@ async function verifyUninterruptedRequest(dataDir) {
   }
 }
 
-export async function run({ app, window, browser, sidebar, store, controller, selectWorkspace, workspaceSetup, snapshot, assertLocalSender, permissionAllowed, dataDir, chromiumDiagnostics, chromiumDiagnosticsFile, navigate, getArchiveWindow, getColorWindow }) {
+export async function run({ app, window, browser, sidebar, store, controller, selectWorkspace, workspaceSetup, snapshot, assertLocalSender, permissionAllowed, dataDir, chromiumDiagnostics, chromiumDiagnosticsFile, navigate, getArchiveWindow, getColorWindow, eventBaseline = false, runtimeMetrics = null }) {
   smokeDataDir = dataDir;
   // Keep frame-based fixture checks running when another desktop window covers this one.
   sidebar.setBackgroundThrottling(false);
@@ -426,6 +427,11 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(sent.replace(/\n+/g, '\n'), first.attempt.text.replace(/\n+/g, '\n'));
   assert.equal(first.receipt, null);
   assert.equal(packetLoads, 1, 'packet loads at line 158');
+  if (eventBaseline) {
+    await measureEventRuntimeBaseline({ app, browser, controller, snapshot, dataDir, chromiumDiagnostics,
+      chromiumDiagnosticsFile, runtimeMetrics, waitFor });
+    return;
+  }
   assert.deepEqual(await browser.executeJavaScript('({ require:typeof require, process:typeof process, bridge:typeof window.webPilot })'),
     { require: 'undefined', process: 'undefined', bridge: 'undefined' });
   await clipboard.clear();
@@ -1210,6 +1216,11 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(await browser.executeJavaScript('document.getElementById("reverse-probe").scrollTop'),-200,'manual history stays still');
   await browser.executeJavaScript('document.getElementById("reverse-probe").remove();window.__webPilotConversationAutoScroll.refresh()');
   assert.equal(await sidebar.executeJavaScript('document.getElementById("prototype-version").textContent'), 'ПРОТОТИП ' + app.getVersion());
+  const beforeSidebarReload = snapshot();
+  await sidebar.reload();
+  await waitFor(() => sidebar.executeJavaScript('typeof window.webPilot === "object" && document.getElementById("prototype-version")?.textContent === "ПРОТОТИП " + ' + JSON.stringify(app.getVersion())), 'sidebar reload receives initial state', snapshot);
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("plan-card").hidden'), false);
+  assert.equal(snapshot().selected?.sessionId, beforeSidebarReload.selected?.sessionId, 'sidebar reload does not change selected session');
   const result = { fullVersionBadge: true, septemberDOM: true, reverseScroll: true, directFirstChat: true, directFirstWork: true, startupLoginEntrypoint: true, uninterruptedFirstRequest: true, firstRequestNetworkTrace: true, duplicateStartupBlocked: true, earlyFirstLoadDiagnostics: true, guidedFirstRun: true, firstRunScreenshots: [path.join(dataDir, "startup-account.png"), path.join(dataDir, "startup-login.png"), path.join(dataDir, "startup-components.png")], fastSavedNavigation: true, lastNavigationWins: true, readinessBeforeOrAfterLoad: true, backgroundFailureRetry: true, liveChatColors: true, composerBackground: true, streamingAssistantColor: true, chatColorsPersistence: true, chatColorsReset: true, colorScreenshots, projectDoctor: true, doctorBackup: true, doctorOpen: true, doctorRefresh: true, doctorNewSession: true, doctorScreenshots, newestSessionFirst: true, projectSelectsNewest: true, threeSessionViewport: true, sessionScrollPreserved: true, visibleSessionScrollbar: true, nativeProjectsDisclosure: true, treePopover: true, treeScreenshots, singleActivePlanSessions: true, checkoutPlanAcrossOldChats: true, checkoutRecoveryShared: true, noPreparedPlanUi: true,
     singleActivePlanScreenshot, mode: 'isolated-fixture', electron: process.versions.electron, chromium: process.versions.chrome,
     views: window.contentView.children.length, secureRemote: true, sidebarIpc: true, archiveRestore: true, archiveRestart: true, deleteCancel: true, localDeletion: true, cloudChatPreserved: true, workspaceCreation: true, workspaceValidation: true, cancelPreservesSession: true, startupMessages: 4, canonicalPacketLoads: packetLoads, recoveryCache: true, operationProgress: true, progressScreenshot: path.join(dataDir, 'progress-ui.png'),

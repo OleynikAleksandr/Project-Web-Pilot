@@ -280,3 +280,20 @@ test('startup report preserves the earliest request after later attempts and fil
   assert.ok(report.eventsOmitted > 0);
   assert.ok(report.events.length <= 61);
 });
+
+test('identical DOM pulse samples are recorded once', async t => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'web-pilot-dom-pulse-'));
+  const contents = new EventEmitter(), debug = new EventEmitter();
+  let attached = false;
+  debug.attach = () => { attached = true; }; debug.isAttached = () => attached; debug.detach = () => { attached = false; };
+  debug.sendCommand = async () => ({});
+  contents.debugger = debug; contents.getURL = () => 'https://chatgpt.com/c/fixture'; contents.isDestroyed = () => false;
+  contents.executeJavaScript = async () => ({ userMessages: 2, assistantMessages: 1, busy: false, composer: true, visibility: 'visible' });
+  const file = path.join(dir, 'events.jsonl');
+  const diagnostics = new ChromiumDiagnostics(contents, { file, allowFixture: true, sampleIntervalMs: 60000 });
+  t.after(async () => { await diagnostics.stop(); await fs.rm(dir, { recursive: true, force: true }); });
+  await diagnostics.start();
+  await diagnostics.sampleDom(); await diagnostics.sampleDom(); await diagnostics.flush();
+  const records = (await fs.readFile(file, 'utf8')).trim().split('\n').map(JSON.parse);
+  assert.equal(records.filter(entry => entry.source === 'dom' && entry.event === 'pulse').length, 1);
+});
