@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "profile": "DEVELOPMENT",
-  "stack": "Electron 44.3.0 / embedded Node 24.20.0 / Workflow Kit 1.5.0",
+  "stack": "Electron 44.3.0 / embedded Node 24.20.0 / Workflow Kit 1.5.1",
   "checks": [
     {
       "required": false,
