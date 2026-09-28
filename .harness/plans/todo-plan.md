@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 788,
+  "plan_revision": 789,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-2-20260928",
@@ -39,7 +39,9 @@
       "tests/chromium-diagnostics.test.mjs",
       "tests/session-opening-performance.test.mjs",
       "tests/prosemirror-composer-fixture.mjs",
-      "src/ui/sidebar.mjs"
+      "src/ui/sidebar.mjs",
+      "src/ui/progress.mjs",
+      "tests/progress.test.mjs"
     ],
     "documentation_paths": [
       "docs/planning/event-driven-runtime.md",
@@ -595,6 +597,39 @@
       ]
     },
     {
+      "id": "T009",
+      "title": "Убрать общий индикатор проверки после Send; финальный выпуск 0.6.71",
+      "why": "Убрать общий индикатор проверки после Send; финальный выпуск 0.6.71",
+      "dependencies": [],
+      "functional_paths": [
+        "src/ui/progress.mjs",
+        "tests/progress.test.mjs",
+        "package.json"
+      ],
+      "documentation_paths": [
+        "docs/planning/event-driven-runtime.md",
+        "docs/RELEASE.md"
+      ],
+      "verification_ids": [
+        "progress-ui",
+        "release-pair"
+      ],
+      "verification_kind": "installed",
+      "acceptance_criteria": [
+        "waiting-chat/send-unknown не показывают спиннер и не держат секундомер после Send.",
+        "0.6.71 включает проверенную T008 и завершение общего индикатора; root app, /Applications и парные ZIP обновлены.",
+        "Документация и README обоих проектов отражают финальный выпуск."
+      ],
+      "expected_commit_message": "feat: Убрать общий индикатор проверки после Send; финальный выпуск 0.6.71",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "event-driven-runtime-phase-2-20260928",
+        "task_id": "T009",
+        "role": "implementation"
+      }
+    },
+    {
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
@@ -610,7 +645,8 @@
         "T005",
         "T006",
         "T007",
-        "T008"
+        "T008",
+        "T009"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -657,7 +693,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-phase-2-20260928
 Current Task: нет
-Revision: 788
+Revision: 789
 
 ## Цель
 
@@ -701,6 +737,10 @@ Revision: 788
   - Git Commit: [DONE] feat: Завершать передачу сразу после Send; выпуск 0.6.70
   - Reference: event-driven-runtime-phase-2-20260928 / T008 / implementation
   - Файлы: src/chatgpt-composer.mjs, src/context-session.mjs, src/ui/sidebar.mjs, tests/chatgpt-composer.test.mjs, tests/context-session.test.mjs, tests/installed-observer-fixture.cjs, package.json, package-lock.json, scripts/check-event-runtime-release.mjs, tests/electron-smoke.mjs, docs/planning/event-driven-runtime.md, README.md, docs/CONTEXT_DELIVERY.md, docs/DOCUMENTATION_INDEX.md, docs/MODULES.md, docs/PRODUCT.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/modules/chatgpt-dom-compatibility.md, docs/modules/workspace-sessions.md
+- [TODO] T009: Убрать общий индикатор проверки после Send; финальный выпуск 0.6.71 — Ожидает
+  - Git Commit: [PENDING] feat: Убрать общий индикатор проверки после Send; финальный выпуск 0.6.71
+  - Reference: event-driven-runtime-phase-2-20260928 / T009 / implementation
+  - Файлы: src/ui/progress.mjs, tests/progress.test.mjs, package.json, docs/planning/event-driven-runtime.md, docs/RELEASE.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: event-driven-runtime-phase-2-20260928 / DOCS / implementation
