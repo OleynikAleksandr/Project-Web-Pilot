@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 749,
+  "plan_revision": 751,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-1-20260928",
@@ -51,7 +51,8 @@
       "src/workspace-session.mjs",
       "src/preload.cjs",
       "src/ui/index.html",
-      "tests/workspace-session.test.mjs"
+      "tests/workspace-session.test.mjs",
+      "tests/installed-observer-fixture.cjs"
     ],
     "documentation_paths": [
       "docs/planning/event-driven-runtime.md",
@@ -338,7 +339,8 @@
       "functional_paths": [
         "package.json",
         "package-lock.json",
-        "scripts/check-event-runtime-release.mjs"
+        "scripts/check-event-runtime-release.mjs",
+        "tests/installed-observer-fixture.cjs"
       ],
       "documentation_paths": [
         "docs/planning/event-driven-runtime.md",
@@ -355,13 +357,19 @@
         "Проверки fixture и ограничения реального ChatGPT/Windows описаны явно"
       ],
       "expected_commit_message": "feat: Собрать и проверить исправленный парный релиз 0.6.64",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "event-driven-runtime-phase-1-20260928",
         "task_id": "T005",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "package-lock.json",
+        "package.json",
+        "scripts/check-event-runtime-release.mjs",
+        "tests/installed-observer-fixture.cjs"
+      ]
     },
     {
       "id": "T006",
@@ -589,7 +597,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-phase-1-20260928
 Current Task: нет
-Revision: 749
+Revision: 751
 
 ## Цель
 
@@ -620,10 +628,10 @@ Revision: 749
   - Git Commit: [DONE] feat: Сохранить привязку разговора после ручной отправки и проверить повторное открытие
   - Reference: event-driven-runtime-phase-1-20260928 / T004 / implementation
   - Файлы: src/context-session.mjs, src/chatgpt-composer.mjs, tests/context-session.test.mjs, tests/electron-smoke.mjs, docs/planning/event-driven-runtime.md, docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md
-- [TODO] T005: Собрать и проверить исправленный парный релиз 0.6.64 — Ожидает
-  - Git Commit: [PENDING] feat: Собрать и проверить исправленный парный релиз 0.6.64
+- [DONE] T005: Собрать и проверить исправленный парный релиз 0.6.64 — Завершено
+  - Git Commit: [DONE] feat: Собрать и проверить исправленный парный релиз 0.6.64
   - Reference: event-driven-runtime-phase-1-20260928 / T005 / implementation
-  - Файлы: package.json, package-lock.json, scripts/check-event-runtime-release.mjs, docs/planning/event-driven-runtime.md, docs/RELEASE.md, docs/VERIFICATION.md
+  - Файлы: package.json, package-lock.json, scripts/check-event-runtime-release.mjs, tests/installed-observer-fixture.cjs, docs/planning/event-driven-runtime.md, docs/RELEASE.md, docs/VERIFICATION.md
 - [DONE] T006: Распознавать обрыв ответа и безопасно восстанавливать сохранённый разговор — Завершено
   - Git Commit: [DONE] feat: Распознавать обрыв ответа и безопасно восстанавливать сохранённый разговор
   - Reference: event-driven-runtime-phase-1-20260928 / T006 / implementation
