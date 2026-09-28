@@ -4,18 +4,20 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 14,
+  "plan_revision": 15,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "release-1.5.0-docs-finalization-001",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Зафиксировать актуальные release-документы Workflow Kit 1.5.0 после self-host cutover.",
   "acceptance_criteria": [
     "Release-документы отражают фактический single-active contract 1.5.0 и завершённый self-host cutover."
   ],
   "approved_scope": {
-    "functional_paths": [],
+    "functional_paths": [
+      "LICENSE"
+    ],
     "documentation_paths": [
       "docs/DOCUMENTATION_INDEX.md",
       "docs/modules/workflow-kit-package.md",
@@ -116,17 +118,43 @@
       ]
     },
     {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
+      "id": "T004",
+      "title": "Сохранить GitHub LICENSE в локальной истории",
+      "why": "Сохранить GitHub LICENSE в локальной истории",
+      "dependencies": [],
+      "functional_paths": [
+        "LICENSE"
+      ],
+      "documentation_paths": [],
+      "verification_ids": [
+        "package"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "MIT LICENSE из существующего GitHub main присутствует в локальной истории WorkflowKit без изменения содержимого."
+      ],
+      "expected_commit_message": "chore: add repository LICENSE",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "release-1.5.0-docs-finalization-001",
+        "task_id": "T004",
+        "role": "implementation"
+      }
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "release-1.5.0-docs-finalization-001",
         "task_id": "DOCS",
         "role": "implementation",
-        "iteration": 3
+        "iteration": 4
       },
       "dependencies": [
         "T002",
-        "T003"
+        "T003",
+        "T004"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -163,10 +191,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: release-1.5.0-docs-finalization-001
 Current Task: нет
-Revision: 14
+Revision: 15
 
 ## Цель
 
@@ -186,8 +214,12 @@ Revision: 14
   - Git Commit: [DONE] docs: index README
   - Reference: release-1.5.0-docs-finalization-001 / T003 / implementation
   - Файлы: docs/DOCUMENTATION_INDEX.md
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: завершить release-документацию 1.5.0
+- [TODO] T004: Сохранить GitHub LICENSE в локальной истории — Ожидает
+  - Git Commit: [PENDING] chore: add repository LICENSE
+  - Reference: release-1.5.0-docs-finalization-001 / T004 / implementation
+  - Файлы: LICENSE
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: завершить release-документацию 1.5.0
   - Reference: release-1.5.0-docs-finalization-001 / DOCS / implementation
   - Файлы: docs/DOCUMENTATION_INDEX.md, docs/modules/workflow-kit-package.md, docs/planning/single-active-plan-migration.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, README.md
 
