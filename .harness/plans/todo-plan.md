@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 743,
+  "plan_revision": 744,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-1-20260928",
@@ -44,7 +44,8 @@
       "src/page-state-bridge.mjs",
       "scripts/stage-page-observer.mjs",
       "tests/page-state.test.mjs",
-      "tests/chatgpt-composer.test.mjs"
+      "tests/chatgpt-composer.test.mjs",
+      "src/workspace-session.mjs"
     ],
     "documentation_paths": [
       "docs/planning/event-driven-runtime.md",
@@ -437,6 +438,45 @@
       ]
     },
     {
+      "id": "T008",
+      "title": "Сохранить разговор после обычного ручного первого сообщения без ложной доставки контекста",
+      "why": "Сохранить разговор после обычного ручного первого сообщения без ложной доставки контекста",
+      "dependencies": [
+        "T004"
+      ],
+      "functional_paths": [
+        "src/chatgpt-page-observer.mjs",
+        "src/page-state.mjs",
+        "src/main.mjs",
+        "src/context-session.mjs",
+        "src/workspace-session.mjs",
+        "tests/page-state.test.mjs",
+        "tests/context-session.test.mjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "docs/planning/event-driven-runtime.md"
+      ],
+      "verification_ids": [
+        "unit",
+        "smoke"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Обычный текст вручную создаёт сохранённый разговор, но не подтверждает recovery.",
+        "Повторное открытие этого разговора не создаёт новый чат и не отправляет контекст автоматически.",
+        "Чужая навигация без подтверждённого ручного Send не привязывается."
+      ],
+      "expected_commit_message": "feat: Сохранить разговор после обычного ручного первого сообщения без ложной доставки контекста",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "event-driven-runtime-phase-1-20260928",
+        "task_id": "T008",
+        "role": "implementation"
+      }
+    },
+    {
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
@@ -451,7 +491,8 @@
         "T004",
         "T005",
         "T006",
-        "T007"
+        "T007",
+        "T008"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -495,7 +536,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-phase-1-20260928
 Current Task: нет
-Revision: 743
+Revision: 744
 
 ## Цель
 
@@ -535,6 +576,10 @@ Revision: 743
   - Git Commit: [DONE] feat: Проверить и исправить автоматическую отправку большого recovery
   - Reference: event-driven-runtime-phase-1-20260928 / T007 / implementation
   - Файлы: src/chatgpt-composer.mjs, tests/chatgpt-composer.test.mjs, tests/electron-smoke.mjs, docs/planning/event-driven-runtime.md, docs/VERIFICATION.md
+- [TODO] T008: Сохранить разговор после обычного ручного первого сообщения без ложной доставки контекста — Ожидает
+  - Git Commit: [PENDING] feat: Сохранить разговор после обычного ручного первого сообщения без ложной доставки контекста
+  - Reference: event-driven-runtime-phase-1-20260928 / T008 / implementation
+  - Файлы: src/chatgpt-page-observer.mjs, src/page-state.mjs, src/main.mjs, src/context-session.mjs, src/workspace-session.mjs, tests/page-state.test.mjs, tests/context-session.test.mjs, tests/electron-smoke.mjs, docs/planning/event-driven-runtime.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: event-driven-runtime-phase-1-20260928 / DOCS / implementation
