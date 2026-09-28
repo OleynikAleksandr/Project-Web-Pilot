@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 666,
+  "plan_revision": 668,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-title-sync-20260928",
@@ -79,8 +79,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-title-sync-20260928",
         "task_id": "T001",
@@ -109,7 +109,12 @@
         "Marker автоименования принадлежит session: другая session того же workspace не переименовывается при переключении.",
         "Manual title имеет приоритет, page title остаётся только fallback."
       ],
-      "expected_commit_message": "feat: restore session-scoped automatic titles"
+      "expected_commit_message": "feat: restore session-scoped automatic titles",
+      "actual_files": [
+        "src/main.mjs",
+        "src/workspace-session.mjs",
+        "tests/workspace-session.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -270,7 +275,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-title-sync-20260928
 Current Task: нет
-Revision: 666
+Revision: 668
 
 ## Цель
 
@@ -282,8 +287,8 @@ Revision: 666
 
 ## Микрозадачи
 
-- [TODO] T001: Восстановить и адаптировать локальное автоимя session к single active plan — Ожидает
-  - Git Commit: [PENDING] feat: restore session-scoped automatic titles
+- [DONE] T001: Восстановить и адаптировать локальное автоимя session к single active plan — Завершено
+  - Git Commit: [DONE] feat: restore session-scoped automatic titles
   - Reference: session-title-sync-20260928 / T001 / implementation
   - Файлы: src/workspace-session.mjs, src/plan-monitor.mjs, src/main.mjs, tests/workspace-session.test.mjs, tests/plan-monitor.test.mjs, docs/planning/session-title-sync.md
 - [TODO] T002: Реализовать узкий adapter server-side переименования native ChatGPT conversation — Ожидает

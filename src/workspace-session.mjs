@@ -112,6 +112,13 @@ function localName(value, { empty = 'Нужно непустое названи�
   return name;
 }
 
+function scopeSessionTitle(objective, nextTaskTitle = '') {
+  const base = localName(objective, { empty: 'У scope нет названия для сессии.' });
+  const task = typeof nextTaskTitle === 'string' ? nextTaskTitle.replace(/\s+/g, ' ').trim() : '';
+  if (!task || base.toLocaleLowerCase().includes(task.toLocaleLowerCase())) return base;
+  return localName(`${base} — ${task}`, { empty: 'У scope нет названия для сессии.' });
+}
+
 const validDuration = value => Number.isSafeInteger(value) && value >= 0;
 const validAgentTime = value => typeof value === 'object' && !Array.isArray(value)
   && validDuration(value.totalMs) && validDuration(value.lastMs) && value.lastMs <= value.totalMs;
@@ -453,6 +460,19 @@ export class WorkspaceSessions {
       if (!title || explicitTitleSources.has(session.titleSource)) return false;
       if (session.title === title && session.titleSource === 'page') return false;
       session.title = title; session.titleSource = 'page'; return true;
+    });
+  }
+
+  applyScopeTitle(workspace, sessionId, { scopeId, objective, scopeStatus, nextTaskTitle } = {}) {
+    return this.mutate(data => {
+      const { session } = this.activeRecord(workspace, sessionId, data);
+      if (!['ACTIVE', 'BLOCKED'].includes(scopeStatus) || typeof scopeId !== 'string' || !scopeId) return false;
+      if (session.lastNamedScopeId === scopeId) return false;
+      session.lastNamedScopeId = scopeId;
+      if (session.titleSource === 'manual') return true;
+      session.title = scopeSessionTitle(objective, nextTaskTitle);
+      session.titleSource = 'scope';
+      return true;
     });
   }
 

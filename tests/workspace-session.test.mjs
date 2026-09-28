@@ -148,6 +148,30 @@ test('session titles remain chat metadata independent of the current project pla
   assert.deepEqual(reopenedSecond.planView, reopenedFirst.planView);
 });
 
+test('scope naming belongs to one session and manual titles win over automatic naming', async t => {
+  const { project, store } = await fixture(t);
+  const first = await store.select(await project('Scope titles'));
+  const info = { scopeId: first.scopeId, objective: 'Синхронизация названий',
+    nextTaskTitle: 'Добавить локальное автоимя', scopeStatus: 'ACTIVE' };
+  assert.equal(await store.applyScopeTitle(first.workspace, first.sessionId, info), true);
+  let session = store.snapshot().projects[0].sessions[0];
+  assert.equal(session.title, 'Синхронизация названий — Добавить локальное автоимя');
+  assert.equal(session.titleSource, 'scope');
+  assert.equal(session.lastNamedScopeId, first.scopeId);
+  assert.equal(await store.setSessionTitle(first.workspace, first.sessionId, 'Поздний заголовок страницы'), false);
+  assert.equal(await store.applyScopeTitle(first.workspace, first.sessionId, { ...info, nextTaskTitle: 'Другая задача' }), false,
+    'plan revisions and task changes inside one scope do not rename the session');
+
+  const second = await store.newSession(first.workspace, 'chat');
+  assert.equal(await store.renameSession(first.workspace, second.sessionId, 'Моё название'), true);
+  assert.equal(await store.applyScopeTitle(first.workspace, second.sessionId, info), true,
+    'the same scope is observed independently by a newly selected session');
+  session = store.snapshot().projects[0].sessions.find(item => item.sessionId === second.sessionId);
+  assert.equal(session.title, 'Моё название');
+  assert.equal(session.titleSource, 'manual');
+  assert.equal(session.lastNamedScopeId, first.scopeId);
+});
+
 test('switching project cannot mutate another chat or accept late session results', async t => {
   const { project, store } = await fixture(t);
   const a = await store.select(await project('A')); const b = await store.select(await project('B'));
