@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 655,
+  "plan_revision": 657,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "remote-project-ui-research-20260928",
@@ -64,8 +64,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "remote-project-ui-research-20260928",
         "task_id": "T001",
@@ -88,7 +88,10 @@
         "Приведены официальные источники и host matrix с явными неизвестными",
         "Отделены snapshot, живое обновление и навигация разговоров; учтён прежний adapter"
       ],
-      "expected_commit_message": "feat: Исследовать MCP UI, PiP и совместимость клиентов ChatGPT"
+      "expected_commit_message": "feat: Исследовать MCP UI, PiP и совместимость клиентов ChatGPT",
+      "actual_files": [
+        "docs/research/remote-project-ui-options-2026-09-28.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -199,7 +202,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: remote-project-ui-research-20260928
 Current Task: нет
-Revision: 655
+Revision: 657
 
 ## Цель
 
@@ -211,8 +214,8 @@ Revision: 655
 
 ## Микрозадачи
 
-- [TODO] T001: Исследовать MCP UI, PiP и совместимость клиентов ChatGPT — Ожидает
-  - Git Commit: [PENDING] feat: Исследовать MCP UI, PiP и совместимость клиентов ChatGPT
+- [DONE] T001: Исследовать MCP UI, PiP и совместимость клиентов ChatGPT — Завершено
+  - Git Commit: [DONE] feat: Исследовать MCP UI, PiP и совместимость клиентов ChatGPT
   - Reference: remote-project-ui-research-20260928 / T001 / implementation
   - Файлы: docs/planning/remote-project-ui-research.md, docs/research/remote-project-ui-options-2026-09-28.md
 - [TODO] T002: Оценить мобильный Web Pilot для iOS/Android и готовые open-source основы — Ожидает
