@@ -1,3 +1,4 @@
+import { ConversationRecovery } from './conversation-recovery.mjs';
 import { PageStateSource } from './page-state.mjs';
 import { connectPageState } from './page-state-bridge.mjs';
 import { PlanMonitor } from './plan-monitor.mjs';
@@ -117,10 +118,25 @@ const agentTimer = new AgentTimer({ onFinish: ({ workspace, sessionId }, duratio
 } });
 const pageState = new PageStateSource();
 let disconnectPageState = null;
+const conversationRecovery = new ConversationRecovery({
+  selected: () => store.selected(),
+  available: () => !pageLoading && !setupState && !settingsState && !controller?.composer.inFlight,
+  inspect: () => controller.composer.inspect(),
+  reopen: async (project, current) => {
+    if (!current()) return false;
+    await navigate(project, { generation: navigationId });
+    if (!current()) return false;
+    if (!pageState.current) await pageState.waitForChange(pageState.version, { timeoutMs: 5000, canContinue: current });
+    return current() && pageState.current?.state.url === project.chatUrl
+      && !pageState.current.state.connectionError && !!pageState.current.state.editorAvailable;
+  },
+  onChange: () => publish(),
+});
 function applyObservedPage(event) {
   if (event.reset) { agentTimer.finish(); return; }
   chromiumDiagnostics?.observePage(event.state);
   if (pageLoading || setupState || settingsState) return;
+  conversationRecovery.observe(event.state);
   const selected = store.selected();
   const target = selected && !selected.sessionArchivedAt
     ? { workspace: selected.workspace, sessionId: selected.sessionId } : null;
@@ -214,6 +230,7 @@ function snapshot() {
     sessions: activeSessionsNewestFirst(sessions).map(({ sessionId, experience, chatUrl, title, createdAt }) => ({ sessionId, experience, chatUrl, title, createdAt })),
   })),
     archives: projectedArchives(), settings: settingsState, doctor: doctorState,
+    conversationRecovery: conversationRecovery.view(),
     selected, context: controller?.state ?? { phase: 'selected', servicesReady: false, messageSent: false },
     contextPreparation: { busy: selected ? contextCache.isBuilding(selected.workspace, sessionSelection(selected)) : false },
     runtimeFolder, platform: process.platform,
@@ -486,6 +503,7 @@ function nextNavigation() {
   // An older async action cannot reclaim navigation after a newer user selection.
   if (owner && owner.generation !== navigationId) return owner.generation;
   agentTimer.finish();
+  conversationRecovery.reset();
   const generation = ++navigationId;
   if (owner) owner.generation = generation;
   return generation;
@@ -801,6 +819,7 @@ function connectController() {
 
 function registerIpc() {
   ipcMain.handle('pilot:get-state', event => { assertLocalSender(event); return snapshot(); });
+  registerAction('pilot:reconnect', () => conversationRecovery.retry());
   registerAction('pilot:startup', action => startupAction(action), { navigation: true });
   registerAction('pilot:open-archive-window', input => openArchiveWindow(typeof input === 'string' ? input : null));
   registerAction('pilot:open-settings', () => openSettings());
@@ -1168,6 +1187,7 @@ async function createWindow() {
   secureRemote(browser.webContents);
   chromiumDiagnostics = new ChromiumDiagnostics(browser.webContents, { file: chromiumDiagnosticsFile,
     allowFixture: smoke,
+    onConversationRateLimit: (id, seconds) => conversationRecovery.rateLimited(id, seconds),
     startupNetwork: !smoke && store.snapshot().projects.length === 0 });
   sidebar.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   sidebar.webContents.on('will-navigate', event => event.preventDefault());
@@ -1195,7 +1215,7 @@ async function createWindow() {
   window.on('closed', () => {
     try {
       ++navigationId; startupClipboard?.dispose(); startupClipboard = null; startupFlow?.dispose(); startupFlow = null;
-      controller?.cancel(); planMonitor.close(); clearInterval(interval); disconnectPageState?.(); agentTimer.finish(); contextCache.clear(); workspaceSetup.invalidateReadiness();
+      conversationRecovery.reset(); controller?.cancel(); planMonitor.close(); clearInterval(interval); disconnectPageState?.(); agentTimer.finish(); contextCache.clear(); workspaceSetup.invalidateReadiness();
       chatColorStyles?.dispose();
       void chromiumDiagnostics?.stop().catch(() => {}); chromiumDiagnostics = null;
     } finally {

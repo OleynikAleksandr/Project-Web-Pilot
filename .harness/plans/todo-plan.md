@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 744,
+  "plan_revision": 746,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-1-20260928",
@@ -45,7 +45,9 @@
       "scripts/stage-page-observer.mjs",
       "tests/page-state.test.mjs",
       "tests/chatgpt-composer.test.mjs",
-      "src/workspace-session.mjs"
+      "src/workspace-session.mjs",
+      "src/preload.cjs",
+      "src/ui/index.html"
     ],
     "documentation_paths": [
       "docs/planning/event-driven-runtime.md",
@@ -371,10 +373,18 @@
         "src/conversation-recovery.mjs",
         "src/ui/sidebar.mjs",
         "tests/conversation-recovery.test.mjs",
-        "tests/electron-smoke.mjs"
+        "tests/electron-smoke.mjs",
+        "src/chatgpt-composer.mjs",
+        "src/chatgpt-dom.mjs",
+        "src/chromium-diagnostics.mjs",
+        "src/context-session.mjs",
+        "src/preload.cjs",
+        "src/ui/index.html",
+        "tests/page-state.test.mjs"
       ],
       "documentation_paths": [
-        "docs/planning/event-driven-runtime.md"
+        "docs/planning/event-driven-runtime.md",
+        "docs/VERIFICATION.md"
       ],
       "verification_ids": [
         "unit",
@@ -388,13 +398,30 @@
         "При неудаче доступен явный повтор, смена сессии отменяет отложенную попытку"
       ],
       "expected_commit_message": "feat: Распознавать обрыв ответа и безопасно восстанавливать сохранённый разговор",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "event-driven-runtime-phase-1-20260928",
         "task_id": "T006",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "docs/VERIFICATION.md",
+        "src/chatgpt-composer.mjs",
+        "src/chatgpt-dom.mjs",
+        "src/chatgpt-page-observer.mjs",
+        "src/chromium-diagnostics.mjs",
+        "src/context-session.mjs",
+        "src/conversation-recovery.mjs",
+        "src/main.mjs",
+        "src/page-state.mjs",
+        "src/preload.cjs",
+        "src/ui/index.html",
+        "src/ui/sidebar.mjs",
+        "tests/conversation-recovery.test.mjs",
+        "tests/electron-smoke.mjs",
+        "tests/page-state.test.mjs"
+      ]
     },
     {
       "id": "T007",
@@ -536,7 +563,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-phase-1-20260928
 Current Task: нет
-Revision: 744
+Revision: 746
 
 ## Цель
 
@@ -568,10 +595,10 @@ Revision: 744
   - Git Commit: [PENDING] feat: Собрать и проверить исправленный парный релиз 0.6.64
   - Reference: event-driven-runtime-phase-1-20260928 / T005 / implementation
   - Файлы: package.json, package-lock.json, scripts/check-event-runtime-release.mjs, docs/planning/event-driven-runtime.md, docs/RELEASE.md, docs/VERIFICATION.md
-- [TODO] T006: Распознавать обрыв ответа и безопасно восстанавливать сохранённый разговор — Ожидает
-  - Git Commit: [PENDING] feat: Распознавать обрыв ответа и безопасно восстанавливать сохранённый разговор
+- [DONE] T006: Распознавать обрыв ответа и безопасно восстанавливать сохранённый разговор — Завершено
+  - Git Commit: [DONE] feat: Распознавать обрыв ответа и безопасно восстанавливать сохранённый разговор
   - Reference: event-driven-runtime-phase-1-20260928 / T006 / implementation
-  - Файлы: src/chatgpt-page-observer.mjs, src/page-state.mjs, src/main.mjs, src/conversation-recovery.mjs, src/ui/sidebar.mjs, tests/conversation-recovery.test.mjs, tests/electron-smoke.mjs, docs/planning/event-driven-runtime.md
+  - Файлы: src/chatgpt-page-observer.mjs, src/page-state.mjs, src/main.mjs, src/conversation-recovery.mjs, src/ui/sidebar.mjs, tests/conversation-recovery.test.mjs, tests/electron-smoke.mjs, src/chatgpt-composer.mjs, src/chatgpt-dom.mjs, src/chromium-diagnostics.mjs, src/context-session.mjs, src/preload.cjs, src/ui/index.html, tests/page-state.test.mjs, docs/planning/event-driven-runtime.md, docs/VERIFICATION.md
 - [DONE] T007: Проверить и исправить автоматическую отправку большого recovery — Завершено
   - Git Commit: [DONE] feat: Проверить и исправить автоматическую отправку большого recovery
   - Reference: event-driven-runtime-phase-1-20260928 / T007 / implementation

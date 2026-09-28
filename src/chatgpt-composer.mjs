@@ -10,6 +10,7 @@ export function pageOperation({ action = 'inspect', text = '', requestId = '', e
   const { first } = dom;
   const editor = dom.editor();
   const busy = dom.busy();
+  const connectionError = dom.connectionError();
   const login = !!first('[data-testid="login-button"],a[href="/auth/login"],a[href="https://chatgpt.com/auth/login"]');
   const draft = () => editor ? (editor.tagName === 'TEXTAREA' || editor.tagName === 'INPUT'
     ? editor.value : editor.innerText ?? editor.textContent ?? '') : '';
@@ -24,10 +25,11 @@ export function pageOperation({ action = 'inspect', text = '', requestId = '', e
   const modeButtons = dom.modeButtons();
   const modeOf = dom.modeOf;
   const experience = dom.experience();
-  const result = { url: location.href, editorAvailable: !!editor, writable, login, busy,
+  const result = { connectionError, url: location.href, editorAvailable: !!editor, writable, login, busy,
     draftLength, draftMatches, sendEnabled, messageSeen, userMessageCount: messages.length, experience };
   if (action === 'inspect') return result;
   if (messageSeen) return { ...result, action: 'already-sent' };
+  if (connectionError) return { ...result, action: 'deferred', reason: 'CONNECTION_INTERRUPTED' };
   if (login || !writable) return { ...result, action: 'deferred', reason: 'LOGIN_REQUIRED' };
   if (busy) return { ...result, action: 'deferred', reason: 'GENERATION_ACTIVE' };
   if (expectedExperience) {
@@ -109,7 +111,7 @@ export class ChatGPTComposer {
     do {
       if (!canContinue()) return observation ?? {};
       observation = await this.inspect(args);
-      if (observation.messageSeen || observation.login || observation.busy
+      if (observation.messageSeen || observation.login || observation.busy || observation.connectionError
           || (observation.draftMatches && observation.sendEnabled && observation.writable)) return observation;
       const signal = await this.waitForObservedChange(version, deadline, canContinue);
       version = signal.version ?? version;

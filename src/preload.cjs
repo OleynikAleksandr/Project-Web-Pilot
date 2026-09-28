@@ -36,6 +36,7 @@ contextBridge.exposeInMainWorld('webPilot', Object.freeze({
   setExpanded: (workspace, expanded) => ipcRenderer.invoke('pilot:set-expanded', { workspace, expanded }),
   newSession: (workspace, experience) => ipcRenderer.invoke('pilot:new-session', { workspace, experience }),
   returnToChat: () => ipcRenderer.invoke('pilot:return-chat'),
+  reconnect: () => ipcRenderer.invoke('pilot:reconnect'),
   retry: () => ipcRenderer.invoke('pilot:retry'),
   reload: () => ipcRenderer.invoke('pilot:reload'),
   chooseRuntime: () => ipcRenderer.invoke('pilot:choose-runtime'),

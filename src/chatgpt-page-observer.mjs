@@ -16,6 +16,7 @@ export function installPageObserver(dom, send) {
       visibility: document.visibilityState,
       editorAvailable: !!editor, editorRevision,
       writable: !!editor && !editor.disabled && !editor.readOnly && editor.getAttribute('contenteditable') !== 'false',
+      connectionError: dom.connectionError(),
       busy: dom.busy(), sendEnabled: !!button && !button.disabled && button.getAttribute('aria-disabled') !== 'true',
       draftRevision, userMessageCount: dom.messages('user').length, userMessagesRevision,
     };
@@ -43,7 +44,7 @@ export function installPageObserver(dom, send) {
       const inAssistant = elementOf(record.target)?.closest(dom.selectors.assistant);
       const onlyText = record.type === 'characterData' || (record.type === 'childList'
         && [...record.addedNodes, ...record.removedNodes].every(n => n.nodeType === 3));
-      if (!(inAssistant && onlyText)) relevant = true;
+      if (!(inAssistant && onlyText) || elementOf(record.target)?.closest('[role="alert"],[data-testid="conversation-error"],.text-token-text-error')) relevant = true;
     }
     if (draftChanged) draftRevision++;
     if (usersChanged) userMessagesRevision++;

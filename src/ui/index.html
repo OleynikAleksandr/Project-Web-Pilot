@@ -337,6 +337,11 @@ SOFTWARE.
           <ul id="plan-tasks" class="plan-tasks" aria-label="Микрозадачи плана"></ul>
         </section>
       </section>
+      <section id="conversation-recovery" class="card" role="status" aria-live="polite" hidden>
+        <h3>Связь с ChatGPT</h3>
+        <p id="conversation-recovery-message" class="description"></p>
+        <button id="reconnect-chat" class="secondary">Повторно открыть разговор</button>
+      </section>
       <section id="context-card" class="card" data-tone="neutral" aria-live="polite">
         <div class="card-head"><button id="context-toggle" class="context-toggle" type="button" aria-label="Показать подробности состояния контекста" aria-expanded="false" aria-controls="context-details"></button><h3 id="context-title">Готов к началу</h3></div>
         <div id="context-details" hidden>

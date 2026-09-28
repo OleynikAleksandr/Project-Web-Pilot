@@ -342,9 +342,10 @@ const IGNORED_CDP = new Set([
 ]);
 
 export class ChromiumDiagnostics {
-  constructor(contents, { file, maxBytes, allowFixture = false, startupNetwork = false } = {}) {
+  constructor(contents, { file, maxBytes, allowFixture = false, startupNetwork = false, onConversationRateLimit = () => {} } = {}) {
     if (!contents || !file) throw new TypeError('ChromiumDiagnostics requires contents and file');
     this.contents = contents;
+    this.onConversationRateLimit = onConversationRateLimit;
     this.allowFixture = allowFixture;
     this.log = new DiagnosticJsonl(file, { maxBytes });
     this.networkTrace = startupNetwork ? new StartupNetworkTrace(contents.session?.netLog, path.join(path.dirname(file), 'startup-network.json')) : null;
@@ -446,6 +447,13 @@ export class ChromiumDiagnostics {
       const url = safeUrl(params.response?.url);
       try {
         const rawUrl = new URL(params.response?.url);
+        const limited = rawUrl.pathname.match(/^\/backend-api\/conversations?\/([^/]+)$/);
+        if (rawUrl.origin === 'https://chatgpt.com' && limited && params.response?.status === 429) {
+          const headers = params.response.headers ?? {};
+          const retry = Object.entries(headers).find(([key]) => key.toLowerCase() === 'retry-after')?.[1];
+          const seconds = Number(retry) || Math.max(0, (Date.parse(retry) - Date.now()) / 1000) || 60;
+          this.onConversationRateLimit(decodeURIComponent(limited[1]), seconds);
+        }
         if (rawUrl.origin === 'https://chatgpt.com' && params.response?.mimeType === 'application/json') {
           if (rawUrl.pathname === '/backend-api/models') this.serviceResponses.set(params.requestId, { kind: 'models', url });
           else if (/^\/backend-api\/conversations\/[^/]+$/.test(rawUrl.pathname)) this.serviceResponses.set(params.requestId, { kind: 'conversation', url });

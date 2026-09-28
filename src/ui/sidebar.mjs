@@ -392,6 +392,11 @@ function render(state) {
     if (button.closest('#startup-panel') || button.id === 'open-startup') continue;
     button.disabled = actionPending || (state.storageError && ['create-workspace', 'add-workspace', 'retry-context'].includes(button.id));
   }
+  const recovery = state.conversationRecovery;
+  $('conversation-recovery').hidden = !recovery || recovery.phase === 'idle' || !!state.setup || !!state.settings;
+  $('conversation-recovery-message').textContent = recovery?.message ?? '';
+  $('reconnect-chat').hidden = !recovery?.canRetry;
+  $('reconnect-chat').disabled = actionPending || !recovery?.canRetry;
   setupView.render(state, actionPending);
   archiveView.render(state, actionPending);
   const guidedStartup = !!state.startup?.active && !state.setup && !state.settings;
@@ -415,6 +420,7 @@ $('reload-chat').addEventListener('click', () => action('reload'));
 // An outdated Kit opens the regular upgrade preview; the user confirms it there.
 $('workspace-health-retry').addEventListener('click', () => action(kitUpgradeNeeded(currentState?.workspaceHealth) ? 'retry' : 'reload'));
 $('workspace-health-doctor').addEventListener('click', () => action('openDoctor'));
+$('reconnect-chat').addEventListener('click', () => action('reconnect'));
 $('retry-context').addEventListener('click', () => action('retry'));
 $('return-chat').addEventListener('click', () => action('returnToChat'));
 $('choose-runtime').addEventListener('click', () => action('chooseRuntime'));

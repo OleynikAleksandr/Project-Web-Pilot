@@ -29,6 +29,7 @@ export function normalizePageObservation(message) {
     seq: message.seq,
     state: {
       url, experience, login, visibility,
+      connectionError: state.connectionError === 'stream-interrupted' ? state.connectionError : null,
       editorAvailable: state.editorAvailable,
       editorRevision: state.editorRevision,
       writable: state.writable,

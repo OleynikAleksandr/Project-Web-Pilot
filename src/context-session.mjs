@@ -232,6 +232,10 @@ export class ContextSession {
           delivery: { ...attempt.packet, sentAtMs: attempt.sentAtMs ?? attempt.sendStartedAtMs }, error: null });
         return;
       }
+      if (observation.connectionError) {
+        this.emit({ phase: 'error', projectInfo: info, error: { code: 'CHATGPT_CONNECTION_INTERRUPTED',
+          message: 'Связь с ChatGPT прервалась. Проверьте восстановление разговора.' } }); return;
+      }
       if (!this.servicesReady) {
         this.emit({ phase: 'preparing', projectInfo: info });
         await this.runtime.ensure();

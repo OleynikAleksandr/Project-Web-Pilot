@@ -39,6 +39,25 @@ export function createChatGPTDOM(selectors) {
   };
   const editor = () => first(selectors.editor);
   const sendButton = () => first(selectors.send) ?? [...(editor()?.closest('form')?.querySelectorAll('button[type="submit"]') ?? [])].find(visible);
-  return { selectors, visible, first, messages, modeOf, modeButtons, experience, editor, sendButton, busy: () => !!first(selectors.stop) };
+  const connectionError = () => {
+    // Inspect error UI, never ordinary message prose or code quoted by the user.
+    const candidates = [...document.querySelectorAll('[role="alert"],[data-testid="conversation-error"],.text-token-text-error')];
+    for (const button of document.querySelectorAll('button')) {
+      if (/^(Retry|Try again|Повторить|Попробовать снова)$/i.test((button.innerText ?? button.textContent ?? '').trim())) {
+        let node = button.parentElement;
+        for (let i = 0; node && i < 3; i++, node = node.parentElement)
+          if ((node.textContent ?? '').length < 1200) candidates.push(node);
+      }
+    }
+    for (const node of candidates) {
+      if (!visible(node) || node.closest(selectors.user + ',pre,code,blockquote,[contenteditable="true"]')) continue;
+      const text = (node.innerText ?? node.textContent ?? '').trim();
+      if (text.length > 1200) continue;
+      if (/ChatGPT stream recovery polling timed out|network error|connection (?:was )?(?:lost|interrupted)|ошибка сети|соединение (?:прервано|потеряно)/i.test(text))
+        return 'stream-interrupted';
+    }
+    return null;
+  };
+  return { selectors, visible, first, messages, connectionError, modeOf, modeButtons, experience, editor, sendButton, busy: () => !!first(selectors.stop) };
 }
 export const chatGPTDOMScript = () => `(${createChatGPTDOM.toString()})(${JSON.stringify(CHATGPT_SELECTORS)})`;
