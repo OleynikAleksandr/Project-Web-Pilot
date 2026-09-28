@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 676,
+  "plan_revision": 677,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-title-sync-20260928",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Автоматически давать каждой рабочей session Project Web Pilot осмысленное имя по текущей работе и синхронизировать это же server-side имя с соответствующим native conversation ChatGPT.",
   "acceptance_criteria": [
     "Автоматически давать каждой рабочей session Project Web Pilot осмысленное имя по текущей работе и синхронизировать это же server-side имя с соответствующим native conversation ChatGPT."
@@ -239,18 +239,90 @@
       ]
     },
     {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
+      "id": "T005",
+      "title": "Исправить startup reconciliation названия session и native ChatGPT",
+      "why": "Реальная приёмка 0.6.59 показала: local explicit scope title и server-side ChatGPT title расходятся после перезапуска, хотя standalone adapter работает.",
+      "dependencies": [
+        "T004"
+      ],
+      "functional_paths": [
+        "src/chatgpt-title.mjs",
+        "src/main.mjs",
+        "tests/chatgpt-title.test.mjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "docs/planning/session-title-sync.md"
+      ],
+      "verification_ids": [
+        "unit",
+        "smoke"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "При открытии exact bound conversation Web Pilot читает server title и не выполняет PATCH, если он уже совпадает с local explicit title.",
+        "Если server title отличается, Web Pilot автоматически выполняет PATCH и подтверждает результат GET-readback без пользовательского действия.",
+        "TITLE_SYNC_NOT_READY и ранняя загрузка не теряют sync: после did-finish-load/pageLoading=false выполняется bounded retry.",
+        "Результаты sync наблюдаемы в безопасной диагностике без access token и без содержимого сообщений."
+      ],
+      "expected_commit_message": "fix: reconcile session title after ChatGPT load",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "session-title-sync-20260928",
+        "task_id": "T005",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T006",
+      "title": "Собрать исправленный парный релиз Project Web Pilot 0.6.60",
+      "why": "Пользователь должен повторить реальный restart-test на исправленном приложении.",
+      "dependencies": [
+        "T005"
+      ],
+      "functional_paths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "documentation_paths": [
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [
+        "package"
+      ],
+      "verification_kind": "package",
+      "acceptance_criteria": [
+        "0.6.60 собран для macOS arm64 и Windows x64 одной release pipeline.",
+        "Финальный manifest указывает на зафиксированный source commit и packagedSourceMatches=true.",
+        "Корневой и /Applications macOS app обновлены до 0.6.60; native Windows остаётся пользовательской проверкой."
+      ],
+      "expected_commit_message": "release: Project Web Pilot 0.6.60",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "session-title-sync-20260928",
+        "task_id": "T006",
+        "role": "implementation"
+      }
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "session-title-sync-20260928",
         "task_id": "DOCS",
-        "role": "implementation"
+        "role": "implementation",
+        "iteration": 2
       },
       "dependencies": [
         "T001",
         "T002",
         "T003",
-        "T004"
+        "T004",
+        "T005",
+        "T006"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -300,10 +372,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: session-title-sync-20260928
 Current Task: нет
-Revision: 676
+Revision: 677
 
 ## Цель
 
@@ -331,8 +403,16 @@ Revision: 676
   - Git Commit: [DONE] release: Project Web Pilot 0.6.59
   - Reference: session-title-sync-20260928 / T004 / implementation
   - Файлы: package.json, package-lock.json, docs/planning/session-title-sync.md, docs/RELEASE.md, docs/VERIFICATION.md
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: актуализировать контекст проекта
+- [TODO] T005: Исправить startup reconciliation названия session и native ChatGPT — Ожидает
+  - Git Commit: [PENDING] fix: reconcile session title after ChatGPT load
+  - Reference: session-title-sync-20260928 / T005 / implementation
+  - Файлы: src/chatgpt-title.mjs, src/main.mjs, tests/chatgpt-title.test.mjs, tests/electron-smoke.mjs, docs/planning/session-title-sync.md
+- [TODO] T006: Собрать исправленный парный релиз Project Web Pilot 0.6.60 — Ожидает
+  - Git Commit: [PENDING] release: Project Web Pilot 0.6.60
+  - Reference: session-title-sync-20260928 / T006 / implementation
+  - Файлы: package.json, package-lock.json, docs/RELEASE.md, docs/VERIFICATION.md
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: session-title-sync-20260928 / DOCS / implementation
   - Файлы: docs/planning/session-title-sync.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/modules/workspace-sessions.md
 
