@@ -1,6 +1,6 @@
 # Продукт
 
-Текущий локальный выпуск — **0.6.63**, macOS arm64 / Windows x64. Canonical package — `@webpilot/workflow-kit@1.5.0` из `/Users/oleksandroliinyk/VSCODE/WorkflowKit`; generated `resources/workflow-kit` содержит 35 файлов, SHA-256 `0db567df6f0c8f68f3119a7322b4c1c6d28cd06bf57b267993b792097bbb2c75`. Действующая модель: один checkout/worktree = один current plan; Web Pilot sessions — chats/navigation с собственным стабильным title. 0.6.63 заменяет ненадёжный `window.prompt()` на встроенный modal переименования в sidebar: поле с текущим именем, Enter/«Сохранить», «Отмена». Native title sync остаётся событийным и неблокирующим. Парная поставка: `~/Downloads/WebPilot-0.6.63/`; корневой и `/Applications` app обновлены до 0.6.63.
+Текущий локальный выпуск — **0.6.64**, macOS arm64 / Windows x64; Workflow Kit остаётся **1.5.0**. Реализована первая фаза событийной обработки: общий наблюдатель страницы, сохранение разговора после ручного Send и ограниченное восстановление связи с ChatGPT. Парная поставка — `~/Downloads/WebPilot-0.6.64/`. Обновлены постоянный `Project Web Pilot.app` в корне проекта и копия в `/Applications`; для применения нужен полный выход и повторный запуск.
 
 Предыдущий локальный выпуск — **0.6.54**: таймер работы агента в карточке плана. Поставка: `~/Downloads/WebPilot-0.6.54/`.
 
@@ -16,7 +16,7 @@
 
 Контракт совместимости — `docs/modules/chatgpt-dom-compatibility.md`. Версионные разделы ниже сохраняют историю.
 
-## Действующий контракт — macOS / Windows 0.6.63
+## Действующий контракт — macOS / Windows 0.6.64
 
 Один Git checkout/worktree имеет один current Workflow Kit plan `.harness/plans/todo-plan.md`. Web Pilot хранит несколько Chat/Work sessions с собственными URL, title, датами и UI metadata, но выбор session **не выбирает plan**. Открытие старого чата сохраняет его разговор и одновременно показывает актуальный current plan checkout. Новый Chat/Work получает recovery того же plan; второй canonical plan не создаётся.
 

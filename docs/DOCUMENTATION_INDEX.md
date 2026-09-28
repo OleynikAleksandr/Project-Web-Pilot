@@ -11,7 +11,7 @@
 | .harness/kit/templates/PLAN.md | Шаблон собственного/подготовленного плана: project navigation, задачи и финальная DOCS |
 | .harness/kit/templates/PRODUCT.md | Универсальный шаблон общего замысла проекта |
 | .harness/kit/templates/START.md | Шаблон правил начала новой сессии |
-| .harness/plans/todo-plan.md | Совместимый legacy-путь текущего проекта; принадлежность задана sessionId, новые планы — в .harness/plans/by-id/ |
+| .harness/plans/todo-plan.md | Единственный current plan текущего checkout/worktree; chat/session не выбирает его |
 | .harness/plans/todo-plan.template.md | Доступный агенту шаблон следующего рабочего scope |
 | AGENTS.md | Управляемые инструкции Workflow Kit и границы Project Web Pilot |
 | docs/PRODUCT.md | Действующий продуктовый контракт Project Web Pilot |
@@ -47,7 +47,7 @@
 
 ## Обязательная навигация проекта
 
-Каждый канонический план сессии, включая состояние `NONE`, содержит required-ссылки на:
+Каждый current plan checkout/worktree, включая состояние `NONE`, содержит required-ссылки на:
 1. `docs/architecture/OVERVIEW.md` — что это за проект и как он устроен в целом;
 2. `docs/MODULES.md` — из каких самостоятельных частей он состоит и где их спецификации;
 3. `docs/DOCUMENTATION_INDEX.md` — какие документы существуют и что в них находится.
@@ -56,9 +56,9 @@
 
 ## Порядок чтения новой сессией
 
-Новая сессия начинает с recovery capsule. При `NONE` capsule уже содержит Workflow Core и три обязательных навигационных документа и предлагает обсудить следующий этап проекта. При активном scope дополнительно передаются sessionId/planId, цель, текущая и оставшиеся задачи, релевантные specification/planning documents, рабочие изменения и только необходимые dependency diffs.
+Новая сессия начинает с recovery capsule. При `NONE` capsule уже содержит Workflow Core и три обязательных навигационных документа и предлагает обсудить следующий этап проекта. При активном scope дополнительно передаются current scope/revision, цель, текущая и оставшиеся задачи, релевантные specification/planning documents, рабочие изменения и только необходимые dependency diffs.
 
-Большие исторические `PRODUCT`, `ARCHITECTURE`, `VERIFICATION`, `DECISIONS` и другие профильные документы читаются по этому индексу только когда нужны для конкретного этапа. Только явно архивированные планы находятся в `.harness/plans/archive/` и являются историей. Выполненный, но не архивированный план остаётся в своей сессии и может быть продолжен.
+Большие исторические `PRODUCT`, `ARCHITECTURE`, `VERIFICATION`, `DECISIONS` и другие профильные документы читаются по этому индексу только когда нужны для конкретного этапа. Только явно архивированные планы находятся в `.harness/plans/archive/` и являются историей. Выполненный, но не архивированный план остаётся current plan checkout и может быть продолжен новым чатом.
 
 ## Workflow Kit package и generated runtime
 
@@ -142,7 +142,7 @@ Scope `stable-mcp-connector-036` завершает интеграцию scope 0
 
 Исторический выпуск 0.6.51: RELEASE.md, VERIFICATION.md. Выбор первого проекта описан в `docs/modules/first-run-onboarding.md` и WORKSPACE_SETUP.md.
 
-Текущий выпуск 0.6.63: [RELEASE](RELEASE.md), [VERIFICATION](VERIFICATION.md), naming planning — `docs/planning/session-title-sync.md`; single-active contract сохраняется в `docs/planning/single-active-plan-adaptation.md`. Canonical Workflow Kit 1.5.0 / 35 files / digest `0db567df…bbb2c75`; парная поставка находится в `~/Downloads/WebPilot-0.6.63/`.
+Текущий выпуск 0.6.64: [RELEASE](RELEASE.md), [VERIFICATION](VERIFICATION.md), naming planning — `docs/planning/session-title-sync.md`; single-active contract сохраняется в `docs/planning/single-active-plan-adaptation.md`. Canonical Workflow Kit 1.5.0 / 35 files / digest `0db567df…bbb2c75`; парная поставка находится в `~/Downloads/WebPilot-0.6.64/`.
 
 ## Удалённый интерфейс — исследование 2026-09-28
 
@@ -157,4 +157,4 @@ Scope `stable-mcp-connector-036` завершает интеграцию scope 0
 
 | Документ | Назначение |
 | --- | --- |
-| [Событийная обработка состояния Web Pilot](planning/event-driven-runtime.md) | Согласованные выводы аудита polling, preload, файловые сигналы, карта 18 фаз контроллера, три коротких этапа реализации и критерии приёмки; реализация не начата |
+| [Событийная обработка состояния Web Pilot](planning/event-driven-runtime.md) | Согласованный контракт трёх этапов; фаза 1 реализована в 0.6.64, включая ручной Send и восстановление разговора; фазы 2/3 ожидают отдельного продолжения |

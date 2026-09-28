@@ -85,3 +85,8 @@ Workflow Kit подключён как canonical `@webpilot/workflow-kit@1.5.0` 
 ## Выпуск 0.6.52
 
 Поставляемый `resources/workflow-kit` — Workflow Kit 1.4.11 (источник: CodeAppServer+WebChatGPT, ветка codex/gpt-provider-names, коммит badcf20; тест закрепляет SHA-256). Собственный `.harness/kit` репозитория остаётся 1.4.1 и обновляется только отдельным поручением. Проекты 1.4.1 открываются через штатный upgrade с резервной копией. Парная поставка — `~/Downloads/WebPilot-0.6.52/`; обновлены корневой app и `/Applications/Project Web Pilot.app`. План scope 038 принадлежит сессии cowork-kit-1411.
+
+
+## Локальный выпуск — 0.6.64 / 28.09.2026
+
+Фаза 1 событийного runtime завершена; контракт — `docs/planning/event-driven-runtime.md`. Общий sandboxed observer заменяет опрос DOM у controller/timer/diagnostics. Сохранены ручной recovery и обычный ручной разговор; reconnect ограничен и не повторяет сообщения. Парная поставка — `~/Downloads/WebPilot-0.6.64/`, root app и /Applications обновлены. Kit 1.5.0 не менялся. Source/installed fixtures подтверждены; реальный аккаунт и native Windows отдельно. Фазы 2/3 не выполнены; новый чат продолжает текущий checkout plan.

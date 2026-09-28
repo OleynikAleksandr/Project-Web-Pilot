@@ -1,5 +1,14 @@
 # Проверки и приёмка
 
+## Текущий результат — 0.6.64 / 28.09.2026
+
+Workflow commits T003, T004, T006, T007 и T008 прошли назначенные Node suite и Electron smoke; T005 прошёл installed/package gate. Проверены изолированные реальные UI-пути: автоматический Send >200 КБ с поздней готовностью кнопки, ручной recovery без sendStartedAtMs, обычный trusted ручной Send без ложного recovery ACK, повторное открытие, terminal error → один reconnect, черновик → блокировка, явная кнопка повторного открытия, сворачивание и защита от таймерной DOM-подстраховки.
+
+Парный build 0.6.64 и проверка 101 source/resource файлов прошли. Root app и /Applications совпадают со staging; их filesystem identity сохранена. Наблюдатель/composer из установленной копии исполнены отдельно в Electron 44.3.0 / Node 24.20.0 на offline fixture; это не полный live-account прогон установленного приложения. ZIP и hashes — `docs/RELEASE.md`. Native Windows, clean VM и реальный ChatGPT этой серии проверок не выполнялись.
+
+Точная историческая причина waiting-draft не восстановлена из старого журнала. Размер пакета и измерения T007 приведены ниже; политика сокращения контекста и canonical WorkflowKit не менялись.
+
+
 ## Event-driven runtime / Фаза 1 / T001 — baseline и публикация состояния (28.09.2026)
 
 Baseline снят **до изменения production-поведения** из HEAD `4584390b7425894bc750e08de799f2cf52edbad5` в изолированном source fixture Electron 44.3.0 / Chromium 152.0.7977.78 / встроенный Node 24.20.0 на macOS arm64. Для каждого сценария использовано стабильное окно 60 с. Временный счётчик действует только с флагом `--event-runtime-baseline`: считает вызовы `executeJavaScript` основного ChatGPT view, фактические отправки снимка sidebar, запуски Workflow/WorkspaceSetup Node worker и прирост диагностического JSONL. CPU раз в секунду берётся через `app.getAppMetrics()`; значения ниже — среднее `percentCPUUsage` по типу Electron-процесса. Тексты чатов, recovery, credentials и secrets не записываются.
@@ -42,7 +51,7 @@ Composer теперь ждёт наблюдаемое совпадение че�
 
 Состав текущего обязательного контекста: OVERVIEW 17112 bytes, MODULES 19268, DOCUMENTATION_INDEX 17709 — вместе 54089 bytes; planning event-driven-runtime 50341 bytes на момент измерения. Навигационные документы содержат накопленные исторические разделы. Политика ограничения контекста и изменение canonical WorkflowKit не входят в исправление отправки; вопрос передан в отдельное обсуждение.
 
-## Текущий результат — 0.6.40
+## Исторический результат — 0.6.40
 
 На 18.09.2026 версии исходников, установленного macOS app и обеих поставок — 0.6.40. Повторная сверка ZIP и установленного app при закрытии 031 успешна; Node suite и Electron smoke подтверждены для release commit 978e6613e6ff4285083911a6d137cb12d37660cb. Пользователь принял чистую 0.6.38 и проверку 0.6.39; новая пользовательская проверка 0.6.40, Windows 11 ARM64/x64-эмуляция и native x64 не объявляются выполненными.
 

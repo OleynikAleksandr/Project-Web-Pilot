@@ -1,6 +1,15 @@
 # Module Specification — Workspace & Sessions
 
-## Действующая модель — 0.6.63 / schema v6
+## События страницы и разговоры — 0.6.64
+
+Общий `PageStateSource` получает compact state от изолированного одностороннего preload. Проверяются текущий main frame, chatgpt.com, document ID и sequence; логика не зависит от rAF и работает в скрытом окне. Busy-переходы задают секундомер: первый idle фиксирует конец, одиночный grace-timeout 5 с объединяет короткие паузы. Периодические observeAgent/sampleDom удалены. PlanMonitor пока читает файлы по 1500 мс пульсу; одинаковая проекция не вызывает controller.tick.
+
+Ручная отправка своего recovery подтверждается requestId в пользовательском сообщении. Обычный первый Send подтверждается trusted click/Enter и наблюдением отправленного текста внутри страницы; его URL сохраняется с необязательным `manualStart: true` schema v6. Текст не проходит IPC. Такой разговор открывается без новой доставки в фазе manual-session; контекст отправляется только после явного обновления. Чужая навигация не привязывается.
+
+При terminal stream/network error `ConversationRecovery` допускает одну попытку открыть тот же сохранённый URL, свежую проверку черновика/статуса отправки и отмену при смене сессии. Повторный сбой требует явного действия; 429 даёт паузу. Генерация и сообщения не повторяются автоматически. Контракт: `docs/planning/event-driven-runtime.md`; доказательства: `docs/VERIFICATION.md`.
+
+
+## Действующая модель — 0.6.64 / schema v6
 
 Session store остаётся schema v6 и backward-compatible: старые поля `planId`, `originSessionId`, `legacyPlanId`, `planBinding` могут присутствовать на диске, но runtime их не использует для выбора plan. Полные задачи в session store не копируются.
 

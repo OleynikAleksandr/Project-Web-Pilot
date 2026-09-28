@@ -1,13 +1,12 @@
 # Перенос на Windows 10/11
 
-Текущая поставка — **Project Web Pilot 0.6.58, Windows x64**, собранная вместе с macOS arm64 из source commit `c135f1a523bdd5dc1c26a5e8ca72327866a093e0`. Package содержит Workflow Kit 1.5.0 и single-active-plan consumer. Windows package verifier прошёл; физический запуск на native Windows/clean VM для 0.6.58 не выполнялся.
+Текущая поставка — **Project Web Pilot 0.6.64, Windows x64**, собранная вместе с macOS arm64. Workflow Kit остаётся 1.5.0. Упакованные исходники и ZIP сверены; native Windows/clean VM не запускались.
 
 ## Файл для переноса
 
-`~/Downloads/WebPilot-0.6.58/Project-Web-Pilot-0.6.58-Windows-x64.zip`
+`~/Downloads/WebPilot-0.6.64/Project-Web-Pilot-0.6.64-Windows-x64.zip`
 
-- Project-Web-Pilot-0.6.58-macOS-arm64.zip: 181471570 bytes; SHA-256 `a80df450f37d92dc682ca8b085eeeae2b6024bbd16a01c67c7fb26fcd02dab4f`.
-- Project-Web-Pilot-0.6.58-Windows-x64.zip: 316733865 bytes; SHA-256 `bd338add3a7d24520ee1fe5722b932580e78118de15ac7f11b48f72200c96f2a`.
+Размер: 316752603 bytes; SHA-256 `4c21ba3ad5d8b506df1d73833375eb4a0ef201638107d468ac7c005a85c7bee0`.
 
 Контрольные суммы, инструкция и общий manifest лежат рядом. Полностью распакуйте ZIP на локальный диск Windows; запускайте `Project Web Pilot.exe` из полученной папки. Не переносите один EXE отдельно от resources. Для обновления завершите старое приложение и распакуйте новую поставку в отдельную папку; данные аккаунта и проектов в пользовательском профиле сохраняются.
 
@@ -53,7 +52,7 @@ Windows 11 ARM64 в UTM запускает x64-приложение через �
 
 Scope выпуска — windows-onboarding-033 собственной сессии; планы 031 и 032 не изменяются. Реестр наблюдений — docs/CLEAN_INSTALL.md, контракт — docs/modules/first-run-onboarding.md, детали выпуска — docs/RELEASE.md.
 
-Текущая 0.6.47 подготовлена локально в `~/Downloads/WebPilot-0.6.47/`. Последний опубликованный GitHub Release пока [0.6.45](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.45); публикация 0.6.47 требует отдельного поручения.
+Историческая 0.6.47 была подготовлена локально в `~/Downloads/WebPilot-0.6.47/`. На момент той поставки опубликованным GitHub Release был [0.6.45](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.45); публикация 0.6.47 требует отдельного поручения.
 
 19.09.2026: пользователь считает план завершённым. Скриншот 09.53.24 показывает
 созданное Codex Local Win MCP с Allow all actions. В 0.6.45 инструкция дополнена

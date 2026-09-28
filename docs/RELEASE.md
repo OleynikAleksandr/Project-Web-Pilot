@@ -1,5 +1,19 @@
 # Выпуск и постоянный путь запуска
 
+## Текущая локальная поставка — 0.6.64 / 28.09.2026
+
+`npm run build` выпустил macOS arm64 и Windows x64 из одной версии исходников; базовый commit `884e8818364709691c4f2b8a3349b4a7dfad6de8`, версия package/lock обновлена до 0.6.64 в задаче выпуска. Все 101 source/resource файла сверены с обеими упаковками. Root app и `/Applications/Project Web Pilot.app` обновлены с прежними inode 406600483 и 406571340 соответственно. Сборка не перезапускает открытый пользовательский процесс.
+
+Доставка: `~/Downloads/WebPilot-0.6.64/`, рядом `SHA256SUMS.txt`, `INSTALL.txt` и `release-manifest.json`.
+
+- `Project-Web-Pilot-0.6.64-macOS-arm64.zip` — 181490764 bytes; SHA-256 `b0d90ac3fbcd2ed64cab0d41ad22077eb3b89d41ac76f7a1593384d778bc9998`.
+- `Project-Web-Pilot-0.6.64-Windows-x64.zip` — 316752603 bytes; SHA-256 `4c21ba3ad5d8b506df1d73833375eb4a0ef201638107d468ac7c005a85c7bee0`.
+
+`scripts/check-event-runtime-release.mjs` проверяет источники/версии обеих упаковок, обе установленные macOS копии, identity, hashes ZIP и наличие generated preload в каждом ZIP. Отдельный Electron fixture исполняет preload и composer, извлечённые из установленной копии, на изолированной странице: большой Send, reload того же разговора и отсутствие дубля. Полный исходный UI проверен Electron smoke; полный запуск установленного приложения с реальным аккаунтом и native Windows не объявляются проверенными.
+
+Первая фаза событийного runtime завершена; этот заказанный промежуточный выпуск не закрывает фазы 2/3. Workflow Kit 1.5.0 и runtime digest не менялись. Локальная поставка не опубликована как новый GitHub Release.
+
+
 ## Согласованный результат
 
 16.09.2026 пользователь поручил один постоянный адрес приложения для Finder-алиаса и отдельный ZIP. Владелец этой части проекта — Release & Local Installation.
