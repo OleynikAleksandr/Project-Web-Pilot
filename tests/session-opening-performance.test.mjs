@@ -15,7 +15,7 @@ import { ContextCache } from '../src/context-cache.mjs';
 import { readinessContextKey } from '../src/context-inputs.mjs';
 import { ContextSession } from '../src/context-session.mjs';
 
-test('production readiness and canonical recovery block Send after real input mutations', async t => {
+test('production readiness and canonical recovery block insertion after real input mutations', async t => {
   for (const kind of ['document', 'index', 'HEAD', 'plan', 'transaction']) await t.test(kind, async t => {
     const workspace = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'web-pilot-send-inputs-')));
     t.after(() => fs.rm(workspace, { recursive: true, force: true }));
@@ -29,7 +29,7 @@ test('production readiness and canonical recovery block Send after real input mu
       tasks: [{ id: 'T1', title: 'Fixture', why: 'Freshness', dependencies: [], functional_paths: [], documentation_paths: ['docs/PRODUCT.md'],
         acceptance_criteria: ['Current'], verification_ids: [], expected_commit_message: 'docs: fixture' }],
     }));
-    if (kind === 'index') await fs.writeFile(path.join(workspace, 'index-fixture.txt'), 'stage after fill');
+    if (kind === 'index') await fs.writeFile(path.join(workspace, 'index-fixture.txt'), 'stage before fill');
     const setup = new WorkspaceSetup(), plans = new SessionPlans({ setup });
     const indexFile = path.resolve(workspace, git('rev-parse', '--git-path', 'index'));
     const indexBefore = await fs.readFile(indexFile);
@@ -49,8 +49,8 @@ test('production readiness and canonical recovery block Send after real input mu
       inspect: async options => ({ url: 'https://chatgpt.com/', editorAvailable: true, writable: true, draftLength: 0,
         busy: false, login: false, messageSeen: false, ...(options?.action === 'select-experience' ? { action: 'experience-confirmed' } : {}) }),
       deliver: async options => {
-        fills++; assert.equal(saved.attempt.state, 'prepared');
-        if (kind === 'document') await fs.appendFile(path.join(workspace, 'docs/architecture/OVERVIEW.md'), '\nChanged after fill\n');
+        assert.equal(saved.attempt.state, 'prepared');
+        if (kind === 'document') await fs.appendFile(path.join(workspace, 'docs/architecture/OVERVIEW.md'), '\nChanged before fill\n');
         if (kind === 'index') git('add', 'index-fixture.txt');
         if (kind === 'HEAD') {
           // Synthetic fixture history only; no user repository or hook configuration is changed.
@@ -59,13 +59,15 @@ test('production readiness and canonical recovery block Send after real input mu
         }
         if (kind === 'plan') execFileSync(process.execPath, [path.join(workspace, 'scripts/workflow.mjs'), 'task:start', 'T1', '--session', sessionId], { cwd: workspace });
         if (kind === 'transaction') await fs.writeFile(path.resolve(workspace, git('rev-parse', '--git-path', 'workflow-kit/transaction.json')), '{}');
+        await options.onBeforeFill();
+        fills++;
         await options.onBeforeSend();
         if (options.canContinue()) sends++;
         return { state: 'cancelled' };
       } };
     const controller = new ContextSession({ store, runtime: { ensure: async () => ({}) }, composer, contextCache: cache });
     controller.attach(saved); await controller.tick();
-    assert.equal(loads, 1); assert.equal(fills, 1); assert.equal(sends, 0);
+    assert.equal(loads, 1); assert.equal(fills, 0); assert.equal(sends, 0);
     assert.equal(controller.state.phase, 'prepared-stale');
     assert.equal(saved.attempt.state, 'prepared'); assert.equal(saved.attempt.sendStartedAtMs, null);
   });

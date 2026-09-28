@@ -260,12 +260,12 @@ export class ContextSession {
         this.servicesReady = true;
       }
       const deferred = !observation.editorAvailable || !observation.writable ? 'waiting-composer'
-        : observation.busy ? 'waiting-generation' : observation.draftLength && !observation.draftMatches ? 'waiting-draft' : null;
+        : observation.busy ? 'waiting-generation' : observation.draftLength && !observation.draftMatches && !this.composer.hasFilled?.(attempt?.requestId) ? 'waiting-draft' : null;
       if (deferred) {
         if (this.contextCache) void this.contextCache.warm(project.workspace, sessionSelection(project));
         this.emit({ phase: deferred, projectInfo: info }); return;
       }
-      if (attempt && !await this.packetIsCurrent(attempt.packet, project)) {
+      if (attempt && !this.composer.hasFilled?.(attempt.requestId) && !await this.packetIsCurrent(attempt.packet, project)) {
         if (observation.draftLength) { this.emit({ phase: 'prepared-stale', projectInfo: info }); return; }
         attempt = null;
         await this.store.updateSession(project.workspace, project.sessionId, { attempt: null, receipt: null });
@@ -292,11 +292,12 @@ export class ContextSession {
       const deliveryStarted = performance.now();
       const result = await this.composer.deliver({ text: attempt.text, requestId: attempt.requestId,
         expectedExperience: project.chatUrl ? null : experience,
-        canContinue: () => this.current(generation) && this.atExpectedChat(project, attempt), onBeforeSend: async () => {
+        canContinue: () => this.current(generation) && this.atExpectedChat(project, attempt), onBeforeFill: async () => {
           const latest = { ...project, ...await this.inspectProject(project.workspace, project.sessionId, generation) };
           if (!await this.packetIsCurrent(attempt.packet, latest)) {
-            throw failure('CONTEXT_CHANGED_BEFORE_SEND', 'Пакет в поле устарел. Уберите этот черновик и обновите контекст.');
+            throw failure('CONTEXT_CHANGED_BEFORE_SEND', 'Пакет устарел до вставки. Обновите контекст.');
           }
+        }, onBeforeSend: async () => {
           if (!this.current(generation) || !this.atExpectedChat(project, attempt)) return;
           attempt = { ...attempt, state: 'sending', sendStartedAtMs: this.now() };
           await this.store.updateSession(project.workspace, project.sessionId, { attempt });

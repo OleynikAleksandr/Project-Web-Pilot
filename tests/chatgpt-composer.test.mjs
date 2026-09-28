@@ -33,17 +33,17 @@ test('inserts and sends exactly once, after persisting uncertainty and observing
   assert.equal((await f.composer.deliver(request)).state,'sent');assert.equal(f.sends(),1);
 });
 
-test('preserves existing drafts and active generation without clicking',async()=>{
-  for(const options of [{draft:'Моя незаконченная мысль'},{stop:true}]){
+test('active generation defers recovery without clicking',async()=>{
+  for(const options of [{stop:true}]){
     const f=fixture(options);const result=await f.composer.deliver(request);
     assert.equal(result.state,'deferred');assert.equal(f.sends(),0);assert.equal(f.editor.value,options.draft??'');
   }
 });
 
-test('user edits during insertion/send are preserved; pending send is not clicked',async()=>{
-  const f=fixture();const result=await f.composer.deliver({...request,onBeforeSend:async()=>{f.editor.value='Новая мысль пользователя';}});
-  assert.equal(result.state,'deferred');assert.equal(result.reason,'DRAFT_CHANGED');assert.equal(f.sends(),0);
-  assert.equal(f.editor.value,'Новая мысль пользователя');
+test('user additions after insertion are sent immediately with recovery',async()=>{
+  const f=fixture();const result=await f.composer.deliver({...request,onBeforeSend:async()=>{f.editor.value+='Новая мысль пользователя';}});
+  assert.equal(result.state,'sent');assert.equal(f.sends(),1);
+  assert.equal(f.document.querySelector('[data-message-author-role="user"]').textContent,message+'Новая мысль пользователя');
 });
 
 test('an uncertain send is returned without a second click',async()=>{
@@ -67,8 +67,9 @@ test('only a user-role message is evidence; an assistant quote cannot acknowledg
 
 test('normal contenteditable receives text through the visible composer input path',async()=>{
   const f=fixture();const editor=f.document.createElement('div');editor.id='prompt-textarea';editor.setAttribute('contenteditable','true');f.editor.replaceWith(editor);
-  f.dom.window.document.execCommand=(command,_ui,text)=>{assert.equal(command,'insertText');editor.textContent=text;editor.dispatchEvent(new f.dom.window.InputEvent('input',{bubbles:true}));return true;};
-  const result=f.dom.window.eval(pageScript({action:'fill',...request}));
+  f.dom.window.document.execCommand=()=>{throw Error('slow execCommand must not run');};
+  f.view.insertText=async text=>{editor.textContent=text;editor.dispatchEvent(new f.dom.window.InputEvent('input',{bubbles:true}));};
+  const result=await f.composer.inspect({action:'fill',...request});
   assert.equal(result.action,'filled');assert.equal(editor.textContent,message);
 });
 
@@ -187,23 +188,24 @@ test('event-driven Send waits for late editor readiness instead of assuming a fi
   } finally { clearTimeout(ready); dispose(); f.dom.window.close(); }
 });
 
-test('event-driven readiness timeout preserves a changed draft and never clicks Send', async () => {
+test('event-driven readiness sends changed text without waiting for equality', async () => {
   const f = fixture(), source = new PageStateSource();
   f.dom.window.reportObservation = message => source.accept(message);
   const dispose = f.dom.window.eval('(' + installPageObserver.toString() + ')(' + chatGPTDOMScript() + ', reportObservation)');
   const execute = f.view.executeJavaScript;
   f.view.executeJavaScript = async script => {
     const result = await execute(script);
-    if (result.action === 'filled') f.editor.value = 'Текст пользователя';
+    if (result.action === 'filled') f.editor.value += 'Текст пользователя';
     return result;
   };
+  source.waitForChange=()=>{throw Error('enabled Send must not wait for draft equality');};
   const composer = new ChatGPTComposer(f.view, { pageState: source, timeoutMs: 30 });
   // Keep the test alive; production has its Electron event loop.
   const keepAlive = setTimeout(() => {}, 100);
   try {
     const result = await composer.deliver(request);
-    assert.equal(result.state, 'deferred'); assert.equal(result.reason, 'DRAFT_CHANGED');
-    assert.equal(f.sends(), 0); assert.equal(f.editor.value, 'Текст пользователя');
+    assert.equal(result.state, 'sent'); assert.equal(f.sends(), 1);
+    assert.equal(f.document.querySelector('[data-message-author-role="user"]').textContent, message+'Текст пользователя');
   } finally { clearTimeout(keepAlive); dispose(); f.dom.window.close(); }
 });
 
@@ -241,24 +243,24 @@ test('new conversation clearing preserves active generation and messages at entr
   }
 });
 
-test('diagnostics distinguish draft guards and actual clicks without logging text', async () => {
+test('diagnostics record actual clicks despite user edits without logging text', async () => {
   for (const changed of [false, true]) {
     const f=fixture(), records=[]; f.composer.onDiagnostic=r=>records.push(r);
     const text='PRIVATE_RECOVERY_TEXT /private/two  spaces\nwp-request-trace';
     const result=await f.composer.deliver({text,requestId:'wp-request-trace',
-      onBeforeSend:async()=>{if(changed)f.editor.value='PRIVATE_USER_EDIT';}});
-    assert.equal(result.state,changed?'deferred':'sent');
-    assert.equal(records.some(r=>r.outcome==='clicked'),!changed);
+      onBeforeSend:async()=>{if(changed)f.editor.value+='PRIVATE_USER_EDIT';}});
+    assert.equal(result.state,'sent');
+    assert.equal(records.some(r=>r.outcome==='clicked'),true);
     assert.ok(records.some(r=>r.event==='delivery-result'&&r.state===result.state));
-    if(changed)assert.ok(records.some(r=>r.reason==='DRAFT_CHANGED'&&r.diagnostic?.mismatchIndex===8));
+    if(changed)assert.ok(records.some(r=>r.outcome==='clicked'&&r.draftMatches===false));
     for(const value of ['PRIVATE_RECOVERY_TEXT','PRIVATE_USER_EDIT','/private/two'])assert.equal(JSON.stringify(records).includes(value),false);
   }
 });
-test('whitespace diagnostics do not relax exact matching or change delivery', async () => {
+test('whitespace diagnostics are observational and do not block delivery', async () => {
   const f=fixture(),records=[];f.composer.onDiagnostic=r=>records.push(r);
   f.editor.value='Workspace: /My Folder\nwp-request-space';
   const result=await f.composer.deliver({text:'Workspace: /My  Folder\nwp-request-space',requestId:'wp-request-space'});
-  assert.equal(result.reason,'DRAFT_PRESENT');assert.equal(f.sends(),0);
+  assert.equal(result.state,'sent');assert.equal(f.sends(),1);
   const d=records.find(r=>r.diagnostic).diagnostic;
   assert.equal(d.nonWhitespaceMatches,true);assert.equal(d.expectedKind,'space');assert.equal(d.actualKind,'text');
 });
@@ -274,4 +276,47 @@ test('duplicate observations are deduplicated and logger errors never block Send
   const f=fixture(),records=[];f.composer.onDiagnostic=r=>records.push(r);
   await f.composer.inspect(request);await f.composer.inspect(request);assert.equal(records.length,1);
   f.composer.onDiagnostic=()=>{throw Error('logger failed');};assert.equal((await f.composer.deliver(request)).state,'sent');
+});
+
+test('recovery appends to additions already present at insertion', async () => {
+  const f=fixture({draft:'Дополнение пользователя. '});
+  assert.equal((await f.composer.deliver(request)).state,'sent');
+  assert.equal(f.document.querySelector('[data-message-author-role="user"]').textContent,'Дополнение пользователя. '+message);
+});
+
+test('retry after unavailable Send never inserts the packet twice or revalidates it', async () => {
+  const f=fixture(); let fills=0, beforeFill=0;
+  f.editor.addEventListener('input',()=>fills++);
+  const button=f.document.querySelector('button'); button.disabled=true;
+  assert.equal((await f.composer.deliver({...request,onBeforeFill:async()=>beforeFill++})).reason,'SEND_UNAVAILABLE');
+  assert.equal(f.composer.hasFilled(request.requestId),true);
+  f.editor.value+=' Дополнение'; button.disabled=false;
+  assert.equal((await f.composer.deliver({...request,onBeforeFill:async()=>{throw Error('already filled');}})).state,'sent');
+  assert.equal(fills,1); assert.equal(beforeFill,1); assert.equal(f.sends(),1);
+  assert.equal(f.document.querySelector('[data-message-author-role="user"]').textContent,message+' Дополнение');
+});
+
+test('document change cancels native insertion and invalidates the insertion marker', async () => {
+  const f=fixture(); const editor=f.document.createElement('div');
+  editor.id='prompt-textarea'; editor.setAttribute('contenteditable','true'); f.editor.replaceWith(editor);
+  f.composer.pageState={current:{documentId:'first'}};
+  let inserts=0; f.view.insertText=async()=>inserts++;
+  const execute=f.view.executeJavaScript;
+  f.view.executeJavaScript=async script=>{
+    const result=await execute(script);
+    if(result.action==='native-insert-ready') f.composer.pageState.current={documentId:'next'};
+    return result;
+  };
+  assert.equal((await f.composer.inspect({action:'fill',...request})).reason,'CHAT_CHANGED');
+  assert.equal(inserts,0);
+  f.composer.filledRequest={requestId:request.requestId,documentKey:'first'};
+  assert.equal(f.composer.hasFilled(request.requestId),false);
+});
+
+test('restored exact recovery is reused instead of inserting a second copy', async () => {
+  const f=fixture({draft:message}); let fills=0;
+  f.editor.addEventListener('input',()=>fills++);
+  assert.equal((await f.composer.deliver(request)).state,'sent');
+  assert.equal(fills,0); assert.equal(f.sends(),1);
+  assert.equal(f.document.querySelector('[data-message-author-role="user"]').textContent,message);
 });

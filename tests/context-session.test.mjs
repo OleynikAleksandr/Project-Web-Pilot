@@ -30,6 +30,7 @@ function controllerFixture({ savedAttempt=null, chatUrl=project.chatUrl }={}){
       ?'experience-confirmed':'experience-selecting'}:{})}),contents:{getURL:()=>inspection.url},deliver:async options=>{
     assert.equal(saved.attempt.state,'prepared');assert.ok(options.text.includes(packet().context));
     if(!options.canContinue())return {state:'cancelled'};
+    await options.onBeforeFill?.();
     await options.onBeforeSend();if(!options.canContinue())return {state:'cancelled'};
     assert.equal(saved.attempt.state,'sending');sends++;inspection.messageSeen=true;
     inspection.url=project.chatUrl;return {state:'sent'};
@@ -89,7 +90,7 @@ test('incomplete or wrong-project packet and a changed plan fail before sending'
   }
 });
 
-test('plan changes after filling cannot send an outdated packet',async()=>{
+test('plan changes before insertion cannot insert an outdated packet',async()=>{
   const f=controllerFixture();const deliver=f.composer.deliver;
   f.composer.deliver=async options=>{f.info.planRevision=8;return deliver(options);};
   await f.controller.tick();assert.equal(f.controller.state.phase,'prepared-stale');assert.equal(f.sends(),0);
@@ -152,6 +153,7 @@ test('Work session keeps provenance when ChatGPT moves from /work/ to shared /c/
   f.composer.contents.getURL=()=>f.inspection.url;
   f.composer.deliver=async options=>{
     assert.equal(options.canContinue(),true);
+    await options.onBeforeFill?.();
     await options.onBeforeSend();
     f.inspection.url='https://chatgpt.com/c/work-real-session';
     f.inspection.messageSeen=true;
@@ -187,6 +189,7 @@ test('pending WEB conversation after Send waits for its permanent URL for Chat a
     let clicks=0;
     f.composer.deliver=async options=>{
       assert.equal(options.expectedExperience,experience);
+      await options.onBeforeFill?.();
       await options.onBeforeSend(); clicks++;
       f.inspection.url='https://chatgpt.com/c/'+prefix+'12345678-1234-1234-1234-123456789abc';
       assert.equal(options.canContinue(),true);
@@ -222,7 +225,7 @@ test('prepared cache removes recover from explicit refresh and records timings',
   assert.ok(Number.isFinite(f.saved.attempt.packet.preparationMs));assert.ok(Number.isFinite(f.saved.attempt.packet.deliveryMs));
   await f.controller.retry();assert.equal(f.sends(),2);assert.equal(f.loads(),0);
 });
-test('source edit after fill blocks send even when plan revision is unchanged',async()=>{
+test('source edit before insertion blocks send even when plan revision is unchanged',async()=>{
   const f=controllerFixture();let key='before';
   const cache=new ContextCache({load:async()=>packet(),inputKey:async()=>key});
   await cache.load(project.workspace,{sessionId:project.sessionId,planId:project.scopeId});f.controller.contextCache=cache;
@@ -252,19 +255,19 @@ test('saved sent, legacy and unknown chats are observed without services or reco
   }
 });
 
-test('readiness failure before preparation and changed readiness before Send cannot authorize a packet', async () => {
-  for (const changedAfterFill of [false, true]) {
-    const f = controllerFixture(); let ready = changedAfterFill, builds = 0;
+test('readiness failure before preparation and changed readiness before insertion cannot authorize a packet', async () => {
+  for (const changedBeforeInsertion of [false, true]) {
+    const f = controllerFixture(); let ready = changedBeforeInsertion, builds = 0;
     const cache = new ContextCache({ inputKey: async () => { if (!ready) throw Error('hooks changed or transaction active'); return 'ready-key'; },
       load: async () => { builds++; return packet(); } });
     f.controller.contextCache = cache;
-    if (changedAfterFill) {
+    if (changedBeforeInsertion) {
       const deliver = f.composer.deliver;
       f.composer.deliver = async options => { ready = false; return deliver(options); };
     }
     await f.controller.tick();
-    assert.equal(f.sends(), 0); assert.equal(builds, changedAfterFill ? 1 : 0);
-    assert.equal(f.controller.state.phase, changedAfterFill ? 'prepared-stale' : 'error');
+    assert.equal(f.sends(), 0); assert.equal(builds, changedBeforeInsertion ? 1 : 0);
+    assert.equal(f.controller.state.phase, changedBeforeInsertion ? 'prepared-stale' : 'error');
   }
 });
 
@@ -435,4 +438,32 @@ test('cancellation during fresh draft reset never prepares or sends a context', 
   const running = f.controller.tick(); await new Promise(setImmediate);
   f.controller.cancel(); finish({ action: 'draft-cleared' }); await running;
   assert.equal(f.sends(), 0); assert.equal(f.loads(), 0);
+});
+
+test('changes after insertion do not run a second readiness check before Send', async () => {
+  const f=controllerFixture(); const deliver=f.composer.deliver;
+  f.composer.deliver=options=>deliver({...options,onBeforeFill:async()=>{
+    await options.onBeforeFill();
+    f.info.planRevision=8;
+    f.controller.packetIsCurrent=async()=>{throw Error('no revalidation after fill');};
+    Object.assign(f.inspection,{draftLength:100,draftMatches:false});
+  }});
+  await f.controller.tick();
+  assert.equal(f.sends(),1); assert.equal(f.saved.attempt.state,'sent');
+});
+
+test('already inserted attempt with edited draft continues without preparation or revalidation', async () => {
+  const f=controllerFixture();
+  f.composer.deliver=async options=>{
+    await options.onBeforeFill();
+    return {state:'deferred',reason:'SEND_UNAVAILABLE'};
+  };
+  await f.controller.tick();
+  f.composer.hasFilled=id=>id===f.saved.attempt.requestId;
+  f.inspection.draftLength=99; f.inspection.draftMatches=false;
+  f.controller.packetIsCurrent=async()=>{throw Error('filled attempt must not be revalidated');};
+  let delivered=0;
+  f.composer.deliver=async options=>{await options.onBeforeSend(); delivered++;return {state:'sent'};};
+  await f.controller.tick();
+  assert.equal(delivered,1);assert.equal(f.loads(),1);assert.equal(f.saved.attempt.state,'sent');
 });

@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 778,
+  "plan_revision": 779,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-2-20260928",
@@ -36,7 +36,8 @@
       "scripts/check-event-runtime-release.mjs",
       "package.json",
       "package-lock.json",
-      "tests/chromium-diagnostics.test.mjs"
+      "tests/chromium-diagnostics.test.mjs",
+      "tests/session-opening-performance.test.mjs"
     ],
     "documentation_paths": [
       "docs/planning/event-driven-runtime.md",
@@ -56,7 +57,7 @@
     ]
   },
   "baseline_commit": "b8dc62aa4b469c63e82cc9ee27f791fc0870af91",
-  "current_task_id": "T006",
+  "current_task_id": null,
   "context_pack": {
     "documents": [
       {
@@ -372,10 +373,27 @@
         "src/context-session.mjs",
         "tests/chatgpt-composer.test.mjs",
         "tests/context-session.test.mjs",
-        "tests/installed-observer-fixture.cjs"
+        "tests/installed-observer-fixture.cjs",
+        "package-lock.json",
+        "package.json",
+        "scripts/check-event-runtime-release.mjs",
+        "tests/session-opening-performance.test.mjs"
       ],
       "documentation_paths": [
-        "docs/planning/event-driven-runtime.md"
+        "docs/planning/event-driven-runtime.md",
+        "README.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/RELEASE.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/chatgpt-dom-compatibility.md",
+        "docs/modules/workspace-sessions.md"
       ],
       "verification_ids": [
         "unit",
@@ -389,13 +407,38 @@
         "Навигация и неопределённая предыдущая отправка не создают дублей; собраны обе платформы."
       ],
       "expected_commit_message": "feat: Быстрая массовая вставка и Send без сверки черновика, выпуск 0.6.68",
-      "implementation_status": "IN_PROGRESS",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "event-driven-runtime-phase-2-20260928",
         "task_id": "T006",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "README.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/RELEASE.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/chatgpt-dom-compatibility.md",
+        "docs/modules/workspace-sessions.md",
+        "docs/planning/event-driven-runtime.md",
+        "package-lock.json",
+        "package.json",
+        "scripts/check-event-runtime-release.mjs",
+        "src/chatgpt-composer.mjs",
+        "src/context-session.mjs",
+        "tests/chatgpt-composer.test.mjs",
+        "tests/context-session.test.mjs",
+        "tests/installed-observer-fixture.cjs",
+        "tests/session-opening-performance.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -457,8 +500,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-phase-2-20260928
-Current Task: T006
-Revision: 778
+Current Task: нет
+Revision: 779
 
 ## Цель
 
@@ -490,10 +533,10 @@ Revision: 778
   - Git Commit: [DONE] feat: Причина блокировки Send: сравнение черновика, диагностика и парный выпуск 0.6.67
   - Reference: event-driven-runtime-phase-2-20260928 / T005 / implementation
   - Файлы: src/chatgpt-composer.mjs, src/main.mjs, tests/chatgpt-composer.test.mjs, tests/installed-observer-fixture.cjs, package-lock.json, package.json, scripts/check-event-runtime-release.mjs, src/chromium-diagnostics.mjs, tests/chromium-diagnostics.test.mjs, docs/planning/event-driven-runtime.md, docs/VERIFICATION.md, README.md, docs/CONTEXT_DELIVERY.md, docs/DOCUMENTATION_INDEX.md, docs/MODULES.md, docs/PRODUCT.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/modules/chatgpt-dom-compatibility.md
-- [IN_PROGRESS] T006: Быстрая массовая вставка и Send без сверки черновика, выпуск 0.6.68 — В работе
-  - Git Commit: [PENDING] feat: Быстрая массовая вставка и Send без сверки черновика, выпуск 0.6.68
+- [DONE] T006: Быстрая массовая вставка и Send без сверки черновика, выпуск 0.6.68 — Завершено
+  - Git Commit: [DONE] feat: Быстрая массовая вставка и Send без сверки черновика, выпуск 0.6.68
   - Reference: event-driven-runtime-phase-2-20260928 / T006 / implementation
-  - Файлы: src/chatgpt-composer.mjs, src/context-session.mjs, tests/chatgpt-composer.test.mjs, tests/context-session.test.mjs, tests/installed-observer-fixture.cjs, docs/planning/event-driven-runtime.md
+  - Файлы: src/chatgpt-composer.mjs, src/context-session.mjs, tests/chatgpt-composer.test.mjs, tests/context-session.test.mjs, tests/installed-observer-fixture.cjs, package-lock.json, package.json, scripts/check-event-runtime-release.mjs, tests/session-opening-performance.test.mjs, docs/planning/event-driven-runtime.md, README.md, docs/CONTEXT_DELIVERY.md, docs/DOCUMENTATION_INDEX.md, docs/MODULES.md, docs/PRODUCT.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/modules/chatgpt-dom-compatibility.md, docs/modules/workspace-sessions.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: event-driven-runtime-phase-2-20260928 / DOCS / implementation

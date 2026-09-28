@@ -112,3 +112,7 @@ Workspace & Sessions совместно с Workflow Kit / Context Recovery: [к�
 
 ## Диагностика Send — T005 / 0.6.67
 Workspace & Sessions / ChatGPT DOM: этапы composer, сводка первого отличия без текста, защита data URL в сетевой диагностике. Контракт — docs/planning/event-driven-runtime.md; инцидент и границы выводов — docs/VERIFICATION.md. Основные задачи фазы 2 не выполнены этим диагностическим выпуском.
+
+## Быстрая вставка и автоматический Send — 0.6.68
+
+Workspace & Sessions: штатный webContents.insertText, актуальность до вставки, отсутствие запрета Send из-за изменений текста. Контракты — [доставка](CONTEXT_DELIVERY.md), [DOM](modules/chatgpt-dom-compatibility.md), [фаза 2, T006](planning/event-driven-runtime.md). Kit 1.5.0 не менялся.

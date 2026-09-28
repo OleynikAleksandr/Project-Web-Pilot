@@ -1,5 +1,7 @@
 # Архитектура
 
+В 0.6.68 ускорена массовая вставка; Send после неё не зависит от совпадения текста. Контракт — docs/CONTEXT_DELIVERY.md, измерения — docs/VERIFICATION.md.
+
 ## Событийный runtime и восстановление — 0.6.64
 
 `chatgpt-page-observer.mjs` вместе с общим `chatgpt-dom.mjs` генерирует ignored `resources/chatgpt-page-observer-preload.cjs`. `page-state-bridge.mjs` проверяет односторонний IPC основного sandboxed view; origin, frame, isolated-world document ID и sequence обязательны. Popup/auth не получают этот preload и API страницы не публикуется. `PageStateSource` передаёт изменения ContextSession, AgentTimer и ChromiumDiagnostics; ожидания composer событийные с дедлайном. Пульс оставлен для PlanMonitor/startup, одинаковая проекция не запускает DOM-проверку.
@@ -17,7 +19,7 @@
 
 ## Состояние
 
-Текущий локальный выпуск — **0.6.67**, macOS arm64 / Windows x64; Workflow Kit остаётся **1.5.0**. Реализована первая фаза событийной обработки: общий наблюдатель страницы, сохранение разговора после ручного Send и ограниченное восстановление связи с ChatGPT. Парная поставка — `~/Downloads/WebPilot-0.6.67/`. Обновлены постоянный `Project Web Pilot.app` в корне проекта и копия в `/Applications`; для применения нужен полный выход и повторный запуск. Состав, контрольные суммы и границы проверки — `docs/RELEASE.md` и `docs/VERIFICATION.md`.
+Текущий локальный выпуск — **0.6.68**, macOS arm64 / Windows x64; Workflow Kit остаётся **1.5.0**. Реализована первая фаза событийной обработки: общий наблюдатель страницы, сохранение разговора после ручного Send и ограниченное восстановление связи с ChatGPT. Парная поставка — `~/Downloads/WebPilot-0.6.68/`. Обновлены постоянный `Project Web Pilot.app` в корне проекта и копия в `/Applications`; для применения нужен полный выход и повторный запуск. Состав, контрольные суммы и границы проверки — `docs/RELEASE.md` и `docs/VERIFICATION.md`.
 
 Пользователь принял чистый macOS-путь 0.6.38 и проверку 0.6.39. Пользовательское испытание нового изменения 0.6.40 и Windows остаются отдельными. 18.09.2026 пользователь поручил закрыть план first-run-onboarding-031 и передал испытания Windows 11 другому агенту. Итог macOS и границы доказательств — docs/CLEAN_INSTALL.md; условия и оставшиеся критерии Windows — docs/TRANSFER_TO_WINDOWS.md. План first-run-corrections-032 принадлежит другой сессии и этим закрытием не изменяется.
 

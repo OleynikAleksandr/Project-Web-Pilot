@@ -41,6 +41,9 @@ app.whenReady().then(async () => {
       + '\n\tТабуляция\nКод: \\n и \\t\nwp-request-installed-fixture';
     assert.equal((await composer.deliver({ text, requestId: 'wp-request-installed-fixture' })).state, 'sent');
     assert.equal(await view.webContents.executeJavaScript('document.querySelectorAll("article").length'), 1);
+    const insertion=trace.find(r=>r.insertionMethod==='webContents.insertText');
+    assert.ok(insertion, 'installed composer uses native bulk insertion');
+    assert.ok(insertion.elapsedMs < 5000, 'large fixture insertion must not regress to tens of seconds');
     assert.ok(trace.some(r => r.outcome === 'clicked'));
     assert.ok(trace.some(r => r.event === 'delivery-result' && r.state === 'sent'));
     assert.ok(trace.some(r => r.diagnostic?.editorKind === 'contenteditable'));
@@ -61,7 +64,7 @@ app.whenReady().then(async () => {
 
     assert.equal(await view.webContents.executeJavaScript('document.querySelectorAll("article").length'), 1);
     console.log(JSON.stringify({ installedPreload: resourceRoot, scenario: 'sandbox observer, restored draft cleared, multiline contenteditable Send with diagnostics, Resume stream unavailable detected, same conversation reload without duplicate',
-      electron: process.versions.electron, node: process.versions.node, liveChatGPT: false }));
+      electron: process.versions.electron, node: process.versions.node, insertionMs: insertion.elapsedMs, chars: text.length, liveChatGPT: false }));
   } finally { disconnect(); view.destroy(); clearTimeout(deadline); }
   app.quit();
 }).catch(error => { console.error(error); clearTimeout(deadline); app.exit(1); });

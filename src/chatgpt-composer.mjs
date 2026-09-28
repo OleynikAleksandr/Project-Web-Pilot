@@ -97,24 +97,25 @@ export function pageOperation({ action = 'inspect', text = '', requestId = '', e
     if (experience !== expectedExperience) return { ...result, action: 'deferred', reason: 'EXPERIENCE_UNCONFIRMED' };
   }
   if (action === 'fill') {
-    if (draftLength && !draftMatches) return { ...result, action: 'deferred', reason: 'DRAFT_PRESENT' };
-    if (draftMatches) return { ...result, action: 'filled' };
+    // Reuse a restored exact packet; equality never gates Send after insertion.
+    if (requestId && draftMatches) return { ...result, action: 'filled' };
+    // Recovery owns this insertion. User additions are explicitly allowed.
+    if (!requestId && draftLength) return { ...result, action: 'deferred', reason: 'DRAFT_PRESENT' };
     editor.focus();
     if (editor.tagName === 'TEXTAREA') {
-      Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set.call(editor, text);
+      Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set.call(editor, draftText + text);
       editor.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: text }));
       editor.dispatchEvent(new Event('change', { bubbles: true }));
     } else {
       const selection = getSelection();
       const range = document.createRange(); range.selectNodeContents(editor); range.collapse(false);
       selection.removeAllRanges(); selection.addRange(range);
-      if (!document.execCommand('insertText', false, text)) return { ...result, action: 'deferred', reason: 'INSERT_FAILED' };
+      return { ...result, action: 'native-insert-ready' };
     }
     return { ...result, action: 'filled' };
   }
   if (action === 'send') {
-    // Recheck in the same renderer turn as click, preserving any user edits.
-    if (!draftMatches) return { ...result, action: 'deferred', reason: 'DRAFT_CHANGED' };
+    // User authorized sending the editor as-is after our insertion.
     if (!sendEnabled) return { ...result, action: 'deferred', reason: 'SEND_UNAVAILABLE' };
     button.click();
     return { ...result, action: 'clicked' };
@@ -137,9 +138,10 @@ export class ChatGPTComposer {
     this.inFlight = false;
     this.onDiagnostic = onDiagnostic;
     this.lastDiagnostic = '';
+    this.filledRequest = null;
   }
 
-  async inspect({ text = '', requestId = '', action = 'inspect', expectedExperience = null } = {}) {
+  async inspect({ text = '', requestId = '', action = 'inspect', expectedExperience = null, canContinue = () => true } = {}) {
     const current = this.contents.getURL();
     let url;
     try { url = new URL(current); } catch { return { login: true, editorAvailable: false, url: current }; }
@@ -150,15 +152,28 @@ export class ChatGPTComposer {
     const diagnose = typeof this.onDiagnostic === 'function' && !!text;
     const started = this.now();
     if (diagnose && action !== 'inspect') this.trace('action-start', { action, requestId });
-    const observation = await this.contents.executeJavaScript(pageScript({ action, text, requestId, expectedExperience, diagnose }), action !== 'inspect');
+    const documentKey = this.documentKey();
+    let observation = await this.contents.executeJavaScript(pageScript({ action, text, requestId, expectedExperience, diagnose }), action !== 'inspect');
+    if (observation.action === 'native-insert-ready') {
+      if (!canContinue() || this.documentKey() !== documentKey)
+        return { action: 'deferred', reason: 'CHAT_CHANGED' };
+      await this.contents.insertText(text);
+      observation = { ...observation, action: 'filled', insertionMethod: 'webContents.insertText' };
+    }
     if (diagnose) {
       const { diagnostic, editorAvailable, writable, login, busy, draftLength, draftMatches, sendEnabled,
-        messageSeen, userMessageCount, experience, connectionError, action: outcome, reason } = observation;
+        messageSeen, userMessageCount, experience, connectionError, insertionMethod, action: outcome, reason } = observation;
       this.trace('observation', { action, requestId, diagnostic, editorAvailable, writable, login, busy,
-        draftLength, draftMatches, sendEnabled, messageSeen, userMessageCount, experience, connectionError, outcome, reason },
+        draftLength, draftMatches, sendEnabled, messageSeen, userMessageCount, experience, connectionError, insertionMethod, outcome, reason },
         Math.max(0, this.now() - started));
     }
     return observation;
+  }
+
+  documentKey() { return this.pageState?.current?.documentId ?? this.contents.getURL(); }
+  hasFilled(requestId) {
+    return !!requestId && this.filledRequest?.requestId === requestId
+      && this.filledRequest.documentKey === this.documentKey();
   }
 
   trace(event, fields = {}, elapsedMs) {
@@ -203,18 +218,14 @@ export class ChatGPTComposer {
     return result;
   }
 
-  async waitForDraft(args, version, canContinue) {
-    if (!this.pageState) {
-      await this.wait(this.settleMs);
-      return this.inspect(args);
-    }
+  async waitForSendReady(args, version, canContinue) {
     const deadline = this.now() + this.timeoutMs;
     let observation;
     do {
       if (!canContinue()) return observation ?? {};
       observation = await this.inspect(args);
       if (observation.messageSeen || observation.login || observation.busy || observation.connectionError
-          || (observation.draftMatches && observation.sendEnabled && observation.writable)) return observation;
+          || (observation.sendEnabled && observation.writable)) return observation;
       const signal = await this.waitForObservedChange(version, deadline, canContinue);
       version = signal.version ?? version;
       if (signal.cancelled || signal.timeout) return observation;
@@ -245,12 +256,12 @@ export class ChatGPTComposer {
       if (observation.busy) return { state: 'deferred', reason: 'GENERATION_ACTIVE', observation };
       if (observation.draftLength) return { state: 'deferred', reason: 'DRAFT_PRESENT', observation };
       const fillVersion = this.pageState?.version ?? 0;
-      observation = await this.inspect({ action: 'fill', text });
+      observation = await this.inspect({ action: 'fill', text, canContinue });
       if (observation.action !== 'filled') return { state: 'deferred', reason: observation.reason ?? 'SEND_UNAVAILABLE', observation };
-      observation = await this.waitForDraft({ text }, fillVersion, canContinue);
+      observation = await this.waitForSendReady({ text }, fillVersion, canContinue);
       if (!canContinue()) return { state: 'cancelled' };
-      if (!observation.draftMatches || !observation.sendEnabled || observation.busy) {
-        return { state: 'deferred', reason: observation.busy ? 'GENERATION_ACTIVE' : !observation.draftMatches ? 'DRAFT_CHANGED' : 'SEND_UNAVAILABLE', observation };
+      if (!observation.sendEnabled || observation.busy) {
+        return { state: 'deferred', reason: observation.busy ? 'GENERATION_ACTIVE' : 'SEND_UNAVAILABLE', observation };
       }
       observation = await this.inspect({ action: 'send', text });
       if (observation.action !== 'clicked') return { state: 'deferred', reason: observation.reason ?? 'SEND_UNAVAILABLE', observation };
@@ -273,7 +284,7 @@ export class ChatGPTComposer {
     } finally { this.inFlight = false; }
   }
 
-  async deliverInternal({ text, requestId, expectedExperience = null, canContinue = () => true, onBeforeSend = async () => {} }) {
+  async deliverInternal({ text, requestId, expectedExperience = null, canContinue = () => true, onBeforeFill = async () => {}, onBeforeSend = async () => {} }) {
     if (this.inFlight) throw new ComposerError('SEND_IN_PROGRESS', 'Другая отправка ещё не завершилась.');
     if (typeof text !== 'string' || !text || !requestId || !text.includes(requestId)) throw new ComposerError('MESSAGE_INVALID', 'Не подготовлено стартовое сообщение.');
     this.inFlight = true;
@@ -284,14 +295,21 @@ export class ChatGPTComposer {
       if (observation.messageSeen) return { state: 'sent', recovered: true, observation };
       if (!canContinue()) return { state: 'cancelled' };
       const fillVersion = this.pageState?.version ?? 0;
-      observation = await this.inspect({ action: 'fill', text, requestId, expectedExperience });
-      if (observation.action === 'already-sent') return { state: 'sent', recovered: true, observation };
-      if (observation.action !== 'filled') return { state: 'deferred', reason: observation.reason ?? 'LOGIN_REQUIRED', observation };
-      observation = await this.waitForDraft({ text, requestId }, fillVersion, canContinue);
+      if (!this.hasFilled(requestId)) {
+        await onBeforeFill();
+        if (!canContinue()) return { state: 'cancelled' };
+        const documentKey = this.documentKey();
+        observation = await this.inspect({ action: 'fill', text, requestId, expectedExperience, canContinue });
+        if (observation.action === 'already-sent') return { state: 'sent', recovered: true, observation };
+        if (observation.action !== 'filled') return { state: 'deferred', reason: observation.reason ?? 'LOGIN_REQUIRED', observation };
+        if (!canContinue() || this.documentKey() !== documentKey) return { state: 'cancelled' };
+        this.filledRequest = { requestId, documentKey };
+      }
+      observation = await this.waitForSendReady({ text, requestId }, fillVersion, canContinue);
       if (!canContinue()) return { state: 'cancelled' };
       if (observation.messageSeen) return { state: 'sent', recovered: true, observation };
-      if (!observation.draftMatches || !observation.sendEnabled || observation.busy) {
-        return { state: 'deferred', reason: observation.busy ? 'GENERATION_ACTIVE' : !observation.draftMatches ? 'DRAFT_CHANGED' : 'SEND_UNAVAILABLE', observation };
+      if (!observation.sendEnabled || observation.busy) {
+        return { state: 'deferred', reason: observation.busy ? 'GENERATION_ACTIVE' : 'SEND_UNAVAILABLE', observation };
       }
       // Persist an uncertain attempt BEFORE the click, so a crash never triggers a second send.
       this.trace('before-send-start', { requestId });
