@@ -1348,3 +1348,8 @@ Regression smoke намеренно портит server title, заставля�
 Реальная 0.6.60 диагностика показала `RENAME_FAILED` HTTP 422 для auto-title длиной 160 символов / 262 UTF-8 байта. Тем же authenticated endpoint 59-символьное имя сохранилось успешно. Поэтому 0.6.61 исправляет источник и контракт длины, а не retry.
 
 `readWorkspace()` извлекает H1 первого required `docs/planning/*` из current plan context pack (fallback required `docs/modules/*`, затем objective). Этот `scopeTitle` transient: в persisted project/session state не записывается. Session names нормализуются до 80 Unicode-символов и 200 UTF-8 байт. Existing `titleSource=scope` того же scope обновляется на canonical title; manual title не меняется. Для текущего проекта canonical title — `Автоматические названия сессий Web Pilot и ChatGPT`.
+
+
+## 0.6.62 — event-driven title sync
+
+Title sync исключён из generic `ContextSession.onChange`; retry timers/backoff удалены. `ContextSession` имеет отдельный `onChatBound` для единственного late-bind события. Manual rename сохраняется локально внутри IPC и запускает native sync fire-and-forget, поэтому сеть не блокирует sidebar action queue.

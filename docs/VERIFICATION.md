@@ -2130,3 +2130,12 @@ T005 commit `efb5e882b49f703d4d712ad8c906bd92c6c86074`: `npm test` — **364 tes
 T007 commit `6a42f6ffa36f2b53ad6165d259ecb6b2b8386163`: `npm test` — **366 tests, 363 PASS, 3 SKIP, 0 FAIL**; Electron smoke — PASSED. Unit regressions проверяют planning H1 source, same-scope migration, 80 Unicode chars / 200 UTF-8 bytes и общий adapter limit. Отдельный прогон на копии реального `workspaces.json` преобразовал длинный current scope title в `Автоматические названия сессий Web Pilot и ChatGPT`, сохранив `titleSource=scope` и `lastNamedScopeId`.
 
 Финальная 0.6.61 собрана из release commit `320e9fd8ae59d477097b09de9d116e34aca1e756`; manifest: `sourceFiles=96`, `packagedSourceMatches=true`. ZIP integrity — OK. macOS ZIP `67ed9741e004f6fbdf9029fc310822cd181b06b0ef610fcba86cc636f00b67fc`; Windows ZIP `f53880165665274b0248ed6378e7a129ab98e8918d53083ff21bb661c7828b68`.
+
+
+## Event-driven title sync — 0.6.62
+
+Реальная 0.6.61 диагностика показала request storm: около 20 `title-sync` попыток за ~30 секунд, затем повторяющиеся GET `/backend-api/conversation/:id` с HTTP 429. Причина: generic `ContextSession.onChange` переустанавливал 250ms sync и фактически отменял backoff.
+
+T009 commit `899623004825a30dfd1ed0b85be4b347fee3c2fe`: `npm test` — **366 tests, 363 PASS, 3 SKIP, 0 FAIL**; Electron smoke — PASSED. Smoke подтверждает, что slow native API не задерживает manual rename IPC; 429 приводит ровно к одной failed attempt без автоматических повторов; следующий natural reopen синхронизирует pending local title. `onChatBound` regression подтверждает один bind event и отсутствие повторов при reopen already-bound chat.
+
+Финальная 0.6.62 собрана из `a2be84b59ed611040aba3f685719176c68911b07`; `packagedSourceMatches=true`.

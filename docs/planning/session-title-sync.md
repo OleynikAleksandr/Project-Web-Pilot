@@ -132,3 +132,8 @@ Windows package должен содержать ту же application logic; liv
 ## Приёмочный hotfix 0.6.61
 
 0.6.60 доказал, что lifecycle reconciliation запускается, но ChatGPT возвращает HTTP 422 на 160-символьный / 262-byte objective-title. 0.6.61 использует H1 planning/spec как canonical short title и общий лимит 80 Unicode chars / 200 UTF-8 bytes; existing scope-title того же scope мигрируется автоматически, manual title сохраняется.
+
+
+## Приёмочный hotfix 0.6.62
+
+0.6.61 выявил request storm: общий `ContextSession.onChange` запускал frequent title sync и при 429 обходил backoff. 0.6.62 полностью удаляет timer/retry loop. Native sync теперь event-driven и одноразовый; manual rename local-first и не ждёт сеть.

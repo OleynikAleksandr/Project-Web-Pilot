@@ -601,3 +601,10 @@ Canonical session auto-title теперь берётся из H1 обязате�
 | --- | ---: | --- | --- |
 | macOS arm64 | 181475006 | `67ed9741e004f6fbdf9029fc310822cd181b06b0ef610fcba86cc636f00b67fc` | `478d63635904ec13708a53b79ecbfce577937e2b0c48487afacc3d32cf390947` |
 | Windows x64 | 316737303 | `f53880165665274b0248ed6378e7a129ab98e8918d53083ff21bb661c7828b68` | `bd413c5b79a5aa99ca1d166f57a1feef175b88b854cbca0430d89b4a91bccf03` |
+
+
+## Локальный парный выпуск 0.6.62 — 28.09.2026
+
+Убран циклический native title retry. Sync выполняется только одноразово на естественных событиях: изменение local scope-title, manual rename, поздний bindChat новой session и reopen/navigation bound conversation. Ошибка 429/5xx не запускает автоматический повтор. Manual rename сохраняет local title и возвращает UI результат до любого сетевого title request.
+
+Финальный `npm run build` выполнен из source commit `a2be84b59ed611040aba3f685719176c68911b07`; `sourceFiles=96`, `packagedSourceMatches=true`. Поставка: `~/Downloads/WebPilot-0.6.62/`; ZIP integrity — OK. macOS ZIP `82a43d6671cdc5f9310f3dd14899d054d83ece6ad3fbca5239292f42d33f155e`; Windows ZIP `60c607631f3916351be93bd2d9d494cdc2cbf3467133184cc5eb24c862845b0f`. macOS ASAR `537fe82b51bbd08d41d53314fc92bba0a9ea653f3b8c2efce150317311f25a06`.

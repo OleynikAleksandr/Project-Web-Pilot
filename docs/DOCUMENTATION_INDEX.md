@@ -142,7 +142,7 @@ Scope `stable-mcp-connector-036` завершает интеграцию scope 0
 
 Исторический выпуск 0.6.51: RELEASE.md, VERIFICATION.md. Выбор первого проекта описан в `docs/modules/first-run-onboarding.md` и WORKSPACE_SETUP.md.
 
-Текущий выпуск 0.6.61: [RELEASE](RELEASE.md), [VERIFICATION](VERIFICATION.md), naming planning — `docs/planning/session-title-sync.md`; single-active contract сохраняется в `docs/planning/single-active-plan-adaptation.md`. Canonical Workflow Kit 1.5.0 / 35 files / digest `0db567df…bbb2c75`; парная поставка находится в `~/Downloads/WebPilot-0.6.61/`.
+Текущий выпуск 0.6.62: [RELEASE](RELEASE.md), [VERIFICATION](VERIFICATION.md), naming planning — `docs/planning/session-title-sync.md`; single-active contract сохраняется в `docs/planning/single-active-plan-adaptation.md`. Canonical Workflow Kit 1.5.0 / 35 files / digest `0db567df…bbb2c75`; парная поставка находится в `~/Downloads/WebPilot-0.6.62/`.
 
 ## Удалённый интерфейс — исследование 2026-09-28
 
