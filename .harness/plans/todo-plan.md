@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 690,
+  "plan_revision": 691,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-title-sync-20260928",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Автоматически давать каждой рабочей session Project Web Pilot осмысленное имя по текущей работе и синхронизировать это же server-side имя с соответствующим native conversation ChatGPT.",
   "acceptance_criteria": [
     "Автоматически давать каждой рабочей session Project Web Pilot осмысленное имя по текущей работе и синхронизировать это же server-side имя с соответствующим native conversation ChatGPT."
@@ -28,7 +28,9 @@
       "src/ui/sidebar.mjs",
       "tests/electron-smoke.mjs",
       "package.json",
-      "package-lock.json"
+      "package-lock.json",
+      "src/context-session.mjs",
+      "tests/context-session.test.mjs"
     ],
     "documentation_paths": [
       "docs/planning/session-title-sync.md",
@@ -402,13 +404,84 @@
       ]
     },
     {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
+      "id": "T009",
+      "title": "Убрать циклический title-sync и восстановить мгновенное ручное переименование",
+      "why": "Реальная 0.6.61 диагностика показала 20 title-sync за ~30 секунд и HTTP 429; manual rename блокируется, потому что IPC ожидает сетевой sync внутри общей action queue.",
+      "dependencies": [
+        "T008"
+      ],
+      "functional_paths": [
+        "src/main.mjs",
+        "src/context-session.mjs",
+        "src/ui/sidebar.mjs",
+        "tests/electron-smoke.mjs",
+        "tests/context-session.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/planning/session-title-sync.md"
+      ],
+      "verification_ids": [
+        "unit",
+        "smoke"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Title sync не запускается из общего ContextSession.onChange и не содержит timer/backoff/retry loop.",
+        "Автоматический sync выполняется только одноразово после local scope-title change, reopen/navigation exact chat и late bindChat новой session.",
+        "Manual rename сохраняет local title и возвращает IPC/UI результат до любого native ChatGPT network request; native sync запускается best-effort отдельно.",
+        "429/5xx native title sync не повторяется автоматически до следующего естественного события.",
+        "Regression smoke подтверждает ограниченное число title-sync запросов и отсутствие блокировки sidebar action queue."
+      ],
+      "expected_commit_message": "fix: make title sync event-driven and non-blocking",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "session-title-sync-20260928",
+        "task_id": "T009",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T010",
+      "title": "Собрать парный релиз Project Web Pilot 0.6.62",
+      "why": "Пользователю нужен релиз без request storm и с работающим ручным rename.",
+      "dependencies": [
+        "T009"
+      ],
+      "functional_paths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "documentation_paths": [
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [
+        "package"
+      ],
+      "verification_kind": "package",
+      "acceptance_criteria": [
+        "0.6.62 собран для macOS arm64 и Windows x64.",
+        "Финальный manifest соответствует release commit и packagedSourceMatches=true.",
+        "Корневой и /Applications macOS app обновлены до 0.6.62."
+      ],
+      "expected_commit_message": "release: Project Web Pilot 0.6.62",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "session-title-sync-20260928",
+        "task_id": "T010",
+        "role": "implementation"
+      }
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "session-title-sync-20260928",
         "task_id": "DOCS",
         "role": "implementation",
-        "iteration": 3
+        "iteration": 4
       },
       "dependencies": [
         "T001",
@@ -418,7 +491,9 @@
         "T005",
         "T006",
         "T007",
-        "T008"
+        "T008",
+        "T009",
+        "T010"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -468,10 +543,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: session-title-sync-20260928
 Current Task: нет
-Revision: 690
+Revision: 691
 
 ## Цель
 
@@ -515,8 +590,16 @@ Revision: 690
   - Git Commit: [DONE] release: Project Web Pilot 0.6.61
   - Reference: session-title-sync-20260928 / T008 / implementation
   - Файлы: package.json, package-lock.json, docs/RELEASE.md, docs/VERIFICATION.md
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: актуализировать контекст проекта
+- [TODO] T009: Убрать циклический title-sync и восстановить мгновенное ручное переименование — Ожидает
+  - Git Commit: [PENDING] fix: make title sync event-driven and non-blocking
+  - Reference: session-title-sync-20260928 / T009 / implementation
+  - Файлы: src/main.mjs, src/context-session.mjs, src/ui/sidebar.mjs, tests/electron-smoke.mjs, tests/context-session.test.mjs, docs/planning/session-title-sync.md
+- [TODO] T010: Собрать парный релиз Project Web Pilot 0.6.62 — Ожидает
+  - Git Commit: [PENDING] release: Project Web Pilot 0.6.62
+  - Reference: session-title-sync-20260928 / T010 / implementation
+  - Файлы: package.json, package-lock.json, docs/RELEASE.md, docs/VERIFICATION.md
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: session-title-sync-20260928 / DOCS / implementation
   - Файлы: docs/planning/session-title-sync.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/modules/workspace-sessions.md
 
