@@ -96,7 +96,7 @@ export function pageOperation({ action = 'inspect', text = '', requestId = '', e
     }
     if (experience !== expectedExperience) return { ...result, action: 'deferred', reason: 'EXPERIENCE_UNCONFIRMED' };
   }
-  if (action === 'fill') {
+  if (action === 'fill' || action === 'paste') {
     // Reuse a restored exact packet; equality never gates Send after insertion.
     if (requestId && draftMatches) return { ...result, action: 'filled' };
     // Recovery owns this insertion. User additions are explicitly allowed.
@@ -110,7 +110,19 @@ export function pageOperation({ action = 'inspect', text = '', requestId = '', e
       const selection = getSelection();
       const range = document.createRange(); range.selectNodeContents(editor); range.collapse(false);
       selection.removeAllRanges(); selection.addRange(range);
-      return { ...result, action: 'native-insert-ready' };
+      if (action === 'fill') return { ...result, action: 'paste-ready' };
+      // ProseMirror's paste pipeline inserts a whole slice in one transaction.
+      // Escape source text: no packet content becomes markup or executable HTML.
+      const escape = value => value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const html = text.replace(/\r\n?/g, '\n').split('\n').map((line, index) =>
+        '<p' + (index === 0 ? ' data-pm-slice="0 0 []"' : '') + '>' + (line ? escape(line) : '<br>') + '</p>').join('');
+      const data = new DataTransfer();
+      data.setData('text/plain', text); data.setData('text/html', html);
+      const event = new ClipboardEvent('paste', { clipboardData: data, bubbles: true, cancelable: true });
+      editor.dispatchEvent(event);
+      return { ...result, action: event.defaultPrevented ? 'filled' : 'deferred',
+        reason: event.defaultPrevented ? null : 'PASTE_UNHANDLED',
+        insertionMethod: 'ClipboardEvent.paste', pasteHandled: event.defaultPrevented };
     }
     return { ...result, action: 'filled' };
   }
@@ -154,19 +166,22 @@ export class ChatGPTComposer {
     if (diagnose && action !== 'inspect') this.trace('action-start', { action, requestId });
     const documentKey = this.documentKey();
     let observation = await this.contents.executeJavaScript(pageScript({ action, text, requestId, expectedExperience, diagnose }), action !== 'inspect');
-    if (observation.action === 'native-insert-ready') {
+    if (observation.action === 'paste-ready') {
       if (!canContinue() || this.documentKey() !== documentKey)
         return { action: 'deferred', reason: 'CHAT_CHANGED' };
-      await this.contents.insertText(text);
-      observation = { ...observation, action: 'filled', insertionMethod: 'webContents.insertText' };
+      observation = await this.contents.executeJavaScript(pageScript({
+        action: 'paste', text, requestId, expectedExperience, diagnose,
+      }), true);
     }
     if (diagnose) {
       const { diagnostic, editorAvailable, writable, login, busy, draftLength, draftMatches, sendEnabled,
-        messageSeen, userMessageCount, experience, connectionError, insertionMethod, action: outcome, reason } = observation;
+        messageSeen, userMessageCount, experience, connectionError, insertionMethod, pasteHandled, action: outcome, reason } = observation;
       this.trace('observation', { action, requestId, diagnostic, editorAvailable, writable, login, busy,
-        draftLength, draftMatches, sendEnabled, messageSeen, userMessageCount, experience, connectionError, insertionMethod, outcome, reason },
+        draftLength, draftMatches, sendEnabled, messageSeen, userMessageCount, experience, connectionError, insertionMethod, pasteHandled, outcome, reason },
         Math.max(0, this.now() - started));
     }
+    if (observation.reason === 'PASTE_UNHANDLED')
+      throw new ComposerError('PASTE_UNHANDLED', 'Редактор не принял вставку Paste. Контекст не отправлен.');
     return observation;
   }
 

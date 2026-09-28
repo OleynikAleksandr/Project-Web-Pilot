@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 782,
+  "plan_revision": 783,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-2-20260928",
@@ -37,7 +37,8 @@
       "package.json",
       "package-lock.json",
       "tests/chromium-diagnostics.test.mjs",
-      "tests/session-opening-performance.test.mjs"
+      "tests/session-opening-performance.test.mjs",
+      "tests/prosemirror-composer-fixture.mjs"
     ],
     "documentation_paths": [
       "docs/planning/event-driven-runtime.md",
@@ -57,7 +58,7 @@
     ]
   },
   "baseline_commit": "b8dc62aa4b469c63e82cc9ee27f791fc0870af91",
-  "current_task_id": "T007",
+  "current_task_id": null,
   "context_pack": {
     "documents": [
       {
@@ -448,11 +449,27 @@
       "functional_paths": [
         "src/chatgpt-composer.mjs",
         "tests/chatgpt-composer.test.mjs",
-        "tests/installed-observer-fixture.cjs"
+        "tests/installed-observer-fixture.cjs",
+        "package-lock.json",
+        "package.json",
+        "scripts/check-event-runtime-release.mjs",
+        "tests/electron-smoke.mjs",
+        "tests/prosemirror-composer-fixture.mjs"
       ],
       "documentation_paths": [
         "docs/planning/event-driven-runtime.md",
-        "README.md"
+        "README.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/RELEASE.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/chatgpt-dom-compatibility.md"
       ],
       "verification_ids": [
         "unit",
@@ -466,13 +483,36 @@
         "Проверены сохранность большого многострочного текста в настоящем ProseMirror, установленный composer и обе упаковки 0.6.69. Живой ChatGPT проверяет пользователь."
       ],
       "expected_commit_message": "feat: Paste для контекста и парный выпуск 0.6.69",
-      "implementation_status": "IN_PROGRESS",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "event-driven-runtime-phase-2-20260928",
         "task_id": "T007",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "README.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/RELEASE.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/chatgpt-dom-compatibility.md",
+        "docs/planning/event-driven-runtime.md",
+        "package-lock.json",
+        "package.json",
+        "scripts/check-event-runtime-release.mjs",
+        "src/chatgpt-composer.mjs",
+        "tests/chatgpt-composer.test.mjs",
+        "tests/electron-smoke.mjs",
+        "tests/installed-observer-fixture.cjs",
+        "tests/prosemirror-composer-fixture.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -535,8 +575,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-phase-2-20260928
-Current Task: T007
-Revision: 782
+Current Task: нет
+Revision: 783
 
 ## Цель
 
@@ -572,10 +612,10 @@ Revision: 782
   - Git Commit: [DONE] feat: Быстрая массовая вставка и Send без сверки черновика, выпуск 0.6.68
   - Reference: event-driven-runtime-phase-2-20260928 / T006 / implementation
   - Файлы: src/chatgpt-composer.mjs, src/context-session.mjs, tests/chatgpt-composer.test.mjs, tests/context-session.test.mjs, tests/installed-observer-fixture.cjs, package-lock.json, package.json, scripts/check-event-runtime-release.mjs, tests/session-opening-performance.test.mjs, docs/planning/event-driven-runtime.md, README.md, docs/CONTEXT_DELIVERY.md, docs/DOCUMENTATION_INDEX.md, docs/MODULES.md, docs/PRODUCT.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/modules/chatgpt-dom-compatibility.md, docs/modules/workspace-sessions.md
-- [IN_PROGRESS] T007: Paste для контекста и парный выпуск 0.6.69 — В работе
-  - Git Commit: [PENDING] feat: Paste для контекста и парный выпуск 0.6.69
+- [DONE] T007: Paste для контекста и парный выпуск 0.6.69 — Завершено
+  - Git Commit: [DONE] feat: Paste для контекста и парный выпуск 0.6.69
   - Reference: event-driven-runtime-phase-2-20260928 / T007 / implementation
-  - Файлы: src/chatgpt-composer.mjs, tests/chatgpt-composer.test.mjs, tests/installed-observer-fixture.cjs, docs/planning/event-driven-runtime.md, README.md
+  - Файлы: src/chatgpt-composer.mjs, tests/chatgpt-composer.test.mjs, tests/installed-observer-fixture.cjs, package-lock.json, package.json, scripts/check-event-runtime-release.mjs, tests/electron-smoke.mjs, tests/prosemirror-composer-fixture.mjs, docs/planning/event-driven-runtime.md, README.md, docs/CONTEXT_DELIVERY.md, docs/DOCUMENTATION_INDEX.md, docs/MODULES.md, docs/PRODUCT.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/modules/chatgpt-dom-compatibility.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: event-driven-runtime-phase-2-20260928 / DOCS / implementation

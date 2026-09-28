@@ -116,3 +116,7 @@ Workspace & Sessions / ChatGPT DOM: этапы composer, сводка перво
 ## Быстрая вставка и автоматический Send — 0.6.68
 
 Workspace & Sessions: штатный webContents.insertText, актуальность до вставки, отсутствие запрета Send из-за изменений текста. Контракты — [доставка](CONTEXT_DELIVERY.md), [DOM](modules/chatgpt-dom-compatibility.md), [фаза 2, T006](planning/event-driven-runtime.md). Kit 1.5.0 не менялся.
+
+## Paste для recovery — 0.6.69
+
+Workspace & Sessions: ClipboardEvent.paste в composer, безопасный HTML и неизменённый plain text; диагностика принятия/времени. Контракт — [доставка](CONTEXT_DELIVERY.md), [T007](planning/event-driven-runtime.md). TXT и runtime Workflow Kit не меняются.

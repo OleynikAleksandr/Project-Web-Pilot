@@ -68,7 +68,12 @@ test('only a user-role message is evidence; an assistant quote cannot acknowledg
 test('normal contenteditable receives text through the visible composer input path',async()=>{
   const f=fixture();const editor=f.document.createElement('div');editor.id='prompt-textarea';editor.setAttribute('contenteditable','true');f.editor.replaceWith(editor);
   f.dom.window.document.execCommand=()=>{throw Error('slow execCommand must not run');};
-  f.view.insertText=async text=>{editor.textContent=text;editor.dispatchEvent(new f.dom.window.InputEvent('input',{bubbles:true}));};
+  installPasteAPI(f);
+  editor.addEventListener('paste', event=>{
+    event.preventDefault(); editor.textContent=event.clipboardData.getData('text/plain');
+    editor.dispatchEvent(new f.dom.window.InputEvent('input',{bubbles:true}));
+  });
+  f.view.insertText=()=>{throw Error('native insertion must not run');};
   const result=await f.composer.inspect({action:'fill',...request});
   assert.equal(result.action,'filled');assert.equal(editor.textContent,message);
 });
@@ -296,7 +301,7 @@ test('retry after unavailable Send never inserts the packet twice or revalidates
   assert.equal(f.document.querySelector('[data-message-author-role="user"]').textContent,message+' Дополнение');
 });
 
-test('document change cancels native insertion and invalidates the insertion marker', async () => {
+test('document change cancels paste and invalidates the insertion marker', async () => {
   const f=fixture(); const editor=f.document.createElement('div');
   editor.id='prompt-textarea'; editor.setAttribute('contenteditable','true'); f.editor.replaceWith(editor);
   f.composer.pageState={current:{documentId:'first'}};
@@ -304,7 +309,7 @@ test('document change cancels native insertion and invalidates the insertion mar
   const execute=f.view.executeJavaScript;
   f.view.executeJavaScript=async script=>{
     const result=await execute(script);
-    if(result.action==='native-insert-ready') f.composer.pageState.current={documentId:'next'};
+    if(result.action==='paste-ready') f.composer.pageState.current={documentId:'next'};
     return result;
   };
   assert.equal((await f.composer.inspect({action:'fill',...request})).reason,'CHAT_CHANGED');
@@ -319,4 +324,43 @@ test('restored exact recovery is reused instead of inserting a second copy', asy
   assert.equal((await f.composer.deliver(request)).state,'sent');
   assert.equal(fills,0); assert.equal(f.sends(),1);
   assert.equal(f.document.querySelector('[data-message-author-role="user"]').textContent,message);
+});
+
+// jsdom lacks browser clipboard constructors; this fixture tests event semantics.
+// Installed Electron uses real ClipboardEvent/DataTransfer and real ProseMirror.
+function installPasteAPI(f) {
+  f.dom.window.DataTransfer=class {
+    constructor(){this.data=new Map();}
+    setData(type,value){this.data.set(type,value);}
+    getData(type){return this.data.get(type)||'';}
+  };
+  f.dom.window.ClipboardEvent=class extends f.dom.window.Event {
+    constructor(type,options){super(type,options);this.clipboardData=options.clipboardData;}
+  };
+}
+test('paste provides escaped HTML and unchanged plain text, including empty lines and spaces', async () => {
+  const f=fixture(); installPasteAPI(f);
+  const editor=f.document.createElement('div');editor.id='prompt-textarea';
+  editor.setAttribute('contenteditable','true'); f.editor.replaceWith(editor);
+  const text='  A  & <script>alert(1)</script>\n\n\tB\nopaque-request-123\n';
+  let pastes=0;
+  editor.addEventListener('paste',event=>{
+    pastes++;event.preventDefault();
+    assert.equal(event.clipboardData.getData('text/plain'),text);
+    const doc=new f.dom.window.DOMParser().parseFromString(event.clipboardData.getData('text/html'),'text/html');
+    assert.equal(doc.querySelector('script'),null);
+    assert.equal(doc.querySelector('p').getAttribute('data-pm-slice'),'0 0 []');
+    assert.deepEqual([...doc.querySelectorAll('p')].map(p=>p.textContent),text.split('\n'));
+  });
+  const observation=await f.composer.inspect({action:'fill',text,requestId:request.requestId});
+  assert.equal(observation.insertionMethod,'ClipboardEvent.paste');
+  assert.equal(observation.pasteHandled,true); assert.equal(pastes,1);
+});
+test('unhandled paste is explicit and never falls back to the slow insertion', async () => {
+  const f=fixture(); installPasteAPI(f);
+  const editor=f.document.createElement('div');editor.id='prompt-textarea';
+  editor.setAttribute('contenteditable','true');f.editor.replaceWith(editor);
+  f.view.insertText=()=>{throw Error('no slow fallback');};
+  await assert.rejects(f.composer.deliver(request),{code:'PASTE_UNHANDLED'});
+  assert.equal(f.sends(),0);assert.equal(editor.textContent,'');
 });

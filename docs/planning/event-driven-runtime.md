@@ -271,3 +271,11 @@ Contenteditable заполняется одним webContents.insertText, без
 
 Промежуточный выпуск: 0.6.68, обе платформы, корневой app и /Applications. T001–T003 основной фазы 2 остаются невыполненными. Kit runtime не меняется.
 API: https://www.electronjs.org/docs/latest/api/web-contents#contentsinserttexttext
+
+## T007: Paste и промежуточный выпуск 0.6.69
+
+Поручение 28.09.2026: последовательно испытать обработчик Paste, собрать обе платформы; TXT отложен. Живой 0.6.68 показал 37 972 ms на webContents.insertText, затем автоматический Send за 12 ms и подтверждённую отправку. Быстрый простой стенд не доказал скорость текущего ChatGPT.
+
+Реализация: text/plain + безопасный HTML (экранирование исходного текста, абзацы, пустые строки, data-pm-slice) в ClipboardEvent(paste). Системный clipboard и внутренние API страницы не используются. Непринятое событие отображается как PASTE_UNHANDLED без fallback, принятие события не запускает сверку текста. Сохраняются отмена при смене документа/сессии и запрет дубля неизвестной отправки. Логирование метода, времени, принятия paste и Send обязательно.
+
+Проверки T007: unit, smoke, установленный composer с настоящим ProseMirror и точным многострочным текстом/одной transaction, парная упаковка. ProseMirror/esbuild — только test devDependencies, не runtime приложения. Выпуск 0.6.69 обновляет корневой app и /Applications; ZIP в ~/Downloads/WebPilot-0.6.69/. Пользователь проверяет реальный Chat сначала, затем Work. T001–T003 основной фазы 2 не входят в этот hotfix; current plan сохраняется.

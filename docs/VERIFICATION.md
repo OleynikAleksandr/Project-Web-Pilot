@@ -2243,3 +2243,11 @@ Unit-сценарии: повторный сбой, черновик, unknown Se
 Изолированный ProseMirror с большим сохранённым пакетом: 83 514 символов, 887 строк. Synthetic paste — 23,5 ms, но изменил текст; этот вариант отвергнут. webContents.insertText — 249,6 ms, одна transaction, точное совпадение. Тест не использовал реальный аккаунт и системный clipboard.
 
 T006 проверяет additions после fill, отсутствие ожидания равенства, недоступный Send и повтор без двойной вставки, восстановленный точный пакет, отмену native insertion при смене документа, перенос readiness до вставки и продолжение после изменений. Installed gate выполняет composer из выдаваемого app: большой многострочный contenteditable, native insertion с измерением, clicked/sent, reload без дубля. Полные unit/smoke и сверка обеих упаковок входят в обязательный commit gate; вывод хранит Workflow Kit. Live ChatGPT, native Windows и clean VM этим не подтверждаются.
+
+## 0.6.69 / T007 — Paste после живой проверки 0.6.68
+
+Попытка 0.6.68 от 28.09.2026 18:30–18:31 CEST, request wp-request-5d976f3c-8e7e-4238-90a4-5f3a7da8dc4f: 111 354 символа. Fill начался 18:30:43.493, завершился 18:31:21.466; insertionMethod=webContents.insertText, elapsedMs=37 972. Следующий inspect 96 ms, запись sending 7 ms, click 12 ms; sent в 18:31:22.424. Удаление DRAFT_CHANGED исправило автоматический Send, но ускорение вставки на живой странице не подтвердилось.
+
+HTML-paste на изолированном ProseMirror с тем же пакетом: 30,2 ms, точный текст, одна transaction. T007 проверяет production composer через ClipboardEvent.paste, экранирование HTML, пустые строки/отступы, отмену до paste, явную ошибку без обработчика. Установленный gate использует настоящий ProseMirror вместо plain contenteditable, проверяет модель целиком и одну transaction; дополнения пользовательского текста не блокируют Send. Полный unit/smoke и package/installed gate обязательны при commit. Реальный ChatGPT, native Windows и clean VM этим не подтверждаются.
+
+T007 устранил ошибку smoke fixture: Electron 44 возвращает undefined в getLastWebPreferences().preload, поэтому отдельное largeView не получало observer. Стенд теперь задаёт реальный путь и ждёт initial observation; отдельный прогон большого Paste с отложенной кнопкой Send прошёл. Production задаёт preload явно и этой ошибки не имел.

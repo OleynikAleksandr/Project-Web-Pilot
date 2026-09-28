@@ -44,6 +44,12 @@ const html = `<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>
 <div id="mixed-message" data-message-author-role="assistant" style="min-height:72px;padding:10px"><span id="mixed-message-text">Содержательный ответ агента</span><div class="tool-row"><button id="fixture-mixed-tool-call" type="button">Вызываемый инструмент</button></div></div>
 <div aria-label="Select chat surface"><button type="button" data-tpp-toggle-value="chatgpt">Chat</button><button type="button" data-tpp-toggle-value="work">Work</button></div>\n<div id="messages"></div><form><div id="prompt-textarea" contenteditable="true" role="textbox"></div><button type="submit" data-testid="send-button">Send fixture</button></form>
 <script>
+// Minimal editor adapter for smoke; real ProseMirror is covered by installed gate.
+document.getElementById('prompt-textarea').addEventListener('paste',event=>{
+ event.preventDefault();const editor=event.currentTarget;
+ editor.append(document.createTextNode(event.clipboardData.getData('text/plain')));
+ editor.dispatchEvent(new InputEvent('input',{bubbles:true,inputType:'insertFromPaste'}));
+});
 window.fixtureMode=location.pathname.startsWith('/work')?'work':localStorage.getItem('fixture-mode')||'work';
 window.fixtureModeClicks=0;
 function setFixtureMode(mode){window.fixtureMode=mode;localStorage.setItem('fixture-mode',mode);document.querySelectorAll('[data-tpp-toggle-value]').forEach(button=>button.setAttribute('data-state',button.dataset.tppToggleValue===mode?'on':'off'));if(!location.pathname.startsWith('/c/')) document.getElementById('prompt-textarea').textContent=localStorage.getItem('fixture-restored-draft-'+mode)||'';}
@@ -598,7 +604,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   // Use a separate isolated view so session-count and packet-cache assertions stay independent.
   const largeView = new BrowserWindow({ show: false, webPreferences: {
     partition: 'web-pilot-smoke', sandbox: true, contextIsolation: true, nodeIntegration: false,
-    preload: browser.getLastWebPreferences().preload } });
+    preload: path.join(app.getAppPath(), 'resources/chatgpt-page-observer-preload.cjs') } });
   const { PageStateSource } = await import('../src/page-state.mjs');
   const { connectPageState } = await import('../src/page-state-bridge.mjs');
   const { ipcMain } = await import('electron');
@@ -606,11 +612,14 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   const disconnect = connectPageState(largeView.webContents, ipcMain, largeSource);
   try {
     await largeView.loadURL('https://chatgpt.com/');
+    // Production waits for observer readiness before delivery; the isolated view must too.
+    await waitFor(() => largeSource.current?.state.editorAvailable, 'large composer observer ready', () => largeSource.current);
     await largeView.webContents.executeJavaScript("document.querySelector('[data-testid=send-button]').disabled=true; setTimeout(()=>document.querySelector('[data-testid=send-button]').disabled=false,700)");
     const largeComposer = new ChatGPTComposer(largeView.webContents, { pageState: largeSource });
     const largeText = fixtureContext.repeat(3) + '\nwp-request-large-autosend';
     assert.ok(Buffer.byteLength(largeText) > 200000);
-    assert.equal((await largeComposer.deliver({ text: largeText, requestId: 'wp-request-large-autosend' })).state, 'sent');
+    const largeResult = await largeComposer.deliver({ text: largeText, requestId: 'wp-request-large-autosend' });
+    assert.equal(largeResult.state, 'sent', JSON.stringify(largeResult));
     assert.equal(await largeView.webContents.executeJavaScript('window.fixtureMessages.length'), 1);
     assert.equal((await largeComposer.inspect({ text: largeText, requestId: 'wp-request-large-autosend' })).messageSeen, true);
   } finally { disconnect(); largeView.destroy(); }

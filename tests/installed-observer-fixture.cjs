@@ -2,15 +2,18 @@ const { app, BrowserWindow, ipcMain, session } = require('electron');
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
+const { buildSync } = require('esbuild');
+const fixtureBundle = buildSync({ entryPoints: [path.join(__dirname, 'prosemirror-composer-fixture.mjs')],
+  bundle: true, platform: 'browser', format: 'iife', write: false }).outputFiles[0].text;
 const [resourceRoot, moduleRoot, profile] = process.argv.slice(2);
 app.setPath('userData', profile);
 const html = `<!doctype html><html><body><div id="messages"></div><form>
-<div id="prompt-textarea" contenteditable="true" style="white-space:pre-wrap">Контекст архивной сессии wp-request-old-draft</div><button data-testid="send-button" disabled>Send</button></form>
+<div id="editor-host"></div><button data-testid="send-button" disabled>Send</button></form>
 <script>
 const sent=JSON.parse(sessionStorage.getItem('sent')||'[]');
 function show(text){const el=document.createElement('article');el.dataset.messageAuthorRole='user';el.textContent=text;document.querySelector('#messages').append(el)}
 sent.forEach(show);
-document.querySelector('form').onsubmit=e=>{e.preventDefault();const text=document.querySelector('#prompt-textarea').innerText;sent.push(text);sessionStorage.setItem('sent',JSON.stringify(sent));show(text);history.replaceState({},'', '/c/installed-fixture');document.querySelector('#prompt-textarea').innerText='';document.querySelector('#prompt-textarea').dispatchEvent(new Event('input',{bubbles:true}))};
+document.querySelector('form').onsubmit=e=>{e.preventDefault();const text=fixtureReadModel();sent.push(text);sessionStorage.setItem('sent',JSON.stringify(sent));show(text);history.replaceState({},'', '/c/installed-fixture');fixtureClearModel();document.querySelector('#prompt-textarea').dispatchEvent(new Event('input',{bubbles:true}))};
 setTimeout(()=>document.querySelector('button').disabled=false,350);
 </script></body></html>`;
 let fixtureStage = 'boot', trace = [];
@@ -28,7 +31,8 @@ app.whenReady().then(async () => {
   try {
     fixtureStage = 'load';
     await view.loadURL('https://chatgpt.com/');
-    if (!source.current) await source.waitForChange(source.version, { timeoutMs: 3000 });
+    await view.webContents.executeJavaScript(fixtureBundle);
+    if (!source.current?.state.editorAvailable) await source.waitForChange(source.version, { timeoutMs: 3000 });
     assert.ok(source.current?.state.editorAvailable);
     assert.equal(await view.webContents.executeJavaScript('typeof window.require + ":" + typeof window.webPilot'), 'undefined:undefined');
     fixtureStage = 'clear';
@@ -37,12 +41,17 @@ app.whenReady().then(async () => {
     assert.equal((await composer.inspect()).draftLength, 0);
     fixtureStage = 'deliver';
     // Comparable to the incident: ~100k characters with hundreds of lines.
-    const text = ('Полный пакет проверки. Отступы  и путь /My  Folder. '.repeat(3) + '\n').repeat(700)
+    const text = '\n\n  <script>not executable</script> & \\ literal\n' + ('Полный пакет проверки. Отступы  и путь /My  Folder. '.repeat(3) + '\n').repeat(700)
       + '\n\tТабуляция\nКод: \\n и \\t\nwp-request-installed-fixture';
     assert.equal((await composer.deliver({ text, requestId: 'wp-request-installed-fixture' })).state, 'sent');
     assert.equal(await view.webContents.executeJavaScript('document.querySelectorAll("article").length'), 1);
-    const insertion=trace.find(r=>r.insertionMethod==='webContents.insertText');
-    assert.ok(insertion, 'installed composer uses native bulk insertion');
+    const insertion=trace.find(r=>r.insertionMethod==='ClipboardEvent.paste');
+    assert.ok(insertion, 'installed composer uses paste pipeline');
+    assert.equal(insertion.pasteHandled, true);
+    assert.equal(await view.webContents.executeJavaScript('fixturePasteTransactions'), 1);
+    assert.equal(await view.webContents.executeJavaScript('fixturePastedModel'), text,
+      'whole model preserves every character, blank line and indentation');
+    assert.equal(await view.webContents.executeJavaScript('document.querySelector("#editor-host script")'), null);
     assert.ok(insertion.elapsedMs < 5000, 'large fixture insertion must not regress to tens of seconds');
     assert.ok(trace.some(r => r.outcome === 'clicked'));
     assert.ok(trace.some(r => r.event === 'delivery-result' && r.state === 'sent'));
@@ -57,14 +66,15 @@ app.whenReady().then(async () => {
     assert.equal((await composer.inspect()).connectionError, 'stream-interrupted');
     const documentId = source.current.documentId;
     await view.loadURL('https://chatgpt.com/c/installed-fixture');
-    if (!source.current) await source.waitForChange(source.version, { timeoutMs: 3000 });
+    await view.webContents.executeJavaScript(fixtureBundle);
+    if (!source.current?.state.editorAvailable) await source.waitForChange(source.version, { timeoutMs: 3000 });
     assert.notEqual(source.current.documentId, documentId);
     assert.equal((await composer.inspect({ requestId: 'wp-request-installed-fixture' })).messageSeen, true);
     assert.equal(await view.webContents.executeJavaScript('document.querySelector("#prompt-textarea").innerText'), 'Контекст архивной сессии wp-request-old-draft');
 
     assert.equal(await view.webContents.executeJavaScript('document.querySelectorAll("article").length'), 1);
-    console.log(JSON.stringify({ installedPreload: resourceRoot, scenario: 'sandbox observer, restored draft cleared, multiline contenteditable Send with diagnostics, Resume stream unavailable detected, same conversation reload without duplicate',
-      electron: process.versions.electron, node: process.versions.node, insertionMs: insertion.elapsedMs, chars: text.length, liveChatGPT: false }));
+    console.log(JSON.stringify({ installedPreload: resourceRoot, scenario: 'sandbox observer, restored draft cleared, real ProseMirror paste, exact multiline model, Send with diagnostics, Resume stream unavailable detected, same conversation reload without duplicate',
+      electron: process.versions.electron, node: process.versions.node, insertionMethod: insertion.insertionMethod, insertionMs: insertion.elapsedMs, chars: text.length, liveChatGPT: false }));
   } finally { disconnect(); view.destroy(); clearTimeout(deadline); }
   app.quit();
 }).catch(error => { console.error(error); clearTimeout(deadline); app.exit(1); });
