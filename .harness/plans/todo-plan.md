@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 19,
+  "plan_revision": 20,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "release-1.5.0-docs-finalization-001",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Зафиксировать актуальные release-документы Workflow Kit 1.5.0 после self-host cutover.",
   "acceptance_criteria": [
     "Release-документы отражают фактический single-active contract 1.5.0 и завершённый self-host cutover."
@@ -57,6 +57,10 @@
       },
       {
         "path": "docs/planning/single-active-plan-migration.md",
+        "required": true
+      },
+      {
+        "path": "docs/modules/workflow-kit-package.md",
         "required": true
       }
     ],
@@ -146,18 +150,44 @@
       ]
     },
     {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
+      "id": "R001",
+      "title": "Актуализировать README для интеграции с Web Pilot 0.6.64",
+      "why": "Актуализировать README для интеграции с Web Pilot 0.6.64",
+      "dependencies": [],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/modules/workflow-kit-package.md",
+        "README.md"
+      ],
+      "verification_ids": [],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "README отражает Kit 1.5.0, фактическую структуру пакета и границу ответственности с Web Pilot 0.6.64.",
+        "Ссылки и команды сверены с существующими файлами; runtime, версия и digest Kit не меняются."
+      ],
+      "expected_commit_message": "feat: Актуализировать README для интеграции с Web Pilot 0.6.64",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "release-1.5.0-docs-finalization-001",
+        "task_id": "R001",
+        "role": "implementation"
+      }
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "release-1.5.0-docs-finalization-001",
         "task_id": "DOCS",
         "role": "implementation",
-        "iteration": 4
+        "iteration": 5
       },
       "dependencies": [
         "T002",
         "T003",
-        "T004"
+        "T004",
+        "R001"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -194,10 +224,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: release-1.5.0-docs-finalization-001
 Current Task: нет
-Revision: 19
+Revision: 20
 
 ## Цель
 
@@ -221,8 +251,12 @@ Revision: 19
   - Git Commit: [DONE] chore: add repository LICENSE
   - Reference: release-1.5.0-docs-finalization-001 / T004 / implementation
   - Файлы: LICENSE
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: завершить release-документацию 1.5.0
+- [TODO] R001: Актуализировать README для интеграции с Web Pilot 0.6.64 — Ожидает
+  - Git Commit: [PENDING] feat: Актуализировать README для интеграции с Web Pilot 0.6.64
+  - Reference: release-1.5.0-docs-finalization-001 / R001 / implementation
+  - Файлы: docs/modules/workflow-kit-package.md, README.md
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: завершить release-документацию 1.5.0
   - Reference: release-1.5.0-docs-finalization-001 / DOCS / implementation
   - Файлы: docs/DOCUMENTATION_INDEX.md, docs/modules/workflow-kit-package.md, docs/planning/single-active-plan-migration.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, README.md
 
@@ -232,5 +266,6 @@ Revision: 19
 - docs/MODULES.md → Модули проекта
 - docs/DOCUMENTATION_INDEX.md → Каталог документации
 - docs/planning/single-active-plan-migration.md
+- docs/modules/workflow-kit-package.md
 
 Служебные состояния меняются только командами workflow. Приёмка не архивирует scope.
