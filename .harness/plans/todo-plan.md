@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 10,
+  "plan_revision": 12,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "release-1.5.0-docs-finalization-001",
@@ -104,13 +104,16 @@
         "README присутствует в полном индексе документации WorkflowKit."
       ],
       "expected_commit_message": "docs: index README",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "release-1.5.0-docs-finalization-001",
         "task_id": "T003",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "docs/DOCUMENTATION_INDEX.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -163,7 +166,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: release-1.5.0-docs-finalization-001
 Current Task: нет
-Revision: 10
+Revision: 12
 
 ## Цель
 
@@ -179,8 +182,8 @@ Revision: 10
   - Git Commit: [DONE] docs: add WorkflowKit README and Web Pilot link
   - Reference: release-1.5.0-docs-finalization-001 / T002 / implementation
   - Файлы: README.md
-- [TODO] T003: Добавить README в индекс документации — Ожидает
-  - Git Commit: [PENDING] docs: index README
+- [DONE] T003: Добавить README в индекс документации — Завершено
+  - Git Commit: [DONE] docs: index README
   - Reference: release-1.5.0-docs-finalization-001 / T003 / implementation
   - Файлы: docs/DOCUMENTATION_INDEX.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает

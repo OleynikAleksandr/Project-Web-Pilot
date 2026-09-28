@@ -19,6 +19,7 @@
 | .harness/plans/todo-plan.md | Единственный current plan checkout/worktree |
 | .harness/plans/todo-plan.template.md | Шаблон нового current plan |
 | AGENTS.md | Инструкции проекта |
+| README.md | Краткое описание WorkflowKit, запуск, документация и связь с Project Web Pilot |
 | docs/PRODUCT.md | Назначение canonical package и current state model |
 | docs/architecture/ARCHITECTURE.md | Архитектура package, single-active plan и legacy history |
 | docs/architecture/OVERVIEW.md | Компактный recovery-обзор текущей архитектуры |
