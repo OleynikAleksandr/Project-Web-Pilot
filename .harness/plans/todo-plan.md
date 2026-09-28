@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 9,
+  "plan_revision": 10,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "release-1.5.0-docs-finalization-001",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Зафиксировать актуальные release-документы Workflow Kit 1.5.0 после self-host cutover.",
   "acceptance_criteria": [
     "Release-документы отражают фактический single-active contract 1.5.0 и завершённый self-host cutover."
@@ -90,16 +90,40 @@
       ]
     },
     {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
+      "id": "T003",
+      "title": "Добавить README в индекс документации",
+      "why": "Добавить README в индекс документации",
+      "dependencies": [],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/DOCUMENTATION_INDEX.md"
+      ],
+      "verification_ids": [],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "README присутствует в полном индексе документации WorkflowKit."
+      ],
+      "expected_commit_message": "docs: index README",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "release-1.5.0-docs-finalization-001",
+        "task_id": "T003",
+        "role": "implementation"
+      }
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "release-1.5.0-docs-finalization-001",
         "task_id": "DOCS",
         "role": "implementation",
-        "iteration": 2
+        "iteration": 3
       },
       "dependencies": [
-        "T002"
+        "T002",
+        "T003"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -136,10 +160,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: release-1.5.0-docs-finalization-001
 Current Task: нет
-Revision: 9
+Revision: 10
 
 ## Цель
 
@@ -155,8 +179,12 @@ Revision: 9
   - Git Commit: [DONE] docs: add WorkflowKit README and Web Pilot link
   - Reference: release-1.5.0-docs-finalization-001 / T002 / implementation
   - Файлы: README.md
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: завершить release-документацию 1.5.0
+- [TODO] T003: Добавить README в индекс документации — Ожидает
+  - Git Commit: [PENDING] docs: index README
+  - Reference: release-1.5.0-docs-finalization-001 / T003 / implementation
+  - Файлы: docs/DOCUMENTATION_INDEX.md
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: завершить release-документацию 1.5.0
   - Reference: release-1.5.0-docs-finalization-001 / DOCS / implementation
   - Файлы: docs/DOCUMENTATION_INDEX.md, docs/modules/workflow-kit-package.md, docs/planning/single-active-plan-migration.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, README.md
 
