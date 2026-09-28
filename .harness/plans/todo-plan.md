@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 30,
+  "plan_revision": 32,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "release-1.5.0-docs-finalization-001",
@@ -220,13 +220,16 @@
         "README отражает версию клиента 0.6.66 и границу между кэшем Kit и редактором ChatGPT; ссылка на Web Pilot сохранена."
       ],
       "expected_commit_message": "feat: README: чистое поле нового Chat/Work в клиенте 0.6.66",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "release-1.5.0-docs-finalization-001",
         "task_id": "R003",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "README.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -283,7 +286,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: release-1.5.0-docs-finalization-001
 Current Task: нет
-Revision: 30
+Revision: 32
 
 ## Цель
 
@@ -315,8 +318,8 @@ Revision: 30
   - Git Commit: [DONE] feat: Актуализировать README для выпуска клиента Web Pilot 0.6.65
   - Reference: release-1.5.0-docs-finalization-001 / R002 / implementation
   - Файлы: docs/modules/workflow-kit-package.md, README.md
-- [TODO] R003: README: чистое поле нового Chat/Work в клиенте 0.6.66 — Ожидает
-  - Git Commit: [PENDING] feat: README: чистое поле нового Chat/Work в клиенте 0.6.66
+- [DONE] R003: README: чистое поле нового Chat/Work в клиенте 0.6.66 — Завершено
+  - Git Commit: [DONE] feat: README: чистое поле нового Chat/Work в клиенте 0.6.66
   - Reference: release-1.5.0-docs-finalization-001 / R003 / implementation
   - Файлы: docs/modules/workflow-kit-package.md, README.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
