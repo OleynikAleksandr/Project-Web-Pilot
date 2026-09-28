@@ -4,19 +4,24 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 59,
+  "plan_revision": 60,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "release-1.5.0-docs-finalization-001",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Зафиксировать актуальные release-документы Workflow Kit 1.5.0 после self-host cutover.",
   "acceptance_criteria": [
     "Release-документы отражают фактический single-active contract 1.5.0 и завершённый self-host cutover."
   ],
   "approved_scope": {
     "functional_paths": [
-      "LICENSE"
+      "LICENSE",
+      "src/lib/actions.mjs",
+      "src/cli.mjs",
+      "src/lib/transaction.mjs",
+      "src/lib/command-help.mjs",
+      "scripts/check-runtime-fixture.mjs"
     ],
     "documentation_paths": [
       "docs/DOCUMENTATION_INDEX.md",
@@ -24,7 +29,9 @@
       "docs/planning/single-active-plan-migration.md",
       "docs/architecture/OVERVIEW.md",
       "docs/MODULES.md",
-      "README.md"
+      "README.md",
+      "src/templates/CONTINUE.md",
+      "src/WORKFLOW.md"
     ]
   },
   "baseline_commit": "62fa4f5ef06d6f9e6541c3a7b280adf5a631aee1",
@@ -362,13 +369,51 @@
       ]
     },
     {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
+      "id": "R009",
+      "title": "Перенос незавершённых задач одним коммитом; Workflow Kit 1.5.1",
+      "why": "Перенос незавершённых задач одним коммитом; Workflow Kit 1.5.1",
+      "dependencies": [],
+      "functional_paths": [
+        "src/lib/actions.mjs",
+        "src/cli.mjs",
+        "src/lib/transaction.mjs",
+        "src/lib/command-help.mjs",
+        "scripts/check-runtime-fixture.mjs"
+      ],
+      "documentation_paths": [
+        "src/templates/CONTINUE.md",
+        "src/WORKFLOW.md",
+        "docs/modules/workflow-kit-package.md",
+        "README.md"
+      ],
+      "verification_ids": [
+        "package",
+        "runtime",
+        "consumer-contract"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "plan:carryover по явному поручению архивирует исходный план с честными статусами и создаёт новый из незавершённых задач вместе с DOCS.",
+        "Критерии, проверки, документация и внутренние зависимости сохранены; выполненные зависимости остаются историей.",
+        "Ошибки revision, занятой задачи, чужих изменений, коллизии архива и повтор команды не теряют задачи; прерывание восстанавливается штатным repair."
+      ],
+      "expected_commit_message": "feat: Перенос незавершённых задач одним коммитом; Workflow Kit 1.5.1",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "release-1.5.0-docs-finalization-001",
+        "task_id": "R009",
+        "role": "implementation"
+      }
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "release-1.5.0-docs-finalization-001",
         "task_id": "DOCS",
         "role": "implementation",
-        "iteration": 12
+        "iteration": 13
       },
       "dependencies": [
         "T002",
@@ -381,7 +426,8 @@
         "R005",
         "R006",
         "R007",
-        "R008"
+        "R008",
+        "R009"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -390,7 +436,9 @@
         "docs/planning/single-active-plan-migration.md",
         "docs/architecture/OVERVIEW.md",
         "docs/MODULES.md",
-        "README.md"
+        "README.md",
+        "src/templates/CONTINUE.md",
+        "src/WORKFLOW.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -418,10 +466,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: release-1.5.0-docs-finalization-001
 Current Task: нет
-Revision: 59
+Revision: 60
 
 ## Цель
 
@@ -477,10 +525,14 @@ Revision: 59
   - Git Commit: [DONE] feat: README: итоговый клиент Web Pilot 0.6.71
   - Reference: release-1.5.0-docs-finalization-001 / R008 / implementation
   - Файлы: README.md
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: завершить release-документацию 1.5.0
+- [TODO] R009: Перенос незавершённых задач одним коммитом; Workflow Kit 1.5.1 — Ожидает
+  - Git Commit: [PENDING] feat: Перенос незавершённых задач одним коммитом; Workflow Kit 1.5.1
+  - Reference: release-1.5.0-docs-finalization-001 / R009 / implementation
+  - Файлы: src/lib/actions.mjs, src/cli.mjs, src/lib/transaction.mjs, src/lib/command-help.mjs, scripts/check-runtime-fixture.mjs, src/templates/CONTINUE.md, src/WORKFLOW.md, docs/modules/workflow-kit-package.md, README.md
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: завершить release-документацию 1.5.0
   - Reference: release-1.5.0-docs-finalization-001 / DOCS / implementation
-  - Файлы: docs/DOCUMENTATION_INDEX.md, docs/modules/workflow-kit-package.md, docs/planning/single-active-plan-migration.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, README.md
+  - Файлы: docs/DOCUMENTATION_INDEX.md, docs/modules/workflow-kit-package.md, docs/planning/single-active-plan-migration.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, README.md, src/templates/CONTINUE.md, src/WORKFLOW.md
 
 ## Context Pack For This Cycle
 
