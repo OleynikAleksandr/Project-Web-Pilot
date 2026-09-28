@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 776,
+  "plan_revision": 778,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-2-20260928",
@@ -56,7 +56,7 @@
     ]
   },
   "baseline_commit": "b8dc62aa4b469c63e82cc9ee27f791fc0870af91",
-  "current_task_id": null,
+  "current_task_id": "T006",
   "context_pack": {
     "documents": [
       {
@@ -389,7 +389,7 @@
         "Навигация и неопределённая предыдущая отправка не создают дублей; собраны обе платформы."
       ],
       "expected_commit_message": "feat: Быстрая массовая вставка и Send без сверки черновика, выпуск 0.6.68",
-      "implementation_status": "TODO",
+      "implementation_status": "IN_PROGRESS",
       "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "event-driven-runtime-phase-2-20260928",
@@ -457,8 +457,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-phase-2-20260928
-Current Task: нет
-Revision: 776
+Current Task: T006
+Revision: 778
 
 ## Цель
 
@@ -490,7 +490,7 @@ Revision: 776
   - Git Commit: [DONE] feat: Причина блокировки Send: сравнение черновика, диагностика и парный выпуск 0.6.67
   - Reference: event-driven-runtime-phase-2-20260928 / T005 / implementation
   - Файлы: src/chatgpt-composer.mjs, src/main.mjs, tests/chatgpt-composer.test.mjs, tests/installed-observer-fixture.cjs, package-lock.json, package.json, scripts/check-event-runtime-release.mjs, src/chromium-diagnostics.mjs, tests/chromium-diagnostics.test.mjs, docs/planning/event-driven-runtime.md, docs/VERIFICATION.md, README.md, docs/CONTEXT_DELIVERY.md, docs/DOCUMENTATION_INDEX.md, docs/MODULES.md, docs/PRODUCT.md, docs/RELEASE.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/modules/chatgpt-dom-compatibility.md
-- [TODO] T006: Быстрая массовая вставка и Send без сверки черновика, выпуск 0.6.68 — Ожидает
+- [IN_PROGRESS] T006: Быстрая массовая вставка и Send без сверки черновика, выпуск 0.6.68 — В работе
   - Git Commit: [PENDING] feat: Быстрая массовая вставка и Send без сверки черновика, выпуск 0.6.68
   - Reference: event-driven-runtime-phase-2-20260928 / T006 / implementation
   - Файлы: src/chatgpt-composer.mjs, src/context-session.mjs, tests/chatgpt-composer.test.mjs, tests/context-session.test.mjs, tests/installed-observer-fixture.cjs, docs/planning/event-driven-runtime.md
