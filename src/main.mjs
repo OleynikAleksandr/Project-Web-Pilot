@@ -1,3 +1,5 @@
+import { PageStateSource } from './page-state.mjs';
+import { connectPageState } from './page-state-bridge.mjs';
 import { PlanMonitor } from './plan-monitor.mjs';
 import { AgentTimer } from './agent-timer.mjs';
 import { chatGPTDOMScript } from './chatgpt-dom.mjs';
@@ -49,7 +51,10 @@ const settingsFile = path.join(dataDir, 'settings.json');
 const chromiumDiagnosticsFile = path.join(dataDir, 'diagnostics', 'chromium-events.jsonl');
 const store = new WorkspaceSessions(path.join(dataDir, 'workspaces.json'));
 const planMonitor = new PlanMonitor({ selected: () => store.selected(),
-  inspect: (workspace, sessionId) => store.inspect(workspace, sessionId), onChange: () => publish(), onError: () => publish() });
+  inspect: (workspace, sessionId) => store.inspect(workspace, sessionId), onChange: (_info, change) => {
+    publish();
+    if (change?.semanticChanged && !pageLoading && !setupState && !settingsState) void controller?.tick();
+  }, onError: () => publish() });
 const partition = smoke ? 'web-pilot-smoke' : 'persist:chatgpt';
 let runtimeFolder = bundledWindowsRuntimeFolder(dataDir, process.platform) ?? defaultRuntimeFolder(os.homedir(), process.platform);
 let configuredRuntimeFolder = null;
@@ -110,20 +115,19 @@ const agentTimer = new AgentTimer({ onFinish: ({ workspace, sessionId }, duratio
   void store.recordAgentTime(workspace, sessionId, durationMs).then(() => publish(),
     error => console.error('Project Web Pilot: agent time not saved:', error?.message ?? error));
 } });
-const agentBusyScript = chatGPTDOMScript() + '.busy()';
-let agentTimerInterval = null, agentProbe = false;
-async function observeAgent() {
-  if (agentProbe) return;
-  agentProbe = true;
-  try {
-    const selected = store.selected();
-    const target = selected && !selected.sessionArchivedAt ? { workspace: selected.workspace, sessionId: selected.sessionId } : null;
-    let busy = false;
-    if (target && !pageLoading && browser && !browser.webContents.isDestroyed() && browser.webContents.getURL().startsWith('https://chatgpt.com/'))
-      busy = await browser.webContents.executeJavaScript(agentBusyScript, true).then(value => value === true, () => false);
-    if (agentTimer.observe(target, busy)) publish();
-  } finally { agentProbe = false; }
+const pageState = new PageStateSource();
+let disconnectPageState = null;
+function applyObservedPage(event) {
+  if (event.reset) { agentTimer.finish(); return; }
+  chromiumDiagnostics?.observePage(event.state);
+  if (pageLoading || setupState || settingsState) return;
+  const selected = store.selected();
+  const target = selected && !selected.sessionArchivedAt
+    ? { workspace: selected.workspace, sessionId: selected.sessionId } : null;
+  if (agentTimer.observe(target, event.state.busy)) publish();
+  void controller?.tick();
 }
+pageState.subscribe(applyObservedPage);
 let setupState = null;
 let workspaceHealth = null;
 let settingsState = null;
@@ -342,7 +346,7 @@ async function syncSelectedSessionTitle({ force = false, reason = 'event' } = {}
 
 function report(error) { startupError = publicError(error); if (settingsState) settingsState = { ...settingsState, notice: null }; if (setupState) setupState = { ...setupState, phase: 'error', error: startupError }; publish(); }
 function remotePreferences() {
-  return { partition, nodeIntegration: false, contextIsolation: true, sandbox: true, webSecurity: true };
+  return { partition, preload: undefined, nodeIntegration: false, contextIsolation: true, sandbox: true, webSecurity: true };
 }
 
 function isChatGPTOrigin(value) {
@@ -481,6 +485,7 @@ function nextNavigation() {
   const owner = actionContext.getStore();
   // An older async action cannot reclaim navigation after a newer user selection.
   if (owner && owner.generation !== navigationId) return owner.generation;
+  agentTimer.finish();
   const generation = ++navigationId;
   if (owner) owner.generation = generation;
   return generation;
@@ -534,6 +539,7 @@ async function navigate(project = store.selected(), { refresh = false, generatio
     if (attachController(project && store.project(project.workspace))) {
       if (refresh) await controller.retry();
       else void controller.tick();
+      if (pageState.current) applyObservedPage({ state: pageState.current.state });
     }
     publish();
     void syncSelectedSessionTitle({ force: true, reason: 'navigation-loaded' });
@@ -787,7 +793,7 @@ async function startupAction(action) {
 
 function connectController() {
   controller?.cancel();
-  controller = new ContextSession({ store, runtime, contextCache, composer: new ChatGPTComposer(browser.webContents),
+  controller = new ContextSession({ store, runtime, contextCache, composer: new ChatGPTComposer(browser.webContents, { pageState }),
     onChange: publish,
     onChatBound: () => { void syncSelectedSessionTitle({ force: true, reason: 'chat-bound' }); },
   });
@@ -1137,7 +1143,13 @@ async function createWindow() {
     windowStatePersistence: { bounds: true, displayMode: false } });
   sidebar = new WebContentsView({ webPreferences: { preload: path.join(sourceDir, 'preload.cjs'),
     nodeIntegration: false, contextIsolation: true, sandbox: true, webSecurity: true } });
-  browser = new WebContentsView({ webPreferences: remotePreferences() });
+  browser = new WebContentsView({ webPreferences: { ...remotePreferences(),
+    preload: app.isPackaged ? path.join(process.resourcesPath, 'resources/chatgpt-page-observer-preload.cjs')
+      : path.join(sourceDir, '../resources/chatgpt-page-observer-preload.cjs') } });
+  disconnectPageState = connectPageState(browser.webContents, ipcMain, pageState, { onFailure: code => {
+    controller?.cancel();
+    report(Object.assign(new Error('Наблюдатель ChatGPT недоступен. Повторите открытие страницы.'), { code }));
+  } });
   if (eventBaseline) {
     const executeJavaScript = browser.webContents.executeJavaScript.bind(browser.webContents);
     browser.webContents.executeJavaScript = (...args) => {
@@ -1155,18 +1167,23 @@ async function createWindow() {
   window.contentView.addChildView(sidebar); window.contentView.addChildView(browser);
   secureRemote(browser.webContents);
   chromiumDiagnostics = new ChromiumDiagnostics(browser.webContents, { file: chromiumDiagnosticsFile,
-    sampleIntervalMs: eventBaseline ? 5000 : smoke ? 250 : 5000, allowFixture: smoke,
+    allowFixture: smoke,
     startupNetwork: !smoke && store.snapshot().projects.length === 0 });
   sidebar.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   sidebar.webContents.on('will-navigate', event => event.preventDefault());
   sidebar.webContents.on('did-start-loading', () => { sidebarReady = false; lastSidebarStateSignature = null; });
   sidebar.webContents.on('did-finish-load', () => { sidebarReady = true; lastSidebarStateSignature = null; publish(); });
   browser.webContents.on('page-title-updated', rememberSessionTitle);
+  browser.webContents.on('did-start-navigation', (event, _url, inPlace, mainFrame) => {
+    if ((event.isMainFrame ?? mainFrame) && !(event.isSameDocument ?? inPlace)) controller?.cancel();
+  });
   browser.webContents.on('did-navigate-in-page', () => {
     void applyToolCallVisibility(); void installChatGPTAutoScroll(browser.webContents); publish();
     if (!pageLoading && !setupState && !settingsState) void controller?.tick();
   });
   browser.webContents.on('did-finish-load', () => {
+    if (!pageLoading) attachController(store.selected());
+    if (pageState.current) applyObservedPage({ state: pageState.current.state });
     void applyToolCallVisibility(); void installChatGPTAutoScroll(browser.webContents, { forceFollow: true }); publish();
     if (!pageLoading && !setupState && !settingsState) void controller?.tick();
   });
@@ -1178,7 +1195,7 @@ async function createWindow() {
   window.on('closed', () => {
     try {
       ++navigationId; startupClipboard?.dispose(); startupClipboard = null; startupFlow?.dispose(); startupFlow = null;
-      controller?.cancel(); planMonitor.close(); clearInterval(interval); clearInterval(agentTimerInterval); agentTimer.finish(); contextCache.clear(); workspaceSetup.invalidateReadiness();
+      controller?.cancel(); planMonitor.close(); clearInterval(interval); disconnectPageState?.(); agentTimer.finish(); contextCache.clear(); workspaceSetup.invalidateReadiness();
       chatColorStyles?.dispose();
       void chromiumDiagnostics?.stop().catch(() => {}); chromiumDiagnostics = null;
     } finally {
@@ -1213,14 +1230,12 @@ async function createWindow() {
   interval = setInterval(() => {
     void planMonitor.tick();
     void observeStartupAccount(); observeStartupClipboard();
-    if (!pageLoading && !setupState && !settingsState) { void controller.tick(); }
   }, 1500);
-  agentTimerInterval = setInterval(() => { void observeAgent(); }, 1000);
   if (smoke) {
     await fixture.run({ app, window, browser: browser.webContents, sidebar: sidebar.webContents,
       store, controller, selectWorkspace, workspaceSetup, snapshot, assertLocalSender, permissionAllowed, dataDir,
       chromiumDiagnostics, chromiumDiagnosticsFile, navigate, openArchiveWindow, getArchiveWindow: () => archiveWindow,
-      getColorWindow: () => colorEditor.window, chatColorStyles, eventBaseline, runtimeMetrics });
+      getColorWindow: () => colorEditor.window, chatColorStyles, eventBaseline, runtimeMetrics, pageState });
     await chromiumDiagnostics.stop(); chromiumDiagnostics = null;
     window.close(); app.quit();
   } else { const current = store.selected(); if (current && !storageError && !settingsState) void selectWorkspace(current.workspace).catch(report); else void navigate(); }

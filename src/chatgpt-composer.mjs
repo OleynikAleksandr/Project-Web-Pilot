@@ -77,9 +77,10 @@ export function pageScript(args) { return `(${pageOperation.toString()})(${JSON.
 
 export class ChatGPTComposer {
   constructor(contents, { wait = pause, now = Date.now, settleMs = 200, timeoutMs = 12000,
-    allowFixture = false } = {}) {
+    allowFixture = false, pageState = null } = {}) {
     this.contents = contents;
     this.wait = wait;
+    this.pageState = pageState;
     this.now = now;
     this.settleMs = settleMs;
     this.timeoutMs = timeoutMs;
@@ -98,6 +99,21 @@ export class ChatGPTComposer {
     return this.contents.executeJavaScript(pageScript({ action, text, requestId, expectedExperience }), action !== 'inspect');
   }
 
+  async waitAfterMutation(version, canContinue) {
+    if (!this.pageState) { await this.wait(this.settleMs); return; }
+    await this.pageState.waitForChange(version, { timeoutMs: Math.min(1000, this.timeoutMs), canContinue });
+  }
+
+  async waitForObservedChange(version, deadline, canContinue) {
+    if (!this.pageState) {
+      await this.wait(this.settleMs);
+      return { changed: true, version };
+    }
+    const remaining = Math.max(0, deadline - this.now());
+    if (!remaining) return { changed: false, timeout: true, version: this.pageState.version };
+    return this.pageState.waitForChange(version, { timeoutMs: remaining, canContinue });
+  }
+
   async sendUserMessage({ text, canContinue = () => true }) {
     if (this.inFlight) throw new ComposerError('SEND_IN_PROGRESS', 'Другая отправка ещё не завершилась.');
     if (typeof text !== 'string' || !text.trim()) throw new ComposerError('MESSAGE_INVALID', 'Не подготовлено пользовательское сообщение.');
@@ -110,9 +126,10 @@ export class ChatGPTComposer {
       if (observation.login || !observation.editorAvailable || !observation.writable) return { state: 'deferred', reason: 'LOGIN_REQUIRED', observation };
       if (observation.busy) return { state: 'deferred', reason: 'GENERATION_ACTIVE', observation };
       if (observation.draftLength) return { state: 'deferred', reason: 'DRAFT_PRESENT', observation };
+      const fillVersion = this.pageState?.version ?? 0;
       observation = await this.inspect({ action: 'fill', text });
       if (observation.action !== 'filled') return { state: 'deferred', reason: observation.reason ?? 'SEND_UNAVAILABLE', observation };
-      await this.wait(this.settleMs);
+      await this.waitAfterMutation(fillVersion, canContinue);
       if (!canContinue()) return { state: 'cancelled' };
       observation = await this.inspect({ text });
       if (!observation.draftMatches || !observation.sendEnabled || observation.busy) {
@@ -122,11 +139,15 @@ export class ChatGPTComposer {
       if (observation.action !== 'clicked') return { state: 'deferred', reason: observation.reason ?? 'SEND_UNAVAILABLE', observation };
       clicked = true;
       const deadline = this.now() + this.timeoutMs;
+      let observedVersion = this.pageState?.version ?? 0;
       do {
         if (!canContinue()) return { state: 'unknown', reason: 'CHAT_CHANGED' };
         observation = await this.inspect();
         if ((observation.userMessageCount ?? 0) > beforeCount) return { state: 'sent', observation };
-        await this.wait(this.settleMs);
+        const signal = await this.waitForObservedChange(observedVersion, deadline, canContinue);
+        observedVersion = signal.version ?? observedVersion;
+        if (signal.cancelled) return { state: 'unknown', reason: 'CHAT_CHANGED' };
+        if (signal.timeout) break;
       } while (this.now() < deadline);
       return { state: 'unknown', reason: 'SEND_NOT_OBSERVED' };
     } catch (error) {
@@ -145,10 +166,11 @@ export class ChatGPTComposer {
       let observation = await this.inspect({ text, requestId });
       if (observation.messageSeen) return { state: 'sent', recovered: true, observation };
       if (!canContinue()) return { state: 'cancelled' };
+      const fillVersion = this.pageState?.version ?? 0;
       observation = await this.inspect({ action: 'fill', text, requestId, expectedExperience });
       if (observation.action === 'already-sent') return { state: 'sent', recovered: true, observation };
       if (observation.action !== 'filled') return { state: 'deferred', reason: observation.reason ?? 'LOGIN_REQUIRED', observation };
-      await this.wait(this.settleMs);
+      await this.waitAfterMutation(fillVersion, canContinue);
       if (!canContinue()) return { state: 'cancelled' };
       observation = await this.inspect({ text, requestId });
       if (!observation.draftMatches || !observation.sendEnabled || observation.busy) {
@@ -162,11 +184,15 @@ export class ChatGPTComposer {
       if (observation.action !== 'clicked') return { state: 'deferred', reason: observation.reason, observation };
       clicked = true;
       const deadline = this.now() + this.timeoutMs;
+      let observedVersion = this.pageState?.version ?? 0;
       do {
         if (!canContinue()) return { state: 'unknown', reason: 'CHAT_CHANGED' };
         observation = await this.inspect({ requestId });
         if (observation.messageSeen) return { state: 'sent', observation };
-        await this.wait(this.settleMs);
+        const signal = await this.waitForObservedChange(observedVersion, deadline, canContinue);
+        observedVersion = signal.version ?? observedVersion;
+        if (signal.cancelled) return { state: 'unknown', reason: 'CHAT_CHANGED' };
+        if (signal.timeout) break;
       } while (this.now() < deadline);
       return { state: 'unknown', reason: 'SEND_NOT_OBSERVED' };
     } catch (error) {

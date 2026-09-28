@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 735,
+  "plan_revision": 738,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-1-20260928",
@@ -32,7 +32,19 @@
       "src/ui/sidebar.mjs",
       "tests/agent-timer.test.mjs",
       "tests/context-session.test.mjs",
-      "tests/plan-monitor.test.mjs"
+      "tests/plan-monitor.test.mjs",
+      "package.json",
+      "package-lock.json",
+      "scripts/check-event-runtime-release.mjs",
+      "src/chatgpt-page-observer.mjs",
+      "src/page-state.mjs",
+      "src/conversation-recovery.mjs",
+      "tests/conversation-recovery.test.mjs",
+      ".gitignore",
+      "src/page-state-bridge.mjs",
+      "scripts/stage-page-observer.mjs",
+      "tests/page-state.test.mjs",
+      "tests/chatgpt-composer.test.mjs"
     ],
     "documentation_paths": [
       "docs/planning/event-driven-runtime.md",
@@ -44,11 +56,12 @@
       "docs/architecture/ARCHITECTURE.md",
       "docs/architecture/OVERVIEW.md",
       "docs/MODULES.md",
-      "docs/DOCUMENTATION_INDEX.md"
+      "docs/DOCUMENTATION_INDEX.md",
+      "docs/RELEASE.md"
     ]
   },
   "baseline_commit": "e97af3fa61baef8686206a1c18aee6b1a3c237b7",
-  "current_task_id": "T003",
+  "current_task_id": null,
   "context_pack": {
     "documents": [
       {
@@ -188,8 +201,8 @@
       ]
     },
     {
-      "implementation_status": "IN_PROGRESS",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "event-driven-runtime-phase-1-20260928",
         "task_id": "T003",
@@ -207,7 +220,16 @@
         "src/chromium-diagnostics.mjs",
         "src/agent-timer.mjs",
         "src/chatgpt-state-preload.cjs",
-        "tests/electron-smoke.mjs"
+        "tests/electron-smoke.mjs",
+        ".gitignore",
+        "package.json",
+        "src/page-state.mjs",
+        "src/page-state-bridge.mjs",
+        "src/chatgpt-page-observer.mjs",
+        "scripts/stage-page-observer.mjs",
+        "tests/page-state.test.mjs",
+        "tests/chatgpt-composer.test.mjs",
+        "tests/chromium-diagnostics.test.mjs"
       ],
       "documentation_paths": [
         "docs/planning/event-driven-runtime.md",
@@ -235,7 +257,135 @@
         "Startup-account и clipboard пока ограничены шагом настройки; они не служат обходным механизмом продолжения ContextSession",
         "Реальные Chat/Work, source fixture и неподтверждённые платформенные сценарии различаются в evidence; финальная упаковка относится к фазе 3"
       ],
-      "expected_commit_message": "feat: Подключить preload и проверить доставку без периодических DOM-опросов"
+      "expected_commit_message": "feat: Подключить preload и проверить доставку без периодических DOM-опросов",
+      "actual_files": [
+        ".gitignore",
+        "package.json",
+        "src/main.mjs",
+        "src/context-session.mjs",
+        "src/chatgpt-composer.mjs",
+        "src/chromium-diagnostics.mjs",
+        "src/page-state.mjs",
+        "src/page-state-bridge.mjs",
+        "src/chatgpt-page-observer.mjs",
+        "scripts/stage-page-observer.mjs",
+        "tests/page-state.test.mjs",
+        "tests/chatgpt-composer.test.mjs",
+        "tests/chromium-diagnostics.test.mjs",
+        "tests/electron-smoke.mjs",
+        "docs/planning/event-driven-runtime.md",
+        "docs/VERIFICATION.md"
+      ]
+    },
+    {
+      "id": "T004",
+      "title": "Сохранить привязку разговора после ручной отправки и проверить повторное открытие",
+      "why": "По docs/planning/event-driven-runtime.md; поручение 28.09: исправление потери привязки и промежуточный парный выпуск до DOCS.",
+      "dependencies": [
+        "T003"
+      ],
+      "functional_paths": [
+        "src/context-session.mjs",
+        "src/chatgpt-composer.mjs",
+        "tests/context-session.test.mjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "docs/planning/event-driven-runtime.md",
+        "docs/CONTEXT_DELIVERY.md"
+      ],
+      "verification_ids": [
+        "unit",
+        "smoke"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Своя отправленная recovery определяется по requestId даже без sendStartedAtMs; чужой разговор не привязывается",
+        "Перезапуск и повторное открытие используют сохранённый URL без новой отправки recovery",
+        "Сбой подтверждения не вызывает повторный Send; незавершённые правки T003 сохранены"
+      ],
+      "expected_commit_message": "feat: Сохранить привязку разговора после ручной отправки и проверить повторное открытие",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "event-driven-runtime-phase-1-20260928",
+        "task_id": "T004",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T005",
+      "title": "Собрать и проверить исправленный парный релиз 0.6.64",
+      "why": "По docs/planning/event-driven-runtime.md; поручение 28.09: исправление потери привязки и промежуточный парный выпуск до DOCS.",
+      "dependencies": [
+        "T004"
+      ],
+      "functional_paths": [
+        "package.json",
+        "package-lock.json",
+        "scripts/check-event-runtime-release.mjs"
+      ],
+      "documentation_paths": [
+        "docs/planning/event-driven-runtime.md",
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [
+        "release-pair"
+      ],
+      "verification_kind": "installed",
+      "acceptance_criteria": [
+        "macOS arm64 и Windows x64 одного выпуска совпадают с финальными исходниками",
+        "Корневой app и установленная macOS копия обновлены с сохранением Finder identity",
+        "Проверки fixture и ограничения реального ChatGPT/Windows описаны явно"
+      ],
+      "expected_commit_message": "feat: Собрать и проверить исправленный парный релиз 0.6.64",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "event-driven-runtime-phase-1-20260928",
+        "task_id": "T005",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T006",
+      "title": "Распознавать обрыв ответа и безопасно восстанавливать сохранённый разговор",
+      "why": "docs/planning/event-driven-runtime.md; скриншот 28.09 15:10: ChatGPT stream recovery polling timed out",
+      "dependencies": [
+        "T004"
+      ],
+      "functional_paths": [
+        "src/chatgpt-page-observer.mjs",
+        "src/page-state.mjs",
+        "src/main.mjs",
+        "src/conversation-recovery.mjs",
+        "src/ui/sidebar.mjs",
+        "tests/conversation-recovery.test.mjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "docs/planning/event-driven-runtime.md"
+      ],
+      "verification_ids": [
+        "unit",
+        "smoke"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Распознаётся видимая ошибка восстановления потока; пользователь видит состояние восстановления",
+        "Ограниченное повторное открытие только привязанного URL при отсутствии черновика и неопределённой отправки",
+        "Нет автоматического повторного Send или клика по кнопке Retry в ответе; 429 не запускает частые повторы",
+        "При неудаче доступен явный повтор, смена сессии отменяет отложенную попытку"
+      ],
+      "expected_commit_message": "feat: Распознавать обрыв ответа и безопасно восстанавливать сохранённый разговор",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "event-driven-runtime-phase-1-20260928",
+        "task_id": "T006",
+        "role": "implementation"
+      }
     },
     {
       "implementation_status": "TODO",
@@ -248,7 +398,10 @@
       "dependencies": [
         "T001",
         "T002",
-        "T003"
+        "T003",
+        "T004",
+        "T005",
+        "T006"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -261,7 +414,8 @@
         "docs/CONTEXT_DELIVERY.md",
         "docs/architecture/OVERVIEW.md",
         "docs/MODULES.md",
-        "docs/DOCUMENTATION_INDEX.md"
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/RELEASE.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -290,8 +444,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-phase-1-20260928
-Current Task: T003
-Revision: 735
+Current Task: нет
+Revision: 738
 
 ## Цель
 
@@ -311,14 +465,26 @@ Revision: 735
   - Git Commit: [DONE] feat: Обеспечить продолжение операций без потери событий и исправить секундомер
   - Reference: event-driven-runtime-phase-1-20260928 / T002 / implementation
   - Файлы: src/plan-monitor.mjs, src/context-session.mjs, src/agent-timer.mjs, tests/electron-smoke.mjs, src/main.mjs, src/ui/sidebar.mjs, tests/agent-timer.test.mjs, tests/context-session.test.mjs, tests/plan-monitor.test.mjs, docs/planning/event-driven-runtime.md, docs/modules/workspace-sessions.md, docs/VERIFICATION.md
-- [IN_PROGRESS] T003: Подключить preload и проверить доставку без периодических DOM-опросов — В работе
-  - Git Commit: [PENDING] feat: Подключить preload и проверить доставку без периодических DOM-опросов
+- [DONE] T003: Подключить preload и проверить доставку без периодических DOM-опросов — Завершено
+  - Git Commit: [DONE] feat: Подключить preload и проверить доставку без периодических DOM-опросов
   - Reference: event-driven-runtime-phase-1-20260928 / T003 / implementation
-  - Файлы: src/main.mjs, src/chatgpt-dom.mjs, src/chatgpt-composer.mjs, src/context-session.mjs, src/plan-monitor.mjs, src/chromium-diagnostics.mjs, src/agent-timer.mjs, src/chatgpt-state-preload.cjs, tests/electron-smoke.mjs, docs/planning/event-driven-runtime.md, docs/modules/chatgpt-dom-compatibility.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md
+  - Файлы: src/main.mjs, src/chatgpt-dom.mjs, src/chatgpt-composer.mjs, src/context-session.mjs, src/plan-monitor.mjs, src/chromium-diagnostics.mjs, src/agent-timer.mjs, src/chatgpt-state-preload.cjs, tests/electron-smoke.mjs, .gitignore, package.json, src/page-state.mjs, src/page-state-bridge.mjs, src/chatgpt-page-observer.mjs, scripts/stage-page-observer.mjs, tests/page-state.test.mjs, tests/chatgpt-composer.test.mjs, tests/chromium-diagnostics.test.mjs, docs/planning/event-driven-runtime.md, docs/modules/chatgpt-dom-compatibility.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md
+- [TODO] T004: Сохранить привязку разговора после ручной отправки и проверить повторное открытие — Ожидает
+  - Git Commit: [PENDING] feat: Сохранить привязку разговора после ручной отправки и проверить повторное открытие
+  - Reference: event-driven-runtime-phase-1-20260928 / T004 / implementation
+  - Файлы: src/context-session.mjs, src/chatgpt-composer.mjs, tests/context-session.test.mjs, tests/electron-smoke.mjs, docs/planning/event-driven-runtime.md, docs/CONTEXT_DELIVERY.md
+- [TODO] T005: Собрать и проверить исправленный парный релиз 0.6.64 — Ожидает
+  - Git Commit: [PENDING] feat: Собрать и проверить исправленный парный релиз 0.6.64
+  - Reference: event-driven-runtime-phase-1-20260928 / T005 / implementation
+  - Файлы: package.json, package-lock.json, scripts/check-event-runtime-release.mjs, docs/planning/event-driven-runtime.md, docs/RELEASE.md, docs/VERIFICATION.md
+- [TODO] T006: Распознавать обрыв ответа и безопасно восстанавливать сохранённый разговор — Ожидает
+  - Git Commit: [PENDING] feat: Распознавать обрыв ответа и безопасно восстанавливать сохранённый разговор
+  - Reference: event-driven-runtime-phase-1-20260928 / T006 / implementation
+  - Файлы: src/chatgpt-page-observer.mjs, src/page-state.mjs, src/main.mjs, src/conversation-recovery.mjs, src/ui/sidebar.mjs, tests/conversation-recovery.test.mjs, tests/electron-smoke.mjs, docs/planning/event-driven-runtime.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: event-driven-runtime-phase-1-20260928 / DOCS / implementation
-  - Файлы: docs/planning/event-driven-runtime.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/workspace-sessions.md, docs/modules/chatgpt-dom-compatibility.md, docs/CONTEXT_DELIVERY.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
+  - Файлы: docs/planning/event-driven-runtime.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/modules/workspace-sessions.md, docs/modules/chatgpt-dom-compatibility.md, docs/CONTEXT_DELIVERY.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/RELEASE.md
 
 ## Context Pack For This Cycle
 

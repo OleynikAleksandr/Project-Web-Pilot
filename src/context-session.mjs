@@ -292,7 +292,7 @@ export class ContextSession {
       this.pending = false;
       const rerun = this.rerunRequested;
       this.rerunRequested = false;
-      if (rerun && generation === this.generation && this.current(generation) && this.state.phase !== 'error') {
+      if (rerun && this.current(this.generation) && this.state.phase !== 'error') {
         queueMicrotask(() => { void this.tick(); });
       }
     }

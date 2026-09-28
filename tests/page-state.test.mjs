@@ -1,0 +1,81 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { EventEmitter } from 'node:events';
+import { JSDOM } from 'jsdom';
+import { chatGPTDOMScript } from '../src/chatgpt-dom.mjs';
+import { installPageObserver } from '../src/chatgpt-page-observer.mjs';
+import { PageStateSource, PAGE_STATE_CHANNEL, normalizePageObservation } from '../src/page-state.mjs';
+import { connectPageState } from '../src/page-state-bridge.mjs';
+
+const turn = () => new Promise(resolve => setImmediate(resolve));
+const observation = (seq = 1, documentId = 'document-1111', patch = {}) => ({ version: 1, seq, documentId,
+  state: { url: 'https://chatgpt.com/', experience: 'chat', login: 'unknown', visibility: 'visible',
+    editorAvailable: true, editorRevision: 1, writable: true, busy: false, sendEnabled: true,
+    draftRevision: 1, userMessageCount: 0, userMessagesRevision: 0, ...patch } });
+
+test('observer catches equal-length drafts, late user text, attributes and busy without frame scheduling', async () => {
+  const dom = new JSDOM('<form><div id="prompt-textarea" contenteditable="true">aa</div><button data-testid="send-button">Send</button></form><article data-message-author-role="assistant"><span>stream</span></article>',
+    { url: 'https://chatgpt.com/', runScripts: 'outside-only' });
+  const w = dom.window;
+  w.HTMLElement.prototype.getClientRects = function () { return this.hidden ? [] : [{}]; };
+  w.requestAnimationFrame = () => { throw Error('Logic must work without frames'); };
+  const messages = []; w.reportObservation = m => messages.push(m);
+  const dispose = w.eval('(' + installPageObserver.toString() + ')(' + chatGPTDOMScript() + ', reportObservation)');
+  await turn();
+  const editor = w.document.querySelector('#prompt-textarea');
+  const initial = messages.at(-1);
+  assert.equal(initial.state.login, 'unknown', 'an editor alone does not prove authentication');
+  editor.textContent = 'bb'; await turn();
+  assert.ok(messages.at(-1).state.draftRevision > initial.state.draftRevision);
+  let revision = messages.at(-1).state.draftRevision;
+  editor.className = 'cosmetic'; await turn();
+  assert.equal(messages.at(-1).state.draftRevision, revision);
+  const user = w.document.createElement('article'); user.dataset.messageAuthorRole = 'user'; w.document.body.append(user); await turn();
+  revision = messages.at(-1).state.userMessagesRevision;
+  user.textContent = 'late requestId'; await turn();
+  assert.equal(messages.at(-1).state.userMessageCount, 1);
+  assert.ok(messages.at(-1).state.userMessagesRevision > revision);
+  const count = messages.length;
+  w.document.querySelector('article[data-message-author-role="assistant"] span').firstChild.data += ' token'; await turn();
+  assert.equal(messages.length, count);
+  const stop = w.document.createElement('button'); stop.dataset.testid = 'stop-button'; w.document.body.append(stop); await turn();
+  assert.equal(messages.at(-1).state.busy, true);
+  stop.remove(); await turn(); assert.equal(messages.at(-1).state.busy, false);
+  dispose(); w.close();
+});
+
+test('source rejects stale documents/sequences and closes the check-subscribe gap', async () => {
+  const source = new PageStateSource();
+  source.accept(observation());
+  const version = source.version;
+  source.accept(observation(2, 'document-1111', { draftRevision: 2 }));
+  assert.equal((await source.waitForChange(version)).changed, true);
+  assert.equal(source.accept(observation()).accepted, false);
+  const waiting = source.waitForChange(source.version);
+  source.reset();
+  assert.equal((await waiting).changed, true);
+  assert.equal(source.accept(observation(3)).accepted, false);
+  assert.equal(source.accept(observation(1, 'document-2222')).accepted, true);
+  assert.throws(() => normalizePageObservation({ ...observation(), padding: 'x'.repeat(9000) }));
+});
+
+test('bridge rejects wrong senders, frames, origins and late hello from former document', async () => {
+  const ipc = new EventEmitter(), contents = new EventEmitter(), source = new PageStateSource();
+  const frame = { url: 'https://chatgpt.com/' };
+  contents.mainFrame = frame; contents.getURL = () => frame.url; contents.isDestroyed = () => false;
+  let liveId = 'document-1111', reads = 0;
+  contents.executeJavaScriptInIsolatedWorld = async () => { reads++; return liveId; };
+  const stop = connectPageState(contents, ipc, source);
+  const emit = (message, patch = {}) => ipc.emit(PAGE_STATE_CHANNEL, { sender: contents, senderFrame: frame, ...patch }, message);
+  emit(observation(), { sender: {} }); emit(observation(), { senderFrame: { url: frame.url } }); await turn();
+  assert.equal(reads, 0);
+  emit(observation()); await turn(); assert.equal(source.current.documentId, liveId);
+  contents.emit('did-start-navigation', {}, frame.url, false, true);
+  liveId = 'document-2222';
+  emit(observation(2)); await turn(); assert.equal(source.current, null);
+  emit(observation(1, liveId)); await turn(); assert.equal(source.current.documentId, liveId);
+  const version = source.version;
+  frame.url = 'https://evil.example/'; emit(observation(2, liveId)); await turn();
+  assert.equal(source.version, version);
+  stop(); assert.equal(ipc.listenerCount(PAGE_STATE_CHANNEL), 0);
+});

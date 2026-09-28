@@ -12,3 +12,6 @@ windows-app/
 # Permanent macOS release and transient install staging
 /Project Web Pilot.app/
 /.web-pilot-install-*/
+
+# Generated isolated ChatGPT observer bundle
+/resources/chatgpt-page-observer-preload.cjs

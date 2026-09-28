@@ -1,6 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
+import { PageStateSource } from '../src/page-state.mjs';
+import { chatGPTDOMScript } from '../src/chatgpt-dom.mjs';
+import { installPageObserver } from '../src/chatgpt-page-observer.mjs';
 import { ChatGPTComposer, pageScript } from '../src/chatgpt-composer.mjs';
 
 function fixture({ draft = '', stop = false, emitMessage = true } = {}) {
@@ -153,4 +156,19 @@ test('switching mode or opening a foreign conversation immediately before Send b
     }});
     assert.equal(result.state, 'deferred'); assert.equal(f.sends(), 0); assert.equal(f.editor.value, message);
   }
+});
+
+test('event-driven composer confirms its marker without using the polling wait', async () => {
+  const f = fixture();
+  const source = new PageStateSource();
+  f.dom.window.reportObservation = message => source.accept(message);
+  const dispose = f.dom.window.eval('(' + installPageObserver.toString() + ')(' + chatGPTDOMScript() + ', reportObservation)');
+  const composer = new ChatGPTComposer(f.view, { pageState: source, timeoutMs: 100,
+    wait: () => { throw Error('Polling wait must not run'); } });
+  try {
+    assert.equal((await composer.deliver(request)).state, 'sent');
+    assert.equal(f.sends(), 1);
+    assert.equal((await composer.deliver(request)).state, 'sent');
+    assert.equal(f.sends(), 1);
+  } finally { dispose(); f.dom.window.close(); }
 });

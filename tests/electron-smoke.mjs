@@ -164,7 +164,7 @@ async function verifyUninterruptedRequest(dataDir) {
   }
 }
 
-export async function run({ app, window, browser, sidebar, store, controller, selectWorkspace, workspaceSetup, snapshot, assertLocalSender, permissionAllowed, dataDir, chromiumDiagnostics, chromiumDiagnosticsFile, navigate, getArchiveWindow, getColorWindow, eventBaseline = false, runtimeMetrics = null }) {
+export async function run({ app, window, browser, sidebar, store, controller, selectWorkspace, workspaceSetup, snapshot, assertLocalSender, permissionAllowed, dataDir, chromiumDiagnostics, chromiumDiagnosticsFile, navigate, getArchiveWindow, getColorWindow, eventBaseline = false, runtimeMetrics = null, pageState }) {
   smokeDataDir = dataDir;
   // Keep frame-based fixture checks running when another desktop window covers this one.
   sidebar.setBackgroundThrottling(false);
@@ -425,6 +425,35 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(snapshot().selected.attempt.text, undefined, 'Full prompt stays out of sidebar IPC');
   const sent = await browser.executeJavaScript('window.fixtureMessages[0].text');
   assert.equal(sent.replace(/\n+/g, '\n'), first.attempt.text.replace(/\n+/g, '\n'));
+  assert.ok(pageState.current, 'sandbox preload delivered its initial observation');
+  const popupOpened = new Promise(resolve => browser.once('did-create-window', resolve));
+  await browser.executeJavaScript("void window.open('https://auth.openai.com/fixture-popup')", true);
+  const popup = await popupOpened;
+  assert.ok(!popup.webContents.getLastWebPreferences().preload, 'auth popup has no observer preload');
+  popup.destroy();
+
+  assert.equal(browser.getLastWebPreferences().sandbox, true);
+  assert.equal(browser.getLastWebPreferences().contextIsolation, true);
+  assert.equal(await browser.executeJavaScript('typeof globalThis.__webPilotObserverDocumentId'), 'undefined');
+  // Freeze project changes. Only the page signal may drive controller work.
+  await new Promise(resolve => setTimeout(resolve, 1700));
+  const originalTick = controller.tick.bind(controller); let pageTicks = 0;
+  controller.tick = (...args) => { pageTicks++; return originalTick(...args); };
+  const listeners = [...pageState.listeners]; pageState.listeners.clear();
+  await browser.executeJavaScript("document.getElementById('prompt-textarea').textContent='aa'");
+  await new Promise(resolve => setTimeout(resolve, 1800));
+  assert.equal(pageTicks, 0, 'shared pulse never compensates for suppressed DOM signals');
+  for (const listener of listeners) pageState.subscribe(listener);
+  await browser.executeJavaScript("document.getElementById('prompt-textarea').textContent='bb'");
+  await waitFor(() => pageTicks > 0, 'equal-length draft change signals controller', snapshot);
+  const previousRevision = pageState.current.state.draftRevision;
+  window.minimize();
+  await browser.executeJavaScript("document.getElementById('prompt-textarea').textContent='cc'");
+  await waitFor(() => pageState.current?.state.draftRevision > previousRevision, 'observer works minimized', snapshot);
+  window.restore();
+  await browser.executeJavaScript("document.getElementById('prompt-textarea').textContent=''");
+  await waitFor(() => !controller.pending, 'finish page events', snapshot);
+  controller.tick = originalTick;
   assert.equal(first.receipt, null);
   assert.equal(packetLoads, 1, 'packet loads at line 158');
   if (eventBaseline) {
@@ -987,12 +1016,12 @@ export async function run({ app, window, browser, sidebar, store, controller, se
     return text.includes('conversation-stream-inspected');
   }, 'conversation SSE diagnostics', snapshot);
   assert.equal(Object.hasOwn(snapshot(), 'contextWindow'), false, 'telemetry does not republish contextWindow state');
-  await chromiumDiagnostics.sampleDom(); await chromiumDiagnostics.flush();
+  await chromiumDiagnostics.flush();
   const diagnosticLines = (await fs.readFile(chromiumDiagnosticsFile, 'utf8')).trim().split('\n').map(line => JSON.parse(line));
   assert.ok(diagnosticLines.some(entry => entry.source === 'diagnostics' && entry.event === 'session-start'), 'diagnostic session is logged');
   assert.ok(diagnosticLines.some(entry => entry.source === 'cdp' && entry.event === 'attached'), 'CDP is attached');
   assert.ok(diagnosticLines.some(entry => entry.source === 'webContents' && entry.event === 'did-finish-load'), 'native load is logged');
-  assert.ok(diagnosticLines.some(entry => entry.source === 'dom' && entry.event === 'pulse' && entry.userMessages >= 1 && entry.composer === true), 'DOM pulse is logged');
+  assert.ok(diagnosticLines.some(entry => entry.source === 'dom' && entry.event === 'state' && entry.userMessages >= 1 && entry.composer === true), 'DOM pulse is logged');
   assert.ok(diagnosticLines.some(entry => entry.source === 'cdp' && ['request','response','loading-finished'].includes(entry.event)), 'network metadata is logged');
   assert.ok(diagnosticLines.some(entry => entry.source === 'telemetry' && entry.event === 'conversation-stream-inspected' && entry.telemetryFound === true), 'conversation SSE body is inspected');
   assert.ok(diagnosticLines.some(entry => entry.source === 'telemetry' && entry.event === 'context' && entry.origin === 'conversation-sse'

@@ -1,4 +1,3 @@
-import { chatGPTDOMScript } from './chatgpt-dom.mjs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
@@ -343,16 +342,15 @@ const IGNORED_CDP = new Set([
 ]);
 
 export class ChromiumDiagnostics {
-  constructor(contents, { file, maxBytes, sampleIntervalMs = 5000, allowFixture = false, startupNetwork = false } = {}) {
+  constructor(contents, { file, maxBytes, allowFixture = false, startupNetwork = false } = {}) {
     if (!contents || !file) throw new TypeError('ChromiumDiagnostics requires contents and file');
     this.contents = contents;
     this.allowFixture = allowFixture;
-    this.sampleIntervalMs = sampleIntervalMs;
     this.log = new DiagnosticJsonl(file, { maxBytes });
     this.networkTrace = startupNetwork ? new StartupNetworkTrace(contents.session?.netLog, path.join(path.dirname(file), 'startup-network.json')) : null;
     this.handlers = [];
-    this.sampleTimer = null;
     this.lastDomPulse = null;
+    this.lastPageState = null;
     this.attachedByUs = false;
     this.started = false;
     this.streamResponses = new Map();
@@ -372,9 +370,7 @@ export class ChromiumDiagnostics {
     await this.networkTrace?.start();
     // CDP may wait for the first renderer; it must never delay that navigation.
     void this.#attachDebugger();
-    this.sampleTimer = setInterval(() => { void this.sampleDom(); }, this.sampleIntervalMs);
-    this.sampleTimer.unref?.();
-    await this.sampleDom();
+
   }
 
 
@@ -576,35 +572,19 @@ export class ChromiumDiagnostics {
     }
   }
 
-  async sampleDom() {
-    if (!this.started || this.contents.isDestroyed?.()) return;
-    const current = this.contents.getURL();
-    if (!current || current === 'about:blank') return;
-    let url;
-    try { url = new URL(current); } catch { return; }
-    if (!(url.hostname === 'chatgpt.com' && url.protocol === 'https:') && !this.allowFixture) return;
-    try {
-      const sample = await this.contents.executeJavaScript(`(() => {
-        const dom = ${chatGPTDOMScript()};
-        return { userMessages: dom.messages('user').length, assistantMessages: dom.messages('assistant').length,
-          busy: dom.busy(), composer: !!dom.editor(), visibility: document.visibilityState };
-      })()`, false);
-      const pulse = { url: safeUrl(current), ...sample };
-      const signature = JSON.stringify(pulse);
-      if (signature !== this.lastDomPulse) {
-        this.lastDomPulse = signature;
-        this.log.record('dom', 'pulse', pulse);
-      }
-    } catch (error) {
-      this.log.record('dom', 'pulse-failed', { name: error?.name ?? 'Error' });
-    }
+  observePage(state) {
+    if (!this.started || !state) return;
+    const pulse = { url: safeUrl(state.url), userMessages: state.userMessageCount,
+      busy: state.busy, composer: state.editorAvailable, visibility: state.visibility };
+    const signature = JSON.stringify(pulse);
+    if (signature === this.lastDomPulse) return;
+    this.lastDomPulse = signature;
+    this.log.record('dom', 'state', pulse);
   }
 
   async stop() {
     if (!this.started) return;
     this.started = false;
-    if (this.sampleTimer) clearInterval(this.sampleTimer);
-    this.sampleTimer = null;
     this.lastDomPulse = null;
     this.streamResponses.clear();
     this.serviceResponses.clear();
