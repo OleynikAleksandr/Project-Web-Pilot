@@ -46,8 +46,10 @@ const html = `<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>
 <script>
 window.fixtureMode=location.pathname.startsWith('/work')?'work':localStorage.getItem('fixture-mode')||'work';
 window.fixtureModeClicks=0;
-function setFixtureMode(mode){window.fixtureMode=mode;localStorage.setItem('fixture-mode',mode);document.querySelectorAll('[data-tpp-toggle-value]').forEach(button=>button.setAttribute('data-state',button.dataset.tppToggleValue===mode?'on':'off'));}
+function setFixtureMode(mode){window.fixtureMode=mode;localStorage.setItem('fixture-mode',mode);document.querySelectorAll('[data-tpp-toggle-value]').forEach(button=>button.setAttribute('data-state',button.dataset.tppToggleValue===mode?'on':'off'));if(!location.pathname.startsWith('/c/')) document.getElementById('prompt-textarea').textContent=localStorage.getItem('fixture-restored-draft-'+mode)||'';}
 setFixtureMode(window.fixtureMode);
+document.getElementById('prompt-textarea').addEventListener('input',()=>{if(!document.getElementById('prompt-textarea').innerText.trim())localStorage.removeItem('fixture-restored-draft-'+window.fixtureMode);});
+
 document.querySelectorAll('[data-tpp-toggle-value]').forEach(button=>button.addEventListener('click',()=>{window.fixtureModeClicks++;setFixtureMode(button.dataset.tppToggleValue);}));
 window.fixtureMessages=JSON.parse(sessionStorage.getItem(location.pathname)||'[]');
 function showMessage(text){const article=document.createElement('article');article.setAttribute('data-message-author-role','user');article.setAttribute('data-message-id','fixture-message-'+document.querySelectorAll('[data-message-author-role="user"]').length);article.textContent=text;document.getElementById('messages').append(article);}
@@ -1147,11 +1149,18 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.notEqual(fixtureConversationTitles.get(new URL(untouchedLegacy.chatUrl).pathname.split('/').at(-1)), currentScopeTitle);
 
   const loadsBeforeNewCurrentChat = packetLoads;
+  await browser.executeJavaScript("localStorage.setItem('fixture-restored-draft-chatgpt','Старый контекст wp-request-archived-chat');localStorage.setItem('fixture-restored-draft-work','Старый контекст wp-request-archived-work')");
+
   await sidebar.executeJavaScript(`window.webPilot.newSession(${JSON.stringify(workspace)}, "chat")`);
   await waitFor(() => !legacyChats.some(item => item.sessionId === store.selected()?.sessionId)
     && snapshot().context.phase === 'delivered' && snapshot().selected?.scopeId === 'fixture-current-plan',
     'new Chat continues current checkout plan', snapshot);
   const currentChat = store.selected();
+  assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 1);
+  assert.equal(await browser.executeJavaScript("window.fixtureMessages[0].text.includes('wp-request-archived-')"), false);
+  assert.ok(await browser.executeJavaScript('window.fixtureMessages[0].text.includes(' + JSON.stringify(currentChat.attempt.requestId) + ')'));
+  await browser.executeJavaScript("localStorage.setItem('fixture-restored-draft-work','Старый контекст wp-request-archived-work')");
+
   assert.equal(currentChat.planId, 'fixture-current-plan');
   assert.equal(currentChat.attempt.packet.facts.scope_id, 'fixture-current-plan');
   assert.equal(currentChat.attempt.packet.session_id, undefined);
@@ -1166,6 +1175,10 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await waitFor(() => store.selected()?.experience === 'work' && snapshot().context.phase === 'delivered'
     && snapshot().selected?.scopeId === 'fixture-current-plan', 'new Work continues current checkout plan', snapshot);
   const currentWork = store.selected();
+  assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 1);
+  assert.equal(await browser.executeJavaScript("window.fixtureMessages[0].text.includes('wp-request-archived-')"), false);
+  assert.ok(await browser.executeJavaScript('window.fixtureMessages[0].text.includes(' + JSON.stringify(currentWork.attempt.requestId) + ')'));
+
   assert.equal(currentWork.planId, 'fixture-current-plan');
   assert.equal(currentWork.attempt.packet.facts.scope_id, 'fixture-current-plan');
   assert.equal(currentWork.title, currentScopeTitle, 'new Work in the same scope receives its own session title');

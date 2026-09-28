@@ -56,7 +56,8 @@ export class ContextSession {
     this.state = { phase: 'selected', servicesReady: false, messageSent: false };
   }
 
-  attach(project) {
+  attach(project, { freshDraft = false } = {}) {
+    this.freshDraft = freshDraft && !project.chatUrl && !project.attempt;
     this.generation++;
     this.rerunRequested = false;
     this.active = { workspace: project.workspace, sessionId: project.sessionId };
@@ -66,7 +67,7 @@ export class ContextSession {
   }
 
   cancel() {
-    this.generation++; this.rerunRequested = false; this.active = null; this.servicesReady = false;
+    this.generation++; this.rerunRequested = false; this.active = null; this.servicesReady = false; this.freshDraft = false;
     this.emit({ phase: 'selected', messageSent: false, delivery: null, error: null, projectInfo: null });
   }
 
@@ -204,6 +205,16 @@ export class ContextSession {
       if (project.manualStart && !ownMessageSeen) {
         this.emit({ phase: 'manual-session', projectInfo: info, messageSent: false, delivery: null, error: null }); return;
       }
+      if (this.freshDraft && !project.chatUrl && !attempt) {
+        const cleared = await this.composer.clearNewSessionDraft({
+          canContinue: () => this.current(generation) && this.atExpectedChat(project),
+        });
+        if (!this.current(generation)) return;
+        if (cleared.action !== 'draft-cleared') {
+          this.emit({ phase: cleared.reason === 'CHAT_CHANGED' ? 'chat-changed' : phaseForReason(cleared.reason),
+            projectInfo: info }); return;
+        }
+      }
       if (!project.chatUrl && !attempt?.sendStartedAtMs) {
         observation = await this.composer.inspect({ action: 'select-experience', expectedExperience: experience,
           requestId: attempt?.requestId, text: attempt?.text });
@@ -214,6 +225,8 @@ export class ContextSession {
           return;
         }
       }
+      // The new editor and requested mode are ready. Later user input is preserved.
+      this.freshDraft = false;
       if (attempt && attempt.protocol !== CONTEXT_PROTOCOL) {
         const known = ['sent', 'acknowledged'].includes(attempt.state) || observation.messageSeen;
         if (observation.messageSeen && !['sent', 'acknowledged'].includes(attempt.state)) {

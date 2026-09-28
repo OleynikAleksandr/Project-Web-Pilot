@@ -1,10 +1,10 @@
 # Перенос на Windows 10/11
 
-Текущая поставка — **Project Web Pilot 0.6.65, Windows x64**, собранная вместе с macOS arm64. Workflow Kit остаётся 1.5.0. Упакованные исходники и ZIP сверены; native Windows/clean VM не запускались.
+Текущая поставка — **Project Web Pilot 0.6.66, Windows x64**, собранная вместе с macOS arm64. Workflow Kit остаётся 1.5.0. Упакованные исходники и ZIP сверены; native Windows/clean VM не запускались.
 
 ## Файл для переноса
 
-`~/Downloads/WebPilot-0.6.65/Project-Web-Pilot-0.6.65-Windows-x64.zip`
+`~/Downloads/WebPilot-0.6.66/Project-Web-Pilot-0.6.66-Windows-x64.zip`
 
 Размер: 316752603 bytes; SHA-256 `4c21ba3ad5d8b506df1d73833375eb4a0ef201638107d468ac7c005a85c7bee0`.
 

@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 770,
+  "plan_revision": 771,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-2-20260928",
@@ -47,11 +47,15 @@
       "docs/MODULES.md",
       "docs/DOCUMENTATION_INDEX.md",
       "README.md",
-      "docs/RELEASE.md"
+      "docs/RELEASE.md",
+      "docs/CONTEXT_DELIVERY.md",
+      "docs/TRANSFER_TO_WINDOWS.md",
+      "docs/WORKFLOW_START.md",
+      "docs/modules/workspace-sessions.md"
     ]
   },
   "baseline_commit": "b8dc62aa4b469c63e82cc9ee27f791fc0870af91",
-  "current_task_id": "T004",
+  "current_task_id": null,
   "context_pack": {
     "documents": [
       {
@@ -223,7 +227,17 @@
         "docs/planning/event-driven-runtime.md",
         "README.md",
         "docs/VERIFICATION.md",
-        "docs/RELEASE.md"
+        "docs/RELEASE.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/chatgpt-dom-compatibility.md",
+        "docs/modules/workspace-sessions.md"
       ],
       "verification_ids": [
         "unit",
@@ -238,13 +252,39 @@
         "Обновлены связанные документы; задачи основной фазы 2 остаются ожидающими."
       ],
       "expected_commit_message": "feat: Чистое поле нового Chat/Work и парное исправление 0.6.66",
-      "implementation_status": "IN_PROGRESS",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "event-driven-runtime-phase-2-20260928",
         "task_id": "T004",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "README.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/RELEASE.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/chatgpt-dom-compatibility.md",
+        "docs/modules/workspace-sessions.md",
+        "docs/planning/event-driven-runtime.md",
+        "package-lock.json",
+        "package.json",
+        "scripts/check-event-runtime-release.mjs",
+        "src/chatgpt-composer.mjs",
+        "src/context-session.mjs",
+        "src/main.mjs",
+        "tests/chatgpt-composer.test.mjs",
+        "tests/context-session.test.mjs",
+        "tests/electron-smoke.mjs",
+        "tests/installed-observer-fixture.cjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -271,7 +311,11 @@
         "docs/MODULES.md",
         "docs/DOCUMENTATION_INDEX.md",
         "README.md",
-        "docs/RELEASE.md"
+        "docs/RELEASE.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "docs/WORKFLOW_START.md",
+        "docs/modules/workspace-sessions.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -300,8 +344,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-phase-2-20260928
-Current Task: T004
-Revision: 770
+Current Task: нет
+Revision: 771
 
 ## Цель
 
@@ -325,14 +369,14 @@ Revision: 770
   - Git Commit: [PENDING] feat: Убрать секундный обход цветов и проверить событийное оформление
   - Reference: event-driven-runtime-phase-2-20260928 / T003 / implementation
   - Файлы: src/chatgpt-colors.mjs, tests/electron-smoke.mjs, docs/planning/event-driven-runtime.md, docs/modules/chatgpt-dom-compatibility.md, docs/VERIFICATION.md
-- [IN_PROGRESS] T004: Чистое поле нового Chat/Work и парное исправление 0.6.66 — В работе
-  - Git Commit: [PENDING] feat: Чистое поле нового Chat/Work и парное исправление 0.6.66
+- [DONE] T004: Чистое поле нового Chat/Work и парное исправление 0.6.66 — Завершено
+  - Git Commit: [DONE] feat: Чистое поле нового Chat/Work и парное исправление 0.6.66
   - Reference: event-driven-runtime-phase-2-20260928 / T004 / implementation
-  - Файлы: src/main.mjs, src/context-session.mjs, src/chatgpt-composer.mjs, tests/chatgpt-composer.test.mjs, tests/context-session.test.mjs, tests/electron-smoke.mjs, tests/installed-observer-fixture.cjs, scripts/check-event-runtime-release.mjs, package.json, package-lock.json, docs/planning/event-driven-runtime.md, README.md, docs/VERIFICATION.md, docs/RELEASE.md
+  - Файлы: src/main.mjs, src/context-session.mjs, src/chatgpt-composer.mjs, tests/chatgpt-composer.test.mjs, tests/context-session.test.mjs, tests/electron-smoke.mjs, tests/installed-observer-fixture.cjs, scripts/check-event-runtime-release.mjs, package.json, package-lock.json, docs/planning/event-driven-runtime.md, README.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/CONTEXT_DELIVERY.md, docs/DOCUMENTATION_INDEX.md, docs/MODULES.md, docs/PRODUCT.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/modules/chatgpt-dom-compatibility.md, docs/modules/workspace-sessions.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: event-driven-runtime-phase-2-20260928 / DOCS / implementation
-  - Файлы: docs/planning/event-driven-runtime.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/modules/chatgpt-dom-compatibility.md, docs/VERIFICATION.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, README.md, docs/RELEASE.md
+  - Файлы: docs/planning/event-driven-runtime.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/modules/chatgpt-dom-compatibility.md, docs/VERIFICATION.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, README.md, docs/RELEASE.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKFLOW_START.md, docs/modules/workspace-sessions.md
 
 ## Context Pack For This Cycle
 

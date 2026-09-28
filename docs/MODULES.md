@@ -106,3 +106,5 @@ Workspace & Sessions использует planning contract [session-title-sync]
 ## Событийная обработка — фаза 1 / 0.6.64
 
 Workspace & Sessions совместно с Workflow Kit / Context Recovery: [контракт перехода на события](planning/event-driven-runtime.md). Фаза 1 завершена: `chatgpt-page-observer`, `page-state` и `page-state-bridge` обеспечивают общий источник событий; `conversation-recovery` — ограниченное восстановление сохранённого разговора. Ручной recovery и обычный ручной Send различаются, before-Send сохранён. Промежуточный парный релиз 0.6.64 прямо заказан пользователем; исправление 0.6.65 добавляет «Resume stream unavailable» в общий DOM adapter и прежний путь восстановления. Фазы 2/3 ещё не выполнены; Kit 1.5.0 не менялся.
+
+0.6.66 / фаза 2, T004: Workspace & Sessions и Context Delivery — одноразовая очистка восстановленного черновика только при новом Chat/Work. Контракт: [событийная обработка](planning/event-driven-runtime.md), [DOM](modules/chatgpt-dom-compatibility.md). Файловые события и удаление оставшихся опросов пока не реализованы.

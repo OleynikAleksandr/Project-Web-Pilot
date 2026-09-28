@@ -535,17 +535,17 @@ function nextNavigation() {
 function navigationCurrent(generation) {
   return generation === navigationId && window && !window.isDestroyed() && browser && !browser.webContents.isDestroyed();
 }
-function attachController(project) {
+function attachController(project, { freshDraft = false } = {}) {
   const selected = store.selected();
   if (!project || !navigationCurrent(workspaceHealth?.generation) || !workspaceHealth?.ready
       || workspaceHealth.workspace !== project.workspace || workspaceHealth.sessionId !== project.sessionId
       || selected?.workspace !== project.workspace || selected.sessionId !== project.sessionId
       || pageLoading || setupState || settingsState) return false;
-  if (controller.active?.workspace !== project.workspace || controller.active?.sessionId !== project.sessionId) controller.attach(project);
+  if (controller.active?.workspace !== project.workspace || controller.active?.sessionId !== project.sessionId) controller.attach(project, { freshDraft });
   return true;
 }
 
-async function navigate(project = store.selected(), { refresh = false, generation = null, resume = false, entryUrl = null } = {}) {
+async function navigate(project = store.selected(), { refresh = false, generation = null, resume = false, entryUrl = null, freshDraft = false } = {}) {
   if (!project && pageLoading) return;
   const ownNavigation = generation ?? nextNavigation();
   if (!navigationCurrent(ownNavigation)) return;
@@ -578,7 +578,7 @@ async function navigate(project = store.selected(), { refresh = false, generatio
     if (!navigationCurrent(ownNavigation)) return;
     pageLoading = false; startupFlow?.finishPage(ownNavigation);
     void observeStartupAccount();
-    if (attachController(project && store.project(project.workspace))) {
+    if (attachController(project && store.project(project.workspace), { freshDraft })) {
       if (refresh) await controller.retry();
       else void controller.tick();
       if (pageState.current) applyObservedPage({ state: pageState.current.state });
@@ -656,7 +656,7 @@ async function openConnectedSession(input, sessionId = null, { latest = false, r
         : await store.select(workspace, { latest, isCurrent: current });
       if (!current()) return null;
       workspaceHealth = { ...workspaceHealth, sessionId: project.sessionId };
-      publish(); void navigate(project, { generation, resume }); return project;
+      publish(); void navigate(project, { generation, resume, freshDraft: true }); return project;
     }
     sessionId ??= latest ? activeSessionsNewestFirst(record.sessions)[0]?.sessionId : record.selectedSessionId;
     workspaceHealth = { workspace, sessionId, generation, phase: 'checking', ready: false };
@@ -883,7 +883,7 @@ function registerIpc() {
     if (['chat','work'].includes(mode) && existing) project = await store.newSession(workspace, mode);
     if (!navigationCurrent(generation)) return;
     // Navigation attaches the selected session. Refresh is requested only after it loaded.
-    await navigate(project, { refresh: mode === 'refresh', generation });
+    await navigate(project, { refresh: mode === 'refresh', generation, freshDraft: !existing || ['chat','work'].includes(mode) });
   });
   registerAction('pilot:close-settings', closeSettings);
   registerAction('pilot:set-sidebar-width', async input => {
@@ -1070,7 +1070,7 @@ function registerIpc() {
     const project = await store.select(result.workspace, { experience: firstSessionExperience, isCurrent: () => navigationCurrent(generation) });
     if (!navigationCurrent(generation) || !project) return;
     workspaceHealth = { ...workspaceHealth, generation };
-    setupState = null; publish(); void navigate(project, { generation });
+    setupState = null; publish(); void navigate(project, { generation, freshDraft: firstSessionRequired });
   });
   registerAction('pilot:choose-workspace', async () => {
     pauseForSetup();
@@ -1101,7 +1101,7 @@ function registerIpc() {
     if (!navigationCurrent(generation)) return;
     const project = await store.newSession(input.workspace, input.experience);
     if (!navigationCurrent(generation)) return;
-    startupError = null; void navigate(project, { generation });
+    startupError = null; void navigate(project, { generation, freshDraft: true });
   });
   registerAction('pilot:return-chat', async () => { const current = store.selected(); if (current) await selectWorkspace(current.workspace); }, { navigation: true });
   registerAction('pilot:retry', async () => {

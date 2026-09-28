@@ -394,3 +394,45 @@ test('ordinary manually started conversation is view-only until explicit context
   assert.equal(f.saved.manualStart, false);
   assert.equal(f.sends(), 1); assert.equal(f.controller.state.phase, 'delivered');
 });
+
+test('fresh creation resets the draft before mode selection and never resets later user input', async () => {
+  const f = controllerFixture({ chatUrl: null });
+  f.inspection.draftLength = 30; f.inspection.draftMatches = false;
+  let clears = 0, modePasses = 0;
+  f.composer.clearNewSessionDraft = async ({ canContinue }) => {
+    assert.equal(canContinue(), true); clears++; f.inspection.draftLength = 0;
+    return { action: 'draft-cleared' };
+  };
+  const inspect = f.composer.inspect;
+  f.composer.inspect = async options => {
+    if (options?.action === 'select-experience' && modePasses++ === 0) {
+      assert.equal(f.inspection.draftLength, 0);
+      f.inspection.draftLength = 50; // Switching surface restored its other draft.
+      return { ...f.inspection, action: 'experience-selecting' };
+    }
+    return inspect(options);
+  };
+  f.controller.attach(f.saved, { freshDraft: true });
+  await f.controller.tick(); assert.equal(f.sends(), 0);
+  await f.controller.tick(); assert.equal(f.sends(), 1); assert.equal(clears, 2);
+  await f.controller.tick();
+  f.inspection.draftLength = 20; f.controller.attach(f.saved); await f.controller.tick();
+  assert.equal(f.inspection.draftLength, 20); assert.equal(clears, 2);
+});
+
+test('ordinary reopen of an unsent session never authorizes draft clearing', async () => {
+  const f = controllerFixture({ chatUrl: null });
+  f.inspection.draftLength = 10;
+  f.composer.clearNewSessionDraft = () => { throw Error('Unexpected clearing'); };
+  await f.controller.tick();
+  assert.equal(f.controller.state.phase, 'waiting-draft'); assert.equal(f.loads(), 0);
+});
+
+test('cancellation during fresh draft reset never prepares or sends a context', async () => {
+  const f = controllerFixture({ chatUrl: null }); let finish;
+  f.composer.clearNewSessionDraft = () => new Promise(r => { finish = r; });
+  f.controller.attach(f.saved, { freshDraft: true });
+  const running = f.controller.tick(); await new Promise(setImmediate);
+  f.controller.cancel(); finish({ action: 'draft-cleared' }); await running;
+  assert.equal(f.sends(), 0); assert.equal(f.loads(), 0);
+});

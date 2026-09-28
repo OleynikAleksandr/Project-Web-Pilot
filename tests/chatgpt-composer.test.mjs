@@ -206,3 +206,37 @@ test('event-driven readiness timeout preserves a changed draft and never clicks 
     assert.equal(f.sends(), 0); assert.equal(f.editor.value, 'Текст пользователя');
   } finally { clearTimeout(keepAlive); dispose(); f.dom.window.close(); }
 });
+
+test('explicit new conversation clears textarea through input, never the clipboard or an existing chat', async () => {
+  const f = fixture({ draft: 'Контекст архивной сессии' });
+  let input = 0; f.editor.addEventListener('input', () => input++);
+  f.dom.window.__webPilotObserverDocumentId = 'fresh-document';
+  f.view.executeJavaScriptInIsolatedWorld = async (world, scripts) => {
+    assert.equal(world, 999); return f.dom.window.eval(scripts[0].code);
+  };
+  f.composer.pageState = { current: { documentId: 'fresh-document' } };
+  assert.equal((await f.composer.clearNewSessionDraft()).action, 'draft-cleared');
+  assert.equal(f.editor.value, ''); assert.equal(input, 1); assert.equal(f.sends(), 0);
+  f.editor.value = 'Сохранить';
+  assert.equal((await f.composer.clearNewSessionDraft({ canContinue: () => false })).reason, 'CHAT_CHANGED');
+  assert.equal(f.editor.value, 'Сохранить');
+  f.dom.window.__webPilotObserverDocumentId = 'other-document';
+  assert.equal((await f.composer.clearNewSessionDraft()).reason, 'CHAT_CHANGED');
+  assert.equal(f.editor.value, 'Сохранить');
+  f.dom.window.__webPilotObserverDocumentId = 'fresh-document';
+  f.dom.reconfigure({ url: 'https://chatgpt.com/c/existing' });
+  assert.equal((await f.composer.clearNewSessionDraft()).reason, 'CHAT_CHANGED');
+  assert.equal(f.editor.value, 'Сохранить'); f.dom.window.close();
+});
+
+test('new conversation clearing preserves active generation and messages at entrypoint', () => {
+  for (const kind of ['busy', 'message']) {
+    const f = fixture({ draft: 'Сохранить', stop: kind === 'busy' });
+    if (kind === 'message') {
+      const m = f.document.createElement('article'); m.dataset.messageAuthorRole = 'user';
+      m.textContent = 'already sent'; f.document.body.append(m);
+    }
+    assert.equal(f.dom.window.eval(pageScript({ action: 'clear-new-draft' })).action, 'deferred');
+    assert.equal(f.editor.value, 'Сохранить'); f.dom.window.close();
+  }
+});

@@ -142,7 +142,7 @@ Scope `stable-mcp-connector-036` завершает интеграцию scope 0
 
 Исторический выпуск 0.6.51: RELEASE.md, VERIFICATION.md. Выбор первого проекта описан в `docs/modules/first-run-onboarding.md` и WORKSPACE_SETUP.md.
 
-Текущий выпуск 0.6.65: [RELEASE](RELEASE.md), [VERIFICATION](VERIFICATION.md), naming planning — `docs/planning/session-title-sync.md`; single-active contract сохраняется в `docs/planning/single-active-plan-adaptation.md`. Canonical Workflow Kit 1.5.0 / 35 files / digest `0db567df…bbb2c75`; парная поставка находится в `~/Downloads/WebPilot-0.6.65/`.
+Текущий выпуск 0.6.66: [RELEASE](RELEASE.md), [VERIFICATION](VERIFICATION.md), naming planning — `docs/planning/session-title-sync.md`; single-active contract сохраняется в `docs/planning/single-active-plan-adaptation.md`. Canonical Workflow Kit 1.5.0 / 35 files / digest `0db567df…bbb2c75`; парная поставка находится в `~/Downloads/WebPilot-0.6.66/`.
 
 ## Удалённый интерфейс — исследование 2026-09-28
 
@@ -157,4 +157,4 @@ Scope `stable-mcp-connector-036` завершает интеграцию scope 0
 
 | Документ | Назначение |
 | --- | --- |
-| [Событийная обработка состояния Web Pilot](planning/event-driven-runtime.md) | Согласованный контракт трёх этапов; фаза 1 реализована в 0.6.64, включая ручной Send и восстановление разговора; 0.6.65 добавляет Resume stream unavailable; фазы 2/3 ожидают отдельного продолжения |
+| [Событийная обработка состояния Web Pilot](planning/event-driven-runtime.md) | Согласованный контракт трёх этапов; фаза 1 реализована в 0.6.64, включая ручной Send и восстановление разговора; 0.6.65 добавляет Resume stream unavailable, 0.6.66 — чистое поле нового Chat/Work; фазы 2/3 ожидают отдельного продолжения |

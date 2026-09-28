@@ -32,6 +32,27 @@ export function pageOperation({ action = 'inspect', text = '', requestId = '', e
   if (connectionError) return { ...result, action: 'deferred', reason: 'CONNECTION_INTERRUPTED' };
   if (login || !writable) return { ...result, action: 'deferred', reason: 'LOGIN_REQUIRED' };
   if (busy) return { ...result, action: 'deferred', reason: 'GENERATION_ACTIVE' };
+  if (action === 'clear-new-draft') {
+    // Explicit New Chat/Work only. A conversation (even empty) is never cleared.
+    if (!['/', '/work', '/work/'].includes(location.pathname) || messages.length)
+      return { ...result, action: 'deferred', reason: 'CHAT_CHANGED' };
+    if (draftLength) {
+      editor.focus();
+      if (editor.tagName === 'TEXTAREA') {
+        Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set.call(editor, '');
+        editor.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'deleteContentBackward', data: null }));
+        editor.dispatchEvent(new Event('change', { bubbles: true }));
+      } else {
+        const selection = getSelection(), range = document.createRange();
+        range.selectNodeContents(editor); selection.removeAllRanges(); selection.addRange(range);
+        if (!document.execCommand('delete', false))
+          return { ...result, action: 'deferred', reason: 'DRAFT_CLEAR_FAILED' };
+      }
+    }
+    return { ...result, draftLength: normalized(draft()).length,
+      action: normalized(draft()).length ? 'deferred' : 'draft-cleared',
+      reason: normalized(draft()).length ? 'DRAFT_CLEAR_FAILED' : null };
+  }
   if (expectedExperience) {
     const entry = location.pathname.replace(/\/+$/, '') || '/';
     const atEntrypoint = entry === '/' || entry === '/work';
@@ -99,6 +120,21 @@ export class ChatGPTComposer {
       return { login: true, editorAvailable: false, url: current };
     }
     return this.contents.executeJavaScript(pageScript({ action, text, requestId, expectedExperience }), action !== 'inspect');
+  }
+
+  async clearNewSessionDraft({ canContinue = () => true } = {}) {
+    if (!canContinue()) return { action: 'deferred', reason: 'CHAT_CHANGED' };
+    const documentId = this.pageState?.current?.documentId;
+    if (!documentId) return { action: 'deferred', reason: 'EDITOR_UNAVAILABLE' };
+    // Verify the isolated observer's identity in the same renderer turn as deletion.
+    // A queued operation from the previous document cannot erase the next chat.
+    const code = `globalThis.__webPilotObserverDocumentId === ${JSON.stringify(documentId)}
+      ? ${pageScript({ action: 'clear-new-draft' })}
+      : ({ action: 'deferred', reason: 'CHAT_CHANGED' })`;
+    const result = await this.contents.executeJavaScriptInIsolatedWorld(999, [{ code }], true);
+    if (result.reason === 'DRAFT_CLEAR_FAILED')
+      throw new ComposerError('NEW_SESSION_DRAFT_CLEAR_FAILED', 'Не удалось очистить поле нового чата. Уберите старый черновик и повторите.');
+    return result;
   }
 
   async waitForDraft(args, version, canContinue) {
