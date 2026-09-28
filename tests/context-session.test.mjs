@@ -287,3 +287,59 @@ test('a readiness result for an earlier A generation cannot send after A-B-A', a
   f.controller.contextCache.inputKey = async () => 'ready'; release('ready'); await running;
   assert.equal(f.sends(), 0); assert.equal(f.saved.attempt, null);
 });
+
+test('a signal arriving during an active controller pass is rerun once without parallel inspection', async () => {
+  const f = controllerFixture();
+  await f.controller.tick();
+  let release, calls = 0, active = 0, maxActive = 0;
+  const originalInspect = f.store.inspect;
+  f.store.inspect = async (...args) => {
+    calls++; active++; maxActive = Math.max(maxActive, active);
+    if (calls === 1) await new Promise(resolve => { release = resolve; });
+    active--;
+    return originalInspect(...args);
+  };
+  const running = f.controller.tick();
+  while (!release) await new Promise(resolve => setImmediate(resolve));
+  f.info.planRevision = 8;
+  assert.equal(f.controller.signal(), true);
+  assert.equal(f.controller.signal(), true);
+  release();
+  await running;
+  for (let i = 0; i < 5 && calls < 2; i++) await new Promise(resolve => setImmediate(resolve));
+  assert.equal(calls, 2, 'multiple signals collapse into one follow-up pass');
+  assert.equal(maxActive, 1, 'controller inspection remains serialized');
+  assert.equal(f.controller.state.phase, 'stale');
+  assert.equal(f.sends(), 1, 'project change never resends recovery automatically');
+});
+
+test('project reads retry a bounded number of times and persistent failure becomes visible', async () => {
+  const f = controllerFixture();
+  let calls = 0;
+  f.store.inspect = async () => { calls++; throw Error('transactional file unavailable'); };
+  f.controller.readRetryDelays = [0, 0];
+  f.controller.wait = async () => {};
+  await f.controller.tick();
+  assert.equal(calls, 3);
+  assert.equal(f.controller.state.phase, 'error');
+  assert.equal(f.controller.state.error.code, 'PROJECT_READ_FAILED');
+  assert.match(f.controller.state.error.message, /transactional file unavailable/);
+  assert.equal(f.sends(), 0);
+});
+
+test('generation change cancels a delayed project-read recovery without publishing the old error', async () => {
+  const f = controllerFixture();
+  let releaseWait, calls = 0;
+  f.store.inspect = async () => { calls++; throw Error('old generation read'); };
+  f.controller.readRetryDelays = [1];
+  f.controller.wait = () => new Promise(resolve => { releaseWait = resolve; });
+  const running = f.controller.tick();
+  while (!releaseWait) await new Promise(resolve => setImmediate(resolve));
+  f.controller.cancel();
+  f.controller.attach(f.saved);
+  releaseWait();
+  await running;
+  assert.equal(calls, 1);
+  assert.equal(f.controller.state.phase, 'selected');
+  assert.equal(f.controller.state.error, null);
+});

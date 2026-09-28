@@ -49,7 +49,7 @@ const settingsFile = path.join(dataDir, 'settings.json');
 const chromiumDiagnosticsFile = path.join(dataDir, 'diagnostics', 'chromium-events.jsonl');
 const store = new WorkspaceSessions(path.join(dataDir, 'workspaces.json'));
 const planMonitor = new PlanMonitor({ selected: () => store.selected(),
-  inspect: (workspace, sessionId) => store.inspect(workspace, sessionId), onChange: () => publish() });
+  inspect: (workspace, sessionId) => store.inspect(workspace, sessionId), onChange: () => publish(), onError: () => publish() });
 const partition = smoke ? 'web-pilot-smoke' : 'persist:chatgpt';
 let runtimeFolder = bundledWindowsRuntimeFolder(dataDir, process.platform) ?? defaultRuntimeFolder(os.homedir(), process.platform);
 let configuredRuntimeFolder = null;
@@ -204,7 +204,7 @@ function snapshot() {
   const selected = saved && { ...saved, attempt: saved.attempt && { protocol: saved.attempt.protocol,
     requestId: saved.attempt.requestId, state: saved.attempt.state }, receipt: undefined,
     ...(info?.workspace === saved.workspace && info.inspectedSessionId === saved.sessionId ? info : {}),
-    agentRun: agentTimer.view(saved) };
+    planReadError: planMonitor.error, agentRun: agentTimer.view(saved) };
   return { projects: store.snapshot().projects.filter(p => !p.archivedAt).map(({ workspace, projectId, name, displayName, selectedSessionId, expanded, sessions }) => ({
     workspace, projectId, name: displayName || name, selectedSessionId, expanded,
     sessions: activeSessionsNewestFirst(sessions).map(({ sessionId, experience, chatUrl, title, createdAt }) => ({ sessionId, experience, chatUrl, title, createdAt })),
@@ -477,6 +477,7 @@ async function openArchiveWindow(workspace = null) {
 }
 
 function nextNavigation() {
+  planMonitor.invalidate();
   const owner = actionContext.getStore();
   // An older async action cannot reclaim navigation after a newer user selection.
   if (owner && owner.generation !== navigationId) return owner.generation;

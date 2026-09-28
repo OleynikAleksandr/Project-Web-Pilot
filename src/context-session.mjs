@@ -42,19 +42,23 @@ const metadata = packet => ({ workspace: packet.workspace, session_id: packet.se
   preparationMs: packet.preparation?.ms, cacheHit: packet.preparation?.cacheHit });
 const isModeEntrypoint = value => /^https:\/\/chatgpt\.com\/(?:work\/?)?(?:[?#].*)?$/.test(value);
 const failure = (code, message) => Object.assign(new Error(message), { code });
+const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 export class ContextSession {
-  constructor({ store, runtime, composer, contextCache = null, onChange = () => {}, onChatBound = () => {}, now = Date.now, uuid = randomUUID }) {
-    Object.assign(this, { store, runtime, composer, contextCache, onChange, onChatBound, now, uuid });
+  constructor({ store, runtime, composer, contextCache = null, onChange = () => {}, onChatBound = () => {}, now = Date.now, uuid = randomUUID,
+    wait = pause, readRetryDelays = [25, 100] }) {
+    Object.assign(this, { store, runtime, composer, contextCache, onChange, onChatBound, now, uuid, wait, readRetryDelays });
     this.generation = 0;
     this.active = null;
     this.pending = false;
+    this.rerunRequested = false;
     this.servicesReady = false;
     this.state = { phase: 'selected', servicesReady: false, messageSent: false };
   }
 
   attach(project) {
     this.generation++;
+    this.rerunRequested = false;
     this.active = { workspace: project.workspace, sessionId: project.sessionId };
     this.servicesReady = false;
     this.emit({ phase: 'selected', messageSent: project.attempt?.protocol === CONTEXT_PROTOCOL && project.attempt.state === 'sent',
@@ -62,7 +66,7 @@ export class ContextSession {
   }
 
   cancel() {
-    this.generation++; this.active = null; this.servicesReady = false;
+    this.generation++; this.rerunRequested = false; this.active = null; this.servicesReady = false;
     this.emit({ phase: 'selected', messageSent: false, delivery: null, error: null, projectInfo: null });
   }
 
@@ -94,7 +98,8 @@ export class ContextSession {
   }
 
   async retry() {
-    if (!this.active || this.pending) return;
+    if (!this.active) return;
+    if (this.pending) { this.rerunRequested = true; return; }
     const project = this.store.project(this.active.workspace);
     const attempt = project?.attempt;
     // Only an observed send or a never-sent draft can be replaced by an explicit refresh.
@@ -106,15 +111,37 @@ export class ContextSession {
     return this.tick();
   }
 
+  signal() {
+    if (!this.active || this.state.phase === 'error') return false;
+    if (this.pending) this.rerunRequested = true;
+    else void this.tick();
+    return true;
+  }
+
+  async inspectProject(workspace, sessionId, generation) {
+    let lastError;
+    for (let attempt = 0; attempt <= this.readRetryDelays.length; attempt++) {
+      try { return await this.store.inspect(workspace, sessionId); }
+      catch (error) {
+        lastError = error;
+        if (attempt >= this.readRetryDelays.length) break;
+        await this.wait(this.readRetryDelays[attempt]);
+        if (!this.current(generation)) throw failure('CONTEXT_CANCELLED', 'Проверка отменена после смены проекта или сессии.');
+      }
+    }
+    throw failure('PROJECT_READ_FAILED', String(lastError?.message ?? lastError ?? 'Не удалось прочитать состояние проекта.'));
+  }
+
   async tick() {
-    if (!this.active || this.pending || this.state.phase === 'error') return;
+    if (!this.active || this.state.phase === 'error') return;
+    if (this.pending) { this.rerunRequested = true; return; }
     const generation = this.generation;
     this.pending = true;
     let project;
     try {
       project = this.store.project(this.active.workspace);
       if (!project || !this.current(generation)) return;
-      let info = await this.store.inspect(project.workspace, project.sessionId);
+      let info = await this.inspectProject(project.workspace, project.sessionId, generation);
       if (!this.current(generation)) return;
       if (info.projectId !== project.projectId) throw failure('PROJECT_REPLACED', 'В этой папке теперь другой проект. Старый чат сохранён.');
       project = { ...project, ...info };
@@ -217,7 +244,7 @@ export class ContextSession {
           ? this.contextCache.load(project.workspace, sessionSelection(project)) : this.runtime.loadContext(project.workspace, sessionSelection(project))), project.workspace, sessionSelection(project));
         const preparationMs = performance.now() - preparationStarted;
         if (!this.current(generation)) return;
-        info = await this.store.inspect(project.workspace, project.sessionId);
+        info = await this.inspectProject(project.workspace, project.sessionId, generation);
         if (!this.current(generation)) return;
         project = { ...project, ...info };
         if (!packetMatchesProject(packet, project)) throw failure('CONTEXT_CHANGED', 'План изменился во время подготовки. Обновите контекст.');
@@ -232,7 +259,7 @@ export class ContextSession {
       const result = await this.composer.deliver({ text: attempt.text, requestId: attempt.requestId,
         expectedExperience: project.chatUrl ? null : experience,
         canContinue: () => this.current(generation) && this.atExpectedChat(project, attempt), onBeforeSend: async () => {
-          const latest = { ...project, ...await this.store.inspect(project.workspace, project.sessionId) };
+          const latest = { ...project, ...await this.inspectProject(project.workspace, project.sessionId, generation) };
           if (!await this.packetIsCurrent(attempt.packet, latest)) {
             throw failure('CONTEXT_CHANGED_BEFORE_SEND', 'Пакет в поле устарел. Уберите этот черновик и обновите контекст.');
           }
@@ -261,6 +288,13 @@ export class ContextSession {
         this.emit({ phase: 'send-unknown', error: { code: error.code ?? 'SEND_UNKNOWN', message: error.message } });
       } else this.emit({ phase: error.code === 'CONTEXT_CHANGED_BEFORE_SEND' ? 'prepared-stale' : 'error',
         error: { code: error.code ?? 'CONTEXT_ERROR', message: error.message } });
-    } finally { this.pending = false; }
+    } finally {
+      this.pending = false;
+      const rerun = this.rerunRequested;
+      this.rerunRequested = false;
+      if (rerun && generation === this.generation && this.current(generation) && this.state.phase !== 'error') {
+        queueMicrotask(() => { void this.tick(); });
+      }
+    }
   }
 }

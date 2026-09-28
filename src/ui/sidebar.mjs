@@ -339,7 +339,8 @@ function render(state) {
     $('plan-status').textContent = statusText; $('plan-status').dataset.state = plan.state;
     $('plan-note').hidden = plan.state !== 'closed';
     $('plan-note').textContent = plan.state === 'closed' ? 'Проект готов к следующему новому плану.' : '';
-    $('plan-reason').hidden = !plan.blockedReason; $('plan-reason').textContent = plan.blockedReason ?? '';
+    const planReason = selected.planReadError?.message ?? plan.blockedReason ?? '';
+    $('plan-reason').hidden = !planReason; $('plan-reason').textContent = planReason;
     $('plan-tasks').replaceChildren(...plan.tasks.map(task => {
       const item = document.createElement('li'); item.className = 'plan-task'; item.dataset.status = task.status;
       const mark = document.createElement('span'); mark.className = 'plan-task-state'; mark.setAttribute('aria-hidden', 'true');

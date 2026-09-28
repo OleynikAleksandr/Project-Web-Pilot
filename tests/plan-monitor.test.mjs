@@ -38,3 +38,49 @@ test('transient read failures retry and preserve only the matching plan', async 
   fail = false; await monitor.tick();
   assert.equal(monitor.view(selected, info(6)).planRevision, 6);
 });
+
+test('signals during an active read collapse into one rerun and publish the latest projection', async () => {
+  let revision = 1, release, calls = 0, activeReads = 0, maxReads = 0, changes = 0;
+  const monitor = new PlanMonitor({
+    selected: () => selected,
+    inspect: async () => {
+      calls++; activeReads++; maxReads = Math.max(maxReads, activeReads);
+      if (calls === 1) await new Promise(resolve => { release = resolve; });
+      activeReads--;
+      return info(revision);
+    },
+    onChange: () => changes++,
+  });
+  const first = monitor.tick();
+  while (!release) await new Promise(resolve => setImmediate(resolve));
+  revision = 9;
+  void monitor.tick(); void monitor.tick();
+  release();
+  await first;
+  assert.equal(calls, 2);
+  assert.equal(maxReads, 1);
+  assert.equal(changes, 1, 'both reads collapse to the latest semantic projection');
+  assert.equal(monitor.view(selected).planRevision, 9);
+});
+
+test('read failures have bounded recovery and expose a persistent error until a later success', async () => {
+  let calls = 0, fail = true, errors = 0, recoveries = 0;
+  const monitor = new PlanMonitor({
+    selected: () => selected,
+    inspect: async () => { calls++; if (fail) throw Error('temporary replace'); return info(4); },
+    retryDelays: [0, 0],
+    wait: async () => {},
+    onError: error => { errors++; assert.equal(error.code, 'PLAN_READ_FAILED'); },
+    onChange: (_value, meta) => { if (meta.recovered) recoveries++; },
+  });
+  await monitor.tick();
+  assert.equal(calls, 3); assert.equal(errors, 1); assert.equal(monitor.error.code, 'PLAN_READ_FAILED');
+  await monitor.tick();
+  assert.equal(errors, 1, 'the same persistent failure is not republished');
+  fail = false;
+  await monitor.tick();
+  assert.equal(monitor.view(selected).planRevision, 4);
+  assert.equal(monitor.error, null);
+  assert.equal(recoveries, 0, 'first valid projection is a semantic initial change, not recovery-only');
+});
+

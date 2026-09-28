@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 731,
+  "plan_revision": 733,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-1-20260928",
@@ -28,7 +28,11 @@
       "src/session-plans.mjs",
       "src/workspace-setup.mjs",
       "tests/chromium-diagnostics.test.mjs",
-      "tests/event-runtime-baseline.mjs"
+      "tests/event-runtime-baseline.mjs",
+      "src/ui/sidebar.mjs",
+      "tests/agent-timer.test.mjs",
+      "tests/context-session.test.mjs",
+      "tests/plan-monitor.test.mjs"
     ],
     "documentation_paths": [
       "docs/planning/event-driven-runtime.md",
@@ -129,8 +133,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "event-driven-runtime-phase-1-20260928",
         "task_id": "T002",
@@ -143,7 +147,12 @@
         "src/plan-monitor.mjs",
         "src/context-session.mjs",
         "src/agent-timer.mjs",
-        "tests/electron-smoke.mjs"
+        "tests/electron-smoke.mjs",
+        "src/main.mjs",
+        "src/ui/sidebar.mjs",
+        "tests/agent-timer.test.mjs",
+        "tests/context-session.test.mjs",
+        "tests/plan-monitor.test.mjs"
       ],
       "documentation_paths": [
         "docs/planning/event-driven-runtime.md",
@@ -165,7 +174,18 @@
         "Для 18 фаз определены события, допустимые и запрещённые действия; send-unknown не разрешает автоматическую повторную отправку",
         "Before-Send, сохранение пользовательского черновика и независимость карточки плана сохранены"
       ],
-      "expected_commit_message": "feat: Обеспечить продолжение операций без потери событий и исправить секундомер"
+      "expected_commit_message": "feat: Обеспечить продолжение операций без потери событий и исправить секундомер",
+      "actual_files": [
+        "docs/VERIFICATION.md",
+        "src/agent-timer.mjs",
+        "src/context-session.mjs",
+        "src/main.mjs",
+        "src/plan-monitor.mjs",
+        "src/ui/sidebar.mjs",
+        "tests/agent-timer.test.mjs",
+        "tests/context-session.test.mjs",
+        "tests/plan-monitor.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -271,7 +291,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-phase-1-20260928
 Current Task: нет
-Revision: 731
+Revision: 733
 
 ## Цель
 
@@ -287,10 +307,10 @@ Revision: 731
   - Git Commit: [DONE] feat: Измерить исходное состояние и устранить дублирование снимков
   - Reference: event-driven-runtime-phase-1-20260928 / T001 / implementation
   - Файлы: src/main.mjs, src/chromium-diagnostics.mjs, tests/electron-smoke.mjs, src/session-plans.mjs, src/workspace-setup.mjs, tests/chromium-diagnostics.test.mjs, tests/event-runtime-baseline.mjs, docs/planning/event-driven-runtime.md, docs/VERIFICATION.md
-- [TODO] T002: Обеспечить продолжение операций без потери событий и исправить секундомер — Ожидает
-  - Git Commit: [PENDING] feat: Обеспечить продолжение операций без потери событий и исправить секундомер
+- [DONE] T002: Обеспечить продолжение операций без потери событий и исправить секундомер — Завершено
+  - Git Commit: [DONE] feat: Обеспечить продолжение операций без потери событий и исправить секундомер
   - Reference: event-driven-runtime-phase-1-20260928 / T002 / implementation
-  - Файлы: src/plan-monitor.mjs, src/context-session.mjs, src/agent-timer.mjs, tests/electron-smoke.mjs, docs/planning/event-driven-runtime.md, docs/modules/workspace-sessions.md, docs/VERIFICATION.md
+  - Файлы: src/plan-monitor.mjs, src/context-session.mjs, src/agent-timer.mjs, tests/electron-smoke.mjs, src/main.mjs, src/ui/sidebar.mjs, tests/agent-timer.test.mjs, tests/context-session.test.mjs, tests/plan-monitor.test.mjs, docs/planning/event-driven-runtime.md, docs/modules/workspace-sessions.md, docs/VERIFICATION.md
 - [TODO] T003: Подключить preload и проверить доставку без периодических DOM-опросов — Ожидает
   - Git Commit: [PENDING] feat: Подключить preload и проверить доставку без периодических DOM-опросов
   - Reference: event-driven-runtime-phase-1-20260928 / T003 / implementation
