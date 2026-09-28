@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 4,
+  "plan_revision": 5,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "release-1.5.0-docs-finalization-001",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Зафиксировать актуальные release-документы Workflow Kit 1.5.0 после self-host cutover.",
   "acceptance_criteria": [
     "Release-документы отражают фактический single-active contract 1.5.0 и завершённый self-host cutover."
@@ -21,7 +21,8 @@
       "docs/modules/workflow-kit-package.md",
       "docs/planning/single-active-plan-migration.md",
       "docs/architecture/OVERVIEW.md",
-      "docs/MODULES.md"
+      "docs/MODULES.md",
+      "README.md"
     ]
   },
   "baseline_commit": "62fa4f5ef06d6f9e6541c3a7b280adf5a631aee1",
@@ -62,21 +63,49 @@
   },
   "tasks": [
     {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
+      "id": "T002",
+      "title": "Добавить README и связать WorkflowKit с Project Web Pilot",
+      "why": "Добавить README и связать WorkflowKit с Project Web Pilot",
+      "dependencies": [],
+      "functional_paths": [],
+      "documentation_paths": [
+        "README.md"
+      ],
+      "verification_ids": [],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "README описывает WorkflowKit 1.5.0, single-active plan model, запуск проверок и package integration.",
+        "README содержит прямую ссылку на https://github.com/OleynikAleksandr/Project-Web-Pilot."
+      ],
+      "expected_commit_message": "docs: add WorkflowKit README and Web Pilot link",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "release-1.5.0-docs-finalization-001",
+        "task_id": "T002",
+        "role": "implementation"
+      }
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "release-1.5.0-docs-finalization-001",
         "task_id": "DOCS",
-        "role": "implementation"
+        "role": "implementation",
+        "iteration": 2
       },
-      "dependencies": [],
+      "dependencies": [
+        "T002"
+      ],
       "functional_paths": [],
       "documentation_paths": [
         "docs/DOCUMENTATION_INDEX.md",
         "docs/modules/workflow-kit-package.md",
         "docs/planning/single-active-plan-migration.md",
         "docs/architecture/OVERVIEW.md",
-        "docs/MODULES.md"
+        "docs/MODULES.md",
+        "README.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -104,10 +133,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: release-1.5.0-docs-finalization-001
 Current Task: нет
-Revision: 4
+Revision: 5
 
 ## Цель
 
@@ -119,10 +148,14 @@ Revision: 4
 
 ## Микрозадачи
 
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: завершить release-документацию 1.5.0
+- [TODO] T002: Добавить README и связать WorkflowKit с Project Web Pilot — Ожидает
+  - Git Commit: [PENDING] docs: add WorkflowKit README and Web Pilot link
+  - Reference: release-1.5.0-docs-finalization-001 / T002 / implementation
+  - Файлы: README.md
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: завершить release-документацию 1.5.0
   - Reference: release-1.5.0-docs-finalization-001 / DOCS / implementation
-  - Файлы: docs/DOCUMENTATION_INDEX.md, docs/modules/workflow-kit-package.md, docs/planning/single-active-plan-migration.md, docs/architecture/OVERVIEW.md, docs/MODULES.md
+  - Файлы: docs/DOCUMENTATION_INDEX.md, docs/modules/workflow-kit-package.md, docs/planning/single-active-plan-migration.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, README.md
 
 ## Context Pack For This Cycle
 
