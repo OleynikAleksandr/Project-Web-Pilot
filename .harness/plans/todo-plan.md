@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 5,
+  "plan_revision": 7,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "release-1.5.0-docs-finalization-001",
@@ -78,13 +78,16 @@
         "README содержит прямую ссылку на https://github.com/OleynikAleksandr/Project-Web-Pilot."
       ],
       "expected_commit_message": "docs: add WorkflowKit README and Web Pilot link",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "release-1.5.0-docs-finalization-001",
         "task_id": "T002",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "README.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -136,7 +139,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: release-1.5.0-docs-finalization-001
 Current Task: нет
-Revision: 5
+Revision: 7
 
 ## Цель
 
@@ -148,8 +151,8 @@ Revision: 5
 
 ## Микрозадачи
 
-- [TODO] T002: Добавить README и связать WorkflowKit с Project Web Pilot — Ожидает
-  - Git Commit: [PENDING] docs: add WorkflowKit README and Web Pilot link
+- [DONE] T002: Добавить README и связать WorkflowKit с Project Web Pilot — Завершено
+  - Git Commit: [DONE] docs: add WorkflowKit README and Web Pilot link
   - Reference: release-1.5.0-docs-finalization-001 / T002 / implementation
   - Файлы: README.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
