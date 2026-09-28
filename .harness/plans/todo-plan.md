@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 45,
+  "plan_revision": 47,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "release-1.5.0-docs-finalization-001",
@@ -298,13 +298,16 @@
         "README отражает тестовый Paste клиента 0.6.69, неизменённый runtime Kit и взаимную ссылку."
       ],
       "expected_commit_message": "feat: README: Paste в клиенте Web Pilot 0.6.69",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "release-1.5.0-docs-finalization-001",
         "task_id": "R006",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "README.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -364,7 +367,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: release-1.5.0-docs-finalization-001
 Current Task: нет
-Revision: 45
+Revision: 47
 
 ## Цель
 
@@ -408,8 +411,8 @@ Revision: 45
   - Git Commit: [DONE] feat: README: быстрая вставка клиента Web Pilot 0.6.68
   - Reference: release-1.5.0-docs-finalization-001 / R005 / implementation
   - Файлы: README.md
-- [TODO] R006: README: Paste в клиенте Web Pilot 0.6.69 — Ожидает
-  - Git Commit: [PENDING] feat: README: Paste в клиенте Web Pilot 0.6.69
+- [DONE] R006: README: Paste в клиенте Web Pilot 0.6.69 — Завершено
+  - Git Commit: [DONE] feat: README: Paste в клиенте Web Pilot 0.6.69
   - Reference: release-1.5.0-docs-finalization-001 / R006 / implementation
   - Файлы: README.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
