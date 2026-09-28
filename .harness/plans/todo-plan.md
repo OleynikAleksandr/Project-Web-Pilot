@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 40,
+  "plan_revision": 42,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "release-1.5.0-docs-finalization-001",
@@ -272,13 +272,16 @@
         "README отражает клиент 0.6.68 и отсутствие изменений runtime Kit; связь с репозиторием Web Pilot сохранена."
       ],
       "expected_commit_message": "feat: README: быстрая вставка клиента Web Pilot 0.6.68",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "release-1.5.0-docs-finalization-001",
         "task_id": "R005",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "README.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -337,7 +340,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: release-1.5.0-docs-finalization-001
 Current Task: нет
-Revision: 40
+Revision: 42
 
 ## Цель
 
@@ -377,8 +380,8 @@ Revision: 40
   - Git Commit: [DONE] feat: README: диагностический клиент Web Pilot 0.6.67
   - Reference: release-1.5.0-docs-finalization-001 / R004 / implementation
   - Файлы: README.md
-- [TODO] R005: README: быстрая вставка клиента Web Pilot 0.6.68 — Ожидает
-  - Git Commit: [PENDING] feat: README: быстрая вставка клиента Web Pilot 0.6.68
+- [DONE] R005: README: быстрая вставка клиента Web Pilot 0.6.68 — Завершено
+  - Git Commit: [DONE] feat: README: быстрая вставка клиента Web Pilot 0.6.68
   - Reference: release-1.5.0-docs-finalization-001 / R005 / implementation
   - Файлы: README.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
