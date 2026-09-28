@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 710,
+  "plan_revision": 712,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-title-sync-20260928",
@@ -608,13 +608,16 @@
         "README содержит прямую ссылку на https://github.com/OleynikAleksandr/WorkflowKit."
       ],
       "expected_commit_message": "docs: update README and link WorkflowKit",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-title-sync-20260928",
         "task_id": "T014",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "README.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -683,7 +686,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-title-sync-20260928
 Current Task: нет
-Revision: 710
+Revision: 712
 
 ## Цель
 
@@ -747,8 +750,8 @@ Revision: 710
   - Git Commit: [DONE] docs: record final 0.6.63 release provenance
   - Reference: session-title-sync-20260928 / T013 / implementation
   - Файлы: docs/RELEASE.md, docs/VERIFICATION.md
-- [TODO] T014: Актуализировать README и связать Project Web Pilot с WorkflowKit — Ожидает
-  - Git Commit: [PENDING] docs: update README and link WorkflowKit
+- [DONE] T014: Актуализировать README и связать Project Web Pilot с WorkflowKit — Завершено
+  - Git Commit: [DONE] docs: update README and link WorkflowKit
   - Reference: session-title-sync-20260928 / T014 / implementation
   - Файлы: README.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает

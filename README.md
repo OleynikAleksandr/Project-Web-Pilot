@@ -1,6 +1,11 @@
 # Project Web Pilot
 
-Текущий локальный выпуск — **0.6.58**, macOS arm64 / Windows x64. Project Web Pilot использует canonical package `@webpilot/workflow-kit@1.5.0` из `/Users/oleksandroliinyk/VSCODE/WorkflowKit`; `resources/workflow-kit` создаётся автоматически как generated runtime staging и не хранится в Git как исходник. Действующая модель: **один checkout/worktree = один current plan** `.harness/plans/todo-plan.md`; Web Pilot sessions хранят чат, URL и UI-метаданные, но не владеют plan. Парная поставка: `~/Downloads/WebPilot-0.6.58/`; корневой и `/Applications/Project Web Pilot.app` обновлены до 0.6.58.
+Текущий локальный выпуск — **0.6.63**, macOS arm64 / Windows x64. Project Web Pilot использует canonical package [`@webpilot/workflow-kit@1.5.0`](https://github.com/OleynikAleksandr/WorkflowKit); `resources/workflow-kit` создаётся автоматически как generated runtime staging и не хранится в Git как исходник. Действующая модель: **один checkout/worktree = один current plan** `.harness/plans/todo-plan.md`; Web Pilot sessions хранят чат, URL, собственное осмысленное имя и UI-метаданные, но не владеют plan. 0.6.63 добавляет надёжный встроенный dialog ручного переименования и событийную синхронизацию session title с native ChatGPT без циклических retry. Парная поставка: `~/Downloads/WebPilot-0.6.63/`; корневой и `/Applications/Project Web Pilot.app` обновлены до 0.6.63.
+
+## Связанные репозитории
+
+- [Project Web Pilot](https://github.com/OleynikAleksandr/Project-Web-Pilot) — это приложение.
+- [WorkflowKit](https://github.com/OleynikAleksandr/WorkflowKit) — canonical source пакета `@webpilot/workflow-kit`, который управляет current plan, recovery и project lifecycle.
 
 Предыдущий локальный выпуск — **0.6.54**: таймер работы агента в карточке плана. Поставка: `~/Downloads/WebPilot-0.6.54/`.
 
@@ -16,11 +21,11 @@ Project Web Pilot — локальное Electron-приложение для ma
 
 После первоначальной настройки MCP и tunnel запускаются при входе пользователя в систему: macOS через существующий LaunchAgent, Windows через HKCU Run и стабильный private launcher. Открывать Web Pilot для этого не нужно. Это автозапуск в пользовательском профиле, а не системная служба до входа в аккаунт. Закрытие UI не останавливает службы; выключение компьютера завершает процессы.
 
-Для release source 0.6.58 полный Node suite: **357 tests, 355 PASS, 2 SKIP, 0 FAIL**. Electron smoke PASSED и отдельно подтверждает `singleActivePlanSessions`, одинаковый current plan в старых чатах, общий checkout-scoped recovery cache и отсутствие prepared-plan UI. Native Windows и clean VM для 0.6.58 не запускались; это остаётся пользовательской проверкой. Подробности — [VERIFICATION](docs/VERIFICATION.md).
+Для release source 0.6.63 полный Node suite: **366 tests, 363 PASS, 3 SKIP, 0 FAIL**. Electron smoke PASSED и дополнительно проверяет встроенный rename dialog, неблокирующее ручное переименование и событийную native title sync без retry-loop. Native Windows и clean VM для 0.6.63 не запускались; это остаётся пользовательской проверкой. Подробности — [VERIFICATION](docs/VERIFICATION.md).
 
 История 0.6.47: 19.09.2026 собрана **0.6.47** для macOS arm64 и Windows x64 одной командой `npm run build`; ZIP находятся в `~/Downloads/WebPilot-0.6.47/`. В macOS Settings добавлен выбор **Codex Local Mac / Codex App Server Local Mac**: Web Pilot держит один стабильный Secure MCP Tunnel/ChatGPT connector и переключает за ним только локальный MCP backend; выбор сохраняется между входами в macOS, а после переключения приложение автоматически перезапускается. Новый Codex App Server MCP упакован в релиз как физический resource и при первом использовании копируется в стабильный private state. Оба пакета и постоянный Mac app сверены с исходниками.
 
-Последний опубликованный GitHub Release пока остаётся [0.6.45](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.45). Выпуск **0.6.58** подготовлен локально; публикация на GitHub выполняется только по отдельному поручению пользователя.
+Последний опубликованный GitHub Release пока остаётся [0.6.45](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.45). Текущий source/release state — **0.6.63**; исходный репозиторий публикуется на GitHub отдельно от бинарного GitHub Release.
 
 На Windows распакуйте **всю** папку Windows ZIP на локальный диск и запустите `Project Web Pilot.exe`. Экран «Начнём работу» доступен также через «Начальная настройка» внизу сайдбара. Для Windows создайте отдельный туннель и подключение **Codex Local Windows MCP**: основной сайдбар ChatGPT → Plugins → «+» → Connection: Tunnel → туннель этой Windows → No authentication. Дождитесь списка инструментов; в новом чате добавьте это подключение через меню инструментов. Установленный ранее Codex Local Mac относится к другому компьютеру.
 
@@ -78,7 +83,7 @@ ChatGPT сохраняются. Названия соответствуют ин
 
 Карточка «Текущий план проекта» показывает микрозадачи **единственного plan текущего checkout**: `✓` — выполнена и зафиксирована, `●` — выполняется, `○` — ожидает. Переключение между чатами меняет разговор справа, но не выбирает другой plan. Новое поручение расширяет current plan через Workflow Kit, сохраняя выполненные задачи и commit references; финальная DOCS актуализирует документацию.
 
-`plan:prepare`, `plan:bind` и session ownership больше не являются рабочим lifecycle. Legacy `planId`, `originSessionId`, `legacyPlanId`, `owner_session_id` и подобные поля могут оставаться в старых данных для history/diagnostics, но Web Pilot 0.6.58 не использует их для runtime selection. Исторические session plans при upgrade Workflow Kit 1.5.0 переносятся в read-only archive. Для действительно независимой параллельной работы используется отдельный Git branch/worktree.
+`plan:prepare`, `plan:bind` и session ownership больше не являются рабочим lifecycle. Legacy `planId`, `originSessionId`, `legacyPlanId`, `owner_session_id` и подобные поля могут оставаться в старых данных для history/diagnostics, но Web Pilot 0.6.63 не использует их для runtime selection. Исторические session plans при upgrade Workflow Kit 1.5.0 переносятся в read-only archive. Для действительно независимой параллельной работы используется отдельный Git branch/worktree.
 
 ## Доктор проекта
 
@@ -115,7 +120,7 @@ npm run build
 
 ## Продолжение работы
 
-Начните с [WORKFLOW_START](docs/WORKFLOW_START.md) и актуального recovery packet. Каждая сессия имеет собственный план в `.harness/plans/by-id/` либо NONE; адрес команд берётся из её recovery packet. `.harness/plans/todo-plan.md` сохранён для совместимости и истории; каталог — [DOCUMENTATION_INDEX](docs/DOCUMENTATION_INDEX.md). Канонический контракт — [CONTEXT_DELIVERY](docs/CONTEXT_DELIVERY.md); устройство приложения — [ARCHITECTURE](docs/architecture/ARCHITECTURE.md).
+Начните с [WORKFLOW_START](docs/WORKFLOW_START.md) и актуального recovery packet. Каждый Git checkout/worktree имеет ровно один current plan — `.harness/plans/todo-plan.md`; новый Chat/Work продолжает этот же plan. Для независимой параллельной работы создаётся отдельный Git worktree. Каталог документов — [DOCUMENTATION_INDEX](docs/DOCUMENTATION_INDEX.md), контракт доставки контекста — [CONTEXT_DELIVERY](docs/CONTEXT_DELIVERY.md), устройство приложения — [ARCHITECTURE](docs/architecture/ARCHITECTURE.md).
 
 WF001 и Codex Local Mac ([исходные проекты](docs/SOURCE_WORKSPACES.md)) остаются отдельными репозиториями. По поручению пользователя MCP обновлён для прямой передачи контекста. Профили браузеров и секреты не переносились. Приёмка не архивирует scope; следующий объём определяется отзывом пользователя.
 
