@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 672,
+  "plan_revision": 674,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "session-title-sync-20260928",
@@ -199,8 +199,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "session-title-sync-20260928",
         "task_id": "T004",
@@ -230,7 +230,12 @@
         "Постоянный macOS app в корне workspace обновлён штатным release pipeline и совпадает с финальным source state.",
         "Versioned delivery содержит обе платформы; live evidence native ChatGPT rename записано в VERIFICATION без приписывания пользовательской приёмки."
       ],
-      "expected_commit_message": "release: Project Web Pilot 0.6.59"
+      "expected_commit_message": "release: Project Web Pilot 0.6.59",
+      "actual_files": [
+        "docs/VERIFICATION.md",
+        "package-lock.json",
+        "package.json"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -285,7 +290,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: session-title-sync-20260928
 Current Task: нет
-Revision: 672
+Revision: 674
 
 ## Цель
 
@@ -309,8 +314,8 @@ Revision: 672
   - Git Commit: [DONE] feat: synchronize Web Pilot and ChatGPT session titles
   - Reference: session-title-sync-20260928 / T003 / implementation
   - Файлы: src/main.mjs, src/workspace-session.mjs, src/ui/sidebar.mjs, tests/electron-smoke.mjs, tests/workspace-session.test.mjs, docs/planning/session-title-sync.md
-- [TODO] T004: Собрать и проверить парный релиз Project Web Pilot 0.6.59 — Ожидает
-  - Git Commit: [PENDING] release: Project Web Pilot 0.6.59
+- [DONE] T004: Собрать и проверить парный релиз Project Web Pilot 0.6.59 — Завершено
+  - Git Commit: [DONE] release: Project Web Pilot 0.6.59
   - Reference: session-title-sync-20260928 / T004 / implementation
   - Файлы: package.json, package-lock.json, docs/planning/session-title-sync.md, docs/RELEASE.md, docs/VERIFICATION.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает

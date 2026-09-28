@@ -2096,3 +2096,8 @@ Electron smoke — **PASSED** на isolated fixture (Electron 44.3.0 / Chromium 
 
 Корневой и `/Applications/Project Web Pilot.app` проверены после build: версия 0.6.58, macOS ASAR одинаковый. Windows package verifier подтвердил PE/package layout, portable Node и Windows runtime; **native Windows и clean VM не запускались**.
 
+
+
+## Session title sync / live ChatGPT — 0.6.59
+
+28.09.2026 на текущем авторизованном профиле Project Web Pilot выполнен live probe exact bound conversation `https://chatgpt.com/c/6aba037d-f788-83eb-b519-a4f86dce23bb`. Узкий title adapter сначала server-side переименовал conversation в диагностическое `WP title sync live probe 2026-09-28`; PATCH был подтверждён последующим GET того же conversation (`ok=true`). Затем тем же путём установлено итоговое имя `Автопереименование сессий Web Pilot и ChatGPT`; отдельный новый Electron/WebContents повторно загрузил conversation и GET-readback вернул то же имя (`ok=true`). Access token использовался только внутри authenticated renderer и не возвращался в приложение/лог. Это подтверждает server-side сохранение native ChatGPT title для текущего Web UI; устойчивость к будущим изменениям недокументированного backend endpoint обеспечивается fail-closed adapter и regression tests.
