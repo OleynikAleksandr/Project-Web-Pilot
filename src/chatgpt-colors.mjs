@@ -56,7 +56,7 @@ export function installComposerCapsule(enabled, editorSelector, capsuleAttr, inn
   window[key]?.disconnect();
   const tagged = () => document.querySelectorAll('[' + capsuleAttr + '],[' + innerAttr + ']');
   if (!enabled) { for (const e of tagged()) { e.removeAttribute(capsuleAttr); e.removeAttribute(innerAttr); } return 0; }
-  const MIN_RADIUS = 12, MAX_DEPTH = 14, SAFETY_MS = 1000;
+  const MIN_RADIUS = 12, MAX_DEPTH = 14;
   const visible = e => e.getClientRects().length > 0 && getComputedStyle(e).visibility !== 'hidden';
   const radius = e => {
     const s = getComputedStyle(e);
@@ -64,10 +64,18 @@ export function installComposerCapsule(enabled, editorSelector, capsuleAttr, inn
     const values = corners.length === 4 ? corners : String(s.borderRadius || '0').split(/[\s/]+/);
     return Math.min(...values.map(value => parseFloat(value) || 0));
   };
-  let marked = new Set();
+  let watched = new Set(), resizeWatched = new Set(), pending = false, live = true;
+  let schedule = () => {};
+  const resizeObserver = typeof ResizeObserver === 'function' ? new ResizeObserver(() => schedule()) : null;
+  const media = typeof matchMedia === 'function' ? matchMedia('(prefers-color-scheme: dark)') : null;
   const apply = () => {
-    const capsules = new Set(), inner = new Set();
+    if (!live) return 0;
+    const capsules = new Set(), inner = new Set(), nextWatched = new Set();
     for (const editor of document.querySelectorAll(editorSelector)) {
+      for (let e = editor; e; e = e.parentElement) {
+        nextWatched.add(e);
+        if (e === document.documentElement) break;
+      }
       if (!visible(editor)) continue;
       const chain = [];
       for (let e = editor.parentElement, depth = 0; e && e !== document.body && depth < MAX_DEPTH; e = e.parentElement, depth++) {
@@ -80,18 +88,35 @@ export function installComposerCapsule(enabled, editorSelector, capsuleAttr, inn
     for (const e of document.querySelectorAll('[' + innerAttr + ']')) if (!inner.has(e)) e.removeAttribute(innerAttr);
     for (const e of capsules) if (!e.hasAttribute(capsuleAttr)) e.setAttribute(capsuleAttr, '');
     for (const e of inner) if (!e.hasAttribute(innerAttr)) e.setAttribute(innerAttr, '');
-    marked = capsules;
+    watched = nextWatched;
+    if (resizeObserver) {
+      for (const e of resizeWatched) if (!watched.has(e)) resizeObserver.unobserve?.(e);
+      for (const e of watched) if (!resizeWatched.has(e)) resizeObserver.observe(e);
+      resizeWatched = new Set(watched);
+    }
     return capsules.size;
   };
-  // Mark synchronously (before paint) only when an editor appears or a marked capsule leaves the DOM,
-  // so streaming answers do not trigger style reads; a slow safety pass follows class-only layout changes.
+  schedule = () => {
+    if (!live || pending) return;
+    pending = true;
+    queueMicrotask(() => { pending = false; apply(); });
+  };
   const addsEditor = node => node.nodeType === 1 && (node.matches(editorSelector) || !!node.querySelector(editorSelector));
+  const containsWatched = node => node.nodeType === 1 && [...watched].some(e => node === e || node.contains(e));
   const observer = new MutationObserver(mutations => {
-    if ([...marked].some(e => !e.isConnected) || mutations.some(m => [...m.addedNodes].some(addsEditor))) apply();
+    if ([...watched].some(e => !e.isConnected) || mutations.some(m =>
+      m.type === 'attributes' ? watched.has(m.target)
+        : watched.has(m.target) || [...m.addedNodes].some(addsEditor) || [...m.removedNodes].some(containsWatched))) schedule();
   });
-  const safety = setInterval(apply, SAFETY_MS);
-  window[key] = { apply, disconnect: () => { observer.disconnect(); clearInterval(safety); delete window[key]; } };
-  observer.observe(document.documentElement, { childList: true, subtree: true });
+  const onResize = () => schedule();
+  const onMedia = () => schedule();
+  window.addEventListener('resize', onResize);
+  media?.addEventListener?.('change', onMedia);
+  observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'style'] });
+  window[key] = { apply, disconnect: () => {
+    live = false; pending = false; observer.disconnect(); resizeObserver?.disconnect();
+    window.removeEventListener('resize', onResize); media?.removeEventListener?.('change', onMedia); delete window[key];
+  } };
   return apply();
 }
 export const composerCapsuleScript = enabled => `(${installComposerCapsule.toString()})(${!!enabled}, ${JSON.stringify(CHATGPT_SELECTORS.editor)}, ${JSON.stringify(COMPOSER_CAPSULE_ATTR)}, ${JSON.stringify(COMPOSER_INNER_ATTR)})`;

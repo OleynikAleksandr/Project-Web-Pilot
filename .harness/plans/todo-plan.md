@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 815,
+  "plan_revision": 817,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-2-continuation-20260928",
@@ -51,7 +51,8 @@
       "tests/page-state.test.mjs",
       "tests/installed-observer-fixture.cjs",
       "src/startup-readiness.mjs",
-      "tests/startup-readiness.test.mjs"
+      "tests/startup-readiness.test.mjs",
+      "tests/chatgpt-colors.test.mjs"
     ],
     "documentation_paths": [
       "docs/planning/event-driven-runtime.md",
@@ -228,8 +229,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "event-driven-runtime-phase-2-continuation-20260928",
         "task_id": "T003",
@@ -240,7 +241,8 @@
       ],
       "functional_paths": [
         "src/chatgpt-colors.mjs",
-        "tests/electron-smoke.mjs"
+        "tests/electron-smoke.mjs",
+        "tests/chatgpt-colors.test.mjs"
       ],
       "documentation_paths": [
         "docs/planning/event-driven-runtime.md",
@@ -261,7 +263,12 @@
         "Оформление Chat/Work проверено в fixture; реальная вёрстка и native Windows отмечаются только по фактической проверке пользователя, без VM/Computer Use.",
         "В установившемся простое нет целевых периодических опросов плана/страницы/прогрева/цветов. Реестр удалённых и сохранённых таймеров передан DOCS; итоговые сопоставимые baseline-замеры и парный релиз остаются фазе 3."
       ],
-      "expected_commit_message": "feat: Убрать секундный обход цветов и проверить событийное оформление"
+      "expected_commit_message": "feat: Убрать секундный обход цветов и проверить событийное оформление",
+      "actual_files": [
+        "src/chatgpt-colors.mjs",
+        "tests/chatgpt-colors.test.mjs",
+        "tests/electron-smoke.mjs"
+      ]
     },
     {
       "id": "T004",
@@ -630,7 +637,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-phase-2-continuation-20260928
 Current Task: нет
-Revision: 815
+Revision: 817
 
 ## Цель
 
@@ -650,10 +657,10 @@ Revision: 815
   - Git Commit: [DONE] feat: Перевести вход в аккаунт на события и удалить общий пульс
   - Reference: event-driven-runtime-phase-2-continuation-20260928 / T002 / implementation
   - Файлы: src/main.mjs, src/startup-flow.mjs, src/chatgpt-page-observer.mjs, src/page-state.mjs, src/chromium-diagnostics.mjs, tests/electron-smoke.mjs, src/startup-readiness.mjs, tests/page-state.test.mjs, tests/startup-readiness.test.mjs, docs/planning/event-driven-runtime.md
-- [TODO] T003: Убрать секундный обход цветов и проверить событийное оформление — Ожидает
-  - Git Commit: [PENDING] feat: Убрать секундный обход цветов и проверить событийное оформление
+- [DONE] T003: Убрать секундный обход цветов и проверить событийное оформление — Завершено
+  - Git Commit: [DONE] feat: Убрать секундный обход цветов и проверить событийное оформление
   - Reference: event-driven-runtime-phase-2-continuation-20260928 / T003 / implementation
-  - Файлы: src/chatgpt-colors.mjs, tests/electron-smoke.mjs, docs/planning/event-driven-runtime.md, docs/modules/chatgpt-dom-compatibility.md, docs/VERIFICATION.md
+  - Файлы: src/chatgpt-colors.mjs, tests/electron-smoke.mjs, tests/chatgpt-colors.test.mjs, docs/planning/event-driven-runtime.md, docs/modules/chatgpt-dom-compatibility.md, docs/VERIFICATION.md
 - [DONE] T004: Передавать правило делегирования только по прямому поручению пользователя — Завершено
   - Git Commit: [DONE] feat: Передавать правило делегирования только по прямому поручению пользователя
   - Reference: event-driven-runtime-phase-2-continuation-20260928 / T004 / implementation

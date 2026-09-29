@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
 import { JSDOM } from 'jsdom';
 import { ChatColors, normalizeChatColors, validateColorChange, chatColorsCSS, composerCapsuleScript, COMPOSER_CAPSULE_ATTR, COMPOSER_INNER_ATTR } from '../src/chatgpt-colors.mjs';
+const turn = () => new Promise(resolve => setImmediate(resolve));
 class Contents extends EventEmitter {
   constructor() { super(); this.url = 'https://chatgpt.com/c/fixture'; this.sheets = new Map(); this.serial = 0; this.scripts = []; }
   async executeJavaScript(code) { this.scripts.push(code); }
@@ -64,6 +65,58 @@ test('composer capsule is the nearest rounded ancestor of each editor, never a r
   for (const id of ['mode-surface', 'plain-root', 'square-surface', 'square']) assert.equal($(id).hasAttribute(COMPOSER_CAPSULE_ATTR), false, id + ' is not painted');
   assert.equal(window.eval(composerCapsuleScript(false)), 0);
   assert.deepEqual([...tagged(COMPOSER_CAPSULE_ATTR), ...tagged(COMPOSER_INNER_ATTR)], [], 'reset removes every mark');
+  assert.equal(window.__webPilotComposerCapsule, undefined);
+  dom.window.close();
+});
+
+test('composer capsule follows watched ancestors, editor replacement, resize and color-scheme events without polling', async () => {
+  const dom = new JSDOM('<body>' + capsuleLayouts + '</body>', { runScripts: 'outside-only' });
+  const { window } = dom, $ = id => window.document.getElementById(id);
+  window.Element.prototype.getClientRects = () => [{ width: 1, height: 1 }];
+  let resizeCallback = null, mediaCallback = null, intervals = 0;
+  window.setInterval = () => { intervals++; throw new Error('composer capsule must not poll'); };
+  window.ResizeObserver = class {
+    constructor(callback) { resizeCallback = callback; }
+    observe() {}
+    disconnect() {}
+  };
+  window.matchMedia = () => ({
+    addEventListener: (event, callback) => { if (event === 'change') mediaCallback = callback; },
+    removeEventListener: (event, callback) => { if (event === 'change' && mediaCallback === callback) mediaCallback = null; },
+  });
+  const nativeStyle = window.getComputedStyle.bind(window);
+  const radii = new Map();
+  window.getComputedStyle = element => {
+    const style = nativeStyle(element), value = radii.get(element.id);
+    if (value === undefined) return style;
+    const radius = value + 'px';
+    return { visibility: style.visibility, borderRadius: radius,
+      borderTopLeftRadius: radius, borderTopRightRadius: radius, borderBottomRightRadius: radius, borderBottomLeftRadius: radius };
+  };
+  assert.equal(window.eval(composerCapsuleScript(true)), 2);
+  assert.equal(intervals, 0);
+
+  radii.set('root', 0); radii.set('mode-surface', 30);
+  resizeCallback(); await turn();
+  assert.equal($('root').hasAttribute(COMPOSER_CAPSULE_ATTR), false);
+  assert.equal($('mode-surface').hasAttribute(COMPOSER_CAPSULE_ATTR), true, 'resize recomputes geometry through the watched ancestor chain');
+
+  radii.set('mode-surface', 0); radii.set('root', 28);
+  mediaCallback(); await turn();
+  assert.equal($('root').hasAttribute(COMPOSER_CAPSULE_ATTR), true, 'prefers-color-scheme event triggers an apply');
+
+  $('root').style.borderRadius = '0px'; radii.delete('root');
+  $('mode-surface').style.borderRadius = '32px'; radii.delete('mode-surface');
+  await turn();
+  assert.equal($('mode-surface').hasAttribute(COMPOSER_CAPSULE_ATTR), true, 'class/style mutation on a watched ancestor triggers an apply');
+
+  $('footer').innerHTML = '<div id="replacement" data-testid="composer-text-input" contenteditable="true" role="textbox"></div>';
+  await turn();
+  assert.equal($('mode-surface').hasAttribute(COMPOSER_CAPSULE_ATTR), true, 'childList replacement of the editor is observed');
+
+  window.dispatchEvent(new window.Event('resize')); await turn();
+  window.eval(composerCapsuleScript(false));
+  assert.equal(mediaCallback, null);
   assert.equal(window.__webPilotComposerCapsule, undefined);
   dom.window.close();
 });

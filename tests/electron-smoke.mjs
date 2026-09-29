@@ -1002,6 +1002,13 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(coloredComposer.legacyEditor, 'rgba(0, 0, 0, 0)', 'legacy editor remains transparent within capsule');
   assert.equal(coloredComposer.editorBackground, 'rgba(0, 0, 0, 0)', 'editor shares the capsule fill');
   for (const key of ['editorColor','draft','button','radius','padding','width','unrelated']) assert.equal(coloredComposer[key], originalComposer[key], 'composer preserves ' + key);
+  await browser.executeJavaScript('(()=>{const c=document.getElementById("palette-composer"),f=document.getElementById("palette-composer-form");c.style.borderRadius="0px";f.style.borderRadius="34px"})()');
+  await waitFor(() => browser.executeJavaScript('document.getElementById("palette-composer-form").hasAttribute("data-web-pilot-composer-capsule") && getComputedStyle(document.getElementById("palette-composer-form")).backgroundColor==="rgb(36, 51, 68)"'), 'composer class/style change moves capsule without safety polling', snapshot);
+  assert.equal(await browser.executeJavaScript('getComputedStyle(document.getElementById("palette-composer")).backgroundColor'), 'rgba(0, 0, 0, 0)', 'former capsule becomes transparent inner wrapper');
+  await browser.executeJavaScript('(()=>{const c=document.getElementById("palette-composer"),f=document.getElementById("palette-composer-form");f.style.borderRadius="0px";c.style.borderRadius="28px"})()');
+  await waitFor(() => browser.executeJavaScript('document.getElementById("palette-composer").hasAttribute("data-web-pilot-composer-capsule")'), 'composer capsule returns on ancestor style event', snapshot);
+  await browser.executeJavaScript('(()=>{const old=document.getElementById("palette-composer"),clone=old.cloneNode(true);clone.removeAttribute("data-web-pilot-composer-capsule");clone.querySelectorAll("[data-web-pilot-composer-inner]").forEach(e=>e.removeAttribute("data-web-pilot-composer-inner"));old.replaceWith(clone)})()');
+  await waitFor(() => browser.executeJavaScript('document.getElementById("palette-composer").hasAttribute("data-web-pilot-composer-capsule")'), 'replacement editor subtree is retagged by childList event', snapshot);
   await colors.executeJavaScript('document.getElementById("composerBackground").closest(".row").querySelector(".reset-one").click()');
   await waitFor(async () => JSON.parse(await fs.readFile(path.join(dataDir,'settings.json'),'utf8')).chatColors.composerBackground === null, 'independent composer reset saved', snapshot);
   await waitFor(async () => (await browser.executeJavaScript(composerProbe)).background === originalComposer.background, 'independent composer reset applied', snapshot);
