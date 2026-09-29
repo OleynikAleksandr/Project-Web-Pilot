@@ -21,7 +21,7 @@
 - [Быстрое открытие](modules/session-opening-performance.md): быстрый показ и строгая before-Send готовность.
 - [ChatGPT DOM](modules/chatgpt-dom-compatibility.md): общий adapter, composer, наблюдатель, фильтр, цвета и autoscroll.
 - [Событийный рефакторинг](planning/event-driven-runtime.md): фаза 1 выпущена, T001 фазы 2 завершена; T002/T003 остаются.
-- [Автовыполнение](planning/auto-plan-continuation.md): Workspace & Sessions владеет короткими ответами, точным «Продолжай», частично выполненным планом, остановкой/восстановлением. Workflow Kit обеспечивает фактический план и Git evidence.
+- 0.6.73: [Автовыполнение](planning/auto-plan-continuation.md): Workspace & Sessions владеет короткими ответами, точным «Продолжай», частично выполненным планом, остановкой/восстановлением. Workflow Kit обеспечивает фактический план и Git evidence.
 - [Первый запуск](modules/first-run-onboarding.md), [Workspace Setup](WORKSPACE_SETUP.md): комплектные компоненты, MCP Permissions, подключение папок.
 - [Исследование удалённого UI](research/remote-project-ui-options-2026-09-28.md): исследование, не функция продукта.
 - [Session titles](planning/session-title-sync.md): событийная синхронизация и ручное переименование.

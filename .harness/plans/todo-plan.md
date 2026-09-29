@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 812,
+  "plan_revision": 813,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-2-continuation-20260928",
@@ -48,7 +48,8 @@
       "src/auto-plan-state.mjs",
       "src/chatgpt-composer.mjs",
       "tests/chatgpt-composer.test.mjs",
-      "tests/page-state.test.mjs"
+      "tests/page-state.test.mjs",
+      "tests/installed-observer-fixture.cjs"
     ],
     "documentation_paths": [
       "docs/planning/event-driven-runtime.md",
@@ -75,7 +76,7 @@
     ]
   },
   "baseline_commit": "812f646ba47d4eaed5b5f67cacb9f629007554df",
-  "current_task_id": "T007",
+  "current_task_id": null,
   "context_pack": {
     "documents": [
       {
@@ -425,7 +426,8 @@
       "functional_paths": [
         "package.json",
         "package-lock.json",
-        "scripts/check-event-runtime-release.mjs"
+        "scripts/check-event-runtime-release.mjs",
+        "tests/installed-observer-fixture.cjs"
       ],
       "documentation_paths": [
         "docs/RELEASE.md",
@@ -435,7 +437,9 @@
         "docs/DOCUMENTATION_INDEX.md",
         "docs/modules/workspace-sessions.md",
         "docs/CONTEXT_DELIVERY.md",
-        "README.md"
+        "README.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/planning/event-driven-runtime.md"
       ],
       "verification_ids": [
         "release-pair"
@@ -447,13 +451,28 @@
         "README и контракты отражают включение/паузу/завершение, ограничения живой проверки и оставшиеся T002/T003 текущей фазы; scope не закрывается."
       ],
       "expected_commit_message": "feat: Выпустить macOS/Windows 0.6.73 и обновить документы",
-      "implementation_status": "IN_PROGRESS",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "event-driven-runtime-phase-2-continuation-20260928",
         "task_id": "T007",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "README.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/MODULES.md",
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/workspace-sessions.md",
+        "docs/planning/event-driven-runtime.md",
+        "package-lock.json",
+        "package.json",
+        "scripts/check-event-runtime-release.mjs",
+        "tests/installed-observer-fixture.cjs"
+      ]
     },
     {
       "id": "T008",
@@ -597,8 +616,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-phase-2-continuation-20260928
-Current Task: T007
-Revision: 812
+Current Task: нет
+Revision: 813
 
 ## Цель
 
@@ -634,10 +653,10 @@ Revision: 812
   - Git Commit: [DONE] feat: Диагностика отсутствия продвижения и восстановление разговора без повторного исполнения
   - Reference: event-driven-runtime-phase-2-continuation-20260928 / T006 / implementation
   - Файлы: src/auto-plan.mjs, src/conversation-recovery.mjs, src/chatgpt-page-observer.mjs, src/chromium-diagnostics.mjs, src/main.mjs, tests/auto-plan.test.mjs, tests/conversation-recovery.test.mjs, tests/electron-smoke.mjs, src/ui/sidebar.mjs, tests/page-state.test.mjs, docs/planning/auto-plan-continuation.md
-- [IN_PROGRESS] T007: Выпустить macOS/Windows 0.6.73 и обновить документы — В работе
-  - Git Commit: [PENDING] feat: Выпустить macOS/Windows 0.6.73 и обновить документы
+- [DONE] T007: Выпустить macOS/Windows 0.6.73 и обновить документы — Завершено
+  - Git Commit: [DONE] feat: Выпустить macOS/Windows 0.6.73 и обновить документы
   - Reference: event-driven-runtime-phase-2-continuation-20260928 / T007 / implementation
-  - Файлы: package.json, package-lock.json, scripts/check-event-runtime-release.mjs, docs/RELEASE.md, docs/VERIFICATION.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, README.md
+  - Файлы: package.json, package-lock.json, scripts/check-event-runtime-release.mjs, tests/installed-observer-fixture.cjs, docs/RELEASE.md, docs/VERIFICATION.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, README.md, docs/architecture/ARCHITECTURE.md, docs/planning/event-driven-runtime.md
 - [DONE] T008: Возобновлять включённое автовыполнение после нового сообщения пользователя — Завершено
   - Git Commit: [DONE] feat: Возобновлять включённое автовыполнение после нового сообщения пользователя
   - Reference: event-driven-runtime-phase-2-continuation-20260928 / T008 / implementation

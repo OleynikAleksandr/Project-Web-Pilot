@@ -80,7 +80,45 @@ app.whenReady().then(async () => {
     assert.equal(await view.webContents.executeJavaScript('document.querySelector("#prompt-textarea").innerText'), 'Контекст архивной сессии wp-request-old-draft');
 
     assert.equal(await view.webContents.executeJavaScript('document.querySelectorAll("article").length'), 1);
-    console.log(JSON.stringify({ installedPreload: resourceRoot, scenario: 'sandbox observer, restored draft cleared, real ProseMirror paste, exact multiline model, immediate Send completion without marker or extra message, Resume stream unavailable detected, same conversation reload without duplicate',
+
+    fixtureStage = 'installed-auto-plan';
+    const { AutoPlan } = await import(pathToFileURL(path.join(moduleRoot, 'auto-plan.mjs')));
+    await view.webContents.executeJavaScript('fixtureClearModel()');
+    const waiting = new Set();
+    const notify = () => { for (const check of [...waiting]) check(); };
+    const until = predicate => new Promise((resolve, reject) => {
+      const timer = setTimeout(() => { waiting.delete(check); reject(new Error('Installed AutoPlan timeout: ' + fixtureStage)); }, 4000);
+      const check = () => { if (predicate()) { clearTimeout(timer); waiting.delete(check); resolve(); } };
+      waiting.add(check); check();
+    });
+    const selection = { workspace: '/installed-fixture', sessionId: 'chat', scopeId: 'scope', chatUrl: 'https://chatgpt.com/c/installed-fixture' };
+    const plan = { confirmed: true, scopeId: 'scope', scopeStatus: 'ACTIVE', planRevision: 3,
+      planView: { tasks: [{ id: 'T001', status: 'done' }, { id: 'DOCS', status: 'pending' }] } };
+    const automatic = new AutoPlan({ selected: () => selection, inspectPlan: async () => structuredClone(plan),
+      send: (text, canContinue, onBeforeSend) => composer.sendUserMessage({ text, canContinue, onBeforeSend, waitForAcknowledgement: false }),
+      onChange: notify });
+    const unsubscribeAuto = source.subscribe(event => { automatic.observe(event); notify(); });
+    automatic.observe(source.current);
+    const beginAnswer = async () => {
+      await view.webContents.executeJavaScript("(()=>{const b=document.createElement('button');b.id='fixture-stop';b.dataset.testid='stop-button';b.textContent='Stop';document.body.append(b)})()");
+      await until(() => source.current.state.busy);
+    };
+    const endAnswer = () => view.webContents.executeJavaScript("(()=>{const a=document.createElement('article');a.dataset.messageAuthorRole='assistant';a.textContent='Готов продолжать.';document.body.append(a);document.getElementById('fixture-stop').remove()})()");
+    try {
+      await automatic.start();
+      assert.equal(automatic.view().phase, 'running');
+      assert.deepEqual(automatic.run.completedAtStart, ['T001']);
+      await beginAnswer(); await endAnswer();
+      await until(() => automatic.view().phase === 'running' && !automatic.run.sawBusy
+        && source.current.state.userMessageCount === 3);
+      assert.equal(await view.webContents.executeJavaScript('JSON.parse(sessionStorage.sent).at(-1)'), 'Продолжай');
+      await beginAnswer();
+      plan.planView.tasks[1].status = 'done'; plan.planRevision++;
+      await endAnswer(); await until(() => automatic.view().phase === 'complete');
+      assert.equal(await view.webContents.executeJavaScript('JSON.parse(sessionStorage.sent).length'), 3,
+        'all DONE produces no extra Continue in installed code');
+    } finally { unsubscribeAuto(); automatic.dispose(); }
+    console.log(JSON.stringify({ installedPreload: resourceRoot, installedAutoPlan: true, scenario: 'partial plan -> Continue -> all DONE without extra Send; sandbox observer, restored draft cleared, real ProseMirror paste, exact multiline model, immediate Send completion without marker or extra message, Resume stream unavailable detected, same conversation reload without duplicate',
       electron: process.versions.electron, node: process.versions.node, insertionMethod: insertion.insertionMethod, insertionMs: insertion.elapsedMs, chars: text.length, liveChatGPT: false }));
   } finally { disconnect(); view.destroy(); clearTimeout(deadline); }
   app.quit();
