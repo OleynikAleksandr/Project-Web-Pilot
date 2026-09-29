@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 799,
+  "plan_revision": 800,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-2-continuation-20260928",
@@ -52,7 +52,8 @@
       "docs/WORKFLOW_START.md",
       "docs/modules/workspace-sessions.md",
       "docs/modules/workflow-kit-recovery.md",
-      "docs/modules/session-owned-plans.md"
+      "docs/modules/session-owned-plans.md",
+      "AGENTS.md"
     ]
   },
   "baseline_commit": "812f646ba47d4eaed5b5f67cacb9f629007554df",
@@ -227,6 +228,38 @@
       "expected_commit_message": "feat: Убрать секундный обход цветов и проверить событийное оформление"
     },
     {
+      "id": "T004",
+      "title": "Передавать правило делегирования только по прямому поручению пользователя",
+      "why": "Прямое поручение пользователя 29.09.2026: запрет codex exec и других модельных агентов должен быть явно доставлен в контексте с исключением для прямого поручения пользователя.",
+      "dependencies": [],
+      "functional_paths": [
+        "src/context-session.mjs",
+        "tests/context-session.test.mjs"
+      ],
+      "documentation_paths": [
+        "AGENTS.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/architecture/OVERVIEW.md"
+      ],
+      "verification_ids": [
+        "unit"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Первое сообщение любой новой Chat/Work сессии явно запрещает codex exec, запуск других модельных агентов и делегирование им работы, если пользователь прямо этого не попросил.",
+        "Обычные локальные инструменты MCP и штатный codex app-server без модельных запросов разрешены; правило не блокирует локальный исполнитель.",
+        "AGENTS.md, обязательный recovery OVERVIEW и контракт доставки согласованы; существующие разговоры не получают автоматических сообщений."
+      ],
+      "expected_commit_message": "feat: Передавать правило делегирования только по прямому поручению пользователя",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "event-driven-runtime-phase-2-continuation-20260928",
+        "task_id": "T004",
+        "role": "implementation"
+      }
+    },
+    {
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
@@ -237,7 +270,8 @@
       "dependencies": [
         "T001",
         "T002",
-        "T003"
+        "T003",
+        "T004"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -256,7 +290,8 @@
         "docs/WORKFLOW_START.md",
         "docs/modules/workspace-sessions.md",
         "docs/modules/workflow-kit-recovery.md",
-        "docs/modules/session-owned-plans.md"
+        "docs/modules/session-owned-plans.md",
+        "AGENTS.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -313,7 +348,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-phase-2-continuation-20260928
 Current Task: нет
-Revision: 799
+Revision: 800
 
 ## Цель
 
@@ -337,10 +372,14 @@ Revision: 799
   - Git Commit: [PENDING] feat: Убрать секундный обход цветов и проверить событийное оформление
   - Reference: event-driven-runtime-phase-2-continuation-20260928 / T003 / implementation
   - Файлы: src/chatgpt-colors.mjs, tests/electron-smoke.mjs, docs/planning/event-driven-runtime.md, docs/modules/chatgpt-dom-compatibility.md, docs/VERIFICATION.md
+- [TODO] T004: Передавать правило делегирования только по прямому поручению пользователя — Ожидает
+  - Git Commit: [PENDING] feat: Передавать правило делегирования только по прямому поручению пользователя
+  - Reference: event-driven-runtime-phase-2-continuation-20260928 / T004 / implementation
+  - Файлы: src/context-session.mjs, tests/context-session.test.mjs, AGENTS.md, docs/CONTEXT_DELIVERY.md, docs/architecture/OVERVIEW.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: event-driven-runtime-phase-2-continuation-20260928 / DOCS / implementation
-  - Файлы: docs/planning/event-driven-runtime.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/modules/chatgpt-dom-compatibility.md, docs/VERIFICATION.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, README.md, docs/RELEASE.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKFLOW_START.md, docs/modules/workspace-sessions.md, docs/modules/workflow-kit-recovery.md, docs/modules/session-owned-plans.md
+  - Файлы: docs/planning/event-driven-runtime.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/modules/chatgpt-dom-compatibility.md, docs/VERIFICATION.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, README.md, docs/RELEASE.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKFLOW_START.md, docs/modules/workspace-sessions.md, docs/modules/workflow-kit-recovery.md, docs/modules/session-owned-plans.md, AGENTS.md
 
 ## Context Pack For This Cycle
 
