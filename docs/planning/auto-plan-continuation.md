@@ -21,4 +21,4 @@
 ## Владельцы и границы
 Workspace & Sessions: AutoPlan, PageStateSource, ChatGPTComposer, sidebar. Runtime Lifecycle и MCP не заменяются; Workflow Kit остаётся 1.5.1. Нет второго агента, модельного API, нового хранилища планов или таймерного опроса Git. Правило делегирования сохраняет исключение для прямого поручения пользователя.
 
-Связи: [общий рефакторинг](event-driven-runtime.md), [сессии](../modules/workspace-sessions.md), [DOM](../modules/chatgpt-dom-compatibility.md), [доставка](../CONTEXT_DELIVERY.md), [выпуск](../RELEASE.md). Новые задачи T005–T008 дополняют current scope; T002/T003 остаются отдельным незавершённым рефакторингом.
+Связи: [общий рефакторинг](event-driven-runtime.md), [сессии](../modules/workspace-sessions.md), [DOM](../modules/chatgpt-dom-compatibility.md), [доставка](../CONTEXT_DELIVERY.md), [выпуск](../RELEASE.md). T005–T008 добавили автовыполнение в тот же current scope. T002/T003 событийного рефакторинга позднее завершены в source; этот контракт не подменяет отдельную фазу 3 с итоговыми измерениями и парной поставкой.

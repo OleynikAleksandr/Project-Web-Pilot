@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 817,
+  "plan_revision": 819,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-2-continuation-20260928",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Продолжить фазу 2 из 3 по docs/planning/event-driven-runtime.md: файловые события, событийный прогрев, удаление общего пульса 1500 мс и секундного обхода цветов. Сохранить доставку Paste/Send 0.6.72 и ограниченное восстановление разговоров. Перенесены незавершённые T001–T003 и DOCS; реализация сейчас не начинается.",
   "acceptance_criteria": [
     "Фаза 2 из 3 по docs/planning/event-driven-runtime.md: файловые события, событийный прогрев, удаление общего пульса 1500 мс и секундного обхода цветов; сохранить доставку, разговоры и ограниченное восстановление 0.6.65."
@@ -541,8 +541,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "event-driven-runtime-phase-2-continuation-20260928",
         "task_id": "DOCS",
@@ -589,7 +589,23 @@
       "acceptance_criteria": [
         "Документы соответствуют результату"
       ],
-      "expected_commit_message": "docs: актуализировать контекст проекта"
+      "expected_commit_message": "docs: актуализировать контекст проекта",
+      "actual_files": [
+        "AGENTS.md",
+        "README.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/chatgpt-dom-compatibility.md",
+        "docs/modules/workspace-sessions.md",
+        "docs/planning/auto-plan-continuation.md",
+        "docs/planning/event-driven-runtime.md"
+      ]
     }
   ],
   "blocked_reason": null,
@@ -634,10 +650,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: event-driven-runtime-phase-2-continuation-20260928
 Current Task: нет
-Revision: 817
+Revision: 819
 
 ## Цель
 
@@ -681,8 +697,8 @@ Revision: 817
   - Git Commit: [DONE] feat: Возобновлять включённое автовыполнение после нового сообщения пользователя
   - Reference: event-driven-runtime-phase-2-continuation-20260928 / T008 / implementation
   - Файлы: src/auto-plan.mjs, src/auto-plan-state.mjs, src/main.mjs, tests/auto-plan.test.mjs, src/chatgpt-page-observer.mjs, src/ui/sidebar.mjs, tests/electron-smoke.mjs, docs/planning/auto-plan-continuation.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать контекст проекта
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать контекст проекта
   - Reference: event-driven-runtime-phase-2-continuation-20260928 / DOCS / implementation
   - Файлы: docs/planning/event-driven-runtime.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/modules/chatgpt-dom-compatibility.md, docs/VERIFICATION.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, README.md, docs/RELEASE.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKFLOW_START.md, docs/modules/workspace-sessions.md, docs/modules/workflow-kit-recovery.md, docs/modules/session-owned-plans.md, AGENTS.md, docs/planning/auto-plan-continuation.md, docs/DOCUMENTATION_INDEX.history-20260929.md, docs/MODULES.history-20260929.md, docs/architecture/OVERVIEW.history-20260929.md
 

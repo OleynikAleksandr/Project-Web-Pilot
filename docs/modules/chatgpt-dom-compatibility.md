@@ -1,4 +1,4 @@
-# Совместимость интерфейса ChatGPT — 0.6.70
+# Совместимость интерфейса ChatGPT — текущий source / 29.09.2026
 
 ## Новый Chat/Work — 0.6.66
 
@@ -8,7 +8,7 @@
 
 `createChatGPTDOM` используется composer и generated sandboxed preload. Наблюдатель передаёт ревизии редактора/черновика/пользовательских сообщений, busy, login, writable, sendEnabled, URL/experience и компактный connectionError. Равные по длине правки замечаются через input/MutationObserver; текст, хеш текста и найденные requestId через IPC не передаются. Controller выполняет существующий inspect по сигналу, включая позднее заполнение пользовательского сообщения.
 
-Manual Send подтверждается trusted click/Enter, появлением соответствующего пользовательского текста и очисткой редактора; наружу передаётся только manualSendRevision. С 0.6.65 распознаются обе формулировки «ChatGPT stream recovery polling timed out» и «Resume stream unavailable». Terminal error ищется в видимом error UI, не в обычном ответе/цитатах. Main отвергает сообщения чужого документа, origin и фрейма. Цвета и автопрокрутка сохраняют свои прежние observer-ы; секундный страховочный проход цветов относится к следующей фазе.
+Manual Send подтверждается trusted click/Enter, появлением соответствующего пользовательского текста и очисткой редактора; наружу передаётся только manualSendRevision. С 0.6.65 распознаются обе формулировки «ChatGPT stream recovery polling timed out» и «Resume stream unavailable». Terminal error ищется в видимом error UI, не в обычном ответе/цитатах. Main отвергает сообщения чужого документа, origin и фрейма. Startup-account использует этот же общий observer; явная проверка и возврат после auth-popup делают единичный snapshot из isolated world, без фонового DOM polling. Цвета сохраняют отдельный узкий observer плашки composer: editor/предки до html, childList, class/style, ResizeObserver, resize и prefers-color-scheme; секундного safety interval больше нет.
 
 Контракт: `docs/planning/event-driven-runtime.md`. Source/installed fixtures не заменяют проверку текущей вёрстки в пользовательском аккаунте.
 
