@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 803,
+  "plan_revision": 805,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-2-continuation-20260928",
@@ -44,7 +44,10 @@
       "tests/conversation-recovery.test.mjs",
       "package.json",
       "package-lock.json",
-      "scripts/check-event-runtime-release.mjs"
+      "scripts/check-event-runtime-release.mjs",
+      "src/auto-plan-state.mjs",
+      "src/chatgpt-composer.mjs",
+      "tests/chatgpt-composer.test.mjs"
     ],
     "documentation_paths": [
       "docs/planning/event-driven-runtime.md",
@@ -64,7 +67,10 @@
       "docs/modules/workflow-kit-recovery.md",
       "docs/modules/session-owned-plans.md",
       "AGENTS.md",
-      "docs/planning/auto-plan-continuation.md"
+      "docs/planning/auto-plan-continuation.md",
+      "docs/DOCUMENTATION_INDEX.history-20260929.md",
+      "docs/MODULES.history-20260929.md",
+      "docs/architecture/OVERVIEW.history-20260929.md"
     ]
   },
   "baseline_commit": "812f646ba47d4eaed5b5f67cacb9f629007554df",
@@ -293,10 +299,19 @@
         "src/context-session.mjs",
         "src/workspace-session.mjs",
         "tests/auto-plan.test.mjs",
-        "tests/electron-smoke.mjs"
+        "tests/electron-smoke.mjs",
+        "src/auto-plan-state.mjs",
+        "src/chatgpt-composer.mjs",
+        "tests/chatgpt-composer.test.mjs"
       ],
       "documentation_paths": [
-        "docs/planning/auto-plan-continuation.md"
+        "docs/planning/auto-plan-continuation.md",
+        "docs/DOCUMENTATION_INDEX.history-20260929.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/MODULES.history-20260929.md",
+        "docs/MODULES.md",
+        "docs/architecture/OVERVIEW.history-20260929.md",
+        "docs/architecture/OVERVIEW.md"
       ],
       "verification_ids": [
         "unit",
@@ -310,13 +325,34 @@
         "Ручной Stop, вопрос/ошибка, пользовательский ввод, смена чата/scope и перезапуск приостанавливают режим; один ответ не даёт двойного Send. Подготовленная Git-транзакция не считается выполненным планом."
       ],
       "expected_commit_message": "feat: Автовыполнение короткими ответами с учётом частично выполненного плана",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "event-driven-runtime-phase-2-continuation-20260928",
         "task_id": "T005",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "docs/DOCUMENTATION_INDEX.history-20260929.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/MODULES.history-20260929.md",
+        "docs/MODULES.md",
+        "docs/architecture/OVERVIEW.history-20260929.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/planning/auto-plan-continuation.md",
+        "src/auto-plan-state.mjs",
+        "src/auto-plan.mjs",
+        "src/chatgpt-composer.mjs",
+        "src/chatgpt-page-observer.mjs",
+        "src/main.mjs",
+        "src/page-state.mjs",
+        "src/preload.cjs",
+        "src/ui/index.html",
+        "src/ui/sidebar.mjs",
+        "tests/auto-plan.test.mjs",
+        "tests/chatgpt-composer.test.mjs",
+        "tests/electron-smoke.mjs"
+      ]
     },
     {
       "id": "T006",
@@ -435,7 +471,10 @@
         "docs/modules/workflow-kit-recovery.md",
         "docs/modules/session-owned-plans.md",
         "AGENTS.md",
-        "docs/planning/auto-plan-continuation.md"
+        "docs/planning/auto-plan-continuation.md",
+        "docs/DOCUMENTATION_INDEX.history-20260929.md",
+        "docs/MODULES.history-20260929.md",
+        "docs/architecture/OVERVIEW.history-20260929.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -492,7 +531,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-phase-2-continuation-20260928
 Current Task: нет
-Revision: 803
+Revision: 805
 
 ## Цель
 
@@ -520,10 +559,10 @@ Revision: 803
   - Git Commit: [DONE] feat: Передавать правило делегирования только по прямому поручению пользователя
   - Reference: event-driven-runtime-phase-2-continuation-20260928 / T004 / implementation
   - Файлы: src/context-session.mjs, tests/context-session.test.mjs, AGENTS.md, docs/CONTEXT_DELIVERY.md, docs/architecture/OVERVIEW.md
-- [TODO] T005: Автовыполнение короткими ответами с учётом частично выполненного плана — Ожидает
-  - Git Commit: [PENDING] feat: Автовыполнение короткими ответами с учётом частично выполненного плана
+- [DONE] T005: Автовыполнение короткими ответами с учётом частично выполненного плана — Завершено
+  - Git Commit: [DONE] feat: Автовыполнение короткими ответами с учётом частично выполненного плана
   - Reference: event-driven-runtime-phase-2-continuation-20260928 / T005 / implementation
-  - Файлы: src/auto-plan.mjs, src/main.mjs, src/chatgpt-page-observer.mjs, src/page-state.mjs, src/preload.cjs, src/ui/sidebar.mjs, src/ui/index.html, src/context-session.mjs, src/workspace-session.mjs, tests/auto-plan.test.mjs, tests/electron-smoke.mjs, docs/planning/auto-plan-continuation.md
+  - Файлы: src/auto-plan.mjs, src/main.mjs, src/chatgpt-page-observer.mjs, src/page-state.mjs, src/preload.cjs, src/ui/sidebar.mjs, src/ui/index.html, src/context-session.mjs, src/workspace-session.mjs, tests/auto-plan.test.mjs, tests/electron-smoke.mjs, src/auto-plan-state.mjs, src/chatgpt-composer.mjs, tests/chatgpt-composer.test.mjs, docs/planning/auto-plan-continuation.md, docs/DOCUMENTATION_INDEX.history-20260929.md, docs/DOCUMENTATION_INDEX.md, docs/MODULES.history-20260929.md, docs/MODULES.md, docs/architecture/OVERVIEW.history-20260929.md, docs/architecture/OVERVIEW.md
 - [TODO] T006: Диагностика отсутствия продвижения и восстановление разговора без повторного исполнения — Ожидает
   - Git Commit: [PENDING] feat: Диагностика отсутствия продвижения и восстановление разговора без повторного исполнения
   - Reference: event-driven-runtime-phase-2-continuation-20260928 / T006 / implementation
@@ -535,7 +574,7 @@ Revision: 803
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: event-driven-runtime-phase-2-continuation-20260928 / DOCS / implementation
-  - Файлы: docs/planning/event-driven-runtime.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/modules/chatgpt-dom-compatibility.md, docs/VERIFICATION.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, README.md, docs/RELEASE.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKFLOW_START.md, docs/modules/workspace-sessions.md, docs/modules/workflow-kit-recovery.md, docs/modules/session-owned-plans.md, AGENTS.md, docs/planning/auto-plan-continuation.md
+  - Файлы: docs/planning/event-driven-runtime.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/modules/chatgpt-dom-compatibility.md, docs/VERIFICATION.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, README.md, docs/RELEASE.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKFLOW_START.md, docs/modules/workspace-sessions.md, docs/modules/workflow-kit-recovery.md, docs/modules/session-owned-plans.md, AGENTS.md, docs/planning/auto-plan-continuation.md, docs/DOCUMENTATION_INDEX.history-20260929.md, docs/MODULES.history-20260929.md, docs/architecture/OVERVIEW.history-20260929.md
 
 ## Context Pack For This Cycle
 

@@ -373,3 +373,14 @@ test('unhandled paste is explicit and never falls back to the slow insertion', a
   await assert.rejects(f.composer.deliver(request),{code:'PASTE_UNHANDLED'});
   assert.equal(f.sends(),0);assert.equal(editor.textContent,'');
 });
+
+test('automatic Continue checks plan before click and returns immediately without acknowledgement polling', async () => {
+  const f = fixture({ emitMessage: false }); let checks = 0;
+  const result = await f.composer.sendUserMessage({ text: 'Продолжай', waitForAcknowledgement: false,
+    onBeforeSend: async () => { checks++; return true; } });
+  assert.equal(checks, 1); assert.equal(result.state, 'sent'); assert.equal(result.completion, 'send-dispatched');
+  assert.equal(f.sends(), 1);
+  const cancelled = fixture();
+  assert.equal((await cancelled.composer.sendUserMessage({ text: 'Продолжай', onBeforeSend: async () => false })).state, 'cancelled');
+  assert.equal(cancelled.sends(), 0);
+});

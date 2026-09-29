@@ -3,6 +3,7 @@ export function installPageObserver(dom, send) {
   const documentId = crypto.randomUUID();
   Object.defineProperty(globalThis, '__webPilotObserverDocumentId', { value: documentId });
   let manualSendRevision = 0, manualCandidate = null;
+  let manualStopRevision = 0, manualInputRevision = 0, assistantRevision = 0;
   let seq = 0, draftRevision = 0, userMessagesRevision = 0, editorRevision = 0;
   let editorIdentity = null, pending = false, lastSignature = '', live = true;
   const loginSelector = '[data-testid="login-button"],[data-testid="signup-button"],a[href="/auth/login"],a[href="https://chatgpt.com/auth/login"]';
@@ -25,6 +26,15 @@ export function installPageObserver(dom, send) {
       manualSendRevision++; manualCandidate = null;
     }
     const editor = dom.editor() ?? null;
+    let turnSignal = null;
+    if (!dom.busy()) {
+      const last = dom.messages('assistant').at(-1)?.cloneNode(true);
+      last?.querySelectorAll('pre,code,blockquote').forEach(node => node.remove());
+      const tail = (last?.textContent ?? '').trim();
+      if (tail.endsWith('Нужен ваш ответ.')) turnSignal = 'wait';
+      else if (tail.endsWith('Готов продолжать.')) turnSignal = 'continue';
+      else if (tail.endsWith('План завершён.')) turnSignal = 'done';
+    }
     if (editor !== editorIdentity) { editorIdentity = editor; editorRevision++; draftRevision++; }
     const button = dom.sendButton();
     const login = dom.first(loginSelector) ? 'signed-out' : dom.first(profileSelector) ? 'signed-in' : 'unknown';
@@ -35,6 +45,7 @@ export function installPageObserver(dom, send) {
       writable: !!editor && !editor.disabled && !editor.readOnly && editor.getAttribute('contenteditable') !== 'false',
       connectionError: dom.connectionError(),
       busy: dom.busy(), sendEnabled: !!button && !button.disabled && button.getAttribute('aria-disabled') !== 'true',
+      manualStopRevision, manualInputRevision, assistantRevision, turnSignal,
       manualSendRevision, draftRevision, userMessageCount: dom.messages('user').length, userMessagesRevision,
     };
   };
@@ -52,28 +63,40 @@ export function installPageObserver(dom, send) {
   const containsUser = node => !!elementOf(node)?.matches(dom.selectors.user)
     || !!(node?.nodeType === 1 && node.querySelector(dom.selectors.user));
   const observer = new MutationObserver(records => {
-    let draftChanged = false, usersChanged = false, relevant = false;
+    let draftChanged = false, usersChanged = false, relevant = false, assistantChanged = false;
     for (const record of records) {
       const textChange = record.type === 'characterData' || record.type === 'childList';
       if (textChange && editorIdentity && (record.target === editorIdentity || editorIdentity.contains(record.target))) draftChanged = true;
       if (textChange && (inUser(record.target) || [...record.addedNodes, ...record.removedNodes].some(containsUser))) usersChanged = true;
       // Streaming assistant text alone is irrelevant to delivery and agent busy state.
       const inAssistant = elementOf(record.target)?.closest(dom.selectors.assistant);
+      if (textChange && (inAssistant || [...record.addedNodes, ...record.removedNodes].some(node =>
+          elementOf(node)?.matches(dom.selectors.assistant) || node.nodeType === 1 && node.querySelector(dom.selectors.assistant))))
+        assistantChanged = true;
       const onlyText = record.type === 'characterData' || (record.type === 'childList'
         && [...record.addedNodes, ...record.removedNodes].every(n => n.nodeType === 3));
       if (!(inAssistant && onlyText) || elementOf(record.target)?.closest('[role="alert"],[data-testid="conversation-error"],.text-token-text-error')) relevant = true;
     }
+    if (assistantChanged) assistantRevision++;
     if (draftChanged) draftRevision++;
     if (usersChanged) userMessagesRevision++;
-    if (relevant || draftChanged || usersChanged) schedule();
+    if (relevant || draftChanged || usersChanged || assistantChanged && !dom.busy() && snapshot().turnSignal) schedule();
   });
   const start = () => {
     observer.observe(document.documentElement, { subtree: true, childList: true, characterData: true, attributes: true,
       attributeFilter: ['disabled', 'readonly', 'contenteditable', 'aria-disabled', 'aria-hidden', 'hidden',
         'data-state', 'aria-checked', 'aria-pressed', 'class', 'style', 'data-testid', 'data-message-author-role'] });
-    document.addEventListener('click', captureManualSend, true);
+    document.addEventListener('click', event => {
+      if (event.isTrusted && elementOf(event.target)?.closest(dom.selectors.stop)) {
+        manualStopRevision++; emit();
+      }
+      captureManualSend(event);
+    }, true);
     document.addEventListener('keydown', captureManualSend, true);
     document.addEventListener('input', event => {
+      if (event.isTrusted && editorIdentity && (event.target === editorIdentity || editorIdentity.contains(event.target))) {
+        manualInputRevision++; emit();
+      }
       if (manualCandidate && editorText(manualCandidate.editor) && editorText(manualCandidate.editor) !== manualCandidate.text) manualCandidate = null;
       if (editorIdentity && (event.target === editorIdentity || editorIdentity.contains(event.target))) { draftRevision++; schedule(); }
     }, true);

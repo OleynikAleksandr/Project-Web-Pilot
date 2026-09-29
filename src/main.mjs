@@ -1,3 +1,5 @@
+import { AutoPlan } from './auto-plan.mjs';
+import { readAutoPlanState } from './auto-plan-state.mjs';
 import { ConversationRecovery } from './conversation-recovery.mjs';
 import { PageStateSource } from './page-state.mjs';
 import { connectPageState } from './page-state-bridge.mjs';
@@ -157,7 +159,16 @@ const conversationRecovery = new ConversationRecovery({
   },
   onChange: () => publish(),
 });
+const autoPlan = new AutoPlan({
+  selected: () => { const p = store.selected(); return p && { ...p, scopeId: planMonitor.info?.scopeId ?? p.scopeId }; },
+  inspectPlan: readAutoPlanState,
+  send: (text, canContinue, onBeforeSend) => controller.composer.sendUserMessage({
+    text, canContinue, onBeforeSend, waitForAcknowledgement: false }),
+  onChange: () => publish(),
+  log: (event, fields) => chromiumDiagnostics?.log.record('auto-plan', event, fields),
+});
 function applyObservedPage(event) {
+  autoPlan.observe(event);
   if (event.reset) { manualDocumentOwner = null; agentTimer.finish(); return; }
   chromiumDiagnostics?.observePage(event.state);
   if (pageLoading || setupState || settingsState) return;
@@ -257,6 +268,7 @@ function snapshot() {
   })),
     archives: projectedArchives(), settings: settingsState, doctor: doctorState,
     conversationRecovery: conversationRecovery.view(),
+    autoPlan: autoPlan.view(),
     selected, context: controller?.state ?? { phase: 'selected', servicesReady: false, messageSent: false },
     contextPreparation: { busy: selected ? contextCache.isBuilding(selected.workspace, sessionSelection(selected)) : false },
     runtimeFolder, platform: process.platform,
@@ -283,6 +295,7 @@ function snapshot() {
 
 function publish() {
   planMonitor.observeSelection();
+  autoPlan.selectionChanged();
   observeStartupClipboard();
   rememberSessionTitle();
   rememberScopeTitle();
@@ -852,6 +865,10 @@ function connectController() {
 
 function registerIpc() {
   ipcMain.handle('pilot:get-state', event => { assertLocalSender(event); return snapshot(); });
+  registerAction('pilot:auto-plan', async enabled => {
+    if (enabled === true) await autoPlan.start();
+    else autoPlan.pause('Автовыполнение выключено пользователем.');
+  });
   registerAction('pilot:reconnect', () => conversationRecovery.retry());
   registerAction('pilot:startup', action => startupAction(action), { navigation: true });
   registerAction('pilot:open-archive-window', input => openArchiveWindow(typeof input === 'string' ? input : null));
@@ -1249,7 +1266,7 @@ async function createWindow() {
   window.on('closed', () => {
     try {
       ++navigationId; startupClipboard?.dispose(); startupClipboard = null; startupFlow?.dispose(); startupFlow = null;
-      conversationRecovery.reset(); controller?.cancel(); planMonitor.close(); clearInterval(interval); disconnectPageState?.(); agentTimer.finish(); contextCache.clear(); workspaceSetup.invalidateReadiness();
+      autoPlan.dispose(); conversationRecovery.reset(); controller?.cancel(); planMonitor.close(); clearInterval(interval); disconnectPageState?.(); agentTimer.finish(); contextCache.clear(); workspaceSetup.invalidateReadiness();
       chatColorStyles?.dispose();
       void chromiumDiagnostics?.stop().catch(() => {}); chromiumDiagnostics = null;
     } finally {
@@ -1288,7 +1305,7 @@ async function createWindow() {
     await fixture.run({ app, window, browser: browser.webContents, sidebar: sidebar.webContents,
       store, controller, selectWorkspace, workspaceSetup, snapshot, assertLocalSender, permissionAllowed, dataDir,
       chromiumDiagnostics, chromiumDiagnosticsFile, navigate, openArchiveWindow, getArchiveWindow: () => archiveWindow,
-      getColorWindow: () => colorEditor.window, chatColorStyles, eventBaseline, runtimeMetrics, pageState });
+      getColorWindow: () => colorEditor.window, chatColorStyles, eventBaseline, runtimeMetrics, pageState, autoPlan });
     await chromiumDiagnostics.stop(); chromiumDiagnostics = null;
     window.close(); app.quit();
   } else { const current = store.selected(); if (current && !storageError && !settingsState) void selectWorkspace(current.workspace).catch(report); else void navigate(); }

@@ -174,7 +174,7 @@ async function verifyUninterruptedRequest(dataDir) {
   }
 }
 
-export async function run({ app, window, browser, sidebar, store, controller, selectWorkspace, workspaceSetup, snapshot, assertLocalSender, permissionAllowed, dataDir, chromiumDiagnostics, chromiumDiagnosticsFile, navigate, getArchiveWindow, getColorWindow, eventBaseline = false, runtimeMetrics = null, pageState }) {
+export async function run({ app, window, browser, sidebar, store, controller, selectWorkspace, workspaceSetup, snapshot, assertLocalSender, permissionAllowed, dataDir, chromiumDiagnostics, chromiumDiagnosticsFile, navigate, getArchiveWindow, getColorWindow, eventBaseline = false, runtimeMetrics = null, pageState, autoPlan }) {
   smokeDataDir = dataDir;
   // Keep frame-based fixture checks running when another desktop window covers this one.
   sidebar.setBackgroundThrottling(false);
@@ -1234,10 +1234,51 @@ export async function run({ app, window, browser, sidebar, store, controller, se
     'single current task visible without delivery controller', snapshot);
   await fs.appendFile(path.join(workspace, 'docs/PRODUCT.md'), '\nSingle active fixture result\n');
   assert.equal(withSessionPlan(workspace, { sessionId: currentChat.sessionId }, () => commitTask(workspace, 'T001')).ok, true);
+  // Actual sidebar -> IPC -> AutoPlan -> composer -> isolated observer, with a real partial Git plan.
+  const beginAnswer = async () => {
+    await browser.executeJavaScript("(()=>{const b=document.createElement('button');b.id='auto-fixture-stop';b.dataset.testid='stop-button';b.textContent='Stop';b.style='position:fixed;left:20px;top:20px;z-index:99999';b.onclick=()=>b.remove();document.body.append(b)})()");
+    await waitFor(() => pageState.current?.state.busy, 'auto-plan busy transition', snapshot);
+  };
+  const endAnswer = async () => {
+    await browser.executeJavaScript("(()=>{const a=document.createElement('article');a.dataset.messageAuthorRole='assistant';a.textContent='Готов продолжать.';document.body.append(a);document.getElementById('auto-fixture-stop')?.remove()})()");
+  };
+  for (const target of [currentChat, currentWork]) {
+    await sidebar.executeJavaScript(`window.webPilot.selectSession(${JSON.stringify(workspace)}, ${JSON.stringify(target.sessionId)})`);
+    await waitFor(() => store.selected()?.sessionId === target.sessionId && !snapshot().pageLoading
+      && pageState.current?.state.url === target.chatUrl && snapshot().selected?.planView?.completed === 1,
+      'partial plan ready in ' + target.experience, snapshot);
+    await waitFor(() => sidebar.executeJavaScript("!document.getElementById('auto-plan-toggle').disabled"),
+      'auto-plan button enabled', snapshot);
+    const before = await browser.executeJavaScript('window.fixtureMessages.length');
+    await sidebar.executeJavaScript("document.getElementById('auto-plan-toggle').click()");
+    await waitFor(() => autoPlan.view().phase === 'running', 'auto-plan starts from partial plan', snapshot);
+    assert.deepEqual(autoPlan.run.completedAtStart, ['T001']);
+    await beginAnswer(); await endAnswer();
+    await waitFor(() => browser.executeJavaScript('window.fixtureMessages.length === ' + (before + 2)),
+      'exactly one automatic continuation', snapshot);
+    assert.equal(await browser.executeJavaScript('window.fixtureMessages.at(-1).text'), 'Продолжай');
+    await waitFor(() => autoPlan.view().phase === 'running', 'continue dispatched', snapshot);
+    if (target.experience === 'chat') {
+      await beginAnswer();
+      window.focus(); browser.focus();
+      const point = await browser.executeJavaScript("(()=>{const r=document.getElementById('auto-fixture-stop').getBoundingClientRect();return {x:Math.round(r.x+r.width/2),y:Math.round(r.y+r.height/2)}})()");
+      browser.sendInputEvent({ type: 'mouseDown', ...point, button: 'left', clickCount: 1 });
+      browser.sendInputEvent({ type: 'mouseUp', ...point, button: 'left', clickCount: 1 });
+      await waitFor(() => autoPlan.view().phase === 'paused', 'trusted native Stop pauses auto-plan', snapshot);
+      assert.match(autoPlan.view().message, /остановили/);
+    }
+  }
+  await beginAnswer();
   withSessionPlan(workspace, { sessionId: legacyChats[0].sessionId }, () => startTask(workspace, 'DOCS'));
   assert.equal(withSessionPlan(workspace, { sessionId: legacyChats[1].sessionId }, () => commitTask(workspace, 'DOCS')).ok, true);
   await waitFor(() => snapshot().selected?.planView?.state === 'awaiting-acceptance', 'single current plan completed', snapshot);
   assert.equal(packetLoads, loadsBeforeProgress, 'plan monitoring never sends recovery');
+  const beforeFinal = await browser.executeJavaScript('window.fixtureMessages.length');
+  await endAnswer();
+  await waitFor(() => autoPlan.view().phase === 'complete', 'all DONE including DOCS terminates without Continue', snapshot);
+  assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), beforeFinal);
+  await fs.writeFile(path.join(dataDir, 'auto-plan-completed.png'), (await sidebar.capturePage()).toPNG());
+
 
   for (const legacy of legacyChats) {
     await sidebar.executeJavaScript(`window.webPilot.selectSession(${JSON.stringify(workspace)}, ${JSON.stringify(legacy.sessionId)})`);

@@ -258,7 +258,7 @@ export class ChatGPTComposer {
     return this.pageState.waitForChange(version, { timeoutMs: remaining, canContinue });
   }
 
-  async sendUserMessageInternal({ text, canContinue = () => true }) {
+  async sendUserMessageInternal({ text, canContinue = () => true, waitForAcknowledgement = true, onBeforeSend = async () => true }) {
     if (this.inFlight) throw new ComposerError('SEND_IN_PROGRESS', 'Другая отправка ещё не завершилась.');
     if (typeof text !== 'string' || !text.trim()) throw new ComposerError('MESSAGE_INVALID', 'Не подготовлено пользовательское сообщение.');
     this.inFlight = true;
@@ -278,9 +278,11 @@ export class ChatGPTComposer {
       if (!observation.sendEnabled || observation.busy) {
         return { state: 'deferred', reason: observation.busy ? 'GENERATION_ACTIVE' : 'SEND_UNAVAILABLE', observation };
       }
+      if (!await onBeforeSend() || !canContinue()) return { state: 'cancelled' };
       observation = await this.inspect({ action: 'send', text });
       if (observation.action !== 'clicked') return { state: 'deferred', reason: observation.reason ?? 'SEND_UNAVAILABLE', observation };
       clicked = true;
+      if (!waitForAcknowledgement) return { state: 'sent', completion: 'send-dispatched' };
       const deadline = this.now() + this.timeoutMs;
       let observedVersion = this.pageState?.version ?? 0;
       do {
