@@ -57,6 +57,8 @@ export class ContextSession {
   }
 
   attach(project, { freshDraft = false } = {}) {
+    this.warmState = { requested: 0, started: -1, pending: false };
+    this.inputsChanged = false; this.inputStale = false;
     this.freshDraft = freshDraft && !project.chatUrl && !project.attempt;
     this.generation++;
     this.rerunRequested = false;
@@ -109,6 +111,8 @@ export class ContextSession {
       await this.store.updateSession(project.workspace, project.sessionId, { attempt: null, receipt: null });
     }
     this.servicesReady = false;
+    this.warmState = { requested: 0, started: -1, pending: false };
+    this.inputsChanged = false; this.inputStale = false;
     this.emit({ phase: 'selected', error: null, delivery: null });
     return this.tick();
   }
@@ -118,6 +122,33 @@ export class ContextSession {
     if (this.pending) this.rerunRequested = true;
     else void this.tick();
     return true;
+  }
+
+  projectChanged() {
+    if (!this.active) return;
+    this.inputsChanged = true;
+    this.warmState.requested++;
+    this.signal();
+  }
+
+  warm(project, generation) {
+    const state = this.warmState;
+    if (!this.contextCache || state.pending || state.started === state.requested) return;
+    state.started = state.requested; state.pending = true;
+    const request = state.started;
+    void Promise.resolve().then(() => this.contextCache.warm(project.workspace, sessionSelection(project))).then(result => {
+      if (!this.current(generation) || this.warmState !== state) return;
+      if (result?.ok === false && state.requested === request) {
+        this.emit({ phase: 'error', error: { code: result.error?.code ?? 'CONTEXT_WARM_FAILED',
+          message: result.error?.message ?? 'Не удалось подготовить контекст. Повторите проверку.' } });
+      }
+    }, error => {
+      if (this.current(generation) && this.warmState === state && state.requested === request)
+        this.emit({ phase: 'error', error: { code: error.code ?? 'CONTEXT_WARM_FAILED', message: error.message } });
+    }).finally(() => {
+      state.pending = false;
+      if (this.current(generation) && this.warmState === state) this.signal();
+    });
   }
 
   async inspectProject(workspace, sessionId, generation) {
@@ -246,7 +277,14 @@ export class ContextSession {
           // Keep their conversation and allow normal use without replay or polling.
           this.emit({ phase: 'send-unknown', projectInfo: info, messageSent: false, error: null }); return;
         }
-        const phase = !project.chatUrl ? 'waiting-chat' : packetMatchesProject(attempt.packet, project) ? 'delivered' : 'stale';
+        if (this.inputsChanged && this.contextCache) {
+          this.inputsChanged = false;
+          const current = await this.packetIsCurrent(attempt.packet, project);
+          if (!this.current(generation)) return;
+          this.inputStale = !current;
+        }
+        const phase = !project.chatUrl ? 'waiting-chat'
+          : !this.inputStale && packetMatchesProject(attempt.packet, project) ? 'delivered' : 'stale';
         this.emit({ phase, projectInfo: info, messageSent: true,
           delivery: { ...attempt.packet, sentAtMs: attempt.sentAtMs ?? attempt.sendStartedAtMs }, error: null });
         return;
@@ -264,7 +302,7 @@ export class ContextSession {
       const deferred = !observation.editorAvailable || !observation.writable ? 'waiting-composer'
         : observation.busy ? 'waiting-generation' : observation.draftLength && !observation.draftMatches && !this.composer.hasFilled?.(attempt?.requestId) ? 'waiting-draft' : null;
       if (deferred) {
-        if (this.contextCache) void this.contextCache.warm(project.workspace, sessionSelection(project));
+        this.warm(project, generation);
         this.emit({ phase: deferred, projectInfo: info }); return;
       }
       if (attempt && !this.composer.hasFilled?.(attempt.requestId) && !await this.packetIsCurrent(attempt.packet, project)) {

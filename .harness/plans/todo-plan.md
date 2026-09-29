@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 797,
+  "plan_revision": 799,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-2-continuation-20260928",
@@ -29,7 +29,12 @@
       "src/chatgpt-page-observer.mjs",
       "src/page-state.mjs",
       "src/chromium-diagnostics.mjs",
-      "src/chatgpt-colors.mjs"
+      "src/chatgpt-colors.mjs",
+      "src/project-input-watch.mjs",
+      "src/workspace-session.mjs",
+      "tests/context-cache.test.mjs",
+      "tests/project-input-watch.test.mjs",
+      "tests/tunnel-clipboard.test.mjs"
     ],
     "documentation_paths": [
       "docs/planning/event-driven-runtime.md",
@@ -88,8 +93,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "event-driven-runtime-phase-2-continuation-20260928",
         "task_id": "T001",
@@ -105,7 +110,12 @@
         "src/tunnel-clipboard.mjs",
         "tests/plan-monitor.test.mjs",
         "tests/context-session.test.mjs",
-        "tests/electron-smoke.mjs"
+        "tests/electron-smoke.mjs",
+        "src/project-input-watch.mjs",
+        "src/workspace-session.mjs",
+        "tests/context-cache.test.mjs",
+        "tests/project-input-watch.test.mjs",
+        "tests/tunnel-clipboard.test.mjs"
       ],
       "documentation_paths": [
         "docs/planning/event-driven-runtime.md"
@@ -125,7 +135,21 @@
         "Прогрев вызывается при новой/явно обновлённой доставке и значимых известных изменениях; одинаковые запросы объединяются, завершение async продолжает ожидание без зависимости от следующей DOM-мутации. Нет наблюдения за всем Git-деревом.",
         "Clipboard имеет свой опрос только во время допустимого шага туннеля, включая копирование внутри встроенного браузера; выход со шага/закрытие прекращают опрос."
       ],
-      "expected_commit_message": "feat: События проекта, прогрев контекста и ограниченный опрос буфера"
+      "expected_commit_message": "feat: События проекта, прогрев контекста и ограниченный опрос буфера",
+      "actual_files": [
+        "src/context-cache.mjs",
+        "src/context-session.mjs",
+        "src/main.mjs",
+        "src/plan-monitor.mjs",
+        "src/project-input-watch.mjs",
+        "src/tunnel-clipboard.mjs",
+        "src/workspace-session.mjs",
+        "tests/context-cache.test.mjs",
+        "tests/context-session.test.mjs",
+        "tests/electron-smoke.mjs",
+        "tests/project-input-watch.test.mjs",
+        "tests/tunnel-clipboard.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -289,7 +313,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-phase-2-continuation-20260928
 Current Task: нет
-Revision: 797
+Revision: 799
 
 ## Цель
 
@@ -301,10 +325,10 @@ Revision: 797
 
 ## Микрозадачи
 
-- [TODO] T001: События проекта, прогрев контекста и ограниченный опрос буфера — Ожидает
-  - Git Commit: [PENDING] feat: События проекта, прогрев контекста и ограниченный опрос буфера
+- [DONE] T001: События проекта, прогрев контекста и ограниченный опрос буфера — Завершено
+  - Git Commit: [DONE] feat: События проекта, прогрев контекста и ограниченный опрос буфера
   - Reference: event-driven-runtime-phase-2-continuation-20260928 / T001 / implementation
-  - Файлы: src/plan-monitor.mjs, src/main.mjs, src/context-session.mjs, src/context-cache.mjs, src/context-inputs.mjs, src/tunnel-clipboard.mjs, tests/plan-monitor.test.mjs, tests/context-session.test.mjs, tests/electron-smoke.mjs, docs/planning/event-driven-runtime.md
+  - Файлы: src/plan-monitor.mjs, src/main.mjs, src/context-session.mjs, src/context-cache.mjs, src/context-inputs.mjs, src/tunnel-clipboard.mjs, tests/plan-monitor.test.mjs, tests/context-session.test.mjs, tests/electron-smoke.mjs, src/project-input-watch.mjs, src/workspace-session.mjs, tests/context-cache.test.mjs, tests/project-input-watch.test.mjs, tests/tunnel-clipboard.test.mjs, docs/planning/event-driven-runtime.md
 - [TODO] T002: Перевести вход в аккаунт на события и удалить общий пульс — Ожидает
   - Git Commit: [PENDING] feat: Перевести вход в аккаунт на события и удалить общий пульс
   - Reference: event-driven-runtime-phase-2-continuation-20260928 / T002 / implementation

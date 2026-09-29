@@ -72,6 +72,10 @@ export async function readWorkspace(input, sessionId = null) {
   const scopeTitle = await readScopeTitle(workspace, plan);
   const view = projectPlan(plan, scopeTitle);
   return { workspace, ...view, inspectedSessionId: sessionId, planId: plan.scope_id,
+    watchInputs: [...new Set([...(plan.context_pack?.documents ?? []),
+      ...plan.tasks.flatMap(task => task.context_pack?.documents ?? [])]
+      .map(document => document?.path).filter(file => typeof file === 'string'
+        && /^docs\//.test(file) && !file.split(/[\\/]/).includes('..')))],
     originSessionId: null, preparedPlans: [], unassignedPlans: [] };
 }
 
@@ -117,7 +121,7 @@ function projectPlan(plan, scopeTitle = '') {
 }
 
 const copy = value => structuredClone(value);
-const persistent = data => JSON.parse(JSON.stringify(data, (key, value) => ['planView', 'preparedPlans', 'unassignedPlans', 'scopeTitle'].includes(key) ? undefined : value));
+const persistent = data => JSON.parse(JSON.stringify(data, (key, value) => ['planView', 'preparedPlans', 'unassignedPlans', 'scopeTitle', 'watchInputs'].includes(key) ? undefined : value));
 const invalid = () => new WorkspaceError('SESSIONS_INVALID', 'Формат сохранённых проектов не поддерживается. Исходный файл сохранён.');
 const sessionFields = ['planId', 'originSessionId', 'legacyPlanId', 'lastNamedScopeId', 'sessionId', 'experience', 'chatUrl', 'manualStart', 'attempt', 'receipt', 'title', 'titleSource', 'createdAt', 'lastOpenedAt', 'archivedAt'];
 const explicitTitleSources = new Set(['manual', 'scope']);

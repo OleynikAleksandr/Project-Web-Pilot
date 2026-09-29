@@ -41,7 +41,9 @@ test('pending connection is single-flight and disposal discards late results and
   let finish, received;
   const f = fixture({ configure: data => { received = data; return new Promise(r => { finish = r; }); } });
   await f.tick(); f.copy(id); await f.tick(); f.copy(key);
-  const pending = f.tick(); assert.equal(f.flow.snapshot().step, 'connecting');
+  const pending = f.tick();
+  while (!finish) await new Promise(resolve => setImmediate(resolve));
+  assert.equal(f.flow.snapshot().step, 'connecting');
   const reads = f.reads(); await f.tick(); assert.equal(f.reads(), reads);
   f.flow.dispose(); finish(); await pending;
   assert.equal(received.key, ''); assert.equal(f.flow.snapshot().step, 'tunnel');
@@ -106,4 +108,33 @@ test('manual route separates ID and key actions, retains ID on cancel and exclud
   assert.equal(f.reads(), reads); assert.equal(prompts.length, 1); assert.deepEqual(f.calls, []);
   finish(); await pending;
   await f.tick(); assert.deepEqual(f.calls, [], 'cancelled native key input must not retry from clipboard');
+});
+
+test('observed setup lifecycle owns polling and detects embedded copy without focus', async () => {
+  const timers = new Map(); let id = 0;
+  const f = fixture({ schedule: callback => { timers.set(++id, callback); return id; }, unschedule: timer => timers.delete(timer) });
+  const active = { active: true, ready: true, busy: false };
+  f.flow.observe({ ...active, ready: false }); assert.equal(timers.size, 0); assert.equal(f.reads(), 0);
+  f.flow.observe(active); assert.equal(timers.size, 1);
+  f.copy('tunnel_embedded12345678901234'); await [...timers.values()][0]();
+  assert.equal(f.flow.snapshot().step, 'key');
+  f.flow.observe({ ...active, busy: true }); assert.equal(timers.size, 0);
+  f.flow.observe(active); assert.equal(timers.size, 1);
+  f.copy(key); await [...timers.values()][0](); await new Promise(resolve => setImmediate(resolve));
+  assert.equal(f.calls.length, 1); assert.equal(timers.size, 0);
+  f.flow.observe({ active: false }); assert.equal(f.flow.snapshot().step, 'tunnel');
+  f.flow.observe(active); assert.equal(timers.size, 1);
+  const staleCallback = [...timers.values()][0]; f.flow.dispose(); const reads = f.reads();
+  staleCallback(); f.flow.observe(active); assert.equal(timers.size, 0); assert.equal(f.reads(), reads);
+});
+
+test('Electron-style async clipboard reads are awaited', async () => {
+  let text = 'baseline';
+  const flow = new TunnelClipboard({ readText: async () => text, configure: async () => {},
+    promptTunnelId: async () => ({ cancelled: true }) });
+  await flow.tick({ active: true });
+  text = id;
+  await flow.tick({ active: true });
+  assert.equal(flow.snapshot().step, 'key');
+  flow.dispose();
 });

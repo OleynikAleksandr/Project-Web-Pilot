@@ -1,3 +1,4 @@
+import { ProjectInputWatch } from './project-input-watch.mjs';
 // Read-only plan projection. Delivery, browser readiness and MCP never gate it.
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
 const selectionKey = selected => selected ? [selected.workspace, selected.projectId, selected.sessionId].join('\n') : '';
@@ -17,8 +18,10 @@ const projectionSignature = info => JSON.stringify(info && {
 });
 
 export class PlanMonitor {
-  constructor({ selected, inspect, onChange = () => {}, onError = () => {}, wait = pause, retryDelays = [25, 100] }) {
-    Object.assign(this, { selected, inspect, onChange, onError, wait, retryDelays });
+  constructor({ selected, inspect, onChange = () => {}, onError = () => {}, onInputsChanged = () => {},
+    createWatcher = options => new ProjectInputWatch(options), wait = pause, retryDelays = [25, 100] }) {
+    Object.assign(this, { selected, inspect, onChange, onError, onInputsChanged, createWatcher, wait, retryDelays });
+    this.watcher = null; this.watchedSelection = ''; this.watchError = null;
     this.info = null;
     this.pending = false;
     this.rerunRequested = false;
@@ -44,6 +47,36 @@ export class PlanMonitor {
   invalidate() {
     this.generation++;
     if (this.pending) this.rerunRequested = true;
+  }
+
+  // Called on selection/publish; installing watchers precedes the initial read.
+  observeSelection() {
+    if (this.closed) return;
+    const selected = this.selected(), key = selectionKey(selected);
+    if (key === this.watchedSelection) return;
+    this.watchedSelection = key;
+    this.invalidate(); this.watcher?.close(); this.watcher = null; this.watchError = null;
+    if (selected) {
+      const watcher = this.createWatcher({ workspace: selected.workspace,
+        onSignal: () => {
+          if (this.watcher !== watcher || selectionKey(this.selected()) !== key) return;
+          this.onInputsChanged(); void this.tick();
+        },
+        onError: error => {
+          if (this.watcher !== watcher || JSON.stringify(error) === JSON.stringify(this.watchError)) return;
+          this.watchError = error; this.onError(error);
+        } });
+      this.watcher = watcher;
+      watcher.refresh();
+    }
+    void this.tick();
+  }
+
+  refresh() {
+    this.observeSelection();
+    this.watcher?.refresh({ explicit: true });
+    this.onInputsChanged();
+    return this.tick();
   }
 
   async #inspectWithRetry(selected, generation) {
@@ -85,6 +118,9 @@ export class PlanMonitor {
         const info = await this.#inspectWithRetry(selected, generation);
         if (!info || this.closed || generation !== this.generation
             || selectionKey(this.selected()) !== key || !this.matches(info, selected)) continue;
+        // A newly discovered document may have changed during the first read.
+        // Arm first, then read once more to close that registration gap.
+        if (this.watcher?.update(info.watchInputs)) this.rerunRequested = true;
         const previous = this.info;
         if (projectionSignature(previous) !== projectionSignature(info)) {
           this.info = info;
@@ -111,6 +147,7 @@ export class PlanMonitor {
   }
 
   close() {
+    this.watcher?.close(); this.watcher = null;
     this.closed = true;
     this.generation++;
     this.rerunRequested = false;

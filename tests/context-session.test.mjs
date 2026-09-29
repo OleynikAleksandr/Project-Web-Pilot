@@ -485,3 +485,43 @@ test('dispatched recovery binds and reopens an attachment-only chat without look
   f.controller.attach(f.saved);await f.controller.tick();
   assert.equal(f.sends(),1);assert.equal(f.loads(),1);assert.equal(f.controller.state.phase,'delivered');
 });
+
+const settleEvents = async () => { for (let i = 0; i < 12; i++) await new Promise(resolve => setImmediate(resolve)); };
+
+test('warm completion continues a waiting controller without another page signal and does not warm on every tick', async () => {
+  const f = controllerFixture(); let release, warms = 0;
+  f.inspection.busy = true;
+  f.controller.contextCache = { warm: () => { warms++; return new Promise(resolve => { release = resolve; }); },
+    load: async () => packet(), isCurrent: async () => true };
+  await f.controller.tick(); await settleEvents();
+  assert.equal(warms, 1);
+  await f.controller.tick(); await f.controller.tick(); assert.equal(warms, 1);
+  release({ ok: true }); await settleEvents();
+  assert.equal(f.controller.state.phase, 'waiting-generation'); assert.equal(warms, 1);
+  f.controller.projectChanged(); await settleEvents(); assert.equal(warms, 2);
+  f.inspection.busy = false;
+  release({ ok: true }); await settleEvents();
+  assert.equal(f.sends(), 1); assert.equal(warms, 2);
+});
+
+test('warm failure is visible and bounded; explicit retry restarts it, cancellation ignores completion', async () => {
+  const f = controllerFixture(); let warms = 0, release;
+  f.inspection.busy = true;
+  f.controller.contextCache = { warm: async () => { warms++; return { ok: false, error: Object.assign(Error('unavailable'), { code: 'INPUT_FAILED' }) }; } };
+  await f.controller.tick(); await settleEvents();
+  assert.equal(f.controller.state.phase, 'error'); assert.equal(f.controller.state.error.code, 'INPUT_FAILED');
+  await settleEvents(); assert.equal(warms, 1);
+  f.controller.contextCache.warm = () => { warms++; return new Promise(resolve => { release = resolve; }); };
+  await f.controller.retry(); await settleEvents(); assert.equal(warms, 2);
+  f.controller.cancel(); release({ ok: false, error: Error('old error') }); await settleEvents();
+  assert.equal(f.controller.state.phase, 'selected'); assert.equal(f.sends(), 0);
+});
+
+test('known input change marks delivered recovery stale without another Send or warm', async () => {
+  const f = controllerFixture(); await f.controller.tick(); await f.controller.tick();
+  let fingerprints = 0;
+  f.controller.contextCache = { isCurrent: async () => { fingerprints++; return false; }, warm: () => assert.fail('delivered chat must not warm') };
+  f.controller.projectChanged(); await settleEvents();
+  assert.equal(f.controller.state.phase, 'stale'); assert.equal(f.sends(), 1); assert.equal(fingerprints, 1);
+  await f.controller.tick(); assert.equal(f.controller.state.phase, 'stale'); assert.equal(fingerprints, 1);
+});

@@ -128,3 +128,18 @@ test('checkout recovery key ignores chat address and rejects failed or foreign r
   ready = false; await assert.rejects(readinessContextKey(setup, '/project', a), { code: 'CONTEXT_INPUTS_UNAVAILABLE' });
   ready = true; workspace = '/other'; await assert.rejects(readinessContextKey(setup, '/project', a), { code: 'CONTEXT_INPUTS_UNAVAILABLE' });
 });
+test('concurrent warm shares one promise, and a new event retries immediately without a time gate', async () => {
+  let release, keys = 0;
+  const cache = new ContextCache({ inputKey: async () => { keys++; return 'key'; },
+    load: async workspace => { await new Promise(resolve => { release = resolve; }); return packet(workspace); } });
+  const a = cache.warm('/project'), b = cache.warm('/project');
+  assert.equal(a, b);
+  while (!release) await new Promise(resolve => setImmediate(resolve));
+  release(); assert.deepEqual(await a, { ok: true }); assert.equal(keys, 2);
+  await cache.warm('/project'); assert.equal(keys, 3);
+  cache.inputKey = async () => { throw Error('offline'); };
+  assert.equal((await cache.warm('/project')).ok, false);
+  cache.inputKey = async () => 'key';
+  cache.loadPacket = async workspace => packet(workspace);
+  assert.deepEqual(await cache.warm('/project'), { ok: true });
+});

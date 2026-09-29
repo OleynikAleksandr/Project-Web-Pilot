@@ -55,6 +55,8 @@ const planMonitor = new PlanMonitor({ selected: () => store.selected(),
   inspect: (workspace, sessionId) => store.inspect(workspace, sessionId), onChange: (_info, change) => {
     publish();
     if (change?.semanticChanged && !pageLoading && !setupState && !settingsState) void controller?.tick();
+  }, onInputsChanged: () => {
+    if (!pageLoading && !setupState && !settingsState) controller?.projectChanged();
   }, onError: () => publish() });
 const partition = smoke ? 'web-pilot-smoke' : 'persist:chatgpt';
 let runtimeFolder = bundledWindowsRuntimeFolder(dataDir, process.platform) ?? defaultRuntimeFolder(os.homedir(), process.platform);
@@ -248,7 +250,7 @@ function snapshot() {
   const selected = saved && { ...saved, attempt: saved.attempt && { protocol: saved.attempt.protocol,
     requestId: saved.attempt.requestId, state: saved.attempt.state }, receipt: undefined,
     ...(info?.workspace === saved.workspace && info.inspectedSessionId === saved.sessionId ? info : {}),
-    planReadError: planMonitor.error, agentRun: agentTimer.view(saved) };
+    planReadError: planMonitor.error ?? planMonitor.watchError, agentRun: agentTimer.view(saved) };
   return { projects: store.snapshot().projects.filter(p => !p.archivedAt).map(({ workspace, projectId, name, displayName, selectedSessionId, expanded, sessions }) => ({
     workspace, projectId, name: displayName || name, selectedSessionId, expanded,
     sessions: activeSessionsNewestFirst(sessions).map(({ sessionId, experience, chatUrl, title, createdAt }) => ({ sessionId, experience, chatUrl, title, createdAt })),
@@ -280,6 +282,8 @@ function snapshot() {
 }
 
 function publish() {
+  planMonitor.observeSelection();
+  observeStartupClipboard();
   rememberSessionTitle();
   rememberScopeTitle();
   const state = snapshot();
@@ -554,6 +558,7 @@ async function navigate(project = store.selected(), { refresh = false, generatio
     workspaceHealth = { ...workspaceHealth, generation: ownNavigation, sessionId: project.sessionId };
   controller?.cancel();
   pageLoading = true; startupFlow?.beginPage(ownNavigation); publish();
+  void planMonitor.refresh();
   const target = entryUrl ?? project?.chatUrl
     ?? (project ? chatGPTEntrypoint(project.experience ?? 'chat') : CHATGPT_SIGNIN_ENTRYPOINT);
   const began = Date.now();
@@ -775,7 +780,7 @@ function createStartupFlow() {
 function observeStartupClipboard() {
   if (!startupClipboard || !startupFlow) return;
   const s = startupFlow.snapshot();
-  void startupClipboard.tick({
+  startupClipboard.observe({
     active: startupActive && !settingsState && !setupState && s.account === 'signed-in' && !s.tunnel,
     ready: s.node && s.git && s.runtime, busy: s.busy,
   });
@@ -1240,6 +1245,7 @@ async function createWindow() {
     controller?.cancel(); report(new Error('Страница ChatGPT закрылась. Повторите открытие страницы.'));
   });
   window.on('resize', layout);
+  window.on('focus', () => { void planMonitor.refresh(); observeStartupClipboard(); });
   window.on('closed', () => {
     try {
       ++navigationId; startupClipboard?.dispose(); startupClipboard = null; startupFlow?.dispose(); startupFlow = null;
@@ -1276,8 +1282,7 @@ async function createWindow() {
   await sidebar.webContents.loadURL(sidebarUrl);
   if (startupFlow) void startupFlow.check({ prepare: startupActive });
   interval = setInterval(() => {
-    void planMonitor.tick();
-    void observeStartupAccount(); observeStartupClipboard();
+    void observeStartupAccount();
   }, 1500);
   if (smoke) {
     await fixture.run({ app, window, browser: browser.webContents, sidebar: sidebar.webContents,

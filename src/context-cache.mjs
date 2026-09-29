@@ -3,11 +3,11 @@ import { validateContextPacket } from './mcp-runtime.mjs';
 
 export const contextAddress = workspace => workspace;
 export class ContextCache {
-  constructor({ load, inputKey = contextInputKey, now = Date.now, intervalMs = 5000, limit = 4, onChange = () => {} }) {
-    Object.assign(this, { loadPacket: load, inputKey, now, intervalMs, limit, onChange });
-    this.entries = new Map(); this.pending = new Map(); this.nextWarm = new Map(); this.building = new Set(); this.epoch = 0;
+  constructor({ load, inputKey = contextInputKey, limit = 4, onChange = () => {} }) {
+    Object.assign(this, { loadPacket: load, inputKey, limit, onChange });
+    this.entries = new Map(); this.pending = new Map(); this.warming = new Map(); this.building = new Set(); this.epoch = 0;
   }
-  clear() { this.epoch++; this.entries.clear(); this.nextWarm.clear(); }
+  clear() { this.epoch++; this.entries.clear(); }
   isBuilding(workspace, selection) { return this.building.has(contextAddress(workspace, selection)); }
   async load(workspace, selection = {}) {
     const address = contextAddress(workspace, selection);
@@ -57,11 +57,15 @@ export class ContextCache {
     if (!key) return false;
     try { return await this.inputKey(workspace) === key; } catch { return false; }
   }
-  async warm(workspace, selection = {}) {
+  warm(workspace, selection = {}) {
     const address = contextAddress(workspace, selection);
-    if (this.pending.has(address) || this.now() < (this.nextWarm.get(address) ?? 0)) return;
-    this.nextWarm.set(address, this.now() + this.intervalMs);
-    while (this.nextWarm.size > this.limit) this.nextWarm.delete(this.nextWarm.keys().next().value);
-    try { await this.load(workspace, selection); } catch {}
+    if (this.warming.has(address)) return this.warming.get(address);
+    // Callers schedule warm on events. Concurrent requests share completion,
+    // including failures; a later explicit event can retry immediately.
+    const operation = (this.pending.get(address) ?? this.load(workspace, selection))
+      .then(() => ({ ok: true }), error => ({ ok: false, error }))
+      .finally(() => this.warming.delete(address));
+    this.warming.set(address, operation);
+    return operation;
   }
 }

@@ -491,10 +491,29 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   }
   assert.deepEqual(await browser.executeJavaScript('({ require:typeof require, process:typeof process, bridge:typeof window.webPilot })'),
     { require: 'undefined', process: 'undefined', bridge: 'undefined' });
-  await clipboard.clear();
-  window.focus(); browser.focus();
-  await browser.executeJavaScript("navigator.clipboard.writeText('REMOTE_CHATGPT_CLIPBOARD_FIXTURE').catch(error => { throw new Error('Fixture clipboard: ' + error.name + ': ' + error.message); })", true);
-  await waitFor(async () => await clipboard.readText() === 'REMOTE_CHATGPT_CLIPBOARD_FIXTURE', 'remote ChatGPT clipboard write', snapshot);
+  const previousClipboard = await clipboard.readText();
+  let tunnelClipboardReads = 0;
+  const embeddedTunnelId = 'tunnel_fixture1234567890123456';
+  const embeddedClipboard = new TunnelClipboard({ readText: () => { tunnelClipboardReads++; return clipboard.readText(); },
+    configure: async () => {}, promptTunnelId: async () => ({ cancelled: true }) });
+  try {
+    window.focus(); browser.focus();
+    await clipboard.writeText('');
+    // Complete the async baseline read before simulating a new in-window copy.
+    await embeddedClipboard.tick({ active: true, ready: true, busy: false });
+    embeddedClipboard.observe({ active: true, ready: true, busy: false });
+    await browser.executeJavaScript(`navigator.clipboard.writeText(${JSON.stringify(embeddedTunnelId)}).catch(error => { throw new Error('Fixture clipboard: ' + error.name + ': ' + error.message); })`, true);
+    await waitFor(async () => await clipboard.readText() === embeddedTunnelId,
+      'embedded browser copy reaches system clipboard', snapshot);
+    await waitFor(() => embeddedClipboard.snapshot().step === 'key',
+      'tunnel polling observes embedded copy without focus change', snapshot);
+    assert.ok(tunnelClipboardReads >= 2);
+    embeddedClipboard.observe({ active: false });
+    assert.equal(embeddedClipboard.timer, null);
+  } finally {
+    embeddedClipboard.dispose();
+    await clipboard.writeText(previousClipboard);
+  }
 
   assert.equal(await sidebar.executeJavaScript('document.querySelector(".session-tokens") === null'), true);
   assert.equal(snapshot().selected.tokenEstimate, undefined);

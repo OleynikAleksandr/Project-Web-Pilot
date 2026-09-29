@@ -6,14 +6,27 @@ const keyPattern = /^sk-[A-Za-z0-9_-]{16,4093}$/;
 // Main-process facade: only progress crosses the renderer boundary.
 export class TunnelClipboard {
   #id = null; #last = null; #active = false; #generation = 0; #pending = false;
-  constructor({ readText, configure, promptTunnelId, onChange = () => {} }) {
-    Object.assign(this, { readText, configure, promptTunnelId, onChange });
+  constructor({ readText, configure, promptTunnelId, onChange = () => {}, schedule = setInterval, unschedule = clearInterval }) {
+    Object.assign(this, { readText, configure, promptTunnelId, onChange, schedule, unschedule });
+    this.timer = null; this.closed = false; this.conditions = { active: false };
     this.state = { step: 'tunnel', hasTunnelId: false, error: null };
   }
   snapshot() { return { ...this.state }; }
+  observe(conditions) {
+    if (this.closed) return;
+    this.conditions = conditions;
+    const allowed = conditions.active && conditions.ready !== false && !conditions.busy
+      && !this.#pending && !['connecting', 'done'].includes(this.state.step);
+    if (!allowed && this.timer !== null) { this.unschedule(this.timer); this.timer = null; }
+    if (!conditions.active || conditions.ready === false) { if (this.#active) this.reset(); return; }
+    if (allowed && this.timer === null) {
+      this.timer = this.schedule(() => { void this.tick(this.conditions); }, 500);
+      void this.tick(this.conditions);
+    }
+  }
   manualInput() { return this.#id ? { tunnelId: this.#id } : undefined; }
-  #rememberClipboard() {
-    try { const value = this.readText(); if (typeof value === 'string') this.#last = digest(value); }
+  async #rememberClipboard() {
+    try { const value = await this.readText(); if (typeof value === 'string') this.#last = digest(value); }
     catch { /* Clipboard access is optional when using native input. */ }
   }
   async pasteTunnelId() {
@@ -36,8 +49,8 @@ export class TunnelClipboard {
           : 'Не удалось открыть окно ввода ID туннеля. Повторите попытку.' });
     } finally {
       // Copy/paste inside a native dialog must not trigger another action on close/cancel.
-      if (generation === this.#generation) this.#rememberClipboard();
-      this.#pending = false;
+      if (generation === this.#generation) await this.#rememberClipboard();
+      this.#pending = false; if (this.conditions.active) this.observe(this.conditions);
     }
   }
   async configureManually(configure) {
@@ -48,22 +61,31 @@ export class TunnelClipboard {
     this.#pending = true;
     try { return await configure({ tunnelId: this.#id }); }
     finally {
-      if (generation === this.#generation) this.#rememberClipboard();
-      this.#pending = false;
+      if (generation === this.#generation) await this.#rememberClipboard();
+      this.#pending = false; if (this.conditions.active) this.observe(this.conditions);
     }
   }
-  publish(patch) { Object.assign(this.state, patch); this.onChange(this.snapshot()); }
+  publish(patch) {
+    Object.assign(this.state, patch);
+    // Only an observed lifecycle owns a timer; direct/manual calls stay usable.
+    if (this.conditions.active) this.observe(this.conditions);
+    this.onChange(this.snapshot());
+  }
   reset() {
     this.#generation++; this.#id = null; this.#last = null; this.#active = false;
     if (this.state.step !== 'tunnel' || this.state.error || this.state.hasTunnelId)
       this.publish({ step: 'tunnel', hasTunnelId: false, error: null });
   }
   async tick({ active, ready = true, busy = false }) {
+    if (this.closed) return;
     if (!active) { if (this.#active) this.reset(); return; }
     if (busy || this.#pending) return;
     if (!ready) { if (this.#active) this.reset(); return; }
     let value;
-    try { value = this.readText(); } catch { return; }
+    try {
+      const reading = this.readText();
+      value = reading && typeof reading.then === 'function' ? await reading : reading;
+    } catch { return; }
     if (typeof value !== 'string') return;
     // Establish a baseline without accepting stale credentials from another task.
     if (!this.#active) { this.#active = true; this.#last = digest(value); return; }
@@ -87,7 +109,11 @@ export class TunnelClipboard {
     } catch {
       if (generation === this.#generation) this.publish({ step: 'key',
         error: 'Подключение не подтверждено. Проверьте данные и права ключа. Скопируйте исправленный ключ или воспользуйтесь ручным вводом.' });
-    } finally { credentials.key = ''; this.#pending = false; }
+    } finally { credentials.key = ''; this.#pending = false; if (this.conditions.active) this.observe(this.conditions); }
   }
-  dispose() { this.reset(); }
+  dispose() {
+    this.closed = true;
+    if (this.timer !== null) this.unschedule(this.timer);
+    this.timer = null; this.reset();
+  }
 }
