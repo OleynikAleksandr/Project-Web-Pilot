@@ -43,3 +43,18 @@ test('no fallback to a new conversation when the URL has not been bound', () => 
   const f = fixture(); f.project.chatUrl = null; f.recovery.observe(f.page);
   assert.equal(f.recovery.view().phase, 'blocked'); assert.equal(f.timers.size, 0);
 });
+
+test('manual Stop suppresses automatic reopen through reset until a new user message', async () => {
+  const f = fixture(); f.page.userMessageCount = 4;
+  f.recovery.observe(f.page); assert.equal(f.timers.size, 1);
+  f.recovery.manualStop(f.page); f.recovery.reset(); f.recovery.observe(f.page);
+  assert.equal(f.timers.size, 0); assert.equal(f.calls(), 0);
+  f.page.userMessageCount = 5; f.recovery.observe(f.page);
+  await f.fire(); assert.equal(f.calls(), 1);
+});
+test('explicit recovery is available without a detected error and still protects drafts', async () => {
+  const f = fixture(); f.page.connectionError = null; f.page.draftLength = 2;
+  assert.equal(await f.recovery.requestRetry(), false); assert.equal(f.calls(), 0);
+  f.page.draftLength = 0;
+  assert.equal(await f.recovery.requestRetry(), true); assert.equal(f.calls(), 1);
+});

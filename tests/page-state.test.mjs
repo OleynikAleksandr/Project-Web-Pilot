@@ -106,3 +106,25 @@ for (const errorText of ['ChatGPT stream recovery polling timed out', 'Resume st
     });
   }
 }
+
+test('stream content progress is coalesced, decorative mutations do not count, final footer is observed', async () => {
+  const dom = new JSDOM('<div id="prompt-textarea" contenteditable="true"></div><button data-testid="stop-button">Stop</button><article data-message-author-role="assistant"><span>start</span></article>',
+    { url: 'https://chatgpt.com/c/fixture', runScripts: 'outside-only' });
+  const w = dom.window; w.HTMLElement.prototype.getClientRects = () => [{}];
+  const timers = new Map(); let id = 0, clock = 10000;
+  w.Date.now = () => clock; w.setTimeout = fn => { timers.set(++id, fn); return id; }; w.clearTimeout = key => timers.delete(key);
+  const messages = []; w.reportObservation = m => messages.push(m);
+  const dispose = w.eval('(' + installPageObserver.toString() + ')(' + chatGPTDOMScript() + ', reportObservation)');
+  const first = messages.at(-1).state.assistantRevision;
+  const text = w.document.querySelector('article span').firstChild;
+  for (let i = 0; i < 4; i++) { text.data += ' token'; await turn(); }
+  assert.equal(timers.size, 1);
+  clock += 5000; const callback = [...timers.values()][0]; timers.clear(); callback();
+  assert.ok(messages.at(-1).state.assistantRevision > first);
+  const progress = messages.at(-1).state.assistantRevision;
+  w.document.querySelector('article').className = 'animated'; await turn();
+  assert.equal(messages.at(-1).state.assistantRevision, progress);
+  w.document.querySelector('button').remove(); text.data = 'Готов продолжать.'; await turn();
+  assert.equal(messages.at(-1).state.turnSignal, 'continue');
+  dispose(); assert.equal(timers.size, 0); w.close();
+});

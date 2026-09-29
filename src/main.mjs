@@ -123,6 +123,7 @@ const agentTimer = new AgentTimer({ onFinish: ({ workspace, sessionId }, duratio
 const pageState = new PageStateSource();
 let disconnectPageState = null;
 let manualDocumentOwner = null;
+let lastStopObservation = null;
 function observeManualConversation(state) {
   const selected = store.selected(), documentId = pageState.current?.documentId;
   if (!selected || selected.chatUrl || !documentId) return false;
@@ -168,6 +169,14 @@ const autoPlan = new AutoPlan({
   log: (event, fields) => chromiumDiagnostics?.log.record('auto-plan', event, fields),
 });
 function applyObservedPage(event) {
+  if (event.reset) lastStopObservation = null;
+  else {
+    const documentId = event.documentId ?? pageState.current?.documentId;
+    const revision = event.state.manualStopRevision ?? 0;
+    if (revision > (lastStopObservation?.documentId === documentId ? lastStopObservation.revision : 0))
+      conversationRecovery.manualStop(event.state);
+    lastStopObservation = { documentId, revision };
+  }
   autoPlan.observe(event);
   if (event.reset) { manualDocumentOwner = null; agentTimer.finish(); return; }
   chromiumDiagnostics?.observePage(event.state);
@@ -869,7 +878,7 @@ function registerIpc() {
     if (enabled === true) await autoPlan.start();
     else autoPlan.pause('Автовыполнение выключено пользователем.');
   });
-  registerAction('pilot:reconnect', () => conversationRecovery.retry());
+  registerAction('pilot:reconnect', () => conversationRecovery.requestRetry());
   registerAction('pilot:startup', action => startupAction(action), { navigation: true });
   registerAction('pilot:open-archive-window', input => openArchiveWindow(typeof input === 'string' ? input : null));
   registerAction('pilot:open-settings', () => openSettings());

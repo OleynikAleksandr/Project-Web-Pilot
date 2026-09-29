@@ -7,7 +7,7 @@ export class ConversationRecovery {
   constructor({ selected, inspect, reopen, available = () => true, onChange = () => {},
     schedule = setTimeout, cancel = clearTimeout, delayMs = 3000, now = Date.now }) {
     Object.assign(this, { selected, inspect, reopen, available, onChange, schedule, cancel, delayMs, now });
-    this.used = new Set(); this.cooldowns = new Map(); this.epoch = 0; this.timer = null;
+    this.used = new Set(); this.cooldowns = new Map(); this.stopped = new Map(); this.epoch = 0; this.timer = null;
     this.state = { phase: 'idle', message: '', canRetry: false };
   }
   view() { return { ...this.state }; }
@@ -18,7 +18,23 @@ export class ConversationRecovery {
     this.epoch++; this.cancel(this.timer); this.timer = null; this.key = null;
     this.set('idle', '');
   }
+  manualStop(page) {
+    const key = keyOf(this.selected());
+    this.stopped.set(key, page?.userMessageCount ?? 0);
+    while (this.stopped.size > 32) this.stopped.delete(this.stopped.keys().next().value);
+    this.reset();
+  }
+  async requestRetry() {
+    this.key = keyOf(this.selected());
+    this.stopped.delete(this.key);
+    return this.retry();
+  }
   observe(page) {
+    const stopKey = keyOf(this.selected());
+    if (this.stopped.has(stopKey)) {
+      if ((page?.userMessageCount ?? 0) <= this.stopped.get(stopKey)) return;
+      this.stopped.delete(stopKey);
+    }
     if (!page || this.state.phase === 'reopening') return;
     if (!page.connectionError) {
       if (this.key && page.url === this.selected()?.chatUrl) this.reset();

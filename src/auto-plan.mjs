@@ -13,9 +13,9 @@ const key = p => p && JSON.stringify([p.workspace, p.sessionId, p.scopeId, p.cha
 const finished = p => p?.planView?.tasks?.length > 0 && p.planView.tasks.every(t => t.status === 'done');
 export class AutoPlan {
   constructor({ selected, inspectPlan, send, onChange = () => {}, log = () => {},
-    schedule = setTimeout, cancel = clearTimeout, settleMs = 500 }) {
-    Object.assign(this, { selected, inspectPlan, send, onChange, log, schedule, cancel, settleMs });
-    this.page = null; this.run = null; this.epoch = 0; this.timer = null;
+    schedule = setTimeout, cancel = clearTimeout, settleMs = 500, stallMs = 180000 }) {
+    Object.assign(this, { selected, inspectPlan, send, onChange, log, schedule, cancel, settleMs, stallMs });
+    this.page = null; this.run = null; this.epoch = 0; this.timer = null; this.watchdog = null;
     this.state = { phase: 'off', message: '', active: false };
   }
   view() { return { ...this.state }; }
@@ -24,12 +24,23 @@ export class AutoPlan {
     this.log('state', { phase }); this.onChange();
   }
   clearTimer() { if (this.timer !== null) this.cancel(this.timer); this.timer = null; }
+  clearWatchdog() { if (this.watchdog !== null) this.cancel(this.watchdog); this.watchdog = null; }
+  watch(run) {
+    this.clearWatchdog();
+    this.watchdog = this.schedule(() => {
+      this.watchdog = null;
+      if (this.run !== run) return;
+      this.log('progress-timeout', { busy: !!this.page?.busy, assistantRevision: this.page?.assistantRevision ?? 0 });
+      this.pause('Три минуты без новых наблюдаемых данных. Проверьте ответ или восстановите разговор; повторной отправки не было.');
+    }, this.stallMs);
+    this.watchdog?.unref?.();
+  }
   pause(message = 'Автовыполнение приостановлено.') {
-    this.epoch++; this.clearTimer(); this.run = null;
+    this.epoch++; this.clearTimer(); this.clearWatchdog(); this.run = null;
     this.set('paused', message);
   }
   complete() {
-    this.epoch++; this.clearTimer(); this.run = null;
+    this.epoch++; this.clearTimer(); this.clearWatchdog(); this.run = null;
     this.set('complete', 'Все пункты плана выполнены. Продолжение не отправляется.');
   }
   selectionChanged() {
@@ -46,6 +57,9 @@ export class AutoPlan {
     if ((p.manualStopRevision ?? 0) !== run.stopRevision) return this.pause('Вы остановили ответ. Автовыполнение приостановлено.');
     if ((p.manualInputRevision ?? 0) !== run.inputRevision) return this.pause('Вы начали ввод. Автовыполнение приостановлено.');
     if (p.connectionError) return this.pause('Связь с ChatGPT прервалась. Восстановите разговор перед продолжением.');
+    if ((p.assistantRevision ?? 0) !== run.lastActivityRevision || p.busy && !run.sawBusy) {
+      run.lastActivityRevision = p.assistantRevision ?? 0; this.watch(run);
+    }
     if (p.busy) { run.sawBusy = true; this.clearTimer(); return; }
     if (this.state.phase === 'sending' || !run.sawBusy) return;
     if (p.assistantRevision <= run.beforeAssistantRevision) return;
@@ -128,10 +142,11 @@ export class AutoPlan {
       if (result.state !== 'sent') return this.pause('Сообщение не отправлено либо результат неизвестен. Проверьте поле ввода и разговор.');
       this.log('send', { kind: text === CONTINUE_TEXT ? 'continue' : 'start' });
       this.set('running', 'Автовыполнение: ждём контрольную точку агента.', true);
+      this.watch(run);
       if (this.page) this.observe({ state: this.page, documentId: this.page.documentId });
     } catch {
       if (this.run === run) this.pause('Ошибка отправки. Автоматический повтор отключён.');
     }
   }
-  dispose() { this.epoch++; this.clearTimer(); this.run = null; }
+  dispose() { this.epoch++; this.clearTimer(); this.clearWatchdog(); this.run = null; }
 }

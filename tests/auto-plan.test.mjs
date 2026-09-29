@@ -14,12 +14,12 @@ function fixture() {
   const timers = new Map(), sends = []; let timerId = 0, sendResult = { state: 'sent' }, gate = null;
   const flow = new AutoPlan({ selected: () => selected, inspectPlan: async () => structuredClone(plan),
     send: async (text, current, before) => { if (gate) await gate(); if (!current() || !await before()) return { state: 'cancelled' }; sends.push(text); return sendResult; },
-    schedule: fn => { timers.set(++timerId, fn); return timerId; }, cancel: id => timers.delete(id) });
+    schedule: (fn, ms) => { timers.set(++timerId, { fn, ms }); return timerId; }, cancel: id => timers.delete(id) });
   let state = { url: selected.chatUrl, editorAvailable: true, busy: false, assistantRevision: 0,
     manualStopRevision: 0, manualInputRevision: 0, turnSignal: null };
   const observe = patch => { Object.assign(state, patch); flow.observe({ state: { ...state }, documentId: 'document-1111' }); };
   observe({});
-  const drain = async () => { const callbacks = [...timers.values()]; timers.clear(); callbacks.forEach(fn => fn()); await settle(); };
+  const drain = async () => { const callbacks = [...timers.entries()].filter(([, value]) => value.ms < 1000); callbacks.forEach(([id, value]) => { timers.delete(id); value.fn(); }); await settle(); };
   const finish = async (signal = 'continue') => {
     observe({ busy: true, turnSignal: null });
     observe({ busy: false, assistantRevision: ++state.assistantRevision, turnSignal: signal });
@@ -96,4 +96,20 @@ test('checkpoint reader distinguishes working task, prepared DONE and committed 
   assert.equal((await readAutoPlanState({ workspace: root })).confirmed, false);
   await fs.unlink(path.join(root,'.git/workflow-kit/transaction.json'));
   assert.equal((await readAutoPlanState({ workspace: root })).confirmed, true);
+});
+
+test('watchdog uses content progress, ignores decorative updates, and never clicks Stop or sends again', async () => {
+  const f = fixture(); await f.flow.start();
+  f.observe({ busy: true });
+  const first = f.flow.watchdog;
+  f.observe({ busy: true, visibility: 'hidden' });
+  assert.equal(f.flow.watchdog, first, 'cosmetic events do not reset the deadline');
+  f.observe({ busy: true, assistantRevision: 2 });
+  assert.notEqual(f.flow.watchdog, first);
+  const timeout = f.timers.get(f.flow.watchdog);
+  timeout.fn();
+  assert.equal(f.flow.view().phase, 'paused');
+  assert.match(f.flow.view().message, /Три минуты/);
+  assert.equal(f.sends.length, 1);
+  await f.finish(); assert.equal(f.sends.length, 1, 'late completion cannot restart a paused run');
 });

@@ -584,7 +584,9 @@ export class ChromiumDiagnostics {
   observePage(state) {
     if (!this.started || !state) return;
     const pulse = { url: safeUrl(state.url), userMessages: state.userMessageCount,
-      busy: state.busy, composer: state.editorAvailable, visibility: state.visibility };
+      busy: state.busy, composer: state.editorAvailable, visibility: state.visibility,
+      manualStopRevision: state.manualStopRevision ?? 0, assistantRevision: state.assistantRevision ?? 0,
+      turnSignal: state.turnSignal ?? null, connectionError: state.connectionError ?? null };
     const signature = JSON.stringify(pulse);
     if (signature === this.lastDomPulse) return;
     this.lastDomPulse = signature;

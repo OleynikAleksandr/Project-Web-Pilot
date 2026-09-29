@@ -1268,6 +1268,14 @@ export async function run({ app, window, browser, sidebar, store, controller, se
       assert.match(autoPlan.view().message, /остановили/);
     }
   }
+  // Exercise the watchdog through the same UI without waiting three wall-clock minutes.
+  const originalStall = autoPlan.stallMs; autoPlan.stallMs = 25; autoPlan.watch(autoPlan.run);
+  await waitFor(() => autoPlan.view().phase === 'paused', 'watchdog suspends automatic continuation', snapshot);
+  autoPlan.stallMs = originalStall;
+  await waitFor(() => sidebar.executeJavaScript("!document.getElementById('reconnect-chat').hidden"),
+    'stalled response exposes recovery action', snapshot);
+  await sidebar.executeJavaScript("window.webPilot.setAutoPlan(true)");
+  await waitFor(() => autoPlan.view().phase === 'running', 'explicit resume after watchdog', snapshot);
   await beginAnswer();
   withSessionPlan(workspace, { sessionId: legacyChats[0].sessionId }, () => startTask(workspace, 'DOCS'));
   assert.equal(withSessionPlan(workspace, { sessionId: legacyChats[1].sessionId }, () => commitTask(workspace, 'DOCS')).ok, true);

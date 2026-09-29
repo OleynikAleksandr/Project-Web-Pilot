@@ -404,8 +404,13 @@ function render(state) {
   const recovery = state.conversationRecovery;
   $('conversation-recovery').hidden = !recovery || recovery.phase === 'idle' || !!state.setup || !!state.settings;
   $('conversation-recovery-message').textContent = recovery?.message ?? '';
-  $('reconnect-chat').hidden = !recovery?.canRetry;
-  $('reconnect-chat').disabled = actionPending || !recovery?.canRetry;
+  const stalledAuto = state.autoPlan?.phase === 'paused' && /Три минуты/.test(state.autoPlan?.message ?? '') && recovery?.phase === 'idle';
+  if (stalledAuto && recovery?.phase === 'idle') {
+    $('conversation-recovery').hidden = false;
+    $('conversation-recovery-message').textContent = 'Можно повторно открыть сохранённый разговор. Это не повторяет команды.';
+  }
+  $('reconnect-chat').hidden = !recovery?.canRetry && !stalledAuto;
+  $('reconnect-chat').disabled = actionPending || (!recovery?.canRetry && !stalledAuto);
   setupView.render(state, actionPending);
   archiveView.render(state, actionPending);
   const guidedStartup = !!state.startup?.active && !state.setup && !state.settings;

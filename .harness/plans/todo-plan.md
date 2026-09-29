@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 805,
+  "plan_revision": 807,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-2-continuation-20260928",
@@ -47,7 +47,8 @@
       "scripts/check-event-runtime-release.mjs",
       "src/auto-plan-state.mjs",
       "src/chatgpt-composer.mjs",
-      "tests/chatgpt-composer.test.mjs"
+      "tests/chatgpt-composer.test.mjs",
+      "tests/page-state.test.mjs"
     ],
     "documentation_paths": [
       "docs/planning/event-driven-runtime.md",
@@ -369,7 +370,9 @@
         "src/main.mjs",
         "tests/auto-plan.test.mjs",
         "tests/conversation-recovery.test.mjs",
-        "tests/electron-smoke.mjs"
+        "tests/electron-smoke.mjs",
+        "src/ui/sidebar.mjs",
+        "tests/page-state.test.mjs"
       ],
       "documentation_paths": [
         "docs/planning/auto-plan-continuation.md"
@@ -386,13 +389,26 @@
         "Сценарии проверены в Chat и Work fixtures; отсутствие живого воспроизведения зависания не объявляется исправлением сервера."
       ],
       "expected_commit_message": "feat: Диагностика отсутствия продвижения и восстановление разговора без повторного исполнения",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "event-driven-runtime-phase-2-continuation-20260928",
         "task_id": "T006",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "docs/planning/auto-plan-continuation.md",
+        "src/auto-plan.mjs",
+        "src/chatgpt-page-observer.mjs",
+        "src/chromium-diagnostics.mjs",
+        "src/conversation-recovery.mjs",
+        "src/main.mjs",
+        "src/ui/sidebar.mjs",
+        "tests/auto-plan.test.mjs",
+        "tests/conversation-recovery.test.mjs",
+        "tests/electron-smoke.mjs",
+        "tests/page-state.test.mjs"
+      ]
     },
     {
       "id": "T007",
@@ -531,7 +547,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-phase-2-continuation-20260928
 Current Task: нет
-Revision: 805
+Revision: 807
 
 ## Цель
 
@@ -563,10 +579,10 @@ Revision: 805
   - Git Commit: [DONE] feat: Автовыполнение короткими ответами с учётом частично выполненного плана
   - Reference: event-driven-runtime-phase-2-continuation-20260928 / T005 / implementation
   - Файлы: src/auto-plan.mjs, src/main.mjs, src/chatgpt-page-observer.mjs, src/page-state.mjs, src/preload.cjs, src/ui/sidebar.mjs, src/ui/index.html, src/context-session.mjs, src/workspace-session.mjs, tests/auto-plan.test.mjs, tests/electron-smoke.mjs, src/auto-plan-state.mjs, src/chatgpt-composer.mjs, tests/chatgpt-composer.test.mjs, docs/planning/auto-plan-continuation.md, docs/DOCUMENTATION_INDEX.history-20260929.md, docs/DOCUMENTATION_INDEX.md, docs/MODULES.history-20260929.md, docs/MODULES.md, docs/architecture/OVERVIEW.history-20260929.md, docs/architecture/OVERVIEW.md
-- [TODO] T006: Диагностика отсутствия продвижения и восстановление разговора без повторного исполнения — Ожидает
-  - Git Commit: [PENDING] feat: Диагностика отсутствия продвижения и восстановление разговора без повторного исполнения
+- [DONE] T006: Диагностика отсутствия продвижения и восстановление разговора без повторного исполнения — Завершено
+  - Git Commit: [DONE] feat: Диагностика отсутствия продвижения и восстановление разговора без повторного исполнения
   - Reference: event-driven-runtime-phase-2-continuation-20260928 / T006 / implementation
-  - Файлы: src/auto-plan.mjs, src/conversation-recovery.mjs, src/chatgpt-page-observer.mjs, src/chromium-diagnostics.mjs, src/main.mjs, tests/auto-plan.test.mjs, tests/conversation-recovery.test.mjs, tests/electron-smoke.mjs, docs/planning/auto-plan-continuation.md
+  - Файлы: src/auto-plan.mjs, src/conversation-recovery.mjs, src/chatgpt-page-observer.mjs, src/chromium-diagnostics.mjs, src/main.mjs, tests/auto-plan.test.mjs, tests/conversation-recovery.test.mjs, tests/electron-smoke.mjs, src/ui/sidebar.mjs, tests/page-state.test.mjs, docs/planning/auto-plan-continuation.md
 - [TODO] T007: Выпустить macOS/Windows 0.6.73 и обновить документы — Ожидает
   - Git Commit: [PENDING] feat: Выпустить macOS/Windows 0.6.73 и обновить документы
   - Reference: event-driven-runtime-phase-2-continuation-20260928 / T007 / implementation

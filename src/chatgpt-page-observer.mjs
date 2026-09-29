@@ -4,6 +4,7 @@ export function installPageObserver(dom, send) {
   Object.defineProperty(globalThis, '__webPilotObserverDocumentId', { value: documentId });
   let manualSendRevision = 0, manualCandidate = null;
   let manualStopRevision = 0, manualInputRevision = 0, assistantRevision = 0;
+  let reportedAssistantRevision = 0, lastProgressAt = 0, progressTimer = null;
   let seq = 0, draftRevision = 0, userMessagesRevision = 0, editorRevision = 0;
   let editorIdentity = null, pending = false, lastSignature = '', live = true;
   const loginSelector = '[data-testid="login-button"],[data-testid="signup-button"],a[href="/auth/login"],a[href="https://chatgpt.com/auth/login"]';
@@ -26,10 +27,13 @@ export function installPageObserver(dom, send) {
       manualSendRevision++; manualCandidate = null;
     }
     const editor = dom.editor() ?? null;
+    if (!dom.busy() || Date.now() - lastProgressAt >= 5000) {
+      reportedAssistantRevision = assistantRevision; lastProgressAt = Date.now();
+    }
     let turnSignal = null;
     if (!dom.busy()) {
       const last = dom.messages('assistant').at(-1)?.cloneNode(true);
-      last?.querySelectorAll('pre,code,blockquote').forEach(node => node.remove());
+      last?.querySelectorAll('pre,code,blockquote,button,[role=button],svg').forEach(node => node.remove());
       const tail = (last?.textContent ?? '').trim();
       if (tail.endsWith('Нужен ваш ответ.')) turnSignal = 'wait';
       else if (tail.endsWith('Готов продолжать.')) turnSignal = 'continue';
@@ -45,7 +49,7 @@ export function installPageObserver(dom, send) {
       writable: !!editor && !editor.disabled && !editor.readOnly && editor.getAttribute('contenteditable') !== 'false',
       connectionError: dom.connectionError(),
       busy: dom.busy(), sendEnabled: !!button && !button.disabled && button.getAttribute('aria-disabled') !== 'true',
-      manualStopRevision, manualInputRevision, assistantRevision, turnSignal,
+      manualStopRevision, manualInputRevision, assistantRevision: reportedAssistantRevision, turnSignal,
       manualSendRevision, draftRevision, userMessageCount: dom.messages('user').length, userMessagesRevision,
     };
   };
@@ -77,7 +81,14 @@ export function installPageObserver(dom, send) {
         && [...record.addedNodes, ...record.removedNodes].every(n => n.nodeType === 3));
       if (!(inAssistant && onlyText) || elementOf(record.target)?.closest('[role="alert"],[data-testid="conversation-error"],.text-token-text-error')) relevant = true;
     }
-    if (assistantChanged) assistantRevision++;
+    if (assistantChanged) {
+      assistantRevision++;
+      // One trailing progress notification, only after real content mutations.
+      // Animated attributes and an unchanged spinner do not keep a turn alive.
+      if (dom.busy() && progressTimer === null) progressTimer = setTimeout(() => {
+        progressTimer = null; emit();
+      }, 5000);
+    }
     if (draftChanged) draftRevision++;
     if (usersChanged) userMessagesRevision++;
     if (relevant || draftChanged || usersChanged || assistantChanged && !dom.busy() && snapshot().turnSignal) schedule();
@@ -112,5 +123,5 @@ export function installPageObserver(dom, send) {
   };
   if (document.documentElement) start();
   else addEventListener('DOMContentLoaded', start, { once: true });
-  return () => { live = false; observer.disconnect(); };
+  return () => { live = false; observer.disconnect(); if (progressTimer !== null) clearTimeout(progressTimer); };
 }
