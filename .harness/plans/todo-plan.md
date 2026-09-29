@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 65,
+  "plan_revision": 67,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "release-1.5.0-docs-finalization-001",
@@ -457,13 +457,16 @@
         "README сохраняет взаимные ссылки репозиториев и отделяет автовыполнение клиента от current plan/commit semantics Workflow Kit 1.5.1."
       ],
       "expected_commit_message": "feat: Обновить README интеграции с автовыполнением Web Pilot 0.6.73",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "release-1.5.0-docs-finalization-001",
         "task_id": "T001",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "README.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -536,7 +539,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: release-1.5.0-docs-finalization-001
 Current Task: нет
-Revision: 65
+Revision: 67
 
 ## Цель
 
@@ -596,8 +599,8 @@ Revision: 65
   - Git Commit: [DONE] feat: Перенос незавершённых задач одним коммитом; Workflow Kit 1.5.1
   - Reference: release-1.5.0-docs-finalization-001 / R009 / implementation
   - Файлы: src/lib/actions.mjs, src/cli.mjs, src/lib/transaction.mjs, src/lib/command-help.mjs, scripts/check-runtime-fixture.mjs, package.json, scripts/check-carryover-fixture.mjs, scripts/check-consumer-contract.mjs, scripts/check-package.mjs, src/lib/common.mjs, src/lib/installer.mjs, src/templates/CONTINUE.md, src/WORKFLOW.md, docs/modules/workflow-kit-package.md, README.md, docs/DOCUMENTATION_INDEX.md, docs/architecture/OVERVIEW.md
-- [TODO] T001: Обновить README интеграции с автовыполнением Web Pilot 0.6.73 — Ожидает
-  - Git Commit: [PENDING] feat: Обновить README интеграции с автовыполнением Web Pilot 0.6.73
+- [DONE] T001: Обновить README интеграции с автовыполнением Web Pilot 0.6.73 — Завершено
+  - Git Commit: [DONE] feat: Обновить README интеграции с автовыполнением Web Pilot 0.6.73
   - Reference: release-1.5.0-docs-finalization-001 / T001 / implementation
   - Файлы: README.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
