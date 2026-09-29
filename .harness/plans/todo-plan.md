@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 800,
+  "plan_revision": 802,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-2-continuation-20260928",
@@ -251,13 +251,20 @@
         "AGENTS.md, обязательный recovery OVERVIEW и контракт доставки согласованы; существующие разговоры не получают автоматических сообщений."
       ],
       "expected_commit_message": "feat: Передавать правило делегирования только по прямому поручению пользователя",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "event-driven-runtime-phase-2-continuation-20260928",
         "task_id": "T004",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "AGENTS.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/architecture/OVERVIEW.md",
+        "src/context-session.mjs",
+        "tests/context-session.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -348,7 +355,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-phase-2-continuation-20260928
 Current Task: нет
-Revision: 800
+Revision: 802
 
 ## Цель
 
@@ -372,8 +379,8 @@ Revision: 800
   - Git Commit: [PENDING] feat: Убрать секундный обход цветов и проверить событийное оформление
   - Reference: event-driven-runtime-phase-2-continuation-20260928 / T003 / implementation
   - Файлы: src/chatgpt-colors.mjs, tests/electron-smoke.mjs, docs/planning/event-driven-runtime.md, docs/modules/chatgpt-dom-compatibility.md, docs/VERIFICATION.md
-- [TODO] T004: Передавать правило делегирования только по прямому поручению пользователя — Ожидает
-  - Git Commit: [PENDING] feat: Передавать правило делегирования только по прямому поручению пользователя
+- [DONE] T004: Передавать правило делегирования только по прямому поручению пользователя — Завершено
+  - Git Commit: [DONE] feat: Передавать правило делегирования только по прямому поручению пользователя
   - Reference: event-driven-runtime-phase-2-continuation-20260928 / T004 / implementation
   - Файлы: src/context-session.mjs, tests/context-session.test.mjs, AGENTS.md, docs/CONTEXT_DELIVERY.md, docs/architecture/OVERVIEW.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает

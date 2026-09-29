@@ -50,6 +50,9 @@ test('the first message contains the exact complete packet and asks for a short 
   assert.equal(packetMatchesProject(p,{...project,planRevision:8}),false);
   assert.ok(text.includes('текущему checkout/worktree'));
   assert.ok(text.includes('только для навигации разговора'));
+  for (const rule of ['Не запускай codex exec', 'других модельных агентов', 'не делегируй им работу',
+    'если пользователь прямо этого не попросил', 'локальный исполнитель MCP без модельных запросов разрешён'])
+    assert.ok(text.includes(rule), rule);
 });
 
 test('loads once, saves full message before send, and reopens the same chat without another recovery or send',async()=>{
