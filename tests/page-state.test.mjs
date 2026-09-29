@@ -21,10 +21,16 @@ test('observer catches equal-length drafts, late user text, attributes and busy 
   w.requestAnimationFrame = () => { throw Error('Logic must work without frames'); };
   const messages = []; w.reportObservation = m => messages.push(m);
   const dispose = w.eval('(' + installPageObserver.toString() + ')(' + chatGPTDOMScript() + ', reportObservation)');
+  assert.equal(typeof w.__webPilotObserverSnapshot, 'function');
   await turn();
   const editor = w.document.querySelector('#prompt-textarea');
   const initial = messages.at(-1);
   assert.equal(initial.state.login, 'unknown', 'an editor alone does not prove authentication');
+  const login = w.document.createElement('button'); login.dataset.testid = 'login-button'; w.document.body.append(login); await turn();
+  assert.equal(messages.at(-1).state.login, 'signed-out');
+  login.remove(); const profile = w.document.createElement('button'); profile.setAttribute('aria-label', 'Open Profile Menu'); w.document.body.append(profile); await turn();
+  assert.equal(messages.at(-1).state.login, 'signed-in');
+  assert.equal(w.__webPilotObserverSnapshot().login, 'signed-in', 'explicit checks reuse the observer snapshot');
   editor.textContent = 'bb'; await turn();
   assert.ok(messages.at(-1).state.draftRevision > initial.state.draftRevision);
   let revision = messages.at(-1).state.draftRevision;
@@ -41,7 +47,7 @@ test('observer catches equal-length drafts, late user text, attributes and busy 
   const stop = w.document.createElement('button'); stop.dataset.testid = 'stop-button'; w.document.body.append(stop); await turn();
   assert.equal(messages.at(-1).state.busy, true);
   stop.remove(); await turn(); assert.equal(messages.at(-1).state.busy, false);
-  dispose(); w.close();
+  dispose(); assert.equal(w.__webPilotObserverSnapshot, undefined); w.close();
 });
 
 test('source rejects stale documents/sequences and closes the check-subscribe gap', async () => {

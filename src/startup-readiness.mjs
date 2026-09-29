@@ -47,15 +47,6 @@ export async function installMacGit(run = execute) {
   return { warning: null };
 }
 
-// No cookies, account APIs, tokens, or page internals.
-export function accountObservation() {
-  const visible = e => !!e && !e.hidden && e.getClientRects().length > 0;
-  const has = selector => [...document.querySelectorAll(selector)].some(visible);
-  const login = has('[data-testid="login-button"],[data-testid="signup-button"],a[href="/auth/login"]');
-  const profile = has('[data-testid="profile-button"],[data-testid="accounts-profile-button"],[data-testid="user-menu-button"],button[aria-label="Open Profile Menu"],button[aria-label="Открыть меню профиля"]');
-  return { login, authenticated: !login && profile };
-}
-
 export class StartupReadiness {
   constructor({ platform = 'darwin', prepareComponents, probeNode, probeGit, inspectRuntime, prepareRuntime, installGit, configureTunnel, onChange = () => {},
     schedule = setTimeout, cancel = clearTimeout, scheduleGit = setTimeout, cancelGit = clearTimeout,
@@ -193,7 +184,8 @@ export class StartupReadiness {
   }
   observe(generation, observation) {
     if (generation !== this.pageGeneration || !this.live || ['loading', 'slow', 'failed'].includes(this.state.page)) return;
-    this.publish({ account: observation?.authenticated ? 'signed-in' : observation?.login ? 'signed-out' : 'unknown' });
+    const sharedLogin = ['signed-in', 'signed-out', 'unknown'].includes(observation?.login) ? observation.login : null;
+    this.publish({ account: sharedLogin ?? (observation?.authenticated ? 'signed-in' : observation?.login ? 'signed-out' : 'unknown') });
   }
   dispose() { this.live = false; this.stopGitWatch(); if (this.timer !== null) this.cancel(this.timer); this.timer = null; }
 }

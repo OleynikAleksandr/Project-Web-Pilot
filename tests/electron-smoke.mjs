@@ -460,7 +460,8 @@ export async function run({ app, window, browser, sidebar, store, controller, se
 
   assert.equal(browser.getLastWebPreferences().sandbox, true);
   assert.equal(browser.getLastWebPreferences().contextIsolation, true);
-  assert.equal(await browser.executeJavaScript('typeof globalThis.__webPilotObserverDocumentId'), 'undefined');
+  assert.deepEqual(await browser.executeJavaScript('({id:typeof globalThis.__webPilotObserverDocumentId,snapshot:typeof globalThis.__webPilotObserverSnapshot})'),
+    { id: 'undefined', snapshot: 'undefined' }, 'observer internals stay inside the isolated world');
   // Freeze project changes. Only the page signal may drive controller work.
   await new Promise(resolve => setTimeout(resolve, 1700));
   const originalTick = controller.tick.bind(controller); let pageTicks = 0;

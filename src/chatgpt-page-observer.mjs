@@ -53,6 +53,7 @@ export function installPageObserver(dom, send) {
       manualSendRevision, draftRevision, userMessageCount: dom.messages('user').length, userMessagesRevision,
     };
   };
+  Object.defineProperty(globalThis, '__webPilotObserverSnapshot', { value: snapshot, configurable: true });
   const emit = () => {
     pending = false;
     if (!live || location.origin !== 'https://chatgpt.com') return;
@@ -123,5 +124,8 @@ export function installPageObserver(dom, send) {
   };
   if (document.documentElement) start();
   else addEventListener('DOMContentLoaded', start, { once: true });
-  return () => { live = false; observer.disconnect(); if (progressTimer !== null) clearTimeout(progressTimer); };
+  return () => {
+    live = false; observer.disconnect(); if (progressTimer !== null) clearTimeout(progressTimer);
+    delete globalThis.__webPilotObserverSnapshot;
+  };
 }

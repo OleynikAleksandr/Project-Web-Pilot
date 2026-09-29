@@ -38,10 +38,11 @@ import { WindowsRuntimeBootstrap, WINDOWS_RUNTIME_ARCHIVE } from './windows-runt
 import { MacRuntimeBootstrap } from './mac-runtime.mjs';
 import { CodexAppServerRuntime, MacRuntimeSwitcher, MAC_RUNTIME_LOCAL, MAC_RUNTIME_APP_SERVER, MAC_RUNTIME_MODES } from './mac-runtime-switch.mjs';
 import { TunnelClipboard } from './tunnel-clipboard.mjs';
-import { StartupReadiness, inspectMacGit, installMacGit, accountObservation, offerMacInstallation } from './startup-readiness.mjs';
+import { StartupReadiness, inspectMacGit, installMacGit, offerMacInstallation } from './startup-readiness.mjs';
 import { startupPlatformOptions, startupSupported } from './startup-platform.mjs';
 
 const eventBaseline = !app.isPackaged && process.argv.includes('--event-runtime-baseline');
+const eventRuntimeChecker = !app.isPackaged && process.argv.includes('--event-runtime-checker');
 const smoke = !app.isPackaged && (process.argv.includes('--smoke') || eventBaseline);
 const sourceDir = path.dirname(fileURLToPath(import.meta.url));
 const sidebarUrl = pathToFileURL(path.join(sourceDir, 'ui/index.html')).href;
@@ -76,7 +77,8 @@ const SIDEBAR_MIN_WIDTH = 312;
 const BROWSER_MIN_WIDTH = 600;
 let sidebarWidth = SIDEBAR_MIN_WIDTH;
 let projectsParent = null;
-let window, browser, sidebar, archiveWindow, runtime, controller, interval, fixture, chromiumDiagnostics, windowsRuntimeBootstrap;
+let window, browser, sidebar, archiveWindow, runtime, controller, fixture, chromiumDiagnostics, windowsRuntimeBootstrap;
+let eventRuntimeCheckerTimer = null, lastEventRuntimeCheckerMismatch = '';
 let sidebarReady = false, lastSidebarStateSignature = null;
 let navigationId = 0;
 const runtimeMetrics = {
@@ -87,7 +89,7 @@ const runtimeMetrics = {
 const actionContext = new AsyncLocalStorage();
 let pageLoading = false;
 let startupClipboard = null;
-let startupFlow = null, startupActive = false, observingAccount = false;
+let startupFlow = null, startupActive = false;
 let startupError = null;
 let storageError = false;
 let lastDiagnostic = '';
@@ -172,6 +174,7 @@ const autoPlan = new AutoPlan({
 function applyObservedPage(event) {
   if (event.reset) lastStopObservation = null;
   else {
+    observeStartupAccount(event.state);
     const documentId = event.documentId ?? pageState.current?.documentId;
     const revision = event.state.manualStopRevision ?? 0;
     if (revision > (lastStopObservation?.documentId === documentId ? lastStopObservation.revision : 0))
@@ -333,6 +336,35 @@ function publish() {
 }
 
 
+function checkEventRuntimeState() {
+  if (!eventRuntimeChecker || !chromiumDiagnostics || pageLoading || planMonitor.pending || planMonitor.rerunRequested
+      || controller?.pending || controller?.rerunRequested || controller?.inputsChanged) return;
+  const generation = navigationId;
+  const selected = store.selected();
+  const mismatches = [];
+  const card = selected ? planMonitor.view(selected) : null;
+  const context = controller?.state?.projectInfo ?? null;
+  if (selected && controller?.active?.workspace === selected.workspace && controller.active.sessionId === selected.sessionId
+      && card && context) {
+    for (const key of ['scopeId', 'planRevision', 'nextTaskId', 'deliveryStatus']) {
+      if (card[key] !== context[key]) mismatches.push('plan:' + key);
+    }
+  }
+  const observed = pageState.current?.state;
+  if (startupActive && startupFlow && observed && isChatGPTOrigin(observed.url)) {
+    const startup = startupFlow.snapshot();
+    if (!['loading', 'slow'].includes(startup.page) && observed.login !== 'unknown' && startup.account !== observed.login)
+      mismatches.push('startup:account');
+  }
+  if (generation !== navigationId) return;
+  const signature = mismatches.sort().join(',');
+  if (signature === lastEventRuntimeCheckerMismatch) return;
+  const previous = lastEventRuntimeCheckerMismatch;
+  lastEventRuntimeCheckerMismatch = signature;
+  if (signature) chromiumDiagnostics.log.record('event-checker', 'state-divergence', { generation, mismatches });
+  else if (previous) chromiumDiagnostics.log.record('event-checker', 'state-converged', { generation });
+}
+
 function rememberSessionTitle() {
   if (!browser || browser.webContents.isDestroyed() || pageLoading) return;
   const selected = store.selected();
@@ -441,7 +473,10 @@ function secureRemote(contents) {
   contents.on('will-navigate', (event, url) => { if (!url.startsWith('https://')) event.preventDefault(); });
   contents.setWindowOpenHandler(({ url }) => ({ action: url.startsWith('https://') ? 'allow' : 'deny',
     overrideBrowserWindowOptions: { width: 980, height: 780, webPreferences: remotePreferences() } }));
-  contents.on('did-create-window', child => secureRemote(child.webContents));
+  contents.on('did-create-window', child => {
+    secureRemote(child.webContents);
+    if (contents === browser?.webContents) child.once('closed', () => { void refreshStartupAccount(); });
+  });
 }
 
 function clampedSidebarWidth(value = sidebarWidth) {
@@ -605,7 +640,7 @@ async function navigate(project = store.selected(), { refresh = false, generatio
     }
     if (!navigationCurrent(ownNavigation)) return;
     pageLoading = false; startupFlow?.finishPage(ownNavigation);
-    void observeStartupAccount();
+    void refreshStartupAccount();
     if (attachController(project && store.project(project.workspace), { freshDraft })) {
       if (refresh) await controller.retry();
       else void controller.tick();
@@ -808,24 +843,32 @@ function observeStartupClipboard() {
     ready: s.node && s.git && s.runtime, busy: s.busy,
   });
 }
-async function observeStartupAccount() {
-  if (!startupFlow || !startupActive || pageLoading || observingAccount || !browser || browser.webContents.isDestroyed()) return;
-  observingAccount = true;
+function observeStartupAccount(observation = pageState.current?.state) {
+  if (!startupFlow || !startupActive || !observation || !browser || browser.webContents.isDestroyed()) return false;
   const generation = navigationId;
+  if (!navigationCurrent(generation) || !isChatGPTOrigin(observation.url) || observation.url !== browser.webContents.getURL()) return false;
+  if (['loading', 'slow', 'idle'].includes(startupFlow.snapshot().page)) startupFlow.finishPage(generation);
+  startupFlow.observe(generation, observation);
+  return true;
+}
+async function refreshStartupAccount() {
+  if (!startupFlow || !startupActive || !browser || browser.webContents.isDestroyed()) return false;
+  const generation = navigationId;
+  if (!navigationCurrent(generation) || !isChatGPTOrigin(browser.webContents.getURL())) return false;
   try {
-    if (!isChatGPTOrigin(browser.webContents.getURL())) return;
-    if (['loading', 'slow', 'idle'].includes(startupFlow.snapshot().page)) startupFlow.finishPage(generation);
-    const observation = await browser.webContents.mainFrame.executeJavaScript('(' + accountObservation.toString() + ')()');
-    if (navigationCurrent(generation)) startupFlow.observe(generation, observation);
-  } catch { /* Unknown remains unverified; a later visible document can be inspected. */ }
-  finally { observingAccount = false; }
+    const observation = await browser.webContents.executeJavaScriptInIsolatedWorld(999, [{ code: 'globalThis.__webPilotObserverSnapshot?.()' }]);
+    if (!navigationCurrent(generation)) return false;
+    return observeStartupAccount(observation) || observeStartupAccount();
+  } catch {
+    return observeStartupAccount();
+  }
 }
 async function startupAction(action) {
   if (!startupFlow) throw new Error('Начальная настройка недоступна на этой платформе.');
   if (action === 'show') {
     settingsState = null; setupState = null; workspaceSetup.clear(); startupError = null; startupActive = true;
     if (!store.selected()) void navigate(null);
-    else void observeStartupAccount();
+    else void refreshStartupAccount();
     return startupFlow.check({ prepare: process.platform === 'win32' });
   }
   if (!startupActive) throw new Error('Сначала откройте начальную настройку.');
@@ -833,7 +876,7 @@ async function startupAction(action) {
     clipboard.writeText(await chromiumDiagnostics.startupReport());
     return true;
   }
-  if (action === 'check') { void observeStartupAccount(); return startupFlow.check({ prepare: true }); }
+  if (action === 'check') { await refreshStartupAccount(); return startupFlow.check({ prepare: true }); }
   if (action === 'install-git') return startupFlow.install();
   if (action === 'paste-tunnel-id' || action === 'configure-tunnel') {
     const s = startupFlow.snapshot();
@@ -852,7 +895,7 @@ async function startupAction(action) {
   if (Object.hasOwn(pages, action)) return shell.openExternal(pages[action]);
   if (action === 'continue') {
     await startupFlow.check();
-    await observeStartupAccount();
+    await refreshStartupAccount();
     const state = startupFlow.snapshot();
     if (state.busy || !state.node || !state.git || !state.runtime || !state.tunnel || state.account !== 'signed-in')
       throw new Error('Завершите вход и проверку подключения перед созданием проекта.');
@@ -1255,13 +1298,17 @@ async function createWindow() {
   sidebar.webContents.on('did-finish-load', () => { sidebarReady = true; lastSidebarStateSignature = null; publish(); });
   browser.webContents.on('page-title-updated', rememberSessionTitle);
   browser.webContents.on('did-start-navigation', (event, _url, inPlace, mainFrame) => {
-    if ((event.isMainFrame ?? mainFrame) && !(event.isSameDocument ?? inPlace)) controller?.cancel();
+    if ((event.isMainFrame ?? mainFrame) && !(event.isSameDocument ?? inPlace)) {
+      controller?.cancel();
+      if (startupActive && !pageLoading) startupFlow?.beginPage(navigationId);
+    }
   });
   browser.webContents.on('did-navigate-in-page', () => {
     void applyToolCallVisibility(); void installChatGPTAutoScroll(browser.webContents); publish();
     if (!pageLoading && !setupState && !settingsState) void controller?.tick();
   });
   browser.webContents.on('did-finish-load', () => {
+    if (startupActive && !pageLoading) { startupFlow?.finishPage(navigationId); void refreshStartupAccount(); }
     if (!pageLoading) attachController(store.selected());
     if (pageState.current) applyObservedPage({ state: pageState.current.state });
     void applyToolCallVisibility(); void installChatGPTAutoScroll(browser.webContents, { forceFollow: true }); publish();
@@ -1276,7 +1323,9 @@ async function createWindow() {
   window.on('closed', () => {
     try {
       ++navigationId; startupClipboard?.dispose(); startupClipboard = null; startupFlow?.dispose(); startupFlow = null;
-      autoPlan.dispose(); conversationRecovery.reset(); controller?.cancel(); planMonitor.close(); clearInterval(interval); disconnectPageState?.(); agentTimer.finish(); contextCache.clear(); workspaceSetup.invalidateReadiness();
+      autoPlan.dispose(); conversationRecovery.reset(); controller?.cancel(); planMonitor.close();
+      if (eventRuntimeCheckerTimer !== null) clearInterval(eventRuntimeCheckerTimer);
+      eventRuntimeCheckerTimer = null; disconnectPageState?.(); agentTimer.finish(); contextCache.clear(); workspaceSetup.invalidateReadiness();
       chatColorStyles?.dispose();
       void chromiumDiagnostics?.stop().catch(() => {}); chromiumDiagnostics = null;
     } finally {
@@ -1308,9 +1357,10 @@ async function createWindow() {
   registerIpc();
   await sidebar.webContents.loadURL(sidebarUrl);
   if (startupFlow) void startupFlow.check({ prepare: startupActive });
-  interval = setInterval(() => {
-    void observeStartupAccount();
-  }, 1500);
+  if (eventRuntimeChecker) {
+    eventRuntimeCheckerTimer = setInterval(checkEventRuntimeState, 2000);
+    eventRuntimeCheckerTimer.unref?.();
+  }
   if (smoke) {
     await fixture.run({ app, window, browser: browser.webContents, sidebar: sidebar.webContents,
       store, controller, selectWorkspace, workspaceSetup, snapshot, assertLocalSender, permissionAllowed, dataDir,

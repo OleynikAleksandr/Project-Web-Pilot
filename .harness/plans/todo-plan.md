@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 813,
+  "plan_revision": 815,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-2-continuation-20260928",
@@ -49,7 +49,9 @@
       "src/chatgpt-composer.mjs",
       "tests/chatgpt-composer.test.mjs",
       "tests/page-state.test.mjs",
-      "tests/installed-observer-fixture.cjs"
+      "tests/installed-observer-fixture.cjs",
+      "src/startup-readiness.mjs",
+      "tests/startup-readiness.test.mjs"
     ],
     "documentation_paths": [
       "docs/planning/event-driven-runtime.md",
@@ -176,8 +178,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "event-driven-runtime-phase-2-continuation-20260928",
         "task_id": "T002",
@@ -192,7 +194,10 @@
         "src/chatgpt-page-observer.mjs",
         "src/page-state.mjs",
         "src/chromium-diagnostics.mjs",
-        "tests/electron-smoke.mjs"
+        "tests/electron-smoke.mjs",
+        "src/startup-readiness.mjs",
+        "tests/page-state.test.mjs",
+        "tests/startup-readiness.test.mjs"
       ],
       "documentation_paths": [
         "docs/planning/event-driven-runtime.md"
@@ -212,7 +217,15 @@
         "Сценарии атомарных изменений, ожиданий, A→B→A, reload/sidebar, сворачивания и восстановления выполняются без периодической функциональной подстраховки; подавленный сигнал не исправляется проверяющим механизмом.",
         "Ручной recovery и обычный Send сохраняют свои разговоры; unknown Send не повторяется, обе ошибки потока используют прежний ограниченный reconnect и защиту черновика."
       ],
-      "expected_commit_message": "feat: Перевести вход в аккаунт на события и удалить общий пульс"
+      "expected_commit_message": "feat: Перевести вход в аккаунт на события и удалить общий пульс",
+      "actual_files": [
+        "src/chatgpt-page-observer.mjs",
+        "src/main.mjs",
+        "src/startup-readiness.mjs",
+        "tests/electron-smoke.mjs",
+        "tests/page-state.test.mjs",
+        "tests/startup-readiness.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -617,7 +630,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-phase-2-continuation-20260928
 Current Task: нет
-Revision: 813
+Revision: 815
 
 ## Цель
 
@@ -633,10 +646,10 @@ Revision: 813
   - Git Commit: [DONE] feat: События проекта, прогрев контекста и ограниченный опрос буфера
   - Reference: event-driven-runtime-phase-2-continuation-20260928 / T001 / implementation
   - Файлы: src/plan-monitor.mjs, src/main.mjs, src/context-session.mjs, src/context-cache.mjs, src/context-inputs.mjs, src/tunnel-clipboard.mjs, tests/plan-monitor.test.mjs, tests/context-session.test.mjs, tests/electron-smoke.mjs, src/project-input-watch.mjs, src/workspace-session.mjs, tests/context-cache.test.mjs, tests/project-input-watch.test.mjs, tests/tunnel-clipboard.test.mjs, docs/planning/event-driven-runtime.md
-- [TODO] T002: Перевести вход в аккаунт на события и удалить общий пульс — Ожидает
-  - Git Commit: [PENDING] feat: Перевести вход в аккаунт на события и удалить общий пульс
+- [DONE] T002: Перевести вход в аккаунт на события и удалить общий пульс — Завершено
+  - Git Commit: [DONE] feat: Перевести вход в аккаунт на события и удалить общий пульс
   - Reference: event-driven-runtime-phase-2-continuation-20260928 / T002 / implementation
-  - Файлы: src/main.mjs, src/startup-flow.mjs, src/chatgpt-page-observer.mjs, src/page-state.mjs, src/chromium-diagnostics.mjs, tests/electron-smoke.mjs, docs/planning/event-driven-runtime.md
+  - Файлы: src/main.mjs, src/startup-flow.mjs, src/chatgpt-page-observer.mjs, src/page-state.mjs, src/chromium-diagnostics.mjs, tests/electron-smoke.mjs, src/startup-readiness.mjs, tests/page-state.test.mjs, tests/startup-readiness.test.mjs, docs/planning/event-driven-runtime.md
 - [TODO] T003: Убрать секундный обход цветов и проверить событийное оформление — Ожидает
   - Git Commit: [PENDING] feat: Убрать секундный обход цветов и проверить событийное оформление
   - Reference: event-driven-runtime-phase-2-continuation-20260928 / T003 / implementation

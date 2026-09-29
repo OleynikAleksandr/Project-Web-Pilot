@@ -40,9 +40,11 @@ test('page timeout and stale completion are distinct from component readiness', 
   f.flow.beginPage(1); timeout(); assert.equal(f.flow.snapshot().page, 'slow');
   f.flow.beginPage(2); f.flow.finishPage(1, 'ERR_FAILED');
   assert.equal(f.flow.snapshot().page, 'loading');
-  f.flow.finishPage(2); f.flow.observe(2, { login: true, authenticated: false });
-  assert.equal(f.flow.snapshot().account, 'signed-out');
-  f.flow.observe(1, { authenticated: true }); assert.equal(f.flow.snapshot().account, 'signed-out');
+  f.flow.finishPage(2); f.flow.observe(2, { login: 'unknown' });
+  assert.equal(f.flow.snapshot().account, 'unknown', 'absence of Login is not proof of authentication');
+  f.flow.observe(2, { login: 'signed-out' }); assert.equal(f.flow.snapshot().account, 'signed-out');
+  f.flow.observe(2, { login: 'signed-in' }); assert.equal(f.flow.snapshot().account, 'signed-in');
+  f.flow.observe(1, { login: 'signed-out' }); assert.equal(f.flow.snapshot().account, 'signed-in');
   f.flow.dispose();
 });
 test('parallel clicks share one operation; late results after disposal are ignored', async () => {
@@ -62,19 +64,7 @@ test('raw runtime errors never leak commands or secrets into public state', asyn
   assert.doesNotMatch(JSON.stringify(f.flow.snapshot()), /sk-example-value/);
 });
 
-import { JSDOM } from 'jsdom';
-import { accountObservation, offerMacInstallation } from '../src/startup-readiness.mjs';
-test('guest composer is not proof of login; visible account marker is required', () => {
-  const dom = new JSDOM('<textarea id="prompt-textarea"></textarea>', { runScripts: 'outside-only' });
-  dom.window.HTMLElement.prototype.getClientRects = function() { return this.hidden ? [] : [{}]; };
-  const inspect = () => JSON.parse(JSON.stringify(dom.window.eval('(' + accountObservation.toString() + ')()')));
-  assert.deepEqual(inspect(), { login: false, authenticated: false });
-  dom.window.document.body.insertAdjacentHTML('beforeend', '<button aria-label="Open Profile Menu"></button>');
-  assert.equal(inspect().authenticated, true);
-  dom.window.document.body.insertAdjacentHTML('beforeend', '<button data-testid="login-button"></button>');
-  assert.equal(inspect().authenticated, false);
-  dom.window.close();
-});
+import { offerMacInstallation } from '../src/startup-readiness.mjs';
 test('existing profile and installation cancellation never move the app', async () => {
   let moved = 0, prompted = 0;
   const app = { isInApplicationsFolder: () => false, moveToApplicationsFolder: () => { moved++; return true; } };
