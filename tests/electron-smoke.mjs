@@ -1266,6 +1266,17 @@ export async function run({ app, window, browser, sidebar, store, controller, se
       browser.sendInputEvent({ type: 'mouseUp', ...point, button: 'left', clickCount: 1 });
       await waitFor(() => autoPlan.view().phase === 'paused', 'trusted native Stop pauses auto-plan', snapshot);
       assert.match(autoPlan.view().message, /остановили/);
+      assert.equal(autoPlan.view().enabled, true);
+      await browser.executeJavaScript("(()=>{const e=document.getElementById('prompt-textarea');e.textContent='Мой ответ после Stop';e.dispatchEvent(new Event('input',{bubbles:true}))})()");
+      const sendPoint = await browser.executeJavaScript("(()=>{const r=document.querySelector('[data-testid=send-button]').getBoundingClientRect();return {x:Math.round(r.x+r.width/2),y:Math.round(r.y+r.height/2)}})()");
+      browser.sendInputEvent({ type: 'mouseDown', ...sendPoint, button: 'left', clickCount: 1 });
+      browser.sendInputEvent({ type: 'mouseUp', ...sendPoint, button: 'left', clickCount: 1 });
+      await waitFor(() => autoPlan.view().phase === 'running', 'user message resumes mode after Stop', snapshot);
+      assert.equal(await browser.executeJavaScript('window.fixtureMessages.at(-1).text'), 'Мой ответ после Stop');
+      await beginAnswer(); await endAnswer();
+      await waitFor(() => browser.executeJavaScript("window.fixtureMessages.at(-1).text === 'Продолжай'"),
+        'automatic cycle continues after user answer', snapshot);
+
     }
   }
   // Exercise the watchdog through the same UI without waiting three wall-clock minutes.

@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 808,
+  "plan_revision": 810,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-2-continuation-20260928",
@@ -464,7 +464,10 @@
         "src/auto-plan.mjs",
         "src/auto-plan-state.mjs",
         "src/main.mjs",
-        "tests/auto-plan.test.mjs"
+        "tests/auto-plan.test.mjs",
+        "src/chatgpt-page-observer.mjs",
+        "src/ui/sidebar.mjs",
+        "tests/electron-smoke.mjs"
       ],
       "documentation_paths": [
         "docs/planning/auto-plan-continuation.md"
@@ -480,13 +483,23 @@
         "Инструкция разрешает задавать вопросы пользователю; Windows использует комплектный Git"
       ],
       "expected_commit_message": "feat: Возобновлять включённое автовыполнение после нового сообщения пользователя",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "event-driven-runtime-phase-2-continuation-20260928",
         "task_id": "T008",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "docs/planning/auto-plan-continuation.md",
+        "src/auto-plan-state.mjs",
+        "src/auto-plan.mjs",
+        "src/chatgpt-page-observer.mjs",
+        "src/main.mjs",
+        "src/ui/sidebar.mjs",
+        "tests/auto-plan.test.mjs",
+        "tests/electron-smoke.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -585,7 +598,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-phase-2-continuation-20260928
 Current Task: нет
-Revision: 808
+Revision: 810
 
 ## Цель
 
@@ -625,10 +638,10 @@ Revision: 808
   - Git Commit: [PENDING] feat: Выпустить macOS/Windows 0.6.73 и обновить документы
   - Reference: event-driven-runtime-phase-2-continuation-20260928 / T007 / implementation
   - Файлы: package.json, package-lock.json, scripts/check-event-runtime-release.mjs, docs/RELEASE.md, docs/VERIFICATION.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, README.md
-- [TODO] T008: Возобновлять включённое автовыполнение после нового сообщения пользователя — Ожидает
-  - Git Commit: [PENDING] feat: Возобновлять включённое автовыполнение после нового сообщения пользователя
+- [DONE] T008: Возобновлять включённое автовыполнение после нового сообщения пользователя — Завершено
+  - Git Commit: [DONE] feat: Возобновлять включённое автовыполнение после нового сообщения пользователя
   - Reference: event-driven-runtime-phase-2-continuation-20260928 / T008 / implementation
-  - Файлы: src/auto-plan.mjs, src/auto-plan-state.mjs, src/main.mjs, tests/auto-plan.test.mjs, docs/planning/auto-plan-continuation.md
+  - Файлы: src/auto-plan.mjs, src/auto-plan-state.mjs, src/main.mjs, tests/auto-plan.test.mjs, src/chatgpt-page-observer.mjs, src/ui/sidebar.mjs, tests/electron-smoke.mjs, docs/planning/auto-plan-continuation.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: event-driven-runtime-phase-2-continuation-20260928 / DOCS / implementation

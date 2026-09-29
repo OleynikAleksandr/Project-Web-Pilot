@@ -12,17 +12,17 @@ export function installPageObserver(dom, send) {
   const normalize = text => text.replace(/\s+/g, ' ').trim();
   const editorText = editor => editor ? normalize(editor.value ?? editor.innerText ?? editor.textContent ?? '') : '';
   const captureManualSend = event => {
-    if (!event.isTrusted || !/^\/(?:work\/?)?$/.test(location.pathname) || dom.messages('user').length) return;
+    if (!event.isTrusted) return;
     const editor = dom.editor(), button = dom.sendButton(), target = event.target;
     const click = event.type === 'click' && button && (target === button || button.contains(target));
     const enter = event.type === 'keydown' && event.key === 'Enter' && !event.shiftKey && !event.isComposing
       && editor && (target === editor || editor.contains(target));
     const text = editorText(editor);
     if ((click || enter) && text && !dom.busy() && button && !button.disabled)
-      manualCandidate = { text, editor };
+      manualCandidate = { text, editor, count: dom.messages('user').length };
   };
   const snapshot = () => {
-    if (manualCandidate && !editorText(dom.editor()) && dom.messages('user').some(message =>
+    if (manualCandidate && dom.messages('user').length > manualCandidate.count && !editorText(dom.editor()) && dom.messages('user').some(message =>
         normalize(message.innerText ?? message.textContent ?? '') === manualCandidate.text)) {
       manualSendRevision++; manualCandidate = null;
     }

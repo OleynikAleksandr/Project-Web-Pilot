@@ -16,7 +16,7 @@ function fixture() {
     send: async (text, current, before) => { if (gate) await gate(); if (!current() || !await before()) return { state: 'cancelled' }; sends.push(text); return sendResult; },
     schedule: (fn, ms) => { timers.set(++timerId, { fn, ms }); return timerId; }, cancel: id => timers.delete(id) });
   let state = { url: selected.chatUrl, editorAvailable: true, busy: false, assistantRevision: 0,
-    manualStopRevision: 0, manualInputRevision: 0, turnSignal: null };
+    manualStopRevision: 0, manualInputRevision: 0, manualSendRevision: 0, turnSignal: null };
   const observe = patch => { Object.assign(state, patch); flow.observe({ state: { ...state }, documentId: 'document-1111' }); };
   observe({});
   const drain = async () => { const callbacks = [...timers.entries()].filter(([, value]) => value.ms < 1000); callbacks.forEach(([id, value]) => { timers.delete(id); value.fn(); }); await settle(); };
@@ -86,6 +86,8 @@ test('checkpoint reader distinguishes working task, prepared DONE and committed 
   const write = () => fs.writeFile(path.join(root,'.harness/plans/todo-plan.md'),
     '<!-- workflow-state:begin -->\n\x60\x60\x60json\n' + JSON.stringify(p) + '\n\x60\x60\x60\n<!-- workflow-state:end -->');
   await write(); git(['add','.']); git(['commit','-m','fixture']);
+  const bundledGit = execFileSync('/usr/bin/which', ['git'], { encoding: 'utf8' }).trim();
+  assert.equal((await readAutoPlanState({ workspace: root }, { ...process.env, PATH: '/unavailable', WORKFLOW_GIT_BIN: bundledGit })).confirmed, true);
   p.plan_revision++; await write();
   assert.equal((await readAutoPlanState({ workspace: root })).confirmed, true, 'in-progress dirty plan may continue');
   p.tasks[0].implementation_status = 'DONE'; p.tasks[0].commit_status = 'DONE'; await write();
@@ -112,4 +114,35 @@ test('watchdog uses content progress, ignores decorative updates, and never clic
   assert.match(f.flow.view().message, /Три минуты/);
   assert.equal(f.sends.length, 1);
   await f.finish(); assert.equal(f.sends.length, 1, 'late completion cannot restart a paused run');
+});
+
+test('new user message resumes Stop, typing and question without an extra Send', async () => {
+  for (const reason of ['stop', 'typing', 'question']) {
+    const f = fixture(); await f.flow.start();
+    if (reason === 'stop') f.observe({ manualStopRevision: 1 });
+    if (reason === 'typing') f.observe({ manualInputRevision: 1 });
+    if (reason === 'question') await f.finish('wait');
+    assert.equal(f.flow.view().enabled, true);
+    const before = f.sends.length;
+    f.observe({ userMessageCount: 10 }); await f.drain();
+    assert.equal(f.flow.view().phase, 'paused', 'DOM count alone does not impersonate user Send');
+    f.observe({ manualSendRevision: 1, busy: true }); await f.drain();
+    assert.equal(f.flow.view().phase, 'running', reason);
+    assert.equal(f.sends.length, before, 'user has already sent their message');
+    await f.finish();
+    assert.equal(f.sends.length, before + 1);
+    assert.equal(f.sends.at(-1), 'Продолжай');
+  }
+});
+test('explicit off, completed plan, different conversation and restart never resume implicitly', async () => {
+  for (const reason of ['off','complete','selection','reload']) {
+    const f = fixture(); await f.flow.start(); f.observe({ manualStopRevision: 1 });
+    if (reason === 'off') f.flow.pause('off');
+    if (reason === 'complete') f.plan.planView.tasks.forEach(t => { t.status = 'done'; });
+    if (reason === 'selection') { f.changeSelection(); f.flow.selectionChanged(); }
+    if (reason === 'reload') f.flow.observe({ reset: true });
+    f.observe({ manualSendRevision: 1, busy: true }); await f.drain();
+    assert.equal(f.flow.view().enabled, false, reason);
+    assert.equal(f.sends.length, 1);
+  }
 });

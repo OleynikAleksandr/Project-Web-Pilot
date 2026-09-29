@@ -5,6 +5,7 @@ export const AUTO_PLAN_INSTRUCTION = [
   'За один ответ выполняй не более одной микрозадачи с её проверкой и коммитом. Затем обязательно закончи ответ.',
   'Если работа затягивается, сохрани промежуточный результат и закончи ответ на безопасной контрольной точке; незавершённую задачу не помечай DONE.',
   'Длительные команды запускай через доступный MCP в фоне, сохраняя идентификатор процесса. После продолжения сначала проверь его результат, не запускай ту же операцию повторно.',
+  'Если по ходу работы есть вопросы, задай их пользователю и дождись ответа, приостановив самостоятельную работу.',
   'В конце ответа отдельной последней строкой пиши «Готов продолжать.», если можешь работать дальше; «Нужен ваш ответ.», если есть вопрос, ошибка или требуется решение пользователя; «План завершён.», только когда все пункты, включая DOCS, действительно завершены.',
   'После полного завершения не архивируй план без отдельного поручения. Следующее сообщение «Продолжай» означает продолжение фактической незавершённой работы, а не обязательный переход к следующей задаче.',
   'Не запускай codex exec, других модельных агентов и не делегируй им работу, если пользователь прямо этого не попросил.',
@@ -18,7 +19,7 @@ export class AutoPlan {
     this.page = null; this.run = null; this.epoch = 0; this.timer = null; this.watchdog = null;
     this.state = { phase: 'off', message: '', active: false };
   }
-  view() { return { ...this.state }; }
+  view() { return { ...this.state, enabled: this.state.active || !!this.suspended }; }
   set(phase, message, active = false) {
     this.state = { phase, message, active };
     this.log('state', { phase }); this.onChange();
@@ -35,33 +36,44 @@ export class AutoPlan {
     }, this.stallMs);
     this.watchdog?.unref?.();
   }
-  pause(message = 'Автовыполнение приостановлено.') {
+  pause(message = 'Автовыполнение приостановлено.', resumeOnMessage = false) {
+    const previous = this.run ?? this.suspended?.run;
+    this.suspended = resumeOnMessage && previous ? { run: previous, sendRevision: this.page?.manualSendRevision ?? 0 } : null;
     this.epoch++; this.clearTimer(); this.clearWatchdog(); this.run = null;
     this.set('paused', message);
   }
   complete() {
+    this.suspended = null;
     this.epoch++; this.clearTimer(); this.clearWatchdog(); this.run = null;
     this.set('complete', 'Все пункты плана выполнены. Продолжение не отправляется.');
   }
   selectionChanged() {
-    if (this.run && key(this.selected()) !== this.run.key) this.pause('Выбран другой разговор или план.');
+    if ((this.run ?? this.suspended?.run) && key(this.selected()) !== (this.run ?? this.suspended.run).key) this.pause('Выбран другой разговор или план.');
   }
   observe(event) {
-    if (event.reset) { this.page = null; if (this.run) this.pause('Страница загружается заново. Проверьте разговор и включите автовыполнение.'); return; }
+    if (event.reset) { this.page = null; if (this.run || this.suspended) this.pause('Страница загружается заново. Проверьте разговор и включите автовыполнение.'); return; }
     this.page = { ...event.state, documentId: event.documentId ?? this.page?.documentId };
+    this.selectionChanged();
+    if (this.suspended) {
+      const waiting = this.suspended, p = this.page;
+      if (p.documentId !== waiting.run.documentId || p.url !== waiting.run.url || p.connectionError)
+        return this.pause('Изменился документ или состояние связи.');
+      if ((p.manualSendRevision ?? 0) > waiting.sendRevision) void this.resumeAfterMessage(waiting);
+      return;
+    }
     const run = this.run;
     if (!run) return;
     this.selectionChanged(); if (this.run !== run) return;
     const p = this.page;
     if (p.documentId !== run.documentId || p.url !== run.url) return this.pause('Изменился документ разговора.');
-    if ((p.manualStopRevision ?? 0) !== run.stopRevision) return this.pause('Вы остановили ответ. Автовыполнение приостановлено.');
-    if ((p.manualInputRevision ?? 0) !== run.inputRevision) return this.pause('Вы начали ввод. Автовыполнение приостановлено.');
+    if ((p.manualStopRevision ?? 0) !== run.stopRevision) return this.pause('Вы остановили ответ. Новое сообщение возобновит автовыполнение.', true);
+    if ((p.manualInputRevision ?? 0) !== run.inputRevision) return this.pause('Ждём отправки вашего сообщения для продолжения.', true);
     if (p.connectionError) return this.pause('Связь с ChatGPT прервалась. Восстановите разговор перед продолжением.');
     if ((p.assistantRevision ?? 0) !== run.lastActivityRevision || p.busy && !run.sawBusy) {
       run.lastActivityRevision = p.assistantRevision ?? 0; this.watch(run);
     }
     if (p.busy) { run.sawBusy = true; this.clearTimer(); return; }
-    if (this.state.phase === 'sending' || !run.sawBusy) return;
+    if (['sending', 'resuming'].includes(this.state.phase) || !run.sawBusy) return;
     if (p.assistantRevision <= run.beforeAssistantRevision) return;
     if (this.timer !== null) return;
     const epoch = this.epoch;
@@ -73,6 +85,7 @@ export class AutoPlan {
   }
   async start() {
     if (this.state.active) return;
+    this.suspended = null;
     const selected = this.selected(), page = this.page;
     if (!selected?.chatUrl || !selected.scopeId || !page || page.url !== selected.chatUrl
         || page.busy || !page.editorAvailable)
@@ -96,6 +109,29 @@ export class AutoPlan {
     this.log('start', { completed: this.run.completedAtStart.length, total: plan.planView.tasks.length });
     await this.dispatch(this.run, AUTO_PLAN_INSTRUCTION);
   }
+  async resumeAfterMessage(waiting) {
+    if (this.suspended !== waiting) return;
+    const p = this.page, run = { ...waiting.run };
+    this.suspended = null; this.run = run;
+    run.stopRevision = p.manualStopRevision ?? 0; run.inputRevision = p.manualInputRevision ?? 0;
+    run.beforeAssistantRevision = p.assistantRevision ?? 0;
+    run.lastActivityRevision = run.beforeAssistantRevision;
+    run.sawBusy = !!p.busy; run.unchanged = 0;
+    this.set('resuming', 'Ваше сообщение отправлено. Возобновляем автовыполнение…', true);
+    try {
+      const plan = await this.inspectPlan(run.selected);
+      if (this.run !== run) return;
+      this.selectionChanged(); if (this.run !== run) return;
+      if (!plan.confirmed || plan.scopeId !== run.selected.scopeId) return this.pause('Проверьте текущий план и Git-операцию.');
+      if (finished(plan)) return this.complete();
+      if (plan.scopeStatus !== 'ACTIVE') return this.pause('План приостановлен.');
+      run.planRevision = plan.planRevision;
+      this.log('resume', { reason: 'user-message' });
+      this.set('running', 'Автовыполнение возобновлено вашим сообщением.', true);
+      this.watch(run);
+      this.observe({ state: this.page, documentId: this.page.documentId });
+    } catch { if (this.run === run) this.pause('Не удалось проверить план после вашего сообщения.'); }
+  }
   async finishTurn(run) {
     if (this.run !== run || this.page?.busy) return;
     run.sawBusy = false;
@@ -108,7 +144,7 @@ export class AutoPlan {
       if (!plan.confirmed) return this.pause('Git-операция ещё не завершена. Проверьте её результат.');
       if (finished(plan)) return this.complete();
       if (plan.scopeStatus !== 'ACTIVE') return this.pause('План приостановлен.');
-      if (this.page?.turnSignal === 'wait') return this.pause('Агент ожидает вашего ответа или сообщил об ошибке.');
+      if (this.page?.turnSignal === 'wait') return this.pause('Агент ждёт вашего ответа. Отправьте сообщение для продолжения.', true);
       if (!['continue', 'done'].includes(this.page?.turnSignal))
         return this.pause('Ответ закончился без контрольной точки. Проверьте сообщение агента.');
       run.unchanged = plan.planRevision === run.planRevision ? run.unchanged + 1 : 0;
@@ -148,5 +184,5 @@ export class AutoPlan {
       if (this.run === run) this.pause('Ошибка отправки. Автоматический повтор отключён.');
     }
   }
-  dispose() { this.epoch++; this.clearTimer(); this.clearWatchdog(); this.run = null; }
+  dispose() { this.suspended = null; this.epoch++; this.clearTimer(); this.clearWatchdog(); this.run = null; }
 }

@@ -162,7 +162,8 @@ const conversationRecovery = new ConversationRecovery({
 });
 const autoPlan = new AutoPlan({
   selected: () => { const p = store.selected(); return p && { ...p, scopeId: planMonitor.info?.scopeId ?? p.scopeId }; },
-  inspectPlan: readAutoPlanState,
+  inspectPlan: async selected => readAutoPlanState(selected, process.platform === 'win32'
+    ? await windowsRuntimeBootstrap.workflowEnvironment() : process.env),
   send: (text, canContinue, onBeforeSend) => controller.composer.sendUserMessage({
     text, canContinue, onBeforeSend, waitForAcknowledgement: false }),
   onChange: () => publish(),

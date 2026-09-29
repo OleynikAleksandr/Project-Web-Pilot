@@ -325,10 +325,10 @@ function render(state) {
   $('toggle-projects').setAttribute('aria-label', $('toggle-projects').title);
   $('plan-card').hidden = !selected;
   const auto = state.autoPlan ?? { phase: 'off', active: false, message: '' };
-  $('auto-plan-toggle').textContent = auto.active ? 'Приостановить автовыполнение' : 'Автовыполнение';
-  $('auto-plan-toggle').disabled = actionPending || (!auto.active && (!selected?.chatUrl || !selected?.scopeId
+  $('auto-plan-toggle').textContent = auto.enabled ? 'Выключить автовыполнение' : 'Автовыполнение';
+  $('auto-plan-toggle').disabled = actionPending || (!auto.enabled && (!selected?.chatUrl || !selected?.scopeId
     || selected?.planView?.tasks?.every(task => task.status === 'done')));
-  $('auto-plan-toggle').setAttribute('aria-pressed', String(auto.active));
+  $('auto-plan-toggle').setAttribute('aria-pressed', String(auto.enabled));
   $('auto-plan-message').hidden = !auto.message;
   $('auto-plan-message').textContent = auto.message;
 
@@ -434,7 +434,7 @@ $('reload-chat').addEventListener('click', () => action('reload'));
 // An outdated Kit opens the regular upgrade preview; the user confirms it there.
 $('workspace-health-retry').addEventListener('click', () => action(kitUpgradeNeeded(currentState?.workspaceHealth) ? 'retry' : 'reload'));
 $('workspace-health-doctor').addEventListener('click', () => action('openDoctor'));
-$('auto-plan-toggle').addEventListener('click', () => action('setAutoPlan', !currentState?.autoPlan?.active));
+$('auto-plan-toggle').addEventListener('click', () => action('setAutoPlan', !currentState?.autoPlan?.enabled));
 $('reconnect-chat').addEventListener('click', () => action('reconnect'));
 $('retry-context').addEventListener('click', () => action('retry'));
 $('return-chat').addEventListener('click', () => action('returnToChat'));
