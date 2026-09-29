@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 802,
+  "plan_revision": 803,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-2-continuation-20260928",
@@ -34,7 +34,17 @@
       "src/workspace-session.mjs",
       "tests/context-cache.test.mjs",
       "tests/project-input-watch.test.mjs",
-      "tests/tunnel-clipboard.test.mjs"
+      "tests/tunnel-clipboard.test.mjs",
+      "src/auto-plan.mjs",
+      "src/preload.cjs",
+      "src/ui/sidebar.mjs",
+      "src/ui/index.html",
+      "tests/auto-plan.test.mjs",
+      "src/conversation-recovery.mjs",
+      "tests/conversation-recovery.test.mjs",
+      "package.json",
+      "package-lock.json",
+      "scripts/check-event-runtime-release.mjs"
     ],
     "documentation_paths": [
       "docs/planning/event-driven-runtime.md",
@@ -53,7 +63,8 @@
       "docs/modules/workspace-sessions.md",
       "docs/modules/workflow-kit-recovery.md",
       "docs/modules/session-owned-plans.md",
-      "AGENTS.md"
+      "AGENTS.md",
+      "docs/planning/auto-plan-continuation.md"
     ]
   },
   "baseline_commit": "812f646ba47d4eaed5b5f67cacb9f629007554df",
@@ -267,6 +278,128 @@
       ]
     },
     {
+      "id": "T005",
+      "title": "Автовыполнение короткими ответами с учётом частично выполненного плана",
+      "why": "Поручение 29.09.2026; модуль Workspace & Sessions, смежный Workflow Kit. Продолжает docs/planning/event-driven-runtime.md; отдельный контракт docs/planning/auto-plan-continuation.md.",
+      "dependencies": [],
+      "functional_paths": [
+        "src/auto-plan.mjs",
+        "src/main.mjs",
+        "src/chatgpt-page-observer.mjs",
+        "src/page-state.mjs",
+        "src/preload.cjs",
+        "src/ui/sidebar.mjs",
+        "src/ui/index.html",
+        "src/context-session.mjs",
+        "src/workspace-session.mjs",
+        "tests/auto-plan.test.mjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "docs/planning/auto-plan-continuation.md"
+      ],
+      "verification_ids": [
+        "unit",
+        "smoke"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Явное включение для выбранного разговора и текущего scope; начальный снимок учитывает DONE, TODO и текущую задачу без повторения DONE.",
+        "Агенту передано правило заканчивать ответ после одной микрозадачи или сохраняемой промежуточной точки; продолжение после подтверждённого окончания ответа отправляет ровно «Продолжай».",
+        "Незавершённый текущий пункт допускает продолжение без нового коммита; все задачи включая DOCS, подтверждённо DONE, запрещают Send.",
+        "Ручной Stop, вопрос/ошибка, пользовательский ввод, смена чата/scope и перезапуск приостанавливают режим; один ответ не даёт двойного Send. Подготовленная Git-транзакция не считается выполненным планом."
+      ],
+      "expected_commit_message": "feat: Автовыполнение короткими ответами с учётом частично выполненного плана",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "event-driven-runtime-phase-2-continuation-20260928",
+        "task_id": "T005",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T006",
+      "title": "Диагностика отсутствия продвижения и восстановление разговора без повторного исполнения",
+      "why": "Диагностика отсутствия продвижения и восстановление разговора без повторного исполнения",
+      "dependencies": [
+        "T005"
+      ],
+      "functional_paths": [
+        "src/auto-plan.mjs",
+        "src/conversation-recovery.mjs",
+        "src/chatgpt-page-observer.mjs",
+        "src/chromium-diagnostics.mjs",
+        "src/main.mjs",
+        "tests/auto-plan.test.mjs",
+        "tests/conversation-recovery.test.mjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "docs/planning/auto-plan-continuation.md"
+      ],
+      "verification_ids": [
+        "unit",
+        "smoke"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Однократный сторожевой таймаут различает отсутствие новых наблюдаемых данных и доказанную ошибку; анимация сама по себе не считается продвижением.",
+        "Диагностика сохраняет переходы busy/Stop/контрольной точки/ошибки без текста сообщений; восстановление ограничено и сохраняет разговор.",
+        "После ручного Stop нет автоматического восстановления/Продолжай; при неопределённой отправке или состоянии нет повторного исполнения; черновик и 429 учитываются.",
+        "Сценарии проверены в Chat и Work fixtures; отсутствие живого воспроизведения зависания не объявляется исправлением сервера."
+      ],
+      "expected_commit_message": "feat: Диагностика отсутствия продвижения и восстановление разговора без повторного исполнения",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "event-driven-runtime-phase-2-continuation-20260928",
+        "task_id": "T006",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T007",
+      "title": "Выпустить macOS/Windows 0.6.73 и обновить документы",
+      "why": "Выпустить macOS/Windows 0.6.73 и обновить документы",
+      "dependencies": [
+        "T005",
+        "T006"
+      ],
+      "functional_paths": [
+        "package.json",
+        "package-lock.json",
+        "scripts/check-event-runtime-release.mjs"
+      ],
+      "documentation_paths": [
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/MODULES.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/modules/workspace-sessions.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "README.md"
+      ],
+      "verification_ids": [
+        "release-pair"
+      ],
+      "verification_kind": "installed",
+      "acceptance_criteria": [
+        "Парный выпуск 0.6.73 доставлен в Downloads/WebPilot-0.6.73; постоянный Mac app и /Applications обновлены с сохранением identity.",
+        "Выдаваемые копии совпадают с исходниками, установленный код проходит сценарии частичного/полного плана и отправки Продолжай.",
+        "README и контракты отражают включение/паузу/завершение, ограничения живой проверки и оставшиеся T002/T003 текущей фазы; scope не закрывается."
+      ],
+      "expected_commit_message": "feat: Выпустить macOS/Windows 0.6.73 и обновить документы",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "event-driven-runtime-phase-2-continuation-20260928",
+        "task_id": "T007",
+        "role": "implementation"
+      }
+    },
+    {
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
@@ -278,7 +411,10 @@
         "T001",
         "T002",
         "T003",
-        "T004"
+        "T004",
+        "T005",
+        "T006",
+        "T007"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -298,7 +434,8 @@
         "docs/modules/workspace-sessions.md",
         "docs/modules/workflow-kit-recovery.md",
         "docs/modules/session-owned-plans.md",
-        "AGENTS.md"
+        "AGENTS.md",
+        "docs/planning/auto-plan-continuation.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -355,7 +492,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-phase-2-continuation-20260928
 Current Task: нет
-Revision: 802
+Revision: 803
 
 ## Цель
 
@@ -383,10 +520,22 @@ Revision: 802
   - Git Commit: [DONE] feat: Передавать правило делегирования только по прямому поручению пользователя
   - Reference: event-driven-runtime-phase-2-continuation-20260928 / T004 / implementation
   - Файлы: src/context-session.mjs, tests/context-session.test.mjs, AGENTS.md, docs/CONTEXT_DELIVERY.md, docs/architecture/OVERVIEW.md
+- [TODO] T005: Автовыполнение короткими ответами с учётом частично выполненного плана — Ожидает
+  - Git Commit: [PENDING] feat: Автовыполнение короткими ответами с учётом частично выполненного плана
+  - Reference: event-driven-runtime-phase-2-continuation-20260928 / T005 / implementation
+  - Файлы: src/auto-plan.mjs, src/main.mjs, src/chatgpt-page-observer.mjs, src/page-state.mjs, src/preload.cjs, src/ui/sidebar.mjs, src/ui/index.html, src/context-session.mjs, src/workspace-session.mjs, tests/auto-plan.test.mjs, tests/electron-smoke.mjs, docs/planning/auto-plan-continuation.md
+- [TODO] T006: Диагностика отсутствия продвижения и восстановление разговора без повторного исполнения — Ожидает
+  - Git Commit: [PENDING] feat: Диагностика отсутствия продвижения и восстановление разговора без повторного исполнения
+  - Reference: event-driven-runtime-phase-2-continuation-20260928 / T006 / implementation
+  - Файлы: src/auto-plan.mjs, src/conversation-recovery.mjs, src/chatgpt-page-observer.mjs, src/chromium-diagnostics.mjs, src/main.mjs, tests/auto-plan.test.mjs, tests/conversation-recovery.test.mjs, tests/electron-smoke.mjs, docs/planning/auto-plan-continuation.md
+- [TODO] T007: Выпустить macOS/Windows 0.6.73 и обновить документы — Ожидает
+  - Git Commit: [PENDING] feat: Выпустить macOS/Windows 0.6.73 и обновить документы
+  - Reference: event-driven-runtime-phase-2-continuation-20260928 / T007 / implementation
+  - Файлы: package.json, package-lock.json, scripts/check-event-runtime-release.mjs, docs/RELEASE.md, docs/VERIFICATION.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, README.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: event-driven-runtime-phase-2-continuation-20260928 / DOCS / implementation
-  - Файлы: docs/planning/event-driven-runtime.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/modules/chatgpt-dom-compatibility.md, docs/VERIFICATION.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, README.md, docs/RELEASE.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKFLOW_START.md, docs/modules/workspace-sessions.md, docs/modules/workflow-kit-recovery.md, docs/modules/session-owned-plans.md, AGENTS.md
+  - Файлы: docs/planning/event-driven-runtime.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/modules/chatgpt-dom-compatibility.md, docs/VERIFICATION.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, README.md, docs/RELEASE.md, docs/CONTEXT_DELIVERY.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKFLOW_START.md, docs/modules/workspace-sessions.md, docs/modules/workflow-kit-recovery.md, docs/modules/session-owned-plans.md, AGENTS.md, docs/planning/auto-plan-continuation.md
 
 ## Context Pack For This Cycle
 
