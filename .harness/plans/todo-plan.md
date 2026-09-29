@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 810,
+  "plan_revision": 812,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-2-continuation-20260928",
@@ -75,7 +75,7 @@
     ]
   },
   "baseline_commit": "812f646ba47d4eaed5b5f67cacb9f629007554df",
-  "current_task_id": null,
+  "current_task_id": "T007",
   "context_pack": {
     "documents": [
       {
@@ -447,7 +447,7 @@
         "README и контракты отражают включение/паузу/завершение, ограничения живой проверки и оставшиеся T002/T003 текущей фазы; scope не закрывается."
       ],
       "expected_commit_message": "feat: Выпустить macOS/Windows 0.6.73 и обновить документы",
-      "implementation_status": "TODO",
+      "implementation_status": "IN_PROGRESS",
       "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "event-driven-runtime-phase-2-continuation-20260928",
@@ -597,8 +597,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-phase-2-continuation-20260928
-Current Task: нет
-Revision: 810
+Current Task: T007
+Revision: 812
 
 ## Цель
 
@@ -634,7 +634,7 @@ Revision: 810
   - Git Commit: [DONE] feat: Диагностика отсутствия продвижения и восстановление разговора без повторного исполнения
   - Reference: event-driven-runtime-phase-2-continuation-20260928 / T006 / implementation
   - Файлы: src/auto-plan.mjs, src/conversation-recovery.mjs, src/chatgpt-page-observer.mjs, src/chromium-diagnostics.mjs, src/main.mjs, tests/auto-plan.test.mjs, tests/conversation-recovery.test.mjs, tests/electron-smoke.mjs, src/ui/sidebar.mjs, tests/page-state.test.mjs, docs/planning/auto-plan-continuation.md
-- [TODO] T007: Выпустить macOS/Windows 0.6.73 и обновить документы — Ожидает
+- [IN_PROGRESS] T007: Выпустить macOS/Windows 0.6.73 и обновить документы — В работе
   - Git Commit: [PENDING] feat: Выпустить macOS/Windows 0.6.73 и обновить документы
   - Reference: event-driven-runtime-phase-2-continuation-20260928 / T007 / implementation
   - Файлы: package.json, package-lock.json, scripts/check-event-runtime-release.mjs, docs/RELEASE.md, docs/VERIFICATION.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, README.md
