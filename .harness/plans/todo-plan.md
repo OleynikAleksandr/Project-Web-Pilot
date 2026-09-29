@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 807,
+  "plan_revision": 808,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-2-continuation-20260928",
@@ -104,6 +104,10 @@
       },
       {
         "path": "docs/planning/event-driven-runtime.md",
+        "required": true
+      },
+      {
+        "path": "docs/planning/auto-plan-continuation.md",
         "required": true
       }
     ],
@@ -452,6 +456,39 @@
       }
     },
     {
+      "id": "T008",
+      "title": "Возобновлять включённое автовыполнение после нового сообщения пользователя",
+      "why": "Возобновлять включённое автовыполнение после нового сообщения пользователя",
+      "dependencies": [],
+      "functional_paths": [
+        "src/auto-plan.mjs",
+        "src/auto-plan-state.mjs",
+        "src/main.mjs",
+        "tests/auto-plan.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/planning/auto-plan-continuation.md"
+      ],
+      "verification_ids": [
+        "unit",
+        "smoke"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Stop и вопрос агента приостанавливают автоматическое продолжение; новое отправленное сообщение пользователя возобновляет ранее включённый режим в том же разговоре без дополнительного Send",
+        "Явное выключение режима и смена разговора не возобновляются от сообщения; завершённый план не получает Продолжай",
+        "Инструкция разрешает задавать вопросы пользователю; Windows использует комплектный Git"
+      ],
+      "expected_commit_message": "feat: Возобновлять включённое автовыполнение после нового сообщения пользователя",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "event-driven-runtime-phase-2-continuation-20260928",
+        "task_id": "T008",
+        "role": "implementation"
+      }
+    },
+    {
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
@@ -466,7 +503,8 @@
         "T004",
         "T005",
         "T006",
-        "T007"
+        "T007",
+        "T008"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -547,7 +585,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-phase-2-continuation-20260928
 Current Task: нет
-Revision: 807
+Revision: 808
 
 ## Цель
 
@@ -587,6 +625,10 @@ Revision: 807
   - Git Commit: [PENDING] feat: Выпустить macOS/Windows 0.6.73 и обновить документы
   - Reference: event-driven-runtime-phase-2-continuation-20260928 / T007 / implementation
   - Файлы: package.json, package-lock.json, scripts/check-event-runtime-release.mjs, docs/RELEASE.md, docs/VERIFICATION.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/modules/workspace-sessions.md, docs/CONTEXT_DELIVERY.md, README.md
+- [TODO] T008: Возобновлять включённое автовыполнение после нового сообщения пользователя — Ожидает
+  - Git Commit: [PENDING] feat: Возобновлять включённое автовыполнение после нового сообщения пользователя
+  - Reference: event-driven-runtime-phase-2-continuation-20260928 / T008 / implementation
+  - Файлы: src/auto-plan.mjs, src/auto-plan-state.mjs, src/main.mjs, tests/auto-plan.test.mjs, docs/planning/auto-plan-continuation.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: event-driven-runtime-phase-2-continuation-20260928 / DOCS / implementation
@@ -598,5 +640,6 @@ Revision: 807
 - docs/MODULES.md → Модули проекта
 - docs/DOCUMENTATION_INDEX.md → Каталог документации
 - docs/planning/event-driven-runtime.md
+- docs/planning/auto-plan-continuation.md
 
 Служебные состояния меняются только командами workflow. Приёмка не архивирует scope.
