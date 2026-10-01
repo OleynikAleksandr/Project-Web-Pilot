@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 830,
+  "plan_revision": 831,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-3-20261001",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Завершить фазу 3 событийного рефакторинга: выполнить сопоставимые итоговые измерения и пользовательскую матрицу Chat/Work, исправить только выявленные регрессии, затем собрать и проверить парный локальный релиз Project Web Pilot 0.6.74 для macOS arm64 и Windows x64.",
   "acceptance_criteria": [
     "Завершить фазу 3 событийного рефакторинга: выполнить сопоставимые итоговые измерения и пользовательскую матрицу Chat/Work, исправить только выявленные регрессии, затем собрать и проверить парный локальный релиз Project Web Pilot 0.6.74 для macOS arm64 и Windows x64."
@@ -32,7 +32,8 @@
       "docs/architecture/ARCHITECTURE.md",
       "docs/architecture/OVERVIEW.md",
       "docs/MODULES.md",
-      "docs/DOCUMENTATION_INDEX.md"
+      "docs/DOCUMENTATION_INDEX.md",
+      "README.md"
     ]
   },
   "baseline_commit": "2fac605dcc350291d6e160dea2c7b01735b33748",
@@ -153,16 +154,41 @@
       ]
     },
     {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
+      "id": "T003",
+      "title": "Обновить README для релиза 0.6.74 и публикации GitHub",
+      "why": "Обновить README для релиза 0.6.74 и публикации GitHub",
+      "dependencies": [],
+      "functional_paths": [],
+      "documentation_paths": [
+        "README.md"
+      ],
+      "verification_ids": [],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "README описывает текущий 0.6.74, завершённую фазу 3, границу /Applications 0.6.73 и содержит взаимную ссылку на WorkflowKit"
+      ],
+      "expected_commit_message": "feat: Обновить README для релиза 0.6.74 и публикации GitHub",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "event-driven-runtime-phase-3-20261001",
+        "task_id": "T003",
+        "role": "implementation"
+      }
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "event-driven-runtime-phase-3-20261001",
         "task_id": "DOCS",
-        "role": "implementation"
+        "role": "implementation",
+        "iteration": 2
       },
       "dependencies": [
         "T001",
-        "T002"
+        "T002",
+        "T003"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -173,7 +199,8 @@
         "docs/RELEASE.md",
         "docs/architecture/OVERVIEW.md",
         "docs/MODULES.md",
-        "docs/DOCUMENTATION_INDEX.md"
+        "docs/DOCUMENTATION_INDEX.md",
+        "README.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -210,10 +237,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-phase-3-20261001
 Current Task: нет
-Revision: 830
+Revision: 831
 
 ## Цель
 
@@ -233,10 +260,14 @@ Revision: 830
   - Git Commit: [DONE] feat: Собрать и проверить парный локальный релиз 0.6.74
   - Reference: event-driven-runtime-phase-3-20261001 / T002 / implementation
   - Файлы: package.json, package-lock.json, scripts/release-all.mjs, scripts/release-mac.mjs, scripts/verify-windows-package.mjs, scripts/check-event-runtime-release.mjs, docs/planning/event-driven-runtime.md, docs/RELEASE.md, docs/VERIFICATION.md
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: актуализировать контекст проекта
+- [TODO] T003: Обновить README для релиза 0.6.74 и публикации GitHub — Ожидает
+  - Git Commit: [PENDING] feat: Обновить README для релиза 0.6.74 и публикации GitHub
+  - Reference: event-driven-runtime-phase-3-20261001 / T003 / implementation
+  - Файлы: README.md
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: event-driven-runtime-phase-3-20261001 / DOCS / implementation
-  - Файлы: docs/planning/event-driven-runtime.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
+  - Файлы: docs/planning/event-driven-runtime.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, README.md
 
 ## Context Pack For This Cycle
 
