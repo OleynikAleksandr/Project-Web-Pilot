@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 823,
+  "plan_revision": 824,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-3-20261001",
@@ -16,11 +16,12 @@
   ],
   "approved_scope": {
     "functional_paths": [
-      "src",
-      "tests",
-      "scripts",
+      "src/main.mjs",
       "package.json",
-      "package-lock.json"
+      "package-lock.json",
+      "scripts/release-all.mjs",
+      "scripts/release-mac.mjs",
+      "scripts/verify-windows-package.mjs"
     ],
     "documentation_paths": [
       "docs/planning/event-driven-runtime.md",
@@ -80,9 +81,7 @@
       },
       "dependencies": [],
       "functional_paths": [
-        "src",
-        "tests",
-        "scripts"
+        "src/main.mjs"
       ],
       "documentation_paths": [
         "docs/planning/event-driven-runtime.md",
@@ -112,11 +111,15 @@
         "task_id": "T002",
         "role": "implementation"
       },
-      "dependencies": [],
+      "dependencies": [
+        "T001"
+      ],
       "functional_paths": [
         "package.json",
         "package-lock.json",
-        "scripts"
+        "scripts/release-all.mjs",
+        "scripts/release-mac.mjs",
+        "scripts/verify-windows-package.mjs"
       ],
       "documentation_paths": [
         "docs/planning/event-driven-runtime.md",
@@ -189,7 +192,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-phase-3-20261001
 Current Task: нет
-Revision: 823
+Revision: 824
 
 ## Цель
 
@@ -204,11 +207,11 @@ Revision: 823
 - [TODO] T001: Проверить пользовательские сценарии и повторить сопоставимые измерения — Ожидает
   - Git Commit: [PENDING] feat: Проверить пользовательские сценарии и повторить сопоставимые измерения
   - Reference: event-driven-runtime-phase-3-20261001 / T001 / implementation
-  - Файлы: src, tests, scripts, docs/planning/event-driven-runtime.md, docs/VERIFICATION.md
+  - Файлы: src/main.mjs, docs/planning/event-driven-runtime.md, docs/VERIFICATION.md
 - [TODO] T002: Собрать и проверить парный локальный релиз 0.6.74 — Ожидает
   - Git Commit: [PENDING] feat: Собрать и проверить парный локальный релиз 0.6.74
   - Reference: event-driven-runtime-phase-3-20261001 / T002 / implementation
-  - Файлы: package.json, package-lock.json, scripts, docs/planning/event-driven-runtime.md, docs/RELEASE.md, docs/VERIFICATION.md
+  - Файлы: package.json, package-lock.json, scripts/release-all.mjs, scripts/release-mac.mjs, scripts/verify-windows-package.mjs, docs/planning/event-driven-runtime.md, docs/RELEASE.md, docs/VERIFICATION.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: event-driven-runtime-phase-3-20261001 / DOCS / implementation
