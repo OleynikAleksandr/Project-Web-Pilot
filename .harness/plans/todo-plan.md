@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 831,
+  "plan_revision": 833,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-3-20261001",
@@ -168,13 +168,16 @@
         "README описывает текущий 0.6.74, завершённую фазу 3, границу /Applications 0.6.73 и содержит взаимную ссылку на WorkflowKit"
       ],
       "expected_commit_message": "feat: Обновить README для релиза 0.6.74 и публикации GitHub",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "event-driven-runtime-phase-3-20261001",
         "task_id": "T003",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "README.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -240,7 +243,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-phase-3-20261001
 Current Task: нет
-Revision: 831
+Revision: 833
 
 ## Цель
 
@@ -260,8 +263,8 @@ Revision: 831
   - Git Commit: [DONE] feat: Собрать и проверить парный локальный релиз 0.6.74
   - Reference: event-driven-runtime-phase-3-20261001 / T002 / implementation
   - Файлы: package.json, package-lock.json, scripts/release-all.mjs, scripts/release-mac.mjs, scripts/verify-windows-package.mjs, scripts/check-event-runtime-release.mjs, docs/planning/event-driven-runtime.md, docs/RELEASE.md, docs/VERIFICATION.md
-- [TODO] T003: Обновить README для релиза 0.6.74 и публикации GitHub — Ожидает
-  - Git Commit: [PENDING] feat: Обновить README для релиза 0.6.74 и публикации GitHub
+- [DONE] T003: Обновить README для релиза 0.6.74 и публикации GitHub — Завершено
+  - Git Commit: [DONE] feat: Обновить README для релиза 0.6.74 и публикации GitHub
   - Reference: event-driven-runtime-phase-3-20261001 / T003 / implementation
   - Файлы: README.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
