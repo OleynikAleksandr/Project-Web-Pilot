@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 70,
+  "plan_revision": 72,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "release-1.5.0-docs-finalization-001",
@@ -483,13 +483,16 @@
         "README описывает интеграцию с Web Pilot 0.6.74, неизменный Workflow Kit 1.5.1 и содержит взаимную ссылку на Project Web Pilot"
       ],
       "expected_commit_message": "feat: Обновить README интеграции Project Web Pilot 0.6.74",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "release-1.5.0-docs-finalization-001",
         "task_id": "T005",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "README.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -561,7 +564,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: release-1.5.0-docs-finalization-001
 Current Task: нет
-Revision: 70
+Revision: 72
 
 ## Цель
 
@@ -625,8 +628,8 @@ Revision: 70
   - Git Commit: [DONE] feat: Обновить README интеграции с автовыполнением Web Pilot 0.6.73
   - Reference: release-1.5.0-docs-finalization-001 / T001 / implementation
   - Файлы: README.md
-- [TODO] T005: Обновить README интеграции Project Web Pilot 0.6.74 — Ожидает
-  - Git Commit: [PENDING] feat: Обновить README интеграции Project Web Pilot 0.6.74
+- [DONE] T005: Обновить README интеграции Project Web Pilot 0.6.74 — Завершено
+  - Git Commit: [DONE] feat: Обновить README интеграции Project Web Pilot 0.6.74
   - Reference: release-1.5.0-docs-finalization-001 / T005 / implementation
   - Файлы: README.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
