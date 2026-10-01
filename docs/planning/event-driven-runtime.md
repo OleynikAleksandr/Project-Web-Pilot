@@ -3,7 +3,7 @@
 Дата: 28.09.2026; актуализация 29.09.2026. Статус: фазы 1 и 2 реализованы в source. Последняя пользовательская поставка — 0.6.73 и предшествует source-коммитам T002/T003 фазы 2; итоговая проверка и парный релиз относятся к фазе 3.
 Историческая основа первоначального аудита: Project Web Pilot 0.6.63, commit `1fe2e5ac5de33a597f4e5c903ab7cc43b2b05caf`, Workflow Kit 1.5.0.
 Среда main: Electron 44.3.0 / встроенный Node 24.20.0. Версии фактически получены 28.09.2026 через `process.versions` из executable комплектного `Project Web Pilot.app` в режиме `ELECTRON_RUN_AS_NODE=1`, без запуска UI. Node 22.17.0 из recovery относится к Workflow runtime и не определяет поведение fs.watch в Electron main. При смене Electron версию встроенного Node проверять повторно.
-Фаза 2 выполнена в current scope `event-driven-runtime-phase-2-continuation-20260928`: T001 `8b12f56d…`, T002 `a845cded…`, T003 `aa6d8055…`. Текущий DOCS фиксирует результат без новой сборки. Следующий отдельный этап по этому контракту — фаза 3: сопоставимые измерения, live Chat/Work и platform-проверки, затем парная поставка.
+Фаза 2 выполнена в current scope `event-driven-runtime-phase-2-continuation-20260928`: T001 `8b12f56d…`, T002 `a845cded…`, T003 `aa6d8055…`. Текущий DOCS фиксирует результат без новой сборки. Фаза 3 выполняется в scope `event-driven-runtime-phase-3-20261001`: сопоставимый source fixture и live Chat/Work на macOS уже пройдены в T001; reload, stale, оформление и сворачивание/восстановление фиксируются до её коммита, затем следует парная поставка 0.6.74.
 
 ## Результат
 

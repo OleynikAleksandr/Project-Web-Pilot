@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 824,
+  "plan_revision": 826,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-3-20261001",
@@ -72,8 +72,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "event-driven-runtime-phase-3-20261001",
         "task_id": "T001",
@@ -101,7 +101,11 @@
         "Конкретные регрессии, выявленные матрицей, исправлены в этой задаче и покрыты относящимися тестами; отсутствие регрессии не порождает лишних изменений.",
         "Windows fixture/package evidence отделено от native Windows evidence; если native Windows недоступен в этой среде, это явно зафиксировано как пользовательская проверка, а не объявлено выполненным."
       ],
-      "expected_commit_message": "feat: Проверить пользовательские сценарии и повторить сопоставимые измерения"
+      "expected_commit_message": "feat: Проверить пользовательские сценарии и повторить сопоставимые измерения",
+      "actual_files": [
+        "docs/VERIFICATION.md",
+        "docs/planning/event-driven-runtime.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -192,7 +196,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-phase-3-20261001
 Current Task: нет
-Revision: 824
+Revision: 826
 
 ## Цель
 
@@ -204,8 +208,8 @@ Revision: 824
 
 ## Микрозадачи
 
-- [TODO] T001: Проверить пользовательские сценарии и повторить сопоставимые измерения — Ожидает
-  - Git Commit: [PENDING] feat: Проверить пользовательские сценарии и повторить сопоставимые измерения
+- [DONE] T001: Проверить пользовательские сценарии и повторить сопоставимые измерения — Завершено
+  - Git Commit: [DONE] feat: Проверить пользовательские сценарии и повторить сопоставимые измерения
   - Reference: event-driven-runtime-phase-3-20261001 / T001 / implementation
   - Файлы: src/main.mjs, docs/planning/event-driven-runtime.md, docs/VERIFICATION.md
 - [TODO] T002: Собрать и проверить парный локальный релиз 0.6.74 — Ожидает

@@ -8,6 +8,28 @@ T003 подтверждена `aa6d8055e5000901e679024fdfd1f44e9035fec6`: из `
 
 Текущая пользовательская поставка по-прежнему 0.6.73 и создана до T002/T003. Отдельная сборка фазы 2 не назначалась. Live ChatGPT/current account, native Windows и сопоставимые итоговые baseline-замеры относятся к фазе 3; VM/Computer Use не запускались.
 
+## Event-driven runtime / Фаза 3 / T001 — промежуточный сопоставимый fixture (01.10.2026)
+
+На current source `ecb3bd1c5d0aa957a1d30ece63168277cd1d9194` штатный `npm run smoke -- --event-runtime-baseline` завершился с exit 0 в Electron 44.3.0 / Chromium 152.0.7977.78 / Node 24.20.0, macOS arm64. Использован тот же измеритель и те же три стабильных окна по 60 с, что в baseline фазы 1. Raw evidence сохранено в `.harness/runtime/event-runtime-phase3-fixture.json`.
+
+| Сценарий | executeJavaScript baseline → current | IPC baseline → current | worker/Node baseline → current | diagnostics baseline → current | CPU current Browser / GPU / Tab |
+| --- | ---: | ---: | ---: | ---: | --- |
+| Доставленный сохранённый чат, простой | 112 → 2 | 40 → 0 | 0 → 1 | 13 → 0 | 0.023 / 0.002 / 0.002 |
+| Ожидание генерации | 112 → 1 | 41 → 0 | 11 → 0 | 12 → 0 | 0.013 / 0.230 / 0.062 |
+| Потоковый ответ fixture | 112 → 12 | 40 → 12 | 10 → 0 | 12 → 12 | 0.015 / 0.393 / 0.215 |
+
+Целевые постоянные опросы в idle/waiting окнах не вернулись: IPC и diagnostic increments равны нулю, executeJavaScript остаётся единичным событийным. Streaming fixture закономерно даёт 12 событийных снимков/diagnostic records за 60 с; это не периодический fallback. CPU приведён как наблюдение тем же способом, но не используется для заявления фиксированного процента улучшения: GPU/Tab streaming близки к прежнему фону и местами немного выше. Один worker start в idle относится к эпизодическому действию внутри окна, а не к периодическому запуску.
+
+Live-матрица T001 также выполнена на current source `ecb3bd1c5d0aa957a1d30ece63168277cd1d9194` с реальным аккаунтом ChatGPT на macOS arm64. Чтобы не запускать старую установленную 0.6.73 и не перезапускать её runtime/tunnel, использован только временный стенд в `/tmp`: копия браузерного профиля, отдельный `appData` и wrapper, который не меняет исходники и запрещает тестовому экземпляру перенастраивать действующий runtime. VM и Computer Use не использовались.
+
+Через настоящий sidebar создан отдельный live Chat: recovery 133.5 КБ / plan 825 подготовлен за 2070 мс, отправка заняла 4.08 с; observer зафиксировал реальную генерацию `busy → idle`, ответ завершился без connection error. Затем создан отдельный live Work: подготовка 1488 мс с заранее готовым пакетом, отправка 0.37 с; Work также прошёл `busy → idle`. В диагностике composer явно зафиксированы `experience:"chat"` и `experience:"work"`, Paste принят и Send выполнен одним click. Эти тестовые разговоры существуют только как новые разговоры ChatGPT; локальные записи создавались в изолированной копии store и не меняли основной Web Pilot.
+
+Повторное открытие и reload live Work сохранили тот же URL и одну пару «Вы сказали / ChatGPT сказал», а sidebar сохранил исходное время доставки и `Контекст передан`: повторного recovery Send не произошло. Для file-event/stale выбранная Work-сессия сначала была delivered; после фактического изменения канонического `docs/planning/event-driven-runtime.md` файловый watcher без повторной отправки перевёл её в `Контекст нужно обновить`, plan-card остался `В работе · 0 из 3 выполнено`.
+
+Live-оформление проверено на настоящем composer: один `data-web-pilot-composer-capsule`, фактический фон `rgb(43, 43, 43)` соответствует настройке `#2b2b2b`. После удаления только служебной capsule-метки и изменения `class` отслеживаемого editor MutationObserver восстановил capsule за событие; секундный safety-pass не требовался. Нативный Electron probe через `BaseWindow.minimize()/restore()` получил события `minimize` и `restore`; состояние окна прошло `visible=true → minimized=true/visible=false → visible=true`, а page observer записал `visibility: visible → hidden → visible` при сохранённых composer, idle и отсутствии connection error. Точный поиск по live diagnostic не нашёл событий `event-checker/state-divergence`.
+
+Таким образом macOS live/fixture часть T001 подтверждена без исправлений production-кода: выявленных регрессий нет. Native Windows здесь не выполнялся и не подменяется macOS cross-platform fixture/package evidence; его статус остаётся отдельной пользовательской/platform-проверкой по контракту.
+
 ## Текущая локальная поставка — 0.6.73 / T005–T008
 
 T005 — 42b39b923e6ab845cdc5607b0cf469108b361cc4, T006 — cbfca56ba79d110c88b8b479bcaab6e04bcef71c, T008 — 232de6b8618f0af4342fbc69d3523d62549e1770: unit и Electron smoke PASSED. Последний полный suite: 434 теста, 431 PASS, 3 SKIP, 0 FAIL.
