@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 828,
+  "plan_revision": 830,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-3-20261001",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Завершить фазу 3 событийного рефакторинга: выполнить сопоставимые итоговые измерения и пользовательскую матрицу Chat/Work, исправить только выявленные регрессии, затем собрать и проверить парный локальный релиз Project Web Pilot 0.6.74 для macOS arm64 и Windows x64.",
   "acceptance_criteria": [
     "Завершить фазу 3 событийного рефакторинга: выполнить сопоставимые итоговые измерения и пользовательскую матрицу Chat/Work, исправить только выявленные регрессии, затем собрать и проверить парный локальный релиз Project Web Pilot 0.6.74 для macOS arm64 и Windows x64."
@@ -153,8 +153,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "event-driven-runtime-phase-3-20261001",
         "task_id": "DOCS",
@@ -182,7 +182,17 @@
       "acceptance_criteria": [
         "Документы соответствуют результату"
       ],
-      "expected_commit_message": "docs: актуализировать контекст проекта"
+      "expected_commit_message": "docs: актуализировать контекст проекта",
+      "actual_files": [
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/planning/event-driven-runtime.md"
+      ]
     }
   ],
   "blocked_reason": null,
@@ -200,10 +210,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: event-driven-runtime-phase-3-20261001
 Current Task: нет
-Revision: 828
+Revision: 830
 
 ## Цель
 
@@ -223,8 +233,8 @@ Revision: 828
   - Git Commit: [DONE] feat: Собрать и проверить парный локальный релиз 0.6.74
   - Reference: event-driven-runtime-phase-3-20261001 / T002 / implementation
   - Файлы: package.json, package-lock.json, scripts/release-all.mjs, scripts/release-mac.mjs, scripts/verify-windows-package.mjs, scripts/check-event-runtime-release.mjs, docs/planning/event-driven-runtime.md, docs/RELEASE.md, docs/VERIFICATION.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать контекст проекта
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать контекст проекта
   - Reference: event-driven-runtime-phase-3-20261001 / DOCS / implementation
   - Файлы: docs/planning/event-driven-runtime.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
 

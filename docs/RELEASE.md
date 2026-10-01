@@ -1,6 +1,21 @@
 # Выпуск и постоянный путь запуска
 
-## Текущая локальная поставка — 0.6.73 / 29.09.2026
+## Текущая локальная поставка — 0.6.74 / 01.10.2026
+
+0.6.74 завершает трёхфазный событийный рефакторинг и сохраняет AutoPlan 0.6.73. T001 фазы 3 выполнила сопоставимые 60-секундные fixture-замеры и live Chat/Work на macOS с реальным аккаунтом: recovery, `busy → idle`, reload без дубля, file-event/stale, событийное оформление composer и minimize/restore. Production-регрессий не выявлено. Workflow Kit 1.5.1 неизменён.
+
+T002 штатно выполнила `npm run build` внутри управляемого Workflow Kit commit `a0db3583fe5f0e24169aa635bf9b0d12ee5d284f`. Release manifest фиксирует `sourceCommit=274688bb141c8a06cd4a32a68a4ee47a30909e0c`, 104 source/resource файла и `packagedSourceMatches=true`; версия/релизные изменения вошли в T002. Workflow Kit в обеих упаковках: 1.5.1, 35 файлов, SHA-256 `93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33`.
+
+Поставка: `~/Downloads/WebPilot-0.6.74/`.
+
+- `Project-Web-Pilot-0.6.74-macOS-arm64.zip` — 181585874 bytes; SHA-256 `c42738a5e5dec9b0d3cccb74b5e6e3c48a39fe3fad65827891c72abf9591a1cf`.
+- `Project-Web-Pilot-0.6.74-Windows-x64.zip` — 316847740 bytes; SHA-256 `aa02587d23a356975c8fb8814ed2ba7e85f39f8db88d571c9c228fe65b09377d`.
+
+Постоянный root `Project Web Pilot.app` обновлён до 0.6.74 с сохранением device/inode `16777234/406600483`, то есть Finder-identity не изменилась. Отдельная копия `/Applications/Project Web Pilot.app` в T002 не обновлялась: inode `406571340` сохранён, версия остаётся 0.6.73. Это явно отличать от root app и ZIP-поставки.
+
+Native Windows запуск и clean VM в этой фазе не выполнялись (`nativeWindowsTested=false`, `cleanVmTested=false`) и не подменяются macOS cross-package проверкой. GitHub Release не публиковался.
+
+## Предыдущая локальная поставка — 0.6.73 / 29.09.2026
 
 Автовыполнение короткими ответами, продолжение частичного плана, Stop/вопрос с возобновлением после сообщения пользователя, диагностика отсутствия наблюдаемого прогресса и исправление T001 второй фазы. Workflow Kit 1.5.1 неизменён. Контракт — [автовыполнение](planning/auto-plan-continuation.md).
 

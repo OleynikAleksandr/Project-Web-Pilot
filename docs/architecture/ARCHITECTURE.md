@@ -1,6 +1,6 @@
 # Архитектура
 
-0.6.73: AutoPlan управляет контрольными ответами и точным «Продолжай» через существующие PageStateSource/ChatGPTComposer; частичный план и подтверждённое завершение читает auto-plan-state.mjs. Stop/вопрос приостанавливают цикл до отправленного сообщения пользователя, явное выключение снимает режим. Однократный watchdog не нажимает Stop. Контракт — docs/planning/auto-plan-continuation.md. Workflow Kit 1.5.1 неизменён. После выпуска 0.6.73 source T002/T003 событийного рефакторинга завершён: удалён общий 1500-мс функциональный пульс и секундный safety-pass цветов; парная поставка остаётся фазе 3.
+0.6.74: AutoPlan сохраняет контракт 0.6.73, а событийный runtime завершает фазы 2/3: startup-account и ContextSession используют общий PageStateSource, проект/план обновляются по файловым событиям, общий 1500-мс функциональный пульс и секундный safety-pass цветов отсутствуют. Сопоставимый fixture и live Chat/Work на macOS пройдены; парная macOS arm64/Windows x64 поставка собрана. Workflow Kit 1.5.1 неизменён; native Windows остаётся отдельной platform-проверкой.
 
 В 0.6.71 передача recovery завершается сразу после Send, без поиска текста в DOM или ожидания ответа. Paste сохранён; старые неопределённые попытки больше не показывают бесконечную проверку. Контракт — docs/CONTEXT_DELIVERY.md, измерения — docs/VERIFICATION.md.
 
@@ -14,14 +14,14 @@
 
 `ConversationRecovery` владеет одной автоматической попыткой открыть тот же известный URL, проверкой черновика/отправки, отменой при выборе другого чата и паузой после 429. Обычный ручной первый Send подтверждается trusted gesture и собственным пользовательским текстом внутри страницы; наружу идёт счётчик. `manualStart` — необязательный boolean schema v6, отдельный от attempt.sent; явное обновление контекста снимает его. Фаза manual-session не отправляет recovery при reopen.
 
-Фаза 2 по `docs/planning/event-driven-runtime.md` завершена в source 29.09.2026; фаза 3 остаётся отдельным этапом итоговых измерений, live/native проверок и парной поставки. Runtime Workflow Kit не менялся. Версионные разделы ниже сохраняют историю.
+Фазы 2 и 3 по `docs/planning/event-driven-runtime.md` завершены: 29.09.2026 завершён source-рефакторинг, 01.10.2026 выполнены сопоставимые измерения и live Chat/Work на macOS и собрана парная поставка 0.6.74. Runtime Workflow Kit не менялся. Native Windows не подменяется cross-package проверкой и остаётся отдельной platform-проверкой. Версионные разделы ниже сохраняют историю.
 
 
 Действующие компактные контракты: `docs/architecture/OVERVIEW.md`, `docs/MODULES.md`, `docs/modules/session-owned-plans.md` (stable filename, теперь single-active contract), `docs/modules/workspace-sessions.md`, `docs/modules/workflow-kit-recovery.md` и `docs/modules/session-opening-performance.md`. Версионные разделы ниже — история. С 0.6.58 / Workflow Kit 1.5.0 один checkout/worktree имеет один current plan; Web Pilot sessions являются chats, а prepared/session-owned lifecycle удалён.
 
 ## Состояние
 
-Текущий локальный выпуск — **0.6.73**, macOS arm64 / Windows x64; Workflow Kit **1.5.1**. Парная поставка — `~/Downloads/WebPilot-0.6.73/`. В source после этой поставки завершены T002/T003 фазы 2; они ещё не установлены в постоянный app. Итоговые package/installed проверки и новый парный выпуск выполняются в фазе 3. Состав, контрольные суммы и границы проверки — `docs/RELEASE.md` и `docs/VERIFICATION.md`.
+Текущий локальный выпуск — **0.6.74**, macOS arm64 / Windows x64; Workflow Kit **1.5.1**. Парная поставка — `~/Downloads/WebPilot-0.6.74/`; 104 source/resource файла совпадают с обеими упаковками. Постоянный root app обновлён до 0.6.74 с сохранением inode; `/Applications/Project Web Pilot.app` этой сборкой не обновлялся и остаётся 0.6.73. Состав, контрольные суммы и границы проверки — `docs/RELEASE.md` и `docs/VERIFICATION.md`.
 
 Пользователь принял чистый macOS-путь 0.6.38 и проверку 0.6.39. Пользовательское испытание нового изменения 0.6.40 и Windows остаются отдельными. 18.09.2026 пользователь поручил закрыть план first-run-onboarding-031 и передал испытания Windows 11 другому агенту. Итог macOS и границы доказательств — docs/CLEAN_INSTALL.md; условия и оставшиеся критерии Windows — docs/TRANSFER_TO_WINDOWS.md. План first-run-corrections-032 принадлежит другой сессии и этим закрытием не изменяется.
 

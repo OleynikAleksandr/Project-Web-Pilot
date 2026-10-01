@@ -1,12 +1,12 @@
 # Проверки и приёмка
 
-## Текущий source — фаза 2 завершена / 29.09.2026
+## Текущий source — фаза 3 завершена / 01.10.2026
 
 T001 фазы 2 подтверждена коммитом `8b12f56d266b085f5f6ef2ff380c8f7faa13324f`; прежняя PREPARED-транзакция не считалась завершением. T002 подтверждена `a845cded1e1c2f0adcda34ff61a3b6328852ff98`: startup-account получает tri-state login из общего sandboxed observer, навигация/явная проверка и закрытие auth-popup используют единичный isolated snapshot; общий функциональный `setInterval` 1500 мс удалён. Opt-in `--event-runtime-checker` доступен только непакетной сборке и лишь записывает расхождения после завершения очередей, не вызывает controller.tick, warm, Send, запись сессии или исправление проекции. Назначенные unit и Electron smoke прошли.
 
 T003 подтверждена `aa6d8055e5000901e679024fdfd1f44e9035fec6`: из `installComposerCapsule` удалён секундный safety interval. Один узкий observer отслеживает editor/предков до html, childList, class/style, ResizeObserver, resize и prefers-color-scheme; собственные `data-web-pilot-*` атрибуты не входят в attributeFilter. Адресный `tests/chatgpt-colors.test.mjs` прошёл 6/6, включая явный запрет polling; управляемый commit также прошёл назначенные unit и Electron smoke. Chromium fixture проверяет перенос capsule при изменении style предка и повторную разметку после замены subtree редактора.
 
-Текущая пользовательская поставка по-прежнему 0.6.73 и создана до T002/T003. Отдельная сборка фазы 2 не назначалась. Live ChatGPT/current account, native Windows и сопоставимые итоговые baseline-замеры относятся к фазе 3; VM/Computer Use не запускались.
+Фаза 3 завершена: T001 подтверждена commit `274688bb141c8a06cd4a32a68a4ee47a30909e0c`, T002 — `a0db3583fe5f0e24169aa635bf9b0d12ee5d284f`. Текущая парная поставка — 0.6.74. Live Chat/Work и сопоставимые измерения выполнены на macOS; native Windows и clean VM не выполнялись и явно остаются отдельной platform-проверкой. VM/Computer Use не запускались.
 
 ## Event-driven runtime / Фаза 3 / T001 — промежуточный сопоставимый fixture (01.10.2026)
 
@@ -30,7 +30,15 @@ Live-оформление проверено на настоящем composer: �
 
 Таким образом macOS live/fixture часть T001 подтверждена без исправлений production-кода: выявленных регрессий нет. Native Windows здесь не выполнялся и не подменяется macOS cross-platform fixture/package evidence; его статус остаётся отдельной пользовательской/platform-проверкой по контракту.
 
-## Текущая локальная поставка — 0.6.73 / T005–T008
+## Event-driven runtime / Фаза 3 / T002 — парная поставка 0.6.74
+
+Управляемый `commit --task T002` выполнил назначенный package-check `npm run build` и завершился успешно. Release manifest: `version=0.6.74`, `sourceCommit=274688bb141c8a06cd4a32a68a4ee47a30909e0c`, `sourceFiles=104`, `packagedSourceMatches=true`; Workflow Kit 1.5.1 / 35 files / SHA-256 `93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33`.
+
+Проверены обе выдаваемые упаковки и их SHA-256: macOS arm64 — `c42738a5e5dec9b0d3cccb74b5e6e3c48a39fe3fad65827891c72abf9591a1cf`, Windows x64 — `aa02587d23a356975c8fb8814ed2ba7e85f39f8db88d571c9c228fe65b09377d`. Root `Project Web Pilot.app` сообщает 0.6.74 и сохранил device/inode `16777234/406600483`. `/Applications/Project Web Pilot.app` не являлся целью T002 и остаётся 0.6.73 с inode `406571340`; это не объявляется установленной проверкой 0.6.74.
+
+Manifest явно содержит `nativeWindowsTested=false` и `cleanVmTested=false`. Windows ZIP проверен как cross-package на macOS, но native Windows запуск не подменён этой проверкой. GitHub Release не публиковался.
+
+## Предыдущая локальная поставка — 0.6.73 / T005–T008
 
 T005 — 42b39b923e6ab845cdc5607b0cf469108b361cc4, T006 — cbfca56ba79d110c88b8b479bcaab6e04bcef71c, T008 — 232de6b8618f0af4342fbc69d3523d62549e1770: unit и Electron smoke PASSED. Последний полный suite: 434 теста, 431 PASS, 3 SKIP, 0 FAIL.
 

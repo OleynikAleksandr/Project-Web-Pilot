@@ -56,7 +56,7 @@
 | --- | --- |
 | docs/modules/session-owned-plans.md | Stable filename действующего 0.6.58 контракта: один current plan на checkout/worktree; sessions — chats, legacy ownership только history |
 | docs/modules/workspace-sessions.md | Session store, Chat/Work navigation, backward-compatible legacy fields и проекция current plan |
-| docs/modules/workflow-kit-recovery.md | Workflow Kit 1.5.0, checkout-scoped recovery/cache и migration legacy session plans |
+| docs/modules/workflow-kit-recovery.md | Workflow Kit 1.5.1, checkout-scoped recovery/cache, migration legacy session plans и carryover continuity |
 | docs/design/session-plan-navigation.md | Исторический макет 0.6.28 прежней prepared/session-owned модели; не действующий UI-контракт |
 ## Действующий контракт — скорость открытия
 | Документ | Назначение |
@@ -78,8 +78,8 @@
 ## Событийная обработка — планирование 2026-09-28
 | Документ | Назначение |
 | --- | --- |
-| [Событийная обработка состояния Web Pilot](planning/event-driven-runtime.md) | Согласованный контракт трёх этапов; фаза 1 реализована и выпущена серией 0.6.64–0.6.71, фаза 2 завершена в source 29.09.2026: файловые события/прогрев, startup-account через общий observer, удаление общего пульса и секундного обхода цветов. Фаза 3 — итоговые сопоставимые измерения, live/native проверки и парная поставка |
-## Workflow Kit 1.5.1 / Web Pilot 0.6.72
+| [Событийная обработка состояния Web Pilot](planning/event-driven-runtime.md) | Завершённый контракт трёх этапов: фаза 1 — общий observer/дедупликация, фаза 2 — файловые события/прогрев и удаление постоянных опросов, фаза 3 — сопоставимые измерения, live Chat/Work на macOS и парная поставка 0.6.74; native Windows отмечен как отдельная непроведённая проверка |
+## Workflow Kit 1.5.1 / Web Pilot 0.6.74
 
 ## Актуальные дополнения
 - [Автовыполнение](planning/auto-plan-continuation.md) — короткие этапы, частичный план, Продолжай и пауза.
