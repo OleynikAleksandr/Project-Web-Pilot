@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 826,
+  "plan_revision": 828,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "event-driven-runtime-phase-3-20261001",
@@ -21,7 +21,8 @@
       "package-lock.json",
       "scripts/release-all.mjs",
       "scripts/release-mac.mjs",
-      "scripts/verify-windows-package.mjs"
+      "scripts/verify-windows-package.mjs",
+      "scripts/check-event-runtime-release.mjs"
     ],
     "documentation_paths": [
       "docs/planning/event-driven-runtime.md",
@@ -108,8 +109,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "event-driven-runtime-phase-3-20261001",
         "task_id": "T002",
@@ -123,7 +124,8 @@
         "package-lock.json",
         "scripts/release-all.mjs",
         "scripts/release-mac.mjs",
-        "scripts/verify-windows-package.mjs"
+        "scripts/verify-windows-package.mjs",
+        "scripts/check-event-runtime-release.mjs"
       ],
       "documentation_paths": [
         "docs/planning/event-driven-runtime.md",
@@ -143,7 +145,12 @@
         "Постоянный Project Web Pilot.app сохраняет filesystem identity/Finder alias; выдача находится в ~/Downloads/WebPilot-0.6.74/ и содержит оба ZIP, хэши, инструкции и release-manifest.",
         "Native Windows запуск не подменён macOS cross-package проверкой; если он не выполнен локально, ограничение явно передано пользователю."
       ],
-      "expected_commit_message": "feat: Собрать и проверить парный локальный релиз 0.6.74"
+      "expected_commit_message": "feat: Собрать и проверить парный локальный релиз 0.6.74",
+      "actual_files": [
+        "package-lock.json",
+        "package.json",
+        "scripts/check-event-runtime-release.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -196,7 +203,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: event-driven-runtime-phase-3-20261001
 Current Task: нет
-Revision: 826
+Revision: 828
 
 ## Цель
 
@@ -212,10 +219,10 @@ Revision: 826
   - Git Commit: [DONE] feat: Проверить пользовательские сценарии и повторить сопоставимые измерения
   - Reference: event-driven-runtime-phase-3-20261001 / T001 / implementation
   - Файлы: src/main.mjs, docs/planning/event-driven-runtime.md, docs/VERIFICATION.md
-- [TODO] T002: Собрать и проверить парный локальный релиз 0.6.74 — Ожидает
-  - Git Commit: [PENDING] feat: Собрать и проверить парный локальный релиз 0.6.74
+- [DONE] T002: Собрать и проверить парный локальный релиз 0.6.74 — Завершено
+  - Git Commit: [DONE] feat: Собрать и проверить парный локальный релиз 0.6.74
   - Reference: event-driven-runtime-phase-3-20261001 / T002 / implementation
-  - Файлы: package.json, package-lock.json, scripts/release-all.mjs, scripts/release-mac.mjs, scripts/verify-windows-package.mjs, docs/planning/event-driven-runtime.md, docs/RELEASE.md, docs/VERIFICATION.md
+  - Файлы: package.json, package-lock.json, scripts/release-all.mjs, scripts/release-mac.mjs, scripts/verify-windows-package.mjs, scripts/check-event-runtime-release.mjs, docs/planning/event-driven-runtime.md, docs/RELEASE.md, docs/VERIFICATION.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: event-driven-runtime-phase-3-20261001 / DOCS / implementation
