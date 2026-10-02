@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 912,
+  "plan_revision": 914,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "auto-plan-reliability-20261002",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Устранить ложные остановки режима «Автовыполнение», чтобы Web Pilot самостоятельно отправлял «Продолжай» между микрозадачами и требовал пользователя только при действительно необходимом решении.",
   "acceptance_criteria": [
     "Технические ситуации, которые агент способен исследовать сам, не требуют ручного «Продолжай» пользователя.",
@@ -610,8 +610,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "auto-plan-reliability-20261002",
         "task_id": "DOCS",
@@ -656,7 +656,10 @@
         "Основная актуализация документации выполнена в T009 до публикаций T010–T012; финальная DOCS проверяет итоговые ссылки, версии и соответствие публикаций.",
         "После финального DOCS-коммита актуальные коммиты документации отправлены на GitHub; проверено совпадение локального и удалённого HEAD всех трёх репозиториев."
       ],
-      "expected_commit_message": "docs: актуализировать контекст проекта"
+      "expected_commit_message": "docs: актуализировать контекст проекта",
+      "actual_files": [
+        "docs/VERIFICATION.md"
+      ]
     }
   ],
   "blocked_reason": null,
@@ -674,10 +677,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: auto-plan-reliability-20261002
 Current Task: нет
-Revision: 912
+Revision: 914
 
 ## Цель
 
@@ -745,8 +748,8 @@ Revision: 912
   - Git Commit: [DONE] docs: дополнить релиз Sidebar подписанным DMG
   - Reference: auto-plan-reliability-20261002 / T013 / implementation
   - Файлы: docs/SOURCE_WORKSPACES.md, docs/VERIFICATION.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать контекст проекта
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать контекст проекта
   - Reference: auto-plan-reliability-20261002 / DOCS / implementation
   - Файлы: docs/planning/auto-plan-reliability.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/planning/auto-plan-continuation.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/RELEASE.md, docs/VERIFICATION.md, README.md, AGENTS.md, docs/SOURCE_WORKSPACES.md
 
