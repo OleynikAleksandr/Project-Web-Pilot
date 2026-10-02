@@ -2,7 +2,6 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
 import { getRuntimeRoot } from '@webpilot/workflow-kit';
 import { runtimeFiles, runtimeDigest, EXPECTED_WORKFLOW_KIT_FILES, EXPECTED_WORKFLOW_KIT_SHA256 } from './check-workflow-kit-dependency.mjs';
 import { PROJECT_ROOT, DEFAULT_STAGE, stageWorkflowKit } from './stage-workflow-kit.mjs';

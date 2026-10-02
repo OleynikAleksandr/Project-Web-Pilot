@@ -1,6 +1,5 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { randomUUID } from 'node:crypto';
@@ -8,23 +7,6 @@ import { WorkspaceSetup } from './workspace-setup.mjs';
 const execute = promisify(execFile);
 const fail = (code, message) => Object.assign(new Error(message), { code });
 
-// Use the trusted bundled facade for data-only projection before workspace readiness.
-// Installed workspace code is executed only by the strict command path.
-let projectionFacade;
-async function trustedProjection() {
-  const packaged = process.resourcesPath && path.join(process.resourcesPath, 'resources/workflow-kit/lib/session-plans.mjs');
-  if (packaged) {
-    try { await fs.access(packaged); return import(pathToFileURL(packaged).href); }
-    catch (error) { if (error.code !== 'ENOENT') throw error; }
-  }
-  return import('@webpilot/workflow-kit/lib/session-plans');
-}
-export async function readSessionPlans(workspace, sessionId) {
-  const file = path.join(workspace, '.harness/kit/lib/session-plans.mjs');
-  try { await fs.access(file); } catch (error) { if (error.code === 'ENOENT') return null; throw error; }
-  const facade = await (projectionFacade ??= trustedProjection().catch(error => { projectionFacade = null; throw error; }));
-  return facade.sessionPlanView(workspace, sessionId);
-}
 export class SessionPlans {
   constructor({ setup = new WorkspaceSetup(), run = execute, onWorkerStart = () => {} } = {}) {
     Object.assign(this, { setup, run, onWorkerStart });

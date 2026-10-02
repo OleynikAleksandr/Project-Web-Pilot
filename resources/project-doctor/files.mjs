@@ -24,7 +24,7 @@ export function readFile(file) {
   } catch (error) { if (error.code === 'ENOENT') return null; throw error; }
 }
 export const signature = file => { const value = readFile(file); return value ? digest(Buffer.concat([Buffer.from(value.mode + '\n'), value.content])) : null; };
-export function atomicWrite(file, content, mode = 0o644) {
+function atomicWrite(file, content, mode = 0o644) {
   regularPath(file); fs.mkdirSync(path.dirname(file), { recursive: true });
   const temporary = file + '.doctor-' + randomUUID();
   try { fs.writeFileSync(temporary, content, { mode, flag: 'wx' }); fs.chmodSync(temporary, mode); fs.renameSync(temporary, file); }

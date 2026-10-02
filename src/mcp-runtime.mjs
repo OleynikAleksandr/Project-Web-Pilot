@@ -14,7 +14,7 @@ export class RuntimeError extends Error {
   constructor(code, message) { super(message); this.code = code; }
 }
 
-export function validateContextPacket(packet, workspace, selection = {}) {
+export function validateContextPacket(packet, workspace) {
   if (packet?.delivery_protocol !== CONTEXT_PROTOCOL || packet.ack_required !== false) {
     throw new RuntimeError('MCP_UPDATE_REQUIRED', 'Нужна обновлённая версия Codex Local Mac с прямой передачей контекста.');
   }

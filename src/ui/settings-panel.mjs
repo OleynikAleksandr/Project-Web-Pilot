@@ -61,7 +61,6 @@ export function settingsPanelView(action) {
         extracting: 'Распаковываем Windows runtime в профиль пользователя…',
         installing: 'Устанавливаем локальный Python, Git и MCP. Это может занять несколько минут…',
         installed: 'Windows runtime установлен. Настройте tunnel или нажмите «Проверить».',
-        'tunnel-setup-launched': 'Открыта консоль настройки tunnel. После завершения нажмите «Проверить».',
         'tunnel-unconfigured': 'Windows runtime установлен, но Secure MCP Tunnel ещё не настроен.',
         ready: 'Windows runtime и Secure MCP Tunnel готовы к работе.',
         error: 'Не удалось подготовить Windows runtime. Повторите проверку.',

@@ -171,7 +171,7 @@ export class CodexAppServerRuntime {
   }
 }
 
-export class MacSelectedRuntime {
+class MacSelectedRuntime {
   constructor({ backendRuntime, stableRuntime, status }) {
     this.backendRuntime = backendRuntime;
     this.stableRuntime = stableRuntime;
@@ -218,9 +218,9 @@ export class MacSelectedRuntime {
     throw new RuntimeError('RUNTIME_ACTION_DENIED', 'Эта операция не поддерживается оболочкой.');
   }
 
-  async loadContext(workspace, selection = {}) {
+  async loadContext(workspace) {
     await this.ensure();
-    return this.backendRuntime.loadContext(workspace, selection);
+    return this.backendRuntime.loadContext(workspace);
   }
 }
 

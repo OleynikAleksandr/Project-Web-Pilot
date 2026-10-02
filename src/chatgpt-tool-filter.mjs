@@ -1,6 +1,6 @@
 import { chatGPTDOMScript } from './chatgpt-dom.mjs';
 
-export function installToolFilter(hide, dom) {
+function installToolFilter(hide, dom) {
   const key = '__webPilotToolCallFilter';
   window[key]?.disconnect();
   const attr = 'data-web-pilot-tool-call-hidden', footprintAttr = 'data-web-pilot-tool-call-footprint-hidden';

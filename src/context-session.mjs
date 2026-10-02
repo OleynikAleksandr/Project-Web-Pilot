@@ -3,9 +3,6 @@ import { normalizeChatUrl, conversationUrlCompatibleWithExperience } from './wor
 import { CONTEXT_PROTOCOL, validateContextPacket } from './mcp-runtime.mjs';
 import { chatGPTUrlMatchesExperience, isPendingChatGPTConversation } from './chatgpt-experience.mjs';
 
-// Compatibility name retained for callers; project recovery is now checkout-scoped.
-export const sessionSelection = () => ({});
-
 export function packetMatchesProject(packet, project) {
   const expected = { project_id: project.projectId, project_name: project.name, plan_revision: project.planRevision,
     scope_id: project.scopeId, execution_scope_status: project.scopeStatus, delivery_status: project.deliveryStatus,
@@ -97,7 +94,7 @@ export class ContextSession {
 
   async packetIsCurrent(packet, project) {
     if (!packetMatchesProject(packet, project)) return false;
-    if (this.contextCache) return this.contextCache.isCurrent(project.workspace, packet.cacheKey, sessionSelection(project));
+    if (this.contextCache) return this.contextCache.isCurrent(project.workspace, packet.cacheKey);
     return this.now() - packet.generatedAtMs <= 300000;
   }
 
@@ -137,7 +134,7 @@ export class ContextSession {
     if (!this.contextCache || state.pending || state.started === state.requested) return;
     state.started = state.requested; state.pending = true;
     const request = state.started;
-    void Promise.resolve().then(() => this.contextCache.warm(project.workspace, sessionSelection(project))).then(result => {
+    void Promise.resolve().then(() => this.contextCache.warm(project.workspace)).then(result => {
       if (!this.current(generation) || this.warmState !== state) return;
       if (result?.ok === false && state.requested === request) {
         this.emit({ phase: 'error', error: { code: result.error?.code ?? 'CONTEXT_WARM_FAILED',
@@ -316,7 +313,7 @@ export class ContextSession {
         this.emit({ phase: 'loading-context', projectInfo: info });
         const preparationStarted = performance.now();
         const packet = validateContextPacket(await (this.contextCache
-          ? this.contextCache.load(project.workspace, sessionSelection(project)) : this.runtime.loadContext(project.workspace, sessionSelection(project))), project.workspace, sessionSelection(project));
+          ? this.contextCache.load(project.workspace) : this.runtime.loadContext(project.workspace)), project.workspace);
         const preparationMs = performance.now() - preparationStarted;
         if (!this.current(generation)) return;
         info = await this.inspectProject(project.workspace, project.sessionId, generation);

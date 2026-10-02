@@ -17,7 +17,6 @@ import { readWorkspace, WorkspaceSessions } from '../src/workspace-session.mjs';
 import { createScope, startTask } from '@webpilot/workflow-kit/lib/actions';
 import { withSessionPlan } from '@webpilot/workflow-kit/lib/session-plans';
 import { renderPlan } from '@webpilot/workflow-kit/lib/plan';
-import { sessionSelection } from '../src/context-session.mjs';
 import { commitTask } from '@webpilot/workflow-kit/lib/transaction';
 import { measureEventRuntimeBaseline } from './event-runtime-baseline.mjs';
 
@@ -111,14 +110,14 @@ export async function createRuntime({ browser, session }) {
   });
   return {
     ensure: async () => ({ mcp: { ready: true }, tunnel: { ready: true }, fixture: true }),
-    loadContext: async (workspace, selection = {}) => {
+    loadContext: async workspace => {
       packetLoads++;
       await new Promise(resolve => setTimeout(resolve, 650)); // Observable fixture preparation, not a performance benchmark.
-      const info = await readWorkspace(workspace, selection.sessionId);
+      const info = await readWorkspace(workspace);
       const facts = { project_id: info.projectId, project_name: info.name, plan_revision: info.planRevision,
         scope_id: info.scopeId, execution_scope_status: info.scopeStatus, delivery_status: info.deliveryStatus,
         task_id: info.nextTaskId, task_title: info.nextTaskTitle };
-      return { workspace, facts, session_id: selection.sessionId, plan_id: info.scopeId, delivery_protocol: 'inline-context-v1', ack_required: false,
+      return { workspace, facts, plan_id: info.scopeId, delivery_protocol: 'inline-context-v1', ack_required: false,
         status: 'ready', completeness: 'COMPLETE', signature: 'fixture-snapshot', head: 'fixture-head',
         generated_at_ms: Date.now(), context: fixtureContext, context_bytes: Buffer.byteLength(fixtureContext),
         context_sha256: createHash('sha256').update(fixtureContext).digest('hex') };
@@ -648,7 +647,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   } finally { disconnect(); largeView.destroy(); }
 
   controller.attach(store.selected()); await controller.tick();
-  await controller.contextCache.load(workspace, sessionSelection(store.selected()));
+  await controller.contextCache.load(workspace);
   const warmPacketLoads = packetLoads;
   assert.deepEqual(await sidebar.executeJavaScript(`(() => { document.querySelector('.project-menu-button').click(); return Array.from(document.querySelectorAll('.project-menu button')).map(button => button.textContent); })()`),
     ['Новый Chat', 'Новый Work', 'Переименовать', 'Скопировать полный путь', 'Перенести в архив']);

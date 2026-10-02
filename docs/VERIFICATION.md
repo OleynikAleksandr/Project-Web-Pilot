@@ -2366,3 +2366,11 @@ npm run prepare:mac и npm run prepare:win завершились успешно
 Добавлены две UI-регрессии: настройки без выбранной сессии сохраняют recovery workspace, команды Доктора/архива и открытие/закрытие; startupError остаётся видимой до очистки состояния. Electron smoke проверяет отсутствие старого блока, единственное поле workspace в settings и существующую кнопку отдельного архива. Прежние проверки отсутствия prepared-card/plan-origin сохранены.
 
 Обязательные node24/unit/smoke выполняет Workflow Kit при коммите; фактический результат хранится в его evidence. Сравнение: T002 — 434 tests / 431 PASS / 3 SKIP; T003 — 452 / 449 / 3; T004 добавляет две регрессии без удаления прежних тестов. Это source/isolated-fixture проверка, без новой сборки и live ChatGPT.
+
+## 2026-10-02 — T005: очистка runtime и доставки контекста
+
+Удалены sessionSelection/contextAddress и параметр selection по цепочке кеша, fingerprint, проверки пакета, выбранного Mac runtime, основного процесса и smoke fixture. ContextCache использует workspace непосредственно. Существующие проверки общего пакета для чатов, устаревания перед вставкой, конкурентного прогрева и current plan сохранены; tests/workspace-setup теперь вызывает sessionPlanView из canonical Workflow Kit.
+
+Удалены невызываемые launchTunnelSetup/windowsTunnelSetupInvocation, connectScript и устаревшая подпись. Мастер настройки Windows и configureWindowsTunnel сохранены вместе с тестами передачи credentials, ошибок и отмены. Прямой поиск подтвердил отсутствие потребителей всех 27 символов приложения A: 25 стали внутренними, contextAddress и windowsTunnelSetupInvocation удалены; проверки имён сериализованного кода и коды ошибок сохранены.
+
+Обязательные node24/unit/smoke выполняет Workflow Kit при коммите; фактический вывод хранится в его evidence. Число и утверждения прежних тестов сохранены: ориентир T004 — 454 tests / 451 PASS / 3 SKIP; исходный T002 — 434 / 431 / 3. Source/isolated-fixture проверка не означает live-приёмку ChatGPT или native Windows; новый выпуск относится к T009.

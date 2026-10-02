@@ -23,7 +23,7 @@ export function conversationIdFromChatUrl(input) {
 
 // Runs inside the authenticated ChatGPT renderer. The access token is read and
 // consumed inside that renderer and is never returned to or persisted by Web Pilot.
-export async function renameChatGPTConversationPage({ expectedUrl, title }) {
+async function renameChatGPTConversationPage({ expectedUrl, title }) {
   const fail = (code, status = null) => ({ ok: false, code, status });
   try {
     const exact = new URL(expectedUrl);

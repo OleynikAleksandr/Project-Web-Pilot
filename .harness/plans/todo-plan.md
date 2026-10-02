@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 850,
+  "plan_revision": 852,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "refactoring-node24-20261002",
@@ -74,7 +74,10 @@
       "tests/tunnel-id-runtime.test.mjs",
       "tests/mac-runtime.test.mjs",
       "tests/release-all.test.mjs",
-      "scripts/check-installed-release.mjs"
+      "scripts/check-installed-release.mjs",
+      "tests/session-opening-performance.test.mjs",
+      "tests/context-session.test.mjs",
+      "tests/context-cache.test.mjs"
     ],
     "documentation_paths": [
       "docs/planning/refactoring-node24.md",
@@ -326,8 +329,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "refactoring-node24-20261002",
         "task_id": "T005",
@@ -358,10 +361,15 @@
         "resources/project-doctor/files.mjs",
         "scripts/check-workflow-kit-staging.mjs",
         "tests/electron-smoke.mjs",
-        "tests/workspace-setup.test.mjs"
+        "tests/workspace-setup.test.mjs",
+        "tests/session-opening-performance.test.mjs",
+        "tests/context-session.test.mjs",
+        "tests/context-cache.test.mjs"
       ],
       "documentation_paths": [
-        "docs/planning/refactoring-node24.md"
+        "docs/planning/refactoring-node24.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/VERIFICATION.md"
       ],
       "verification_ids": [
         "node24",
@@ -379,7 +387,37 @@
         "Неиспользуемые импорты chatGPTDOMScript, fsSync и fileURLToPath и лишний return удалены; export снят только с символов приложения A, подтверждённых в T002.",
         "unit и smoke проходят; итог сопоставлен с эталоном T002."
       ],
-      "expected_commit_message": "refactor: Удалить мёртвый код runtime и доставки контекста"
+      "expected_commit_message": "refactor: Удалить мёртвый код runtime и доставки контекста",
+      "actual_files": [
+        "src/context-cache.mjs",
+        "src/context-session.mjs",
+        "src/context-inputs.mjs",
+        "src/mcp-runtime.mjs",
+        "src/mac-runtime-switch.mjs",
+        "src/main.mjs",
+        "src/windows-runtime.mjs",
+        "src/ui/settings-panel.mjs",
+        "src/session-plans.mjs",
+        "src/mac-runtime.mjs",
+        "scripts/check-workflow-kit-staging.mjs",
+        "src/chatgpt-auto-scroll.mjs",
+        "tests/electron-smoke.mjs",
+        "tests/workspace-setup.test.mjs",
+        "tests/session-opening-performance.test.mjs",
+        "tests/context-session.test.mjs",
+        "tests/context-cache.test.mjs",
+        "resources/project-doctor/files.mjs",
+        "src/auto-plan.mjs",
+        "src/browser-startup.mjs",
+        "src/chatgpt-colors.mjs",
+        "src/chatgpt-composer.mjs",
+        "src/chatgpt-title.mjs",
+        "src/chatgpt-tool-filter.mjs",
+        "src/project-input-watch.mjs",
+        "docs/planning/refactoring-node24.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/VERIFICATION.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -649,7 +687,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: refactoring-node24-20261002
 Current Task: нет
-Revision: 850
+Revision: 852
 
 ## Цель
 
@@ -681,10 +719,10 @@ Revision: 850
   - Git Commit: [DONE] refactor: Удалить устаревший архив настроек и мёртвую разметку
   - Reference: refactoring-node24-20261002 / T004 / implementation
   - Файлы: src/main.mjs, src/ui/index.html, src/ui/project-archive.mjs, src/ui/settings-panel.mjs, src/ui/sidebar.mjs, tests/electron-smoke.mjs, tests/project-doctor-ui.test.mjs, tests/sidebar.test.mjs, docs/planning/refactoring-node24.md, docs/architecture/OVERVIEW.md, docs/VERIFICATION.md
-- [TODO] T005: Удалить мёртвый код runtime и доставки контекста — Ожидает
-  - Git Commit: [PENDING] refactor: Удалить мёртвый код runtime и доставки контекста
+- [DONE] T005: Удалить мёртвый код runtime и доставки контекста — Завершено
+  - Git Commit: [DONE] refactor: Удалить мёртвый код runtime и доставки контекста
   - Reference: refactoring-node24-20261002 / T005 / implementation
-  - Файлы: src/context-session.mjs, src/context-cache.mjs, src/context-inputs.mjs, src/mcp-runtime.mjs, src/mac-runtime-switch.mjs, src/main.mjs, src/windows-runtime.mjs, src/session-plans.mjs, src/mac-runtime.mjs, src/chatgpt-auto-scroll.mjs, src/ui/settings-panel.mjs, src/auto-plan.mjs, src/browser-startup.mjs, src/chatgpt-colors.mjs, src/chatgpt-composer.mjs, src/chatgpt-title.mjs, src/chatgpt-tool-filter.mjs, src/project-input-watch.mjs, resources/project-doctor/files.mjs, scripts/check-workflow-kit-staging.mjs, tests/electron-smoke.mjs, tests/workspace-setup.test.mjs, docs/planning/refactoring-node24.md
+  - Файлы: src/context-session.mjs, src/context-cache.mjs, src/context-inputs.mjs, src/mcp-runtime.mjs, src/mac-runtime-switch.mjs, src/main.mjs, src/windows-runtime.mjs, src/session-plans.mjs, src/mac-runtime.mjs, src/chatgpt-auto-scroll.mjs, src/ui/settings-panel.mjs, src/auto-plan.mjs, src/browser-startup.mjs, src/chatgpt-colors.mjs, src/chatgpt-composer.mjs, src/chatgpt-title.mjs, src/chatgpt-tool-filter.mjs, src/project-input-watch.mjs, resources/project-doctor/files.mjs, scripts/check-workflow-kit-staging.mjs, tests/electron-smoke.mjs, tests/workspace-setup.test.mjs, tests/session-opening-performance.test.mjs, tests/context-session.test.mjs, tests/context-cache.test.mjs, docs/planning/refactoring-node24.md, docs/architecture/OVERVIEW.md, docs/VERIFICATION.md
 - [TODO] T006: Очистить Python MCP-сервер без изменения контракта — Ожидает
   - Git Commit: [PENDING] refactor: Очистить Python MCP-сервер без изменения контракта
   - Reference: refactoring-node24-20261002 / T006 / implementation

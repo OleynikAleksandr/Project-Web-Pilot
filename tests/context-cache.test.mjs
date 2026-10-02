@@ -102,12 +102,12 @@ test('sessions of one checkout share one packet and legacy session echo does not
   const cache=new ContextCache({inputKey:async()=> 'identical-revision',load:async w=>{
     loads++;return {...packet(w,'current'),session_id:'legacy-owner',plan_id:'legacy-plan'};
   }});
-  const a={sessionId:'a',planId:'plan-a'},b={sessionId:'b',planId:'plan-b'};
-  const [first,second]=await Promise.all([cache.load('/project',a),cache.load('/project',b)]);
+  const a={workspace:'/project',sessionId:'a'},b={workspace:'/project',sessionId:'b'};
+  const [first,second]=await Promise.all([cache.load(a.workspace),cache.load(b.workspace)]);
   assert.equal(first.context,'current');assert.equal(second.context,'current');assert.equal(loads,1);
-  assert.equal((await cache.load('/project',b)).preparation.cacheHit,true);assert.equal(loads,1);
+  assert.equal((await cache.load(b.workspace)).preparation.cacheHit,true);assert.equal(loads,1);
   cache.clear();cache.loadPacket=async w=>({...packet(w,'current'),session_id:'different-legacy-session',plan_id:'historical-plan'});
-  assert.equal((await cache.load('/project',a)).context,'current');
+  assert.equal((await cache.load(a.workspace)).context,'current');
 });
 
 test('warm uses one input check on a cache hit and two around a cold build', async () => {
@@ -120,13 +120,13 @@ test('warm uses one input check on a cache hit and two around a cold build', asy
 test('checkout recovery key ignores chat address and rejects failed or foreign readiness', async () => {
   let inputKey = 'all-inputs-a', ready = true, workspace = '/project';
   const setup = { ready: async () => ({ ready, inputKey, workspace }) };
-  const a = { sessionId: 'a', planId: 'plan-a' }, b = { sessionId: 'b', planId: null };
-  const key = await readinessContextKey(setup, '/project', a);
-  assert.equal(key, await readinessContextKey(setup, '/project', b));
+  const a = { workspace: '/project', sessionId: 'a' }, b = { workspace: '/project', sessionId: 'b' };
+  const key = await readinessContextKey(setup, a.workspace);
+  assert.equal(key, await readinessContextKey(setup, b.workspace));
   inputKey = 'changed-hooks-config-or-required-document';
-  assert.notEqual(key, await readinessContextKey(setup, '/project', a));
-  ready = false; await assert.rejects(readinessContextKey(setup, '/project', a), { code: 'CONTEXT_INPUTS_UNAVAILABLE' });
-  ready = true; workspace = '/other'; await assert.rejects(readinessContextKey(setup, '/project', a), { code: 'CONTEXT_INPUTS_UNAVAILABLE' });
+  assert.notEqual(key, await readinessContextKey(setup, a.workspace));
+  ready = false; await assert.rejects(readinessContextKey(setup, a.workspace), { code: 'CONTEXT_INPUTS_UNAVAILABLE' });
+  ready = true; workspace = '/other'; await assert.rejects(readinessContextKey(setup, a.workspace), { code: 'CONTEXT_INPUTS_UNAVAILABLE' });
 });
 test('concurrent warm shares one promise, and a new event retries immediately without a time gate', async () => {
   let release, keys = 0;

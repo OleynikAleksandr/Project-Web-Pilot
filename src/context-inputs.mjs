@@ -7,7 +7,7 @@ import { createHash } from 'node:crypto';
 const execFile = promisify(callback);
 const digest = data => createHash('sha256').update(data).digest('hex');
 const absent = error => error.code === 'ENOENT' || error.code === 'ENOTDIR';
-export const inputError = message => Object.assign(new Error(message), { code: 'CONTEXT_INPUTS_UNAVAILABLE' });
+const inputError = message => Object.assign(new Error(message), { code: 'CONTEXT_INPUTS_UNAVAILABLE' });
 
 async function fileState(file) {
   try {
@@ -37,7 +37,7 @@ function safeInput(root, relative) {
       || relative.split(/[\\/]/).includes('..')) throw inputError('Invalid recovery input path');
   return path.join(root, relative);
 }
-export async function contextInputKey(workspace, selection = {}) {
+export async function contextInputKey(workspace) {
   const root = await fs.realpath(workspace);
   if (root !== workspace) throw inputError('Workspace must be canonical');
   let executable = process.platform === 'win32' ? 'git.exe' : 'git';
@@ -110,7 +110,7 @@ export async function contextInputKey(workspace, selection = {}) {
 
 // The application shares readiness's complete input inventory with its addressed
 // recovery cache. It still obtains every packet from the canonical CLI builder.
-export async function readinessContextKey(setup, workspace, selection = {}) {
+export async function readinessContextKey(setup, workspace) {
   const result = await setup.ready(workspace);
   if (result.ready !== true || result.workspace !== workspace || typeof result.inputKey !== 'string' || !result.inputKey)
     throw inputError('Workspace readiness could not be confirmed');

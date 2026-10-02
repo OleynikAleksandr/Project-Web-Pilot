@@ -1,12 +1,12 @@
 import { createChatGPTDOM, CHATGPT_SELECTORS, chatGPTDOMScript } from './chatgpt-dom.mjs';
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-export class ComposerError extends Error {
+class ComposerError extends Error {
   constructor(code, message) { super(message); this.code = code; }
 }
 
 // Runs only in the visible ChatGPT document. No page internals, cookies or API requests.
-export function pageOperation({ action = 'inspect', text = '', requestId = '', expectedExperience = null, diagnose = false } = {}, dom = createChatGPTDOM(CHATGPT_SELECTORS)) {
+function pageOperation({ action = 'inspect', text = '', requestId = '', expectedExperience = null, diagnose = false } = {}, dom = createChatGPTDOM(CHATGPT_SELECTORS)) {
   const { first } = dom;
   const editor = dom.editor();
   const busy = dom.busy();

@@ -9,9 +9,9 @@ import { executePrivateInput } from './mac-runtime.mjs';
 const execFile = promisify(execFileCallback);
 export const WINDOWS_RUNTIME_ARCHIVE = 'Windows-Codex-Local-2026-09-10.zip';
 export const WINDOWS_RUNTIME_SHA256 = '1f041488ad97d8abf1984fd3521afb8abe15f50b8df3d3e11f1cc4248e019d98';
-export const WINDOWS_RUNTIME_FOLDER = 'Windows-Codex-Local';
+const WINDOWS_RUNTIME_FOLDER = 'Windows-Codex-Local';
 
-export const WINDOWS_RUNTIME_OVERLAY_VERSION = 1;
+const WINDOWS_RUNTIME_OVERLAY_VERSION = 1;
 export const WINDOWS_RUNTIME_CONTROL_CONTRACT = 2;
 export const WINDOWS_LEGACY_CONTROL_SHA256 = '13dd532f339db09cc0a99568ba3be63a12a0c4548f25e9c611fd0978ca70bdda';
 export const WINDOWS_CONTEXT_PACKET_SOURCE = String.raw`"""Workflow Kit recovery packet used by Project Web Pilot on Windows."""
@@ -124,7 +124,7 @@ export function patchWindowsBridgeSource(source) {
   return result;
 }
 
-export async function applyWindowsWebPilotOverlay(folder) {
+async function applyWindowsWebPilotOverlay(folder) {
   const serverFile = path.win32.join(folder, 'server', 'context_packet.py');
   const bridgeFile = path.win32.join(folder, 'mcp', 'bridge_mcp.py');
   const bridge = await fs.readFile(bridgeFile, 'utf8');
@@ -133,7 +133,7 @@ export async function applyWindowsWebPilotOverlay(folder) {
   if (patched !== bridge) await fs.writeFile(bridgeFile, patched, { encoding: 'utf8', mode: 0o600 });
 }
 
-export class WindowsRuntimeError extends Error {
+class WindowsRuntimeError extends Error {
   constructor(code, message) { super(message); this.code = code; }
 }
 
@@ -145,7 +145,6 @@ function windowsRuntimeFolderPaths(folder) {
     python: api.join(folder, '.venv', 'Scripts', 'python.exe'),
     locations: api.join(folder, '.runtime', 'locations.json'),
     setupScript: api.join(folder, 'scripts', 'setup.ps1'),
-    connectScript: api.join(folder, '2_CONNECT_TUNNEL.cmd'),
   };
 }
 
@@ -242,15 +241,6 @@ export function windowsSetupInvocation(setupScript, workspace) {
   return {
     executable: 'powershell.exe',
     args: ['-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', setupScript, '-Workspace', workspace],
-  };
-}
-
-export function windowsTunnelSetupInvocation(connectScript, workingDirectory) {
-  return {
-    executable: 'powershell.exe',
-    args: ['-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command',
-      'Start-Process -FilePath $env:WEB_PILOT_TUNNEL_SCRIPT -WorkingDirectory $env:WEB_PILOT_TUNNEL_CWD -WindowStyle Normal'],
-    environment: { WEB_PILOT_TUNNEL_SCRIPT: connectScript, WEB_PILOT_TUNNEL_CWD: workingDirectory },
   };
 }
 
@@ -454,25 +444,6 @@ export class WindowsRuntimeBootstrap {
     if (refreshed) this.external = refreshed;
     this.#publish({ phase: 'installed', installed: true, source: 'external', folder, service: refreshed?.service ?? current.service, error: null });
     return { ...this.snapshot(), control: this.controlSourceFile ?? windowsRuntimeFolderPaths(folder).control, reused: true, adopted: true };
-  }
-
-  async launchTunnelSetup() {
-    if (this.platform !== 'win32') throw new WindowsRuntimeError('WINDOWS_ONLY', 'Настройка tunnel доступна только в Windows-сборке.');
-    const current = await this.inspect();
-    const layout = windowsRuntimeFolderPaths(current.folder);
-    if (!current.installed || !(await exists(layout.connectScript))) {
-      throw new WindowsRuntimeError('WINDOWS_RUNTIME_NOT_INSTALLED', 'Сначала установите или подключите Windows runtime.');
-    }
-    if (current.source === 'external' && current.service?.tunnel?.configured) {
-      return { launched: false, configured: true, folder: current.folder };
-    }
-    const launch = windowsTunnelSetupInvocation(layout.connectScript, current.folder);
-    await this.execute(launch.executable, launch.args, {
-      timeout: 15000, maxBuffer: 1024 * 1024,
-      env: { ...this.environment, ...launch.environment }, windowsHide: true,
-    });
-    this.#publish({ phase: 'tunnel-setup-launched', installed: true, error: null, folder: current.folder });
-    return { launched: true, folder: current.folder };
   }
 
   async #ensure(workspace) {

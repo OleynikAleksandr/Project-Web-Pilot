@@ -1,5 +1,4 @@
 import fs from 'node:fs/promises';
-import fsSync from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import { createHash } from 'node:crypto';
@@ -23,20 +22,20 @@ const TUNNEL_SETUP_ERRORS = {
  MAC_TUNNEL_SETUP_FAILED: 'Не удалось завершить настройку подключения. Повторите ввод. Если ошибка повторяется, сообщите разработчику. Действующее подключение автоматически не заменяется.',
 };
 
-export const MAC_RUNTIME_CONTRACT=2;
-export const MAC_RUNTIME_FOLDER='Codex-Local-Mac';
+const MAC_RUNTIME_CONTRACT=2;
+const MAC_RUNTIME_FOLDER='Codex-Local-Mac';
 // control.py shipped in resources/mac-runtime.zip; adapt only this exact known version.
-export const MAC_BUNDLED_CONTROL_SHA256='84a68f87448cfc10090752e4e4b15c6e4120ea53ad8ec70038408051b85358f9';
-export const MAC_LEGACY_CONTROL_SHA256='6c5c14972774ece2a9820059b3953fe2fe968c186bb6e17af074c7752dc294be';
+const MAC_BUNDLED_CONTROL_SHA256='84a68f87448cfc10090752e4e4b15c6e4120ea53ad8ec70038408051b85358f9';
+const MAC_LEGACY_CONTROL_SHA256='6c5c14972774ece2a9820059b3953fe2fe968c186bb6e17af074c7752dc294be';
 
-export class MacRuntimeError extends Error { constructor(code,message){super(message);this.code=code;} }
+class MacRuntimeError extends Error { constructor(code,message){super(message);this.code=code;} }
 const exists=async file=>{try{await fs.access(file);return true;}catch{return false;}};
 async function sha256(file){const data=await fs.readFile(file);return createHash('sha256').update(data).digest('hex');}
-export function macRuntimePaths(dataDir,payloadFile=''){
+function macRuntimePaths(dataDir,payloadFile=''){
  const root=path.join(dataDir,'runtime'); const folder=path.join(root,MAC_RUNTIME_FOLDER);
  return {root,folder,payloadFile,marker:path.join(root,'mac-runtime.json'),staging:path.join(root,'.mac-runtime-staging'),control:path.join(folder,'control.py'),python:path.join(folder,'.venv','bin','python3')};
 }
-export function macRuntimeFolderPaths(folder){return {folder,control:path.join(folder,'control.py'),python:path.join(folder,'.venv','bin','python3')};}
+function macRuntimeFolderPaths(folder){return {folder,control:path.join(folder,'control.py'),python:path.join(folder,'.venv','bin','python3')};}
 
 export class MacRuntimeBootstrap {
  constructor({payloadFile,controlSourceFile,dataDir,preferredFolder=null,defaultFolder=null,execute=execFile,executeInput=executePrivateInput,environment=process.env,platform=process.platform,onState=null,legacyControlHashes=[MAC_LEGACY_CONTROL_SHA256,MAC_BUNDLED_CONTROL_SHA256]}={}){

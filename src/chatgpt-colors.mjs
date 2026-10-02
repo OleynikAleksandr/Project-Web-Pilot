@@ -1,5 +1,5 @@
 import { CHATGPT_SELECTORS } from './chatgpt-dom.mjs';
-export const COLOR_KEYS = Object.freeze(['background', 'userBackground', 'userText', 'assistantText', 'composerBackground']);
+const COLOR_KEYS = Object.freeze(['background', 'userBackground', 'userText', 'assistantText', 'composerBackground']);
 export const DEFAULT_COLORS = Object.freeze({
   light: Object.freeze({ background: '#ffffff', userBackground: '#f4f4f4', userText: '#0d0d0d', assistantText: '#0d0d0d', composerBackground: '#ffffff' }),
   dark: Object.freeze({ background: '#212121', userBackground: '#303030', userText: '#ececec', assistantText: '#ececec', composerBackground: '#303030' }),
@@ -51,7 +51,7 @@ export function chatColorsCSS(input) {
 // Runs in the ChatGPT page. ChatGPT builds differ in which wrapper draws the rounded capsule
 // (data-composer-body itself, ComposerLayoutRoot around a rectangular body, or the form for guests),
 // so the capsule is found by geometry: the nearest rounded ancestor of every visible editor, never above its form.
-export function installComposerCapsule(enabled, editorSelector, capsuleAttr, innerAttr) {
+function installComposerCapsule(enabled, editorSelector, capsuleAttr, innerAttr) {
   const key = '__webPilotComposerCapsule';
   window[key]?.disconnect();
   const tagged = () => document.querySelectorAll('[' + capsuleAttr + '],[' + innerAttr + ']');
@@ -120,7 +120,7 @@ export function installComposerCapsule(enabled, editorSelector, capsuleAttr, inn
   return apply();
 }
 export const composerCapsuleScript = enabled => `(${installComposerCapsule.toString()})(${!!enabled}, ${JSON.stringify(CHATGPT_SELECTORS.editor)}, ${JSON.stringify(COMPOSER_CAPSULE_ATTR)}, ${JSON.stringify(COMPOSER_INNER_ATTR)})`;
-export function isChatColorsURL(value) {
+function isChatColorsURL(value) {
   try { const url = new URL(value); return url.origin === 'https://chatgpt.com'; } catch { return false; }
 }
 // One sheet per document; coalescing prevents a fast color drag from queuing obsolete sheets.

@@ -1,7 +1,7 @@
 import { watch, statSync } from 'node:fs';
 import path from 'node:path';
 
-export const projectWatchInputs = ['.harness/plans/todo-plan.md', 'scripts/workflow.mjs',
+const projectWatchInputs = ['.harness/plans/todo-plan.md', 'scripts/workflow.mjs',
   'scripts/workflow', 'scripts/workflow.cmd', '.harness/workflow.json', '.harness/kit-manifest.json'];
 
 // Watch only named inputs and their directory ancestry, never a recursive Git tree.

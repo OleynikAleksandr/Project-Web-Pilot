@@ -30,7 +30,7 @@ function firstDocument(contents, url, isCurrent, timeoutMs) {
 }
 
 // Diagnostic iteration: let Chromium complete its own first connection attempt.
-export const STARTUP_REQUEST_TIMEOUT_MS = 120000;
+const STARTUP_REQUEST_TIMEOUT_MS = 120000;
 export async function openStartupPage(contents, url, {
   isCurrent = () => true, timeoutMs = STARTUP_REQUEST_TIMEOUT_MS,
 } = {}) {

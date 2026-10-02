@@ -5,7 +5,6 @@ import { PageStateSource } from './page-state.mjs';
 import { connectPageState } from './page-state-bridge.mjs';
 import { PlanMonitor } from './plan-monitor.mjs';
 import { AgentTimer } from './agent-timer.mjs';
-import { chatGPTDOMScript } from './chatgpt-dom.mjs';
 import { chatGPTTitleScript } from './chatgpt-title.mjs';
 import { toolFilterScript } from './chatgpt-tool-filter.mjs';
 import { app, BaseWindow, BrowserWindow, WebContentsView, Menu, session, ipcMain, dialog, nativeTheme, clipboard, shell } from 'electron';
@@ -23,10 +22,10 @@ import { ChatColors, normalizeChatColors, validateColorChange, DEFAULT_COLORS } 
 import { ChatColorsWindow } from './chat-colors-window.mjs';
 import { ContextCache } from './context-cache.mjs';
 import { readinessContextKey } from './context-inputs.mjs';
-const contextCache = new ContextCache({ load: (workspace, selection) => runtime.loadContext(workspace, selection),
-  inputKey: (workspace, selection) => readinessContextKey(workspaceSetup, workspace, selection), onChange: () => publish() });
+const contextCache = new ContextCache({ load: workspace => runtime.loadContext(workspace),
+  inputKey: workspace => readinessContextKey(workspaceSetup, workspace), onChange: () => publish() });
 import { SessionPlans } from './session-plans.mjs';
-import { ContextSession, sessionSelection } from './context-session.mjs';
+import { ContextSession } from './context-session.mjs';
 import { chatGPTEntrypoint, CHATGPT_SIGNIN_ENTRYPOINT } from './chatgpt-experience.mjs';
 import { WorkspaceDeletion } from './workspace-deletion.mjs';
 import { WorkspaceSetup } from './workspace-setup.mjs';
@@ -283,7 +282,7 @@ function snapshot() {
     conversationRecovery: conversationRecovery.view(),
     autoPlan: autoPlan.view(),
     selected, context: controller?.state ?? { phase: 'selected', servicesReady: false, messageSent: false },
-    contextPreparation: { busy: selected ? contextCache.isBuilding(selected.workspace, sessionSelection(selected)) : false },
+    contextPreparation: { busy: selected ? contextCache.isBuilding(selected.workspace) : false },
     runtimeFolder, platform: process.platform,
     macRuntime: process.platform === 'darwin' ? {
       mode: macRuntimeMode,

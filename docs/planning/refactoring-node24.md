@@ -135,6 +135,8 @@
   - Лишний `return` в `chatgpt-auto-scroll.mjs:58`.
   - Убрать `export` у символов приложения A, подтверждённых в T002. Функции, сериализуемые через `toString()`, от этого не меняются: тест `chatgpt-colors` сверяет имя функции, а не экспорт.
 
+Реализация T005: убраны sessionSelection/contextAddress и неиспользуемый selection по всей цепочке подготовки; ключи кеша непосредственно равны workspace. Удалены консоль launchTunnelSetup с её invocation/connectScript/подписью и неиспользуемая проекция readSessionPlans. Проверка плана использует sessionPlanView canonical Kit с прежними утверждениями. Сняты 25 лишних export из приложения A; два остальных символа удалены целиком. Повторный поиск потребителей совпал с T002; имя сериализованной installComposerCapsule и ключ ошибки MAC_RUNTIME_CONTRACT сохранены. Удалены три неиспользуемых импорта, импорт pathToFileURL удалён вместе с trustedProjection, лишний return и непрочитываемый тестовый импорт PROJECT_CONTINUATION_OBJECTIVE. Тестовые вызовы context-cache/context-session/session-opening-performance также переведены на workspace без session selector. Количество тестов не сокращается; node24/unit/smoke проверяются при Workflow-коммите.
+
 ### T006. Python MCP-сервер
 
 - `tools/codex-app-server-mcp/server.py`: удалить импорты `shlex`, `tempfile`, `AppServerError`, мёртвый метод `_keycode` (`:761`), атрибуты `_watch_lock`/`_watch` (`:102–103`).

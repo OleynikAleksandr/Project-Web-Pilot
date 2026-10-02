@@ -43,8 +43,8 @@ test('production readiness and canonical recovery block insertion after real inp
       updateSession: async (_w, _s, patch) => (saved = { ...saved, ...structuredClone(patch) }),
       bindChat: async (_w, _s, chatUrl) => (saved = { ...saved, chatUrl }) };
     let loads = 0, sends = 0, fills = 0;
-    const cache = new ContextCache({ load: (w, selection) => { loads++; return plans.loadContext(w, selection); },
-      inputKey: (w, selection) => readinessContextKey(setup, w, selection) });
+    const cache = new ContextCache({ load: w => { loads++; return plans.loadContext(w); },
+      inputKey: w => readinessContextKey(setup, w) });
     const composer = { contents: { getURL: () => 'https://chatgpt.com/' },
       inspect: async options => ({ url: 'https://chatgpt.com/', editorAvailable: true, writable: true, draftLength: 0,
         busy: false, login: false, messageSeen: false, ...(options?.action === 'select-experience' ? { action: 'experience-confirmed' } : {}) }),

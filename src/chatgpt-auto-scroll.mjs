@@ -2,7 +2,7 @@ import { chatGPTDOMScript, createChatGPTDOM, CHATGPT_SELECTORS } from './chatgpt
 const CHATGPT_ORIGIN = 'https://chatgpt.com';
 
 // Runs inside the visible ChatGPT document. It uses only DOM scrolling/events and does not call ChatGPT internals.
-export function installAutoScrollPage({ forceFollow = false } = {}, dom = createChatGPTDOM(CHATGPT_SELECTORS)) {
+function installAutoScrollPage({ forceFollow = false } = {}, dom = createChatGPTDOM(CHATGPT_SELECTORS)) {
   const stateKey = '__webPilotConversationAutoScroll';
   const previous = window[stateKey];
   if (previous?.version === 3 && typeof previous.refresh === 'function') {
@@ -55,7 +55,6 @@ export function installAutoScrollPage({ forceFollow = false } = {}, dom = create
     }
     if (hasUserScrollIntent()) {
       following = false;
-      return;
     }
     // Never correct a scroll event with another scroll: ChatGPT owns its animations.
     // Content/layout changes and explicit Send are the only follow triggers.
