@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 847,
+  "plan_revision": 848,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "refactoring-node24-20261002",
@@ -92,7 +92,7 @@
     ]
   },
   "baseline_commit": "65cc2f73a5aebd628c4ef4041ac3fcc9eab8aec1",
-  "current_task_id": "T003",
+  "current_task_id": null,
   "context_pack": {
     "documents": [
       {
@@ -194,8 +194,8 @@
       ]
     },
     {
-      "implementation_status": "IN_PROGRESS",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "refactoring-node24-20261002",
         "task_id": "T003",
@@ -222,7 +222,9 @@
       ],
       "documentation_paths": [
         "docs/planning/refactoring-node24.md",
-        "README.md"
+        "README.md",
+        "docs/VERIFICATION.md",
+        "docs/architecture/ARCHITECTURE.md"
       ],
       "verification_ids": [
         "node24",
@@ -243,7 +245,27 @@
         "stack в .harness/workflow.json обновлён через config:apply полной конфигурацией с сохранением checks: Electron 44.5.1 / embedded Node 24.21.0 / Workflow Kit 1.5.1.",
         "unit и smoke проходят; итог и состав пропусков сопоставлены с эталоном T002."
       ],
-      "expected_commit_message": "chore: Перевести среду на Node 24.21.0 и Electron 44.5.1"
+      "expected_commit_message": "chore: Перевести среду на Node 24.21.0 и Electron 44.5.1",
+      "actual_files": [
+        "BUILD_WINDOWS.cmd",
+        "README.md",
+        "docs/VERIFICATION.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/planning/refactoring-node24.md",
+        "package-lock.json",
+        "package.json",
+        "scripts/prepare-mac-toolchain.mjs",
+        "scripts/prepare-windows-toolchain.mjs",
+        "scripts/verify-windows-package.mjs",
+        "src/main.mjs",
+        "src/platform.mjs",
+        "src/workspace-setup.mjs",
+        "tests/mac-toolchain.test.mjs",
+        "tests/windows-runtime.test.mjs",
+        "tests/workspace-setup.test.mjs",
+        "windows-runtime/Windows-Codex-Local-2026-09-10.zip.sha256",
+        "windows-runtime/node-v22.17.0-win-x64.zip.sha256"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -611,8 +633,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: refactoring-node24-20261002
-Current Task: T003
-Revision: 847
+Current Task: нет
+Revision: 848
 
 ## Цель
 
@@ -636,10 +658,10 @@ Revision: 847
   - Git Commit: [DONE] docs: Зафиксировать исходное состояние на macOS
   - Reference: refactoring-node24-20261002 / T002 / implementation
   - Файлы: docs/planning/refactoring-node24.md, docs/VERIFICATION.md
-- [IN_PROGRESS] T003: Перевести среду на Node 24.21.0 и Electron 44.5.1 — В работе
-  - Git Commit: [PENDING] chore: Перевести среду на Node 24.21.0 и Electron 44.5.1
+- [DONE] T003: Перевести среду на Node 24.21.0 и Electron 44.5.1 — Завершено
+  - Git Commit: [DONE] chore: Перевести среду на Node 24.21.0 и Electron 44.5.1
   - Reference: refactoring-node24-20261002 / T003 / implementation
-  - Файлы: package.json, package-lock.json, src/platform.mjs, src/main.mjs, src/workspace-setup.mjs, scripts/prepare-mac-toolchain.mjs, scripts/prepare-windows-toolchain.mjs, scripts/verify-windows-package.mjs, BUILD_WINDOWS.cmd, windows-runtime/node-v22.17.0-win-x64.zip.sha256, windows-runtime/Windows-Codex-Local-2026-09-10.zip.sha256, tests/mac-toolchain.test.mjs, tests/windows-runtime.test.mjs, tests/workspace-setup.test.mjs, docs/planning/refactoring-node24.md, README.md
+  - Файлы: package.json, package-lock.json, src/platform.mjs, src/main.mjs, src/workspace-setup.mjs, scripts/prepare-mac-toolchain.mjs, scripts/prepare-windows-toolchain.mjs, scripts/verify-windows-package.mjs, BUILD_WINDOWS.cmd, windows-runtime/node-v22.17.0-win-x64.zip.sha256, windows-runtime/Windows-Codex-Local-2026-09-10.zip.sha256, tests/mac-toolchain.test.mjs, tests/windows-runtime.test.mjs, tests/workspace-setup.test.mjs, docs/planning/refactoring-node24.md, README.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
 - [TODO] T004: Удалить устаревший архив настроек и мёртвую разметку — Ожидает
   - Git Commit: [PENDING] refactor: Удалить устаревший архив настроек и мёртвую разметку
   - Reference: refactoring-node24-20261002 / T004 / implementation

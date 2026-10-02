@@ -11,7 +11,7 @@ import { WindowsRuntimeBootstrap, WINDOWS_RUNTIME_SHA256, WINDOWS_CONTEXT_PACKET
 const execute = promisify(execFile);
 const windowsControl = fileURLToPath(new URL('../resources/runtime-control/windows-control.py', import.meta.url));
 
-import { bundledWindowsRuntimeFolder } from '../src/platform.mjs';
+import { BUNDLED_NODE_VERSION, bundledWindowsRuntimeFolder } from '../src/platform.mjs';
 import { extractionCommand, NODE_ARCHIVE, NODE_SHA256, windowsRuntimeSourceCandidates, windowsToolchainPaths } from '../scripts/prepare-windows-toolchain.mjs';
 
 test('Windows runtime paths stay in writable userData and use Windows venv layout', () => {
@@ -134,10 +134,10 @@ test('Windows MCP compatibility overlay adds Workflow Kit recovery exactly once'
 
 
 test('portable Node build payload has pinned Windows x64 layout and safe extraction plans', () => {
-  assert.equal(NODE_ARCHIVE, 'node-v22.17.0-win-x64.zip');
-  assert.equal(NODE_SHA256, '721ab118a3aac8584348b132767eadf51379e0616f0db802cc1e66d7f0d98f85');
+  assert.equal(NODE_ARCHIVE, 'node-v24.21.0-win-x64.zip');
+  assert.equal(NODE_SHA256, '158f7685b44de51f6c0df1d153526cbcd3e1bc739a8dfc607721cef75de9e541');
   const p = windowsToolchainPaths('/repo');
-  assert.match(p.nodeExe, /windows-node[\\/]node-v22\.17\.0-win-x64[\\/]node\.exe$/);
+  assert.match(p.nodeExe, /windows-node[\\/]node-v24\.21\.0-win-x64[\\/]node\.exe$/);
   const mac = extractionCommand('darwin', '/cache/node.zip', '/out');
   assert.deepEqual(mac, { executable: '/usr/bin/ditto', args: ['-x', '-k', '/cache/node.zip', '/out'], env: {} });
   const win = extractionCommand('win32', 'C:\\cache\\node.zip', 'C:\\out');
@@ -236,4 +236,12 @@ test('Windows workflow receives a complete portable Git environment and rejects 
   assert.equal(env.Path, `${folder}\\tools\\git\\cmd;${folder}\\tools\\git\\usr\\bin;C:\\Windows\\System32`);
   assert.throws(() => windowsWorkflowEnvironment(folder, { ...locations, git: 'C:\\foreign\\git.exe' }), { code: 'WINDOWS_GIT_LAYOUT_INVALID' });
   assert.throws(() => windowsWorkflowEnvironment(folder, { ...locations, package_root: 'D:\\Moved' }), { code: 'WINDOWS_GIT_LAYOUT_INVALID' });
+});
+
+
+test('Windows build launcher uses the canonical bundled Node folder', async () => {
+  const launcher = await fs.readFile(new URL('../BUILD_WINDOWS.cmd', import.meta.url), 'utf8');
+  const folder = windowsToolchainPaths('/repo').nodeFolder;
+  assert.equal(path.basename(folder), 'node-v' + BUNDLED_NODE_VERSION + '-win-x64');
+  assert.ok(launcher.includes('windows-node\\' + path.basename(folder)));
 });

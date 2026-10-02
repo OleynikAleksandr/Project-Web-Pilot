@@ -1,5 +1,7 @@
 import path from 'node:path';
 
+export const BUNDLED_NODE_VERSION = '24.21.0';
+
 function pathApi(platform) {
   return platform === 'win32' ? path.win32 : path.posix;
 }

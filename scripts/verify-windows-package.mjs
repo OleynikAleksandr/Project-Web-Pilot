@@ -4,7 +4,7 @@ import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { WINDOWS_RUNTIME_ARCHIVE, WINDOWS_RUNTIME_SHA256 } from '../src/windows-runtime.mjs';
-import { NODE_FOLDER, NODE_SHA256 } from './prepare-windows-toolchain.mjs';
+import { NODE_ARCHIVE, NODE_FOLDER, NODE_SHA256 } from './prepare-windows-toolchain.mjs';
 import { verifyPackagedSources } from './release-all.mjs';
 import { EXPECTED_WORKFLOW_KIT_FILES, EXPECTED_WORKFLOW_KIT_SHA256, runtimeFiles, runtimeDigest } from './check-workflow-kit-dependency.mjs';
 
@@ -41,7 +41,7 @@ export async function verifyWindowsPackage(packageDir = path.join(ROOT, '.harnes
   const executable = path.join(packageDir, 'Project Web Pilot.exe');
   const appAsar = path.join(resources, 'app.asar');
   const runtimeArchive = path.join(resources, 'windows-payload', WINDOWS_RUNTIME_ARCHIVE);
-  const nodeArchive = path.join(resources, 'windows-payload', `node-v22.17.0-win-x64.zip`);
+  const nodeArchive = path.join(resources, 'windows-payload', NODE_ARCHIVE);
   const nodeExe = path.join(resources, 'windows-node', NODE_FOLDER, 'node.exe');
   const workflowRoot = path.join(resources, 'resources', 'workflow-kit');
   const workflow = path.join(workflowRoot, 'WORKFLOW.md');

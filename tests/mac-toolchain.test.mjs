@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { prepareMacNode } from '../scripts/prepare-mac-toolchain.mjs';
+import { prepareMacNode, NODE_ARCHIVE } from '../scripts/prepare-mac-toolchain.mjs';
 import { bundledMacNode } from '../src/platform.mjs';
 
 test('Mac Node is resolved inside resources, including spaces', () => {
@@ -20,5 +20,5 @@ test('untrusted download cannot be extracted or replace an existing Node', async
   assert.equal(executed, false);
   assert.equal(await fs.readFile(node, 'utf8'), 'existing');
   const files = await fs.readdir(path.join(root, '.harness/runtime/mac-node-cache'));
-  assert.equal(files.includes('node-v22.17.0-darwin-arm64.tar.gz.download'), false);
+  assert.equal(files.includes(NODE_ARCHIVE + '.download'), false);
 });

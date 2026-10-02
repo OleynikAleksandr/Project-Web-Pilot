@@ -53,7 +53,7 @@ export class WorkspaceSetup {
   }
   async node() {
     if (this.nodeExecutable) return this.nodeExecutable;
-    const windowsIssues = [];
+    const nodeIssues = [];
     for (const candidate of this.nodeCandidates) {
       if (!executableCandidateAllowed(candidate, this.platform)) continue;
       try {
@@ -61,27 +61,33 @@ export class WorkspaceSetup {
           timeout: 5000, env: this.environment,
           ...(this.platform === 'win32' ? { windowsHide: true } : {}),
         });
-        const version = /^v(\d+)\.\d+\.\d+/.exec(stdout);
-        if (version && Number(version[1]) >= 22) return this.nodeExecutable = candidate;
-        if (this.platform === 'win32') windowsIssues.push({
-          candidate, code: version ? 'NODE_TOO_OLD' : 'INVALID_VERSION_OUTPUT', version: version?.[0],
+        const version = /^v(\d+)\.(\d+)\.(\d+)\s*$/.exec(stdout);
+        if (version && Number(version[1]) === 24 && Number(version[2]) >= 21)
+          return this.nodeExecutable = candidate;
+        if (version || this.platform === 'win32') nodeIssues.push({
+          candidate, code: version
+            ? (Number(version[1]) > 24 ? 'NODE_UNSUPPORTED' : 'NODE_TOO_OLD')
+            : 'INVALID_VERSION_OUTPUT', version: version?.[0].trim(),
         });
       } catch (error) {
-        if (this.platform === 'win32' && error.code !== 'ENOENT') windowsIssues.push({
+        if (this.platform === 'win32' && error.code !== 'ENOENT') nodeIssues.push({
           candidate, code: error.killed ? 'TIMEOUT' : String(error.code ?? 'START_FAILED'),
         });
       }
     }
+    const issue = nodeIssues.find(item => !['NODE_TOO_OLD', 'NODE_UNSUPPORTED'].includes(item.code)) ?? nodeIssues[0];
+    if (issue && ['NODE_TOO_OLD', 'NODE_UNSUPPORTED'].includes(issue.code)) throw fail(issue.code,
+      'Найден Node.js ' + issue.version + ', нужен Node.js 24.21.0 или новее в линии 24 (ниже 25). ' +
+      (this.platform === 'win32'
+        ? 'Распакуйте всю папку актуальной Windows-версии приложения.'
+        : 'Установите поддерживаемую версию и повторите проверку.'));
     if (this.platform === 'win32') {
-      const issue = windowsIssues.find(item => item.code !== 'NODE_TOO_OLD') ?? windowsIssues[0];
-      if (issue?.code === 'NODE_TOO_OLD') throw fail('NODE_TOO_OLD',
-        'Найден Node.js ' + issue.version + ', нужен 22 или новее. Распакуйте всю папку актуальной Windows-версии приложения.');
       if (issue) throw fail('NODE_START_FAILED',
         'Не удалось запустить Node.js: ' + issue.candidate + ' (' + issue.code + '). Проверьте доступ к файлу и повторите проверку.');
       throw fail('NODE_MISSING',
         'Node.js не найден. Распакуйте всю папку Windows-версии приложения, включая resources, и повторите проверку.');
     }
-    throw fail('NODE_MISSING', 'Для подготовки проектов нужен Node.js 22 или новее. Установите его и повторите проверку.');
+    throw fail('NODE_MISSING', 'Для подготовки проектов нужен Node.js 24.21.0 или новее в линии 24 (ниже 25). Установите его и повторите проверку.');
   }
   async call(input) {
     if (this.prepareEnvironment) this.setRuntimeEnvironment(await this.prepareEnvironment());

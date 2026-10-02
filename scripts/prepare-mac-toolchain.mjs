@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { BUNDLED_NODE_VERSION } from '../src/platform.mjs';
 import os from 'node:os';
 import { createHash } from 'node:crypto';
 import { execFile } from 'node:child_process';
@@ -9,8 +10,8 @@ const execute = promisify(execFile);
 const ROOT = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 export const UV_VERSION = '0.9.13';
 export const UV_SHA256 = '11609c939296348c7cc1e1231b3fbf7ca90a603a4c494ec72b59d7ceafa695e1';
-export const NODE_VERSION = '22.17.0';
-export const NODE_SHA256 = '615dda58b5fb41fad2be43940b6398ca56554cbe05800953afadc724729cb09e';
+export const NODE_VERSION = BUNDLED_NODE_VERSION;
+export const NODE_SHA256 = 'bed7eea5325e1108f32ce5228ddd6a5f0f08a499ee42aa7442aea583702f6057';
 export const NODE_ARCHIVE = 'node-v' + NODE_VERSION + '-darwin-arm64.tar.gz';
 const digest = async file => createHash('sha256').update(await fs.readFile(file)).digest('hex');
 const matches = async (file, sha) => { try { return await digest(file) === sha; } catch { return false; } };

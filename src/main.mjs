@@ -33,7 +33,7 @@ import { WorkspaceSetup } from './workspace-setup.mjs';
 import { ProjectDoctor } from './project-doctor.mjs';
 import { ChromiumDiagnostics, safeUrl } from './chromium-diagnostics.mjs';
 import { openStartupPage } from './browser-startup.mjs';
-import { defaultRuntimeFolder, bundledWindowsRuntimeFolder, bundledMacNode, nodeExecutableCandidates } from './platform.mjs';
+import { BUNDLED_NODE_VERSION, defaultRuntimeFolder, bundledWindowsRuntimeFolder, bundledMacNode, nodeExecutableCandidates } from './platform.mjs';
 import { WindowsRuntimeBootstrap, WINDOWS_RUNTIME_ARCHIVE } from './windows-runtime.mjs';
 import { MacRuntimeBootstrap } from './mac-runtime.mjs';
 import { CodexAppServerRuntime, MacRuntimeSwitcher, MAC_RUNTIME_LOCAL, MAC_RUNTIME_APP_SERVER, MAC_RUNTIME_MODES } from './mac-runtime-switch.mjs';
@@ -98,8 +98,8 @@ const titleSyncSuccess = new Map();
 const titleSyncPending = new Map();
 const windowsPortableNode = process.platform === 'win32'
   ? (app.isPackaged
-      ? path.join(process.resourcesPath, 'windows-node', 'node-v22.17.0-win-x64', 'node.exe')
-      : path.join(sourceDir, '../.harness/runtime/windows-node/node-v22.17.0-win-x64/node.exe'))
+      ? path.join(process.resourcesPath, 'windows-node', `node-v${BUNDLED_NODE_VERSION}-win-x64`, 'node.exe')
+      : path.join(sourceDir, `../.harness/runtime/windows-node/node-v${BUNDLED_NODE_VERSION}-win-x64/node.exe`))
   : null;
 const workspaceSetup = new WorkspaceSetup({
   resourceDir: app.isPackaged ? path.join(process.resourcesPath, 'resources') : path.join(sourceDir, '../resources'),

@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import fsSync from 'node:fs';
 import path from 'node:path';
+import { BUNDLED_NODE_VERSION } from '../src/platform.mjs';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { execFile } from 'node:child_process';
@@ -9,9 +10,9 @@ import { promisify } from 'node:util';
 
 const execute = promisify(execFile);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-export const NODE_VERSION = '22.17.0';
+export const NODE_VERSION = BUNDLED_NODE_VERSION;
 export const NODE_ARCHIVE = `node-v${NODE_VERSION}-win-x64.zip`;
-export const NODE_SHA256 = '721ab118a3aac8584348b132767eadf51379e0616f0db802cc1e66d7f0d98f85';
+export const NODE_SHA256 = '158f7685b44de51f6c0df1d153526cbcd3e1bc739a8dfc607721cef75de9e541';
 export const NODE_URL = `https://nodejs.org/dist/v${NODE_VERSION}/${NODE_ARCHIVE}`;
 export const NODE_FOLDER = `node-v${NODE_VERSION}-win-x64`;
 

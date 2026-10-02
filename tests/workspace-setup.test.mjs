@@ -219,7 +219,7 @@ test('Windows keeps searching after failure and caches only a successful Node', 
       calls.push(candidate);
       if (candidate === 'blocked.exe') throw Object.assign(new Error(), { code: 'EACCES' });
       if (candidate === 'old.exe') return { stdout: 'v18.20.0\n' };
-      if (candidate === 'good.exe' && available) return { stdout: 'v22.17.0\r\n' };
+      if (candidate === 'good.exe' && available) return { stdout: 'v24.21.0\r\n' };
       throw Object.assign(new Error(), { code: 'ENOENT' });
     },
   });
@@ -471,5 +471,26 @@ test('existing complete Git identity is preserved and partial identity gets only
     assert.equal((await f.setup.apply(preview.token)).ready, true);
     assert.equal(local('config', '--local', 'user.name'), 'Existing User');
     assert.equal(local('config', '--local', 'user.email'), complete ? 'existing@example.invalid' : 'web-pilot@localhost');
+  }
+});
+test('worker Node accepts only supported Node 24 releases on macOS and Windows', async t => {
+  for (const platform of ['darwin', 'win32']) {
+    for (const [version, expected] of [
+      ['v22.17.0', 'NODE_TOO_OLD'], ['v24.20.0', 'NODE_TOO_OLD'],
+      ['v25.0.0', 'NODE_UNSUPPORTED'], ['v26.0.0', 'NODE_UNSUPPORTED'],
+      ['v24.21.0', null], ['v24.21.1', null], ['v24.22.0', null],
+    ]) await t.test(platform + ' ' + version, async () => {
+      const candidate = platform === 'win32' ? 'node.exe' : '/fixture/node';
+      const setup = new WorkspaceSetup({ platform, nodeCandidates: [candidate],
+        executeNode: async () => ({ stdout: version + '\r\n' }) });
+      if (expected) await assert.rejects(setup.node(), { code: expected });
+      else assert.equal(await setup.node(), candidate);
+    });
+    await t.test(platform + ' continues past unsupported Node', async () => {
+      const candidates = platform === 'win32' ? ['newer.exe', 'supported.exe'] : ['/newer/node', '/supported/node'];
+      const setup = new WorkspaceSetup({ platform, nodeCandidates: candidates,
+        executeNode: async candidate => ({ stdout: candidate === candidates[0] ? 'v25.0.0\n' : 'v24.21.0\n' }) });
+      assert.equal(await setup.node(), candidates[1]);
+    });
   }
 });
