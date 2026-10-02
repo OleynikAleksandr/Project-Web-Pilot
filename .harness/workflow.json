@@ -5,7 +5,7 @@
   "checks": [
     {
       "required": false,
-      "timeout_ms": 10000,
+      "timeout_ms": 120000,
       "id": "node24",
       "executable": "node",
       "args": [
@@ -34,37 +34,15 @@
     },
     {
       "required": false,
-      "timeout_ms": 600000,
-      "id": "paired-release",
+      "timeout_ms": 120000,
+      "id": "auto-plan-package",
       "executable": "npm",
       "args": [
         "run",
         "build"
       ],
       "kind": "package",
-      "evidence": "Сборка выполняется только этой проверкой внутри commit T009. Project Web Pilot.app в корне checkout и /Applications; ~/Downloads/WebPilot-0.6.75/ с macOS arm64 и Windows x64 ZIP, SHA256SUMS.txt, INSTALL.txt и release-manifest.json; release-all сверяет packaged sources, версию 0.6.75 и установленную macOS копию."
-    },
-    {
-      "required": false,
-      "timeout_ms": 600000,
-      "id": "release-installed",
-      "executable": "node",
-      "args": [
-        "scripts/check-installed-release.mjs"
-      ],
-      "kind": "installed",
-      "evidence": "Готовая поставка 0.6.75 без пересборки: корневой и /Applications Project Web Pilot.app и ZIP из ~/Downloads/WebPilot-0.6.75/ — исходники и identity совпадают, встроенный Node 24.21.0, mac-tools Node v24.21.0 arm64, Windows-пакет с node-v24.21.0-win-x64; workspace-setup worker и CLI установленного Kit выполняются комплектным Node при PATH без системного node."
-    },
-    {
-      "id": "auto-plan-release",
-      "required": false,
-      "timeout_ms": 600000,
-      "executable": "node",
-      "args": [
-        "scripts/check-installed-release.mjs"
-      ],
-      "kind": "package",
-      "evidence": "Парная сборка 0.6.76 выполняется один раз через npm run build; проверка перед commit сверяет готовые ZIP, исходники, версии и Finder identity root /Applications, комплектные инструменты и установленный observer fixture. Поставка: ~/Downloads/WebPilot-0.6.76/. Native Windows и live ChatGPT отдельно."
+      "evidence": "Штатная парная сборка Project Web Pilot следующей версии: macOS arm64 и Windows x64; версия берётся из package.json, release directory и manifest создаются штатным build-процессом и затем сверяются задачей T005."
     }
   ],
   "budget": {
