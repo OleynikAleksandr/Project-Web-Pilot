@@ -2,6 +2,14 @@
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
+## 2026-10-02 — T004: клиентское автопродолжение / source
+
+Адресный observer suite — **12/12 PASS**. Полный `npm run smoke` и ProseMirror fixture на текущих source/staged preload завершились с exit 0 в Electron **44.5.1**, Node **24.21.0**. ProseMirror вставил 110 001 символ через ClipboardEvent.paste за 19 мс. Логи и checkpoint проверки сохранены в `.harness/runtime/t004-client-driven/`; обязательные Node/unit/smoke повторно выполняет управляемый T004 commit.
+
+Новая изолированная Electron-проверка 01TestAuto: сохранённый ON → новый Chat с NONE → обычный busy-ответ создаёт ACTIVE-план → один «Продолжай» → task:start/настоящий Git commit T001/обычный отчёт → следующий «Продолжай». В Chat/Work проверяются переключатель busy/idle/OFF/ON, draft и trusted Send, ручной Stop с частичным ответом, reload, connection recovery, watchdog и завершение DOCS без лишней отправки. Стартовая AutoPlan-инструкция и специальные строки ответа для отправки не требуются; прежние footer-слова проверяются как обычный текст.
+
+Fresh Electron fixture читает durable settings и real fixture-plan, проверяет busy/sent/interrupted sending/manual и reload без дубля. Сообщения и native IDs сохраняются в fixture-history. Исходный ProseMirror installed-gate обновлён под новый контракт; запуск на новой установленной сборке относится к T005. Unit-регрессия подтверждает trailing progress после быстрого idle → busy; исправление не добавляет периодические чтения. Все проверки используют отдельные временные страницы/проекты; живой ChatGPT, native Windows и новый packaged app здесь не заявляются проверенными.
+
 ## Текущий выпуск — 0.6.76 / 02.10.2026
 
 T007 `0a73a39ec27bf844607619bd1bf29c3884a92e81`: версия 0.6.76 и парная macOS arm64 / Windows x64 поставка подтверждены назначенными `node24`, `unit`, `smoke` и `auto-plan-release`. Готовые ZIP и сопроводительные файлы находятся в `~/Downloads/WebPilot-0.6.76/`; package-gate сверяет исходники, версии, архивы, Finder identity, комплектные инструменты и установленный AutoPlan fixture.

@@ -87,7 +87,7 @@ app.whenReady().then(async () => {
     const waiting = new Set();
     const notify = () => { for (const check of [...waiting]) check(); };
     const until = predicate => new Promise((resolve, reject) => {
-      const timer = setTimeout(() => { waiting.delete(check); reject(new Error('Installed AutoPlan timeout: ' + fixtureStage)); }, 4000);
+      const timer = setTimeout(() => { waiting.delete(check); reject(new Error('Installed AutoPlan timeout: ' + fixtureStage + ' ' + JSON.stringify({ auto: automatic.view(), page: source.current?.state }))); }, 4000);
       const check = () => { if (predicate()) { clearTimeout(timer); waiting.delete(check); resolve(); } };
       waiting.add(check); check();
     });
@@ -103,19 +103,19 @@ app.whenReady().then(async () => {
       await view.webContents.executeJavaScript("(()=>{const b=document.createElement('button');b.id='fixture-stop';b.dataset.testid='stop-button';b.textContent='Stop';document.body.append(b)})()");
       await until(() => source.current.state.busy);
     };
-    const endAnswer = () => view.webContents.executeJavaScript("(()=>{const a=document.createElement('article');a.dataset.messageAuthorRole='assistant';a.textContent='Готов продолжать.';document.body.append(a);document.getElementById('fixture-stop').remove()})()");
+    const endAnswer = () => view.webContents.executeJavaScript("(()=>{const a=document.createElement('article');a.dataset.messageAuthorRole='assistant';a.textContent='Изменение проверено и закоммичено.';document.getElementById('messages').append(a);document.getElementById('fixture-stop').remove()})()");
     try {
+      await until(() => !source.current.state.draftPresent);
       await automatic.start();
-      assert.equal(automatic.view().phase, 'running');
-      assert.deepEqual(automatic.run.completedAtStart, ['T001']);
+      assert.equal(automatic.view().reason, 'USER_MESSAGE_PENDING');
       await beginAnswer(); await endAnswer();
-      await until(() => automatic.view().phase === 'running' && !automatic.run.sawBusy
-        && source.current.state.userMessageCount === 3);
+      await until(() => automatic.checkpoint?.status === 'sent'
+        && source.current.state.userMessageCount === 2);
       assert.equal(await view.webContents.executeJavaScript('JSON.parse(sessionStorage.sent).at(-1)'), 'Продолжай');
       await beginAnswer();
       plan.planView.tasks[1].status = 'done'; plan.planRevision++;
       await endAnswer(); await until(() => automatic.view().phase === 'complete');
-      assert.equal(await view.webContents.executeJavaScript('JSON.parse(sessionStorage.sent).length'), 3,
+      assert.equal(await view.webContents.executeJavaScript('JSON.parse(sessionStorage.sent).length'), 2,
         'all DONE produces no extra Continue in installed code');
     } finally { unsubscribeAuto(); automatic.dispose(); }
     console.log(JSON.stringify({ installedPreload: resourceRoot, installedAutoPlan: true, scenario: 'partial plan -> Continue -> all DONE without extra Send; sandbox observer, restored draft cleared, real ProseMirror paste, exact multiline model, immediate Send completion without marker or extra message, Resume stream unavailable detected, same conversation reload without duplicate',

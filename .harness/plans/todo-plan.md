@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 923,
+  "plan_revision": 925,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "auto-plan-client-driven-refactor-20261002",
@@ -34,7 +34,8 @@
       "package.json",
       "package-lock.json",
       ".harness/workflow.json",
-      "scripts/check-installed-release.mjs"
+      "scripts/check-installed-release.mjs",
+      "tests/installed-observer-fixture.cjs"
     ],
     "documentation_paths": [
       "docs/planning/auto-plan-client-driven-refactor.md",
@@ -233,8 +234,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "auto-plan-client-driven-refactor-20261002",
         "task_id": "T004",
@@ -247,7 +248,9 @@
         "tests/electron-smoke.mjs",
         "tests/auto-plan.test.mjs",
         "tests/page-state.test.mjs",
-        "tests/auto-plan-restart-fixture.cjs"
+        "tests/auto-plan-restart-fixture.cjs",
+        "src/chatgpt-page-observer.mjs",
+        "tests/installed-observer-fixture.cjs"
       ],
       "documentation_paths": [
         "docs/planning/auto-plan-client-driven-refactor.md",
@@ -269,7 +272,16 @@
         "Параллельные PlanMonitor и page events не создают duplicate Send; unknown исход Send не повторяется вслепую.",
         "Production code и regression suite больше не требуют специальных footer-строк агента."
       ],
-      "expected_commit_message": "test: закрепить клиентское автопродолжение"
+      "expected_commit_message": "test: закрепить клиентское автопродолжение",
+      "actual_files": [
+        "docs/VERIFICATION.md",
+        "docs/planning/auto-plan-client-driven-refactor.md",
+        "src/chatgpt-page-observer.mjs",
+        "tests/auto-plan-restart-fixture.cjs",
+        "tests/electron-smoke.mjs",
+        "tests/installed-observer-fixture.cjs",
+        "tests/page-state.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -366,7 +378,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: auto-plan-client-driven-refactor-20261002
 Current Task: нет
-Revision: 923
+Revision: 925
 
 ## Цель
 
@@ -390,10 +402,10 @@ Revision: 923
   - Git Commit: [DONE] fix: сделать автопродолжение устойчивым и идемпотентным
   - Reference: auto-plan-client-driven-refactor-20261002 / T003 / implementation
   - Файлы: src/auto-plan.mjs, src/main.mjs, src/chatgpt-page-observer.mjs, src/page-state.mjs, src/ui/sidebar.mjs, tests/auto-plan.test.mjs, tests/auto-plan-restart-fixture.cjs, tests/page-state.test.mjs, docs/planning/auto-plan-client-driven-refactor.md
-- [TODO] T004: Воспроизвести 01TestAuto и все границы в Electron smoke — Ожидает
-  - Git Commit: [PENDING] test: закрепить клиентское автопродолжение
+- [DONE] T004: Воспроизвести 01TestAuto и все границы в Electron smoke — Завершено
+  - Git Commit: [DONE] test: закрепить клиентское автопродолжение
   - Reference: auto-plan-client-driven-refactor-20261002 / T004 / implementation
-  - Файлы: tests/electron-smoke.mjs, tests/auto-plan.test.mjs, tests/page-state.test.mjs, tests/auto-plan-restart-fixture.cjs, docs/planning/auto-plan-client-driven-refactor.md, docs/VERIFICATION.md
+  - Файлы: tests/electron-smoke.mjs, tests/auto-plan.test.mjs, tests/page-state.test.mjs, tests/auto-plan-restart-fixture.cjs, src/chatgpt-page-observer.mjs, tests/installed-observer-fixture.cjs, docs/planning/auto-plan-client-driven-refactor.md, docs/VERIFICATION.md
 - [TODO] T005: Подготовить локальную поставку следующей версии для приёмки — Ожидает
   - Git Commit: [PENDING] build: подготовить клиентский AutoPlan к приёмке
   - Reference: auto-plan-client-driven-refactor-20261002 / T005 / implementation

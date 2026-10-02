@@ -94,7 +94,9 @@ export function installPageObserver(dom, send) {
       // One trailing progress notification, only after real content mutations.
       // Animated attributes and an unchanged spinner do not keep a turn alive.
       if (dom.busy() && progressTimer === null) progressTimer = setTimeout(() => {
-        progressTimer = null; emit();
+        progressTimer = null;
+        reportedAssistantRevision = assistantRevision; lastProgressAt = Date.now();
+        emit();
       }, 5000);
     }
     if (draftChanged) draftRevision++;

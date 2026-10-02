@@ -160,6 +160,27 @@ test('stream content progress is coalesced, decorative mutations do not count, f
   assert.equal(Object.hasOwn(messages.at(-1).state, 'turnSignal'), false);
   dispose(); assert.equal(timers.size, 0); w.close();
 });
+test('trailing progress survives a quick idle and next busy answer', async () => {
+  const dom = new JSDOM('<div id="prompt-textarea" contenteditable="true"></div><button data-testid="stop-button">Stop</button><article data-message-author-role="assistant">start</article>',
+    { url: 'https://chatgpt.com/c/fixture', runScripts: 'outside-only' });
+  const w = dom.window; w.HTMLElement.prototype.getClientRects = () => [{}];
+  const timers = new Map(); let id = 0, clock = 10000;
+  w.Date.now = () => clock; w.setTimeout = fn => { timers.set(++id, fn); return id; }; w.clearTimeout = key => timers.delete(key);
+  const messages = []; w.reportObservation = m => messages.push(m);
+  const dispose = w.eval('(' + installPageObserver.toString() + ')(' + chatGPTDOMScript() + ', reportObservation)');
+  const article = w.document.querySelector('article');
+  article.textContent = 'first progress'; await turn();
+  assert.equal(timers.size, 1);
+  clock = 11000; w.document.querySelector('button').remove(); await turn();
+  const stop = w.document.createElement('button'); stop.dataset.testid = 'stop-button'; w.document.body.append(stop); await turn();
+  article.textContent = 'second answer progress'; await turn();
+  const before = messages.at(-1).state.assistantRevision;
+  clock = 15000; const callback = [...timers.values()][0]; timers.clear(); callback();
+  assert.equal(messages.at(-1).state.busy, true);
+  assert.ok(messages.at(-1).state.assistantRevision > before,
+    'trailing real content is reported even when idle refreshed the throttle timestamp');
+  dispose(); w.close();
+});
 test('machine turn identities survive content edits, reload and DOM replacement without native IDs', async () => {
   for (const native of [false, true]) {
     const ids = [];
