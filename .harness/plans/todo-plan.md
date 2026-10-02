@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 895,
+  "plan_revision": 897,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "auto-plan-reliability-20261002",
@@ -48,7 +48,7 @@
     ]
   },
   "baseline_commit": "b15ae93c1e5d13a7d877ab4eca06b7a6b24c9087",
-  "current_task_id": null,
+  "current_task_id": "T007",
   "context_pack": {
     "documents": [
       {
@@ -367,7 +367,7 @@
         "Финальная DOCS выполняется после этой задачи и описывает фактически собранный выпуск; native Windows и живая пользовательская приёмка не подменяются fixture-проверкой."
       ],
       "expected_commit_message": "build: выпустить исправления AutoPlan для macOS и Windows",
-      "implementation_status": "TODO",
+      "implementation_status": "IN_PROGRESS",
       "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "auto-plan-reliability-20261002",
@@ -481,8 +481,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: auto-plan-reliability-20261002
-Current Task: нет
-Revision: 895
+Current Task: T007
+Revision: 897
 
 ## Цель
 
@@ -522,7 +522,7 @@ Revision: 895
   - Git Commit: [DONE] feat: сохранять выбор автовыполнения между запусками
   - Reference: auto-plan-reliability-20261002 / T006 / implementation
   - Файлы: src/main.mjs, src/auto-plan.mjs, src/ui/sidebar.mjs, tests/auto-plan.test.mjs, tests/electron-smoke.mjs, tests/installed-observer-fixture.cjs, src/chatgpt-page-observer.mjs, src/page-state.mjs, tests/auto-plan-restart-fixture.cjs, tests/page-state.test.mjs, docs/planning/auto-plan-reliability.md, docs/planning/auto-plan-continuation.md
-- [TODO] T007: Собрать и проверить новые релизы macOS и Windows — Ожидает
+- [IN_PROGRESS] T007: Собрать и проверить новые релизы macOS и Windows — В работе
   - Git Commit: [PENDING] build: выпустить исправления AutoPlan для macOS и Windows
   - Reference: auto-plan-reliability-20261002 / T007 / implementation
   - Файлы: package.json, package-lock.json, scripts/release-all.mjs, scripts/check-installed-release.mjs, tests/installed-observer-fixture.cjs, docs/planning/auto-plan-reliability.md, docs/RELEASE.md, docs/VERIFICATION.md

@@ -59,13 +59,12 @@
       "id": "auto-plan-release",
       "required": false,
       "timeout_ms": 600000,
-      "executable": "npm",
+      "executable": "node",
       "args": [
-        "run",
-        "build"
+        "scripts/check-installed-release.mjs"
       ],
       "kind": "package",
-      "evidence": "Новый парный выпуск после 0.6.75 с итоговым AutoPlan: macOS arm64 / Windows x64 ZIP, SHA256SUMS.txt, INSTALL.txt, release-manifest.json в ~/Downloads/WebPilot-<version>/. Проверки источников, версии, архивов, постоянного root app и установленного observer fixture; native Windows и live ChatGPT проверяет пользователь."
+      "evidence": "Парная сборка 0.6.76 выполняется один раз через npm run build; проверка перед commit сверяет готовые ZIP, исходники, версии и Finder identity root /Applications, комплектные инструменты и установленный observer fixture. Поставка: ~/Downloads/WebPilot-0.6.76/. Native Windows и live ChatGPT отдельно."
     }
   ],
   "budget": {
