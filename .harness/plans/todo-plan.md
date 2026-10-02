@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 888,
+  "plan_revision": 891,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "auto-plan-reliability-20261002",
@@ -30,7 +30,10 @@
       "package.json",
       "package-lock.json",
       "scripts/release-all.mjs",
-      "scripts/check-installed-release.mjs"
+      "scripts/check-installed-release.mjs",
+      "src/chatgpt-page-observer.mjs",
+      "src/page-state.mjs",
+      "tests/auto-plan-restart-fixture.cjs"
     ],
     "documentation_paths": [
       "docs/planning/auto-plan-reliability.md",
@@ -294,7 +297,11 @@
         "src/ui/sidebar.mjs",
         "tests/auto-plan.test.mjs",
         "tests/electron-smoke.mjs",
-        "tests/installed-observer-fixture.cjs"
+        "tests/installed-observer-fixture.cjs",
+        "src/chatgpt-page-observer.mjs",
+        "src/page-state.mjs",
+        "tests/auto-plan-restart-fixture.cjs",
+        "tests/page-state.test.mjs"
       ],
       "documentation_paths": [
         "docs/planning/auto-plan-reliability.md",
@@ -313,13 +320,18 @@
         "Node tests и Electron smoke проверяют сохранение обоих положений кнопки, восстановление и отсутствие дублирующего сообщения."
       ],
       "expected_commit_message": "feat: сохранять выбор автовыполнения между запусками",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "auto-plan-reliability-20261002",
         "task_id": "T006",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "docs/planning/auto-plan-continuation.md",
+        "docs/planning/auto-plan-reliability.md",
+        "tests/page-state.test.mjs"
+      ]
     },
     {
       "id": "T007",
@@ -419,7 +431,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: auto-plan-reliability-20261002
 Current Task: нет
-Revision: 888
+Revision: 891
 
 ## Цель
 
@@ -455,10 +467,10 @@ Revision: 888
   - Git Commit: [DONE] test: закрепить надёжность AutoPlan
   - Reference: auto-plan-reliability-20261002 / T005 / implementation
   - Файлы: tests/electron-smoke.mjs, tests/installed-observer-fixture.cjs, tests/page-state.test.mjs, docs/planning/auto-plan-reliability.md
-- [TODO] T006: Сохранять выбор автовыполнения и восстанавливать работу после перезапуска — Ожидает
-  - Git Commit: [PENDING] feat: сохранять выбор автовыполнения между запусками
+- [DONE] T006: Сохранять выбор автовыполнения и восстанавливать работу после перезапуска — Завершено
+  - Git Commit: [DONE] feat: сохранять выбор автовыполнения между запусками
   - Reference: auto-plan-reliability-20261002 / T006 / implementation
-  - Файлы: src/main.mjs, src/auto-plan.mjs, src/ui/sidebar.mjs, tests/auto-plan.test.mjs, tests/electron-smoke.mjs, tests/installed-observer-fixture.cjs, docs/planning/auto-plan-reliability.md, docs/planning/auto-plan-continuation.md
+  - Файлы: src/main.mjs, src/auto-plan.mjs, src/ui/sidebar.mjs, tests/auto-plan.test.mjs, tests/electron-smoke.mjs, tests/installed-observer-fixture.cjs, src/chatgpt-page-observer.mjs, src/page-state.mjs, tests/auto-plan-restart-fixture.cjs, tests/page-state.test.mjs, docs/planning/auto-plan-reliability.md, docs/planning/auto-plan-continuation.md
 - [TODO] T007: Собрать и проверить новые релизы macOS и Windows — Ожидает
   - Git Commit: [PENDING] build: выпустить исправления AutoPlan для macOS и Windows
   - Reference: auto-plan-reliability-20261002 / T007 / implementation

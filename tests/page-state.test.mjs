@@ -50,6 +50,29 @@ test('observer catches equal-length drafts, late user text, attributes and busy 
   dispose(); assert.equal(w.__webPilotObserverSnapshot, undefined); w.close();
 });
 
+test('checkpoint identity survives reload and an older footer never answers a newer user message', async () => {
+  const markup = '<article data-message-author-role="user">Request</article><article data-message-author-role="assistant" data-message-id="answer-id">Готов продолжать.</article><form><div id="prompt-textarea" contenteditable="true">Saved draft</div><button data-testid="send-button">Send</button></form>';
+  const states = [];
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const dom = new JSDOM(markup, { url: 'https://chatgpt.com/c/fixture', runScripts: 'outside-only' });
+    const w = dom.window;
+    w.HTMLElement.prototype.getClientRects = function () { return [{}]; };
+    const observations = []; w.reportObservation = m => observations.push(m);
+    const dispose = w.eval('(' + installPageObserver.toString() + ')(' + chatGPTDOMScript() + ', reportObservation)');
+    await turn();
+    states.push(observations.at(-1));
+    assert.equal(states.at(-1).state.turnSignal, 'continue');
+    assert.equal(states.at(-1).state.draftPresent, true);
+    const user = w.document.createElement('article'); user.dataset.messageAuthorRole = 'user';
+    user.textContent = 'New request'; w.document.body.append(user); await turn();
+    assert.equal(observations.at(-1).state.turnSignal, null);
+    assert.equal(observations.at(-1).state.turnId, states.at(-1).state.turnId);
+    dispose(); w.close();
+  }
+  assert.notEqual(states[0].documentId, states[1].documentId);
+  assert.equal(states[0].state.turnId, states[1].state.turnId);
+});
+
 test('source rejects stale documents/sequences and closes the check-subscribe gap', async () => {
   const source = new PageStateSource();
   source.accept(observation());
