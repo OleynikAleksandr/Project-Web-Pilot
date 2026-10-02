@@ -6,7 +6,7 @@
 
 Выпуск **0.6.75** для macOS arm64 и Windows x64: Electron **44.5.1**, встроенный и комплектный Node **24.21.0**, Workflow Kit **1.5.1**. Node разработки, проверок и внешних workers — **^24.21.0** (не ниже 24.21.0 и ниже 25). Очистка мёртвого кода и дубликатов сохраняет поведение 0.6.74 и событийный runtime. Экспорт `pageOperation` восстановлен для Web Pilot Sidebar; формат `pageScript` сохранён.
 
-Поставка — `/Downloads/WebPilot-0.6.75/`. Корневой `Project Web Pilot.app` и копия в `/Applications` обновляются с сохранением Finder-identity. После обновления полностью завершите приложение и запустите его снова. Автоматические проверки сборки не заменяют пользовательскую приёмку T010; live Chat/Work новой версии, native Windows и чистый первый запуск ещё не проверены.
+Поставка — `~/Downloads/WebPilot-0.6.75/`. Корневой `Project Web Pilot.app` и копия в `/Applications` обновляются с сохранением Finder-identity. 02.10.2026 пользователь запустил 0.6.75 и явно передал общую приёмку. Отдельные live-сценарии не перечислены; native Windows и чистый первый запуск не проверены. Матрица подтверждений — в [VERIFICATION](VERIFICATION.md).
 
 T009 запускает единственную сборку проверкой paired-release внутри Workflow Kit commit после node24/unit/smoke. Packager получает версию из package.json, отдельного `--app-version` больше нет. Build сверяет исходники с обеими упаковками, ZIP integrity, ASAR, версии, комплектные инструменты и контрольные суммы копий.
 
@@ -14,7 +14,7 @@ T009 запускает единственную сборку проверкой
 
 Корневой app обновляет build:mac; после успешного commit копия `/Applications/Project Web Pilot.app` обновляется штатным `installMacBundle` без пересборки. Device/inode сверяются с `.harness/runtime/release-0.6.75-preflight.json`; прежние Contents сохраняются в backup, работающий процесс не перезапускается автоматически.
 
-Пользователь поручил синхронизацию main и публикацию [v0.6.75](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.75) с двумя ZIP и тремя сопроводительными файлами. После подтверждённого T009 тег указывает на его commit; серверные размеры и SHA-256 сверяются с локальными. Отчёты — `.harness/runtime/t009-installation.json` и `.harness/runtime/t009-publication.json`. T010 отдельно проверяет готовую установку и записывает пользовательскую приёмку.
+Пользователь поручил синхронизацию main и публикацию [v0.6.75](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.75) с двумя ZIP и тремя сопроводительными файлами. После подтверждённого T009 тег указывает на его commit; серверные размеры и SHA-256 сверяются с локальными. Отчёты — `.harness/runtime/t009-installation.json` и `.harness/runtime/t009-publication.json`. T010 проверяет готовую установку без пересборки командой `node scripts/check-installed-release.mjs` (gate `release-installed`): исходники, ZIP, identity обоих app, встроенный/комплектный Node, worker и CLI Kit с PATH без системного Node, статическая Windows-проверка и установленный observer fixture. Пользовательская приёмка записана отдельно от автоматических проверок.
 
 ## Предыдущая локальная поставка — 0.6.74 / 01.10.2026
 
@@ -153,7 +153,7 @@ T006: webContents.insertText вместо медленного execCommand; Send
 - `Project-Web-Pilot-0.6.64-macOS-arm64.zip` — 181490764 bytes; SHA-256 `b0d90ac3fbcd2ed64cab0d41ad22077eb3b89d41ac76f7a1593384d778bc9998`.
 - `Project-Web-Pilot-0.6.64-Windows-x64.zip` — 316752603 bytes; SHA-256 `4c21ba3ad5d8b506df1d73833375eb4a0ef201638107d468ac7c005a85c7bee0`.
 
-`scripts/check-event-runtime-release.mjs` проверяет источники/версии обеих упаковок, обе установленные macOS копии, identity, hashes ZIP и наличие generated preload в каждом ZIP. Отдельный Electron fixture исполняет preload и composer, извлечённые из установленной копии, на изолированной странице: большой Send, reload того же разговора и отсутствие дубля. Полный исходный UI проверен Electron smoke; полный запуск установленного приложения с реальным аккаунтом и native Windows не объявляются проверенными.
+`scripts/check-installed-release.mjs` проверяет источники/версии обеих упаковок, обе установленные macOS копии, identity, hashes ZIP и наличие generated preload в каждом ZIP. Отдельный Electron fixture исполняет preload и composer, извлечённые из установленной копии, на изолированной странице: большой Send, reload того же разговора и отсутствие дубля. Полный исходный UI проверен Electron smoke; полный запуск установленного приложения с реальным аккаунтом и native Windows не объявляются проверенными.
 
 Первая фаза событийного runtime завершена; этот заказанный промежуточный выпуск не закрывает фазы 2/3. Workflow Kit 1.5.0 и runtime digest не менялись. Локальная поставка не опубликована как новый GitHub Release.
 

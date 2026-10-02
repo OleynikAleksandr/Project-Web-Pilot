@@ -4,14 +4,14 @@ import path from 'node:path';
 import os from 'node:os';
 import assert from 'node:assert/strict';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { createRequire } from 'node:module';
 import { execFileSync } from 'node:child_process';
 import { extractFile } from '@electron/asar';
 import { sourceSnapshot, verifyPackagedSources } from './release-all.mjs';
+import { verifyWindowsPackage } from './verify-windows-package.mjs';
+import { createRequire } from 'node:module';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const { version } = JSON.parse(await fs.readFile(path.join(root, 'package.json'), 'utf8'));
-assert.equal(version, '0.6.74');
 const delivery = path.join(os.homedir(), 'Downloads', 'WebPilot-' + version);
 const manifest = JSON.parse(await fs.readFile(path.join(delivery, 'release-manifest.json'), 'utf8'));
 assert.equal(manifest.version, version); assert.equal(manifest.packagedSourceMatches, true);
@@ -29,10 +29,13 @@ for (const app of [rootApp, appsApp]) {
   assert.equal((await fs.lstat(app)).isSymbolicLink(), false);
   assert.equal(execFileSync('/usr/libexec/PlistBuddy', ['-c', 'Print :CFBundleShortVersionString', path.join(app, 'Contents/Info.plist')], { encoding: 'utf8' }).trim(), version);
 }
-const preflight = JSON.parse(await fs.readFile(path.join(root, '.harness/runtime/release-074-preflight.json'), 'utf8'));
-const appsBefore = preflight.find(item => item.path === appsApp);
-const appsAfter = await fs.stat(appsApp);
-assert.equal(appsAfter.dev, appsBefore.device); assert.equal(appsAfter.ino, appsBefore.inode);
+const preflight = JSON.parse(await fs.readFile(path.join(root, '.harness/runtime/release-' + version + '-preflight.json'), 'utf8'));
+for (const app of [rootApp, appsApp]) {
+  const before = preflight.find(item => item.path === app);
+  assert.ok(before, 'preflight identity for ' + app);
+  const after = await fs.stat(app);
+  assert.equal(after.dev, before.device); assert.equal(after.ino, before.inode);
+}
 assert.equal(Object.keys(sources).length, manifest.sourceFiles);
 const stat = await fs.stat(rootApp); assert.equal(stat.ino, manifest.identity.inode); assert.equal(stat.dev, manifest.identity.device);
 for (const artifact of manifest.artifacts) {
@@ -44,14 +47,35 @@ for (const artifact of manifest.artifacts) {
   assert.deepEqual(preload, await fs.readFile(path.join(targets[0], 'resources/chatgpt-page-observer-preload.cjs')));
 }
 
+// Probe both installed copies, without opening or stopping the user's application.
+const nodeEnvironment = { ...process.env };
+for (const key of ['NODE_OPTIONS', 'NODE_PATH', 'ELECTRON_RUN_AS_NODE']) delete nodeEnvironment[key];
+for (const app of [rootApp, appsApp]) {
+  const versions = JSON.parse(execFileSync(path.join(app, 'Contents/MacOS/Project Web Pilot'),
+    ['-p', 'JSON.stringify(process.versions)'],
+    { encoding: 'utf8', timeout: 10000, env: { ...nodeEnvironment, ELECTRON_RUN_AS_NODE: '1' } }));
+  assert.equal(versions.node, '24.21.0'); assert.equal(versions.electron, '44.5.1');
+  const bundled = path.join(app, 'Contents/Resources/mac-tools/node/bin/node');
+  assert.equal(execFileSync(bundled, ['-p', 'process.version + " " + process.arch'],
+    { encoding: 'utf8', timeout: 10000, env: nodeEnvironment }).trim(), 'v24.21.0 arm64');
+}
+const bundledNode = path.join(targets[1], 'mac-tools/node/bin/node');
+const isolatedEnvironment = { ...nodeEnvironment,
+  PATH: [path.dirname(bundledNode), '/usr/bin', '/bin', '/usr/sbin', '/sbin'].join(path.delimiter) };
+assert.deepEqual(execFileSync('/usr/bin/which', ['-a', 'node'],
+  { encoding: 'utf8', env: isolatedEnvironment }).trim().split('\n'), [bundledNode],
+  'fixture PATH resolves only the bundled Node');
+const windows = await verifyWindowsPackage(path.dirname(targets[3]));
+await fs.access(path.join(targets[3], 'windows-node/node-v24.21.0-win-x64/node.exe'));
+assert.equal(windows.version, version);
+
 for (const resources of [targets[0], targets[3]]) {
   const kit = path.join(resources,'resources/workflow-kit');
-  const { install } = await import(pathToFileURL(path.join(kit,'lib/installer.mjs')).href);
   const { readPlan } = await import(pathToFileURL(path.join(kit,'lib/plan.mjs')).href);
   const fixture = await fs.mkdtemp(path.join(os.tmpdir(),'web-pilot-carryover-'));
-  const run = (exe,args) => execFileSync(exe,args,{cwd:fixture,encoding:'utf8',timeout:30000});
+  const run = (exe,args) => execFileSync(exe,args,{cwd:fixture,encoding:'utf8',timeout:30000,env:isolatedEnvironment});
   const cli = (...args) => {
-    const result=JSON.parse(run(process.execPath,[path.join(fixture,'scripts/workflow.mjs'),...args]));
+    const result=JSON.parse(run(bundledNode,[path.join(fixture,'scripts/workflow.mjs'),...args]));
     assert.equal(result.ok,true,JSON.stringify(result));return result;
   };
   try {
@@ -60,7 +84,20 @@ for (const resources of [targets[0], targets[3]]) {
     await fs.mkdir(path.join(fixture,'docs/planning'),{recursive:true});
     await fs.writeFile(path.join(fixture,'docs/planning/fixture.md'),'# Installed carryover\n');
     run('git',['add','docs/planning/fixture.md']);run('git',['commit','-m','fixture']);
-    assert.equal(install({project:fixture,mode:'existing'}).version,'1.5.1');
+    // Exercise the worker from each package with installed Mac Node; Windows JS is cross-package only.
+    const worker = input => {
+      const result = JSON.parse(execFileSync(bundledNode,
+        [path.join(resources, 'resources/workspace-setup-worker.mjs')],
+        { cwd: fixture, encoding: 'utf8', timeout: 60000, env: isolatedEnvironment,
+          input: JSON.stringify({ project: fixture, mode: 'existing', ...input }) }));
+      assert.equal(result.ok, true, JSON.stringify(result)); return result;
+    };
+    const preview = worker({ action: 'inspect' });
+    assert.equal(preview.action, 'install');
+    const installed = worker({ action: 'apply', fingerprint: preview.fingerprint });
+    assert.equal(installed.kitVersion, '1.5.1'); assert.equal(installed.ready, true);
+    assert.equal(worker({ action: 'inspect' }).ready, true);
+    cli('status'); assert.equal(cli('recover', '--format', 'json').completeness, 'COMPLETE');
     const file=path.join(fixture,'.harness/runtime/input.json');
     await fs.writeFile(file,JSON.stringify({id:'old',spec:'docs/planning/fixture.md',objective:'Installed carryover',
       tasks:[{id:'T001',title:'Remaining',files:['docs/planning/fixture.md'],acceptance:['Retained criterion']}]}));
@@ -97,4 +134,6 @@ try {
   process.stdout.write(result);
 } finally { await fs.rm(temporary, { recursive: true, force: true }); }
 console.log(JSON.stringify({ version, delivery, packagedSources: true, installedResourcesExecuted: true,
+  embeddedNode: '24.21.0', bundledMacNode: 'v24.21.0 arm64', bundledWindowsNode: 'node-v24.21.0-win-x64',
+  workerAndKitWithoutSystemNode: true, windowsPackageVerified: true,
   nativeWindowsTested: false, liveChatGPT: false }));

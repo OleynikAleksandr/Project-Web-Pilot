@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 864,
+  "plan_revision": 866,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "refactoring-node24-20261002",
@@ -761,8 +761,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "refactoring-node24-20261002",
         "task_id": "T010",
@@ -795,7 +795,14 @@
         "Пользователь явно принял запуск релиза 0.6.75 сообщением «Я запустил новый релиз 0.6.75. Как будто бы всё работает. То есть моя приёмка у тебя есть». Приёмка записана в docs/VERIFICATION.md; отдельные сценарии первоначального списка, не перечисленные пользователем, отмечены как отдельно не подтверждённые, без повторного запроса общей приёмки.",
         "Первый запуск на чистой macOS записан как выполненный пользователем или «не проверено»; Windows подтверждён только статической проверкой пакета, и его работоспособность не заявляется до пользовательской проверки."
       ],
-      "expected_commit_message": "feat: Проверить готовую поставку 0.6.75 и записать пользовательскую приёмку"
+      "expected_commit_message": "feat: Проверить готовую поставку 0.6.75 и записать пользовательскую приёмку",
+      "actual_files": [
+        "scripts/check-event-runtime-release.mjs",
+        "scripts/check-installed-release.mjs",
+        "docs/planning/refactoring-node24.md",
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -892,7 +899,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: refactoring-node24-20261002
 Current Task: нет
-Revision: 864
+Revision: 866
 
 ## Цель
 
@@ -944,8 +951,8 @@ Revision: 864
   - Git Commit: [DONE] feat: Выпустить 0.6.75 для macOS и Windows
   - Reference: refactoring-node24-20261002 / T009 / implementation
   - Файлы: package.json, package-lock.json, docs/planning/refactoring-node24.md, docs/RELEASE.md, docs/VERIFICATION.md, README.md, AGENTS.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/architecture/ARCHITECTURE.md, docs/PRODUCT.md, docs/MODULES.md
-- [TODO] T010: Проверить готовую поставку 0.6.75 и записать пользовательскую приёмку — Ожидает
-  - Git Commit: [PENDING] feat: Проверить готовую поставку 0.6.75 и записать пользовательскую приёмку
+- [DONE] T010: Проверить готовую поставку 0.6.75 и записать пользовательскую приёмку — Завершено
+  - Git Commit: [DONE] feat: Проверить готовую поставку 0.6.75 и записать пользовательскую приёмку
   - Reference: refactoring-node24-20261002 / T010 / implementation
   - Файлы: scripts/check-event-runtime-release.mjs, scripts/check-installed-release.mjs, docs/planning/refactoring-node24.md, docs/RELEASE.md, docs/VERIFICATION.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
