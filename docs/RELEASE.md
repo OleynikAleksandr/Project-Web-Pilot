@@ -15,9 +15,11 @@
 
 Корневой app и `/Applications/Project Web Pilot.app` обновлены до 0.6.76 штатной установкой с сохранением device/inode: `16777234/406600483` и `16777234/406571340`. Оба соответствуют staging; ASAR SHA-256 — `9f32216ae38994f6b166d918a45324bcda1495babb79b80a015f5f58e936a46f`. Старые Contents сохранены в release-backups. Работающий пользовательский процесс не перезапускался; для запуска новой версии нужен полный выход и повторное открытие приложения.
 
-T007 требует node24, unit, smoke и auto-plan-release. Последняя проверка выполняет `scripts/check-installed-release.mjs` на уже собранной поставке: источники, версии, ZIP, identity, комплектные инструменты и установленный observer/Composer/AutoPlan. Сборка не повторяется внутри коммита. Исходные отчёты: `.harness/runtime/release-0.6.76-preflight.json`, `auto-plan-t007-installation.json` и release manifest. Итоги проверок фиксирует Workflow Kit; после T007 выполняются документальная подготовка T009, публикации T010–T012 и финальная DOCS.
+T007 требует node24, unit, smoke и auto-plan-release. Последняя проверка выполняет `scripts/check-installed-release.mjs` на уже собранной поставке: источники, версии, ZIP, identity, комплектные инструменты и установленный observer/Composer/AutoPlan. Сборка не повторяется внутри коммита. Исходные отчёты: `.harness/runtime/release-0.6.76-preflight.json`, `auto-plan-t007-installation.json` и release manifest. Итоги проверок фиксирует Workflow Kit; после T007 выполнена документальная подготовка T009, публикация Project Web Pilot — T010, публикации WorkflowKit/Web Pilot Sidebar — T011/T012, затем финальная DOCS.
 
-Native Windows, чистый первый запуск и живая приёмка ChatGPT не выполнялись. GitHub Release этой версии ещё не опубликован; готовая поставка предназначена для T010 без повторной сборки.
+[GitHub Release v0.6.76](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.76) опубликован из готовой поставки без пересборки. Тег `v0.6.76` указывает на release/build commit T007 `0a73a39ec27bf844607619bd1bf29c3884a92e81`; remote `main` после публикации совпал с документальным HEAD T009 `bb9e262267b8e66642e5b3aeb6bdeffbe1fe20b7`. На GitHub ровно пять требуемых assets: оба ZIP, `SHA256SUMS.txt`, `INSTALL.txt` и `release-manifest.json`; их серверные размеры и SHA-256 digest совпали с локальными файлами. Evidence — `.harness/runtime/t010-publication.json`.
+
+Native Windows, чистый первый запуск и живая приёмка ChatGPT не выполнялись.
 
 ## Выпуск 0.6.75 — 02.10.2026
 

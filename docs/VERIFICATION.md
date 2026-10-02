@@ -6,7 +6,9 @@
 
 T007 `0a73a39ec27bf844607619bd1bf29c3884a92e81`: версия 0.6.76 и парная macOS arm64 / Windows x64 поставка подтверждены назначенными `node24`, `unit`, `smoke` и `auto-plan-release`. Готовые ZIP и сопроводительные файлы находятся в `~/Downloads/WebPilot-0.6.76/`; package-gate сверяет исходники, версии, архивы, Finder identity, комплектные инструменты и установленный AutoPlan fixture.
 
-Fixture 0.6.76 покрывает постоянный выбор AutoPlan, восстановление после fresh process/reload, `STALL_WARNING` без ложного выключения busy-turn, сохранение draft до ручного Send, вопрос/Stop, счётчик подтверждённых «Продолжай», reason codes и отсутствие небезопасного дубля. Живая приёмка ChatGPT 0.6.76, native Windows и чистая macOS не выполнялись. Предыдущая общая пользовательская приёмка 0.6.75 сохранена ниже как историческое evidence; GitHub Release 0.6.76 ещё не опубликован.
+Fixture 0.6.76 покрывает постоянный выбор AutoPlan, восстановление после fresh process/reload, `STALL_WARNING` без ложного выключения busy-turn, сохранение draft до ручного Send, вопрос/Stop, счётчик подтверждённых «Продолжай», reason codes и отсутствие небезопасного дубля. Живая приёмка ChatGPT 0.6.76, native Windows и чистая macOS не выполнялись. Предыдущая общая пользовательская приёмка 0.6.75 сохранена ниже как историческое evidence.
+
+T010 опубликовала [GitHub Release v0.6.76](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.76) без пересборки. `main` синхронизирован с `bb9e262267b8e66642e5b3aeb6bdeffbe1fe20b7`; тег указывает на release/build commit T007 `0a73a39ec27bf844607619bd1bf29c3884a92e81`. Публичный GitHub API подтвердил ровно пять требуемых assets. Серверные размеры и `digest=sha256:...` каждого файла совпали с локальными значениями; для ZIP это 185522652 / `086936d44b3b392e126a06df244ef9c762a7db1c4c3a6038149b1c405412cc81` и 355424499 / `1b69c8f118d37d68b16f021f53ee0e4fdc46bbb65cece815a47a43ebd396c363`. Полный отчёт — `.harness/runtime/t010-publication.json`.
 
 ## История source — фаза 3 завершена / 01.10.2026
 
