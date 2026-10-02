@@ -1,5 +1,7 @@
 # Workflow Kit package migration — Project Web Pilot
 
+Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](../SOURCE_WORKSPACES.md).
+
 ## Результат
 
 Project Web Pilot использует единственный canonical package `@webpilot/workflow-kit@1.4.12` из `/Users/oleksandroliinyk/VSCODE/WorkflowKit`. Tracked duplicate `resources/workflow-kit` удалён как исходник. Если этот layout нужен external workers и Electron package, он создаётся автоматически как generated staging из `getRuntimeRoot()`.

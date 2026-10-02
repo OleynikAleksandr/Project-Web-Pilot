@@ -1,5 +1,7 @@
 # Module Specification — Runtime Lifecycle
 
+Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](../SOURCE_WORKSPACES.md).
+
 ## Назначение
 
 Обеспечить бесшумный self-healing startup локальных MCP и Secure MCP Tunnel на macOS и Windows: переиспользовать существующую совместимую установку, установить runtime при отсутствии, восстановиться после stale PID и конфликтов локальных портов и всегда вернуть Web Pilot фактические loopback endpoints.

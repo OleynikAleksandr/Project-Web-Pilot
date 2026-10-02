@@ -1,5 +1,7 @@
 # Продукт
 
+Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
+
 В 0.6.72 передача recovery завершается сразу после Send, без поиска текста в DOM или ожидания ответа. Paste сохранён; старые неопределённые попытки больше не показывают бесконечную проверку. Контракт — docs/CONTEXT_DELIVERY.md, измерения — docs/VERIFICATION.md.
 
 Текущий локальный выпуск — **0.6.74**, macOS arm64 / Windows x64; Workflow Kit **1.5.1**. Он завершает трёхфазный событийный рефакторинг: startup-account работает через общий observer без общего 1500-мс функционального пульса, оформление composer — без секундного safety-pass, проект/план прогреваются и инвалидируются по событиям. Сопоставимый fixture и live Chat/Work на macOS подтверждены; native Windows остаётся отдельной platform-проверкой. Поставка — `~/Downloads/WebPilot-0.6.74/`; постоянный root app обновлён до 0.6.74, `/Applications` этой сборкой не обновлялся и остаётся 0.6.73.
@@ -25,6 +27,10 @@
 Workflow Kit 1.5.0 удаляет normal lifecycle `plan:prepare`/`plan:bind` и переносит legacy `.harness/plans/by-id` / `by-session` в read-only history при upgrade. Legacy session/plan fields читаются backward-compatible, но не маршрутизируют runtime state. Истинная параллельная работа изолируется отдельным Git worktree. Подробные контракты — `docs/modules/session-owned-plans.md` (файл сохранён для стабильности ссылок, содержание заменено single-active model), `docs/modules/workspace-sessions.md` и `docs/modules/workflow-kit-recovery.md`.
 
 19.09.2026 собрана исправленная **0.6.47** для macOS arm64 и Windows x64; ZIP находятся в `~/Downloads/WebPilot-0.6.47/`. На macOS пользователь выбирает в Settings **Codex Local Mac** либо **Codex App Server Local Mac**, но ChatGPT должен работать через один стабильный Secure MCP Tunnel/connector: переключается только локальный backend за ним, выбор сохраняется после login/reboot и Web Pilot relaunch-ится после switch. Первый запуск и Permissions сохраняют контракт 0.6.45, а layout hidden tool calls — исправление 0.6.46. Windows onboarding этим macOS selector не меняется.
+
+## Связанный браузерный интерфейс — Web Pilot Sidebar
+
+Параллельно создаётся отдельный репозиторий `/Users/oleksandroliinyk/VSCODE/Web Pilot Sidebar`. Его расширение показывает проекты, сессии и прогресс рядом с обычным веб-чатом; оно переиспользует адаптер ChatGPT из этого приложения. Workflow Kit остаётся ядром current plan/recovery, Project Web Pilot — владельцем проектов и локального runtime. Сейчас Sidebar проверяет осуществимость на тестовых данных; production Host API требует отдельного плана здесь. Это связь с дополнительным интерфейсом, без изменения принятого Electron-приложения. [Границы и источники](SOURCE_WORKSPACES.md), [контракт адаптера](modules/chatgpt-dom-compatibility.md).
 
 ## Идея
 

@@ -4,7 +4,7 @@ import { JSDOM } from 'jsdom';
 import { PageStateSource } from '../src/page-state.mjs';
 import { chatGPTDOMScript } from '../src/chatgpt-dom.mjs';
 import { installPageObserver } from '../src/chatgpt-page-observer.mjs';
-import { ChatGPTComposer, pageScript } from '../src/chatgpt-composer.mjs';
+import { ChatGPTComposer, pageOperation, pageScript } from '../src/chatgpt-composer.mjs';
 
 function fixture({ draft = '', stop = false, emitMessage = true } = {}) {
   const dom = new JSDOM('<!doctype html><form><textarea id="prompt-textarea"></textarea><button data-testid="send-button" type="submit">Send</button></form>',
@@ -23,6 +23,13 @@ function fixture({ draft = '', stop = false, emitMessage = true } = {}) {
   const composer=new ChatGPTComposer(view,{settleMs:1,timeoutMs:5,now:()=>time,wait:async ms=>{time+=ms;}});
   return {dom,document,editor,view,composer,sends:()=>sends};
 }
+test('Sidebar can import pageOperation and reconstruct the exact pageScript wire format', () => {
+  const args = { action: 'inspect', text: 'Контекст\n"Sidebar"', requestId: 'sidebar-contract' };
+  assert.equal(typeof pageOperation, 'function');
+  assert.equal(pageOperation.name, 'pageOperation');
+  assert.equal(pageScript(args), `(${pageOperation})(${JSON.stringify(args)}, ${chatGPTDOMScript()})`);
+});
+
 const message='Read project context. Request: opaque-request-123';
 const request={text:message,requestId:'opaque-request-123'};
 

@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 856,
+  "plan_revision": 860,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "refactoring-node24-20261002",
@@ -79,7 +79,8 @@
       "tests/context-session.test.mjs",
       "tests/context-cache.test.mjs",
       "tests/common.test.mjs",
-      "tests/conversation-recovery.test.mjs"
+      "tests/conversation-recovery.test.mjs",
+      "tests/chatgpt-composer.test.mjs"
     ],
     "documentation_paths": [
       "docs/planning/refactoring-node24.md",
@@ -94,7 +95,33 @@
       "docs/PRODUCT.md",
       "docs/architecture/OVERVIEW.md",
       "docs/MODULES.md",
-      "docs/modules/codex-app-server-executor.md"
+      "docs/modules/codex-app-server-executor.md",
+      "docs/modules/chatgpt-dom-compatibility.md",
+      "docs/CLEAN_INSTALL.md",
+      "docs/CONTEXT_DELIVERY.md",
+      "docs/DECISIONS.md",
+      "docs/DOCUMENTATION_INDEX.history-20260929.md",
+      "docs/MODULES.history-20260929.md",
+      "docs/PROJECT_ARCHIVE.md",
+      "docs/TRANSFER_TO_WINDOWS.md",
+      "docs/WORKSPACE_SETUP.md",
+      "docs/architecture/OVERVIEW.history-20260929.md",
+      "docs/design/chat-message-layout-regression.md",
+      "docs/design/computer-use-latency-investigation.md",
+      "docs/modules/first-run-onboarding.md",
+      "docs/modules/project-doctor.md",
+      "docs/modules/runtime-lifecycle.md",
+      "docs/modules/session-opening-performance.md",
+      "docs/modules/session-owned-plans.md",
+      "docs/modules/workflow-kit-recovery.md",
+      "docs/modules/workspace-sessions.md",
+      "docs/planning/auto-plan-continuation.md",
+      "docs/planning/event-driven-runtime.md",
+      "docs/planning/remote-project-ui-research.md",
+      "docs/planning/session-title-sync.md",
+      "docs/planning/single-active-plan-adaptation.md",
+      "docs/planning/workflow-kit-package-migration.md",
+      "docs/research/remote-project-ui-options-2026-09-28.md"
     ]
   },
   "baseline_commit": "65cc2f73a5aebd628c4ef4041ac3fcc9eab8aec1",
@@ -556,8 +583,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "refactoring-node24-20261002",
         "task_id": "T008",
@@ -566,7 +593,10 @@
       "dependencies": [
         "T007"
       ],
-      "functional_paths": [],
+      "functional_paths": [
+        "src/chatgpt-composer.mjs",
+        "tests/chatgpt-composer.test.mjs"
+      ],
       "documentation_paths": [
         "docs/planning/refactoring-node24.md",
         "AGENTS.md",
@@ -575,9 +605,44 @@
         "docs/RELEASE.md",
         "docs/architecture/ARCHITECTURE.md",
         "docs/SOURCE_WORKSPACES.md",
-        "docs/DOCUMENTATION_INDEX.md"
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/modules/chatgpt-dom-compatibility.md",
+        "docs/VERIFICATION.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/DECISIONS.md",
+        "docs/DOCUMENTATION_INDEX.history-20260929.md",
+        "docs/MODULES.history-20260929.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/PROJECT_ARCHIVE.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/architecture/OVERVIEW.history-20260929.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/design/chat-message-layout-regression.md",
+        "docs/design/computer-use-latency-investigation.md",
+        "docs/modules/codex-app-server-executor.md",
+        "docs/modules/first-run-onboarding.md",
+        "docs/modules/project-doctor.md",
+        "docs/modules/runtime-lifecycle.md",
+        "docs/modules/session-opening-performance.md",
+        "docs/modules/session-owned-plans.md",
+        "docs/modules/workflow-kit-recovery.md",
+        "docs/modules/workspace-sessions.md",
+        "docs/planning/auto-plan-continuation.md",
+        "docs/planning/event-driven-runtime.md",
+        "docs/planning/remote-project-ui-research.md",
+        "docs/planning/session-title-sync.md",
+        "docs/planning/single-active-plan-adaptation.md",
+        "docs/planning/workflow-kit-package-migration.md",
+        "docs/research/remote-project-ui-options-2026-09-28.md"
       ],
-      "verification_ids": [],
+      "verification_ids": [
+        "node24",
+        "unit",
+        "smoke"
+      ],
       "id": "T008",
       "title": "Убрать противоречия и устаревшие сведения в документации агента",
       "why": "Убрать противоречия и устаревшие сведения в документации агента",
@@ -586,9 +651,54 @@
         "В AGENTS.md вне блока workflow-kit один раздел текущего состояния; повторяющиеся разделы «Текущий (локальный) выпуск» и «Выпуск 0.6.52/0.6.53» удалены после переноса недостающих фактов в docs/RELEASE.md; версия Workflow Kit везде 1.5.1; правило версий Node указано.",
         "README.md и docs/WORKFLOW_START.md содержат по одному текущему разделу без смеси версий; история выпусков остаётся в docs/RELEASE.md.",
         "ARCHITECTURE.md больше не описывает удалённые session-tokens как действующие; пути WF001 в SOURCE_WORKSPACES.md однозначны; DOCUMENTATION_INDEX.md ссылается на этот план и на planning/single-active-plan-adaptation.md.",
-        "Блок workflow-kit в AGENTS.md не изменён; относительные ссылки в изменённых Markdown-файлах не битые."
+        "Блок workflow-kit в AGENTS.md не изменён; относительные ссылки в изменённых Markdown-файлах не битые.",
+        "По уточнению пользователя 02.10.2026 экспорт pageOperation восстановлен для Web Pilot Sidebar; ComposerError остаётся внутренним. Формат pageScript и остальные исходники DOM/experience не изменены. Контракт Sidebar (публичные символы, browser-only imports, SHA-256 vendor lock) записан; описание коммита явно отмечает восстановление экспорта.",
+        "По поручению пользователя 02.10.2026 все собственные документы Project Web Pilot с упоминанием Workflow Kit также обозначают Web Pilot Sidebar как связанный проект по пути /Users/oleksandroliinyk/VSCODE/Web Pilot Sidebar. Действующие архитектура, карта модулей, индекс, продукт и README описывают роли и внешний контракт; исторические свидетельства сохраняются. Чужой workspace и managed/generated Kit не изменяются."
       ],
-      "expected_commit_message": "docs: Убрать противоречия и устаревшие сведения в документации агента"
+      "expected_commit_message": "docs: Актуализировать документацию и восстановить экспорт pageOperation для Sidebar",
+      "actual_files": [
+        "src/chatgpt-composer.mjs",
+        "tests/chatgpt-composer.test.mjs",
+        "AGENTS.md",
+        "README.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/SOURCE_WORKSPACES.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/modules/chatgpt-dom-compatibility.md",
+        "docs/planning/refactoring-node24.md",
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/DECISIONS.md",
+        "docs/DOCUMENTATION_INDEX.history-20260929.md",
+        "docs/MODULES.history-20260929.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/PROJECT_ARCHIVE.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/architecture/OVERVIEW.history-20260929.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/design/chat-message-layout-regression.md",
+        "docs/design/computer-use-latency-investigation.md",
+        "docs/modules/codex-app-server-executor.md",
+        "docs/modules/first-run-onboarding.md",
+        "docs/modules/project-doctor.md",
+        "docs/modules/runtime-lifecycle.md",
+        "docs/modules/session-opening-performance.md",
+        "docs/modules/session-owned-plans.md",
+        "docs/modules/workflow-kit-recovery.md",
+        "docs/modules/workspace-sessions.md",
+        "docs/planning/auto-plan-continuation.md",
+        "docs/planning/event-driven-runtime.md",
+        "docs/planning/remote-project-ui-research.md",
+        "docs/planning/session-title-sync.md",
+        "docs/planning/single-active-plan-adaptation.md",
+        "docs/planning/workflow-kit-package-migration.md",
+        "docs/research/remote-project-ui-options-2026-09-28.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -699,7 +809,33 @@
         "docs/VERIFICATION.md",
         "docs/architecture/OVERVIEW.md",
         "docs/MODULES.md",
-        "docs/modules/codex-app-server-executor.md"
+        "docs/modules/codex-app-server-executor.md",
+        "docs/modules/chatgpt-dom-compatibility.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/DECISIONS.md",
+        "docs/DOCUMENTATION_INDEX.history-20260929.md",
+        "docs/MODULES.history-20260929.md",
+        "docs/PROJECT_ARCHIVE.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/architecture/OVERVIEW.history-20260929.md",
+        "docs/design/chat-message-layout-regression.md",
+        "docs/design/computer-use-latency-investigation.md",
+        "docs/modules/first-run-onboarding.md",
+        "docs/modules/project-doctor.md",
+        "docs/modules/runtime-lifecycle.md",
+        "docs/modules/session-opening-performance.md",
+        "docs/modules/session-owned-plans.md",
+        "docs/modules/workflow-kit-recovery.md",
+        "docs/modules/workspace-sessions.md",
+        "docs/planning/auto-plan-continuation.md",
+        "docs/planning/event-driven-runtime.md",
+        "docs/planning/remote-project-ui-research.md",
+        "docs/planning/session-title-sync.md",
+        "docs/planning/single-active-plan-adaptation.md",
+        "docs/planning/workflow-kit-package-migration.md",
+        "docs/research/remote-project-ui-options-2026-09-28.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -734,7 +870,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: refactoring-node24-20261002
 Current Task: нет
-Revision: 856
+Revision: 860
 
 ## Цель
 
@@ -778,10 +914,10 @@ Revision: 856
   - Git Commit: [DONE] refactor: Свести дублирующиеся помощники к одной реализации
   - Reference: refactoring-node24-20261002 / T007 / implementation
   - Файлы: src/common.mjs, src/tunnel-setup.mjs, src/mac-runtime.mjs, src/windows-runtime.mjs, src/mac-runtime-switch.mjs, src/workspace-session.mjs, src/workspace-setup.mjs, src/session-plans.mjs, src/workspace-readiness.mjs, src/workspace-deletion.mjs, src/tunnel-clipboard.mjs, scripts/prepare-mac-toolchain.mjs, scripts/prepare-windows-toolchain.mjs, scripts/verify-windows-package.mjs, scripts/release-all.mjs, scripts/release-mac.mjs, scripts/check-event-runtime-release.mjs, tests/windows-runtime.test.mjs, tests/tunnel-id-runtime.test.mjs, tests/mac-runtime.test.mjs, tests/release-all.test.mjs, tests/common.test.mjs, tests/electron-smoke.mjs, tests/conversation-recovery.test.mjs, docs/planning/refactoring-node24.md, docs/architecture/OVERVIEW.md, docs/VERIFICATION.md
-- [TODO] T008: Убрать противоречия и устаревшие сведения в документации агента — Ожидает
-  - Git Commit: [PENDING] docs: Убрать противоречия и устаревшие сведения в документации агента
+- [DONE] T008: Убрать противоречия и устаревшие сведения в документации агента — Завершено
+  - Git Commit: [DONE] docs: Актуализировать документацию и восстановить экспорт pageOperation для Sidebar
   - Reference: refactoring-node24-20261002 / T008 / implementation
-  - Файлы: docs/planning/refactoring-node24.md, AGENTS.md, README.md, docs/WORKFLOW_START.md, docs/RELEASE.md, docs/architecture/ARCHITECTURE.md, docs/SOURCE_WORKSPACES.md, docs/DOCUMENTATION_INDEX.md
+  - Файлы: src/chatgpt-composer.mjs, tests/chatgpt-composer.test.mjs, docs/planning/refactoring-node24.md, AGENTS.md, README.md, docs/WORKFLOW_START.md, docs/RELEASE.md, docs/architecture/ARCHITECTURE.md, docs/SOURCE_WORKSPACES.md, docs/DOCUMENTATION_INDEX.md, docs/modules/chatgpt-dom-compatibility.md, docs/VERIFICATION.md, docs/CLEAN_INSTALL.md, docs/CONTEXT_DELIVERY.md, docs/DECISIONS.md, docs/DOCUMENTATION_INDEX.history-20260929.md, docs/MODULES.history-20260929.md, docs/MODULES.md, docs/PRODUCT.md, docs/PROJECT_ARCHIVE.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKSPACE_SETUP.md, docs/architecture/OVERVIEW.history-20260929.md, docs/architecture/OVERVIEW.md, docs/design/chat-message-layout-regression.md, docs/design/computer-use-latency-investigation.md, docs/modules/codex-app-server-executor.md, docs/modules/first-run-onboarding.md, docs/modules/project-doctor.md, docs/modules/runtime-lifecycle.md, docs/modules/session-opening-performance.md, docs/modules/session-owned-plans.md, docs/modules/workflow-kit-recovery.md, docs/modules/workspace-sessions.md, docs/planning/auto-plan-continuation.md, docs/planning/event-driven-runtime.md, docs/planning/remote-project-ui-research.md, docs/planning/session-title-sync.md, docs/planning/single-active-plan-adaptation.md, docs/planning/workflow-kit-package-migration.md, docs/research/remote-project-ui-options-2026-09-28.md
 - [TODO] T009: Собрать парный выпуск 0.6.75 — Ожидает
   - Git Commit: [PENDING] feat: Собрать парный выпуск 0.6.75
   - Reference: refactoring-node24-20261002 / T009 / implementation
@@ -793,7 +929,7 @@ Revision: 856
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: refactoring-node24-20261002 / DOCS / implementation
-  - Файлы: docs/planning/refactoring-node24.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, README.md, AGENTS.md, docs/WORKFLOW_START.md, docs/RELEASE.md, docs/SOURCE_WORKSPACES.md, docs/DOCUMENTATION_INDEX.md, docs/VERIFICATION.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/modules/codex-app-server-executor.md
+  - Файлы: docs/planning/refactoring-node24.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, README.md, AGENTS.md, docs/WORKFLOW_START.md, docs/RELEASE.md, docs/SOURCE_WORKSPACES.md, docs/DOCUMENTATION_INDEX.md, docs/VERIFICATION.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/modules/codex-app-server-executor.md, docs/modules/chatgpt-dom-compatibility.md, docs/CLEAN_INSTALL.md, docs/CONTEXT_DELIVERY.md, docs/DECISIONS.md, docs/DOCUMENTATION_INDEX.history-20260929.md, docs/MODULES.history-20260929.md, docs/PROJECT_ARCHIVE.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKSPACE_SETUP.md, docs/architecture/OVERVIEW.history-20260929.md, docs/design/chat-message-layout-regression.md, docs/design/computer-use-latency-investigation.md, docs/modules/first-run-onboarding.md, docs/modules/project-doctor.md, docs/modules/runtime-lifecycle.md, docs/modules/session-opening-performance.md, docs/modules/session-owned-plans.md, docs/modules/workflow-kit-recovery.md, docs/modules/workspace-sessions.md, docs/planning/auto-plan-continuation.md, docs/planning/event-driven-runtime.md, docs/planning/remote-project-ui-research.md, docs/planning/session-title-sync.md, docs/planning/single-active-plan-adaptation.md, docs/planning/workflow-kit-package-migration.md, docs/research/remote-project-ui-options-2026-09-28.md
 
 ## Context Pack For This Cycle
 

@@ -1,5 +1,7 @@
 # Архитектура
 
+Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](../SOURCE_WORKSPACES.md).
+
 0.6.74: AutoPlan сохраняет контракт 0.6.73, а событийный runtime завершает фазы 2/3: startup-account и ContextSession используют общий PageStateSource, проект/план обновляются по файловым событиям, общий 1500-мс функциональный пульс и секундный safety-pass цветов отсутствуют. Сопоставимый fixture и live Chat/Work на macOS пройдены; парная macOS arm64/Windows x64 поставка собрана. Workflow Kit 1.5.1 неизменён; native Windows остаётся отдельной platform-проверкой.
 
 В 0.6.71 передача recovery завершается сразу после Send, без поиска текста в DOM или ожидания ответа. Paste сохранён; старые неопределённые попытки больше не показывают бесконечную проверку. Контракт — docs/CONTEXT_DELIVERY.md, измерения — docs/VERIFICATION.md.
@@ -619,7 +621,9 @@ Patch 0.6.8 подтверждает фактический Chat/Work через
 
 macOS arm64 и Windows x64 packages пересобираются из одного исходного дерева. Реальная проверка нового Chat/Work остаётся пользователю; scope остаётся ACTIVE/READY_FOR_ACCEPTANCE после обязательных checks.
 
-## Session token estimate — scope 012 / T002
+## Session token estimate — scope 012 / T002 (история 0.6.9–0.6.12)
+
+Исторический эксперимент: описанные ниже `src/session-tokens.mjs`, `SessionTokenCounter` и `js-tiktoken` удалены в 0.6.12. Этот раздел и следующие записи scope 012 сохраняют ход эксперимента, а не действующий runtime.
 
 Workspace & Sessions использует src/session-tokens.mjs и js-tiktoken 1.0.21 (pure JS, o200k_base из установленного пакета). Токенизация исполняется в одном worker_threads worker вне Electron main thread. DOM reader читает только user/assistant message elements с устойчивым message/turn ID, удаляет UI controls и не трогает composer/сеть. Неизменённые тексты пропускаются по SHA-256; новая версия того же message ID заменяет количество. Локальная schema v5 допускает optional tokenEstimate; старые записи без поля остаются читаемыми. Record содержит encoding, total, updatedAt и таблицу ID → digest/tokens, без копии текста. Guard записи проверяет выбранную session и exact chatUrl. Оценка включает ранее прочитанные сообщения, даже если DOM их выгрузил; не измеряет серверный контекст.
 
@@ -1388,3 +1392,7 @@ Sidebar владеет собственным `<dialog>` для rename вмес�
 Единственный источник версии комплектных workers — BUNDLED_NODE_VERSION в src/platform.mjs. Скрипты подготовки macOS/Windows, проверка Windows-пакета и путь windows-node в main используют эту константу; литерал BUILD_WINDOWS.cmd контролируется тестом. Архивы nodejs.org проверяются по закреплённым SHA-256 v24.21.0. Неиспользуемые контрольные файлы windows-runtime удалены; resources/mac-runtime.zip не изменяется.
 
 WorkspaceSetup продолжает искать следующий кандидат Node после несовместимой версии. Для Node ниже 24.21 возвращается NODE_TOO_OLD, для 25+ — NODE_UNSUPPORTED; существующие диагностики отсутствующего/незапускаемого Node и очистка Windows-окружения сохранены. Контракт и объём проверки — docs/planning/refactoring-node24.md.
+
+## 2026-10-02 — T008: внешний контракт Sidebar
+
+`pageOperation` в `src/chatgpt-composer.mjs` снова экспортируется для Web Pilot Sidebar. Тело функции, формат `pageScript`, DOM/experience-модули и runtime-поведение сохранены; `ComposerError` остаётся внутренним. Публичные зависимости Sidebar, browser-only imports и порядок обновления SHA-256 описаны в [контракте DOM](../modules/chatgpt-dom-compatibility.md).

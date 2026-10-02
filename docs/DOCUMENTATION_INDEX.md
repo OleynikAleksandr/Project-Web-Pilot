@@ -1,5 +1,7 @@
 # Каталог документации
 
+Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
+
 <!-- workflow-kit:begin -->
 ## Документы проекта
 | Документ | Назначение |
@@ -34,7 +36,7 @@
 | docs/planning/session-title-sync.md | Контракт auto/manual session title и server-side синхронизации с native ChatGPT Recents |
 | docs/design/chat-message-layout-regression.md | Planning исправления пустого layout скрытых tool-call message/turn wrappers и regression coverage |
 | docs/design/computer-use-latency-investigation.md | Planning и evidence исследования end-to-end задержек Computer Use, MCP, Secure MCP Tunnel и Web ChatGPT |
-| docs/SOURCE_WORKSPACES.md | Исходные проекты, пути, версии и официальные ссылки |
+| docs/SOURCE_WORKSPACES.md | Связанные Project Web Pilot / Workflow Kit / Web Pilot Sidebar, рабочие каталоги, границы интеграции и исторические источники |
 | docs/VERIFICATION.md | Проверки, release evidence и границы пользовательской приёмки |
 | docs/RELEASE.md | Парный выпуск macOS/Windows, постоянный macOS app, Finder-алиас, ZIP, GitHub Release и проверка доставки |
 | docs/CLEAN_INSTALL.md | Стенд Clean/Test macOS/Windows, evidence первого запуска до 0.6.45 и границы проверки текущей поставки 0.6.47 |
@@ -81,7 +83,13 @@
 | [Событийная обработка состояния Web Pilot](planning/event-driven-runtime.md) | Завершённый контракт трёх этапов: фаза 1 — общий observer/дедупликация, фаза 2 — файловые события/прогрев и удаление постоянных опросов, фаза 3 — сопоставимые измерения, live Chat/Work на macOS и парная поставка 0.6.74; native Windows отмечен как отдельная непроведённая проверка |
 ## Workflow Kit 1.5.1 / Web Pilot 0.6.74
 
+## Web Pilot Sidebar — связанный репозиторий
+- [Контракт DOM/Sidebar](modules/chatgpt-dom-compatibility.md) — общие browser-модули, публичные символы, pageScript и SHA-256.
+- [Рабочие репозитории](SOURCE_WORKSPACES.md) — пути, роли Workflow Kit и Sidebar, текущий тестовый хост и границы будущего Host API.
+
 ## Актуальные дополнения
+- [Рефакторинг и Node 24](planning/refactoring-node24.md) — текущий scope очистки, Node 24.21.0 / Electron 44.5.1, контракт Sidebar и подготовка выпуска 0.6.75.
+- [Переход на один текущий план](planning/single-active-plan-adaptation.md) — исходный контракт адаптации Web Pilot к single-active Workflow Kit.
 - [Автовыполнение](planning/auto-plan-continuation.md) — короткие этапы, частичный план, Продолжай и пауза.
 - [История обзора](architecture/OVERVIEW.history-20260929.md).
 - [История карты модулей](MODULES.history-20260929.md).

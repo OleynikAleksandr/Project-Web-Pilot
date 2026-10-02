@@ -1,5 +1,26 @@
 # Совместимость интерфейса ChatGPT — текущий source / 29.09.2026
 
+## Внешний потребитель — Web Pilot Sidebar / 02.10.2026
+
+Sidebar собирает `src/chatgpt-dom.mjs`, `src/chatgpt-composer.mjs` и `src/chatgpt-experience.mjs` в обычный browser content script. Эти модули импортируют только друг друга через именованные статические импорты вида `import { a, b } from './file.mjs'`; Node API и динамические импорты не допускаются.
+
+Публичные зависимости Sidebar:
+
+- `CHATGPT_SELECTORS`, включая `stop`; `createChatGPTDOM(selectors)` с `editor()`, `sendButton()`, `first(selector)`; `chatGPTDOMScript()`.
+- `pageOperation(args, dom)` вызывается прямо на странице. Его экспорт восстановлен в T008 после уточнения внешнего потребителя; `ComposerError` Sidebar не использует, класс остаётся внутренним.
+- `ChatGPTComposer(contents, { timeoutMs })` с `deliver({ text, requestId, expectedExperience })` и `inspect({ action, text })`. От `contents` Sidebar предоставляет `getURL()` и `executeJavaScript(code)`.
+- `chatGPTEntrypoint(experience)` и `isPendingChatGPTConversation(url)`.
+
+Sidebar восстанавливает точную строку `pageScript` из функции и DOM factory:
+
+```js
+`(${pageOperation})(${JSON.stringify(args)}, ${chatGPTDOMScript()})`
+```
+
+Вызовы `executeJavaScript(code)` Sidebar распознаёт по этому формату и обслуживает без eval. Имя/наличие `pageOperation` и сериализация являются частью внешнего контракта. Не менять экспорты или этот формат без явной необходимости; изменения перечисленного контракта обязательно отмечать в описании коммита.
+
+У Sidebar три файла закреплены SHA-256 в `vendor.lock.json`. Любая правка требует проверки и повторного закрепления на его стороне. После снятия экспорта в T005 Sidebar временно извлекал функцию без `export`; после восстановления экспорта обходной путь может убрать сопровождающий Sidebar. Этот репозиторий не меняет внешний lock или сборку Sidebar.
+
 ## Новый Chat/Work — 0.6.66
 
 Только явное создание новой сессии разрешает очистить восстановленный черновик. Composer использует нативный setter + input/change для textarea или выделение + execCommand(delete) для contenteditable, для удаления восстановленного текста. Операция выполняется в isolated world 999 и сверяет identity документа в том же вызове; разрешены только entrypoint без пользовательских сообщений, доступный редактор и отсутствие busy/login/error. После подтверждения режима разрешение снимается. Reopen/retry не очищают поле; системный clipboard и browser storage не затрагиваются.

@@ -1,5 +1,7 @@
 # Project Web Pilot — Single Active Plan Adaptation
 
+Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](../SOURCE_WORKSPACES.md).
+
 Дата: 2026-09-27  
 Workspace: `/Users/oleksandroliinyk/VSCODE/Project Web Pilot`  
 Источник требований: `/Users/oleksandroliinyk/Desktop/Project_Web_Pilot_Single_Active_Plan_Adaptation_Planning.md`

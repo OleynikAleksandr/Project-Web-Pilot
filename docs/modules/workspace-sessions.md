@@ -1,5 +1,7 @@
 # Module Specification — Workspace & Sessions
 
+Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](../SOURCE_WORKSPACES.md).
+
 ## Автовыполнение — 0.6.73
 
 AutoPlan (src/auto-plan.mjs) связывает явную кнопку sidebar, PageStateSource и существующий ChatGPTComposer. Контракт — [автовыполнение текущего плана](../planning/auto-plan-continuation.md). Он читает фактический частичный план и Git-транзакцию через auto-plan-state.mjs; на Windows использует комплектный Git. DONE до включения — исходное состояние, все подтверждённые DONE завершают цикл.

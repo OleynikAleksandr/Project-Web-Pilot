@@ -1,5 +1,7 @@
 # Planning — регрессия layout скрытых tool calls
 
+Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](../SOURCE_WORKSPACES.md).
+
 Дата: 19.09.2026  
 Scope: `chat-layout-regression-034`  
 Владелец: Workspace & Sessions

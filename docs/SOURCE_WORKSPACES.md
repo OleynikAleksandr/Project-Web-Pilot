@@ -1,5 +1,19 @@
 # Исходные проекты и ссылки
 
+## Связанные рабочие репозитории — 02.10.2026
+
+| Репозиторий | Workspace | Роль и граница |
+| --- | --- | --- |
+| Project Web Pilot | `/Users/oleksandroliinyk/VSCODE/Project Web Pilot` | Electron-приложение, проекты, сессии, текущий план, доставка recovery и MCP/runtime |
+| [Workflow Kit](https://github.com/OleynikAleksandr/WorkflowKit) | `/Users/oleksandroliinyk/VSCODE/WorkflowKit` | Canonical пакет `@webpilot/workflow-kit@1.5.1`; current plan и recovery; приложение получает generated runtime из пакета |
+| Web Pilot Sidebar | `/Users/oleksandroliinyk/VSCODE/Web Pilot Sidebar` | Отдельный репозиторий браузерного расширения; разрабатывается параллельно другим агентом, использует адаптер ChatGPT из Web Pilot |
+
+Sidebar отображает проекты, сессии и прогресс плана в настоящей странице chatgpt.com. Проектные данные, текущий план, recovery и локальные инструменты остаются ответственностью Project Web Pilot и Workflow Kit; расширение не пишет todo-plan.md и не хранит проектные данные. На 02.10.2026 Sidebar — прототип этапа 0 с тестовыми данными и тестовым хостом. Production Host API в Project Web Pilot ещё не реализован; его подключение требует отдельной задачи по собственному workflow этого репозитория.
+
+Текущая фактическая связь — сборка Sidebar переиспользует `src/chatgpt-dom.mjs`, `src/chatgpt-composer.mjs` и `src/chatgpt-experience.mjs`, закреплённые SHA-256 в его `vendor.lock.json`. Публичные символы, точный формат pageScript, ограничения импортов и порядок обновления описаны в [контракте DOM/Sidebar](modules/chatgpt-dom-compatibility.md). Изменения внешнего контракта отмечаются в описании коммита и передаются сопровождающему Sidebar для повторного закрепления.
+
+Источники Sidebar для чтения: `README.md`, `AGENTS.md`, `docs/modules/provider-adapter.md` и `docs/modules/host-api.md` относительно его workspace. Git remote у Sidebar на момент проверки не настроен; GitHub URL здесь не предполагается. В этой задаче чужие репозитории не изменяются. Исторические источники WF001 и Codex Local Mac ниже сохраняются отдельно от этих текущих связей.
+
 ## Проверенный снимок
 
 Пути и Git-состояние проверены 11.09.2026 при подготовке Project Web Pilot. Оба источника имели чистое рабочее дерево. Перед переиспользованием повторно проверить HEAD и действующие инструкции: это привязанный ко времени снимок, не указание сбрасывать репозиторий на старую версию.
@@ -29,7 +43,9 @@ Project ID нового проекта: `cf944136-d1fc-4bd5-9ea0-e46d1fe230e7`. 
 | SwiftUI AppModel — `/Users/oleksandroliinyk/VSCODE/WF001/Sources/WorkflowStudio/AppModel.swift` | Пример подключения UI к ядру; не обязательный стек нового UI |
 | Windows — `/Users/oleksandroliinyk/VSCODE/WF001/docs/WINDOWS.md` | Прежняя упаковка для Windows и ограничения её проверки |
 
-Связанные исходники: `kit/lib/plan.mjs`, `validate.mjs`, `transaction.mjs`, `git.mjs`, `git-hooks.mjs`, `common.mjs`, `platform.mjs`, `installation-files.mjs`, `kit/schemas/`, `kit/templates/`. Регрессии: `tests/install.test.mjs`, `workflow.test.mjs`, `recovery.test.mjs`, `windows.test.mjs` и `scripts/demo-workflow.mjs`.
+Все относительные пути в следующем абзаце относятся к репозиторию **WF001**, корень `/Users/oleksandroliinyk/VSCODE/WF001`, а не к Project Web Pilot.
+
+Связанные исходники WF001: `kit/lib/plan.mjs`, `kit/lib/validate.mjs`, `kit/lib/transaction.mjs`, `kit/lib/git.mjs`, `kit/lib/git-hooks.mjs`, `kit/lib/common.mjs`, `kit/lib/platform.mjs`, `kit/lib/installation-files.mjs`, `kit/schemas/`, `kit/templates/`. Регрессии WF001: `tests/install.test.mjs`, `tests/workflow.test.mjs`, `tests/recovery.test.mjs`, `tests/windows.test.mjs` и `scripts/demo-workflow.mjs`.
 
 Источник переносимого runtime на исходном этапе был **WF001/kit**, версия 1.1.0 по common.mjs. Собственная установленная WF001/.harness/kit имела manifest 1.0.0: не перепутать установленный экземпляр с исходным комплектом. Это только историческое происхождение комплекта; с 0.6.56 текущий source of truth описан в разделе canonical package ниже. Реальный Project Web Pilot manifest был reconciled Доктором 16.09.2026 (`doctor_reconciled_at=2026-09-16T07:28:22.983Z`) и затем синхронизирован с correction-round bytes. 17.09.2026 штатный Doctor согласовал его с полным проверенным комплектом 1.4.0 с новой резервной копией; намеренно возвращать stale-состояние нельзя.
 
@@ -107,7 +123,9 @@ T021 переносит только `kit/` из WF001 на HEAD `20260a0cebd825
 
 Payload не содержит пользовательского tunnel ID/API key или DPAPI state. Эти данные создаются только на целевом Windows-пользователе в `%LOCALAPPDATA%\\CodexLocalWindows`.
 
-## Portable Node.js для Windows — scope 008 / T014
+## Portable Node.js для Windows — scope 008 / T014 (история)
+
+Ниже описана первоначальная поставка Node 22.17.0. В текущих исходниках после T003 refactoring-node24 используется Node 24.21.0; версии и проверки зафиксированы в `docs/planning/refactoring-node24.md` и `docs/VERIFICATION.md`.
 
 Чистая Windows-машина не должна иметь системный Node.js. Build pipeline использует официальный архив Node.js `node-v22.17.0-win-x64.zip` с `https://nodejs.org/dist/v22.17.0/`; ожидаемый SHA-256 — `721ab118a3aac8584348b132767eadf51379e0616f0db802cc1e66d7f0d98f85`. В Git хранится только `windows-runtime/node-v22.17.0-win-x64.zip.sha256`; сам 35.5 MiB архив и распакованный runtime находятся в ignored `.harness/runtime/windows-payload` / `.harness/runtime/windows-node` и физически попадают только в Windows distribution.
 
@@ -115,9 +133,13 @@ Scope 029 / T007: 17.09.2026 штатный Doctor согласовал manifest
 
 Scope 029 / T009: 0.6.29 собран из main 5028241 с изменением только package version для выпуска. Все 33 src и 31 resources совпадают побайтово между source, macOS/Windows staging и постоянным Mac app. Workflow Kit 1.4.1 — собственное развитие этого репозитория; внешние WF001/Codex runtime не редактировались. Полный receipt и SHA — .harness/runtime/releases/0.6.29/source-verification.json.
 
-## Canonical Workflow Kit package — 0.6.58
+## Canonical Workflow Kit package — текущее состояние
 
-Текущий source of truth: `/Users/oleksandroliinyk/VSCODE/WorkflowKit`, package `@webpilot/workflow-kit@1.5.0`. Single-active implementation зафиксирована в серии commit начиная с `06a0b6a`; финальная документация Kit — `f0b98d9`. Runtime `src/` содержит 35 файлов с digest `0db567df6f0c8f68f3119a7322b4c1c6d28cd06bf57b267993b792097bbb2c75`. Project Web Pilot подключает package как `file:../WorkflowKit`, а `resources/workflow-kit` создаёт автоматически и игнорирует в Git. Исторические разделы 1.4.x ниже описывают происхождение прежней session-owned модели, но не задают текущую semantics/source.
+Текущий source of truth — `/Users/oleksandroliinyk/VSCODE/WorkflowKit`, package `@webpilot/workflow-kit@1.5.1`; `resources/workflow-kit` создаётся автоматически и игнорируется Git. Сведения о переходе на canonical package ниже относятся к выпуску 0.6.58.
+
+### История подключения canonical package — 0.6.58
+
+На момент выпуска source of truth: `/Users/oleksandroliinyk/VSCODE/WorkflowKit`, package `@webpilot/workflow-kit@1.5.0`. Single-active implementation зафиксирована в серии commit начиная с `06a0b6a`; финальная документация Kit — `f0b98d9`. Runtime `src/` содержит 35 файлов с digest `0db567df6f0c8f68f3119a7322b4c1c6d28cd06bf57b267993b792097bbb2c75`. Project Web Pilot подключает package как `file:../WorkflowKit`, а `resources/workflow-kit` создаёт автоматически и игнорирует в Git. Исторические разделы 1.4.x ниже описывают происхождение прежней session-owned модели, но не задают текущую semantics/source.
 
 ## Поставляемый Workflow Kit 1.4.12 — 0.6.53 (история)
 
