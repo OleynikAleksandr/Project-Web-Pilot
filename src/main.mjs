@@ -69,6 +69,7 @@ let macRuntimeMode = MAC_RUNTIME_LOCAL;
 let localRuntime = null, appServerRuntime = null, macRuntimeSwitcher = null;
 let shellTheme = 'light';
 let hideToolCalls = true;
+let autoPlanEnabled = false, autoPlanCheckpoint = null;
 let chatColors = normalizeChatColors();
 let chatColorStyles, colorEditor;
 let settingsSaveTail = Promise.resolve();
@@ -168,6 +169,12 @@ const autoPlan = new AutoPlan({
   send: (text, canContinue, onBeforeSend) => controller.composer.sendUserMessage({
     text, canContinue, onBeforeSend, waitForAcknowledgement: false }),
   onChange: () => publish(),
+  available: () => !!controller && !controller.composer.inFlight && !pageLoading && !setupState && !settingsState
+    && workspaceHealth?.ready && workspaceHealth.workspace === store.selected()?.workspace,
+  saveCheckpoint: async checkpoint => {
+    await saveSettings({ autoPlanCheckpoint: checkpoint });
+    autoPlanCheckpoint = checkpoint;
+  },
   log: (event, fields) => chromiumDiagnostics?.log.record('auto-plan', event, fields),
 });
 function applyObservedPage(event) {
@@ -181,6 +188,7 @@ function applyObservedPage(event) {
     lastStopObservation = { documentId, revision };
   }
   autoPlan.observe(event);
+  void autoPlan.recover().catch(report);
   if (event.reset) { manualDocumentOwner = null; agentTimer.finish(); return; }
   chromiumDiagnostics?.observePage(event.state);
   if (pageLoading || setupState || settingsState) return;
@@ -217,7 +225,7 @@ async function applyToolCallVisibility() {
 }
 
 function saveSettings(overrides = {}) {
-  const settings = { runtimeFolder, runtimeRegistration, macRuntimeMode, shellTheme, hideToolCalls, sidebarWidth, chatColors, projectsParent, ...overrides };
+  const settings = { runtimeFolder, runtimeRegistration, macRuntimeMode, shellTheme, hideToolCalls, sidebarWidth, chatColors, projectsParent, autoPlanEnabled, autoPlanCheckpoint, ...overrides };
   const operation = settingsSaveTail.catch(() => {}).then(async () => {
     await fsp.mkdir(dataDir, { recursive: true, mode: 0o700 });
     await fsp.writeFile(settingsFile + '.tmp', JSON.stringify(settings, null, 2) + '\n', { mode: 0o600 });
@@ -308,6 +316,7 @@ function snapshot() {
 function publish() {
   planMonitor.observeSelection();
   autoPlan.selectionChanged();
+  void autoPlan.recover().catch(report);
   observeStartupClipboard();
   rememberSessionTitle();
   rememberScopeTitle();
@@ -918,8 +927,11 @@ function connectController() {
 function registerIpc() {
   ipcMain.handle('pilot:get-state', event => { assertLocalSender(event); return snapshot(); });
   registerAction('pilot:auto-plan', async enabled => {
-    if (enabled === true) await autoPlan.start();
-    else autoPlan.pause('Автовыполнение выключено пользователем.');
+    const choice = enabled === true;
+    await saveSettings({ autoPlanEnabled: choice });
+    autoPlanEnabled = choice;
+    if (choice) await autoPlan.start();
+    else autoPlan.disable();
   });
   registerAction('pilot:reconnect', () => conversationRecovery.requestRetry());
   registerAction('pilot:startup', action => startupAction(action), { navigation: true });
@@ -1378,10 +1390,13 @@ else {
       }
       if (['light', 'dark'].includes(settings.shellTheme)) shellTheme = settings.shellTheme;
       if (typeof settings.hideToolCalls === 'boolean') hideToolCalls = settings.hideToolCalls;
+      autoPlanEnabled = settings.autoPlanEnabled === true;
+      autoPlanCheckpoint = settings.autoPlanCheckpoint ?? null;
       chatColors = normalizeChatColors(settings.chatColors);
       if (Number.isFinite(settings.sidebarWidth)) sidebarWidth = Math.max(SIDEBAR_MIN_WIDTH, Math.round(settings.sidebarWidth));
       if (typeof settings.projectsParent === 'string' && path.isAbsolute(settings.projectsParent)) projectsParent = settings.projectsParent;
     } catch (error) { if (error.code !== 'ENOENT') startupError = { code: 'SETTINGS_INVALID', message: 'Не удалось прочитать локальные настройки Web Pilot. Проверьте настройки подключения.' }; }
+    autoPlan.restore(autoPlanEnabled, autoPlanCheckpoint);
     if (process.platform === 'darwin' && !loadedMacRuntimeMode) {
       const appServerPrivate = path.join(os.homedir(), 'Library/Application Support/WebPilotCodexExecutor/private');
       const configured = await Promise.all([

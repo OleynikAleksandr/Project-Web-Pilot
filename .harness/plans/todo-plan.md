@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 893,
+  "plan_revision": 895,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "auto-plan-reliability-20261002",
@@ -392,7 +392,9 @@
         "tests/auto-plan.test.mjs",
         "tests/electron-smoke.mjs"
       ],
-      "documentation_paths": [],
+      "documentation_paths": [
+        "docs/planning/auto-plan-reliability.md"
+      ],
       "verification_ids": [
         "unit",
         "smoke"
@@ -403,13 +405,24 @@
         "Настройки сохраняют выбор пользователя и отметку Send; восстановление, draft, question, busy и unknown проходят проверки."
       ],
       "expected_commit_message": "fix: завершить фиксацию постоянного автовыполнения",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "auto-plan-reliability-20261002",
         "task_id": "T008",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "src/auto-plan.mjs",
+        "src/chatgpt-page-observer.mjs",
+        "src/main.mjs",
+        "src/page-state.mjs",
+        "src/ui/sidebar.mjs",
+        "tests/auto-plan-restart-fixture.cjs",
+        "tests/auto-plan.test.mjs",
+        "tests/electron-smoke.mjs",
+        "docs/planning/auto-plan-reliability.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -469,7 +482,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: auto-plan-reliability-20261002
 Current Task: нет
-Revision: 893
+Revision: 895
 
 ## Цель
 
@@ -513,10 +526,10 @@ Revision: 893
   - Git Commit: [PENDING] build: выпустить исправления AutoPlan для macOS и Windows
   - Reference: auto-plan-reliability-20261002 / T007 / implementation
   - Файлы: package.json, package-lock.json, scripts/release-all.mjs, scripts/check-installed-release.mjs, tests/installed-observer-fixture.cjs, docs/planning/auto-plan-reliability.md, docs/RELEASE.md, docs/VERIFICATION.md
-- [TODO] T008: Зафиксировать исключённый код постоянного автовыполнения — Ожидает
-  - Git Commit: [PENDING] fix: завершить фиксацию постоянного автовыполнения
+- [DONE] T008: Зафиксировать исключённый код постоянного автовыполнения — Завершено
+  - Git Commit: [DONE] fix: завершить фиксацию постоянного автовыполнения
   - Reference: auto-plan-reliability-20261002 / T008 / implementation
-  - Файлы: src/auto-plan.mjs, src/chatgpt-page-observer.mjs, src/main.mjs, src/page-state.mjs, src/ui/sidebar.mjs, tests/auto-plan-restart-fixture.cjs, tests/auto-plan.test.mjs, tests/electron-smoke.mjs
+  - Файлы: src/auto-plan.mjs, src/chatgpt-page-observer.mjs, src/main.mjs, src/page-state.mjs, src/ui/sidebar.mjs, tests/auto-plan-restart-fixture.cjs, tests/auto-plan.test.mjs, tests/electron-smoke.mjs, docs/planning/auto-plan-reliability.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: auto-plan-reliability-20261002 / DOCS / implementation

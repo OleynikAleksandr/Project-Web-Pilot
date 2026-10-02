@@ -11,6 +11,8 @@ import { StartupNetworkTrace } from '../src/startup-network-trace.mjs';
 import { StartupReadiness } from '../src/startup-readiness.mjs';
 import { startupPlatformOptions, startupSupported } from '../src/startup-platform.mjs';
 import { createHash } from 'node:crypto';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 import { nativeTheme, clipboard, BrowserWindow, dialog } from 'electron';
 import { ChatColors } from '../src/chatgpt-colors.mjs';
 import { readWorkspace, WorkspaceSessions } from '../src/workspace-session.mjs';
@@ -1266,6 +1268,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
     await browser.executeJavaScript("(()=>{const a=document.createElement('article');a.dataset.messageAuthorRole='assistant';a.textContent=" + JSON.stringify(text) + ";document.body.append(a);document.getElementById('auto-fixture-stop')?.remove()})()");
   };
   for (const target of [currentChat, currentWork]) {
+    await sidebar.executeJavaScript('window.webPilot.setAutoPlan(false)');
     await sidebar.executeJavaScript(`window.webPilot.selectSession(${JSON.stringify(workspace)}, ${JSON.stringify(target.sessionId)})`);
     await waitFor(() => store.selected()?.sessionId === target.sessionId && !snapshot().pageLoading
       && pageState.current?.state.url === target.chatUrl && snapshot().selected?.planView?.completed === 1,
@@ -1276,6 +1279,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
     await sidebar.executeJavaScript("document.getElementById('auto-plan-toggle').click()");
     await waitFor(() => autoPlan.view().phase === 'running', 'auto-plan starts from partial plan', snapshot);
     assert.deepEqual(autoPlan.run.completedAtStart, ['T001']);
+    assert.equal(JSON.parse(await fs.readFile(path.join(dataDir, 'settings.json'), 'utf8')).autoPlanEnabled, true);
     await beginAnswer(); await endAnswer();
     await waitFor(() => browser.executeJavaScript('window.fixtureMessages.length === ' + (before + 2)),
       'exactly one automatic continuation', snapshot);
@@ -1335,6 +1339,26 @@ export async function run({ app, window, browser, sidebar, store, controller, se
 
     }
   }
+  // Recreate AutoPlan from the actual settings file, as a new application instance does.
+  const beforeRestore = await browser.executeJavaScript('window.fixtureMessages.length');
+  const restartFixture = choice => promisify(execFile)(process.execPath,
+    [path.join(import.meta.dirname, 'auto-plan-restart-fixture.cjs'), path.join(dataDir, 'settings.json'), choice],
+    { timeout: 20000, env: { ...process.env, ELECTRON_RUN_AS_NODE: '' } });
+  const restartedOn = await restartFixture('on');
+  assert.match(restartedOn.stdout, /"autoPlanRestart":"on"/);
+  const savedAuto = JSON.parse(await fs.readFile(path.join(dataDir, 'settings.json'), 'utf8'));
+  autoPlan.dispose();
+  autoPlan.restore(savedAuto.autoPlanEnabled, savedAuto.autoPlanCheckpoint);
+  await autoPlan.recover();
+  await waitFor(() => autoPlan.view().phase === 'running', 'saved enabled choice restores without button click', snapshot);
+  assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), beforeRestore);
+  // Actual Chromium reload retires the document and restores without sending another instruction.
+  const beforeReloadDocument = pageState.current.documentId;
+  await browser.reload();
+  await waitFor(() => pageState.current?.documentId !== beforeReloadDocument && autoPlan.run?.documentId === pageState.current?.documentId
+    && autoPlan.view().phase === 'running', 'document reload restores the enabled mode', snapshot);
+  assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), beforeRestore);
+  assert.equal(autoPlan.view().enabled, true);
   // A genuine question suspends the cycle; only a trusted user Send resumes it.
   await beginAnswer();
   const beforeQuestion = await browser.executeJavaScript('window.fixtureMessages.length');
@@ -1392,7 +1416,10 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await waitFor(() => autoPlan.view().reason === 'NO_CHECKPOINT', 'missing footer stops dispatch', snapshot);
   assert.equal(autoPlan.run, null);
   assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), beforeMissing);
-  await sidebar.executeJavaScript("document.getElementById('auto-plan-toggle').click()");
+  assert.equal(autoPlan.view().enabled, true, 'a pause preserves the global user choice');
+  await sidebar.executeJavaScript('window.webPilot.setAutoPlan(false)');
+  assert.equal(JSON.parse(await fs.readFile(path.join(dataDir, 'settings.json'), 'utf8')).autoPlanEnabled, false);
+  await sidebar.executeJavaScript('window.webPilot.setAutoPlan(true)');
   await waitFor(() => autoPlan.view().phase === 'running', 'explicit restart after missing checkpoint', snapshot);
   await beginAnswer();
   const beforeError = await browser.executeJavaScript('window.fixtureMessages.length');
@@ -1404,7 +1431,9 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await browser.executeJavaScript("document.getElementById('auto-fixture-error').remove()");
   await waitFor(() => !pageState.current?.state.connectionError && !pageState.current?.state.busy,
     'fixture connection recovered before explicit restart', snapshot);
-  await sidebar.executeJavaScript("document.getElementById('auto-plan-toggle').click()");
+  assert.equal(autoPlan.view().enabled, true);
+  await sidebar.executeJavaScript('window.webPilot.setAutoPlan(false)');
+  await sidebar.executeJavaScript('window.webPilot.setAutoPlan(true)');
   await waitFor(() => autoPlan.view().phase === 'running', 'explicit restart after connection recovery', snapshot);
   await beginAnswer();
   withSessionPlan(workspace, { sessionId: legacyChats[0].sessionId }, () => startTask(workspace, 'DOCS'));
@@ -1437,6 +1466,16 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   const singleActivePlanScreenshot = path.join(dataDir, 'single-active-plan.png');
   await fs.writeFile(singleActivePlanScreenshot, (await sidebar.capturePage()).toPNG());
 
+  assert.equal(autoPlan.view().enabled, true, 'completion and selecting old chats preserve user choice');
+  assert.equal(JSON.parse(await fs.readFile(path.join(dataDir, 'settings.json'), 'utf8')).autoPlanEnabled, true);
+  await sidebar.executeJavaScript('window.webPilot.setAutoPlan(false)');
+  const savedOff = JSON.parse(await fs.readFile(path.join(dataDir, 'settings.json'), 'utf8'));
+  assert.equal(savedOff.autoPlanEnabled, false);
+  const restartedOff = await restartFixture('off');
+  assert.match(restartedOff.stdout, /"autoPlanRestart":"off"/);
+  autoPlan.dispose(); autoPlan.restore(savedOff.autoPlanEnabled, savedOff.autoPlanCheckpoint);
+  await autoPlan.recover();
+  assert.equal(autoPlan.view().enabled, false, 'disabled choice remains off after reconstruction');
   // Doctor scenarios begin after prior background recovery work has settled.
   await waitFor(() => controller.contextCache.pending.size === 0, 'background preparation before Doctor', snapshot);
   // Doctor operates on the isolated fixture only; the real workspace is never damaged.

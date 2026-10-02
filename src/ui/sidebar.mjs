@@ -325,8 +325,7 @@ function render(state) {
   $('plan-card').hidden = !selected;
   const auto = state.autoPlan ?? { phase: 'off', active: false, message: '' };
   $('auto-plan-toggle').textContent = auto.enabled ? 'Выключить автовыполнение' : 'Автовыполнение';
-  $('auto-plan-toggle').disabled = actionPending || (!auto.enabled && (!selected?.chatUrl || !selected?.scopeId
-    || selected?.planView?.tasks?.every(task => task.status === 'done')));
+  $('auto-plan-toggle').disabled = actionPending;
   $('auto-plan-toggle').setAttribute('aria-pressed', String(auto.enabled));
   const autoSent = auto.continuations > 0 ? `Автоматически отправлено «Продолжай» №${auto.continuations}.` : '';
   $('auto-plan-message').hidden = !auto.message && !autoSent;

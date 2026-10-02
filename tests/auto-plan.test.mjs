@@ -239,7 +239,7 @@ test('unknown Send is not treated as a recoverable draft and deferred resume rec
   const unknown = fixture();
   unknown.setResult({ state: 'unknown', reason: 'DRAFT_PRESENT' });
   await unknown.flow.start();
-  assert.equal(unknown.flow.view().enabled, false);
+  assert.equal(unknown.flow.view().enabled, true);
   assert.equal(unknown.flow.suspended, null);
   unknown.observe({ manualSendRevision: 1, busy: true }); await unknown.drain();
   assert.equal(unknown.sends.length, 1, 'an unknown Send is never repeated');
@@ -300,15 +300,70 @@ test('pause and warning diagnostics identify causes without conversation content
     assert.doesNotMatch(JSON.stringify(f.events), /private-secret-error|private-user-text|Готов продолжать|chatgpt\.com|\/project/);
   }
 });
-test('explicit off, completed plan, different conversation and restart never resume implicitly', async () => {
+test('only explicit off clears the global choice; other interruptions never repeat Send', async () => {
   for (const reason of ['off','complete','selection','reload']) {
     const f = fixture(); await f.flow.start(); f.observe({ manualStopRevision: 1 });
-    if (reason === 'off') f.flow.pause('off');
+    if (reason === 'off') f.flow.disable();
     if (reason === 'complete') f.plan.planView.tasks.forEach(t => { t.status = 'done'; });
     if (reason === 'selection') { f.changeSelection(); f.flow.selectionChanged(); }
     if (reason === 'reload') f.flow.observe({ reset: true });
     f.observe({ manualSendRevision: 1, busy: true }); await f.drain();
-    assert.equal(f.flow.view().enabled, false, reason);
+    assert.equal(f.flow.view().enabled, reason !== 'off', reason);
     assert.equal(f.sends.length, 1);
   }
+});
+
+test('restored enabled choice adopts busy, waits for questions and drafts, and completes without Send', async () => {
+  for (const kind of ['busy', 'question', 'draft', 'done', 'off']) {
+    const f = fixture();
+    f.observe({ busy: kind === 'busy', turnSignal: kind === 'question' ? 'wait' : 'continue',
+      turnId: 'abc123', draftPresent: kind === 'draft' });
+    if (kind === 'done') f.plan.planView.tasks.forEach(t => { t.status = 'done'; });
+    f.flow.restore(kind !== 'off');
+    await f.flow.recover(); await f.drain();
+    assert.equal(f.flow.view().enabled, kind !== 'off', kind);
+    assert.equal(f.sends.length, 0, kind);
+    if (kind === 'question') assert.equal(f.flow.view().reason, 'AGENT_WAIT');
+    if (kind === 'draft') assert.equal(f.flow.view().reason, 'DRAFT_PRESENT');
+    if (kind === 'done') assert.equal(f.flow.view().phase, 'complete');
+    if (kind === 'busy') {
+      await f.finish();
+      assert.deepEqual(f.sends, ['Продолжай']);
+    }
+  }
+});
+test('restored checkpoint sends once and a consumed or uncertain Send never retries on reload', async () => {
+  for (const kind of ['new', 'consumed', 'unknown']) {
+    const f = fixture();
+    f.observe({ turnSignal: 'continue', turnId: 'abc123' });
+    const owner = JSON.stringify(['/project', 'chat', 'scope', 'https://chatgpt.com/c/abcdefgh']);
+    f.flow.restore(true, kind === 'new' ? null : { key: owner, turnId: 'abc123',
+      status: kind === 'unknown' ? 'sending' : 'sent' });
+    await f.flow.recover(); await f.drain();
+    assert.equal(f.sends.length, kind === 'new' ? 1 : 0, kind);
+    const checkpoint = f.flow.checkpoint;
+    f.flow.observe({ reset: true });
+    f.flow.observe({ state: { url: 'https://chatgpt.com/c/abcdefgh', editorAvailable: true,
+      busy: false, assistantRevision: 1, turnSignal: 'continue', turnId: 'abc123' }, documentId: 'document-2222' });
+    await f.flow.recover(); await f.drain();
+    assert.equal(f.sends.length, kind === 'new' ? 1 : 0, 'reload does not repeat consumed Send');
+    assert.deepEqual(f.flow.checkpoint, checkpoint);
+    assert.equal(f.flow.view().enabled, true);
+    if (kind === 'unknown') assert.equal(f.flow.view().reason, 'SEND_UNKNOWN');
+  }
+});
+test('checkpoint is durably saved before Send; failed saving never dispatches', async () => {
+  const order = [];
+  const f = fixture();
+  f.flow.saveCheckpoint = async checkpoint => { order.push(checkpoint.status); };
+  const send = f.flow.send;
+  f.flow.send = async (...args) => { order.push('Send'); return send(...args); };
+  await f.flow.start();
+  assert.deepEqual(order, ['sending', 'Send', 'sent']);
+  const failed = fixture();
+  failed.flow.saveCheckpoint = async () => { throw new Error('disk unavailable'); };
+  await failed.flow.start();
+  assert.equal(failed.sends.length, 0);
+  assert.equal(failed.flow.view().enabled, true);
+  assert.equal(failed.flow.view().reason, 'SEND_ERROR');
 });

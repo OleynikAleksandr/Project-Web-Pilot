@@ -10,6 +10,12 @@ export function installPageObserver(dom, send) {
   const loginSelector = '[data-testid="login-button"],[data-testid="signup-button"],a[href="/auth/login"],a[href="https://chatgpt.com/auth/login"]';
   const profileSelector = '[data-testid="profile-button"],[data-testid="accounts-profile-button"],[data-testid="user-menu-button"],button[aria-label="Open Profile Menu"],button[aria-label="Открыть меню профиля"]';
   const normalize = text => text.replace(/\s+/g, ' ').trim();
+  // Stable across document reloads; store an opaque identity, never conversation text.
+  const fingerprint = text => {
+    let hash = 2166136261;
+    for (let i = 0; i < text.length; i++) hash = Math.imul(hash ^ text.charCodeAt(i), 16777619);
+    return (hash >>> 0).toString(16);
+  };
   const editorText = editor => editor ? normalize(editor.value ?? editor.innerText ?? editor.textContent ?? '') : '';
   const captureManualSend = event => {
     if (!event.isTrusted) return;
@@ -30,9 +36,12 @@ export function installPageObserver(dom, send) {
     if (!dom.busy() || Date.now() - lastProgressAt >= 5000) {
       reportedAssistantRevision = assistantRevision; lastProgressAt = Date.now();
     }
+    const assistant = dom.messages('assistant').at(-1), user = dom.messages('user').at(-1);
+    const turnId = assistant ? fingerprint(assistant.getAttribute('data-message-id') || (dom.messages('assistant').length + '\n' + (assistant.textContent ?? ''))) : '';
     let turnSignal = null;
-    if (!dom.busy()) {
-      const last = dom.messages('assistant').at(-1)?.cloneNode(true);
+    // The old assistant footer is not a checkpoint for a newer user message.
+    if (!dom.busy() && assistant && (!user || !(assistant.compareDocumentPosition(user) & 4))) {
+      const last = assistant.cloneNode(true);
       last?.querySelectorAll('pre,code,blockquote,button,[role=button],svg').forEach(node => node.remove());
       const tail = (last?.textContent ?? '').trim();
       if (tail.endsWith('Нужен ваш ответ.')) turnSignal = 'wait';
@@ -49,7 +58,7 @@ export function installPageObserver(dom, send) {
       writable: !!editor && !editor.disabled && !editor.readOnly && editor.getAttribute('contenteditable') !== 'false',
       connectionError: dom.connectionError(),
       busy: dom.busy(), sendEnabled: !!button && !button.disabled && button.getAttribute('aria-disabled') !== 'true',
-      manualStopRevision, manualInputRevision, assistantRevision: reportedAssistantRevision, turnSignal,
+      manualStopRevision, manualInputRevision, assistantRevision: reportedAssistantRevision, turnSignal, turnId, draftPresent: !!editorText(editor),
       manualSendRevision, draftRevision, userMessageCount: dom.messages('user').length, userMessagesRevision,
     };
   };
