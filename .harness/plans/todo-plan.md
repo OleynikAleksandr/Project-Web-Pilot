@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 883,
+  "plan_revision": 884,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "auto-plan-reliability-20261002",
@@ -214,13 +214,15 @@
       "functional_paths": [
         "src/auto-plan.mjs",
         "src/ui/sidebar.mjs",
-        "tests/auto-plan.test.mjs"
+        "tests/auto-plan.test.mjs",
+        "tests/electron-smoke.mjs"
       ],
       "documentation_paths": [
         "docs/planning/auto-plan-reliability.md"
       ],
       "verification_ids": [
-        "unit"
+        "unit",
+        "smoke"
       ],
       "id": "T004",
       "title": "Сделать автоматическое «Продолжай» и причины пауз явно наблюдаемыми",
@@ -406,7 +408,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: auto-plan-reliability-20261002
 Current Task: нет
-Revision: 883
+Revision: 884
 
 ## Цель
 
@@ -437,7 +439,7 @@ Revision: 883
 - [TODO] T004: Сделать автоматическое «Продолжай» и причины пауз явно наблюдаемыми — Ожидает
   - Git Commit: [PENDING] feat: показать автоматические продолжения AutoPlan
   - Reference: auto-plan-reliability-20261002 / T004 / implementation
-  - Файлы: src/auto-plan.mjs, src/ui/sidebar.mjs, tests/auto-plan.test.mjs, docs/planning/auto-plan-reliability.md
+  - Файлы: src/auto-plan.mjs, src/ui/sidebar.mjs, tests/auto-plan.test.mjs, tests/electron-smoke.mjs, docs/planning/auto-plan-reliability.md
 - [TODO] T005: Закрепить реальные сценарии AutoPlan интеграционным smoke — Ожидает
   - Git Commit: [PENDING] test: закрепить надёжность AutoPlan
   - Reference: auto-plan-reliability-20261002 / T005 / implementation
