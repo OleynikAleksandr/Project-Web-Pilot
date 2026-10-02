@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 860,
+  "plan_revision": 861,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "refactoring-node24-20261002",
@@ -719,7 +719,14 @@
       "documentation_paths": [
         "docs/planning/refactoring-node24.md",
         "docs/RELEASE.md",
-        "docs/VERIFICATION.md"
+        "docs/VERIFICATION.md",
+        "README.md",
+        "AGENTS.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/PRODUCT.md",
+        "docs/MODULES.md"
       ],
       "verification_ids": [
         "node24",
@@ -733,10 +740,11 @@
       "verification_kind": "package",
       "acceptance_criteria": [
         "До commit: версия 0.6.75; ключ --app-version удалён из скриптов упаковки, и @electron/packager берёт версию из package.json; записан .harness/runtime/release-0.6.75-preflight.json с device/inode корневого app и /Applications; npm run build вручную не запускался.",
-        "Сборка выполнена проверкой paired-release внутри commit: корневой Project Web Pilot.app обновлён с сохранением Finder identity, ~/Downloads/WebPilot-0.6.75/ содержит два ZIP, SHA256SUMS.txt, INSTALL.txt и release-manifest.json, копия в /Applications обновлена по RELEASE.md; CFBundleShortVersionString и версия Windows exe равны 0.6.75.",
-        "При сбое сборки версия не повышалась; paired-release.lock и releases/0.6.75 осмотрены, незавершённые артефакты удалены только с согласия пользователя перед повтором commit."
+        "Сборка выполнена проверкой paired-release внутри commit: корневой Project Web Pilot.app обновлён с сохранением Finder identity; ~/Downloads/WebPilot-0.6.75/ содержит два ZIP, SHA256SUMS.txt, INSTALL.txt и release-manifest.json; версии macOS/Windows равны 0.6.75. После успешного build/commit копия в /Applications обновлена штатным installMacBundle без пересборки и с сохранением identity.",
+        "При сбое сборки версия не повышалась; paired-release.lock и releases/0.6.75 осмотрены, незавершённые артефакты удалены только с согласия пользователя перед повтором commit.",
+        "По поручению пользователя 02.10.2026 main синхронизирован с GitHub обычным push; тег v0.6.75 указывает на release commit. GitHub Release 0.6.75 содержит проверенные macOS arm64 и Windows x64 ZIP, SHA256SUMS.txt, INSTALL.txt и release-manifest.json; серверные размеры/SHA-256 сверены. Публикация не означает пользовательскую приёмку T010."
       ],
-      "expected_commit_message": "feat: Собрать парный выпуск 0.6.75"
+      "expected_commit_message": "feat: Выпустить 0.6.75 для macOS и Windows"
     },
     {
       "implementation_status": "TODO",
@@ -870,7 +878,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: refactoring-node24-20261002
 Current Task: нет
-Revision: 860
+Revision: 861
 
 ## Цель
 
@@ -919,9 +927,9 @@ Revision: 860
   - Reference: refactoring-node24-20261002 / T008 / implementation
   - Файлы: src/chatgpt-composer.mjs, tests/chatgpt-composer.test.mjs, docs/planning/refactoring-node24.md, AGENTS.md, README.md, docs/WORKFLOW_START.md, docs/RELEASE.md, docs/architecture/ARCHITECTURE.md, docs/SOURCE_WORKSPACES.md, docs/DOCUMENTATION_INDEX.md, docs/modules/chatgpt-dom-compatibility.md, docs/VERIFICATION.md, docs/CLEAN_INSTALL.md, docs/CONTEXT_DELIVERY.md, docs/DECISIONS.md, docs/DOCUMENTATION_INDEX.history-20260929.md, docs/MODULES.history-20260929.md, docs/MODULES.md, docs/PRODUCT.md, docs/PROJECT_ARCHIVE.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKSPACE_SETUP.md, docs/architecture/OVERVIEW.history-20260929.md, docs/architecture/OVERVIEW.md, docs/design/chat-message-layout-regression.md, docs/design/computer-use-latency-investigation.md, docs/modules/codex-app-server-executor.md, docs/modules/first-run-onboarding.md, docs/modules/project-doctor.md, docs/modules/runtime-lifecycle.md, docs/modules/session-opening-performance.md, docs/modules/session-owned-plans.md, docs/modules/workflow-kit-recovery.md, docs/modules/workspace-sessions.md, docs/planning/auto-plan-continuation.md, docs/planning/event-driven-runtime.md, docs/planning/remote-project-ui-research.md, docs/planning/session-title-sync.md, docs/planning/single-active-plan-adaptation.md, docs/planning/workflow-kit-package-migration.md, docs/research/remote-project-ui-options-2026-09-28.md
 - [TODO] T009: Собрать парный выпуск 0.6.75 — Ожидает
-  - Git Commit: [PENDING] feat: Собрать парный выпуск 0.6.75
+  - Git Commit: [PENDING] feat: Выпустить 0.6.75 для macOS и Windows
   - Reference: refactoring-node24-20261002 / T009 / implementation
-  - Файлы: package.json, package-lock.json, docs/planning/refactoring-node24.md, docs/RELEASE.md, docs/VERIFICATION.md
+  - Файлы: package.json, package-lock.json, docs/planning/refactoring-node24.md, docs/RELEASE.md, docs/VERIFICATION.md, README.md, AGENTS.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/architecture/ARCHITECTURE.md, docs/PRODUCT.md, docs/MODULES.md
 - [TODO] T010: Проверить готовую поставку 0.6.75 и записать пользовательскую приёмку — Ожидает
   - Git Commit: [PENDING] feat: Проверить готовую поставку 0.6.75 и записать пользовательскую приёмку
   - Reference: refactoring-node24-20261002 / T010 / implementation
