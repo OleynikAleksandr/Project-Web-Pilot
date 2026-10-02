@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 881,
+  "plan_revision": 883,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "auto-plan-reliability-20261002",
@@ -161,8 +161,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "auto-plan-reliability-20261002",
         "task_id": "T003",
@@ -192,7 +192,13 @@
         "AutoPlan переходит в ожидающее/suspended состояние, а не полностью выключается.",
         "Фактическая ручная отправка сообщения в том же документе возобновляет существующий run без дополнительного автоматического Send."
       ],
-      "expected_commit_message": "fix: возобновлять AutoPlan после пользовательского черновика"
+      "expected_commit_message": "fix: возобновлять AutoPlan после пользовательского черновика",
+      "actual_files": [
+        "docs/planning/auto-plan-reliability.md",
+        "src/auto-plan.mjs",
+        "tests/auto-plan.test.mjs",
+        "tests/electron-smoke.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -400,7 +406,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: auto-plan-reliability-20261002
 Current Task: нет
-Revision: 881
+Revision: 883
 
 ## Цель
 
@@ -424,8 +430,8 @@ Revision: 881
   - Git Commit: [DONE] fix: не останавливать AutoPlan по stall watchdog
   - Reference: auto-plan-reliability-20261002 / T002 / implementation
   - Файлы: src/auto-plan.mjs, tests/auto-plan.test.mjs, tests/electron-smoke.mjs, docs/planning/auto-plan-reliability.md
-- [TODO] T003: Сохранять включённый AutoPlan при DRAFT_PRESENT и возобновлять после сообщения пользователя — Ожидает
-  - Git Commit: [PENDING] fix: возобновлять AutoPlan после пользовательского черновика
+- [DONE] T003: Сохранять включённый AutoPlan при DRAFT_PRESENT и возобновлять после сообщения пользователя — Завершено
+  - Git Commit: [DONE] fix: возобновлять AutoPlan после пользовательского черновика
   - Reference: auto-plan-reliability-20261002 / T003 / implementation
   - Файлы: src/auto-plan.mjs, tests/auto-plan.test.mjs, tests/electron-smoke.mjs, docs/planning/auto-plan-reliability.md
 - [TODO] T004: Сделать автоматическое «Продолжай» и причины пауз явно наблюдаемыми — Ожидает

@@ -51,9 +51,9 @@ export class AutoPlan {
     }, this.stallMs);
     this.watchdog?.unref?.();
   }
-  pause(message = 'Автовыполнение приостановлено.', resumeOnMessage = false) {
+  pause(message = 'Автовыполнение приостановлено.', resumeOnMessage = false, sendRevision = this.page?.manualSendRevision ?? 0) {
     const previous = this.run ?? this.suspended?.run;
-    this.suspended = resumeOnMessage && previous ? { run: previous, sendRevision: this.page?.manualSendRevision ?? 0 } : null;
+    this.suspended = resumeOnMessage && previous ? { run: previous, sendRevision } : null;
     this.epoch++; this.clearTimer(); this.clearWatchdog(); this.run = null;
     this.set('paused', message);
   }
@@ -172,6 +172,7 @@ export class AutoPlan {
   }
   async dispatch(run, text) {
     if (this.run !== run) return;
+    const sendRevision = this.page?.manualSendRevision ?? 0;
     run.beforeAssistantRevision = this.page?.assistantRevision ?? 0;
     run.sawBusy = false;
     this.set('sending', text === CONTINUE_TEXT ? 'Отправляем «Продолжай»…' : 'Запускаем автовыполнение…', true);
@@ -190,6 +191,12 @@ export class AutoPlan {
         return true;
       });
       if (this.run !== run) return;
+      if (result.state === 'deferred' && result.reason === 'DRAFT_PRESENT') {
+        this.log('wait', { reason: 'DRAFT_PRESENT' });
+        this.pause('Ждём отправки вашего сообщения. Черновик сохранён, автовыполнение остаётся включённым.', true, sendRevision);
+        if (this.page) this.observe({ state: this.page, documentId: this.page.documentId });
+        return;
+      }
       if (result.state !== 'sent') return this.pause('Сообщение не отправлено либо результат неизвестен. Проверьте поле ввода и разговор.');
       this.log('send', { kind: text === CONTINUE_TEXT ? 'continue' : 'start' });
       this.set('running', 'Автовыполнение: ждём контрольную точку агента.', true);

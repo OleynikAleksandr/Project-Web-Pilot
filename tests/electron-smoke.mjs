@@ -1281,6 +1281,33 @@ export async function run({ app, window, browser, sidebar, store, controller, se
       'exactly one automatic continuation', snapshot);
     assert.equal(await browser.executeJavaScript('window.fixtureMessages.at(-1).text'), 'Продолжай');
     await waitFor(() => autoPlan.view().phase === 'running', 'continue dispatched', snapshot);
+    if (target.experience === 'work') {
+      await beginAnswer();
+      const draft = 'Мой сохранённый черновик';
+      // Untrusted input isolates Composer's DRAFT_PRESENT path from the native typing pause.
+      await browser.executeJavaScript("(()=>{const e=document.getElementById('prompt-textarea');e.textContent=" + JSON.stringify(draft) + ";e.dispatchEvent(new Event('input',{bubbles:true}))})()");
+      const beforeDraft = await browser.executeJavaScript('window.fixtureMessages.length');
+      await endAnswer();
+      await waitFor(() => !!autoPlan.suspended && autoPlan.view().message.includes('Черновик сохранён'),
+        'composer draft suspends without disabling mode', snapshot);
+      assert.equal(autoPlan.view().enabled, true);
+      assert.equal(await browser.executeJavaScript("document.getElementById('prompt-textarea').textContent"), draft);
+      assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), beforeDraft);
+      await waitFor(() => sidebar.executeJavaScript("document.getElementById('auto-plan-toggle').getAttribute('aria-pressed') === 'true'"),
+        'draft keeps sidebar toggle pressed', snapshot);
+      window.focus(); browser.focus();
+      const point = await browser.executeJavaScript("(()=>{const r=document.querySelector('[data-testid=send-button]').getBoundingClientRect();return {x:Math.round(r.x+r.width/2),y:Math.round(r.y+r.height/2)}})()");
+      browser.sendInputEvent({ type: 'mouseDown', ...point, button: 'left', clickCount: 1 });
+      browser.sendInputEvent({ type: 'mouseUp', ...point, button: 'left', clickCount: 1 });
+      await waitFor(() => autoPlan.view().phase === 'running', 'manual draft Send resumes the same conversation', snapshot);
+      assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), beforeDraft + 1);
+      assert.equal(await browser.executeJavaScript('window.fixtureMessages.at(-1).text'), draft);
+      await beginAnswer(); await endAnswer();
+      await waitFor(() => browser.executeJavaScript('window.fixtureMessages.length === ' + (beforeDraft + 2)),
+        'next completed answer continues automatically after draft', snapshot);
+      assert.equal(await browser.executeJavaScript('window.fixtureMessages.at(-1).text'), 'Продолжай');
+      await waitFor(() => autoPlan.view().phase === 'running', 'draft continuation dispatched', snapshot);
+    }
     if (target.experience === 'chat') {
       await beginAnswer();
       window.focus(); browser.focus();

@@ -14,7 +14,7 @@ function fixture() {
   const timers = new Map(), sends = [], events = []; let timerId = 0, sendResult = { state: 'sent' }, gate = null;
   const flow = new AutoPlan({ selected: () => selected, inspectPlan: async () => structuredClone(plan),
     log: (event, fields) => events.push({ event, ...fields }),
-    send: async (text, current, before) => { if (gate) await gate(); if (!current() || !await before()) return { state: 'cancelled' }; sends.push(text); return sendResult; },
+    send: async (text, current, before) => { if (gate) await gate(); if (!current() || !await before()) return { state: 'cancelled' }; if (sendResult.state !== 'deferred') sends.push(text); return sendResult; },
     schedule: (fn, ms) => { timers.set(++timerId, { fn, ms }); return timerId; }, cancel: id => timers.delete(id) });
   let state = { url: selected.chatUrl, editorAvailable: true, busy: false, assistantRevision: 0,
     manualStopRevision: 0, manualInputRevision: 0, manualSendRevision: 0, turnSignal: null };
@@ -196,6 +196,61 @@ test('new user message resumes Stop, typing and question without an extra Send',
     await f.finish();
     assert.equal(f.sends.length, before + 1);
     assert.equal(f.sends.at(-1), 'Продолжай');
+  }
+});
+test('draft defers startup and continuation without disabling mode or resending after user Send', async () => {
+  for (const stage of ['startup', 'continuation']) {
+    const f = fixture();
+    if (stage === 'continuation') await f.flow.start();
+    const before = f.sends.length;
+    f.setResult({ state: 'deferred', reason: 'DRAFT_PRESENT' });
+    if (stage === 'startup') await f.flow.start(); else await f.finish();
+    assert.equal(f.flow.view().phase, 'paused', stage);
+    assert.equal(f.flow.view().enabled, true, stage);
+    assert.ok(f.flow.suspended, stage);
+    assert.ok(f.events.some(e => e.event === 'wait' && e.reason === 'DRAFT_PRESENT'));
+    assert.equal(f.sends.length, before);
+    f.observe({ userMessageCount: 10 }); await f.drain();
+    assert.equal(f.flow.view().phase, 'paused', 'only actual manual Send resumes the run');
+    f.setResult({ state: 'sent' });
+    f.observe({ manualSendRevision: 1, busy: true }); await f.drain();
+    assert.equal(f.flow.view().phase, 'running', stage);
+    assert.equal(f.sends.length, before, 'the user message is not followed by an automatic Send');
+    await f.finish();
+    assert.equal(f.sends.length, before + 1);
+    assert.equal(f.sends.at(-1), 'Продолжай');
+  }
+});
+
+test('manual Send observed while draft inspection is pending is not lost', async () => {
+  const f = fixture();
+  f.setResult({ state: 'deferred', reason: 'DRAFT_PRESENT' });
+  f.setGate(async () => { f.observe({ manualSendRevision: 1, busy: true }); });
+  await f.flow.start(); await f.drain();
+  assert.equal(f.flow.view().phase, 'running');
+  assert.equal(f.sends.length, 0);
+  f.setGate(null); f.setResult({ state: 'sent' });
+  await f.finish();
+  assert.equal(f.sends.length, 1);
+  assert.equal(f.sends[0], 'Продолжай');
+});
+
+test('unknown Send is not treated as a recoverable draft and deferred resume rechecks the plan', async () => {
+  const unknown = fixture();
+  unknown.setResult({ state: 'unknown', reason: 'DRAFT_PRESENT' });
+  await unknown.flow.start();
+  assert.equal(unknown.flow.view().enabled, false);
+  assert.equal(unknown.flow.suspended, null);
+  unknown.observe({ manualSendRevision: 1, busy: true }); await unknown.drain();
+  assert.equal(unknown.sends.length, 1, 'an unknown Send is never repeated');
+  for (const kind of ['transaction', 'completed']) {
+    const f = fixture(); f.setResult({ state: 'deferred', reason: 'DRAFT_PRESENT' });
+    await f.flow.start();
+    if (kind === 'transaction') f.plan.confirmed = false;
+    else f.plan.planView.tasks.forEach(t => { t.status = 'done'; });
+    f.observe({ manualSendRevision: 1, busy: true }); await f.drain();
+    assert.equal(f.flow.view().phase, kind === 'completed' ? 'complete' : 'paused');
+    assert.equal(f.sends.length, 0);
   }
 });
 test('explicit off, completed plan, different conversation and restart never resume implicitly', async () => {
