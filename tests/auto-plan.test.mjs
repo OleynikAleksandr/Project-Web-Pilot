@@ -11,8 +11,9 @@ function fixture() {
   let selected = { workspace: '/project', sessionId: 'chat', scopeId: 'scope', chatUrl: 'https://chatgpt.com/c/abcdefgh' };
   const plan = { confirmed: true, scopeId: 'scope', scopeStatus: 'ACTIVE', planRevision: 7,
     planView: { tasks: [{ id: 'T001', status: 'done' }, { id: 'T002', status: 'current' }, { id: 'DOCS', status: 'pending' }] } };
-  const timers = new Map(), sends = []; let timerId = 0, sendResult = { state: 'sent' }, gate = null;
+  const timers = new Map(), sends = [], events = []; let timerId = 0, sendResult = { state: 'sent' }, gate = null;
   const flow = new AutoPlan({ selected: () => selected, inspectPlan: async () => structuredClone(plan),
+    log: (event, fields) => events.push({ event, ...fields }),
     send: async (text, current, before) => { if (gate) await gate(); if (!current() || !await before()) return { state: 'cancelled' }; sends.push(text); return sendResult; },
     schedule: (fn, ms) => { timers.set(++timerId, { fn, ms }); return timerId; }, cancel: id => timers.delete(id) });
   let state = { url: selected.chatUrl, editorAvailable: true, busy: false, assistantRevision: 0,
@@ -25,7 +26,7 @@ function fixture() {
     observe({ busy: false, assistantRevision: ++state.assistantRevision, turnSignal: signal });
     await drain();
   };
-  return { flow, plan, sends, observe, drain, finish, timers,
+  return { flow, plan, sends, observe, drain, finish, timers, events,
     setResult: value => { sendResult = value; }, setGate: value => { gate = value; },
     changeSelection: () => { selected = { ...selected, sessionId: 'other' }; } };
 }
@@ -110,20 +111,73 @@ test('checkpoint reader distinguishes working task, prepared DONE and committed 
   assert.equal((await readAutoPlanState({ workspace: root })).confirmed, true);
 });
 
-test('watchdog uses content progress, ignores decorative updates, and never clicks Stop or sends again', async () => {
+test('busy watchdog warns without stopping the run and later progress continues automatically', async () => {
   const f = fixture(); await f.flow.start();
   f.observe({ busy: true });
-  const first = f.flow.watchdog;
+  const run = f.flow.run, epoch = f.flow.epoch, first = f.flow.watchdog;
   f.observe({ busy: true, visibility: 'hidden' });
   assert.equal(f.flow.watchdog, first, 'cosmetic events do not reset the deadline');
   f.observe({ busy: true, assistantRevision: 2 });
   assert.notEqual(f.flow.watchdog, first);
-  const timeout = f.timers.get(f.flow.watchdog);
-  timeout.fn();
+  const expire = () => {
+    const id = f.flow.watchdog, timeout = f.timers.get(id);
+    f.timers.delete(id); timeout.fn();
+  };
+  expire();
+  assert.equal(f.flow.view().phase, 'running');
+  assert.equal(f.flow.view().enabled, true);
+  assert.equal(f.flow.view().warning, 'STALL_WARNING');
+  assert.equal(f.flow.run, run);
+  assert.equal(f.flow.epoch, epoch);
+  assert.equal(f.flow.watchdog, null, 'one warning waits for actual progress');
+  assert.equal(f.sends.length, 1, 'the watchdog never repeats Send');
+  assert.equal(f.events.find(e => e.event === 'progress-timeout').reason, 'STALL_WARNING');
+  f.observe({ visibility: 'visible' });
+  assert.equal(f.flow.view().warning, 'STALL_WARNING', 'cosmetic events do not clear a warning');
+  f.observe({ assistantRevision: 3 });
+  assert.equal(f.flow.view().warning, null);
+  assert.doesNotMatch(f.flow.view().message, /Три минуты/);
+  assert.equal(f.flow.run, run);
+  assert.notEqual(f.flow.watchdog, null);
+  expire();
+  assert.equal(f.flow.view().warning, 'STALL_WARNING');
+  f.plan.planRevision++;
+  await f.finish();
+  assert.equal(f.sends.length, 2);
+  assert.equal(f.sends.at(-1), 'Продолжай');
+  assert.equal(f.flow.view().warning, null);
+  assert.equal(f.flow.run, run, 'completion after a warning uses the same run');
+  f.observe({ busy: false }); await f.drain();
+  assert.equal(f.sends.length, 2, 'the same idle event cannot send twice');
+});
+
+test('idle watchdog keeps the safe pause when no answer or checkpoint appears', async () => {
+  const f = fixture(); await f.flow.start();
+  const id = f.flow.watchdog, timeout = f.timers.get(id);
+  f.timers.delete(id); timeout.fn();
   assert.equal(f.flow.view().phase, 'paused');
-  assert.match(f.flow.view().message, /Три минуты/);
+  assert.equal(f.flow.view().warning, null);
+  assert.equal(f.events.find(e => e.event === 'progress-timeout').reason, 'NO_CHECKPOINT');
   assert.equal(f.sends.length, 1);
-  await f.finish(); assert.equal(f.sends.length, 1, 'late completion cannot restart a paused run');
+});
+
+test('a stall warning preserves real wait, Stop, connection error and plan completion safeguards', async () => {
+  for (const reason of ['wait', 'stop', 'connection', 'done']) {
+    const f = fixture(); await f.flow.start(); f.observe({ busy: true });
+    const id = f.flow.watchdog, timeout = f.timers.get(id);
+    f.timers.delete(id); timeout.fn();
+    assert.equal(f.flow.view().warning, 'STALL_WARNING');
+    if (reason === 'wait') await f.finish('wait');
+    if (reason === 'stop') f.observe({ manualStopRevision: 1 });
+    if (reason === 'connection') f.observe({ connectionError: 'stream-interrupted' });
+    if (reason === 'done') {
+      f.plan.planView.tasks.forEach(t => { t.status = 'done'; });
+      await f.finish('done');
+    }
+    assert.equal(f.flow.view().phase, reason === 'done' ? 'complete' : 'paused', reason);
+    assert.equal(f.flow.view().warning, null, reason);
+    assert.equal(f.sends.length, 1, reason);
+  }
 });
 
 test('new user message resumes Stop, typing and question without an extra Send', async () => {

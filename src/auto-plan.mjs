@@ -21,7 +21,8 @@ export class AutoPlan {
     this.page = null; this.run = null; this.epoch = 0; this.timer = null; this.watchdog = null;
     this.state = { phase: 'off', message: '', active: false };
   }
-  view() { return { ...this.state, enabled: this.state.active || !!this.suspended }; }
+  view() { return { ...this.state, enabled: this.state.active || !!this.suspended,
+    warning: this.run?.stallWarning ? 'STALL_WARNING' : null }; }
   set(phase, message, active = false) {
     this.state = { phase, message, active };
     this.log('state', { phase }); this.onChange();
@@ -30,10 +31,22 @@ export class AutoPlan {
   clearWatchdog() { if (this.watchdog !== null) this.cancel(this.watchdog); this.watchdog = null; }
   watch(run) {
     this.clearWatchdog();
+    if (run.stallWarning) {
+      run.stallWarning = false;
+      this.log('progress-resumed', { reason: 'STALL_WARNING' });
+      this.set(this.state.phase, 'Автовыполнение: ждём контрольную точку агента.', this.state.active);
+    }
     this.watchdog = this.schedule(() => {
       this.watchdog = null;
       if (this.run !== run) return;
-      this.log('progress-timeout', { busy: !!this.page?.busy, assistantRevision: this.page?.assistantRevision ?? 0 });
+      const busy = !!this.page?.busy;
+      this.log('progress-timeout', { busy, assistantRevision: this.page?.assistantRevision ?? 0,
+        reason: busy ? 'STALL_WARNING' : 'NO_CHECKPOINT' });
+      if (busy) {
+        run.stallWarning = true;
+        this.set(this.state.phase, 'Три минуты без новых наблюдаемых данных. Агент ещё работает; ждём завершения ответа.', this.state.active);
+        return;
+      }
       this.pause('Три минуты без новых наблюдаемых данных. Проверьте ответ или восстановите разговор; повторной отправки не было.');
     }, this.stallMs);
     this.watchdog?.unref?.();

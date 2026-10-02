@@ -1302,14 +1302,33 @@ export async function run({ app, window, browser, sidebar, store, controller, se
 
     }
   }
-  // Exercise the watchdog through the same UI without waiting three wall-clock minutes.
-  const originalStall = autoPlan.stallMs; autoPlan.stallMs = 25; autoPlan.watch(autoPlan.run);
-  await waitFor(() => autoPlan.view().phase === 'paused', 'watchdog suspends automatic continuation', snapshot);
-  autoPlan.stallMs = originalStall;
-  await waitFor(() => sidebar.executeJavaScript("!document.getElementById('reconnect-chat').hidden"),
-    'stalled response exposes recovery action', snapshot);
-  await sidebar.executeJavaScript("window.webPilot.setAutoPlan(true)");
-  await waitFor(() => autoPlan.view().phase === 'running', 'explicit resume after watchdog', snapshot);
+  // Exercise a long busy answer through the real sidebar without a three-minute wait.
+  await beginAnswer();
+  const stalledRun = autoPlan.run, stalledEpoch = autoPlan.epoch;
+  const beforeWarning = await browser.executeJavaScript('window.fixtureMessages.length');
+  const originalStall = autoPlan.stallMs;
+  try {
+    autoPlan.stallMs = 25; autoPlan.watch(autoPlan.run);
+    await waitFor(() => autoPlan.view().warning === 'STALL_WARNING', 'busy watchdog warns without pausing', snapshot);
+    assert.equal(autoPlan.view().phase, 'running');
+    assert.equal(autoPlan.view().enabled, true);
+    assert.equal(autoPlan.run, stalledRun);
+    assert.equal(autoPlan.epoch, stalledEpoch);
+    assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), beforeWarning);
+    await waitFor(() => sidebar.executeJavaScript("document.getElementById('auto-plan-message').textContent.includes('ещё работает')"),
+      'stall warning visible in sidebar', snapshot);
+    assert.equal(await sidebar.executeJavaScript("document.getElementById('reconnect-chat').hidden"), true);
+    autoPlan.stallMs = originalStall;
+    await browser.executeJavaScript("(()=>{const a=document.createElement('article');a.dataset.messageAuthorRole='assistant';a.textContent='Продолжаю проверку';document.body.append(a)})()");
+    await waitFor(() => autoPlan.view().warning === null && pageState.current?.state.busy,
+      'content progress clears warning while the answer is still busy', snapshot);
+  } finally { autoPlan.stallMs = originalStall; }
+  await endAnswer();
+  await waitFor(() => browser.executeJavaScript('window.fixtureMessages.length === ' + (beforeWarning + 1)),
+    'answer after watchdog warning automatically continues', snapshot);
+  assert.equal(await browser.executeJavaScript('window.fixtureMessages.at(-1).text'), 'Продолжай');
+  await waitFor(() => autoPlan.view().phase === 'running', 'same run continues after watchdog', snapshot);
+  assert.equal(autoPlan.run, stalledRun);
   await beginAnswer();
   withSessionPlan(workspace, { sessionId: legacyChats[0].sessionId }, () => startTask(workspace, 'DOCS'));
   assert.equal(withSessionPlan(workspace, { sessionId: legacyChats[1].sessionId }, () => commitTask(workspace, 'DOCS')).ok, true);

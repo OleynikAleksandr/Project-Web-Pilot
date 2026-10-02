@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 878,
+  "plan_revision": 880,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "auto-plan-reliability-20261002",
@@ -121,8 +121,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "auto-plan-reliability-20261002",
         "task_id": "T002",
@@ -152,7 +152,13 @@
         "После последующего прогресса/завершения turn обычная проверка плана и автоматическое продолжение сохраняются.",
         "Watchdog не нажимает Stop и не делает повторный Send."
       ],
-      "expected_commit_message": "fix: не останавливать AutoPlan по stall watchdog"
+      "expected_commit_message": "fix: не останавливать AutoPlan по stall watchdog",
+      "actual_files": [
+        "docs/planning/auto-plan-reliability.md",
+        "src/auto-plan.mjs",
+        "tests/auto-plan.test.mjs",
+        "tests/electron-smoke.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -392,7 +398,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: auto-plan-reliability-20261002
 Current Task: нет
-Revision: 878
+Revision: 880
 
 ## Цель
 
@@ -412,8 +418,8 @@ Revision: 878
   - Git Commit: [DONE] fix: уточнить контракт ожидания AutoPlan
   - Reference: auto-plan-reliability-20261002 / T001 / implementation
   - Файлы: src/auto-plan.mjs, tests/auto-plan.test.mjs, docs/planning/auto-plan-reliability.md, docs/planning/auto-plan-continuation.md
-- [TODO] T002: Сделать watchdog диагностическим предупреждением без остановки run — Ожидает
-  - Git Commit: [PENDING] fix: не останавливать AutoPlan по stall watchdog
+- [DONE] T002: Сделать watchdog диагностическим предупреждением без остановки run — Завершено
+  - Git Commit: [DONE] fix: не останавливать AutoPlan по stall watchdog
   - Reference: auto-plan-reliability-20261002 / T002 / implementation
   - Файлы: src/auto-plan.mjs, tests/auto-plan.test.mjs, tests/electron-smoke.mjs, docs/planning/auto-plan-reliability.md
 - [TODO] T003: Сохранять включённый AutoPlan при DRAFT_PRESENT и возобновлять после сообщения пользователя — Ожидает
