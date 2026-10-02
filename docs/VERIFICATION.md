@@ -2406,3 +2406,11 @@ runTunnelHelper/executePrivateInput перенесены в src/tunnel-setup.mjs
 Назначенные node24, unit и Electron smoke выполняются внутри Workflow Kit commit T008; окончательный результат хранится в evidence этого коммита. Отдельная проверка документации проверяет относительные Markdown-ссылки, неизменность управляемого блока AGENTS, один текущий раздел и соответствие изменения composer одному возвращённому `export`. Сборка самого Sidebar и обновление его `vendor.lock.json` остаются на стороне Sidebar.
 
 Документальная проверка T008: 207 относительных Markdown-ссылок, битых нет; оба managed-блока (AGENTS и индекс) побайтно сохранены. Все 38 собственных документов с упоминанием Workflow Kit содержат связь с Web Pilot Sidebar. Diff production-кода — только возврат export у pageOperation; DOM и experience побайтно равны HEAD до T008.
+
+## 2026-10-02 — T009: парный выпуск 0.6.75 и GitHub
+
+Node24, unit, smoke и paired-release выполняются внутри Workflow Kit commit T009; окончательные статусы — в Git evidence. До сборки сохранены device/inode обоих Mac app в .harness/runtime/release-0.6.75-preflight.json; подтверждено отсутствие готового выпуска 0.6.75 и publisher lock. Версия задаётся package.json/lock без --app-version.
+
+Build проверяет packagedSourceMatches, версии, целостность обоих ZIP, ASAR, комплектные инструменты и SHA-256 копий. Итог — ~/Downloads/WebPilot-0.6.75/release-manifest.json. После commit копия /Applications обновляется installMacBundle без пересборки; identity/ASAR и backup — в .harness/runtime/t009-installation.json.
+
+По поручению пользователя main и тег v0.6.75 публикуются на GitHub; два ZIP и три сопроводительных файла загружаются из проверенной поставки. Серверные размеры/SHA-256 и удалённые refs сверяются; итог — .harness/runtime/t009-publication.json. Публикация не заменяет installed/live приёмку T010; native Windows и clean first-run не заявляются проверенными.

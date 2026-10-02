@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 861,
+  "plan_revision": 863,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "refactoring-node24-20261002",
@@ -701,8 +701,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "refactoring-node24-20261002",
         "task_id": "T009",
@@ -744,7 +744,21 @@
         "При сбое сборки версия не повышалась; paired-release.lock и releases/0.6.75 осмотрены, незавершённые артефакты удалены только с согласия пользователя перед повтором commit.",
         "По поручению пользователя 02.10.2026 main синхронизирован с GitHub обычным push; тег v0.6.75 указывает на release commit. GitHub Release 0.6.75 содержит проверенные macOS arm64 и Windows x64 ZIP, SHA256SUMS.txt, INSTALL.txt и release-manifest.json; серверные размеры/SHA-256 сверены. Публикация не означает пользовательскую приёмку T010."
       ],
-      "expected_commit_message": "feat: Выпустить 0.6.75 для macOS и Windows"
+      "expected_commit_message": "feat: Выпустить 0.6.75 для macOS и Windows",
+      "actual_files": [
+        "package.json",
+        "package-lock.json",
+        "README.md",
+        "AGENTS.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/PRODUCT.md",
+        "docs/MODULES.md",
+        "docs/RELEASE.md",
+        "docs/planning/refactoring-node24.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -878,7 +892,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: refactoring-node24-20261002
 Current Task: нет
-Revision: 861
+Revision: 863
 
 ## Цель
 
@@ -926,8 +940,8 @@ Revision: 861
   - Git Commit: [DONE] docs: Актуализировать документацию и восстановить экспорт pageOperation для Sidebar
   - Reference: refactoring-node24-20261002 / T008 / implementation
   - Файлы: src/chatgpt-composer.mjs, tests/chatgpt-composer.test.mjs, docs/planning/refactoring-node24.md, AGENTS.md, README.md, docs/WORKFLOW_START.md, docs/RELEASE.md, docs/architecture/ARCHITECTURE.md, docs/SOURCE_WORKSPACES.md, docs/DOCUMENTATION_INDEX.md, docs/modules/chatgpt-dom-compatibility.md, docs/VERIFICATION.md, docs/CLEAN_INSTALL.md, docs/CONTEXT_DELIVERY.md, docs/DECISIONS.md, docs/DOCUMENTATION_INDEX.history-20260929.md, docs/MODULES.history-20260929.md, docs/MODULES.md, docs/PRODUCT.md, docs/PROJECT_ARCHIVE.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKSPACE_SETUP.md, docs/architecture/OVERVIEW.history-20260929.md, docs/architecture/OVERVIEW.md, docs/design/chat-message-layout-regression.md, docs/design/computer-use-latency-investigation.md, docs/modules/codex-app-server-executor.md, docs/modules/first-run-onboarding.md, docs/modules/project-doctor.md, docs/modules/runtime-lifecycle.md, docs/modules/session-opening-performance.md, docs/modules/session-owned-plans.md, docs/modules/workflow-kit-recovery.md, docs/modules/workspace-sessions.md, docs/planning/auto-plan-continuation.md, docs/planning/event-driven-runtime.md, docs/planning/remote-project-ui-research.md, docs/planning/session-title-sync.md, docs/planning/single-active-plan-adaptation.md, docs/planning/workflow-kit-package-migration.md, docs/research/remote-project-ui-options-2026-09-28.md
-- [TODO] T009: Собрать парный выпуск 0.6.75 — Ожидает
-  - Git Commit: [PENDING] feat: Выпустить 0.6.75 для macOS и Windows
+- [DONE] T009: Собрать парный выпуск 0.6.75 — Завершено
+  - Git Commit: [DONE] feat: Выпустить 0.6.75 для macOS и Windows
   - Reference: refactoring-node24-20261002 / T009 / implementation
   - Файлы: package.json, package-lock.json, docs/planning/refactoring-node24.md, docs/RELEASE.md, docs/VERIFICATION.md, README.md, AGENTS.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/architecture/ARCHITECTURE.md, docs/PRODUCT.md, docs/MODULES.md
 - [TODO] T010: Проверить готовую поставку 0.6.75 и записать пользовательскую приёмку — Ожидает

@@ -1396,3 +1396,7 @@ WorkspaceSetup продолжает искать следующий кандид
 ## 2026-10-02 — T008: внешний контракт Sidebar
 
 `pageOperation` в `src/chatgpt-composer.mjs` снова экспортируется для Web Pilot Sidebar. Тело функции, формат `pageScript`, DOM/experience-модули и runtime-поведение сохранены; `ComposerError` остаётся внутренним. Публичные зависимости Sidebar, browser-only imports и порядок обновления SHA-256 описаны в [контракте DOM](../modules/chatgpt-dom-compatibility.md).
+
+## 2026-10-02 — T009: упаковка 0.6.75
+
+package.json и lock задают версию 0.6.75; --app-version удалён из обеих команд packager. Electron 44.5.1 и Node 24.21.0 упаковываются штатной paired-release проверкой; Workflow Kit остаётся 1.5.1. Публичный контракт Sidebar сохранён. Копия /Applications обновляется после успешного commit через installMacBundle без пересборки; app identity сохраняется. Пользователь поручил публикацию main/v0.6.75 и двух ZIP; T010 остаётся отдельной installed/live проверкой.

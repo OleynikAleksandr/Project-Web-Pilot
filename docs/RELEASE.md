@@ -2,7 +2,21 @@
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
-## Текущая локальная поставка — 0.6.74 / 01.10.2026
+## Выпуск 0.6.75 — 02.10.2026
+
+Выпуск **0.6.75** для macOS arm64 и Windows x64: Electron **44.5.1**, встроенный и комплектный Node **24.21.0**, Workflow Kit **1.5.1**. Node разработки, проверок и внешних workers — **^24.21.0** (не ниже 24.21.0 и ниже 25). Очистка мёртвого кода и дубликатов сохраняет поведение 0.6.74 и событийный runtime. Экспорт `pageOperation` восстановлен для Web Pilot Sidebar; формат `pageScript` сохранён.
+
+Поставка — `/Downloads/WebPilot-0.6.75/`. Корневой `Project Web Pilot.app` и копия в `/Applications` обновляются с сохранением Finder-identity. После обновления полностью завершите приложение и запустите его снова. Автоматические проверки сборки не заменяют пользовательскую приёмку T010; live Chat/Work новой версии, native Windows и чистый первый запуск ещё не проверены.
+
+T009 запускает единственную сборку проверкой paired-release внутри Workflow Kit commit после node24/unit/smoke. Packager получает версию из package.json, отдельного `--app-version` больше нет. Build сверяет исходники с обеими упаковками, ZIP integrity, ASAR, версии, комплектные инструменты и контрольные суммы копий.
+
+Поставка содержит `Project-Web-Pilot-0.6.75-macOS-arm64.zip`, `Project-Web-Pilot-0.6.75-Windows-x64.zip`, `SHA256SUMS.txt`, `INSTALL.txt` и `release-manifest.json`. Точные размеры, SHA-256 и sourceCommit записывает сборщик в manifest. SourceCommit — HEAD перед release commit; изменения версии входят в commit T009.
+
+Корневой app обновляет build:mac; после успешного commit копия `/Applications/Project Web Pilot.app` обновляется штатным `installMacBundle` без пересборки. Device/inode сверяются с `.harness/runtime/release-0.6.75-preflight.json`; прежние Contents сохраняются в backup, работающий процесс не перезапускается автоматически.
+
+Пользователь поручил синхронизацию main и публикацию [v0.6.75](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.75) с двумя ZIP и тремя сопроводительными файлами. После подтверждённого T009 тег указывает на его commit; серверные размеры и SHA-256 сверяются с локальными. Отчёты — `.harness/runtime/t009-installation.json` и `.harness/runtime/t009-publication.json`. T010 отдельно проверяет готовую установку и записывает пользовательскую приёмку.
+
+## Предыдущая локальная поставка — 0.6.74 / 01.10.2026
 
 0.6.74 завершает трёхфазный событийный рефакторинг и сохраняет AutoPlan 0.6.73. T001 фазы 3 выполнила сопоставимые 60-секундные fixture-замеры и live Chat/Work на macOS с реальным аккаунтом: recovery, `busy → idle`, reload без дубля, file-event/stale, событийное оформление composer и minimize/restore. Production-регрессий не выявлено. Workflow Kit 1.5.1 неизменён.
 

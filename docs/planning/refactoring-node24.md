@@ -204,7 +204,9 @@
 - ключ `--app-version=0.6.74` удалён из `build:mac:package` и `build:win:package` — @electron/packager по умолчанию берёт `version` из `package.json`;
 - записан `.harness/runtime/release-0.6.75-preflight.json` (device/inode корневого app и `/Applications`, формат как у `release-074-preflight.json`).
 
-Commit проходит, когда проверка собрала корневой app, `~/Downloads/WebPilot-0.6.75/` (два ZIP, `SHA256SUMS.txt`, `INSTALL.txt`, `release-manifest.json`) и обновила копию в `/Applications` по RELEASE. Лимит проверки — 600 с, это максимум Kit.
+Commit проходит, когда paired-release собрала корневой app и ~/Downloads/WebPilot-0.6.75/ с обоими ZIP, SHA256SUMS.txt, INSTALL.txt и release-manifest.json. После успешного commit копия /Applications обновляется штатным installMacBundle без пересборки, с проверкой identity/ASAR. Лимит проверки — 600 с, это максимум Kit.
+
+Дополнение пользователя 02.10.2026: в T009 синхронизировать main с GitHub и опубликовать оба ZIP в одном релизе v0.6.75 вместе с контрольными суммами, инструкцией и manifest. Тег указывает на commit T009; серверные размеры/SHA-256 сверяются. Публикация разрешена сейчас и не заменяет приёмку T010.
 
 При сбое:
 - версию не повышать;

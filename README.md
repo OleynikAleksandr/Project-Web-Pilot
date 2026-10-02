@@ -2,11 +2,13 @@
 
 Project Web Pilot — локальное Electron-приложение для macOS и Windows: слева проекты, чаты и текущий план, справа ChatGPT Web во встроенном Chromium. Новая сессия получает полный контекст текущего checkout; сохранённый чат открывается без повторной отправки. Файлы и команды доступны через локальный MCP/tunnel, модельные API не используются.
 
-## Текущий выпуск — 0.6.74
+## Текущий выпуск — 0.6.75
 
-Текущий локальный выпуск — **0.6.74**, macOS arm64 / Windows x64; Workflow Kit **1.5.1**. Трёхфазный событийный рефакторинг завершён: файловые события и прогрев, общий page observer без постоянного 1500-мс функционального пульса, оформление composer без секундного safety-pass, сопоставимые измерения и live Chat/Work на macOS. Парная поставка — `~/Downloads/WebPilot-0.6.74/`. Постоянный `Project Web Pilot.app` в корне проекта обновлён до 0.6.74 с сохранением Finder-identity; отдельная копия `/Applications/Project Web Pilot.app` этой сборкой не обновлялась и остаётся 0.6.73. Native Windows остаётся отдельной platform-проверкой.
+Выпуск **0.6.75** для macOS arm64 и Windows x64: Electron **44.5.1**, встроенный и комплектный Node **24.21.0**, Workflow Kit **1.5.1**. Node разработки, проверок и внешних workers — **^24.21.0** (не ниже 24.21.0 и ниже 25). Очистка мёртвого кода и дубликатов сохраняет поведение 0.6.74 и событийный runtime. Экспорт `pageOperation` восстановлен для Web Pilot Sidebar; формат `pageScript` сохранён.
 
-История, контрольные суммы и поставки — [RELEASE](docs/RELEASE.md); опубликованные версии — [GitHub Releases](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases). Текущий source проходит рефакторинг для 0.6.75 с Electron 44.5.1 и Node 24.21.0; эта поставка ещё не собрана. План — [рефакторинг и Node 24](docs/planning/refactoring-node24.md).
+Поставка — `/Downloads/WebPilot-0.6.75/`. Корневой `Project Web Pilot.app` и копия в `/Applications` обновляются с сохранением Finder-identity. После обновления полностью завершите приложение и запустите его снова. Автоматические проверки сборки не заменяют пользовательскую приёмку T010; live Chat/Work новой версии, native Windows и чистый первый запуск ещё не проверены.
+
+История и evidence — [RELEASE](docs/RELEASE.md). [Текущий план](docs/planning/refactoring-node24.md) разделяет сборку/публикацию T009 и повторяемую installed-проверку с пользовательской приёмкой T010. Пользователь поручил синхронизацию main и публикацию [v0.6.75](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.75) с двумя архивами. Публикация не закрывает T010 и не архивирует scope.
 
 ## Связанные репозитории
 
@@ -147,7 +149,7 @@ Settings → «Цвета чата…» открывает отдельное п
 
 ## Проверка на чистых системах
 
-Для текущей поставки 0.6.74 live Chat/Work проверен на основном Mac; native Windows и чистый первый запуск отдельно не выполнялись. История принятого первого запуска macOS 0.6.38/0.6.39 и прежних Windows-проверок — [CLEAN_INSTALL](docs/CLEAN_INSTALL.md); условия самостоятельной проверки — [TRANSFER_TO_WINDOWS](docs/TRANSFER_TO_WINDOWS.md).
+Для 0.6.75 пользовательская проверка live Chat/Work, native Windows и чистого первого запуска ещё не записана. Прежний live Chat/Work проверен на основном Mac в 0.6.74. История принятого первого запуска macOS 0.6.38/0.6.39 и прежних Windows-проверок — [CLEAN_INSTALL](docs/CLEAN_INSTALL.md); условия самостоятельной проверки — [TRANSFER_TO_WINDOWS](docs/TRANSFER_TO_WINDOWS.md).
 
 ## Сохранение размеров интерфейса
 
