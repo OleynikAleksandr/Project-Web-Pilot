@@ -2319,3 +2319,24 @@ T008 удаляет ожидание результата recovery после Se
 T008 зафиксирован 44713e56c20dd4138fc9929ba36204ce93a2d16b после успешных unit, smoke и installed/package. Устранена гонка smoke: после ручного Send очищенный editor нельзя считать несовпадением черновика до прихода асинхронного состояния. Для диагностики ожиданий стенд пишет stage.json.
 
 T009 меняет только общий индикатор завершённых попыток: waiting-chat/send-unknown скрывают полосу и выключают её таймер. Проверка progress-ui исполняет createProgress в DOM и проверяет hidden, пустые подписи и отмену таймера. Release-pair дополнительно импортирует progress.mjs из установленного app и проверяет отсутствие operationLabel для обеих фаз; Paste/Send и обе упаковки проверяются прежним installed gate. Native Windows и live ChatGPT 0.6.71 остаются пользователю.
+
+
+## 2026-10-02 — T002: исходное состояние перед рефакторингом Node 24
+
+Эталон получен на macOS arm64 до изменений кода: Project Web Pilot 0.6.74, исходный HEAD `a3ad36c4414bb1d17a0f38bcdc5fc3c53002250a`, внешний Node `v22.17.0`, Electron 44.3.0, Workflow Kit 1.5.1.
+
+`npm test`: **434 tests, 431 PASS, 0 FAIL, 3 SKIP**, cancelled/todo — 0; время Node test runner — 118737.987667 мс. Это эталон текущего scope; информационные результаты Linux его не заменяют.
+
+Пропущенные тесты:
+
+| Тест | Причина |
+| --- | --- |
+| Windows bootstrap adopts an existing compatible Codex Local instead of installing bundled payload | Только Windows: `process.platform !== win32` на этом Mac |
+| Windows bootstrap restarts the same running external runtime when first applying the overlay | Только Windows: `process.platform !== win32` на этом Mac |
+| real installation of the development Kit upgrades to the bundled Kit and archives legacy session plans | Development и bundled Kit одной версии: `development and bundled Kit are the same version` |
+
+Логи: `.harness/runtime/t002-baseline-unit.log` и `.harness/runtime/t002-baseline-smoke.log`. `npm run smoke` — **PASSED**, exit 0, Electron 44.3.0 / Chromium 152.0.7977.78, `mode=isolated-fixture`. Подтверждены sidebar IPC, Chat/Work recovery, ручная отправка, single-current-plan, архив/возврат/удаление на fixtures, настройки и Доктор. `liveChatGPT=false`: это не пользовательская приёмка живого ChatGPT или Windows.
+
+В исходном smoke отмечены ожидаемый `ERR_FAILED` сценария `fixture-first-load-failure` и `MaxListenersExceededWarning` (11 `did-stop-loading` listeners). Прогон завершился успешно; предупреждение сохранено как наблюдение исходного состояния, его причина в T002 не исследовалась. Общий фоновый процесс unit → smoke завершился с exit 0; повторные обязательные проверки выполняет Workflow Kit при коммите.
+
+Все 27 символов приложения A перепроверены; внешних потребителей экспортов не найдено. Два вида совпадений по имени разобраны в [планировочном документе](planning/refactoring-node24.md#приложение-a-экспорты-без-внешних-потребителей). Код приложения, тесты и конфигурация в T002 не изменяются.

@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 843,
+  "plan_revision": 845,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "refactoring-node24-20261002",
@@ -159,8 +159,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "refactoring-node24-20261002",
         "task_id": "T002",
@@ -187,7 +187,11 @@
         "Символы приложения A перепроверены grep на текущем коде, включая tests и scripts; расхождения отмечены в планировочном документе.",
         "Код приложения, тесты и конфигурация не изменены."
       ],
-      "expected_commit_message": "docs: Зафиксировать исходное состояние на macOS"
+      "expected_commit_message": "docs: Зафиксировать исходное состояние на macOS",
+      "actual_files": [
+        "docs/VERIFICATION.md",
+        "docs/planning/refactoring-node24.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -608,7 +612,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: refactoring-node24-20261002
 Current Task: нет
-Revision: 843
+Revision: 845
 
 ## Цель
 
@@ -628,8 +632,8 @@ Revision: 843
   - Git Commit: [DONE] docs: Уточнить план рефакторинга по результатам ревью
   - Reference: refactoring-node24-20261002 / T001 / implementation
   - Файлы: docs/planning/refactoring-node24.md
-- [TODO] T002: Зафиксировать исходное состояние на macOS — Ожидает
-  - Git Commit: [PENDING] docs: Зафиксировать исходное состояние на macOS
+- [DONE] T002: Зафиксировать исходное состояние на macOS — Завершено
+  - Git Commit: [DONE] docs: Зафиксировать исходное состояние на macOS
   - Reference: refactoring-node24-20261002 / T002 / implementation
   - Файлы: docs/planning/refactoring-node24.md, docs/VERIFICATION.md
 - [TODO] T003: Перевести среду на Node 24.21.0 и Electron 44.5.1 — Ожидает
