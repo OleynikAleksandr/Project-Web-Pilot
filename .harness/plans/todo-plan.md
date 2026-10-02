@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 899,
+  "plan_revision": 900,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "auto-plan-reliability-20261002",
@@ -596,7 +596,9 @@
       "title": "Актуализация всех документов проекта",
       "why": "Сохранить актуальный контекст для следующего агента",
       "acceptance_criteria": [
-        "Документы соответствуют результату"
+        "Документы соответствуют результату",
+        "Основная актуализация документации выполнена в T009 до публикаций T010–T012; финальная DOCS проверяет итоговые ссылки, версии и соответствие публикаций.",
+        "После финального DOCS-коммита актуальные коммиты документации отправлены на GitHub; проверено совпадение локального и удалённого HEAD всех трёх репозиториев."
       ],
       "expected_commit_message": "docs: актуализировать контекст проекта"
     }
@@ -619,7 +621,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: auto-plan-reliability-20261002
 Current Task: нет
-Revision: 899
+Revision: 900
 
 ## Цель
 
