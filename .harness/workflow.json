@@ -36,13 +36,12 @@
       "required": false,
       "timeout_ms": 120000,
       "id": "auto-plan-package",
-      "executable": "npm",
+      "executable": "node",
       "args": [
-        "run",
-        "build"
+        "scripts/check-installed-release.mjs"
       ],
       "kind": "package",
-      "evidence": "Штатная парная сборка Project Web Pilot следующей версии: macOS arm64 и Windows x64; версия берётся из package.json, release directory и manifest создаются штатным build-процессом и затем сверяются задачей T005."
+      "evidence": "Готовая локальная поставка Project Web Pilot 0.6.77: ~/Downloads/WebPilot-0.6.77/, macOS arm64/Windows x64 ZIP, source/metadata/hash/версия, Finder identity root app и /Applications, installed client AutoPlan без footer-протокола. Сборка выполнена штатным npm run build и не повторяется при commit."
     }
   ],
   "budget": {
