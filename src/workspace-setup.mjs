@@ -1,3 +1,4 @@
+import { fail } from './common.mjs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -7,7 +8,6 @@ import { randomUUID } from 'node:crypto';
 import { executableCandidateAllowed, nodeExecutableCandidates } from './platform.mjs';
 import { WorkspaceReadiness } from './workspace-readiness.mjs';
 const execute = promisify(execFile);
-const fail = (code, message) => Object.assign(new Error(message), { code });
 
 export class WorkspaceSetup {
   constructor({ resourceDir = fileURLToPath(new URL('../resources/', import.meta.url)), nodeCandidates,

@@ -1,3 +1,4 @@
+import { sha256File } from '../src/common.mjs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
@@ -6,7 +7,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import { execFileSync } from 'node:child_process';
 import { extractFile } from '@electron/asar';
-import { hashFile, sourceSnapshot, verifyPackagedSources } from './release-all.mjs';
+import { sourceSnapshot, verifyPackagedSources } from './release-all.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const { version } = JSON.parse(await fs.readFile(path.join(root, 'package.json'), 'utf8'));
@@ -36,7 +37,7 @@ assert.equal(Object.keys(sources).length, manifest.sourceFiles);
 const stat = await fs.stat(rootApp); assert.equal(stat.ino, manifest.identity.inode); assert.equal(stat.dev, manifest.identity.device);
 for (const artifact of manifest.artifacts) {
   const zip = path.join(delivery, artifact.file);
-  assert.equal(await hashFile(zip), artifact.sha256);
+  assert.equal(await sha256File(zip), artifact.sha256);
   const prefix = artifact.platform.startsWith('macOS')
     ? 'Project Web Pilot.app/Contents/Resources/' : 'Project Web Pilot-win32-x64/resources/';
   const preload = execFileSync('/usr/bin/unzip', ['-p', zip, prefix + 'resources/chatgpt-page-observer-preload.cjs'], { maxBuffer: 1024 * 1024 });

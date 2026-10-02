@@ -1,3 +1,4 @@
+import { fail } from './common.mjs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { execFile } from 'node:child_process';
@@ -5,7 +6,6 @@ import { promisify } from 'node:util';
 import { randomUUID } from 'node:crypto';
 import { WorkspaceSetup } from './workspace-setup.mjs';
 const execute = promisify(execFile);
-const fail = (code, message) => Object.assign(new Error(message), { code });
 
 export class SessionPlans {
   constructor({ setup = new WorkspaceSetup(), run = execute, onWorkerStart = () => {} } = {}) {

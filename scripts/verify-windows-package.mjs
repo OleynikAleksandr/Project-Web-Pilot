@@ -1,7 +1,7 @@
+import { sha256File } from '../src/common.mjs';
 import fs from 'node:fs/promises';
 import fsSync from 'node:fs';
 import path from 'node:path';
-import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { WINDOWS_RUNTIME_ARCHIVE, WINDOWS_RUNTIME_SHA256 } from '../src/windows-runtime.mjs';
 import { NODE_ARCHIVE, NODE_FOLDER, NODE_SHA256 } from './prepare-windows-toolchain.mjs';
@@ -9,17 +9,6 @@ import { verifyPackagedSources } from './release-all.mjs';
 import { EXPECTED_WORKFLOW_KIT_FILES, EXPECTED_WORKFLOW_KIT_SHA256, runtimeFiles, runtimeDigest } from './check-workflow-kit-dependency.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-
-async function hashFile(file) {
-  const hash = createHash('sha256');
-  await new Promise((resolve, reject) => {
-    const stream = fsSync.createReadStream(file);
-    stream.on('data', chunk => hash.update(chunk));
-    stream.on('error', reject);
-    stream.on('end', resolve);
-  });
-  return hash.digest('hex');
-}
 
 async function requireFile(file, label) {
   const stat = await fs.stat(file).catch(() => null);
@@ -64,9 +53,9 @@ export async function verifyWindowsPackage(packageDir = path.join(ROOT, '.harnes
   if (workflowSha256 !== EXPECTED_WORKFLOW_KIT_SHA256) throw new Error(`Workflow Kit SHA mismatch: ${workflowSha256}`);
   const workflowCommon = await fs.readFile(path.join(workflowRoot, 'lib', 'common.mjs'), 'utf8');
   if (!workflowCommon.includes("VERSION = '1.5.1'")) throw new Error('Workflow Kit version mismatch');
-  const runtimeSha256 = await hashFile(runtimeArchive);
+  const runtimeSha256 = await sha256File(runtimeArchive);
   if (runtimeSha256 !== WINDOWS_RUNTIME_SHA256) throw new Error(`Codex Local Windows SHA mismatch: ${runtimeSha256}`);
-  const nodeSha256 = await hashFile(nodeArchive);
+  const nodeSha256 = await sha256File(nodeArchive);
   if (nodeSha256 !== NODE_SHA256) throw new Error(`portable Node SHA mismatch: ${nodeSha256}`);
   if (fsSync.existsSync(path.join(packageDir, 'Contents', 'Info.plist'))) throw new Error('macOS bundle structure leaked into Windows package');
   if (exeStat.size < 1024 * 1024 || nodeStat.size < 10 * 1024 * 1024) throw new Error('Windows executable payload is unexpectedly small');
@@ -75,7 +64,7 @@ export async function verifyWindowsPackage(packageDir = path.join(ROOT, '.harnes
     firstRun: true,
     packageDir,
     executable,
-    executableSha256: await hashFile(executable),
+    executableSha256: await sha256File(executable),
     runtimeSha256,
     nodeSha256,
     nodeExecutableBytes: nodeStat.size,

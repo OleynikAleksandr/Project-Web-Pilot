@@ -1,3 +1,4 @@
+import { exists } from './common.mjs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
@@ -15,10 +16,6 @@ export const APP_SERVER_LAUNCH_AGENT = 'com.oleynik.WebPilotCodexExecutor';
 function xml(value) {
   return String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;').replaceAll("'", '&apos;');
-}
-
-async function exists(file) {
-  try { await fs.access(file); return true; } catch { return false; }
 }
 
 export class CodexAppServerRuntime {

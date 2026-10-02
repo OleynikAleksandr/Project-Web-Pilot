@@ -14,9 +14,13 @@ function fixture() {
     fire: async () => { const [id, fn] = timers.entries().next().value; timers.delete(id); fn(); await new Promise(setImmediate); } };
 }
 test('terminal stream error reopens the same conversation once without retrying generation', async () => {
-  const f = fixture(); f.recovery.observe(f.page); await f.fire();
+  const f = fixture(), phases = [];
+  f.recovery.onChange = state => phases.push(state.phase);
+  f.recovery.observe(f.page); await f.fire();
   assert.equal(f.calls(), 1); assert.equal(f.recovery.view().phase, 'restored');
   f.recovery.observe({ ...f.page, connectionError: null });
+  assert.equal(f.recovery.view().phase, 'idle', 'a healthy observation clears the transient result');
+  assert.deepEqual(phases.slice(-2), ['restored', 'idle'], 'subscribers observe success even between polling checks');
   f.recovery.observe(f.page);
   assert.equal(f.recovery.view().phase, 'failed'); assert.equal(f.timers.size, 0);
 });

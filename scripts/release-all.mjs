@@ -1,5 +1,5 @@
+import { sha256File } from '../src/common.mjs';
 import fs from 'node:fs/promises';
-import { createReadStream } from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import { createHash } from 'node:crypto';
@@ -10,11 +10,6 @@ import { extractFile, listPackage, uncache } from '@electron/asar';
 import { stageWorkflowKit, verifyWorkflowKitRuntime } from './stage-workflow-kit.mjs';
 
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
-export async function hashFile(file) {
-  const hash = createHash('sha256');
-  for await (const chunk of createReadStream(file)) hash.update(chunk);
-  return hash.digest('hex');
-}
 async function files(folder) {
   return (await fs.readdir(folder, { recursive: true, withFileTypes: true }))
     .filter(e => e.isFile() && e.name !== '.DS_Store')
@@ -27,7 +22,7 @@ export async function sourceSnapshot(root) {
       .map(file => 'tools/codex-app-server-mcp/' + file));
   for (const file of ['package.json', 'package-lock.json', ...await files(path.join(root, 'src')).then(a => a.map(f => 'src/' + f)),
     ...await files(path.join(root, 'resources')).then(a => a.map(f => 'resources/' + f)), ...codexExecutor])
-    result[file] = await hashFile(path.join(root, file));
+    result[file] = await sha256File(path.join(root, file));
   return result;
 }
 export async function verifyPackagedSources({ root, resources, version, sources }) {
@@ -42,15 +37,15 @@ export async function verifyPackagedSources({ root, resources, version, sources 
   for (const [file, expected] of Object.entries(sources)) {
     if (file === 'package-lock.json' || file === 'package.json') continue; // Development metadata is pruned; runtime fields are checked above.
     let actual;
-    if (file.startsWith('resources/')) actual = await hashFile(path.join(resources, file));
+    if (file.startsWith('resources/')) actual = await sha256File(path.join(resources, file));
     else if (file.startsWith('tools/codex-app-server-mcp/')) {
       const relative = file.slice('tools/codex-app-server-mcp/'.length);
-      actual = await hashFile(path.join(resources, 'codex-app-server-mcp', relative));
+      actual = await sha256File(path.join(resources, 'codex-app-server-mcp', relative));
     } else actual = digest(extractFile(asar, file));
     if (actual !== expected) throw new Error('Packaged source mismatch: ' + file);
   }
   if (listPackage(asar).some(f => f.includes('Project Web Pilot.app'))) throw new Error('Nested app in package');
-  return { version: pkg.version, asarSha256: await hashFile(asar) };
+  return { version: pkg.version, asarSha256: await sha256File(asar) };
 }
 const run = (command, args, cwd) => new Promise((resolve, reject) => {
   const child = spawn(command, args, { cwd, stdio: 'inherit', shell: false });
@@ -97,9 +92,9 @@ export async function releaseAll({ root = fileURLToPath(new URL('..', import.met
     const identity = await fs.stat(target);
     if (before && (before.ino !== identity.ino || before.dev !== identity.dev)) throw new Error('Installed app identity changed');
     for (const file of await files(path.join(runtime, 'mac-tools'))) {
-      const expected = await hashFile(path.join(runtime, 'mac-tools', file));
+      const expected = await sha256File(path.join(runtime, 'mac-tools', file));
       for (const res of [macResources, installedResources])
-        if (await hashFile(path.join(res, 'mac-tools', file)) !== expected) throw new Error('Mac toolchain mismatch: ' + file);
+        if (await sha256File(path.join(res, 'mac-tools', file)) !== expected) throw new Error('Mac toolchain mismatch: ' + file);
     }
     const receipt = JSON.parse(await fs.readFile(path.join(release, 'mac-release.json'), 'utf8'));
     if (receipt.version !== version || receipt.installation.asarSha256 !== mac.asarSha256) throw new Error('Mac receipt mismatch');
@@ -127,7 +122,7 @@ export async function releaseAll({ root = fileURLToPath(new URL('..', import.met
           { maxBuffer: 16 * 1024 * 1024, timeout: 180_000 });
         if (digest(resource) !== expected) throw new Error('ZIP Codex executor resource mismatch: ' + platform + ' / ' + relative);
       }
-      artifacts.push({ platform, file: path.basename(zip), bytes: (await fs.stat(zip)).size, sha256: await hashFile(zip),
+      artifacts.push({ platform, file: path.basename(zip), bytes: (await fs.stat(zip)).size, sha256: await sha256File(zip),
         asarSha256: proof.asarSha256, codexExecutorFiles: codexExecutorSources.length });
     }
     const evidence = { version, sourceCommit, sourceFiles: Object.keys(sources).length, packagedSourceMatches: true,
@@ -137,7 +132,7 @@ export async function releaseAll({ root = fileURLToPath(new URL('..', import.met
     for (const artifact of artifacts) {
       const destination = path.join(delivery, artifact.file);
       await fs.copyFile(path.join(release, artifact.file), destination);
-      if (await hashFile(destination) !== artifact.sha256) throw new Error('Delivery copy mismatch');
+      if (await sha256File(destination) !== artifact.sha256) throw new Error('Delivery copy mismatch');
     }
     const hashes = artifacts.map(a => `${a.sha256}  ${a.file}`).join('\n') + '\n';
     const instructions = `Project Web Pilot ${version}\n\nmacOS arm64: постоянное приложение в корне проекта обновлено; ZIP предназначен для переноса.\nWindows x64: распакуйте всю папку ZIP на локальный диск Windows, затем запустите Project Web Pilot.exe. Мастер подготовит компоненты, туннель и покажет подключение Codex Local Windows MCP в ChatGPT. Для этой Windows используйте отдельный туннель.\n\nОба пакета собраны одной командой и сверены с исходниками. Подключение личного аккаунта и проверка файлов в Windows выполняются пользователем отдельно. Windows ARM64 использует эмуляцию x64; отдельной сборки ARM64 нет.\n`;

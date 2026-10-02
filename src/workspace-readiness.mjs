@@ -1,4 +1,4 @@
-const fail = (code, message) => Object.assign(new Error(message), { code });
+import { fail } from './common.mjs';
 const copy = value => structuredClone(value);
 
 // One active worker operation and one latest queued workspace. Readiness is

@@ -1,3 +1,4 @@
+import { exists } from './common.mjs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
@@ -242,10 +243,6 @@ function migrate(data) {
 
 }
 
-async function fileExists(file) {
-  try { await fs.access(file); return true; } catch (error) { if (error.code === 'ENOENT') return false; throw error; }
-}
-
 async function writeJsonAtomic(file, data) {
   const temporary = file + '.tmp-session-archive';
   await fs.writeFile(temporary, JSON.stringify(data, null, 2) + '\n', { mode: 0o600 });
@@ -255,7 +252,7 @@ async function writeJsonAtomic(file, data) {
 async function purgeSessionCopies(storeFile, workspace, sessionId) {
   for (const version of [1, 2, 3, 4, 5]) {
     const file = storeFile + `.v${version}-backup`;
-    if (!await fileExists(file)) continue;
+    if (!await exists(file, { strict: true })) continue;
     const data = JSON.parse(await fs.readFile(file, 'utf8'));
     if (!Array.isArray(data.projects)) throw new WorkspaceError('SESSION_LOCAL_CLEANUP', 'Не удалось очистить старую локальную копию сессий.');
     let projectRemoved = false;
@@ -274,7 +271,7 @@ async function purgeSessionCopies(storeFile, workspace, sessionId) {
     await writeJsonAtomic(file, data);
   }
   const diagnostics = path.join(path.dirname(storeFile), 'diagnostics.jsonl');
-  if (await fileExists(diagnostics)) {
+  if (await exists(diagnostics, { strict: true })) {
     const lines = (await fs.readFile(diagnostics, 'utf8')).split('\n').filter(Boolean).filter(line => {
       const entry = JSON.parse(line);
       return !(entry.workspace === workspace && entry.sessionId === sessionId);

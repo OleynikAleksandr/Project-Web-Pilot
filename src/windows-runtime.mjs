@@ -1,10 +1,9 @@
 import fs from 'node:fs/promises';
-import fsSync from 'node:fs';
 import path from 'node:path';
-import { createHash } from 'node:crypto';
 import { execFile as execFileCallback } from 'node:child_process';
 import { promisify } from 'node:util';
-import { executePrivateInput } from './mac-runtime.mjs';
+import { executePrivateInput, runTunnelHelper } from './tunnel-setup.mjs';
+import { exists, sha256File } from './common.mjs';
 
 const execFile = promisify(execFileCallback);
 export const WINDOWS_RUNTIME_ARCHIVE = 'Windows-Codex-Local-2026-09-10.zip';
@@ -198,34 +197,12 @@ export async function configureWindowsTunnel({ folder, controlSourceFile, creden
   execute = execFile, executeInput = executePrivateInput }) {
   const layout = windowsRuntimeFolderPaths(folder);
   const helper = path.join(path.dirname(controlSourceFile), 'windows-first-run.py');
-  try {
-    const options = { cwd: folder, timeout: 16 * 60 * 1000, maxBuffer: 64 * 1024, windowsHide: true,
-      env: { ...environment, PYTHONUTF8: '1', PYTHONDONTWRITEBYTECODE: '1', WEB_PILOT_RUNTIME_ROOT: folder } };
-    let result;
-    if (credentials === undefined) result = await execute(layout.python, ['-B', helper, ...(idOnly ? ['--tunnel-id'] : [])], options);
-    else {
-      if (!credentials || typeof credentials.tunnelId !== 'string' || credentials.tunnelId.length > 150
-          || (credentials.key !== undefined && (typeof credentials.key !== 'string' || credentials.key.length > 4096))) {
-        throw { stderr: JSON.stringify({ ok: false, code: 'WINDOWS_TUNNEL_INVALID_DATA' }) };
-      }
-      result = await executeInput(layout.python, ['-B', helper, '--stdin'], options,
-        JSON.stringify({ tunnel_id: credentials.tunnelId, ...(credentials.key === undefined ? {} : { api_key: credentials.key }) }));
-    }
-    const value = JSON.parse(result.stdout);
-    if (value.cancelled === true) return { cancelled: true };
-    if (idOnly && typeof value.tunnel_id === 'string' && /^tunnel_[A-Za-z0-9_-]{16,100}$/.test(value.tunnel_id))
-      return { tunnelId: value.tunnel_id };
-    if (!idOnly && value.configured === true) return { configured: true };
-    throw new Error('Invalid worker response');
-  } catch (failure) {
-    let code = 'WINDOWS_TUNNEL_SETUP_FAILED';
-    try {
-      const value = JSON.parse(failure.stderr);
-      if (value?.ok === false && Object.hasOwn(TUNNEL_ERRORS, value.code)) code = value.code;
-    } catch { /* Never surface command output from a secret-input worker. */ }
-    const error = new WindowsRuntimeError(code, TUNNEL_ERRORS[code]);
-    error.publicMessage = error.message; throw error;
-  }
+  return runTunnelHelper({
+    python: layout.python, helper, credentials, idOnly, execute, executeInput,
+    options: { cwd: folder, timeout: 16 * 60 * 1000, maxBuffer: 64 * 1024, windowsHide: true,
+      env: { ...environment, PYTHONUTF8: '1', PYTHONDONTWRITEBYTECODE: '1', WEB_PILOT_RUNTIME_ROOT: folder } },
+    errorPrefix: 'WINDOWS', ErrorType: WindowsRuntimeError, errorMessages: TUNNEL_ERRORS,
+  });
 }
 
 export function windowsExpandInvocation(payloadFile, destination) {
@@ -242,21 +219,6 @@ export function windowsSetupInvocation(setupScript, workspace) {
     executable: 'powershell.exe',
     args: ['-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', setupScript, '-Workspace', workspace],
   };
-}
-
-export async function sha256File(file) {
-  const hash = createHash('sha256');
-  await new Promise((resolve, reject) => {
-    const stream = fsSync.createReadStream(file);
-    stream.on('data', chunk => hash.update(chunk));
-    stream.on('error', reject);
-    stream.on('end', resolve);
-  });
-  return hash.digest('hex');
-}
-
-async function exists(file) {
-  try { await fs.access(file); return true; } catch { return false; }
 }
 
 export class WindowsRuntimeBootstrap {

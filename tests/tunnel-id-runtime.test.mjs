@@ -1,3 +1,4 @@
+import { TUNNEL_ID_PATTERN } from '../src/tunnel-setup.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -48,4 +49,23 @@ for (const platform of ['mac', 'windows']) test(`${platform}: ID dialog facade v
   failure = { stderr: 'sk-fixture-private' };
   await assert.rejects(invoke(), error => !error.message.includes('sk-fixture'));
   assert.equal(calls.length, 7);
+});
+
+test('tunnel ID grammar matches all five standalone Python runtimes', async () => {
+  const files = [
+    'resources/runtime-control/mac-control.py',
+    'resources/runtime-control/mac-first-run.py',
+    'resources/runtime-control/windows-control.py',
+    'resources/runtime-control/windows-first-run.py',
+    'tools/codex-app-server-mcp/control.py',
+  ];
+  for (const file of files) {
+    const source = await fs.readFile(new URL('../' + file, import.meta.url), 'utf8');
+    const patterns = [...source.matchAll(/re\.fullmatch\(r(['"])(tunnel_[^'"]+)\1,/g)];
+    assert.ok(patterns.length, 'Missing tunnel ID validator in ' + file);
+    for (const match of patterns) assert.equal('^' + match[2] + '$', TUNNEL_ID_PATTERN.source, file);
+  }
+  for (const size of [16, 100]) assert.equal(TUNNEL_ID_PATTERN.test('tunnel_' + 'a'.repeat(size)), true);
+  for (const value of ['tunnel_' + 'a'.repeat(15), 'tunnel_' + 'a'.repeat(101), 'tunnel_' + 'a'.repeat(16) + '!', 'wrong_' + 'a'.repeat(16)])
+    assert.equal(TUNNEL_ID_PATTERN.test(value), false);
 });

@@ -604,23 +604,38 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   const boundUrl = store.selected().chatUrl;
   const previousDocument = pageState.current.documentId;
   const injectError = "(()=>{const e=document.createElement('div');e.setAttribute('role','alert');e.textContent='Resume stream unavailable';document.body.append(e)})()";
-  await browser.executeJavaScript(injectError);
-  await waitFor(() => snapshot().conversationRecovery.phase === 'restored', 'safe stream reconnection', snapshot);
-  assert.equal(browser.getURL(), boundUrl); assert.notEqual(pageState.current.documentId, previousDocument);
-  assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 1);
-  assert.equal(store.selected().chatUrl, boundUrl);
-  // A second outage requires an explicit action and must preserve a user's draft.
-  await browser.executeJavaScript("document.getElementById('prompt-textarea').textContent='Несохранённый черновик'");
-  await browser.executeJavaScript(injectError);
-  await waitFor(() => snapshot().conversationRecovery.phase === 'failed', 'bounded reconnect', snapshot);
-  await sidebar.executeJavaScript("document.getElementById('reconnect-chat').click()");
-  await waitFor(() => snapshot().conversationRecovery.phase === 'blocked', 'draft blocks reconnect', snapshot);
-  assert.equal(await browser.executeJavaScript("document.getElementById('prompt-textarea').textContent"), 'Несохранённый черновик');
-  await browser.executeJavaScript("document.getElementById('prompt-textarea').textContent=''");
-  await sidebar.executeJavaScript("document.getElementById('reconnect-chat').click()");
-  await waitFor(() => snapshot().conversationRecovery.phase === 'restored', 'manual reconnect button', snapshot);
-  assert.equal(browser.getURL(), boundUrl);
-  assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 1);
+  // A healthy page event can reset restored to idle before a polling check.
+  // Capture every published phase before triggering recovery.
+  await sidebar.executeJavaScript(`
+    window.fixtureRecoveryPhases = [];
+    window.stopFixtureRecoveryPhases = window.webPilot.onState(state => {
+      const phase = state.conversationRecovery.phase;
+      if (window.fixtureRecoveryPhases.at(-1) !== phase) window.fixtureRecoveryPhases.push(phase);
+    });
+    void 0; // executeJavaScript must not try to clone the unsubscribe function.
+  `);
+  try {
+    await browser.executeJavaScript(injectError);
+    await waitFor(() => sidebar.executeJavaScript('window.fixtureRecoveryPhases.includes("restored")'), 'safe stream reconnection', snapshot);
+    assert.equal(browser.getURL(), boundUrl); assert.notEqual(pageState.current.documentId, previousDocument);
+    assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 1);
+    assert.equal(store.selected().chatUrl, boundUrl);
+    // A second outage requires an explicit action and must preserve a user's draft.
+    await browser.executeJavaScript("document.getElementById('prompt-textarea').textContent='Несохранённый черновик'");
+    await browser.executeJavaScript(injectError);
+    await waitFor(() => snapshot().conversationRecovery.phase === 'failed', 'bounded reconnect', snapshot);
+    await sidebar.executeJavaScript("document.getElementById('reconnect-chat').click()");
+    await waitFor(() => snapshot().conversationRecovery.phase === 'blocked', 'draft blocks reconnect', snapshot);
+    assert.equal(await browser.executeJavaScript("document.getElementById('prompt-textarea').textContent"), 'Несохранённый черновик');
+    await browser.executeJavaScript("document.getElementById('prompt-textarea').textContent=''");
+    await sidebar.executeJavaScript('window.fixtureRecoveryPhases = []');
+    await sidebar.executeJavaScript("document.getElementById('reconnect-chat').click()");
+    await waitFor(() => sidebar.executeJavaScript('window.fixtureRecoveryPhases.includes("restored")'), 'manual reconnect button', snapshot);
+    assert.equal(browser.getURL(), boundUrl);
+    assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 1);
+  } finally {
+    await sidebar.executeJavaScript('window.stopFixtureRecoveryPhases(); delete window.stopFixtureRecoveryPhases; delete window.fixtureRecoveryPhases;');
+  }
 
   // A large prompt and a delayed Send button are verified through the native fixture composer.
   // Use a separate isolated view so session-count and packet-cache assertions stay independent.

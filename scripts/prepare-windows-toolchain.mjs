@@ -1,8 +1,8 @@
+import { sha256File } from '../src/common.mjs';
 import fs from 'node:fs/promises';
 import fsSync from 'node:fs';
 import path from 'node:path';
 import { BUNDLED_NODE_VERSION } from '../src/platform.mjs';
-import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { execFile } from 'node:child_process';
 import { WINDOWS_RUNTIME_ARCHIVE, WINDOWS_RUNTIME_SHA256 } from '../src/windows-runtime.mjs';
@@ -37,28 +37,17 @@ export function windowsToolchainPaths(root = ROOT) {
   };
 }
 
-async function sha256(file) {
-  const hash = createHash('sha256');
-  await new Promise((resolve, reject) => {
-    const stream = fsSync.createReadStream(file);
-    stream.on('data', chunk => hash.update(chunk));
-    stream.on('error', reject);
-    stream.on('end', resolve);
-  });
-  return hash.digest('hex');
-}
-
 async function ensureWindowsRuntimePayload(root, cacheDir, environment = process.env) {
   const destination = path.join(cacheDir, WINDOWS_RUNTIME_ARCHIVE);
   let digest = null;
-  try { digest = await sha256(destination); } catch {}
+  try { digest = await sha256File(destination); } catch {}
   if (digest === WINDOWS_RUNTIME_SHA256) return { file: destination, sha256: digest, reused: true };
   await fs.rm(destination, { force: true });
   for (const source of windowsRuntimeSourceCandidates(root, environment)) {
     try {
-      if (await sha256(source) !== WINDOWS_RUNTIME_SHA256) continue;
+      if (await sha256File(source) !== WINDOWS_RUNTIME_SHA256) continue;
       await fs.copyFile(source, destination);
-      if (await sha256(destination) === WINDOWS_RUNTIME_SHA256) return { file: destination, sha256: WINDOWS_RUNTIME_SHA256, reused: false };
+      if (await sha256File(destination) === WINDOWS_RUNTIME_SHA256) return { file: destination, sha256: WINDOWS_RUNTIME_SHA256, reused: false };
     } catch {}
   }
   throw new Error(`Windows Codex Local payload missing. Put ${WINDOWS_RUNTIME_ARCHIVE} at ${destination} or set WEB_PILOT_WINDOWS_RUNTIME_ARCHIVE.`);
@@ -96,17 +85,17 @@ export async function prepareWindowsToolchain({ root = ROOT, platform = process.
   await fs.mkdir(p.cacheDir, { recursive: true });
   const runtime = await ensureWindowsRuntimePayload(root, p.cacheDir);
   let digest = null;
-  try { digest = await sha256(p.archive); } catch {}
+  try { digest = await sha256File(p.archive); } catch {}
   if (digest !== NODE_SHA256) {
     await fs.rm(p.archive, { force: true });
     const packagedNode = path.join(root, 'windows-app', 'resources', 'windows-payload', NODE_ARCHIVE);
     try {
-      if (await sha256(packagedNode) === NODE_SHA256) await fs.copyFile(packagedNode, p.archive);
+      if (await sha256File(packagedNode) === NODE_SHA256) await fs.copyFile(packagedNode, p.archive);
     } catch {}
-    try { digest = await sha256(p.archive); } catch { digest = null; }
+    try { digest = await sha256File(p.archive); } catch { digest = null; }
     if (digest !== NODE_SHA256) {
       await fetchArchive(NODE_URL, p.archive);
-      digest = await sha256(p.archive);
+      digest = await sha256File(p.archive);
     }
   }
   if (digest !== NODE_SHA256) throw new Error(`Node payload SHA-256 mismatch: ${digest ?? 'missing'}`);

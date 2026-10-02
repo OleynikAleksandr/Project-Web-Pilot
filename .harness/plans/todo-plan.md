@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 854,
+  "plan_revision": 856,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "refactoring-node24-20261002",
@@ -77,7 +77,9 @@
       "scripts/check-installed-release.mjs",
       "tests/session-opening-performance.test.mjs",
       "tests/context-session.test.mjs",
-      "tests/context-cache.test.mjs"
+      "tests/context-cache.test.mjs",
+      "tests/common.test.mjs",
+      "tests/conversation-recovery.test.mjs"
     ],
     "documentation_paths": [
       "docs/planning/refactoring-node24.md",
@@ -466,8 +468,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "refactoring-node24-20261002",
         "task_id": "T007",
@@ -497,10 +499,15 @@
         "tests/windows-runtime.test.mjs",
         "tests/tunnel-id-runtime.test.mjs",
         "tests/mac-runtime.test.mjs",
-        "tests/release-all.test.mjs"
+        "tests/release-all.test.mjs",
+        "tests/common.test.mjs",
+        "tests/electron-smoke.mjs",
+        "tests/conversation-recovery.test.mjs"
       ],
       "documentation_paths": [
-        "docs/planning/refactoring-node24.md"
+        "docs/planning/refactoring-node24.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/VERIFICATION.md"
       ],
       "verification_ids": [
         "node24",
@@ -518,7 +525,35 @@
         "Границы импорта соблюдены: src не импортирует scripts, resources-workers не импортируют src; необъединённые повторы перечислены в документе с причинами.",
         "unit и smoke проходят; итог сопоставлен с эталоном T002."
       ],
-      "expected_commit_message": "refactor: Свести дублирующиеся помощники к одной реализации"
+      "expected_commit_message": "refactor: Свести дублирующиеся помощники к одной реализации",
+      "actual_files": [
+        "src/common.mjs",
+        "src/tunnel-setup.mjs",
+        "src/mac-runtime.mjs",
+        "src/windows-runtime.mjs",
+        "src/mac-runtime-switch.mjs",
+        "src/workspace-session.mjs",
+        "src/workspace-setup.mjs",
+        "src/session-plans.mjs",
+        "src/workspace-readiness.mjs",
+        "src/workspace-deletion.mjs",
+        "src/tunnel-clipboard.mjs",
+        "scripts/prepare-mac-toolchain.mjs",
+        "scripts/prepare-windows-toolchain.mjs",
+        "scripts/verify-windows-package.mjs",
+        "scripts/release-all.mjs",
+        "scripts/release-mac.mjs",
+        "scripts/check-event-runtime-release.mjs",
+        "tests/windows-runtime.test.mjs",
+        "tests/mac-runtime.test.mjs",
+        "tests/tunnel-id-runtime.test.mjs",
+        "tests/common.test.mjs",
+        "docs/planning/refactoring-node24.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/VERIFICATION.md",
+        "tests/electron-smoke.mjs",
+        "tests/conversation-recovery.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -699,7 +734,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: refactoring-node24-20261002
 Current Task: нет
-Revision: 854
+Revision: 856
 
 ## Цель
 
@@ -739,10 +774,10 @@ Revision: 854
   - Git Commit: [DONE] refactor: Очистить Python MCP-сервер без изменения контракта
   - Reference: refactoring-node24-20261002 / T006 / implementation
   - Файлы: tools/codex-app-server-mcp/server.py, tools/codex-app-server-mcp/control.py, .gitignore, docs/planning/refactoring-node24.md, docs/modules/codex-app-server-executor.md, docs/VERIFICATION.md
-- [TODO] T007: Свести дублирующиеся помощники к одной реализации — Ожидает
-  - Git Commit: [PENDING] refactor: Свести дублирующиеся помощники к одной реализации
+- [DONE] T007: Свести дублирующиеся помощники к одной реализации — Завершено
+  - Git Commit: [DONE] refactor: Свести дублирующиеся помощники к одной реализации
   - Reference: refactoring-node24-20261002 / T007 / implementation
-  - Файлы: src/common.mjs, src/tunnel-setup.mjs, src/mac-runtime.mjs, src/windows-runtime.mjs, src/mac-runtime-switch.mjs, src/workspace-session.mjs, src/workspace-setup.mjs, src/session-plans.mjs, src/workspace-readiness.mjs, src/workspace-deletion.mjs, src/tunnel-clipboard.mjs, scripts/prepare-mac-toolchain.mjs, scripts/prepare-windows-toolchain.mjs, scripts/verify-windows-package.mjs, scripts/release-all.mjs, scripts/release-mac.mjs, scripts/check-event-runtime-release.mjs, tests/windows-runtime.test.mjs, tests/tunnel-id-runtime.test.mjs, tests/mac-runtime.test.mjs, tests/release-all.test.mjs, docs/planning/refactoring-node24.md
+  - Файлы: src/common.mjs, src/tunnel-setup.mjs, src/mac-runtime.mjs, src/windows-runtime.mjs, src/mac-runtime-switch.mjs, src/workspace-session.mjs, src/workspace-setup.mjs, src/session-plans.mjs, src/workspace-readiness.mjs, src/workspace-deletion.mjs, src/tunnel-clipboard.mjs, scripts/prepare-mac-toolchain.mjs, scripts/prepare-windows-toolchain.mjs, scripts/verify-windows-package.mjs, scripts/release-all.mjs, scripts/release-mac.mjs, scripts/check-event-runtime-release.mjs, tests/windows-runtime.test.mjs, tests/tunnel-id-runtime.test.mjs, tests/mac-runtime.test.mjs, tests/release-all.test.mjs, tests/common.test.mjs, tests/electron-smoke.mjs, tests/conversation-recovery.test.mjs, docs/planning/refactoring-node24.md, docs/architecture/OVERVIEW.md, docs/VERIFICATION.md
 - [TODO] T008: Убрать противоречия и устаревшие сведения в документации агента — Ожидает
   - Git Commit: [PENDING] docs: Убрать противоречия и устаревшие сведения в документации агента
   - Reference: refactoring-node24-20261002 / T008 / implementation

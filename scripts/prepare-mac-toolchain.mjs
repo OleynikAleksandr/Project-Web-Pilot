@@ -1,8 +1,8 @@
+import { sha256File } from '../src/common.mjs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { BUNDLED_NODE_VERSION } from '../src/platform.mjs';
 import os from 'node:os';
-import { createHash } from 'node:crypto';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { fileURLToPath } from 'node:url';
@@ -13,8 +13,7 @@ export const UV_SHA256 = '11609c939296348c7cc1e1231b3fbf7ca90a603a4c494ec72b59d7
 export const NODE_VERSION = BUNDLED_NODE_VERSION;
 export const NODE_SHA256 = 'bed7eea5325e1108f32ce5228ddd6a5f0f08a499ee42aa7442aea583702f6057';
 export const NODE_ARCHIVE = 'node-v' + NODE_VERSION + '-darwin-arm64.tar.gz';
-const digest = async file => createHash('sha256').update(await fs.readFile(file)).digest('hex');
-const matches = async (file, sha) => { try { return await digest(file) === sha; } catch { return false; } };
+const matches = async (file, sha) => { try { return await sha256File(file) === sha; } catch { return false; } };
 
 export async function prepareMacNode({ root = ROOT, run = execute, download = async (url, target) => {
   const response = await fetch(url, { signal: AbortSignal.timeout(120000) });
@@ -44,7 +43,7 @@ export async function prepareMacNode({ root = ROOT, run = execute, download = as
     await fs.copyFile(node, path.join(output, 'bin/node'));
     await fs.chmod(path.join(output, 'bin/node'), 0o755);
     await fs.copyFile(path.join(source, 'LICENSE'), path.join(output, 'LICENSE'));
-    const evidence = { version: NODE_VERSION, archiveSha256: NODE_SHA256, binarySha256: await digest(node) };
+    const evidence = { version: NODE_VERSION, archiveSha256: NODE_SHA256, binarySha256: await sha256File(node) };
     await fs.writeFile(path.join(output, 'manifest.json'), JSON.stringify(evidence, null, 2) + '\n');
     return { output, ...evidence };
   } finally { await fs.rm(temporary, { recursive: true, force: true }); }

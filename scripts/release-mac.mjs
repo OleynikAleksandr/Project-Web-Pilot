@@ -1,8 +1,7 @@
+import { sha256File } from '../src/common.mjs';
 import fs from 'node:fs/promises';
-import { createReadStream } from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
-import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { extractFile, uncache } from '@electron/asar';
@@ -10,12 +9,6 @@ import { extractFile, uncache } from '@electron/asar';
 const APP = 'Project Web Pilot.app';
 const BUNDLE_ID = 'com.oleynik.ProjectWebPilot';
 const run = (command, args) => execFileSync(command, args, { encoding: 'utf8' }).trim();
-
-async function hash(file) {
-  const digest = createHash('sha256');
-  for await (const chunk of createReadStream(file)) digest.update(chunk);
-  return digest.digest('hex');
-}
 
 async function existingStat(file) {
   try { return await fs.lstat(file); }
@@ -40,7 +33,7 @@ async function inspectBundle(bundle, version) {
   if (pkg.name !== 'project-web-pilot' || pkg.version !== actualVersion || (version && actualVersion !== version)) {
     throw new Error('App version mismatch: ' + bundle);
   }
-  return { version: actualVersion, asarSha256: await hash(archive), plistSha256: await hash(plist) };
+  return { version: actualVersion, asarSha256: await sha256File(archive), plistSha256: await sha256File(plist) };
 }
 
 function sameBundle(actual, expected) {
@@ -119,7 +112,7 @@ export async function publishMacRelease({ root, deliveryDirectory } = {}) {
     }, expected);
     const zip = path.join(release, name);
     await fs.rename(stagedZip, zip);
-    const sha256 = await hash(zip);
+    const sha256 = await sha256File(zip);
     const checksum = sha256 + '  ' + name + '\n';
     await fs.writeFile(zip + '.sha256', checksum);
     const delivery = deliveryDirectory ?? path.join(os.homedir(), 'Downloads', 'WebPilot-' + version);

@@ -6,7 +6,7 @@ import { readWorkspace, WorkspaceError } from './workspace-session.mjs';
 
 const fail = (code, message) => { throw new WorkspaceError(code, message); };
 const within = (child, parent) => child === parent || child.startsWith(parent + path.sep);
-const exists = async file => { try { return await fs.lstat(file, { bigint: true }); } catch (e) { if (e.code === 'ENOENT') return null; throw e; } };
+const lstatOrNull = async file => { try { return await fs.lstat(file, { bigint: true }); } catch (e) { if (e.code === 'ENOENT') return null; throw e; } };
 const identity = stat => ({ dev: String(stat.dev), ino: String(stat.ino) });
 const same = (stat, expected) => stat?.isDirectory() && !stat.isSymbolicLink() && String(stat.dev) === expected.dev && String(stat.ino) === expected.ino;
 
@@ -37,7 +37,7 @@ export class WorkspaceDeletion {
       if (other.workspace !== workspace && (within(other.workspace, workspace) || within(workspace, other.workspace)))
         fail('DELETE_NESTED_PROJECT', 'Вложенные проекты пересекаются с этой папкой. Сначала разберите их отдельно.');
     }
-    const stat = await exists(workspace);
+    const stat = await lstatOrNull(workspace);
     if (stat && (!stat.isDirectory() || stat.isSymbolicLink() || await fs.realpath(workspace) !== workspace))
       fail('DELETE_PATH_CHANGED', 'Путь больше не указывает на исходную папку проекта.');
     return stat;
@@ -89,7 +89,7 @@ export class WorkspaceDeletion {
   async purgeCopies(workspace) {
     for (const version of [1, 2]) {
       const file = this.store.file + `.v${version}-backup`;
-      if (!await exists(file)) continue;
+      if (!await lstatOrNull(file)) continue;
       const data = JSON.parse(await fs.readFile(file, 'utf8'));
       if (!Array.isArray(data.projects)) throw new Error('Не удалось очистить старую локальную копию списка проектов.');
       data.projects = data.projects.filter(p => p.workspace !== workspace);
@@ -97,7 +97,7 @@ export class WorkspaceDeletion {
       await fs.writeFile(file + '.tmp', JSON.stringify(data, null, 2) + '\n', { mode: 0o600 }); await fs.rename(file + '.tmp', file);
     }
     const file = path.join(path.dirname(this.store.file), 'diagnostics.jsonl');
-    if (await exists(file)) {
+    if (await lstatOrNull(file)) {
       const lines = (await fs.readFile(file, 'utf8')).split('\n').filter(Boolean).filter(line => JSON.parse(line).workspace !== workspace);
       await fs.writeFile(file + '.tmp', lines.length ? lines.join('\n') + '\n' : '', { mode: 0o600 }); await fs.rename(file + '.tmp', file);
     }
@@ -106,15 +106,15 @@ export class WorkspaceDeletion {
     const record = this.store.project(job.workspace);
     if (record && (!record.archivedAt || record.projectId !== job.projectId)) fail('DELETE_RECORD_CHANGED', 'Запись проекта изменилась. Автоматическая очистка остановлена.');
     await this.guard(job.workspace);
-    let quarantined = await exists(job.quarantine);
+    let quarantined = await lstatOrNull(job.quarantine);
     if (quarantined && !same(quarantined, job.identity)) fail('DELETE_PATH_CHANGED', 'Папка удаления была заменена. Очистка остановлена.');
     if (!quarantined && job.stage === 'confirmed' && !job.missing) {
-      const original = await exists(job.workspace);
+      const original = await lstatOrNull(job.workspace);
       if (!same(original, job.identity)) fail('DELETE_PATH_CHANGED', 'Исходная папка изменилась. Очистка остановлена.');
       const latest = await this.inspect(job.workspace);
       if (latest.fingerprint !== job.fingerprint) fail('DELETE_PREVIEW_CHANGED', 'Папка изменилась до удаления. Очистка остановлена.');
       await fs.rename(job.workspace, job.quarantine);
-      quarantined = await exists(job.quarantine);
+      quarantined = await lstatOrNull(job.quarantine);
       if (!same(quarantined, job.identity)) fail('DELETE_PATH_CHANGED', 'Папка изменилась во время удаления. Очистка остановлена.');
     }
     // After this durable stage, recovery only touches the renamed directory; a replacement at the old path is preserved.

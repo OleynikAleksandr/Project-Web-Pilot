@@ -1,3 +1,5 @@
+import { exists, sha256File } from './common.mjs';
+import { executePrivateInput, runTunnelHelper } from './tunnel-setup.mjs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
@@ -5,16 +7,6 @@ import { createHash } from 'node:crypto';
 import { execFile as execFileCallback } from 'node:child_process';
 import { promisify } from 'node:util';
 const execFile=promisify(execFileCallback);
-// Secrets enter the worker through its pipe, never argv or environment.
-export function executePrivateInput(file, args, options, input) {
- return new Promise((resolve, reject) => {
-  const child = execFileCallback(file, args, options, (error, stdout, stderr) => {
-   if (error) { error.stderr = stderr; reject(error); } else resolve({ stdout, stderr });
-  });
-  child.stdin.on('error', () => {}); // The process callback owns early-exit failure.
-  child.stdin.end(input);
- });
-}
 const TUNNEL_SETUP_ERRORS = {
  MAC_TUNNEL_ID_INVALID: 'Вставьте полный ID туннеля, начинающийся с tunnel_, и подтвердите ввод ещё раз.',
  MAC_TUNNEL_PROMPT_FAILED: 'Не удалось открыть окно ввода подключения. Обновите Web Pilot и повторите ввод. Данные подключения не сохранены.',
@@ -29,8 +21,6 @@ const MAC_BUNDLED_CONTROL_SHA256='84a68f87448cfc10090752e4e4b15c6e4120ea53ad8ec7
 const MAC_LEGACY_CONTROL_SHA256='6c5c14972774ece2a9820059b3953fe2fe968c186bb6e17af074c7752dc294be';
 
 class MacRuntimeError extends Error { constructor(code,message){super(message);this.code=code;} }
-const exists=async file=>{try{await fs.access(file);return true;}catch{return false;}};
-async function sha256(file){const data=await fs.readFile(file);return createHash('sha256').update(data).digest('hex');}
 function macRuntimePaths(dataDir,payloadFile=''){
  const root=path.join(dataDir,'runtime'); const folder=path.join(root,MAC_RUNTIME_FOLDER);
  return {root,folder,payloadFile,marker:path.join(root,'mac-runtime.json'),staging:path.join(root,'.mac-runtime-staging'),control:path.join(folder,'control.py'),python:path.join(folder,'.venv','bin','python3')};
@@ -46,7 +36,7 @@ export class MacRuntimeBootstrap {
  #publish(next){this.state={...this.state,...next,folder:next?.folder??this.state.folder??this.paths.folder};try{this.onState?.(this.snapshot());}catch{}}
  async #desired(){const content=await fs.readFile(this.controlSourceFile,'utf8');return {content,sha:createHash('sha256').update(content).digest('hex')};}
  async #marker(){try{return JSON.parse(await fs.readFile(this.paths.marker,'utf8'));}catch{return null;}}
- async #candidate(folder){if(!folder)return null;const layout=macRuntimeFolderPaths(folder);if(!await exists(layout.control)||!await exists(layout.python))return null;const current=await sha256(layout.control);const desired=await this.#desired();return {folder,layout,current,desired,compatible:current===desired.sha,overlayable:this.legacyControlHashes.has(current)};}
+ async #candidate(folder){if(!folder)return null;const layout=macRuntimeFolderPaths(folder);if(!await exists(layout.control)||!await exists(layout.python))return null;const current=await sha256File(layout.control);const desired=await this.#desired();return {folder,layout,current,desired,compatible:current===desired.sha,overlayable:this.legacyControlHashes.has(current)};}
  async inspect(){
   if(this.platform!=='darwin')return this.snapshot();
   const seen=new Set();
@@ -56,7 +46,7 @@ export class MacRuntimeBootstrap {
    if(this.preferredFolder&&path.resolve(this.preferredFolder)===key){this.#publish({phase:'error',installed:true,source:'external',folder:c.folder,error:'MAC_RUNTIME_EXTERNAL_MODIFIED'});return this.snapshot();}
   }
   const marker=await this.#marker();const bundled=await this.#candidate(this.paths.folder);
-  if(bundled&&marker?.payloadSha256===await sha256(this.payloadFile)){
+  if(bundled&&marker?.payloadSha256===await sha256File(this.payloadFile)){
    const trusted=bundled.compatible||bundled.overlayable;
    this.#publish({phase:trusted?'installed':'error',installed:true,source:'bundled',folder:this.paths.folder,needsOverlay:!bundled.compatible,error:trusted?null:'MAC_RUNTIME_EXTERNAL_MODIFIED'});return this.snapshot();
   }
@@ -78,7 +68,7 @@ export class MacRuntimeBootstrap {
  async #findPython(){for(const f of ['/opt/homebrew/bin/python3','/usr/local/bin/python3','/usr/bin/python3']){if(!await exists(f))continue;try{const r=await this.execute(f,['-c','import sys;print(sys.version_info[:2] >= (3,13))'],{timeout:5000});if(String(r.stdout).trim()==='True')return f;}catch{}}return null;}
  async #install(workspace){
   if(!await exists(this.payloadFile))throw new MacRuntimeError('MAC_RUNTIME_PAYLOAD_MISSING','В macOS-сборке отсутствует bundled Codex Local runtime.');
-  const payloadSha=await sha256(this.payloadFile);await fs.rm(this.paths.staging,{recursive:true,force:true});await fs.mkdir(this.paths.staging,{recursive:true});
+  const payloadSha=await sha256File(this.payloadFile);await fs.rm(this.paths.staging,{recursive:true,force:true});await fs.mkdir(this.paths.staging,{recursive:true});
   await this.execute('/usr/bin/ditto',['-x','-k',this.payloadFile,this.paths.staging],{timeout:60000,maxBuffer:4*1024*1024});
   const entries=await fs.readdir(this.paths.staging);if(entries.length!==1||entries[0]!==MAC_RUNTIME_FOLDER)throw new MacRuntimeError('MAC_RUNTIME_ARCHIVE_INVALID','Bundled Mac runtime имеет неожиданную структуру.');
   const extracted=path.join(this.paths.staging,MAC_RUNTIME_FOLDER);await fs.rm(this.paths.folder,{recursive:true,force:true});await fs.rename(extracted,this.paths.folder);await fs.rm(this.paths.staging,{recursive:true,force:true});
@@ -102,36 +92,14 @@ export class MacRuntimeBootstrap {
   await this.#controlFor(current.folder);
   const layout = macRuntimeFolderPaths(current.folder);
   const helper = path.join(path.dirname(this.controlSourceFile), 'mac-first-run.py');
-  try {
-   const options = {
+  return runTunnelHelper({
+   python: layout.python, helper, credentials, idOnly, execute: this.execute, executeInput: this.executeInput,
+   options: {
     cwd: current.folder, timeout: 16 * 60 * 1000, maxBuffer: 64 * 1024,
     env: { ...this.environment, PYTHONDONTWRITEBYTECODE: '1', WEB_PILOT_RUNTIME_ROOT: current.folder },
-   };
-   let result;
-   if (credentials === undefined) result = await this.execute(layout.python, ['-B', helper, ...(idOnly ? ['--tunnel-id'] : [])], options);
-   else {
-    if (!credentials || typeof credentials.tunnelId !== 'string' || credentials.tunnelId.length > 150
-        || (credentials.key !== undefined && (typeof credentials.key !== 'string' || credentials.key.length > 4096))) {
-     throw { stderr: JSON.stringify({ ok: false, code: 'MAC_TUNNEL_INVALID_DATA' }) };
-    }
-    result = await this.executeInput(layout.python, ['-B', helper, '--stdin'], options,
-      JSON.stringify({ tunnel_id: credentials.tunnelId, ...(credentials.key === undefined ? {} : { api_key: credentials.key }) }));
-   }
-   const value = JSON.parse(result.stdout);
-   if (value.cancelled === true) return { cancelled: true };
-   if (idOnly && typeof value.tunnel_id === 'string' && /^tunnel_[A-Za-z0-9_-]{16,100}$/.test(value.tunnel_id))
-    return { tunnelId: value.tunnel_id };
-   if (!idOnly && value.configured === true) return { configured: true };
-   throw new Error('Unexpected setup result');
-  } catch (failure) {
-   let code = 'MAC_TUNNEL_SETUP_FAILED';
-   try {
-    const report = JSON.parse(failure.stderr);
-    if (report?.ok === false && Object.hasOwn(TUNNEL_SETUP_ERRORS, report.code)) code = report.code;
-   } catch { /* Only the worker's known codes may cross the secret-input boundary. */ }
-   const error = new MacRuntimeError(code, TUNNEL_SETUP_ERRORS[code]);
-   error.publicMessage = error.message; throw error;
-  }
+   },
+   errorPrefix: 'MAC', ErrorType: MacRuntimeError, errorMessages: TUNNEL_SETUP_ERRORS,
+  });
  }
  ensure(workspace){if(this.platform!=='darwin')return Promise.reject(new MacRuntimeError('MAC_ONLY','Mac runtime доступен только на macOS.'));if(this.pending)return this.pending;this.pending=this.#ensure(workspace).finally(()=>{this.pending=null;});return this.pending;}
  async #ensure(workspace){

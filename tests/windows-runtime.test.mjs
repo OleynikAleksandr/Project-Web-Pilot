@@ -1,3 +1,4 @@
+import { sha256File } from '../src/common.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -7,7 +8,7 @@ import net from 'node:net';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { fileURLToPath } from 'node:url';
-import { WindowsRuntimeBootstrap, WINDOWS_RUNTIME_SHA256, WINDOWS_CONTEXT_PACKET_SOURCE, WINDOWS_RUNTIME_CONTROL_CONTRACT, WINDOWS_LEGACY_CONTROL_SHA256, patchWindowsBridgeSource, sha256File, windowsRuntimePaths, windowsRuntimeStateDirectory, windowsCommandFailureText, windowsExpandInvocation, windowsSetupInvocation } from '../src/windows-runtime.mjs';
+import { WindowsRuntimeBootstrap, WINDOWS_RUNTIME_SHA256, WINDOWS_CONTEXT_PACKET_SOURCE, WINDOWS_RUNTIME_CONTROL_CONTRACT, WINDOWS_LEGACY_CONTROL_SHA256, patchWindowsBridgeSource, windowsRuntimePaths, windowsRuntimeStateDirectory, windowsCommandFailureText, windowsExpandInvocation, windowsSetupInvocation } from '../src/windows-runtime.mjs';
 const execute = promisify(execFile);
 const windowsControl = fileURLToPath(new URL('../resources/runtime-control/windows-control.py', import.meta.url));
 
@@ -205,6 +206,8 @@ test('Windows first run passes credentials only over stdin and strips worker fai
       calls.push({ file, args, settings });
       assert.deepEqual(JSON.parse(input), { tunnel_id: id, api_key: secret });
       assert.equal(settings.windowsHide, true);
+      assert.equal(settings.env.PYTHONUTF8, '1');
+      assert.equal(settings.env.PYTHONDONTWRITEBYTECODE, '1');
       assert.equal(settings.env.WEB_PILOT_RUNTIME_ROOT, 'C:\\Pilot\\runtime');
       return { stdout: '{"configured":true}' };
     } };

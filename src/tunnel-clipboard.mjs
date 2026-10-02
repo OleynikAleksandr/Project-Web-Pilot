@@ -1,6 +1,6 @@
+import { TUNNEL_ID_PATTERN } from './tunnel-setup.mjs';
 import { createHash } from 'node:crypto';
 const digest = value => createHash('sha256').update(value).digest('hex');
-const tunnelPattern = /^tunnel_[A-Za-z0-9_-]{16,100}$/;
 const keyPattern = /^sk-[A-Za-z0-9_-]{16,4093}$/;
 
 // Main-process facade: only progress crosses the renderer boundary.
@@ -36,7 +36,7 @@ export class TunnelClipboard {
     try {
       const result = await this.promptTunnelId();
       if (generation !== this.#generation || result?.cancelled) return;
-      if (typeof result?.tunnelId !== 'string' || !tunnelPattern.test(result.tunnelId)) {
+      if (typeof result?.tunnelId !== 'string' || !TUNNEL_ID_PATTERN.test(result.tunnelId)) {
         this.publish({ error: 'Вставьте полный ID туннеля, начинающийся с tunnel_, и подтвердите ввод ещё раз.' });
         return;
       }
@@ -93,7 +93,7 @@ export class TunnelClipboard {
     const changed = digest(value);
     if (changed === this.#last) return;
     this.#last = changed; value = value.trim();
-    if (tunnelPattern.test(value)) {
+    if (TUNNEL_ID_PATTERN.test(value)) {
       this.#id = value;
       this.publish({ step: 'key', hasTunnelId: true, error: null }); return;
     }

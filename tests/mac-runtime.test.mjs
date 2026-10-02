@@ -191,7 +191,7 @@ test('copied credentials use only the worker stdin and permit ID-only manual fal
  assert.equal(received.length,0);
 });
 test('private process input arrives over a pipe rather than command arguments', async () => {
- const { executePrivateInput }=await import('../src/mac-runtime.mjs');
+ const { executePrivateInput }=await import('../src/tunnel-setup.mjs');
  const r=await executePrivateInput(process.execPath,['-e',"process.stdin.setEncoding('utf8');let s='';process.stdin.on('data',c=>s+=c);process.stdin.on('end',()=>process.stdout.write(JSON.stringify({received:s==='fixture-secret',argvClean:!process.argv.some(x=>x.includes('fixture-secret-value'))})))"],{timeout:5000},'fixture-secret');
  assert.deepEqual(JSON.parse(r.stdout),{received:true,argvClean:true});
 });
