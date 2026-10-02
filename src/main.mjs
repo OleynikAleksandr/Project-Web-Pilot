@@ -56,6 +56,7 @@ const store = new WorkspaceSessions(path.join(dataDir, 'workspaces.json'));
 const planMonitor = new PlanMonitor({ selected: () => store.selected(),
   inspect: (workspace, sessionId) => store.inspect(workspace, sessionId), onChange: (_info, change) => {
     publish();
+    if (change?.semanticChanged || change?.recovered) void autoPlan.planChanged().catch(report);
     if (change?.semanticChanged && !pageLoading && !setupState && !settingsState) void controller?.tick();
   }, onInputsChanged: () => {
     if (!pageLoading && !setupState && !settingsState) controller?.projectChanged();
@@ -163,7 +164,7 @@ const conversationRecovery = new ConversationRecovery({
   onChange: () => publish(),
 });
 const autoPlan = new AutoPlan({
-  selected: () => { const p = store.selected(); return p && { ...p, scopeId: planMonitor.info?.scopeId ?? p.scopeId }; },
+  selected: () => { const p = store.selected(), info = planMonitor.view(p); return p && { ...p, scopeId: info ? info.scopeId : p.scopeId }; },
   inspectPlan: async selected => readAutoPlanState(selected, process.platform === 'win32'
     ? await windowsRuntimeBootstrap.workflowEnvironment() : process.env),
   send: (text, canContinue, onBeforeSend) => controller.composer.sendUserMessage({
@@ -188,7 +189,6 @@ function applyObservedPage(event) {
     lastStopObservation = { documentId, revision };
   }
   autoPlan.observe(event);
-  void autoPlan.recover().catch(report);
   if (event.reset) { manualDocumentOwner = null; agentTimer.finish(); return; }
   chromiumDiagnostics?.observePage(event.state);
   if (pageLoading || setupState || settingsState) return;
@@ -316,7 +316,7 @@ function snapshot() {
 function publish() {
   planMonitor.observeSelection();
   autoPlan.selectionChanged();
-  void autoPlan.recover().catch(report);
+  autoPlan.availabilityChanged();
   observeStartupClipboard();
   rememberSessionTitle();
   rememberScopeTitle();

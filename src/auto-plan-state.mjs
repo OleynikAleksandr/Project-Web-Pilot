@@ -4,7 +4,7 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { readWorkspace } from './workspace-session.mjs';
 const execute = promisify(execFile);
-// Only at activation/checkpoints/Send, never a Git polling loop.
+// Only on relevant idle events and immediately before Send; never a Git polling loop.
 export async function readAutoPlanState(selected, environment = process.env) {
   const { workspace, sessionId } = selected;
   const before = await readWorkspace(workspace, sessionId);

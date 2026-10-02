@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 919,
+  "plan_revision": 921,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "auto-plan-client-driven-refactor-20261002",
@@ -134,8 +134,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "auto-plan-client-driven-refactor-20261002",
         "task_id": "T002",
@@ -170,7 +170,14 @@
         "Если AutoPlan уже ON, а plan меняется NONE/неподтверждённый → ACTIVE unfinished, текущий busy-turn не прерывается, а после его окончания отправляется одно «Продолжай».",
         "Завершённый plan, OFF, неподходящий разговор или временно неготовая страница не вызывают Send."
       ],
-      "expected_commit_message": "refactor: сделать AutoPlan клиентским reconciler"
+      "expected_commit_message": "refactor: сделать AutoPlan клиентским reconciler",
+      "actual_files": [
+        "docs/planning/auto-plan-client-driven-refactor.md",
+        "src/auto-plan-state.mjs",
+        "src/auto-plan.mjs",
+        "src/main.mjs",
+        "tests/auto-plan.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -349,7 +356,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: auto-plan-client-driven-refactor-20261002
 Current Task: нет
-Revision: 919
+Revision: 921
 
 ## Цель
 
@@ -365,8 +372,8 @@ Revision: 919
   - Git Commit: [DONE] refactor: убрать агентский протокол AutoPlan
   - Reference: auto-plan-client-driven-refactor-20261002 / T001 / implementation
   - Файлы: src/auto-plan.mjs, src/chatgpt-page-observer.mjs, src/page-state.mjs, src/context-session.mjs, src/chromium-diagnostics.mjs, tests/auto-plan.test.mjs, tests/page-state.test.mjs, tests/context-session.test.mjs, docs/planning/auto-plan-client-driven-refactor.md
-- [TODO] T002: Перевести AutoPlan на событийный reconcile пауз — Ожидает
-  - Git Commit: [PENDING] refactor: сделать AutoPlan клиентским reconciler
+- [DONE] T002: Перевести AutoPlan на событийный reconcile пауз — Завершено
+  - Git Commit: [DONE] refactor: сделать AutoPlan клиентским reconciler
   - Reference: auto-plan-client-driven-refactor-20261002 / T002 / implementation
   - Файлы: src/auto-plan.mjs, src/auto-plan-state.mjs, src/main.mjs, src/plan-monitor.mjs, tests/auto-plan.test.mjs, tests/plan-monitor.test.mjs, docs/planning/auto-plan-client-driven-refactor.md
 - [TODO] T003: Закрепить переключатель, dedupe и приоритет пользователя — Ожидает

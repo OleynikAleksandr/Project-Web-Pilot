@@ -2,93 +2,300 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { AutoPlan, CONTINUE_TEXT } from '../src/auto-plan.mjs';
 import { readAutoPlanState } from '../src/auto-plan-state.mjs';
+import { ChatGPTComposer } from '../src/chatgpt-composer.mjs';
+import { PlanMonitor } from '../src/plan-monitor.mjs';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 const settle = async () => { for (let i = 0; i < 12; i++) await new Promise(r => setImmediate(r)); };
-function fixture() {
-  let selected = { workspace: '/project', sessionId: 'chat', scopeId: 'scope', chatUrl: 'https://chatgpt.com/c/abcdefgh' };
-  const plan = { confirmed: true, scopeId: 'scope', scopeStatus: 'ACTIVE', planRevision: 7,
-    planView: { tasks: [{ id: 'T001', status: 'done' }, { id: 'T002', status: 'current' }, { id: 'DOCS', status: 'pending' }] } };
-  const timers = new Map(), sends = [], events = []; let timerId = 0, sendResult = { state: 'sent' }, gate = null;
-  const flow = new AutoPlan({ selected: () => selected, inspectPlan: async () => structuredClone(plan),
+
+function fixture({ busy = false, scopeId = 'scope', turnId = 'a1234' } = {}) {
+  let selected = { workspace: '/project', projectId: 'project-id', sessionId: 'chat', scopeId, chatUrl: 'https://chatgpt.com/c/abcdefgh' };
+  const plan = { confirmed: true, scopeId, scopeStatus: scopeId ? 'ACTIVE' : 'NONE', planRevision: 7,
+    planView: { tasks: scopeId ? [{ id: 'T001', status: 'done' }, { id: 'T002', status: 'current' }, { id: 'DOCS', status: 'pending' }] : [] } };
+  const timers = new Map(), sends = [], events = [], saved = [];
+  let timerId = 0, sendResult = { state: 'sent' }, gate = null, inspectGate = null, available = true, reads = 0;
+  const flow = new AutoPlan({ selected: () => selected, available: () => available,
+    inspectPlan: async () => { reads++; if (inspectGate) await inspectGate(); return structuredClone(plan); },
     log: (event, fields) => events.push({ event, ...fields }),
-    send: async (text, current, before) => { if (gate) await gate(); if (!current() || !await before()) return { state: 'cancelled' }; if (sendResult.state !== 'deferred') sends.push(text); return sendResult; },
+    saveCheckpoint: async checkpoint => { saved.push(structuredClone(checkpoint)); },
+    send: async (text, current, before) => {
+      if (gate) await gate();
+      if (!current() || !await before()) return { state: 'cancelled' };
+      if (sendResult.state !== 'deferred') sends.push(text);
+      return sendResult;
+    },
     schedule: (fn, ms) => { timers.set(++timerId, { fn, ms }); return timerId; }, cancel: id => timers.delete(id) });
-  let state = { url: selected.chatUrl, editorAvailable: true, busy: false, assistantRevision: 0,
-    manualStopRevision: 0, manualInputRevision: 0, manualSendRevision: 0, turnId: 'a1234' };
+  const state = { url: selected.chatUrl, editorAvailable: true, writable: true, busy, assistantRevision: 0,
+    manualStopRevision: 0, manualInputRevision: 0, manualSendRevision: 0, userMessageCount: 1, turnId, draftPresent: false };
   const observe = patch => { Object.assign(state, patch); flow.observe({ state: { ...state }, documentId: 'document-1111' }); };
   observe({});
-  const drain = async () => { const callbacks = [...timers.entries()].filter(([, value]) => value.ms < 1000); callbacks.forEach(([id, value]) => { timers.delete(id); value.fn(); }); await settle(); };
+  const drain = async () => {
+    for (let i = 0; i < 4; i++) {
+      await settle();
+      for (const [id, value] of [...timers.entries()].filter(([, value]) => value.ms < 1000)) {
+        timers.delete(id); value.fn();
+      }
+    }
+    await settle();
+  };
   const finish = async () => {
-    observe({ busy: true });
+    observe({ busy: true }); await settle();
     observe({ busy: false, assistantRevision: ++state.assistantRevision, turnId: state.assistantRevision.toString(16) });
     await drain();
   };
-  return { flow, plan, sends, observe, drain, finish, timers, events,
+  return { flow, plan, sends, saved, observe, drain, finish, timers, events, state, selected: () => selected, reads: () => reads,
     setResult: value => { sendResult = value; }, setGate: value => { gate = value; },
-    changeSelection: () => { selected = { ...selected, sessionId: 'other' }; } };
+    setInspectGate: value => { inspectGate = value; },
+    setAvailable: value => { available = value; flow.availabilityChanged(); },
+    setScope: value => { selected = { ...selected, scopeId: value }; },
+    changeSelection: () => { selected = { ...selected, sessionId: 'other', chatUrl: 'https://chatgpt.com/c/otherchat' }; flow.selectionChanged(); } };
 }
-test('enabling sends no startup instruction and adopts a busy reply', async () => {
-  for (const busy of [false, true]) {
-    const f = fixture(); f.observe({ turnId: '', busy });
-    await f.flow.start();
-    assert.equal(f.flow.view().enabled, true);
-    assert.deepEqual(f.sends, []);
-    await f.finish();
-    assert.deepEqual(f.sends, [CONTINUE_TEXT]);
-  }
-});
-test('an existing idle reply needs no special footer to continue', async () => {
-  const f = fixture(); await f.flow.start();
-  assert.deepEqual(f.sends, ['Продолжай']);
+
+test('toggle during busy sends nothing; ordinary idle replies send only exact Continue', async () => {
+  const f = fixture({ busy: true, turnId: '' });
+  await f.flow.start();
+  assert.equal(f.reads(), 0, 'streaming progress does not read Git');
+  assert.deepEqual(f.sends, []);
+  await f.finish();
+  assert.deepEqual(f.sends, [CONTINUE_TEXT]);
   await f.finish();
   assert.deepEqual(f.sends, ['Продолжай', 'Продолжай']);
 });
-test('partial baseline skips old DONE; current task can continue without a new commit; all DONE ends', async () => {
-  const f = fixture(); await f.flow.start();
-  assert.deepEqual(f.flow.run.completedAtStart, ['T001']); assert.equal(f.sends.length, 1);
-  await f.drain(); assert.equal(f.sends.length, 1, 'initial snapshot is not a completed turn');
-  await f.finish(); assert.equal(f.sends[1], CONTINUE_TEXT); assert.equal(f.sends[1], 'Продолжай');
-  f.observe({ busy: false }); await f.drain(); assert.equal(f.sends.length, 2, 'no duplicate from the same idle');
-  f.plan.planView.tasks.forEach(t => { t.status = 'done'; });
-  await f.finish(); assert.equal(f.flow.view().phase, 'complete'); assert.equal(f.sends.length, 2);
+test('existing idle replies and idle without any assistant turn are suitable pauses', async () => {
+  for (const turnId of ['a1234', '']) {
+    const f = fixture({ turnId }); await f.flow.start();
+    assert.deepEqual(f.sends, [CONTINUE_TEXT]);
+    assert.deepEqual(f.flow.run.completedAtStart, ['T001']);
+    f.observe({ busy: false }); await f.flow.planChanged(); await f.drain();
+    assert.equal(f.sends.length, 1);
+    await f.finish();
+    assert.equal(f.sends.length, 2, 'a task can continue without a new DONE or commit');
+    f.plan.planView.tasks.forEach(t => { t.status = 'done'; });
+    await f.flow.planChanged(); await f.drain();
+    assert.equal(f.flow.view().phase, 'complete');
+    assert.equal(f.flow.view().enabled, true);
+    assert.equal(f.sends.length, 2);
+  }
 });
-test('already complete, empty, blocked and prepared plans never send', async () => {
-  for (const kind of ['done', 'empty', 'blocked', 'prepared']) {
+test('NONE becomes ACTIVE through PlanMonitor while an ordinary reply is busy', async () => {
+  const f = fixture({ busy: true, scopeId: null, turnId: '' });
+  const monitor = new PlanMonitor({
+    selected: f.selected, retryDelays: [],
+    inspect: async () => ({ ...structuredClone(f.plan), workspace: '/project', projectId: 'project-id', inspectedSessionId: 'chat' }),
+    onChange: (info, meta) => { f.setScope(info.scopeId); if (meta.semanticChanged) void f.flow.planChanged(); },
+  });
+  await f.flow.start(); await monitor.tick(); await f.drain();
+  assert.deepEqual(f.sends, []);
+  f.plan.scopeId = 'scope'; f.plan.scopeStatus = 'ACTIVE'; f.plan.planRevision++;
+  f.plan.planView.tasks = [{ id: 'T001', status: 'pending' }, { id: 'DOCS', status: 'pending' }];
+  await monitor.tick(); await f.drain();
+  assert.equal(f.reads(), 0);
+  assert.deepEqual(f.sends, [], 'creating the plan never interrupts the current response');
+  await f.finish();
+  assert.deepEqual(f.sends, ['Продолжай']);
+  f.plan.planView.tasks[0].status = 'done'; f.plan.planRevision++;
+  await monitor.tick(); await f.finish();
+  assert.deepEqual(f.sends, ['Продолжай', 'Продолжай']);
+  monitor.close();
+});
+test('an enabled idle client wakes when its first plan appears', async () => {
+  const f = fixture({ scopeId: null, turnId: '' }); await f.flow.start();
+  assert.equal(f.flow.view().reason, 'PLAN_UNAVAILABLE');
+  f.plan.scopeId = 'scope'; f.plan.scopeStatus = 'ACTIVE'; f.plan.planView.tasks = [{ id: 'T001', status: 'pending' }];
+  f.setScope('scope'); await f.flow.planChanged(); await f.drain();
+  assert.deepEqual(f.sends, ['Продолжай']);
+});
+test('completed, empty, inactive, unconfirmed, mismatched and OFF plans never send', async () => {
+  for (const kind of ['done', 'empty', 'blocked', 'transaction', 'mismatch', 'off']) {
     const f = fixture();
     if (kind === 'done') f.plan.planView.tasks.forEach(t => { t.status = 'done'; });
     if (kind === 'empty') f.plan.planView.tasks = [];
     if (kind === 'blocked') f.plan.scopeStatus = 'BLOCKED';
-    if (kind === 'prepared') f.plan.confirmed = false;
-    await f.flow.start(); assert.equal(f.sends.length, 0, kind);
+    if (kind === 'transaction') f.plan.confirmed = false;
+    if (kind === 'mismatch') f.plan.scopeId = 'another';
+    if (kind !== 'off') await f.flow.start(); else await f.flow.planChanged();
+    assert.deepEqual(f.sends, [], kind);
   }
 });
-test('native Stop, typing, navigation, error, unknown send and no progress pause', async () => {
-  for (const reason of ['stop', 'input', 'navigation', 'error', 'unknown', 'no-progress']) {
-    const f = fixture(); if (reason === 'unknown') f.setResult({ state: 'unknown' });
+test('unready pages wait and recover on their next relevant event', async () => {
+  for (const kind of ['editor', 'writable', 'connection', 'url', 'availability']) {
+    const f = fixture();
+    if (kind === 'editor') f.observe({ editorAvailable: false });
+    if (kind === 'writable') f.observe({ writable: false });
+    if (kind === 'connection') f.observe({ connectionError: 'stream-interrupted' });
+    if (kind === 'url') f.observe({ url: 'https://chatgpt.com/c/otherchat' });
+    if (kind === 'availability') f.setAvailable(false);
     await f.flow.start();
-    if (reason === 'stop') f.observe({ manualStopRevision: 1 });
-    if (reason === 'input') f.observe({ manualInputRevision: 1 });
-    if (reason === 'navigation') f.flow.observe({ reset: true });
-    if (reason === 'error') f.observe({ connectionError: 'stream-interrupted' });
-    if (reason === 'no-progress') { await f.finish(); await f.finish(); await f.finish(); }
-    assert.equal(f.flow.view().phase, 'paused', reason);
-    const count = f.sends.length; await f.drain(); assert.equal(f.sends.length, count);
+    assert.deepEqual(f.sends, [], kind);
+    f.observe({ editorAvailable: true, writable: true, connectionError: null, url: f.selected().chatUrl });
+    f.setAvailable(true); await f.drain();
+    assert.deepEqual(f.sends, ['Продолжай'], kind);
   }
 });
-test('completion or selection change during pre-Send cancels dispatch', async () => {
-  for (const reason of ['complete', 'selection', 'stop']) {
+test('a transaction or read error waits until a later plan event without a toggle', async () => {
+  for (const kind of ['transaction', 'read-error']) {
+    const f = fixture();
+    if (kind === 'transaction') f.plan.confirmed = false;
+    else f.setInspectGate(() => { throw Error('private-read-error'); });
+    await f.flow.start();
+    assert.deepEqual(f.sends, []);
+    assert.equal(f.flow.view().enabled, true);
+    f.plan.confirmed = true; f.setInspectGate(null);
+    await f.flow.planChanged(); await f.drain();
+    assert.deepEqual(f.sends, ['Продолжай']);
+    assert.doesNotMatch(JSON.stringify(f.events), /private-read-error/);
+  }
+});
+test('duplicate page and plan events serialize inspections and consume one pause', async () => {
+  const f = fixture();
+  let release, first = true, active = 0, max = 0;
+  f.setInspectGate(async () => {
+    active++; max = Math.max(max, active);
+    if (first) { first = false; await new Promise(resolve => { release = resolve; }); }
+    active--;
+  });
+  const start = f.flow.start(); await settle();
+  f.observe({}); void f.flow.planChanged(); f.observe({}); void f.flow.recover();
+  release(); await start; await f.drain();
+  assert.equal(max, 1);
+  assert.deepEqual(f.sends, ['Продолжай']);
+});
+test('page becomes busy during the plan read: do not send on stale idle', async () => {
+  const f = fixture(); let first = true;
+  f.setInspectGate(async () => { if (first) { first = false; f.observe({ busy: true }); } });
+  await f.flow.start(); await f.drain();
+  assert.deepEqual(f.sends, []);
+  await f.finish(); assert.deepEqual(f.sends, ['Продолжай']);
+});
+test('simultaneous plan change and end of answer wait for settled idle and send once', async () => {
+  const f = fixture({ busy: true }); await f.flow.start();
+  f.observe({ busy: false, turnId: 'b1234', assistantRevision: 1 });
+  f.plan.planRevision++; await f.flow.planChanged();
+  assert.deepEqual(f.sends, [], 'settle timer gates all event sources');
+  await f.drain(); assert.deepEqual(f.sends, ['Продолжай']);
+});
+test('disable, selection, completion and new busy during pre-Send cancel dispatch', async () => {
+  for (const kind of ['off', 'selection', 'done', 'busy']) {
     const f = fixture();
     f.setGate(async () => {
-      if (reason === 'complete') f.plan.planView.tasks.forEach(t => { t.status = 'done'; });
-      if (reason === 'selection') f.changeSelection();
-      if (reason === 'stop') f.observe({ manualStopRevision: 1 });
+      if (kind === 'off') f.flow.disable();
+      if (kind === 'selection') f.changeSelection();
+      if (kind === 'done') f.plan.planView.tasks.forEach(t => { t.status = 'done'; });
+      if (kind === 'busy') f.observe({ busy: true });
     });
-    await f.flow.start(); assert.equal(f.sends.length, 0, reason);
+    await f.flow.start(); await f.drain();
+    assert.deepEqual(f.sends, [], kind);
   }
 });
+test('draft waits without changing it; clearing the draft wakes the same pause', async () => {
+  const f = fixture(); f.observe({ draftPresent: true }); await f.flow.start();
+  assert.equal(f.flow.view().reason, 'DRAFT_PRESENT');
+  assert.equal(f.state.draftPresent, true);
+  assert.deepEqual(f.sends, []);
+  f.observe({ draftPresent: false }); await f.drain();
+  assert.deepEqual(f.sends, ['Продолжай']);
+});
+test('manual Send wins while continuation is being inspected and waits for a new reply', async () => {
+  const f = fixture();
+  f.setGate(async () => { f.observe({ manualSendRevision: 1, busy: true }); });
+  await f.flow.start(); await f.drain();
+  assert.deepEqual(f.sends, []);
+  f.setGate(null); await f.finish();
+  assert.deepEqual(f.sends, ['Продолжай']);
+});
+test('own composer insertion can change draft state while its guarded Send is in flight', async () => {
+  const f = fixture();
+  f.setGate(async () => { f.observe({ draftPresent: true }); });
+  await f.flow.start();
+  assert.deepEqual(f.sends, ['Продолжай']);
+});
+test('unknown Send never repeats the same pause on events, reload or toggle', async () => {
+  const f = fixture(); f.setResult({ state: 'unknown' });
+  await f.flow.start(); assert.equal(f.flow.view().reason, 'SEND_UNKNOWN');
+  const checkpoint = f.flow.checkpoint;
+  f.observe({}); await f.flow.planChanged(); await f.drain();
+  f.flow.observe({ reset: true }); f.observe({}); await f.drain();
+  f.flow.disable(); await f.flow.start();
+  assert.deepEqual(f.sends, ['Продолжай']);
+  assert.deepEqual(f.flow.checkpoint, checkpoint);
+});
+test('known deferred Send preserves the previous checkpoint and never claims delivery', async () => {
+  const f = fixture(); f.setResult({ state: 'deferred', reason: 'DRAFT_PRESENT' });
+  await f.flow.start();
+  assert.deepEqual(f.sends, []);
+  assert.equal(f.flow.checkpoint, null);
+  assert.equal(f.flow.view().reason, 'DRAFT_PRESENT');
+  assert.equal(f.flow.view().continuations, 0);
+});
+test('counter records confirmed automatic Continue and retains it across waits', async () => {
+  const f = fixture(); await f.flow.start(); assert.equal(f.flow.view().continuations, 1);
+  f.observe({ connectionError: 'stream-interrupted' }); await f.drain();
+  assert.equal(f.flow.view().continuations, 1);
+  f.observe({ connectionError: null }); await f.finish();
+  assert.equal(f.flow.view().continuations, 2);
+  f.setResult({ state: 'unknown' }); await f.finish();
+  assert.equal(f.flow.view().continuations, 2);
+  f.changeSelection(); await f.drain();
+  assert.equal(f.flow.view().continuations, 0);
+});
+test('busy watchdog warns without stopping automation or reading Git', async () => {
+  const f = fixture({ busy: true }); await f.flow.start();
+  const first = f.flow.watchdog;
+  f.observe({ visibility: 'hidden' }); await f.drain();
+  assert.equal(f.flow.watchdog, first);
+  f.observe({ assistantRevision: 2 }); await f.drain();
+  assert.notEqual(f.flow.watchdog, first);
+  const id = f.flow.watchdog, timeout = f.timers.get(id); f.timers.delete(id); timeout.fn();
+  assert.equal(f.flow.view().warning, 'STALL_WARNING');
+  assert.equal(f.flow.view().enabled, true);
+  assert.equal(f.reads(), 0);
+  assert.deepEqual(f.sends, []);
+  f.observe({ assistantRevision: 3 }); await f.drain();
+  assert.equal(f.flow.view().warning, null);
+  await f.finish(); assert.deepEqual(f.sends, ['Продолжай']);
+});
+test('timers never poll an idle plan after a confirmed Send', async () => {
+  const f = fixture(); await f.flow.start(); const reads = f.reads();
+  for (const [id, value] of [...f.timers]) { f.timers.delete(id); value.fn(); }
+  await settle();
+  assert.equal(f.reads(), reads);
+  assert.deepEqual(f.sends, ['Продолжай']);
+});
+test('persistent enabled choice resumes busy and consumed checkpoints without another Send', async () => {
+  for (const kind of ['busy', 'draft', 'done', 'off', 'sent', 'sending']) {
+    const f = fixture({ busy: kind === 'busy' });
+    if (kind === 'draft') f.observe({ draftPresent: true });
+    if (kind === 'done') f.plan.planView.tasks.forEach(t => { t.status = 'done'; });
+    const checkpoint = ['sent', 'sending'].includes(kind) ? { key: JSON.stringify(['/project', 'chat', 'scope', f.selected().chatUrl]), turnId: 'a1234', status: kind } : null;
+    f.flow.restore(kind !== 'off', checkpoint); await f.flow.recover(); await f.drain();
+    assert.deepEqual(f.sends, [], kind);
+    if (kind === 'busy') { await f.finish(); assert.deepEqual(f.sends, ['Продолжай']); }
+    if (kind === 'sending') assert.equal(f.flow.view().reason, 'SEND_UNKNOWN');
+  }
+});
+test('checkpoint is saved before Send and failed persistence never sends', async () => {
+  const order = [], f = fixture();
+  f.flow.saveCheckpoint = async checkpoint => { order.push(checkpoint.status); };
+  const send = f.flow.send; f.flow.send = async (...args) => { order.push('Send'); return send(...args); };
+  await f.flow.start();
+  assert.deepEqual(order, ['sending', 'Send', 'sent']);
+  const failed = fixture(); failed.flow.saveCheckpoint = async () => { throw Error('private-disk-error'); };
+  await failed.flow.start(); assert.deepEqual(failed.sends, []);
+  assert.equal(failed.flow.view().reason, 'SEND_ERROR');
+  assert.equal(failed.flow.view().enabled, true);
+  assert.doesNotMatch(JSON.stringify(failed.events), /private-disk-error/);
+});
+test('UI publication only wakes automation when availability changes', async () => {
+  const f = fixture(); f.flow.onChange = () => f.flow.availabilityChanged();
+  await f.flow.start(); const reads = f.reads();
+  for (let i = 0; i < 10; i++) f.flow.availabilityChanged();
+  await f.drain();
+  assert.equal(f.reads(), reads);
+  assert.deepEqual(f.sends, ['Продолжай']);
+});
+
 test('checkpoint reader distinguishes working task, prepared DONE and committed DONE', async t => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'auto-plan-proof-'));
   t.after(() => fs.rm(root, { recursive: true, force: true }));
@@ -115,259 +322,32 @@ test('checkpoint reader distinguishes working task, prepared DONE and committed 
   await fs.unlink(path.join(root,'.git/workflow-kit/transaction.json'));
   assert.equal((await readAutoPlanState({ workspace: root })).confirmed, true);
 });
-
-test('busy watchdog warns without stopping the run and later progress continues automatically', async () => {
-  const f = fixture(); await f.flow.start();
-  f.observe({ busy: true });
-  const run = f.flow.run, epoch = f.flow.epoch, first = f.flow.watchdog;
-  f.observe({ busy: true, visibility: 'hidden' });
-  assert.equal(f.flow.watchdog, first, 'cosmetic events do not reset the deadline');
-  f.observe({ busy: true, assistantRevision: 2 });
-  assert.notEqual(f.flow.watchdog, first);
-  const expire = () => {
-    const id = f.flow.watchdog, timeout = f.timers.get(id);
-    f.timers.delete(id); timeout.fn();
+test('real Composer keeps the AutoPlan guard valid for its own insertion and inFlight', async () => {
+  const f = fixture();
+  const composer = new ChatGPTComposer({ getURL: () => f.selected().chatUrl }, { wait: async () => {} });
+  f.flow.available = () => !composer.inFlight;
+  let clicks = 0;
+  composer.inspect = async ({ action = 'inspect' } = {}) => {
+    const observation = { userMessageCount: 1, editorAvailable: true, writable: true, login: false,
+      busy: false, sendEnabled: true, draftLength: f.state.draftPresent ? 1 : 0 };
+    if (action === 'fill') { f.observe({ draftPresent: true }); return { ...observation, action: 'filled' }; }
+    if (action === 'send') {
+      clicks++; f.observe({ draftPresent: false, busy: true });
+      return { ...observation, action: 'clicked' };
+    }
+    return observation;
   };
-  expire();
-  assert.equal(f.flow.view().phase, 'running');
-  assert.equal(f.flow.view().enabled, true);
-  assert.equal(f.flow.view().warning, 'STALL_WARNING');
-  assert.equal(f.flow.run, run);
-  assert.equal(f.flow.epoch, epoch);
-  assert.equal(f.flow.watchdog, null, 'one warning waits for actual progress');
-  assert.equal(f.sends.length, 1, 'the watchdog never repeats Send');
-  assert.equal(f.events.find(e => e.event === 'progress-timeout').reason, 'STALL_WARNING');
-  f.observe({ visibility: 'visible' });
-  assert.equal(f.flow.view().warning, 'STALL_WARNING', 'cosmetic events do not clear a warning');
-  f.observe({ assistantRevision: 3 });
-  assert.equal(f.flow.view().warning, null);
-  assert.doesNotMatch(f.flow.view().message, /Три минуты/);
-  assert.equal(f.flow.run, run);
-  assert.notEqual(f.flow.watchdog, null);
-  expire();
-  assert.equal(f.flow.view().warning, 'STALL_WARNING');
-  f.plan.planRevision++;
-  await f.finish();
-  assert.equal(f.sends.length, 2);
-  assert.equal(f.sends.at(-1), 'Продолжай');
-  assert.equal(f.flow.view().warning, null);
-  assert.equal(f.flow.run, run, 'completion after a warning uses the same run');
-  f.observe({ busy: false }); await f.drain();
-  assert.equal(f.sends.length, 2, 'the same idle event cannot send twice');
-});
-
-test('idle watchdog keeps the safe pause when no answer appears', async () => {
-  const f = fixture(); await f.flow.start();
-  const id = f.flow.watchdog, timeout = f.timers.get(id);
-  f.timers.delete(id); timeout.fn();
-  assert.equal(f.flow.view().phase, 'paused');
-  assert.equal(f.flow.view().warning, null);
-  assert.equal(f.events.find(e => e.event === 'progress-timeout').reason, 'RESPONSE_NOT_OBSERVED');
-  assert.equal(f.sends.length, 1);
-});
-
-test('a stall warning preserves Stop, connection error and plan completion safeguards', async () => {
-  for (const reason of ['stop', 'connection', 'done']) {
-    const f = fixture(); await f.flow.start(); f.observe({ busy: true });
-    const id = f.flow.watchdog, timeout = f.timers.get(id);
-    f.timers.delete(id); timeout.fn();
-    assert.equal(f.flow.view().warning, 'STALL_WARNING');
-    if (reason === 'stop') f.observe({ manualStopRevision: 1 });
-    if (reason === 'connection') f.observe({ connectionError: 'stream-interrupted' });
-    if (reason === 'done') {
-      f.plan.planView.tasks.forEach(t => { t.status = 'done'; });
-      await f.finish();
-    }
-    assert.equal(f.flow.view().phase, reason === 'done' ? 'complete' : 'paused', reason);
-    assert.equal(f.flow.view().warning, null, reason);
-    assert.equal(f.sends.length, 1, reason);
-  }
-});
-
-test('new user message resumes Stop and typing without an extra Send', async () => {
-  for (const reason of ['stop', 'typing']) {
-    const f = fixture(); await f.flow.start();
-    if (reason === 'stop') f.observe({ manualStopRevision: 1 });
-    if (reason === 'typing') f.observe({ manualInputRevision: 1 });
-    assert.equal(f.flow.view().enabled, true);
-    const before = f.sends.length;
-    f.observe({ userMessageCount: 10 }); await f.drain();
-    assert.equal(f.flow.view().phase, 'paused', 'DOM count alone does not impersonate user Send');
-    f.observe({ manualSendRevision: 1, busy: true }); await f.drain();
-    assert.equal(f.flow.view().phase, 'running', reason);
-    assert.equal(f.sends.length, before, 'user has already sent their message');
-    await f.finish();
-    assert.equal(f.sends.length, before + 1);
-    assert.equal(f.sends.at(-1), 'Продолжай');
-  }
-});
-test('draft defers startup and continuation without disabling mode or resending after user Send', async () => {
-  for (const stage of ['startup', 'continuation']) {
-    const f = fixture();
-    if (stage === 'continuation') await f.flow.start();
-    const before = f.sends.length;
-    f.setResult({ state: 'deferred', reason: 'DRAFT_PRESENT' });
-    if (stage === 'startup') await f.flow.start(); else await f.finish();
-    assert.equal(f.flow.view().phase, 'paused', stage);
-    assert.equal(f.flow.view().enabled, true, stage);
-    assert.ok(f.flow.suspended, stage);
-    assert.ok(f.events.some(e => e.event === 'wait' && e.reason === 'DRAFT_PRESENT'));
-    assert.equal(f.sends.length, before);
-    f.observe({ userMessageCount: 10 }); await f.drain();
-    assert.equal(f.flow.view().phase, 'paused', 'only actual manual Send resumes the run');
-    f.setResult({ state: 'sent' });
-    f.observe({ manualSendRevision: 1, busy: true }); await f.drain();
-    assert.equal(f.flow.view().phase, 'running', stage);
-    assert.equal(f.sends.length, before, 'the user message is not followed by an automatic Send');
-    await f.finish();
-    assert.equal(f.sends.length, before + 1);
-    assert.equal(f.sends.at(-1), 'Продолжай');
-  }
-});
-
-test('manual Send observed while draft inspection is pending is not lost', async () => {
-  const f = fixture();
-  f.setResult({ state: 'deferred', reason: 'DRAFT_PRESENT' });
-  f.setGate(async () => { f.observe({ manualSendRevision: 1, busy: true }); });
+  f.flow.send = (text, canContinue, onBeforeSend) => composer.sendUserMessage({
+    text, canContinue, onBeforeSend, waitForAcknowledgement: false });
   await f.flow.start(); await f.drain();
-  assert.equal(f.flow.view().phase, 'running');
-  assert.equal(f.sends.length, 0);
-  f.setGate(null); f.setResult({ state: 'sent' });
-  await f.finish();
-  assert.equal(f.sends.length, 1);
-  assert.equal(f.sends[0], 'Продолжай');
+  assert.equal(clicks, 1);
+  assert.equal(f.flow.view().continuations, 1);
+  assert.equal(f.flow.checkpoint.status, 'sent');
 });
-
-test('unknown Send is not treated as a recoverable draft and deferred resume rechecks the plan', async () => {
-  const unknown = fixture();
-  unknown.setResult({ state: 'unknown', reason: 'DRAFT_PRESENT' });
-  await unknown.flow.start();
-  assert.equal(unknown.flow.view().enabled, true);
-  assert.equal(unknown.flow.suspended, null);
-  unknown.observe({ manualSendRevision: 1, busy: true }); await unknown.drain();
-  assert.equal(unknown.sends.length, 1, 'an unknown Send is never repeated');
-  for (const kind of ['transaction', 'completed']) {
-    const f = fixture(); f.setResult({ state: 'deferred', reason: 'DRAFT_PRESENT' });
-    await f.flow.start();
-    if (kind === 'transaction') f.plan.confirmed = false;
-    else f.plan.planView.tasks.forEach(t => { t.status = 'done'; });
-    f.observe({ manualSendRevision: 1, busy: true }); await f.drain();
-    assert.equal(f.flow.view().phase, kind === 'completed' ? 'complete' : 'paused');
-    assert.equal(f.sends.length, 0);
-  }
-});
-test('continuation counter records only confirmed automatic Continue and survives waits', async () => {
-  const f = fixture(); await f.flow.start();
-  assert.equal(f.flow.view().continuations, 1, 'only the exact Continue is sent at an existing pause');
-  await f.finish();
-  assert.equal(f.flow.view().continuations, 2);
-  f.observe({ busy: false }); await f.drain();
-  assert.equal(f.flow.view().continuations, 2);
-  f.observe({ manualStopRevision: 1 });
-  assert.equal(f.flow.view().continuations, 2, 'pause retains the last sent fact');
-  assert.equal(f.flow.view().reason, 'MANUAL_STOP');
-  f.observe({ manualSendRevision: 1, busy: true }); await f.drain();
-  assert.equal(f.flow.view().continuations, 2, 'user Send is not an automatic continuation');
-  f.plan.planRevision++; await f.finish();
-  assert.equal(f.flow.view().continuations, 3);
-  f.setResult({ state: 'unknown' }); f.plan.planRevision++; await f.finish();
-  assert.equal(f.flow.view().continuations, 3, 'unknown Send cannot claim success');
-  assert.equal(f.flow.view().reason, 'SEND_UNKNOWN');
-  f.changeSelection(); f.flow.selectionChanged();
-  assert.equal(f.flow.view().continuations, 0, 'another conversation never shows this counter');
-});
-
-test('pause and warning diagnostics identify causes without conversation contents', async () => {
-  for (const reason of ['DRAFT_PRESENT','MANUAL_STOP','MANUAL_INPUT','CONNECTION_ERROR',
-    'PLAN_CHANGED_OR_TRANSACTION','SEND_UNKNOWN','STALL_WARNING','RESPONSE_NOT_OBSERVED','MANUAL_OFF']) {
-    const f = fixture();
-    if (reason === 'DRAFT_PRESENT') f.setResult({ state: 'deferred', reason });
-    if (reason === 'SEND_UNKNOWN') f.setResult({ state: 'unknown' });
-    await f.flow.start();
-    if (reason === 'MANUAL_STOP') f.observe({ manualStopRevision: 1 });
-    if (reason === 'MANUAL_INPUT') f.observe({ manualInputRevision: 1 });
-    if (reason === 'CONNECTION_ERROR') f.observe({ connectionError: 'private-secret-error' });
-    if (reason === 'PLAN_CHANGED_OR_TRANSACTION') { f.plan.confirmed = false; await f.finish(); }
-    if (reason === 'RESPONSE_NOT_OBSERVED') {
-      const id = f.flow.watchdog, timeout = f.timers.get(id);
-      f.timers.delete(id); timeout.fn();
-    }
-    if (reason === 'MANUAL_OFF') f.flow.pause('private-user-text');
-    if (reason === 'STALL_WARNING') {
-      f.observe({ busy: true });
-      const id = f.flow.watchdog, timeout = f.timers.get(id);
-      f.timers.delete(id); timeout.fn();
-    }
-    assert.equal(f.flow.view().reason, reason);
-    assert.ok(f.events.some(e => e.event === 'state' && e.reason === reason), reason);
-    for (const event of f.events.filter(e => e.event === 'state' && e.phase === 'paused'))
-      assert.match(event.reason, /^[A-Z_]+$/);
-    assert.doesNotMatch(JSON.stringify(f.events), /private-secret-error|private-user-text|Готов продолжать|chatgpt\.com|\/project/);
-  }
-});
-test('only explicit off clears the global choice; other interruptions never repeat Send', async () => {
-  for (const reason of ['off','complete','selection','reload']) {
-    const f = fixture(); await f.flow.start(); f.observe({ manualStopRevision: 1 });
-    if (reason === 'off') f.flow.disable();
-    if (reason === 'complete') f.plan.planView.tasks.forEach(t => { t.status = 'done'; });
-    if (reason === 'selection') { f.changeSelection(); f.flow.selectionChanged(); }
-    if (reason === 'reload') f.flow.observe({ reset: true });
-    f.observe({ manualSendRevision: 1, busy: true }); await f.drain();
-    assert.equal(f.flow.view().enabled, reason !== 'off', reason);
-    assert.equal(f.sends.length, 1);
-  }
-});
-
-test('restored enabled choice adopts busy, waits for drafts and a first reply, and completes without Send', async () => {
-  for (const kind of ['busy', 'no-answer', 'draft', 'done', 'off']) {
-    const f = fixture();
-    f.observe({ busy: kind === 'busy',
-      turnId: kind === 'no-answer' ? '' : 'abc123', draftPresent: kind === 'draft' });
-    if (kind === 'done') f.plan.planView.tasks.forEach(t => { t.status = 'done'; });
-    f.flow.restore(kind !== 'off');
-    await f.flow.recover(); await f.drain();
-    assert.equal(f.flow.view().enabled, kind !== 'off', kind);
-    assert.equal(f.sends.length, 0, kind);
-    if (kind === 'draft') assert.equal(f.flow.view().reason, 'DRAFT_PRESENT');
-    if (kind === 'done') assert.equal(f.flow.view().phase, 'complete');
-    if (kind === 'busy') {
-      await f.finish();
-      assert.deepEqual(f.sends, ['Продолжай']);
-    }
-  }
-});
-test('restored checkpoint sends once and a consumed or uncertain Send never retries on reload', async () => {
-  for (const kind of ['new', 'consumed', 'unknown']) {
-    const f = fixture();
-    f.observe({ turnId: 'abc123' });
-    const owner = JSON.stringify(['/project', 'chat', 'scope', 'https://chatgpt.com/c/abcdefgh']);
-    f.flow.restore(true, kind === 'new' ? null : { key: owner, turnId: 'abc123',
-      status: kind === 'unknown' ? 'sending' : 'sent' });
-    await f.flow.recover(); await f.drain();
-    assert.equal(f.sends.length, kind === 'new' ? 1 : 0, kind);
-    const checkpoint = f.flow.checkpoint;
-    f.flow.observe({ reset: true });
-    f.flow.observe({ state: { url: 'https://chatgpt.com/c/abcdefgh', editorAvailable: true,
-      busy: false, assistantRevision: 1, turnId: 'abc123' }, documentId: 'document-2222' });
-    await f.flow.recover(); await f.drain();
-    assert.equal(f.sends.length, kind === 'new' ? 1 : 0, 'reload does not repeat consumed Send');
-    assert.deepEqual(f.flow.checkpoint, checkpoint);
-    assert.equal(f.flow.view().enabled, true);
-    if (kind === 'unknown') assert.equal(f.flow.view().reason, 'SEND_UNKNOWN');
-  }
-});
-test('checkpoint is durably saved before Send; failed saving never dispatches', async () => {
-  const order = [];
-  const f = fixture();
-  f.flow.saveCheckpoint = async checkpoint => { order.push(checkpoint.status); };
-  const send = f.flow.send;
-  f.flow.send = async (...args) => { order.push('Send'); return send(...args); };
-  await f.flow.start();
-  assert.deepEqual(order, ['sending', 'Send', 'sent']);
-  const failed = fixture();
-  failed.flow.saveCheckpoint = async () => { throw new Error('disk unavailable'); };
-  await failed.flow.start();
-  assert.equal(failed.sends.length, 0);
-  assert.equal(failed.flow.view().enabled, true);
-  assert.equal(failed.flow.view().reason, 'SEND_ERROR');
+test('a different idle turn arriving during inspection cannot reuse the previous pause', async () => {
+  const f = fixture(); let first = true;
+  f.setInspectGate(async () => { if (first) { first = false; f.observe({ turnId: 'b1234', assistantRevision: 1 }); } });
+  await f.flow.start(); await f.drain();
+  assert.deepEqual(f.sends, ['Продолжай']);
+  assert.equal(f.flow.checkpoint.turnId, 'b1234');
 });
