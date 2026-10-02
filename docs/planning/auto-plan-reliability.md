@@ -108,6 +108,8 @@ T006 отделяет сохранённый `autoPlanEnabled` от текуще
 
 T007 повышает версию после 0.6.75 и выполняет существующий `npm run build` для macOS arm64 и Windows x64. Необходимы постоянный `Project Web Pilot.app` с сохранением Finder-identity, оба ZIP, `SHA256SUMS.txt`, `INSTALL.txt` и `release-manifest.json` в `~/Downloads/WebPilot-<version>/`; сверка источников, версий, архивов и установленного observer fixture. Финальные документы описывают фактическую поставку. Native Windows и живая пользовательская приёмка остаются отдельными от fixture-проверки.
 
+Фактическая парная сборка T007 — **0.6.76**, macOS arm64 и Windows x64. Архивы и manifest находятся в `~/Downloads/WebPilot-0.6.76/`; постоянный root app и `/Applications/Project Web Pilot.app` обновлены с сохранением Finder-identity. Все 106 исходных/resource файлов совпали с упаковками. Размеры и SHA-256 — в [RELEASE](../RELEASE.md). Проверка `auto-plan-release` сверяет эту готовую поставку и исполняет установленный observer fixture без повторной сборки.
+
 ## Проверка
 
 Обязательны существующие Node tests и Electron smoke.

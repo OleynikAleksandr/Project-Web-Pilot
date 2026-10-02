@@ -2,6 +2,23 @@
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
+## Выпуск 0.6.76 — 02.10.2026
+
+Исправления AutoPlan: постоянный выбор автовыполнения, восстановление после перезапуска, ожидание busy без ложной остановки, сохранение черновика, понятный счётчик «Продолжай» и причины пауз. Electron **44.5.1**, Node **24.21.0**, Workflow Kit **1.5.1**.
+
+Парный `npm run build` выполнил сборку macOS arm64 и Windows x64. Поставка — `~/Downloads/WebPilot-0.6.76/`, включая оба ZIP, `SHA256SUMS.txt`, `INSTALL.txt` и `release-manifest.json`. Все 106 source/resource файлов совпали с упаковками. Manifest sourceCommit — `2a716271cba9c9af1ac62cd84df142beb144246c`; изменение версии фиксируется T007.
+
+| Архив | Размер, байт | SHA-256 |
+| --- | ---: | --- |
+| Project-Web-Pilot-0.6.76-macOS-arm64.zip | 185522652 | `086936d44b3b392e126a06df244ef9c762a7db1c4c3a6038149b1c405412cc81` |
+| Project-Web-Pilot-0.6.76-Windows-x64.zip | 355424499 | `1b69c8f118d37d68b16f021f53ee0e4fdc46bbb65cece815a47a43ebd396c363` |
+
+Корневой app и `/Applications/Project Web Pilot.app` обновлены до 0.6.76 штатной установкой с сохранением device/inode: `16777234/406600483` и `16777234/406571340`. Оба соответствуют staging; ASAR SHA-256 — `9f32216ae38994f6b166d918a45324bcda1495babb79b80a015f5f58e936a46f`. Старые Contents сохранены в release-backups. Работающий пользовательский процесс не перезапускался; для запуска новой версии нужен полный выход и повторное открытие приложения.
+
+T007 требует node24, unit, smoke и auto-plan-release. Последняя проверка выполняет `scripts/check-installed-release.mjs` на уже собранной поставке: источники, версии, ZIP, identity, комплектные инструменты и установленный observer/Composer/AutoPlan. Сборка не повторяется внутри коммита. Исходные отчёты: `.harness/runtime/release-0.6.76-preflight.json`, `auto-plan-t007-installation.json` и release manifest. Итоги проверок фиксирует Workflow Kit; финальная DOCS следует после T007.
+
+Native Windows, чистый первый запуск и живая приёмка ChatGPT не выполнялись. GitHub Release этой версии не публиковался.
+
 ## Выпуск 0.6.75 — 02.10.2026
 
 Выпуск **0.6.75** для macOS arm64 и Windows x64: Electron **44.5.1**, встроенный и комплектный Node **24.21.0**, Workflow Kit **1.5.1**. Node разработки, проверок и внешних workers — **^24.21.0** (не ниже 24.21.0 и ниже 25). Очистка мёртвого кода и дубликатов сохраняет поведение 0.6.74 и событийный runtime. Экспорт `pageOperation` восстановлен для Web Pilot Sidebar; формат `pageScript` сохранён.
