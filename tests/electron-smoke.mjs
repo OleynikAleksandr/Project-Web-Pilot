@@ -1262,8 +1262,8 @@ export async function run({ app, window, browser, sidebar, store, controller, se
     await browser.executeJavaScript("(()=>{const b=document.createElement('button');b.id='auto-fixture-stop';b.dataset.testid='stop-button';b.textContent='Stop';b.style='position:fixed;left:20px;top:20px;z-index:99999';b.onclick=()=>b.remove();document.body.append(b)})()");
     await waitFor(() => pageState.current?.state.busy, 'auto-plan busy transition', snapshot);
   };
-  const endAnswer = async () => {
-    await browser.executeJavaScript("(()=>{const a=document.createElement('article');a.dataset.messageAuthorRole='assistant';a.textContent='Готов продолжать.';document.body.append(a);document.getElementById('auto-fixture-stop')?.remove()})()");
+  const endAnswer = async (text = 'Готов продолжать.') => {
+    await browser.executeJavaScript("(()=>{const a=document.createElement('article');a.dataset.messageAuthorRole='assistant';a.textContent=" + JSON.stringify(text) + ";document.body.append(a);document.getElementById('auto-fixture-stop')?.remove()})()");
   };
   for (const target of [currentChat, currentWork]) {
     await sidebar.executeJavaScript(`window.webPilot.selectSession(${JSON.stringify(workspace)}, ${JSON.stringify(target.sessionId)})`);
@@ -1335,6 +1335,29 @@ export async function run({ app, window, browser, sidebar, store, controller, se
 
     }
   }
+  // A genuine question suspends the cycle; only a trusted user Send resumes it.
+  await beginAnswer();
+  const beforeQuestion = await browser.executeJavaScript('window.fixtureMessages.length');
+  await endAnswer('Какой вариант выбрать?\n\nНужен ваш ответ.');
+  await waitFor(() => autoPlan.view().reason === 'AGENT_WAIT', 'agent question waits for user', snapshot);
+  assert.equal(autoPlan.view().enabled, true);
+  assert.ok(autoPlan.suspended);
+  assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), beforeQuestion);
+  await waitFor(() => sidebar.executeJavaScript("document.getElementById('auto-plan-message').dataset.reason === 'AGENT_WAIT'"),
+    'question cause is visible in sidebar', snapshot);
+  await browser.executeJavaScript("(()=>{const e=document.getElementById('prompt-textarea');e.textContent='Выбираю первый вариант';e.dispatchEvent(new Event('input',{bubbles:true}))})()");
+  window.focus(); browser.focus();
+  const replyPoint = await browser.executeJavaScript("(()=>{const r=document.querySelector('[data-testid=send-button]').getBoundingClientRect();return {x:Math.round(r.x+r.width/2),y:Math.round(r.y+r.height/2)}})()");
+  browser.sendInputEvent({ type: 'mouseDown', ...replyPoint, button: 'left', clickCount: 1 });
+  browser.sendInputEvent({ type: 'mouseUp', ...replyPoint, button: 'left', clickCount: 1 });
+  await waitFor(() => autoPlan.view().phase === 'running', 'trusted answer resumes suspended question', snapshot);
+  assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), beforeQuestion + 1);
+  assert.equal(await browser.executeJavaScript('window.fixtureMessages.at(-1).text'), 'Выбираю первый вариант');
+  await beginAnswer(); await endAnswer();
+  await waitFor(() => browser.executeJavaScript('window.fixtureMessages.length === ' + (beforeQuestion + 2)),
+    'next checkpoint continues after user decision', snapshot);
+  await waitFor(() => autoPlan.view().phase === 'running', 'question continuation dispatched', snapshot);
+  assert.equal(await browser.executeJavaScript('window.fixtureMessages.at(-1).text'), 'Продолжай');
   // Exercise a long busy answer through the real sidebar without a three-minute wait.
   await beginAnswer();
   const stalledRun = autoPlan.run, stalledEpoch = autoPlan.epoch;
@@ -1362,6 +1385,27 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(await browser.executeJavaScript('window.fixtureMessages.at(-1).text'), 'Продолжай');
   await waitFor(() => autoPlan.view().phase === 'running', 'same run continues after watchdog', snapshot);
   assert.equal(autoPlan.run, stalledRun);
+  // Missing checkpoints and real connection alerts must never produce a blind retry.
+  await beginAnswer();
+  const beforeMissing = await browser.executeJavaScript('window.fixtureMessages.length');
+  await endAnswer('Промежуточный текст без итогового сигнала.');
+  await waitFor(() => autoPlan.view().reason === 'NO_CHECKPOINT', 'missing footer stops dispatch', snapshot);
+  assert.equal(autoPlan.run, null);
+  assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), beforeMissing);
+  await sidebar.executeJavaScript("document.getElementById('auto-plan-toggle').click()");
+  await waitFor(() => autoPlan.view().phase === 'running', 'explicit restart after missing checkpoint', snapshot);
+  await beginAnswer();
+  const beforeError = await browser.executeJavaScript('window.fixtureMessages.length');
+  await browser.executeJavaScript("(()=>{const e=document.createElement('div');e.id='auto-fixture-error';e.setAttribute('role','alert');e.textContent='Resume stream unavailable';document.body.append(e)})()");
+  await waitFor(() => autoPlan.view().reason === 'CONNECTION_ERROR', 'real alert stops active cycle', snapshot);
+  await endAnswer();
+  assert.equal(autoPlan.run, null);
+  assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), beforeError);
+  await browser.executeJavaScript("document.getElementById('auto-fixture-error').remove()");
+  await waitFor(() => !pageState.current?.state.connectionError && !pageState.current?.state.busy,
+    'fixture connection recovered before explicit restart', snapshot);
+  await sidebar.executeJavaScript("document.getElementById('auto-plan-toggle').click()");
+  await waitFor(() => autoPlan.view().phase === 'running', 'explicit restart after connection recovery', snapshot);
   await beginAnswer();
   withSessionPlan(workspace, { sessionId: legacyChats[0].sessionId }, () => startTask(workspace, 'DOCS'));
   assert.equal(withSessionPlan(workspace, { sessionId: legacyChats[1].sessionId }, () => commitTask(workspace, 'DOCS')).ok, true);

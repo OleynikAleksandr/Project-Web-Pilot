@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 886,
+  "plan_revision": 888,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "auto-plan-reliability-20261002",
@@ -243,8 +243,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "auto-plan-reliability-20261002",
         "task_id": "T005",
@@ -275,7 +275,11 @@
         "Smoke подтверждает сохранение draft и возобновление после ручной отправки.",
         "Smoke подтверждает корректное ожидание при настоящем «Нужен ваш ответ.» и fail-closed поведение остальных терминальных случаев."
       ],
-      "expected_commit_message": "test: закрепить надёжность AutoPlan"
+      "expected_commit_message": "test: закрепить надёжность AutoPlan",
+      "actual_files": [
+        "docs/planning/auto-plan-reliability.md",
+        "tests/electron-smoke.mjs"
+      ]
     },
     {
       "id": "T006",
@@ -415,7 +419,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: auto-plan-reliability-20261002
 Current Task: нет
-Revision: 886
+Revision: 888
 
 ## Цель
 
@@ -447,8 +451,8 @@ Revision: 886
   - Git Commit: [DONE] feat: показать автоматические продолжения AutoPlan
   - Reference: auto-plan-reliability-20261002 / T004 / implementation
   - Файлы: src/auto-plan.mjs, src/ui/sidebar.mjs, tests/auto-plan.test.mjs, tests/electron-smoke.mjs, docs/planning/auto-plan-reliability.md
-- [TODO] T005: Закрепить реальные сценарии AutoPlan интеграционным smoke — Ожидает
-  - Git Commit: [PENDING] test: закрепить надёжность AutoPlan
+- [DONE] T005: Закрепить реальные сценарии AutoPlan интеграционным smoke — Завершено
+  - Git Commit: [DONE] test: закрепить надёжность AutoPlan
   - Reference: auto-plan-reliability-20261002 / T005 / implementation
   - Файлы: tests/electron-smoke.mjs, tests/installed-observer-fixture.cjs, tests/page-state.test.mjs, docs/planning/auto-plan-reliability.md
 - [TODO] T006: Сохранять выбор автовыполнения и восстанавливать работу после перезапуска — Ожидает
