@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 904,
+  "plan_revision": 906,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "auto-plan-reliability-20261002",
@@ -535,13 +535,17 @@
         "Актуальный GitHub Release и предусмотренные проектом артефакты опубликованы или подтверждены уже актуальными; тег и серверные файлы проверены, ссылка и результат записаны."
       ],
       "expected_commit_message": "docs: подтвердить публикацию WorkflowKit",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "auto-plan-reliability-20261002",
         "task_id": "T011",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "docs/SOURCE_WORKSPACES.md",
+        "docs/VERIFICATION.md"
+      ]
     },
     {
       "id": "T012",
@@ -638,7 +642,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: auto-plan-reliability-20261002
 Current Task: нет
-Revision: 904
+Revision: 906
 
 ## Цель
 
@@ -694,8 +698,8 @@ Revision: 904
   - Git Commit: [DONE] docs: подтвердить публикацию Web Pilot 0.6.76
   - Reference: auto-plan-reliability-20261002 / T010 / implementation
   - Файлы: docs/RELEASE.md, docs/VERIFICATION.md
-- [TODO] T011: Опубликовать WorkflowKit и его актуальный релиз на GitHub — Ожидает
-  - Git Commit: [PENDING] docs: подтвердить публикацию WorkflowKit
+- [DONE] T011: Опубликовать WorkflowKit и его актуальный релиз на GitHub — Завершено
+  - Git Commit: [DONE] docs: подтвердить публикацию WorkflowKit
   - Reference: auto-plan-reliability-20261002 / T011 / implementation
   - Файлы: docs/SOURCE_WORKSPACES.md, docs/VERIFICATION.md
 - [TODO] T012: Опубликовать Web Pilot Sidebar и его актуальный релиз на GitHub — Ожидает

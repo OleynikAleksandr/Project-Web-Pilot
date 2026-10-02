@@ -6,13 +6,15 @@
 | --- | --- | --- |
 | Project Web Pilot | `/Users/oleksandroliinyk/VSCODE/Project Web Pilot` | Electron-приложение, проекты, сессии, текущий план, доставка recovery и MCP/runtime |
 | [Workflow Kit](https://github.com/OleynikAleksandr/WorkflowKit) | `/Users/oleksandroliinyk/VSCODE/WorkflowKit` | Canonical пакет `@webpilot/workflow-kit@1.5.1`; current plan и recovery; приложение получает generated runtime из пакета |
-| Web Pilot Sidebar | `/Users/oleksandroliinyk/VSCODE/Web Pilot Sidebar` | Отдельный репозиторий браузерного расширения; разрабатывается параллельно другим агентом, использует адаптер ChatGPT из Web Pilot |
+| [Web Pilot Sidebar](https://github.com/OleynikAleksandr/Web-Pilot-Sidebar) | `/Users/oleksandroliinyk/VSCODE/Web Pilot Sidebar` | Отдельный репозиторий браузерного расширения; разрабатывается параллельно другим агентом, использует адаптер ChatGPT из Web Pilot |
 
 Sidebar отображает проекты, сессии и прогресс плана в настоящей странице chatgpt.com. Проектные данные, текущий план, recovery и локальные инструменты остаются ответственностью Project Web Pilot и Workflow Kit; расширение не пишет todo-plan.md и не хранит проектные данные. На 02.10.2026 Sidebar — прототип этапа 0 с тестовыми данными и тестовым хостом. Production Host API в Project Web Pilot ещё не реализован; его подключение требует отдельной задачи по собственному workflow этого репозитория.
 
 Текущая фактическая связь — сборка Sidebar переиспользует `src/chatgpt-dom.mjs`, `src/chatgpt-composer.mjs` и `src/chatgpt-experience.mjs`, закреплённые SHA-256 в его `vendor.lock.json`. Публичные символы, точный формат pageScript, ограничения импортов и порядок обновления описаны в [контракте DOM/Sidebar](modules/chatgpt-dom-compatibility.md). Изменения внешнего контракта отмечаются в описании коммита и передаются сопровождающему Sidebar для повторного закрепления.
 
-Источники Sidebar для чтения: `README.md`, `AGENTS.md`, `docs/modules/provider-adapter.md` и `docs/modules/host-api.md` относительно его workspace. Git remote у Sidebar на момент проверки не настроен; GitHub URL здесь не предполагается. В этой задаче чужие репозитории не изменяются. Исторические источники WF001 и Codex Local Mac ниже сохраняются отдельно от этих текущих связей.
+Источники Sidebar для чтения: `README.md`, `AGENTS.md`, `docs/modules/provider-adapter.md` и `docs/modules/host-api.md` относительно его workspace. Remote `origin` Sidebar — `https://github.com/OleynikAleksandr/Web-Pilot-Sidebar.git`; его публикация и актуальный release проверяются отдельной T012 без присвоения параллельных изменений. Исторические источники WF001 и Codex Local Mac ниже сохраняются отдельно от этих текущих связей.
+
+WorkflowKit 1.5.1 опубликован как [GitHub Release v1.5.1](https://github.com/OleynikAleksandr/WorkflowKit/releases/tag/v1.5.1). Тег и `main` указывают на чистый commit `dfc38c1b4a2cee1c13c68f9b54f064d3496dab10`. Репозиторий не определяет отдельные release binaries/assets: GitHub предоставляет source archives тега; перед публикацией прошли `npm run check`, runtime fixture и standalone consumer contract, canonical runtime — 35 файлов, SHA-256 `93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33`.
 
 ## Проверенный снимок
 
