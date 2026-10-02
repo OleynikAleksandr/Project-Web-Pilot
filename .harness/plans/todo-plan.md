@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 845,
+  "plan_revision": 847,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "refactoring-node24-20261002",
@@ -92,7 +92,7 @@
     ]
   },
   "baseline_commit": "65cc2f73a5aebd628c4ef4041ac3fcc9eab8aec1",
-  "current_task_id": null,
+  "current_task_id": "T003",
   "context_pack": {
     "documents": [
       {
@@ -194,7 +194,7 @@
       ]
     },
     {
-      "implementation_status": "TODO",
+      "implementation_status": "IN_PROGRESS",
       "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "refactoring-node24-20261002",
@@ -611,8 +611,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: refactoring-node24-20261002
-Current Task: нет
-Revision: 845
+Current Task: T003
+Revision: 847
 
 ## Цель
 
@@ -636,7 +636,7 @@ Revision: 845
   - Git Commit: [DONE] docs: Зафиксировать исходное состояние на macOS
   - Reference: refactoring-node24-20261002 / T002 / implementation
   - Файлы: docs/planning/refactoring-node24.md, docs/VERIFICATION.md
-- [TODO] T003: Перевести среду на Node 24.21.0 и Electron 44.5.1 — Ожидает
+- [IN_PROGRESS] T003: Перевести среду на Node 24.21.0 и Electron 44.5.1 — В работе
   - Git Commit: [PENDING] chore: Перевести среду на Node 24.21.0 и Electron 44.5.1
   - Reference: refactoring-node24-20261002 / T003 / implementation
   - Файлы: package.json, package-lock.json, src/platform.mjs, src/main.mjs, src/workspace-setup.mjs, scripts/prepare-mac-toolchain.mjs, scripts/prepare-windows-toolchain.mjs, scripts/verify-windows-package.mjs, BUILD_WINDOWS.cmd, windows-runtime/node-v22.17.0-win-x64.zip.sha256, windows-runtime/Windows-Codex-Local-2026-09-10.zip.sha256, tests/mac-toolchain.test.mjs, tests/windows-runtime.test.mjs, tests/workspace-setup.test.mjs, docs/planning/refactoring-node24.md, README.md
