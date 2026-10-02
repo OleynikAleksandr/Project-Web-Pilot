@@ -916,7 +916,8 @@ export async function run({ app, window, browser, sidebar, store, controller, se
 
   await sidebar.executeJavaScript('document.getElementById("open-settings").click()');
   await waitFor(() => !!snapshot().settings, 'gear opens settings', snapshot);
-  assert.equal(await sidebar.executeJavaScript('document.getElementById("archive-list").hidden'), true);
+  assert.equal(await sidebar.executeJavaScript('document.querySelector("#archive-list, #archive-empty, #archive-detail, #settings-notice, #delete-form")'), null);
+  assert.deepEqual(Object.keys(snapshot().settings), ['workspace']);
   assert.equal(await sidebar.executeJavaScript('document.getElementById("open-archive-window").textContent'), 'Архив…');
   assert.equal(snapshot().platform, process.platform);
   assert.equal(await sidebar.executeJavaScript('document.getElementById("windows-runtime-section").hidden'), true, 'Windows onboarding stays hidden on macOS smoke');

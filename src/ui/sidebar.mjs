@@ -1,5 +1,5 @@
 import { createProgress, operationLabel } from './progress.mjs';
-import { projectArchiveView } from './project-archive.mjs';
+import { settingsPanelView } from './settings-panel.mjs';
 import { workspaceSetupView } from './workspace-setup.mjs';
 const $ = id => document.getElementById(id);
 const api = window.webPilot;
@@ -11,7 +11,6 @@ const progress = createProgress($('operation-progress'));
 window.addEventListener('pagehide', () => progress.destroy());
 let contextExpanded = false;
 const sessionScroll = new Map();
-const preparedExpansion = new Map();
 const renameDialog = $('rename-dialog');
 const renameInput = $('rename-dialog-input');
 const renameDialogTitle = $('rename-dialog-title');
@@ -119,7 +118,7 @@ const phases = {
 };
 
 const setupView = workspaceSetupView(action);
-const archiveView = projectArchiveView(action);
+const settingsView = settingsPanelView(action);
 
 const splitter = $('sidebar-splitter');
 let splitterDrag = null, resizeFrame = 0, requestedSidebarWidth = null;
@@ -354,7 +353,7 @@ function render(state) {
       const item = document.createElement('li'); item.className = 'plan-task'; item.dataset.status = task.status;
       const mark = document.createElement('span'); mark.className = 'plan-task-state'; mark.setAttribute('aria-hidden', 'true');
       mark.textContent = task.status === 'done' ? '✓' : task.status === 'current' ? '●' : '○';
-      const body = document.createElement('div'), title = document.createElement('strong'), id = document.createElement('small');
+      const body = document.createElement('div'), title = document.createElement('strong');
       title.textContent = task.title; body.append(title); item.append(mark, body); return item;
     }));
   } else { $('plan-tasks').replaceChildren(); $('plan-note').hidden = true; $('plan-reason').hidden = true; }
@@ -412,7 +411,7 @@ function render(state) {
   $('reconnect-chat').hidden = !recovery?.canRetry && !stalledAuto;
   $('reconnect-chat').disabled = actionPending || (!recovery?.canRetry && !stalledAuto);
   setupView.render(state, actionPending);
-  archiveView.render(state, actionPending);
+  settingsView.render(state, actionPending);
   const guidedStartup = !!state.startup?.active && !state.setup && !state.settings;
   $('active-projects').hidden = guidedStartup || !!state.setup || !!state.settings;
   if (guidedStartup) { $('context-card').hidden = true; $('workspace-health').hidden = true; }

@@ -1,12 +1,11 @@
 import { projectDoctorView } from './project-doctor.mjs';
-export function projectArchiveView(action) {
+export function settingsPanelView(action) {
   const $ = id => document.getElementById(id);
   const doctor = projectDoctorView(action);
   const archiveButton = document.createElement('button');
   archiveButton.id = 'open-archive-window'; archiveButton.type = 'button'; archiveButton.className = 'secondary';
   archiveButton.textContent = 'Архив…'; archiveButton.style.width = '100%'; archiveButton.style.marginTop = '10px';
-  $('archive-list').before(archiveButton);
-  for (const id of ['archive-empty', 'archive-list', 'archive-detail', 'settings-notice']) $(id).hidden = true;
+  $('settings-panel').append(archiveButton);
   archiveButton.addEventListener('click', () => action('openArchive'));
   $('open-chat-colors').addEventListener('click', () => action('openChatColors'));
   $('open-settings').addEventListener('click', () => action(state?.settings ? 'closeSettings' : 'openSettings'));

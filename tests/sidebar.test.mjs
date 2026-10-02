@@ -35,7 +35,7 @@ async function fixture(t) {
     async chooseWorkspace() { calls.push(['chooseWorkspace']); return { state: structuredClone(state) }; },
   };
   window.webPilot = api;
-  window.eval(`const createProgress = () => ({show(){},destroy(){}}); const operationLabel = () => ''; const projectArchiveView = () => ({render(){}}); const workspaceSetupView = () => ({render(state){document.getElementById('projects').hidden=!!state.setup;}});\n` + source.replace(/^import .*;\n/gm, ''));
+  window.eval(`const createProgress = () => ({show(){},destroy(){}}); const operationLabel = () => ''; const settingsPanelView = () => ({render(){}}); const workspaceSetupView = () => ({render(state){document.getElementById('projects').hidden=!!state.setup;}});\n` + source.replace(/^import .*;\n/gm, ''));
   const settle = () => new Promise(resolve => setTimeout(resolve, 0));
   await settle();
   return { window, document, calls, emit, get state() { return structuredClone(state); }, settle };
@@ -197,4 +197,11 @@ test('plan card shows current and total agent time in minutes and seconds withou
   assert.equal(timer.textContent, '01:10 · Σ 02:10');
   state.selected = null; f.emit(state);
   assert.equal(timer.hidden, true);
+});
+test('startup deletion recovery error remains visible until settings are closed',async t=>{
+  const f=await fixture(t),banner=f.document.getElementById('error-banner');
+  f.emit({...f.state,settings:{workspace:'/recovery'},startupError:{code:'DELETE_RECOVERY',message:'Не удалось завершить удаление'}});
+  assert.equal(banner.hidden,false);assert.equal(banner.textContent,'Не удалось завершить удаление (DELETE_RECOVERY)');
+  f.emit({...f.state,settings:null,startupError:null});
+  assert.equal(banner.hidden,true);assert.equal(banner.textContent,'');
 });

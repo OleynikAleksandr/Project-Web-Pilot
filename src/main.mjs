@@ -239,7 +239,7 @@ function openSettings(workspace = null) {
   workspace ??= setupState?.workspace ?? store.selected()?.workspace ?? null;
   if (doctorState?.workspace !== workspace) doctorState = { workspace, phase: 'idle' };
   pauseForSetup(); workspaceSetup.clear(); setupState = null; deletion.clear();
-  settingsState = { workspace, deletion: null, notice: null };
+  settingsState = { workspace };
 }
 function closeSettings() {
   deletion.clear(); settingsState = null; startupError = null;
@@ -444,7 +444,7 @@ async function syncSelectedSessionTitle({ force = false, reason = 'event' } = {}
   return operation;
 }
 
-function report(error) { startupError = publicError(error); if (settingsState) settingsState = { ...settingsState, notice: null }; if (setupState) setupState = { ...setupState, phase: 'error', error: startupError }; publish(); }
+function report(error) { startupError = publicError(error); if (setupState) setupState = { ...setupState, phase: 'error', error: startupError }; publish(); }
 function remotePreferences() {
   return { partition, preload: undefined, nodeIntegration: false, contextIsolation: true, sandbox: true, webSecurity: true };
 }
@@ -1059,38 +1059,6 @@ function registerIpc() {
     startupError = null;
     if (selected) { const fallback = store.selected(); if (fallback) await selectWorkspace(fallback.workspace); }
   });
-  registerAction('pilot:select-archive', input => {
-    if (!settingsState || !store.project(input)?.archivedAt) throw new Error('Выберите проект из архива.');
-    deletion.clear(); settingsState = { workspace: input, deletion: null, notice: null }; startupError = null;
-  });
-  registerAction('pilot:restore-project', async input => {
-    if (!settingsState || !store.project(input)?.archivedAt) throw new Error('Выберите проект из архива.');
-    if (deletion.isPending(input)) throw new Error('Сначала завершите ранее подтверждённое удаление.');
-    const name = store.project(input).name; await store.setArchived(input, false);
-    deletion.clear(); settingsState = { workspace: null, deletion: null, notice: `«${name}» возвращён в активные проекты.` }; startupError = null;
-  });
-  registerAction('pilot:preview-delete', async input => {
-    if (!settingsState || settingsState.workspace !== input) throw new Error('Выберите проект в настройках.');
-    settingsState = { ...settingsState, deletion: null, notice: 'Проверяем содержимое папки…' }; publish();
-    const preview = await deletion.preview(input);
-    settingsState = { workspace: input, deletion: preview, notice: null }; startupError = null;
-  });
-  registerAction('pilot:cancel-delete', () => {
-    deletion.clear(); if (settingsState) settingsState = { ...settingsState, deletion: null, notice: null }; startupError = null;
-  });
-  registerAction('pilot:delete-project', async input => {
-    if (!settingsState?.deletion || input?.token !== settingsState.deletion.token) throw new Error('Откройте подтверждение удаления.');
-    try { await deletion.apply(input.token, input.confirmation); }
-    catch (error) { settingsState = { ...settingsState, deletion: null, notice: null }; throw error; }
-    settingsState = { workspace: null, deletion: null, notice: 'Папка и локальная история удалены. Чаты в ChatGPT сохранены.' }; startupError = null;
-  });
-  registerAction('pilot:recover-deletions', async () => {
-    if (!settingsState) return;
-    const errors = await deletion.recover();
-    settingsState = { workspace: null, deletion: null, notice: errors.length ? null : 'Локальная очистка завершена.' };
-    if (errors.length) throw Object.assign(new Error(errors[0].message), { code: errors[0].code });
-    startupError = null;
-  });
   registerAction('pilot:begin-create', () => {
     if (storageError) throw new Error('Сначала нужно восстановить сохранённый список проектов.');
     settingsState = null; deletion.clear(); pauseForSetup(); workspaceSetup.clear();
@@ -1447,7 +1415,7 @@ else {
     deletion = new WorkspaceDeletion({ store, journalDir: path.join(dataDir, 'deletions'), protectedPaths: [app.getAppPath(), runtimeFolder] });
     if (!storageError) {
       const errors = await deletion.recover();
-      if (errors.length) { startupError = errors[0]; settingsState = { workspace: errors[0].workspace, deletion: null, notice: null }; }
+      if (errors.length) { startupError = errors[0]; settingsState = { workspace: errors[0].workspace }; }
     }
     const remoteSession = session.fromPartition(partition);
     remoteSession.setPermissionRequestHandler((contents, permission, callback, details) => {

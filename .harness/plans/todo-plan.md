@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 848,
+  "plan_revision": 850,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "refactoring-node24-20261002",
@@ -268,8 +268,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "refactoring-node24-20261002",
         "task_id": "T004",
@@ -289,7 +289,9 @@
         "tests/sidebar.test.mjs"
       ],
       "documentation_paths": [
-        "docs/planning/refactoring-node24.md"
+        "docs/planning/refactoring-node24.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/VERIFICATION.md"
       ],
       "verification_ids": [
         "node24",
@@ -308,7 +310,20 @@
         "project-archive.mjs переименован в settings-panel.mjs с экспортом settingsPanelView; поле archives в снимке сайдбара сохранено для smoke.",
         "unit и smoke проходят; итог сопоставлен с эталоном T002."
       ],
-      "expected_commit_message": "refactor: Удалить устаревший архив настроек и мёртвую разметку"
+      "expected_commit_message": "refactor: Удалить устаревший архив настроек и мёртвую разметку",
+      "actual_files": [
+        "src/main.mjs",
+        "src/ui/index.html",
+        "src/ui/project-archive.mjs",
+        "src/ui/settings-panel.mjs",
+        "src/ui/sidebar.mjs",
+        "tests/electron-smoke.mjs",
+        "tests/project-doctor-ui.test.mjs",
+        "tests/sidebar.test.mjs",
+        "docs/planning/refactoring-node24.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/VERIFICATION.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -634,7 +649,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: refactoring-node24-20261002
 Current Task: нет
-Revision: 848
+Revision: 850
 
 ## Цель
 
@@ -662,10 +677,10 @@ Revision: 848
   - Git Commit: [DONE] chore: Перевести среду на Node 24.21.0 и Electron 44.5.1
   - Reference: refactoring-node24-20261002 / T003 / implementation
   - Файлы: package.json, package-lock.json, src/platform.mjs, src/main.mjs, src/workspace-setup.mjs, scripts/prepare-mac-toolchain.mjs, scripts/prepare-windows-toolchain.mjs, scripts/verify-windows-package.mjs, BUILD_WINDOWS.cmd, windows-runtime/node-v22.17.0-win-x64.zip.sha256, windows-runtime/Windows-Codex-Local-2026-09-10.zip.sha256, tests/mac-toolchain.test.mjs, tests/windows-runtime.test.mjs, tests/workspace-setup.test.mjs, docs/planning/refactoring-node24.md, README.md, docs/VERIFICATION.md, docs/architecture/ARCHITECTURE.md
-- [TODO] T004: Удалить устаревший архив настроек и мёртвую разметку — Ожидает
-  - Git Commit: [PENDING] refactor: Удалить устаревший архив настроек и мёртвую разметку
+- [DONE] T004: Удалить устаревший архив настроек и мёртвую разметку — Завершено
+  - Git Commit: [DONE] refactor: Удалить устаревший архив настроек и мёртвую разметку
   - Reference: refactoring-node24-20261002 / T004 / implementation
-  - Файлы: src/main.mjs, src/ui/index.html, src/ui/project-archive.mjs, src/ui/settings-panel.mjs, src/ui/sidebar.mjs, tests/electron-smoke.mjs, tests/project-doctor-ui.test.mjs, tests/sidebar.test.mjs, docs/planning/refactoring-node24.md
+  - Файлы: src/main.mjs, src/ui/index.html, src/ui/project-archive.mjs, src/ui/settings-panel.mjs, src/ui/sidebar.mjs, tests/electron-smoke.mjs, tests/project-doctor-ui.test.mjs, tests/sidebar.test.mjs, docs/planning/refactoring-node24.md, docs/architecture/OVERVIEW.md, docs/VERIFICATION.md
 - [TODO] T005: Удалить мёртвый код runtime и доставки контекста — Ожидает
   - Git Commit: [PENDING] refactor: Удалить мёртвый код runtime и доставки контекста
   - Reference: refactoring-node24-20261002 / T005 / implementation

@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import { JSDOM } from 'jsdom';
 import { projectDoctorView } from '../src/ui/project-doctor.mjs';
 import { workspaceSetupView } from '../src/ui/workspace-setup.mjs';
-import { projectArchiveView } from '../src/ui/project-archive.mjs';
+import { settingsPanelView } from '../src/ui/settings-panel.mjs';
 import { ProjectDoctor } from '../src/project-doctor.mjs';
 async function fixture(t, factory=projectDoctorView) {
   const dom=new JSDOM(await fs.readFile(new URL('../src/ui/index.html',import.meta.url),'utf8'));
@@ -47,7 +47,7 @@ test('busy run cannot be repeated and unready services never appear as success',
 test('setup offers doctor without a working session and settings remain available',async t=>{
   const f=await fixture(t,workspaceSetupView),s=state();s.setup={phase:'preview',installed:true,workspace:'/broken',issues:[{path:'file',reason:'broken'}]};
   f.view.render(s,false);assert.equal(f.$('setup-doctor').hidden,false);f.$('setup-doctor').click();assert.deepEqual(f.calls,[['openDoctor']]);
-  const settings=projectArchiveView(()=>{});settings.render(s,false);assert.equal(f.$('open-settings').disabled,false);
+  const settings=settingsPanelView(()=>{});settings.render(s,false);assert.equal(f.$('open-settings').disabled,false);
 });
 function coordinator({worker,health={ready:true,checks:[],issues:[]},services=async()=>{}}={}) {
   const calls=[];const setup={preview:async()=>{calls.push('verify');return health;},apply:async()=>{calls.push('reconnect');return {ready:true,checks:[],issues:[]};}};
@@ -88,4 +88,22 @@ test('first project needs no personal fields and diagnosed problems still expose
   s.setup={phase:'preview',mode:'existing',workspace:'/existing',token:'preview-3',action:'open',ready:true,firstSessionRequired:false};
   f.view.render(s,false);assert.equal(f.$('setup-experience').hidden,true);assert.equal(f.$('setup-apply').hidden,false);
   assert.equal(f.$('setup-doctor').hidden,true);assert.equal(f.$('setup-refresh').hidden,true);
+});
+
+test('settings retain recovery workspace for doctor and open the separate archive window',async t=>{
+  const f=await fixture(t,settingsPanelView),s={...state(),projects:[],selected:null,settings:{workspace:'/recovery'},doctor:null};
+  f.view.render(s,false);
+  assert.equal(f.$('settings-panel').hidden,false);
+  assert.equal(f.$('active-projects').hidden,true);
+  assert.equal(f.$('doctor-workspace').value,'/recovery');
+  assert.equal(f.$('doctor-run').disabled,false);
+  for(const id of ['archive-empty','archive-list','archive-detail','settings-notice','delete-form']) assert.equal(f.$(id),null);
+  f.$('doctor-run').click();f.$('open-archive-window').click();
+  assert.deepEqual(f.calls,[['runDoctor','/recovery'],['openArchive']]);
+  f.view.render(s,true);assert.equal(f.$('open-archive-window').disabled,true);
+  f.view.render(s,false);f.$('close-settings').click();
+  assert.deepEqual(f.calls.at(-1),['closeSettings']);
+  s.settings=null;f.view.render(s,false);
+  assert.equal(f.$('settings-panel').hidden,true);assert.equal(f.$('active-projects').hidden,false);
+  f.$('open-settings').click();assert.deepEqual(f.calls.at(-1),['openSettings']);
 });
