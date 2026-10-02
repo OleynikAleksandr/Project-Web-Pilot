@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 841,
+  "plan_revision": 843,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "refactoring-node24-20261002",
@@ -129,8 +129,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "refactoring-node24-20261002",
         "task_id": "T001",
@@ -153,7 +153,10 @@
         "Правило версий Node однозначно: встроенный и комплектный Node ровно 24.21.0, всё остальное — ^24.21.0.",
         "Добавлены приложения: список экспортов, прочие находки, облачные пропуски с причинами и способ повтора аудита; облачные прогоны помечены как информационные."
       ],
-      "expected_commit_message": "docs: Уточнить план рефакторинга по результатам ревью"
+      "expected_commit_message": "docs: Уточнить план рефакторинга по результатам ревью",
+      "actual_files": [
+        "docs/planning/refactoring-node24.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -605,7 +608,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: refactoring-node24-20261002
 Current Task: нет
-Revision: 841
+Revision: 843
 
 ## Цель
 
@@ -621,8 +624,8 @@ Revision: 841
 
 ## Микрозадачи
 
-- [TODO] T001: Уточнить план рефакторинга по результатам ревью — Ожидает
-  - Git Commit: [PENDING] docs: Уточнить план рефакторинга по результатам ревью
+- [DONE] T001: Уточнить план рефакторинга по результатам ревью — Завершено
+  - Git Commit: [DONE] docs: Уточнить план рефакторинга по результатам ревью
   - Reference: refactoring-node24-20261002 / T001 / implementation
   - Файлы: docs/planning/refactoring-node24.md
 - [TODO] T002: Зафиксировать исходное состояние на macOS — Ожидает
