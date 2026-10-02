@@ -4,19 +4,34 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 932,
+  "plan_revision": 933,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
-  "scope_id": null,
-  "execution_scope_status": "NONE",
+  "scope_id": "github-publication-0.6.77-20261002",
+  "execution_scope_status": "ACTIVE",
   "delivery_status": "IN_PROGRESS",
-  "objective": "Если поручение уже ясно, создайте короткий план и приступайте; иначе обсудите следующий этап проекта.",
-  "acceptance_criteria": [],
+  "objective": "Актуализировать README Project Web Pilot и WorkflowKit, синхронизировать оба репозитория с GitHub и опубликовать проверенные актуальные релизы без пересборки.",
+  "acceptance_criteria": [
+    "Актуализировать README Project Web Pilot и WorkflowKit, синхронизировать оба репозитория с GitHub и опубликовать проверенные актуальные релизы без пересборки."
+  ],
   "approved_scope": {
     "functional_paths": [],
-    "documentation_paths": []
+    "documentation_paths": [
+      "docs/planning/github-publication-0.6.77.md",
+      "README.md",
+      "AGENTS.md",
+      "docs/WORKFLOW_START.md",
+      "docs/RELEASE.md",
+      "docs/VERIFICATION.md",
+      "docs/DOCUMENTATION_INDEX.md",
+      "docs/TRANSFER_TO_WINDOWS.md",
+      "docs/PRODUCT.md",
+      "docs/architecture/ARCHITECTURE.md",
+      "docs/architecture/OVERVIEW.md",
+      "docs/MODULES.md"
+    ]
   },
-  "baseline_commit": null,
+  "baseline_commit": "0a78bf366e65ad35fed3332c43eda3aa3cddf9b2",
   "current_task_id": null,
   "context_pack": {
     "documents": [
@@ -43,47 +58,160 @@
         ],
         "required": true,
         "revision": "WORKTREE"
+      },
+      {
+        "path": "docs/planning/github-publication-0.6.77.md",
+        "required": true
       }
     ],
     "include_last_completed_task": false,
     "dependency_task_ids": []
   },
-  "tasks": [],
+  "tasks": [
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "github-publication-0.6.77-20261002",
+        "task_id": "T001",
+        "role": "implementation"
+      },
+      "dependencies": [],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/planning/github-publication-0.6.77.md",
+        "README.md",
+        "AGENTS.md",
+        "docs/WORKFLOW_START.md",
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/TRANSFER_TO_WINDOWS.md"
+      ],
+      "verification_ids": [],
+      "id": "T001",
+      "title": "Опубликовать принятую поставку Project Web Pilot 0.6.77",
+      "why": "Опубликовать принятую поставку Project Web Pilot 0.6.77",
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "README отражает принятую 0.6.77 и актуальные ссылки",
+        "main синхронизирован с GitHub; v0.6.77 указывает на проверенный build commit",
+        "Публичный GitHub Release содержит оба ZIP и три metadata-файла с совпадающими размерами/SHA-256"
+      ],
+      "expected_commit_message": "docs: опубликовать принятую поставку Web Pilot 0.6.77"
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "github-publication-0.6.77-20261002",
+        "task_id": "T002",
+        "role": "implementation"
+      },
+      "dependencies": [],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/planning/github-publication-0.6.77.md",
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [],
+      "id": "T002",
+      "title": "Актуализировать и синхронизировать WorkflowKit",
+      "why": "Актуализировать и синхронизировать WorkflowKit",
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "README canonical WorkflowKit описывает интеграцию с Web Pilot 0.6.77",
+        "WorkflowKit main отправлен и совпадает с локальным Git",
+        "Опубликованный v1.5.1 сохранён; версия и runtime не меняются"
+      ],
+      "expected_commit_message": "docs: подтвердить публикацию актуального WorkflowKit"
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "github-publication-0.6.77-20261002",
+        "task_id": "DOCS",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "T001",
+        "T002"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/planning/github-publication-0.6.77.md",
+        "docs/PRODUCT.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "README.md",
+        "AGENTS.md",
+        "docs/WORKFLOW_START.md",
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/MODULES.md"
+      ],
+      "verification_ids": [],
+      "id": "DOCS",
+      "title": "Актуализация всех документов проекта",
+      "why": "Сохранить актуальный контекст для следующего агента",
+      "acceptance_criteria": [
+        "Документы соответствуют результату"
+      ],
+      "expected_commit_message": "docs: актуализировать контекст проекта"
+    }
+  ],
   "blocked_reason": null,
   "user_decisions": [
     {
-      "id": "fc9b5d2c-40d4-4537-8a68-5f48641833a8",
-      "text": "02.10.2026: пользователь подтвердил приёмку 0.6.77 и прямо поручил закрыть план: «Я протестировал всё, работает, как мы обсудили. План можно закрывать. Спасибо.»",
-      "recorded_at": "2026-10-02T19:15:26.580Z"
+      "id": "2dab0901-b01a-4c56-b4cf-30e03d7da673",
+      "text": "Пользователь поручил выполнить описанную задачу и план.",
+      "recorded_at": "2026-10-02T19:20:11.182Z"
     }
-  ],
-  "archived_scope_id": "auto-plan-client-driven-refactor-20261002"
+  ]
 }
 ```
 <!-- workflow-state:end -->
 
 ## Состояние
 
-Execution Scope Status: NONE
+Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
-Scope: не создан
+Scope: github-publication-0.6.77-20261002
 Current Task: нет
-Revision: 932
+Revision: 933
 
 ## Цель
 
-Если поручение уже ясно, создайте короткий план и приступайте; иначе обсудите следующий этап проекта.
+Актуализировать README Project Web Pilot и WorkflowKit, синхронизировать оба репозитория с GitHub и опубликовать проверенные актуальные релизы без пересборки.
 
 ## Критерии приёмки
 
+- Актуализировать README Project Web Pilot и WorkflowKit, синхронизировать оба репозитория с GitHub и опубликовать проверенные актуальные релизы без пересборки.
 
 ## Микрозадачи
 
+- [TODO] T001: Опубликовать принятую поставку Project Web Pilot 0.6.77 — Ожидает
+  - Git Commit: [PENDING] docs: опубликовать принятую поставку Web Pilot 0.6.77
+  - Reference: github-publication-0.6.77-20261002 / T001 / implementation
+  - Файлы: docs/planning/github-publication-0.6.77.md, README.md, AGENTS.md, docs/WORKFLOW_START.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/DOCUMENTATION_INDEX.md, docs/TRANSFER_TO_WINDOWS.md
+- [TODO] T002: Актуализировать и синхронизировать WorkflowKit — Ожидает
+  - Git Commit: [PENDING] docs: подтвердить публикацию актуального WorkflowKit
+  - Reference: github-publication-0.6.77-20261002 / T002 / implementation
+  - Файлы: docs/planning/github-publication-0.6.77.md, docs/RELEASE.md, docs/VERIFICATION.md
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: актуализировать контекст проекта
+  - Reference: github-publication-0.6.77-20261002 / DOCS / implementation
+  - Файлы: docs/planning/github-publication-0.6.77.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, README.md, AGENTS.md, docs/WORKFLOW_START.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/DOCUMENTATION_INDEX.md, docs/TRANSFER_TO_WINDOWS.md, docs/architecture/OVERVIEW.md, docs/MODULES.md
 
 ## Context Pack For This Cycle
 
 - docs/architecture/OVERVIEW.md → Краткая архитектура проекта
 - docs/MODULES.md → Модули проекта
 - docs/DOCUMENTATION_INDEX.md → Каталог документации
+- docs/planning/github-publication-0.6.77.md
 
 Служебные состояния меняются только командами workflow. Приёмка не архивирует scope.
