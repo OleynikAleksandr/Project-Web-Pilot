@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 877,
+  "plan_revision": 878,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "auto-plan-reliability-20261002",
@@ -133,13 +133,15 @@
       ],
       "functional_paths": [
         "src/auto-plan.mjs",
-        "tests/auto-plan.test.mjs"
+        "tests/auto-plan.test.mjs",
+        "tests/electron-smoke.mjs"
       ],
       "documentation_paths": [
         "docs/planning/auto-plan-reliability.md"
       ],
       "verification_ids": [
-        "unit"
+        "unit",
+        "smoke"
       ],
       "id": "T002",
       "title": "Сделать watchdog диагностическим предупреждением без остановки run",
@@ -390,7 +392,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: auto-plan-reliability-20261002
 Current Task: нет
-Revision: 877
+Revision: 878
 
 ## Цель
 
@@ -413,7 +415,7 @@ Revision: 877
 - [TODO] T002: Сделать watchdog диагностическим предупреждением без остановки run — Ожидает
   - Git Commit: [PENDING] fix: не останавливать AutoPlan по stall watchdog
   - Reference: auto-plan-reliability-20261002 / T002 / implementation
-  - Файлы: src/auto-plan.mjs, tests/auto-plan.test.mjs, docs/planning/auto-plan-reliability.md
+  - Файлы: src/auto-plan.mjs, tests/auto-plan.test.mjs, tests/electron-smoke.mjs, docs/planning/auto-plan-reliability.md
 - [TODO] T003: Сохранять включённый AutoPlan при DRAFT_PRESENT и возобновлять после сообщения пользователя — Ожидает
   - Git Commit: [PENDING] fix: возобновлять AutoPlan после пользовательского черновика
   - Reference: auto-plan-reliability-20261002 / T003 / implementation
