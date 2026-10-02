@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 891,
+  "plan_revision": 892,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "auto-plan-reliability-20261002",
@@ -375,6 +375,42 @@
       }
     },
     {
+      "id": "T008",
+      "title": "Зафиксировать исключённый код постоянного автовыполнения",
+      "why": "T006 прошла unit/smoke, но исходники существовали до task:start и были исключены из коммита. Это собственные правки текущей работы; требуется явный состав commit перед сборкой.",
+      "dependencies": [
+        "T006"
+      ],
+      "functional_paths": [
+        "src/auto-plan.mjs",
+        "src/chatgpt-page-observer.mjs",
+        "src/main.mjs",
+        "src/page-state.mjs",
+        "src/ui/sidebar.mjs",
+        "tests/auto-plan-restart-fixture.cjs",
+        "tests/auto-plan.test.mjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [],
+      "verification_ids": [
+        "unit",
+        "smoke"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Все исключённые исходники и restart fixture включены явно в Git-коммит, рабочее дерево чистое перед T007.",
+        "Настройки сохраняют выбор пользователя и отметку Send; восстановление, draft, question, busy и unknown проходят проверки."
+      ],
+      "expected_commit_message": "fix: завершить фиксацию постоянного автовыполнения",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "auto-plan-reliability-20261002",
+        "task_id": "T008",
+        "role": "implementation"
+      }
+    },
+    {
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
@@ -389,7 +425,8 @@
         "T004",
         "T005",
         "T006",
-        "T007"
+        "T007",
+        "T008"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -431,7 +468,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: auto-plan-reliability-20261002
 Current Task: нет
-Revision: 891
+Revision: 892
 
 ## Цель
 
@@ -475,6 +512,10 @@ Revision: 891
   - Git Commit: [PENDING] build: выпустить исправления AutoPlan для macOS и Windows
   - Reference: auto-plan-reliability-20261002 / T007 / implementation
   - Файлы: package.json, package-lock.json, scripts/release-all.mjs, scripts/check-installed-release.mjs, tests/installed-observer-fixture.cjs, docs/planning/auto-plan-reliability.md, docs/RELEASE.md, docs/VERIFICATION.md
+- [TODO] T008: Зафиксировать исключённый код постоянного автовыполнения — Ожидает
+  - Git Commit: [PENDING] fix: завершить фиксацию постоянного автовыполнения
+  - Reference: auto-plan-reliability-20261002 / T008 / implementation
+  - Файлы: src/auto-plan.mjs, src/chatgpt-page-observer.mjs, src/main.mjs, src/page-state.mjs, src/ui/sidebar.mjs, tests/auto-plan-restart-fixture.cjs, tests/auto-plan.test.mjs, tests/electron-smoke.mjs
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: auto-plan-reliability-20261002 / DOCS / implementation
