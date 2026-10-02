@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 892,
+  "plan_revision": 893,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "auto-plan-reliability-20261002",
@@ -338,7 +338,8 @@
       "title": "Собрать и проверить новые релизы macOS и Windows",
       "why": "Прямое поручение пользователя 02.10.2026: изменения должны войти в код и новые релизы до финальной актуализации документов.",
       "dependencies": [
-        "T006"
+        "T006",
+        "T008"
       ],
       "functional_paths": [
         "package.json",
@@ -468,7 +469,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: auto-plan-reliability-20261002
 Current Task: нет
-Revision: 892
+Revision: 893
 
 ## Цель
 
