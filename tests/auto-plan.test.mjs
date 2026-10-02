@@ -29,6 +29,16 @@ function fixture() {
     setResult: value => { sendResult = value; }, setGate: value => { gate = value; },
     changeSelection: () => { selected = { ...selected, sessionId: 'other' }; } };
 }
+test('startup instruction reserves user wait for necessary decisions and allows technical recovery', async () => {
+  const f = fixture(); await f.flow.start();
+  const instruction = f.sends[0];
+  assert.match(instruction, /не более одной микрозадачи с её проверкой и коммитом/);
+  assert.match(instruction, /Web Pilot автоматически отправит «Продолжай»/);
+  assert.match(instruction, /только когда без информации, выбора или решения пользователя корректно продолжать невозможно/);
+  assert.match(instruction, /Техническая ошибка, упавший тест, проблема сборки, Git\/MCP или совместимости сами по себе не требуют ответа пользователя/);
+  assert.match(instruction, /«Готов продолжать\.».*самостоятельную диагностику, исправление ошибки или проверку фонового процесса/);
+  assert.doesNotMatch(instruction, /если есть вопрос, ошибка/);
+});
 test('partial baseline skips old DONE; current task can continue without a new commit; all DONE ends', async () => {
   const f = fixture(); await f.flow.start();
   assert.deepEqual(f.flow.run.completedAtStart, ['T001']); assert.equal(f.sends.length, 1);

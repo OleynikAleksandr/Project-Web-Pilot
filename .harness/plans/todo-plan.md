@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 874,
+  "plan_revision": 877,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "auto-plan-reliability-20261002",
@@ -82,8 +82,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "auto-plan-reliability-20261002",
         "task_id": "T001",
@@ -99,7 +99,8 @@
         "docs/planning/auto-plan-continuation.md"
       ],
       "verification_ids": [
-        "unit"
+        "unit",
+        "smoke"
       ],
       "id": "T001",
       "title": "Уточнить контракт агента и критерий реального ожидания пользователя",
@@ -112,7 +113,12 @@
         "Стартовая инструкция явно описывает цикл: одна микрозадача, проверка и commit, окончание ответа; Web Pilot автоматически отправляет точное «Продолжай».",
         "Вопрос пользователю задаётся только когда без его информации, выбора или решения корректно продолжать невозможно; техническая диагностика и исправления выполняются самостоятельно."
       ],
-      "expected_commit_message": "fix: уточнить контракт ожидания AutoPlan"
+      "expected_commit_message": "fix: уточнить контракт ожидания AutoPlan",
+      "actual_files": [
+        "docs/planning/auto-plan-reliability.md",
+        "src/auto-plan.mjs",
+        "tests/auto-plan.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -384,7 +390,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: auto-plan-reliability-20261002
 Current Task: нет
-Revision: 874
+Revision: 877
 
 ## Цель
 
@@ -400,8 +406,8 @@ Revision: 874
 
 ## Микрозадачи
 
-- [TODO] T001: Уточнить контракт агента и критерий реального ожидания пользователя — Ожидает
-  - Git Commit: [PENDING] fix: уточнить контракт ожидания AutoPlan
+- [DONE] T001: Уточнить контракт агента и критерий реального ожидания пользователя — Завершено
+  - Git Commit: [DONE] fix: уточнить контракт ожидания AutoPlan
   - Reference: auto-plan-reliability-20261002 / T001 / implementation
   - Файлы: src/auto-plan.mjs, tests/auto-plan.test.mjs, docs/planning/auto-plan-reliability.md, docs/planning/auto-plan-continuation.md
 - [TODO] T002: Сделать watchdog диагностическим предупреждением без остановки run — Ожидает
