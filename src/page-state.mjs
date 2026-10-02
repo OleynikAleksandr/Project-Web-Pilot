@@ -40,6 +40,8 @@ export function normalizePageObservation(message) {
       manualInputRevision: integer(state.manualInputRevision) ? state.manualInputRevision : 0,
       assistantRevision: integer(state.assistantRevision) ? state.assistantRevision : 0,
       turnId: typeof state.turnId === 'string' && /^[a-f0-9]{1,8}$/.test(state.turnId) ? state.turnId : '',
+      userTurnId: typeof state.userTurnId === 'string' && /^[a-f0-9]{1,8}$/.test(state.userTurnId) ? state.userTurnId : '',
+      lastMessageRole: ['user', 'assistant'].includes(state.lastMessageRole) ? state.lastMessageRole : null,
       draftPresent: state.draftPresent === true,
       draftRevision: state.draftRevision,
       userMessageCount: state.userMessageCount,

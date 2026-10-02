@@ -160,3 +160,45 @@ test('stream content progress is coalesced, decorative mutations do not count, f
   assert.equal(Object.hasOwn(messages.at(-1).state, 'turnSignal'), false);
   dispose(); assert.equal(timers.size, 0); w.close();
 });
+test('machine turn identities survive content edits, reload and DOM replacement without native IDs', async () => {
+  for (const native of [false, true]) {
+    const ids = [];
+    for (const text of ['Начало ответа', 'Совсем другой текст ответа']) {
+      const markup = '<article data-message-author-role="user">Request</article><article data-message-author-role="assistant"'
+        + (native ? ' data-message-id="stable-message-id"' : '') + '><span>' + text + '</span></article><div id="prompt-textarea" contenteditable="true"></div>';
+      const dom = new JSDOM(markup, { url: 'https://chatgpt.com/c/fixture', runScripts: 'outside-only' });
+      const w = dom.window; w.HTMLElement.prototype.getClientRects = () => [{}];
+      const messages = []; w.reportObservation = m => messages.push(m);
+      const dispose = w.eval('(' + installPageObserver.toString() + ')(' + chatGPTDOMScript() + ', reportObservation)');
+      ids.push(messages.at(-1).state.turnId);
+      assert.equal(messages.at(-1).state.lastMessageRole, 'assistant');
+      const assistant = w.document.querySelector('[data-message-author-role="assistant"]');
+      assistant.querySelector('span').textContent = 'Позднее изменение готового ответа'; await turn();
+      assert.equal(messages.at(-1).state.turnId, ids.at(-1));
+      const replacement = assistant.cloneNode(true); assistant.replaceWith(replacement); await turn();
+      assert.equal(messages.at(-1).state.turnId, ids.at(-1));
+      const user = w.document.createElement('article'); user.dataset.messageAuthorRole = 'user'; user.textContent = 'New request';
+      w.document.body.append(user); await turn();
+      assert.equal(messages.at(-1).state.lastMessageRole, 'user');
+      assert.equal(messages.at(-1).state.turnId, ids.at(-1));
+      const next = w.document.createElement('article'); next.dataset.messageAuthorRole = 'assistant'; next.textContent = 'New reply';
+      w.document.body.append(next); await turn();
+      assert.equal(messages.at(-1).state.lastMessageRole, 'assistant');
+      assert.notEqual(messages.at(-1).state.turnId, ids.at(-1));
+      dispose(); w.close();
+    }
+    assert.equal(ids[0], ids[1], 'text differences never create another identity on reload');
+  }
+});
+test('source normalizes only opaque identities and fixed machine roles', () => {
+  const normalized = normalizePageObservation(observation(1, 'document-1111', {
+    turnId: 'a1234', userTurnId: 'b1234', lastMessageRole: 'user',
+  }));
+  assert.equal(normalized.state.userTurnId, 'b1234');
+  assert.equal(normalized.state.lastMessageRole, 'user');
+  const invalid = normalizePageObservation(observation(1, 'document-1111', {
+    userTurnId: 'private conversation text', lastMessageRole: 'arbitrary prose',
+  }));
+  assert.equal(invalid.state.userTurnId, '');
+  assert.equal(invalid.state.lastMessageRole, null);
+});

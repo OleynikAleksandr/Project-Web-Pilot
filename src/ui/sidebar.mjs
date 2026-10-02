@@ -404,7 +404,7 @@ function render(state) {
   const recovery = state.conversationRecovery;
   $('conversation-recovery').hidden = !recovery || recovery.phase === 'idle' || !!state.setup || !!state.settings;
   $('conversation-recovery-message').textContent = recovery?.message ?? '';
-  const stalledAuto = state.autoPlan?.phase === 'paused' && /Три минуты/.test(state.autoPlan?.message ?? '') && recovery?.phase === 'idle';
+  const stalledAuto = state.autoPlan?.warning === 'STALL_WARNING' && recovery?.phase === 'idle';
   if (stalledAuto && recovery?.phase === 'idle') {
     $('conversation-recovery').hidden = false;
     $('conversation-recovery-message').textContent = 'Можно повторно открыть сохранённый разговор. Это не повторяет команды.';

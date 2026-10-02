@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 921,
+  "plan_revision": 923,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "auto-plan-client-driven-refactor-20261002",
@@ -180,8 +180,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "auto-plan-client-driven-refactor-20261002",
         "task_id": "T003",
@@ -220,7 +220,17 @@
         "Page reload, plan transaction, connection error и временная неготовность являются автоматически пересматриваемыми ожиданиями, а не липкой паузой, требующей передёрнуть переключатель.",
         "UI и diagnostics описывают только клиентские причины состояния; AGENT_WAIT и NO_CHECKPOINT как текстовый протокол удалены."
       ],
-      "expected_commit_message": "fix: сделать автопродолжение устойчивым и идемпотентным"
+      "expected_commit_message": "fix: сделать автопродолжение устойчивым и идемпотентным",
+      "actual_files": [
+        "docs/planning/auto-plan-client-driven-refactor.md",
+        "src/auto-plan.mjs",
+        "src/chatgpt-page-observer.mjs",
+        "src/page-state.mjs",
+        "src/ui/sidebar.mjs",
+        "tests/auto-plan-restart-fixture.cjs",
+        "tests/auto-plan.test.mjs",
+        "tests/page-state.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -356,7 +366,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: auto-plan-client-driven-refactor-20261002
 Current Task: нет
-Revision: 921
+Revision: 923
 
 ## Цель
 
@@ -376,8 +386,8 @@ Revision: 921
   - Git Commit: [DONE] refactor: сделать AutoPlan клиентским reconciler
   - Reference: auto-plan-client-driven-refactor-20261002 / T002 / implementation
   - Файлы: src/auto-plan.mjs, src/auto-plan-state.mjs, src/main.mjs, src/plan-monitor.mjs, tests/auto-plan.test.mjs, tests/plan-monitor.test.mjs, docs/planning/auto-plan-client-driven-refactor.md
-- [TODO] T003: Закрепить переключатель, dedupe и приоритет пользователя — Ожидает
-  - Git Commit: [PENDING] fix: сделать автопродолжение устойчивым и идемпотентным
+- [DONE] T003: Закрепить переключатель, dedupe и приоритет пользователя — Завершено
+  - Git Commit: [DONE] fix: сделать автопродолжение устойчивым и идемпотентным
   - Reference: auto-plan-client-driven-refactor-20261002 / T003 / implementation
   - Файлы: src/auto-plan.mjs, src/main.mjs, src/chatgpt-page-observer.mjs, src/page-state.mjs, src/ui/sidebar.mjs, tests/auto-plan.test.mjs, tests/auto-plan-restart-fixture.cjs, tests/page-state.test.mjs, docs/planning/auto-plan-client-driven-refactor.md
 - [TODO] T004: Воспроизвести 01TestAuto и все границы в Electron smoke — Ожидает

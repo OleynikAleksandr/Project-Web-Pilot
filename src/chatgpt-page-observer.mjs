@@ -36,8 +36,16 @@ export function installPageObserver(dom, send) {
     if (!dom.busy() || Date.now() - lastProgressAt >= 5000) {
       reportedAssistantRevision = assistantRevision; lastProgressAt = Date.now();
     }
-    const assistant = dom.messages('assistant').at(-1);
-    const turnId = assistant ? fingerprint(assistant.getAttribute('data-message-id') || (dom.messages('assistant').length + '\n' + (assistant.textContent ?? ''))) : '';
+    const assistants = dom.messages('assistant'), users = dom.messages('user');
+    const assistant = assistants.at(-1), user = users.at(-1);
+    const machineId = (node, fallback) => node?.getAttribute('data-message-id')
+      || node?.closest('[data-message-id]')?.getAttribute('data-message-id')
+      || node?.closest('article[data-testid]')?.getAttribute('data-testid') || fallback;
+    const precedingUsers = assistant ? users.filter(node => node.compareDocumentPosition(assistant) & 4).length : 0;
+    const turnId = assistant ? fingerprint(machineId(assistant, 'assistant:' + assistants.length + ':user:' + precedingUsers)) : '';
+    const userTurnId = user ? fingerprint(machineId(user, 'user:' + users.length)) : '';
+    const lastMessageRole = user && (!assistant || assistant.compareDocumentPosition(user) & 4) ? 'user'
+      : assistant ? 'assistant' : null;
     if (editor !== editorIdentity) { editorIdentity = editor; editorRevision++; draftRevision++; }
     const button = dom.sendButton();
     const login = dom.first(loginSelector) ? 'signed-out' : dom.first(profileSelector) ? 'signed-in' : 'unknown';
@@ -48,7 +56,7 @@ export function installPageObserver(dom, send) {
       writable: !!editor && !editor.disabled && !editor.readOnly && editor.getAttribute('contenteditable') !== 'false',
       connectionError: dom.connectionError(),
       busy: dom.busy(), sendEnabled: !!button && !button.disabled && button.getAttribute('aria-disabled') !== 'true',
-      manualStopRevision, manualInputRevision, assistantRevision: reportedAssistantRevision, turnId, draftPresent: !!editorText(editor),
+      manualStopRevision, manualInputRevision, assistantRevision: reportedAssistantRevision, turnId, userTurnId, lastMessageRole, draftPresent: !!editorText(editor),
       manualSendRevision, draftRevision, userMessageCount: dom.messages('user').length, userMessagesRevision,
     };
   };
@@ -96,7 +104,7 @@ export function installPageObserver(dom, send) {
   const start = () => {
     observer.observe(document.documentElement, { subtree: true, childList: true, characterData: true, attributes: true,
       attributeFilter: ['disabled', 'readonly', 'contenteditable', 'aria-disabled', 'aria-hidden', 'hidden',
-        'data-state', 'aria-checked', 'aria-pressed', 'class', 'style', 'data-testid', 'data-message-author-role'] });
+        'data-message-id', 'id', 'data-state', 'aria-checked', 'aria-pressed', 'class', 'style', 'data-testid', 'data-message-author-role'] });
     document.addEventListener('click', event => {
       if (event.isTrusted && elementOf(event.target)?.closest(dom.selectors.stop)) {
         manualStopRevision++; emit();

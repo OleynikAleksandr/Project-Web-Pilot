@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
-const [settingsFile, expectedChoice] = process.argv.slice(2);
+const [settingsFile, expectedChoice, selectedKey] = process.argv.slice(2);
 app.setPath('userData', path.join(path.dirname(settingsFile), 'auto-plan-restart-' + expectedChoice));
 const deadline = setTimeout(() => { console.error('AutoPlan restart fixture timed out'); app.exit(1); }, 15000);
 app.whenReady().then(async () => {
@@ -16,7 +16,9 @@ app.whenReady().then(async () => {
   const { ChatGPTComposer } = await import(pathToFileURL(path.join(root, 'src/chatgpt-composer.mjs')));
   const settings = JSON.parse(await fs.readFile(settingsFile, 'utf8'));
   assert.equal(settings.autoPlanEnabled, expectedChoice === 'on');
-  const [workspace, sessionId, scopeId, chatUrl] = JSON.parse(settings.autoPlanCheckpoint.key);
+  const entries = settings.autoPlanCheckpoint?.version === 2 ? settings.autoPlanCheckpoint.entries : [settings.autoPlanCheckpoint];
+  const checkpoint = selectedKey ? entries.findLast(entry => entry.key === selectedKey) : entries.at(-1);
+  const [workspace, sessionId, scopeId, chatUrl] = JSON.parse(checkpoint.key);
   const selected = { workspace, sessionId, scopeId, chatUrl };
   const partition = session.fromPartition('restart-fixture');
   await partition.protocol.handle('https', () => new Response('<html><body><article data-message-author-role="user">Existing request</article><button id="stop" data-testid="stop-button">Stop</button><form><div id="prompt-textarea" contenteditable="true"></div><button data-testid="send-button">Send</button></form><script>window.sent=[];document.querySelector("form").onsubmit=e=>{e.preventDefault();sent.push(document.getElementById("prompt-textarea").textContent)};document.getElementById("prompt-textarea").onpaste=e=>{e.preventDefault();e.currentTarget.textContent+=e.clipboardData.getData("text/plain");e.currentTarget.dispatchEvent(new Event("input",{bubbles:true}))}</script></body></html>', { headers: { 'content-type': 'text/html' } }));
@@ -34,7 +36,6 @@ app.whenReady().then(async () => {
   };
   const unsubscribe = source.subscribe(event => {
     automatic?.observe(event);
-    void automatic?.recover();
   });
   try {
     automatic = new AutoPlan({ selected: () => selected, inspectPlan: () => readAutoPlanState(selected),
@@ -43,12 +44,12 @@ app.whenReady().then(async () => {
     await window.loadURL(chatUrl);
     await wait(() => source.current?.state.editorAvailable);
     await automatic.recover();
-    await wait(() => !automatic.recovering);
+    await wait(() => !automatic.pending);
     assert.equal(automatic.view().enabled, expectedChoice === 'on');
     assert.deepEqual(await window.webContents.executeJavaScript('window.sent'), [], 'fresh process never repeats Send into a busy turn');
     if (expectedChoice === 'on') {
       assert.equal(automatic.view().phase, 'running');
-      assert.equal(automatic.run.sawBusy, true);
+      assert.equal(automatic.page.busy, true);
     } else assert.equal(automatic.run, null);
     console.log(JSON.stringify({ autoPlanRestart: expectedChoice, busy: true, sends: 0, isolated: true }));
   } finally { automatic?.dispose(); unsubscribe(); disconnect(); window.destroy(); clearTimeout(deadline); app.quit(); }

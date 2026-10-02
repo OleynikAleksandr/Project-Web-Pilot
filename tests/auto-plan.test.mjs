@@ -28,7 +28,7 @@ function fixture({ busy = false, scopeId = 'scope', turnId = 'a1234' } = {}) {
     },
     schedule: (fn, ms) => { timers.set(++timerId, { fn, ms }); return timerId; }, cancel: id => timers.delete(id) });
   const state = { url: selected.chatUrl, editorAvailable: true, writable: true, busy, assistantRevision: 0,
-    manualStopRevision: 0, manualInputRevision: 0, manualSendRevision: 0, userMessageCount: 1, turnId, draftPresent: false };
+    manualStopRevision: 0, manualInputRevision: 0, manualSendRevision: 0, userMessageCount: 1, turnId, userTurnId: 'f1234', lastMessageRole: turnId ? 'assistant' : null, draftPresent: false };
   const observe = patch => { Object.assign(state, patch); flow.observe({ state: { ...state }, documentId: 'document-1111' }); };
   observe({});
   const drain = async () => {
@@ -42,13 +42,14 @@ function fixture({ busy = false, scopeId = 'scope', turnId = 'a1234' } = {}) {
   };
   const finish = async () => {
     observe({ busy: true }); await settle();
-    observe({ busy: false, assistantRevision: ++state.assistantRevision, turnId: state.assistantRevision.toString(16) });
+    observe({ busy: false, assistantRevision: ++state.assistantRevision, turnId: state.assistantRevision.toString(16), lastMessageRole: 'assistant' });
     await drain();
   };
   return { flow, plan, sends, saved, observe, drain, finish, timers, events, state, selected: () => selected, reads: () => reads,
     setResult: value => { sendResult = value; }, setGate: value => { gate = value; },
     setInspectGate: value => { inspectGate = value; },
     setAvailable: value => { available = value; flow.availabilityChanged(); },
+    setSelection: value => { selected = { ...selected, ...value }; flow.selectionChanged(); },
     setScope: value => { selected = { ...selected, scopeId: value }; },
     changeSelection: () => { selected = { ...selected, sessionId: 'other', chatUrl: 'https://chatgpt.com/c/otherchat' }; flow.selectionChanged(); } };
 }
@@ -277,7 +278,7 @@ test('persistent enabled choice resumes busy and consumed checkpoints without an
 });
 test('checkpoint is saved before Send and failed persistence never sends', async () => {
   const order = [], f = fixture();
-  f.flow.saveCheckpoint = async checkpoint => { order.push(checkpoint.status); };
+  f.flow.saveCheckpoint = async checkpoint => { order.push(checkpoint.entries.at(-1).status); };
   const send = f.flow.send; f.flow.send = async (...args) => { order.push('Send'); return send(...args); };
   await f.flow.start();
   assert.deepEqual(order, ['sending', 'Send', 'sent']);
@@ -350,4 +351,150 @@ test('a different idle turn arriving during inspection cannot reuse the previous
   await f.flow.start(); await f.drain();
   assert.deepEqual(f.sends, ['Продолжай']);
   assert.equal(f.flow.checkpoint.turnId, 'b1234');
+});
+test('toggle can be used at any time and does not reuse a consumed pause', async () => {
+  const f = fixture({ busy: true }); await f.flow.start(); f.flow.disable();
+  await f.finish(); assert.deepEqual(f.sends, []);
+  await f.flow.start(); assert.deepEqual(f.sends, ['Продолжай']);
+  f.flow.disable(); await f.flow.start(); assert.deepEqual(f.sends, ['Продолжай']);
+  await f.finish(); assert.deepEqual(f.sends, ['Продолжай', 'Продолжай']);
+});
+test('new pause proceeds after an uncertain Send, while that earlier pause remains blocked', async () => {
+  const f = fixture(); f.setResult({ state: 'unknown' }); await f.flow.start();
+  f.setResult({ state: 'sent' }); await f.finish();
+  assert.deepEqual(f.sends, ['Продолжай', 'Продолжай']);
+  f.observe({ turnId: 'a1234' }); await f.drain();
+  assert.equal(f.sends.length, 2, 'an older pause is still protected by its own checkpoint');
+  assert.equal(f.flow.view().reason, 'SEND_UNKNOWN');
+});
+test('checkpoints survive switching conversations and revisiting an earlier pause', async () => {
+  const f = fixture(); await f.flow.start(); const first = f.selected();
+  f.changeSelection(); f.observe({ url: f.selected().chatUrl, turnId: 'b1234' }); await f.drain();
+  assert.equal(f.sends.length, 2);
+  f.setSelection(first); f.observe({ url: first.chatUrl, turnId: 'a1234' }); await f.drain();
+  assert.equal(f.sends.length, 2);
+  await f.finish(); assert.equal(f.sends.length, 3);
+  f.observe({ turnId: 'a1234' }); await f.drain(); assert.equal(f.sends.length, 3);
+  assert.equal(f.flow.checkpointState().entries.length, 3);
+});
+test('synthetic initial pause remains consumed across plan revisions and reconstruction', async () => {
+  const f = fixture({ turnId: '' }); await f.flow.start(); const saved = f.flow.checkpointState();
+  f.plan.planRevision++; await f.flow.planChanged(); await f.drain();
+  assert.equal(f.sends.length, 1);
+  f.flow.dispose(); f.flow.restore(true, saved); await f.flow.recover();
+  assert.equal(f.sends.length, 1);
+  assert.deepEqual(f.flow.checkpointState(), saved);
+});
+test('manual Send consumes a pause even when busy has not appeared and after reload', async () => {
+  const f = fixture(); f.observe({ draftPresent: true }); await f.flow.start();
+  f.observe({ draftPresent: false, manualSendRevision: 1, userTurnId: 'f5678',
+    lastMessageRole: 'user', userMessageCount: 2 });
+  await f.drain(); assert.deepEqual(f.sends, []);
+  f.flow.observe({ reset: true });
+  f.flow.observe({ documentId: 'document-2222', state: { ...f.state, manualSendRevision: 0, assistantRevision: 0 } });
+  await f.flow.recover(); assert.deepEqual(f.sends, []);
+  assert.equal(f.flow.view().reason, 'USER_MESSAGE_PENDING');
+  f.flow.observe({ documentId: 'document-2222', state: { ...f.state, busy: false,
+    turnId: 'b1234', lastMessageRole: 'assistant' } });
+  await f.drain(); assert.deepEqual(f.sends, ['Продолжай']);
+});
+test('manual waiting does not mistake idle text progress for a new answer', async () => {
+  const f = fixture(); f.observe({ draftPresent: true }); await f.flow.start();
+  f.observe({ manualSendRevision: 1, draftPresent: false });
+  await f.drain(); assert.deepEqual(f.sends, []);
+  f.observe({ assistantRevision: 9 }); await f.drain();
+  assert.deepEqual(f.sends, []);
+  f.flow.observe({ reset: true }); f.observe({ assistantRevision: 0 }); await f.drain();
+  assert.deepEqual(f.sends, []);
+  f.observe({ turnId: 'b1234' }); await f.drain();
+  assert.deepEqual(f.sends, ['Продолжай']);
+});
+test('manual input or a newly visible user turn cancels Send at the last guard', async () => {
+  for (const kind of ['input', 'user-turn']) {
+    const f = fixture();
+    f.setGate(async () => {
+      if (kind === 'input') f.observe({ manualInputRevision: 1, draftPresent: true });
+      else f.observe({ userTurnId: 'f5678', lastMessageRole: 'user' });
+    });
+    await f.flow.start(); await f.drain();
+    assert.deepEqual(f.sends, [], kind);
+    assert.equal(f.flow.view().reason, kind === 'input' ? 'DRAFT_PRESENT' : 'USER_MESSAGE_PENDING');
+  }
+});
+test('Stop at a new partial answer is an idle pause and mode stays enabled', async () => {
+  const f = fixture({ busy: true }); await f.flow.start();
+  f.observe({ turnId: 'b1234', manualStopRevision: 1, busy: false });
+  await f.drain();
+  assert.deepEqual(f.sends, ['Продолжай']);
+  assert.equal(f.flow.view().enabled, true);
+});
+test('confirmed Send is retained when OFF happens just after dispatch', async () => {
+  const f = fixture();
+  f.flow.send = async (_text, current, before) => {
+    assert.equal(current(), true); assert.equal(await before(), true);
+    f.sends.push('Продолжай'); f.flow.disable();
+    return { state: 'sent' };
+  };
+  await f.flow.start();
+  assert.equal(f.flow.view().enabled, false);
+  assert.equal(f.flow.checkpoint.status, 'sent');
+  assert.equal(f.flow.view().continuations, 1);
+  await f.flow.start(); assert.deepEqual(f.sends, ['Продолжай']);
+});
+test('failure to save a sent confirmation retains its fact and never repeats Send', async () => {
+  const f = fixture();
+  f.flow.saveCheckpoint = async snapshot => {
+    if (snapshot.entries.at(-1).status === 'sent') throw Error('private-disk-error');
+  };
+  await f.flow.start();
+  assert.equal(f.flow.view().continuations, 1);
+  assert.equal(f.flow.checkpoint.status, 'sent');
+  assert.equal(f.flow.view().reason, 'SEND_CHECKPOINT_ERROR');
+  f.observe({}); await f.flow.planChanged(); await f.drain();
+  assert.deepEqual(f.sends, ['Продолжай']);
+});
+test('checkpoint save failing before Composer permits a later event to retry the known unsent pause', async () => {
+  const f = fixture(); let fail = true;
+  f.flow.saveCheckpoint = async () => { if (fail) throw Error('disk temporarily unavailable'); };
+  await f.flow.start(); assert.deepEqual(f.sends, []); assert.equal(f.flow.checkpoint, null);
+  fail = false; await f.flow.planChanged();
+  assert.deepEqual(f.sends, ['Продолжай']);
+});
+test('fresh Node processes retain ON/OFF, sent and sending checkpoints, including earlier pauses', () => {
+  const owner = JSON.stringify(['/project', 'chat', 'scope', 'https://chatgpt.com/c/abcdefgh']);
+  const moduleUrl = new URL('../src/auto-plan.mjs', import.meta.url).href;
+  const program = [
+    'import { AutoPlan } from ' + JSON.stringify(moduleUrl) + ';',
+    'const input = JSON.parse(process.argv[1]);',
+    'const selected = {workspace:"/project",sessionId:"chat",scopeId:"scope",chatUrl:"https://chatgpt.com/c/abcdefgh"};',
+    'const sends=[];',
+    'const flow=new AutoPlan({selected:()=>selected,inspectPlan:async()=>({confirmed:true,scopeId:"scope",scopeStatus:"ACTIVE",planRevision:10,planView:{tasks:[{id:"T001",status:"pending"}]}}),send:async text=>{sends.push(text);return {state:"sent"};}});',
+    'flow.restore(input.enabled,input.checkpoint);',
+    'flow.observe({documentId:"document-2222",state:{url:selected.chatUrl,editorAvailable:true,writable:true,busy:false,turnId:"a1234",userTurnId:"f1234",lastMessageRole:input.userPending?"user":"assistant"}});',
+    'await flow.recover();',
+    'console.log(JSON.stringify({enabled:flow.view().enabled,reason:flow.view().reason,sends}));',
+    'flow.dispose();',
+  ].join('\n');
+  for (const kind of ['off', 'sent', 'sending', 'earlier', 'manual']) {
+    const checkpoint = { version: 2, entries: [
+      { key: owner, turnId: 'a1234', status: kind === 'sending' ? 'sending' : 'sent' },
+      ...(kind === 'earlier' ? [{ key: owner, turnId: 'b1234', status: 'sent' }] : []),
+    ] };
+    const output = JSON.parse(execFileSync(process.execPath, ['--input-type=module', '-e', program,
+      JSON.stringify({ enabled: kind !== 'off', checkpoint: kind === 'manual' ? null : checkpoint, userPending: kind === 'manual' })], { encoding: 'utf8' }));
+    assert.deepEqual(output.sends, [], kind);
+    assert.equal(output.enabled, kind !== 'off');
+    if (kind === 'sending') assert.equal(output.reason, 'SEND_UNKNOWN');
+    if (kind === 'manual') assert.equal(output.reason, 'USER_MESSAGE_PENDING');
+  }
+});
+test('failed rollback of a known unsent attempt recovers on the next event in the live client', async () => {
+  const f = fixture(); let failRollback = true;
+  f.setResult({ state: 'deferred', reason: 'DRAFT_PRESENT' });
+  f.flow.saveCheckpoint = async snapshot => {
+    if (snapshot === null && failRollback) throw Error('rollback persistence unavailable');
+  };
+  await f.flow.start(); assert.deepEqual(f.sends, []); assert.equal(f.flow.checkpoint, null);
+  failRollback = false; f.setResult({ state: 'sent' }); await f.flow.planChanged();
+  assert.deepEqual(f.sends, ['Продолжай']);
 });
