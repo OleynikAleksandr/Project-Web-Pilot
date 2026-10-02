@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 908,
+  "plan_revision": 912,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "auto-plan-reliability-20261002",
@@ -580,6 +580,36 @@
       ]
     },
     {
+      "id": "T013",
+      "title": "Дополнить релиз Web Pilot Sidebar подписанным macOS DMG",
+      "why": "Дополнить релиз Web Pilot Sidebar подписанным macOS DMG",
+      "dependencies": [],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/SOURCE_WORKSPACES.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "К существующему GitHub Release Web Pilot Sidebar v0.1.0 добавлен готовый подписанный macOS DMG без изменения release tag.",
+        "Серверные имя, размер и SHA-256 DMG совпадают с локальным файлом; внутри DMG приложение проходит codesign, Gatekeeper и stapler validation.",
+        "Документы фиксируют актуальный Sidebar main после параллельного commit 0fab32a и честно отмечают, что TestFlight не опубликован из-за отсутствующего App Store Connect app record."
+      ],
+      "expected_commit_message": "docs: дополнить релиз Sidebar подписанным DMG",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
+      "commit_ref": {
+        "scope_id": "auto-plan-reliability-20261002",
+        "task_id": "T013",
+        "role": "implementation"
+      },
+      "actual_files": [
+        "docs/SOURCE_WORKSPACES.md",
+        "docs/VERIFICATION.md"
+      ]
+    },
+    {
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
@@ -599,7 +629,8 @@
         "T009",
         "T010",
         "T011",
-        "T012"
+        "T012",
+        "T013"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -646,7 +677,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: auto-plan-reliability-20261002
 Current Task: нет
-Revision: 908
+Revision: 912
 
 ## Цель
 
@@ -709,6 +740,10 @@ Revision: 908
 - [DONE] T012: Опубликовать Web Pilot Sidebar и его актуальный релиз на GitHub — Завершено
   - Git Commit: [DONE] docs: подтвердить публикацию Web Pilot Sidebar
   - Reference: auto-plan-reliability-20261002 / T012 / implementation
+  - Файлы: docs/SOURCE_WORKSPACES.md, docs/VERIFICATION.md
+- [DONE] T013: Дополнить релиз Web Pilot Sidebar подписанным macOS DMG — Завершено
+  - Git Commit: [DONE] docs: дополнить релиз Sidebar подписанным DMG
+  - Reference: auto-plan-reliability-20261002 / T013 / implementation
   - Файлы: docs/SOURCE_WORKSPACES.md, docs/VERIFICATION.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
