@@ -15,7 +15,7 @@
 
 Корневой app и `/Applications/Project Web Pilot.app` обновлены до **0.6.77** штатным installMacBundle с сохранением device/inode `16777234/406600483` и `16777234/406571340`. Оба app соответствуют staging; общий ASAR SHA-256 — `8e01a33bd51287b31d12edb1e1d49d27e9f362316823310bc73e6603fd37afdc`. Предыдущие Contents сохранены в release-backups. Работающий пользовательский процесс не перезапускался; новую версию запускают после полного выхода.
 
-Через config:apply `auto-plan-package` настроена на проверку уже готовой 0.6.77 командой `node scripts/check-installed-release.mjs`: source/metadata/hash/version, Finder identity, комплектные инструменты, runtime Kit из обеих упаковок и установленный observer/Composer/клиентский AutoPlan с обычными ответами без footer. Управляемый T005 выполняет node24, unit, smoke и этот package-gate; сборка в commit не повторяется. Evidence — `.harness/runtime/t005-build.log`, `release-0.6.77-preflight.json`, `t005-installation.json` и release manifest.
+Через config:apply `auto-plan-package` настроена на проверку уже готовой 0.6.77 командой `node scripts/check-installed-release.mjs`: source/metadata/hash/version, Finder identity, комплектные инструменты, runtime Kit из обеих упаковок и установленный observer/Composer/клиентский AutoPlan с обычными ответами без footer. T005 завершена коммитом `0b8335cb22193f3b986a1e9ad93bc65830556116`: node24, unit, smoke и package/installed gate прошли; сборка в commit не повторялась. Evidence — `.harness/runtime/t005-build.log`, `release-0.6.77-preflight.json`, `t005-installation.json` и release manifest.
 
 Живая приёмка ChatGPT, native Windows и чистый первый запуск остаются отдельными пользовательскими проверками. GitHub Release 0.6.77 не публиковался.
 

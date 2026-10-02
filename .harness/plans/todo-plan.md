@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 928,
+  "plan_revision": 930,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "auto-plan-client-driven-refactor-20261002",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Перевести автопродолжение полностью под управление клиента: переключатель не отправляет агенту инструкций, Web Pilot событийно отправляет только одно точное «Продолжай» на каждую подходящую паузу незавершённого Workflow Kit plan.",
   "acceptance_criteria": [
     "Перевести автопродолжение полностью под управление клиента: переключатель не отправляет агенту инструкций, Web Pilot событийно отправляет только одно точное «Продолжай» на каждую подходящую паузу незавершённого Workflow Kit plan."
@@ -45,7 +45,17 @@
       "docs/architecture/ARCHITECTURE.md",
       "docs/architecture/OVERVIEW.md",
       "docs/MODULES.md",
-      "docs/DOCUMENTATION_INDEX.md"
+      "docs/DOCUMENTATION_INDEX.md",
+      "AGENTS.md",
+      "README.md",
+      "docs/CLEAN_INSTALL.md",
+      "docs/CONTEXT_DELIVERY.md",
+      "docs/DECISIONS.md",
+      "docs/TRANSFER_TO_WINDOWS.md",
+      "docs/WORKFLOW_START.md",
+      "docs/modules/workspace-sessions.md",
+      "docs/planning/auto-plan-continuation.md",
+      "docs/planning/auto-plan-reliability.md"
     ]
   },
   "baseline_commit": "2ca651faad912501f58e3733c377e4c4dcd0e654",
@@ -333,8 +343,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "auto-plan-client-driven-refactor-20261002",
         "task_id": "DOCS",
@@ -356,7 +366,17 @@
         "docs/RELEASE.md",
         "docs/architecture/OVERVIEW.md",
         "docs/MODULES.md",
-        "docs/DOCUMENTATION_INDEX.md"
+        "docs/DOCUMENTATION_INDEX.md",
+        "AGENTS.md",
+        "README.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/DECISIONS.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "docs/WORKFLOW_START.md",
+        "docs/modules/workspace-sessions.md",
+        "docs/planning/auto-plan-continuation.md",
+        "docs/planning/auto-plan-reliability.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -365,7 +385,27 @@
       "acceptance_criteria": [
         "Документы соответствуют результату"
       ],
-      "expected_commit_message": "docs: актуализировать контекст проекта"
+      "expected_commit_message": "docs: актуализировать контекст проекта",
+      "actual_files": [
+        "AGENTS.md",
+        "README.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/DECISIONS.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/RELEASE.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/workspace-sessions.md",
+        "docs/planning/auto-plan-client-driven-refactor.md",
+        "docs/planning/auto-plan-continuation.md",
+        "docs/planning/auto-plan-reliability.md"
+      ]
     }
   ],
   "blocked_reason": null,
@@ -383,10 +423,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: auto-plan-client-driven-refactor-20261002
 Current Task: нет
-Revision: 928
+Revision: 930
 
 ## Цель
 
@@ -418,10 +458,10 @@ Revision: 928
   - Git Commit: [DONE] build: подготовить клиентский AutoPlan к приёмке
   - Reference: auto-plan-client-driven-refactor-20261002 / T005 / implementation
   - Файлы: package.json, package-lock.json, .harness/workflow.json, scripts/check-installed-release.mjs, docs/planning/auto-plan-client-driven-refactor.md, docs/RELEASE.md, docs/VERIFICATION.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать контекст проекта
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать контекст проекта
   - Reference: auto-plan-client-driven-refactor-20261002 / DOCS / implementation
-  - Файлы: docs/planning/auto-plan-client-driven-refactor.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
+  - Файлы: docs/planning/auto-plan-client-driven-refactor.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, AGENTS.md, README.md, docs/CLEAN_INSTALL.md, docs/CONTEXT_DELIVERY.md, docs/DECISIONS.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKFLOW_START.md, docs/modules/workspace-sessions.md, docs/planning/auto-plan-continuation.md, docs/planning/auto-plan-reliability.md
 
 ## Context Pack For This Cycle
 

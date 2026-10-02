@@ -2,9 +2,15 @@
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
+## 2026-10-02 — финальная DOCS / клиентский AutoPlan 0.6.77
+
+Сверены README, AGENTS, startup/recovery, product, архитектура, модули, индекс, release/verification и передача Windows. Действующие ссылки ведут на client-driven contract; прежние AutoPlan 0.6.73–0.6.76 помечены как история. Аудит: **42 Markdown-документа, 237 локальных ссылок, 0 сломанных ссылок, 0 несоответствий актуального контракта, 0 изменений приложения**. Evidence — `.harness/runtime/client-auto-plan-DOCS-audit.json`. `workflow validate` подтвердил соответствие T001–T005 плану/Git; DOCS фиксирует только документацию и не повторяет уже пройденные runtime/package проверки.
+
+Локальная 0.6.77 готова к пользовательской приёмке после полного выхода и запуска постоянного app. План остаётся в checkout; публикация нового GitHub Release и архивирование не поручены.
+
 ## 2026-10-02 — T004: клиентское автопродолжение / source
 
-Адресный observer suite — **12/12 PASS**. Полный `npm run smoke` и ProseMirror fixture на текущих source/staged preload завершились с exit 0 в Electron **44.5.1**, Node **24.21.0**. ProseMirror вставил 110 001 символ через ClipboardEvent.paste за 19 мс. Логи и checkpoint проверки сохранены в `.harness/runtime/t004-client-driven/`; обязательные Node/unit/smoke повторно выполняет управляемый T004 commit.
+Адресный observer suite — **12/12 PASS**. Полный `npm run smoke` и ProseMirror fixture на текущих source/staged preload завершились с exit 0 в Electron **44.5.1**, Node **24.21.0**. ProseMirror вставил 110 001 символ через ClipboardEvent.paste за 19 мс. Логи и checkpoint проверки сохранены в `.harness/runtime/t004-client-driven/`; управляемый T004 commit `b00b344` прошёл назначенные node24/unit/smoke.
 
 Новая изолированная Electron-проверка 01TestAuto: сохранённый ON → новый Chat с NONE → обычный busy-ответ создаёт ACTIVE-план → один «Продолжай» → task:start/настоящий Git commit T001/обычный отчёт → следующий «Продолжай». В Chat/Work проверяются переключатель busy/idle/OFF/ON, draft и trusted Send, ручной Stop с частичным ответом, reload, connection recovery, watchdog и завершение DOCS без лишней отправки. Стартовая AutoPlan-инструкция и специальные строки ответа для отправки не требуются; прежние footer-слова проверяются как обычный текст.
 
@@ -14,7 +20,7 @@ Fresh Electron fixture читает durable settings и real fixture-plan, пр�
 
 T005 подготовила 0.6.77 штатной парной сборкой: **106 source/resource файлов совпали** с macOS arm64 / Windows x64; ZIP integrity и hashes delivery подтверждены сборочным скриптом. Поставка — `~/Downloads/WebPilot-0.6.77/`. Root app и `/Applications/Project Web Pilot.app` обновлены с сохранением Finder identity; ASAR обеих копий совпадает со staging. Версии — Electron 44.5.1, Node 24.21.0, Workflow Kit 1.5.1. Подробные размеры/hashes — [RELEASE](RELEASE.md).
 
-В управляемый T005 назначены node24, полная unit suite, Electron smoke и package/installed gate `auto-plan-package`. Последний сверяет готовые артефакты и metadata, версии/исходники/identity обеих app, packaged runtime и установленный ProseMirror/observer/клиентский AutoPlan без footer или стартовой инструкции. Windows JS проверяется на Mac; native Windows запуск этим не подменяется.
+T005 завершена коммитом `0b8335cb22193f3b986a1e9ad93bc65830556116`: node24, полная unit suite, Electron smoke и package/installed gate `auto-plan-package` прошли. Последний сверил готовые артефакты и metadata, версии/исходники/identity обеих app, packaged runtime и установленный ProseMirror/observer/клиентский AutoPlan без footer или стартовой инструкции. Windows JS проверяется на Mac; native Windows запуск этим не подменяется.
 
 Evidence: `.harness/runtime/t005-build.log`, `release-0.6.77-preflight.json`, `t005-installation.json` и release-manifest.json. Работающий процесс не перезапускался. Живая приёмка ChatGPT, native Windows и чистый первый запуск не выполнялись; GitHub Release 0.6.77 не публиковался.
 

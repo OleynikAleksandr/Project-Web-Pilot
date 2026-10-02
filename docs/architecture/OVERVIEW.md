@@ -8,11 +8,11 @@ Project Web Pilot — Electron-приложение для macOS arm64 и Window
 
 ## Текущее состояние
 
-Выпуск **0.6.76** для macOS arm64 и Windows x64: Electron **44.5.1**, встроенный и комплектный Node **24.21.0**, Workflow Kit **1.5.1**. AutoPlan сохраняет пользовательский on/off между перезапусками, не выключается при busy-watchdog, сохраняет draft до ручного Send и показывает счётчик подтверждённых «Продолжай» вместе с безопасными reason codes. Контракт Web Pilot Sidebar и формат `pageScript` сохранены.
+Локальная поставка **0.6.77** для macOS arm64 и Windows x64: Electron **44.5.1**, встроенный и комплектный Node **24.21.0**, Workflow Kit **1.5.1**. AutoPlan принадлежит клиенту: переключатель можно менять в любой момент; при включённом режиме подходящая пауза незавершённого ACTIVE-плана получает ровно одно точное «Продолжай». Стартовая AutoPlan-инструкция и управляющие строки ответа удалены. Контракт Web Pilot Sidebar, экспорт `pageOperation` и формат `pageScript` сохранены.
 
-Поставка — `~/Downloads/WebPilot-0.6.76/`. Корневой `Project Web Pilot.app` и копия в `/Applications` обновлены с сохранением Finder-identity; оба ZIP и сопроводительные файлы готовы и сверены package-gate. Живая приёмка 0.6.76, native Windows и чистый первый запуск пока не выполнялись.
+Поставка — `~/Downloads/WebPilot-0.6.77/`. Корневой `Project Web Pilot.app` и копия в `/Applications` обновлены с сохранением Finder identity. Оба ZIP и metadata сверены с 106 source/resource файлами; node24, unit, Electron smoke и package/installed gate прошли в T005 (`0b8335c`). Для новой версии нужен полный выход и повторный запуск. Живая приёмка 0.6.77, native Windows и чистый первый запуск остаются отдельными проверками пользователя.
 
-История и evidence — [RELEASE](../RELEASE.md). Текущий scope — [надёжность AutoPlan](../planning/auto-plan-reliability.md): реализация и локальная поставка 0.6.76 завершены, после документальной подготовки выполняются публикации Project Web Pilot, WorkflowKit и Web Pilot Sidebar. Архивирование scope требует отдельного поручения.
+[Клиентский AutoPlan](../planning/auto-plan-client-driven-refactor.md) реализован и проверен в T001–T005. История и evidence — [RELEASE](../RELEASE.md) и [VERIFICATION](../VERIFICATION.md). Финальная DOCS оставляет план в checkout; публикация 0.6.77 и архивирование требуют отдельного поручения.
 
 ## Связь с Web Pilot Sidebar
 
@@ -25,7 +25,7 @@ Web Pilot Sidebar (`/Users/oleksandroliinyk/VSCODE/Web Pilot Sidebar`) — от�
 - PageStateSource получает события из sandboxed isolated preload только основного ChatGPT document. Проверяются frame/origin/document/sequence. Агентский секундомер следует Stop; busy не доказывает серверное состояние.
 - ContextCache, fingerprint и проверка recovery принимают workspace без session selector; кеш общий для чатов checkout. Пакет по-прежнему строит canonical Workflow Kit, а актуальность проверяется перед вставкой. Настройка туннеля Windows идёт через мастер и configureWindowsTunnel; старый запуск внешней консоли удалён.
 - PlanMonitor независим от доставки. Файловые сигналы означают перечитывание, а не журнал. Ошибки видимы, повторы ограничены; полный fingerprint остаётся перед вставкой.
-- AutoPlan отделяет сохранённый `autoPlanEnabled` от текущей фазы. Busy-watchdog пишет `STALL_WARNING` и продолжает ждать; `DRAFT_PRESENT` не меняет composer и возобновляется после ручного Send; неизвестный исход отправки не повторяется. Sidebar удерживает номер последнего подтверждённого «Продолжай», diagnostics — только безопасные reason codes.
+- AutoPlan выполняет один последовательный событийный reconcile по toggle, странице, выбранному контексту и PlanMonitor. Saved on/off независим от фазы; busy не вызывает Git polling. Перед Send повторно проверяется подтверждённый ACTIVE-план. Stable turn/user IDs и v2 checkpoint ledger исключают дубль sending/sent между OFF/ON, reload и restart. Draft сохраняется, ручной Send ждёт нового ответа; Stop с частичным ответом допускает подходящую idle-паузу. Текст ответа не определяет отправку. Watchdog только сообщает STALL_WARNING; sidebar показывает подтверждённый счётчик, diagnostics — причины без содержимого разговора.
 - ConversationRecovery ограниченно восстанавливает известный URL при terminal stream error, включая Resume stream unavailable. Черновик, ручной Stop и rate limit учитываются; восстановление страницы не равно повторной генерации.
 - Project Doctor чинит известные служебные неисправности current plan. Исторические планы не блокируют readiness.
 - Панель настроек — src/ui/settings-panel.mjs (settingsPanelView). Кнопка «Архив…» открывает отдельное окно с archive:* IPC; скрытого встроенного архива и старых pilot:* обработчиков удаления нет. settings хранит workspace для выбора проекта в Докторе, включая ошибку восстановления удаления при старте; archives в снимке остаётся для наблюдения за архивированием.
@@ -36,5 +36,5 @@ Web Pilot Sidebar (`/Users/oleksandroliinyk/VSCODE/Web Pilot Sidebar`) — от�
 
 ## Навигация
 [Модули](../MODULES.md), [индекс](../DOCUMENTATION_INDEX.md), [выпуск](../RELEASE.md), [проверки](../VERIFICATION.md).
-[Общий контракт рефакторинга](../planning/event-driven-runtime.md), [автовыполнение](../planning/auto-plan-continuation.md).
+[Общий контракт рефакторинга](../planning/event-driven-runtime.md), [клиентское автопродолжение](../planning/auto-plan-client-driven-refactor.md).
 Полная прежняя сводка с историей выпусков сохранена без потерь в [OVERVIEW.history-20260929.md](OVERVIEW.history-20260929.md); она не обязательна для каждого recovery.

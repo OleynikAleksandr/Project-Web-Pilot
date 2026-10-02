@@ -2,7 +2,7 @@
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
-Текущий выпуск — **0.6.75**, macOS arm64 / Windows x64, Electron **44.5.1**, встроенный и комплектный Node **24.21.0**, Workflow Kit **1.5.1**. Поставка: `~/Downloads/WebPilot-0.6.75/`, также [GitHub Release](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.75). Пользователь принял запуск на основном Mac 02.10.2026; это не чистая установка. Native Windows и первый запуск на чистой macOS не проверены. Installed-проверка T010 подтвердила комплектные инструменты и worker/CLI без системного Node; VM и Computer Use агент не запускал. Полная матрица — [VERIFICATION](VERIFICATION.md).
+Текущая локальная поставка — **0.6.77**, macOS arm64 / Windows x64, Electron **44.5.1**, встроенный и комплектный Node **24.21.0**, Workflow Kit **1.5.1**. Поставка: `~/Downloads/WebPilot-0.6.77/`; GitHub Release 0.6.77 не опубликован. T005 (`0b8335c`) подтвердила исходники, версии, ZIP, Finder identity, комплектные инструменты и worker/CLI без системного Node, установленный observer/Composer/AutoPlan fixture. Живая приёмка 0.6.77, native Windows и чистый первый запуск не выполнялись. Прежняя пользовательская приёмка 0.6.75 на основном Mac не является clean-install и не переносится на 0.6.77. Матрица — [VERIFICATION](VERIFICATION.md).
 
 История 0.6.58: Workspace Setup мигрирует совместимые 1.1.0–1.4.13 к single-active model с резервной копией; historical session plans не участвуют в readiness.
 

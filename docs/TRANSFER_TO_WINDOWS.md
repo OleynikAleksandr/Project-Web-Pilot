@@ -2,15 +2,15 @@
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
-Текущая поставка — **Project Web Pilot 0.6.75, Windows x64**, собранная вместе с macOS arm64. Workflow Kit 1.5.1. Упакованные исходники и ZIP сверены; native Windows/clean VM не запускались.
+Текущая поставка — **Project Web Pilot 0.6.77, Windows x64**, собранная вместе с macOS arm64. Workflow Kit 1.5.1. Упакованные исходники и ZIP сверены; native Windows/clean VM не запускались.
 
 ## Файл для переноса
 
-`~/Downloads/WebPilot-0.6.75/Project-Web-Pilot-0.6.75-Windows-x64.zip`
+`~/Downloads/WebPilot-0.6.77/Project-Web-Pilot-0.6.77-Windows-x64.zip`
 
-Размер: 355422106 bytes; SHA-256 `ba135bceaa379d6cc2073ecbc5be5ce940972c4b038e3096a7eae51fb6b27ec4`.
+Размер: 355424594 bytes; SHA-256 `5e7ea853b69068142908ea4ccf096b059143ea00f1515b91e1c3f4b3ca230ef6`.
 
-[Скачать Windows ZIP с GitHub](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/download/v0.6.75/Project-Web-Pilot-0.6.75-Windows-x64.zip). Electron 44.5.1, встроенный и комплектный Node 24.21.0. Статическая проверка пакета пройдена в T009/T010; работа Windows нативно пока не подтверждена.
+0.6.77 передаётся из локальной поставки; GitHub Release для неё не опубликован. Electron 44.5.1, встроенный и комплектный Node 24.21.0. Package/installed gate T005 (`0b8335c`) прошла на Mac; native Windows пока не подтверждена. История опубликованных выпусков — [RELEASE](RELEASE.md).
 
 Контрольные суммы, инструкция и общий manifest лежат рядом. Полностью распакуйте ZIP на локальный диск Windows; запускайте `Project Web Pilot.exe` из полученной папки. Не переносите один EXE отдельно от resources. Для обновления завершите старое приложение и распакуйте новую поставку в отдельную папку; данные аккаунта и проектов в пользовательском профиле сохраняются.
 

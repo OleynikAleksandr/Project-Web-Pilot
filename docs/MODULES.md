@@ -2,7 +2,7 @@
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
-Текущий выпуск — 0.6.76: исправлена надёжность AutoPlan при сохранении Node 24.21.0 / Electron 44.5.1 / Workflow Kit 1.5.1 и контракта Web Pilot Sidebar. Локальная парная поставка собрана и проверена; публикации трёх связанных репозиториев ещё следуют по текущему плану. Результаты — в [AutoPlan reliability](planning/auto-plan-reliability.md), [RELEASE](RELEASE.md) и [VERIFICATION](VERIFICATION.md).
+Текущая локальная поставка — 0.6.77: событийный клиентский AutoPlan, Node 24.21.0 / Electron 44.5.1 / Workflow Kit 1.5.1 и сохранённый контракт Sidebar. T001–T005 и локальная парная поставка проверены; новый GitHub Release не назначен. Контракт — [AutoPlan 0.6.77](planning/auto-plan-client-driven-refactor.md), evidence — [RELEASE](RELEASE.md) и [VERIFICATION](VERIFICATION.md).
 
 Карта самостоятельных частей проекта и их владельцев. Workflow Kit не ограничивает проект программным продуктом: здесь могут быть программные модули, исследовательские направления, зоны проектирования или другие устойчивые части предметной работы. Перед новым scope агент сначала находит затрагиваемую часть здесь; если владельца/спецификации нет, сначала создаётся и согласуется подходящий specification/planning document.
 
@@ -15,6 +15,7 @@
 | Runtime Lifecycle | `docs/modules/runtime-lifecycle.md` | MCP/tunnel discovery, bootstrap, process identity, persisted endpoints и self-healing startup |
 | Codex App Server Local Executor | `docs/modules/codex-app-server-executor.md` | macOS local-only MCP facade поверх Codex App Server: паритет 47 локальных tools, Computer Use и альтернативный backend за единым stable connector |
 | Workspace & Sessions | `docs/modules/workspace-sessions.md` | Проекты, Chat/Work sessions, session tree, experience routing, оформление и сохранение геометрии интерфейса |
+| AutoPlan | `docs/planning/auto-plan-client-driven-refactor.md` | Клиентское событийное продолжение current plan, переключатель, идентичность паузы/checkpoint и приоритет пользовательского ввода |
 | Release & Local Installation | `docs/RELEASE.md` | Постоянный macOS app, сохранение Finder-алиаса, отдельные ZIP и доставка релиза; стенд чистых ОС, точка передачи проверки установки и диагностика Computer Use/MCP — `docs/CLEAN_INSTALL.md` |
 
 Этот файл является маршрутизатором. Общая архитектура находится в `docs/architecture/OVERVIEW.md`, полный перечень документов — в `docs/DOCUMENTATION_INDEX.md`, детали частей проекта — в их спецификациях.
@@ -29,7 +30,7 @@ Workflow Kit — отдельный canonical пакет планов и recover
 - [Быстрое открытие](modules/session-opening-performance.md): быстрый показ и строгая before-Send готовность.
 - [ChatGPT DOM](modules/chatgpt-dom-compatibility.md): общий adapter, composer, наблюдатель, фильтр, цвета и autoscroll.
 - [Событийный рефакторинг](planning/event-driven-runtime.md): фазы 1–3 завершены; 0.6.74 включает файловые события/прогрев, общий page observer без общего 1500-мс функционального пульса, оформление без секундного safety-pass, сопоставимые измерения и live Chat/Work на macOS. Native Windows остаётся отдельной platform-проверкой.
-- 0.6.76: [Автовыполнение](planning/auto-plan-continuation.md) сохраняет короткие turn и точное «Продолжай», а [исправление надёжности](planning/auto-plan-reliability.md) добавляет постоянный on/off, `STALL_WARNING` без ложной паузы, безопасный draft-resume, видимый счётчик автоотправок и reason codes. Workflow Kit по-прежнему обеспечивает фактический plan и Git evidence.
+- [Клиентский AutoPlan 0.6.77](planning/auto-plan-client-driven-refactor.md): любой момент ON/OFF, обычные ответы, один «Продолжай» на подходящую паузу, persistent choice/checkpoint, draft и ручной Send, recovery и предупреждение watchdog. Workflow Kit обеспечивает фактический plan и Git evidence; прежние документы 0.6.73–0.6.76 сохранены как история.
 - [Первый запуск](modules/first-run-onboarding.md), [Workspace Setup](WORKSPACE_SETUP.md): комплектные компоненты, MCP Permissions, подключение папок.
 - [Исследование удалённого UI](research/remote-project-ui-options-2026-09-28.md): исследование, не функция продукта.
 - [Session titles](planning/session-title-sync.md): событийная синхронизация и ручное переименование.

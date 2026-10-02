@@ -2,6 +2,12 @@
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](../SOURCE_WORKSPACES.md).
 
+## Клиентское автопродолжение — 0.6.77
+
+AutoPlan получает toggle, page/context/availability и PlanMonitor semantic change через один сериализованный reconcile. Настройки хранят постоянный autoPlanEnabled и v2 ledger с ключом workspace/session/scope/URL, идентичностью паузы и sending/sent; старый одиночный checkpoint читается. Машинные turn/user IDs устойчивы к правкам текста и reload. Ни смысл ответа, ни footer не участвуют в Send. Busy не опрашивает Git; подходящий idle читает подтверждённый ACTIVE-план и повторяет проверку непосредственно перед click. Draft, ручной Send, connection error и готовность поля являются событиями ожидания. Unknown не повторяет свою паузу; следующая новая пауза проверяется обычно. Watchdog только предупреждает, sidebar считает подтверждённые отправки. Общий порядок одной микрозадачи передаётся обычным startupMessage независимо от переключателя. Контракт — [клиентский AutoPlan](../planning/auto-plan-client-driven-refactor.md).
+
+### История событийного runtime
+
 0.6.74: AutoPlan сохраняет контракт 0.6.73, а событийный runtime завершает фазы 2/3: startup-account и ContextSession используют общий PageStateSource, проект/план обновляются по файловым событиям, общий 1500-мс функциональный пульс и секундный safety-pass цветов отсутствуют. Сопоставимый fixture и live Chat/Work на macOS пройдены; парная macOS arm64/Windows x64 поставка собрана. Workflow Kit 1.5.1 неизменён; native Windows остаётся отдельной platform-проверкой.
 
 В 0.6.71 передача recovery завершается сразу после Send, без поиска текста в DOM или ожидания ответа. Paste сохранён; старые неопределённые попытки больше не показывают бесконечную проверку. Контракт — docs/CONTEXT_DELIVERY.md, измерения — docs/VERIFICATION.md.
@@ -23,7 +29,7 @@
 
 ## Состояние
 
-Текущий выпуск — **0.6.76**, macOS arm64 / Windows x64; Electron **44.5.1**, встроенный и комплектный Node **24.21.0**, Workflow Kit **1.5.1**. Все 106 source/resource файлов совпадают с упаковками. Root app и `/Applications/Project Web Pilot.app` обновлены до 0.6.76 с сохранением device/inode. T007 (`0a73a39`) собрала парную поставку и проверила установленный AutoPlan fixture: постоянный выбор, busy-watchdog без ложной паузы, draft/suspend-resume, видимый счётчик «Продолжай» и reason codes. GitHub Release 0.6.76 ещё не опубликован; живая приёмка, native Windows и clean first-run не проверены. Контрольные суммы и границы — `docs/RELEASE.md` и `docs/VERIFICATION.md`.
+Локальная поставка **0.6.77** для macOS arm64 и Windows x64: Electron **44.5.1**, встроенный и комплектный Node **24.21.0**, Workflow Kit **1.5.1**. AutoPlan принадлежит клиенту: переключатель можно менять в любой момент; при включённом режиме подходящая пауза незавершённого ACTIVE-плана получает ровно одно точное «Продолжай». Стартовая AutoPlan-инструкция и управляющие строки ответа удалены. Контракт Web Pilot Sidebar, экспорт `pageOperation` и формат `pageScript` сохранены. Все 106 source/resource файлов совпали с упаковками. Root app и /Applications обновлены до 0.6.77 с сохранением device/inode. T005 (`0b8335c`) прошла node24, unit, smoke и package/installed gate. Источник размеров/hashes и границ live/native-приёмки — [RELEASE](../RELEASE.md) и [VERIFICATION](../VERIFICATION.md). Новый GitHub Release не назначен.
 
 Пользователь принял чистый macOS-путь 0.6.38 и проверку 0.6.39. Пользовательское испытание нового изменения 0.6.40 и Windows остаются отдельными. 18.09.2026 пользователь поручил закрыть план first-run-onboarding-031 и передал испытания Windows 11 другому агенту. Итог macOS и границы доказательств — docs/CLEAN_INSTALL.md; условия и оставшиеся критерии Windows — docs/TRANSFER_TO_WINDOWS.md. План first-run-corrections-032 принадлежит другой сессии и этим закрытием не изменяется.
 
