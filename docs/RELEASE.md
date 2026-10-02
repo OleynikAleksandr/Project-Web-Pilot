@@ -2,7 +2,7 @@
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
-## Локальная поставка 0.6.77 — 02.10.2026
+## Выпуск 0.6.77 — 02.10.2026
 
 Клиентский AutoPlan: переключатель не отправляет стартовую инструкцию, обычный ответ не требует footer, подходящая idle-пауза незавершённого ACTIVE-плана получает ровно одно точное «Продолжай». Постоянный выбор, durable checkpoint, ручной ввод и восстановление связи управляются клиентом. Electron **44.5.1**, встроенный и комплектный Node **24.21.0**, Workflow Kit **1.5.1**.
 
@@ -17,7 +17,9 @@
 
 Через config:apply `auto-plan-package` настроена на проверку уже готовой 0.6.77 командой `node scripts/check-installed-release.mjs`: source/metadata/hash/version, Finder identity, комплектные инструменты, runtime Kit из обеих упаковок и установленный observer/Composer/клиентский AutoPlan с обычными ответами без footer. T005 завершена коммитом `0b8335cb22193f3b986a1e9ad93bc65830556116`: node24, unit, smoke и package/installed gate прошли; сборка в commit не повторялась. Evidence — `.harness/runtime/t005-build.log`, `release-0.6.77-preflight.json`, `t005-installation.json` и release manifest.
 
-Живая приёмка ChatGPT, native Windows и чистый первый запуск остаются отдельными пользовательскими проверками. GitHub Release 0.6.77 не публиковался.
+02.10.2026 пользователь подтвердил общую приёмку 0.6.77: всё работает согласно обсуждённому контракту; scope рефакторинга закрыт коммитом `46097fb`. Отдельные native Windows и чистый первый запуск в сообщении о приёмке не перечислены.
+
+[GitHub Release v0.6.77](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.77) опубликован из этой готовой поставки без пересборки. Тег указывает на build commit T005 `0b8335cb22193f3b986a1e9ad93bc65830556116`; manifest sourceCommit сохраняет HEAD перед build commit. Перед раскрытием draft проверены ровно пять assets: оба ZIP, `SHA256SUMS.txt`, `INSTALL.txt` и `release-manifest.json`. Серверные размеры и `digest=sha256:...` совпали с локальными файлами. На момент публикации main синхронизирован с `25619d5fb4eb4fba76255dc632580718b2f1f1df`; документы T001 отправляются последующим коммитом. Evidence — `.harness/runtime/github-0.6.77-publication.json`.
 
 ## Выпуск 0.6.76 — 02.10.2026
 

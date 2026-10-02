@@ -4,11 +4,11 @@
 
 ## Текущее состояние — 02.10.2026
 
-Локальная поставка **0.6.77** для macOS arm64 и Windows x64: Electron **44.5.1**, встроенный и комплектный Node **24.21.0**, Workflow Kit **1.5.1**. AutoPlan принадлежит клиенту: переключатель можно менять в любой момент; при включённом режиме подходящая пауза незавершённого ACTIVE-плана получает ровно одно точное «Продолжай». Стартовая AutoPlan-инструкция и управляющие строки ответа удалены. Контракт Web Pilot Sidebar, экспорт `pageOperation` и формат `pageScript` сохранены.
+Выпуск **0.6.77** для macOS arm64 и Windows x64: Electron **44.5.1**, встроенный и комплектный Node **24.21.0**, Workflow Kit **1.5.1**. AutoPlan принадлежит клиенту: переключатель можно менять в любой момент; при включённом режиме подходящая пауза незавершённого ACTIVE-плана получает ровно одно точное «Продолжай». Стартовая AutoPlan-инструкция и управляющие строки ответа удалены. Контракт Web Pilot Sidebar, экспорт `pageOperation` и формат `pageScript` сохранены.
 
-Поставка — `~/Downloads/WebPilot-0.6.77/`. Корневой `Project Web Pilot.app` и копия в `/Applications` обновлены с сохранением Finder identity. Оба ZIP и metadata сверены с 106 source/resource файлами; node24, unit, Electron smoke и package/installed gate прошли в T005 (`0b8335c`). Для новой версии нужен полный выход и повторный запуск. Живая приёмка 0.6.77, native Windows и чистый первый запуск остаются отдельными проверками пользователя.
+Поставка — `~/Downloads/WebPilot-0.6.77/`. Корневой `Project Web Pilot.app` и копия в `/Applications` обновлены с сохранением Finder identity. Оба ZIP и metadata сверены с 106 source/resource файлами; node24, unit, Electron smoke и package/installed gate прошли в T005 (`0b8335c`). 02.10.2026 пользователь подтвердил общую приёмку 0.6.77: всё работает в соответствии с обсуждённым контрактом. Отдельные native Windows и чистый первый запуск в сообщении о приёмке не перечислены.
 
-[Клиентский AutoPlan](planning/auto-plan-client-driven-refactor.md) реализован и проверен в T001–T005; текущий план заканчивается DOCS. История и evidence — [RELEASE](RELEASE.md) и [VERIFICATION](VERIFICATION.md). Публикация 0.6.77 и архивирование не входят в этот scope.
+[Клиентский AutoPlan](planning/auto-plan-client-driven-refactor.md) реализован и проверен; scope рефакторинга принят и закрыт (`46097fb`). [Выпуск v0.6.77](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.77) опубликован с проверенными архивами. Текущий [publication scope](planning/github-publication-0.6.77.md) синхронизирует оба репозитория и README. История и evidence — [RELEASE](RELEASE.md) и [VERIFICATION](VERIFICATION.md).
 
 Node разработки, проверок и внешних workers — **^24.21.0** (не ниже 24.21.0 и ниже 25).
 

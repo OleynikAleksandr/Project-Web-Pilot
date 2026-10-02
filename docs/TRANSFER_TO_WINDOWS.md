@@ -10,7 +10,7 @@
 
 Размер: 355424594 bytes; SHA-256 `5e7ea853b69068142908ea4ccf096b059143ea00f1515b91e1c3f4b3ca230ef6`.
 
-0.6.77 передаётся из локальной поставки; GitHub Release для неё не опубликован. Electron 44.5.1, встроенный и комплектный Node 24.21.0. Package/installed gate T005 (`0b8335c`) прошла на Mac; native Windows пока не подтверждена. История опубликованных выпусков — [RELEASE](RELEASE.md).
+[Скачать Windows ZIP выпуска 0.6.77](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/download/v0.6.77/Project-Web-Pilot-0.6.77-Windows-x64.zip). Серверные размер и SHA-256 совпадают с указанными выше; metadata доступны в [GitHub Release](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.77). Electron 44.5.1, встроенный и комплектный Node 24.21.0. Package/installed gate T005 (`0b8335c`) прошла на Mac. Пользователь подтвердил общую приёмку 0.6.77; отдельный native Windows сценарий не перечислен. История выпусков — [RELEASE](RELEASE.md).
 
 Контрольные суммы, инструкция и общий manifest лежат рядом. Полностью распакуйте ZIP на локальный диск Windows; запускайте `Project Web Pilot.exe` из полученной папки. Не переносите один EXE отдельно от resources. Для обновления завершите старое приложение и распакуйте новую поставку в отдельную папку; данные аккаунта и проектов в пользовательском профиле сохраняются.
 

@@ -13,3 +13,6 @@ WorkflowKit: canonical workspace /Users/oleksandroliinyk/VSCODE/WorkflowKit. В�
 
 ## Границы
 Повторная сборка и runtime-тесты не нужны для неизменённых проверенных пакетов и документальных правок. Общая приёмка пользователя не перечисляет отдельные платформенные сценарии; native Windows и чистый первый запуск отдельно не утверждаются. Web Pilot Sidebar не входит в это поручение. Публикации разрешены пользователем; архивирование нового publication scope отдельно не поручено.
+
+## T001 — публикация Web Pilot
+GitHub Release v0.6.77 опубликован 02.10.2026. Проверены 5 assets, их server digest/размеры, main на момент публикации и тег build commit. Evidence: .harness/runtime/github-0.6.77-publication.json. README и release/verification/startup документы отражают общую приёмку и закрытый scope рефакторинга. WorkflowKit README и синхронизация остаются T002.

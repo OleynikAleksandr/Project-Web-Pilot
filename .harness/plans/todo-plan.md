@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 933,
+  "plan_revision": 935,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "github-publication-0.6.77-20261002",
@@ -28,7 +28,8 @@
       "docs/PRODUCT.md",
       "docs/architecture/ARCHITECTURE.md",
       "docs/architecture/OVERVIEW.md",
-      "docs/MODULES.md"
+      "docs/MODULES.md",
+      "docs/planning/auto-plan-client-driven-refactor.md"
     ]
   },
   "baseline_commit": "0a78bf366e65ad35fed3332c43eda3aa3cddf9b2",
@@ -69,8 +70,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "github-publication-0.6.77-20261002",
         "task_id": "T001",
@@ -86,7 +87,9 @@
         "docs/RELEASE.md",
         "docs/VERIFICATION.md",
         "docs/DOCUMENTATION_INDEX.md",
-        "docs/TRANSFER_TO_WINDOWS.md"
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/planning/auto-plan-client-driven-refactor.md"
       ],
       "verification_ids": [],
       "id": "T001",
@@ -98,7 +101,19 @@
         "main синхронизирован с GitHub; v0.6.77 указывает на проверенный build commit",
         "Публичный GitHub Release содержит оба ZIP и три metadata-файла с совпадающими размерами/SHA-256"
       ],
-      "expected_commit_message": "docs: опубликовать принятую поставку Web Pilot 0.6.77"
+      "expected_commit_message": "docs: опубликовать принятую поставку Web Pilot 0.6.77",
+      "actual_files": [
+        "AGENTS.md",
+        "README.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/RELEASE.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/planning/auto-plan-client-driven-refactor.md",
+        "docs/planning/github-publication-0.6.77.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -152,7 +167,8 @@
         "docs/DOCUMENTATION_INDEX.md",
         "docs/TRANSFER_TO_WINDOWS.md",
         "docs/architecture/OVERVIEW.md",
-        "docs/MODULES.md"
+        "docs/MODULES.md",
+        "docs/planning/auto-plan-client-driven-refactor.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -182,7 +198,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: github-publication-0.6.77-20261002
 Current Task: нет
-Revision: 933
+Revision: 935
 
 ## Цель
 
@@ -194,10 +210,10 @@ Revision: 933
 
 ## Микрозадачи
 
-- [TODO] T001: Опубликовать принятую поставку Project Web Pilot 0.6.77 — Ожидает
-  - Git Commit: [PENDING] docs: опубликовать принятую поставку Web Pilot 0.6.77
+- [DONE] T001: Опубликовать принятую поставку Project Web Pilot 0.6.77 — Завершено
+  - Git Commit: [DONE] docs: опубликовать принятую поставку Web Pilot 0.6.77
   - Reference: github-publication-0.6.77-20261002 / T001 / implementation
-  - Файлы: docs/planning/github-publication-0.6.77.md, README.md, AGENTS.md, docs/WORKFLOW_START.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/DOCUMENTATION_INDEX.md, docs/TRANSFER_TO_WINDOWS.md
+  - Файлы: docs/planning/github-publication-0.6.77.md, README.md, AGENTS.md, docs/WORKFLOW_START.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/DOCUMENTATION_INDEX.md, docs/TRANSFER_TO_WINDOWS.md, docs/architecture/OVERVIEW.md, docs/planning/auto-plan-client-driven-refactor.md
 - [TODO] T002: Актуализировать и синхронизировать WorkflowKit — Ожидает
   - Git Commit: [PENDING] docs: подтвердить публикацию актуального WorkflowKit
   - Reference: github-publication-0.6.77-20261002 / T002 / implementation
@@ -205,7 +221,7 @@ Revision: 933
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: github-publication-0.6.77-20261002 / DOCS / implementation
-  - Файлы: docs/planning/github-publication-0.6.77.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, README.md, AGENTS.md, docs/WORKFLOW_START.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/DOCUMENTATION_INDEX.md, docs/TRANSFER_TO_WINDOWS.md, docs/architecture/OVERVIEW.md, docs/MODULES.md
+  - Файлы: docs/planning/github-publication-0.6.77.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, README.md, AGENTS.md, docs/WORKFLOW_START.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/DOCUMENTATION_INDEX.md, docs/TRANSFER_TO_WINDOWS.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/planning/auto-plan-client-driven-refactor.md
 
 ## Context Pack For This Cycle
 

@@ -40,7 +40,7 @@
 | docs/VERIFICATION.md | Проверки, release evidence и границы пользовательской приёмки |
 | docs/RELEASE.md | Парный выпуск macOS/Windows, постоянный macOS app, Finder-алиас, ZIP, GitHub Release и проверка доставки |
 | docs/CLEAN_INSTALL.md | Стенд Clean/Test macOS/Windows, историческое evidence первого запуска и границы clean/native-проверок текущей поставки 0.6.77 |
-| docs/TRANSFER_TO_WINDOWS.md | Локальная Windows x64 поставка 0.6.77, hashes и самостоятельная проверка; прежние GitHub-выпуски — история |
+| docs/TRANSFER_TO_WINDOWS.md | Опубликованная Windows x64 поставка 0.6.77, hashes и самостоятельная проверка |
 | docs/WORKSPACE_SETUP.md | Создание/подключение workspace и install/upgrade Workflow Kit |
 | docs/PROJECT_ARCHIVE.md | Архив workspace, возврат и безопасное локальное удаление; веб-чаты сохраняются |
 ## Обязательная навигация проекта
@@ -88,9 +88,10 @@
 - [Рабочие репозитории](SOURCE_WORKSPACES.md) — пути, роли Workflow Kit и Sidebar, текущий тестовый хост и границы будущего Host API.
 
 ## Актуальные дополнения
+- [Публикация 0.6.77 и актуализация WorkflowKit](planning/github-publication-0.6.77.md) — текущий контракт GitHub-поставки и проверки README обоих репозиториев.
 - [Рефакторинг и Node 24](planning/refactoring-node24.md) — завершённый scope очистки, Node 24.21.0 / Electron 44.5.1, контракт Sidebar, опубликованный выпуск 0.6.75 и полученная приёмка.
 - [Переход на один текущий план](planning/single-active-plan-adaptation.md) — исходный контракт адаптации Web Pilot к single-active Workflow Kit.
-- [Клиентский AutoPlan 0.6.77](planning/auto-plan-client-driven-refactor.md) — действующий контракт событийного reconcile, переключателя, обычных ответов, идентичности паузы/checkpoint и пользовательского ввода; локальная поставка и проверки.
+- [Клиентский AutoPlan 0.6.77](planning/auto-plan-client-driven-refactor.md) — действующий контракт событийного reconcile, переключателя, обычных ответов, идентичности паузы/checkpoint и пользовательского ввода; принятый и опубликованный выпуск, проверки.
 - [Автовыполнение 0.6.73–0.6.76](planning/auto-plan-continuation.md) — исторический протокол коротких turn; заменён клиентским AutoPlan.
 - [Надёжность AutoPlan 0.6.76](planning/auto-plan-reliability.md) — исторические исправления и опубликованный выпуск; архитектура заменена в 0.6.77.
 - [История обзора](architecture/OVERVIEW.history-20260929.md).
