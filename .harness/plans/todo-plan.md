@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 898,
+  "plan_revision": 899,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "auto-plan-reliability-20261002",
@@ -44,7 +44,10 @@
       "docs/MODULES.md",
       "docs/DOCUMENTATION_INDEX.md",
       "docs/RELEASE.md",
-      "docs/VERIFICATION.md"
+      "docs/VERIFICATION.md",
+      "README.md",
+      "AGENTS.md",
+      "docs/SOURCE_WORKSPACES.md"
     ]
   },
   "baseline_commit": "b15ae93c1e5d13a7d877ab4eca06b7a6b24c9087",
@@ -431,6 +434,127 @@
       ]
     },
     {
+      "id": "T009",
+      "title": "Актуализировать документацию перед публикацией",
+      "why": "Пользователь требует публикацию трёх связанных репозиториев и актуальных релизов после обновления документов.",
+      "dependencies": [
+        "T007"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/planning/auto-plan-reliability.md",
+        "docs/PRODUCT.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/planning/auto-plan-continuation.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/MODULES.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md",
+        "README.md",
+        "AGENTS.md"
+      ],
+      "verification_ids": [],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Документы Project Web Pilot описывают фактическую поставку 0.6.76 и завершённые исправления AutoPlan.",
+        "Проверены актуальность описаний и взаимных ссылок Project Web Pilot, WorkflowKit и Web Pilot Sidebar; необходимые правки связанных репозиториев выполняются по их локальным правилам без присвоения чужих изменений.",
+        "Зафиксированы версии и готовые артефакты для последующей публикации; финальная DOCS остаётся проверкой после публикаций."
+      ],
+      "expected_commit_message": "docs: подготовить документацию к публикации",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "auto-plan-reliability-20261002",
+        "task_id": "T009",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T010",
+      "title": "Опубликовать Project Web Pilot и релиз 0.6.76 на GitHub",
+      "why": "Прямое поручение пользователя 02.10.2026 15:35: загрузить три связанных репозитория и актуальные релизы.",
+      "dependencies": [
+        "T009"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Проверены remote и локальные коммиты; main Project-Web-Pilot синхронизирован с GitHub без force push.",
+        "Опубликован релиз v0.6.76 с macOS arm64 ZIP, Windows x64 ZIP, SHA256SUMS.txt, INSTALL.txt и release-manifest.json.",
+        "Тег указывает на корректный release commit; серверные имена, размеры и контрольные суммы артефактов сверены с локальной поставкой; ссылки записаны в документах."
+      ],
+      "expected_commit_message": "docs: подтвердить публикацию Web Pilot 0.6.76",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "auto-plan-reliability-20261002",
+        "task_id": "T010",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T011",
+      "title": "Опубликовать WorkflowKit и его актуальный релиз на GitHub",
+      "why": "Прямое поручение пользователя о публикации связанного WorkflowKit.",
+      "dependencies": [
+        "T009"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/SOURCE_WORKSPACES.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Прочитаны фактическое состояние и правила /Users/oleksandroliinyk/VSCODE/WorkflowKit; подтверждена актуальная готовая версия.",
+        "Коммиты WorkflowKit синхронизированы с origin main без force push и без включения посторонних незавершённых правок.",
+        "Актуальный GitHub Release и предусмотренные проектом артефакты опубликованы или подтверждены уже актуальными; тег и серверные файлы проверены, ссылка и результат записаны."
+      ],
+      "expected_commit_message": "docs: подтвердить публикацию WorkflowKit",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "auto-plan-reliability-20261002",
+        "task_id": "T011",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T012",
+      "title": "Опубликовать Web Pilot Sidebar и его актуальный релиз на GitHub",
+      "why": "Прямое поручение пользователя о публикации третьего связанного репозитория Web Pilot Sidebar.",
+      "dependencies": [
+        "T009"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/SOURCE_WORKSPACES.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Прочитаны фактическое состояние и правила /Users/oleksandroliinyk/VSCODE/Web Pilot Sidebar; подтверждена актуальная готовая версия.",
+        "Коммиты Web-Pilot-Sidebar синхронизированы с origin main без force push и без присвоения правок параллельной разработки.",
+        "Актуальный GitHub Release и предусмотренные проектом артефакты опубликованы или подтверждены уже актуальными; тег и серверные файлы проверены, ссылка и результат записаны."
+      ],
+      "expected_commit_message": "docs: подтвердить публикацию Web Pilot Sidebar",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "auto-plan-reliability-20261002",
+        "task_id": "T012",
+        "role": "implementation"
+      }
+    },
+    {
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
@@ -446,7 +570,11 @@
         "T005",
         "T006",
         "T007",
-        "T008"
+        "T008",
+        "T009",
+        "T010",
+        "T011",
+        "T012"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -458,7 +586,10 @@
         "docs/MODULES.md",
         "docs/DOCUMENTATION_INDEX.md",
         "docs/RELEASE.md",
-        "docs/VERIFICATION.md"
+        "docs/VERIFICATION.md",
+        "README.md",
+        "AGENTS.md",
+        "docs/SOURCE_WORKSPACES.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -488,7 +619,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: auto-plan-reliability-20261002
 Current Task: нет
-Revision: 898
+Revision: 899
 
 ## Цель
 
@@ -536,10 +667,26 @@ Revision: 898
   - Git Commit: [DONE] fix: завершить фиксацию постоянного автовыполнения
   - Reference: auto-plan-reliability-20261002 / T008 / implementation
   - Файлы: src/auto-plan.mjs, src/chatgpt-page-observer.mjs, src/main.mjs, src/page-state.mjs, src/ui/sidebar.mjs, tests/auto-plan-restart-fixture.cjs, tests/auto-plan.test.mjs, tests/electron-smoke.mjs, docs/planning/auto-plan-reliability.md
+- [TODO] T009: Актуализировать документацию перед публикацией — Ожидает
+  - Git Commit: [PENDING] docs: подготовить документацию к публикации
+  - Reference: auto-plan-reliability-20261002 / T009 / implementation
+  - Файлы: docs/planning/auto-plan-reliability.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/planning/auto-plan-continuation.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/RELEASE.md, docs/VERIFICATION.md, README.md, AGENTS.md
+- [TODO] T010: Опубликовать Project Web Pilot и релиз 0.6.76 на GitHub — Ожидает
+  - Git Commit: [PENDING] docs: подтвердить публикацию Web Pilot 0.6.76
+  - Reference: auto-plan-reliability-20261002 / T010 / implementation
+  - Файлы: docs/RELEASE.md, docs/VERIFICATION.md
+- [TODO] T011: Опубликовать WorkflowKit и его актуальный релиз на GitHub — Ожидает
+  - Git Commit: [PENDING] docs: подтвердить публикацию WorkflowKit
+  - Reference: auto-plan-reliability-20261002 / T011 / implementation
+  - Файлы: docs/SOURCE_WORKSPACES.md, docs/VERIFICATION.md
+- [TODO] T012: Опубликовать Web Pilot Sidebar и его актуальный релиз на GitHub — Ожидает
+  - Git Commit: [PENDING] docs: подтвердить публикацию Web Pilot Sidebar
+  - Reference: auto-plan-reliability-20261002 / T012 / implementation
+  - Файлы: docs/SOURCE_WORKSPACES.md, docs/VERIFICATION.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: auto-plan-reliability-20261002 / DOCS / implementation
-  - Файлы: docs/planning/auto-plan-reliability.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/planning/auto-plan-continuation.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/RELEASE.md, docs/VERIFICATION.md
+  - Файлы: docs/planning/auto-plan-reliability.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/planning/auto-plan-continuation.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/RELEASE.md, docs/VERIFICATION.md, README.md, AGENTS.md, docs/SOURCE_WORKSPACES.md
 
 ## Context Pack For This Cycle
 
