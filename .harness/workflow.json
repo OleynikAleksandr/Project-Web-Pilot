@@ -5,6 +5,16 @@
   "checks": [
     {
       "required": false,
+      "timeout_ms": 10000,
+      "id": "node24",
+      "executable": "node",
+      "args": [
+        "-e",
+        "const [a,b]=process.versions.node.split('.').map(Number);if(a<24||(a===24&&b<21)){console.error('Нужен Node.js 24.21 или новее; сейчас '+process.version);process.exit(1)}console.log('Node.js '+process.version)"
+      ]
+    },
+    {
+      "required": false,
       "timeout_ms": 120000,
       "id": "unit",
       "executable": "npm",
@@ -32,7 +42,7 @@
         "build"
       ],
       "kind": "package",
-      "evidence": "Project Web Pilot.app в корне checkout; ~/Downloads/WebPilot-0.6.74/ с macOS arm64 и Windows x64 ZIP, SHA256SUMS.txt, INSTALL.txt и release-manifest.json; release-all сверяет packaged sources, версию и установленную macOS копию."
+      "evidence": "Project Web Pilot.app в корне checkout; ~/Downloads/WebPilot-0.6.75/ с macOS arm64 и Windows x64 ZIP, SHA256SUMS.txt, INSTALL.txt и release-manifest.json; release-all сверяет packaged sources, версию 0.6.75 и установленную macOS копию; встроенный и комплектный Node 24.21.0."
     }
   ],
   "budget": {
