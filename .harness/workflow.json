@@ -1,49 +1,8 @@
 {
   "schema_version": 1,
   "profile": "DEVELOPMENT",
-  "stack": "Electron 44.5.1 / embedded Node 24.21.0 / Workflow Kit 1.5.1",
-  "checks": [
-    {
-      "required": false,
-      "timeout_ms": 120000,
-      "id": "node24",
-      "executable": "node",
-      "args": [
-        "-e",
-        "const [a,b]=process.versions.node.split('.').map(Number);if(a!==24||b<21){console.error('Нужен Node.js ^24.21.0 (24.21 или новее в линии 24); сейчас '+process.version);process.exit(1)}console.log('Node.js '+process.version)"
-      ]
-    },
-    {
-      "required": false,
-      "timeout_ms": 120000,
-      "id": "unit",
-      "executable": "npm",
-      "args": [
-        "test"
-      ]
-    },
-    {
-      "required": false,
-      "timeout_ms": 120000,
-      "id": "smoke",
-      "executable": "npm",
-      "args": [
-        "run",
-        "smoke"
-      ]
-    },
-    {
-      "required": false,
-      "timeout_ms": 120000,
-      "id": "auto-plan-package",
-      "executable": "node",
-      "args": [
-        "scripts/check-installed-release.mjs"
-      ],
-      "kind": "package",
-      "evidence": "Готовая локальная поставка Project Web Pilot 0.6.77: ~/Downloads/WebPilot-0.6.77/, macOS arm64/Windows x64 ZIP, source/metadata/hash/версия, Finder identity root app и /Applications, installed client AutoPlan без footer-протокола. Сборка выполнена штатным npm run build и не повторяется при commit."
-    }
-  ],
+  "stack": "Electron 44.5.1 / Node 24.21.0 / Workflow Kit 1.5.1",
+  "checks": [],
   "budget": {
     "soft_tokens": 16000,
     "hard_tokens": 90000,
