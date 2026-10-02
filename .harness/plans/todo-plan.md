@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 884,
+  "plan_revision": 886,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "auto-plan-reliability-20261002",
@@ -201,8 +201,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "auto-plan-reliability-20261002",
         "task_id": "T004",
@@ -233,7 +233,14 @@
         "Значимые pause/wait/warning события AutoPlan содержат безопасный reason code без текста разговора.",
         "Существующие секреты и содержимое сообщений в diagnostics не добавляются."
       ],
-      "expected_commit_message": "feat: показать автоматические продолжения AutoPlan"
+      "expected_commit_message": "feat: показать автоматические продолжения AutoPlan",
+      "actual_files": [
+        "docs/planning/auto-plan-reliability.md",
+        "src/auto-plan.mjs",
+        "src/ui/sidebar.mjs",
+        "tests/auto-plan.test.mjs",
+        "tests/electron-smoke.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -408,7 +415,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: auto-plan-reliability-20261002
 Current Task: нет
-Revision: 884
+Revision: 886
 
 ## Цель
 
@@ -436,8 +443,8 @@ Revision: 884
   - Git Commit: [DONE] fix: возобновлять AutoPlan после пользовательского черновика
   - Reference: auto-plan-reliability-20261002 / T003 / implementation
   - Файлы: src/auto-plan.mjs, tests/auto-plan.test.mjs, tests/electron-smoke.mjs, docs/planning/auto-plan-reliability.md
-- [TODO] T004: Сделать автоматическое «Продолжай» и причины пауз явно наблюдаемыми — Ожидает
-  - Git Commit: [PENDING] feat: показать автоматические продолжения AutoPlan
+- [DONE] T004: Сделать автоматическое «Продолжай» и причины пауз явно наблюдаемыми — Завершено
+  - Git Commit: [DONE] feat: показать автоматические продолжения AutoPlan
   - Reference: auto-plan-reliability-20261002 / T004 / implementation
   - Файлы: src/auto-plan.mjs, src/ui/sidebar.mjs, tests/auto-plan.test.mjs, tests/electron-smoke.mjs, docs/planning/auto-plan-reliability.md
 - [TODO] T005: Закрепить реальные сценарии AutoPlan интеграционным smoke — Ожидает

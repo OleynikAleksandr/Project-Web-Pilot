@@ -253,6 +253,53 @@ test('unknown Send is not treated as a recoverable draft and deferred resume rec
     assert.equal(f.sends.length, 0);
   }
 });
+test('continuation counter records only confirmed automatic Continue and survives waits', async () => {
+  const f = fixture(); await f.flow.start();
+  assert.equal(f.flow.view().continuations, 0, 'startup instruction is not Continue');
+  await f.finish();
+  assert.equal(f.flow.view().continuations, 1);
+  f.observe({ busy: false }); await f.drain();
+  assert.equal(f.flow.view().continuations, 1);
+  f.observe({ manualStopRevision: 1 });
+  assert.equal(f.flow.view().continuations, 1, 'pause retains the last sent fact');
+  assert.equal(f.flow.view().reason, 'MANUAL_STOP');
+  f.observe({ manualSendRevision: 1, busy: true }); await f.drain();
+  assert.equal(f.flow.view().continuations, 1, 'user Send is not an automatic continuation');
+  f.plan.planRevision++; await f.finish();
+  assert.equal(f.flow.view().continuations, 2);
+  f.setResult({ state: 'unknown' }); f.plan.planRevision++; await f.finish();
+  assert.equal(f.flow.view().continuations, 2, 'unknown Send cannot claim success');
+  assert.equal(f.flow.view().reason, 'SEND_UNKNOWN');
+  f.changeSelection(); f.flow.selectionChanged();
+  assert.equal(f.flow.view().continuations, 0, 'another conversation never shows this counter');
+});
+
+test('pause and warning diagnostics identify causes without conversation contents', async () => {
+  for (const reason of ['AGENT_WAIT','DRAFT_PRESENT','MANUAL_STOP','MANUAL_INPUT','CONNECTION_ERROR',
+    'PLAN_CHANGED_OR_TRANSACTION','SEND_UNKNOWN','STALL_WARNING','NO_CHECKPOINT','MANUAL_OFF']) {
+    const f = fixture();
+    if (reason === 'DRAFT_PRESENT') f.setResult({ state: 'deferred', reason });
+    if (reason === 'SEND_UNKNOWN') f.setResult({ state: 'unknown' });
+    await f.flow.start();
+    if (reason === 'AGENT_WAIT') await f.finish('wait');
+    if (reason === 'MANUAL_STOP') f.observe({ manualStopRevision: 1 });
+    if (reason === 'MANUAL_INPUT') f.observe({ manualInputRevision: 1 });
+    if (reason === 'CONNECTION_ERROR') f.observe({ connectionError: 'private-secret-error' });
+    if (reason === 'PLAN_CHANGED_OR_TRANSACTION') { f.plan.confirmed = false; await f.finish(); }
+    if (reason === 'NO_CHECKPOINT') await f.finish(null);
+    if (reason === 'MANUAL_OFF') f.flow.pause('private-user-text');
+    if (reason === 'STALL_WARNING') {
+      f.observe({ busy: true });
+      const id = f.flow.watchdog, timeout = f.timers.get(id);
+      f.timers.delete(id); timeout.fn();
+    }
+    assert.equal(f.flow.view().reason, reason);
+    assert.ok(f.events.some(e => e.event === 'state' && e.reason === reason), reason);
+    for (const event of f.events.filter(e => e.event === 'state' && e.phase === 'paused'))
+      assert.match(event.reason, /^[A-Z_]+$/);
+    assert.doesNotMatch(JSON.stringify(f.events), /private-secret-error|private-user-text|Готов продолжать|chatgpt\.com|\/project/);
+  }
+});
 test('explicit off, completed plan, different conversation and restart never resume implicitly', async () => {
   for (const reason of ['off','complete','selection','reload']) {
     const f = fixture(); await f.flow.start(); f.observe({ manualStopRevision: 1 });

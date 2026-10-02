@@ -328,8 +328,10 @@ function render(state) {
   $('auto-plan-toggle').disabled = actionPending || (!auto.enabled && (!selected?.chatUrl || !selected?.scopeId
     || selected?.planView?.tasks?.every(task => task.status === 'done')));
   $('auto-plan-toggle').setAttribute('aria-pressed', String(auto.enabled));
-  $('auto-plan-message').hidden = !auto.message;
-  $('auto-plan-message').textContent = auto.message;
+  const autoSent = auto.continuations > 0 ? `Автоматически отправлено «Продолжай» №${auto.continuations}.` : '';
+  $('auto-plan-message').hidden = !auto.message && !autoSent;
+  $('auto-plan-message').textContent = [autoSent, auto.message].filter(Boolean).join(' ');
+  $('auto-plan-message').dataset.reason = auto.reason ?? '';
 
   renderAgentTime(selected);
   $('session-actions').hidden = !selected;

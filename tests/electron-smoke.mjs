@@ -1281,6 +1281,9 @@ export async function run({ app, window, browser, sidebar, store, controller, se
       'exactly one automatic continuation', snapshot);
     assert.equal(await browser.executeJavaScript('window.fixtureMessages.at(-1).text'), 'Продолжай');
     await waitFor(() => autoPlan.view().phase === 'running', 'continue dispatched', snapshot);
+    assert.equal(autoPlan.view().continuations, 1);
+    await waitFor(() => sidebar.executeJavaScript("document.getElementById('auto-plan-message').textContent.includes('Продолжай» №1')"),
+      'confirmed automatic continuation stays visible in sidebar', snapshot);
     if (target.experience === 'work') {
       await beginAnswer();
       const draft = 'Мой сохранённый черновик';
@@ -1317,6 +1320,9 @@ export async function run({ app, window, browser, sidebar, store, controller, se
       await waitFor(() => autoPlan.view().phase === 'paused', 'trusted native Stop pauses auto-plan', snapshot);
       assert.match(autoPlan.view().message, /остановили/);
       assert.equal(autoPlan.view().enabled, true);
+      assert.equal(autoPlan.view().reason, 'MANUAL_STOP');
+      await waitFor(() => sidebar.executeJavaScript("document.getElementById('auto-plan-message').dataset.reason === 'MANUAL_STOP' && document.getElementById('auto-plan-message').textContent.includes('Продолжай» №1')"),
+        'pause shows its cause and retains the last continuation fact', snapshot);
       await browser.executeJavaScript("(()=>{const e=document.getElementById('prompt-textarea');e.textContent='Мой ответ после Stop';e.dispatchEvent(new Event('input',{bubbles:true}))})()");
       const sendPoint = await browser.executeJavaScript("(()=>{const r=document.querySelector('[data-testid=send-button]').getBoundingClientRect();return {x:Math.round(r.x+r.width/2),y:Math.round(r.y+r.height/2)}})()");
       browser.sendInputEvent({ type: 'mouseDown', ...sendPoint, button: 'left', clickCount: 1 });
