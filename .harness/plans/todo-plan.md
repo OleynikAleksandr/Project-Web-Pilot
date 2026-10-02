@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 900,
+  "plan_revision": 902,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "auto-plan-reliability-20261002",
@@ -462,13 +462,26 @@
         "Зафиксированы версии и готовые артефакты для последующей публикации; финальная DOCS остаётся проверкой после публикаций."
       ],
       "expected_commit_message": "docs: подготовить документацию к публикации",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "auto-plan-reliability-20261002",
         "task_id": "T009",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "AGENTS.md",
+        "README.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/planning/auto-plan-continuation.md",
+        "docs/planning/auto-plan-reliability.md"
+      ]
     },
     {
       "id": "T010",
@@ -621,7 +634,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: auto-plan-reliability-20261002
 Current Task: нет
-Revision: 900
+Revision: 902
 
 ## Цель
 
@@ -669,8 +682,8 @@ Revision: 900
   - Git Commit: [DONE] fix: завершить фиксацию постоянного автовыполнения
   - Reference: auto-plan-reliability-20261002 / T008 / implementation
   - Файлы: src/auto-plan.mjs, src/chatgpt-page-observer.mjs, src/main.mjs, src/page-state.mjs, src/ui/sidebar.mjs, tests/auto-plan-restart-fixture.cjs, tests/auto-plan.test.mjs, tests/electron-smoke.mjs, docs/planning/auto-plan-reliability.md
-- [TODO] T009: Актуализировать документацию перед публикацией — Ожидает
-  - Git Commit: [PENDING] docs: подготовить документацию к публикации
+- [DONE] T009: Актуализировать документацию перед публикацией — Завершено
+  - Git Commit: [DONE] docs: подготовить документацию к публикации
   - Reference: auto-plan-reliability-20261002 / T009 / implementation
   - Файлы: docs/planning/auto-plan-reliability.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/planning/auto-plan-continuation.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/RELEASE.md, docs/VERIFICATION.md, README.md, AGENTS.md
 - [TODO] T010: Опубликовать Project Web Pilot и релиз 0.6.76 на GitHub — Ожидает

@@ -15,9 +15,9 @@
 
 Корневой app и `/Applications/Project Web Pilot.app` обновлены до 0.6.76 штатной установкой с сохранением device/inode: `16777234/406600483` и `16777234/406571340`. Оба соответствуют staging; ASAR SHA-256 — `9f32216ae38994f6b166d918a45324bcda1495babb79b80a015f5f58e936a46f`. Старые Contents сохранены в release-backups. Работающий пользовательский процесс не перезапускался; для запуска новой версии нужен полный выход и повторное открытие приложения.
 
-T007 требует node24, unit, smoke и auto-plan-release. Последняя проверка выполняет `scripts/check-installed-release.mjs` на уже собранной поставке: источники, версии, ZIP, identity, комплектные инструменты и установленный observer/Composer/AutoPlan. Сборка не повторяется внутри коммита. Исходные отчёты: `.harness/runtime/release-0.6.76-preflight.json`, `auto-plan-t007-installation.json` и release manifest. Итоги проверок фиксирует Workflow Kit; финальная DOCS следует после T007.
+T007 требует node24, unit, smoke и auto-plan-release. Последняя проверка выполняет `scripts/check-installed-release.mjs` на уже собранной поставке: источники, версии, ZIP, identity, комплектные инструменты и установленный observer/Composer/AutoPlan. Сборка не повторяется внутри коммита. Исходные отчёты: `.harness/runtime/release-0.6.76-preflight.json`, `auto-plan-t007-installation.json` и release manifest. Итоги проверок фиксирует Workflow Kit; после T007 выполняются документальная подготовка T009, публикации T010–T012 и финальная DOCS.
 
-Native Windows, чистый первый запуск и живая приёмка ChatGPT не выполнялись. GitHub Release этой версии не публиковался.
+Native Windows, чистый первый запуск и живая приёмка ChatGPT не выполнялись. GitHub Release этой версии ещё не опубликован; готовая поставка предназначена для T010 без повторной сборки.
 
 ## Выпуск 0.6.75 — 02.10.2026
 

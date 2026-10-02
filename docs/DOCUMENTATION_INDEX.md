@@ -39,7 +39,7 @@
 | docs/SOURCE_WORKSPACES.md | Связанные Project Web Pilot / Workflow Kit / Web Pilot Sidebar, рабочие каталоги, границы интеграции и исторические источники |
 | docs/VERIFICATION.md | Проверки, release evidence и границы пользовательской приёмки |
 | docs/RELEASE.md | Парный выпуск macOS/Windows, постоянный macOS app, Finder-алиас, ZIP, GitHub Release и проверка доставки |
-| docs/CLEAN_INSTALL.md | Стенд Clean/Test macOS/Windows, evidence первого запуска до 0.6.45 и границы проверки текущей поставки 0.6.75 |
+| docs/CLEAN_INSTALL.md | Стенд Clean/Test macOS/Windows, историческое evidence первого запуска и границы clean/native-проверок текущей поставки 0.6.76 |
 | docs/TRANSFER_TO_WINDOWS.md | Актуальная Windows x64 поставка 0.6.75 на GitHub и локально и самостоятельная проверка пользователем |
 | docs/WORKSPACE_SETUP.md | Создание/подключение workspace и install/upgrade Workflow Kit |
 | docs/PROJECT_ARCHIVE.md | Архив workspace, возврат и безопасное локальное удаление; веб-чаты сохраняются |
@@ -81,7 +81,7 @@
 | Документ | Назначение |
 | --- | --- |
 | [Событийная обработка состояния Web Pilot](planning/event-driven-runtime.md) | Завершённый контракт трёх этапов: фаза 1 — общий observer/дедупликация, фаза 2 — файловые события/прогрев и удаление постоянных опросов, фаза 3 — сопоставимые измерения, live Chat/Work на macOS и парная поставка 0.6.74; native Windows отмечен как отдельная непроведённая проверка |
-## Workflow Kit 1.5.1 / Web Pilot 0.6.75
+## Workflow Kit 1.5.1 / Web Pilot 0.6.76
 
 ## Web Pilot Sidebar — связанный репозиторий
 - [Контракт DOM/Sidebar](modules/chatgpt-dom-compatibility.md) — общие browser-модули, публичные символы, pageScript и SHA-256.
@@ -90,7 +90,8 @@
 ## Актуальные дополнения
 - [Рефакторинг и Node 24](planning/refactoring-node24.md) — текущий scope очистки, Node 24.21.0 / Electron 44.5.1, контракт Sidebar, опубликованный выпуск 0.6.75 и полученная приёмка.
 - [Переход на один текущий план](planning/single-active-plan-adaptation.md) — исходный контракт адаптации Web Pilot к single-active Workflow Kit.
-- [Автовыполнение](planning/auto-plan-continuation.md) — короткие этапы, частичный план, Продолжай и пауза.
+- [Автовыполнение](planning/auto-plan-continuation.md) — базовый контракт коротких turn, частичного plan, точного «Продолжай» и пауз.
+- [Надёжность AutoPlan 0.6.76](planning/auto-plan-reliability.md) — постоянный on/off, watchdog warning, draft-resume, счётчик автоотправок, reason codes, release evidence и текущий scope публикации.
 - [История обзора](architecture/OVERVIEW.history-20260929.md).
 - [История карты модулей](MODULES.history-20260929.md).
 - [Прежний полный индекс](DOCUMENTATION_INDEX.history-20260929.md) — сохранённые описания прошлых выпусков.

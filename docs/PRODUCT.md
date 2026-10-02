@@ -4,7 +4,7 @@
 
 В 0.6.72 передача recovery завершается сразу после Send, без поиска текста в DOM или ожидания ответа. Paste сохранён; старые неопределённые попытки больше не показывают бесконечную проверку. Контракт — docs/CONTEXT_DELIVERY.md, измерения — docs/VERIFICATION.md.
 
-Текущий выпуск — **0.6.75**, macOS arm64 / Windows x64: Electron 44.5.1, встроенный и комплектный Node 24.21.0, Workflow Kit 1.5.1. Очистка кода сохраняет поведение 0.6.74 и внешний контракт Web Pilot Sidebar. Поставка и публикация — [RELEASE](RELEASE.md); пользовательская приёмка запуска получена 02.10.2026, installed-проверка T010 пройдена. Границы отдельных сценариев — [VERIFICATION](VERIFICATION.md).
+Текущий выпуск — **0.6.76**, macOS arm64 / Windows x64: Electron 44.5.1, встроенный и комплектный Node 24.21.0, Workflow Kit 1.5.1. AutoPlan сохраняет включённый пользователем режим между перезапусками, считает подтверждённые автоматические «Продолжай», не превращает busy-watchdog в ложную паузу и не затирает draft. Локальная парная поставка собрана и проверена; GitHub Release 0.6.76 следует отдельной задачей текущего плана. Границы live/native-проверок — [VERIFICATION](VERIFICATION.md), артефакты — [RELEASE](RELEASE.md).
 
 История выпуска **0.6.54**: таймер работы агента в карточке плана. Поставка: `~/Downloads/WebPilot-0.6.54/`.
 
@@ -20,7 +20,7 @@
 
 Контракт совместимости — `docs/modules/chatgpt-dom-compatibility.md`. Версионные разделы ниже сохраняют историю.
 
-## Действующий контракт — macOS / Windows 0.6.67
+## Действующий контракт — single active plan
 
 Один Git checkout/worktree имеет один current Workflow Kit plan `.harness/plans/todo-plan.md`. Web Pilot хранит несколько Chat/Work sessions с собственными URL, title, датами и UI metadata, но выбор session **не выбирает plan**. Открытие старого чата сохраняет его разговор и одновременно показывает актуальный current plan checkout. Новый Chat/Work получает recovery того же plan; второй canonical plan не создаётся.
 

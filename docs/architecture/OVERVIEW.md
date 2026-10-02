@@ -8,11 +8,11 @@ Project Web Pilot — Electron-приложение для macOS arm64 и Window
 
 ## Текущее состояние
 
-Выпуск **0.6.75** для macOS arm64 и Windows x64: Electron **44.5.1**, встроенный и комплектный Node **24.21.0**, Workflow Kit **1.5.1**. Node разработки, проверок и внешних workers — **^24.21.0** (не ниже 24.21.0 и ниже 25). Очистка мёртвого кода и дубликатов сохраняет поведение 0.6.74 и событийный runtime. Экспорт `pageOperation` восстановлен для Web Pilot Sidebar; формат `pageScript` сохранён.
+Выпуск **0.6.76** для macOS arm64 и Windows x64: Electron **44.5.1**, встроенный и комплектный Node **24.21.0**, Workflow Kit **1.5.1**. AutoPlan сохраняет пользовательский on/off между перезапусками, не выключается при busy-watchdog, сохраняет draft до ручного Send и показывает счётчик подтверждённых «Продолжай» вместе с безопасными reason codes. Контракт Web Pilot Sidebar и формат `pageScript` сохранены.
 
-Поставка — `~/Downloads/WebPilot-0.6.75/`. Корневой `Project Web Pilot.app` и копия в `/Applications` обновляются с сохранением Finder-identity. 02.10.2026 пользователь запустил 0.6.75 и явно передал общую приёмку. Installed-проверка T010 пройдена; отдельные live-сценарии не перечислены пользователем, native Windows и чистый первый запуск не проверены.
+Поставка — `~/Downloads/WebPilot-0.6.76/`. Корневой `Project Web Pilot.app` и копия в `/Applications` обновлены с сохранением Finder-identity; оба ZIP и сопроводительные файлы готовы и сверены package-gate. Живая приёмка 0.6.76, native Windows и чистый первый запуск пока не выполнялись.
 
-История и evidence — [RELEASE](../RELEASE.md). [Текущий план](../planning/refactoring-node24.md) разделяет сборку/публикацию T009 и повторяемую installed-проверку с пользовательской приёмкой T010. T009 синхронизировала main с GitHub и опубликовала [v0.6.75](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.75) с двумя архивами. T010 завершена коммитом `1820314`; приёмка записана в VERIFICATION. Архивирование scope требует отдельного поручения.
+История и evidence — [RELEASE](../RELEASE.md). Текущий scope — [надёжность AutoPlan](../planning/auto-plan-reliability.md): реализация и локальная поставка 0.6.76 завершены, после документальной подготовки выполняются публикации Project Web Pilot, WorkflowKit и Web Pilot Sidebar. Архивирование scope требует отдельного поручения.
 
 ## Связь с Web Pilot Sidebar
 
@@ -25,6 +25,7 @@ Web Pilot Sidebar (`/Users/oleksandroliinyk/VSCODE/Web Pilot Sidebar`) — от�
 - PageStateSource получает события из sandboxed isolated preload только основного ChatGPT document. Проверяются frame/origin/document/sequence. Агентский секундомер следует Stop; busy не доказывает серверное состояние.
 - ContextCache, fingerprint и проверка recovery принимают workspace без session selector; кеш общий для чатов checkout. Пакет по-прежнему строит canonical Workflow Kit, а актуальность проверяется перед вставкой. Настройка туннеля Windows идёт через мастер и configureWindowsTunnel; старый запуск внешней консоли удалён.
 - PlanMonitor независим от доставки. Файловые сигналы означают перечитывание, а не журнал. Ошибки видимы, повторы ограничены; полный fingerprint остаётся перед вставкой.
+- AutoPlan отделяет сохранённый `autoPlanEnabled` от текущей фазы. Busy-watchdog пишет `STALL_WARNING` и продолжает ждать; `DRAFT_PRESENT` не меняет composer и возобновляется после ручного Send; неизвестный исход отправки не повторяется. Sidebar удерживает номер последнего подтверждённого «Продолжай», diagnostics — только безопасные reason codes.
 - ConversationRecovery ограниченно восстанавливает известный URL при terminal stream error, включая Resume stream unavailable. Черновик, ручной Stop и rate limit учитываются; восстановление страницы не равно повторной генерации.
 - Project Doctor чинит известные служебные неисправности current plan. Исторические планы не блокируют readiness.
 - Панель настроек — src/ui/settings-panel.mjs (settingsPanelView). Кнопка «Архив…» открывает отдельное окно с archive:* IPC; скрытого встроенного архива и старых pilot:* обработчиков удаления нет. settings хранит workspace для выбора проекта в Докторе, включая ошибку восстановления удаления при старте; archives в снимке остаётся для наблюдения за архивированием.

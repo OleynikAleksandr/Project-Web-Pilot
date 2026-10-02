@@ -2,7 +2,7 @@
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
-Текущий выпуск — 0.6.75: очистка кода, Node 24.21.0 / Electron 44.5.1; Workflow Kit 1.5.1. Состав модулей и поведение 0.6.74 сохранены, контракт Web Pilot Sidebar закреплён. Сборка/публикация T009 и installed-проверка T010 завершены; общая пользовательская приёмка получена. Результаты — в [плане](planning/refactoring-node24.md) и [VERIFICATION](VERIFICATION.md).
+Текущий выпуск — 0.6.76: исправлена надёжность AutoPlan при сохранении Node 24.21.0 / Electron 44.5.1 / Workflow Kit 1.5.1 и контракта Web Pilot Sidebar. Локальная парная поставка собрана и проверена; публикации трёх связанных репозиториев ещё следуют по текущему плану. Результаты — в [AutoPlan reliability](planning/auto-plan-reliability.md), [RELEASE](RELEASE.md) и [VERIFICATION](VERIFICATION.md).
 
 Карта самостоятельных частей проекта и их владельцев. Workflow Kit не ограничивает проект программным продуктом: здесь могут быть программные модули, исследовательские направления, зоны проектирования или другие устойчивые части предметной работы. Перед новым scope агент сначала находит затрагиваемую часть здесь; если владельца/спецификации нет, сначала создаётся и согласуется подходящий specification/planning document.
 
@@ -29,7 +29,7 @@ Workflow Kit — отдельный canonical пакет планов и recover
 - [Быстрое открытие](modules/session-opening-performance.md): быстрый показ и строгая before-Send готовность.
 - [ChatGPT DOM](modules/chatgpt-dom-compatibility.md): общий adapter, composer, наблюдатель, фильтр, цвета и autoscroll.
 - [Событийный рефакторинг](planning/event-driven-runtime.md): фазы 1–3 завершены; 0.6.74 включает файловые события/прогрев, общий page observer без общего 1500-мс функционального пульса, оформление без секундного safety-pass, сопоставимые измерения и live Chat/Work на macOS. Native Windows остаётся отдельной platform-проверкой.
-- 0.6.74: [Автовыполнение](planning/auto-plan-continuation.md) сохраняет поведение 0.6.73: Workspace & Sessions владеет короткими ответами, точным «Продолжай», частично выполненным планом, остановкой/восстановлением. Workflow Kit обеспечивает фактический план и Git evidence.
+- 0.6.76: [Автовыполнение](planning/auto-plan-continuation.md) сохраняет короткие turn и точное «Продолжай», а [исправление надёжности](planning/auto-plan-reliability.md) добавляет постоянный on/off, `STALL_WARNING` без ложной паузы, безопасный draft-resume, видимый счётчик автоотправок и reason codes. Workflow Kit по-прежнему обеспечивает фактический plan и Git evidence.
 - [Первый запуск](modules/first-run-onboarding.md), [Workspace Setup](WORKSPACE_SETUP.md): комплектные компоненты, MCP Permissions, подключение папок.
 - [Исследование удалённого UI](research/remote-project-ui-options-2026-09-28.md): исследование, не функция продукта.
 - [Session titles](planning/session-title-sync.md): событийная синхронизация и ручное переименование.
