@@ -106,6 +106,8 @@ Codex может видеть большой общий каталог MCP и Ap
 - `list_processes`
 - `stop_process`
 
+Совместимость: stop_process(process_id, force=False) сохраняет параметр force в схеме MCP. Текущий App Server command/exec/terminate не различает его значение; изменение этой схемы требует отдельной задачи совместимости. Очистка Python-кода 02.10.2026 удалила только непрочитываемые импорты/поля и старый _keycode, сохранив все 47 зарегистрированных инструментов и действующий путь Sky.
+
 ### Repository/Git
 
 - `list_repository_tree`

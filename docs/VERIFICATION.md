@@ -2374,3 +2374,11 @@ npm run prepare:mac и npm run prepare:win завершились успешно
 Удалены невызываемые launchTunnelSetup/windowsTunnelSetupInvocation, connectScript и устаревшая подпись. Мастер настройки Windows и configureWindowsTunnel сохранены вместе с тестами передачи credentials, ошибок и отмены. Прямой поиск подтвердил отсутствие потребителей всех 27 символов приложения A: 25 стали внутренними, contextAddress и windowsTunnelSetupInvocation удалены; проверки имён сериализованного кода и коды ошибок сохранены.
 
 Обязательные node24/unit/smoke выполняет Workflow Kit при коммите; фактический вывод хранится в его evidence. Число и утверждения прежних тестов сохранены: ориентир T004 — 454 tests / 451 PASS / 3 SKIP; исходный T002 — 434 / 431 / 3. Source/isolated-fixture проверка не означает live-приёмку ChatGPT или native Windows; новый выпуск относится к T009.
+
+## 2026-10-02 — T006: очистка Python MCP без изменения контракта
+
+После обновления Xcode системный Git 2.54.0 (Apple Git-157) работает; подтверждены коммит T005 и чистое дерево до начала T006. В server.py удалены shlex, tempfile, импорт AppServerError, LocalFacade._keycode и поля _watch_lock/_watch. В control.py удалён только неиспользуемый верхнеуровневый asyncio; строковый скрипт readiness сохраняет собственный импорт.
+
+Статическое сравнение AST всех 47 функций с @mcp.tool подтвердило неизменность декораторов, аргументов, значений по умолчанию и тел. stop_process(process_id, force=False) сохранён. AST control.py совпадает с исходным после исключения одного импорта. Результат — .harness/runtime/t006-static-verification.json. git check-ignore -v подтвердил исключение tools/codex-app-server-mcp/__pycache__/server.cpython-314.pyc правилом __pycache__/.
+
+Назначенные node24/unit выполняет Workflow Kit при коммите; suite включает Python-проверки Codex App Server client/control и паритет MCP-каталога. Состав тестов сохранён, ориентир T005 — 454 tests / 451 PASS / 3 SKIP. Electron smoke этой задаче не назначен; новая упаковка и live-проверки не выполняются.

@@ -144,6 +144,8 @@
 - `.gitignore`: добавить `__pycache__/` — тесты создают `tools/codex-app-server-mcp/__pycache__/`.
 - **`stop_process(process_id, force=False)` не меняется.** Параметр `force` объявлен для клиентов MCP. Протокол `command/exec/terminate` его не различает, но удаление было бы изменением внешнего контракта. Если понадобится честная схема, это отдельное изменение с тестом совместимости старых вызовов.
 
+Реализация T006: удалены неиспользуемые импорты shlex/tempfile/AppServerError, LocalFacade._keycode и поля _watch_lock/_watch; из control.py удалён только верхнеуровневый asyncio, встроенная readiness-проба сохраняет собственный импорт. AST всех 47 зарегистрированных MCP-инструментов до и после правки совпадает, включая декораторы, параметры и тела; stop_process(process_id, force=False) сохранён. git check-ignore подтвердил правило __pycache__/ для tools/codex-app-server-mcp/__pycache__/server.cpython-314.pyc. Обязательные node24/unit запускает Workflow Kit при коммите; эталон T005 — 454 tests / 451 PASS / 3 SKIP. Проверка Git после обновления Xcode успешна, предыдущий T005 подтверждён и рабочее дерево перед T006 было чистым.
+
 ### T007. Одна реализация общих помощников
 
 | Дубликат | Сейчас | Решение |

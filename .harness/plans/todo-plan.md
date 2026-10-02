@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 852,
+  "plan_revision": 854,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "refactoring-node24-20261002",
@@ -91,7 +91,8 @@
       "docs/DOCUMENTATION_INDEX.md",
       "docs/PRODUCT.md",
       "docs/architecture/OVERVIEW.md",
-      "docs/MODULES.md"
+      "docs/MODULES.md",
+      "docs/modules/codex-app-server-executor.md"
     ]
   },
   "baseline_commit": "65cc2f73a5aebd628c4ef4041ac3fcc9eab8aec1",
@@ -420,8 +421,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "refactoring-node24-20261002",
         "task_id": "T006",
@@ -436,7 +437,9 @@
         ".gitignore"
       ],
       "documentation_paths": [
-        "docs/planning/refactoring-node24.md"
+        "docs/planning/refactoring-node24.md",
+        "docs/modules/codex-app-server-executor.md",
+        "docs/VERIFICATION.md"
       ],
       "verification_ids": [
         "node24",
@@ -452,7 +455,15 @@
         "__pycache__/ добавлен в .gitignore, git check-ignore подтверждает исключение tools/codex-app-server-mcp/__pycache__.",
         "unit проходит, включая Python-тесты codex-app-server-mcp."
       ],
-      "expected_commit_message": "refactor: Очистить Python MCP-сервер без изменения контракта"
+      "expected_commit_message": "refactor: Очистить Python MCP-сервер без изменения контракта",
+      "actual_files": [
+        "tools/codex-app-server-mcp/server.py",
+        "tools/codex-app-server-mcp/control.py",
+        ".gitignore",
+        "docs/planning/refactoring-node24.md",
+        "docs/modules/codex-app-server-executor.md",
+        "docs/VERIFICATION.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -652,7 +663,8 @@
         "docs/DOCUMENTATION_INDEX.md",
         "docs/VERIFICATION.md",
         "docs/architecture/OVERVIEW.md",
-        "docs/MODULES.md"
+        "docs/MODULES.md",
+        "docs/modules/codex-app-server-executor.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -687,7 +699,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: refactoring-node24-20261002
 Current Task: нет
-Revision: 852
+Revision: 854
 
 ## Цель
 
@@ -723,10 +735,10 @@ Revision: 852
   - Git Commit: [DONE] refactor: Удалить мёртвый код runtime и доставки контекста
   - Reference: refactoring-node24-20261002 / T005 / implementation
   - Файлы: src/context-session.mjs, src/context-cache.mjs, src/context-inputs.mjs, src/mcp-runtime.mjs, src/mac-runtime-switch.mjs, src/main.mjs, src/windows-runtime.mjs, src/session-plans.mjs, src/mac-runtime.mjs, src/chatgpt-auto-scroll.mjs, src/ui/settings-panel.mjs, src/auto-plan.mjs, src/browser-startup.mjs, src/chatgpt-colors.mjs, src/chatgpt-composer.mjs, src/chatgpt-title.mjs, src/chatgpt-tool-filter.mjs, src/project-input-watch.mjs, resources/project-doctor/files.mjs, scripts/check-workflow-kit-staging.mjs, tests/electron-smoke.mjs, tests/workspace-setup.test.mjs, tests/session-opening-performance.test.mjs, tests/context-session.test.mjs, tests/context-cache.test.mjs, docs/planning/refactoring-node24.md, docs/architecture/OVERVIEW.md, docs/VERIFICATION.md
-- [TODO] T006: Очистить Python MCP-сервер без изменения контракта — Ожидает
-  - Git Commit: [PENDING] refactor: Очистить Python MCP-сервер без изменения контракта
+- [DONE] T006: Очистить Python MCP-сервер без изменения контракта — Завершено
+  - Git Commit: [DONE] refactor: Очистить Python MCP-сервер без изменения контракта
   - Reference: refactoring-node24-20261002 / T006 / implementation
-  - Файлы: tools/codex-app-server-mcp/server.py, tools/codex-app-server-mcp/control.py, .gitignore, docs/planning/refactoring-node24.md
+  - Файлы: tools/codex-app-server-mcp/server.py, tools/codex-app-server-mcp/control.py, .gitignore, docs/planning/refactoring-node24.md, docs/modules/codex-app-server-executor.md, docs/VERIFICATION.md
 - [TODO] T007: Свести дублирующиеся помощники к одной реализации — Ожидает
   - Git Commit: [PENDING] refactor: Свести дублирующиеся помощники к одной реализации
   - Reference: refactoring-node24-20261002 / T007 / implementation
@@ -746,7 +758,7 @@ Revision: 852
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: refactoring-node24-20261002 / DOCS / implementation
-  - Файлы: docs/planning/refactoring-node24.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, README.md, AGENTS.md, docs/WORKFLOW_START.md, docs/RELEASE.md, docs/SOURCE_WORKSPACES.md, docs/DOCUMENTATION_INDEX.md, docs/VERIFICATION.md, docs/architecture/OVERVIEW.md, docs/MODULES.md
+  - Файлы: docs/planning/refactoring-node24.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, README.md, AGENTS.md, docs/WORKFLOW_START.md, docs/RELEASE.md, docs/SOURCE_WORKSPACES.md, docs/DOCUMENTATION_INDEX.md, docs/VERIFICATION.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/modules/codex-app-server-executor.md
 
 ## Context Pack For This Cycle
 

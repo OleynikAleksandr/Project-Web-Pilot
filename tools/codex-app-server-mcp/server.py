@@ -7,9 +7,7 @@ import base64
 import hashlib
 import json
 import os
-import shlex
 import shutil
-import tempfile
 import threading
 import time
 import uuid
@@ -19,7 +17,7 @@ from typing import Any, Literal
 from mcp.server.fastmcp import FastMCP, Image
 from mcp.types import ToolAnnotations
 
-from app_server_client import AppServerClient, AppServerError
+from app_server_client import AppServerClient
 
 
 READ_ONLY = ToolAnnotations(
@@ -99,8 +97,6 @@ class LocalFacade:
         self._next_window_id = 1
         self._window_lock = threading.Lock()
         self._active_app_id: str | None = None
-        self._watch_lock = threading.Lock()
-        self._watch: dict[str, tuple[int, threading.Timer]] = {}
 
     def resolve(self, path: str, *, must_exist: bool = False, allow_sensitive: bool = False) -> Path:
         candidate = Path(path).expanduser()
@@ -756,22 +752,6 @@ class LocalFacade:
         if record is None:
             raise ValueError("Unknown window_id; call computer_list_windows first")
         return record
-
-    @staticmethod
-    def _keycode(key: str) -> int:
-        mapping = {
-            "a":0,"s":1,"d":2,"f":3,"h":4,"g":5,"z":6,"x":7,"c":8,"v":9,"b":11,
-            "q":12,"w":13,"e":14,"r":15,"y":16,"t":17,"1":18,"2":19,"3":20,"4":21,
-            "6":22,"5":23,"=":24,"9":25,"7":26,"-":27,"8":28,"0":29,"]":30,"o":31,
-            "u":32,"[":33,"i":34,"p":35,"enter":36,"return":36,"l":37,"j":38,"'":39,
-            "k":40,";":41,"\\":42,",":43,"/":44,"n":45,"m":46,".":47,"tab":48,
-            "space":49,"backspace":51,"delete":51,"escape":53,"esc":53,"left":123,
-            "right":124,"down":125,"up":126,"home":115,"end":119,"pageup":116,"pagedown":121,
-        }
-        value = mapping.get(key.lower())
-        if value is None:
-            raise ValueError(f"Unsupported key: {key}")
-        return value
 
     def _protect_delete(self, target: Path) -> None:
         resolved = target.resolve(strict=False)
