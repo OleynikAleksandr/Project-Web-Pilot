@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 863,
+  "plan_revision": 864,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "refactoring-node24-20261002",
@@ -792,7 +792,7 @@
         "scripts/check-event-runtime-release.mjs обобщён в scripts/check-installed-release.mjs: версия из package.json, preflight release-<version>-preflight.json, прежние утверждения сохранены; ссылка в RELEASE.md обновлена.",
         "Проверка release-installed без пересборки подтверждает встроенный Node 24.21.0 (ELECTRON_RUN_AS_NODE), mac-tools Node v24.21.0 arm64, node-v24.21.0-win-x64 в Windows-пакете и выполнение workspace-setup worker и CLI установленного Kit комплектным Node при PATH без системного node.",
         "Задача не меняет src, resources, tools и package*.json.",
-        "Пользователь после полного выхода и запуска проверил на macOS: новый Chat и Work получают recovery; повторное открытие чата не отправляет контекст повторно; AutoPlan на временном проекте; архивирование, возврат и удаление с подтверждением на временном проекте; тема, скрытие вызовов и Доктор; переключение Mac runtime; ввод ID туннеля открывается и отменяется без изменения подключения. Результат каждого пункта записан в docs/VERIFICATION.md.",
+        "Пользователь явно принял запуск релиза 0.6.75 сообщением «Я запустил новый релиз 0.6.75. Как будто бы всё работает. То есть моя приёмка у тебя есть». Приёмка записана в docs/VERIFICATION.md; отдельные сценарии первоначального списка, не перечисленные пользователем, отмечены как отдельно не подтверждённые, без повторного запроса общей приёмки.",
         "Первый запуск на чистой macOS записан как выполненный пользователем или «не проверено»; Windows подтверждён только статической проверкой пакета, и его работоспособность не заявляется до пользовательской проверки."
       ],
       "expected_commit_message": "feat: Проверить готовую поставку 0.6.75 и записать пользовательскую приёмку"
@@ -892,7 +892,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: refactoring-node24-20261002
 Current Task: нет
-Revision: 863
+Revision: 864
 
 ## Цель
 
