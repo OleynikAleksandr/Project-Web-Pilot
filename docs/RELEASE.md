@@ -2,6 +2,23 @@
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
+## Локальная поставка 0.6.77 — 02.10.2026
+
+Клиентский AutoPlan: переключатель не отправляет стартовую инструкцию, обычный ответ не требует footer, подходящая idle-пауза незавершённого ACTIVE-плана получает ровно одно точное «Продолжай». Постоянный выбор, durable checkpoint, ручной ввод и восстановление связи управляются клиентом. Electron **44.5.1**, встроенный и комплектный Node **24.21.0**, Workflow Kit **1.5.1**.
+
+Штатный `npm run build` завершился успешно. Поставка — `~/Downloads/WebPilot-0.6.77/`: macOS arm64 / Windows x64 ZIP, SHA256SUMS.txt, INSTALL.txt и release-manifest.json. Все **106** source/resource файлов совпали с упаковками; manifest sourceCommit — `4ca7ac90be225d515ed92b6815be9a3739b446a3` (HEAD перед version/build commit T005). Версия и release-изменения входят в T005.
+
+| Архив | Размер, байт | SHA-256 |
+| --- | ---: | --- |
+| Project-Web-Pilot-0.6.77-macOS-arm64.zip | 185522743 | `cf9f7468fc0289cd73dd170517bf69cc4bab69daf6ca9de4502bba09783c0072` |
+| Project-Web-Pilot-0.6.77-Windows-x64.zip | 355424594 | `5e7ea853b69068142908ea4ccf096b059143ea00f1515b91e1c3f4b3ca230ef6` |
+
+Корневой app и `/Applications/Project Web Pilot.app` обновлены до **0.6.77** штатным installMacBundle с сохранением device/inode `16777234/406600483` и `16777234/406571340`. Оба app соответствуют staging; общий ASAR SHA-256 — `8e01a33bd51287b31d12edb1e1d49d27e9f362316823310bc73e6603fd37afdc`. Предыдущие Contents сохранены в release-backups. Работающий пользовательский процесс не перезапускался; новую версию запускают после полного выхода.
+
+Через config:apply `auto-plan-package` настроена на проверку уже готовой 0.6.77 командой `node scripts/check-installed-release.mjs`: source/metadata/hash/version, Finder identity, комплектные инструменты, runtime Kit из обеих упаковок и установленный observer/Composer/клиентский AutoPlan с обычными ответами без footer. Управляемый T005 выполняет node24, unit, smoke и этот package-gate; сборка в commit не повторяется. Evidence — `.harness/runtime/t005-build.log`, `release-0.6.77-preflight.json`, `t005-installation.json` и release manifest.
+
+Живая приёмка ChatGPT, native Windows и чистый первый запуск остаются отдельными пользовательскими проверками. GitHub Release 0.6.77 не публиковался.
+
 ## Выпуск 0.6.76 — 02.10.2026
 
 Исправления AutoPlan: постоянный выбор автовыполнения, восстановление после перезапуска, ожидание busy без ложной остановки, сохранение черновика, понятный счётчик «Продолжай» и причины пауз. Electron **44.5.1**, Node **24.21.0**, Workflow Kit **1.5.1**.

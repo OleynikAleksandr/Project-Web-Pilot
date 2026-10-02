@@ -10,7 +10,15 @@
 
 Fresh Electron fixture читает durable settings и real fixture-plan, проверяет busy/sent/interrupted sending/manual и reload без дубля. Сообщения и native IDs сохраняются в fixture-history. Исходный ProseMirror installed-gate обновлён под новый контракт; запуск на новой установленной сборке относится к T005. Unit-регрессия подтверждает trailing progress после быстрого idle → busy; исправление не добавляет периодические чтения. Все проверки используют отдельные временные страницы/проекты; живой ChatGPT, native Windows и новый packaged app здесь не заявляются проверенными.
 
-## Текущий выпуск — 0.6.76 / 02.10.2026
+## Текущая локальная поставка — 0.6.77 / 02.10.2026
+
+T005 подготовила 0.6.77 штатной парной сборкой: **106 source/resource файлов совпали** с macOS arm64 / Windows x64; ZIP integrity и hashes delivery подтверждены сборочным скриптом. Поставка — `~/Downloads/WebPilot-0.6.77/`. Root app и `/Applications/Project Web Pilot.app` обновлены с сохранением Finder identity; ASAR обеих копий совпадает со staging. Версии — Electron 44.5.1, Node 24.21.0, Workflow Kit 1.5.1. Подробные размеры/hashes — [RELEASE](RELEASE.md).
+
+В управляемый T005 назначены node24, полная unit suite, Electron smoke и package/installed gate `auto-plan-package`. Последний сверяет готовые артефакты и metadata, версии/исходники/identity обеих app, packaged runtime и установленный ProseMirror/observer/клиентский AutoPlan без footer или стартовой инструкции. Windows JS проверяется на Mac; native Windows запуск этим не подменяется.
+
+Evidence: `.harness/runtime/t005-build.log`, `release-0.6.77-preflight.json`, `t005-installation.json` и release-manifest.json. Работающий процесс не перезапускался. Живая приёмка ChatGPT, native Windows и чистый первый запуск не выполнялись; GitHub Release 0.6.77 не публиковался.
+
+## Предыдущий выпуск — 0.6.76 / 02.10.2026
 
 T007 `0a73a39ec27bf844607619bd1bf29c3884a92e81`: версия 0.6.76 и парная macOS arm64 / Windows x64 поставка подтверждены назначенными `node24`, `unit`, `smoke` и `auto-plan-release`. Готовые ZIP и сопроводительные файлы находятся в `~/Downloads/WebPilot-0.6.76/`; package-gate сверяет исходники, версии, архивы, Finder identity, комплектные инструменты и установленный AutoPlan fixture.
 

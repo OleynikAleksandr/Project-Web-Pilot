@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 927,
+  "plan_revision": 928,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "auto-plan-client-driven-refactor-20261002",
@@ -49,7 +49,7 @@
     ]
   },
   "baseline_commit": "2ca651faad912501f58e3733c377e4c4dcd0e654",
-  "current_task_id": "T005",
+  "current_task_id": null,
   "context_pack": {
     "documents": [
       {
@@ -284,8 +284,8 @@
       ]
     },
     {
-      "implementation_status": "IN_PROGRESS",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "auto-plan-client-driven-refactor-20261002",
         "task_id": "T005",
@@ -322,7 +322,15 @@
         "В установленной macOS версии fixture подтверждает новую клиентскую AutoPlan state machine без footer-протокола.",
         "GitHub Release не публикуется без отдельного поручения пользователя."
       ],
-      "expected_commit_message": "build: подготовить клиентский AutoPlan к приёмке"
+      "expected_commit_message": "build: подготовить клиентский AutoPlan к приёмке",
+      "actual_files": [
+        "package.json",
+        "package-lock.json",
+        "scripts/check-installed-release.mjs",
+        "docs/planning/auto-plan-client-driven-refactor.md",
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -377,8 +385,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: auto-plan-client-driven-refactor-20261002
-Current Task: T005
-Revision: 927
+Current Task: нет
+Revision: 928
 
 ## Цель
 
@@ -406,8 +414,8 @@ Revision: 927
   - Git Commit: [DONE] test: закрепить клиентское автопродолжение
   - Reference: auto-plan-client-driven-refactor-20261002 / T004 / implementation
   - Файлы: tests/electron-smoke.mjs, tests/auto-plan.test.mjs, tests/page-state.test.mjs, tests/auto-plan-restart-fixture.cjs, src/chatgpt-page-observer.mjs, tests/installed-observer-fixture.cjs, docs/planning/auto-plan-client-driven-refactor.md, docs/VERIFICATION.md
-- [IN_PROGRESS] T005: Подготовить локальную поставку следующей версии для приёмки — В работе
-  - Git Commit: [PENDING] build: подготовить клиентский AutoPlan к приёмке
+- [DONE] T005: Подготовить локальную поставку следующей версии для приёмки — Завершено
+  - Git Commit: [DONE] build: подготовить клиентский AutoPlan к приёмке
   - Reference: auto-plan-client-driven-refactor-20261002 / T005 / implementation
   - Файлы: package.json, package-lock.json, .harness/workflow.json, scripts/check-installed-release.mjs, docs/planning/auto-plan-client-driven-refactor.md, docs/RELEASE.md, docs/VERIFICATION.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает

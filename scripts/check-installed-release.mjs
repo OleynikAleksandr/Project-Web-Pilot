@@ -37,9 +37,16 @@ for (const app of [rootApp, appsApp]) {
   assert.equal(after.dev, before.device); assert.equal(after.ino, before.inode);
 }
 assert.equal(Object.keys(sources).length, manifest.sourceFiles);
+const hashList = await fs.readFile(path.join(delivery, 'SHA256SUMS.txt'), 'utf8');
+assert.equal(hashList, manifest.artifacts.map(a => a.sha256 + '  ' + a.file).join('\n') + '\n');
+assert.ok((await fs.readFile(path.join(delivery, 'INSTALL.txt'), 'utf8')).startsWith('Project Web Pilot ' + version + '\n'));
+assert.equal(manifest.artifacts.length, 2);
+assert.deepEqual(manifest.artifacts.map(a => a.platform), ['macOS arm64', 'Windows x64']);
+
 const stat = await fs.stat(rootApp); assert.equal(stat.ino, manifest.identity.inode); assert.equal(stat.dev, manifest.identity.device);
 for (const artifact of manifest.artifacts) {
   const zip = path.join(delivery, artifact.file);
+  assert.equal((await fs.stat(zip)).size, artifact.bytes);
   assert.equal(await sha256File(zip), artifact.sha256);
   const prefix = artifact.platform.startsWith('macOS')
     ? 'Project Web Pilot.app/Contents/Resources/' : 'Project Web Pilot-win32-x64/resources/';
@@ -120,6 +127,11 @@ try {
   for (const file of ['page-state.mjs','page-state-bridge.mjs','chatgpt-dom.mjs','chatgpt-composer.mjs','auto-plan.mjs'])
     await fs.writeFile(path.join(temporary, file), extractFile(path.join(targets[0], 'app.asar'), 'src/' + file));
   await fs.writeFile(path.join(temporary, 'progress.mjs'), extractFile(path.join(targets[0], 'app.asar'), 'src/ui/progress.mjs'));
+  const installedAuto = await import(pathToFileURL(path.join(temporary, 'auto-plan.mjs')).href);
+  assert.equal(installedAuto.CONTINUE_TEXT, 'Продолжай');
+  assert.equal(Object.hasOwn(installedAuto, 'AUTO_PLAN_INSTRUCTION'), false);
+  for (const method of ['reconcile', 'planChanged', 'checkpointState'])
+    assert.equal(typeof installedAuto.AutoPlan.prototype[method], 'function', 'installed client state machine: ' + method);
   const { operationLabel } = await import(pathToFileURL(path.join(temporary, 'progress.mjs')).href);
   for (const phase of ['waiting-chat', 'send-unknown'])
     assert.equal(operationLabel({ context: { phase }, contextPreparation: { busy: true } }), null,
@@ -134,6 +146,8 @@ try {
   process.stdout.write(result);
 } finally { await fs.rm(temporary, { recursive: true, force: true }); }
 console.log(JSON.stringify({ version, delivery, packagedSources: true, installedResourcesExecuted: true,
+  clientAutoPlan: true, sourceCommit: manifest.sourceCommit, sourceFiles: manifest.sourceFiles,
+  artifacts: manifest.artifacts, finderIdentityPreserved: true,
   embeddedNode: '24.21.0', bundledMacNode: 'v24.21.0 arm64', bundledWindowsNode: 'node-v24.21.0-win-x64',
   workerAndKitWithoutSystemNode: true, windowsPackageVerified: true,
   nativeWindowsTested: false, liveChatGPT: false }));
