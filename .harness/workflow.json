@@ -10,7 +10,7 @@
       "executable": "node",
       "args": [
         "-e",
-        "const [a,b]=process.versions.node.split('.').map(Number);if(a<24||(a===24&&b<21)){console.error('Нужен Node.js 24.21 или новее; сейчас '+process.version);process.exit(1)}console.log('Node.js '+process.version)"
+        "const [a,b]=process.versions.node.split('.').map(Number);if(a!==24||b<21){console.error('Нужен Node.js ^24.21.0 (24.21 или новее в линии 24); сейчас '+process.version);process.exit(1)}console.log('Node.js '+process.version)"
       ]
     },
     {
@@ -34,7 +34,7 @@
     },
     {
       "required": false,
-      "timeout_ms": 120000,
+      "timeout_ms": 600000,
       "id": "paired-release",
       "executable": "npm",
       "args": [
@@ -42,7 +42,18 @@
         "build"
       ],
       "kind": "package",
-      "evidence": "Project Web Pilot.app в корне checkout; ~/Downloads/WebPilot-0.6.75/ с macOS arm64 и Windows x64 ZIP, SHA256SUMS.txt, INSTALL.txt и release-manifest.json; release-all сверяет packaged sources, версию 0.6.75 и установленную macOS копию; встроенный и комплектный Node 24.21.0."
+      "evidence": "Сборка выполняется только этой проверкой внутри commit T009. Project Web Pilot.app в корне checkout и /Applications; ~/Downloads/WebPilot-0.6.75/ с macOS arm64 и Windows x64 ZIP, SHA256SUMS.txt, INSTALL.txt и release-manifest.json; release-all сверяет packaged sources, версию 0.6.75 и установленную macOS копию."
+    },
+    {
+      "required": false,
+      "timeout_ms": 600000,
+      "id": "release-installed",
+      "executable": "node",
+      "args": [
+        "scripts/check-installed-release.mjs"
+      ],
+      "kind": "installed",
+      "evidence": "Готовая поставка 0.6.75 без пересборки: корневой и /Applications Project Web Pilot.app и ZIP из ~/Downloads/WebPilot-0.6.75/ — исходники и identity совпадают, встроенный Node 24.21.0, mac-tools Node v24.21.0 arm64, Windows-пакет с node-v24.21.0-win-x64; workspace-setup worker и CLI установленного Kit выполняются комплектным Node при PATH без системного node."
     }
   ],
   "budget": {
