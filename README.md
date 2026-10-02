@@ -6,9 +6,9 @@ Project Web Pilot — локальное Electron-приложение для ma
 
 Выпуск **0.6.75** для macOS arm64 и Windows x64: Electron **44.5.1**, встроенный и комплектный Node **24.21.0**, Workflow Kit **1.5.1**. Node разработки, проверок и внешних workers — **^24.21.0** (не ниже 24.21.0 и ниже 25). Очистка мёртвого кода и дубликатов сохраняет поведение 0.6.74 и событийный runtime. Экспорт `pageOperation` восстановлен для Web Pilot Sidebar; формат `pageScript` сохранён.
 
-Поставка — `/Downloads/WebPilot-0.6.75/`. Корневой `Project Web Pilot.app` и копия в `/Applications` обновляются с сохранением Finder-identity. После обновления полностью завершите приложение и запустите его снова. Автоматические проверки сборки не заменяют пользовательскую приёмку T010; live Chat/Work новой версии, native Windows и чистый первый запуск ещё не проверены.
+Поставка — `~/Downloads/WebPilot-0.6.75/`. Корневой `Project Web Pilot.app` и копия в `/Applications` обновляются с сохранением Finder-identity. 02.10.2026 пользователь запустил 0.6.75 и явно передал общую приёмку. Installed-проверка T010 пройдена; отдельные live-сценарии не перечислены пользователем, native Windows и чистый первый запуск не проверены.
 
-История и evidence — [RELEASE](docs/RELEASE.md). [Текущий план](docs/planning/refactoring-node24.md) разделяет сборку/публикацию T009 и повторяемую installed-проверку с пользовательской приёмкой T010. Пользователь поручил синхронизацию main и публикацию [v0.6.75](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.75) с двумя архивами. Публикация не закрывает T010 и не архивирует scope.
+История и evidence — [RELEASE](docs/RELEASE.md). [Текущий план](docs/planning/refactoring-node24.md) разделяет сборку/публикацию T009 и повторяемую installed-проверку с пользовательской приёмкой T010. T009 синхронизировала main с GitHub и опубликовала [v0.6.75](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.75) с двумя архивами. T010 завершена коммитом `1820314`; приёмка записана в VERIFICATION. Архивирование scope требует отдельного поручения.
 
 ## Связанные репозитории
 

@@ -2,7 +2,7 @@
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](../SOURCE_WORKSPACES.md).
 
-Дата: 28.09.2026; актуализация 01.10.2026. Статус: все три фазы завершены. Текущая парная поставка — 0.6.74; сопоставимые итоговые измерения и live Chat/Work на macOS выполнены, native Windows остаётся отдельной непроведённой platform-проверкой.
+Дата: 28.09.2026; актуализация 01.10.2026. Статус: все три фазы завершены. Итоговая поставка этих фаз — 0.6.74 (текущий выпуск см. в [RELEASE](../RELEASE.md)); сопоставимые итоговые измерения и live Chat/Work на macOS выполнены, native Windows остаётся отдельной непроведённой platform-проверкой.
 Историческая основа первоначального аудита: Project Web Pilot 0.6.63, commit `1fe2e5ac5de33a597f4e5c903ab7cc43b2b05caf`, Workflow Kit 1.5.0.
 Среда main: Electron 44.3.0 / встроенный Node 24.20.0. Версии фактически получены 28.09.2026 через `process.versions` из executable комплектного `Project Web Pilot.app` в режиме `ELECTRON_RUN_AS_NODE=1`, без запуска UI. Node 22.17.0 из recovery относится к Workflow runtime и не определяет поведение fs.watch в Electron main. При смене Electron версию встроенного Node проверять повторно.
 Фаза 2 выполнена в scope `event-driven-runtime-phase-2-continuation-20260928`: T001 `8b12f56d…`, T002 `a845cded…`, T003 `aa6d8055…`. Фаза 3 выполнена в scope `event-driven-runtime-phase-3-20261001`: T001 `274688bb…` подтвердила сопоставимый fixture и live Chat/Work на macOS, reload/stale/оформление/minimize-restore; T002 `a0db3583…` собрала и проверила парный локальный выпуск 0.6.74. DOCS фиксирует итог и границу native Windows.

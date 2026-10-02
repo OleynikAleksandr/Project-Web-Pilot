@@ -2,7 +2,9 @@
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
-Текущий локальный выпуск — **0.6.58**, macOS arm64 / Windows x64, canonical Workflow Kit **1.5.0**. Поставка: `~/Downloads/WebPilot-0.6.58/`. Workspace Setup мигрирует совместимые 1.1.0–1.4.13 к single-active model с резервной копией; historical session plans не участвуют в readiness. Native Windows и clean VM для 0.6.58 не запускались и остаются пользовательской проверкой.
+Текущий выпуск — **0.6.75**, macOS arm64 / Windows x64, Electron **44.5.1**, встроенный и комплектный Node **24.21.0**, Workflow Kit **1.5.1**. Поставка: `~/Downloads/WebPilot-0.6.75/`, также [GitHub Release](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.75). Пользователь принял запуск на основном Mac 02.10.2026; это не чистая установка. Native Windows и первый запуск на чистой macOS не проверены. Installed-проверка T010 подтвердила комплектные инструменты и worker/CLI без системного Node; VM и Computer Use агент не запускал. Полная матрица — [VERIFICATION](VERIFICATION.md).
+
+История 0.6.58: Workspace Setup мигрирует совместимые 1.1.0–1.4.13 к single-active model с резервной копией; historical session plans не участвуют в readiness.
 
 Предыдущий локальный выпуск — **0.6.50**, macOS arm64 и Windows x64, Workflow Kit **1.4.1**. Поставка: `~/Downloads/WebPilot-0.6.50/`. Исправлена заливка всей скруглённой плашки ввода: от «+» до голосовой кнопки. Реальный ChatGPT проверен визуально в Chat и Work; окружающая подложка и цвета кнопок сохраняются. Это заменяет поведение 0.6.49, окрашивавшее только editor. Независимое обновление задач из 0.6.49 сохранено.
 

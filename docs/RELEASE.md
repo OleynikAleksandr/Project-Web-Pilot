@@ -6,15 +6,20 @@
 
 Выпуск **0.6.75** для macOS arm64 и Windows x64: Electron **44.5.1**, встроенный и комплектный Node **24.21.0**, Workflow Kit **1.5.1**. Node разработки, проверок и внешних workers — **^24.21.0** (не ниже 24.21.0 и ниже 25). Очистка мёртвого кода и дубликатов сохраняет поведение 0.6.74 и событийный runtime. Экспорт `pageOperation` восстановлен для Web Pilot Sidebar; формат `pageScript` сохранён.
 
-Поставка — `~/Downloads/WebPilot-0.6.75/`. Корневой `Project Web Pilot.app` и копия в `/Applications` обновляются с сохранением Finder-identity. 02.10.2026 пользователь запустил 0.6.75 и явно передал общую приёмку. Отдельные live-сценарии не перечислены; native Windows и чистый первый запуск не проверены. Матрица подтверждений — в [VERIFICATION](VERIFICATION.md).
+Поставка — `~/Downloads/WebPilot-0.6.75/`. Корневой `Project Web Pilot.app` и копия в `/Applications` обновлены с сохранением Finder-identity. 02.10.2026 пользователь запустил 0.6.75 и явно передал общую приёмку. Отдельные live-сценарии не перечислены; native Windows и чистый первый запуск не проверены. Матрица подтверждений — в [VERIFICATION](VERIFICATION.md).
 
-T009 запускает единственную сборку проверкой paired-release внутри Workflow Kit commit после node24/unit/smoke. Packager получает версию из package.json, отдельного `--app-version` больше нет. Build сверяет исходники с обеими упаковками, ZIP integrity, ASAR, версии, комплектные инструменты и контрольные суммы копий.
+T009 завершена коммитом `ed55308431f28239205ba854f20d1e2a69add865`. Проверки node24, unit (457 / 454 PASS / 3 SKIP), smoke и paired-release прошли. Packager получает версию из package.json без --app-version. Все 106 исходных файлов совпали с упаковками. Manifest sourceCommit — `198cb457cb82240bc2c2519b67500903b75a657b` (HEAD перед release commit); изменения версии вошли в T009.
 
-Поставка содержит `Project-Web-Pilot-0.6.75-macOS-arm64.zip`, `Project-Web-Pilot-0.6.75-Windows-x64.zip`, `SHA256SUMS.txt`, `INSTALL.txt` и `release-manifest.json`. Точные размеры, SHA-256 и sourceCommit записывает сборщик в manifest. SourceCommit — HEAD перед release commit; изменения версии входят в commit T009.
+| Архив | Размер, байт | SHA-256 |
+| --- | ---: | --- |
+| Project-Web-Pilot-0.6.75-macOS-arm64.zip | 185520257 | `d36df5cf7edca43e622481b29b411748d7dc8fdc109bd2696927711c85efa0aa` |
+| Project-Web-Pilot-0.6.75-Windows-x64.zip | 355422106 | `ba135bceaa379d6cc2073ecbc5be5ce940972c4b038e3096a7eae51fb6b27ec4` |
 
-Корневой app обновляет build:mac; после успешного commit копия `/Applications/Project Web Pilot.app` обновляется штатным `installMacBundle` без пересборки. Device/inode сверяются с `.harness/runtime/release-0.6.75-preflight.json`; прежние Contents сохраняются в backup, работающий процесс не перезапускается автоматически.
+[Релиз v0.6.75 на GitHub](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.75) опубликован с обоими ZIP, SHA256SUMS.txt, INSTALL.txt и release-manifest.json. Main и тег были синхронизированы с T009; последующие документальные коммиты продвигают main, тег остаётся на release commit. Серверные размеры/SHA-256 сверены; отчёт — .harness/runtime/t009-publication.json.
 
-Пользователь поручил синхронизацию main и публикацию [v0.6.75](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.75) с двумя ZIP и тремя сопроводительными файлами. После подтверждённого T009 тег указывает на его commit; серверные размеры и SHA-256 сверяются с локальными. Отчёты — `.harness/runtime/t009-installation.json` и `.harness/runtime/t009-publication.json`. T010 проверяет готовую установку без пересборки командой `node scripts/check-installed-release.mjs` (gate `release-installed`): исходники, ZIP, identity обоих app, встроенный/комплектный Node, worker и CLI Kit с PATH без системного Node, статическая Windows-проверка и установленный observer fixture. Пользовательская приёмка записана отдельно от автоматических проверок.
+Root app и /Applications обновлены без потери Finder identity; device/inode сверены с .harness/runtime/release-0.6.75-preflight.json. Установка /Applications после сборки выполнена штатным installMacBundle без пересборки; прежние Contents сохранены в backup. Отчёт — .harness/runtime/t009-installation.json.
+
+T010 завершена коммитом `18203141cee540dadb2b92742d9ea676743b286d`. `node scripts/check-installed-release.mjs` (gate release-installed) прошла за 21,74 с: исходники, ZIP, identity обоих app, встроенный/комплектный Node, worker и CLI Kit с PATH без системного Node, статическая Windows-проверка и установленный observer fixture. Приёмка пользователя записана в [VERIFICATION](VERIFICATION.md).
 
 ## Предыдущая локальная поставка — 0.6.74 / 01.10.2026
 

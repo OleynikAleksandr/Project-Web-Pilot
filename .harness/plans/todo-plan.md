@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 866,
+  "plan_revision": 868,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "refactoring-node24-20261002",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Очистить Project Web Pilot от мёртвого кода и дубликатов, найденных аудитом 01.10.2026, перевести среду на Node 24.21.0 и Electron 44.5.1 без изменения пользовательского поведения 0.6.74 и выпустить проверенную парную поставку 0.6.75 для macOS arm64 и Windows x64.",
   "acceptance_criteria": [
     "Пользовательское поведение 0.6.74 сохранено; внешние контракты (схемы MCP-инструментов, IPC preload, форматы хранения) не изменены.",
@@ -805,8 +805,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "refactoring-node24-20261002",
         "task_id": "DOCS",
@@ -873,7 +873,23 @@
       "acceptance_criteria": [
         "Документы соответствуют результату"
       ],
-      "expected_commit_message": "docs: актуализировать контекст проекта"
+      "expected_commit_message": "docs: актуализировать контекст проекта",
+      "actual_files": [
+        "README.md",
+        "AGENTS.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/VERIFICATION.md",
+        "docs/RELEASE.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/planning/event-driven-runtime.md",
+        "docs/planning/refactoring-node24.md"
+      ]
     }
   ],
   "blocked_reason": null,
@@ -896,10 +912,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: refactoring-node24-20261002
 Current Task: нет
-Revision: 866
+Revision: 868
 
 ## Цель
 
@@ -955,8 +971,8 @@ Revision: 866
   - Git Commit: [DONE] feat: Проверить готовую поставку 0.6.75 и записать пользовательскую приёмку
   - Reference: refactoring-node24-20261002 / T010 / implementation
   - Файлы: scripts/check-event-runtime-release.mjs, scripts/check-installed-release.mjs, docs/planning/refactoring-node24.md, docs/RELEASE.md, docs/VERIFICATION.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать контекст проекта
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать контекст проекта
   - Reference: refactoring-node24-20261002 / DOCS / implementation
   - Файлы: docs/planning/refactoring-node24.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, README.md, AGENTS.md, docs/WORKFLOW_START.md, docs/RELEASE.md, docs/SOURCE_WORKSPACES.md, docs/DOCUMENTATION_INDEX.md, docs/VERIFICATION.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/modules/codex-app-server-executor.md, docs/modules/chatgpt-dom-compatibility.md, docs/CLEAN_INSTALL.md, docs/CONTEXT_DELIVERY.md, docs/DECISIONS.md, docs/DOCUMENTATION_INDEX.history-20260929.md, docs/MODULES.history-20260929.md, docs/PROJECT_ARCHIVE.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKSPACE_SETUP.md, docs/architecture/OVERVIEW.history-20260929.md, docs/design/chat-message-layout-regression.md, docs/design/computer-use-latency-investigation.md, docs/modules/first-run-onboarding.md, docs/modules/project-doctor.md, docs/modules/runtime-lifecycle.md, docs/modules/session-opening-performance.md, docs/modules/session-owned-plans.md, docs/modules/workflow-kit-recovery.md, docs/modules/workspace-sessions.md, docs/planning/auto-plan-continuation.md, docs/planning/event-driven-runtime.md, docs/planning/remote-project-ui-research.md, docs/planning/session-title-sync.md, docs/planning/single-active-plan-adaptation.md, docs/planning/workflow-kit-package-migration.md, docs/research/remote-project-ui-options-2026-09-28.md
 

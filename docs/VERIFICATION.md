@@ -2,7 +2,13 @@
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
-## Текущий source — фаза 3 завершена / 01.10.2026
+## Текущий выпуск — 0.6.75 / 02.10.2026
+
+T009 `ed55308431f28239205ba854f20d1e2a69add865`: node24, unit (457 tests / 454 PASS / 3 SKIP), Electron smoke и paired-release — PASSED. Опубликованы оба ZIP и три сопроводительных файла; их серверные размеры/SHA-256 сверены. T010 `18203141cee540dadb2b92742d9ea676743b286d`: node24 — PASSED (32 мс), release-installed — PASSED (21 740 мс), без пересборки. Установленный fixture подтвердил observer, реальную ProseMirror-вставку 110 001 символа, немедленное завершение Send, reload без дубля и AutoPlan без дополнительного Send после всех DONE.
+
+Пользовательская приёмка запуска 0.6.75 получена 02.10.2026. Подробная матрица подтверждений — в разделе T010 в конце документа. Native Windows и чистая macOS не проверены. Датированные записи ниже сохраняют результаты на момент соответствующей задачи.
+
+## История source — фаза 3 завершена / 01.10.2026
 
 T001 фазы 2 подтверждена коммитом `8b12f56d266b085f5f6ef2ff380c8f7faa13324f`; прежняя PREPARED-транзакция не считалась завершением. T002 подтверждена `a845cded1e1c2f0adcda34ff61a3b6328852ff98`: startup-account получает tri-state login из общего sandboxed observer, навигация/явная проверка и закрытие auth-popup используют единичный isolated snapshot; общий функциональный `setInterval` 1500 мс удалён. Opt-in `--event-runtime-checker` доступен только непакетной сборке и лишь записывает расхождения после завершения очередей, не вызывает controller.tick, warm, Send, запись сессии или исправление проекции. Назначенные unit и Electron smoke прошли.
 
@@ -2438,3 +2444,10 @@ Build проверяет packagedSourceMatches, версии, целостнос
 На временных Git fixtures worker из Mac/Windows ресурсов выполняет inspect/apply/inspect; установленный Kit 1.5.1 — status/recover и прежние plan:carryover assertions. Исполнитель — Node из /Applications; PATH содержит только его bin и стандартные системные утилиты, а which -a node подтверждает единственный комплектный Node. Windows JavaScript выполняется на Mac, это не нативная проверка Windows.
 
 Прежний observer/composer/AutoPlan fixture и проверки отсутствия post-Send индикатора сохранены: ресурсы берутся из установленного app, fixture запускается тестовым Electron. Реальный аккаунт ChatGPT не используется. Обязательные node24/release-installed выполняются управляемым commit T010; фактические результаты сохраняются Workflow Kit в evidence. Релиз не пересобирается; src, resources, tools и package*.json не меняются. Контракт Web Pilot Sidebar, включая pageOperation и формат pageScript, сохранён.
+
+
+## 2026-10-02 — DOCS: итоговая документация 0.6.75
+
+Сверены действующие документы, навигация, ссылки, поставка Windows, архитектура и границы clean-install. README, AGENTS, WORKFLOW_START, PRODUCT, OVERVIEW и MODULES отражают опубликованный релиз и полученную приёмку. Связь с Web Pilot Sidebar проверена во всех собственных Markdown-документах, упоминающих Workflow Kit; публичный контракт адаптера сохранён. Managed-блоки Kit и датированные исторические свидетельства не переписывались.
+
+Проверка DOCS: существование относительных ссылок и путей индекса, отсутствие устаревших текущих формулировок, соответствие версии/контрольных сумм manifest, неизменность исходников и managed-блоков, git diff --check. Evidence проверки: .harness/runtime/docs-final-check.json. Сборка и тесты приложения не повторяются: изменения только документальные. Scope не архивируется; статусы ведёт Workflow Kit.
