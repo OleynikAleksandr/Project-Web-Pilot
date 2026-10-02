@@ -39,7 +39,6 @@ export function normalizePageObservation(message) {
       manualStopRevision: integer(state.manualStopRevision) ? state.manualStopRevision : 0,
       manualInputRevision: integer(state.manualInputRevision) ? state.manualInputRevision : 0,
       assistantRevision: integer(state.assistantRevision) ? state.assistantRevision : 0,
-      turnSignal: ['continue', 'wait', 'done'].includes(state.turnSignal) ? state.turnSignal : null,
       turnId: typeof state.turnId === 'string' && /^[a-f0-9]{1,8}$/.test(state.turnId) ? state.turnId : '',
       draftPresent: state.draftPresent === true,
       draftRevision: state.draftRevision,

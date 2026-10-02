@@ -36,18 +36,8 @@ export function installPageObserver(dom, send) {
     if (!dom.busy() || Date.now() - lastProgressAt >= 5000) {
       reportedAssistantRevision = assistantRevision; lastProgressAt = Date.now();
     }
-    const assistant = dom.messages('assistant').at(-1), user = dom.messages('user').at(-1);
+    const assistant = dom.messages('assistant').at(-1);
     const turnId = assistant ? fingerprint(assistant.getAttribute('data-message-id') || (dom.messages('assistant').length + '\n' + (assistant.textContent ?? ''))) : '';
-    let turnSignal = null;
-    // The old assistant footer is not a checkpoint for a newer user message.
-    if (!dom.busy() && assistant && (!user || !(assistant.compareDocumentPosition(user) & 4))) {
-      const last = assistant.cloneNode(true);
-      last?.querySelectorAll('pre,code,blockquote,button,[role=button],svg').forEach(node => node.remove());
-      const tail = (last?.textContent ?? '').trim();
-      if (tail.endsWith('Нужен ваш ответ.')) turnSignal = 'wait';
-      else if (tail.endsWith('Готов продолжать.')) turnSignal = 'continue';
-      else if (tail.endsWith('План завершён.')) turnSignal = 'done';
-    }
     if (editor !== editorIdentity) { editorIdentity = editor; editorRevision++; draftRevision++; }
     const button = dom.sendButton();
     const login = dom.first(loginSelector) ? 'signed-out' : dom.first(profileSelector) ? 'signed-in' : 'unknown';
@@ -58,7 +48,7 @@ export function installPageObserver(dom, send) {
       writable: !!editor && !editor.disabled && !editor.readOnly && editor.getAttribute('contenteditable') !== 'false',
       connectionError: dom.connectionError(),
       busy: dom.busy(), sendEnabled: !!button && !button.disabled && button.getAttribute('aria-disabled') !== 'true',
-      manualStopRevision, manualInputRevision, assistantRevision: reportedAssistantRevision, turnSignal, turnId, draftPresent: !!editorText(editor),
+      manualStopRevision, manualInputRevision, assistantRevision: reportedAssistantRevision, turnId, draftPresent: !!editorText(editor),
       manualSendRevision, draftRevision, userMessageCount: dom.messages('user').length, userMessagesRevision,
     };
   };
@@ -101,7 +91,7 @@ export function installPageObserver(dom, send) {
     }
     if (draftChanged) draftRevision++;
     if (usersChanged) userMessagesRevision++;
-    if (relevant || draftChanged || usersChanged || assistantChanged && !dom.busy() && snapshot().turnSignal) schedule();
+    if (relevant || draftChanged || usersChanged || assistantChanged && !dom.busy()) schedule();
   });
   const start = () => {
     observer.observe(document.documentElement, { subtree: true, childList: true, characterData: true, attributes: true,

@@ -55,6 +55,17 @@ test('the first message contains the exact complete packet and asks for a short 
     assert.ok(text.includes(rule), rule);
 });
 
+test('ordinary session contract defines one verified microtask per reply without an AutoPlan protocol', () => {
+  const p = packet(), text = startupMessage(project, 'contract-request', p);
+  for (const rule of ['не более одной микрозадачи', 'task:start', 'проверкой и commit --task',
+    'кратко отчитайся и закончи ответ', 'безопасной контрольной точке', 'не помечая задачу DONE'])
+    assert.ok(text.includes(rule), rule);
+  assert.equal(text.split(p.context).length, 2, 'complete recovery remains included exactly once');
+  assert.doesNotMatch(text, /AutoPlan|автовыполнения|Готов продолжать\.|Нужен ваш ответ\.|План завершён\./);
+  assert.equal(startupMessage({ ...project, autoPlanEnabled: true }, 'contract-request', p),
+    startupMessage({ ...project, autoPlanEnabled: false }, 'contract-request', p));
+});
+
 test('loads once, saves full message before send, and reopens the same chat without another recovery or send',async()=>{
   const f=controllerFixture({chatUrl:null});await f.controller.tick();assert.equal(f.sends(),1);assert.equal(f.loads(),1);
   assert.equal(f.saved.attempt.state,'sent');await f.controller.tick();assert.equal(f.controller.state.phase,'delivered');

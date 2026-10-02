@@ -43,15 +43,16 @@ test('observer catches equal-length drafts, late user text, attributes and busy 
   assert.ok(messages.at(-1).state.userMessagesRevision > revision);
   const count = messages.length;
   w.document.querySelector('article[data-message-author-role="assistant"] span').firstChild.data += ' token'; await turn();
-  assert.equal(messages.length, count);
+  assert.ok(messages.length > count, 'idle reply changes are observed without a footer');
+  assert.equal(messages.at(-1).state.busy, false);
   const stop = w.document.createElement('button'); stop.dataset.testid = 'stop-button'; w.document.body.append(stop); await turn();
   assert.equal(messages.at(-1).state.busy, true);
   stop.remove(); await turn(); assert.equal(messages.at(-1).state.busy, false);
   dispose(); assert.equal(w.__webPilotObserverSnapshot, undefined); w.close();
 });
 
-test('checkpoint identity survives reload and an older footer never answers a newer user message', async () => {
-  const markup = '<article data-message-author-role="user">Request</article><article data-message-author-role="assistant" data-message-id="answer-id">Готов продолжать.</article><form><div id="prompt-textarea" contenteditable="true">Saved draft</div><button data-testid="send-button">Send</button></form>';
+test('turn identity survives reload and a newer user message does not change the previous turn', async () => {
+  const markup = '<article data-message-author-role="user">Request</article><article data-message-author-role="assistant" data-message-id="answer-id">Микрозадача выполнена и сохранена.</article><form><div id="prompt-textarea" contenteditable="true">Saved draft</div><button data-testid="send-button">Send</button></form>';
   const states = [];
   for (let attempt = 0; attempt < 2; attempt++) {
     const dom = new JSDOM(markup, { url: 'https://chatgpt.com/c/fixture', runScripts: 'outside-only' });
@@ -61,11 +62,11 @@ test('checkpoint identity survives reload and an older footer never answers a ne
     const dispose = w.eval('(' + installPageObserver.toString() + ')(' + chatGPTDOMScript() + ', reportObservation)');
     await turn();
     states.push(observations.at(-1));
-    assert.equal(states.at(-1).state.turnSignal, 'continue');
+    assert.equal(Object.hasOwn(states.at(-1).state, 'turnSignal'), false);
     assert.equal(states.at(-1).state.draftPresent, true);
     const user = w.document.createElement('article'); user.dataset.messageAuthorRole = 'user';
     user.textContent = 'New request'; w.document.body.append(user); await turn();
-    assert.equal(observations.at(-1).state.turnSignal, null);
+    assert.equal(Object.hasOwn(observations.at(-1).state, 'turnSignal'), false);
     assert.equal(observations.at(-1).state.turnId, states.at(-1).state.turnId);
     dispose(); w.close();
   }
@@ -136,7 +137,7 @@ for (const errorText of ['ChatGPT stream recovery polling timed out', 'Resume st
   }
 }
 
-test('stream content progress is coalesced, decorative mutations do not count, final footer is observed', async () => {
+test('stream content progress is coalesced, decorative mutations do not count, final ordinary reply is observed', async () => {
   const dom = new JSDOM('<div id="prompt-textarea" contenteditable="true"></div><button data-testid="stop-button">Stop</button><article data-message-author-role="assistant"><span>start</span></article>',
     { url: 'https://chatgpt.com/c/fixture', runScripts: 'outside-only' });
   const w = dom.window; w.HTMLElement.prototype.getClientRects = () => [{}];
@@ -153,7 +154,9 @@ test('stream content progress is coalesced, decorative mutations do not count, f
   const progress = messages.at(-1).state.assistantRevision;
   w.document.querySelector('article').className = 'animated'; await turn();
   assert.equal(messages.at(-1).state.assistantRevision, progress);
-  w.document.querySelector('button').remove(); text.data = 'Готов продолжать.'; await turn();
-  assert.equal(messages.at(-1).state.turnSignal, 'continue');
+  w.document.querySelector('button').remove(); text.data = 'Микрозадача выполнена и сохранена.'; await turn();
+  assert.equal(messages.at(-1).state.busy, false);
+  assert.ok(messages.at(-1).state.assistantRevision > progress);
+  assert.equal(Object.hasOwn(messages.at(-1).state, 'turnSignal'), false);
   dispose(); assert.equal(timers.size, 0); w.close();
 });

@@ -17,28 +17,34 @@ function fixture() {
     send: async (text, current, before) => { if (gate) await gate(); if (!current() || !await before()) return { state: 'cancelled' }; if (sendResult.state !== 'deferred') sends.push(text); return sendResult; },
     schedule: (fn, ms) => { timers.set(++timerId, { fn, ms }); return timerId; }, cancel: id => timers.delete(id) });
   let state = { url: selected.chatUrl, editorAvailable: true, busy: false, assistantRevision: 0,
-    manualStopRevision: 0, manualInputRevision: 0, manualSendRevision: 0, turnSignal: null };
+    manualStopRevision: 0, manualInputRevision: 0, manualSendRevision: 0, turnId: 'a1234' };
   const observe = patch => { Object.assign(state, patch); flow.observe({ state: { ...state }, documentId: 'document-1111' }); };
   observe({});
   const drain = async () => { const callbacks = [...timers.entries()].filter(([, value]) => value.ms < 1000); callbacks.forEach(([id, value]) => { timers.delete(id); value.fn(); }); await settle(); };
-  const finish = async (signal = 'continue') => {
-    observe({ busy: true, turnSignal: null });
-    observe({ busy: false, assistantRevision: ++state.assistantRevision, turnSignal: signal });
+  const finish = async () => {
+    observe({ busy: true });
+    observe({ busy: false, assistantRevision: ++state.assistantRevision, turnId: state.assistantRevision.toString(16) });
     await drain();
   };
   return { flow, plan, sends, observe, drain, finish, timers, events,
     setResult: value => { sendResult = value; }, setGate: value => { gate = value; },
     changeSelection: () => { selected = { ...selected, sessionId: 'other' }; } };
 }
-test('startup instruction reserves user wait for necessary decisions and allows technical recovery', async () => {
+test('enabling sends no startup instruction and adopts a busy reply', async () => {
+  for (const busy of [false, true]) {
+    const f = fixture(); f.observe({ turnId: '', busy });
+    await f.flow.start();
+    assert.equal(f.flow.view().enabled, true);
+    assert.deepEqual(f.sends, []);
+    await f.finish();
+    assert.deepEqual(f.sends, [CONTINUE_TEXT]);
+  }
+});
+test('an existing idle reply needs no special footer to continue', async () => {
   const f = fixture(); await f.flow.start();
-  const instruction = f.sends[0];
-  assert.match(instruction, /не более одной микрозадачи с её проверкой и коммитом/);
-  assert.match(instruction, /Web Pilot автоматически отправит «Продолжай»/);
-  assert.match(instruction, /только когда без информации, выбора или решения пользователя корректно продолжать невозможно/);
-  assert.match(instruction, /Техническая ошибка, упавший тест, проблема сборки, Git\/MCP или совместимости сами по себе не требуют ответа пользователя/);
-  assert.match(instruction, /«Готов продолжать\.».*самостоятельную диагностику, исправление ошибки или проверку фонового процесса/);
-  assert.doesNotMatch(instruction, /если есть вопрос, ошибка/);
+  assert.deepEqual(f.sends, ['Продолжай']);
+  await f.finish();
+  assert.deepEqual(f.sends, ['Продолжай', 'Продолжай']);
 });
 test('partial baseline skips old DONE; current task can continue without a new commit; all DONE ends', async () => {
   const f = fixture(); await f.flow.start();
@@ -59,11 +65,10 @@ test('already complete, empty, blocked and prepared plans never send', async () 
     await f.flow.start(); assert.equal(f.sends.length, 0, kind);
   }
 });
-test('question, native Stop, typing, navigation, error, unknown send and no progress pause', async () => {
-  for (const reason of ['question', 'stop', 'input', 'navigation', 'error', 'unknown', 'no-progress']) {
+test('native Stop, typing, navigation, error, unknown send and no progress pause', async () => {
+  for (const reason of ['stop', 'input', 'navigation', 'error', 'unknown', 'no-progress']) {
     const f = fixture(); if (reason === 'unknown') f.setResult({ state: 'unknown' });
     await f.flow.start();
-    if (reason === 'question') await f.finish('wait');
     if (reason === 'stop') f.observe({ manualStopRevision: 1 });
     if (reason === 'input') f.observe({ manualInputRevision: 1 });
     if (reason === 'navigation') f.flow.observe({ reset: true });
@@ -151,28 +156,27 @@ test('busy watchdog warns without stopping the run and later progress continues 
   assert.equal(f.sends.length, 2, 'the same idle event cannot send twice');
 });
 
-test('idle watchdog keeps the safe pause when no answer or checkpoint appears', async () => {
+test('idle watchdog keeps the safe pause when no answer appears', async () => {
   const f = fixture(); await f.flow.start();
   const id = f.flow.watchdog, timeout = f.timers.get(id);
   f.timers.delete(id); timeout.fn();
   assert.equal(f.flow.view().phase, 'paused');
   assert.equal(f.flow.view().warning, null);
-  assert.equal(f.events.find(e => e.event === 'progress-timeout').reason, 'NO_CHECKPOINT');
+  assert.equal(f.events.find(e => e.event === 'progress-timeout').reason, 'RESPONSE_NOT_OBSERVED');
   assert.equal(f.sends.length, 1);
 });
 
-test('a stall warning preserves real wait, Stop, connection error and plan completion safeguards', async () => {
-  for (const reason of ['wait', 'stop', 'connection', 'done']) {
+test('a stall warning preserves Stop, connection error and plan completion safeguards', async () => {
+  for (const reason of ['stop', 'connection', 'done']) {
     const f = fixture(); await f.flow.start(); f.observe({ busy: true });
     const id = f.flow.watchdog, timeout = f.timers.get(id);
     f.timers.delete(id); timeout.fn();
     assert.equal(f.flow.view().warning, 'STALL_WARNING');
-    if (reason === 'wait') await f.finish('wait');
     if (reason === 'stop') f.observe({ manualStopRevision: 1 });
     if (reason === 'connection') f.observe({ connectionError: 'stream-interrupted' });
     if (reason === 'done') {
       f.plan.planView.tasks.forEach(t => { t.status = 'done'; });
-      await f.finish('done');
+      await f.finish();
     }
     assert.equal(f.flow.view().phase, reason === 'done' ? 'complete' : 'paused', reason);
     assert.equal(f.flow.view().warning, null, reason);
@@ -180,12 +184,11 @@ test('a stall warning preserves real wait, Stop, connection error and plan compl
   }
 });
 
-test('new user message resumes Stop, typing and question without an extra Send', async () => {
-  for (const reason of ['stop', 'typing', 'question']) {
+test('new user message resumes Stop and typing without an extra Send', async () => {
+  for (const reason of ['stop', 'typing']) {
     const f = fixture(); await f.flow.start();
     if (reason === 'stop') f.observe({ manualStopRevision: 1 });
     if (reason === 'typing') f.observe({ manualInputRevision: 1 });
-    if (reason === 'question') await f.finish('wait');
     assert.equal(f.flow.view().enabled, true);
     const before = f.sends.length;
     f.observe({ userMessageCount: 10 }); await f.drain();
@@ -255,38 +258,40 @@ test('unknown Send is not treated as a recoverable draft and deferred resume rec
 });
 test('continuation counter records only confirmed automatic Continue and survives waits', async () => {
   const f = fixture(); await f.flow.start();
-  assert.equal(f.flow.view().continuations, 0, 'startup instruction is not Continue');
+  assert.equal(f.flow.view().continuations, 1, 'only the exact Continue is sent at an existing pause');
   await f.finish();
-  assert.equal(f.flow.view().continuations, 1);
+  assert.equal(f.flow.view().continuations, 2);
   f.observe({ busy: false }); await f.drain();
-  assert.equal(f.flow.view().continuations, 1);
+  assert.equal(f.flow.view().continuations, 2);
   f.observe({ manualStopRevision: 1 });
-  assert.equal(f.flow.view().continuations, 1, 'pause retains the last sent fact');
+  assert.equal(f.flow.view().continuations, 2, 'pause retains the last sent fact');
   assert.equal(f.flow.view().reason, 'MANUAL_STOP');
   f.observe({ manualSendRevision: 1, busy: true }); await f.drain();
-  assert.equal(f.flow.view().continuations, 1, 'user Send is not an automatic continuation');
+  assert.equal(f.flow.view().continuations, 2, 'user Send is not an automatic continuation');
   f.plan.planRevision++; await f.finish();
-  assert.equal(f.flow.view().continuations, 2);
+  assert.equal(f.flow.view().continuations, 3);
   f.setResult({ state: 'unknown' }); f.plan.planRevision++; await f.finish();
-  assert.equal(f.flow.view().continuations, 2, 'unknown Send cannot claim success');
+  assert.equal(f.flow.view().continuations, 3, 'unknown Send cannot claim success');
   assert.equal(f.flow.view().reason, 'SEND_UNKNOWN');
   f.changeSelection(); f.flow.selectionChanged();
   assert.equal(f.flow.view().continuations, 0, 'another conversation never shows this counter');
 });
 
 test('pause and warning diagnostics identify causes without conversation contents', async () => {
-  for (const reason of ['AGENT_WAIT','DRAFT_PRESENT','MANUAL_STOP','MANUAL_INPUT','CONNECTION_ERROR',
-    'PLAN_CHANGED_OR_TRANSACTION','SEND_UNKNOWN','STALL_WARNING','NO_CHECKPOINT','MANUAL_OFF']) {
+  for (const reason of ['DRAFT_PRESENT','MANUAL_STOP','MANUAL_INPUT','CONNECTION_ERROR',
+    'PLAN_CHANGED_OR_TRANSACTION','SEND_UNKNOWN','STALL_WARNING','RESPONSE_NOT_OBSERVED','MANUAL_OFF']) {
     const f = fixture();
     if (reason === 'DRAFT_PRESENT') f.setResult({ state: 'deferred', reason });
     if (reason === 'SEND_UNKNOWN') f.setResult({ state: 'unknown' });
     await f.flow.start();
-    if (reason === 'AGENT_WAIT') await f.finish('wait');
     if (reason === 'MANUAL_STOP') f.observe({ manualStopRevision: 1 });
     if (reason === 'MANUAL_INPUT') f.observe({ manualInputRevision: 1 });
     if (reason === 'CONNECTION_ERROR') f.observe({ connectionError: 'private-secret-error' });
     if (reason === 'PLAN_CHANGED_OR_TRANSACTION') { f.plan.confirmed = false; await f.finish(); }
-    if (reason === 'NO_CHECKPOINT') await f.finish(null);
+    if (reason === 'RESPONSE_NOT_OBSERVED') {
+      const id = f.flow.watchdog, timeout = f.timers.get(id);
+      f.timers.delete(id); timeout.fn();
+    }
     if (reason === 'MANUAL_OFF') f.flow.pause('private-user-text');
     if (reason === 'STALL_WARNING') {
       f.observe({ busy: true });
@@ -313,17 +318,16 @@ test('only explicit off clears the global choice; other interruptions never repe
   }
 });
 
-test('restored enabled choice adopts busy, waits for questions and drafts, and completes without Send', async () => {
-  for (const kind of ['busy', 'question', 'draft', 'done', 'off']) {
+test('restored enabled choice adopts busy, waits for drafts and a first reply, and completes without Send', async () => {
+  for (const kind of ['busy', 'no-answer', 'draft', 'done', 'off']) {
     const f = fixture();
-    f.observe({ busy: kind === 'busy', turnSignal: kind === 'question' ? 'wait' : 'continue',
-      turnId: 'abc123', draftPresent: kind === 'draft' });
+    f.observe({ busy: kind === 'busy',
+      turnId: kind === 'no-answer' ? '' : 'abc123', draftPresent: kind === 'draft' });
     if (kind === 'done') f.plan.planView.tasks.forEach(t => { t.status = 'done'; });
     f.flow.restore(kind !== 'off');
     await f.flow.recover(); await f.drain();
     assert.equal(f.flow.view().enabled, kind !== 'off', kind);
     assert.equal(f.sends.length, 0, kind);
-    if (kind === 'question') assert.equal(f.flow.view().reason, 'AGENT_WAIT');
     if (kind === 'draft') assert.equal(f.flow.view().reason, 'DRAFT_PRESENT');
     if (kind === 'done') assert.equal(f.flow.view().phase, 'complete');
     if (kind === 'busy') {
@@ -335,7 +339,7 @@ test('restored enabled choice adopts busy, waits for questions and drafts, and c
 test('restored checkpoint sends once and a consumed or uncertain Send never retries on reload', async () => {
   for (const kind of ['new', 'consumed', 'unknown']) {
     const f = fixture();
-    f.observe({ turnSignal: 'continue', turnId: 'abc123' });
+    f.observe({ turnId: 'abc123' });
     const owner = JSON.stringify(['/project', 'chat', 'scope', 'https://chatgpt.com/c/abcdefgh']);
     f.flow.restore(true, kind === 'new' ? null : { key: owner, turnId: 'abc123',
       status: kind === 'unknown' ? 'sending' : 'sent' });
@@ -344,7 +348,7 @@ test('restored checkpoint sends once and a consumed or uncertain Send never retr
     const checkpoint = f.flow.checkpoint;
     f.flow.observe({ reset: true });
     f.flow.observe({ state: { url: 'https://chatgpt.com/c/abcdefgh', editorAvailable: true,
-      busy: false, assistantRevision: 1, turnSignal: 'continue', turnId: 'abc123' }, documentId: 'document-2222' });
+      busy: false, assistantRevision: 1, turnId: 'abc123' }, documentId: 'document-2222' });
     await f.flow.recover(); await f.drain();
     assert.equal(f.sends.length, kind === 'new' ? 1 : 0, 'reload does not repeat consumed Send');
     assert.deepEqual(f.flow.checkpoint, checkpoint);

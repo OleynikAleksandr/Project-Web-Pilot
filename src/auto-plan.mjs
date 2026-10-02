@@ -1,17 +1,4 @@
 export const CONTINUE_TEXT = 'Продолжай';
-const AUTO_PLAN_INSTRUCTION = [
-  'Включён режим автовыполнения текущего плана Web Pilot.',
-  'Сначала прочитай фактическое состояние текущего плана: выполненные задачи не повторяй, продолжай незавершённую.',
-  'За один ответ выполняй не более одной микрозадачи с её проверкой и коммитом. Затем обязательно закончи ответ.',
-  'После окончания ответа Web Pilot автоматически отправит «Продолжай», если план не завершён и пользователь не требуется. Не жди ручного «Продолжай» при возможности самостоятельной работы.',
-  'Если работа затягивается, сохрани промежуточный результат и закончи ответ на безопасной контрольной точке; незавершённую задачу не помечай DONE.',
-  'Длительные команды запускай через доступный MCP в фоне, сохраняя идентификатор процесса. После продолжения сначала проверь его результат, не запускай ту же операцию повторно.',
-  'Задавай вопрос и приостанавливай самостоятельную работу только когда без информации, выбора или решения пользователя корректно продолжать невозможно. В этом случае дождись его ответа.',
-  'Техническая ошибка, упавший тест, проблема сборки, Git/MCP или совместимости сами по себе не требуют ответа пользователя. Если можешь исследовать или исправить ситуацию самостоятельно, продолжай диагностику; при окончании ответа сохраняй возможность автоматического продолжения.',
-  'В конце ответа отдельной последней строкой пиши «Готов продолжать.», если можешь работать дальше, включая самостоятельную диагностику, исправление ошибки или проверку фонового процесса; «Нужен ваш ответ.», только когда без информации, выбора или решения пользователя корректно продолжать невозможно; «План завершён.», только когда все пункты, включая DOCS, действительно завершены.',
-  'После полного завершения не архивируй план без отдельного поручения. Следующее сообщение «Продолжай» означает продолжение фактической незавершённой работы, а не обязательный переход к следующей задаче.',
-  'Не запускай codex exec, других модельных агентов и не делегируй им работу, если пользователь прямо этого не попросил.',
-].join('\n');
 const key = p => p && JSON.stringify([p.workspace, p.sessionId, p.scopeId, p.chatUrl]);
 const finished = p => p?.planView?.tasks?.length > 0 && p.planView.tasks.every(t => t.status === 'done');
 export class AutoPlan {
@@ -45,7 +32,7 @@ export class AutoPlan {
     const selected = this.selected(), page = this.page;
     if (!selected?.chatUrl || !selected.scopeId || !page?.editorAvailable || page.url !== selected.chatUrl || page.connectionError) return;
     this.recovering = true; this.recoveryPending = false;
-    try { await this.start({ recover: true }); }
+    try { await this.start(); }
     finally { this.recovering = false; }
   }
   set(phase, message, active = false, reason = null) {
@@ -59,20 +46,20 @@ export class AutoPlan {
     if (run.stallWarning) {
       run.stallWarning = false;
       this.log('progress-resumed', { reason: 'STALL_WARNING' });
-      this.set(this.state.phase, 'Автовыполнение: ждём контрольную точку агента.', this.state.active);
+      this.set(this.state.phase, 'Автовыполнение: ждём завершения ответа.', this.state.active);
     }
     this.watchdog = this.schedule(() => {
       this.watchdog = null;
       if (this.run !== run) return;
       const busy = !!this.page?.busy;
       this.log('progress-timeout', { busy, assistantRevision: this.page?.assistantRevision ?? 0,
-        reason: busy ? 'STALL_WARNING' : 'NO_CHECKPOINT' });
+        reason: busy ? 'STALL_WARNING' : 'RESPONSE_NOT_OBSERVED' });
       if (busy) {
         run.stallWarning = true;
         this.set(this.state.phase, 'Три минуты без новых наблюдаемых данных. Агент ещё работает; ждём завершения ответа.', this.state.active, 'STALL_WARNING');
         return;
       }
-      this.pause('Три минуты без новых наблюдаемых данных. Проверьте ответ или восстановите разговор; повторной отправки не было.', 'NO_CHECKPOINT');
+      this.pause('Три минуты без новых наблюдаемых данных. Проверьте ответ или восстановите разговор; повторной отправки не было.', 'RESPONSE_NOT_OBSERVED');
     }, this.stallMs);
     this.watchdog?.unref?.();
   }
@@ -127,13 +114,13 @@ export class AutoPlan {
     }, this.settleMs);
     this.timer?.unref?.();
   }
-  async start({ recover = false } = {}) {
+  async start() {
     this.enabled = true; this.recoveryPending = false;
     if (this.state.active) return;
     this.suspended = null;
     const selected = this.selected(), page = this.page;
     if (!selected?.chatUrl || !selected.scopeId || !page || page.url !== selected.chatUrl
-        || (!recover && page.busy) || !page.editorAvailable || page.connectionError) {
+        || !page.editorAvailable || page.connectionError) {
       this.recoveryPending = true;
       return this.set('waiting', 'Автовыполнение включено. Ждём подходящий разговор и план.', false, 'PAGE_NOT_READY');
     }
@@ -150,12 +137,11 @@ export class AutoPlan {
       return this.pause('Нет доступного незавершённого плана.', 'PLAN_UNAVAILABLE');
     this.run = { key: key(selected), selected: { ...selected }, url: page.url, documentId: page.documentId,
       stopRevision: page.manualStopRevision ?? 0, inputRevision: page.manualInputRevision ?? 0,
-      sawBusy: recover && !!page.busy, beforeAssistantRevision: page.assistantRevision ?? 0,
+      sawBusy: !!page.busy, beforeAssistantRevision: page.assistantRevision ?? 0,
       planRevision: plan.planRevision, unchanged: 0,
       completedAtStart: plan.planView.tasks.filter(t => t.status === 'done').map(t => t.id) };
     this.continuationOwner = this.run.key; this.continuations = 0;
     this.log('start', { completed: this.run.completedAtStart.length, total: plan.planView.tasks.length });
-    if (!recover) return this.dispatch(this.run, AUTO_PLAN_INSTRUCTION);
     const run = this.run, checkpoint = this.checkpoint;
     if (page.busy) {
       this.set('running', 'Автовыполнение восстановлено. Ждём завершения текущего ответа.', true);
@@ -166,11 +152,9 @@ export class AutoPlan {
       return this.pause('Ждём отправки вашего сообщения. Черновик сохранён, автовыполнение остаётся включённым.', 'DRAFT_PRESENT', true);
     if (checkpoint?.key === run.key && checkpoint.status === 'sending')
       return this.pause('Исход предыдущей отправки неизвестен. Отправьте сообщение после проверки разговора.', 'SEND_UNKNOWN', true);
-    if (page.turnSignal === 'wait')
-      return this.pause('Агент ждёт вашего ответа. Отправьте сообщение для продолжения.', 'AGENT_WAIT', true);
-    if (page.turnId && page.turnId !== (checkpoint?.key === run.key ? checkpoint.turnId : null)
-        && ['continue', 'done'].includes(page.turnSignal)) return this.finishTurn(run);
-    this.set('running', 'Автовыполнение восстановлено. Ждём новую контрольную точку или ваше сообщение.', true);
+    if (page.turnId && page.turnId !== (checkpoint?.key === run.key ? checkpoint.turnId : null))
+      return this.finishTurn(run);
+    this.set('running', 'Автовыполнение включено. Ждём ответ или ваше сообщение.', true);
     this.watch(run); this.observe({ state: this.page, documentId: this.page.documentId });
   }
   async resumeAfterMessage(waiting) {
@@ -208,23 +192,20 @@ export class AutoPlan {
       if (!plan.confirmed) return this.pause('Git-операция ещё не завершена. Проверьте её результат.', 'PLAN_CHANGED_OR_TRANSACTION');
       if (finished(plan)) return this.complete();
       if (plan.scopeStatus !== 'ACTIVE') return this.pause('План приостановлен.', 'PLAN_INACTIVE');
-      if (this.page?.turnSignal === 'wait') return this.pause('Агент ждёт вашего ответа. Отправьте сообщение для продолжения.', 'AGENT_WAIT', true);
-      if (!['continue', 'done'].includes(this.page?.turnSignal))
-        return this.pause('Ответ закончился без контрольной точки. Проверьте сообщение агента.', 'NO_CHECKPOINT');
       run.unchanged = plan.planRevision === run.planRevision ? run.unchanged + 1 : 0;
       run.planRevision = plan.planRevision;
       if (run.unchanged >= 3) return this.pause('Три ответа без изменения плана. Проверьте ход работы.', 'NO_PLAN_PROGRESS');
-      await this.dispatch(run, CONTINUE_TEXT);
+      await this.dispatch(run);
     } catch {
       if (this.run === run) this.pause('Не удалось проверить план или отправить продолжение. Повтора Send не будет.', 'CHECK_OR_SEND_ERROR');
     }
   }
-  async dispatch(run, text) {
+  async dispatch(run) {
     if (this.run !== run) return;
     const sendRevision = this.page?.manualSendRevision ?? 0;
     run.beforeAssistantRevision = this.page?.assistantRevision ?? 0;
     run.sawBusy = false;
-    this.set('sending', text === CONTINUE_TEXT ? 'Отправляем «Продолжай»…' : 'Запускаем автовыполнение…', true);
+    this.set('sending', 'Отправляем «Продолжай»…', true);
     const current = () => this.run === run && key(this.selected()) === run.key
       && this.page?.documentId === run.documentId && this.page?.url === run.url
       && (this.page?.manualStopRevision ?? 0) === run.stopRevision
@@ -234,7 +215,7 @@ export class AutoPlan {
       await this.saveCheckpoint(checkpoint);
       this.checkpoint = checkpoint;
       if (!current()) return;
-      const result = await this.send(text, current, async () => {
+      const result = await this.send(CONTINUE_TEXT, current, async () => {
         const plan = await this.inspectPlan(run.selected);
         if (!current()) return false;
         if (!plan.confirmed || plan.scopeId !== run.selected.scopeId || plan.scopeStatus !== 'ACTIVE') {
@@ -254,9 +235,9 @@ export class AutoPlan {
       this.checkpoint = { ...checkpoint, status: 'sent' };
       await this.saveCheckpoint(this.checkpoint);
       if (!current()) return;
-      if (text === CONTINUE_TEXT) this.continuations++;
-      this.log('send', { kind: text === CONTINUE_TEXT ? 'continue' : 'start', continuations: this.continuations });
-      this.set('running', 'Автовыполнение: ждём контрольную точку агента.', true);
+      this.continuations++;
+      this.log('send', { kind: 'continue', continuations: this.continuations });
+      this.set('running', 'Автовыполнение: ждём завершения ответа.', true);
       this.watch(run);
       if (this.page) this.observe({ state: this.page, documentId: this.page.documentId });
     } catch {

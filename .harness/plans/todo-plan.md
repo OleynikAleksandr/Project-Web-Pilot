@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 917,
+  "plan_revision": 919,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "auto-plan-client-driven-refactor-20261002",
@@ -85,8 +85,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "auto-plan-client-driven-refactor-20261002",
         "task_id": "T001",
@@ -120,7 +120,18 @@
         "Обычный startup contract Web Pilot независимо от AutoPlan закрепляет цикл: одна микрозадача за ответ, task:start, проверка, commit --task, короткий отчёт и конец ответа.",
         "Unit tests подтверждают отсутствие агентского управляющего протокола и сохранение обычной доставки recovery."
       ],
-      "expected_commit_message": "refactor: убрать агентский протокол AutoPlan"
+      "expected_commit_message": "refactor: убрать агентский протокол AutoPlan",
+      "actual_files": [
+        "docs/planning/auto-plan-client-driven-refactor.md",
+        "src/auto-plan.mjs",
+        "src/chatgpt-page-observer.mjs",
+        "src/chromium-diagnostics.mjs",
+        "src/context-session.mjs",
+        "src/page-state.mjs",
+        "tests/auto-plan.test.mjs",
+        "tests/context-session.test.mjs",
+        "tests/page-state.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -338,7 +349,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: auto-plan-client-driven-refactor-20261002
 Current Task: нет
-Revision: 917
+Revision: 919
 
 ## Цель
 
@@ -350,8 +361,8 @@ Revision: 917
 
 ## Микрозадачи
 
-- [TODO] T001: Убрать управляющий протокол агента из AutoPlan — Ожидает
-  - Git Commit: [PENDING] refactor: убрать агентский протокол AutoPlan
+- [DONE] T001: Убрать управляющий протокол агента из AutoPlan — Завершено
+  - Git Commit: [DONE] refactor: убрать агентский протокол AutoPlan
   - Reference: auto-plan-client-driven-refactor-20261002 / T001 / implementation
   - Файлы: src/auto-plan.mjs, src/chatgpt-page-observer.mjs, src/page-state.mjs, src/context-session.mjs, src/chromium-diagnostics.mjs, tests/auto-plan.test.mjs, tests/page-state.test.mjs, tests/context-session.test.mjs, docs/planning/auto-plan-client-driven-refactor.md
 - [TODO] T002: Перевести AutoPlan на событийный reconcile пауз — Ожидает
