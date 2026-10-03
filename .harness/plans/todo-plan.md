@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 81,
+  "plan_revision": 83,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "release-1.5.0-docs-finalization-001",
@@ -554,13 +554,20 @@
         "Локальные ссылки проверены; изменения отправляются в main без изменения release tag"
       ],
       "expected_commit_message": "docs: актуализировать интеграцию Web Pilot 0.6.78",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "release-1.5.0-docs-finalization-001",
         "task_id": "T007",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "README.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/PRODUCT.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/workflow-kit-package.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -633,7 +640,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: release-1.5.0-docs-finalization-001
 Current Task: нет
-Revision: 81
+Revision: 83
 
 ## Цель
 
@@ -705,8 +712,8 @@ Revision: 81
   - Git Commit: [DONE] docs: актуализировать интеграцию Web Pilot 0.6.77 и Node 24
   - Reference: release-1.5.0-docs-finalization-001 / T006 / implementation
   - Файлы: docs/modules/workflow-kit-package.md, README.md, docs/PRODUCT.md, docs/architecture/OVERVIEW.md, docs/DOCUMENTATION_INDEX.md
-- [TODO] T007: Актуализировать интеграционные документы для опубликованного Web Pilot 0.6.78 — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать интеграцию Web Pilot 0.6.78
+- [DONE] T007: Актуализировать интеграционные документы для опубликованного Web Pilot 0.6.78 — Завершено
+  - Git Commit: [DONE] docs: актуализировать интеграцию Web Pilot 0.6.78
   - Reference: release-1.5.0-docs-finalization-001 / T007 / implementation
   - Файлы: docs/modules/workflow-kit-package.md, README.md, docs/PRODUCT.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/architecture/OVERVIEW.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает

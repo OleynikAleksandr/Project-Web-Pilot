@@ -24,7 +24,7 @@
 | docs/architecture/ARCHITECTURE.md | Архитектура package, single-active plan и legacy history |
 | docs/architecture/OVERVIEW.md | Компактный recovery-обзор текущей архитектуры |
 | docs/MODULES.md | Карта модулей проекта |
-| docs/modules/workflow-kit-package.md | Техническая спецификация package/runtime, minimum Node 22+, рабочая среда Node 24 и интеграция Web Pilot 0.6.77 |
+| docs/modules/workflow-kit-package.md | Техническая спецификация package/runtime, minimum Node 22+, рабочая среда Node 24 и интеграция Web Pilot 0.6.78 |
 | docs/planning/canonical-workflow-kit-package.md | Исторический план выделения canonical package |
 | docs/planning/single-active-plan-migration.md | План и результат перехода к одному current plan на checkout |
 | docs/WORKFLOW_START.md | Общий контракт старта Workflow Kit |
