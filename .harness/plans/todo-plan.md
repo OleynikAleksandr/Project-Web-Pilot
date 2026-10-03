@@ -4,18 +4,26 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 940,
+  "plan_revision": 941,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "github-publication-0.6.77-20261002",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Актуализировать README Project Web Pilot и WorkflowKit, синхронизировать оба репозитория с GitHub и опубликовать проверенные актуальные релизы без пересборки.",
   "acceptance_criteria": [
     "Актуализировать README Project Web Pilot и WorkflowKit, синхронизировать оба репозитория с GitHub и опубликовать проверенные актуальные релизы без пересборки."
   ],
   "approved_scope": {
-    "functional_paths": [],
+    "functional_paths": [
+      "src/chatgpt-page-observer.mjs",
+      "src/auto-plan.mjs",
+      "src/page-state.mjs",
+      "src/chromium-diagnostics.mjs",
+      "tests/page-state.test.mjs",
+      "tests/auto-plan.test.mjs",
+      "tests/installed-observer-fixture.cjs"
+    ],
     "documentation_paths": [
       "docs/planning/github-publication-0.6.77.md",
       "README.md",
@@ -31,7 +39,8 @@
       "docs/MODULES.md",
       "docs/planning/auto-plan-client-driven-refactor.md",
       "docs/CLEAN_INSTALL.md",
-      "docs/DECISIONS.md"
+      "docs/DECISIONS.md",
+      "docs/planning/auto-plan-session-incident-20261003.md"
     ]
   },
   "baseline_commit": "0a78bf366e65ad35fed3332c43eda3aa3cddf9b2",
@@ -64,6 +73,10 @@
       },
       {
         "path": "docs/planning/github-publication-0.6.77.md",
+        "required": true
+      },
+      {
+        "path": "docs/planning/auto-plan-client-driven-refactor.md",
         "required": true
       }
     ],
@@ -150,16 +163,89 @@
       ]
     },
     {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
+      "id": "T003",
+      "title": "Разобрать сбой автовыполнения в сессии публикации",
+      "why": "Разобрать сбой автовыполнения в сессии публикации",
+      "dependencies": [],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/planning/auto-plan-client-driven-refactor.md",
+        "docs/planning/auto-plan-session-incident-20261003.md",
+        "docs/DOCUMENTATION_INDEX.md"
+      ],
+      "verification_ids": [],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "По Git проверен порядок архивирования и создания scope",
+        "Скриншоты сопоставлены с журналом AutoPlan и коммитами двух репозиториев",
+        "Коллизия идентификатора паузы воспроизведена на изолированном DOM без изменений живого чата"
+      ],
+      "expected_commit_message": "docs: разобрать остановку AutoPlan в сессии публикации",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "github-publication-0.6.77-20261002",
+        "task_id": "T003",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T004",
+      "title": "Исправить идентификацию пауз AutoPlan и проверить доставляемое приложение",
+      "why": "Исправить идентификацию пауз AutoPlan и проверить доставляемое приложение",
+      "dependencies": [
+        "T003"
+      ],
+      "functional_paths": [
+        "src/chatgpt-page-observer.mjs",
+        "src/auto-plan.mjs",
+        "src/page-state.mjs",
+        "src/chromium-diagnostics.mjs",
+        "tests/page-state.test.mjs",
+        "tests/auto-plan.test.mjs",
+        "tests/installed-observer-fixture.cjs"
+      ],
+      "documentation_paths": [
+        "docs/planning/auto-plan-client-driven-refactor.md",
+        "docs/planning/auto-plan-session-incident-20261003.md",
+        "docs/VERIFICATION.md",
+        "docs/RELEASE.md"
+      ],
+      "verification_ids": [
+        "unit",
+        "smoke"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Новая завершённая реплика при неизменном размере DOM-окна получает своё продолжение",
+        "Повторный render, reload, restart и старый ledger не дают дублирующий Send",
+        "Первичная загрузка разговора не оставляет собственный черновик Продолжай при отменённой отправке",
+        "Назначены и пройдены Node, Electron fixture и проверки доставляемой сборки",
+        "Граница штатного ответа соответствует завершению видимой микрозадачи; промежуточная остановка только по реальной необходимости"
+      ],
+      "expected_commit_message": "fix: восстановить продолжение AutoPlan в длинных разговорах",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "github-publication-0.6.77-20261002",
+        "task_id": "T004",
+        "role": "implementation"
+      }
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "github-publication-0.6.77-20261002",
         "task_id": "DOCS",
-        "role": "implementation"
+        "role": "implementation",
+        "iteration": 2
       },
       "dependencies": [
         "T001",
-        "T002"
+        "T002",
+        "T003",
+        "T004"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -177,7 +263,8 @@
         "docs/MODULES.md",
         "docs/planning/auto-plan-client-driven-refactor.md",
         "docs/CLEAN_INSTALL.md",
-        "docs/DECISIONS.md"
+        "docs/DECISIONS.md",
+        "docs/planning/auto-plan-session-incident-20261003.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -216,10 +303,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: github-publication-0.6.77-20261002
 Current Task: нет
-Revision: 940
+Revision: 941
 
 ## Цель
 
@@ -239,10 +326,18 @@ Revision: 940
   - Git Commit: [DONE] docs: подтвердить публикацию актуального WorkflowKit
   - Reference: github-publication-0.6.77-20261002 / T002 / implementation
   - Файлы: docs/planning/github-publication-0.6.77.md, docs/RELEASE.md, docs/VERIFICATION.md
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: актуализировать контекст проекта
+- [TODO] T003: Разобрать сбой автовыполнения в сессии публикации — Ожидает
+  - Git Commit: [PENDING] docs: разобрать остановку AutoPlan в сессии публикации
+  - Reference: github-publication-0.6.77-20261002 / T003 / implementation
+  - Файлы: docs/planning/auto-plan-client-driven-refactor.md, docs/planning/auto-plan-session-incident-20261003.md, docs/DOCUMENTATION_INDEX.md
+- [TODO] T004: Исправить идентификацию пауз AutoPlan и проверить доставляемое приложение — Ожидает
+  - Git Commit: [PENDING] fix: восстановить продолжение AutoPlan в длинных разговорах
+  - Reference: github-publication-0.6.77-20261002 / T004 / implementation
+  - Файлы: src/chatgpt-page-observer.mjs, src/auto-plan.mjs, src/page-state.mjs, src/chromium-diagnostics.mjs, tests/page-state.test.mjs, tests/auto-plan.test.mjs, tests/installed-observer-fixture.cjs, docs/planning/auto-plan-client-driven-refactor.md, docs/planning/auto-plan-session-incident-20261003.md, docs/VERIFICATION.md, docs/RELEASE.md
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: github-publication-0.6.77-20261002 / DOCS / implementation
-  - Файлы: docs/planning/github-publication-0.6.77.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, README.md, AGENTS.md, docs/WORKFLOW_START.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/DOCUMENTATION_INDEX.md, docs/TRANSFER_TO_WINDOWS.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/planning/auto-plan-client-driven-refactor.md, docs/CLEAN_INSTALL.md, docs/DECISIONS.md
+  - Файлы: docs/planning/github-publication-0.6.77.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, README.md, AGENTS.md, docs/WORKFLOW_START.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/DOCUMENTATION_INDEX.md, docs/TRANSFER_TO_WINDOWS.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/planning/auto-plan-client-driven-refactor.md, docs/CLEAN_INSTALL.md, docs/DECISIONS.md, docs/planning/auto-plan-session-incident-20261003.md
 
 ## Context Pack For This Cycle
 
@@ -250,5 +345,6 @@ Revision: 940
 - docs/MODULES.md → Модули проекта
 - docs/DOCUMENTATION_INDEX.md → Каталог документации
 - docs/planning/github-publication-0.6.77.md
+- docs/planning/auto-plan-client-driven-refactor.md
 
 Служебные состояния меняются только командами workflow. Приёмка не архивирует scope.
