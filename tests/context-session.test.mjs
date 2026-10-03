@@ -60,6 +60,10 @@ test('ordinary session contract defines one verified microtask per reply without
   for (const rule of ['не более одной микрозадачи', 'task:start', 'проверкой и commit --task',
     'кратко отчитайся и закончи ответ', 'безопасной контрольной точке', 'не помечая задачу DONE'])
     assert.ok(text.includes(rule), rule);
+  for (const rule of ['build/package/sign/notarize/release/publish', 'прямо названо в активной микрозадаче',
+    'документы должны быть актуализированы и зафиксированы', 'DOCS выполняется до delivery-хвоста',
+    'Если явной delivery-задачи нет — не собирай и не публикуй'])
+    assert.ok(text.includes(rule), rule);
   assert.equal(text.split(p.context).length, 2, 'complete recovery remains included exactly once');
   assert.doesNotMatch(text, /AutoPlan|автовыполнения|Готов продолжать\.|Нужен ваш ответ\.|План завершён\./);
   assert.equal(startupMessage({ ...project, autoPlanEnabled: true }, 'contract-request', p),

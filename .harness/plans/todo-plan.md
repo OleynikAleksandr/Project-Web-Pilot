@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 996,
+  "plan_revision": 998,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "input-instruction-delivery-ordering-20261003",
@@ -100,8 +100,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "input-instruction-delivery-ordering-20261003",
         "task_id": "T002",
@@ -129,7 +129,11 @@
         "startupMessage требует актуализировать документы до build и GitHub publish",
         "startupMessage не расходится с canonical policy WorkflowKit"
       ],
-      "expected_commit_message": "feat: Добавить delivery-порядок в startupMessage Project Web Pilot"
+      "expected_commit_message": "feat: Добавить delivery-порядок в startupMessage Project Web Pilot",
+      "actual_files": [
+        "src/context-session.mjs",
+        "tests/context-session.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -214,7 +218,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: input-instruction-delivery-ordering-20261003
 Current Task: нет
-Revision: 996
+Revision: 998
 
 ## Цель
 
@@ -230,8 +234,8 @@ Revision: 996
   - Git Commit: [DONE] feat: Завершить canonical policy DOCS/build/publish в WorkflowKit
   - Reference: input-instruction-delivery-ordering-20261003 / T001 / implementation
   - Файлы: docs/planning/input-instruction-delivery-ordering.md
-- [TODO] T002: Добавить delivery-порядок в startupMessage Project Web Pilot — Ожидает
-  - Git Commit: [PENDING] feat: Добавить delivery-порядок в startupMessage Project Web Pilot
+- [DONE] T002: Добавить delivery-порядок в startupMessage Project Web Pilot — Завершено
+  - Git Commit: [DONE] feat: Добавить delivery-порядок в startupMessage Project Web Pilot
   - Reference: input-instruction-delivery-ordering-20261003 / T002 / implementation
   - Файлы: src/context-session.mjs, tests/context-session.test.mjs, docs/planning/input-instruction-delivery-ordering.md
 - [TODO] T003: Проверить интеграцию canonical recovery и startupMessage — Ожидает
