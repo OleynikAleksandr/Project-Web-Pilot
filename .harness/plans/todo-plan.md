@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 961,
+  "plan_revision": 963,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "macos-screen-permission-stability-20261003",
@@ -24,7 +24,8 @@
       "scripts/check-mac-signature.mjs",
       "scripts/check-installed-release.mjs",
       "tests/release-mac.test.mjs",
-      "scripts/check-mac-screen-capture.mjs"
+      "scripts/check-mac-screen-capture.mjs",
+      "tests/sign-mac-bundle.test.mjs"
     ],
     "documentation_paths": [
       "docs/planning/macos-screen-permission-stability.md",
@@ -107,8 +108,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "macos-screen-permission-stability-20261003",
         "task_id": "T002",
@@ -120,11 +121,14 @@
       "functional_paths": [
         "package.json",
         "package-lock.json",
-        "scripts/sign-mac-bundle.mjs"
+        "scripts/sign-mac-bundle.mjs",
+        "tests/sign-mac-bundle.test.mjs"
       ],
       "documentation_paths": [
         "docs/planning/macos-screen-permission-stability.md",
-        "docs/RELEASE.md"
+        "docs/RELEASE.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/DOCUMENTATION_INDEX.md"
       ],
       "verification_ids": [
         "unit",
@@ -139,7 +143,17 @@
         "Штатный @electron/osx-sign подписывает окончательные ресурсы и вложенные компоненты; bundle identity соответствует com.oleynik.ProjectWebPilot",
         "Производственная подпись и нотарификация не добавляются"
       ],
-      "expected_commit_message": "fix: sign macOS bundle with a persistent development identity"
+      "expected_commit_message": "fix: sign macOS bundle with a persistent development identity",
+      "actual_files": [
+        "package.json",
+        "package-lock.json",
+        "scripts/sign-mac-bundle.mjs",
+        "tests/sign-mac-bundle.test.mjs",
+        "docs/RELEASE.md",
+        "docs/planning/macos-screen-permission-stability.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/DOCUMENTATION_INDEX.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -300,7 +314,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: macos-screen-permission-stability-20261003
 Current Task: нет
-Revision: 961
+Revision: 963
 
 ## Цель
 
@@ -316,10 +330,10 @@ Revision: 961
   - Git Commit: [DONE] docs: plan stable macOS screen recording permissions
   - Reference: macos-screen-permission-stability-20261003 / T001 / implementation
   - Файлы: docs/planning/macos-screen-permission-stability.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
-- [TODO] T002: Настроить постоянную подпись окончательного macOS bundle — Ожидает
-  - Git Commit: [PENDING] fix: sign macOS bundle with a persistent development identity
+- [DONE] T002: Настроить постоянную подпись окончательного macOS bundle — Завершено
+  - Git Commit: [DONE] fix: sign macOS bundle with a persistent development identity
   - Reference: macos-screen-permission-stability-20261003 / T002 / implementation
-  - Файлы: package.json, package-lock.json, scripts/sign-mac-bundle.mjs, docs/planning/macos-screen-permission-stability.md, docs/RELEASE.md
+  - Файлы: package.json, package-lock.json, scripts/sign-mac-bundle.mjs, tests/sign-mac-bundle.test.mjs, docs/planning/macos-screen-permission-stability.md, docs/RELEASE.md, docs/architecture/OVERVIEW.md, docs/DOCUMENTATION_INDEX.md
 - [TODO] T003: Добавить контроль подписи перед выпуском и установкой — Ожидает
   - Git Commit: [PENDING] fix: verify macOS code signature before installing releases
   - Reference: macos-screen-permission-stability-20261003 / T003 / implementation

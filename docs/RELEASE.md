@@ -859,3 +859,9 @@ Canonical session auto-title теперь берётся из H1 обязате�
 Ручное переименование больше не использует `window.prompt()`. В sidebar есть собственный modal с текущим именем, полем ввода, Enter/«Сохранить» и «Отмена». Один и тот же dialog используется для проекта и session. Native ChatGPT sync остаётся отдельной одноразовой best-effort операцией и не блокирует ввод.
 
 Финальный `npm run build` выполнен из source commit `243e250a0f75d4480e7cdc2b25c58d36bf11a3fb`; `sourceFiles=96`, `packagedSourceMatches=true`. Поставка: `~/Downloads/WebPilot-0.6.63/`; ZIP integrity — OK. macOS ZIP `fdaf6f4ab0a08d462401ac472ad4f7145a8085137db9e3ecb2750a97ad3c3660`; Windows ZIP `cbf6133dae0490689c61702e2334ba5d34e1e4af362fe0273d1bec1e6e979b1e`. macOS ASAR `dce3e5edad72df49b6a394d44378fd7d6743674f14a32f9274afd148d63c48ff`.
+
+## Постоянная локальная подпись macOS — scope 03.10.2026
+
+[Контракт](planning/macos-screen-permission-stability.md) устраняет подтверждённое несовпадение TCC signing requirement. `npm run build:mac` требует явно выбранную Apple Development identity до упаковки. Укажите SHA-1 сертификата через `WEBPILOT_MAC_SIGNING_IDENTITY` либо `.harness/runtime/mac-signing.json`: `{"identity":"<SHA-1 выбранного сертификата>"}`. Конфигурация и signing receipt остаются в игнорируемом runtime, вне Git. `npm run check:mac-signing` проверяет наличие действительной identity; `npm run sign:mac` подписывает окончательный staging через `@electron/osx-sign@2.7.0` и выполняет строгую проверку перед выпуском. Штатные ошибки останавливают `build:mac`; автоматического выбора сертификата и перехода на ad hoc нет. Подпись локальная development, без profile automation, нотарификации и timestamp server.
+
+Это изменение кода T002; реальная подписанная поставка, release gate установленной копии и live сохранение Screen Recording разрешения ещё не подтверждены. Первичная перепривязка системного разрешения относится к T004.
