@@ -38,12 +38,16 @@ export function installPageObserver(dom, send) {
     }
     const assistants = dom.messages('assistant'), users = dom.messages('user');
     const assistant = assistants.at(-1), user = users.at(-1);
-    const machineId = (node, fallback) => node?.getAttribute('data-message-id')
+    // Native IDs may be inside the outer semantic wrapper (Work) or on its ancestor.
+    // DOM counts are not identities: virtualized history keeps a bounded window.
+    const machineId = node => node?.getAttribute('data-message-id')
       || node?.closest('[data-message-id]')?.getAttribute('data-message-id')
-      || node?.closest('article[data-testid]')?.getAttribute('data-testid') || fallback;
-    const precedingUsers = assistant ? users.filter(node => node.compareDocumentPosition(assistant) & 4).length : 0;
-    const turnId = assistant ? fingerprint(machineId(assistant, 'assistant:' + assistants.length + ':user:' + precedingUsers)) : '';
-    const userTurnId = user ? fingerprint(machineId(user, 'user:' + users.length)) : '';
+      || node?.querySelector('[data-message-id]')?.getAttribute('data-message-id')
+      || node?.closest('[data-turn-id]')?.getAttribute('data-turn-id') || '';
+    const assistantId = machineId(assistant), userId = machineId(user);
+    const turnId = assistantId ? fingerprint(assistantId) : '';
+    const userTurnId = userId ? fingerprint(userId) : '';
+    const turnIdentitySource = assistantId ? 'native' : assistant ? 'cycle' : 'none';
     const lastMessageRole = user && (!assistant || assistant.compareDocumentPosition(user) & 4) ? 'user'
       : assistant ? 'assistant' : null;
     if (editor !== editorIdentity) { editorIdentity = editor; editorRevision++; draftRevision++; }
@@ -56,7 +60,7 @@ export function installPageObserver(dom, send) {
       writable: !!editor && !editor.disabled && !editor.readOnly && editor.getAttribute('contenteditable') !== 'false',
       connectionError: dom.connectionError(),
       busy: dom.busy(), sendEnabled: !!button && !button.disabled && button.getAttribute('aria-disabled') !== 'true',
-      manualStopRevision, manualInputRevision, assistantRevision: reportedAssistantRevision, turnId, userTurnId, lastMessageRole, draftPresent: !!editorText(editor),
+      manualStopRevision, manualInputRevision, assistantRevision: reportedAssistantRevision, turnId, userTurnId, turnIdentitySource, lastMessageRole, draftPresent: !!editorText(editor),
       manualSendRevision, draftRevision, userMessageCount: dom.messages('user').length, userMessagesRevision,
     };
   };
@@ -106,7 +110,7 @@ export function installPageObserver(dom, send) {
   const start = () => {
     observer.observe(document.documentElement, { subtree: true, childList: true, characterData: true, attributes: true,
       attributeFilter: ['disabled', 'readonly', 'contenteditable', 'aria-disabled', 'aria-hidden', 'hidden',
-        'data-message-id', 'id', 'data-state', 'aria-checked', 'aria-pressed', 'class', 'style', 'data-testid', 'data-message-author-role'] });
+        'data-message-id', 'data-turn-id', 'id', 'data-state', 'aria-checked', 'aria-pressed', 'class', 'style', 'data-testid', 'data-message-author-role'] });
     document.addEventListener('click', event => {
       if (event.isTrusted && elementOf(event.target)?.closest(dom.selectors.stop)) {
         manualStopRevision++; emit();

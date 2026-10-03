@@ -391,3 +391,27 @@ test('automatic Continue checks plan before click and returns immediately withou
   assert.equal((await cancelled.composer.sendUserMessage({ text: 'Продолжай', onBeforeSend: async () => false })).state, 'cancelled');
   assert.equal(cancelled.sends(), 0);
 });
+
+test('cancelled automatic Paste cleans only its owned unchanged draft', async () => {
+  for (const changed of [false, true]) {
+    const f = fixture();
+    const result = await f.composer.sendUserMessage({ text: 'Продолжай', cleanupOnCancel: true,
+      onBeforeSend: async () => { if (changed) f.editor.value += ' моя правка'; return false; } });
+    assert.equal(result.state, 'cancelled'); assert.equal(f.sends(), 0);
+    assert.equal(f.editor.value, changed ? 'Продолжай моя правка' : '');
+    f.dom.window.close();
+  }
+});
+test('automatic Send exception after dispatch is unknown and never clears the editor', async () => {
+  const f = fixture({ emitMessage: false });
+  const execute = f.view.executeJavaScript;
+  f.view.executeJavaScript = async script => {
+    const result = await execute(script);
+    if (result.action === 'clicked') throw Error('connection lost after click');
+    return result;
+  };
+  const result = await f.composer.sendUserMessage({ text: 'Продолжай', cleanupOnCancel: true });
+  assert.equal(result.state, 'unknown'); assert.equal(f.sends(), 1);
+  assert.equal(f.editor.value, 'Продолжай');
+  f.dom.window.close();
+});

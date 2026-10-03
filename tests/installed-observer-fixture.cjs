@@ -81,6 +81,14 @@ app.whenReady().then(async () => {
 
     assert.equal(await view.webContents.executeJavaScript('document.querySelectorAll("article").length'), 1);
 
+    fixtureStage = 'cancel-owned-paste';
+    await view.webContents.executeJavaScript('fixtureClearModel()');
+    const cancelled = await composer.sendUserMessage({ text: 'Продолжай', cleanupOnCancel: true,
+      onBeforeSend: async () => false });
+    assert.equal(cancelled.state, 'cancelled');
+    assert.equal(await view.webContents.executeJavaScript('fixtureReadModel()'), '',
+      'real ProseMirror clears only the automatic insertion after cancellation');
+
     fixtureStage = 'installed-auto-plan';
     const { AutoPlan } = await import(pathToFileURL(path.join(moduleRoot, 'auto-plan.mjs')));
     await view.webContents.executeJavaScript('fixtureClearModel()');
@@ -95,7 +103,7 @@ app.whenReady().then(async () => {
     const plan = { confirmed: true, scopeId: 'scope', scopeStatus: 'ACTIVE', planRevision: 3,
       planView: { tasks: [{ id: 'T001', status: 'done' }, { id: 'DOCS', status: 'pending' }] } };
     const automatic = new AutoPlan({ selected: () => selection, inspectPlan: async () => structuredClone(plan),
-      send: (text, canContinue, onBeforeSend) => composer.sendUserMessage({ text, canContinue, onBeforeSend, waitForAcknowledgement: false }),
+      send: (text, canContinue, onBeforeSend) => composer.sendUserMessage({ text, canContinue, onBeforeSend, waitForAcknowledgement: false, cleanupOnCancel: true }),
       onChange: notify });
     const unsubscribeAuto = source.subscribe(event => { automatic.observe(event); notify(); });
     automatic.observe(source.current);
@@ -112,10 +120,21 @@ app.whenReady().then(async () => {
       await until(() => automatic.checkpoint?.status === 'sent'
         && source.current.state.userMessageCount === 2);
       assert.equal(await view.webContents.executeJavaScript('JSON.parse(sessionStorage.sent).at(-1)'), 'Продолжай');
+      // Replace the complete visible window, including same-text user/assistant
+      // messages. Native IDs and DOM counts cannot identify this new answer.
+      await beginAnswer();
+      await view.webContents.executeJavaScript("document.getElementById('messages').innerHTML='<article data-message-author-role=\"user\">Same request</article>'");
+      await endAnswer();
+      await until(() => automatic.view().continuations === 2);
+      assert.equal(await view.webContents.executeJavaScript('JSON.parse(sessionStorage.sent).length'), 3);
+      const saved = automatic.checkpointState();
+      automatic.restore(true, saved); await automatic.recover();
+      assert.equal(await view.webContents.executeJavaScript('JSON.parse(sessionStorage.sent).length'), 3,
+        'reconstructed controller does not repeat a native-less pause');
       await beginAnswer();
       plan.planView.tasks[1].status = 'done'; plan.planRevision++;
       await endAnswer(); await until(() => automatic.view().phase === 'complete');
-      assert.equal(await view.webContents.executeJavaScript('JSON.parse(sessionStorage.sent).length'), 2,
+      assert.equal(await view.webContents.executeJavaScript('JSON.parse(sessionStorage.sent).length'), 3,
         'all DONE produces no extra Continue in installed code');
     } finally { unsubscribeAuto(); automatic.dispose(); }
     console.log(JSON.stringify({ installedPreload: resourceRoot, installedAutoPlan: true, scenario: 'partial plan -> Continue -> all DONE without extra Send; sandbox observer, restored draft cleared, real ProseMirror paste, exact multiline model, immediate Send completion without marker or extra message, Resume stream unavailable detected, same conversation reload without duplicate',

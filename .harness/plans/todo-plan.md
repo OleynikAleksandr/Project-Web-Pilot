@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 945,
+  "plan_revision": 947,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "github-publication-0.6.77-20261002",
@@ -22,7 +22,13 @@
       "src/chromium-diagnostics.mjs",
       "tests/page-state.test.mjs",
       "tests/auto-plan.test.mjs",
-      "tests/installed-observer-fixture.cjs"
+      "tests/installed-observer-fixture.cjs",
+      "package-lock.json",
+      "package.json",
+      "src/chatgpt-composer.mjs",
+      "src/main.mjs",
+      "tests/auto-plan-restart-fixture.cjs",
+      "tests/chatgpt-composer.test.mjs"
     ],
     "documentation_paths": [
       "docs/planning/github-publication-0.6.77.md",
@@ -40,11 +46,12 @@
       "docs/planning/auto-plan-client-driven-refactor.md",
       "docs/CLEAN_INSTALL.md",
       "docs/DECISIONS.md",
-      "docs/planning/auto-plan-session-incident-20261003.md"
+      "docs/planning/auto-plan-session-incident-20261003.md",
+      "docs/modules/chatgpt-dom-compatibility.md"
     ]
   },
   "baseline_commit": "0a78bf366e65ad35fed3332c43eda3aa3cddf9b2",
-  "current_task_id": "T004",
+  "current_task_id": null,
   "context_pack": {
     "documents": [
       {
@@ -207,19 +214,29 @@
         "src/chromium-diagnostics.mjs",
         "tests/page-state.test.mjs",
         "tests/auto-plan.test.mjs",
-        "tests/installed-observer-fixture.cjs"
+        "tests/installed-observer-fixture.cjs",
+        "package-lock.json",
+        "package.json",
+        "src/chatgpt-composer.mjs",
+        "src/main.mjs",
+        "tests/auto-plan-restart-fixture.cjs",
+        "tests/chatgpt-composer.test.mjs"
       ],
       "documentation_paths": [
         "docs/planning/auto-plan-client-driven-refactor.md",
         "docs/planning/auto-plan-session-incident-20261003.md",
         "docs/VERIFICATION.md",
-        "docs/RELEASE.md"
+        "docs/RELEASE.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/modules/chatgpt-dom-compatibility.md"
       ],
       "verification_ids": [
         "unit",
-        "smoke"
+        "smoke",
+        "release-installed"
       ],
-      "verification_kind": "code",
+      "verification_kind": "installed",
       "acceptance_criteria": [
         "Новая завершённая реплика при неизменном размере DOM-окна получает своё продолжение",
         "Повторный render, reload, restart и старый ledger не дают дублирующий Send",
@@ -228,13 +245,34 @@
         "Граница штатного ответа соответствует завершению видимой микрозадачи; промежуточная остановка только по реальной необходимости"
       ],
       "expected_commit_message": "fix: восстановить продолжение AutoPlan в длинных разговорах",
-      "implementation_status": "IN_PROGRESS",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "github-publication-0.6.77-20261002",
         "task_id": "T004",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/modules/chatgpt-dom-compatibility.md",
+        "docs/planning/auto-plan-session-incident-20261003.md",
+        "package-lock.json",
+        "package.json",
+        "src/auto-plan.mjs",
+        "src/chatgpt-composer.mjs",
+        "src/chatgpt-page-observer.mjs",
+        "src/chromium-diagnostics.mjs",
+        "src/main.mjs",
+        "src/page-state.mjs",
+        "tests/auto-plan-restart-fixture.cjs",
+        "tests/auto-plan.test.mjs",
+        "tests/chatgpt-composer.test.mjs",
+        "tests/installed-observer-fixture.cjs",
+        "tests/page-state.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -268,7 +306,8 @@
         "docs/planning/auto-plan-client-driven-refactor.md",
         "docs/CLEAN_INSTALL.md",
         "docs/DECISIONS.md",
-        "docs/planning/auto-plan-session-incident-20261003.md"
+        "docs/planning/auto-plan-session-incident-20261003.md",
+        "docs/modules/chatgpt-dom-compatibility.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -309,8 +348,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: github-publication-0.6.77-20261002
-Current Task: T004
-Revision: 945
+Current Task: нет
+Revision: 947
 
 ## Цель
 
@@ -334,14 +373,14 @@ Revision: 945
   - Git Commit: [DONE] docs: разобрать остановку AutoPlan в сессии публикации
   - Reference: github-publication-0.6.77-20261002 / T003 / implementation
   - Файлы: docs/planning/auto-plan-client-driven-refactor.md, docs/planning/auto-plan-session-incident-20261003.md, docs/DOCUMENTATION_INDEX.md
-- [IN_PROGRESS] T004: Исправить идентификацию пауз AutoPlan и проверить доставляемое приложение — В работе
-  - Git Commit: [PENDING] fix: восстановить продолжение AutoPlan в длинных разговорах
+- [DONE] T004: Исправить идентификацию пауз AutoPlan и проверить доставляемое приложение — Завершено
+  - Git Commit: [DONE] fix: восстановить продолжение AutoPlan в длинных разговорах
   - Reference: github-publication-0.6.77-20261002 / T004 / implementation
-  - Файлы: src/chatgpt-page-observer.mjs, src/auto-plan.mjs, src/page-state.mjs, src/chromium-diagnostics.mjs, tests/page-state.test.mjs, tests/auto-plan.test.mjs, tests/installed-observer-fixture.cjs, docs/planning/auto-plan-client-driven-refactor.md, docs/planning/auto-plan-session-incident-20261003.md, docs/VERIFICATION.md, docs/RELEASE.md
+  - Файлы: src/chatgpt-page-observer.mjs, src/auto-plan.mjs, src/page-state.mjs, src/chromium-diagnostics.mjs, tests/page-state.test.mjs, tests/auto-plan.test.mjs, tests/installed-observer-fixture.cjs, package-lock.json, package.json, src/chatgpt-composer.mjs, src/main.mjs, tests/auto-plan-restart-fixture.cjs, tests/chatgpt-composer.test.mjs, docs/planning/auto-plan-client-driven-refactor.md, docs/planning/auto-plan-session-incident-20261003.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md, docs/modules/chatgpt-dom-compatibility.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: github-publication-0.6.77-20261002 / DOCS / implementation
-  - Файлы: docs/planning/github-publication-0.6.77.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, README.md, AGENTS.md, docs/WORKFLOW_START.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/DOCUMENTATION_INDEX.md, docs/TRANSFER_TO_WINDOWS.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/planning/auto-plan-client-driven-refactor.md, docs/CLEAN_INSTALL.md, docs/DECISIONS.md, docs/planning/auto-plan-session-incident-20261003.md
+  - Файлы: docs/planning/github-publication-0.6.77.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, README.md, AGENTS.md, docs/WORKFLOW_START.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/DOCUMENTATION_INDEX.md, docs/TRANSFER_TO_WINDOWS.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/planning/auto-plan-client-driven-refactor.md, docs/CLEAN_INSTALL.md, docs/DECISIONS.md, docs/planning/auto-plan-session-incident-20261003.md, docs/modules/chatgpt-dom-compatibility.md
 
 ## Context Pack For This Cycle
 

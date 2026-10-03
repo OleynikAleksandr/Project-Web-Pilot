@@ -11,7 +11,7 @@ export class AutoPlan {
     this.page = null; this.run = null; this.epoch = 0; this.timer = null; this.watchdog = null;
     this.state = { phase: 'off', message: '', active: false, reason: null };
     this.continuations = 0; this.continuationOwner = null;
-    this.enabled = false; this.checkpoints = new Map(); this.closed = false;
+    this.enabled = false; this.checkpoints = new Map(); this.cycles = new Map(); this.cyclesDirty = false; this.closed = false;
     this.pending = null; this.rerunRequested = false; this.lastAvailability = false;
     this.selectionKey = key(this.selected()); this.manualWaiting = null;
   }
@@ -19,22 +19,48 @@ export class AutoPlan {
     warning: this.run?.stallWarning ? 'STALL_WARNING' : null,
     continuations: this.continuationOwner === key(this.selected()) ? this.continuations : 0 }; }
   get checkpoint() { return [...this.checkpoints.values()].findLast(entry => entry.key === key(this.selected())) ?? null; }
-  checkpointState() { return this.checkpoints.size ? { version: 2, entries: [...this.checkpoints.values()] } : null; }
+  checkpointState(entries = this.checkpoints) {
+    return entries.size || this.cycles.size ? { version: 3, entries: [...entries.values()],
+      cycles: [...this.cycles.values()] } : null;
+  }
+  observeCycle(p) {
+    const owner = conversationKey(this.selected());
+    if (!owner || p.url !== this.selected()?.chatUrl || (!p.busy && !p.lastMessageRole)) return;
+    let cycle = this.cycles.get(owner);
+    if (!cycle) {
+      const legacy = [...this.checkpoints.values()].some(entry => entry.key === key(this.selected()));
+      cycle = { key: owner, generation: 0, busy: false, legacy };
+    }
+    if (p.busy && !cycle.busy) cycle = { ...cycle, generation: cycle.generation + 1, busy: true };
+    else if (!p.busy && p.lastMessageRole === 'assistant') cycle = { ...cycle, busy: false };
+    if (JSON.stringify(cycle) !== JSON.stringify(this.cycles.get(owner))) {
+      this.cycles.set(owner, cycle); this.cyclesDirty = true;
+    }
+  }
+  pauseIdentity(p = this.page) {
+    return p?.turnId || 'cycle:' + (this.cycles.get(conversationKey(this.selected()))?.generation ?? 0);
+  }
   async writeCheckpoint(owner, checkpoint, replacingTurnId = checkpoint?.turnId) {
     const next = new Map(this.checkpoints);
     next.delete(JSON.stringify([owner, replacingTurnId]));
     if (checkpoint) next.set(JSON.stringify([owner, checkpoint.turnId]), checkpoint);
-    await this.saveCheckpoint(next.size ? { version: 2, entries: [...next.values()] } : null);
+    await this.saveCheckpoint(this.checkpointState(next));
     this.checkpoints = next;
   }
   restore(enabled, checkpoint = null) {
     this.epoch++; this.clearTimer(); this.clearWatchdog(); this.run = null; this.manualWaiting = null;
-    this.closed = false; this.enabled = enabled === true; this.checkpoints = new Map();
-    const entries = checkpoint?.version === 2 && Array.isArray(checkpoint.entries) ? checkpoint.entries : [checkpoint];
+    this.closed = false; this.enabled = enabled === true; this.checkpoints = new Map(); this.cycles = new Map(); this.cyclesDirty = false;
+    const entries = [2, 3].includes(checkpoint?.version) && Array.isArray(checkpoint.entries) ? checkpoint.entries : [checkpoint];
     for (const entry of entries) {
       if (entry && typeof entry.key === 'string' && typeof entry.turnId === 'string'
           && ['sending', 'sent'].includes(entry.status))
-        this.checkpoints.set(JSON.stringify([entry.key, entry.turnId]), { key: entry.key, turnId: entry.turnId, status: entry.status });
+        this.checkpoints.set(JSON.stringify([entry.key, entry.turnId]), { key: entry.key, turnId: entry.turnId, status: entry.status,
+          ...(Number.isSafeInteger(entry.generation) && entry.generation >= 0 ? { generation: entry.generation } : {}) });
+    }
+    for (const cycle of checkpoint?.version === 3 && Array.isArray(checkpoint.cycles) ? checkpoint.cycles : []) {
+      if (typeof cycle.key === 'string' && Number.isSafeInteger(cycle.generation) && cycle.generation >= 0
+          && typeof cycle.busy === 'boolean')
+        this.cycles.set(cycle.key, { key: cycle.key, generation: cycle.generation, busy: cycle.busy, legacy: cycle.legacy === true });
     }
     this.set(this.enabled ? 'waiting' : 'off', this.enabled ? 'Автовыполнение включено. Ждём разговор и план.' : '');
   }
@@ -104,8 +130,9 @@ export class AutoPlan {
     this.selectionChanged();
     const p = this.page;
     if (previous?.documentId === p.documentId && (p.manualSendRevision ?? 0) > (previous.manualSendRevision ?? 0)) {
-      this.manualWaiting = { key: conversationKey(this.selected()), turnId: previous.turnId ?? '' };
+      this.manualWaiting = { key: conversationKey(this.selected()), turnId: this.pauseIdentity(previous) };
     }
+    this.observeCycle(p);
     if (this.run && (this.run.key !== key(this.selected()) || this.run.documentId !== p.documentId)) {
       this.epoch++; this.clearWatchdog(); this.run = null;
     }
@@ -141,6 +168,12 @@ export class AutoPlan {
   }
   async reconcileOnce() {
     this.selectionChanged();
+    if (this.page) this.observeCycle(this.page);
+    if (this.cyclesDirty) {
+      this.cyclesDirty = false;
+      try { await this.saveCheckpoint(this.checkpointState()); }
+      catch { this.cyclesDirty = true; return this.wait('SEND_CHECKPOINT_ERROR', 'Не удалось сохранить состояние ответа.'); }
+    }
     const selected = this.selected(), p = this.page, owner = key(selected), epoch = this.epoch;
     if (!selected?.chatUrl || selected.sessionArchivedAt || !p || p.url !== selected.chatUrl)
       return this.wait('PAGE_NOT_READY', 'Ждём выбранный разговор.');
@@ -156,18 +189,22 @@ export class AutoPlan {
     if (this.timer !== null) return;
     if (!p.editorAvailable || !p.writable) return this.wait('PAGE_NOT_READY', 'Ждём готовности поля ввода.');
     if (p.draftPresent) return this.wait('DRAFT_PRESENT', 'Ждём вашего сообщения. Черновик сохранён.');
+    if (!p.lastMessageRole)
+      return this.wait('HISTORY_NOT_READY', 'Ждём загрузки сообщений разговора.');
     if (p.lastMessageRole === 'user')
       return this.wait('USER_MESSAGE_PENDING', 'Ваше сообщение отправлено. Ждём ответ.');
     if (this.manualWaiting?.key === conversationKey(selected)) {
-      if ((p.turnId ?? '') === this.manualWaiting.turnId)
+      if (this.pauseIdentity(p) === this.manualWaiting.turnId)
         return this.wait('USER_MESSAGE_PENDING', 'Ваше сообщение отправлено. Ждём ответ.');
       this.manualWaiting = null;
     }
     if (!selected.scopeId) return this.wait('PLAN_UNAVAILABLE', 'Ждём незавершённый текущий план.');
+    const observedPause = this.pauseIdentity(p);
     const currentContext = () => this.enabled && !this.closed && epoch === this.epoch && key(this.selected()) === owner
       && this.page?.documentId === p.documentId && this.page?.url === selected.chatUrl;
     const ready = () => currentContext() && !this.page.busy && !this.page.connectionError
       && this.page.editorAvailable && this.page.writable && this.page.lastMessageRole !== 'user'
+      && this.pauseIdentity() === observedPause
       && (this.page.turnId ?? '') === (p.turnId ?? '')
       && (this.page.userTurnId ?? '') === (p.userTurnId ?? '')
       && (this.page.manualInputRevision ?? 0) === (p.manualInputRevision ?? 0)
@@ -184,21 +221,24 @@ export class AutoPlan {
     if (plan.scopeStatus !== 'ACTIVE' || !plan.planView?.tasks?.length)
       return this.wait('PLAN_UNAVAILABLE', 'Ждём незавершённый активный план.');
     run.completedAtStart ??= plan.planView.tasks.filter(t => t.status === 'done').map(t => t.id);
-    // No reply text participates in identity. The synthetic initial pause stays
-    // consumed across plan revisions until a genuinely new user/assistant turn.
+    // A persisted busy cycle distinguishes completed replies even when Work
+    // replaces a fixed-size DOM window with no native message IDs.
     const previousCheckpoint = this.checkpoint;
-    const syntheticSuffix = ':' + (p.userTurnId || 'empty');
-    const initial = [...this.checkpoints.values()].findLast(entry => entry.key === owner
-      && entry.turnId.startsWith('idle:') && entry.turnId.endsWith(syntheticSuffix));
-    const pauseId = p.turnId || initial?.turnId || 'idle:' + plan.planRevision + syntheticSuffix;
-    const consumed = this.checkpoints.get(JSON.stringify([owner, pauseId]));
+    const pauseId = this.pauseIdentity(p);
+    const cycle = this.cycles.get(conversationKey(selected));
+    if (!p.turnId && cycle?.legacy && cycle.generation === 0)
+      return this.wait('LEGACY_PAUSE_UNKNOWN', 'Старая пауза не имеет надёжного ID. Ждём следующий ответ.');
+    const consumed = this.checkpoints.get(JSON.stringify([owner, pauseId]))
+      ?? [...this.checkpoints.values()].findLast(entry => entry.key === owner
+        && entry.generation === cycle?.generation && (!p.turnId || entry.turnId.startsWith('cycle:')));
     if (consumed)
       return this.set(consumed.status === 'sending' ? 'paused' : 'running',
         consumed.status === 'sending' ? 'Исход отправки для этой паузы неизвестен. Повтор не отправляется.'
           : '«Продолжай» уже отправлено. Ждём ответ.', consumed.status === 'sent',
         consumed.status === 'sending' ? 'SEND_UNKNOWN' : 'PAUSE_CONSUMED');
     if (this.continuationOwner !== owner) { this.continuationOwner = owner; this.continuations = 0; }
-    const checkpoint = { key: owner, turnId: pauseId, status: 'sending' };
+    const checkpoint = { key: owner, turnId: pauseId, status: 'sending', generation: cycle?.generation ?? 0 };
+    this.log('pause', { turnId: p.turnId || '', identitySource: p.turnId ? 'native' : 'cycle', generation: cycle?.generation ?? 0 });
     this.set('sending', 'Отправляем «Продолжай»…', true);
     let sendInvoked = false, delivered = false, knownUnsent = false;
     try {

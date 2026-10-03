@@ -2,6 +2,21 @@
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
+## Локальная поставка 0.6.78 — 03.10.2026
+
+Исправлен AutoPlan для длинных Work-разговоров: количество DOM-узлов больше не служит ID ответа, сохраняются наблюдаемые циклы генерации. При загрузке истории нет преждевременной вставки; отменённый собственный Paste очищается с сохранением пользовательских правок. [Разбор и ограничения](planning/auto-plan-session-incident-20261003.md).
+
+Поставка: `~/Downloads/WebPilot-0.6.78/`. Штатный `npm run build` создал macOS arm64 / Windows x64 ZIP и metadata; 106 source/resource файлов совпали с упаковками. Manifest sourceCommit — `f32e4e382d35e6ea947537f3d930f5c1dfc7bc3c` (HEAD перед коммитом реализации T004). Electron 44.5.1, Node 24.21.0, WorkflowKit 1.5.1.
+
+| Архив | Размер, байт | SHA-256 |
+| --- | ---: | --- |
+| Project-Web-Pilot-0.6.78-macOS-arm64.zip | 185532186 | `0bfd43caf03274390889b83319fb48c531e266140ce3df371c96a31a49e38f15` |
+| Project-Web-Pilot-0.6.78-Windows-x64.zip | 355434034 | `f98e5eef4a9347b45d2ecb62b8cb8c6f3665566484967234be5a335f762271f7` |
+
+Root app и `/Applications/Project Web Pilot.app` обновлены штатным installMacBundle. Inode 406600483 и 406571340 сохранены; старые Contents сохранены в backup. ASAR SHA-256 обеих копий — `eb4badce53d64455448e2e7d310cd4ca4967de2ddac198a0e57ac7406c981122`. Пользовательский процесс не перезапускался. Для применения нужен полный выход и повторный запуск.
+
+Финальный gate T004 — unit, smoke и release-installed: исходники/версии/хеши/identity, runtime обеих упаковок и установленный observer/Composer/AutoPlan с bounded DOM и настоящим ProseMirror. Результат хранит Workflow Kit и `.harness/runtime/t004-commit.log`; сборка внутри commit не повторяется. GitHub Release 0.6.78 не опубликован, живая приёмка и native Windows не заявлены.
+
 ## Выпуск 0.6.77 — 02.10.2026
 
 Клиентский AutoPlan: переключатель не отправляет стартовую инструкцию, обычный ответ не требует footer, подходящая idle-пауза незавершённого ACTIVE-плана получает ровно одно точное «Продолжай». Постоянный выбор, durable checkpoint, ручной ввод и восстановление связи управляются клиентом. Electron **44.5.1**, встроенный и комплектный Node **24.21.0**, Workflow Kit **1.5.1**.

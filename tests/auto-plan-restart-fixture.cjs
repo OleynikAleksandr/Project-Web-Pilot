@@ -17,7 +17,7 @@ app.whenReady().then(async () => {
   const { ChatGPTComposer } = await import(pathToFileURL(path.join(root, 'src/chatgpt-composer.mjs')));
   const settings = JSON.parse(await fs.readFile(settingsFile, 'utf8'));
   assert.equal(settings.autoPlanEnabled, expectedChoice === 'on');
-  const entries = settings.autoPlanCheckpoint?.version === 2 ? settings.autoPlanCheckpoint.entries : [settings.autoPlanCheckpoint];
+  const entries = [2, 3].includes(settings.autoPlanCheckpoint?.version) ? settings.autoPlanCheckpoint.entries : [settings.autoPlanCheckpoint];
   const checkpoint = selectedKey ? entries.findLast(entry => entry.key === selectedKey) : entries.at(-1);
   const [workspace, sessionId, scopeId, chatUrl] = JSON.parse(checkpoint.key);
   const selected = { workspace, sessionId, scopeId, chatUrl };

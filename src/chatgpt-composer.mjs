@@ -6,7 +6,7 @@ class ComposerError extends Error {
 }
 
 // Runs only in the visible ChatGPT document. No page internals, cookies or API requests.
-export function pageOperation({ action = 'inspect', text = '', requestId = '', expectedExperience = null, diagnose = false } = {}, dom = createChatGPTDOM(CHATGPT_SELECTORS)) {
+export function pageOperation({ action = 'inspect', text = '', requestId = '', expectedExperience = null, diagnose = false, draftToken = '' } = {}, dom = createChatGPTDOM(CHATGPT_SELECTORS)) {
   const { first } = dom;
   const editor = dom.editor();
   const busy = dom.busy();
@@ -52,6 +52,24 @@ export function pageOperation({ action = 'inspect', text = '', requestId = '', e
         ariaDisabled: button?.getAttribute('aria-disabled') === 'true',
         submit: button?.type === 'submit' },
     };
+  }
+  const ownershipKey = Symbol.for('web-pilot-owned-draft');
+  if (action === 'clear-owned-draft') {
+    const owned = editor?.[ownershipKey];
+    if (!owned || owned.token !== draftToken || owned.touched || !draftMatches || busy || !writable)
+      return { ...result, action: 'deferred', reason: 'DRAFT_CHANGED' };
+    editor.focus();
+    if (editor.tagName === 'TEXTAREA') {
+      Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set.call(editor, '');
+      editor.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'deleteContentBackward', data: null }));
+      editor.dispatchEvent(new Event('change', { bubbles: true }));
+    } else {
+      const selection = getSelection(), range = document.createRange();
+      range.selectNodeContents(editor); selection.removeAllRanges(); selection.addRange(range);
+      if (!document.execCommand('delete', false)) return { ...result, action: 'deferred', reason: 'DRAFT_CLEAR_FAILED' };
+    }
+    delete editor[ownershipKey];
+    return { ...result, action: 'draft-cleared' };
   }
   if (action === 'inspect') return result;
   if (messageSeen) return { ...result, action: 'already-sent' };
@@ -101,6 +119,16 @@ export function pageOperation({ action = 'inspect', text = '', requestId = '', e
     if (requestId && draftMatches) return { ...result, action: 'filled' };
     // Recovery owns this insertion. User additions are explicitly allowed.
     if (!requestId && draftLength) return { ...result, action: 'deferred', reason: 'DRAFT_PRESENT' };
+    if (draftToken && !draftLength) {
+      const listenerKey = Symbol.for('web-pilot-owned-draft-listener');
+      if (!editor[listenerKey]) {
+        editor.addEventListener('input', event => {
+          if (event.isTrusted && editor[ownershipKey]) editor[ownershipKey].touched = true;
+        });
+        editor[listenerKey] = true;
+      }
+      editor[ownershipKey] = { token: draftToken, touched: false };
+    }
     editor.focus();
     if (editor.tagName === 'TEXTAREA') {
       Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set.call(editor, draftText + text);
@@ -153,7 +181,7 @@ export class ChatGPTComposer {
     this.filledRequest = null;
   }
 
-  async inspect({ text = '', requestId = '', action = 'inspect', expectedExperience = null, canContinue = () => true } = {}) {
+  async inspect({ text = '', requestId = '', action = 'inspect', expectedExperience = null, canContinue = () => true, draftToken = '' } = {}) {
     const current = this.contents.getURL();
     let url;
     try { url = new URL(current); } catch { return { login: true, editorAvailable: false, url: current }; }
@@ -165,12 +193,12 @@ export class ChatGPTComposer {
     const started = this.now();
     if (diagnose && action !== 'inspect') this.trace('action-start', { action, requestId });
     const documentKey = this.documentKey();
-    let observation = await this.contents.executeJavaScript(pageScript({ action, text, requestId, expectedExperience, diagnose }), action !== 'inspect');
+    let observation = await this.contents.executeJavaScript(pageScript({ action, text, requestId, expectedExperience, diagnose, draftToken }), action !== 'inspect');
     if (observation.action === 'paste-ready') {
       if (!canContinue() || this.documentKey() !== documentKey)
         return { action: 'deferred', reason: 'CHAT_CHANGED' };
       observation = await this.contents.executeJavaScript(pageScript({
-        action: 'paste', text, requestId, expectedExperience, diagnose,
+        action: 'paste', text, requestId, expectedExperience, diagnose, draftToken,
       }), true);
     }
     if (diagnose) {
@@ -258,11 +286,12 @@ export class ChatGPTComposer {
     return this.pageState.waitForChange(version, { timeoutMs: remaining, canContinue });
   }
 
-  async sendUserMessageInternal({ text, canContinue = () => true, waitForAcknowledgement = true, onBeforeSend = async () => true }) {
+  async sendUserMessageInternal({ text, canContinue = () => true, waitForAcknowledgement = true, onBeforeSend = async () => true, cleanupOnCancel = false }) {
     if (this.inFlight) throw new ComposerError('SEND_IN_PROGRESS', 'Другая отправка ещё не завершилась.');
     if (typeof text !== 'string' || !text.trim()) throw new ComposerError('MESSAGE_INVALID', 'Не подготовлено пользовательское сообщение.');
     this.inFlight = true;
-    let clicked = false;
+    let sendAttempted = false;
+    const draftToken = cleanupOnCancel ? crypto.randomUUID() : '';
     try {
       if (!canContinue()) return { state: 'cancelled' };
       let observation = await this.inspect({ text });
@@ -270,8 +299,9 @@ export class ChatGPTComposer {
       if (observation.login || !observation.editorAvailable || !observation.writable) return { state: 'deferred', reason: 'LOGIN_REQUIRED', observation };
       if (observation.busy) return { state: 'deferred', reason: 'GENERATION_ACTIVE', observation };
       if (observation.draftLength) return { state: 'deferred', reason: 'DRAFT_PRESENT', observation };
+      if (!canContinue()) return { state: 'cancelled' };
       const fillVersion = this.pageState?.version ?? 0;
-      observation = await this.inspect({ action: 'fill', text, canContinue });
+      observation = await this.inspect({ action: 'fill', text, canContinue, draftToken });
       if (observation.action !== 'filled') return { state: 'deferred', reason: observation.reason ?? 'SEND_UNAVAILABLE', observation };
       observation = await this.waitForSendReady({ text }, fillVersion, canContinue);
       if (!canContinue()) return { state: 'cancelled' };
@@ -279,9 +309,9 @@ export class ChatGPTComposer {
         return { state: 'deferred', reason: observation.busy ? 'GENERATION_ACTIVE' : 'SEND_UNAVAILABLE', observation };
       }
       if (!await onBeforeSend() || !canContinue()) return { state: 'cancelled' };
+      sendAttempted = true;
       observation = await this.inspect({ action: 'send', text });
       if (observation.action !== 'clicked') return { state: 'deferred', reason: observation.reason ?? 'SEND_UNAVAILABLE', observation };
-      clicked = true;
       if (!waitForAcknowledgement) return { state: 'sent', completion: 'send-dispatched' };
       const deadline = this.now() + this.timeoutMs;
       let observedVersion = this.pageState?.version ?? 0;
@@ -296,9 +326,14 @@ export class ChatGPTComposer {
       } while (this.now() < deadline);
       return { state: 'unknown', reason: 'SEND_NOT_OBSERVED' };
     } catch (error) {
-      if (clicked) return { state: 'unknown', reason: 'PAGE_UNAVAILABLE' };
+      if (sendAttempted) return { state: 'unknown', reason: 'PAGE_UNAVAILABLE' };
       throw error;
-    } finally { this.inFlight = false; }
+    } finally {
+      if (draftToken && !sendAttempted) {
+        try { await this.inspect({ action: 'clear-owned-draft', text, draftToken }); } catch {}
+      }
+      this.inFlight = false;
+    }
   }
 
   async deliverInternal({ text, requestId, expectedExperience = null, canContinue = () => true, onBeforeFill = async () => {}, onBeforeSend = async () => {} }) {

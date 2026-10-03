@@ -168,7 +168,7 @@ const autoPlan = new AutoPlan({
   inspectPlan: async selected => readAutoPlanState(selected, process.platform === 'win32'
     ? await windowsRuntimeBootstrap.workflowEnvironment() : process.env),
   send: (text, canContinue, onBeforeSend) => controller.composer.sendUserMessage({
-    text, canContinue, onBeforeSend, waitForAcknowledgement: false }),
+    text, canContinue, onBeforeSend, waitForAcknowledgement: false, cleanupOnCancel: true }),
   onChange: () => publish(),
   available: () => !!controller && !controller.composer.inFlight && !pageLoading && !setupState && !settingsState
     && workspaceHealth?.ready && workspaceHealth.workspace === store.selected()?.workspace,

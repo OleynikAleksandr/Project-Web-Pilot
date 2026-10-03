@@ -64,9 +64,9 @@ test('toggle during busy sends nothing; ordinary idle replies send only exact Co
   await f.finish();
   assert.deepEqual(f.sends, ['Продолжай', 'Продолжай']);
 });
-test('existing idle replies and idle without any assistant turn are suitable pauses', async () => {
+test('existing idle replies with and without native IDs are suitable pauses', async () => {
   for (const turnId of ['a1234', '']) {
-    const f = fixture({ turnId }); await f.flow.start();
+    const f = fixture({ turnId }); f.observe({ lastMessageRole: 'assistant' }); await f.flow.start();
     assert.deepEqual(f.sends, [CONTINUE_TEXT]);
     assert.deepEqual(f.flow.run.completedAtStart, ['T001']);
     f.observe({ busy: false }); await f.flow.planChanged(); await f.drain();
@@ -102,7 +102,7 @@ test('NONE becomes ACTIVE through PlanMonitor while an ordinary reply is busy', 
   monitor.close();
 });
 test('an enabled idle client wakes when its first plan appears', async () => {
-  const f = fixture({ scopeId: null, turnId: '' }); await f.flow.start();
+  const f = fixture({ scopeId: null, turnId: '' }); f.observe({ lastMessageRole: 'assistant' }); await f.flow.start();
   assert.equal(f.flow.view().reason, 'PLAN_UNAVAILABLE');
   f.plan.scopeId = 'scope'; f.plan.scopeStatus = 'ACTIVE'; f.plan.planView.tasks = [{ id: 'T001', status: 'pending' }];
   f.setScope('scope'); await f.flow.planChanged(); await f.drain();
@@ -278,13 +278,13 @@ test('persistent enabled choice resumes busy and consumed checkpoints without an
 });
 test('checkpoint is saved before Send and failed persistence never sends', async () => {
   const order = [], f = fixture();
-  f.flow.saveCheckpoint = async checkpoint => { order.push(checkpoint.entries.at(-1).status); };
+  f.flow.saveCheckpoint = async checkpoint => { if (checkpoint.entries.length) order.push(checkpoint.entries.at(-1).status); };
   const send = f.flow.send; f.flow.send = async (...args) => { order.push('Send'); return send(...args); };
   await f.flow.start();
   assert.deepEqual(order, ['sending', 'Send', 'sent']);
   const failed = fixture(); failed.flow.saveCheckpoint = async () => { throw Error('private-disk-error'); };
   await failed.flow.start(); assert.deepEqual(failed.sends, []);
-  assert.equal(failed.flow.view().reason, 'SEND_ERROR');
+  assert.equal(failed.flow.view().reason, 'SEND_CHECKPOINT_ERROR');
   assert.equal(failed.flow.view().enabled, true);
   assert.doesNotMatch(JSON.stringify(failed.events), /private-disk-error/);
 });
@@ -378,7 +378,7 @@ test('checkpoints survive switching conversations and revisiting an earlier paus
   assert.equal(f.flow.checkpointState().entries.length, 3);
 });
 test('synthetic initial pause remains consumed across plan revisions and reconstruction', async () => {
-  const f = fixture({ turnId: '' }); await f.flow.start(); const saved = f.flow.checkpointState();
+  const f = fixture({ turnId: '' }); f.observe({ lastMessageRole: 'assistant' }); await f.flow.start(); const saved = f.flow.checkpointState();
   f.plan.planRevision++; await f.flow.planChanged(); await f.drain();
   assert.equal(f.sends.length, 1);
   f.flow.dispose(); f.flow.restore(true, saved); await f.flow.recover();
@@ -444,7 +444,7 @@ test('confirmed Send is retained when OFF happens just after dispatch', async ()
 test('failure to save a sent confirmation retains its fact and never repeats Send', async () => {
   const f = fixture();
   f.flow.saveCheckpoint = async snapshot => {
-    if (snapshot.entries.at(-1).status === 'sent') throw Error('private-disk-error');
+    if (snapshot.entries.at(-1)?.status === 'sent') throw Error('private-disk-error');
   };
   await f.flow.start();
   assert.equal(f.flow.view().continuations, 1);
@@ -497,4 +497,56 @@ test('failed rollback of a known unsent attempt recovers on the next event in th
   await f.flow.start(); assert.deepEqual(f.sends, []); assert.equal(f.flow.checkpoint, null);
   failRollback = false; f.setResult({ state: 'sent' }); await f.flow.planChanged();
   assert.deepEqual(f.sends, ['Продолжай']);
+});
+
+test('hydrating an existing conversation never starts an empty-history Send', async () => {
+  const f = fixture({ turnId: '' }); await f.flow.start(); await f.drain();
+  assert.equal(f.sends.length, 0); assert.equal(f.flow.view().reason, 'HISTORY_NOT_READY');
+  f.observe({ turnId: 'abc', lastMessageRole: 'assistant' }); await f.drain();
+  assert.equal(f.sends.length, 1);
+});
+
+test('persisted cycles distinguish native-less replies with unchanged message counts', async () => {
+  const f = fixture({ turnId: '' }); f.observe({ lastMessageRole: 'assistant', userTurnId: '' });
+  await f.flow.start(); assert.equal(f.sends.length, 1);
+  f.observe({ busy: true }); await f.drain();
+  const busyCheckpoint = f.flow.checkpointState();
+  f.flow.dispose(); f.flow.restore(true, busyCheckpoint); await f.flow.recover();
+  f.observe({ busy: false, assistantRevision: 10 }); await f.drain();
+  assert.equal(f.sends.length, 2, 'completion after restart uses the persisted pending cycle');
+  const idleCheckpoint = f.flow.checkpointState();
+  f.flow.dispose(); f.flow.restore(true, idleCheckpoint); await f.flow.recover();
+  f.observe({ assistantRevision: 11 }); await f.drain();
+  f.plan.planRevision++; await f.flow.planChanged();
+  assert.equal(f.sends.length, 2, 'rerender, restart and plan revision do not create another pause');
+  f.observe({ busy: true }); await f.drain();
+  f.observe({ busy: false, assistantRevision: 12 }); await f.drain();
+  assert.equal(f.sends.length, 3);
+  f.plan.planView.tasks.forEach(t => t.status = 'done');
+  f.observe({ busy: true }); await f.drain(); f.observe({ busy: false }); await f.drain();
+  assert.equal(f.sends.length, 3); assert.equal(f.flow.view().phase, 'complete');
+});
+test('legacy count checkpoint is retained but cannot block a newly observed cycle', async () => {
+  for (const status of ['sent', 'sending']) {
+    const f = fixture({ turnId: '' }); f.observe({ lastMessageRole: 'assistant' });
+    const owner = JSON.stringify(['/project', 'chat', 'scope', f.selected().chatUrl]);
+    f.flow.restore(true, { version: 2, entries: [{ key: owner, turnId: '6429d210', status }] });
+    await f.flow.recover(); assert.equal(f.sends.length, 0);
+    assert.equal(f.flow.view().reason, 'LEGACY_PAUSE_UNKNOWN');
+    f.observe({ busy: true }); await f.drain(); f.observe({ busy: false }); await f.drain();
+    assert.equal(f.sends.length, 1);
+    assert.ok(f.flow.checkpointState().entries.some(e => e.turnId === '6429d210' && e.status === status));
+  }
+});
+
+test('late or disappearing native identity cannot repeat the same consumed cycle', async () => {
+  const f = fixture({ turnId: '' }); f.observe({ lastMessageRole: 'assistant' });
+  await f.flow.start(); assert.equal(f.sends.length, 1);
+  f.observe({ turnId: 'aabbcc' }); await f.drain(); assert.equal(f.sends.length, 1);
+  f.observe({ turnId: '' }); await f.drain(); assert.equal(f.sends.length, 1);
+  const saved = f.flow.checkpointState(); f.flow.restore(true, saved); await f.flow.recover();
+  f.observe({ turnId: 'aabbcc' }); await f.drain(); assert.equal(f.sends.length, 1);
+  f.observe({ busy: true }); await f.drain();
+  f.observe({ busy: false, turnId: '112233' }); await f.drain(); assert.equal(f.sends.length, 2);
+  f.observe({ turnId: '' }); await f.drain(); assert.equal(f.sends.length, 2);
 });

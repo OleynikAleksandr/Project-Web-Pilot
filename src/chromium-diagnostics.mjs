@@ -586,6 +586,10 @@ export class ChromiumDiagnostics {
     const pulse = { url: safeUrl(state.url), userMessages: state.userMessageCount,
       busy: state.busy, composer: state.editorAvailable, visibility: state.visibility,
       manualStopRevision: state.manualStopRevision ?? 0, assistantRevision: state.assistantRevision ?? 0,
+      turnId: /^[a-f0-9]{1,8}$/.test(state.turnId ?? '') ? state.turnId : '',
+      userTurnId: /^[a-f0-9]{1,8}$/.test(state.userTurnId ?? '') ? state.userTurnId : '',
+      identitySource: ['native', 'cycle', 'none'].includes(state.turnIdentitySource) ? state.turnIdentitySource : 'none',
+      lastMessageRole: ['user', 'assistant'].includes(state.lastMessageRole) ? state.lastMessageRole : null,
       connectionError: state.connectionError ?? null };
     const signature = JSON.stringify(pulse);
     if (signature === this.lastDomPulse) return;

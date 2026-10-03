@@ -205,7 +205,8 @@ test('machine turn identities survive content edits, reload and DOM replacement 
       const next = w.document.createElement('article'); next.dataset.messageAuthorRole = 'assistant'; next.textContent = 'New reply';
       w.document.body.append(next); await turn();
       assert.equal(messages.at(-1).state.lastMessageRole, 'assistant');
-      assert.notEqual(messages.at(-1).state.turnId, ids.at(-1));
+      if (native) assert.notEqual(messages.at(-1).state.turnId, ids.at(-1));
+      else assert.equal(messages.at(-1).state.turnId, '', 'counts never masquerade as an identity');
       dispose(); w.close();
     }
     assert.equal(ids[0], ids[1], 'text differences never create another identity on reload');
@@ -222,4 +223,20 @@ test('source normalizes only opaque identities and fixed machine roles', () => {
   }));
   assert.equal(invalid.state.userTurnId, '');
   assert.equal(invalid.state.lastMessageRole, null);
+});
+
+test('observer finds native IDs inside Work wrappers and avoids positional fallback', async () => {
+  const dom = new JSDOM('<div data-markdown-text-style="assistant-message"><span data-message-id="native-one">Same answer</span></div><div id="prompt-textarea" contenteditable="true"></div>',
+    { url: 'https://chatgpt.com/c/fixture', runScripts: 'outside-only' });
+  const w = dom.window; w.HTMLElement.prototype.getClientRects = () => [{}];
+  const messages = []; w.report = m => messages.push(m);
+  const dispose = w.eval('(' + installPageObserver.toString() + ')(' + chatGPTDOMScript() + ', report)');
+  const first = messages.at(-1).state.turnId;
+  assert.ok(first); assert.equal(messages.at(-1).state.turnIdentitySource, 'native');
+  w.document.querySelector('span').dataset.messageId = 'native-two'; await turn();
+  assert.notEqual(messages.at(-1).state.turnId, first);
+  w.document.querySelector('span').removeAttribute('data-message-id'); await turn();
+  assert.equal(messages.at(-1).state.turnId, '');
+  assert.equal(messages.at(-1).state.turnIdentitySource, 'cycle');
+  dispose(); w.close();
 });

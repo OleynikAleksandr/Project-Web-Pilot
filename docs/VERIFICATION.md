@@ -2517,3 +2517,12 @@ Build проверяет packagedSourceMatches, версии, целостнос
 `auto-plan-release` проверяет готовую, а не пересобранную поставку: версии, ZIP/ASAR, Finder identity постоянного root app и `/Applications`, комплектные инструменты и установленный observer/Composer/AutoPlan fixture. В fixture подтверждаются постоянный on/off, восстановление после fresh process/reload, `STALL_WARNING` без выключения busy-turn, сохранение draft до ручного Send, вопрос/Stop, подтверждённый счётчик «Продолжай», reason codes и отсутствие повторной отправки при unknown outcome/смене контекста/завершённом плане.
 
 Это package/fixture evidence. Native Windows, чистый первый запуск и живая приёмка ChatGPT 0.6.76 не выполнялись и не считаются подтверждёнными. GitHub Release 0.6.76 публикуется отдельной T010 из этой уже проверенной поставки; WorkflowKit и Web Pilot Sidebar публикуются T011/T012.
+
+
+## T004 — исправление AutoPlan 0.6.78 / 03.10.2026
+
+Production observer + AutoPlan проверены на неизменном размере окна сообщений: новый busy/idle-цикл даёт новое продолжение; rerender/reconstruction не даёт дубль. Проверены legacy sent/sending, поздний/исчезающий native ID и гидратация без преждевременного Paste. Composer сохраняет правки пользователя, отменённую собственную вставку очищает, ошибку после попытки клика считает unknown.
+
+Первый Node-прогон: 498 tests, 495 PASS, 3 SKIP, 0 FAIL; после добавления защиты позднего native ID целевой AutoPlan-прогон: 42 PASS. Electron fixture с настоящим ProseMirror прошла bounded DOM и отмену Paste. Финальные unit/smoke/release-installed назначены T004 и запускаются управляемым commit; результаты — .harness/runtime/t004-commit.log и журнал Workflow Kit. Релизный gate проверяет обе упаковки, source/hash/version, identity root app и /Applications и запускает installed fixture.
+
+[Разбор инцидента и ограничения](planning/auto-plan-session-incident-20261003.md). Живая приёмка 0.6.78 и native Windows не заявляются.
