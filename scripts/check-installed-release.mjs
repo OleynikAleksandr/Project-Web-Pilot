@@ -9,6 +9,7 @@ import { extractFile } from '@electron/asar';
 import { sourceSnapshot, verifyPackagedSources } from './release-all.mjs';
 import { verifyWindowsPackage } from './verify-windows-package.mjs';
 import { createRequire } from 'node:module';
+import { verifyMacSignature } from './check-mac-signature.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const { version } = JSON.parse(await fs.readFile(path.join(root, 'package.json'), 'utf8'));
@@ -26,6 +27,7 @@ const targets = [
 ];
 for (const resources of targets) await verifyPackagedSources({ root, resources, version, sources });
 for (const app of [rootApp, appsApp]) {
+  assert.deepEqual(await verifyMacSignature({ bundle: app, root }), manifest.macCodeSignature);
   assert.equal((await fs.lstat(app)).isSymbolicLink(), false);
   assert.equal(execFileSync('/usr/libexec/PlistBuddy', ['-c', 'Print :CFBundleShortVersionString', path.join(app, 'Contents/Info.plist')], { encoding: 'utf8' }).trim(), version);
 }

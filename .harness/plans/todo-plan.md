@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 963,
+  "plan_revision": 965,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "macos-screen-permission-stability-20261003",
@@ -156,8 +156,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "macos-screen-permission-stability-20261003",
         "task_id": "T003",
@@ -171,11 +171,17 @@
         "scripts/release-all.mjs",
         "scripts/check-mac-signature.mjs",
         "scripts/check-installed-release.mjs",
-        "tests/release-mac.test.mjs"
+        "tests/release-mac.test.mjs",
+        "package.json",
+        "package-lock.json",
+        "scripts/sign-mac-bundle.mjs"
       ],
       "documentation_paths": [
         "docs/planning/macos-screen-permission-stability.md",
-        "docs/RELEASE.md"
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/DOCUMENTATION_INDEX.md"
       ],
       "verification_ids": [
         "unit",
@@ -191,7 +197,22 @@
         "Неверная identity/подпись блокирует замену app; отрицательный тест использует только временный bundle",
         "Finder identity, постоянный путь и штатный rollback сохранены"
       ],
-      "expected_commit_message": "fix: verify macOS code signature before installing releases"
+      "expected_commit_message": "fix: verify macOS code signature before installing releases",
+      "actual_files": [
+        "package.json",
+        "package-lock.json",
+        "scripts/sign-mac-bundle.mjs",
+        "scripts/release-mac.mjs",
+        "scripts/release-all.mjs",
+        "scripts/check-mac-signature.mjs",
+        "scripts/check-installed-release.mjs",
+        "tests/release-mac.test.mjs",
+        "docs/planning/macos-screen-permission-stability.md",
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/DOCUMENTATION_INDEX.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -314,7 +335,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: macos-screen-permission-stability-20261003
 Current Task: нет
-Revision: 963
+Revision: 965
 
 ## Цель
 
@@ -334,10 +355,10 @@ Revision: 963
   - Git Commit: [DONE] fix: sign macOS bundle with a persistent development identity
   - Reference: macos-screen-permission-stability-20261003 / T002 / implementation
   - Файлы: package.json, package-lock.json, scripts/sign-mac-bundle.mjs, tests/sign-mac-bundle.test.mjs, docs/planning/macos-screen-permission-stability.md, docs/RELEASE.md, docs/architecture/OVERVIEW.md, docs/DOCUMENTATION_INDEX.md
-- [TODO] T003: Добавить контроль подписи перед выпуском и установкой — Ожидает
-  - Git Commit: [PENDING] fix: verify macOS code signature before installing releases
+- [DONE] T003: Добавить контроль подписи перед выпуском и установкой — Завершено
+  - Git Commit: [DONE] fix: verify macOS code signature before installing releases
   - Reference: macos-screen-permission-stability-20261003 / T003 / implementation
-  - Файлы: scripts/release-mac.mjs, scripts/release-all.mjs, scripts/check-mac-signature.mjs, scripts/check-installed-release.mjs, tests/release-mac.test.mjs, docs/planning/macos-screen-permission-stability.md, docs/RELEASE.md
+  - Файлы: scripts/release-mac.mjs, scripts/release-all.mjs, scripts/check-mac-signature.mjs, scripts/check-installed-release.mjs, tests/release-mac.test.mjs, package.json, package-lock.json, scripts/sign-mac-bundle.mjs, docs/planning/macos-screen-permission-stability.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/architecture/OVERVIEW.md, docs/DOCUMENTATION_INDEX.md
 - [TODO] T004: Перепривязать разрешение текущей сборки и проверить настоящий MCP-захват — Ожидает
   - Git Commit: [PENDING] test: verify screen capture through the installed MCP executor
   - Reference: macos-screen-permission-stability-20261003 / T004 / implementation

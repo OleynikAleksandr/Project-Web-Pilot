@@ -2,6 +2,20 @@
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
+## Локальная подписанная macOS 0.6.79 — 03.10.2026
+
+По прямому поручению пользователя используется существующий Apple Development сертификат организации UkrHD. Подписана окончательная macOS arm64-сборка с bundle ID `com.oleynik.ProjectWebPilot` и TeamID `LXY7H5ZUE9`. Designated requirement содержит Apple anchor и выбранную identity, без привязки к CDHash отдельной сборки. Ключи не экспортировались.
+
+Root app и `/Applications/Project Web Pilot.app` обновлены штатным installer; device/inode `16777227/406600483` и `16777227/406571340` сохранены. Старые Contents доступны в release-backups. ASAR SHA-256 обеих копий — `b60e422a94d938a94a4d082e20af1b1fb6e5b64c72ccf409df1fa73c53c0c8cb`. Комплектные Node 24.21.0 и uv 0.9.13 не переподписывались; исходные контрольные суммы сохранены.
+
+Поставка: `~/Downloads/WebPilot-0.6.79/Project-Web-Pilot-0.6.79-macOS-arm64.zip`, 186321811 байт, SHA-256 `4f507f6206b1101bbcb00050b82dc38a36793953e92fae3f60a6b2a027c8915b`. Это локальная macOS-поставка текущего исправления: Windows 0.6.79 и GitHub-публикация не выполнялись; публичная парная версия остаётся 0.6.78.
+
+Проверки T003: unit, Electron smoke и `mac-signature`. Последняя проверяет настоящие подписи staging, двух установленных копий и приложения из выданного ZIP, совпадение identity/TeamID/requirement/CDHash и сохранённые device/inode. Отрицательная проверка на временном bundle отклонила чужую identity и повреждённый запечатанный ресурс до изменения временной установки. Реальные установленные приложения для этого теста не повреждались.
+
+Работающий пользовательский процесс не перезапускался. Для применения нужен полный выход и повторный запуск Web Pilot и его executor. Первичная миграция Screen Recording, живой MCP-захват и сохранение разрешения между обновлениями остаются T004–T005; подпись сама по себе не является подтверждением живого захвата.
+
+Evidence: `.harness/runtime/releases/0.6.79/mac-release.json`, `t003-applications-install.json`, `t003-vendor-hashes.json`, `t003-signature-negative.json`, `mac-signature-check.json` и управляемый результат commit T003.
+
 ## Выпуск 0.6.78 — 03.10.2026
 
 Исправлен AutoPlan для длинных Work-разговоров: количество DOM-узлов больше не служит ID ответа, сохраняются наблюдаемые циклы генерации. При загрузке истории нет преждевременной вставки; отменённый собственный Paste очищается с сохранением пользовательских правок. [Разбор и ограничения](planning/auto-plan-session-incident-20261003.md).
@@ -864,4 +878,4 @@ Canonical session auto-title теперь берётся из H1 обязате�
 
 [Контракт](planning/macos-screen-permission-stability.md) устраняет подтверждённое несовпадение TCC signing requirement. `npm run build:mac` требует явно выбранную Apple Development identity до упаковки. Укажите SHA-1 сертификата через `WEBPILOT_MAC_SIGNING_IDENTITY` либо `.harness/runtime/mac-signing.json`: `{"identity":"<SHA-1 выбранного сертификата>"}`. Конфигурация и signing receipt остаются в игнорируемом runtime, вне Git. `npm run check:mac-signing` проверяет наличие действительной identity; `npm run sign:mac` подписывает окончательный staging через `@electron/osx-sign@2.7.0` и выполняет строгую проверку перед выпуском. Штатные ошибки останавливают `build:mac`; автоматического выбора сертификата и перехода на ad hoc нет. Подпись локальная development, без profile automation, нотарификации и timestamp server.
 
-Это изменение кода T002; реальная подписанная поставка, release gate установленной копии и live сохранение Screen Recording разрешения ещё не подтверждены. Первичная перепривязка системного разрешения относится к T004.
+T002 добавила подпись staging. T003 установила подписанную 0.6.79 и добавила обязательный gate до установки, после копирования и для извлечённого ZIP: строгая проверка вложенного кода, bundle ID, выбранного сертификата/TeamID, запечатанных ресурсов и designated requirement. Неудачная проверка блокирует замену либо возвращает прежние Contents. Комплектные Node/uv сохраняют исходные подписи и контрольные суммы; ресурсы покрыты подписью Web Pilot. Проверка `mac-signature` сверяет staging, root app, /Applications, выданный ZIP и сохранённые device/inode. Парный release manifest также хранит доказательство подписи. Живое сохранение Screen Recording ещё не подтверждено; первичная перепривязка относится к T004.

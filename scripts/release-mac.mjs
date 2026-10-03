@@ -5,6 +5,7 @@ import os from 'node:os';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { extractFile, uncache } from '@electron/asar';
+import { verifyMacSignature } from './check-mac-signature.mjs';
 
 const APP = 'Project Web Pilot.app';
 const BUNDLE_ID = 'com.oleynik.ProjectWebPilot';
@@ -36,16 +37,20 @@ async function inspectBundle(bundle, version) {
   return { version: actualVersion, asarSha256: await sha256File(archive), plistSha256: await sha256File(plist) };
 }
 
+async function inspectSignedBundle(bundle, version, verifySignature) {
+  return { ...await inspectBundle(bundle, version), signature: await verifySignature({ bundle }) };
+}
+
 function sameBundle(actual, expected) {
   if (JSON.stringify(actual) !== JSON.stringify(expected)) throw new Error('Copied app does not match staging');
 }
 
 // Keep the outer directory: Finder aliases can retain its filesystem identity.
-export async function installMacBundle({ source, target, backupRoot, version }) {
+export async function installMacBundle({ source, target, backupRoot, version, verifySignature = verifyMacSignature }) {
   if (process.platform !== 'darwin') throw new Error('macOS release requires macOS');
   if (path.resolve(source) === path.resolve(target)) throw new Error('Source and target must differ');
   if (!target.endsWith('.app')) throw new Error('Target must be an app bundle');
-  const expected = await inspectBundle(source, version);
+  const expected = await inspectSignedBundle(source, version, verifySignature);
   const previous = await existingStat(target);
   if (previous) await inspectBundle(target);
   await fs.mkdir(path.dirname(target), { recursive: true });
@@ -55,7 +60,7 @@ export async function installMacBundle({ source, target, backupRoot, version }) 
   let backup = null, oldMoved = false, newMoved = false, created = false;
   try {
     run('/usr/bin/ditto', [source, stagedApp]);
-    sameBundle(await inspectBundle(stagedApp, version), expected);
+    sameBundle(await inspectSignedBundle(stagedApp, version, verifySignature), expected);
     if (previous) {
       await fs.mkdir(backupRoot, { recursive: true });
       backup = await fs.mkdtemp(path.join(backupRoot, 'mac-'));
@@ -67,7 +72,7 @@ export async function installMacBundle({ source, target, backupRoot, version }) 
     }
     await fs.rename(path.join(stagedApp, 'Contents'), targetContents);
     newMoved = true;
-    sameBundle(await inspectBundle(target, version), expected);
+    sameBundle(await inspectSignedBundle(target, version, verifySignature), expected);
     const installed = await fs.stat(target);
     if (previous && (previous.dev !== installed.dev || previous.ino !== installed.ino)) {
       throw new Error('App directory identity changed');
@@ -83,7 +88,7 @@ export async function installMacBundle({ source, target, backupRoot, version }) 
   }
 }
 
-export async function publishMacRelease({ root, deliveryDirectory } = {}) {
+export async function publishMacRelease({ root, deliveryDirectory, verifySignature = verifyMacSignature } = {}) {
   root = path.resolve(root ?? fileURLToPath(new URL('..', import.meta.url)));
   if (process.platform !== 'darwin') throw new Error('macOS release requires macOS');
   const { version } = JSON.parse(await fs.readFile(path.join(root, 'package.json'), 'utf8'));
@@ -95,7 +100,7 @@ export async function publishMacRelease({ root, deliveryDirectory } = {}) {
   let zipStage;
   try {
     const source = path.join(runtime, 'build/Project Web Pilot-darwin-arm64', APP);
-    const expected = await inspectBundle(source, version);
+    const expected = await inspectSignedBundle(source, version, verifySignature);
     const release = path.join(runtime, 'releases', version);
     await fs.mkdir(release, { recursive: true });
     const name = 'Project-Web-Pilot-' + version + '-macOS-arm64.zip';
@@ -103,12 +108,15 @@ export async function publishMacRelease({ root, deliveryDirectory } = {}) {
     const stagedZip = path.join(zipStage, name);
     run('/usr/bin/ditto', ['-c', '-k', '--sequesterRsrc', '--keepParent', source, stagedZip]);
     run('/usr/bin/unzip', ['-tq', stagedZip]);
+    const zipCheck = path.join(zipStage, 'verified');
+    run('/usr/bin/ditto', ['-x', '-k', stagedZip, zipCheck]);
+    sameBundle(await inspectSignedBundle(path.join(zipCheck, APP), version, verifySignature), expected);
     const installation = await installMacBundle({
       source, target: path.join(root, APP),
-      backupRoot: path.join(runtime, 'release-backups'), version,
+      backupRoot: path.join(runtime, 'release-backups'), version, verifySignature,
     });
     sameBundle({
-      version: installation.version, asarSha256: installation.asarSha256, plistSha256: installation.plistSha256,
+      version: installation.version, asarSha256: installation.asarSha256, plistSha256: installation.plistSha256, signature: installation.signature,
     }, expected);
     const zip = path.join(release, name);
     await fs.rename(stagedZip, zip);

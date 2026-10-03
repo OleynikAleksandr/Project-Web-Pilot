@@ -70,10 +70,13 @@ export async function signMacBundle({
   if (field('CFBundleShortVersionString') !== pkg.version) {
     throw fail('MAC_SIGNING_BUNDLE_INVALID', 'Версия сборки не совпадает с package.json.');
   }
+  const vendorTools = path.join(app, 'Contents/Resources/mac-tools');
   await signBundle({
     app, identity: selected.identity, platform: 'darwin', type: 'development',
     version: pkg.devDependencies.electron, identityValidation: true,
     preAutoEntitlements: false, preEmbedProvisioningProfile: false, strictVerify: true,
+    // Keep the verified upstream Node/uv binaries and pinned hashes unchanged; the app seals these resources.
+    ignore: file => file === vendorTools || file.startsWith(vendorTools + path.sep),
     // Local development signing uses Electron's normal entitlements, without notarization.
     optionsForFile: () => ({ hardenedRuntime: false, timestamp: 'none' }),
   });

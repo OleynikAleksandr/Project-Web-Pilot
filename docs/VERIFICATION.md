@@ -1,5 +1,13 @@
 # Проверки и приёмка
 
+## 2026-10-03 — T003: локальная подписанная macOS 0.6.79
+
+Подписанная staging-сборка, установленный root app, /Applications и извлечённый macOS ZIP проверяются production gate `mac-signature` в управляемом commit T003 вместе с unit и Electron smoke. Gate сверяет сертификат UkrHD, TeamID, bundle ID, designated requirement, CDHash, целостность sealed resources и сохранённую filesystem identity.
+
+Физический отрицательный тест на временной копии настоящего bundle отклонил другую identity и изменённый Node LICENSE: временная установленная папка и контрольный файл сохранились; staging не менялся. Отдельные installer-тесты проверяют блокировку до замены и rollback после неудачной проверки копии. SHA-256 комплектных Node/uv совпадают с подготовленным upstream toolchain в staging и обеих установках.
+
+Evidence и SHA-256 ZIP — [RELEASE](RELEASE.md). Живой Screen Recording consent, MCP capture, повторный запуск и сохранение разрешения после обновления/перезагрузки ещё не подтверждены (T004–T005).
+
 ## 2026-10-03 — финальная DOCS после публикации 0.6.78
 
 Согласованы README обоих репозиториев, index/startup/recovery, release/verification, действующий AutoPlan и его диагностика. Web Pilot: 44 документа и 256 локальных ссылок; WorkflowKit: 11 документов и 19 ссылок, ошибок нет. Историческая приёмка 0.6.77 отделена от опубликованного исправления 0.6.78. Рабочий Node 24.21.0 и minimum пакета Kit Node 22+ различаются явно.

@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { isDeepStrictEqual } from 'node:util';
 import { extractFile, listPackage, uncache } from '@electron/asar';
 import { stageWorkflowKit, verifyWorkflowKitRuntime } from './stage-workflow-kit.mjs';
+import { verifyMacSignature } from './check-mac-signature.mjs';
 
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
 async function files(folder) {
@@ -96,7 +97,9 @@ export async function releaseAll({ root = fileURLToPath(new URL('..', import.met
       for (const res of [macResources, installedResources])
         if (await sha256File(path.join(res, 'mac-tools', file)) !== expected) throw new Error('Mac toolchain mismatch: ' + file);
     }
+    const macCodeSignature = await verifyMacSignature({ bundle: target, root });
     const receipt = JSON.parse(await fs.readFile(path.join(release, 'mac-release.json'), 'utf8'));
+    if (!isDeepStrictEqual(macCodeSignature, receipt.installation.signature)) throw new Error('Mac code signature receipt mismatch');
     if (receipt.version !== version || receipt.installation.asarSha256 !== mac.asarSha256) throw new Error('Mac receipt mismatch');
     const macZip = path.join(release, `Project-Web-Pilot-${version}-macOS-arm64.zip`);
     const winZip = path.join(release, `Project-Web-Pilot-${version}-Windows-x64.zip`);
@@ -127,7 +130,7 @@ export async function releaseAll({ root = fileURLToPath(new URL('..', import.met
     }
     const evidence = { version, sourceCommit, sourceFiles: Object.keys(sources).length, packagedSourceMatches: true,
       workflowKit: { version: workflowKit.version, files: workflowKit.files, sha256: workflowKit.sha256 },
-      identity: { device: identity.dev, inode: identity.ino }, artifacts, nativeWindowsTested: false, cleanVmTested: false };
+      identity: { device: identity.dev, inode: identity.ino }, macCodeSignature, artifacts, nativeWindowsTested: false, cleanVmTested: false };
     await fs.mkdir(delivery, { recursive: true });
     for (const artifact of artifacts) {
       const destination = path.join(delivery, artifact.file);
