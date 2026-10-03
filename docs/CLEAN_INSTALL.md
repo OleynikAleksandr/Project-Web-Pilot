@@ -1,6 +1,6 @@
 # Проверка установки на чистых системах
 
-Source target **0.6.81** уже подготовлен с Workflow Kit **1.5.2**, но текущая DOCS выполняется до build. Поэтому фактические installed/clean evidence ниже пока относятся к 0.6.80; clean install 0.6.81 не заявляется выполненной.
+Локальная подписанная **0.6.81** уже собрана и установлена поверх существующего Mac после предсборочной DOCS; bundled Workflow Kit 1.5.2, общий ASAR `4fc92297dafdf6afa2e97b0a504d774753a57f7c195a6a931477f9ea4beb8195`. Это проверка обновления существующих root/Applications copies, **не clean install**. GitHub Release 0.6.81 ещё не опубликован; clean macOS и native Windows 0.6.81 не выполнялись.
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 

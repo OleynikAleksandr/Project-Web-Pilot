@@ -1,5 +1,13 @@
 # Проверки и приёмка
 
+## 2026-10-03 — 0.6.81 local build/install before GitHub
+
+Предсборочная DOCS `db59be8` предшествовала release build. T002 (`36c4ff3`) выполнила единственный paired build 0.6.81: sourceCommit `db59be83f0d3fa4136c109a8252181422acfe94c`, 106 source/resource files, `packagedSourceMatches=true`, Workflow Kit **1.5.2 / 35 files / SHA-256 `646fec106c498e004d8688a3bc40012bea1654178ce66a61b650211ab28055df`**. macOS ZIP: 186376299 bytes / `76084ae92195e4d86c350075f87aac76031a97ee9f03e024ece5041dc85c0f78`; Windows ZIP: 355490949 bytes / `24c1ddb9071e5b4efc58ad63a3d1a44f0a129d91a98b6f18f84a7d63111e5634`; общий ASAR `4fc92297dafdf6afa2e97b0a504d774753a57f7c195a6a931477f9ea4beb8195`.
+
+T003 установила `/Applications/Project Web Pilot.app` из уже готового staging через `installMacBundle` без повторной сборки. Root и `/Applications` сообщают 0.6.81; inode сохранены `406600483` и `406571340`, подпись UkrHD и bundle ID сохранены. Полный `release-installed` gate выполняется managed commit T003 после этой документальной фиксации.
+
+GitHub publication на этой точке ещё не выполнялась; публичный latest остаётся 0.6.80. Native Windows/clean VM для 0.6.81 не проверялись.
+
 ## 2026-10-03 — 0.6.81 pre-build DOCS / Workflow Kit 1.5.2
 
 T001 (`beda941`) подготовила source **0.6.81** без release-сборки: package/lock обновлены, installed/Windows gates ожидают Workflow Kit **1.5.2**, добавлен read-only GitHub verifier. Source-gate прошёл на Node 24.21.0; он проверяет startup/recovery/source/staging/workspace setup и canonical dependency.

@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1016,
+  "plan_revision": 1018,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "release-0.6.81-workflowkit-1.5.2-20261003",
@@ -229,8 +229,8 @@
       "actual_files": []
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "release-0.6.81-workflowkit-1.5.2-20261003",
         "task_id": "T003",
@@ -270,7 +270,18 @@
         "Native Windows и clean VM остаются непроверенными, если пользователь отдельно их не запускал",
         "До GitHub publication документы фиксируют фактические local build/install evidence 0.6.81 и сохраняют различие между готовой локальной поставкой и ещё не опубликованным GitHub Release"
       ],
-      "expected_commit_message": "release: проверить установленный Project Web Pilot 0.6.81"
+      "expected_commit_message": "release: проверить установленный Project Web Pilot 0.6.81",
+      "actual_files": [
+        "README.md",
+        "docs/PRODUCT.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/MODULES.md",
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "docs/CLEAN_INSTALL.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -327,7 +338,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: release-0.6.81-workflowkit-1.5.2-20261003
 Current Task: нет
-Revision: 1016
+Revision: 1018
 
 ## Цель
 
@@ -356,8 +367,8 @@ Revision: 1016
   - Git Commit: [DONE] release: собрать парный Project Web Pilot 0.6.81
   - Reference: release-0.6.81-workflowkit-1.5.2-20261003 / T002 / implementation
   - Файлы: package.json, scripts/release-all.mjs, scripts/release-mac.mjs, scripts/verify-windows-package.mjs, resources/workspace-setup-worker.mjs, docs/planning/release-0.6.81-workflowkit-1.5.2.md
-- [TODO] T003: Обновить и проверить установленные macOS-копии 0.6.81 — Ожидает
-  - Git Commit: [PENDING] release: проверить установленный Project Web Pilot 0.6.81
+- [DONE] T003: Обновить и проверить установленные macOS-копии 0.6.81 — Завершено
+  - Git Commit: [DONE] release: проверить установленный Project Web Pilot 0.6.81
   - Reference: release-0.6.81-workflowkit-1.5.2-20261003 / T003 / implementation
   - Файлы: scripts/release-mac.mjs, scripts/check-installed-release.mjs, docs/planning/release-0.6.81-workflowkit-1.5.2.md, README.md, docs/PRODUCT.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/TRANSFER_TO_WINDOWS.md, docs/CLEAN_INSTALL.md
 - [TODO] T004: Опубликовать 0.6.81 и синхронизировать Project Web Pilot с GitHub — Ожидает
