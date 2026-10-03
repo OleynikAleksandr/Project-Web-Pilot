@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 112,
+  "plan_revision": 114,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "pwp-t001-kit-152-cutover-20261003",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Поднять локальный Workflow Kit до 1.5.2 для доставки policy DOCS → delivery в installed recovery без release/publish.",
   "acceptance_criteria": [
     "Package version 1.5.2 поддерживает upgrade 1.5.1 → 1.5.2",
@@ -122,8 +122,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "pwp-t001-kit-152-cutover-20261003",
         "task_id": "DOCS",
@@ -148,7 +148,8 @@
         "Все документы из индекса проверены; устаревшие сведения и ссылки исправлены; после этого результат готов только к пользовательской приёмке."
       ],
       "verification_ids": [],
-      "expected_commit_message": "docs: актуализировать документацию проекта"
+      "expected_commit_message": "docs: актуализировать документацию проекта",
+      "actual_files": []
     }
   ],
   "blocked_reason": null,
@@ -166,10 +167,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: pwp-t001-kit-152-cutover-20261003
 Current Task: нет
-Revision: 112
+Revision: 114
 
 ## Цель
 
@@ -187,8 +188,8 @@ Revision: 112
   - Git Commit: [DONE] feat: prepare Workflow Kit 1.5.2 policy cutover
   - Reference: pwp-t001-kit-152-cutover-20261003 / T001 / implementation
   - Файлы: package.json, src/lib/common.mjs, src/lib/installer.mjs, scripts/check-runtime-fixture.mjs, scripts/check-package.mjs, scripts/check-consumer-contract.mjs, README.md, docs/architecture/OVERVIEW.md, docs/modules/workflow-kit-package.md, docs/planning/delivery-ordering-policy.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать документацию проекта
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать документацию проекта
   - Reference: pwp-t001-kit-152-cutover-20261003 / DOCS / implementation
   - Файлы: docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, README.md, docs/modules/workflow-kit-package.md, docs/planning/delivery-ordering-policy.md
 
