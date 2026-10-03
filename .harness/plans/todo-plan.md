@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 85,
+  "plan_revision": 86,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "release-1.5.0-docs-finalization-001",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Зафиксировать актуальные release-документы Workflow Kit 1.5.0 после self-host cutover.",
   "acceptance_criteria": [
     "Release-документы отражают фактический single-active contract 1.5.0 и завершённый self-host cutover."
@@ -570,13 +570,38 @@
       ]
     },
     {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
+      "id": "T008",
+      "title": "Актуализировать README для локального Web Pilot 0.6.80",
+      "why": "Прямое поручение пользователя 03.10.2026 в DOCS scope macos-screen-permission-stability-20261003 проекта Web Pilot.",
+      "dependencies": [],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/modules/workflow-kit-package.md",
+        "README.md"
+      ],
+      "verification_ids": [],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "README различает локальную подписанную macOS 0.6.80 и опубликованную парную 0.6.78; описывает подтверждённое сохранение ScreenCapture после обновления и перезагрузки.",
+        "WorkflowKit остаётся 1.5.1 с прежним runtime, minimum Node 22+ и рабочим Node 24.21.0; указаны оба связанных проекта."
+      ],
+      "expected_commit_message": "docs: align README with local Web Pilot 0.6.80",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "release-1.5.0-docs-finalization-001",
+        "task_id": "T008",
+        "role": "implementation"
+      }
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "release-1.5.0-docs-finalization-001",
         "task_id": "DOCS",
         "role": "implementation",
-        "iteration": 17
+        "iteration": 18
       },
       "dependencies": [
         "T002",
@@ -594,7 +619,8 @@
         "T001",
         "T005",
         "T006",
-        "T007"
+        "T007",
+        "T008"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -637,10 +663,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: release-1.5.0-docs-finalization-001
 Current Task: нет
-Revision: 85
+Revision: 86
 
 ## Цель
 
@@ -716,8 +742,12 @@ Revision: 85
   - Git Commit: [DONE] docs: актуализировать интеграцию Web Pilot 0.6.78
   - Reference: release-1.5.0-docs-finalization-001 / T007 / implementation
   - Файлы: docs/modules/workflow-kit-package.md, README.md, docs/PRODUCT.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/architecture/OVERVIEW.md
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: завершить актуализацию WorkflowKit 1.5.1
+- [TODO] T008: Актуализировать README для локального Web Pilot 0.6.80 — Ожидает
+  - Git Commit: [PENDING] docs: align README with local Web Pilot 0.6.80
+  - Reference: release-1.5.0-docs-finalization-001 / T008 / implementation
+  - Файлы: docs/modules/workflow-kit-package.md, README.md
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: завершить актуализацию WorkflowKit 1.5.1
   - Reference: release-1.5.0-docs-finalization-001 / DOCS / implementation
   - Файлы: docs/DOCUMENTATION_INDEX.md, docs/modules/workflow-kit-package.md, docs/planning/single-active-plan-migration.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, README.md, src/templates/CONTINUE.md, src/WORKFLOW.md, docs/PRODUCT.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md
 
