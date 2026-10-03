@@ -10,7 +10,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = path.join(ROOT, 'src');
 const BASELINE_VERSION = '1.5.1';
 const BASELINE_FILE_COUNT = 35;
-const BASELINE_SHA256 = '11370d99d87cfb9641d7db2cbf57af1cb8a260257ded472a2eaec4cad2bd0e16';
+const BASELINE_SHA256 = 'aeea7c56b2dbc34e5ca1f8aa3c4c87ab1ec47406b5d04f49b6177eaba2a3bf9a';
 
 async function filesBelow(directory, prefix = '') {
   const result = [];

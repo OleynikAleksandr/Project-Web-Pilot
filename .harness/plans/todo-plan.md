@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 104,
+  "plan_revision": 106,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "pwp-t001-crossrepo-commit-20261003",
@@ -68,8 +68,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "pwp-t001-crossrepo-commit-20261003",
         "task_id": "T001",
@@ -97,7 +97,13 @@
         "plan:extend сохраняет DOCS перед delivery и переоткрывает DOCS для correction",
         "runtime fixture и package check проходят"
       ],
-      "expected_commit_message": "feat: complete delivery ordering policy under Web Pilot plan"
+      "expected_commit_message": "feat: complete delivery ordering policy under Web Pilot plan",
+      "actual_files": [
+        "src/lib/actions.mjs",
+        "scripts/check-runtime-fixture.mjs",
+        "scripts/check-package.mjs",
+        "scripts/check-consumer-contract.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -145,7 +151,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: pwp-t001-crossrepo-commit-20261003
 Current Task: нет
-Revision: 104
+Revision: 106
 
 ## Цель
 
@@ -159,8 +165,8 @@ Revision: 104
 
 ## Микрозадачи
 
-- [TODO] T001: Зафиксировать policy и regression Workflow Kit — Ожидает
-  - Git Commit: [PENDING] feat: complete delivery ordering policy under Web Pilot plan
+- [DONE] T001: Зафиксировать policy и regression Workflow Kit — Завершено
+  - Git Commit: [DONE] feat: complete delivery ordering policy under Web Pilot plan
   - Reference: pwp-t001-crossrepo-commit-20261003 / T001 / implementation
   - Файлы: src/lib/actions.mjs, scripts/check-runtime-fixture.mjs, scripts/check-package.mjs, scripts/check-consumer-contract.mjs, docs/planning/delivery-ordering-policy.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает

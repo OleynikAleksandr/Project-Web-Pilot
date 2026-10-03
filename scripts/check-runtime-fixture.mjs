@@ -7,7 +7,7 @@ import { execFileSync } from 'node:child_process';
 import { installer, sessionPlans, plan as planApi, VERSION } from '@webpilot/workflow-kit';
 
 const EXPECTED_VERSION = '1.5.1';
-const EXPECTED_RUNTIME_SHA256 = '11370d99d87cfb9641d7db2cbf57af1cb8a260257ded472a2eaec4cad2bd0e16';
+const EXPECTED_RUNTIME_SHA256 = 'aeea7c56b2dbc34e5ca1f8aa3c4c87ab1ec47406b5d04f49b6177eaba2a3bf9a';
 
 function run(executable, args, cwd) {
   return execFileSync(executable, args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
@@ -117,6 +117,88 @@ try {
   const recovered = workflow(root, 'recover', '--format', 'json');
   assert.equal(recovered.completeness, 'COMPLETE');
   assert.equal(recovered.plan_id, 'fixture-current-plan');
+  assert.deepEqual(planApi.readPlan(root).tasks.map(task => task.id), ['T001', 'DOCS'],
+    'code-only plan must keep DOCS as the final task');
+
+  // Delivery ordering: ordinary work -> DOCS -> package/installed tail.
+  // Extending a plan must keep that order and reopen DOCS when new code work
+  // appears after documentation was already completed but delivery is pending.
+  const deliveryRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'workflow-kit-delivery-order-'));
+  try {
+    git(deliveryRoot, 'init', '-b', 'main');
+    git(deliveryRoot, 'config', 'user.name', 'Workflow Kit Delivery Test');
+    git(deliveryRoot, 'config', 'user.email', 'workflow-kit-delivery@test.local');
+    await fs.mkdir(path.join(deliveryRoot, 'docs/planning'), { recursive: true });
+    await fs.writeFile(path.join(deliveryRoot, 'docs/planning/fixture.md'), '# Delivery fixture\n');
+    await fs.writeFile(path.join(deliveryRoot, 'README.md'), '# Delivery fixture\n');
+    git(deliveryRoot, 'add', 'README.md', 'docs/planning/fixture.md');
+    git(deliveryRoot, 'commit', '-m', 'test: delivery fixture baseline');
+    installer.install({ project: deliveryRoot, mode: 'existing' });
+
+    const deliveryInput = path.join(deliveryRoot, '.harness/runtime/delivery-plan.json');
+    await fs.writeFile(deliveryInput, JSON.stringify({
+      id: 'fixture-delivery-order',
+      spec: 'docs/planning/fixture.md',
+      objective: 'Verify documentation before delivery tail',
+      stack: 'Node.js',
+      checks: [
+        { id: 'code', executable: process.execPath, args: ['-e', 'process.exit(0)'], kind: 'test' },
+        { id: 'artifact', executable: process.execPath, args: ['-e', 'process.exit(0)'], kind: 'package',
+          evidence: 'fixture package; zero-exit command represents artifact verification' }
+      ],
+      tasks: [
+        { id: 'T001', title: 'Implement fixture', files: ['README.md'], checks: ['code'],
+          acceptance: ['Fixture implementation is ready'] },
+        { id: 'T002', title: 'Package fixture', files: ['README.md'], checks: ['artifact'],
+          verification_kind: 'package', acceptance: ['Fixture package is verified'] }
+      ]
+    }));
+    workflow(deliveryRoot, 'plan:create', '--input', deliveryInput);
+
+    let deliveryPlan = planApi.readPlan(deliveryRoot);
+    assert.deepEqual(deliveryPlan.tasks.map(task => task.id), ['T001', 'DOCS', 'T002']);
+    assert.deepEqual(deliveryPlan.tasks.find(task => task.id === 'DOCS').dependencies, ['T001']);
+    assert.ok(deliveryPlan.tasks.find(task => task.id === 'T002').dependencies.includes('DOCS'));
+
+    const extendInput = path.join(deliveryRoot, '.harness/runtime/delivery-extend.json');
+    await fs.writeFile(extendInput, JSON.stringify({ tasks: [{
+      id: 'T003', title: 'Correct fixture', files: ['README.md'], checks: ['code'],
+      acceptance: ['Correction is applied']
+    }] }));
+    workflow(deliveryRoot, 'plan:extend', '--input', extendInput, '--expected-revision',
+      String(workflow(deliveryRoot, 'status').plan_revision));
+    deliveryPlan = planApi.readPlan(deliveryRoot);
+    assert.deepEqual(deliveryPlan.tasks.map(task => task.id), ['T001', 'T003', 'DOCS', 'T002']);
+    assert.deepEqual(deliveryPlan.tasks.find(task => task.id === 'DOCS').dependencies, ['T001', 'T003']);
+    assert.ok(deliveryPlan.tasks.find(task => task.id === 'T002').dependencies.includes('DOCS'));
+
+    workflow(deliveryRoot, 'task:start', 'T001');
+    await fs.appendFile(path.join(deliveryRoot, 'README.md'), 'implementation\n');
+    workflow(deliveryRoot, 'commit', '--task', 'T001');
+    workflow(deliveryRoot, 'task:start', 'T003');
+    await fs.appendFile(path.join(deliveryRoot, 'README.md'), 'correction\n');
+    workflow(deliveryRoot, 'commit', '--task', 'T003');
+    workflow(deliveryRoot, 'task:start', 'DOCS');
+    workflow(deliveryRoot, 'commit', '--task', 'DOCS');
+
+    const secondExtend = path.join(deliveryRoot, '.harness/runtime/delivery-second-extend.json');
+    await fs.writeFile(secondExtend, JSON.stringify({ tasks: [{
+      id: 'T004', title: 'Late correction', files: ['README.md'], checks: ['code'],
+      acceptance: ['Late correction is applied']
+    }] }));
+    workflow(deliveryRoot, 'plan:extend', '--input', secondExtend, '--expected-revision',
+      String(workflow(deliveryRoot, 'status').plan_revision));
+    deliveryPlan = planApi.readPlan(deliveryRoot);
+    assert.deepEqual(deliveryPlan.tasks.map(task => task.id), ['T001', 'T003', 'T004', 'DOCS', 'T002']);
+    const reopenedDocs = deliveryPlan.tasks.find(task => task.id === 'DOCS');
+    assert.equal(reopenedDocs.commit_status, 'PENDING');
+    assert.equal(reopenedDocs.implementation_status, 'TODO');
+    assert.equal(reopenedDocs.commit_ref.iteration, 2);
+    assert.deepEqual(reopenedDocs.dependencies, ['T001', 'T003', 'T004']);
+    assert.equal(workflow(deliveryRoot, 'recover', '--format', 'json').next_task_id, 'T004');
+  } finally {
+    await fs.rm(deliveryRoot, { recursive: true, force: true });
+  }
 
   const compatA = workflow(root, 'status', '--session', 'legacy-session-a');
   const compatB = workflow(root, 'status', '--session', 'legacy-session-b');

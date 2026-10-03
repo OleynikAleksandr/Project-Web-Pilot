@@ -113,8 +113,8 @@ export function applyPlan(root, input, expectedRevision) {
     const added = plan.tasks.filter(t => !original.tasks.some(old => old.id === t.id));
     const originalFinal = original.tasks.find(isDocumentationFinalizationTask);
     const deferDocs = original.current_task_id === 'DOCS' && added.length > 0;
-    const correctionRound = original.execution_scope_status === 'ACTIVE' && original.delivery_status === 'READY_FOR_ACCEPTANCE'
-      && original.current_task_id === null && originalFinal?.commit_status === 'DONE' && added.length > 0;
+    const correctionRound = original.execution_scope_status === 'ACTIVE' && original.current_task_id === null
+      && originalFinal?.commit_status === 'DONE' && added.some(task => !isDeliveryTask(task));
     for (const old of original.tasks) {
       const current = plan.tasks.find(t => t.id === old.id);
       check(current, 'TASK_REMOVAL', 'Существующие задачи не удаляются из активного scope.');
@@ -145,8 +145,8 @@ export function applyPlan(root, input, expectedRevision) {
       const iteration = currentFinal.commit_ref?.iteration ?? 1;
       currentFinal.implementation_status = 'TODO'; currentFinal.commit_status = 'PENDING';
       currentFinal.commit_ref = { ...currentFinal.commit_ref, iteration: iteration + 1 };
-      normalizeCompletionContract(plan);
-    } else if (originalFinal?.commit_status !== 'DONE' || (!originalFinal && added.length)) normalizeCompletionContract(plan);
+    }
+    if (added.length || originalFinal?.commit_status !== 'DONE' || !originalFinal) normalizeCompletionContract(plan);
     if (added.some(t => t.functional_paths.length) || (input.context_pack && plan.tasks.some(t => t.functional_paths.length && t.commit_status !== 'DONE'))) requireModuleContext(plan);
     plan.delivery_status = plan.tasks.length && plan.tasks.every(t => t.commit_status === 'DONE') ? 'READY_FOR_ACCEPTANCE' : 'IN_PROGRESS';
     validatePlan(plan); validatePlanConfiguration(root, plan, readConfig(root)); resolveReferences(root, plan);
