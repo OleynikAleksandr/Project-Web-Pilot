@@ -4,7 +4,7 @@
 
 ## Среда Node.js
 
-Минимальное требование `@webpilot/workflow-kit` 1.5.1 — **Node 22+**: его задают `package.json` (`engines.node: >=22`), CLI и installer launcher. Рабочая среда разработки и интеграция с Web Pilot 0.6.78 используют **Node 24.21.0**. Переход клиента и его workers на Node 24 сохраняет совместимость пакета Kit; runtime и версия 1.5.1 не меняются.
+Минимальное требование `@webpilot/workflow-kit` 1.5.1 — **Node 22+**: его задают `package.json` (`engines.node: >=22`), CLI и installer launcher. Рабочая среда разработки и текущая локальная macOS-интеграция с Web Pilot 0.6.80 используют **Node 24.21.0**. Последняя опубликованная парная поставка клиента — 0.6.78. Переход клиента и его workers на Node 24 сохраняет совместимость пакета Kit; runtime и версия 1.5.1 не меняются.
 
 ## Назначение
 
@@ -109,9 +109,9 @@ Web Pilot сохраняет старые chat/session records и их chat URL/
 
 Workspace Setup и project readiness проверяют только current checkout state и не full-recover-ят historical plans.
 
-## Актуальная интеграция — Web Pilot 0.6.78
+## Актуальная интеграция — локальная macOS Web Pilot 0.6.80
 
-Опубликованный [Web Pilot 0.6.78](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.78) включает прежний Kit 1.5.1. Клиент управляет AutoPlan событийно: постоянный выбор, одно точное «Продолжай» на подходящую паузу незавершённого ACTIVE-плана, durable защита от повторов и приоритет ручного ввода. Стартовая инструкция и footer-протокол удалены. Это поведение принадлежит Web Pilot и не меняет API/CLI или minimum Node пакета Kit. [Действующий контракт AutoPlan](https://github.com/OleynikAleksandr/Project-Web-Pilot/blob/main/docs/planning/auto-plan-client-driven-refactor.md).
+Локальная macOS Web Pilot 0.6.80 и последняя опубликованная парная [0.6.78](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.78) включают прежний Kit 1.5.1. В 0.6.80 сохранение ScreenCapture после обновления и перезагрузки подтверждено проверками и пользователем; это исправление подписи клиента, без изменения runtime/API/CLI Kit. Windows 0.6.80 и публикация 0.6.80 не выполнялись. Клиент управляет AutoPlan событийно: постоянный выбор, одно точное «Продолжай» на подходящую паузу незавершённого ACTIVE-плана, durable защита от повторов и приоритет ручного ввода. Стартовая инструкция и footer-протокол удалены. Это поведение принадлежит Web Pilot и не меняет API/CLI или minimum Node пакета Kit. [Действующий контракт AutoPlan](https://github.com/OleynikAleksandr/Project-Web-Pilot/blob/main/docs/planning/auto-plan-client-driven-refactor.md).
 
 ## Проверки package contract
 
@@ -127,7 +127,7 @@ Release **@webpilot/workflow-kit 1.5.1**: canonical runtime — **35 файло�
 
 По поручению пользователя 28.09.2026 добавлена plan:carryover: архив содержит точную исходную копию со статусами TODO/DONE; новый current plan — только незавершённые задачи и DOCS. Критерии, проверки, planning/module ссылки и зависимости между оставшимися задачами сохраняются. Ссылки на выполненные зависимости хранятся в carryover metadata и архиве. Оба плана фиксируются одним Git-коммитом. Нужны чистый checkout, отсутствие активной микрозадачи, точная revision и прямое поручение. Повтор после успеха безопасен; прерывания обслуживает штатный repair. Обычный archive сохраняет требование всех DONE. Runtime: 35 файлов; SHA-256 93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33.
 
-Проверка — scripts/check-carryover-fixture.mjs через установленный CLI: точный архив, сохранность задач, зависимости, отказы без изменения плана, повтор и прерывания до/после коммита. Входит в runtime gate. Актуальная интеграция и парная поставка — Project Web Pilot 0.6.78; прежняя 0.6.72 была первым выпуском клиента с plan:carryover.
+Проверка — scripts/check-carryover-fixture.mjs через установленный CLI: точный архив, сохранность задач, зависимости, отказы без изменения плана, повтор и прерывания до/после коммита. Входит в runtime gate. Текущий локальный клиент — macOS Project Web Pilot 0.6.80; последняя опубликованная парная поставка — 0.6.78; прежняя 0.6.72 была первым выпуском клиента с plan:carryover.
 
 ## Документальная актуализация после публикации 0.6.78 — 03.10.2026
 

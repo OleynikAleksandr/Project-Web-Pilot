@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 88,
+  "plan_revision": 90,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "release-1.5.0-docs-finalization-001",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Зафиксировать актуальные release-документы Workflow Kit 1.5.0 после self-host cutover.",
   "acceptance_criteria": [
     "Release-документы отражают фактический single-active contract 1.5.0 и завершённый self-host cutover."
@@ -598,8 +598,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "release-1.5.0-docs-finalization-001",
         "task_id": "DOCS",
@@ -648,7 +648,12 @@
         "Minimum Node 22+ и рабочая среда Node 24.21.0 различаются явно; исходники/runtime не меняются"
       ],
       "expected_commit_message": "docs: завершить актуализацию WorkflowKit 1.5.1",
-      "actual_files": []
+      "actual_files": [
+        "docs/PRODUCT.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/modules/workflow-kit-package.md"
+      ]
     }
   ],
   "blocked_reason": null,
@@ -666,10 +671,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: release-1.5.0-docs-finalization-001
 Current Task: нет
-Revision: 88
+Revision: 90
 
 ## Цель
 
@@ -749,8 +754,8 @@ Revision: 88
   - Git Commit: [DONE] docs: align README with local Web Pilot 0.6.80
   - Reference: release-1.5.0-docs-finalization-001 / T008 / implementation
   - Файлы: docs/modules/workflow-kit-package.md, README.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: завершить актуализацию WorkflowKit 1.5.1
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: завершить актуализацию WorkflowKit 1.5.1
   - Reference: release-1.5.0-docs-finalization-001 / DOCS / implementation
   - Файлы: docs/DOCUMENTATION_INDEX.md, docs/modules/workflow-kit-package.md, docs/planning/single-active-plan-migration.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, README.md, src/templates/CONTINUE.md, src/WORKFLOW.md, docs/PRODUCT.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md
 
