@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 90,
+  "plan_revision": 91,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "release-1.5.0-docs-finalization-001",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Зафиксировать актуальные release-документы Workflow Kit 1.5.0 после self-host cutover.",
   "acceptance_criteria": [
     "Release-документы отражают фактический single-active contract 1.5.0 и завершённый self-host cutover."
@@ -598,13 +598,36 @@
       ]
     },
     {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
+      "id": "T009",
+      "title": "Актуализировать README для опубликованного Project Web Pilot 0.6.80",
+      "why": "Актуализировать README для опубликованного Project Web Pilot 0.6.80",
+      "dependencies": [],
+      "functional_paths": [],
+      "documentation_paths": [
+        "README.md"
+      ],
+      "verification_ids": [],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "README указывает GitHub Release v0.6.80 и сохраняет границы native Windows"
+      ],
+      "expected_commit_message": "feat: Актуализировать README для опубликованного Project Web Pilot 0.6.80",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "release-1.5.0-docs-finalization-001",
+        "task_id": "T009",
+        "role": "implementation"
+      }
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "release-1.5.0-docs-finalization-001",
         "task_id": "DOCS",
         "role": "implementation",
-        "iteration": 18
+        "iteration": 19
       },
       "dependencies": [
         "T002",
@@ -623,7 +646,8 @@
         "T005",
         "T006",
         "T007",
-        "T008"
+        "T008",
+        "T009"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -671,10 +695,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: release-1.5.0-docs-finalization-001
 Current Task: нет
-Revision: 90
+Revision: 91
 
 ## Цель
 
@@ -754,8 +778,12 @@ Revision: 90
   - Git Commit: [DONE] docs: align README with local Web Pilot 0.6.80
   - Reference: release-1.5.0-docs-finalization-001 / T008 / implementation
   - Файлы: docs/modules/workflow-kit-package.md, README.md
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: завершить актуализацию WorkflowKit 1.5.1
+- [TODO] T009: Актуализировать README для опубликованного Project Web Pilot 0.6.80 — Ожидает
+  - Git Commit: [PENDING] feat: Актуализировать README для опубликованного Project Web Pilot 0.6.80
+  - Reference: release-1.5.0-docs-finalization-001 / T009 / implementation
+  - Файлы: README.md
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: завершить актуализацию WorkflowKit 1.5.1
   - Reference: release-1.5.0-docs-finalization-001 / DOCS / implementation
   - Файлы: docs/DOCUMENTATION_INDEX.md, docs/modules/workflow-kit-package.md, docs/planning/single-active-plan-migration.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, README.md, src/templates/CONTINUE.md, src/WORKFLOW.md, docs/PRODUCT.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md
 
