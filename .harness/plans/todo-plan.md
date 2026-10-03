@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 80,
+  "plan_revision": 81,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "release-1.5.0-docs-finalization-001",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Зафиксировать актуальные release-документы Workflow Kit 1.5.0 после self-host cutover.",
   "acceptance_criteria": [
     "Release-документы отражают фактический single-active contract 1.5.0 и завершённый self-host cutover."
@@ -533,13 +533,43 @@
       ]
     },
     {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
+      "id": "T007",
+      "title": "Актуализировать интеграционные документы для опубликованного Web Pilot 0.6.78",
+      "why": "Актуализировать интеграционные документы для опубликованного Web Pilot 0.6.78",
+      "dependencies": [],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/modules/workflow-kit-package.md",
+        "README.md",
+        "docs/PRODUCT.md",
+        "docs/MODULES.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/architecture/OVERVIEW.md"
+      ],
+      "verification_ids": [],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "README и связанные документы описывают Web Pilot 0.6.78 без переноса приёмки 0.6.77",
+        "Пакет 1.5.1, runtime, minimum Node 22+ и рабочий Node 24.21.0 сохранены",
+        "Локальные ссылки проверены; изменения отправляются в main без изменения release tag"
+      ],
+      "expected_commit_message": "docs: актуализировать интеграцию Web Pilot 0.6.78",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "release-1.5.0-docs-finalization-001",
+        "task_id": "T007",
+        "role": "implementation"
+      }
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "release-1.5.0-docs-finalization-001",
         "task_id": "DOCS",
         "role": "implementation",
-        "iteration": 16
+        "iteration": 17
       },
       "dependencies": [
         "T002",
@@ -556,7 +586,8 @@
         "R009",
         "T001",
         "T005",
-        "T006"
+        "T006",
+        "T007"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -599,10 +630,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: release-1.5.0-docs-finalization-001
 Current Task: нет
-Revision: 80
+Revision: 81
 
 ## Цель
 
@@ -674,8 +705,12 @@ Revision: 80
   - Git Commit: [DONE] docs: актуализировать интеграцию Web Pilot 0.6.77 и Node 24
   - Reference: release-1.5.0-docs-finalization-001 / T006 / implementation
   - Файлы: docs/modules/workflow-kit-package.md, README.md, docs/PRODUCT.md, docs/architecture/OVERVIEW.md, docs/DOCUMENTATION_INDEX.md
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: завершить актуализацию WorkflowKit 1.5.1
+- [TODO] T007: Актуализировать интеграционные документы для опубликованного Web Pilot 0.6.78 — Ожидает
+  - Git Commit: [PENDING] docs: актуализировать интеграцию Web Pilot 0.6.78
+  - Reference: release-1.5.0-docs-finalization-001 / T007 / implementation
+  - Файлы: docs/modules/workflow-kit-package.md, README.md, docs/PRODUCT.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/architecture/OVERVIEW.md
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: завершить актуализацию WorkflowKit 1.5.1
   - Reference: release-1.5.0-docs-finalization-001 / DOCS / implementation
   - Файлы: docs/DOCUMENTATION_INDEX.md, docs/modules/workflow-kit-package.md, docs/planning/single-active-plan-migration.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, README.md, src/templates/CONTINUE.md, src/WORKFLOW.md, docs/PRODUCT.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md
 
