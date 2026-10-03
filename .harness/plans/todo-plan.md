@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 984,
+  "plan_revision": 986,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "github-publication-0.6.80-20261003",
@@ -167,8 +167,8 @@
       "actual_files": []
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "github-publication-0.6.80-20261003",
         "task_id": "T005",
@@ -190,7 +190,8 @@
         "GitHub Release v0.6.80 опубликован",
         "На GitHub доступны оба ZIP и три metadata assets"
       ],
-      "expected_commit_message": "feat: Опубликовать GitHub Release v0.6.80 с macOS arm64 и Windows x64"
+      "expected_commit_message": "feat: Опубликовать GitHub Release v0.6.80 с macOS arm64 и Windows x64",
+      "actual_files": []
     },
     {
       "implementation_status": "TODO",
@@ -244,7 +245,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: github-publication-0.6.80-20261003
 Current Task: нет
-Revision: 984
+Revision: 986
 
 ## Цель
 
@@ -272,8 +273,8 @@ Revision: 984
   - Git Commit: [DONE] feat: Собрать и проверить Windows x64 0.6.80 для парного релиза
   - Reference: github-publication-0.6.80-20261003 / T004 / implementation
   - Файлы: docs/planning/github-publication-0.6.77.md
-- [TODO] T005: Опубликовать GitHub Release v0.6.80 с macOS arm64 и Windows x64 — Ожидает
-  - Git Commit: [PENDING] feat: Опубликовать GitHub Release v0.6.80 с macOS arm64 и Windows x64
+- [DONE] T005: Опубликовать GitHub Release v0.6.80 с macOS arm64 и Windows x64 — Завершено
+  - Git Commit: [DONE] feat: Опубликовать GitHub Release v0.6.80 с macOS arm64 и Windows x64
   - Reference: github-publication-0.6.80-20261003 / T005 / implementation
   - Файлы: docs/planning/github-publication-0.6.77.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
