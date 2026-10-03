@@ -18,6 +18,21 @@ function run(command, args) {
   return (result.stdout + '\n' + result.stderr).trim();
 }
 
+
+const UUID = /^[0-9A-F]{8}(?:-[0-9A-F]{4}){3}-[0-9A-F]{12}$/i;
+export function macBootSessionUUID() {
+  const uuid = run('/usr/sbin/sysctl', ['-n', 'kern.bootsessionuuid']);
+  assert.match(uuid, UUID, 'macOS boot session UUID');
+  return uuid;
+}
+export function macVolumeUUID(directory) {
+  const uuid = run('/usr/bin/swift', ['-e',
+    'import Foundation; let values = try URL(fileURLWithPath: CommandLine.arguments[1]).resourceValues(forKeys: [.volumeUUIDStringKey]); print(values.volumeUUIDString ?? "")',
+    directory]);
+  assert.match(uuid, UUID, 'App volume UUID');
+  return uuid;
+}
+
 export async function verifyMacSignature({ bundle, identity, root = ROOT } = {}) {
   if (process.platform !== 'darwin') throw new Error('macOS signature verification requires macOS');
   const expected = identity ?? (await resolveMacSigning({ root, identity: process.env.WEBPILOT_MAC_SIGNING_IDENTITY })).identity;
@@ -56,6 +71,7 @@ export async function verifyMacSignature({ bundle, identity, root = ROOT } = {})
 export async function checkInstalledMacSignatures({ root = ROOT } = {}) {
   const selected = await resolveMacSigning({ root, identity: process.env.WEBPILOT_MAC_SIGNING_IDENTITY });
   const { version } = JSON.parse(await fs.readFile(path.join(root, 'package.json'), 'utf8'));
+  const bootSessionUUID = macBootSessionUUID();
   const apps = [
     path.join(root, '.harness/runtime/build/Project Web Pilot-darwin-arm64', APP),
     path.join(root, APP),
@@ -70,12 +86,19 @@ export async function checkInstalledMacSignatures({ root = ROOT } = {}) {
     proofs.push({ app, signature });
   }
   const preflight = JSON.parse(await fs.readFile(path.join(root, '.harness/runtime/release-' + version + '-preflight.json'), 'utf8'));
+  const filesystemIdentities = [];
   for (const app of apps.slice(1)) {
     const before = preflight.find(entry => entry.path === app);
     assert.ok(before, 'Preflight filesystem identity: ' + app);
     const after = await fs.stat(app);
-    assert.equal(after.dev, before.device);
+    const volumeUUID = macVolumeUUID(app);
+    // Device numbers may change between boots; volume UUID + inode identify the same directory.
+    if (before.volumeUUID) {
+      assert.equal(volumeUUID, before.volumeUUID, 'App volume identity: ' + app);
+      if (before.bootSessionUUID === bootSessionUUID) assert.equal(after.dev, before.device);
+    } else assert.equal(after.dev, before.device); // Legacy same-boot receipts.
     assert.equal(after.ino, before.inode);
+    filesystemIdentities.push({ app, device: after.dev, inode: after.ino, volumeUUID });
   }
   const receipt = JSON.parse(await fs.readFile(path.join(root, '.harness/runtime/releases', version, 'mac-release.json'), 'utf8'));
   assert.equal(receipt.version, version);
@@ -92,7 +115,7 @@ export async function checkInstalledMacSignatures({ root = ROOT } = {}) {
   } finally {
     await fs.rm(temporary, { recursive: true, force: true });
   }
-  const result = { version, proofs, filesystemIdentityPreserved: true, deliveredZipSha256: receipt.sha256 };
+  const result = { version, bootSessionUUID, proofs, filesystemIdentities, filesystemIdentityPreserved: true, deliveredZipSha256: receipt.sha256 };
   await fs.writeFile(path.join(root, '.harness/runtime/mac-signature-check.json'), JSON.stringify(result, null, 2) + '\n');
   return result;
 }

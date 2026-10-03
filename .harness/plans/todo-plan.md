@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 968,
+  "plan_revision": 970,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "macos-screen-permission-stability-20261003",
@@ -253,8 +253,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "macos-screen-permission-stability-20261003",
         "task_id": "T005",
@@ -288,7 +288,17 @@
         "После установки B поверх A и перезагрузки реальный MCP-захват работает без повторного consent; пользователь подтверждает отсутствие диалога",
         "Сохранены evidence обеих сборок, запуска и live результата; неподтверждённая проверка не объявлена успешной"
       ],
-      "expected_commit_message": "test: verify persistent screen permission across macOS updates"
+      "expected_commit_message": "test: verify persistent screen permission across macOS updates",
+      "actual_files": [
+        "package.json",
+        "package-lock.json",
+        "scripts/check-mac-signature.mjs",
+        "scripts/check-mac-screen-capture.mjs",
+        "docs/planning/macos-screen-permission-stability.md",
+        "docs/VERIFICATION.md",
+        "docs/RELEASE.md",
+        "docs/architecture/ARCHITECTURE.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -344,7 +354,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: macos-screen-permission-stability-20261003
 Current Task: нет
-Revision: 968
+Revision: 970
 
 ## Цель
 
@@ -372,8 +382,8 @@ Revision: 968
   - Git Commit: [DONE] test: verify screen capture through the installed MCP executor
   - Reference: macos-screen-permission-stability-20261003 / T004 / implementation
   - Файлы: scripts/check-mac-screen-capture.mjs, docs/planning/macos-screen-permission-stability.md, docs/VERIFICATION.md
-- [TODO] T005: Подтвердить сохранение разрешения между двумя сборками и после перезагрузки — Ожидает
-  - Git Commit: [PENDING] test: verify persistent screen permission across macOS updates
+- [DONE] T005: Подтвердить сохранение разрешения между двумя сборками и после перезагрузки — Завершено
+  - Git Commit: [DONE] test: verify persistent screen permission across macOS updates
   - Reference: macos-screen-permission-stability-20261003 / T005 / implementation
   - Файлы: scripts/check-mac-signature.mjs, scripts/check-mac-screen-capture.mjs, package.json, package-lock.json, docs/planning/macos-screen-permission-stability.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/architecture/ARCHITECTURE.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает

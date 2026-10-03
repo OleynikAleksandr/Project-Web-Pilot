@@ -2,6 +2,16 @@
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
+## Локальная macOS 0.6.80 — проверка обновления разрешений, 03.10.2026
+
+B для T005 сохраняет функциональный код и зависимости 0.6.79; изменена версия package/Info.plist/ASAR. Подпись Apple Development организации UkrHD и designated requirement совпадают с A при новом CDHash. Штатный `npm run build:mac` создал ZIP и обновил root app; Applications обновлён тем же installMacBundle. Внешние папки app сохранили inode 406600483 и 406571340 и прежний volume UUID; старые Contents доступны в backup.
+
+Поставка: `~/Downloads/WebPilot-0.6.80/Project-Web-Pilot-0.6.80-macOS-arm64.zip`, 186322226 байт, SHA-256 `bca650c9de63d02d19edc3c5fa008a09d76ad60c1809a60c95ce235db800f3c3`. ASAR двух установок: `d343a61ef69d169fd333ebf945b84fa85c3103212f5c412e8c987998df0b4baf`. Настоящие подписи staging, обеих копий и извлечённого доставленного ZIP проверены.
+
+0.6.80 запущена через прежний root app. Live MCP capture после обновления и после настоящей перезагрузки Mac прошёл с сохранённым разрешением; подписи/ZIP проверены в обеих загрузках, volume UUID и inode сохранены. 03.10.2026 пользователь подтвердил работоспособность и отсутствие новых системных запросов; критерии приёмки T005 подтверждены. Это локальная macOS-поставка; Windows 0.6.80 и GitHub-публикация в задаче не выполнялись. Последняя подтверждённая публичная парная поставка — 0.6.78.
+
+Evidence: `.harness/runtime/releases/0.6.80/mac-release.json`, `t005-applications-install.json`, `t005-baseline.json`, `t005-update-comparison.json`, `t005-before-reboot.json`, `t005-after-reboot.json`, `t005-user-confirmation.json`, `t005-progress.json`. Проверки после перезагрузки прошли на той же B; назначенные installed gates выполняются в managed commit.
+
 ## Локальная подписанная macOS 0.6.79 — 03.10.2026
 
 По прямому поручению пользователя используется существующий Apple Development сертификат организации UkrHD. Подписана окончательная macOS arm64-сборка с bundle ID `com.oleynik.ProjectWebPilot` и TeamID `LXY7H5ZUE9`. Designated requirement содержит Apple anchor и выбранную identity, без привязки к CDHash отдельной сборки. Ключи не экспортировались.
@@ -12,7 +22,7 @@ Root app и `/Applications/Project Web Pilot.app` обновлены штатн�
 
 Проверки T003: unit, Electron smoke и `mac-signature`. Последняя проверяет настоящие подписи staging, двух установленных копий и приложения из выданного ZIP, совпадение identity/TeamID/requirement/CDHash и сохранённые device/inode. Отрицательная проверка на временном bundle отклонила чужую identity и повреждённый запечатанный ресурс до изменения временной установки. Реальные установленные приложения для этого теста не повреждались.
 
-Работающий пользовательский процесс не перезапускался. Для применения нужен полный выход и повторный запуск Web Pilot и его executor. Первичная миграция Screen Recording, живой MCP-захват и сохранение разрешения между обновлениями остаются T004–T005; подпись сама по себе не является подтверждением живого захвата.
+При установке T003 пользовательский процесс ещё не перезапускался. Последующая T004 подтвердила первичную миграцию Screen Recording, живой MCP-захват и сохранение доступа после полного перезапуска app/executor. Обновление и перезагрузка относятся к T005; подпись сама по себе не является подтверждением живого захвата.
 
 Evidence: `.harness/runtime/releases/0.6.79/mac-release.json`, `t003-applications-install.json`, `t003-vendor-hashes.json`, `t003-signature-negative.json`, `mac-signature-check.json` и управляемый результат commit T003.
 

@@ -97,3 +97,23 @@
 Evidence: .harness/runtime/t004-initial-capture.json, t004-persistence-restart.json, t004-post-restart-preflight.json, mac-screen-capture-check.json и итоговый t004-progress.json. PNG и связанный TCC log сохраняются только в приватной ignored runtime-папке. Отсутствие видимого диалога пользователь отдельно не подтверждал; T005 требует его подтверждения после обновления/перезагрузки. T004 проверяет фактический доступ текущей сборки и полный перезапуск, но ещё не гарантирует поведение новой сборки.
 
 Первый managed commit остановился по двухминутному timeout mac-signature при чтении доставленного ZIP из Downloads. Диагностическая трасса подтвердила действительные подписи staging/root/Applications и хеш исходного ZIP; TCC сообщил о старом ad hoc requirement для SystemPolicyAllFiles. После следующего запуска app PID 9303 / MCP PID 9346 чтение доставленного файла восстановилось. Для ScreenCapture адресный reset не повторялся; Full Disk Access и TCC.db агент не менял. Итоговые assigned checks подтверждают полноту проверки; при их отказе T004 остаётся открытой.
+
+## Обновление и перезагрузка — T005
+
+A — установленная 0.6.79 с живым захватом из T004; её подпись, release receipt и capture evidence сохранены в `.harness/runtime/t005-baseline.json`. Штатный `npm run build:mac` создал B — 0.6.80. Изменена версия package/package-lock; функциональный код приложения и зависимости сохранены. Root app и /Applications обновлены обычным подписанным installer с backup/rollback.
+
+| Проверка | A: 0.6.79 | B: 0.6.80 |
+| --- | --- | --- |
+| CDHash | `df46eb68c01a219c1437b7df6f16f11ba46120d8` | `7530b6039526f6b7153be0a29308196f0088b781` |
+| Identity / TeamID / bundle ID | Выбранный сертификат UkrHD | Те же значения |
+| Designated requirement | Apple anchor + выбранный сертификат, без CDHash | Полностью совпадает с A |
+
+В 14:43 Europe/Madrid root app и executor штатно перезапущены: app PID 30871, MCP PID 30914 загрузили B после её подписи. Native preflight сразу подтвердил доступ. Installed checks до перезагрузки прошли: mac-signature проверил staging, обе установки и извлечённый ZIP; mac-screen-capture получил PNG 1600×900 / 558698 байт. TCC подтвердил настоящий разрешённый запрос и текущий Web Pilot, без mismatch. Разрешения/reset агент не менял.
+
+Проверки сохраняют kern.bootsessionuuid, чтобы отличать перезагрузку ОС от перезапуска app. Для filesystem identity записан штатный Foundation volume UUID и inode; device также сверяется в пределах одной загрузки. ScreenCapture preflight проверяет установленную версию перед захватом.
+
+Обновление B и настоящая перезагрузка подтверждены. Новая boot session `095A1F32-27F4-48D7-BF9B-EBB9E6EB41A7` отличается от baseline. После загрузки 0.6.80 обе assigned installed проверки прошли: все подписи/ZIP действительны, реальный MCP PNG 1600×900 / 640056 байт получен, TCC разрешил запрос текущего Web Pilot без mismatch. У двух app сохранились volume UUID и inode, номер device изменился с 16777227 на 16777231 — новая проверка устойчивой filesystem identity прошла.
+
+03.10.2026 пользователь подтвердил: «Я подтверждаю, всё работает и запросов никаких не присылает». Подтверждение сохранено в `.harness/runtime/t005-user-confirmation.json` отдельно от результатов автоматических проверок. Все критерии T005 подтверждены: смена CDHash при постоянной identity/requirement, сохранённый живой MCP-захват после обновления и настоящей перезагрузки, отсутствие новых диалогов по наблюдению пользователя. Завершение оформляется managed commit с назначенными mac-signature и mac-screen-capture на установленной B.
+
+Evidence: `.harness/runtime/t005-progress.json`, `t005-baseline.json`, `t005-update-comparison.json`, `t005-update-restart.json`, `t005-before-reboot.json`, `t005-after-reboot.json`, `t005-user-confirmation.json`. Все запущенные сборки/установки/проверки завершились с exit 0; PNG/TCC находятся только в приватном ignored runtime.

@@ -1,5 +1,17 @@
 # Проверки и приёмка
 
+## 2026-10-03 — T005: разрешение сохранилось после обновления и перезагрузки
+
+CDHash изменился с `df46eb68c01a219c1437b7df6f16f11ba46120d8` на `7530b6039526f6b7153be0a29308196f0088b781`. Сертификат UkrHD, TeamID, bundle ID и designated requirement совпадают. Root app и Applications обновлены штатным installer с сохранением device/inode. После полного перезапуска 0.6.80 и нового MCP доступ сохранился.
+
+Обе assigned installed проверки до перезагрузки прошли. mac-signature сверил staging, root/Applications и приложение из выданного ZIP; mac-screen-capture получил PNG 1600×900 / 558698 байт, SHA-256 `35085b117b5835f1453b307de93212e38d162ba0968721895e09fcf0ec4aa3be`. TCC подтвердил текущий Web Pilot и разрешённый настоящий request, mismatch отсутствует.
+
+Настоящая перезагрузка подтверждена: новая boot session `095A1F32-27F4-48D7-BF9B-EBB9E6EB41A7` отличается от `FE8247C3-2636-47D5-9E40-5BE3F03249F6`. На новой загрузке обе installed проверки прошли. MCP PID 4272, запущенный подписанным app PID 4219, вернул PNG 1600×900 / 640056 байт, SHA-256 `fc812af4f6e4ca3f1c3b7c5dafa8f19cf5feafdf848c6cf34786cd239542c1eb`. TCC разрешил настоящий запрос, responsible application = текущая 0.6.80; mismatch отсутствует. Volume UUID и inode двух app сохранились при смене device 16777227 → 16777231.
+
+03.10.2026 пользователь подтвердил: «Я подтверждаю, всё работает и запросов никаких не присылает». Вместе с проверками обновления и настоящей перезагрузки это закрывает критерии приёмки T005. Назначенные mac-signature и mac-screen-capture выполняются в managed commit на той же установленной B.
+
+Evidence: `.harness/runtime/t005-baseline.json`, `t005-update-comparison.json`, `t005-before-reboot.json`, `t005-after-reboot.json`, `t005-user-confirmation.json`, `t005-progress.json`; [контракт](planning/macos-screen-permission-stability.md). Подтверждение пользователя сохранено отдельно от технических результатов. Windows/GitHub-публикация не выполнялась.
+
 ## 2026-10-03 — T004: живой MCP-захват подписанной macOS 0.6.79
 
 После единственного адресного сброса устаревшего ScreenCapture grant системное разрешение выдано текущей подписанной копии. CGPreflightScreenCaptureAccess подтвердил доступ без вызова диалога. В 14:02:39 Europe/Madrid официальный Python MCP client действующего executor вернул PNG 1600×900 / 1 514 442 байта; SHA-256 17197679087d1cf15e0fb7a84a2b169375918391d9ac6dcd4388d361b9e7c35a. TCC подтвердил responsible application = com.oleynik.ProjectWebPilot, PID 92168, путь постоянного root app; разрешённый настоящий запрос, несовпадения code requirement нет.

@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { sha256File } from '../src/common.mjs';
-import { verifyMacSignature } from './check-mac-signature.mjs';
+import { verifyMacSignature, macBootSessionUUID } from './check-mac-signature.mjs';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const APP = 'Project Web Pilot.app';
@@ -44,9 +44,11 @@ export async function screenCapturePreflight({ root = ROOT } = {}) {
   }
   const signature = await verifyMacSignature({ bundle: app, root });
   const { version } = JSON.parse(await fs.readFile(path.join(root, 'package.json'), 'utf8'));
+  assert.equal(run('/usr/libexec/PlistBuddy', ['-c', 'Print :CFBundleShortVersionString',
+    path.join(app, 'Contents/Info.plist')]), version, 'Установленная версия должна совпадать с проверяемой сборкой.');
   const screenCaptureAllowed = run('/usr/bin/swift', ['-e',
     'import CoreGraphics; print(CGPreflightScreenCaptureAccess() ? "allowed" : "denied")']) === 'allowed';
-  return { version, app: appProcess, mcp: mcpProcess, signedAt, signature, screenCaptureAllowed };
+  return { version, app: appProcess, mcp: mcpProcess, signedAt, signature, bootSessionUUID: macBootSessionUUID(), screenCaptureAllowed };
 }
 
 const PYTHON = String.raw`
