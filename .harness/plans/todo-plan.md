@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 967,
+  "plan_revision": 968,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "macos-screen-permission-stability-20261003",
@@ -265,11 +265,15 @@
       ],
       "functional_paths": [
         "scripts/check-mac-signature.mjs",
-        "scripts/check-mac-screen-capture.mjs"
+        "scripts/check-mac-screen-capture.mjs",
+        "package.json",
+        "package-lock.json"
       ],
       "documentation_paths": [
         "docs/planning/macos-screen-permission-stability.md",
-        "docs/VERIFICATION.md"
+        "docs/VERIFICATION.md",
+        "docs/RELEASE.md",
+        "docs/architecture/ARCHITECTURE.md"
       ],
       "verification_ids": [
         "mac-signature",
@@ -340,7 +344,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: macos-screen-permission-stability-20261003
 Current Task: нет
-Revision: 967
+Revision: 968
 
 ## Цель
 
@@ -371,7 +375,7 @@ Revision: 967
 - [TODO] T005: Подтвердить сохранение разрешения между двумя сборками и после перезагрузки — Ожидает
   - Git Commit: [PENDING] test: verify persistent screen permission across macOS updates
   - Reference: macos-screen-permission-stability-20261003 / T005 / implementation
-  - Файлы: scripts/check-mac-signature.mjs, scripts/check-mac-screen-capture.mjs, docs/planning/macos-screen-permission-stability.md, docs/VERIFICATION.md
+  - Файлы: scripts/check-mac-signature.mjs, scripts/check-mac-screen-capture.mjs, package.json, package-lock.json, docs/planning/macos-screen-permission-stability.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/architecture/ARCHITECTURE.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: macos-screen-permission-stability-20261003 / DOCS / implementation
