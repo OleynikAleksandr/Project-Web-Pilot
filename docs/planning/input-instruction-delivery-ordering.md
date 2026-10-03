@@ -16,19 +16,18 @@
 - если сборка в плане не указана — её не выполняют;
 - публикация исходников или релиза на GitHub выполняется только после DOCS и только явной delivery-задачей.
 
-## Связанный canonical scope
+## Управление cross-repository изменениями
 
 WorkflowKit:
 `/Users/oleksandroliinyk/VSCODE/WorkflowKit`
 
-Current scope:
-`delivery-ordering-policy-20261003`
+Единственный управляющий план этой работы — current plan Project Web Pilot `input-instruction-delivery-ordering-20261003`. В WorkflowKit отдельного незавершённого current scope нет: после managed фиксации cross-repository изменений его состояние возвращено в `NONE`.
 
-Он меняет canonical recovery policy и механизм расположения DOCS относительно package/installed delivery-задач.
+WorkflowKit меняет canonical recovery policy, расположение DOCS относительно package/installed delivery-задач и поведение `plan:extend` при correction после уже завершённой DOCS.
 
 ## Проверка
 
-- WorkflowKit scope завершён и его `npm run check` проходит;
+- WorkflowKit current plan остаётся `NONE`; `npm run check`, runtime fixture и standalone consumer contract проходят;
 - recovery WorkflowKit содержит новые правила;
 - `startupMessage()` Project Web Pilot содержит короткое явное правило;
 - тесты Web Pilot проверяют наличие правила и отсутствие расхождения с canonical policy;
