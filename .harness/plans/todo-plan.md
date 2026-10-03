@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 982,
+  "plan_revision": 984,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "github-publication-0.6.80-20261003",
@@ -141,8 +141,8 @@
       "actual_files": []
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "github-publication-0.6.80-20261003",
         "task_id": "T004",
@@ -163,7 +163,8 @@
       "acceptance_criteria": [
         "Windows x64 0.6.80 собран и проходит штатную verify:win"
       ],
-      "expected_commit_message": "feat: Собрать и проверить Windows x64 0.6.80 для парного релиза"
+      "expected_commit_message": "feat: Собрать и проверить Windows x64 0.6.80 для парного релиза",
+      "actual_files": []
     },
     {
       "implementation_status": "TODO",
@@ -243,7 +244,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: github-publication-0.6.80-20261003
 Current Task: нет
-Revision: 982
+Revision: 984
 
 ## Цель
 
@@ -267,8 +268,8 @@ Revision: 982
   - Git Commit: [DONE] feat: Опубликовать актуальный Project Web Pilot main
   - Reference: github-publication-0.6.80-20261003 / T003 / implementation
   - Файлы: docs/planning/github-publication-0.6.77.md
-- [TODO] T004: Собрать и проверить Windows x64 0.6.80 для парного релиза — Ожидает
-  - Git Commit: [PENDING] feat: Собрать и проверить Windows x64 0.6.80 для парного релиза
+- [DONE] T004: Собрать и проверить Windows x64 0.6.80 для парного релиза — Завершено
+  - Git Commit: [DONE] feat: Собрать и проверить Windows x64 0.6.80 для парного релиза
   - Reference: github-publication-0.6.80-20261003 / T004 / implementation
   - Файлы: docs/planning/github-publication-0.6.77.md
 - [TODO] T005: Опубликовать GitHub Release v0.6.80 с macOS arm64 и Windows x64 — Ожидает
