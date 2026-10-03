@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 74,
+  "plan_revision": 75,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "release-1.5.0-docs-finalization-001",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Зафиксировать актуальные release-документы Workflow Kit 1.5.0 после self-host cutover.",
   "acceptance_criteria": [
     "Release-документы отражают фактический single-active contract 1.5.0 и завершённый self-host cutover."
@@ -495,13 +495,44 @@
       ]
     },
     {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
+      "id": "T006",
+      "title": "Актуализировать README для Web Pilot 0.6.77 и рабочей среды Node 24",
+      "why": "Актуализировать README для Web Pilot 0.6.77 и рабочей среды Node 24",
+      "dependencies": [],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/modules/workflow-kit-package.md",
+        "README.md",
+        "docs/PRODUCT.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/DOCUMENTATION_INDEX.md"
+      ],
+      "verification_ids": [
+        "package"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "README описывает принятую и опубликованную Web Pilot 0.6.77 и клиентский AutoPlan",
+        "README различает рабочий Node 24.21.0 и минимальное требование пакета Node 22+",
+        "Версия 1.5.1, package engines и 35-файловый runtime остаются прежними; актуальные документы отправлены на GitHub"
+      ],
+      "expected_commit_message": "docs: актуализировать интеграцию Web Pilot 0.6.77 и Node 24",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "release-1.5.0-docs-finalization-001",
+        "task_id": "T006",
+        "role": "implementation"
+      }
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "release-1.5.0-docs-finalization-001",
         "task_id": "DOCS",
         "role": "implementation",
-        "iteration": 15
+        "iteration": 16
       },
       "dependencies": [
         "T002",
@@ -517,7 +548,8 @@
         "R008",
         "R009",
         "T001",
-        "T005"
+        "T005",
+        "T006"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -559,10 +591,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: release-1.5.0-docs-finalization-001
 Current Task: нет
-Revision: 74
+Revision: 75
 
 ## Цель
 
@@ -630,8 +662,12 @@ Revision: 74
   - Git Commit: [DONE] feat: Обновить README интеграции Project Web Pilot 0.6.74
   - Reference: release-1.5.0-docs-finalization-001 / T005 / implementation
   - Файлы: README.md
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: завершить release-документацию 1.5.0
+- [TODO] T006: Актуализировать README для Web Pilot 0.6.77 и рабочей среды Node 24 — Ожидает
+  - Git Commit: [PENDING] docs: актуализировать интеграцию Web Pilot 0.6.77 и Node 24
+  - Reference: release-1.5.0-docs-finalization-001 / T006 / implementation
+  - Файлы: docs/modules/workflow-kit-package.md, README.md, docs/PRODUCT.md, docs/architecture/OVERVIEW.md, docs/DOCUMENTATION_INDEX.md
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: завершить release-документацию 1.5.0
   - Reference: release-1.5.0-docs-finalization-001 / DOCS / implementation
   - Файлы: docs/DOCUMENTATION_INDEX.md, docs/modules/workflow-kit-package.md, docs/planning/single-active-plan-migration.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, README.md, src/templates/CONTINUE.md, src/WORKFLOW.md, docs/PRODUCT.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md
 
