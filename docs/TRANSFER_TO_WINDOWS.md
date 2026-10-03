@@ -2,17 +2,17 @@
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
-Текущая опубликованная Windows-поставка — **Project Web Pilot 0.6.78, Windows x64**, собранная вместе с macOS arm64. Workflow Kit 1.5.1. Упакованные исходники и ZIP сверены; native Windows/clean VM не запускались.
+Текущая опубликованная Windows-поставка — **Project Web Pilot 0.6.80, Windows x64**, опубликованная вместе с проверенным macOS arm64 ZIP. Workflow Kit 1.5.1. Windows package собран штатным `build:win` и прошёл `verify:win` на Mac; native Windows/clean VM не запускались.
 
-На основном Mac локально установлена подписанная 0.6.80 с подтверждённым сохранением ScreenCapture после обновления/перезагрузки. Windows 0.6.79/0.6.80 и новая парная публикация не выполнялись; файл для переноса ниже остаётся 0.6.78. [Контракт macOS](planning/macos-screen-permission-stability.md), [RELEASE](RELEASE.md).
+На основном Mac локально установлена подписанная 0.6.80 с подтверждённым сохранением ScreenCapture после обновления/перезагрузки. Windows x64 0.6.80 собран, проверен на Mac и опубликован в парном GitHub Release; native Windows по-прежнему требует отдельной проверки. [Контракт macOS](planning/macos-screen-permission-stability.md), [RELEASE](RELEASE.md).
 
 ## Файл для переноса
 
-`~/Downloads/WebPilot-0.6.78/Project-Web-Pilot-0.6.78-Windows-x64.zip`
+`~/Downloads/WebPilot-0.6.80/Project-Web-Pilot-0.6.80-Windows-x64.zip`
 
-Размер: 355434034 bytes; SHA-256 `f98e5eef4a9347b45d2ecb62b8cb8c6f3665566484967234be5a335f762271f7`.
+Размер: 355438598 bytes; SHA-256 `8d0a1728713988315697626c5969ba3af387c6172fad3251ce3a40906b9d44b1`.
 
-[GitHub Release 0.6.78](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.78) содержит готовый Windows ZIP; указанные выше hash и размер сверены с опубликованным файлом. Electron 44.5.1, Node 24.21.0. Release-installed T004 (`88f8866`) прошла на Mac; native Windows и живая приёмка 0.6.78 не подтверждены. История — [RELEASE](RELEASE.md).
+[GitHub Release 0.6.80](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.80) содержит готовый Windows ZIP: 355438598 байт, SHA-256 `8d0a1728713988315697626c5969ba3af387c6172fad3251ce3a40906b9d44b1`; размер и серверный digest сверены после публикации. Electron 44.5.1, Node 24.21.0, Workflow Kit 1.5.1. `verify:win` прошёл на Mac; native Windows и живая приёмка Windows 0.6.80 не подтверждены. История — [RELEASE](RELEASE.md).
 
 Контрольные суммы, инструкция и общий manifest лежат рядом. Полностью распакуйте ZIP на локальный диск Windows; запускайте `Project Web Pilot.exe` из полученной папки. Не переносите один EXE отдельно от resources. Для обновления завершите старое приложение и распакуйте новую поставку в отдельную папку; данные аккаунта и проектов в пользовательском профиле сохраняются.
 

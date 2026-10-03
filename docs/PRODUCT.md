@@ -8,7 +8,7 @@
 
 Корневой `Project Web Pilot.app` и копия в `/Applications` обновлены с сохранением Finder identity. Проверены строгие подписи staging, обеих установок и приложения из выданного ZIP. T004 подтвердила первичную миграцию разрешения и живой MCP-захват; T005 (`8a6d0dd`) подтвердила сохранение доступа после обновления 0.6.79 → 0.6.80 и настоящей перезагрузки Mac. Пользователь подтвердил работоспособность и отсутствие новых запросов. Подробности — [стабильное разрешение macOS](planning/macos-screen-permission-stability.md), [RELEASE](RELEASE.md) и [VERIFICATION](VERIFICATION.md).
 
-Локальная поставка — `~/Downloads/WebPilot-0.6.80/Project-Web-Pilot-0.6.80-macOS-arm64.zip`. Последняя опубликованная парная macOS/Windows поставка — [0.6.78](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.78). Windows 0.6.80 и публикация 0.6.80 не выполнялись; native Windows и чистая установка этой локальной версии не проверены.
+Парная поставка **0.6.80** опубликована в [GitHub Release v0.6.80](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.80) и локально находится в `~/Downloads/WebPilot-0.6.80/`. macOS arm64 — точный проверенный ZIP; Windows x64 собран и прошёл `verify:win` на Mac. Native Windows и чистая установка 0.6.80 не проверены.
 
 Функциональное поведение AutoPlan из 0.6.78 сохранено: native ID либо сохраняемый цикл генерации определяет паузу; загрузка истории ожидается, отменённая собственная вставка очищается с сохранением пользовательских правок. Публичные экспорты DOM/Composer и формат `pageScript` сохранены. [Контракт AutoPlan](planning/auto-plan-client-driven-refactor.md).
 

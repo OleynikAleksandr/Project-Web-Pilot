@@ -24,7 +24,7 @@
 <!-- workflow-kit:end -->
 ## Project Web Pilot
 
-Текущая локальная macOS 0.6.80: [постоянная подпись и подтверждённое сохранение ScreenCapture](planning/macos-screen-permission-stability.md). Последняя опубликованная парная поставка — 0.6.78; [история исправления AutoPlan](planning/auto-plan-session-incident-20261003.md).
+Текущая опубликованная парная поставка — **0.6.80**: [постоянная подпись и подтверждённое сохранение ScreenCapture](planning/macos-screen-permission-stability.md), macOS arm64 и Windows x64 assets в GitHub Release v0.6.80; [история исправления AutoPlan](planning/auto-plan-session-incident-20261003.md).
 
 | Документ | Назначение |
 | --- | --- |
@@ -84,7 +84,7 @@
 | Документ | Назначение |
 | --- | --- |
 | [Событийная обработка состояния Web Pilot](planning/event-driven-runtime.md) | Завершённый контракт трёх этапов: фаза 1 — общий observer/дедупликация, фаза 2 — файловые события/прогрев и удаление постоянных опросов, фаза 3 — сопоставимые измерения, live Chat/Work на macOS и парная поставка 0.6.74; native Windows отмечен как отдельная непроведённая проверка |
-## Workflow Kit 1.5.1 / опубликованная Web Pilot 0.6.78
+## Workflow Kit 1.5.1 / опубликованная Web Pilot 0.6.80
 
 ## Web Pilot Sidebar — связанный репозиторий
 - [Контракт DOM/Sidebar](modules/chatgpt-dom-compatibility.md) — общие browser-модули, публичные символы, pageScript и SHA-256.

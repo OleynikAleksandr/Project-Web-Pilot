@@ -4,7 +4,7 @@
 
 Текущая локальная macOS-версия — **0.6.80**, Electron **44.5.1**, Node **24.21.0**, Workflow Kit **1.5.1**. T005 (`8a6d0dd`) проверила обновление существующего Mac с 0.6.79, настоящий MCP-захват и сохранение разрешения после перезагрузки; пользователь подтвердил работоспособность и отсутствие новых запросов. Это не чистая установка. ZIP — `~/Downloads/WebPilot-0.6.80/`; [контракт и evidence](planning/macos-screen-permission-stability.md).
 
-Последняя опубликованная парная macOS/Windows поставка — [0.6.78](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.78), проверенная unit/smoke/release-installed. Чистая установка 0.6.80 и native Windows не проверены; Windows 0.6.80 не собиралась. Матрица — [VERIFICATION](VERIFICATION.md).
+Текущая опубликованная парная macOS/Windows поставка — [0.6.80](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.80). macOS ZIP — точная проверенная сборка после обновления/перезагрузки; Windows x64 0.6.80 собран и прошёл `verify:win` на Mac. Чистая установка 0.6.80 и native Windows не проверены. Матрица — [VERIFICATION](VERIFICATION.md).
 
 История 0.6.58: Workspace Setup мигрирует совместимые 1.1.0–1.4.13 к single-active model с резервной копией; historical session plans не участвуют в readiness.
 

@@ -8,7 +8,7 @@ Project Web Pilot — локальное Electron-приложение для ma
 
 Корневой `Project Web Pilot.app` и копия в `/Applications` обновлены с сохранением Finder identity. Проверены строгие подписи staging, обеих установок и приложения из выданного ZIP. T004 подтвердила первичную миграцию разрешения и живой MCP-захват; T005 (`8a6d0dd`) подтвердила сохранение доступа после обновления 0.6.79 → 0.6.80 и настоящей перезагрузки Mac. Пользователь подтвердил работоспособность и отсутствие новых запросов. Подробности — [стабильное разрешение macOS](docs/planning/macos-screen-permission-stability.md), [RELEASE](docs/RELEASE.md) и [VERIFICATION](docs/VERIFICATION.md).
 
-Локальная поставка — `~/Downloads/WebPilot-0.6.80/Project-Web-Pilot-0.6.80-macOS-arm64.zip`. Последняя опубликованная парная macOS/Windows поставка — [0.6.78](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.78). Windows 0.6.80 и публикация 0.6.80 не выполнялись; native Windows и чистая установка этой локальной версии не проверены.
+Парная поставка **0.6.80** опубликована в [GitHub Release v0.6.80](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.80) и локально находится в `~/Downloads/WebPilot-0.6.80/`. macOS arm64 — точный ZIP, проверенный после обновления и настоящей перезагрузки; Windows x64 собран штатным `build:win` и прошёл `verify:win` на Mac. Native Windows и чистая установка 0.6.80 не проверены.
 
 Функциональное поведение AutoPlan из 0.6.78 сохранено: native ID либо сохраняемый цикл генерации определяет паузу; загрузка истории ожидается, отменённая собственная вставка очищается с сохранением пользовательских правок. Публичные экспорты DOM/Composer и формат `pageScript` сохранены. [Контракт AutoPlan](docs/planning/auto-plan-client-driven-refactor.md).
 
@@ -143,7 +143,7 @@ WF001 и Codex Local Mac ([исходные проекты](docs/SOURCE_WORKSPAC
 
 Settings → «Цвета чата…» открывает отдельное перемещаемое окно. Можно независимо выбрать общий фон чата, фон плашки пользователя, фон поля ввода и цвета текста пользователя/агента. Выбор цвета или корректного HEX сразу отображается в открытом ChatGPT и автоматически сохраняется для всех чатов Web Pilot. ↺ возвращает стандартный цвет строки; «Вернуть оформление ChatGPT» сбрасывает всю палитру. Настройки действуют только внутри Web Pilot; после изменения DOM ChatGPT возможна адаптация CSS.
 
-Текущий локальный macOS ZIP 0.6.80 находится в `~/Downloads/WebPilot-0.6.80/`; последняя парная поставка 0.6.78 — в `~/Downloads/WebPilot-0.6.78/`. Контрольные суммы — [RELEASE](docs/RELEASE.md).
+Текущая парная поставка 0.6.80 находится в `~/Downloads/WebPilot-0.6.80/` и опубликована в GitHub Release v0.6.80. Контрольные суммы обоих ZIP — [RELEASE](docs/RELEASE.md).
 
 
 ## Постоянное приложение и выпуск
@@ -155,7 +155,7 @@ Settings → «Цвета чата…» открывает отдельное п
 
 ## Проверка на чистых системах
 
-Для 0.6.80 прошли mac-signature и mac-screen-capture до и после настоящей перезагрузки; пользователь подтвердил работоспособность и отсутствие новых запросов. Это проверка обновления существующего Mac. Чистая установка 0.6.80 и native Windows не проверены; Windows остаётся на опубликованной 0.6.78. История — [CLEAN_INSTALL](docs/CLEAN_INSTALL.md); условия проверки Windows — [TRANSFER_TO_WINDOWS](docs/TRANSFER_TO_WINDOWS.md).
+Для 0.6.80 прошли mac-signature и mac-screen-capture до и после настоящей перезагрузки; пользователь подтвердил работоспособность и отсутствие новых запросов. Windows x64 0.6.80 собран и проверен штатным package-gate на Mac и опубликован, но native Windows и чистая установка 0.6.80 не проверены. История — [CLEAN_INSTALL](docs/CLEAN_INSTALL.md); условия проверки Windows — [TRANSFER_TO_WINDOWS](docs/TRANSFER_TO_WINDOWS.md).
 
 ## Сохранение размеров интерфейса
 

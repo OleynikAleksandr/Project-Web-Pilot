@@ -31,7 +31,7 @@ AutoPlan получает toggle, page/context/availability и PlanMonitor seman
 
 Текущий локальный macOS Web Pilot — **0.6.80**, Electron **44.5.1**, Node **24.21.0**, Workflow Kit **1.5.1**. Постоянная Apple Development подпись UkrHD и строгий gate проверяют staging, обе установленные копии и приложение из ZIP. T004 подтвердила первичное разрешение и настоящий MCP-захват; T005 (`8a6d0dd`) — сохранение доступа после обновления 0.6.79 → 0.6.80 и настоящей перезагрузки Mac. Пользователь подтвердил работоспособность и отсутствие новых запросов. [Контракт](../planning/macos-screen-permission-stability.md), [RELEASE](../RELEASE.md), [VERIFICATION](../VERIFICATION.md).
 
-Функциональный AutoPlan и публичные browser-модули из 0.6.78 сохранены. Последняя опубликованная парная macOS/Windows поставка — 0.6.78. Windows 0.6.80 и публикация 0.6.80 не выполнялись; native Windows и чистая установка 0.6.80 не проверены.
+Функциональный AutoPlan и публичные browser-модули из 0.6.78 сохранены. Парная macOS arm64 / Windows x64 поставка 0.6.80 опубликована в GitHub Release v0.6.80; Windows package прошёл `verify:win` на Mac. Native Windows и чистая установка 0.6.80 не проверены.
 
 Пользователь принял чистый macOS-путь 0.6.38 и проверку 0.6.39. Пользовательское испытание нового изменения 0.6.40 и Windows остаются отдельными. 18.09.2026 пользователь поручил закрыть план first-run-onboarding-031 и передал испытания Windows 11 другому агенту. Итог macOS и границы доказательств — docs/CLEAN_INSTALL.md; условия и оставшиеся критерии Windows — docs/TRANSFER_TO_WINDOWS.md. План first-run-corrections-032 принадлежит другой сессии и этим закрытием не изменяется.
 

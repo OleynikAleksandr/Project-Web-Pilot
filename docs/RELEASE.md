@@ -2,15 +2,19 @@
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
-## Локальная macOS 0.6.80 — проверка обновления разрешений, 03.10.2026
+## Выпуск 0.6.80 — 03.10.2026
 
 B для T005 сохраняет функциональный код и зависимости 0.6.79; изменена версия package/Info.plist/ASAR. Подпись Apple Development организации UkrHD и designated requirement совпадают с A при новом CDHash. Штатный `npm run build:mac` создал ZIP и обновил root app; Applications обновлён тем же installMacBundle. Внешние папки app сохранили inode 406600483 и 406571340 и прежний volume UUID; старые Contents доступны в backup.
 
 Поставка: `~/Downloads/WebPilot-0.6.80/Project-Web-Pilot-0.6.80-macOS-arm64.zip`, 186322226 байт, SHA-256 `bca650c9de63d02d19edc3c5fa008a09d76ad60c1809a60c95ce235db800f3c3`. ASAR двух установок: `d343a61ef69d169fd333ebf945b84fa85c3103212f5c412e8c987998df0b4baf`. Настоящие подписи staging, обеих копий и извлечённого доставленного ZIP проверены.
 
-0.6.80 запущена через прежний root app. Live MCP capture после обновления и после настоящей перезагрузки Mac прошёл с сохранённым разрешением; подписи/ZIP проверены в обеих загрузках, volume UUID и inode сохранены. 03.10.2026 пользователь подтвердил работоспособность и отсутствие новых системных запросов; критерии приёмки T005 подтверждены. Это локальная macOS-поставка; Windows 0.6.80 и GitHub-публикация в задаче не выполнялись. Последняя подтверждённая публичная парная поставка — 0.6.78.
+Windows x64: `~/Downloads/WebPilot-0.6.80/Project-Web-Pilot-0.6.80-Windows-x64.zip`, 355438598 байт, SHA-256 `8d0a1728713988315697626c5969ba3af387c6172fad3251ce3a40906b9d44b1`. `verify:win` подтвердил версию 0.6.80, EXE, bundled Node 24.21.0, Windows runtime и Workflow Kit 1.5.1.
 
-Evidence: `.harness/runtime/releases/0.6.80/mac-release.json`, `t005-applications-install.json`, `t005-baseline.json`, `t005-update-comparison.json`, `t005-before-reboot.json`, `t005-after-reboot.json`, `t005-user-confirmation.json`, `t005-progress.json`. Проверки после перезагрузки и назначенные installed gates managed commit T005 (`8a6d0dd`) прошли на той же B.
+0.6.80 запущена через прежний root app. Live MCP capture после обновления и после настоящей перезагрузки Mac прошёл с сохранённым разрешением; подписи/ZIP проверены в обеих загрузках, volume UUID и inode сохранены. 03.10.2026 пользователь подтвердил работоспособность и отсутствие новых системных запросов; критерии приёмки macOS T005 подтверждены.
+
+[GitHub Release v0.6.80](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.80) опубликован 2026-10-03T15:21:11Z. Тег указывает на проверенный build-коммит `8a6d0dd0f2d8dd99aace8b86c0e8359bf4e82308`. macOS не пересобирался перед публикацией: загружен точный ранее проверенный ZIP. Windows x64 собран штатным `npm run build:win`, прошёл `verify:win` на Mac и упакован в ZIP. На GitHub опубликованы оба ZIP, `SHA256SUMS.txt`, `INSTALL.txt` и `release-manifest.json`; серверные SHA-256 совпали с локальными файлами. Native Windows и clean VM не проверены.
+
+Evidence: `.harness/runtime/releases/0.6.80/mac-release.json`, `t005-applications-install.json`, `t005-baseline.json`, `t005-update-comparison.json`, `t005-before-reboot.json`, `t005-after-reboot.json`, `t005-user-confirmation.json`, `t005-progress.json`, `.harness/runtime/github-0.6.80-publication.json`. Проверки после перезагрузки и назначенные installed gates managed commit T005 (`8a6d0dd`) прошли на той же B; публикация сверена отдельно по GitHub API.
 
 ## Локальная подписанная macOS 0.6.79 — 03.10.2026
 

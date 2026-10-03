@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 986,
+  "plan_revision": 988,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "github-publication-0.6.80-20261003",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Опубликовать актуальные main трёх связанных репозиториев и GitHub Release Project Web Pilot v0.6.80 с macOS arm64 и Windows x64.",
   "acceptance_criteria": [
     "Опубликовать актуальные main трёх связанных репозиториев и GitHub Release Project Web Pilot v0.6.80 с macOS arm64 и Windows x64."
@@ -22,7 +22,15 @@
       "docs/architecture/ARCHITECTURE.md",
       "docs/architecture/OVERVIEW.md",
       "docs/MODULES.md",
-      "docs/DOCUMENTATION_INDEX.md"
+      "docs/DOCUMENTATION_INDEX.md",
+      "README.md",
+      "docs/CLEAN_INSTALL.md",
+      "docs/RELEASE.md",
+      "docs/SOURCE_WORKSPACES.md",
+      "docs/TRANSFER_TO_WINDOWS.md",
+      "docs/VERIFICATION.md",
+      "docs/WORKFLOW_START.md",
+      "docs/modules/chatgpt-dom-compatibility.md"
     ]
   },
   "baseline_commit": "4fe3a62697aa1f2c07593f2c9db895b3307f9e0a",
@@ -194,8 +202,8 @@
       "actual_files": []
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "github-publication-0.6.80-20261003",
         "task_id": "DOCS",
@@ -215,7 +223,15 @@
         "docs/architecture/ARCHITECTURE.md",
         "docs/architecture/OVERVIEW.md",
         "docs/MODULES.md",
-        "docs/DOCUMENTATION_INDEX.md"
+        "docs/DOCUMENTATION_INDEX.md",
+        "README.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/RELEASE.md",
+        "docs/SOURCE_WORKSPACES.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/modules/chatgpt-dom-compatibility.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -224,7 +240,22 @@
       "acceptance_criteria": [
         "Документы соответствуют результату"
       ],
-      "expected_commit_message": "docs: актуализировать контекст проекта"
+      "expected_commit_message": "docs: актуализировать контекст проекта",
+      "actual_files": [
+        "README.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/RELEASE.md",
+        "docs/SOURCE_WORKSPACES.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/chatgpt-dom-compatibility.md"
+      ]
     }
   ],
   "blocked_reason": null,
@@ -242,10 +273,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: github-publication-0.6.80-20261003
 Current Task: нет
-Revision: 986
+Revision: 988
 
 ## Цель
 
@@ -277,10 +308,10 @@ Revision: 986
   - Git Commit: [DONE] feat: Опубликовать GitHub Release v0.6.80 с macOS arm64 и Windows x64
   - Reference: github-publication-0.6.80-20261003 / T005 / implementation
   - Файлы: docs/planning/github-publication-0.6.77.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать контекст проекта
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать контекст проекта
   - Reference: github-publication-0.6.80-20261003 / DOCS / implementation
-  - Файлы: docs/planning/github-publication-0.6.77.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
+  - Файлы: docs/planning/github-publication-0.6.77.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, README.md, docs/CLEAN_INSTALL.md, docs/RELEASE.md, docs/SOURCE_WORKSPACES.md, docs/TRANSFER_TO_WINDOWS.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/modules/chatgpt-dom-compatibility.md
 
 ## Context Pack For This Cycle
 
