@@ -1,6 +1,6 @@
 # Краткая архитектура проекта
 
-Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](../SOURCE_WORKSPACES.md).
+Связанные проекты (03.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](../SOURCE_WORKSPACES.md).
 
 Project Web Pilot — Electron-приложение для macOS arm64 и Windows x64. Слева проекты, разговоры и текущий план; справа настоящий ChatGPT Web в изолированном Chromium. Файлы и команды доступны через MCP/tunnel; модельные API не используются.
 
@@ -8,7 +8,7 @@ Project Web Pilot — Electron-приложение для macOS arm64 и Window
 
 ## Текущее состояние
 
-Текущая локальная версия для macOS arm64 — **0.6.80**: Electron **44.5.1**, встроенный и комплектный Node **24.21.0**, Workflow Kit **1.5.1**. По прямому выбору пользователя приложение подписывается существующим Apple Development сертификатом UkrHD. Постоянные bundle ID и designated requirement сохраняются при изменении CDHash сборки.
+Опубликованная и установленная бинарная **0.6.80** остаётся на Electron **44.5.1**, Node **24.21.0** и комплектном Workflow Kit **1.5.1**. Текущий source/dev checkout и установленный workflow runtime этого workspace обновлены до Workflow Kit **1.5.2** (35 файлов, SHA-256 `646fec106c498e004d8688a3bc40012bea1654178ce66a61b650211ab28055df`) для policy DOCS → delivery. В этом scope Project Web Pilot не пересобирался и не публиковался. По прямому выбору пользователя приложение подписывается существующим Apple Development сертификатом UkrHD; постоянные bundle ID и designated requirement сохраняются при изменении CDHash сборки.
 
 Корневой `Project Web Pilot.app` и копия в `/Applications` обновлены с сохранением Finder identity. Проверены строгие подписи staging, обеих установок и приложения из выданного ZIP. T004 подтвердила первичную миграцию разрешения и живой MCP-захват; T005 (`8a6d0dd`) подтвердила сохранение доступа после обновления 0.6.79 → 0.6.80 и настоящей перезагрузки Mac. Пользователь подтвердил работоспособность и отсутствие новых запросов. Подробности — [стабильное разрешение macOS](../planning/macos-screen-permission-stability.md), [RELEASE](../RELEASE.md) и [VERIFICATION](../VERIFICATION.md).
 
@@ -22,7 +22,7 @@ Web Pilot Sidebar (`/Users/oleksandroliinyk/VSCODE/Web Pilot Sidebar`) — от�
 
 ## Основные контракты
 - Один checkout/worktree имеет один current plan: .harness/plans/todo-plan.md. Chat/Work sessions — разговоры с собственными URL, title и временем. Session ID не выбирает plan; legacy ownership только история. Независимая работа — отдельный worktree.
-- Canonical Workflow Kit — /Users/oleksandroliinyk/VSCODE/WorkflowKit, package @webpilot/workflow-kit. resources/workflow-kit — ignored generated runtime; .harness/kit — установленный runtime проекта.
+- Canonical Workflow Kit — /Users/oleksandroliinyk/VSCODE/WorkflowKit, локальный package @webpilot/workflow-kit **1.5.2** (35 файлов, SHA-256 `646fec106c498e004d8688a3bc40012bea1654178ce66a61b650211ab28055df`). resources/workflow-kit — ignored generated runtime; .harness/kit — установленный runtime проекта. Последний опубликованный WorkflowKit release остаётся 1.5.1.
 - Recovery строит Kit. Новая сессия получает полный актуальный пакет; просмотр старого разговора не отправляет его повторно. Paste использует обработчик страницы; передача завершается после Send без сверки текста и ожидания ответа. При неопределённом исходе автоматического дубля нет.
 - PageStateSource получает события из sandboxed isolated preload только основного ChatGPT document. Проверяются frame/origin/document/sequence. Агентский секундомер следует Stop; busy не доказывает серверное состояние.
 - ContextCache, fingerprint и проверка recovery принимают workspace без session selector; кеш общий для чатов checkout. Пакет по-прежнему строит canonical Workflow Kit, а актуальность проверяется перед вставкой. Настройка туннеля Windows идёт через мастер и configureWindowsTunnel; старый запуск внешней консоли удалён.
@@ -33,12 +33,12 @@ Web Pilot Sidebar (`/Users/oleksandroliinyk/VSCODE/Web Pilot Sidebar`) — от�
 - Панель настроек — src/ui/settings-panel.mjs (settingsPanelView). Кнопка «Архив…» открывает отдельное окно с archive:* IPC; скрытого встроенного архива и старых pilot:* обработчиков удаления нет. settings хранит workspace для выбора проекта в Докторе, включая ошибку восстановления удаления при старте; archives в снимке остаётся для наблюдения за архивированием.
 - Общие файловые функции находятся в src/common.mjs: потоковый SHA-256, exists (строгий режим для очистки истории) и создание ошибок fail. src/tunnel-setup.mjs объединяет обмен с first-run helper, передачу credentials через stdin и фильтрацию ошибок; платформенные обёртки задают прежние env, классы ошибок и пользовательские сообщения. Scripts импортируют src, обратных зависимостей нет; самостоятельные Python/resources-workers не зависят от src.
 - На macOS один стабильный tunnel обслуживает выбранный MCP backend: Codex Local Mac или Codex App Server Local Mac. App Server выполняет локальные инструменты без модельного turn/start. Службы живут независимо от UI.
-- Новый этап дополняет current plan через plan:extend; DOCS завершает scope, архивирование только по прямому поручению. plan:carryover 1.5.1 переносит незавершённые задачи с точным архивом прошлого scope.
+- Новый этап дополняет current plan через plan:extend. Для code-only scope DOCS завершает задачи; при package/installed delivery DOCS располагается перед delivery-хвостом и переоткрывается при поздней correction-работе. Архивирование — только по прямому поручению; исторический plan:carryover 1.5.1 сохраняет точный архив прошлого scope.
 - Парный выпуск macOS/Windows — npm run build; сохранять identity постоянного app и Finder-алиас. Для локальной macOS-подписи используется явно выбранный пользователем сертификат UkrHD через штатную signing configuration; автоматического выбора и ad hoc fallback нет. Native Windows/live ChatGPT проверяются отдельно; VM и Computer Use не запускать.
 
 ## Навигация
 [Модули](../MODULES.md), [индекс](../DOCUMENTATION_INDEX.md), [выпуск](../RELEASE.md), [проверки](../VERIFICATION.md).
-[Общий контракт рефакторинга](../planning/event-driven-runtime.md), [клиентское автопродолжение](../planning/auto-plan-client-driven-refactor.md).
+[Общий контракт рефакторинга](../planning/event-driven-runtime.md), [клиентское автопродолжение](../planning/auto-plan-client-driven-refactor.md), [порядок DOCS → delivery](../planning/input-instruction-delivery-ordering.md).
 Полная прежняя сводка с историей выпусков сохранена без потерь в [OVERVIEW.history-20260929.md](OVERVIEW.history-20260929.md); она не обязательна для каждого recovery.
 
 ## Стабильное разрешение macOS — локальная реализация

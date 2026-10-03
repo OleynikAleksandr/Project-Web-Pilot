@@ -1,10 +1,10 @@
 # Начало работы
 
-Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
+Связанные проекты (03.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
 ## Текущее состояние — 03.10.2026
 
-Текущая локальная версия для macOS arm64 — **0.6.80**: Electron **44.5.1**, встроенный и комплектный Node **24.21.0**, Workflow Kit **1.5.1**. По прямому выбору пользователя приложение подписывается существующим Apple Development сертификатом UkrHD. Постоянные bundle ID и designated requirement сохраняются при изменении CDHash сборки.
+Опубликованная и установленная бинарная **0.6.80** остаётся на Electron **44.5.1**, Node **24.21.0** и комплектном Workflow Kit **1.5.1**. Текущий source/dev checkout и установленный workflow runtime этого workspace обновлены до Workflow Kit **1.5.2** (35 файлов, SHA-256 `646fec106c498e004d8688a3bc40012bea1654178ce66a61b650211ab28055df`) для policy DOCS → delivery. В этом scope Project Web Pilot не пересобирался и не публиковался. По прямому выбору пользователя приложение подписывается существующим Apple Development сертификатом UkrHD; постоянные bundle ID и designated requirement сохраняются при изменении CDHash сборки.
 
 Корневой `Project Web Pilot.app` и копия в `/Applications` обновлены с сохранением Finder identity. Проверены строгие подписи staging, обеих установок и приложения из выданного ZIP. T004 подтвердила первичную миграцию разрешения и живой MCP-захват; T005 (`8a6d0dd`) подтвердила сохранение доступа после обновления 0.6.79 → 0.6.80 и настоящей перезагрузки Mac. Пользователь подтвердил работоспособность и отсутствие новых запросов. Подробности — [стабильное разрешение macOS](planning/macos-screen-permission-stability.md), [RELEASE](RELEASE.md) и [VERIFICATION](VERIFICATION.md).
 
@@ -12,18 +12,18 @@
 
 Функциональное поведение AutoPlan из 0.6.78 сохранено: native ID либо сохраняемый цикл генерации определяет паузу; загрузка истории ожидается, отменённая собственная вставка очищается с сохранением пользовательских правок. Публичные экспорты DOM/Composer и формат `pageScript` сохранены. [Контракт AutoPlan](planning/auto-plan-client-driven-refactor.md).
 
-Node разработки, проверок и внешних workers — **^24.21.0** (не ниже 24.21.0 и ниже 25). Minimum самого Workflow Kit 1.5.1 остаётся Node 22+.
+Node разработки, проверок и внешних workers — **^24.21.0** (не ниже 24.21.0 и ниже 25). Minimum текущего Workflow Kit 1.5.2 остаётся Node 22+.
 
 ## Продолжение current plan
 
 Project Web Pilot передаёт recovery **текущего checkout**. Один checkout/worktree имеет один `.harness/plans/todo-plan.md`; новая Web Pilot session продолжает его. Session ID служит навигации чата и не выбирает план. Для первого ответа повторно запрашивать уже переданный пакет не нужно.
 
-Если пакета нет, используйте `./scripts/workflow recover --format text`. Workflow Kit 1.5.1 принимает legacy `--session` как compatibility/no-op; `--plan` допустим только для current scope.
+Если пакета нет, используйте `./scripts/workflow recover --format text`. Workflow Kit 1.5.2 принимает legacy `--session` как compatibility/no-op; `--plan` допустим только для current scope.
 
 1. При NONE обсудите следующий этап по OVERVIEW, MODULES и DOCUMENTATION_INDEX.
 2. Сопоставьте запрос с существующей частью проекта и её контрактом. При отсутствии контракта сначала создайте краткий planning/spec document.
 3. Создайте current plan через plan:create/scope:create либо расширьте через plan:extend, сохраняя DONE и commit references.
-4. Перед изменениями выполните task:start; каждую микрозадачу завершите управляемым commit с назначенными проверками. Один checkout имеет одного текущего писателя.
+4. Перед изменениями выполните task:start; каждую микрозадачу завершите управляемым commit с назначенными проверками. Build/package/sign/notarize/release/publish допустимы только в явно названной active-задаче; документы должны быть актуализированы и зафиксированы до build/GitHub publish. Для delivery-плана порядок: работа → DOCS → delivery. Один checkout имеет одного текущего писателя.
 5. Финальная DOCS актуализирует действующие документы. Архивирование — только по прямому поручению пользователя.
 6. Новый Chat/Work продолжает этот же plan. `plan:prepare`/`plan:bind` удалены; независимая параллельная работа требует отдельного Git worktree. `plan:carryover` переносит незавершённые задачи в новый scope с точным архивом прошлого только по поручению пользователя.
 

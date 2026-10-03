@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1001,
+  "plan_revision": 1003,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "input-instruction-delivery-ordering-20261003",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Сделать обязательный порядок DOCS → delivery частью canonical recovery WorkflowKit и startupMessage Project Web Pilot и исключить незапланированные сборки/публикации.",
   "acceptance_criteria": [
     "Сделать обязательный порядок DOCS → delivery частью canonical recovery WorkflowKit и startupMessage Project Web Pilot и исключить незапланированные сборки/публикации."
@@ -28,7 +28,13 @@
       "docs/architecture/ARCHITECTURE.md",
       "docs/architecture/OVERVIEW.md",
       "docs/MODULES.md",
-      "docs/DOCUMENTATION_INDEX.md"
+      "docs/DOCUMENTATION_INDEX.md",
+      "README.md",
+      "docs/DECISIONS.md",
+      "docs/SOURCE_WORKSPACES.md",
+      "docs/VERIFICATION.md",
+      "docs/WORKFLOW_START.md",
+      "docs/modules/workflow-kit-recovery.md"
     ]
   },
   "baseline_commit": "0db9db525090e376ee5aaa1b87a14172e2810aa6",
@@ -177,8 +183,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "input-instruction-delivery-ordering-20261003",
         "task_id": "DOCS",
@@ -196,7 +202,13 @@
         "docs/architecture/ARCHITECTURE.md",
         "docs/architecture/OVERVIEW.md",
         "docs/MODULES.md",
-        "docs/DOCUMENTATION_INDEX.md"
+        "docs/DOCUMENTATION_INDEX.md",
+        "README.md",
+        "docs/DECISIONS.md",
+        "docs/SOURCE_WORKSPACES.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/modules/workflow-kit-recovery.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -205,7 +217,20 @@
       "acceptance_criteria": [
         "Документы соответствуют результату"
       ],
-      "expected_commit_message": "docs: актуализировать контекст проекта"
+      "expected_commit_message": "docs: актуализировать контекст проекта",
+      "actual_files": [
+        "README.md",
+        "docs/DECISIONS.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/SOURCE_WORKSPACES.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/workflow-kit-recovery.md"
+      ]
     }
   ],
   "blocked_reason": null,
@@ -223,10 +248,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: input-instruction-delivery-ordering-20261003
 Current Task: нет
-Revision: 1001
+Revision: 1003
 
 ## Цель
 
@@ -250,10 +275,10 @@ Revision: 1001
   - Git Commit: [DONE] feat: Проверить интеграцию canonical recovery и startupMessage
   - Reference: input-instruction-delivery-ordering-20261003 / T003 / implementation
   - Файлы: tests/workflow-kit-recovery.test.mjs, tests/workflow-kit-source.test.mjs, tests/context-session.test.mjs, scripts/check-workflow-kit-dependency.mjs, docs/planning/input-instruction-delivery-ordering.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать контекст проекта
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать контекст проекта
   - Reference: input-instruction-delivery-ordering-20261003 / DOCS / implementation
-  - Файлы: docs/planning/input-instruction-delivery-ordering.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
+  - Файлы: docs/planning/input-instruction-delivery-ordering.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, README.md, docs/DECISIONS.md, docs/SOURCE_WORKSPACES.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/modules/workflow-kit-recovery.md
 
 ## Context Pack For This Cycle
 

@@ -1,11 +1,11 @@
 # Исходные проекты и ссылки
 
-## Связанные рабочие репозитории — 02.10.2026
+## Связанные рабочие репозитории — 03.10.2026
 
 | Репозиторий | Workspace | Роль и граница |
 | --- | --- | --- |
 | Project Web Pilot | `/Users/oleksandroliinyk/VSCODE/Project Web Pilot` | Electron-приложение, проекты, сессии, текущий план, доставка recovery и MCP/runtime |
-| [Workflow Kit](https://github.com/OleynikAleksandr/WorkflowKit) | `/Users/oleksandroliinyk/VSCODE/WorkflowKit` | Canonical пакет `@webpilot/workflow-kit@1.5.1`; current plan и recovery; приложение получает generated runtime из пакета |
+| [Workflow Kit](https://github.com/OleynikAleksandr/WorkflowKit) | `/Users/oleksandroliinyk/VSCODE/WorkflowKit` | Canonical локальный пакет `@webpilot/workflow-kit@1.5.2` (35 файлов, SHA-256 `646fec106c498e004d8688a3bc40012bea1654178ce66a61b650211ab28055df`); current plan сейчас `NONE`; последний опубликованный release — 1.5.1 |
 | [Web Pilot Sidebar](https://github.com/OleynikAleksandr/Web-Pilot-Sidebar) | `/Users/oleksandroliinyk/VSCODE/Web Pilot Sidebar` | Отдельный репозиторий браузерного расширения; разрабатывается параллельно другим агентом, использует адаптер ChatGPT из Web Pilot |
 
 Sidebar отображает проекты, сессии и прогресс плана в настоящей странице chatgpt.com. Проектные данные, текущий план, recovery и локальные инструменты остаются ответственностью Project Web Pilot и Workflow Kit; расширение не пишет todo-plan.md и не хранит проектные данные. На 02.10.2026 Sidebar — прототип этапа 0 с тестовыми данными и тестовым хостом. Production Host API в Project Web Pilot ещё не реализован; его подключение требует отдельной задачи по собственному workflow этого репозитория.
@@ -14,7 +14,7 @@ Sidebar отображает проекты, сессии и прогресс п
 
 Источники Sidebar для чтения: `README.md`, `AGENTS.md`, `docs/modules/provider-adapter.md` и `docs/modules/host-api.md` относительно его workspace. Remote `origin` Sidebar — `https://github.com/OleynikAleksandr/Web-Pilot-Sidebar.git`. [GitHub Release v0.1.0](https://github.com/OleynikAleksandr/Web-Pilot-Sidebar/releases/tag/v0.1.0) содержит два проверенных артефакта: Chrome/Edge ZIP `web-pilot-sidebar-chrome-0.1.0.zip` — 34468 байт, SHA-256 `00f9fc9405549c9e3c5b8cab3dbfa95be245ce3da3540a7dd8ee46d5b19b471e`; подписанный macOS DMG `Web-Pilot-Sidebar-0.1.0-2610021544.dmg` — 222208 байт, SHA-256 `80d638fffb34a6f827a21be1ef5ef8bd423242c51e52c885f92c09c63a8c690b`. Публичный GitHub API подтвердил оба digest. Приложение внутри DMG проходит `codesign --verify`, Gatekeeper принимает его как Notarized Developer ID, stapler-ticket валиден. Тег `v0.1.0` остаётся на функциональном release commit `8786bef8ae7be64277604c29a949681b9f496146`; после релиза `main` продвинут параллельной packaging/documentation работой до `0fab32aa88a92abc8ba854b4f22c777004d7dac3`, и `origin/main` совпадает с ним. TestFlight ещё не опубликован: App Store Connect не содержит app record для `com.oleynik.WebPilotSidebar`. Исторические источники WF001 и Codex Local Mac ниже сохраняются отдельно от этих текущих связей.
 
-WorkflowKit 1.5.1 опубликован как [GitHub Release v1.5.1](https://github.com/OleynikAleksandr/WorkflowKit/releases/tag/v1.5.1). Тег и `main` указывают на чистый commit `dfc38c1b4a2cee1c13c68f9b54f064d3496dab10`. Репозиторий не определяет отдельные release binaries/assets: GitHub предоставляет source archives тега; перед публикацией прошли `npm run check`, runtime fixture и standalone consumer contract, canonical runtime — 35 файлов, SHA-256 `93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33`.
+Последний опубликованный WorkflowKit — [GitHub Release v1.5.1](https://github.com/OleynikAleksandr/WorkflowKit/releases/tag/v1.5.1), tag commit `dfc38c1b4a2cee1c13c68f9b54f064d3496dab10`, canonical runtime 35 файлов / SHA-256 `93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33`. Локальный canonical workspace уже обновлён до **1.5.2**, 35 файлов / SHA-256 `646fec106c498e004d8688a3bc40012bea1654178ce66a61b650211ab28055df`; новый release/publish в текущем Project Web Pilot scope не выполнялся. WorkflowKit current plan после cross-repository фиксации возвращён в `NONE`.
 
 ## Проверенный снимок
 

@@ -1,6 +1,6 @@
 # Каталог документации
 
-Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
+Связанные проекты (03.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
 <!-- workflow-kit:begin -->
 ## Документы проекта
@@ -37,13 +37,14 @@
 | docs/modules/codex-app-server-executor.md | Local-only MCP facade поверх Codex App Server: паритет Codex Local Mac, Computer Use, исторический A/B и stable-connector integration 0.6.47 |
 | docs/modules/workspace-sessions.md | Specification проектов, Chat/Work sessions, session tree, переходов после scope, оформления и сохранения геометрии интерфейса |
 | docs/planning/session-title-sync.md | Контракт auto/manual session title и server-side синхронизации с native ChatGPT Recents |
+| docs/planning/input-instruction-delivery-ordering.md | Канонический порядок DOCS → delivery, startupMessage guard и границы незапланированных build/publish |
 | docs/design/chat-message-layout-regression.md | Planning исправления пустого layout скрытых tool-call message/turn wrappers и regression coverage |
 | docs/design/computer-use-latency-investigation.md | Planning и evidence исследования end-to-end задержек Computer Use, MCP, Secure MCP Tunnel и Web ChatGPT |
 | docs/SOURCE_WORKSPACES.md | Связанные Project Web Pilot / Workflow Kit / Web Pilot Sidebar, рабочие каталоги, границы интеграции и исторические источники |
 | docs/VERIFICATION.md | Проверки, release evidence и границы пользовательской приёмки |
 | docs/RELEASE.md | Парный выпуск macOS/Windows, постоянный macOS app, Finder-алиас, ZIP, GitHub Release и проверка доставки |
 | docs/CLEAN_INSTALL.md | Стенд Clean/Test macOS/Windows, историческое evidence первого запуска, обновление существующего Mac до 0.6.80 и границы clean/native-проверок |
-| docs/TRANSFER_TO_WINDOWS.md | Опубликованная Windows x64 0.6.78, hashes и самостоятельная проверка |
+| docs/TRANSFER_TO_WINDOWS.md | Опубликованная Windows x64 0.6.80, hashes и самостоятельная проверка |
 | docs/WORKSPACE_SETUP.md | Создание/подключение workspace и install/upgrade Workflow Kit |
 | docs/PROJECT_ARCHIVE.md | Архив workspace, возврат и безопасное локальное удаление; веб-чаты сохраняются |
 ## Обязательная навигация проекта
@@ -61,7 +62,7 @@
 | --- | --- |
 | docs/modules/session-owned-plans.md | Stable filename действующего 0.6.58 контракта: один current plan на checkout/worktree; sessions — chats, legacy ownership только history |
 | docs/modules/workspace-sessions.md | Session store, Chat/Work navigation, backward-compatible legacy fields и проекция current plan |
-| docs/modules/workflow-kit-recovery.md | Workflow Kit 1.5.1, checkout-scoped recovery/cache, migration legacy session plans и carryover continuity |
+| docs/modules/workflow-kit-recovery.md | Workflow Kit 1.5.2 source/runtime: checkout-scoped recovery, delivery ordering, migration legacy session plans и continuity |
 | docs/design/session-plan-navigation.md | Исторический макет 0.6.28 прежней prepared/session-owned модели; не действующий UI-контракт |
 ## Действующий контракт — скорость открытия
 | Документ | Назначение |
@@ -84,7 +85,7 @@
 | Документ | Назначение |
 | --- | --- |
 | [Событийная обработка состояния Web Pilot](planning/event-driven-runtime.md) | Завершённый контракт трёх этапов: фаза 1 — общий observer/дедупликация, фаза 2 — файловые события/прогрев и удаление постоянных опросов, фаза 3 — сопоставимые измерения, live Chat/Work на macOS и парная поставка 0.6.74; native Windows отмечен как отдельная непроведённая проверка |
-## Workflow Kit 1.5.1 / опубликованная Web Pilot 0.6.80
+## Workflow Kit 1.5.2 source/runtime / опубликованная Web Pilot 0.6.80 (bundled Kit 1.5.1)
 
 ## Web Pilot Sidebar — связанный репозиторий
 - [Контракт DOM/Sidebar](modules/chatgpt-dom-compatibility.md) — общие browser-модули, публичные символы, pageScript и SHA-256.

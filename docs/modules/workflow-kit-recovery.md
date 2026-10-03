@@ -1,6 +1,6 @@
 # Module Specification — Workflow Kit / Context Recovery
 
-Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](../SOURCE_WORKSPACES.md).
+Связанные проекты (03.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](../SOURCE_WORKSPACES.md).
 
 ## Назначение
 
@@ -152,19 +152,19 @@ Workflow Kit обслуживает проекты любого типа. Про
 
 Цель navigation-plan в `NONE`: «Обсудите следующий этап проекта с пользователем». Recovery разворачивает required-документы из этих ссылок, поэтому новая сессия понимает существующий проект без чтения истории завершённых scopes и без ложного возврата к «идее нового проекта».
 
-Каждый новый рабочий scope обязан завершаться единственной последней задачей `DOCS` с названием «Актуализация всех документов проекта». Она зависит от всех остальных задач scope. Агент проходит весь действующий комплект документации через `docs/DOCUMENTATION_INDEX.md`, исправляет только устаревшие документы и ссылки и фиксирует результат. Если все документы уже актуальны, задача может завершиться без искусственного редактирования содержательных файлов: отдельный управляемый commit фиксирует факт проверки вместе с завершением задачи.
+Каждый новый рабочий scope содержит единственную системную задачу `DOCS` с названием «Актуализация всех документов проекта». Для code-only scope она завершает список задач и зависит от всей предшествующей работы. Для scope с `verification_kind=package|installed` Workflow Kit 1.5.2 размещает `DOCS` перед явным delivery-хвостом; delivery-задачи зависят от `DOCS`. Агент проходит весь действующий комплект документации через `docs/DOCUMENTATION_INDEX.md`, исправляет только устаревшие документы и ссылки и фиксирует результат. Если все документы уже актуальны, задача может завершиться без искусственного редактирования содержательных файлов: отдельный управляемый commit фиксирует факт проверки.
 
-`READY_FOR_ACCEPTANCE` допускается только после завершения `DOCS`. Этот enum сохраняется для совместимости истории и обозначает завершённость задач. Пользователь оценивает результат в диалоге; обязательного интерфейсного gate нет. Archive по-прежнему требует отдельной прямой команды пользователя. Если после пользовательской проверки потребовались изменения, `DOCS` снова должна быть последней незавершённой задачей после этих изменений.
+`READY_FOR_ACCEPTANCE` допускается только после завершения **всех** задач. В code-only scope это означает завершённую `DOCS`; в delivery scope после `DOCS` должны быть завершены и явные delivery-задачи. Этот enum сохраняется для совместимости истории и обозначает завершённость задач. Пользователь оценивает результат в диалоге; обязательного интерфейсного gate нет. Archive по-прежнему требует отдельной прямой команды пользователя. Если после пользовательской проверки потребовались изменения, `DOCS` переоткрывается после correction-работы; при наличии delivery-хвоста она остаётся непосредственно перед ним.
 
-`scope:create` нормализует обязательный project navigation context и добавляет/проверяет `DOCS`, чтобы агент не мог забыть эти правила при составлении очередного плана. `plan:apply` сохраняет `DOCS` последней и обновляет её зависимости при добавлении новых задач по поручению пользователя.
+`scope:create` нормализует обязательный project navigation context и добавляет/проверяет `DOCS`. Workflow Kit 1.5.2 нормализует порядок как `work → DOCS → package/installed delivery`; `plan:apply`/`plan:extend` сохраняют этот порядок и обновляют зависимости при добавлении новых задач.
 
 ## Correction round после пользовательской проверки — scope 022
 
-`READY_FOR_ACCEPTANCE` означает готовность результата к пользовательской проверке, но scope остаётся `ACTIVE`. Если пользователь после проверки поручает исправления до archive, `plan:apply` должен штатно вернуть тот же scope в `IN_PROGRESS`, добавить согласованные correction tasks перед финальной документационной задачей и повторно открыть `DOCS` как последнюю обязательную задачу.
+`READY_FOR_ACCEPTANCE` означает готовность результата к пользовательской проверке, но scope остаётся `ACTIVE`. Если пользователь после проверки поручает исправления до archive, `plan:apply`/`plan:extend` должны штатно вернуть тот же scope в `IN_PROGRESS`, добавить согласованные correction tasks перед `DOCS` и повторно открыть `DOCS`. При незавершённом delivery-хвосте переоткрытая `DOCS` остаётся перед ним, а не переносится в конец.
 
 Повторное выполнение `DOCS` не должно делать commit history неоднозначной. Для этого `commit_ref` поддерживает положительный `iteration`: первая фиксация задачи совместима с историческими commit без iteration и считается iteration 1; при повторном открытии уже завершённой `DOCS` её iteration увеличивается, статусы возвращаются в `TODO/PENDING`, зависимости пересчитываются на все остальные задачи scope. Commit trailers нового прохода содержат `Workflow-Iteration`, а resolver выбирает commit только требуемой iteration.
 
-Обычные завершённые задачи остаются неизменяемыми. Повторное открытие разрешено только когда исходный scope остаётся `ACTIVE`, находится в `READY_FOR_ACCEPTANCE`, финальная `DOCS` завершена и пользователь явно добавляет новые задачи через `plan:apply`. Archive по-прежнему требует отдельной прямой команды пользователя. После correction tasks новая iteration `DOCS` снова является единственным путём к `READY_FOR_ACCEPTANCE`. Реализация использует `Workflow-Iteration` только для implementation commits; historical commits без этого trailer интерпретируются как iteration 1.
+Обычные завершённые задачи остаются неизменяемыми. Повторное открытие `DOCS` разрешено, когда исходный scope остаётся `ACTIVE`, `DOCS` завершена и пользователь явно добавляет новую обычную correction-задачу; это работает как после `READY_FOR_ACCEPTANCE`, так и при ещё незавершённом delivery-хвосте. Archive по-прежнему требует отдельной прямой команды пользователя. После correction tasks новая iteration `DOCS` снова является путём к дальнейшему delivery или, для code-only scope, к `READY_FOR_ACCEPTANCE`. Реализация использует `Workflow-Iteration` только для implementation commits; historical commits без этого trailer интерпретируются как iteration 1.
 
 
 Scope 028 / T002: слой session-plans адресует канонический файл без глобального переключателя; legacy путь сохраняется.
@@ -211,6 +211,19 @@ Recovery 1.4.11 передаёт вместе с Workflow Core правила `P
 Исторические поставки 1.4.x выше сохраняют происхождение изменений. Текущий владелец source один: `/Users/oleksandroliinyk/VSCODE/WorkflowKit/src`, package `@webpilot/workflow-kit@1.5.0`. WebPilot programmatic imports используют package exports; external Workspace Setup/Project Doctor и Electron package получают generated runtime из `getRuntimeRoot()` в ignored `resources/workflow-kit`. Canonical и staged runtime подтверждены: 35 файлов, SHA-256 `0db567df6f0c8f68f3119a7322b4c1c6d28cd06bf57b267993b792097bbb2c75`.
 
 1.5.0 делает `.harness/plans/todo-plan.md` единственным runtime current plan. `listPlans` и `sessionPlanView` transitional facade возвращают тот же current plan для любой session; prepared/unassigned пусты. Legacy `by-id`/`by-session` обнаруживаются только migration code и переносятся в `.harness/plans/archive/legacy-session-plans/`.
+
+## Workflow Kit 1.5.2 — delivery ordering / 03.10.2026
+
+Текущий canonical source и installed workflow runtime Project Web Pilot используют Workflow Kit **1.5.2**, 35 файлов, SHA-256 `646fec106c498e004d8688a3bc40012bea1654178ce66a61b650211ab28055df`. Последний опубликованный WorkflowKit release остаётся 1.5.1; опубликованные бинарники Web Pilot 0.6.80 также содержат bundled Kit 1.5.1. В этом scope приложение не пересобиралось и не публиковалось.
+
+1. `build/package/sign/notarize/release/publish` разрешены только внутри активной микрозадачи, где действие прямо названо.
+2. До build или GitHub publish относящиеся к результату документы должны быть актуализированы и зафиксированы.
+3. Code-only plan заканчивается `DOCS`; delivery-plan нормализуется как `work → DOCS → package/installed delivery`.
+4. Поздняя correction после уже завершённой `DOCS` переоткрывает новую iteration `DOCS` перед незавершённым delivery-хвостом.
+5. `startupMessage()` Project Web Pilot дублирует короткий guard, а полный canonical policy приходит из recovery Workflow Kit.
+6. Cross-repository работа этой сессии управляется current plan Project Web Pilot. WorkflowKit не оставляет отдельный незавершённый current plan; после managed технических фиксаций его состояние возвращено в `NONE`.
+
+Контракт и критерии: [input-instruction-delivery-ordering.md](../planning/input-instruction-delivery-ordering.md).
 
 ## Workflow Kit 1.5.1 / Web Pilot 0.6.72
 

@@ -1,8 +1,8 @@
 # Модули проекта
 
-Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
+Связанные проекты (03.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
-Текущая версия — **0.6.80**: постоянная подпись UkrHD и проверка целостности установки/ZIP; MCP-захват сохранился после обновления и настоящей перезагрузки, пользователь подтвердил отсутствие новых запросов. Electron 44.5.1 / Node 24.21.0 / Workflow Kit 1.5.1 и функциональный AutoPlan из 0.6.78 сохранены. Парная macOS arm64 / Windows x64 поставка 0.6.80 опубликована; Windows package проверен на Mac, native Windows отдельно не проверен. [Контракт подписи](planning/macos-screen-permission-stability.md), [RELEASE](RELEASE.md), [VERIFICATION](VERIFICATION.md).
+Опубликованная версия остаётся **0.6.80**: постоянная подпись UkrHD и проверка целостности установки/ZIP; MCP-захват сохранился после обновления и настоящей перезагрузки, пользователь подтвердил отсутствие новых запросов. Опубликованные бинарники содержат Electron 44.5.1 / Node 24.21.0 / Workflow Kit 1.5.1; текущий source/dev и установленный workflow runtime workspace используют Workflow Kit **1.5.2** (35 файлов, SHA-256 `646fec106c498e004d8688a3bc40012bea1654178ce66a61b650211ab28055df`) без пересборки приложения. Функциональный AutoPlan из 0.6.78 сохранён. Парная macOS arm64 / Windows x64 поставка 0.6.80 опубликована; Windows package проверен на Mac, native Windows отдельно не проверен. [Контракт подписи](planning/macos-screen-permission-stability.md), [RELEASE](RELEASE.md), [VERIFICATION](VERIFICATION.md).
 
 Карта самостоятельных частей проекта и их владельцев. Workflow Kit не ограничивает проект программным продуктом: здесь могут быть программные модули, исследовательские направления, зоны проектирования или другие устойчивые части предметной работы. Перед новым scope агент сначала находит затрагиваемую часть здесь; если владельца/спецификации нет, сначала создаётся и согласуется подходящий specification/planning document.
 
@@ -10,7 +10,8 @@
 
 | Модуль / часть проекта | Спецификация | Ответственность |
 | --- | --- | --- |
-| Workflow Kit / Context Recovery | `docs/modules/workflow-kit-recovery.md` | Единственный current plan checkout/worktree, lifecycle scope, recovery capsule, dependency context, migration legacy session plans и continuity |
+| Workflow Kit / Context Recovery | `docs/modules/workflow-kit-recovery.md` | Единственный current plan checkout/worktree, lifecycle scope, recovery capsule, dependency context, migration legacy session plans, continuity и canonical delivery-ordering policy |
+| Workflow Kit / Delivery Ordering | `docs/planning/input-instruction-delivery-ordering.md` | Явная active delivery-задача, DOCS до package/installed хвоста, запрет незапланированных build/sign/release/publish и короткий startupMessage guard |
 | Project Doctor | `docs/modules/project-doctor.md` | Автономная диагностика, резервная копия и безопасное исправление известных проблем открытия проекта |
 | Runtime Lifecycle | `docs/modules/runtime-lifecycle.md` | MCP/tunnel discovery, bootstrap, process identity, persisted endpoints и self-healing startup |
 | Codex App Server Local Executor | `docs/modules/codex-app-server-executor.md` | macOS local-only MCP facade поверх Codex App Server: паритет 47 локальных tools, Computer Use и альтернативный backend за единым stable connector |

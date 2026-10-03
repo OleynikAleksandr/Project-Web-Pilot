@@ -1,5 +1,17 @@
 # Проверки и приёмка
 
+## 2026-10-03 — DOCS → delivery policy / Workflow Kit 1.5.2
+
+Текущий source/dev Project Web Pilot и installed workflow runtime workspace используют Workflow Kit **1.5.2**, 35 файлов, SHA-256 `646fec106c498e004d8688a3bc40012bea1654178ce66a61b650211ab28055df`. Последний публичный WorkflowKit release остаётся **v1.5.1**, а опубликованные бинарники Web Pilot **0.6.80** по-прежнему содержат bundled Kit 1.5.1: приложение в этом scope не пересобиралось и не публиковалось.
+
+T001 Project Web Pilot (`d1fabf0`) завершила canonical policy в WorkflowKit: build/package/sign/notarize/release/publish разрешены только в явно названной active-задаче; документы должны быть актуализированы и зафиксированы до build/GitHub publish; code-only план заканчивается DOCS, delivery-план нормализуется как work → DOCS → package/installed delivery; поздняя correction переоткрывает DOCS перед незавершённым delivery-хвостом. WorkflowKit после cross-repository managed commits оставлен с current plan `NONE`. В canonical Kit прошли `npm run check`, runtime fixture и standalone consumer contract.
+
+T002 (`68fcd3c`) добавила короткий delivery guard в `startupMessage()`: он не дублирует весь Workflow Core, но явно запрещает незапланированные delivery-действия и требует DOCS до delivery. T003 (`7d15a65`) проверила совместно startupMessage, recovery и canonical sibling package; integration-policy выполняет staging из `@webpilot/workflow-kit` и тесты context-session / workflow-kit-recovery / workflow-kit-source. Source/staging contract закреплён на Workflow Kit 1.5.2 / 35 files / SHA выше.
+
+Финальная DOCS-сверка проверила все tracked Markdown-файлы проекта: **113 Markdown-файлов, 284 локальных ссылки, 0 сломанных ссылок**. Исторические сведения о Workflow Kit 1.5.1 сохранены там, где они описывают опубликованные Web Pilot 0.6.80 и прежние релизы. Действующие README/PRODUCT/WORKFLOW_START/OVERVIEW/MODULES/INDEX/SOURCE_WORKSPACES/recovery contract и DECISIONS различают текущий source/runtime 1.5.2 и опубликованный bundled 1.5.1.
+
+В этом scope **не выполнялись** build/package/sign/notarize/release/publish Project Web Pilot и не создавался новый GitHub Release.
+
 ## 2026-10-03 — DOCS: актуальная 0.6.80 и оба сателлита
 
 Документальная сверка охватила 45 действующих Markdown-документов Web Pilot, 13 WorkflowKit и 13 Sidebar; проверены 282 / 19 / 33 локальные ссылки соответственно, ошибок нет. Текущая опубликованная парная версия — 0.6.80: точный проверенный macOS ZIP и Windows x64 ZIP, собранный и проверенный `verify:win` на Mac. Обе установленные Mac-копии имеют версию 0.6.80; runtime/package WorkflowKit побайтно не изменились относительно v1.5.1. Native Windows и clean VM не проверены. Evidence — `.harness/runtime/github-0.6.80-publication.json` и `.harness/runtime/docs-0.6.80-publication-audit.json`.
