@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1009,
+  "plan_revision": 1010,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "release-0.6.81-workflowkit-1.5.2-20261003",
@@ -296,7 +296,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: release-0.6.81-workflowkit-1.5.2-20261003
 Current Task: T001
-Revision: 1009
+Revision: 1010
 
 ## Цель
 
