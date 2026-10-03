@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 948,
+  "plan_revision": 950,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "github-publication-0.6.77-20261002",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Опубликовать проверенную 0.6.77 и актуализировать WorkflowKit; по поручению 03.10.2026 разобрать сбой AutoPlan, доставить исправленную локальную 0.6.78 и актуализировать документы.",
   "acceptance_criteria": [
     "Результаты публикации 0.6.77 и актуализации WorkflowKit сохранены в истории T001/T002.",
@@ -49,7 +49,9 @@
       "docs/CLEAN_INSTALL.md",
       "docs/DECISIONS.md",
       "docs/planning/auto-plan-session-incident-20261003.md",
-      "docs/modules/chatgpt-dom-compatibility.md"
+      "docs/modules/chatgpt-dom-compatibility.md",
+      "docs/CONTEXT_DELIVERY.md",
+      "docs/modules/workspace-sessions.md"
     ]
   },
   "baseline_commit": "0a78bf366e65ad35fed3332c43eda3aa3cddf9b2",
@@ -277,8 +279,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "github-publication-0.6.77-20261002",
         "task_id": "DOCS",
@@ -309,7 +311,9 @@
         "docs/CLEAN_INSTALL.md",
         "docs/DECISIONS.md",
         "docs/planning/auto-plan-session-incident-20261003.md",
-        "docs/modules/chatgpt-dom-compatibility.md"
+        "docs/modules/chatgpt-dom-compatibility.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/modules/workspace-sessions.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -323,12 +327,20 @@
         "AGENTS.md",
         "README.md",
         "docs/CLEAN_INSTALL.md",
+        "docs/CONTEXT_DELIVERY.md",
         "docs/DECISIONS.md",
         "docs/DOCUMENTATION_INDEX.md",
         "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/RELEASE.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
         "docs/VERIFICATION.md",
         "docs/WORKFLOW_START.md",
+        "docs/architecture/ARCHITECTURE.md",
         "docs/architecture/OVERVIEW.md",
+        "docs/modules/workspace-sessions.md",
+        "docs/planning/auto-plan-client-driven-refactor.md",
+        "docs/planning/auto-plan-session-incident-20261003.md",
         "docs/planning/github-publication-0.6.77.md"
       ]
     }
@@ -348,10 +360,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: github-publication-0.6.77-20261002
 Current Task: нет
-Revision: 948
+Revision: 950
 
 ## Цель
 
@@ -381,10 +393,10 @@ Revision: 948
   - Git Commit: [DONE] fix: восстановить продолжение AutoPlan в длинных разговорах
   - Reference: github-publication-0.6.77-20261002 / T004 / implementation
   - Файлы: src/chatgpt-page-observer.mjs, src/auto-plan.mjs, src/page-state.mjs, src/chromium-diagnostics.mjs, tests/page-state.test.mjs, tests/auto-plan.test.mjs, tests/installed-observer-fixture.cjs, package-lock.json, package.json, src/chatgpt-composer.mjs, src/main.mjs, tests/auto-plan-restart-fixture.cjs, tests/chatgpt-composer.test.mjs, docs/planning/auto-plan-client-driven-refactor.md, docs/planning/auto-plan-session-incident-20261003.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md, docs/modules/chatgpt-dom-compatibility.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать контекст проекта
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать контекст проекта
   - Reference: github-publication-0.6.77-20261002 / DOCS / implementation
-  - Файлы: docs/planning/github-publication-0.6.77.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, README.md, AGENTS.md, docs/WORKFLOW_START.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/DOCUMENTATION_INDEX.md, docs/TRANSFER_TO_WINDOWS.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/planning/auto-plan-client-driven-refactor.md, docs/CLEAN_INSTALL.md, docs/DECISIONS.md, docs/planning/auto-plan-session-incident-20261003.md, docs/modules/chatgpt-dom-compatibility.md
+  - Файлы: docs/planning/github-publication-0.6.77.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, README.md, AGENTS.md, docs/WORKFLOW_START.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/DOCUMENTATION_INDEX.md, docs/TRANSFER_TO_WINDOWS.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/planning/auto-plan-client-driven-refactor.md, docs/CLEAN_INSTALL.md, docs/DECISIONS.md, docs/planning/auto-plan-session-incident-20261003.md, docs/modules/chatgpt-dom-compatibility.md, docs/CONTEXT_DELIVERY.md, docs/modules/workspace-sessions.md
 
 ## Context Pack For This Cycle
 

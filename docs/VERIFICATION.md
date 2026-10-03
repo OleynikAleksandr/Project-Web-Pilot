@@ -2,11 +2,19 @@
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
-## 2026-10-03 — финальная DOCS: публикации и README
+## 2026-10-03 — DOCS после исправления AutoPlan
+
+Согласованы README, текущие версии, checkpoint v3, startup/recovery, архитектура, модули, release/Windows-инструкции и ограничения приёмки. Проверены 44 документа и 256 локальных ссылок: 0 ошибок; изменений исходников нет. DONE T001–T004 и scope сохранены, objective уточнён для дополнительного поручения. Evidence — `.harness/runtime/auto-plan-DOCS-audit.json`. 0.6.78 остаётся локальной; опубликованная 0.6.77 и историческая приёмка обозначены отдельно.
+
+## 2026-10-03 — T004: локальная 0.6.78
+
+Коммит `88f8866d2722edaff019137455a79d7be5698b08` прошёл unit (499 tests: 496 PASS, 3 SKIP), smoke и release-installed. Сверены 106 source/resource файлов, обе упаковки, установленный observer/Composer/AutoPlan и Finder identity двух app. Проверены bounded DOM, checkpoint migration/reconstruction и отмена Paste в ProseMirror. Evidence — `.harness/runtime/t004-final-verification.json` и `t004-checkpoint.json`. Живая приёмка 0.6.78, native Windows и чистая установка не подтверждены. [Полный разбор](planning/auto-plan-session-incident-20261003.md).
+
+## 2026-10-03 — история первичной DOCS: публикации и README
 
 Сверены README обоих репозиториев, startup/recovery, архитектура/модули/индекс, release/verification, Clean Install, Windows transfer, решения и контракт публикации. Устранены оставшиеся формулировки о неопубликованной 0.6.77 и отсутствии общей приёмки; исторические проверки сохранены с явными границами. Документы различают рабочий Node 24.21.0 и minimum Node 22+ пакета Kit.
 
-GitHub API подтвердил latest public releases [Web Pilot v0.6.77](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.77) и [WorkflowKit v1.5.1](https://github.com/OleynikAleksandr/WorkflowKit/releases/tag/v1.5.1), main обоих репозиториев, неизменные release tags и соответствие README Git-коммитам. У Web Pilot ровно пять ожидаемых assets; их серверные размеры и SHA-256 совпадают с сохранёнными подтверждениями локальной поставки. Kit сохраняет source-only release без custom assets. Код обоих проектов совпадает с соответствующими release tags; повторные сборки и runtime suite не требовались.
+GitHub API подтвердил latest public releases [Web Pilot v0.6.77](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.77) и [WorkflowKit v1.5.1](https://github.com/OleynikAleksandr/WorkflowKit/releases/tag/v1.5.1), main обоих репозиториев, неизменные release tags и соответствие README Git-коммитам. У Web Pilot ровно пять ожидаемых assets; их серверные размеры и SHA-256 совпадают с сохранёнными подтверждениями локальной поставки. Kit сохраняет source-only release без custom assets. На момент первичной DOCS код обоих проектов совпадал с соответствующими release tags; повторные сборки и runtime suite не требовались.
 
 Evidence — `.harness/runtime/github-DOCS-release-verification.json` и `github-DOCS-audit.json`. После DOCS-коммита выполняется обычный push main и проверяется соответствие опубликованных README локальным файлам. Publication scope остаётся доступным без архивирования.
 
@@ -2523,6 +2531,6 @@ Build проверяет packagedSourceMatches, версии, целостнос
 
 Production observer + AutoPlan проверены на неизменном размере окна сообщений: новый busy/idle-цикл даёт новое продолжение; rerender/reconstruction не даёт дубль. Проверены legacy sent/sending, поздний/исчезающий native ID и гидратация без преждевременного Paste. Composer сохраняет правки пользователя, отменённую собственную вставку очищает, ошибку после попытки клика считает unknown.
 
-Первый Node-прогон: 498 tests, 495 PASS, 3 SKIP, 0 FAIL; после добавления защиты позднего native ID целевой AutoPlan-прогон: 42 PASS. Electron fixture с настоящим ProseMirror прошла bounded DOM и отмену Paste. Финальные unit/smoke/release-installed назначены T004 и запускаются управляемым commit; результаты — .harness/runtime/t004-commit.log и журнал Workflow Kit. Релизный gate проверяет обе упаковки, source/hash/version, identity root app и /Applications и запускает installed fixture.
+Первый Node-прогон: 498 tests, 495 PASS, 3 SKIP, 0 FAIL; после добавления защиты позднего native ID целевой AutoPlan-прогон: 42 PASS. Electron fixture с настоящим ProseMirror прошла bounded DOM и отмену Paste. Финальные unit/smoke/release-installed прошли в managed commit `88f8866`; Node: 499 tests / 496 PASS / 3 SKIP. Результаты — .harness/runtime/t004-final-verification.json и t004-commit.log. Релизный gate проверяет обе упаковки, source/hash/version, identity root app и /Applications и запускает installed fixture.
 
 [Разбор инцидента и ограничения](planning/auto-plan-session-incident-20261003.md). Живая приёмка 0.6.78 и native Windows не заявляются.

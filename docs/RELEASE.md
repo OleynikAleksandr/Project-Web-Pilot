@@ -15,7 +15,7 @@
 
 Root app и `/Applications/Project Web Pilot.app` обновлены штатным installMacBundle. Inode 406600483 и 406571340 сохранены; старые Contents сохранены в backup. ASAR SHA-256 обеих копий — `eb4badce53d64455448e2e7d310cd4ca4967de2ddac198a0e57ac7406c981122`. Пользовательский процесс не перезапускался. Для применения нужен полный выход и повторный запуск.
 
-Финальный gate T004 — unit, smoke и release-installed: исходники/версии/хеши/identity, runtime обеих упаковок и установленный observer/Composer/AutoPlan с bounded DOM и настоящим ProseMirror. Результат хранит Workflow Kit и `.harness/runtime/t004-commit.log`; сборка внутри commit не повторяется. GitHub Release 0.6.78 не опубликован, живая приёмка и native Windows не заявлены.
+T004 завершена коммитом `88f8866`; unit (496 PASS, 3 SKIP), smoke и release-installed прошли: исходники/версии/хеши/identity, runtime обеих упаковок и установленный observer/Composer/AutoPlan с bounded DOM и настоящим ProseMirror. Результат хранит Workflow Kit и `.harness/runtime/t004-commit.log`; сборка внутри commit не повторяется. GitHub Release 0.6.78 не опубликован, живая приёмка и native Windows не заявлены.
 
 ## Выпуск 0.6.77 — 02.10.2026
 

@@ -4,9 +4,11 @@
 
 ## Текущее состояние — 03.10.2026
 
-Выпуск **0.6.77** для macOS arm64 и Windows x64: Electron **44.5.1**, встроенный и комплектный Node **24.21.0**, Workflow Kit **1.5.1**. AutoPlan принадлежит клиенту: переключатель можно менять в любой момент; при включённом режиме подходящая пауза незавершённого ACTIVE-плана получает ровно одно точное «Продолжай». Стартовая AutoPlan-инструкция и управляющие строки ответа удалены. Контракт Web Pilot Sidebar, экспорт `pageOperation` и формат `pageScript` сохранены.
+Локальная поставка **0.6.78** для macOS arm64 и Windows x64: Electron **44.5.1**, встроенный и комплектный Node **24.21.0**, Workflow Kit **1.5.1**. Исправлен AutoPlan для ограниченного окна сообщений Work: native ID либо сохраняемый цикл генерации заменяет счётчики DOM. При загрузке истории отправка ожидает сообщения; отменённая собственная вставка очищается с сохранением пользовательских правок. Экспорт `pageOperation` и формат `pageScript` сохранены.
 
-Поставка — `~/Downloads/WebPilot-0.6.77/`. Корневой `Project Web Pilot.app` и копия в `/Applications` обновлены с сохранением Finder identity. Оба ZIP и metadata сверены с 106 source/resource файлами; node24, unit, Electron smoke и package/installed gate прошли в T005 (`0b8335c`). 02.10.2026 пользователь подтвердил общую приёмку 0.6.77: всё работает в соответствии с обсуждённым контрактом. Отдельные native Windows и чистый первый запуск в сообщении о приёмке не перечислены.
+Поставка — `~/Downloads/WebPilot-0.6.78/`. Корневой `Project Web Pilot.app` и копия в `/Applications` обновлены с сохранением Finder identity. Оба ZIP сверены с 106 source/resource файлами. T004 (`88f8866`) прошла unit (496 PASS, 3 SKIP), Electron smoke и release-installed. Для применения нужен полный выход и повторный запуск. Живая приёмка 0.6.78, native Windows и чистый первый запуск не подтверждены.
+
+[Исправление и ограничения 0.6.78](planning/auto-plan-session-incident-20261003.md). На GitHub опубликована 0.6.77; новая 0.6.78 пока доступна локально. Publication scope расширен T003/T004 по сообщению пользователя о сбое, выполненные задачи сохранены; архивирование не поручено.
 
 [Клиентский AutoPlan](planning/auto-plan-client-driven-refactor.md) реализован и проверен; scope рефакторинга принят и закрыт (`46097fb`). [Выпуск v0.6.77](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.77) опубликован с проверенными архивами. [Publication scope](planning/github-publication-0.6.77.md) подтвердил публикации, актуализировал README и синхронизировал оба репозитория. WorkflowKit 1.5.1 сохраняет minimum Node 22+; рабочая среда обоих проектов — Node 24.21.0. История и evidence — [RELEASE](RELEASE.md) и [VERIFICATION](VERIFICATION.md).
 
@@ -33,7 +35,7 @@ Project Web Pilot передаёт recovery **текущего checkout**. Од�
 
 Для изменений приложения обязательны Node suite и Electron smoke на изолированных fixtures; документальные задачи выполняют назначенные проверки Workflow Kit. Проверки внутри commit не запускаются отдельно на том же состоянии. Готовый проверенный бинарный релиз не пересобирается без изменения приложения.
 
-`npm run build` последовательно собирает обе платформы и выдаёт общий manifest. Внутренний build:mac обновляет постоянный app в корне workspace с сохранением Finder identity и создаёт ZIP. T005 собрала 0.6.77 отдельно и проверила готовые файлы через package/installed gate в commit без пересборки; /Applications обновлена штатным installMacBundle. Новая версия применяется после полного выхода и повторного запуска. Публикация GitHub — по отдельному поручению.
+`npm run build` последовательно собирает обе платформы и выдаёт общий manifest. Внутренний build:mac обновляет постоянный app в корне workspace с сохранением Finder identity и создаёт ZIP. T004 подготовила 0.6.78 и проверила готовые файлы через release-installed в commit без повторной сборки; /Applications обновлена штатным installMacBundle. Новая версия применяется после полного выхода и повторного запуска. Публикация GitHub — по отдельному поручению.
 
 Живой ChatGPT, первый запуск и native Windows проверяет пользователь; агент не использует Computer Use и не запускает VM. Реальные чаты, профили и гостевые проекты не используются для разрушительных проверок. Предыдущие результаты и ограничения — [CLEAN_INSTALL](CLEAN_INSTALL.md) и [TRANSFER_TO_WINDOWS](TRANSFER_TO_WINDOWS.md).
 

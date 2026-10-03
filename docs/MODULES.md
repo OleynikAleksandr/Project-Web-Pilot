@@ -2,7 +2,7 @@
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
-Текущий выпуск — 0.6.77: событийный клиентский AutoPlan, Node 24.21.0 / Electron 44.5.1 / Workflow Kit 1.5.1 и сохранённый контракт Sidebar. T001–T005 и DOCS рефакторинга завершены; пользователь принял результат. [GitHub Release v0.6.77](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.77) опубликован, README и main обоих репозиториев актуализированы. Контракт — [AutoPlan 0.6.77](planning/auto-plan-client-driven-refactor.md), evidence — [RELEASE](RELEASE.md) и [VERIFICATION](VERIFICATION.md).
+Текущая локальная версия — 0.6.78: исправление идентичности пауз AutoPlan и отменённого Paste. Node 24.21.0 / Electron 44.5.1 / Workflow Kit 1.5.1 сохранены. T004 (`88f8866`) прошла unit, smoke и release-installed; живая приёмка не получена. Опубликованный GitHub Release — 0.6.77. [Контракт AutoPlan](planning/auto-plan-client-driven-refactor.md), [исправление](planning/auto-plan-session-incident-20261003.md), [RELEASE](RELEASE.md), [VERIFICATION](VERIFICATION.md).
 
 Карта самостоятельных частей проекта и их владельцев. Workflow Kit не ограничивает проект программным продуктом: здесь могут быть программные модули, исследовательские направления, зоны проектирования или другие устойчивые части предметной работы. Перед новым scope агент сначала находит затрагиваемую часть здесь; если владельца/спецификации нет, сначала создаётся и согласуется подходящий specification/planning document.
 
@@ -30,7 +30,7 @@ Workflow Kit — отдельный canonical пакет планов и recover
 - [Быстрое открытие](modules/session-opening-performance.md): быстрый показ и строгая before-Send готовность.
 - [ChatGPT DOM](modules/chatgpt-dom-compatibility.md): общий adapter, composer, наблюдатель, фильтр, цвета и autoscroll.
 - [Событийный рефакторинг](planning/event-driven-runtime.md): фазы 1–3 завершены; 0.6.74 включает файловые события/прогрев, общий page observer без общего 1500-мс функционального пульса, оформление без секундного safety-pass, сопоставимые измерения и live Chat/Work на macOS. Native Windows остаётся отдельной platform-проверкой.
-- [Клиентский AutoPlan 0.6.77](planning/auto-plan-client-driven-refactor.md): любой момент ON/OFF, обычные ответы, один «Продолжай» на подходящую паузу, persistent choice/checkpoint, draft и ручной Send, recovery и предупреждение watchdog. Workflow Kit обеспечивает фактический plan и Git evidence; прежние документы 0.6.73–0.6.76 сохранены как история.
+- [Клиентский AutoPlan 0.6.78](planning/auto-plan-client-driven-refactor.md): любой момент ON/OFF, обычные ответы, один «Продолжай» на подходящую паузу, persistent choice/checkpoint, draft и ручной Send, recovery и предупреждение watchdog. Workflow Kit обеспечивает фактический plan и Git evidence; прежние документы 0.6.73–0.6.76 сохранены как история.
 - [Первый запуск](modules/first-run-onboarding.md), [Workspace Setup](WORKSPACE_SETUP.md): комплектные компоненты, MCP Permissions, подключение папок.
 - [Исследование удалённого UI](research/remote-project-ui-options-2026-09-28.md): исследование, не функция продукта.
 - [Session titles](planning/session-title-sync.md): событийная синхронизация и ручное переименование.
