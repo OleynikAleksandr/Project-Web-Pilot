@@ -6,56 +6,34 @@
     {
       "required": false,
       "timeout_ms": 120000,
-      "id": "workflowkit_remote",
+      "id": "workflowkit-policy",
       "executable": "bash",
       "args": [
         "-lc",
-        "test \"$(git -C ../WorkflowKit rev-parse HEAD)\" = \"$(git -C ../WorkflowKit ls-remote origin refs/heads/main | cut -f1)\""
+        "cd ../WorkflowKit && test \"$(./scripts/workflow status | node -e 'let s=\"\";process.stdin.on(\"data\",d=>s+=d).on(\"end\",()=>process.stdout.write(JSON.parse(s).delivery_status))')\" = READY_FOR_ACCEPTANCE && npm run check"
       ]
     },
     {
       "required": false,
       "timeout_ms": 120000,
-      "id": "sidebar_remote",
-      "executable": "bash",
+      "id": "startup-policy",
+      "executable": "node",
       "args": [
-        "-lc",
-        "test \"$(git -C '../Web Pilot Sidebar' rev-parse HEAD)\" = \"$(git -C '../Web Pilot Sidebar' ls-remote origin refs/heads/main | cut -f1)\""
+        "--test",
+        "tests/context-session.test.mjs"
       ]
     },
     {
       "required": false,
       "timeout_ms": 120000,
-      "id": "webpilot_remote",
-      "executable": "bash",
+      "id": "integration-policy",
+      "executable": "node",
       "args": [
-        "-lc",
-        "test \"$(git rev-parse HEAD)\" = \"$(git ls-remote origin refs/heads/main | cut -f1)\""
+        "--test",
+        "tests/context-session.test.mjs",
+        "tests/workflow-kit-recovery.test.mjs",
+        "tests/workflow-kit-source.test.mjs"
       ]
-    },
-    {
-      "required": false,
-      "timeout_ms": 120000,
-      "id": "windows_package",
-      "executable": "npm",
-      "args": [
-        "run",
-        "verify:win"
-      ],
-      "kind": "package",
-      "evidence": ".harness/runtime/build/Project Web Pilot-win32-x64; штатная verify:win проверяет Windows x64 package"
-    },
-    {
-      "required": false,
-      "timeout_ms": 120000,
-      "id": "github_release",
-      "executable": "bash",
-      "args": [
-        "-lc",
-        "set -euo pipefail; j=$(curl -fsSL https://api.github.com/repos/OleynikAleksandr/Project-Web-Pilot/releases/tags/v0.6.80); for f in Project-Web-Pilot-0.6.80-macOS-arm64.zip Project-Web-Pilot-0.6.80-Windows-x64.zip SHA256SUMS.txt INSTALL.txt release-manifest.json; do printf '%s' \"$j\" | grep -Fq \"\\\"name\\\": \\\"$f\\\"\"; done"
-      ],
-      "kind": "package",
-      "evidence": "GitHub Release v0.6.80; оба ZIP и три metadata assets доступны через публичный GitHub API"
     }
   ],
   "budget": {
