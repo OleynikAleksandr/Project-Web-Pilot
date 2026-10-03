@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 950,
+  "plan_revision": 951,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "github-publication-0.6.77-20261002",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Опубликовать проверенную 0.6.77 и актуализировать WorkflowKit; по поручению 03.10.2026 разобрать сбой AutoPlan, доставить исправленную локальную 0.6.78 и актуализировать документы.",
   "acceptance_criteria": [
     "Результаты публикации 0.6.77 и актуализации WorkflowKit сохранены в истории T001/T002.",
@@ -83,11 +83,11 @@
         "revision": "WORKTREE"
       },
       {
-        "path": "docs/planning/github-publication-0.6.77.md",
+        "path": "docs/planning/auto-plan-client-driven-refactor.md",
         "required": true
       },
       {
-        "path": "docs/planning/auto-plan-client-driven-refactor.md",
+        "path": "docs/planning/github-publication-0.6.77.md",
         "required": true
       }
     ],
@@ -279,19 +279,52 @@
       ]
     },
     {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
+      "id": "T005",
+      "title": "Опубликовать готовую 0.6.78 и синхронизировать актуальные репозитории GitHub",
+      "why": "Прямое поручение пользователя 03.10.2026: отправить актуальные репозитории и собранные новые релизы на GitHub.",
+      "dependencies": [],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/planning/github-publication-0.6.77.md",
+        "README.md",
+        "AGENTS.md",
+        "docs/WORKFLOW_START.md",
+        "docs/PRODUCT.md",
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md",
+        "docs/DECISIONS.md"
+      ],
+      "verification_ids": [],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "main Web Pilot отправлен и сверён с GitHub; WorkflowKit main и релиз 1.5.1 проверены без ненужного нового выпуска",
+        "v0.6.78 указывает на проверенный 88f8866; опубликованы пять готовых файлов, серверные размеры и SHA-256 совпадают",
+        "README и документы публикации отражают опубликованную 0.6.78; ограничения приёмки сохранены"
+      ],
+      "expected_commit_message": "release: опубликовать Web Pilot 0.6.78 на GitHub",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "github-publication-0.6.77-20261002",
+        "task_id": "T005",
+        "role": "implementation"
+      }
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "github-publication-0.6.77-20261002",
         "task_id": "DOCS",
         "role": "implementation",
-        "iteration": 2
+        "iteration": 3
       },
       "dependencies": [
         "T001",
         "T002",
         "T003",
-        "T004"
+        "T004",
+        "T005"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -360,10 +393,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: github-publication-0.6.77-20261002
 Current Task: нет
-Revision: 950
+Revision: 951
 
 ## Цель
 
@@ -393,8 +426,12 @@ Revision: 950
   - Git Commit: [DONE] fix: восстановить продолжение AutoPlan в длинных разговорах
   - Reference: github-publication-0.6.77-20261002 / T004 / implementation
   - Файлы: src/chatgpt-page-observer.mjs, src/auto-plan.mjs, src/page-state.mjs, src/chromium-diagnostics.mjs, tests/page-state.test.mjs, tests/auto-plan.test.mjs, tests/installed-observer-fixture.cjs, package-lock.json, package.json, src/chatgpt-composer.mjs, src/main.mjs, tests/auto-plan-restart-fixture.cjs, tests/chatgpt-composer.test.mjs, docs/planning/auto-plan-client-driven-refactor.md, docs/planning/auto-plan-session-incident-20261003.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md, docs/modules/chatgpt-dom-compatibility.md
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: актуализировать контекст проекта
+- [TODO] T005: Опубликовать готовую 0.6.78 и синхронизировать актуальные репозитории GitHub — Ожидает
+  - Git Commit: [PENDING] release: опубликовать Web Pilot 0.6.78 на GitHub
+  - Reference: github-publication-0.6.77-20261002 / T005 / implementation
+  - Файлы: docs/planning/github-publication-0.6.77.md, README.md, AGENTS.md, docs/WORKFLOW_START.md, docs/PRODUCT.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/DECISIONS.md
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: github-publication-0.6.77-20261002 / DOCS / implementation
   - Файлы: docs/planning/github-publication-0.6.77.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, README.md, AGENTS.md, docs/WORKFLOW_START.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/DOCUMENTATION_INDEX.md, docs/TRANSFER_TO_WINDOWS.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/planning/auto-plan-client-driven-refactor.md, docs/CLEAN_INSTALL.md, docs/DECISIONS.md, docs/planning/auto-plan-session-incident-20261003.md, docs/modules/chatgpt-dom-compatibility.md, docs/CONTEXT_DELIVERY.md, docs/modules/workspace-sessions.md
 
@@ -403,7 +440,7 @@ Revision: 950
 - docs/architecture/OVERVIEW.md → Краткая архитектура проекта
 - docs/MODULES.md → Модули проекта
 - docs/DOCUMENTATION_INDEX.md → Каталог документации
-- docs/planning/github-publication-0.6.77.md
 - docs/planning/auto-plan-client-driven-refactor.md
+- docs/planning/github-publication-0.6.77.md
 
 Служебные состояния меняются только командами workflow. Приёмка не архивирует scope.
