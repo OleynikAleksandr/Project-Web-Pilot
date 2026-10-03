@@ -5,44 +5,57 @@
   "checks": [
     {
       "required": false,
-      "timeout_ms": 600000,
-      "id": "unit",
-      "executable": "npm",
+      "timeout_ms": 120000,
+      "id": "workflowkit_remote",
+      "executable": "bash",
       "args": [
-        "test"
+        "-lc",
+        "test \"$(git -C ../WorkflowKit rev-parse HEAD)\" = \"$(git -C ../WorkflowKit ls-remote origin refs/heads/main | cut -f1)\""
       ]
     },
     {
       "required": false,
-      "timeout_ms": 600000,
-      "id": "smoke",
+      "timeout_ms": 120000,
+      "id": "sidebar_remote",
+      "executable": "bash",
+      "args": [
+        "-lc",
+        "test \"$(git -C '../Web Pilot Sidebar' rev-parse HEAD)\" = \"$(git -C '../Web Pilot Sidebar' ls-remote origin refs/heads/main | cut -f1)\""
+      ]
+    },
+    {
+      "required": false,
+      "timeout_ms": 120000,
+      "id": "webpilot_remote",
+      "executable": "bash",
+      "args": [
+        "-lc",
+        "test \"$(git rev-parse HEAD)\" = \"$(git ls-remote origin refs/heads/main | cut -f1)\""
+      ]
+    },
+    {
+      "required": false,
+      "timeout_ms": 120000,
+      "id": "windows_package",
       "executable": "npm",
       "args": [
         "run",
-        "smoke"
-      ]
+        "verify:win"
+      ],
+      "kind": "package",
+      "evidence": ".harness/runtime/build/Project Web Pilot-win32-x64; штатная verify:win проверяет Windows x64 package"
     },
     {
       "required": false,
       "timeout_ms": 120000,
-      "id": "mac-signature",
-      "executable": "node",
+      "id": "github_release",
+      "executable": "bash",
       "args": [
-        "scripts/check-mac-signature.mjs"
+        "-lc",
+        "set -euo pipefail; j=$(curl -fsSL https://api.github.com/repos/OleynikAleksandr/Project-Web-Pilot/releases/tags/v0.6.80); for f in Project-Web-Pilot-0.6.80-macOS-arm64.zip Project-Web-Pilot-0.6.80-Windows-x64.zip SHA256SUMS.txt INSTALL.txt release-manifest.json; do printf '%s' \"$j\" | grep -Fq \"\\\"name\\\": \\\"$f\\\"\"; done"
       ],
-      "kind": "installed",
-      "evidence": "Готовый macOS bundle, root Project Web Pilot.app и /Applications/Project Web Pilot.app: строгая подпись, закреплённая identity, sealed resources и совместимость designated requirement; до замены проверяется staging"
-    },
-    {
-      "required": false,
-      "timeout_ms": 120000,
-      "id": "mac-screen-capture",
-      "executable": "node",
-      "args": [
-        "scripts/check-mac-screen-capture.mjs"
-      ],
-      "kind": "installed",
-      "evidence": "Реальный PNG через действующий local MCP computer_capture_screen и App Server, responsible application Web Pilot; пользователь отдельно подтверждает отсутствие нового системного запроса"
+      "kind": "package",
+      "evidence": "GitHub Release v0.6.80; оба ZIP и три metadata assets доступны через публичный GitHub API"
     }
   ],
   "budget": {
