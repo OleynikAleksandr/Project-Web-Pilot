@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1010,
+  "plan_revision": 1011,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "release-0.6.81-workflowkit-1.5.2-20261003",
@@ -49,7 +49,7 @@
     ]
   },
   "baseline_commit": "9a58204a9574713bdd623453f36f0a311c523b72",
-  "current_task_id": "T001",
+  "current_task_id": null,
   "context_pack": {
     "documents": [
       {
@@ -86,8 +86,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "IN_PROGRESS",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "release-0.6.81-workflowkit-1.5.2-20261003",
         "task_id": "T001",
@@ -131,7 +131,14 @@
         "GitHub verifier умеет сверить v0.6.81 tag/release/assets и remote main с release-manifest без сборки",
         "Source/integration regressions проходят, release build и GitHub publication не выполняются"
       ],
-      "expected_commit_message": "feat: подготовить Project Web Pilot 0.6.81 к release на Workflow Kit 1.5.2"
+      "expected_commit_message": "feat: подготовить Project Web Pilot 0.6.81 к release на Workflow Kit 1.5.2",
+      "actual_files": [
+        "package.json",
+        "package-lock.json",
+        "scripts/check-installed-release.mjs",
+        "scripts/verify-windows-package.mjs",
+        "scripts/check-github-release.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -295,8 +302,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: release-0.6.81-workflowkit-1.5.2-20261003
-Current Task: T001
-Revision: 1010
+Current Task: нет
+Revision: 1011
 
 ## Цель
 
@@ -313,8 +320,8 @@ Revision: 1010
 
 ## Микрозадачи
 
-- [IN_PROGRESS] T001: Подготовить source релиза 0.6.81 и release-gates для Workflow Kit 1.5.2 — В работе
-  - Git Commit: [PENDING] feat: подготовить Project Web Pilot 0.6.81 к release на Workflow Kit 1.5.2
+- [DONE] T001: Подготовить source релиза 0.6.81 и release-gates для Workflow Kit 1.5.2 — Завершено
+  - Git Commit: [DONE] feat: подготовить Project Web Pilot 0.6.81 к release на Workflow Kit 1.5.2
   - Reference: release-0.6.81-workflowkit-1.5.2-20261003 / T001 / implementation
   - Файлы: package.json, package-lock.json, scripts/check-installed-release.mjs, scripts/verify-windows-package.mjs, scripts/check-workflow-kit-dependency.mjs, scripts/check-github-release.mjs, tests/workspace-setup.test.mjs, docs/planning/release-0.6.81-workflowkit-1.5.2.md, README.md, docs/PRODUCT.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/SOURCE_WORKSPACES.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/TRANSFER_TO_WINDOWS.md, docs/CLEAN_INSTALL.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает

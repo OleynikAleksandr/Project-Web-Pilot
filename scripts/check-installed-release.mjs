@@ -104,7 +104,7 @@ for (const resources of [targets[0], targets[3]]) {
     const preview = worker({ action: 'inspect' });
     assert.equal(preview.action, 'install');
     const installed = worker({ action: 'apply', fingerprint: preview.fingerprint });
-    assert.equal(installed.kitVersion, '1.5.1'); assert.equal(installed.ready, true);
+    assert.equal(installed.kitVersion, '1.5.2'); assert.equal(installed.ready, true);
     assert.equal(worker({ action: 'inspect' }).ready, true);
     cli('status'); assert.equal(cli('recover', '--format', 'json').completeness, 'COMPLETE');
     const file=path.join(fixture,'.harness/runtime/input.json');
