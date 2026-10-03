@@ -2,6 +2,10 @@
 
 Текущий release contract: `@webpilot/workflow-kit` **1.5.1**. Canonical runtime: 35 файлов, SHA-256 `93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33`.
 
+## Среда Node.js
+
+Минимальное требование `@webpilot/workflow-kit` 1.5.1 — **Node 22+**: его задают `package.json` (`engines.node: >=22`), CLI и installer launcher. Рабочая среда разработки и интеграция с Web Pilot 0.6.77 используют **Node 24.21.0**. Переход клиента и его workers на Node 24 сохраняет совместимость пакета Kit; runtime и версия 1.5.1 не меняются.
+
 ## Назначение
 
 `@webpilot/workflow-kit` — единственный canonical Node.js package Workflow Kit. Он предоставляет CLI, installer/upgrade, programmatic imports для доверенных локальных клиентов и self-contained runtime payload для упаковки приложений.
@@ -105,6 +109,10 @@ Web Pilot сохраняет старые chat/session records и их chat URL/
 
 Workspace Setup и project readiness проверяют только current checkout state и не full-recover-ят historical plans.
 
+## Актуальная интеграция — Web Pilot 0.6.77
+
+Принятый пользователем и опубликованный [Web Pilot 0.6.77](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.77) включает прежний Kit 1.5.1. Клиент управляет AutoPlan событийно: постоянный выбор, одно точное «Продолжай» на подходящую паузу незавершённого ACTIVE-плана, durable защита от повторов и приоритет ручного ввода. Стартовая инструкция и footer-протокол удалены. Это поведение принадлежит Web Pilot и не меняет API/CLI или minimum Node пакета Kit. [Действующий контракт AutoPlan](https://github.com/OleynikAleksandr/Project-Web-Pilot/blob/main/docs/planning/auto-plan-client-driven-refactor.md).
+
 ## Проверки package contract
 
 `scripts/check-runtime-fixture.mjs` проверяет single-active runtime, compatibility session IDs, legacy migration, strict current recovery budget и Git worktree isolation.
@@ -119,4 +127,4 @@ Release **@webpilot/workflow-kit 1.5.1**: canonical runtime — **35 файло�
 
 По поручению пользователя 28.09.2026 добавлена plan:carryover: архив содержит точную исходную копию со статусами TODO/DONE; новый current plan — только незавершённые задачи и DOCS. Критерии, проверки, planning/module ссылки и зависимости между оставшимися задачами сохраняются. Ссылки на выполненные зависимости хранятся в carryover metadata и архиве. Оба плана фиксируются одним Git-коммитом. Нужны чистый checkout, отсутствие активной микрозадачи, точная revision и прямое поручение. Повтор после успеха безопасен; прерывания обслуживает штатный repair. Обычный archive сохраняет требование всех DONE. Runtime: 35 файлов; SHA-256 93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33.
 
-Проверка — scripts/check-carryover-fixture.mjs через установленный CLI: точный архив, сохранность задач, зависимости, отказы без изменения плана, повтор и прерывания до/после коммита. Входит в runtime gate. Интеграция и парная поставка — Project Web Pilot 0.6.72.
+Проверка — scripts/check-carryover-fixture.mjs через установленный CLI: точный архив, сохранность задач, зависимости, отказы без изменения плана, повтор и прерывания до/после коммита. Входит в runtime gate. Актуальная интеграция и парная поставка — Project Web Pilot 0.6.77; прежняя 0.6.72 была первым выпуском клиента с plan:carryover.

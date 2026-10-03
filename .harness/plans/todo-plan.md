@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 75,
+  "plan_revision": 77,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "release-1.5.0-docs-finalization-001",
@@ -517,13 +517,20 @@
         "Версия 1.5.1, package engines и 35-файловый runtime остаются прежними; актуальные документы отправлены на GitHub"
       ],
       "expected_commit_message": "docs: актуализировать интеграцию Web Pilot 0.6.77 и Node 24",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "release-1.5.0-docs-finalization-001",
         "task_id": "T006",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "README.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/PRODUCT.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/workflow-kit-package.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -594,7 +601,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: release-1.5.0-docs-finalization-001
 Current Task: нет
-Revision: 75
+Revision: 77
 
 ## Цель
 
@@ -662,8 +669,8 @@ Revision: 75
   - Git Commit: [DONE] feat: Обновить README интеграции Project Web Pilot 0.6.74
   - Reference: release-1.5.0-docs-finalization-001 / T005 / implementation
   - Файлы: README.md
-- [TODO] T006: Актуализировать README для Web Pilot 0.6.77 и рабочей среды Node 24 — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать интеграцию Web Pilot 0.6.77 и Node 24
+- [DONE] T006: Актуализировать README для Web Pilot 0.6.77 и рабочей среды Node 24 — Завершено
+  - Git Commit: [DONE] docs: актуализировать интеграцию Web Pilot 0.6.77 и Node 24
   - Reference: release-1.5.0-docs-finalization-001 / T006 / implementation
   - Файлы: docs/modules/workflow-kit-package.md, README.md, docs/PRODUCT.md, docs/architecture/OVERVIEW.md, docs/DOCUMENTATION_INDEX.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
