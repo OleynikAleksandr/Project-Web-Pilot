@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 941,
+  "plan_revision": 943,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "github-publication-0.6.77-20261002",
@@ -181,13 +181,17 @@
         "Коллизия идентификатора паузы воспроизведена на изолированном DOM без изменений живого чата"
       ],
       "expected_commit_message": "docs: разобрать остановку AutoPlan в сессии публикации",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "github-publication-0.6.77-20261002",
         "task_id": "T003",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/planning/auto-plan-session-incident-20261003.md"
+      ]
     },
     {
       "id": "T004",
@@ -306,7 +310,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: github-publication-0.6.77-20261002
 Current Task: нет
-Revision: 941
+Revision: 943
 
 ## Цель
 
@@ -326,8 +330,8 @@ Revision: 941
   - Git Commit: [DONE] docs: подтвердить публикацию актуального WorkflowKit
   - Reference: github-publication-0.6.77-20261002 / T002 / implementation
   - Файлы: docs/planning/github-publication-0.6.77.md, docs/RELEASE.md, docs/VERIFICATION.md
-- [TODO] T003: Разобрать сбой автовыполнения в сессии публикации — Ожидает
-  - Git Commit: [PENDING] docs: разобрать остановку AutoPlan в сессии публикации
+- [DONE] T003: Разобрать сбой автовыполнения в сессии публикации — Завершено
+  - Git Commit: [DONE] docs: разобрать остановку AutoPlan в сессии публикации
   - Reference: github-publication-0.6.77-20261002 / T003 / implementation
   - Файлы: docs/planning/auto-plan-client-driven-refactor.md, docs/planning/auto-plan-session-incident-20261003.md, docs/DOCUMENTATION_INDEX.md
 - [TODO] T004: Исправить идентификацию пауз AutoPlan и проверить доставляемое приложение — Ожидает
