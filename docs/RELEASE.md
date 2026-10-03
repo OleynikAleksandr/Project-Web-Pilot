@@ -19,6 +19,8 @@ T004 завершена коммитом `88f8866`; unit (496 PASS, 3 SKIP), smo
 
 [GitHub Release v0.6.78](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.78) опубликован 2026-10-03T08:08:36Z. Тег указывает на проверенный коммит `88f8866d2722edaff019137455a79d7be5698b08`. Готовые пакеты не пересобирались. До публикации сверены размеры и серверные SHA-256 всех пяти файлов: macOS arm64 ZIP, Windows x64 ZIP, `SHA256SUMS.txt`, `INSTALL.txt`, `release-manifest.json`. GitHub подтвердил latest public release; WorkflowKit main синхронизирован, актуальный v1.5.1 и его runtime не менялись. Evidence: `.harness/runtime/github-0.6.78-publication.json` и `github-0.6.78-workflowkit.json`. Живая приёмка, native Windows и чистый первый запуск отдельно не подтверждены.
 
+Финальная документальная сверка: 44 документа/256 локальных ссылок Web Pilot и 11/19 WorkflowKit без ошибок. README Kit описывает опубликованную 0.6.78; main Kit обновлён до `b0aeb72761f8cd6288235c15167ed955df68603a`. Теги и готовые assets сохранены. Подробности — [VERIFICATION](VERIFICATION.md).
+
 ## Выпуск 0.6.77 — 02.10.2026
 
 Клиентский AutoPlan: переключатель не отправляет стартовую инструкцию, обычный ответ не требует footer, подходящая idle-пауза незавершённого ACTIVE-плана получает ровно одно точное «Продолжай». Постоянный выбор, durable checkpoint, ручной ввод и восстановление связи управляются клиентом. Electron **44.5.1**, встроенный и комплектный Node **24.21.0**, Workflow Kit **1.5.1**.

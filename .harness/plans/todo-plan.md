@@ -4,17 +4,18 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 953,
+  "plan_revision": 956,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "github-publication-0.6.77-20261002",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
-  "objective": "Опубликовать проверенную 0.6.77 и актуализировать WorkflowKit; по поручению 03.10.2026 разобрать сбой AutoPlan, доставить исправленную локальную 0.6.78 и актуализировать документы.",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "objective": "Опубликовать проверенные выпуски 0.6.77 и исправленный 0.6.78, синхронизировать Project Web Pilot и WorkflowKit с GitHub и актуализировать документы.",
   "acceptance_criteria": [
-    "Результаты публикации 0.6.77 и актуализации WorkflowKit сохранены в истории T001/T002.",
-    "Инцидент AutoPlan исследован; локальная 0.6.78 проверена и доставлена в T004.",
-    "Документы различают локальную 0.6.78, опубликованную 0.6.77 и ещё не полученную живую приёмку исправления."
+    "История публикации 0.6.77 и диагностики/исправления AutoPlan T001–T004 сохранена.",
+    "Готовая 0.6.78 опубликована в T005: пять файлов сверены по серверным размерам и SHA-256, тег указывает на проверенный коммит.",
+    "README и связанные документы обоих проектов описывают опубликованную 0.6.78 и WorkflowKit 1.5.1; main синхронизированы с GitHub.",
+    "Живая приёмка исправления, native Windows и чистый первый запуск не заявляются без подтверждения."
   ],
   "approved_scope": {
     "functional_paths": [
@@ -331,8 +332,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "github-publication-0.6.77-20261002",
         "task_id": "DOCS",
@@ -379,19 +380,11 @@
       "actual_files": [
         "AGENTS.md",
         "README.md",
-        "docs/CLEAN_INSTALL.md",
-        "docs/CONTEXT_DELIVERY.md",
-        "docs/DECISIONS.md",
         "docs/DOCUMENTATION_INDEX.md",
-        "docs/MODULES.md",
-        "docs/PRODUCT.md",
         "docs/RELEASE.md",
-        "docs/TRANSFER_TO_WINDOWS.md",
         "docs/VERIFICATION.md",
         "docs/WORKFLOW_START.md",
-        "docs/architecture/ARCHITECTURE.md",
         "docs/architecture/OVERVIEW.md",
-        "docs/modules/workspace-sessions.md",
         "docs/planning/auto-plan-client-driven-refactor.md",
         "docs/planning/auto-plan-session-incident-20261003.md",
         "docs/planning/github-publication-0.6.77.md"
@@ -413,20 +406,21 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: github-publication-0.6.77-20261002
 Current Task: нет
-Revision: 953
+Revision: 956
 
 ## Цель
 
-Опубликовать проверенную 0.6.77 и актуализировать WorkflowKit; по поручению 03.10.2026 разобрать сбой AutoPlan, доставить исправленную локальную 0.6.78 и актуализировать документы.
+Опубликовать проверенные выпуски 0.6.77 и исправленный 0.6.78, синхронизировать Project Web Pilot и WorkflowKit с GitHub и актуализировать документы.
 
 ## Критерии приёмки
 
-- Результаты публикации 0.6.77 и актуализации WorkflowKit сохранены в истории T001/T002.
-- Инцидент AutoPlan исследован; локальная 0.6.78 проверена и доставлена в T004.
-- Документы различают локальную 0.6.78, опубликованную 0.6.77 и ещё не полученную живую приёмку исправления.
+- История публикации 0.6.77 и диагностики/исправления AutoPlan T001–T004 сохранена.
+- Готовая 0.6.78 опубликована в T005: пять файлов сверены по серверным размерам и SHA-256, тег указывает на проверенный коммит.
+- README и связанные документы обоих проектов описывают опубликованную 0.6.78 и WorkflowKit 1.5.1; main синхронизированы с GitHub.
+- Живая приёмка исправления, native Windows и чистый первый запуск не заявляются без подтверждения.
 
 ## Микрозадачи
 
@@ -450,8 +444,8 @@ Revision: 953
   - Git Commit: [DONE] release: опубликовать Web Pilot 0.6.78 на GitHub
   - Reference: github-publication-0.6.77-20261002 / T005 / implementation
   - Файлы: docs/planning/github-publication-0.6.77.md, README.md, AGENTS.md, docs/WORKFLOW_START.md, docs/PRODUCT.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/DECISIONS.md, docs/CLEAN_INSTALL.md, docs/MODULES.md, docs/TRANSFER_TO_WINDOWS.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать контекст проекта
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать контекст проекта
   - Reference: github-publication-0.6.77-20261002 / DOCS / implementation
   - Файлы: docs/planning/github-publication-0.6.77.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, README.md, AGENTS.md, docs/WORKFLOW_START.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/DOCUMENTATION_INDEX.md, docs/TRANSFER_TO_WINDOWS.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/planning/auto-plan-client-driven-refactor.md, docs/CLEAN_INSTALL.md, docs/DECISIONS.md, docs/planning/auto-plan-session-incident-20261003.md, docs/modules/chatgpt-dom-compatibility.md, docs/CONTEXT_DELIVERY.md, docs/modules/workspace-sessions.md
 

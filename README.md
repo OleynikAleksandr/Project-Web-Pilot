@@ -8,7 +8,7 @@ Project Web Pilot — локальное Electron-приложение для ma
 
 Поставка — `~/Downloads/WebPilot-0.6.78/`. Корневой `Project Web Pilot.app` и копия в `/Applications` обновлены с сохранением Finder identity. Оба ZIP сверены с 106 source/resource файлами. T004 (`88f8866`) прошла unit (496 PASS, 3 SKIP), Electron smoke и release-installed. Для применения нужен полный выход и повторный запуск. Живая приёмка 0.6.78, native Windows и чистый первый запуск не подтверждены.
 
-[Исправление и ограничения 0.6.78](docs/planning/auto-plan-session-incident-20261003.md). На GitHub опубликована 0.6.78 с пятью проверенными файлами; 0.6.77 сохранена в истории выпусков. Publication scope расширен T003/T004 по сообщению пользователя о сбое, выполненные задачи сохранены; архивирование не поручено.
+[Исправление и ограничения 0.6.78](docs/planning/auto-plan-session-incident-20261003.md). На GitHub опубликована 0.6.78 с пятью проверенными файлами; 0.6.77 сохранена в истории выпусков. Publication scope расширен T003/T004 по сообщению о сбое и T005 по поручению опубликовать 0.6.78; выполненные задачи сохранены, архивирование не поручено.
 
 [Скачать выпуск 0.6.78](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.78): macOS arm64 ZIP, Windows x64 ZIP и сопроводительные файлы. При публикации серверные размеры и SHA-256 всех пяти файлов были сверены с локальной поставкой 0.6.78. Предыдущий scope рефакторинга принят и закрыт коммитом `46097fb`; история и evidence — [RELEASE](docs/RELEASE.md), действующий контракт — [клиентское автопродолжение](docs/planning/auto-plan-client-driven-refactor.md).
 

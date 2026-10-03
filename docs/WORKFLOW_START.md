@@ -8,7 +8,7 @@
 
 Поставка — `~/Downloads/WebPilot-0.6.78/`. Корневой `Project Web Pilot.app` и копия в `/Applications` обновлены с сохранением Finder identity. Оба ZIP сверены с 106 source/resource файлами. T004 (`88f8866`) прошла unit (496 PASS, 3 SKIP), Electron smoke и release-installed. Для применения нужен полный выход и повторный запуск. Живая приёмка 0.6.78, native Windows и чистый первый запуск не подтверждены.
 
-[Исправление и ограничения 0.6.78](planning/auto-plan-session-incident-20261003.md). На GitHub опубликована 0.6.78 с пятью проверенными файлами; 0.6.77 сохранена в истории выпусков. Publication scope расширен T003/T004 по сообщению пользователя о сбое, выполненные задачи сохранены; архивирование не поручено.
+[Исправление и ограничения 0.6.78](planning/auto-plan-session-incident-20261003.md). На GitHub опубликована 0.6.78 с пятью проверенными файлами; 0.6.77 сохранена в истории выпусков. Publication scope расширен T003/T004 по сообщению о сбое и T005 по поручению опубликовать 0.6.78; выполненные задачи сохранены, архивирование не поручено.
 
 [Клиентский AutoPlan](planning/auto-plan-client-driven-refactor.md) реализован и проверен; scope рефакторинга принят и закрыт (`46097fb`). [Выпуск v0.6.77](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.77) опубликован с проверенными архивами. [Publication scope](planning/github-publication-0.6.77.md) подтвердил публикации, актуализировал README и синхронизировал оба репозитория. WorkflowKit 1.5.1 сохраняет minimum Node 22+; рабочая среда обоих проектов — Node 24.21.0. История и evidence — [RELEASE](RELEASE.md) и [VERIFICATION](VERIFICATION.md).
 
@@ -35,7 +35,7 @@ Project Web Pilot передаёт recovery **текущего checkout**. Од�
 
 Для изменений приложения обязательны Node suite и Electron smoke на изолированных fixtures; документальные задачи выполняют назначенные проверки Workflow Kit. Проверки внутри commit не запускаются отдельно на том же состоянии. Готовый проверенный бинарный релиз не пересобирается без изменения приложения.
 
-`npm run build` последовательно собирает обе платформы и выдаёт общий manifest. Внутренний build:mac обновляет постоянный app в корне workspace с сохранением Finder identity и создаёт ZIP. T004 подготовила 0.6.78 и проверила готовые файлы через release-installed в commit без повторной сборки; /Applications обновлена штатным installMacBundle. Новая версия применяется после полного выхода и повторного запуска. Публикация GitHub — по отдельному поручению.
+`npm run build` последовательно собирает обе платформы и выдаёт общий manifest. Внутренний build:mac обновляет постоянный app в корне workspace с сохранением Finder identity и создаёт ZIP. T004 подготовила 0.6.78 и проверила готовые файлы через release-installed в commit без повторной сборки; /Applications обновлена штатным installMacBundle. Новая версия применяется после полного выхода и повторного запуска. По отдельному поручению пользователя T005 опубликовала готовую 0.6.78 на GitHub.
 
 Живой ChatGPT, первый запуск и native Windows проверяет пользователь; агент не использует Computer Use и не запускает VM. Реальные чаты, профили и гостевые проекты не используются для разрушительных проверок. Предыдущие результаты и ограничения — [CLEAN_INSTALL](CLEAN_INSTALL.md) и [TRANSFER_TO_WINDOWS](TRANSFER_TO_WINDOWS.md).
 

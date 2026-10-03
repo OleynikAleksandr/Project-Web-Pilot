@@ -36,4 +36,12 @@ T003 (`3e7b7a8`) воспроизвела коллизию; T004 (`88f8866`) и�
 
 [GitHub Release v0.6.78](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.78) опубликован 2026-10-03T08:08:36Z. Тег указывает на проверенный коммит `88f8866d2722edaff019137455a79d7be5698b08`. Готовые пакеты не пересобирались. До публикации сверены размеры и серверные SHA-256 всех пяти файлов: macOS arm64 ZIP, Windows x64 ZIP, `SHA256SUMS.txt`, `INSTALL.txt`, `release-manifest.json`. GitHub подтвердил latest public release; WorkflowKit main синхронизирован, актуальный v1.5.1 и его runtime не менялись. Evidence: `.harness/runtime/github-0.6.78-publication.json` и `github-0.6.78-workflowkit.json`. Живая приёмка, native Windows и чистый первый запуск отдельно не подтверждены.
 
-Финальная DOCS после T005 сверяет все документы, включая интеграционные сведения README WorkflowKit о новой 0.6.78, и отправляет необходимые документальные изменения. Новая версия Kit не требуется. Архивирование не поручено.
+Финальная DOCS после T005 сверила документы, включая интеграционные сведения README WorkflowKit о новой 0.6.78. Документальные коммиты обоих репозиториев отправляются с итоговой сверкой main и README. Новая версия Kit не требуется. Архивирование не поручено.
+
+## 2026-10-03 — финальная DOCS после публикации 0.6.78
+
+Согласованы README обоих репозиториев, index/startup/recovery, release/verification, действующий AutoPlan и его диагностика. Web Pilot: 44 документа и 256 локальных ссылок; WorkflowKit: 11 документов и 19 ссылок, ошибок нет. Историческая приёмка 0.6.77 отделена от опубликованного исправления 0.6.78. Рабочий Node 24.21.0 и minimum пакета Kit Node 22+ различаются явно.
+
+WorkflowKit обновлён документальным T007 `dff2c8e` и финальной DOCS `b0aeb72761f8cd6288235c15167ed955df68603a`; main и README подтверждены через GitHub, 17/17 задач завершены. v1.5.1 и runtime сохранены. Web Pilot v0.6.78 остаётся latest public release с пятью проверенными файлами, тег `88f8866` сохранён. Исходники и поставки не менялись; повторные сборки и runtime suite не требовались.
+
+Evidence: `.harness/runtime/github-0.6.78-final-docs-audit.json` и `github-0.6.78-final-docs-preflight.json`; итоговая сверка обоих main и README после managed DOCS-коммита — `github-0.6.78-final-docs-publication.json`. Current scope и DONE сохранены, цель и критерии уточнены для публикации. Архивирование не поручено.

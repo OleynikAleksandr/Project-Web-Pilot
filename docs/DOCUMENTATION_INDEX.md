@@ -24,7 +24,7 @@
 <!-- workflow-kit:end -->
 ## Project Web Pilot
 
-Диагностика и исправление локальной 0.6.78 (живая приёмка ожидается): [AutoPlan в сессии публикации, 03.10.2026](planning/auto-plan-session-incident-20261003.md).
+Диагностика и исправление опубликованной 0.6.78 (живая приёмка ожидается): [AutoPlan в сессии публикации, 03.10.2026](planning/auto-plan-session-incident-20261003.md).
 
 | Документ | Назначение |
 | --- | --- |
@@ -42,8 +42,8 @@
 | docs/SOURCE_WORKSPACES.md | Связанные Project Web Pilot / Workflow Kit / Web Pilot Sidebar, рабочие каталоги, границы интеграции и исторические источники |
 | docs/VERIFICATION.md | Проверки, release evidence и границы пользовательской приёмки |
 | docs/RELEASE.md | Парный выпуск macOS/Windows, постоянный macOS app, Finder-алиас, ZIP, GitHub Release и проверка доставки |
-| docs/CLEAN_INSTALL.md | Стенд Clean/Test macOS/Windows, историческое evidence первого запуска и границы clean/native-проверок текущей локальной поставки 0.6.78 |
-| docs/TRANSFER_TO_WINDOWS.md | Локальная Windows x64 0.6.78 и опубликованная 0.6.77, hashes и самостоятельная проверка |
+| docs/CLEAN_INSTALL.md | Стенд Clean/Test macOS/Windows, историческое evidence первого запуска и границы clean/native-проверок текущей опубликованной поставки 0.6.78 |
+| docs/TRANSFER_TO_WINDOWS.md | Опубликованная Windows x64 0.6.78, hashes и самостоятельная проверка |
 | docs/WORKSPACE_SETUP.md | Создание/подключение workspace и install/upgrade Workflow Kit |
 | docs/PROJECT_ARCHIVE.md | Архив workspace, возврат и безопасное локальное удаление; веб-чаты сохраняются |
 ## Обязательная навигация проекта
@@ -84,17 +84,17 @@
 | Документ | Назначение |
 | --- | --- |
 | [Событийная обработка состояния Web Pilot](planning/event-driven-runtime.md) | Завершённый контракт трёх этапов: фаза 1 — общий observer/дедупликация, фаза 2 — файловые события/прогрев и удаление постоянных опросов, фаза 3 — сопоставимые измерения, live Chat/Work на macOS и парная поставка 0.6.74; native Windows отмечен как отдельная непроведённая проверка |
-## Workflow Kit 1.5.1 / локальная Web Pilot 0.6.78 / опубликованная 0.6.77
+## Workflow Kit 1.5.1 / опубликованная Web Pilot 0.6.78
 
 ## Web Pilot Sidebar — связанный репозиторий
 - [Контракт DOM/Sidebar](modules/chatgpt-dom-compatibility.md) — общие browser-модули, публичные символы, pageScript и SHA-256.
 - [Рабочие репозитории](SOURCE_WORKSPACES.md) — пути, роли Workflow Kit и Sidebar, текущий тестовый хост и границы будущего Host API.
 
 ## Актуальные дополнения
-- [Публикация 0.6.77 и актуализация WorkflowKit](planning/github-publication-0.6.77.md) — результат GitHub-поставки, актуализации README обоих репозиториев и финальной сверки.
+- [Публикация 0.6.77/0.6.78 и актуализация WorkflowKit](planning/github-publication-0.6.77.md) — результат GitHub-поставки, актуализации README обоих репозиториев и финальной сверки.
 - [Рефакторинг и Node 24](planning/refactoring-node24.md) — завершённый scope очистки, Node 24.21.0 / Electron 44.5.1, контракт Sidebar, опубликованный выпуск 0.6.75 и полученная приёмка.
 - [Переход на один текущий план](planning/single-active-plan-adaptation.md) — исходный контракт адаптации Web Pilot к single-active Workflow Kit.
-- [Клиентский AutoPlan с исправлением 0.6.78](planning/auto-plan-client-driven-refactor.md) — действующий контракт событийного reconcile, переключателя, обычных ответов, идентичности паузы/checkpoint и пользовательского ввода; принятый и опубликованный выпуск, проверки.
+- [Клиентский AutoPlan с исправлением 0.6.78](planning/auto-plan-client-driven-refactor.md) — действующий контракт событийного reconcile, переключателя, обычных ответов, идентичности паузы/checkpoint и пользовательского ввода; опубликованная 0.6.78, историческая приёмка 0.6.77 и границы проверок.
 - [Автовыполнение 0.6.73–0.6.76](planning/auto-plan-continuation.md) — исторический протокол коротких turn; заменён клиентским AutoPlan.
 - [Надёжность AutoPlan 0.6.76](planning/auto-plan-reliability.md) — исторические исправления и опубликованный выпуск; архитектура заменена в 0.6.77.
 - [История обзора](architecture/OVERVIEW.history-20260929.md).

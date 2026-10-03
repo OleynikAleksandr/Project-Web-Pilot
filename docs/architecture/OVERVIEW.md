@@ -12,9 +12,9 @@ Project Web Pilot — Electron-приложение для macOS arm64 и Window
 
 Поставка — `~/Downloads/WebPilot-0.6.78/`. Корневой `Project Web Pilot.app` и копия в `/Applications` обновлены с сохранением Finder identity. Оба ZIP сверены с 106 source/resource файлами. T004 (`88f8866`) прошла unit (496 PASS, 3 SKIP), Electron smoke и release-installed. Для применения нужен полный выход и повторный запуск. Живая приёмка 0.6.78, native Windows и чистый первый запуск не подтверждены.
 
-[Исправление и ограничения 0.6.78](../planning/auto-plan-session-incident-20261003.md). На GitHub опубликована 0.6.78 с пятью проверенными файлами; 0.6.77 сохранена в истории выпусков. Publication scope расширен T003/T004 по сообщению пользователя о сбое, выполненные задачи сохранены; архивирование не поручено.
+[Исправление и ограничения 0.6.78](../planning/auto-plan-session-incident-20261003.md). На GitHub опубликована 0.6.78 с пятью проверенными файлами; 0.6.77 сохранена в истории выпусков. Publication scope расширен T003/T004 по сообщению о сбое и T005 по поручению опубликовать 0.6.78; выполненные задачи сохранены, архивирование не поручено.
 
-[Клиентский AutoPlan](../planning/auto-plan-client-driven-refactor.md) реализован и проверен в T001–T005. История и evidence — [RELEASE](../RELEASE.md) и [VERIFICATION](../VERIFICATION.md). Пользователь принял результат и поручил закрыть scope рефакторинга (`46097fb`). [Выпуск v0.6.77](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.77) опубликован; README и main обоих репозиториев актуализированы отдельным publication scope. В WorkflowKit 1.5.1 minimum Node 22+ сохраняется; рабочая среда и клиент используют Node 24.21.0.
+[Клиентский AutoPlan](../planning/auto-plan-client-driven-refactor.md) реализован и проверен в T001–T005. История и evidence — [RELEASE](../RELEASE.md) и [VERIFICATION](../VERIFICATION.md). Пользователь принял прежний результат 0.6.77 и поручил закрыть scope рефакторинга (`46097fb`). [Выпуск v0.6.77](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.77) опубликован; README и main обоих репозиториев актуализированы отдельным publication scope. В WorkflowKit 1.5.1 minimum Node 22+ сохраняется; рабочая среда и клиент используют Node 24.21.0.
 
 ## Связь с Web Pilot Sidebar
 
