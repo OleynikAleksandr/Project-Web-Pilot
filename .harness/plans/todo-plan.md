@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 77,
+  "plan_revision": 78,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "release-1.5.0-docs-finalization-001",
@@ -575,11 +575,12 @@
       "verification_ids": [],
       "id": "DOCS",
       "title": "Актуализация всех документов проекта",
-      "why": "Зафиксировать поздние release-уточнения после self-host cutover.",
+      "why": "Сверить документацию WorkflowKit 1.5.1 после актуализации интеграции Web Pilot 0.6.77 и рабочей среды Node 24.",
       "acceptance_criteria": [
-        "Release docs согласованы с Workflow Kit 1.5.0 и self-host cutover."
+        "README, product, architecture/module/index документы согласованы с WorkflowKit 1.5.1 и Web Pilot 0.6.77",
+        "Minimum Node 22+ и рабочая среда Node 24.21.0 различаются явно; исходники/runtime не меняются"
       ],
-      "expected_commit_message": "docs: завершить release-документацию 1.5.0",
+      "expected_commit_message": "docs: завершить актуализацию WorkflowKit 1.5.1",
       "actual_files": []
     }
   ],
@@ -601,7 +602,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: release-1.5.0-docs-finalization-001
 Current Task: нет
-Revision: 77
+Revision: 78
 
 ## Цель
 
@@ -674,7 +675,7 @@ Revision: 77
   - Reference: release-1.5.0-docs-finalization-001 / T006 / implementation
   - Файлы: docs/modules/workflow-kit-package.md, README.md, docs/PRODUCT.md, docs/architecture/OVERVIEW.md, docs/DOCUMENTATION_INDEX.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: завершить release-документацию 1.5.0
+  - Git Commit: [PENDING] docs: завершить актуализацию WorkflowKit 1.5.1
   - Reference: release-1.5.0-docs-finalization-001 / DOCS / implementation
   - Файлы: docs/DOCUMENTATION_INDEX.md, docs/modules/workflow-kit-package.md, docs/planning/single-active-plan-migration.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, README.md, src/templates/CONTINUE.md, src/WORKFLOW.md, docs/PRODUCT.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md
 
