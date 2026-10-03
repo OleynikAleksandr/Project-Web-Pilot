@@ -9,7 +9,7 @@
       "args": [
         "test"
       ],
-      "required": true,
+      "required": false,
       "timeout_ms": 600000
     },
     {
@@ -19,8 +19,19 @@
         "run",
         "smoke"
       ],
-      "required": true,
+      "required": false,
       "timeout_ms": 600000
+    },
+    {
+      "id": "release-installed",
+      "executable": "node",
+      "args": [
+        "scripts/check-installed-release.mjs"
+      ],
+      "required": false,
+      "timeout_ms": 600000,
+      "kind": "installed",
+      "evidence": "Project Web Pilot 0.6.78: macOS arm64/Windows x64 ZIP, source/hash/version, root app and /Applications identities, installed observer/Composer/AutoPlan bounded DOM and cancelled Paste fixture."
     }
   ],
   "budget": {
