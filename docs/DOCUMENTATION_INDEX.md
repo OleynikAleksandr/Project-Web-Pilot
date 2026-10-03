@@ -81,14 +81,14 @@
 | Документ | Назначение |
 | --- | --- |
 | [Событийная обработка состояния Web Pilot](planning/event-driven-runtime.md) | Завершённый контракт трёх этапов: фаза 1 — общий observer/дедупликация, фаза 2 — файловые события/прогрев и удаление постоянных опросов, фаза 3 — сопоставимые измерения, live Chat/Work на macOS и парная поставка 0.6.74; native Windows отмечен как отдельная непроведённая проверка |
-## Workflow Kit 1.5.1 / локальная Web Pilot 0.6.77
+## Workflow Kit 1.5.1 / опубликованная Web Pilot 0.6.77
 
 ## Web Pilot Sidebar — связанный репозиторий
 - [Контракт DOM/Sidebar](modules/chatgpt-dom-compatibility.md) — общие browser-модули, публичные символы, pageScript и SHA-256.
 - [Рабочие репозитории](SOURCE_WORKSPACES.md) — пути, роли Workflow Kit и Sidebar, текущий тестовый хост и границы будущего Host API.
 
 ## Актуальные дополнения
-- [Публикация 0.6.77 и актуализация WorkflowKit](planning/github-publication-0.6.77.md) — текущий контракт GitHub-поставки и проверки README обоих репозиториев.
+- [Публикация 0.6.77 и актуализация WorkflowKit](planning/github-publication-0.6.77.md) — результат GitHub-поставки, актуализации README обоих репозиториев и финальной сверки.
 - [Рефакторинг и Node 24](planning/refactoring-node24.md) — завершённый scope очистки, Node 24.21.0 / Electron 44.5.1, контракт Sidebar, опубликованный выпуск 0.6.75 и полученная приёмка.
 - [Переход на один текущий план](planning/single-active-plan-adaptation.md) — исходный контракт адаптации Web Pilot к single-active Workflow Kit.
 - [Клиентский AutoPlan 0.6.77](planning/auto-plan-client-driven-refactor.md) — действующий контракт событийного reconcile, переключателя, обычных ответов, идентичности паузы/checkpoint и пользовательского ввода; принятый и опубликованный выпуск, проверки.

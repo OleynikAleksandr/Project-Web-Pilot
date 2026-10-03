@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 937,
+  "plan_revision": 939,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "github-publication-0.6.77-20261002",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Актуализировать README Project Web Pilot и WorkflowKit, синхронизировать оба репозитория с GitHub и опубликовать проверенные актуальные релизы без пересборки.",
   "acceptance_criteria": [
     "Актуализировать README Project Web Pilot и WorkflowKit, синхронизировать оба репозитория с GitHub и опубликовать проверенные актуальные релизы без пересборки."
@@ -29,7 +29,9 @@
       "docs/architecture/ARCHITECTURE.md",
       "docs/architecture/OVERVIEW.md",
       "docs/MODULES.md",
-      "docs/planning/auto-plan-client-driven-refactor.md"
+      "docs/planning/auto-plan-client-driven-refactor.md",
+      "docs/CLEAN_INSTALL.md",
+      "docs/DECISIONS.md"
     ]
   },
   "baseline_commit": "0a78bf366e65ad35fed3332c43eda3aa3cddf9b2",
@@ -148,8 +150,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "github-publication-0.6.77-20261002",
         "task_id": "DOCS",
@@ -173,7 +175,9 @@
         "docs/TRANSFER_TO_WINDOWS.md",
         "docs/architecture/OVERVIEW.md",
         "docs/MODULES.md",
-        "docs/planning/auto-plan-client-driven-refactor.md"
+        "docs/planning/auto-plan-client-driven-refactor.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/DECISIONS.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -182,7 +186,19 @@
       "acceptance_criteria": [
         "Документы соответствуют результату"
       ],
-      "expected_commit_message": "docs: актуализировать контекст проекта"
+      "expected_commit_message": "docs: актуализировать контекст проекта",
+      "actual_files": [
+        "AGENTS.md",
+        "README.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/DECISIONS.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/MODULES.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/planning/github-publication-0.6.77.md"
+      ]
     }
   ],
   "blocked_reason": null,
@@ -200,10 +216,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: github-publication-0.6.77-20261002
 Current Task: нет
-Revision: 937
+Revision: 939
 
 ## Цель
 
@@ -223,10 +239,10 @@ Revision: 937
   - Git Commit: [DONE] docs: подтвердить публикацию актуального WorkflowKit
   - Reference: github-publication-0.6.77-20261002 / T002 / implementation
   - Файлы: docs/planning/github-publication-0.6.77.md, docs/RELEASE.md, docs/VERIFICATION.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать контекст проекта
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать контекст проекта
   - Reference: github-publication-0.6.77-20261002 / DOCS / implementation
-  - Файлы: docs/planning/github-publication-0.6.77.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, README.md, AGENTS.md, docs/WORKFLOW_START.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/DOCUMENTATION_INDEX.md, docs/TRANSFER_TO_WINDOWS.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/planning/auto-plan-client-driven-refactor.md
+  - Файлы: docs/planning/github-publication-0.6.77.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, README.md, AGENTS.md, docs/WORKFLOW_START.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/DOCUMENTATION_INDEX.md, docs/TRANSFER_TO_WINDOWS.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/planning/auto-plan-client-driven-refactor.md, docs/CLEAN_INSTALL.md, docs/DECISIONS.md
 
 ## Context Pack For This Cycle
 

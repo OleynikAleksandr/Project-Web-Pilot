@@ -149,7 +149,7 @@ Settings → «Цвета чата…» открывает отдельное п
 
 ## Проверка на чистых системах
 
-Для 0.6.77 выполнены node24/unit/smoke и package/installed AutoPlan fixture, но живая приёмка ChatGPT, native Windows и чистый первый запуск ещё не записаны. Общая пользовательская приёмка предыдущего 0.6.75 получена 02.10.2026; отдельные live Chat/Work сценарии ранее проверялись на основном Mac в 0.6.74. История чистых запусков — [CLEAN_INSTALL](docs/CLEAN_INSTALL.md); условия самостоятельной проверки Windows — [TRANSFER_TO_WINDOWS](docs/TRANSFER_TO_WINDOWS.md).
+Для 0.6.77 выполнены node24/unit/smoke и package/installed AutoPlan fixture. 02.10.2026 пользователь подтвердил общую приёмку 0.6.77; отдельные native Windows и чистый первый запуск в сообщении не перечислены. Отдельные live Chat/Work сценарии ранее проверялись на основном Mac в 0.6.74; общая приёмка текущей версии не подменяет clean-install. История чистых запусков — [CLEAN_INSTALL](docs/CLEAN_INSTALL.md); условия самостоятельной проверки Windows — [TRANSFER_TO_WINDOWS](docs/TRANSFER_TO_WINDOWS.md).
 
 ## Сохранение размеров интерфейса
 

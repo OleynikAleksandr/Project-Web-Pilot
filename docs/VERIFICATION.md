@@ -2,6 +2,14 @@
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
+## 2026-10-03 — финальная DOCS: публикации и README
+
+Сверены README обоих репозиториев, startup/recovery, архитектура/модули/индекс, release/verification, Clean Install, Windows transfer, решения и контракт публикации. Устранены оставшиеся формулировки о неопубликованной 0.6.77 и отсутствии общей приёмки; исторические проверки сохранены с явными границами. Документы различают рабочий Node 24.21.0 и minimum Node 22+ пакета Kit.
+
+GitHub API подтвердил latest public releases [Web Pilot v0.6.77](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.77) и [WorkflowKit v1.5.1](https://github.com/OleynikAleksandr/WorkflowKit/releases/tag/v1.5.1), main обоих репозиториев, неизменные release tags и соответствие README Git-коммитам. У Web Pilot ровно пять ожидаемых assets; их серверные размеры и SHA-256 совпадают с сохранёнными подтверждениями локальной поставки. Kit сохраняет source-only release без custom assets. Код обоих проектов совпадает с соответствующими release tags; повторные сборки и runtime suite не требовались.
+
+Evidence — `.harness/runtime/github-DOCS-release-verification.json` и `github-DOCS-audit.json`. После DOCS-коммита выполняется обычный push main и проверяется соответствие опубликованных README локальным файлам. Publication scope остаётся доступным без архивирования.
+
 ## 2026-10-03 — T002: README и публикация WorkflowKit
 
 В canonical WorkflowKit выполнена T006 (`298219e`): README описывает клиентский AutoPlan Web Pilot 0.6.77 и явно различает рабочий Node 24.21.0 и minimum Node 22+ пакета. Назначенная package-проверка прошла; версия 1.5.1 и runtime 35 файлов / SHA-256 `93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33` сохранены. DOCS (`6ced594`) завершила scope: 16/16 DONE, 11 документов и 19 локальных ссылок без ошибок. Runtime/package/index/scripts совпадают с опубликованным тегом.
@@ -28,7 +36,7 @@ WorkflowKit `main` отправлен на GitHub и совпадает с `6ced
 
 Fresh Electron fixture читает durable settings и real fixture-plan, проверяет busy/sent/interrupted sending/manual и reload без дубля. Сообщения и native IDs сохраняются в fixture-history. Исходный ProseMirror installed-gate обновлён под новый контракт; запуск на новой установленной сборке относится к T005. Unit-регрессия подтверждает trailing progress после быстрого idle → busy; исправление не добавляет периодические чтения. Все проверки используют отдельные временные страницы/проекты; живой ChatGPT, native Windows и новый packaged app здесь не заявляются проверенными.
 
-## Текущая локальная поставка — 0.6.77 / 02.10.2026
+## Текущий выпуск — 0.6.77 / 02.10.2026
 
 T005 подготовила 0.6.77 штатной парной сборкой: **106 source/resource файлов совпали** с macOS arm64 / Windows x64; ZIP integrity и hashes delivery подтверждены сборочным скриптом. Поставка — `~/Downloads/WebPilot-0.6.77/`. Root app и `/Applications/Project Web Pilot.app` обновлены с сохранением Finder identity; ASAR обеих копий совпадает со staging. Версии — Electron 44.5.1, Node 24.21.0, Workflow Kit 1.5.1. Подробные размеры/hashes — [RELEASE](RELEASE.md).
 

@@ -12,7 +12,7 @@ Project Web Pilot — Electron-приложение для macOS arm64 и Window
 
 Поставка — `~/Downloads/WebPilot-0.6.77/`. Корневой `Project Web Pilot.app` и копия в `/Applications` обновлены с сохранением Finder identity. Оба ZIP и metadata сверены с 106 source/resource файлами; node24, unit, Electron smoke и package/installed gate прошли в T005 (`0b8335c`). 02.10.2026 пользователь подтвердил общую приёмку 0.6.77: всё работает в соответствии с обсуждённым контрактом. Отдельные native Windows и чистый первый запуск в сообщении о приёмке не перечислены.
 
-[Клиентский AutoPlan](../planning/auto-plan-client-driven-refactor.md) реализован и проверен в T001–T005. История и evidence — [RELEASE](../RELEASE.md) и [VERIFICATION](../VERIFICATION.md). Пользователь принял результат и поручил закрыть scope рефакторинга (`46097fb`). [Выпуск v0.6.77](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.77) опубликован; актуализация обоих репозиториев выполняется отдельным publication scope.
+[Клиентский AutoPlan](../planning/auto-plan-client-driven-refactor.md) реализован и проверен в T001–T005. История и evidence — [RELEASE](../RELEASE.md) и [VERIFICATION](../VERIFICATION.md). Пользователь принял результат и поручил закрыть scope рефакторинга (`46097fb`). [Выпуск v0.6.77](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.77) опубликован; README и main обоих репозиториев актуализированы отдельным publication scope. В WorkflowKit 1.5.1 minimum Node 22+ сохраняется; рабочая среда и клиент используют Node 24.21.0.
 
 ## Связь с Web Pilot Sidebar
 
