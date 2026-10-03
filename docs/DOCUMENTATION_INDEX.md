@@ -24,7 +24,7 @@
 <!-- workflow-kit:end -->
 ## Project Web Pilot
 
-Диагностика и исправление опубликованной 0.6.78 (живая приёмка ожидается): [AutoPlan в сессии публикации, 03.10.2026](planning/auto-plan-session-incident-20261003.md).
+Текущая локальная macOS 0.6.80: [постоянная подпись и подтверждённое сохранение ScreenCapture](planning/macos-screen-permission-stability.md). Последняя опубликованная парная поставка — 0.6.78; [история исправления AutoPlan](planning/auto-plan-session-incident-20261003.md).
 
 | Документ | Назначение |
 | --- | --- |
@@ -42,7 +42,7 @@
 | docs/SOURCE_WORKSPACES.md | Связанные Project Web Pilot / Workflow Kit / Web Pilot Sidebar, рабочие каталоги, границы интеграции и исторические источники |
 | docs/VERIFICATION.md | Проверки, release evidence и границы пользовательской приёмки |
 | docs/RELEASE.md | Парный выпуск macOS/Windows, постоянный macOS app, Finder-алиас, ZIP, GitHub Release и проверка доставки |
-| docs/CLEAN_INSTALL.md | Стенд Clean/Test macOS/Windows, историческое evidence первого запуска и границы clean/native-проверок текущей опубликованной поставки 0.6.78 |
+| docs/CLEAN_INSTALL.md | Стенд Clean/Test macOS/Windows, историческое evidence первого запуска, обновление существующего Mac до 0.6.80 и границы clean/native-проверок |
 | docs/TRANSFER_TO_WINDOWS.md | Опубликованная Windows x64 0.6.78, hashes и самостоятельная проверка |
 | docs/WORKSPACE_SETUP.md | Создание/подключение workspace и install/upgrade Workflow Kit |
 | docs/PROJECT_ARCHIVE.md | Архив workspace, возврат и безопасное локальное удаление; веб-чаты сохраняются |
@@ -88,10 +88,10 @@
 
 ## Web Pilot Sidebar — связанный репозиторий
 - [Контракт DOM/Sidebar](modules/chatgpt-dom-compatibility.md) — общие browser-модули, публичные символы, pageScript и SHA-256.
-- [Рабочие репозитории](SOURCE_WORKSPACES.md) — пути, роли Workflow Kit и Sidebar, текущий тестовый хост и границы будущего Host API.
+- [Рабочие репозитории](SOURCE_WORKSPACES.md) — пути и роли Workflow Kit/Sidebar, актуальные README для локальной 0.6.80, расхождение Composer vendor lock и границы будущего Host API.
 
 ## Актуальные дополнения
-- [Стабильное разрешение macOS на захват экрана](planning/macos-screen-permission-stability.md) — подтверждённая причина TCC, выбранная пользователем подпись UkrHD и установленная локальная macOS 0.6.79 со строгим контролем staging/ZIP/обеих копий. Live consent и сохранение разрешения между обновлениями проверяются в T004–T005.
+- [Стабильное разрешение macOS на захват экрана](planning/macos-screen-permission-stability.md) — выбранная подпись UkrHD, строгий контроль staging/ZIP/обеих установок 0.6.80, реальный MCP-захват после обновления и перезагрузки, подтверждение пользователя об отсутствии новых запросов; T005 завершена.
 - [Публикация 0.6.77/0.6.78 и актуализация WorkflowKit](planning/github-publication-0.6.77.md) — результат GitHub-поставки, актуализации README обоих репозиториев и финальной сверки.
 - [Рефакторинг и Node 24](planning/refactoring-node24.md) — завершённый scope очистки, Node 24.21.0 / Electron 44.5.1, контракт Sidebar, опубликованный выпуск 0.6.75 и полученная приёмка.
 - [Переход на один текущий план](planning/single-active-plan-adaptation.md) — исходный контракт адаптации Web Pilot к single-active Workflow Kit.

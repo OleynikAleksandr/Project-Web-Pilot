@@ -150,3 +150,9 @@ Scope 029 / T009: 0.6.29 собран из main 5028241 с изменением 
 ## Источник поставляемого Workflow Kit 1.4.11 — 0.6.52
 
 С 0.6.52 `resources/workflow-kit` взят не из WF001 (там 1.4.9), а из `/Users/oleksandroliinyk/VSCODE/CodeAppServer+WebChatGPT`, ветка `codex/gpt-provider-names`, коммит `badcf20` (`resources/workflow-kit`, tree `1fe409fbc804a565ef850f830ceb83aaa43e7a0b`). Та же копия установлена в тестовом проекте `/Users/oleksandroliinyk/VSCODE/02_Chat`. Содержимое 35 файлов закреплено SHA-256 `49dd163e025739d93eddd7603ac16c45bae1bae762b14fac69f7d42c111746e9` в `tests/workflow-kit-source.test.mjs`. Ветка ещё не слита в main CodeAppServer.
+
+## Сверка с локальной Web Pilot 0.6.80 — 03.10.2026
+
+Текущий локальный macOS Web Pilot — 0.6.80 с постоянной Apple Development подписью UkrHD; сохранение ScreenCapture после обновления/перезагрузки подтверждено проверками и пользователем. Последняя опубликованная парная macOS/Windows поставка — 0.6.78. README всех трёх репозиториев различают эти поставки.
+
+Workflow Kit сохраняет версию 1.5.1, прежний runtime и minimum Node 22+; рабочая среда обоих проектов — Node 24.21.0. Web Pilot Sidebar сохраняет собственную версию 0.1.0 и тестовый хост. При сверке vendor lock два адаптера совпали с текущими исходниками Web Pilot; Composer отличается и требует отдельной синхронизации/проверки сборки, что отмечено в README Sidebar. Lock и функциональный код сателлитов этой DOCS не меняются. Точные SHA и публичный контракт — [DOM/Sidebar](modules/chatgpt-dom-compatibility.md).

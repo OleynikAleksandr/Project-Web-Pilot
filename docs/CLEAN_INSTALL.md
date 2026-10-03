@@ -2,7 +2,9 @@
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
-Текущая версия — **0.6.78**, macOS arm64 / Windows x64, Electron **44.5.1**, Node **24.21.0**, Workflow Kit **1.5.1**. Поставка: `~/Downloads/WebPilot-0.6.78/`. T004 (`88f8866`) прошла unit/smoke/release-installed: исходники, ZIP, версии, Finder identity, комплектные инструменты и установленный observer/Composer/AutoPlan. Живая приёмка 0.6.78, native Windows и чистая установка не подтверждены. Готовые архивы доступны в [GitHub Release v0.6.78](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.78). Приёмка предыдущей 0.6.77 не переносится на 0.6.78. Матрица — [VERIFICATION](VERIFICATION.md).
+Текущая локальная macOS-версия — **0.6.80**, Electron **44.5.1**, Node **24.21.0**, Workflow Kit **1.5.1**. T005 (`8a6d0dd`) проверила обновление существующего Mac с 0.6.79, настоящий MCP-захват и сохранение разрешения после перезагрузки; пользователь подтвердил работоспособность и отсутствие новых запросов. Это не чистая установка. ZIP — `~/Downloads/WebPilot-0.6.80/`; [контракт и evidence](planning/macos-screen-permission-stability.md).
+
+Последняя опубликованная парная macOS/Windows поставка — [0.6.78](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.78), проверенная unit/smoke/release-installed. Чистая установка 0.6.80 и native Windows не проверены; Windows 0.6.80 не собиралась. Матрица — [VERIFICATION](VERIFICATION.md).
 
 История 0.6.58: Workspace Setup мигрирует совместимые 1.1.0–1.4.13 к single-active model с резервной копией; historical session plans не участвуют в readiness.
 
@@ -14,7 +16,7 @@
 
 В 0.6.48 добавлен Windows autostart после настройки подключения. После первоначальной настройки MCP и tunnel запускаются при входе пользователя в систему: macOS через существующий LaunchAgent, Windows через HKCU Run и стабильный private launcher. Открывать Web Pilot для этого не нужно. Это автозапуск в пользовательском профиле, а не системная служба до входа в аккаунт. Закрытие UI не останавливает службы; выключение компьютера завершает процессы.
 
-Живые проверки macOS выполнялись в существующем профиле, поэтому не считаются чистой установкой. Windows VM и reboot не запускались. Исторические доказательства onboarding ниже не заменены новой приёмкой.
+Живые проверки ScreenCapture 0.6.80 выполнялись в существующем профиле после обновления и настоящей перезагрузки основного Mac, поэтому не считаются чистой установкой. Windows VM и Clean/Test гости в этом scope не запускались. Исторические доказательства onboarding ниже сохраняют свои исходные границы приёмки.
 
 ## История 0.6.47; evidence первого запуска — 0.6.45
 

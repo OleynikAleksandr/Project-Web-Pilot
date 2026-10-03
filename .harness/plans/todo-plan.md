@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 970,
+  "plan_revision": 973,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "macos-screen-permission-stability-20261003",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Устранить повторный запрос Screen Recording из-за смены подписи Web Pilot: постоянная identity, проверяемая упаковка и сохранение разрешения после обновления",
   "acceptance_criteria": [
     "Устранить повторный запрос Screen Recording из-за смены подписи Web Pilot: постоянная identity, проверяемая упаковка и сохранение разрешения после обновления"
@@ -35,7 +35,16 @@
       "docs/RELEASE.md",
       "docs/VERIFICATION.md",
       "docs/PRODUCT.md",
-      "docs/architecture/ARCHITECTURE.md"
+      "docs/architecture/ARCHITECTURE.md",
+      "README.md",
+      "AGENTS.md",
+      "docs/WORKFLOW_START.md",
+      "docs/DECISIONS.md",
+      "docs/SOURCE_WORKSPACES.md",
+      "docs/CLEAN_INSTALL.md",
+      "docs/TRANSFER_TO_WINDOWS.md",
+      "docs/modules/codex-app-server-executor.md",
+      "docs/modules/chatgpt-dom-compatibility.md"
     ]
   },
   "baseline_commit": "cf72636faecc54f0bd38ef6c6bbf263efca4d9e7",
@@ -301,8 +310,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "macos-screen-permission-stability-20261003",
         "task_id": "DOCS",
@@ -324,16 +333,46 @@
         "docs/MODULES.md",
         "docs/DOCUMENTATION_INDEX.md",
         "docs/RELEASE.md",
-        "docs/VERIFICATION.md"
+        "docs/VERIFICATION.md",
+        "README.md",
+        "AGENTS.md",
+        "docs/WORKFLOW_START.md",
+        "docs/DECISIONS.md",
+        "docs/SOURCE_WORKSPACES.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "docs/modules/codex-app-server-executor.md",
+        "docs/modules/chatgpt-dom-compatibility.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
       "title": "Актуализация всех документов проекта",
       "why": "Сохранить актуальный контекст для следующего агента",
       "acceptance_criteria": [
-        "Документы соответствуют результату"
+        "Документы соответствуют результату",
+        "Действующие документы различают локальную подписанную macOS 0.6.80 и опубликованную парную 0.6.78; приёмка ScreenCapture после обновления/перезагрузки и отсутствие новых запросов подтверждены.",
+        "README Workflow Kit и Web Pilot Sidebar сверены с текущим Web Pilot 0.6.80; версии собственных пакетов, границы Host API и фактическое состояние vendor.lock описаны без ложного объявления новой публикации или совместимости."
       ],
-      "expected_commit_message": "docs: актуализировать контекст проекта"
+      "expected_commit_message": "docs: актуализировать контекст проекта",
+      "actual_files": [
+        "AGENTS.md",
+        "README.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/DECISIONS.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/RELEASE.md",
+        "docs/SOURCE_WORKSPACES.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/chatgpt-dom-compatibility.md",
+        "docs/modules/codex-app-server-executor.md",
+        "docs/planning/macos-screen-permission-stability.md"
+      ]
     }
   ],
   "blocked_reason": null,
@@ -351,10 +390,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: macos-screen-permission-stability-20261003
 Current Task: нет
-Revision: 970
+Revision: 973
 
 ## Цель
 
@@ -386,10 +425,10 @@ Revision: 970
   - Git Commit: [DONE] test: verify persistent screen permission across macOS updates
   - Reference: macos-screen-permission-stability-20261003 / T005 / implementation
   - Файлы: scripts/check-mac-signature.mjs, scripts/check-mac-screen-capture.mjs, package.json, package-lock.json, docs/planning/macos-screen-permission-stability.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/architecture/ARCHITECTURE.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать контекст проекта
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать контекст проекта
   - Reference: macos-screen-permission-stability-20261003 / DOCS / implementation
-  - Файлы: docs/planning/macos-screen-permission-stability.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/RELEASE.md, docs/VERIFICATION.md
+  - Файлы: docs/planning/macos-screen-permission-stability.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/RELEASE.md, docs/VERIFICATION.md, README.md, AGENTS.md, docs/WORKFLOW_START.md, docs/DECISIONS.md, docs/SOURCE_WORKSPACES.md, docs/CLEAN_INSTALL.md, docs/TRANSFER_TO_WINDOWS.md, docs/modules/codex-app-server-executor.md, docs/modules/chatgpt-dom-compatibility.md
 
 ## Context Pack For This Cycle
 

@@ -76,3 +76,9 @@ Composer передаёт ClipboardEvent(paste) штатному обработ�
 Observer больше не выдаёт количества DOM-узлов за ID сообщения. Native data-message-id читается также внутри semantic wrapper Work; fallback принадлежит сохраняемому циклу генерации AutoPlan. IPC содержит источник native/cycle/none, текст беседы не передаётся. Пустой snapshot загружаемой истории не разрешает автоотправку.
 
 Публичные экспорты и точный формат pageScript сохранены. pageOperation принимает необязательный draftToken и дополнительное действие clear-owned-draft; sendUserMessage поддерживает cleanupOnCancel=false. Только AutoPlan включает очистку своей отменённой вставки. Она требует совпадения токена конкретного editor, неизменённого текста и отсутствия trusted input; пользовательский черновик и unknown Send сохраняются. Recovery deliver не изменён. Внешнему Sidebar потребуется обычное обновление vendor lock при принятии новой версии; его workspace здесь не менялся.
+
+## Сверка Sidebar с локальной 0.6.80 — 03.10.2026
+
+Изменения подписи 0.6.79/0.6.80 сохранили browser-модули и публичный контракт 0.6.78. При документальной сверке `vendor.lock.json` Sidebar (`commit: 0d2a026298d42cd2063f36f242885fe032f5e910`) два SHA-256 совпали с текущими исходниками: `chatgpt-dom.mjs` и `chatgpt-experience.mjs`. Composer закреплён на `aa790c868fbd8bb5e9173d36848e74dc994840db3676c5ab5b92eb09b37c63b0`, текущий `src/chatgpt-composer.mjs` — `296f42fba2d151d82e949c7d0f1ab605fb356d8d89a5ee5fb97665e4c889af5a`.
+
+README Sidebar отражает локальную 0.6.80, публичную парную 0.6.78 и это расхождение. Повторное закрепление Composer и проверка сборки Sidebar требуют отдельной осознанной синхронизации; в DOCS внешний lock/код не менялись, совместимость сборки с новым исходником не заявляется. Production Host API в Web Pilot ещё не реализован.

@@ -8,13 +8,13 @@ Project Web Pilot — Electron-приложение для macOS arm64 и Window
 
 ## Текущее состояние
 
-Поставка **0.6.78** для macOS arm64 и Windows x64: Electron **44.5.1**, встроенный и комплектный Node **24.21.0**, Workflow Kit **1.5.1**. Исправлен AutoPlan для ограниченного окна сообщений Work: native ID либо сохраняемый цикл генерации заменяет счётчики DOM. При загрузке истории отправка ожидает сообщения; отменённая собственная вставка очищается с сохранением пользовательских правок. Экспорт `pageOperation` и формат `pageScript` сохранены.
+Текущая локальная версия для macOS arm64 — **0.6.80**: Electron **44.5.1**, встроенный и комплектный Node **24.21.0**, Workflow Kit **1.5.1**. По прямому выбору пользователя приложение подписывается существующим Apple Development сертификатом UkrHD. Постоянные bundle ID и designated requirement сохраняются при изменении CDHash сборки.
 
-Поставка — `~/Downloads/WebPilot-0.6.78/`. Корневой `Project Web Pilot.app` и копия в `/Applications` обновлены с сохранением Finder identity. Оба ZIP сверены с 106 source/resource файлами. T004 (`88f8866`) прошла unit (496 PASS, 3 SKIP), Electron smoke и release-installed. Для применения нужен полный выход и повторный запуск. Живая приёмка 0.6.78, native Windows и чистый первый запуск не подтверждены.
+Корневой `Project Web Pilot.app` и копия в `/Applications` обновлены с сохранением Finder identity. Проверены строгие подписи staging, обеих установок и приложения из выданного ZIP. T004 подтвердила первичную миграцию разрешения и живой MCP-захват; T005 (`8a6d0dd`) подтвердила сохранение доступа после обновления 0.6.79 → 0.6.80 и настоящей перезагрузки Mac. Пользователь подтвердил работоспособность и отсутствие новых запросов. Подробности — [стабильное разрешение macOS](../planning/macos-screen-permission-stability.md), [RELEASE](../RELEASE.md) и [VERIFICATION](../VERIFICATION.md).
 
-[Исправление и ограничения 0.6.78](../planning/auto-plan-session-incident-20261003.md). На GitHub опубликована 0.6.78 с пятью проверенными файлами; 0.6.77 сохранена в истории выпусков. Publication scope расширен T003/T004 по сообщению о сбое и T005 по поручению опубликовать 0.6.78; выполненные задачи сохранены, архивирование не поручено.
+Локальная поставка — `~/Downloads/WebPilot-0.6.80/Project-Web-Pilot-0.6.80-macOS-arm64.zip`. Последняя опубликованная парная macOS/Windows поставка — [0.6.78](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.78). Windows 0.6.80 и публикация 0.6.80 не выполнялись; native Windows и чистая установка этой локальной версии не проверены.
 
-[Клиентский AutoPlan](../planning/auto-plan-client-driven-refactor.md) реализован и проверен в T001–T005. История и evidence — [RELEASE](../RELEASE.md) и [VERIFICATION](../VERIFICATION.md). Пользователь принял прежний результат 0.6.77 и поручил закрыть scope рефакторинга (`46097fb`). [Выпуск v0.6.77](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.77) опубликован; README и main обоих репозиториев актуализированы отдельным publication scope. В WorkflowKit 1.5.1 minimum Node 22+ сохраняется; рабочая среда и клиент используют Node 24.21.0.
+Функциональное поведение AutoPlan из 0.6.78 сохранено: native ID либо сохраняемый цикл генерации определяет паузу; загрузка истории ожидается, отменённая собственная вставка очищается с сохранением пользовательских правок. Публичные экспорты DOM/Composer и формат `pageScript` сохранены. [Контракт AutoPlan](../planning/auto-plan-client-driven-refactor.md).
 
 ## Связь с Web Pilot Sidebar
 
@@ -34,7 +34,7 @@ Web Pilot Sidebar (`/Users/oleksandroliinyk/VSCODE/Web Pilot Sidebar`) — от�
 - Общие файловые функции находятся в src/common.mjs: потоковый SHA-256, exists (строгий режим для очистки истории) и создание ошибок fail. src/tunnel-setup.mjs объединяет обмен с first-run helper, передачу credentials через stdin и фильтрацию ошибок; платформенные обёртки задают прежние env, классы ошибок и пользовательские сообщения. Scripts импортируют src, обратных зависимостей нет; самостоятельные Python/resources-workers не зависят от src.
 - На macOS один стабильный tunnel обслуживает выбранный MCP backend: Codex Local Mac или Codex App Server Local Mac. App Server выполняет локальные инструменты без модельного turn/start. Службы живут независимо от UI.
 - Новый этап дополняет current plan через plan:extend; DOCS завершает scope, архивирование только по прямому поручению. plan:carryover 1.5.1 переносит незавершённые задачи с точным архивом прошлого scope.
-- Парный выпуск macOS/Windows — npm run build; сохранять identity постоянного app и Finder-алиас. Не использовать пользовательские сертификаты. Native Windows/live ChatGPT проверяются отдельно; VM и Computer Use не запускать.
+- Парный выпуск macOS/Windows — npm run build; сохранять identity постоянного app и Finder-алиас. Для локальной macOS-подписи используется явно выбранный пользователем сертификат UkrHD через штатную signing configuration; автоматического выбора и ad hoc fallback нет. Native Windows/live ChatGPT проверяются отдельно; VM и Computer Use не запускать.
 
 ## Навигация
 [Модули](../MODULES.md), [индекс](../DOCUMENTATION_INDEX.md), [выпуск](../RELEASE.md), [проверки](../VERIFICATION.md).
@@ -43,4 +43,4 @@ Web Pilot Sidebar (`/Users/oleksandroliinyk/VSCODE/Web Pilot Sidebar`) — от�
 
 ## Стабильное разрешение macOS — локальная реализация
 
-[Контракт](../planning/macos-screen-permission-stability.md): устранить подтверждённое TCC несовпадение подписи ScreenCapture через постоянную identity и проверяемую упаковку. По прямому выбору пользователя используется UkrHD. T003 подписала и локально установила macOS 0.6.79 в root app и /Applications, сохранив Finder identity; строгий gate проверяет подпись до замены, после копирования и в ZIP. Системное разрешение и живой захват ещё не проверены (T004–T005). Публичная парная поставка остаётся 0.6.78.
+[Контракт](../planning/macos-screen-permission-stability.md): подтверждённое TCC несовпадение устранено постоянной identity UkrHD и проверяемой упаковкой. T003 установила подписанную 0.6.79; T004 подтвердила разрешение и живой MCP-захват. T005 проверила 0.6.80 с другим CDHash, прежним requirement и сохранённым доступом после обновления/перезагрузки; пользователь подтвердил отсутствие новых запросов. Filesystem identity проверяется по volume UUID и inode, device — дополнительно в пределах одной загрузки. Публичная парная поставка остаётся 0.6.78.

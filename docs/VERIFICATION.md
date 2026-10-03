@@ -1,5 +1,11 @@
 # Проверки и приёмка
 
+## 2026-10-03 — DOCS: актуальная 0.6.80 и оба сателлита
+
+Документальная сверка охватила 42 действующих документа Web Pilot, 11 WorkflowKit и 13 Sidebar: 286 локальных Markdown-ссылок без ошибок. Текущая локальная macOS-версия 0.6.80 отделена от последней опубликованной парной 0.6.78. Обе установленные Mac-копии имеют версию 0.6.80; runtime/package WorkflowKit побайтно не изменились относительно v1.5.1. Evidence — `.harness/runtime/docs-0.6.80-audit.json`.
+
+README WorkflowKit обновлён managed commit `933f146`; его финальная сверка документов — `c59ee84`. README Web Pilot Sidebar обновлён `c30d2cd`: собственная версия 0.1.0, тестовый хост и расхождение Composer vendor lock описаны явно. Два других адаптера совпали; lock и функциональный код Sidebar не менялись. Сборка с новым Composer не проверена и требует отдельной синхронизации. Эти документальные изменения не пересобирают приложения и не публикуют новый парный релиз.
+
 ## 2026-10-03 — T005: разрешение сохранилось после обновления и перезагрузки
 
 CDHash изменился с `df46eb68c01a219c1437b7df6f16f11ba46120d8` на `7530b6039526f6b7153be0a29308196f0088b781`. Сертификат UkrHD, TeamID, bundle ID и designated requirement совпадают. Root app и Applications обновлены штатным installer с сохранением device/inode. После полного перезапуска 0.6.80 и нового MCP доступ сохранился.
@@ -8,7 +14,7 @@ CDHash изменился с `df46eb68c01a219c1437b7df6f16f11ba46120d8` на `75
 
 Настоящая перезагрузка подтверждена: новая boot session `095A1F32-27F4-48D7-BF9B-EBB9E6EB41A7` отличается от `FE8247C3-2636-47D5-9E40-5BE3F03249F6`. На новой загрузке обе installed проверки прошли. MCP PID 4272, запущенный подписанным app PID 4219, вернул PNG 1600×900 / 640056 байт, SHA-256 `fc812af4f6e4ca3f1c3b7c5dafa8f19cf5feafdf848c6cf34786cd239542c1eb`. TCC разрешил настоящий запрос, responsible application = текущая 0.6.80; mismatch отсутствует. Volume UUID и inode двух app сохранились при смене device 16777227 → 16777231.
 
-03.10.2026 пользователь подтвердил: «Я подтверждаю, всё работает и запросов никаких не присылает». Вместе с проверками обновления и настоящей перезагрузки это закрывает критерии приёмки T005. Назначенные mac-signature и mac-screen-capture выполняются в managed commit на той же установленной B.
+03.10.2026 пользователь подтвердил: «Я подтверждаю, всё работает и запросов никаких не присылает». Вместе с проверками обновления и настоящей перезагрузки это закрывает критерии приёмки T005. Managed commit T005 (`8a6d0dd`) завершён: назначенные mac-signature и mac-screen-capture прошли на той же установленной B. Итоговый PNG 1600×900 / 701865 байт, SHA-256 `b0d49b03759e94643aef695046939de7632612f912ab63ef5f92500d54ab9902`; TCC разрешил настоящий запрос без mismatch. Receipt — `.harness/runtime/t005-managed-checks.json`.
 
 Evidence: `.harness/runtime/t005-baseline.json`, `t005-update-comparison.json`, `t005-before-reboot.json`, `t005-after-reboot.json`, `t005-user-confirmation.json`, `t005-progress.json`; [контракт](planning/macos-screen-permission-stability.md). Подтверждение пользователя сохранено отдельно от технических результатов. Windows/GitHub-публикация не выполнялась.
 
@@ -20,7 +26,7 @@ Evidence: `.harness/runtime/t005-baseline.json`, `t005-update-comparison.json`, 
 
 Первый managed commit остановлен timeout mac-signature при чтении доставленного ZIP: старый Full Disk Access grant не совпал с новой подписью. После следующего запуска app PID 9303 / MCP PID 9346 доступ к ZIP восстановился. Повторный commit запускает обе назначенные installed проверки без ослабления gate; агент не менял Full Disk Access и не повторял ScreenCapture reset.
 
-Evidence — .harness/runtime/t004-initial-capture.json, t004-persistence-restart.json, t004-post-restart-preflight.json, t004-post-restart-capture.json, mac-screen-capture-check.json и t004-progress.json; история миграции — t004-cloud-capture-attribution.json и t004-permission-reset.json. Снимки/логи остаются в приватной ignored runtime-папке. Смена сборки с другим CDHash, перезагрузка Mac и подтверждение пользователем отсутствия диалога ещё не проверены: T005. [Контракт](planning/macos-screen-permission-stability.md).
+Evidence — .harness/runtime/t004-initial-capture.json, t004-persistence-restart.json, t004-post-restart-preflight.json, t004-post-restart-capture.json, mac-screen-capture-check.json и t004-progress.json; история миграции — t004-cloud-capture-attribution.json и t004-permission-reset.json. Снимки/логи остаются в приватной ignored runtime-папке. На момент T004 смена сборки с другим CDHash, перезагрузка Mac и подтверждение пользователем отсутствия диалога относились к следующей T005; её подтверждённый результат приведён выше. [Контракт](planning/macos-screen-permission-stability.md).
 
 ## 2026-10-03 — T003: локальная подписанная macOS 0.6.79
 

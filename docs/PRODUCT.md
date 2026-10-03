@@ -4,7 +4,13 @@
 
 В 0.6.72 передача recovery завершается сразу после Send, без поиска текста в DOM или ожидания ответа. Paste сохранён; старые неопределённые попытки больше не показывают бесконечную проверку. Контракт — docs/CONTEXT_DELIVERY.md, измерения — docs/VERIFICATION.md.
 
-Поставка **0.6.78** для macOS arm64 и Windows x64: Electron **44.5.1**, встроенный и комплектный Node **24.21.0**, Workflow Kit **1.5.1**. Исправлен AutoPlan для ограниченного окна сообщений Work: native ID либо сохраняемый цикл генерации заменяет счётчики DOM. При загрузке истории отправка ожидает сообщения; отменённая собственная вставка очищается с сохранением пользовательских правок. Экспорт `pageOperation` и формат `pageScript` сохранены. T004 (`88f8866`) прошла unit, smoke и release-installed. GitHub Release 0.6.78 опубликован; предыдущая 0.6.77 сохранена. Границы приёмки — [VERIFICATION](VERIFICATION.md), артефакты — [RELEASE](RELEASE.md), [контракт AutoPlan](planning/auto-plan-client-driven-refactor.md), [разбор инцидента](planning/auto-plan-session-incident-20261003.md).
+Текущая локальная версия для macOS arm64 — **0.6.80**: Electron **44.5.1**, встроенный и комплектный Node **24.21.0**, Workflow Kit **1.5.1**. По прямому выбору пользователя приложение подписывается существующим Apple Development сертификатом UkrHD. Постоянные bundle ID и designated requirement сохраняются при изменении CDHash сборки.
+
+Корневой `Project Web Pilot.app` и копия в `/Applications` обновлены с сохранением Finder identity. Проверены строгие подписи staging, обеих установок и приложения из выданного ZIP. T004 подтвердила первичную миграцию разрешения и живой MCP-захват; T005 (`8a6d0dd`) подтвердила сохранение доступа после обновления 0.6.79 → 0.6.80 и настоящей перезагрузки Mac. Пользователь подтвердил работоспособность и отсутствие новых запросов. Подробности — [стабильное разрешение macOS](planning/macos-screen-permission-stability.md), [RELEASE](RELEASE.md) и [VERIFICATION](VERIFICATION.md).
+
+Локальная поставка — `~/Downloads/WebPilot-0.6.80/Project-Web-Pilot-0.6.80-macOS-arm64.zip`. Последняя опубликованная парная macOS/Windows поставка — [0.6.78](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.78). Windows 0.6.80 и публикация 0.6.80 не выполнялись; native Windows и чистая установка этой локальной версии не проверены.
+
+Функциональное поведение AutoPlan из 0.6.78 сохранено: native ID либо сохраняемый цикл генерации определяет паузу; загрузка истории ожидается, отменённая собственная вставка очищается с сохранением пользовательских правок. Публичные экспорты DOM/Composer и формат `pageScript` сохранены. [Контракт AutoPlan](planning/auto-plan-client-driven-refactor.md).
 
 История выпуска **0.6.54**: таймер работы агента в карточке плана. Поставка: `~/Downloads/WebPilot-0.6.54/`.
 

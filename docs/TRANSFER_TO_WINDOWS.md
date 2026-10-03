@@ -2,7 +2,9 @@
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
-Текущая поставка — **Project Web Pilot 0.6.78, Windows x64**, собранная вместе с macOS arm64. Workflow Kit 1.5.1. Упакованные исходники и ZIP сверены; native Windows/clean VM не запускались.
+Текущая опубликованная Windows-поставка — **Project Web Pilot 0.6.78, Windows x64**, собранная вместе с macOS arm64. Workflow Kit 1.5.1. Упакованные исходники и ZIP сверены; native Windows/clean VM не запускались.
+
+На основном Mac локально установлена подписанная 0.6.80 с подтверждённым сохранением ScreenCapture после обновления/перезагрузки. Windows 0.6.79/0.6.80 и новая парная публикация не выполнялись; файл для переноса ниже остаётся 0.6.78. [Контракт macOS](planning/macos-screen-permission-stability.md), [RELEASE](RELEASE.md).
 
 ## Файл для переноса
 
