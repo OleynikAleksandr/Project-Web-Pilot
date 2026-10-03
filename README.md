@@ -2,7 +2,7 @@
 
 WorkflowKit — canonical Node.js package `@webpilot/workflow-kit` для управления состоянием проекта, current plan, recovery context и lifecycle задач в одном Git checkout/worktree.
 
-Текущая версия: **1.5.1**. Текущая рабочая среда и Project Web Pilot используют **Node.js 24.21.0**. Минимальное требование самого пакета остаётся **Node.js 22+** (`engines.node: >=22`); Node 24 соответствует этому требованию.
+Текущая локальная версия исходников: **1.5.2**; последний опубликованный Release — **1.5.1**. Текущая рабочая среда и Project Web Pilot используют **Node.js 24.21.0**. Минимальное требование самого пакета остаётся **Node.js 22+** (`engines.node: >=22`); Node 24 соответствует этому требованию.
 
 ## Связанные репозитории
 
@@ -50,7 +50,7 @@ node scripts/check-runtime-fixture.mjs
 node scripts/check-consumer-contract.mjs
 ```
 
-Опубликованный runtime Release 1.5.1 содержит 35 файлов; SHA-256: `93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33`. Текущий локальный worktree после policy DOCS → delivery также содержит 35 файлов, SHA-256: `aeea7c56b2dbc34e5ca1f8aa3c4c87ab1ec47406b5d04f49b6177eaba2a3bf9a`; эти изменения ещё не публиковались отдельным release.
+Опубликованный runtime Release 1.5.1 содержит 35 файлов; SHA-256: `93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33`. Текущий локальный Workflow Kit 1.5.2 после policy DOCS → delivery содержит 35 файлов, SHA-256: `646fec106c498e004d8688a3bc40012bea1654178ce66a61b650211ab28055df`; эти изменения ещё не публиковались отдельным release.
 
 Исходный [GitHub Release WorkflowKit 1.5.1](https://github.com/OleynikAleksandr/WorkflowKit/releases/tag/v1.5.1) сохраняет опубликованный тег; последующие документальные обновления находятся в main.
 

@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 110,
+  "plan_revision": 112,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "pwp-t001-kit-152-cutover-20261003",
@@ -72,8 +72,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "pwp-t001-kit-152-cutover-20261003",
         "task_id": "T001",
@@ -107,7 +107,19 @@
         "upgradeFrom включает 1.5.1",
         "runtime fixture и package check проходят"
       ],
-      "expected_commit_message": "feat: prepare Workflow Kit 1.5.2 policy cutover"
+      "expected_commit_message": "feat: prepare Workflow Kit 1.5.2 policy cutover",
+      "actual_files": [
+        "README.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/workflow-kit-package.md",
+        "docs/planning/delivery-ordering-policy.md",
+        "package.json",
+        "scripts/check-consumer-contract.mjs",
+        "scripts/check-package.mjs",
+        "scripts/check-runtime-fixture.mjs",
+        "src/lib/common.mjs",
+        "src/lib/installer.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -157,7 +169,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: pwp-t001-kit-152-cutover-20261003
 Current Task: нет
-Revision: 110
+Revision: 112
 
 ## Цель
 
@@ -171,8 +183,8 @@ Revision: 110
 
 ## Микрозадачи
 
-- [TODO] T001: Подготовить локальный Workflow Kit 1.5.2 для self-host upgrade — Ожидает
-  - Git Commit: [PENDING] feat: prepare Workflow Kit 1.5.2 policy cutover
+- [DONE] T001: Подготовить локальный Workflow Kit 1.5.2 для self-host upgrade — Завершено
+  - Git Commit: [DONE] feat: prepare Workflow Kit 1.5.2 policy cutover
   - Reference: pwp-t001-kit-152-cutover-20261003 / T001 / implementation
   - Файлы: package.json, src/lib/common.mjs, src/lib/installer.mjs, scripts/check-runtime-fixture.mjs, scripts/check-package.mjs, scripts/check-consumer-contract.mjs, README.md, docs/architecture/OVERVIEW.md, docs/modules/workflow-kit-package.md, docs/planning/delivery-ordering-policy.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает

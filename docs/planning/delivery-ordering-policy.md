@@ -19,7 +19,7 @@ Workflow Kit должен передавать каждому новому аг�
 
 Изменения выполняются в canonical workspace `/Users/oleksandroliinyk/VSCODE/WorkflowKit`, но отдельного ACTIVE-плана в этом checkout нет: current plan WorkflowKit остаётся `NONE`. Работой управляет активная T001 плана Project Web Pilot `input-instruction-delivery-ordering-20261003`; это исключает второй незавершённый plan при открытии WorkflowKit как отдельного проекта.
 
-Эта работа **не** собирает и не публикует новую версию Workflow Kit или Project Web Pilot. Возможный binary/package release — отдельная последующая delivery-задача после DOCS.
+Для доставки новой recovery policy локальная package version Workflow Kit поднята до **1.5.2** с upgrade-path 1.5.1 → 1.5.2. Это не release/publish: GitHub Release и публикация package в этой работе не выполняются. Возможный внешний release — отдельная последующая delivery-задача после DOCS.
 
 ## Проверка
 

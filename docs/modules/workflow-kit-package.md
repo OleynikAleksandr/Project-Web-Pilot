@@ -1,10 +1,10 @@
 # Workflow Kit Package — техническая спецификация
 
-Текущий опубликованный release contract: `@webpilot/workflow-kit` **1.5.1**, 35 файлов, SHA-256 `93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33`. Локальный worktree после policy DOCS → delivery: 35 файлов, SHA-256 `aeea7c56b2dbc34e5ca1f8aa3c4c87ab1ec47406b5d04f49b6177eaba2a3bf9a`; отдельный release ещё не выполнялся.
+Текущий опубликованный release contract: `@webpilot/workflow-kit` **1.5.1**, 35 файлов, SHA-256 `93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33`. Локальный Workflow Kit **1.5.2** после policy DOCS → delivery: 35 файлов, SHA-256 `646fec106c498e004d8688a3bc40012bea1654178ce66a61b650211ab28055df`; отдельный release ещё не выполнялся.
 
 ## Среда Node.js
 
-Минимальное требование `@webpilot/workflow-kit` 1.5.1 — **Node 22+**: его задают `package.json` (`engines.node: >=22`), CLI и installer launcher. Рабочая среда разработки и опубликованный Web Pilot 0.6.80 используют **Node 24.21.0**. Переход клиента и его workers на Node 24 сохраняет совместимость пакета Kit; package version пока остаётся 1.5.1.
+Минимальное требование `@webpilot/workflow-kit` 1.5.1 — **Node 22+**: его задают `package.json` (`engines.node: >=22`), CLI и installer launcher. Рабочая среда разработки и опубликованный Web Pilot 0.6.80 используют **Node 24.21.0**. Переход клиента и его workers на Node 24 сохраняет совместимость пакета Kit; локальная package version — 1.5.2, опубликованная — 1.5.1.
 
 ## Назначение
 
@@ -121,7 +121,7 @@ Workspace Setup и project readiness проверяют только current che
 
 `scripts/check-package.mjs` проверяет package identity/fileset/exports и отсутствие project/runtime state в tarball.
 
-Release **@webpilot/workflow-kit 1.5.1**: canonical runtime — **35 файлов**, SHA-256 **93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33**. Текущий непубликованный worktree — **35 файлов**, SHA-256 **aeea7c56b2dbc34e5ca1f8aa3c4c87ab1ec47406b5d04f49b6177eaba2a3bf9a**. Installer принимает upgrade с 1.4.13; runtime regression проверяет этот переход, архивирование legacy session plans, strict current recovery budget и Git worktree isolation.
+Release **@webpilot/workflow-kit 1.5.1**: canonical runtime — **35 файлов**, SHA-256 **93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33**. Текущий непубликованный Workflow Kit **1.5.2** — **35 файлов**, SHA-256 **646fec106c498e004d8688a3bc40012bea1654178ce66a61b650211ab28055df**. Upgrade 1.5.1 → 1.5.2 поддерживается installer-ом. Installer принимает upgrade с 1.4.13; runtime regression проверяет этот переход, архивирование legacy session plans, strict current recovery budget и Git worktree isolation.
 
 ## Workflow Kit 1.5.1 — перенос остатка scope
 

@@ -2,9 +2,9 @@
 
 ## Назначение
 
-WorkflowKit — canonical Node.js package `@webpilot/workflow-kit`. Репозиторий `/Users/oleksandroliinyk/VSCODE/WorkflowKit` является единственным местом разработки кода Kit. Текущий release — **1.5.1**.
+WorkflowKit — canonical Node.js package `@webpilot/workflow-kit`. Репозиторий `/Users/oleksandroliinyk/VSCODE/WorkflowKit` является единственным местом разработки кода Kit. Текущая локальная версия исходников — **1.5.2**; последний опубликованный release — **1.5.1**.
 
-Рабочая среда и опубликованная интеграция Web Pilot 0.6.80 используют Node 24.21.0; минимальное требование самого пакета Kit остаётся Node 22+. Опубликованный Release Kit остаётся 1.5.1; текущий локальный worktree содержит непубликованное изменение policy DOCS → delivery.
+Рабочая среда и опубликованная интеграция Web Pilot 0.6.80 используют Node 24.21.0; минимальное требование самого пакета Kit остаётся Node 22+. Опубликованный Release Kit остаётся 1.5.1; локальный Workflow Kit 1.5.2 содержит непубликованное изменение policy DOCS → delivery и безопасный upgrade 1.5.1 → 1.5.2.
 
 ## Устройство
 
@@ -24,7 +24,7 @@ Upgrade со старой session-owned установки оставляет va
 
 ## Проверка
 
-Текущий локальный canonical runtime: 35 файлов; SHA-256 `aeea7c56b2dbc34e5ca1f8aa3c4c87ab1ec47406b5d04f49b6177eaba2a3bf9a`. Опубликованный Release 1.5.1 сохраняет SHA-256 `93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33`.
+Текущий локальный canonical runtime 1.5.2: 35 файлов; SHA-256 `646fec106c498e004d8688a3bc40012bea1654178ce66a61b650211ab28055df`. Опубликованный Release 1.5.1 сохраняет SHA-256 `93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33`.
 
 Проверки: `node scripts/check-package.mjs`, `node scripts/check-runtime-fixture.mjs`, `node scripts/check-consumer-contract.mjs`.
 
