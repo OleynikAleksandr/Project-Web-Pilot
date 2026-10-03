@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 991,
+  "plan_revision": 993,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "input-instruction-delivery-ordering-20261003",
@@ -31,7 +31,7 @@
     ]
   },
   "baseline_commit": "0db9db525090e376ee5aaa1b87a14172e2810aa6",
-  "current_task_id": null,
+  "current_task_id": "T001",
   "context_pack": {
     "documents": [
       {
@@ -68,7 +68,7 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
+      "implementation_status": "IN_PROGRESS",
       "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "input-instruction-delivery-ordering-20261003",
@@ -209,8 +209,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: input-instruction-delivery-ordering-20261003
-Current Task: нет
-Revision: 991
+Current Task: T001
+Revision: 993
 
 ## Цель
 
@@ -222,7 +222,7 @@ Revision: 991
 
 ## Микрозадачи
 
-- [TODO] T001: Завершить canonical policy DOCS/build/publish в WorkflowKit — Ожидает
+- [IN_PROGRESS] T001: Завершить canonical policy DOCS/build/publish в WorkflowKit — В работе
   - Git Commit: [PENDING] feat: Завершить canonical policy DOCS/build/publish в WorkflowKit
   - Reference: input-instruction-delivery-ordering-20261003 / T001 / implementation
   - Файлы: docs/planning/input-instruction-delivery-ordering.md

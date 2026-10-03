@@ -10,7 +10,7 @@
       "executable": "bash",
       "args": [
         "-lc",
-        "cd ../WorkflowKit && test \"$(./scripts/workflow status | node -e 'let s=\"\";process.stdin.on(\"data\",d=>s+=d).on(\"end\",()=>process.stdout.write(JSON.parse(s).delivery_status))')\" = READY_FOR_ACCEPTANCE && npm run check"
+        "cd ../WorkflowKit && test \"$(./scripts/workflow status | node -e 'let s=\"\";process.stdin.on(\"data\",d=>s+=d).on(\"end\",()=>process.stdout.write(JSON.parse(s).scope_status))')\" = NONE && npm run check"
       ]
     },
     {
