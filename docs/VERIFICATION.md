@@ -1,12 +1,22 @@
 # Проверки и приёмка
 
+## 2026-10-03 — T004: живой MCP-захват подписанной macOS 0.6.79
+
+После единственного адресного сброса устаревшего ScreenCapture grant системное разрешение выдано текущей подписанной копии. CGPreflightScreenCaptureAccess подтвердил доступ без вызова диалога. В 14:02:39 Europe/Madrid официальный Python MCP client действующего executor вернул PNG 1600×900 / 1 514 442 байта; SHA-256 17197679087d1cf15e0fb7a84a2b169375918391d9ac6dcd4388d361b9e7c35a. TCC подтвердил responsible application = com.oleynik.ProjectWebPilot, PID 92168, путь постоянного root app; разрешённый настоящий запрос, несовпадения code requirement нет.
+
+В 14:04:17 агент штатно завершил и снова открыл Web Pilot. App PID 98011 и MCP PID 98053 отличаются от предыдущих; подпись та же, native preflight сразу подтвердил сохранённое разрешение. Назначенные installed checks managed commit — mac-signature и mac-screen-capture. Повторный живой захват в 14:15:08 прошёл: PNG 1600×900 / 1 853 446 байт, SHA-256 4a4042c71777cf91b1a09cb671157327f7e3a5c2ec4e411ddc44bc12085a7e32, TCC разрешил настоящий запрос и подтвердил текущий root app. Проверка mac-screen-capture проверяет PNG через действующий MCP-процесс, его размеры/хеш и положительную TCC attribution. Проверка останавливается до захвата при старом процессе или отсутствии системного разрешения; consent-кнопки и службы не автоматизирует.
+
+Первый managed commit остановлен timeout mac-signature при чтении доставленного ZIP: старый Full Disk Access grant не совпал с новой подписью. После следующего запуска app PID 9303 / MCP PID 9346 доступ к ZIP восстановился. Повторный commit запускает обе назначенные installed проверки без ослабления gate; агент не менял Full Disk Access и не повторял ScreenCapture reset.
+
+Evidence — .harness/runtime/t004-initial-capture.json, t004-persistence-restart.json, t004-post-restart-preflight.json, t004-post-restart-capture.json, mac-screen-capture-check.json и t004-progress.json; история миграции — t004-cloud-capture-attribution.json и t004-permission-reset.json. Снимки/логи остаются в приватной ignored runtime-папке. Смена сборки с другим CDHash, перезагрузка Mac и подтверждение пользователем отсутствия диалога ещё не проверены: T005. [Контракт](planning/macos-screen-permission-stability.md).
+
 ## 2026-10-03 — T003: локальная подписанная macOS 0.6.79
 
 Подписанная staging-сборка, установленный root app, /Applications и извлечённый macOS ZIP проверяются production gate `mac-signature` в управляемом commit T003 вместе с unit и Electron smoke. Gate сверяет сертификат UkrHD, TeamID, bundle ID, designated requirement, CDHash, целостность sealed resources и сохранённую filesystem identity.
 
 Физический отрицательный тест на временной копии настоящего bundle отклонил другую identity и изменённый Node LICENSE: временная установленная папка и контрольный файл сохранились; staging не менялся. Отдельные installer-тесты проверяют блокировку до замены и rollback после неудачной проверки копии. SHA-256 комплектных Node/uv совпадают с подготовленным upstream toolchain в staging и обеих установках.
 
-Evidence и SHA-256 ZIP — [RELEASE](RELEASE.md). Живой Screen Recording consent, MCP capture, повторный запуск и сохранение разрешения после обновления/перезагрузки ещё не подтверждены (T004–T005).
+Evidence и SHA-256 ZIP — [RELEASE](RELEASE.md). На момент T003 живой Screen Recording consent, MCP capture и сохранение разрешения ещё не были подтверждены; результаты захвата/повторного запуска описаны в T004 выше. Обновление и перезагрузка остаются T005.
 
 ## 2026-10-03 — финальная DOCS после публикации 0.6.78
 

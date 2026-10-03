@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 965,
+  "plan_revision": 967,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "macos-screen-permission-stability-20261003",
@@ -215,8 +215,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "macos-screen-permission-stability-20261003",
         "task_id": "T004",
@@ -245,7 +245,12 @@
         "Действующий MCP capture_screen возвращает непустой PNG; responsible application подтверждён",
         "Повторный запуск app/executor сохраняет разрешение; нет TCC mismatch"
       ],
-      "expected_commit_message": "test: verify screen capture through the installed MCP executor"
+      "expected_commit_message": "test: verify screen capture through the installed MCP executor",
+      "actual_files": [
+        "scripts/check-mac-screen-capture.mjs",
+        "docs/planning/macos-screen-permission-stability.md",
+        "docs/VERIFICATION.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -335,7 +340,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: macos-screen-permission-stability-20261003
 Current Task: нет
-Revision: 965
+Revision: 967
 
 ## Цель
 
@@ -359,8 +364,8 @@ Revision: 965
   - Git Commit: [DONE] fix: verify macOS code signature before installing releases
   - Reference: macos-screen-permission-stability-20261003 / T003 / implementation
   - Файлы: scripts/release-mac.mjs, scripts/release-all.mjs, scripts/check-mac-signature.mjs, scripts/check-installed-release.mjs, tests/release-mac.test.mjs, package.json, package-lock.json, scripts/sign-mac-bundle.mjs, docs/planning/macos-screen-permission-stability.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/architecture/OVERVIEW.md, docs/DOCUMENTATION_INDEX.md
-- [TODO] T004: Перепривязать разрешение текущей сборки и проверить настоящий MCP-захват — Ожидает
-  - Git Commit: [PENDING] test: verify screen capture through the installed MCP executor
+- [DONE] T004: Перепривязать разрешение текущей сборки и проверить настоящий MCP-захват — Завершено
+  - Git Commit: [DONE] test: verify screen capture through the installed MCP executor
   - Reference: macos-screen-permission-stability-20261003 / T004 / implementation
   - Файлы: scripts/check-mac-screen-capture.mjs, docs/planning/macos-screen-permission-stability.md, docs/VERIFICATION.md
 - [TODO] T005: Подтвердить сохранение разрешения между двумя сборками и после перезагрузки — Ожидает
