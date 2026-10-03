@@ -27,6 +27,7 @@ export function projectContextPack(pack = {}) {
 }
 export const isDocumentationFinalizationTask = task => task?.id === FINAL_DOCUMENTATION_TASK_ID
   && task?.title === FINAL_DOCUMENTATION_TASK_TITLE;
+export const isDeliveryTask = task => ['package','installed'].includes(task?.verification_kind);
 export function emptyPlan(name) {
   return { schema_version: 1, plan_revision: 1, project_id: id(), project_name: name, scope_id: null,
     execution_scope_status: 'NONE', delivery_status: 'IN_PROGRESS', objective: PROJECT_CONTINUATION_OBJECTIVE, acceptance_criteria: [],
@@ -107,12 +108,20 @@ export function validatePlan(p) {
   check(p.execution_scope_status !== 'BLOCKED' || (typeof p.blocked_reason === 'string' && p.blocked_reason.trim()), 'PLAN_SCHEMA', 'BLOCKED требует причину.');
   const finalTask = p.tasks.find(isDocumentationFinalizationTask);
   if (finalTask) {
-    check(p.tasks.at(-1)?.id === finalTask.id, 'DOCUMENTATION_FINAL_TASK', 'Актуализация документов должна быть последней задачей scope.');
+    const finalIndex = p.tasks.indexOf(finalTask);
+    const beforeDocs = p.tasks.slice(0, finalIndex);
+    const deliveryTail = p.tasks.slice(finalIndex + 1);
+    check(beforeDocs.every(task => !isDeliveryTask(task)), 'DOCUMENTATION_FINAL_TASK',
+      'Package/installed delivery-задачи должны находиться после DOCS.');
+    check(deliveryTail.every(isDeliveryTask), 'DOCUMENTATION_FINAL_TASK',
+      'После DOCS допустим только package/installed delivery-хвост.');
     check(finalTask.functional_paths.length === 0, 'DOCUMENTATION_FINAL_TASK', 'Финальная актуализация документации не содержит функциональных файлов.');
     check(finalTask.documentation_paths.includes('docs/DOCUMENTATION_INDEX.md'), 'DOCUMENTATION_FINAL_TASK', 'Финальная актуализация должна включать docs/DOCUMENTATION_INDEX.md.');
-    const expected = p.tasks.slice(0, -1).map(task => task.id);
+    const expected = beforeDocs.map(task => task.id);
     check(expected.every(id => finalTask.dependencies.includes(id)) && finalTask.dependencies.length === expected.length,
-      'DOCUMENTATION_FINAL_TASK', 'Финальная актуализация документации должна зависеть от всех предыдущих задач.');
+      'DOCUMENTATION_FINAL_TASK', 'DOCS должна зависеть от всех задач до delivery-хвоста и только от них.');
+    for (const task of deliveryTail) check(task.dependencies.includes(finalTask.id), 'DOCUMENTATION_FINAL_TASK',
+      'Каждая package/installed delivery-задача должна зависеть от DOCS.', {task_id:task.id});
   }
   check(p.delivery_status !== 'READY_FOR_ACCEPTANCE' || (p.tasks.length > 0 && p.tasks.every(t => t.commit_status === 'DONE')), 'PLAN_SCHEMA', 'Готовность к приёмке не подтверждается задачами.');
   return p;
