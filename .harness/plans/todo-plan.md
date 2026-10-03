@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1000,
+  "plan_revision": 1001,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "input-instruction-delivery-ordering-20261003",
@@ -19,7 +19,8 @@
       "src/context-session.mjs",
       "tests/context-session.test.mjs",
       "tests/workflow-kit-recovery.test.mjs",
-      "tests/workflow-kit-source.test.mjs"
+      "tests/workflow-kit-source.test.mjs",
+      "scripts/check-workflow-kit-dependency.mjs"
     ],
     "documentation_paths": [
       "docs/planning/input-instruction-delivery-ordering.md",
@@ -31,7 +32,7 @@
     ]
   },
   "baseline_commit": "0db9db525090e376ee5aaa1b87a14172e2810aa6",
-  "current_task_id": "T003",
+  "current_task_id": null,
   "context_pack": {
     "documents": [
       {
@@ -136,8 +137,8 @@
       ]
     },
     {
-      "implementation_status": "IN_PROGRESS",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "input-instruction-delivery-ordering-20261003",
         "task_id": "T003",
@@ -149,7 +150,8 @@
       "functional_paths": [
         "tests/workflow-kit-recovery.test.mjs",
         "tests/workflow-kit-source.test.mjs",
-        "tests/context-session.test.mjs"
+        "tests/context-session.test.mjs",
+        "scripts/check-workflow-kit-dependency.mjs"
       ],
       "documentation_paths": [
         "docs/planning/input-instruction-delivery-ordering.md"
@@ -166,7 +168,13 @@
         "Интеграция использует canonical WorkflowKit, а не отдельную копию правил",
         "В этом scope не выполняются build/package/release/publish Project Web Pilot"
       ],
-      "expected_commit_message": "feat: Проверить интеграцию canonical recovery и startupMessage"
+      "expected_commit_message": "feat: Проверить интеграцию canonical recovery и startupMessage",
+      "actual_files": [
+        "docs/planning/input-instruction-delivery-ordering.md",
+        "scripts/check-workflow-kit-dependency.mjs",
+        "tests/workflow-kit-recovery.test.mjs",
+        "tests/workflow-kit-source.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -217,8 +225,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: input-instruction-delivery-ordering-20261003
-Current Task: T003
-Revision: 1000
+Current Task: нет
+Revision: 1001
 
 ## Цель
 
@@ -238,10 +246,10 @@ Revision: 1000
   - Git Commit: [DONE] feat: Добавить delivery-порядок в startupMessage Project Web Pilot
   - Reference: input-instruction-delivery-ordering-20261003 / T002 / implementation
   - Файлы: src/context-session.mjs, tests/context-session.test.mjs, docs/planning/input-instruction-delivery-ordering.md
-- [IN_PROGRESS] T003: Проверить интеграцию canonical recovery и startupMessage — В работе
-  - Git Commit: [PENDING] feat: Проверить интеграцию canonical recovery и startupMessage
+- [DONE] T003: Проверить интеграцию canonical recovery и startupMessage — Завершено
+  - Git Commit: [DONE] feat: Проверить интеграцию canonical recovery и startupMessage
   - Reference: input-instruction-delivery-ordering-20261003 / T003 / implementation
-  - Файлы: tests/workflow-kit-recovery.test.mjs, tests/workflow-kit-source.test.mjs, tests/context-session.test.mjs, docs/planning/input-instruction-delivery-ordering.md
+  - Файлы: tests/workflow-kit-recovery.test.mjs, tests/workflow-kit-source.test.mjs, tests/context-session.test.mjs, scripts/check-workflow-kit-dependency.mjs, docs/planning/input-instruction-delivery-ordering.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: input-instruction-delivery-ordering-20261003 / DOCS / implementation

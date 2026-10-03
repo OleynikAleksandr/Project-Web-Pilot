@@ -188,6 +188,8 @@ test('Recovery v2 sends required module context, references optional docs, and i
   assert.equal(packet.next_task_id, 'T003');
   assert.equal(packet.soft_exceeded, packet.size.tokens > defaultConfig().budget.soft_tokens);
   assert.match(packet.text, /## Workflow Core/);
+  assert.ok(packet.text.includes('Build/package/sign/notarize/release/publish'));
+  assert.match(packet.text, /DOCS выполняется до явного delivery-хвоста/);
   assert.doesNotMatch(packet.text, /## Обязательные правила/);
   assert.match(packet.text, /OVERVIEW_REQUIRED/);
   assert.match(packet.text, /MODULE_REQUIRED/);

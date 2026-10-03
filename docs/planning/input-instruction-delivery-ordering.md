@@ -31,6 +31,7 @@ WorkflowKit меняет canonical recovery policy, расположение DOC
 - recovery WorkflowKit содержит новые правила;
 - `startupMessage()` Project Web Pilot содержит короткое явное правило;
 - тесты Web Pilot проверяют наличие правила и отсутствие расхождения с canonical policy;
+- локальная canonical dependency и установленный runtime Project Web Pilot используют Workflow Kit 1.5.2; тест source/staging проверяет 35-файловый SHA-256 `646fec106c498e004d8688a3bc40012bea1654178ce66a61b650211ab28055df`;
 - code-only план сохраняет обычную финальную DOCS;
 - delivery-план имеет порядок работа → DOCS → delivery;
 - в этом scope **нет** build/package/release/publish Project Web Pilot.
