@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1013,
+  "plan_revision": 1015,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "release-0.6.81-workflowkit-1.5.2-20261003",
@@ -190,8 +190,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "release-0.6.81-workflowkit-1.5.2-20261003",
         "task_id": "T002",
@@ -225,7 +225,8 @@
         "macOS staging/root bundle подписан выбранным Apple Development сертификатом UkrHD; Windows x64 проходит verify:win на Mac",
         "Сборка не публикует GitHub Release"
       ],
-      "expected_commit_message": "release: собрать парный Project Web Pilot 0.6.81"
+      "expected_commit_message": "release: собрать парный Project Web Pilot 0.6.81",
+      "actual_files": []
     },
     {
       "implementation_status": "TODO",
@@ -316,7 +317,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: release-0.6.81-workflowkit-1.5.2-20261003
 Current Task: нет
-Revision: 1013
+Revision: 1015
 
 ## Цель
 
@@ -341,8 +342,8 @@ Revision: 1013
   - Git Commit: [DONE] docs: актуализировать контекст проекта
   - Reference: release-0.6.81-workflowkit-1.5.2-20261003 / DOCS / implementation
   - Файлы: docs/planning/release-0.6.81-workflowkit-1.5.2.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, README.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/SOURCE_WORKSPACES.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/TRANSFER_TO_WINDOWS.md, docs/CLEAN_INSTALL.md
-- [TODO] T002: Собрать и проверить парный release 0.6.81 — Ожидает
-  - Git Commit: [PENDING] release: собрать парный Project Web Pilot 0.6.81
+- [DONE] T002: Собрать и проверить парный release 0.6.81 — Завершено
+  - Git Commit: [DONE] release: собрать парный Project Web Pilot 0.6.81
   - Reference: release-0.6.81-workflowkit-1.5.2-20261003 / T002 / implementation
   - Файлы: package.json, scripts/release-all.mjs, scripts/release-mac.mjs, scripts/verify-windows-package.mjs, resources/workspace-setup-worker.mjs, docs/planning/release-0.6.81-workflowkit-1.5.2.md
 - [TODO] T003: Обновить и проверить установленные macOS-копии 0.6.81 — Ожидает
