@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 98,
+  "plan_revision": 100,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "delivery-ordering-policy-20261003",
@@ -23,7 +23,8 @@
       "src/lib/recovery.mjs",
       "src/lib/task-files.mjs",
       "scripts/check-runtime-fixture.mjs",
-      "scripts/check-package.mjs"
+      "scripts/check-package.mjs",
+      "scripts/check-consumer-contract.mjs"
     ],
     "documentation_paths": [
       "docs/planning/delivery-ordering-policy.md",
@@ -76,15 +77,19 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "delivery-ordering-policy-20261003",
         "task_id": "T001",
         "role": "implementation"
       },
       "dependencies": [],
-      "functional_paths": [],
+      "functional_paths": [
+        "scripts/check-consumer-contract.mjs",
+        "scripts/check-package.mjs",
+        "scripts/check-runtime-fixture.mjs"
+      ],
       "documentation_paths": [
         "docs/planning/delivery-ordering-policy.md",
         "src/templates/PROTOTYPE.md",
@@ -104,7 +109,16 @@
         "Инструкция требует актуализировать и зафиксировать документы до build и GitHub publish",
         "Инструкция требует явный delivery-хвост и не разрешает скрытую сборку в code/test/DOCS-задаче"
       ],
-      "expected_commit_message": "feat: Зафиксировать канонические правила DOCS, build и publish во входных инструкциях"
+      "expected_commit_message": "feat: Зафиксировать канонические правила DOCS, build и publish во входных инструкциях",
+      "actual_files": [
+        "scripts/check-consumer-contract.mjs",
+        "scripts/check-package.mjs",
+        "scripts/check-runtime-fixture.mjs",
+        "src/WORKFLOW.md",
+        "src/templates/PLAN.md",
+        "src/templates/PROTOTYPE.md",
+        "src/templates/STAGES.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -262,7 +276,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: delivery-ordering-policy-20261003
 Current Task: нет
-Revision: 98
+Revision: 100
 
 ## Цель
 
@@ -274,10 +288,10 @@ Revision: 98
 
 ## Микрозадачи
 
-- [TODO] T001: Зафиксировать канонические правила DOCS, build и publish во входных инструкциях — Ожидает
-  - Git Commit: [PENDING] feat: Зафиксировать канонические правила DOCS, build и publish во входных инструкциях
+- [DONE] T001: Зафиксировать канонические правила DOCS, build и publish во входных инструкциях — Завершено
+  - Git Commit: [DONE] feat: Зафиксировать канонические правила DOCS, build и publish во входных инструкциях
   - Reference: delivery-ordering-policy-20261003 / T001 / implementation
-  - Файлы: docs/planning/delivery-ordering-policy.md, src/templates/PROTOTYPE.md, src/templates/PLAN.md, src/templates/STAGES.md, src/WORKFLOW.md
+  - Файлы: scripts/check-consumer-contract.mjs, scripts/check-package.mjs, scripts/check-runtime-fixture.mjs, docs/planning/delivery-ordering-policy.md, src/templates/PROTOTYPE.md, src/templates/PLAN.md, src/templates/STAGES.md, src/WORKFLOW.md
 - [TODO] T002: Перенести системную DOCS перед delivery-хвостом плана — Ожидает
   - Git Commit: [PENDING] feat: Перенести системную DOCS перед delivery-хвостом плана
   - Reference: delivery-ordering-policy-20261003 / T002 / implementation

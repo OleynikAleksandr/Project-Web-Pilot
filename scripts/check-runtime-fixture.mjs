@@ -7,7 +7,7 @@ import { execFileSync } from 'node:child_process';
 import { installer, sessionPlans, plan as planApi, VERSION } from '@webpilot/workflow-kit';
 
 const EXPECTED_VERSION = '1.5.1';
-const EXPECTED_RUNTIME_SHA256 = '93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33';
+const EXPECTED_RUNTIME_SHA256 = '79504b1be8460d7d7fa68f0aef824a28a6d8c5cf0c7c13b5194bbfb094dd5461';
 
 function run(executable, args, cwd) {
   return execFileSync(executable, args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
