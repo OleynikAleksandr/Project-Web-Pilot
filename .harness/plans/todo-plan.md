@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 86,
+  "plan_revision": 88,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "release-1.5.0-docs-finalization-001",
@@ -586,13 +586,16 @@
         "WorkflowKit остаётся 1.5.1 с прежним runtime, minimum Node 22+ и рабочим Node 24.21.0; указаны оба связанных проекта."
       ],
       "expected_commit_message": "docs: align README with local Web Pilot 0.6.80",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "release-1.5.0-docs-finalization-001",
         "task_id": "T008",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "README.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -666,7 +669,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: release-1.5.0-docs-finalization-001
 Current Task: нет
-Revision: 86
+Revision: 88
 
 ## Цель
 
@@ -742,8 +745,8 @@ Revision: 86
   - Git Commit: [DONE] docs: актуализировать интеграцию Web Pilot 0.6.78
   - Reference: release-1.5.0-docs-finalization-001 / T007 / implementation
   - Файлы: docs/modules/workflow-kit-package.md, README.md, docs/PRODUCT.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/architecture/OVERVIEW.md
-- [TODO] T008: Актуализировать README для локального Web Pilot 0.6.80 — Ожидает
-  - Git Commit: [PENDING] docs: align README with local Web Pilot 0.6.80
+- [DONE] T008: Актуализировать README для локального Web Pilot 0.6.80 — Завершено
+  - Git Commit: [DONE] docs: align README with local Web Pilot 0.6.80
   - Reference: release-1.5.0-docs-finalization-001 / T008 / implementation
   - Файлы: docs/modules/workflow-kit-package.md, README.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
