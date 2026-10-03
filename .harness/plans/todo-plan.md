@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 935,
+  "plan_revision": 937,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "github-publication-0.6.77-20261002",
@@ -116,8 +116,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "github-publication-0.6.77-20261002",
         "task_id": "T002",
@@ -140,7 +140,12 @@
         "WorkflowKit main отправлен и совпадает с локальным Git",
         "Опубликованный v1.5.1 сохранён; версия и runtime не меняются"
       ],
-      "expected_commit_message": "docs: подтвердить публикацию актуального WorkflowKit"
+      "expected_commit_message": "docs: подтвердить публикацию актуального WorkflowKit",
+      "actual_files": [
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md",
+        "docs/planning/github-publication-0.6.77.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -198,7 +203,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: github-publication-0.6.77-20261002
 Current Task: нет
-Revision: 935
+Revision: 937
 
 ## Цель
 
@@ -214,8 +219,8 @@ Revision: 935
   - Git Commit: [DONE] docs: опубликовать принятую поставку Web Pilot 0.6.77
   - Reference: github-publication-0.6.77-20261002 / T001 / implementation
   - Файлы: docs/planning/github-publication-0.6.77.md, README.md, AGENTS.md, docs/WORKFLOW_START.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/DOCUMENTATION_INDEX.md, docs/TRANSFER_TO_WINDOWS.md, docs/architecture/OVERVIEW.md, docs/planning/auto-plan-client-driven-refactor.md
-- [TODO] T002: Актуализировать и синхронизировать WorkflowKit — Ожидает
-  - Git Commit: [PENDING] docs: подтвердить публикацию актуального WorkflowKit
+- [DONE] T002: Актуализировать и синхронизировать WorkflowKit — Завершено
+  - Git Commit: [DONE] docs: подтвердить публикацию актуального WorkflowKit
   - Reference: github-publication-0.6.77-20261002 / T002 / implementation
   - Файлы: docs/planning/github-publication-0.6.77.md, docs/RELEASE.md, docs/VERIFICATION.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает

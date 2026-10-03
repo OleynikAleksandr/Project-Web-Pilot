@@ -19,7 +19,13 @@
 
 02.10.2026 пользователь подтвердил общую приёмку 0.6.77: всё работает согласно обсуждённому контракту; scope рефакторинга закрыт коммитом `46097fb`. Отдельные native Windows и чистый первый запуск в сообщении о приёмке не перечислены.
 
-[GitHub Release v0.6.77](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.77) опубликован из этой готовой поставки без пересборки. Тег указывает на build commit T005 `0b8335cb22193f3b986a1e9ad93bc65830556116`; manifest sourceCommit сохраняет HEAD перед build commit. Перед раскрытием draft проверены ровно пять assets: оба ZIP, `SHA256SUMS.txt`, `INSTALL.txt` и `release-manifest.json`. Серверные размеры и `digest=sha256:...` совпали с локальными файлами. На момент публикации main синхронизирован с `25619d5fb4eb4fba76255dc632580718b2f1f1df`; документы T001 отправляются последующим коммитом. Evidence — `.harness/runtime/github-0.6.77-publication.json`.
+[GitHub Release v0.6.77](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.77) опубликован из этой готовой поставки без пересборки. Тег указывает на build commit T005 `0b8335cb22193f3b986a1e9ad93bc65830556116`; manifest sourceCommit сохраняет HEAD перед build commit. Перед раскрытием draft проверены ровно пять assets: оба ZIP, `SHA256SUMS.txt`, `INSTALL.txt` и `release-manifest.json`. Серверные размеры и `digest=sha256:...` совпали с локальными файлами. На момент публикации main синхронизирован с `25619d5fb4eb4fba76255dc632580718b2f1f1df`; документы T001 отправлены коммитом `ebf6e20a000b34d41d568b04aa94f07295f0db32`. Evidence — `.harness/runtime/github-0.6.77-publication.json`.
+
+### WorkflowKit — актуализация 03.10.2026
+
+[WorkflowKit 1.5.1](https://github.com/OleynikAleksandr/WorkflowKit/releases/tag/v1.5.1) остаётся актуальным релизом пакета: его код, версия и 35-файловый runtime не менялись. README и product/module/architecture/index документы обновлены для интеграции с Web Pilot 0.6.77 коммитом T006 `298219e5222274f7b088f7d78924ec950a9d976d`. Рабочая среда использует Node **24.21.0**; минимальное требование самого пакета остаётся **Node 22+** (`engines.node: >=22`).
+
+T006 прошла назначенную package-проверку. Финальная DOCS завершена коммитом `6ced59485e7dcbaf94d33a5c887b4631e1eeefd5`: 11 документов, 19 локальных ссылок, 0 ошибок. `main` WorkflowKit синхронизирован с этим коммитом; опубликованный тег `v1.5.1` сохранён на `dfc38c1b4a2cee1c13c68f9b54f064d3496dab10`. Отдельные бинарные release assets для Kit не предусмотрены; GitHub предоставляет исходные архивы тега. Повторная сборка Web Pilot и новая версия Kit ради документальной актуализации не требовались. Evidence — `.harness/runtime/github-T002-workflowkit-verification.json` и отчёты canonical workspace WorkflowKit.
 
 ## Выпуск 0.6.76 — 02.10.2026
 

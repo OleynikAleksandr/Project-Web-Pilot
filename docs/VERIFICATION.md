@@ -2,6 +2,12 @@
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
+## 2026-10-03 — T002: README и публикация WorkflowKit
+
+В canonical WorkflowKit выполнена T006 (`298219e`): README описывает клиентский AutoPlan Web Pilot 0.6.77 и явно различает рабочий Node 24.21.0 и minimum Node 22+ пакета. Назначенная package-проверка прошла; версия 1.5.1 и runtime 35 файлов / SHA-256 `93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33` сохранены. DOCS (`6ced594`) завершила scope: 16/16 DONE, 11 документов и 19 локальных ссылок без ошибок. Runtime/package/index/scripts совпадают с опубликованным тегом.
+
+WorkflowKit `main` отправлен на GitHub и совпадает с `6ced59485e7dcbaf94d33a5c887b4631e1eeefd5`; [релиз v1.5.1](https://github.com/OleynikAleksandr/WorkflowKit/releases/tag/v1.5.1) остаётся опубликованным на `dfc38c1b4a2cee1c13c68f9b54f064d3496dab10`, без custom assets. Тег не перемещался; изменения относятся к README и документации. Evidence — `.harness/runtime/github-T002-workflowkit-verification.json`, canonical `webpilot-0.6.77-publication.json` и `webpilot-0.6.77-DOCS-publication.json`. Уже пройденные runtime/package тесты и сборка не повторялись.
+
 ## 2026-10-02 — приёмка, закрытие и публикация 0.6.77
 
 Пользователь подтвердил общую приёмку: «Я протестировал всё, работает, как мы обсудили. План можно закрывать». Scope рефакторинга закрыт архивным коммитом `46097fb`. Отдельные native Windows и чистый первый запуск в сообщении не перечислены.
