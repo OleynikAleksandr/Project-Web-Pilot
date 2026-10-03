@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 91,
+  "plan_revision": 93,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "release-1.5.0-docs-finalization-001",
@@ -612,13 +612,16 @@
         "README указывает GitHub Release v0.6.80 и сохраняет границы native Windows"
       ],
       "expected_commit_message": "feat: Актуализировать README для опубликованного Project Web Pilot 0.6.80",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "release-1.5.0-docs-finalization-001",
         "task_id": "T009",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "README.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -698,7 +701,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: release-1.5.0-docs-finalization-001
 Current Task: нет
-Revision: 91
+Revision: 93
 
 ## Цель
 
@@ -778,8 +781,8 @@ Revision: 91
   - Git Commit: [DONE] docs: align README with local Web Pilot 0.6.80
   - Reference: release-1.5.0-docs-finalization-001 / T008 / implementation
   - Файлы: docs/modules/workflow-kit-package.md, README.md
-- [TODO] T009: Актуализировать README для опубликованного Project Web Pilot 0.6.80 — Ожидает
-  - Git Commit: [PENDING] feat: Актуализировать README для опубликованного Project Web Pilot 0.6.80
+- [DONE] T009: Актуализировать README для опубликованного Project Web Pilot 0.6.80 — Завершено
+  - Git Commit: [DONE] feat: Актуализировать README для опубликованного Project Web Pilot 0.6.80
   - Reference: release-1.5.0-docs-finalization-001 / T009 / implementation
   - Файлы: README.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
