@@ -1,5 +1,7 @@
 # Перенос на Windows 10/11
 
+Source target **0.6.81** уже подготовлен с bundled Workflow Kit **1.5.2**, но на этой DOCS-точке до T002 он ещё не собран. Поэтому все фактические Windows hashes ниже пока относятся к опубликованной 0.6.80; native Windows 0.6.81 не заявляется проверенной автоматически.
+
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
 Текущая опубликованная Windows-поставка — **Project Web Pilot 0.6.80, Windows x64**, опубликованная вместе с проверенным macOS arm64 ZIP. Workflow Kit 1.5.1. Windows package собран штатным `build:win` и прошёл `verify:win` на Mac; native Windows/clean VM не запускались.

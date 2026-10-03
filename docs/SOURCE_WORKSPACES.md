@@ -2,6 +2,8 @@
 
 ## Связанные рабочие репозитории — 03.10.2026
 
+Source target Project Web Pilot 0.6.81 использует canonical Workflow Kit 1.5.2. На этой DOCS-точке 0.6.81 ещё не собрана и не синхронизирована с GitHub; публичная поставка остаётся 0.6.80 до delivery-задач текущего плана.
+
 | Репозиторий | Workspace | Роль и граница |
 | --- | --- | --- |
 | Project Web Pilot | `/Users/oleksandroliinyk/VSCODE/Project Web Pilot` | Electron-приложение, проекты, сессии, текущий план, доставка recovery и MCP/runtime |

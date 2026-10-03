@@ -24,7 +24,7 @@
 <!-- workflow-kit:end -->
 ## Project Web Pilot
 
-Текущая опубликованная парная поставка — **0.6.80**: [постоянная подпись и подтверждённое сохранение ScreenCapture](planning/macos-screen-permission-stability.md), macOS arm64 и Windows x64 assets в GitHub Release v0.6.80; [история исправления AutoPlan](planning/auto-plan-session-incident-20261003.md).
+Текущий source target — **0.6.81 / Workflow Kit 1.5.2**; DOCS выполнена до release-сборки по [контракту 0.6.81](planning/release-0.6.81-workflowkit-1.5.2.md). Текущая опубликованная парная поставка пока — **0.6.80**: [постоянная подпись и подтверждённое сохранение ScreenCapture](planning/macos-screen-permission-stability.md), macOS arm64 и Windows x64 assets в GitHub Release v0.6.80; [история исправления AutoPlan](planning/auto-plan-session-incident-20261003.md).
 
 | Документ | Назначение |
 | --- | --- |
@@ -38,6 +38,7 @@
 | docs/modules/workspace-sessions.md | Specification проектов, Chat/Work sessions, session tree, переходов после scope, оформления и сохранения геометрии интерфейса |
 | docs/planning/session-title-sync.md | Контракт auto/manual session title и server-side синхронизации с native ChatGPT Recents |
 | docs/planning/input-instruction-delivery-ordering.md | Канонический порядок DOCS → delivery, startupMessage guard и границы незапланированных build/publish |
+| docs/planning/release-0.6.81-workflowkit-1.5.2.md | Release 0.6.81: DOCS до build/package и GitHub publish, bundled Workflow Kit 1.5.2 |
 | docs/design/chat-message-layout-regression.md | Planning исправления пустого layout скрытых tool-call message/turn wrappers и regression coverage |
 | docs/design/computer-use-latency-investigation.md | Planning и evidence исследования end-to-end задержек Computer Use, MCP, Secure MCP Tunnel и Web ChatGPT |
 | docs/SOURCE_WORKSPACES.md | Связанные Project Web Pilot / Workflow Kit / Web Pilot Sidebar, рабочие каталоги, границы интеграции и исторические источники |

@@ -1,5 +1,13 @@
 # Проверки и приёмка
 
+## 2026-10-03 — 0.6.81 pre-build DOCS / Workflow Kit 1.5.2
+
+T001 (`beda941`) подготовила source **0.6.81** без release-сборки: package/lock обновлены, installed/Windows gates ожидают Workflow Kit **1.5.2**, добавлен read-only GitHub verifier. Source-gate прошёл на Node 24.21.0; он проверяет startup/recovery/source/staging/workspace setup и canonical dependency.
+
+DOCS выполняется **до T002 package build**. На этой точке ни `npm run build`, ни подпись нового 0.6.81, ни установка 0.6.81 в `/Applications`, ни GitHub Release v0.6.81 ещё не выполнялись. Публичная/установленная версия остаётся 0.6.80 с bundled Workflow Kit 1.5.1. Target 0.6.81 должен содержать Workflow Kit 1.5.2 / 35 files / SHA-256 `646fec106c498e004d8688a3bc40012bea1654178ce66a61b650211ab28055df`.
+
+Порядок delivery зафиксирован current plan: T001 → DOCS → T002(package) → T003(installed) → T004(GitHub). Native Windows/clean VM остаются отдельной ручной проверкой.
+
 ## 2026-10-03 — DOCS → delivery policy / Workflow Kit 1.5.2
 
 Текущий source/dev Project Web Pilot и installed workflow runtime workspace используют Workflow Kit **1.5.2**, 35 файлов, SHA-256 `646fec106c498e004d8688a3bc40012bea1654178ce66a61b650211ab28055df`. Последний публичный WorkflowKit release остаётся **v1.5.1**, а опубликованные бинарники Web Pilot **0.6.80** по-прежнему содержат bundled Kit 1.5.1: приложение в этом scope не пересобиралось и не публиковалось.

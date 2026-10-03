@@ -2,6 +2,14 @@
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
+## Подготовка 0.6.81 — DOCS до build / 03.10.2026
+
+Source version уже **0.6.81**. Целевой bundled Workflow Kit — **1.5.2**, 35 файлов, SHA-256 `646fec106c498e004d8688a3bc40012bea1654178ce66a61b650211ab28055df`. Source-gate T001 (`beda941`) обновил version/lock и release checks; новый GitHub verifier проверяет tag, пять assets, server digests и `origin/main` без пересборки.
+
+Эта запись сделана **до первой release-сборки**. На момент DOCS 0.6.81 ещё не имеет ZIP, release-manifest или GitHub Release; опубликованная и установленная версия остаётся 0.6.80 / bundled Workflow Kit 1.5.1. Следующий допустимый шаг — только T002 package build. После него T003 обновит `/Applications` без пересборки и выполнит installed gate; T004 выполнит GitHub delivery.
+
+Native Windows и clean VM не входят в автоматическую проверку этого плана.
+
 ## Выпуск 0.6.80 — 03.10.2026
 
 B для T005 сохраняет функциональный код и зависимости 0.6.79; изменена версия package/Info.plist/ASAR. Подпись Apple Development организации UkrHD и designated requirement совпадают с A при новом CDHash. Штатный `npm run build:mac` создал ZIP и обновил root app; Applications обновлён тем же installMacBundle. Внешние папки app сохранили inode 406600483 и 406571340 и прежний volume UUID; старые Contents доступны в backup.
