@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1018,
+  "plan_revision": 1019,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "release-0.6.81-workflowkit-1.5.2-20261003",
@@ -300,7 +300,18 @@
         "package.json"
       ],
       "documentation_paths": [
-        "docs/planning/release-0.6.81-workflowkit-1.5.2.md"
+        "docs/planning/release-0.6.81-workflowkit-1.5.2.md",
+        "README.md",
+        "docs/PRODUCT.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/MODULES.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/SOURCE_WORKSPACES.md",
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "docs/CLEAN_INSTALL.md"
       ],
       "verification_ids": [
         "github-release"
@@ -315,7 +326,8 @@
         "GitHub Release v0.6.81 опубликован не draft/prerelease и содержит ровно пять ожидаемых файлов готовой поставки",
         "Server size/digest всех assets совпадает с локальными файлами; повторная сборка не выполняется",
         "После managed commit T004 final main отправлен на GitHub и повторная проверка подтверждает origin/main == local HEAD",
-        "Старые release tags и assets не изменены"
+        "Старые release tags и assets не изменены",
+        "После публикации, но до финальной синхронизации main, документация фиксирует фактический GitHub Release v0.6.81, tag sourceCommit и server digests пяти assets"
       ],
       "expected_commit_message": "release: опубликовать Project Web Pilot 0.6.81"
     }
@@ -338,7 +350,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: release-0.6.81-workflowkit-1.5.2-20261003
 Current Task: нет
-Revision: 1018
+Revision: 1019
 
 ## Цель
 
@@ -374,7 +386,7 @@ Revision: 1018
 - [TODO] T004: Опубликовать 0.6.81 и синхронизировать Project Web Pilot с GitHub — Ожидает
   - Git Commit: [PENDING] release: опубликовать Project Web Pilot 0.6.81
   - Reference: release-0.6.81-workflowkit-1.5.2-20261003 / T004 / implementation
-  - Файлы: scripts/check-github-release.mjs, package.json, docs/planning/release-0.6.81-workflowkit-1.5.2.md
+  - Файлы: scripts/check-github-release.mjs, package.json, docs/planning/release-0.6.81-workflowkit-1.5.2.md, README.md, docs/PRODUCT.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/SOURCE_WORKSPACES.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/TRANSFER_TO_WINDOWS.md, docs/CLEAN_INSTALL.md
 
 ## Context Pack For This Cycle
 
