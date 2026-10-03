@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 976,
+  "plan_revision": 978,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "github-publication-0.6.80-20261003",
@@ -63,8 +63,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "github-publication-0.6.80-20261003",
         "task_id": "T001",
@@ -85,7 +85,8 @@
       "acceptance_criteria": [
         "origin/main WorkflowKit совпадает с локальным HEAD"
       ],
-      "expected_commit_message": "feat: Опубликовать актуальный WorkflowKit main"
+      "expected_commit_message": "feat: Опубликовать актуальный WorkflowKit main",
+      "actual_files": []
     },
     {
       "implementation_status": "TODO",
@@ -240,7 +241,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: github-publication-0.6.80-20261003
 Current Task: нет
-Revision: 976
+Revision: 978
 
 ## Цель
 
@@ -252,8 +253,8 @@ Revision: 976
 
 ## Микрозадачи
 
-- [TODO] T001: Опубликовать актуальный WorkflowKit main — Ожидает
-  - Git Commit: [PENDING] feat: Опубликовать актуальный WorkflowKit main
+- [DONE] T001: Опубликовать актуальный WorkflowKit main — Завершено
+  - Git Commit: [DONE] feat: Опубликовать актуальный WorkflowKit main
   - Reference: github-publication-0.6.80-20261003 / T001 / implementation
   - Файлы: docs/planning/github-publication-0.6.77.md
 - [TODO] T002: Опубликовать актуальный Web Pilot Sidebar main — Ожидает
