@@ -4,34 +4,45 @@
   "stack": "Electron 44.5.1 / Node 24.21.0 / Workflow Kit 1.5.1",
   "checks": [
     {
+      "required": false,
+      "timeout_ms": 600000,
       "id": "unit",
       "executable": "npm",
       "args": [
         "test"
-      ],
-      "required": false,
-      "timeout_ms": 600000
+      ]
     },
     {
+      "required": false,
+      "timeout_ms": 600000,
       "id": "smoke",
       "executable": "npm",
       "args": [
         "run",
         "smoke"
-      ],
-      "required": false,
-      "timeout_ms": 600000
+      ]
     },
     {
-      "id": "release-installed",
+      "required": false,
+      "timeout_ms": 120000,
+      "id": "mac-signature",
       "executable": "node",
       "args": [
-        "scripts/check-installed-release.mjs"
+        "scripts/check-mac-signature.mjs"
       ],
-      "required": false,
-      "timeout_ms": 600000,
       "kind": "installed",
-      "evidence": "Project Web Pilot 0.6.78: macOS arm64/Windows x64 ZIP, source/hash/version, root app and /Applications identities, installed observer/Composer/AutoPlan bounded DOM and cancelled Paste fixture."
+      "evidence": "Готовый macOS bundle, root Project Web Pilot.app и /Applications/Project Web Pilot.app: строгая подпись, закреплённая identity, sealed resources и совместимость designated requirement; до замены проверяется staging"
+    },
+    {
+      "required": false,
+      "timeout_ms": 120000,
+      "id": "mac-screen-capture",
+      "executable": "node",
+      "args": [
+        "scripts/check-mac-screen-capture.mjs"
+      ],
+      "kind": "installed",
+      "evidence": "Реальный PNG через действующий local MCP computer_capture_screen и App Server, responsible application Web Pilot; пользователь отдельно подтверждает отсутствие нового системного запроса"
     }
   ],
   "budget": {
