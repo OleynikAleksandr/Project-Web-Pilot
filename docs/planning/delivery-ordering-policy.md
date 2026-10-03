@@ -15,15 +15,11 @@ Workflow Kit должен передавать каждому новому аг�
 
 Новые поля схемы не добавлять, если существующих `verification_kind=code|package|installed` достаточно для надёжного порядка.
 
-## Запуск
+## Управление работой
 
-Изменения выполняются в canonical workspace:
+Изменения выполняются в canonical workspace `/Users/oleksandroliinyk/VSCODE/WorkflowKit`, но отдельного ACTIVE-плана в этом checkout нет: current plan WorkflowKit остаётся `NONE`. Работой управляет активная T001 плана Project Web Pilot `input-instruction-delivery-ordering-20261003`; это исключает второй незавершённый plan при открытии WorkflowKit как отдельного проекта.
 
-`/Users/oleksandroliinyk/VSCODE/WorkflowKit`
-
-Обычные команды: `./scripts/workflow ...`.
-
-Этот scope **не** собирает и не публикует новую версию Workflow Kit или Project Web Pilot. Интеграция обновлённого Kit в Web Pilot и возможный новый бинарный релиз должны быть отдельным последующим планом, где build будет явно указан как delivery-задача.
+Эта работа **не** собирает и не публикует новую версию Workflow Kit или Project Web Pilot. Возможный binary/package release — отдельная последующая delivery-задача после DOCS.
 
 ## Проверка
 
@@ -31,7 +27,7 @@ Workflow Kit должен передавать каждому новому аг�
 - Runtime fixture подтверждает, что recovery содержит новые канонические правила.
 - `plan:create` для code-only scope сохраняет обычную финальную DOCS.
 - `plan:create` для scope с package/installed delivery размещает DOCS перед delivery-хвостом.
-- `plan:extend` сохраняет этот порядок и не возвращает DOCS в конец после delivery-задач.
+- `plan:extend` сохраняет этот порядок; correction после уже завершённой DOCS переоткрывает DOCS перед незавершённым delivery-хвостом.
 - План с обычной code-задачей не получает неявного разрешения на build/package/publish.
 - Исторические планы и существующие DONE-коммиты не переписываются.
 

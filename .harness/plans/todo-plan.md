@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 106,
+  "plan_revision": 108,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "pwp-t001-crossrepo-commit-20261003",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Зафиксировать изменения Workflow Kit, управляемые активной T001 плана Project Web Pilot, без постоянного active plan в WorkflowKit.",
   "acceptance_criteria": [
     "Policy DOCS → delivery и plan:extend regression зафиксированы",
@@ -27,7 +27,10 @@
       "docs/planning/delivery-ordering-policy.md",
       "docs/architecture/OVERVIEW.md",
       "docs/MODULES.md",
-      "docs/DOCUMENTATION_INDEX.md"
+      "docs/DOCUMENTATION_INDEX.md",
+      "README.md",
+      "docs/WORKFLOW_START.md",
+      "docs/modules/workflow-kit-package.md"
     ]
   },
   "baseline_commit": "35e2c5a283a043808ac9142862c5ecb6d9d8a4f0",
@@ -106,8 +109,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "pwp-t001-crossrepo-commit-20261003",
         "task_id": "DOCS",
@@ -124,13 +127,25 @@
         "docs/architecture/OVERVIEW.md",
         "docs/MODULES.md",
         "docs/DOCUMENTATION_INDEX.md",
-        "docs/planning/delivery-ordering-policy.md"
+        "docs/planning/delivery-ordering-policy.md",
+        "README.md",
+        "docs/WORKFLOW_START.md",
+        "docs/modules/workflow-kit-package.md"
       ],
       "acceptance_criteria": [
         "Все документы из индекса проверены; устаревшие сведения и ссылки исправлены; после этого результат готов только к пользовательской приёмке."
       ],
       "verification_ids": [],
-      "expected_commit_message": "docs: актуализировать документацию проекта"
+      "expected_commit_message": "docs: актуализировать документацию проекта",
+      "actual_files": [
+        "README.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/MODULES.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/workflow-kit-package.md",
+        "docs/planning/delivery-ordering-policy.md"
+      ]
     }
   ],
   "blocked_reason": null,
@@ -148,10 +163,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: pwp-t001-crossrepo-commit-20261003
 Current Task: нет
-Revision: 106
+Revision: 108
 
 ## Цель
 
@@ -169,10 +184,10 @@ Revision: 106
   - Git Commit: [DONE] feat: complete delivery ordering policy under Web Pilot plan
   - Reference: pwp-t001-crossrepo-commit-20261003 / T001 / implementation
   - Файлы: src/lib/actions.mjs, scripts/check-runtime-fixture.mjs, scripts/check-package.mjs, scripts/check-consumer-contract.mjs, docs/planning/delivery-ordering-policy.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать документацию проекта
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать документацию проекта
   - Reference: pwp-t001-crossrepo-commit-20261003 / DOCS / implementation
-  - Файлы: docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/planning/delivery-ordering-policy.md
+  - Файлы: docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/planning/delivery-ordering-policy.md, README.md, docs/WORKFLOW_START.md, docs/modules/workflow-kit-package.md
 
 ## Context Pack For This Cycle
 

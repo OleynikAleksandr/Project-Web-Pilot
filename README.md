@@ -50,7 +50,7 @@ node scripts/check-runtime-fixture.mjs
 node scripts/check-consumer-contract.mjs
 ```
 
-Canonical runtime 1.5.1 содержит 35 файлов; SHA-256: `93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33`.
+Опубликованный runtime Release 1.5.1 содержит 35 файлов; SHA-256: `93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33`. Текущий локальный worktree после policy DOCS → delivery также содержит 35 файлов, SHA-256: `aeea7c56b2dbc34e5ca1f8aa3c4c87ab1ec47406b5d04f49b6177eaba2a3bf9a`; эти изменения ещё не публиковались отдельным release.
 
 Исходный [GitHub Release WorkflowKit 1.5.1](https://github.com/OleynikAleksandr/WorkflowKit/releases/tag/v1.5.1) сохраняет опубликованный тег; последующие документальные обновления находятся в main.
 
@@ -61,6 +61,7 @@ Canonical runtime 1.5.1 содержит 35 файлов; SHA-256: `93de6bb6362d
 - [Modules](docs/MODULES.md) — карта модулей.
 - [Workflow Kit package](docs/modules/workflow-kit-package.md) — технический контракт package/runtime.
 - [Single active plan migration](docs/planning/single-active-plan-migration.md) — переход к одному current plan на checkout.
+- [Delivery ordering policy](docs/planning/delivery-ordering-policy.md) — обязательный порядок DOCS → delivery и запрет незапланированных build/publish.
 - [Documentation index](docs/DOCUMENTATION_INDEX.md) — полный индекс документации.
 
 ## Интеграция с Project Web Pilot

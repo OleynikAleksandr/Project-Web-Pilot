@@ -1,10 +1,10 @@
 # Workflow Kit Package — техническая спецификация
 
-Текущий release contract: `@webpilot/workflow-kit` **1.5.1**. Canonical runtime: 35 файлов, SHA-256 `93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33`.
+Текущий опубликованный release contract: `@webpilot/workflow-kit` **1.5.1**, 35 файлов, SHA-256 `93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33`. Локальный worktree после policy DOCS → delivery: 35 файлов, SHA-256 `aeea7c56b2dbc34e5ca1f8aa3c4c87ab1ec47406b5d04f49b6177eaba2a3bf9a`; отдельный release ещё не выполнялся.
 
 ## Среда Node.js
 
-Минимальное требование `@webpilot/workflow-kit` 1.5.1 — **Node 22+**: его задают `package.json` (`engines.node: >=22`), CLI и installer launcher. Рабочая среда разработки и текущая локальная macOS-интеграция с Web Pilot 0.6.80 используют **Node 24.21.0**. Последняя опубликованная парная поставка клиента — 0.6.78. Переход клиента и его workers на Node 24 сохраняет совместимость пакета Kit; runtime и версия 1.5.1 не меняются.
+Минимальное требование `@webpilot/workflow-kit` 1.5.1 — **Node 22+**: его задают `package.json` (`engines.node: >=22`), CLI и installer launcher. Рабочая среда разработки и опубликованный Web Pilot 0.6.80 используют **Node 24.21.0**. Переход клиента и его workers на Node 24 сохраняет совместимость пакета Kit; package version пока остаётся 1.5.1.
 
 ## Назначение
 
@@ -111,17 +111,17 @@ Workspace Setup и project readiness проверяют только current che
 
 ## Актуальная интеграция — локальная macOS Web Pilot 0.6.80
 
-Локальная macOS Web Pilot 0.6.80 и последняя опубликованная парная [0.6.78](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.78) включают прежний Kit 1.5.1. В 0.6.80 сохранение ScreenCapture после обновления и перезагрузки подтверждено проверками и пользователем; это исправление подписи клиента, без изменения runtime/API/CLI Kit. Windows 0.6.80 и публикация 0.6.80 не выполнялись. Клиент управляет AutoPlan событийно: постоянный выбор, одно точное «Продолжай» на подходящую паузу незавершённого ACTIVE-плана, durable защита от повторов и приоритет ручного ввода. Стартовая инструкция и footer-протокол удалены. Это поведение принадлежит Web Pilot и не меняет API/CLI или minimum Node пакета Kit. [Действующий контракт AutoPlan](https://github.com/OleynikAleksandr/Project-Web-Pilot/blob/main/docs/planning/auto-plan-client-driven-refactor.md).
+Опубликованная парная Web Pilot 0.6.80 включает прежний опубликованный Kit 1.5.1. В 0.6.80 сохранение ScreenCapture после обновления и перезагрузки подтверждено проверками и пользователем; это исправление подписи клиента, без изменения runtime/API/CLI Kit. Windows x64 0.6.80 собран, проверен на Mac и опубликован вместе с macOS asset; native Windows отдельно не проверен. Клиент управляет AutoPlan событийно: постоянный выбор, одно точное «Продолжай» на подходящую паузу незавершённого ACTIVE-плана, durable защита от повторов и приоритет ручного ввода. Стартовая инструкция и footer-протокол удалены. Это поведение принадлежит Web Pilot и не меняет API/CLI или minimum Node пакета Kit. [Действующий контракт AutoPlan](https://github.com/OleynikAleksandr/Project-Web-Pilot/blob/main/docs/planning/auto-plan-client-driven-refactor.md).
 
 ## Проверки package contract
 
-`scripts/check-runtime-fixture.mjs` проверяет single-active runtime, compatibility session IDs, legacy migration, strict current recovery budget и Git worktree isolation.
+`scripts/check-runtime-fixture.mjs` проверяет single-active runtime, compatibility session IDs, legacy migration, strict current recovery budget, Git worktree isolation и порядок code → DOCS → package/installed при plan:create/plan:extend, включая повторное открытие DOCS для correction.
 
 `scripts/check-consumer-contract.mjs` проверяет local `file:` dependency, package/subpath imports, `currentPlanView/sessionPlanView`, `npm pack` standalone consumer и staging runtime без sibling repository.
 
 `scripts/check-package.mjs` проверяет package identity/fileset/exports и отсутствие project/runtime state в tarball.
 
-Release **@webpilot/workflow-kit 1.5.1**: canonical runtime — **35 файлов**, SHA-256 **93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33**. Installer принимает upgrade с 1.4.13; runtime regression проверяет этот переход, архивирование legacy session plans, strict current recovery budget и Git worktree isolation.
+Release **@webpilot/workflow-kit 1.5.1**: canonical runtime — **35 файлов**, SHA-256 **93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33**. Текущий непубликованный worktree — **35 файлов**, SHA-256 **aeea7c56b2dbc34e5ca1f8aa3c4c87ab1ec47406b5d04f49b6177eaba2a3bf9a**. Installer принимает upgrade с 1.4.13; runtime regression проверяет этот переход, архивирование legacy session plans, strict current recovery budget и Git worktree isolation.
 
 ## Workflow Kit 1.5.1 — перенос остатка scope
 

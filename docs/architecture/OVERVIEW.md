@@ -4,7 +4,7 @@
 
 WorkflowKit — canonical Node.js package `@webpilot/workflow-kit`. Репозиторий `/Users/oleksandroliinyk/VSCODE/WorkflowKit` является единственным местом разработки кода Kit. Текущий release — **1.5.1**.
 
-Рабочая среда и текущая локальная macOS-интеграция с Web Pilot 0.6.80 используют Node 24.21.0; последняя опубликованная парная поставка клиента — 0.6.78; минимальное требование самого пакета Kit остаётся Node 22+. Версия 1.5.1 и canonical runtime не меняются.
+Рабочая среда и опубликованная интеграция Web Pilot 0.6.80 используют Node 24.21.0; минимальное требование самого пакета Kit остаётся Node 22+. Опубликованный Release Kit остаётся 1.5.1; текущий локальный worktree содержит непубликованное изменение policy DOCS → delivery.
 
 ## Устройство
 
@@ -24,11 +24,11 @@ Upgrade со старой session-owned установки оставляет va
 
 ## Проверка
 
-Canonical runtime: 35 файлов; SHA-256 `93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33`.
+Текущий локальный canonical runtime: 35 файлов; SHA-256 `aeea7c56b2dbc34e5ca1f8aa3c4c87ab1ec47406b5d04f49b6177eaba2a3bf9a`. Опубликованный Release 1.5.1 сохраняет SHA-256 `93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33`.
 
 Проверки: `node scripts/check-package.mjs`, `node scripts/check-runtime-fixture.mjs`, `node scripts/check-consumer-contract.mjs`.
 
-Подробный контракт: [Workflow Kit Package](../modules/workflow-kit-package.md). История package extraction: [Canonical Workflow Kit Package](../planning/canonical-workflow-kit-package.md). Спецификация миграции state: [Single Active Plan Migration](../planning/single-active-plan-migration.md).
+Подробный контракт: [Workflow Kit Package](../modules/workflow-kit-package.md). Policy DOCS → delivery: [Delivery Ordering](../planning/delivery-ordering-policy.md). История package extraction: [Canonical Workflow Kit Package](../planning/canonical-workflow-kit-package.md). Спецификация миграции state: [Single Active Plan Migration](../planning/single-active-plan-migration.md).
 
 ## Workflow Kit 1.5.1 — перенос остатка scope
 
