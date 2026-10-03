@@ -2,7 +2,27 @@
   "schema_version": 1,
   "profile": "DEVELOPMENT",
   "stack": "Electron 44.5.1 / Node 24.21.0 / Workflow Kit 1.5.1",
-  "checks": [],
+  "checks": [
+    {
+      "id": "unit",
+      "executable": "npm",
+      "args": [
+        "test"
+      ],
+      "required": true,
+      "timeout_ms": 600000
+    },
+    {
+      "id": "smoke",
+      "executable": "npm",
+      "args": [
+        "run",
+        "smoke"
+      ],
+      "required": true,
+      "timeout_ms": 600000
+    }
+  ],
   "budget": {
     "soft_tokens": 16000,
     "hard_tokens": 90000,
