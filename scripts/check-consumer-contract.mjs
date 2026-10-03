@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const EXPECTED_VERSION = '1.5.1';
 const EXPECTED_FILES = 35;
-const EXPECTED_SHA256 = '79504b1be8460d7d7fa68f0aef824a28a6d8c5cf0c7c13b5194bbfb094dd5461';
+const EXPECTED_SHA256 = '11370d99d87cfb9641d7db2cbf57af1cb8a260257ded472a2eaec4cad2bd0e16';
 const REQUIRED_SUBPATHS = [
   'common',
   'actions',

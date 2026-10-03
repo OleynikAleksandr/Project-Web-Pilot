@@ -3,7 +3,7 @@ import {beginTaskFiles,handoffTaskFiles} from './task-files.mjs';
 import path from 'node:path';
 import { VERSION, PLAN, planPath, safePath, CONFIG, MANIFEST, check, readJSON, atomic, json, hash, id, textFile } from './common.mjs';
 import { emptyPlan, readPlan, parsePlan, renderPlan, writePlan, validatePlan, nextTask, projectContextPack, projectContextPaths,
-  FINAL_DOCUMENTATION_TASK_ID, FINAL_DOCUMENTATION_TASK_TITLE, isDocumentationFinalizationTask } from './plan.mjs';
+  FINAL_DOCUMENTATION_TASK_ID, FINAL_DOCUMENTATION_TASK_TITLE, isDocumentationFinalizationTask, isDeliveryTask } from './plan.mjs';
 import { validate, validateConfig, validatePlanConfiguration, readConfig, journal, resolveReferences, taskChecks } from './validate.mjs';
 import { git, head, localPath, allChanges, identityReady, paths, gitPath } from './git.mjs';
 import { locked, commitCandidate, completedTransaction, finishTransaction } from './transaction.mjs';
@@ -29,6 +29,8 @@ function normalizeCompletionContract(plan) {
   check(existing.length <= 1, 'DOCUMENTATION_FINAL_TASK', 'В scope должна быть одна финальная задача актуализации документации.');
   let finalTask = existing[0];
   const ordinary = plan.tasks.filter(task => task !== finalTask);
+  const delivery = ordinary.filter(isDeliveryTask);
+  const work = ordinary.filter(task => !isDeliveryTask(task));
   if (!finalTask) {
     finalTask = {
       id: FINAL_DOCUMENTATION_TASK_ID, title: FINAL_DOCUMENTATION_TASK_TITLE,
@@ -40,11 +42,15 @@ function normalizeCompletionContract(plan) {
   }
   check(finalTask.id === FINAL_DOCUMENTATION_TASK_ID && finalTask.title === FINAL_DOCUMENTATION_TASK_TITLE,
     'DOCUMENTATION_FINAL_TASK', 'Зарезервированный пункт DOCS должен называться «' + FINAL_DOCUMENTATION_TASK_TITLE + '».');
-  check(finalTask.commit_status !== 'DONE' || ordinary.every(task => task.commit_status === 'DONE'),
-    'DOCUMENTATION_FINAL_TASK', 'Завершённую DOCS-задачу нельзя ставить перед незавершёнными задачами.');
-  finalTask = { ...finalTask, dependencies: ordinary.map(task => task.id), functional_paths: [],
+  check(finalTask.commit_status !== 'DONE' || work.every(task => task.commit_status === 'DONE'),
+    'DOCUMENTATION_FINAL_TASK', 'DOCS нельзя завершить до незавершённых задач, предшествующих delivery-хвосту.');
+  const deliveryIds = new Set(delivery.map(task => task.id));
+  for (const task of work) check(!task.dependencies.some(id => deliveryIds.has(id)), 'DOCUMENTATION_FINAL_TASK',
+    'Обычная задача не может зависеть от package/installed delivery-задачи.', {task_id:task.id});
+  finalTask = { ...finalTask, dependencies: work.map(task => task.id), functional_paths: [],
     documentation_paths: [...new Set([...(finalTask.documentation_paths ?? []), ...ordinary.flatMap(t=>t.documentation_paths ?? []), ...foundation])] };
-  plan.tasks = [...ordinary, finalTask];
+  const normalizedDelivery = delivery.map(task => ({ ...task, dependencies: [...new Set([...task.dependencies, finalTask.id])] }));
+  plan.tasks = [...work, finalTask, ...normalizedDelivery];
   return plan;
 }
 function service(root, plan, role, selected, message) {

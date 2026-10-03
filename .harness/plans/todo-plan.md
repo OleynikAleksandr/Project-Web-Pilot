@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 100,
+  "plan_revision": 102,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "delivery-ordering-policy-20261003",
@@ -121,8 +121,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "delivery-ordering-policy-20261003",
         "task_id": "T002",
@@ -134,7 +134,10 @@
       "functional_paths": [
         "src/lib/simple-workflow.mjs",
         "src/lib/actions.mjs",
-        "src/lib/plan.mjs"
+        "src/lib/plan.mjs",
+        "scripts/check-consumer-contract.mjs",
+        "scripts/check-package.mjs",
+        "scripts/check-runtime-fixture.mjs"
       ],
       "documentation_paths": [
         "docs/planning/delivery-ordering-policy.md"
@@ -152,7 +155,15 @@
         "Delivery-задачи идут после DOCS и остаются последними пользовательскими задачами",
         "Решение использует существующий verification_kind без эвристики по title"
       ],
-      "expected_commit_message": "feat: Перенести системную DOCS перед delivery-хвостом плана"
+      "expected_commit_message": "feat: Перенести системную DOCS перед delivery-хвостом плана",
+      "actual_files": [
+        "scripts/check-consumer-contract.mjs",
+        "scripts/check-package.mjs",
+        "scripts/check-runtime-fixture.mjs",
+        "src/lib/actions.mjs",
+        "src/lib/plan.mjs",
+        "src/lib/simple-workflow.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -276,7 +287,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: delivery-ordering-policy-20261003
 Current Task: нет
-Revision: 100
+Revision: 102
 
 ## Цель
 
@@ -292,10 +303,10 @@ Revision: 100
   - Git Commit: [DONE] feat: Зафиксировать канонические правила DOCS, build и publish во входных инструкциях
   - Reference: delivery-ordering-policy-20261003 / T001 / implementation
   - Файлы: scripts/check-consumer-contract.mjs, scripts/check-package.mjs, scripts/check-runtime-fixture.mjs, docs/planning/delivery-ordering-policy.md, src/templates/PROTOTYPE.md, src/templates/PLAN.md, src/templates/STAGES.md, src/WORKFLOW.md
-- [TODO] T002: Перенести системную DOCS перед delivery-хвостом плана — Ожидает
-  - Git Commit: [PENDING] feat: Перенести системную DOCS перед delivery-хвостом плана
+- [DONE] T002: Перенести системную DOCS перед delivery-хвостом плана — Завершено
+  - Git Commit: [DONE] feat: Перенести системную DOCS перед delivery-хвостом плана
   - Reference: delivery-ordering-policy-20261003 / T002 / implementation
-  - Файлы: src/lib/simple-workflow.mjs, src/lib/actions.mjs, src/lib/plan.mjs, docs/planning/delivery-ordering-policy.md
+  - Файлы: src/lib/simple-workflow.mjs, src/lib/actions.mjs, src/lib/plan.mjs, scripts/check-consumer-contract.mjs, scripts/check-package.mjs, scripts/check-runtime-fixture.mjs, docs/planning/delivery-ordering-policy.md
 - [TODO] T003: Сохранить новый порядок при plan:extend и повторном открытии scope — Ожидает
   - Git Commit: [PENDING] feat: Сохранить новый порядок при plan:extend и повторном открытии scope
   - Reference: delivery-ordering-policy-20261003 / T003 / implementation
