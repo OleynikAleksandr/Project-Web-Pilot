@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "profile": "DEVELOPMENT",
-  "stack": "Electron 44.5.1 / Node 24.21.0 / Workflow Kit 1.5.1",
+  "stack": "Electron 44.5.1 / Node 24.21.0 / Workflow Kit 1.5.2",
   "checks": [
     {
       "required": false,
@@ -27,12 +27,10 @@
       "required": false,
       "timeout_ms": 120000,
       "id": "integration-policy",
-      "executable": "node",
+      "executable": "bash",
       "args": [
-        "--test",
-        "tests/context-session.test.mjs",
-        "tests/workflow-kit-recovery.test.mjs",
-        "tests/workflow-kit-source.test.mjs"
+        "-lc",
+        "npm run stage:workflow-kit && node --test tests/context-session.test.mjs tests/workflow-kit-recovery.test.mjs tests/workflow-kit-source.test.mjs"
       ]
     }
   ],
