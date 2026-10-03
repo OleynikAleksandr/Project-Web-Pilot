@@ -28,6 +28,39 @@ function remoteRef(ref) {
   return (peeled ?? direct)?.[0];
 }
 
+function githubToken() {
+  const output = execFileSync('git', ['credential', 'fill'], {
+    cwd: ROOT,
+    input: 'protocol=https\nhost=github.com\n\n',
+    encoding: 'utf8',
+    timeout: 10000,
+  });
+  const values = Object.fromEntries(output.trim().split(/\r?\n/).map(line => {
+    const index = line.indexOf('=');
+    return index < 0 ? [line, ''] : [line.slice(0, index), line.slice(index + 1)];
+  }));
+  if (!values.password) throw new Error('GitHub credential helper did not return a token');
+  return values.password;
+}
+
+async function githubApi(pathname) {
+  const response = await fetch('https://api.github.com' + pathname, {
+    headers: {
+      'Authorization': 'Bearer ' + githubToken(),
+      'Accept': 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+      'User-Agent': 'Project-Web-Pilot-release-check',
+    },
+  });
+  const text = await response.text();
+  let body = null;
+  if (text) {
+    try { body = JSON.parse(text); } catch { body = text; }
+  }
+  if (!response.ok) throw new Error('GitHub API ' + response.status + ': ' + (typeof body === 'string' ? body : JSON.stringify(body)));
+  return body;
+}
+
 async function expectedAssets(delivery, version) {
   const names = [
     `Project-Web-Pilot-${version}-macOS-arm64.zip`,
@@ -63,7 +96,7 @@ export async function verifyGitHubRelease({ root = ROOT } = {}) {
   const remoteTag = remoteRef('refs/tags/' + tag);
   assert.equal(remoteTag, manifest.sourceCommit, 'release tag must point to release-manifest.sourceCommit');
 
-  const release = JSON.parse(exec('gh', ['api', `repos/${REPOSITORY}/releases/tags/${tag}`]));
+  const release = await githubApi(`/repos/${REPOSITORY}/releases/tags/${tag}`);
   assert.equal(release.tag_name, tag);
   assert.equal(release.draft, false);
   assert.equal(release.prerelease, false);

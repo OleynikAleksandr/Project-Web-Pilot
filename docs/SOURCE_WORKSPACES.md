@@ -2,7 +2,7 @@
 
 ## Связанные рабочие репозитории — 03.10.2026
 
-Source target Project Web Pilot 0.6.81 использует canonical Workflow Kit 1.5.2. На этой DOCS-точке 0.6.81 ещё не собрана и не синхронизирована с GitHub; публичная поставка остаётся 0.6.80 до delivery-задач текущего плана.
+Project Web Pilot **0.6.81** опубликован с bundled canonical Workflow Kit **1.5.2**. Предсборочная DOCS была зафиксирована до package build; tag v0.6.81 указывает на release-manifest.sourceCommit, пять assets сверены по server digest. Финальный `main` синхронизируется managed T004 commit и повторно проверяется release verifier.
 
 | Репозиторий | Workspace | Роль и граница |
 | --- | --- | --- |

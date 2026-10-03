@@ -2,15 +2,15 @@
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
-## Локальная 0.6.81 — build/install завершены, GitHub ещё не опубликован / 03.10.2026
+## Выпуск 0.6.81 — 03.10.2026
 
 Предсборочная DOCS была зафиксирована коммитом `db59be8` **до** первой release-сборки. T002 (`36c4ff3`) выполнила единственный `npm run build`: `release-manifest.sourceCommit=db59be83f0d3fa4136c109a8252181422acfe94c`, `sourceFiles=106`, `packagedSourceMatches=true`, bundled Workflow Kit **1.5.2 / 35 файлов / SHA-256 `646fec106c498e004d8688a3bc40012bea1654178ce66a61b650211ab28055df`**.
 
 macOS arm64: `~/Downloads/WebPilot-0.6.81/Project-Web-Pilot-0.6.81-macOS-arm64.zip`, 186376299 байт, SHA-256 `76084ae92195e4d86c350075f87aac76031a97ee9f03e024ece5041dc85c0f78`. Windows x64: `~/Downloads/WebPilot-0.6.81/Project-Web-Pilot-0.6.81-Windows-x64.zip`, 355490949 байт, SHA-256 `24c1ddb9071e5b4efc58ad63a3d1a44f0a129d91a98b6f18f84a7d63111e5634`. Оба package имеют ASAR SHA-256 `4fc92297dafdf6afa2e97b0a504d774753a57f7c195a6a931477f9ea4beb8195`; Windows прошёл `verify:win` на Mac, native Windows/clean VM не запускались.
 
-Root app и `/Applications/Project Web Pilot.app` обновлены до 0.6.81. `/Applications` установлена из уже собранного staging штатным `installMacBundle` **без пересборки**; inode сохранён `406571340`, root inode — `406600483`. Подпись — выбранный Apple Development сертификат UkrHD, bundle ID `com.oleynik.ProjectWebPilot`; backup `/Applications` создан в `.harness/runtime/release-backups/`.
+Root app и `/Applications/Project Web Pilot.app` обновлены до 0.6.81. `/Applications` установлена из уже собранного staging штатным `installMacBundle` **без пересборки**; inode сохранён `406571340`, root inode — `406600483`. Managed T003 (`795f368`) прошёл полный `release-installed` gate.
 
-GitHub Release v0.6.81 **ещё не опубликован**. Следующий допустимый delivery-шаг — T004: публикация готовых файлов без пересборки и сверка tag/assets/main.
+[GitHub Release v0.6.81](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.81) опубликован 2026-10-03T18:07:01Z. Tag `v0.6.81` указывает точно на `db59be83f0d3fa4136c109a8252181422acfe94c`. Опубликованы ровно пять файлов: оба ZIP, `SHA256SUMS.txt`, `INSTALL.txt`, `release-manifest.json`; server size/digest каждого совпадает с локальной поставкой. Release не draft/prerelease. Финальный `main` должен совпасть с managed T004 commit; это повторно проверяет `scripts/check-github-release.mjs` после push.
 
 ## Выпуск 0.6.80 — 03.10.2026
 

@@ -1,5 +1,13 @@
 # Проверки и приёмка
 
+## 2026-10-03 — 0.6.81 GitHub publication
+
+GitHub Release [v0.6.81](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.81) опубликован 2026-10-03T18:07:01Z, `draft=false`, `prerelease=false`. Tag указывает на release sourceCommit `db59be83f0d3fa4136c109a8252181422acfe94c`. До публикации current `main` с предсборочной DOCS и local build/install evidence был синхронизирован с GitHub.
+
+GitHub содержит ровно пять assets: macOS ZIP 186376299 / `76084ae92195e4d86c350075f87aac76031a97ee9f03e024ece5041dc85c0f78`, Windows ZIP 355490949 / `24c1ddb9071e5b4efc58ad63a3d1a44f0a129d91a98b6f18f84a7d63111e5634`, `SHA256SUMS.txt` / `640ccf117ae8ce804ac0781a72f6938ae10e75e2dd4eaac036441c870977f598`, `INSTALL.txt` / `510c5cac0297f52d36d9ba162cb4e69d11961086d622eef3a39145697bf4f515`, `release-manifest.json` / `f390d177bf18323fb6ec91880017829ab9a8808479ee4a8beb1b13daf0eaf813`. Server size/digest совпали с локальными файлами; пересборка для GitHub не выполнялась.
+
+Managed T004 завершается только если verifier подтверждает tag/assets и `origin/main == local HEAD`; после T004 commit выполняется финальный push `main` и та же проверка повторяется. Native Windows/clean VM 0.6.81 не проверялись.
+
 ## 2026-10-03 — 0.6.81 local build/install before GitHub
 
 Предсборочная DOCS `db59be8` предшествовала release build. T002 (`36c4ff3`) выполнила единственный paired build 0.6.81: sourceCommit `db59be83f0d3fa4136c109a8252181422acfe94c`, 106 source/resource files, `packagedSourceMatches=true`, Workflow Kit **1.5.2 / 35 files / SHA-256 `646fec106c498e004d8688a3bc40012bea1654178ce66a61b650211ab28055df`**. macOS ZIP: 186376299 bytes / `76084ae92195e4d86c350075f87aac76031a97ee9f03e024ece5041dc85c0f78`; Windows ZIP: 355490949 bytes / `24c1ddb9071e5b4efc58ad63a3d1a44f0a129d91a98b6f18f84a7d63111e5634`; общий ASAR `4fc92297dafdf6afa2e97b0a504d774753a57f7c195a6a931477f9ea4beb8195`.

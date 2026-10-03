@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1019,
+  "plan_revision": 1021,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "release-0.6.81-workflowkit-1.5.2-20261003",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Подготовить, собрать, проверить и опубликовать Project Web Pilot 0.6.81 с bundled Workflow Kit 1.5.2, строго выполнив DOCS до build/package и до GitHub publish/sync.",
   "acceptance_criteria": [
     "Project Web Pilot 0.6.81 содержит bundled Workflow Kit 1.5.2 и больше не считает workspace 1.5.2 неподдерживаемым",
@@ -284,8 +284,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "release-0.6.81-workflowkit-1.5.2-20261003",
         "task_id": "T004",
@@ -329,7 +329,21 @@
         "Старые release tags и assets не изменены",
         "После публикации, но до финальной синхронизации main, документация фиксирует фактический GitHub Release v0.6.81, tag sourceCommit и server digests пяти assets"
       ],
-      "expected_commit_message": "release: опубликовать Project Web Pilot 0.6.81"
+      "expected_commit_message": "release: опубликовать Project Web Pilot 0.6.81",
+      "actual_files": [
+        "scripts/check-github-release.mjs",
+        "README.md",
+        "docs/PRODUCT.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/MODULES.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/SOURCE_WORKSPACES.md",
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "docs/CLEAN_INSTALL.md"
+      ]
     }
   ],
   "blocked_reason": null,
@@ -347,10 +361,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: release-0.6.81-workflowkit-1.5.2-20261003
 Current Task: нет
-Revision: 1019
+Revision: 1021
 
 ## Цель
 
@@ -383,8 +397,8 @@ Revision: 1019
   - Git Commit: [DONE] release: проверить установленный Project Web Pilot 0.6.81
   - Reference: release-0.6.81-workflowkit-1.5.2-20261003 / T003 / implementation
   - Файлы: scripts/release-mac.mjs, scripts/check-installed-release.mjs, docs/planning/release-0.6.81-workflowkit-1.5.2.md, README.md, docs/PRODUCT.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/TRANSFER_TO_WINDOWS.md, docs/CLEAN_INSTALL.md
-- [TODO] T004: Опубликовать 0.6.81 и синхронизировать Project Web Pilot с GitHub — Ожидает
-  - Git Commit: [PENDING] release: опубликовать Project Web Pilot 0.6.81
+- [DONE] T004: Опубликовать 0.6.81 и синхронизировать Project Web Pilot с GitHub — Завершено
+  - Git Commit: [DONE] release: опубликовать Project Web Pilot 0.6.81
   - Reference: release-0.6.81-workflowkit-1.5.2-20261003 / T004 / implementation
   - Файлы: scripts/check-github-release.mjs, package.json, docs/planning/release-0.6.81-workflowkit-1.5.2.md, README.md, docs/PRODUCT.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/SOURCE_WORKSPACES.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/TRANSFER_TO_WINDOWS.md, docs/CLEAN_INSTALL.md
 
