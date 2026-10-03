@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 959,
+  "plan_revision": 961,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "macos-screen-permission-stability-20261003",
@@ -75,8 +75,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "macos-screen-permission-stability-20261003",
         "task_id": "T001",
@@ -99,7 +99,12 @@
         "План связан с Release & Local Installation и Executor; сохранены TCC evidence, проверенный стандартный путь подписи и условия приёмки",
         "Реализация не запущена; явный выбор сертификата остаётся до подписи"
       ],
-      "expected_commit_message": "docs: plan stable macOS screen recording permissions"
+      "expected_commit_message": "docs: plan stable macOS screen recording permissions",
+      "actual_files": [
+        "docs/architecture/OVERVIEW.md",
+        "docs/MODULES.md",
+        "docs/DOCUMENTATION_INDEX.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -295,7 +300,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: macos-screen-permission-stability-20261003
 Current Task: нет
-Revision: 959
+Revision: 961
 
 ## Цель
 
@@ -307,8 +312,8 @@ Revision: 959
 
 ## Микрозадачи
 
-- [TODO] T001: Зафиксировать подтверждённую причину, контракт решения и current план — Ожидает
-  - Git Commit: [PENDING] docs: plan stable macOS screen recording permissions
+- [DONE] T001: Зафиксировать подтверждённую причину, контракт решения и current план — Завершено
+  - Git Commit: [DONE] docs: plan stable macOS screen recording permissions
   - Reference: macos-screen-permission-stability-20261003 / T001 / implementation
   - Файлы: docs/planning/macos-screen-permission-stability.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
 - [TODO] T002: Настроить постоянную подпись окончательного macOS bundle — Ожидает

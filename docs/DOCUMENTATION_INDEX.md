@@ -91,6 +91,7 @@
 - [Рабочие репозитории](SOURCE_WORKSPACES.md) — пути, роли Workflow Kit и Sidebar, текущий тестовый хост и границы будущего Host API.
 
 ## Актуальные дополнения
+- [Стабильное разрешение macOS на захват экрана](planning/macos-screen-permission-stability.md) — подготовленный план: подтверждённая смена CDHash, постоянная подпись, контроль установки и live проверка сохранения consent между сборками. Реализация ещё не начата.
 - [Публикация 0.6.77/0.6.78 и актуализация WorkflowKit](planning/github-publication-0.6.77.md) — результат GitHub-поставки, актуализации README обоих репозиториев и финальной сверки.
 - [Рефакторинг и Node 24](planning/refactoring-node24.md) — завершённый scope очистки, Node 24.21.0 / Electron 44.5.1, контракт Sidebar, опубликованный выпуск 0.6.75 и полученная приёмка.
 - [Переход на один текущий план](planning/single-active-plan-adaptation.md) — исходный контракт адаптации Web Pilot к single-active Workflow Kit.

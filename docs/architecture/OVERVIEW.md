@@ -40,3 +40,7 @@ Web Pilot Sidebar (`/Users/oleksandroliinyk/VSCODE/Web Pilot Sidebar`) — от�
 [Модули](../MODULES.md), [индекс](../DOCUMENTATION_INDEX.md), [выпуск](../RELEASE.md), [проверки](../VERIFICATION.md).
 [Общий контракт рефакторинга](../planning/event-driven-runtime.md), [клиентское автопродолжение](../planning/auto-plan-client-driven-refactor.md).
 Полная прежняя сводка с историей выпусков сохранена без потерь в [OVERVIEW.history-20260929.md](OVERVIEW.history-20260929.md); она не обязательна для каждого recovery.
+
+## Подготовленный план — стабильное разрешение macOS
+
+[Контракт](../planning/macos-screen-permission-stability.md): устранить подтверждённое TCC несовпадение подписи ScreenCapture через постоянную identity и проверяемую упаковку. Сейчас подготовлен план; подпись приложения и системные разрешения не менялись. Явный выбор сертификата предшествует реализации.
