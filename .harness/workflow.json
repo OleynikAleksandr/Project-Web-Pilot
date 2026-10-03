@@ -1,21 +1,12 @@
 {
   "schema_version": 1,
   "profile": "DEVELOPMENT",
-  "stack": "Node.js 22 / ESM",
+  "stack": "Node.js 22+ / ESM",
   "checks": [
     {
       "required": false,
       "timeout_ms": 120000,
-      "id": "package",
-      "executable": "node",
-      "args": [
-        "scripts/check-package.mjs"
-      ]
-    },
-    {
-      "required": false,
-      "timeout_ms": 120000,
-      "id": "runtime",
+      "id": "runtime-fixture",
       "executable": "node",
       "args": [
         "scripts/check-runtime-fixture.mjs"
@@ -24,10 +15,11 @@
     {
       "required": false,
       "timeout_ms": 120000,
-      "id": "consumer-contract",
-      "executable": "node",
+      "id": "package-check",
+      "executable": "npm",
       "args": [
-        "scripts/check-consumer-contract.mjs"
+        "run",
+        "check"
       ]
     }
   ],
