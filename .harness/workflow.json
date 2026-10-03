@@ -41,7 +41,7 @@
       "executable": "bash",
       "args": [
         "-lc",
-        "npm run stage:workflow-kit && node --test tests/context-session.test.mjs tests/workflow-kit-recovery.test.mjs tests/workflow-kit-source.test.mjs tests/workspace-setup.test.mjs && node scripts/check-workflow-kit-dependency.mjs"
+        "npm run stage:workflow-kit && node --check scripts/check-github-release.mjs && node --test tests/context-session.test.mjs tests/workflow-kit-recovery.test.mjs tests/workflow-kit-source.test.mjs tests/workspace-setup.test.mjs && node scripts/check-workflow-kit-dependency.mjs"
       ]
     },
     {
