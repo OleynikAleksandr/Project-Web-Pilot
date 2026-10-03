@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1015,
+  "plan_revision": 1016,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "release-0.6.81-workflowkit-1.5.2-20261003",
@@ -245,7 +245,16 @@
         "scripts/check-installed-release.mjs"
       ],
       "documentation_paths": [
-        "docs/planning/release-0.6.81-workflowkit-1.5.2.md"
+        "docs/planning/release-0.6.81-workflowkit-1.5.2.md",
+        "README.md",
+        "docs/PRODUCT.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/MODULES.md",
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "docs/CLEAN_INSTALL.md"
       ],
       "verification_ids": [
         "release-installed"
@@ -258,7 +267,8 @@
         "/Applications/Project Web Pilot.app обновлён из уже собранного staging через installMacBundle без новой сборки",
         "Root app и /Applications имеют 0.6.81, одинаковый ASAR/signature и сохраняют filesystem identity",
         "check-installed-release.mjs подтверждает staging, обе Mac-копии, оба ZIP, Workflow Kit 1.5.2 и Windows package",
-        "Native Windows и clean VM остаются непроверенными, если пользователь отдельно их не запускал"
+        "Native Windows и clean VM остаются непроверенными, если пользователь отдельно их не запускал",
+        "До GitHub publication документы фиксируют фактические local build/install evidence 0.6.81 и сохраняют различие между готовой локальной поставкой и ещё не опубликованным GitHub Release"
       ],
       "expected_commit_message": "release: проверить установленный Project Web Pilot 0.6.81"
     },
@@ -317,7 +327,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: release-0.6.81-workflowkit-1.5.2-20261003
 Current Task: нет
-Revision: 1015
+Revision: 1016
 
 ## Цель
 
@@ -349,7 +359,7 @@ Revision: 1015
 - [TODO] T003: Обновить и проверить установленные macOS-копии 0.6.81 — Ожидает
   - Git Commit: [PENDING] release: проверить установленный Project Web Pilot 0.6.81
   - Reference: release-0.6.81-workflowkit-1.5.2-20261003 / T003 / implementation
-  - Файлы: scripts/release-mac.mjs, scripts/check-installed-release.mjs, docs/planning/release-0.6.81-workflowkit-1.5.2.md
+  - Файлы: scripts/release-mac.mjs, scripts/check-installed-release.mjs, docs/planning/release-0.6.81-workflowkit-1.5.2.md, README.md, docs/PRODUCT.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/TRANSFER_TO_WINDOWS.md, docs/CLEAN_INSTALL.md
 - [TODO] T004: Опубликовать 0.6.81 и синхронизировать Project Web Pilot с GitHub — Ожидает
   - Git Commit: [PENDING] release: опубликовать Project Web Pilot 0.6.81
   - Reference: release-0.6.81-workflowkit-1.5.2-20261003 / T004 / implementation
