@@ -2,7 +2,7 @@
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
-Текущая локальная версия — 0.6.78: исправление идентичности пауз AutoPlan и отменённого Paste. Node 24.21.0 / Electron 44.5.1 / Workflow Kit 1.5.1 сохранены. T004 (`88f8866`) прошла unit, smoke и release-installed; живая приёмка не получена. Опубликованный GitHub Release — 0.6.77. [Контракт AutoPlan](planning/auto-plan-client-driven-refactor.md), [исправление](planning/auto-plan-session-incident-20261003.md), [RELEASE](RELEASE.md), [VERIFICATION](VERIFICATION.md).
+Текущая версия — 0.6.78: исправление идентичности пауз AutoPlan и отменённого Paste. Node 24.21.0 / Electron 44.5.1 / Workflow Kit 1.5.1 сохранены. T004 (`88f8866`) прошла unit, smoke и release-installed; живая приёмка не получена. Опубликованный GitHub Release — 0.6.78. [Контракт AutoPlan](planning/auto-plan-client-driven-refactor.md), [исправление](planning/auto-plan-session-incident-20261003.md), [RELEASE](RELEASE.md), [VERIFICATION](VERIFICATION.md).
 
 Карта самостоятельных частей проекта и их владельцев. Workflow Kit не ограничивает проект программным продуктом: здесь могут быть программные модули, исследовательские направления, зоны проектирования или другие устойчивые части предметной работы. Перед новым scope агент сначала находит затрагиваемую часть здесь; если владельца/спецификации нет, сначала создаётся и согласуется подходящий specification/planning document.
 

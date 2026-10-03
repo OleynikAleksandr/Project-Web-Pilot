@@ -2,7 +2,7 @@
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
-## Локальная поставка 0.6.78 — 03.10.2026
+## Выпуск 0.6.78 — 03.10.2026
 
 Исправлен AutoPlan для длинных Work-разговоров: количество DOM-узлов больше не служит ID ответа, сохраняются наблюдаемые циклы генерации. При загрузке истории нет преждевременной вставки; отменённый собственный Paste очищается с сохранением пользовательских правок. [Разбор и ограничения](planning/auto-plan-session-incident-20261003.md).
 
@@ -15,7 +15,9 @@
 
 Root app и `/Applications/Project Web Pilot.app` обновлены штатным installMacBundle. Inode 406600483 и 406571340 сохранены; старые Contents сохранены в backup. ASAR SHA-256 обеих копий — `eb4badce53d64455448e2e7d310cd4ca4967de2ddac198a0e57ac7406c981122`. Пользовательский процесс не перезапускался. Для применения нужен полный выход и повторный запуск.
 
-T004 завершена коммитом `88f8866`; unit (496 PASS, 3 SKIP), smoke и release-installed прошли: исходники/версии/хеши/identity, runtime обеих упаковок и установленный observer/Composer/AutoPlan с bounded DOM и настоящим ProseMirror. Результат хранит Workflow Kit и `.harness/runtime/t004-commit.log`; сборка внутри commit не повторяется. GitHub Release 0.6.78 не опубликован, живая приёмка и native Windows не заявлены.
+T004 завершена коммитом `88f8866`; unit (496 PASS, 3 SKIP), smoke и release-installed прошли: исходники/версии/хеши/identity, runtime обеих упаковок и установленный observer/Composer/AutoPlan с bounded DOM и настоящим ProseMirror. Результат хранит Workflow Kit и `.harness/runtime/t004-commit.log`; сборка внутри commit не повторяется. GitHub Release 0.6.78 опубликован по последующему поручению пользователя; живая приёмка и native Windows не заявлены.
+
+[GitHub Release v0.6.78](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.78) опубликован 2026-10-03T08:08:36Z. Тег указывает на проверенный коммит `88f8866d2722edaff019137455a79d7be5698b08`. Готовые пакеты не пересобирались. До публикации сверены размеры и серверные SHA-256 всех пяти файлов: macOS arm64 ZIP, Windows x64 ZIP, `SHA256SUMS.txt`, `INSTALL.txt`, `release-manifest.json`. GitHub подтвердил latest public release; WorkflowKit main синхронизирован, актуальный v1.5.1 и его runtime не менялись. Evidence: `.harness/runtime/github-0.6.78-publication.json` и `github-0.6.78-workflowkit.json`. Живая приёмка, native Windows и чистый первый запуск отдельно не подтверждены.
 
 ## Выпуск 0.6.77 — 02.10.2026
 

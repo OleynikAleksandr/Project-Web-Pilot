@@ -2,7 +2,7 @@
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
-Текущая локальная поставка — **Project Web Pilot 0.6.78, Windows x64**, собранная вместе с macOS arm64. Workflow Kit 1.5.1. Упакованные исходники и ZIP сверены; native Windows/clean VM не запускались.
+Текущая поставка — **Project Web Pilot 0.6.78, Windows x64**, собранная вместе с macOS arm64. Workflow Kit 1.5.1. Упакованные исходники и ZIP сверены; native Windows/clean VM не запускались.
 
 ## Файл для переноса
 
@@ -10,7 +10,7 @@
 
 Размер: 355434034 bytes; SHA-256 `f98e5eef4a9347b45d2ecb62b8cb8c6f3665566484967234be5a335f762271f7`.
 
-0.6.78 пока доступна в локальной поставке. На GitHub опубликована [предыдущая версия 0.6.77](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.77); указанные выше hash и размер относятся к новой 0.6.78. Electron 44.5.1, Node 24.21.0. Release-installed T004 (`88f8866`) прошла на Mac; native Windows и живая приёмка 0.6.78 не подтверждены. История — [RELEASE](RELEASE.md).
+[GitHub Release 0.6.78](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.78) содержит готовый Windows ZIP; указанные выше hash и размер сверены с опубликованным файлом. Electron 44.5.1, Node 24.21.0. Release-installed T004 (`88f8866`) прошла на Mac; native Windows и живая приёмка 0.6.78 не подтверждены. История — [RELEASE](RELEASE.md).
 
 Контрольные суммы, инструкция и общий manifest лежат рядом. Полностью распакуйте ZIP на локальный диск Windows; запускайте `Project Web Pilot.exe` из полученной папки. Не переносите один EXE отдельно от resources. Для обновления завершите старое приложение и распакуйте новую поставку в отдельную папку; данные аккаунта и проектов в пользовательском профиле сохраняются.
 

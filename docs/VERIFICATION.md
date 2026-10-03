@@ -1,10 +1,14 @@
 # Проверки и приёмка
 
+## 2026-10-03 — T005: публикация 0.6.78
+
+[GitHub Release v0.6.78](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.78) опубликован 2026-10-03T08:08:36Z. Тег указывает на проверенный коммит `88f8866d2722edaff019137455a79d7be5698b08`. Готовые пакеты не пересобирались. До публикации сверены размеры и серверные SHA-256 всех пяти файлов: macOS arm64 ZIP, Windows x64 ZIP, `SHA256SUMS.txt`, `INSTALL.txt`, `release-manifest.json`. GitHub подтвердил latest public release; WorkflowKit main синхронизирован, актуальный v1.5.1 и его runtime не менялись. Evidence: `.harness/runtime/github-0.6.78-publication.json` и `github-0.6.78-workflowkit.json`. Живая приёмка, native Windows и чистый первый запуск отдельно не подтверждены.
+
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
 ## 2026-10-03 — DOCS после исправления AutoPlan
 
-Согласованы README, текущие версии, checkpoint v3, startup/recovery, архитектура, модули, release/Windows-инструкции и ограничения приёмки. Проверены 44 документа и 256 локальных ссылок: 0 ошибок; изменений исходников нет. DONE T001–T004 и scope сохранены, objective уточнён для дополнительного поручения. Evidence — `.harness/runtime/auto-plan-DOCS-audit.json`. 0.6.78 остаётся локальной; опубликованная 0.6.77 и историческая приёмка обозначены отдельно.
+Согласованы README, текущие версии, checkpoint v3, startup/recovery, архитектура, модули, release/Windows-инструкции и ограничения приёмки. Проверены 44 документа и 256 локальных ссылок: 0 ошибок; изменений исходников нет. DONE T001–T004 и scope сохранены, objective уточнён для дополнительного поручения. Evidence — `.harness/runtime/auto-plan-DOCS-audit.json`. На момент этой DOCS 0.6.78 оставалась локальной; последующая публикация оформлена в разделе T005.
 
 ## 2026-10-03 — T004: локальная 0.6.78
 

@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 951,
+  "plan_revision": 953,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "github-publication-0.6.77-20261002",
@@ -292,7 +292,12 @@
         "docs/PRODUCT.md",
         "docs/RELEASE.md",
         "docs/VERIFICATION.md",
-        "docs/DECISIONS.md"
+        "docs/DECISIONS.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/MODULES.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/architecture/OVERVIEW.md"
       ],
       "verification_ids": [],
       "verification_kind": "code",
@@ -302,13 +307,28 @@
         "README и документы публикации отражают опубликованную 0.6.78; ограничения приёмки сохранены"
       ],
       "expected_commit_message": "release: опубликовать Web Pilot 0.6.78 на GitHub",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "github-publication-0.6.77-20261002",
         "task_id": "T005",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "AGENTS.md",
+        "README.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/DECISIONS.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/RELEASE.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/planning/github-publication-0.6.77.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -396,7 +416,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: github-publication-0.6.77-20261002
 Current Task: нет
-Revision: 951
+Revision: 953
 
 ## Цель
 
@@ -426,10 +446,10 @@ Revision: 951
   - Git Commit: [DONE] fix: восстановить продолжение AutoPlan в длинных разговорах
   - Reference: github-publication-0.6.77-20261002 / T004 / implementation
   - Файлы: src/chatgpt-page-observer.mjs, src/auto-plan.mjs, src/page-state.mjs, src/chromium-diagnostics.mjs, tests/page-state.test.mjs, tests/auto-plan.test.mjs, tests/installed-observer-fixture.cjs, package-lock.json, package.json, src/chatgpt-composer.mjs, src/main.mjs, tests/auto-plan-restart-fixture.cjs, tests/chatgpt-composer.test.mjs, docs/planning/auto-plan-client-driven-refactor.md, docs/planning/auto-plan-session-incident-20261003.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md, docs/modules/chatgpt-dom-compatibility.md
-- [TODO] T005: Опубликовать готовую 0.6.78 и синхронизировать актуальные репозитории GitHub — Ожидает
-  - Git Commit: [PENDING] release: опубликовать Web Pilot 0.6.78 на GitHub
+- [DONE] T005: Опубликовать готовую 0.6.78 и синхронизировать актуальные репозитории GitHub — Завершено
+  - Git Commit: [DONE] release: опубликовать Web Pilot 0.6.78 на GitHub
   - Reference: github-publication-0.6.77-20261002 / T005 / implementation
-  - Файлы: docs/planning/github-publication-0.6.77.md, README.md, AGENTS.md, docs/WORKFLOW_START.md, docs/PRODUCT.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/DECISIONS.md
+  - Файлы: docs/planning/github-publication-0.6.77.md, README.md, AGENTS.md, docs/WORKFLOW_START.md, docs/PRODUCT.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/DECISIONS.md, docs/CLEAN_INSTALL.md, docs/MODULES.md, docs/TRANSFER_TO_WINDOWS.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: github-publication-0.6.77-20261002 / DOCS / implementation
