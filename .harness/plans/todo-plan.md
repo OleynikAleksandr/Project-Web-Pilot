@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 993,
+  "plan_revision": 995,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "input-instruction-delivery-ordering-20261003",
@@ -88,10 +88,11 @@
       "why": "Завершить canonical policy DOCS/build/publish в WorkflowKit",
       "verification_kind": "code",
       "acceptance_criteria": [
-        "Связанный WorkflowKit scope delivery-ordering-policy-20261003 завершён",
+        "WorkflowKit current plan остаётся NONE; отдельный active scope для этой работы не создаётся",
         "Canonical recovery запрещает build/package/sign/notarize/release/publish вне явно названной микрозадачи",
         "WorkflowKit размещает DOCS перед package/installed delivery-хвостом и сохраняет финальную DOCS для code-only планов",
-        "npm run check WorkflowKit проходит"
+        "plan:extend сохраняет порядок работа → DOCS → delivery и recovery показывает корректную следующую задачу",
+        "Полный npm run check WorkflowKit проходит"
       ],
       "expected_commit_message": "feat: Завершить canonical policy DOCS/build/publish в WorkflowKit"
     },
@@ -210,7 +211,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: input-instruction-delivery-ordering-20261003
 Current Task: T001
-Revision: 993
+Revision: 995
 
 ## Цель
 

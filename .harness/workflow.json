@@ -10,7 +10,7 @@
       "executable": "bash",
       "args": [
         "-lc",
-        "cd ../WorkflowKit && test \"$(./scripts/workflow status | node -e 'let s=\"\";process.stdin.on(\"data\",d=>s+=d).on(\"end\",()=>process.stdout.write(JSON.parse(s).scope_status))')\" = NONE && npm run check"
+        "cd ../WorkflowKit && test \"$(./scripts/workflow status | node -e 'let s=\"\";process.stdin.on(\"data\",d=>s+=d).on(\"end\",()=>process.stdout.write(JSON.parse(s).scope_status))')\" = NONE && ./scripts/workflow recover --format json | node -e 'let s=\"\";process.stdin.on(\"data\",d=>s+=d).on(\"end\",()=>{const t=JSON.parse(s).text; if(!t.includes(\"Build/package/sign/notarize/release/publish\")||!t.includes(\"DOCS выполняется до явного delivery-хвоста\")) process.exit(1)})' && npm run check && node scripts/check-runtime-fixture.mjs && node scripts/check-consumer-contract.mjs"
       ]
     },
     {
