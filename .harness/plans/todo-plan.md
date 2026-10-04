@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1029,
+  "plan_revision": 1031,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "release-0.6.82-workflowkit-1.5.3-20261004",
@@ -168,8 +168,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "release-0.6.82-workflowkit-1.5.3-20261004",
         "task_id": "T002",
@@ -203,7 +203,8 @@
         "macOS staging/root bundle подписан выбранным Apple Development сертификатом UkrHD; Windows x64 проходит verify:win на Mac",
         "Сборка не публикует GitHub Release"
       ],
-      "expected_commit_message": "feat: Собрать и проверить парный release 0.6.82"
+      "expected_commit_message": "feat: Собрать и проверить парный release 0.6.82",
+      "actual_files": []
     },
     {
       "implementation_status": "TODO",
@@ -296,7 +297,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: release-0.6.82-workflowkit-1.5.3-20261004
 Current Task: нет
-Revision: 1029
+Revision: 1031
 
 ## Цель
 
@@ -316,8 +317,8 @@ Revision: 1029
   - Git Commit: [DONE] docs: актуализировать контекст проекта
   - Reference: release-0.6.82-workflowkit-1.5.3-20261004 / DOCS / implementation
   - Файлы: docs/planning/release-0.6.82-workflowkit-1.5.3.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, README.md, docs/RELEASE.md, docs/SOURCE_WORKSPACES.md, docs/WORKFLOW_START.md
-- [TODO] T002: Собрать и проверить парный release 0.6.82 — Ожидает
-  - Git Commit: [PENDING] feat: Собрать и проверить парный release 0.6.82
+- [DONE] T002: Собрать и проверить парный release 0.6.82 — Завершено
+  - Git Commit: [DONE] feat: Собрать и проверить парный release 0.6.82
   - Reference: release-0.6.82-workflowkit-1.5.3-20261004 / T002 / implementation
   - Файлы: package.json, scripts/release-all.mjs, scripts/release-mac.mjs, scripts/verify-windows-package.mjs, resources/workspace-setup-worker.mjs, docs/planning/release-0.6.82-workflowkit-1.5.3.md
 - [TODO] T003: Обновить и проверить установленные macOS-копии 0.6.82 — Ожидает
