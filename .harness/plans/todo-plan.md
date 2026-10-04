@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 128,
+  "plan_revision": 129,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "kit-extend-after-delivery-note-20261004",
@@ -139,7 +139,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: READY_FOR_ACCEPTANCE
 Scope: kit-extend-after-delivery-note-20261004
 Current Task: нет
-Revision: 128
+Revision: 129
 
 ## Цель
 

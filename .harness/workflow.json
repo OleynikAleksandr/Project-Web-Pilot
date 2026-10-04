@@ -21,6 +21,18 @@
         "run",
         "check"
       ]
+    },
+    {
+      "required": false,
+      "timeout_ms": 60000,
+      "id": "github-main",
+      "kind": "package",
+      "executable": "bash",
+      "args": [
+        "-lc",
+        "git fetch -q origin main && test \"$(git rev-parse origin/main)\" = \"$(git rev-parse HEAD)\" && git ls-remote origin refs/heads/main"
+      ],
+      "evidence": "github.com/OleynikAleksandr/WorkflowKit: origin/main совпадает с локальным HEAD перед фиксацией задачи синхронизации"
     }
   ],
   "budget": {
