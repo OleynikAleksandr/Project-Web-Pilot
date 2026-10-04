@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1115,
+  "plan_revision": 1116,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "mcp-sequential-parts-kit-1.5.4-0.6.87-20261004",
@@ -39,7 +39,7 @@
     ]
   },
   "baseline_commit": "372c314fc141ec20b338a24492bd81d7ba926c39",
-  "current_task_id": "T002",
+  "current_task_id": null,
   "context_pack": {
     "documents": [
       {
@@ -114,8 +114,8 @@
       ]
     },
     {
-      "implementation_status": "IN_PROGRESS",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "mcp-sequential-parts-kit-1.5.4-0.6.87-20261004",
         "task_id": "T002",
@@ -144,7 +144,14 @@
         "Release-gates ожидают Workflow Kit 1.5.4, 35 файлов, новый SHA-256",
         "Recovery без форм и без содержимого MODULES/DOCUMENTATION_INDEX вне DOCS"
       ],
-      "expected_commit_message": "feat: Перевести Web Pilot на Workflow Kit 1.5.4"
+      "expected_commit_message": "feat: Перевести Web Pilot на Workflow Kit 1.5.4",
+      "actual_files": [
+        "scripts/check-installed-release.mjs",
+        "scripts/check-workflow-kit-dependency.mjs",
+        "scripts/verify-windows-package.mjs",
+        "tests/workflow-kit-recovery.test.mjs",
+        "tests/workflow-kit-source.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -312,8 +319,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: mcp-sequential-parts-kit-1.5.4-0.6.87-20261004
-Current Task: T002
-Revision: 1115
+Current Task: нет
+Revision: 1116
 
 ## Цель
 
@@ -329,8 +336,8 @@ Revision: 1115
   - Git Commit: [DONE] feat: MCP: части контекста строго по одной — ключ следующей части
   - Reference: mcp-sequential-parts-kit-1.5.4-0.6.87-20261004 / T001 / implementation
   - Файлы: tools/codex-app-server-mcp/server.py, tests/codex-app-server-mcp.test.mjs, docs/planning/mcp-sequential-parts-kit-1.5.4.md, tools/codex-app-server-mcp/session-rules.md
-- [IN_PROGRESS] T002: Перевести Web Pilot на Workflow Kit 1.5.4 — В работе
-  - Git Commit: [PENDING] feat: Перевести Web Pilot на Workflow Kit 1.5.4
+- [DONE] T002: Перевести Web Pilot на Workflow Kit 1.5.4 — Завершено
+  - Git Commit: [DONE] feat: Перевести Web Pilot на Workflow Kit 1.5.4
   - Reference: mcp-sequential-parts-kit-1.5.4-0.6.87-20261004 / T002 / implementation
   - Файлы: scripts/check-workflow-kit-dependency.mjs, tests/workflow-kit-source.test.mjs, tests/workflow-kit-recovery.test.mjs, scripts/check-installed-release.mjs, scripts/verify-windows-package.mjs, docs/planning/mcp-sequential-parts-kit-1.5.4.md
 - [TODO] T003: Подготовить source релиза 0.6.87 — Ожидает

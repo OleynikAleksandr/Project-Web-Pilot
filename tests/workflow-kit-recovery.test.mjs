@@ -103,6 +103,7 @@ test('READY_FOR_ACCEPTANCE requires DOCS and archive returns a contextual NONE p
 
   startTask(root, 'DOCS');
   const docsPacket = recover(root, 'manual');
+  assert.match(docsPacket.text, /Fixture module map/, 'the final DOCS audits the full module map');
   assert.equal(docsPacket.included.includes(implementation.sha), false, 'DOCS ordering dependency is not copied as commit diff');
   assert.doesNotMatch(docsPacket.text, /RESULT_READY/, 'DOCS recovery does not replay completed implementation diff');
   commitTask(root, 'DOCS');
@@ -123,7 +124,11 @@ test('READY_FOR_ACCEPTANCE requires DOCS and archive returns a contextual NONE p
   }
   const packet = recover(root, 'startup');
   assert.match(packet.text, /OVERVIEW_REQUIRED/);
-  assert.match(packet.text, /Fixture module map/);
+  // Workflow Kit 1.5.4: navigation maps and forms are read on demand outside the final DOCS.
+  assert.doesNotMatch(packet.text, /Fixture module map/);
+  assert.ok(packet.text.includes('Прочитай при задаче: docs/MODULES.md'));
+  assert.doesNotMatch(packet.text, /--- ДАННЫЕ: \.harness\/kit\/templates\/PLAN\.md ---/);
+  assert.ok(packet.text.includes('plan:create --help'));
   assert.ok(packet.text.includes(PROJECT_CONTINUATION_OBJECTIVE));
   assert.equal(git(root, 'status', '--porcelain'), '');
 });
