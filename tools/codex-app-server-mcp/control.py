@@ -39,6 +39,10 @@ SELECTOR_FILE = PRIVATE / "selector.json"
 MCP_PORT = int(os.environ.get("WEB_PILOT_CODEX_EXECUTOR_PORT", "17852"))
 TUNNEL_PORT = int(os.environ.get("WEB_PILOT_CODEX_EXECUTOR_TUNNEL_PORT", "17853"))
 TUNNEL_KEY_ENV = "WEB_PILOT_CODEX_EXECUTOR_TUNNEL_API_KEY"
+# How ChatGPT reaches the selected MCP: OpenAI Secure MCP Tunnel (tunnel-client)
+# or the user's own server, whose SSH tunnel Project Web Pilot maintains itself.
+CHATGPT_CHANNELS = ("secure-tunnel", "vps")
+DEFAULT_CHATGPT_CHANNEL = "secure-tunnel"
 
 
 def json_out(value: object) -> None:
@@ -309,16 +313,43 @@ def configure_selector(
         "runtime_root": _absolute_existing_path(local_root, directory=True),
         "state_directory": _absolute_existing_path(local_state, directory=True),
     }
-    adopted_tunnel = adopt_tunnel_from_local(local["state_directory"])
-    target = set_tunnel_target(mcp_url)
+    channel = current_chatgpt_channel()
+    try:
+        adopted_tunnel = adopt_tunnel_from_local(local["state_directory"])
+    except RuntimeError:
+        if channel != "vps":
+            raise
+        adopted_tunnel = False
+    if channel == "vps" and not (PROFILE.is_file() and KEY_FILE.is_file()):
+        target = normalize_mcp_url(mcp_url)
+    else:
+        target = set_tunnel_target(mcp_url)
     selector = {
         "schema_version": 1,
         "mode": mode,
         "mcp_url": target,
+        "chatgpt_channel": channel,
         "local": local,
     }
     private_write(SELECTOR_FILE, json.dumps(selector, ensure_ascii=False, indent=2) + "\n")
-    return {"configured": True, "mode": mode, "mcp_url": target, "adopted_tunnel": adopted_tunnel}
+    return {"configured": True, "mode": mode, "mcp_url": target, "chatgpt_channel": channel,
+            "adopted_tunnel": adopted_tunnel}
+
+
+def current_chatgpt_channel() -> str:
+    try:
+        return load_selector()["chatgpt_channel"]
+    except RuntimeError:
+        return DEFAULT_CHATGPT_CHANNEL
+
+
+def configure_channel(channel: str) -> dict[str, object]:
+    if channel not in CHATGPT_CHANNELS:
+        raise ValueError("ChatGPT channel must be secure-tunnel or vps")
+    selector = load_selector()
+    selector["chatgpt_channel"] = channel
+    private_write(SELECTOR_FILE, json.dumps(selector, ensure_ascii=False, indent=2) + "\n")
+    return {"configured": True, "chatgpt_channel": channel}
 
 
 def load_selector() -> dict[str, object]:
@@ -331,6 +362,9 @@ def load_selector() -> dict[str, object]:
     if selector.get("schema_version") != 1 or selector.get("mode") not in {"local", "app-server"}:
         raise RuntimeError("MCP backend selector is invalid")
     selector["mcp_url"] = normalize_mcp_url(selector.get("mcp_url"))
+    selector.setdefault("chatgpt_channel", DEFAULT_CHATGPT_CHANNEL)
+    if selector["chatgpt_channel"] not in CHATGPT_CHANNELS:
+        raise RuntimeError("MCP backend selector has an invalid ChatGPT channel")
     return selector
 
 
@@ -339,7 +373,7 @@ def selector_public() -> dict[str, object] | None:
         selector = load_selector()
     except RuntimeError:
         return None
-    return {"mode": selector["mode"], "mcp_url": selector["mcp_url"]}
+    return {"mode": selector["mode"], "mcp_url": selector["mcp_url"], "chatgpt_channel": selector["chatgpt_channel"]}
 
 
 def run_local_control(selector: dict[str, object], command: str, *extra: str) -> dict[str, object]:
@@ -549,11 +583,11 @@ def start(*, mcp_only: bool = False, tunnel_only: bool = False) -> dict[str, obj
             raise RuntimeError(f"MCP did not become ready; see {STATE / 'mcp.err.log'}")
         time.sleep(0.25)
 
-    if mcp_only or not (PROFILE.is_file() and KEY_FILE.is_file()):
+    if mcp_only or not (PROFILE.is_file() and KEY_FILE.is_file()) or current_chatgpt_channel() == "vps":
         result = status()
         result["next"] = (
             "Local MCP is ready; configure the stable OpenAI Secure MCP Tunnel."
-            if not result["tunnel"]["configured"]
+            if not result["tunnel"]["configured"] and current_chatgpt_channel() != "vps"
             else "Local MCP started without tunnel."
         )
         return result
@@ -585,7 +619,9 @@ def stop_one(name: str) -> dict[str, object]:
     return {"service": name, "stopped": True}
 
 
-def stop() -> dict[str, object]:
+def stop(*, tunnel_only: bool = False) -> dict[str, object]:
+    if tunnel_only:
+        return {"services": [stop_one("tunnel")]}
     return {"services": [stop_one("tunnel"), stop_one("mcp")]}
 
 
@@ -613,8 +649,17 @@ def selector_start() -> dict[str, object]:
     if selector.get("mcp_url") != target:
         selector["mcp_url"] = target
         private_write(SELECTOR_FILE, json.dumps(selector, ensure_ascii=False, indent=2) + "\n")
-    set_tunnel_target(target)
-    stable = start_tunnel()
+    if selector["chatgpt_channel"] == "vps":
+        # ChatGPT uses the user's server: tunnel-client must not run at login.
+        tunnel = managed_process("tunnel")
+        if tunnel["running"] and not tunnel["owned"]:
+            raise RuntimeError("Recorded tunnel PID belongs to another process")
+        if tunnel["owned"]:
+            stop_one("tunnel")
+        stable = status()
+    else:
+        set_tunnel_target(target)
+        stable = start_tunnel()
     stable["selected_backend"] = {
         "mode": selector["mode"],
         "mcp_url": target,
@@ -632,8 +677,11 @@ def parse_args() -> argparse.Namespace:
     start_group = start_parser.add_mutually_exclusive_group()
     start_group.add_argument("--mcp-only", action="store_true")
     start_group.add_argument("--tunnel-only", action="store_true")
-    sub.add_parser("stop")
+    stop_parser = sub.add_parser("stop")
+    stop_parser.add_argument("--tunnel-only", action="store_true")
     sub.add_parser("selector-start")
+    channel = sub.add_parser("configure-channel")
+    channel.add_argument("--channel", required=True, choices=list(CHATGPT_CHANNELS))
     selector = sub.add_parser("configure-selector")
     selector.add_argument("--mode", required=True, choices=["local", "app-server"])
     selector.add_argument("--mcp-url", required=True)
@@ -661,7 +709,9 @@ def main() -> int:
             elif args.command == "start":
                 result = start(mcp_only=args.mcp_only, tunnel_only=args.tunnel_only)
             elif args.command == "stop":
-                result = stop()
+                result = stop(tunnel_only=args.tunnel_only)
+            elif args.command == "configure-channel":
+                result = configure_channel(args.channel)
             elif args.command == "configure-selector":
                 result = configure_selector(
                     args.mode,

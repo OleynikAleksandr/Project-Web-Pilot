@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1039,
+  "plan_revision": 1041,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "chatgpt-channel-vps-20261004",
@@ -79,8 +79,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "chatgpt-channel-vps-20261004",
         "task_id": "T001",
@@ -107,7 +107,11 @@
         "selector-start в режиме vps не запускает и останавливает tunnel-client, в режиме secure-tunnel запускает как раньше",
         "status сообщает выбранный канал; неизвестное значение отклоняется"
       ],
-      "expected_commit_message": "feat: Executor: канал ChatGPT в selector и запуск tunnel-client только для Secure Tunnel"
+      "expected_commit_message": "feat: Executor: канал ChatGPT в selector и запуск tunnel-client только для Secure Tunnel",
+      "actual_files": [
+        "tests/codex-app-server-mcp.test.mjs",
+        "tools/codex-app-server-mcp/control.py"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -229,7 +233,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: chatgpt-channel-vps-20261004
 Current Task: нет
-Revision: 1039
+Revision: 1041
 
 ## Цель
 
@@ -245,8 +249,8 @@ Revision: 1039
 
 ## Микрозадачи
 
-- [TODO] T001: Executor: канал ChatGPT в selector и запуск tunnel-client только для Secure Tunnel — Ожидает
-  - Git Commit: [PENDING] feat: Executor: канал ChatGPT в selector и запуск tunnel-client только для Secure Tunnel
+- [DONE] T001: Executor: канал ChatGPT в selector и запуск tunnel-client только для Secure Tunnel — Завершено
+  - Git Commit: [DONE] feat: Executor: канал ChatGPT в selector и запуск tunnel-client только для Secure Tunnel
   - Reference: chatgpt-channel-vps-20261004 / T001 / implementation
   - Файлы: tools/codex-app-server-mcp/control.py, tests/codex-app-server-mcp.test.mjs, docs/planning/chatgpt-channel-vps.md
 - [TODO] T002: Туннель VPS следует за портом MCP; переключение канала ChatGPT в main — Ожидает

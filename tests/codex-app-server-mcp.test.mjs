@@ -349,6 +349,119 @@ test('stable selector adopts an existing local tunnel without exposing its key',
   }
 });
 
+async function runCommand(command, args, env = {}) {
+  return await new Promise((resolve, reject) => {
+    const child = spawn(command, args, { env: { ...process.env, ...env }, stdio: ['ignore', 'pipe', 'pipe'] });
+    let stdout = '';
+    child.stdout.on('data', chunk => { stdout += chunk; });
+    child.on('error', reject);
+    child.on('close', code => code === 0 ? resolve(stdout.trim()) : reject(new Error(command + ' exited ' + code)));
+  });
+}
+
+// A real process group recorded as if control.py had launched it.
+async function fakeService(state, name) {
+  const child = spawn('/bin/sleep', ['60'], { detached: true, stdio: 'ignore' });
+  const exited = new Promise(resolve => child.once('exit', () => resolve(true)));
+  await new Promise(resolve => setTimeout(resolve, 150));
+  const identity = await runCommand('/bin/ps', ['-p', String(child.pid), '-o', 'lstart=', '-o', 'command='], { LC_ALL: 'C', LANG: 'C' });
+  await mkdir(state, { recursive: true });
+  await writeFile(path.join(state, name + '.pid.json'), JSON.stringify({ pid: child.pid, identity }));
+  return { child, exited };
+}
+
+test('ChatGPT channel vps keeps tunnel-client stopped at login and survives backend switches', { timeout: 30_000 }, async () => {
+  const root = await mkdtemp(path.join(tmpdir(), 'web-pilot-chatgpt-channel-'));
+  const state = path.join(root, 'state');
+  const control = path.join(clientDir, 'control.py');
+  const env = {
+    WEB_PILOT_CODEX_EXECUTOR_STATE_DIR: state,
+    WEB_PILOT_CODEX_EXECUTOR_PORT: '27852',
+    WEB_PILOT_CODEX_EXECUTOR_TUNNEL_PORT: '27853',
+  };
+  const localRoot = path.join(root, 'local-runtime');
+  const localControl = path.join(root, 'local-control.py');
+  const services = [];
+  await mkdir(localRoot, { recursive: true });
+  await writeFile(localControl, `import json, sys
+if sys.argv[1] == "start":
+    print(json.dumps({"mcp": {"ready": True, "owned": True}, "mcp_url": "http://127.0.0.1:27842/mcp"}))
+else:
+    print(json.dumps({"ok": True}))
+`);
+  const python = await runCommand('python3', ['-c', 'import sys; print(sys.executable)']);
+  const json = result => JSON.parse(result.stdout);
+  const selectorFile = path.join(state, 'private', 'selector.json');
+  const readSelector = async () => JSON.parse(await (await import('node:fs/promises')).readFile(selectorFile, 'utf8'));
+  const configureSelector = mcpUrl => runPython(control, ['configure-selector', '--mode', 'local', '--mcp-url', mcpUrl,
+    '--local-python', python, '--local-control', localControl, '--local-root', localRoot, '--local-state', state], env);
+  try {
+    const configured = await new Promise((resolve, reject) => {
+      const child = spawn('python3', [control, 'configure-tunnel', '--tunnel-id', 'tunnel_abcdefghijklmnop', '--key-stdin'],
+        { cwd: repoRoot, env: { ...process.env, ...env }, stdio: ['pipe', 'pipe', 'pipe'] });
+      let stdout = '';
+      child.stdout.on('data', chunk => { stdout += chunk; });
+      child.on('error', reject);
+      child.on('close', code => resolve({ code, stdout }));
+      child.stdin.end('0123456789abcdefghijklmnop\n');
+    });
+    assert.equal(configured.code, 0, configured.stdout);
+
+    const selected = await configureSelector('http://127.0.0.1:27842/mcp');
+    assert.equal(selected.code, 0, selected.stdout);
+    assert.equal(json(selected).chatgpt_channel, 'secure-tunnel');
+    assert.equal(json(await runPython(control, ['status'], env)).selector.chatgpt_channel, 'secure-tunnel');
+
+    // Secure Tunnel at login still starts tunnel-client (missing here, so the attempt is visible).
+    const secureLogin = await runPython(control, ['selector-start'], env);
+    assert.equal(secureLogin.code, 1);
+    assert.match(json(secureLogin).error, /tunnel-client is missing/);
+
+    const invalid = await runPython(control, ['configure-channel', '--channel', 'public'], env);
+    assert.notEqual(invalid.code, 0);
+    assert.equal((await readSelector()).chatgpt_channel, 'secure-tunnel');
+
+    const vps = await runPython(control, ['configure-channel', '--channel', 'vps'], env);
+    assert.equal(vps.code, 0, vps.stdout);
+    assert.deepEqual(json(vps), { ok: true, configured: true, chatgpt_channel: 'vps' });
+    assert.equal((await readSelector()).chatgpt_channel, 'vps');
+
+    // stop --tunnel-only stops tunnel-client and leaves MCP running.
+    const tunnel = await fakeService(state, 'tunnel'); services.push(tunnel.child);
+    const mcp = await fakeService(state, 'mcp'); services.push(mcp.child);
+    const stopped = await runPython(control, ['stop', '--tunnel-only'], env);
+    assert.equal(stopped.code, 0, stopped.stdout);
+    assert.deepEqual(json(stopped).services.map(service => service.service), ['tunnel']);
+    assert.equal(await tunnel.exited, true);
+    assert.equal(existsSync(path.join(state, 'tunnel.pid.json')), false);
+    assert.equal(existsSync(path.join(state, 'mcp.pid.json')), true);
+    assert.equal(mcp.child.exitCode, null);
+
+    // Login in vps mode stops a running tunnel-client and never starts it.
+    const loginTunnel = await fakeService(state, 'tunnel'); services.push(loginTunnel.child);
+    const vpsLogin = await runPython(control, ['selector-start'], env);
+    assert.equal(vpsLogin.code, 0, vpsLogin.stdout);
+    const login = json(vpsLogin);
+    assert.equal(login.tunnel.running, false);
+    assert.equal(login.selected_backend.mcp_url, 'http://127.0.0.1:27842/mcp');
+    assert.equal(login.selector.chatgpt_channel, 'vps');
+    assert.equal(await loginTunnel.exited, true);
+    assert.equal(existsSync(path.join(state, 'tunnel.pid.json')), false);
+
+    // A runtime switch rewrites the backend but keeps the ChatGPT channel.
+    const switched = await configureSelector('http://127.0.0.1:27852/mcp');
+    assert.equal(switched.code, 0, switched.stdout);
+    assert.equal(json(switched).chatgpt_channel, 'vps');
+    assert.equal((await readSelector()).mcp_url, 'http://127.0.0.1:27852/mcp');
+    assert.equal((await readSelector()).chatgpt_channel, 'vps');
+  } finally {
+    for (const child of services) if (child.exitCode === null && child.signalCode === null) {
+      try { process.kill(-child.pid, 'SIGKILL'); } catch { /* already gone */ }
+    }
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test('pid identity forces C locale for stable Terminal ownership checks', async () => {
   const root = await mkdtemp(path.join(tmpdir(), 'web-pilot-codex-identity-'));
   const probe = path.join(root, 'probe.py');
