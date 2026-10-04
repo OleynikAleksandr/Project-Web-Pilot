@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1116,
+  "plan_revision": 1118,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "mcp-sequential-parts-kit-1.5.4-0.6.87-20261004",
@@ -154,8 +154,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "mcp-sequential-parts-kit-1.5.4-0.6.87-20261004",
         "task_id": "T003",
@@ -179,7 +179,11 @@
       "acceptance_criteria": [
         "package.json и package-lock.json задают 0.6.87"
       ],
-      "expected_commit_message": "feat: Подготовить source релиза 0.6.87"
+      "expected_commit_message": "feat: Подготовить source релиза 0.6.87",
+      "actual_files": [
+        "package-lock.json",
+        "package.json"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -320,7 +324,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: mcp-sequential-parts-kit-1.5.4-0.6.87-20261004
 Current Task: нет
-Revision: 1116
+Revision: 1118
 
 ## Цель
 
@@ -340,8 +344,8 @@ Revision: 1116
   - Git Commit: [DONE] feat: Перевести Web Pilot на Workflow Kit 1.5.4
   - Reference: mcp-sequential-parts-kit-1.5.4-0.6.87-20261004 / T002 / implementation
   - Файлы: scripts/check-workflow-kit-dependency.mjs, tests/workflow-kit-source.test.mjs, tests/workflow-kit-recovery.test.mjs, scripts/check-installed-release.mjs, scripts/verify-windows-package.mjs, docs/planning/mcp-sequential-parts-kit-1.5.4.md
-- [TODO] T003: Подготовить source релиза 0.6.87 — Ожидает
-  - Git Commit: [PENDING] feat: Подготовить source релиза 0.6.87
+- [DONE] T003: Подготовить source релиза 0.6.87 — Завершено
+  - Git Commit: [DONE] feat: Подготовить source релиза 0.6.87
   - Reference: mcp-sequential-parts-kit-1.5.4-0.6.87-20261004 / T003 / implementation
   - Файлы: package.json, package-lock.json, docs/planning/mcp-sequential-parts-kit-1.5.4.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
