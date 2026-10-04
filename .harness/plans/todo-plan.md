@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1078,
+  "plan_revision": 1080,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "computer-use-keys-batch-0.6.85-20261004",
@@ -32,7 +32,8 @@
       "scripts/check-github-release.mjs",
       "src/workspace-session.mjs",
       "src/main.mjs",
-      "tests/workspace-session.test.mjs"
+      "tests/workspace-session.test.mjs",
+      "src/vps-tunnel.mjs"
     ],
     "documentation_paths": [
       "docs/planning/computer-use-keys-batch.md",
@@ -117,8 +118,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "computer-use-keys-batch-0.6.85-20261004",
         "task_id": "T002",
@@ -129,7 +130,8 @@
         "src/ui/index.html",
         "src/ui/settings-panel.mjs",
         "src/mac-runtime-switch.mjs",
-        "tests/settings-chatgpt-channel.test.mjs"
+        "tests/settings-chatgpt-channel.test.mjs",
+        "src/vps-tunnel.mjs"
       ],
       "documentation_paths": [
         "docs/planning/computer-use-keys-batch.md"
@@ -148,7 +150,14 @@
         "Под переключателем подсказка про плагин ChatGPT для выбранного канала",
         "Весь npm test проходит"
       ],
-      "expected_commit_message": "feat: Канал ChatGPT: нейтральные подписи и подсказка про плагин"
+      "expected_commit_message": "feat: Канал ChatGPT: нейтральные подписи и подсказка про плагин",
+      "actual_files": [
+        "src/ui/index.html",
+        "src/ui/settings-panel.mjs",
+        "src/mac-runtime-switch.mjs",
+        "src/vps-tunnel.mjs",
+        "tests/settings-chatgpt-channel.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -352,7 +361,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: computer-use-keys-batch-0.6.85-20261004
 Current Task: нет
-Revision: 1078
+Revision: 1080
 
 ## Цель
 
@@ -371,10 +380,10 @@ Computer Use в MCP: имена клавиш X11 и пакет действий 
   - Git Commit: [DONE] feat: Computer Use: имена клавиш X11 и пакет действий computer_actions
   - Reference: computer-use-keys-batch-0.6.85-20261004 / T001 / implementation
   - Файлы: tools/codex-app-server-mcp/server.py, tests/codex-app-server-mcp.test.mjs, docs/planning/computer-use-keys-batch.md
-- [TODO] T002: Канал ChatGPT: нейтральные подписи и подсказка про плагин — Ожидает
-  - Git Commit: [PENDING] feat: Канал ChatGPT: нейтральные подписи и подсказка про плагин
+- [DONE] T002: Канал ChatGPT: нейтральные подписи и подсказка про плагин — Завершено
+  - Git Commit: [DONE] feat: Канал ChatGPT: нейтральные подписи и подсказка про плагин
   - Reference: computer-use-keys-batch-0.6.85-20261004 / T002 / implementation
-  - Файлы: src/ui/index.html, src/ui/settings-panel.mjs, src/mac-runtime-switch.mjs, tests/settings-chatgpt-channel.test.mjs, docs/planning/computer-use-keys-batch.md
+  - Файлы: src/ui/index.html, src/ui/settings-panel.mjs, src/mac-runtime-switch.mjs, tests/settings-chatgpt-channel.test.mjs, src/vps-tunnel.mjs, docs/planning/computer-use-keys-batch.md
 - [TODO] T003: Подготовить source релиза 0.6.85 — Ожидает
   - Git Commit: [PENDING] feat: Подготовить source релиза 0.6.85
   - Reference: computer-use-keys-batch-0.6.85-20261004 / T003 / implementation

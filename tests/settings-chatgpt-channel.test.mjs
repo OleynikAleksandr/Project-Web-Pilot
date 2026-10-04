@@ -32,6 +32,7 @@ test('ChatGPT channel section sits under the macOS runtime switch and switches c
   assert.equal(f.$('chatgpt-channel-vps').disabled, false);
   assert.match(f.$('chatgpt-channel-status').textContent, /Secure MCP Tunnel\. Туннель готов/);
   assert.match(f.$('mac-runtime-status').textContent, /MCP и Secure MCP Tunnel готовы/);
+  assert.match(f.$('chatgpt-channel-hint').textContent, /включите плагин Secure MCP Tunnel/);
   assert.equal(f.$('vps-status').textContent, 'Туннель VPS работает: сервер → MCP на порту 17852.');
   assert.equal(f.$('vps-status').dataset.ready, 'true');
   assert.equal(f.$('vps-connector').hidden, false);
@@ -47,6 +48,7 @@ test('ChatGPT channel section sits under the macOS runtime switch and switches c
   assert.equal(f.$('chatgpt-channel-vps').getAttribute('aria-pressed'), 'true');
   assert.match(f.$('chatgpt-channel-status').textContent, /через VPS\. Канал готов/);
   assert.match(f.$('mac-runtime-status').textContent, /MCP и канал VPS готовы/);
+  assert.match(f.$('chatgpt-channel-hint').textContent, /включите плагин с адресом своего сервера/);
 
   f.view.render(state(), true);
   for (const id of ['chatgpt-channel-secure', 'chatgpt-channel-vps', 'chatgpt-channel-refresh', 'vps-connector-copy']) assert.equal(f.$(id).disabled, true, id);
@@ -56,7 +58,7 @@ test('VPS cannot be chosen until its tunnel works, and the reason is shown', asy
   const f = await fixture(t);
   const cases = [
     [null, /ещё не проверено/],
-    [{ ...vpsReady, configured: false, ready: false, running: false, connector: null }, /vps-server/],
+    [{ ...vpsReady, configured: false, ready: false, running: false, connector: null }, /^Свой сервер не настроен\.$/],
     [{ ...vpsReady, conflict: true, ready: false }, /RemoteForward/],
     [{ ...vpsReady, ready: false, portMatches: false, forwardPort: 17842 }, /ведёт на порт 17842, а MCP работает на 17852/],
     [{ ...vpsReady, ready: false, running: false, lastError: { message: 'Connection refused', at: '2026-10-04T10:00:00.000Z' } }, /не запущен\. Последняя ошибка .*Connection refused/],

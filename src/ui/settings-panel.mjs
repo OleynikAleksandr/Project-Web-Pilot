@@ -2,8 +2,8 @@ import { projectDoctorView } from './project-doctor.mjs';
 
 function vpsLine(vps) {
   if (!vps) return 'Состояние VPS ещё не проверено.';
-  if (!vps.configured) return 'VPS не настроен: запустите setup/mcp-tunnel.sh в репозитории vps-server.';
-  if (vps.conflict) return 'В ~/.ssh/config у vps-mcp-tunnel остался RemoteForward — обновите настройку из vps-server.';
+  if (!vps.configured) return 'Свой сервер не настроен.';
+  if (vps.conflict) return 'В ~/.ssh/config у vps-mcp-tunnel остался RemoteForward — обновите настройку сервера.';
   if (vps.error) return 'Туннель VPS: ' + vps.error;
   if (vps.ready) return `Туннель VPS работает: сервер → MCP на порту ${vps.mcpPort}.`;
   if (vps.running && !vps.portMatches) return `Туннель VPS ведёт на порт ${vps.forwardPort ?? '—'}, а MCP работает на ${vps.mcpPort ?? '—'}.`;
@@ -71,6 +71,10 @@ export function settingsPanelView(action) {
       $('chatgpt-channel-status').textContent = viaVps
         ? (service?.tunnelReady ? 'ChatGPT подключается через VPS. Канал готов.' : 'Выбран VPS. Канал ещё не готов — состояние ниже.')
         : (service?.tunnelReady ? 'ChatGPT подключается через Secure MCP Tunnel. Туннель готов.' : 'Выбран Secure MCP Tunnel. Туннель ещё не подтвердил готовность.');
+      // The ChatGPT side is a separate plugin per channel; Web Pilot cannot switch it.
+      $('chatgpt-channel-hint').textContent = viaVps
+        ? 'В ChatGPT включите плагин с адресом своего сервера, а плагин Secure MCP Tunnel отключите.'
+        : 'В ChatGPT включите плагин Secure MCP Tunnel, а плагин с адресом своего сервера отключите.';
       $('vps-status').textContent = vpsLine(vps);
       $('vps-status').dataset.ready = String(!!vps?.ready);
       $('vps-connector').hidden = !vps?.connector;

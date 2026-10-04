@@ -19,8 +19,8 @@ export const CHATGPT_CHANNEL_VPS = 'vps';
 export const CHATGPT_CHANNELS = Object.freeze([CHATGPT_CHANNEL_SECURE, CHATGPT_CHANNEL_VPS]);
 
 function vpsProblem(vps) {
-  if (!vps?.configured) return 'Канал VPS не настроен: запустите setup/mcp-tunnel.sh в репозитории vps-server.';
-  if (vps.conflict) return 'В ~/.ssh/config у vps-mcp-tunnel остался RemoteForward: обновите настройку из vps-server.';
+  if (!vps?.configured) return 'Свой сервер для канала VPS не настроен.';
+  if (vps.conflict) return 'В ~/.ssh/config у vps-mcp-tunnel остался RemoteForward: обновите настройку сервера.';
   if (vps.error) return vps.error;
   if (!vps.portMatches) return 'Туннель VPS ещё не переключён на текущий порт MCP.';
   return 'Туннель VPS не запущен' + (vps.lastError?.message ? ': ' + vps.lastError.message : '.');

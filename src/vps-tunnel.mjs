@@ -67,7 +67,7 @@ export class VpsTunnel {
     let url;
     try { url = new URL(text); } catch { url = null; }
     if (!url || url.protocol !== 'https:' || !CONNECTOR_PATH.test(url.pathname) || url.search || url.hash || url.username) {
-      throw new Error('Адрес коннектора VPS повреждён; повторите настройку в vps-server.');
+      throw new Error('Адрес коннектора VPS повреждён; повторите настройку сервера.');
     }
     return text;
   }
