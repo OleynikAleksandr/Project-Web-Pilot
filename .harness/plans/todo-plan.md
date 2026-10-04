@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1129,
+  "plan_revision": 1131,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "mcp-start-message-0.6.88-20261004",
@@ -75,8 +75,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "mcp-start-message-0.6.88-20261004",
         "task_id": "T001",
@@ -106,7 +106,8 @@
         "Привязанный, ручной и прежний чат стартового сообщения не получают",
         "Сайдбар и индикатор показывают стартовое сообщение и чтение через MCP; доставка первым сообщением без изменений"
       ],
-      "expected_commit_message": "feat: MCP: Web Pilot начинает сессию коротким стартовым сообщением"
+      "expected_commit_message": "feat: MCP: Web Pilot начинает сессию коротким стартовым сообщением",
+      "actual_files": []
     },
     {
       "implementation_status": "TODO",
@@ -273,7 +274,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: mcp-start-message-0.6.88-20261004
 Current Task: нет
-Revision: 1129
+Revision: 1131
 
 ## Цель
 
@@ -285,8 +286,8 @@ Web Pilot сам начинает MCP-сессию коротким старто
 
 ## Микрозадачи
 
-- [TODO] T001: MCP: Web Pilot начинает сессию коротким стартовым сообщением — Ожидает
-  - Git Commit: [PENDING] feat: MCP: Web Pilot начинает сессию коротким стартовым сообщением
+- [DONE] T001: MCP: Web Pilot начинает сессию коротким стартовым сообщением — Завершено
+  - Git Commit: [DONE] feat: MCP: Web Pilot начинает сессию коротким стартовым сообщением
   - Reference: mcp-start-message-0.6.88-20261004 / T001 / implementation
   - Файлы: src/context-session.mjs, src/ui/sidebar.mjs, src/ui/progress.mjs, tests/context-session.test.mjs, tests/sidebar.test.mjs, tests/progress.test.mjs, docs/planning/mcp-start-message.md
 - [TODO] T002: Подготовить source релиза 0.6.88 — Ожидает
