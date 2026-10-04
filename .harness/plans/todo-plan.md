@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1041,
+  "plan_revision": 1043,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "chatgpt-channel-vps-20261004",
@@ -114,8 +114,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "chatgpt-channel-vps-20261004",
         "task_id": "T002",
@@ -148,7 +148,15 @@
         "Выбор канала сохраняется в настройках и selector.json, переключение без перезапуска Web Pilot",
         "Полный адрес коннектора доступен только действию копирования и не попадает в статус, настройки и журналы"
       ],
-      "expected_commit_message": "feat: Туннель VPS следует за портом MCP; переключение канала ChatGPT в main"
+      "expected_commit_message": "feat: Туннель VPS следует за портом MCP; переключение канала ChatGPT в main",
+      "actual_files": [
+        "src/mac-runtime-switch.mjs",
+        "src/main.mjs",
+        "src/preload.cjs",
+        "src/vps-tunnel.mjs",
+        "tests/mac-runtime-switch.test.mjs",
+        "tests/vps-tunnel.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -233,7 +241,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: chatgpt-channel-vps-20261004
 Current Task: нет
-Revision: 1041
+Revision: 1043
 
 ## Цель
 
@@ -253,8 +261,8 @@ Revision: 1041
   - Git Commit: [DONE] feat: Executor: канал ChatGPT в selector и запуск tunnel-client только для Secure Tunnel
   - Reference: chatgpt-channel-vps-20261004 / T001 / implementation
   - Файлы: tools/codex-app-server-mcp/control.py, tests/codex-app-server-mcp.test.mjs, docs/planning/chatgpt-channel-vps.md
-- [TODO] T002: Туннель VPS следует за портом MCP; переключение канала ChatGPT в main — Ожидает
-  - Git Commit: [PENDING] feat: Туннель VPS следует за портом MCP; переключение канала ChatGPT в main
+- [DONE] T002: Туннель VPS следует за портом MCP; переключение канала ChatGPT в main — Завершено
+  - Git Commit: [DONE] feat: Туннель VPS следует за портом MCP; переключение канала ChatGPT в main
   - Reference: chatgpt-channel-vps-20261004 / T002 / implementation
   - Файлы: src/vps-tunnel.mjs, src/mac-runtime-switch.mjs, src/main.mjs, src/preload.cjs, tests/vps-tunnel.test.mjs, tests/mac-runtime-switch.test.mjs, docs/planning/chatgpt-channel-vps.md
 - [TODO] T003: Раздел «Подключение ChatGPT» в Настройках — Ожидает

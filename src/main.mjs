@@ -35,7 +35,9 @@ import { openStartupPage } from './browser-startup.mjs';
 import { BUNDLED_NODE_VERSION, defaultRuntimeFolder, bundledWindowsRuntimeFolder, bundledMacNode, nodeExecutableCandidates } from './platform.mjs';
 import { WindowsRuntimeBootstrap, WINDOWS_RUNTIME_ARCHIVE } from './windows-runtime.mjs';
 import { MacRuntimeBootstrap } from './mac-runtime.mjs';
-import { CodexAppServerRuntime, MacRuntimeSwitcher, MAC_RUNTIME_LOCAL, MAC_RUNTIME_APP_SERVER, MAC_RUNTIME_MODES } from './mac-runtime-switch.mjs';
+import { CodexAppServerRuntime, MacRuntimeSwitcher, MAC_RUNTIME_LOCAL, MAC_RUNTIME_APP_SERVER, MAC_RUNTIME_MODES,
+  CHATGPT_CHANNEL_SECURE, CHATGPT_CHANNELS } from './mac-runtime-switch.mjs';
+import { VpsTunnel } from './vps-tunnel.mjs';
 import { TunnelClipboard } from './tunnel-clipboard.mjs';
 import { StartupReadiness, inspectMacGit, installMacGit, offerMacInstallation } from './startup-readiness.mjs';
 import { startupPlatformOptions, startupSupported } from './startup-platform.mjs';
@@ -67,7 +69,8 @@ let configuredRuntimeFolder = null;
 let runtimeRegistration = null;
 let macRuntimeBootstrap = null;
 let macRuntimeMode = MAC_RUNTIME_LOCAL;
-let localRuntime = null, appServerRuntime = null, macRuntimeSwitcher = null;
+let chatgptChannel = CHATGPT_CHANNEL_SECURE;
+let localRuntime = null, appServerRuntime = null, macRuntimeSwitcher = null, vpsTunnel = null;
 let shellTheme = 'light';
 let hideToolCalls = true;
 let autoPlanEnabled = false, autoPlanCheckpoint = null;
@@ -225,7 +228,7 @@ async function applyToolCallVisibility() {
 }
 
 function saveSettings(overrides = {}) {
-  const settings = { runtimeFolder, runtimeRegistration, macRuntimeMode, shellTheme, hideToolCalls, sidebarWidth, chatColors, projectsParent, autoPlanEnabled, autoPlanCheckpoint, ...overrides };
+  const settings = { runtimeFolder, runtimeRegistration, macRuntimeMode, chatgptChannel, shellTheme, hideToolCalls, sidebarWidth, chatColors, projectsParent, autoPlanEnabled, autoPlanCheckpoint, ...overrides };
   const operation = settingsSaveTail.catch(() => {}).then(async () => {
     await fsp.mkdir(dataDir, { recursive: true, mode: 0o700 });
     await fsp.writeFile(settingsFile + '.tmp', JSON.stringify(settings, null, 2) + '\n', { mode: 0o600 });
@@ -295,11 +298,13 @@ function snapshot() {
     macRuntime: process.platform === 'darwin' ? {
       mode: macRuntimeMode,
       label: macRuntimeMode === MAC_RUNTIME_APP_SERVER ? 'Codex App Server Local Mac' : 'Codex Local Mac',
+      chatgptChannel,
       service: runtime?.lastStatus ? {
         mcpReady: !!runtime.lastStatus.mcp?.ready,
         tunnelReady: !!runtime.lastStatus.tunnel?.ready,
         tunnelConfigured: !!runtime.lastStatus.tunnel?.configured,
       } : null,
+      vps: vpsView(runtime?.lastStatus?.vps),
     } : null,
     windowsRuntime: windowsRuntimeBootstrap ? {
       ...windowsRuntimeBootstrap.snapshot(),
@@ -795,6 +800,15 @@ function createLocalRuntime() {
   });
 }
 
+// Only display-safe fields: the connector address is already masked by VpsTunnel.
+function vpsView(vps) {
+  if (!vps) return null;
+  return { configured: !!vps.configured, ready: !!vps.ready, running: !!vps.running, conflict: !!vps.conflict,
+    portMatches: !!vps.portMatches, mcpPort: vps.mcpPort ?? null, forwardPort: vps.forwardPort ?? null,
+    lastError: vps.lastError ? { message: String(vps.lastError.message), at: vps.lastError.at } : null,
+    error: vps.error ? String(vps.error) : null, connector: vps.connector ?? null };
+}
+
 function appServerSourceFolder() {
   return app.isPackaged ? path.join(process.resourcesPath, 'codex-app-server-mcp')
     : path.join(sourceDir, '../tools/codex-app-server-mcp');
@@ -808,7 +822,8 @@ function ensureMacRuntimeSwitcher() {
     stateDir: path.join(os.homedir(), 'Library/Application Support/WebPilotCodexExecutor'),
     tunnelClientCandidate: path.join(runtimeFolder, 'tools', 'tunnel-client'),
   });
-  macRuntimeSwitcher ??= new MacRuntimeSwitcher({ appServerRuntime });
+  vpsTunnel ??= new VpsTunnel();
+  macRuntimeSwitcher ??= new MacRuntimeSwitcher({ appServerRuntime, vpsTunnel });
   return macRuntimeSwitcher;
 }
 
@@ -816,7 +831,7 @@ async function activateMacRuntimeMode(mode = macRuntimeMode) {
   if (process.platform !== 'darwin' || smoke) return null;
   if (!MAC_RUNTIME_MODES.includes(mode)) throw new Error('Неизвестный режим локальных инструментов macOS.');
   const switcher = ensureMacRuntimeSwitcher();
-  const result = await switcher.activate(mode, { localRuntime });
+  const result = await switcher.activate(mode, { localRuntime, chatgptChannel });
   macRuntimeMode = mode;
   runtime = result.runtime;
   contextCache.clear();
@@ -1018,6 +1033,28 @@ function registerIpc() {
       if (current) attachController(current);
       throw error;
     }
+  });
+  registerAction('pilot:set-chatgpt-channel', async input => {
+    if (process.platform !== 'darwin' || smoke || typeof runtime?.setChannel !== 'function') throw new Error('Выбор канала ChatGPT доступен только в macOS.');
+    if (!CHATGPT_CHANNELS.includes(input)) throw new Error('Неизвестный канал ChatGPT.');
+    if (input === chatgptChannel && runtime.channel === input) return { channel: chatgptChannel };
+    try {
+      return { channel: input, status: await runtime.setChannel(input) };
+    } finally {
+      // The selector may already hold the new channel even if starting it failed.
+      if (runtime.channel !== chatgptChannel) { chatgptChannel = runtime.channel; await saveSettings({ chatgptChannel }); }
+    }
+  });
+  registerAction('pilot:refresh-chatgpt-channel', async () => {
+    if (process.platform !== 'darwin' || smoke || typeof runtime?.setChannel !== 'function') throw new Error('Проверка канала ChatGPT доступна только в macOS.');
+    await runtime.control('status');
+  });
+  registerAction('pilot:copy-vps-connector-url', async () => {
+    if (process.platform !== 'darwin' || smoke) throw new Error('Канал VPS доступен только в macOS.');
+    vpsTunnel ??= new VpsTunnel();
+    // The full address goes straight to the clipboard; it is never returned, published or logged.
+    clipboard.writeText(await vpsTunnel.connectorUrl());
+    return { copied: true };
   });
   registerAction('pilot:configure-windows-tunnel', async () => {
     if (process.platform !== 'win32' || !windowsRuntimeBootstrap) throw new Error('Настройка Windows tunnel недоступна на этой платформе.');
@@ -1384,6 +1421,7 @@ else {
           verifiedAt: typeof settings.runtimeRegistration.verifiedAt === 'string' ? settings.runtimeRegistration.verifiedAt : null };
         if (process.platform === 'darwin') runtimeFolder = runtimeRegistration.folder;
       }
+      if (process.platform === 'darwin' && CHATGPT_CHANNELS.includes(settings.chatgptChannel)) chatgptChannel = settings.chatgptChannel;
       if (process.platform === 'darwin' && MAC_RUNTIME_MODES.includes(settings.macRuntimeMode)) {
         macRuntimeMode = settings.macRuntimeMode;
         loadedMacRuntimeMode = true;

@@ -12,6 +12,23 @@ export const MAC_RUNTIME_APP_SERVER = 'app-server';
 export const MAC_RUNTIME_MODES = Object.freeze([MAC_RUNTIME_LOCAL, MAC_RUNTIME_APP_SERVER]);
 export const LOCAL_LAUNCH_AGENT = 'com.oleynik.CodexLocalMac';
 export const APP_SERVER_LAUNCH_AGENT = 'com.oleynik.WebPilotCodexExecutor';
+// How ChatGPT reaches the selected MCP. The VPS tunnel itself runs whenever it is
+// configured (Claude uses it too); the channel only decides whether tunnel-client runs.
+export const CHATGPT_CHANNEL_SECURE = 'secure-tunnel';
+export const CHATGPT_CHANNEL_VPS = 'vps';
+export const CHATGPT_CHANNELS = Object.freeze([CHATGPT_CHANNEL_SECURE, CHATGPT_CHANNEL_VPS]);
+
+function vpsProblem(vps) {
+  if (!vps?.configured) return 'Канал VPS не настроен: запустите setup/mcp-tunnel.sh в репозитории vps-server.';
+  if (vps.conflict) return 'В ~/.ssh/config у vps-mcp-tunnel остался RemoteForward: обновите настройку из vps-server.';
+  if (vps.error) return vps.error;
+  if (!vps.portMatches) return 'Туннель VPS ещё не переключён на текущий порт MCP.';
+  return 'Туннель VPS не запущен' + (vps.lastError?.message ? ': ' + vps.lastError.message : '.');
+}
+
+function vpsAsTunnel(vps) {
+  return { ready: !!vps?.ready, owned: true, configured: !!vps?.configured, running: !!vps?.running };
+}
 
 function xml(value) {
   return String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
@@ -49,21 +66,45 @@ export class CodexAppServerRuntime {
     return this.installedSource;
   }
 
-  async control(command, { mcpOnly = false, tunnelOnly = false } = {}) {
-    if (!['setup', 'status', 'start', 'stop', 'selector-start'].includes(command)) throw new RuntimeError('RUNTIME_ACTION_DENIED', 'Эта операция не поддерживается оболочкой.');
-    if (!await exists(path.join(this.installedSource, 'control.py')) || command === 'setup') await this.syncSource();
-    const control = path.join(this.installedSource, 'control.py');
-    const env = {
+  controlEnvironment() {
+    return {
       ...this.environment,
       PYTHONDONTWRITEBYTECODE: '1',
       WEB_PILOT_CODEX_EXECUTOR_STATE_DIR: this.stateDir,
       ...(this.tunnelClientCandidate ? { WEB_PILOT_CODEX_TUNNEL_CLIENT: this.tunnelClientCandidate } : {}),
     };
+  }
+
+  async configureChannel(channel) {
+    if (!CHATGPT_CHANNELS.includes(channel)) throw new RuntimeError('CHATGPT_CHANNEL_INVALID', 'Неизвестный канал ChatGPT.');
+    if (!await exists(path.join(this.installedSource, 'control.py'))) await this.syncSource();
+    let output;
+    try {
+      output = await this.execute(this.python, ['-B', path.join(this.installedSource, 'control.py'), 'configure-channel', '--channel', channel],
+        { cwd: this.installedSource, timeout: 20_000, maxBuffer: 2 * 1024 * 1024, env: this.controlEnvironment() });
+    } catch (error) {
+      let message = 'Не удалось сохранить канал ChatGPT.';
+      try { message = JSON.parse(error.stdout || error.stderr).error ?? message; } catch { /* bounded public error */ }
+      throw new RuntimeError('CHATGPT_CHANNEL_CONFIG_FAILED', message);
+    }
+    let result;
+    try { result = JSON.parse(output.stdout); } catch {
+      throw new RuntimeError('RUNTIME_STATUS_INVALID', 'Selector вернул непонятный результат.');
+    }
+    if (result?.ok === false || result?.chatgpt_channel !== channel) throw new RuntimeError('CHATGPT_CHANNEL_CONFIG_FAILED', String(result?.error ?? 'Канал ChatGPT не сохранён.'));
+    return result;
+  }
+
+  async control(command, { mcpOnly = false, tunnelOnly = false } = {}) {
+    if (!['setup', 'status', 'start', 'stop', 'selector-start'].includes(command)) throw new RuntimeError('RUNTIME_ACTION_DENIED', 'Эта операция не поддерживается оболочкой.');
+    if (!await exists(path.join(this.installedSource, 'control.py')) || command === 'setup') await this.syncSource();
+    const control = path.join(this.installedSource, 'control.py');
+    const env = this.controlEnvironment();
     let output;
     try {
       output = await this.execute(this.python, ['-B', control, command,
         ...(command === 'start' && mcpOnly ? ['--mcp-only'] : []),
-        ...(command === 'start' && tunnelOnly ? ['--tunnel-only'] : [])],
+        ...(['start', 'stop'].includes(command) && tunnelOnly ? ['--tunnel-only'] : [])],
         { cwd: this.installedSource, timeout: command === 'setup' ? 10 * 60_000 : command === 'start' ? 90_000 : 20_000,
           maxBuffer: 2 * 1024 * 1024, env });
     } catch (error) {
@@ -77,7 +118,7 @@ export class CodexAppServerRuntime {
     }
     if (result?.ok === false) throw new RuntimeError('APP_SERVER_RUNTIME_COMMAND_FAILED', String(result.error ?? 'Codex App Server runtime error'));
     if (command === 'stop' || command === 'setup') {
-      if (command === 'stop') { this.client = null; this.lastStatus = null; }
+      if (command === 'stop' && !tunnelOnly) { this.client = null; this.lastStatus = null; }
       return result;
     }
     if (!result?.mcp || !result?.tunnel || !result.mcp_url) throw new RuntimeError('RUNTIME_STATUS_INVALID', 'Codex App Server runtime вернул неполный status.');
@@ -128,9 +169,7 @@ export class CodexAppServerRuntime {
         '--local-root', localDescriptor.runtimeRoot,
         '--local-state', localState],
       { cwd: this.installedSource, timeout: 20_000, maxBuffer: 2 * 1024 * 1024,
-        env: { ...this.environment, PYTHONDONTWRITEBYTECODE: '1',
-          WEB_PILOT_CODEX_EXECUTOR_STATE_DIR: this.stateDir,
-          ...(this.tunnelClientCandidate ? { WEB_PILOT_CODEX_TUNNEL_CLIENT: this.tunnelClientCandidate } : {}) } });
+        env: this.controlEnvironment() });
     } catch (error) {
       let message = 'Не удалось настроить стабильный MCP connector.';
       try { message = JSON.parse(error.stdout || error.stderr).error ?? message; } catch { /* bounded public error */ }
@@ -169,32 +208,79 @@ export class CodexAppServerRuntime {
 }
 
 class MacSelectedRuntime {
-  constructor({ backendRuntime, stableRuntime, status }) {
+  constructor({ backendRuntime, stableRuntime, vpsTunnel = null, channel = CHATGPT_CHANNEL_SECURE, status = null }) {
     this.backendRuntime = backendRuntime;
     this.stableRuntime = stableRuntime;
+    this.vpsTunnel = vpsTunnel;
+    this.channel = channel;
     this.lastStatus = status;
   }
 
-  combine(backend, stable) {
+  // In the VPS channel the status "tunnel" is the VPS forward, so every readiness
+  // check (startup, sidebar, settings) keeps working without a separate branch.
+  combine(backend, stable, vps = null) {
+    const viaVps = this.channel === CHATGPT_CHANNEL_VPS;
     const status = {
       ...backend,
-      tunnel: stable.tunnel,
-      tunnel_ui: stable.tunnel_ui,
-      stable_tunnel_target: stable.tunnel_target,
+      tunnel: viaVps ? vpsAsTunnel(vps) : stable.tunnel,
+      tunnel_ui: viaVps ? null : stable.tunnel_ui,
+      stable_tunnel_target: stable?.tunnel_target ?? null,
+      chatgpt_channel: this.channel,
+      vps,
     };
     this.lastStatus = status;
     this.backendRuntime.lastStatus = status;
     return status;
   }
 
-  async ensure() {
-    const backend = await this.backendRuntime.ensureMcpOnly();
+  // The VPS forward must never break the Secure Tunnel channel.
+  async applyVps(mcpUrl) {
+    if (!this.vpsTunnel) return null;
+    try { return await this.vpsTunnel.apply(mcpUrl); } catch (error) {
+      return { configured: true, conflict: false, running: false, ready: false, owned: true, portMatches: false,
+        error: String(error?.message ?? error).slice(0, 200), lastError: null, connector: null };
+    }
+  }
+
+  async vpsStatus(mcpUrl) {
+    if (!this.vpsTunnel) return null;
+    try { return await this.vpsTunnel.status(mcpUrl); } catch { return null; }
+  }
+
+  async startStable() {
     let stable = await this.stableRuntime.control('status');
     if (!stable.tunnel?.ready) stable = await this.stableRuntime.control('start', { tunnelOnly: true });
     if (!stable.tunnel?.ready || !stable.tunnel?.owned || !stable.tunnel?.configured) {
       throw new RuntimeError('RUNTIME_NOT_READY', 'Стабильный Secure MCP Tunnel ещё не готов.');
     }
-    return this.combine(backend, stable);
+    return stable;
+  }
+
+  async ensure() {
+    const backend = await this.backendRuntime.ensureMcpOnly();
+    const vps = await this.applyVps(backend.mcp_url);
+    if (this.channel === CHATGPT_CHANNEL_VPS) {
+      const status = this.combine(backend, null, vps);
+      if (!vps?.ready) throw new RuntimeError('RUNTIME_NOT_READY', vpsProblem(vps));
+      return status;
+    }
+    return this.combine(backend, await this.startStable(), vps);
+  }
+
+  async setChannel(channel) {
+    if (!CHATGPT_CHANNELS.includes(channel)) throw new RuntimeError('CHATGPT_CHANNEL_INVALID', 'Неизвестный канал ChatGPT.');
+    const backend = await this.backendRuntime.ensureMcpOnly();
+    const vps = await this.applyVps(backend.mcp_url);
+    if (channel === CHATGPT_CHANNEL_VPS) {
+      if (!vps?.ready) throw new RuntimeError('VPS_NOT_READY', vpsProblem(vps));
+      await this.stableRuntime.configureChannel(CHATGPT_CHANNEL_VPS);
+      await this.stableRuntime.control('stop', { tunnelOnly: true });
+      this.channel = CHATGPT_CHANNEL_VPS;
+      return this.combine(backend, null, vps);
+    }
+    await this.stableRuntime.configureChannel(CHATGPT_CHANNEL_SECURE);
+    this.channel = CHATGPT_CHANNEL_SECURE;
+    return this.combine(backend, await this.startStable(), vps);
   }
 
   async control(command) {
@@ -203,7 +289,7 @@ class MacSelectedRuntime {
       const stable = this.backendRuntime === this.stableRuntime
         ? backend
         : await this.stableRuntime.control('status');
-      return this.combine(backend, stable);
+      return this.combine(backend, stable, await this.vpsStatus(backend.mcp_url));
     }
     if (command === 'start') return this.ensure();
     if (command === 'stop') {
@@ -222,10 +308,11 @@ class MacSelectedRuntime {
 }
 
 export class MacRuntimeSwitcher {
-  constructor({ appServerRuntime, homeDir = os.homedir(), uid = typeof process.getuid === 'function' ? process.getuid() : 501,
+  constructor({ appServerRuntime, vpsTunnel = null, homeDir = os.homedir(), uid = typeof process.getuid === 'function' ? process.getuid() : 501,
     execute = execFile, launchAgentDir = null } = {}) {
     if (!appServerRuntime) throw new TypeError('MacRuntimeSwitcher requires appServerRuntime');
     this.appServerRuntime = appServerRuntime;
+    this.vpsTunnel = vpsTunnel;
     this.homeDir = homeDir;
     this.uid = uid;
     this.execute = execute;
@@ -311,8 +398,9 @@ export class MacRuntimeSwitcher {
     return signalled;
   }
 
-  async activate(mode, { localRuntime } = {}) {
+  async activate(mode, { localRuntime, chatgptChannel = CHATGPT_CHANNEL_SECURE } = {}) {
     if (!MAC_RUNTIME_MODES.includes(mode)) throw new RuntimeError('MAC_RUNTIME_MODE_INVALID', 'Неизвестный режим локальных инструментов.');
+    if (!CHATGPT_CHANNELS.includes(chatgptChannel)) throw new RuntimeError('CHATGPT_CHANNEL_INVALID', 'Неизвестный канал ChatGPT.');
     if (!localRuntime) throw new TypeError('activate requires localRuntime');
     await this.ensureAppServerLaunchAgent();
 
@@ -331,22 +419,25 @@ export class MacRuntimeSwitcher {
     await this.stopLegacyOrphans(localDescriptor, localStatus);
     await this.appServerRuntime.control('stop');
     await this.appServerRuntime.configureSelector(mode, targetStatus.mcp_url, localDescriptor, localStatus.state_directory);
+    await this.appServerRuntime.configureChannel(chatgptChannel);
 
     const backendRuntime = mode === MAC_RUNTIME_APP_SERVER ? this.appServerRuntime : localRuntime;
     const backendStatus = await backendRuntime.ensureMcpOnly();
-    const stableStatus = await this.appServerRuntime.control('start', { tunnelOnly: true });
-    if (!stableStatus.tunnel?.ready || !stableStatus.tunnel?.owned || !stableStatus.tunnel?.configured) {
-      throw new RuntimeError('RUNTIME_NOT_READY', 'Стабильный Secure MCP Tunnel ещё не готов.');
+    const runtime = new MacSelectedRuntime({ backendRuntime, stableRuntime: this.appServerRuntime,
+      vpsTunnel: this.vpsTunnel, channel: chatgptChannel });
+    // The VPS forward follows the MCP port of the selected backend.
+    const vps = await runtime.applyVps(backendStatus.mcp_url);
+    let stableStatus = null;
+    if (chatgptChannel === CHATGPT_CHANNEL_SECURE) {
+      stableStatus = await this.appServerRuntime.control('start', { tunnelOnly: true });
+      if (!stableStatus.tunnel?.ready || !stableStatus.tunnel?.owned || !stableStatus.tunnel?.configured) {
+        throw new RuntimeError('RUNTIME_NOT_READY', 'Стабильный Secure MCP Tunnel ещё не готов.');
+      }
     }
-
-    const status = {
-      ...backendStatus,
-      tunnel: stableStatus.tunnel,
-      tunnel_ui: stableStatus.tunnel_ui,
-      stable_tunnel_target: stableStatus.tunnel_target,
-    };
+    // tunnel-client was stopped above; in the VPS channel it stays stopped. An unready VPS
+    // is reported in the status instead of blocking startup: the server may be offline.
+    const status = runtime.combine(backendStatus, stableStatus, vps);
     await this.setLaunchAgentEnabled(this.appServerLabel, true);
-    const runtime = new MacSelectedRuntime({ backendRuntime, stableRuntime: this.appServerRuntime, status });
     return { mode, runtime, status };
   }
 }
