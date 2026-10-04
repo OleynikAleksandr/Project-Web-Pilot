@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1150,
+  "plan_revision": 1152,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "release-backups-kit-1.5.5-0.6.89-20261004",
@@ -33,7 +33,11 @@
       "docs/architecture/ARCHITECTURE.md",
       "docs/architecture/OVERVIEW.md",
       "docs/MODULES.md",
-      "docs/DOCUMENTATION_INDEX.md"
+      "docs/DOCUMENTATION_INDEX.md",
+      "README.md",
+      "docs/RELEASE.md",
+      "docs/VERIFICATION.md",
+      "docs/WORKFLOW_START.md"
     ]
   },
   "baseline_commit": "1b5ca63b444a29a5f40cf5a13b2be45e9a162b74",
@@ -177,8 +181,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "release-backups-kit-1.5.5-0.6.89-20261004",
         "task_id": "DOCS",
@@ -196,7 +200,11 @@
         "docs/architecture/ARCHITECTURE.md",
         "docs/architecture/OVERVIEW.md",
         "docs/MODULES.md",
-        "docs/DOCUMENTATION_INDEX.md"
+        "docs/DOCUMENTATION_INDEX.md",
+        "README.md",
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -205,7 +213,19 @@
       "acceptance_criteria": [
         "Документы соответствуют результату"
       ],
-      "expected_commit_message": "docs: актуализировать контекст проекта"
+      "expected_commit_message": "docs: актуализировать контекст проекта",
+      "actual_files": [
+        "README.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/planning/release-backups-kit-1.5.5.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -315,7 +335,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: release-backups-kit-1.5.5-0.6.89-20261004
 Current Task: нет
-Revision: 1150
+Revision: 1152
 
 ## Цель
 
@@ -339,10 +359,10 @@ Revision: 1150
   - Git Commit: [DONE] feat: Подготовить source релиза 0.6.89
   - Reference: release-backups-kit-1.5.5-0.6.89-20261004 / T003 / implementation
   - Файлы: package.json, package-lock.json, docs/planning/release-backups-kit-1.5.5.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать контекст проекта
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать контекст проекта
   - Reference: release-backups-kit-1.5.5-0.6.89-20261004 / DOCS / implementation
-  - Файлы: docs/planning/release-backups-kit-1.5.5.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
+  - Файлы: docs/planning/release-backups-kit-1.5.5.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, README.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md
 - [TODO] T004: Собрать и проверить парный релиз 0.6.89 — Ожидает
   - Git Commit: [PENDING] feat: Собрать и проверить парный релиз 0.6.89
   - Reference: release-backups-kit-1.5.5-0.6.89-20261004 / T004 / implementation

@@ -1,5 +1,11 @@
 # Проверки и приёмка
 
+## 2026-10-04 — 0.6.89 резервные копии и Workflow Kit 1.5.5 (до сборки)
+
+Причина: к 0.6.88 в `.harness/runtime/release-backups` накопилось около 110 копий на 46 ГБ; Spotlight показывал вложенные Helper-приложения. Пользователь перенёс их в Корзину.
+
+Автоматически: `unit-all` — `tests/release-mac.test.mjs`: три выпуска подряд оставляют одну копию в `release-backups.noindex` с предыдущей версией, вторая цель получает свой слот, первая установка копии не создаёт; `release-source` — Workflow Kit 1.5.5 (35 файлов, SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`). WorkflowKit: `runtime-fixture` — push в локальный bare-remote до DOCS отклонён `DOCS_BEFORE_PUSH`, после DOCS проходит, после повторного `plan:extend` снова отклонён. Живой тест 0.6.88 на новом проекте `Test_0.6.88` (Chat, автопродолжение): план по форме из `plan:create --help`, по одной задаче за ответ, DOCS последней, новая сессия Work подхватила состояние, `plan:extend` переоткрыл DOCS.
+
 ## 2026-10-04 — 0.6.88 GitHub publication
 
 GitHub Release [v0.6.88](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.88) опубликован 2026-10-04T16:08:41Z, `draft=false`, `prerelease=false`. Tag указывает на release sourceCommit `5e2b21419f6d5d3126ae0d28d9b85dcccbee2fdf`.
