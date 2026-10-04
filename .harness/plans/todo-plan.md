@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1135,
+  "plan_revision": 1137,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "mcp-start-message-0.6.88-20261004",
@@ -213,8 +213,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "mcp-start-message-0.6.88-20261004",
         "task_id": "T003",
@@ -240,7 +240,8 @@
         "~/Downloads/WebPilot-0.6.88 собран из коммита после DOCS, packagedSourceMatches=true, bundled Workflow Kit 1.5.4",
         "Preflight identity записан до сборки"
       ],
-      "expected_commit_message": "feat: Собрать и проверить парный релиз 0.6.88"
+      "expected_commit_message": "feat: Собрать и проверить парный релиз 0.6.88",
+      "actual_files": []
     },
     {
       "implementation_status": "TODO",
@@ -319,7 +320,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: mcp-start-message-0.6.88-20261004
 Current Task: нет
-Revision: 1135
+Revision: 1137
 
 ## Цель
 
@@ -343,8 +344,8 @@ Web Pilot сам начинает MCP-сессию коротким старто
   - Git Commit: [DONE] docs: актуализировать контекст проекта
   - Reference: mcp-start-message-0.6.88-20261004 / DOCS / implementation
   - Файлы: docs/planning/mcp-start-message.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, README.md, AGENTS.md, docs/WORKFLOW_START.md, docs/CONTEXT_DELIVERY.md, docs/modules/codex-app-server-executor.md, docs/planning/mcp-context-delivery.md, docs/VERIFICATION.md
-- [TODO] T003: Собрать и проверить парный релиз 0.6.88 — Ожидает
-  - Git Commit: [PENDING] feat: Собрать и проверить парный релиз 0.6.88
+- [DONE] T003: Собрать и проверить парный релиз 0.6.88 — Завершено
+  - Git Commit: [DONE] feat: Собрать и проверить парный релиз 0.6.88
   - Reference: mcp-start-message-0.6.88-20261004 / T003 / implementation
   - Файлы: scripts/release-all.mjs, docs/planning/mcp-start-message.md
 - [TODO] T004: Установить 0.6.88 и проверить установленные macOS-копии — Ожидает
