@@ -24,3 +24,10 @@
 ## Границы
 
 Схема плана Workflow Kit и формат `pageScript`/экспорты DOM-модулей не меняются. Codex Local Mac и Windows сохраняют доставку первым сообщением.
+
+## Итог
+
+- T001 `e9c5bbe` — части строго по одной (ключ after); kit-update `eda3d51` и T002 `a857a1b` — Workflow Kit 1.5.4; T003 `ab6e7b7` — версия; DOCS `394f907`.
+- T004 — сборка из sourceCommit `394f907642d2ffe2abb865ea0b404c12ed43fbd9`; T005 — установка в `/Applications` без пересборки.
+- T006: [GitHub Release v0.6.87](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.87) опубликован 2026-10-04T15:32:40Z, пять assets сверены по серверным SHA-256.
+- Живая проверка новой сессии Chat и Work (каждая часть читается один раз) — за пользователем; в настройках коннектора ChatGPT нажать «Обновить инструменты».

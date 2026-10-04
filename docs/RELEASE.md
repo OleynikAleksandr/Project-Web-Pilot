@@ -2,6 +2,18 @@
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
+## Выпуск 0.6.87 — 04.10.2026
+
+0.6.87 ([контракт](planning/mcp-sequential-parts-kit-1.5.4.md)): агент читает контекст через MCP строго по одной части — следующая часть выдаётся только по ключу `after` из конца предыдущей, части до 28 000 байт, повторного чтения нет; bundled Workflow Kit 1.5.4 не включает в recovery формы плана и карты документов. Source: T001 `e9c5bbe`, kit-update `eda3d51`, T002 `a857a1b`, T003 `ab6e7b7`.
+
+Предсборочная DOCS — коммит `394f907` **до** release-сборки. T004 выполнила единственный `npm run build`: `release-manifest.sourceCommit=394f907642d2ffe2abb865ea0b404c12ed43fbd9`, `sourceFiles=108`, `packagedSourceMatches=true`; identity обеих Mac-копий записана в `release-0.6.87-preflight.json` до сборки.
+
+macOS arm64: `~/Downloads/WebPilot-0.6.87/Project-Web-Pilot-0.6.87-macOS-arm64.zip`, 186480315 байт, SHA-256 `69ad05c7ead98e1cb7061ac1c0def11f19286d281835461c3e1596e62f574cde`. Windows x64: `~/Downloads/WebPilot-0.6.87/Project-Web-Pilot-0.6.87-Windows-x64.zip`, 355594448 байт, SHA-256 `6325a805a2ad2a9176a146e48636f01961b345615893cc324e33d966fceeb088`. Оба package имеют ASAR SHA-256 `07a1b7ef6dc1ef6e6d673c9778cd94acb1e2c9beba891095b59aa146a2b85f38`; Windows прошёл `verify:win` на Mac, native Windows/clean VM не запускались.
+
+`/Applications` установлена из staging штатным `installMacBundle` **без пересборки**, inode сохранён `406571340`; T005 прошла полный `release-installed` gate.
+
+[GitHub Release v0.6.87](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.87) опубликован 2026-10-04T15:32:40Z. Tag `v0.6.87` указывает точно на `394f907642d2ffe2abb865ea0b404c12ed43fbd9`. Опубликованы ровно пять файлов; server size/digest каждого совпадает с локальной поставкой. Release не draft/prerelease. Финальный `main` должен совпасть с managed T006 commit; это повторно проверяет `scripts/check-github-release.mjs` после push.
+
 ## Выпуск 0.6.86 — 04.10.2026
 
 0.6.86 ([контракт](planning/mcp-context-delivery.md)): агент сам получает контекст проекта через MCP — `workflow_context_recover` выдаёт правила сессии и полный пакет Workflow Kit текстовыми частями до 20 000 байт; в режиме Codex App Server Web Pilot больше не вставляет recovery в ChatGPT, новая сессия ждёт первого сообщения пользователя и привязывается по нему. Codex Local Mac и Windows сохраняют доставку первым сообщением. Source: T001 `18970e8`, T002 `05fd934`, T003 `734d632`.

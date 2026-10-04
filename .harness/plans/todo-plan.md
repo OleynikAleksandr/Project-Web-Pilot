@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1124,
+  "plan_revision": 1126,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "mcp-sequential-parts-kit-1.5.4-0.6.87-20261004",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Агент читает контекст через MCP строго по одной части без повторов; компактный recovery Workflow Kit 1.5.4; релиз 0.6.87.",
   "acceptance_criteria": [
     "Агент читает контекст через MCP строго по одной части без повторов; компактный recovery Workflow Kit 1.5.4; релиз 0.6.87."
@@ -40,7 +40,8 @@
       "docs/CONTEXT_DELIVERY.md",
       "docs/VERIFICATION.md",
       "docs/WORKFLOW_START.md",
-      "docs/modules/codex-app-server-executor.md"
+      "docs/modules/codex-app-server-executor.md",
+      "docs/RELEASE.md"
     ]
   },
   "baseline_commit": "372c314fc141ec20b338a24492bd81d7ba926c39",
@@ -301,8 +302,8 @@
       "actual_files": []
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "mcp-sequential-parts-kit-1.5.4-0.6.87-20261004",
         "task_id": "T006",
@@ -315,7 +316,14 @@
         "scripts/check-github-release.mjs"
       ],
       "documentation_paths": [
-        "docs/planning/mcp-sequential-parts-kit-1.5.4.md"
+        "docs/planning/mcp-sequential-parts-kit-1.5.4.md",
+        "README.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/OVERVIEW.md"
       ],
       "verification_ids": [
         "github-release"
@@ -327,7 +335,17 @@
       "acceptance_criteria": [
         "Tag v0.6.87 на sourceCommit, пять assets совпадают с локальной поставкой, main синхронизирован"
       ],
-      "expected_commit_message": "feat: Опубликовать 0.6.87 и синхронизировать Project Web Pilot с GitHub"
+      "expected_commit_message": "feat: Опубликовать 0.6.87 и синхронизировать Project Web Pilot с GitHub",
+      "actual_files": [
+        "README.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/planning/mcp-sequential-parts-kit-1.5.4.md"
+      ]
     }
   ],
   "blocked_reason": null,
@@ -345,10 +363,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: mcp-sequential-parts-kit-1.5.4-0.6.87-20261004
 Current Task: нет
-Revision: 1124
+Revision: 1126
 
 ## Цель
 
@@ -384,10 +402,10 @@ Revision: 1124
   - Git Commit: [DONE] feat: Установить 0.6.87 и проверить установленные macOS-копии
   - Reference: mcp-sequential-parts-kit-1.5.4-0.6.87-20261004 / T005 / implementation
   - Файлы: scripts/check-installed-release.mjs, docs/planning/mcp-sequential-parts-kit-1.5.4.md
-- [TODO] T006: Опубликовать 0.6.87 и синхронизировать Project Web Pilot с GitHub — Ожидает
-  - Git Commit: [PENDING] feat: Опубликовать 0.6.87 и синхронизировать Project Web Pilot с GitHub
+- [DONE] T006: Опубликовать 0.6.87 и синхронизировать Project Web Pilot с GitHub — Завершено
+  - Git Commit: [DONE] feat: Опубликовать 0.6.87 и синхронизировать Project Web Pilot с GitHub
   - Reference: mcp-sequential-parts-kit-1.5.4-0.6.87-20261004 / T006 / implementation
-  - Файлы: scripts/check-github-release.mjs, docs/planning/mcp-sequential-parts-kit-1.5.4.md
+  - Файлы: scripts/check-github-release.mjs, docs/planning/mcp-sequential-parts-kit-1.5.4.md, README.md, docs/MODULES.md, docs/PRODUCT.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md
 
 ## Context Pack For This Cycle
 

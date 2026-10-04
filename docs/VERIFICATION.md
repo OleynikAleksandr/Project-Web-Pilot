@@ -1,5 +1,11 @@
 # Проверки и приёмка
 
+## 2026-10-04 — 0.6.87 GitHub publication
+
+GitHub Release [v0.6.87](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.87) опубликован 2026-10-04T15:32:40Z, `draft=false`, `prerelease=false`. Tag указывает на release sourceCommit `394f907642d2ffe2abb865ea0b404c12ed43fbd9`.
+
+GitHub содержит ровно пять assets: macOS ZIP 186480315 / `69ad05c7ead98e1cb7061ac1c0def11f19286d281835461c3e1596e62f574cde`, Windows ZIP 355594448 / `6325a805a2ad2a9176a146e48636f01961b345615893cc324e33d966fceeb088`, `SHA256SUMS.txt` / `1f937e5cbc4ad0c1eebfd30ec723abad0bb3f4b932c5a5602080a062c4c394f4`, `INSTALL.txt` / `2c06a67975ce908ba7ad600ddc2d1db106377e451af8ec16d40590a28471f3da`, `release-manifest.json` / `60a75219709d851f147be544f17aa1720a4d92a4b2f71353ba4f9ca77af18e22`. Server size/digest совпали с локальными файлами.
+
 ## 2026-10-04 — 0.6.87 части по одной и Workflow Kit 1.5.4 (до сборки)
 
 Опыт 0.6.86 в Web Pilot (Chat): 6 частей по 20 КБ, правила первыми, файлы не читались, но части 2–6 запрошены одним вызовом `functions.exec` — вывод обрезан, части 2–5 прочитаны повторно (10 вызовов).
