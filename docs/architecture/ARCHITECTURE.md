@@ -29,6 +29,8 @@ AutoPlan получает toggle, page/context/availability и PlanMonitor seman
 
 ## Состояние
 
+**Готовится 0.6.82** ([контракт](../planning/release-0.6.82-workflowkit-1.5.3.md)): bundled Workflow Kit **1.5.3** (35 файлов, SHA-256 `d59ae7b6b074e953fdd6c5d78d1f644902f0e7b9af5ad3c78d67d42f1f6a1c0f`) с командой `project:rename` — штатное переименование проекта. Сборка, установка и GitHub-публикация выполняются только delivery-задачами T002–T004 после этой DOCS; до их завершения 0.6.81 остаётся последним опубликованным релизом.
+
 Опубликованный и установленный macOS Web Pilot остаётся **0.6.80**, Electron **44.5.1**, Node **24.21.0**, комплектный Workflow Kit **1.5.1**. Текущий source/dev checkout и установленный workflow runtime workspace используют Workflow Kit **1.5.2** (35 файлов, SHA-256 `646fec106c498e004d8688a3bc40012bea1654178ce66a61b650211ab28055df`); приложение в этом scope не пересобиралось. Постоянная Apple Development подпись UkrHD и строгий gate проверяют staging, обе установленные копии и приложение из ZIP. T004 подтвердила первичное разрешение и настоящий MCP-захват; T005 (`8a6d0dd`) — сохранение доступа после обновления 0.6.79 → 0.6.80 и настоящей перезагрузки Mac. Пользователь подтвердил работоспособность и отсутствие новых запросов. [Контракт](../planning/macos-screen-permission-stability.md), [RELEASE](../RELEASE.md), [VERIFICATION](../VERIFICATION.md).
 
 Функциональный AutoPlan и публичные browser-модули из 0.6.78 сохранены. Парная macOS arm64 / Windows x64 поставка 0.6.80 опубликована в GitHub Release v0.6.80; Windows package прошёл `verify:win` на Mac. Native Windows и чистая установка 0.6.80 не проверены.

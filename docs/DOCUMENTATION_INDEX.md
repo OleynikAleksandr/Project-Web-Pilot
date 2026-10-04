@@ -24,7 +24,7 @@
 <!-- workflow-kit:end -->
 ## Project Web Pilot
 
-Текущая локальная и опубликованная парная поставка — **0.6.81 / Workflow Kit 1.5.2**. DOCS выполнена до release-сборки по [контракту 0.6.81](planning/release-0.6.81-workflowkit-1.5.2.md); package/installed gates завершены, GitHub Release v0.6.81 содержит пять проверенных assets. История сохранения ScreenCapture 0.6.80 — [отдельный контракт](planning/macos-screen-permission-stability.md).
+Текущая локальная и опубликованная парная поставка — **0.6.81 / Workflow Kit 1.5.2**. **Готовится 0.6.82** ([контракт](planning/release-0.6.82-workflowkit-1.5.3.md)): bundled Workflow Kit **1.5.3** (35 файлов, SHA-256 `d59ae7b6b074e953fdd6c5d78d1f644902f0e7b9af5ad3c78d67d42f1f6a1c0f`) с командой `project:rename` — штатное переименование проекта. Сборка, установка и GitHub-публикация выполняются только delivery-задачами T002–T004 после этой DOCS; до их завершения 0.6.81 остаётся последним опубликованным релизом. DOCS выполнена до release-сборки по [контракту 0.6.81](planning/release-0.6.81-workflowkit-1.5.2.md); package/installed gates завершены, GitHub Release v0.6.81 содержит пять проверенных assets. История сохранения ScreenCapture 0.6.80 — [отдельный контракт](planning/macos-screen-permission-stability.md).
 
 | Документ | Назначение |
 | --- | --- |
@@ -38,6 +38,7 @@
 | docs/modules/workspace-sessions.md | Specification проектов, Chat/Work sessions, session tree, переходов после scope, оформления и сохранения геометрии интерфейса |
 | docs/planning/session-title-sync.md | Контракт auto/manual session title и server-side синхронизации с native ChatGPT Recents |
 | docs/planning/input-instruction-delivery-ordering.md | Канонический порядок DOCS → delivery, startupMessage guard и границы незапланированных build/publish |
+| docs/planning/release-0.6.82-workflowkit-1.5.3.md | Release 0.6.82: bundled Workflow Kit 1.5.3 (project:rename), DOCS до build/package и GitHub publish |
 | docs/planning/release-0.6.81-workflowkit-1.5.2.md | Release 0.6.81: DOCS до build/package и GitHub publish, bundled Workflow Kit 1.5.2 |
 | docs/design/chat-message-layout-regression.md | Planning исправления пустого layout скрытых tool-call message/turn wrappers и regression coverage |
 | docs/design/computer-use-latency-investigation.md | Planning и evidence исследования end-to-end задержек Computer Use, MCP, Secure MCP Tunnel и Web ChatGPT |

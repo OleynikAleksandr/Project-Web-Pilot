@@ -2,12 +2,12 @@
 
 ## Связанные рабочие репозитории — 03.10.2026
 
-Project Web Pilot **0.6.81** опубликован с bundled canonical Workflow Kit **1.5.2**. Предсборочная DOCS была зафиксирована до package build; tag v0.6.81 указывает на release-manifest.sourceCommit, пять assets сверены по server digest. Финальный `main` синхронизируется managed T004 commit и повторно проверяется release verifier.
+Project Web Pilot **0.6.81** опубликован с bundled canonical Workflow Kit **1.5.2**. **Готовится 0.6.82** ([контракт](planning/release-0.6.82-workflowkit-1.5.3.md)): bundled Workflow Kit **1.5.3** (35 файлов, SHA-256 `d59ae7b6b074e953fdd6c5d78d1f644902f0e7b9af5ad3c78d67d42f1f6a1c0f`) с командой `project:rename` — штатное переименование проекта. Сборка, установка и GitHub-публикация выполняются только delivery-задачами T002–T004 после этой DOCS; до их завершения 0.6.81 остаётся последним опубликованным релизом. Предсборочная DOCS была зафиксирована до package build; tag v0.6.81 указывает на release-manifest.sourceCommit, пять assets сверены по server digest. Финальный `main` синхронизируется managed T004 commit и повторно проверяется release verifier.
 
 | Репозиторий | Workspace | Роль и граница |
 | --- | --- | --- |
 | Project Web Pilot | `/Users/oleksandroliinyk/VSCODE/Project Web Pilot` | Electron-приложение, проекты, сессии, текущий план, доставка recovery и MCP/runtime |
-| [Workflow Kit](https://github.com/OleynikAleksandr/WorkflowKit) | `/Users/oleksandroliinyk/VSCODE/WorkflowKit` | Canonical локальный пакет `@webpilot/workflow-kit@1.5.2` (35 файлов, SHA-256 `646fec106c498e004d8688a3bc40012bea1654178ce66a61b650211ab28055df`); current plan сейчас `NONE`; последний опубликованный release — 1.5.1 |
+| [Workflow Kit](https://github.com/OleynikAleksandr/WorkflowKit) | `/Users/oleksandroliinyk/VSCODE/WorkflowKit` | Canonical локальный пакет `@webpilot/workflow-kit@1.5.3` (35 файлов, SHA-256 `d59ae7b6b074e953fdd6c5d78d1f644902f0e7b9af5ad3c78d67d42f1f6a1c0f`; команда `project:rename`); current plan сейчас `NONE`; последний опубликованный release — 1.5.1 |
 | [Web Pilot Sidebar](https://github.com/OleynikAleksandr/Web-Pilot-Sidebar) | `/Users/oleksandroliinyk/VSCODE/Web Pilot Sidebar` | Отдельный репозиторий браузерного расширения; разрабатывается параллельно другим агентом, использует адаптер ChatGPT из Web Pilot |
 
 Sidebar отображает проекты, сессии и прогресс плана в настоящей странице chatgpt.com. Проектные данные, текущий план, recovery и локальные инструменты остаются ответственностью Project Web Pilot и Workflow Kit; расширение не пишет todo-plan.md и не хранит проектные данные. На 02.10.2026 Sidebar — прототип этапа 0 с тестовыми данными и тестовым хостом. Production Host API в Project Web Pilot ещё не реализован; его подключение требует отдельной задачи по собственному workflow этого репозитория.

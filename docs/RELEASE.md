@@ -2,6 +2,10 @@
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
+## Выпуск 0.6.82 — подготовка, 04.10.2026
+
+**Готовится 0.6.82** ([контракт](planning/release-0.6.82-workflowkit-1.5.3.md)): bundled Workflow Kit **1.5.3** (35 файлов, SHA-256 `d59ae7b6b074e953fdd6c5d78d1f644902f0e7b9af5ad3c78d67d42f1f6a1c0f`) с командой `project:rename` — штатное переименование проекта. Сборка, установка и GitHub-публикация выполняются только delivery-задачами T002–T004 после этой DOCS; до их завершения 0.6.81 остаётся последним опубликованным релизом. Source preparation T001 переводит release gates на 1.5.3; dev Kit репозитория обновлён до 1.5.3 штатным installer (`7f6d853`), поэтому development и bundled Kit совпадают.
+
 ## Выпуск 0.6.81 — 03.10.2026
 
 Предсборочная DOCS была зафиксирована коммитом `db59be8` **до** первой release-сборки. T002 (`36c4ff3`) выполнила единственный `npm run build`: `release-manifest.sourceCommit=db59be83f0d3fa4136c109a8252181422acfe94c`, `sourceFiles=106`, `packagedSourceMatches=true`, bundled Workflow Kit **1.5.2 / 35 файлов / SHA-256 `646fec106c498e004d8688a3bc40012bea1654178ce66a61b650211ab28055df`**.
