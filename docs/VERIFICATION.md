@@ -1,5 +1,11 @@
 # Проверки и приёмка
 
+## 2026-10-04 — 0.6.88 GitHub publication
+
+GitHub Release [v0.6.88](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.88) опубликован 2026-10-04T16:08:41Z, `draft=false`, `prerelease=false`. Tag указывает на release sourceCommit `5e2b21419f6d5d3126ae0d28d9b85dcccbee2fdf`.
+
+GitHub содержит ровно пять assets: macOS ZIP 186481309 / `14182747fd13027e3b44dd5ed6adaaf922f970dab819bcbb5dd88f73fae1e060`, Windows ZIP 355595639 / `9cac9974dc260495f6c24f6a05674e3a529c174a3f8ee75d4eb1ad69b847356e`, `SHA256SUMS.txt` / `e00a63a33fdf95c755ca8f136a24b9e028d83e7051dfcc928771266d8e0a8e92`, `INSTALL.txt` / `e931a7d10592859dc270347ce8b5385670ffb030ab0780096a3e9b2a7820bd5a`, `release-manifest.json` / `7dca532d7494f428406f8014ee9e8af2416286d0b74e705124dafeae3b1d49fb`. Server size/digest совпали с локальными файлами.
+
 ## 2026-10-04 — 0.6.88 стартовое сообщение MCP-сессии (до сборки)
 
 Опыт 0.6.87 (Chat): первое сообщение «Начинаем новую сессию.» — ответ без вызова `workflow_context_recover`. Сообщение с проектом, папкой и порядком частей, отправленное вручную, — ровно два последовательных вызова (part=1; part=2 с ключом `after`), без обрезки и `PART_ORDER`, без чтения файлов и git, sha256 совпал.

@@ -2,6 +2,18 @@
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
+## Выпуск 0.6.88 — 04.10.2026
+
+0.6.88 ([контракт](planning/mcp-start-message.md)): в режиме Codex App Server Web Pilot сам начинает новую сессию коротким стартовым сообщением — проект, папка и порядок чтения `workflow_context_recover` по одной части с ключом `after`; агент получает контекст через MCP и кратко подтверждает. Пакет в чат не вставляется; привязанный, ручной и прежний чат стартового сообщения не получают. Bundled Workflow Kit 1.5.4. Source: T001 `330108f` (план), T002 `96367b8` (код и версия).
+
+Предсборочная DOCS — коммит `5e2b214` **до** release-сборки. T003 выполнила единственный `npm run build`: `release-manifest.sourceCommit=5e2b21419f6d5d3126ae0d28d9b85dcccbee2fdf`, `sourceFiles=108`, `packagedSourceMatches=true`; identity обеих Mac-копий записана в `release-0.6.88-preflight.json` до сборки.
+
+macOS arm64: `~/Downloads/WebPilot-0.6.88/Project-Web-Pilot-0.6.88-macOS-arm64.zip`, 186481309 байт, SHA-256 `14182747fd13027e3b44dd5ed6adaaf922f970dab819bcbb5dd88f73fae1e060`. Windows x64: `~/Downloads/WebPilot-0.6.88/Project-Web-Pilot-0.6.88-Windows-x64.zip`, 355595639 байт, SHA-256 `9cac9974dc260495f6c24f6a05674e3a529c174a3f8ee75d4eb1ad69b847356e`. Оба package имеют ASAR SHA-256 `07705d3b1e723f9cf3a4a1716eae51f898a805b40e4f2cfebc81ae6af1036d41`; Windows прошёл `verify:win` на Mac, native Windows/clean VM не запускались.
+
+`/Applications` установлена из staging штатным `installMacBundle` **без пересборки**, inode сохранён `406571340`; T004 прошла полный `release-installed` gate.
+
+[GitHub Release v0.6.88](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.88) опубликован 2026-10-04T16:08:41Z. Tag `v0.6.88` указывает точно на `5e2b21419f6d5d3126ae0d28d9b85dcccbee2fdf`. Опубликованы ровно пять файлов; server size/digest каждого совпадает с локальной поставкой. Release не draft/prerelease. Финальный `main` должен совпасть с managed T005 commit; это повторно проверяет `scripts/check-github-release.mjs` после push.
+
 ## Выпуск 0.6.87 — 04.10.2026
 
 0.6.87 ([контракт](planning/mcp-sequential-parts-kit-1.5.4.md)): агент читает контекст через MCP строго по одной части — следующая часть выдаётся только по ключу `after` из конца предыдущей, части до 28 000 байт, повторного чтения нет; bundled Workflow Kit 1.5.4 не включает в recovery формы плана и карты документов. Source: T001 `e9c5bbe`, kit-update `eda3d51`, T002 `a857a1b`, T003 `ab6e7b7`.

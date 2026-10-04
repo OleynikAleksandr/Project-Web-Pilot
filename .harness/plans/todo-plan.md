@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1139,
+  "plan_revision": 1141,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "mcp-start-message-0.6.88-20261004",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Web Pilot сам начинает MCP-сессию коротким стартовым сообщением; агент читает контекст через MCP; релиз 0.6.88.",
   "acceptance_criteria": [
     "Web Pilot сам начинает MCP-сессию коротким стартовым сообщением; агент читает контекст через MCP; релиз 0.6.88."
@@ -41,7 +41,8 @@
       "docs/CONTEXT_DELIVERY.md",
       "docs/modules/codex-app-server-executor.md",
       "docs/planning/mcp-context-delivery.md",
-      "docs/VERIFICATION.md"
+      "docs/VERIFICATION.md",
+      "docs/RELEASE.md"
     ]
   },
   "baseline_commit": "ff914be35b996ba2357d17ecccb6d808258d439d",
@@ -274,8 +275,8 @@
       "actual_files": []
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "mcp-start-message-0.6.88-20261004",
         "task_id": "T005",
@@ -288,7 +289,14 @@
         "scripts/check-github-release.mjs"
       ],
       "documentation_paths": [
-        "docs/planning/mcp-start-message.md"
+        "docs/planning/mcp-start-message.md",
+        "README.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/OVERVIEW.md"
       ],
       "verification_ids": [
         "github-release"
@@ -300,7 +308,17 @@
       "acceptance_criteria": [
         "Tag v0.6.88 на sourceCommit, пять assets совпадают с локальной поставкой, main синхронизирован"
       ],
-      "expected_commit_message": "feat: Опубликовать 0.6.88 и синхронизировать Project Web Pilot с GitHub"
+      "expected_commit_message": "feat: Опубликовать 0.6.88 и синхронизировать Project Web Pilot с GitHub",
+      "actual_files": [
+        "README.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/planning/mcp-start-message.md"
+      ]
     }
   ],
   "blocked_reason": null,
@@ -318,10 +336,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: mcp-start-message-0.6.88-20261004
 Current Task: нет
-Revision: 1139
+Revision: 1141
 
 ## Цель
 
@@ -353,10 +371,10 @@ Web Pilot сам начинает MCP-сессию коротким старто
   - Git Commit: [DONE] feat: Установить 0.6.88 и проверить установленные macOS-копии
   - Reference: mcp-start-message-0.6.88-20261004 / T004 / implementation
   - Файлы: scripts/check-installed-release.mjs, docs/planning/mcp-start-message.md
-- [TODO] T005: Опубликовать 0.6.88 и синхронизировать Project Web Pilot с GitHub — Ожидает
-  - Git Commit: [PENDING] feat: Опубликовать 0.6.88 и синхронизировать Project Web Pilot с GitHub
+- [DONE] T005: Опубликовать 0.6.88 и синхронизировать Project Web Pilot с GitHub — Завершено
+  - Git Commit: [DONE] feat: Опубликовать 0.6.88 и синхронизировать Project Web Pilot с GitHub
   - Reference: mcp-start-message-0.6.88-20261004 / T005 / implementation
-  - Файлы: scripts/check-github-release.mjs, docs/planning/mcp-start-message.md
+  - Файлы: scripts/check-github-release.mjs, docs/planning/mcp-start-message.md, README.md, docs/MODULES.md, docs/PRODUCT.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md
 
 ## Context Pack For This Cycle
 
