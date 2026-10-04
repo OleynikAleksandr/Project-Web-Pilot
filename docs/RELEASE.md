@@ -2,9 +2,17 @@
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
-## Выпуск 0.6.83 — подготовка, 04.10.2026
+## Выпуск 0.6.83 — 04.10.2026
 
-**Готовится 0.6.83** ([контракт](planning/chatgpt-channel-vps.md)): в Настройках под «Локальные инструменты macOS» — раздел «Подключение ChatGPT»: Secure MCP Tunnel или собственный сервер (VPS). В режиме VPS tunnel-client не запускается ни Web Pilot, ни автозапуском macOS; туннель VPS (LaunchAgent `com.oleynik.vps-mcp-tunnel`) работает при любом выборе — через него подключается Claude — и следует за портом MCP выбранного runtime. Адрес коннектора показывается скрытым и только копируется. Сборка, установка и GitHub-публикация — задачи T005–T007 после этой DOCS; до их завершения 0.6.82 остаётся последним опубликованным релизом. Source: T001 `40585ca` (executor: канал в selector), T002 `07926e2` (туннель VPS и переключение в main), T003 `04d47e3` (раздел в Настройках, полный `npm test`), T004 `7140742` (версия 0.6.83). Bundled Workflow Kit не меняется — 1.5.3.
+Причина релиза — переключатель канала ChatGPT (Secure MCP Tunnel / VPS) по [контракту](planning/chatgpt-channel-vps.md). Source: T001 `40585ca` (executor: канал в selector), T002 `07926e2` (туннель VPS и переключение в main), T003 `04d47e3` (раздел в Настройках, полный `npm test`), T004 `7140742` (версия). Bundled Workflow Kit 1.5.3 не менялся.
+
+Предсборочная DOCS зафиксирована коммитом `366791a` **до** первой release-сборки. T005 (`fa32f6e`) выполнила единственный `npm run build`: `release-manifest.sourceCommit=366791a752cc4a67ada3f9fbf92326e6b9e78f12`, `sourceFiles=107`, `packagedSourceMatches=true`. Identity обеих Mac-копий записана в `release-0.6.83-preflight.json` до сборки.
+
+macOS arm64: `~/Downloads/WebPilot-0.6.83/Project-Web-Pilot-0.6.83-macOS-arm64.zip`, 186435757 байт, SHA-256 `4125d4b2dfb8c2605b47614f73842c02a2b1d61bb4dbc619f9272695f69bedb0`. Windows x64: `~/Downloads/WebPilot-0.6.83/Project-Web-Pilot-0.6.83-Windows-x64.zip`, 355550282 байт, SHA-256 `b7e81ec6f97da618145c98caf2a27c705857f8c72fc92c2464ed54685f0b5559`. Оба package имеют ASAR SHA-256 `871dcd8b471615add399d2628cb22ff99b8a54cd29e1f6b4b6e2cd9568ca02f6`; Windows прошёл `verify:win` на Mac, native Windows/clean VM не запускались.
+
+Root app и `/Applications/Project Web Pilot.app` обновлены до 0.6.83; `/Applications` установлена из staging штатным `installMacBundle` **без пересборки**, inode сохранён `406571340`. Managed T006 (`1dfe2dd`) прошёл полный `release-installed` gate. После перезапуска 0.6.83 канал ChatGPT — Secure MCP Tunnel (по умолчанию), туннель VPS не перезагружался (plist совпал), `vps-server/setup/check-mcp.sh` — ok.
+
+[GitHub Release v0.6.83](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.83) опубликован 2026-10-04T09:54:15Z. Tag `v0.6.83` указывает точно на `366791a752cc4a67ada3f9fbf92326e6b9e78f12`. Опубликованы ровно пять файлов: оба ZIP, `SHA256SUMS.txt`, `INSTALL.txt`, `release-manifest.json`; server size/digest каждого совпадает с локальной поставкой. Release не draft/prerelease. Финальный `main` должен совпасть с managed T007 commit; это повторно проверяет `scripts/check-github-release.mjs` после push.
 
 ## Выпуск 0.6.82 — 04.10.2026
 

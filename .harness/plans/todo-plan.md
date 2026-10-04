@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1055,
+  "plan_revision": 1057,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "chatgpt-channel-vps-20261004",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Переключатель канала ChatGPT в Настройках Web Pilot: Secure MCP Tunnel или собственный сервер (VPS); канал VPS для Claude работает всегда и следует за портом MCP.",
   "acceptance_criteria": [
     "В Настройках под «Локальные инструменты macOS» есть раздел «Подключение ChatGPT» с кнопками Secure MCP Tunnel и VPS",
@@ -363,7 +363,14 @@
       ],
       "documentation_paths": [
         "docs/RELEASE.md",
-        "docs/VERIFICATION.md"
+        "docs/VERIFICATION.md",
+        "README.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/planning/chatgpt-channel-vps.md"
       ],
       "verification_ids": [
         "github-release"
@@ -376,13 +383,24 @@
         "Документы фиксируют фактическую публикацию"
       ],
       "expected_commit_message": "feat: Опубликовать 0.6.83 и синхронизировать Project Web Pilot с GitHub",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "chatgpt-channel-vps-20261004",
         "task_id": "T007",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "README.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/planning/chatgpt-channel-vps.md"
+      ]
     }
   ],
   "blocked_reason": null,
@@ -400,10 +418,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: chatgpt-channel-vps-20261004
 Current Task: нет
-Revision: 1055
+Revision: 1057
 
 ## Цель
 
@@ -447,10 +465,10 @@ Revision: 1055
   - Git Commit: [DONE] feat: Установить 0.6.83 и проверить установленные macOS-копии
   - Reference: chatgpt-channel-vps-20261004 / T006 / implementation
   - Файлы: scripts/check-installed-release.mjs
-- [TODO] T007: Опубликовать 0.6.83 и синхронизировать Project Web Pilot с GitHub — Ожидает
-  - Git Commit: [PENDING] feat: Опубликовать 0.6.83 и синхронизировать Project Web Pilot с GitHub
+- [DONE] T007: Опубликовать 0.6.83 и синхронизировать Project Web Pilot с GitHub — Завершено
+  - Git Commit: [DONE] feat: Опубликовать 0.6.83 и синхронизировать Project Web Pilot с GitHub
   - Reference: chatgpt-channel-vps-20261004 / T007 / implementation
-  - Файлы: scripts/check-github-release.mjs, docs/RELEASE.md, docs/VERIFICATION.md
+  - Файлы: scripts/check-github-release.mjs, docs/RELEASE.md, docs/VERIFICATION.md, README.md, docs/MODULES.md, docs/PRODUCT.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/planning/chatgpt-channel-vps.md
 
 ## Context Pack For This Cycle
 

@@ -34,3 +34,11 @@
 - Маршрут `/v1`, пользователь `wpstunnel`, служба `com.oleynik.wps-tunnel` — не трогать.
 - Секрет и полный адрес коннектора не попадают в репозиторий, журналы, диагностику, настройки и чат.
 - OAuth для коннекторов — позже.
+
+## Итог
+
+- T001 `40585ca`, T002 `07926e2`, T003 `04d47e3`: executor, туннель VPS и раздел «Подключение ChatGPT»; полный `npm test` прошёл.
+- `vps-server`: проброс перенесён в аргументы LaunchAgent, `RemoteForward` убран из `~/.ssh/config` (коммит `50273e5` в vps-server).
+- T005 `fa32f6e` — сборка из sourceCommit `366791a752cc4a67ada3f9fbf92326e6b9e78f12`; T006 `1dfe2dd` — установка в `/Applications` без пересборки.
+- T007: [GitHub Release v0.6.83](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.83) опубликован 2026-10-04T09:54:15Z, пять assets сверены по серверным SHA-256.
+- Ручная приёмка переключения в Настройках и коннекторов — за пользователем; native Windows и clean VM не проверялись.

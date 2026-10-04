@@ -1,5 +1,13 @@
 # Проверки и приёмка
 
+## 2026-10-04 — 0.6.83 GitHub publication
+
+GitHub Release [v0.6.83](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.83) опубликован 2026-10-04T09:54:15Z, `draft=false`, `prerelease=false`. Tag указывает на release sourceCommit `366791a752cc4a67ada3f9fbf92326e6b9e78f12`. До публикации `main` с предсборочной DOCS и local build/install evidence синхронизирован с GitHub.
+
+GitHub содержит ровно пять assets: macOS ZIP 186435757 / `4125d4b2dfb8c2605b47614f73842c02a2b1d61bb4dbc619f9272695f69bedb0`, Windows ZIP 355550282 / `b7e81ec6f97da618145c98caf2a27c705857f8c72fc92c2464ed54685f0b5559`, `SHA256SUMS.txt` / `3b3221b32a9b64059573c2fac1780430ac5322bffbce54369002f7d57402e49c`, `INSTALL.txt` / `38bb2eecb76da764ca2bf1e3711d16ff05c096beaa4cc330e6d45916da1f52c6`, `release-manifest.json` / `2dc26a6a11fb6d2903fe0f090a103d4368e09d18e159e18bc21303f54e59055d`. Server size/digest совпали с локальными файлами; пересборка для GitHub не выполнялась.
+
+Функция 0.6.83 проверена автоматически: `executor-channel`, `vps-runtime`, `settings-ui` и полный `npm test`; установленная 0.6.83 запущена, канал по умолчанию Secure MCP Tunnel, туннель VPS работает, `check-mcp.sh` — ok. Ручная приёмка переключения каналов в Настройках и коннекторов ChatGPT/Claude — за пользователем. Native Windows/clean VM 0.6.83 не проверялись.
+
 ## 2026-10-04 — 0.6.82 GitHub publication
 
 GitHub Release [v0.6.82](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.82) опубликован 2026-10-04T09:16:44Z, `draft=false`, `prerelease=false`. Tag указывает на release sourceCommit `85ffd3355b7fa9d945c1a703bc1027ce6c3ca2a7`. До публикации current `main` с предсборочной DOCS и local build/install evidence был синхронизирован с GitHub.
