@@ -1,5 +1,13 @@
 # Проверки и приёмка
 
+## 2026-10-04 — 0.6.85 GitHub publication
+
+GitHub Release [v0.6.85](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.85) опубликован 2026-10-04T12:29:00Z, `draft=false`, `prerelease=false`. Tag указывает на release sourceCommit `9a0b6994fce07bcf466314cfe9bb0267420d0242`.
+
+GitHub содержит ровно пять assets: macOS ZIP 186439652 / `9f32618b10ab315637068cc6f0eae19c6f781a20a0c45da8f465c5fc63d19297`, Windows ZIP 355554835 / `132742acd2fc813176d561a7e403f89cb022a95b00e44f2ccdd6b02bb1220a21`, `SHA256SUMS.txt` / `95e9db98a901902372e34f058851162814e01dd8340647c8e99eb828004cda05`, `INSTALL.txt` / `5284765bebc7275061b6461ac3d3c413acf0596c3db465ac0ece3eddfda0eb1a`, `release-manifest.json` / `a8e670df0bfe380db6d89d381bb7e9f9af32332905e28111384ace38d818458d`. Server size/digest совпали с локальными файлами.
+
+Автоматически проверены: перевод символов клавиш и пакет `computer_actions` на настоящем `server.py` с исполнением созданного сценария против поддельного sky; подписи и подсказка канала (JSDOM); возврат к активному проекту после архива/удаления выбранного (`landing()`); полный `npm test`. Живая проверка `computer_actions` через ChatGPT и сценария архива — за пользователем. Native Windows/clean VM 0.6.85 не проверялись.
+
 ## 2026-10-04 — 0.6.84 GitHub publication
 
 GitHub Release [v0.6.84](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.84) опубликован 2026-10-04T10:22:08Z, `draft=false`, `prerelease=false`. Tag указывает на release sourceCommit `ee2cf2031a396a7cf33c317df47efefd768770ef`.

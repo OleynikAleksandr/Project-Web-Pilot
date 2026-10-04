@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1090,
+  "plan_revision": 1092,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "computer-use-keys-batch-0.6.85-20261004",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Computer Use в MCP: имена клавиш X11 и пакет действий одним вызовом; нейтральные подписи канала VPS и подсказка про плагин; релиз 0.6.85.",
   "acceptance_criteria": [
     "computer_key_press и computer_hotkey принимают символы",
@@ -338,8 +338,8 @@
       "actual_files": []
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "computer-use-keys-batch-0.6.85-20261004",
         "task_id": "T006",
@@ -354,7 +354,13 @@
       "documentation_paths": [
         "docs/planning/computer-use-keys-batch.md",
         "docs/RELEASE.md",
-        "docs/VERIFICATION.md"
+        "docs/VERIFICATION.md",
+        "README.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/architecture/OVERVIEW.md"
       ],
       "verification_ids": [
         "github-release"
@@ -368,7 +374,18 @@
         "После финального push origin/main == local HEAD",
         "Документы фиксируют публикацию"
       ],
-      "expected_commit_message": "feat: Опубликовать 0.6.85 и синхронизировать Project Web Pilot с GitHub"
+      "expected_commit_message": "feat: Опубликовать 0.6.85 и синхронизировать Project Web Pilot с GitHub",
+      "actual_files": [
+        "README.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/planning/computer-use-keys-batch.md"
+      ]
     }
   ],
   "blocked_reason": null,
@@ -386,10 +403,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: computer-use-keys-batch-0.6.85-20261004
 Current Task: нет
-Revision: 1090
+Revision: 1092
 
 ## Цель
 
@@ -432,10 +449,10 @@ Computer Use в MCP: имена клавиш X11 и пакет действий 
   - Git Commit: [DONE] feat: Установить 0.6.85 и проверить установленные macOS-копии
   - Reference: computer-use-keys-batch-0.6.85-20261004 / T005 / implementation
   - Файлы: scripts/check-installed-release.mjs, docs/planning/computer-use-keys-batch.md
-- [TODO] T006: Опубликовать 0.6.85 и синхронизировать Project Web Pilot с GitHub — Ожидает
-  - Git Commit: [PENDING] feat: Опубликовать 0.6.85 и синхронизировать Project Web Pilot с GitHub
+- [DONE] T006: Опубликовать 0.6.85 и синхронизировать Project Web Pilot с GitHub — Завершено
+  - Git Commit: [DONE] feat: Опубликовать 0.6.85 и синхронизировать Project Web Pilot с GitHub
   - Reference: computer-use-keys-batch-0.6.85-20261004 / T006 / implementation
-  - Файлы: scripts/check-github-release.mjs, docs/planning/computer-use-keys-batch.md, docs/RELEASE.md, docs/VERIFICATION.md
+  - Файлы: scripts/check-github-release.mjs, docs/planning/computer-use-keys-batch.md, docs/RELEASE.md, docs/VERIFICATION.md, README.md, docs/MODULES.md, docs/PRODUCT.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md
 
 ## Context Pack For This Cycle
 
