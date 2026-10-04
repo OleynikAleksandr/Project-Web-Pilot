@@ -2,9 +2,17 @@
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
-## Выпуск 0.6.84 — подготовка, 04.10.2026
+## Выпуск 0.6.84 — 04.10.2026
 
-**Готовится 0.6.84** ([контракт](planning/mcp-stateless-sessions.md)): сервер MCP «Codex App Server Local Mac» работает без сессий (`stateless_http`), поэтому перезапуск Web Pilot и MCP больше не ломает коннекторы ChatGPT и Claude через VPS (раньше ChatGPT получал `Session terminated` по устаревшему `Mcp-Session-Id`). Сборка, установка и GitHub-публикация — задачи T003–T005 после этой DOCS; до их завершения 0.6.83 остаётся последним опубликованным релизом. Причина — проверка пользователя через VPS после 0.6.83: `run_command_batch` → `McpServerError: Session terminated`; через сервер воспроизведено `POST /mcp` с чужим `Mcp-Session-Id` → `404 Session not found`. Source: T001 `d565c1a` (`stateless_http=True`, тест на настоящем `server.py` с устаревшим идентификатором, полный `npm test`). Scope 0.6.83 закрыт в архив: в план с завершённым delivery-хвостом Workflow Kit 1.5.3 не даёт добавить задачи (`DEPENDENCY_ORDER`).
+Причина — проверка пользователя через VPS после 0.6.83: `run_command_batch` → `McpServerError: Session terminated`; через сервер воспроизведено `POST /mcp` с чужим `Mcp-Session-Id` → `404 Session not found`. Исправление по [контракту](planning/mcp-stateless-sessions.md): T001 `d565c1a` — `stateless_http=True`, тест на настоящем `server.py` с устаревшим идентификатором, полный `npm test`; T002 `fd0719e` — версия. Scope 0.6.83 закрыт в архив: в план с завершённым delivery-хвостом Workflow Kit 1.5.3 не даёт добавить задачи (`DEPENDENCY_ORDER`, записано в политике delivery-ordering WorkflowKit).
+
+Предсборочная DOCS — коммит `ee2cf20` **до** release-сборки. T003 выполнила единственный `npm run build`: `release-manifest.sourceCommit=ee2cf2031a396a7cf33c317df47efefd768770ef`, `sourceFiles=107`, `packagedSourceMatches=true`; identity обеих Mac-копий записана в `release-0.6.84-preflight.json` до сборки.
+
+macOS arm64: `~/Downloads/WebPilot-0.6.84/Project-Web-Pilot-0.6.84-macOS-arm64.zip`, 186437905 байт, SHA-256 `868b524094e95aa7747bd49c4ff3a35fe5351299ecad13c41da6b45bad595a5e`. Windows x64: `~/Downloads/WebPilot-0.6.84/Project-Web-Pilot-0.6.84-Windows-x64.zip`, 355552588 байт, SHA-256 `22e8cfeb898e6b1fd52af5eeaf34308bd959a7b89045d9b39bfd2684fac60e7c`. Оба package имеют ASAR SHA-256 `5232684f7d488e2f37e7c33f02c49fa9960972f9c1504b2f5bd393703b0d4618`; Windows прошёл `verify:win` на Mac, native Windows/clean VM не запускались.
+
+`/Applications` установлена из staging штатным `installMacBundle` **без пересборки**, inode сохранён `406571340`; T004 прошла полный `release-installed` gate.
+
+[GitHub Release v0.6.84](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.84) опубликован 2026-10-04T10:22:08Z. Tag `v0.6.84` указывает точно на `ee2cf2031a396a7cf33c317df47efefd768770ef`. Опубликованы ровно пять файлов; server size/digest каждого совпадает с локальной поставкой. Release не draft/prerelease. Финальный `main` должен совпасть с managed T005 commit; это повторно проверяет `scripts/check-github-release.mjs` после push.
 
 ## Выпуск 0.6.83 — 04.10.2026
 

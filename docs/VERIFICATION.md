@@ -1,5 +1,13 @@
 # Проверки и приёмка
 
+## 2026-10-04 — 0.6.84 GitHub publication
+
+GitHub Release [v0.6.84](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.84) опубликован 2026-10-04T10:22:08Z, `draft=false`, `prerelease=false`. Tag указывает на release sourceCommit `ee2cf2031a396a7cf33c317df47efefd768770ef`.
+
+GitHub содержит ровно пять assets: macOS ZIP 186437905 / `868b524094e95aa7747bd49c4ff3a35fe5351299ecad13c41da6b45bad595a5e`, Windows ZIP 355552588 / `22e8cfeb898e6b1fd52af5eeaf34308bd959a7b89045d9b39bfd2684fac60e7c`, `SHA256SUMS.txt` / `36c53847ae23da5db1a4eff1fd11ef5bbe559bec0a840f1d40c4ded968adde89`, `INSTALL.txt` / `6bc36b045c975a24df838535a4caa6b4d40e4120b6e3017a81642ad8f7ed4fd6`, `release-manifest.json` / `349f4d666ead02c2f8356ddd045cd679c1f073c472902da4b6192241d52cd297`. Server size/digest совпали с локальными файлами.
+
+Исправление сессий проверено автоматически: настоящий `server.py` отвечает на `tools/list` с устаревшим `Mcp-Session-Id` без `initialize`; полный `npm test`. Живая проверка канала VPS агентом ChatGPT — за пользователем после перезапуска 0.6.84. Native Windows/clean VM 0.6.84 не проверялись.
+
 ## 2026-10-04 — 0.6.83 GitHub publication
 
 GitHub Release [v0.6.83](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.83) опубликован 2026-10-04T09:54:15Z, `draft=false`, `prerelease=false`. Tag указывает на release sourceCommit `366791a752cc4a67ada3f9fbf92326e6b9e78f12`. До публикации `main` с предсборочной DOCS и local build/install evidence синхронизирован с GitHub.

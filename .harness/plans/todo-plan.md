@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1070,
+  "plan_revision": 1072,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "mcp-stateless-0.6.84-20261004",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Сервер MCP App Server без сессий: перезапуск Web Pilot не ломает коннекторы ChatGPT и Claude через VPS; релиз 0.6.84.",
   "acceptance_criteria": [
     "Запрос с устаревшим Mcp-Session-Id к серверу App Server получает ответ без initialize",
@@ -251,8 +251,8 @@
       "actual_files": []
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "mcp-stateless-0.6.84-20261004",
         "task_id": "T005",
@@ -267,7 +267,13 @@
       "documentation_paths": [
         "docs/planning/mcp-stateless-sessions.md",
         "docs/RELEASE.md",
-        "docs/VERIFICATION.md"
+        "docs/VERIFICATION.md",
+        "README.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/architecture/OVERVIEW.md"
       ],
       "verification_ids": [
         "github-release"
@@ -281,7 +287,18 @@
         "После финального push origin/main == local HEAD",
         "Документы фиксируют публикацию"
       ],
-      "expected_commit_message": "feat: Опубликовать 0.6.84 и синхронизировать Project Web Pilot с GitHub"
+      "expected_commit_message": "feat: Опубликовать 0.6.84 и синхронизировать Project Web Pilot с GitHub",
+      "actual_files": [
+        "README.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/planning/mcp-stateless-sessions.md"
+      ]
     }
   ],
   "blocked_reason": null,
@@ -299,10 +316,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: mcp-stateless-0.6.84-20261004
 Current Task: нет
-Revision: 1070
+Revision: 1072
 
 ## Цель
 
@@ -335,10 +352,10 @@ Revision: 1070
   - Git Commit: [DONE] feat: Установить 0.6.84 и проверить установленные macOS-копии
   - Reference: mcp-stateless-0.6.84-20261004 / T004 / implementation
   - Файлы: scripts/check-installed-release.mjs, docs/planning/mcp-stateless-sessions.md
-- [TODO] T005: Опубликовать 0.6.84 и синхронизировать Project Web Pilot с GitHub — Ожидает
-  - Git Commit: [PENDING] feat: Опубликовать 0.6.84 и синхронизировать Project Web Pilot с GitHub
+- [DONE] T005: Опубликовать 0.6.84 и синхронизировать Project Web Pilot с GitHub — Завершено
+  - Git Commit: [DONE] feat: Опубликовать 0.6.84 и синхронизировать Project Web Pilot с GitHub
   - Reference: mcp-stateless-0.6.84-20261004 / T005 / implementation
-  - Файлы: scripts/check-github-release.mjs, docs/planning/mcp-stateless-sessions.md, docs/RELEASE.md, docs/VERIFICATION.md
+  - Файлы: scripts/check-github-release.mjs, docs/planning/mcp-stateless-sessions.md, docs/RELEASE.md, docs/VERIFICATION.md, README.md, docs/MODULES.md, docs/PRODUCT.md, docs/WORKFLOW_START.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md
 
 ## Context Pack For This Cycle
 

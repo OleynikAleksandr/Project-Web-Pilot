@@ -22,3 +22,10 @@
 
 - Внешний runtime **Codex Local Mac** (`/Users/oleksandroliinyk/VSCODE/Codex Local Mac`) не меняется: в режиме Codex Local Mac канал VPS после перезапуска MCP по-прежнему может давать `Session terminated`. Исправление там — отдельная задача.
 - Ограничение Workflow Kit: в план с завершённым delivery-хвостом нельзя добавить задачи — `plan:extend` переносит DOCS в конец, и выполненная сборка, зависящая от DOCS, нарушает порядок (`DEPENDENCY_ORDER`). Поэтому scope `chatgpt-channel-vps-20261004` закрыт в архив, а исправление идёт отдельным планом.
+
+## Итог
+
+- T001 `d565c1a` — `stateless_http=True` и тест на настоящем сервере; T002 `fd0719e` — версия 0.6.84; DOCS `ee2cf20`.
+- T003 — сборка из sourceCommit `ee2cf2031a396a7cf33c317df47efefd768770ef`; T004 — установка в `/Applications` без пересборки.
+- T005: [GitHub Release v0.6.84](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.84) опубликован 2026-10-04T10:22:08Z, пять assets сверены по серверным SHA-256.
+- Живая проверка ChatGPT через VPS — за пользователем; Codex Local Mac не менялся.
