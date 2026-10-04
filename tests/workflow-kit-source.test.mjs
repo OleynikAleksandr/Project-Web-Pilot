@@ -7,9 +7,9 @@ import { createHash } from 'node:crypto';
 import { VERSION, getRuntimeRoot } from '@webpilot/workflow-kit';
 import { DEFAULT_STAGE } from '../scripts/stage-workflow-kit.mjs';
 
-const EXPECTED_VERSION = '1.5.4';
+const EXPECTED_VERSION = '1.5.5';
 const EXPECTED_FILES = 35;
-const EXPECTED_SHA256 = '3a9a3838dbfaac80bccf8cb05d3be71576797cbb6946c6b1537a9c73c383b562';
+const EXPECTED_SHA256 = '8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376';
 const projectRoot = fileURLToPath(new URL('..', import.meta.url));
 
 async function snapshot(root) {
@@ -29,7 +29,7 @@ function digestSnapshot(value) {
   return digest.digest('hex');
 }
 
-test('canonical Workflow Kit package resolves to the sibling 1.5.4 policy source', async () => {
+test('canonical Workflow Kit package resolves to the sibling 1.5.5 policy source', async () => {
   assert.equal(VERSION, EXPECTED_VERSION);
   const packageRoot = await fs.realpath(path.join(projectRoot, 'node_modules/@webpilot/workflow-kit'));
   const canonicalRoot = await fs.realpath(path.join(projectRoot, '../WorkflowKit'));

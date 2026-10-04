@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1146,
+  "plan_revision": 1148,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "release-backups-kit-1.5.5-0.6.89-20261004",
@@ -108,8 +108,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "release-backups-kit-1.5.5-0.6.89-20261004",
         "task_id": "T002",
@@ -136,7 +136,13 @@
       "acceptance_criteria": [
         "Release-gates ожидают Workflow Kit 1.5.5, 35 файлов, новый SHA-256"
       ],
-      "expected_commit_message": "feat: Перевести Web Pilot на Workflow Kit 1.5.5"
+      "expected_commit_message": "feat: Перевести Web Pilot на Workflow Kit 1.5.5",
+      "actual_files": [
+        "scripts/check-workflow-kit-dependency.mjs",
+        "tests/workflow-kit-source.test.mjs",
+        "scripts/check-installed-release.mjs",
+        "scripts/verify-windows-package.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -305,7 +311,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: release-backups-kit-1.5.5-0.6.89-20261004
 Current Task: нет
-Revision: 1146
+Revision: 1148
 
 ## Цель
 
@@ -321,8 +327,8 @@ Revision: 1146
   - Git Commit: [DONE] feat: Резервные копии установки: одна на цель, вне Spotlight
   - Reference: release-backups-kit-1.5.5-0.6.89-20261004 / T001 / implementation
   - Файлы: scripts/release-mac.mjs, tests/release-mac.test.mjs, docs/planning/release-backups-kit-1.5.5.md
-- [TODO] T002: Перевести Web Pilot на Workflow Kit 1.5.5 — Ожидает
-  - Git Commit: [PENDING] feat: Перевести Web Pilot на Workflow Kit 1.5.5
+- [DONE] T002: Перевести Web Pilot на Workflow Kit 1.5.5 — Завершено
+  - Git Commit: [DONE] feat: Перевести Web Pilot на Workflow Kit 1.5.5
   - Reference: release-backups-kit-1.5.5-0.6.89-20261004 / T002 / implementation
   - Файлы: scripts/check-workflow-kit-dependency.mjs, tests/workflow-kit-source.test.mjs, scripts/check-installed-release.mjs, scripts/verify-windows-package.mjs, docs/planning/release-backups-kit-1.5.5.md
 - [TODO] T003: Подготовить source релиза 0.6.89 — Ожидает
