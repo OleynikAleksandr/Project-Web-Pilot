@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1099,
+  "plan_revision": 1101,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "mcp-context-delivery-0.6.86-20261004",
@@ -159,8 +159,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "mcp-context-delivery-0.6.86-20261004",
         "task_id": "T003",
@@ -184,7 +184,11 @@
       "acceptance_criteria": [
         "package.json и package-lock.json задают 0.6.86"
       ],
-      "expected_commit_message": "feat: Подготовить source релиза 0.6.86"
+      "expected_commit_message": "feat: Подготовить source релиза 0.6.86",
+      "actual_files": [
+        "package-lock.json",
+        "package.json"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -325,7 +329,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: mcp-context-delivery-0.6.86-20261004
 Current Task: нет
-Revision: 1099
+Revision: 1101
 
 ## Цель
 
@@ -345,8 +349,8 @@ Revision: 1099
   - Git Commit: [DONE] feat: Web Pilot: сессии Codex App Server без вставки recovery
   - Reference: mcp-context-delivery-0.6.86-20261004 / T002 / implementation
   - Файлы: src/context-session.mjs, src/mac-runtime-switch.mjs, src/ui/sidebar.mjs, tests/context-session.test.mjs, tests/mac-runtime-switch.test.mjs, tests/sidebar.test.mjs, docs/planning/mcp-context-delivery.md
-- [TODO] T003: Подготовить source релиза 0.6.86 — Ожидает
-  - Git Commit: [PENDING] feat: Подготовить source релиза 0.6.86
+- [DONE] T003: Подготовить source релиза 0.6.86 — Завершено
+  - Git Commit: [DONE] feat: Подготовить source релиза 0.6.86
   - Reference: mcp-context-delivery-0.6.86-20261004 / T003 / implementation
   - Файлы: package.json, package-lock.json, docs/planning/mcp-context-delivery.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
