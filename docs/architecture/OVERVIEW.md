@@ -24,11 +24,15 @@ Upgrade со старой session-owned установки оставляет va
 
 ## Проверка
 
-Текущий canonical runtime 1.5.4: 35 файлов; SHA-256 `3a9a3838dbfaac80bccf8cb05d3be71576797cbb6946c6b1537a9c73c383b562`. Прежний 1.5.3: SHA-256 `d59ae7b6b074e953fdd6c5d78d1f644902f0e7b9af5ad3c78d67d42f1f6a1c0f`. Прежний 1.5.2: SHA-256 `646fec106c498e004d8688a3bc40012bea1654178ce66a61b650211ab28055df`. Опубликованный Release 1.5.1 сохраняет SHA-256 `93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33`.
+Текущий canonical runtime 1.5.5: 35 файлов; SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`. Прежний 1.5.4: SHA-256 `3a9a3838dbfaac80bccf8cb05d3be71576797cbb6946c6b1537a9c73c383b562`. Прежний 1.5.3: SHA-256 `d59ae7b6b074e953fdd6c5d78d1f644902f0e7b9af5ad3c78d67d42f1f6a1c0f`. Прежний 1.5.2: SHA-256 `646fec106c498e004d8688a3bc40012bea1654178ce66a61b650211ab28055df`. Опубликованный Release 1.5.1 сохраняет SHA-256 `93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33`.
 
 Проверки: `node scripts/check-package.mjs`, `node scripts/check-runtime-fixture.mjs`, `node scripts/check-consumer-contract.mjs`.
 
 Подробный контракт: [Workflow Kit Package](../modules/workflow-kit-package.md). Policy DOCS → delivery: [Delivery Ordering](../planning/delivery-ordering-policy.md). История package extraction: [Canonical Workflow Kit Package](../planning/canonical-workflow-kit-package.md). Спецификация миграции state: [Single Active Plan Migration](../planning/single-active-plan-migration.md).
+
+## Workflow Kit 1.5.5 — push только после DOCS
+
+По поручению пользователя 04.10.2026 ([контракт](../planning/push-after-docs.md)): управляемый `pre-push` hook отказывает в push, пока у текущего плана checkout есть незавершённая DOCS (`DOCS_BEFORE_PUSH`). Без плана и после DOCS push разрешён; повторно открытая `plan:extend` DOCS снова его останавливает. Так публикация исходников на GitHub, оформленная даже обычной задачей, не уходит раньше актуальных документов. Форма плана и правила прототипа называют такую публикацию delivery-задачей после DOCS (`verification_kind=package` с проверкой удалённой ветки). Новых полей схемы нет. Runtime 1.5.5: 35 файлов, SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`.
 
 ## Workflow Kit 1.5.4 — компактный recovery
 

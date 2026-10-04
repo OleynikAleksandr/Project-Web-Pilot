@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 141,
+  "plan_revision": 143,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "push-after-docs-1.5.5-20261004",
@@ -33,7 +33,10 @@
       "docs/architecture/ARCHITECTURE.md",
       "docs/architecture/OVERVIEW.md",
       "docs/MODULES.md",
-      "docs/DOCUMENTATION_INDEX.md"
+      "docs/DOCUMENTATION_INDEX.md",
+      "README.md",
+      "docs/modules/workflow-kit-package.md",
+      "docs/planning/delivery-ordering-policy.md"
     ]
   },
   "baseline_commit": "1ba1f955c0c6aca75356557dc93cb6519e9736a1",
@@ -123,8 +126,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "push-after-docs-1.5.5-20261004",
         "task_id": "DOCS",
@@ -142,7 +145,10 @@
         "src/templates/PROTOTYPE.md",
         "docs/architecture/OVERVIEW.md",
         "docs/MODULES.md",
-        "docs/DOCUMENTATION_INDEX.md"
+        "docs/DOCUMENTATION_INDEX.md",
+        "README.md",
+        "docs/modules/workflow-kit-package.md",
+        "docs/planning/delivery-ordering-policy.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -151,7 +157,15 @@
       "acceptance_criteria": [
         "Документы соответствуют результату"
       ],
-      "expected_commit_message": "docs: актуализировать контекст проекта"
+      "expected_commit_message": "docs: актуализировать контекст проекта",
+      "actual_files": [
+        "README.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/MODULES.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/workflow-kit-package.md",
+        "docs/planning/delivery-ordering-policy.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -199,7 +213,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: push-after-docs-1.5.5-20261004
 Current Task: нет
-Revision: 141
+Revision: 143
 
 ## Цель
 
@@ -216,10 +230,10 @@ Push на GitHub только после DOCS текущего плана: pre-p
   - Git Commit: [DONE] feat: Kit 1.5.5: push только после DOCS
   - Reference: push-after-docs-1.5.5-20261004 / T001 / implementation
   - Файлы: src/lib/git-hooks.mjs, src/lib/common.mjs, src/lib/installer.mjs, package.json, scripts/check-runtime-fixture.mjs, scripts/check-package.mjs, scripts/check-consumer-contract.mjs, docs/planning/push-after-docs.md, src/templates/PLAN.md, src/templates/PROTOTYPE.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать контекст проекта
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать контекст проекта
   - Reference: push-after-docs-1.5.5-20261004 / DOCS / implementation
-  - Файлы: docs/planning/push-after-docs.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, src/templates/PLAN.md, src/templates/PROTOTYPE.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
+  - Файлы: docs/planning/push-after-docs.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, src/templates/PLAN.md, src/templates/PROTOTYPE.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, README.md, docs/modules/workflow-kit-package.md, docs/planning/delivery-ordering-policy.md
 - [TODO] T002: Опубликовать Workflow Kit 1.5.5 на GitHub — Ожидает
   - Git Commit: [PENDING] feat: Опубликовать Workflow Kit 1.5.5 на GitHub
   - Reference: push-after-docs-1.5.5-20261004 / T002 / implementation

@@ -1,4 +1,4 @@
-| Delivery ordering | [docs/planning/delivery-ordering-policy.md](planning/delivery-ordering-policy.md) | Явный delivery-хвост, DOCS перед package/installed, запрет незапланированных build/sign/release/publish |
+| Delivery ordering | [docs/planning/delivery-ordering-policy.md](planning/delivery-ordering-policy.md) | Явный delivery-хвост, DOCS перед package/installed, запрет незапланированных build/sign/release/publish; push только после DOCS (pre-push, 1.5.5) |
 # Модули проекта
 
 | Модуль / часть проекта | Спецификация | Ответственность |
