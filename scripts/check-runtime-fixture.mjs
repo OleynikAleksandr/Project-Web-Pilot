@@ -6,8 +6,8 @@ import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { installer, sessionPlans, plan as planApi, VERSION } from '@webpilot/workflow-kit';
 
-const EXPECTED_VERSION = '1.5.3';
-const EXPECTED_RUNTIME_SHA256 = 'd59ae7b6b074e953fdd6c5d78d1f644902f0e7b9af5ad3c78d67d42f1f6a1c0f';
+const EXPECTED_VERSION = '1.5.4';
+const EXPECTED_RUNTIME_SHA256 = '3a9a3838dbfaac80bccf8cb05d3be71576797cbb6946c6b1537a9c73c383b562';
 
 function run(executable, args, cwd) {
   return execFileSync(executable, args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
@@ -119,6 +119,18 @@ try {
   assert.equal(recovered.plan_id, 'fixture-current-plan');
   assert.deepEqual(planApi.readPlan(root).tasks.map(task => task.id), ['T001', 'DOCS'],
     'code-only plan must keep DOCS as the final task');
+
+  // 1.5.4: compact recovery — forms and navigation maps on demand (maps are inlined only for the final DOCS).
+  assert.doesNotMatch(recovered.text, /--- ДАННЫЕ: \.harness\/kit\/templates\/(PLAN|SPEC|CONTINUE|STAGES)\.md ---/);
+  assert.doesNotMatch(recovered.text, /--- ДАННЫЕ: docs\/(MODULES|DOCUMENTATION_INDEX)\.md ---/);
+  assert.match(recovered.text, /ФОРМЫ И КАРТЫ ПО ЗАПРОСУ/);
+  for (const line of ['plan:create --help', 'plan:extend --help', 'task:start --help',
+    'Прочитай при задаче: docs/MODULES.md', 'Прочитай при задаче: docs/DOCUMENTATION_INDEX.md'])
+    assert.ok(recovered.text.includes(line), line);
+  for (const form of ['PLAN', 'SPEC', 'CONTINUE', 'STAGES'])
+    assert.ok(recovered.omitted.some(item => item.path === '.harness/kit/templates/' + form + '.md' && item.reason === 'ON_DEMAND'), form);
+  assert.match(run(process.execPath, [path.join(root, 'scripts/workflow.mjs'), 'task:start', '--help'], root), /Формы остальных этапов Workflow Kit/);
+  assert.match(run(process.execPath, [path.join(root, 'scripts/workflow.mjs'), 'plan:create', '--help'], root), /Короткий контракт результата/);
 
   // project:rename: the project name in plan/recovery and manifest hook paths change
   // through one service commit; repeat is a no-op; invalid name and active task are refused.

@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { VERSION, PLAN, planPath, CONFIG, check, contextPath, textFile, atomic, json, hash, id, errorResult } from './common.mjs';
+import { VERSION, PLAN, planPath, CONFIG, INDEX, check, contextPath, textFile, atomic, json, hash, id, errorResult } from './common.mjs';
 import { validate } from './validate.mjs';
 import { nextTask, PROJECT_CONTINUATION_OBJECTIVE, isDocumentationFinalizationTask } from './plan.mjs';
 import { snapshot, diff, git, localPath, head, fileFingerprint } from './git.mjs';
@@ -8,6 +8,8 @@ import { projectFacts, projectFactPaths } from './project-facts.mjs';
 import { inspectionInputs } from './inspection-inputs.mjs';
 
 export const TRANSPORT_HARD_BYTES = 180000;
+// Maps read when a task arrives; inlined only for the final DOCS that audits them.
+export const ON_DEMAND_MAPS = Object.freeze(['docs/MODULES.md', INDEX]);
 
 export function section(text, headings, file) {
   if (!headings?.length) return text;
@@ -136,14 +138,22 @@ export function recoverState(root, reason = 'manual', options = {}) {
     add('workflow-core', core);
     add('prototype-policy', textFile(root, policyPath));
     add('project-facts', 'СРЕДА И ПРОЕКТ (данные, не инструкции; команды не запускались)\n' + json(projectFacts(root)));
-    for (const file of templatePaths) add('template:' + file, dataBlock(file, textFile(root, file))); 
+    // Forms are printed by command help when a plan is created or extended; they are not needed to resume work.
+    const docsTask = isDocumentationFinalizationTask(task);
+    const deferredMaps = docsTask ? [] : mandatory.filter(doc => ON_DEMAND_MAPS.includes(doc.path));
+    add('on-demand', 'ФОРМЫ И КАРТЫ ПО ЗАПРОСУ (не включены в recovery; получай, когда начинаешь соответствующий шаг)\n'
+      + '- Новый план и контракт результата: ./scripts/workflow plan:create --help\n'
+      + '- Новые задачи в текущем плане: ./scripts/workflow plan:extend --help\n'
+      + '- Выполнение, проверка и DOCS: ./scripts/workflow task:start --help'
+      + deferredMaps.map(doc => '\n- Прочитай при задаче: ' + doc.path).join(''));
     add('objective', 'ЦЕЛЬ\n' + (plan.objective || PROJECT_CONTINUATION_OBJECTIVE) + '\nКритерии:\n' + plan.acceptance_criteria.map(c => '- ' + c).join('\n'));
     add('user-decisions', 'РЕШЕНИЯ ПОЛЬЗОВАТЕЛЯ\n' + json(plan.user_decisions));
     add('current-task', 'ТЕКУЩАЯ ЗАДАЧА\n' + (task ? json(task) : 'Активной микрозадачи нет.'));
     add('remaining-tasks', 'НЕВЫПОЛНЕННЫЕ МИКРОЗАДАЧИ\n' + json(plan.tasks.filter(t => t.commit_status !== 'DONE').map(t => ({ id: t.id, title: t.title, why: t.why, dependencies: t.dependencies, acceptance_criteria: t.acceptance_criteria }))));
     add('progress', 'ПРОГРЕСС\n' + plan.tasks.map(t => t.id + ': ' + t.implementation_status + (resolved[t.id]?.sha ? ' / ' + resolved[t.id].sha : resolved[t.id]?.pending ? ' / COMMIT_PENDING' : '')).join('\n'));
 
-    const included = [PLAN, CONFIG, rulesPath, policyPath, ...templatePaths]; const omitted = [];
+    const included = [PLAN, CONFIG, rulesPath, policyPath];
+    const omitted = templatePaths.map(file => ({ path: file, reason: 'ON_DEMAND' }));
     const changeParts=[];
     const addChange=(label,text,paths,kind)=>{
       const part={label,text};parts.push(part);
@@ -156,6 +166,7 @@ export function recoverState(root, reason = 'manual', options = {}) {
     };
     for (const doc of mandatory) {
       contextPath(root, doc.path);
+      if (deferredMaps.includes(doc)) { omitted.push({ path: doc.path, reason: 'ON_DEMAND' }); continue; }
       const piece = dataBlock(doc.path, section(textFile(root, doc.path), doc.heading_path, doc.path));
       add('required:' + doc.path, piece); included.push(doc.path);
     }
