@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 134,
+  "plan_revision": 136,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "kit-extend-after-delivery-note-20261004",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Записать известное ограничение: plan:extend невозможен в плане с завершённым delivery-хвостом.",
   "acceptance_criteria": [
     "Ограничение и обходной путь описаны в политике delivery-ordering"
@@ -229,13 +229,14 @@
         "origin/main совпадает с локальным HEAD после DOCS"
       ],
       "expected_commit_message": "feat: Синхронизировать WorkflowKit main с GitHub",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "kit-extend-after-delivery-note-20261004",
         "task_id": "K2",
         "role": "implementation"
-      }
+      },
+      "actual_files": []
     }
   ],
   "blocked_reason": null,
@@ -253,10 +254,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: kit-extend-after-delivery-note-20261004
 Current Task: нет
-Revision: 134
+Revision: 136
 
 ## Цель
 
@@ -280,8 +281,8 @@ Revision: 134
   - Git Commit: [DONE] docs: актуализировать контекст проекта
   - Reference: kit-extend-after-delivery-note-20261004 / DOCS / implementation
   - Файлы: docs/planning/delivery-ordering-policy.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, src/templates/AGENTS.md, src/templates/START.md, src/templates/STAGES.md, docs/planning/compact-recovery.md, README.md, src/templates/PLAN.md, docs/WORKFLOW_START.md, docs/modules/workflow-kit-package.md
-- [TODO] K2: Синхронизировать WorkflowKit main с GitHub — Ожидает
-  - Git Commit: [PENDING] feat: Синхронизировать WorkflowKit main с GitHub
+- [DONE] K2: Синхронизировать WorkflowKit main с GitHub — Завершено
+  - Git Commit: [DONE] feat: Синхронизировать WorkflowKit main с GitHub
   - Reference: kit-extend-after-delivery-note-20261004 / K2 / implementation
   - Файлы: README.md
 
