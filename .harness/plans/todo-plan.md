@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1045,
+  "plan_revision": 1047,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "chatgpt-channel-vps-20261004",
@@ -166,8 +166,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "chatgpt-channel-vps-20261004",
         "task_id": "T003",
@@ -196,7 +196,12 @@
         "Адрес коннектора показан скрытым, «Скопировать» вызывает действие main",
         "Весь npm test проходит"
       ],
-      "expected_commit_message": "feat: Раздел «Подключение ChatGPT» в Настройках"
+      "expected_commit_message": "feat: Раздел «Подключение ChatGPT» в Настройках",
+      "actual_files": [
+        "src/ui/index.html",
+        "src/ui/settings-panel.mjs",
+        "tests/settings-chatgpt-channel.test.mjs"
+      ]
     },
     {
       "id": "T004",
@@ -374,7 +379,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: chatgpt-channel-vps-20261004
 Current Task: нет
-Revision: 1045
+Revision: 1047
 
 ## Цель
 
@@ -398,8 +403,8 @@ Revision: 1045
   - Git Commit: [DONE] feat: Туннель VPS следует за портом MCP; переключение канала ChatGPT в main
   - Reference: chatgpt-channel-vps-20261004 / T002 / implementation
   - Файлы: src/vps-tunnel.mjs, src/mac-runtime-switch.mjs, src/main.mjs, src/preload.cjs, tests/vps-tunnel.test.mjs, tests/mac-runtime-switch.test.mjs, docs/planning/chatgpt-channel-vps.md
-- [TODO] T003: Раздел «Подключение ChatGPT» в Настройках — Ожидает
-  - Git Commit: [PENDING] feat: Раздел «Подключение ChatGPT» в Настройках
+- [DONE] T003: Раздел «Подключение ChatGPT» в Настройках — Завершено
+  - Git Commit: [DONE] feat: Раздел «Подключение ChatGPT» в Настройках
   - Reference: chatgpt-channel-vps-20261004 / T003 / implementation
   - Файлы: src/ui/index.html, src/ui/settings-panel.mjs, tests/settings-chatgpt-channel.test.mjs, docs/planning/chatgpt-channel-vps.md
 - [TODO] T004: Подготовить source релиза 0.6.83 — Ожидает

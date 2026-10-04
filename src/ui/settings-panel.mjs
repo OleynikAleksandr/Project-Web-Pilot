@@ -1,4 +1,15 @@
 import { projectDoctorView } from './project-doctor.mjs';
+
+function vpsLine(vps) {
+  if (!vps) return 'Состояние VPS ещё не проверено.';
+  if (!vps.configured) return 'VPS не настроен: запустите setup/mcp-tunnel.sh в репозитории vps-server.';
+  if (vps.conflict) return 'В ~/.ssh/config у vps-mcp-tunnel остался RemoteForward — обновите настройку из vps-server.';
+  if (vps.error) return 'Туннель VPS: ' + vps.error;
+  if (vps.ready) return `Туннель VPS работает: сервер → MCP на порту ${vps.mcpPort}.`;
+  if (vps.running && !vps.portMatches) return `Туннель VPS ведёт на порт ${vps.forwardPort ?? '—'}, а MCP работает на ${vps.mcpPort ?? '—'}.`;
+  const last = vps.lastError ? ` Последняя ошибка (${new Date(vps.lastError.at).toLocaleString('ru-RU')}): ${vps.lastError.message}` : '';
+  return 'Туннель VPS не запущен.' + last;
+}
 export function settingsPanelView(action) {
   const $ = id => document.getElementById(id);
   const doctor = projectDoctorView(action);
@@ -16,6 +27,10 @@ export function settingsPanelView(action) {
   $('tool-calls-show').addEventListener('click', () => action('setHideToolCalls', false));
   $('mac-runtime-local').addEventListener('click', () => action('setMacRuntimeMode', 'local'));
   $('mac-runtime-app-server').addEventListener('click', () => action('setMacRuntimeMode', 'app-server'));
+  $('chatgpt-channel-secure').addEventListener('click', () => action('setChatgptChannel', 'secure-tunnel'));
+  $('chatgpt-channel-vps').addEventListener('click', () => action('setChatgptChannel', 'vps'));
+  $('chatgpt-channel-refresh').addEventListener('click', () => action('refreshChatgptChannel'));
+  $('vps-connector-copy').addEventListener('click', () => action('copyVpsConnectorUrl'));
   $('configure-windows-tunnel').addEventListener('click', () => action('configureWindowsTunnel'));
   $('refresh-windows-runtime').addEventListener('click', () => action('refreshWindowsRuntime'));
   let state;
@@ -41,11 +56,28 @@ export function settingsPanelView(action) {
       $('mac-runtime-local').disabled = pending;
       $('mac-runtime-app-server').disabled = pending;
       const service = macRuntime.service;
+      const viaVps = macRuntime.chatgptChannel === 'vps';
       const ready = !!service?.mcpReady && !!service?.tunnelReady && !!service?.tunnelConfigured;
       $('mac-runtime-status').textContent = ready
-        ? `Активен: ${macRuntime.label}. MCP и Secure MCP Tunnel готовы.`
+        ? `Активен: ${macRuntime.label}. MCP и ${viaVps ? 'канал VPS' : 'Secure MCP Tunnel'} готовы.`
         : `Выбран: ${macRuntime.label}. Службы ещё не подтвердили полную готовность.`;
+      const vps = macRuntime.vps ?? null;
+      $('chatgpt-channel-secure').setAttribute('aria-pressed', String(!viaVps));
+      $('chatgpt-channel-vps').setAttribute('aria-pressed', String(viaVps));
+      $('chatgpt-channel-secure').disabled = pending;
+      // Switching to VPS needs a working tunnel; switching back is always possible.
+      $('chatgpt-channel-vps').disabled = pending || (!viaVps && !vps?.ready);
+      $('chatgpt-channel-refresh').disabled = pending;
+      $('chatgpt-channel-status').textContent = viaVps
+        ? (service?.tunnelReady ? 'ChatGPT подключается через VPS. Канал готов.' : 'Выбран VPS. Канал ещё не готов — состояние ниже.')
+        : (service?.tunnelReady ? 'ChatGPT подключается через Secure MCP Tunnel. Туннель готов.' : 'Выбран Secure MCP Tunnel. Туннель ещё не подтвердил готовность.');
+      $('vps-status').textContent = vpsLine(vps);
+      $('vps-status').dataset.ready = String(!!vps?.ready);
+      $('vps-connector').hidden = !vps?.connector;
+      $('vps-connector-url').textContent = vps?.connector ?? '';
+      $('vps-connector-copy').disabled = pending;
     }
+    $('chatgpt-channel-section').hidden = !isMac;
     const isWindows = state.platform === 'win32';
     const windowsSection = $('windows-runtime-section');
     windowsSection.hidden = !isWindows;
