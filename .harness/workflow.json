@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "profile": "DEVELOPMENT",
-  "stack": "Node.js 22+ (ESM), без зависимостей",
+  "stack": "Node.js",
   "checks": [
     {
       "required": false,
