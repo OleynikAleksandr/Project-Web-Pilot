@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1088,
+  "plan_revision": 1090,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "computer-use-keys-batch-0.6.85-20261004",
@@ -308,8 +308,8 @@
       "actual_files": []
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "computer-use-keys-batch-0.6.85-20261004",
         "task_id": "T005",
@@ -334,7 +334,8 @@
       "acceptance_criteria": [
         "/Applications обновлена из staging без пересборки, identity сохранена, release-installed проходит"
       ],
-      "expected_commit_message": "feat: Установить 0.6.85 и проверить установленные macOS-копии"
+      "expected_commit_message": "feat: Установить 0.6.85 и проверить установленные macOS-копии",
+      "actual_files": []
     },
     {
       "implementation_status": "TODO",
@@ -388,7 +389,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: computer-use-keys-batch-0.6.85-20261004
 Current Task: нет
-Revision: 1088
+Revision: 1090
 
 ## Цель
 
@@ -427,8 +428,8 @@ Computer Use в MCP: имена клавиш X11 и пакет действий 
   - Git Commit: [DONE] feat: Собрать и проверить парный релиз 0.6.85
   - Reference: computer-use-keys-batch-0.6.85-20261004 / T004 / implementation
   - Файлы: scripts/release-all.mjs, docs/planning/computer-use-keys-batch.md
-- [TODO] T005: Установить 0.6.85 и проверить установленные macOS-копии — Ожидает
-  - Git Commit: [PENDING] feat: Установить 0.6.85 и проверить установленные macOS-копии
+- [DONE] T005: Установить 0.6.85 и проверить установленные macOS-копии — Завершено
+  - Git Commit: [DONE] feat: Установить 0.6.85 и проверить установленные macOS-копии
   - Reference: computer-use-keys-batch-0.6.85-20261004 / T005 / implementation
   - Файлы: scripts/check-installed-release.mjs, docs/planning/computer-use-keys-batch.md
 - [TODO] T006: Опубликовать 0.6.85 и синхронизировать Project Web Pilot с GitHub — Ожидает
