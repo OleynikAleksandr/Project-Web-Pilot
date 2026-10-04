@@ -351,3 +351,7 @@ Local backend работает `--mcp-only`; App Server backend также от�
 ## Части строго по одной — 0.6.87
 
 `workflow_context_recover(workspace="", session_id="", part=0, after="")`. Часть N+1 выдаётся только с ключом `after`, напечатанным в конце части N; без ключа, с чужим ключом или через часть — `PART_ORDER`. Части до 28 000 байт. `instructions` и описание инструмента: одна часть на вызов, без пачек, параллельных вызовов и циклов; при обрезке повторить только эту часть. [Контракт](../planning/mcp-sequential-parts-kit-1.5.4.md).
+
+## Стартовое сообщение — 0.6.88
+
+Вызов `workflow_context_recover` запускает короткое стартовое сообщение Web Pilot (проект, папка, part=1 и далее по ключу `after`); сервер не меняется. [Контракт](../planning/mcp-start-message.md).

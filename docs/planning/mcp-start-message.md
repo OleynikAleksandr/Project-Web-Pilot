@@ -24,3 +24,7 @@
 ## Границы
 
 `pageScript`, экспорты `src/chatgpt-dom.mjs`, `src/chatgpt-composer.mjs`, `src/chatgpt-experience.mjs`, MCP-сервер и Workflow Kit не меняются.
+
+## Итог
+
+- T001 `330108f` (план) и T002 `96367b8` — стартовое сообщение, сайдбар, индикатор, тесты и версия 0.6.88 (код вошёл в T002 через явный `--files`: правки были сделаны до `task:start T001`).

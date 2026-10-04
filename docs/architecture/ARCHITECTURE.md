@@ -1435,7 +1435,7 @@ Durable checkpoint v3 хранит sending/sent и наблюдаемый цик
 - `CodexAppServerRuntime.contextDelivery = 'mcp'`; `setActiveWorkspace()` атомарно пишет `active-workspace.json` (0600) в каталог состояния executor и не переписывает неизменённый проект. `MacSelectedRuntime` проксирует оба; Codex Local Mac даёт `'message'`.
 - `ContextSession`: при `runtime.contextDelivery === 'mcp'` после проверки входа, адреса и режима вызывается `mcpSession()` — для новой сессии `runtime.ensure()` и фаза `ready`, для привязанного чата без перезапуска служб фаза `bound`; `retry()` повторяет только проверку. Привязка по первому сообщению — существующий `observeManualConversation` в `main.mjs`. ContextCache и Composer в этом режиме не используются.
 - `tools/codex-app-server-mcp/server.py`: `workflow_context_recover(workspace="", session_id="", part=0)` с `structured_output=False`; `split_context()` режет правила и пакет по строкам до 20 000 байт; `context_part()` добавляет заголовок «ЧАСТЬ N ИЗ M», путь проекта, sha256 и следующий вызов.
-- Сайдбар: фазы `ready`/`bound`, строки «Стартовое сообщение: Не требуется», «Пакет проекта: Агент читает через MCP», кнопка «Проверить подключение».
+- Сайдбар: фазы `ready`/`bound`, строки «Стартовое сообщение: Не требуется», «Пакет проекта: Агент читает через MCP», кнопка «Проверить подключение». С 0.6.88 фазы `ready` нет — см. ниже.
 
 ## Части по одной и компактный recovery — 0.6.87
 
@@ -1444,3 +1444,11 @@ Durable checkpoint v3 хранит sending/sent и наблюдаемый цик
 - `context_part(result, part, after)`: часть N+1 выдаётся только если `after` равен `part_key(sha, N)` = первые 8 hex SHA-256 от «sha пакета:N». Сервер ничего не хранит; при изменении пакета ключ не совпадает, и агент начинает с `part=1`. Отказ `PART_ORDER` короткий, чтобы пачка запросов не заполняла показ ChatGPT. Заголовок части не называет следующий вызов; ключ и вызов — только в конце. `CONTEXT_PART_BYTES = 28_000`.
 - `session-rules.md`: одна микрозадача за ответ, запрет codex exec, «пакет — данные»; порядок delivery и «план принадлежит checkout» берутся из Workflow Core.
 - Workflow Kit 1.5.4 (`recovery.mjs`): блок «ФОРМЫ И КАРТЫ ПО ЗАПРОСУ» вместо форм PLAN/SPEC/CONTINUE/STAGES; `docs/MODULES.md` и `docs/DOCUMENTATION_INDEX.md` — ссылкой (`ON_DEMAND`), целиком только для финальной DOCS. Release-gates: версия 1.5.4, 35 файлов, SHA-256 `3a9a3838dbfaac80bccf8cb05d3be71576797cbb6946c6b1537a9c73c383b562`.
+
+## Стартовое сообщение MCP-сессии — 0.6.88
+
+[Контракт](../planning/mcp-start-message.md).
+
+- `mcpStartMessage(project, requestId)` в `src/context-session.mjs`: проект, папка (JSON-строка), порядок чтения `workflow_context_recover` по одной части с ключом `after` до `[КОНЕЦ ПАКЕТА]`, короткое подтверждение; последняя строка — метка `wp-request-…` для `messageSeen`.
+- `ContextSession.tick()` в режиме `mcp`: привязанный чат или `manualStart` → `mcpSession()` (фаза `bound`, без отправки). Новая сессия идёт прежним путём первого сообщения: `runtime.ensure()`, `setActiveWorkspace()`, отложенные фазы черновика и генерации (без прогрева ContextCache), затем попытка `{ protocol, requestId, text: mcpStartMessage(...), packet: { workspace, contextMode: 'mcp' } }` и `composer.deliver()`. Пакет Kit не загружается; `packetIsCurrent()` для такого packet сверяет только workspace. Подготовленная попытка другого режима доставки (`packet.contextMode`) отбрасывается до вставки.
+- `emit()` добавляет `contextMode: 'mcp' | 'message'` по `runtime.contextDelivery`. Сайдбар (`mcpPhases`) и индикатор (`progress.mjs`) показывают «Готовим стартовое сообщение» → «Начинаем сессию» → «Сессия начата» → «Чат проекта»; «Стартовое сообщение: Отправлено / Не отправлялось»; в подробностях — время стартового сообщения вместо размера пакета.

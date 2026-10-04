@@ -38,6 +38,7 @@
 | docs/modules/workspace-sessions.md | Specification проектов, Chat/Work sessions, session tree, переходов после scope, оформления и сохранения геометрии интерфейса |
 | docs/planning/session-title-sync.md | Контракт auto/manual session title и server-side синхронизации с native ChatGPT Recents |
 | docs/planning/input-instruction-delivery-ordering.md | Канонический порядок DOCS → delivery, startupMessage guard и границы незапланированных build/publish |
+| docs/planning/mcp-start-message.md | Web Pilot начинает MCP-сессию коротким стартовым сообщением; релиз 0.6.88 |
 | docs/planning/mcp-sequential-parts-kit-1.5.4.md | Части контекста строго по одной (ключ after), компактный recovery Workflow Kit 1.5.4; релиз 0.6.87 |
 | docs/planning/mcp-context-delivery.md | Контекст проекта через MCP частями без вставки recovery в ChatGPT; правила сессии в MCP; релиз 0.6.86 |
 | docs/planning/computer-use-keys-batch.md | Computer Use: имена клавиш X11 и пакет действий computer_actions; подписи канала VPS; возврат к проекту после архива; релиз 0.6.85 |

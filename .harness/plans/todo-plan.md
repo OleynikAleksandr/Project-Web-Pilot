@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1133,
+  "plan_revision": 1135,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "mcp-start-message-0.6.88-20261004",
@@ -34,7 +34,14 @@
       "docs/architecture/ARCHITECTURE.md",
       "docs/architecture/OVERVIEW.md",
       "docs/MODULES.md",
-      "docs/DOCUMENTATION_INDEX.md"
+      "docs/DOCUMENTATION_INDEX.md",
+      "README.md",
+      "AGENTS.md",
+      "docs/WORKFLOW_START.md",
+      "docs/CONTEXT_DELIVERY.md",
+      "docs/modules/codex-app-server-executor.md",
+      "docs/planning/mcp-context-delivery.md",
+      "docs/VERIFICATION.md"
     ]
   },
   "baseline_commit": "ff914be35b996ba2357d17ecccb6d808258d439d",
@@ -154,8 +161,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "mcp-start-message-0.6.88-20261004",
         "task_id": "DOCS",
@@ -172,7 +179,14 @@
         "docs/architecture/ARCHITECTURE.md",
         "docs/architecture/OVERVIEW.md",
         "docs/MODULES.md",
-        "docs/DOCUMENTATION_INDEX.md"
+        "docs/DOCUMENTATION_INDEX.md",
+        "README.md",
+        "AGENTS.md",
+        "docs/WORKFLOW_START.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/modules/codex-app-server-executor.md",
+        "docs/planning/mcp-context-delivery.md",
+        "docs/VERIFICATION.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -181,7 +195,22 @@
       "acceptance_criteria": [
         "Документы соответствуют результату"
       ],
-      "expected_commit_message": "docs: актуализировать контекст проекта"
+      "expected_commit_message": "docs: актуализировать контекст проекта",
+      "actual_files": [
+        "README.md",
+        "AGENTS.md",
+        "docs/MODULES.md",
+        "docs/WORKFLOW_START.md",
+        "docs/PRODUCT.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/modules/codex-app-server-executor.md",
+        "docs/planning/mcp-context-delivery.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/VERIFICATION.md",
+        "docs/planning/mcp-start-message.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -290,7 +319,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: mcp-start-message-0.6.88-20261004
 Current Task: нет
-Revision: 1133
+Revision: 1135
 
 ## Цель
 
@@ -310,10 +339,10 @@ Web Pilot сам начинает MCP-сессию коротким старто
   - Git Commit: [DONE] feat: Подготовить source релиза 0.6.88
   - Reference: mcp-start-message-0.6.88-20261004 / T002 / implementation
   - Файлы: package.json, package-lock.json, src/context-session.mjs, src/ui/progress.mjs, src/ui/sidebar.mjs, tests/context-session.test.mjs, tests/progress.test.mjs, tests/sidebar.test.mjs, docs/planning/mcp-start-message.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать контекст проекта
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать контекст проекта
   - Reference: mcp-start-message-0.6.88-20261004 / DOCS / implementation
-  - Файлы: docs/planning/mcp-start-message.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
+  - Файлы: docs/planning/mcp-start-message.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, README.md, AGENTS.md, docs/WORKFLOW_START.md, docs/CONTEXT_DELIVERY.md, docs/modules/codex-app-server-executor.md, docs/planning/mcp-context-delivery.md, docs/VERIFICATION.md
 - [TODO] T003: Собрать и проверить парный релиз 0.6.88 — Ожидает
   - Git Commit: [PENDING] feat: Собрать и проверить парный релиз 0.6.88
   - Reference: mcp-start-message-0.6.88-20261004 / T003 / implementation
