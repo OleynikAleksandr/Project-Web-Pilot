@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1084,
+  "plan_revision": 1086,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "computer-use-keys-batch-0.6.85-20261004",
@@ -43,7 +43,10 @@
       "docs/VERIFICATION.md",
       "docs/architecture/OVERVIEW.md",
       "docs/MODULES.md",
-      "docs/DOCUMENTATION_INDEX.md"
+      "docs/DOCUMENTATION_INDEX.md",
+      "README.md",
+      "docs/WORKFLOW_START.md",
+      "docs/modules/codex-app-server-executor.md"
     ]
   },
   "baseline_commit": "e92010bb22665888ad9a8018a2f5e6d94d6af1fb",
@@ -226,8 +229,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "computer-use-keys-batch-0.6.85-20261004",
         "task_id": "DOCS",
@@ -248,7 +251,10 @@
         "docs/VERIFICATION.md",
         "docs/architecture/OVERVIEW.md",
         "docs/MODULES.md",
-        "docs/DOCUMENTATION_INDEX.md"
+        "docs/DOCUMENTATION_INDEX.md",
+        "README.md",
+        "docs/WORKFLOW_START.md",
+        "docs/modules/codex-app-server-executor.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -257,7 +263,18 @@
       "acceptance_criteria": [
         "Документы соответствуют результату"
       ],
-      "expected_commit_message": "docs: актуализировать контекст проекта"
+      "expected_commit_message": "docs: актуализировать контекст проекта",
+      "actual_files": [
+        "README.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/RELEASE.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/codex-app-server-executor.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -370,7 +387,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: computer-use-keys-batch-0.6.85-20261004
 Current Task: нет
-Revision: 1084
+Revision: 1086
 
 ## Цель
 
@@ -401,10 +418,10 @@ Computer Use в MCP: имена клавиш X11 и пакет действий 
   - Git Commit: [DONE] feat: Закрытие Настроек после архива выбранного проекта открывает другой проект, а не первый запуск
   - Reference: computer-use-keys-batch-0.6.85-20261004 / T007 / implementation
   - Файлы: src/workspace-session.mjs, src/main.mjs, tests/workspace-session.test.mjs
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать контекст проекта
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать контекст проекта
   - Reference: computer-use-keys-batch-0.6.85-20261004 / DOCS / implementation
-  - Файлы: docs/planning/computer-use-keys-batch.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
+  - Файлы: docs/planning/computer-use-keys-batch.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, README.md, docs/WORKFLOW_START.md, docs/modules/codex-app-server-executor.md
 - [TODO] T004: Собрать и проверить парный релиз 0.6.85 — Ожидает
   - Git Commit: [PENDING] feat: Собрать и проверить парный релиз 0.6.85
   - Reference: computer-use-keys-batch-0.6.85-20261004 / T004 / implementation

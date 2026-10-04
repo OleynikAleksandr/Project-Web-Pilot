@@ -38,6 +38,7 @@
 | docs/modules/workspace-sessions.md | Specification проектов, Chat/Work sessions, session tree, переходов после scope, оформления и сохранения геометрии интерфейса |
 | docs/planning/session-title-sync.md | Контракт auto/manual session title и server-side синхронизации с native ChatGPT Recents |
 | docs/planning/input-instruction-delivery-ordering.md | Канонический порядок DOCS → delivery, startupMessage guard и границы незапланированных build/publish |
+| docs/planning/computer-use-keys-batch.md | Computer Use: имена клавиш X11 и пакет действий computer_actions; подписи канала VPS; возврат к проекту после архива; релиз 0.6.85 |
 | docs/planning/mcp-stateless-sessions.md | MCP App Server без сессий: перезапуск не ломает коннекторы через VPS; релиз 0.6.84 |
 | docs/planning/chatgpt-channel-vps.md | Канал ChatGPT: Secure MCP Tunnel / VPS в Настройках, туннель VPS следует за портом MCP; релиз 0.6.83 |
 | docs/planning/release-0.6.82-workflowkit-1.5.3.md | Release 0.6.82: bundled Workflow Kit 1.5.3 (project:rename), DOCS до build/package и GitHub publish |

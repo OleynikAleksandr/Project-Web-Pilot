@@ -326,6 +326,12 @@ Local backend работает `--mcp-only`; App Server backend также от�
 
 `selector.json` хранит `chatgpt_channel` (`secure-tunnel` по умолчанию или `vps`). `configure-channel --channel <канал>` меняет только это поле; `configure-selector` при смене runtime канал сохраняет и в режиме VPS не требует настроенного Secure Tunnel. `stop --tunnel-only` останавливает только tunnel-client. `selector-start` в режиме VPS останавливает tunnel-client, если он работает, и не запускает его; полный `start` в режиме VPS поднимает только MCP. Туннель VPS держит не executor, а Web Pilot (`src/vps-tunnel.mjs`, LaunchAgent `com.oleynik.vps-mcp-tunnel`). Контракт — [chatgpt-channel-vps](../planning/chatgpt-channel-vps.md).
 
+## Computer Use: имена клавиш и пакет действий — 0.6.85
+
+`computer_key_press` и `computer_hotkey` переводят символы в имена клавиш X11, которые ждёт `@oai/sky` (`*` → `asterisk`, `=` → `equal`, `+` → `plus` и т. д.); прежние имена работают как раньше. Встроенно (Work) модель пишет X11-имена по инструкции Computer Use; через MCP она этой инструкции не видит, поэтому перевод делает MCP.
+
+Новый `computer_actions(actions)` выполняет до 50 действий в активном приложении одним вызовом `node_repl`: `key`, `hotkey`, `text` (вставка, без искажения кириллицы), `click`, `scroll`, `wait`. Все действия проверяются до выполнения; при ошибке выполнение останавливается, ответ содержит результат и время каждого выполненного действия. Встроенный `sky.type_text` искажает кириллицу, поэтому текст по-прежнему вставляется через `sky.paste`. `equal` в Калькуляторе даёт `+`, вычисляет `Return` — поведение sky, вне MCP. Чтобы ChatGPT увидел новый инструмент, в настройках плагина нужно нажать «Обновить инструменты». Контракт — [computer-use-keys-batch](../planning/computer-use-keys-batch.md).
+
 ## Сессии MCP — 0.6.84
 
 `FastMCP` создаётся со `stateless_http=True`: сервер не выдаёт `Mcp-Session-Id` и не проверяет присланный, каждый запрос обрабатывается самостоятельно. Web Pilot перезапускает сервер при каждом старте, а внешние клиенты (ChatGPT и Claude через VPS) хранят идентификатор прошлой сессии; в режиме сессий новый процесс отвечал `404 Session not found`, ChatGPT не переподключался. Инструменты не хранят состояние сессии MCP и не шлют уведомлений внутри сессии (уведомления macOS — osascript). Внешний runtime Codex Local Mac не менялся. Контракт — [mcp-stateless-sessions](../planning/mcp-stateless-sessions.md).
