@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1066,
+  "plan_revision": 1068,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "mcp-stateless-0.6.84-20261004",
@@ -190,8 +190,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "mcp-stateless-0.6.84-20261004",
         "task_id": "T003",
@@ -217,7 +217,8 @@
         "~/Downloads/WebPilot-0.6.84 собран из коммита после DOCS, packagedSourceMatches=true",
         "Preflight identity записан до сборки"
       ],
-      "expected_commit_message": "feat: Собрать и проверить парный релиз 0.6.84"
+      "expected_commit_message": "feat: Собрать и проверить парный релиз 0.6.84",
+      "actual_files": []
     },
     {
       "implementation_status": "TODO",
@@ -300,7 +301,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: mcp-stateless-0.6.84-20261004
 Current Task: нет
-Revision: 1066
+Revision: 1068
 
 ## Цель
 
@@ -325,8 +326,8 @@ Revision: 1066
   - Git Commit: [DONE] docs: актуализировать контекст проекта
   - Reference: mcp-stateless-0.6.84-20261004 / DOCS / implementation
   - Файлы: docs/planning/mcp-stateless-sessions.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, README.md, docs/WORKFLOW_START.md, docs/modules/codex-app-server-executor.md
-- [TODO] T003: Собрать и проверить парный релиз 0.6.84 — Ожидает
-  - Git Commit: [PENDING] feat: Собрать и проверить парный релиз 0.6.84
+- [DONE] T003: Собрать и проверить парный релиз 0.6.84 — Завершено
+  - Git Commit: [DONE] feat: Собрать и проверить парный релиз 0.6.84
   - Reference: mcp-stateless-0.6.84-20261004 / T003 / implementation
   - Файлы: scripts/release-all.mjs, docs/planning/mcp-stateless-sessions.md
 - [TODO] T004: Установить 0.6.84 и проверить установленные macOS-копии — Ожидает
