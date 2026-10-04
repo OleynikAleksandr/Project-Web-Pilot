@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1047,
+  "plan_revision": 1049,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "chatgpt-channel-vps-20261004",
@@ -224,13 +224,17 @@
         "release gates и bundled Workflow Kit 1.5.3 проверены без сборки"
       ],
       "expected_commit_message": "feat: Подготовить source релиза 0.6.83",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "chatgpt-channel-vps-20261004",
         "task_id": "T004",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "package-lock.json",
+        "package.json"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -379,7 +383,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: chatgpt-channel-vps-20261004
 Current Task: нет
-Revision: 1047
+Revision: 1049
 
 ## Цель
 
@@ -407,8 +411,8 @@ Revision: 1047
   - Git Commit: [DONE] feat: Раздел «Подключение ChatGPT» в Настройках
   - Reference: chatgpt-channel-vps-20261004 / T003 / implementation
   - Файлы: src/ui/index.html, src/ui/settings-panel.mjs, tests/settings-chatgpt-channel.test.mjs, docs/planning/chatgpt-channel-vps.md
-- [TODO] T004: Подготовить source релиза 0.6.83 — Ожидает
-  - Git Commit: [PENDING] feat: Подготовить source релиза 0.6.83
+- [DONE] T004: Подготовить source релиза 0.6.83 — Завершено
+  - Git Commit: [DONE] feat: Подготовить source релиза 0.6.83
   - Reference: chatgpt-channel-vps-20261004 / T004 / implementation
   - Файлы: package.json, package-lock.json
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
