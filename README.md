@@ -2,7 +2,7 @@
 
 WorkflowKit — canonical Node.js package `@webpilot/workflow-kit` для управления состоянием проекта, current plan, recovery context и lifecycle задач в одном Git checkout/worktree.
 
-Текущая версия исходников: **1.5.3** (команда `project:rename`); последний опубликованный Release Kit — **1.5.1**; 1.5.2 входит в Web Pilot 0.6.81. Текущая рабочая среда и Project Web Pilot используют **Node.js 24.21.0**. Минимальное требование самого пакета остаётся **Node.js 22+** (`engines.node: >=22`); Node 24 соответствует этому требованию.
+Текущая версия исходников: **1.5.4** (компактный recovery); последний опубликованный Release Kit — **1.5.1**; 1.5.2 входит в Web Pilot 0.6.81. Текущая рабочая среда и Project Web Pilot используют **Node.js 24.21.0**. Минимальное требование самого пакета остаётся **Node.js 22+** (`engines.node: >=22`); Node 24 соответствует этому требованию.
 
 ## Связанные репозитории
 
@@ -77,6 +77,10 @@ Project Web Pilot подключает WorkflowKit как локальную dep
 Один checkout по-прежнему имеет один current plan. Новый Chat/Work получает его recovery; сохранённый чат открывается без новой отправки. Исторические планы исключены из обычного recovery. Размер текущего пакета зависит от включённых документов и рабочих изменений; transport budget ограничивает выдачу и не сокращает автоматически историю внутри обязательных документов. Политика компактного контекста требует отдельного изменения контракта. Передача контекста использует Paste без изменения системного clipboard и завершается после Send; неизвестный результат не вызывает автоматический повтор.
 
 Подробности: [README Web Pilot](https://github.com/OleynikAleksandr/Project-Web-Pilot/blob/main/README.md), [контракт клиентского AutoPlan](https://github.com/OleynikAleksandr/Project-Web-Pilot/blob/main/docs/planning/auto-plan-client-driven-refactor.md) и [проверки/приёмка клиента](https://github.com/OleynikAleksandr/Project-Web-Pilot/blob/main/docs/VERIFICATION.md). Сохранение ScreenCapture локальной 0.6.80 принято пользователем и подтверждено установленными mac-signature/mac-screen-capture проверками. Native Windows и чистая установка 0.6.80 не проверены. Web Pilot Sidebar остаётся отдельным 0.1.0 с тестовым хостом; его README отмечает расхождение Composer vendor lock с текущим клиентом.
+
+## Workflow Kit 1.5.4 — компактный recovery
+
+По поручению пользователя 04.10.2026 ([контракт](docs/planning/compact-recovery.md)): recovery больше не включает формы PLAN/SPEC/CONTINUE/STAGES — их печатают `plan:create --help`, `plan:extend --help` и `task:start --help`. Карты `docs/MODULES.md` и `docs/DOCUMENTATION_INDEX.md` остаются обязательными документами плана, но в recovery идут ссылкой (целиком — только в финальной DOCS). Блок «ФОРМЫ И КАРТЫ ПО ЗАПРОСУ» перечисляет команды и пути. Пакет Project Web Pilot уменьшился примерно вдвое: агент в ChatGPT получает его за 1–2 чтения. Схема плана и проверки не менялись. Runtime 1.5.4 — 35 файлов, SHA-256 `3a9a3838dbfaac80bccf8cb05d3be71576797cbb6946c6b1537a9c73c383b562`; upgrade 1.5.3 → 1.5.4 через `install --update`.
 
 ## Workflow Kit 1.5.3 — переименование проекта
 

@@ -29,6 +29,7 @@
 | docs/planning/single-active-plan-migration.md | План и результат перехода к одному current plan на checkout |
 | docs/planning/delivery-ordering-policy.md | Канонический порядок DOCS → delivery и запрет незапланированных build/publish |
 | docs/planning/project-rename.md | Workflow Kit 1.5.3: команда project:rename |
+| docs/planning/compact-recovery.md | Workflow Kit 1.5.4: компактный recovery, формы и карты по запросу |
 | docs/WORKFLOW_START.md | Общий контракт старта Workflow Kit |
 | docs/DOCUMENTATION_INDEX.md | Этот индекс |
 <!-- workflow-kit:end -->

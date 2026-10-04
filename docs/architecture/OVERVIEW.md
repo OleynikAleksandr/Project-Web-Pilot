@@ -24,11 +24,15 @@ Upgrade со старой session-owned установки оставляет va
 
 ## Проверка
 
-Текущий canonical runtime 1.5.3: 35 файлов; SHA-256 `d59ae7b6b074e953fdd6c5d78d1f644902f0e7b9af5ad3c78d67d42f1f6a1c0f`. Прежний 1.5.2: SHA-256 `646fec106c498e004d8688a3bc40012bea1654178ce66a61b650211ab28055df`. Опубликованный Release 1.5.1 сохраняет SHA-256 `93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33`.
+Текущий canonical runtime 1.5.4: 35 файлов; SHA-256 `3a9a3838dbfaac80bccf8cb05d3be71576797cbb6946c6b1537a9c73c383b562`. Прежний 1.5.3: SHA-256 `d59ae7b6b074e953fdd6c5d78d1f644902f0e7b9af5ad3c78d67d42f1f6a1c0f`. Прежний 1.5.2: SHA-256 `646fec106c498e004d8688a3bc40012bea1654178ce66a61b650211ab28055df`. Опубликованный Release 1.5.1 сохраняет SHA-256 `93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33`.
 
 Проверки: `node scripts/check-package.mjs`, `node scripts/check-runtime-fixture.mjs`, `node scripts/check-consumer-contract.mjs`.
 
 Подробный контракт: [Workflow Kit Package](../modules/workflow-kit-package.md). Policy DOCS → delivery: [Delivery Ordering](../planning/delivery-ordering-policy.md). История package extraction: [Canonical Workflow Kit Package](../planning/canonical-workflow-kit-package.md). Спецификация миграции state: [Single Active Plan Migration](../planning/single-active-plan-migration.md).
+
+## Workflow Kit 1.5.4 — компактный recovery
+
+По поручению пользователя 04.10.2026 ([контракт](../planning/compact-recovery.md)): recovery больше не включает формы PLAN/SPEC/CONTINUE/STAGES — их печатают `plan:create --help`, `plan:extend --help` и `task:start --help`. Карты `docs/MODULES.md` и `docs/DOCUMENTATION_INDEX.md` остаются обязательными документами плана, но в recovery идут ссылкой (целиком — только в финальной DOCS). Блок «ФОРМЫ И КАРТЫ ПО ЗАПРОСУ» перечисляет команды и пути. Пакет Project Web Pilot уменьшился примерно вдвое: агент в ChatGPT получает его за 1–2 чтения. Схема плана и проверки не менялись. Runtime 1.5.4 — 35 файлов, SHA-256 `3a9a3838dbfaac80bccf8cb05d3be71576797cbb6946c6b1537a9c73c383b562`; upgrade 1.5.3 → 1.5.4 через `install --update`.
 
 ## Workflow Kit 1.5.3 — переименование проекта
 

@@ -4,7 +4,7 @@
 
 Правила работы и Git: `.harness/kit/templates/PROTOTYPE.md`, включённый в recovery. Используй сводку среды и проекта, не запрашивай неизменившиеся сведения повторно.
 
-При NONE и ясном поручении запиши короткий контракт и создай plan через `plan:create` без повторного согласования. Если поручения нет, обсуди следующий этап. Recovery уже содержит PLAN.md, SPEC.md, CONTINUE.md и STAGES.md.
+При NONE и ясном поручении запиши короткий контракт и создай plan через `plan:create` без повторного согласования. Если поручения нет, обсуди следующий этап. Формы плана и этапов recovery не включает: `plan:create --help` (PLAN и SPEC), `plan:extend --help` (CONTINUE), `task:start --help` (STAGES).
 
 Продолжай незавершённую задачу. Новое поручение добавляй через `plan:extend`. Обычный цикл: `task:start` → работа и необходимая проверка → отдельный `commit --task`. Для code-only scope DOCS завершает план; при явном package/installed delivery DOCS стоит перед delivery-хвостом и переоткрывается при новой correction-работе.
 

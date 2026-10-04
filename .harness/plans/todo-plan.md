@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 132,
+  "plan_revision": 134,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "kit-extend-after-delivery-note-20261004",
@@ -37,7 +37,9 @@
       "src/templates/STAGES.md",
       "docs/planning/compact-recovery.md",
       "README.md",
-      "src/templates/PLAN.md"
+      "src/templates/PLAN.md",
+      "docs/WORKFLOW_START.md",
+      "docs/modules/workflow-kit-package.md"
     ]
   },
   "baseline_commit": "18691d25d7f4943b0b1a8d5dce86081037c39208",
@@ -163,8 +165,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "kit-extend-after-delivery-note-20261004",
         "task_id": "DOCS",
@@ -188,7 +190,9 @@
         "src/templates/STAGES.md",
         "docs/planning/compact-recovery.md",
         "README.md",
-        "src/templates/PLAN.md"
+        "src/templates/PLAN.md",
+        "docs/WORKFLOW_START.md",
+        "docs/modules/workflow-kit-package.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -198,7 +202,13 @@
         "Документы соответствуют результату"
       ],
       "expected_commit_message": "docs: актуализировать контекст проекта",
-      "actual_files": []
+      "actual_files": [
+        "README.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/workflow-kit-package.md"
+      ]
     },
     {
       "id": "K2",
@@ -246,7 +256,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: kit-extend-after-delivery-note-20261004
 Current Task: нет
-Revision: 132
+Revision: 134
 
 ## Цель
 
@@ -266,10 +276,10 @@ Revision: 132
   - Git Commit: [DONE] feat: Компактный recovery: формы и карты по запросу; Workflow Kit 1.5.4
   - Reference: kit-extend-after-delivery-note-20261004 / K1 / implementation
   - Файлы: src/lib/recovery.mjs, src/lib/command-help.mjs, src/lib/common.mjs, package.json, scripts/check-package.mjs, scripts/check-runtime-fixture.mjs, src/lib/installer.mjs, scripts/check-consumer-contract.mjs, src/templates/AGENTS.md, src/templates/START.md, src/templates/STAGES.md, docs/planning/compact-recovery.md, src/templates/PLAN.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать контекст проекта
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать контекст проекта
   - Reference: kit-extend-after-delivery-note-20261004 / DOCS / implementation
-  - Файлы: docs/planning/delivery-ordering-policy.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, src/templates/AGENTS.md, src/templates/START.md, src/templates/STAGES.md, docs/planning/compact-recovery.md, README.md, src/templates/PLAN.md
+  - Файлы: docs/planning/delivery-ordering-policy.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, src/templates/AGENTS.md, src/templates/START.md, src/templates/STAGES.md, docs/planning/compact-recovery.md, README.md, src/templates/PLAN.md, docs/WORKFLOW_START.md, docs/modules/workflow-kit-package.md
 - [TODO] K2: Синхронизировать WorkflowKit main с GitHub — Ожидает
   - Git Commit: [PENDING] feat: Синхронизировать WorkflowKit main с GitHub
   - Reference: kit-extend-after-delivery-note-20261004 / K2 / implementation
