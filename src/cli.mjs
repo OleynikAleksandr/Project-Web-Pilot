@@ -4,7 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { errorResult, check, readJSON, json, withPlanFile, PLAN } from './lib/common.mjs';
 import { repoRoot } from './lib/git.mjs';
-import { status, createScope, startTask, applyPlan, applyConfig, archive, carryoverPlan, repair, acknowledgeHook } from './lib/actions.mjs';
+import { status, createScope, startTask, applyPlan, applyConfig, archive, carryoverPlan, repair, acknowledgeHook, renameProject } from './lib/actions.mjs';
 import { journal } from './lib/validate.mjs';
 import { withSessionPlan, sessionPlanView } from './lib/session-plans.mjs';
 import { validate } from './lib/validate.mjs';
@@ -59,6 +59,7 @@ export async function main(argv = process.argv.slice(2)) {
         break;
       case 'plan:extend': result = extendPlan(root,input(),opts['expected-revision']); break;
       case 'plan:carryover': result = carryoverPlan(root,input(),opts['expected-revision']); break;
+      case 'project:rename': result = renameProject(root, opts.name, opts['expected-revision']); break;
       case 'plan:create': result = createSimplePlan(root,input()); break;
       case 'scope:create': result = createScope(root, input(), opts['expected-revision']); break;
       case 'task:update': result = updateTask(root,opts.task,input(),opts['expected-revision']); break;

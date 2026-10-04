@@ -7,9 +7,9 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const EXPECTED_VERSION = '1.5.2';
+const EXPECTED_VERSION = '1.5.3';
 const EXPECTED_FILES = 35;
-const EXPECTED_SHA256 = '646fec106c498e004d8688a3bc40012bea1654178ce66a61b650211ab28055df';
+const EXPECTED_SHA256 = 'd59ae7b6b074e953fdd6c5d78d1f644902f0e7b9af5ad3c78d67d42f1f6a1c0f';
 const REQUIRED_SUBPATHS = [
   'common',
   'actions',

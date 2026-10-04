@@ -6,8 +6,8 @@ import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { installer, sessionPlans, plan as planApi, VERSION } from '@webpilot/workflow-kit';
 
-const EXPECTED_VERSION = '1.5.2';
-const EXPECTED_RUNTIME_SHA256 = '646fec106c498e004d8688a3bc40012bea1654178ce66a61b650211ab28055df';
+const EXPECTED_VERSION = '1.5.3';
+const EXPECTED_RUNTIME_SHA256 = 'd59ae7b6b074e953fdd6c5d78d1f644902f0e7b9af5ad3c78d67d42f1f6a1c0f';
 
 function run(executable, args, cwd) {
   return execFileSync(executable, args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
@@ -119,6 +119,66 @@ try {
   assert.equal(recovered.plan_id, 'fixture-current-plan');
   assert.deepEqual(planApi.readPlan(root).tasks.map(task => task.id), ['T001', 'DOCS'],
     'code-only plan must keep DOCS as the final task');
+
+  // project:rename: the project name in plan/recovery and manifest hook paths change
+  // through one service commit; repeat is a no-op; invalid name and active task are refused.
+  const renameRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'workflow-kit-rename-'));
+  try {
+    git(renameRoot, 'init', '-b', 'main');
+    git(renameRoot, 'config', 'user.name', 'Workflow Kit Rename Test');
+    git(renameRoot, 'config', 'user.email', 'workflow-kit-rename@test.local');
+    await fs.mkdir(path.join(renameRoot, 'docs/planning'), { recursive: true });
+    await fs.writeFile(path.join(renameRoot, 'docs/planning/fixture.md'), '# Rename fixture\n');
+    await fs.writeFile(path.join(renameRoot, 'README.md'), '# Rename fixture\n');
+    git(renameRoot, 'add', 'README.md', 'docs/planning/fixture.md');
+    git(renameRoot, 'commit', '-m', 'test: rename fixture baseline');
+    installer.install({ project: renameRoot, mode: 'existing' });
+    const renameInput = path.join(renameRoot, '.harness/runtime/rename-plan.json');
+    await fs.writeFile(renameInput, JSON.stringify({ ...planInput, id: 'rename-plan' }));
+    workflow(renameRoot, 'plan:create', '--input', renameInput);
+
+    // A moved folder leaves old absolute hook paths in the manifest.
+    const renameManifestFile = path.join(renameRoot, '.harness/kit-manifest.json');
+    const movedManifest = JSON.parse(await fs.readFile(renameManifestFile, 'utf8'));
+    const movedHooks = movedManifest.files.filter(entry => entry.external && entry.kind === 'git-hook');
+    assert.ok(movedHooks.length > 0, 'manifest has no git-hook entries');
+    for (const entry of movedHooks) entry.path = '/old/location/.git/hooks/' + path.basename(entry.path);
+    await fs.writeFile(renameManifestFile, JSON.stringify(movedManifest, null, 2) + '\n');
+    git(renameRoot, 'add', '.harness/kit-manifest.json');
+    git(renameRoot, 'commit', '--no-verify', '-m', 'test: simulate moved project folder');
+
+    const beforeRename = workflow(renameRoot, 'status');
+    const renamed = workflow(renameRoot, 'project:rename', '--name', 'renamed-project', '--expected-revision', String(beforeRename.plan_revision));
+    assert.equal(renamed.changed, true);
+    assert.equal(renamed.project_name, 'renamed-project');
+    assert.equal(planApi.readPlan(renameRoot).project_name, 'renamed-project');
+    assert.ok((await fs.readFile(path.join(renameRoot, '.harness/plans/todo-plan.md'), 'utf8')).startsWith('# Активный план — renamed-project\n'));
+    const renamedManifest = JSON.parse(await fs.readFile(renameManifestFile, 'utf8'));
+    for (const entry of renamedManifest.files.filter(item => item.external && item.kind === 'git-hook')) {
+      assert.ok(!entry.path.startsWith('/old/location/'), 'stale hook path kept: ' + entry.path);
+      assert.ok(entry.path.replaceAll('\\', '/').endsWith('/.git/hooks/' + path.basename(entry.path)), 'unexpected hook path: ' + entry.path);
+    }
+    assert.equal(git(renameRoot, 'log', '-1', '--format=%s'), 'chore: переименовать проект в renamed-project');
+    assert.equal(git(renameRoot, 'status', '--porcelain'), '', 'rename left uncommitted changes');
+    const afterRename = workflow(renameRoot, 'status');
+    assert.equal(afterRename.project_name, 'renamed-project');
+    assert.equal(afterRename.recovery_completeness, 'COMPLETE');
+
+    const headAfterRename = git(renameRoot, 'rev-parse', 'HEAD');
+    const repeated = workflow(renameRoot, 'project:rename', '--name', 'renamed-project', '--expected-revision', String(afterRename.plan_revision));
+    assert.equal(repeated.changed, false);
+    assert.equal(git(renameRoot, 'rev-parse', 'HEAD'), headAfterRename, 'repeated rename committed changes');
+
+    const invalid = workflowFailure(renameRoot, 'project:rename', '--name', '   ', '--expected-revision', String(afterRename.plan_revision));
+    assert.equal(invalid.code, 'PROJECT_NAME');
+    workflow(renameRoot, 'task:start', 'T001');
+    const active = workflowFailure(renameRoot, 'project:rename', '--name', 'other-name', '--expected-revision', String(workflow(renameRoot, 'status').plan_revision));
+    assert.equal(active.code, 'TASK_ACTIVE');
+    assert.equal(planApi.readPlan(renameRoot).project_name, 'renamed-project');
+    assert.equal(git(renameRoot, 'rev-parse', 'HEAD'), headAfterRename, 'refused rename committed changes');
+  } finally {
+    await fs.rm(renameRoot, { recursive: true, force: true });
+  }
 
   // Delivery ordering: ordinary work -> DOCS -> package/installed tail.
   // Extending a plan must keep that order and reopen DOCS when new code work
@@ -401,7 +461,8 @@ try {
     recovery: recovered.completeness,
     compatibilitySessions: true,
     sessionOwnershipRemoved: true,
-    reconnectHeadStable: true
+    reconnectHeadStable: true,
+    projectRename: true
   }, null, 2) + '\n');
 } finally {
   await fs.rm(root, { recursive: true, force: true });

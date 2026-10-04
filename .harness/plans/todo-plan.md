@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 117,
+  "plan_revision": 119,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "kit-153-project-rename",
@@ -23,7 +23,8 @@
       "src/lib/installer.mjs",
       "package.json",
       "scripts/check-package.mjs",
-      "scripts/check-runtime-fixture.mjs"
+      "scripts/check-runtime-fixture.mjs",
+      "scripts/check-consumer-contract.mjs"
     ],
     "documentation_paths": [
       "docs/planning/project-rename.md",
@@ -73,8 +74,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "kit-153-project-rename",
         "task_id": "T001",
@@ -89,7 +90,8 @@
         "src/lib/installer.mjs",
         "package.json",
         "scripts/check-package.mjs",
-        "scripts/check-runtime-fixture.mjs"
+        "scripts/check-runtime-fixture.mjs",
+        "scripts/check-consumer-contract.mjs"
       ],
       "documentation_paths": [
         "docs/planning/project-rename.md",
@@ -109,7 +111,19 @@
         "Установка 1.5.2 обновляется до 1.5.3 с сохранением плана",
         "npm run check проходит с версией 1.5.3 и новым baseline"
       ],
-      "expected_commit_message": "feat: Команда project:rename и обновление 1.5.2 → 1.5.3"
+      "expected_commit_message": "feat: Команда project:rename и обновление 1.5.2 → 1.5.3",
+      "actual_files": [
+        "package.json",
+        "scripts/check-consumer-contract.mjs",
+        "scripts/check-package.mjs",
+        "scripts/check-runtime-fixture.mjs",
+        "src/WORKFLOW.md",
+        "src/cli.mjs",
+        "src/lib/actions.mjs",
+        "src/lib/command-help.mjs",
+        "src/lib/common.mjs",
+        "src/lib/installer.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -160,7 +174,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: kit-153-project-rename
 Current Task: нет
-Revision: 117
+Revision: 119
 
 ## Цель
 
@@ -172,10 +186,10 @@ Workflow Kit 1.5.3: штатное переименование проекта (
 
 ## Микрозадачи
 
-- [TODO] T001: Команда project:rename и обновление 1.5.2 → 1.5.3 — Ожидает
-  - Git Commit: [PENDING] feat: Команда project:rename и обновление 1.5.2 → 1.5.3
+- [DONE] T001: Команда project:rename и обновление 1.5.2 → 1.5.3 — Завершено
+  - Git Commit: [DONE] feat: Команда project:rename и обновление 1.5.2 → 1.5.3
   - Reference: kit-153-project-rename / T001 / implementation
-  - Файлы: src/lib/actions.mjs, src/cli.mjs, src/lib/command-help.mjs, src/lib/common.mjs, src/lib/installer.mjs, package.json, scripts/check-package.mjs, scripts/check-runtime-fixture.mjs, docs/planning/project-rename.md, src/WORKFLOW.md
+  - Файлы: src/lib/actions.mjs, src/cli.mjs, src/lib/command-help.mjs, src/lib/common.mjs, src/lib/installer.mjs, package.json, scripts/check-package.mjs, scripts/check-runtime-fixture.mjs, scripts/check-consumer-contract.mjs, docs/planning/project-rename.md, src/WORKFLOW.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: kit-153-project-rename / DOCS / implementation

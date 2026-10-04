@@ -47,6 +47,7 @@ one current working state
 | `repair --dry-run` | Диагностика незавершённой транзакции/проекции |
 | `archive --scope ID --approval-note "..."` | Архивировать завершённый current scope только по прямому поручению |
 | `config:apply --input config.json` | Полностью применить конфигурацию проверок |
+| `project:rename --name ИМЯ --expected-revision N` | Сменить имя проекта (например, после переименования папки); без активной микрозадачи |
 | `inspect/doctor/install` | Проверка и обслуживание установки Kit |
 
 В Windows PowerShell/CMD используй `./scripts/workflow.cmd`, в Git Bash/macOS — `./scripts/workflow`.
