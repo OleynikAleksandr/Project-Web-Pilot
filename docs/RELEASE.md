@@ -2,9 +2,17 @@
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
-## Выпуск 0.6.82 — подготовка, 04.10.2026
+## Выпуск 0.6.82 — 04.10.2026
 
-**Готовится 0.6.82** ([контракт](planning/release-0.6.82-workflowkit-1.5.3.md)): bundled Workflow Kit **1.5.3** (35 файлов, SHA-256 `d59ae7b6b074e953fdd6c5d78d1f644902f0e7b9af5ad3c78d67d42f1f6a1c0f`) с командой `project:rename` — штатное переименование проекта. Сборка, установка и GitHub-публикация выполняются только delivery-задачами T002–T004 после этой DOCS; до их завершения 0.6.81 остаётся последним опубликованным релизом. Source preparation T001 переводит release gates на 1.5.3; dev Kit репозитория обновлён до 1.5.3 штатным installer (`7f6d853`), поэтому development и bundled Kit совпадают.
+Причина релиза — поручение пользователя навести порядок с именами: bundled Workflow Kit **1.5.3** добавляет команду `project:rename` (переименование проекта с обновлением путей Git-хуков в manifest). Dev Kit репозитория обновлён до 1.5.3 штатным installer (`7f6d853`), поэтому development и bundled Kit совпадают.
+
+Предсборочная DOCS зафиксирована коммитом `85ffd33` **до** первой release-сборки. T002 (`0490365`) выполнила единственный `npm run build`: `release-manifest.sourceCommit=85ffd3355b7fa9d945c1a703bc1027ce6c3ca2a7`, `sourceFiles=106`, `packagedSourceMatches=true`, bundled Workflow Kit **1.5.3 / 35 файлов / SHA-256 `d59ae7b6b074e953fdd6c5d78d1f644902f0e7b9af5ad3c78d67d42f1f6a1c0f`**.
+
+macOS arm64: `~/Downloads/WebPilot-0.6.82/Project-Web-Pilot-0.6.82-macOS-arm64.zip`, 186428235 байт, SHA-256 `dc3b1115bc6808f92a9119507efcd15ea97c0622de76ff72c51b07460cabf9a5`. Windows x64: `~/Downloads/WebPilot-0.6.82/Project-Web-Pilot-0.6.82-Windows-x64.zip`, 355543096 байт, SHA-256 `846c555169c69023d3879df677be7a6fa579d9b308e1f122158ad106ea941e76`. Оба package имеют ASAR SHA-256 `37766b5fc586d0934fe9f4c8da08c3ebd1db7359b600b26f6b34af7fe79c6770`; Windows прошёл `verify:win` на Mac, native Windows/clean VM не запускались.
+
+Root app и `/Applications/Project Web Pilot.app` обновлены до 0.6.82. `/Applications` установлена из уже собранного staging штатным `installMacBundle` **без пересборки**; inode сохранён `406571340`. Managed T003 (`8e701ae`) прошёл полный `release-installed` gate.
+
+[GitHub Release v0.6.82](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.82) опубликован 2026-10-04T09:16:44Z. Tag `v0.6.82` указывает точно на `85ffd3355b7fa9d945c1a703bc1027ce6c3ca2a7`. Опубликованы ровно пять файлов: оба ZIP, `SHA256SUMS.txt`, `INSTALL.txt`, `release-manifest.json`; server size/digest каждого совпадает с локальной поставкой. Release не draft/prerelease. Финальный `main` должен совпасть с managed T004 commit; это повторно проверяет `scripts/check-github-release.mjs` после push.
 
 ## Выпуск 0.6.81 — 03.10.2026
 

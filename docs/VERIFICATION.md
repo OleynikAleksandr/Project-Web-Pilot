@@ -1,5 +1,13 @@
 # Проверки и приёмка
 
+## 2026-10-04 — 0.6.82 GitHub publication
+
+GitHub Release [v0.6.82](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.82) опубликован 2026-10-04T09:16:44Z, `draft=false`, `prerelease=false`. Tag указывает на release sourceCommit `85ffd3355b7fa9d945c1a703bc1027ce6c3ca2a7`. До публикации current `main` с предсборочной DOCS и local build/install evidence был синхронизирован с GitHub.
+
+GitHub содержит ровно пять assets: macOS ZIP 186428235 / `dc3b1115bc6808f92a9119507efcd15ea97c0622de76ff72c51b07460cabf9a5`, Windows ZIP 355543096 / `846c555169c69023d3879df677be7a6fa579d9b308e1f122158ad106ea941e76`, `SHA256SUMS.txt` / `d83fd642e3e97786692e8f06c06198ac7e0faf94a6a80ba25e48ae4277b8a2aa`, `INSTALL.txt` / `ef75072e94c3de6f8b77ebbc88a0dd839e0de85020e7152a469232e7446c8efd`, `release-manifest.json` / `2863e6364a4dae658b3caf836e4c85fa9634fdbea568a096b7596ef00822d0b5`. Server size/digest совпали с локальными файлами; пересборка для GitHub не выполнялась.
+
+Managed T004 завершается только если verifier подтверждает tag/assets и `origin/main == local HEAD`; после T004 commit выполняется финальный push `main` и та же проверка повторяется. Native Windows/clean VM 0.6.82 не проверялись.
+
 ## 2026-10-03 — 0.6.81 GitHub publication
 
 GitHub Release [v0.6.81](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.81) опубликован 2026-10-03T18:07:01Z, `draft=false`, `prerelease=false`. Tag указывает на release sourceCommit `db59be83f0d3fa4136c109a8252181422acfe94c`. До публикации current `main` с предсборочной DOCS и local build/install evidence был синхронизирован с GitHub.

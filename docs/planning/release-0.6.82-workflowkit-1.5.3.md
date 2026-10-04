@@ -97,3 +97,10 @@ GitHub gate:
 - Не переподписывать bundled Node/uv отдельно от существующего release contract.
 - Не выполнять native Windows/clean VM автоматически.
 - Не архивировать новый scope без отдельного прямого поручения пользователя.
+
+## Итог
+
+- T002 `0490365`: парная сборка из sourceCommit `85ffd3355b7fa9d945c1a703bc1027ce6c3ca2a7`, bundled Workflow Kit 1.5.3.
+- T003 `8e701ae`: `/Applications/Project Web Pilot.app` обновлена из staging без пересборки, identity сохранена.
+- T004: [GitHub Release v0.6.82](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.82) опубликован 2026-10-04T09:16:44Z, tag `v0.6.82` → sourceCommit, пять assets сверены по серверным SHA-256.
+- Native Windows и clean VM 0.6.82 не проверялись.

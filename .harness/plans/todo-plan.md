@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1034,
+  "plan_revision": 1036,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "release-0.6.82-workflowkit-1.5.3-20261004",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Подготовить, собрать, проверить и опубликовать Project Web Pilot 0.6.82 с bundled Workflow Kit 1.5.3, строго выполнив DOCS до build/package и до GitHub publish/sync.",
   "acceptance_criteria": [
     "Подготовить, собрать, проверить и опубликовать Project Web Pilot 0.6.82 с bundled Workflow Kit 1.5.3, строго выполнив DOCS до build/package и до GitHub publish/sync."
@@ -244,8 +244,8 @@
       "actual_files": []
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "release-0.6.82-workflowkit-1.5.3-20261004",
         "task_id": "T004",
@@ -288,7 +288,20 @@
         "Старые release tags и assets не изменены",
         "После публикации, но до финальной синхронизации main, документация фиксирует фактический GitHub Release v0.6.82, tag sourceCommit и server digests пяти assets"
       ],
-      "expected_commit_message": "feat: Опубликовать 0.6.82 и синхронизировать Project Web Pilot с GitHub"
+      "expected_commit_message": "feat: Опубликовать 0.6.82 и синхронизировать Project Web Pilot с GitHub",
+      "actual_files": [
+        "README.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/RELEASE.md",
+        "docs/SOURCE_WORKSPACES.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/planning/release-0.6.82-workflowkit-1.5.3.md"
+      ]
     }
   ],
   "blocked_reason": null,
@@ -306,10 +319,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: release-0.6.82-workflowkit-1.5.3-20261004
 Current Task: нет
-Revision: 1034
+Revision: 1036
 
 ## Цель
 
@@ -337,8 +350,8 @@ Revision: 1034
   - Git Commit: [DONE] feat: Обновить и проверить установленные macOS-копии 0.6.82
   - Reference: release-0.6.82-workflowkit-1.5.3-20261004 / T003 / implementation
   - Файлы: scripts/release-mac.mjs, scripts/check-installed-release.mjs, docs/planning/release-0.6.82-workflowkit-1.5.3.md
-- [TODO] T004: Опубликовать 0.6.82 и синхронизировать Project Web Pilot с GitHub — Ожидает
-  - Git Commit: [PENDING] feat: Опубликовать 0.6.82 и синхронизировать Project Web Pilot с GitHub
+- [DONE] T004: Опубликовать 0.6.82 и синхронизировать Project Web Pilot с GitHub — Завершено
+  - Git Commit: [DONE] feat: Опубликовать 0.6.82 и синхронизировать Project Web Pilot с GitHub
   - Reference: release-0.6.82-workflowkit-1.5.3-20261004 / T004 / implementation
   - Файлы: scripts/check-github-release.mjs, package.json, docs/planning/release-0.6.82-workflowkit-1.5.3.md, README.md, docs/PRODUCT.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/architecture/ARCHITECTURE.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/SOURCE_WORKSPACES.md, docs/RELEASE.md, docs/VERIFICATION.md
 
