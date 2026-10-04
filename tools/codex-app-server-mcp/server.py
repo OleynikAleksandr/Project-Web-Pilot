@@ -823,6 +823,11 @@ def create_server(*, host: str, port: int, state_root: Path, codex_binary: str |
         host=host,
         port=port,
         log_level="WARNING",
+        # No MCP sessions: Web Pilot restarts this server on every launch, and remote
+        # clients (ChatGPT/Claude via the VPS) keep their old Mcp-Session-Id. A stateful
+        # server answers 404 "Session not found" and ChatGPT does not reconnect. The tools
+        # keep no per-session state and send no in-session notifications.
+        stateless_http=True,
     )
 
     @mcp.tool(annotations=LOCAL_NOTIFICATION)

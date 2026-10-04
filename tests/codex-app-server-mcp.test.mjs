@@ -462,6 +462,44 @@ else:
   }
 });
 
+test('App Server MCP answers a stale session id without initialize after a restart', { timeout: 60_000 }, async t => {
+  const venvPython = path.join(homedir(), 'Library', 'Application Support', 'WebPilotCodexExecutor', 'runtime', 'venv', 'bin', 'python');
+  const source = await (await import('node:fs/promises')).readFile(path.join(clientDir, 'server.py'), 'utf8');
+  assert.match(source, /stateless_http=True/);
+  if (!existsSync(venvPython)) { t.skip('Codex App Server runtime venv is not installed'); return; }
+  const port = await new Promise((resolve, reject) => {
+    const probe = http.createServer().listen(0, '127.0.0.1', () => { const { port } = probe.address(); probe.close(() => resolve(port)); });
+    probe.on('error', reject);
+  });
+  const root = await mkdtemp(path.join(tmpdir(), 'web-pilot-stateless-'));
+  const server = spawn(venvPython, ['-B', path.join(clientDir, 'server.py'), '--port', String(port), '--state-dir', root],
+    { cwd: clientDir, env: { ...process.env, PYTHONDONTWRITEBYTECODE: '1' }, stdio: ['ignore', 'ignore', 'pipe'] });
+  let stderr = '';
+  server.stderr.on('data', chunk => { stderr += chunk; });
+  t.after(async () => {
+    if (server.exitCode === null) { server.kill('SIGTERM'); await new Promise(resolve => server.once('exit', resolve)); }
+    await rm(root, { recursive: true, force: true });
+  });
+  // The id belongs to no process: exactly what ChatGPT sends after Web Pilot restarted the server.
+  const call = () => fetch(`http://127.0.0.1:${port}/mcp`, { method: 'POST', headers: {
+    'Content-Type': 'application/json', Accept: 'application/json, text/event-stream',
+    'Mcp-Session-Id': '0123456789abcdef0123456789abcdef', 'MCP-Protocol-Version': '2025-06-18',
+  }, body: JSON.stringify({ jsonrpc: '2.0', id: 7, method: 'tools/list', params: {} }) });
+  let response;
+  for (let attempt = 0; attempt < 100 && !response; attempt += 1) {
+    try { response = await call(); } catch { await new Promise(resolve => setTimeout(resolve, 200)); }
+    assert.equal(server.exitCode, null, stderr);
+  }
+  assert.ok(response, 'server did not start: ' + stderr);
+  const text = await response.text();
+  assert.equal(response.status, 200, text);
+  assert.equal(response.headers.get('mcp-session-id'), null);
+  const payload = text.trim().startsWith('{') ? text : text.split('\n').filter(line => line.startsWith('data:')).map(line => line.slice(5).trim()).at(-1);
+  const message = JSON.parse(payload);
+  assert.equal(message.id, 7);
+  assert.ok(message.result.tools.some(tool => tool.name === 'run_command_batch'));
+});
+
 test('pid identity forces C locale for stable Terminal ownership checks', async () => {
   const root = await mkdtemp(path.join(tmpdir(), 'web-pilot-codex-identity-'));
   const probe = path.join(root, 'probe.py');

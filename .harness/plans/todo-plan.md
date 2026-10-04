@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1060,
+  "plan_revision": 1062,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "mcp-stateless-0.6.84-20261004",
@@ -74,8 +74,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "mcp-stateless-0.6.84-20261004",
         "task_id": "T001",
@@ -102,7 +102,11 @@
         "tools/list с устаревшим Mcp-Session-Id без initialize возвращает инструменты",
         "Весь npm test проходит"
       ],
-      "expected_commit_message": "feat: MCP App Server без сессий"
+      "expected_commit_message": "feat: MCP App Server без сессий",
+      "actual_files": [
+        "tests/codex-app-server-mcp.test.mjs",
+        "tools/codex-app-server-mcp/server.py"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -275,7 +279,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: mcp-stateless-0.6.84-20261004
 Current Task: нет
-Revision: 1060
+Revision: 1062
 
 ## Цель
 
@@ -288,8 +292,8 @@ Revision: 1060
 
 ## Микрозадачи
 
-- [TODO] T001: MCP App Server без сессий — Ожидает
-  - Git Commit: [PENDING] feat: MCP App Server без сессий
+- [DONE] T001: MCP App Server без сессий — Завершено
+  - Git Commit: [DONE] feat: MCP App Server без сессий
   - Reference: mcp-stateless-0.6.84-20261004 / T001 / implementation
   - Файлы: tools/codex-app-server-mcp/server.py, tests/codex-app-server-mcp.test.mjs, docs/planning/mcp-stateless-sessions.md
 - [TODO] T002: Подготовить source релиза 0.6.84 — Ожидает
