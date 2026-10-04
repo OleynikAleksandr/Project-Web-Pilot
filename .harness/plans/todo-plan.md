@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 126,
+  "plan_revision": 128,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "kit-extend-after-delivery-note-20261004",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Записать известное ограничение: plan:extend невозможен в плане с завершённым delivery-хвостом.",
   "acceptance_criteria": [
     "Ограничение и обходной путь описаны в политике delivery-ordering"
@@ -91,8 +91,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "kit-extend-after-delivery-note-20261004",
         "task_id": "DOCS",
@@ -117,7 +117,8 @@
       "acceptance_criteria": [
         "Документы соответствуют результату"
       ],
-      "expected_commit_message": "docs: актуализировать контекст проекта"
+      "expected_commit_message": "docs: актуализировать контекст проекта",
+      "actual_files": []
     }
   ],
   "blocked_reason": null,
@@ -135,10 +136,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: kit-extend-after-delivery-note-20261004
 Current Task: нет
-Revision: 126
+Revision: 128
 
 ## Цель
 
@@ -154,8 +155,8 @@ Revision: 126
   - Git Commit: [DONE] feat: Записать ограничение plan:extend после завершённого delivery
   - Reference: kit-extend-after-delivery-note-20261004 / T001 / implementation
   - Файлы: docs/planning/delivery-ordering-policy.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать контекст проекта
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать контекст проекта
   - Reference: kit-extend-after-delivery-note-20261004 / DOCS / implementation
   - Файлы: docs/planning/delivery-ordering-policy.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
 
