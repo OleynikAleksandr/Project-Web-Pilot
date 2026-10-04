@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1043,
+  "plan_revision": 1044,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "chatgpt-channel-vps-20261004",
@@ -241,7 +241,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: chatgpt-channel-vps-20261004
 Current Task: нет
-Revision: 1043
+Revision: 1044
 
 ## Цель
 

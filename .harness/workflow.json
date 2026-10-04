@@ -50,6 +50,51 @@
       ],
       "kind": "test",
       "evidence": "Полный node --test tests/*.test.mjs"
+    },
+    {
+      "required": false,
+      "timeout_ms": 180000,
+      "id": "release-source",
+      "kind": "test",
+      "executable": "bash",
+      "args": [
+        "-lc",
+        "/opt/homebrew/bin/node scripts/stage-workflow-kit.mjs && /opt/homebrew/bin/node --check scripts/check-github-release.mjs && /opt/homebrew/bin/node --test tests/context-session.test.mjs tests/workflow-kit-recovery.test.mjs tests/workflow-kit-source.test.mjs tests/workspace-setup.test.mjs && /opt/homebrew/bin/node scripts/check-workflow-kit-dependency.mjs"
+      ]
+    },
+    {
+      "required": false,
+      "timeout_ms": 600000,
+      "id": "paired-release",
+      "kind": "package",
+      "evidence": "~/Downloads/WebPilot-0.6.82: macOS arm64 + Windows x64 ZIP, SHA256SUMS.txt, INSTALL.txt, release-manifest.json; packaged sources and bundled Workflow Kit 1.5.3 verified",
+      "executable": "npm",
+      "args": [
+        "run",
+        "build"
+      ]
+    },
+    {
+      "required": false,
+      "timeout_ms": 600000,
+      "id": "release-installed",
+      "kind": "installed",
+      "evidence": "root Project Web Pilot.app and /Applications/Project Web Pilot.app plus staging and both release ZIPs; identity/signature/runtime verified",
+      "executable": "node",
+      "args": [
+        "scripts/check-installed-release.mjs"
+      ]
+    },
+    {
+      "required": false,
+      "timeout_ms": 180000,
+      "id": "github-release",
+      "kind": "package",
+      "evidence": "GitHub Release v0.6.82 tag/assets and remote main verified against local release-manifest.json without rebuilding",
+      "executable": "node",
+      "args": [
+        "scripts/check-github-release.mjs"
+      ]
     }
   ],
   "budget": {
