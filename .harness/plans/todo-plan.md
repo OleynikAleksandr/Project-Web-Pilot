@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1031,
+  "plan_revision": 1033,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "release-0.6.82-workflowkit-1.5.3-20261004",
@@ -207,8 +207,8 @@
       "actual_files": []
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "release-0.6.82-workflowkit-1.5.3-20261004",
         "task_id": "T003",
@@ -239,7 +239,8 @@
         "Native Windows и clean VM остаются непроверенными, если пользователь отдельно их не запускал",
         "До GitHub publication документы фиксируют фактические local build/install evidence 0.6.82 и сохраняют различие между готовой локальной поставкой и ещё не опубликованным GitHub Release"
       ],
-      "expected_commit_message": "feat: Обновить и проверить установленные macOS-копии 0.6.82"
+      "expected_commit_message": "feat: Обновить и проверить установленные macOS-копии 0.6.82",
+      "actual_files": []
     },
     {
       "implementation_status": "TODO",
@@ -297,7 +298,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: release-0.6.82-workflowkit-1.5.3-20261004
 Current Task: нет
-Revision: 1031
+Revision: 1033
 
 ## Цель
 
@@ -321,8 +322,8 @@ Revision: 1031
   - Git Commit: [DONE] feat: Собрать и проверить парный release 0.6.82
   - Reference: release-0.6.82-workflowkit-1.5.3-20261004 / T002 / implementation
   - Файлы: package.json, scripts/release-all.mjs, scripts/release-mac.mjs, scripts/verify-windows-package.mjs, resources/workspace-setup-worker.mjs, docs/planning/release-0.6.82-workflowkit-1.5.3.md
-- [TODO] T003: Обновить и проверить установленные macOS-копии 0.6.82 — Ожидает
-  - Git Commit: [PENDING] feat: Обновить и проверить установленные macOS-копии 0.6.82
+- [DONE] T003: Обновить и проверить установленные macOS-копии 0.6.82 — Завершено
+  - Git Commit: [DONE] feat: Обновить и проверить установленные macOS-копии 0.6.82
   - Reference: release-0.6.82-workflowkit-1.5.3-20261004 / T003 / implementation
   - Файлы: scripts/release-mac.mjs, scripts/check-installed-release.mjs, docs/planning/release-0.6.82-workflowkit-1.5.3.md
 - [TODO] T004: Опубликовать 0.6.82 и синхронизировать Project Web Pilot с GitHub — Ожидает
