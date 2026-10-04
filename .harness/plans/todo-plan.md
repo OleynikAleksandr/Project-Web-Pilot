@@ -4,25 +4,37 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 129,
+  "plan_revision": 130,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "kit-extend-after-delivery-note-20261004",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Записать известное ограничение: plan:extend невозможен в плане с завершённым delivery-хвостом.",
   "acceptance_criteria": [
     "Ограничение и обходной путь описаны в политике delivery-ordering"
   ],
   "approved_scope": {
-    "functional_paths": [],
+    "functional_paths": [
+      "src/lib/recovery.mjs",
+      "src/lib/command-help.mjs",
+      "src/lib/common.mjs",
+      "package.json",
+      "scripts/check-package.mjs",
+      "scripts/check-runtime-fixture.mjs"
+    ],
     "documentation_paths": [
       "docs/planning/delivery-ordering-policy.md",
       "docs/PRODUCT.md",
       "docs/architecture/ARCHITECTURE.md",
       "docs/architecture/OVERVIEW.md",
       "docs/MODULES.md",
-      "docs/DOCUMENTATION_INDEX.md"
+      "docs/DOCUMENTATION_INDEX.md",
+      "src/templates/AGENTS.md",
+      "src/templates/START.md",
+      "src/templates/STAGES.md",
+      "docs/planning/compact-recovery.md",
+      "README.md"
     ]
   },
   "baseline_commit": "18691d25d7f4943b0b1a8d5dce86081037c39208",
@@ -91,15 +103,56 @@
       ]
     },
     {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
+      "id": "K1",
+      "title": "Компактный recovery: формы и карты по запросу; Workflow Kit 1.5.4",
+      "why": "Пакет Project Web Pilot ~100 КБ не помещается в показ ChatGPT; формы и карты на старте не нужны.",
+      "dependencies": [],
+      "functional_paths": [
+        "src/lib/recovery.mjs",
+        "src/lib/command-help.mjs",
+        "src/lib/common.mjs",
+        "package.json",
+        "scripts/check-package.mjs",
+        "scripts/check-runtime-fixture.mjs"
+      ],
+      "documentation_paths": [
+        "src/templates/AGENTS.md",
+        "src/templates/START.md",
+        "src/templates/STAGES.md",
+        "docs/planning/compact-recovery.md"
+      ],
+      "verification_ids": [
+        "package-check",
+        "runtime-fixture"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Recovery без форм PLAN/SPEC/CONTINUE/STAGES и без содержимого MODULES/DOCUMENTATION_INDEX вне DOCS",
+        "Блок «ФОРМЫ И КАРТЫ ПО ЗАПРОСУ» с командами справки и путями",
+        "task:start --help печатает STAGES",
+        "Версия 1.5.4, новый baseline"
+      ],
+      "expected_commit_message": "feat: Компактный recovery: формы и карты по запросу; Workflow Kit 1.5.4",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "kit-extend-after-delivery-note-20261004",
+        "task_id": "K1",
+        "role": "implementation"
+      }
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "kit-extend-after-delivery-note-20261004",
         "task_id": "DOCS",
-        "role": "implementation"
+        "role": "implementation",
+        "iteration": 2
       },
       "dependencies": [
-        "T001"
+        "T001",
+        "K1"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -108,7 +161,12 @@
         "docs/architecture/ARCHITECTURE.md",
         "docs/architecture/OVERVIEW.md",
         "docs/MODULES.md",
-        "docs/DOCUMENTATION_INDEX.md"
+        "docs/DOCUMENTATION_INDEX.md",
+        "src/templates/AGENTS.md",
+        "src/templates/START.md",
+        "src/templates/STAGES.md",
+        "docs/planning/compact-recovery.md",
+        "README.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -119,6 +177,33 @@
       ],
       "expected_commit_message": "docs: актуализировать контекст проекта",
       "actual_files": []
+    },
+    {
+      "id": "K2",
+      "title": "Синхронизировать WorkflowKit main с GitHub",
+      "why": "Project Web Pilot 0.6.87 встраивает Workflow Kit 1.5.4; исходники Kit на GitHub должны совпадать.",
+      "dependencies": [
+        "DOCS"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "README.md"
+      ],
+      "verification_ids": [
+        "github-main"
+      ],
+      "verification_kind": "package",
+      "acceptance_criteria": [
+        "origin/main совпадает с локальным HEAD после DOCS"
+      ],
+      "expected_commit_message": "feat: Синхронизировать WorkflowKit main с GitHub",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "kit-extend-after-delivery-note-20261004",
+        "task_id": "K2",
+        "role": "implementation"
+      }
     }
   ],
   "blocked_reason": null,
@@ -136,10 +221,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: kit-extend-after-delivery-note-20261004
 Current Task: нет
-Revision: 129
+Revision: 130
 
 ## Цель
 
@@ -155,10 +240,18 @@ Revision: 129
   - Git Commit: [DONE] feat: Записать ограничение plan:extend после завершённого delivery
   - Reference: kit-extend-after-delivery-note-20261004 / T001 / implementation
   - Файлы: docs/planning/delivery-ordering-policy.md
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: актуализировать контекст проекта
+- [TODO] K1: Компактный recovery: формы и карты по запросу; Workflow Kit 1.5.4 — Ожидает
+  - Git Commit: [PENDING] feat: Компактный recovery: формы и карты по запросу; Workflow Kit 1.5.4
+  - Reference: kit-extend-after-delivery-note-20261004 / K1 / implementation
+  - Файлы: src/lib/recovery.mjs, src/lib/command-help.mjs, src/lib/common.mjs, package.json, scripts/check-package.mjs, scripts/check-runtime-fixture.mjs, src/templates/AGENTS.md, src/templates/START.md, src/templates/STAGES.md, docs/planning/compact-recovery.md
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: kit-extend-after-delivery-note-20261004 / DOCS / implementation
-  - Файлы: docs/planning/delivery-ordering-policy.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
+  - Файлы: docs/planning/delivery-ordering-policy.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, src/templates/AGENTS.md, src/templates/START.md, src/templates/STAGES.md, docs/planning/compact-recovery.md, README.md
+- [TODO] K2: Синхронизировать WorkflowKit main с GitHub — Ожидает
+  - Git Commit: [PENDING] feat: Синхронизировать WorkflowKit main с GitHub
+  - Reference: kit-extend-after-delivery-note-20261004 / K2 / implementation
+  - Файлы: README.md
 
 ## Context Pack For This Cycle
 
