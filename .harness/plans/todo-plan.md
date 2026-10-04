@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 119,
+  "plan_revision": 121,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "kit-153-project-rename",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Workflow Kit 1.5.3: штатное переименование проекта (project:rename) и обновление установок 1.5.2",
   "acceptance_criteria": [
     "Workflow Kit 1.5.3: штатное переименование проекта (project:rename) и обновление установок 1.5.2"
@@ -33,7 +33,9 @@
       "docs/architecture/ARCHITECTURE.md",
       "docs/architecture/OVERVIEW.md",
       "docs/MODULES.md",
-      "docs/DOCUMENTATION_INDEX.md"
+      "docs/DOCUMENTATION_INDEX.md",
+      "README.md",
+      "docs/modules/workflow-kit-package.md"
     ]
   },
   "baseline_commit": "c438148a6eea3532538eb122383f17887155b9d7",
@@ -126,8 +128,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "kit-153-project-rename",
         "task_id": "DOCS",
@@ -144,7 +146,9 @@
         "src/WORKFLOW.md",
         "docs/architecture/OVERVIEW.md",
         "docs/MODULES.md",
-        "docs/DOCUMENTATION_INDEX.md"
+        "docs/DOCUMENTATION_INDEX.md",
+        "README.md",
+        "docs/modules/workflow-kit-package.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -153,7 +157,13 @@
       "acceptance_criteria": [
         "Документы соответствуют результату"
       ],
-      "expected_commit_message": "docs: актуализировать контекст проекта"
+      "expected_commit_message": "docs: актуализировать контекст проекта",
+      "actual_files": [
+        "README.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/workflow-kit-package.md"
+      ]
     }
   ],
   "blocked_reason": null,
@@ -171,10 +181,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: kit-153-project-rename
 Current Task: нет
-Revision: 119
+Revision: 121
 
 ## Цель
 
@@ -190,10 +200,10 @@ Workflow Kit 1.5.3: штатное переименование проекта (
   - Git Commit: [DONE] feat: Команда project:rename и обновление 1.5.2 → 1.5.3
   - Reference: kit-153-project-rename / T001 / implementation
   - Файлы: src/lib/actions.mjs, src/cli.mjs, src/lib/command-help.mjs, src/lib/common.mjs, src/lib/installer.mjs, package.json, scripts/check-package.mjs, scripts/check-runtime-fixture.mjs, scripts/check-consumer-contract.mjs, docs/planning/project-rename.md, src/WORKFLOW.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать контекст проекта
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать контекст проекта
   - Reference: kit-153-project-rename / DOCS / implementation
-  - Файлы: docs/planning/project-rename.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, src/WORKFLOW.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
+  - Файлы: docs/planning/project-rename.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, src/WORKFLOW.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, README.md, docs/modules/workflow-kit-package.md
 
 ## Context Pack For This Cycle
 

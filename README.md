@@ -2,7 +2,7 @@
 
 WorkflowKit — canonical Node.js package `@webpilot/workflow-kit` для управления состоянием проекта, current plan, recovery context и lifecycle задач в одном Git checkout/worktree.
 
-Текущая локальная версия исходников: **1.5.2**; последний опубликованный Release — **1.5.1**. Текущая рабочая среда и Project Web Pilot используют **Node.js 24.21.0**. Минимальное требование самого пакета остаётся **Node.js 22+** (`engines.node: >=22`); Node 24 соответствует этому требованию.
+Текущая версия исходников: **1.5.3** (команда `project:rename`); последний опубликованный Release Kit — **1.5.1**; 1.5.2 входит в Web Pilot 0.6.81. Текущая рабочая среда и Project Web Pilot используют **Node.js 24.21.0**. Минимальное требование самого пакета остаётся **Node.js 22+** (`engines.node: >=22`); Node 24 соответствует этому требованию.
 
 ## Связанные репозитории
 
@@ -50,7 +50,7 @@ node scripts/check-runtime-fixture.mjs
 node scripts/check-consumer-contract.mjs
 ```
 
-Опубликованный runtime Release 1.5.1 содержит 35 файлов; SHA-256: `93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33`. Текущий локальный Workflow Kit 1.5.2 после policy DOCS → delivery содержит 35 файлов, SHA-256: `646fec106c498e004d8688a3bc40012bea1654178ce66a61b650211ab28055df`; эти изменения ещё не публиковались отдельным release.
+Опубликованный runtime Release 1.5.1 содержит 35 файлов; SHA-256: `93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33`. Текущий локальный Workflow Kit 1.5.2 после policy DOCS → delivery содержит 35 файлов, SHA-256: `646fec106c498e004d8688a3bc40012bea1654178ce66a61b650211ab28055df`; эти изменения ещё не публиковались отдельным release. Workflow Kit 1.5.3 — 35 файлов, SHA-256: `d59ae7b6b074e953fdd6c5d78d1f644902f0e7b9af5ad3c78d67d42f1f6a1c0f`.
 
 Исходный [GitHub Release WorkflowKit 1.5.1](https://github.com/OleynikAleksandr/WorkflowKit/releases/tag/v1.5.1) сохраняет опубликованный тег; последующие документальные обновления находятся в main.
 
@@ -77,6 +77,10 @@ Project Web Pilot подключает WorkflowKit как локальную dep
 Один checkout по-прежнему имеет один current plan. Новый Chat/Work получает его recovery; сохранённый чат открывается без новой отправки. Исторические планы исключены из обычного recovery. Размер текущего пакета зависит от включённых документов и рабочих изменений; transport budget ограничивает выдачу и не сокращает автоматически историю внутри обязательных документов. Политика компактного контекста требует отдельного изменения контракта. Передача контекста использует Paste без изменения системного clipboard и завершается после Send; неизвестный результат не вызывает автоматический повтор.
 
 Подробности: [README Web Pilot](https://github.com/OleynikAleksandr/Project-Web-Pilot/blob/main/README.md), [контракт клиентского AutoPlan](https://github.com/OleynikAleksandr/Project-Web-Pilot/blob/main/docs/planning/auto-plan-client-driven-refactor.md) и [проверки/приёмка клиента](https://github.com/OleynikAleksandr/Project-Web-Pilot/blob/main/docs/VERIFICATION.md). Сохранение ScreenCapture локальной 0.6.80 принято пользователем и подтверждено установленными mac-signature/mac-screen-capture проверками. Native Windows и чистая установка 0.6.80 не проверены. Web Pilot Sidebar остаётся отдельным 0.1.0 с тестовым хостом; его README отмечает расхождение Composer vendor lock с текущим клиентом.
+
+## Workflow Kit 1.5.3 — переименование проекта
+
+По поручению пользователя 04.10.2026 добавлена команда `project:rename --name <имя> --expected-revision N`. Она меняет `project_name` в current plan (заголовок плана и recovery) — например, после переименования папки проекта — и обновляет абсолютные пути git-hooks в `.harness/kit-manifest.json` под текущий checkout. Один служебный коммит (роль kit-update); повтор без изменений не коммитит; при активной микрозадаче и недопустимом имени — отказ без изменений. Папку команда не переименовывает. Установки 1.5.2 обновляются до 1.5.3 штатным `install --update`. Runtime: 35 файлов; SHA-256 `d59ae7b6b074e953fdd6c5d78d1f644902f0e7b9af5ad3c78d67d42f1f6a1c0f`. Проверка — сценарий переименования в `scripts/check-runtime-fixture.mjs`. Контракт: [Переименование проекта](docs/planning/project-rename.md).
 
 ## Workflow Kit 1.5.1 — перенос остатка scope
 

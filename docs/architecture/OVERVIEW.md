@@ -2,7 +2,7 @@
 
 ## Назначение
 
-WorkflowKit — canonical Node.js package `@webpilot/workflow-kit`. Репозиторий `/Users/oleksandroliinyk/VSCODE/WorkflowKit` является единственным местом разработки кода Kit. Текущая локальная версия исходников — **1.5.2**; последний опубликованный release — **1.5.1**.
+WorkflowKit — canonical Node.js package `@webpilot/workflow-kit`. Репозиторий `/Users/oleksandroliinyk/VSCODE/WorkflowKit` является единственным местом разработки кода Kit. Текущая версия исходников — **1.5.3**; последний опубликованный release Kit — **1.5.1**; 1.5.2 входит в Web Pilot 0.6.81.
 
 Рабочая среда и опубликованная интеграция Web Pilot 0.6.80 используют Node 24.21.0; минимальное требование самого пакета Kit остаётся Node 22+. Опубликованный Release Kit остаётся 1.5.1; локальный Workflow Kit 1.5.2 содержит непубликованное изменение policy DOCS → delivery и безопасный upgrade 1.5.1 → 1.5.2.
 
@@ -24,11 +24,15 @@ Upgrade со старой session-owned установки оставляет va
 
 ## Проверка
 
-Текущий локальный canonical runtime 1.5.2: 35 файлов; SHA-256 `646fec106c498e004d8688a3bc40012bea1654178ce66a61b650211ab28055df`. Опубликованный Release 1.5.1 сохраняет SHA-256 `93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33`.
+Текущий canonical runtime 1.5.3: 35 файлов; SHA-256 `d59ae7b6b074e953fdd6c5d78d1f644902f0e7b9af5ad3c78d67d42f1f6a1c0f`. Прежний 1.5.2: SHA-256 `646fec106c498e004d8688a3bc40012bea1654178ce66a61b650211ab28055df`. Опубликованный Release 1.5.1 сохраняет SHA-256 `93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33`.
 
 Проверки: `node scripts/check-package.mjs`, `node scripts/check-runtime-fixture.mjs`, `node scripts/check-consumer-contract.mjs`.
 
 Подробный контракт: [Workflow Kit Package](../modules/workflow-kit-package.md). Policy DOCS → delivery: [Delivery Ordering](../planning/delivery-ordering-policy.md). История package extraction: [Canonical Workflow Kit Package](../planning/canonical-workflow-kit-package.md). Спецификация миграции state: [Single Active Plan Migration](../planning/single-active-plan-migration.md).
+
+## Workflow Kit 1.5.3 — переименование проекта
+
+По поручению пользователя 04.10.2026 добавлена команда `project:rename --name <имя> --expected-revision N`. Она меняет `project_name` в current plan (заголовок плана и recovery) — например, после переименования папки проекта — и обновляет абсолютные пути git-hooks в `.harness/kit-manifest.json` под текущий checkout. Один служебный коммит (роль kit-update); повтор без изменений не коммитит; при активной микрозадаче и недопустимом имени — отказ без изменений. Папку команда не переименовывает. Установки 1.5.2 обновляются до 1.5.3 штатным `install --update`. Runtime: 35 файлов; SHA-256 `d59ae7b6b074e953fdd6c5d78d1f644902f0e7b9af5ad3c78d67d42f1f6a1c0f`. Проверка — сценарий переименования в `scripts/check-runtime-fixture.mjs`. Контракт: [Переименование проекта](../planning/project-rename.md).
 
 ## Workflow Kit 1.5.1 — перенос остатка scope
 

@@ -28,6 +28,7 @@
 | docs/planning/canonical-workflow-kit-package.md | Исторический план выделения canonical package |
 | docs/planning/single-active-plan-migration.md | План и результат перехода к одному current plan на checkout |
 | docs/planning/delivery-ordering-policy.md | Канонический порядок DOCS → delivery и запрет незапланированных build/publish |
+| docs/planning/project-rename.md | Workflow Kit 1.5.3: команда project:rename |
 | docs/WORKFLOW_START.md | Общий контракт старта Workflow Kit |
 | docs/DOCUMENTATION_INDEX.md | Этот индекс |
 <!-- workflow-kit:end -->

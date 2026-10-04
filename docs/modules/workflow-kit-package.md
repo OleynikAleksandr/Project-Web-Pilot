@@ -121,7 +121,11 @@ Workspace Setup и project readiness проверяют только current che
 
 `scripts/check-package.mjs` проверяет package identity/fileset/exports и отсутствие project/runtime state в tarball.
 
-Release **@webpilot/workflow-kit 1.5.1**: canonical runtime — **35 файлов**, SHA-256 **93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33**. Текущий непубликованный Workflow Kit **1.5.2** — **35 файлов**, SHA-256 **646fec106c498e004d8688a3bc40012bea1654178ce66a61b650211ab28055df**. Upgrade 1.5.1 → 1.5.2 поддерживается installer-ом. Installer принимает upgrade с 1.4.13; runtime regression проверяет этот переход, архивирование legacy session plans, strict current recovery budget и Git worktree isolation.
+Release **@webpilot/workflow-kit 1.5.1**: canonical runtime — **35 файлов**, SHA-256 **93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33**. Текущий непубликованный Workflow Kit **1.5.2** — **35 файлов**, SHA-256 **646fec106c498e004d8688a3bc40012bea1654178ce66a61b650211ab28055df**. Upgrade 1.5.1 → 1.5.2 поддерживается installer-ом. Workflow Kit **1.5.3** — **35 файлов**, SHA-256 **d59ae7b6b074e953fdd6c5d78d1f644902f0e7b9af5ad3c78d67d42f1f6a1c0f**: команда `project:rename`, upgrade 1.5.2 → 1.5.3. Installer принимает upgrade с 1.4.13; runtime regression проверяет этот переход, архивирование legacy session plans, strict current recovery budget и Git worktree isolation.
+
+## Workflow Kit 1.5.3 — переименование проекта
+
+По поручению пользователя 04.10.2026 добавлена команда `project:rename --name <имя> --expected-revision N`. Она меняет `project_name` в current plan (заголовок плана и recovery) — например, после переименования папки проекта — и обновляет абсолютные пути git-hooks в `.harness/kit-manifest.json` под текущий checkout. Один служебный коммит (роль kit-update); повтор без изменений не коммитит; при активной микрозадаче и недопустимом имени — отказ без изменений. Папку команда не переименовывает. Установки 1.5.2 обновляются до 1.5.3 штатным `install --update`. Runtime: 35 файлов; SHA-256 `d59ae7b6b074e953fdd6c5d78d1f644902f0e7b9af5ad3c78d67d42f1f6a1c0f`. Проверка — сценарий переименования в `scripts/check-runtime-fixture.mjs`. Контракт: [Переименование проекта](../planning/project-rename.md).
 
 ## Workflow Kit 1.5.1 — перенос остатка scope
 
