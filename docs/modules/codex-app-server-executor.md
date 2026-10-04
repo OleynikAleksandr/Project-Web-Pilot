@@ -322,6 +322,10 @@ Private state App Server runtime теперь также владеет selector
 
 Local backend работает `--mcp-only`; App Server backend также отделяет MCP start от `--tunnel-only`. Один внешний catalog из 47 tools остаётся привязан к одному tunnel, поэтому relaunch Web Pilot нужен лишь для обновления tool catalog после смены backend, а не для ручного включения второго connector.
 
+## Канал ChatGPT — 0.6.83
+
+`selector.json` хранит `chatgpt_channel` (`secure-tunnel` по умолчанию или `vps`). `configure-channel --channel <канал>` меняет только это поле; `configure-selector` при смене runtime канал сохраняет и в режиме VPS не требует настроенного Secure Tunnel. `stop --tunnel-only` останавливает только tunnel-client. `selector-start` в режиме VPS останавливает tunnel-client, если он работает, и не запускает его; полный `start` в режиме VPS поднимает только MCP. Туннель VPS держит не executor, а Web Pilot (`src/vps-tunnel.mjs`, LaunchAgent `com.oleynik.vps-mcp-tunnel`). Контракт — [chatgpt-channel-vps](../planning/chatgpt-channel-vps.md).
+
 ## macOS ScreenCapture — подтверждённая локальная 0.6.80
 
 Разрешение tool calls в ChatGPT, sandbox локального executor и системный Screen Recording macOS — отдельные уровни. TCC связывает запросы executor с responsible application `com.oleynik.ProjectWebPilot`; разрешение выдаётся подписанному Web Pilot штатно пользователем. Повторные запросы прежней ad hoc сборки были вызваны несовпадением code requirement.
