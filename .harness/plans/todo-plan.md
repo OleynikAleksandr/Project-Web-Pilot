@@ -4,41 +4,19 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 121,
+  "plan_revision": 122,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
-  "scope_id": "kit-153-project-rename",
-  "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
-  "objective": "Workflow Kit 1.5.3: штатное переименование проекта (project:rename) и обновление установок 1.5.2",
-  "acceptance_criteria": [
-    "Workflow Kit 1.5.3: штатное переименование проекта (project:rename) и обновление установок 1.5.2"
-  ],
+  "scope_id": null,
+  "execution_scope_status": "NONE",
+  "delivery_status": "IN_PROGRESS",
+  "objective": "Если поручение уже ясно, создайте короткий план и приступайте; иначе обсудите следующий этап проекта.",
+  "acceptance_criteria": [],
   "approved_scope": {
-    "functional_paths": [
-      "src/lib/actions.mjs",
-      "src/cli.mjs",
-      "src/lib/command-help.mjs",
-      "src/lib/common.mjs",
-      "src/lib/installer.mjs",
-      "package.json",
-      "scripts/check-package.mjs",
-      "scripts/check-runtime-fixture.mjs",
-      "scripts/check-consumer-contract.mjs"
-    ],
-    "documentation_paths": [
-      "docs/planning/project-rename.md",
-      "src/WORKFLOW.md",
-      "docs/PRODUCT.md",
-      "docs/architecture/ARCHITECTURE.md",
-      "docs/architecture/OVERVIEW.md",
-      "docs/MODULES.md",
-      "docs/DOCUMENTATION_INDEX.md",
-      "README.md",
-      "docs/modules/workflow-kit-package.md"
-    ]
+    "functional_paths": [],
+    "documentation_paths": []
   },
-  "baseline_commit": "c438148a6eea3532538eb122383f17887155b9d7",
+  "baseline_commit": null,
   "current_task_id": null,
   "context_pack": {
     "documents": [
@@ -65,151 +43,47 @@
         ],
         "required": true,
         "revision": "WORKTREE"
-      },
-      {
-        "path": "docs/planning/project-rename.md",
-        "required": true
       }
     ],
     "include_last_completed_task": false,
     "dependency_task_ids": []
   },
-  "tasks": [
-    {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
-      "commit_ref": {
-        "scope_id": "kit-153-project-rename",
-        "task_id": "T001",
-        "role": "implementation"
-      },
-      "dependencies": [],
-      "functional_paths": [
-        "src/lib/actions.mjs",
-        "src/cli.mjs",
-        "src/lib/command-help.mjs",
-        "src/lib/common.mjs",
-        "src/lib/installer.mjs",
-        "package.json",
-        "scripts/check-package.mjs",
-        "scripts/check-runtime-fixture.mjs",
-        "scripts/check-consumer-contract.mjs"
-      ],
-      "documentation_paths": [
-        "docs/planning/project-rename.md",
-        "src/WORKFLOW.md"
-      ],
-      "verification_ids": [
-        "runtime-fixture",
-        "package-check"
-      ],
-      "id": "T001",
-      "title": "Команда project:rename и обновление 1.5.2 → 1.5.3",
-      "why": "Команда project:rename и обновление 1.5.2 → 1.5.3",
-      "verification_kind": "code",
-      "acceptance_criteria": [
-        "project:rename меняет project_name в plan и recovery и пути hooks в manifest одним коммитом",
-        "Повтор без изменений не создаёт коммит; активная задача и недопустимое имя отклоняются без изменений",
-        "Установка 1.5.2 обновляется до 1.5.3 с сохранением плана",
-        "npm run check проходит с версией 1.5.3 и новым baseline"
-      ],
-      "expected_commit_message": "feat: Команда project:rename и обновление 1.5.2 → 1.5.3",
-      "actual_files": [
-        "package.json",
-        "scripts/check-consumer-contract.mjs",
-        "scripts/check-package.mjs",
-        "scripts/check-runtime-fixture.mjs",
-        "src/WORKFLOW.md",
-        "src/cli.mjs",
-        "src/lib/actions.mjs",
-        "src/lib/command-help.mjs",
-        "src/lib/common.mjs",
-        "src/lib/installer.mjs"
-      ]
-    },
-    {
-      "implementation_status": "DONE",
-      "commit_status": "DONE",
-      "commit_ref": {
-        "scope_id": "kit-153-project-rename",
-        "task_id": "DOCS",
-        "role": "implementation"
-      },
-      "dependencies": [
-        "T001"
-      ],
-      "functional_paths": [],
-      "documentation_paths": [
-        "docs/planning/project-rename.md",
-        "docs/PRODUCT.md",
-        "docs/architecture/ARCHITECTURE.md",
-        "src/WORKFLOW.md",
-        "docs/architecture/OVERVIEW.md",
-        "docs/MODULES.md",
-        "docs/DOCUMENTATION_INDEX.md",
-        "README.md",
-        "docs/modules/workflow-kit-package.md"
-      ],
-      "verification_ids": [],
-      "id": "DOCS",
-      "title": "Актуализация всех документов проекта",
-      "why": "Сохранить актуальный контекст для следующего агента",
-      "acceptance_criteria": [
-        "Документы соответствуют результату"
-      ],
-      "expected_commit_message": "docs: актуализировать контекст проекта",
-      "actual_files": [
-        "README.md",
-        "docs/DOCUMENTATION_INDEX.md",
-        "docs/architecture/OVERVIEW.md",
-        "docs/modules/workflow-kit-package.md"
-      ]
-    }
-  ],
+  "tasks": [],
   "blocked_reason": null,
   "user_decisions": [
     {
-      "id": "467659be-86d7-4de9-bb0e-bf3ef8ac8b7e",
-      "text": "Пользователь поручил выполнить описанную задачу и план.",
-      "recorded_at": "2026-10-04T08:53:34.570Z"
+      "id": "50abc900-581b-47cb-ae87-ece32f20da43",
+      "text": "Поручение пользователя 04.10.2026: выпустить Kit 1.5.3 и Project Web Pilot с ним; scope выполнен, закрывается перед release Web Pilot",
+      "recorded_at": "2026-10-04T09:00:11.878Z"
     }
-  ]
+  ],
+  "archived_scope_id": "kit-153-project-rename"
 }
 ```
 <!-- workflow-state:end -->
 
 ## Состояние
 
-Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
-Scope: kit-153-project-rename
+Execution Scope Status: NONE
+Delivery Status: IN_PROGRESS
+Scope: не создан
 Current Task: нет
-Revision: 121
+Revision: 122
 
 ## Цель
 
-Workflow Kit 1.5.3: штатное переименование проекта (project:rename) и обновление установок 1.5.2
+Если поручение уже ясно, создайте короткий план и приступайте; иначе обсудите следующий этап проекта.
 
 ## Критерии приёмки
 
-- Workflow Kit 1.5.3: штатное переименование проекта (project:rename) и обновление установок 1.5.2
 
 ## Микрозадачи
 
-- [DONE] T001: Команда project:rename и обновление 1.5.2 → 1.5.3 — Завершено
-  - Git Commit: [DONE] feat: Команда project:rename и обновление 1.5.2 → 1.5.3
-  - Reference: kit-153-project-rename / T001 / implementation
-  - Файлы: src/lib/actions.mjs, src/cli.mjs, src/lib/command-help.mjs, src/lib/common.mjs, src/lib/installer.mjs, package.json, scripts/check-package.mjs, scripts/check-runtime-fixture.mjs, scripts/check-consumer-contract.mjs, docs/planning/project-rename.md, src/WORKFLOW.md
-- [DONE] DOCS: Актуализация всех документов проекта — Завершено
-  - Git Commit: [DONE] docs: актуализировать контекст проекта
-  - Reference: kit-153-project-rename / DOCS / implementation
-  - Файлы: docs/planning/project-rename.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, src/WORKFLOW.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, README.md, docs/modules/workflow-kit-package.md
 
 ## Context Pack For This Cycle
 
 - docs/architecture/OVERVIEW.md → Краткая архитектура проекта
 - docs/MODULES.md → Модули проекта
 - docs/DOCUMENTATION_INDEX.md → Каталог документации
-- docs/planning/project-rename.md
 
 Служебные состояния меняются только командами workflow. Приёмка не архивирует scope.
