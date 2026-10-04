@@ -41,6 +41,11 @@ MAX_BINARY_READ = 512_000
 MAX_BINARY_WRITE = 10_000_000
 MAX_BATCH = 16
 MAX_OUTPUT = 120_000
+# ChatGPT shows a model roughly 10 000 tokens of one tool result; a part of 20 000 bytes
+# (about 5 000 tokens of Russian text) stays visible even if the client prints it twice.
+CONTEXT_PART_BYTES = 20_000
+SESSION_RULES_FILE = Path(__file__).resolve().parent / "session-rules.md"
+ACTIVE_WORKSPACE_FILE = "active-workspace.json"
 
 SENSITIVE_NAMES = {
     ".env", ".npmrc", ".pypirc", ".netrc", "credentials", "credentials.json",
@@ -182,6 +187,22 @@ class LocalFacade:
             "generated_at_ms": int(time.time() * 1000),
             "ack_required": False,
         }
+
+    def active_workspace(self) -> str:
+        """The project Web Pilot has open; Web Pilot writes it for calls without a workspace."""
+        record = self.state_root / ACTIVE_WORKSPACE_FILE
+        try:
+            workspace = json.loads(record.read_text(encoding="utf-8")).get("workspace")
+        except (OSError, ValueError, AttributeError):
+            workspace = None
+        if not isinstance(workspace, str) or not Path(workspace).is_absolute():
+            raise ValueError("WORKSPACE_REQUIRED: no project is open in Web Pilot; ask the user for the absolute project folder path")
+        return workspace
+
+    def workflow_context(self, workspace: str = "", session_id: str = "", part: int = 0) -> dict[str, Any] | str:
+        workspace = workspace.strip() or self.active_workspace()
+        result = self.workflow_recover(workspace, session_id)
+        return context_part(result, part) if part else result
 
     def file_info(self, path: str) -> dict[str, Any]:
         target = self.resolve(path, must_exist=True)
@@ -913,6 +934,53 @@ class TurnWatchdog:
         raise ValueError("action must be start, checkpoint or complete")
 
 
+def session_rules() -> str:
+    return SESSION_RULES_FILE.read_text(encoding="utf-8").strip() + "\n\n"
+
+
+def split_context(text: str, limit: int = CONTEXT_PART_BYTES) -> list[str]:
+    """Split on line boundaries; a single longer line is cut by characters (at most 4 bytes each)."""
+    pieces: list[str] = []
+    for line in text.splitlines(keepends=True):
+        if len(line.encode("utf-8")) <= limit:
+            pieces.append(line)
+        else:
+            step = max(1, limit // 4)
+            pieces.extend(line[i:i + step] for i in range(0, len(line), step))
+    parts: list[str] = []
+    current: list[str] = []
+    size = 0
+    for piece in pieces:
+        n = len(piece.encode("utf-8"))
+        if current and size + n > limit:
+            parts.append("".join(current))
+            current, size = [], 0
+        current.append(piece)
+        size += n
+    if current:
+        parts.append("".join(current))
+    return parts or [""]
+
+
+def context_part(result: dict[str, Any], part: int) -> str:
+    """One readable part of the session rules plus the complete recovery packet."""
+    text = session_rules() + result["context"]
+    parts = split_context(text)
+    total = len(parts)
+    if part < 1 or part > total:
+        raise ValueError(f"PART_OUT_OF_RANGE: part must be 1..{total}")
+    workspace = json.dumps(result["workspace"], ensure_ascii=False)
+    sha = sha256_bytes(text.encode("utf-8"))[:16]
+    nxt = (f"Следующая часть: workflow_context_recover(workspace={workspace}, part={part + 1})."
+           if part < total else "Это последняя часть.")
+    head = f"ЧАСТЬ {part} ИЗ {total} контекста проекта {workspace}; sha256 {sha}. {nxt}\n\n"
+    tail = (f"\n[ПРОДОЛЖЕНИЕ] Контекст не закончен. До ответа пользователю вызови "
+            f"workflow_context_recover(workspace={workspace}, part={part + 1}).\n"
+            if part < total else
+            f"\n[КОНЕЦ ПАКЕТА] Получены все {total} части. Если sha256 у частей различался, прочитай контекст заново с part=1.\n")
+    return head + parts[part - 1] + tail
+
+
 def create_server(*, host: str, port: int, state_root: Path, codex_binary: str | None = None) -> FastMCP:
     client = AppServerClient(binary=codex_binary, cwd=str(Path.home()), request_timeout=30)
     facade = LocalFacade(client, state_root)
@@ -920,6 +988,13 @@ def create_server(*, host: str, port: int, state_root: Path, codex_binary: str |
     mcp = FastMCP(
         "Codex App Server Local Mac",
         instructions=(
+            "Workflow Kit projects: when a conversation concerns a local project, call "
+            "workflow_context_recover(part=1) before your first answer in that conversation, then call it with "
+            "each next part number the result names until the last part; repeat only when the user asks to refresh "
+            "the project context. All parts together are the complete current project context and working rules: "
+            "read all of them and follow them; do not substitute reading project files for unread parts. "
+            "Omit workspace to use the project open in Web Pilot, or pass the absolute project folder the user names "
+            "or the path shown in the parts. "
             "Local-computer tools only. Use ChatGPT native web/cloud tools for public information. "
             "This MCP uses Codex App Server as an executor and never launches a Codex model turn. "
             "Computer Use is routed through the local Codex/node_repl/@oai/sky stack where applicable."
@@ -947,9 +1022,13 @@ def create_server(*, host: str, port: int, state_root: Path, codex_binary: str |
             result["computer_use"] = {"available": False, "error": str(exc)}
         return result
 
-    @mcp.tool(annotations=READ_ONLY)
-    def workflow_context_recover(workspace: str, session_id: str = "") -> dict[str, Any]:
-        return facade.workflow_recover(workspace, session_id)
+    # Text only: a structured copy would double what the client shows the model.
+    @mcp.tool(annotations=READ_ONLY, structured_output=False)
+    def workflow_context_recover(workspace: str = "", session_id: str = "", part: int = 0) -> dict[str, Any] | str:
+        """Project context for Workflow Kit projects: working rules, current plan and project documents.
+        Call with part=1, then with each next part number the result names, and read every part before answering.
+        workspace defaults to the project open in Web Pilot. part=0 returns the whole packet in one result."""
+        return facade.workflow_context(workspace, session_id, part)
 
     @mcp.tool(annotations=READ_ONLY)
     def computer_status() -> dict[str, Any]:

@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1095,
+  "plan_revision": 1097,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "mcp-context-delivery-0.6.86-20261004",
@@ -77,8 +77,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "mcp-context-delivery-0.6.86-20261004",
         "task_id": "T001",
@@ -107,7 +107,12 @@
         "part=0 отдаёт весь пакет как раньше",
         "instructions требуют прочитать все части перед первым ответом"
       ],
-      "expected_commit_message": "feat: MCP: recovery частями, правила сессии и проект по умолчанию"
+      "expected_commit_message": "feat: MCP: recovery частями, правила сессии и проект по умолчанию",
+      "actual_files": [
+        "tests/codex-app-server-mcp.test.mjs",
+        "tools/codex-app-server-mcp/server.py",
+        "tools/codex-app-server-mcp/session-rules.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -310,7 +315,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: mcp-context-delivery-0.6.86-20261004
 Current Task: нет
-Revision: 1095
+Revision: 1097
 
 ## Цель
 
@@ -322,8 +327,8 @@ Revision: 1095
 
 ## Микрозадачи
 
-- [TODO] T001: MCP: recovery частями, правила сессии и проект по умолчанию — Ожидает
-  - Git Commit: [PENDING] feat: MCP: recovery частями, правила сессии и проект по умолчанию
+- [DONE] T001: MCP: recovery частями, правила сессии и проект по умолчанию — Завершено
+  - Git Commit: [DONE] feat: MCP: recovery частями, правила сессии и проект по умолчанию
   - Reference: mcp-context-delivery-0.6.86-20261004 / T001 / implementation
   - Файлы: tools/codex-app-server-mcp/server.py, tests/codex-app-server-mcp.test.mjs, docs/planning/mcp-context-delivery.md, tools/codex-app-server-mcp/session-rules.md
 - [TODO] T002: Web Pilot: сессии Codex App Server без вставки recovery — Ожидает

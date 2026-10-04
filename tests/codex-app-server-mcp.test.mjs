@@ -595,6 +595,117 @@ print(json.dumps(out, ensure_ascii=False))
   assert.match(out.errors.bad_click, /integer x and y/);
 });
 
+test('workflow context is read in text parts with the session rules and the project open in Web Pilot', { timeout: 60_000 }, async t => {
+  const venvPython = path.join(homedir(), 'Library', 'Application Support', 'WebPilotCodexExecutor', 'runtime', 'venv', 'bin', 'python');
+  if (!existsSync(venvPython)) { t.skip('Codex App Server runtime venv is not installed'); return; }
+  const { chmod } = await import('node:fs/promises');
+  const root = await mkdtemp(path.join(tmpdir(), 'web-pilot-context-parts-'));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const workspace = path.join(root, 'Мой проект');
+  await mkdir(path.join(workspace, 'scripts'), { recursive: true });
+  await mkdir(path.join(workspace, '.harness', 'plans'), { recursive: true });
+  await writeFile(path.join(workspace, '.harness', 'plans', 'todo-plan.md'), '# plan\n');
+  // About 70 KB of Russian lines plus one line longer than a part.
+  const lines = Array.from({ length: 900 }, (_, i) => `Строка ${i} контекста проекта: описание модулей и правил работы.`);
+  lines.splice(450, 0, 'Длинная строка '.repeat(2000));
+  const text = lines.join('\n') + '\nReference-only: []\n';
+  await writeFile(path.join(workspace, 'packet.json'), JSON.stringify({ ok: true, text, completeness: 'COMPLETE', head: 'h', signature: 's' }));
+  const script = path.join(workspace, 'scripts', 'workflow');
+  await writeFile(script, '#!/bin/sh\ncat "$(dirname "$0")/../packet.json"\n');
+  await chmod(script, 0o755);
+  const probe = path.join(root, 'probe.py');
+  await writeFile(probe, `import json, sys, pathlib, subprocess
+sys.path.insert(0, sys.argv[1])
+import server
+root = pathlib.Path(sys.argv[2])
+workspace = sys.argv[3]
+class Client:
+    cwd = str(root)
+    def fs_read_file(self, path):
+        return pathlib.Path(path).read_bytes()
+    def command_exec(self, argv, cwd=None, timeout_ms=None, output_bytes_cap=None, **kwargs):
+        run = subprocess.run(argv, cwd=cwd, capture_output=True, text=True)
+        return {"exitCode": run.returncode, "stdout": run.stdout, "stderr": run.stderr}
+state = root / "state"
+state.mkdir()
+facade = server.LocalFacade(Client(), state)
+out = {}
+try:
+    facade.workflow_context("", "", 1)
+except ValueError as error:
+    out["no_active"] = str(error)
+(state / "active-workspace.json").write_text(json.dumps({"workspace": workspace}), encoding="utf-8")
+full = facade.workflow_context("", "", 0)
+out["full_context"] = full["context"]
+parts = []
+for number in range(1, 50):
+    part = facade.workflow_context("", "", number)
+    parts.append(part)
+    if "[КОНЕЦ ПАКЕТА]" in part:
+        break
+out["parts"] = parts
+out["explicit_first"] = facade.workflow_context(workspace, "", 1) == parts[0]
+out["range"] = []
+for bad in (len(parts) + 1, -1):
+    try:
+        facade.workflow_context(workspace, "", bad)
+        out["range"].append(None)
+    except ValueError as error:
+        out["range"].append(str(error))
+out["rules"] = server.session_rules()
+mcp = server.create_server(host="127.0.0.1", port=0, state_root=state)
+tool = mcp._tool_manager.get_tool("workflow_context_recover")
+out["output_schema"] = tool.fn_metadata.output_schema
+out["params"] = tool.parameters
+out["instructions"] = mcp.instructions
+print(json.dumps(out, ensure_ascii=False))
+`);
+  const run = await new Promise((resolve, reject) => {
+    const child = spawn(venvPython, ['-B', probe, clientDir, root, workspace], { cwd: root, env: { ...process.env, PYTHONDONTWRITEBYTECODE: '1' }, stdio: ['ignore', 'pipe', 'pipe'] });
+    // Decode as one stream: a Cyrillic character may be split between two chunks.
+    child.stdout.setEncoding('utf8'); child.stderr.setEncoding('utf8');
+    let stdout = '', stderr = '';
+    child.stdout.on('data', chunk => { stdout += chunk; });
+    child.stderr.on('data', chunk => { stderr += chunk; });
+    child.on('error', reject);
+    child.on('close', code => resolve({ code, stdout, stderr }));
+  });
+  assert.equal(run.code, 0, run.stderr);
+  const out = JSON.parse(run.stdout.trim().split('\n').at(-1));
+  assert.match(out.no_active, /WORKSPACE_REQUIRED/);
+  assert.equal(out.full_context, text, 'part=0 keeps the whole packet');
+  assert.ok(out.parts.length >= 4, 'about 70 KB needs several parts');
+  const total = out.parts.length;
+  const resolvedWorkspace = await (await import('node:fs/promises')).realpath(workspace); // /var → /private/var on macOS
+  const bodies = [], shas = new Set();
+  out.parts.forEach((part, index) => {
+    const head = part.slice(0, part.indexOf('\n\n'));
+    assert.match(head, new RegExp(`^ЧАСТЬ ${index + 1} ИЗ ${total} контекста проекта `));
+    assert.ok(head.includes(JSON.stringify(resolvedWorkspace)), 'every part names the project folder');
+    shas.add(head.match(/sha256 ([0-9a-f]{16})/)[1]);
+    const marker = index + 1 < total ? '\n[ПРОДОЛЖЕНИЕ]' : '\n[КОНЕЦ ПАКЕТА]';
+    const body = part.slice(head.length + 2, part.lastIndexOf(marker));
+    assert.ok(Buffer.byteLength(body) <= 20_000, `part ${index + 1} body is ${Buffer.byteLength(body)} bytes`);
+    if (index + 1 < total) assert.ok(part.endsWith(`part=${index + 2}).\n`), 'the next call is named at the end');
+    else assert.match(part, /Это последняя часть\./);
+    bodies.push(body);
+  });
+  assert.equal(shas.size, 1, 'all parts carry one sha256');
+  assert.equal(bodies.join(''), out.rules + text, 'parts join into the rules plus the exact packet');
+  assert.ok(bodies[0].startsWith('ПРАВИЛА СЕССИИ WEB PILOT'));
+  for (const rule of ['не более одной микрозадачи', 'Delivery-порядок', 'Не запускай codex exec', 'текущему checkout/worktree'])
+    assert.ok(out.rules.includes(rule), rule);
+  assert.equal(out.explicit_first, true);
+  assert.match(out.range[0], /PART_OUT_OF_RANGE/);
+  assert.match(out.range[1], /PART_OUT_OF_RANGE/);
+  assert.equal(out.output_schema, null, 'text only: no structured copy of the result');
+  assert.equal(out.params.properties.part.default, 0);
+  assert.equal(out.params.properties.workspace.default, '');
+  const lead = out.instructions.slice(0, 512);
+  for (const phrase of ['Workflow Kit projects', 'workflow_context_recover(part=1)', 'until the last part', 'before your first answer'])
+    assert.ok(lead.includes(phrase), phrase);
+});
+
 test('pid identity forces C locale for stable Terminal ownership checks', async () => {
   const root = await mkdtemp(path.join(tmpdir(), 'web-pilot-codex-identity-'));
   const probe = path.join(root, 'probe.py');
