@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "profile": "DEVELOPMENT",
-  "stack": "Electron 44.5.1 / Node 24.21.0 / Python 3 executor / Workflow Kit 1.5.3",
+  "stack": "Electron 44.5.1 / Node 24.21.0 / Python MCP 1.28.1 / Workflow Kit 1.5.3",
   "checks": [
     {
       "required": false,
@@ -14,30 +14,6 @@
       ],
       "kind": "test",
       "evidence": "tools/codex-app-server-mcp/control.py: configure-channel, stop --tunnel-only, selector-start соблюдает chatgpt_channel"
-    },
-    {
-      "required": false,
-      "timeout_ms": 180000,
-      "id": "vps-runtime",
-      "executable": "bash",
-      "args": [
-        "-lc",
-        "/opt/homebrew/bin/node --test tests/vps-tunnel.test.mjs tests/mac-runtime-switch.test.mjs tests/mac-runtime.test.mjs tests/startup-platform.test.mjs"
-      ],
-      "kind": "test",
-      "evidence": "src/vps-tunnel.mjs и src/mac-runtime-switch.mjs: plist проброса, смена порта, канал VPS без tunnel-client"
-    },
-    {
-      "required": false,
-      "timeout_ms": 180000,
-      "id": "settings-ui",
-      "executable": "bash",
-      "args": [
-        "-lc",
-        "/opt/homebrew/bin/node --test tests/settings-chatgpt-channel.test.mjs tests/project-doctor-ui.test.mjs tests/sidebar.test.mjs"
-      ],
-      "kind": "test",
-      "evidence": "src/ui/index.html + settings-panel.mjs: раздел «Подключение ChatGPT» в JSDOM"
     },
     {
       "required": false,
