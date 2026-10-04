@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "profile": "DEVELOPMENT",
-  "stack": "Electron 44.5.1 / Node 24.21.0 / Python MCP 1.28.1 / Workflow Kit 1.5.3",
+  "stack": "Electron 44.5.1 / Node 24.21.0 / Python MCP 1.28.1 / Workflow Kit 1.5.4",
   "checks": [
     {
       "required": false,
@@ -13,7 +13,7 @@
         "/opt/homebrew/bin/node --test tests/codex-app-server-mcp.test.mjs"
       ],
       "kind": "test",
-      "evidence": "tools/codex-app-server-mcp: каналы control.py, Computer Use и workflow_context_recover частями (≤20000 байт, один sha256, проект по умолчанию)"
+      "evidence": "tools/codex-app-server-mcp: каналы control.py, Computer Use и workflow_context_recover частями строго по одной (ключ after, ≤28000 байт, PART_ORDER)"
     },
     {
       "required": false,
@@ -43,7 +43,7 @@
       "timeout_ms": 600000,
       "id": "paired-release",
       "kind": "package",
-      "evidence": "~/Downloads/WebPilot-0.6.86: macOS arm64 + Windows x64 ZIP, SHA256SUMS.txt, INSTALL.txt, release-manifest.json; packaged sources and bundled Workflow Kit 1.5.3 verified",
+      "evidence": "~/Downloads/WebPilot-0.6.87: macOS arm64 + Windows x64 ZIP, SHA256SUMS.txt, INSTALL.txt, release-manifest.json; packaged sources and bundled Workflow Kit 1.5.4 verified",
       "executable": "npm",
       "args": [
         "run",
@@ -66,7 +66,7 @@
       "timeout_ms": 180000,
       "id": "github-release",
       "kind": "package",
-      "evidence": "GitHub Release v0.6.86 tag/assets and remote main verified against local release-manifest.json without rebuilding",
+      "evidence": "GitHub Release v0.6.87 tag/assets and remote main verified against local release-manifest.json without rebuilding",
       "executable": "node",
       "args": [
         "scripts/check-github-release.mjs"
