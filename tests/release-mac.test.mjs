@@ -56,6 +56,23 @@ test('two releases keep the permanent app identity, back up old contents and pub
   assert.ok((await fs.stat(path.join(delivery, path.basename(second.zip)))).size > 0);
   assert.equal((await fs.readFile(second.zip + '.sha256', 'utf8')).split(' ')[0], second.sha256);
   assert.ok(!second.zip.startsWith(second.installation.target + path.sep));
+  // Backups: one slot per target outside Spotlight; the next release replaces it with the then-previous version.
+  const backupRoot = path.dirname(second.installation.backup);
+  assert.equal(path.basename(backupRoot), 'release-backups.noindex');
+  const thirdSource = await bundle(root, '1.0.2', 'third');
+  const third = await publishMacRelease({ root, deliveryDirectory: delivery, verifySignature });
+  assert.equal(third.installation.backup, second.installation.backup, 'the same target keeps one slot');
+  assert.equal(marker(third.installation.backup), 'second');
+  assert.equal(third.installation.backupError, undefined);
+  assert.deepEqual(await fs.readdir(backupRoot), [path.basename(third.installation.backup)]);
+  const other = path.join(root, 'Applications', 'Project Web Pilot.app');
+  const options = { source: thirdSource, target: other, backupRoot, version: '1.0.2', verifySignature };
+  assert.equal((await installMacBundle(options)).backup, null, 'a first installation has nothing to back up');
+  const otherAgain = await installMacBundle(options);
+  assert.notEqual(otherAgain.backup, third.installation.backup, 'another target gets its own slot');
+  assert.equal(marker(otherAgain.backup), 'third');
+  assert.equal(marker(third.installation.backup), 'second', 'other targets keep their backups');
+  assert.equal((await fs.readdir(backupRoot)).length, 2);
 });
 
 test('invalid source version and unexpected target files preserve the installed app', mac, async t => {

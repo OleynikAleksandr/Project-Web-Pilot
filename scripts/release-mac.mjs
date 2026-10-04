@@ -1,5 +1,6 @@
 import { sha256File } from '../src/common.mjs';
 import fs from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import path from 'node:path';
 import os from 'node:os';
 import { execFileSync } from 'node:child_process';
@@ -8,6 +9,14 @@ import { extractFile, uncache } from '@electron/asar';
 import { verifyMacSignature } from './check-mac-signature.mjs';
 
 const APP = 'Project Web Pilot.app';
+// Spotlight skips `.noindex` folders, so helper apps inside backups are not listed as applications.
+export const BACKUP_FOLDER = 'release-backups.noindex';
+// One slot per install target (repo root app, /Applications): it holds only the previous Contents.
+export function backupSlot(backupRoot, target) {
+  const resolved = path.resolve(target);
+  const parent = path.basename(path.dirname(resolved)).replace(/[^A-Za-z0-9._-]+/g, '-');
+  return path.join(backupRoot, 'mac-' + parent + '-' + createHash('sha256').update(resolved).digest('hex').slice(0, 12));
+}
 const BUNDLE_ID = 'com.oleynik.ProjectWebPilot';
 const run = (command, args) => execFileSync(command, args, { encoding: 'utf8' }).trim();
 
@@ -57,7 +66,7 @@ export async function installMacBundle({ source, target, backupRoot, version, ve
   const stage = await fs.mkdtemp(path.join(path.dirname(target), '.web-pilot-install-'));
   const stagedApp = path.join(stage, APP);
   const targetContents = path.join(target, 'Contents');
-  let backup = null, oldMoved = false, newMoved = false, created = false;
+  let backup = null, oldMoved = false, newMoved = false, created = false, result;
   try {
     run('/usr/bin/ditto', [source, stagedApp]);
     sameBundle(await inspectSignedBundle(stagedApp, version, verifySignature), expected);
@@ -77,7 +86,7 @@ export async function installMacBundle({ source, target, backupRoot, version, ve
     if (previous && (previous.dev !== installed.dev || previous.ino !== installed.ino)) {
       throw new Error('App directory identity changed');
     }
-    return { target, ...expected, device: installed.dev, inode: installed.ino, backup };
+    result = { target, ...expected, device: installed.dev, inode: installed.ino, backup };
   } catch (error) {
     if (newMoved) await fs.rm(targetContents, { recursive: true });
     if (oldMoved) await fs.rename(path.join(backup, 'Contents'), targetContents);
@@ -86,6 +95,17 @@ export async function installMacBundle({ source, target, backupRoot, version, ve
   } finally {
     await fs.rm(stage, { recursive: true, force: true });
   }
+  if (backup) {
+    // The new app is verified: its backup replaces this target's previous one. A failure here keeps
+    // the temporary backup and never undoes the completed installation.
+    const slot = backupSlot(backupRoot, target);
+    try {
+      await fs.rm(slot, { recursive: true, force: true });
+      await fs.rename(backup, slot);
+      result.backup = slot;
+    } catch (error) { result.backupError = String(error?.message ?? error); }
+  }
+  return result;
 }
 
 export async function publishMacRelease({ root, deliveryDirectory, verifySignature = verifyMacSignature } = {}) {
@@ -113,7 +133,7 @@ export async function publishMacRelease({ root, deliveryDirectory, verifySignatu
     sameBundle(await inspectSignedBundle(path.join(zipCheck, APP), version, verifySignature), expected);
     const installation = await installMacBundle({
       source, target: path.join(root, APP),
-      backupRoot: path.join(runtime, 'release-backups'), version, verifySignature,
+      backupRoot: path.join(runtime, BACKUP_FOLDER), version, verifySignature,
     });
     sameBundle({
       version: installation.version, asarSha256: installation.asarSha256, plistSha256: installation.plistSha256, signature: installation.signature,
