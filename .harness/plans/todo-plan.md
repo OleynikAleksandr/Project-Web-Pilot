@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1033,
+  "plan_revision": 1034,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "release-0.6.82-workflowkit-1.5.3-20261004",
@@ -38,7 +38,8 @@
       "README.md",
       "docs/RELEASE.md",
       "docs/SOURCE_WORKSPACES.md",
-      "docs/WORKFLOW_START.md"
+      "docs/WORKFLOW_START.md",
+      "docs/VERIFICATION.md"
     ]
   },
   "baseline_commit": "d2afd57bb04924b607dd4a79fb7c1485400c6552",
@@ -259,7 +260,17 @@
         "package.json"
       ],
       "documentation_paths": [
-        "docs/planning/release-0.6.82-workflowkit-1.5.3.md"
+        "docs/planning/release-0.6.82-workflowkit-1.5.3.md",
+        "README.md",
+        "docs/PRODUCT.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/MODULES.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/SOURCE_WORKSPACES.md",
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md"
       ],
       "verification_ids": [
         "github-release"
@@ -298,7 +309,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: release-0.6.82-workflowkit-1.5.3-20261004
 Current Task: нет
-Revision: 1033
+Revision: 1034
 
 ## Цель
 
@@ -329,7 +340,7 @@ Revision: 1033
 - [TODO] T004: Опубликовать 0.6.82 и синхронизировать Project Web Pilot с GitHub — Ожидает
   - Git Commit: [PENDING] feat: Опубликовать 0.6.82 и синхронизировать Project Web Pilot с GitHub
   - Reference: release-0.6.82-workflowkit-1.5.3-20261004 / T004 / implementation
-  - Файлы: scripts/check-github-release.mjs, package.json, docs/planning/release-0.6.82-workflowkit-1.5.3.md
+  - Файлы: scripts/check-github-release.mjs, package.json, docs/planning/release-0.6.82-workflowkit-1.5.3.md, README.md, docs/PRODUCT.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/architecture/ARCHITECTURE.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/SOURCE_WORKSPACES.md, docs/RELEASE.md, docs/VERIFICATION.md
 
 ## Context Pack For This Cycle
 
