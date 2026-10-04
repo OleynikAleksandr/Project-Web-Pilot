@@ -6,8 +6,8 @@ import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { installer, sessionPlans, plan as planApi, VERSION } from '@webpilot/workflow-kit';
 
-const EXPECTED_VERSION = '1.5.4';
-const EXPECTED_RUNTIME_SHA256 = '3a9a3838dbfaac80bccf8cb05d3be71576797cbb6946c6b1537a9c73c383b562';
+const EXPECTED_VERSION = '1.5.5';
+const EXPECTED_RUNTIME_SHA256 = '8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376';
 
 function run(executable, args, cwd) {
   return execFileSync(executable, args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
@@ -41,6 +41,12 @@ function workflow(root, ...args) {
   const parsed = JSON.parse(output);
   assert.equal(parsed.ok, true, 'Workflow command failed: ' + output);
   return parsed;
+}
+
+function gitFailure(root, ...args) {
+  try { run('git', args, root); }
+  catch (error) { return String(error.stdout || '') + String(error.stderr || ''); }
+  assert.fail('git ' + args.join(' ') + ' unexpectedly succeeded');
 }
 
 function workflowFailure(root, ...args) {
@@ -206,6 +212,10 @@ try {
     git(deliveryRoot, 'add', 'README.md', 'docs/planning/fixture.md');
     git(deliveryRoot, 'commit', '-m', 'test: delivery fixture baseline');
     installer.install({ project: deliveryRoot, mode: 'existing' });
+    // 1.5.5: a local bare remote checks that the managed pre-push hook waits for DOCS.
+    const remote = deliveryRoot + '-remote.git';
+    run('git', ['init', '--bare', '-q', remote], deliveryRoot);
+    git(deliveryRoot, 'remote', 'add', 'origin', remote);
 
     const deliveryInput = path.join(deliveryRoot, '.harness/runtime/delivery-plan.json');
     await fs.writeFile(deliveryInput, JSON.stringify({
@@ -250,8 +260,11 @@ try {
     workflow(deliveryRoot, 'task:start', 'T003');
     await fs.appendFile(path.join(deliveryRoot, 'README.md'), 'correction\n');
     workflow(deliveryRoot, 'commit', '--task', 'T003');
+    assert.match(gitFailure(deliveryRoot, 'push', '-q', 'origin', 'main'), /DOCS_BEFORE_PUSH/, 'push before DOCS must be refused');
     workflow(deliveryRoot, 'task:start', 'DOCS');
     workflow(deliveryRoot, 'commit', '--task', 'DOCS');
+    git(deliveryRoot, 'push', '-q', 'origin', 'main');
+    assert.equal(git(remote, 'rev-parse', 'main'), git(deliveryRoot, 'rev-parse', 'HEAD'), 'push after DOCS reaches the remote');
 
     const secondExtend = path.join(deliveryRoot, '.harness/runtime/delivery-second-extend.json');
     await fs.writeFile(secondExtend, JSON.stringify({ tasks: [{
@@ -268,8 +281,10 @@ try {
     assert.equal(reopenedDocs.commit_ref.iteration, 2);
     assert.deepEqual(reopenedDocs.dependencies, ['T001', 'T003', 'T004']);
     assert.equal(workflow(deliveryRoot, 'recover', '--format', 'json').next_task_id, 'T004');
+    assert.match(gitFailure(deliveryRoot, 'push', '-q', 'origin', 'main'), /DOCS_BEFORE_PUSH/, 'reopened DOCS blocks push again');
   } finally {
     await fs.rm(deliveryRoot, { recursive: true, force: true });
+    await fs.rm(deliveryRoot + '-remote.git', { recursive: true, force: true });
   }
 
   const compatA = workflow(root, 'status', '--session', 'legacy-session-a');

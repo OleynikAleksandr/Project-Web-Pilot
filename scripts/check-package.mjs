@@ -8,9 +8,9 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = path.join(ROOT, 'src');
-const BASELINE_VERSION = '1.5.4';
+const BASELINE_VERSION = '1.5.5';
 const BASELINE_FILE_COUNT = 35;
-const BASELINE_SHA256 = '3a9a3838dbfaac80bccf8cb05d3be71576797cbb6946c6b1537a9c73c383b562';
+const BASELINE_SHA256 = '8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376';
 
 async function filesBelow(directory, prefix = '') {
   const result = [];

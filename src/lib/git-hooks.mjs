@@ -65,7 +65,14 @@ export function postCommit(root) {
 }
 export function prePush(root) {
   check(!journal(root), 'TRANSACTION_PENDING', 'Перед push завершите commit/repair.');
-  for (const { file, plan } of listPlans(root)) withPlanFile(root, file, {}, () => resolveReferences(root, plan));
+  for (const { file, plan } of listPlans(root)) {
+    withPlanFile(root, file, {}, () => resolveReferences(root, plan));
+    // 1.5.5: GitHub gets the result only after its documentation (delivery-ordering-policy, invariant 5).
+    const docs = plan.execution_scope_status === 'NONE' ? null : plan.tasks.find(isDocumentationFinalizationTask);
+    check(!docs || docs.commit_status === 'DONE', 'DOCS_BEFORE_PUSH',
+      'Push выполняется только после DOCS текущего плана. Заверши DOCS, затем публикуй в delivery-задаче после неё (verification_kind=package с проверкой удалённой ветки). Не обходи hook через --no-verify.',
+      { scope_id: plan.scope_id, docs_status: docs?.commit_status ?? null });
+  }
   const config = readConfig(root);
   for (const test of config.checks.filter(c => c.stage === 'push' && c.required)) {
     const result = run(test.executable, test.args, test.cwd && test.cwd !== '.' ? safePath(root, test.cwd) : root, { timeout: test.timeout_ms });

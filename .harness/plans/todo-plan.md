@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 139,
+  "plan_revision": 141,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "push-after-docs-1.5.5-20261004",
@@ -74,8 +74,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "push-after-docs-1.5.5-20261004",
         "task_id": "T001",
@@ -109,7 +109,18 @@
         "Форма плана и правила прототипа называют публикацию исходников delivery-задачей после DOCS",
         "Версия 1.5.5, upgrade-path 1.5.4 → 1.5.5, baselines обновлены"
       ],
-      "expected_commit_message": "feat: Kit 1.5.5: push только после DOCS"
+      "expected_commit_message": "feat: Kit 1.5.5: push только после DOCS",
+      "actual_files": [
+        "package.json",
+        "scripts/check-consumer-contract.mjs",
+        "scripts/check-package.mjs",
+        "scripts/check-runtime-fixture.mjs",
+        "src/lib/common.mjs",
+        "src/lib/git-hooks.mjs",
+        "src/lib/installer.mjs",
+        "src/templates/PLAN.md",
+        "src/templates/PROTOTYPE.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -188,7 +199,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: push-after-docs-1.5.5-20261004
 Current Task: нет
-Revision: 139
+Revision: 141
 
 ## Цель
 
@@ -201,8 +212,8 @@ Push на GitHub только после DOCS текущего плана: pre-p
 
 ## Микрозадачи
 
-- [TODO] T001: Kit 1.5.5: push только после DOCS — Ожидает
-  - Git Commit: [PENDING] feat: Kit 1.5.5: push только после DOCS
+- [DONE] T001: Kit 1.5.5: push только после DOCS — Завершено
+  - Git Commit: [DONE] feat: Kit 1.5.5: push только после DOCS
   - Reference: push-after-docs-1.5.5-20261004 / T001 / implementation
   - Файлы: src/lib/git-hooks.mjs, src/lib/common.mjs, src/lib/installer.mjs, package.json, scripts/check-runtime-fixture.mjs, scripts/check-package.mjs, scripts/check-consumer-contract.mjs, docs/planning/push-after-docs.md, src/templates/PLAN.md, src/templates/PROTOTYPE.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
