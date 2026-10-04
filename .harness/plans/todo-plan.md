@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1022,
+  "plan_revision": 1023,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": null,
@@ -68,7 +68,7 @@ Execution Scope Status: NONE
 Delivery Status: IN_PROGRESS
 Scope: не создан
 Current Task: нет
-Revision: 1022
+Revision: 1023
 
 ## Цель
 

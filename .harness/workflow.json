@@ -49,7 +49,7 @@
       "timeout_ms": 600000,
       "id": "paired-release",
       "kind": "package",
-      "evidence": "~/Downloads/WebPilot-0.6.81: macOS arm64 + Windows x64 ZIP, SHA256SUMS.txt, INSTALL.txt, release-manifest.json; packaged sources and bundled Workflow Kit 1.5.2 verified",
+      "evidence": "~/Downloads/WebPilot-0.6.82: macOS arm64 + Windows x64 ZIP, SHA256SUMS.txt, INSTALL.txt, release-manifest.json; packaged sources and bundled Workflow Kit 1.5.3 verified",
       "executable": "npm",
       "args": [
         "run",
@@ -72,7 +72,7 @@
       "timeout_ms": 180000,
       "id": "github-release",
       "kind": "package",
-      "evidence": "GitHub Release v0.6.81 tag/assets and remote main verified against local release-manifest.json without rebuilding",
+      "evidence": "GitHub Release v0.6.82 tag/assets and remote main verified against local release-manifest.json without rebuilding",
       "executable": "node",
       "args": [
         "scripts/check-github-release.mjs"
