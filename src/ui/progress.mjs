@@ -20,17 +20,19 @@ const phaseLabels = {
   'preparing-message': 'Вставляем контекст в сообщение', sending: 'Отправляем контекст',
   'waiting-generation': 'Ждём завершения ответа ChatGPT',
 };
+const mcpPhaseLabels = { 'preparing-message': 'Вставляем стартовое сообщение', sending: 'Отправляем стартовое сообщение' };
+const phaseLabel = context => (context?.contextMode === 'mcp' && mcpPhaseLabels[context.phase]) || phaseLabels[context?.phase];
 export function operationLabel(state = {}, action = null) {
   if (['repairing','verifying','services'].includes(state.doctor?.phase)) return 'Доктор проекта: проверка и восстановление';
   if (state.setup?.phase === 'checking') return 'Проверяем папку проекта';
   if (state.setup?.phase === 'applying') return 'Подготавливаем проект';
   if (state.startup?.active) return state.startup.busy ? (state.startup.phase === 'preparing' ? 'Готовим компоненты на компьютере' : state.startup.phase === 'configuring' ? 'Настраиваем подключение' : 'Проверяем готовность') : null;
   if (state.pageLoading) return 'Открываем ChatGPT';
-  if (action && phaseLabels[state.context?.phase] && !state.context?.error) return phaseLabels[state.context.phase];
+  if (action && phaseLabel(state.context) && !state.context?.error) return phaseLabel(state.context);
   if (action) return actionLabels[action] ?? null; // Native file dialogs already show what they await.
   if (state.startupError || state.context?.error || state.setup || state.settings) return null;
   if (['waiting-login','waiting-draft','waiting-composer','prepared-stale','error','chat-changed','waiting-chat','send-unknown'].includes(state.context?.phase)) return null;
-  if (phaseLabels[state.context?.phase]) return phaseLabels[state.context.phase];
+  if (phaseLabel(state.context)) return phaseLabel(state.context);
   if (state.contextPreparation?.busy) return 'Подготавливаем контекст заранее';
   return null;
 }

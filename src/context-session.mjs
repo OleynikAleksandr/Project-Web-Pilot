@@ -34,6 +34,17 @@ export function startupMessage(project, requestId, packet) {
   ].join('\n');
 }
 
+// MCP delivery: a short first message makes the agent read the project context itself,
+// one part per tool call. The context itself is never pasted into the chat.
+export function mcpStartMessage(project, requestId) {
+  return [
+    `Начало сессии проекта «${project.name}» в Web Pilot. Папка проекта: ${JSON.stringify(project.workspace)}.`,
+    'Перед ответом получи контекст проекта инструментом workflow_context_recover: part=1, затем каждую следующую часть отдельным вызовом с ключом after из конца предыдущей, до [КОНЕЦ ПАКЕТА].',
+    'Потом коротко подтверди, что контекст получен, и в одном-двух предложениях опиши назначение проекта и текущее состояние плана.',
+    `Метка отправки Web Pilot: ${requestId}`,
+  ].join('\n');
+}
+
 const phaseForReason = reason => ({ LOGIN_REQUIRED: 'waiting-login', GENERATION_ACTIVE: 'waiting-generation',
   DRAFT_PRESENT: 'waiting-draft', DRAFT_CHANGED: 'waiting-draft', EXPERIENCE_UNCONFIRMED: 'waiting-experience' })[reason] ?? 'waiting-composer';
 const metadata = packet => ({ workspace: packet.workspace, session_id: packet.session_id, plan_id: packet.plan_id, plan_path: packet.plan_path, facts: packet.facts, signature: packet.signature,
@@ -74,7 +85,7 @@ export class ContextSession {
   }
 
   emit(patch) {
-    this.state = { ...this.state, ...patch, servicesReady: this.servicesReady };
+    this.state = { ...this.state, ...patch, servicesReady: this.servicesReady, contextMode: this.mcpContext ? 'mcp' : 'message' };
     this.onChange(structuredClone(this.state));
   }
 
@@ -95,6 +106,8 @@ export class ContextSession {
   }
 
   async packetIsCurrent(packet, project) {
+    // The MCP start message carries no context, so it never goes stale.
+    if (packet?.contextMode === 'mcp') return packet.workspace === project.workspace;
     if (!packetMatchesProject(packet, project)) return false;
     if (this.contextCache) return this.contextCache.isCurrent(project.workspace, packet.cacheKey);
     return this.now() - packet.generatedAtMs <= 300000;
@@ -159,19 +172,21 @@ export class ContextSession {
     });
   }
 
-  // MCP delivery: the agent reads the context in parts via workflow_context_recover; nothing is pasted or sent.
-  // A fresh chat waits for the user's first message, which binds it (main.mjs observeManualConversation).
+  // MCP delivery, project chat: the agent reads the context in parts via workflow_context_recover.
+  // A bound chat (or one the user started manually) never gets another start message.
   async mcpSession(project, info, generation) {
     if (!project.chatUrl && !this.servicesReady) {
-      this.emit({ phase: 'preparing', projectInfo: info, contextMode: 'mcp' });
+      this.emit({ phase: 'preparing', projectInfo: info });
       await this.runtime.ensure();
       if (!this.current(generation)) return;
       this.servicesReady = true;
     }
     await this.runtime.setActiveWorkspace(project.workspace);
     if (!this.current(generation)) return;
-    this.emit({ phase: project.chatUrl ? 'bound' : 'ready', projectInfo: info, messageSent: false,
-      delivery: null, error: null, contextMode: 'mcp' });
+    const attempt = project.attempt;
+    const sent = attempt?.protocol === CONTEXT_PROTOCOL && attempt.state === 'sent';
+    this.emit({ phase: 'bound', projectInfo: info, messageSent: sent, error: null,
+      delivery: sent && attempt.packet?.contextMode === 'mcp' ? { ...attempt.packet, sentAtMs: attempt.sentAtMs ?? attempt.sendStartedAtMs } : null });
   }
 
   async inspectProject(workspace, sessionId, generation) {
@@ -286,7 +301,7 @@ export class ContextSession {
       }
       // The new editor and requested mode are ready. Later user input is preserved.
       this.freshDraft = false;
-      if (this.mcpContext) { await this.mcpSession(project, info, generation); return; }
+      if (this.mcpContext && (project.chatUrl || project.manualStart)) { await this.mcpSession(project, info, generation); return; }
       if (attempt && attempt.protocol !== CONTEXT_PROTOCOL) {
         const known = ['sent', 'acknowledged'].includes(attempt.state) || observation.messageSeen;
         if (observation.messageSeen && !['sent', 'acknowledged'].includes(attempt.state)) {
@@ -301,7 +316,7 @@ export class ContextSession {
           // Keep their conversation and allow normal use without replay or polling.
           this.emit({ phase: 'send-unknown', projectInfo: info, messageSent: false, error: null }); return;
         }
-        if (this.inputsChanged && this.contextCache) {
+        if (this.inputsChanged && this.contextCache && !this.mcpContext) {
           this.inputsChanged = false;
           const current = await this.packetIsCurrent(attempt.packet, project);
           if (!this.current(generation)) return;
@@ -323,16 +338,29 @@ export class ContextSession {
         if (!this.current(generation)) return;
         this.servicesReady = true;
       }
+      if (this.mcpContext) {
+        await this.runtime.setActiveWorkspace(project.workspace);
+        if (!this.current(generation)) return;
+      }
       const deferred = !observation.editorAvailable || !observation.writable ? 'waiting-composer'
         : observation.busy ? 'waiting-generation' : observation.draftLength && !observation.draftMatches && !this.composer.hasFilled?.(attempt?.requestId) ? 'waiting-draft' : null;
       if (deferred) {
-        this.warm(project, generation);
+        if (!this.mcpContext) this.warm(project, generation);
         this.emit({ phase: deferred, projectInfo: info }); return;
       }
-      if (attempt && !this.composer.hasFilled?.(attempt.requestId) && !await this.packetIsCurrent(attempt.packet, project)) {
+      // A prepared message of the other delivery mode (full packet vs MCP start message) is never sent.
+      if (attempt && !this.composer.hasFilled?.(attempt.requestId) && ((attempt.packet?.contextMode === 'mcp') !== this.mcpContext
+          || !await this.packetIsCurrent(attempt.packet, project))) {
         if (observation.draftLength) { this.emit({ phase: 'prepared-stale', projectInfo: info }); return; }
         attempt = null;
         await this.store.updateSession(project.workspace, project.sessionId, { attempt: null, receipt: null });
+        if (!this.current(generation)) return;
+      }
+      if (!attempt && this.mcpContext) {
+        const requestId = 'wp-request-' + this.uuid();
+        attempt = { protocol: CONTEXT_PROTOCOL, requestId, text: mcpStartMessage(project, requestId),
+          packet: { workspace: project.workspace, contextMode: 'mcp' }, createdAtMs: this.now(), sendStartedAtMs: null, state: 'prepared' };
+        await this.store.updateSession(project.workspace, project.sessionId, { attempt, receipt: null });
         if (!this.current(generation)) return;
       }
       if (!attempt) {

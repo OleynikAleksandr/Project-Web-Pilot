@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1131,
+  "plan_revision": 1133,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "mcp-start-message-0.6.88-20261004",
@@ -110,8 +110,8 @@
       "actual_files": []
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "mcp-start-message-0.6.88-20261004",
         "task_id": "T002",
@@ -120,7 +120,13 @@
       "dependencies": [],
       "functional_paths": [
         "package.json",
-        "package-lock.json"
+        "package-lock.json",
+        "src/context-session.mjs",
+        "src/ui/progress.mjs",
+        "src/ui/sidebar.mjs",
+        "tests/context-session.test.mjs",
+        "tests/progress.test.mjs",
+        "tests/sidebar.test.mjs"
       ],
       "documentation_paths": [
         "docs/planning/mcp-start-message.md"
@@ -135,7 +141,17 @@
       "acceptance_criteria": [
         "package.json и package-lock.json задают 0.6.88"
       ],
-      "expected_commit_message": "feat: Подготовить source релиза 0.6.88"
+      "expected_commit_message": "feat: Подготовить source релиза 0.6.88",
+      "actual_files": [
+        "package.json",
+        "package-lock.json",
+        "src/context-session.mjs",
+        "src/ui/progress.mjs",
+        "src/ui/sidebar.mjs",
+        "tests/context-session.test.mjs",
+        "tests/progress.test.mjs",
+        "tests/sidebar.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -274,7 +290,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: mcp-start-message-0.6.88-20261004
 Current Task: нет
-Revision: 1131
+Revision: 1133
 
 ## Цель
 
@@ -290,10 +306,10 @@ Web Pilot сам начинает MCP-сессию коротким старто
   - Git Commit: [DONE] feat: MCP: Web Pilot начинает сессию коротким стартовым сообщением
   - Reference: mcp-start-message-0.6.88-20261004 / T001 / implementation
   - Файлы: src/context-session.mjs, src/ui/sidebar.mjs, src/ui/progress.mjs, tests/context-session.test.mjs, tests/sidebar.test.mjs, tests/progress.test.mjs, docs/planning/mcp-start-message.md
-- [TODO] T002: Подготовить source релиза 0.6.88 — Ожидает
-  - Git Commit: [PENDING] feat: Подготовить source релиза 0.6.88
+- [DONE] T002: Подготовить source релиза 0.6.88 — Завершено
+  - Git Commit: [DONE] feat: Подготовить source релиза 0.6.88
   - Reference: mcp-start-message-0.6.88-20261004 / T002 / implementation
-  - Файлы: package.json, package-lock.json, docs/planning/mcp-start-message.md
+  - Файлы: package.json, package-lock.json, src/context-session.mjs, src/ui/progress.mjs, src/ui/sidebar.mjs, tests/context-session.test.mjs, tests/progress.test.mjs, tests/sidebar.test.mjs, docs/planning/mcp-start-message.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: mcp-start-message-0.6.88-20261004 / DOCS / implementation
