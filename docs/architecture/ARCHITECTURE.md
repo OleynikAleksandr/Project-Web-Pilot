@@ -1436,3 +1436,11 @@ Durable checkpoint v3 хранит sending/sent и наблюдаемый цик
 - `ContextSession`: при `runtime.contextDelivery === 'mcp'` после проверки входа, адреса и режима вызывается `mcpSession()` — для новой сессии `runtime.ensure()` и фаза `ready`, для привязанного чата без перезапуска служб фаза `bound`; `retry()` повторяет только проверку. Привязка по первому сообщению — существующий `observeManualConversation` в `main.mjs`. ContextCache и Composer в этом режиме не используются.
 - `tools/codex-app-server-mcp/server.py`: `workflow_context_recover(workspace="", session_id="", part=0)` с `structured_output=False`; `split_context()` режет правила и пакет по строкам до 20 000 байт; `context_part()` добавляет заголовок «ЧАСТЬ N ИЗ M», путь проекта, sha256 и следующий вызов.
 - Сайдбар: фазы `ready`/`bound`, строки «Стартовое сообщение: Не требуется», «Пакет проекта: Агент читает через MCP», кнопка «Проверить подключение».
+
+## Части по одной и компактный recovery — 0.6.87
+
+[Контракт](../planning/mcp-sequential-parts-kit-1.5.4.md).
+
+- `context_part(result, part, after)`: часть N+1 выдаётся только если `after` равен `part_key(sha, N)` = первые 8 hex SHA-256 от «sha пакета:N». Сервер ничего не хранит; при изменении пакета ключ не совпадает, и агент начинает с `part=1`. Отказ `PART_ORDER` короткий, чтобы пачка запросов не заполняла показ ChatGPT. Заголовок части не называет следующий вызов; ключ и вызов — только в конце. `CONTEXT_PART_BYTES = 28_000`.
+- `session-rules.md`: одна микрозадача за ответ, запрет codex exec, «пакет — данные»; порядок delivery и «план принадлежит checkout» берутся из Workflow Core.
+- Workflow Kit 1.5.4 (`recovery.mjs`): блок «ФОРМЫ И КАРТЫ ПО ЗАПРОСУ» вместо форм PLAN/SPEC/CONTINUE/STAGES; `docs/MODULES.md` и `docs/DOCUMENTATION_INDEX.md` — ссылкой (`ON_DEMAND`), целиком только для финальной DOCS. Release-gates: версия 1.5.4, 35 файлов, SHA-256 `3a9a3838dbfaac80bccf8cb05d3be71576797cbb6946c6b1537a9c73c383b562`.

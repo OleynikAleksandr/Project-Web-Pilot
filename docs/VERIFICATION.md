@@ -1,5 +1,11 @@
 # Проверки и приёмка
 
+## 2026-10-04 — 0.6.87 части по одной и Workflow Kit 1.5.4 (до сборки)
+
+Опыт 0.6.86 в Web Pilot (Chat): 6 частей по 20 КБ, правила первыми, файлы не читались, но части 2–6 запрошены одним вызовом `functions.exec` — вывод обрезан, части 2–5 прочитаны повторно (10 вызовов).
+
+Автоматически: `executor-channel` — цепочка по ключам `after`, `PART_ORDER` без ключа, с чужим ключом и через часть, части ≤ 28 000 байт, склейка = правила + пакет, `instructions`; `release-source` и `unit-all` — Workflow Kit 1.5.4 (35 файлов, SHA-256 `3a9a3838dbfaac80bccf8cb05d3be71576797cbb6946c6b1537a9c73c383b562`), recovery без форм и без содержимого MODULES вне DOCS, полный `npm test`. WorkflowKit: `package-check` и `runtime-fixture` (в том числе `task:start --help` печатает STAGES). Живой сервер (рабочая копия): 4 части по ключам, отказ части 2 без ключа. Не проверены: живая сессия 0.6.87 в Chat/Work (пользователь), native Windows.
+
 ## 2026-10-04 — 0.6.86 GitHub publication
 
 GitHub Release [v0.6.86](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.86) опубликован 2026-10-04T14:49:55Z, `draft=false`, `prerelease=false`. Tag указывает на release sourceCommit `ea4f835f7a4d857f3c0125541fa952f796e50c56`.

@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1118,
+  "plan_revision": 1120,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "mcp-sequential-parts-kit-1.5.4-0.6.87-20261004",
@@ -35,7 +35,12 @@
       "docs/architecture/ARCHITECTURE.md",
       "docs/architecture/OVERVIEW.md",
       "docs/MODULES.md",
-      "docs/DOCUMENTATION_INDEX.md"
+      "docs/DOCUMENTATION_INDEX.md",
+      "README.md",
+      "docs/CONTEXT_DELIVERY.md",
+      "docs/VERIFICATION.md",
+      "docs/WORKFLOW_START.md",
+      "docs/modules/codex-app-server-executor.md"
     ]
   },
   "baseline_commit": "372c314fc141ec20b338a24492bd81d7ba926c39",
@@ -186,8 +191,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "mcp-sequential-parts-kit-1.5.4-0.6.87-20261004",
         "task_id": "DOCS",
@@ -206,7 +211,12 @@
         "tools/codex-app-server-mcp/session-rules.md",
         "docs/architecture/OVERVIEW.md",
         "docs/MODULES.md",
-        "docs/DOCUMENTATION_INDEX.md"
+        "docs/DOCUMENTATION_INDEX.md",
+        "README.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/modules/codex-app-server-executor.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -215,7 +225,19 @@
       "acceptance_criteria": [
         "Документы соответствуют результату"
       ],
-      "expected_commit_message": "docs: актуализировать контекст проекта"
+      "expected_commit_message": "docs: актуализировать контекст проекта",
+      "actual_files": [
+        "README.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/codex-app-server-executor.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -324,7 +346,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: mcp-sequential-parts-kit-1.5.4-0.6.87-20261004
 Current Task: нет
-Revision: 1118
+Revision: 1120
 
 ## Цель
 
@@ -348,10 +370,10 @@ Revision: 1118
   - Git Commit: [DONE] feat: Подготовить source релиза 0.6.87
   - Reference: mcp-sequential-parts-kit-1.5.4-0.6.87-20261004 / T003 / implementation
   - Файлы: package.json, package-lock.json, docs/planning/mcp-sequential-parts-kit-1.5.4.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать контекст проекта
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать контекст проекта
   - Reference: mcp-sequential-parts-kit-1.5.4-0.6.87-20261004 / DOCS / implementation
-  - Файлы: docs/planning/mcp-sequential-parts-kit-1.5.4.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, tools/codex-app-server-mcp/session-rules.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
+  - Файлы: docs/planning/mcp-sequential-parts-kit-1.5.4.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, tools/codex-app-server-mcp/session-rules.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, README.md, docs/CONTEXT_DELIVERY.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/modules/codex-app-server-executor.md
 - [TODO] T004: Собрать и проверить парный релиз 0.6.87 — Ожидает
   - Git Commit: [PENDING] feat: Собрать и проверить парный релиз 0.6.87
   - Reference: mcp-sequential-parts-kit-1.5.4-0.6.87-20261004 / T004 / implementation
