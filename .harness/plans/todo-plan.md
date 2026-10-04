@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1107,
+  "plan_revision": 1109,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "mcp-context-delivery-0.6.86-20261004",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Агент получает recovery через MCP частями; Web Pilot (Codex App Server) больше не вставляет пакет в ChatGPT; релиз 0.6.86.",
   "acceptance_criteria": [
     "Агент получает recovery через MCP частями; Web Pilot (Codex App Server) больше не вставляет пакет в ChatGPT; релиз 0.6.86."
@@ -43,7 +43,8 @@
       "docs/CONTEXT_DELIVERY.md",
       "docs/VERIFICATION.md",
       "docs/WORKFLOW_START.md",
-      "docs/modules/codex-app-server-executor.md"
+      "docs/modules/codex-app-server-executor.md",
+      "docs/RELEASE.md"
     ]
   },
   "baseline_commit": "9cd25faf5743fff706269ef7589705f4306384b7",
@@ -309,8 +310,8 @@
       "actual_files": []
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "mcp-context-delivery-0.6.86-20261004",
         "task_id": "T006",
@@ -323,7 +324,14 @@
         "scripts/check-github-release.mjs"
       ],
       "documentation_paths": [
-        "docs/planning/mcp-context-delivery.md"
+        "docs/planning/mcp-context-delivery.md",
+        "README.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/OVERVIEW.md"
       ],
       "verification_ids": [
         "github-release"
@@ -335,7 +343,17 @@
       "acceptance_criteria": [
         "Tag v0.6.86 на sourceCommit, пять assets совпадают с локальной поставкой, main синхронизирован"
       ],
-      "expected_commit_message": "feat: Опубликовать 0.6.86 и синхронизировать Project Web Pilot с GitHub"
+      "expected_commit_message": "feat: Опубликовать 0.6.86 и синхронизировать Project Web Pilot с GitHub",
+      "actual_files": [
+        "README.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/planning/mcp-context-delivery.md"
+      ]
     }
   ],
   "blocked_reason": null,
@@ -353,10 +371,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: mcp-context-delivery-0.6.86-20261004
 Current Task: нет
-Revision: 1107
+Revision: 1109
 
 ## Цель
 
@@ -392,10 +410,10 @@ Revision: 1107
   - Git Commit: [DONE] feat: Установить 0.6.86 и проверить установленные macOS-копии
   - Reference: mcp-context-delivery-0.6.86-20261004 / T005 / implementation
   - Файлы: scripts/check-installed-release.mjs, docs/planning/mcp-context-delivery.md
-- [TODO] T006: Опубликовать 0.6.86 и синхронизировать Project Web Pilot с GitHub — Ожидает
-  - Git Commit: [PENDING] feat: Опубликовать 0.6.86 и синхронизировать Project Web Pilot с GitHub
+- [DONE] T006: Опубликовать 0.6.86 и синхронизировать Project Web Pilot с GitHub — Завершено
+  - Git Commit: [DONE] feat: Опубликовать 0.6.86 и синхронизировать Project Web Pilot с GitHub
   - Reference: mcp-context-delivery-0.6.86-20261004 / T006 / implementation
-  - Файлы: scripts/check-github-release.mjs, docs/planning/mcp-context-delivery.md
+  - Файлы: scripts/check-github-release.mjs, docs/planning/mcp-context-delivery.md, README.md, docs/MODULES.md, docs/PRODUCT.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md
 
 ## Context Pack For This Cycle
 

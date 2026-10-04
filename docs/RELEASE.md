@@ -2,6 +2,18 @@
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
+## Выпуск 0.6.86 — 04.10.2026
+
+0.6.86 ([контракт](planning/mcp-context-delivery.md)): агент сам получает контекст проекта через MCP — `workflow_context_recover` выдаёт правила сессии и полный пакет Workflow Kit текстовыми частями до 20 000 байт; в режиме Codex App Server Web Pilot больше не вставляет recovery в ChatGPT, новая сессия ждёт первого сообщения пользователя и привязывается по нему. Codex Local Mac и Windows сохраняют доставку первым сообщением. Source: T001 `18970e8`, T002 `05fd934`, T003 `734d632`.
+
+Предсборочная DOCS — коммит `ea4f835` **до** release-сборки. T004 выполнила единственный `npm run build`: `release-manifest.sourceCommit=ea4f835f7a4d857f3c0125541fa952f796e50c56`, `sourceFiles=108`, `packagedSourceMatches=true`; identity обеих Mac-копий записана в `release-0.6.86-preflight.json` до сборки.
+
+macOS arm64: `~/Downloads/WebPilot-0.6.86/Project-Web-Pilot-0.6.86-macOS-arm64.zip`, 186444882 байт, SHA-256 `9be94072f3b98e43214594e155cbc03c53f806cbfd614c1a9b6714fb1a0e0f07`. Windows x64: `~/Downloads/WebPilot-0.6.86/Project-Web-Pilot-0.6.86-Windows-x64.zip`, 355558960 байт, SHA-256 `f1674fd3285adf92815d344fd43954e6947b6d779d513a3498265ee1bdcf23dc`. Оба package имеют ASAR SHA-256 `a2d85bc7e6a85912372a978704b59f828be5d31c8b357b023b65e6f8f28c4eeb`; Windows прошёл `verify:win` на Mac, native Windows/clean VM не запускались.
+
+`/Applications` установлена из staging штатным `installMacBundle` **без пересборки**, inode сохранён `406571340`; T005 прошла полный `release-installed` gate.
+
+[GitHub Release v0.6.86](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.86) опубликован 2026-10-04T14:49:55Z. Tag `v0.6.86` указывает точно на `ea4f835f7a4d857f3c0125541fa952f796e50c56`. Опубликованы ровно пять файлов; server size/digest каждого совпадает с локальной поставкой. Release не draft/prerelease. Финальный `main` должен совпасть с managed T006 commit; это повторно проверяет `scripts/check-github-release.mjs` после push.
+
 ## Выпуск 0.6.85 — 04.10.2026
 
 0.6.85 ([контракт](planning/computer-use-keys-batch.md)): Computer Use в MCP принимает символы клавиш (`*` → `asterisk`) и новый инструмент `computer_actions` — до 50 нажатий, сочетаний, вставок текста, кликов и прокруток одним вызовом вместо отдельного хода модели на каждое действие; подписи канала VPS без ссылок на vps-server и подсказка, какой плагин включить в ChatGPT; после архива или удаления выбранного проекта закрытие Настроек открывает другой активный проект, а не первый запуск. Сборка, установка и GitHub-публикация — задачи T004–T006 после этой DOCS; до их завершения 0.6.84 остаётся последним опубликованным релизом. Основание — проверка Computer Use через VPS и встроенными средствами Work (`equal`/`Escape`/`type_text` ведут себя так же встроенно и не исправляются) и сообщение пользователя о первом запуске после удаления архивного проекта. Source: T001 `de07563` (имена клавиш, `computer_actions`, тест на настоящем `server.py` с исполнением созданного сценария), T002 `979887f` (подписи и подсказка канала), T007 `8623b60` (`landing()` в хранилище проектов, `closeSettings`/`cancelSetup`), T003 `51f2143` (версия).

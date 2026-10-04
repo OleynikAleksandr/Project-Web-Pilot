@@ -1,5 +1,11 @@
 # Проверки и приёмка
 
+## 2026-10-04 — 0.6.86 GitHub publication
+
+GitHub Release [v0.6.86](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.86) опубликован 2026-10-04T14:49:55Z, `draft=false`, `prerelease=false`. Tag указывает на release sourceCommit `ea4f835f7a4d857f3c0125541fa952f796e50c56`.
+
+GitHub содержит ровно пять assets: macOS ZIP 186444882 / `9be94072f3b98e43214594e155cbc03c53f806cbfd614c1a9b6714fb1a0e0f07`, Windows ZIP 355558960 / `f1674fd3285adf92815d344fd43954e6947b6d779d513a3498265ee1bdcf23dc`, `SHA256SUMS.txt` / `570a4e7eaae027f316d6d00813e15f93d8c34c5aba76931531cf21ecac5215e1`, `INSTALL.txt` / `50f9d04b5270132cfa1eccadb5d406e00d67c492a52fa33d9952c3738adad09c`, `release-manifest.json` / `51049079623a5321be57a27e7554b49524f54a16ebd466cb003ce4f3983347c4`. Server size/digest совпали с локальными файлами.
+
 ## 2026-10-04 — 0.6.86 контекст через MCP (до сборки)
 
 Опыт пользователя в ChatGPT (браузер, Chat и Work) на рабочей копии сервера: модель видит `instructions` MCP и сама вызывает `workflow_context_recover` до первого ответа, на следующих сообщениях не повторяет. Целый пакет (~22 000 токенов) показывался с вырезанной серединой (видно ~10 000 токенов), просьбу дочитать модель не выполняла. Частями по ~30 КБ модель прочитала все части с одним sha256 без чтения файлов и git; в Work первая часть один раз обрезалась из-за дубля текст + structured — отсюда части 20 000 байт только текстом.

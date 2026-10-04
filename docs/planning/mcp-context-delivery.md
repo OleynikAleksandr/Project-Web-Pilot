@@ -32,3 +32,10 @@
 - Публичные экспорты `chatgpt-dom.mjs`, `chatgpt-composer.mjs`, `chatgpt-experience.mjs` и формат `pageScript` не меняются.
 - Codex Local Mac и Windows MCP bridge не меняются; для них остаётся доставка первым сообщением.
 - Состав пакета recovery (Workflow Kit) не меняется — его сокращение отдельной задачей.
+
+## Итог
+
+- T001 `18970e8` — recovery частями, правила сессии и проект по умолчанию в MCP; T002 `05fd934` — сессии Codex App Server без вставки; T003 `734d632` — версия; DOCS `ea4f835`.
+- T004 — сборка из sourceCommit `ea4f835f7a4d857f3c0125541fa952f796e50c56`; T005 — установка в `/Applications` без пересборки.
+- T006: [GitHub Release v0.6.86](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.86) опубликован 2026-10-04T14:49:55Z, пять assets сверены по серверным SHA-256.
+- Живая проверка новой сессии Web Pilot без вставки (Chat и Work) — за пользователем; в настройках коннектора ChatGPT нажать «Обновить инструменты».
