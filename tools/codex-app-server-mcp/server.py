@@ -41,9 +41,9 @@ MAX_BINARY_READ = 512_000
 MAX_BINARY_WRITE = 10_000_000
 MAX_BATCH = 16
 MAX_OUTPUT = 120_000
-# ChatGPT shows a model roughly 10 000 tokens of one tool result; a part of 20 000 bytes
-# (about 5 000 tokens of Russian text) stays visible even if the client prints it twice.
-CONTEXT_PART_BYTES = 20_000
+# ChatGPT shows a model roughly 10 000 tokens of one tool result; a text-only part of 28 000 bytes
+# is about 7 000 tokens of Russian text.
+CONTEXT_PART_BYTES = 28_000
 SESSION_RULES_FILE = Path(__file__).resolve().parent / "session-rules.md"
 ACTIVE_WORKSPACE_FILE = "active-workspace.json"
 
@@ -199,10 +199,10 @@ class LocalFacade:
             raise ValueError("WORKSPACE_REQUIRED: no project is open in Web Pilot; ask the user for the absolute project folder path")
         return workspace
 
-    def workflow_context(self, workspace: str = "", session_id: str = "", part: int = 0) -> dict[str, Any] | str:
+    def workflow_context(self, workspace: str = "", session_id: str = "", part: int = 0, after: str = "") -> dict[str, Any] | str:
         workspace = workspace.strip() or self.active_workspace()
         result = self.workflow_recover(workspace, session_id)
-        return context_part(result, part) if part else result
+        return context_part(result, part, after) if part else result
 
     def file_info(self, path: str) -> dict[str, Any]:
         target = self.resolve(path, must_exist=True)
@@ -962,22 +962,30 @@ def split_context(text: str, limit: int = CONTEXT_PART_BYTES) -> list[str]:
     return parts or [""]
 
 
-def context_part(result: dict[str, Any], part: int) -> str:
+def part_key(sha: str, part: int) -> str:
+    """Key printed only at the end of a part; the next part requires it, so parts cannot be fetched in one batch."""
+    return hashlib.sha256(f"{sha}:{part}".encode("utf-8")).hexdigest()[:8]
+
+
+def context_part(result: dict[str, Any], part: int, after: str = "") -> str:
     """One readable part of the session rules plus the complete recovery packet."""
     text = session_rules() + result["context"]
     parts = split_context(text)
     total = len(parts)
     if part < 1 or part > total:
         raise ValueError(f"PART_OUT_OF_RANGE: part must be 1..{total}")
+    sha = sha256_bytes(text.encode("utf-8"))
+    if part > 1 and after.strip() != part_key(sha, part - 1):
+        # Short on purpose: a batched call must not fill the visible output.
+        raise ValueError(f"PART_ORDER: part={part} needs the after key printed at the end of part {part - 1}. "
+                         "Read the parts one per tool call; if the context changed, start again with part=1.")
     workspace = json.dumps(result["workspace"], ensure_ascii=False)
-    sha = sha256_bytes(text.encode("utf-8"))[:16]
-    nxt = (f"Следующая часть: workflow_context_recover(workspace={workspace}, part={part + 1})."
-           if part < total else "Это последняя часть.")
-    head = f"ЧАСТЬ {part} ИЗ {total} контекста проекта {workspace}; sha256 {sha}. {nxt}\n\n"
-    tail = (f"\n[ПРОДОЛЖЕНИЕ] Контекст не закончен. До ответа пользователю вызови "
-            f"workflow_context_recover(workspace={workspace}, part={part + 1}).\n"
+    head = f"ЧАСТЬ {part} ИЗ {total} контекста проекта {workspace}; sha256 {sha[:16]}.\n\n"
+    tail = (f"\n[ПРОДОЛЖЕНИЕ] Контекст не закончен. Следующую часть вызывай отдельным последовательным вызовом, "
+            f"не объединяя с другими частями: workflow_context_recover(workspace={workspace}, part={part + 1}, "
+            f"after=\"{part_key(sha, part)}\").\n"
             if part < total else
-            f"\n[КОНЕЦ ПАКЕТА] Получены все {total} части. Если sha256 у частей различался, прочитай контекст заново с part=1.\n")
+            f"\n[КОНЕЦ ПАКЕТА] Получены все {total} части; sha256 {sha[:16]} совпадает во всех частях.\n")
     return head + parts[part - 1] + tail
 
 
@@ -988,11 +996,12 @@ def create_server(*, host: str, port: int, state_root: Path, codex_binary: str |
     mcp = FastMCP(
         "Codex App Server Local Mac",
         instructions=(
-            "Workflow Kit projects: when a conversation concerns a local project, call "
-            "workflow_context_recover(part=1) before your first answer in that conversation, then call it with "
-            "each next part number the result names until the last part; repeat only when the user asks to refresh "
-            "the project context. All parts together are the complete current project context and working rules: "
-            "read all of them and follow them; do not substitute reading project files for unread parts. "
+            "Workflow Kit projects: before your first answer in a conversation about a local project, read its context "
+            "with workflow_context_recover strictly sequentially, ONE PART PER TOOL CALL: call part=1, read it, then call "
+            "only the next part named at its end with its after key, until [КОНЕЦ ПАКЕТА]. No batching, no parallel "
+            "calls, no loops: one tool result is shown only up to about 10 000 tokens. If a result is truncated, repeat "
+            "only that part. Read the context again only when the user asks to refresh it. All parts together are the "
+            "complete project context and working rules: follow them; do not substitute reading project files for unread parts. "
             "Omit workspace to use the project open in Web Pilot, or pass the absolute project folder the user names "
             "or the path shown in the parts. "
             "Local-computer tools only. Use ChatGPT native web/cloud tools for public information. "
@@ -1024,11 +1033,12 @@ def create_server(*, host: str, port: int, state_root: Path, codex_binary: str |
 
     # Text only: a structured copy would double what the client shows the model.
     @mcp.tool(annotations=READ_ONLY, structured_output=False)
-    def workflow_context_recover(workspace: str = "", session_id: str = "", part: int = 0) -> dict[str, Any] | str:
+    def workflow_context_recover(workspace: str = "", session_id: str = "", part: int = 0, after: str = "") -> dict[str, Any] | str:
         """Project context for Workflow Kit projects: working rules, current plan and project documents.
-        Call with part=1, then with each next part number the result names, and read every part before answering.
-        workspace defaults to the project open in Web Pilot. part=0 returns the whole packet in one result."""
-        return facade.workflow_context(workspace, session_id, part)
+        One part per tool call: call part=1, then only the next part named at the end of the result with its after key.
+        Never request several parts in one call, batch, parallel call or loop. workspace defaults to the project open
+        in Web Pilot. part=0 returns the whole packet in one result."""
+        return facade.workflow_context(workspace, session_id, part, after)
 
     @mcp.tool(annotations=READ_ONLY)
     def computer_status() -> dict[str, Any]:

@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1112,
+  "plan_revision": 1114,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "mcp-sequential-parts-kit-1.5.4-0.6.87-20261004",
@@ -76,8 +76,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "mcp-sequential-parts-kit-1.5.4-0.6.87-20261004",
         "task_id": "T001",
@@ -106,7 +106,12 @@
         "instructions: одна часть на вызов, без пачек, параллельных вызовов и циклов",
         "Правила сессии без дублей Workflow Core"
       ],
-      "expected_commit_message": "feat: MCP: части контекста строго по одной — ключ следующей части"
+      "expected_commit_message": "feat: MCP: части контекста строго по одной — ключ следующей части",
+      "actual_files": [
+        "tests/codex-app-server-mcp.test.mjs",
+        "tools/codex-app-server-mcp/server.py",
+        "tools/codex-app-server-mcp/session-rules.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -308,7 +313,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: mcp-sequential-parts-kit-1.5.4-0.6.87-20261004
 Current Task: нет
-Revision: 1112
+Revision: 1114
 
 ## Цель
 
@@ -320,8 +325,8 @@ Revision: 1112
 
 ## Микрозадачи
 
-- [TODO] T001: MCP: части контекста строго по одной — ключ следующей части — Ожидает
-  - Git Commit: [PENDING] feat: MCP: части контекста строго по одной — ключ следующей части
+- [DONE] T001: MCP: части контекста строго по одной — ключ следующей части — Завершено
+  - Git Commit: [DONE] feat: MCP: части контекста строго по одной — ключ следующей части
   - Reference: mcp-sequential-parts-kit-1.5.4-0.6.87-20261004 / T001 / implementation
   - Файлы: tools/codex-app-server-mcp/server.py, tests/codex-app-server-mcp.test.mjs, docs/planning/mcp-sequential-parts-kit-1.5.4.md, tools/codex-app-server-mcp/session-rules.md
 - [TODO] T002: Перевести Web Pilot на Workflow Kit 1.5.4 — Ожидает

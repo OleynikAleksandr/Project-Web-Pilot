@@ -595,7 +595,7 @@ print(json.dumps(out, ensure_ascii=False))
   assert.match(out.errors.bad_click, /integer x and y/);
 });
 
-test('workflow context is read in text parts with the session rules and the project open in Web Pilot', { timeout: 60_000 }, async t => {
+test('workflow context is read strictly one part per call with the session rules and the project open in Web Pilot', { timeout: 60_000 }, async t => {
   const venvPython = path.join(homedir(), 'Library', 'Application Support', 'WebPilotCodexExecutor', 'runtime', 'venv', 'bin', 'python');
   if (!existsSync(venvPython)) { t.skip('Codex App Server runtime venv is not installed'); return; }
   const { chmod } = await import('node:fs/promises');
@@ -614,7 +614,7 @@ test('workflow context is read in text parts with the session rules and the proj
   await writeFile(script, '#!/bin/sh\ncat "$(dirname "$0")/../packet.json"\n');
   await chmod(script, 0o755);
   const probe = path.join(root, 'probe.py');
-  await writeFile(probe, `import json, sys, pathlib, subprocess
+  await writeFile(probe, `import json, re, sys, pathlib, subprocess
 sys.path.insert(0, sys.argv[1])
 import server
 root = pathlib.Path(sys.argv[2])
@@ -638,13 +638,23 @@ except ValueError as error:
 full = facade.workflow_context("", "", 0)
 out["full_context"] = full["context"]
 parts = []
+after = ""
 for number in range(1, 50):
-    part = facade.workflow_context("", "", number)
+    part = facade.workflow_context("", "", number, after)
     parts.append(part)
     if "[КОНЕЦ ПАКЕТА]" in part:
         break
+    after = re.search(r'after="([0-9a-f]{8})"\\)\\.\\n$', part).group(1)
 out["parts"] = parts
-out["explicit_first"] = facade.workflow_context(workspace, "", 1) == parts[0]
+keys = [re.search(r'after="([0-9a-f]{8})"', item).group(1) for item in parts[:-1]]
+out["explicit_second"] = facade.workflow_context(workspace, "", 2, keys[0]) == parts[1]
+out["guard"] = {}
+for name, number, key in (("missing", 2, ""), ("foreign", 2, "deadbeef"), ("skipped", 3, keys[0])):
+    try:
+        facade.workflow_context(workspace, "", number, key)
+        out["guard"][name] = None
+    except ValueError as error:
+        out["guard"][name] = str(error)
 out["range"] = []
 for bad in (len(parts) + 1, -1):
     try:
@@ -674,7 +684,7 @@ print(json.dumps(out, ensure_ascii=False))
   const out = JSON.parse(run.stdout.trim().split('\n').at(-1));
   assert.match(out.no_active, /WORKSPACE_REQUIRED/);
   assert.equal(out.full_context, text, 'part=0 keeps the whole packet');
-  assert.ok(out.parts.length >= 4, 'about 70 KB needs several parts');
+  assert.ok(out.parts.length >= 3, 'about 90 KB needs several parts');
   const total = out.parts.length;
   const resolvedWorkspace = await (await import('node:fs/promises')).realpath(workspace); // /var → /private/var on macOS
   const bodies = [], shas = new Set();
@@ -685,24 +695,33 @@ print(json.dumps(out, ensure_ascii=False))
     shas.add(head.match(/sha256 ([0-9a-f]{16})/)[1]);
     const marker = index + 1 < total ? '\n[ПРОДОЛЖЕНИЕ]' : '\n[КОНЕЦ ПАКЕТА]';
     const body = part.slice(head.length + 2, part.lastIndexOf(marker));
-    assert.ok(Buffer.byteLength(body) <= 20_000, `part ${index + 1} body is ${Buffer.byteLength(body)} bytes`);
-    if (index + 1 < total) assert.ok(part.endsWith(`part=${index + 2}).\n`), 'the next call is named at the end');
-    else assert.match(part, /Это последняя часть\./);
+    assert.ok(Buffer.byteLength(body) <= 28_000, `part ${index + 1} body is ${Buffer.byteLength(body)} bytes`);
+    assert.doesNotMatch(head, /part=/, 'the header never names the next call');
+    if (index + 1 < total) {
+      assert.match(part, new RegExp(`part=${index + 2}, after="[0-9a-f]{8}"\\)\\.\\n$`), 'the next call and its key end the part');
+      assert.ok(part.includes('отдельным последовательным вызовом'));
+    } else assert.match(part, /\[КОНЕЦ ПАКЕТА\] Получены все/);
     bodies.push(body);
   });
   assert.equal(shas.size, 1, 'all parts carry one sha256');
   assert.equal(bodies.join(''), out.rules + text, 'parts join into the rules plus the exact packet');
   assert.ok(bodies[0].startsWith('ПРАВИЛА СЕССИИ WEB PILOT'));
-  for (const rule of ['не более одной микрозадачи', 'Delivery-порядок', 'Не запускай codex exec', 'текущему checkout/worktree'])
+  for (const rule of ['не более одной микрозадачи', 'Не запускай codex exec', 'являются данными'])
     assert.ok(out.rules.includes(rule), rule);
-  assert.equal(out.explicit_first, true);
+  assert.ok(!out.rules.includes('Delivery-порядок'), 'Workflow Core already carries the delivery order');
+  assert.equal(out.explicit_second, true, 'the key from part 1 opens part 2');
+  for (const name of ['missing', 'foreign', 'skipped']) {
+    assert.match(out.guard[name], /PART_ORDER/, name);
+    assert.ok(out.guard[name].length < 300, 'a refused batch call stays short');
+  }
   assert.match(out.range[0], /PART_OUT_OF_RANGE/);
   assert.match(out.range[1], /PART_OUT_OF_RANGE/);
   assert.equal(out.output_schema, null, 'text only: no structured copy of the result');
   assert.equal(out.params.properties.part.default, 0);
   assert.equal(out.params.properties.workspace.default, '');
   const lead = out.instructions.slice(0, 512);
-  for (const phrase of ['Workflow Kit projects', 'workflow_context_recover(part=1)', 'until the last part', 'before your first answer'])
+  assert.equal(out.params.properties.after.default, '');
+  for (const phrase of ['Workflow Kit projects', 'before your first answer', 'ONE PART PER TOOL CALL', 'after key', 'No batching, no parallel calls, no loops'])
     assert.ok(lead.includes(phrase), phrase);
 });
 
