@@ -13,7 +13,7 @@
         "/opt/homebrew/bin/node --test tests/codex-app-server-mcp.test.mjs"
       ],
       "kind": "test",
-      "evidence": "tools/codex-app-server-mcp/control.py: configure-channel, stop --tunnel-only, selector-start соблюдает chatgpt_channel"
+      "evidence": "tools/codex-app-server-mcp: каналы control.py, Computer Use и workflow_context_recover частями (≤20000 байт, один sha256, проект по умолчанию)"
     },
     {
       "required": false,
@@ -43,7 +43,7 @@
       "timeout_ms": 600000,
       "id": "paired-release",
       "kind": "package",
-      "evidence": "~/Downloads/WebPilot-0.6.82: macOS arm64 + Windows x64 ZIP, SHA256SUMS.txt, INSTALL.txt, release-manifest.json; packaged sources and bundled Workflow Kit 1.5.3 verified",
+      "evidence": "~/Downloads/WebPilot-0.6.86: macOS arm64 + Windows x64 ZIP, SHA256SUMS.txt, INSTALL.txt, release-manifest.json; packaged sources and bundled Workflow Kit 1.5.3 verified",
       "executable": "npm",
       "args": [
         "run",
@@ -66,7 +66,7 @@
       "timeout_ms": 180000,
       "id": "github-release",
       "kind": "package",
-      "evidence": "GitHub Release v0.6.82 tag/assets and remote main verified against local release-manifest.json without rebuilding",
+      "evidence": "GitHub Release v0.6.86 tag/assets and remote main verified against local release-manifest.json without rebuilding",
       "executable": "node",
       "args": [
         "scripts/check-github-release.mjs"
