@@ -26,3 +26,5 @@
 ## Итог
 
 - T001 `88762d4` — резервные копии (`scripts/release-mac.mjs`, тесты); kit-update `cf39482` — Kit проекта 1.5.5; T002 `6d9f39b` — release-gates 1.5.5; T003 `241580d` — версия 0.6.89. Зависимость `@webpilot/workflow-kit` уже была 1.5.5, поэтому `unit-all` T001 выполнялась на рабочей копии вместе с правками gates; сами gates зафиксированы в T002.
+- DOCS `d340f7a`; T004 — сборка из sourceCommit `d340f7afdad3963888ae5c484c201287635fd549`; T005 — установка в `/Applications` без пересборки, в `release-backups.noindex` по одной копии на цель.
+- T006: [GitHub Release v0.6.89](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.89) опубликован 2026-10-04T17:08:22Z, пять assets сверены по серверным SHA-256; push прошёл через pre-push Kit 1.5.5 после DOCS.

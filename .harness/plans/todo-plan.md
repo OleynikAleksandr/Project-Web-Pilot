@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1156,
+  "plan_revision": 1158,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "release-backups-kit-1.5.5-0.6.89-20261004",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Одна резервная копия на установку вне Spotlight; Workflow Kit 1.5.5 (push только после DOCS); релиз 0.6.89.",
   "acceptance_criteria": [
     "Одна резервная копия на установку вне Spotlight; Workflow Kit 1.5.5 (push только после DOCS); релиз 0.6.89."
@@ -290,8 +290,8 @@
       "actual_files": []
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "release-backups-kit-1.5.5-0.6.89-20261004",
         "task_id": "T006",
@@ -304,7 +304,14 @@
         "scripts/check-github-release.mjs"
       ],
       "documentation_paths": [
-        "docs/planning/release-backups-kit-1.5.5.md"
+        "docs/planning/release-backups-kit-1.5.5.md",
+        "README.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/OVERVIEW.md"
       ],
       "verification_ids": [
         "github-release"
@@ -316,7 +323,17 @@
       "acceptance_criteria": [
         "Tag v0.6.89 на sourceCommit, пять assets совпадают с локальной поставкой, main синхронизирован"
       ],
-      "expected_commit_message": "feat: Опубликовать 0.6.89 и синхронизировать Project Web Pilot с GitHub"
+      "expected_commit_message": "feat: Опубликовать 0.6.89 и синхронизировать Project Web Pilot с GitHub",
+      "actual_files": [
+        "README.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/planning/release-backups-kit-1.5.5.md"
+      ]
     }
   ],
   "blocked_reason": null,
@@ -334,10 +351,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: release-backups-kit-1.5.5-0.6.89-20261004
 Current Task: нет
-Revision: 1156
+Revision: 1158
 
 ## Цель
 
@@ -373,10 +390,10 @@ Revision: 1156
   - Git Commit: [DONE] feat: Установить 0.6.89 и проверить установленные macOS-копии
   - Reference: release-backups-kit-1.5.5-0.6.89-20261004 / T005 / implementation
   - Файлы: scripts/check-installed-release.mjs, docs/planning/release-backups-kit-1.5.5.md
-- [TODO] T006: Опубликовать 0.6.89 и синхронизировать Project Web Pilot с GitHub — Ожидает
-  - Git Commit: [PENDING] feat: Опубликовать 0.6.89 и синхронизировать Project Web Pilot с GitHub
+- [DONE] T006: Опубликовать 0.6.89 и синхронизировать Project Web Pilot с GitHub — Завершено
+  - Git Commit: [DONE] feat: Опубликовать 0.6.89 и синхронизировать Project Web Pilot с GitHub
   - Reference: release-backups-kit-1.5.5-0.6.89-20261004 / T006 / implementation
-  - Файлы: scripts/check-github-release.mjs, docs/planning/release-backups-kit-1.5.5.md
+  - Файлы: scripts/check-github-release.mjs, docs/planning/release-backups-kit-1.5.5.md, README.md, docs/MODULES.md, docs/PRODUCT.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md
 
 ## Context Pack For This Cycle
 

@@ -2,6 +2,18 @@
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
+## Выпуск 0.6.89 — 04.10.2026
+
+0.6.89 ([контракт](planning/release-backups-kit-1.5.5.md)): установка хранит по одной резервной копии предыдущей версии на цель в `.harness/runtime/release-backups.noindex` (вне Spotlight, без накопления); bundled Workflow Kit 1.5.5 — push только после DOCS текущего плана. Source: T001 `88762d4`, kit-update `cf39482`, T002 `6d9f39b`, T003 `241580d`.
+
+Предсборочная DOCS — коммит `d340f7a` **до** release-сборки. T004 выполнила единственный `npm run build`: `release-manifest.sourceCommit=d340f7afdad3963888ae5c484c201287635fd549`, `sourceFiles=108`, `packagedSourceMatches=true`; identity обеих Mac-копий записана в `release-0.6.89-preflight.json` до сборки.
+
+macOS arm64: `~/Downloads/WebPilot-0.6.89/Project-Web-Pilot-0.6.89-macOS-arm64.zip`, 186503700 байт, SHA-256 `ddb6d9be8e7432b48c7ace812eee705d7231c812fcd9534f899736bc85c835a3`. Windows x64: `~/Downloads/WebPilot-0.6.89/Project-Web-Pilot-0.6.89-Windows-x64.zip`, 355617913 байт, SHA-256 `4eaddd9fd0d633951122c0c4071d0be8724041380acb988455c76318bd3dfce4`. Оба package имеют ASAR SHA-256 `002e56ec296fb4293302502f1248facdbb6c2f97c3c9732eb1336b8cf8342afa`; Windows прошёл `verify:win` на Mac, native Windows/clean VM не запускались.
+
+`/Applications` установлена из staging штатным `installMacBundle` **без пересборки**, inode сохранён `406571340`; T005 прошла полный `release-installed` gate.
+
+[GitHub Release v0.6.89](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.89) опубликован 2026-10-04T17:08:22Z. Tag `v0.6.89` указывает точно на `d340f7afdad3963888ae5c484c201287635fd549`. Опубликованы ровно пять файлов; server size/digest каждого совпадает с локальной поставкой. Release не draft/prerelease. Финальный `main` должен совпасть с managed T006 commit; это повторно проверяет `scripts/check-github-release.mjs` после push.
+
 ## Выпуск 0.6.88 — 04.10.2026
 
 0.6.88 ([контракт](planning/mcp-start-message.md)): в режиме Codex App Server Web Pilot сам начинает новую сессию коротким стартовым сообщением — проект, папка и порядок чтения `workflow_context_recover` по одной части с ключом `after`; агент получает контекст через MCP и кратко подтверждает. Пакет в чат не вставляется; привязанный, ручной и прежний чат стартового сообщения не получают. Bundled Workflow Kit 1.5.4. Source: T001 `330108f` (план), T002 `96367b8` (код и версия).

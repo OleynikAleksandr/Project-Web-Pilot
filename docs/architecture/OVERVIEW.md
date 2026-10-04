@@ -8,7 +8,7 @@ Project Web Pilot — Electron-приложение для macOS arm64 и Window
 
 ## Текущее состояние
 
-**0.6.89** ([контракт](../planning/release-backups-kit-1.5.5.md)) — текущая версия: установка релиза хранит по одной резервной копии предыдущей версии на каждую цель (корневой app и `/Applications`) в `.harness/runtime/release-backups.noindex` — копии больше не накапливаются и не видны в Spotlight. Bundled Workflow Kit **1.5.5**: push на GitHub отклоняется, пока DOCS текущего плана не завершена.
+**Опубликован 0.6.89** ([контракт](../planning/release-backups-kit-1.5.5.md)) — текущая локальная и опубликованная парная версия: установка релиза хранит по одной резервной копии предыдущей версии на каждую цель (корневой app и `/Applications`) в `.harness/runtime/release-backups.noindex` — копии больше не накапливаются и не видны в Spotlight. Bundled Workflow Kit **1.5.5**: push на GitHub отклоняется, пока DOCS текущего плана не завершена. Release собран после предсборочной DOCS из source commit `d340f7afdad3963888ae5c484c201287635fd549`; root `Project Web Pilot.app` и `/Applications/Project Web Pilot.app` обновлены до 0.6.89 без пересборки (общий ASAR SHA-256 `002e56ec296fb4293302502f1248facdbb6c2f97c3c9732eb1336b8cf8342afa`). [GitHub Release v0.6.89](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.89) опубликован 2026-10-04T17:08:22Z; tag указывает на sourceCommit, пять assets сверены по серверным SHA-256. native Windows и clean VM 0.6.89 не проверялись.
 
 Предыдущая опубликованная парная версия — **0.6.88** ([контракт](../planning/mcp-start-message.md)): Web Pilot сам начинает MCP-сессию коротким стартовым сообщением; агент читает контекст через MCP по одной части.
 

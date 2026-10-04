@@ -1,5 +1,11 @@
 # Проверки и приёмка
 
+## 2026-10-04 — 0.6.89 GitHub publication
+
+GitHub Release [v0.6.89](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.89) опубликован 2026-10-04T17:08:22Z, `draft=false`, `prerelease=false`. Tag указывает на release sourceCommit `d340f7afdad3963888ae5c484c201287635fd549`.
+
+GitHub содержит ровно пять assets: macOS ZIP 186503700 / `ddb6d9be8e7432b48c7ace812eee705d7231c812fcd9534f899736bc85c835a3`, Windows ZIP 355617913 / `4eaddd9fd0d633951122c0c4071d0be8724041380acb988455c76318bd3dfce4`, `SHA256SUMS.txt` / `04bc1ebed06115b79367869ab1894221274a9f37890e785ac41eed1a11a75412`, `INSTALL.txt` / `db74965bcfbb2296ec9ced503e455446735f5f1ac5ed4a0b78beec98c93efcdc`, `release-manifest.json` / `1561799630bf106f5985c6a5fffce020bb3b002b3298bb922e0ebf3fd54770ae`. Server size/digest совпали с локальными файлами.
+
 ## 2026-10-04 — 0.6.89 резервные копии и Workflow Kit 1.5.5 (до сборки)
 
 Причина: к 0.6.88 в `.harness/runtime/release-backups` накопилось около 110 копий на 46 ГБ; Spotlight показывал вложенные Helper-приложения. Пользователь перенёс их в Корзину.
