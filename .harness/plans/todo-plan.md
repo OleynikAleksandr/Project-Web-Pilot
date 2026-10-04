@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 143,
+  "plan_revision": 145,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "push-after-docs-1.5.5-20261004",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Push на GitHub только после DOCS текущего плана: pre-push hook Workflow Kit 1.5.5.",
   "acceptance_criteria": [
     "Push до завершения DOCS текущего плана отклоняется, после DOCS проходит",
@@ -168,8 +168,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "push-after-docs-1.5.5-20261004",
         "task_id": "T002",
@@ -192,7 +192,8 @@
       "acceptance_criteria": [
         "origin/main совпадает с локальным HEAD; push прошёл через новый pre-push после DOCS"
       ],
-      "expected_commit_message": "feat: Опубликовать Workflow Kit 1.5.5 на GitHub"
+      "expected_commit_message": "feat: Опубликовать Workflow Kit 1.5.5 на GitHub",
+      "actual_files": []
     }
   ],
   "blocked_reason": null,
@@ -210,10 +211,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: push-after-docs-1.5.5-20261004
 Current Task: нет
-Revision: 143
+Revision: 145
 
 ## Цель
 
@@ -234,8 +235,8 @@ Push на GitHub только после DOCS текущего плана: pre-p
   - Git Commit: [DONE] docs: актуализировать контекст проекта
   - Reference: push-after-docs-1.5.5-20261004 / DOCS / implementation
   - Файлы: docs/planning/push-after-docs.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, src/templates/PLAN.md, src/templates/PROTOTYPE.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, README.md, docs/modules/workflow-kit-package.md, docs/planning/delivery-ordering-policy.md
-- [TODO] T002: Опубликовать Workflow Kit 1.5.5 на GitHub — Ожидает
-  - Git Commit: [PENDING] feat: Опубликовать Workflow Kit 1.5.5 на GitHub
+- [DONE] T002: Опубликовать Workflow Kit 1.5.5 на GitHub — Завершено
+  - Git Commit: [DONE] feat: Опубликовать Workflow Kit 1.5.5 на GitHub
   - Reference: push-after-docs-1.5.5-20261004 / T002 / implementation
   - Файлы: docs/planning/push-after-docs.md
 
