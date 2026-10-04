@@ -99,7 +99,7 @@ const phases = {
   selected: ['Готов к началу', 'Войдите в ChatGPT справа и выберите папку проекта слева.', 'neutral'],
   preparing: ['Подготавливаем подключение', 'Проверяем локальные инструменты и связь с ChatGPT.', 'working'],
   'loading-context': ['Получаем контекст проекта', 'Готовим полный пакет для первого сообщения.', 'working'],
-  'waiting-login': ['Войдите в ChatGPT', 'После входа полный контекст отправится автоматически.', 'working'],
+  'waiting-login': ['Войдите в ChatGPT', 'После входа Web Pilot продолжит автоматически.', 'working'],
   'waiting-experience': ['Не удалось определить режим ChatGPT', 'Откройте новый Chat или Work. Web Pilot ожидает подтверждения выбранного режима.', 'working'],
   'waiting-composer': ['Ожидаем поле сообщения', 'Откройте доступное поле ChatGPT. Старт продолжится автоматически.', 'working'],
   'waiting-draft': ['В поле есть черновик', 'Закончите или уберите свой черновик. Стартовое сообщение подождёт.', 'working'],
@@ -114,6 +114,8 @@ const phases = {
   'legacy-session': ['Сохранённый чат проекта', 'Чат открыт. Для передачи полного пакета нажмите «Обновить контекст» или создайте новую сессию через меню проекта.', 'neutral'],
   'send-unknown': ['Можно продолжать разговор', 'Прежняя попытка отправки не подтверждена. Автоматических проверок и повторной отправки нет.', 'neutral'],
   'chat-changed': ['Открыт другой чат', 'Этот чат пока не связан с проектом. Вернитесь к сессии проекта или создайте новую через меню проекта.', 'working'],
+  ready: ['Можно начинать', 'Напишите первое сообщение. Агент сам получит контекст проекта через MCP.', 'success'],
+  bound: ['Чат проекта', 'Контекст агент получает сам через MCP. Чтобы обновить его в этом чате, попросите агента получить контекст проекта заново.', 'success'],
   error: ['Не удалось передать контекст', 'Подробности ошибки показаны выше. После исправления нажмите «Проверить контекст».', 'error'],
 };
 
@@ -370,12 +372,15 @@ function render(state) {
   const servicesReady = !!context.servicesReady || !!(runtimeService?.mcpReady && runtimeService?.tunnelReady);
   $('state-service').textContent = servicesReady ? 'Готовы' : context.phase === 'preparing' ? 'Проверка…' : 'Не проверены';
   $('state-service').dataset.ready = String(servicesReady);
-  $('state-message').textContent = context.messageSent ? 'Отправлено' : context.phase === 'sending' ? 'Отправка…' : context.phase === 'send-unknown' ? 'Без подтверждения' : 'Ожидание';
-  $('state-message').dataset.ready = String(!!context.messageSent);
-  $('state-context').textContent = context.phase === 'delivered' ? 'Передан целиком' : ['stale', 'prepared-stale'].includes(context.phase) ? 'Устарел' : context.phase === 'loading-context' ? 'Подготовка…' : context.phase === 'legacy-session' ? 'Прежняя сессия' : 'Ожидание';
-  $('state-context').dataset.ready = String(context.phase === 'delivered');
+  // MCP delivery: no start message; the agent reads the project context itself.
+  const mcpContext = context.contextMode === 'mcp';
+  $('state-message').textContent = mcpContext ? 'Не требуется' : context.messageSent ? 'Отправлено' : context.phase === 'sending' ? 'Отправка…' : context.phase === 'send-unknown' ? 'Без подтверждения' : 'Ожидание';
+  $('state-message').dataset.ready = String(mcpContext || !!context.messageSent);
+  $('state-context').textContent = mcpContext ? 'Агент читает через MCP' : context.phase === 'delivered' ? 'Передан целиком' : ['stale', 'prepared-stale'].includes(context.phase) ? 'Устарел' : context.phase === 'loading-context' ? 'Подготовка…' : context.phase === 'legacy-session' ? 'Прежняя сессия' : 'Ожидание';
+  $('state-context').dataset.ready = String(mcpContext ? ['ready', 'bound'].includes(context.phase) : context.phase === 'delivered');
   $('return-chat').hidden = context.phase !== 'chat-changed';
-  $('retry-context').textContent = ['delivered', 'stale', 'prepared-stale', 'legacy-session', 'manual-session'].includes(context.phase) ? 'Обновить контекст'
+  $('retry-context').textContent = mcpContext ? 'Проверить подключение'
+    : ['delivered', 'stale', 'prepared-stale', 'legacy-session', 'manual-session'].includes(context.phase) ? 'Обновить контекст'
     : ['send-unknown', 'waiting-chat'].includes(context.phase) ? 'Проверить статус' : 'Проверить контекст';
   $('connection-detail').textContent = state.platform === 'win32' ? 'Codex Local Windows · встроенный runtime' : state.runtimeFolder;
   const delivery = context.delivery;

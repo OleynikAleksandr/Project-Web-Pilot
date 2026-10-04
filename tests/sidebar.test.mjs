@@ -176,6 +176,23 @@ test('delivered chat shows local tools from the last confirmed runtime status wi
   assert.equal(f.document.getElementById('state-service').textContent, 'Не проверены');
 });
 
+test('MCP delivery shows a ready project chat without a start message or packet refresh', async t => {
+  const f = await fixture(t), text = id => f.document.getElementById(id).textContent;
+  f.emit({ ...f.state, context: { phase: 'ready', contextMode: 'mcp', messageSent: false } });
+  assert.equal(text('context-title'), 'Можно начинать');
+  assert.match(text('context-detail'), /Агент сам получит контекст проекта через MCP/);
+  assert.equal(text('state-message'), 'Не требуется');
+  assert.equal(text('state-context'), 'Агент читает через MCP');
+  assert.equal(f.document.getElementById('state-context').dataset.ready, 'true');
+  assert.equal(text('retry-context'), 'Проверить подключение');
+  f.emit({ ...f.state, context: { phase: 'bound', contextMode: 'mcp', messageSent: false } });
+  assert.equal(text('context-title'), 'Чат проекта');
+  assert.equal(text('retry-context'), 'Проверить подключение');
+  f.emit({ ...f.state, context: { phase: 'delivered', messageSent: true } });
+  assert.equal(text('state-context'), 'Передан целиком', 'first-message delivery keeps its labels');
+  assert.equal(text('retry-context'), 'Обновить контекст');
+});
+
 test('plan card shows current and total agent time in minutes and seconds without live announcements', async t => {
   const f = await fixture(t), state = f.state, timer = f.document.getElementById('agent-time');
   assert.equal(timer.getAttribute('role'), 'timer', 'role=timer is not announced every second');

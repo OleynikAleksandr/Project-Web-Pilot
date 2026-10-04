@@ -296,6 +296,37 @@ test('CodexAppServerRuntime passes the channel and tunnel-only stop to control.p
   await assert.rejects(runtime.configureChannel('public'), error => error.code === 'CHATGPT_CHANNEL_INVALID');
 });
 
+test('App Server backend serves the context over MCP and records the project open in Web Pilot', async t => {
+  const root = await mkdtemp(path.join(tmpdir(), 'web-pilot-active-workspace-'));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const state = path.join(root, 'state');
+  const runtime = new CodexAppServerRuntime({ sourceDir: path.join(root, 'resource'), stateDir: state,
+    sessionPlans: { loadContext() {} }, execute: async () => { throw new Error('not used'); } });
+  assert.equal(runtime.contextDelivery, 'mcp');
+  assert.equal(await runtime.setActiveWorkspace('/Projects/Мой проект'), true);
+  const file = path.join(state, 'active-workspace.json');
+  const record = JSON.parse(await fs.readFile(file, 'utf8'));
+  assert.equal(record.workspace, '/Projects/Мой проект');
+  assert.ok(Number.isSafeInteger(record.updated_at_ms));
+  assert.equal((await fs.stat(file)).mode & 0o777, 0o600);
+  assert.equal(await runtime.setActiveWorkspace('/Projects/Мой проект'), false, 'an unchanged project is not rewritten');
+  assert.equal(await runtime.setActiveWorkspace('/Projects/Другой'), true);
+  assert.equal(JSON.parse(await fs.readFile(file, 'utf8')).workspace, '/Projects/Другой');
+  await assert.rejects(runtime.setActiveWorkspace('relative/path'), TypeError);
+  assert.deepEqual((await fs.readdir(state)).sort(), ['active-workspace.json'], 'no temporary files remain');
+
+  const f = channelFixture(root);
+  const recorded = [];
+  Object.assign(f.switcher.appServerRuntime, { contextDelivery: 'mcp', async setActiveWorkspace(workspace) { recorded.push(workspace); return true; } });
+  const app = await f.switcher.activate(MAC_RUNTIME_APP_SERVER, { localRuntime: f.localRuntime });
+  assert.equal(app.runtime.contextDelivery, 'mcp');
+  assert.equal(await app.runtime.setActiveWorkspace('/Projects/Мой проект'), true);
+  assert.deepEqual(recorded, ['/Projects/Мой проект']);
+  const local = await f.switcher.activate(MAC_RUNTIME_LOCAL, { localRuntime: f.localRuntime });
+  assert.equal(local.runtime.contextDelivery, 'message', 'Codex Local Mac keeps the first-message delivery');
+  assert.equal(await local.runtime.setActiveWorkspace('/Projects/Мой проект'), false);
+});
+
 test('MacRuntimeSwitcher stops only strictly identified legacy listeners', async t => {
   const root = await mkdtemp(path.join(tmpdir(), 'web-pilot-runtime-orphans-'));
   t.after(() => fs.rm(root, { recursive: true, force: true }));

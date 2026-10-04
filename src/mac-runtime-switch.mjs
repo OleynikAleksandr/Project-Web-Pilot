@@ -17,6 +17,8 @@ export const APP_SERVER_LAUNCH_AGENT = 'com.oleynik.WebPilotCodexExecutor';
 export const CHATGPT_CHANNEL_SECURE = 'secure-tunnel';
 export const CHATGPT_CHANNEL_VPS = 'vps';
 export const CHATGPT_CHANNELS = Object.freeze([CHATGPT_CHANNEL_SECURE, CHATGPT_CHANNEL_VPS]);
+// Read by tools/codex-app-server-mcp/server.py when a client asks for the project context without a workspace.
+export const ACTIVE_WORKSPACE_FILE = 'active-workspace.json';
 
 function vpsProblem(vps) {
   if (!vps?.configured) return 'Свой сервер для канала VPS не настроен.';
@@ -54,6 +56,21 @@ export class CodexAppServerRuntime {
     this.pending = null;
     this.mcpOnlyPending = null;
     this.lastStatus = null;
+    this.activeWorkspace = null;
+  }
+
+  // The bundled server gives the agent the project context in parts, so Web Pilot sends no recovery message.
+  get contextDelivery() { return 'mcp'; }
+
+  async setActiveWorkspace(workspace) {
+    if (!path.isAbsolute(workspace ?? '')) throw new TypeError('setActiveWorkspace requires an absolute workspace');
+    if (this.activeWorkspace === workspace) return false;
+    await fs.mkdir(this.stateDir, { recursive: true, mode: 0o700 });
+    const file = path.join(this.stateDir, ACTIVE_WORKSPACE_FILE), temp = file + '.tmp-' + process.pid;
+    await fs.writeFile(temp, JSON.stringify({ workspace, updated_at_ms: Date.now() }) + '\n', { mode: 0o600 });
+    await fs.rename(temp, file);
+    this.activeWorkspace = workspace;
+    return true;
   }
 
   async syncSource() {
@@ -214,6 +231,12 @@ class MacSelectedRuntime {
     this.vpsTunnel = vpsTunnel;
     this.channel = channel;
     this.lastStatus = status;
+  }
+
+  get contextDelivery() { return this.backendRuntime.contextDelivery ?? 'message'; }
+
+  async setActiveWorkspace(workspace) {
+    return this.backendRuntime.setActiveWorkspace ? this.backendRuntime.setActiveWorkspace(workspace) : false;
   }
 
   // In the VPS channel the status "tunnel" is the VPS forward, so every readiness

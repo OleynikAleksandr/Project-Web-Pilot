@@ -100,9 +100,17 @@ export class ContextSession {
     return this.now() - packet.generatedAtMs <= 300000;
   }
 
+  get mcpContext() { return this.runtime?.contextDelivery === 'mcp'; }
+
   async retry() {
     if (!this.active) return;
     if (this.pending) { this.rerunRequested = true; return; }
+    if (this.mcpContext) {
+      // The agent fetches the context itself; a retry only repeats the connection check.
+      this.servicesReady = false;
+      this.emit({ phase: 'selected', error: null, delivery: null });
+      return this.tick();
+    }
     const project = this.store.project(this.active.workspace);
     const attempt = project?.attempt;
     if (project?.manualStart) await this.store.updateSession(project.workspace, project.sessionId, { manualStart: false, attempt: null, receipt: null });
@@ -149,6 +157,21 @@ export class ContextSession {
       state.pending = false;
       if (this.current(generation) && this.warmState === state) this.signal();
     });
+  }
+
+  // MCP delivery: the agent reads the context in parts via workflow_context_recover; nothing is pasted or sent.
+  // A fresh chat waits for the user's first message, which binds it (main.mjs observeManualConversation).
+  async mcpSession(project, info, generation) {
+    if (!project.chatUrl && !this.servicesReady) {
+      this.emit({ phase: 'preparing', projectInfo: info, contextMode: 'mcp' });
+      await this.runtime.ensure();
+      if (!this.current(generation)) return;
+      this.servicesReady = true;
+    }
+    await this.runtime.setActiveWorkspace(project.workspace);
+    if (!this.current(generation)) return;
+    this.emit({ phase: project.chatUrl ? 'bound' : 'ready', projectInfo: info, messageSent: false,
+      delivery: null, error: null, contextMode: 'mcp' });
   }
 
   async inspectProject(workspace, sessionId, generation) {
@@ -238,7 +261,7 @@ export class ContextSession {
           ? 'Work-сессия не открыта в режиме Work. Recovery не отправлен.'
           : 'Chat-сессия не открыта в обычном Chat. Recovery не отправлен.');
       }
-      if (project.manualStart && !ownMessageSeen) {
+      if (project.manualStart && !ownMessageSeen && !this.mcpContext) {
         this.emit({ phase: 'manual-session', projectInfo: info, messageSent: false, delivery: null, error: null }); return;
       }
       if (this.freshDraft && !project.chatUrl && !attempt) {
@@ -263,6 +286,7 @@ export class ContextSession {
       }
       // The new editor and requested mode are ready. Later user input is preserved.
       this.freshDraft = false;
+      if (this.mcpContext) { await this.mcpSession(project, info, generation); return; }
       if (attempt && attempt.protocol !== CONTEXT_PROTOCOL) {
         const known = ['sent', 'acknowledged'].includes(attempt.state) || observation.messageSeen;
         if (observation.messageSeen && !['sent', 'acknowledged'].includes(attempt.state)) {

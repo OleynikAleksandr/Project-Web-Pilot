@@ -419,6 +419,58 @@ test('ordinary manually started conversation is view-only until explicit context
   assert.equal(f.sends(), 1); assert.equal(f.controller.state.phase, 'delivered');
 });
 
+function mcpFixture(options) {
+  const f = controllerFixture(options);
+  const active = []; let ensures = 0;
+  Object.assign(f.runtime, { contextDelivery: 'mcp', ensure: async () => { ensures++; return {}; },
+    setActiveWorkspace: async workspace => { active.push(workspace); return true; } });
+  return Object.assign(f, { active, ensures: () => ensures });
+}
+
+test('MCP delivery: a fresh session prepares services, records the project and waits without pasting recovery', async () => {
+  const f = mcpFixture({ chatUrl: null });
+  await f.controller.tick();
+  assert.equal(f.controller.state.phase, 'ready');
+  assert.equal(f.controller.state.contextMode, 'mcp');
+  assert.equal(f.controller.state.messageSent, false);
+  assert.equal(f.loads(), 0); assert.equal(f.sends(), 0);
+  assert.equal(f.saved.attempt, null, 'no recovery message is prepared');
+  assert.equal(f.ensures(), 1);
+  assert.deepEqual(f.active, [project.workspace]);
+  await f.controller.tick();
+  assert.equal(f.ensures(), 1, 'services are checked once per attach');
+  assert.equal(f.sends(), 0);
+});
+
+test('MCP delivery: a chat bound by the first user message is a project chat without packet or service restart', async () => {
+  const f = mcpFixture();
+  await f.store.updateSession('', '', { manualStart: true });
+  await f.controller.tick();
+  assert.equal(f.controller.state.phase, 'bound');
+  assert.equal(f.loads(), 0); assert.equal(f.sends(), 0); assert.equal(f.ensures(), 0);
+  assert.deepEqual(f.active, [project.workspace]);
+  assert.equal(f.saved.manualStart, true);
+});
+
+test('MCP delivery: an older chat with a delivered packet stays a project chat', async () => {
+  const f = mcpFixture({ savedAttempt: { protocol: 'inline-context-v1', requestId: 'old', text: 'old', state: 'sent',
+    sendStartedAtMs: now - 10, sentAtMs: now - 5, packet: { workspace: project.workspace, facts: { ...facts } } } });
+  await f.controller.tick();
+  assert.equal(f.controller.state.phase, 'bound');
+  assert.equal(f.loads(), 0); assert.equal(f.sends(), 0);
+});
+
+test('MCP delivery: retry repeats the connection check and keeps the session unchanged', async () => {
+  const f = mcpFixture({ chatUrl: null });
+  await f.store.updateSession('', '', { manualStart: true });
+  await f.controller.tick();
+  await f.controller.retry();
+  assert.equal(f.saved.manualStart, true, 'retry never turns the chat into a recovery send');
+  assert.equal(f.controller.state.phase, 'ready');
+  assert.equal(f.ensures(), 2);
+  assert.equal(f.sends(), 0); assert.equal(f.loads(), 0);
+});
+
 test('fresh creation resets the draft before mode selection and never resets later user input', async () => {
   const f = controllerFixture({ chatUrl: null });
   f.inspection.draftLength = 30; f.inspection.draftMatches = false;
