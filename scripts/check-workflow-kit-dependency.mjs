@@ -5,9 +5,9 @@ import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { VERSION, getRuntimeRoot } from '@webpilot/workflow-kit';
 
-export const EXPECTED_WORKFLOW_KIT_VERSION = '1.5.2';
+export const EXPECTED_WORKFLOW_KIT_VERSION = '1.5.3';
 export const EXPECTED_WORKFLOW_KIT_FILES = 35;
-export const EXPECTED_WORKFLOW_KIT_SHA256 = '646fec106c498e004d8688a3bc40012bea1654178ce66a61b650211ab28055df';
+export const EXPECTED_WORKFLOW_KIT_SHA256 = 'd59ae7b6b074e953fdd6c5d78d1f644902f0e7b9af5ad3c78d67d42f1f6a1c0f';
 
 export async function runtimeFiles(root = getRuntimeRoot()) {
   root = path.resolve(root);

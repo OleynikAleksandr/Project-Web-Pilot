@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1026,
+  "plan_revision": 1027,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "release-0.6.82-workflowkit-1.5.3-20261004",
@@ -25,7 +25,8 @@
       "tests/workspace-setup.test.mjs",
       "scripts/release-all.mjs",
       "scripts/release-mac.mjs",
-      "resources/workspace-setup-worker.mjs"
+      "resources/workspace-setup-worker.mjs",
+      "tests/workflow-kit-source.test.mjs"
     ],
     "documentation_paths": [
       "docs/planning/release-0.6.82-workflowkit-1.5.3.md",
@@ -37,7 +38,7 @@
     ]
   },
   "baseline_commit": "d2afd57bb04924b607dd4a79fb7c1485400c6552",
-  "current_task_id": "T001",
+  "current_task_id": null,
   "context_pack": {
     "documents": [
       {
@@ -74,8 +75,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "IN_PROGRESS",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "release-0.6.82-workflowkit-1.5.3-20261004",
         "task_id": "T001",
@@ -89,7 +90,8 @@
         "scripts/verify-windows-package.mjs",
         "scripts/check-workflow-kit-dependency.mjs",
         "scripts/check-github-release.mjs",
-        "tests/workspace-setup.test.mjs"
+        "tests/workspace-setup.test.mjs",
+        "tests/workflow-kit-source.test.mjs"
       ],
       "documentation_paths": [
         "docs/planning/release-0.6.82-workflowkit-1.5.3.md"
@@ -107,7 +109,15 @@
         "GitHub verifier умеет сверить v0.6.82 tag/release/assets и remote main с release-manifest без сборки",
         "Source/integration regressions проходят, release build и GitHub publication не выполняются"
       ],
-      "expected_commit_message": "feat: Подготовить source релиза 0.6.82 и release-gates для Workflow Kit 1.5.3"
+      "expected_commit_message": "feat: Подготовить source релиза 0.6.82 и release-gates для Workflow Kit 1.5.3",
+      "actual_files": [
+        "package-lock.json",
+        "package.json",
+        "scripts/check-installed-release.mjs",
+        "scripts/check-workflow-kit-dependency.mjs",
+        "scripts/verify-windows-package.mjs",
+        "tests/workflow-kit-source.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -266,8 +276,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: release-0.6.82-workflowkit-1.5.3-20261004
-Current Task: T001
-Revision: 1026
+Current Task: нет
+Revision: 1027
 
 ## Цель
 
@@ -279,10 +289,10 @@ Revision: 1026
 
 ## Микрозадачи
 
-- [IN_PROGRESS] T001: Подготовить source релиза 0.6.82 и release-gates для Workflow Kit 1.5.3 — В работе
-  - Git Commit: [PENDING] feat: Подготовить source релиза 0.6.82 и release-gates для Workflow Kit 1.5.3
+- [DONE] T001: Подготовить source релиза 0.6.82 и release-gates для Workflow Kit 1.5.3 — Завершено
+  - Git Commit: [DONE] feat: Подготовить source релиза 0.6.82 и release-gates для Workflow Kit 1.5.3
   - Reference: release-0.6.82-workflowkit-1.5.3-20261004 / T001 / implementation
-  - Файлы: package.json, package-lock.json, scripts/check-installed-release.mjs, scripts/verify-windows-package.mjs, scripts/check-workflow-kit-dependency.mjs, scripts/check-github-release.mjs, tests/workspace-setup.test.mjs, docs/planning/release-0.6.82-workflowkit-1.5.3.md
+  - Файлы: package.json, package-lock.json, scripts/check-installed-release.mjs, scripts/verify-windows-package.mjs, scripts/check-workflow-kit-dependency.mjs, scripts/check-github-release.mjs, tests/workspace-setup.test.mjs, tests/workflow-kit-source.test.mjs, docs/planning/release-0.6.82-workflowkit-1.5.3.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: release-0.6.82-workflowkit-1.5.3-20261004 / DOCS / implementation
