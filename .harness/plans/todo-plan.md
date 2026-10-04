@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1025,
+  "plan_revision": 1026,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "release-0.6.82-workflowkit-1.5.3-20261004",
@@ -37,7 +37,7 @@
     ]
   },
   "baseline_commit": "d2afd57bb04924b607dd4a79fb7c1485400c6552",
-  "current_task_id": null,
+  "current_task_id": "T001",
   "context_pack": {
     "documents": [
       {
@@ -74,7 +74,7 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
+      "implementation_status": "IN_PROGRESS",
       "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "release-0.6.82-workflowkit-1.5.3-20261004",
@@ -266,8 +266,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: release-0.6.82-workflowkit-1.5.3-20261004
-Current Task: нет
-Revision: 1025
+Current Task: T001
+Revision: 1026
 
 ## Цель
 
@@ -279,7 +279,7 @@ Revision: 1025
 
 ## Микрозадачи
 
-- [TODO] T001: Подготовить source релиза 0.6.82 и release-gates для Workflow Kit 1.5.3 — Ожидает
+- [IN_PROGRESS] T001: Подготовить source релиза 0.6.82 и release-gates для Workflow Kit 1.5.3 — В работе
   - Git Commit: [PENDING] feat: Подготовить source релиза 0.6.82 и release-gates для Workflow Kit 1.5.3
   - Reference: release-0.6.82-workflowkit-1.5.3-20261004 / T001 / implementation
   - Файлы: package.json, package-lock.json, scripts/check-installed-release.mjs, scripts/verify-windows-package.mjs, scripts/check-workflow-kit-dependency.mjs, scripts/check-github-release.mjs, tests/workspace-setup.test.mjs, docs/planning/release-0.6.82-workflowkit-1.5.3.md

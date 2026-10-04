@@ -9,6 +9,7 @@ import { git, head, localPath, allChanges, identityReady, paths, gitPath } from 
 import { locked, commitCandidate, completedTransaction, finishTransaction } from './transaction.mjs';
 import { recover, recoverState } from './recovery.mjs';
 import { assertSingleWriter } from './session-plans.mjs';
+import { hooksDirectory } from './installation-files.mjs';
 
 const noTransaction = root => check(!journal(root), 'TRANSACTION_PENDING', 'Сначала завершите текущую транзакцию commit/repair.');
 const acknowledgementsPath = root => path.join(root, '.harness/runtime/worktrees', hash(gitPath(root, 'index')).slice(0, 20), 'hook-acknowledgements.json');
@@ -243,6 +244,40 @@ export function carryoverPlan(root, input, expectedRevision) {
   });
 }
 
+// Project rename: the name shown in the plan heading and recovery follows the user's
+// decision (usually a renamed folder). Manifest hook paths are refreshed for the current
+// checkout; runtime targets are already resolved from the hooks directory, so this is tidiness.
+export function renameProject(root, name, expectedRevision) {
+  const PLAN = planPath(root);
+  return locked(root, () => {
+    noTransaction(root); assertSingleWriter(root, PLAN); const { plan } = validate(root);
+    check(expectedRevision !== undefined, 'EXPECTED_REVISION_REQUIRED', 'Укажите --expected-revision из status.'); revision(plan, expectedRevision);
+    const next = typeof name === 'string' ? name.trim() : '';
+    check(next && next.length <= 100 && !/[\u0000-\u001f\u007f]/.test(next), 'PROJECT_NAME', 'Укажите имя проекта: одна строка до 100 символов без управляющих символов.');
+    check(plan.current_task_id === null, 'TASK_ACTIVE', 'Сначала завершите активную микрозадачу.');
+    const manifestFile = path.join(root, MANIFEST);
+    const manifestBefore = fs.existsSync(manifestFile) ? fs.readFileSync(manifestFile, 'utf8') : null;
+    let manifestAfter = manifestBefore;
+    if (manifestBefore !== null) {
+      const manifest = JSON.parse(manifestBefore); const folder = hooksDirectory(root).folder;
+      manifest.files = manifest.files.map(entry => entry.external && entry.kind === 'git-hook'
+        ? { ...entry, path: path.join(folder, path.posix.basename(entry.path.replaceAll('\\', '/'))) } : entry);
+      manifestAfter = json(manifest);
+    }
+    if (plan.project_name === next && manifestAfter === manifestBefore) return { ok: true, changed: false, project_name: next, message: 'Имя проекта уже актуально.' };
+    const previousName = plan.project_name;
+    plan.project_name = next; plan.plan_revision++;
+    const selected = [PLAN];
+    if (manifestAfter !== manifestBefore) { atomic(manifestFile, manifestAfter); selected.push(MANIFEST); }
+    try {
+      const result = service(root, plan, 'kit-update', selected, 'chore: переименовать проект в ' + next);
+      return { ...result, changed: true, previous_name: previousName, project_name: next, message: 'Имя проекта: ' + next + '.' };
+    } catch (error) {
+      if (!journal(root) && manifestAfter !== manifestBefore) atomic(manifestFile, manifestBefore);
+      throw error;
+    }
+  });
+}
 export function archive(root, scope, approvalNote) {
   const PLAN = planPath(root);
   return locked(root, () => {
