@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1144,
+  "plan_revision": 1145,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "release-backups-kit-1.5.5-0.6.89-20261004",
@@ -37,7 +37,7 @@
     ]
   },
   "baseline_commit": "1b5ca63b444a29a5f40cf5a13b2be45e9a162b74",
-  "current_task_id": null,
+  "current_task_id": "T001",
   "context_pack": {
     "documents": [
       {
@@ -74,7 +74,7 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
+      "implementation_status": "IN_PROGRESS",
       "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "release-backups-kit-1.5.5-0.6.89-20261004",
@@ -300,8 +300,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: release-backups-kit-1.5.5-0.6.89-20261004
-Current Task: нет
-Revision: 1144
+Current Task: T001
+Revision: 1145
 
 ## Цель
 
@@ -313,7 +313,7 @@ Revision: 1144
 
 ## Микрозадачи
 
-- [TODO] T001: Резервные копии установки: одна на цель, вне Spotlight — Ожидает
+- [IN_PROGRESS] T001: Резервные копии установки: одна на цель, вне Spotlight — В работе
   - Git Commit: [PENDING] feat: Резервные копии установки: одна на цель, вне Spotlight
   - Reference: release-backups-kit-1.5.5-0.6.89-20261004 / T001 / implementation
   - Файлы: scripts/release-mac.mjs, tests/release-mac.test.mjs, docs/planning/release-backups-kit-1.5.5.md
