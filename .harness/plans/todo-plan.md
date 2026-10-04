@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1044,
+  "plan_revision": 1045,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "chatgpt-channel-vps-20261004",
@@ -30,7 +30,12 @@
       "tests/mac-runtime-switch.test.mjs",
       "src/ui/index.html",
       "src/ui/settings-panel.mjs",
-      "tests/settings-chatgpt-channel.test.mjs"
+      "tests/settings-chatgpt-channel.test.mjs",
+      "package.json",
+      "package-lock.json",
+      "scripts/release-all.mjs",
+      "scripts/check-installed-release.mjs",
+      "scripts/check-github-release.mjs"
     ],
     "documentation_paths": [
       "docs/planning/chatgpt-channel-vps.md",
@@ -38,7 +43,9 @@
       "docs/architecture/ARCHITECTURE.md",
       "docs/architecture/OVERVIEW.md",
       "docs/MODULES.md",
-      "docs/DOCUMENTATION_INDEX.md"
+      "docs/DOCUMENTATION_INDEX.md",
+      "docs/RELEASE.md",
+      "docs/VERIFICATION.md"
     ]
   },
   "baseline_commit": "b2b7c5a57af30bb07930301b865445bbac3425ef",
@@ -192,6 +199,35 @@
       "expected_commit_message": "feat: Раздел «Подключение ChatGPT» в Настройках"
     },
     {
+      "id": "T004",
+      "title": "Подготовить source релиза 0.6.83",
+      "why": "Новая функция доходит до пользователя только новой сборкой; версия поднимается до DOCS и сборки.",
+      "dependencies": [
+        "T003"
+      ],
+      "functional_paths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "documentation_paths": [],
+      "verification_ids": [
+        "release-source"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "package.json и package-lock.json задают 0.6.83",
+        "release gates и bundled Workflow Kit 1.5.3 проверены без сборки"
+      ],
+      "expected_commit_message": "feat: Подготовить source релиза 0.6.83",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "chatgpt-channel-vps-20261004",
+        "task_id": "T004",
+        "role": "implementation"
+      }
+    },
+    {
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
@@ -202,7 +238,8 @@
       "dependencies": [
         "T001",
         "T002",
-        "T003"
+        "T003",
+        "T004"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -211,7 +248,9 @@
         "docs/architecture/ARCHITECTURE.md",
         "docs/architecture/OVERVIEW.md",
         "docs/MODULES.md",
-        "docs/DOCUMENTATION_INDEX.md"
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -221,6 +260,100 @@
         "Документы соответствуют результату"
       ],
       "expected_commit_message": "docs: актуализировать контекст проекта"
+    },
+    {
+      "id": "T005",
+      "title": "Собрать и проверить парный релиз 0.6.83",
+      "why": "По поручению пользователя после задач плана пересобрать релиз.",
+      "dependencies": [
+        "T004",
+        "DOCS"
+      ],
+      "functional_paths": [
+        "scripts/release-all.mjs"
+      ],
+      "documentation_paths": [],
+      "verification_ids": [
+        "paired-release"
+      ],
+      "verification_kind": "package",
+      "acceptance_criteria": [
+        "~/Downloads/WebPilot-0.6.83 содержит macOS arm64 ZIP, Windows x64 ZIP, SHA256SUMS.txt, INSTALL.txt, release-manifest.json",
+        "release-manifest.sourceCommit — коммит до delivery bookkeeping, packagedSourceMatches=true",
+        "macOS подписан сертификатом UkrHD; Windows прошёл verify:win на Mac",
+        "Перед сборкой записан release-0.6.83-preflight.json с identity обеих Mac-копий"
+      ],
+      "expected_commit_message": "feat: Собрать и проверить парный релиз 0.6.83",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "chatgpt-channel-vps-20261004",
+        "task_id": "T005",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T006",
+      "title": "Установить 0.6.83 и проверить установленные macOS-копии",
+      "why": "Пользователь работает из /Applications; установка без пересборки.",
+      "dependencies": [
+        "T005",
+        "DOCS"
+      ],
+      "functional_paths": [
+        "scripts/check-installed-release.mjs"
+      ],
+      "documentation_paths": [],
+      "verification_ids": [
+        "release-installed"
+      ],
+      "verification_kind": "installed",
+      "acceptance_criteria": [
+        "/Applications/Project Web Pilot.app обновлена из staging штатным installMacBundle без пересборки, identity сохранена",
+        "check-installed-release.mjs проверяет обе Mac-копии, staging, ZIP, подпись и runtime"
+      ],
+      "expected_commit_message": "feat: Установить 0.6.83 и проверить установленные macOS-копии",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "chatgpt-channel-vps-20261004",
+        "task_id": "T006",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T007",
+      "title": "Опубликовать 0.6.83 и синхронизировать Project Web Pilot с GitHub",
+      "why": "По поручению пользователя отправить релиз на GitHub.",
+      "dependencies": [
+        "T006",
+        "DOCS"
+      ],
+      "functional_paths": [
+        "scripts/check-github-release.mjs"
+      ],
+      "documentation_paths": [
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md"
+      ],
+      "verification_ids": [
+        "github-release"
+      ],
+      "verification_kind": "package",
+      "acceptance_criteria": [
+        "Tag v0.6.83 указывает на release-manifest.sourceCommit",
+        "GitHub Release v0.6.83 не draft/prerelease, ровно пять файлов, server digest совпадает с локальными",
+        "После managed commit финальный main отправлен и origin/main == local HEAD",
+        "Документы фиксируют фактическую публикацию"
+      ],
+      "expected_commit_message": "feat: Опубликовать 0.6.83 и синхронизировать Project Web Pilot с GitHub",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "chatgpt-channel-vps-20261004",
+        "task_id": "T007",
+        "role": "implementation"
+      }
     }
   ],
   "blocked_reason": null,
@@ -241,7 +374,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: chatgpt-channel-vps-20261004
 Current Task: нет
-Revision: 1044
+Revision: 1045
 
 ## Цель
 
@@ -269,10 +402,26 @@ Revision: 1044
   - Git Commit: [PENDING] feat: Раздел «Подключение ChatGPT» в Настройках
   - Reference: chatgpt-channel-vps-20261004 / T003 / implementation
   - Файлы: src/ui/index.html, src/ui/settings-panel.mjs, tests/settings-chatgpt-channel.test.mjs, docs/planning/chatgpt-channel-vps.md
+- [TODO] T004: Подготовить source релиза 0.6.83 — Ожидает
+  - Git Commit: [PENDING] feat: Подготовить source релиза 0.6.83
+  - Reference: chatgpt-channel-vps-20261004 / T004 / implementation
+  - Файлы: package.json, package-lock.json
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: chatgpt-channel-vps-20261004 / DOCS / implementation
-  - Файлы: docs/planning/chatgpt-channel-vps.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
+  - Файлы: docs/planning/chatgpt-channel-vps.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/RELEASE.md, docs/VERIFICATION.md
+- [TODO] T005: Собрать и проверить парный релиз 0.6.83 — Ожидает
+  - Git Commit: [PENDING] feat: Собрать и проверить парный релиз 0.6.83
+  - Reference: chatgpt-channel-vps-20261004 / T005 / implementation
+  - Файлы: scripts/release-all.mjs
+- [TODO] T006: Установить 0.6.83 и проверить установленные macOS-копии — Ожидает
+  - Git Commit: [PENDING] feat: Установить 0.6.83 и проверить установленные macOS-копии
+  - Reference: chatgpt-channel-vps-20261004 / T006 / implementation
+  - Файлы: scripts/check-installed-release.mjs
+- [TODO] T007: Опубликовать 0.6.83 и синхронизировать Project Web Pilot с GitHub — Ожидает
+  - Git Commit: [PENDING] feat: Опубликовать 0.6.83 и синхронизировать Project Web Pilot с GitHub
+  - Reference: chatgpt-channel-vps-20261004 / T007 / implementation
+  - Файлы: scripts/check-github-release.mjs, docs/RELEASE.md, docs/VERIFICATION.md
 
 ## Context Pack For This Cycle
 
