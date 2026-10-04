@@ -1427,3 +1427,12 @@ Durable checkpoint v3 хранит sending/sent и наблюдаемый цик
 Локальная B для scope macos-screen-permission-stability-20261003 сохраняет функциональный код и зависимости 0.6.79; изменена версия упакованного приложения. Подпись UkrHD и designated requirement совпадают с A при новом CDHash. До перезагрузки installed gates подтвердили целостность обеих установок/ZIP и настоящий захват обновлённого executor. Consent-кнопки и TCC.db не автоматизируются.
 
 Проверки записывают boot session UUID для подтверждения настоящей перезагрузки. Filesystem identity сравнивается по штатному volume UUID и inode; device дополнительно проверяется в пределах одной загрузки. ScreenCapture preflight требует совпадения установленной версии и запуска app/MCP после подписи. Postboot capture и обе installed проверки 0.6.80 прошли на новой загрузке; volume UUID/inode сохранились при смене device. 03.10.2026 пользователь подтвердил работоспособность и отсутствие новых диалогов после обновления/перезагрузки; [контракт и evidence](../planning/macos-screen-permission-stability.md).
+
+## Доставка контекста через MCP — 0.6.86
+
+[Контракт](../planning/mcp-context-delivery.md), [порядок](../CONTEXT_DELIVERY.md).
+
+- `CodexAppServerRuntime.contextDelivery = 'mcp'`; `setActiveWorkspace()` атомарно пишет `active-workspace.json` (0600) в каталог состояния executor и не переписывает неизменённый проект. `MacSelectedRuntime` проксирует оба; Codex Local Mac даёт `'message'`.
+- `ContextSession`: при `runtime.contextDelivery === 'mcp'` после проверки входа, адреса и режима вызывается `mcpSession()` — для новой сессии `runtime.ensure()` и фаза `ready`, для привязанного чата без перезапуска служб фаза `bound`; `retry()` повторяет только проверку. Привязка по первому сообщению — существующий `observeManualConversation` в `main.mjs`. ContextCache и Composer в этом режиме не используются.
+- `tools/codex-app-server-mcp/server.py`: `workflow_context_recover(workspace="", session_id="", part=0)` с `structured_output=False`; `split_context()` режет правила и пакет по строкам до 20 000 байт; `context_part()` добавляет заголовок «ЧАСТЬ N ИЗ M», путь проекта, sha256 и следующий вызов.
+- Сайдбар: фазы `ready`/`bound`, строки «Стартовое сообщение: Не требуется», «Пакет проекта: Агент читает через MCP», кнопка «Проверить подключение».

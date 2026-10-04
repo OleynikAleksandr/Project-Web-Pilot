@@ -1,5 +1,11 @@
 # Проверки и приёмка
 
+## 2026-10-04 — 0.6.86 контекст через MCP (до сборки)
+
+Опыт пользователя в ChatGPT (браузер, Chat и Work) на рабочей копии сервера: модель видит `instructions` MCP и сама вызывает `workflow_context_recover` до первого ответа, на следующих сообщениях не повторяет. Целый пакет (~22 000 токенов) показывался с вырезанной серединой (видно ~10 000 токенов), просьбу дочитать модель не выполняла. Частями по ~30 КБ модель прочитала все части с одним sha256 без чтения файлов и git; в Work первая часть один раз обрезалась из-за дубля текст + structured — отсюда части 20 000 байт только текстом.
+
+Автоматически: T001 `18970e8` — `executor-channel` (10 тестов, в том числе части ≤ 20 000 байт, склейка = правила + пакет, один sha256, проект по умолчанию, `WORKSPACE_REQUIRED`, `PART_OUT_OF_RANGE`, нет structuredContent, `instructions`); T002 `05fd934` — `unit-all` (полный `npm test`), в том числе ContextSession в режиме MCP и сайдбар; Electron smoke (TEST FIXTURE, доставка первым сообщением) — EXIT 0. Не проверены: живая сессия Web Pilot 0.6.86 без вставки (пользователь), native Windows.
+
 ## 2026-10-04 — 0.6.85 GitHub publication
 
 GitHub Release [v0.6.85](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.85) опубликован 2026-10-04T12:29:00Z, `draft=false`, `prerelease=false`. Tag указывает на release sourceCommit `9a0b6994fce07bcf466314cfe9bb0267420d0242`.
