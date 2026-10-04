@@ -408,6 +408,20 @@ test('corrupt histories and invalid selection preserve the original data', async
   }
 });
 
+test('landing returns to another active project after the selected one is archived or deleted', async t => {
+  const { project, store } = await fixture(t);
+  const first = await store.select(await project('Первый'));
+  const second = await store.select(await project('Второй'));
+  assert.equal(store.landing().workspace, second.workspace);
+  await store.setArchived(second.workspace, true);
+  assert.equal(store.selected(), null);
+  assert.equal(store.landing().workspace, first.workspace);
+  await store.forgetArchivedMany([{ workspace: second.workspace, projectId: second.projectId }]);
+  assert.equal(store.landing().workspace, first.workspace);
+  await store.setArchived(first.workspace, true);
+  assert.equal(store.landing(), null);
+});
+
 test('archive and restore preserve every session, selection and project files', async t => {
   const { project, store } = await fixture(t); const a = await store.select(await project('Архив'));
   await store.bindChat(a.workspace, a.sessionId, 'https://chatgpt.com/c/archive-chat');

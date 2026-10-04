@@ -333,6 +333,9 @@ export class WorkspaceSessions {
 
   snapshot() { return persistent(this.data); }
   selected() { return this.project(this.data.selectedWorkspace); }
+  // Archiving or deleting the selected project clears the selection; the UI then returns
+  // to another active project. Only an empty active list means first run.
+  landing() { return this.selected() ?? currentView(this.data.projects.find(p => p.archivedAt === null)); }
   project(workspace) { return currentView(this.data.projects.find(p => p.workspace === workspace)); }
 
   activeRecord(workspace, sessionId, data = this.data) {

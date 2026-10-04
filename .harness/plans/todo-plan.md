@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1080,
+  "plan_revision": 1082,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "computer-use-keys-batch-0.6.85-20261004",
@@ -208,13 +208,18 @@
         "Прежнее поведение архива (выбор сбрасывается в хранилище) сохраняется"
       ],
       "expected_commit_message": "feat: Закрытие Настроек после архива выбранного проекта открывает другой проект, а не первый запуск",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "computer-use-keys-batch-0.6.85-20261004",
         "task_id": "T007",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "src/main.mjs",
+        "src/workspace-session.mjs",
+        "tests/workspace-session.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -361,7 +366,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: computer-use-keys-batch-0.6.85-20261004
 Current Task: нет
-Revision: 1080
+Revision: 1082
 
 ## Цель
 
@@ -388,8 +393,8 @@ Computer Use в MCP: имена клавиш X11 и пакет действий 
   - Git Commit: [PENDING] feat: Подготовить source релиза 0.6.85
   - Reference: computer-use-keys-batch-0.6.85-20261004 / T003 / implementation
   - Файлы: package.json, package-lock.json, docs/planning/computer-use-keys-batch.md
-- [TODO] T007: Закрытие Настроек после архива выбранного проекта открывает другой проект, а не первый запуск — Ожидает
-  - Git Commit: [PENDING] feat: Закрытие Настроек после архива выбранного проекта открывает другой проект, а не первый запуск
+- [DONE] T007: Закрытие Настроек после архива выбранного проекта открывает другой проект, а не первый запуск — Завершено
+  - Git Commit: [DONE] feat: Закрытие Настроек после архива выбранного проекта открывает другой проект, а не первый запуск
   - Reference: computer-use-keys-batch-0.6.85-20261004 / T007 / implementation
   - Файлы: src/workspace-session.mjs, src/main.mjs, tests/workspace-session.test.mjs
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает

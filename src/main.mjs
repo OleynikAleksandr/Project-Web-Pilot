@@ -253,7 +253,7 @@ function openSettings(workspace = null) {
 }
 function closeSettings() {
   deletion.clear(); settingsState = null; startupError = null;
-  const current = store.selected(); if (current) void selectWorkspace(current.workspace, { resume: true }).catch(report);
+  const current = store.landing(); if (current) void selectWorkspace(current.workspace, { resume: true }).catch(report);
   else if (startupFlow) { startupActive = true; void navigate(null); }
 }
 
@@ -684,7 +684,7 @@ function pauseForSetup() {
 }
 function cancelSetup() {
   workspaceSetup.clear(); setupState = null; startupError = null;
-  const current = store.selected(); if (current) void selectWorkspace(current.workspace, { resume: true }).catch(report);
+  const current = store.landing(); if (current) void selectWorkspace(current.workspace, { resume: true }).catch(report);
   else if (startupFlow) { startupActive = true; void navigate(null); }
   publish();
 }
