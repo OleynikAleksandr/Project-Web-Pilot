@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1051,
+  "plan_revision": 1053,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "chatgpt-channel-vps-20261004",
@@ -311,13 +311,14 @@
         "Перед сборкой записан release-0.6.83-preflight.json с identity обеих Mac-копий"
       ],
       "expected_commit_message": "feat: Собрать и проверить парный релиз 0.6.83",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "chatgpt-channel-vps-20261004",
         "task_id": "T005",
         "role": "implementation"
-      }
+      },
+      "actual_files": []
     },
     {
       "id": "T006",
@@ -401,7 +402,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: chatgpt-channel-vps-20261004
 Current Task: нет
-Revision: 1051
+Revision: 1053
 
 ## Цель
 
@@ -437,8 +438,8 @@ Revision: 1051
   - Git Commit: [DONE] docs: актуализировать контекст проекта
   - Reference: chatgpt-channel-vps-20261004 / DOCS / implementation
   - Файлы: docs/planning/chatgpt-channel-vps.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/RELEASE.md, docs/VERIFICATION.md, README.md, docs/WORKFLOW_START.md, docs/modules/codex-app-server-executor.md
-- [TODO] T005: Собрать и проверить парный релиз 0.6.83 — Ожидает
-  - Git Commit: [PENDING] feat: Собрать и проверить парный релиз 0.6.83
+- [DONE] T005: Собрать и проверить парный релиз 0.6.83 — Завершено
+  - Git Commit: [DONE] feat: Собрать и проверить парный релиз 0.6.83
   - Reference: chatgpt-channel-vps-20261004 / T005 / implementation
   - Файлы: scripts/release-all.mjs
 - [TODO] T006: Установить 0.6.83 и проверить установленные macOS-копии — Ожидает
