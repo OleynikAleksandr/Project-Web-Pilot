@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1152,
+  "plan_revision": 1154,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "release-backups-kit-1.5.5-0.6.89-20261004",
@@ -228,8 +228,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "release-backups-kit-1.5.5-0.6.89-20261004",
         "task_id": "T004",
@@ -255,7 +255,8 @@
         "~/Downloads/WebPilot-0.6.89 собран из коммита после DOCS, packagedSourceMatches=true, bundled Workflow Kit 1.5.5",
         "Preflight identity записан до сборки"
       ],
-      "expected_commit_message": "feat: Собрать и проверить парный релиз 0.6.89"
+      "expected_commit_message": "feat: Собрать и проверить парный релиз 0.6.89",
+      "actual_files": []
     },
     {
       "implementation_status": "TODO",
@@ -335,7 +336,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: release-backups-kit-1.5.5-0.6.89-20261004
 Current Task: нет
-Revision: 1152
+Revision: 1154
 
 ## Цель
 
@@ -363,8 +364,8 @@ Revision: 1152
   - Git Commit: [DONE] docs: актуализировать контекст проекта
   - Reference: release-backups-kit-1.5.5-0.6.89-20261004 / DOCS / implementation
   - Файлы: docs/planning/release-backups-kit-1.5.5.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, README.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md
-- [TODO] T004: Собрать и проверить парный релиз 0.6.89 — Ожидает
-  - Git Commit: [PENDING] feat: Собрать и проверить парный релиз 0.6.89
+- [DONE] T004: Собрать и проверить парный релиз 0.6.89 — Завершено
+  - Git Commit: [DONE] feat: Собрать и проверить парный релиз 0.6.89
   - Reference: release-backups-kit-1.5.5-0.6.89-20261004 / T004 / implementation
   - Файлы: scripts/release-all.mjs, docs/planning/release-backups-kit-1.5.5.md
 - [TODO] T005: Установить 0.6.89 и проверить установленные macOS-копии — Ожидает
