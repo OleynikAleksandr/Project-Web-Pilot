@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1077,
+  "plan_revision": 1078,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "computer-use-keys-batch-0.6.85-20261004",
@@ -29,7 +29,10 @@
       "package-lock.json",
       "scripts/release-all.mjs",
       "scripts/check-installed-release.mjs",
-      "scripts/check-github-release.mjs"
+      "scripts/check-github-release.mjs",
+      "src/workspace-session.mjs",
+      "src/main.mjs",
+      "tests/workspace-session.test.mjs"
     ],
     "documentation_paths": [
       "docs/planning/computer-use-keys-batch.md",
@@ -176,6 +179,35 @@
       "expected_commit_message": "feat: Подготовить source релиза 0.6.85"
     },
     {
+      "id": "T007",
+      "title": "Закрытие Настроек после архива выбранного проекта открывает другой проект, а не первый запуск",
+      "why": "Пользователь: архивировал тестовый проект, удалил его с диска из архива, закрыл Настройки — сайдбар показал первый запуск, хотя другие проекты есть. Архив и удаление выбранного проекта сбрасывают выбор, а closeSettings и cancelSetup при пустом выборе включают первый запуск.",
+      "dependencies": [],
+      "functional_paths": [
+        "src/workspace-session.mjs",
+        "src/main.mjs",
+        "tests/workspace-session.test.mjs"
+      ],
+      "documentation_paths": [],
+      "verification_ids": [
+        "unit-all"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Если выбранный проект архивирован или удалён, закрытие Настроек и отмена создания проекта открывают первый активный проект из списка",
+        "Первый запуск показывается только когда активных проектов нет",
+        "Прежнее поведение архива (выбор сбрасывается в хранилище) сохраняется"
+      ],
+      "expected_commit_message": "feat: Закрытие Настроек после архива выбранного проекта открывает другой проект, а не первый запуск",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "computer-use-keys-batch-0.6.85-20261004",
+        "task_id": "T007",
+        "role": "implementation"
+      }
+    },
+    {
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
@@ -186,7 +218,8 @@
       "dependencies": [
         "T001",
         "T002",
-        "T003"
+        "T003",
+        "T007"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -319,7 +352,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: computer-use-keys-batch-0.6.85-20261004
 Current Task: нет
-Revision: 1077
+Revision: 1078
 
 ## Цель
 
@@ -346,6 +379,10 @@ Computer Use в MCP: имена клавиш X11 и пакет действий 
   - Git Commit: [PENDING] feat: Подготовить source релиза 0.6.85
   - Reference: computer-use-keys-batch-0.6.85-20261004 / T003 / implementation
   - Файлы: package.json, package-lock.json, docs/planning/computer-use-keys-batch.md
+- [TODO] T007: Закрытие Настроек после архива выбранного проекта открывает другой проект, а не первый запуск — Ожидает
+  - Git Commit: [PENDING] feat: Закрытие Настроек после архива выбранного проекта открывает другой проект, а не первый запуск
+  - Reference: computer-use-keys-batch-0.6.85-20261004 / T007 / implementation
+  - Файлы: src/workspace-session.mjs, src/main.mjs, tests/workspace-session.test.mjs
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: computer-use-keys-batch-0.6.85-20261004 / DOCS / implementation
