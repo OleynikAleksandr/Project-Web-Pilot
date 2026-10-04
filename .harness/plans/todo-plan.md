@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1082,
+  "plan_revision": 1084,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "computer-use-keys-batch-0.6.85-20261004",
@@ -160,8 +160,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "computer-use-keys-batch-0.6.85-20261004",
         "task_id": "T003",
@@ -185,7 +185,11 @@
       "acceptance_criteria": [
         "package.json и package-lock.json задают 0.6.85"
       ],
-      "expected_commit_message": "feat: Подготовить source релиза 0.6.85"
+      "expected_commit_message": "feat: Подготовить source релиза 0.6.85",
+      "actual_files": [
+        "package-lock.json",
+        "package.json"
+      ]
     },
     {
       "id": "T007",
@@ -366,7 +370,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: computer-use-keys-batch-0.6.85-20261004
 Current Task: нет
-Revision: 1082
+Revision: 1084
 
 ## Цель
 
@@ -389,8 +393,8 @@ Computer Use в MCP: имена клавиш X11 и пакет действий 
   - Git Commit: [DONE] feat: Канал ChatGPT: нейтральные подписи и подсказка про плагин
   - Reference: computer-use-keys-batch-0.6.85-20261004 / T002 / implementation
   - Файлы: src/ui/index.html, src/ui/settings-panel.mjs, src/mac-runtime-switch.mjs, tests/settings-chatgpt-channel.test.mjs, src/vps-tunnel.mjs, docs/planning/computer-use-keys-batch.md
-- [TODO] T003: Подготовить source релиза 0.6.85 — Ожидает
-  - Git Commit: [PENDING] feat: Подготовить source релиза 0.6.85
+- [DONE] T003: Подготовить source релиза 0.6.85 — Завершено
+  - Git Commit: [DONE] feat: Подготовить source релиза 0.6.85
   - Reference: computer-use-keys-batch-0.6.85-20261004 / T003 / implementation
   - Файлы: package.json, package-lock.json, docs/planning/computer-use-keys-batch.md
 - [DONE] T007: Закрытие Настроек после архива выбранного проекта открывает другой проект, а не первый запуск — Завершено
