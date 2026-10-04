@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 124,
+  "plan_revision": 126,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "kit-extend-after-delivery-note-20261004",
@@ -63,8 +63,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "kit-extend-after-delivery-note-20261004",
         "task_id": "T001",
@@ -85,7 +85,10 @@
       "acceptance_criteria": [
         "В политике есть раздел «Известные ограничения» с причиной, симптомом и обходным путём"
       ],
-      "expected_commit_message": "feat: Записать ограничение plan:extend после завершённого delivery"
+      "expected_commit_message": "feat: Записать ограничение plan:extend после завершённого delivery",
+      "actual_files": [
+        "docs/planning/delivery-ordering-policy.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -135,7 +138,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: kit-extend-after-delivery-note-20261004
 Current Task: нет
-Revision: 124
+Revision: 126
 
 ## Цель
 
@@ -147,8 +150,8 @@ Revision: 124
 
 ## Микрозадачи
 
-- [TODO] T001: Записать ограничение plan:extend после завершённого delivery — Ожидает
-  - Git Commit: [PENDING] feat: Записать ограничение plan:extend после завершённого delivery
+- [DONE] T001: Записать ограничение plan:extend после завершённого delivery — Завершено
+  - Git Commit: [DONE] feat: Записать ограничение plan:extend после завершённого delivery
   - Reference: kit-extend-after-delivery-note-20261004 / T001 / implementation
   - Файлы: docs/planning/delivery-ordering-policy.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
