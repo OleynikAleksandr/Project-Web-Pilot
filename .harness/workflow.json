@@ -1,82 +1,55 @@
 {
   "schema_version": 1,
   "profile": "DEVELOPMENT",
-  "stack": "Electron 44.5.1 / Node 24.21.0 / Workflow Kit 1.5.2",
+  "stack": "Electron 44.5.1 / Node 24.21.0 / Python 3 executor / Workflow Kit 1.5.3",
   "checks": [
     {
       "required": false,
-      "timeout_ms": 120000,
-      "id": "workflowkit-policy",
-      "executable": "bash",
-      "args": [
-        "-lc",
-        "cd ../WorkflowKit && test \"$(./scripts/workflow status | node -e 'let s=\"\";process.stdin.on(\"data\",d=>s+=d).on(\"end\",()=>process.stdout.write(JSON.parse(s).scope_status))')\" = NONE && ./scripts/workflow recover --format json | node -e 'let s=\"\";process.stdin.on(\"data\",d=>s+=d).on(\"end\",()=>{const t=JSON.parse(s).text; if(!t.includes(\"Build/package/sign/notarize/release/publish\")||!t.includes(\"DOCS выполняется до явного delivery-хвоста\")) process.exit(1)})' && npm run check && node scripts/check-runtime-fixture.mjs && node scripts/check-consumer-contract.mjs"
-      ]
-    },
-    {
-      "required": false,
-      "timeout_ms": 120000,
-      "id": "startup-policy",
-      "executable": "node",
-      "args": [
-        "--test",
-        "tests/context-session.test.mjs"
-      ]
-    },
-    {
-      "required": false,
-      "timeout_ms": 120000,
-      "id": "integration-policy",
-      "executable": "bash",
-      "args": [
-        "-lc",
-        "npm run stage:workflow-kit && node --test tests/context-session.test.mjs tests/workflow-kit-recovery.test.mjs tests/workflow-kit-source.test.mjs"
-      ]
-    },
-    {
-      "required": false,
       "timeout_ms": 180000,
-      "id": "release-source",
+      "id": "executor-channel",
+      "executable": "bash",
+      "args": [
+        "-lc",
+        "/opt/homebrew/bin/node --test tests/codex-app-server-mcp.test.mjs"
+      ],
       "kind": "test",
-      "executable": "bash",
-      "args": [
-        "-lc",
-        "/opt/homebrew/bin/node scripts/stage-workflow-kit.mjs && /opt/homebrew/bin/node --check scripts/check-github-release.mjs && /opt/homebrew/bin/node --test tests/context-session.test.mjs tests/workflow-kit-recovery.test.mjs tests/workflow-kit-source.test.mjs tests/workspace-setup.test.mjs && /opt/homebrew/bin/node scripts/check-workflow-kit-dependency.mjs"
-      ]
-    },
-    {
-      "required": false,
-      "timeout_ms": 600000,
-      "id": "paired-release",
-      "kind": "package",
-      "evidence": "~/Downloads/WebPilot-0.6.82: macOS arm64 + Windows x64 ZIP, SHA256SUMS.txt, INSTALL.txt, release-manifest.json; packaged sources and bundled Workflow Kit 1.5.3 verified",
-      "executable": "npm",
-      "args": [
-        "run",
-        "build"
-      ]
-    },
-    {
-      "required": false,
-      "timeout_ms": 600000,
-      "id": "release-installed",
-      "kind": "installed",
-      "evidence": "root Project Web Pilot.app and /Applications/Project Web Pilot.app plus staging and both release ZIPs; identity/signature/runtime verified",
-      "executable": "node",
-      "args": [
-        "scripts/check-installed-release.mjs"
-      ]
+      "evidence": "tools/codex-app-server-mcp/control.py: configure-channel, stop --tunnel-only, selector-start соблюдает chatgpt_channel"
     },
     {
       "required": false,
       "timeout_ms": 180000,
-      "id": "github-release",
-      "kind": "package",
-      "evidence": "GitHub Release v0.6.82 tag/assets and remote main verified against local release-manifest.json without rebuilding",
-      "executable": "node",
+      "id": "vps-runtime",
+      "executable": "bash",
       "args": [
-        "scripts/check-github-release.mjs"
-      ]
+        "-lc",
+        "/opt/homebrew/bin/node --test tests/vps-tunnel.test.mjs tests/mac-runtime-switch.test.mjs tests/mac-runtime.test.mjs tests/startup-platform.test.mjs"
+      ],
+      "kind": "test",
+      "evidence": "src/vps-tunnel.mjs и src/mac-runtime-switch.mjs: plist проброса, смена порта, канал VPS без tunnel-client"
+    },
+    {
+      "required": false,
+      "timeout_ms": 180000,
+      "id": "settings-ui",
+      "executable": "bash",
+      "args": [
+        "-lc",
+        "/opt/homebrew/bin/node --test tests/settings-chatgpt-channel.test.mjs tests/project-doctor-ui.test.mjs tests/sidebar.test.mjs"
+      ],
+      "kind": "test",
+      "evidence": "src/ui/index.html + settings-panel.mjs: раздел «Подключение ChatGPT» в JSDOM"
+    },
+    {
+      "required": false,
+      "timeout_ms": 600000,
+      "id": "unit-all",
+      "executable": "bash",
+      "args": [
+        "-lc",
+        "PATH=/opt/homebrew/bin:$PATH npm test"
+      ],
+      "kind": "test",
+      "evidence": "Полный node --test tests/*.test.mjs"
     }
   ],
   "budget": {
