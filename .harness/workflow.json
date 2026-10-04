@@ -71,6 +71,30 @@
       "args": [
         "scripts/check-github-release.mjs"
       ]
+    },
+    {
+      "required": false,
+      "timeout_ms": 180000,
+      "id": "vps-runtime",
+      "executable": "bash",
+      "args": [
+        "-lc",
+        "/opt/homebrew/bin/node --test tests/vps-tunnel.test.mjs tests/mac-runtime-switch.test.mjs tests/mac-runtime.test.mjs tests/startup-platform.test.mjs"
+      ],
+      "kind": "test",
+      "evidence": "src/vps-tunnel.mjs и src/mac-runtime-switch.mjs: plist проброса, смена порта, канал VPS без tunnel-client"
+    },
+    {
+      "required": false,
+      "timeout_ms": 180000,
+      "id": "settings-ui",
+      "executable": "bash",
+      "args": [
+        "-lc",
+        "/opt/homebrew/bin/node --test tests/settings-chatgpt-channel.test.mjs tests/project-doctor-ui.test.mjs tests/sidebar.test.mjs"
+      ],
+      "kind": "test",
+      "evidence": "src/ui/index.html + settings-panel.mjs: раздел «Подключение ChatGPT» в JSDOM"
     }
   ],
   "budget": {
