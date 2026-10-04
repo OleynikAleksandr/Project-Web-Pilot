@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1075,
+  "plan_revision": 1077,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "computer-use-keys-batch-0.6.85-20261004",
@@ -80,8 +80,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "computer-use-keys-batch-0.6.85-20261004",
         "task_id": "T001",
@@ -107,7 +107,11 @@
         "computer_actions: до 50 действий key/hotkey/text/click/scroll/wait одним вызовом node_repl, остановка на ошибке, результат по каждому действию",
         "Прежние инструменты и имена клавиш работают как раньше"
       ],
-      "expected_commit_message": "feat: Computer Use: имена клавиш X11 и пакет действий computer_actions"
+      "expected_commit_message": "feat: Computer Use: имена клавиш X11 и пакет действий computer_actions",
+      "actual_files": [
+        "tests/codex-app-server-mcp.test.mjs",
+        "tools/codex-app-server-mcp/server.py"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -315,7 +319,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: computer-use-keys-batch-0.6.85-20261004
 Current Task: нет
-Revision: 1075
+Revision: 1077
 
 ## Цель
 
@@ -330,8 +334,8 @@ Computer Use в MCP: имена клавиш X11 и пакет действий 
 
 ## Микрозадачи
 
-- [TODO] T001: Computer Use: имена клавиш X11 и пакет действий computer_actions — Ожидает
-  - Git Commit: [PENDING] feat: Computer Use: имена клавиш X11 и пакет действий computer_actions
+- [DONE] T001: Computer Use: имена клавиш X11 и пакет действий computer_actions — Завершено
+  - Git Commit: [DONE] feat: Computer Use: имена клавиш X11 и пакет действий computer_actions
   - Reference: computer-use-keys-batch-0.6.85-20261004 / T001 / implementation
   - Файлы: tools/codex-app-server-mcp/server.py, tests/codex-app-server-mcp.test.mjs, docs/planning/computer-use-keys-batch.md
 - [TODO] T002: Канал ChatGPT: нейтральные подписи и подсказка про плагин — Ожидает

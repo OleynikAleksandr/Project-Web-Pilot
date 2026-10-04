@@ -657,8 +657,21 @@ class LocalFacade:
             raise ValueError("No active app; call computer_list_windows and computer_activate_window first")
         return self._active_app_id
 
-    @staticmethod
-    def _sky_key(key: str) -> str:
+    # Computer Use (sky) expects X11 key names; models naturally send the character itself.
+    _SYMBOL_KEYS = {
+        "*": "asterisk", "+": "plus", "-": "minus", "=": "equal", "/": "slash", "\\": "backslash",
+        ".": "period", ",": "comma", ";": "semicolon", ":": "colon", "'": "apostrophe", '"': "quotedbl",
+        "`": "grave", "~": "asciitilde", "!": "exclam", "@": "at", "#": "numbersign", "$": "dollar",
+        "%": "percent", "^": "asciicircum", "&": "ampersand", "(": "parenleft", ")": "parenright",
+        "[": "bracketleft", "]": "bracketright", "{": "braceleft", "}": "braceright", "<": "less",
+        ">": "greater", "?": "question", "_": "underscore", "|": "bar", " ": "space",
+    }
+    _ACTION_LIMIT = 50
+
+    @classmethod
+    def _sky_key(cls, key: str) -> str:
+        if key in cls._SYMBOL_KEYS:
+            return cls._SYMBOL_KEYS[key]
         mapping = {
             "enter": "Return", "return": "Return", "escape": "Escape", "esc": "Escape",
             "tab": "Tab", "left": "Left", "right": "Right", "up": "Up", "down": "Down",
@@ -723,21 +736,112 @@ class LocalFacade:
         )
         return {"pressed": True, "key": key, "presses": count, "interval_ms": interval_ms, "backend": "node_repl -> @oai/sky"}
 
-    def computer_hotkey(self, keys: list[str]) -> dict[str, Any]:
-        if len(keys) < 2 or len(keys) > 8:
+    @classmethod
+    def _chord(cls, keys: list[str]) -> str:
+        if not isinstance(keys, list) or len(keys) < 2 or len(keys) > 8 or not all(isinstance(k, str) and k for k in keys):
             raise ValueError("keys must contain 2-8 items")
         modifier_map = {
             "cmd": "super", "command": "super", "shift": "shift",
             "option": "alt", "alt": "alt", "control": "ctrl", "ctrl": "ctrl",
         }
-        translated = [modifier_map.get(key.lower(), self._sky_key(key)) for key in keys]
-        chord = "+".join(translated)
+        return "+".join(modifier_map.get(key.lower(), cls._sky_key(key)) for key in keys)
+
+    def computer_hotkey(self, keys: list[str]) -> dict[str, Any]:
+        chord = self._chord(keys)
         app = self._active_app()
         self._sky(
             f"await sky.press_key({{app:{json.dumps(app)},key:{json.dumps(chord)}}}); nodeRepl.write(JSON.stringify({{ok:true}}));",
             "Press shortcut in local application",
         )
         return {"pressed": True, "keys": keys, "sky_key": chord, "backend": "node_repl -> @oai/sky"}
+
+    def _action_js(self, app: str, action: Any) -> tuple[str, dict[str, Any]]:
+        """JavaScript for one batch action plus its public summary; validates the input."""
+        if not isinstance(action, dict):
+            raise ValueError("each action must be an object with a type")
+        kind = action.get("type")
+        target = json.dumps(app)
+        if kind == "key":
+            key = action.get("key")
+            if not isinstance(key, str) or not key:
+                raise ValueError("key action requires key")
+            presses = max(1, min(int(action.get("presses", 1)), 100))
+            sky_key = self._sky_key(key)
+            return (f"for(let k=0;k<{presses};k++) await sky.press_key({{app:{target},key:{json.dumps(sky_key)}}});",
+                    {"type": "key", "key": key, "sky_key": sky_key, "presses": presses})
+        if kind == "hotkey":
+            chord = self._chord(action.get("keys"))
+            return (f"await sky.press_key({{app:{target},key:{json.dumps(chord)}}});", {"type": "hotkey", "sky_key": chord})
+        if kind == "text":
+            text = action.get("text")
+            if not isinstance(text, str) or not text or len(text) > 10000:
+                raise ValueError("text action requires text up to 10000 characters")
+            return (f"await sky.paste({{app:{target},text:{json.dumps(text)},format:\"text\"}});",
+                    {"type": "text", "characters": len(text), "mode": "paste"})
+        if kind == "click":
+            x, y = action.get("x"), action.get("y")
+            if not isinstance(x, int) or not isinstance(y, int):
+                raise ValueError("click action requires integer x and y")
+            button = action.get("button", "left")
+            if button not in ("left", "right", "middle"):
+                raise ValueError("button must be left, right, or middle")
+            clicks = max(1, min(int(action.get("clicks", 1)), 5))
+            return (f"await sky.click({{app:{target},x:{x},y:{y},mouse_button:{json.dumps(button)},click_count:{clicks}}});",
+                    {"type": "click", "x": x, "y": y, "button": button, "clicks": clicks})
+        if kind == "scroll":
+            value = int(action.get("delta", 0))
+            if value == 0:
+                raise ValueError("scroll action requires non-zero delta")
+            horizontal = bool(action.get("horizontal", False))
+            direction = ("right" if value > 0 else "left") if horizontal else ("up" if value > 0 else "down")
+            pages = max(1, min(round(abs(value) / 120), 10))
+            x, y = action.get("x"), action.get("y")
+            coords = f",x:{int(x)},y:{int(y)}" if x is not None and y is not None else ""
+            return (f"await sky.scroll({{app:{target},direction:{json.dumps(direction)},pages:{pages}{coords}}});",
+                    {"type": "scroll", "direction": direction, "pages": pages})
+        if kind == "wait":
+            ms = int(action.get("ms", 0))
+            if not 0 <= ms <= 5000:
+                raise ValueError("wait action ms must be 0-5000")
+            return (f"await new Promise(r=>setTimeout(r,{ms}));", {"type": "wait", "ms": ms})
+        raise ValueError("unknown action type; use key, hotkey, text, click, scroll or wait")
+
+    def computer_actions(self, actions: list[dict[str, Any]]) -> dict[str, Any]:
+        if not isinstance(actions, list) or not actions:
+            raise ValueError("actions must be a non-empty list")
+        if len(actions) > self._ACTION_LIMIT:
+            raise ValueError(f"actions is limited to {self._ACTION_LIMIT} items")
+        app = self._active_app()
+        built = [self._action_js(app, action) for action in actions]  # validate everything before acting
+        steps = ",".join(f"async()=>{{{code}}}" for code, _ in built)
+        result = self._sky(
+            "var steps=[" + steps + "]; var results=[]; var t0=Date.now();"
+            " for(let i=0;i<steps.length;i++){ var t=Date.now();"
+            " try{ await steps[i](); results.push({ok:true,ms:Date.now()-t}); }"
+            " catch(e){ results.push({ok:false,ms:Date.now()-t,error:String((e&&e.message)||e)}); break; } }"
+            " nodeRepl.write(JSON.stringify({results,total_ms:Date.now()-t0}));",
+            "Run actions in local application",
+        )
+        payload: dict[str, Any] = {}
+        for item in result.get("content", []):
+            if item.get("type") == "text":
+                try:
+                    payload = json.loads(item.get("text") or "{}")
+                    break
+                except json.JSONDecodeError:
+                    continue
+        outcomes = payload.get("results") if isinstance(payload.get("results"), list) else []
+        rows = [{**summary, **outcome} for (_, summary), outcome in zip(built, outcomes)]
+        failed = next((dict(row, index=i) for i, row in enumerate(rows) if not row.get("ok")), None)
+        return {
+            "completed": len(rows) == len(built) and failed is None,
+            "app_id": app,
+            "results": rows,
+            "skipped": len(built) - len(rows),
+            "failed": failed,
+            "total_ms": payload.get("total_ms"),
+            "backend": "node_repl -> @oai/sky (one call)",
+        }
 
     def computer_release_inputs(self) -> dict[str, Any]:
         return {
@@ -885,11 +989,18 @@ def create_server(*, host: str, port: int, state_root: Path, codex_binary: str |
 
     @mcp.tool(annotations=ARBITRARY_COMMAND)
     def computer_key_press(key: str, presses: int = 1, interval_ms: int = 50) -> dict[str, Any]:
+        """Press a key in the app activated with computer_activate_window. Accepts characters ('*', '=') or X11 key names ('asterisk', 'Return', 'Escape', 'F5')."""
         return facade.computer_key_press(key,presses,interval_ms)
 
     @mcp.tool(annotations=ARBITRARY_COMMAND)
     def computer_hotkey(keys: list[str]) -> dict[str, Any]:
+        """Press a shortcut in the active app, e.g. ["cmd","n"]. Modifiers: cmd, shift, option/alt, control/ctrl."""
         return facade.computer_hotkey(keys)
+
+    @mcp.tool(annotations=ARBITRARY_COMMAND)
+    def computer_actions(actions: list[dict[str, Any]]) -> dict[str, Any]:
+        """Run up to 50 UI actions in the active app with ONE call (activate it first with computer_activate_window); much faster than one tool call per action. Each action is an object: {"type":"key","key":"1","presses":1}, {"type":"hotkey","keys":["cmd","n"]}, {"type":"text","text":"..."} (pasted, Unicode-safe), {"type":"click","x":100,"y":200,"button":"left","clicks":1}, {"type":"scroll","delta":-120,"x":100,"y":200,"horizontal":false}, {"type":"wait","ms":300}. Keys accept characters or X11 names. Stops at the first failure and reports each executed action."""
+        return facade.computer_actions(actions)
 
     @mcp.tool(annotations=ARBITRARY_COMMAND)
     def computer_release_inputs() -> dict[str, Any]:

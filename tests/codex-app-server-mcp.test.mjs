@@ -500,6 +500,101 @@ test('App Server MCP answers a stale session id without initialize after a resta
   assert.ok(message.result.tools.some(tool => tool.name === 'run_command_batch'));
 });
 
+test('Computer Use accepts key characters and runs a batch of actions in one node_repl call', { timeout: 30_000 }, async t => {
+  const venvPython = path.join(homedir(), 'Library', 'Application Support', 'WebPilotCodexExecutor', 'runtime', 'venv', 'bin', 'python');
+  const source = await (await import('node:fs/promises')).readFile(path.join(clientDir, 'server.py'), 'utf8');
+  assert.match(source, /def computer_actions\(/);
+  if (!existsSync(venvPython)) { t.skip('Codex App Server runtime venv is not installed'); return; }
+  const root = await mkdtemp(path.join(tmpdir(), 'web-pilot-computer-actions-'));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const probe = path.join(root, 'probe.py');
+  await writeFile(probe, `import json, sys, pathlib
+sys.path.insert(0, sys.argv[1])
+import server
+calls = []
+class Client:
+    cwd = sys.argv[2]
+    def mcp_tool_call(self, server_name, tool, args):
+        calls.append({"server": server_name, "tool": tool, "code": args["code"]})
+        if "var steps=" in args["code"]:
+            return {"content": [{"type": "text", "text": json.dumps({"results": [{"ok": True, "ms": 3}, {"ok": True, "ms": 2}, {"ok": False, "ms": 1, "error": "boom"}], "total_ms": 9})}]}
+        return {"content": [{"type": "text", "text": "{}"}]}
+facade = server.LocalFacade(Client(), pathlib.Path(sys.argv[2]))
+out = {}
+try:
+    facade.computer_key_press("*")
+except ValueError as error:
+    out["no_app"] = str(error)
+facade._active_app_id = "com.apple.calculator"
+out["key"] = facade.computer_key_press("*")
+out["named"] = facade.computer_key_press("Return")
+out["hotkey"] = facade.computer_hotkey(["cmd", "="])
+out["batch"] = facade.computer_actions([{"type": "key", "key": "1"}, {"type": "key", "key": "*", "presses": 2}, {"type": "text", "text": "Привет"}, {"type": "wait", "ms": 10}])
+errors = {}
+cases = {"unknown": [{"type": "drag"}], "empty": [], "too_many": [{"type": "wait", "ms": 0}] * 51, "bad_click": [{"type": "click", "x": "1", "y": 2}]}
+for name, actions in cases.items():
+    try:
+        facade.computer_actions(actions)
+        errors[name] = None
+    except ValueError as error:
+        errors[name] = str(error)
+out["errors"] = errors
+out["calls"] = calls
+print(json.dumps(out, ensure_ascii=False))
+`);
+  const run = await new Promise((resolve, reject) => {
+    const child = spawn(venvPython, ['-B', probe, clientDir, root], { cwd: root, env: { ...process.env, PYTHONDONTWRITEBYTECODE: '1' }, stdio: ['ignore', 'pipe', 'pipe'] });
+    let stdout = '', stderr = '';
+    child.stdout.on('data', chunk => { stdout += chunk; });
+    child.stderr.on('data', chunk => { stderr += chunk; });
+    child.on('error', reject);
+    child.on('close', code => resolve({ code, stdout, stderr }));
+  });
+  assert.equal(run.code, 0, run.stderr);
+  const out = JSON.parse(run.stdout.trim().split('\n').at(-1));
+  assert.match(out.no_app, /No active app/);
+  assert.equal(out.calls.length, 4, 'validation errors never reach Computer Use');
+  assert.ok(out.calls.every(call => call.server === 'node_repl' && call.tool === 'js'));
+  assert.match(out.calls[0].code, /key:"asterisk"/);
+  assert.match(out.calls[1].code, /key:"Return"/);
+  assert.match(out.calls[2].code, /key:"super\+equal"/);
+
+  // Execute the generated batch script against a fake sky: one call, actions in order, stop at the first failure.
+  const AsyncFunction = (async () => {}).constructor;
+  const execute = async (failOn) => {
+    const events = []; let written = '';
+    globalThis.sky = {
+      press_key: async ({ app, key }) => { events.push(['key', app, key]); if (key === failOn) throw new Error('keyNotFound(' + key + ')'); },
+      paste: async ({ app, text, format }) => { events.push(['paste', app, text, format]); },
+      click: async () => { events.push(['click']); }, scroll: async () => { events.push(['scroll']); },
+    };
+    try { await new AsyncFunction('nodeRepl', out.calls[3].code)({ write: value => { written = value; } }); }
+    finally { delete globalThis.sky; }
+    return { events, result: JSON.parse(written) };
+  };
+  const ok = await execute(null);
+  assert.deepEqual(ok.events, [['key', 'com.apple.calculator', '1'], ['key', 'com.apple.calculator', 'asterisk'],
+    ['key', 'com.apple.calculator', 'asterisk'], ['paste', 'com.apple.calculator', 'Привет', 'text']]);
+  assert.deepEqual(ok.result.results.map(row => row.ok), [true, true, true, true]);
+  const stopped = await execute('asterisk');
+  assert.deepEqual(stopped.events, [['key', 'com.apple.calculator', '1'], ['key', 'com.apple.calculator', 'asterisk']]);
+  assert.deepEqual(stopped.result.results.map(row => row.ok), [true, false]);
+  assert.match(stopped.result.results[1].error, /keyNotFound/);
+
+  // The facade maps per-action outcomes back to the actions it built.
+  assert.equal(out.batch.completed, false);
+  assert.equal(out.batch.skipped, 1);
+  assert.equal(out.batch.failed.index, 2);
+  assert.equal(out.batch.failed.error, 'boom');
+  assert.equal(out.batch.results[1].sky_key, 'asterisk');
+  assert.equal(out.batch.results[1].presses, 2);
+  assert.equal(out.batch.results[2].mode, 'paste');
+  assert.match(out.errors.unknown, /unknown action type/);
+  assert.match(out.errors.empty, /non-empty/);
+  assert.match(out.errors.too_many, /limited to 50/);
+  assert.match(out.errors.bad_click, /integer x and y/);
+});
+
 test('pid identity forces C locale for stable Terminal ownership checks', async () => {
   const root = await mkdtemp(path.join(tmpdir(), 'web-pilot-codex-identity-'));
   const probe = path.join(root, 'probe.py');
