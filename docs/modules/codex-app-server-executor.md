@@ -326,6 +326,10 @@ Local backend работает `--mcp-only`; App Server backend также от�
 
 `selector.json` хранит `chatgpt_channel` (`secure-tunnel` по умолчанию или `vps`). `configure-channel --channel <канал>` меняет только это поле; `configure-selector` при смене runtime канал сохраняет и в режиме VPS не требует настроенного Secure Tunnel. `stop --tunnel-only` останавливает только tunnel-client. `selector-start` в режиме VPS останавливает tunnel-client, если он работает, и не запускает его; полный `start` в режиме VPS поднимает только MCP. Туннель VPS держит не executor, а Web Pilot (`src/vps-tunnel.mjs`, LaunchAgent `com.oleynik.vps-mcp-tunnel`). Контракт — [chatgpt-channel-vps](../planning/chatgpt-channel-vps.md).
 
+## Сессии MCP — 0.6.84
+
+`FastMCP` создаётся со `stateless_http=True`: сервер не выдаёт `Mcp-Session-Id` и не проверяет присланный, каждый запрос обрабатывается самостоятельно. Web Pilot перезапускает сервер при каждом старте, а внешние клиенты (ChatGPT и Claude через VPS) хранят идентификатор прошлой сессии; в режиме сессий новый процесс отвечал `404 Session not found`, ChatGPT не переподключался. Инструменты не хранят состояние сессии MCP и не шлют уведомлений внутри сессии (уведомления macOS — osascript). Внешний runtime Codex Local Mac не менялся. Контракт — [mcp-stateless-sessions](../planning/mcp-stateless-sessions.md).
+
 ## macOS ScreenCapture — подтверждённая локальная 0.6.80
 
 Разрешение tool calls в ChatGPT, sandbox локального executor и системный Screen Recording macOS — отдельные уровни. TCC связывает запросы executor с responsible application `com.oleynik.ProjectWebPilot`; разрешение выдаётся подписанному Web Pilot штатно пользователем. Повторные запросы прежней ad hoc сборки были вызваны несовпадением code requirement.

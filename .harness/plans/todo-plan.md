@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1064,
+  "plan_revision": 1066,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "mcp-stateless-0.6.84-20261004",
@@ -33,7 +33,10 @@
       "docs/VERIFICATION.md",
       "docs/architecture/OVERVIEW.md",
       "docs/MODULES.md",
-      "docs/DOCUMENTATION_INDEX.md"
+      "docs/DOCUMENTATION_INDEX.md",
+      "README.md",
+      "docs/WORKFLOW_START.md",
+      "docs/modules/codex-app-server-executor.md"
     ]
   },
   "baseline_commit": "0514b7f580b854dca651b07d0746ebd94b3ec2d7",
@@ -141,8 +144,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "mcp-stateless-0.6.84-20261004",
         "task_id": "DOCS",
@@ -161,7 +164,10 @@
         "docs/VERIFICATION.md",
         "docs/architecture/OVERVIEW.md",
         "docs/MODULES.md",
-        "docs/DOCUMENTATION_INDEX.md"
+        "docs/DOCUMENTATION_INDEX.md",
+        "README.md",
+        "docs/WORKFLOW_START.md",
+        "docs/modules/codex-app-server-executor.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -170,7 +176,18 @@
       "acceptance_criteria": [
         "Документы соответствуют результату"
       ],
-      "expected_commit_message": "docs: актуализировать контекст проекта"
+      "expected_commit_message": "docs: актуализировать контекст проекта",
+      "actual_files": [
+        "README.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/RELEASE.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/codex-app-server-executor.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -283,7 +300,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: mcp-stateless-0.6.84-20261004
 Current Task: нет
-Revision: 1064
+Revision: 1066
 
 ## Цель
 
@@ -304,10 +321,10 @@ Revision: 1064
   - Git Commit: [DONE] feat: Подготовить source релиза 0.6.84
   - Reference: mcp-stateless-0.6.84-20261004 / T002 / implementation
   - Файлы: package.json, package-lock.json, docs/planning/mcp-stateless-sessions.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать контекст проекта
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать контекст проекта
   - Reference: mcp-stateless-0.6.84-20261004 / DOCS / implementation
-  - Файлы: docs/planning/mcp-stateless-sessions.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
+  - Файлы: docs/planning/mcp-stateless-sessions.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, README.md, docs/WORKFLOW_START.md, docs/modules/codex-app-server-executor.md
 - [TODO] T003: Собрать и проверить парный релиз 0.6.84 — Ожидает
   - Git Commit: [PENDING] feat: Собрать и проверить парный релиз 0.6.84
   - Reference: mcp-stateless-0.6.84-20261004 / T003 / implementation

@@ -2,6 +2,10 @@
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
+## Выпуск 0.6.84 — подготовка, 04.10.2026
+
+**Готовится 0.6.84** ([контракт](planning/mcp-stateless-sessions.md)): сервер MCP «Codex App Server Local Mac» работает без сессий (`stateless_http`), поэтому перезапуск Web Pilot и MCP больше не ломает коннекторы ChatGPT и Claude через VPS (раньше ChatGPT получал `Session terminated` по устаревшему `Mcp-Session-Id`). Сборка, установка и GitHub-публикация — задачи T003–T005 после этой DOCS; до их завершения 0.6.83 остаётся последним опубликованным релизом. Причина — проверка пользователя через VPS после 0.6.83: `run_command_batch` → `McpServerError: Session terminated`; через сервер воспроизведено `POST /mcp` с чужим `Mcp-Session-Id` → `404 Session not found`. Source: T001 `d565c1a` (`stateless_http=True`, тест на настоящем `server.py` с устаревшим идентификатором, полный `npm test`). Scope 0.6.83 закрыт в архив: в план с завершённым delivery-хвостом Workflow Kit 1.5.3 не даёт добавить задачи (`DEPENDENCY_ORDER`).
+
 ## Выпуск 0.6.83 — 04.10.2026
 
 Причина релиза — переключатель канала ChatGPT (Secure MCP Tunnel / VPS) по [контракту](planning/chatgpt-channel-vps.md). Source: T001 `40585ca` (executor: канал в selector), T002 `07926e2` (туннель VPS и переключение в main), T003 `04d47e3` (раздел в Настройках, полный `npm test`), T004 `7140742` (версия). Bundled Workflow Kit 1.5.3 не менялся.
