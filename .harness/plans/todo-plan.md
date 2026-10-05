@@ -4,17 +4,17 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1162,
+  "plan_revision": 1163,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "computer-use-removal-0.6.90-20261005",
   "execution_scope_status": "ACTIVE",
   "delivery_status": "IN_PROGRESS",
-  "objective": "Убрать Computer Use из инструментов MCP на macOS и Windows, оставив только снимок экрана; добавить запрет управления интерфейсом в правила; релиз 0.6.90.",
+  "objective": "Убрать управление интерфейсом из инструментов MCP на macOS и Windows, оставив снимки экрана и окна и список окон; добавить запрет управления интерфейсом в правила; релиз 0.6.90.",
   "acceptance_criteria": [
-    "macOS: в каталоге MCP App Server 36 инструментов, из computer_* остался только computer_capture_screen; кода Sky и MCP-thread нет",
-    "Windows: overlay оставляет в bridge 36 инструментов, из computer_* только computer_capture_screen; раздел Desktop в SKILL.md заменён",
-    "Правила сессии в обоих режимах доставки запрещают управлять интерфейсом и разрешают снимок экрана",
+    "macOS: в каталоге MCP App Server 38 инструментов, из computer_* остались computer_capture_screen, computer_capture_window, computer_list_windows; кода Sky и MCP-thread нет",
+    "Windows: overlay оставляет в bridge 38 инструментов, из computer_* те же три; раздел Desktop в SKILL.md заменён",
+    "Правила сессии в обоих режимах доставки запрещают управлять интерфейсом и разрешают снимки и список окон",
     "Релиз 0.6.90 собран, установлен в /Applications, опубликован на GitHub; main синхронизирован"
   ],
   "approved_scope": {
@@ -104,17 +104,17 @@
         "unit-all"
       ],
       "id": "T001",
-      "title": "macOS: убрать 12 инструментов Computer Use и код Sky из MCP App Server",
+      "title": "macOS: убрать 10 инструментов управления интерфейсом и код Sky; снимок и список окон — системными средствами",
       "why": "Веб-модель не должна управлять интерфейсом через MCP; Computer Use через туннель медленный и не нужен.",
       "verification_kind": "code",
       "acceptance_criteria": [
-        "Удалены computer_status, computer_list_windows, computer_activate_window, computer_capture_window, computer_move_mouse, computer_click, computer_scroll, computer_type_text, computer_key_press, computer_hotkey, computer_actions, computer_release_inputs; @mcp.tool ровно 36",
-        "computer_capture_screen работает как раньше, имя не изменено",
+        "Удалены computer_status, computer_activate_window, computer_move_mouse, computer_click, computer_scroll, computer_type_text, computer_key_press, computer_hotkey, computer_actions, computer_release_inputs; @mcp.tool ровно 38",
+        "computer_capture_screen работает как раньше; computer_list_windows и computer_capture_window сохранили имена и работают без Sky: список окон через CoreGraphics, снимок через /usr/sbin/screencapture -l <window_id> с масштабированием max_dimension",
         "В server.py и app_server_client.py нет node_repl, @oai/sky, методов MCP-thread и другого кода, который больше нигде не вызывается",
         "bridge_status без поля computer_use; в instructions фраза про Sky заменена, первые 512 символов не изменены",
-        "Тесты клавиш, computer_actions и маршрута через Sky удалены; тест каталога проверяет отсутствие 12 имён; benchmark не вызывает computer_status"
+        "Тесты клавиш, computer_actions и маршрута через Sky удалены; тест каталога проверяет отсутствие 10 имён и наличие трёх оставшихся; тест на поддельном исполнителе проверяет argv снимка окна и отказ при неверном window_id; benchmark не вызывает computer_status"
       ],
-      "expected_commit_message": "feat: macOS: убрать 12 инструментов Computer Use и код Sky из MCP App Server"
+      "expected_commit_message": "feat: macOS: убрать 10 инструментов управления интерфейсом и код Sky; снимок и список окон — системными средствами"
     },
     {
       "implementation_status": "TODO",
@@ -137,17 +137,17 @@
         "unit-all"
       ],
       "id": "T002",
-      "title": "Windows: overlay убирает 11 инструментов Computer Use и раздел Desktop",
+      "title": "Windows: overlay убирает 9 инструментов управления интерфейсом и раздел Desktop",
       "why": "В Windows-runtime свои computer_*; закреплённый ZIP не меняется, поэтому правка идёт существующим overlay.",
       "verification_kind": "code",
       "acceptance_criteria": [
-        "patchWindowsBridgeSource удаляет 11 инструментов (все computer_*, кроме computer_capture_screen) и строку computer_use в bridge_status; workflow_context_recover по-прежнему добавляется ровно один раз",
-        "Раздел Desktop в skills/local-computer/SKILL.md заменён коротким текстом: управления нет, снимок через computer_capture_screen",
+        "patchWindowsBridgeSource удаляет computer_status, computer_activate_window, computer_move_mouse, computer_click, computer_scroll, computer_type_text, computer_key_press, computer_hotkey, computer_release_inputs и строку computer_use в bridge_status; computer_capture_screen, computer_capture_window, computer_list_windows остаются; workflow_context_recover по-прежнему добавляется ровно один раз",
+        "Раздел Desktop в skills/local-computer/SKILL.md заменён коротким текстом: управления нет, доступны список окон и снимки экрана и окна",
         "Overlay идемпотентен; при ненайденном блоке в неизменённом bridge — WINDOWS_RUNTIME_BRIDGE_INVALID; уже установленный runtime получает правку при обновлении",
-        "На настоящих bridge_mcp.py и SKILL.md из закреплённого ZIP (если он есть в .harness/runtime/windows-payload): 36 инструментов, python3 -m py_compile проходит",
+        "На настоящих bridge_mcp.py и SKILL.md из закреплённого ZIP (если он есть в .harness/runtime/windows-payload): 38 инструментов, python3 -m py_compile проходит",
         "WINDOWS_RUNTIME_SHA256 и сам ZIP не изменены"
       ],
-      "expected_commit_message": "feat: Windows: overlay убирает 11 инструментов Computer Use и раздел Desktop"
+      "expected_commit_message": "feat: Windows: overlay убирает 9 инструментов управления интерфейсом и раздел Desktop"
     },
     {
       "implementation_status": "TODO",
@@ -340,6 +340,11 @@
       "id": "0468ee71-2fc8-44ee-9589-ce14cd931844",
       "text": "Поручение пользователя 05.10.2026: полностью убрать Computer Use из инструментов MCP для веб-модели (macOS и Windows), снимок экрана оставить, добавить текстовый запрет в правила, собрать релиз 0.6.90 и синхронизировать с GitHub. Локальный агент не делается. Codex Local Mac удаляется отдельным релизом 0.6.91.",
       "recorded_at": "2026-10-05T07:06:30.679Z"
+    },
+    {
+      "id": "ff32df00-2a51-4f1f-a6d4-34ea5ba9cd2b",
+      "text": "Уточнение пользователя 05.10.2026: снимок окна тоже остаётся (вместе со списком окон, который даёт window_id); ZIP Windows-runtime в 0.6.91 публикуется в разделе релизов рядом с пакетами macOS и Windows.",
+      "recorded_at": "2026-10-05T07:14:58.000Z"
     }
   ]
 }
@@ -352,27 +357,27 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: computer-use-removal-0.6.90-20261005
 Current Task: нет
-Revision: 1162
+Revision: 1163
 
 ## Цель
 
-Убрать Computer Use из инструментов MCP на macOS и Windows, оставив только снимок экрана; добавить запрет управления интерфейсом в правила; релиз 0.6.90.
+Убрать управление интерфейсом из инструментов MCP на macOS и Windows, оставив снимки экрана и окна и список окон; добавить запрет управления интерфейсом в правила; релиз 0.6.90.
 
 ## Критерии приёмки
 
-- macOS: в каталоге MCP App Server 36 инструментов, из computer_* остался только computer_capture_screen; кода Sky и MCP-thread нет
-- Windows: overlay оставляет в bridge 36 инструментов, из computer_* только computer_capture_screen; раздел Desktop в SKILL.md заменён
-- Правила сессии в обоих режимах доставки запрещают управлять интерфейсом и разрешают снимок экрана
+- macOS: в каталоге MCP App Server 38 инструментов, из computer_* остались computer_capture_screen, computer_capture_window, computer_list_windows; кода Sky и MCP-thread нет
+- Windows: overlay оставляет в bridge 38 инструментов, из computer_* те же три; раздел Desktop в SKILL.md заменён
+- Правила сессии в обоих режимах доставки запрещают управлять интерфейсом и разрешают снимки и список окон
 - Релиз 0.6.90 собран, установлен в /Applications, опубликован на GitHub; main синхронизирован
 
 ## Микрозадачи
 
-- [TODO] T001: macOS: убрать 12 инструментов Computer Use и код Sky из MCP App Server — Ожидает
-  - Git Commit: [PENDING] feat: macOS: убрать 12 инструментов Computer Use и код Sky из MCP App Server
+- [TODO] T001: macOS: убрать 10 инструментов управления интерфейсом и код Sky; снимок и список окон — системными средствами — Ожидает
+  - Git Commit: [PENDING] feat: macOS: убрать 10 инструментов управления интерфейсом и код Sky; снимок и список окон — системными средствами
   - Reference: computer-use-removal-0.6.90-20261005 / T001 / implementation
   - Файлы: tools/codex-app-server-mcp/server.py, tools/codex-app-server-mcp/app_server_client.py, tests/codex-app-server-mcp.test.mjs, scripts/benchmark-codex-app-server-mcp.mjs, docs/planning/computer-use-removal.md
-- [TODO] T002: Windows: overlay убирает 11 инструментов Computer Use и раздел Desktop — Ожидает
-  - Git Commit: [PENDING] feat: Windows: overlay убирает 11 инструментов Computer Use и раздел Desktop
+- [TODO] T002: Windows: overlay убирает 9 инструментов управления интерфейсом и раздел Desktop — Ожидает
+  - Git Commit: [PENDING] feat: Windows: overlay убирает 9 инструментов управления интерфейсом и раздел Desktop
   - Reference: computer-use-removal-0.6.90-20261005 / T002 / implementation
   - Файлы: src/windows-runtime.mjs, tests/windows-runtime.test.mjs, docs/planning/computer-use-removal.md
 - [TODO] T003: Правила: запрет управления интерфейсом в обоих режимах доставки — Ожидает
