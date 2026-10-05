@@ -24,7 +24,7 @@
 <!-- workflow-kit:end -->
 ## Project Web Pilot
 
-**Source 0.6.92 подготовлен к release-хвосту после предсборочной DOCS** ([контракт](planning/codex-native-tools-macos.md)): macOS MCP — 13 инструментов вместо 38, четыре инструмента в форме Codex, определения закреплены за Codex 0.160.0 и проверены по `rust-v0.160.0`; Windows-runtime не менялся. Сборка, установка и публикация 0.6.92 ещё не выполнялись. Текущая установленная и опубликованная парная версия — **0.6.91 / Workflow Kit 1.5.5**; история выпусков — [RELEASE.md](RELEASE.md).
+**Source 0.6.93 подготовлен к release-хвосту после предсборочной DOCS** ([контракт](planning/codex-native-tools-macos.md)): macOS MCP сохраняет 13 инструментов из 0.6.92; исправлены закрытие stdin для non-TTY, семантика `write_stdin`/Ctrl-C, write/poll yield clamp и описания двух command tools. Definitions lock остаётся Codex 0.160.0 / `rust-v0.160.0`; Windows-runtime не менялся. Текущая установленная и опубликованная парная версия — **0.6.92 / Workflow Kit 1.5.5**; delivery 0.6.93 ещё не выполнялся. История выпусков — [RELEASE.md](RELEASE.md).
 
 | Документ | Назначение |
 | --- | --- |
@@ -39,7 +39,7 @@
 | docs/planning/session-title-sync.md | Контракт auto/manual session title и server-side синхронизации с native ChatGPT Recents |
 | docs/planning/input-instruction-delivery-ordering.md | Канонический порядок DOCS → delivery, startupMessage guard и границы незапланированных build/publish |
 | docs/planning/computer-use-removal.md | Управление интерфейсом убрано из MCP на macOS и Windows; остаются список окон и снимки; запрет в правилах; релиз 0.6.90 |
-| docs/planning/codex-native-tools-macos.md | Source 0.6.92: macOS каталог из 13 tools, Codex-form `exec_command`/`write_stdin`/`apply_patch`/`view_image`, definitions lock/check, Windows без изменений, DOCS → delivery |
+| docs/planning/codex-native-tools-macos.md | 0.6.92: macOS каталог из 13 tools и Codex-form command/patch/image; 0.6.93: stdin/write timing corrections, descriptions, definitions lock/check; Windows без изменений, DOCS → delivery |
 | docs/planning/codex-local-mac-removal.md | 0.6.91: Codex Local Mac удалён; macOS только через Codex App Server (первый запуск, одноразовая очистка); в пакете только приложение; ZIP Windows-runtime — шестой файл релиза |
 | docs/planning/release-backups-kit-1.5.5.md | Одна резервная копия установки на цель вне Spotlight; Workflow Kit 1.5.5 (push только после DOCS); релиз 0.6.89 |
 | docs/planning/mcp-start-message.md | Web Pilot начинает MCP-сессию коротким стартовым сообщением; релиз 0.6.88 |
