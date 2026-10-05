@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1247,
+  "plan_revision": 1249,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-stdin-contract-fix-0.6.93-20261005",
@@ -278,8 +278,8 @@
       "actual_files": []
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "codex-stdin-contract-fix-0.6.93-20261005",
         "task_id": "T004",
@@ -308,7 +308,8 @@
         "Установленная копия и release artifacts проходят штатную installed-проверку",
         "Интерфейсом компьютера агент не управляет"
       ],
-      "expected_commit_message": "feat: Установить и проверить macOS 0.6.93 в /Applications"
+      "expected_commit_message": "feat: Установить и проверить macOS 0.6.93 в /Applications",
+      "actual_files": []
     },
     {
       "implementation_status": "TODO",
@@ -363,7 +364,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: codex-stdin-contract-fix-0.6.93-20261005
 Current Task: нет
-Revision: 1247
+Revision: 1249
 
 ## Цель
 
@@ -395,8 +396,8 @@ Revision: 1247
   - Git Commit: [DONE] feat: Собрать и проверить парный release 0.6.93
   - Reference: codex-stdin-contract-fix-0.6.93-20261005 / T003 / implementation
   - Файлы: package.json, scripts/release-all.mjs, scripts/release-mac.mjs, scripts/verify-windows-package.mjs, docs/planning/codex-native-tools-macos.md
-- [TODO] T004: Установить и проверить macOS 0.6.93 в /Applications — Ожидает
-  - Git Commit: [PENDING] feat: Установить и проверить macOS 0.6.93 в /Applications
+- [DONE] T004: Установить и проверить macOS 0.6.93 в /Applications — Завершено
+  - Git Commit: [DONE] feat: Установить и проверить macOS 0.6.93 в /Applications
   - Reference: codex-stdin-contract-fix-0.6.93-20261005 / T004 / implementation
   - Файлы: scripts/release-mac.mjs, scripts/check-installed-release.mjs, docs/planning/codex-native-tools-macos.md
 - [TODO] T005: Опубликовать GitHub Release v0.6.93 и синхронизировать main — Ожидает
