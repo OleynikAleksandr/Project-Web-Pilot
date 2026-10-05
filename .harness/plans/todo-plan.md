@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1274,
+  "plan_revision": 1276,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-tools-polish-0.6.94-20261005",
@@ -416,8 +416,8 @@
       "actual_files": []
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "codex-tools-polish-0.6.94-20261005",
         "task_id": "T008",
@@ -447,7 +447,12 @@
         "Коммиты WorkflowKit отправлены в его origin/main; worktree чистый",
         "docs/RELEASE.md Web Pilot называет коммит синхронизации WorkflowKit"
       ],
-      "expected_commit_message": "feat: Синхронизировать документы Workflow Kit с выпуском 0.6.94"
+      "expected_commit_message": "feat: Синхронизировать документы Workflow Kit с выпуском 0.6.94",
+      "actual_files": [
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md",
+        "docs/planning/codex-native-tools-macos.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -509,7 +514,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: codex-tools-polish-0.6.94-20261005
 Current Task: нет
-Revision: 1274
+Revision: 1276
 
 ## Цель
 
@@ -559,8 +564,8 @@ Revision: 1274
   - Git Commit: [DONE] feat: Опубликовать GitHub Release v0.6.94 и синхронизировать main
   - Reference: codex-tools-polish-0.6.94-20261005 / T007 / implementation
   - Файлы: scripts/check-github-release.mjs, docs/planning/codex-native-tools-macos.md
-- [TODO] T008: Синхронизировать документы Workflow Kit с выпуском 0.6.94 — Ожидает
-  - Git Commit: [PENDING] feat: Синхронизировать документы Workflow Kit с выпуском 0.6.94
+- [DONE] T008: Синхронизировать документы Workflow Kit с выпуском 0.6.94 — Завершено
+  - Git Commit: [DONE] feat: Синхронизировать документы Workflow Kit с выпуском 0.6.94
   - Reference: codex-tools-polish-0.6.94-20261005 / T008 / implementation
   - Файлы: docs/planning/codex-native-tools-macos.md, docs/RELEASE.md, docs/VERIFICATION.md
 - [TODO] T009: Послерелизная сверка всех документов и README, синхронизация origin/main — Ожидает
