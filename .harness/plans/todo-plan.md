@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1236,
+  "plan_revision": 1238,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-stdin-contract-fix-0.6.93-20261005",
@@ -73,8 +73,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "codex-stdin-contract-fix-0.6.93-20261005",
         "task_id": "T001",
@@ -108,7 +108,12 @@
         "apply_patch, view_image, корзина, recovery/status/watchdog, инструменты наблюдения, Windows-runtime и первые 512 символов server instructions не меняются",
         "Контракт docs/planning/codex-native-tools-macos.md дополнен исправлением 0.6.93"
       ],
-      "expected_commit_message": "feat: Исправить stdin-контракт exec_command/write_stdin и покрыть его тестами"
+      "expected_commit_message": "feat: Исправить stdin-контракт exec_command/write_stdin и покрыть его тестами",
+      "actual_files": [
+        "docs/planning/codex-native-tools-macos.md",
+        "tests/codex-app-server-mcp.test.mjs",
+        "tools/codex-app-server-mcp/server.py"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -296,7 +301,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: codex-stdin-contract-fix-0.6.93-20261005
 Current Task: нет
-Revision: 1236
+Revision: 1238
 
 ## Цель
 
@@ -308,8 +313,8 @@ Revision: 1236
 
 ## Микрозадачи
 
-- [TODO] T001: Исправить stdin-контракт exec_command/write_stdin и покрыть его тестами — Ожидает
-  - Git Commit: [PENDING] feat: Исправить stdin-контракт exec_command/write_stdin и покрыть его тестами
+- [DONE] T001: Исправить stdin-контракт exec_command/write_stdin и покрыть его тестами — Завершено
+  - Git Commit: [DONE] feat: Исправить stdin-контракт exec_command/write_stdin и покрыть его тестами
   - Reference: codex-stdin-contract-fix-0.6.93-20261005 / T001 / implementation
   - Файлы: tools/codex-app-server-mcp/server.py, tests/codex-app-server-mcp.test.mjs, docs/planning/codex-native-tools-macos.md
 - [TODO] T002: Подготовить source версии 0.6.93 и повторно проверить релизный исходник — Ожидает

@@ -57,6 +57,19 @@ T001–T005 завершены: `200b6cb` (`exec_command`/`write_stdin`), `157c6
 
 Delivery ещё не начат: T006–T008 должны использовать sourceCommit после этой DOCS; 0.6.92 пока не собрана, не установлена и не опубликована. Windows-runtime не менялся.
 
+## Исправление 0.6.93 — stdin-контракт команд
+
+Пользовательская проверка уже выпущенной 0.6.92 выявила один дефект нового `exec_command`: `LocalFacade.exec_command` всегда запускал `command/exec` с `stream_stdin=True`. Поэтому обычная `tty=false` команда получала открытый stdin, и `rg -n "add"` без пути, `grep`, `cat` и другие stdin-aware программы могли ждать ввод вместо обычного завершения. Это расходилось с закреплённым Codex `rust-v0.160.0`: в `process_manager.rs` non-TTY процесс создаётся с закрытым stdin (`stdin_open: tty`), запись процесса хранит `tty`, а `write_stdin` для non-TTY разрешает только одиночный `U+0003`; любой другой непустой ввод возвращает `stdin is closed for this session; rerun exec_command with tty=true to keep stdin open`.
+
+Контракт 0.6.93:
+
+- `exec_command(..., tty=false)` запускает App Server с закрытым stdin; `tty=true` по-прежнему держит stdin открытым и принимает обычный `write_stdin`.
+- Сервер хранит для каждой продолжающейся command session и cursor, и `tty`. Пустой `write_stdin` остаётся опросом для обоих режимов.
+- Для `tty=false` непустой `write_stdin` принимает только точный `U+0003`: MCP вызывает `command/exec/terminate`, возвращает обычный формат завершённой команды и закрывает сессию. Любые другие символы отклоняются приведённым выше текстом Codex без остановки процесса; следующий пустой poll продолжает работать.
+- `yield_time_ms` и `max_output_tokens` больше не отклоняются только из-за выхода за диапазон: числовые значения приводятся к допустимому диапазону. Для `exec_command` `yield_time_ms` — 250–30000 мс; для этого MCP `write_stdin` — 5000–60000 мс; `max_output_tokens` — 1–10000. Строка вместо числа остаётся ошибкой.
+- `exec_command` и `write_stdin` получают непустые tool/parameter descriptions на основе `shell_spec.rs` Codex с явными локальными отличиями: обязательный `workdir`, stdin только при `tty=true`, Ctrl-C для обычной сессии, локальные пределы ожидания и максимум 10000 output tokens.
+- Первые 512 символов server instructions, `apply_patch`, `view_image`, корзина, recovery/status/watchdog, инструменты наблюдения, Windows-runtime и `codex-tools.lock.json` не меняются.
+
 ## Запуск
 
 1. Установить 0.6.92, полностью выйти из Web Pilot (⌘Q) и открыть снова.

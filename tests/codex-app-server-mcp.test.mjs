@@ -239,10 +239,11 @@ test('Codex-form exec_command and write_stdin run through the real App Server', 
   await mkdir(codexHome, { recursive: true });
   await writeFile(path.join(codexHome, 'config.toml'), '[analytics]\nenabled = false\n');
   await writeFile(path.join(root, 'not-a-directory.txt'), 'x');
+  await writeFile(path.join(root, 'calc.py'), 'def add(a, b):\n    return a + b\n');
 
   const probe = path.join(root, 'probe.py');
   await writeFile(probe, [
-    'import json, os, pathlib, re, sys',
+    'import json, os, pathlib, re, subprocess, sys',
     'sys.path.insert(0, sys.argv[1])',
     'import server',
     'from app_server_client import AppServerClient',
@@ -259,6 +260,9 @@ test('Codex-form exec_command and write_stdin run through the real App Server', 
     '    out["nonzero"] = facade.exec_command("printf ERR >&2; exit 7", root, "/bin/sh", False, False, 500, 10000)',
     '    out["login_shell"] = facade.exec_command("printf SHELL_OK", root, "/bin/bash", True, False, 500, 10000)',
     '    out["truncated"] = facade.exec_command("printf BEGIN-; /usr/bin/yes x | /usr/bin/head -c 400; printf -- -END", root, "/bin/sh", False, False, 500, 20)',
+    '    out["rg"] = facade.exec_command("rg -n add", root, "/bin/zsh", True, False, 1000, 10000)',
+    '    out["rg_sessions"] = len(facade._command_sessions)',
+    '    out["cat"] = facade.exec_command("cat", root, "/bin/sh", False, False, 1000, 10000)',
     '    running = facade.exec_command("printf START; sleep 1; printf DONE", root, "/bin/sh", False, False, 250, 10000)',
     '    out["running"] = running',
     '    sid = session_id(running)',
@@ -268,9 +272,34 @@ test('Codex-form exec_command and write_stdin run through the real App Server', 
     '        out["finished_error"] = None',
     '    except ValueError as error:',
     '        out["finished_error"] = str(error)',
-    `    waiting = facade.exec_command('IFS= read -r line; printf GOT:%s "$line"', root, "/bin/sh", False, False, 250, 10000)`,
+    '    non_tty_waiting = facade.exec_command("sleep 20", root, "/bin/sh", False, False, 250, 10000)',
+    '    non_tty_sid = session_id(non_tty_waiting)',
+    '    try:',
+    '        facade.write_stdin(non_tty_sid, "hello\\n", 5000, 10000)',
+    '        out["non_tty_write_error"] = None',
+    '    except ValueError as error:',
+    '        out["non_tty_write_error"] = str(error)',
+    '    out["non_tty_poll"] = facade.write_stdin(non_tty_sid, "", 5000, 10000)',
+    '    out["non_tty_cleanup"] = facade.write_stdin(non_tty_sid, "\\x03", 5000, 10000)',
+    '    marker = "web-pilot-nontty-" + str(os.getpid())',
+    `    interrupt_waiting = facade.exec_command('python3 -c "import time; time.sleep(20)" ' + marker, root, "/bin/sh", False, False, 250, 10000)`,
+    '    interrupt_sid = session_id(interrupt_waiting)',
+    '    out["non_tty_interrupt"] = facade.write_stdin(interrupt_sid, "\\x03", 5000, 10000)',
+    '    out["non_tty_interrupt_pgrep"] = subprocess.run(["pgrep", "-f", marker], capture_output=True).returncode',
+    '    try:',
+    '        facade.write_stdin(interrupt_sid, "again", 5000, 10000)',
+    '        out["non_tty_interrupt_repeat"] = None',
+    '    except ValueError as error:',
+    '        out["non_tty_interrupt_repeat"] = str(error)',
+    `    waiting = facade.exec_command('IFS= read -r line; printf "got:%s" "$line"', root, "/bin/sh", False, True, 250, 10000)`,
     '    input_sid = session_id(waiting)',
     '    out["stdin"] = facade.write_stdin(input_sid, "hello\\n", 5000, 10000)',
+    '    clamp_waiting = facade.exec_command("sleep 0.5; printf CLAMP_WRITE", root, "/bin/sh", False, False, 100, 10000)',
+    '    clamp_sid = session_id(clamp_waiting)',
+    '    out["write_clamp"] = facade.write_stdin(clamp_sid, "", 1000, 10000)',
+    '    out["exec_clamp_low"] = facade.exec_command("printf CLAMP_LOW", root, "/bin/sh", False, False, 100, 10000)',
+    '    out["exec_clamp_high"] = facade.exec_command("printf CLAMP_HIGH", root, "/bin/sh", False, False, 999999, 10000)',
+    '    out["token_clamp"] = facade.exec_command("printf TOKEN_CLAMP", root, "/bin/sh", False, False, 500, 20000)',
     '    tty_waiting = facade.exec_command("printf READY; sleep 20", root, "/bin/sh", False, True, 250, 10000)',
     '    out["tty_start"] = tty_waiting',
     '    tty_sid = session_id(tty_waiting)',
@@ -282,8 +311,9 @@ test('Codex-form exec_command and write_stdin run through the real App Server', 
     '        "empty_workdir": lambda: facade.exec_command("true", ""),',
     '        "missing_workdir": lambda: facade.exec_command("true", os.path.join(root, "missing")),',
     '        "file_workdir": lambda: facade.exec_command("true", os.path.join(root, "not-a-directory.txt")),',
-    '        "bad_yield": lambda: facade.exec_command("true", root, yield_time_ms=249),',
-    '        "bad_tokens": lambda: facade.exec_command("true", root, max_output_tokens=10001),',
+    '        "string_yield": lambda: facade.exec_command("true", root, yield_time_ms="100"),',
+    '        "string_tokens": lambda: facade.exec_command("true", root, max_output_tokens="20000"),',
+    '        "string_write_yield": lambda: facade.write_stdin("deadbeef", "", "1000", 10000),',
     '        "unknown_session": lambda: facade.write_stdin("deadbeef", "", 5000, 10000),',
     '    }.items():',
     '        try:',
@@ -312,7 +342,7 @@ test('Codex-form exec_command and write_stdin run through the real App Server', 
   assert.equal(run.code, 0, run.stderr || run.stdout);
   const out = JSON.parse(run.stdout.trim().split('\n').at(-1));
 
-  for (const key of ['short', 'nonzero', 'login_shell', 'truncated', 'running', 'poll', 'stdin', 'tty_start', 'tty_signal', 'tty_done']) {
+  for (const key of ['short', 'nonzero', 'login_shell', 'truncated', 'rg', 'cat', 'running', 'poll', 'non_tty_poll', 'non_tty_cleanup', 'non_tty_interrupt', 'stdin', 'write_clamp', 'exec_clamp_low', 'exec_clamp_high', 'token_clamp', 'tty_start', 'tty_signal', 'tty_done']) {
     assert.match(out[key], /^Chunk ID: [0-9a-f]{8}\nWall time: \d+\.\d{3} seconds\n/m, key);
     assert.match(out[key], /\nOriginal token count: \d+\nOutput:\n/, key);
   }
@@ -324,12 +354,27 @@ test('Codex-form exec_command and write_stdin run through the real App Server', 
   assert.match(out.truncated, /BEGIN-/);
   assert.match(out.truncated, /bytes omitted/);
   assert.match(out.truncated, /-END$/);
+  assert.match(out.rg, /Process exited with code 0/);
+  assert.match(out.rg, /calc\.py:1:def add\(a, b\):/);
+  assert.equal(out.rg_sessions, 0);
+  assert.match(out.cat, /Process exited with code 0/);
   assert.match(out.running, /Process running with session ID [0-9a-f]+/);
   assert.match(out.poll, /Process exited with code 0/);
   assert.match(out.poll, /DONE$/);
   assert.match(out.finished_error, /Unknown or finished command session/);
+  assert.equal(out.non_tty_write_error, 'stdin is closed for this session; rerun exec_command with tty=true to keep stdin open');
+  assert.match(out.non_tty_poll, /Process running with session ID [0-9a-f]+/);
+  assert.match(out.non_tty_cleanup, /Process exited with code /);
+  assert.match(out.non_tty_interrupt, /Process exited with code /);
+  assert.equal(out.non_tty_interrupt_pgrep, 1);
+  assert.match(out.non_tty_interrupt_repeat, /Unknown or finished command session/);
   assert.match(out.stdin, /Process exited with code 0/);
-  assert.match(out.stdin, /GOT:hello/);
+  assert.match(out.stdin, /got:hello/);
+  assert.match(out.write_clamp, /Process exited with code 0/);
+  assert.match(out.write_clamp, /CLAMP_WRITE$/);
+  assert.match(out.exec_clamp_low, /CLAMP_LOW$/);
+  assert.match(out.exec_clamp_high, /CLAMP_HIGH$/);
+  assert.match(out.token_clamp, /TOKEN_CLAMP$/);
   assert.match(out.tty_start, /Process running with session ID [0-9a-f]+/);
   assert.match(out.tty_start, /READY/);
   assert.match(out.tty_signal, /\^C/);
@@ -338,8 +383,9 @@ test('Codex-form exec_command and write_stdin run through the real App Server', 
   assert.match(out.errors.empty_workdir, /workdir is required/);
   assert.match(out.errors.missing_workdir, /Path does not exist/);
   assert.match(out.errors.file_workdir, /workdir is not a directory/);
-  assert.ok(out.errors.bad_yield.includes('yield') && out.errors.bad_yield.includes('250') && out.errors.bad_yield.includes('30000'));
-  assert.ok(out.errors.bad_tokens.includes('max_output_tokens') && out.errors.bad_tokens.includes('1') && out.errors.bad_tokens.includes('10000'));
+  assert.match(out.errors.string_yield, /yield_time_ms must be an integer from 250 to 30000/);
+  assert.match(out.errors.string_tokens, /max_output_tokens must be an integer from 1 to 10000/);
+  assert.equal(out.errors.string_write_yield, 'yield' + '_time_ms must be an integer from 5000 to 60000');
   assert.match(out.errors.unknown_session, /Unknown or finished command session/);
 });
 
@@ -816,11 +862,19 @@ test('App Server MCP answers a stale session id without initialize after a resta
   const payload = text.trim().startsWith('{') ? text : text.split('\n').filter(line => line.startsWith('data:')).map(line => line.slice(5).trim()).at(-1);
   const message = JSON.parse(payload);
   assert.equal(message.id, 7);
-  assert.deepEqual(message.result.tools.map(tool => tool.name).sort(), [
+  const tools = message.result.tools;
+  assert.deepEqual(tools.map(tool => tool.name).sort(), [
     'apply_patch', 'bridge_status', 'computer_capture_screen', 'computer_capture_window',
     'computer_list_windows', 'delete_path', 'exec_command', 'list_trash', 'restore_trash',
     'turn_watchdog', 'view_image', 'workflow_context_recover', 'write_stdin',
   ]);
+  for (const name of ['exec_command', 'write_stdin']) {
+    const tool = tools.find(candidate => candidate.name === name);
+    assert.ok(tool.description?.trim(), `${name} description is required`);
+    for (const [parameter, schema] of Object.entries(tool.inputSchema.properties)) {
+      assert.ok(schema.description?.trim(), `${name}.${parameter} description is required`);
+    }
+  }
 });
 
 test('window list and screenshots use system tools and validate input before running a command', { timeout: 30_000 }, async t => {

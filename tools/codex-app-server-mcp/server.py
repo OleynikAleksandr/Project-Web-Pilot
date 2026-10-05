@@ -12,10 +12,11 @@ import threading
 import time
 import uuid
 from pathlib import Path
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
 from mcp.server.fastmcp import FastMCP, Image
 from mcp.types import ToolAnnotations
+from pydantic import Field
 
 from app_server_client import AppServerClient
 
@@ -36,6 +37,7 @@ LOCAL_NOTIFICATION = ToolAnnotations(
 MAX_VIEW_IMAGE_BYTES = 20_000_000
 MAX_PATCH_BYTES = 1_000_000
 MAX_OUTPUT = 120_000
+STDIN_CLOSED_MESSAGE = "stdin is closed for this session; rerun exec_command with tty=true to keep stdin open"
 # ChatGPT shows a model roughly 10 000 tokens of one tool result; a text-only part of 28 000 bytes
 # is about 7 000 tokens of Russian text.
 CONTEXT_PART_BYTES = 28_000
@@ -87,7 +89,7 @@ class LocalFacade:
         self.state_root = state_root
         self.trash_root = state_root / "trash"
         self.trash_root.mkdir(parents=True, exist_ok=True, mode=0o700)
-        self._command_sessions: dict[str, int] = {}
+        self._command_sessions: dict[str, tuple[int, bool]] = {}
         self._command_sessions_lock = threading.Lock()
 
     def resolve(self, path: str, *, must_exist: bool = False, allow_sensitive: bool = False) -> Path:
@@ -370,15 +372,9 @@ class LocalFacade:
 
     @staticmethod
     def _command_limit(name: str, value: int, minimum: int, maximum: int) -> int:
-        if isinstance(value, bool):
+        if type(value) is not int:
             raise ValueError(f"{name} must be an integer from {minimum} to {maximum}")
-        try:
-            number = int(value)
-        except (TypeError, ValueError):
-            raise ValueError(f"{name} must be an integer from {minimum} to {maximum}") from None
-        if number < minimum or number > maximum:
-            raise ValueError(f"{name} must be from {minimum} to {maximum}")
-        return number
+        return max(minimum, min(value, maximum))
 
     def _command_workdir(self, workdir: str) -> Path:
         if not isinstance(workdir, str) or not workdir.strip():
@@ -460,7 +456,7 @@ class LocalFacade:
             output_bytes_cap=4_000_000,
             sandbox_policy={"type": "dangerFullAccess"},
             tty=tty,
-            stream_stdin=True,
+            stream_stdin=tty,
         )
         process_id = str(started["process_id"])
         result = self.client.read_command_output(process_id, cursor=0, wait_ms=wait_ms)
@@ -468,7 +464,7 @@ class LocalFacade:
             raise ValueError(str(result["error"]))
         if result.get("running"):
             with self._command_sessions_lock:
-                self._command_sessions[process_id] = int(result["cursor"])
+                self._command_sessions[process_id] = (int(result["cursor"]), tty)
         return self._format_command_result(result, token_limit)
 
     def write_stdin(
@@ -485,16 +481,26 @@ class LocalFacade:
         if not isinstance(chars, str):
             raise ValueError("chars must be a string")
         with self._command_sessions_lock:
-            cursor = self._command_sessions.get(session_id)
-        if cursor is None:
+            session = self._command_sessions.get(session_id)
+        if session is None:
             raise ValueError(f"Unknown or finished command session: {session_id}")
+        cursor, tty = session
         if chars:
             status = self.client.read_command_output(session_id, cursor=cursor, wait_ms=0)
             if not status.get("running"):
                 with self._command_sessions_lock:
                     self._command_sessions.pop(session_id, None)
                 raise ValueError(f"Command session is no longer running: {session_id}")
-            self.client.write_command_stdin(session_id, chars.encode("utf-8"))
+            if not tty:
+                if chars != "\x03":
+                    raise ValueError(STDIN_CLOSED_MESSAGE)
+                self.client.request(
+                    "command/exec/terminate",
+                    {"processId": session_id},
+                    timeout=10.0,
+                )
+            else:
+                self.client.write_command_stdin(session_id, chars.encode("utf-8"))
         result = self.client.read_command_output(session_id, cursor=cursor, wait_ms=wait_ms)
         if result.get("error"):
             with self._command_sessions_lock:
@@ -502,7 +508,7 @@ class LocalFacade:
             raise ValueError(str(result["error"]))
         with self._command_sessions_lock:
             if result.get("running"):
-                self._command_sessions[session_id] = int(result["cursor"])
+                self._command_sessions[session_id] = (int(result["cursor"]), tty)
             else:
                 self._command_sessions.pop(session_id, None)
         return self._format_command_result(result, token_limit)
@@ -794,11 +800,26 @@ def create_server(*, host: str, port: int, state_root: Path, codex_binary: str |
     def restore_trash(trash_id: str, destination: str = "", overwrite: bool = False) -> dict[str, Any]: return facade.restore_trash(trash_id,destination,overwrite)
 
     @mcp.tool(annotations=ARBITRARY_COMMAND)
-    async def exec_command(cmd: str, workdir: str, shell: str = "", login: bool = True, tty: bool = False, yield_time_ms: int = 10_000, max_output_tokens: int = 10_000) -> str:
+    async def exec_command(
+        cmd: Annotated[str, Field(description="Shell command to execute.")],
+        workdir: Annotated[str, Field(description="Working directory for the command. Required because this MCP has no turn cwd.")],
+        shell: Annotated[str, Field(description="Shell binary to launch. Defaults to the user's default shell.")] = "",
+        login: Annotated[bool, Field(description="True runs the shell with -l/-i semantics; false disables them. Defaults to true.", strict=True)] = True,
+        tty: Annotated[bool, Field(description="True allocates a PTY and keeps stdin open for write_stdin; false or omitted uses plain pipes with stdin closed. A single Ctrl-C write can still terminate a running non-TTY session.", strict=True)] = False,
+        yield_time_ms: Annotated[int, Field(description="Wait before yielding output. Defaults to 10000 ms; values are clamped to the effective 250-30000 ms range.", strict=True)] = 10_000,
+        max_output_tokens: Annotated[int, Field(description="Output token budget. Defaults to 10000 tokens; values are clamped to the MCP policy range of 1-10000.", strict=True)] = 10_000,
+    ) -> str:
+        """Runs a shell command, returning output or a session ID for ongoing interaction."""
         return await asyncio.to_thread(facade.exec_command,cmd,workdir,shell,login,tty,yield_time_ms,max_output_tokens)
 
     @mcp.tool(annotations=ARBITRARY_COMMAND)
-    async def write_stdin(session_id: str, chars: str = "", yield_time_ms: int = 10_000, max_output_tokens: int = 10_000) -> str:
+    async def write_stdin(
+        session_id: Annotated[str, Field(description="Identifier of the running exec_command session.")],
+        chars: Annotated[str, Field(description="Characters to write to stdin. Empty polls without writing. stdin is writable only for tty=true sessions; for tty=false, a single Ctrl-C interrupts the process and any other non-empty input is rejected.")] = "",
+        yield_time_ms: Annotated[int, Field(description="Wait before yielding output. Defaults to 10000 ms; this MCP clamps values to 5000-60000 ms.", strict=True)] = 10_000,
+        max_output_tokens: Annotated[int, Field(description="Output token budget. Defaults to 10000 tokens; values are clamped to the MCP policy range of 1-10000.", strict=True)] = 10_000,
+    ) -> str:
+        """Writes characters to an existing exec_command session and returns recent output."""
         return await asyncio.to_thread(facade.write_stdin,session_id,chars,yield_time_ms,max_output_tokens)
 
 
