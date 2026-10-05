@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1272,
+  "plan_revision": 1274,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-tools-polish-0.6.94-20261005",
@@ -383,8 +383,8 @@
       "actual_files": []
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "codex-tools-polish-0.6.94-20261005",
         "task_id": "T007",
@@ -412,7 +412,8 @@
         "GitHub Release v0.6.94 содержит ровно шесть ожидаемых файлов, их digests совпадают с локальной поставкой",
         "origin/main после managed commit совпадает с локальным HEAD; повторная сборка при публикации не выполняется"
       ],
-      "expected_commit_message": "feat: Опубликовать GitHub Release v0.6.94 и синхронизировать main"
+      "expected_commit_message": "feat: Опубликовать GitHub Release v0.6.94 и синхронизировать main",
+      "actual_files": []
     },
     {
       "implementation_status": "TODO",
@@ -508,7 +509,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: codex-tools-polish-0.6.94-20261005
 Current Task: нет
-Revision: 1272
+Revision: 1274
 
 ## Цель
 
@@ -554,8 +555,8 @@ Revision: 1272
   - Git Commit: [DONE] feat: Установить 0.6.94 и проверить установленные macOS-копии
   - Reference: codex-tools-polish-0.6.94-20261005 / T006 / implementation
   - Файлы: scripts/check-installed-release.mjs, docs/planning/codex-native-tools-macos.md
-- [TODO] T007: Опубликовать GitHub Release v0.6.94 и синхронизировать main — Ожидает
-  - Git Commit: [PENDING] feat: Опубликовать GitHub Release v0.6.94 и синхронизировать main
+- [DONE] T007: Опубликовать GitHub Release v0.6.94 и синхронизировать main — Завершено
+  - Git Commit: [DONE] feat: Опубликовать GitHub Release v0.6.94 и синхронизировать main
   - Reference: codex-tools-polish-0.6.94-20261005 / T007 / implementation
   - Файлы: scripts/check-github-release.mjs, docs/planning/codex-native-tools-macos.md
 - [TODO] T008: Синхронизировать документы Workflow Kit с выпуском 0.6.94 — Ожидает
