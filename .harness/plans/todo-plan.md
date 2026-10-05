@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1283,
+  "plan_revision": 1285,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "trash-removal-0.6.95-20261005",
@@ -126,8 +126,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "trash-removal-0.6.95-20261005",
         "task_id": "T002",
@@ -172,7 +172,11 @@
         "Сборка, установка и публикация на этом шаге не выполняются",
         "Следующая за этой задачей DOCS синхронизирует все перечисленные документы, включая README.md, и записывает в docs/VERIFICATION.md пользовательскую проверку 0.6.94"
       ],
-      "expected_commit_message": "feat: Подготовить source версии 0.6.95 и проверить релизный исходник"
+      "expected_commit_message": "feat: Подготовить source версии 0.6.95 и проверить релизный исходник",
+      "actual_files": [
+        "package-lock.json",
+        "package.json"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -409,7 +413,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: trash-removal-0.6.95-20261005
 Current Task: нет
-Revision: 1283
+Revision: 1285
 
 ## Цель
 
@@ -430,8 +434,8 @@ Revision: 1283
   - Git Commit: [DONE] feat: Удалить корзину из MCP: каталог из 10 инструментов
   - Reference: trash-removal-0.6.95-20261005 / T001 / implementation
   - Файлы: tools/codex-app-server-mcp/server.py, tests/codex-app-server-mcp.test.mjs, docs/planning/codex-native-tools-macos.md, tools/codex-app-server-mcp/session-rules.md
-- [TODO] T002: Подготовить source версии 0.6.95 и проверить релизный исходник — Ожидает
-  - Git Commit: [PENDING] feat: Подготовить source версии 0.6.95 и проверить релизный исходник
+- [DONE] T002: Подготовить source версии 0.6.95 и проверить релизный исходник — Завершено
+  - Git Commit: [DONE] feat: Подготовить source версии 0.6.95 и проверить релизный исходник
   - Reference: trash-removal-0.6.95-20261005 / T002 / implementation
   - Файлы: package.json, package-lock.json, docs/planning/codex-native-tools-macos.md, README.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/DECISIONS.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/modules/codex-app-server-executor.md, docs/CLEAN_INSTALL.md, docs/SOURCE_WORKSPACES.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKFLOW_START.md, docs/modules/workflow-kit-recovery.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
