@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1263,
+  "plan_revision": 1265,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-tools-polish-0.6.94-20261005",
@@ -201,8 +201,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "codex-tools-polish-0.6.94-20261005",
         "task_id": "T004",
@@ -244,7 +244,11 @@
         "Сборка, установка и публикация на этом шаге не выполняются",
         "Следующая за этой задачей DOCS синхронизирует все перечисленные документы, включая README.md, и записывает в docs/VERIFICATION.md пользовательскую проверку 0.6.93"
       ],
-      "expected_commit_message": "feat: Подготовить source версии 0.6.94 и проверить релизный исходник"
+      "expected_commit_message": "feat: Подготовить source версии 0.6.94 и проверить релизный исходник",
+      "actual_files": [
+        "package-lock.json",
+        "package.json"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -474,7 +478,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: codex-tools-polish-0.6.94-20261005
 Current Task: нет
-Revision: 1263
+Revision: 1265
 
 ## Цель
 
@@ -504,8 +508,8 @@ Revision: 1263
   - Git Commit: [DONE] feat: Описания всех 13 инструментов и параметров, подсказка про изображения, общее правило повтора
   - Reference: codex-tools-polish-0.6.94-20261005 / T003 / implementation
   - Файлы: tools/codex-app-server-mcp/server.py, tests/codex-app-server-mcp.test.mjs, docs/planning/codex-native-tools-macos.md, tools/codex-app-server-mcp/session-rules.md
-- [TODO] T004: Подготовить source версии 0.6.94 и проверить релизный исходник — Ожидает
-  - Git Commit: [PENDING] feat: Подготовить source версии 0.6.94 и проверить релизный исходник
+- [DONE] T004: Подготовить source версии 0.6.94 и проверить релизный исходник — Завершено
+  - Git Commit: [DONE] feat: Подготовить source версии 0.6.94 и проверить релизный исходник
   - Reference: codex-tools-polish-0.6.94-20261005 / T004 / implementation
   - Файлы: package.json, package-lock.json, docs/planning/codex-native-tools-macos.md, README.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/DECISIONS.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/modules/codex-app-server-executor.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
