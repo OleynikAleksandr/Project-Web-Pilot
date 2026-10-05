@@ -11,6 +11,8 @@ import { stageWorkflowKit, verifyWorkflowKitRuntime } from './stage-workflow-kit
 import { verifyMacSignature } from './check-mac-signature.mjs';
 
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
+// Everything electron-packager may take from the project root; package.json --ignore allows exactly these.
+export const PACKAGED_ROOTS = new Set(['src', 'node_modules', 'package.json', 'LICENSE']);
 async function files(folder) {
   return (await fs.readdir(folder, { recursive: true, withFileTypes: true }))
     .filter(e => e.isFile() && e.name !== '.DS_Store')
@@ -46,6 +48,10 @@ export async function verifyPackagedSources({ root, resources, version, sources 
     if (actual !== expected) throw new Error('Packaged source mismatch: ' + file);
   }
   if (listPackage(asar).some(f => f.includes('Project Web Pilot.app'))) throw new Error('Nested app in package');
+  // Only the application itself ships: a stray folder in the workspace must stop the release.
+  const foreign = [...new Set(listPackage(asar).map(entry => entry.split(/[\\/]/).filter(Boolean)[0]))]
+    .filter(top => top && !PACKAGED_ROOTS.has(top));
+  if (foreign.length) throw new Error('Unexpected files in package: ' + foreign.join(', '));
   return { version: pkg.version, asarSha256: await sha256File(asar) };
 }
 const run = (command, args, cwd) => new Promise((resolve, reject) => {

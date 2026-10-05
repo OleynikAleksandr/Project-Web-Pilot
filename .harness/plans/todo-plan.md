@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1189,
+  "plan_revision": 1191,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-local-mac-removal-0.6.91-20261005",
@@ -107,8 +107,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "codex-local-mac-removal-0.6.91-20261005",
         "task_id": "T000",
@@ -136,7 +136,13 @@
         "verifyPackagedSources отклоняет app.asar с чем-либо ещё в корне; тест воспроизводит постороннюю папку",
         "«Claude outputs/» в .gitignore"
       ],
-      "expected_commit_message": "feat: Сборка: в пакет попадает только приложение"
+      "expected_commit_message": "feat: Сборка: в пакет попадает только приложение",
+      "actual_files": [
+        ".gitignore",
+        "package.json",
+        "scripts/release-all.mjs",
+        "tests/release-all.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -465,7 +471,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: codex-local-mac-removal-0.6.91-20261005
 Current Task: нет
-Revision: 1189
+Revision: 1191
 
 ## Цель
 
@@ -481,8 +487,8 @@ Revision: 1189
 
 ## Микрозадачи
 
-- [TODO] T000: Сборка: в пакет попадает только приложение — Ожидает
-  - Git Commit: [PENDING] feat: Сборка: в пакет попадает только приложение
+- [DONE] T000: Сборка: в пакет попадает только приложение — Завершено
+  - Git Commit: [DONE] feat: Сборка: в пакет попадает только приложение
   - Reference: codex-local-mac-removal-0.6.91-20261005 / T000 / implementation
   - Файлы: package.json, scripts/release-all.mjs, tests/release-all.test.mjs, .gitignore, docs/planning/codex-local-mac-removal.md
 - [TODO] T001: ZIP Windows-runtime: шестой файл релиза и загрузка с проверкой SHA-256 — Ожидает

@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import { createPackage } from '@electron/asar';
-import { buildPlatforms, sourceSnapshot, verifyPackagedSources } from '../scripts/release-all.mjs';
+import { buildPlatforms, PACKAGED_ROOTS, sourceSnapshot, verifyPackagedSources } from '../scripts/release-all.mjs';
 
 async function fixture(t) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'pilot-paired-release-'));
@@ -75,4 +75,32 @@ test('packager prunes development metadata while preserving every runtime field'
   await fs.writeFile(path.join(f.input, 'package.json'), JSON.stringify({ ...production, main: 'wrong.mjs' }));
   await createPackage(f.input, path.join(f.resources, 'app.asar'));
   await assert.rejects(verifyPackagedSources(f), /runtime manifest mismatch/);
+});
+
+test('release refuses a package that carries anything but the application', async t => {
+  const f = await fixture(t);
+  await verifyPackagedSources(f);
+  // 0.6.90: an untracked folder next to the sources was packed into app.asar.
+  await fs.mkdir(path.join(f.input, 'Claude outputs'), { recursive: true });
+  await fs.writeFile(path.join(f.input, 'Claude outputs', 'draft.mp4'), 'private');
+  await fs.writeFile(path.join(f.input, 'notes.txt'), 'stray');
+  await createPackage(f.input, path.join(f.resources, 'app.asar'));
+  await assert.rejects(verifyPackagedSources(f), /Unexpected files in package: (Claude outputs, notes\.txt|notes\.txt, Claude outputs)/);
+});
+
+test('packager ignore of both platforms lets through only the application roots', async () => {
+  const { scripts } = JSON.parse(await fs.readFile(new URL('../package.json', import.meta.url), 'utf8'));
+  for (const name of ['build:mac:package', 'build:win:package']) {
+    const match = scripts[name].match(/--ignore="([^"]+)"/);
+    assert.ok(match, name + ' has --ignore');
+    // npm hands the script to sh, where "\\." inside double quotes becomes "\.".
+    const ignore = new RegExp(match[1].replaceAll('\\\\', '\\'));
+    for (const kept of ['', '/src', '/src/main.mjs', '/src/ui/index.html', '/node_modules', '/node_modules/@webpilot/workflow-kit/cli.mjs', '/package.json', '/LICENSE'])
+      assert.equal(ignore.test(kept), false, name + ' keeps ' + kept);
+    for (const dropped of ['/Claude outputs', '/Claude outputs/draft.mp4', '/docs', '/tests/a.test.mjs', '/.harness/runtime', '/.git', '/.codex/hooks.json',
+      '/Project Web Pilot.app', '/resources', '/tools/codex-app-server-mcp/server.py', '/scripts', '/AGENTS.md', '/README.md', '/package-lock.json',
+      '/src-old', '/src-old/main.mjs', '/package.json.bak', '/LICENSE.txt', '/node_modules_backup', '/windows-app'])
+      assert.equal(ignore.test(dropped), true, name + ' drops ' + dropped);
+    for (const root of PACKAGED_ROOTS) assert.equal(ignore.test('/' + root), false, name + ' allows the verified root ' + root);
+  }
 });
