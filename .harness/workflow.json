@@ -13,7 +13,7 @@
         "/opt/homebrew/bin/node --test tests/codex-app-server-mcp.test.mjs"
       ],
       "kind": "test",
-      "evidence": "tools/codex-app-server-mcp: каналы control.py, каталог из 36 инструментов без управления интерфейсом и workflow_context_recover частями строго по одной (ключ after, ≤28000 байт, PART_ORDER)"
+      "evidence": "tools/codex-app-server-mcp: каналы control.py, каталог из 38 инструментов без управления интерфейсом (снимки и список окон системными средствами) и workflow_context_recover частями строго по одной (ключ after, ≤28000 байт, PART_ORDER)"
     },
     {
       "required": false,
@@ -106,7 +106,7 @@
         "/opt/homebrew/bin/node --test tests/windows-runtime.test.mjs"
       ],
       "kind": "test",
-      "evidence": "src/windows-runtime.mjs: overlay убирает 11 computer_* и раздел Desktop из Windows bridge, идемпотентен и закрыт на отказ"
+      "evidence": "src/windows-runtime.mjs: overlay убирает 9 инструментов управления интерфейсом и раздел Desktop из Windows bridge, идемпотентен и закрыт на отказ"
     }
   ],
   "budget": {
