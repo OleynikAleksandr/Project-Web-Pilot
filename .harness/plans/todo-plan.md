@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1287,
+  "plan_revision": 1289,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "trash-removal-0.6.95-20261005",
@@ -234,8 +234,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "trash-removal-0.6.95-20261005",
         "task_id": "T003",
@@ -263,7 +263,8 @@
         "~/Downloads/WebPilot-0.6.95 собран из коммита после DOCS, packagedSourceMatches=true, bundled Workflow Kit 1.5.5, в поставке шесть файлов",
         "Windows-runtime и его каталог не изменены; GitHub Release на этом шаге не публикуется"
       ],
-      "expected_commit_message": "feat: Собрать и проверить парный релиз 0.6.95"
+      "expected_commit_message": "feat: Собрать и проверить парный релиз 0.6.95",
+      "actual_files": []
     },
     {
       "implementation_status": "TODO",
@@ -427,7 +428,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: trash-removal-0.6.95-20261005
 Current Task: нет
-Revision: 1287
+Revision: 1289
 
 ## Цель
 
@@ -456,8 +457,8 @@ Revision: 1287
   - Git Commit: [DONE] docs: актуализировать контекст проекта
   - Reference: trash-removal-0.6.95-20261005 / DOCS / implementation
   - Файлы: docs/planning/codex-native-tools-macos.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, tools/codex-app-server-mcp/session-rules.md, README.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/DECISIONS.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/modules/codex-app-server-executor.md, docs/CLEAN_INSTALL.md, docs/SOURCE_WORKSPACES.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKFLOW_START.md, docs/modules/workflow-kit-recovery.md
-- [TODO] T003: Собрать и проверить парный релиз 0.6.95 — Ожидает
-  - Git Commit: [PENDING] feat: Собрать и проверить парный релиз 0.6.95
+- [DONE] T003: Собрать и проверить парный релиз 0.6.95 — Завершено
+  - Git Commit: [DONE] feat: Собрать и проверить парный релиз 0.6.95
   - Reference: trash-removal-0.6.95-20261005 / T003 / implementation
   - Файлы: scripts/release-all.mjs, docs/planning/codex-native-tools-macos.md
 - [TODO] T004: Установить 0.6.95 и проверить установленные macOS-копии — Ожидает
