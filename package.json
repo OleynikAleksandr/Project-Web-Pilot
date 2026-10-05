@@ -28,6 +28,7 @@
     "build:mac:package": "electron-packager . \"Project Web Pilot\" --platform=darwin --arch=arm64 --out=.harness/runtime/build --overwrite --app-bundle-id=com.oleynik.ProjectWebPilot --extend-info=resources/mac-permissions.plist --asar --extra-resource=resources --extra-resource=tools/codex-app-server-mcp --extra-resource=.harness/runtime/mac-tools --ignore=\"^/(?!(src|node_modules)(/|$)|(package\\.json|LICENSE)$)\"",
     "release:mac": "node scripts/release-mac.mjs",
     "stage:page-observer": "node scripts/stage-page-observer.mjs",
+    "check:codex-tools": "node scripts/check-codex-tools.mjs",
     "check:mac-signing": "node scripts/sign-mac-bundle.mjs --check",
     "sign:mac": "node scripts/sign-mac-bundle.mjs"
   },

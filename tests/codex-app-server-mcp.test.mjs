@@ -187,6 +187,47 @@ test('Codex App Server MCP exposes exactly the 13-tool macOS catalog', async () 
 
 const executorVenvPython = path.join(homedir(), 'Library', 'Application Support', 'WebPilotCodexExecutor', 'runtime', 'venv', 'bin', 'python');
 
+test('bridge_status reports pinned and installed Codex tool compatibility', { timeout: 30_000 }, async t => {
+  if (!existsSync(executorVenvPython)) { t.skip('Codex App Server runtime venv is not installed'); return; }
+  const root = await mkdtemp(path.join(tmpdir(), 'web-pilot-codex-status-'));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const probe = path.join(root, 'probe.py');
+  await writeFile(probe, `import json, pathlib, sys, types
+sys.path.insert(0, sys.argv[1])
+import server
+class Client:
+    cwd = sys.argv[2]
+    binary = types.SimpleNamespace(version="codex-cli 0.160.0")
+    def status(self):
+        return {"version": self.binary.version}
+    def command_exec(self, argv, **kwargs):
+        if argv == ["/usr/bin/which", "apply_patch"]:
+            return {"exitCode": 0, "stdout": "/codex/bin/apply_patch\\n", "stderr": ""}
+        return {"exitCode": 1, "stdout": "", "stderr": "unexpected"}
+facade = server.LocalFacade(Client(), pathlib.Path(sys.argv[2]) / "state")
+print(json.dumps(facade.status()["codex_tools"]))
+`);
+  const run = await new Promise((resolve, reject) => {
+    const child = spawn(executorVenvPython, ['-B', probe, clientDir, root], {
+      cwd: root, env: { ...process.env, PYTHONDONTWRITEBYTECODE: '1' }, stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    let stdout = '', stderr = '';
+    child.stdout.on('data', chunk => { stdout += chunk; });
+    child.stderr.on('data', chunk => { stderr += chunk; });
+    child.on('error', reject);
+    child.on('close', code => resolve({ code, stdout, stderr }));
+  });
+  assert.equal(run.code, 0, run.stderr || run.stdout);
+  const status = JSON.parse(run.stdout.trim());
+  assert.deepEqual(status, {
+    pinned_version: '0.160.0',
+    pinned_tag: 'rust-v0.160.0',
+    installed_version: '0.160.0',
+    version_matches: true,
+    apply_patch_available: true,
+  });
+});
+
 test('Codex-form exec_command and write_stdin run through the real App Server', { timeout: 60_000 }, async t => {
   if (process.platform !== 'darwin' || !existsSync(userCodex) || !existsSync(executorVenvPython)) {
     t.skip('real Codex command-tool probe requires macOS, Codex, and the executor venv');

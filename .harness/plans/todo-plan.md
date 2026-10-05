@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1221,
+  "plan_revision": 1223,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-native-tools-0.6.92-20261005",
@@ -195,8 +195,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "codex-native-tools-0.6.92-20261005",
         "task_id": "T004",
@@ -228,7 +228,15 @@
         "bridge_status показывает закреплённую и установленную версии Codex, признак совпадения и доступность apply_patch",
         "Прогон против настоящего GitHub для установленного Codex выполнен и записан"
       ],
-      "expected_commit_message": "feat: Сверка определений с версией Codex"
+      "expected_commit_message": "feat: Сверка определений с версией Codex",
+      "actual_files": [
+        "package.json",
+        "scripts/check-codex-tools.mjs",
+        "tests/check-codex-tools.test.mjs",
+        "tests/codex-app-server-mcp.test.mjs",
+        "tools/codex-app-server-mcp/codex-tools.lock.json",
+        "tools/codex-app-server-mcp/server.py"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -402,7 +410,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: codex-native-tools-0.6.92-20261005
 Current Task: нет
-Revision: 1221
+Revision: 1223
 
 ## Цель
 
@@ -430,8 +438,8 @@ Revision: 1221
   - Git Commit: [DONE] feat: Каталог из 13 инструментов: удалить самодельные, подсказки и правило сессии
   - Reference: codex-native-tools-0.6.92-20261005 / T003 / implementation
   - Файлы: tools/codex-app-server-mcp/server.py, tests/codex-app-server-mcp.test.mjs, docs/planning/codex-native-tools-macos.md, tools/codex-app-server-mcp/session-rules.md
-- [TODO] T004: Сверка определений с версией Codex — Ожидает
-  - Git Commit: [PENDING] feat: Сверка определений с версией Codex
+- [DONE] T004: Сверка определений с версией Codex — Завершено
+  - Git Commit: [DONE] feat: Сверка определений с версией Codex
   - Reference: codex-native-tools-0.6.92-20261005 / T004 / implementation
   - Файлы: scripts/check-codex-tools.mjs, tools/codex-app-server-mcp/codex-tools.lock.json, tools/codex-app-server-mcp/server.py, package.json, tests/check-codex-tools.test.mjs, tests/codex-app-server-mcp.test.mjs, docs/planning/codex-native-tools-macos.md
 - [TODO] T005: Подготовить source релиза 0.6.92 — Ожидает

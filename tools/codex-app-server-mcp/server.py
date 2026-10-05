@@ -41,6 +41,7 @@ MAX_OUTPUT = 120_000
 CONTEXT_PART_BYTES = 28_000
 SESSION_RULES_FILE = Path(__file__).resolve().parent / "session-rules.md"
 ACTIVE_WORKSPACE_FILE = "active-workspace.json"
+CODEX_TOOLS_LOCK_FILE = Path(__file__).resolve().parent / "codex-tools.lock.json"
 
 SENSITIVE_NAMES = {
     ".env", ".npmrc", ".pypirc", ".netrc", "credentials", "credentials.json",
@@ -123,6 +124,31 @@ class LocalFacade:
             "stderr": clamp(str(result.get("stderr") or "")),
         }
 
+    def _codex_tools_status(self) -> dict[str, Any]:
+        installed_text = str(self.client.binary.version)
+        installed_version = next(
+            (part for part in installed_text.replace(",", " ").split() if part[:1].isdigit() and part.count(".") >= 2),
+            installed_text,
+        )
+        pinned_version = None
+        pinned_tag = None
+        lock_error = None
+        try:
+            lock = json.loads(CODEX_TOOLS_LOCK_FILE.read_text(encoding="utf-8"))
+            pinned_version = lock.get("codex_version")
+            pinned_tag = lock.get("tag")
+        except Exception as exc:
+            lock_error = str(exc)
+        probe = self._command(["/usr/bin/which", "apply_patch"], timeout_ms=10_000)
+        return {
+            "pinned_version": pinned_version,
+            "pinned_tag": pinned_tag,
+            "installed_version": installed_version,
+            "version_matches": bool(pinned_version and installed_version == pinned_version),
+            "apply_patch_available": bool(probe["ok"] and probe["stdout"].strip()),
+            **({"lock_error": lock_error} if lock_error else {}),
+        }
+
     def status(self, repository: str = "") -> dict[str, Any]:
         data = {
             "executor": self.client.status(),
@@ -131,6 +157,7 @@ class LocalFacade:
             "state_root": str(self.state_root),
             "local_only": True,
             "model_turns": "forbidden",
+            "codex_tools": self._codex_tools_status(),
         }
         if repository:
             repo = self.resolve(repository, must_exist=True, allow_sensitive=True)
