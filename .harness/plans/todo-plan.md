@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1257,
+  "plan_revision": 1259,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-tools-polish-0.6.94-20261005",
@@ -83,8 +83,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "codex-tools-polish-0.6.94-20261005",
         "task_id": "T001",
@@ -114,7 +114,11 @@
         "Ошибка command/exec/terminate из-за процесса, завершившегося в этот момент, не теряет результат: ответ — финальный результат процесса",
         "Отказ на обычный ввод в работающую non-TTY сессию, пустой опрос, пределы ожидания и формат ответа не меняются"
       ],
-      "expected_commit_message": "feat: write_stdin: Wall time вызова и ввод в завершившуюся сессию"
+      "expected_commit_message": "feat: write_stdin: Wall time вызова и ввод в завершившуюся сессию",
+      "actual_files": [
+        "tests/codex-app-server-mcp.test.mjs",
+        "tools/codex-app-server-mcp/server.py"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -461,7 +465,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: codex-tools-polish-0.6.94-20261005
 Current Task: нет
-Revision: 1257
+Revision: 1259
 
 ## Цель
 
@@ -479,8 +483,8 @@ Revision: 1257
 
 ## Микрозадачи
 
-- [TODO] T001: write_stdin: Wall time вызова и ввод в завершившуюся сессию — Ожидает
-  - Git Commit: [PENDING] feat: write_stdin: Wall time вызова и ввод в завершившуюся сессию
+- [DONE] T001: write_stdin: Wall time вызова и ввод в завершившуюся сессию — Завершено
+  - Git Commit: [DONE] feat: write_stdin: Wall time вызова и ввод в завершившуюся сессию
   - Reference: codex-tools-polish-0.6.94-20261005 / T001 / implementation
   - Файлы: tools/codex-app-server-mcp/server.py, tests/codex-app-server-mcp.test.mjs, docs/planning/codex-native-tools-macos.md
 - [TODO] T002: Одна обрезка вывода: бюджет 8000 токенов — Ожидает

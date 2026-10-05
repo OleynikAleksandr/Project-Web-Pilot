@@ -279,6 +279,7 @@ test('Codex-form exec_command and write_stdin run through the real App Server', 
     '        out["non_tty_write_error"] = None',
     '    except ValueError as error:',
     '        out["non_tty_write_error"] = str(error)',
+    '    time.sleep(2)',
     '    poll_started = time.monotonic()',
     '    out["non_tty_poll"] = facade.write_stdin(non_tty_sid, "", 1000, 10000)',
     '    out["non_tty_poll_elapsed"] = time.monotonic() - poll_started',
@@ -298,6 +299,45 @@ test('Codex-form exec_command and write_stdin run through the real App Server', 
     '    stdin_started = time.monotonic()',
     '    out["stdin"] = facade.write_stdin(input_sid, "hello\\n")',
     '    out["stdin_elapsed"] = time.monotonic() - stdin_started',
+    `    wall_waiting = facade.exec_command('printf WALL_READY; sleep 2.2; IFS= read -r line; printf "wall:%s" "$line"', root, "/bin/sh", False, True, 250, 10000)`,
+    '    wall_sid = session_id(wall_waiting)',
+    '    time.sleep(2.4)',
+    '    out["wall_after_pause"] = facade.write_stdin(wall_sid, "hello\\n", 250, 10000)',
+    '    finished_tty = facade.exec_command("printf BEFORE; sleep 0.4; printf LATE_TTY; exit 7", root, "/bin/sh", False, True, 250, 10000)',
+    '    finished_tty_sid = session_id(finished_tty)',
+    '    time.sleep(0.8)',
+    '    out["finished_tty_write"] = facade.write_stdin(finished_tty_sid, "ignored\\n", 250, 10000)',
+    '    try:',
+    '        facade.write_stdin(finished_tty_sid, "again\\n", 250, 10000)',
+    '        out["finished_tty_repeat"] = None',
+    '    except ValueError as error:',
+    '        out["finished_tty_repeat"] = str(error)',
+    '    finished_non_tty = facade.exec_command("printf BEFORE; sleep 0.4; printf LATE_CTRL; exit 9", root, "/bin/sh", False, False, 250, 10000)',
+    '    finished_non_tty_sid = session_id(finished_non_tty)',
+    '    time.sleep(0.8)',
+    '    out["finished_non_tty_ctrl_c"] = facade.write_stdin(finished_non_tty_sid, "\\x03", 250, 10000)',
+    '    race_tty = facade.exec_command("sleep 0.6; printf TTY_RACE; exit 11", root, "/bin/sh", False, True, 250, 10000)',
+    '    race_tty_sid = session_id(race_tty)',
+    '    original_write = client.write_command_stdin',
+    '    def delayed_write(*args, **kwargs):',
+    '        time.sleep(0.5)',
+    '        return original_write(*args, **kwargs)',
+    '    client.write_command_stdin = delayed_write',
+    '    try:',
+    '        out["tty_write_race"] = facade.write_stdin(race_tty_sid, "ignored\\n", 250, 10000)',
+    '    finally:',
+    '        client.write_command_stdin = original_write',
+    '    race_terminate = facade.exec_command("sleep 0.6; printf TERM_RACE; exit 12", root, "/bin/sh", False, False, 250, 10000)',
+    '    race_terminate_sid = session_id(race_terminate)',
+    '    original_request = client.request',
+    '    def delayed_request(method, params=None, **kwargs):',
+    '        if method == "command/exec/terminate": time.sleep(0.5)',
+    '        return original_request(method, params, **kwargs)',
+    '    client.request = delayed_request',
+    '    try:',
+    '        out["terminate_race"] = facade.write_stdin(race_terminate_sid, "\\x03", 250, 10000)',
+    '    finally:',
+    '        client.request = original_request',
     '    clamp_waiting = facade.exec_command("sleep 0.5; printf CLAMP_WRITE", root, "/bin/sh", False, False, 100, 10000)',
     '    clamp_sid = session_id(clamp_waiting)',
     '    out["write_clamp"] = facade.write_stdin(clamp_sid, "", 1000, 10000)',
@@ -346,7 +386,7 @@ test('Codex-form exec_command and write_stdin run through the real App Server', 
   assert.equal(run.code, 0, run.stderr || run.stdout);
   const out = JSON.parse(run.stdout.trim().split('\n').at(-1));
 
-  for (const key of ['short', 'nonzero', 'login_shell', 'truncated', 'rg', 'cat', 'running', 'poll', 'non_tty_poll', 'non_tty_cleanup', 'non_tty_interrupt', 'stdin', 'write_clamp', 'exec_clamp_low', 'exec_clamp_high', 'token_clamp', 'tty_start', 'tty_signal', 'tty_done']) {
+  for (const key of ['short', 'nonzero', 'login_shell', 'truncated', 'rg', 'cat', 'running', 'poll', 'non_tty_poll', 'non_tty_cleanup', 'non_tty_interrupt', 'stdin', 'wall_after_pause', 'finished_tty_write', 'finished_non_tty_ctrl_c', 'tty_write_race', 'terminate_race', 'write_clamp', 'exec_clamp_low', 'exec_clamp_high', 'token_clamp', 'tty_start', 'tty_signal', 'tty_done']) {
     assert.match(out[key], /^Chunk ID: [0-9a-f]{8}\nWall time: \d+\.\d{3} seconds\n/m, key);
     assert.match(out[key], /\nOriginal token count: \d+\nOutput:\n/, key);
   }
@@ -369,6 +409,8 @@ test('Codex-form exec_command and write_stdin run through the real App Server', 
   assert.equal(out.non_tty_write_error, 'stdin is closed for this session; rerun exec_command with tty=true to keep stdin open');
   assert.match(out.non_tty_poll, /Process running with session ID [0-9a-f]+/);
   assert.ok(out.non_tty_poll_elapsed >= 4.5, `empty poll lower clamp was ${out.non_tty_poll_elapsed}s`);
+  const nonTtyPollWall = Number(out.non_tty_poll.match(/Wall time: ([0-9.]+) seconds/)[1]);
+  assert.ok(Math.abs(nonTtyPollWall - out.non_tty_poll_elapsed) < 0.5, `poll wall time ${nonTtyPollWall}s did not match ${out.non_tty_poll_elapsed}s interaction`);
   assert.match(out.non_tty_cleanup, /Process exited with code /);
   assert.match(out.non_tty_interrupt, /Process exited with code /);
   assert.equal(out.non_tty_interrupt_pgrep, 1);
@@ -376,6 +418,18 @@ test('Codex-form exec_command and write_stdin run through the real App Server', 
   assert.match(out.stdin, /Process exited with code 0/);
   assert.match(out.stdin, /got:hello/);
   assert.ok(out.stdin_elapsed < 2, `tty write with default yield took ${out.stdin_elapsed}s`);
+  const wallAfterPause = Number(out.wall_after_pause.match(/Wall time: ([0-9.]+) seconds/)[1]);
+  assert.ok(wallAfterPause < 1, `write_stdin wall time used process age: ${wallAfterPause}s`);
+  assert.match(out.wall_after_pause, /wall:hello/);
+  assert.match(out.finished_tty_write, /Process exited with code 7/);
+  assert.match(out.finished_tty_write, /LATE_TTY/);
+  assert.match(out.finished_tty_repeat, /Unknown or finished command session/);
+  assert.match(out.finished_non_tty_ctrl_c, /Process exited with code 9/);
+  assert.match(out.finished_non_tty_ctrl_c, /LATE_CTRL/);
+  assert.match(out.tty_write_race, /Process exited with code 11/);
+  assert.match(out.tty_write_race, /TTY_RACE/);
+  assert.match(out.terminate_race, /Process exited with code 12/);
+  assert.match(out.terminate_race, /TERM_RACE/);
   assert.match(out.write_clamp, /Process exited with code 0/);
   assert.match(out.write_clamp, /CLAMP_WRITE$/);
   assert.match(out.exec_clamp_low, /CLAMP_LOW$/);

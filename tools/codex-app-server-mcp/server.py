@@ -490,23 +490,35 @@ class LocalFacade:
         if session is None:
             raise ValueError(f"Unknown or finished command session: {session_id}")
         cursor, tty = session
+        result = None
         if chars:
             status = self.client.read_command_output(session_id, cursor=cursor, wait_ms=0)
             if not status.get("running"):
-                with self._command_sessions_lock:
-                    self._command_sessions.pop(session_id, None)
-                raise ValueError(f"Command session is no longer running: {session_id}")
-            if not tty:
-                if chars != "\x03":
-                    raise ValueError(STDIN_CLOSED_MESSAGE)
-                self.client.request(
-                    "command/exec/terminate",
-                    {"processId": session_id},
-                    timeout=10.0,
-                )
+                result = status
             else:
-                self.client.write_command_stdin(session_id, chars.encode("utf-8"))
-        result = self.client.read_command_output(session_id, cursor=cursor, wait_ms=wait_ms)
+                try:
+                    if not tty:
+                        if chars != "\x03":
+                            raise ValueError(STDIN_CLOSED_MESSAGE)
+                        self.client.request(
+                            "command/exec/terminate",
+                            {"processId": session_id},
+                            timeout=10.0,
+                        )
+                    else:
+                        self.client.write_command_stdin(session_id, chars.encode("utf-8"))
+                except ValueError:
+                    raise
+                except Exception:
+                    status = self.client.read_command_output(session_id, cursor=cursor, wait_ms=0)
+                    if status.get("running"):
+                        raise
+                    result = status
+        interaction_started = time.monotonic()
+        if result is None:
+            result = self.client.read_command_output(session_id, cursor=cursor, wait_ms=wait_ms)
+        result = dict(result)
+        result["duration_ms"] = int((time.monotonic() - interaction_started) * 1000)
         if result.get("error"):
             with self._command_sessions_lock:
                 self._command_sessions.pop(session_id, None)
