@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 146,
+  "plan_revision": 148,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "push-after-docs-1.5.5-20261004",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Push на GitHub только после DOCS текущего плана: pre-push hook Workflow Kit 1.5.5.",
   "acceptance_criteria": [
     "Push до завершения DOCS текущего плана отклоняется, после DOCS проходит",
@@ -224,13 +224,20 @@
         "После managed commit origin/main синхронизирован с новым HEAD"
       ],
       "expected_commit_message": "docs: синхронизировать WorkflowKit с Web Pilot 0.6.94",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "push-after-docs-1.5.5-20261004",
         "task_id": "T003",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "README.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/PRODUCT.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/workflow-kit-package.md"
+      ]
     }
   ],
   "blocked_reason": null,
@@ -248,10 +255,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: push-after-docs-1.5.5-20261004
 Current Task: нет
-Revision: 146
+Revision: 148
 
 ## Цель
 
@@ -276,8 +283,8 @@ Push на GitHub только после DOCS текущего плана: pre-p
   - Git Commit: [DONE] feat: Опубликовать Workflow Kit 1.5.5 на GitHub
   - Reference: push-after-docs-1.5.5-20261004 / T002 / implementation
   - Файлы: docs/planning/push-after-docs.md
-- [TODO] T003: Синхронизировать документы WorkflowKit с Web Pilot 0.6.94 и опубликовать main — Ожидает
-  - Git Commit: [PENDING] docs: синхронизировать WorkflowKit с Web Pilot 0.6.94
+- [DONE] T003: Синхронизировать документы WorkflowKit с Web Pilot 0.6.94 и опубликовать main — Завершено
+  - Git Commit: [DONE] docs: синхронизировать WorkflowKit с Web Pilot 0.6.94
   - Reference: push-after-docs-1.5.5-20261004 / T003 / implementation
   - Файлы: README.md, docs/PRODUCT.md, docs/architecture/OVERVIEW.md, docs/modules/workflow-kit-package.md, docs/DOCUMENTATION_INDEX.md
 
