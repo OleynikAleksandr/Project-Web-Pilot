@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1209,
+  "plan_revision": 1210,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-local-mac-removal-0.6.91-20261005",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Удалить Codex Local Mac: macOS работает только через Codex App Server, первый запуск идёт через executor; в пакет попадает только приложение; ZIP Windows-runtime публикуется в релизе; релиз 0.6.91.",
   "acceptance_criteria": [
     "В app.asar обеих платформ в корне только src, node_modules, package.json и LICENSE; посторонняя папка в пакете останавливает сборку",
@@ -573,6 +573,35 @@
         "docs/architecture/OVERVIEW.md",
         "docs/planning/codex-local-mac-removal.md"
       ]
+    },
+    {
+      "id": "A001",
+      "title": "Зафиксировать проверку установленной 0.6.91 на Mac пользователя",
+      "why": "Пользователь 05.10.2026 перезапустил Web Pilot 0.6.91, агент в ChatGPT выполнил задание на проверку релиза (28 пунктов без отказов), интерфейс подтверждён снимком и текстом «Настроек». Документы пока называют это непроверенным; пользователь поручил закрыть scope.",
+      "dependencies": [
+        "DOCS"
+      ],
+      "functional_paths": [
+        "scripts/check-github-release.mjs"
+      ],
+      "documentation_paths": [],
+      "verification_ids": [
+        "github-release"
+      ],
+      "verification_kind": "package",
+      "acceptance_criteria": [
+        "docs/VERIFICATION.md и docs/RELEASE.md описывают, что проверено на установленной 0.6.91 и что осталось непроверенным",
+        "Документы не называют подключение Claude проверенным или существующим: коннектор Claude к серверу пользователь не создавал",
+        "Опубликованный релиз v0.6.91 не меняется: tag и шесть assets прежние"
+      ],
+      "expected_commit_message": "feat: Зафиксировать проверку установленной 0.6.91 на Mac пользователя",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "codex-local-mac-removal-0.6.91-20261005",
+        "task_id": "A001",
+        "role": "implementation"
+      }
     }
   ],
   "blocked_reason": null,
@@ -590,10 +619,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: codex-local-mac-removal-0.6.91-20261005
 Current Task: нет
-Revision: 1209
+Revision: 1210
 
 ## Цель
 
@@ -649,6 +678,10 @@ Revision: 1209
   - Git Commit: [DONE] feat: Опубликовать 0.6.91 и синхронизировать Project Web Pilot с GitHub
   - Reference: codex-local-mac-removal-0.6.91-20261005 / T008 / implementation
   - Файлы: scripts/check-github-release.mjs, docs/planning/codex-local-mac-removal.md, README.md, docs/MODULES.md, docs/PRODUCT.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md
+- [TODO] A001: Зафиксировать проверку установленной 0.6.91 на Mac пользователя — Ожидает
+  - Git Commit: [PENDING] feat: Зафиксировать проверку установленной 0.6.91 на Mac пользователя
+  - Reference: codex-local-mac-removal-0.6.91-20261005 / A001 / implementation
+  - Файлы: scripts/check-github-release.mjs
 
 ## Context Pack For This Cycle
 
