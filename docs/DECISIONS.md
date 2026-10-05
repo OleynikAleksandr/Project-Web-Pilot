@@ -23,9 +23,9 @@
 
 Если сессия открыта в Project Web Pilot и работа затрагивает связанный WorkflowKit, управляющим остаётся current plan **Project Web Pilot**. В WorkflowKit нельзя оставлять отдельный незавершённый current plan, иначе при открытии этого репозитория пользователь увидит ложную незавершённую работу. Технический managed scope в спутнике допустим только если его требуют hooks/transaction semantics и он закрывается/архивируется до контрольной точки; итоговый WorkflowKit current state для этой cross-repository работы — `NONE`.
 
-Текущий canonical source/dev и bundled runtime Workflow Kit — **1.5.5**, 35 файлов, SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`. Последний отдельный WorkflowKit Release остаётся **v1.5.1**. Project Web Pilot **0.6.94** опубликован и установлен с bundled 1.5.5; T008 синхронизировала только документы WorkflowKit commit `6c8ad1902df1d0932a44215f014baca66ebf51df`. Код/version/runtime Workflow Kit в scope 0.6.94 не менялись.
+Текущий canonical source/dev и bundled runtime Workflow Kit — **1.5.5**, 35 файлов, SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`. Последний отдельный WorkflowKit Release остаётся **v1.5.1**. Project Web Pilot **0.6.95** опубликован и установлен с bundled 1.5.5; документы WorkflowKit синхронизированы commit `6bbec655497eaea69d5c5825c68e9bdf78a01c18`. Код/version/runtime Workflow Kit в scope 0.6.95 не менялись.
 
-Текущая установленная и опубликованная версия Project Web Pilot — **0.6.94**; предыдущая — **0.6.93**.
+Текущая установленная и опубликованная версия Project Web Pilot — **0.6.95**; предыдущая — **0.6.94**.
 
 ## Принятое техническое направление
 

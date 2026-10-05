@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1295,
+  "plan_revision": 1297,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "trash-removal-0.6.95-20261005",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Убрать самодельную корзину из macOS MCP Codex App Server Local Mac: каталог из 10 инструментов, удаление как в Codex, откат через git; синхронизировать все документы, включая README, и документы Workflow Kit; выпустить Project Web Pilot 0.6.95.",
   "acceptance_criteria": [
     "Каталог macOS — 10 инструментов; delete_path, list_trash, restore_trash и их код удалены; правило про delete_path убрано из server instructions и session-rules.md",
@@ -370,8 +370,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "trash-removal-0.6.95-20261005",
         "task_id": "T007",
@@ -413,7 +413,25 @@
         "docs/VERIFICATION.md и docs/RELEASE.md содержат итог релиза: проверки, sourceCommit, шесть файлов поставки, коммит синхронизации WorkflowKit",
         "origin/main совпадает с финальным локальным HEAD после публикации"
       ],
-      "expected_commit_message": "feat: Послерелизная сверка всех документов и README, синхронизация origin/main"
+      "expected_commit_message": "feat: Послерелизная сверка всех документов и README, синхронизация origin/main",
+      "actual_files": [
+        "README.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/DECISIONS.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/RELEASE.md",
+        "docs/SOURCE_WORKSPACES.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/codex-app-server-executor.md",
+        "docs/modules/workflow-kit-recovery.md",
+        "docs/planning/codex-native-tools-macos.md"
+      ]
     }
   ],
   "blocked_reason": null,
@@ -431,10 +449,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: trash-removal-0.6.95-20261005
 Current Task: нет
-Revision: 1295
+Revision: 1297
 
 ## Цель
 
@@ -479,8 +497,8 @@ Revision: 1295
   - Git Commit: [DONE] feat: Синхронизировать документы Workflow Kit с выпуском 0.6.95
   - Reference: trash-removal-0.6.95-20261005 / T006 / implementation
   - Файлы: docs/planning/codex-native-tools-macos.md, docs/RELEASE.md, docs/VERIFICATION.md
-- [TODO] T007: Послерелизная сверка всех документов и README, синхронизация origin/main — Ожидает
-  - Git Commit: [PENDING] feat: Послерелизная сверка всех документов и README, синхронизация origin/main
+- [DONE] T007: Послерелизная сверка всех документов и README, синхронизация origin/main — Завершено
+  - Git Commit: [DONE] feat: Послерелизная сверка всех документов и README, синхронизация origin/main
   - Reference: trash-removal-0.6.95-20261005 / T007 / implementation
   - Файлы: docs/planning/codex-native-tools-macos.md, README.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/DECISIONS.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/modules/codex-app-server-executor.md, docs/CLEAN_INSTALL.md, docs/SOURCE_WORKSPACES.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKFLOW_START.md, docs/modules/workflow-kit-recovery.md
 

@@ -214,13 +214,13 @@ Recovery 1.4.11 передаёт вместе с Workflow Core правила `P
 
 ## Workflow Kit 1.5.5 — текущий runtime / 05.10.2026
 
-Canonical source `/Users/oleksandroliinyk/VSCODE/WorkflowKit/src`, installed Kit этого checkout и bundled runtime опубликованного Project Web Pilot 0.6.94 используют Workflow Kit **1.5.5**: 35 файлов, SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`. Последний отдельный WorkflowKit release остаётся 1.5.1. Документы WorkflowKit синхронизированы с Web Pilot 0.6.94 commit `6c8ad1902df1d0932a44215f014baca66ebf51df`; код, версия и runtime Kit не менялись.
+Canonical source `/Users/oleksandroliinyk/VSCODE/WorkflowKit/src`, installed Kit этого checkout и bundled runtime опубликованного Project Web Pilot 0.6.95 используют Workflow Kit **1.5.5**: 35 файлов, SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`. Последний отдельный WorkflowKit release остаётся 1.5.1. Документы WorkflowKit синхронизированы с Web Pilot 0.6.95 commit `6bbec655497eaea69d5c5825c68e9bdf78a01c18`; код, версия и runtime Kit не менялись.
 
 1. Один checkout/worktree имеет один current plan `.harness/plans/todo-plan.md`; новый chat/client продолжает его, независимая работа использует отдельный worktree.
 2. Recovery выдаётся компактно по частям; формы/карты читаются по запросу, а обязательные OVERVIEW/MODULES/INDEX и документы текущего контракта остаются в project context.
 3. Delivery ordering остаётся `work → DOCS → explicit build/package/install/publish tasks`; build/publish вне названной delivery-задачи запрещены.
 4. `DOCS` до первой сборки обязана пройти весь действующий `DOCUMENTATION_INDEX`; поздняя correction переоткрывает новую iteration DOCS перед оставшимся delivery-хвостом.
-5. Связанный репозиторий WorkflowKit в scope 0.6.94 получил только документальную синхронизацию собственным managed plan после публикации Web Pilot; runtime 1.5.5 не изменился.
+5. Связанный репозиторий WorkflowKit в scope 0.6.94 и 0.6.95 получал только документальную синхронизацию собственным managed plan после публикации Web Pilot; runtime 1.5.5 не изменился.
 
 ## Workflow Kit 1.5.2 — delivery ordering / исторический снимок 03.10.2026
 

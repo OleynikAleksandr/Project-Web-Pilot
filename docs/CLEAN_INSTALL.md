@@ -2,13 +2,13 @@
 
 > **0.6.91:** первый запуск macOS теперь ставит Codex App Server Local Mac ([описание](modules/first-run-onboarding.md)). Все записи ниже о чистой macOS получены с прежним runtime Codex Local Mac; с executor чистая macOS не проверялась — ни с установленным Codex, ни без него. Native Windows 0.6.91 также не проверялась.
 
-Текущая локальная и опубликованная **0.6.94** установлена поверх существующего Mac; bundled Workflow Kit 1.5.5, общий ASAR root и `/Applications` — `4d9f5efec3b608fbd0da3b216f57100c32b8a6ce1aa8bce2bb7abb22e9f98549`. Обе копии прошли installed gate с сохранением identity. Это **не clean install**; clean macOS с текущим executor и native Windows 0.6.94 не выполнялись. Предыдущая установленная/опубликованная версия — 0.6.93.
+Текущая локальная и опубликованная **0.6.95** установлена поверх существующего Mac; bundled Workflow Kit 1.5.5, общий ASAR root и `/Applications` — `506cd28c9bf954fe732a53df0b6efba7d545d20e06bcdef68037a86546ae251d`. Обе копии прошли installed gate с сохранением identity. Это **не clean install**; clean macOS с текущим executor и native Windows 0.6.95 не выполнялись. Предыдущая установленная/опубликованная версия — 0.6.94.
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
-Текущая локальная macOS-версия — **0.6.94**, Electron **44.5.1**, Node **24.21.0**, Workflow Kit **1.5.5**. Она установлена штатным installer поверх существующей установки и прошла release-installed gate; это не чистая установка. ZIP — `~/Downloads/WebPilot-0.6.94/`; история TCC 0.6.80 — [отдельный контракт](planning/macos-screen-permission-stability.md).
+Текущая локальная macOS-версия — **0.6.95**, Electron **44.5.1**, Node **24.21.0**, Workflow Kit **1.5.5**. Она установлена штатным installer поверх существующей установки и прошла release-installed gate; это не чистая установка. ZIP — `~/Downloads/WebPilot-0.6.95/`; история TCC 0.6.80 — [отдельный контракт](planning/macos-screen-permission-stability.md).
 
-Текущая опубликованная парная macOS/Windows поставка — [0.6.94](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.94). Оба ZIP и ещё четыре release assets прошли package/integrity/GitHub digest gates; Windows x64 проверен на Mac. Чистая установка 0.6.94 и native Windows не проверены. Матрица — [VERIFICATION](VERIFICATION.md).
+Текущая опубликованная парная macOS/Windows поставка — [0.6.95](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.95). Оба ZIP и ещё четыре release assets прошли package/integrity/GitHub digest gates; Windows x64 проверен на Mac. Чистая установка 0.6.95 и native Windows не проверены. Матрица — [VERIFICATION](VERIFICATION.md).
 
 История 0.6.58: Workspace Setup мигрирует совместимые 1.1.0–1.4.13 к single-active model с резервной копией; historical session plans не участвуют в readiness.
 

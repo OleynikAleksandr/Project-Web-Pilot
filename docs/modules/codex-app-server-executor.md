@@ -392,7 +392,7 @@ Local backend работает `--mcp-only`; App Server backend также от�
 
 ## Родные инструменты Codex — 0.6.92–0.6.95
 
-[Контракт](../planning/codex-native-tools-macos.md). С 0.6.92 это действующая поверхность macOS executor; разделы выше про 38/47 tools — история соответствующих версий. Текущая опубликованная/установленная версия — 0.6.94; предыдущая — 0.6.93. Текущий source — 0.6.95: корзина удалена, сборка ещё не выполнялась.
+[Контракт](../planning/codex-native-tools-macos.md). С 0.6.92 это действующая поверхность macOS executor; разделы выше про 38/47 tools — история соответствующих версий. Текущая опубликованная/установленная версия — 0.6.95; предыдущая — 0.6.94.
 
 Каталог MCP с 0.6.95 содержит ровно 10 инструментов (в 0.6.92–0.6.94 их было 13 — с тремя инструментами корзины `delete_path`, `list_trash`, `restore_trash`):
 
@@ -406,4 +406,4 @@ Local backend работает `--mcp-only`; App Server backend также от�
 
 Определения закреплены в `codex-tools.lock.json` на Codex **0.160.0**, tag `rust-v0.160.0` и SHA-256 `shell_spec.rs`, `view_image_spec.rs`, `apply_patch.lark`. `npm run check:codex-tools` сверяет installed Codex с соответствующим GitHub tag: 0 — совпало, 1 — definitions/version отличаются, 2 — сеть/tag недоступны. `bridge_status.codex_tools` показывает pinned/installed version, `version_matches` и `apply_patch_available`. Живая GitHub-сверка 05.10.2026 прошла.
 
-Windows-runtime, selector, VPS/Secure Tunnel, lifecycle служб и правила первого сообщения Windows в 0.6.92–0.6.95 не менялись. 0.6.94 прошла полный `npm test` (553 total, 549 passed, 4 skipped, 0 failed), live `npm run check:codex-tools`, paired build, installed gate и GitHub release verification; обе macOS-копии установлены. Native Windows остаётся отдельной проверкой.
+Windows-runtime, selector, VPS/Secure Tunnel, lifecycle служб и правила первого сообщения Windows в 0.6.92–0.6.95 не менялись. 0.6.95 прошла полный `npm test` (553 total, 549 passed, 4 skipped, 0 failed), live `npm run check:codex-tools`, paired build, installed gate и GitHub release verification; обе macOS-копии установлены. Native Windows остаётся отдельной проверкой.

@@ -116,6 +116,8 @@ T001–T005 завершены: `200b6cb` (`exec_command`/`write_stdin`), `157c6
 
 Реализовано до предсборочной DOCS: T001 `ec2e57f` (удаление корзины, тесты каталога и папки `trash`), T002 `c1c839b` (версия 0.6.95; полный `npm test` 553/549/4/0 и сверка с `rust-v0.160.0`).
 
+Delivery 0.6.95: DOCS/source commit `7416c88c7a96b358b21b0f1744decee6fb5e3fb7`; сборка T003 `25f7744`, установка T004 `cda0e96`, публикация T005 `82ed208` ([GitHub Release v0.6.95](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.95)); документы WorkflowKit — commit `6bbec655497eaea69d5c5825c68e9bdf78a01c18`; послерелизная сверка — T007.
+
 ## Запуск
 
 1. После выпуска установить 0.6.94, полностью выйти из Web Pilot (⌘Q) и открыть снова.
