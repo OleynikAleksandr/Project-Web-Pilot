@@ -29,6 +29,8 @@ Codex App Server Local MCP
                 +-- явно разрешённые локальные downstream MCP
 ```
 
+> **С 0.6.90** ветки «App Server MCP manager» в этой схеме нет: executor не создаёт thread, не вызывает `mcpServer/tool/call` и не использует `node_repl → @oai/sky`. Текущее состояние — в разделе «Наблюдение без управления интерфейсом — 0.6.90» в конце документа; схема и разделы ниже сохранены как история решения.
+
 Адаптер не пересылает поручение второму агенту, не вызывает Responses API и не должен инициировать `turn/start`. Разрешены служебный `thread/start` для привязки MCP manager и прямые App Server requests, которые сами не выполняют модельный turn.
 
 ## Границы
@@ -54,7 +56,7 @@ Codex может видеть большой общий каталог MCP и Ap
 - локальные Git operations;
 - короткие shell commands и длительные процессы;
 - безопасные file mutations и recoverable delete/restore;
-- Computer Use;
+- наблюдение за экраном: список окон и снимки (управление интерфейсом удалено в 0.6.90);
 - Workflow Kit recovery для локального workspace;
 - явно разрешённые downstream MCP, если их ценность зависит от этого Mac.
 
@@ -122,6 +124,8 @@ Codex может видеть большой общий каталог MCP и Ap
 
 ### Computer Use
 
+**С 0.6.90** из списка ниже остаются только `computer_list_windows`, `computer_capture_screen` и `computer_capture_window`, и они работают без Sky. Остальное — история до 0.6.89.
+
 Для Computer Use адаптер не проксирует сломанную compatibility-запись `computer-use`. Актуальный bundled plugin Codex определяет рабочий путь как `node_repl + @oai/sky`.
 
 Внешние инструменты сохраняют высокоуровневую поверхность:
@@ -168,6 +172,8 @@ Codex может видеть большой общий каталог MCP и Ap
 Для доступа к downstream MCP создаётся ephemeral thread. Сам `thread/start` не является модельным turn и используется только как scope для `mcpServerStatus/list` / `mcpServer/tool/call`.
 
 ## Computer Use contract
+
+**С 0.6.90 не действует:** действий в интерфейсе нет, остались только read-only инструменты наблюдения. Раздел сохранён как история.
 
 Computer Use считается частью обязательного локального паритета. Источник возможностей — bundled plugin Computer Use через `node_repl + @oai/sky`.
 
@@ -355,3 +361,17 @@ Local backend работает `--mcp-only`; App Server backend также от�
 ## Стартовое сообщение — 0.6.88
 
 Вызов `workflow_context_recover` запускает короткое стартовое сообщение Web Pilot (проект, папка, part=1 и далее по ключу `after`); сервер не меняется. [Контракт](../planning/mcp-start-message.md).
+
+## Наблюдение без управления интерфейсом — 0.6.90
+
+[Контракт](../planning/computer-use-removal.md). Каталог — 38 инструментов. Из `computer_*` остались три, все read-only:
+
+| Инструмент | Как работает | Что возвращает |
+| --- | --- | --- |
+| `computer_list_windows(title_contains, max_results)` | `/usr/bin/osascript -l JavaScript`, `CGWindowListCopyWindowInfo` — видимые окна слоя 0 | `window_id` (системный номер окна), `title`, `application`, `pid`, `rect`; `note`, если macOS скрыла заголовки |
+| `computer_capture_screen(x, y, width, height, max_dimension, include_cursor)` | `/usr/sbin/screencapture -x -t png [-C] [-R …]` | PNG экрана или прямоугольника |
+| `computer_capture_window(window_id, max_dimension)` | `/usr/sbin/screencapture -x -t png -o -l <window_id>` | PNG окна, в том числе перекрытого другим; параметр `include_cursor` сохранён в схеме и не действует |
+
+Удалены `computer_status`, `computer_activate_window`, `computer_move_mouse`, `computer_click`, `computer_scroll`, `computer_type_text`, `computer_key_press`, `computer_hotkey`, `computer_actions`, `computer_release_inputs`, фасад Sky и методы MCP-thread клиента. Executor больше не требует плагина Computer Use внутри Codex и не создаёт thread с `danger-full-access`.
+
+Заголовки окон и снимки требуют разрешения macOS на запись экрана для Project Web Pilot — того же, что проверяет `scripts/check-mac-screen-capture.mjs`. Снимок окна больше не возвращает текст интерфейса приложения, который добавлял Sky. Правило сессии запрещает управлять интерфейсом командами; технической блокировки `run_command` нет.

@@ -1,5 +1,17 @@
 # Проверки и приёмка
 
+## 2026-10-05 — 0.6.90 наблюдение без управления интерфейсом (до сборки)
+
+Автоматически, внутри коммитов задач: T001 — `executor-channel` (9 тестов, без пропусков) и `unit-all`; T002 — `windows-overlay` и `unit-all`; T003 — `release-source` и `executor-channel`; T004 — `release-source`.
+
+- `tests/codex-app-server-mcp.test.mjs`: каталог — ровно 38 `@mcp.tool`, десяти удалённых имён, `node_repl`, `@oai/sky`, `thread/start` и `mcp_tool_call` нет ни в `server.py`, ни в `app_server_client.py`; клиент App Server не имеет методов MCP-thread, ключи статуса — `binary`, `generation`, `pid`, `running`, `version`. Новый тест на поддельном исполнителе команд: список окон разбирает ответ, фильтрует по заголовку и приложению, ограничивает число строк, сообщает о скрытых заголовках и об ошибке команды; снимок окна вызывает `screencapture -x -t png -o -l 84` и `sips -Z 800`; нулевой, отрицательный, булев и строковый `window_id` отклоняются без единого вызова команды; временные снимки не остаются. Правила сессии содержат строку запрета дословно.
+- `tests/windows-runtime.test.mjs`: на фрагменте bridge — 9 инструментов удалены, три инструмента наблюдения и `workflow_context_recover` на месте, патч идемпотентен, bridge после overlay 0.6.89 доводится до того же результата; частичный набор, отсутствующий блок, повтор и отсутствие строки `computer_use` дают `WINDOWS_RUNTIME_BRIDGE_INVALID`. На настоящих `bridge_mcp.py` и `SKILL.md` из закреплённого ZIP в кеше сборки: 46 → 38 инструментов, `python3 -m py_compile` проходит, раздел «Desktop» заменён.
+- `tests/context-session.test.mjs`: первое сообщение содержит ту же строку запрета.
+
+Вживую на этом Mac до сборки, через настоящий Codex App Server и `LocalFacade` из рабочей копии: `computer_list_windows` вернул окно с заголовком и прямоугольником, `computer_capture_window` и `computer_capture_screen` вернули PNG, несуществующий `window_id` дал ошибку `could not create image from window`, временных файлов не осталось.
+
+Не проверено: три теста bootstrap в `tests/windows-runtime.test.mjs` выполняются только на Windows; на Mac их сценарии (внешний runtime, перезапуск служб, обновление bundled runtime на месте) пройдены в одноразовом прогоне с подменой `path.win32` на POSIX. Native Windows, живой каталог в ChatGPT и Claude после «Обновить инструменты» — за пользователем.
+
 ## 2026-10-04 — 0.6.89 GitHub publication
 
 GitHub Release [v0.6.89](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.89) опубликован 2026-10-04T17:08:22Z, `draft=false`, `prerelease=false`. Tag указывает на release sourceCommit `d340f7afdad3963888ae5c484c201287635fd549`.

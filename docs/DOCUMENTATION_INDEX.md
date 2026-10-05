@@ -34,10 +34,12 @@
 | docs/modules/workflow-kit-recovery.md | Specification Workflow Kit / Context Recovery / project continuity |
 | docs/modules/project-doctor.md | Контракт автономного Доктора проекта и границы автоматического ремонта |
 | docs/modules/runtime-lifecycle.md | Specification self-healing MCP/tunnel lifecycle |
-| docs/modules/codex-app-server-executor.md | Local-only MCP facade поверх Codex App Server: паритет Codex Local Mac, Computer Use, исторический A/B и stable-connector integration 0.6.47 |
+| docs/modules/codex-app-server-executor.md | Local-only MCP facade поверх Codex App Server: 38 инструментов, наблюдение без управления интерфейсом (0.6.90), исторический A/B и stable-connector integration 0.6.47 |
 | docs/modules/workspace-sessions.md | Specification проектов, Chat/Work sessions, session tree, переходов после scope, оформления и сохранения геометрии интерфейса |
 | docs/planning/session-title-sync.md | Контракт auto/manual session title и server-side синхронизации с native ChatGPT Recents |
 | docs/planning/input-instruction-delivery-ordering.md | Канонический порядок DOCS → delivery, startupMessage guard и границы незапланированных build/publish |
+| docs/planning/computer-use-removal.md | Управление интерфейсом убрано из MCP на macOS и Windows; остаются список окон и снимки; запрет в правилах; релиз 0.6.90 |
+| docs/planning/codex-local-mac-removal.md | Следующий этап 0.6.91: удаление Codex Local Mac, macOS только через App Server, ZIP Windows-runtime в релизе |
 | docs/planning/release-backups-kit-1.5.5.md | Одна резервная копия установки на цель вне Spotlight; Workflow Kit 1.5.5 (push только после DOCS); релиз 0.6.89 |
 | docs/planning/mcp-start-message.md | Web Pilot начинает MCP-сессию коротким стартовым сообщением; релиз 0.6.88 |
 | docs/planning/mcp-sequential-parts-kit-1.5.4.md | Части контекста строго по одной (ключ after), компактный recovery Workflow Kit 1.5.4; релиз 0.6.87 |
