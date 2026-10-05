@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1182,
+  "plan_revision": 1184,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "computer-use-removal-0.6.90-20261005",
@@ -385,8 +385,8 @@
       "actual_files": []
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "computer-use-removal-0.6.90-20261005",
         "task_id": "T006",
@@ -413,7 +413,8 @@
         "/Applications обновлена из staging без пересборки, identity сохранена, release-installed проходит",
         "В release-backups.noindex по одной копии 0.6.89 на цель"
       ],
-      "expected_commit_message": "feat: Установить 0.6.90 и проверить установленные macOS-копии"
+      "expected_commit_message": "feat: Установить 0.6.90 и проверить установленные macOS-копии",
+      "actual_files": []
     },
     {
       "implementation_status": "TODO",
@@ -469,7 +470,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: computer-use-removal-0.6.90-20261005
 Current Task: нет
-Revision: 1182
+Revision: 1184
 
 ## Цель
 
@@ -516,8 +517,8 @@ Revision: 1182
   - Git Commit: [DONE] feat: Пересобрать парный релиз 0.6.90 без посторонних файлов
   - Reference: computer-use-removal-0.6.90-20261005 / T008 / implementation
   - Файлы: scripts/release-all.mjs
-- [TODO] T006: Установить 0.6.90 и проверить установленные macOS-копии — Ожидает
-  - Git Commit: [PENDING] feat: Установить 0.6.90 и проверить установленные macOS-копии
+- [DONE] T006: Установить 0.6.90 и проверить установленные macOS-копии — Завершено
+  - Git Commit: [DONE] feat: Установить 0.6.90 и проверить установленные macOS-копии
   - Reference: computer-use-removal-0.6.90-20261005 / T006 / implementation
   - Файлы: scripts/check-installed-release.mjs, docs/planning/computer-use-removal.md
 - [TODO] T007: Опубликовать 0.6.90 и синхронизировать Project Web Pilot с GitHub — Ожидает
