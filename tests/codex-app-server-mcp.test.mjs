@@ -175,15 +175,42 @@ test('Codex App Server MCP facade exposes local parity and excludes cloud duplic
   }
 });
 
-test('experimental lifecycle keeps independent state, ports and tunnel credentials', { timeout: 20_000 }, async () => {
+const executorVenvPython = path.join(homedir(), 'Library', 'Application Support', 'WebPilotCodexExecutor', 'runtime', 'venv', 'bin', 'python');
+
+// Every control.py test runs on a temporary state and never reads the real state of the retired local runtime.
+function controlEnvironment(root, extra = {}) {
+  return {
+    WEB_PILOT_CODEX_EXECUTOR_STATE_DIR: path.join(root, 'state'),
+    WEB_PILOT_CODEX_EXECUTOR_PORT: '27852',
+    WEB_PILOT_CODEX_EXECUTOR_TUNNEL_PORT: '27853',
+    WEB_PILOT_LEGACY_LOCAL_STATE_DIR: path.join(root, 'no-legacy-state'),
+    ...extra,
+  };
+}
+
+function configureTunnel(control, env, key = '0123456789abcdefghijklmnop') {
+  return new Promise((resolve, reject) => {
+    const child = spawn('python3', [control, 'configure-tunnel', '--tunnel-id', 'tunnel_abcdefghijklmnop', '--key-stdin'],
+      { cwd: repoRoot, env: { ...process.env, ...env }, stdio: ['pipe', 'pipe', 'pipe'] });
+    let stdout = '';
+    let stderr = '';
+    child.stdout.on('data', chunk => { stdout += chunk; });
+    child.stderr.on('data', chunk => { stderr += chunk; });
+    child.on('error', reject);
+    child.on('close', code => resolve({ code, stdout, stderr }));
+    child.stdin.end(key + '\n');
+  });
+}
+
+test('executor lifecycle keeps its own state, ports and tunnel credentials and needs no other runtime', { timeout: 20_000 }, async () => {
+  const { readFile, stat } = await import('node:fs/promises');
   const root = await mkdtemp(path.join(tmpdir(), 'web-pilot-codex-control-'));
   const state = path.join(root, 'state');
   const control = path.join(repoRoot, 'tools', 'codex-app-server-mcp', 'control.py');
-  const env = {
-    WEB_PILOT_CODEX_EXECUTOR_STATE_DIR: state,
-    WEB_PILOT_CODEX_EXECUTOR_PORT: '27852',
-    WEB_PILOT_CODEX_EXECUTOR_TUNNEL_PORT: '27853',
-  };
+  const env = controlEnvironment(root);
+  const selectorFile = path.join(state, 'private', 'selector.json');
+  const profilePath = path.join(state, 'private', 'tunnel-profile', 'codex-executor.yaml');
+  const keyPath = path.join(state, 'private', 'tunnel-key');
 
   try {
     const status = await runPython(control, ['status'], env);
@@ -192,114 +219,149 @@ test('experimental lifecycle keeps independent state, ports and tunnel credentia
     assert.equal(statusJson.ok, true);
     assert.equal(statusJson.mcp_url, 'http://127.0.0.1:27852/mcp');
     assert.equal(statusJson.tunnel.ready, false);
-    assert.equal(statusJson.production_runtime_touched, false);
+    assert.equal(statusJson.selector, null);
 
-    const configured = await new Promise((resolve, reject) => {
-      const child = spawn(
-        'python3',
-        [control, 'configure-tunnel', '--tunnel-id', 'tunnel_abcdefghijklmnop', '--key-stdin'],
-        { cwd: repoRoot, env: { ...process.env, ...env }, stdio: ['pipe', 'pipe', 'pipe'] },
-      );
-      let stdout = '';
-      let stderr = '';
-      child.stdout.on('data', chunk => { stdout += chunk; });
-      child.stderr.on('data', chunk => { stderr += chunk; });
-      child.on('error', reject);
-      child.on('close', code => resolve({ code, stdout, stderr }));
-      child.stdin.end('0123456789abcdefghijklmnop\n');
-    });
+    // First run: there is no tunnel yet. The selector is written anyway and nothing is invented.
+    const first = await runPython(control, ['configure-selector'], env);
+    assert.equal(first.code, 0, first.stderr || first.stdout);
+    assert.deepEqual(JSON.parse(first.stdout), { ok: true, configured: true, mode: 'app-server',
+      mcp_url: 'http://127.0.0.1:27852/mcp', chatgpt_channel: 'secure-tunnel', adopted_tunnel: false });
+    assert.deepEqual(JSON.parse(await readFile(selectorFile, 'utf8')),
+      { schema_version: 1, mode: 'app-server', mcp_url: 'http://127.0.0.1:27852/mcp', chatgpt_channel: 'secure-tunnel' });
+    assert.equal(existsSync(profilePath), false);
+    assert.equal(existsSync(keyPath), false);
+
+    const configured = await configureTunnel(control, env);
     assert.equal(configured.code, 0, configured.stderr || configured.stdout);
     assert.equal(JSON.parse(configured.stdout).configured, true);
-
-    const profilePath = path.join(state, 'private', 'tunnel-profile', 'codex-executor.yaml');
-    const keyPath = path.join(state, 'private', 'tunnel-key');
-    const profile = await (await import('node:fs/promises')).readFile(profilePath, 'utf8');
-    const key = await (await import('node:fs/promises')).readFile(keyPath, 'utf8');
-    const keyMode = (await (await import('node:fs/promises')).stat(keyPath)).mode & 0o777;
-
+    const profile = await readFile(profilePath, 'utf8');
     assert.match(profile, /127\.0\.0\.1:27852\/mcp/);
     assert.match(profile, /127\.0\.0\.1:27853/);
     assert.match(profile, /WEB_PILOT_CODEX_EXECUTOR_TUNNEL_API_KEY/);
     assert.doesNotMatch(profile, /0123456789abcdefghijklmnop/);
-    assert.equal(key.trim(), '0123456789abcdefghijklmnop');
-    assert.equal(keyMode, 0o600);
+    assert.equal((await readFile(keyPath, 'utf8')).trim(), '0123456789abcdefghijklmnop');
+    assert.equal((await stat(keyPath)).mode & 0o777, 0o600);
     assert.equal(profile.includes('17842'), false);
     assert.equal(profile.includes('17843'), false);
 
-    const localRoot = path.join(root, 'local-runtime');
-    const localPython = path.join(root, 'local-python');
-    const localControl = path.join(root, 'local-control.py');
-    await mkdir(localRoot, { recursive: true });
-    await writeFile(localPython, '#!/bin/sh\n');
-    await writeFile(localControl, '# control\n');
-    const selected = await runPython(control, [
-      'configure-selector',
-      '--mode', 'local',
-      '--mcp-url', 'http://127.0.0.1:27842/mcp',
-      '--local-python', localPython,
-      '--local-control', localControl,
-      '--local-root', localRoot,
-      '--local-state', state,
-    ], env);
+    // A selector left by 0.6.90 in the retired local mode is read as the only backend and rewritten without its block.
+    await writeFile(selectorFile, JSON.stringify({ schema_version: 1, mode: 'local', mcp_url: 'http://127.0.0.1:27842/mcp', chatgpt_channel: 'vps',
+      local: { python: '/gone/python3', control: '/gone/control.py', runtime_root: '/gone', state_directory: '/gone/state' } }));
+    assert.deepEqual(JSON.parse((await runPython(control, ['status'], env)).stdout).selector,
+      { mode: 'app-server', mcp_url: 'http://127.0.0.1:27842/mcp', chatgpt_channel: 'vps' });
+    const selected = await runPython(control, ['configure-selector'], env);
     assert.equal(selected.code, 0, selected.stderr || selected.stdout);
-    assert.equal(JSON.parse(selected.stdout).mode, 'local');
-    const retargetedProfile = await (await import('node:fs/promises')).readFile(profilePath, 'utf8');
-    const selector = JSON.parse(await (await import('node:fs/promises')).readFile(path.join(state, 'private', 'selector.json'), 'utf8'));
-    assert.match(retargetedProfile, /127\.0\.0\.1:27842\/mcp/);
-    assert.equal(selector.mode, 'local');
-    assert.equal(selector.mcp_url, 'http://127.0.0.1:27842/mcp');
+    assert.deepEqual(JSON.parse(await readFile(selectorFile, 'utf8')),
+      { schema_version: 1, mode: 'app-server', mcp_url: 'http://127.0.0.1:27852/mcp', chatgpt_channel: 'vps' });
+    assert.match(await readFile(profilePath, 'utf8'), /127\.0\.0\.1:27852\/mcp/);
+
+    // The old arguments are gone together with the second backend.
+    const legacyCall = await runPython(control, ['configure-selector', '--mode', 'local', '--mcp-url', 'http://127.0.0.1:27842/mcp'], env);
+    assert.notEqual(legacyCall.code, 0);
+    const source = await readFile(control, 'utf8');
+    for (const gone of ['run_local_control', '--local-python', 'Codex Local Mac', 'mac-codex-local']) assert.equal(source.includes(gone), false, gone);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
 });
 
-test('stable selector adopts an existing local tunnel without exposing its key', async () => {
+test('the tunnel of the retired local runtime is carried over once without exposing its key', async () => {
+  const { readFile } = await import('node:fs/promises');
   const root = await mkdtemp(path.join(tmpdir(), 'web-pilot-stable-tunnel-adopt-'));
-  const state = path.join(root, 'app-state');
-  const localState = path.join(root, 'local-state');
-  const localPrivate = path.join(localState, 'private');
-  const localProfileDir = path.join(localPrivate, 'tunnel-profile');
-  const localRoot = path.join(root, 'local-runtime');
-  const localPython = path.join(localRoot, '.venv', 'bin', 'python3');
-  const localControl = path.join(localRoot, 'control.py');
+  const state = path.join(root, 'state');
+  const legacyState = path.join(root, 'legacy-state');
+  const legacyProfileDir = path.join(legacyState, 'private', 'tunnel-profile');
   const control = path.join(repoRoot, 'tools', 'codex-app-server-mcp', 'control.py');
   const secret = 'stable-local-key-abcdefghijklmnop';
-  await mkdir(localProfileDir, { recursive: true });
-  await mkdir(path.dirname(localPython), { recursive: true });
-  await writeFile(localPython, '#!/bin/sh\n');
-  await writeFile(localControl, '# control\n');
-  await writeFile(path.join(localPrivate, 'tunnel-key'), secret + '\n');
-  await writeFile(path.join(localProfileDir, 'mac-local.yaml'), JSON.stringify({
-    config_version: 1,
-    control_plane: { base_url: 'https://api.openai.com', tunnel_id: 'tunnel_abcdefghijklmnop', api_key: 'env:LOCAL_KEY' },
-    health: { listen_addr: '127.0.0.1:17843' },
-    mcp: { server_urls: [{ channel: 'main', url: 'http://127.0.0.1:17842/mcp' }] },
-  }, null, 2));
+  const env = controlEnvironment(root, { WEB_PILOT_LEGACY_LOCAL_STATE_DIR: legacyState });
+  const keyPath = path.join(state, 'private', 'tunnel-key');
+  await mkdir(legacyProfileDir, { recursive: true });
+  await writeFile(path.join(legacyState, 'private', 'tunnel-key'), secret + '\n');
   try {
-    const result = await runPython(control, [
-      'configure-selector',
-      '--mode', 'local',
-      '--mcp-url', 'http://127.0.0.1:17842/mcp',
-      '--local-python', localPython,
-      '--local-control', localControl,
-      '--local-root', localRoot,
-      '--local-state', localState,
-    ], {
-      WEB_PILOT_CODEX_EXECUTOR_STATE_DIR: state,
-      WEB_PILOT_CODEX_EXECUTOR_PORT: '27852',
-      WEB_PILOT_CODEX_EXECUTOR_TUNNEL_PORT: '27853',
-    });
+    // A damaged legacy profile is not carried over and does not stop the first run.
+    await writeFile(path.join(legacyProfileDir, 'mac-local.yaml'), '{ broken');
+    const damaged = await runPython(control, ['configure-selector'], env);
+    assert.equal(damaged.code, 0, damaged.stderr || damaged.stdout);
+    assert.equal(JSON.parse(damaged.stdout).adopted_tunnel, false);
+    assert.equal(existsSync(keyPath), false);
+
+    await writeFile(path.join(legacyProfileDir, 'mac-local.yaml'), JSON.stringify({
+      config_version: 1,
+      control_plane: { base_url: 'https://api.openai.com', tunnel_id: 'tunnel_abcdefghijklmnop', api_key: 'env:LOCAL_KEY' },
+      health: { listen_addr: '127.0.0.1:17843' },
+      mcp: { server_urls: [{ channel: 'main', url: 'http://127.0.0.1:17842/mcp' }] },
+    }, null, 2));
+    const result = await runPython(control, ['configure-selector'], env);
     assert.equal(result.code, 0, result.stderr || result.stdout);
     const data = JSON.parse(result.stdout);
     assert.equal(data.adopted_tunnel, true);
-    assert.equal(data.mcp_url, 'http://127.0.0.1:17842/mcp');
-    assert.equal(result.stdout.includes(secret), false);
-    const copiedKey = await (await import('node:fs/promises')).readFile(path.join(state, 'private', 'tunnel-key'), 'utf8');
-    const profile = await (await import('node:fs/promises')).readFile(path.join(state, 'private', 'tunnel-profile', 'codex-executor.yaml'), 'utf8');
-    assert.equal(copiedKey.trim(), secret);
+    assert.equal(data.mcp_url, 'http://127.0.0.1:27852/mcp');
+    assert.equal((result.stdout + result.stderr).includes(secret), false);
+    assert.equal((await readFile(keyPath, 'utf8')).trim(), secret);
+    const profile = await readFile(path.join(state, 'private', 'tunnel-profile', 'codex-executor.yaml'), 'utf8');
     assert.match(profile, /tunnel_abcdefghijklmnop/);
-    assert.match(profile, /127\.0\.0\.1:17842\/mcp/);
+    // The carried tunnel serves the executor's own MCP, not the port of the retired runtime.
+    assert.match(profile, /127\.0\.0\.1:27852\/mcp/);
+    assert.doesNotMatch(profile, /17842/);
     assert.doesNotMatch(profile, new RegExp(secret));
+    // The legacy state is only read.
+    assert.equal((await readFile(path.join(legacyState, 'private', 'tunnel-key'), 'utf8')).trim(), secret);
+
+    const again = await runPython(control, ['configure-selector'], env);
+    assert.equal(JSON.parse(again.stdout).adopted_tunnel, false);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('a missing Codex is reported by its own code before anything is installed or started', async () => {
+  const root = await mkdtemp(path.join(tmpdir(), 'web-pilot-codex-missing-'));
+  const probe = path.join(root, 'probe.py');
+  const control = path.join(clientDir, 'control.py');
+  await writeFile(probe, `import contextlib, importlib.util, io, json, os, sys
+control_file, client_dir, scratch = sys.argv[1:4]
+sys.path.insert(0, client_dir)
+spec = importlib.util.spec_from_file_location("ctl", control_file)
+ctl = importlib.util.module_from_spec(spec); spec.loader.exec_module(ctl)
+import app_server_client
+def missing(explicit=None):
+    raise app_server_client.AppServerError("No compatible Codex binary was found")
+app_server_client.discover_codex_binary = missing
+out = {"path_before": os.environ.get("PATH")}
+def run(command):
+    sys.argv = ["control.py", *command]
+    buffer = io.StringIO()
+    with contextlib.redirect_stdout(buffer):
+        code = ctl.main()
+    return {"exit": code, **json.loads(buffer.getvalue())}
+out["setup"] = run(["setup"])
+out["start"] = run(["start", "--mcp-only"])
+out["path_after"] = os.environ.get("PATH")
+out["runtime_created"] = ctl.RUNTIME.exists()
+os.environ["WEB_PILOT_UV"] = sys.executable
+out["bundled_uv"] = ctl.find_uv() == sys.executable
+os.environ["WEB_PILOT_UV"] = os.path.join(scratch, "no-such-uv")
+out["missing_bundled_uv_ignored"] = ctl.find_uv() != os.environ["WEB_PILOT_UV"]
+print(json.dumps(out))
+`);
+  try {
+    // "start" reaches the Codex check only with an installed venv: borrow the real one read-only when it exists.
+    const env = controlEnvironment(root);
+    if (existsSync(executorVenvPython)) {
+      await mkdir(path.join(root, 'state', 'runtime'), { recursive: true });
+      await (await import('node:fs/promises')).symlink(path.dirname(path.dirname(executorVenvPython)), path.join(root, 'state', 'runtime', 'venv'));
+    }
+    const result = await runPython(probe, [control, clientDir, root], env);
+    assert.equal(result.code, 0, result.stderr);
+    const out = JSON.parse(result.stdout.trim().split('\n').at(-1));
+    assert.deepEqual(out.setup, { exit: 1, ok: false, code: 'CODEX_NOT_FOUND',
+      error: 'Codex is not installed: install the Codex CLI or the ChatGPT app and check again' });
+    if (existsSync(executorVenvPython)) assert.equal(out.start.code, 'CODEX_NOT_FOUND');
+    else assert.match(out.start.error, /setup first/);
+    assert.equal(out.runtime_created, existsSync(executorVenvPython), 'setup stops before it creates the runtime folder');
+    assert.equal(out.path_after, out.path_before, 'the search path of the caller is restored');
+    assert.equal(out.bundled_uv, true);
+    assert.equal(out.missing_bundled_uv_ignored, true);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -326,52 +388,42 @@ async function fakeService(state, name) {
   return { child, exited };
 }
 
-test('ChatGPT channel vps keeps tunnel-client stopped at login and survives backend switches', { timeout: 30_000 }, async () => {
+test('ChatGPT channel is kept by the selector; login starts only the App Server MCP and obeys the channel', { timeout: 90_000 }, async t => {
+  const { readFile, symlink } = await import('node:fs/promises');
   const root = await mkdtemp(path.join(tmpdir(), 'web-pilot-chatgpt-channel-'));
   const state = path.join(root, 'state');
   const control = path.join(clientDir, 'control.py');
-  const env = {
-    WEB_PILOT_CODEX_EXECUTOR_STATE_DIR: state,
-    WEB_PILOT_CODEX_EXECUTOR_PORT: '27852',
-    WEB_PILOT_CODEX_EXECUTOR_TUNNEL_PORT: '27853',
-  };
-  const localRoot = path.join(root, 'local-runtime');
-  const localControl = path.join(root, 'local-control.py');
+  const env = controlEnvironment(root);
   const services = [];
-  await mkdir(localRoot, { recursive: true });
-  await writeFile(localControl, `import json, sys
-if sys.argv[1] == "start":
-    print(json.dumps({"mcp": {"ready": True, "owned": True}, "mcp_url": "http://127.0.0.1:27842/mcp"}))
-else:
-    print(json.dumps({"ok": True}))
-`);
-  const python = await runCommand('python3', ['-c', 'import sys; print(sys.executable)']);
   const json = result => JSON.parse(result.stdout);
   const selectorFile = path.join(state, 'private', 'selector.json');
-  const readSelector = async () => JSON.parse(await (await import('node:fs/promises')).readFile(selectorFile, 'utf8'));
-  const configureSelector = mcpUrl => runPython(control, ['configure-selector', '--mode', 'local', '--mcp-url', mcpUrl,
-    '--local-python', python, '--local-control', localControl, '--local-root', localRoot, '--local-state', state], env);
+  const readSelector = async () => JSON.parse(await readFile(selectorFile, 'utf8'));
+  // Login starts the real MCP server: it needs the installed venv. The tunnel-client is deliberately absent here.
+  const canStart = process.platform === 'darwin' && existsSync(executorVenvPython) && existsSync(userCodex);
   try {
-    const configured = await new Promise((resolve, reject) => {
-      const child = spawn('python3', [control, 'configure-tunnel', '--tunnel-id', 'tunnel_abcdefghijklmnop', '--key-stdin'],
-        { cwd: repoRoot, env: { ...process.env, ...env }, stdio: ['pipe', 'pipe', 'pipe'] });
-      let stdout = '';
-      child.stdout.on('data', chunk => { stdout += chunk; });
-      child.on('error', reject);
-      child.on('close', code => resolve({ code, stdout }));
-      child.stdin.end('0123456789abcdefghijklmnop\n');
-    });
-    assert.equal(configured.code, 0, configured.stdout);
+    if (canStart) {
+      await mkdir(path.join(state, 'runtime'), { recursive: true });
+      await symlink(path.dirname(path.dirname(executorVenvPython)), path.join(state, 'runtime', 'venv'));
+    }
+    assert.equal((await runPython(control, ['configure-selector'], env)).code, 0);
 
-    const selected = await configureSelector('http://127.0.0.1:27842/mcp');
+    if (canStart) {
+      // First run at login: no tunnel is configured yet. The MCP comes up and nothing fails.
+      const firstLogin = await runPython(control, ['selector-start'], env);
+      assert.equal(firstLogin.code, 0, firstLogin.stdout + firstLogin.stderr);
+      assert.equal(json(firstLogin).mcp.ready, true);
+      assert.equal(json(firstLogin).tunnel.configured, false);
+      assert.equal(json(firstLogin).tunnel.running, false);
+      assert.deepEqual(json(firstLogin).selected_backend.mode, 'app-server');
+      assert.equal(json(await runPython(control, ['stop'], env)).ok, true);
+    }
+
+    const configured = await configureTunnel(control, env);
+    assert.equal(configured.code, 0, configured.stdout);
+    const selected = await runPython(control, ['configure-selector'], env);
     assert.equal(selected.code, 0, selected.stdout);
     assert.equal(json(selected).chatgpt_channel, 'secure-tunnel');
     assert.equal(json(await runPython(control, ['status'], env)).selector.chatgpt_channel, 'secure-tunnel');
-
-    // Secure Tunnel at login still starts tunnel-client (missing here, so the attempt is visible).
-    const secureLogin = await runPython(control, ['selector-start'], env);
-    assert.equal(secureLogin.code, 1);
-    assert.match(json(secureLogin).error, /tunnel-client is missing/);
 
     const invalid = await runPython(control, ['configure-channel', '--channel', 'public'], env);
     assert.notEqual(invalid.code, 0);
@@ -380,7 +432,7 @@ else:
     const vps = await runPython(control, ['configure-channel', '--channel', 'vps'], env);
     assert.equal(vps.code, 0, vps.stdout);
     assert.deepEqual(json(vps), { ok: true, configured: true, chatgpt_channel: 'vps' });
-    assert.equal((await readSelector()).chatgpt_channel, 'vps');
+    assert.deepEqual(await readSelector(), { schema_version: 1, mode: 'app-server', mcp_url: 'http://127.0.0.1:27852/mcp', chatgpt_channel: 'vps' });
 
     // stop --tunnel-only stops tunnel-client and leaves MCP running.
     const tunnel = await fakeService(state, 'tunnel'); services.push(tunnel.child);
@@ -392,25 +444,35 @@ else:
     assert.equal(existsSync(path.join(state, 'tunnel.pid.json')), false);
     assert.equal(existsSync(path.join(state, 'mcp.pid.json')), true);
     assert.equal(mcp.child.exitCode, null);
+    assert.equal(json(await runPython(control, ['stop'], env)).ok, true);
+    assert.equal(await mcp.exited, true);
+
+    // A reconfigured selector keeps the ChatGPT channel.
+    const again = await runPython(control, ['configure-selector'], env);
+    assert.equal(json(again).chatgpt_channel, 'vps');
+    assert.equal((await readSelector()).chatgpt_channel, 'vps');
+
+    if (!canStart) { t.diagnostic('login checks skipped: the executor venv or Codex is not installed'); return; }
 
     // Login in vps mode stops a running tunnel-client and never starts it.
     const loginTunnel = await fakeService(state, 'tunnel'); services.push(loginTunnel.child);
     const vpsLogin = await runPython(control, ['selector-start'], env);
-    assert.equal(vpsLogin.code, 0, vpsLogin.stdout);
+    assert.equal(vpsLogin.code, 0, vpsLogin.stdout + vpsLogin.stderr);
     const login = json(vpsLogin);
+    assert.equal(login.mcp.ready, true);
     assert.equal(login.tunnel.running, false);
-    assert.equal(login.selected_backend.mcp_url, 'http://127.0.0.1:27842/mcp');
+    assert.deepEqual(login.selected_backend.mcp_url, 'http://127.0.0.1:27852/mcp');
     assert.equal(login.selector.chatgpt_channel, 'vps');
     assert.equal(await loginTunnel.exited, true);
     assert.equal(existsSync(path.join(state, 'tunnel.pid.json')), false);
 
-    // A runtime switch rewrites the backend but keeps the ChatGPT channel.
-    const switched = await configureSelector('http://127.0.0.1:27852/mcp');
-    assert.equal(switched.code, 0, switched.stdout);
-    assert.equal(json(switched).chatgpt_channel, 'vps');
-    assert.equal((await readSelector()).mcp_url, 'http://127.0.0.1:27852/mcp');
-    assert.equal((await readSelector()).chatgpt_channel, 'vps');
+    // Secure Tunnel at login still starts tunnel-client (missing here, so the attempt is visible).
+    assert.equal((await runPython(control, ['configure-channel', '--channel', 'secure-tunnel'], env)).code, 0);
+    const secureLogin = await runPython(control, ['selector-start'], env);
+    assert.equal(secureLogin.code, 1);
+    assert.match(json(secureLogin).error, /tunnel-client is missing/);
   } finally {
+    await runPython(control, ['stop'], env).catch(() => {});
     for (const child of services) if (child.exitCode === null && child.signalCode === null) {
       try { process.kill(-child.pid, 'SIGKILL'); } catch { /* already gone */ }
     }

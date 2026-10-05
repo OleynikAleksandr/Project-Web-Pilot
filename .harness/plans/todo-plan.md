@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1193,
+  "plan_revision": 1195,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-local-mac-removal-0.6.91-20261005",
@@ -57,7 +57,8 @@
       "tests/tunnel-id-prompt.test.mjs",
       "tests/mcp-runtime.test.mjs",
       "package-lock.json",
-      "scripts/check-installed-release.mjs"
+      "scripts/check-installed-release.mjs",
+      "tests/tunnel-prompt.test.mjs"
     ],
     "documentation_paths": [
       "docs/planning/codex-local-mac-removal.md",
@@ -187,8 +188,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "codex-local-mac-removal-0.6.91-20261005",
         "task_id": "T002",
@@ -198,7 +199,8 @@
       "functional_paths": [
         "tools/codex-app-server-mcp/control.py",
         "tools/codex-app-server-mcp/tunnel_prompt.py",
-        "tests/codex-app-server-mcp.test.mjs"
+        "tests/codex-app-server-mcp.test.mjs",
+        "tests/tunnel-prompt.test.mjs"
       ],
       "documentation_paths": [
         "docs/planning/codex-local-mac-removal.md"
@@ -217,7 +219,13 @@
         "Отсутствие Codex даёт код CODEX_NOT_FOUND в setup и start; setup использует WEB_PILOT_UV",
         "tunnel_prompt.py записывает туннель в состояние executor; ключ только через stdin"
       ],
-      "expected_commit_message": "feat: Executor без Codex Local Mac: selector, проверка Codex, встроенный uv, диалог ввода туннеля"
+      "expected_commit_message": "feat: Executor без Codex Local Mac: selector, проверка Codex, встроенный uv, диалог ввода туннеля",
+      "actual_files": [
+        "tests/codex-app-server-mcp.test.mjs",
+        "tests/tunnel-prompt.test.mjs",
+        "tools/codex-app-server-mcp/control.py",
+        "tools/codex-app-server-mcp/tunnel_prompt.py"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -480,7 +488,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: codex-local-mac-removal-0.6.91-20261005
 Current Task: нет
-Revision: 1193
+Revision: 1195
 
 ## Цель
 
@@ -504,10 +512,10 @@ Revision: 1193
   - Git Commit: [DONE] feat: ZIP Windows-runtime: шестой файл релиза и загрузка с проверкой SHA-256
   - Reference: codex-local-mac-removal-0.6.91-20261005 / T001 / implementation
   - Файлы: scripts/prepare-windows-toolchain.mjs, scripts/release-all.mjs, scripts/check-github-release.mjs, tests/windows-runtime.test.mjs, tests/release-all.test.mjs, scripts/check-installed-release.mjs, docs/planning/codex-local-mac-removal.md
-- [TODO] T002: Executor без Codex Local Mac: selector, проверка Codex, встроенный uv, диалог ввода туннеля — Ожидает
-  - Git Commit: [PENDING] feat: Executor без Codex Local Mac: selector, проверка Codex, встроенный uv, диалог ввода туннеля
+- [DONE] T002: Executor без Codex Local Mac: selector, проверка Codex, встроенный uv, диалог ввода туннеля — Завершено
+  - Git Commit: [DONE] feat: Executor без Codex Local Mac: selector, проверка Codex, встроенный uv, диалог ввода туннеля
   - Reference: codex-local-mac-removal-0.6.91-20261005 / T002 / implementation
-  - Файлы: tools/codex-app-server-mcp/control.py, tools/codex-app-server-mcp/tunnel_prompt.py, tests/codex-app-server-mcp.test.mjs, docs/planning/codex-local-mac-removal.md
+  - Файлы: tools/codex-app-server-mcp/control.py, tools/codex-app-server-mcp/tunnel_prompt.py, tests/codex-app-server-mcp.test.mjs, tests/tunnel-prompt.test.mjs, docs/planning/codex-local-mac-removal.md
 - [TODO] T003: macOS только через App Server: подготовка, первый запуск, одноразовое обновление, интерфейс — Ожидает
   - Git Commit: [PENDING] feat: macOS только через App Server: подготовка, первый запуск, одноразовое обновление, интерфейс
   - Reference: codex-local-mac-removal-0.6.91-20261005 / T003 / implementation

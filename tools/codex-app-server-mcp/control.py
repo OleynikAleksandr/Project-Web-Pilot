@@ -43,6 +43,13 @@ TUNNEL_KEY_ENV = "WEB_PILOT_CODEX_EXECUTOR_TUNNEL_API_KEY"
 # or the user's own server, whose SSH tunnel Project Web Pilot maintains itself.
 CHATGPT_CHANNELS = ("secure-tunnel", "vps")
 DEFAULT_CHATGPT_CHANNEL = "secure-tunnel"
+# State of the retired local runtime (before 0.6.91): read once to carry its tunnel over, never written.
+LEGACY_LOCAL_STATE = Path(os.environ.get("WEB_PILOT_LEGACY_LOCAL_STATE_DIR") or
+                          Path.home() / "Library/Application Support/CodexLocalMac")
+
+
+class CodexNotFound(RuntimeError):
+    code = "CODEX_NOT_FOUND"
 
 
 def json_out(value: object) -> None:
@@ -101,10 +108,7 @@ def download(url: str) -> bytes:
 
 def _working_tunnel_candidate() -> Path | None:
     explicit = os.environ.get("WEB_PILOT_CODEX_TUNNEL_CLIENT")
-    candidates = [
-        Path(explicit).expanduser() if explicit else None,
-        Path.home() / "VSCODE/Codex Local Mac/mac-codex-local/tools/tunnel-client",
-    ]
+    candidates = [Path(explicit).expanduser() if explicit else None]
     from_path = shutil.which("tunnel-client")
     if from_path:
         candidates.append(Path(from_path))
@@ -157,18 +161,45 @@ def install_tunnel_client() -> str:
     return subprocess.check_output([str(TUNNEL_CLIENT), "--version"], text=True, timeout=10).strip()
 
 
+def require_codex() -> dict[str, str]:
+    """The MCP server cannot start without Codex: say so before installing or launching anything."""
+    from app_server_client import AppServerError, discover_codex_binary
+    saved = os.environ.get("PATH")
+    os.environ["PATH"] = environment()["PATH"]
+    try:
+        binary = discover_codex_binary()
+    except AppServerError:
+        raise CodexNotFound("Codex is not installed: install the Codex CLI or the ChatGPT app and check again") from None
+    finally:
+        if saved is None:
+            os.environ.pop("PATH", None)
+        else:
+            os.environ["PATH"] = saved
+    return {"path": binary.path, "version": binary.version}
+
+
+def find_uv() -> str | None:
+    # The packaged app brings its own uv: a clean Mac has only Python 3.9, too old for the mcp package.
+    explicit = os.environ.get("WEB_PILOT_UV")
+    if explicit and os.access(explicit, os.X_OK):
+        return explicit
+    return shutil.which("uv", path=environment()["PATH"])
+
+
 def setup() -> dict[str, object]:
     if sys.platform != "darwin":
-        raise RuntimeError("This experimental runtime is macOS-only")
+        raise RuntimeError("This runtime is macOS-only")
+    codex = require_codex()
     RUNTIME.mkdir(parents=True, exist_ok=True, mode=0o700)
-    uv = shutil.which("uv")
+    uv = find_uv()
     if not PYTHON.is_file():
+        # Installer chatter goes to stderr: stdout carries only the JSON result of this command.
         if uv:
-            subprocess.run([uv, "venv", "--python", "3.13", str(VENV)], check=True)
+            subprocess.run([uv, "venv", "--python", "3.13", str(VENV)], check=True, stdout=sys.stderr)
         else:
-            subprocess.run([sys.executable, "-m", "venv", str(VENV)], check=True)
+            subprocess.run([sys.executable, "-m", "venv", str(VENV)], check=True, stdout=sys.stderr)
     installer = [uv, "pip", "install", "--python", str(PYTHON)] if uv else [str(PYTHON), "-m", "pip", "install"]
-    subprocess.run([*installer, "-r", str(ROOT / "requirements.txt")], check=True)
+    subprocess.run([*installer, "-r", str(ROOT / "requirements.txt")], check=True, stdout=sys.stderr)
     version = install_tunnel_client()
     STATE.mkdir(parents=True, exist_ok=True, mode=0o700)
     return {
@@ -179,6 +210,7 @@ def setup() -> dict[str, object]:
         "mcp_url": f"http://127.0.0.1:{MCP_PORT}/mcp",
         "tunnel_health_url": f"http://127.0.0.1:{TUNNEL_PORT}/readyz",
         "state_directory": str(STATE),
+        "codex": codex,
     }
 
 
@@ -188,7 +220,7 @@ def configure_tunnel(tunnel_id: str, key: str) -> dict[str, object]:
     if len(key) < 16 or any(character.isspace() for character in key):
         raise ValueError("Tunnel runtime key is invalid")
     if managed_process("tunnel")["running"]:
-        raise RuntimeError("Stop this experimental tunnel before changing its configuration")
+        raise RuntimeError("Stop the tunnel before changing its configuration")
     profile = {
         "config_version": 1,
         "control_plane": {
@@ -266,73 +298,42 @@ def set_tunnel_target(mcp_url: str) -> str:
     return target
 
 
-def _absolute_existing_path(value: str, *, directory: bool = False) -> str:
-    path = Path(value).expanduser()
-    if not path.is_absolute():
-        raise ValueError("Selector paths must be absolute")
-    if directory:
-        if not path.is_dir():
-            raise ValueError(f"Selector directory does not exist: {path}")
-    elif not path.is_file():
-        raise ValueError(f"Selector file does not exist: {path}")
-    return str(path.resolve())
+def own_mcp_url() -> str:
+    return f"http://127.0.0.1:{MCP_PORT}/mcp"
 
 
-def adopt_tunnel_from_local(local_state: str) -> bool:
+def write_selector(mcp_url: str, channel: str) -> None:
+    # Same shape as before 0.6.91 without the "local" block, so an older Web Pilot still reads it.
+    selector = {"schema_version": 1, "mode": "app-server", "mcp_url": mcp_url, "chatgpt_channel": channel}
+    private_write(SELECTOR_FILE, json.dumps(selector, ensure_ascii=False, indent=2) + "\n")
+
+
+def adopt_legacy_tunnel() -> bool:
+    """Carry the tunnel of the retired local runtime over once; its key is never printed."""
     if PROFILE.is_file() and KEY_FILE.is_file():
         return False
-    state = Path(_absolute_existing_path(local_state, directory=True))
-    local_profile = state / "private" / "tunnel-profile" / "mac-local.yaml"
-    local_key = state / "private" / "tunnel-key"
-    if not local_profile.is_file() or not local_key.is_file():
-        raise RuntimeError("No configured Secure MCP Tunnel is available for the stable connector")
+    legacy_profile = LEGACY_LOCAL_STATE / "private" / "tunnel-profile" / "mac-local.yaml"
+    legacy_key = LEGACY_LOCAL_STATE / "private" / "tunnel-key"
+    if not legacy_profile.is_file() or not legacy_key.is_file():
+        return False
     try:
-        profile = json.loads(local_profile.read_text())
-        tunnel_id = profile["control_plane"]["tunnel_id"]
-        key = local_key.read_text().strip()
-    except (OSError, json.JSONDecodeError, KeyError, TypeError):
-        raise RuntimeError("Existing Secure MCP Tunnel configuration is invalid") from None
-    configure_tunnel(str(tunnel_id), key)
+        tunnel_id = json.loads(legacy_profile.read_text())["control_plane"]["tunnel_id"]
+        configure_tunnel(str(tunnel_id), legacy_key.read_text().strip())
+    except (OSError, json.JSONDecodeError, KeyError, TypeError, ValueError):
+        # A damaged legacy configuration is not carried over: the tunnel is entered again in the wizard.
+        return False
     return True
 
 
-def configure_selector(
-    mode: str,
-    mcp_url: str,
-    *,
-    local_python: str,
-    local_control: str,
-    local_root: str,
-    local_state: str,
-) -> dict[str, object]:
-    if mode not in {"local", "app-server"}:
-        raise ValueError("Selector mode must be local or app-server")
-    local = {
-        "python": _absolute_existing_path(local_python),
-        "control": _absolute_existing_path(local_control),
-        "runtime_root": _absolute_existing_path(local_root, directory=True),
-        "state_directory": _absolute_existing_path(local_state, directory=True),
-    }
+def configure_selector() -> dict[str, object]:
     channel = current_chatgpt_channel()
-    try:
-        adopted_tunnel = adopt_tunnel_from_local(local["state_directory"])
-    except RuntimeError:
-        if channel != "vps":
-            raise
-        adopted_tunnel = False
-    if channel == "vps" and not (PROFILE.is_file() and KEY_FILE.is_file()):
-        target = normalize_mcp_url(mcp_url)
-    else:
-        target = set_tunnel_target(mcp_url)
-    selector = {
-        "schema_version": 1,
-        "mode": mode,
-        "mcp_url": target,
-        "chatgpt_channel": channel,
-        "local": local,
-    }
-    private_write(SELECTOR_FILE, json.dumps(selector, ensure_ascii=False, indent=2) + "\n")
-    return {"configured": True, "mode": mode, "mcp_url": target, "chatgpt_channel": channel,
+    adopted_tunnel = adopt_legacy_tunnel()
+    target = own_mcp_url()
+    # Without a tunnel (first run, or the VPS channel alone) there is no profile to retarget yet.
+    if PROFILE.is_file() and KEY_FILE.is_file():
+        target = set_tunnel_target(target)
+    write_selector(target, channel)
+    return {"configured": True, "mode": "app-server", "mcp_url": target, "chatgpt_channel": channel,
             "adopted_tunnel": adopted_tunnel}
 
 
@@ -346,9 +347,7 @@ def current_chatgpt_channel() -> str:
 def configure_channel(channel: str) -> dict[str, object]:
     if channel not in CHATGPT_CHANNELS:
         raise ValueError("ChatGPT channel must be secure-tunnel or vps")
-    selector = load_selector()
-    selector["chatgpt_channel"] = channel
-    private_write(SELECTOR_FILE, json.dumps(selector, ensure_ascii=False, indent=2) + "\n")
+    write_selector(load_selector()["mcp_url"], channel)
     return {"configured": True, "chatgpt_channel": channel}
 
 
@@ -361,6 +360,9 @@ def load_selector() -> dict[str, object]:
         raise RuntimeError("MCP backend selector is damaged") from None
     if selector.get("schema_version") != 1 or selector.get("mode") not in {"local", "app-server"}:
         raise RuntimeError("MCP backend selector is invalid")
+    # A selector written before 0.6.91 may name the retired local backend: it is read as the only one.
+    selector["mode"] = "app-server"
+    selector.pop("local", None)
     selector["mcp_url"] = normalize_mcp_url(selector.get("mcp_url"))
     selector.setdefault("chatgpt_channel", DEFAULT_CHATGPT_CHANNEL)
     if selector["chatgpt_channel"] not in CHATGPT_CHANNELS:
@@ -374,41 +376,6 @@ def selector_public() -> dict[str, object] | None:
     except RuntimeError:
         return None
     return {"mode": selector["mode"], "mcp_url": selector["mcp_url"], "chatgpt_channel": selector["chatgpt_channel"]}
-
-
-def run_local_control(selector: dict[str, object], command: str, *extra: str) -> dict[str, object]:
-    local = selector.get("local")
-    if not isinstance(local, dict):
-        raise RuntimeError("Local runtime selector details are missing")
-    python = _absolute_existing_path(str(local.get("python") or ""))
-    control = _absolute_existing_path(str(local.get("control") or ""))
-    runtime_root = _absolute_existing_path(str(local.get("runtime_root") or ""), directory=True)
-    env = os.environ.copy()
-    env["PYTHONDONTWRITEBYTECODE"] = "1"
-    env["WEB_PILOT_RUNTIME_ROOT"] = runtime_root
-    result = subprocess.run(
-        [python, "-B", control, command, *extra],
-        cwd=runtime_root,
-        env=env,
-        capture_output=True,
-        text=True,
-        timeout=90 if command == "start" else 20,
-        check=False,
-    )
-    if result.returncode != 0:
-        message = "Local runtime command failed"
-        for raw in (result.stderr, result.stdout):
-            try:
-                parsed = json.loads(raw)
-                message = parsed.get("error") or message
-                break
-            except (json.JSONDecodeError, TypeError):
-                continue
-        raise RuntimeError(message)
-    try:
-        return json.loads(result.stdout)
-    except json.JSONDecodeError:
-        raise RuntimeError("Local runtime returned an invalid lifecycle response") from None
 
 
 def pid_identity(pid: object) -> str | None:
@@ -569,6 +536,7 @@ def start(*, mcp_only: bool = False, tunnel_only: bool = False) -> dict[str, obj
     if not mcp["owned"]:
         if port_open(MCP_PORT):
             raise RuntimeError(f"Port {MCP_PORT} belongs to another process; it will not be stopped")
+        require_codex()
         launch(
             "mcp",
             [
@@ -592,7 +560,7 @@ def start(*, mcp_only: bool = False, tunnel_only: bool = False) -> dict[str, obj
         )
         return result
 
-    set_tunnel_target(f"http://127.0.0.1:{MCP_PORT}/mcp")
+    set_tunnel_target(own_mcp_url())
     return start_tunnel()
 
 
@@ -627,28 +595,10 @@ def stop(*, tunnel_only: bool = False) -> dict[str, object]:
 
 def selector_start() -> dict[str, object]:
     selector = load_selector()
-    local = selector.get("local")
-    if isinstance(local, dict):
-        # The legacy runtime owns its own PID records and re-checks process identity
-        # immediately before signalling.  A stale/foreign PID therefore fails closed.
-        run_local_control(selector, "stop")
-
-    if selector["mode"] == "local":
-        app_mcp = managed_process("mcp")
-        if app_mcp["running"]:
-            stop_one("mcp")
-        backend = run_local_control(selector, "start", "--mcp-only")
-        mcp = backend.get("mcp") if isinstance(backend, dict) else None
-        if not isinstance(mcp, dict) or not mcp.get("ready") or not mcp.get("owned"):
-            raise RuntimeError("Codex Local Mac MCP did not become ready")
-        target = normalize_mcp_url(str(backend.get("mcp_url") or ""))
-    else:
-        backend = start(mcp_only=True)
-        target = normalize_mcp_url(str(backend.get("mcp_url") or ""))
-
-    if selector.get("mcp_url") != target:
-        selector["mcp_url"] = target
-        private_write(SELECTOR_FILE, json.dumps(selector, ensure_ascii=False, indent=2) + "\n")
+    backend = start(mcp_only=True)
+    target = normalize_mcp_url(str(backend.get("mcp_url") or ""))
+    # Also drops what an older version stored: the "local" block and a foreign target.
+    write_selector(target, selector["chatgpt_channel"])
     if selector["chatgpt_channel"] == "vps":
         # ChatGPT uses the user's server: tunnel-client must not run at login.
         tunnel = managed_process("tunnel")
@@ -657,11 +607,14 @@ def selector_start() -> dict[str, object]:
         if tunnel["owned"]:
             stop_one("tunnel")
         stable = status()
-    else:
+    elif PROFILE.is_file() and KEY_FILE.is_file():
         set_tunnel_target(target)
         stable = start_tunnel()
+    else:
+        # First run not finished: the MCP is up, the tunnel is entered in Web Pilot.
+        stable = status()
     stable["selected_backend"] = {
-        "mode": selector["mode"],
+        "mode": "app-server",
         "mcp_url": target,
         "mcp": backend.get("mcp"),
     }
@@ -669,7 +622,7 @@ def selector_start() -> dict[str, object]:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Lifecycle for the experimental Codex App Server MCP")
+    parser = argparse.ArgumentParser(description="Lifecycle for the Codex App Server MCP")
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("setup")
     sub.add_parser("status")
@@ -682,13 +635,7 @@ def parse_args() -> argparse.Namespace:
     sub.add_parser("selector-start")
     channel = sub.add_parser("configure-channel")
     channel.add_argument("--channel", required=True, choices=list(CHATGPT_CHANNELS))
-    selector = sub.add_parser("configure-selector")
-    selector.add_argument("--mode", required=True, choices=["local", "app-server"])
-    selector.add_argument("--mcp-url", required=True)
-    selector.add_argument("--local-python", required=True)
-    selector.add_argument("--local-control", required=True)
-    selector.add_argument("--local-root", required=True)
-    selector.add_argument("--local-state", required=True)
+    sub.add_parser("configure-selector")
     configure = sub.add_parser("configure-tunnel")
     configure.add_argument("--tunnel-id")
     configure.add_argument(
@@ -713,14 +660,7 @@ def main() -> int:
             elif args.command == "configure-channel":
                 result = configure_channel(args.channel)
             elif args.command == "configure-selector":
-                result = configure_selector(
-                    args.mode,
-                    args.mcp_url,
-                    local_python=args.local_python,
-                    local_control=args.local_control,
-                    local_root=args.local_root,
-                    local_state=args.local_state,
-                )
+                result = configure_selector()
             elif args.command == "selector-start":
                 result = selector_start()
             elif args.command == "configure-tunnel":
@@ -736,7 +676,8 @@ def main() -> int:
         json_out({"ok": True, **result})
         return 0
     except Exception as exc:
-        json_out({"ok": False, "error": str(exc)})
+        code = getattr(exc, "code", None)
+        json_out({"ok": False, "error": str(exc), **({"code": code} if isinstance(code, str) else {})})
         return 1
 
 
