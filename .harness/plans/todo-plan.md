@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1245,
+  "plan_revision": 1247,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-stdin-contract-fix-0.6.93-20261005",
@@ -241,8 +241,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "codex-stdin-contract-fix-0.6.93-20261005",
         "task_id": "T003",
@@ -274,7 +274,8 @@
         "Windows-runtime и его каталог не изменены",
         "GitHub Release на этом шаге не публикуется"
       ],
-      "expected_commit_message": "feat: Собрать и проверить парный release 0.6.93"
+      "expected_commit_message": "feat: Собрать и проверить парный release 0.6.93",
+      "actual_files": []
     },
     {
       "implementation_status": "TODO",
@@ -362,7 +363,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: codex-stdin-contract-fix-0.6.93-20261005
 Current Task: нет
-Revision: 1245
+Revision: 1247
 
 ## Цель
 
@@ -390,8 +391,8 @@ Revision: 1245
   - Git Commit: [DONE] docs: актуализировать контекст проекта
   - Reference: codex-stdin-contract-fix-0.6.93-20261005 / DOCS / implementation
   - Файлы: docs/planning/codex-native-tools-macos.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/DECISIONS.md, docs/VERIFICATION.md
-- [TODO] T003: Собрать и проверить парный release 0.6.93 — Ожидает
-  - Git Commit: [PENDING] feat: Собрать и проверить парный release 0.6.93
+- [DONE] T003: Собрать и проверить парный release 0.6.93 — Завершено
+  - Git Commit: [DONE] feat: Собрать и проверить парный release 0.6.93
   - Reference: codex-stdin-contract-fix-0.6.93-20261005 / T003 / implementation
   - Файлы: package.json, scripts/release-all.mjs, scripts/release-mac.mjs, scripts/verify-windows-package.mjs, docs/planning/codex-native-tools-macos.md
 - [TODO] T004: Установить и проверить macOS 0.6.93 в /Applications — Ожидает
