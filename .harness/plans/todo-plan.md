@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1249,
+  "plan_revision": 1251,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-stdin-contract-fix-0.6.93-20261005",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Исправить контракт stdin у exec_command/write_stdin в macOS MCP Codex App Server Local Mac, добавить Codex-совместимые описания и clamp пределов, проверить на настоящем Codex App Server и выпустить Project Web Pilot 0.6.93 без изменений Windows-runtime.",
   "acceptance_criteria": [
     "Исправить контракт stdin у exec_command/write_stdin в macOS MCP Codex App Server Local Mac, добавить Codex-совместимые описания и clamp пределов, проверить на настоящем Codex App Server и выпустить Project Web Pilot 0.6.93 без изменений Windows-runtime."
@@ -312,8 +312,8 @@
       "actual_files": []
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "codex-stdin-contract-fix-0.6.93-20261005",
         "task_id": "T005",
@@ -343,7 +343,8 @@
         "origin/main после managed commit совпадает с локальным HEAD",
         "Повторная сборка при публикации не выполняется"
       ],
-      "expected_commit_message": "feat: Опубликовать GitHub Release v0.6.93 и синхронизировать main"
+      "expected_commit_message": "feat: Опубликовать GitHub Release v0.6.93 и синхронизировать main",
+      "actual_files": []
     }
   ],
   "blocked_reason": null,
@@ -361,10 +362,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: codex-stdin-contract-fix-0.6.93-20261005
 Current Task: нет
-Revision: 1249
+Revision: 1251
 
 ## Цель
 
@@ -400,8 +401,8 @@ Revision: 1249
   - Git Commit: [DONE] feat: Установить и проверить macOS 0.6.93 в /Applications
   - Reference: codex-stdin-contract-fix-0.6.93-20261005 / T004 / implementation
   - Файлы: scripts/release-mac.mjs, scripts/check-installed-release.mjs, docs/planning/codex-native-tools-macos.md
-- [TODO] T005: Опубликовать GitHub Release v0.6.93 и синхронизировать main — Ожидает
-  - Git Commit: [PENDING] feat: Опубликовать GitHub Release v0.6.93 и синхронизировать main
+- [DONE] T005: Опубликовать GitHub Release v0.6.93 и синхронизировать main — Завершено
+  - Git Commit: [DONE] feat: Опубликовать GitHub Release v0.6.93 и синхронизировать main
   - Reference: codex-stdin-contract-fix-0.6.93-20261005 / T005 / implementation
   - Файлы: scripts/check-github-release.mjs, package.json, docs/planning/codex-native-tools-macos.md
 
