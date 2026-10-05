@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1227,
+  "plan_revision": 1229,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-native-tools-0.6.92-20261005",
@@ -324,8 +324,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "codex-native-tools-0.6.92-20261005",
         "task_id": "T006",
@@ -352,7 +352,8 @@
         "В корне app.asar обеих платформ только src, node_modules, package.json и LICENSE; в поставке шесть файлов; executor в пакете содержит codex-tools.lock.json",
         "Preflight identity записан до сборки"
       ],
-      "expected_commit_message": "feat: Собрать и проверить парный релиз 0.6.92"
+      "expected_commit_message": "feat: Собрать и проверить парный релиз 0.6.92",
+      "actual_files": []
     },
     {
       "implementation_status": "TODO",
@@ -433,7 +434,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: codex-native-tools-0.6.92-20261005
 Current Task: нет
-Revision: 1227
+Revision: 1229
 
 ## Цель
 
@@ -473,8 +474,8 @@ Revision: 1227
   - Git Commit: [DONE] docs: актуализировать контекст проекта
   - Reference: codex-native-tools-0.6.92-20261005 / DOCS / implementation
   - Файлы: docs/planning/codex-native-tools-macos.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, tools/codex-app-server-mcp/session-rules.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, README.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/modules/codex-app-server-executor.md
-- [TODO] T006: Собрать и проверить парный релиз 0.6.92 — Ожидает
-  - Git Commit: [PENDING] feat: Собрать и проверить парный релиз 0.6.92
+- [DONE] T006: Собрать и проверить парный релиз 0.6.92 — Завершено
+  - Git Commit: [DONE] feat: Собрать и проверить парный релиз 0.6.92
   - Reference: codex-native-tools-0.6.92-20261005 / T006 / implementation
   - Файлы: scripts/release-all.mjs, docs/planning/codex-native-tools-macos.md
 - [TODO] T007: Установить 0.6.92 и проверить установленные macOS-копии — Ожидает
