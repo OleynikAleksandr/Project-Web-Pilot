@@ -4,7 +4,22 @@
 
 [Контракт](planning/codex-native-tools-macos.md). 0.6.95 убирает самодельную корзину из `Codex App Server Local Mac`: `delete_path`, `list_trash`, `restore_trash` и их код удалены, каталог macOS — 10 инструментов; удаление выполняется как в Codex, откат даёт git; исполнитель при запуске убирает прежнюю папку `trash` только пустой. Остальные десять инструментов, `codex-tools.lock.json`, Windows-runtime и VPS channel не менялись. После установки нужно перезапустить Web Pilot и обновить инструменты в ChatGPT.
 
-Предсборочное evidence: T001 `ec2e57f`, T002 `c1c839b`. Полный `npm test`: 553 total, 549 passed, 4 skipped, 0 failed. `npm run check:codex-tools` подтвердил `rust-v0.160.0`; bundled Workflow Kit — 1.5.5 / 35 файлов / SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`.
+Предсборочное evidence: T001 `ec2e57f`, T002 `c1c839b`. Полный `npm test`: 553 total, 549 passed, 4 skipped, 0 failed. `npm run check:codex-tools` подтвердил `rust-v0.160.0`; bundled Workflow Kit — 1.5.5 / 35 файлов / SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`. DOCS/source commit — `7416c88c7a96b358b21b0f1744decee6fb5e3fb7`.
+
+После предсборочной DOCS `7416c88c7a96b358b21b0f1744decee6fb5e3fb7` выполнен один paired build — его запустила проверка `paired-release` при коммите T003 (`25f7744`); затем установка `/Applications` без пересборки (T004 `cda0e96`) и публикация [GitHub Release v0.6.95](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.95) 2026-10-05T18:14:25Z (T005 `82ed208`). Tag `v0.6.95` указывает на release-manifest.sourceCommit `7416c88c…`; `sourceFiles=106`, `packagedSourceMatches=true`; GitHub содержит ровно шесть assets с совпадающими size/SHA-256, а `origin/main` после T005 совпадает с `82ed20889b36d09eae7a5f4e4658f1ec84f3c603`. Обе macOS-копии — 0.6.95 с общим ASAR `506cd28c9bf954fe732a53df0b6efba7d545d20e06bcdef68037a86546ae251d`, identity сохранена.
+
+Шесть файлов GitHub Release v0.6.95:
+
+- `Project-Web-Pilot-0.6.95-macOS-arm64.zip` — 186412851 bytes, SHA-256 `e183768ea9fb1c5732bae33ff1b65d4d98a5aeb80bdee922b44ecced844df545`;
+- `Project-Web-Pilot-0.6.95-Windows-x64.zip` — 355538964 bytes, SHA-256 `070e98c4d7a75f7aae531e7f3ab5271eed713a26fef532a7863886f91f6b6598`;
+- `Windows-Codex-Local-2026-09-10.zip` — 86242347 bytes, SHA-256 `1f041488ad97d8abf1984fd3521afb8abe15f50b8df3d3e11f1cc4248e019d98`;
+- `SHA256SUMS.txt`, `INSTALL.txt`, `release-manifest.json`.
+
+Документы связанного WorkflowKit синхронизированы собственным managed plan и отправлены в `WorkflowKit/origin/main` коммитом **`6bbec655497eaea69d5c5825c68e9bdf78a01c18`**. Пять current-state документов называют опубликованный Project Web Pilot 0.6.95 с bundled Workflow Kit 1.5.5; canonical source/runtime Kit остаётся 1.5.5 / 35 файлов / SHA-256 `8eadd988…f376`, код и версия не менялись.
+
+Замечание по сборке: первая попытка остановилась через 1,4 с на `.harness/runtime/mac-tools/uv --version` — закреплённый бинарник `uv`, перезаписанный на месте при сборке 0.6.94, завершался системой (SIGKILL), хотя SHA-256 и подпись были верны, а его свежая копия работала. Файл заменён копией с тем же содержимым; вторая попытка собрала релиз. `scripts/prepare-mac-toolchain.mjs` в этом scope не менялся.
+
+Не проверено: живая сессия ChatGPT с каталогом из 10 инструментов после перезапуска Web Pilot и обновления инструментов, чистая установка macOS, native Windows.
 
 ## Выпуск 0.6.94 — 05.10.2026
 

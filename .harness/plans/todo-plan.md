@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1293,
+  "plan_revision": 1295,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "trash-removal-0.6.95-20261005",
@@ -333,8 +333,8 @@
       "actual_files": []
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "trash-removal-0.6.95-20261005",
         "task_id": "T006",
@@ -363,7 +363,11 @@
         "Коммиты WorkflowKit отправлены в его origin/main; worktree чистый",
         "docs/RELEASE.md Web Pilot называет коммит синхронизации WorkflowKit"
       ],
-      "expected_commit_message": "feat: Синхронизировать документы Workflow Kit с выпуском 0.6.95"
+      "expected_commit_message": "feat: Синхронизировать документы Workflow Kit с выпуском 0.6.95",
+      "actual_files": [
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -430,7 +434,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: trash-removal-0.6.95-20261005
 Current Task: нет
-Revision: 1293
+Revision: 1295
 
 ## Цель
 
@@ -471,8 +475,8 @@ Revision: 1293
   - Git Commit: [DONE] feat: Опубликовать GitHub Release v0.6.95 и синхронизировать main
   - Reference: trash-removal-0.6.95-20261005 / T005 / implementation
   - Файлы: scripts/check-github-release.mjs, docs/planning/codex-native-tools-macos.md
-- [TODO] T006: Синхронизировать документы Workflow Kit с выпуском 0.6.95 — Ожидает
-  - Git Commit: [PENDING] feat: Синхронизировать документы Workflow Kit с выпуском 0.6.95
+- [DONE] T006: Синхронизировать документы Workflow Kit с выпуском 0.6.95 — Завершено
+  - Git Commit: [DONE] feat: Синхронизировать документы Workflow Kit с выпуском 0.6.95
   - Reference: trash-removal-0.6.95-20261005 / T006 / implementation
   - Файлы: docs/planning/codex-native-tools-macos.md, docs/RELEASE.md, docs/VERIFICATION.md
 - [TODO] T007: Послерелизная сверка всех документов и README, синхронизация origin/main — Ожидает
