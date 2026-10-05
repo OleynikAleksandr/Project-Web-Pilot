@@ -1,66 +1,74 @@
 # Codex Local Mac удалён, macOS работает только через App Server — релиз 0.6.91
 
-Поручение пользователя 05.10.2026: Codex Local Mac — второй, собственный MCP, который тестировался и поддерживаться не будет; удалить его совсем. Решения пользователя: отдельный релиз после 0.6.90 ([Computer Use убран из MCP](computer-use-removal.md)); удаляются и следы на Mac, и зависимость сборки от папки `~/VSCODE/Codex Local Mac`. Уточнение 05.10.2026: ZIP Windows-runtime лежит в разделе релизов рядом с пакетами macOS и Windows.
+Поручение пользователя 05.10.2026: Codex Local Mac — второй, собственный MCP, который тестировался и поддерживаться не будет; удалить его совсем. Решения пользователя: отдельный релиз после 0.6.90 ([управление интерфейсом убрано из MCP](computer-use-removal.md)); удаляются и следы на Mac, и зависимость сборки от папки `~/VSCODE/Codex Local Mac`; ZIP Windows-runtime лежит в разделе релизов рядом с пакетами macOS и Windows. Поручение 05.10.2026 после приёмки 0.6.90: закрыть прежний scope, открыть этот план и выполнить его полностью.
 
-Статус: контракт следующего этапа. План в Workflow Kit создаётся через `plan:create` после закрытия плана 0.6.90, потому что у checkout один текущий план. До начала этапа сверить перечни ниже с кодом: они составлены по `main` `7b1d77b` (0.6.89).
+Из 0.6.90 сюда перенесено исправление упаковщика: первая сборка 0.6.90 упаковала в `app.asar` неотслеживаемую папку «Claude outputs» ([выпуск 0.6.90](../RELEASE.md)).
 
-## Что показал осмотр кода
+## Что показал осмотр кода (main `b08bd64`, 0.6.90)
 
 - `MacRuntimeSwitcher.activate` требует `localRuntime` в обоих режимах: берёт у Codex Local Mac описание команд и состояние и передаёт их в `configure-selector`.
-- Первый запуск на macOS идёт через `MacRuntimeBootstrap` (`src/mac-runtime.mjs`): он ставит `resources/mac-runtime.zip` в данные приложения, а ID и ключ туннеля принимает `resources/runtime-control/mac-first-run.py` в состояние Codex Local Mac. App Server затем забирает туннель через `adopt_tunnel_from_local`.
-- `tools/codex-app-server-mcp/control.py` уже умеет всё сам: `setup` (venv и tunnel-client в собственном состоянии), `configure-tunnel --key-stdin`, `start`, `stop`, `configure-channel`. От Codex Local Mac в нём остаются обязательные аргументы `--local-*`, режим `local` в `selector.json`, `run_local_control` и путь `~/VSCODE/Codex Local Mac/…/tunnel-client` среди кандидатов.
-- Сборка Windows берёт `Windows-Codex-Local-2026-09-10.zip` (86 МБ, SHA-256 закреплён в `src/windows-runtime.mjs`) из `../Codex Local Mac/`; копия лежит в неотслеживаемом кеше `.harness/runtime/windows-payload/`. Этот же ZIP уже публикуется внутри каждого Windows-пакета релиза.
+- Запуск приложения на macOS ждёт `activate`. На Mac без туннеля `configure-selector` завершается ошибкой «No configured Secure MCP Tunnel…», и приложение закрывается с окном ошибки: первый запуск на чистом Mac сейчас не доходит до мастера. В выпусках это отмечалось как «чистая VM не проверялась».
+- Первый запуск ставит `resources/mac-runtime.zip` (`MacRuntimeBootstrap`, `src/mac-runtime.mjs`) встроенным `uv`, а ID и ключ туннеля принимает `resources/runtime-control/mac-first-run.py` в состояние Codex Local Mac.
+- `tools/codex-app-server-mcp/control.py` умеет `setup`, `configure-tunnel`, `start`, `stop`, `configure-channel`, но: запускается через `/usr/bin/python3` (на чистом Mac это заглушка Xcode Command Line Tools), `uv` ищет только в `PATH`, без `uv` создаёт venv системным Python 3.9, которому пакет `mcp` недоступен; отсутствие Codex видно только как «MCP did not become ready».
+- Сборка Windows берёт `Windows-Codex-Local-2026-09-10.zip` (86 МБ, SHA-256 закреплён в `src/windows-runtime.mjs`) из `../Codex Local Mac/`; копия лежит в неотслеживаемом кеше `.harness/runtime/windows-payload/`.
+- Упаковщик исключает из пакета перечисленные папки; любая новая папка в корне проекта попадает в `app.asar`.
 - Codex Local Windows — runtime из того же семейства. Он остаётся: App Server-варианта для Windows нет.
 
 ## Результат
 
-1. **Один backend на macOS — Codex App Server Local Mac.** Режим `local`, `MAC_RUNTIME_MODES`, действие `setMacRuntimeMode`, выбор папки «Выбрать Codex Local Mac» и две кнопки переключателя в «Настройках» удалены. В разделе «Локальные инструменты macOS» остаётся состояние службы.
-2. **Первый запуск на чистом Mac** идёт через executor App Server: `control.py setup`, затем ввод ID и ключа туннеля прямо в его состояние (`configure-tunnel`, ключ только через stdin), затем запуск. Bundled runtime Codex Local Mac не ставится. В мастере имя плагина — «Codex App Server Local Mac».
-3. **Требование macOS:** установлен Codex (CLI или приложение ChatGPT). Если бинарник не найден, мастер первого запуска показывает понятную ошибку с тем, что установить, а не общий отказ runtime.
-4. **Selector.** `selector.json` хранит адрес MCP и канал ChatGPT. Блок `local`, режим и аргументы `--local-*` удалены; `selector-start` при входе в macOS поднимает только App Server и соблюдает канал. Файл прежнего формата читается и переписывается.
-5. **Обновление существующей установки** (один раз, при первом запуске 0.6.91):
-   - настройка `macRuntimeMode: local` становится `app-server`;
-   - если у executor ещё нет профиля и ключа туннеля, а в `~/Library/Application Support/CodexLocalMac/private` они есть, туннель переносится существующим `adopt_tunnel_from_local`; ключ не выводится и не логируется;
-   - процессы прежнего runtime останавливаются с проверкой принадлежности (как `stopLegacyOrphans`);
-   - удаляются установленная Web Pilot копия `<данные приложения>/runtime/Codex-Local-Mac` с маркером `mac-runtime.json` и LaunchAgent `com.oleynik.CodexLocalMac` (bootout и plist).
-6. **Не удаляются автоматически:** `~/Library/Application Support/CodexLocalMac` (там ключ туннеля) и `~/VSCODE/Codex Local Mac`. Их пользователь удаляет сам; в `docs/RELEASE.md` — точные пути и условие: 0.6.91 запущена и инструменты работают.
-7. **Удалены из репозитория:** `src/mac-runtime.mjs`, `resources/mac-runtime.zip`, `resources/runtime-control/mac-control.py`, `resources/runtime-control/mac-first-run.py` (или заменён помощником ввода для executor), `scripts/benchmark-codex-app-server-mcp.mjs`, ветка `darwin` в `defaultRuntimeFolder`, кандидат tunnel-client из папки Codex Local Mac, строки «Codex Local Mac» в интерфейсе.
-8. **ZIP Windows-runtime не зависит от папки Codex Local Mac.** Он публикуется в разделе релизов GitHub рядом с пакетами macOS и Windows — дополнительным файлом обычного релиза, начиная с v0.6.91; отдельного тега нет, в Git файл не добавляется. Релиз содержит шесть файлов вместо пяти; `release-manifest.json`, `SHA256SUMS.txt` и проверка `github-release` учитывают шестой. `scripts/prepare-windows-toolchain.mjs` при пустом кеше скачивает ZIP из последнего релиза и сверяет закреплённый SHA-256 — так же, как portable Node. Кандидат `../Codex Local Mac/` удалён; `WEB_PILOT_WINDOWS_RUNTIME_ARCHIVE` и локальный кеш остаются.
-9. Режим первого сообщения (`src/context-session.mjs`, `src/mcp-runtime.mjs`) остаётся для Windows; на macOS контекст доставляется только через MCP.
-10. Релиз **0.6.91**: версия → DOCS → парная сборка → установка в `/Applications` → GitHub Release и синхронизация `main`.
+1. **В пакет попадает только приложение.** `--ignore` упаковщика обеих платформ пропускает из корня проекта только `src`, `node_modules`, `package.json`, `LICENSE`. `verifyPackagedSources` отклоняет `app.asar`, в корне которого есть что-либо ещё. «Claude outputs/» добавлена в `.gitignore`.
+2. **ZIP Windows-runtime — шестой файл каждого релиза**, рядом с пакетами macOS и Windows, начиная с v0.6.91; отдельного тега нет, в Git файл не добавляется. `release-manifest.json`, `SHA256SUMS.txt` и проверка `github-release` учитывают шестой файл. `scripts/prepare-windows-toolchain.mjs` при пустом кеше скачивает ZIP из последнего релиза и сверяет закреплённый SHA-256; кандидат `../Codex Local Mac/` удалён; `WEB_PILOT_WINDOWS_RUNTIME_ARCHIVE` и локальный кеш остаются.
+3. **Один backend на macOS — Codex App Server Local Mac.** Режим `local`, действие `setMacRuntimeMode`, выбор папки runtime и две кнопки переключателя в «Настройках» удалены. В разделе «Локальные инструменты macOS» остаётся состояние службы.
+4. **Запуск приложения не зависит от готовности служб.** Объект runtime создаётся без обращения к диску; подготовка (`activate`) выполняется при запуске, только если установлены Xcode Command Line Tools, и её ошибка показывается в интерфейсе, а не закрывает приложение. Мастер первого запуска повторяет подготовку на шаге «Проверить и продолжить».
+5. **Первый запуск на чистом Mac:** Git (Command Line Tools, как раньше) → `control.py setup` встроенным `uv` (Python 3.13, пакет `mcp`, tunnel-client с проверкой SHA-256) → запуск MCP → ввод ID и ключа туннеля прямо в состояние executor (ключ только через stdin) → запуск туннеля. Bundled runtime Codex Local Mac не ставится. В мастере имя плагина — «Codex App Server Local Mac».
+6. **Требование macOS:** установлен Codex (CLI или приложение ChatGPT). `control.py` проверяет это до установки и запуска и сообщает код `CODEX_NOT_FOUND`; интерфейс показывает отдельное понятное сообщение.
+7. **Selector.** `selector.json` хранит адрес MCP и канал ChatGPT; блок `local` и аргументы `--mode`/`--local-*` удалены. Формат совместим с 0.6.90 (`schema_version: 1`, `mode: "app-server"`), файл с режимом `local` читается как `app-server` и переписывается. `selector-start` при входе в macOS поднимает только App Server и соблюдает канал.
+8. **Обновление существующей установки** (один раз, при первой подготовке в 0.6.91; отметка в настройках Web Pilot):
+   - если у executor нет профиля и ключа туннеля, а в `~/Library/Application Support/CodexLocalMac/private` они есть, туннель переносится; ключ не выводится и не логируется;
+   - процессы прежнего runtime останавливаются только при точном совпадении командной строки с его файлами (`mcp/bridge_mcp.py`, `tools/tunnel-client … --profile mac-local`);
+   - удаляются установленная Web Pilot копия `<данные приложения>/runtime/Codex-Local-Mac` с маркером `mac-runtime.json` и LaunchAgent `com.oleynik.CodexLocalMac` (bootout и plist);
+   - настройки `macRuntimeMode`, `runtimeFolder` и `runtimeRegistration` на macOS больше не используются и не записываются.
+9. **Не удаляются автоматически:** `~/Library/Application Support/CodexLocalMac` (там ключ туннеля) и `~/VSCODE/Codex Local Mac`. Их пользователь удаляет сам; в `docs/RELEASE.md` — точные пути и условие: 0.6.91 запущена и инструменты работают.
+10. **Удалены из репозитория:** `src/mac-runtime.mjs`, `resources/mac-runtime.zip`, `resources/runtime-control/mac-control.py`, `resources/runtime-control/mac-first-run.py` (диалоги ввода переехали в `tools/codex-app-server-mcp/tunnel_prompt.py`), `scripts/benchmark-codex-app-server-mcp.mjs`, ветка `darwin` в `defaultRuntimeFolder`, кандидат tunnel-client из папки Codex Local Mac, строки «Codex Local Mac» в интерфейсе.
+11. Режим первого сообщения (`src/context-session.mjs`, `src/mcp-runtime.mjs`) остаётся для Windows; на macOS контекст доставляется только через MCP.
+12. Релиз **0.6.91**: версия → DOCS → парная сборка → установка в `/Applications` → GitHub Release (шесть файлов) и синхронизация `main`.
 
 ## Запуск
 
-Установить 0.6.91 и запустить Web Pilot. На Mac пользователя перенос не нужен: executor уже владеет туннелем и каналом VPS. После проверки можно удалить `~/VSCODE/Codex Local Mac` и `~/Library/Application Support/CodexLocalMac`.
+Установить 0.6.91, полностью выйти из Web Pilot (⌘Q) и открыть снова. На Mac пользователя перенос туннеля не нужен: executor уже владеет туннелем и каналом VPS. После проверки можно удалить `~/VSCODE/Codex Local Mac` и `~/Library/Application Support/CodexLocalMac`.
+
+Откат: в `.harness/runtime/release-backups.noindex/mac-Applications-*` лежит Contents версии 0.6.90; тот же пакет есть в GitHub Release v0.6.90. `selector.json` остаётся читаемым для 0.6.90.
 
 ## Проверка
 
-- Тесты executor (`control.py` на временном состоянии): selector без `local`; чтение файла прежнего формата; `selector-start` в обоих каналах; перенос туннеля из прежнего состояния без вывода ключа; `configure-tunnel` принимает ключ только из stdin.
-- Тесты runtime macOS: `activate` без `localRuntime`; первый запуск вызывает `setup` и `configure-tunnel` executor; отсутствие Codex даёт отдельный код ошибки; очистка удаляет только копию в данных приложения и LaunchAgent, чужие пути не трогает (временные fixtures).
-- JSDOM: в «Настройках» нет переключателя backend, раздел канала ChatGPT работает; мастер показывает новое имя плагина.
-- Сборка Windows: при пустом кеше ZIP скачивается, неверный SHA-256 отклоняется, существующий кеш переиспользуется (сеть в тестах подменена). Поставка содержит ZIP runtime шестым файлом, его SHA-256 в `SHA256SUMS.txt` совпадает с закреплённым.
-- Поиск по `src`, `scripts`, `resources`, `tools`: нет `Codex Local Mac`, `CodexLocalMac`, `mac-runtime.zip`, `mac-control.py` вне кода одноразового обновления.
-- `unit-all`, `paired-release`, `release-installed`, `github-release` для 0.6.91.
-- Вживую — пользователь: обновление на своём Mac (инструменты работают в ChatGPT и Claude через VPS, после перезагрузки тоже); первый запуск на чистой macOS VM с установленным Codex и без него; сборка `npm run build` после удаления папки `~/VSCODE/Codex Local Mac`.
+- `unit-all`: весь `npm test`, включая тесты ниже.
+- Упаковщик: тест `verifyPackagedSources` с посторонней папкой в `app.asar` — отказ; регулярное выражение `--ignore` из `package.json` пропускает `src`, `node_modules`, `package.json`, `LICENSE` и отбрасывает «Claude outputs», `docs`, `.harness`, `Project Web Pilot.app`.
+- ZIP Windows-runtime: при пустом кеше ZIP скачивается, неверный SHA-256 отклоняется, существующий кеш переиспользуется (сеть в тестах подменена); поставка содержит ZIP шестым файлом с закреплённым SHA-256.
+- `executor-channel` (`control.py` на временном состоянии): selector без `local`; файл с режимом `local` читается и переписывается; `selector-start` в обоих каналах; `configure-selector` без туннеля не падает; перенос туннеля из прежнего состояния без вывода ключа; отсутствие Codex даёт `CODEX_NOT_FOUND`; диалог ввода принимает ключ только из stdin.
+- `vps-runtime` (runtime macOS на подменённых командах): подготовка без `localRuntime`; без туннеля подготовка не падает и не запускает tunnel-client; `start` с `mcpOnly`; отсутствие Codex — отдельный код ошибки; одноразовое обновление останавливает только процессы с точным совпадением пути, удаляет только копию в данных приложения и LaunchAgent, повторно не выполняется.
+- `settings-ui`: в «Настройках» нет переключателя backend, раздел канала ChatGPT работает; мастер показывает новое имя плагина.
+- Поиск по `src`, `scripts`, `resources`, `tools`: нет `Codex Local Mac`, `mac-runtime.zip`, `mac-control.py`; `CodexLocalMac` — только в коде одноразового обновления.
+- Статически для `src/main.mjs`: сборка esbuild без неразрешённых импортов и проверка неопределённых имён (главный процесс тестами не покрыт).
+- Вживую на этом Mac до сборки: `control.py setup` и `start --mcp-only` во временном каталоге состояния со встроенным `uv`.
+- `paired-release`, `release-installed`, `github-release` для 0.6.91.
+- Вживую — пользователь: перезапуск Web Pilot 0.6.91 на своём Mac (инструменты работают в ChatGPT и Claude через VPS, после перезагрузки тоже); первый запуск на чистой macOS VM с установленным Codex и без него; native Windows.
 
-## Задачи будущего плана
+## Задачи
 
 | № | Задача | Основные файлы |
 | --- | --- | --- |
-| T000 | Сборка: в пакет попадает только приложение — `--ignore` обеих платформ пропускает из корня только `src`, `node_modules`, `package.json`, `LICENSE`; `verifyPackagedSources` отклоняет `app.asar` с чем-либо ещё в корне | `package.json`, `scripts/release-all.mjs`, `tests/release-all.test.mjs` |
-| T001 | ZIP Windows-runtime: шестой файл релиза, загрузка с проверкой SHA-256 | `scripts/prepare-windows-toolchain.mjs`, `scripts/release-all.mjs`, `scripts/check-github-release.mjs`, `tests/windows-runtime.test.mjs`, `tests/release-all.test.mjs`, `docs/SOURCE_WORKSPACES.md` |
-| T002 | Executor без Codex Local Mac: selector, `selector-start`, кандидаты tunnel-client | `tools/codex-app-server-mcp/control.py`, `tests/codex-app-server-mcp.test.mjs` |
-| T003 | Первый запуск macOS через executor: setup, ввод туннеля, проверка Codex | `src/mac-runtime-switch.mjs`, `src/main.mjs`, `src/tunnel-setup.mjs`, `src/startup-platform.mjs`, `src/ui/startup.mjs`, `src/ui/index.html`, тесты запуска |
-| T004 | Один backend: убрать режим `local` и переключатель, перевод настроек | `src/mac-runtime-switch.mjs`, `src/main.mjs`, `src/ui/settings-panel.mjs`, `src/ui/index.html`, `src/platform.mjs`, тесты |
-| T005 | Одноразовое обновление: перенос туннеля, остановка и очистка следов | `src/mac-runtime-switch.mjs`, `src/main.mjs`, тесты |
-| T006 | Удалить ресурсы и код Codex Local Mac, обновить `AGENTS.md` | `src/mac-runtime.mjs`, `resources/mac-runtime.zip`, `resources/runtime-control/mac-*.py`, `scripts/benchmark-codex-app-server-mcp.mjs`, `tests/mac-runtime.test.mjs`, `tests/mac-first-run.test.mjs`, `tests/tunnel-id-*.test.mjs`, `AGENTS.md` |
-| T007 | Source релиза 0.6.91 | `package.json`, `package-lock.json` |
+| T000 | Сборка: в пакет попадает только приложение | `package.json`, `scripts/release-all.mjs`, `tests/release-all.test.mjs`, `.gitignore` |
+| T001 | ZIP Windows-runtime: шестой файл релиза, загрузка с проверкой SHA-256 | `scripts/prepare-windows-toolchain.mjs`, `scripts/release-all.mjs`, `scripts/check-github-release.mjs`, тесты |
+| T002 | Executor без Codex Local Mac: selector, проверка Codex, встроенный uv, диалог ввода туннеля | `tools/codex-app-server-mcp/control.py`, `tools/codex-app-server-mcp/tunnel_prompt.py`, `tests/codex-app-server-mcp.test.mjs` |
+| T003 | macOS только через App Server: подготовка, первый запуск, одноразовое обновление, интерфейс | `src/mac-runtime-switch.mjs`, `src/main.mjs`, `src/preload.cjs`, `src/startup-platform.mjs`, `src/startup-readiness.mjs`, `src/ui/*`, тесты |
+| T004 | Удалить Codex Local Mac из репозитория | `src/mac-runtime.mjs`, `resources/mac-runtime.zip`, `resources/runtime-control/mac-*.py`, `scripts/benchmark-codex-app-server-mcp.mjs`, `src/platform.mjs`, `src/mcp-runtime.mjs`, тесты, `AGENTS.md` |
+| T005 | Source релиза 0.6.91 | `package.json`, `package-lock.json` |
 | DOCS | Актуализация документов | добавляет Kit |
-| T008 | Парная сборка 0.6.91 | — |
-| T009 | Установка в `/Applications` | — |
-| T010 | GitHub Release v0.6.91 и синхронизация `main` | — |
+| T006 | Парная сборка 0.6.91 | — |
+| T007 | Установка в `/Applications` | — |
+| T008 | GitHub Release v0.6.91 (шесть файлов) и синхронизация `main` | — |
 
-T000 самой первой: она перенесена из 0.6.90, где сборка упаковала неотслеживаемую папку «Claude outputs» (см. [выпуск 0.6.90](../RELEASE.md)); до неё перед сборкой в корне проекта не должно быть посторонних папок. T001 следом: она независима. Зависимость сборки из свежего клона от папки снимается после публикации v0.6.91, когда ZIP появляется в релизе; до этого сборка идёт из локального кеша. T005 и T006 — после T003 и T004, чтобы до переноса первого запуска прежний путь оставался рабочим.
+Workflow Kit 1.5.5 не принимает кодовую задачу после завершённой delivery-задачи, поэтому всё, что должно попасть в релиз, проверяется до T006.
 
 ## Границы
 
@@ -73,7 +81,8 @@ T000 самой первой: она перенесена из 0.6.90, где с
 
 ## Риски
 
-- Первый запуск на чистом Mac автотестами покрывается только на подменённых командах; реальную установку venv и tunnel-client проверяет пользователь.
+- Первый запуск на чистом Mac автотестами покрывается только на подменённых командах и прогоном `setup` во временном каталоге на Mac разработчика; чистую систему проверяет пользователь.
+- Главный процесс (`src/main.mjs`) меняется заметно, а тестами не покрыт: проверяется статически и первым запуском установленной версии у пользователя.
 - Установки, оставшиеся в режиме `local` и не имеющие Codex, после обновления не заработают, пока Codex не установлен. Это следствие решения оставить один backend.
-- Сборка из свежего клона зависит от GitHub: ZIP берётся из последнего релиза; локальный кеш и переменная окружения остаются запасным путём.
+- Сборка из свежего клона зависит от GitHub: ZIP Windows-runtime берётся из последнего релиза; локальный кеш и переменная окружения остаются запасным путём. До публикации v0.6.91 в релизах этого файла нет.
 - Каждый релиз становится больше на 86 МБ, хотя тот же ZIP уже лежит внутри Windows-пакета. Это цена того, что файл всегда рядом с текущим релизом.
