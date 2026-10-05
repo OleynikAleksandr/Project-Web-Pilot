@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1210,
+  "plan_revision": 1212,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-local-mac-removal-0.6.91-20261005",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Удалить Codex Local Mac: macOS работает только через Codex App Server, первый запуск идёт через executor; в пакет попадает только приложение; ZIP Windows-runtime публикуется в релизе; релиз 0.6.91.",
   "acceptance_criteria": [
     "В app.asar обеих платформ в корне только src, node_modules, package.json и LICENSE; посторонняя папка в пакете останавливает сборку",
@@ -584,7 +584,17 @@
       "functional_paths": [
         "scripts/check-github-release.mjs"
       ],
-      "documentation_paths": [],
+      "documentation_paths": [
+        "README.md",
+        "docs/DECISIONS.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/planning/codex-local-mac-removal.md"
+      ],
       "verification_ids": [
         "github-release"
       ],
@@ -595,13 +605,24 @@
         "Опубликованный релиз v0.6.91 не меняется: tag и шесть assets прежние"
       ],
       "expected_commit_message": "feat: Зафиксировать проверку установленной 0.6.91 на Mac пользователя",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "codex-local-mac-removal-0.6.91-20261005",
         "task_id": "A001",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "README.md",
+        "docs/DECISIONS.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/planning/codex-local-mac-removal.md"
+      ]
     }
   ],
   "blocked_reason": null,
@@ -619,10 +640,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: codex-local-mac-removal-0.6.91-20261005
 Current Task: нет
-Revision: 1210
+Revision: 1212
 
 ## Цель
 
@@ -678,10 +699,10 @@ Revision: 1210
   - Git Commit: [DONE] feat: Опубликовать 0.6.91 и синхронизировать Project Web Pilot с GitHub
   - Reference: codex-local-mac-removal-0.6.91-20261005 / T008 / implementation
   - Файлы: scripts/check-github-release.mjs, docs/planning/codex-local-mac-removal.md, README.md, docs/MODULES.md, docs/PRODUCT.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md
-- [TODO] A001: Зафиксировать проверку установленной 0.6.91 на Mac пользователя — Ожидает
-  - Git Commit: [PENDING] feat: Зафиксировать проверку установленной 0.6.91 на Mac пользователя
+- [DONE] A001: Зафиксировать проверку установленной 0.6.91 на Mac пользователя — Завершено
+  - Git Commit: [DONE] feat: Зафиксировать проверку установленной 0.6.91 на Mac пользователя
   - Reference: codex-local-mac-removal-0.6.91-20261005 / A001 / implementation
-  - Файлы: scripts/check-github-release.mjs
+  - Файлы: scripts/check-github-release.mjs, README.md, docs/DECISIONS.md, docs/MODULES.md, docs/PRODUCT.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/architecture/OVERVIEW.md, docs/planning/codex-local-mac-removal.md
 
 ## Context Pack For This Cycle
 

@@ -100,4 +100,5 @@ Workflow Kit 1.5.5 не принимает кодовую задачу посл�
 - `commit --task T003` в первый раз снова завершился `PRIVATE_CONTEXT` на `.codex/hooks.json` (файл не менялся); повтор без изменений прошёл. То же было в 0.6.90; причина не установлена.
 - DOCS `00eb4a4` — до сборки. T006 `5ff4905` — парная сборка из sourceCommit `00eb4a424125229cf3ce5c4bab4a52672d520a7d`, шесть файлов поставки. T007 `711d37b` — установка в `/Applications` без пересборки.
 - T008: [GitHub Release v0.6.91](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.91) опубликован 2026-10-05T09:18:07Z, шесть assets сверены по серверным SHA-256.
-- Остаётся пользователю: полностью выйти из Web Pilot и открыть 0.6.91; проверить инструменты в ChatGPT и Claude; после этого удалить `~/VSCODE/Codex Local Mac` и `~/Library/Application Support/CodexLocalMac`; чистая macOS и native Windows.
+- Приёмка 05.10.2026: пользователь перезапустил Web Pilot 0.6.91; проверка агентом в ChatGPT — 28 пунктов без отказов, интерфейс подтверждён ([запись](../VERIFICATION.md)). Пользователь поручил закрыть scope.
+- Остаётся пользователю: удалить `~/VSCODE/Codex Local Mac` и `~/Library/Application Support/CodexLocalMac`, когда решит не возвращаться на 0.6.90; автозапуск после перезагрузки, чистая macOS, native Windows. Коннектор Claude к серверу не создавался.

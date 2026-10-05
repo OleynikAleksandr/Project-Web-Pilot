@@ -1,5 +1,22 @@
 # Проверки и приёмка
 
+## 2026-10-05 — 0.6.91 проверка установленной версии на Mac пользователя
+
+Пользователь полностью вышел из Web Pilot, открыл установленную 0.6.91 и дал агенту в ChatGPT (сессия этого проекта, канал VPS) задание на независимую проверку релиза: только чтение и наблюдение, `control.py` — только `status`. Блоки задания: версия и подключение, одноразовая очистка, службы, установленный пакет, поставка и GitHub, репозиторий по тегу, тесты, интерфейс. Результат агента: 28 пунктов, отказов нет.
+
+- Версия и подключение: `/Applications` — 0.6.91; сервер MCP «Codex App Server Local Mac», 38 инструментов, из `computer_*` три инструмента наблюдения; `bridge_status` без ошибки.
+- Настройки приложения после первого запуска: `macRuntimeMode=app-server`, `chatgptChannel=vps`, `legacyMacRuntimeRetired=true`; `runtimeFolder`, `runtimeRegistration`, `legacyRuntimeRoots` отсутствуют. Отметка об очистке записывается только после успешной подготовки служб, то есть ветка macOS в `src/main.mjs` выполнена на настоящих данных.
+- Одноразовая очистка: plist и служба `com.oleynik.CodexLocalMac` отсутствуют (`launchctl print` — «Could not find service»), каталога `runtime` в данных приложения нет, процессов `bridge_mcp.py` и `--profile mac-local` нет; `~/VSCODE/Codex Local Mac` и `~/Library/Application Support/CodexLocalMac` на месте.
+- Службы: `control.py status` — MCP `running`, `owned`, `ready`, `127.0.0.1:17852`; selector `app-server` / `vps` без ключа `local`; туннель настроен и в канале VPS не запущен, процессов tunnel-client нет; LaunchAgent `com.oleynik.WebPilotCodexExecutor` включён и запускает `selector-start`; исходники в состоянии executor совпадают с пакетом (шесть файлов).
+- Пакет и поставка: SHA-256 установленного `app.asar` равен `asarSha256` обоих пакетов; в корне `app.asar` четыре разрешённых имени, из `src/mac-runtime*` только `mac-runtime-switch.mjs`; в ресурсах нет файлов прежнего runtime; `shasum -c SHA256SUMS.txt` — три OK; в обоих ZIP нет `mac-runtime.zip`, `mac-control.py`, `mac-first-run.py`; `check-github-release.mjs` — ok, шесть assets.
+- Репозиторий по тегу `v0.6.91`: «Codex Local Mac» в `src`, `scripts`, `resources`, `tools` не встречается, `CodexLocalMac` — две ожидаемые строки, удалённых файлов нет.
+- Тесты, запущенные агентом: 127 (124 прошли, 3 пропущены — Windows bootstrap) и 19 (все прошли).
+- Интерфейс: по снимку окна — в «Подробностях подключения» «Codex App Server Local Mac · встроенный MCP», кнопки выбора папки нет. Раздел «Настройки» пользователь передал текстом: «Codex App Server Local Mac: MCP и канал VPS готовы.», новое пояснение, канал VPS готов, туннель VPS ведёт на порт 17852, адрес коннектора показан скрытым.
+
+Уточнение пользователя: коннектор Claude к серверу он не создавал. Упоминания Claude в документах 0.6.83–0.6.91 описывают назначение канала VPS, а не проверенное подключение.
+
+Не проверено: автозапуск служб после перезагрузки Mac, первый запуск на чистой macOS (с Codex и без него), native Windows, откат на 0.6.90, подключение Claude.
+
 ## 2026-10-05 — 0.6.91 сборка, установка и GitHub publication
 
 T006: `paired-release` прошла; `app.asar` — 2561960 байт на обеих платформах и в корневом app, в корне только `src`, `node_modules`, `package.json`, `LICENSE`; в `Resources` обоих пакетов нет файлов прежнего runtime macOS, `codex-app-server-mcp` содержит `tunnel_prompt.py`, `mac-tools` — `node` и `uv`; в поставке шесть файлов релиза. T007: `release-installed` прошла, `/Applications` — 0.6.91, inode прежний.
