@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1170,
+  "plan_revision": 1172,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "computer-use-removal-0.6.90-20261005",
@@ -163,8 +163,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "computer-use-removal-0.6.90-20261005",
         "task_id": "T003",
@@ -193,7 +193,13 @@
         "session-rules.md и правила первого сообщения содержат строку из п. 6 контракта дословно",
         "Тесты обоих путей доставки проверяют новую строку; прежние правила не изменены"
       ],
-      "expected_commit_message": "feat: Правила: запрет управления интерфейсом в обоих режимах доставки"
+      "expected_commit_message": "feat: Правила: запрет управления интерфейсом в обоих режимах доставки",
+      "actual_files": [
+        "src/context-session.mjs",
+        "tests/codex-app-server-mcp.test.mjs",
+        "tests/context-session.test.mjs",
+        "tools/codex-app-server-mcp/session-rules.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -400,7 +406,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: computer-use-removal-0.6.90-20261005
 Current Task: нет
-Revision: 1170
+Revision: 1172
 
 ## Цель
 
@@ -423,8 +429,8 @@ Revision: 1170
   - Git Commit: [DONE] feat: Windows: overlay убирает 9 инструментов управления интерфейсом и раздел Desktop
   - Reference: computer-use-removal-0.6.90-20261005 / T002 / implementation
   - Файлы: src/windows-runtime.mjs, tests/windows-runtime.test.mjs, src/startup-readiness.mjs, docs/planning/computer-use-removal.md
-- [TODO] T003: Правила: запрет управления интерфейсом в обоих режимах доставки — Ожидает
-  - Git Commit: [PENDING] feat: Правила: запрет управления интерфейсом в обоих режимах доставки
+- [DONE] T003: Правила: запрет управления интерфейсом в обоих режимах доставки — Завершено
+  - Git Commit: [DONE] feat: Правила: запрет управления интерфейсом в обоих режимах доставки
   - Reference: computer-use-removal-0.6.90-20261005 / T003 / implementation
   - Файлы: src/context-session.mjs, tests/context-session.test.mjs, tests/codex-app-server-mcp.test.mjs, docs/planning/computer-use-removal.md, tools/codex-app-server-mcp/session-rules.md, docs/planning/codex-local-mac-removal.md
 - [TODO] T004: Подготовить source релиза 0.6.90 — Ожидает

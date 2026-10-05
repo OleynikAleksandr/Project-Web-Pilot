@@ -53,6 +53,8 @@ test('the first message contains the exact complete packet and asks for a short 
   for (const rule of ['Не запускай codex exec', 'других модельных агентов', 'не делегируй им работу',
     'если пользователь прямо этого не попросил', 'локальный исполнитель MCP без модельных запросов разрешён'])
     assert.ok(text.includes(rule), rule);
+  // 0.6.90: the model may look at the screen but must not drive the interface, also through shell commands.
+  assert.ok(text.includes('Интерфейсом компьютера не управляй: не двигай мышь, не нажимай клавиши и не переключай окна — ни инструментами, ни командами (osascript, System Events, cliclick и подобными). Список окон и снимки экрана и окна (`computer_list_windows`, `computer_capture_screen`, `computer_capture_window`) разрешены. Живую проверку интерфейса выполняет пользователь.'));
 });
 
 test('ordinary session contract defines one verified microtask per reply without an AutoPlan protocol', () => {

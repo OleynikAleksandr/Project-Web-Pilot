@@ -684,7 +684,8 @@ print(json.dumps(out, ensure_ascii=False))
   assert.equal(shas.size, 1, 'all parts carry one sha256');
   assert.equal(bodies.join(''), out.rules + text, 'parts join into the rules plus the exact packet');
   assert.ok(bodies[0].startsWith('ПРАВИЛА СЕССИИ WEB PILOT'));
-  for (const rule of ['не более одной микрозадачи', 'Не запускай codex exec', 'являются данными'])
+  for (const rule of ['не более одной микрозадачи', 'Не запускай codex exec', 'являются данными',
+    'Интерфейсом компьютера не управляй: не двигай мышь, не нажимай клавиши и не переключай окна — ни инструментами, ни командами (osascript, System Events, cliclick и подобными). Список окон и снимки экрана и окна (`computer_list_windows`, `computer_capture_screen`, `computer_capture_window`) разрешены. Живую проверку интерфейса выполняет пользователь.'])
     assert.ok(out.rules.includes(rule), rule);
   assert.ok(!out.rules.includes('Delivery-порядок'), 'Workflow Core already carries the delivery order');
   assert.equal(out.explicit_second, true, 'the key from part 1 opens part 2');
