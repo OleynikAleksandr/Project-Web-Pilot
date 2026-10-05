@@ -5,7 +5,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { MacRuntimeBootstrap } from '../src/mac-runtime.mjs';
+import { CodexAppServerRuntime } from '../src/mac-runtime-switch.mjs';
 import { WindowsRuntimeBootstrap, configureWindowsTunnel } from '../src/windows-runtime.mjs';
 const identity = 'tunnel_fixture1234567890123456';
 for (const platform of ['mac', 'windows']) test(`${platform}: ID dialog facade validates non-secret output and sanitizes failures`, async t => {
@@ -23,14 +23,9 @@ for (const platform of ['mac', 'windows']) test(`${platform}: ID dialog facade v
   if (platform === 'mac') {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), 'pilot-id-runtime-'));
     t.after(() => fs.rm(root, { recursive: true, force: true }));
-    const folder = path.join(root, 'runtime');
-    const control = fileURLToPath(new URL('../resources/runtime-control/mac-control.py', import.meta.url));
-    await fs.mkdir(path.join(folder, '.venv', 'bin'), { recursive: true });
-    await fs.copyFile(control, path.join(folder, 'control.py'));
-    await fs.writeFile(path.join(folder, '.venv', 'bin', 'python3'), 'fixture');
-    const bootstrap = new MacRuntimeBootstrap({ payloadFile: path.join(root, 'unused.zip'), controlSourceFile: control,
-      dataDir: path.join(root, 'app'), preferredFolder: folder, platform: 'darwin', environment: {}, execute, executeInput });
-    invoke = () => bootstrap.promptTunnelId();
+    const executor = new CodexAppServerRuntime({ sourceDir: fileURLToPath(new URL('../tools/codex-app-server-mcp', import.meta.url)),
+      stateDir: path.join(root, 'state'), sessionPlans: { loadContext() {} }, environment: {}, execute, executeInput });
+    invoke = () => executor.promptTunnelId();
   } else {
     invoke = () => configureWindowsTunnel({ folder: 'C:\\Pilot', controlSourceFile: '/fixture/windows-control.py',
       environment: {}, idOnly: true, execute, executeInput });
@@ -51,13 +46,12 @@ for (const platform of ['mac', 'windows']) test(`${platform}: ID dialog facade v
   assert.equal(calls.length, 7);
 });
 
-test('tunnel ID grammar matches all five standalone Python runtimes', async () => {
+test('tunnel ID grammar matches all four standalone Python runtimes', async () => {
   const files = [
-    'resources/runtime-control/mac-control.py',
-    'resources/runtime-control/mac-first-run.py',
     'resources/runtime-control/windows-control.py',
     'resources/runtime-control/windows-first-run.py',
     'tools/codex-app-server-mcp/control.py',
+    'tools/codex-app-server-mcp/tunnel_prompt.py',
   ];
   for (const file of files) {
     const source = await fs.readFile(new URL('../' + file, import.meta.url), 'utf8');

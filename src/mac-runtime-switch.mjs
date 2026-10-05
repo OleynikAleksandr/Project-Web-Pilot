@@ -14,7 +14,6 @@ export const APP_SERVER_LAUNCH_AGENT = 'com.oleynik.WebPilotCodexExecutor';
 // The local runtime retired in 0.6.91. These names exist only to remove what earlier versions installed.
 export const LEGACY_LAUNCH_AGENT = 'com.oleynik.CodexLocalMac';
 const LEGACY_RUNTIME_FOLDER = 'Codex-Local-Mac';
-const LEGACY_DEFAULT_ROOT = ['VSCODE', 'Codex Local Mac', 'mac-codex-local'];
 // How ChatGPT reaches the MCP. The VPS tunnel itself runs whenever it is
 // configured (Claude uses it too); the channel only decides whether tunnel-client runs.
 export const CHATGPT_CHANNEL_SECURE = 'secure-tunnel';
@@ -450,10 +449,11 @@ export class MacRuntimeSwitcher {
 
   // One-time cleanup after the retired local runtime: its processes, its LaunchAgent and the copy
   // Web Pilot itself installed into its data folder. The user's own folders and the old tunnel key stay.
+  // runtimeRoots are the runtime folders that earlier versions recorded in the settings.
   async retireLegacyRuntime({ dataDir, runtimeRoots = [] }) {
     if (!dataDir || !path.isAbsolute(dataDir)) throw new TypeError('retireLegacyRuntime requires an absolute dataDir');
     const installed = path.join(dataDir, 'runtime', LEGACY_RUNTIME_FOLDER);
-    const roots = [...new Set([installed, path.join(this.homeDir, ...LEGACY_DEFAULT_ROOT), ...runtimeRoots]
+    const roots = [...new Set([installed, ...runtimeRoots]
       .filter(root => typeof root === 'string' && path.isAbsolute(root)).map(root => path.resolve(root)))];
     const stopped = await this.stopLegacyProcesses(roots);
     try {

@@ -16,7 +16,7 @@ export class RuntimeError extends Error {
 
 export function validateContextPacket(packet, workspace) {
   if (packet?.delivery_protocol !== CONTEXT_PROTOCOL || packet.ack_required !== false) {
-    throw new RuntimeError('MCP_UPDATE_REQUIRED', 'Нужна обновлённая версия Codex Local Mac с прямой передачей контекста.');
+    throw new RuntimeError('MCP_UPDATE_REQUIRED', 'Нужна обновлённая версия локальных инструментов с прямой передачей контекста.');
   }
   if (packet.workspace !== workspace) throw new RuntimeError('MCP_CONTEXT_MISMATCH', 'Получен контекст другой папки.');
   const facts = packet.facts;
@@ -87,7 +87,9 @@ async function responseMessage(response, id) {
 }
 
 export class LocalMcpClient {
-  constructor(endpoint, { fetchImpl = globalThis.fetch, timeoutMs = 10000, expectedServerName = 'Codex Local Mac' } = {}) {
+  // expectedServerName is the backend of this platform: another MCP server on the same local port is refused.
+  constructor(endpoint, { fetchImpl = globalThis.fetch, timeoutMs = 10000, expectedServerName } = {}) {
+    if (typeof expectedServerName !== 'string' || !expectedServerName) throw new TypeError('LocalMcpClient requires expectedServerName');
     this.endpoint = validateEndpoint(endpoint);
     this.fetch = fetchImpl;
     this.timeoutMs = timeoutMs;
@@ -180,9 +182,10 @@ export async function findRuntimeFolder(input, { platform = process.platform } =
   throw new RuntimeError('RUNTIME_NOT_FOUND', 'В выбранной папке не найден настроенный локальный Codex runtime.');
 }
 
+// The local runtime that lives in a folder with control.py: Windows. macOS uses CodexAppServerRuntime.
 export class McpRuntime {
   constructor(folder, { execute = execFile, clientFactory = null, platform = process.platform,
-    expectedServerName = platform === 'win32' ? 'Codex Local Windows' : 'Codex Local Mac', ensureRuntime = null, sessionPlans = new SessionPlans() } = {}) {
+    expectedServerName = 'Codex Local Windows', ensureRuntime = null, sessionPlans = new SessionPlans() } = {}) {
     this.folder = folder;
     this.sessionPlans = sessionPlans;
     this.execute = execute;

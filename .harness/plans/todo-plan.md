@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1197,
+  "plan_revision": 1199,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-local-mac-removal-0.6.91-20261005",
@@ -296,8 +296,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "codex-local-mac-removal-0.6.91-20261005",
         "task_id": "T004",
@@ -316,7 +316,9 @@
         "tests/mac-first-run.test.mjs",
         "tests/tunnel-id-runtime.test.mjs",
         "tests/tunnel-id-prompt.test.mjs",
-        "tests/mcp-runtime.test.mjs"
+        "tests/mcp-runtime.test.mjs",
+        "src/mac-runtime-switch.mjs",
+        "src/main.mjs"
       ],
       "documentation_paths": [
         "docs/planning/codex-local-mac-removal.md",
@@ -335,7 +337,24 @@
         "В src, scripts, resources и tools нет «Codex Local Mac», mac-runtime.zip и mac-control.py; CodexLocalMac — только в коде одноразового обновления",
         "AGENTS.md описывает один backend macOS и не называет Codex Local Mac источником"
       ],
-      "expected_commit_message": "feat: Удалить Codex Local Mac из репозитория"
+      "expected_commit_message": "feat: Удалить Codex Local Mac из репозитория",
+      "actual_files": [
+        "AGENTS.md",
+        "resources/mac-runtime.zip",
+        "resources/runtime-control/mac-control.py",
+        "resources/runtime-control/mac-first-run.py",
+        "scripts/benchmark-codex-app-server-mcp.mjs",
+        "src/mac-runtime-switch.mjs",
+        "src/mac-runtime.mjs",
+        "src/main.mjs",
+        "src/mcp-runtime.mjs",
+        "src/platform.mjs",
+        "tests/mac-first-run.test.mjs",
+        "tests/mac-runtime.test.mjs",
+        "tests/mcp-runtime.test.mjs",
+        "tests/tunnel-id-prompt.test.mjs",
+        "tests/tunnel-id-runtime.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -510,7 +529,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: codex-local-mac-removal-0.6.91-20261005
 Current Task: нет
-Revision: 1197
+Revision: 1199
 
 ## Цель
 
@@ -542,10 +561,10 @@ Revision: 1197
   - Git Commit: [DONE] feat: macOS только через App Server: подготовка, первый запуск, одноразовое обновление, интерфейс
   - Reference: codex-local-mac-removal-0.6.91-20261005 / T003 / implementation
   - Файлы: src/mac-runtime-switch.mjs, src/main.mjs, src/preload.cjs, src/startup-platform.mjs, src/startup-readiness.mjs, src/ui/index.html, src/ui/settings-panel.mjs, src/ui/sidebar.mjs, src/ui/startup.mjs, tests/mac-runtime-switch.test.mjs, tests/startup-platform.test.mjs, tests/settings-chatgpt-channel.test.mjs, tests/sidebar.test.mjs, tests/startup-ui.test.mjs, tests/electron-smoke.mjs, tests/startup-readiness.test.mjs, docs/planning/codex-local-mac-removal.md
-- [TODO] T004: Удалить Codex Local Mac из репозитория — Ожидает
-  - Git Commit: [PENDING] feat: Удалить Codex Local Mac из репозитория
+- [DONE] T004: Удалить Codex Local Mac из репозитория — Завершено
+  - Git Commit: [DONE] feat: Удалить Codex Local Mac из репозитория
   - Reference: codex-local-mac-removal-0.6.91-20261005 / T004 / implementation
-  - Файлы: src/mac-runtime.mjs, resources/mac-runtime.zip, resources/runtime-control/mac-control.py, resources/runtime-control/mac-first-run.py, scripts/benchmark-codex-app-server-mcp.mjs, src/platform.mjs, src/mcp-runtime.mjs, tests/mac-runtime.test.mjs, tests/mac-first-run.test.mjs, tests/tunnel-id-runtime.test.mjs, tests/tunnel-id-prompt.test.mjs, tests/mcp-runtime.test.mjs, docs/planning/codex-local-mac-removal.md, AGENTS.md
+  - Файлы: src/mac-runtime.mjs, resources/mac-runtime.zip, resources/runtime-control/mac-control.py, resources/runtime-control/mac-first-run.py, scripts/benchmark-codex-app-server-mcp.mjs, src/platform.mjs, src/mcp-runtime.mjs, tests/mac-runtime.test.mjs, tests/mac-first-run.test.mjs, tests/tunnel-id-runtime.test.mjs, tests/tunnel-id-prompt.test.mjs, tests/mcp-runtime.test.mjs, src/mac-runtime-switch.mjs, src/main.mjs, docs/planning/codex-local-mac-removal.md, AGENTS.md
 - [TODO] T005: Подготовить source релиза 0.6.91 — Ожидает
   - Git Commit: [PENDING] feat: Подготовить source релиза 0.6.91
   - Reference: codex-local-mac-removal-0.6.91-20261005 / T005 / implementation

@@ -62,9 +62,7 @@ const planMonitor = new PlanMonitor({ selected: () => store.selected(),
     if (!pageLoading && !setupState && !settingsState) controller?.projectChanged();
   }, onError: () => publish() });
 const partition = smoke ? 'web-pilot-smoke' : 'persist:chatgpt';
-const macExecutorStateDir = path.join(os.homedir(), 'Library/Application Support/WebPilotCodexExecutor');
-let runtimeFolder = process.platform === 'darwin' ? macExecutorStateDir
-  : bundledWindowsRuntimeFolder(dataDir, process.platform) ?? defaultRuntimeFolder(os.homedir(), process.platform);
+let runtimeFolder = bundledWindowsRuntimeFolder(dataDir, process.platform) ?? defaultRuntimeFolder(os.homedir(), process.platform);
 let configuredRuntimeFolder = null;
 let runtimeRegistration = null;
 // macOS: what the local runtime retired in 0.6.91 left behind is removed once; until then its folders are remembered.
@@ -810,7 +808,7 @@ function appServerSourceFolder() {
 function ensureMacRuntimeSwitcher() {
   if (process.platform !== 'darwin' || smoke) return null;
   appServerRuntime ??= new CodexAppServerRuntime({
-    sourceDir: appServerSourceFolder(), sessionPlans, stateDir: macExecutorStateDir,
+    sourceDir: appServerSourceFolder(), sessionPlans, stateDir: defaultRuntimeFolder(os.homedir(), 'darwin'),
     // The bundled uv builds the executor's Python on a Mac that has only the system one.
     uv: path.join(app.isPackaged ? process.resourcesPath : path.join(sourceDir, '../.harness/runtime'), 'mac-tools', 'uv'),
   });

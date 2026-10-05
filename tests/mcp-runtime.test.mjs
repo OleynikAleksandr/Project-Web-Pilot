@@ -5,7 +5,7 @@ import path from 'node:path';
 import os from 'node:os';
 import { createHash } from 'node:crypto';
 import { McpRuntime, LocalMcpClient, validateEndpoint, validateContextPacket } from '../src/mcp-runtime.mjs';
-import { runtimeFolderCandidates, runtimeLayout } from '../src/platform.mjs';
+import { defaultRuntimeFolder, runtimeFolderCandidates, runtimeLayout } from '../src/platform.mjs';
 
 const ready = { mcp: { running: true, owned: true, ready: true },
   tunnel: { running: true, owned: true, ready: true, configured: true }, mcp_url: 'http://127.0.0.1:17842/mcp' };
@@ -20,16 +20,18 @@ async function folder(t) {
   return fs.realpath(root);
 }
 
-const clientFactory = () => ({ initialize: async () => ({ serverName: process.platform === 'win32' ? 'Codex Local Windows' : 'Codex Local Mac', toolCount: 47 }) });
+const clientFactory = () => ({ initialize: async () => ({ serverName: 'Codex Local Windows', toolCount: 47 }) });
 
-test('platform runtime layout preserves macOS and defines Windows paths without runtime access', () => {
-  assert.deepEqual(runtimeLayout('/Users/test/Codex Local Mac/mac-codex-local', 'darwin'), {
-    control: '/Users/test/Codex Local Mac/mac-codex-local/control.py',
-    python: '/Users/test/Codex Local Mac/mac-codex-local/.venv/bin/python3',
+test('platform runtime layout defines POSIX and Windows paths without runtime access; macOS keeps its backend in the executor state', () => {
+  assert.deepEqual(runtimeLayout('/home/test/Codex Local/codex-local', 'linux'), {
+    control: '/home/test/Codex Local/codex-local/control.py',
+    python: '/home/test/Codex Local/codex-local/.venv/bin/python3',
   });
-  assert.deepEqual(runtimeFolderCandidates('/Users/test/Codex Local Mac', 'darwin'), [
-    '/Users/test/Codex Local Mac', '/Users/test/Codex Local Mac/mac-codex-local',
+  assert.deepEqual(runtimeFolderCandidates('/home/test/Codex Local', 'linux'), [
+    '/home/test/Codex Local', '/home/test/Codex Local/codex-local',
   ]);
+  assert.equal(defaultRuntimeFolder('/Users/test', 'darwin'), '/Users/test/Library/Application Support/WebPilotCodexExecutor');
+  assert.equal(defaultRuntimeFolder('C:\\Users\\test', 'win32'), 'C:\\Users\\test\\VSCODE\\Codex Local Windows\\windows-codex-local');
   assert.deepEqual(runtimeLayout('C:\\Users\\test\\Codex Local', 'win32'), {
     control: 'C:\\Users\\test\\Codex Local\\control.py',
     python: 'C:\\Users\\test\\Codex Local\\.venv\\Scripts\\python.exe',
@@ -96,7 +98,7 @@ test('HTTP JSON and streamed SSE deliver the full packet with no agent receipt c
   const fetchImpl=async (_url,options) => {
     const body=JSON.parse(options.body);requests.push({body,headers:options.headers});
     if(body.method==='notifications/initialized')return new Response(null,{status:202});
-    const results={initialize:{serverInfo:{name:'Codex Local Mac'},protocolVersion:'2025-03-26'},
+    const results={initialize:{serverInfo:{name:'Codex App Server Local Mac'},protocolVersion:'2025-03-26'},
       'tools/list':{tools:['bridge_status','workflow_context_recover'].map(name=>({name}))},
       'tools/call':{structuredContent:packet}};
     const text=JSON.stringify({jsonrpc:'2.0',id:body.id,result:results[body.method]});
@@ -106,7 +108,7 @@ test('HTTP JSON and streamed SSE deliver the full packet with no agent receipt c
     }
     return new Response(text,{headers:{'content-type':'application/json','mcp-session-id':'opaque-session'}});
   };
-  const client=new LocalMcpClient(ready.mcp_url,{fetchImpl});
+  const client=new LocalMcpClient(ready.mcp_url,{fetchImpl,expectedServerName:'Codex App Server Local Mac'});
   assert.deepEqual(await client.loadContext('/project'),packet);
   assert.equal(requests[2].headers['Mcp-Session-Id'],'opaque-session');
   assert.equal(requests.at(-1).body.params.name,'workflow_context_recover');
@@ -116,12 +118,16 @@ test('HTTP JSON and streamed SSE deliver the full packet with no agent receipt c
 
 test('non-local addresses and a server without context tools fail closed', async () => {
   for(const url of ['https://evil.test/mcp','http://127.0.0.1:17842/mcp?x=y','file:///tmp/mcp'])assert.throws(()=>validateEndpoint(url),{code:'MCP_URL_INVALID'});
-  const client=new LocalMcpClient(ready.mcp_url,{fetchImpl:async(_url,options)=>{
+  const fetchImpl=async(_url,options)=>{
     const body=JSON.parse(options.body);
     if(body.method.startsWith('notifications/'))return new Response(null,{status:202});
-    return new Response(JSON.stringify({id:body.id,result:body.method==='initialize'?{serverInfo:{name:'Codex Local Mac'},protocolVersion:'2025-03-26'}:{tools:[]}}),{headers:{'content-type':'application/json'}});
-  }});
+    return new Response(JSON.stringify({id:body.id,result:body.method==='initialize'?{serverInfo:{name:'Codex App Server Local Mac'},protocolVersion:'2025-03-26'}:{tools:[]}}),{headers:{'content-type':'application/json'}});
+  };
+  const client=new LocalMcpClient(ready.mcp_url,{fetchImpl,expectedServerName:'Codex App Server Local Mac'});
   await assert.rejects(client.initialize(),{code:'MCP_TOOLS_MISSING'});
+  // Another MCP server on the same local port is refused, and the expected name is never assumed.
+  await assert.rejects(new LocalMcpClient(ready.mcp_url,{fetchImpl,expectedServerName:'Codex Local Windows'}).initialize(),{code:'MCP_SERVER_MISMATCH'});
+  assert.throws(()=>new LocalMcpClient(ready.mcp_url,{fetchImpl}),TypeError);
 });
 
 function contextPacket() {
