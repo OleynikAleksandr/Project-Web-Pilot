@@ -1,5 +1,11 @@
 # Выпуск и постоянный путь запуска
 
+## Выпуск 0.6.95 — 05.10.2026
+
+[Контракт](planning/codex-native-tools-macos.md). 0.6.95 убирает самодельную корзину из `Codex App Server Local Mac`: `delete_path`, `list_trash`, `restore_trash` и их код удалены, каталог macOS — 10 инструментов; удаление выполняется как в Codex, откат даёт git; исполнитель при запуске убирает прежнюю папку `trash` только пустой. Остальные десять инструментов, `codex-tools.lock.json`, Windows-runtime и VPS channel не менялись. После установки нужно перезапустить Web Pilot и обновить инструменты в ChatGPT.
+
+Предсборочное evidence: T001 `ec2e57f`, T002 `c1c839b`. Полный `npm test`: 553 total, 549 passed, 4 skipped, 0 failed. `npm run check:codex-tools` подтвердил `rust-v0.160.0`; bundled Workflow Kit — 1.5.5 / 35 файлов / SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`.
+
 ## Выпуск 0.6.94 — 05.10.2026
 
 [Контракт](planning/codex-native-tools-macos.md). Source 0.6.94 сохраняет 13-tool каталог `Codex App Server Local Mac`, но доводит командный контракт и metadata поверхности после пользовательской проверки 0.6.93: Wall time `write_stdin` относится к текущему вызову; завершение между status и write/terminate возвращает финальный вывод и exit code; default/max command output — 8000 оценочных токенов; все 13 tools и все параметры имеют descriptions; image-tool объясняют JSON + `image/png` и `content_items → image()`; pre-execution OpenAI block получает единое правило одного неизменённого retry. Первые 512 символов server instructions, `codex-tools.lock.json`, Windows-runtime и VPS channel не менялись.

@@ -24,6 +24,8 @@
 <!-- workflow-kit:end -->
 ## Project Web Pilot
 
+**Текущий source — 0.6.95; сборка ещё не выполнялась** ([контракт](planning/codex-native-tools-macos.md)). 0.6.95 убирает самодельную корзину: `delete_path`, `list_trash`, `restore_trash` и их код удалены, каталог macOS — 10 инструментов. Удаление выполняется как в Codex — `rm` через `exec_command` или `*** Delete File` в `apply_patch`; откат даёт git. Исполнитель при запуске убирает прежнюю папку `trash` только пустой. Полный `npm test`: 553 теста, 549 passed, 4 skipped, 0 failed; `npm run check:codex-tools` подтвердил `rust-v0.160.0`. Остальные десять инструментов, `codex-tools.lock.json`, Windows-runtime и VPS channel не менялись.
+
 **Текущая установленная и опубликованная версия — 0.6.94 / Workflow Kit 1.5.5; предыдущая — 0.6.93** ([контракт](planning/codex-native-tools-macos.md)). 0.6.94 сохраняет 13-tool каталог, исправляет Wall time/race `write_stdin`, ограничивает command-output 8000 оценочных токенов, заполняет descriptions всех tools/parameters, добавляет image-result hint и единое pre-execution retry-rule. Release sourceCommit `24b04476…`, обе Mac-копии установлены, GitHub содержит ровно шесть проверенных assets; WorkflowKit docs синхронизированы commit `6c8ad190…`. Native Windows остаётся отдельной проверкой. `codex-tools.lock.json`, Windows-runtime и VPS channel не менялись. История выпусков — [RELEASE.md](RELEASE.md).
 
 | Документ | Назначение |
@@ -34,12 +36,12 @@
 | docs/modules/workflow-kit-recovery.md | Specification Workflow Kit / Context Recovery / project continuity |
 | docs/modules/project-doctor.md | Контракт автономного Доктора проекта и границы автоматического ремонта |
 | docs/modules/runtime-lifecycle.md | Specification self-healing MCP/tunnel lifecycle |
-| docs/modules/codex-app-server-executor.md | Единственный macOS executor: 13 tools с 0.6.92; 0.6.93 — stdin/timing correction; опубликованная 0.6.94 — Wall time/race, output 8000, полный schema/image hint/retry-rule; lifecycle 0.6.91, наблюдение без UI control и исторический A/B |
+| docs/modules/codex-app-server-executor.md | Единственный macOS executor: 13 tools с 0.6.92; 0.6.93 — stdin/timing correction; опубликованная 0.6.94 — Wall time/race, output 8000, полный schema/image hint/retry-rule; source 0.6.95 — 10 tools, корзина удалена; lifecycle 0.6.91, наблюдение без UI control и исторический A/B |
 | docs/modules/workspace-sessions.md | Specification проектов, Chat/Work sessions, session tree, переходов после scope, оформления и сохранения геометрии интерфейса |
 | docs/planning/session-title-sync.md | Контракт auto/manual session title и server-side синхронизации с native ChatGPT Recents |
 | docs/planning/input-instruction-delivery-ordering.md | Канонический порядок DOCS → delivery, startupMessage guard и границы незапланированных build/publish |
 | docs/planning/computer-use-removal.md | Управление интерфейсом убрано из MCP на macOS и Windows; остаются список окон и снимки; запрет в правилах; релиз 0.6.90 |
-| docs/planning/codex-native-tools-macos.md | 0.6.92: 13-tool каталог; 0.6.93: stdin/write timing correction; 0.6.94: Wall time/race, output 8000, полный tool schema/image hint/retry-rule, все документы и Workflow Kit docs; Windows без изменений, DOCS → delivery |
+| docs/planning/codex-native-tools-macos.md | 0.6.95: корзина удалена, каталог 10 tools; 0.6.92: 13-tool каталог; 0.6.93: stdin/write timing correction; 0.6.94: Wall time/race, output 8000, полный tool schema/image hint/retry-rule, все документы и Workflow Kit docs; Windows без изменений, DOCS → delivery |
 | docs/planning/codex-local-mac-removal.md | 0.6.91: Codex Local Mac удалён; macOS только через Codex App Server (первый запуск, одноразовая очистка); в пакете только приложение; ZIP Windows-runtime — шестой файл релиза |
 | docs/planning/release-backups-kit-1.5.5.md | Одна резервная копия установки на цель вне Spotlight; Workflow Kit 1.5.5 (push только после DOCS); релиз 0.6.89 |
 | docs/planning/mcp-start-message.md | Web Pilot начинает MCP-сессию коротким стартовым сообщением; релиз 0.6.88 |
