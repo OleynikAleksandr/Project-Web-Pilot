@@ -38,6 +38,7 @@ MAX_VIEW_IMAGE_BYTES = 20_000_000
 MAX_PATCH_BYTES = 1_000_000
 MAX_OUTPUT = 120_000
 STDIN_CLOSED_MESSAGE = "stdin is closed for this session; rerun exec_command with tty=true to keep stdin open"
+PREEXECUTION_RETRY_RULE = "If OpenAI blocked the call before execution, retry the same call once unchanged; change or split it only if the retry is blocked too."
 # ChatGPT shows a model roughly 10 000 tokens of one tool result; a text-only part of 28 000 bytes
 # is about 7 000 tokens of Russian text.
 CONTEXT_PART_BYTES = 28_000
@@ -740,7 +741,8 @@ def create_server(*, host: str, port: int, state_root: Path, codex_binary: str |
             "No UI control: this MCP cannot move the mouse, press keys or switch windows. Observation only: "
             "computer_list_windows, computer_capture_screen and computer_capture_window. "
             "Tool usage: search with rg through exec_command; edit text files with apply_patch and do not reread them "
-            "after a successful patch; delete paths with delete_path, not rm."
+            "after a successful patch; delete paths with delete_path, not rm. "
+            + PREEXECUTION_RETRY_RULE
         ),
         host=host,
         port=port,
@@ -753,16 +755,31 @@ def create_server(*, host: str, port: int, state_root: Path, codex_binary: str |
     )
 
     @mcp.tool(annotations=LOCAL_NOTIFICATION)
-    def turn_watchdog(action: Literal["start","checkpoint","complete"], summary: str, turn_token: str = "", timeout_seconds: int = 150, notify_checkpoint: bool = False) -> dict[str, Any]:
+    def turn_watchdog(
+        action: Annotated[Literal["start","checkpoint","complete"], Field(description="Watchdog action: start a timer, checkpoint and restart it, or complete the watched turn.")],
+        summary: Annotated[str, Field(description="Short status text used in the macOS notification if the watchdog fires.")],
+        turn_token: Annotated[str, Field(description="Token returned by start; required for checkpoint and complete.")] = "",
+        timeout_seconds: Annotated[int, Field(description="Watchdog timeout in seconds; values are clamped to 60-600.")] = 150,
+        notify_checkpoint: Annotated[bool, Field(description="When true, checkpoint also posts a 'work continues' notification.")] = False,
+    ) -> dict[str, Any]:
+        """Manage a local turn watchdog that can notify the user if a long response appears interrupted."""
         return watchdog.action(action, summary, turn_token, timeout_seconds, notify_checkpoint)
 
     @mcp.tool(annotations=READ_ONLY)
-    def bridge_status(repository: str = "") -> dict[str, Any]:
+    def bridge_status(
+        repository: Annotated[str, Field(description="Optional local repository path. When provided, include git status for that repository.")] = "",
+    ) -> dict[str, Any]:
+        """Report Codex App Server executor status, local filesystem scope, and pinned/installed Codex tool compatibility."""
         return facade.status(repository)
 
     # Text only: a structured copy would double what the client shows the model.
     @mcp.tool(annotations=READ_ONLY, structured_output=False)
-    def workflow_context_recover(workspace: str = "", session_id: str = "", part: int = 0, after: str = "") -> dict[str, Any] | str:
+    def workflow_context_recover(
+        workspace: Annotated[str, Field(description="Absolute Workflow Kit project folder. Omit to use the project currently open in Web Pilot.")] = "",
+        session_id: Annotated[str, Field(description="Optional legacy recovery session selector; normally leave empty for the checkout current plan.")] = "",
+        part: Annotated[int, Field(description="Context part to read. Use 1 first and then the next part named at the end; 0 returns the whole packet for compatibility.")] = 0,
+        after: Annotated[str, Field(description="Ordering key printed at the end of the previous part; required for part 2 and later.")] = "",
+    ) -> dict[str, Any] | str:
         """Project context for Workflow Kit projects: working rules, current plan and project documents.
         One part per tool call: call part=1, then only the next part named at the end of the result with its after key.
         Never request several parts in one call, batch, parallel call or loop. workspace defaults to the project open
@@ -770,17 +787,32 @@ def create_server(*, host: str, port: int, state_root: Path, codex_binary: str |
         return facade.workflow_context(workspace, session_id, part, after)
 
     @mcp.tool(annotations=READ_ONLY)
-    def computer_list_windows(title_contains: str = "", max_results: int = 200) -> dict[str, Any]:
+    def computer_list_windows(
+        title_contains: Annotated[str, Field(description="Optional case-insensitive substring matched against window title and application name.")] = "",
+        max_results: Annotated[int, Field(description="Maximum windows to return; values are clamped to 1-500.")] = 200,
+    ) -> dict[str, Any]:
         """List visible on-screen windows (read-only): window_id, title, application, pid and rect. Pass window_id to computer_capture_window."""
         return facade.computer_list_windows(title_contains, max_results)
 
     @mcp.tool(annotations=READ_ONLY)
-    def computer_capture_screen(x: int | None = None, y: int | None = None, width: int | None = None, height: int | None = None, max_dimension: int = 1600, include_cursor: bool = True) -> Any:
+    def computer_capture_screen(
+        x: Annotated[int | None, Field(description="Crop origin X in screen coordinates; used only when x, y, width and height are all provided.")] = None,
+        y: Annotated[int | None, Field(description="Crop origin Y in screen coordinates; used only when x, y, width and height are all provided.")] = None,
+        width: Annotated[int | None, Field(description="Crop width in screen points; used only when x, y, width and height are all provided.")] = None,
+        height: Annotated[int | None, Field(description="Crop height in screen points; used only when x, y, width and height are all provided.")] = None,
+        max_dimension: Annotated[int, Field(description="Resize the PNG so its longest side is at most this value; 0 disables resize, positive values are clamped to 100-5000.")] = 1600,
+        include_cursor: Annotated[bool, Field(description="Include the mouse cursor in the desktop capture.")] = True,
+    ) -> Any:
+        """Capture the desktop or a rectangular screen region as PNG. Result contains a text block with JSON metadata and an image/png block. In ChatGPT tool-call scripts the blocks are in content_items; pass the image block to image()."""
         return facade.computer_capture_screen(x,y,width,height,max_dimension,include_cursor)
 
     @mcp.tool(annotations=READ_ONLY)
-    def computer_capture_window(window_id: int, max_dimension: int = 1600, include_cursor: bool = True) -> Any:
-        """Capture one window from computer_list_windows as a PNG, even when another window covers it. include_cursor is ignored for windows."""
+    def computer_capture_window(
+        window_id: Annotated[int, Field(description="Positive window_id returned by computer_list_windows.")],
+        max_dimension: Annotated[int, Field(description="Resize the PNG so its longest side is at most this value; 0 disables resize, positive values are clamped to 100-5000.")] = 1600,
+        include_cursor: Annotated[bool, Field(description="Compatibility parameter; ignored for window captures.")] = True,
+    ) -> Any:
+        """Capture one window from computer_list_windows as a PNG, even when another window covers it. include_cursor is ignored for windows. Result contains a text block with JSON metadata and an image/png block. In ChatGPT tool-call scripts the blocks are in content_items; pass the image block to image()."""
         return facade.computer_capture_window(window_id, max_dimension)
 
 
@@ -796,25 +828,42 @@ def create_server(*, host: str, port: int, state_root: Path, codex_binary: str |
 
 
     @mcp.tool(annotations=ARBITRARY_COMMAND)
-    async def apply_patch(patch: str, workdir: str) -> str:
-        """Apply a Codex patch in workdir. Format: *** Begin Patch, then Add/Delete/Update File operations, optional *** Move to, then *** End Patch."""
+    async def apply_patch(
+        patch: Annotated[str, Field(description="Codex patch text: *** Begin Patch, then Add/Delete/Update File operations, optional *** Move to, then *** End Patch.")],
+        workdir: Annotated[str, Field(description="Working directory in which to apply the patch. Required because this MCP has no turn cwd.")],
+    ) -> str:
+        """Use the Codex apply_patch format to edit files. This MCP carries the freeform Codex patch inside the patch string parameter."""
         return await asyncio.to_thread(facade.apply_patch,patch,workdir)
 
     @mcp.tool(annotations=READ_ONLY)
-    def view_image(path: str) -> Any:
-        """Display a local image, resized to at most 1600 points on its longest side."""
+    def view_image(
+        path: Annotated[str, Field(description="Local filesystem path to an image file.")],
+    ) -> Any:
+        """View a local image file from the filesystem when visual inspection is needed. Use this for images already available on disk. This MCP resizes to at most 1600 points on the longest side. Result contains a text block with JSON metadata and an image/png block. In ChatGPT tool-call scripts the blocks are in content_items; pass the image block to image()."""
         return facade.view_image(path)
 
 
 
     @mcp.tool(annotations=LOCAL_DESTRUCTIVE)
-    def delete_path(path: str) -> dict[str, Any]: return facade.delete_path(path)
+    def delete_path(
+        path: Annotated[str, Field(description="Local file or directory path to move into the recoverable Web Pilot trash.")],
+    ) -> dict[str, Any]:
+        """Move a local file or directory into recoverable Web Pilot trash instead of permanently deleting it."""
+        return facade.delete_path(path)
 
     @mcp.tool(annotations=READ_ONLY)
-    def list_trash() -> dict[str, Any]: return facade.list_trash()
+    def list_trash() -> dict[str, Any]:
+        """List recoverable items previously moved to Web Pilot trash, including trash_id and original path."""
+        return facade.list_trash()
 
     @mcp.tool(annotations=LOCAL_DESTRUCTIVE)
-    def restore_trash(trash_id: str, destination: str = "", overwrite: bool = False) -> dict[str, Any]: return facade.restore_trash(trash_id,destination,overwrite)
+    def restore_trash(
+        trash_id: Annotated[str, Field(description="trash_id returned by delete_path or list_trash.")],
+        destination: Annotated[str, Field(description="Optional restore destination. Omit to restore to the original path.")] = "",
+        overwrite: Annotated[bool, Field(description="Allow replacing an existing restore destination when true.")] = False,
+    ) -> dict[str, Any]:
+        """Restore an item from recoverable Web Pilot trash to its original path or an explicit destination."""
+        return facade.restore_trash(trash_id,destination,overwrite)
 
     @mcp.tool(annotations=ARBITRARY_COMMAND)
     async def exec_command(
@@ -828,7 +877,7 @@ def create_server(*, host: str, port: int, state_root: Path, codex_binary: str |
     ) -> str:
         """Runs a shell command, returning output or a session ID for ongoing interaction.
 
-        If OpenAI blocks the call before execution because the safety status could not be determined, retry the same call once unchanged; split the command only if the retry is blocked too. Output is capped at 8000 estimated tokens so ChatGPT does not truncate it a second time.
+        If OpenAI blocked the call before execution, retry the same call once unchanged; change or split it only if the retry is blocked too. Output is capped at 8000 estimated tokens so ChatGPT does not truncate it a second time.
         """
         return await asyncio.to_thread(facade.exec_command,cmd,workdir,shell,login,tty,yield_time_ms,max_output_tokens)
 
@@ -839,7 +888,7 @@ def create_server(*, host: str, port: int, state_root: Path, codex_binary: str |
         yield_time_ms: Annotated[int, Field(description="Wait before yielding output. Defaults to 250 ms; non-empty writes clamp to 250-30000 ms, while empty polls clamp to 5000-60000 ms in this MCP.", strict=True)] = 250,
         max_output_tokens: Annotated[int, Field(description="Output token budget. Defaults to 8000 tokens; values are clamped to the MCP policy range of 1-8000.", strict=True)] = 8_000,
     ) -> str:
-        """Writes characters to an existing exec_command session and returns recent output."""
+        """Writes characters to an existing exec_command session and returns recent output. If OpenAI blocked the call before execution, retry the same call once unchanged; change or split it only if the retry is blocked too."""
         return await asyncio.to_thread(facade.write_stdin,session_id,chars,yield_time_ms,max_output_tokens)
 
 

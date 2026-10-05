@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1261,
+  "plan_revision": 1263,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-tools-polish-0.6.94-20261005",
@@ -159,8 +159,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "codex-tools-polish-0.6.94-20261005",
         "task_id": "T003",
@@ -193,7 +193,12 @@
         "Правило повтора общее: если OpenAI заблокировал вызов до исполнения — один раз повторить тот же вызов без изменений; менять или делить его только если повтор тоже заблокирован. Оно стоит в описаниях exec_command и write_stdin, в хвосте server instructions после первых 512 символов и той же строкой в session-rules.md",
         "Имена, параметры, значения по умолчанию и поведение инструментов не меняются; первые 512 символов server instructions прежние; codex-tools.lock.json без изменений; Windows-runtime не тронут"
       ],
-      "expected_commit_message": "feat: Описания всех 13 инструментов и параметров, подсказка про изображения, общее правило повтора"
+      "expected_commit_message": "feat: Описания всех 13 инструментов и параметров, подсказка про изображения, общее правило повтора",
+      "actual_files": [
+        "tests/codex-app-server-mcp.test.mjs",
+        "tools/codex-app-server-mcp/server.py",
+        "tools/codex-app-server-mcp/session-rules.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -469,7 +474,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: codex-tools-polish-0.6.94-20261005
 Current Task: нет
-Revision: 1261
+Revision: 1263
 
 ## Цель
 
@@ -495,8 +500,8 @@ Revision: 1261
   - Git Commit: [DONE] feat: Одна обрезка вывода: бюджет 8000 токенов
   - Reference: codex-tools-polish-0.6.94-20261005 / T002 / implementation
   - Файлы: tools/codex-app-server-mcp/server.py, tests/codex-app-server-mcp.test.mjs, docs/planning/codex-native-tools-macos.md
-- [TODO] T003: Описания всех 13 инструментов и параметров, подсказка про изображения, общее правило повтора — Ожидает
-  - Git Commit: [PENDING] feat: Описания всех 13 инструментов и параметров, подсказка про изображения, общее правило повтора
+- [DONE] T003: Описания всех 13 инструментов и параметров, подсказка про изображения, общее правило повтора — Завершено
+  - Git Commit: [DONE] feat: Описания всех 13 инструментов и параметров, подсказка про изображения, общее правило повтора
   - Reference: codex-tools-polish-0.6.94-20261005 / T003 / implementation
   - Файлы: tools/codex-app-server-mcp/server.py, tests/codex-app-server-mcp.test.mjs, docs/planning/codex-native-tools-macos.md, tools/codex-app-server-mcp/session-rules.md
 - [TODO] T004: Подготовить source версии 0.6.94 и проверить релизный исходник — Ожидает

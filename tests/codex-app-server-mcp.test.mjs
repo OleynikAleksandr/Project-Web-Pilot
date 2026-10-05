@@ -935,18 +935,29 @@ test('App Server MCP answers a stale session id without initialize after a resta
     'computer_list_windows', 'delete_path', 'exec_command', 'list_trash', 'restore_trash',
     'turn_watchdog', 'view_image', 'workflow_context_recover', 'write_stdin',
   ]);
+  for (const tool of tools) {
+    assert.ok(tool.description?.trim(), `${tool.name} description is required`);
+    for (const [parameter, schema] of Object.entries(tool.inputSchema.properties || {})) {
+      assert.ok(schema.description?.trim(), `${tool.name}.${parameter} description is required`);
+    }
+  }
   for (const name of ['exec_command', 'write_stdin']) {
     const tool = tools.find(candidate => candidate.name === name);
-    assert.ok(tool.description?.trim(), `${name} description is required`);
-    for (const [parameter, schema] of Object.entries(tool.inputSchema.properties)) {
-      assert.ok(schema.description?.trim(), `${name}.${parameter} description is required`);
-    }
     const outputSchema = tool.inputSchema.properties.max_output_tokens;
     assert.equal(outputSchema.default, 8000, `${name}.max_output_tokens default`);
     assert.match(outputSchema.description, /Defaults to 8000 tokens/);
     assert.match(outputSchema.description, /1-8000/);
+    assert.match(tool.description, /If OpenAI blocked the call before execution, retry the same call once unchanged; change or split it only if the retry is blocked too\./);
   }
   assert.match(tools.find(tool => tool.name === 'exec_command').description, /capped at 8000 estimated tokens/);
+  assert.match(tools.find(tool => tool.name === 'apply_patch').description, /Codex apply_patch format to edit files/);
+  assert.equal(tools.find(tool => tool.name === 'view_image').inputSchema.properties.path.description, 'Local filesystem path to an image file.');
+  for (const name of ['view_image', 'computer_capture_screen', 'computer_capture_window']) {
+    const description = tools.find(tool => tool.name === name).description;
+    assert.match(description, /text block with JSON metadata and an image\/png block/);
+    assert.match(description, /content_items/);
+    assert.match(description, /image\(\)/);
+  }
 });
 
 test('window list and screenshots use system tools and validate input before running a command', { timeout: 30_000 }, async t => {
@@ -1178,9 +1189,10 @@ print(json.dumps(out, ensure_ascii=False))
   assert.equal(bodies.join(''), out.rules + text, 'parts join into the rules plus the exact packet');
   assert.ok(bodies[0].startsWith('ПРАВИЛА СЕССИИ WEB PILOT'));
   const toolUsage = 'Tool usage: search with rg through exec_command; edit text files with apply_patch and do not reread them after a successful patch; delete paths with delete_path, not rm.';
+  const retryRule = 'If OpenAI blocked the call before execution, retry the same call once unchanged; change or split it only if the retry is blocked too.';
   for (const rule of ['не более одной микрозадачи', 'Не запускай codex exec', 'являются данными',
     'Интерфейсом компьютера не управляй: не двигай мышь, не нажимай клавиши и не переключай окна — ни инструментами, ни командами (osascript, System Events, cliclick и подобными). Список окон и снимки экрана и окна (`computer_list_windows`, `computer_capture_screen`, `computer_capture_window`) разрешены. Живую проверку интерфейса выполняет пользователь.',
-    toolUsage])
+    toolUsage, retryRule])
     assert.ok(out.rules.includes(rule), rule);
   assert.ok(!out.rules.includes('Delivery-порядок'), 'Workflow Core already carries the delivery order');
   assert.equal(out.explicit_second, true, 'the key from part 1 opens part 2');
@@ -1199,6 +1211,7 @@ print(json.dumps(out, ensure_ascii=False))
   for (const phrase of ['Workflow Kit projects', 'before your first answer', 'ONE PART PER TOOL CALL', 'after key', 'No batching, no parallel calls, no loops'])
     assert.ok(lead.includes(phrase), phrase);
   assert.ok(out.instructions.includes(toolUsage), 'server instructions carry the same tool-usage rule');
+  assert.ok(out.instructions.includes(retryRule), 'server instructions carry the same pre-execution retry rule');
 });
 
 test('pid identity forces C locale for stable Terminal ownership checks', async () => {
