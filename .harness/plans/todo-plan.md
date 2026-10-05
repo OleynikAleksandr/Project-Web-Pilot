@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1238,
+  "plan_revision": 1239,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-stdin-contract-fix-0.6.93-20261005",
@@ -150,6 +150,43 @@
       "expected_commit_message": "feat: Подготовить source версии 0.6.93 и повторно проверить релизный исходник"
     },
     {
+      "id": "T001A",
+      "title": "Привести ожидание write_stdin к Codex rust-v0.160.0",
+      "why": "После исправления stdin-контракта 0.6.92 write_stdin всё ещё применяет poll-минимум 5000 мс к непустой записи, из-за чего интерактивный tty-ввод искусственно задерживается примерно на 5 секунд.",
+      "dependencies": [
+        "T001"
+      ],
+      "functional_paths": [
+        "tools/codex-app-server-mcp/server.py",
+        "tests/codex-app-server-mcp.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/planning/codex-native-tools-macos.md"
+      ],
+      "verification_ids": [
+        "executor-channel"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Поведение сверено с openai/codex tag rust-v0.160.0, включая process_manager.rs и handlers/unified_exec.rs",
+        "write_stdin по умолчанию использует yield_time_ms=250",
+        "При непустом chars yield_time_ms clamp-ится к диапазону 250-30000 мс",
+        "При пустом chars (poll) yield_time_ms clamp-ится к диапазону 5000-60000 мс",
+        "Описание параметра yield_time_ms у write_stdin и docs/planning/codex-native-tools-macos.md отражают раздельные пределы для write и poll",
+        "Реальный App Server тест подтверждает: tty=true запись с default yield возвращает ответ программы быстрее 2 секунд",
+        "Реальный App Server тест подтверждает: пустой poll с yield ниже 5000 сохраняет нижнюю границу 5000 мс",
+        "Каталог остаётся ровно 13 tools; codex-tools.lock.json, Windows-runtime и Windows catalog не меняются"
+      ],
+      "expected_commit_message": "feat: Привести ожидание write_stdin к Codex rust-v0.160.0",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "codex-stdin-contract-fix-0.6.93-20261005",
+        "task_id": "T001A",
+        "role": "implementation"
+      }
+    },
+    {
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
@@ -159,7 +196,8 @@
       },
       "dependencies": [
         "T001",
-        "T002"
+        "T002",
+        "T001A"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -301,7 +339,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: codex-stdin-contract-fix-0.6.93-20261005
 Current Task: нет
-Revision: 1238
+Revision: 1239
 
 ## Цель
 
@@ -321,6 +359,10 @@ Revision: 1238
   - Git Commit: [PENDING] feat: Подготовить source версии 0.6.93 и повторно проверить релизный исходник
   - Reference: codex-stdin-contract-fix-0.6.93-20261005 / T002 / implementation
   - Файлы: package.json, package-lock.json, docs/planning/codex-native-tools-macos.md
+- [TODO] T001A: Привести ожидание write_stdin к Codex rust-v0.160.0 — Ожидает
+  - Git Commit: [PENDING] feat: Привести ожидание write_stdin к Codex rust-v0.160.0
+  - Reference: codex-stdin-contract-fix-0.6.93-20261005 / T001A / implementation
+  - Файлы: tools/codex-app-server-mcp/server.py, tests/codex-app-server-mcp.test.mjs, docs/planning/codex-native-tools-macos.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: codex-stdin-contract-fix-0.6.93-20261005 / DOCS / implementation
