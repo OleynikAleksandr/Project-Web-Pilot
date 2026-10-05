@@ -1,6 +1,6 @@
 # Каталог документации
 
-Canonical source/runtime Workflow Kit — **1.5.5** (35 файлов, SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`). Последний отдельный GitHub Release Kit — **v1.5.1**. Текущий опубликованный клиент — **Project Web Pilot 0.6.94** с bundled Workflow Kit **1.5.5**.
+Canonical source/runtime Workflow Kit — **1.5.5** (35 файлов, SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`). Последний отдельный GitHub Release Kit — **v1.5.1**. Текущий опубликованный клиент — **Project Web Pilot 0.6.95** с bundled Workflow Kit **1.5.5**.
 
 <!-- workflow-kit:begin -->
 ## Документы проекта
@@ -26,7 +26,7 @@ Canonical source/runtime Workflow Kit — **1.5.5** (35 файлов, SHA-256 `8
 | docs/architecture/ARCHITECTURE.md | Архитектура package, single-active plan и legacy history |
 | docs/architecture/OVERVIEW.md | Компактный recovery-обзор текущей архитектуры |
 | docs/MODULES.md | Карта модулей проекта |
-| docs/modules/workflow-kit-package.md | Техническая спецификация package/runtime: canonical 1.5.5, latest отдельный Release v1.5.1, minimum Node 22+, рабочая среда Node 24 и опубликованный consumer Web Pilot 0.6.94 с bundled Kit 1.5.5 |
+| docs/modules/workflow-kit-package.md | Техническая спецификация package/runtime: canonical 1.5.5, latest отдельный Release v1.5.1, minimum Node 22+, рабочая среда Node 24 и опубликованный consumer Web Pilot 0.6.95 с bundled Kit 1.5.5 |
 | docs/planning/canonical-workflow-kit-package.md | Исторический план выделения canonical package |
 | docs/planning/single-active-plan-migration.md | План и результат перехода к одному current plan на checkout |
 | docs/planning/delivery-ordering-policy.md | Канонический порядок DOCS → delivery и запрет незапланированных build/publish |

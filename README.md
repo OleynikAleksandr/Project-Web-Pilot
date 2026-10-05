@@ -2,7 +2,7 @@
 
 WorkflowKit — canonical Node.js package `@webpilot/workflow-kit` для управления состоянием проекта, current plan, recovery context и lifecycle задач в одном Git checkout/worktree.
 
-Canonical source/runtime Workflow Kit — **1.5.5**, 35 файлов, SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`. Последний отдельный GitHub Release Kit — **v1.5.1**. Текущий опубликованный клиент — **Project Web Pilot 0.6.94**, он bundles Workflow Kit **1.5.5**. Рабочая среда клиента и разработки — **Node.js 24.21.0**; минимальное требование самого пакета остаётся **Node.js 22+** (`engines.node: >=22`).
+Canonical source/runtime Workflow Kit — **1.5.5**, 35 файлов, SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`. Последний отдельный GitHub Release Kit — **v1.5.1**. Текущий опубликованный клиент — **Project Web Pilot 0.6.95**, он bundles Workflow Kit **1.5.5**. Рабочая среда клиента и разработки — **Node.js 24.21.0**; минимальное требование самого пакета остаётся **Node.js 22+** (`engines.node: >=22`).
 
 ## Связанные репозитории
 
@@ -68,7 +68,7 @@ Canonical runtime **1.5.5** содержит 35 файлов; SHA-256: `8eadd988
 
 Project Web Pilot подключает WorkflowKit как локальную dependency `@webpilot/workflow-kit` и включает runtime в готовые macOS/Windows приложения. Изменения кода Kit вносят здесь; `resources/workflow-kit` клиента — производная сборочная копия.
 
-Текущий опубликованный клиент — **Project Web Pilot 0.6.94**; парная macOS/Windows поставка опубликована в [GitHub Release v0.6.94](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.94). Она включает canonical Workflow Kit **1.5.5**: 35 runtime-файлов, SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`. Клиент, среда разработки, проверки и комплектные workers используют **Node 24.21.0**. Минимальное требование самого пакета Kit остаётся **Node 22+**. Native Windows 0.6.94 остаётся отдельной ручной проверкой.
+Текущий опубликованный клиент — **Project Web Pilot 0.6.95**; парная macOS/Windows поставка опубликована в [GitHub Release v0.6.95](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.95). Она включает canonical Workflow Kit **1.5.5**: 35 runtime-файлов, SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`. Клиент, среда разработки, проверки и комплектные workers используют **Node 24.21.0**. Минимальное требование самого пакета Kit остаётся **Node 22+**. Native Windows 0.6.95 остаётся отдельной ручной проверкой.
 
 Исторические 0.6.79/0.6.80 добавили постоянную Apple Development подпись UkrHD и строгую проверку macOS bundle/ZIP. Живой MCP-захват сохранился после обновления и настоящей перезагрузки; пользователь подтвердил работоспособность и отсутствие новых запросов. Это было изменение упаковки клиента, без изменения API/CLI/runtime Kit. [Контракт исправления](https://github.com/OleynikAleksandr/Project-Web-Pilot/blob/main/docs/planning/macos-screen-permission-stability.md).
 
@@ -76,7 +76,7 @@ Project Web Pilot подключает WorkflowKit как локальную dep
 
 Один checkout по-прежнему имеет один current plan. Новый Chat/Work получает его recovery; сохранённый чат открывается без новой отправки. Исторические планы исключены из обычного recovery. Размер текущего пакета зависит от включённых документов и рабочих изменений; transport budget ограничивает выдачу и не сокращает автоматически историю внутри обязательных документов. Политика компактного контекста требует отдельного изменения контракта. Передача контекста использует Paste без изменения системного clipboard и завершается после Send; неизвестный результат не вызывает автоматический повтор.
 
-Подробности: [README Web Pilot](https://github.com/OleynikAleksandr/Project-Web-Pilot/blob/main/README.md), [контракт клиентского AutoPlan](https://github.com/OleynikAleksandr/Project-Web-Pilot/blob/main/docs/planning/auto-plan-client-driven-refactor.md) и [проверки/приёмка клиента](https://github.com/OleynikAleksandr/Project-Web-Pilot/blob/main/docs/VERIFICATION.md). Историческая ScreenCapture-приёмка 0.6.80 сохранена в документах клиента. Native Windows 0.6.94 и clean VM остаются отдельной приёмкой. Web Pilot Sidebar остаётся отдельным 0.1.0 с тестовым хостом.
+Подробности: [README Web Pilot](https://github.com/OleynikAleksandr/Project-Web-Pilot/blob/main/README.md), [контракт клиентского AutoPlan](https://github.com/OleynikAleksandr/Project-Web-Pilot/blob/main/docs/planning/auto-plan-client-driven-refactor.md) и [проверки/приёмка клиента](https://github.com/OleynikAleksandr/Project-Web-Pilot/blob/main/docs/VERIFICATION.md). Историческая ScreenCapture-приёмка 0.6.80 сохранена в документах клиента. Native Windows 0.6.95 и clean VM остаются отдельной приёмкой. Web Pilot Sidebar остаётся отдельным 0.1.0 с тестовым хостом.
 
 ## Workflow Kit 1.5.5 — push только после DOCS
 
@@ -94,4 +94,4 @@ Project Web Pilot подключает WorkflowKit как локальную dep
 
 По поручению пользователя 28.09.2026 добавлена plan:carryover: архив содержит точную исходную копию со статусами TODO/DONE; новый current plan — только незавершённые задачи и DOCS. Критерии, проверки, planning/module ссылки и зависимости между оставшимися задачами сохраняются. Ссылки на выполненные зависимости хранятся в carryover metadata и архиве. Оба плана фиксируются одним Git-коммитом. Нужны чистый checkout, отсутствие активной микрозадачи, точная revision и прямое поручение. Повтор после успеха безопасен; прерывания обслуживает штатный repair. Обычный archive сохраняет требование всех DONE. Runtime: 35 файлов; SHA-256 93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33.
 
-Проверка — scripts/check-carryover-fixture.mjs через установленный CLI: точный архив, сохранность задач, зависимости, отказы без изменения плана, повтор и прерывания до/после коммита. Входит в runtime gate. На момент появления plan:carryover клиентом был Web Pilot 0.6.72; текущий опубликованный клиент — Project Web Pilot 0.6.94 с bundled Kit 1.5.5.
+Проверка — scripts/check-carryover-fixture.mjs через установленный CLI: точный архив, сохранность задач, зависимости, отказы без изменения плана, повтор и прерывания до/после коммита. Входит в runtime gate. На момент появления plan:carryover клиентом был Web Pilot 0.6.72; текущий опубликованный клиент — Project Web Pilot 0.6.95 с bundled Kit 1.5.5.

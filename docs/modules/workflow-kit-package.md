@@ -1,10 +1,10 @@
 # Workflow Kit Package — техническая спецификация
 
-Canonical source/runtime `@webpilot/workflow-kit` — **1.5.5**, 35 файлов, SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`. Последний отдельный GitHub Release Kit — **v1.5.1**, 35 файлов, SHA-256 `93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33`. Текущий опубликованный consumer — Project Web Pilot **0.6.94**, bundled runtime — Workflow Kit **1.5.5**.
+Canonical source/runtime `@webpilot/workflow-kit` — **1.5.5**, 35 файлов, SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`. Последний отдельный GitHub Release Kit — **v1.5.1**, 35 файлов, SHA-256 `93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33`. Текущий опубликованный consumer — Project Web Pilot **0.6.95**, bundled runtime — Workflow Kit **1.5.5**.
 
 ## Среда Node.js
 
-Минимальное требование `@webpilot/workflow-kit` — **Node 22+**: его задают `package.json` (`engines.node: >=22`), CLI и installer launcher. Рабочая среда разработки и опубликованный Web Pilot 0.6.94 используют **Node 24.21.0**. Canonical package/runtime version — 1.5.5; последний отдельный GitHub Release Kit — v1.5.1.
+Минимальное требование `@webpilot/workflow-kit` — **Node 22+**: его задают `package.json` (`engines.node: >=22`), CLI и installer launcher. Рабочая среда разработки и опубликованный Web Pilot 0.6.95 используют **Node 24.21.0**. Canonical package/runtime version — 1.5.5; последний отдельный GitHub Release Kit — v1.5.1.
 
 ## Назначение
 
@@ -109,9 +109,9 @@ Web Pilot сохраняет старые chat/session records и их chat URL/
 
 Workspace Setup и project readiness проверяют только current checkout state и не full-recover-ят historical plans.
 
-## Актуальная интеграция — Project Web Pilot 0.6.94
+## Актуальная интеграция — Project Web Pilot 0.6.95
 
-Опубликованная парная Web Pilot 0.6.94 включает canonical Workflow Kit 1.5.5 (35 файлов, SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`). Клиент использует Node 24.21.0 и сохраняет checkout-scoped current-plan contract; изменения 0.6.94 относятся к macOS Codex App Server MCP и не меняют API/CLI/runtime Kit. Windows x64 0.6.94 собран и проверен на Mac; native Windows остаётся отдельной проверкой. [Release Web Pilot 0.6.94](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.94).
+Опубликованная парная Web Pilot 0.6.95 включает canonical Workflow Kit 1.5.5 (35 файлов, SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`). Клиент использует Node 24.21.0 и сохраняет checkout-scoped current-plan contract; изменения 0.6.95 относятся к macOS Codex App Server MCP и не меняют API/CLI/runtime Kit. Windows x64 0.6.95 собран и проверен на Mac; native Windows остаётся отдельной проверкой. [Release Web Pilot 0.6.95](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.95).
 
 ## Проверки package contract
 
@@ -139,7 +139,7 @@ Workspace Setup и project readiness проверяют только current che
 
 По поручению пользователя 28.09.2026 добавлена plan:carryover: архив содержит точную исходную копию со статусами TODO/DONE; новый current plan — только незавершённые задачи и DOCS. Критерии, проверки, planning/module ссылки и зависимости между оставшимися задачами сохраняются. Ссылки на выполненные зависимости хранятся в carryover metadata и архиве. Оба плана фиксируются одним Git-коммитом. Нужны чистый checkout, отсутствие активной микрозадачи, точная revision и прямое поручение. Повтор после успеха безопасен; прерывания обслуживает штатный repair. Обычный archive сохраняет требование всех DONE. Runtime: 35 файлов; SHA-256 93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33.
 
-Проверка — scripts/check-carryover-fixture.mjs через установленный CLI: точный архив, сохранность задач, зависимости, отказы без изменения плана, повтор и прерывания до/после коммита. Входит в runtime gate. 0.6.72 был первым Web Pilot с plan:carryover; текущий опубликованный consumer — Project Web Pilot 0.6.94 с bundled Kit 1.5.5.
+Проверка — scripts/check-carryover-fixture.mjs через установленный CLI: точный архив, сохранность задач, зависимости, отказы без изменения плана, повтор и прерывания до/после коммита. Входит в runtime gate. 0.6.72 был первым Web Pilot с plan:carryover; текущий опубликованный consumer — Project Web Pilot 0.6.95 с bundled Kit 1.5.5.
 
 ## Документальная актуализация после публикации 0.6.78 — 03.10.2026
 
