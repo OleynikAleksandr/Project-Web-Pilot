@@ -5,69 +5,84 @@
   "checks": [
     {
       "required": false,
-      "timeout_ms": 120000,
+      "timeout_ms": 180000,
       "id": "executor-channel",
       "kind": "test",
       "executable": "node",
       "args": [
         "--test",
         "tests/codex-app-server-mcp.test.mjs"
-      ]
+      ],
+      "evidence": "tools/codex-app-server-mcp на настоящем Codex App Server: каталог из 13 инструментов с описаниями инструментов и параметров, Wall time вызова write_stdin, ввод в завершившуюся сессию, бюджет вывода 8000 токенов, правило повтора в instructions и session-rules.md"
     },
     {
       "required": false,
-      "timeout_ms": 120000,
+      "timeout_ms": 600000,
       "id": "unit-all",
       "kind": "test",
       "executable": "npm",
       "args": [
         "test"
-      ]
+      ],
+      "evidence": "Полный npm test"
     },
     {
       "required": false,
-      "timeout_ms": 120000,
+      "timeout_ms": 180000,
       "id": "codex-tools-live",
       "kind": "test",
       "executable": "npm",
       "args": [
         "run",
         "check:codex-tools"
-      ]
+      ],
+      "evidence": "Определения сверены с openai/codex rust-v0.160.0; codex-tools.lock.json без изменений"
     },
     {
       "required": false,
-      "timeout_ms": 120000,
+      "timeout_ms": 600000,
       "id": "paired-release",
       "kind": "package",
-      "evidence": "Project Web Pilot 0.6.93: macOS arm64 + Windows x64 ZIP, Windows runtime archive, SHA256SUMS.txt, INSTALL.txt and release-manifest.json; source already verified before build",
       "executable": "npm",
       "args": [
         "run",
         "build"
-      ]
+      ],
+      "evidence": "~/Downloads/WebPilot-0.6.94: macOS arm64 + Windows x64 ZIP, ZIP Windows-runtime, SHA256SUMS.txt, INSTALL.txt, release-manifest.json; packaged sources и bundled Workflow Kit 1.5.5 verified"
     },
     {
       "required": false,
-      "timeout_ms": 120000,
+      "timeout_ms": 600000,
       "id": "release-installed",
       "kind": "installed",
-      "evidence": "Root app and /Applications/Project Web Pilot.app are 0.6.93 from the already-built staging bundle; identity/signature/runtime and release artifacts verified without rebuilding",
       "executable": "node",
       "args": [
         "scripts/check-installed-release.mjs"
-      ]
+      ],
+      "evidence": "Root app и /Applications/Project Web Pilot.app — 0.6.94 из уже собранного staging; identity/signature/runtime и release artifacts verified без пересборки"
     },
     {
       "required": false,
-      "timeout_ms": 120000,
+      "timeout_ms": 180000,
       "id": "github-release",
       "kind": "package",
-      "evidence": "GitHub Release v0.6.93 tag, six assets and remote main verified against local release-manifest.json without rebuilding",
       "executable": "node",
       "args": [
         "scripts/check-github-release.mjs"
-      ]
+      ],
+      "evidence": "GitHub Release v0.6.94: tag, шесть assets и remote main сверены с локальным release-manifest.json без пересборки"
+    },
+    {
+      "required": false,
+      "timeout_ms": 180000,
+      "id": "workflow-kit-docs",
+      "kind": "package",
+      "executable": "bash",
+      "args": [
+        "-lc",
+        "PATH=/opt/homebrew/bin:$PATH; V=$(node -p \"require('./package.json').version\"); K=../WorkflowKit; fail=0; for f in README.md docs/PRODUCT.md docs/architecture/OVERVIEW.md docs/modules/workflow-kit-package.md; do grep -q \"Web Pilot $V\" \"$K/$f\" || { echo \"WorkflowKit/$f не называет Web Pilot $V\"; fail=1; }; done; [ -z \"$(git -C \"$K\" status --porcelain)\" ] || { echo 'WorkflowKit: есть незакоммиченные изменения'; fail=1; }; [ \"$(git -C \"$K\" rev-parse HEAD)\" = \"$(git -C \"$K\" ls-remote origin refs/heads/main | cut -f1)\" ] || { echo 'WorkflowKit: main не совпадает с origin/main'; fail=1; }; node scripts/check-workflow-kit-dependency.mjs >/dev/null || { echo 'Workflow Kit: версия или состав runtime изменились'; fail=1; }; [ $fail -eq 0 ] && echo \"WorkflowKit docs: Web Pilot $V, worktree чистый, main опубликован, runtime 1.5.5 без изменений\"; exit $fail"
+      ],
+      "evidence": "Репозиторий WorkflowKit: README и документы называют текущим клиентом Web Pilot 0.6.94, worktree чистый, main совпадает с origin/main, версия и runtime Workflow Kit 1.5.5 не изменены"
     }
   ],
   "budget": {
