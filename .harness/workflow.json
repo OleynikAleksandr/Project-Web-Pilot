@@ -13,7 +13,7 @@
         "--test",
         "tests/codex-app-server-mcp.test.mjs"
       ],
-      "evidence": "tools/codex-app-server-mcp на настоящем Codex App Server: каталог из 13 инструментов с описаниями инструментов и параметров, Wall time вызова write_stdin, ввод в завершившуюся сессию, бюджет вывода 8000 токенов, правило повтора в instructions и session-rules.md"
+      "evidence": "tools/codex-app-server-mcp на настоящем Codex App Server: каталог из 10 инструментов без корзины, описания инструментов и параметров, команды, патч, изображения, правила в instructions и session-rules.md"
     },
     {
       "required": false,
@@ -40,14 +40,15 @@
     },
     {
       "required": false,
-      "timeout_ms": 180000,
+      "timeout_ms": 600000,
       "id": "paired-release",
       "kind": "package",
-      "executable": "node",
+      "executable": "npm",
       "args": [
-        ".harness/runtime/check-paired-release-0.6.94.mjs"
+        "run",
+        "build"
       ],
-      "evidence": "Готовая существующая поставка ~/Downloads/WebPilot-0.6.94: ровно шесть release assets, packagedSourceMatches=true, sourceCommit=pre-build DOCS HEAD, bundled Workflow Kit 1.5.5, hashes/manifest/identity verified; npm run build уже выполнен ровно один раз и этой проверкой не повторяется"
+      "evidence": "~/Downloads/WebPilot-0.6.95: macOS arm64 + Windows x64 ZIP, ZIP Windows-runtime, SHA256SUMS.txt, INSTALL.txt, release-manifest.json; packaged sources и bundled Workflow Kit 1.5.5 verified. Сборку выполняет сама эта проверка при коммите задачи, один раз"
     },
     {
       "required": false,
@@ -58,7 +59,7 @@
       "args": [
         "scripts/check-installed-release.mjs"
       ],
-      "evidence": "Root app и /Applications/Project Web Pilot.app — 0.6.94 из уже собранного staging; identity/signature/runtime и release artifacts verified без пересборки"
+      "evidence": "Root app и /Applications/Project Web Pilot.app — 0.6.95 из уже собранного staging; identity/signature/runtime и release artifacts verified без пересборки"
     },
     {
       "required": false,
@@ -69,7 +70,7 @@
       "args": [
         "scripts/check-github-release.mjs"
       ],
-      "evidence": "GitHub Release v0.6.94: tag, шесть assets и remote main сверены с локальным release-manifest.json без пересборки"
+      "evidence": "GitHub Release v0.6.95: tag, шесть assets и remote main сверены с локальным release-manifest.json без пересборки"
     },
     {
       "required": false,
@@ -81,7 +82,7 @@
         "-lc",
         "PATH=/opt/homebrew/bin:$PATH; V=$(node -p \"require('./package.json').version\"); K=../WorkflowKit; fail=0; for f in README.md docs/PRODUCT.md docs/architecture/OVERVIEW.md docs/modules/workflow-kit-package.md; do grep -q \"Web Pilot $V\" \"$K/$f\" || { echo \"WorkflowKit/$f не называет Web Pilot $V\"; fail=1; }; done; [ -z \"$(git -C \"$K\" status --porcelain)\" ] || { echo 'WorkflowKit: есть незакоммиченные изменения'; fail=1; }; [ \"$(git -C \"$K\" rev-parse HEAD)\" = \"$(git -C \"$K\" ls-remote origin refs/heads/main | cut -f1)\" ] || { echo 'WorkflowKit: main не совпадает с origin/main'; fail=1; }; node scripts/check-workflow-kit-dependency.mjs >/dev/null || { echo 'Workflow Kit: версия или состав runtime изменились'; fail=1; }; [ $fail -eq 0 ] && echo \"WorkflowKit docs: Web Pilot $V, worktree чистый, main опубликован, runtime 1.5.5 без изменений\"; exit $fail"
       ],
-      "evidence": "Репозиторий WorkflowKit: README и документы называют текущим клиентом Web Pilot 0.6.94, worktree чистый, main совпадает с origin/main, версия и runtime Workflow Kit 1.5.5 не изменены"
+      "evidence": "Репозиторий WorkflowKit: README и документы называют текущим клиентом Web Pilot 0.6.95, worktree чистый, main совпадает с origin/main, версия и runtime Workflow Kit 1.5.5 не изменены"
     }
   ],
   "budget": {
