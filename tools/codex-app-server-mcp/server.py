@@ -8,6 +8,7 @@ import hashlib
 import json
 import os
 import shutil
+import subprocess
 import threading
 import time
 import uuid
@@ -39,6 +40,8 @@ LOCAL_NOTIFICATION = ToolAnnotations(
 MAX_TEXT_BYTES = 10_000_000
 MAX_BINARY_READ = 512_000
 MAX_BINARY_WRITE = 10_000_000
+MAX_VIEW_IMAGE_BYTES = 20_000_000
+MAX_PATCH_BYTES = 1_000_000
 MAX_BATCH = 16
 MAX_OUTPUT = 120_000
 # ChatGPT shows a model roughly 10 000 tokens of one tool result; a text-only part of 28 000 bytes
@@ -469,23 +472,96 @@ class LocalFacade:
         shutil.rmtree(container, ignore_errors=True)
         return {"trash_id": trash_id, "restored_to": str(target)}
 
-    def apply_patch(self, patch: str, working_directory: str = "", check_only: bool = False, reverse: bool = False) -> dict[str, Any]:
-        if not patch.strip():
+    @staticmethod
+    def _native_apply_patch_error(detail: str) -> ValueError:
+        text = detail.strip() or "apply_patch failed"
+        lowered = text.lower()
+        unavailable = any(
+            marker in lowered
+            for marker in ("no such file or directory", "command not found", "not found in path", "failed to spawn")
+        )
+        if unavailable:
+            return ValueError(f"Codex apply_patch command is unavailable: {text}")
+        return ValueError(text)
+
+    def apply_patch(self, patch: str, workdir: str) -> str:
+        if not isinstance(patch, str) or not patch.strip():
             raise ValueError("patch is empty")
-        cwd = self.resolve(working_directory or self.client.cwd, must_exist=True, allow_sensitive=True)
-        temp = self.state_root / f"patch-{uuid.uuid4().hex}.diff"
-        self.client.fs_write_file(str(temp), patch.encode("utf-8"))
-        argv = ["git", "apply", "--whitespace=nowarn"]
-        if check_only:
-            argv.append("--check")
-        if reverse:
-            argv.append("--reverse")
-        argv.append(str(temp))
+        data = patch.encode("utf-8")
+        if len(data) > MAX_PATCH_BYTES:
+            raise ValueError(f"patch is larger than {MAX_PATCH_BYTES} bytes")
+        if not patch.lstrip().startswith("*** Begin Patch"):
+            raise ValueError("patch must start with *** Begin Patch")
+        cwd = self._command_workdir(workdir)
+        started = self.client.start_command(
+            ["apply_patch"],
+            cwd=str(cwd),
+            output_bytes_cap=1_000_000,
+            sandbox_policy={"type": "dangerFullAccess"},
+            stream_stdin=True,
+        )
+        process_id = str(started["process_id"])
         try:
-            return self._command(argv, cwd=cwd, write=not check_only, timeout_ms=120_000)
+            self.client.write_command_stdin(process_id, data, close_stdin=True)
+        except Exception as exc:
+            result = self.client.read_command_output(process_id, cursor=0, wait_ms=100)
+            detail = str(result.get("error") or result.get("output") or exc)
+            raise self._native_apply_patch_error(detail) from None
+        result = self.client.read_command_output(process_id, cursor=0, wait_ms=60_000)
+        if result.get("running"):
+            result = self.client.read_command_output(process_id, cursor=0, wait_ms=60_000)
+        if result.get("running"):
+            self.client.stop_process(process_id)
+            raise ValueError("Codex apply_patch did not finish within 120 seconds")
+        if result.get("error"):
+            raise self._native_apply_patch_error(str(result["error"]))
+        output = str(result.get("output") or "").strip()
+        if result.get("exit_code") != 0:
+            raise self._native_apply_patch_error(output or f"apply_patch exited with code {result.get('exit_code')}")
+        return output or "Done!"
+
+    def view_image(self, path: str) -> Any:
+        target = self.resolve(path, must_exist=True)
+        if not target.is_file():
+            raise ValueError(f"Image path is not a file: {target}")
+        size = target.stat().st_size
+        if size > MAX_VIEW_IMAGE_BYTES:
+            raise ValueError(f"Image is larger than {MAX_VIEW_IMAGE_BYTES} bytes")
+        try:
+            probe = subprocess.run(
+                ["/usr/bin/file", "--mime-type", "-b", str(target)],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            raise ValueError(f"Image type check failed: {exc}") from None
+        mime = (probe.stdout or "").strip().lower()
+        if probe.returncode != 0 or not mime.startswith("image/"):
+            raise ValueError("File is not an image")
+        suffix = target.suffix if 0 < len(target.suffix) <= 16 else ".image"
+        copy = self.state_root / f"view-image-{uuid.uuid4().hex}{suffix}"
+        try:
+            shutil.copyfile(target, copy)
+            try:
+                resized = subprocess.run(
+                    ["/usr/bin/sips", "-Z", "1600", str(copy)],
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
+                    check=False,
+                )
+            except (OSError, subprocess.TimeoutExpired) as exc:
+                raise ValueError(f"Image resize failed: {exc}") from None
+            if resized.returncode != 0:
+                raise ValueError((resized.stderr or "").strip() or "Image format is not supported")
+            data = copy.read_bytes()
+            image_format = mime.split("/", 1)[1]
+            return [{"source": str(target), "bytes": len(data)}, Image(data=data, format=image_format)]
         finally:
             try:
-                temp.unlink()
+                copy.unlink()
             except OSError:
                 pass
 
@@ -986,7 +1062,14 @@ def create_server(*, host: str, port: int, state_root: Path, codex_binary: str |
     def replace_text(path: str, old_text: str, new_text: str, expected_replacements: int = 1, expected_sha256: str = "") -> dict[str, Any]: return facade.replace_text(path,old_text,new_text,expected_replacements,expected_sha256)
 
     @mcp.tool(annotations=ARBITRARY_COMMAND)
-    async def apply_patch(patch: str, working_directory: str = "", check_only: bool = False, reverse: bool = False) -> dict[str, Any]: return await asyncio.to_thread(facade.apply_patch,patch,working_directory,check_only,reverse)
+    async def apply_patch(patch: str, workdir: str) -> str:
+        """Apply a Codex patch in workdir. Format: *** Begin Patch, then Add/Delete/Update File operations, optional *** Move to, then *** End Patch."""
+        return await asyncio.to_thread(facade.apply_patch,patch,workdir)
+
+    @mcp.tool(annotations=READ_ONLY)
+    def view_image(path: str) -> Any:
+        """Display a local image, resized to at most 1600 points on its longest side."""
+        return facade.view_image(path)
 
     @mcp.tool(annotations=LOCAL_WRITE)
     def copy_path(source: str, destination: str, overwrite: bool = False) -> dict[str, Any]: return facade.copy_path(source,destination,overwrite)

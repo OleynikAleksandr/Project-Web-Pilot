@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1217,
+  "plan_revision": 1219,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-native-tools-0.6.92-20261005",
@@ -119,8 +119,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "codex-native-tools-0.6.92-20261005",
         "task_id": "T002",
@@ -129,7 +129,8 @@
       "dependencies": [],
       "functional_paths": [
         "tools/codex-app-server-mcp/server.py",
-        "tests/codex-app-server-mcp.test.mjs"
+        "tests/codex-app-server-mcp.test.mjs",
+        "tools/codex-app-server-mcp/app_server_client.py"
       ],
       "documentation_paths": [
         "docs/planning/codex-native-tools-macos.md"
@@ -148,7 +149,12 @@
         "view_image(path) возвращает изображение, уменьшенное до 1600 точек; не изображение, отсутствующий или слишком большой файл и защищённый путь отклоняются",
         "Прежний apply_patch через git apply удалён"
       ],
-      "expected_commit_message": "feat: Родной apply_patch и view_image"
+      "expected_commit_message": "feat: Родной apply_patch и view_image",
+      "actual_files": [
+        "tests/codex-app-server-mcp.test.mjs",
+        "tools/codex-app-server-mcp/app_server_client.py",
+        "tools/codex-app-server-mcp/server.py"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -391,7 +397,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: codex-native-tools-0.6.92-20261005
 Current Task: нет
-Revision: 1217
+Revision: 1219
 
 ## Цель
 
@@ -411,10 +417,10 @@ Revision: 1217
   - Git Commit: [DONE] feat: Команды в форме Codex: exec_command и write_stdin
   - Reference: codex-native-tools-0.6.92-20261005 / T001 / implementation
   - Файлы: tools/codex-app-server-mcp/app_server_client.py, tools/codex-app-server-mcp/server.py, tests/codex-app-server-mcp.test.mjs, docs/planning/codex-native-tools-macos.md
-- [TODO] T002: Родной apply_patch и view_image — Ожидает
-  - Git Commit: [PENDING] feat: Родной apply_patch и view_image
+- [DONE] T002: Родной apply_patch и view_image — Завершено
+  - Git Commit: [DONE] feat: Родной apply_patch и view_image
   - Reference: codex-native-tools-0.6.92-20261005 / T002 / implementation
-  - Файлы: tools/codex-app-server-mcp/server.py, tests/codex-app-server-mcp.test.mjs, docs/planning/codex-native-tools-macos.md
+  - Файлы: tools/codex-app-server-mcp/server.py, tests/codex-app-server-mcp.test.mjs, tools/codex-app-server-mcp/app_server_client.py, docs/planning/codex-native-tools-macos.md
 - [TODO] T003: Каталог из 13 инструментов: удалить самодельные, подсказки и правило сессии — Ожидает
   - Git Commit: [PENDING] feat: Каталог из 13 инструментов: удалить самодельные, подсказки и правило сессии
   - Reference: codex-native-tools-0.6.92-20261005 / T003 / implementation

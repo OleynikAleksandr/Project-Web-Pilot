@@ -328,18 +328,27 @@ class AppServerClient:
         waiter.start()
         return self.process_status(process_id, include_output=False)
 
-    def write_command_stdin(self, process_id: str, data: bytes) -> dict[str, Any]:
+    def write_command_stdin(
+        self,
+        process_id: str,
+        data: bytes = b"",
+        *,
+        close_stdin: bool = False,
+    ) -> dict[str, Any]:
         state = self._get_process(process_id)
         if state.done.is_set():
             raise AppServerError(f"Command session is no longer running: {process_id}")
-        if not data:
+        if not data and not close_stdin:
             return {}
+        params: dict[str, Any] = {
+            "processId": process_id,
+            "closeStdin": bool(close_stdin),
+        }
+        if data:
+            params["deltaBase64"] = base64.b64encode(data).decode("ascii")
         return self._request_running(
             "command/exec/write",
-            {
-                "processId": process_id,
-                "deltaBase64": base64.b64encode(data).decode("ascii"),
-            },
+            params,
             timeout=10.0,
         )
 

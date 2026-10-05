@@ -145,7 +145,7 @@ test('Codex App Server MCP facade exposes local parity and excludes cloud duplic
     'computer_list_windows', 'computer_capture_screen', 'computer_capture_window',
     'list_drives', 'file_info', 'list_directory', 'read_file', 'read_binary',
     'search_files', 'search_text', 'make_directory', 'write_file', 'write_binary',
-    'patch_binary', 'replace_text', 'apply_patch', 'copy_path', 'move_path',
+    'patch_binary', 'replace_text', 'apply_patch', 'view_image', 'copy_path', 'move_path',
     'delete_path', 'list_trash', 'restore_trash',
     'exec_command', 'write_stdin',
     'run_command', 'run_command_batch', 'start_process', 'process_status',
@@ -156,7 +156,7 @@ test('Codex App Server MCP facade exposes local parity and excludes cloud duplic
   for (const name of required) {
     assert.match(source, new RegExp(`def ${name}\\(`), `missing local tool ${name}`);
   }
-  assert.equal(source.match(/@mcp\.tool/g).length, 40, 'T001 adds the two Codex-form command tools before T003 removes legacy duplicates');
+  assert.equal(source.match(/@mcp\.tool/g).length, 41, 'T001-T002 add three Codex-form tools before T003 removes legacy duplicates');
 
   // 0.6.90: the web model observes the screen but never drives the interface.
   const removed = [
@@ -291,6 +291,141 @@ test('Codex-form exec_command and write_stdin run through the real App Server', 
   assert.ok(out.errors.bad_yield.includes('yield') && out.errors.bad_yield.includes('250') && out.errors.bad_yield.includes('30000'));
   assert.ok(out.errors.bad_tokens.includes('max_output_tokens') && out.errors.bad_tokens.includes('1') && out.errors.bad_tokens.includes('10000'));
   assert.match(out.errors.unknown_session, /Unknown or finished command session/);
+});
+
+
+test('native Codex apply_patch and Codex-form view_image satisfy the macOS contract', { timeout: 60_000 }, async t => {
+  if (process.platform !== 'darwin' || !existsSync(userCodex) || !existsSync(executorVenvPython)) {
+    t.skip('patch/image probe requires macOS, Codex, and the executor venv');
+    return;
+  }
+  const root = await mkdtemp(path.join(homedir(), 'Library', 'Caches', 'web-pilot-codex-patch-image-'));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const codexHome = path.join(root, 'codex-home');
+  await mkdir(codexHome, { recursive: true });
+  await writeFile(path.join(codexHome, 'config.toml'), '[analytics]\nenabled = false\n');
+
+  const probe = path.join(root, 'probe.py');
+  await writeFile(probe, [
+    'import json, os, pathlib, struct, subprocess, sys, zlib',
+    'sys.path.insert(0, sys.argv[1])',
+    'import server',
+    'from app_server_client import AppServerClient',
+    'codex, root, codex_home = sys.argv[2], pathlib.Path(sys.argv[3]), sys.argv[4]',
+    'client = AppServerClient(binary=codex, cwd=str(root), environment={"CODEX_HOME": codex_home}, request_timeout=20)',
+    'facade = server.LocalFacade(client, root / "state")',
+    'def patch(text): return "*** Begin Patch\\n" + text + "\\n*** End Patch"',
+    'def png(width, height):',
+    '    def chunk(kind, data):',
+    '        return struct.pack(">I", len(data)) + kind + data + struct.pack(">I", zlib.crc32(kind + data) & 0xffffffff)',
+    '    raw = b"".join(b"\\x00" + (b"\\xff\\x00\\x00\\xff" * width) for _ in range(height))',
+    '    return b"\\x89PNG\\r\\n\\x1a\\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0)) + chunk(b"IDAT", zlib.compress(raw)) + chunk(b"IEND", b"")',
+    'out = {}',
+    'try:',
+    '    out["add"] = facade.apply_patch(patch("*** Add File: alpha.txt\\n+one"), str(root))',
+    '    out["after_add"] = (root / "alpha.txt").read_text()',
+    '    out["update"] = facade.apply_patch(patch("*** Update File: alpha.txt\\n@@\\n-one\\n+two"), str(root))',
+    '    out["after_update"] = (root / "alpha.txt").read_text()',
+    '    out["move"] = facade.apply_patch(patch("*** Update File: alpha.txt\\n*** Move to: beta.txt\\n@@\\n-two\\n+three"), str(root))',
+    '    out["after_move"] = [(root / "alpha.txt").exists(), (root / "beta.txt").read_text()]',
+    '    out["delete"] = facade.apply_patch(patch("*** Delete File: beta.txt"), str(root))',
+    '    out["after_delete"] = (root / "beta.txt").exists()',
+    '    errors = {}',
+    '    cases = {',
+    '        "empty": lambda: facade.apply_patch("", str(root)),',
+    '        "missing_header": lambda: facade.apply_patch("*** Add File: x.txt\\n+x", str(root)),',
+    '        "too_large": lambda: facade.apply_patch("*** Begin Patch\\n" + ("x" * (server.MAX_PATCH_BYTES + 1)), str(root)),',
+    '        "missing_workdir": lambda: facade.apply_patch(patch("*** Add File: x.txt\\n+x"), str(root / "missing")),',
+    '        "invalid_native": lambda: facade.apply_patch(patch("*** Update File: absent.txt\\n@@\\n-old\\n+new"), str(root)),',
+    '    }',
+    '    for name, call in cases.items():',
+    '        try:',
+    '            call()',
+    '            errors[name] = None',
+    '        except Exception as error:',
+    '            errors[name] = str(error)',
+    '    out["errors"] = errors',
+    '    missing = client.start_command(["webpilot-command-that-does-not-exist"], cwd=str(root), sandbox_policy={"type":"dangerFullAccess"})',
+    '    missing_result = client.read_command_output(missing["process_id"], cursor=0, wait_ms=1000)',
+    '    out["unavailable"] = str(facade._native_apply_patch_error(str(missing_result.get("error") or missing_result.get("output") or "")))',
+    '    image = root / "wide.png"',
+    '    image.write_bytes(png(2000, 10))',
+    '    shown = facade.view_image(str(image))',
+    '    rendered = root / "rendered.png"',
+    '    rendered.write_bytes(shown[1].data)',
+    '    dimensions = subprocess.run(["/usr/bin/sips", "-g", "pixelWidth", "-g", "pixelHeight", str(rendered)], capture_output=True, text=True, check=True).stdout',
+    '    out["image_meta"] = shown[0]',
+    '    out["image_type"] = type(shown[1]).__name__',
+    '    out["dimensions"] = dimensions',
+    '    text = root / "plain.txt"',
+    '    text.write_text("not an image")',
+    '    huge = root / "huge.png"',
+    '    with huge.open("wb") as stream:',
+    '        stream.seek(server.MAX_VIEW_IMAGE_BYTES)',
+    '        stream.write(b"x")',
+    '    secret_dir = root / ".ssh"',
+    '    secret_dir.mkdir()',
+    '    secret = secret_dir / "secret.png"',
+    '    secret.write_bytes(image.read_bytes())',
+    '    image_errors = {}',
+    '    for name, value in {"missing": root / "missing.png", "text": text, "huge": huge, "secret": secret}.items():',
+    '        try:',
+    '            facade.view_image(str(value))',
+    '            image_errors[name] = None',
+    '        except Exception as error:',
+    '            image_errors[name] = str(error)',
+    '    out["image_errors"] = image_errors',
+    '    out["leftovers"] = [item.name for item in (root / "state").glob("view-image-*")]',
+    '    mcp = server.create_server(host="127.0.0.1", port=0, state_root=root / "schema-state", codex_binary=codex)',
+    '    out["apply_params"] = mcp._tool_manager.get_tool("apply_patch").parameters',
+    '    out["view_params"] = mcp._tool_manager.get_tool("view_image").parameters',
+    'finally:',
+    '    client.close()',
+    'print(json.dumps(out))',
+  ].join('\n'));
+
+  const run = await new Promise((resolve, reject) => {
+    const child = spawn(executorVenvPython, ['-B', probe, clientDir, userCodex, root, codexHome], {
+      cwd: root,
+      env: { ...process.env, PYTHONDONTWRITEBYTECODE: '1' },
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    let stdout = '', stderr = '';
+    child.stdout.on('data', chunk => { stdout += chunk; });
+    child.stderr.on('data', chunk => { stderr += chunk; });
+    child.on('error', reject);
+    child.on('close', code => resolve({ code, stdout, stderr }));
+  });
+  assert.equal(run.code, 0, run.stderr || run.stdout);
+  const out = JSON.parse(run.stdout.trim().split('\n').at(-1));
+
+  for (const name of ['add', 'update', 'move', 'delete']) assert.match(out[name], /^Success\./);
+  assert.equal(out.after_add, 'one\n');
+  assert.equal(out.after_update, 'two\n');
+  assert.deepEqual(out.after_move, [false, 'three\n']);
+  assert.equal(out.after_delete, false);
+  assert.match(out.errors.empty, /patch is empty/);
+  assert.match(out.errors.missing_header, /must start with \*\*\* Begin Patch/);
+  assert.match(out.errors.too_large, /larger than 1000000 bytes/);
+  assert.match(out.errors.missing_workdir, /Path does not exist/);
+  assert.ok(out.errors.invalid_native && out.errors.invalid_native.length > 0);
+  assert.match(out.unavailable, /Codex apply_patch command is unavailable/);
+
+  assert.equal(out.image_type, 'Image');
+  assert.equal(out.image_meta.source, path.join(root, 'wide.png'));
+  assert.ok(out.image_meta.bytes > 0);
+  assert.match(out.dimensions, /pixelWidth:\s+1600/);
+  assert.match(out.dimensions, /pixelHeight:\s+8/);
+  assert.match(out.image_errors.missing, /Path does not exist/);
+  assert.match(out.image_errors.text, /not an image/);
+  assert.match(out.image_errors.huge, /larger than 20000000 bytes/);
+  assert.match(out.image_errors.secret, /Sensitive credential\/private path/);
+  assert.deepEqual(out.leftovers, []);
+
+  assert.deepEqual(Object.keys(out.apply_params.properties).sort(), ['patch', 'workdir']);
+  assert.deepEqual(out.apply_params.required.sort(), ['patch', 'workdir']);
+  assert.deepEqual(Object.keys(out.view_params.properties), ['path']);
+  assert.deepEqual(out.view_params.required, ['path']);
 });
 
 // Every control.py test runs on a temporary state and never reads the real state of the retired local runtime.
