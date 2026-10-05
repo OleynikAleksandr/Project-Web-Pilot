@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1163,
+  "plan_revision": 1164,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "computer-use-removal-0.6.90-20261005",
@@ -211,6 +211,31 @@
       "expected_commit_message": "feat: Подготовить source релиза 0.6.90"
     },
     {
+      "id": "C001",
+      "title": "Уточнить контракты: снимки и список окон остаются, ZIP Windows-runtime в релизе",
+      "why": "Уточнение пользователя 05.10.2026 после создания плана; контракты должны совпадать с планом до начала реализации.",
+      "dependencies": [],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/planning/computer-use-removal.md",
+        "docs/planning/codex-local-mac-removal.md"
+      ],
+      "verification_ids": [],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Контракт 0.6.90 описывает 38 инструментов и три оставшихся computer_*",
+        "Контракт 0.6.91 описывает публикацию ZIP Windows-runtime в обычном релизе"
+      ],
+      "expected_commit_message": "docs: уточнить контракты 0.6.90 и 0.6.91",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "computer-use-removal-0.6.90-20261005",
+        "task_id": "C001",
+        "role": "implementation"
+      }
+    },
+    {
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
@@ -222,7 +247,8 @@
         "T001",
         "T002",
         "T003",
-        "T004"
+        "T004",
+        "C001"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -357,7 +383,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: computer-use-removal-0.6.90-20261005
 Current Task: нет
-Revision: 1163
+Revision: 1164
 
 ## Цель
 
@@ -388,6 +414,10 @@ Revision: 1163
   - Git Commit: [PENDING] feat: Подготовить source релиза 0.6.90
   - Reference: computer-use-removal-0.6.90-20261005 / T004 / implementation
   - Файлы: package.json, package-lock.json, docs/planning/computer-use-removal.md
+- [TODO] C001: Уточнить контракты: снимки и список окон остаются, ZIP Windows-runtime в релизе — Ожидает
+  - Git Commit: [PENDING] docs: уточнить контракты 0.6.90 и 0.6.91
+  - Reference: computer-use-removal-0.6.90-20261005 / C001 / implementation
+  - Файлы: docs/planning/computer-use-removal.md, docs/planning/codex-local-mac-removal.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: computer-use-removal-0.6.90-20261005 / DOCS / implementation
