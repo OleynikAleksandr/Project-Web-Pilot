@@ -1,20 +1,20 @@
 # Перенос на Windows 10/11
 
-Текущая опубликованная Windows-поставка — **Project Web Pilot 0.6.93, Windows x64**, bundled Workflow Kit 1.5.5. ZIP: `~/Downloads/WebPilot-0.6.93/Project-Web-Pilot-0.6.93-Windows-x64.zip`, 355497917 байт, SHA-256 `17068c38611e885a8a2e404e4a0e6804eba9fe3010f409fa95d3c98803bfe190`; локальный SHA-256 и GitHub Release v0.6.93 digest совпадают. `verify:win` прошёл на Mac; native Windows/clean VM 0.6.93 не запускались. Source 0.6.94 ещё не собирался.
+Текущая опубликованная Windows-поставка — **Project Web Pilot 0.6.94, Windows x64**, bundled Workflow Kit 1.5.5. ZIP: `~/Downloads/WebPilot-0.6.94/Project-Web-Pilot-0.6.94-Windows-x64.zip`, 355499338 байт, SHA-256 `87e077df005a922a89204f9115bec3286acd2cc8af1d69d34c8b0bd7951bff7d`; локальный SHA-256 и GitHub Release v0.6.94 digest совпадают. `verify:win` прошёл на Mac; native Windows/clean VM 0.6.94 не запускались. Предыдущая Windows-поставка — 0.6.93.
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
-Текущая опубликованная Windows-поставка — **Project Web Pilot 0.6.93, Windows x64**, опубликованная вместе с macOS arm64 ZIP и четырьмя служебными assets. Workflow Kit 1.5.5. Windows package собран штатным paired build и прошёл `verify:win` на Mac; native Windows/clean VM не запускались.
+Текущая опубликованная Windows-поставка — **Project Web Pilot 0.6.94, Windows x64**, опубликованная вместе с macOS arm64 ZIP и четырьмя служебными assets. Workflow Kit 1.5.5. Windows package собран штатным paired build и прошёл `verify:win` на Mac; native Windows/clean VM не запускались.
 
-На основном Mac локально установлена подписанная 0.6.93; root и `/Applications` прошли installed gate. Windows x64 0.6.93 собран, проверен на Mac и опубликован в парном GitHub Release; native Windows по-прежнему требует отдельной проверки. [Контракт macOS](planning/macos-screen-permission-stability.md), [RELEASE](RELEASE.md).
+На основном Mac локально установлена подписанная 0.6.94; root и `/Applications` прошли installed gate. Windows x64 0.6.94 собран, проверен на Mac и опубликован в парном GitHub Release; native Windows по-прежнему требует отдельной проверки. [Контракт macOS](planning/macos-screen-permission-stability.md), [RELEASE](RELEASE.md).
 
 ## Файл для переноса
 
-`~/Downloads/WebPilot-0.6.93/Project-Web-Pilot-0.6.93-Windows-x64.zip`
+`~/Downloads/WebPilot-0.6.94/Project-Web-Pilot-0.6.94-Windows-x64.zip`
 
-Размер: 355497917 bytes; SHA-256 `17068c38611e885a8a2e404e4a0e6804eba9fe3010f409fa95d3c98803bfe190`.
+Размер: 355499338 bytes; SHA-256 `87e077df005a922a89204f9115bec3286acd2cc8af1d69d34c8b0bd7951bff7d`.
 
-[GitHub Release 0.6.93](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.93) содержит готовый Windows ZIP: 355497917 байт, SHA-256 `17068c38611e885a8a2e404e4a0e6804eba9fe3010f409fa95d3c98803bfe190`; локальный digest и server digest сверены после публикации. Electron 44.5.1, Node 24.21.0, Workflow Kit 1.5.5. `verify:win` прошёл на Mac; native Windows и живая приёмка Windows 0.6.93 не подтверждены. История — [RELEASE](RELEASE.md).
+[GitHub Release 0.6.94](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.94) содержит готовый Windows ZIP: 355499338 байт, SHA-256 `87e077df005a922a89204f9115bec3286acd2cc8af1d69d34c8b0bd7951bff7d`; локальный digest и server digest сверены после публикации. Electron 44.5.1, Node 24.21.0, Workflow Kit 1.5.5. `verify:win` прошёл на Mac; native Windows и живая приёмка Windows 0.6.94 не подтверждены. История — [RELEASE](RELEASE.md).
 
 Контрольные суммы, инструкция и общий manifest лежат рядом. Полностью распакуйте ZIP на локальный диск Windows; запускайте `Project Web Pilot.exe` из полученной папки. Не переносите один EXE отдельно от resources. Для обновления завершите старое приложение и распакуйте новую поставку в отдельную папку; данные аккаунта и проектов в пользовательском профиле сохраняются.
 

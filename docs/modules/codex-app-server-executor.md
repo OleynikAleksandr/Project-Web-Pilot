@@ -392,7 +392,7 @@ Local backend работает `--mcp-only`; App Server backend также от�
 
 ## Родные инструменты Codex — 0.6.92–0.6.94
 
-[Контракт](../planning/codex-native-tools-macos.md). С 0.6.92 это действующая поверхность macOS executor; разделы выше про 38/47 tools — история соответствующих версий. Текущий source — 0.6.94, опубликованная/установленная версия — 0.6.93.
+[Контракт](../planning/codex-native-tools-macos.md). С 0.6.92 это действующая поверхность macOS executor; разделы выше про 38/47 tools — история соответствующих версий. Текущая опубликованная/установленная версия — 0.6.94; предыдущая — 0.6.93.
 
 Каталог MCP содержит ровно 13 инструментов:
 
@@ -407,4 +407,4 @@ Local backend работает `--mcp-only`; App Server backend также от�
 
 Определения закреплены в `codex-tools.lock.json` на Codex **0.160.0**, tag `rust-v0.160.0` и SHA-256 `shell_spec.rs`, `view_image_spec.rs`, `apply_patch.lark`. `npm run check:codex-tools` сверяет installed Codex с соответствующим GitHub tag: 0 — совпало, 1 — definitions/version отличаются, 2 — сеть/tag недоступны. `bridge_status.codex_tools` показывает pinned/installed version, `version_matches` и `apply_patch_available`. Живая GitHub-сверка 05.10.2026 прошла.
 
-Windows-runtime, selector, VPS/Secure Tunnel, lifecycle служб и правила первого сообщения Windows в 0.6.92–0.6.94 не менялись. Source 0.6.94 прошёл полный `npm test` (553 total, 549 passed, 4 skipped, 0 failed) и live `npm run check:codex-tools` против `rust-v0.160.0`; сборка 0.6.94 ещё не выполнялась. Опубликованная и установленная версия остаётся 0.6.93.
+Windows-runtime, selector, VPS/Secure Tunnel, lifecycle служб и правила первого сообщения Windows в 0.6.92–0.6.94 не менялись. 0.6.94 прошла полный `npm test` (553 total, 549 passed, 4 skipped, 0 failed), live `npm run check:codex-tools`, paired build, installed gate и GitHub release verification; обе macOS-копии установлены. Native Windows остаётся отдельной проверкой.

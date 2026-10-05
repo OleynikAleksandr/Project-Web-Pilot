@@ -24,7 +24,7 @@
 <!-- workflow-kit:end -->
 ## Project Web Pilot
 
-**Текущий source — 0.6.94; установленная и опубликованная версия — 0.6.93 / Workflow Kit 1.5.5** ([контракт](planning/codex-native-tools-macos.md)). 0.6.94 сохраняет 13-tool каталог, исправляет Wall time/race `write_stdin`, ограничивает command-output 8000 оценочных токенов, заполняет descriptions всех tools/parameters, добавляет image-result hint и единое pre-execution retry-rule. Полный `npm test` и `check:codex-tools` прошли; сборка 0.6.94 ещё не выполнялась. Пользовательская проверка установленной 0.6.93 завершена; native Windows остаётся отдельной проверкой. `codex-tools.lock.json`, Windows-runtime и VPS channel не менялись. История выпусков — [RELEASE.md](RELEASE.md).
+**Текущая установленная и опубликованная версия — 0.6.94 / Workflow Kit 1.5.5; предыдущая — 0.6.93** ([контракт](planning/codex-native-tools-macos.md)). 0.6.94 сохраняет 13-tool каталог, исправляет Wall time/race `write_stdin`, ограничивает command-output 8000 оценочных токенов, заполняет descriptions всех tools/parameters, добавляет image-result hint и единое pre-execution retry-rule. Release sourceCommit `24b04476…`, обе Mac-копии установлены, GitHub содержит ровно шесть проверенных assets; WorkflowKit docs синхронизированы commit `6c8ad190…`. Native Windows остаётся отдельной проверкой. `codex-tools.lock.json`, Windows-runtime и VPS channel не менялись. История выпусков — [RELEASE.md](RELEASE.md).
 
 | Документ | Назначение |
 | --- | --- |
@@ -34,7 +34,7 @@
 | docs/modules/workflow-kit-recovery.md | Specification Workflow Kit / Context Recovery / project continuity |
 | docs/modules/project-doctor.md | Контракт автономного Доктора проекта и границы автоматического ремонта |
 | docs/modules/runtime-lifecycle.md | Specification self-healing MCP/tunnel lifecycle |
-| docs/modules/codex-app-server-executor.md | Единственный macOS executor: 13 tools с 0.6.92; 0.6.93 — stdin/timing correction; source 0.6.94 — Wall time/race, output 8000, полный schema/image hint/retry-rule; lifecycle 0.6.91, наблюдение без UI control и исторический A/B |
+| docs/modules/codex-app-server-executor.md | Единственный macOS executor: 13 tools с 0.6.92; 0.6.93 — stdin/timing correction; опубликованная 0.6.94 — Wall time/race, output 8000, полный schema/image hint/retry-rule; lifecycle 0.6.91, наблюдение без UI control и исторический A/B |
 | docs/modules/workspace-sessions.md | Specification проектов, Chat/Work sessions, session tree, переходов после scope, оформления и сохранения геометрии интерфейса |
 | docs/planning/session-title-sync.md | Контракт auto/manual session title и server-side синхронизации с native ChatGPT Recents |
 | docs/planning/input-instruction-delivery-ordering.md | Канонический порядок DOCS → delivery, startupMessage guard и границы незапланированных build/publish |

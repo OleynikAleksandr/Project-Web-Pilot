@@ -1,14 +1,25 @@
 # Выпуск и постоянный путь запуска
 
-## Исходники 0.6.94 — 05.10.2026, до сборки
+## Выпуск 0.6.94 — 05.10.2026
 
 [Контракт](planning/codex-native-tools-macos.md). Source 0.6.94 сохраняет 13-tool каталог `Codex App Server Local Mac`, но доводит командный контракт и metadata поверхности после пользовательской проверки 0.6.93: Wall time `write_stdin` относится к текущему вызову; завершение между status и write/terminate возвращает финальный вывод и exit code; default/max command output — 8000 оценочных токенов; все 13 tools и все параметры имеют descriptions; image-tool объясняют JSON + `image/png` и `content_items → image()`; pre-execution OpenAI block получает единое правило одного неизменённого retry. Первые 512 символов server instructions, `codex-tools.lock.json`, Windows-runtime и VPS channel не менялись.
 
-Реализация до DOCS: T001 `7f0664f`, T002 `3f550b0`, T003 `4c21128`, T004 `fe7592d`. Полный `npm test` на source 0.6.94: 553 total, 549 passed, 4 skipped, 0 failed. `npm run check:codex-tools` подтвердил `rust-v0.160.0`; bundled Workflow Kit — 1.5.5 / 35 файлов / SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`. Парная сборка, установка, GitHub Release и публикация 0.6.94 на момент этой записи не выполнялись. Текущая установленная/опубликованная версия остаётся 0.6.93.
+Предсборочное evidence: T001 `7f0664f`, T002 `3f550b0`, T003 `4c21128`, T004 `fe7592d`; DOCS/source commit — `24b04476d1d96fa770b1d488c197b19c07a33422`. Полный `npm test`: 553 total, 549 passed, 4 skipped, 0 failed. `npm run check:codex-tools` подтвердил `rust-v0.160.0`; bundled Workflow Kit — 1.5.5 / 35 файлов / SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`.
 
 После предсборочной DOCS `24b04476d1d96fa770b1d488c197b19c07a33422` выполнен один paired build (T005 `cc06f99`), установка `/Applications` без пересборки (T006 `11307d5`) и публикация [GitHub Release v0.6.94](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.94) (T007 `880fdda`). Tag `v0.6.94` указывает на release-manifest.sourceCommit `24b04476…`; GitHub содержит ровно шесть assets с совпадающими size/SHA-256, а `origin/main` после T007 совпадает с `880fddaa63008675d0591f6793f93bb1ce9878eb`. Обе macOS-копии установлены как 0.6.94 с ASAR SHA-256 `4d9f5efec3b608fbd0da3b216f57100c32b8a6ce1aa8bce2bb7abb22e9f98549`; filesystem identity сохранена.
 
+Шесть файлов GitHub Release v0.6.94:
+
+- `Project-Web-Pilot-0.6.94-macOS-arm64.zip` — 186364653 bytes, SHA-256 `75ae7a6b4c2d45984d3a73a3610990e65e914764668cc159735538d96dfef2af`;
+- `Project-Web-Pilot-0.6.94-Windows-x64.zip` — 355499338 bytes, SHA-256 `87e077df005a922a89204f9115bec3286acd2cc8af1d69d34c8b0bd7951bff7d`;
+- `Windows-Codex-Local-2026-09-10.zip` — 86242347 bytes, SHA-256 `1f041488ad97d8abf1984fd3521afb8abe15f50b8df3d3e11f1cc4248e019d98`;
+- `SHA256SUMS.txt` — 315 bytes, SHA-256 `b26f2c3fd107e584339c8da13acfff2d031b82ae9ac19c2dac8f09d6bc2c441b`;
+- `INSTALL.txt` — 1186 bytes, SHA-256 `65ebf114604db85bce5201ec5d9da30d52eb27e05f3dd94fa0e1e9061e8e95df`;
+- `release-manifest.json` — 1753 bytes, SHA-256 `fcbd8960fee26c981bd10e970f2eff00d3fda4a9a2e3fc66c1c2190d11d6d086`.
+
 Документы связанного WorkflowKit синхронизированы собственным managed plan и отправлены в `WorkflowKit/origin/main` коммитом **`6c8ad1902df1d0932a44215f014baca66ebf51df`**. Пять current-state документов теперь называют опубликованный Project Web Pilot 0.6.94 с bundled Workflow Kit 1.5.5; canonical source/runtime Kit остаётся 1.5.5 / 35 файлов / SHA-256 `8eadd988…f376`, код/runtime не менялись. Последний отдельный GitHub Release WorkflowKit по факту остаётся **v1.5.1**.
+
+Текущая установленная и опубликованная версия Project Web Pilot — **0.6.94**; предыдущая — **0.6.93**. Native Windows и clean VM 0.6.94 не выполнялись.
 
 ## Выпуск 0.6.93 — 05.10.2026
 

@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1276,
+  "plan_revision": 1278,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-tools-polish-0.6.94-20261005",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Довести macOS MCP Codex App Server Local Mac до предела того, что мы контролируем: закрыть всё найденное пользовательской проверкой 0.6.93 (Wall time, ввод в завершившуюся сессию, одна обрезка вывода, описания всех 13 инструментов, подсказка про изображения, общее правило повтора), синхронизировать все документы, включая README, и документы Workflow Kit; выпустить Project Web Pilot 0.6.94.",
   "acceptance_criteria": [
     "write_stdin показывает Wall time своего вызова, а ввод в уже завершившуюся сессию возвращает финальный вывод и код выхода вместо их потери",
@@ -455,8 +455,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "codex-tools-polish-0.6.94-20261005",
         "task_id": "T009",
@@ -478,7 +478,12 @@
         "docs/DECISIONS.md",
         "docs/VERIFICATION.md",
         "docs/RELEASE.md",
-        "docs/modules/codex-app-server-executor.md"
+        "docs/modules/codex-app-server-executor.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/SOURCE_WORKSPACES.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "docs/WORKFLOW_START.md",
+        "docs/modules/workflow-kit-recovery.md"
       ],
       "verification_ids": [
         "github-release"
@@ -493,7 +498,25 @@
         "docs/VERIFICATION.md и docs/RELEASE.md содержат итог релиза: проверки, sourceCommit, шесть файлов поставки, коммит синхронизации WorkflowKit",
         "origin/main совпадает с финальным локальным HEAD после публикации"
       ],
-      "expected_commit_message": "feat: Послерелизная сверка всех документов и README, синхронизация origin/main"
+      "expected_commit_message": "feat: Послерелизная сверка всех документов и README, синхронизация origin/main",
+      "actual_files": [
+        "README.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/DECISIONS.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/RELEASE.md",
+        "docs/SOURCE_WORKSPACES.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/codex-app-server-executor.md",
+        "docs/modules/workflow-kit-recovery.md",
+        "docs/planning/codex-native-tools-macos.md"
+      ]
     }
   ],
   "blocked_reason": null,
@@ -511,10 +534,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: codex-tools-polish-0.6.94-20261005
 Current Task: нет
-Revision: 1276
+Revision: 1278
 
 ## Цель
 
@@ -568,10 +591,10 @@ Revision: 1276
   - Git Commit: [DONE] feat: Синхронизировать документы Workflow Kit с выпуском 0.6.94
   - Reference: codex-tools-polish-0.6.94-20261005 / T008 / implementation
   - Файлы: docs/planning/codex-native-tools-macos.md, docs/RELEASE.md, docs/VERIFICATION.md
-- [TODO] T009: Послерелизная сверка всех документов и README, синхронизация origin/main — Ожидает
-  - Git Commit: [PENDING] feat: Послерелизная сверка всех документов и README, синхронизация origin/main
+- [DONE] T009: Послерелизная сверка всех документов и README, синхронизация origin/main — Завершено
+  - Git Commit: [DONE] feat: Послерелизная сверка всех документов и README, синхронизация origin/main
   - Reference: codex-tools-polish-0.6.94-20261005 / T009 / implementation
-  - Файлы: docs/planning/codex-native-tools-macos.md, README.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/DECISIONS.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/modules/codex-app-server-executor.md
+  - Файлы: docs/planning/codex-native-tools-macos.md, README.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/DECISIONS.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/modules/codex-app-server-executor.md, docs/CLEAN_INSTALL.md, docs/SOURCE_WORKSPACES.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKFLOW_START.md, docs/modules/workflow-kit-recovery.md
 
 ## Context Pack For This Cycle
 
