@@ -1,49 +1,46 @@
 {
   "schema_version": 1,
   "profile": "DEVELOPMENT",
-  "stack": "Electron 44.5.1 / Node 24.21.0 / Python MCP 1.28.1 / Workflow Kit 1.5.5",
+  "stack": "Electron 44.5.1 / Node 24.21.0 / Workflow Kit 1.5.5 / Codex 0.160.0",
   "checks": [
     {
       "required": false,
-      "timeout_ms": 180000,
+      "timeout_ms": 120000,
       "id": "executor-channel",
-      "executable": "bash",
-      "args": [
-        "-lc",
-        "/opt/homebrew/bin/node --test tests/codex-app-server-mcp.test.mjs"
-      ],
       "kind": "test",
-      "evidence": "tools/codex-app-server-mcp на настоящем Codex App Server: каталог из 13 инструментов, exec_command и write_stdin в форме Codex, родной apply_patch, view_image, корзина, подсказки и правила, статус сверки с версией Codex; control.py и workflow_context_recover без изменений"
-    },
-    {
-      "required": false,
-      "timeout_ms": 600000,
-      "id": "unit-all",
-      "executable": "bash",
+      "executable": "node",
       "args": [
-        "-lc",
-        "PATH=/opt/homebrew/bin:$PATH npm test"
-      ],
-      "kind": "test",
-      "evidence": "Полный node --test tests/*.test.mjs"
-    },
-    {
-      "required": false,
-      "timeout_ms": 180000,
-      "id": "release-source",
-      "kind": "test",
-      "executable": "bash",
-      "args": [
-        "-lc",
-        "/opt/homebrew/bin/node scripts/stage-workflow-kit.mjs && /opt/homebrew/bin/node --check scripts/check-github-release.mjs && /opt/homebrew/bin/node --test tests/context-session.test.mjs tests/workflow-kit-recovery.test.mjs tests/workflow-kit-source.test.mjs tests/workspace-setup.test.mjs && /opt/homebrew/bin/node scripts/check-workflow-kit-dependency.mjs"
+        "--test",
+        "tests/codex-app-server-mcp.test.mjs"
       ]
     },
     {
       "required": false,
-      "timeout_ms": 600000,
+      "timeout_ms": 120000,
+      "id": "unit-all",
+      "kind": "test",
+      "executable": "npm",
+      "args": [
+        "test"
+      ]
+    },
+    {
+      "required": false,
+      "timeout_ms": 120000,
+      "id": "codex-tools-live",
+      "kind": "test",
+      "executable": "npm",
+      "args": [
+        "run",
+        "check:codex-tools"
+      ]
+    },
+    {
+      "required": false,
+      "timeout_ms": 120000,
       "id": "paired-release",
       "kind": "package",
-      "evidence": "~/Downloads/WebPilot-0.6.92: macOS arm64 + Windows x64 ZIP, ZIP Windows-runtime, SHA256SUMS.txt, INSTALL.txt, release-manifest.json; packaged sources, состав app.asar и bundled Workflow Kit 1.5.5 verified",
+      "evidence": "Project Web Pilot 0.6.93: macOS arm64 + Windows x64 ZIP, Windows runtime archive, SHA256SUMS.txt, INSTALL.txt and release-manifest.json; source already verified before build",
       "executable": "npm",
       "args": [
         "run",
@@ -52,10 +49,10 @@
     },
     {
       "required": false,
-      "timeout_ms": 600000,
+      "timeout_ms": 120000,
       "id": "release-installed",
       "kind": "installed",
-      "evidence": "root Project Web Pilot.app and /Applications/Project Web Pilot.app plus staging and both release ZIPs; identity/signature/runtime verified",
+      "evidence": "Root app and /Applications/Project Web Pilot.app are 0.6.93 from the already-built staging bundle; identity/signature/runtime and release artifacts verified without rebuilding",
       "executable": "node",
       "args": [
         "scripts/check-installed-release.mjs"
@@ -63,50 +60,14 @@
     },
     {
       "required": false,
-      "timeout_ms": 180000,
+      "timeout_ms": 120000,
       "id": "github-release",
       "kind": "package",
-      "evidence": "GitHub Release v0.6.92 tag/six assets and remote main verified against local release-manifest.json without rebuilding",
+      "evidence": "GitHub Release v0.6.93 tag, six assets and remote main verified against local release-manifest.json without rebuilding",
       "executable": "node",
       "args": [
         "scripts/check-github-release.mjs"
       ]
-    },
-    {
-      "required": false,
-      "timeout_ms": 180000,
-      "id": "vps-runtime",
-      "executable": "bash",
-      "args": [
-        "-lc",
-        "/opt/homebrew/bin/node --test tests/vps-tunnel.test.mjs tests/mac-runtime-switch.test.mjs tests/startup-platform.test.mjs"
-      ],
-      "kind": "test",
-      "evidence": "src/vps-tunnel.mjs и src/mac-runtime-switch.mjs: подготовка App Server без Codex Local Mac, первый запуск, одноразовое обновление, канал VPS без tunnel-client"
-    },
-    {
-      "required": false,
-      "timeout_ms": 180000,
-      "id": "settings-ui",
-      "executable": "bash",
-      "args": [
-        "-lc",
-        "/opt/homebrew/bin/node --test tests/settings-chatgpt-channel.test.mjs tests/project-doctor-ui.test.mjs tests/sidebar.test.mjs tests/startup-ui.test.mjs"
-      ],
-      "kind": "test",
-      "evidence": "src/ui: «Настройки» без переключателя backend, раздел «Подключение ChatGPT», мастер первого запуска в JSDOM"
-    },
-    {
-      "required": false,
-      "timeout_ms": 180000,
-      "id": "windows-overlay",
-      "executable": "bash",
-      "args": [
-        "-lc",
-        "/opt/homebrew/bin/node --test tests/windows-runtime.test.mjs"
-      ],
-      "kind": "test",
-      "evidence": "src/windows-runtime.mjs: overlay убирает 9 инструментов управления интерфейсом и раздел Desktop из Windows bridge, идемпотентен и закрыт на отказ"
     }
   ],
   "budget": {
