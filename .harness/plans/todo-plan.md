@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1164,
+  "plan_revision": 1166,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "computer-use-removal-0.6.90-20261005",
@@ -227,13 +227,17 @@
         "Контракт 0.6.91 описывает публикацию ZIP Windows-runtime в обычном релизе"
       ],
       "expected_commit_message": "docs: уточнить контракты 0.6.90 и 0.6.91",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "computer-use-removal-0.6.90-20261005",
         "task_id": "C001",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "docs/planning/codex-local-mac-removal.md",
+        "docs/planning/computer-use-removal.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -383,7 +387,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: computer-use-removal-0.6.90-20261005
 Current Task: нет
-Revision: 1164
+Revision: 1166
 
 ## Цель
 
@@ -414,8 +418,8 @@ Revision: 1164
   - Git Commit: [PENDING] feat: Подготовить source релиза 0.6.90
   - Reference: computer-use-removal-0.6.90-20261005 / T004 / implementation
   - Файлы: package.json, package-lock.json, docs/planning/computer-use-removal.md
-- [TODO] C001: Уточнить контракты: снимки и список окон остаются, ZIP Windows-runtime в релизе — Ожидает
-  - Git Commit: [PENDING] docs: уточнить контракты 0.6.90 и 0.6.91
+- [DONE] C001: Уточнить контракты: снимки и список окон остаются, ZIP Windows-runtime в релизе — Завершено
+  - Git Commit: [DONE] docs: уточнить контракты 0.6.90 и 0.6.91
   - Reference: computer-use-removal-0.6.90-20261005 / C001 / implementation
   - Файлы: docs/planning/computer-use-removal.md, docs/planning/codex-local-mac-removal.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
