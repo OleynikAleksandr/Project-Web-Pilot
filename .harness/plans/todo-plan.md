@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1239,
+  "plan_revision": 1241,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-stdin-contract-fix-0.6.93-20261005",
@@ -178,13 +178,18 @@
         "Каталог остаётся ровно 13 tools; codex-tools.lock.json, Windows-runtime и Windows catalog не меняются"
       ],
       "expected_commit_message": "feat: Привести ожидание write_stdin к Codex rust-v0.160.0",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "codex-stdin-contract-fix-0.6.93-20261005",
         "task_id": "T001A",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "docs/planning/codex-native-tools-macos.md",
+        "tests/codex-app-server-mcp.test.mjs",
+        "tools/codex-app-server-mcp/server.py"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -339,7 +344,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: codex-stdin-contract-fix-0.6.93-20261005
 Current Task: нет
-Revision: 1239
+Revision: 1241
 
 ## Цель
 
@@ -359,8 +364,8 @@ Revision: 1239
   - Git Commit: [PENDING] feat: Подготовить source версии 0.6.93 и повторно проверить релизный исходник
   - Reference: codex-stdin-contract-fix-0.6.93-20261005 / T002 / implementation
   - Файлы: package.json, package-lock.json, docs/planning/codex-native-tools-macos.md
-- [TODO] T001A: Привести ожидание write_stdin к Codex rust-v0.160.0 — Ожидает
-  - Git Commit: [PENDING] feat: Привести ожидание write_stdin к Codex rust-v0.160.0
+- [DONE] T001A: Привести ожидание write_stdin к Codex rust-v0.160.0 — Завершено
+  - Git Commit: [DONE] feat: Привести ожидание write_stdin к Codex rust-v0.160.0
   - Reference: codex-stdin-contract-fix-0.6.93-20261005 / T001A / implementation
   - Файлы: tools/codex-app-server-mcp/server.py, tests/codex-app-server-mcp.test.mjs, docs/planning/codex-native-tools-macos.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает

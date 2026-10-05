@@ -243,7 +243,7 @@ test('Codex-form exec_command and write_stdin run through the real App Server', 
 
   const probe = path.join(root, 'probe.py');
   await writeFile(probe, [
-    'import json, os, pathlib, re, subprocess, sys',
+    'import json, os, pathlib, re, subprocess, sys, time',
     'sys.path.insert(0, sys.argv[1])',
     'import server',
     'from app_server_client import AppServerClient',
@@ -279,7 +279,9 @@ test('Codex-form exec_command and write_stdin run through the real App Server', 
     '        out["non_tty_write_error"] = None',
     '    except ValueError as error:',
     '        out["non_tty_write_error"] = str(error)',
-    '    out["non_tty_poll"] = facade.write_stdin(non_tty_sid, "", 5000, 10000)',
+    '    poll_started = time.monotonic()',
+    '    out["non_tty_poll"] = facade.write_stdin(non_tty_sid, "", 1000, 10000)',
+    '    out["non_tty_poll_elapsed"] = time.monotonic() - poll_started',
     '    out["non_tty_cleanup"] = facade.write_stdin(non_tty_sid, "\\x03", 5000, 10000)',
     '    marker = "web-pilot-nontty-" + str(os.getpid())',
     `    interrupt_waiting = facade.exec_command('python3 -c "import time; time.sleep(20)" ' + marker, root, "/bin/sh", False, False, 250, 10000)`,
@@ -293,7 +295,9 @@ test('Codex-form exec_command and write_stdin run through the real App Server', 
     '        out["non_tty_interrupt_repeat"] = str(error)',
     `    waiting = facade.exec_command('IFS= read -r line; printf "got:%s" "$line"', root, "/bin/sh", False, True, 250, 10000)`,
     '    input_sid = session_id(waiting)',
-    '    out["stdin"] = facade.write_stdin(input_sid, "hello\\n", 5000, 10000)',
+    '    stdin_started = time.monotonic()',
+    '    out["stdin"] = facade.write_stdin(input_sid, "hello\\n")',
+    '    out["stdin_elapsed"] = time.monotonic() - stdin_started',
     '    clamp_waiting = facade.exec_command("sleep 0.5; printf CLAMP_WRITE", root, "/bin/sh", False, False, 100, 10000)',
     '    clamp_sid = session_id(clamp_waiting)',
     '    out["write_clamp"] = facade.write_stdin(clamp_sid, "", 1000, 10000)',
@@ -364,12 +368,14 @@ test('Codex-form exec_command and write_stdin run through the real App Server', 
   assert.match(out.finished_error, /Unknown or finished command session/);
   assert.equal(out.non_tty_write_error, 'stdin is closed for this session; rerun exec_command with tty=true to keep stdin open');
   assert.match(out.non_tty_poll, /Process running with session ID [0-9a-f]+/);
+  assert.ok(out.non_tty_poll_elapsed >= 4.5, `empty poll lower clamp was ${out.non_tty_poll_elapsed}s`);
   assert.match(out.non_tty_cleanup, /Process exited with code /);
   assert.match(out.non_tty_interrupt, /Process exited with code /);
   assert.equal(out.non_tty_interrupt_pgrep, 1);
   assert.match(out.non_tty_interrupt_repeat, /Unknown or finished command session/);
   assert.match(out.stdin, /Process exited with code 0/);
   assert.match(out.stdin, /got:hello/);
+  assert.ok(out.stdin_elapsed < 2, `tty write with default yield took ${out.stdin_elapsed}s`);
   assert.match(out.write_clamp, /Process exited with code 0/);
   assert.match(out.write_clamp, /CLAMP_WRITE$/);
   assert.match(out.exec_clamp_low, /CLAMP_LOW$/);
