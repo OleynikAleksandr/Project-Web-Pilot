@@ -2,6 +2,22 @@
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
+## Выпуск 0.6.90 — 05.10.2026
+
+0.6.90 ([контракт](planning/computer-use-removal.md)): управление интерфейсом убрано из MCP на macOS и Windows; остаются список окон и снимки экрана и окна, каталог — 38 инструментов; правила сессии запрещают управлять интерфейсом. Source: T001 `1fb9b8c`, T002 `216a235`, T003 `2b24d35`, T004 `e301c29`.
+
+Предсборочная DOCS — коммит `304f6f3` **до** release-сборки. Первая сборка (T005 `52968f8`) упаковала в `app.asar` неотслеживаемую папку «Claude outputs» с двумя видео пользователя (27 МБ): `--ignore` упаковщика перечисляет известные папки, а `packagedSourceMatches` сверяет только исходники. Сборка не публиковалась и не ставилась в `/Applications`; её файлы в `.harness/runtime/releases/0.6.90` и `~/Downloads/WebPilot-0.6.90` удалены. T008 `3d441a9` пересобрала релиз из того же дерева исходников, убрав папку на время сборки и вернув её без изменений: `release-manifest.sourceCommit=ee737e2efec453d78c6efe1d5beadece53ecd43c`, `sourceFiles=108`, `packagedSourceMatches=true`; в корне `app.asar` обеих платформ и корневого app — только `src`, `node_modules`, `package.json`, `LICENSE`; в ZIP нет `.mp4`. Identity обеих Mac-копий записана в `release-0.6.90-preflight.json` до первой сборки и сохранена.
+
+macOS arm64: `~/Downloads/WebPilot-0.6.90/Project-Web-Pilot-0.6.90-macOS-arm64.zip`, 186500458 байт, SHA-256 `8881cea5ae32f5740fe251a77d530eb68a250dbb27843a4444f8415f77b71da1`. Windows x64: `~/Downloads/WebPilot-0.6.90/Project-Web-Pilot-0.6.90-Windows-x64.zip`, 355614790 байт, SHA-256 `d752870da0543d2c79306e311350088b259cae63bedbb919455527525d50b103`. Оба package имеют ASAR SHA-256 `d3752086cf1f97f9300081a88a41cae3685737c945940ca439e4465f78734639`; Windows прошёл `verify:win` на Mac, native Windows/clean VM не запускались.
+
+`/Applications` установлена из staging штатным `installMacBundle` **без пересборки**, inode сохранён `406571340`; T006 `b644fce` прошла полный `release-installed` gate. В слоте резервной копии корневого app лежит Contents первой сборки 0.6.90 (с видео внутри `app.asar`); следующая установка его заменит.
+
+[GitHub Release v0.6.90](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.90) опубликован 2026-10-05T07:48:47Z. Tag `v0.6.90` указывает точно на `ee737e2efec453d78c6efe1d5beadece53ecd43c`. Опубликованы ровно пять файлов; server size/digest каждого совпадает с локальной поставкой. Release не draft/prerelease. Финальный `main` должен совпасть с managed T007 commit; это повторно проверяет `scripts/check-github-release.mjs` после push.
+
+После установки: в настройках плагина ChatGPT и подключения Claude нажать «Обновить инструменты» — клиенты хранят прежний каталог.
+
+Ограничение Workflow Kit 1.5.5, выявленное здесь: `plan:extend` с кодовой задачей после завершённой delivery-задачи отклоняется (`DEPENDENCY_ORDER`: DOCS переоткрывается новой итерацией, а завершённая delivery-задача зависит от неё). Поэтому исправление упаковщика не вошло в 0.6.90 и перенесено первой задачей в 0.6.91.
+
 ## Выпуск 0.6.89 — 04.10.2026
 
 0.6.89 ([контракт](planning/release-backups-kit-1.5.5.md)): установка хранит по одной резервной копии предыдущей версии на цель в `.harness/runtime/release-backups.noindex` (вне Spotlight, без накопления); bundled Workflow Kit 1.5.5 — push только после DOCS текущего плана. Source: T001 `88762d4`, kit-update `cf39482`, T002 `6d9f39b`, T003 `241580d`.

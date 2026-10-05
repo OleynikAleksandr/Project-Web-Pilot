@@ -1,5 +1,15 @@
 # Проверки и приёмка
 
+## 2026-10-05 — 0.6.90 сборка, установка и GitHub publication
+
+T005: `paired-release` прошла, но проверка состава показала постороннюю папку в `app.asar` (29,8 МБ вместо 2,6 МБ; macOS ZIP 213 МБ вместо 186 МБ). Сборка отклонена до установки и публикации. T008: повторная `paired-release` — `app.asar` 2575411 байт на обеих платформах и в корневом app, в корне только `src`, `node_modules`, `package.json`, `LICENSE`; `unzip -l` обоих ZIP не содержит «Claude outputs» и `.mp4`; папка «Claude outputs» возвращена, размеры и даты файлов прежние. T006: `release-installed` прошла, `/Applications` — 0.6.90, inode прежний.
+
+GitHub Release [v0.6.90](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.90) опубликован 2026-10-05T07:48:47Z, `draft=false`, `prerelease=false`. Tag указывает на release sourceCommit `ee737e2efec453d78c6efe1d5beadece53ecd43c`.
+
+GitHub содержит ровно пять assets: macOS ZIP 186500458 / `8881cea5ae32f5740fe251a77d530eb68a250dbb27843a4444f8415f77b71da1`, Windows ZIP 355614790 / `d752870da0543d2c79306e311350088b259cae63bedbb919455527525d50b103`, `SHA256SUMS.txt` / `5915d04b30930f3d445f4f23516bb1063f93068f3473881cefabc3b5dd6961c7`, `INSTALL.txt` / `2ee7283f07e59c42a581721669deafbab9ab2b439d9bea0531cffa8408aefe7f`, `release-manifest.json` / `85fa589101fa9d1a0850c13035f9a5d26c52649168caeadd09f69379a45abe20`. Server size/digest совпали с локальными файлами.
+
+Не проверено: живой каталог в ChatGPT и Claude после «Обновить инструменты», запуск установленной 0.6.90 пользователем, native Windows, чистая VM.
+
 ## 2026-10-05 — 0.6.90 наблюдение без управления интерфейсом (до сборки)
 
 Автоматически, внутри коммитов задач: T001 — `executor-channel` (9 тестов, без пропусков) и `unit-all`; T002 — `windows-overlay` и `unit-all`; T003 — `release-source` и `executor-channel`; T004 — `release-source`.

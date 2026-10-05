@@ -47,6 +47,7 @@
 
 | № | Задача | Основные файлы |
 | --- | --- | --- |
+| T000 | Сборка: в пакет попадает только приложение — `--ignore` обеих платформ пропускает из корня только `src`, `node_modules`, `package.json`, `LICENSE`; `verifyPackagedSources` отклоняет `app.asar` с чем-либо ещё в корне | `package.json`, `scripts/release-all.mjs`, `tests/release-all.test.mjs` |
 | T001 | ZIP Windows-runtime: шестой файл релиза, загрузка с проверкой SHA-256 | `scripts/prepare-windows-toolchain.mjs`, `scripts/release-all.mjs`, `scripts/check-github-release.mjs`, `tests/windows-runtime.test.mjs`, `tests/release-all.test.mjs`, `docs/SOURCE_WORKSPACES.md` |
 | T002 | Executor без Codex Local Mac: selector, `selector-start`, кандидаты tunnel-client | `tools/codex-app-server-mcp/control.py`, `tests/codex-app-server-mcp.test.mjs` |
 | T003 | Первый запуск macOS через executor: setup, ввод туннеля, проверка Codex | `src/mac-runtime-switch.mjs`, `src/main.mjs`, `src/tunnel-setup.mjs`, `src/startup-platform.mjs`, `src/ui/startup.mjs`, `src/ui/index.html`, тесты запуска |
@@ -59,7 +60,7 @@
 | T009 | Установка в `/Applications` | — |
 | T010 | GitHub Release v0.6.91 и синхронизация `main` | — |
 
-T001 первой: она независима. Зависимость сборки из свежего клона от папки снимается после публикации v0.6.91, когда ZIP появляется в релизе; до этого сборка идёт из локального кеша. T005 и T006 — после T003 и T004, чтобы до переноса первого запуска прежний путь оставался рабочим.
+T000 самой первой: она перенесена из 0.6.90, где сборка упаковала неотслеживаемую папку «Claude outputs» (см. [выпуск 0.6.90](../RELEASE.md)); до неё перед сборкой в корне проекта не должно быть посторонних папок. T001 следом: она независима. Зависимость сборки из свежего клона от папки снимается после публикации v0.6.91, когда ZIP появляется в релизе; до этого сборка идёт из локального кеша. T005 и T006 — после T003 и T004, чтобы до переноса первого запуска прежний путь оставался рабочим.
 
 ## Границы
 
