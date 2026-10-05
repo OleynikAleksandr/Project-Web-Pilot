@@ -99,6 +99,21 @@ T001–T005 завершены: `200b6cb` (`exec_command`/`write_stdin`), `157c6
 - T004 `fe7592d`: `package.json`/root lock переведены на 0.6.94. Полный `npm test`: 553 total, 549 passed, 4 skipped, 0 failed; live `npm run check:codex-tools` — `Codex tool definitions match rust-v0.160.0`.
 - Сборка, установка и GitHub publication 0.6.94 до DOCS не запускались. `codex-tools.lock.json`, Windows-runtime и VPS channel не менялись.
 
+## 0.6.95 — корзина удалена
+
+Пользовательская проверка установленной 0.6.94 (05.10.2026, 48 вызовов) прошла полностью: Wall time вызова, ввод в завершившуюся сессию, одна обрезка вывода, описания всех инструментов и изображения через `content_items` подтверждены; блокировок OpenAI не было.
+
+Решение пользователя 05.10.2026: убрать самодельную корзину целиком. Причины: у Codex её нет; она ничего не гарантирует, потому что `rm` в `exec_command` и удаление файла в `apply_patch` её обходят; откат даёт git — задачи и коммиты Workflow Kit; очистки у неё не было (за десять дней 14 записей на 2,6 ГБ, почти всё — копии сборок и кэши). Содержимое корзины удалено по поручению пользователя 05.10.2026; папка пуста.
+
+Контракт 0.6.95:
+
+- Каталог macOS — 10 инструментов: `exec_command`, `write_stdin`, `apply_patch`, `view_image`; `workflow_context_recover`, `bridge_status`, `turn_watchdog`; `computer_list_windows`, `computer_capture_screen`, `computer_capture_window`. `delete_path`, `list_trash`, `restore_trash` и их код удалены.
+- Правило «delete paths with delete_path, not rm» убрано из server instructions и `session-rules.md`. Удаление — как в Codex: `rm` через `exec_command` или `*** Delete File` в `apply_patch`.
+- Исполнитель при запуске удаляет прежнюю папку `trash` в своём каталоге состояния, только если она пуста; непустую не трогает.
+- Остальные десять инструментов, их параметры, описания и поведение, первые 512 символов server instructions, `codex-tools.lock.json`, Windows-runtime и канал VPS не меняются.
+- Документы проекта, включая README, и документы репозитория `WorkflowKit` синхронизируются так же, как в 0.6.94: DOCS до сборки, послерелизная сверка после публикации.
+- После установки пользователь перезапускает Web Pilot и обновляет инструменты в ChatGPT: каталог меняется.
+
 ## Запуск
 
 1. После выпуска установить 0.6.94, полностью выйти из Web Pilot (⌘Q) и открыть снова.
