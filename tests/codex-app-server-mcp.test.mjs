@@ -260,6 +260,7 @@ test('Codex-form exec_command and write_stdin run through the real App Server', 
     '    out["nonzero"] = facade.exec_command("printf ERR >&2; exit 7", root, "/bin/sh", False, False, 500, 10000)',
     '    out["login_shell"] = facade.exec_command("printf SHELL_OK", root, "/bin/bash", True, False, 500, 10000)',
     '    out["truncated"] = facade.exec_command("printf BEGIN-; /usr/bin/yes x | /usr/bin/head -c 400; printf -- -END", root, "/bin/sh", False, False, 500, 20)',
+    '    out["default_large"] = facade.exec_command("seq 1 60000", root, "/bin/sh", False, False, 1000)',
     '    out["rg"] = facade.exec_command("rg -n add", root, "/bin/zsh", True, False, 1000, 10000)',
     '    out["rg_sessions"] = len(facade._command_sessions)',
     '    out["cat"] = facade.exec_command("cat", root, "/bin/sh", False, False, 1000, 10000)',
@@ -386,7 +387,7 @@ test('Codex-form exec_command and write_stdin run through the real App Server', 
   assert.equal(run.code, 0, run.stderr || run.stdout);
   const out = JSON.parse(run.stdout.trim().split('\n').at(-1));
 
-  for (const key of ['short', 'nonzero', 'login_shell', 'truncated', 'rg', 'cat', 'running', 'poll', 'non_tty_poll', 'non_tty_cleanup', 'non_tty_interrupt', 'stdin', 'wall_after_pause', 'finished_tty_write', 'finished_non_tty_ctrl_c', 'tty_write_race', 'terminate_race', 'write_clamp', 'exec_clamp_low', 'exec_clamp_high', 'token_clamp', 'tty_start', 'tty_signal', 'tty_done']) {
+  for (const key of ['short', 'nonzero', 'login_shell', 'truncated', 'default_large', 'rg', 'cat', 'running', 'poll', 'non_tty_poll', 'non_tty_cleanup', 'non_tty_interrupt', 'stdin', 'wall_after_pause', 'finished_tty_write', 'finished_non_tty_ctrl_c', 'tty_write_race', 'terminate_race', 'write_clamp', 'exec_clamp_low', 'exec_clamp_high', 'token_clamp', 'tty_start', 'tty_signal', 'tty_done']) {
     assert.match(out[key], /^Chunk ID: [0-9a-f]{8}\nWall time: \d+\.\d{3} seconds\n/m, key);
     assert.match(out[key], /\nOriginal token count: \d+\nOutput:\n/, key);
   }
@@ -398,6 +399,12 @@ test('Codex-form exec_command and write_stdin run through the real App Server', 
   assert.match(out.truncated, /BEGIN-/);
   assert.match(out.truncated, /bytes omitted/);
   assert.match(out.truncated, /-END$/);
+  const largeOutput = out.default_large.split('Output:\n')[1];
+  assert.ok(Buffer.byteLength(largeOutput, 'utf8') <= 32_000, `default output was ${Buffer.byteLength(largeOutput, 'utf8')} bytes`);
+  assert.equal((largeOutput.match(/bytes omitted/g) || []).length, 1);
+  assert.match(largeOutput, /^1\n2\n3\n/);
+  assert.match(largeOutput, /59999\n60000\n?$/);
+  assert.ok(Number(out.default_large.match(/Original token count: (\d+)/)[1]) > 8_000);
   assert.match(out.rg, /Process exited with code 0/);
   assert.match(out.rg, /calc\.py:1:def add\(a, b\):/);
   assert.equal(out.rg_sessions, 0);
@@ -444,7 +451,7 @@ test('Codex-form exec_command and write_stdin run through the real App Server', 
   assert.match(out.errors.missing_workdir, /Path does not exist/);
   assert.match(out.errors.file_workdir, /workdir is not a directory/);
   assert.match(out.errors.string_yield, /yield_time_ms must be an integer from 250 to 30000/);
-  assert.match(out.errors.string_tokens, /max_output_tokens must be an integer from 1 to 10000/);
+  assert.match(out.errors.string_tokens, /max_output_tokens must be an integer from 1 to 8000/);
   assert.equal(out.errors.string_write_yield, 'yield' + '_time_ms must be an integer from 5000 to 60000');
   assert.match(out.errors.unknown_session, /Unknown or finished command session/);
 });
@@ -934,7 +941,12 @@ test('App Server MCP answers a stale session id without initialize after a resta
     for (const [parameter, schema] of Object.entries(tool.inputSchema.properties)) {
       assert.ok(schema.description?.trim(), `${name}.${parameter} description is required`);
     }
+    const outputSchema = tool.inputSchema.properties.max_output_tokens;
+    assert.equal(outputSchema.default, 8000, `${name}.max_output_tokens default`);
+    assert.match(outputSchema.description, /Defaults to 8000 tokens/);
+    assert.match(outputSchema.description, /1-8000/);
   }
+  assert.match(tools.find(tool => tool.name === 'exec_command').description, /capped at 8000 estimated tokens/);
 });
 
 test('window list and screenshots use system tools and validate input before running a command', { timeout: 30_000 }, async t => {

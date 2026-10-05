@@ -438,14 +438,14 @@ class LocalFacade:
         login: bool = True,
         tty: bool = False,
         yield_time_ms: int = 10_000,
-        max_output_tokens: int = 10_000,
+        max_output_tokens: int = 8_000,
     ) -> str:
         if not isinstance(cmd, str) or not cmd.strip():
             raise ValueError("cmd must not be empty")
         cwd = self._command_workdir(workdir)
         executable = self._command_shell(shell)
         wait_ms = self._command_limit("yield_time_ms", yield_time_ms, 250, 30_000)
-        token_limit = self._command_limit("max_output_tokens", max_output_tokens, 1, 10_000)
+        token_limit = self._command_limit("max_output_tokens", max_output_tokens, 1, 8_000)
         if not isinstance(login, bool):
             raise ValueError("login must be true or false")
         if not isinstance(tty, bool):
@@ -472,7 +472,7 @@ class LocalFacade:
         session_id: str,
         chars: str = "",
         yield_time_ms: int = 250,
-        max_output_tokens: int = 10_000,
+        max_output_tokens: int = 8_000,
     ) -> str:
         if not isinstance(session_id, str) or not session_id.strip():
             raise ValueError("session_id is required")
@@ -484,7 +484,7 @@ class LocalFacade:
             250 if chars else 5_000,
             30_000 if chars else 60_000,
         )
-        token_limit = self._command_limit("max_output_tokens", max_output_tokens, 1, 10_000)
+        token_limit = self._command_limit("max_output_tokens", max_output_tokens, 1, 8_000)
         with self._command_sessions_lock:
             session = self._command_sessions.get(session_id)
         if session is None:
@@ -824,11 +824,11 @@ def create_server(*, host: str, port: int, state_root: Path, codex_binary: str |
         login: Annotated[bool, Field(description="True runs the shell with -l/-i semantics; false disables them. Defaults to true.", strict=True)] = True,
         tty: Annotated[bool, Field(description="True allocates a PTY and keeps stdin open for write_stdin; false or omitted uses plain pipes with stdin closed. A single Ctrl-C write can still terminate a running non-TTY session.", strict=True)] = False,
         yield_time_ms: Annotated[int, Field(description="Wait before yielding output. Defaults to 10000 ms; values are clamped to the effective 250-30000 ms range.", strict=True)] = 10_000,
-        max_output_tokens: Annotated[int, Field(description="Output token budget. Defaults to 10000 tokens; values are clamped to the MCP policy range of 1-10000.", strict=True)] = 10_000,
+        max_output_tokens: Annotated[int, Field(description="Output token budget. Defaults to 8000 tokens; values are clamped to the MCP policy range of 1-8000.", strict=True)] = 8_000,
     ) -> str:
         """Runs a shell command, returning output or a session ID for ongoing interaction.
 
-        If OpenAI blocks the call before execution because the safety status could not be determined, retry the same call once unchanged; split the command only if the retry is blocked too. Keep combined output under about 10000 tokens, the rest is truncated.
+        If OpenAI blocks the call before execution because the safety status could not be determined, retry the same call once unchanged; split the command only if the retry is blocked too. Output is capped at 8000 estimated tokens so ChatGPT does not truncate it a second time.
         """
         return await asyncio.to_thread(facade.exec_command,cmd,workdir,shell,login,tty,yield_time_ms,max_output_tokens)
 
@@ -837,7 +837,7 @@ def create_server(*, host: str, port: int, state_root: Path, codex_binary: str |
         session_id: Annotated[str, Field(description="Identifier of the running exec_command session.")],
         chars: Annotated[str, Field(description="Characters to write to stdin. Empty polls without writing. stdin is writable only for tty=true sessions; for tty=false, a single Ctrl-C interrupts the process and any other non-empty input is rejected.")] = "",
         yield_time_ms: Annotated[int, Field(description="Wait before yielding output. Defaults to 250 ms; non-empty writes clamp to 250-30000 ms, while empty polls clamp to 5000-60000 ms in this MCP.", strict=True)] = 250,
-        max_output_tokens: Annotated[int, Field(description="Output token budget. Defaults to 10000 tokens; values are clamped to the MCP policy range of 1-10000.", strict=True)] = 10_000,
+        max_output_tokens: Annotated[int, Field(description="Output token budget. Defaults to 8000 tokens; values are clamped to the MCP policy range of 1-8000.", strict=True)] = 8_000,
     ) -> str:
         """Writes characters to an existing exec_command session and returns recent output."""
         return await asyncio.to_thread(facade.write_stdin,session_id,chars,yield_time_ms,max_output_tokens)

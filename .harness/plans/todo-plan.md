@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1259,
+  "plan_revision": 1261,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-tools-polish-0.6.94-20261005",
@@ -121,8 +121,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "codex-tools-polish-0.6.94-20261005",
         "task_id": "T002",
@@ -152,7 +152,11 @@
         "Тест на настоящем App Server: seq 1 60000 возвращает вывод не длиннее 32000 байт с одним маркером bytes omitted, начало и конец сохранены, Original token count показывает полный размер",
         "workflow_context_recover и размер его частей не меняются"
       ],
-      "expected_commit_message": "feat: Одна обрезка вывода: бюджет 8000 токенов"
+      "expected_commit_message": "feat: Одна обрезка вывода: бюджет 8000 токенов",
+      "actual_files": [
+        "tests/codex-app-server-mcp.test.mjs",
+        "tools/codex-app-server-mcp/server.py"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -465,7 +469,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: codex-tools-polish-0.6.94-20261005
 Current Task: нет
-Revision: 1259
+Revision: 1261
 
 ## Цель
 
@@ -487,8 +491,8 @@ Revision: 1259
   - Git Commit: [DONE] feat: write_stdin: Wall time вызова и ввод в завершившуюся сессию
   - Reference: codex-tools-polish-0.6.94-20261005 / T001 / implementation
   - Файлы: tools/codex-app-server-mcp/server.py, tests/codex-app-server-mcp.test.mjs, docs/planning/codex-native-tools-macos.md
-- [TODO] T002: Одна обрезка вывода: бюджет 8000 токенов — Ожидает
-  - Git Commit: [PENDING] feat: Одна обрезка вывода: бюджет 8000 токенов
+- [DONE] T002: Одна обрезка вывода: бюджет 8000 токенов — Завершено
+  - Git Commit: [DONE] feat: Одна обрезка вывода: бюджет 8000 токенов
   - Reference: codex-tools-polish-0.6.94-20261005 / T002 / implementation
   - Файлы: tools/codex-app-server-mcp/server.py, tests/codex-app-server-mcp.test.mjs, docs/planning/codex-native-tools-macos.md
 - [TODO] T003: Описания всех 13 инструментов и параметров, подсказка про изображения, общее правило повтора — Ожидает
