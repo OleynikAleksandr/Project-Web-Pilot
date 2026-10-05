@@ -13,7 +13,7 @@
         "/opt/homebrew/bin/node --test tests/codex-app-server-mcp.test.mjs"
       ],
       "kind": "test",
-      "evidence": "tools/codex-app-server-mcp: control.py без Codex Local Mac (selector, каналы, проверка Codex, перенос туннеля), диалог ввода туннеля, каталог из 38 инструментов и workflow_context_recover частями строго по одной"
+      "evidence": "tools/codex-app-server-mcp на настоящем Codex App Server: каталог из 13 инструментов, exec_command и write_stdin в форме Codex, родной apply_patch, view_image, корзина, подсказки и правила, статус сверки с версией Codex; control.py и workflow_context_recover без изменений"
     },
     {
       "required": false,
@@ -43,7 +43,7 @@
       "timeout_ms": 600000,
       "id": "paired-release",
       "kind": "package",
-      "evidence": "~/Downloads/WebPilot-0.6.91: macOS arm64 + Windows x64 ZIP, ZIP Windows-runtime, SHA256SUMS.txt, INSTALL.txt, release-manifest.json; packaged sources, состав app.asar и bundled Workflow Kit 1.5.5 verified",
+      "evidence": "~/Downloads/WebPilot-0.6.92: macOS arm64 + Windows x64 ZIP, ZIP Windows-runtime, SHA256SUMS.txt, INSTALL.txt, release-manifest.json; packaged sources, состав app.asar и bundled Workflow Kit 1.5.5 verified",
       "executable": "npm",
       "args": [
         "run",
@@ -66,7 +66,7 @@
       "timeout_ms": 180000,
       "id": "github-release",
       "kind": "package",
-      "evidence": "GitHub Release v0.6.91 tag/six assets and remote main verified against local release-manifest.json without rebuilding",
+      "evidence": "GitHub Release v0.6.92 tag/six assets and remote main verified against local release-manifest.json without rebuilding",
       "executable": "node",
       "args": [
         "scripts/check-github-release.mjs"
