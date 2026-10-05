@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1180,
+  "plan_revision": 1182,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "computer-use-removal-0.6.90-20261005",
@@ -375,13 +375,14 @@
         "Локальные файлы первой сборки 0.6.90 удалены; папка «Claude outputs» возвращена на место без изменений"
       ],
       "expected_commit_message": "feat: Пересобрать парный релиз 0.6.90 без посторонних файлов",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "computer-use-removal-0.6.90-20261005",
         "task_id": "T008",
         "role": "implementation"
-      }
+      },
+      "actual_files": []
     },
     {
       "implementation_status": "TODO",
@@ -468,7 +469,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: computer-use-removal-0.6.90-20261005
 Current Task: нет
-Revision: 1180
+Revision: 1182
 
 ## Цель
 
@@ -511,8 +512,8 @@ Revision: 1180
   - Git Commit: [DONE] feat: Собрать и проверить парный релиз 0.6.90
   - Reference: computer-use-removal-0.6.90-20261005 / T005 / implementation
   - Файлы: scripts/release-all.mjs, docs/planning/computer-use-removal.md
-- [TODO] T008: Пересобрать парный релиз 0.6.90 без посторонних файлов — Ожидает
-  - Git Commit: [PENDING] feat: Пересобрать парный релиз 0.6.90 без посторонних файлов
+- [DONE] T008: Пересобрать парный релиз 0.6.90 без посторонних файлов — Завершено
+  - Git Commit: [DONE] feat: Пересобрать парный релиз 0.6.90 без посторонних файлов
   - Reference: computer-use-removal-0.6.90-20261005 / T008 / implementation
   - Файлы: scripts/release-all.mjs
 - [TODO] T006: Установить 0.6.90 и проверить установленные macOS-копии — Ожидает
