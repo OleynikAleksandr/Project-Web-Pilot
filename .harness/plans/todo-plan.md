@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1179,
+  "plan_revision": 1180,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "computer-use-removal-0.6.90-20261005",
@@ -355,6 +355,35 @@
       "actual_files": []
     },
     {
+      "id": "T008",
+      "title": "Пересобрать парный релиз 0.6.90 без посторонних файлов",
+      "why": "Сборка T005 упаковала в app.asar неотслеживаемую папку «Claude outputs» с двумя видео пользователя (27 МБ): список исключений упаковщика перечисляет известные папки, а новая папка в корне проекта попала в пакет. Эта сборка не опубликована и не установлена в /Applications; публиковать её нельзя.",
+      "dependencies": [
+        "DOCS"
+      ],
+      "functional_paths": [
+        "scripts/release-all.mjs"
+      ],
+      "documentation_paths": [],
+      "verification_ids": [
+        "paired-release"
+      ],
+      "verification_kind": "package",
+      "acceptance_criteria": [
+        "~/Downloads/WebPilot-0.6.90 пересобран из текущего HEAD, packagedSourceMatches=true, bundled Workflow Kit 1.5.5",
+        "В app.asar обеих платформ в корне только src, node_modules, package.json и LICENSE",
+        "Локальные файлы первой сборки 0.6.90 удалены; папка «Claude outputs» возвращена на место без изменений"
+      ],
+      "expected_commit_message": "feat: Пересобрать парный релиз 0.6.90 без посторонних файлов",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "computer-use-removal-0.6.90-20261005",
+        "task_id": "T008",
+        "role": "implementation"
+      }
+    },
+    {
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
@@ -363,7 +392,8 @@
         "role": "implementation"
       },
       "dependencies": [
-        "DOCS"
+        "DOCS",
+        "T008"
       ],
       "functional_paths": [
         "scripts/check-installed-release.mjs"
@@ -393,7 +423,8 @@
         "role": "implementation"
       },
       "dependencies": [
-        "DOCS"
+        "DOCS",
+        "T008"
       ],
       "functional_paths": [
         "scripts/check-github-release.mjs"
@@ -412,35 +443,6 @@
         "Tag v0.6.90 на sourceCommit, пять assets совпадают с локальной поставкой, main синхронизирован с origin, включая коммит 7b1d77b"
       ],
       "expected_commit_message": "feat: Опубликовать 0.6.90 и синхронизировать Project Web Pilot с GitHub"
-    },
-    {
-      "id": "T008",
-      "title": "Пересобрать парный релиз 0.6.90 без посторонних файлов",
-      "why": "Сборка T005 упаковала в app.asar неотслеживаемую папку «Claude outputs» с двумя видео пользователя (27 МБ): список исключений упаковщика перечисляет известные папки, а новая папка в корне проекта попала в пакет. Эта сборка не опубликована и не установлена в /Applications; публиковать её нельзя.",
-      "dependencies": [
-        "DOCS"
-      ],
-      "functional_paths": [
-        "scripts/release-all.mjs"
-      ],
-      "documentation_paths": [],
-      "verification_ids": [
-        "paired-release"
-      ],
-      "verification_kind": "package",
-      "acceptance_criteria": [
-        "~/Downloads/WebPilot-0.6.90 пересобран из текущего HEAD, packagedSourceMatches=true, bundled Workflow Kit 1.5.5",
-        "В app.asar обеих платформ в корне только src, node_modules, package.json и LICENSE",
-        "Локальные файлы первой сборки 0.6.90 удалены; папка «Claude outputs» возвращена на место без изменений"
-      ],
-      "expected_commit_message": "feat: Пересобрать парный релиз 0.6.90 без посторонних файлов",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
-      "commit_ref": {
-        "scope_id": "computer-use-removal-0.6.90-20261005",
-        "task_id": "T008",
-        "role": "implementation"
-      }
     }
   ],
   "blocked_reason": null,
@@ -466,7 +468,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: computer-use-removal-0.6.90-20261005
 Current Task: нет
-Revision: 1179
+Revision: 1180
 
 ## Цель
 
@@ -509,6 +511,10 @@ Revision: 1179
   - Git Commit: [DONE] feat: Собрать и проверить парный релиз 0.6.90
   - Reference: computer-use-removal-0.6.90-20261005 / T005 / implementation
   - Файлы: scripts/release-all.mjs, docs/planning/computer-use-removal.md
+- [TODO] T008: Пересобрать парный релиз 0.6.90 без посторонних файлов — Ожидает
+  - Git Commit: [PENDING] feat: Пересобрать парный релиз 0.6.90 без посторонних файлов
+  - Reference: computer-use-removal-0.6.90-20261005 / T008 / implementation
+  - Файлы: scripts/release-all.mjs
 - [TODO] T006: Установить 0.6.90 и проверить установленные macOS-копии — Ожидает
   - Git Commit: [PENDING] feat: Установить 0.6.90 и проверить установленные macOS-копии
   - Reference: computer-use-removal-0.6.90-20261005 / T006 / implementation
@@ -517,10 +523,6 @@ Revision: 1179
   - Git Commit: [PENDING] feat: Опубликовать 0.6.90 и синхронизировать Project Web Pilot с GitHub
   - Reference: computer-use-removal-0.6.90-20261005 / T007 / implementation
   - Файлы: scripts/check-github-release.mjs, docs/planning/computer-use-removal.md
-- [TODO] T008: Пересобрать парный релиз 0.6.90 без посторонних файлов — Ожидает
-  - Git Commit: [PENDING] feat: Пересобрать парный релиз 0.6.90 без посторонних файлов
-  - Reference: computer-use-removal-0.6.90-20261005 / T008 / implementation
-  - Файлы: scripts/release-all.mjs
 
 ## Context Pack For This Cycle
 
