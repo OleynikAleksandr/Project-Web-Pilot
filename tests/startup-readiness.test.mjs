@@ -132,13 +132,13 @@ test('failed installer activation remains an accepted installation with visible 
 test('known setup error explains the cause, preserves installed Git and supports retry without leaking stderr', async () => {
  let failed = true;
  const f = fixture({ inspectRuntime: async () => {
-  if (failed) throw Object.assign(new Error('private sk-runtime-secret'), {code:'MAC_RUNTIME_EXTERNAL_MODIFIED',stderr:'private token'});
+  if (failed) throw Object.assign(new Error('private sk-runtime-secret'), {code:'RUNTIME_STATUS_INVALID',stderr:'private token'});
   return {mcp:{ready:true},tunnel:{ready:false,configured:false}};
  } });
  await f.flow.check();
  assert.equal(f.flow.snapshot().git,true);
  assert.equal(f.flow.snapshot().phase,'error');
- assert.match(f.flow.snapshot().error,/MAC_RUNTIME_EXTERNAL_MODIFIED/);
+ assert.match(f.flow.snapshot().error,/RUNTIME_STATUS_INVALID/);
  assert.doesNotMatch(f.flow.snapshot().error,/интернет|private|sk-runtime/);
  failed=false;await f.flow.check();
  assert.equal(f.flow.snapshot().error,null);

@@ -25,8 +25,6 @@ export function settingsPanelView(action) {
   $('theme-dark').addEventListener('click', () => action('setTheme', 'dark'));
   $('tool-calls-hide').addEventListener('click', () => action('setHideToolCalls', true));
   $('tool-calls-show').addEventListener('click', () => action('setHideToolCalls', false));
-  $('mac-runtime-local').addEventListener('click', () => action('setMacRuntimeMode', 'local'));
-  $('mac-runtime-app-server').addEventListener('click', () => action('setMacRuntimeMode', 'app-server'));
   $('chatgpt-channel-secure').addEventListener('click', () => action('setChatgptChannel', 'secure-tunnel'));
   $('chatgpt-channel-vps').addEventListener('click', () => action('setChatgptChannel', 'vps'));
   $('chatgpt-channel-refresh').addEventListener('click', () => action('refreshChatgptChannel'));
@@ -49,18 +47,13 @@ export function settingsPanelView(action) {
     const macSection = $('mac-runtime-section');
     macSection.hidden = !isMac;
     if (isMac) {
-      const macRuntime = state.macRuntime ?? { mode: 'local', label: 'Codex Local Mac', service: null };
-      const appServer = macRuntime.mode === 'app-server';
-      $('mac-runtime-local').setAttribute('aria-pressed', String(!appServer));
-      $('mac-runtime-app-server').setAttribute('aria-pressed', String(appServer));
-      $('mac-runtime-local').disabled = pending;
-      $('mac-runtime-app-server').disabled = pending;
+      const macRuntime = state.macRuntime ?? { label: 'Codex App Server Local Mac', service: null };
       const service = macRuntime.service;
       const viaVps = macRuntime.chatgptChannel === 'vps';
       const ready = !!service?.mcpReady && !!service?.tunnelReady && !!service?.tunnelConfigured;
       $('mac-runtime-status').textContent = ready
-        ? `Активен: ${macRuntime.label}. MCP и ${viaVps ? 'канал VPS' : 'Secure MCP Tunnel'} готовы.`
-        : `Выбран: ${macRuntime.label}. Службы ещё не подтвердили полную готовность.`;
+        ? `${macRuntime.label}: MCP и ${viaVps ? 'канал VPS' : 'Secure MCP Tunnel'} готовы.`
+        : `${macRuntime.label}: службы ещё не подтвердили полную готовность.`;
       const vps = macRuntime.vps ?? null;
       $('chatgpt-channel-secure').setAttribute('aria-pressed', String(!viaVps));
       $('chatgpt-channel-vps').setAttribute('aria-pressed', String(viaVps));

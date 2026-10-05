@@ -22,6 +22,9 @@ export function startupPlatformOptions({ platform, setup, bootstrap, ensureRunti
       return current.installed ? control('status') : null;
     },
     prepareRuntime: async () => {
+      // macOS installs and starts its services here, after Git: the system Python they need comes with it.
+      // On Windows the components step has already done this.
+      if (!windows) await ensureRuntime();
       let status = await control('status');
       if (!status.mcp.ready || (status.tunnel.configured && !status.tunnel.ready))
         status = await control('start', { mcpOnly: !status.tunnel.configured });

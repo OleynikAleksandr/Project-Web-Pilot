@@ -58,7 +58,7 @@ export function createStartupView({ document, api }) {
         : 'Нажмите «Проверить и продолжить». Web Pilot проверит установленные компоненты и подготовит недостающие. Повторно устанавливать уже готовый компонент Apple не нужно.');
     $('startup-install-git').hidden = windows || !!s.git || waitingApple;
     $('startup-plugin-platform').hidden = !windows;
-    $('startup-plugin-name').textContent = windows ? 'Codex Local Windows MCP' : 'Codex Local Mac';
+    $('startup-plugin-name').textContent = windows ? 'Codex Local Windows MCP' : 'Codex App Server Local Mac';
     $('startup-plugin-body').hidden = !logged || !ready;
     $('startup-plugin-wait').hidden = logged && ready;
     $('startup-tunnel-status').textContent = s.tunnel ? 'Служба подключения работает' : !local ? 'После подготовки компьютера' : 'Нужна однократная настройка';

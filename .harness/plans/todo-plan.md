@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1195,
+  "plan_revision": 1197,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-local-mac-removal-0.6.91-20261005",
@@ -58,7 +58,9 @@
       "tests/mcp-runtime.test.mjs",
       "package-lock.json",
       "scripts/check-installed-release.mjs",
-      "tests/tunnel-prompt.test.mjs"
+      "tests/tunnel-prompt.test.mjs",
+      "tests/electron-smoke.mjs",
+      "tests/startup-readiness.test.mjs"
     ],
     "documentation_paths": [
       "docs/planning/codex-local-mac-removal.md",
@@ -228,8 +230,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "codex-local-mac-removal-0.6.91-20261005",
         "task_id": "T003",
@@ -250,7 +252,9 @@
         "tests/startup-platform.test.mjs",
         "tests/settings-chatgpt-channel.test.mjs",
         "tests/sidebar.test.mjs",
-        "tests/startup-ui.test.mjs"
+        "tests/startup-ui.test.mjs",
+        "tests/electron-smoke.mjs",
+        "tests/startup-readiness.test.mjs"
       ],
       "documentation_paths": [
         "docs/planning/codex-local-mac-removal.md"
@@ -271,7 +275,25 @@
         "В «Настройках» нет переключателя backend и выбора папки runtime; имя плагина в мастере — Codex App Server Local Mac",
         "src/main.mjs собирается esbuild без неразрешённых импортов и не содержит неопределённых имён"
       ],
-      "expected_commit_message": "feat: macOS только через App Server: подготовка, первый запуск, одноразовое обновление, интерфейс"
+      "expected_commit_message": "feat: macOS только через App Server: подготовка, первый запуск, одноразовое обновление, интерфейс",
+      "actual_files": [
+        "src/mac-runtime-switch.mjs",
+        "src/main.mjs",
+        "src/preload.cjs",
+        "src/startup-platform.mjs",
+        "src/startup-readiness.mjs",
+        "src/ui/index.html",
+        "src/ui/settings-panel.mjs",
+        "src/ui/sidebar.mjs",
+        "src/ui/startup.mjs",
+        "tests/electron-smoke.mjs",
+        "tests/mac-runtime-switch.test.mjs",
+        "tests/settings-chatgpt-channel.test.mjs",
+        "tests/sidebar.test.mjs",
+        "tests/startup-platform.test.mjs",
+        "tests/startup-readiness.test.mjs",
+        "tests/startup-ui.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -488,7 +510,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: codex-local-mac-removal-0.6.91-20261005
 Current Task: нет
-Revision: 1195
+Revision: 1197
 
 ## Цель
 
@@ -516,10 +538,10 @@ Revision: 1195
   - Git Commit: [DONE] feat: Executor без Codex Local Mac: selector, проверка Codex, встроенный uv, диалог ввода туннеля
   - Reference: codex-local-mac-removal-0.6.91-20261005 / T002 / implementation
   - Файлы: tools/codex-app-server-mcp/control.py, tools/codex-app-server-mcp/tunnel_prompt.py, tests/codex-app-server-mcp.test.mjs, tests/tunnel-prompt.test.mjs, docs/planning/codex-local-mac-removal.md
-- [TODO] T003: macOS только через App Server: подготовка, первый запуск, одноразовое обновление, интерфейс — Ожидает
-  - Git Commit: [PENDING] feat: macOS только через App Server: подготовка, первый запуск, одноразовое обновление, интерфейс
+- [DONE] T003: macOS только через App Server: подготовка, первый запуск, одноразовое обновление, интерфейс — Завершено
+  - Git Commit: [DONE] feat: macOS только через App Server: подготовка, первый запуск, одноразовое обновление, интерфейс
   - Reference: codex-local-mac-removal-0.6.91-20261005 / T003 / implementation
-  - Файлы: src/mac-runtime-switch.mjs, src/main.mjs, src/preload.cjs, src/startup-platform.mjs, src/startup-readiness.mjs, src/ui/index.html, src/ui/settings-panel.mjs, src/ui/sidebar.mjs, src/ui/startup.mjs, tests/mac-runtime-switch.test.mjs, tests/startup-platform.test.mjs, tests/settings-chatgpt-channel.test.mjs, tests/sidebar.test.mjs, tests/startup-ui.test.mjs, docs/planning/codex-local-mac-removal.md
+  - Файлы: src/mac-runtime-switch.mjs, src/main.mjs, src/preload.cjs, src/startup-platform.mjs, src/startup-readiness.mjs, src/ui/index.html, src/ui/settings-panel.mjs, src/ui/sidebar.mjs, src/ui/startup.mjs, tests/mac-runtime-switch.test.mjs, tests/startup-platform.test.mjs, tests/settings-chatgpt-channel.test.mjs, tests/sidebar.test.mjs, tests/startup-ui.test.mjs, tests/electron-smoke.mjs, tests/startup-readiness.test.mjs, docs/planning/codex-local-mac-removal.md
 - [TODO] T004: Удалить Codex Local Mac из репозитория — Ожидает
   - Git Commit: [PENDING] feat: Удалить Codex Local Mac из репозитория
   - Reference: codex-local-mac-removal-0.6.91-20261005 / T004 / implementation

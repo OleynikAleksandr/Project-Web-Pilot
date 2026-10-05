@@ -17,11 +17,11 @@ const vpsReady = { configured: true, ready: true, running: true, conflict: false
 function state({ platform = 'darwin', channel = 'secure-tunnel', tunnelReady = true, vps = vpsReady } = {}) {
   return { platform, projects: [{ workspace: '/one', name: 'Первый' }], selected: { workspace: '/one' },
     settings: { workspace: '/one' }, context: {}, archives: [], hideToolCalls: true, theme: 'light',
-    macRuntime: { mode: 'app-server', label: 'Codex App Server Local Mac', chatgptChannel: channel,
+    macRuntime: { label: 'Codex App Server Local Mac', chatgptChannel: channel,
       service: { mcpReady: true, tunnelReady, tunnelConfigured: true }, vps } };
 }
 
-test('ChatGPT channel section sits under the macOS runtime switch and switches channels', async t => {
+test('ChatGPT channel section sits under the macOS runtime status and switches channels', async t => {
   const f = await fixture(t);
   f.view.render(state(), false);
   const section = f.$('chatgpt-channel-section');
@@ -31,7 +31,11 @@ test('ChatGPT channel section sits under the macOS runtime switch and switches c
   assert.equal(f.$('chatgpt-channel-vps').getAttribute('aria-pressed'), 'false');
   assert.equal(f.$('chatgpt-channel-vps').disabled, false);
   assert.match(f.$('chatgpt-channel-status').textContent, /Secure MCP Tunnel\. Туннель готов/);
-  assert.match(f.$('mac-runtime-status').textContent, /MCP и Secure MCP Tunnel готовы/);
+  assert.equal(f.$('mac-runtime-status').textContent, 'Codex App Server Local Mac: MCP и Secure MCP Tunnel готовы.');
+  // One backend: nothing to switch and no second runtime to name.
+  assert.equal(f.$('mac-runtime-local'), null);
+  assert.equal(f.$('mac-runtime-app-server'), null);
+  assert.doesNotMatch(f.$('mac-runtime-section').textContent, /Codex Local Mac/);
   assert.match(f.$('chatgpt-channel-hint').textContent, /включите плагин Secure MCP Tunnel/);
   assert.equal(f.$('vps-status').textContent, 'Туннель VPS работает: сервер → MCP на порту 17852.');
   assert.equal(f.$('vps-status').dataset.ready, 'true');

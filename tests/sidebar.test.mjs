@@ -170,10 +170,13 @@ test('delivered chat shows local tools from the last confirmed runtime status wi
   f.emit({ ...f.state, context: { phase: 'delivered', servicesReady: false, messageSent: true } });
   assert.equal(f.document.getElementById('state-service').textContent, 'Не проверены');
   f.emit({ ...f.state, context: { phase: 'delivered', servicesReady: false, messageSent: true },
-    macRuntime: { mode: 'x', label: 'Codex Local Mac', service: { mcpReady: true, tunnelReady: true, tunnelConfigured: true } } });
+    macRuntime: { label: 'Codex App Server Local Mac', service: { mcpReady: true, tunnelReady: true, tunnelConfigured: true } } });
   assert.equal(f.document.getElementById('state-service').textContent, 'Готовы');
-  f.emit({ ...f.state, macRuntime: { mode: 'x', label: 'Codex Local Mac', service: { mcpReady: true, tunnelReady: false, tunnelConfigured: true } } });
+  f.emit({ ...f.state, macRuntime: { label: 'Codex App Server Local Mac', service: { mcpReady: true, tunnelReady: false, tunnelConfigured: true } } });
   assert.equal(f.document.getElementById('state-service').textContent, 'Не проверены');
+  // macOS has one built-in backend: its name is shown and there is no folder to choose.
+  assert.equal(f.document.getElementById('connection-detail').textContent, 'Codex App Server Local Mac · встроенный MCP');
+  assert.equal(f.document.getElementById('choose-runtime'), null);
 });
 
 test('MCP delivery shows the short start message and the agent reading the context through MCP', async t => {

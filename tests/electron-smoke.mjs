@@ -942,7 +942,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(await sidebar.executeJavaScript('document.getElementById("open-archive-window").textContent'), 'Архив…');
   assert.equal(snapshot().platform, process.platform);
   assert.equal(await sidebar.executeJavaScript('document.getElementById("windows-runtime-section").hidden'), true, 'Windows onboarding stays hidden on macOS smoke');
-  assert.equal(await sidebar.executeJavaScript('document.getElementById("choose-runtime").hidden'), false, 'macOS keeps manual Codex Local picker');
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("choose-runtime")'), null, 'macOS has one built-in backend and no runtime folder picker');
   assert.equal(snapshot().theme, 'light');
   await sidebar.executeJavaScript('document.getElementById("theme-dark").click()');
   await waitFor(() => snapshot().theme === 'dark', 'switch shell theme to dark', snapshot);

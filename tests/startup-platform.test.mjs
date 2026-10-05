@@ -79,11 +79,47 @@ test('Windows inspection is read-only and package failure does not install compo
   assert.match(flow.snapshot().error, /Windows ZIP/);
   assert.doesNotMatch(flow.snapshot().error, /Apple|Applications/);
 });
-test('macOS adapter preserves Git-first probes and does not run Windows component preparation', async () => {
+test('macOS adapter probes Git first, then installs and starts its services in the preparation step', async () => {
   const f = fixture('darwin');
+  await f.flow.check();
+  assert.deepEqual(f.calls, [['apple-probe']], 'inspection is read-only: services that are not installed are not asked');
+  assert.equal(f.flow.snapshot().phase, 'prepare');
+  f.calls.length = 0;
   await f.flow.check({ prepare: true });
-  assert.deepEqual(f.calls[0], ['apple-probe']);
-  assert.ok(!f.calls.some(([command]) => command === 'ensure' || command === 'environment'));
+  assert.deepEqual(f.calls.map(([command]) => command), ['apple-probe', 'ensure', 'status', 'start']);
+  assert.deepEqual(f.calls.at(-1), ['start', { mcpOnly: true }]);
+  assert.ok(!f.calls.some(([command]) => command === 'environment'), 'no Windows component environment on macOS');
+  assert.equal(f.flow.snapshot().phase, 'tunnel');
+  assert.equal(f.flow.snapshot().runtime, true);
   await f.flow.configure({ tunnelId: 'fixture' });
   assert.equal(f.flow.snapshot().tunnel, true);
+  assert.equal(f.flow.snapshot().phase, 'connected');
+});
+test('macOS without Git never touches the services: the system Python they need comes with Git', async () => {
+  const f = fixture('darwin');
+  f.input.inspectGit = async () => { f.calls.push(['apple-probe']); return false; };
+  const flow = new StartupReadiness(startupPlatformOptions(f.input));
+  await flow.check({ prepare: true });
+  assert.equal(flow.snapshot().phase, 'git');
+  assert.deepEqual(f.calls, [['apple-probe']]);
+  flow.dispose();
+});
+test('macOS preparation failure is shown with its own message and the next check repeats it', async () => {
+  const f = fixture('darwin');
+  let failed = true;
+  f.input.ensureRuntime = async () => {
+    f.calls.push(['ensure']);
+    if (failed) throw Object.assign(new Error('private-command'), { code: 'MAC_CODEX_NOT_FOUND', publicMessage: 'На этом Mac не найден Codex.' });
+  };
+  f.input.bootstrap.inspect = async () => ({ installed: !failed });
+  const flow = new StartupReadiness(startupPlatformOptions(f.input));
+  await flow.check({ prepare: true });
+  assert.equal(flow.snapshot().phase, 'error');
+  assert.equal(flow.snapshot().error, 'На этом Mac не найден Codex.');
+  assert.equal(flow.snapshot().runtime, false);
+  failed = false;
+  await flow.check({ prepare: true });
+  assert.equal(flow.snapshot().error, null);
+  assert.equal(flow.snapshot().phase, 'tunnel');
+  flow.dispose();
 });

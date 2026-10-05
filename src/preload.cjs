@@ -14,7 +14,6 @@ contextBridge.exposeInMainWorld('webPilot', Object.freeze({
   setSidebarWidth: width => ipcRenderer.invoke('pilot:set-sidebar-width', width),
   setTheme: theme => ipcRenderer.invoke('pilot:set-theme', theme),
   setHideToolCalls: value => ipcRenderer.invoke('pilot:set-hide-tool-calls', value),
-  setMacRuntimeMode: mode => ipcRenderer.invoke('pilot:set-mac-runtime-mode', mode),
   setChatgptChannel: channel => ipcRenderer.invoke('pilot:set-chatgpt-channel', channel),
   refreshChatgptChannel: () => ipcRenderer.invoke('pilot:refresh-chatgpt-channel'),
   copyVpsConnectorUrl: () => ipcRenderer.invoke('pilot:copy-vps-connector-url'),
@@ -43,7 +42,6 @@ contextBridge.exposeInMainWorld('webPilot', Object.freeze({
   reconnect: () => ipcRenderer.invoke('pilot:reconnect'),
   retry: () => ipcRenderer.invoke('pilot:retry'),
   reload: () => ipcRenderer.invoke('pilot:reload'),
-  chooseRuntime: () => ipcRenderer.invoke('pilot:choose-runtime'),
   onState: callback => {
     if (typeof callback !== 'function') throw new TypeError('Expected a callback');
     const listener = (_event, state) => callback(state);

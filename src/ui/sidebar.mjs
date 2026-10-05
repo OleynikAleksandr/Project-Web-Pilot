@@ -393,7 +393,8 @@ function render(state) {
   $('retry-context').textContent = mcpContext ? 'Проверить подключение'
     : ['delivered', 'stale', 'prepared-stale', 'legacy-session', 'manual-session'].includes(context.phase) ? 'Обновить контекст'
     : ['send-unknown', 'waiting-chat'].includes(context.phase) ? 'Проверить статус' : 'Проверить контекст';
-  $('connection-detail').textContent = state.platform === 'win32' ? 'Codex Local Windows · встроенный runtime' : state.runtimeFolder;
+  $('connection-detail').textContent = state.platform === 'win32' ? 'Codex Local Windows · встроенный runtime'
+    : state.macRuntime ? `${state.macRuntime.label} · встроенный MCP` : state.runtimeFolder;
   const delivery = context.delivery;
   $('session-detail').textContent = selected ? `Сессия: ${selected.sessionId}`
     + (delivery?.contextMode === 'mcp' ? `\nСтартовое сообщение · ${new Date(delivery.sentAtMs).toLocaleString('ru-RU')}`
@@ -441,8 +442,6 @@ function render(state) {
       if (list.scrollTop !== top) list.scrollTop = top;
     }
   }
-  $('choose-runtime').hidden = state.platform === 'win32';
-  $('choose-runtime').disabled = actionPending || !!state.setup || !!state.settings;
 }
 
 $('context-toggle').addEventListener('click', () => { contextExpanded = !contextExpanded; render(currentState); });
@@ -455,6 +454,5 @@ $('auto-plan-toggle').addEventListener('click', () => action('setAutoPlan', !cur
 $('reconnect-chat').addEventListener('click', () => action('reconnect'));
 $('retry-context').addEventListener('click', () => action('retry'));
 $('return-chat').addEventListener('click', () => action('returnToChat'));
-$('choose-runtime').addEventListener('click', () => action('chooseRuntime'));
 api.onState(render);
 api.getState().then(render).catch(error => { $('error-banner').hidden = false; $('error-banner').textContent = error.message; });

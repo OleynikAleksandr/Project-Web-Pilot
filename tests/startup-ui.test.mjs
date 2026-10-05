@@ -311,7 +311,7 @@ for (const platform of ['darwin', 'win32']) test(`${platform}: explicit ChatGPT 
   f.emit({ tunnel: true, clipboard: { step: 'done' } });
   assert.equal(guide.hidden, false);
   assert.equal(guide.compareDocumentPosition(project) & 4, 4);
-  assert.equal(f.document.querySelector('#startup-plugin-name').textContent, platform === 'win32' ? 'Codex Local Windows MCP' : 'Codex Local Mac');
+  assert.equal(f.document.querySelector('#startup-plugin-name').textContent, platform === 'win32' ? 'Codex Local Windows MCP' : 'Codex App Server Local Mac');
   assert.match(project.textContent, /меню инструментов/);
   assert.match(project.textContent, /ещё не подтверждают доступ/);
   f.document.querySelector('[data-startup=plugins]').click(); await f.settle();
