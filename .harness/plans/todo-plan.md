@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1203,
+  "plan_revision": 1205,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-local-mac-removal-0.6.91-20261005",
@@ -465,8 +465,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "codex-local-mac-removal-0.6.91-20261005",
         "task_id": "T006",
@@ -493,7 +493,8 @@
         "В корне app.asar обеих платформ только src, node_modules, package.json и LICENSE; в поставке шесть файлов, включая ZIP Windows-runtime",
         "Preflight identity записан до сборки"
       ],
-      "expected_commit_message": "feat: Собрать и проверить парный релиз 0.6.91"
+      "expected_commit_message": "feat: Собрать и проверить парный релиз 0.6.91",
+      "actual_files": []
     },
     {
       "implementation_status": "TODO",
@@ -574,7 +575,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: codex-local-mac-removal-0.6.91-20261005
 Current Task: нет
-Revision: 1203
+Revision: 1205
 
 ## Цель
 
@@ -618,8 +619,8 @@ Revision: 1203
   - Git Commit: [DONE] docs: актуализировать контекст проекта
   - Reference: codex-local-mac-removal-0.6.91-20261005 / DOCS / implementation
   - Файлы: docs/planning/codex-local-mac-removal.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, AGENTS.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, README.md, docs/CLEAN_INSTALL.md, docs/CONTEXT_DELIVERY.md, docs/DECISIONS.md, docs/RELEASE.md, docs/SOURCE_WORKSPACES.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/modules/codex-app-server-executor.md, docs/modules/first-run-onboarding.md, docs/modules/runtime-lifecycle.md
-- [TODO] T006: Собрать и проверить парный релиз 0.6.91 — Ожидает
-  - Git Commit: [PENDING] feat: Собрать и проверить парный релиз 0.6.91
+- [DONE] T006: Собрать и проверить парный релиз 0.6.91 — Завершено
+  - Git Commit: [DONE] feat: Собрать и проверить парный релиз 0.6.91
   - Reference: codex-local-mac-removal-0.6.91-20261005 / T006 / implementation
   - Файлы: scripts/release-all.mjs, docs/planning/codex-local-mac-removal.md
 - [TODO] T007: Установить 0.6.91 и проверить установленные macOS-копии — Ожидает
