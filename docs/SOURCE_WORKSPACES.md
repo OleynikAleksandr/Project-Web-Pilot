@@ -55,6 +55,8 @@ Project ID нового проекта: `cf944136-d1fc-4bd5-9ea0-e46d1fe230e7`. 
 
 ## Codex Local Mac: откуда брать локальное подключение
 
+> **С 0.6.91 не источник.** Codex Local Mac удалён из Project Web Pilot по поручению пользователя от 05.10.2026: приложение его не ставит, не запускает и не читает, сборка не обращается к его папке. Таблица и разделы о нём ниже — история происхождения кода. Папки `~/VSCODE/Codex Local Mac` и `~/Library/Application Support/CodexLocalMac` удаляет пользователь. ZIP Windows-runtime, который сборка раньше брала из этой папки, теперь публикуется шестым файлом каждого релиза Project Web Pilot.
+
 | Материал | Для чего читать |
 | --- | --- |
 | AGENTS.md — `/Users/oleksandroliinyk/VSCODE/Codex Local Mac/AGENTS.md` | Инструкции исходного workspace |

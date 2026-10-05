@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1201,
+  "plan_revision": 1203,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-local-mac-removal-0.6.91-20261005",
@@ -69,7 +69,18 @@
       "docs/architecture/ARCHITECTURE.md",
       "docs/architecture/OVERVIEW.md",
       "docs/MODULES.md",
-      "docs/DOCUMENTATION_INDEX.md"
+      "docs/DOCUMENTATION_INDEX.md",
+      "README.md",
+      "docs/CLEAN_INSTALL.md",
+      "docs/CONTEXT_DELIVERY.md",
+      "docs/DECISIONS.md",
+      "docs/RELEASE.md",
+      "docs/SOURCE_WORKSPACES.md",
+      "docs/VERIFICATION.md",
+      "docs/WORKFLOW_START.md",
+      "docs/modules/codex-app-server-executor.md",
+      "docs/modules/first-run-onboarding.md",
+      "docs/modules/runtime-lifecycle.md"
     ]
   },
   "baseline_commit": "151c782c7689489fbf81dd60181d2fcada299d94",
@@ -389,8 +400,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "codex-local-mac-removal-0.6.91-20261005",
         "task_id": "DOCS",
@@ -412,7 +423,18 @@
         "AGENTS.md",
         "docs/architecture/OVERVIEW.md",
         "docs/MODULES.md",
-        "docs/DOCUMENTATION_INDEX.md"
+        "docs/DOCUMENTATION_INDEX.md",
+        "README.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/DECISIONS.md",
+        "docs/RELEASE.md",
+        "docs/SOURCE_WORKSPACES.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/modules/codex-app-server-executor.md",
+        "docs/modules/first-run-onboarding.md",
+        "docs/modules/runtime-lifecycle.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -421,7 +443,26 @@
       "acceptance_criteria": [
         "Документы соответствуют результату"
       ],
-      "expected_commit_message": "docs: актуализировать контекст проекта"
+      "expected_commit_message": "docs: актуализировать контекст проекта",
+      "actual_files": [
+        "README.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/DECISIONS.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/RELEASE.md",
+        "docs/SOURCE_WORKSPACES.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/codex-app-server-executor.md",
+        "docs/modules/first-run-onboarding.md",
+        "docs/modules/runtime-lifecycle.md",
+        "docs/planning/codex-local-mac-removal.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -533,7 +574,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: codex-local-mac-removal-0.6.91-20261005
 Current Task: нет
-Revision: 1201
+Revision: 1203
 
 ## Цель
 
@@ -573,10 +614,10 @@ Revision: 1201
   - Git Commit: [DONE] feat: Подготовить source релиза 0.6.91
   - Reference: codex-local-mac-removal-0.6.91-20261005 / T005 / implementation
   - Файлы: package.json, package-lock.json, docs/planning/codex-local-mac-removal.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать контекст проекта
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать контекст проекта
   - Reference: codex-local-mac-removal-0.6.91-20261005 / DOCS / implementation
-  - Файлы: docs/planning/codex-local-mac-removal.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, AGENTS.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
+  - Файлы: docs/planning/codex-local-mac-removal.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, AGENTS.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, README.md, docs/CLEAN_INSTALL.md, docs/CONTEXT_DELIVERY.md, docs/DECISIONS.md, docs/RELEASE.md, docs/SOURCE_WORKSPACES.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/modules/codex-app-server-executor.md, docs/modules/first-run-onboarding.md, docs/modules/runtime-lifecycle.md
 - [TODO] T006: Собрать и проверить парный релиз 0.6.91 — Ожидает
   - Git Commit: [PENDING] feat: Собрать и проверить парный релиз 0.6.91
   - Reference: codex-local-mac-removal-0.6.91-20261005 / T006 / implementation

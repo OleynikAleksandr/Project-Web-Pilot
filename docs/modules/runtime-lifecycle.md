@@ -2,6 +2,8 @@
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](../SOURCE_WORKSPACES.md).
 
+> **С 0.6.91** на macOS один backend — Codex App Server Local Mac, его lifecycle описан в разделе «macOS: только executor — 0.6.91» в конце документа и в [спецификации executor](codex-app-server-executor.md). Разделы о Codex Local Mac (`mac-control.py`, `MacRuntimeBootstrap`, `mac-runtime.zip`, `macRuntimeMode`, переключатель в Settings) — история; разделы о Windows действуют.
+
 ## Назначение
 
 Обеспечить бесшумный self-healing startup локальных MCP и Secure MCP Tunnel на macOS и Windows: переиспользовать существующую совместимую установку, установить runtime при отсутствии, восстановиться после stale PID и конфликтов локальных портов и всегда вернуть Web Pilot фактические loopback endpoints.
@@ -210,3 +212,13 @@ Correction scope `stable-mcp-connector-036` заменяет предварит�
 ## Независимый lifecycle — 0.6.48
 
 Закрытие Web Pilot завершает только UI и дочерние окна, не MCP и tunnel. На macOS действующий пользовательский LaunchAgent запускает selector-start при входе (RunAtLoad). В Windows полный start дополнительно регистрирует HKCU Run ProjectWebPilotMCP: pythonw запускает стабильную private-копию control.py с явным ROOT и STATE, а не файл из распакованного ZIP. Ключи остаются в DPAPI/private; реестр и launcher не содержат секретов. Повторная регистрация идемпотентна. Автозапуск относится к входу пользователя, а не к системному сервису до входа. Первый reboot Windows должен проверить пользователь; агент VM не запускает.
+
+## macOS: только executor — 0.6.91
+
+[Контракт](../planning/codex-local-mac-removal.md); устройство — [ARCHITECTURE](../architecture/ARCHITECTURE.md), раздел «Один backend macOS — 0.6.91».
+
+- Состояние: `~/Library/Application Support/WebPilotCodexExecutor` (`source`, `runtime/venv`, `runtime/tunnel-client`, `private/selector.json`, `private/tunnel-key`, `private/tunnel-profile`, журналы, `*.pid.json`). MCP — `127.0.0.1:17852/mcp`, health tunnel-client — `127.0.0.1:17853`.
+- Установка: `control.py setup` встроенным `uv` (Python 3.13, пакет `mcp`, tunnel-client с проверкой SHA-256). Требуются Xcode Command Line Tools (системный Python для запуска `control.py`) и Codex; без Codex — `CODEX_NOT_FOUND` до каких-либо загрузок.
+- Запуск: при входе в macOS — LaunchAgent `com.oleynik.WebPilotCodexExecutor` (`selector-start`); при запуске Web Pilot — `MacRuntimeSwitcher.activate`, которая останавливает службы, обновляет исходники и запускает их снова. Process identity, отказ трогать чужой процесс или порт и остановка по группе — как в разделах об executor выше.
+- Без туннеля службы не считаются сломанными: MCP работает, статус сообщает `tunnel.configured = false`, мастер просит ID и ключ.
+- Прежний runtime: его процессы, копия в данных приложения и LaunchAgent `com.oleynik.CodexLocalMac` убираются один раз; `~/Library/Application Support/CodexLocalMac` и `~/VSCODE/Codex Local Mac` остаются пользователю.

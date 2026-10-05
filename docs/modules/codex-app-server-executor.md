@@ -2,6 +2,8 @@
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](../SOURCE_WORKSPACES.md).
 
+> **С 0.6.91** это единственный локальный backend macOS, а не эксперимент рядом с Codex Local Mac: раздел «Единственный backend macOS — 0.6.91» в конце документа. Сравнение A/B, переключение `local`/`app-server` и приём credentials Codex Local Mac при каждом переключении ниже — история.
+
 ## Назначение
 
 Экспериментальный модуль scope `codex-app-server-mcp-035` проверяет, можно ли заменить собственный исполнитель Codex Local Mac тонким MCP-адаптером к официальному Codex App Server без изменения кода Project Web Pilot. Модель остаётся в ChatGPT Web и сама принимает решения; Codex используется только как локальный runtime и MCP host. Запуск модельного цикла Codex через `turn/start` запрещён.
@@ -375,3 +377,15 @@ Local backend работает `--mcp-only`; App Server backend также от�
 Удалены `computer_status`, `computer_activate_window`, `computer_move_mouse`, `computer_click`, `computer_scroll`, `computer_type_text`, `computer_key_press`, `computer_hotkey`, `computer_actions`, `computer_release_inputs`, фасад Sky и методы MCP-thread клиента. Executor больше не требует плагина Computer Use внутри Codex и не создаёт thread с `danger-full-access`.
 
 Заголовки окон и снимки требуют разрешения macOS на запись экрана для Project Web Pilot — того же, что проверяет `scripts/check-mac-screen-capture.mjs`. Снимок окна больше не возвращает текст интерфейса приложения, который добавлял Sky. Правило сессии запрещает управлять интерфейсом командами; технической блокировки `run_command` нет.
+
+## Единственный backend macOS — 0.6.91
+
+[Контракт](../planning/codex-local-mac-removal.md).
+
+- `control.py`: `setup` · `configure-tunnel` · `configure-selector` (без аргументов) · `configure-channel` · `status` · `start [--mcp-only|--tunnel-only]` · `stop [--tunnel-only]` · `selector-start`. Аргументы `--mode` и `--local-*`, блок `local` в `selector.json` и запуск чужого `control.py` удалены.
+- `require_codex()`: Codex ищется до установки и перед запуском MCP; его отсутствие — JSON с `code: "CODEX_NOT_FOUND"`.
+- `find_uv()`: `WEB_PILOT_UV` (встроенный `mac-tools/uv`), затем `PATH`. С `uv` venv создаётся на Python 3.13; без него — системным Python, которому пакет `mcp` на чистом Mac недоступен.
+- `adopt_legacy_tunnel()`: если своих профиля и ключа нет, а в `~/Library/Application Support/CodexLocalMac/private` есть `tunnel-profile/mac-local.yaml` и `tunnel-key`, туннель один раз переносится через обычный `configure_tunnel`; ключ не печатается; повреждённая прежняя настройка не переносится.
+- `tunnel_prompt.py`: системные диалоги ввода ID и ключа туннеля (прежний `mac-first-run.py`), загружает соседний `control.py`; режимы `--tunnel-id` и `--stdin`.
+- Каталог инструментов не менялся: 38, как в 0.6.90.
+- `scripts/benchmark-codex-app-server-mcp.mjs` удалён: сравнивать больше не с чем. Результаты A/B в разделе T005 — история.

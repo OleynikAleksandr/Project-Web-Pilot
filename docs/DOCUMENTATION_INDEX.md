@@ -39,7 +39,7 @@
 | docs/planning/session-title-sync.md | Контракт auto/manual session title и server-side синхронизации с native ChatGPT Recents |
 | docs/planning/input-instruction-delivery-ordering.md | Канонический порядок DOCS → delivery, startupMessage guard и границы незапланированных build/publish |
 | docs/planning/computer-use-removal.md | Управление интерфейсом убрано из MCP на macOS и Windows; остаются список окон и снимки; запрет в правилах; релиз 0.6.90 |
-| docs/planning/codex-local-mac-removal.md | Следующий этап 0.6.91: удаление Codex Local Mac, macOS только через App Server, ZIP Windows-runtime в релизе |
+| docs/planning/codex-local-mac-removal.md | 0.6.91: Codex Local Mac удалён; macOS только через Codex App Server (первый запуск, одноразовая очистка); в пакете только приложение; ZIP Windows-runtime — шестой файл релиза |
 | docs/planning/release-backups-kit-1.5.5.md | Одна резервная копия установки на цель вне Spotlight; Workflow Kit 1.5.5 (push только после DOCS); релиз 0.6.89 |
 | docs/planning/mcp-start-message.md | Web Pilot начинает MCP-сессию коротким стартовым сообщением; релиз 0.6.88 |
 | docs/planning/mcp-sequential-parts-kit-1.5.4.md | Части контекста строго по одной (ключ after), компактный recovery Workflow Kit 1.5.4; релиз 0.6.87 |
