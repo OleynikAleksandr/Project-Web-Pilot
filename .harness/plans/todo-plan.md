@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1269,
+  "plan_revision": 1270,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-tools-polish-0.6.94-20261005",
@@ -51,7 +51,7 @@
     ]
   },
   "baseline_commit": "ce8c6cc5d2dddb1f6c2f9ddf869ef7692f932860",
-  "current_task_id": "T005",
+  "current_task_id": null,
   "context_pack": {
     "documents": [
       {
@@ -317,8 +317,8 @@
       ]
     },
     {
-      "implementation_status": "IN_PROGRESS",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "codex-tools-polish-0.6.94-20261005",
         "task_id": "T005",
@@ -346,7 +346,8 @@
         "~/Downloads/WebPilot-0.6.94 собран из коммита после DOCS, packagedSourceMatches=true, bundled Workflow Kit 1.5.5, в поставке шесть файлов",
         "Windows-runtime и его каталог не изменены; GitHub Release на этом шаге не публикуется"
       ],
-      "expected_commit_message": "feat: Собрать и проверить парный релиз 0.6.94"
+      "expected_commit_message": "feat: Собрать и проверить парный релиз 0.6.94",
+      "actual_files": []
     },
     {
       "implementation_status": "TODO",
@@ -505,8 +506,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: codex-tools-polish-0.6.94-20261005
-Current Task: T005
-Revision: 1269
+Current Task: нет
+Revision: 1270
 
 ## Цель
 
@@ -544,8 +545,8 @@ Revision: 1269
   - Git Commit: [DONE] docs: актуализировать контекст проекта
   - Reference: codex-tools-polish-0.6.94-20261005 / DOCS / implementation
   - Файлы: docs/planning/codex-native-tools-macos.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, tools/codex-app-server-mcp/session-rules.md, README.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/DECISIONS.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/modules/codex-app-server-executor.md, docs/CLEAN_INSTALL.md, docs/SOURCE_WORKSPACES.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKFLOW_START.md, docs/modules/workflow-kit-recovery.md
-- [IN_PROGRESS] T005: Собрать и проверить парный релиз 0.6.94 — В работе
-  - Git Commit: [PENDING] feat: Собрать и проверить парный релиз 0.6.94
+- [DONE] T005: Собрать и проверить парный релиз 0.6.94 — Завершено
+  - Git Commit: [DONE] feat: Собрать и проверить парный релиз 0.6.94
   - Reference: codex-tools-polish-0.6.94-20261005 / T005 / implementation
   - Файлы: scripts/release-all.mjs, docs/planning/codex-native-tools-macos.md
 - [TODO] T006: Установить 0.6.94 и проверить установленные macOS-копии — Ожидает
