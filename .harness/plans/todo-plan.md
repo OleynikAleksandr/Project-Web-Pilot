@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1176,
+  "plan_revision": 1178,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "computer-use-removal-0.6.90-20261005",
@@ -324,8 +324,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "computer-use-removal-0.6.90-20261005",
         "task_id": "T005",
@@ -351,7 +351,8 @@
         "~/Downloads/WebPilot-0.6.90 собран из коммита после DOCS, packagedSourceMatches=true, bundled Workflow Kit 1.5.5",
         "Preflight identity записан до сборки"
       ],
-      "expected_commit_message": "feat: Собрать и проверить парный релиз 0.6.90"
+      "expected_commit_message": "feat: Собрать и проверить парный релиз 0.6.90",
+      "actual_files": []
     },
     {
       "implementation_status": "TODO",
@@ -436,7 +437,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: computer-use-removal-0.6.90-20261005
 Current Task: нет
-Revision: 1176
+Revision: 1178
 
 ## Цель
 
@@ -475,8 +476,8 @@ Revision: 1176
   - Git Commit: [DONE] docs: актуализировать контекст проекта
   - Reference: computer-use-removal-0.6.90-20261005 / DOCS / implementation
   - Файлы: docs/planning/computer-use-removal.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, tools/codex-app-server-mcp/session-rules.md, docs/planning/codex-local-mac-removal.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, README.md, docs/CONTEXT_DELIVERY.md, docs/DECISIONS.md, docs/VERIFICATION.md, docs/WORKFLOW_START.md, docs/modules/codex-app-server-executor.md
-- [TODO] T005: Собрать и проверить парный релиз 0.6.90 — Ожидает
-  - Git Commit: [PENDING] feat: Собрать и проверить парный релиз 0.6.90
+- [DONE] T005: Собрать и проверить парный релиз 0.6.90 — Завершено
+  - Git Commit: [DONE] feat: Собрать и проверить парный релиз 0.6.90
   - Reference: computer-use-removal-0.6.90-20261005 / T005 / implementation
   - Файлы: scripts/release-all.mjs, docs/planning/computer-use-removal.md
 - [TODO] T006: Установить 0.6.90 и проверить установленные macOS-копии — Ожидает
