@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1199,
+  "plan_revision": 1201,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-local-mac-removal-0.6.91-20261005",
@@ -357,8 +357,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "codex-local-mac-removal-0.6.91-20261005",
         "task_id": "T005",
@@ -382,7 +382,11 @@
       "acceptance_criteria": [
         "package.json и package-lock.json задают 0.6.91"
       ],
-      "expected_commit_message": "feat: Подготовить source релиза 0.6.91"
+      "expected_commit_message": "feat: Подготовить source релиза 0.6.91",
+      "actual_files": [
+        "package-lock.json",
+        "package.json"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -529,7 +533,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: codex-local-mac-removal-0.6.91-20261005
 Current Task: нет
-Revision: 1199
+Revision: 1201
 
 ## Цель
 
@@ -565,8 +569,8 @@ Revision: 1199
   - Git Commit: [DONE] feat: Удалить Codex Local Mac из репозитория
   - Reference: codex-local-mac-removal-0.6.91-20261005 / T004 / implementation
   - Файлы: src/mac-runtime.mjs, resources/mac-runtime.zip, resources/runtime-control/mac-control.py, resources/runtime-control/mac-first-run.py, scripts/benchmark-codex-app-server-mcp.mjs, src/platform.mjs, src/mcp-runtime.mjs, tests/mac-runtime.test.mjs, tests/mac-first-run.test.mjs, tests/tunnel-id-runtime.test.mjs, tests/tunnel-id-prompt.test.mjs, tests/mcp-runtime.test.mjs, src/mac-runtime-switch.mjs, src/main.mjs, docs/planning/codex-local-mac-removal.md, AGENTS.md
-- [TODO] T005: Подготовить source релиза 0.6.91 — Ожидает
-  - Git Commit: [PENDING] feat: Подготовить source релиза 0.6.91
+- [DONE] T005: Подготовить source релиза 0.6.91 — Завершено
+  - Git Commit: [DONE] feat: Подготовить source релиза 0.6.91
   - Reference: codex-local-mac-removal-0.6.91-20261005 / T005 / implementation
   - Файлы: package.json, package-lock.json, docs/planning/codex-local-mac-removal.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
