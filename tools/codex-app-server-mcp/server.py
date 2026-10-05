@@ -24,9 +24,6 @@ from app_server_client import AppServerClient
 READ_ONLY = ToolAnnotations(
     readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
 )
-LOCAL_DESTRUCTIVE = ToolAnnotations(
-    readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=False
-)
 ARBITRARY_COMMAND = ToolAnnotations(
     readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=True
 )
@@ -88,8 +85,12 @@ class LocalFacade:
     def __init__(self, client: AppServerClient, state_root: Path) -> None:
         self.client = client
         self.state_root = state_root
-        self.trash_root = state_root / "trash"
-        self.trash_root.mkdir(parents=True, exist_ok=True, mode=0o700)
+        state_root.mkdir(parents=True, exist_ok=True, mode=0o700)
+        try:
+            # The recoverable-delete folder of 0.6.94 and earlier: rmdir removes it only when it is empty.
+            (state_root / "trash").rmdir()
+        except OSError:
+            pass
         self._command_sessions: dict[str, tuple[int, bool]] = {}
         self._command_sessions_lock = threading.Lock()
 
@@ -232,48 +233,6 @@ class LocalFacade:
 
 
 
-
-    def delete_path(self, path: str) -> dict[str, Any]:
-        target = self.resolve(path, must_exist=True)
-        self._protect_delete(target)
-        trash_id = f"{time.strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:10]}"
-        container = self.trash_root / trash_id
-        payload = container / "payload"
-        container.mkdir(parents=True, exist_ok=False)
-        result = self._command(["/bin/mv", str(target), str(payload)], write=True, timeout_ms=120_000)
-        if not result["ok"]:
-            shutil.rmtree(container, ignore_errors=True)
-            raise ValueError(result["stderr"])
-        meta = {"trash_id": trash_id, "original_path": str(target), "deleted_at": time.time()}
-        self.client.fs_write_file(str(container / "metadata.json"), json.dumps(meta, ensure_ascii=False, indent=2).encode())
-        return {**meta, "recoverable": True}
-
-    def list_trash(self) -> dict[str, Any]:
-        items = []
-        for metadata in sorted(self.trash_root.glob("*/metadata.json"), reverse=True):
-            try:
-                items.append(json.loads(self.client.fs_read_file(str(metadata))))
-            except Exception:
-                continue
-        return {"items": items}
-
-    def restore_trash(self, trash_id: str, destination: str = "", overwrite: bool = False) -> dict[str, Any]:
-        if not trash_id or not all(ch.isalnum() or ch == "-" for ch in trash_id):
-            raise ValueError("Invalid trash_id")
-        container = self.trash_root / trash_id
-        metadata = json.loads(self.client.fs_read_file(str(container / "metadata.json")))
-        payload = container / "payload"
-        target = self.resolve(destination or metadata["original_path"])
-        if target.exists() and not overwrite:
-            raise ValueError("Restore destination exists; set overwrite=true")
-        if target.exists():
-            self._command(["/bin/rm", "-rf", str(target)], write=True)
-        target.parent.mkdir(parents=True, exist_ok=True)
-        result = self._command(["/bin/mv", str(payload), str(target)], write=True)
-        if not result["ok"]:
-            raise ValueError(result["stderr"])
-        shutil.rmtree(container, ignore_errors=True)
-        return {"trash_id": trash_id, "restored_to": str(target)}
 
     @staticmethod
     def _native_apply_patch_error(detail: str) -> ValueError:
@@ -610,16 +569,6 @@ class LocalFacade:
         png = self._screenshot(["-o", "-l", str(window_id)], max_dimension)
         return [{"source": "window", "window_id": window_id, "bytes": len(png)}, Image(data=png, format="png")]
 
-    def _protect_delete(self, target: Path) -> None:
-        resolved = target.resolve(strict=False)
-        protected = {
-            Path("/"), Path.home().resolve(), self.state_root.resolve(),
-            Path("/System"), Path("/Library"), Path("/Applications"), Path("/Users"),
-            Path("/Volumes"), Path("/usr"), Path("/bin"), Path("/sbin"), Path("/private"),
-        }
-        if resolved in protected:
-            raise ValueError("Protected path cannot be deleted/moved")
-
 
 class TurnWatchdog:
     def __init__(self, facade: LocalFacade) -> None:
@@ -741,7 +690,7 @@ def create_server(*, host: str, port: int, state_root: Path, codex_binary: str |
             "No UI control: this MCP cannot move the mouse, press keys or switch windows. Observation only: "
             "computer_list_windows, computer_capture_screen and computer_capture_window. "
             "Tool usage: search with rg through exec_command; edit text files with apply_patch and do not reread them "
-            "after a successful patch; delete paths with delete_path, not rm. "
+            "after a successful patch. "
             + PREEXECUTION_RETRY_RULE
         ),
         host=host,
@@ -843,27 +792,6 @@ def create_server(*, host: str, port: int, state_root: Path, codex_binary: str |
         return facade.view_image(path)
 
 
-
-    @mcp.tool(annotations=LOCAL_DESTRUCTIVE)
-    def delete_path(
-        path: Annotated[str, Field(description="Local file or directory path to move into the recoverable Web Pilot trash.")],
-    ) -> dict[str, Any]:
-        """Move a local file or directory into recoverable Web Pilot trash instead of permanently deleting it."""
-        return facade.delete_path(path)
-
-    @mcp.tool(annotations=READ_ONLY)
-    def list_trash() -> dict[str, Any]:
-        """List recoverable items previously moved to Web Pilot trash, including trash_id and original path."""
-        return facade.list_trash()
-
-    @mcp.tool(annotations=LOCAL_DESTRUCTIVE)
-    def restore_trash(
-        trash_id: Annotated[str, Field(description="trash_id returned by delete_path or list_trash.")],
-        destination: Annotated[str, Field(description="Optional restore destination. Omit to restore to the original path.")] = "",
-        overwrite: Annotated[bool, Field(description="Allow replacing an existing restore destination when true.")] = False,
-    ) -> dict[str, Any]:
-        """Restore an item from recoverable Web Pilot trash to its original path or an explicit destination."""
-        return facade.restore_trash(trash_id,destination,overwrite)
 
     @mcp.tool(annotations=ARBITRARY_COMMAND)
     async def exec_command(

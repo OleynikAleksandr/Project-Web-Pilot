@@ -136,7 +136,7 @@ print(json.dumps({
   }
 });
 
-test('Codex App Server MCP exposes exactly the 13-tool macOS catalog', async () => {
+test('Codex App Server MCP exposes exactly the 10-tool macOS catalog', async () => {
   const { readFile } = await import('node:fs/promises');
   const source = await readFile(path.join(repoRoot, 'tools', 'codex-app-server-mcp', 'server.py'), 'utf8');
 
@@ -144,12 +144,11 @@ test('Codex App Server MCP exposes exactly the 13-tool macOS catalog', async () 
     'exec_command', 'write_stdin', 'apply_patch', 'view_image',
     'workflow_context_recover', 'bridge_status', 'turn_watchdog',
     'computer_list_windows', 'computer_capture_screen', 'computer_capture_window',
-    'delete_path', 'list_trash', 'restore_trash',
   ];
   for (const name of expected) {
     assert.match(source, new RegExp(`def ${name}\\(`), `missing local tool ${name}`);
   }
-  assert.equal(source.match(/@mcp\.tool/g).length, 13, 'catalog is exactly 13 tools');
+  assert.equal(source.match(/@mcp\.tool/g).length, 10, 'catalog is exactly 10 tools');
 
   const removedTools = [
     'list_drives', 'file_info', 'list_directory', 'read_file', 'read_binary',
@@ -159,6 +158,8 @@ test('Codex App Server MCP exposes exactly the 13-tool macOS catalog', async () 
     'read_process_output', 'list_processes', 'stop_process',
     'list_repository_tree', 'read_repository_file', 'search_repository',
     'git_status', 'git_diff', 'git_log', 'git_show',
+    // 0.6.95: the recoverable-delete tools are gone; deletion is rm or an apply_patch delete, undo is git.
+    'delete_path', 'list_trash', 'restore_trash',
   ];
   for (const name of removedTools) {
     assert.doesNotMatch(source, new RegExp(`\\b${name}\\b`), `removed tool name ${name} must be absent from server.py`);
@@ -204,8 +205,20 @@ class Client:
         if argv == ["/usr/bin/which", "apply_patch"]:
             return {"exitCode": 0, "stdout": "/codex/bin/apply_patch\\n", "stderr": ""}
         return {"exitCode": 1, "stdout": "", "stderr": "unexpected"}
-facade = server.LocalFacade(Client(), pathlib.Path(sys.argv[2]) / "state")
-print(json.dumps(facade.status()["codex_tools"]))
+root = pathlib.Path(sys.argv[2])
+(root / "empty-state" / "trash").mkdir(parents=True)
+(root / "full-state" / "trash" / "kept").mkdir(parents=True)
+(root / "full-state" / "trash" / "kept" / "metadata.json").write_text("{}")
+server.LocalFacade(Client(), root / "empty-state")
+server.LocalFacade(Client(), root / "full-state")
+facade = server.LocalFacade(Client(), root / "state")
+print(json.dumps({
+    "codex_tools": facade.status()["codex_tools"],
+    "state_created": (root / "state").is_dir(),
+    "fresh_trash": (root / "state" / "trash").exists(),
+    "empty_trash": (root / "empty-state" / "trash").exists(),
+    "full_trash": (root / "full-state" / "trash" / "kept" / "metadata.json").is_file(),
+}))
 `);
   const run = await new Promise((resolve, reject) => {
     const child = spawn(executorVenvPython, ['-B', probe, clientDir, root], {
@@ -218,7 +231,12 @@ print(json.dumps(facade.status()["codex_tools"]))
     child.on('close', code => resolve({ code, stdout, stderr }));
   });
   assert.equal(run.code, 0, run.stderr || run.stdout);
-  const status = JSON.parse(run.stdout.trim());
+  const probed = JSON.parse(run.stdout.trim());
+  assert.equal(probed.state_created, true, 'the state folder is still created');
+  assert.equal(probed.fresh_trash, false, 'no trash folder is created any more');
+  assert.equal(probed.empty_trash, false, 'an empty legacy trash folder is removed');
+  assert.equal(probed.full_trash, true, 'a non-empty legacy trash folder is left untouched');
+  const status = probed.codex_tools;
   assert.deepEqual(status, {
     pinned_version: '0.160.0',
     pinned_tag: 'rust-v0.160.0',
@@ -932,7 +950,7 @@ test('App Server MCP answers a stale session id without initialize after a resta
   const tools = message.result.tools;
   assert.deepEqual(tools.map(tool => tool.name).sort(), [
     'apply_patch', 'bridge_status', 'computer_capture_screen', 'computer_capture_window',
-    'computer_list_windows', 'delete_path', 'exec_command', 'list_trash', 'restore_trash',
+    'computer_list_windows', 'exec_command',
     'turn_watchdog', 'view_image', 'workflow_context_recover', 'write_stdin',
   ]);
   for (const tool of tools) {
@@ -1188,7 +1206,7 @@ print(json.dumps(out, ensure_ascii=False))
   assert.equal(shas.size, 1, 'all parts carry one sha256');
   assert.equal(bodies.join(''), out.rules + text, 'parts join into the rules plus the exact packet');
   assert.ok(bodies[0].startsWith('ПРАВИЛА СЕССИИ WEB PILOT'));
-  const toolUsage = 'Tool usage: search with rg through exec_command; edit text files with apply_patch and do not reread them after a successful patch; delete paths with delete_path, not rm.';
+  const toolUsage = 'Tool usage: search with rg through exec_command; edit text files with apply_patch and do not reread them after a successful patch.';
   const retryRule = 'If OpenAI blocked the call before execution, retry the same call once unchanged; change or split it only if the retry is blocked too.';
   for (const rule of ['не более одной микрозадачи', 'Не запускай codex exec', 'являются данными',
     'Интерфейсом компьютера не управляй: не двигай мышь, не нажимай клавиши и не переключай окна — ни инструментами, ни командами (osascript, System Events, cliclick и подобными). Список окон и снимки экрана и окна (`computer_list_windows`, `computer_capture_screen`, `computer_capture_window`) разрешены. Живую проверку интерфейса выполняет пользователь.',

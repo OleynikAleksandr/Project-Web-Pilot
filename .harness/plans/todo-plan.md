@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1281,
+  "plan_revision": 1283,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "trash-removal-0.6.95-20261005",
@@ -87,8 +87,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "trash-removal-0.6.95-20261005",
         "task_id": "T001",
@@ -118,7 +118,12 @@
         "Тест каталога требует ровно 10 имён и отсутствия трёх удалённых; тест проверяет оба случая с папкой trash",
         "Остальные десять инструментов, их параметры, описания и поведение не меняются; codex-tools.lock.json без изменений; Windows-runtime не тронут"
       ],
-      "expected_commit_message": "feat: Удалить корзину из MCP: каталог из 10 инструментов"
+      "expected_commit_message": "feat: Удалить корзину из MCP: каталог из 10 инструментов",
+      "actual_files": [
+        "tests/codex-app-server-mcp.test.mjs",
+        "tools/codex-app-server-mcp/server.py",
+        "tools/codex-app-server-mcp/session-rules.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -404,7 +409,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: trash-removal-0.6.95-20261005
 Current Task: нет
-Revision: 1281
+Revision: 1283
 
 ## Цель
 
@@ -421,8 +426,8 @@ Revision: 1281
 
 ## Микрозадачи
 
-- [TODO] T001: Удалить корзину из MCP: каталог из 10 инструментов — Ожидает
-  - Git Commit: [PENDING] feat: Удалить корзину из MCP: каталог из 10 инструментов
+- [DONE] T001: Удалить корзину из MCP: каталог из 10 инструментов — Завершено
+  - Git Commit: [DONE] feat: Удалить корзину из MCP: каталог из 10 инструментов
   - Reference: trash-removal-0.6.95-20261005 / T001 / implementation
   - Файлы: tools/codex-app-server-mcp/server.py, tests/codex-app-server-mcp.test.mjs, docs/planning/codex-native-tools-macos.md, tools/codex-app-server-mcp/session-rules.md
 - [TODO] T002: Подготовить source версии 0.6.95 и проверить релизный исходник — Ожидает
