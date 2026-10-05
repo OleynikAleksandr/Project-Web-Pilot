@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1252,
+  "plan_revision": 1254,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-stdin-contract-fix-0.6.93-20261005",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Исправить контракт stdin у exec_command/write_stdin в macOS MCP Codex App Server Local Mac, добавить Codex-совместимые описания и clamp пределов, проверить на настоящем Codex App Server и выпустить Project Web Pilot 0.6.93 без изменений Windows-runtime.",
   "acceptance_criteria": [
     "Исправить контракт stdin у exec_command/write_stdin в macOS MCP Codex App Server Local Mac, добавить Codex-совместимые описания и clamp пределов, проверить на настоящем Codex App Server и выпустить Project Web Pilot 0.6.93 без изменений Windows-runtime."
@@ -35,7 +35,8 @@
       "docs/DOCUMENTATION_INDEX.md",
       "docs/DECISIONS.md",
       "docs/VERIFICATION.md",
-      "README.md"
+      "README.md",
+      "docs/RELEASE.md"
     ]
   },
   "baseline_commit": "b9025dabdd8ef99bc9a2352697e31c1da894a6c0",
@@ -357,7 +358,12 @@
       ],
       "functional_paths": [],
       "documentation_paths": [
-        "README.md"
+        "README.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md",
+        "docs/architecture/OVERVIEW.md"
       ],
       "verification_ids": [
         "github-release"
@@ -368,13 +374,21 @@
         "origin/main совпадает с финальным локальным HEAD после публикации"
       ],
       "expected_commit_message": "feat: Опубликовать post-release DOCS correction в origin/main",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "codex-stdin-contract-fix-0.6.93-20261005",
         "task_id": "T006",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "README.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md",
+        "docs/architecture/OVERVIEW.md"
+      ]
     }
   ],
   "blocked_reason": null,
@@ -392,10 +406,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: codex-stdin-contract-fix-0.6.93-20261005
 Current Task: нет
-Revision: 1252
+Revision: 1254
 
 ## Цель
 
@@ -435,10 +449,10 @@ Revision: 1252
   - Git Commit: [DONE] feat: Опубликовать GitHub Release v0.6.93 и синхронизировать main
   - Reference: codex-stdin-contract-fix-0.6.93-20261005 / T005 / implementation
   - Файлы: scripts/check-github-release.mjs, package.json, docs/planning/codex-native-tools-macos.md
-- [TODO] T006: Опубликовать post-release DOCS correction в origin/main — Ожидает
-  - Git Commit: [PENDING] feat: Опубликовать post-release DOCS correction в origin/main
+- [DONE] T006: Опубликовать post-release DOCS correction в origin/main — Завершено
+  - Git Commit: [DONE] feat: Опубликовать post-release DOCS correction в origin/main
   - Reference: codex-stdin-contract-fix-0.6.93-20261005 / T006 / implementation
-  - Файлы: README.md
+  - Файлы: README.md, docs/MODULES.md, docs/PRODUCT.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/architecture/OVERVIEW.md
 
 ## Context Pack For This Cycle
 

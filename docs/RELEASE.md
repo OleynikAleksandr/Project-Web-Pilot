@@ -1,10 +1,14 @@
 # Выпуск и постоянный путь запуска
 
-## Source 0.6.92 — 05.10.2026, до сборки
+## Выпуск 0.6.93 — 05.10.2026
 
-[Контракт](planning/codex-native-tools-macos.md). Source version поднята до **0.6.92**. На macOS каталог Codex App Server Local Mac сокращён 38 → 13: `exec_command`, `write_stdin`, native `apply_patch`, `view_image`; recovery/status/watchdog; три инструмента наблюдения; корзина. 28 старых самодельных имён удалены. Definitions lock закреплён на Codex 0.160.0 / `rust-v0.160.0`, живая `npm run check:codex-tools` сверка GitHub прошла. Windows-runtime не менялся.
+[Контракт](planning/codex-native-tools-macos.md). Correction release сохраняет 13-tool каталог `Codex App Server Local Mac` из 0.6.92 и исправляет stdin/timing contract command tools: non-TTY `exec_command` получает закрытый stdin; `write_stdin` различает tty/non-TTY, поддерживает одиночный Ctrl-C для обычной сессии и использует default 250 мс с clamp 250–30000 мс для write и 5000–60000 мс для empty poll. Tool/parameter descriptions заполнены; definitions lock остаётся Codex 0.160.0 / `rust-v0.160.0`. Windows-runtime и Windows catalog не менялись.
 
-Source-коммиты до DOCS: T001 `200b6cb`, T002 `157c66b`, T003 `8cd0ed8`, T004 `ee53370`, T005 `e01f42d`. Предсборочная DOCS выполняется сейчас и должна быть sourceCommit для T006. **Сборка, установка `/Applications`, tag и GitHub Release v0.6.92 ещё не выполнялись**; фактическая поставка по-прежнему 0.6.91.
+Предсборочная DOCS/source commit — `21dcd113cc6c6c76090ea7d33bf0c0aa02c6d8ea`. Root app и `/Applications/Project Web Pilot.app` установлены как 0.6.93; ASAR SHA-256 обеих Mac-копий — `44863bc4dfd22168c08410111b64a2df3606302a6d9ba66f10f4a51d764c3b8d`. [GitHub Release v0.6.93](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.93) опубликован 2026-10-05T15:15:04Z, не draft/prerelease. Tag указывает на sourceCommit; штатный `scripts/check-github-release.mjs` подтвердил ровно шесть assets, их server size/SHA-256 и согласованность release/main. Пользовательская повторная проверка 0.6.93 в новой сессии и native Windows ещё не выполнялись.
+
+## Выпуск 0.6.92 — 05.10.2026
+
+[Контракт](planning/codex-native-tools-macos.md). На macOS каталог Codex App Server Local Mac сокращён 38 → 13: `exec_command`, `write_stdin`, native `apply_patch`, `view_image`; recovery/status/watchdog; три инструмента наблюдения; корзина. Definitions lock закреплён на Codex 0.160.0 / `rust-v0.160.0`; Windows-runtime не менялся. [GitHub Release v0.6.92](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.92) опубликован 2026-10-05T12:09:11Z из source commit `ca85e9dcc4673bfaa7b5a6d358a6fc5b353506d6`, не draft/prerelease и содержит шесть assets. Пользовательская проверка подтвердила каталог и штатные сценарии, но выявила открытый non-TTY stdin и неудобные timing limits `write_stdin`; исправление выпущено в 0.6.93.
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
