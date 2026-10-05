@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1241,
+  "plan_revision": 1243,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-stdin-contract-fix-0.6.93-20261005",
@@ -116,8 +116,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "codex-stdin-contract-fix-0.6.93-20261005",
         "task_id": "T002",
@@ -147,7 +147,11 @@
         "Сверка определений с Codex 0.160.0 проходит; codex-tools.lock.json остаётся неизменным",
         "Сборка, установка и публикация на этом шаге не выполняются"
       ],
-      "expected_commit_message": "feat: Подготовить source версии 0.6.93 и повторно проверить релизный исходник"
+      "expected_commit_message": "feat: Подготовить source версии 0.6.93 и повторно проверить релизный исходник",
+      "actual_files": [
+        "package-lock.json",
+        "package.json"
+      ]
     },
     {
       "id": "T001A",
@@ -344,7 +348,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: codex-stdin-contract-fix-0.6.93-20261005
 Current Task: нет
-Revision: 1241
+Revision: 1243
 
 ## Цель
 
@@ -360,8 +364,8 @@ Revision: 1241
   - Git Commit: [DONE] feat: Исправить stdin-контракт exec_command/write_stdin и покрыть его тестами
   - Reference: codex-stdin-contract-fix-0.6.93-20261005 / T001 / implementation
   - Файлы: tools/codex-app-server-mcp/server.py, tests/codex-app-server-mcp.test.mjs, docs/planning/codex-native-tools-macos.md
-- [TODO] T002: Подготовить source версии 0.6.93 и повторно проверить релизный исходник — Ожидает
-  - Git Commit: [PENDING] feat: Подготовить source версии 0.6.93 и повторно проверить релизный исходник
+- [DONE] T002: Подготовить source версии 0.6.93 и повторно проверить релизный исходник — Завершено
+  - Git Commit: [DONE] feat: Подготовить source версии 0.6.93 и повторно проверить релизный исходник
   - Reference: codex-stdin-contract-fix-0.6.93-20261005 / T002 / implementation
   - Файлы: package.json, package-lock.json, docs/planning/codex-native-tools-macos.md
 - [DONE] T001A: Привести ожидание write_stdin к Codex rust-v0.160.0 — Завершено
