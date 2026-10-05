@@ -97,6 +97,8 @@ class LocalFacade:
         self.state_root = state_root
         self.trash_root = state_root / "trash"
         self.trash_root.mkdir(parents=True, exist_ok=True, mode=0o700)
+        self._command_sessions: dict[str, int] = {}
+        self._command_sessions_lock = threading.Lock()
 
     def resolve(self, path: str, *, must_exist: bool = False, allow_sensitive: bool = False) -> Path:
         candidate = Path(path).expanduser()
@@ -487,6 +489,145 @@ class LocalFacade:
             except OSError:
                 pass
 
+    @staticmethod
+    def _command_limit(name: str, value: int, minimum: int, maximum: int) -> int:
+        if isinstance(value, bool):
+            raise ValueError(f"{name} must be an integer from {minimum} to {maximum}")
+        try:
+            number = int(value)
+        except (TypeError, ValueError):
+            raise ValueError(f"{name} must be an integer from {minimum} to {maximum}") from None
+        if number < minimum or number > maximum:
+            raise ValueError(f"{name} must be from {minimum} to {maximum}")
+        return number
+
+    def _command_workdir(self, workdir: str) -> Path:
+        if not isinstance(workdir, str) or not workdir.strip():
+            raise ValueError("workdir is required")
+        cwd = self.resolve(workdir, must_exist=True, allow_sensitive=True)
+        if not cwd.is_dir():
+            raise ValueError(f"workdir is not a directory: {cwd}")
+        return cwd
+
+    def _command_shell(self, shell: str) -> str:
+        requested = shell.strip() if isinstance(shell, str) else ""
+        if not requested:
+            environment = getattr(self.client, "environment", {})
+            requested = str(environment.get("SHELL") or os.environ.get("SHELL") or "/bin/zsh")
+        if "/" not in requested:
+            requested = shutil.which(requested) or f"/bin/{requested}"
+        path = Path(requested).expanduser()
+        if not path.is_absolute():
+            raise ValueError("shell must name an executable shell")
+        resolved = path.resolve(strict=False)
+        if not resolved.is_file() or not os.access(resolved, os.X_OK):
+            raise ValueError(f"shell is not executable: {resolved}")
+        return str(resolved)
+
+    @staticmethod
+    def _truncate_command_output(output: str, max_output_tokens: int) -> tuple[str, int]:
+        data = output.encode("utf-8")
+        original_tokens = (len(data) + 3) // 4
+        budget = max_output_tokens * 4
+        if len(data) <= budget:
+            return output, original_tokens
+        marker = f"\n... {len(data) - budget} bytes omitted ...\n".encode("utf-8")
+        usable = max(2, budget - len(marker))
+        head = usable // 2
+        tail = usable - head
+        clipped = data[:head].decode("utf-8", errors="ignore") + marker.decode("utf-8") + data[-tail:].decode("utf-8", errors="ignore")
+        return clipped, original_tokens
+
+    @classmethod
+    def _format_command_result(cls, result: dict[str, Any], max_output_tokens: int) -> str:
+        output, original_tokens = cls._truncate_command_output(str(result.get("output") or ""), max_output_tokens)
+        process_id = str(result["process_id"])
+        duration = max(0.0, float(result.get("duration_ms") or 0) / 1000.0)
+        if result.get("running"):
+            state = f"Process running with session ID {process_id}"
+        else:
+            state = f"Process exited with code {result.get('exit_code')}"
+        return (
+            f"Chunk ID: {process_id[:8]}\n"
+            f"Wall time: {duration:.3f} seconds\n"
+            f"{state}\n"
+            f"Original token count: {original_tokens}\n"
+            f"Output:\n{output}"
+        )
+
+    def exec_command(
+        self,
+        cmd: str,
+        workdir: str,
+        shell: str = "",
+        login: bool = True,
+        tty: bool = False,
+        yield_time_ms: int = 10_000,
+        max_output_tokens: int = 10_000,
+    ) -> str:
+        if not isinstance(cmd, str) or not cmd.strip():
+            raise ValueError("cmd must not be empty")
+        cwd = self._command_workdir(workdir)
+        executable = self._command_shell(shell)
+        wait_ms = self._command_limit("yield_time_ms", yield_time_ms, 250, 30_000)
+        token_limit = self._command_limit("max_output_tokens", max_output_tokens, 1, 10_000)
+        if not isinstance(login, bool):
+            raise ValueError("login must be true or false")
+        if not isinstance(tty, bool):
+            raise ValueError("tty must be true or false")
+        started = self.client.start_command(
+            [executable, "-lc" if login else "-c", cmd],
+            cwd=str(cwd),
+            output_bytes_cap=4_000_000,
+            sandbox_policy={"type": "dangerFullAccess"},
+            tty=tty,
+            stream_stdin=True,
+        )
+        process_id = str(started["process_id"])
+        result = self.client.read_command_output(process_id, cursor=0, wait_ms=wait_ms)
+        if result.get("error"):
+            raise ValueError(str(result["error"]))
+        if result.get("running"):
+            with self._command_sessions_lock:
+                self._command_sessions[process_id] = int(result["cursor"])
+        return self._format_command_result(result, token_limit)
+
+    def write_stdin(
+        self,
+        session_id: str,
+        chars: str = "",
+        yield_time_ms: int = 10_000,
+        max_output_tokens: int = 10_000,
+    ) -> str:
+        if not isinstance(session_id, str) or not session_id.strip():
+            raise ValueError("session_id is required")
+        wait_ms = self._command_limit("yield_time_ms", yield_time_ms, 5_000, 60_000)
+        token_limit = self._command_limit("max_output_tokens", max_output_tokens, 1, 10_000)
+        if not isinstance(chars, str):
+            raise ValueError("chars must be a string")
+        with self._command_sessions_lock:
+            cursor = self._command_sessions.get(session_id)
+        if cursor is None:
+            raise ValueError(f"Unknown or finished command session: {session_id}")
+        status = self.client.process_status(session_id, include_output=False)
+        if chars:
+            if not status.get("running"):
+                with self._command_sessions_lock:
+                    self._command_sessions.pop(session_id, None)
+                raise ValueError(f"Command session is no longer running: {session_id}")
+            self.client.write_command_stdin(session_id, chars.encode("utf-8"))
+        result = self.client.read_command_output(session_id, cursor=cursor, wait_ms=wait_ms)
+        if result.get("error"):
+            with self._command_sessions_lock:
+                self._command_sessions.pop(session_id, None)
+            raise ValueError(str(result["error"]))
+        with self._command_sessions_lock:
+            if result.get("running"):
+                self._command_sessions[session_id] = int(result["cursor"])
+            else:
+                self._command_sessions.pop(session_id, None)
+        return self._format_command_result(result, token_limit)
+
     def run_shell(self, command: str, working_directory: str = "", shell: str = "zsh", timeout: int = 30) -> dict[str, Any]:
         if shell not in {"zsh", "bash"}:
             raise ValueError("shell must be zsh or bash")
@@ -861,6 +1002,14 @@ def create_server(*, host: str, port: int, state_root: Path, codex_binary: str |
 
     @mcp.tool(annotations=LOCAL_DESTRUCTIVE)
     def restore_trash(trash_id: str, destination: str = "", overwrite: bool = False) -> dict[str, Any]: return facade.restore_trash(trash_id,destination,overwrite)
+
+    @mcp.tool(annotations=ARBITRARY_COMMAND)
+    async def exec_command(cmd: str, workdir: str, shell: str = "", login: bool = True, tty: bool = False, yield_time_ms: int = 10_000, max_output_tokens: int = 10_000) -> str:
+        return await asyncio.to_thread(facade.exec_command,cmd,workdir,shell,login,tty,yield_time_ms,max_output_tokens)
+
+    @mcp.tool(annotations=ARBITRARY_COMMAND)
+    async def write_stdin(session_id: str, chars: str = "", yield_time_ms: int = 10_000, max_output_tokens: int = 10_000) -> str:
+        return await asyncio.to_thread(facade.write_stdin,session_id,chars,yield_time_ms,max_output_tokens)
 
     @mcp.tool(annotations=ARBITRARY_COMMAND)
     async def run_command(command: str, working_directory: str = "", shell: Literal["zsh","bash"] = "zsh", timeout: int = 30) -> dict[str, Any]: return await asyncio.to_thread(facade.run_shell,command,working_directory,shell,timeout)

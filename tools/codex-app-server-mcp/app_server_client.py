@@ -35,6 +35,7 @@ class ProcessState:
     started_at: float = field(default_factory=time.time)
     stdout: bytearray = field(default_factory=bytearray)
     stderr: bytearray = field(default_factory=bytearray)
+    output: bytearray = field(default_factory=bytearray)
     stdout_base: int = 0
     stderr_base: int = 0
     cap_reached: dict[str, bool] = field(default_factory=lambda: {"stdout": False, "stderr": False})
@@ -278,6 +279,8 @@ class AppServerClient:
         output_bytes_cap: int = 1_000_000,
         sandbox_policy: dict[str, Any] | None = None,
         environment: dict[str, str | None] | None = None,
+        tty: bool = False,
+        stream_stdin: bool = False,
     ) -> dict[str, Any]:
         if not command:
             raise ValueError("command must not be empty")
@@ -289,6 +292,8 @@ class AppServerClient:
             "processId": process_id,
             "streamStdoutStderr": True,
             "outputBytesCap": int(output_bytes_cap),
+            "tty": bool(tty),
+            "streamStdin": bool(stream_stdin or tty),
         }
         if timeout_ms is not None:
             params["timeoutMs"] = int(timeout_ms)
@@ -299,15 +304,21 @@ class AppServerClient:
         if environment:
             params["env"] = environment
 
-        request_id, response_queue = self._send_request_running("command/exec", params)
         state = ProcessState(
             process_id=process_id,
-            request_id=request_id,
+            request_id=0,
             command=[str(item) for item in command],
             cwd=params["cwd"],
         )
         with self._processes_lock:
             self._processes[process_id] = state
+        try:
+            request_id, response_queue = self._send_request_running("command/exec", params)
+            state.request_id = request_id
+        except Exception:
+            with self._processes_lock:
+                self._processes.pop(process_id, None)
+            raise
 
         waiter = threading.Thread(
             target=self._finish_streaming_command,
@@ -316,6 +327,45 @@ class AppServerClient:
         )
         waiter.start()
         return self.process_status(process_id, include_output=False)
+
+    def write_command_stdin(self, process_id: str, data: bytes) -> dict[str, Any]:
+        state = self._get_process(process_id)
+        if state.done.is_set():
+            raise AppServerError(f"Command session is no longer running: {process_id}")
+        if not data:
+            return {}
+        return self._request_running(
+            "command/exec/write",
+            {
+                "processId": process_id,
+                "deltaBase64": base64.b64encode(data).decode("ascii"),
+            },
+            timeout=10.0,
+        )
+
+    def read_command_output(
+        self,
+        process_id: str,
+        *,
+        cursor: int = 0,
+        wait_ms: int = 0,
+    ) -> dict[str, Any]:
+        state = self._get_process(process_id)
+        wait_seconds = max(0.0, min(float(wait_ms) / 1000.0, 60.0))
+        if wait_seconds > 0 and not state.done.is_set():
+            state.done.wait(wait_seconds)
+        start = max(0, min(int(cursor), len(state.output)))
+        output = bytes(state.output[start:])
+        result = state.result or {}
+        return {
+            "process_id": process_id,
+            "running": not state.done.is_set(),
+            "exit_code": result.get("exitCode") if state.done.is_set() else None,
+            "duration_ms": int((time.time() - state.started_at) * 1000),
+            "output": output.decode("utf-8", errors="replace"),
+            "cursor": len(state.output),
+            "error": state.error,
+        }
 
     def process_status(self, process_id: str, *, include_output: bool = True) -> dict[str, Any]:
         state = self._get_process(process_id)
@@ -528,6 +578,8 @@ class AppServerClient:
             state.stdout.extend(chunk)
         elif stream == "stderr":
             state.stderr.extend(chunk)
+        if stream in {"stdout", "stderr"}:
+            state.output.extend(chunk)
         if stream in state.cap_reached and params.get("capReached") is True:
             state.cap_reached[stream] = True
 
@@ -543,6 +595,14 @@ class AppServerClient:
                 timeout=24 * 60 * 60,
             )
             state.result = result
+            stdout = str(result.get("stdout") or "").encode("utf-8")
+            stderr = str(result.get("stderr") or "").encode("utf-8")
+            if stdout:
+                state.stdout.extend(stdout)
+                state.output.extend(stdout)
+            if stderr:
+                state.stderr.extend(stderr)
+                state.output.extend(stderr)
         except AppServerError as exc:
             state.error = str(exc)
         finally:

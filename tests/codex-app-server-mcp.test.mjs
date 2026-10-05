@@ -147,6 +147,7 @@ test('Codex App Server MCP facade exposes local parity and excludes cloud duplic
     'search_files', 'search_text', 'make_directory', 'write_file', 'write_binary',
     'patch_binary', 'replace_text', 'apply_patch', 'copy_path', 'move_path',
     'delete_path', 'list_trash', 'restore_trash',
+    'exec_command', 'write_stdin',
     'run_command', 'run_command_batch', 'start_process', 'process_status',
     'read_process_output', 'list_processes', 'stop_process',
     'list_repository_tree', 'read_repository_file', 'search_repository',
@@ -155,7 +156,7 @@ test('Codex App Server MCP facade exposes local parity and excludes cloud duplic
   for (const name of required) {
     assert.match(source, new RegExp(`def ${name}\\(`), `missing local tool ${name}`);
   }
-  assert.equal(source.match(/@mcp\.tool/g).length, 38, 'catalog is 38 tools');
+  assert.equal(source.match(/@mcp\.tool/g).length, 40, 'T001 adds the two Codex-form command tools before T003 removes legacy duplicates');
 
   // 0.6.90: the web model observes the screen but never drives the interface.
   const removed = [
@@ -176,6 +177,121 @@ test('Codex App Server MCP facade exposes local parity and excludes cloud duplic
 });
 
 const executorVenvPython = path.join(homedir(), 'Library', 'Application Support', 'WebPilotCodexExecutor', 'runtime', 'venv', 'bin', 'python');
+
+test('Codex-form exec_command and write_stdin run through the real App Server', { timeout: 60_000 }, async t => {
+  if (process.platform !== 'darwin' || !existsSync(userCodex) || !existsSync(executorVenvPython)) {
+    t.skip('real Codex command-tool probe requires macOS, Codex, and the executor venv');
+    return;
+  }
+  const root = await mkdtemp(path.join(tmpdir(), 'web-pilot-codex-command-tools-'));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const codexHome = path.join(root, 'codex-home');
+  await mkdir(codexHome, { recursive: true });
+  await writeFile(path.join(codexHome, 'config.toml'), '[analytics]\nenabled = false\n');
+  await writeFile(path.join(root, 'not-a-directory.txt'), 'x');
+
+  const probe = path.join(root, 'probe.py');
+  await writeFile(probe, [
+    'import json, os, pathlib, re, sys',
+    'sys.path.insert(0, sys.argv[1])',
+    'import server',
+    'from app_server_client import AppServerClient',
+    'codex, root, codex_home = sys.argv[2], sys.argv[3], sys.argv[4]',
+    'client = AppServerClient(binary=codex, cwd=root, environment={"CODEX_HOME": codex_home}, request_timeout=20)',
+    'facade = server.LocalFacade(client, pathlib.Path(root) / "state")',
+    'def session_id(text):',
+    '    match = re.search(r"Process running with session ID ([0-9a-f]+)", text)',
+    '    if not match: raise RuntimeError(text)',
+    '    return match.group(1)',
+    'out = {}',
+    'try:',
+    '    out["short"] = facade.exec_command("printf SHORT_OK", root, "/bin/sh", False, False, 500, 10000)',
+    '    out["nonzero"] = facade.exec_command("printf ERR >&2; exit 7", root, "/bin/sh", False, False, 500, 10000)',
+    '    out["login_shell"] = facade.exec_command("printf SHELL_OK", root, "/bin/bash", True, False, 500, 10000)',
+    '    out["truncated"] = facade.exec_command("printf BEGIN-; /usr/bin/yes x | /usr/bin/head -c 400; printf -- -END", root, "/bin/sh", False, False, 500, 20)',
+    '    running = facade.exec_command("printf START; sleep 1; printf DONE", root, "/bin/sh", False, False, 250, 10000)',
+    '    out["running"] = running',
+    '    sid = session_id(running)',
+    '    out["poll"] = facade.write_stdin(sid, "", 5000, 10000)',
+    '    try:',
+    '        facade.write_stdin(sid, "", 5000, 10000)',
+    '        out["finished_error"] = None',
+    '    except ValueError as error:',
+    '        out["finished_error"] = str(error)',
+    `    waiting = facade.exec_command('IFS= read -r line; printf GOT:%s "$line"', root, "/bin/sh", False, False, 250, 10000)`,
+    '    input_sid = session_id(waiting)',
+    '    out["stdin"] = facade.write_stdin(input_sid, "hello\\n", 5000, 10000)',
+    '    tty_waiting = facade.exec_command("printf READY; sleep 20", root, "/bin/sh", False, True, 250, 10000)',
+    '    out["tty_start"] = tty_waiting',
+    '    tty_sid = session_id(tty_waiting)',
+    '    out["tty_signal"] = facade.write_stdin(tty_sid, "\\x03", 5000, 10000)',
+    '    out["tty_done"] = facade.write_stdin(tty_sid, "", 5000, 10000) if "Process running" in out["tty_signal"] else out["tty_signal"]',
+    '    errors = {}',
+    '    for name, call in {',
+    '        "empty_cmd": lambda: facade.exec_command(" ", root),',
+    '        "empty_workdir": lambda: facade.exec_command("true", ""),',
+    '        "missing_workdir": lambda: facade.exec_command("true", os.path.join(root, "missing")),',
+    '        "file_workdir": lambda: facade.exec_command("true", os.path.join(root, "not-a-directory.txt")),',
+    '        "bad_yield": lambda: facade.exec_command("true", root, yield_time_ms=249),',
+    '        "bad_tokens": lambda: facade.exec_command("true", root, max_output_tokens=10001),',
+    '        "unknown_session": lambda: facade.write_stdin("deadbeef", "", 5000, 10000),',
+    '    }.items():',
+    '        try:',
+    '            call()',
+    '            errors[name] = None',
+    '        except Exception as error:',
+    '            errors[name] = str(error)',
+    '    out["errors"] = errors',
+    'finally:',
+    '    client.close()',
+    'print(json.dumps(out))',
+  ].join('\n'));
+
+  const run = await new Promise((resolve, reject) => {
+    const child = spawn(executorVenvPython, ['-B', probe, clientDir, userCodex, root, codexHome], {
+      cwd: root,
+      env: { ...process.env, PYTHONDONTWRITEBYTECODE: '1' },
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    let stdout = '', stderr = '';
+    child.stdout.on('data', chunk => { stdout += chunk; });
+    child.stderr.on('data', chunk => { stderr += chunk; });
+    child.on('error', reject);
+    child.on('close', code => resolve({ code, stdout, stderr }));
+  });
+  assert.equal(run.code, 0, run.stderr || run.stdout);
+  const out = JSON.parse(run.stdout.trim().split('\n').at(-1));
+
+  for (const key of ['short', 'nonzero', 'login_shell', 'truncated', 'running', 'poll', 'stdin', 'tty_start', 'tty_signal', 'tty_done']) {
+    assert.match(out[key], /^Chunk ID: [0-9a-f]{8}\nWall time: \d+\.\d{3} seconds\n/m, key);
+    assert.match(out[key], /\nOriginal token count: \d+\nOutput:\n/, key);
+  }
+  assert.match(out.short, /Process exited with code 0/);
+  assert.match(out.short, /SHORT_OK$/);
+  assert.match(out.nonzero, /Process exited with code 7/);
+  assert.match(out.nonzero, /ERR$/);
+  assert.match(out.login_shell, /SHELL_OK$/);
+  assert.match(out.truncated, /BEGIN-/);
+  assert.match(out.truncated, /bytes omitted/);
+  assert.match(out.truncated, /-END$/);
+  assert.match(out.running, /Process running with session ID [0-9a-f]+/);
+  assert.match(out.poll, /Process exited with code 0/);
+  assert.match(out.poll, /DONE$/);
+  assert.match(out.finished_error, /Unknown or finished command session/);
+  assert.match(out.stdin, /Process exited with code 0/);
+  assert.match(out.stdin, /GOT:hello/);
+  assert.match(out.tty_start, /Process running with session ID [0-9a-f]+/);
+  assert.match(out.tty_start, /READY/);
+  assert.match(out.tty_signal, /\^C/);
+  assert.match(out.tty_done, /Process exited with code /);
+  assert.match(out.errors.empty_cmd, /cmd must not be empty/);
+  assert.match(out.errors.empty_workdir, /workdir is required/);
+  assert.match(out.errors.missing_workdir, /Path does not exist/);
+  assert.match(out.errors.file_workdir, /workdir is not a directory/);
+  assert.ok(out.errors.bad_yield.includes('yield') && out.errors.bad_yield.includes('250') && out.errors.bad_yield.includes('30000'));
+  assert.ok(out.errors.bad_tokens.includes('max_output_tokens') && out.errors.bad_tokens.includes('1') && out.errors.bad_tokens.includes('10000'));
+  assert.match(out.errors.unknown_session, /Unknown or finished command session/);
+});
 
 // Every control.py test runs on a temporary state and never reads the real state of the retired local runtime.
 function controlEnvironment(root, extra = {}) {
