@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1223,
+  "plan_revision": 1225,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-native-tools-0.6.92-20261005",
@@ -239,8 +239,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "codex-native-tools-0.6.92-20261005",
         "task_id": "T005",
@@ -264,7 +264,11 @@
       "acceptance_criteria": [
         "package.json и package-lock.json задают 0.6.92"
       ],
-      "expected_commit_message": "feat: Подготовить source релиза 0.6.92"
+      "expected_commit_message": "feat: Подготовить source релиза 0.6.92",
+      "actual_files": [
+        "package-lock.json",
+        "package.json"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -410,7 +414,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: codex-native-tools-0.6.92-20261005
 Current Task: нет
-Revision: 1223
+Revision: 1225
 
 ## Цель
 
@@ -442,8 +446,8 @@ Revision: 1223
   - Git Commit: [DONE] feat: Сверка определений с версией Codex
   - Reference: codex-native-tools-0.6.92-20261005 / T004 / implementation
   - Файлы: scripts/check-codex-tools.mjs, tools/codex-app-server-mcp/codex-tools.lock.json, tools/codex-app-server-mcp/server.py, package.json, tests/check-codex-tools.test.mjs, tests/codex-app-server-mcp.test.mjs, docs/planning/codex-native-tools-macos.md
-- [TODO] T005: Подготовить source релиза 0.6.92 — Ожидает
-  - Git Commit: [PENDING] feat: Подготовить source релиза 0.6.92
+- [DONE] T005: Подготовить source релиза 0.6.92 — Завершено
+  - Git Commit: [DONE] feat: Подготовить source релиза 0.6.92
   - Reference: codex-native-tools-0.6.92-20261005 / T005 / implementation
   - Файлы: package.json, package-lock.json, docs/planning/codex-native-tools-macos.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
