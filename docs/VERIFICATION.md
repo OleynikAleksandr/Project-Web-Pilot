@@ -1,5 +1,15 @@
 # Проверки и приёмка
 
+## 2026-10-05 — 0.6.91 сборка, установка и GitHub publication
+
+T006: `paired-release` прошла; `app.asar` — 2561960 байт на обеих платформах и в корневом app, в корне только `src`, `node_modules`, `package.json`, `LICENSE`; в `Resources` обоих пакетов нет файлов прежнего runtime macOS, `codex-app-server-mcp` содержит `tunnel_prompt.py`, `mac-tools` — `node` и `uv`; в поставке шесть файлов релиза. T007: `release-installed` прошла, `/Applications` — 0.6.91, inode прежний.
+
+GitHub Release [v0.6.91](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.91) опубликован 2026-10-05T09:18:07Z, `draft=false`, `prerelease=false`. Tag указывает на release sourceCommit `00eb4a424125229cf3ce5c4bab4a52672d520a7d`.
+
+GitHub содержит ровно шесть assets: macOS ZIP 186361518 / `8584276cc1ca6ad119550c183cacdc4a51db9270379fb374a58817488aa20548`, Windows ZIP 355496977 / `43a8b4e42d8d470760ae099c9d2360ffa024ee3e62c122504e5a6973e0bfbc29`, ZIP Windows-runtime 86242347 / `1f041488ad97d8abf1984fd3521afb8abe15f50b8df3d3e11f1cc4248e019d98`, `SHA256SUMS.txt` / `4020165abf3de0a5fb1efd3e8221fc8ffc99ddbcb8086f653e6b7508acdca3f6`, `INSTALL.txt` / `c63fc8376b6ce4f1df48a06b74e7d4b447f0a33964a3c83947f14810bc0af232`, `release-manifest.json` / `b6d89a8fc09cc2557c1496d617a724f10f1754adc118ce9cbe7e84d3c4b9a134`. Server size/digest совпали с локальными файлами.
+
+Не проверено: запуск установленной 0.6.91 на данных пользователя (одноразовая очистка, работа инструментов в ChatGPT и Claude, автозапуск после перезагрузки), первый запуск на чистой macOS, native Windows.
+
 ## 2026-10-05 — 0.6.91 один backend macOS (до сборки)
 
 Автоматически, внутри коммитов задач: T000, T001 — `unit-all`; T002 — `executor-channel` и `unit-all`; T003 — `vps-runtime`, `settings-ui`, `unit-all`; T004 — `unit-all`, `release-source`; T005 — `release-source`. Полный `npm test` на исходниках 0.6.91: 547 тестов, 543 прошли, 0 отказов, 4 пропущены (в том числе три теста Windows bootstrap, которые выполняются только на Windows).

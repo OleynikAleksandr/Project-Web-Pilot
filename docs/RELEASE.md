@@ -21,6 +21,14 @@
 
 **Не проверено:** первый запуск на чистой macOS (с Codex и без него), native Windows, работа установленной 0.6.91 в ChatGPT и Claude после перезапуска и перезагрузки — проверки пользователя.
 
+**Сборка, установка, публикация.** Предсборочная DOCS — коммит `00eb4a4` **до** release-сборки. T006 `5ff4905`: `release-manifest.sourceCommit=00eb4a424125229cf3ce5c4bab4a52672d520a7d`, `sourceFiles=105`, `packagedSourceMatches=true`; в корне `app.asar` обеих платформ и корневого app — только `src`, `node_modules`, `package.json`, `LICENSE` (2561960 байт); в ресурсах пакетов нет `mac-runtime.zip`, `mac-control.py` и `mac-first-run.py`, executor — шесть файлов, включая `tunnel_prompt.py`. Identity обеих Mac-копий записана в `release-0.6.91-preflight.json` до сборки и сохранена.
+
+macOS arm64: `~/Downloads/WebPilot-0.6.91/Project-Web-Pilot-0.6.91-macOS-arm64.zip`, 186361518 байт, SHA-256 `8584276cc1ca6ad119550c183cacdc4a51db9270379fb374a58817488aa20548`. Windows x64: `~/Downloads/WebPilot-0.6.91/Project-Web-Pilot-0.6.91-Windows-x64.zip`, 355496977 байт, SHA-256 `43a8b4e42d8d470760ae099c9d2360ffa024ee3e62c122504e5a6973e0bfbc29`. Оба package имеют ASAR SHA-256 `51e4b6e52a15fadf47a1758b729f117b1054b715ae4e192c4f92f7450c2e55fa`; Windows прошёл `verify:win` на Mac. ZIP Windows-runtime: `Windows-Codex-Local-2026-09-10.zip`, 86242347 байт, SHA-256 `1f041488ad97d8abf1984fd3521afb8abe15f50b8df3d3e11f1cc4248e019d98` — взят из кеша сборки, совпадает с закреплённым в `src/windows-runtime.mjs`.
+
+`/Applications` установлена из staging штатным `installMacBundle` **без пересборки**, inode сохранён `406571340`; T007 `711d37b` прошла полный `release-installed` gate. В слоте резервной копии `/Applications` лежит Contents версии 0.6.90.
+
+[GitHub Release v0.6.91](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.91) опубликован 2026-10-05T09:18:07Z. Tag `v0.6.91` указывает точно на `00eb4a424125229cf3ce5c4bab4a52672d520a7d`. Опубликованы ровно шесть файлов; server size/digest каждого совпадает с локальной поставкой. Release не draft/prerelease. Финальный `main` должен совпасть с managed T008 commit; это повторно проверяет `scripts/check-github-release.mjs` после push.
+
 ## Выпуск 0.6.90 — 05.10.2026
 
 0.6.90 ([контракт](planning/computer-use-removal.md)): управление интерфейсом убрано из MCP на macOS и Windows; остаются список окон и снимки экрана и окна, каталог — 38 инструментов; правила сессии запрещают управлять интерфейсом. Source: T001 `1fb9b8c`, T002 `216a235`, T003 `2b24d35`, T004 `e301c29`.
