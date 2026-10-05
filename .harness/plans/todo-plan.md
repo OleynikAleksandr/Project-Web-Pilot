@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1231,
+  "plan_revision": 1233,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-native-tools-0.6.92-20261005",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "На macOS веб-модель работает родными инструментами Codex (exec_command, write_stdin, apply_patch, view_image) через Codex App Server; самодельные инструменты удалены, корзина и продуктовые инструменты остаются; определения сверяются с версией Codex; релиз 0.6.92.",
   "acceptance_criteria": [
     "Каталог MCP на macOS — 13 инструментов: четыре в форме Codex 0.160.0, три продуктовых, три наблюдения, три корзины; 28 самодельных имён удалены",
@@ -387,8 +387,8 @@
       "actual_files": []
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "codex-native-tools-0.6.92-20261005",
         "task_id": "T008",
@@ -414,7 +414,8 @@
       "acceptance_criteria": [
         "Tag v0.6.92 на sourceCommit, шесть assets совпадают с локальной поставкой, main синхронизирован с origin"
       ],
-      "expected_commit_message": "feat: Опубликовать 0.6.92 и синхронизировать Project Web Pilot с GitHub"
+      "expected_commit_message": "feat: Опубликовать 0.6.92 и синхронизировать Project Web Pilot с GitHub",
+      "actual_files": []
     }
   ],
   "blocked_reason": null,
@@ -432,10 +433,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: codex-native-tools-0.6.92-20261005
 Current Task: нет
-Revision: 1231
+Revision: 1233
 
 ## Цель
 
@@ -483,8 +484,8 @@ Revision: 1231
   - Git Commit: [DONE] feat: Установить 0.6.92 и проверить установленные macOS-копии
   - Reference: codex-native-tools-0.6.92-20261005 / T007 / implementation
   - Файлы: scripts/check-installed-release.mjs, docs/planning/codex-native-tools-macos.md
-- [TODO] T008: Опубликовать 0.6.92 и синхронизировать Project Web Pilot с GitHub — Ожидает
-  - Git Commit: [PENDING] feat: Опубликовать 0.6.92 и синхронизировать Project Web Pilot с GitHub
+- [DONE] T008: Опубликовать 0.6.92 и синхронизировать Project Web Pilot с GitHub — Завершено
+  - Git Commit: [DONE] feat: Опубликовать 0.6.92 и синхронизировать Project Web Pilot с GitHub
   - Reference: codex-native-tools-0.6.92-20261005 / T008 / implementation
   - Файлы: scripts/check-github-release.mjs, docs/planning/codex-native-tools-macos.md
 
