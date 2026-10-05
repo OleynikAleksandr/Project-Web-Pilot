@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 148,
+  "plan_revision": 149,
   "project_id": "98dbae8d-f53b-4acc-af12-d094fe016cee",
   "project_name": "WorkflowKit",
   "scope_id": "push-after-docs-1.5.5-20261004",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Push на GitHub только после DOCS текущего плана: pre-push hook Workflow Kit 1.5.5.",
   "acceptance_criteria": [
     "Push до завершения DOCS текущего плана отклоняется, после DOCS проходит",
@@ -238,6 +238,43 @@
         "docs/architecture/OVERVIEW.md",
         "docs/modules/workflow-kit-package.md"
       ]
+    },
+    {
+      "id": "T004",
+      "title": "Синхронизировать документы WorkflowKit с Web Pilot 0.6.95 и опубликовать main",
+      "why": "Пять current-state документов WorkflowKit называют текущим клиентом Web Pilot 0.6.94; после выпуска 0.6.95 синхронизация документальная и попадает в origin/main без изменения release/tag или runtime Kit.",
+      "dependencies": [
+        "DOCS",
+        "T003"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "README.md",
+        "docs/PRODUCT.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/workflow-kit-package.md",
+        "docs/DOCUMENTATION_INDEX.md"
+      ],
+      "verification_ids": [
+        "package-check",
+        "github-main"
+      ],
+      "verification_kind": "package",
+      "acceptance_criteria": [
+        "Пять документов называют текущим опубликованным клиентом Project Web Pilot 0.6.95 с bundled Workflow Kit 1.5.5",
+        "Canonical source/runtime указан как Workflow Kit 1.5.5, 35 файлов, SHA-256 8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376",
+        "Последний отдельный GitHub Release WorkflowKit остаётся фактическим v1.5.1",
+        "Код, package version и canonical runtime Workflow Kit 1.5.5 не изменены",
+        "После managed commit origin/main синхронизирован с новым HEAD"
+      ],
+      "expected_commit_message": "docs: синхронизировать WorkflowKit с Web Pilot 0.6.95",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "push-after-docs-1.5.5-20261004",
+        "task_id": "T004",
+        "role": "implementation"
+      }
     }
   ],
   "blocked_reason": null,
@@ -255,10 +292,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: push-after-docs-1.5.5-20261004
 Current Task: нет
-Revision: 148
+Revision: 149
 
 ## Цель
 
@@ -286,6 +323,10 @@ Push на GitHub только после DOCS текущего плана: pre-p
 - [DONE] T003: Синхронизировать документы WorkflowKit с Web Pilot 0.6.94 и опубликовать main — Завершено
   - Git Commit: [DONE] docs: синхронизировать WorkflowKit с Web Pilot 0.6.94
   - Reference: push-after-docs-1.5.5-20261004 / T003 / implementation
+  - Файлы: README.md, docs/PRODUCT.md, docs/architecture/OVERVIEW.md, docs/modules/workflow-kit-package.md, docs/DOCUMENTATION_INDEX.md
+- [TODO] T004: Синхронизировать документы WorkflowKit с Web Pilot 0.6.95 и опубликовать main — Ожидает
+  - Git Commit: [PENDING] docs: синхронизировать WorkflowKit с Web Pilot 0.6.95
+  - Reference: push-after-docs-1.5.5-20261004 / T004 / implementation
   - Файлы: README.md, docs/PRODUCT.md, docs/architecture/OVERVIEW.md, docs/modules/workflow-kit-package.md, docs/DOCUMENTATION_INDEX.md
 
 ## Context Pack For This Cycle
