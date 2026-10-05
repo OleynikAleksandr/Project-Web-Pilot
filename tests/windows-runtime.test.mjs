@@ -8,12 +8,38 @@ import net from 'node:net';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { fileURLToPath } from 'node:url';
-import { WindowsRuntimeBootstrap, WINDOWS_RUNTIME_SHA256, WINDOWS_CONTEXT_PACKET_SOURCE, WINDOWS_RUNTIME_CONTROL_CONTRACT, WINDOWS_LEGACY_CONTROL_SHA256, patchWindowsBridgeSource, windowsRuntimePaths, windowsRuntimeStateDirectory, windowsCommandFailureText, windowsExpandInvocation, windowsSetupInvocation } from '../src/windows-runtime.mjs';
+import { WindowsRuntimeBootstrap, WINDOWS_RUNTIME_SHA256, WINDOWS_CONTEXT_PACKET_SOURCE, WINDOWS_RUNTIME_CONTROL_CONTRACT, WINDOWS_LEGACY_CONTROL_SHA256, WINDOWS_REMOVED_TOOLS, WINDOWS_SKILL_DESKTOP_SECTION, patchWindowsBridgeSource, patchWindowsSkillSource, windowsRuntimePaths, windowsRuntimeStateDirectory, windowsCommandFailureText, windowsExpandInvocation, windowsSetupInvocation } from '../src/windows-runtime.mjs';
 const execute = promisify(execFile);
 const windowsControl = fileURLToPath(new URL('../resources/runtime-control/windows-control.py', import.meta.url));
 
 import { BUNDLED_NODE_VERSION, bundledWindowsRuntimeFolder } from '../src/platform.mjs';
 import { extractionCommand, NODE_ARCHIVE, NODE_SHA256, windowsRuntimeSourceCandidates, windowsToolchainPaths } from '../scripts/prepare-windows-toolchain.mjs';
+
+// A small bridge with the same shape as the pinned Windows-Codex-Local snapshot: every tool is one
+// "@mcp.tool(" block, the twelve computer_* tools follow bridge_status and list_drives comes after them.
+const WINDOWS_COMPUTER_TOOLS = [
+  ['Computer status', 'computer_status'], ['List visible Windows application windows', 'computer_list_windows'],
+  ['Activate a Windows application window', 'computer_activate_window'], ['Capture the Windows desktop', 'computer_capture_screen'],
+  ['Capture a Windows application window', 'computer_capture_window'], ['Move the Windows mouse pointer', 'computer_move_mouse'],
+  ['Click the Windows mouse', 'computer_click'], ['Scroll the Windows mouse wheel', 'computer_scroll'],
+  ['Type Unicode text into Windows', 'computer_type_text'], ['Press a Windows keyboard key', 'computer_key_press'],
+  ['Press a Windows keyboard shortcut', 'computer_hotkey'], ['Release Windows input state', 'computer_release_inputs'],
+];
+const WINDOWS_OBSERVATION_TOOLS = ['computer_list_windows', 'computer_capture_screen', 'computer_capture_window'];
+function windowsBridgeFixture() {
+  const tool = ([title, name]) => `    @mcp.tool(\n        title="${title}",\n    )\n    def ${name}():\n        return {}\n\n`;
+  return 'from windows_computer import WindowsComputer  # noqa: E402\n\ndef create_server():\n'
+    + '    mcp = FastMCP("Codex Local Windows")\n    computer = WindowsComputer()\n    turn_watchdog = TurnWatchdog()\n'
+    + '    @mcp.tool(\n        title="Bridge status",\n    )\n    def bridge_status(repository: str = ""):\n        status = {}\n'
+    + '        status["computer_use"] = computer.status()\n        return status\n\n'
+    + WINDOWS_COMPUTER_TOOLS.map(tool).join('')
+    + tool(['List local drives', 'list_drives']) + '    return mcp\n';
+}
+const WINDOWS_SKILL_FIXTURE = '---\nname: local-computer\ndescription: "Work on the connected Windows PC: files, Git, PowerShell/CMD, background processes and desktop actions requested in ChatGPT."\n---\n'
+  + '# Codex Local Windows\n\n## Files and commands\n\nCall bridge_status when starting local work.\n\n'
+  + '## Desktop\n\nCall computer_status and inspect computer_list_windows before interacting.\n\n'
+  + '## Turn notifications\n\nCall turn_watchdog.\n';
+const toolCount = source => source.split('    @mcp.tool(').length - 1;
 
 test('Windows runtime paths stay in writable userData and use Windows venv layout', () => {
   const p = windowsRuntimePaths('C:\\Users\\Alex\\AppData\\Roaming\\Project Web Pilot', 'C:\\Program Files\\Project Web Pilot\\resources\\windows-runtime\\runtime.zip');
@@ -42,8 +68,9 @@ test('Windows bootstrap adopts an existing compatible Codex Local instead of ins
   await fs.writeFile(path.join(external, 'control.py'), '# fixture\n');
   await fs.writeFile(path.join(external, '.venv', 'Scripts', 'python.exe'), 'fixture');
   await fs.writeFile(path.join(external, '.runtime', 'locations.json'), '{}\n');
-  const bridge = `from windows_computer import WindowsComputer  # noqa: E402\n\ndef create_server():\n    mcp = FastMCP(\"Codex Local Windows\")\n    turn_watchdog = TurnWatchdog()\n    @mcp.tool()\n    def bridge_status(repository: str = \"\"):\n        status = {}\n        return status\n\n    @mcp.tool(\n        title=\"Computer status\",\n    )\n    def computer_status():\n        return {}\n`;
-  await fs.writeFile(path.join(external, 'mcp', 'bridge_mcp.py'), bridge);
+  await fs.writeFile(path.join(external, 'mcp', 'bridge_mcp.py'), windowsBridgeFixture());
+  await fs.mkdir(path.join(external, 'skills', 'local-computer'), { recursive: true });
+  await fs.writeFile(path.join(external, 'skills', 'local-computer', 'SKILL.md'), WINDOWS_SKILL_FIXTURE);
   await fs.writeFile(path.join(stateDir, 'mcp.pid.json'), JSON.stringify({ package_root: external }));
   const calls = [];
   const service = { package_root: external, mcp: { owned: false, running: false, ready: false },
@@ -62,8 +89,53 @@ test('Windows bootstrap adopts an existing compatible Codex Local instead of ins
   assert.equal(result.adopted, true);
   assert.equal(result.reused, true);
   assert.ok(calls.every(call => call.args.at(-1) === 'status'), JSON.stringify(calls));
-  assert.match(await fs.readFile(path.join(external, 'mcp', 'bridge_mcp.py'), 'utf8'), /workflow_context_recover/);
+  const adopted = await fs.readFile(path.join(external, 'mcp', 'bridge_mcp.py'), 'utf8');
+  assert.match(adopted, /workflow_context_recover/);
+  assert.doesNotMatch(adopted, /def computer_click\(/);
   assert.equal(await fs.readFile(path.join(external, 'server', 'context_packet.py'), 'utf8'), WINDOWS_CONTEXT_PACKET_SOURCE);
+  assert.ok((await fs.readFile(path.join(external, 'skills', 'local-computer', 'SKILL.md'), 'utf8')).includes(WINDOWS_SKILL_DESKTOP_SECTION));
+});
+
+test('Windows bootstrap refreshes an installed bundled runtime in place when the overlay version changes', { skip: process.platform !== 'win32' }, async t => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'web-pilot-bundled-overlay-'));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const dataDir = path.join(root, 'pilot');
+  const paths = windowsRuntimePaths(dataDir);
+  const stateDir = path.join(root, 'state');
+  for (const dir of [path.dirname(paths.python), path.dirname(paths.locations), path.join(paths.folder, 'mcp'), path.join(paths.folder, 'server'),
+    path.join(paths.folder, 'skills', 'local-computer'), stateDir]) await fs.mkdir(dir, { recursive: true });
+  await fs.writeFile(paths.control, '# fixture\n');
+  await fs.writeFile(paths.python, 'fixture');
+  await fs.writeFile(paths.locations, '{}\n');
+  const bridgeFile = path.join(paths.folder, 'mcp', 'bridge_mcp.py');
+  const skillFile = path.join(paths.folder, 'skills', 'local-computer', 'SKILL.md');
+  await fs.writeFile(bridgeFile, windowsBridgeFixture());
+  await fs.writeFile(skillFile, WINDOWS_SKILL_FIXTURE);
+  await fs.writeFile(paths.marker, JSON.stringify({ schemaVersion: 1, payloadSha256: WINDOWS_RUNTIME_SHA256, overlayVersion: 1, folder: paths.folder }));
+  const calls = [];
+  const service = { package_root: paths.folder, mcp: { owned: true, running: true, ready: true },
+    tunnel: { owned: false, running: false, ready: false, configured: true }, mcp_url: 'http://127.0.0.1:17842/mcp' };
+  const execute = async (_file, args) => {
+    const command = args[2]; calls.push(args.slice(2).join(' '));
+    if (command === 'status') return { stdout: JSON.stringify(service), stderr: '' };
+    if (command === 'stop' || command === 'start') return { stdout: '{}', stderr: '' };
+    throw new Error('the bundled payload must not be reinstalled: ' + command);
+  };
+  const bootstrap = new WindowsRuntimeBootstrap({ payloadFile: path.join(root, 'missing-payload.zip'), dataDir,
+    execute, environment: {}, platform: 'win32', stateDir });
+  assert.equal((await bootstrap.inspect()).overlayOutdated, true);
+  const result = await bootstrap.ensure(root);
+  assert.equal(result.reused, true);
+  assert.equal(result.overlayOutdated, false);
+  assert.deepEqual(calls, ['status', 'stop', 'start --mcp-only']);
+  const bridge = await fs.readFile(bridgeFile, 'utf8');
+  for (const name of WINDOWS_REMOVED_TOOLS) assert.doesNotMatch(bridge, new RegExp(`def ${name}\\(`));
+  assert.match(bridge, /def workflow_context_recover\(/);
+  assert.ok((await fs.readFile(skillFile, 'utf8')).includes(WINDOWS_SKILL_DESKTOP_SECTION));
+  assert.equal(JSON.parse(await fs.readFile(paths.marker, 'utf8')).overlayVersion, 2);
+  calls.length = 0;
+  assert.equal((await bootstrap.ensure(root)).reused, true);
+  assert.deepEqual(calls, [], 'a current overlay is not applied twice');
 });
 
 
@@ -78,8 +150,9 @@ test('Windows bootstrap restarts the same running external runtime when first ap
   await fs.writeFile(path.join(external, 'control.py'), '# fixture\n');
   await fs.writeFile(path.join(external, '.venv', 'Scripts', 'python.exe'), 'fixture');
   await fs.writeFile(path.join(external, '.runtime', 'locations.json'), '{}\n');
-  const bridge = `from windows_computer import WindowsComputer  # noqa: E402\n\ndef create_server():\n    mcp = FastMCP(\"Codex Local Windows\")\n    turn_watchdog = TurnWatchdog()\n    @mcp.tool()\n    def bridge_status(repository: str = \"\"):\n        status = {}\n        return status\n\n    @mcp.tool(\n        title=\"Computer status\",\n    )\n    def computer_status():\n        return {}\n`;
-  await fs.writeFile(path.join(external, 'mcp', 'bridge_mcp.py'), bridge);
+  await fs.writeFile(path.join(external, 'mcp', 'bridge_mcp.py'), windowsBridgeFixture());
+  await fs.mkdir(path.join(external, 'skills', 'local-computer'), { recursive: true });
+  await fs.writeFile(path.join(external, 'skills', 'local-computer', 'SKILL.md'), WINDOWS_SKILL_FIXTURE);
   await fs.writeFile(path.join(stateDir, 'mcp.pid.json'), JSON.stringify({ package_root: external }));
   await fs.writeFile(path.join(stateDir, 'tunnel.pid.json'), JSON.stringify({ package_root: external }));
   const calls = [];
@@ -121,11 +194,11 @@ test('SHA-256 verification uses the canonical digest contract', async t => {
 
 
 test('Windows MCP compatibility overlay adds Workflow Kit recovery exactly once', () => {
-  const fixture = `from windows_computer import WindowsComputer  # noqa: E402\n\ndef create_server():\n    mcp = FastMCP(\"Codex Local Windows\")\n    turn_watchdog = TurnWatchdog()\n    @mcp.tool()\n    def bridge_status(repository: str = \"\"):\n        status = {}\n        return status\n\n    @mcp.tool(\n        title=\"Computer status\",\n    )\n    def computer_status():\n        return {}\n`;
+  const fixture = windowsBridgeFixture();
   const patched = patchWindowsBridgeSource(fixture);
   assert.match(patched, /from context_packet import ContextPacket/);
   assert.match(patched, /context_packet = ContextPacket\(\)/);
-  assert.match(patched, /def workflow_context_recover\(workspace: str\)/);
+  assert.equal(patched.split('def workflow_context_recover(workspace: str)').length - 1, 1);
   assert.equal(patchWindowsBridgeSource(patched), patched, 'overlay is idempotent');
   assert.match(WINDOWS_CONTEXT_PACKET_SOURCE, /\.harness\/runtime\/node\.exe/);
   assert.match(WINDOWS_CONTEXT_PACKET_SOURCE, /inline-context-v1/);
@@ -133,6 +206,88 @@ test('Windows MCP compatibility overlay adds Workflow Kit recovery exactly once'
   assert.doesNotMatch(WINDOWS_CONTEXT_PACKET_SOURCE, /scripts\/workflow\.cmd/);
 });
 
+test('Windows overlay removes UI control tools, keeps observation and fails closed on an unknown bridge', () => {
+  const fixture = windowsBridgeFixture();
+  assert.equal(toolCount(fixture), 14);
+  const patched = patchWindowsBridgeSource(fixture);
+  assert.equal(WINDOWS_REMOVED_TOOLS.length, 9);
+  for (const name of WINDOWS_REMOVED_TOOLS) assert.doesNotMatch(patched, new RegExp(`def ${name}\\(`), name);
+  for (const name of [...WINDOWS_OBSERVATION_TOOLS, 'bridge_status', 'workflow_context_recover', 'list_drives']) {
+    assert.equal(patched.split(`def ${name}(`).length - 1, 1, name);
+  }
+  // 14 tools + workflow_context_recover - 9 UI control tools.
+  assert.equal(toolCount(patched), 6);
+  assert.doesNotMatch(patched, /computer_use/);
+  assert.match(patched, /computer = WindowsComputer\(\)/, 'the capture tools still need the computer object');
+  assert.ok(patched.endsWith('    return mcp\n'));
+
+  // A runtime installed by 0.6.89 already has the context tool and still has every UI tool: one more pass removes them.
+  const importAnchor = 'from windows_computer import WindowsComputer  # noqa: E402';
+  const previousOverlay = fixture
+    .replace(importAnchor, importAnchor + '\nfrom context_packet import ContextPacket  # noqa: E402')
+    .replace('    turn_watchdog = TurnWatchdog()\n', '    turn_watchdog = TurnWatchdog()\n    context_packet = ContextPacket()\n')
+    .replace('        return status\n\n', '        return status\n\n    @mcp.tool(\n        title="Read the selected project context",\n    )\n'
+      + '    def workflow_context_recover(workspace: str) -> dict[str, Any]:\n        return context_packet.recover(workspace)\n\n');
+  assert.equal(toolCount(previousOverlay), 15);
+  const upgraded = patchWindowsBridgeSource(previousOverlay);
+  assert.equal(toolCount(upgraded), 6);
+  for (const name of WINDOWS_REMOVED_TOOLS) assert.doesNotMatch(upgraded, new RegExp(`def ${name}\\(`), name);
+  assert.equal(upgraded.split('def workflow_context_recover(').length - 1, 1);
+
+  // Fail closed: a bridge with only some of the UI tools is not a snapshot this overlay knows.
+  const partial = patched.replace('    @mcp.tool(\n        title="List visible Windows application windows",',
+    '    @mcp.tool(\n        title="Computer status",\n    )\n    def computer_status():\n        return {}\n\n    @mcp.tool(\n        title="List visible Windows application windows",');
+  assert.throws(() => patchWindowsBridgeSource(partial), { code: 'WINDOWS_RUNTIME_BRIDGE_INVALID' });
+  const withoutOne = fixture.replace('    @mcp.tool(\n        title="Click the Windows mouse",\n    )\n    def computer_click():\n        return {}\n\n', '');
+  assert.throws(() => patchWindowsBridgeSource(withoutOne), { code: 'WINDOWS_RUNTIME_BRIDGE_INVALID' });
+  const duplicated = fixture.replace('    def computer_scroll():', '    def computer_scroll():\n        return {}\n\n    @mcp.tool(\n        title="Twice",\n    )\n    def computer_scroll():');
+  assert.throws(() => patchWindowsBridgeSource(duplicated), { code: 'WINDOWS_RUNTIME_BRIDGE_INVALID' });
+  const withoutStatusLine = fixture.replace('        status["computer_use"] = computer.status()\n', '');
+  assert.throws(() => patchWindowsBridgeSource(withoutStatusLine), { code: 'WINDOWS_RUNTIME_BRIDGE_INVALID' });
+});
+
+test('Windows skill instructions lose the Desktop control section exactly once', () => {
+  const patched = patchWindowsSkillSource(WINDOWS_SKILL_FIXTURE);
+  assert.ok(patched.includes(WINDOWS_SKILL_DESKTOP_SECTION + '## Turn notifications\n'));
+  assert.doesNotMatch(patched, /Call computer_status/);
+  assert.doesNotMatch(patched, /desktop actions requested in ChatGPT/);
+  assert.match(patched, /## Files and commands\n\nCall bridge_status/);
+  assert.equal(patchWindowsSkillSource(patched), patched, 'skill overlay is idempotent');
+  for (const broken of [WINDOWS_SKILL_FIXTURE.replace('## Desktop\n', '## Screen\n'), WINDOWS_SKILL_FIXTURE.replace('## Turn notifications\n', ''),
+    WINDOWS_SKILL_FIXTURE + '## Desktop\n', null]) {
+    assert.throws(() => patchWindowsSkillSource(broken), { code: 'WINDOWS_RUNTIME_BRIDGE_INVALID' });
+  }
+});
+
+test('Windows overlay leaves 38 tools in the real pinned bridge and valid Python', async t => {
+  const archive = path.join(windowsToolchainPaths().cacheDir, 'Windows-Codex-Local-2026-09-10.zip');
+  let digest = null;
+  try { digest = await sha256File(archive); } catch {}
+  if (process.platform === 'win32' || digest !== WINDOWS_RUNTIME_SHA256) { t.skip('pinned Windows runtime archive is not in the local build cache'); return; }
+  const read = async member => (await execute('/usr/bin/unzip', ['-p', archive, 'Windows-Codex-Local/' + member], { maxBuffer: 4 * 1024 * 1024 })).stdout;
+  const bridge = await read('mcp/bridge_mcp.py');
+  assert.equal(toolCount(bridge), 46);
+  const patched = patchWindowsBridgeSource(bridge);
+  assert.equal(toolCount(patched), 38);
+  for (const name of WINDOWS_REMOVED_TOOLS) assert.doesNotMatch(patched, new RegExp(`def ${name}\\(`), name);
+  for (const name of [...WINDOWS_OBSERVATION_TOOLS, 'workflow_context_recover', 'list_drives', 'git_show']) {
+    assert.equal(patched.split(`def ${name}(`).length - 1, 1, name);
+  }
+  assert.doesNotMatch(patched, /computer_use/);
+  assert.equal(patchWindowsBridgeSource(patched), patched);
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'web-pilot-win-overlay-'));
+  t.after(() => fs.rm(dir, { recursive: true, force: true }));
+  await fs.writeFile(path.join(dir, 'bridge_mcp.py'), patched);
+  await execute('python3', ['-m', 'py_compile', path.join(dir, 'bridge_mcp.py')]);
+
+  const skill = await read('skills/local-computer/SKILL.md');
+  assert.match(skill, /Call computer_status and inspect computer_list_windows/);
+  const patchedSkill = patchWindowsSkillSource(skill);
+  assert.ok(patchedSkill.includes(WINDOWS_SKILL_DESKTOP_SECTION + '## Turn notifications\n'));
+  assert.doesNotMatch(patchedSkill, /Call computer_status|computer_release_inputs|desktop actions requested in ChatGPT/);
+  assert.match(patchedSkill, /## Evidence and reconnection/);
+  assert.equal(patchWindowsSkillSource(patchedSkill), patchedSkill);
+});
 
 test('portable Node build payload has pinned Windows x64 layout and safe extraction plans', () => {
   assert.equal(NODE_ARCHIVE, 'node-v24.21.0-win-x64.zip');

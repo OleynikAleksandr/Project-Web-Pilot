@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1168,
+  "plan_revision": 1170,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "computer-use-removal-0.6.90-20261005",
@@ -31,7 +31,8 @@
       "package-lock.json",
       "scripts/release-all.mjs",
       "scripts/check-installed-release.mjs",
-      "scripts/check-github-release.mjs"
+      "scripts/check-github-release.mjs",
+      "src/startup-readiness.mjs"
     ],
     "documentation_paths": [
       "docs/planning/computer-use-removal.md",
@@ -123,8 +124,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "computer-use-removal-0.6.90-20261005",
         "task_id": "T002",
@@ -133,7 +134,8 @@
       "dependencies": [],
       "functional_paths": [
         "src/windows-runtime.mjs",
-        "tests/windows-runtime.test.mjs"
+        "tests/windows-runtime.test.mjs",
+        "src/startup-readiness.mjs"
       ],
       "documentation_paths": [
         "docs/planning/computer-use-removal.md"
@@ -153,7 +155,12 @@
         "На настоящих bridge_mcp.py и SKILL.md из закреплённого ZIP (если он есть в .harness/runtime/windows-payload): 38 инструментов, python3 -m py_compile проходит",
         "WINDOWS_RUNTIME_SHA256 и сам ZIP не изменены"
       ],
-      "expected_commit_message": "feat: Windows: overlay убирает 9 инструментов управления интерфейсом и раздел Desktop"
+      "expected_commit_message": "feat: Windows: overlay убирает 9 инструментов управления интерфейсом и раздел Desktop",
+      "actual_files": [
+        "src/startup-readiness.mjs",
+        "src/windows-runtime.mjs",
+        "tests/windows-runtime.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -393,7 +400,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: computer-use-removal-0.6.90-20261005
 Current Task: нет
-Revision: 1168
+Revision: 1170
 
 ## Цель
 
@@ -412,10 +419,10 @@ Revision: 1168
   - Git Commit: [DONE] feat: macOS: убрать 10 инструментов управления интерфейсом и код Sky; снимок и список окон — системными средствами
   - Reference: computer-use-removal-0.6.90-20261005 / T001 / implementation
   - Файлы: tools/codex-app-server-mcp/server.py, tools/codex-app-server-mcp/app_server_client.py, tests/codex-app-server-mcp.test.mjs, scripts/benchmark-codex-app-server-mcp.mjs, docs/planning/computer-use-removal.md
-- [TODO] T002: Windows: overlay убирает 9 инструментов управления интерфейсом и раздел Desktop — Ожидает
-  - Git Commit: [PENDING] feat: Windows: overlay убирает 9 инструментов управления интерфейсом и раздел Desktop
+- [DONE] T002: Windows: overlay убирает 9 инструментов управления интерфейсом и раздел Desktop — Завершено
+  - Git Commit: [DONE] feat: Windows: overlay убирает 9 инструментов управления интерфейсом и раздел Desktop
   - Reference: computer-use-removal-0.6.90-20261005 / T002 / implementation
-  - Файлы: src/windows-runtime.mjs, tests/windows-runtime.test.mjs, docs/planning/computer-use-removal.md
+  - Файлы: src/windows-runtime.mjs, tests/windows-runtime.test.mjs, src/startup-readiness.mjs, docs/planning/computer-use-removal.md
 - [TODO] T003: Правила: запрет управления интерфейсом в обоих режимах доставки — Ожидает
   - Git Commit: [PENDING] feat: Правила: запрет управления интерфейсом в обоих режимах доставки
   - Reference: computer-use-removal-0.6.90-20261005 / T003 / implementation
