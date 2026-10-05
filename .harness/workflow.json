@@ -40,15 +40,14 @@
     },
     {
       "required": false,
-      "timeout_ms": 600000,
+      "timeout_ms": 180000,
       "id": "paired-release",
       "kind": "package",
-      "executable": "npm",
+      "executable": "node",
       "args": [
-        "run",
-        "build"
+        ".harness/runtime/check-paired-release-0.6.94.mjs"
       ],
-      "evidence": "~/Downloads/WebPilot-0.6.94: macOS arm64 + Windows x64 ZIP, ZIP Windows-runtime, SHA256SUMS.txt, INSTALL.txt, release-manifest.json; packaged sources и bundled Workflow Kit 1.5.5 verified"
+      "evidence": "Готовая существующая поставка ~/Downloads/WebPilot-0.6.94: ровно шесть release assets, packagedSourceMatches=true, sourceCommit=pre-build DOCS HEAD, bundled Workflow Kit 1.5.5, hashes/manifest/identity verified; npm run build уже выполнен ровно один раз и этой проверкой не повторяется"
     },
     {
       "required": false,
