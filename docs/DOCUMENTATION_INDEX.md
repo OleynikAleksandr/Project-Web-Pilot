@@ -24,7 +24,7 @@
 <!-- workflow-kit:end -->
 ## Project Web Pilot
 
-Предыдущая опубликованная парная поставка — **0.6.81 / Workflow Kit 1.5.2**. **Опубликован 0.6.82** ([контракт](planning/release-0.6.82-workflowkit-1.5.3.md)) — текущая локальная и опубликованная парная версия: bundled Workflow Kit **1.5.3** (35 файлов, SHA-256 `d59ae7b6b074e953fdd6c5d78d1f644902f0e7b9af5ad3c78d67d42f1f6a1c0f`) с командой `project:rename` — штатное переименование проекта. Release собран после предсборочной DOCS из source commit `85ffd3355b7fa9d945c1a703bc1027ce6c3ca2a7`; root `Project Web Pilot.app` и `/Applications/Project Web Pilot.app` обновлены до 0.6.82 без пересборки (общий ASAR SHA-256 `37766b5fc586d0934fe9f4c8da08c3ebd1db7359b600b26f6b34af7fe79c6770`). [GitHub Release v0.6.82](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.82) опубликован 2026-10-04T09:16:44Z; tag указывает на sourceCommit, пять assets сверены по серверным SHA-256. macOS подписан сертификатом Apple Development UkrHD; native Windows и clean VM 0.6.82 не проверялись. DOCS выполнена до release-сборки по [контракту 0.6.81](planning/release-0.6.81-workflowkit-1.5.2.md); package/installed gates завершены, GitHub Release v0.6.81 содержит пять проверенных assets. История сохранения ScreenCapture 0.6.80 — [отдельный контракт](planning/macos-screen-permission-stability.md).
+**Source 0.6.92 подготовлен к release-хвосту после предсборочной DOCS** ([контракт](planning/codex-native-tools-macos.md)): macOS MCP — 13 инструментов вместо 38, четыре инструмента в форме Codex, определения закреплены за Codex 0.160.0 и проверены по `rust-v0.160.0`; Windows-runtime не менялся. Сборка, установка и публикация 0.6.92 ещё не выполнялись. Текущая установленная и опубликованная парная версия — **0.6.91 / Workflow Kit 1.5.5**; история выпусков — [RELEASE.md](RELEASE.md).
 
 | Документ | Назначение |
 | --- | --- |
@@ -34,11 +34,12 @@
 | docs/modules/workflow-kit-recovery.md | Specification Workflow Kit / Context Recovery / project continuity |
 | docs/modules/project-doctor.md | Контракт автономного Доктора проекта и границы автоматического ремонта |
 | docs/modules/runtime-lifecycle.md | Specification self-healing MCP/tunnel lifecycle |
-| docs/modules/codex-app-server-executor.md | Local-only MCP facade поверх Codex App Server: 38 инструментов, наблюдение без управления интерфейсом (0.6.90), исторический A/B и stable-connector integration 0.6.47 |
+| docs/modules/codex-app-server-executor.md | Единственный macOS executor: source 0.6.92 — 13 tools, native `apply_patch`, Codex-form commands/image и definitions lock; lifecycle 0.6.91, наблюдение без UI control и исторический A/B |
 | docs/modules/workspace-sessions.md | Specification проектов, Chat/Work sessions, session tree, переходов после scope, оформления и сохранения геометрии интерфейса |
 | docs/planning/session-title-sync.md | Контракт auto/manual session title и server-side синхронизации с native ChatGPT Recents |
 | docs/planning/input-instruction-delivery-ordering.md | Канонический порядок DOCS → delivery, startupMessage guard и границы незапланированных build/publish |
 | docs/planning/computer-use-removal.md | Управление интерфейсом убрано из MCP на macOS и Windows; остаются список окон и снимки; запрет в правилах; релиз 0.6.90 |
+| docs/planning/codex-native-tools-macos.md | Source 0.6.92: macOS каталог из 13 tools, Codex-form `exec_command`/`write_stdin`/`apply_patch`/`view_image`, definitions lock/check, Windows без изменений, DOCS → delivery |
 | docs/planning/codex-local-mac-removal.md | 0.6.91: Codex Local Mac удалён; macOS только через Codex App Server (первый запуск, одноразовая очистка); в пакете только приложение; ZIP Windows-runtime — шестой файл релиза |
 | docs/planning/release-backups-kit-1.5.5.md | Одна резервная копия установки на цель вне Spotlight; Workflow Kit 1.5.5 (push только после DOCS); релиз 0.6.89 |
 | docs/planning/mcp-start-message.md | Web Pilot начинает MCP-сессию коротким стартовым сообщением; релиз 0.6.88 |

@@ -51,6 +51,12 @@
 - **`view_image` без параметра `detail`.**
 - **Ответы — текст без структурированной копии**, иначе клиент показывает модели содержимое дважды.
 
+## Реализовано до предсборочной DOCS
+
+T001–T005 завершены: `200b6cb` (`exec_command`/`write_stdin`), `157c66b` (native `apply_patch` и `view_image`), `8cd0ed8` (каталог 13 tools и правила), `ee53370` (definitions lock/check/status), `e01f42d` (source 0.6.92). Каталог и отрицательные случаи проверены на настоящем Codex App Server; полный suite после T004 — 553 теста, 549 passed, 4 skipped, 0 failed. Живая `npm run check:codex-tools` сверка `rust-v0.160.0` с GitHub прошла.
+
+Delivery ещё не начат: T006–T008 должны использовать sourceCommit после этой DOCS; 0.6.92 пока не собрана, не установлена и не опубликована. Windows-runtime не менялся.
+
 ## Запуск
 
 1. Установить 0.6.92, полностью выйти из Web Pilot (⌘Q) и открыть снова.

@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1225,
+  "plan_revision": 1227,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-native-tools-0.6.92-20261005",
@@ -39,7 +39,11 @@
       "docs/architecture/ARCHITECTURE.md",
       "docs/architecture/OVERVIEW.md",
       "docs/MODULES.md",
-      "docs/DOCUMENTATION_INDEX.md"
+      "docs/DOCUMENTATION_INDEX.md",
+      "README.md",
+      "docs/RELEASE.md",
+      "docs/VERIFICATION.md",
+      "docs/modules/codex-app-server-executor.md"
     ]
   },
   "baseline_commit": "d724cdf536c34cb2fd1f6612d271d1102b287a54",
@@ -271,8 +275,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "codex-native-tools-0.6.92-20261005",
         "task_id": "DOCS",
@@ -293,7 +297,11 @@
         "tools/codex-app-server-mcp/session-rules.md",
         "docs/architecture/OVERVIEW.md",
         "docs/MODULES.md",
-        "docs/DOCUMENTATION_INDEX.md"
+        "docs/DOCUMENTATION_INDEX.md",
+        "README.md",
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md",
+        "docs/modules/codex-app-server-executor.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -302,7 +310,18 @@
       "acceptance_criteria": [
         "Документы соответствуют результату"
       ],
-      "expected_commit_message": "docs: актуализировать контекст проекта"
+      "expected_commit_message": "docs: актуализировать контекст проекта",
+      "actual_files": [
+        "README.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/codex-app-server-executor.md",
+        "docs/planning/codex-native-tools-macos.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -414,7 +433,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: codex-native-tools-0.6.92-20261005
 Current Task: нет
-Revision: 1225
+Revision: 1227
 
 ## Цель
 
@@ -450,10 +469,10 @@ Revision: 1225
   - Git Commit: [DONE] feat: Подготовить source релиза 0.6.92
   - Reference: codex-native-tools-0.6.92-20261005 / T005 / implementation
   - Файлы: package.json, package-lock.json, docs/planning/codex-native-tools-macos.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать контекст проекта
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать контекст проекта
   - Reference: codex-native-tools-0.6.92-20261005 / DOCS / implementation
-  - Файлы: docs/planning/codex-native-tools-macos.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, tools/codex-app-server-mcp/session-rules.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md
+  - Файлы: docs/planning/codex-native-tools-macos.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, tools/codex-app-server-mcp/session-rules.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, README.md, docs/RELEASE.md, docs/VERIFICATION.md, docs/modules/codex-app-server-executor.md
 - [TODO] T006: Собрать и проверить парный релиз 0.6.92 — Ожидает
   - Git Commit: [PENDING] feat: Собрать и проверить парный релиз 0.6.92
   - Reference: codex-native-tools-0.6.92-20261005 / T006 / implementation

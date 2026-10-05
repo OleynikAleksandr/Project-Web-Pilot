@@ -389,3 +389,22 @@ Local backend работает `--mcp-only`; App Server backend также от�
 - `tunnel_prompt.py`: системные диалоги ввода ID и ключа туннеля (прежний `mac-first-run.py`), загружает соседний `control.py`; режимы `--tunnel-id` и `--stdin`.
 - Каталог инструментов не менялся: 38, как в 0.6.90.
 - `scripts/benchmark-codex-app-server-mcp.mjs` удалён: сравнивать больше не с чем. Результаты A/B в разделе T005 — история.
+
+## Родные инструменты Codex — source 0.6.92
+
+[Контракт](../planning/codex-native-tools-macos.md). Это действующее source-состояние macOS executor перед release-сборкой 0.6.92; разделы выше про 38/47 tools — история соответствующих версий.
+
+Каталог MCP содержит ровно 13 инструментов:
+
+- форма Codex: `exec_command`, `write_stdin`, `apply_patch`, `view_image`;
+- продуктовые: `workflow_context_recover`, `bridge_status`, `turn_watchdog`;
+- наблюдение: `computer_list_windows`, `computer_capture_screen`, `computer_capture_window`;
+- recoverable delete: `delete_path`, `list_trash`, `restore_trash`.
+
+`exec_command` и `write_stdin` используют прямые `command/exec` и `command/exec/write` без thread/turn. `workdir` обязателен; долгий процесс возвращает session ID; TTY принимает Ctrl-C; один результат ограничивается максимум 10 000 токенов с сохранением начала и конца. `apply_patch` запускает native `apply_patch`, который поставляет установленный Codex, и передаёт Codex patch через stdin с `closeStdin`; старого `git apply` нет. `view_image` проверяет sensitive path, наличие, MIME и лимит 20 МБ, работает на временной копии и уменьшает изображение до 1600 по большей стороне.
+
+28 прежних файловых, поисковых, process и Git tools удалены вместе с недостижимым facade. Агент ищет через `rg` в `exec_command`, правит текст через `apply_patch` и удаляет через `delete_path`; эта строка есть и в server instructions, и в `session-rules.md`. Первые 512 символов instructions сохранены без изменения. UI control по-прежнему отсутствует.
+
+Определения закреплены в `codex-tools.lock.json` на Codex **0.160.0**, tag `rust-v0.160.0` и SHA-256 `shell_spec.rs`, `view_image_spec.rs`, `apply_patch.lark`. `npm run check:codex-tools` сверяет installed Codex с соответствующим GitHub tag: 0 — совпало, 1 — definitions/version отличаются, 2 — сеть/tag недоступны. `bridge_status.codex_tools` показывает pinned/installed version, `version_matches` и `apply_patch_available`. Живая GitHub-сверка 05.10.2026 прошла.
+
+Windows-runtime, selector, VPS/Secure Tunnel, lifecycle служб и правила первого сообщения Windows в этом scope не менялись. Source version — 0.6.92; до T006/T007/T008 опубликованная и установленная версия остаётся 0.6.91.

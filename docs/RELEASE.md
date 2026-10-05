@@ -1,5 +1,11 @@
 # Выпуск и постоянный путь запуска
 
+## Source 0.6.92 — 05.10.2026, до сборки
+
+[Контракт](planning/codex-native-tools-macos.md). Source version поднята до **0.6.92**. На macOS каталог Codex App Server Local Mac сокращён 38 → 13: `exec_command`, `write_stdin`, native `apply_patch`, `view_image`; recovery/status/watchdog; три инструмента наблюдения; корзина. 28 старых самодельных имён удалены. Definitions lock закреплён на Codex 0.160.0 / `rust-v0.160.0`, живая `npm run check:codex-tools` сверка GitHub прошла. Windows-runtime не менялся.
+
+Source-коммиты до DOCS: T001 `200b6cb`, T002 `157c66b`, T003 `8cd0ed8`, T004 `ee53370`, T005 `e01f42d`. Предсборочная DOCS выполняется сейчас и должна быть sourceCommit для T006. **Сборка, установка `/Applications`, tag и GitHub Release v0.6.92 ещё не выполнялись**; фактическая поставка по-прежнему 0.6.91.
+
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
 ## Выпуск 0.6.91 — 05.10.2026

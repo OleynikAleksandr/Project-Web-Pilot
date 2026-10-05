@@ -1,5 +1,20 @@
 # Проверки и приёмка
 
+## 2026-10-05 — source 0.6.92, родные инструменты Codex до сборки
+
+T001–T005 завершены коммитами `200b6cb`, `157c66b`, `8cd0ed8`, `ee53370`, `e01f42d`. Финальный полный `npm test` после T004: **553 теста, 549 прошли, 0 отказов, 4 пропущены**; T005 меняла только версию `package.json`/`package-lock.json`. Целевой executor suite после T003/T004 — 12 тестов без отказов; отдельные tests `check-codex-tools` — 3/3.
+
+- `exec_command`/`write_stdin`: настоящий Codex App Server, обычный и ненулевой exit, shell/login, обязательный workdir, budget output, длительная сессия, poll/stdin, TTY + Ctrl-C, ошибки параметров.
+- `apply_patch`: настоящий native `apply_patch` установленного Codex; add/update/move/delete и отрицательные случаи. Старого `git apply` в `server.py` нет.
+- `view_image`: PNG, уменьшение 2000 → 1600, отсутствующий/не-image/>20 МБ/sensitive path; исходник не меняется, временные файлы удаляются.
+- Каталог macOS — ровно 13 tools; 28 старых имён отсутствуют из `server.py`, мёртвый facade удалён. Первые 512 символов instructions имеют прежний SHA-256 `7169dfe9d8134492c5263a3e6c1b68478e0ca56b5f04a904d0e2c6e64adb03a0`; правила `rg`/`apply_patch`/`delete_path` присутствуют и в instructions, и в session rules.
+- `codex-tools.lock.json`: Codex 0.160.0, `rust-v0.160.0`; SHA-256 `shell_spec.rs` — `da7cffc9d6d82bc08b537fec6bddf3cd1906a05ba4ab193ecd50325ae3744e04`, `view_image_spec.rs` — `a54cb2ee992c34f6993c993c8efd16d5b91aa49bff8c5737bb4ffb64e977d413`, `apply_patch.lark` — `d6367f4826ed608c424b0a308f3d6163527df63c22513d089b91863552f8bfeb`.
+- Живая проверка 05.10.2026: `npm run check:codex-tools` через настоящий GitHub → `Codex tool definitions match rust-v0.160.0.`, exit 0. Тесты checker покрывают mismatch с именем файла, drift версии, сеть/tag → exit 2 и повреждённый lock.
+- `bridge_status.codex_tools` тестируется на pinned/installed version, `version_matches=true` и `apply_patch_available=true`.
+- Полный suite подтвердил прежние Windows overlay tests; Windows-runtime в scope 0.6.92 не менялся.
+
+Не проверено до delivery: packaged macOS/Windows 0.6.92, установленная `/Applications` 0.6.92, GitHub Release/tag/assets, живая новая сессия ChatGPT после «Обновить инструменты». Эти проверки принадлежат T006–T008 и пользовательской приёмке после установки.
+
 ## 2026-10-05 — 0.6.91 проверка установленной версии на Mac пользователя
 
 Пользователь полностью вышел из Web Pilot, открыл установленную 0.6.91 и дал агенту в ChatGPT (сессия этого проекта, канал VPS) задание на независимую проверку релиза: только чтение и наблюдение, `control.py` — только `status`. Блоки задания: версия и подключение, одноразовая очистка, службы, установленный пакет, поставка и GitHub, репозиторий по тегу, тесты, интерфейс. Результат агента: 28 пунктов, отказов нет.
