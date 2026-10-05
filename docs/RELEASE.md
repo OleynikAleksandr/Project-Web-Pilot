@@ -1,10 +1,16 @@
 # Выпуск и постоянный путь запуска
 
+## Исходники 0.6.94 — 05.10.2026, до сборки
+
+[Контракт](planning/codex-native-tools-macos.md). Source 0.6.94 сохраняет 13-tool каталог `Codex App Server Local Mac`, но доводит командный контракт и metadata поверхности после пользовательской проверки 0.6.93: Wall time `write_stdin` относится к текущему вызову; завершение между status и write/terminate возвращает финальный вывод и exit code; default/max command output — 8000 оценочных токенов; все 13 tools и все параметры имеют descriptions; image-tool объясняют JSON + `image/png` и `content_items → image()`; pre-execution OpenAI block получает единое правило одного неизменённого retry. Первые 512 символов server instructions, `codex-tools.lock.json`, Windows-runtime и VPS channel не менялись.
+
+Реализация до DOCS: T001 `7f0664f`, T002 `3f550b0`, T003 `4c21128`, T004 `fe7592d`. Полный `npm test` на source 0.6.94: 553 total, 549 passed, 4 skipped, 0 failed. `npm run check:codex-tools` подтвердил `rust-v0.160.0`; bundled Workflow Kit — 1.5.5 / 35 файлов / SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`. Парная сборка, установка, GitHub Release и публикация 0.6.94 на момент этой записи не выполнялись. Текущая установленная/опубликованная версия остаётся 0.6.93.
+
 ## Выпуск 0.6.93 — 05.10.2026
 
 [Контракт](planning/codex-native-tools-macos.md). Correction release сохраняет 13-tool каталог `Codex App Server Local Mac` из 0.6.92 и исправляет stdin/timing contract command tools: non-TTY `exec_command` получает закрытый stdin; `write_stdin` различает tty/non-TTY, поддерживает одиночный Ctrl-C для обычной сессии и использует default 250 мс с clamp 250–30000 мс для write и 5000–60000 мс для empty poll. Tool/parameter descriptions заполнены; definitions lock остаётся Codex 0.160.0 / `rust-v0.160.0`. Windows-runtime и Windows catalog не менялись.
 
-Предсборочная DOCS/source commit — `21dcd113cc6c6c76090ea7d33bf0c0aa02c6d8ea`. Root app и `/Applications/Project Web Pilot.app` установлены как 0.6.93; ASAR SHA-256 обеих Mac-копий — `44863bc4dfd22168c08410111b64a2df3606302a6d9ba66f10f4a51d764c3b8d`. [GitHub Release v0.6.93](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.93) опубликован 2026-10-05T15:15:04Z, не draft/prerelease. Tag указывает на sourceCommit; штатный `scripts/check-github-release.mjs` подтвердил ровно шесть assets, их server size/SHA-256 и согласованность release/main. Пользовательская повторная проверка 0.6.93 в новой сессии и native Windows ещё не выполнялись.
+Предсборочная DOCS/source commit — `21dcd113cc6c6c76090ea7d33bf0c0aa02c6d8ea`. Root app и `/Applications/Project Web Pilot.app` установлены как 0.6.93; ASAR SHA-256 обеих Mac-копий — `44863bc4dfd22168c08410111b64a2df3606302a6d9ba66f10f4a51d764c3b8d`. [GitHub Release v0.6.93](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.93) опубликован 2026-10-05T15:15:04Z, не draft/prerelease. Tag указывает на sourceCommit; штатный `scripts/check-github-release.mjs` подтвердил ровно шесть assets, их server size/SHA-256 и согласованность release/main. Пользовательская проверка 05.10.2026 в новой сессии подтвердила исправления и каталог из 13 tools; продуктовых дефектов 0.6.93 не найдено. Наблюдавшиеся шероховатости metadata/tool-call wrapper вошли в source 0.6.94. Native Windows ещё не выполнялся.
 
 ## Выпуск 0.6.92 — 05.10.2026
 

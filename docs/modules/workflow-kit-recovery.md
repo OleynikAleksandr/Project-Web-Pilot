@@ -152,11 +152,11 @@ Workflow Kit обслуживает проекты любого типа. Про
 
 Цель navigation-plan в `NONE`: «Обсудите следующий этап проекта с пользователем». Recovery разворачивает required-документы из этих ссылок, поэтому новая сессия понимает существующий проект без чтения истории завершённых scopes и без ложного возврата к «идее нового проекта».
 
-Каждый новый рабочий scope содержит единственную системную задачу `DOCS` с названием «Актуализация всех документов проекта». Для code-only scope она завершает список задач и зависит от всей предшествующей работы. Для scope с `verification_kind=package|installed` Workflow Kit 1.5.2 размещает `DOCS` перед явным delivery-хвостом; delivery-задачи зависят от `DOCS`. Агент проходит весь действующий комплект документации через `docs/DOCUMENTATION_INDEX.md`, исправляет только устаревшие документы и ссылки и фиксирует результат. Если все документы уже актуальны, задача может завершиться без искусственного редактирования содержательных файлов: отдельный управляемый commit фиксирует факт проверки.
+Каждый новый рабочий scope содержит единственную системную задачу `DOCS` с названием «Актуализация всех документов проекта». Для code-only scope она завершает список задач и зависит от всей предшествующей работы. Начиная с Workflow Kit 1.5.2, для scope с `verification_kind=package|installed` `DOCS` размещается перед явным delivery-хвостом; текущий 1.5.5 сохраняет этот порядок. Delivery-задачи зависят от `DOCS`. Агент проходит весь действующий комплект документации через `docs/DOCUMENTATION_INDEX.md`, исправляет только устаревшие документы и ссылки и фиксирует результат. Если все документы уже актуальны, задача может завершиться без искусственного редактирования содержательных файлов: отдельный управляемый commit фиксирует факт проверки.
 
 `READY_FOR_ACCEPTANCE` допускается только после завершения **всех** задач. В code-only scope это означает завершённую `DOCS`; в delivery scope после `DOCS` должны быть завершены и явные delivery-задачи. Этот enum сохраняется для совместимости истории и обозначает завершённость задач. Пользователь оценивает результат в диалоге; обязательного интерфейсного gate нет. Archive по-прежнему требует отдельной прямой команды пользователя. Если после пользовательской проверки потребовались изменения, `DOCS` переоткрывается после correction-работы; при наличии delivery-хвоста она остаётся непосредственно перед ним.
 
-`scope:create` нормализует обязательный project navigation context и добавляет/проверяет `DOCS`. Workflow Kit 1.5.2 нормализует порядок как `work → DOCS → package/installed delivery`; `plan:apply`/`plan:extend` сохраняют этот порядок и обновляют зависимости при добавлении новых задач.
+`scope:create` нормализует обязательный project navigation context и добавляет/проверяет `DOCS`. Порядок, введённый в Workflow Kit 1.5.2 и сохранённый в 1.5.5, — `work → DOCS → package/installed delivery`; `plan:apply`/`plan:extend` сохраняют этот порядок и обновляют зависимости при добавлении новых задач.
 
 ## Correction round после пользовательской проверки — scope 022
 
@@ -208,13 +208,23 @@ Recovery 1.4.11 передаёт вместе с Workflow Core правила `P
 
 ## Canonical package и staging — 0.6.58 / Workflow Kit 1.5.0
 
-Исторические поставки 1.4.x выше сохраняют происхождение изменений. Текущий владелец source один: `/Users/oleksandroliinyk/VSCODE/WorkflowKit/src`, package `@webpilot/workflow-kit@1.5.0`. WebPilot programmatic imports используют package exports; external Workspace Setup/Project Doctor и Electron package получают generated runtime из `getRuntimeRoot()` в ignored `resources/workflow-kit`. Canonical и staged runtime подтверждены: 35 файлов, SHA-256 `0db567df6f0c8f68f3119a7322b4c1c6d28cd06bf57b267993b792097bbb2c75`.
+Исторические поставки 1.4.x выше сохраняют происхождение изменений. На этапе 0.6.58 владельцем source стал `/Users/oleksandroliinyk/VSCODE/WorkflowKit/src`, тогда package был `@webpilot/workflow-kit@1.5.0`. WebPilot programmatic imports используют package exports; external Workspace Setup/Project Doctor и Electron package получают generated runtime из `getRuntimeRoot()` в ignored `resources/workflow-kit`. Для того этапа canonical и staged runtime были подтверждены как 35 файлов, SHA-256 `0db567df6f0c8f68f3119a7322b4c1c6d28cd06bf57b267993b792097bbb2c75`. Текущее состояние — раздел 1.5.5 ниже.
 
 1.5.0 делает `.harness/plans/todo-plan.md` единственным runtime current plan. `listPlans` и `sessionPlanView` transitional facade возвращают тот же current plan для любой session; prepared/unassigned пусты. Legacy `by-id`/`by-session` обнаруживаются только migration code и переносятся в `.harness/plans/archive/legacy-session-plans/`.
 
-## Workflow Kit 1.5.2 — delivery ordering / 03.10.2026
+## Workflow Kit 1.5.5 — текущий runtime / 05.10.2026
 
-Текущий canonical source и installed workflow runtime Project Web Pilot используют Workflow Kit **1.5.2**, 35 файлов, SHA-256 `646fec106c498e004d8688a3bc40012bea1654178ce66a61b650211ab28055df`. Последний опубликованный WorkflowKit release остаётся 1.5.1; опубликованные бинарники Web Pilot 0.6.80 также содержат bundled Kit 1.5.1. В этом scope приложение не пересобиралось и не публиковалось.
+Canonical source `/Users/oleksandroliinyk/VSCODE/WorkflowKit/src`, installed Kit этого checkout и generated bundled runtime Project Web Pilot используют Workflow Kit **1.5.5**: 35 файлов, SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`. Последний опубликованный WorkflowKit release остаётся 1.5.1. Source Project Web Pilot 0.6.94 staging подтвердил тот же version/fileset/digest; текущий scope Web Pilot не меняет код, версию или runtime Workflow Kit.
+
+1. Один checkout/worktree имеет один current plan `.harness/plans/todo-plan.md`; новый chat/client продолжает его, независимая работа использует отдельный worktree.
+2. Recovery выдаётся компактно по частям; формы/карты читаются по запросу, а обязательные OVERVIEW/MODULES/INDEX и документы текущего контракта остаются в project context.
+3. Delivery ordering остаётся `work → DOCS → explicit build/package/install/publish tasks`; build/publish вне названной delivery-задачи запрещены.
+4. `DOCS` до первой сборки обязана пройти весь действующий `DOCUMENTATION_INDEX`; поздняя correction переоткрывает новую iteration DOCS перед оставшимся delivery-хвостом.
+5. Связанный репозиторий WorkflowKit в scope 0.6.94 получает только документальную синхронизацию отдельным собственным планом после публикации Web Pilot; runtime 1.5.5 не меняется.
+
+## Workflow Kit 1.5.2 — delivery ordering / исторический снимок 03.10.2026
+
+На этом историческом этапе canonical source и installed workflow runtime Project Web Pilot использовали Workflow Kit **1.5.2**, 35 файлов, SHA-256 `646fec106c498e004d8688a3bc40012bea1654178ce66a61b650211ab28055df`. Последний опубликованный WorkflowKit release оставался 1.5.1; опубликованные бинарники Web Pilot 0.6.80 содержали bundled Kit 1.5.1. В том scope приложение не пересобиралось и не публиковалось.
 
 1. `build/package/sign/notarize/release/publish` разрешены только внутри активной микрозадачи, где действие прямо названо.
 2. До build или GitHub publish относящиеся к результату документы должны быть актуализированы и зафиксированы.

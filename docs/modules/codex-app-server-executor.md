@@ -390,9 +390,9 @@ Local backend работает `--mcp-only`; App Server backend также от�
 - Каталог инструментов не менялся: 38, как в 0.6.90.
 - `scripts/benchmark-codex-app-server-mcp.mjs` удалён: сравнивать больше не с чем. Результаты A/B в разделе T005 — история.
 
-## Родные инструменты Codex — source 0.6.92
+## Родные инструменты Codex — 0.6.92–0.6.94
 
-[Контракт](../planning/codex-native-tools-macos.md). Это действующее source-состояние macOS executor перед release-сборкой 0.6.92; разделы выше про 38/47 tools — история соответствующих версий.
+[Контракт](../planning/codex-native-tools-macos.md). С 0.6.92 это действующая поверхность macOS executor; разделы выше про 38/47 tools — история соответствующих версий. Текущий source — 0.6.94, опубликованная/установленная версия — 0.6.93.
 
 Каталог MCP содержит ровно 13 инструментов:
 
@@ -401,10 +401,10 @@ Local backend работает `--mcp-only`; App Server backend также от�
 - наблюдение: `computer_list_windows`, `computer_capture_screen`, `computer_capture_window`;
 - recoverable delete: `delete_path`, `list_trash`, `restore_trash`.
 
-`exec_command` и `write_stdin` используют прямые `command/exec` и `command/exec/write` без thread/turn. `workdir` обязателен; долгий процесс возвращает session ID; TTY принимает Ctrl-C; один результат ограничивается максимум 10 000 токенов с сохранением начала и конца. `apply_patch` запускает native `apply_patch`, который поставляет установленный Codex, и передаёт Codex patch через stdin с `closeStdin`; старого `git apply` нет. `view_image` проверяет sensitive path, наличие, MIME и лимит 20 МБ, работает на временной копии и уменьшает изображение до 1600 по большей стороне.
+`exec_command` и `write_stdin` используют прямые `command/exec` и `command/exec/write` без thread/turn. `workdir` обязателен; долгий процесс возвращает session ID; TTY принимает Ctrl-C. С 0.6.94 один результат ограничивается максимум 8000 оценочных токенов / 32000 байт с сохранением начала и конца и одним MCP-маркером обрезки; `Original token count` относится к полному выводу. Wall time `write_stdin` измеряет текущий вызов, а завершение процесса между status и write/terminate возвращает финальный вывод и exit code. `apply_patch` запускает native `apply_patch`, который поставляет установленный Codex, и передаёт Codex patch через stdin с `closeStdin`; старого `git apply` нет. `view_image` проверяет sensitive path, наличие, MIME и лимит 20 МБ, работает на временной копии и уменьшает изображение до 1600 по большей стороне.
 
-28 прежних файловых, поисковых, process и Git tools удалены вместе с недостижимым facade. Агент ищет через `rg` в `exec_command`, правит текст через `apply_patch` и удаляет через `delete_path`; эта строка есть и в server instructions, и в `session-rules.md`. Первые 512 символов instructions сохранены без изменения. UI control по-прежнему отсутствует.
+28 прежних файловых, поисковых, process и Git tools удалены вместе с недостижимым facade. Агент ищет через `rg` в `exec_command`, правит текст через `apply_patch` и удаляет через `delete_path`; эта строка есть и в server instructions, и в `session-rules.md`. В 0.6.94 все 13 tools и все параметры имеют описания. `view_image`, `computer_capture_screen`, `computer_capture_window` прямо объясняют двухблочный результат (JSON + `image/png`) и ChatGPT-script путь `content_items → image()`. `exec_command` и `write_stdin`, server instructions и `session-rules.md` содержат одно правило: если OpenAI заблокировал вызов до исполнения — один раз повторить его без изменений, менять/делить только после повторной блокировки. Первые 512 символов instructions сохранены без изменения. UI control по-прежнему отсутствует.
 
 Определения закреплены в `codex-tools.lock.json` на Codex **0.160.0**, tag `rust-v0.160.0` и SHA-256 `shell_spec.rs`, `view_image_spec.rs`, `apply_patch.lark`. `npm run check:codex-tools` сверяет installed Codex с соответствующим GitHub tag: 0 — совпало, 1 — definitions/version отличаются, 2 — сеть/tag недоступны. `bridge_status.codex_tools` показывает pinned/installed version, `version_matches` и `apply_patch_available`. Живая GitHub-сверка 05.10.2026 прошла.
 
-Windows-runtime, selector, VPS/Secure Tunnel, lifecycle служб и правила первого сообщения Windows в этом scope не менялись. Source version — 0.6.92; до T006/T007/T008 опубликованная и установленная версия остаётся 0.6.91.
+Windows-runtime, selector, VPS/Secure Tunnel, lifecycle служб и правила первого сообщения Windows в 0.6.92–0.6.94 не менялись. Source 0.6.94 прошёл полный `npm test` (553 total, 549 passed, 4 skipped, 0 failed) и live `npm run check:codex-tools` против `rust-v0.160.0`; сборка 0.6.94 ещё не выполнялась. Опубликованная и установленная версия остаётся 0.6.93.

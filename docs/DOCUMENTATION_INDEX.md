@@ -24,7 +24,7 @@
 <!-- workflow-kit:end -->
 ## Project Web Pilot
 
-**Source 0.6.93 подготовлен к release-хвосту после предсборочной DOCS** ([контракт](planning/codex-native-tools-macos.md)): macOS MCP сохраняет 13 инструментов из 0.6.92; исправлены закрытие stdin для non-TTY, семантика `write_stdin`/Ctrl-C, write/poll yield clamp и описания двух command tools. Definitions lock остаётся Codex 0.160.0 / `rust-v0.160.0`; Windows-runtime не менялся. Текущая установленная и опубликованная парная версия — **0.6.92 / Workflow Kit 1.5.5**; delivery 0.6.93 ещё не выполнялся. История выпусков — [RELEASE.md](RELEASE.md).
+**Текущий source — 0.6.94; установленная и опубликованная версия — 0.6.93 / Workflow Kit 1.5.5** ([контракт](planning/codex-native-tools-macos.md)). 0.6.94 сохраняет 13-tool каталог, исправляет Wall time/race `write_stdin`, ограничивает command-output 8000 оценочных токенов, заполняет descriptions всех tools/parameters, добавляет image-result hint и единое pre-execution retry-rule. Полный `npm test` и `check:codex-tools` прошли; сборка 0.6.94 ещё не выполнялась. Пользовательская проверка установленной 0.6.93 завершена; native Windows остаётся отдельной проверкой. `codex-tools.lock.json`, Windows-runtime и VPS channel не менялись. История выпусков — [RELEASE.md](RELEASE.md).
 
 | Документ | Назначение |
 | --- | --- |
@@ -34,12 +34,12 @@
 | docs/modules/workflow-kit-recovery.md | Specification Workflow Kit / Context Recovery / project continuity |
 | docs/modules/project-doctor.md | Контракт автономного Доктора проекта и границы автоматического ремонта |
 | docs/modules/runtime-lifecycle.md | Specification self-healing MCP/tunnel lifecycle |
-| docs/modules/codex-app-server-executor.md | Единственный macOS executor: source 0.6.92 — 13 tools, native `apply_patch`, Codex-form commands/image и definitions lock; lifecycle 0.6.91, наблюдение без UI control и исторический A/B |
+| docs/modules/codex-app-server-executor.md | Единственный macOS executor: 13 tools с 0.6.92; 0.6.93 — stdin/timing correction; source 0.6.94 — Wall time/race, output 8000, полный schema/image hint/retry-rule; lifecycle 0.6.91, наблюдение без UI control и исторический A/B |
 | docs/modules/workspace-sessions.md | Specification проектов, Chat/Work sessions, session tree, переходов после scope, оформления и сохранения геометрии интерфейса |
 | docs/planning/session-title-sync.md | Контракт auto/manual session title и server-side синхронизации с native ChatGPT Recents |
 | docs/planning/input-instruction-delivery-ordering.md | Канонический порядок DOCS → delivery, startupMessage guard и границы незапланированных build/publish |
 | docs/planning/computer-use-removal.md | Управление интерфейсом убрано из MCP на macOS и Windows; остаются список окон и снимки; запрет в правилах; релиз 0.6.90 |
-| docs/planning/codex-native-tools-macos.md | 0.6.92: macOS каталог из 13 tools и Codex-form command/patch/image; 0.6.93: stdin/write timing corrections, descriptions, definitions lock/check; Windows без изменений, DOCS → delivery |
+| docs/planning/codex-native-tools-macos.md | 0.6.92: 13-tool каталог; 0.6.93: stdin/write timing correction; 0.6.94: Wall time/race, output 8000, полный tool schema/image hint/retry-rule, все документы и Workflow Kit docs; Windows без изменений, DOCS → delivery |
 | docs/planning/codex-local-mac-removal.md | 0.6.91: Codex Local Mac удалён; macOS только через Codex App Server (первый запуск, одноразовая очистка); в пакете только приложение; ZIP Windows-runtime — шестой файл релиза |
 | docs/planning/release-backups-kit-1.5.5.md | Одна резервная копия установки на цель вне Spotlight; Workflow Kit 1.5.5 (push только после DOCS); релиз 0.6.89 |
 | docs/planning/mcp-start-message.md | Web Pilot начинает MCP-сессию коротким стартовым сообщением; релиз 0.6.88 |
@@ -74,7 +74,7 @@
 | --- | --- |
 | docs/modules/session-owned-plans.md | Stable filename действующего 0.6.58 контракта: один current plan на checkout/worktree; sessions — chats, legacy ownership только history |
 | docs/modules/workspace-sessions.md | Session store, Chat/Work navigation, backward-compatible legacy fields и проекция current plan |
-| docs/modules/workflow-kit-recovery.md | Workflow Kit 1.5.2 source/runtime: checkout-scoped recovery, delivery ordering, migration legacy session plans и continuity |
+| docs/modules/workflow-kit-recovery.md | Текущий Workflow Kit 1.5.5: checkout-scoped recovery и continuity; delivery ordering с 1.5.2; migration legacy session plans и compact recovery |
 | docs/design/session-plan-navigation.md | Исторический макет 0.6.28 прежней prepared/session-owned модели; не действующий UI-контракт |
 ## Действующий контракт — скорость открытия
 | Документ | Назначение |
@@ -97,11 +97,11 @@
 | Документ | Назначение |
 | --- | --- |
 | [Событийная обработка состояния Web Pilot](planning/event-driven-runtime.md) | Завершённый контракт трёх этапов: фаза 1 — общий observer/дедупликация, фаза 2 — файловые события/прогрев и удаление постоянных опросов, фаза 3 — сопоставимые измерения, live Chat/Work на macOS и парная поставка 0.6.74; native Windows отмечен как отдельная непроведённая проверка |
-## Workflow Kit 1.5.2 / опубликованная Web Pilot 0.6.81
+## Исторический переход Workflow Kit 1.5.2 / Web Pilot 0.6.81
 
 ## Web Pilot Sidebar — связанный репозиторий
 - [Контракт DOM/Sidebar](modules/chatgpt-dom-compatibility.md) — общие browser-модули, публичные символы, pageScript и SHA-256.
-- [Рабочие репозитории](SOURCE_WORKSPACES.md) — пути и роли Workflow Kit/Sidebar, актуальные README для локальной 0.6.80, расхождение Composer vendor lock и границы будущего Host API.
+- [Рабочие репозитории](SOURCE_WORKSPACES.md) — текущие пути и роли Project Web Pilot / Workflow Kit / Sidebar, фактические версии source/runtime и отдельный исторический снимок синхронизации 0.6.80.
 
 ## Актуальные дополнения
 - [Стабильное разрешение macOS на захват экрана](planning/macos-screen-permission-stability.md) — выбранная подпись UkrHD, строгий контроль staging/ZIP/обеих установок 0.6.80, реальный MCP-захват после обновления и перезагрузки, подтверждение пользователя об отсутствии новых запросов; T005 завершена.

@@ -29,7 +29,7 @@ AutoPlan получает toggle, page/context/availability и PlanMonitor seman
 
 ## Состояние
 
-**Source 0.6.93** ([контракт](../planning/codex-native-tools-macos.md)) готов к release-хвосту после DOCS. Единственный macOS backend — Codex App Server Local Mac; каталог остаётся 13 tools. В 0.6.93 исправлены non-TTY stdin, session tty state, non-TTY Ctrl-C и раздельные write/poll пределы `write_stdin`; definitions lock остаётся Codex 0.160.0, Windows-runtime не менялся. Текущая установленная/опубликованная версия — 0.6.92.
+**Текущий source — 0.6.94; установленная/опубликованная версия — 0.6.93** ([контракт](../planning/codex-native-tools-macos.md)). Единственный macOS backend — Codex App Server Local Mac; каталог остаётся 13 tools. Source 0.6.94 исправляет Wall time и race завершения `write_stdin`, снижает лимит одного command-result до 8000 оценочных токенов, доводит описания всех 13 tools/параметров и image-result hint, унифицирует правило неизменённого retry после pre-execution OpenAI block. Полный `npm test` и живая сверка `rust-v0.160.0` прошли; сборка 0.6.94 ещё не выполнялась. `codex-tools.lock.json`, Windows-runtime и VPS channel не менялись. Пользовательская проверка 0.6.93 завершена без продуктовых дефектов.
 
 ### История прежних состояний
 
