@@ -50,48 +50,6 @@ test('Codex App Server client executes directly without a model turn', { timeout
   await new Promise(resolve => modelServer.listen(0, '127.0.0.1', resolve));
   const modelPort = modelServer.address().port;
 
-  const fakeMcp = path.join(root, 'fake_mcp.py');
-  await writeFile(fakeMcp, `#!/usr/bin/env python3
-import json, sys
-for raw in sys.stdin:
-    try:
-        msg = json.loads(raw)
-    except Exception:
-        continue
-    method = msg.get("method")
-    ident = msg.get("id")
-    if ident is None:
-        continue
-    if method == "initialize":
-        result = {
-            "protocolVersion": msg.get("params", {}).get("protocolVersion", "2025-06-18"),
-            "capabilities": {"tools": {"listChanged": False}},
-            "serverInfo": {"name": "webpilot-fake-local", "version": "1.0"}
-        }
-    elif method == "tools/list":
-        result = {"tools": [{
-            "name": "add",
-            "description": "Add two integers",
-            "inputSchema": {
-                "type": "object",
-                "properties": {"a": {"type": "integer"}, "b": {"type": "integer"}},
-                "required": ["a", "b"]
-            },
-            "annotations": {"readOnlyHint": True}
-        }]}
-    elif method == "tools/call":
-        args = msg.get("params", {}).get("arguments", {})
-        result = {"content": [{"type": "text", "text": json.dumps({"sum": args.get("a", 0) + args.get("b", 0)})}], "isError": False}
-    elif method == "ping":
-        result = {}
-    else:
-        sys.stdout.write(json.dumps({"jsonrpc":"2.0","id":ident,"error":{"code":-32601,"message":"unsupported"}}) + "\\n")
-        sys.stdout.flush()
-        continue
-    sys.stdout.write(json.dumps({"jsonrpc":"2.0","id":ident,"result":result}) + "\\n")
-    sys.stdout.flush()
-`);
-
   const config = `
 model_provider = "blocked"
 model = "probe-model"
@@ -102,11 +60,6 @@ name = "Blocked local model endpoint"
 base_url = ${tomlString(`http://127.0.0.1:${modelPort}/v1`)}
 wire_api = "responses"
 requires_openai_auth = false
-[mcp_servers.arithmetic_probe]
-command = ${tomlString('python3')}
-args = [${tomlString(fakeMcp)}]
-startup_timeout_sec = 8
-tool_timeout_sec = 5
 `.trimStart();
   await writeFile(path.join(codexHome, 'config.toml'), config);
 
@@ -134,10 +87,6 @@ try:
     c.request("turn/start", {})
 except AppServerError:
     forbidden = True
-thread_id = c.ensure_mcp_thread()
-servers = c.mcp_status_list()
-probe_server = next(item for item in servers if item.get("name") == "arithmetic_probe")
-call = c.mcp_tool_call("arithmetic_probe", "add", {"a": 17, "b": 25})
 old_generation = c.generation
 c._process.kill()
 c._process.wait(timeout=3)
@@ -155,9 +104,8 @@ print(json.dumps({
     "processChunk": chunk.get("stdout"),
     "processStopped": not stopped.get("running", True),
     "forbidden": forbidden,
-    "thread": bool(thread_id),
-    "mcpStatus": probe_server.get("runtimeStatus"),
-    "mcpCall": call,
+    "hasMcpThread": any(hasattr(c, name) for name in ("ensure_mcp_thread", "mcp_status_list", "mcp_tool_call")),
+    "statusKeys": sorted(before.keys()),
     "restartGenerationAdvanced": after["generation"] > old_generation,
     "readAfterRestart": read_after_restart,
 }, ensure_ascii=False))
@@ -177,9 +125,8 @@ print(json.dumps({
     assert.match(data.processChunk, /PROCESS_START/);
     assert.equal(data.processStopped, true);
     assert.equal(data.forbidden, true);
-    assert.equal(data.thread, true);
-    assert.equal(data.mcpStatus, 'connected');
-    assert.match(JSON.stringify(data.mcpCall), /42/);
+    assert.equal(data.hasMcpThread, false, 'the executor opens no Codex thread and calls no Codex-side MCP');
+    assert.deepEqual(data.statusKeys, ['binary', 'generation', 'pid', 'running', 'version']);
     assert.equal(data.restartGenerationAdvanced, true);
     assert.equal(data.readAfterRestart, 'hello-from-app-server');
     assert.equal(modelRequests, 0, 'executor path must not call the configured model endpoint');
@@ -195,10 +142,7 @@ test('Codex App Server MCP facade exposes local parity and excludes cloud duplic
 
   const required = [
     'bridge_status', 'workflow_context_recover',
-    'computer_status', 'computer_list_windows', 'computer_activate_window',
-    'computer_capture_screen', 'computer_capture_window', 'computer_move_mouse',
-    'computer_click', 'computer_scroll', 'computer_type_text', 'computer_key_press',
-    'computer_hotkey', 'computer_release_inputs',
+    'computer_list_windows', 'computer_capture_screen', 'computer_capture_window',
     'list_drives', 'file_info', 'list_directory', 'read_file', 'read_binary',
     'search_files', 'search_text', 'make_directory', 'write_file', 'write_binary',
     'patch_binary', 'replace_text', 'apply_patch', 'copy_path', 'move_path',
@@ -211,9 +155,21 @@ test('Codex App Server MCP facade exposes local parity and excludes cloud duplic
   for (const name of required) {
     assert.match(source, new RegExp(`def ${name}\\(`), `missing local tool ${name}`);
   }
+  assert.equal(source.match(/@mcp\.tool/g).length, 38, 'catalog is 38 tools');
 
-  assert.match(source, /node_repl/);
-  assert.match(source, /@oai\/sky/);
+  // 0.6.90: the web model observes the screen but never drives the interface.
+  const removed = [
+    'computer_status', 'computer_activate_window', 'computer_move_mouse', 'computer_click',
+    'computer_scroll', 'computer_type_text', 'computer_key_press', 'computer_hotkey',
+    'computer_actions', 'computer_release_inputs',
+  ];
+  for (const name of removed) assert.doesNotMatch(source, new RegExp(name), `UI control tool ${name} must be gone`);
+  const client = await readFile(path.join(repoRoot, 'tools', 'codex-app-server-mcp', 'app_server_client.py'), 'utf8');
+  for (const text of [source, client]) {
+    assert.doesNotMatch(text, /node_repl|@oai\/sky|\bsky\.|computer_use/);
+    assert.doesNotMatch(text, /thread\/start|mcpServer\/tool\/call|mcp_tool_call/);
+  }
+  assert.match(source, /No UI control: this MCP cannot move the mouse, press keys or switch windows/);
   for (const duplicate of ['openaiDeveloperDocs', 'codex_apps', 'playwright']) {
     assert.doesNotMatch(source, new RegExp(`def ${duplicate}\\(`));
   }
@@ -500,46 +456,78 @@ test('App Server MCP answers a stale session id without initialize after a resta
   assert.ok(message.result.tools.some(tool => tool.name === 'run_command_batch'));
 });
 
-test('Computer Use accepts key characters and runs a batch of actions in one node_repl call', { timeout: 30_000 }, async t => {
+test('window list and screenshots use system tools and validate input before running a command', { timeout: 30_000 }, async t => {
   const venvPython = path.join(homedir(), 'Library', 'Application Support', 'WebPilotCodexExecutor', 'runtime', 'venv', 'bin', 'python');
   const source = await (await import('node:fs/promises')).readFile(path.join(clientDir, 'server.py'), 'utf8');
-  assert.match(source, /def computer_actions\(/);
+  assert.match(source, /def computer_capture_window\(/);
   if (!existsSync(venvPython)) { t.skip('Codex App Server runtime venv is not installed'); return; }
-  const root = await mkdtemp(path.join(tmpdir(), 'web-pilot-computer-actions-'));
+  const root = await mkdtemp(path.join(tmpdir(), 'web-pilot-observation-'));
   t.after(() => rm(root, { recursive: true, force: true }));
   const probe = path.join(root, 'probe.py');
   await writeFile(probe, `import json, sys, pathlib
 sys.path.insert(0, sys.argv[1])
 import server
 calls = []
+windows = [
+    {"window_id": 84, "application": "Calculator", "pid": 501, "title": "Калькулятор", "bounds": {"X": 10, "Y": 20, "Width": 300, "Height": 400}},
+    {"window_id": 91, "application": "TextEdit", "pid": 502, "title": "Notes.txt", "bounds": {"X": 0, "Y": 0, "Width": 800, "Height": 600}},
+    {"window_id": "broken", "application": "Ignored"},
+]
+listing = {"exit": 0, "stdout": json.dumps(windows)}
 class Client:
     cwd = sys.argv[2]
-    def mcp_tool_call(self, server_name, tool, args):
-        calls.append({"server": server_name, "tool": tool, "code": args["code"]})
-        if "var steps=" in args["code"]:
-            return {"content": [{"type": "text", "text": json.dumps({"results": [{"ok": True, "ms": 3}, {"ok": True, "ms": 2}, {"ok": False, "ms": 1, "error": "boom"}], "total_ms": 9})}]}
-        return {"content": [{"type": "text", "text": "{}"}]}
-facade = server.LocalFacade(Client(), pathlib.Path(sys.argv[2]))
+    def command_exec(self, argv, **kwargs):
+        calls.append(argv)
+        if argv[0] == "/usr/bin/osascript":
+            return {"exitCode": listing["exit"], "stdout": listing["stdout"], "stderr": "not allowed" if listing["exit"] else ""}
+        if argv[0] == "/usr/sbin/screencapture":
+            if "-l" in argv and argv[argv.index("-l") + 1] == "404":
+                return {"exitCode": 1, "stdout": "", "stderr": "could not create image from window"}
+            pathlib.Path(argv[-1]).write_bytes(b"PNGDATA")
+        return {"exitCode": 0, "stdout": "", "stderr": ""}
+    def fs_read_file(self, path):
+        return pathlib.Path(path).read_bytes()
+state = pathlib.Path(sys.argv[2])
+facade = server.LocalFacade(Client(), state)
 out = {}
-try:
-    facade.computer_key_press("*")
-except ValueError as error:
-    out["no_app"] = str(error)
-facade._active_app_id = "com.apple.calculator"
-out["key"] = facade.computer_key_press("*")
-out["named"] = facade.computer_key_press("Return")
-out["hotkey"] = facade.computer_hotkey(["cmd", "="])
-out["batch"] = facade.computer_actions([{"type": "key", "key": "1"}, {"type": "key", "key": "*", "presses": 2}, {"type": "text", "text": "Привет"}, {"type": "wait", "ms": 10}])
+out["all"] = facade.computer_list_windows()
+out["by_title"] = [row["window_id"] for row in facade.computer_list_windows("notes")["windows"]]
+out["by_app"] = [row["window_id"] for row in facade.computer_list_windows("calc")["windows"]]
+out["limited"] = len(facade.computer_list_windows(max_results=1)["windows"])
+listing["stdout"] = json.dumps([{**row, "title": None} for row in windows[:2]])
+out["no_permission"] = facade.computer_list_windows()
 errors = {}
-cases = {"unknown": [{"type": "drag"}], "empty": [], "too_many": [{"type": "wait", "ms": 0}] * 51, "bad_click": [{"type": "click", "x": "1", "y": 2}]}
-for name, actions in cases.items():
+for name, (code, stdout) in {"failed": (1, ""), "garbage": (0, "not json"), "not_a_list": (0, "{}")}.items():
+    listing.update(exit=code, stdout=stdout)
     try:
-        facade.computer_actions(actions)
+        facade.computer_list_windows()
         errors[name] = None
     except ValueError as error:
         errors[name] = str(error)
+calls.clear()
+window = facade.computer_capture_window(84, 800)
+out["window"] = [window[0], type(window[1]).__name__]
+out["window_calls"] = [argv[:-1] for argv in calls]
+calls.clear()
+for name, bad in {"zero": 0, "negative": -5, "bool": True, "text": "84"}.items():
+    try:
+        facade.computer_capture_window(bad)
+        errors[name] = None
+    except ValueError as error:
+        errors[name] = str(error)
+out["calls_for_invalid_ids"] = len(calls)
+try:
+    facade.computer_capture_window(404)
+    errors["missing_window"] = None
+except ValueError as error:
+    errors["missing_window"] = str(error)
+calls.clear()
+screen = facade.computer_capture_screen(1, 2, 3, 4, 0, True)
+out["screen"] = [screen[0], type(screen[1]).__name__]
+out["screen_calls"] = [argv[:-1] for argv in calls]
 out["errors"] = errors
-out["calls"] = calls
+out["leftovers"] = sorted(item.name for item in state.glob("screen-*"))
+out["ui_control"] = sorted(name for name in dir(facade) if name.startswith("computer_"))
 print(json.dumps(out, ensure_ascii=False))
 `);
   const run = await new Promise((resolve, reject) => {
@@ -552,47 +540,37 @@ print(json.dumps(out, ensure_ascii=False))
   });
   assert.equal(run.code, 0, run.stderr);
   const out = JSON.parse(run.stdout.trim().split('\n').at(-1));
-  assert.match(out.no_app, /No active app/);
-  assert.equal(out.calls.length, 4, 'validation errors never reach Computer Use');
-  assert.ok(out.calls.every(call => call.server === 'node_repl' && call.tool === 'js'));
-  assert.match(out.calls[0].code, /key:"asterisk"/);
-  assert.match(out.calls[1].code, /key:"Return"/);
-  assert.match(out.calls[2].code, /key:"super\+equal"/);
 
-  // Execute the generated batch script against a fake sky: one call, actions in order, stop at the first failure.
-  const AsyncFunction = (async () => {}).constructor;
-  const execute = async (failOn) => {
-    const events = []; let written = '';
-    globalThis.sky = {
-      press_key: async ({ app, key }) => { events.push(['key', app, key]); if (key === failOn) throw new Error('keyNotFound(' + key + ')'); },
-      paste: async ({ app, text, format }) => { events.push(['paste', app, text, format]); },
-      click: async () => { events.push(['click']); }, scroll: async () => { events.push(['scroll']); },
-    };
-    try { await new AsyncFunction('nodeRepl', out.calls[3].code)({ write: value => { written = value; } }); }
-    finally { delete globalThis.sky; }
-    return { events, result: JSON.parse(written) };
-  };
-  const ok = await execute(null);
-  assert.deepEqual(ok.events, [['key', 'com.apple.calculator', '1'], ['key', 'com.apple.calculator', 'asterisk'],
-    ['key', 'com.apple.calculator', 'asterisk'], ['paste', 'com.apple.calculator', 'Привет', 'text']]);
-  assert.deepEqual(ok.result.results.map(row => row.ok), [true, true, true, true]);
-  const stopped = await execute('asterisk');
-  assert.deepEqual(stopped.events, [['key', 'com.apple.calculator', '1'], ['key', 'com.apple.calculator', 'asterisk']]);
-  assert.deepEqual(stopped.result.results.map(row => row.ok), [true, false]);
-  assert.match(stopped.result.results[1].error, /keyNotFound/);
+  // Only the three observation methods remain on the facade.
+  assert.deepEqual(out.ui_control, ['computer_capture_screen', 'computer_capture_window', 'computer_list_windows']);
 
-  // The facade maps per-action outcomes back to the actions it built.
-  assert.equal(out.batch.completed, false);
-  assert.equal(out.batch.skipped, 1);
-  assert.equal(out.batch.failed.index, 2);
-  assert.equal(out.batch.failed.error, 'boom');
-  assert.equal(out.batch.results[1].sky_key, 'asterisk');
-  assert.equal(out.batch.results[1].presses, 2);
-  assert.equal(out.batch.results[2].mode, 'paste');
-  assert.match(out.errors.unknown, /unknown action type/);
-  assert.match(out.errors.empty, /non-empty/);
-  assert.match(out.errors.too_many, /limited to 50/);
-  assert.match(out.errors.bad_click, /integer x and y/);
+  assert.deepEqual(out.all.windows, [
+    { window_id: 84, title: 'Калькулятор', application: 'Calculator', pid: 501, rect: { x: 10, y: 20, width: 300, height: 400 } },
+    { window_id: 91, title: 'Notes.txt', application: 'TextEdit', pid: 502, rect: { x: 0, y: 0, width: 800, height: 600 } },
+  ]);
+  assert.equal(out.all.note, undefined);
+  assert.deepEqual(out.by_title, [91]);
+  assert.deepEqual(out.by_app, [84]);
+  assert.equal(out.limited, 1);
+  // Without Screen Recording permission macOS hides titles: the answer says so instead of looking empty.
+  assert.equal(out.no_permission.windows.length, 2);
+  assert.match(out.no_permission.note, /Screen Recording permission/);
+  assert.match(out.errors.failed, /not allowed/);
+  assert.match(out.errors.garbage, /invalid data/);
+  assert.match(out.errors.not_a_list, /invalid data/);
+
+  assert.deepEqual(out.window, [{ source: 'window', window_id: 84, bytes: 7 }, 'Image']);
+  assert.deepEqual(out.window_calls, [
+    ['/usr/sbin/screencapture', '-x', '-t', 'png', '-o', '-l', '84'],
+    ['/usr/bin/sips', '-Z', '800'],
+  ]);
+  for (const name of ['zero', 'negative', 'bool', 'text']) assert.match(out.errors[name], /positive integer/, name);
+  assert.equal(out.calls_for_invalid_ids, 0, 'an invalid window_id never reaches a command');
+  assert.match(out.errors.missing_window, /could not create image from window/);
+
+  assert.deepEqual(out.screen, [{ source: 'desktop', bytes: 7 }, 'Image']);
+  assert.deepEqual(out.screen_calls, [['/usr/sbin/screencapture', '-x', '-t', 'png', '-C', '-R', '1,2,3,4']]);
+  assert.deepEqual(out.leftovers, [], 'temporary screenshots are removed, also after a failed capture');
 });
 
 test('workflow context is read strictly one part per call with the session rules and the project open in Web Pilot', { timeout: 60_000 }, async t => {
@@ -753,22 +731,4 @@ print(json.dumps({"identity":identity,"LC_ALL":seen.get("LC_ALL"),"LANG":seen.ge
   } finally {
     await rm(root, { recursive: true, force: true });
   }
-});
-
-
-
-test('Computer Use actions route through Sky instead of Swift CGEvent', async () => {
-  const { readFile } = await import('node:fs/promises');
-  const source = await readFile(path.join(repoRoot, 'tools', 'codex-app-server-mcp', 'server.py'), 'utf8');
-  const start = source.indexOf('    def computer_click(');
-  const end = source.indexOf('    def _window(', start);
-  const actions = source.slice(start, end);
-  assert.ok(start > 0 && end > start);
-  assert.match(source, /self\._active_app_id: str \| None = None/);
-  assert.match(actions, /sky\.click/);
-  assert.match(actions, /sky\.scroll/);
-  assert.match(actions, /sky\.paste/);
-  assert.match(actions, /sky\.press_key/);
-  assert.match(actions, /node_repl -> @oai\/sky/);
-  assert.doesNotMatch(actions, /self\._swift/);
 });

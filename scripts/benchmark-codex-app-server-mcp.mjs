@@ -61,7 +61,6 @@ async def endpoint(label,url):
                 ("git_status",{"repository":workspace},iterations),
                 ("search_text",{"path":workspace+"/src","query":"WorkspaceSetup","max_results":10},iterations),
                 ("run_command_batch",{"commands":["printf a","printf b","printf c"],"working_directory":workspace,"parallel":False},iterations),
-                ("computer_status",{},max(2,min(iterations,5))),
             ]
             results={}
             for name,args,count in cases:

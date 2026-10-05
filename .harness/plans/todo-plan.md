@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1166,
+  "plan_revision": 1168,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "computer-use-removal-0.6.90-20261005",
@@ -82,8 +82,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "computer-use-removal-0.6.90-20261005",
         "task_id": "T001",
@@ -114,7 +114,13 @@
         "bridge_status без поля computer_use; в instructions фраза про Sky заменена, первые 512 символов не изменены",
         "Тесты клавиш, computer_actions и маршрута через Sky удалены; тест каталога проверяет отсутствие 10 имён и наличие трёх оставшихся; тест на поддельном исполнителе проверяет argv снимка окна и отказ при неверном window_id; benchmark не вызывает computer_status"
       ],
-      "expected_commit_message": "feat: macOS: убрать 10 инструментов управления интерфейсом и код Sky; снимок и список окон — системными средствами"
+      "expected_commit_message": "feat: macOS: убрать 10 инструментов управления интерфейсом и код Sky; снимок и список окон — системными средствами",
+      "actual_files": [
+        "scripts/benchmark-codex-app-server-mcp.mjs",
+        "tests/codex-app-server-mcp.test.mjs",
+        "tools/codex-app-server-mcp/app_server_client.py",
+        "tools/codex-app-server-mcp/server.py"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -387,7 +393,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: computer-use-removal-0.6.90-20261005
 Current Task: нет
-Revision: 1166
+Revision: 1168
 
 ## Цель
 
@@ -402,8 +408,8 @@ Revision: 1166
 
 ## Микрозадачи
 
-- [TODO] T001: macOS: убрать 10 инструментов управления интерфейсом и код Sky; снимок и список окон — системными средствами — Ожидает
-  - Git Commit: [PENDING] feat: macOS: убрать 10 инструментов управления интерфейсом и код Sky; снимок и список окон — системными средствами
+- [DONE] T001: macOS: убрать 10 инструментов управления интерфейсом и код Sky; снимок и список окон — системными средствами — Завершено
+  - Git Commit: [DONE] feat: macOS: убрать 10 инструментов управления интерфейсом и код Sky; снимок и список окон — системными средствами
   - Reference: computer-use-removal-0.6.90-20261005 / T001 / implementation
   - Файлы: tools/codex-app-server-mcp/server.py, tools/codex-app-server-mcp/app_server_client.py, tests/codex-app-server-mcp.test.mjs, scripts/benchmark-codex-app-server-mcp.mjs, docs/planning/computer-use-removal.md
 - [TODO] T002: Windows: overlay убирает 9 инструментов управления интерфейсом и раздел Desktop — Ожидает

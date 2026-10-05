@@ -97,11 +97,6 @@ class LocalFacade:
         self.state_root = state_root
         self.trash_root = state_root / "trash"
         self.trash_root.mkdir(parents=True, exist_ok=True, mode=0o700)
-        self._windows: dict[int, dict[str, Any]] = {}
-        self._window_ids: dict[str, int] = {}
-        self._next_window_id = 1
-        self._window_lock = threading.Lock()
-        self._active_app_id: str | None = None
 
     def resolve(self, path: str, *, must_exist: bool = False, allow_sensitive: bool = False) -> Path:
         candidate = Path(path).expanduser()
@@ -549,334 +544,80 @@ class LocalFacade:
         repo = self.resolve(repository, must_exist=True, allow_sensitive=True)
         return self._command(["git", *args], cwd=repo, timeout_ms=60_000)
 
-    def _sky(self, javascript: str, title: str) -> dict[str, Any]:
-        code = 'globalThis.sky=globalThis.sky??(await import("@oai/sky")).sky; ' + javascript
-        result = self.client.mcp_tool_call("node_repl", "js", {"code": code, "title": title})
-        if result.get("isError"):
-            text = " ".join(str(item.get("text") or "") for item in result.get("content", []) if item.get("type") == "text")
-            raise ValueError(text or "Computer Use failed")
-        return result
-
-    def _sky_json(self, expression: str, title: str) -> Any:
-        result = self._sky(f"var __wp=({expression}); var __wpv=await __wp; nodeRepl.write(JSON.stringify(__wpv));", title)
-        texts = [item.get("text") for item in result.get("content", []) if item.get("type") == "text"]
-        if not texts:
-            return None
-        return json.loads(texts[-1])
-
-    def computer_status(self) -> dict[str, Any]:
-        apps = self._sky_json("sky.list_apps()", "Inspect Computer Use status")
-        running = [a for a in (apps or []) if a.get("isRunning")]
-        return {
-            "backend": "Codex App Server -> node_repl -> @oai/sky",
-            "target": "mac",
-            "available": True,
-            "apps": len(apps or []),
-            "running_apps": len(running),
-        }
+    # Observation only: this MCP lists windows and takes screenshots; it never drives the UI.
+    # CoreGraphics through JXA needs neither Xcode tools nor Automation permission.
+    # Options 1|16: on-screen windows only, no desktop elements; layer 0 is ordinary app windows.
+    _WINDOW_LIST_JXA = (
+        "ObjC.import('CoreGraphics');"
+        "JSON.stringify((ObjC.deepUnwrap(ObjC.castRefToObject($.CGWindowListCopyWindowInfo(1|16,0)))||[])"
+        ".filter(w=>w.kCGWindowLayer===0).map(w=>({window_id:w.kCGWindowNumber,"
+        "application:w.kCGWindowOwnerName||'',pid:w.kCGWindowOwnerPID,"
+        "title:w.kCGWindowName===undefined?null:w.kCGWindowName,bounds:w.kCGWindowBounds||null})))"
+    )
 
     def computer_list_windows(self, title_contains: str = "", max_results: int = 200) -> dict[str, Any]:
-        apps = self._sky_json("sky.list_apps()", "List local applications") or []
-        needle = title_contains.lower().strip()
-        rows = []
-        with self._window_lock:
-            for app in apps:
-                name = str(app.get("displayName") or app.get("id") or "")
-                if needle and needle not in name.lower():
-                    continue
-                app_id = str(app.get("id") or name)
-                window_id = self._window_ids.get(app_id)
-                if window_id is None:
-                    window_id = self._next_window_id
-                    self._next_window_id += 1
-                    self._window_ids[app_id] = window_id
-                record = {
-                    "window_id": window_id,
-                    "application": name,
-                    "app_id": app_id,
-                    "is_running": bool(app.get("isRunning")),
-                    "last_used_date": app.get("lastUsedDate"),
-                }
-                self._windows[window_id] = record
-                rows.append(record)
-                if len(rows) >= max(1, min(int(max_results), 500)):
-                    break
-        return {"windows": rows, "backend": "sky.list_apps", "note": "Sky exposes applications rather than Quartz top-level window IDs."}
-
-    def computer_activate_window(self, window_id: int, restore: bool = True) -> dict[str, Any]:
-        record = self._window(window_id)
-        result = self._command(["/usr/bin/open", "-b", record["app_id"]], write=True)
+        result = self._command(["/usr/bin/osascript", "-l", "JavaScript", "-e", self._WINDOW_LIST_JXA])
         if not result["ok"]:
-            raise ValueError(result["stderr"])
-        app_id = record["app_id"]
-        self._sky(
-            f"var s=await sky.get_app_state({{app:{json.dumps(app_id)},disableDiff:true}}); nodeRepl.write(JSON.stringify({{app:s.app}}));",
-            "Activate local application",
-        )
-        self._active_app_id = app_id
-        return {
-            "window_id": window_id,
-            "activated": True,
-            "app_id": app_id,
-            "restore": bool(restore),
-            "backend": "Codex App Server -> node_repl -> @oai/sky",
-        }
-
-    def computer_capture_window(self, window_id: int) -> Any:
-        record = self._window(window_id)
-        app = json.dumps(record["app_id"])
-        result = self._sky(
-            f"var fs=await import(\"node:fs/promises\"); var u=await import(\"node:url\"); var s=await sky.get_app_state({{app:{app}}}); if(s.screenshot) await nodeRepl.emitImage({{bytes:await fs.readFile(u.fileURLToPath(s.screenshot.url)),mimeType:\"image/png\"}}); nodeRepl.write(JSON.stringify({{app:s.app,text:s.text}}));",
-            "Capture local application",
-        )
-        output: list[Any] = []
-        for item in result.get("content", []):
-            if item.get("type") == "text":
-                try:
-                    output.append(json.loads(item.get("text") or "{}"))
-                except json.JSONDecodeError:
-                    output.append({"text": item.get("text")})
-            elif item.get("type") == "image" and item.get("data"):
-                output.append(Image(data=base64.b64decode(item["data"]), format="png"))
-        return output or [{"window_id": window_id, "captured": False}]
-
-    def computer_capture_screen(self, x: int | None = None, y: int | None = None, width: int | None = None, height: int | None = None, max_dimension: int = 1600, include_cursor: bool = True) -> Any:
-        path = self.state_root / f"screen-{uuid.uuid4().hex}.png"
-        argv = ["/usr/sbin/screencapture", "-x", "-t", "png"]
-        if include_cursor:
-            argv.append("-C")
-        if None not in (x, y, width, height):
-            argv += ["-R", f"{int(x)},{int(y)},{int(width)},{int(height)}"]
-        argv.append(str(path))
-        result = self._command(argv, write=True, timeout_ms=30_000)
-        if not result["ok"]:
-            raise ValueError(result["stderr"])
-        if max_dimension > 0:
-            self._command(["/usr/bin/sips", "-Z", str(max(100, min(int(max_dimension), 5000))), str(path)], write=True, timeout_ms=30_000)
+            raise ValueError(result["stderr"] or "Window list is unavailable")
         try:
-            png = self.client.fs_read_file(str(path))
+            windows = json.loads(result["stdout"])
+        except json.JSONDecodeError:
+            raise ValueError("Window list returned invalid data") from None
+        if not isinstance(windows, list):
+            raise ValueError("Window list returned invalid data")
+        windows = [w for w in windows if isinstance(w, dict) and isinstance(w.get("window_id"), int)]
+        needle = title_contains.lower().strip()
+        limit = max(1, min(int(max_results), 500))
+        rows = []
+        for window in windows:
+            title = window.get("title")
+            application = str(window.get("application") or "")
+            if needle and needle not in f"{title or ''} {application}".lower():
+                continue
+            bounds = window.get("bounds") if isinstance(window.get("bounds"), dict) else {}
+            rows.append({
+                "window_id": window["window_id"],
+                "title": title,
+                "application": application,
+                "pid": window.get("pid"),
+                "rect": {"x": bounds.get("X"), "y": bounds.get("Y"), "width": bounds.get("Width"), "height": bounds.get("Height")},
+            })
+            if len(rows) >= limit:
+                break
+        data: dict[str, Any] = {"windows": rows, "backend": "CoreGraphics window list"}
+        if windows and all(w.get("title") is None for w in windows):
+            # macOS hides window names from a process without Screen Recording permission.
+            data["note"] = "Window titles are hidden: grant Screen Recording permission to Project Web Pilot."
+        return data
+
+    def _screenshot(self, options: list[str], max_dimension: int) -> bytes:
+        path = self.state_root / f"screen-{uuid.uuid4().hex}.png"
+        try:
+            result = self._command(["/usr/sbin/screencapture", "-x", "-t", "png", *options, str(path)], write=True, timeout_ms=30_000)
+            if not result["ok"]:
+                raise ValueError(result["stderr"] or "Screen capture failed")
+            if max_dimension > 0:
+                self._command(["/usr/bin/sips", "-Z", str(max(100, min(int(max_dimension), 5000))), str(path)], write=True, timeout_ms=30_000)
+            return self.client.fs_read_file(str(path))
         finally:
             try:
                 path.unlink()
             except OSError:
                 pass
+
+    def computer_capture_screen(self, x: int | None = None, y: int | None = None, width: int | None = None, height: int | None = None, max_dimension: int = 1600, include_cursor: bool = True) -> Any:
+        options = ["-C"] if include_cursor else []
+        if None not in (x, y, width, height):
+            options += ["-R", f"{int(x)},{int(y)},{int(width)},{int(height)}"]
+        png = self._screenshot(options, max_dimension)
         return [{"source": "desktop", "bytes": len(png)}, Image(data=png, format="png")]
 
-    def _swift(self, source: str) -> dict[str, Any]:
-        result = self._command(["/usr/bin/swift", "-e", source], write=True, timeout_ms=30_000)
-        if not result["ok"]:
-            raise ValueError(result["stderr"])
-        return result
-
-    def computer_move_mouse(self, x: int, y: int, duration_ms: int = 0) -> dict[str, Any]:
-        source = f'import CoreGraphics\nCGWarpMouseCursorPosition(CGPoint(x:{float(x)},y:{float(y)}))\n'
-        self._swift(source)
-        return {"x": x, "y": y, "duration_ms": max(0, int(duration_ms)), "backend": "Codex command/exec -> CoreGraphics"}
-
-    def _active_app(self) -> str:
-        if not self._active_app_id:
-            raise ValueError("No active app; call computer_list_windows and computer_activate_window first")
-        return self._active_app_id
-
-    # Computer Use (sky) expects X11 key names; models naturally send the character itself.
-    _SYMBOL_KEYS = {
-        "*": "asterisk", "+": "plus", "-": "minus", "=": "equal", "/": "slash", "\\": "backslash",
-        ".": "period", ",": "comma", ";": "semicolon", ":": "colon", "'": "apostrophe", '"': "quotedbl",
-        "`": "grave", "~": "asciitilde", "!": "exclam", "@": "at", "#": "numbersign", "$": "dollar",
-        "%": "percent", "^": "asciicircum", "&": "ampersand", "(": "parenleft", ")": "parenright",
-        "[": "bracketleft", "]": "bracketright", "{": "braceleft", "}": "braceright", "<": "less",
-        ">": "greater", "?": "question", "_": "underscore", "|": "bar", " ": "space",
-    }
-    _ACTION_LIMIT = 50
-
-    @classmethod
-    def _sky_key(cls, key: str) -> str:
-        if key in cls._SYMBOL_KEYS:
-            return cls._SYMBOL_KEYS[key]
-        mapping = {
-            "enter": "Return", "return": "Return", "escape": "Escape", "esc": "Escape",
-            "tab": "Tab", "left": "Left", "right": "Right", "up": "Up", "down": "Down",
-            "home": "Home", "end": "End", "pageup": "Page_Up", "pagedown": "Page_Down",
-            "backspace": "BackSpace", "delete": "Delete", "space": "space",
-        }
-        return mapping.get(key.lower(), key)
-
-    def computer_click(self, x: int | None = None, y: int | None = None, button: str = "left", clicks: int = 1, interval_ms: int = 100) -> dict[str, Any]:
-        if x is None or y is None:
-            raise ValueError("x and y are required by the Codex executor compatibility facade")
-        button_map = {"left": "left", "right": "right", "middle": "middle"}
-        if button not in button_map:
-            raise ValueError("button must be left, right, or middle")
-        count = max(1, min(int(clicks), 5))
-        app = self._active_app()
-        self._sky(
-            f"await sky.click({{app:{json.dumps(app)},x:{int(x)},y:{int(y)},mouse_button:{json.dumps(button_map[button])},click_count:{count}}}); nodeRepl.write(JSON.stringify({{ok:true}}));",
-            "Click local application",
-        )
-        return {"clicked": True, "x": x, "y": y, "button": button, "clicks": count, "backend": "node_repl -> @oai/sky"}
-
-    def computer_scroll(self, delta: int, x: int | None = None, y: int | None = None, horizontal: bool = False) -> dict[str, Any]:
-        value = int(delta)
-        if value == 0:
-            raise ValueError("delta must be non-zero")
-        app = self._active_app()
-        direction = ("right" if value > 0 else "left") if horizontal else ("up" if value > 0 else "down")
-        pages = max(1, min(round(abs(value) / 120), 10))
-        coords = ""
-        if x is not None and y is not None:
-            coords = f",x:{int(x)},y:{int(y)}"
-        self._sky(
-            f"await sky.scroll({{app:{json.dumps(app)},direction:{json.dumps(direction)},pages:{pages}{coords}}}); nodeRepl.write(JSON.stringify({{ok:true}}));",
-            "Scroll local application",
-        )
-        return {"scrolled": True, "delta": value, "horizontal": horizontal, "x": x, "y": y, "backend": "node_repl -> @oai/sky"}
-
-    def computer_type_text(self, text: str, interval_ms: int = 0) -> dict[str, Any]:
-        if len(text) > 10000:
-            raise ValueError("text is limited to 10000 characters")
-        app = self._active_app()
-        self._sky(
-            f"await sky.paste({{app:{json.dumps(app)},text:{json.dumps(text)},format:\"text\"}}); nodeRepl.write(JSON.stringify({{ok:true}}));",
-            "Type in local application",
-        )
-        return {
-            "typed": True,
-            "characters": len(text),
-            "interval_ms": interval_ms,
-            "backend": "node_repl -> @oai/sky",
-            "mode": "paste",
-        }
-
-    def computer_key_press(self, key: str, presses: int = 1, interval_ms: int = 50) -> dict[str, Any]:
-        count = max(1, min(int(presses), 100))
-        app = self._active_app()
-        sky_key = self._sky_key(key)
-        self._sky(
-            f"for(let i=0;i<{count};i++) await sky.press_key({{app:{json.dumps(app)},key:{json.dumps(sky_key)}}}); nodeRepl.write(JSON.stringify({{ok:true}}));",
-            "Press key in local application",
-        )
-        return {"pressed": True, "key": key, "presses": count, "interval_ms": interval_ms, "backend": "node_repl -> @oai/sky"}
-
-    @classmethod
-    def _chord(cls, keys: list[str]) -> str:
-        if not isinstance(keys, list) or len(keys) < 2 or len(keys) > 8 or not all(isinstance(k, str) and k for k in keys):
-            raise ValueError("keys must contain 2-8 items")
-        modifier_map = {
-            "cmd": "super", "command": "super", "shift": "shift",
-            "option": "alt", "alt": "alt", "control": "ctrl", "ctrl": "ctrl",
-        }
-        return "+".join(modifier_map.get(key.lower(), cls._sky_key(key)) for key in keys)
-
-    def computer_hotkey(self, keys: list[str]) -> dict[str, Any]:
-        chord = self._chord(keys)
-        app = self._active_app()
-        self._sky(
-            f"await sky.press_key({{app:{json.dumps(app)},key:{json.dumps(chord)}}}); nodeRepl.write(JSON.stringify({{ok:true}}));",
-            "Press shortcut in local application",
-        )
-        return {"pressed": True, "keys": keys, "sky_key": chord, "backend": "node_repl -> @oai/sky"}
-
-    def _action_js(self, app: str, action: Any) -> tuple[str, dict[str, Any]]:
-        """JavaScript for one batch action plus its public summary; validates the input."""
-        if not isinstance(action, dict):
-            raise ValueError("each action must be an object with a type")
-        kind = action.get("type")
-        target = json.dumps(app)
-        if kind == "key":
-            key = action.get("key")
-            if not isinstance(key, str) or not key:
-                raise ValueError("key action requires key")
-            presses = max(1, min(int(action.get("presses", 1)), 100))
-            sky_key = self._sky_key(key)
-            return (f"for(let k=0;k<{presses};k++) await sky.press_key({{app:{target},key:{json.dumps(sky_key)}}});",
-                    {"type": "key", "key": key, "sky_key": sky_key, "presses": presses})
-        if kind == "hotkey":
-            chord = self._chord(action.get("keys"))
-            return (f"await sky.press_key({{app:{target},key:{json.dumps(chord)}}});", {"type": "hotkey", "sky_key": chord})
-        if kind == "text":
-            text = action.get("text")
-            if not isinstance(text, str) or not text or len(text) > 10000:
-                raise ValueError("text action requires text up to 10000 characters")
-            return (f"await sky.paste({{app:{target},text:{json.dumps(text)},format:\"text\"}});",
-                    {"type": "text", "characters": len(text), "mode": "paste"})
-        if kind == "click":
-            x, y = action.get("x"), action.get("y")
-            if not isinstance(x, int) or not isinstance(y, int):
-                raise ValueError("click action requires integer x and y")
-            button = action.get("button", "left")
-            if button not in ("left", "right", "middle"):
-                raise ValueError("button must be left, right, or middle")
-            clicks = max(1, min(int(action.get("clicks", 1)), 5))
-            return (f"await sky.click({{app:{target},x:{x},y:{y},mouse_button:{json.dumps(button)},click_count:{clicks}}});",
-                    {"type": "click", "x": x, "y": y, "button": button, "clicks": clicks})
-        if kind == "scroll":
-            value = int(action.get("delta", 0))
-            if value == 0:
-                raise ValueError("scroll action requires non-zero delta")
-            horizontal = bool(action.get("horizontal", False))
-            direction = ("right" if value > 0 else "left") if horizontal else ("up" if value > 0 else "down")
-            pages = max(1, min(round(abs(value) / 120), 10))
-            x, y = action.get("x"), action.get("y")
-            coords = f",x:{int(x)},y:{int(y)}" if x is not None and y is not None else ""
-            return (f"await sky.scroll({{app:{target},direction:{json.dumps(direction)},pages:{pages}{coords}}});",
-                    {"type": "scroll", "direction": direction, "pages": pages})
-        if kind == "wait":
-            ms = int(action.get("ms", 0))
-            if not 0 <= ms <= 5000:
-                raise ValueError("wait action ms must be 0-5000")
-            return (f"await new Promise(r=>setTimeout(r,{ms}));", {"type": "wait", "ms": ms})
-        raise ValueError("unknown action type; use key, hotkey, text, click, scroll or wait")
-
-    def computer_actions(self, actions: list[dict[str, Any]]) -> dict[str, Any]:
-        if not isinstance(actions, list) or not actions:
-            raise ValueError("actions must be a non-empty list")
-        if len(actions) > self._ACTION_LIMIT:
-            raise ValueError(f"actions is limited to {self._ACTION_LIMIT} items")
-        app = self._active_app()
-        built = [self._action_js(app, action) for action in actions]  # validate everything before acting
-        steps = ",".join(f"async()=>{{{code}}}" for code, _ in built)
-        result = self._sky(
-            "var steps=[" + steps + "]; var results=[]; var t0=Date.now();"
-            " for(let i=0;i<steps.length;i++){ var t=Date.now();"
-            " try{ await steps[i](); results.push({ok:true,ms:Date.now()-t}); }"
-            " catch(e){ results.push({ok:false,ms:Date.now()-t,error:String((e&&e.message)||e)}); break; } }"
-            " nodeRepl.write(JSON.stringify({results,total_ms:Date.now()-t0}));",
-            "Run actions in local application",
-        )
-        payload: dict[str, Any] = {}
-        for item in result.get("content", []):
-            if item.get("type") == "text":
-                try:
-                    payload = json.loads(item.get("text") or "{}")
-                    break
-                except json.JSONDecodeError:
-                    continue
-        outcomes = payload.get("results") if isinstance(payload.get("results"), list) else []
-        rows = [{**summary, **outcome} for (_, summary), outcome in zip(built, outcomes)]
-        failed = next((dict(row, index=i) for i, row in enumerate(rows) if not row.get("ok")), None)
-        return {
-            "completed": len(rows) == len(built) and failed is None,
-            "app_id": app,
-            "results": rows,
-            "skipped": len(built) - len(rows),
-            "failed": failed,
-            "total_ms": payload.get("total_ms"),
-            "backend": "node_repl -> @oai/sky (one call)",
-        }
-
-    def computer_release_inputs(self) -> dict[str, Any]:
-        return {
-            "released": True,
-            "backend": "node_repl -> @oai/sky",
-            "note": "Sky input actions are atomic and do not retain held key/button state.",
-        }
-
-    def _window(self, window_id: int) -> dict[str, Any]:
-        with self._window_lock:
-            record = self._windows.get(int(window_id))
-        if record is None:
-            raise ValueError("Unknown window_id; call computer_list_windows first")
-        return record
+    def computer_capture_window(self, window_id: int, max_dimension: int = 1600) -> Any:
+        if isinstance(window_id, bool) or not isinstance(window_id, int) or window_id <= 0:
+            raise ValueError("window_id must be a positive integer from computer_list_windows")
+        # -l captures that window even when another one covers it; -o leaves out the shadow.
+        png = self._screenshot(["-o", "-l", str(window_id)], max_dimension)
+        return [{"source": "window", "window_id": window_id, "bytes": len(png)}, Image(data=png, format="png")]
 
     def _protect_delete(self, target: Path) -> None:
         resolved = target.resolve(strict=False)
@@ -1006,7 +747,8 @@ def create_server(*, host: str, port: int, state_root: Path, codex_binary: str |
             "or the path shown in the parts. "
             "Local-computer tools only. Use ChatGPT native web/cloud tools for public information. "
             "This MCP uses Codex App Server as an executor and never launches a Codex model turn. "
-            "Computer Use is routed through the local Codex/node_repl/@oai/sky stack where applicable."
+            "No UI control: this MCP cannot move the mouse, press keys or switch windows. Observation only: "
+            "computer_list_windows, computer_capture_screen and computer_capture_window."
         ),
         host=host,
         port=port,
@@ -1024,12 +766,7 @@ def create_server(*, host: str, port: int, state_root: Path, codex_binary: str |
 
     @mcp.tool(annotations=READ_ONLY)
     def bridge_status(repository: str = "") -> dict[str, Any]:
-        result = facade.status(repository)
-        try:
-            result["computer_use"] = facade.computer_status()
-        except Exception as exc:
-            result["computer_use"] = {"available": False, "error": str(exc)}
-        return result
+        return facade.status(repository)
 
     # Text only: a structured copy would double what the client shows the model.
     @mcp.tool(annotations=READ_ONLY, structured_output=False)
@@ -1041,16 +778,9 @@ def create_server(*, host: str, port: int, state_root: Path, codex_binary: str |
         return facade.workflow_context(workspace, session_id, part, after)
 
     @mcp.tool(annotations=READ_ONLY)
-    def computer_status() -> dict[str, Any]:
-        return facade.computer_status()
-
-    @mcp.tool(annotations=READ_ONLY)
     def computer_list_windows(title_contains: str = "", max_results: int = 200) -> dict[str, Any]:
+        """List visible on-screen windows (read-only): window_id, title, application, pid and rect. Pass window_id to computer_capture_window."""
         return facade.computer_list_windows(title_contains, max_results)
-
-    @mcp.tool(annotations=ARBITRARY_COMMAND)
-    def computer_activate_window(window_id: int, restore: bool = True) -> dict[str, Any]:
-        return facade.computer_activate_window(window_id, restore)
 
     @mcp.tool(annotations=READ_ONLY)
     def computer_capture_screen(x: int | None = None, y: int | None = None, width: int | None = None, height: int | None = None, max_dimension: int = 1600, include_cursor: bool = True) -> Any:
@@ -1058,42 +788,8 @@ def create_server(*, host: str, port: int, state_root: Path, codex_binary: str |
 
     @mcp.tool(annotations=READ_ONLY)
     def computer_capture_window(window_id: int, max_dimension: int = 1600, include_cursor: bool = True) -> Any:
-        return facade.computer_capture_window(window_id)
-
-    @mcp.tool(annotations=ARBITRARY_COMMAND)
-    def computer_move_mouse(x: int, y: int, duration_ms: int = 0) -> dict[str, Any]:
-        return facade.computer_move_mouse(x,y,duration_ms)
-
-    @mcp.tool(annotations=ARBITRARY_COMMAND)
-    def computer_click(x: int | None = None, y: int | None = None, button: str = "left", clicks: int = 1, interval_ms: int = 100) -> dict[str, Any]:
-        return facade.computer_click(x,y,button,clicks,interval_ms)
-
-    @mcp.tool(annotations=ARBITRARY_COMMAND)
-    def computer_scroll(delta: int, x: int | None = None, y: int | None = None, horizontal: bool = False) -> dict[str, Any]:
-        return facade.computer_scroll(delta,x,y,horizontal)
-
-    @mcp.tool(annotations=ARBITRARY_COMMAND)
-    def computer_type_text(text: str, interval_ms: int = 0) -> dict[str, Any]:
-        return facade.computer_type_text(text,interval_ms)
-
-    @mcp.tool(annotations=ARBITRARY_COMMAND)
-    def computer_key_press(key: str, presses: int = 1, interval_ms: int = 50) -> dict[str, Any]:
-        """Press a key in the app activated with computer_activate_window. Accepts characters ('*', '=') or X11 key names ('asterisk', 'Return', 'Escape', 'F5')."""
-        return facade.computer_key_press(key,presses,interval_ms)
-
-    @mcp.tool(annotations=ARBITRARY_COMMAND)
-    def computer_hotkey(keys: list[str]) -> dict[str, Any]:
-        """Press a shortcut in the active app, e.g. ["cmd","n"]. Modifiers: cmd, shift, option/alt, control/ctrl."""
-        return facade.computer_hotkey(keys)
-
-    @mcp.tool(annotations=ARBITRARY_COMMAND)
-    def computer_actions(actions: list[dict[str, Any]]) -> dict[str, Any]:
-        """Run up to 50 UI actions in the active app with ONE call (activate it first with computer_activate_window); much faster than one tool call per action. Each action is an object: {"type":"key","key":"1","presses":1}, {"type":"hotkey","keys":["cmd","n"]}, {"type":"text","text":"..."} (pasted, Unicode-safe), {"type":"click","x":100,"y":200,"button":"left","clicks":1}, {"type":"scroll","delta":-120,"x":100,"y":200,"horizontal":false}, {"type":"wait","ms":300}. Keys accept characters or X11 names. Stops at the first failure and reports each executed action."""
-        return facade.computer_actions(actions)
-
-    @mcp.tool(annotations=ARBITRARY_COMMAND)
-    def computer_release_inputs() -> dict[str, Any]:
-        return facade.computer_release_inputs()
+        """Capture one window from computer_list_windows as a PNG, even when another window covers it. include_cursor is ignored for windows."""
+        return facade.computer_capture_window(window_id, max_dimension)
 
     @mcp.tool(annotations=READ_ONLY)
     def list_drives() -> dict[str, Any]:

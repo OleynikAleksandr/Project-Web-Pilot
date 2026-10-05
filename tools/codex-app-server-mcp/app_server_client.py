@@ -136,7 +136,6 @@ class AppServerClient:
         self._stderr_lock = threading.Lock()
         self._processes: dict[str, ProcessState] = {}
         self._processes_lock = threading.Lock()
-        self._thread_id: str | None = None
 
     @property
     def generation(self) -> int:
@@ -150,7 +149,6 @@ class AppServerClient:
             "generation": self._generation,
             "pid": process.pid if process and process.poll() is None else None,
             "running": bool(process and process.poll() is None),
-            "mcp_thread_id": self._thread_id,
         }
 
     def start(self) -> dict[str, Any]:
@@ -175,7 +173,6 @@ class AppServerClient:
                 raise AppServerError(f"Cannot start Codex App Server: {exc}") from exc
 
             self._generation += 1
-            self._thread_id = None
             self._reader = threading.Thread(target=self._read_stdout, daemon=True)
             self._stderr_reader = threading.Thread(target=self._read_stderr, daemon=True)
             self._reader.start()
@@ -401,55 +398,6 @@ class AppServerClient:
         state.done.wait(5.0)
         return self.process_status(process_id, include_output=False)
 
-    def ensure_mcp_thread(self, *, cwd: str | None = None) -> str:
-        self._ensure_running()
-        if self._thread_id:
-            return self._thread_id
-        result = self.request(
-            "thread/start",
-            {
-                "cwd": self._absolute(cwd) if cwd else self.cwd,
-                "ephemeral": True,
-                # The thread is never used for turn/start. Full local access is required so\n                # bundled Computer Use (node_repl -> @oai/sky) can inspect/control apps.\n                "sandbox": "danger-full-access",
-            },
-            timeout=max(self.request_timeout, 20.0),
-        )
-        thread_id = (result.get("thread") or {}).get("id")
-        if not isinstance(thread_id, str) or not thread_id:
-            raise AppServerError("thread/start returned no thread id")
-        self._thread_id = thread_id
-        return thread_id
-
-    def mcp_status_list(self) -> list[dict[str, Any]]:
-        thread_id = self.ensure_mcp_thread()
-        result = self.request(
-            "mcpServerStatus/list",
-            {"threadId": thread_id, "detail": "toolsAndAuthOnly"},
-            timeout=max(self.request_timeout, 30.0),
-        )
-        data = result.get("data")
-        if not isinstance(data, list):
-            raise AppServerError("mcpServerStatus/list returned invalid data")
-        return data
-
-    def mcp_tool_call(
-        self,
-        server: str,
-        tool: str,
-        arguments: dict[str, Any] | None = None,
-    ) -> dict[str, Any]:
-        thread_id = self.ensure_mcp_thread()
-        return self.request(
-            "mcpServer/tool/call",
-            {
-                "threadId": thread_id,
-                "server": server,
-                "tool": tool,
-                "arguments": arguments or {},
-            },
-            timeout=max(self.request_timeout, 60.0),
-        )
-
     def _ensure_running(self) -> None:
         process = self._process
         if process is None or process.poll() is not None:
@@ -619,7 +567,6 @@ class AppServerClient:
     def _terminate_process(self) -> None:
         process = self._process
         self._process = None
-        self._thread_id = None
         if process is None:
             return
         if process.poll() is None:
