@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { sha256File } from '../src/common.mjs';
+import { releaseAssetNames } from './release-all.mjs';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const REPOSITORY = 'OleynikAleksandr/Project-Web-Pilot';
@@ -62,15 +63,8 @@ async function githubApi(pathname) {
 }
 
 async function expectedAssets(delivery, version) {
-  const names = [
-    `Project-Web-Pilot-${version}-macOS-arm64.zip`,
-    `Project-Web-Pilot-${version}-Windows-x64.zip`,
-    'SHA256SUMS.txt',
-    'INSTALL.txt',
-    'release-manifest.json',
-  ];
   const result = [];
-  for (const name of names) {
+  for (const name of releaseAssetNames(version)) {
     const file = path.join(delivery, name);
     const stat = await fs.stat(file);
     assert.ok(stat.isFile(), 'Expected release asset file: ' + name);

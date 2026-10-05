@@ -10,6 +10,7 @@ import { sourceSnapshot, verifyPackagedSources } from './release-all.mjs';
 import { verifyWindowsPackage } from './verify-windows-package.mjs';
 import { createRequire } from 'node:module';
 import { verifyMacSignature } from './check-mac-signature.mjs';
+import { WINDOWS_RUNTIME_ARCHIVE, WINDOWS_RUNTIME_SHA256 } from '../src/windows-runtime.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const { version } = JSON.parse(await fs.readFile(path.join(root, 'package.json'), 'utf8'));
@@ -40,7 +41,11 @@ for (const app of [rootApp, appsApp]) {
 }
 assert.equal(Object.keys(sources).length, manifest.sourceFiles);
 const hashList = await fs.readFile(path.join(delivery, 'SHA256SUMS.txt'), 'utf8');
-assert.equal(hashList, manifest.artifacts.map(a => a.sha256 + '  ' + a.file).join('\n') + '\n');
+const runtimeArchive = manifest.windowsRuntimeArchive;
+assert.deepEqual({ file: runtimeArchive?.file, sha256: runtimeArchive?.sha256 }, { file: WINDOWS_RUNTIME_ARCHIVE, sha256: WINDOWS_RUNTIME_SHA256 });
+assert.equal((await fs.stat(path.join(delivery, runtimeArchive.file))).size, runtimeArchive.bytes);
+assert.equal(await sha256File(path.join(delivery, runtimeArchive.file)), WINDOWS_RUNTIME_SHA256);
+assert.equal(hashList, [...manifest.artifacts, runtimeArchive].map(a => a.sha256 + '  ' + a.file).join('\n') + '\n');
 assert.ok((await fs.readFile(path.join(delivery, 'INSTALL.txt'), 'utf8')).startsWith('Project Web Pilot ' + version + '\n'));
 assert.equal(manifest.artifacts.length, 2);
 assert.deepEqual(manifest.artifacts.map(a => a.platform), ['macOS arm64', 'Windows x64']);

@@ -9,10 +9,15 @@ import { isDeepStrictEqual } from 'node:util';
 import { extractFile, listPackage, uncache } from '@electron/asar';
 import { stageWorkflowKit, verifyWorkflowKitRuntime } from './stage-workflow-kit.mjs';
 import { verifyMacSignature } from './check-mac-signature.mjs';
+import { WINDOWS_RUNTIME_ARCHIVE, WINDOWS_RUNTIME_SHA256 } from '../src/windows-runtime.mjs';
 
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
 // Everything electron-packager may take from the project root; package.json --ignore allows exactly these.
 export const PACKAGED_ROOTS = new Set(['src', 'node_modules', 'package.json', 'LICENSE']);
+// Every file of a GitHub Release. The pinned Windows runtime ships next to the packages,
+// so a fresh clone can build the Windows package without a private folder.
+export const releaseAssetNames = version => [`Project-Web-Pilot-${version}-macOS-arm64.zip`, `Project-Web-Pilot-${version}-Windows-x64.zip`,
+  WINDOWS_RUNTIME_ARCHIVE, 'SHA256SUMS.txt', 'INSTALL.txt', 'release-manifest.json'];
 async function files(folder) {
   return (await fs.readdir(folder, { recursive: true, withFileTypes: true }))
     .filter(e => e.isFile() && e.name !== '.DS_Store')
@@ -134,17 +139,23 @@ export async function releaseAll({ root = fileURLToPath(new URL('..', import.met
       artifacts.push({ platform, file: path.basename(zip), bytes: (await fs.stat(zip)).size, sha256: await sha256File(zip),
         asarSha256: proof.asarSha256, codexExecutorFiles: codexExecutorSources.length });
     }
+    const runtimeSource = path.join(runtime, 'windows-payload', WINDOWS_RUNTIME_ARCHIVE);
+    if (await sha256File(runtimeSource) !== WINDOWS_RUNTIME_SHA256) throw new Error('Windows runtime archive differs from the pinned payload');
+    await fs.copyFile(runtimeSource, path.join(release, WINDOWS_RUNTIME_ARCHIVE));
+    const windowsRuntimeArchive = { file: WINDOWS_RUNTIME_ARCHIVE, bytes: (await fs.stat(runtimeSource)).size, sha256: WINDOWS_RUNTIME_SHA256 };
+    const shipped = [...artifacts, windowsRuntimeArchive];
     const evidence = { version, sourceCommit, sourceFiles: Object.keys(sources).length, packagedSourceMatches: true,
       workflowKit: { version: workflowKit.version, files: workflowKit.files, sha256: workflowKit.sha256 },
-      identity: { device: identity.dev, inode: identity.ino }, macCodeSignature, artifacts, nativeWindowsTested: false, cleanVmTested: false };
+      identity: { device: identity.dev, inode: identity.ino }, macCodeSignature, artifacts, windowsRuntimeArchive,
+      nativeWindowsTested: false, cleanVmTested: false };
     await fs.mkdir(delivery, { recursive: true });
-    for (const artifact of artifacts) {
+    for (const artifact of shipped) {
       const destination = path.join(delivery, artifact.file);
       await fs.copyFile(path.join(release, artifact.file), destination);
       if (await sha256File(destination) !== artifact.sha256) throw new Error('Delivery copy mismatch');
     }
-    const hashes = artifacts.map(a => `${a.sha256}  ${a.file}`).join('\n') + '\n';
-    const instructions = `Project Web Pilot ${version}\n\nmacOS arm64: постоянное приложение в корне проекта обновлено; ZIP предназначен для переноса.\nWindows x64: распакуйте всю папку ZIP на локальный диск Windows, затем запустите Project Web Pilot.exe. Мастер подготовит компоненты, туннель и покажет подключение Codex Local Windows MCP в ChatGPT. Для этой Windows используйте отдельный туннель.\n\nОба пакета собраны одной командой и сверены с исходниками. Подключение личного аккаунта и проверка файлов в Windows выполняются пользователем отдельно. Windows ARM64 использует эмуляцию x64; отдельной сборки ARM64 нет.\n`;
+    const hashes = shipped.map(a => `${a.sha256}  ${a.file}`).join('\n') + '\n';
+    const instructions = `Project Web Pilot ${version}\n\nmacOS arm64: постоянное приложение в корне проекта обновлено; ZIP предназначен для переноса.\nWindows x64: распакуйте всю папку ZIP на локальный диск Windows, затем запустите Project Web Pilot.exe. Мастер подготовит компоненты, туннель и покажет подключение Codex Local Windows MCP в ChatGPT. Для этой Windows используйте отдельный туннель.\n\nОба пакета собраны одной командой и сверены с исходниками. Подключение личного аккаунта и проверка файлов в Windows выполняются пользователем отдельно. Windows ARM64 использует эмуляцию x64; отдельной сборки ARM64 нет.\n\n${WINDOWS_RUNTIME_ARCHIVE} — закреплённый Windows runtime для сборки из исходников; для установки он не нужен, он уже находится внутри Windows-пакета.\n`;
     for (const dir of [release, delivery]) {
       await fs.writeFile(path.join(dir, 'SHA256SUMS.txt'), hashes);
       await fs.writeFile(path.join(dir, 'INSTALL.txt'), instructions);

@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1191,
+  "plan_revision": 1193,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-local-mac-removal-0.6.91-20261005",
@@ -145,8 +145,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "codex-local-mac-removal-0.6.91-20261005",
         "task_id": "T001",
@@ -158,7 +158,8 @@
         "scripts/release-all.mjs",
         "scripts/check-github-release.mjs",
         "tests/windows-runtime.test.mjs",
-        "tests/release-all.test.mjs"
+        "tests/release-all.test.mjs",
+        "scripts/check-installed-release.mjs"
       ],
       "documentation_paths": [
         "docs/planning/codex-local-mac-removal.md"
@@ -175,7 +176,15 @@
         "При пустом кеше ZIP скачивается из последнего релиза; неверный SHA-256 отклоняется; кеш переиспользуется",
         "Кандидат ../Codex Local Mac удалён"
       ],
-      "expected_commit_message": "feat: ZIP Windows-runtime: шестой файл релиза и загрузка с проверкой SHA-256"
+      "expected_commit_message": "feat: ZIP Windows-runtime: шестой файл релиза и загрузка с проверкой SHA-256",
+      "actual_files": [
+        "scripts/check-github-release.mjs",
+        "scripts/check-installed-release.mjs",
+        "scripts/prepare-windows-toolchain.mjs",
+        "scripts/release-all.mjs",
+        "tests/release-all.test.mjs",
+        "tests/windows-runtime.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -471,7 +480,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: codex-local-mac-removal-0.6.91-20261005
 Current Task: нет
-Revision: 1191
+Revision: 1193
 
 ## Цель
 
@@ -491,10 +500,10 @@ Revision: 1191
   - Git Commit: [DONE] feat: Сборка: в пакет попадает только приложение
   - Reference: codex-local-mac-removal-0.6.91-20261005 / T000 / implementation
   - Файлы: package.json, scripts/release-all.mjs, tests/release-all.test.mjs, .gitignore, docs/planning/codex-local-mac-removal.md
-- [TODO] T001: ZIP Windows-runtime: шестой файл релиза и загрузка с проверкой SHA-256 — Ожидает
-  - Git Commit: [PENDING] feat: ZIP Windows-runtime: шестой файл релиза и загрузка с проверкой SHA-256
+- [DONE] T001: ZIP Windows-runtime: шестой файл релиза и загрузка с проверкой SHA-256 — Завершено
+  - Git Commit: [DONE] feat: ZIP Windows-runtime: шестой файл релиза и загрузка с проверкой SHA-256
   - Reference: codex-local-mac-removal-0.6.91-20261005 / T001 / implementation
-  - Файлы: scripts/prepare-windows-toolchain.mjs, scripts/release-all.mjs, scripts/check-github-release.mjs, tests/windows-runtime.test.mjs, tests/release-all.test.mjs, docs/planning/codex-local-mac-removal.md
+  - Файлы: scripts/prepare-windows-toolchain.mjs, scripts/release-all.mjs, scripts/check-github-release.mjs, tests/windows-runtime.test.mjs, tests/release-all.test.mjs, scripts/check-installed-release.mjs, docs/planning/codex-local-mac-removal.md
 - [TODO] T002: Executor без Codex Local Mac: selector, проверка Codex, встроенный uv, диалог ввода туннеля — Ожидает
   - Git Commit: [PENDING] feat: Executor без Codex Local Mac: selector, проверка Codex, встроенный uv, диалог ввода туннеля
   - Reference: codex-local-mac-removal-0.6.91-20261005 / T002 / implementation

@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import { createPackage } from '@electron/asar';
-import { buildPlatforms, PACKAGED_ROOTS, sourceSnapshot, verifyPackagedSources } from '../scripts/release-all.mjs';
+import { buildPlatforms, PACKAGED_ROOTS, releaseAssetNames, sourceSnapshot, verifyPackagedSources } from '../scripts/release-all.mjs';
 
 async function fixture(t) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'pilot-paired-release-'));
@@ -103,4 +103,9 @@ test('packager ignore of both platforms lets through only the application roots'
       assert.equal(ignore.test(dropped), true, name + ' drops ' + dropped);
     for (const root of PACKAGED_ROOTS) assert.equal(ignore.test('/' + root), false, name + ' allows the verified root ' + root);
   }
+});
+
+test('a release has six files: both packages, the pinned Windows runtime and three records', () => {
+  assert.deepEqual(releaseAssetNames('1.2.3'), ['Project-Web-Pilot-1.2.3-macOS-arm64.zip', 'Project-Web-Pilot-1.2.3-Windows-x64.zip',
+    'Windows-Codex-Local-2026-09-10.zip', 'SHA256SUMS.txt', 'INSTALL.txt', 'release-manifest.json']);
 });

@@ -13,7 +13,8 @@ const execute = promisify(execFile);
 const windowsControl = fileURLToPath(new URL('../resources/runtime-control/windows-control.py', import.meta.url));
 
 import { BUNDLED_NODE_VERSION, bundledWindowsRuntimeFolder } from '../src/platform.mjs';
-import { extractionCommand, NODE_ARCHIVE, NODE_SHA256, windowsRuntimeSourceCandidates, windowsToolchainPaths } from '../scripts/prepare-windows-toolchain.mjs';
+import { ensureWindowsRuntimePayload, extractionCommand, NODE_ARCHIVE, NODE_SHA256, WINDOWS_RUNTIME_URL, windowsRuntimeSourceCandidates, windowsToolchainPaths } from '../scripts/prepare-windows-toolchain.mjs';
+import { createHash } from 'node:crypto';
 
 // A small bridge with the same shape as the pinned Windows-Codex-Local snapshot: every tool is one
 // "@mcp.tool(" block, the twelve computer_* tools follow bridge_status and list_drives comes after them.
@@ -307,7 +308,44 @@ test('Windows build preflight can resolve the private runtime payload without ha
   const candidates = windowsRuntimeSourceCandidates('/repo/Project Web Pilot', { WEB_PILOT_WINDOWS_RUNTIME_ARCHIVE: 'D:\\cache\\runtime.zip' });
   assert.equal(candidates[0], 'D:\\cache\\runtime.zip');
   assert.equal(candidates[1], path.join('/repo/Project Web Pilot', 'windows-app', 'resources', 'windows-payload', 'Windows-Codex-Local-2026-09-10.zip'));
-  assert.equal(candidates[2], path.resolve('/repo/Project Web Pilot', '..', 'Codex Local Mac', 'Windows-Codex-Local-2026-09-10.zip'));
+  assert.equal(candidates.length, 2, 'the build no longer looks into a neighbouring private workspace');
+});
+
+test('Windows runtime payload comes from the build cache, a local copy or the release asset and is always verified', async t => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'web-pilot-win-payload-'));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const cacheDir = path.join(root, 'cache'), cached = path.join(cacheDir, 'Windows-Codex-Local-2026-09-10.zip');
+  await fs.mkdir(cacheDir, { recursive: true });
+  const good = Buffer.from('pinned runtime fixture');
+  const expectedSha256 = createHash('sha256').update(good).digest('hex');
+  const offline = async () => { throw new Error('HTTP 404'); };
+  assert.equal(WINDOWS_RUNTIME_URL, 'https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/latest/download/Windows-Codex-Local-2026-09-10.zip');
+
+  // Empty cache and no local copy: the release asset is downloaded and verified.
+  const fetched = [];
+  let result = await ensureWindowsRuntimePayload(root, cacheDir, { environment: {}, expectedSha256,
+    fetchArchive: async (url, destination) => { fetched.push(url); await fs.writeFile(destination, good); } });
+  assert.deepEqual([result.file, result.downloaded, result.reused, fetched], [cached, true, false, [WINDOWS_RUNTIME_URL]]);
+
+  // A verified cache needs no network.
+  result = await ensureWindowsRuntimePayload(root, cacheDir, { environment: {}, expectedSha256, fetchArchive: offline });
+  assert.deepEqual([result.downloaded, result.reused], [false, true]);
+
+  // A local copy named by the environment is preferred to the download.
+  await fs.rm(cached);
+  const local = path.join(root, 'local.zip');
+  await fs.writeFile(local, good);
+  result = await ensureWindowsRuntimePayload(root, cacheDir, { environment: { WEB_PILOT_WINDOWS_RUNTIME_ARCHIVE: local }, expectedSha256, fetchArchive: offline });
+  assert.deepEqual([result.downloaded, result.reused, await sha256File(cached)], [false, false, expectedSha256]);
+
+  // A download with another digest is rejected and never stays in the cache; so does a damaged cache.
+  await fs.writeFile(cached, 'damaged cache');
+  await assert.rejects(ensureWindowsRuntimePayload(root, cacheDir, { environment: {}, expectedSha256,
+    fetchArchive: async (_url, destination) => fs.writeFile(destination, 'tampered') }), /Downloaded Windows Codex Local payload has SHA-256 [0-9a-f]{64}, expected/);
+  await assert.rejects(fs.access(cached));
+  await assert.rejects(ensureWindowsRuntimePayload(root, cacheDir, { environment: {}, expectedSha256, fetchArchive: offline }),
+    /download failed \(HTTP 404\)\. Put Windows-Codex-Local-2026-09-10\.zip at /);
+  await assert.rejects(fs.access(cached));
 });
 
 

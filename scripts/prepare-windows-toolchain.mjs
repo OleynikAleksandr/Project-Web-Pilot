@@ -16,11 +16,13 @@ export const NODE_SHA256 = '158f7685b44de51f6c0df1d153526cbcd3e1bc739a8dfc607721
 export const NODE_URL = `https://nodejs.org/dist/v${NODE_VERSION}/${NODE_ARCHIVE}`;
 export const NODE_FOLDER = `node-v${NODE_VERSION}-win-x64`;
 
+// The pinned runtime archive is published with every GitHub Release next to the packages.
+export const WINDOWS_RUNTIME_URL = `https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/latest/download/${WINDOWS_RUNTIME_ARCHIVE}`;
+
 export function windowsRuntimeSourceCandidates(root = ROOT, environment = process.env) {
   return [...new Set([
     environment.WEB_PILOT_WINDOWS_RUNTIME_ARCHIVE,
     path.join(root, 'windows-app', 'resources', 'windows-payload', WINDOWS_RUNTIME_ARCHIVE),
-    path.resolve(root, '..', 'Codex Local Mac', WINDOWS_RUNTIME_ARCHIVE),
   ].filter(Boolean))];
 }
 
@@ -37,20 +39,35 @@ export function windowsToolchainPaths(root = ROOT) {
   };
 }
 
-async function ensureWindowsRuntimePayload(root, cacheDir, environment = process.env) {
+// Order: verified build cache, a local copy named by the environment or the Windows build folder, then the release asset.
+// Whatever the source, the archive is used only when its SHA-256 equals the pinned one.
+export async function ensureWindowsRuntimePayload(root, cacheDir, { environment = process.env, fetchArchive = download,
+  expectedSha256 = WINDOWS_RUNTIME_SHA256 } = {}) {
   const destination = path.join(cacheDir, WINDOWS_RUNTIME_ARCHIVE);
   let digest = null;
   try { digest = await sha256File(destination); } catch {}
-  if (digest === WINDOWS_RUNTIME_SHA256) return { file: destination, sha256: digest, reused: true };
+  if (digest === expectedSha256) return { file: destination, sha256: digest, reused: true, downloaded: false };
   await fs.rm(destination, { force: true });
   for (const source of windowsRuntimeSourceCandidates(root, environment)) {
     try {
-      if (await sha256File(source) !== WINDOWS_RUNTIME_SHA256) continue;
+      if (await sha256File(source) !== expectedSha256) continue;
       await fs.copyFile(source, destination);
-      if (await sha256File(destination) === WINDOWS_RUNTIME_SHA256) return { file: destination, sha256: WINDOWS_RUNTIME_SHA256, reused: false };
+      if (await sha256File(destination) === expectedSha256) return { file: destination, sha256: expectedSha256, reused: false, downloaded: false };
     } catch {}
   }
-  throw new Error(`Windows Codex Local payload missing. Put ${WINDOWS_RUNTIME_ARCHIVE} at ${destination} or set WEB_PILOT_WINDOWS_RUNTIME_ARCHIVE.`);
+  const manual = `Put ${WINDOWS_RUNTIME_ARCHIVE} at ${destination} or set WEB_PILOT_WINDOWS_RUNTIME_ARCHIVE.`;
+  try { await fetchArchive(WINDOWS_RUNTIME_URL, destination); }
+  catch (error) {
+    await fs.rm(destination, { force: true });
+    throw new Error(`Windows Codex Local payload is missing and its download failed (${error.message}). ${manual}`);
+  }
+  let downloaded = null;
+  try { downloaded = await sha256File(destination); } catch {}
+  if (downloaded !== expectedSha256) {
+    await fs.rm(destination, { force: true });
+    throw new Error(`Downloaded Windows Codex Local payload has SHA-256 ${downloaded ?? 'missing'}, expected ${expectedSha256}. ${manual}`);
+  }
+  return { file: destination, sha256: expectedSha256, reused: false, downloaded: true };
 }
 
 async function download(url, destination) {
@@ -83,7 +100,7 @@ export function extractionCommand(platform, archive, destination) {
 export async function prepareWindowsToolchain({ root = ROOT, platform = process.platform, fetchArchive = download, run = execute } = {}) {
   const p = windowsToolchainPaths(root);
   await fs.mkdir(p.cacheDir, { recursive: true });
-  const runtime = await ensureWindowsRuntimePayload(root, p.cacheDir);
+  const runtime = await ensureWindowsRuntimePayload(root, p.cacheDir, { fetchArchive });
   let digest = null;
   try { digest = await sha256File(p.archive); } catch {}
   if (digest !== NODE_SHA256) {
