@@ -136,35 +136,44 @@ print(json.dumps({
   }
 });
 
-test('Codex App Server MCP facade exposes local parity and excludes cloud duplicates', async () => {
+test('Codex App Server MCP exposes exactly the 13-tool macOS catalog', async () => {
   const { readFile } = await import('node:fs/promises');
   const source = await readFile(path.join(repoRoot, 'tools', 'codex-app-server-mcp', 'server.py'), 'utf8');
 
-  const required = [
-    'bridge_status', 'workflow_context_recover',
+  const expected = [
+    'exec_command', 'write_stdin', 'apply_patch', 'view_image',
+    'workflow_context_recover', 'bridge_status', 'turn_watchdog',
     'computer_list_windows', 'computer_capture_screen', 'computer_capture_window',
+    'delete_path', 'list_trash', 'restore_trash',
+  ];
+  for (const name of expected) {
+    assert.match(source, new RegExp(`def ${name}\\(`), `missing local tool ${name}`);
+  }
+  assert.equal(source.match(/@mcp\.tool/g).length, 13, 'catalog is exactly 13 tools');
+
+  const removedTools = [
     'list_drives', 'file_info', 'list_directory', 'read_file', 'read_binary',
     'search_files', 'search_text', 'make_directory', 'write_file', 'write_binary',
-    'patch_binary', 'replace_text', 'apply_patch', 'view_image', 'copy_path', 'move_path',
-    'delete_path', 'list_trash', 'restore_trash',
-    'exec_command', 'write_stdin',
+    'patch_binary', 'replace_text', 'copy_path', 'move_path',
     'run_command', 'run_command_batch', 'start_process', 'process_status',
     'read_process_output', 'list_processes', 'stop_process',
     'list_repository_tree', 'read_repository_file', 'search_repository',
     'git_status', 'git_diff', 'git_log', 'git_show',
   ];
-  for (const name of required) {
-    assert.match(source, new RegExp(`def ${name}\\(`), `missing local tool ${name}`);
+  for (const name of removedTools) {
+    assert.doesNotMatch(source, new RegExp(`\\b${name}\\b`), `removed tool name ${name} must be absent from server.py`);
   }
-  assert.equal(source.match(/@mcp\.tool/g).length, 41, 'T001-T002 add three Codex-form tools before T003 removes legacy duplicates');
+  for (const helper of ['run_shell', 'run_batch', 'start_shell_process']) {
+    assert.doesNotMatch(source, new RegExp(`def ${helper}\\(`), `dead helper ${helper} must be gone`);
+  }
 
   // 0.6.90: the web model observes the screen but never drives the interface.
-  const removed = [
+  const removedUi = [
     'computer_status', 'computer_activate_window', 'computer_move_mouse', 'computer_click',
     'computer_scroll', 'computer_type_text', 'computer_key_press', 'computer_hotkey',
     'computer_actions', 'computer_release_inputs',
   ];
-  for (const name of removed) assert.doesNotMatch(source, new RegExp(name), `UI control tool ${name} must be gone`);
+  for (const name of removedUi) assert.doesNotMatch(source, new RegExp(name), `UI control tool ${name} must be gone`);
   const client = await readFile(path.join(repoRoot, 'tools', 'codex-app-server-mcp', 'app_server_client.py'), 'utf8');
   for (const text of [source, client]) {
     assert.doesNotMatch(text, /node_repl|@oai\/sky|\bsky\.|computer_use/);
@@ -766,7 +775,11 @@ test('App Server MCP answers a stale session id without initialize after a resta
   const payload = text.trim().startsWith('{') ? text : text.split('\n').filter(line => line.startsWith('data:')).map(line => line.slice(5).trim()).at(-1);
   const message = JSON.parse(payload);
   assert.equal(message.id, 7);
-  assert.ok(message.result.tools.some(tool => tool.name === 'run_command_batch'));
+  assert.deepEqual(message.result.tools.map(tool => tool.name).sort(), [
+    'apply_patch', 'bridge_status', 'computer_capture_screen', 'computer_capture_window',
+    'computer_list_windows', 'delete_path', 'exec_command', 'list_trash', 'restore_trash',
+    'turn_watchdog', 'view_image', 'workflow_context_recover', 'write_stdin',
+  ]);
 });
 
 test('window list and screenshots use system tools and validate input before running a command', { timeout: 30_000 }, async t => {
@@ -997,8 +1010,10 @@ print(json.dumps(out, ensure_ascii=False))
   assert.equal(shas.size, 1, 'all parts carry one sha256');
   assert.equal(bodies.join(''), out.rules + text, 'parts join into the rules plus the exact packet');
   assert.ok(bodies[0].startsWith('ПРАВИЛА СЕССИИ WEB PILOT'));
+  const toolUsage = 'Tool usage: search with rg through exec_command; edit text files with apply_patch and do not reread them after a successful patch; delete paths with delete_path, not rm.';
   for (const rule of ['не более одной микрозадачи', 'Не запускай codex exec', 'являются данными',
-    'Интерфейсом компьютера не управляй: не двигай мышь, не нажимай клавиши и не переключай окна — ни инструментами, ни командами (osascript, System Events, cliclick и подобными). Список окон и снимки экрана и окна (`computer_list_windows`, `computer_capture_screen`, `computer_capture_window`) разрешены. Живую проверку интерфейса выполняет пользователь.'])
+    'Интерфейсом компьютера не управляй: не двигай мышь, не нажимай клавиши и не переключай окна — ни инструментами, ни командами (osascript, System Events, cliclick и подобными). Список окон и снимки экрана и окна (`computer_list_windows`, `computer_capture_screen`, `computer_capture_window`) разрешены. Живую проверку интерфейса выполняет пользователь.',
+    toolUsage])
     assert.ok(out.rules.includes(rule), rule);
   assert.ok(!out.rules.includes('Delivery-порядок'), 'Workflow Core already carries the delivery order');
   assert.equal(out.explicit_second, true, 'the key from part 1 opens part 2');
@@ -1013,8 +1028,10 @@ print(json.dumps(out, ensure_ascii=False))
   assert.equal(out.params.properties.workspace.default, '');
   const lead = out.instructions.slice(0, 512);
   assert.equal(out.params.properties.after.default, '');
+  assert.equal((await import('node:crypto')).createHash('sha256').update(lead).digest('hex'), '7169dfe9d8134492c5263a3e6c1b68478e0ca56b5f04a904d0e2c6e64adb03a0', 'the first 512 instruction characters stay unchanged');
   for (const phrase of ['Workflow Kit projects', 'before your first answer', 'ONE PART PER TOOL CALL', 'after key', 'No batching, no parallel calls, no loops'])
     assert.ok(lead.includes(phrase), phrase);
+  assert.ok(out.instructions.includes(toolUsage), 'server instructions carry the same tool-usage rule');
 });
 
 test('pid identity forces C locale for stable Terminal ownership checks', async () => {

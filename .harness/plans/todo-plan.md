@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1219,
+  "plan_revision": 1221,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "codex-native-tools-0.6.92-20261005",
@@ -157,8 +157,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "codex-native-tools-0.6.92-20261005",
         "task_id": "T003",
@@ -187,7 +187,12 @@
         "Первые 512 символов instructions прежние; после них — подсказки про rg, apply_patch и delete_path; session-rules.md содержит ту же строку",
         "Правила первого сообщения для Windows не изменены"
       ],
-      "expected_commit_message": "feat: Каталог из 13 инструментов: удалить самодельные, подсказки и правило сессии"
+      "expected_commit_message": "feat: Каталог из 13 инструментов: удалить самодельные, подсказки и правило сессии",
+      "actual_files": [
+        "tests/codex-app-server-mcp.test.mjs",
+        "tools/codex-app-server-mcp/server.py",
+        "tools/codex-app-server-mcp/session-rules.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -397,7 +402,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: codex-native-tools-0.6.92-20261005
 Current Task: нет
-Revision: 1219
+Revision: 1221
 
 ## Цель
 
@@ -421,8 +426,8 @@ Revision: 1219
   - Git Commit: [DONE] feat: Родной apply_patch и view_image
   - Reference: codex-native-tools-0.6.92-20261005 / T002 / implementation
   - Файлы: tools/codex-app-server-mcp/server.py, tests/codex-app-server-mcp.test.mjs, tools/codex-app-server-mcp/app_server_client.py, docs/planning/codex-native-tools-macos.md
-- [TODO] T003: Каталог из 13 инструментов: удалить самодельные, подсказки и правило сессии — Ожидает
-  - Git Commit: [PENDING] feat: Каталог из 13 инструментов: удалить самодельные, подсказки и правило сессии
+- [DONE] T003: Каталог из 13 инструментов: удалить самодельные, подсказки и правило сессии — Завершено
+  - Git Commit: [DONE] feat: Каталог из 13 инструментов: удалить самодельные, подсказки и правило сессии
   - Reference: codex-native-tools-0.6.92-20261005 / T003 / implementation
   - Файлы: tools/codex-app-server-mcp/server.py, tests/codex-app-server-mcp.test.mjs, docs/planning/codex-native-tools-macos.md, tools/codex-app-server-mcp/session-rules.md
 - [TODO] T004: Сверка определений с версией Codex — Ожидает

@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-import base64
 import hashlib
 import json
 import os
@@ -24,9 +23,6 @@ from app_server_client import AppServerClient
 READ_ONLY = ToolAnnotations(
     readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
 )
-LOCAL_WRITE = ToolAnnotations(
-    readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False
-)
 LOCAL_DESTRUCTIVE = ToolAnnotations(
     readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=False
 )
@@ -37,12 +33,8 @@ LOCAL_NOTIFICATION = ToolAnnotations(
     readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False
 )
 
-MAX_TEXT_BYTES = 10_000_000
-MAX_BINARY_READ = 512_000
-MAX_BINARY_WRITE = 10_000_000
 MAX_VIEW_IMAGE_BYTES = 20_000_000
 MAX_PATCH_BYTES = 1_000_000
-MAX_BATCH = 16
 MAX_OUTPUT = 120_000
 # ChatGPT shows a model roughly 10 000 tokens of one tool result; a text-only part of 28 000 bytes
 # is about 7 000 tokens of Russian text.
@@ -65,12 +57,6 @@ SENSITIVE_FRAGMENTS = [
     ("codexlocalmac", "private"),
     ("webpilotcodexexecutor", "private"),
 ]
-SEARCH_EXCLUDES = [
-    "!**/.git/**", "!**/.ssh/**", "!**/.gnupg/**", "!**/node_modules/**",
-    "!**/.venv/**", "!**/venv/**", "!**/.env", "!**/.env.*",
-    "!**/credentials.json", "!**/*.pem", "!**/*.key", "!**/*.pfx", "!**/*.p12",
-]
-
 
 def clamp(text: str, limit: int = MAX_OUTPUT) -> str:
     return text if len(text) <= limit else text[:limit] + f"\n\n[TRUNCATED: {len(text)-limit} chars omitted]"
@@ -204,231 +190,18 @@ class LocalFacade:
         result = self.workflow_recover(workspace, session_id)
         return context_part(result, part, after) if part else result
 
-    def file_info(self, path: str) -> dict[str, Any]:
-        target = self.resolve(path, must_exist=True)
-        stat = target.stat()
-        result: dict[str, Any] = {
-            "path": str(target),
-            "exists": True,
-            "is_file": target.is_file(),
-            "is_directory": target.is_dir(),
-            "size_bytes": stat.st_size,
-            "modified_at": stat.st_mtime,
-        }
-        if target.is_file() and stat.st_size <= MAX_TEXT_BYTES:
-            result["sha256"] = sha256_bytes(self.client.fs_read_file(str(target)))
-        return result
 
-    def list_directory(self, path: str = "", max_depth: int = 1, max_entries: int = 1000) -> dict[str, Any]:
-        root = self.resolve(path or self.client.cwd, must_exist=True, allow_sensitive=True)
-        if not root.is_dir():
-            raise ValueError("Path is not a directory")
-        depth_limit = max(0, min(int(max_depth), 8))
-        limit = max(1, min(int(max_entries), 5000))
-        entries: list[dict[str, Any]] = []
 
-        def visit(current: Path, depth: int) -> None:
-            if len(entries) >= limit:
-                return
-            result = self.client.fs_read_directory(str(current))
-            for item in result.get("entries", []):
-                name = item.get("fileName")
-                if not isinstance(name, str):
-                    continue
-                child = current / name
-                if is_sensitive(child):
-                    continue
-                record = {
-                    "path": str(child),
-                    "name": name,
-                    "is_file": bool(item.get("isFile")),
-                    "is_directory": bool(item.get("isDirectory")),
-                }
-                entries.append(record)
-                if len(entries) >= limit:
-                    return
-                if record["is_directory"] and depth < depth_limit:
-                    visit(child, depth + 1)
 
-        visit(root, 0)
-        return {"root": str(root), "entries": entries, "truncated": len(entries) >= limit}
 
-    def read_file(self, path: str, start_line: int = 1, end_line: int = 500, include_line_numbers: bool = True) -> dict[str, Any]:
-        target = self.resolve(path, must_exist=True)
-        data = self.client.fs_read_file(str(target))
-        if len(data) > MAX_TEXT_BYTES:
-            raise ValueError(f"File is larger than {MAX_TEXT_BYTES} bytes")
-        text = data.decode("utf-8", errors="replace")
-        lines = text.splitlines()
-        start = max(1, int(start_line))
-        end = max(start, min(int(end_line), start + 4999))
-        selected = lines[start-1:end]
-        content = "\n".join(
-            f"{number}: {line}" for number, line in enumerate(selected, start=start)
-        ) if include_line_numbers else "\n".join(selected)
-        return {
-            "path": str(target),
-            "start_line": start,
-            "end_line": min(end, len(lines)),
-            "total_lines": len(lines),
-            "sha256": sha256_bytes(data),
-            "content": clamp(content),
-        }
 
-    def read_binary(self, path: str, offset: int = 0, length: int = 65536) -> dict[str, Any]:
-        target = self.resolve(path, must_exist=True)
-        data = self.client.fs_read_file(str(target))
-        start = max(0, int(offset))
-        if start > len(data):
-            raise ValueError("offset is beyond end of file")
-        count = max(1, min(int(length), MAX_BINARY_READ))
-        chunk = data[start:start+count]
-        return {
-            "path": str(target),
-            "offset": start,
-            "bytes_read": len(chunk),
-            "next_offset": start + len(chunk),
-            "total_size_bytes": len(data),
-            "end_of_file": start + len(chunk) >= len(data),
-            "sha256": sha256_bytes(data),
-            "data_base64": base64.b64encode(chunk).decode("ascii"),
-            "hex_preview": chunk[:256].hex(" "),
-        }
 
-    def search_files(self, path: str = "", pattern: str = "*", max_results: int = 1000, include_hidden: bool = True) -> dict[str, Any]:
-        root = self.resolve(path or self.client.cwd, must_exist=True, allow_sensitive=True)
-        argv = ["rg", "--files"]
-        if include_hidden:
-            argv.append("--hidden")
-        for rule in SEARCH_EXCLUDES:
-            argv += ["--glob", rule]
-        if pattern and pattern != "*":
-            argv += ["--glob", pattern]
-        argv.append(str(root))
-        result = self._command(argv, cwd=self.client.cwd, timeout_ms=30_000)
-        lines = [line for line in result["stdout"].splitlines() if line]
-        limit = max(1, min(int(max_results), 10_000))
-        return {**result, "stdout": "", "matches": lines[:limit], "truncated": len(lines) > limit}
 
-    def search_text(self, query: str, path: str = "", fixed: bool = True, glob: str = "", max_results: int = 500) -> dict[str, Any]:
-        if not query:
-            raise ValueError("Query is empty")
-        root = self.resolve(path or self.client.cwd, must_exist=True, allow_sensitive=True)
-        argv = ["rg", "--line-number", "--column", "--no-heading", "--hidden"]
-        for rule in SEARCH_EXCLUDES:
-            argv += ["--glob", rule]
-        if glob:
-            argv += ["--glob", glob]
-        if fixed:
-            argv.append("--fixed-strings")
-        argv += ["--", query, str(root)]
-        result = self._command(argv, cwd=self.client.cwd, timeout_ms=30_000)
-        if result["exit_code"] not in (0, 1):
-            return {**result, "matches": [], "truncated": False}
-        lines = [line for line in result["stdout"].splitlines() if line]
-        limit = max(1, min(int(max_results), 5000))
-        return {**result, "ok": True, "stdout": "", "matches": lines[:limit], "truncated": len(lines) > limit}
 
-    def write_file(self, path: str, content: str, overwrite: bool = False, expected_sha256: str = "") -> dict[str, Any]:
-        target = self.resolve(path)
-        existed = target.exists()
-        if existed and not overwrite:
-            raise ValueError("File already exists; set overwrite=true")
-        if existed and expected_sha256:
-            current = self.client.fs_read_file(str(target))
-            if sha256_bytes(current) != expected_sha256.lower():
-                raise ValueError("expected_sha256 does not match")
-        data = content.encode("utf-8")
-        target.parent.mkdir(parents=True, exist_ok=True)
-        self.client.fs_write_file(str(target), data)
-        return {"path": str(target), "created": not existed, "overwritten": existed, "size_bytes": len(data), "sha256": sha256_bytes(data)}
 
-    def write_binary(self, path: str, data_base64: str, overwrite: bool = False, expected_sha256: str = "") -> dict[str, Any]:
-        data = base64.b64decode("".join(data_base64.split()), validate=True)
-        if len(data) > MAX_BINARY_WRITE:
-            raise ValueError("binary payload too large")
-        target = self.resolve(path)
-        existed = target.exists()
-        if existed and not overwrite:
-            raise ValueError("File already exists; set overwrite=true")
-        if existed and expected_sha256 and sha256_bytes(self.client.fs_read_file(str(target))) != expected_sha256.lower():
-            raise ValueError("expected_sha256 does not match")
-        target.parent.mkdir(parents=True, exist_ok=True)
-        self.client.fs_write_file(str(target), data)
-        return {"path": str(target), "created": not existed, "overwritten": existed, "size_bytes": len(data), "sha256": sha256_bytes(data)}
 
-    def replace_text(self, path: str, old_text: str, new_text: str, expected_replacements: int = 1, expected_sha256: str = "") -> dict[str, Any]:
-        if not old_text:
-            raise ValueError("old_text cannot be empty")
-        target = self.resolve(path, must_exist=True)
-        data = self.client.fs_read_file(str(target))
-        if expected_sha256 and sha256_bytes(data) != expected_sha256.lower():
-            raise ValueError("expected_sha256 does not match")
-        text = data.decode("utf-8")
-        count = text.count(old_text)
-        expected = max(1, int(expected_replacements))
-        if count != expected:
-            raise ValueError(f"Expected {expected} replacements, found {count}")
-        updated = text.replace(old_text, new_text).encode("utf-8")
-        self.client.fs_write_file(str(target), updated)
-        return {"path": str(target), "replacements": count, "size_bytes": len(updated), "sha256": sha256_bytes(updated)}
 
-    def patch_binary(self, path: str, offset: int, data_base64: str, allow_extend: bool = False, expected_sha256: str = "") -> dict[str, Any]:
-        target = self.resolve(path, must_exist=True)
-        original = bytearray(self.client.fs_read_file(str(target)))
-        if expected_sha256 and sha256_bytes(original) != expected_sha256.lower():
-            raise ValueError("expected_sha256 does not match")
-        patch = base64.b64decode("".join(data_base64.split()), validate=True)
-        start = max(0, int(offset))
-        if start > len(original) and not allow_extend:
-            raise ValueError("offset beyond end of file")
-        if start + len(patch) > len(original) and not allow_extend:
-            raise ValueError("patch extends beyond end of file")
-        if start > len(original):
-            original.extend(b"\0" * (start - len(original)))
-        if start + len(patch) > len(original):
-            original.extend(b"\0" * (start + len(patch) - len(original)))
-        original[start:start+len(patch)] = patch
-        self.client.fs_write_file(str(target), bytes(original))
-        return {"path": str(target), "offset": start, "bytes_written": len(patch), "size_bytes": len(original), "sha256": sha256_bytes(original)}
 
-    def make_directory(self, path: str, parents: bool = True) -> dict[str, Any]:
-        target = self.resolve(path)
-        argv = ["/bin/mkdir"]
-        if parents:
-            argv.append("-p")
-        argv.append(str(target))
-        result = self._command(argv, write=True)
-        if not result["ok"]:
-            raise ValueError(result["stderr"])
-        return {"path": str(target), "created": True}
-
-    def copy_path(self, source: str, destination: str, overwrite: bool = False) -> dict[str, Any]:
-        src = self.resolve(source, must_exist=True)
-        dst = self.resolve(destination)
-        if dst.exists() and not overwrite:
-            raise ValueError("Destination exists; set overwrite=true")
-        if dst.exists():
-            self._command(["/bin/rm", "-rf", str(dst)], write=True)
-        dst.parent.mkdir(parents=True, exist_ok=True)
-        result = self._command(["/bin/cp", "-R", str(src), str(dst)], write=True, timeout_ms=120_000)
-        if not result["ok"]:
-            raise ValueError(result["stderr"])
-        return {"source": str(src), "destination": str(dst), "copied": True}
-
-    def move_path(self, source: str, destination: str, overwrite: bool = False) -> dict[str, Any]:
-        src = self.resolve(source, must_exist=True)
-        dst = self.resolve(destination)
-        self._protect_delete(src)
-        if dst.exists() and not overwrite:
-            raise ValueError("Destination exists; set overwrite=true")
-        if dst.exists():
-            self._command(["/bin/rm", "-rf", str(dst)], write=True)
-        dst.parent.mkdir(parents=True, exist_ok=True)
-        result = self._command(["/bin/mv", str(src), str(dst)], write=True, timeout_ms=120_000)
-        if not result["ok"]:
-            raise ValueError(result["stderr"])
-        return {"source": str(src), "destination": str(dst), "moved": True}
 
     def delete_path(self, path: str) -> dict[str, Any]:
         target = self.resolve(path, must_exist=True)
@@ -511,7 +284,10 @@ class LocalFacade:
         if result.get("running"):
             result = self.client.read_command_output(process_id, cursor=0, wait_ms=60_000)
         if result.get("running"):
-            self.client.stop_process(process_id)
+            try:
+                self.client.request("command/exec/terminate", {"processId": process_id}, timeout=10.0)
+            except Exception:
+                pass
             raise ValueError("Codex apply_patch did not finish within 120 seconds")
         if result.get("error"):
             raise self._native_apply_patch_error(str(result["error"]))
@@ -685,8 +461,8 @@ class LocalFacade:
             cursor = self._command_sessions.get(session_id)
         if cursor is None:
             raise ValueError(f"Unknown or finished command session: {session_id}")
-        status = self.client.process_status(session_id, include_output=False)
         if chars:
+            status = self.client.read_command_output(session_id, cursor=cursor, wait_ms=0)
             if not status.get("running"):
                 with self._command_sessions_lock:
                     self._command_sessions.pop(session_id, None)
@@ -704,62 +480,9 @@ class LocalFacade:
                 self._command_sessions.pop(session_id, None)
         return self._format_command_result(result, token_limit)
 
-    def run_shell(self, command: str, working_directory: str = "", shell: str = "zsh", timeout: int = 30) -> dict[str, Any]:
-        if shell not in {"zsh", "bash"}:
-            raise ValueError("shell must be zsh or bash")
-        cwd = self.resolve(working_directory or self.client.cwd, must_exist=True, allow_sensitive=True)
-        result = self.client.command_exec(
-            [f"/bin/{shell}", "-c", command],
-            cwd=str(cwd),
-            timeout_ms=max(1, min(int(timeout), 120)) * 1000,
-            output_bytes_cap=120_000,
-            sandbox_policy={"type": "dangerFullAccess"},
-        )
-        return {
-            "ok": result.get("exitCode") == 0,
-            "exit_code": result.get("exitCode"),
-            "stdout": clamp(str(result.get("stdout") or "")),
-            "stderr": clamp(str(result.get("stderr") or "")),
-        }
 
-    async def run_batch(self, commands: list[str], working_directory: str = "", shell: str = "zsh", timeout: int = 30, parallel: bool = False, stop_on_error: bool = True) -> dict[str, Any]:
-        if not commands or len(commands) > MAX_BATCH:
-            raise ValueError(f"commands must contain 1-{MAX_BATCH} items")
-        async def one(index: int, command: str) -> dict[str, Any]:
-            started = time.perf_counter()
-            result = await asyncio.to_thread(self.run_shell, command, working_directory, shell, timeout)
-            return {"index": index, "duration_ms": int((time.perf_counter()-started)*1000), **result}
-        if parallel:
-            results = list(await asyncio.gather(*(one(i, cmd) for i, cmd in enumerate(commands))))
-        else:
-            results = []
-            for i, cmd in enumerate(commands):
-                item = await one(i, cmd)
-                results.append(item)
-                if stop_on_error and not item["ok"]:
-                    break
-        return {
-            "ok": len(results) == len(commands) and all(x["ok"] for x in results),
-            "requested": len(commands), "completed": len(results),
-            "succeeded": sum(1 for x in results if x["ok"]),
-            "failed": sum(1 for x in results if not x["ok"]),
-            "stopped_early": len(results) < len(commands),
-            "parallel": parallel, "results": results,
-        }
 
-    def start_shell_process(self, command: str, working_directory: str = "", shell: str = "zsh") -> dict[str, Any]:
-        if shell not in {"zsh", "bash"}:
-            raise ValueError("shell must be zsh or bash")
-        cwd = self.resolve(working_directory or self.client.cwd, must_exist=True, allow_sensitive=True)
-        return self.client.start_command(
-            [f"/bin/{shell}", "-c", command],
-            cwd=str(cwd),
-            sandbox_policy={"type": "dangerFullAccess"},
-        )
 
-    def git(self, repository: str, args: list[str]) -> dict[str, Any]:
-        repo = self.resolve(repository, must_exist=True, allow_sensitive=True)
-        return self._command(["git", *args], cwd=repo, timeout_ms=60_000)
 
     # Observation only: this MCP lists windows and takes screenshots; it never drives the UI.
     # CoreGraphics through JXA needs neither Xcode tools nor Automation permission.
@@ -965,7 +688,9 @@ def create_server(*, host: str, port: int, state_root: Path, codex_binary: str |
             "Local-computer tools only. Use ChatGPT native web/cloud tools for public information. "
             "This MCP uses Codex App Server as an executor and never launches a Codex model turn. "
             "No UI control: this MCP cannot move the mouse, press keys or switch windows. Observation only: "
-            "computer_list_windows, computer_capture_screen and computer_capture_window."
+            "computer_list_windows, computer_capture_screen and computer_capture_window. "
+            "Tool usage: search with rg through exec_command; edit text files with apply_patch and do not reread them "
+            "after a successful patch; delete paths with delete_path, not rm."
         ),
         host=host,
         port=port,
@@ -1008,58 +733,17 @@ def create_server(*, host: str, port: int, state_root: Path, codex_binary: str |
         """Capture one window from computer_list_windows as a PNG, even when another window covers it. include_cursor is ignored for windows."""
         return facade.computer_capture_window(window_id, max_dimension)
 
-    @mcp.tool(annotations=READ_ONLY)
-    def list_drives() -> dict[str, Any]:
-        usage = shutil.disk_usage("/")
-        roots = [{"path": "/", "total": usage.total, "used": usage.used, "free": usage.free}]
-        volumes = Path("/Volumes")
-        if volumes.exists():
-            for volume in volumes.iterdir():
-                try:
-                    if volume.is_mount():
-                        u = shutil.disk_usage(volume)
-                        roots.append({"path": str(volume), "total": u.total, "used": u.used, "free": u.free})
-                except OSError:
-                    pass
-        return {"drives": roots}
 
-    @mcp.tool(annotations=READ_ONLY)
-    def file_info(path: str) -> dict[str, Any]: return facade.file_info(path)
 
-    @mcp.tool(annotations=READ_ONLY)
-    def list_directory(path: str = "", max_depth: int = 1, max_entries: int = 1000) -> dict[str, Any]: return facade.list_directory(path,max_depth,max_entries)
 
-    @mcp.tool(annotations=READ_ONLY)
-    def read_file(path: str, start_line: int = 1, end_line: int = 500, include_line_numbers: bool = True) -> dict[str, Any]: return facade.read_file(path,start_line,end_line,include_line_numbers)
 
-    @mcp.tool(annotations=READ_ONLY)
-    def read_binary(path: str, offset: int = 0, length: int = 65536) -> dict[str, Any]: return facade.read_binary(path,offset,length)
 
-    @mcp.tool(annotations=READ_ONLY)
-    async def search_files(path: str = "", pattern: str = "*", max_results: int = 1000, include_hidden: bool = True) -> dict[str, Any]: return await asyncio.to_thread(facade.search_files,path,pattern,max_results,include_hidden)
 
-    @mcp.tool(annotations=READ_ONLY)
-    async def search_text(query: str, path: str = "", fixed: bool = True, glob: str = "", max_results: int = 500) -> dict[str, Any]: return await asyncio.to_thread(facade.search_text,query,path,fixed,glob,max_results)
 
-    @mcp.tool(annotations=LOCAL_WRITE)
-    def make_directory(path: str, parents: bool = True) -> dict[str, Any]: return facade.make_directory(path,parents)
 
-    @mcp.tool(annotations=LOCAL_WRITE)
-    def write_file(path: str, content: str, overwrite: bool = False, create_parent_directories: bool = True, expected_sha256: str = "", encoding: str = "utf-8") -> dict[str, Any]:
-        if encoding.lower() != "utf-8": raise ValueError("only utf-8 is supported")
-        if create_parent_directories: Path(path).expanduser().resolve(strict=False).parent.mkdir(parents=True,exist_ok=True)
-        return facade.write_file(path,content,overwrite,expected_sha256)
 
-    @mcp.tool(annotations=LOCAL_WRITE)
-    def write_binary(path: str, data_base64: str, overwrite: bool = False, create_parent_directories: bool = True, expected_sha256: str = "") -> dict[str, Any]:
-        if create_parent_directories: Path(path).expanduser().resolve(strict=False).parent.mkdir(parents=True,exist_ok=True)
-        return facade.write_binary(path,data_base64,overwrite,expected_sha256)
 
-    @mcp.tool(annotations=LOCAL_WRITE)
-    def patch_binary(path: str, offset: int, data_base64: str, allow_extend: bool = False, expected_sha256: str = "") -> dict[str, Any]: return facade.patch_binary(path,offset,data_base64,allow_extend,expected_sha256)
 
-    @mcp.tool(annotations=LOCAL_WRITE)
-    def replace_text(path: str, old_text: str, new_text: str, expected_replacements: int = 1, expected_sha256: str = "") -> dict[str, Any]: return facade.replace_text(path,old_text,new_text,expected_replacements,expected_sha256)
 
     @mcp.tool(annotations=ARBITRARY_COMMAND)
     async def apply_patch(patch: str, workdir: str) -> str:
@@ -1071,11 +755,7 @@ def create_server(*, host: str, port: int, state_root: Path, codex_binary: str |
         """Display a local image, resized to at most 1600 points on its longest side."""
         return facade.view_image(path)
 
-    @mcp.tool(annotations=LOCAL_WRITE)
-    def copy_path(source: str, destination: str, overwrite: bool = False) -> dict[str, Any]: return facade.copy_path(source,destination,overwrite)
 
-    @mcp.tool(annotations=LOCAL_DESTRUCTIVE)
-    def move_path(source: str, destination: str, overwrite: bool = False) -> dict[str, Any]: return facade.move_path(source,destination,overwrite)
 
     @mcp.tool(annotations=LOCAL_DESTRUCTIVE)
     def delete_path(path: str) -> dict[str, Any]: return facade.delete_path(path)
@@ -1094,67 +774,19 @@ def create_server(*, host: str, port: int, state_root: Path, codex_binary: str |
     async def write_stdin(session_id: str, chars: str = "", yield_time_ms: int = 10_000, max_output_tokens: int = 10_000) -> str:
         return await asyncio.to_thread(facade.write_stdin,session_id,chars,yield_time_ms,max_output_tokens)
 
-    @mcp.tool(annotations=ARBITRARY_COMMAND)
-    async def run_command(command: str, working_directory: str = "", shell: Literal["zsh","bash"] = "zsh", timeout: int = 30) -> dict[str, Any]: return await asyncio.to_thread(facade.run_shell,command,working_directory,shell,timeout)
 
-    @mcp.tool(annotations=ARBITRARY_COMMAND)
-    async def run_command_batch(commands: list[str], working_directory: str | None = None, shell: Literal["zsh","bash"] = "zsh", timeout: int = 30, parallel: bool = False, stop_on_error: bool = True) -> dict[str, Any]:
-        return await facade.run_batch(commands,working_directory or "",shell,timeout,parallel,stop_on_error)
 
-    @mcp.tool(annotations=ARBITRARY_COMMAND)
-    def start_process(command: str, working_directory: str = "", shell: Literal["zsh","bash"] = "zsh") -> dict[str, Any]: return facade.start_shell_process(command,working_directory,shell)
 
-    @mcp.tool(annotations=READ_ONLY)
-    def process_status(process_id: str, output_tail_chars: int = 20000) -> dict[str, Any]:
-        result = client.process_status(process_id,include_output=True)
-        result["stdout"] = result.get("stdout","")[-max(100,int(output_tail_chars)):]
-        result["stderr"] = result.get("stderr","")[-max(100,int(output_tail_chars)):]
-        return result
 
-    @mcp.tool(annotations=READ_ONLY)
-    async def read_process_output(process_id: str, stdout_cursor: int = 0, stderr_cursor: int = 0, wait_ms: int = 1000, max_bytes: int = 100000) -> dict[str, Any]:
-        return await asyncio.to_thread(client.read_process_output,process_id,stdout_cursor=stdout_cursor,stderr_cursor=stderr_cursor,wait_ms=wait_ms,max_bytes=max_bytes)
 
-    @mcp.tool(annotations=READ_ONLY)
-    def list_processes() -> dict[str, Any]: return client.list_processes()
 
-    @mcp.tool(annotations=ARBITRARY_COMMAND)
-    def stop_process(process_id: str, force: bool = False) -> dict[str, Any]: return client.stop_process(process_id)
 
-    @mcp.tool(annotations=READ_ONLY)
-    def list_repository_tree(repository: str, path: str = "", max_depth: int = 3, max_entries: int = 1000) -> dict[str, Any]:
-        root = facade.resolve(str(Path(repository)/path),must_exist=True,allow_sensitive=True)
-        return facade.list_directory(str(root),max_depth,max_entries)
 
-    @mcp.tool(annotations=READ_ONLY)
-    def read_repository_file(repository: str, path: str, start_line: int = 1, end_line: int = 400) -> dict[str, Any]:
-        return facade.read_file(str(Path(repository)/path),start_line,end_line,True)
 
-    @mcp.tool(annotations=READ_ONLY)
-    def search_repository(repository: str, query: str, path: str = ".", fixed: bool = True, max_count: int = 200) -> dict[str, Any]:
-        return facade.search_text(query,str(Path(repository)/path),fixed,"",max_count)
 
-    @mcp.tool(annotations=READ_ONLY)
-    def git_status(repository: str) -> dict[str, Any]: return facade.git(repository,["status","--short","--branch"])
 
-    @mcp.tool(annotations=READ_ONLY)
-    def git_diff(repository: str, path: str | None = None, staged: bool = False, context: int = 3) -> dict[str, Any]:
-        args=["diff","--no-color",f"--unified={max(0,min(int(context),50))}"]
-        if staged: args.append("--cached")
-        if path: args += ["--",path]
-        return facade.git(repository,args)
 
-    @mcp.tool(annotations=READ_ONLY)
-    def git_log(repository: str, count: int = 20, path: str | None = None) -> dict[str, Any]:
-        args=["log",f"-n{max(1,min(int(count),200))}","--decorate","--oneline"]
-        if path: args += ["--",path]
-        return facade.git(repository,args)
 
-    @mcp.tool(annotations=READ_ONLY)
-    def git_show(repository: str, revision: str = "HEAD", path: str | None = None) -> dict[str, Any]:
-        args=["show","--no-color","--stat","--patch",revision]
-        if path: args += ["--",path]
-        return facade.git(repository,args)
 
     return mcp
 
