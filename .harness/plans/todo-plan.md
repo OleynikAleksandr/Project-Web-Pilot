@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1346,
+  "plan_revision": 1348,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "context-as-text-0.6.96-20261006",
@@ -1202,8 +1202,8 @@
       "actual_files": []
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "context-as-text-0.6.96-20261006",
         "task_id": "T008",
@@ -1231,7 +1231,8 @@
         "GitHub Release v0.6.96 содержит ровно шесть ожидаемых файлов, их digests совпадают с локальной поставкой",
         "origin/main после managed commit совпадает с локальным HEAD; повторная сборка при публикации не выполняется"
       ],
-      "expected_commit_message": "feat: Опубликовать GitHub Release v0.6.96 и синхронизировать main"
+      "expected_commit_message": "feat: Опубликовать GitHub Release v0.6.96 и синхронизировать main",
+      "actual_files": []
     },
     {
       "implementation_status": "TODO",
@@ -1337,7 +1338,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: context-as-text-0.6.96-20261006
 Current Task: нет
-Revision: 1346
+Revision: 1348
 
 ## Цель
 
@@ -1432,8 +1433,8 @@ Revision: 1346
   - Git Commit: [DONE] feat: Установить 0.6.96 и проверить установленные macOS-копии
   - Reference: context-as-text-0.6.96-20261006 / T007 / implementation
   - Файлы: scripts/check-installed-release.mjs, docs/planning/context-as-text.md
-- [TODO] T008: Опубликовать GitHub Release v0.6.96 и синхронизировать main — Ожидает
-  - Git Commit: [PENDING] feat: Опубликовать GitHub Release v0.6.96 и синхронизировать main
+- [DONE] T008: Опубликовать GitHub Release v0.6.96 и синхронизировать main — Завершено
+  - Git Commit: [DONE] feat: Опубликовать GitHub Release v0.6.96 и синхронизировать main
   - Reference: context-as-text-0.6.96-20261006 / T008 / implementation
   - Файлы: scripts/check-github-release.mjs, docs/planning/context-as-text.md
 - [TODO] T009: Прежний репозиторий WorkflowKit: только чтение и ссылка на новый дом — Ожидает
