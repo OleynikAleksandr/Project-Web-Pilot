@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1333,
+  "plan_revision": 1334,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "context-as-text-0.6.96-20261006",
@@ -917,8 +917,8 @@
     },
     {
       "id": "W006",
-      "title": "Windows-пакет без прежнего моста; проверка пакета",
-      "why": "Сборка Windows подключает закреплённый архив ради прежнего моста и накладывает на него правки. После W001–W005 из архива нужны только MinGit, ripgrep, tunnel-client и uv.",
+      "title": "Windows-пакет без прежнего сервера инструментов; проверка пакета",
+      "why": "Сборка Windows подключала закреплённый архив ради прежнего сервера инструментов (38 самодельных) и накладывала на него правки. После W001–W005 из архива нужны только MinGit, ripgrep, tunnel-client и uv. Туннель OpenAI (Secure MCP Tunnel) остаётся каналом по умолчанию.",
       "dependencies": [
         "W005",
         "W002"
@@ -939,12 +939,12 @@
       ],
       "verification_kind": "code",
       "acceptance_criteria": [
-        "Наложение правок на прежний мост (patchWindowsBridgeSource, удаление инструментов интерфейса, правка skill, WINDOWS_CONTEXT_PACKET_SOURCE) удалено вместе с тестами на него",
+        "Наложение правок на прежний сервер инструментов (patchWindowsBridgeSource, удаление инструментов интерфейса, правка skill, WINDOWS_CONTEXT_PACKET_SOURCE) удалено вместе с тестами на него",
         "Закреплённый архив Windows-Codex-Local-2026-09-10.zip используется только как источник MinGit, ripgrep, tunnel-client и uv; его имя и SHA-256 не меняются",
-        "verify:win проверяет, что Windows-пакет содержит исполнитель (server.py, app_server_client.py, control.py, codex-tools.lock.json) и не запускает прежний мост",
+        "verify:win проверяет, что Windows-пакет содержит исполнитель (server.py, app_server_client.py, control.py, codex-tools.lock.json) и что из архива берутся только компоненты; прежний сервер инструментов не запускается",
         "В поставке по-прежнему шесть файлов; releaseAssetNames не меняется"
       ],
-      "expected_commit_message": "feat: Windows-пакет без прежнего моста; проверка пакета",
+      "expected_commit_message": "feat: Windows-пакет без прежнего сервера инструментов; проверка пакета",
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
@@ -1049,7 +1049,6 @@
         "docs/planning/context-as-text.md",
         "docs/PRODUCT.md",
         "docs/architecture/ARCHITECTURE.md",
-        "tools/codex-app-server-mcp/session-rules.md",
         "AGENTS.md",
         "README.md",
         "docs/architecture/OVERVIEW.md",
@@ -1078,7 +1077,8 @@
         "packages/workflow-kit/docs/PRODUCT.md",
         "packages/workflow-kit/docs/WORKFLOW_START.md",
         "packages/workflow-kit/docs/architecture/ARCHITECTURE.md",
-        "packages/workflow-kit/docs/architecture/OVERVIEW.md"
+        "packages/workflow-kit/docs/architecture/OVERVIEW.md",
+        "tools/codex-app-server-mcp/session-rules.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -1289,7 +1289,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: context-as-text-0.6.96-20261006
 Current Task: нет
-Revision: 1333
+Revision: 1334
 
 ## Цель
 
@@ -1364,8 +1364,8 @@ Revision: 1333
   - Git Commit: [DONE] feat: Канал VPS и переключатель каналов на Windows
   - Reference: context-as-text-0.6.96-20261006 / W005 / implementation
   - Файлы: src/vps-tunnel.mjs, src/main.mjs, src/ui/settings-panel.mjs, src/ui/index.html, tests/vps-tunnel.test.mjs, tests/settings-chatgpt-channel.test.mjs, src/mac-runtime-switch.mjs, tests/codex-app-server-mcp.test.mjs, tests/mac-runtime-switch.test.mjs, tools/codex-app-server-mcp/control.py, docs/planning/context-as-text.md
-- [TODO] W006: Windows-пакет без прежнего моста; проверка пакета — Ожидает
-  - Git Commit: [PENDING] feat: Windows-пакет без прежнего моста; проверка пакета
+- [TODO] W006: Windows-пакет без прежнего сервера инструментов; проверка пакета — Ожидает
+  - Git Commit: [PENDING] feat: Windows-пакет без прежнего сервера инструментов; проверка пакета
   - Reference: context-as-text-0.6.96-20261006 / W006 / implementation
   - Файлы: src/windows-runtime.mjs, scripts/prepare-windows-toolchain.mjs, scripts/verify-windows-package.mjs, scripts/release-all.mjs, tests/windows-runtime.test.mjs, tests/release-all.test.mjs, docs/planning/context-as-text.md
 - [TODO] T005: Подготовить source версии 0.6.96 и проверить релизный исходник — Ожидает
@@ -1375,7 +1375,7 @@ Revision: 1333
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: context-as-text-0.6.96-20261006 / DOCS / implementation
-  - Файлы: docs/planning/context-as-text.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, tools/codex-app-server-mcp/session-rules.md, AGENTS.md, README.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/DECISIONS.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/CONTEXT_DELIVERY.md, docs/modules/codex-app-server-executor.md, docs/CLEAN_INSTALL.md, docs/SOURCE_WORKSPACES.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKFLOW_START.md, docs/modules/workflow-kit-recovery.md, docs/planning/codex-native-tools-macos.md, packages/workflow-kit/README.md, packages/workflow-kit/docs/modules/workflow-kit-package.md, packages/workflow-kit/src/templates/CONTINUE.md, docs/WORKSPACE_SETUP.md, docs/modules/session-owned-plans.md, docs/planning/mcp-sequential-parts-kit-1.5.4.md, docs/planning/release-backups-kit-1.5.5.md, packages/workflow-kit/docs/DOCUMENTATION_INDEX.md, packages/workflow-kit/docs/MODULES.md, packages/workflow-kit/docs/PRODUCT.md, packages/workflow-kit/docs/WORKFLOW_START.md, packages/workflow-kit/docs/architecture/ARCHITECTURE.md, packages/workflow-kit/docs/architecture/OVERVIEW.md
+  - Файлы: docs/planning/context-as-text.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, AGENTS.md, README.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/DECISIONS.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/CONTEXT_DELIVERY.md, docs/modules/codex-app-server-executor.md, docs/CLEAN_INSTALL.md, docs/SOURCE_WORKSPACES.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKFLOW_START.md, docs/modules/workflow-kit-recovery.md, docs/planning/codex-native-tools-macos.md, packages/workflow-kit/README.md, packages/workflow-kit/docs/modules/workflow-kit-package.md, packages/workflow-kit/src/templates/CONTINUE.md, docs/WORKSPACE_SETUP.md, docs/modules/session-owned-plans.md, docs/planning/mcp-sequential-parts-kit-1.5.4.md, docs/planning/release-backups-kit-1.5.5.md, packages/workflow-kit/docs/DOCUMENTATION_INDEX.md, packages/workflow-kit/docs/MODULES.md, packages/workflow-kit/docs/PRODUCT.md, packages/workflow-kit/docs/WORKFLOW_START.md, packages/workflow-kit/docs/architecture/ARCHITECTURE.md, packages/workflow-kit/docs/architecture/OVERVIEW.md, tools/codex-app-server-mcp/session-rules.md
 - [TODO] T006: Собрать и проверить парный релиз 0.6.96 — Ожидает
   - Git Commit: [PENDING] feat: Собрать и проверить парный релиз 0.6.96
   - Reference: context-as-text-0.6.96-20261006 / T006 / implementation
