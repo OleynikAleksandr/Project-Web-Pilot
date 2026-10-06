@@ -60,7 +60,7 @@
         "run",
         "build"
       ],
-      "evidence": "~/Downloads/WebPilot-0.6.96: macOS arm64 + Windows x64 ZIP, ZIP Windows-runtime, SHA256SUMS.txt, INSTALL.txt, release-manifest.json; packaged sources и bundled Workflow Kit 1.5.5 verified. Сборку выполняет сама эта проверка при коммите задачи, один раз"
+      "evidence": "~/Downloads/WebPilot-0.6.96: macOS arm64 + Windows x64 ZIP, ZIP Windows-runtime, SHA256SUMS.txt, INSTALL.txt, release-manifest.json; packaged sources и bundled Workflow Kit 1.5.6 verified. Сборку выполняет сама эта проверка при коммите задачи, один раз"
     },
     {
       "required": false,
@@ -95,6 +95,31 @@
         "PATH=/opt/homebrew/bin:$PATH; V=$(node -p \"require('./package.json').version\"); K=../WorkflowKit; fail=0; for f in README.md docs/PRODUCT.md docs/architecture/OVERVIEW.md docs/modules/workflow-kit-package.md; do grep -q \"Web Pilot $V\" \"$K/$f\" || { echo \"WorkflowKit/$f не называет Web Pilot $V\"; fail=1; }; done; [ -z \"$(git -C \"$K\" status --porcelain)\" ] || { echo 'WorkflowKit: есть незакоммиченные изменения'; fail=1; }; [ \"$(git -C \"$K\" rev-parse HEAD)\" = \"$(git -C \"$K\" ls-remote origin refs/heads/main | cut -f1)\" ] || { echo 'WorkflowKit: main не совпадает с origin/main'; fail=1; }; node scripts/check-workflow-kit-dependency.mjs >/dev/null || { echo 'Workflow Kit: версия или состав runtime изменились'; fail=1; }; [ $fail -eq 0 ] && echo \"WorkflowKit docs: Web Pilot $V, worktree чистый, main опубликован, runtime 1.5.5 без изменений\"; exit $fail"
       ],
       "evidence": "Репозиторий WorkflowKit: README и документы называют текущим клиентом Web Pilot 0.6.96, worktree чистый, main совпадает с origin/main, версия и runtime Workflow Kit 1.5.5 не изменены"
+    },
+    {
+      "required": false,
+      "timeout_ms": 300000,
+      "id": "kit-check",
+      "kind": "test",
+      "executable": "npm",
+      "args": [
+        "run",
+        "check",
+        "--prefix",
+        "packages/workflow-kit"
+      ],
+      "evidence": "Собственные проверки пакета @webpilot/workflow-kit из packages/workflow-kit: runtime, package и consumer contract"
+    },
+    {
+      "required": false,
+      "timeout_ms": 180000,
+      "id": "workflow-kit-archive",
+      "kind": "package",
+      "executable": "node",
+      "args": [
+        "scripts/check-workflow-kit-archive.mjs"
+      ],
+      "evidence": "Прежний репозиторий OleynikAleksandr/WorkflowKit на GitHub: архивный статус (только чтение) и README со ссылкой на packages/workflow-kit в Project-Web-Pilot подтверждены запросом к GitHub"
     }
   ],
   "budget": {
