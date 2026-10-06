@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1331,
+  "plan_revision": 1333,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "context-as-text-0.6.96-20261006",
@@ -874,7 +874,11 @@
         "src/ui/settings-panel.mjs",
         "src/ui/index.html",
         "tests/vps-tunnel.test.mjs",
-        "tests/settings-chatgpt-channel.test.mjs"
+        "tests/settings-chatgpt-channel.test.mjs",
+        "src/mac-runtime-switch.mjs",
+        "tests/codex-app-server-mcp.test.mjs",
+        "tests/mac-runtime-switch.test.mjs",
+        "tools/codex-app-server-mcp/control.py"
       ],
       "documentation_paths": [
         "docs/planning/context-as-text.md"
@@ -891,13 +895,25 @@
         "Поведение и тесты канала на macOS не меняются"
       ],
       "expected_commit_message": "feat: Канал VPS и переключатель каналов на Windows",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "context-as-text-0.6.96-20261006",
         "task_id": "W005",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "docs/planning/context-as-text.md",
+        "src/mac-runtime-switch.mjs",
+        "src/main.mjs",
+        "src/ui/settings-panel.mjs",
+        "src/vps-tunnel.mjs",
+        "tests/codex-app-server-mcp.test.mjs",
+        "tests/mac-runtime-switch.test.mjs",
+        "tests/settings-chatgpt-channel.test.mjs",
+        "tests/vps-tunnel.test.mjs",
+        "tools/codex-app-server-mcp/control.py"
+      ]
     },
     {
       "id": "W006",
@@ -1273,7 +1289,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: context-as-text-0.6.96-20261006
 Current Task: нет
-Revision: 1331
+Revision: 1333
 
 ## Цель
 
@@ -1344,10 +1360,10 @@ Revision: 1331
   - Git Commit: [DONE] feat: Web Pilot на Windows работает через исполнитель; переход с прежнего runtime
   - Reference: context-as-text-0.6.96-20261006 / W004 / implementation
   - Файлы: src/mac-runtime-switch.mjs, src/windows-runtime.mjs, src/mcp-runtime.mjs, src/platform.mjs, src/startup-platform.mjs, src/startup-readiness.mjs, src/main.mjs, src/context-session.mjs, src/ui/startup.mjs, src/ui/sidebar.mjs, src/ui/index.html, tests/mac-runtime-switch.test.mjs, tests/windows-runtime.test.mjs, tests/windows-first-run.test.mjs, tests/windows-autostart.test.mjs, tests/mcp-runtime.test.mjs, tests/startup-platform.test.mjs, tests/startup-readiness.test.mjs, tests/context-session.test.mjs, resources/runtime-control/windows-first-run.py, scripts/verify-windows-package.mjs, src/preload.cjs, src/ui/progress.mjs, src/ui/settings-panel.mjs, src/zip-archive.mjs, tests/codex-app-server-mcp.test.mjs, tests/electron-smoke.mjs, tests/settings-chatgpt-channel.test.mjs, tests/sidebar.test.mjs, tests/startup-ui.test.mjs, tests/tunnel-id-prompt.test.mjs, tests/tunnel-id-runtime.test.mjs, tools/codex-app-server-mcp/app_server_client.py, tools/codex-app-server-mcp/control.py, tools/codex-app-server-mcp/tunnel_prompt.py, docs/planning/context-as-text.md
-- [TODO] W005: Канал VPS и переключатель каналов на Windows — Ожидает
-  - Git Commit: [PENDING] feat: Канал VPS и переключатель каналов на Windows
+- [DONE] W005: Канал VPS и переключатель каналов на Windows — Завершено
+  - Git Commit: [DONE] feat: Канал VPS и переключатель каналов на Windows
   - Reference: context-as-text-0.6.96-20261006 / W005 / implementation
-  - Файлы: src/vps-tunnel.mjs, src/main.mjs, src/ui/settings-panel.mjs, src/ui/index.html, tests/vps-tunnel.test.mjs, tests/settings-chatgpt-channel.test.mjs, docs/planning/context-as-text.md
+  - Файлы: src/vps-tunnel.mjs, src/main.mjs, src/ui/settings-panel.mjs, src/ui/index.html, tests/vps-tunnel.test.mjs, tests/settings-chatgpt-channel.test.mjs, src/mac-runtime-switch.mjs, tests/codex-app-server-mcp.test.mjs, tests/mac-runtime-switch.test.mjs, tools/codex-app-server-mcp/control.py, docs/planning/context-as-text.md
 - [TODO] W006: Windows-пакет без прежнего моста; проверка пакета — Ожидает
   - Git Commit: [PENDING] feat: Windows-пакет без прежнего моста; проверка пакета
   - Reference: context-as-text-0.6.96-20261006 / W006 / implementation

@@ -41,11 +41,12 @@ export function settingsPanelView(action) {
     $('tool-calls-hide').setAttribute('aria-pressed', String(state.hideToolCalls));
     $('tool-calls-show').setAttribute('aria-pressed', String(!state.hideToolCalls));
     $('tool-calls-hide').disabled = pending; $('tool-calls-show').disabled = pending;
-    // One section for both systems: the same executor, the same services, the same states.
+    // One pair of sections for both systems: the same executor, the same services, the same two channels.
     const isMac = state.platform === 'darwin', isWindows = state.platform === 'win32';
-    const system = isWindows ? 'Windows' : 'macOS';
-    $('local-runtime-section').hidden = !isMac && !isWindows;
-    if (isMac || isWindows) {
+    const supported = isMac || isWindows, system = isWindows ? 'Windows' : 'macOS';
+    $('local-runtime-section').hidden = !supported;
+    $('chatgpt-channel-section').hidden = !supported;
+    if (supported) {
       const localRuntime = state.localRuntime ?? { label: `Codex App Server Local ${isWindows ? 'Windows' : 'Mac'}`, service: null };
       const service = localRuntime.service;
       const viaVps = localRuntime.chatgptChannel === 'vps';
@@ -55,16 +56,12 @@ export function settingsPanelView(action) {
       $('local-runtime-status').textContent = ready
         ? `${localRuntime.label}: MCP и ${viaVps ? 'канал VPS' : 'Secure MCP Tunnel'} готовы.`
         : `${localRuntime.label}: службы ещё не подтвердили полную готовность.`;
-    }
-    if (isMac) {
-      const localRuntime = state.localRuntime ?? { service: null };
-      const service = localRuntime.service;
-      const viaVps = localRuntime.chatgptChannel === 'vps';
       const vps = localRuntime.vps ?? null;
       $('chatgpt-channel-secure').setAttribute('aria-pressed', String(!viaVps));
       $('chatgpt-channel-vps').setAttribute('aria-pressed', String(viaVps));
       $('chatgpt-channel-secure').disabled = pending;
-      // Switching to VPS needs a working tunnel; switching back is always possible.
+      // A server that is not set up on this computer, or whose tunnel is down, cannot be chosen;
+      // switching back to the tunnel of OpenAI is always possible.
       $('chatgpt-channel-vps').disabled = pending || (!viaVps && !vps?.ready);
       $('chatgpt-channel-refresh').disabled = pending;
       $('chatgpt-channel-status').textContent = viaVps
@@ -80,7 +77,6 @@ export function settingsPanelView(action) {
       $('vps-connector-url').textContent = vps?.connector ?? '';
       $('vps-connector-copy').disabled = pending;
     }
-    $('chatgpt-channel-section').hidden = !isMac;
     const settings = state.settings;
     $('settings-panel').hidden = !settings; $('active-projects').hidden = !!settings;
     $('open-settings').setAttribute('aria-pressed', String(!!settings));

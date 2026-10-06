@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { mkdtemp } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { VpsTunnel, VPS_TUNNEL_LABEL, loopbackMcpPort, maskConnectorUrl } from '../src/vps-tunnel.mjs';
+import { VpsTunnel, WindowsVpsTunnel, VPS_TUNNEL_LABEL, loopbackMcpPort, maskConnectorUrl } from '../src/vps-tunnel.mjs';
 
 const SECRET = 'AbCdEfGhIjKlMnOpQrStUvWxYz0123456789_-xyz';
 
@@ -126,4 +126,91 @@ test('apply rejects a non-loopback MCP address', async t => {
   const f = await fixture(t);
   await assert.rejects(f.tunnel.apply('https://example.com/mcp'), /Некорректный адрес/);
   assert.equal(f.calls.length, 0);
+});
+
+// Windows: the same forward, kept by control.py of the executor instead of a LaunchAgent.
+async function windowsFixture(t, { sshConfig = 'hostname 31.70.155.58\r\nuser mcptunnel\r\n', sshSurvives = true } = {}) {
+  const home = await mkdtemp(path.join(tmpdir(), 'web-pilot-vps-win-'));
+  t.after(() => fs.rm(home, { recursive: true, force: true }));
+  const calls = [], service = { supervised: false, running: false, pid: null, forward_port: null, last_error: null, nextPid: 5200 };
+  const state = { sshConfig };
+  const execute = async (file, args, options) => {
+    calls.push([path.basename(file), ...args].join(' '));
+    assert.equal(file, path.join('D:\\Windows', 'System32', 'OpenSSH', 'ssh.exe'), 'the OpenSSH client of Windows');
+    assert.equal(options.windowsHide, true);
+    if (state.sshConfig === null) throw Object.assign(new Error('spawn ENOENT'), { code: 'ENOENT' });
+    return { stdout: state.sshConfig, stderr: '' };
+  };
+  const control = async args => {
+    calls.push('control ' + args.join(' '));
+    if (args[0] === 'vps-apply') {
+      const port = Number(args[2]);
+      if (!service.supervised || service.forward_port !== port) {
+        Object.assign(service, { supervised: true, forward_port: port, running: sshSurvives, pid: sshSurvives ? service.nextPid++ : null,
+          last_error: sshSurvives ? null : { message: 'Error: remote port forwarding failed for listen port 17842', at: '2026-10-06T09:00:00Z' } });
+      }
+    } else if (args[0] === 'vps-stop') Object.assign(service, { supervised: false, running: false, pid: null, forward_port: null });
+    else if (args[0] !== 'vps-status') throw new Error('unexpected control command');
+    const { nextPid, ...vps } = service;
+    return { ok: true, vps };
+  };
+  const tunnel = new WindowsVpsTunnel({ control, homeDir: home, environment: { SystemRoot: 'D:\\Windows' }, execute, sleep: async () => {}, settleMs: 0, startTimeoutMs: 20 });
+  return { home, calls, service, state, tunnel };
+}
+
+test('Windows: the forward follows the MCP port through control.py and restarts only when the port changes', async t => {
+  const f = await windowsFixture(t);
+  await fs.mkdir(path.join(f.home, '.config/vps-server'), { recursive: true });
+  await fs.writeFile(path.join(f.home, '.config/vps-server/mcp-url'), `https://vps.example/mcp/${SECRET}/mcp\n`);
+  assert.deepEqual(await f.tunnel.status('http://127.0.0.1:17852/mcp'), { configured: true, conflict: false, running: false, pid: null, ready: false, owned: true,
+    mcpPort: 17852, forwardPort: null, portMatches: false, lastError: null, connector: 'https://vps.example/mcp/…/mcp' }, 'the same status fields as on macOS');
+  f.calls.length = 0;
+  const first = await f.tunnel.apply('http://127.0.0.1:17852/mcp');
+  assert.deepEqual([first.ready, first.running, first.pid, first.forwardPort, first.portMatches, first.conflict], [true, true, 5200, 17852, true, false]);
+  assert.equal(f.calls[0], 'ssh.exe -G -T vps-mcp-tunnel');
+  assert.ok(f.calls.includes('control vps-apply --port 17852'));
+  assert.equal(f.calls.some(call => /launchctl/.test(call)), false);
+  assert.equal(await fs.access(path.join(f.home, 'Library')).then(() => true, () => false), false, 'nothing of macOS is written');
+
+  f.calls.length = 0;
+  const same = await f.tunnel.apply('http://127.0.0.1:17852/mcp');
+  assert.equal(same.pid, 5200, 'the same port keeps the running ssh');
+  f.calls.length = 0;
+  const moved = await f.tunnel.apply('http://127.0.0.1:17842/mcp');
+  assert.deepEqual([moved.ready, moved.forwardPort, moved.pid], [true, 17842, 5201]);
+  // Status for another port reports the mismatch instead of claiming readiness.
+  const mismatch = await f.tunnel.status('http://127.0.0.1:17852/mcp');
+  assert.deepEqual([mismatch.ready, mismatch.portMatches, mismatch.running], [false, false, true]);
+  assert.equal(await f.tunnel.connectorUrl(), `https://vps.example/mcp/${SECRET}/mcp`);
+  await assert.rejects(f.tunnel.apply('http://example.com:17852/mcp'), /Некорректный адрес/);
+  assert.throws(() => new WindowsVpsTunnel({}), TypeError);
+});
+
+test('Windows: a refused forward, a RemoteForward in the config and a server that is no longer set up', async t => {
+  const refused = await windowsFixture(t, { sshSurvives: false });
+  const status = await refused.tunnel.apply('http://127.0.0.1:17852/mcp');
+  assert.deepEqual([status.configured, status.ready, status.running, status.forwardPort], [true, false, false, 17852]);
+  assert.deepEqual(status.lastError, { message: 'Error: remote port forwarding failed for listen port 17842', at: '2026-10-06T09:00:00Z' });
+
+  const conflict = await windowsFixture(t, { sshConfig: 'hostname 31.70.155.58\r\nremoteforward 127.0.0.1:17842 [127.0.0.1]:17842\r\n' });
+  const blocked = await conflict.tunnel.apply('http://127.0.0.1:17852/mcp');
+  assert.deepEqual([blocked.configured, blocked.conflict, blocked.ready], [true, true, false]);
+  assert.equal(conflict.calls.some(call => call.startsWith('control vps-apply')), false, 'a forward of the config is never taken over');
+
+  const f = await windowsFixture(t);
+  await f.tunnel.apply('http://127.0.0.1:17852/mcp');
+  f.state.sshConfig = 'hostname vps-mcp-tunnel\r\n'; // no Host block: ssh echoes the alias itself
+  f.calls.length = 0;
+  const removed = await f.tunnel.apply('http://127.0.0.1:17852/mcp');
+  assert.deepEqual(removed, { configured: false, conflict: false, running: false, ready: false, owned: false, pid: null,
+    mcpPort: 17852, forwardPort: null, portMatches: false, lastError: null, connector: null });
+  assert.ok(f.calls.includes('control vps-stop'), 'nothing keeps dialling a server that was removed');
+  assert.equal(f.service.supervised, false);
+  f.calls.length = 0;
+  await f.tunnel.apply('http://127.0.0.1:17852/mcp');
+  assert.equal(f.calls.includes('control vps-stop'), false, 'and nothing is stopped twice');
+
+  const noClient = await windowsFixture(t, { sshConfig: null });
+  assert.equal((await noClient.tunnel.status('http://127.0.0.1:17852/mcp')).configured, false, 'without the OpenSSH client the server counts as not set up');
+  assert.equal(noClient.calls.some(call => call.startsWith('control ')), false);
 });

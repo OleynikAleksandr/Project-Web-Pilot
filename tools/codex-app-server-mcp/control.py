@@ -78,6 +78,13 @@ AUTOSTART_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
 AUTOSTART_VALUE = "ProjectWebPilotCodexExecutor"
 AUTOSTART_LAUNCHER = PRIVATE / "autostart.pyw"
 AUTOSTART_LOG = STATE / "autostart.log"
+# Windows only: the SSH forward from the user's own server (the VPS channel). macOS keeps the same forward
+# with a LaunchAgent that Project Web Pilot installs; here a small supervisor process plays that role.
+VPS_SSH_HOST = "vps-mcp-tunnel"
+VPS_REMOTE_PORT = 17842
+VPS_RESTART_SECONDS = 15
+VPS_FILE = STATE / "vps.json"
+VPS_LOG = STATE / "vps-tunnel.log"
 
 
 class CodexNotFound(RuntimeError):
@@ -861,7 +868,120 @@ def selector_start() -> dict[str, object]:
         "mcp_url": target,
         "mcp": backend.get("mcp"),
     }
+    if IS_WINDOWS and _vps_record() is not None:
+        # The forward of the user's server runs with either channel, as the LaunchAgent does on macOS.
+        # Its failure must not undo the start of the MCP and of the tunnel.
+        try:
+            stable["vps"] = vps_apply(urlparse(target).port)["vps"]
+        except Exception as error:
+            stable["vps"] = {"error": str(error)[:200]}
     return stable
+
+
+def vps_ssh_argv(port: int) -> list[str]:
+    """The same forward as the macOS LaunchAgent: the server's loopback port 17842 leads to the local MCP."""
+    ssh = Path(os.environ.get("SystemRoot") or r"C:\Windows") / "System32" / "OpenSSH" / "ssh.exe"
+    return [str(ssh), "-N", "-o", "BatchMode=yes", "-o", "ExitOnForwardFailure=yes",
+            "-o", "ServerAliveInterval=30", "-o", "ServerAliveCountMax=3",
+            "-R", f"127.0.0.1:{VPS_REMOTE_PORT}:127.0.0.1:{port}", VPS_SSH_HOST]
+
+
+def _vps_record() -> dict[str, object] | None:
+    try:
+        record = json.loads(VPS_FILE.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    port = record.get("forward_port") if isinstance(record, dict) else None
+    return record if isinstance(port, int) and not isinstance(port, bool) and 1024 <= port <= 65535 else None
+
+
+def _vps_last_error() -> dict[str, str] | None:
+    """The last line ssh wrote: why the forward is down, when it is."""
+    try:
+        stat = VPS_LOG.stat()
+        if not stat.st_size:
+            return None
+        with VPS_LOG.open("rb") as handle:
+            handle.seek(max(0, stat.st_size - 4096))
+            lines = [line.strip() for line in handle.read().decode("utf-8", errors="replace").splitlines() if line.strip()]
+    except OSError:
+        return None
+    if not lines:
+        return None
+    return {"message": lines[-1][:200], "at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(stat.st_mtime))}
+
+
+def _require_windows_vps() -> None:
+    if not IS_WINDOWS:
+        raise RuntimeError("The VPS tunnel is kept by a LaunchAgent of Project Web Pilot on this system")
+
+
+def vps_status() -> dict[str, object]:
+    _require_windows_vps()
+    supervisor = managed_process("vps")
+    ssh_pid = None
+    if supervisor["owned"]:
+        import psutil
+        try:
+            ssh_pid = next((child.pid for child in psutil.Process(int(supervisor["pid"])).children(recursive=True)
+                            if child.name().lower() == "ssh.exe"), None)
+        except psutil.Error:
+            ssh_pid = None
+    record = _vps_record()
+    # "running" is ssh itself: with ExitOnForwardFailure a refused forward ends it within seconds.
+    return {"vps": {"supervised": bool(supervisor["owned"]), "running": ssh_pid is not None, "pid": ssh_pid,
+                    "forward_port": record["forward_port"] if record else None, "last_error": _vps_last_error()}}
+
+
+def vps_apply(port: int) -> dict[str, object]:
+    """Keep the forward on this MCP port: start the supervisor, or restart it for another port or a newer control.py."""
+    _require_windows_vps()
+    if not isinstance(port, int) or isinstance(port, bool) or not 1024 <= port <= 65535:
+        raise ValueError("A valid local MCP port is required")
+    supervisor = managed_process("vps")
+    if supervisor["running"] and not supervisor["owned"]:
+        raise RuntimeError("Recorded VPS tunnel PID belongs to another process")
+    wanted = {"forward_port": port, "control_sha256": hashlib.sha256((ROOT / "control.py").read_bytes()).hexdigest()}
+    if supervisor["owned"] and _vps_record() == wanted:
+        return vps_status()
+    if supervisor["owned"]:
+        stop_one("vps")
+    private_write(VPS_FILE, json.dumps(wanted, indent=2) + "\n")
+    launch("vps", [str(PYTHON), "-B", str(ROOT / "control.py"), "vps-supervise"], environment())
+    return vps_status()
+
+
+def vps_stop() -> dict[str, object]:
+    """The server is no longer configured: stop the forward and do not start it at sign-in."""
+    _require_windows_vps()
+    stopped = stop_one("vps")
+    VPS_FILE.unlink(missing_ok=True)
+    return {"services": [stopped], **vps_status()}
+
+
+def vps_supervise(popen=subprocess.Popen, sleep=time.sleep, rounds: int | None = None) -> int:
+    """Runs ssh and starts it again after it ends, at most once in 15 seconds — what KeepAlive and
+    ThrottleInterval of the macOS LaunchAgent do. It ends only when control.py stops its process tree."""
+    record = _vps_record()
+    if record is None:
+        return 2
+    argv = vps_ssh_argv(int(record["forward_port"]))
+    while rounds is None or rounds > 0:
+        started = time.monotonic()
+        try:
+            if VPS_LOG.stat().st_size > 1_000_000:
+                VPS_LOG.write_bytes(b"")
+        except OSError:
+            pass
+        with VPS_LOG.open("ab") as log:
+            try:
+                popen(argv, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=log, cwd=str(STATE), **_hidden()).wait()
+            except OSError as error:
+                log.write(f"ssh could not be started: {error}\n".encode("utf-8", errors="replace"))
+        sleep(max(1.0, VPS_RESTART_SECONDS - (time.monotonic() - started)))
+        if rounds is not None:
+            rounds -= 1
+    return 0
 
 
 def autostart_command() -> str:
@@ -933,6 +1053,11 @@ def parse_args() -> argparse.Namespace:
     sub.add_parser("configure-selector")
     autostart = sub.add_parser("autostart", help="Windows: start the services at sign-in")
     autostart.add_argument("--state", required=True, choices=["on", "off", "status"])
+    vps = sub.add_parser("vps-apply", help="Windows: keep the SSH forward of the user's server on this MCP port")
+    vps.add_argument("--port", required=True, type=int)
+    sub.add_parser("vps-status")
+    sub.add_parser("vps-stop")
+    sub.add_parser("vps-supervise")
     configure = sub.add_parser("configure-tunnel")
     configure.add_argument("--tunnel-id")
     configure.add_argument(
@@ -947,6 +1072,9 @@ def main() -> int:
     if IS_WINDOWS and hasattr(sys.stdout, "reconfigure"):
         # The JSON result may carry paths with non-ASCII user names.
         sys.stdout.reconfigure(encoding="utf-8")
+    if args.command == "vps-supervise":
+        # Long-running and outside the lifecycle lock: it is itself a service that control.py starts and stops.
+        return vps_supervise() if IS_WINDOWS else 1
     try:
         with operation_lock():
             if args.command == "setup":
@@ -965,6 +1093,12 @@ def main() -> int:
                 result = selector_start()
             elif args.command == "autostart":
                 result = autostart_status() if args.state == "status" else configure_autostart(args.state == "on")
+            elif args.command == "vps-apply":
+                result = vps_apply(args.port)
+            elif args.command == "vps-status":
+                result = vps_status()
+            elif args.command == "vps-stop":
+                result = vps_stop()
             elif args.command == "configure-tunnel":
                 tunnel_id = args.tunnel_id or input("OpenAI tunnel_id: ").strip()
                 key = (

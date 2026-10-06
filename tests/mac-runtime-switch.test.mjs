@@ -494,6 +494,16 @@ test('Windows: the executor runs control.py with its private Python after the co
     && error.publicMessage === WINDOWS_CODEX_NOT_FOUND_MESSAGE && /install\.ps1/.test(error.message));
   codexMissing = false;
 
+  // The forward of the user's server is kept by control.py on Windows.
+  events.length = 0;
+  runtime.execute = async (file, args) => { events.push('control.' + args.slice(2).join(' ')); return { stdout: JSON.stringify({ ok: true, vps: { running: true } }) }; };
+  assert.deepEqual((await runtime.vpsControl(['vps-apply', '--port', '27852'])).vps, { running: true });
+  await runtime.vpsControl(['vps-status']); await runtime.vpsControl(['vps-stop']);
+  assert.deepEqual(events.filter(event => event.startsWith('control.')), ['control.vps-apply --port 27852', 'control.vps-status', 'control.vps-stop']);
+  for (const denied of [['vps-supervise'], ['stop'], [], undefined]) await assert.rejects(runtime.vpsControl(denied), { code: 'RUNTIME_ACTION_DENIED' });
+  runtime.execute = async () => { throw Object.assign(new Error('failed'), { stdout: JSON.stringify({ ok: false, error: 'Recorded VPS tunnel PID belongs to another process' }) }); };
+  await assert.rejects(runtime.vpsControl(['vps-status']), error => error.code === 'VPS_TUNNEL_COMMAND_FAILED' && /another process/.test(error.message));
+
   // The tunnel worker gets the same Python, a hidden window and WINDOWS_ codes.
   const helperCalls = [];
   runtime.execute = async (file, args, options) => { helperCalls.push({ file, args, options }); return { stdout: JSON.stringify({ tunnel_id: 'tunnel_fixture1234567890123456' }) }; };
@@ -513,6 +523,7 @@ test('Windows: the executor runs control.py with its private Python after the co
   const mac = new CodexAppServerRuntime({ sourceDir: source, stateDir: path.join(root, 'mac'), platform: 'darwin', sessionPlans: { loadContext() {} },
     execute: async () => { throw new Error('not used'); } });
   await assert.rejects(mac.autostart(true), { code: 'RUNTIME_ACTION_DENIED' }, 'macOS keeps its LaunchAgent');
+  await assert.rejects(mac.vpsControl(['vps-status']), { code: 'RUNTIME_ACTION_DENIED' }, 'macOS keeps the forward with its own LaunchAgent');
 });
 
 test('Windows activation: no LaunchAgent, the previous bridge is retired first, start at sign-in is written after the services are up', async t => {

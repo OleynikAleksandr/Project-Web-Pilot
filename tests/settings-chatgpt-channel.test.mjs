@@ -85,23 +85,41 @@ test('VPS cannot be chosen until its tunnel works, and the reason is shown', asy
   assert.match(f.$('chatgpt-channel-status').textContent, /Выбран VPS\. Канал ещё не готов/);
 });
 
-test('the local tools section is the same on Windows; the channel switch arrives with the VPS channel', async t => {
+test('Windows shows the same two sections: local tools and the ChatGPT channel with the VPS button that needs a working server', async t => {
   const f = await fixture(t);
   f.view.render(state(), false);
   assert.equal(f.$('local-runtime-title').textContent, 'Локальные инструменты macOS');
   assert.match(f.$('local-runtime-help').textContent, /при входе в macOS/);
-  f.view.render({ ...state({ platform: 'win32' }), localRuntime: { label: 'Codex App Server Local Windows', chatgptChannel: 'secure-tunnel',
-    service: { mcpReady: true, tunnelReady: true, tunnelConfigured: true }, vps: null } }, false);
+  const windows = (extra = {}) => ({ ...state({ platform: 'win32' }), localRuntime: { label: 'Codex App Server Local Windows', chatgptChannel: 'secure-tunnel',
+    service: { mcpReady: true, tunnelReady: true, tunnelConfigured: true }, vps: vpsReady, ...extra } });
+  f.view.render(windows(), false);
   assert.equal(f.$('local-runtime-section').hidden, false);
   assert.equal(f.$('local-runtime-title').textContent, 'Локальные инструменты Windows');
   assert.equal(f.$('local-runtime-status').textContent, 'Codex App Server Local Windows: MCP и Secure MCP Tunnel готовы.');
   assert.match(f.$('local-runtime-help').textContent, /при входе в Windows/);
+  assert.equal(f.$('chatgpt-channel-section').hidden, false, 'the same channel section as on macOS');
+  assert.equal(f.$('chatgpt-channel-secure').getAttribute('aria-pressed'), 'true');
+  assert.equal(f.$('chatgpt-channel-vps').disabled, false);
+  assert.equal(f.$('vps-status').textContent, 'Туннель VPS работает: сервер → MCP на порту 17852.');
+  f.$('chatgpt-channel-vps').click();
+  assert.deepEqual(f.calls.at(-1), ['setChatgptChannel', 'vps']);
+
+  // A server that is not set up on this computer cannot be chosen; the tunnel of OpenAI stays the channel.
+  f.view.render(windows({ vps: { ...vpsReady, configured: false, ready: false, running: false, connector: null } }), false);
+  assert.equal(f.$('chatgpt-channel-vps').disabled, true);
+  assert.equal(f.$('chatgpt-channel-secure').disabled, false);
+  assert.equal(f.$('vps-status').textContent, 'Свой сервер не настроен.');
+  f.view.render(windows({ vps: null }), false);
+  assert.equal(f.$('chatgpt-channel-vps').disabled, true, 'an unknown state is not a working server');
+  f.view.render(windows({ chatgptChannel: 'vps', vps: { ...vpsReady, ready: false, running: false } }), false);
+  assert.equal(f.$('chatgpt-channel-vps').disabled, false, 'the selected channel stays visible as selected');
+  assert.equal(f.$('chatgpt-channel-secure').disabled, false, 'switching back is always possible');
+
   f.view.render({ ...state({ platform: 'win32' }), localRuntime: null }, false);
   assert.equal(f.$('local-runtime-status').textContent, 'Codex App Server Local Windows: службы ещё не подтвердили полную готовность.');
   for (const id of ['windows-runtime-section', 'configure-windows-tunnel', 'refresh-windows-runtime'])
     assert.equal(f.$(id), null, 'nothing of the previous Windows runtime is left in the settings: ' + id);
   f.view.render({ ...state({ platform: 'linux' }), localRuntime: null }, false);
   assert.equal(f.$('local-runtime-section').hidden, true);
-  f.view.render({ ...state({ platform: 'win32' }), localRuntime: null }, false);
   assert.equal(f.$('chatgpt-channel-section').hidden, true);
 });

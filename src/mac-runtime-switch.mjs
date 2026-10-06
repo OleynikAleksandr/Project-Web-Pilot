@@ -190,6 +190,15 @@ export class CodexAppServerRuntime {
     return result.autostart;
   }
 
+  // Windows: the SSH forward of the user's server is kept by control.py; macOS keeps it with a LaunchAgent.
+  async vpsControl(args) {
+    if (!this.windows || !['vps-status', 'vps-apply', 'vps-stop'].includes(args?.[0])) {
+      throw new RuntimeError('RUNTIME_ACTION_DENIED', 'Эта операция не поддерживается оболочкой.');
+    }
+    if (!await exists(path.join(this.installedSource, 'control.py'))) await this.syncSource();
+    return this.#controlCommand(args, { timeout: 30_000, code: 'VPS_TUNNEL_COMMAND_FAILED', fallback: 'Не удалось выполнить команду туннеля VPS.' });
+  }
+
   async control(command, { mcpOnly = false, tunnelOnly = false } = {}) {
     if (!['setup', 'status', 'start', 'stop', 'selector-start'].includes(command)) throw new RuntimeError('RUNTIME_ACTION_DENIED', 'Эта операция не поддерживается оболочкой.');
     if (!await exists(path.join(this.installedSource, 'control.py')) || command === 'setup') await this.syncSource();

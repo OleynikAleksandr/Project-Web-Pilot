@@ -38,6 +38,8 @@ export class VpsTunnel {
     this.sleep = sleep;
     this.settleMs = settleMs;
     this.startTimeoutMs = startTimeoutMs;
+    this.ssh = '/usr/bin/ssh';
+    this.spawnOptions = {};
     this.plistFile = path.join(launchAgentDir ?? path.join(homeDir, 'Library/LaunchAgents'), VPS_TUNNEL_LABEL + '.plist');
     this.logFile = path.join(homeDir, 'Library/Logs/vps-mcp-tunnel.log');
     this.urlFile = path.join(homeDir, '.config/vps-server/mcp-url');
@@ -75,11 +77,11 @@ export class VpsTunnel {
   async inspectSsh() {
     let stdout = '';
     try {
-      ({ stdout = '' } = await this.execute('/usr/bin/ssh', ['-G', '-T', VPS_SSH_HOST], { timeout: 5_000, maxBuffer: 256 * 1024 }));
+      ({ stdout = '' } = await this.execute(this.ssh, ['-G', '-T', VPS_SSH_HOST], { timeout: 5_000, maxBuffer: 256 * 1024, ...this.spawnOptions }));
     } catch {
       return { configured: false, remoteForward: false };
     }
-    const values = key => stdout.split('\n').filter(line => line.startsWith(key + ' ')).map(line => line.slice(key.length + 1).trim());
+    const values = key => stdout.split(/\r?\n/).filter(line => line.startsWith(key + ' ')).map(line => line.slice(key.length + 1).trim());
     const hostname = values('hostname')[0];
     // Without a Host block ssh echoes the alias itself as the hostname.
     return { configured: !!hostname && hostname !== VPS_SSH_HOST, remoteForward: values('remoteforward').length > 0 };
@@ -129,14 +131,17 @@ export class VpsTunnel {
       return { configured: false, conflict: false, running: false, ready: false, owned: false, pid: null,
         mcpPort, forwardPort: null, portMatches: false, lastError: null, connector: null };
     }
-    const [agent, forwardPort, lastError, connector] = await Promise.all([
-      this.agent(), this.forwardPort(), this.lastError(),
-      this.connectorUrl().then(maskConnectorUrl, () => null),
-    ]);
-    const portMatches = mcpPort !== null && forwardPort === mcpPort;
-    return { configured: true, conflict: ssh.remoteForward, running: agent.running, pid: agent.pid,
-      ready: !ssh.remoteForward && agent.running && portMatches, owned: true,
-      mcpPort, forwardPort, portMatches, lastError, connector };
+    const [seen, connector] = await Promise.all([this.observe(), this.connectorUrl().then(maskConnectorUrl, () => null)]);
+    const portMatches = mcpPort !== null && seen.forwardPort === mcpPort;
+    return { configured: true, conflict: ssh.remoteForward, running: seen.running, pid: seen.pid,
+      ready: !ssh.remoteForward && seen.running && portMatches, owned: true,
+      mcpPort, forwardPort: seen.forwardPort, portMatches, lastError: seen.lastError, connector };
+  }
+
+  // What keeps the forward and how it is doing. macOS: the LaunchAgent, its plist and its log.
+  async observe() {
+    const [agent, forwardPort, lastError] = await Promise.all([this.agent(), this.forwardPort(), this.lastError()]);
+    return { running: agent.running, pid: agent.pid, forwardPort, lastError };
   }
 
   async bootstrap() {
@@ -186,6 +191,58 @@ export class VpsTunnel {
       await this.bootstrap();
       await this.settle();
     }
+    return this.status(mcpUrl);
+  }
+}
+
+// Windows has no LaunchAgent: control.py of the executor keeps the same ssh forward with a small supervisor
+// process, starts it at sign-in and restarts it after a drop. Everything else — the alias in ~/.ssh/config,
+// the RemoteForward conflict, the connector address — is read exactly as on macOS.
+export class WindowsVpsTunnel extends VpsTunnel {
+  // control(args) runs one vps-* command of control.py and returns its JSON.
+  constructor({ control, homeDir = os.homedir(), environment = process.env, ...options } = {}) {
+    super({ homeDir, ...options });
+    if (typeof control !== 'function') throw new TypeError('WindowsVpsTunnel requires control');
+    this.control = control;
+    const systemRoot = Object.entries(environment).find(([key]) => key.toLowerCase() === 'systemroot')?.[1] || 'C:\\Windows';
+    // The OpenSSH client that ships with Windows; without it the server counts as not configured.
+    this.ssh = path.join(systemRoot, 'System32', 'OpenSSH', 'ssh.exe');
+    this.spawnOptions = { windowsHide: true };
+  }
+
+  async observe() {
+    const vps = (await this.control(['vps-status']))?.vps ?? {};
+    return { supervised: !!vps.supervised, running: !!vps.running, pid: vps.pid ?? null,
+      forwardPort: Number.isSafeInteger(vps.forward_port) ? vps.forward_port : null,
+      lastError: vps.last_error?.message ? { message: String(vps.last_error.message).slice(0, 200), at: String(vps.last_error.at) } : null };
+  }
+
+  // ExitOnForwardFailure ends ssh quickly when the forward is refused; an ssh that
+  // survives the settle period holds an established forward.
+  async settle() {
+    const deadline = Date.now() + this.startTimeoutMs;
+    let seen = await this.observe();
+    while (!seen.running && Date.now() < deadline) {
+      await this.sleep(250);
+      seen = await this.observe();
+    }
+    if (seen.running) await this.sleep(this.settleMs);
+  }
+
+  async apply(mcpUrl) {
+    const port = loopbackMcpPort(mcpUrl);
+    if (port === null) throw new Error('Некорректный адрес локального MCP для туннеля VPS.');
+    const ssh = await this.inspectSsh();
+    if (!ssh.configured) {
+      // The server was removed from ~/.ssh/config: nothing may keep dialling it at every sign-in.
+      const seen = await this.observe();
+      if (seen.supervised || seen.forwardPort !== null) await this.control(['vps-stop']);
+      return this.status(mcpUrl);
+    }
+    if (ssh.remoteForward) return this.status(mcpUrl);
+    const before = await this.observe();
+    await this.control(['vps-apply', '--port', String(port)]);
+    if (!before.running || before.forwardPort !== port) await this.settle();
     return this.status(mcpUrl);
   }
 }

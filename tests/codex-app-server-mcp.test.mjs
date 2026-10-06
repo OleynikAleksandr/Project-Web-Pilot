@@ -1573,13 +1573,14 @@ client_dir, root = sys.argv[1], pathlib.Path(sys.argv[2])
 sys.path.insert(0, client_dir)
 import server
 local, appdata = root / "Local", root / "Roaming"
-os.environ.update(LOCALAPPDATA=str(local), APPDATA=str(appdata), PATH="/usr/bin")
+os.environ.update(LOCALAPPDATA=str(local), APPDATA=str(appdata), PATH="/usr/bin", SystemRoot=str(root / "Windows"))
 for name in ("WEB_PILOT_CODEX_EXECUTOR_STATE_DIR", "WEB_PILOT_LEGACY_LOCAL_STATE_DIR", "WEB_PILOT_UV", "WEB_PILOT_CODEX_TUNNEL_CLIENT", "NO_PROXY"):
     os.environ.pop(name, None)
 
-class NoSuchProcess(Exception): pass
-class ZombieProcess(Exception): pass
-class AccessDenied(Exception): pass
+class Error(Exception): pass
+class NoSuchProcess(Error): pass
+class ZombieProcess(Error): pass
+class AccessDenied(Error): pass
 table, events = {}, []
 class Process:
     def __init__(self, pid):
@@ -1589,9 +1590,11 @@ class Process:
     def create_time(self): return table[self.pid]["created"]
     def exe(self): return table[self.pid]["exe"]
     def cmdline(self): return table[self.pid]["cmdline"]
+    def name(self): return table[self.pid].get("name", "python.exe")
     def children(self, recursive=False):
         found = []
         for child in table[self.pid].get("children", []):
+            if child not in table: continue  # psutil lists living processes only
             found.append(Process(child))
             if recursive: found += found[-1].children(recursive=True)
         return found
@@ -1604,7 +1607,7 @@ def wait_procs(processes, timeout=None):
     return [p for p in processes if p.pid not in table], [p for p in processes if p.pid in table]
 psutil = types.ModuleType("psutil")
 psutil.Process, psutil.wait_procs = Process, wait_procs
-psutil.NoSuchProcess, psutil.ZombieProcess, psutil.AccessDenied = NoSuchProcess, ZombieProcess, AccessDenied
+psutil.Error, psutil.NoSuchProcess, psutil.ZombieProcess, psutil.AccessDenied = Error, NoSuchProcess, ZombieProcess, AccessDenied
 sys.modules["psutil"] = psutil
 
 registry = {}
@@ -1740,6 +1743,49 @@ registry[("HKCU", control.AUTOSTART_KEY)][control.AUTOSTART_VALUE] = "C:\\\\old\
 out["autostart_stale"] = control.autostart_status()
 out["autostart_off"] = [control.configure_autostart(False), control.configure_autostart(False), control.AUTOSTART_LAUNCHER.exists(),
                         control.AUTOSTART_VALUE in registry[("HKCU", control.AUTOSTART_KEY)]]
+
+# The forward of the user's own server (the VPS channel): a supervisor instead of the macOS LaunchAgent.
+out["vps_initial"] = control.vps_status()
+out["vps_bad_port"] = [attempt(lambda: control.vps_apply(80)), attempt(lambda: control.vps_apply(True))]
+vps_launches, next_pid = [], [6000]
+class VpsPopen:
+    def __init__(self, argv, **options):
+        vps_launches.append([[str(part) for part in argv], {k: options[k] for k in ("creationflags", "cwd")}])
+        self.pid = next_pid[0]; next_pid[0] += 10
+        table[self.pid] = {"created": 1700000100.0 + self.pid, "exe": "python.exe", "cmdline": argv, "children": [self.pid + 1]}
+        table[self.pid + 1] = {"created": 1700000200.0, "exe": "ssh.exe", "cmdline": ["ssh.exe"], "name": "ssh.exe"}
+    def poll(self): return None
+subprocess.Popen = VpsPopen
+events.clear()
+applied = control.vps_apply(17852)
+same = control.vps_apply(17852)
+launches_for_same_port = len(vps_launches)
+control.start = lambda mcp_only=False, tunnel_only=False: {"mcp_url": "http://127.0.0.1:17852/mcp", "mcp": {"ready": True}}
+login = control.selector_start()
+moved = control.vps_apply(17842)
+record = json.loads(control.VPS_FILE.read_text())
+control.VPS_LOG.write_text("Warning: Permanently added the host key\\nError: remote port forwarding failed for listen port 17842\\n\\n")
+table.pop(6011)
+refused = control.vps_status()
+runs, sleeps = [], []
+class Ssh:
+    def __init__(self, argv, **options):
+        runs.append([[str(part) for part in argv], {k: options[k] for k in ("creationflags", "cwd")}])
+        options["stderr"].write(b"ssh: connect to host vps port 22: Connection refused\\n")
+    def wait(self): return 255
+def no_ssh(argv, **options): raise FileNotFoundError("ssh.exe")
+supervised = [control.vps_supervise(popen=Ssh, sleep=sleeps.append, rounds=2), control.vps_supervise(popen=no_ssh, sleep=sleeps.append, rounds=1)]
+log_tail = control.VPS_LOG.read_text().splitlines()[-3:]
+stopped = control.vps_stop()
+subprocess.Popen = real_popen
+login_without_vps = control.selector_start()
+out["vps"] = {"applied": applied, "same": same, "launches_for_same_port": launches_for_same_port, "launch": vps_launches[0], "moved": moved,
+              "launches": len(vps_launches), "record_port": record["forward_port"], "record_digest": len(record["control_sha256"]),
+              "refused": refused, "stopped": stopped, "record_after_stop": control.VPS_FILE.exists(), "stop_events": events[:],
+              "login": login.get("vps"), "login_without_vps": "vps" in login_without_vps, "supervised": supervised, "runs": runs,
+              "sleeps": sleeps, "log_tail": log_tail, "no_record": control.vps_supervise(popen=Ssh, sleep=sleeps.append, rounds=1),
+              "ssh": str(root / "Windows" / "System32" / "OpenSSH" / "ssh.exe"), "control": str(pathlib.Path(client_dir) / "control.py"),
+              "python": str(control.PYTHON)}
 
 # setup: the private Python and the pinned packages through the uv of the package.
 commands = []
@@ -1879,7 +1925,43 @@ print(json.dumps(out, ensure_ascii=False))
   assert.deepEqual([prompt.cancelled, prompt.failed, prompt.garbage, prompt.no_value, prompt.refused], ['cancelled', 'failure', 'failure', 'failure', 'failure']);
   assert.deepEqual(prompt.routed, [['windows', true], ['mac', false]]);
 
+  const vps = out.vps, forward = port => [vps.ssh, '-N', '-o', 'BatchMode=yes', '-o', 'ExitOnForwardFailure=yes', '-o', 'ServerAliveInterval=30',
+    '-o', 'ServerAliveCountMax=3', '-R', `127.0.0.1:17842:127.0.0.1:${port}`, 'vps-mcp-tunnel'];
+  assert.deepEqual(out.vps_initial, { vps: { supervised: false, running: false, pid: null, forward_port: null, last_error: null } });
+  for (const error of out.vps_bad_port) assert.match(error, /A valid local MCP port is required/);
+  assert.deepEqual(vps.applied, { vps: { supervised: true, running: true, pid: 6001, forward_port: 17852, last_error: null } });
+  assert.deepEqual(vps.same, vps.applied);
+  assert.equal(vps.launches_for_same_port, 1, 'the same port and the same control.py keep the running supervisor');
+  assert.deepEqual(vps.launch, [[vps.python, '-B', vps.control, 'vps-supervise'], { creationflags: 0x08000000 | 0x00000200, cwd: state }]);
+  assert.deepEqual(vps.login, { supervised: true, running: true, pid: 6001, forward_port: 17852, last_error: null },
+    'sign-in keeps the forward up with either channel, as the LaunchAgent does on macOS');
+  assert.deepEqual(vps.moved, { vps: { supervised: true, running: true, pid: 6011, forward_port: 17842, last_error: null } });
+  assert.equal(vps.launches, 2, 'another MCP port restarts the supervisor');
+  assert.deepEqual([vps.record_port, vps.record_digest], [17842, 64]);
+  assert.equal(vps.refused.vps.running, false, 'the supervisor without a living ssh is not a working forward');
+  assert.equal(vps.refused.vps.supervised, true);
+  assert.equal(vps.refused.vps.last_error.message, 'Error: remote port forwarding failed for listen port 17842');
+  assert.match(vps.refused.vps.last_error.at, /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/);
+  assert.deepEqual(vps.supervised, [0, 0]);
+  assert.deepEqual(vps.runs, [[forward(17842), { creationflags: 0x08000000, cwd: state }], [forward(17842), { creationflags: 0x08000000, cwd: state }]],
+    'the same ssh forward as the macOS LaunchAgent, started again after it ends');
+  assert.equal(vps.sleeps.length, 3);
+  for (const pause of vps.sleeps) assert.ok(pause > 14 && pause <= 15, 'at most one start in 15 seconds');
+  assert.deepEqual(vps.log_tail, ['ssh: connect to host vps port 22: Connection refused', 'ssh: connect to host vps port 22: Connection refused', 'ssh could not be started: ssh.exe']);
+  assert.deepEqual(vps.stopped, { services: [{ service: 'vps', stopped: true }], vps: { supervised: false, running: false, pid: null, forward_port: null,
+    last_error: vps.stopped.vps.last_error } });
+  assert.equal(vps.record_after_stop, false, 'a removed server is not dialled again at sign-in');
+  assert.deepEqual(vps.stop_events.filter(([action]) => action === 'terminate').map(([, pid]) => pid), [6000, 6001, 6010], 'ssh ends with its supervisor');
+  assert.equal(vps.login_without_vps, false);
+  assert.equal(vps.no_record, 2);
+
   const control = path.join(clientDir, 'control.py');
+  for (const command of [['vps-status'], ['vps-apply', '--port', '17852'], ['vps-stop']]) {
+    const onMac = await runPython(control, command, controlEnvironment(root));
+    assert.equal(onMac.code, 1);
+    assert.match(JSON.parse(onMac.stdout).error, /kept by a LaunchAgent of Project Web Pilot/, command[0]);
+  }
+  assert.equal((await runPython(control, ['vps-supervise'], controlEnvironment(root))).code, 1);
   const refused = await runPython(control, ['autostart', '--state', 'status'], controlEnvironment(root));
   assert.equal(refused.code, 1);
   assert.match(JSON.parse(refused.stdout).error, /Start at login is set up by Project Web Pilot itself on this system/);

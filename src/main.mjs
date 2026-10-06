@@ -34,7 +34,7 @@ import { openStartupPage } from './browser-startup.mjs';
 import { BUNDLED_NODE_VERSION, defaultRuntimeFolder, legacyWindowsStateFolder, bundledMacNode, nodeExecutableCandidates } from './platform.mjs';
 import { WindowsExecutorBootstrap, WINDOWS_RUNTIME_ARCHIVE } from './windows-runtime.mjs';
 import { CodexAppServerRuntime, MacRuntimeSwitcher, runtimeLabel, CHATGPT_CHANNEL_SECURE, CHATGPT_CHANNELS } from './mac-runtime-switch.mjs';
-import { VpsTunnel } from './vps-tunnel.mjs';
+import { VpsTunnel, WindowsVpsTunnel } from './vps-tunnel.mjs';
 import { TunnelClipboard } from './tunnel-clipboard.mjs';
 import { StartupReadiness, inspectMacGit, installMacGit, offerMacInstallation } from './startup-readiness.mjs';
 import { startupPlatformOptions, startupSupported } from './startup-platform.mjs';
@@ -783,7 +783,9 @@ function ensureRuntimeSwitcher() {
       // The bundled uv builds the executor's Python on a Mac that has only the system one.
       : { uv: path.join(app.isPackaged ? process.resourcesPath : path.join(sourceDir, '../.harness/runtime'), 'mac-tools', 'uv') }),
   });
+  // The forward of the user's own server: a LaunchAgent on macOS, a supervisor of control.py on Windows.
   if (process.platform === 'darwin') vpsTunnel ??= new VpsTunnel();
+  else if (windows) vpsTunnel ??= new WindowsVpsTunnel({ control: args => appServerRuntime.vpsControl(args) });
   runtimeSwitcher ??= new MacRuntimeSwitcher({ appServerRuntime, vpsTunnel,
     legacyWindows: windows ? { legacyStateDir: legacyWindowsStateFolder(),
       controlFile: path.join(app.isPackaged ? path.join(process.resourcesPath, 'resources') : path.join(sourceDir, '../resources'),
@@ -981,7 +983,7 @@ function registerIpc() {
     await applyToolCallVisibility();
   });
   registerAction('pilot:set-chatgpt-channel', async input => {
-    if (process.platform !== 'darwin' || smoke || typeof runtime?.setChannel !== 'function') throw new Error('Выбор канала ChatGPT доступен только в macOS.');
+    if (smoke || typeof runtime?.setChannel !== 'function') throw new Error('Выбор канала ChatGPT недоступен на этой платформе.');
     if (!CHATGPT_CHANNELS.includes(input)) throw new Error('Неизвестный канал ChatGPT.');
     if (input === chatgptChannel && runtime.channel === input) return { channel: chatgptChannel };
     try {
@@ -992,12 +994,12 @@ function registerIpc() {
     }
   });
   registerAction('pilot:refresh-chatgpt-channel', async () => {
-    if (process.platform !== 'darwin' || smoke || typeof runtime?.setChannel !== 'function') throw new Error('Проверка канала ChatGPT доступна только в macOS.');
+    if (smoke || typeof runtime?.setChannel !== 'function') throw new Error('Проверка канала ChatGPT недоступна на этой платформе.');
     await runtime.control('status');
   });
   registerAction('pilot:copy-vps-connector-url', async () => {
-    if (process.platform !== 'darwin' || smoke) throw new Error('Канал VPS доступен только в macOS.');
-    vpsTunnel ??= new VpsTunnel();
+    ensureRuntimeSwitcher();
+    if (!vpsTunnel) throw new Error('Канал VPS недоступен на этой платформе.');
     // The full address goes straight to the clipboard; it is never returned, published or logged.
     clipboard.writeText(await vpsTunnel.connectorUrl());
     return { copied: true };
@@ -1338,7 +1340,7 @@ else {
       legacyRuntimeRoots = [...new Set([...(Array.isArray(settings.legacyRuntimeRoots) ? settings.legacyRuntimeRoots : []),
         settings.runtimeFolder, settings.runtimeRegistration?.folder]
         .filter(folder => typeof folder === 'string' && path.isAbsolute(folder)))].slice(0, 8);
-      if (process.platform === 'darwin' && CHATGPT_CHANNELS.includes(settings.chatgptChannel)) chatgptChannel = settings.chatgptChannel;
+      if (CHATGPT_CHANNELS.includes(settings.chatgptChannel)) chatgptChannel = settings.chatgptChannel;
       if (['light', 'dark'].includes(settings.shellTheme)) shellTheme = settings.shellTheme;
       if (typeof settings.hideToolCalls === 'boolean') hideToolCalls = settings.hideToolCalls;
       autoPlanEnabled = settings.autoPlanEnabled === true;
