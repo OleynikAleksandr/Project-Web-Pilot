@@ -130,6 +130,20 @@ test('non-local addresses and a server without context tools fail closed', async
   assert.throws(()=>new LocalMcpClient(ready.mcp_url,{fetchImpl}),TypeError);
 });
 
+test('the executor catalogue needs no context tool: the client asks only for the tools its runtime names', async () => {
+  const fetchImpl=async(_url,options)=>{
+    const body=JSON.parse(options.body);
+    if(body.method.startsWith('notifications/'))return new Response(null,{status:202});
+    return new Response(JSON.stringify({id:body.id,result:body.method==='initialize'?{serverInfo:{name:'Codex App Server Local Mac'},protocolVersion:'2025-03-26'}
+      :{tools:['bridge_status','exec_command'].map(name=>({name}))}}),{headers:{'content-type':'application/json'}});
+  };
+  const executor=new LocalMcpClient(ready.mcp_url,{fetchImpl,expectedServerName:'Codex App Server Local Mac',requiredTools:['bridge_status']});
+  assert.deepEqual(await executor.initialize(),{serverName:'Codex App Server Local Mac',toolCount:2,protocolVersion:'2025-03-26'});
+  // The former Windows bridge keeps its requirement until it is replaced by the executor.
+  await assert.rejects(new LocalMcpClient(ready.mcp_url,{fetchImpl,expectedServerName:'Codex App Server Local Mac'}).initialize(),
+    error=>error.code==='MCP_TOOLS_MISSING'&&/workflow_context_recover/.test(error.message));
+});
+
 function contextPacket() {
   const context='Полный контекст\nЗадача и незавершённые изменения';
   return {delivery_protocol:'inline-context-v1',ack_required:false,status:'ready',completeness:'COMPLETE',workspace:'/project',

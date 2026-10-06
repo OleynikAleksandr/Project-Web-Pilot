@@ -179,40 +179,35 @@ test('delivered chat shows local tools from the last confirmed runtime status wi
   assert.equal(f.document.getElementById('choose-runtime'), null);
 });
 
-test('MCP delivery shows the short start message and the agent reading the context through MCP', async t => {
+test('the context card describes one delivery: the full packet in the start message', async t => {
   const f = await fixture(t), text = id => f.document.getElementById(id).textContent;
-  f.emit({ ...f.state, context: { phase: 'preparing-message', contextMode: 'mcp', messageSent: false } });
-  assert.equal(text('context-title'), 'Готовим стартовое сообщение');
+  f.emit({ ...f.state, context: { phase: 'preparing-message', messageSent: false } });
+  assert.equal(text('context-title'), 'Вставляем контекст');
   assert.equal(text('state-message'), 'Ожидание');
-  assert.equal(text('state-context'), 'Ожидание');
-  f.emit({ ...f.state, context: { phase: 'sending', contextMode: 'mcp', messageSent: false } });
-  assert.equal(text('context-title'), 'Начинаем сессию');
+  f.emit({ ...f.state, context: { phase: 'sending', messageSent: false } });
+  assert.equal(text('context-title'), 'Передаём контекст');
   assert.equal(text('state-message'), 'Отправка…');
-  const sentAtMs = Date.UTC(2026, 9, 4, 12);
-  f.emit({ ...f.state, context: { phase: 'waiting-chat', contextMode: 'mcp', messageSent: true,
-    delivery: { workspace: '/p', contextMode: 'mcp', sentAtMs, deliveryMs: 1200 } } });
-  assert.equal(text('context-title'), 'Сессия начата');
-  assert.match(text('context-detail'), /через MCP по частям/);
+  const sentAtMs = Date.UTC(2026, 9, 6, 12);
+  f.emit({ ...f.state, context: { phase: 'delivered', messageSent: true,
+    delivery: { workspace: '/p', contextBytes: 89088, facts: { plan_revision: 7 }, sentAtMs, deliveryMs: 1200 } } });
   assert.equal(text('state-message'), 'Отправлено');
-  assert.equal(text('state-context'), 'Агент читает через MCP');
-  assert.equal(f.document.getElementById('state-context').dataset.ready, 'true');
-  assert.match(text('session-detail'), /Стартовое сообщение · /);
-  assert.match(text('session-detail'), /Отправка: 1\.20 с/);
-  assert.doesNotMatch(text('session-detail'), /КБ|NaN|undefined/);
-  assert.equal(text('retry-context'), 'Проверить подключение');
-  f.emit({ ...f.state, context: { phase: 'bound', contextMode: 'mcp', messageSent: true,
-    delivery: { workspace: '/p', contextMode: 'mcp', sentAtMs } } });
-  assert.equal(text('context-title'), 'Чат проекта');
-  assert.equal(text('state-message'), 'Отправлено');
-  f.emit({ ...f.state, context: { phase: 'bound', contextMode: 'mcp', messageSent: false, delivery: null } });
-  assert.equal(text('state-message'), 'Не отправлялось', 'a chat the user started manually got no start message');
-  assert.equal(text('state-context'), 'Агент читает через MCP');
-  assert.equal(text('retry-context'), 'Проверить подключение');
-  f.emit({ ...f.state, context: { phase: 'preparing-message', contextMode: 'message', messageSent: false } });
-  assert.equal(text('context-title'), 'Вставляем контекст', 'first-message delivery keeps its labels');
-  f.emit({ ...f.state, context: { phase: 'delivered', contextMode: 'message', messageSent: true } });
   assert.equal(text('state-context'), 'Передан целиком');
+  assert.equal(f.document.getElementById('state-context').dataset.ready, 'true');
+  assert.match(text('session-detail'), /Передано 87\.0 КБ · план 7/);
+  assert.match(text('session-detail'), /Отправка: 1\.20 с/);
   assert.equal(text('retry-context'), 'Обновить контекст');
+  // A chat started through MCP in 0.6.86–0.6.95 is a saved chat: no MCP wording, no packet figures.
+  f.emit({ ...f.state, context: { phase: 'legacy-session', messageSent: true, delivery: null } });
+  assert.equal(text('context-title'), 'Сохранённый чат проекта');
+  assert.equal(text('state-context'), 'Прежняя сессия');
+  assert.equal(text('retry-context'), 'Обновить контекст');
+  assert.doesNotMatch(text('session-detail'), /КБ|NaN|undefined|Стартовое сообщение/);
+  // The removed MCP mode leaves no texts behind, whatever an old state object carries.
+  f.emit({ ...f.state, context: { phase: 'waiting-chat', contextMode: 'mcp', messageSent: true, delivery: null } });
+  assert.equal(text('context-title'), 'Контекст отправлен');
+  assert.equal(text('retry-context'), 'Проверить статус');
+  const source = await fs.readFile(new URL('../src/ui/sidebar.mjs', import.meta.url), 'utf8');
+  assert.doesNotMatch(source, /через MCP|mcpPhases|contextMode|Проверить подключение/);
 });
 
 test('plan card shows current and total agent time in minutes and seconds without live announcements', async t => {

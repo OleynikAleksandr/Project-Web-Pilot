@@ -7,7 +7,8 @@ import path from 'node:path';
 import { isAbsolutePlatformPath, runtimeFolderCandidates, runtimeLayout } from './platform.mjs';
 
 const execFile = promisify(execFileCallback);
-const requiredTools = ['bridge_status', 'workflow_context_recover'];
+// The former Windows bridge still serves the context tool; the executor (macOS) passes its own list.
+const BRIDGE_REQUIRED_TOOLS = ['bridge_status', 'workflow_context_recover'];
 export const CONTEXT_PROTOCOL = 'inline-context-v1';
 
 export class RuntimeError extends Error {
@@ -88,8 +89,9 @@ async function responseMessage(response, id) {
 
 export class LocalMcpClient {
   // expectedServerName is the backend of this platform: another MCP server on the same local port is refused.
-  constructor(endpoint, { fetchImpl = globalThis.fetch, timeoutMs = 10000, expectedServerName } = {}) {
+  constructor(endpoint, { fetchImpl = globalThis.fetch, timeoutMs = 10000, expectedServerName, requiredTools = BRIDGE_REQUIRED_TOOLS } = {}) {
     if (typeof expectedServerName !== 'string' || !expectedServerName) throw new TypeError('LocalMcpClient requires expectedServerName');
+    this.requiredTools = [...requiredTools];
     this.endpoint = validateEndpoint(endpoint);
     this.fetch = fetchImpl;
     this.timeoutMs = timeoutMs;
@@ -143,7 +145,7 @@ export class LocalMcpClient {
       cursor = result.nextCursor;
       if (!cursor) break;
     }
-    const missing = requiredTools.filter(name => !names.includes(name));
+    const missing = this.requiredTools.filter(name => !names.includes(name));
     if (missing.length) {
       throw new RuntimeError('MCP_TOOLS_MISSING', 'В подключении отсутствуют: ' + missing.join(', ') + '. Нужен актуальный MCP.');
     }

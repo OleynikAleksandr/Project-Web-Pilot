@@ -2,7 +2,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { ContextCache } from '../src/context-cache.mjs';
-import { ContextSession, mcpStartMessage, packetMatchesProject, startupMessage } from '../src/context-session.mjs';
+import { ContextSession, packetMatchesProject, startupMessage } from '../src/context-session.mjs';
+import * as contextSessionModule from '../src/context-session.mjs';
+import { EXECUTOR_TOOL_RULES } from '../src/mac-runtime-switch.mjs';
 
 const project={workspace:'/Projects/Мой проект',projectId:'id-1',name:'Мой проект',planRevision:7,scopeId:'scope-1',
   scopeStatus:'ACTIVE',deliveryStatus:'IN_PROGRESS',nextTaskId:'T001',nextTaskTitle:'Read',sessionId:'session-1', experience:'chat',
@@ -421,113 +423,81 @@ test('ordinary manually started conversation is view-only until explicit context
   assert.equal(f.sends(), 1); assert.equal(f.controller.state.phase, 'delivered');
 });
 
-function mcpFixture(options) {
-  const f = controllerFixture(options);
-  const active = [], texts = []; let ensures = 0;
-  Object.assign(f.runtime, { contextDelivery: 'mcp', ensure: async () => { ensures++; return {}; },
-    setActiveWorkspace: async workspace => { active.push(workspace); return true; } });
-  f.composer.deliver = async options => {
-    assert.equal(f.saved.attempt.state, 'prepared');
-    assert.ok(options.text.includes(options.requestId), 'the marker proves our own message');
-    if (!options.canContinue()) return { state: 'cancelled' };
-    await options.onBeforeFill?.();
-    await options.onBeforeSend(); if (!options.canContinue()) return { state: 'cancelled' };
-    assert.equal(f.saved.attempt.state, 'sending');
-    texts.push(options.text); f.inspection.messageSeen = true; f.inspection.url = project.chatUrl;
-    return { state: 'sent' };
-  };
-  return Object.assign(f, { active, texts, ensures: () => ensures });
-}
+// 0.6.96: the context goes as text in the start message on every platform; MCP carries tools only.
+const mcpStarted = (state, extra = {}) => ({ protocol: 'inline-context-v1', requestId: 'mcp-request', text: 'start mcp-request', state,
+  createdAtMs: now - 10, sendStartedAtMs: state === 'sent' ? now - 8 : null, ...(state === 'sent' ? { sentAtMs: now - 5 } : {}),
+  packet: { workspace: project.workspace, contextMode: 'mcp' }, ...extra });
 
-test('MCP start message is short and makes the agent read the context one part per call', () => {
-  const text = mcpStartMessage(project, 'wp-request-unique');
-  for (const item of ['Начало сессии проекта «Мой проект» в Web Pilot', 'Папка проекта: "/Projects/Мой проект".',
-    'workflow_context_recover', 'part=1', 'отдельным вызовом', 'ключом after', '[КОНЕЦ ПАКЕТА]',
-    'коротко подтверди', 'назначение проекта и текущее состояние плана', 'wp-request-unique'])
+test('executor tool rules join the session rules of the start message; without them the text is the former one', () => {
+  const p = packet(), plain = startupMessage(project, 'rules-request', p), text = startupMessage(project, 'rules-request', p, EXECUTOR_TOOL_RULES);
+  assert.equal(EXECUTOR_TOOL_RULES.length, 2);
+  for (const item of ['rg в exec_command', 'apply_patch и не перечитывай их после успешного патча',
+    'OpenAI заблокировал вызов инструмента до выполнения', 'повтори тот же вызов один раз без изменений'])
     assert.ok(text.includes(item), item);
-  assert.ok(Buffer.byteLength(text) < 1200, 'no project context is pasted');
-  assert.doesNotMatch(text, /НАЧАЛО ПАКЕТА|не вызывай инструменты/);
+  assert.equal(text.replace(EXECUTOR_TOOL_RULES.join('\n') + '\n', ''), plain, 'only the two rule lines are added');
+  assert.ok(text.indexOf(EXECUTOR_TOOL_RULES[1]) < text.indexOf('НАЧАЛО ПАКЕТА'), 'rules precede the packet');
+  assert.equal(text.split(p.context).length, 2, 'the complete packet is still included exactly once');
+  for (const name of ['workflow_context_recover', 'part=1', 'ключом after']) assert.ok(!text.includes(name), name);
+  assert.equal(contextSessionModule.mcpStartMessage, undefined, 'the short MCP start message is gone');
 });
 
-test('MCP delivery: a fresh session sends only the start message and binds the chat by it', async () => {
-  const f = mcpFixture({ chatUrl: null });
-  f.info.planRevision = 8; // plan changes never make the start message stale
+test('a new session sends one start message with the full packet and the rules of the runtime', async () => {
+  const f = controllerFixture({ chatUrl: null }); const texts = [];
+  f.runtime.startupRules = EXECUTOR_TOOL_RULES;
+  const deliver = f.composer.deliver;
+  f.composer.deliver = async options => { texts.push(options.text); return deliver(options); };
   await f.controller.tick();
-  assert.equal(f.controller.state.contextMode, 'mcp');
-  assert.equal(f.loads(), 0, 'the Kit packet is never loaded');
-  assert.equal(f.ensures(), 1);
-  assert.deepEqual(f.active, [project.workspace], 'the project is recorded before the agent calls the tool');
-  assert.deepEqual(f.texts, [mcpStartMessage(project, 'wp-request-test-request')]);
-  assert.equal(f.saved.attempt.state, 'sent');
-  assert.equal(f.saved.attempt.packet.contextMode, 'mcp');
+  assert.equal(f.loads(), 1); assert.equal(f.sends(), 1);
+  assert.deepEqual(texts, [startupMessage(project, 'wp-request-test-request', packet(), EXECUTOR_TOOL_RULES)]);
+  assert.equal(f.saved.attempt.packet.contextMode, undefined);
+  assert.equal(f.saved.attempt.packet.facts.plan_revision, 7);
   assert.equal(f.controller.state.phase, 'waiting-chat');
+  assert.equal('contextMode' in f.controller.state, false, 'there is one delivery mode');
+  await f.controller.tick();
+  assert.equal(f.saved.chatUrl, project.chatUrl); assert.equal(f.controller.state.phase, 'delivered');
+});
+
+test('a chat started through MCP stays bound: nothing is sent on its own, an explicit refresh delivers the full packet', async () => {
+  const f = controllerFixture({ savedAttempt: mcpStarted('sent') });
+  f.runtime.setActiveWorkspace = async () => { throw new Error('the client no longer records the active project'); };
+  await f.controller.tick();
+  assert.equal(f.controller.state.phase, 'legacy-session');
   assert.equal(f.controller.state.messageSent, true);
-  await f.controller.tick();
-  assert.equal(f.saved.chatUrl, project.chatUrl);
-  assert.equal(f.boundLog.length, 1);
-  assert.equal(f.controller.state.phase, 'bound');
-  assert.equal(f.controller.state.messageSent, true);
-  assert.equal(f.controller.state.delivery.contextMode, 'mcp');
-  f.controller.attach(f.saved); await f.controller.tick();
-  assert.equal(f.controller.state.phase, 'bound');
-  assert.equal(f.texts.length, 1, 'reopening the chat never sends the start message again');
-  assert.equal(f.ensures(), 1); assert.equal(f.loads(), 0); assert.equal(f.boundLog.length, 1);
-});
-
-test('MCP delivery: drafts and generation delay the start message without touching user input', async () => {
-  for (const [patch, phase] of [[{ draftLength: 7, draftMatches: false }, 'waiting-draft'], [{ busy: true }, 'waiting-generation']]) {
-    const f = mcpFixture({ chatUrl: null }); Object.assign(f.inspection, patch);
-    await f.controller.tick();
-    assert.equal(f.controller.state.phase, phase);
-    assert.equal(f.texts.length, 0); assert.equal(f.loads(), 0);
-    assert.equal(f.saved.attempt, null);
-  }
-});
-
-test('MCP delivery: a chat bound by the first user message gets no start message and no service restart', async () => {
-  const f = mcpFixture();
-  await f.store.updateSession('', '', { manualStart: true });
-  await f.controller.tick();
-  assert.equal(f.controller.state.phase, 'bound');
-  assert.equal(f.controller.state.messageSent, false);
-  assert.equal(f.loads(), 0); assert.equal(f.texts.length, 0); assert.equal(f.ensures(), 0);
-  assert.deepEqual(f.active, [project.workspace]);
-  assert.equal(f.saved.manualStart, true);
-});
-
-test('MCP delivery: an older chat with a delivered packet stays a project chat', async () => {
-  const f = mcpFixture({ savedAttempt: { protocol: 'inline-context-v1', requestId: 'old', text: 'old', state: 'sent',
-    sendStartedAtMs: now - 10, sentAtMs: now - 5, packet: { workspace: project.workspace, facts: { ...facts } } } });
-  await f.controller.tick();
-  assert.equal(f.controller.state.phase, 'bound');
   assert.equal(f.controller.state.delivery, null);
-  assert.equal(f.loads(), 0); assert.equal(f.texts.length, 0);
-});
-
-test('MCP delivery: a prepared full packet is replaced by the start message, and message mode never sends a start message', async () => {
-  const old = { protocol: 'inline-context-v1', requestId: 'old-request', text: 'full packet old-request', state: 'prepared',
-    createdAtMs: now - 10, sendStartedAtMs: null, packet: { workspace: project.workspace, facts: { ...facts }, generatedAtMs: now } };
-  const f = mcpFixture({ chatUrl: null, savedAttempt: old });
-  await f.controller.tick();
-  assert.equal(f.loads(), 0);
-  assert.deepEqual(f.texts, [mcpStartMessage(project, 'wp-request-test-request')]);
-  const legacy = controllerFixture({ savedAttempt: { ...old, requestId: 'mcp-request', text: 'start mcp-request',
-    packet: { workspace: project.workspace, contextMode: 'mcp' } } });
-  await legacy.controller.tick();
-  assert.equal(legacy.loads(), 1); assert.equal(legacy.sends(), 1, 'the full packet is sent instead');
-  assert.equal(legacy.controller.state.contextMode, 'message');
-  assert.equal(legacy.controller.state.phase, 'waiting-chat');
-});
-
-test('MCP delivery: retry repeats the connection check and keeps the session unchanged', async () => {
-  const f = mcpFixture({ chatUrl: null });
-  await f.store.updateSession('', '', { manualStart: true });
-  await f.controller.tick();
+  f.info.planRevision = 8; await f.controller.tick(); // a changed plan sends nothing either
+  assert.equal(f.controller.state.phase, 'legacy-session');
+  f.controller.attach(f.saved); await f.controller.tick();
+  assert.equal(f.controller.state.phase, 'legacy-session');
+  assert.equal(f.loads(), 0); assert.equal(f.sends(), 0); assert.equal(f.saved.chatUrl, project.chatUrl);
+  f.info.planRevision = 7;
   await f.controller.retry();
-  assert.equal(f.saved.manualStart, true, 'retry never turns the chat into a recovery send');
-  assert.equal(f.controller.state.phase, 'bound');
-  assert.equal(f.ensures(), 2);
-  assert.equal(f.texts.length, 0); assert.equal(f.loads(), 0);
+  assert.equal(f.loads(), 1); assert.equal(f.sends(), 1, 'the user asked for the context');
+  assert.equal(f.saved.attempt.packet.contextMode, undefined);
+});
+
+test('a chat started through MCP whose address is not saved yet is bound when the address appears', async () => {
+  const f = controllerFixture({ chatUrl: null, savedAttempt: mcpStarted('sent') });
+  await f.controller.tick();
+  assert.equal(f.controller.state.phase, 'waiting-chat');
+  f.inspection.url = project.chatUrl;
+  await f.controller.tick();
+  assert.equal(f.saved.chatUrl, project.chatUrl); assert.equal(f.boundLog.length, 1);
+  assert.equal(f.controller.state.phase, 'legacy-session');
+  assert.equal(f.loads(), 0); assert.equal(f.sends(), 0);
+});
+
+test('a prepared short MCP start message is never sent: the full packet replaces it, a draft pauses it', async () => {
+  const f = controllerFixture({ savedAttempt: mcpStarted('prepared') });
+  await f.controller.tick();
+  assert.equal(f.loads(), 1); assert.equal(f.sends(), 1, 'the full packet is sent instead');
+  assert.notEqual(f.saved.attempt.requestId, 'mcp-request');
+  assert.equal(f.controller.state.phase, 'waiting-chat');
+  const drafted = controllerFixture({ savedAttempt: mcpStarted('prepared') });
+  Object.assign(drafted.inspection, { draftLength: 17, draftMatches: true });
+  drafted.composer.hasFilled = () => true;
+  await drafted.controller.tick();
+  assert.equal(drafted.controller.state.phase, 'prepared-stale');
+  assert.equal(drafted.loads(), 0); assert.equal(drafted.sends(), 0);
 });
 
 test('fresh creation resets the draft before mode selection and never resets later user input', async () => {

@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1313,
+  "plan_revision": 1315,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "context-as-text-0.6.96-20261006",
@@ -353,8 +353,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "context-as-text-0.6.96-20261006",
         "task_id": "T001",
@@ -395,7 +395,20 @@
         "LocalMcpClient на macOS не требует workflow_context_recover в каталоге сервера; для Windows требование остаётся до задачи W004",
         "Экспорты src/chatgpt-dom.mjs, src/chatgpt-composer.mjs, src/chatgpt-experience.mjs и формат pageScript не меняются"
       ],
-      "expected_commit_message": "feat: Стартовое сообщение macOS несёт полный контекст; режим MCP-доставки удалён из клиента"
+      "expected_commit_message": "feat: Стартовое сообщение macOS несёт полный контекст; режим MCP-доставки удалён из клиента",
+      "actual_files": [
+        "docs/planning/context-as-text.md",
+        "src/context-session.mjs",
+        "src/mac-runtime-switch.mjs",
+        "src/mcp-runtime.mjs",
+        "src/ui/progress.mjs",
+        "src/ui/sidebar.mjs",
+        "tests/context-session.test.mjs",
+        "tests/mac-runtime-switch.test.mjs",
+        "tests/mcp-runtime.test.mjs",
+        "tests/progress.test.mjs",
+        "tests/sidebar.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -1122,7 +1135,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: context-as-text-0.6.96-20261006
 Current Task: нет
-Revision: 1313
+Revision: 1315
 
 ## Цель
 
@@ -1157,8 +1170,8 @@ Revision: 1313
   - Git Commit: [DONE] docs: документы Workflow Kit в составе проекта
   - Reference: context-as-text-0.6.96-20261006 / M002 / implementation
   - Файлы: docs/planning/context-as-text.md, AGENTS.md, docs/SOURCE_WORKSPACES.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/architecture/OVERVIEW.md, docs/modules/workflow-kit-recovery.md, packages/workflow-kit/README.md, packages/workflow-kit/docs/modules/workflow-kit-package.md, README.md, docs/WORKFLOW_START.md, docs/WORKSPACE_SETUP.md, docs/modules/session-owned-plans.md, docs/planning/mcp-sequential-parts-kit-1.5.4.md, docs/planning/release-backups-kit-1.5.5.md, packages/workflow-kit/docs/DOCUMENTATION_INDEX.md, packages/workflow-kit/docs/MODULES.md, packages/workflow-kit/docs/PRODUCT.md, packages/workflow-kit/docs/WORKFLOW_START.md, packages/workflow-kit/docs/architecture/ARCHITECTURE.md, packages/workflow-kit/docs/architecture/OVERVIEW.md
-- [TODO] T001: Стартовое сообщение macOS несёт полный контекст; режим MCP-доставки удалён из клиента — Ожидает
-  - Git Commit: [PENDING] feat: Стартовое сообщение macOS несёт полный контекст; режим MCP-доставки удалён из клиента
+- [DONE] T001: Стартовое сообщение macOS несёт полный контекст; режим MCP-доставки удалён из клиента — Завершено
+  - Git Commit: [DONE] feat: Стартовое сообщение macOS несёт полный контекст; режим MCP-доставки удалён из клиента
   - Reference: context-as-text-0.6.96-20261006 / T001 / implementation
   - Файлы: src/mac-runtime-switch.mjs, src/context-session.mjs, src/mcp-runtime.mjs, src/ui/sidebar.mjs, src/ui/progress.mjs, src/ui/index.html, src/main.mjs, tests/context-session.test.mjs, tests/mac-runtime-switch.test.mjs, tests/mcp-runtime.test.mjs, tests/sidebar.test.mjs, tests/progress.test.mjs, docs/planning/context-as-text.md
 - [TODO] T002: MCP без доставки контекста: каталог из девяти инструментов — Ожидает

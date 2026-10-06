@@ -20,8 +20,7 @@ const phaseLabels = {
   'preparing-message': 'Вставляем контекст в сообщение', sending: 'Отправляем контекст',
   'waiting-generation': 'Ждём завершения ответа ChatGPT',
 };
-const mcpPhaseLabels = { 'preparing-message': 'Вставляем стартовое сообщение', sending: 'Отправляем стартовое сообщение' };
-const phaseLabel = context => (context?.contextMode === 'mcp' && mcpPhaseLabels[context.phase]) || phaseLabels[context?.phase];
+const phaseLabel = context => phaseLabels[context?.phase];
 export function operationLabel(state = {}, action = null) {
   if (['repairing','verifying','services'].includes(state.doctor?.phase)) return 'Доктор проекта: проверка и восстановление';
   if (state.setup?.phase === 'checking') return 'Проверяем папку проекта';

@@ -9,10 +9,10 @@ test('operations show stages; idle, errors and user input waits never spin',()=>
   for(const phase of ['delivered','waiting-login','waiting-draft','prepared-stale','error','chat-changed','waiting-chat','send-unknown']) {
     assert.equal(operationLabel({context:{phase}}),null);
   }
-  assert.equal(operationLabel({context:{phase:'sending',contextMode:'mcp'}}),'Отправляем стартовое сообщение');
-  assert.equal(operationLabel({context:{phase:'preparing-message',contextMode:'mcp'}}),'Вставляем стартовое сообщение');
-  assert.equal(operationLabel({context:{phase:'sending',contextMode:'message'}}),'Отправляем контекст');
-  assert.equal(operationLabel({context:{phase:'waiting-chat',contextMode:'mcp'}}),null);
+  // 0.6.96: one delivery mode — the full context in the start message; a stale contextMode changes nothing.
+  assert.equal(operationLabel({context:{phase:'sending'}}),'Отправляем контекст');
+  assert.equal(operationLabel({context:{phase:'preparing-message'}}),'Вставляем контекст в сообщение');
+  assert.equal(operationLabel({context:{phase:'sending',contextMode:'mcp'}}),'Отправляем контекст');
   assert.equal(operationLabel({pageLoading:true}),'Открываем ChatGPT');
   assert.equal(operationLabel({setup:{phase:'applying'}}),'Подготавливаем проект');
   assert.equal(operationLabel({context:{phase:'delivered'},contextPreparation:{busy:true}}),'Подготавливаем контекст заранее');

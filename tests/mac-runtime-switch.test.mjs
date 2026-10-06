@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { mkdtemp } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { CodexAppServerRuntime, MacRuntimeSwitcher, MacSelectedRuntime, MAC_RUNTIME_LABEL, CODEX_NOT_FOUND_MESSAGE,
+import { CodexAppServerRuntime, MacRuntimeSwitcher, MacSelectedRuntime, MAC_RUNTIME_LABEL, CODEX_NOT_FOUND_MESSAGE, EXECUTOR_TOOL_RULES,
   LEGACY_LAUNCH_AGENT, APP_SERVER_LAUNCH_AGENT, CHATGPT_CHANNEL_SECURE, CHATGPT_CHANNEL_VPS } from '../src/mac-runtime-switch.mjs';
 import { McpRuntime } from '../src/mcp-runtime.mjs';
 
@@ -27,7 +27,7 @@ function fixture(root, { tunnelConfigured = true, tunnelStarts = true, vps = fal
     tunnel: { ready: state.tunnelRunning, owned: state.tunnelRunning, running: state.tunnelRunning, configured: state.tunnelConfigured },
     tunnel_target: MCP_URL, tunnel_ui: TUNNEL_UI, mcp_url: MCP_URL });
   const appServerRuntime = {
-    installedSource, stateDir: path.join(root, 'state'), lastStatus: null, activated: false, contextDelivery: 'mcp',
+    installedSource, stateDir: path.join(root, 'state'), lastStatus: null, activated: false, startupRules: EXECUTOR_TOOL_RULES,
     async syncSource() {
       events.push('app.sync');
       await fs.mkdir(installedSource, { recursive: true });
@@ -46,7 +46,6 @@ function fixture(root, { tunnelConfigured = true, tunnelStarts = true, vps = fal
       return { ok: true, configured: true };
     },
     async configureChannel(channel) { events.push('app.channel:' + channel); return { ok: true, chatgpt_channel: channel }; },
-    async setActiveWorkspace(workspace) { events.push('app.workspace:' + workspace); return true; },
     async loadContext() { return { ok: true }; },
   };
   const vpsState = { ready: vpsReady };
@@ -338,29 +337,26 @@ test('the tunnel is entered through the executor helper and its key never reache
   await assert.rejects(runtime.configureTunnel({ tunnelId: 5 }), error => error.code === 'MAC_TUNNEL_INVALID_DATA' && !!error.publicMessage);
 });
 
-test('App Server backend serves the context over MCP and records the project open in Web Pilot', async t => {
-  const root = await temporary(t, 'web-pilot-active-workspace-');
+test('the executor runtime adds its tool rules to the start message and no longer records the open project', async t => {
+  const root = await temporary(t, 'web-pilot-start-rules-');
   const state = path.join(root, 'state');
   const runtime = new CodexAppServerRuntime({ sourceDir: path.join(root, 'resource'), stateDir: state,
     sessionPlans: { loadContext() {} }, execute: async () => { throw new Error('not used'); } });
-  assert.equal(runtime.contextDelivery, 'mcp');
-  assert.equal(await runtime.setActiveWorkspace('/Projects/Мой проект'), true);
-  const file = path.join(state, 'active-workspace.json');
-  const record = JSON.parse(await fs.readFile(file, 'utf8'));
-  assert.equal(record.workspace, '/Projects/Мой проект');
-  assert.ok(Number.isSafeInteger(record.updated_at_ms));
-  assert.equal((await fs.stat(file)).mode & 0o777, 0o600);
-  assert.equal(await runtime.setActiveWorkspace('/Projects/Мой проект'), false, 'an unchanged project is not rewritten');
-  assert.equal(await runtime.setActiveWorkspace('/Projects/Другой'), true);
-  assert.equal(JSON.parse(await fs.readFile(file, 'utf8')).workspace, '/Projects/Другой');
-  await assert.rejects(runtime.setActiveWorkspace('relative/path'), TypeError);
-  assert.deepEqual((await fs.readdir(state)).sort(), ['active-workspace.json'], 'no temporary files remain');
+  assert.equal(runtime.startupRules, EXECUTOR_TOOL_RULES);
+  assert.equal(EXECUTOR_TOOL_RULES.length, 2);
+  assert.match(EXECUTOR_TOOL_RULES[0], /rg в exec_command.*apply_patch/);
+  assert.match(EXECUTOR_TOOL_RULES[1], /заблокировал вызов инструмента до выполнения.*один раз без изменений/);
+  for (const name of ['contextDelivery', 'setActiveWorkspace', 'activeWorkspace']) assert.equal(runtime[name], undefined, name);
+  await assert.rejects(fs.access(path.join(state, 'active-workspace.json')), { code: 'ENOENT' });
 
   const f = fixture(root);
   const selected = f.switcher.createRuntime(CHATGPT_CHANNEL_SECURE);
-  assert.equal(selected.contextDelivery, 'mcp');
-  assert.equal(await selected.setActiveWorkspace('/Projects/Мой проект'), true);
-  assert.deepEqual(f.events, ['app.workspace:/Projects/Мой проект']);
+  assert.equal(selected.startupRules, EXECUTOR_TOOL_RULES);
+  assert.equal(selected.contextDelivery, undefined);
+  assert.equal(selected.setActiveWorkspace, undefined);
+  const source = await fs.readFile(new URL('../src/mac-runtime-switch.mjs', import.meta.url), 'utf8');
+  assert.doesNotMatch(source, /active-workspace|workflow_context_recover/);
+  assert.match(source, /requiredTools: EXECUTOR_REQUIRED_TOOLS/);
 });
 
 test('only processes named exactly by a retired runtime folder are stopped', async t => {

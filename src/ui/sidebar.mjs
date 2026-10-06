@@ -114,18 +114,7 @@ const phases = {
   'legacy-session': ['Сохранённый чат проекта', 'Чат открыт. Для передачи полного пакета нажмите «Обновить контекст» или создайте новую сессию через меню проекта.', 'neutral'],
   'send-unknown': ['Можно продолжать разговор', 'Прежняя попытка отправки не подтверждена. Автоматических проверок и повторной отправки нет.', 'neutral'],
   'chat-changed': ['Открыт другой чат', 'Этот чат пока не связан с проектом. Вернитесь к сессии проекта или создайте новую через меню проекта.', 'working'],
-  bound: ['Чат проекта', 'Контекст агент получает сам через MCP. Чтобы обновить его в этом чате, попросите агента получить контекст проекта заново.', 'success'],
   error: ['Не удалось передать контекст', 'Подробности ошибки показаны выше. После исправления нажмите «Проверить контекст».', 'error'],
-};
-
-// MCP delivery sends only a short start message; the agent then reads the project context itself.
-const mcpPhases = {
-  'waiting-draft': ['В поле есть черновик', 'Закончите или уберите свой черновик. Короткое стартовое сообщение подождёт.', 'working'],
-  'waiting-generation': ['Ждём завершения ответа', 'ChatGPT отвечает. Стартовое сообщение отправится, когда поле освободится.', 'working'],
-  'preparing-message': ['Готовим стартовое сообщение', 'Вставляем короткое стартовое сообщение в поле ChatGPT.', 'working'],
-  sending: ['Начинаем сессию', 'Отправляем стартовое сообщение. Контекст проекта агент получит сам через MCP.', 'working'],
-  'waiting-chat': ['Сессия начата', 'Агент получает контекст проекта через MCP по частям и кратко подтвердит. Адрес чата сохранится при его появлении.', 'success'],
-  error: ['Не удалось начать сессию', 'Подробности ошибки показаны выше. После исправления нажмите «Проверить подключение».', 'error'],
 };
 
 const setupView = workspaceSetupView(action);
@@ -369,8 +358,7 @@ function render(state) {
       title.textContent = task.title; body.append(title); item.append(mark, body); return item;
     }));
   } else { $('plan-tasks').replaceChildren(); $('plan-note').hidden = true; $('plan-reason').hidden = true; }
-  const mcpContext = context.contextMode === 'mcp';
-  const [title, detail, tone] = (mcpContext && mcpPhases[context.phase]) || phases[context.phase] || phases.selected;
+  const [title, detail, tone] = phases[context.phase] ?? phases.selected;
   $('context-title').textContent = state.pageLoading ? 'Открываем ChatGPT' : title;
   $('context-details').hidden = !contextExpanded;
   $('context-toggle').setAttribute('aria-expanded', String(contextExpanded));
@@ -382,23 +370,18 @@ function render(state) {
   const servicesReady = !!context.servicesReady || !!(runtimeService?.mcpReady && runtimeService?.tunnelReady);
   $('state-service').textContent = servicesReady ? 'Готовы' : context.phase === 'preparing' ? 'Проверка…' : 'Не проверены';
   $('state-service').dataset.ready = String(servicesReady);
-  // MCP delivery: a short start message; the agent reads the project context itself.
-  $('state-message').textContent = context.messageSent ? 'Отправлено' : context.phase === 'sending' ? 'Отправка…' : context.phase === 'send-unknown' ? 'Без подтверждения'
-    : mcpContext && context.phase === 'bound' ? 'Не отправлялось' : 'Ожидание';
-  $('state-message').dataset.ready = String(!!context.messageSent || (mcpContext && context.phase === 'bound'));
-  const mcpReading = ['waiting-chat', 'bound'].includes(context.phase);
-  $('state-context').textContent = mcpContext ? (mcpReading ? 'Агент читает через MCP' : 'Ожидание') : context.phase === 'delivered' ? 'Передан целиком' : ['stale', 'prepared-stale'].includes(context.phase) ? 'Устарел' : context.phase === 'loading-context' ? 'Подготовка…' : context.phase === 'legacy-session' ? 'Прежняя сессия' : 'Ожидание';
-  $('state-context').dataset.ready = String(mcpContext ? mcpReading : context.phase === 'delivered');
+  $('state-message').textContent = context.messageSent ? 'Отправлено' : context.phase === 'sending' ? 'Отправка…' : context.phase === 'send-unknown' ? 'Без подтверждения' : 'Ожидание';
+  $('state-message').dataset.ready = String(!!context.messageSent);
+  $('state-context').textContent = context.phase === 'delivered' ? 'Передан целиком' : ['stale', 'prepared-stale'].includes(context.phase) ? 'Устарел' : context.phase === 'loading-context' ? 'Подготовка…' : context.phase === 'legacy-session' ? 'Прежняя сессия' : 'Ожидание';
+  $('state-context').dataset.ready = String(context.phase === 'delivered');
   $('return-chat').hidden = context.phase !== 'chat-changed';
-  $('retry-context').textContent = mcpContext ? 'Проверить подключение'
-    : ['delivered', 'stale', 'prepared-stale', 'legacy-session', 'manual-session'].includes(context.phase) ? 'Обновить контекст'
+  $('retry-context').textContent = ['delivered', 'stale', 'prepared-stale', 'legacy-session', 'manual-session'].includes(context.phase) ? 'Обновить контекст'
     : ['send-unknown', 'waiting-chat'].includes(context.phase) ? 'Проверить статус' : 'Проверить контекст';
   $('connection-detail').textContent = state.platform === 'win32' ? 'Codex Local Windows · встроенный runtime'
     : state.macRuntime ? `${state.macRuntime.label} · встроенный MCP` : state.runtimeFolder;
   const delivery = context.delivery;
   $('session-detail').textContent = selected ? `Сессия: ${selected.sessionId}`
-    + (delivery?.contextMode === 'mcp' ? `\nСтартовое сообщение · ${new Date(delivery.sentAtMs).toLocaleString('ru-RU')}`
-      : delivery ? `\nПередано ${(delivery.contextBytes / 1024).toFixed(1)} КБ · план ${delivery.facts.plan_revision}\n${new Date(delivery.sentAtMs).toLocaleString('ru-RU')}` : '')
+    + (delivery ? `\nПередано ${(delivery.contextBytes / 1024).toFixed(1)} КБ · план ${delivery.facts.plan_revision}\n${new Date(delivery.sentAtMs).toLocaleString('ru-RU')}` : '')
     + (Number.isFinite(delivery?.preparationMs) ? `\nПодготовка: ${Math.round(delivery.preparationMs)} мс${delivery.cacheHit ? ' · пакет готов заранее' : ''}` : '')
     + (Number.isFinite(delivery?.deliveryMs) ? `\nОтправка: ${(delivery.deliveryMs / 1000).toFixed(2)} с` : '') : '';
   if (state.fixture) $('connection-detail').textContent = 'TEST FIXTURE · без реального аккаунта и MCP';
