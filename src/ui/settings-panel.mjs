@@ -29,8 +29,6 @@ export function settingsPanelView(action) {
   $('chatgpt-channel-vps').addEventListener('click', () => action('setChatgptChannel', 'vps'));
   $('chatgpt-channel-refresh').addEventListener('click', () => action('refreshChatgptChannel'));
   $('vps-connector-copy').addEventListener('click', () => action('copyVpsConnectorUrl'));
-  $('configure-windows-tunnel').addEventListener('click', () => action('configureWindowsTunnel'));
-  $('refresh-windows-runtime').addEventListener('click', () => action('refreshWindowsRuntime'));
   let state;
   function render(next, pending) {
     state = next;
@@ -43,18 +41,26 @@ export function settingsPanelView(action) {
     $('tool-calls-hide').setAttribute('aria-pressed', String(state.hideToolCalls));
     $('tool-calls-show').setAttribute('aria-pressed', String(!state.hideToolCalls));
     $('tool-calls-hide').disabled = pending; $('tool-calls-show').disabled = pending;
-    const isMac = state.platform === 'darwin';
-    const macSection = $('mac-runtime-section');
-    macSection.hidden = !isMac;
-    if (isMac) {
-      const macRuntime = state.macRuntime ?? { label: 'Codex App Server Local Mac', service: null };
-      const service = macRuntime.service;
-      const viaVps = macRuntime.chatgptChannel === 'vps';
+    // One section for both systems: the same executor, the same services, the same states.
+    const isMac = state.platform === 'darwin', isWindows = state.platform === 'win32';
+    const system = isWindows ? 'Windows' : 'macOS';
+    $('local-runtime-section').hidden = !isMac && !isWindows;
+    if (isMac || isWindows) {
+      const localRuntime = state.localRuntime ?? { label: `Codex App Server Local ${isWindows ? 'Windows' : 'Mac'}`, service: null };
+      const service = localRuntime.service;
+      const viaVps = localRuntime.chatgptChannel === 'vps';
       const ready = !!service?.mcpReady && !!service?.tunnelReady && !!service?.tunnelConfigured;
-      $('mac-runtime-status').textContent = ready
-        ? `${macRuntime.label}: MCP и ${viaVps ? 'канал VPS' : 'Secure MCP Tunnel'} готовы.`
-        : `${macRuntime.label}: службы ещё не подтвердили полную готовность.`;
-      const vps = macRuntime.vps ?? null;
+      $('local-runtime-title').textContent = `Локальные инструменты ${system}`;
+      $('local-runtime-help').textContent = `Web Pilot сам устанавливает и запускает локальный MCP. Он запускается при входе в ${system} и при открытии Web Pilot.`;
+      $('local-runtime-status').textContent = ready
+        ? `${localRuntime.label}: MCP и ${viaVps ? 'канал VPS' : 'Secure MCP Tunnel'} готовы.`
+        : `${localRuntime.label}: службы ещё не подтвердили полную готовность.`;
+    }
+    if (isMac) {
+      const localRuntime = state.localRuntime ?? { service: null };
+      const service = localRuntime.service;
+      const viaVps = localRuntime.chatgptChannel === 'vps';
+      const vps = localRuntime.vps ?? null;
       $('chatgpt-channel-secure').setAttribute('aria-pressed', String(!viaVps));
       $('chatgpt-channel-vps').setAttribute('aria-pressed', String(viaVps));
       $('chatgpt-channel-secure').disabled = pending;
@@ -75,31 +81,6 @@ export function settingsPanelView(action) {
       $('vps-connector-copy').disabled = pending;
     }
     $('chatgpt-channel-section').hidden = !isMac;
-    const isWindows = state.platform === 'win32';
-    const windowsSection = $('windows-runtime-section');
-    windowsSection.hidden = !isWindows;
-    if (isWindows) {
-      const runtime = state.windowsRuntime ?? { phase: 'embedded', installed: false, service: null };
-      const ready = !!runtime.service?.mcpReady && !!runtime.service?.tunnelReady && !!runtime.service?.tunnelConfigured;
-      const tunnelUnconfigured = runtime.installed && runtime.service && !runtime.service.tunnelConfigured;
-      let uiState = ready ? 'ready' : tunnelUnconfigured ? 'tunnel-unconfigured' : runtime.installed ? 'installed' : runtime.phase ?? 'embedded';
-      const working = ['verifying', 'extracting', 'installing'].includes(runtime.phase);
-      const labels = {
-        embedded: 'Встроенный runtime готов к установке.',
-        verifying: 'Проверяем встроенный Windows runtime…',
-        extracting: 'Распаковываем Windows runtime в профиль пользователя…',
-        installing: 'Устанавливаем локальный Python, Git и MCP. Это может занять несколько минут…',
-        installed: 'Windows runtime установлен. Настройте tunnel или нажмите «Проверить».',
-        'tunnel-unconfigured': 'Windows runtime установлен, но Secure MCP Tunnel ещё не настроен.',
-        ready: 'Windows runtime и Secure MCP Tunnel готовы к работе.',
-        error: 'Не удалось подготовить Windows runtime. Повторите проверку.',
-      };
-      $('windows-runtime-status').dataset.state = uiState;
-      $('windows-runtime-status').textContent = labels[uiState] ?? labels.installed;
-      $('configure-windows-tunnel').textContent = runtime.installed ? 'Настроить tunnel…' : 'Установить и настроить tunnel…';
-      $('configure-windows-tunnel').disabled = pending || working;
-      $('refresh-windows-runtime').disabled = pending || working;
-    }
     const settings = state.settings;
     $('settings-panel').hidden = !settings; $('active-projects').hidden = !!settings;
     $('open-settings').setAttribute('aria-pressed', String(!!settings));

@@ -8,11 +8,15 @@ import net from 'node:net';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { fileURLToPath } from 'node:url';
-import { WindowsRuntimeBootstrap, WINDOWS_RUNTIME_SHA256, WINDOWS_CONTEXT_PACKET_SOURCE, WINDOWS_RUNTIME_CONTROL_CONTRACT, WINDOWS_LEGACY_CONTROL_SHA256, WINDOWS_REMOVED_TOOLS, WINDOWS_SKILL_DESKTOP_SECTION, patchWindowsBridgeSource, patchWindowsSkillSource, windowsRuntimePaths, windowsRuntimeStateDirectory, windowsCommandFailureText, windowsExpandInvocation, windowsSetupInvocation } from '../src/windows-runtime.mjs';
+import { WindowsExecutorBootstrap, WINDOWS_RUNTIME_SHA256, WINDOWS_CONTEXT_PACKET_SOURCE, WINDOWS_REMOVED_TOOLS, WINDOWS_SKILL_DESKTOP_SECTION,
+  WINDOWS_VENDOR_TOOLS, patchWindowsBridgeSource, patchWindowsSkillSource, retireLegacyWindowsRuntime, windowsCommandFailureText,
+  windowsExecutorPaths, windowsWorkflowEnvironment } from '../src/windows-runtime.mjs';
+import { ZipError, bufferReader, extractZip, zipEntries, zipEntryData } from '../src/zip-archive.mjs';
+import zlib from 'node:zlib';
 const execute = promisify(execFile);
 const windowsControl = fileURLToPath(new URL('../resources/runtime-control/windows-control.py', import.meta.url));
 
-import { BUNDLED_NODE_VERSION, bundledWindowsRuntimeFolder } from '../src/platform.mjs';
+import { BUNDLED_NODE_VERSION, defaultRuntimeFolder, legacyWindowsStateFolder } from '../src/platform.mjs';
 import { ensureWindowsRuntimePayload, extractionCommand, NODE_ARCHIVE, NODE_SHA256, WINDOWS_RUNTIME_URL, windowsRuntimeSourceCandidates, windowsToolchainPaths } from '../scripts/prepare-windows-toolchain.mjs';
 import { createHash } from 'node:crypto';
 
@@ -42,146 +46,302 @@ const WINDOWS_SKILL_FIXTURE = '---\nname: local-computer\ndescription: "Work on 
   + '## Turn notifications\n\nCall turn_watchdog.\n';
 const toolCount = source => source.split('    @mcp.tool(').length - 1;
 
-test('Windows runtime paths stay in writable userData and use Windows venv layout', () => {
-  const p = windowsRuntimePaths('C:\\Users\\Alex\\AppData\\Roaming\\Project Web Pilot', 'C:\\Program Files\\Project Web Pilot\\resources\\windows-runtime\\runtime.zip');
-  assert.equal(p.folder, 'C:\\Users\\Alex\\AppData\\Roaming\\Project Web Pilot\\runtime\\Windows-Codex-Local');
-  assert.equal(p.python, p.folder + '\\.venv\\Scripts\\python.exe');
-  assert.equal(p.control, p.folder + '\\control.py');
-  assert.equal(bundledWindowsRuntimeFolder('C:\\Data\\Pilot', 'win32'), 'C:\\Data\\Pilot\\runtime\\Windows-Codex-Local');
-  assert.equal(bundledWindowsRuntimeFolder('/tmp/pilot', 'darwin'), null);
-});
-
-test('Windows runtime state path and command errors preserve useful setup diagnostics', () => {
-  assert.equal(windowsRuntimeStateDirectory({ LOCALAPPDATA: 'C:\\Users\\Alex\\AppData\\Local' }), 'C:\\Users\\Alex\\AppData\\Local\\CodexLocalWindows');
-  assert.equal(windowsCommandFailureText({ stdout: 'Extracting...\nERROR: Port 17842 is in use.\n', stderr: '' }), 'Extracting...\nERROR: Port 17842 is in use.');
-});
-
-test('Windows bootstrap adopts an existing compatible Codex Local instead of installing bundled payload', { skip: process.platform !== 'win32' }, async t => {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'web-pilot-existing-runtime-'));
-  t.after(() => fs.rm(root, { recursive: true, force: true }));
-  const external = path.join(root, 'Codex Local Windows');
-  const stateDir = path.join(root, 'state');
-  await fs.mkdir(path.join(external, '.venv', 'Scripts'), { recursive: true });
-  await fs.mkdir(path.join(external, '.runtime'), { recursive: true });
-  await fs.mkdir(path.join(external, 'mcp'), { recursive: true });
-  await fs.mkdir(path.join(external, 'server'), { recursive: true });
-  await fs.mkdir(stateDir, { recursive: true });
-  await fs.writeFile(path.join(external, 'control.py'), '# fixture\n');
-  await fs.writeFile(path.join(external, '.venv', 'Scripts', 'python.exe'), 'fixture');
-  await fs.writeFile(path.join(external, '.runtime', 'locations.json'), '{}\n');
-  await fs.writeFile(path.join(external, 'mcp', 'bridge_mcp.py'), windowsBridgeFixture());
-  await fs.mkdir(path.join(external, 'skills', 'local-computer'), { recursive: true });
-  await fs.writeFile(path.join(external, 'skills', 'local-computer', 'SKILL.md'), WINDOWS_SKILL_FIXTURE);
-  await fs.writeFile(path.join(stateDir, 'mcp.pid.json'), JSON.stringify({ package_root: external }));
-  const calls = [];
-  const service = { package_root: external, mcp: { owned: false, running: false, ready: false },
-    tunnel: { owned: false, running: false, ready: false, configured: true }, mcp_url: 'http://127.0.0.1:17842/mcp' };
-  const execute = async (file, args) => {
-    calls.push({ file, args: [...args] });
-    if (args.at(-1) === 'status') return { stdout: JSON.stringify(service), stderr: '' };
-    throw new Error('bundled setup must not run');
-  };
-  const bootstrap = new WindowsRuntimeBootstrap({ payloadFile: path.join(root, 'missing-payload.zip'), dataDir: path.join(root, 'pilot'),
-    execute, environment: {}, platform: 'win32', stateDir });
-  const inspected = await bootstrap.inspect();
-  assert.equal(inspected.source, 'external');
-  assert.equal(inspected.folder, external);
-  const result = await bootstrap.ensure(root);
-  assert.equal(result.adopted, true);
-  assert.equal(result.reused, true);
-  assert.ok(calls.every(call => call.args.at(-1) === 'status'), JSON.stringify(calls));
-  const adopted = await fs.readFile(path.join(external, 'mcp', 'bridge_mcp.py'), 'utf8');
-  assert.match(adopted, /workflow_context_recover/);
-  assert.doesNotMatch(adopted, /def computer_click\(/);
-  assert.equal(await fs.readFile(path.join(external, 'server', 'context_packet.py'), 'utf8'), WINDOWS_CONTEXT_PACKET_SOURCE);
-  assert.ok((await fs.readFile(path.join(external, 'skills', 'local-computer', 'SKILL.md'), 'utf8')).includes(WINDOWS_SKILL_DESKTOP_SECTION));
-});
-
-test('Windows bootstrap refreshes an installed bundled runtime in place when the overlay version changes', { skip: process.platform !== 'win32' }, async t => {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'web-pilot-bundled-overlay-'));
-  t.after(() => fs.rm(root, { recursive: true, force: true }));
-  const dataDir = path.join(root, 'pilot');
-  const paths = windowsRuntimePaths(dataDir);
-  const stateDir = path.join(root, 'state');
-  for (const dir of [path.dirname(paths.python), path.dirname(paths.locations), path.join(paths.folder, 'mcp'), path.join(paths.folder, 'server'),
-    path.join(paths.folder, 'skills', 'local-computer'), stateDir]) await fs.mkdir(dir, { recursive: true });
-  await fs.writeFile(paths.control, '# fixture\n');
-  await fs.writeFile(paths.python, 'fixture');
-  await fs.writeFile(paths.locations, '{}\n');
-  const bridgeFile = path.join(paths.folder, 'mcp', 'bridge_mcp.py');
-  const skillFile = path.join(paths.folder, 'skills', 'local-computer', 'SKILL.md');
-  await fs.writeFile(bridgeFile, windowsBridgeFixture());
-  await fs.writeFile(skillFile, WINDOWS_SKILL_FIXTURE);
-  await fs.writeFile(paths.marker, JSON.stringify({ schemaVersion: 1, payloadSha256: WINDOWS_RUNTIME_SHA256, overlayVersion: 1, folder: paths.folder }));
-  const calls = [];
-  const service = { package_root: paths.folder, mcp: { owned: true, running: true, ready: true },
-    tunnel: { owned: false, running: false, ready: false, configured: true }, mcp_url: 'http://127.0.0.1:17842/mcp' };
-  const execute = async (_file, args) => {
-    const command = args[2]; calls.push(args.slice(2).join(' '));
-    if (command === 'status') return { stdout: JSON.stringify(service), stderr: '' };
-    if (command === 'stop' || command === 'start') return { stdout: '{}', stderr: '' };
-    throw new Error('the bundled payload must not be reinstalled: ' + command);
-  };
-  const bootstrap = new WindowsRuntimeBootstrap({ payloadFile: path.join(root, 'missing-payload.zip'), dataDir,
-    execute, environment: {}, platform: 'win32', stateDir });
-  assert.equal((await bootstrap.inspect()).overlayOutdated, true);
-  const result = await bootstrap.ensure(root);
-  assert.equal(result.reused, true);
-  assert.equal(result.overlayOutdated, false);
-  assert.deepEqual(calls, ['status', 'stop', 'start --mcp-only']);
-  const bridge = await fs.readFile(bridgeFile, 'utf8');
-  for (const name of WINDOWS_REMOVED_TOOLS) assert.doesNotMatch(bridge, new RegExp(`def ${name}\\(`));
-  assert.match(bridge, /def workflow_context_recover\(/);
-  assert.ok((await fs.readFile(skillFile, 'utf8')).includes(WINDOWS_SKILL_DESKTOP_SECTION));
-  assert.equal(JSON.parse(await fs.readFile(paths.marker, 'utf8')).overlayVersion, 2);
-  calls.length = 0;
-  assert.equal((await bootstrap.ensure(root)).reused, true);
-  assert.deepEqual(calls, [], 'a current overlay is not applied twice');
-});
-
-
-test('Windows bootstrap restarts the same running external runtime when first applying the overlay', { skip: process.platform !== 'win32' }, async t => {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'web-pilot-running-runtime-'));
-  t.after(() => fs.rm(root, { recursive: true, force: true }));
-  const external = path.join(root, 'Codex Local Windows');
-  const stateDir = path.join(root, 'state');
-  for (const dir of [path.join(external, '.venv', 'Scripts'), path.join(external, '.runtime'), path.join(external, 'mcp'), path.join(external, 'server'), stateDir]) {
-    await fs.mkdir(dir, { recursive: true });
+// A ZIP writer for fixtures: entries are [name, content, { method, crc }]; a name ending with "/" is a folder.
+function buildZip(files, { method = 8 } = {}) {
+  const parts = [], directory = [];
+  let offset = 0;
+  for (const [name, content = '', options = {}] of files) {
+    const data = Buffer.from(content), nameBytes = Buffer.from(name);
+    const used = name.endsWith('/') ? 0 : options.method ?? method;
+    const body = used === 8 ? zlib.deflateRawSync(data) : data;
+    const crc = options.crc ?? zlib.crc32(data);
+    const local = Buffer.alloc(30), entry = Buffer.alloc(46);
+    local.writeUInt32LE(0x04034b50, 0); local.writeUInt16LE(20, 4); local.writeUInt16LE(0x800, 6); local.writeUInt16LE(used, 8);
+    local.writeUInt32LE(crc, 14); local.writeUInt32LE(body.length, 18); local.writeUInt32LE(data.length, 22); local.writeUInt16LE(nameBytes.length, 26);
+    entry.writeUInt32LE(0x02014b50, 0); entry.writeUInt16LE(20, 4); entry.writeUInt16LE(20, 6); entry.writeUInt16LE(0x800, 8); entry.writeUInt16LE(used, 10);
+    entry.writeUInt32LE(crc, 16); entry.writeUInt32LE(body.length, 20); entry.writeUInt32LE(data.length, 24); entry.writeUInt16LE(nameBytes.length, 28);
+    entry.writeUInt32LE(offset, 42);
+    parts.push(local, nameBytes, body); directory.push(entry, nameBytes);
+    offset += 30 + nameBytes.length + body.length;
   }
-  await fs.writeFile(path.join(external, 'control.py'), '# fixture\n');
-  await fs.writeFile(path.join(external, '.venv', 'Scripts', 'python.exe'), 'fixture');
-  await fs.writeFile(path.join(external, '.runtime', 'locations.json'), '{}\n');
-  await fs.writeFile(path.join(external, 'mcp', 'bridge_mcp.py'), windowsBridgeFixture());
-  await fs.mkdir(path.join(external, 'skills', 'local-computer'), { recursive: true });
-  await fs.writeFile(path.join(external, 'skills', 'local-computer', 'SKILL.md'), WINDOWS_SKILL_FIXTURE);
-  await fs.writeFile(path.join(stateDir, 'mcp.pid.json'), JSON.stringify({ package_root: external }));
-  await fs.writeFile(path.join(stateDir, 'tunnel.pid.json'), JSON.stringify({ package_root: external }));
-  const calls = [];
-  const service = { package_root: external, mcp: { owned: true, running: true, ready: true },
-    tunnel: { owned: true, running: true, ready: true, configured: true }, mcp_url: 'http://127.0.0.1:17842/mcp' };
-  const execute = async (_file, args) => {
-    const command = args[2]; calls.push(command);
-    if (command === 'status') return { stdout: JSON.stringify(service), stderr: '' };
-    if (command === 'stop' || command === 'start') return { stdout: '{}', stderr: '' };
-    throw new Error('unexpected command ' + command);
+  const central = Buffer.concat(directory), end = Buffer.alloc(22);
+  end.writeUInt32LE(0x06054b50, 0); end.writeUInt16LE(files.length, 8); end.writeUInt16LE(files.length, 10);
+  end.writeUInt32LE(central.length, 12); end.writeUInt32LE(offset, 16);
+  return Buffer.concat([...parts, central, end]);
+}
+const sha256 = data => createHash('sha256').update(data).digest('hex');
+const present = file => fs.access(file).then(() => true, () => false);
+
+// The shape of the pinned archive: a top folder, the old bridge, and vendor/ with a manifest and four inner archives.
+function vendorArchive({ damage = null } = {}) {
+  const inner = {
+    uv: ['uv-x86_64-pc-windows-msvc.zip', 'uv.exe', buildZip([['uv.exe', 'UV'], ['uvx.exe', 'UVX']])],
+    'tunnel-client': ['tunnel-client-v0.0.14-windows-amd64.zip', 'tunnel-client.exe', buildZip([['tunnel-client.exe', 'TUNNEL'], ['cloudflared.exe', 'CLOUDFLARED']])],
+    ripgrep: ['ripgrep-15.2.0-x86_64-pc-windows-msvc.zip', 'ripgrep-15.2.0-x86_64-pc-windows-msvc/rg.exe',
+      buildZip([['ripgrep-15.2.0-x86_64-pc-windows-msvc/'], ['ripgrep-15.2.0-x86_64-pc-windows-msvc/rg.exe', 'RG']])],
+    git: ['MinGit-2.55.0.5-64-bit.zip', 'cmd/git.exe', buildZip([['cmd/git.exe', 'GIT'], ['usr/'], ['usr/bin/'], ['usr/bin/sh.exe', 'SH', { method: 0 }]])],
   };
-  const bootstrap = new WindowsRuntimeBootstrap({ payloadFile: path.join(root, 'missing-payload.zip'), dataDir: path.join(root, 'pilot'),
-    execute, environment: {}, platform: 'win32', stateDir });
-  const result = await bootstrap.ensure(root);
-  assert.equal(result.adopted, true);
-  assert.ok(calls.includes('stop'), JSON.stringify(calls));
-  assert.ok(calls.includes('start'), JSON.stringify(calls));
-  assert.ok(!calls.includes(undefined), JSON.stringify(calls));
+  const tools = Object.entries(inner).map(([id, [file, executable, data]]) => ({ id, file, executable,
+    sha256: damage === 'inner-sha' && id === 'ripgrep' ? '0'.repeat(64) : sha256(data) }));
+  if (damage === 'no-git') tools.pop();
+  if (damage === 'executable') tools[0].executable = 'missing.exe';
+  const manifest = damage === 'manifest' ? '{broken' : JSON.stringify({ schema_version: damage === 'schema' ? 2 : 1, target: 'windows-x64', tools });
+  return buildZip([
+    ['Windows-Codex-Local/'], ['Windows-Codex-Local/mcp/bridge_mcp.py', 'print("the old bridge")'], ['Windows-Codex-Local/vendor/'],
+    ['Windows-Codex-Local/vendor/manifest.json', manifest, { method: 8 }],
+    ...Object.values(inner).map(([file, , data]) => ['Windows-Codex-Local/vendor/' + file, data]),
+  ], { method: 0 });
+}
+
+test('ZIP reader: stored and deflated entries of a real archiver, UTF-8 names, CRC-32 and names that would leave the folder', async t => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'web-pilot-zip-'));
+  t.after(() => fs.rm(dir, { recursive: true, force: true }));
+  const archive = path.join(dir, 'made-by-python.zip');
+  await execute('python3', ['-c', `import sys, zipfile
+with zipfile.ZipFile(sys.argv[1], 'w') as z:
+    z.writestr(zipfile.ZipInfo('cmd/'), '')
+    z.writestr('cmd/git.exe', b'GIT' * 5000, compress_type=zipfile.ZIP_DEFLATED)
+    z.writestr('stored.bin', bytes(range(256)), compress_type=zipfile.ZIP_STORED)
+    z.writestr('папка/файл.txt', 'привет', compress_type=zipfile.ZIP_DEFLATED)
+    z.writestr('empty.txt', b'', compress_type=zipfile.ZIP_DEFLATED)
+`, archive]);
+  const buffer = await fs.readFile(archive);
+  const entries = await zipEntries(bufferReader(buffer));
+  assert.deepEqual(entries.map(entry => [entry.name, entry.method, entry.size, entry.directory]),
+    [['cmd/', 0, 0, true], ['cmd/git.exe', 8, 15000, false], ['stored.bin', 0, 256, false], ['папка/файл.txt', 8, 12, false], ['empty.txt', 8, 0, false]]);
+  const files = await extractZip(buffer, path.join(dir, 'out'));
+  assert.deepEqual(files, ['cmd/git.exe', 'stored.bin', 'папка/файл.txt', 'empty.txt']);
+  assert.equal((await fs.readFile(path.join(dir, 'out', 'cmd', 'git.exe'))).equals(Buffer.from('GIT'.repeat(5000))), true);
+  assert.equal((await fs.readFile(path.join(dir, 'out', 'stored.bin'))).equals(Buffer.from(Array.from({ length: 256 }, (_, index) => index))), true);
+  assert.equal(await fs.readFile(path.join(dir, 'out', 'папка', 'файл.txt'), 'utf8'), 'привет');
+  assert.equal((await fs.stat(path.join(dir, 'out', 'empty.txt'))).size, 0);
+
+  // The fixture writer and the reader agree with the real archiver.
+  const own = buildZip([['a/'], ['a/b.txt', 'text'], ['c.bin', 'stored', { method: 0 }]]);
+  await fs.writeFile(path.join(dir, 'own.zip'), own);
+  await execute('python3', ['-c', 'import sys, zipfile; z = zipfile.ZipFile(sys.argv[1]); assert z.testzip() is None; assert z.read("a/b.txt") == b"text"', path.join(dir, 'own.zip')]);
+
+  const reader = bufferReader(buildZip([['bad.txt', 'content', { crc: 1 }]]));
+  await assert.rejects(zipEntryData(reader, (await zipEntries(reader))[0]), error => error instanceof ZipError && /bad\.txt/.test(error.message));
+  const longer = buildZip([['grows.txt', 'x'.repeat(100)]]);
+  longer.writeUInt32LE(10, longer.length - 22 - 46 - 'grows.txt'.length + 24);
+  const grown = bufferReader(longer);
+  await assert.rejects(zipEntryData(grown, (await zipEntries(grown))[0]), ZipError, 'more data than the directory declares is refused');
+  for (const name of ['../outside.txt', 'a/../../outside.txt', '/absolute.txt', 'C:/drive.txt', 'back\\slash.txt', 'a//b.txt', './dot.txt']) {
+    await assert.rejects(extractZip(buildZip([[name, 'x']]), path.join(dir, 'unsafe')), error => error instanceof ZipError && /unsafe name/.test(error.message), name);
+  }
+  assert.equal(await present(path.join(dir, 'outside.txt')), false);
+  await assert.rejects(zipEntries(bufferReader(Buffer.from('not a zip archive at all, only text'))), ZipError);
+  await assert.rejects(zipEntries(bufferReader(Buffer.alloc(5))), ZipError);
+  const zip64 = buildZip([['a.txt', 'x']]); zip64.writeUInt16LE(0xffff, zip64.length - 22 + 10);
+  await assert.rejects(zipEntries(bufferReader(zip64)), /ZIP64/);
+  const encrypted = buildZip([['a.txt', 'x']]); encrypted.writeUInt16LE(0x801, encrypted.length - 22 - 46 - 'a.txt'.length + 8);
+  await assert.rejects(zipEntries(bufferReader(encrypted)), /Encrypted/);
 });
 
-test('Windows bootstrap command plans pass paths through env/argv instead of shell interpolation', () => {
-  const expand = windowsExpandInvocation('C:\\Payload Dir\\runtime.zip', 'C:\\User Data\\staging');
-  assert.equal(expand.executable, 'powershell.exe');
-  assert.equal(expand.environment.WEB_PILOT_RUNTIME_ARCHIVE, 'C:\\Payload Dir\\runtime.zip');
-  assert.equal(expand.environment.WEB_PILOT_RUNTIME_DESTINATION, 'C:\\User Data\\staging');
-  assert.ok(!expand.args.join(' ').includes('Payload Dir'));
-  const setup = windowsSetupInvocation('C:\\Runtime\\scripts\\setup.ps1', 'D:\\Projects\\Тест');
-  assert.deepEqual(setup.args.slice(-4), ['-File', 'C:\\Runtime\\scripts\\setup.ps1', '-Workspace', 'D:\\Projects\\Тест']);
+test('Windows executor paths and state folders live in the local profile', () => {
+  const state = defaultRuntimeFolder('C:\\Users\\Alex', 'win32', { LOCALAPPDATA: 'C:\\Users\\Alex\\AppData\\Local' });
+  assert.equal(state, 'C:\\Users\\Alex\\AppData\\Local\\WebPilotCodexExecutor');
+  assert.equal(defaultRuntimeFolder('C:\\Users\\Alex', 'win32', {}), state, 'the usual location when LOCALAPPDATA is absent');
+  assert.equal(legacyWindowsStateFolder({ LOCALAPPDATA: 'C:\\Users\\Alex\\AppData\\Local' }), 'C:\\Users\\Alex\\AppData\\Local\\CodexLocalWindows');
+  assert.equal(legacyWindowsStateFolder({}), null);
+  assert.deepEqual(windowsExecutorPaths(state, path.win32), {
+    runtime: state + '\\runtime', tools: state + '\\runtime\\tools', marker: state + '\\runtime\\tools.json',
+    staging: state + '\\runtime\\tools.staging', venv: state + '\\runtime\\venv', python: state + '\\runtime\\venv\\Scripts\\python.exe' });
+  assert.deepEqual(WINDOWS_VENDOR_TOOLS, { uv: 'uv', 'tunnel-client': 'tunnel_client', ripgrep: 'rg', git: 'git' });
+  assert.equal(windowsCommandFailureText({ stdout: 'Extracting...\nERROR: no network.\n', stderr: '' }), 'Extracting...\nERROR: no network.');
+});
+
+test('Windows components: the four vendor tools are verified and unpacked, the private Python is created once, the old bridge is left in the archive', async t => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'web-pilot-win-components-'));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const payloadFile = path.join(root, 'payload.zip'), stateDir = path.join(root, 'Local', 'WebPilotCodexExecutor');
+  const archive = vendorArchive();
+  await fs.writeFile(payloadFile, archive);
+  const paths = windowsExecutorPaths(stateDir), phases = [], calls = [];
+  let venv = 'create';
+  const execute = async (file, args, options) => {
+    calls.push({ file, args, options });
+    if (args[0] === 'venv') {
+      if (venv === 'fail') throw Object.assign(new Error('exit 2'), { stderr: 'error: failed to download Python' });
+      if (venv === 'create') { await fs.mkdir(path.dirname(paths.python), { recursive: true }); await fs.writeFile(paths.python, 'python'); }
+      return { stdout: '', stderr: '' };
+    }
+    if (args[0] === '--version') return { stdout: 'git version 2.55.0.windows.5\n', stderr: '' };
+    throw new Error('unexpected command');
+  };
+  const create = (extra = {}) => new WindowsExecutorBootstrap({ payloadFile, stateDir, platform: 'win32', expectedSha256: sha256(archive),
+    environment: { Path: 'C:\\Windows\\System32' }, execute, onState: state => phases.push(state.phase), ...extra });
+  const bootstrap = create();
+  assert.deepEqual(bootstrap.snapshot(), { phase: 'embedded', installed: false, toolsReady: false, error: null });
+  assert.deepEqual(await bootstrap.inspect(), { phase: 'embedded', installed: false, toolsReady: false, error: null });
+  await assert.rejects(bootstrap.workflowEnvironment(), { code: 'WINDOWS_RUNTIME_NOT_INSTALLED' });
+
+  const [tools, shared] = await Promise.all([bootstrap.ensureTools(), bootstrap.ensureTools()]);
+  assert.equal(tools, shared, 'concurrent callers share one unpacking');
+  assert.deepEqual(tools, { uv: path.join(paths.tools, 'uv', 'uv.exe'), tunnel_client: path.join(paths.tools, 'tunnel-client', 'tunnel-client.exe'),
+    rg: path.join(paths.tools, 'ripgrep', 'ripgrep-15.2.0-x86_64-pc-windows-msvc', 'rg.exe'), git: path.join(paths.tools, 'git', 'cmd', 'git.exe') });
+  for (const [file, content] of [[tools.uv, 'UV'], [tools.tunnel_client, 'TUNNEL'], [tools.rg, 'RG'], [tools.git, 'GIT'],
+    [path.join(paths.tools, 'tunnel-client', 'cloudflared.exe'), 'CLOUDFLARED'], [path.join(paths.tools, 'git', 'usr', 'bin', 'sh.exe'), 'SH']]) {
+    assert.equal(await fs.readFile(file, 'utf8'), content, file);
+  }
+  assert.deepEqual(JSON.parse(await fs.readFile(paths.marker, 'utf8')), { schema_version: 1, archive_sha256: sha256(archive), tools },
+    'control.py of the executor reads the same record');
+  assert.deepEqual((await fs.readdir(paths.runtime)).sort(), ['tools', 'tools.json'], 'no staging folder and no old bridge remain');
+  assert.deepEqual(phases, ['verifying', 'extracting', 'embedded']);
+  assert.deepEqual(await bootstrap.inspect(), { phase: 'embedded', installed: false, toolsReady: true, error: null }, 'Git is ready, the Python is not');
+  assert.equal(calls.length, 0, 'unpacking runs no program');
+
+  const environment = await bootstrap.workflowEnvironment();
+  assert.deepEqual(environment, { WORKFLOW_GIT_BIN: tools.git, WORKFLOW_GIT_HOME: path.join(paths.tools, 'git'),
+    Path: [path.join(paths.tools, 'git', 'cmd'), path.join(paths.tools, 'git', 'usr', 'bin'), 'C:\\Windows\\System32'].join(';') });
+  assert.deepEqual([calls[0].file, calls[0].args, calls[0].options.windowsHide], [tools.git, ['--version'], true]);
+
+  calls.length = 0;
+  const [installed, again] = await Promise.all([bootstrap.ensure(), bootstrap.ensure()]);
+  assert.equal(installed, again);
+  assert.deepEqual(installed, { phase: 'installed', installed: true, toolsReady: true, error: null });
+  assert.equal(calls.length, 1, 'one uv call for concurrent callers');
+  assert.equal(calls[0].file, tools.uv);
+  assert.deepEqual(calls[0].args, ['venv', '--clear', '--managed-python', '--python', '3.13', '--no-config', paths.venv]);
+  assert.equal(calls[0].options.windowsHide, true);
+  assert.equal(calls[0].options.env.UV_PYTHON_INSTALL_DIR, path.join(paths.runtime, 'python'));
+  assert.equal(calls[0].options.env.UV_CACHE_DIR, path.join(paths.runtime, 'uv-cache'));
+  assert.equal(calls[0].options.env.Path, 'C:\\Windows\\System32');
+  const markerTime = (await fs.stat(paths.marker)).mtimeMs;
+  calls.length = 0;
+  await bootstrap.ensure(); await create().ensure();
+  assert.equal(calls.length, 0, 'prepared components are not touched again');
+  assert.equal((await fs.stat(paths.marker)).mtimeMs, markerTime);
+  assert.deepEqual((await create().inspect()), { phase: 'installed', installed: true, toolsReady: true, error: null });
+
+  // A record of another archive, a missing executable or a path outside the tools folder means: unpack again.
+  for (const damage of [
+    marker => ({ ...marker, archive_sha256: 'f'.repeat(64) }),
+    marker => ({ ...marker, tools: { ...marker.tools, git: path.join(root, 'elsewhere', 'git.exe') } }),
+    marker => ({ ...marker, tools: { ...marker.tools, rg: path.join(paths.tools, 'ripgrep', 'gone.exe') } }),
+    () => 'not json',
+  ]) {
+    const marker = JSON.parse(await fs.readFile(paths.marker, 'utf8'));
+    const next = damage(marker);
+    await fs.writeFile(paths.marker, typeof next === 'string' ? next : JSON.stringify(next));
+    assert.equal((await create().inspect()).toolsReady, false);
+    assert.deepEqual(await create().ensureTools(), tools);
+    assert.deepEqual(JSON.parse(await fs.readFile(paths.marker, 'utf8')).tools, tools);
+  }
+  assert.equal(await fs.readFile(paths.python, 'utf8'), 'python', 'unpacking the tools again keeps the Python');
+
+  // Failures carry the codes the first-run wizard explains.
+  await fs.rm(paths.python);
+  venv = 'fail';
+  const failing = create();
+  await assert.rejects(failing.ensure(), error => error.code === 'WINDOWS_RUNTIME_SETUP_FAILED' && /failed to download Python/.test(error.message));
+  assert.deepEqual(failing.snapshot(), { phase: 'error', installed: false, toolsReady: true, error: 'WINDOWS_RUNTIME_SETUP_FAILED' });
+  assert.equal((await failing.inspect()).phase, 'error', 'an inspection does not hide the failure');
+  venv = 'nothing';
+  await assert.rejects(create().ensure(), { code: 'WINDOWS_RUNTIME_SETUP_INCOMPLETE' });
+  venv = 'create';
+  assert.equal((await failing.ensure()).phase, 'installed', 'the next attempt repeats the step');
+
+  await fs.rm(paths.runtime, { recursive: true });
+  await assert.rejects(create({ expectedSha256: 'a'.repeat(64) }).ensureTools(), { code: 'WINDOWS_RUNTIME_PAYLOAD_DAMAGED' });
+  await assert.rejects(create({ payloadFile: path.join(root, 'absent.zip') }).ensure(), { code: 'WINDOWS_RUNTIME_PAYLOAD_MISSING' });
+  for (const damage of ['inner-sha', 'no-git', 'executable', 'manifest', 'schema']) {
+    const broken = vendorArchive({ damage });
+    await fs.writeFile(path.join(root, damage + '.zip'), broken);
+    const attempt = create({ payloadFile: path.join(root, damage + '.zip'), expectedSha256: sha256(broken) });
+    await assert.rejects(attempt.ensureTools(), { code: 'WINDOWS_RUNTIME_ARCHIVE_INVALID' }, damage);
+    assert.equal(attempt.snapshot().error, 'WINDOWS_RUNTIME_ARCHIVE_INVALID');
+    assert.equal(await present(paths.marker), false, damage);
+    assert.equal(await present(paths.staging), false, damage + ': nothing half-unpacked is left');
+  }
+  await fs.writeFile(path.join(root, 'text.zip'), 'this is not an archive');
+  await assert.rejects(create({ payloadFile: path.join(root, 'text.zip'), expectedSha256: sha256('this is not an archive') }).ensureTools(),
+    { code: 'WINDOWS_RUNTIME_ARCHIVE_INVALID' });
+  const mac = create({ platform: 'darwin' });
+  assert.equal(mac.snapshot().phase, 'unavailable');
+  await assert.rejects(mac.ensure(), { code: 'WINDOWS_ONLY' });
+  assert.throws(() => new WindowsExecutorBootstrap({ payloadFile }), TypeError);
+});
+
+test('Windows components unpack from the real pinned archive', { timeout: 120_000 }, async t => {
+  const payloadFile = path.join(windowsToolchainPaths().cacheDir, 'Windows-Codex-Local-2026-09-10.zip');
+  let digest = null;
+  try { digest = await sha256File(payloadFile); } catch {}
+  if (digest !== WINDOWS_RUNTIME_SHA256) { t.skip('pinned Windows archive is not in the local build cache'); return; }
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'web-pilot-win-real-'));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const stateDir = path.join(root, 'WebPilotCodexExecutor'), paths = windowsExecutorPaths(stateDir);
+  const bootstrap = new WindowsExecutorBootstrap({ payloadFile, stateDir, platform: 'win32', environment: {},
+    execute: async (file, args) => {
+      if (args[0] === '--version') return { stdout: 'git version 2.55.0.windows.5\n', stderr: '' };
+      throw new Error('unexpected command');
+    } });
+  const tools = await bootstrap.ensureTools();
+  const size = async (...parts) => (await fs.stat(path.join(paths.tools, ...parts))).size;
+  assert.equal(await size('uv', 'uv.exe'), 41455408);
+  assert.equal(await size('tunnel-client', 'tunnel-client.exe'), 21826048);
+  assert.equal(await size('tunnel-client', 'cloudflared.exe'), 39751680, 'tunnel-client keeps its companion next to it');
+  assert.ok(await size('ripgrep', 'ripgrep-15.2.0-x86_64-pc-windows-msvc', 'rg.exe') > 1_000_000);
+  assert.ok(await size('git', 'cmd', 'git.exe') > 10_000);
+  assert.ok(await size('git', 'usr', 'bin', 'sh.exe') > 10_000);
+  assert.equal(tools.git, path.join(paths.tools, 'git', 'cmd', 'git.exe'));
+  assert.deepEqual((await fs.readdir(paths.tools)).sort(), ['git', 'ripgrep', 'tunnel-client', 'uv']);
+  assert.equal((await bootstrap.workflowEnvironment()).WORKFLOW_GIT_BIN, tools.git);
+  assert.equal(JSON.parse(await fs.readFile(paths.marker, 'utf8')).archive_sha256, WINDOWS_RUNTIME_SHA256);
+});
+
+test('the bridge of earlier versions is stopped by its own lifecycle script and only the copy in the app data is removed', async t => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'web-pilot-win-legacy-'));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const dataDir = path.join(root, 'Roaming', 'Project Web Pilot'), installed = path.join(dataDir, 'runtime', 'Windows-Codex-Local');
+  const chosen = path.join(root, 'Codex Local Windows'), recorded = path.join(root, 'Recorded Copy'), empty = path.join(root, 'No Python');
+  const legacyStateDir = path.join(root, 'Local', 'CodexLocalWindows');
+  const python = folder => path.join(folder, '.venv', 'Scripts', 'python.exe');
+  for (const folder of [installed, chosen, recorded]) {
+    await fs.mkdir(path.dirname(python(folder)), { recursive: true });
+    await fs.writeFile(python(folder), 'python');
+  }
+  await fs.mkdir(empty, { recursive: true });
+  await fs.mkdir(path.join(legacyStateDir, 'private'), { recursive: true });
+  await fs.writeFile(path.join(legacyStateDir, 'private', 'tunnel-key.dpapi'), 'old key');
+  await fs.writeFile(path.join(legacyStateDir, 'mcp.pid.json'), JSON.stringify({ package_root: recorded, identity: { pid: 4242 } }));
+  await fs.writeFile(path.join(legacyStateDir, 'tunnel.pid.json'), 'damaged');
+  await fs.mkdir(path.join(dataDir, 'runtime', '.windows-runtime-staging'), { recursive: true });
+  await fs.writeFile(path.join(dataDir, 'runtime', 'windows-runtime.json'), '{}');
+  await fs.writeFile(path.join(dataDir, 'settings.json'), '{}');
+  const calls = [];
+  let stopFails = null, regFails = false;
+  const execute = async (file, args, options) => {
+    calls.push([file, args, options]);
+    if (args[0] === 'delete') { if (regFails) throw new Error('ERROR: The system was unable to find the specified registry value.'); return { stdout: '' }; }
+    if (stopFails && options.cwd === stopFails) throw Object.assign(new Error('exit 1'), { stderr: '{"ok": false, "error": "mcp: not stopped"}' });
+    return { stdout: '{"stopped": ["tunnel", "mcp"]}' };
+  };
+  const options = { dataDir, runtimeRoots: [chosen, empty, chosen, 'relative', null], legacyStateDir, controlFile: '/app/resources/runtime-control/windows-control.py',
+    execute, environment: { SystemRoot: '/Windows', Path: 'C:\\x' } };
+
+  stopFails = chosen;
+  await assert.rejects(retireLegacyWindowsRuntime(options), /exit 1/);
+  assert.equal(await present(installed), true, 'nothing is removed while a bridge may still be running');
+  calls.length = 0; stopFails = null; regFails = true;
+  const result = await retireLegacyWindowsRuntime(options);
+  assert.deepEqual(result, { stopped: [installed, chosen, recorded], removed: installed });
+  const stops = calls.filter(([, args]) => args.at(-1) === 'stop');
+  assert.deepEqual(stops.map(([file, args, settings]) => [file, args, settings.cwd, settings.env.WEB_PILOT_RUNTIME_ROOT, settings.env.PYTHONUTF8, settings.windowsHide]),
+    [installed, chosen, recorded].map(folder => [python(folder), ['-B', options.controlFile, 'stop'], folder, folder, '1', true]),
+    'every folder is stopped with its own Python; a folder without one cannot be running');
+  const reg = calls.find(([, args]) => args[0] === 'delete');
+  assert.deepEqual([reg[0], reg[1]], [path.join('/Windows', 'System32', 'reg.exe'),
+    ['delete', 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run', '/v', 'ProjectWebPilotMCP', '/f']], 'the old start at sign-in is removed; a missing value is not an error');
+  for (const gone of [installed, path.join(dataDir, 'runtime', 'windows-runtime.json'), path.join(dataDir, 'runtime', '.windows-runtime-staging')])
+    assert.equal(await present(gone), false, gone);
+  for (const kept of [python(chosen), python(recorded), empty, path.join(legacyStateDir, 'private', 'tunnel-key.dpapi'), path.join(dataDir, 'settings.json')])
+    assert.equal(await present(kept), true, 'folders of the user and the old tunnel key stay: ' + kept);
+  calls.length = 0;
+  assert.deepEqual((await retireLegacyWindowsRuntime({ ...options, runtimeRoots: [], legacyStateDir: null })).stopped, [], 'a second run finds nothing to stop');
+  await assert.rejects(retireLegacyWindowsRuntime({ ...options, dataDir: 'relative' }), TypeError);
+  await assert.rejects(retireLegacyWindowsRuntime({ ...options, controlFile: undefined }), TypeError);
 });
 
 test('SHA-256 verification uses the canonical digest contract', async t => {
@@ -349,13 +509,11 @@ test('Windows runtime payload comes from the build cache, a local copy or the re
 });
 
 
-test('Windows lifecycle adapter declares contract v2 and recognizes pinned legacy source', async () => {
-  assert.equal(WINDOWS_RUNTIME_CONTROL_CONTRACT, 2);
-  assert.match(WINDOWS_LEGACY_CONTROL_SHA256, /^[0-9a-f]{64}$/);
+test('the lifecycle script of the previous bridge stays in the package: 0.6.96 uses it once to stop that bridge', async () => {
   const source = await fs.readFile(windowsControl, 'utf8');
   assert.match(source, /RUNTIME_CONTRACT = 2/);
   assert.match(source, /WEB_PILOT_RUNTIME_ROOT/);
-  assert.match(source, /runtime-endpoints\.json/);
+  assert.match(source, /def stop\(\) -> dict:/);
   assert.match(source, /stale_cleaned/);
 });
 
@@ -388,50 +546,16 @@ test('Windows lifecycle adapter cleans stale PID and moves occupied persisted en
   await closeLocal(a);ao=false;await closeLocal(b);bo=false;
 });
 
-// First-run worker boundaries are checked with fixture values only.
-import { configureWindowsTunnel, windowsWorkflowEnvironment } from '../src/windows-runtime.mjs';
-test('Windows first run passes credentials only over stdin and strips worker failures', async () => {
-  const secret = 'sk-fixture_only_1234567890', id = 'tunnel_fixture1234567890123456';
-  const calls = [];
-  const options = { folder: 'C:\\Pilot\\runtime', controlSourceFile: '/fixture/windows-control.py', environment: {},
-    credentials: { tunnelId: id, key: secret },
-    executeInput: async (file, args, settings, input) => {
-      calls.push({ file, args, settings });
-      assert.deepEqual(JSON.parse(input), { tunnel_id: id, api_key: secret });
-      assert.equal(settings.windowsHide, true);
-      assert.equal(settings.env.PYTHONUTF8, '1');
-      assert.equal(settings.env.PYTHONDONTWRITEBYTECODE, '1');
-      assert.equal(settings.env.WEB_PILOT_RUNTIME_ROOT, 'C:\\Pilot\\runtime');
-      return { stdout: '{"configured":true}' };
-    } };
-  assert.deepEqual(await configureWindowsTunnel(options), { configured: true });
-  assert.doesNotMatch(JSON.stringify(calls), /sk-fixture|tunnel_fixture/);
-  await assert.rejects(configureWindowsTunnel({ ...options, executeInput: async () => {
-    throw { message: secret, stderr: secret, stdout: secret };
-  } }), error => error.code === 'WINDOWS_TUNNEL_SETUP_FAILED' && !JSON.stringify(error).includes(secret));
-  await assert.rejects(configureWindowsTunnel({ ...options, credentials: { tunnelId: 42 } }), { code: 'WINDOWS_TUNNEL_INVALID_DATA' });
-});
-test('Windows first run supports cancellation and manual key entry with an already copied ID', async () => {
-  let inputs = 0;
-  const base = { folder: 'C:\\Pilot', controlSourceFile: '/fixture/windows-control.py', environment: {},
-    execute: async (file, args) => { assert.equal(args.includes('--stdin'), false); return { stdout: '{"cancelled":true}' }; },
-    executeInput: async (file, args, settings, input) => {
-      inputs++; assert.deepEqual(JSON.parse(input), { tunnel_id: 'tunnel_fixture1234567890123456' });
-      return { stdout: '{"cancelled":true}' };
-    } };
-  assert.deepEqual(await configureWindowsTunnel(base), { cancelled: true });
-  assert.deepEqual(await configureWindowsTunnel({ ...base, credentials: { tunnelId: 'tunnel_fixture1234567890123456' } }), { cancelled: true });
-  assert.equal(inputs, 1);
-});
-test('Windows workflow receives a complete portable Git environment and rejects moved or foreign tools', () => {
-  const folder = 'C:\\Users\\Pilot\\App Data\\runtime';
-  const locations = { package_root: folder, git: folder + '\\tools\\git\\cmd\\git.exe' };
-  const env = windowsWorkflowEnvironment(folder, locations, { Path: 'C:\\Windows\\System32' });
-  assert.equal(env.WORKFLOW_GIT_BIN, locations.git);
-  assert.equal(env.WORKFLOW_GIT_HOME, folder + '\\tools\\git');
-  assert.equal(env.Path, `${folder}\\tools\\git\\cmd;${folder}\\tools\\git\\usr\\bin;C:\\Windows\\System32`);
-  assert.throws(() => windowsWorkflowEnvironment(folder, { ...locations, git: 'C:\\foreign\\git.exe' }), { code: 'WINDOWS_GIT_LAYOUT_INVALID' });
-  assert.throws(() => windowsWorkflowEnvironment(folder, { ...locations, package_root: 'D:\\Moved' }), { code: 'WINDOWS_GIT_LAYOUT_INVALID' });
+test('Workflow Kit on Windows gets the MinGit of the package and refuses a Git from elsewhere', () => {
+  const tools = 'C:\\Users\\Pilot\\AppData\\Local\\WebPilotCodexExecutor\\runtime\\tools';
+  const git = tools + '\\git\\cmd\\git.exe';
+  const env = windowsWorkflowEnvironment(tools, { git }, { Path: 'C:\\Windows\\System32' }, path.win32);
+  assert.equal(env.WORKFLOW_GIT_BIN, git);
+  assert.equal(env.WORKFLOW_GIT_HOME, tools + '\\git');
+  assert.equal(env.Path, `${tools}\\git\\cmd;${tools}\\git\\usr\\bin;C:\\Windows\\System32`);
+  assert.equal(windowsWorkflowEnvironment(tools, { git: git.toUpperCase() }, {}, path.win32).Path, `${tools}\\git\\cmd;${tools}\\git\\usr\\bin`);
+  assert.throws(() => windowsWorkflowEnvironment(tools, { git: 'C:\\foreign\\git.exe' }, {}, path.win32), { code: 'WINDOWS_GIT_LAYOUT_INVALID' });
+  assert.throws(() => windowsWorkflowEnvironment(tools, {}, {}, path.win32), { code: 'WINDOWS_GIT_LAYOUT_INVALID' });
 });
 
 

@@ -294,12 +294,15 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   clipboardFlow.dispose();
   // Exercise the Windows production adapter against the real Chromium renderer.
   assert.equal(startupSupported('win32'), true);
-  let winInstalled = false, winMcp = false, winConfigured = false, winTunnel = false;
+  let winComponents = false, winInstalled = false, winMcp = false, winConfigured = false, winTunnel = false;
   const winActions = [];
   const winFlow = new StartupReadiness({
     ...startupPlatformOptions({ platform: 'win32',
       setup: { node: async () => {}, setRuntimeEnvironment: () => winActions.push('git') },
-      bootstrap: { inspect: async () => ({ installed: winInstalled }), workflowEnvironment: async () => ({ WORKFLOW_GIT_BIN: 'fixture' }),
+      // The components of the package (tools and the private Python), then the same executor runtime as on macOS.
+      components: { ensure: async () => { winActions.push('components'); winComponents = true; },
+        inspect: async () => ({ toolsReady: winComponents, installed: winComponents }), workflowEnvironment: async () => ({ WORKFLOW_GIT_BIN: 'fixture' }) },
+      bootstrap: { inspect: async () => ({ installed: winInstalled }),
         configureTunnel: async () => { winConfigured = true; return { configured: true }; } },
       ensureRuntime: async () => { winActions.push('prepare'); winInstalled = true; },
       control: async action => {
@@ -314,7 +317,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   });
   await winFlow.check({ prepare: true });
   await waitFor(() => sidebar.executeJavaScript('!document.getElementById("startup-tunnel-body").hidden && document.getElementById("startup-install-git").hidden && document.getElementById("host-platform-label").textContent.includes("Windows")'), 'Windows prepared components and tunnel step', snapshot);
-  assert.deepEqual(winActions, ['prepare', 'git']);
+  assert.deepEqual(winActions, ['components', 'git', 'prepare']);
   await sidebar.executeJavaScript('document.getElementById("startup-tunnel-body").scrollIntoView({block:"start"})');
   await fs.writeFile(path.join(dataDir, 'startup-windows-tunnel.png'), (await sidebar.capturePage()).toPNG());
   await winFlow.configure({ tunnel_id: 'tunnel_fixture', api_key: 'sk-fixture-only' });
@@ -948,7 +951,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.deepEqual(Object.keys(snapshot().settings), ['workspace']);
   assert.equal(await sidebar.executeJavaScript('document.getElementById("open-archive-window").textContent'), 'Архив…');
   assert.equal(snapshot().platform, process.platform);
-  assert.equal(await sidebar.executeJavaScript('document.getElementById("windows-runtime-section").hidden'), true, 'Windows onboarding stays hidden on macOS smoke');
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("windows-runtime-section")'), null, 'the settings have one local tools section for both systems');
   assert.equal(await sidebar.executeJavaScript('document.getElementById("choose-runtime")'), null, 'macOS has one built-in backend and no runtime folder picker');
   assert.equal(snapshot().theme, 'light');
   await sidebar.executeJavaScript('document.getElementById("theme-dark").click()');

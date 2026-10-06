@@ -43,11 +43,16 @@ PRIVATE = STATE / "private"
 RUNTIME = STATE / "runtime"
 VENV = RUNTIME / "venv"
 PYTHON = VENV / ("Scripts/python.exe" if IS_WINDOWS else "bin/python")
-TUNNEL_CLIENT = RUNTIME / ("tunnel-client.exe" if IS_WINDOWS else "tunnel-client")
 # Windows only: Project Web Pilot unpacks uv, tunnel-client, ripgrep and MinGit from its pinned
 # archive into TOOLS_DIR and records their executables in TOOLS_FILE.
 TOOLS_DIR = RUNTIME / "tools"
 TOOLS_FILE = RUNTIME / "tools.json"
+# macOS keeps its own copy of tunnel-client. Windows runs it where the package unpacked it: the
+# official Windows archive ships cloudflared.exe next to tunnel-client.exe.
+TUNNEL_CLIENT = TOOLS_DIR / "tunnel-client" / "tunnel-client.exe" if IS_WINDOWS else RUNTIME / "tunnel-client"
+# Windows only: written when setup has installed the pinned packages. On macOS the copied tunnel-client,
+# the last step of setup, plays this role; on Windows tunnel-client is there before setup ever runs.
+SETUP_FILE = RUNTIME / "setup.json"
 PROFILE_DIR = PRIVATE / "tunnel-profile"
 PROFILE_NAME = "codex-executor"
 PROFILE = PROFILE_DIR / f"{PROFILE_NAME}.yaml"
@@ -260,9 +265,6 @@ def download(url: str) -> bytes:
 def _working_tunnel_candidate() -> Path | None:
     explicit = os.environ.get("WEB_PILOT_CODEX_TUNNEL_CLIENT")
     candidates = [Path(explicit).expanduser() if explicit else None]
-    if IS_WINDOWS:
-        with contextlib.suppress(RuntimeError):
-            candidates.append(tool_locations()["tunnel_client"])
     from_path = shutil.which("tunnel-client")
     if from_path:
         candidates.append(Path(from_path))
@@ -277,6 +279,12 @@ def _working_tunnel_candidate() -> Path | None:
 
 def install_tunnel_client() -> str:
     RUNTIME.mkdir(parents=True, exist_ok=True, mode=0o700)
+    if IS_WINDOWS:
+        # The pinned archive of the package is the only source on Windows: nothing is copied or downloaded.
+        client = tool_locations()["tunnel_client"]
+        if client != TUNNEL_CLIENT.resolve():
+            raise RuntimeError("tunnel-client is not where the Windows components keep it; let Project Web Pilot prepare them again")
+        return subprocess.check_output([str(client), "--version"], text=True, timeout=10, **_hidden()).strip()
     if TUNNEL_CLIENT.is_file():
         result = subprocess.run([str(TUNNEL_CLIENT), "--version"], capture_output=True, text=True, timeout=10, **_hidden())
         if result.returncode == 0:
@@ -287,9 +295,6 @@ def install_tunnel_client() -> str:
         shutil.copy2(existing, TUNNEL_CLIENT)
         TUNNEL_CLIENT.chmod(0o755)
         return subprocess.check_output([str(TUNNEL_CLIENT), "--version"], text=True, timeout=10, **_hidden()).strip()
-    if IS_WINDOWS:
-        # The pinned archive of the package is the only source on Windows: nothing is downloaded here.
-        raise RuntimeError("tunnel-client is missing from the prepared Windows components; let Project Web Pilot prepare them again")
 
     release = json.loads(download("https://api.github.com/repos/openai/tunnel-client/releases/latest"))
     arch = {"arm64": "arm64", "x86_64": "amd64"}.get(platform.machine())
@@ -353,10 +358,27 @@ def _setup_windows_python(uv: str | None) -> None:
     secure_private_directory()
     env = {**os.environ, "UV_PYTHON_INSTALL_DIR": str(RUNTIME / "python"), "UV_CACHE_DIR": str(RUNTIME / "uv-cache")}
     if not PYTHON.is_file():
-        subprocess.run([uv, "venv", "--managed-python", "--python", "3.13", "--no-config", str(VENV)],
+        # --clear replaces what an interrupted attempt left behind.
+        subprocess.run([uv, "venv", "--clear", "--managed-python", "--python", "3.13", "--no-config", str(VENV)],
                        check=True, stdout=sys.stderr, env=env, **_hidden())
     subprocess.run([uv, "pip", "install", "--no-config", "--python", str(PYTHON), "-r", str(ROOT / "requirements.txt")],
                    check=True, stdout=sys.stderr, env=env, **_hidden())
+
+
+def _requirements_digest() -> str:
+    return hashlib.sha256((ROOT / "requirements.txt").read_bytes()).hexdigest()
+
+
+def setup_complete() -> bool:
+    """False until setup has finished for the packages this version pins."""
+    if not PYTHON.is_file() or not TUNNEL_CLIENT.is_file():
+        return False
+    if not IS_WINDOWS:
+        return True
+    try:
+        return json.loads(SETUP_FILE.read_text(encoding="utf-8")).get("requirements_sha256") == _requirements_digest()
+    except (OSError, json.JSONDecodeError, AttributeError):
+        return False
 
 
 def setup() -> dict[str, object]:
@@ -378,6 +400,8 @@ def setup() -> dict[str, object]:
         subprocess.run([*installer, "-r", str(ROOT / "requirements.txt")], check=True, stdout=sys.stderr)
     version = install_tunnel_client()
     STATE.mkdir(parents=True, exist_ok=True, mode=0o700)
+    if IS_WINDOWS:
+        private_write(SETUP_FILE, json.dumps({"requirements_sha256": _requirements_digest()}, indent=2) + "\n")
     return {
         "installed": True,
         "python": str(PYTHON),
@@ -606,9 +630,11 @@ def launch(name: str, argv: list[str], env: dict[str, str]) -> int:
     detached = ({"creationflags": getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
                  | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0x00000200)}
                 if IS_WINDOWS else {"start_new_session": True})
+    # Windows cannot replace a folder that is the working directory of a running process, and the
+    # source folder is replaced on every update: the services run from the state folder there.
     with stdout_path.open("ab") as stdout, stderr_path.open("ab") as stderr:
         process = subprocess.Popen(
-            argv, cwd=str(ROOT), env=env, stdin=subprocess.DEVNULL,
+            argv, cwd=str(STATE if IS_WINDOWS else ROOT), env=env, stdin=subprocess.DEVNULL,
             stdout=stdout, stderr=stderr, close_fds=True, **detached,
         )
     identity = pid_identity(process.pid)
@@ -683,6 +709,7 @@ def status() -> dict[str, object]:
         "state_directory": str(STATE),
         "runtime_python": str(PYTHON),
         "tunnel_client": str(TUNNEL_CLIENT),
+        "setup_complete": setup_complete(),
         "production_runtime_touched": False,
     }
 

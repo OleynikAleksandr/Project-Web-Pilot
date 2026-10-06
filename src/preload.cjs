@@ -17,8 +17,6 @@ contextBridge.exposeInMainWorld('webPilot', Object.freeze({
   setChatgptChannel: channel => ipcRenderer.invoke('pilot:set-chatgpt-channel', channel),
   refreshChatgptChannel: () => ipcRenderer.invoke('pilot:refresh-chatgpt-channel'),
   copyVpsConnectorUrl: () => ipcRenderer.invoke('pilot:copy-vps-connector-url'),
-  configureWindowsTunnel: () => ipcRenderer.invoke('pilot:configure-windows-tunnel'),
-  refreshWindowsRuntime: () => ipcRenderer.invoke('pilot:refresh-windows-runtime'),
   copyWorkspacePath: workspace => ipcRenderer.invoke('pilot:copy-workspace-path', workspace),
   copyExternalClientLine: workspace => ipcRenderer.invoke('pilot:copy-external-client-line', workspace),
   renameProject: (workspace, name) => ipcRenderer.invoke('pilot:rename-project', { workspace, name }),

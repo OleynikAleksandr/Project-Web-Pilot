@@ -1240,6 +1240,8 @@ direct = binary(root / "bin" / "codex.exe", "9.9.9")
 out["exe_on_path"] = client.discover_codex_binary(platform="win32", environ=env, which=lambda name: direct).path
 winget = binary(local / "Microsoft" / "WinGet" / "Links" / "codex.exe", "1.0.0")
 out["winget"] = client.discover_codex_binary(platform="win32", environ={"LOCALAPPDATA": str(local)}, which=lambda name: None).path == winget
+standalone = binary(local / "Programs" / "OpenAI" / "Codex" / "bin" / "codex.exe", "1.1.0")
+out["standalone"] = client.discover_codex_binary(platform="win32", environ={"LOCALAPPDATA": str(local)}, which=lambda name: None).path == standalone
 explicit = binary(root / "explicit" / "codex.exe", "2.0.0")
 out["explicit"] = client.discover_codex_binary(explicit, platform="win32", environ=env, which=lambda name: str(launcher)).path == explicit
 out["env"] = client.discover_codex_binary(platform="win32", environ={**env, "CODEX_APP_SERVER_BIN": explicit}, which=lambda name: None).path == explicit
@@ -1270,6 +1272,7 @@ print(json.dumps(out))
   assert.equal(out.arm64, out.arm); assert.equal(out.wow64, out.arm, 'the real architecture of an emulated process');
   assert.ok(out.exe_on_path.endsWith('/bin/codex.exe'));
   assert.equal(out.winget, true); assert.equal(out.explicit, true); assert.equal(out.env, true);
+  assert.equal(out.standalone, true, 'the folder of the official installer is searched before PATH catches up');
   assert.equal(out.missing, 'No compatible Codex binary was found');
   assert.equal(out.darwin_path, true);
   assert.equal(out.detached_win.start_new_session, undefined);
@@ -1751,12 +1754,19 @@ control.shutil.which = lambda *args, **kwargs: None
 control.require_codex = lambda: {"path": "C:/codex/codex.exe", "version": "0.160.0"}
 real_run, real_check_output = subprocess.run, subprocess.check_output
 subprocess.run = setup_run
-subprocess.check_output = lambda argv, **options: "tunnel-client 0.0.14\\n"
+versions = []
+subprocess.check_output = lambda argv, **options: versions.append([str(argv[0]), argv[1:], options.get("creationflags")]) or "tunnel-client 0.0.14\\n"
+before_setup = control.setup_complete()
 installed = control.setup()
+after_setup = control.setup_complete()
+original_digest = control._requirements_digest
+control._requirements_digest = lambda: "another version of the pinned packages"
+changed_requirements = control.setup_complete()
+control._requirements_digest = original_digest
 control.TOOLS_FILE.unlink()
 out["setup_without_tools"] = attempt(control.setup)
 subprocess.run, subprocess.check_output = real_run, real_check_output
-out["setup"] = {"result": installed, "commands": commands, "tunnel_client_copied": control.TUNNEL_CLIENT.read_bytes() == b"binary",
+out["setup"] = {"result": installed, "commands": commands, "complete": [before_setup, after_setup, changed_requirements], "version_call": versions, "copied": (control.RUNTIME / "tunnel-client.exe").exists(),
                 "venv": str(control.VENV), "requirements": str(pathlib.Path(client_dir) / "requirements.txt"), "uv": str(tools["uv"].resolve()),
                 "python_dir": str(control.RUNTIME / "python"), "cache_dir": str(control.RUNTIME / "uv-cache")}
 
@@ -1791,7 +1801,7 @@ print(json.dumps(out, ensure_ascii=False))
   if (!result) return;
   const { out, root } = result;
   const local = path.join(root, 'Local'), state = path.join(local, 'WebPilotCodexExecutor');
-  assert.deepEqual(out.paths, { state, python: path.join('runtime', 'venv', 'Scripts', 'python.exe'), tunnel_client: path.join('runtime', 'tunnel-client.exe'),
+  assert.deepEqual(out.paths, { state, python: path.join('runtime', 'venv', 'Scripts', 'python.exe'), tunnel_client: path.join('runtime', 'tools', 'tunnel-client', 'tunnel-client.exe'),
     key: path.join('private', 'tunnel-key.dpapi'), legacy: path.join(local, 'CodexLocalWindows'), tools: path.join('runtime', 'tools.json'),
     server_name: 'Codex App Server Local Windows', same_name_as_server: true, hidden: { creationflags: 0x08000000 } });
 
@@ -1816,7 +1826,8 @@ print(json.dumps(out, ensure_ascii=False))
   assert.equal(out.damaged_legacy, false, 'a key that cannot be decrypted is not carried over');
 
   assert.equal(out.launch.pid, 4321);
-  assert.deepEqual(out.launch.call[1], { creationflags: 0x08000000 | 0x00000200, close_fds: true, cwd: clientDir }, 'no console window, own process group, no POSIX session');
+  assert.deepEqual(out.launch.call[1], { creationflags: 0x08000000 | 0x00000200, close_fds: true, cwd: state },
+    'no console window, own process group, no POSIX session; the source folder stays replaceable');
   assert.deepEqual(out.launch.record, { pid: 4321, identity: { created: 1700000000.25, exe: 'C:/state/runtime/venv/Scripts/python.exe', cmdline: ['python.exe', '-B', 'server.py'] } });
   assert.deepEqual(out.launch.managed, { running: true, owned: true, pid: 4321 });
   assert.deepEqual(out.reused_pid, { running: true, owned: false, pid: 4321 }, 'the same PID with another start time is a foreign process');
@@ -1846,10 +1857,14 @@ print(json.dumps(out, ensure_ascii=False))
   const real = value => value.replace(/^\/private/, '');
   const uvCommands = setup.commands.filter(([argv]) => real(argv[0]) === real(setup.uv));
   assert.deepEqual(uvCommands.map(([argv, options]) => [argv.slice(1).map(real), options]), [
-    [['venv', '--managed-python', '--python', '3.13', '--no-config', real(setup.venv)], { ...flags, uv_env: uvEnv }],
+    [['venv', '--clear', '--managed-python', '--python', '3.13', '--no-config', real(setup.venv)], { ...flags, uv_env: uvEnv }],
     [['pip', 'install', '--no-config', '--python', real(path.join(setup.venv, 'Scripts', 'python.exe')), '-r', real(setup.requirements)], { ...flags, uv_env: uvEnv }],
   ]);
-  assert.equal(setup.tunnel_client_copied, true, 'tunnel-client comes from the pinned archive of the package');
+  assert.deepEqual(setup.version_call.map(([file, args, hidden]) => [real(file), args, hidden]),
+    [[real(path.join(state, 'runtime', 'tools', 'tunnel-client', 'tunnel-client.exe')), ['--version'], 0x08000000]],
+    'tunnel-client runs where the package unpacked it, next to cloudflared.exe');
+  assert.equal(setup.copied, false);
+  assert.deepEqual(setup.complete, [false, true, false], 'setup is repeated until it has finished and again when the pinned packages change');
   assert.match(out.setup_without_tools, /uv is missing from the prepared Windows components/);
 
   const prompt = out.prompt;

@@ -6,8 +6,8 @@ import { fileURLToPath } from 'node:url';
 const execute = promisify(execFile);
 for (const [name, platform] of [['mac', 'darwin'], ['windows', 'win32']]) {
   test(`${name}: ID-only entry opens one native prompt and never loads runtime or requests a key`, async () => {
-    const helper = fileURLToPath(new URL(name === 'mac' ? '../tools/codex-app-server-mcp/tunnel_prompt.py'
-      : '../resources/runtime-control/windows-first-run.py', import.meta.url));
+    // One worker for both systems; only the native prompt differs.
+    const helper = fileURLToPath(new URL('../tools/codex-app-server-mcp/tunnel_prompt.py', import.meta.url));
     const { stdout } = await execute('python3', ['-B', '-c', `
 import contextlib,io,json,runpy,subprocess
 from unittest.mock import patch

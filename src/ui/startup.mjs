@@ -47,8 +47,8 @@ export function createStartupView({ document, api }) {
     $('startup-components-body').hidden = !logged || local;
     $('startup-components-help').textContent = windows
       ? (s.busy
-        ? 'Устанавливаем комплектные компоненты Windows в ваш профиль и запускаем Codex Local Windows MCP. Оставьте Web Pilot открытым; результат появится здесь.'
-        : 'Нажмите «Проверить и продолжить». Web Pilot подготовит комплектные Python, Git и Codex Local Windows MCP. Приложение нужно запускать из полностью распакованной папки ZIP. Уже готовые компоненты сохранятся.')
+        ? 'Распаковываем комплектные компоненты Windows в ваш профиль, готовим Python и запускаем локальный MCP. В первый раз нужен интернет. Оставьте Web Pilot открытым; результат появится здесь.'
+        : 'Нажмите «Проверить и продолжить». Web Pilot подготовит комплектные Python и Git и запустит локальный MCP. На компьютере должен быть установлен Codex CLI. Приложение нужно запускать из полностью распакованной папки ZIP. Уже готовые компоненты сохранятся.')
       : waitingApple
       ? 'Подтвердите установку и примите условия в системном окне Apple. Если его не видно, сверните Web Pilot жёлтой кнопкой. Загрузка и установка могут занять десятки минут. Web Pilot сам проверит завершение; затем нажмите «Проверить и продолжить».'
       : !s.git
@@ -58,7 +58,7 @@ export function createStartupView({ document, api }) {
         : 'Нажмите «Проверить и продолжить». Web Pilot проверит установленные компоненты и подготовит недостающие. Повторно устанавливать уже готовый компонент Apple не нужно.');
     $('startup-install-git').hidden = windows || !!s.git || waitingApple;
     $('startup-plugin-platform').hidden = !windows;
-    $('startup-plugin-name').textContent = windows ? 'Codex Local Windows MCP' : 'Codex App Server Local Mac';
+    $('startup-plugin-name').textContent = windows ? 'Codex App Server Local Windows' : 'Codex App Server Local Mac';
     $('startup-plugin-body').hidden = !logged || !ready;
     $('startup-plugin-wait').hidden = logged && ready;
     $('startup-tunnel-status').textContent = s.tunnel ? 'Служба подключения работает' : !local ? 'После подготовки компьютера' : 'Нужна однократная настройка';

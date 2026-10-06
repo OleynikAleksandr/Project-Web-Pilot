@@ -215,7 +215,7 @@ SOFTWARE.
             </ol>
             <p>Если подключение к этому компьютеру уже есть, повторно добавлять его не нужно. Проверьте его туннель и список инструментов; одно название не подтверждает доступ.</p>
             <button class="secondary" data-startup="plugins">Открыть Plugins в ChatGPT</button>
-            <p id="startup-plugin-platform" hidden>Для этой Windows используйте «Codex Local Windows MCP» и туннель этой виртуальной машины. Подключение Mac остаётся отдельным. Windows-подключение нужно проверить, даже если служба туннеля уже работает.</p>
+            <p id="startup-plugin-platform" hidden>Для этой Windows используйте подключение «Codex App Server Local Windows» и туннель этого компьютера. Если раньше вы уже создали «Codex Local Windows MCP» с этим же туннелем, новое подключение не нужно: откройте прежнее и обновите в нём список инструментов (Refresh). Подключение Mac остаётся отдельным. Windows-подключение нужно проверить, даже если служба туннеля уже работает.</p>
             <div id="startup-plugin-permissions">
               <h4>Разрешения MCP</h4>
               <p>После создания подключения откройте в ChatGPT <strong>Settings → Plugins → ваше подключение → Permissions</strong>. Выберите имя, которое вы задали для этого компьютера.</p>
@@ -281,10 +281,10 @@ SOFTWARE.
           <div class="theme-choice" role="group" aria-label="Отображение вызовов инструментов"><button id="tool-calls-hide" type="button" class="secondary" aria-pressed="true">Скрывать</button><button id="tool-calls-show" type="button" class="secondary" aria-pressed="false">Показывать</button></div>
           <p class="settings-help">Скрывает служебные карточки вызовов инструментов в диалоге. Сами инструменты и MCP продолжают работать.</p>
         </div>
-        <div id="mac-runtime-section" class="settings-section" hidden>
-          <p class="eyebrow">Локальные инструменты macOS</p>
-          <p id="mac-runtime-status" class="description" role="status" aria-live="polite"></p>
-          <p class="settings-help">Web Pilot сам устанавливает и запускает локальный MCP. Он запускается при входе в macOS и при открытии Web Pilot.</p>
+        <div id="local-runtime-section" class="settings-section" hidden>
+          <p id="local-runtime-title" class="eyebrow">Локальные инструменты</p>
+          <p id="local-runtime-status" class="description" role="status" aria-live="polite"></p>
+          <p id="local-runtime-help" class="settings-help"></p>
         </div>
         <div id="chatgpt-channel-section" class="settings-section" hidden>
           <p class="eyebrow">Подключение ChatGPT</p>
@@ -301,12 +301,6 @@ SOFTWARE.
           </div>
           <div class="actions"><button id="chatgpt-channel-refresh" type="button" class="secondary">Проверить</button></div>
           <p class="settings-help">Secure MCP Tunnel — туннель OpenAI. VPS — собственный сервер: ChatGPT подключается коннектором на адрес сервера, tunnel-client не запускается. Туннель VPS работает при любом выборе: через него подключается Claude. Полный адрес коннектора только копируется и нигде не сохраняется.</p>
-        </div>
-        <div id="windows-runtime-section" class="settings-section" hidden>
-          <p class="eyebrow">Локальные инструменты Windows</p>
-          <p id="windows-runtime-status" class="description" data-state="embedded">Встроенный runtime готов к установке.</p>
-          <p class="settings-help">Web Pilot подготовит локальные компоненты в профиле Windows. Мастер проведёт через настройку туннеля и подключение Codex Local Windows MCP в ChatGPT. При ручном вводе ключа откроется защищённое системное окно Windows.</p>
-          <div class="actions" style="margin-top:10px"><button id="configure-windows-tunnel" type="button" class="primary">Установить и настроить tunnel…</button><button id="refresh-windows-runtime" type="button" class="secondary">Проверить</button></div>
         </div>
         <p class="eyebrow">Архив проектов</p>
         <p class="description">Архив сохраняет папку проекта и все его сессии.</p>

@@ -92,6 +92,9 @@ def _windows_codex_candidates(environ: dict[str, str], which, machine: str) -> l
     for root in dict.fromkeys(npm_roots):
         candidates.extend(_windows_npm_binaries(root, machine))
     if local:
+        # The official installer (chatgpt.com/codex/install.ps1) puts Codex here; a running app does not
+        # see the PATH entry that the installer has just added.
+        candidates.append(os.path.join(local, "Programs", "OpenAI", "Codex", "bin", "codex.exe"))
         candidates.append(os.path.join(local, "Microsoft", "WinGet", "Links", "codex.exe"))
         candidates.append(os.path.join(local, "Programs", "ChatGPT", "resources", "codex.exe"))
     program_files = environ.get("ProgramFiles")

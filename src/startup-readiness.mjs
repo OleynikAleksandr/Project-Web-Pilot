@@ -3,17 +3,17 @@ import { promisify } from 'node:util';
 import path from 'node:path';
 const execute = promisify(execFile);
 const PREPARATION_ERRORS = {
-  WINDOWS_RUNTIME_PAYLOAD_MISSING: 'В комплекте отсутствуют локальные инструменты Windows. Заново распакуйте всю папку приложения.',
+  WINDOWS_RUNTIME_PAYLOAD_MISSING: 'В комплекте отсутствует архив локальных компонентов Windows. Заново распакуйте всю папку приложения.',
   WINDOWS_RUNTIME_PAYLOAD_DAMAGED: 'Архив локальных компонентов повреждён. Скопируйте и распакуйте Windows ZIP заново.',
   WINDOWS_RUNTIME_ARCHIVE_INVALID: 'Архив локальных компонентов имеет неверную структуру. Заново распакуйте всю поставку.',
   WINDOWS_RUNTIME_SETUP_FAILED: 'Не удалось подготовить компоненты Windows. Проверьте доступ к интернету и разрешение Windows на запуск, затем нажмите «Проверить и продолжить».',
   WINDOWS_RUNTIME_SETUP_INCOMPLETE: 'Установка компонентов Windows не завершилась. Нажмите «Проверить и продолжить».',
-  WINDOWS_RUNTIME_OVERLAY_FAILED: 'Не удалось обновить локальные инструменты Windows. Нажмите «Проверить и продолжить». Если ошибка повторяется, передайте этот код разработчику.',
-  WINDOWS_RUNTIME_EXTERNAL_INCOMPATIBLE: 'Установленные локальные инструменты Windows изменены. Автоматическая замена остановлена; передайте этот код разработчику.',
+  WINDOWS_RUNTIME_NOT_INSTALLED: 'Компоненты Windows ещё не подготовлены. Нажмите «Проверить и продолжить».',
   WINDOWS_GIT_LAYOUT_INVALID: 'Комплектный Git не соответствует установленным компонентам. Повторите подготовку; если ошибка сохраняется, передайте этот код разработчику.',
   WINDOWS_GIT_INCOMPLETE: 'Комплектный Git неполон. Заново распакуйте полный Windows ZIP и повторите подготовку.',
   WINDOWS_GIT_START_FAILED: 'Windows не запустила комплектный Git. Проверьте разрешение на запуск приложения и повторите подготовку.',
-  // macOS: codes of the Codex App Server executor. A Mac without Codex carries its own message.
+  // Codes of the Codex App Server executor on both systems. A computer without Codex carries its own message.
+  APP_SERVER_AUTOSTART_FAILED: 'Службы запущены, но не удалось настроить их запуск при входе в Windows. Нажмите «Проверить и продолжить». Если ошибка повторяется, передайте этот код разработчику.',
   APP_SERVER_RUNTIME_COMMAND_FAILED: 'Не удалось загрузить, установить или запустить локальные компоненты. Проверьте доступ к интернету и нажмите «Проверить и продолжить». Если ошибка повторяется, передайте этот код разработчику.',
   APP_SERVER_SELECTOR_CONFIG_FAILED: 'Не удалось сохранить настройку локального подключения. Нажмите «Проверить и продолжить». Если ошибка повторяется, передайте этот код разработчику.',
   RUNTIME_STATUS_INVALID: 'Локальный компонент вернул непонятный ответ. Обновите Web Pilot и повторите подготовку.',

@@ -1,147 +1,62 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs/promises';
-import path from 'node:path';
-import os from 'node:os';
 import { createHash } from 'node:crypto';
-import { McpRuntime, LocalMcpClient, validateEndpoint, validateContextPacket } from '../src/mcp-runtime.mjs';
-import { defaultRuntimeFolder, runtimeFolderCandidates, runtimeLayout } from '../src/platform.mjs';
+import { LocalMcpClient, validateEndpoint, validateContextPacket } from '../src/mcp-runtime.mjs';
+import { defaultRuntimeFolder } from '../src/platform.mjs';
 
 const ready = { mcp: { running: true, owned: true, ready: true },
   tunnel: { running: true, owned: true, ready: true, configured: true }, mcp_url: 'http://127.0.0.1:17842/mcp' };
 
-async function folder(t) {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'web-pilot-служба с пробелами-'));
-  t.after(() => fs.rm(root, { recursive: true, force: true }));
-  const layout = runtimeLayout(root);
-  await fs.mkdir(path.dirname(layout.python), { recursive: true });
-  await fs.writeFile(layout.control, '# fixture');
-  await fs.writeFile(layout.python, 'fixture');
-  return fs.realpath(root);
-}
-
-const clientFactory = () => ({ initialize: async () => ({ serverName: 'Codex Local Windows', toolCount: 47 }) });
-
-test('platform runtime layout defines POSIX and Windows paths without runtime access; macOS keeps its backend in the executor state', () => {
-  assert.deepEqual(runtimeLayout('/home/test/Codex Local/codex-local', 'linux'), {
-    control: '/home/test/Codex Local/codex-local/control.py',
-    python: '/home/test/Codex Local/codex-local/.venv/bin/python3',
-  });
-  assert.deepEqual(runtimeFolderCandidates('/home/test/Codex Local', 'linux'), [
-    '/home/test/Codex Local', '/home/test/Codex Local/codex-local',
-  ]);
+test('the executor state folder is fixed per system and is never chosen by the user', () => {
   assert.equal(defaultRuntimeFolder('/Users/test', 'darwin'), '/Users/test/Library/Application Support/WebPilotCodexExecutor');
-  assert.equal(defaultRuntimeFolder('C:\\Users\\test', 'win32'), 'C:\\Users\\test\\VSCODE\\Codex Local Windows\\windows-codex-local');
-  assert.deepEqual(runtimeLayout('C:\\Users\\test\\Codex Local', 'win32'), {
-    control: 'C:\\Users\\test\\Codex Local\\control.py',
-    python: 'C:\\Users\\test\\Codex Local\\.venv\\Scripts\\python.exe',
-  });
-  assert.deepEqual(runtimeFolderCandidates('C:\\Users\\test\\Codex Local', 'win32'), [
-    'C:\\Users\\test\\Codex Local',
-    'C:\\Users\\test\\Codex Local\\windows-codex-local',
-    'C:\\Users\\test\\Codex Local\\codex-local',
-  ]);
+  assert.equal(defaultRuntimeFolder('C:\\Users\\test', 'win32', { LOCALAPPDATA: 'D:\\Profiles\\test\\Local' }), 'D:\\Profiles\\test\\Local\\WebPilotCodexExecutor');
+  assert.equal(defaultRuntimeFolder('C:\\Users\\test', 'win32', { LOCALAPPDATA: 'relative' }), 'C:\\Users\\test\\AppData\\Local\\WebPilotCodexExecutor');
+  assert.equal(defaultRuntimeFolder('/home/test', 'linux'), '/home/test/.local/state/WebPilotCodexExecutor');
 });
 
-test('ready shared services are reused, with explicit arguments and one concurrent initialization', async t => {
-  const root = await folder(t); const calls = [];
-  const runtime = new McpRuntime(root, { clientFactory,
-    execute: async (...args) => { calls.push(args); return { stdout: JSON.stringify(ready) }; } });
-  const [a,b] = await Promise.all([runtime.ensure(), runtime.ensure()]);
-  assert.deepEqual(a,b); assert.equal(calls.length,1);
-  const layout = runtimeLayout(root);
-  assert.equal(calls[0][0], layout.python);
-  assert.deepEqual(calls[0][1], ['-B',layout.control,'status']);
-  assert.equal(calls[0][2].cwd,root); assert.equal(calls[0][2].shell,undefined);
-  await runtime.control('stop');
-  assert.equal(calls.length,2);
-  assert.deepEqual(calls[1][1], ['-B',layout.control,'stop']);
-  assert.equal(runtime.client, null);
-  assert.equal(runtime.lastStatus, null);
-});
-
-test('ensureRuntime can replace a stale runtime path with the actual prepared folder', async t => {
-  const root = await folder(t);
-  const stale = path.join(path.dirname(root), 'missing-runtime');
-  const calls = [];
-  const runtime = new McpRuntime(stale, { clientFactory,
-    ensureRuntime: async () => ({ folder: root }),
-    execute: async (...args) => { calls.push(args); return { stdout: JSON.stringify(ready) }; } });
-  const result = await runtime.ensure();
-  assert.equal(runtime.folder, root);
-  assert.equal(result.mcp.ready, true);
-  assert.equal(calls.length, 1);
-  assert.equal(calls[0][2].cwd, root);
-});
-
-test('start is called once only for unready owned services and readiness is rechecked', async t => {
-  const root = await folder(t); const calls = [];
-  const runtime = new McpRuntime(root, { clientFactory, execute: async (_bin,args) => {
-    calls.push(args.at(-1)); return { stdout:JSON.stringify(args.at(-1)==='start' ? ready : {
-      ...ready,mcp:{running:false,owned:false,ready:false} }) };
-  } });
-  await runtime.ensure(); assert.deepEqual(calls,['status','start']);
-});
-
-test('foreign processes and unconfigured tunnel are never changed', async t => {
-  const root = await folder(t);
-  for (const [data,code] of [[{...ready,mcp:{running:true,owned:false,ready:false}},'RUNTIME_FOREIGN_PROCESS'],
-    [{...ready,tunnel:{running:false,owned:false,configured:false}},'TUNNEL_NOT_CONFIGURED']]) {
-    let count=0;
-    const runtime=new McpRuntime(root,{clientFactory,execute:async()=>{count++;return {stdout:JSON.stringify(data)};}});
-    await assert.rejects(runtime.ensure(),{code}); assert.equal(count,1);
-  }
-});
-
-test('HTTP JSON and streamed SSE deliver the full packet with no agent receipt call', async () => {
-  const requests=[]; const packet=contextPacket();
+test('the shell reads the catalogue over HTTP JSON or a streamed SSE answer and never calls a tool', async () => {
+  const requests=[];
   const fetchImpl=async (_url,options) => {
     const body=JSON.parse(options.body);requests.push({body,headers:options.headers});
     if(body.method==='notifications/initialized')return new Response(null,{status:202});
-    const results={initialize:{serverInfo:{name:'Codex App Server Local Mac'},protocolVersion:'2025-03-26'},
-      'tools/list':{tools:['bridge_status','workflow_context_recover'].map(name=>({name}))},
-      'tools/call':{structuredContent:packet}};
+    const results={initialize:{serverInfo:{name:'Codex App Server Local Windows'},protocolVersion:'2025-03-26'},
+      'tools/list':{tools:['bridge_status','exec_command','apply_patch'].map(name=>({name}))}};
     const text=JSON.stringify({jsonrpc:'2.0',id:body.id,result:results[body.method]});
-    if(body.method==='tools/call') {
+    if(body.method==='tools/list') {
       const bytes=new TextEncoder().encode(': keepalive\r\n\r\nevent: message\r\ndata: '+text+'\r\n\r\n');
       return new Response(new ReadableStream({start(controller){controller.enqueue(bytes.slice(0,28));controller.enqueue(bytes.slice(28));controller.close();}}),{headers:{'content-type':'text/event-stream'}});
     }
     return new Response(text,{headers:{'content-type':'application/json','mcp-session-id':'opaque-session'}});
   };
-  const client=new LocalMcpClient(ready.mcp_url,{fetchImpl,expectedServerName:'Codex App Server Local Mac'});
-  assert.deepEqual(await client.loadContext('/project'),packet);
+  const client=new LocalMcpClient(ready.mcp_url,{fetchImpl,expectedServerName:'Codex App Server Local Windows'});
+  assert.deepEqual(await client.initialize(),{serverName:'Codex App Server Local Windows',toolCount:3,protocolVersion:'2025-03-26'});
+  assert.equal(await client.initialize(),client.ready,'one handshake per client');
+  assert.deepEqual(requests.map(request=>request.body.method),['initialize','notifications/initialized','tools/list']);
   assert.equal(requests[2].headers['Mcp-Session-Id'],'opaque-session');
-  assert.equal(requests.at(-1).body.params.name,'workflow_context_recover');
-  assert.deepEqual(requests.at(-1).body.params.arguments,{workspace:'/project'});
-  await assert.rejects(client.request('tools/call',{name:'workflow_context_ack'}),{code:'MCP_READ_ONLY'});
+  for(const name of ['exec_command','workflow_context_recover','bridge_status'])
+    await assert.rejects(client.request('tools/call',{name}),{code:'MCP_READ_ONLY'},'the tools belong to the model, not to the shell');
+  assert.equal(requests.length,3,'a refused call never reaches the server');
+  assert.equal(typeof client.loadContext,'undefined','context is built by Workflow Kit, not fetched from the MCP server');
 });
 
-test('non-local addresses and a server without context tools fail closed', async () => {
+test('non-local addresses, another server on the port and a server without the status tool fail closed', async () => {
   for(const url of ['https://evil.test/mcp','http://127.0.0.1:17842/mcp?x=y','file:///tmp/mcp'])assert.throws(()=>validateEndpoint(url),{code:'MCP_URL_INVALID'});
-  const fetchImpl=async(_url,options)=>{
-    const body=JSON.parse(options.body);
-    if(body.method.startsWith('notifications/'))return new Response(null,{status:202});
-    return new Response(JSON.stringify({id:body.id,result:body.method==='initialize'?{serverInfo:{name:'Codex App Server Local Mac'},protocolVersion:'2025-03-26'}:{tools:[]}}),{headers:{'content-type':'application/json'}});
-  };
-  const client=new LocalMcpClient(ready.mcp_url,{fetchImpl,expectedServerName:'Codex App Server Local Mac'});
-  await assert.rejects(client.initialize(),{code:'MCP_TOOLS_MISSING'});
-  // Another MCP server on the same local port is refused, and the expected name is never assumed.
-  await assert.rejects(new LocalMcpClient(ready.mcp_url,{fetchImpl,expectedServerName:'Codex Local Windows'}).initialize(),{code:'MCP_SERVER_MISMATCH'});
-  assert.throws(()=>new LocalMcpClient(ready.mcp_url,{fetchImpl}),TypeError);
-});
-
-test('the executor catalogue needs no context tool: the client asks only for the tools its runtime names', async () => {
-  const fetchImpl=async(_url,options)=>{
+  const server=tools=>async(_url,options)=>{
     const body=JSON.parse(options.body);
     if(body.method.startsWith('notifications/'))return new Response(null,{status:202});
     return new Response(JSON.stringify({id:body.id,result:body.method==='initialize'?{serverInfo:{name:'Codex App Server Local Mac'},protocolVersion:'2025-03-26'}
-      :{tools:['bridge_status','exec_command'].map(name=>({name}))}}),{headers:{'content-type':'application/json'}});
+      :{tools:tools.map(name=>({name}))}}),{headers:{'content-type':'application/json'}});
   };
-  const executor=new LocalMcpClient(ready.mcp_url,{fetchImpl,expectedServerName:'Codex App Server Local Mac',requiredTools:['bridge_status']});
-  assert.deepEqual(await executor.initialize(),{serverName:'Codex App Server Local Mac',toolCount:2,protocolVersion:'2025-03-26'});
-  // The former Windows bridge keeps its requirement until it is replaced by the executor.
-  await assert.rejects(new LocalMcpClient(ready.mcp_url,{fetchImpl,expectedServerName:'Codex App Server Local Mac'}).initialize(),
-    error=>error.code==='MCP_TOOLS_MISSING'&&/workflow_context_recover/.test(error.message));
+  await assert.rejects(new LocalMcpClient(ready.mcp_url,{fetchImpl:server([]),expectedServerName:'Codex App Server Local Mac'}).initialize(),
+    error=>error.code==='MCP_TOOLS_MISSING'&&/bridge_status/.test(error.message));
+  // The catalogue has no context tool on either system: nothing but the status tool is required by default.
+  assert.deepEqual(await new LocalMcpClient(ready.mcp_url,{fetchImpl:server(['bridge_status','exec_command']),expectedServerName:'Codex App Server Local Mac'}).initialize(),
+    {serverName:'Codex App Server Local Mac',toolCount:2,protocolVersion:'2025-03-26'});
+  await assert.rejects(new LocalMcpClient(ready.mcp_url,{fetchImpl:server(['bridge_status']),expectedServerName:'Codex App Server Local Mac',requiredTools:['bridge_status','exec_command']}).initialize(),
+    error=>error.code==='MCP_TOOLS_MISSING'&&/exec_command/.test(error.message)&&!/bridge_status,/.test(error.message));
+  // Another MCP server on the same local port is refused, and the expected name is never assumed.
+  await assert.rejects(new LocalMcpClient(ready.mcp_url,{fetchImpl:server(['bridge_status']),expectedServerName:'Codex App Server Local Windows'}).initialize(),{code:'MCP_SERVER_MISMATCH'});
+  assert.throws(()=>new LocalMcpClient(ready.mcp_url,{fetchImpl:server([])}),TypeError);
 });
 
 function contextPacket() {
@@ -164,21 +79,4 @@ test('legacy diagnostics, another workspace, incomplete or modified context cann
     [p=>p.challenge='old-probe','MCP_CONTEXT_INCOMPLETE'],
     [p=>p.context='я'.repeat(100000),'MCP_CONTEXT_TOO_LARGE'],
   ]) { const packet=contextPacket();mutate(packet);assert.throws(()=>validateContextPacket(packet,'/project'),{code}); }
-});
-
-test('external runtime adapter control is executed without replacing the runtime folder control', async t => {
-  const root = await folder(t); const adapter = path.join(path.dirname(root), 'adapter-control.py'); await fs.writeFile(adapter, '# adapter');
-  const calls=[]; const runtime=new McpRuntime(root,{clientFactory,
-    ensureRuntime:async()=>{calls.push(['ensureRuntime']);return {folder:root,control:adapter};},
-    execute:async(...args)=>{calls.push(args);return {stdout:JSON.stringify({...ready,runtime_contract:2,mcp_url:'http://127.0.0.1:19111/mcp'})};}});
-  await runtime.ensure(); await runtime.control('status'); assert.equal(calls.filter(c=>Array.isArray(c)&&c[0]==='ensureRuntime').length,1); const execCalls=calls.filter(c=>c[0]!=='ensureRuntime'); assert.equal(execCalls.length,2); assert.equal(execCalls[0][1][1],adapter); assert.equal(execCalls[0][2].env.WEB_PILOT_RUNTIME_ROOT,root);
-});
-
-test('first-time runtime starts MCP only before reporting missing tunnel configuration', async t => {
-  const root=await folder(t); const calls=[];
-  const status={...ready,runtime_contract:2,mcp:{running:false,owned:false,ready:false},tunnel:{running:false,owned:false,ready:false,configured:false}};
-  const mcpOnly={...status,mcp:{running:true,owned:true,ready:true}};
-  const runtime=new McpRuntime(root,{clientFactory,execute:async(_bin,args)=>{calls.push([...args]);return {stdout:JSON.stringify(args.at(-1)==='--mcp-only'?mcpOnly:status)};}});
-  await assert.rejects(runtime.ensure(),{code:'TUNNEL_NOT_CONFIGURED'});
-  assert.deepEqual(calls.map(args=>args.slice(2)),[['status'],['start','--mcp-only']]);
 });

@@ -216,7 +216,8 @@ test('Windows prepares bundled components without an Apple installation action',
   const install = f.document.querySelector('#startup-install-git');
   assert.equal(install.hidden, true); assert.equal(install.disabled, true);
   install.click(); await f.settle(); assert.deepEqual(f.calls, []);
-  assert.match(f.document.querySelector('#startup-components-help').textContent, /комплектные Python, Git и Codex Local Windows MCP/);
+  assert.match(f.document.querySelector('#startup-components-help').textContent, /комплектные Python и Git и запустит локальный MCP/);
+  assert.match(f.document.querySelector('#startup-components-help').textContent, /должен быть установлен Codex CLI/);
   assert.doesNotMatch(f.document.querySelector('#startup-components-status').textContent, /Apple/);
   f.emit({ busy: true, phase: 'preparing-components' });
   assert.match(f.document.querySelector('#startup-components-help').textContent, /профиль/);
@@ -233,7 +234,8 @@ test('Windows connection guidance is visible after tunnel startup and never clai
   const help = f.document.querySelector('#startup-plugin-help');
   assert.equal(help.open, true);
   assert.equal(f.document.querySelector('#startup-plugin-platform').hidden, false);
-  assert.match(f.document.querySelector('#startup-plugin-platform').textContent, /Codex Local Windows MCP/);
+  assert.match(f.document.querySelector('#startup-plugin-platform').textContent, /«Codex App Server Local Windows»/);
+  assert.match(f.document.querySelector('#startup-plugin-platform').textContent, /«Codex Local Windows MCP» с этим же туннелем, новое подключение не нужно/);
   assert.match(f.document.querySelector('#startup-plugin-platform').textContent, /нужно проверить/);
   help.open = false; f.emit({}); assert.equal(help.open, false, 'status updates preserve a manually collapsed guide');
   f.document.querySelector('[data-startup=plugins]').click(); await f.settle();
@@ -311,7 +313,7 @@ for (const platform of ['darwin', 'win32']) test(`${platform}: explicit ChatGPT 
   f.emit({ tunnel: true, clipboard: { step: 'done' } });
   assert.equal(guide.hidden, false);
   assert.equal(guide.compareDocumentPosition(project) & 4, 4);
-  assert.equal(f.document.querySelector('#startup-plugin-name').textContent, platform === 'win32' ? 'Codex Local Windows MCP' : 'Codex App Server Local Mac');
+  assert.equal(f.document.querySelector('#startup-plugin-name').textContent, platform === 'win32' ? 'Codex App Server Local Windows' : 'Codex App Server Local Mac');
   assert.match(project.textContent, /меню инструментов/);
   assert.match(project.textContent, /ещё не подтверждают доступ/);
   f.document.querySelector('[data-startup=plugins]').click(); await f.settle();

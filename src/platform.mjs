@@ -6,28 +6,22 @@ function pathApi(platform) {
   return platform === 'win32' ? path.win32 : path.posix;
 }
 
-// Where the local MCP backend keeps its files. On macOS it is the state of the bundled Codex App Server executor.
-export function defaultRuntimeFolder(homeDir, platform = process.platform) {
+// Where the Codex App Server executor, the only local MCP backend, keeps its files. control.py of the
+// executor computes the same folder when it starts at sign-in without Web Pilot.
+export function defaultRuntimeFolder(homeDir, platform = process.platform, environment = process.env) {
   const api = pathApi(platform);
   if (platform === 'darwin') return api.join(homeDir, 'Library', 'Application Support', 'WebPilotCodexExecutor');
-  if (platform === 'win32') return api.join(homeDir, 'VSCODE', 'Codex Local Windows', 'windows-codex-local');
-  return api.join(homeDir, 'VSCODE', 'Codex Local', 'codex-local');
+  if (platform === 'win32') {
+    const local = environment?.LOCALAPPDATA;
+    return api.join(typeof local === 'string' && api.isAbsolute(local) ? local : api.join(homeDir, 'AppData', 'Local'), 'WebPilotCodexExecutor');
+  }
+  return api.join(homeDir, '.local', 'state', 'WebPilotCodexExecutor');
 }
 
-export function runtimeFolderCandidates(input, platform = process.platform) {
-  const api = pathApi(platform);
-  const names = platform === 'win32' ? ['', 'windows-codex-local', 'codex-local'] : ['', 'codex-local'];
-  return [...new Set(names.map(name => name ? api.join(input, name) : input))];
-}
-
-export function runtimeLayout(folder, platform = process.platform) {
-  const api = pathApi(platform);
-  return {
-    control: api.join(folder, 'control.py'),
-    python: platform === 'win32'
-      ? api.join(folder, '.venv', 'Scripts', 'python.exe')
-      : api.join(folder, '.venv', 'bin', 'python3'),
-  };
+// State of the bridge that Web Pilot ran on Windows before 0.6.96: read once to stop it and to carry its tunnel over.
+export function legacyWindowsStateFolder(environment = process.env) {
+  const local = environment?.LOCALAPPDATA;
+  return typeof local === 'string' && path.win32.isAbsolute(local) ? path.win32.join(local, 'CodexLocalWindows') : null;
 }
 
 export function isAbsolutePlatformPath(value, platform = process.platform) {
@@ -60,10 +54,6 @@ export function nodeExecutableCandidates({
 
 export function executableCandidateAllowed(value, platform = process.platform) {
   return isAbsolutePlatformPath(value, platform) || (typeof value === 'string' && /^[A-Za-z0-9_.-]+$/.test(value));
-}
-
-export function bundledWindowsRuntimeFolder(dataDir, platform = process.platform) {
-  return platform === 'win32' ? path.win32.join(dataDir, 'runtime', 'Windows-Codex-Local') : null;
 }
 
 export function bundledMacNode(resourcesPath) {

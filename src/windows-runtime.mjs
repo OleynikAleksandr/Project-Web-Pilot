@@ -1,19 +1,21 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { createHash } from 'node:crypto';
 import { execFile as execFileCallback } from 'node:child_process';
 import { promisify } from 'node:util';
-import { executePrivateInput, runTunnelHelper } from './tunnel-setup.mjs';
 import { exists, sha256File } from './common.mjs';
+import { ZipError, extractZip, fileReader, zipEntries, zipEntryData } from './zip-archive.mjs';
 
 const execFile = promisify(execFileCallback);
+// The pinned archive of the Windows package. Since 0.6.96 only its vendor folder is used:
+// uv, tunnel-client, ripgrep and MinGit for the Codex App Server executor and for Workflow Kit.
 export const WINDOWS_RUNTIME_ARCHIVE = 'Windows-Codex-Local-2026-09-10.zip';
 export const WINDOWS_RUNTIME_SHA256 = '1f041488ad97d8abf1984fd3521afb8abe15f50b8df3d3e11f1cc4248e019d98';
 const WINDOWS_RUNTIME_FOLDER = 'Windows-Codex-Local';
+// Vendor archive id -> the name under which control.py of the executor reads the executable from tools.json.
+export const WINDOWS_VENDOR_TOOLS = Object.freeze({ uv: 'uv', 'tunnel-client': 'tunnel_client', ripgrep: 'rg', git: 'git' });
 
-// 2 (0.6.90): UI control tools and the Desktop instructions are removed.
-const WINDOWS_RUNTIME_OVERLAY_VERSION = 2;
-export const WINDOWS_RUNTIME_CONTROL_CONTRACT = 2;
-export const WINDOWS_LEGACY_CONTROL_SHA256 = '13dd532f339db09cc0a99568ba3be63a12a0c4548f25e9c611fd0978ca70bdda';
+// The bridge that Web Pilot ran on Windows before 0.6.96. The source patches below are no longer applied.
 export const WINDOWS_CONTEXT_PACKET_SOURCE = String.raw`"""Workflow Kit recovery packet used by Project Web Pilot on Windows."""
 from __future__ import annotations
 
@@ -172,64 +174,8 @@ export function patchWindowsSkillSource(source) {
     .replace('background processes and desktop actions requested in ChatGPT', 'background processes and screenshots');
 }
 
-// Every file the overlay changes, with its content before and after: applied or rolled back as one set.
-async function windowsOverlayPlan(folder) {
-  const contextFile = path.win32.join(folder, 'server', 'context_packet.py');
-  const bridgeFile = path.win32.join(folder, 'mcp', 'bridge_mcp.py');
-  const skillFile = path.win32.join(folder, 'skills', 'local-computer', 'SKILL.md');
-  const bridge = await fs.readFile(bridgeFile, 'utf8');
-  const skill = await fs.readFile(skillFile, 'utf8');
-  let context = null;
-  try { context = await fs.readFile(contextFile, 'utf8'); } catch {}
-  return [
-    { file: contextFile, before: context, after: WINDOWS_CONTEXT_PACKET_SOURCE },
-    { file: bridgeFile, before: bridge, after: patchWindowsBridgeSource(bridge) },
-    { file: skillFile, before: skill, after: patchWindowsSkillSource(skill) },
-  ].filter(item => item.before !== item.after);
-}
-
-async function writeWindowsOverlay(plan, side) {
-  for (const item of plan) {
-    if (item[side] === null) await fs.rm(item.file, { force: true });
-    else await fs.writeFile(item.file, item[side], { encoding: 'utf8', mode: 0o600 });
-  }
-}
-
-async function applyWindowsWebPilotOverlay(folder) {
-  await writeWindowsOverlay(await windowsOverlayPlan(folder), 'after');
-}
-
 class WindowsRuntimeError extends Error {
   constructor(code, message) { super(message); this.code = code; }
-}
-
-function windowsRuntimeFolderPaths(folder) {
-  const api = path.win32;
-  return {
-    folder,
-    control: api.join(folder, 'control.py'),
-    python: api.join(folder, '.venv', 'Scripts', 'python.exe'),
-    locations: api.join(folder, '.runtime', 'locations.json'),
-    setupScript: api.join(folder, 'scripts', 'setup.ps1'),
-  };
-}
-
-export function windowsRuntimePaths(dataDir, payloadFile = '') {
-  const api = path.win32;
-  const root = api.join(dataDir, 'runtime');
-  const folder = api.join(root, WINDOWS_RUNTIME_FOLDER);
-  return {
-    root,
-    ...windowsRuntimeFolderPaths(folder),
-    marker: api.join(root, 'windows-runtime.json'),
-    staging: api.join(root, '.windows-runtime-staging'),
-    payloadFile,
-  };
-}
-
-export function windowsRuntimeStateDirectory(environment = process.env) {
-  const base = environment?.LOCALAPPDATA;
-  return typeof base === 'string' && path.win32.isAbsolute(base) ? path.win32.join(base, 'CodexLocalWindows') : null;
 }
 
 export function windowsCommandFailureText(error, fallback = 'Windows runtime command failed') {
@@ -240,19 +186,19 @@ export function windowsCommandFailureText(error, fallback = 'Windows runtime com
   return fallback;
 }
 
-const TUNNEL_ERRORS = {
-  WINDOWS_TUNNEL_ID_INVALID: 'Вставьте полный ID туннеля, начинающийся с tunnel_, и подтвердите ввод ещё раз.',
-  WINDOWS_TUNNEL_PROMPT_FAILED: 'Не удалось открыть окно ввода подключения. Повторите ввод.',
-  WINDOWS_TUNNEL_INVALID_DATA: 'Проверьте формат ID туннеля и личного ключа. Данные не сохранены.',
-  WINDOWS_TUNNEL_SETUP_FAILED: 'Не удалось сохранить подключение Windows. Нажмите «Проверить и продолжить», затем повторите ввод.',
-};
+// Where the executor keeps what Project Web Pilot unpacks for it; control.py reads the same marker.
+export function windowsExecutorPaths(stateDir, api = path) {
+  const runtime = api.join(stateDir, 'runtime');
+  return { runtime, tools: api.join(runtime, 'tools'), marker: api.join(runtime, 'tools.json'),
+    staging: api.join(runtime, 'tools.staging'), venv: api.join(runtime, 'venv'),
+    python: api.join(runtime, 'venv', 'Scripts', 'python.exe') };
+}
 
-export function windowsWorkflowEnvironment(folder, locations, environment = {}) {
-  const api = path.win32, root = api.resolve(folder), gitHome = api.join(root, 'tools', 'git');
+// Workflow Kit on Windows uses the MinGit of the package, never a Git found on PATH.
+export function windowsWorkflowEnvironment(toolsDir, tools, environment = {}, api = path) {
+  const gitHome = api.join(api.resolve(toolsDir), 'git');
   const git = api.join(gitHome, 'cmd', 'git.exe');
-  if (!locations || typeof locations.package_root !== 'string' || typeof locations.git !== 'string'
-      || api.resolve(locations.package_root).toLowerCase() !== root.toLowerCase()
-      || api.resolve(locations.git).toLowerCase() !== git.toLowerCase()) {
+  if (!tools || typeof tools.git !== 'string' || api.resolve(tools.git).toLowerCase() !== git.toLowerCase()) {
     throw new WindowsRuntimeError('WINDOWS_GIT_LAYOUT_INVALID', 'Комплект Git не соответствует установленным компонентам Windows. Повторите подготовку.');
   }
   const oldPath = Object.entries(environment).find(([key]) => key.toLowerCase() === 'path')?.[1] ?? '';
@@ -260,151 +206,170 @@ export function windowsWorkflowEnvironment(folder, locations, environment = {}) 
     Path: [api.join(gitHome, 'cmd'), api.join(gitHome, 'usr', 'bin'), oldPath].filter(Boolean).join(';') };
 }
 
-export async function configureWindowsTunnel({ folder, controlSourceFile, credentials, environment, idOnly = false,
-  execute = execFile, executeInput = executePrivateInput }) {
-  const layout = windowsRuntimeFolderPaths(folder);
-  const helper = path.join(path.dirname(controlSourceFile), 'windows-first-run.py');
-  return runTunnelHelper({
-    python: layout.python, helper, credentials, idOnly, execute, executeInput,
-    options: { cwd: folder, timeout: 16 * 60 * 1000, maxBuffer: 64 * 1024, windowsHide: true,
-      env: { ...environment, PYTHONUTF8: '1', PYTHONDONTWRITEBYTECODE: '1', WEB_PILOT_RUNTIME_ROOT: folder } },
-    errorPrefix: 'WINDOWS', ErrorType: WindowsRuntimeError, errorMessages: TUNNEL_ERRORS,
-  });
-}
-
-export function windowsExpandInvocation(payloadFile, destination) {
-  return {
-    executable: 'powershell.exe',
-    args: ['-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command',
-      'Expand-Archive -LiteralPath $env:WEB_PILOT_RUNTIME_ARCHIVE -DestinationPath $env:WEB_PILOT_RUNTIME_DESTINATION -Force'],
-    environment: { WEB_PILOT_RUNTIME_ARCHIVE: payloadFile, WEB_PILOT_RUNTIME_DESTINATION: destination },
-  };
-}
-
-export function windowsSetupInvocation(setupScript, workspace) {
-  return {
-    executable: 'powershell.exe',
-    args: ['-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', setupScript, '-Workspace', workspace],
-  };
-}
-
-export class WindowsRuntimeBootstrap {
-  constructor({ payloadFile, dataDir, execute = execFile, environment = process.env, platform = process.platform,
-    expectedSha256 = WINDOWS_RUNTIME_SHA256, onState = null, preferredFolder = null, stateDir = null,
-    controlSourceFile = null, executeInput = executePrivateInput, legacyControlHashes = [WINDOWS_LEGACY_CONTROL_SHA256] } = {}) {
-    if (!payloadFile || !dataDir) throw new TypeError('WindowsRuntimeBootstrap requires payloadFile and dataDir');
+// Prepares what the executor cannot prepare itself on Windows, where there is no system Python:
+// the four vendor tools from the pinned archive and the private Python environment that runs control.py.
+export class WindowsExecutorBootstrap {
+  constructor({ payloadFile, stateDir, execute = execFile, environment = process.env, platform = process.platform,
+    expectedSha256 = WINDOWS_RUNTIME_SHA256, onState = null } = {}) {
+    if (!payloadFile || !stateDir) throw new TypeError('WindowsExecutorBootstrap requires payloadFile and stateDir');
+    this.payloadFile = payloadFile;
     this.platform = platform;
     this.environment = environment;
     this.execute = execute;
-    this.executeInput = executeInput;
     this.expectedSha256 = expectedSha256;
-    this.paths = windowsRuntimePaths(dataDir, payloadFile);
-    this.preferredFolder = typeof preferredFolder === 'string' && path.win32.isAbsolute(preferredFolder) ? preferredFolder : null;
-    this.stateDir = stateDir ?? windowsRuntimeStateDirectory(environment);
-    this.controlSourceFile = controlSourceFile;
-    this.legacyControlHashes = new Set(legacyControlHashes);
+    this.paths = windowsExecutorPaths(stateDir);
     this.onState = typeof onState === 'function' ? onState : null;
     this.pending = null;
-    this.external = null;
-    this.state = { phase: platform === 'win32' ? 'embedded' : 'unavailable', folder: this.paths.folder };
+    this.toolsPending = null;
+    this.state = { phase: platform === 'win32' ? 'embedded' : 'unavailable', installed: false, toolsReady: false, error: null };
   }
 
   snapshot() { return { ...this.state }; }
-  #publish(next) { this.state = { ...this.state, ...next, folder: next?.folder ?? this.state.folder ?? this.paths.folder }; try { this.onState?.(this.snapshot()); } catch {} }
 
-  async #marker() {
-    try { return JSON.parse(await fs.readFile(this.paths.marker, 'utf8')); } catch { return null; }
+  #publish(next) {
+    if (Object.entries(next).every(([key, value]) => this.state[key] === value)) return;
+    this.state = { ...this.state, ...next };
+    try { this.onState?.(this.snapshot()); } catch { /* a view error must not stop the preparation */ }
   }
 
-  async #controlFor(folder) {
-    const layout = windowsRuntimeFolderPaths(folder);
-    if (!this.controlSourceFile) return layout.control;
-    let desired, current;
-    try { [desired, current] = await Promise.all([sha256File(this.controlSourceFile), sha256File(layout.control)]); }
-    catch { throw new WindowsRuntimeError('WINDOWS_RUNTIME_CONTROL_MISSING', 'Не удалось проверить Windows lifecycle control.'); }
-    if (current === desired || this.legacyControlHashes.has(current)) return this.controlSourceFile;
-    throw new WindowsRuntimeError('WINDOWS_RUNTIME_EXTERNAL_INCOMPATIBLE', 'Windows control.py изменён и не будет автоматически адаптирован.');
+  #requireWindows() {
+    if (this.platform !== 'win32') throw new WindowsRuntimeError('WINDOWS_ONLY', 'Компоненты Windows доступны только в Windows-сборке.');
   }
 
-  async #runControl(folder, command, extraArgs = []) {
-    const layout = windowsRuntimeFolderPaths(folder);
-    const control = await this.#controlFor(folder);
-    return this.execute(layout.python, ['-B', control, command, ...extraArgs], {
-      cwd: folder, timeout: command === 'start' ? 90000 : 20000, maxBuffer: 1024 * 1024,
-      env: { ...this.environment, PYTHONUTF8: '1', PYTHONDONTWRITEBYTECODE: '1',
-        ...(control !== layout.control ? { WEB_PILOT_RUNTIME_ROOT: folder } : {}) }, windowsHide: true,
-    });
-  }
-
-  async #externalCandidates() {
-    const values = [];
-    if (this.stateDir) {
-      for (const name of ['mcp.pid.json', 'tunnel.pid.json']) {
-        try {
-          const record = JSON.parse(await fs.readFile(path.win32.join(this.stateDir, name), 'utf8'));
-          if (typeof record?.package_root === 'string' && path.win32.isAbsolute(record.package_root)) values.push(record.package_root);
-        } catch {}
-      }
+  // The recorded executables, or null when the tools are not unpacked from this very archive.
+  async #tools() {
+    let marker;
+    try { marker = JSON.parse((await fs.readFile(this.paths.marker, 'utf8')).replace(/^\uFEFF/, '')); } catch { return null; }
+    if (marker?.schema_version !== 1 || marker.archive_sha256 !== this.expectedSha256 || !marker.tools) return null;
+    const tools = {};
+    for (const key of Object.values(WINDOWS_VENDOR_TOOLS)) {
+      const file = marker.tools[key];
+      if (typeof file !== 'string' || !path.isAbsolute(file)) return null;
+      const relative = path.relative(this.paths.tools, file);
+      if (!relative || relative.startsWith('..') || path.isAbsolute(relative) || !await exists(file)) return null;
+      tools[key] = file;
     }
-    if (this.preferredFolder) values.push(this.preferredFolder);
-    const bundled = path.win32.resolve(this.paths.folder).toLowerCase();
-    return [...new Map(values.map(value => [path.win32.resolve(value).toLowerCase(), value])).entries()]
-      .filter(([key]) => key !== bundled).map(([, value]) => value);
-  }
-
-  async #inspectExternal() {
-    for (const folder of await this.#externalCandidates()) {
-      const layout = windowsRuntimeFolderPaths(folder);
-      if (!(await exists(layout.control) && await exists(layout.python) && await exists(layout.locations))) continue;
-      try {
-        const output = await this.#runControl(folder, 'status');
-        const service = JSON.parse(output.stdout);
-        if (!service?.mcp || !service?.tunnel || typeof service.package_root !== 'string') continue;
-        if (this.controlSourceFile && service.runtime_contract !== WINDOWS_RUNTIME_CONTROL_CONTRACT) continue;
-        if ([service.mcp, service.tunnel].some(item => item?.running && !item?.owned)) continue;
-        if (path.win32.resolve(service.package_root).toLowerCase() !== path.win32.resolve(folder).toLowerCase()) continue;
-        return { folder, layout, service };
-      } catch {}
-    }
-    return null;
+    return tools;
   }
 
   async inspect() {
     if (this.platform !== 'win32') return this.snapshot();
-    const external = await this.#inspectExternal();
-    if (external) {
-      this.external = external;
-      this.#publish({ phase: 'installed', installed: true, source: 'external', folder: external.folder,
-        payloadSha256: null, service: external.service, error: null });
-      return this.snapshot();
-    }
-    this.external = null;
-    const marker = await this.#marker();
-    const installed = marker?.payloadSha256 === this.expectedSha256
-      && await exists(this.paths.control) && await exists(this.paths.python) && await exists(this.paths.locations);
-    // An older overlay is refreshed in place by ensure(): the venv and the tunnel settings are kept.
-    this.#publish({ phase: installed ? 'installed' : 'embedded', installed, source: installed ? 'bundled' : 'embedded',
-      overlayOutdated: installed && marker.overlayVersion !== WINDOWS_RUNTIME_OVERLAY_VERSION,
-      folder: this.paths.folder, payloadSha256: marker?.payloadSha256 ?? null, service: null });
-    return this.snapshot();
+    const tools = await this.#tools();
+    const installed = !!tools && await exists(this.paths.python);
+    // A running preparation owns the phase; inspection only reports what is already on disk.
+    if (!this.pending && !this.toolsPending) this.#publish({ phase: installed ? 'installed' : this.state.phase === 'error' ? 'error' : 'embedded',
+      toolsReady: !!tools, installed });
+    return { ...this.snapshot(), toolsReady: !!tools, installed };
   }
 
-  ensure(workspace) {
-    if (this.platform !== 'win32') return Promise.reject(new WindowsRuntimeError('WINDOWS_ONLY', 'Windows runtime доступен только в Windows-сборке.'));
+  // The vendor tools alone: enough for Workflow Kit (Git), needs no internet.
+  ensureTools() {
+    if (this.toolsPending) return this.toolsPending;
+    this.toolsPending = this.#ensureTools().finally(() => { this.toolsPending = null; });
+    return this.toolsPending;
+  }
+
+  // The tools and the private Python of the executor. The first run downloads Python and needs internet.
+  ensure() {
     if (this.pending) return this.pending;
-    this.pending = this.#ensure(workspace).finally(() => { this.pending = null; });
+    this.pending = this.#ensure().finally(() => { this.pending = null; });
     return this.pending;
   }
 
+  async #ensureTools() {
+    this.#requireWindows();
+    let tools = await this.#tools();
+    if (tools) { this.#publish({ toolsReady: true }); return tools; }
+    this.#publish({ phase: 'verifying', installed: false, toolsReady: false, error: null });
+    try {
+      let actual;
+      try { actual = await sha256File(this.payloadFile); }
+      catch { throw new WindowsRuntimeError('WINDOWS_RUNTIME_PAYLOAD_MISSING', 'В Windows-поставке отсутствует архив локальных компонентов.'); }
+      if (actual !== this.expectedSha256) {
+        throw new WindowsRuntimeError('WINDOWS_RUNTIME_PAYLOAD_DAMAGED', 'SHA-256 архива локальных компонентов Windows не совпадает с закреплённым.');
+      }
+      this.#publish({ phase: 'extracting' });
+      tools = await this.#extract();
+    } catch (error) {
+      const failure = error instanceof WindowsRuntimeError ? error
+        : new WindowsRuntimeError(error instanceof ZipError ? 'WINDOWS_RUNTIME_ARCHIVE_INVALID' : 'WINDOWS_RUNTIME_SETUP_FAILED',
+          windowsCommandFailureText(error, 'Не удалось распаковать компоненты Windows.'));
+      this.#publish({ phase: 'error', error: failure.code });
+      throw failure;
+    }
+    this.#publish({ phase: 'embedded', toolsReady: true });
+    return tools;
+  }
+
+  async #extract() {
+    const { staging, tools: target, marker } = this.paths;
+    const invalid = message => new WindowsRuntimeError('WINDOWS_RUNTIME_ARCHIVE_INVALID', message);
+    const recorded = {};
+    await fs.rm(staging, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+    const reader = await fileReader(this.payloadFile);
+    try {
+      const entries = new Map((await zipEntries(reader)).map(entry => [entry.name, entry]));
+      const vendor = name => {
+        const entry = entries.get(`${WINDOWS_RUNTIME_FOLDER}/vendor/${name}`);
+        if (!entry || entry.directory) throw invalid(`В архиве компонентов Windows нет файла vendor/${name}.`);
+        return entry;
+      };
+      let manifest;
+      try { manifest = JSON.parse((await zipEntryData(reader, vendor('manifest.json'))).toString('utf8').replace(/^\uFEFF/, '')); }
+      catch (error) { throw error instanceof WindowsRuntimeError ? error : invalid('Список компонентов Windows в архиве повреждён.'); }
+      if (manifest?.schema_version !== 1 || !Array.isArray(manifest.tools)) throw invalid('Список компонентов Windows имеет неизвестный формат.');
+      for (const [id, key] of Object.entries(WINDOWS_VENDOR_TOOLS)) {
+        const found = manifest.tools.filter(tool => tool?.id === id);
+        const tool = found[0];
+        if (found.length !== 1 || typeof tool.file !== 'string' || !/^[A-Za-z0-9._-]+\.zip$/.test(tool.file)
+            || typeof tool.sha256 !== 'string' || typeof tool.executable !== 'string') throw invalid(`Компонент ${id} описан в архиве неверно.`);
+        const archive = await zipEntryData(reader, vendor(tool.file));
+        if (createHash('sha256').update(archive).digest('hex') !== tool.sha256.toLowerCase()) throw invalid(`SHA-256 компонента ${id} не совпадает со списком архива.`);
+        const files = await extractZip(archive, path.join(staging, id));
+        if (!files.includes(tool.executable)) throw invalid(`В компоненте ${id} нет исполняемого файла ${tool.executable}.`);
+        recorded[key] = path.join(target, id, ...tool.executable.split('/'));
+      }
+    } catch (error) {
+      await fs.rm(staging, { recursive: true, force: true }).catch(() => {});
+      throw error;
+    } finally { await reader.close(); }
+    // The marker goes first and comes back last: an interrupted swap is simply repeated.
+    await fs.rm(marker, { force: true });
+    await fs.rm(target, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+    await fs.rename(staging, target);
+    await fs.writeFile(marker + '.tmp', JSON.stringify({ schema_version: 1, archive_sha256: this.expectedSha256, tools: recorded }, null, 2) + '\n', { mode: 0o600 });
+    await fs.rename(marker + '.tmp', marker);
+    return recorded;
+  }
+
+  async #ensure() {
+    const tools = await this.ensureTools();
+    if (!await exists(this.paths.python)) {
+      this.#publish({ phase: 'installing', installed: false, error: null });
+      try {
+        // The same command control.py setup uses; --clear replaces what an interrupted attempt left.
+        await this.execute(tools.uv, ['venv', '--clear', '--managed-python', '--python', '3.13', '--no-config', this.paths.venv], {
+          timeout: 15 * 60 * 1000, maxBuffer: 8 * 1024 * 1024, windowsHide: true,
+          env: { ...this.environment, UV_PYTHON_INSTALL_DIR: path.join(this.paths.runtime, 'python'), UV_CACHE_DIR: path.join(this.paths.runtime, 'uv-cache') },
+        });
+      } catch (error) {
+        this.#publish({ phase: 'error', error: 'WINDOWS_RUNTIME_SETUP_FAILED' });
+        throw new WindowsRuntimeError('WINDOWS_RUNTIME_SETUP_FAILED', windowsCommandFailureText(error, 'Не удалось подготовить Python для локальных инструментов Windows.'));
+      }
+      if (!await exists(this.paths.python)) {
+        this.#publish({ phase: 'error', error: 'WINDOWS_RUNTIME_SETUP_INCOMPLETE' });
+        throw new WindowsRuntimeError('WINDOWS_RUNTIME_SETUP_INCOMPLETE', 'Подготовка Python для локальных инструментов Windows завершилась без обязательных файлов.');
+      }
+    }
+    this.#publish({ phase: 'installed', installed: true, toolsReady: true, error: null });
+    return this.snapshot();
+  }
+
   async workflowEnvironment() {
-    const current = await this.inspect();
-    if (!current.installed) throw new WindowsRuntimeError('WINDOWS_RUNTIME_NOT_INSTALLED', 'Сначала подготовьте локальные компоненты Windows.');
-    const layout = windowsRuntimeFolderPaths(current.folder);
-    let locations;
-    try { locations = JSON.parse((await fs.readFile(layout.locations, 'utf8')).replace(/^\uFEFF/, '')); }
-    catch { throw new WindowsRuntimeError('WINDOWS_GIT_LAYOUT_INVALID', 'Не удалось прочитать сведения о комплектном Git. Повторите подготовку.'); }
-    const environment = windowsWorkflowEnvironment(current.folder, locations, this.environment);
-    if (!await exists(path.win32.join(environment.WORKFLOW_GIT_HOME, 'usr', 'bin', 'sh.exe')))
+    const tools = await this.#tools();
+    if (!tools) throw new WindowsRuntimeError('WINDOWS_RUNTIME_NOT_INSTALLED', 'Сначала подготовьте локальные компоненты Windows.');
+    const environment = windowsWorkflowEnvironment(this.paths.tools, tools, this.environment);
+    if (!await exists(path.join(environment.WORKFLOW_GIT_HOME, 'usr', 'bin', 'sh.exe')))
       throw new WindowsRuntimeError('WINDOWS_GIT_INCOMPLETE', 'Комплект Git неполон. Распакуйте всю Windows-поставку и повторите подготовку.');
     let version;
     try { version = await this.execute(environment.WORKFLOW_GIT_BIN, ['--version'], { timeout: 10000, windowsHide: true }); }
@@ -412,148 +377,46 @@ export class WindowsRuntimeBootstrap {
     if (!/^git version \d+\./.test(version.stdout)) throw new WindowsRuntimeError('WINDOWS_GIT_START_FAILED', 'Комплектный Git не подтвердил готовность.');
     return environment;
   }
+}
 
-  promptTunnelId() { return this.configureTunnel(undefined, { idOnly: true }); }
-
-  configureTunnel(credentials, { idOnly = false } = {}) {
-    if (this.configurePending) return this.configurePending;
-    this.configurePending = this.#configureTunnel(credentials, idOnly).finally(() => { this.configurePending = null; });
-    return this.configurePending;
-  }
-
-  async #configureTunnel(credentials, idOnly = false) {
-    if (this.platform !== 'win32' || !this.controlSourceFile)
-      throw new WindowsRuntimeError('WINDOWS_ONLY', 'Настройка подключения Windows недоступна.');
-    const current = await this.inspect();
-    if (!current.installed) throw new WindowsRuntimeError('WINDOWS_RUNTIME_NOT_INSTALLED', 'Сначала подготовьте локальные компоненты Windows.');
-    await this.#controlFor(current.folder);
-    return configureWindowsTunnel({ folder: current.folder, controlSourceFile: this.controlSourceFile, credentials, idOnly,
-      environment: this.environment, execute: this.execute, executeInput: this.executeInput });
-  }
-
-  async #externalControl(folder, command, extraArgs = []) { return this.#runControl(folder, command, extraArgs); }
-
-
-  // Applies the overlay to an installed runtime: owned services are stopped for the write and
-  // started again; on any failure the files are restored. Returns false when nothing changed.
-  async #overlayInPlace(folder, service, plan) {
-    if (!plan.length) return false;
-    const mcpWasRunning = !!service?.mcp?.owned && !!service?.mcp?.running;
-    const tunnelWasRunning = !!service?.tunnel?.owned && !!service?.tunnel?.running;
-    const wasRunning = mcpWasRunning || tunnelWasRunning;
-    const restart = () => this.#externalControl(folder, 'start', tunnelWasRunning ? [] : ['--mcp-only']);
-    try {
-      if (wasRunning) await this.#externalControl(folder, 'stop');
-      await writeWindowsOverlay(plan, 'after');
-      if (wasRunning) await restart();
-    } catch (error) {
+// One-time cleanup after the bridge that Web Pilot ran on Windows before 0.6.96: its services, its start at
+// sign-in and the copy Web Pilot itself unpacked into its data folder. Folders the user chose for the bridge
+// and its state with the old tunnel key stay; the executor reads that key once and never writes there.
+export async function retireLegacyWindowsRuntime({ dataDir, runtimeRoots = [], legacyStateDir = null, controlFile,
+  execute = execFile, environment = process.env, api = path } = {}) {
+  if (!dataDir || !api.isAbsolute(dataDir)) throw new TypeError('retireLegacyWindowsRuntime requires an absolute dataDir');
+  if (!controlFile) throw new TypeError('retireLegacyWindowsRuntime requires the lifecycle script of the old bridge');
+  const installed = api.join(dataDir, 'runtime', WINDOWS_RUNTIME_FOLDER);
+  const recorded = [];
+  if (legacyStateDir) {
+    for (const name of ['mcp.pid.json', 'tunnel.pid.json']) {
       try {
-        await writeWindowsOverlay(plan, 'before');
-        if (wasRunning) await restart();
-      } catch {}
-      throw error;
+        const record = JSON.parse(await fs.readFile(api.join(legacyStateDir, name), 'utf8'));
+        if (typeof record?.package_root === 'string') recorded.push(record.package_root);
+      } catch { /* no record: nothing was started from an unknown folder */ }
     }
-    return true;
   }
-
-  async #ensureExternal(current) {
-    const folder = current.folder;
-    let plan;
-    try { plan = await windowsOverlayPlan(folder); }
-    catch (error) {
-      throw new WindowsRuntimeError('WINDOWS_RUNTIME_EXTERNAL_INCOMPATIBLE', error?.code === 'ENOENT'
-        ? `Найдена установленная Codex Local Windows, но отсутствует совместимый MCP bridge: ${folder}`
-        : `Найдена установленная Codex Local Windows, но её MCP bridge несовместим с Web Pilot: ${error.message}`);
-    }
-    if (!plan.length) {
-      this.#publish({ phase: 'installed', installed: true, source: 'external', folder, error: null });
-      return { ...this.snapshot(), control: this.controlSourceFile ?? windowsRuntimeFolderPaths(folder).control, reused: true, adopted: true };
-    }
-    this.#publish({ phase: 'adopting', installed: true, source: 'external', folder, error: null });
-    try { await this.#overlayInPlace(folder, current.service, plan); }
-    catch (error) {
-      this.#publish({ phase: 'error', installed: true, source: 'external', folder, error: 'WINDOWS_RUNTIME_EXTERNAL_ADOPTION_FAILED' });
-      throw new WindowsRuntimeError('WINDOWS_RUNTIME_EXTERNAL_ADOPTION_FAILED', windowsCommandFailureText(error, 'Не удалось подключить существующую Codex Local Windows.'));
-    }
-    const refreshed = await this.#inspectExternal();
-    if (refreshed) this.external = refreshed;
-    this.#publish({ phase: 'installed', installed: true, source: 'external', folder, service: refreshed?.service ?? current.service, error: null });
-    return { ...this.snapshot(), control: this.controlSourceFile ?? windowsRuntimeFolderPaths(folder).control, reused: true, adopted: true };
+  const roots = [...new Map([installed, ...runtimeRoots, ...recorded]
+    .filter(root => typeof root === 'string' && api.isAbsolute(root))
+    .map(root => [api.resolve(root).toLowerCase(), api.resolve(root)])).values()];
+  const stopped = [];
+  for (const root of roots) {
+    const python = api.join(root, '.venv', 'Scripts', 'python.exe');
+    // Windows keeps the executable of a running process on disk: without this Python nothing of the folder runs.
+    if (!await exists(python)) continue;
+    // The lifecycle script of the old bridge stops only the processes it recorded itself, checked by identity.
+    await execute(python, ['-B', controlFile, 'stop'], { cwd: root, timeout: 30_000, maxBuffer: 1024 * 1024, windowsHide: true,
+      env: { ...environment, PYTHONUTF8: '1', PYTHONDONTWRITEBYTECODE: '1', WEB_PILOT_RUNTIME_ROOT: root } });
+    stopped.push(root);
   }
-
-  // The bundled runtime installed by an earlier Web Pilot gets the current overlay without a reinstall.
-  async #refreshBundledOverlay(folder) {
-    let service = null;
-    try { service = JSON.parse((await this.#runControl(folder, 'status')).stdout); } catch {}
-    try { await this.#overlayInPlace(folder, service, await windowsOverlayPlan(folder)); }
-    catch (error) {
-      this.#publish({ phase: 'error', error: 'WINDOWS_RUNTIME_OVERLAY_FAILED' });
-      throw new WindowsRuntimeError('WINDOWS_RUNTIME_OVERLAY_FAILED', windowsCommandFailureText(error, 'Не удалось обновить локальные инструменты Windows.'));
-    }
-    const marker = { ...(await this.#marker()), overlayVersion: WINDOWS_RUNTIME_OVERLAY_VERSION };
-    await fs.writeFile(this.paths.marker + '.tmp', JSON.stringify(marker, null, 2) + '\n', { mode: 0o600 });
-    await fs.rename(this.paths.marker + '.tmp', this.paths.marker);
-    this.#publish({ phase: 'installed', installed: true, overlayOutdated: false, error: null });
+  const systemRoot = Object.entries(environment).find(([key]) => key.toLowerCase() === 'systemroot')?.[1] || 'C:\\Windows';
+  try {
+    await execute(api.join(systemRoot, 'System32', 'reg.exe'),
+      ['delete', 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run', '/v', 'ProjectWebPilotMCP', '/f'],
+      { timeout: 10_000, maxBuffer: 64 * 1024, windowsHide: true });
+  } catch { /* reg.exe fails when the value is already absent */ }
+  for (const leftover of [installed, api.join(dataDir, 'runtime', 'windows-runtime.json'), api.join(dataDir, 'runtime', '.windows-runtime-staging')]) {
+    await fs.rm(leftover, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
   }
-
-  async #ensure(workspace) {
-    if (typeof workspace !== 'string' || !path.win32.isAbsolute(workspace)) {
-      throw new WindowsRuntimeError('WINDOWS_WORKSPACE_REQUIRED', 'Для подготовки Windows runtime нужен абсолютный путь workspace.');
-    }
-    const current = await this.inspect();
-    if (current.installed && current.source === 'external') return this.#ensureExternal(current);
-    if (current.installed) {
-      if (current.overlayOutdated) await this.#refreshBundledOverlay(current.folder);
-      return { ...this.snapshot(), control: this.controlSourceFile ?? windowsRuntimeFolderPaths(current.folder).control, reused: true };
-    }
-    this.#publish({ phase: 'verifying', installed: false, error: null });
-    let actual;
-    try { actual = await sha256File(this.paths.payloadFile); }
-    catch { throw new WindowsRuntimeError('WINDOWS_RUNTIME_PAYLOAD_MISSING', 'В Windows-поставке отсутствует встроенный Codex Local runtime.'); }
-    if (actual !== this.expectedSha256) {
-      throw new WindowsRuntimeError('WINDOWS_RUNTIME_PAYLOAD_DAMAGED', 'SHA-256 встроенного Windows runtime не совпадает с каноническим пакетом.');
-    }
-    const marker = await this.#marker();
-    if (marker && marker.payloadSha256 !== this.expectedSha256 && await exists(this.paths.folder)) {
-      throw new WindowsRuntimeError('WINDOWS_RUNTIME_UPDATE_REQUIRES_STOP', 'Обнаружена другая установленная версия Windows runtime. Остановите её перед обновлением.');
-    }
-    this.#publish({ phase: 'extracting', payloadSha256: actual });
-    await fs.rm(this.paths.staging, { recursive: true, force: true });
-    await fs.mkdir(this.paths.staging, { recursive: true });
-    const expand = windowsExpandInvocation(this.paths.payloadFile, this.paths.staging);
-    await this.execute(expand.executable, expand.args, {
-      timeout: 180000, maxBuffer: 4 * 1024 * 1024,
-      env: { ...this.environment, ...expand.environment }, windowsHide: true,
-    });
-    const top = await fs.readdir(this.paths.staging);
-    if (top.length !== 1 || top[0] !== WINDOWS_RUNTIME_FOLDER) {
-      await fs.rm(this.paths.staging, { recursive: true, force: true });
-      throw new WindowsRuntimeError('WINDOWS_RUNTIME_ARCHIVE_INVALID', 'Встроенный Windows runtime имеет неожиданную структуру архива.');
-    }
-    const extracted = path.win32.join(this.paths.staging, WINDOWS_RUNTIME_FOLDER);
-    await fs.rm(this.paths.folder, { recursive: true, force: true });
-    await fs.rename(extracted, this.paths.folder);
-    await fs.rm(this.paths.staging, { recursive: true, force: true });
-    await applyWindowsWebPilotOverlay(this.paths.folder);
-    this.#publish({ phase: 'installing' });
-    const setup = windowsSetupInvocation(this.paths.setupScript, workspace);
-    try {
-      await this.execute(setup.executable, setup.args, {
-        timeout: 15 * 60 * 1000, maxBuffer: 8 * 1024 * 1024,
-        env: { ...this.environment, PYTHONUTF8: '1', PYTHONDONTWRITEBYTECODE: '1' }, windowsHide: true,
-      });
-    } catch (error) {
-      this.#publish({ phase: 'error', error: 'WINDOWS_RUNTIME_SETUP_FAILED' });
-      throw new WindowsRuntimeError('WINDOWS_RUNTIME_SETUP_FAILED', windowsCommandFailureText(error, 'Windows runtime setup failed'));
-    }
-    if (!(await exists(this.paths.control) && await exists(this.paths.python) && await exists(this.paths.locations))) {
-      throw new WindowsRuntimeError('WINDOWS_RUNTIME_SETUP_INCOMPLETE', 'Windows runtime setup завершился без обязательных файлов.');
-    }
-    const markerData = { schemaVersion: 1, payloadSha256: actual, overlayVersion: WINDOWS_RUNTIME_OVERLAY_VERSION, installedAt: new Date().toISOString(), folder: this.paths.folder };
-    await fs.mkdir(this.paths.root, { recursive: true });
-    await fs.writeFile(this.paths.marker + '.tmp', JSON.stringify(markerData, null, 2) + '\n', { mode: 0o600 });
-    await fs.rename(this.paths.marker + '.tmp', this.paths.marker);
-    this.#publish({ phase: 'installed', installed: true, payloadSha256: actual, error: null });
-    return { ...this.snapshot(), control: this.controlSourceFile ?? this.paths.control, reused: false };
-  }
+  return { stopped, removed: installed };
 }

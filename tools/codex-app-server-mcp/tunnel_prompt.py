@@ -62,10 +62,10 @@ try {
 '''
 
 
-def windows_prompt(message, hidden=False, run=subprocess.run):
+def windows_prompt(message, hidden=False, run=None):
     encoded = base64.b64encode(windows_prompt_script(message, hidden).encode('utf-16-le')).decode('ascii')
     try:
-        result = run(['powershell.exe', '-NoLogo', '-NoProfile', '-STA', '-EncodedCommand', encoded],
+        result = (run or subprocess.run)(['powershell.exe', '-NoLogo', '-NoProfile', '-STA', '-EncodedCommand', encoded],
                      capture_output=True, text=True, encoding='utf-8', timeout=900,
                      creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0x08000000))
         if result.returncode:

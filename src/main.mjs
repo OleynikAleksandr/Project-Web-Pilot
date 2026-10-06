@@ -15,7 +15,6 @@ import os from 'node:os';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { WorkspaceSessions, normalizeChatUrl, activeSessionsNewestFirst } from './workspace-session.mjs';
-import { McpRuntime } from './mcp-runtime.mjs';
 import { ChatGPTComposer } from './chatgpt-composer.mjs';
 import { installChatGPTAutoScroll } from './chatgpt-auto-scroll.mjs';
 import { ChatColors, normalizeChatColors, validateColorChange, DEFAULT_COLORS } from './chatgpt-colors.mjs';
@@ -32,9 +31,9 @@ import { WorkspaceSetup } from './workspace-setup.mjs';
 import { ProjectDoctor } from './project-doctor.mjs';
 import { ChromiumDiagnostics, safeUrl } from './chromium-diagnostics.mjs';
 import { openStartupPage } from './browser-startup.mjs';
-import { BUNDLED_NODE_VERSION, defaultRuntimeFolder, bundledWindowsRuntimeFolder, bundledMacNode, nodeExecutableCandidates } from './platform.mjs';
-import { WindowsRuntimeBootstrap, WINDOWS_RUNTIME_ARCHIVE } from './windows-runtime.mjs';
-import { CodexAppServerRuntime, MacRuntimeSwitcher, MAC_RUNTIME_LABEL, CHATGPT_CHANNEL_SECURE, CHATGPT_CHANNELS } from './mac-runtime-switch.mjs';
+import { BUNDLED_NODE_VERSION, defaultRuntimeFolder, legacyWindowsStateFolder, bundledMacNode, nodeExecutableCandidates } from './platform.mjs';
+import { WindowsExecutorBootstrap, WINDOWS_RUNTIME_ARCHIVE } from './windows-runtime.mjs';
+import { CodexAppServerRuntime, MacRuntimeSwitcher, runtimeLabel, CHATGPT_CHANNEL_SECURE, CHATGPT_CHANNELS } from './mac-runtime-switch.mjs';
 import { VpsTunnel } from './vps-tunnel.mjs';
 import { TunnelClipboard } from './tunnel-clipboard.mjs';
 import { StartupReadiness, inspectMacGit, installMacGit, offerMacInstallation } from './startup-readiness.mjs';
@@ -62,13 +61,14 @@ const planMonitor = new PlanMonitor({ selected: () => store.selected(),
     if (!pageLoading && !setupState && !settingsState) controller?.projectChanged();
   }, onError: () => publish() });
 const partition = smoke ? 'web-pilot-smoke' : 'persist:chatgpt';
-let runtimeFolder = bundledWindowsRuntimeFolder(dataDir, process.platform) ?? defaultRuntimeFolder(os.homedir(), process.platform);
-let configuredRuntimeFolder = null;
-let runtimeRegistration = null;
-// macOS: what the local runtime retired in 0.6.91 left behind is removed once; until then its folders are remembered.
-let legacyMacRuntimeRetired = false, legacyRuntimeRoots = [];
+// State of the Codex App Server executor, the local MCP backend of both systems.
+const runtimeFolder = defaultRuntimeFolder(os.homedir(), process.platform);
+// What the runtime before the executor left behind (macOS before 0.6.91, Windows before 0.6.96) is removed once;
+// until then the folders that earlier versions recorded in the settings are remembered.
+const legacyRetiredSetting = process.platform === 'win32' ? 'legacyWindowsRuntimeRetired' : 'legacyMacRuntimeRetired';
+let legacyRuntimeRetired = false, legacyRuntimeRoots = [];
 let chatgptChannel = CHATGPT_CHANNEL_SECURE;
-let appServerRuntime = null, macRuntimeSwitcher = null, macActivation = null, vpsTunnel = null;
+let appServerRuntime = null, runtimeSwitcher = null, runtimeActivation = null, vpsTunnel = null;
 let shellTheme = 'light';
 let hideToolCalls = true;
 let autoPlanEnabled = false, autoPlanCheckpoint = null;
@@ -79,7 +79,7 @@ const SIDEBAR_MIN_WIDTH = 312;
 const BROWSER_MIN_WIDTH = 600;
 let sidebarWidth = SIDEBAR_MIN_WIDTH;
 let projectsParent = null;
-let window, browser, sidebar, archiveWindow, runtime, controller, fixture, chromiumDiagnostics, windowsRuntimeBootstrap;
+let window, browser, sidebar, archiveWindow, runtime, controller, fixture, chromiumDiagnostics, windowsBootstrap;
 let eventRuntimeCheckerTimer = null, lastEventRuntimeCheckerMismatch = '';
 let sidebarReady = false, lastSidebarStateSignature = null;
 let navigationId = 0;
@@ -110,9 +110,10 @@ const workspaceSetup = new WorkspaceSetup({
     : process.platform === 'darwin'
       ? [bundledMacNode(app.isPackaged ? process.resourcesPath : path.join(sourceDir, '../.harness/runtime')), ...nodeExecutableCandidates()]
       : undefined,
+  // Workflow Kit needs only the Git of the package: the tools are unpacked without starting any service.
   prepareEnvironment: process.platform === 'win32' && !smoke ? async () => {
-    await ensurePlatformRuntime();
-    return windowsRuntimeBootstrap.workflowEnvironment();
+    await windowsBootstrap.ensureTools();
+    return windowsBootstrap.workflowEnvironment();
   } : undefined,
   onWorkerStart: () => { if (eventBaseline) runtimeMetrics.workerNodeStarts++; },
 });
@@ -167,7 +168,7 @@ const conversationRecovery = new ConversationRecovery({
 const autoPlan = new AutoPlan({
   selected: () => { const p = store.selected(), info = planMonitor.view(p); return p && { ...p, scopeId: info ? info.scopeId : p.scopeId }; },
   inspectPlan: async selected => readAutoPlanState(selected, process.platform === 'win32'
-    ? await windowsRuntimeBootstrap.workflowEnvironment() : process.env),
+    ? await windowsBootstrap.workflowEnvironment() : process.env),
   send: (text, canContinue, onBeforeSend) => controller.composer.sendUserMessage({
     text, canContinue, onBeforeSend, waitForAcknowledgement: false, cleanupOnCancel: true }),
   onChange: () => publish(),
@@ -227,9 +228,10 @@ async function applyToolCallVisibility() {
 
 function saveSettings(overrides = {}) {
   // macRuntimeMode is no longer read: it only lets 0.6.90 open on the same backend after a rollback.
-  const platformSettings = process.platform === 'darwin'
-    ? { macRuntimeMode: 'app-server', legacyMacRuntimeRetired, ...(legacyMacRuntimeRetired ? {} : { legacyRuntimeRoots }) }
-    : { runtimeFolder, runtimeRegistration };
+  const platformSettings = {
+    ...(process.platform === 'darwin' ? { macRuntimeMode: 'app-server' } : {}),
+    [legacyRetiredSetting]: legacyRuntimeRetired, ...(legacyRuntimeRetired ? {} : { legacyRuntimeRoots }),
+  };
   const settings = { ...platformSettings, chatgptChannel, shellTheme, hideToolCalls, sidebarWidth, chatColors, projectsParent, autoPlanEnabled, autoPlanCheckpoint, ...overrides };
   const operation = settingsSaveTail.catch(() => {}).then(async () => {
     await fsp.mkdir(dataDir, { recursive: true, mode: 0o700 });
@@ -297,8 +299,9 @@ function snapshot() {
     selected, context: controller?.state ?? { phase: 'selected', servicesReady: false, messageSent: false },
     contextPreparation: { busy: selected ? contextCache.isBuilding(selected.workspace) : false },
     runtimeFolder, platform: process.platform,
-    macRuntime: process.platform === 'darwin' ? {
-      label: MAC_RUNTIME_LABEL,
+    // The same view on both systems: the executor, the selected ChatGPT channel and the state of its services.
+    localRuntime: {
+      label: runtimeLabel(),
       chatgptChannel,
       service: runtime?.lastStatus ? {
         mcpReady: !!runtime.lastStatus.mcp?.ready,
@@ -306,15 +309,7 @@ function snapshot() {
         tunnelConfigured: !!runtime.lastStatus.tunnel?.configured,
       } : null,
       vps: vpsView(runtime?.lastStatus?.vps),
-    } : null,
-    windowsRuntime: windowsRuntimeBootstrap ? {
-      ...windowsRuntimeBootstrap.snapshot(),
-      service: runtime?.lastStatus ? {
-        mcpReady: !!runtime.lastStatus.mcp?.ready,
-        tunnelReady: !!runtime.lastStatus.tunnel?.ready,
-        tunnelConfigured: !!runtime.lastStatus.tunnel?.configured,
-      } : null,
-    } : null,
+    },
     startup: startupFlow ? { ...startupFlow.snapshot(), clipboard: startupClipboard?.snapshot(), active: startupActive } : null,
     theme: shellTheme, hideToolCalls, sidebarWidth, sidebarMinWidth: SIDEBAR_MIN_WIDTH, pageLoading, startupError, storageError, setup: setupState, workspaceHealth, version: app.getVersion(), fixture: smoke };
 }
@@ -763,34 +758,6 @@ async function selectWorkspace(input, { latest = false, resume = false } = {}) {
   return openConnectedSession(input, null, { latest, resume });
 }
 
-function runtimeRegistrationFrom(result) {
-  const service = result?.service ?? result;
-  if (!result?.folder || !service?.mcp_url) return runtimeRegistration;
-  return { platform: process.platform, folder: result.folder, source: result.source ?? 'external',
-    contract: Number(service.runtime_contract ?? 1), mcpUrl: service.mcp_url, tunnelUi: service.tunnel_ui ?? null,
-    verifiedAt: new Date().toISOString() };
-}
-async function ensurePlatformRuntime() {
-  if (process.platform === 'darwin') return activateMacRuntime();
-  const workspace = store.selected()?.workspace ?? os.homedir();
-  const result = windowsRuntimeBootstrap ? await windowsRuntimeBootstrap.ensure(workspace) : null;
-  if (result?.folder) {
-    runtimeFolder = result.folder; runtimeRegistration = runtimeRegistrationFrom(result);
-    if (deletion) deletion.protectedPaths = [app.getAppPath(), runtimeFolder];
-    await saveSettings({ runtimeFolder, runtimeRegistration });
-  }
-  if (windowsRuntimeBootstrap) workspaceSetup.setRuntimeEnvironment(await windowsRuntimeBootstrap.workflowEnvironment());
-  return result;
-}
-function createLocalRuntime() {
-  contextCache.clear();
-  return new McpRuntime(runtimeFolder, {
-    platform: process.platform, sessionPlans,
-    expectedServerName: 'Codex Local Windows',
-    ensureRuntime: windowsRuntimeBootstrap ? ensurePlatformRuntime : null,
-  });
-}
-
 // Only display-safe fields: the connector address is already masked by VpsTunnel.
 function vpsView(vps) {
   if (!vps) return null;
@@ -805,30 +772,38 @@ function appServerSourceFolder() {
     : path.join(sourceDir, '../tools/codex-app-server-mcp');
 }
 
-function ensureMacRuntimeSwitcher() {
-  if (process.platform !== 'darwin' || smoke) return null;
+function ensureRuntimeSwitcher() {
+  if (smoke) return null;
+  const windows = process.platform === 'win32';
   appServerRuntime ??= new CodexAppServerRuntime({
-    sourceDir: appServerSourceFolder(), sessionPlans, stateDir: defaultRuntimeFolder(os.homedir(), 'darwin'),
-    // The bundled uv builds the executor's Python on a Mac that has only the system one.
-    uv: path.join(app.isPackaged ? process.resourcesPath : path.join(sourceDir, '../.harness/runtime'), 'mac-tools', 'uv'),
+    sourceDir: appServerSourceFolder(), sessionPlans, stateDir: runtimeFolder,
+    ...(windows
+      // Windows has no system Python: the tools of the package and the private Python are prepared first.
+      ? { bootstrap: windowsBootstrap }
+      // The bundled uv builds the executor's Python on a Mac that has only the system one.
+      : { uv: path.join(app.isPackaged ? process.resourcesPath : path.join(sourceDir, '../.harness/runtime'), 'mac-tools', 'uv') }),
   });
-  vpsTunnel ??= new VpsTunnel();
-  macRuntimeSwitcher ??= new MacRuntimeSwitcher({ appServerRuntime, vpsTunnel });
-  return macRuntimeSwitcher;
+  if (process.platform === 'darwin') vpsTunnel ??= new VpsTunnel();
+  runtimeSwitcher ??= new MacRuntimeSwitcher({ appServerRuntime, vpsTunnel,
+    legacyWindows: windows ? { legacyStateDir: legacyWindowsStateFolder(),
+      controlFile: path.join(app.isPackaged ? path.join(process.resourcesPath, 'resources') : path.join(sourceDir, '../resources'),
+        'runtime-control', 'windows-control.py') } : null });
+  return runtimeSwitcher;
 }
 
-// Brings the macOS services up once per app run. Every caller shares the same attempt; a failed one is
+// Brings the local services up once per app run. Every caller shares the same attempt; a failed one is
 // forgotten, so the next use of the services tries again.
-function activateMacRuntime() {
-  if (process.platform !== 'darwin' || smoke) return Promise.resolve(null);
-  macActivation ??= (async () => {
-    const result = await ensureMacRuntimeSwitcher().activate(runtime, { chatgptChannel,
-      retireLegacy: legacyMacRuntimeRetired ? null : { dataDir, runtimeRoots: legacyRuntimeRoots } });
-    if (result.legacyRetired) { legacyMacRuntimeRetired = true; await saveSettings(); }
+function activateRuntime() {
+  if (smoke) return Promise.resolve(null);
+  runtimeActivation ??= (async () => {
+    const result = await ensureRuntimeSwitcher().activate(runtime, { chatgptChannel,
+      retireLegacy: legacyRuntimeRetired || !['darwin', 'win32'].includes(process.platform) ? null : { dataDir, runtimeRoots: legacyRuntimeRoots } });
+    if (result.legacyRetired) { legacyRuntimeRetired = true; await saveSettings(); }
+    if (process.platform === 'win32') workspaceSetup.setRuntimeEnvironment(await windowsBootstrap.workflowEnvironment());
     contextCache.clear();
     return result.status;
-  })().catch(error => { macActivation = null; throw error; });
-  return macActivation;
+  })().catch(error => { runtimeActivation = null; throw error; });
+  return runtimeActivation;
 }
 
 function createStartupFlow() {
@@ -836,14 +811,14 @@ function createStartupFlow() {
   startupActive = store.snapshot().projects.length === 0;
   startupFlow = new StartupReadiness({
     ...startupPlatformOptions({ platform: process.platform, setup: workspaceSetup,
-      bootstrap: windowsRuntimeBootstrap ?? appServerRuntime,
-      ensureRuntime: ensurePlatformRuntime, control: (...args) => runtime.control(...args),
+      bootstrap: appServerRuntime, components: windowsBootstrap,
+      ensureRuntime: activateRuntime, control: (...args) => runtime.control(...args),
       inspectGit: () => inspectMacGit(), installGit: () => installMacGit() }),
     onChange: publish,
   });
   startupClipboard = new TunnelClipboard({
     readText: () => clipboard.readText(),
-    promptTunnelId: () => (windowsRuntimeBootstrap ?? appServerRuntime).promptTunnelId(),
+    promptTunnelId: () => appServerRuntime.promptTunnelId(),
     configure: async credentials => {
       await startupFlow.configure(credentials);
       if (!startupFlow.snapshot().tunnel) throw new Error('Tunnel not ready');
@@ -1026,17 +1001,6 @@ function registerIpc() {
     // The full address goes straight to the clipboard; it is never returned, published or logged.
     clipboard.writeText(await vpsTunnel.connectorUrl());
     return { copied: true };
-  });
-  registerAction('pilot:configure-windows-tunnel', async () => {
-    if (process.platform !== 'win32' || !windowsRuntimeBootstrap) throw new Error('Настройка Windows tunnel недоступна на этой платформе.');
-    return startupAction('show');
-  });
-  registerAction('pilot:refresh-windows-runtime', async () => {
-    if (process.platform !== 'win32' || !windowsRuntimeBootstrap) throw new Error('Windows runtime недоступен на этой платформе.');
-    await windowsRuntimeBootstrap.ensure(store.selected()?.workspace ?? os.homedir());
-    const status = await runtime.control('status');
-    startupError = null;
-    return { windowsRuntime: windowsRuntimeBootstrap.snapshot(), service: status };
   });
   registerAction('pilot:copy-workspace-path', async input => {
     const project = store.project(input);
@@ -1324,14 +1288,14 @@ async function createWindow() {
     await fsp.mkdir(dataDir + '-projects', { recursive: true });
     fixture = await import('../tests/electron-smoke.mjs');
     runtime = await fixture.createRuntime({ browser: browser.webContents, session: session.fromPartition(partition), dataDir });
-  } else if (process.platform === 'darwin') {
-    runtime = ensureMacRuntimeSwitcher().createRuntime(chatgptChannel, activateMacRuntime);
-    // Installed services are brought up before the window is ready, as before. A Mac where they are not
+  } else {
+    runtime = ensureRuntimeSwitcher().createRuntime(chatgptChannel, activateRuntime);
+    // Installed services are brought up before the window is ready, as before. A computer where they are not
     // installed yet is left to the first-run wizard, which shows progress. A failure here is shown in the
     // sidebar and the next use of the services tries again: it must never keep the app from opening.
-    if (await appServerRuntime.prepared() && await inspectMacGit())
-      await activateMacRuntime().catch(error => { startupError = publicError(error); });
-  } else runtime = createLocalRuntime();
+    if (await appServerRuntime.prepared() && (process.platform !== 'darwin' || await inspectMacGit()))
+      await activateRuntime().catch(error => { startupError = publicError(error); });
+  }
   connectController();
   createStartupFlow();
   registerIpc();
@@ -1369,26 +1333,11 @@ else {
   app.whenReady().then(async () => {
     try {
       const settings = JSON.parse(await fsp.readFile(settingsFile, 'utf8'));
-      if (process.platform === 'darwin') {
-        // Settings of 0.6.90 and earlier name the folder of the retired runtime; it is only cleaned up now.
-        legacyMacRuntimeRetired = settings.legacyMacRuntimeRetired === true;
-        legacyRuntimeRoots = [...new Set([...(Array.isArray(settings.legacyRuntimeRoots) ? settings.legacyRuntimeRoots : []),
-          settings.runtimeFolder, settings.runtimeRegistration?.folder]
-          .filter(folder => typeof folder === 'string' && path.isAbsolute(folder)))].slice(0, 8);
-      } else if (typeof settings.runtimeFolder === 'string' && path.isAbsolute(settings.runtimeFolder)) {
-        if (process.platform === 'win32') configuredRuntimeFolder = settings.runtimeFolder;
-        else runtimeFolder = settings.runtimeFolder;
-      }
-      if (process.platform !== 'darwin' && settings.runtimeRegistration && typeof settings.runtimeRegistration === 'object'
-          && settings.runtimeRegistration.platform === process.platform
-          && typeof settings.runtimeRegistration.folder === 'string' && path.isAbsolute(settings.runtimeRegistration.folder)) {
-        runtimeRegistration = { platform: process.platform, folder: settings.runtimeRegistration.folder,
-          source: typeof settings.runtimeRegistration.source === 'string' ? settings.runtimeRegistration.source : 'external',
-          contract: Number.isSafeInteger(settings.runtimeRegistration.contract) ? settings.runtimeRegistration.contract : 1,
-          mcpUrl: typeof settings.runtimeRegistration.mcpUrl === 'string' ? settings.runtimeRegistration.mcpUrl : null,
-          tunnelUi: typeof settings.runtimeRegistration.tunnelUi === 'string' ? settings.runtimeRegistration.tunnelUi : null,
-          verifiedAt: typeof settings.runtimeRegistration.verifiedAt === 'string' ? settings.runtimeRegistration.verifiedAt : null };
-      }
+      // Settings of earlier versions name the folder of the retired runtime; it is only cleaned up now.
+      legacyRuntimeRetired = settings[legacyRetiredSetting] === true;
+      legacyRuntimeRoots = [...new Set([...(Array.isArray(settings.legacyRuntimeRoots) ? settings.legacyRuntimeRoots : []),
+        settings.runtimeFolder, settings.runtimeRegistration?.folder]
+        .filter(folder => typeof folder === 'string' && path.isAbsolute(folder)))].slice(0, 8);
       if (process.platform === 'darwin' && CHATGPT_CHANNELS.includes(settings.chatgptChannel)) chatgptChannel = settings.chatgptChannel;
       if (['light', 'dark'].includes(settings.shellTheme)) shellTheme = settings.shellTheme;
       if (typeof settings.hideToolCalls === 'boolean') hideToolCalls = settings.hideToolCalls;
@@ -1407,12 +1356,7 @@ else {
       const payloadFile = app.isPackaged
         ? path.join(process.resourcesPath, 'windows-payload', WINDOWS_RUNTIME_ARCHIVE)
         : path.join(sourceDir, '../.harness/runtime/windows-payload', WINDOWS_RUNTIME_ARCHIVE);
-      const runtimeControlRoot = app.isPackaged ? path.join(process.resourcesPath, 'resources', 'runtime-control') : path.join(sourceDir, '../resources/runtime-control');
-      windowsRuntimeBootstrap = new WindowsRuntimeBootstrap({ payloadFile, dataDir, preferredFolder: configuredRuntimeFolder,
-        controlSourceFile: path.join(runtimeControlRoot, 'windows-control.py'), onState: publish });
-      const windowsRuntimeState = await windowsRuntimeBootstrap.inspect();
-      runtimeFolder = windowsRuntimeState.folder;
-      if (windowsRuntimeState.source === 'external' || configuredRuntimeFolder) await saveSettings({ runtimeFolder });
+      windowsBootstrap = new WindowsExecutorBootstrap({ payloadFile, stateDir: runtimeFolder });
     }
     deletion = new WorkspaceDeletion({ store, journalDir: path.join(dataDir, 'deletions'), protectedPaths: [app.getAppPath(), runtimeFolder] });
     if (!storageError) {

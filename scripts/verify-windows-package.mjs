@@ -42,8 +42,8 @@ export async function verifyWindowsPackage(packageDir = path.join(ROOT, '.harnes
   const nodeStat = await requireFile(nodeExe, 'portable node.exe');
   await requireFile(workflow, 'Workflow Kit');
   await requireFile(setupWorker, 'workspace setup worker');
-  await requireFile(path.join(resources, 'resources/runtime-control/windows-first-run.py'), 'Windows native tunnel dialog');
-  await requireFile(path.join(resources, 'resources/runtime-control/windows-control.py'), 'Windows lifecycle control');
+  // Only stops the bridge that Web Pilot ran before 0.6.96; the executor has its own control.py.
+  await requireFile(path.join(resources, 'resources/runtime-control/windows-control.py'), 'lifecycle script of the previous Windows bridge');
   const sourceProof = await verifyPackagedSources({ root: ROOT, resources, version });
   await requirePe(executable, 'Project Web Pilot.exe');
   await requirePe(nodeExe, 'portable node.exe');

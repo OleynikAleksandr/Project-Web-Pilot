@@ -1,14 +1,7 @@
-import { execFile as execFileCallback } from 'node:child_process';
-import { promisify } from 'node:util';
-import { SessionPlans } from './session-plans.mjs';
 import { createHash } from 'node:crypto';
-import fs from 'node:fs/promises';
-import path from 'node:path';
-import { isAbsolutePlatformPath, runtimeFolderCandidates, runtimeLayout } from './platform.mjs';
 
-const execFile = promisify(execFileCallback);
-// The former Windows bridge still serves the context tool; the executor (macOS) passes its own list.
-const BRIDGE_REQUIRED_TOOLS = ['bridge_status', 'workflow_context_recover'];
+// The executor catalogue carries tools only; Web Pilot recognises its own server by the status tool.
+const REQUIRED_TOOLS = ['bridge_status'];
 export const CONTEXT_PROTOCOL = 'inline-context-v1';
 
 export class RuntimeError extends Error {
@@ -89,7 +82,7 @@ async function responseMessage(response, id) {
 
 export class LocalMcpClient {
   // expectedServerName is the backend of this platform: another MCP server on the same local port is refused.
-  constructor(endpoint, { fetchImpl = globalThis.fetch, timeoutMs = 10000, expectedServerName, requiredTools = BRIDGE_REQUIRED_TOOLS } = {}) {
+  constructor(endpoint, { fetchImpl = globalThis.fetch, timeoutMs = 10000, expectedServerName, requiredTools = REQUIRED_TOOLS } = {}) {
     if (typeof expectedServerName !== 'string' || !expectedServerName) throw new TypeError('LocalMcpClient requires expectedServerName');
     this.requiredTools = [...requiredTools];
     this.endpoint = validateEndpoint(endpoint);
@@ -103,9 +96,9 @@ export class LocalMcpClient {
   }
 
   async request(method, params = {}) {
-    if (!['initialize', 'notifications/initialized', 'tools/list', 'tools/call'].includes(method)
-        || (method === 'tools/call' && params.name !== 'workflow_context_recover')) {
-      throw new RuntimeError('MCP_READ_ONLY', 'Оболочка может только получать полный контекст проекта.');
+    // The shell only checks that its own server answers: it never calls a tool. The tools belong to the model.
+    if (!['initialize', 'notifications/initialized', 'tools/list'].includes(method)) {
+      throw new RuntimeError('MCP_READ_ONLY', 'Оболочка только проверяет локальные инструменты и не вызывает их.');
     }
     const notification = method.startsWith('notifications/');
     const id = notification ? undefined : ++this.sequence;
@@ -116,7 +109,7 @@ export class LocalMcpClient {
     try {
       response = await this.fetch(this.endpoint, { method: 'POST', headers,
         body: JSON.stringify({ jsonrpc: '2.0', ...(id === undefined ? {} : { id }), method, params }),
-        signal: AbortSignal.timeout(params.name === 'workflow_context_recover' ? Math.max(this.timeoutMs, 35000) : this.timeoutMs), redirect: 'error' });
+        signal: AbortSignal.timeout(this.timeoutMs), redirect: 'error' });
       if (method === 'initialize') this.sessionId = response.headers.get('mcp-session-id');
       const message = await responseMessage(response, id);
       if (message?.error) throw new RuntimeError('MCP_RPC_ERROR', String(message.error.message ?? 'Ошибка MCP.'));
@@ -151,149 +144,5 @@ export class LocalMcpClient {
     }
     this.ready = { serverName: init.serverInfo.name, toolCount: names.length, protocolVersion: this.protocolVersion };
     return this.ready;
-  }
-
-  async loadContext(workspace) {
-    if (!path.isAbsolute(workspace)) throw new RuntimeError('MCP_CONTEXT_REQUIRED', 'Не выбран проект.');
-    await this.initialize();
-    const result = await this.request('tools/call', { name: 'workflow_context_recover', arguments: { workspace } });
-    if (result?.isError) throw new RuntimeError('MCP_CONTEXT_ERROR', 'MCP не смог получить полный контекст проекта. Проверьте выбранную папку и версию локального Codex runtime.');
-    let data = result?.structuredContent;
-    if (data?.result && !data.workspace) data = data.result;
-    if (!data?.workspace) {
-      try { data = JSON.parse(result?.content?.find(item => item.type === 'text')?.text ?? ''); } catch {
-        throw new RuntimeError('MCP_CONTEXT_INVALID', 'Получен непонятный ответ с контекстом.');
-      }
-    }
-    return validateContextPacket(data, workspace);
-  }
-
-}
-
-export async function findRuntimeFolder(input, { platform = process.platform } = {}) {
-  if (!isAbsolutePlatformPath(input, platform)) throw new RuntimeError('RUNTIME_PATH_REQUIRED', 'Выберите папку локального Codex runtime.');
-  for (const candidate of runtimeFolderCandidates(input, platform)) {
-    try {
-      const folder = await fs.realpath(candidate);
-      const layout = runtimeLayout(folder, platform);
-      await fs.access(layout.control);
-      await fs.access(layout.python);
-      return folder;
-    } catch { /* Try the platform-specific source workspace inner folder. */ }
-  }
-  throw new RuntimeError('RUNTIME_NOT_FOUND', 'В выбранной папке не найден настроенный локальный Codex runtime.');
-}
-
-// The local runtime that lives in a folder with control.py: Windows. macOS uses CodexAppServerRuntime.
-export class McpRuntime {
-  constructor(folder, { execute = execFile, clientFactory = null, platform = process.platform,
-    expectedServerName = 'Codex Local Windows', ensureRuntime = null, sessionPlans = new SessionPlans() } = {}) {
-    this.folder = folder;
-    this.sessionPlans = sessionPlans;
-    this.execute = execute;
-    this.expectedServerName = expectedServerName;
-    this.clientFactory = clientFactory ?? (endpoint => new LocalMcpClient(endpoint, { expectedServerName: this.expectedServerName }));
-    this.platform = platform;
-    this.ensureRuntime = typeof ensureRuntime === 'function' ? ensureRuntime : null;
-    this.client = null;
-    this.controlFile = null;
-    this.runtimePrepared = false;
-    this.pending = null;
-    this.mcpOnlyPending = null;
-    this.lastStatus = null;
-  }
-
-  async commandDescriptor() {
-    let runtimeFolder = this.folder;
-    if (this.ensureRuntime && !this.runtimePrepared) {
-      const ensured = await this.ensureRuntime();
-      if (typeof ensured?.folder === 'string' && isAbsolutePlatformPath(ensured.folder, this.platform)) {
-        runtimeFolder = ensured.folder;
-        this.folder = ensured.folder;
-      }
-      this.controlFile = typeof ensured?.control === 'string' && isAbsolutePlatformPath(ensured.control, this.platform)
-        ? ensured.control : null;
-      this.runtimePrepared = true;
-    }
-    const folder = await findRuntimeFolder(runtimeFolder, { platform: this.platform });
-    const layout = runtimeLayout(folder, this.platform);
-    return { folder, python: layout.python, control: this.controlFile ?? layout.control, runtimeRoot: folder };
-  }
-
-  async control(command, { mcpOnly = false } = {}) {
-    if (!['status', 'start', 'stop'].includes(command)) throw new RuntimeError('RUNTIME_ACTION_DENIED', 'Эта операция не поддерживается оболочкой.');
-    const descriptor = await this.commandDescriptor();
-    let output;
-    try {
-      const args = ['-B', descriptor.control, command, ...(command === 'start' && mcpOnly ? ['--mcp-only'] : [])];
-      output = await this.execute(descriptor.python, args,
-        { cwd: descriptor.folder, timeout: command === 'start' ? 75000 : 12000, maxBuffer: 1024 * 1024,
-          env: { ...process.env, PYTHONDONTWRITEBYTECODE: '1', WEB_PILOT_RUNTIME_ROOT: descriptor.runtimeRoot } });
-    } catch (error) {
-      let message = 'Не удалось запустить локальные инструменты. Проверьте локальный Codex runtime.';
-      try { message = JSON.parse(error.stderr).error ?? message; } catch { /* Keep a bounded public error. */ }
-      throw new RuntimeError('RUNTIME_COMMAND_FAILED', message);
-    }
-    let status;
-    try { status = JSON.parse(output.stdout); } catch {
-      throw new RuntimeError('RUNTIME_STATUS_INVALID', 'Служба вернула непонятный статус.');
-    }
-    if (command === 'stop') {
-      this.client = null;
-      this.lastStatus = null;
-      return status;
-    }
-    if (!status?.mcp || !status?.tunnel || !status.mcp_url) throw new RuntimeError('RUNTIME_STATUS_INVALID', 'Служба вернула неполный статус.');
-    validateEndpoint(status.mcp_url);
-    for (const service of [status.mcp, status.tunnel]) {
-      if (service.running && !service.owned) throw new RuntimeError('RUNTIME_FOREIGN_PROCESS', 'Порт или процесс занят другой службой; автоматический запуск остановлен.');
-    }
-    this.lastStatus = status;
-    return status;
-  }
-
-  ensure() {
-    if (this.pending) return this.pending;
-    this.pending = this.prepare().finally(() => { this.pending = null; });
-    return this.pending;
-  }
-
-  ensureMcpOnly() {
-    if (this.mcpOnlyPending) return this.mcpOnlyPending;
-    this.mcpOnlyPending = this.prepareMcpOnly().finally(() => { this.mcpOnlyPending = null; });
-    return this.mcpOnlyPending;
-  }
-
-  async prepareMcpOnly() {
-    let status = await this.control('status');
-    if (!status.mcp.ready) status = await this.control('start', { mcpOnly: true });
-    if (!status.mcp.ready || !status.mcp.owned) {
-      throw new RuntimeError('RUNTIME_NOT_READY', 'Локальный MCP ещё не готов.');
-    }
-    this.client = this.clientFactory(status.mcp_url);
-    const connection = await this.client.initialize();
-    this.lastStatus = status;
-    return { ...status, connection };
-  }
-
-  async prepare() {
-    let status = await this.control('status');
-    if (!status.tunnel.configured) {
-      // First-time bootstrap still brings the local MCP up; only tunnel credentials require user action.
-      if (!status.mcp.ready) status = await this.control('start', { mcpOnly: true });
-      throw new RuntimeError('TUNNEL_NOT_CONFIGURED', 'Локальный MCP готов. Один раз настройте Secure MCP Tunnel в локальном runtime; ключ не передаётся Web Pilot.');
-    }
-    if (!status.mcp.ready || !status.tunnel.ready) status = await this.control('start');
-    if (!status.mcp.ready || !status.mcp.owned || !status.tunnel.ready || !status.tunnel.owned) {
-      throw new RuntimeError('RUNTIME_NOT_READY', 'Локальные инструменты или подключение ещё не готовы.');
-    }
-    // A fresh session also recovers after a separately restarted MCP server.
-    this.client = this.clientFactory(status.mcp_url);
-    const connection = await this.client.initialize();
-    return { ...status, connection };
-  }
-
-  async loadContext(workspace) {
-    return validateContextPacket(await this.sessionPlans.loadContext(workspace), workspace);
   }
 }

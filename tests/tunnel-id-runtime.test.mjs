@@ -6,7 +6,6 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CodexAppServerRuntime } from '../src/mac-runtime-switch.mjs';
-import { WindowsRuntimeBootstrap, configureWindowsTunnel } from '../src/windows-runtime.mjs';
 const identity = 'tunnel_fixture1234567890123456';
 for (const platform of ['mac', 'windows']) test(`${platform}: ID dialog facade validates non-secret output and sanitizes failures`, async t => {
   let output = { tunnel_id: identity }, failure;
@@ -19,20 +18,13 @@ for (const platform of ['mac', 'windows']) test(`${platform}: ID dialog facade v
     return { stdout: JSON.stringify(output) };
   };
   const executeInput = async () => { throw new Error('ID dialog must not pass credentials'); };
-  let invoke;
-  if (platform === 'mac') {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), 'pilot-id-runtime-'));
-    t.after(() => fs.rm(root, { recursive: true, force: true }));
-    const executor = new CodexAppServerRuntime({ sourceDir: fileURLToPath(new URL('../tools/codex-app-server-mcp', import.meta.url)),
-      stateDir: path.join(root, 'state'), sessionPlans: { loadContext() {} }, environment: {}, execute, executeInput });
-    invoke = () => executor.promptTunnelId();
-  } else {
-    invoke = () => configureWindowsTunnel({ folder: 'C:\\Pilot', controlSourceFile: '/fixture/windows-control.py',
-      environment: {}, idOnly: true, execute, executeInput });
-    const bootstrap = new WindowsRuntimeBootstrap({ platform: 'win32', payloadFile: '/fixture/unused.zip', dataDir: '/fixture/app' });
-    bootstrap.configureTunnel = (credentials, options) => { assert.equal(credentials, undefined); assert.deepEqual(options, { idOnly: true }); };
-    bootstrap.promptTunnelId();
-  }
+  // The same executor runtime on both systems; Windows only adds its components step, which is not this test.
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'pilot-id-runtime-'));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const executor = new CodexAppServerRuntime({ sourceDir: fileURLToPath(new URL('../tools/codex-app-server-mcp', import.meta.url)),
+    platform: platform === 'mac' ? 'darwin' : 'win32',
+    stateDir: path.join(root, 'state'), sessionPlans: { loadContext() {} }, environment: {}, execute, executeInput });
+  const invoke = () => executor.promptTunnelId();
   assert.deepEqual(await invoke(), { tunnelId: identity });
   output = { cancelled: true }; assert.deepEqual(await invoke(), { cancelled: true });
   for (const result of [{ configured: true }, { tunnel_id: 'sk-fixture-private' }, { tunnel_id: null }]) {
@@ -46,10 +38,9 @@ for (const platform of ['mac', 'windows']) test(`${platform}: ID dialog facade v
   assert.equal(calls.length, 7);
 });
 
-test('tunnel ID grammar matches all four standalone Python runtimes', async () => {
+test('tunnel ID grammar matches every standalone Python runtime', async () => {
   const files = [
     'resources/runtime-control/windows-control.py',
-    'resources/runtime-control/windows-first-run.py',
     'tools/codex-app-server-mcp/control.py',
     'tools/codex-app-server-mcp/tunnel_prompt.py',
   ];

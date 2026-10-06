@@ -6,10 +6,16 @@ import { execFile as execFileCallback } from 'node:child_process';
 import { promisify } from 'node:util';
 import { LocalMcpClient, RuntimeError, validateContextPacket } from './mcp-runtime.mjs';
 import { executePrivateInput, runTunnelHelper } from './tunnel-setup.mjs';
+import { defaultRuntimeFolder } from './platform.mjs';
+import { retireLegacyWindowsRuntime } from './windows-runtime.mjs';
 
 const execFile = promisify(execFileCallback);
-// The only local MCP backend on macOS.
+// The only local MCP backend: the Codex App Server executor. Its MCP server names the system it runs on.
 export const MAC_RUNTIME_LABEL = 'Codex App Server Local Mac';
+export const WINDOWS_RUNTIME_LABEL = 'Codex App Server Local Windows';
+export function runtimeLabel(platform = process.platform) {
+  return platform === 'win32' ? WINDOWS_RUNTIME_LABEL : MAC_RUNTIME_LABEL;
+}
 export const APP_SERVER_LAUNCH_AGENT = 'com.oleynik.WebPilotCodexExecutor';
 // The local runtime retired in 0.6.91. These names exist only to remove what earlier versions installed.
 export const LEGACY_LAUNCH_AGENT = 'com.oleynik.CodexLocalMac';
@@ -28,13 +34,17 @@ export const EXECUTOR_TOOL_RULES = Object.freeze([
 // The executor catalogue has no context tool: Web Pilot needs only the status tool to recognise its own server.
 const EXECUTOR_REQUIRED_TOOLS = Object.freeze(['bridge_status']);
 export const CODEX_NOT_FOUND_MESSAGE = 'На этом Mac не найден Codex. Установите Codex CLI или приложение ChatGPT и нажмите «Проверить и продолжить».';
+// The command is the one the Codex README gives for Windows.
+export const WINDOWS_CODEX_NOT_FOUND_MESSAGE = 'На этом компьютере не найден Codex. Установите Codex CLI: откройте PowerShell и выполните команду  powershell -ExecutionPolicy ByPass -c "irm https://chatgpt.com/codex/install.ps1 | iex"  — затем нажмите «Проверить и продолжить».';
 
-const TUNNEL_SETUP_ERRORS = {
-  MAC_TUNNEL_ID_INVALID: 'Вставьте полный ID туннеля, начинающийся с tunnel_, и подтвердите ввод ещё раз.',
-  MAC_TUNNEL_PROMPT_FAILED: 'Не удалось открыть окно ввода подключения. Обновите Web Pilot и повторите ввод. Данные подключения не сохранены.',
-  MAC_TUNNEL_INVALID_DATA: 'Проверьте формат tunnel_id и ключа и повторите ввод. Данные подключения не сохранены.',
-  MAC_TUNNEL_SETUP_FAILED: 'Не удалось завершить настройку подключения. Повторите ввод. Если ошибка повторяется, сообщите разработчику. Действующее подключение автоматически не заменяется.',
+// The worker reports MAC_… or WINDOWS_… codes; the texts are the same on both systems.
+const TUNNEL_SETUP_MESSAGES = {
+  TUNNEL_ID_INVALID: 'Вставьте полный ID туннеля, начинающийся с tunnel_, и подтвердите ввод ещё раз.',
+  TUNNEL_PROMPT_FAILED: 'Не удалось открыть окно ввода подключения. Обновите Web Pilot и повторите ввод. Данные подключения не сохранены.',
+  TUNNEL_INVALID_DATA: 'Проверьте формат tunnel_id и ключа и повторите ввод. Данные подключения не сохранены.',
+  TUNNEL_SETUP_FAILED: 'Не удалось завершить настройку подключения. Повторите ввод. Если ошибка повторяется, сообщите разработчику. Действующее подключение автоматически не заменяется.',
 };
+const tunnelSetupErrors = prefix => Object.fromEntries(Object.entries(TUNNEL_SETUP_MESSAGES).map(([code, message]) => [prefix + '_' + code, message]));
 
 function vpsProblem(vps) {
   if (!vps?.configured) return 'Свой сервер для канала VPS не настроен.';
@@ -54,12 +64,19 @@ function xml(value) {
 }
 
 export class CodexAppServerRuntime {
-  constructor({ sourceDir, stateDir = path.join(os.homedir(), 'Library/Application Support/WebPilotCodexExecutor'),
-    python = '/usr/bin/python3', execute = execFile, executeInput = executePrivateInput, sessionPlans, environment = process.env,
-    uv = null } = {}) {
+  // macOS runs control.py with the system Python and control.py builds the runtime environment itself.
+  // Windows has no system Python: `bootstrap` (WindowsExecutorBootstrap) unpacks the tools of the package and
+  // creates the private environment first, and its Python runs control.py.
+  constructor({ sourceDir, platform = process.platform, stateDir = defaultRuntimeFolder(os.homedir(), platform),
+    python = platform === 'win32' ? path.join(stateDir, 'runtime', 'venv', 'Scripts', 'python.exe') : '/usr/bin/python3',
+    execute = execFile, executeInput = executePrivateInput, sessionPlans, environment = process.env,
+    uv = null, bootstrap = null } = {}) {
     if (!sourceDir || !path.isAbsolute(sourceDir)) throw new TypeError('CodexAppServerRuntime requires an absolute sourceDir');
     if (!sessionPlans) throw new TypeError('CodexAppServerRuntime requires sessionPlans');
     this.sourceDir = sourceDir;
+    this.platform = platform;
+    this.windows = platform === 'win32';
+    this.bootstrap = bootstrap;
     this.stateDir = stateDir;
     this.installedSource = path.join(stateDir, 'source');
     this.python = python;
@@ -68,7 +85,7 @@ export class CodexAppServerRuntime {
     this.sessionPlans = sessionPlans;
     this.environment = { ...environment };
     this.uv = uv;
-    this.expectedServerName = MAC_RUNTIME_LABEL;
+    this.expectedServerName = runtimeLabel(platform);
     this.client = null;
     this.pending = null;
     this.mcpOnlyPending = null;
@@ -84,10 +101,14 @@ export class CodexAppServerRuntime {
   // First-run wizard: the services may be asked for their status only after activation.
   async inspect() { return { installed: this.activated, folder: this.stateDir }; }
 
-  // True once setup has completed on this Mac: the services then start in seconds, without downloads.
+  // True once setup has completed on this computer: the services then start in seconds, without downloads.
   async prepared() {
-    return await exists(path.join(this.stateDir, 'runtime', 'venv', 'bin', 'python'))
-      && await exists(path.join(this.stateDir, 'runtime', 'tunnel-client'));
+    const runtime = path.join(this.stateDir, 'runtime');
+    if (this.windows) {
+      return await exists(path.join(runtime, 'venv', 'Scripts', 'python.exe'))
+        && await exists(path.join(runtime, 'tools', 'tunnel-client', 'tunnel-client.exe'));
+    }
+    return await exists(path.join(runtime, 'venv', 'bin', 'python')) && await exists(path.join(runtime, 'tunnel-client'));
   }
 
   async syncSource() {
@@ -104,24 +125,33 @@ export class CodexAppServerRuntime {
     return {
       ...this.environment,
       PYTHONDONTWRITEBYTECODE: '1',
+      // Windows: the JSON of control.py may carry paths with non-ASCII user names.
+      ...(this.windows ? { PYTHONUTF8: '1' } : {}),
       WEB_PILOT_CODEX_EXECUTOR_STATE_DIR: this.stateDir,
       // The packaged uv builds the venv on a Mac that has only the system Python.
       ...(this.uv ? { WEB_PILOT_UV: this.uv } : {}),
     };
   }
 
+  #system() { return this.windows ? 'WINDOWS' : 'MAC'; }
+  // Windows: no console window flashes behind the app.
+  #hidden() { return this.windows ? { windowsHide: true } : {}; }
+
   // Runs one control.py command and returns its JSON; a failure carries the bounded message of control.py.
   async #controlCommand(args, { timeout = 20_000, code, fallback }) {
     const control = path.join(this.installedSource, 'control.py');
+    // Idempotent and fast once done; its own errors carry the codes the first-run wizard explains.
+    if (this.bootstrap) await this.bootstrap.ensure();
     let output;
     try {
       output = await this.execute(this.python, ['-B', control, ...args],
-        { cwd: this.installedSource, timeout, maxBuffer: 2 * 1024 * 1024, env: this.controlEnvironment() });
+        { cwd: this.installedSource, timeout, maxBuffer: 2 * 1024 * 1024, env: this.controlEnvironment(), ...this.#hidden() });
     } catch (error) {
       let report = null;
       try { report = JSON.parse(error.stdout || error.stderr); } catch { /* bounded public error */ }
       if (report?.code === 'CODEX_NOT_FOUND') {
-        throw Object.assign(new RuntimeError('MAC_CODEX_NOT_FOUND', CODEX_NOT_FOUND_MESSAGE), { publicMessage: CODEX_NOT_FOUND_MESSAGE });
+        const message = this.windows ? WINDOWS_CODEX_NOT_FOUND_MESSAGE : CODEX_NOT_FOUND_MESSAGE;
+        throw Object.assign(new RuntimeError(this.#system() + '_CODEX_NOT_FOUND', message), { publicMessage: message });
       }
       throw new RuntimeError(code, report?.error ?? fallback);
     }
@@ -147,6 +177,17 @@ export class CodexAppServerRuntime {
     await this.syncSource();
     return this.#controlCommand(['configure-selector'],
       { code: 'APP_SERVER_SELECTOR_CONFIG_FAILED', fallback: 'Не удалось настроить стабильный MCP connector.' });
+  }
+
+  // Windows: the services start when the user signs in (a per-user Run entry written by control.py).
+  // macOS keeps its LaunchAgent, which MacRuntimeSwitcher installs.
+  async autostart(enabled) {
+    if (!this.windows) throw new RuntimeError('RUNTIME_ACTION_DENIED', 'Эта операция не поддерживается оболочкой.');
+    if (!await exists(path.join(this.installedSource, 'control.py'))) await this.syncSource();
+    const result = await this.#controlCommand(['autostart', '--state', enabled ? 'on' : 'off'],
+      { code: 'APP_SERVER_AUTOSTART_FAILED', fallback: 'Не удалось настроить запуск служб при входе в Windows.' });
+    if (!!result?.autostart?.enabled !== !!enabled) throw new RuntimeError('APP_SERVER_AUTOSTART_FAILED', 'Запуск служб при входе в Windows не сохранён.');
+    return result.autostart;
   }
 
   async control(command, { mcpOnly = false, tunnelOnly = false } = {}) {
@@ -181,10 +222,11 @@ export class CodexAppServerRuntime {
   async #configureTunnel(credentials, idOnly) {
     const helper = path.join(this.installedSource, 'tunnel_prompt.py');
     if (!await exists(helper)) await this.syncSource();
+    if (this.bootstrap) await this.bootstrap.ensure();
     return runTunnelHelper({
       python: this.python, helper, credentials, idOnly, execute: this.execute, executeInput: this.executeInput,
-      options: { cwd: this.installedSource, timeout: 16 * 60 * 1000, maxBuffer: 64 * 1024, env: this.controlEnvironment() },
-      errorPrefix: 'MAC', ErrorType: RuntimeError, errorMessages: TUNNEL_SETUP_ERRORS,
+      options: { cwd: this.installedSource, timeout: 16 * 60 * 1000, maxBuffer: 64 * 1024, env: this.controlEnvironment(), ...this.#hidden() },
+      errorPrefix: this.#system(), ErrorType: RuntimeError, errorMessages: tunnelSetupErrors(this.#system()),
     });
   }
 
@@ -200,9 +242,14 @@ export class CodexAppServerRuntime {
     return this.mcpOnlyPending;
   }
 
+  // control.py says so itself where the files alone cannot tell (Windows: tunnel-client is there before setup).
+  async #needsSetup(status) {
+    return status.setup_complete === false || !await exists(status.runtime_python) || !await exists(status.tunnel_client);
+  }
+
   async prepareMcpOnly() {
     let status = await this.control('status');
-    if (!await exists(status.runtime_python) || !await exists(status.tunnel_client)) {
+    if (await this.#needsSetup(status)) {
       await this.control('setup');
       status = await this.control('status');
     }
@@ -218,7 +265,7 @@ export class CodexAppServerRuntime {
 
   async prepare() {
     let status = await this.control('status');
-    if (!await exists(status.runtime_python) || !await exists(status.tunnel_client)) {
+    if (await this.#needsSetup(status)) {
       await this.control('setup');
       status = await this.control('status');
     }
@@ -356,9 +403,12 @@ export class MacSelectedRuntime {
 }
 
 export class MacRuntimeSwitcher {
+  // legacyWindows: { controlFile, legacyStateDir, environment } — how to stop the bridge of Web Pilot before 0.6.96.
   constructor({ appServerRuntime, vpsTunnel = null, homeDir = os.homedir(), uid = typeof process.getuid === 'function' ? process.getuid() : 501,
-    execute = execFile, launchAgentDir = null } = {}) {
+    execute = execFile, launchAgentDir = null, platform = appServerRuntime?.platform ?? process.platform, legacyWindows = null } = {}) {
     if (!appServerRuntime) throw new TypeError('MacRuntimeSwitcher requires appServerRuntime');
+    this.platform = platform;
+    this.legacyWindows = legacyWindows;
     this.appServerRuntime = appServerRuntime;
     this.vpsTunnel = vpsTunnel;
     this.homeDir = homeDir;
@@ -444,6 +494,10 @@ export class MacRuntimeSwitcher {
   // runtimeRoots are the runtime folders that earlier versions recorded in the settings.
   async retireLegacyRuntime({ dataDir, runtimeRoots = [] }) {
     if (!dataDir || !path.isAbsolute(dataDir)) throw new TypeError('retireLegacyRuntime requires an absolute dataDir');
+    if (this.platform === 'win32') {
+      if (!this.legacyWindows) throw new TypeError('retireLegacyRuntime on Windows requires legacyWindows');
+      return retireLegacyWindowsRuntime({ dataDir, runtimeRoots, execute: this.execute, ...this.legacyWindows });
+    }
     const installed = path.join(dataDir, 'runtime', LEGACY_RUNTIME_FOLDER);
     const roots = [...new Set([installed, ...runtimeRoots]
       .filter(root => typeof root === 'string' && path.isAbsolute(root)).map(root => path.resolve(root)))];
@@ -458,16 +512,19 @@ export class MacRuntimeSwitcher {
     return { stopped, removed: installed };
   }
 
-  // Prepares the services for this app run: source and LaunchAgent, selector and channel, the MCP itself and,
-  // when a tunnel is configured, the tunnel. A Mac without a tunnel is a normal first run, not an error.
+  // Prepares the services for this app run: source and start at login, selector and channel, the MCP itself and,
+  // when a tunnel is configured, the tunnel. A computer without a tunnel is a normal first run, not an error.
   async activate(runtime, { chatgptChannel = runtime?.channel, retireLegacy = null } = {}) {
     if (!(runtime instanceof MacSelectedRuntime)) throw new TypeError('activate requires the runtime created by createRuntime');
     if (!CHATGPT_CHANNELS.includes(chatgptChannel)) throw new RuntimeError('CHATGPT_CHANNEL_INVALID', 'Неизвестный канал ChatGPT.');
     const app = this.appServerRuntime;
-    await this.ensureAppServerLaunchAgent();
-    // The login item is switched off while the services are reconfigured, and back on whatever the outcome:
-    // a failed start (no Codex yet, the tunnel is offline) must not cancel the start at the next login.
-    await this.setLaunchAgentEnabled(this.appServerLabel, false);
+    const mac = this.platform === 'darwin';
+    if (mac) {
+      await this.ensureAppServerLaunchAgent();
+      // The login item is switched off while the services are reconfigured, and back on whatever the outcome:
+      // a failed start (no Codex yet, the tunnel is offline) must not cancel the start at the next login.
+      await this.setLaunchAgentEnabled(this.appServerLabel, false);
+    }
     let legacyRetired = false, combined;
     try {
       if (retireLegacy) {
@@ -494,8 +551,11 @@ export class MacRuntimeSwitcher {
       // tunnel-client was stopped above; in the VPS channel it stays stopped. An unready VPS
       // is reported in the status instead of blocking startup: the server may be offline.
       combined = runtime.combine(status, vps);
+      // Windows: the Run entry only acts at sign-in, so it is written once the services have started and is
+      // never switched off here; an earlier entry survives a failed start.
+      if (this.platform === 'win32') await app.autostart(true);
     } finally {
-      await this.setLaunchAgentEnabled(this.appServerLabel, true);
+      if (mac) await this.setLaunchAgentEnabled(this.appServerLabel, true);
     }
     app.activated = true;
     return { runtime, status: combined, legacyRetired };

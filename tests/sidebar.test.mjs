@@ -170,12 +170,14 @@ test('delivered chat shows local tools from the last confirmed runtime status wi
   f.emit({ ...f.state, context: { phase: 'delivered', servicesReady: false, messageSent: true } });
   assert.equal(f.document.getElementById('state-service').textContent, 'Не проверены');
   f.emit({ ...f.state, context: { phase: 'delivered', servicesReady: false, messageSent: true },
-    macRuntime: { label: 'Codex App Server Local Mac', service: { mcpReady: true, tunnelReady: true, tunnelConfigured: true } } });
+    localRuntime: { label: 'Codex App Server Local Mac', service: { mcpReady: true, tunnelReady: true, tunnelConfigured: true } } });
   assert.equal(f.document.getElementById('state-service').textContent, 'Готовы');
-  f.emit({ ...f.state, macRuntime: { label: 'Codex App Server Local Mac', service: { mcpReady: true, tunnelReady: false, tunnelConfigured: true } } });
+  f.emit({ ...f.state, localRuntime: { label: 'Codex App Server Local Mac', service: { mcpReady: true, tunnelReady: false, tunnelConfigured: true } } });
   assert.equal(f.document.getElementById('state-service').textContent, 'Не проверены');
-  // macOS has one built-in backend: its name is shown and there is no folder to choose.
+  // One built-in backend on both systems: its name is shown and there is no folder to choose.
   assert.equal(f.document.getElementById('connection-detail').textContent, 'Codex App Server Local Mac · встроенный MCP');
+  f.emit({ ...f.state, platform: 'win32', localRuntime: { label: 'Codex App Server Local Windows', service: null } });
+  assert.equal(f.document.getElementById('connection-detail').textContent, 'Codex App Server Local Windows · встроенный MCP');
   assert.equal(f.document.getElementById('choose-runtime'), null);
 });
 

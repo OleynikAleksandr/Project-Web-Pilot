@@ -367,7 +367,7 @@ function render(state) {
   $('context-detail').textContent = state.pageLoading ? 'Загружаем чат выбранного проекта.' : detail;
   $('context-card').dataset.tone = state.pageLoading ? 'working' : tone;
   // A delivered chat is reopened without restarting services; the last confirmed runtime status still applies.
-  const runtimeService = state.macRuntime?.service ?? state.windowsRuntime?.service;
+  const runtimeService = state.localRuntime?.service;
   const servicesReady = !!context.servicesReady || !!(runtimeService?.mcpReady && runtimeService?.tunnelReady);
   $('state-service').textContent = servicesReady ? 'Готовы' : context.phase === 'preparing' ? 'Проверка…' : 'Не проверены';
   $('state-service').dataset.ready = String(servicesReady);
@@ -378,8 +378,7 @@ function render(state) {
   $('return-chat').hidden = context.phase !== 'chat-changed';
   $('retry-context').textContent = ['delivered', 'stale', 'prepared-stale', 'legacy-session', 'manual-session'].includes(context.phase) ? 'Обновить контекст'
     : ['send-unknown', 'waiting-chat'].includes(context.phase) ? 'Проверить статус' : 'Проверить контекст';
-  $('connection-detail').textContent = state.platform === 'win32' ? 'Codex Local Windows · встроенный runtime'
-    : state.macRuntime ? `${state.macRuntime.label} · встроенный MCP` : state.runtimeFolder;
+  $('connection-detail').textContent = state.localRuntime ? `${state.localRuntime.label} · встроенный MCP` : state.runtimeFolder;
   const delivery = context.delivery;
   $('session-detail').textContent = selected ? `Сессия: ${selected.sessionId}`
     + (delivery ? `\nПередано ${(delivery.contextBytes / 1024).toFixed(1)} КБ · план ${delivery.facts.plan_revision}\n${new Date(delivery.sentAtMs).toLocaleString('ru-RU')}` : '')
