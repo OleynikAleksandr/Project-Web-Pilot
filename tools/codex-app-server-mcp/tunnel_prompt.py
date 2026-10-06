@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Native tunnel prompts for the Codex App Server executor. Secrets stay in this worker and the private store of control.py."""
+import base64
 import json
 from pathlib import Path
 import re
@@ -13,7 +14,73 @@ class Cancelled(Exception):
 class PromptFailure(Exception):
     pass
 
-def prompt(message, hidden=False):
+def windows_prompt_script(message, hidden=False):
+    # The message travels as base64 and the whole script as -EncodedCommand: no quoting of user-visible text.
+    message64 = base64.b64encode(message.encode('utf-8')).decode('ascii')
+    return r'''
+$ErrorActionPreference = 'Stop'
+[Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false)
+Add-Type -AssemblyName System.Windows.Forms
+Add-Type -AssemblyName System.Drawing
+[System.Windows.Forms.Application]::EnableVisualStyles()
+$form = New-Object System.Windows.Forms.Form
+$form.Text = 'Project Web Pilot'
+$form.ClientSize = New-Object System.Drawing.Size(510, 190)
+$form.StartPosition = 'CenterScreen'
+$form.FormBorderStyle = 'FixedDialog'
+$form.MaximizeBox = $false
+$form.MinimizeBox = $false
+$form.TopMost = $true
+$label = New-Object System.Windows.Forms.Label
+$label.Location = New-Object System.Drawing.Point(16, 16)
+$label.Size = New-Object System.Drawing.Size(478, 70)
+$label.Text = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String(''' + "'" + message64 + "'" + r'''))
+$field = New-Object System.Windows.Forms.TextBox
+$field.Location = New-Object System.Drawing.Point(16, 91)
+$field.Size = New-Object System.Drawing.Size(478, 25)
+$field.MaxLength = 4096
+$field.UseSystemPasswordChar = ''' + ('$true' if hidden else '$false') + r'''
+$confirm = New-Object System.Windows.Forms.Button
+$confirm.Text = 'Продолжить'
+$confirm.Location = New-Object System.Drawing.Point(274, 140)
+$confirm.Size = New-Object System.Drawing.Size(105, 30)
+$confirm.DialogResult = [System.Windows.Forms.DialogResult]::OK
+$cancel = New-Object System.Windows.Forms.Button
+$cancel.Text = 'Отмена'
+$cancel.Location = New-Object System.Drawing.Point(389, 140)
+$cancel.Size = New-Object System.Drawing.Size(105, 30)
+$cancel.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
+$form.Controls.AddRange(@($label, $field, $confirm, $cancel))
+$form.AcceptButton = $confirm
+$form.CancelButton = $cancel
+$form.Add_Shown({$form.Activate(); $field.Focus()})
+try {
+    if ($form.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
+        @{value=$field.Text} | ConvertTo-Json -Compress
+    } else { @{cancelled=$true} | ConvertTo-Json -Compress }
+} finally { $field.Clear(); $form.Dispose() }
+'''
+
+
+def windows_prompt(message, hidden=False, run=subprocess.run):
+    encoded = base64.b64encode(windows_prompt_script(message, hidden).encode('utf-16-le')).decode('ascii')
+    try:
+        result = run(['powershell.exe', '-NoLogo', '-NoProfile', '-STA', '-EncodedCommand', encoded],
+                     capture_output=True, text=True, encoding='utf-8', timeout=900,
+                     creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0x08000000))
+        if result.returncode:
+            raise PromptFailure()
+        value = json.loads(result.stdout.lstrip('\ufeff'))
+        if value.get('cancelled') is True:
+            raise Cancelled()
+        if not isinstance(value.get('value'), str):
+            raise PromptFailure()
+        return value['value'].strip()
+    except (OSError, subprocess.TimeoutExpired, ValueError, AttributeError) as error:
+        raise PromptFailure() from error
+
+
+def mac_prompt(message, hidden=False):
     script = ('text returned of (display dialog ' + json.dumps(message, ensure_ascii=False) +
               ' with title "Project Web Pilot" default answer ""' +
               (' with hidden answer' if hidden else '') +
@@ -28,6 +95,11 @@ def prompt(message, hidden=False):
             raise Cancelled()
         raise PromptFailure()
     return result.stdout.strip()
+
+
+def prompt(message, hidden=False):
+    return (windows_prompt if sys.platform == 'win32' else mac_prompt)(message, hidden=hidden)
+
 
 class TunnelIdError(ValueError):
     pass
@@ -70,8 +142,8 @@ def configure(control, ask=prompt, supplied=None):
     return {'configured': True}
 
 def main():
-    if sys.platform != 'darwin':
-        raise RuntimeError('Нативная настройка доступна только на macOS.')
+    if sys.platform not in ('darwin', 'win32'):
+        raise RuntimeError('Нативная настройка доступна только на macOS и Windows.')
     supplied = read_input(sys.stdin) if sys.argv[1:] == ['--stdin'] else None
     try:
         if sys.argv[1:] == ['--tunnel-id']:
@@ -89,9 +161,10 @@ if __name__ == '__main__':
         main()
     except Exception as error:
         # Never surface captured native dialog stdout, keys, or command arguments.
-        code = ('MAC_TUNNEL_ID_INVALID' if isinstance(error, TunnelIdError) else
-                'MAC_TUNNEL_PROMPT_FAILED' if isinstance(error, PromptFailure) else
-                'MAC_TUNNEL_INVALID_DATA' if isinstance(error, ValueError) else
-                'MAC_TUNNEL_SETUP_FAILED')
-        print(json.dumps({'ok': False, 'code': code}), file=sys.stderr)
+        system = 'WINDOWS' if sys.platform == 'win32' else 'MAC'
+        code = ('TUNNEL_ID_INVALID' if isinstance(error, TunnelIdError) else
+                'TUNNEL_PROMPT_FAILED' if isinstance(error, PromptFailure) else
+                'TUNNEL_INVALID_DATA' if isinstance(error, ValueError) else
+                'TUNNEL_SETUP_FAILED')
+        print(json.dumps({'ok': False, 'code': system + '_' + code}), file=sys.stderr)
         raise SystemExit(1)

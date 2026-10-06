@@ -1563,3 +1563,310 @@ print(json.dumps(out, ensure_ascii=False))
   for (const control of ['SendInput', 'SetCursorPos', 'SetForegroundWindow', 'ShowWindow', 'BringWindowToTop', 'keybd', 'mouse_event'])
     assert.ok(!desktop.includes(control), `the Windows module never drives the interface: ${control}`);
 });
+
+test('Windows services: paths, components, DPAPI key, process tree, start at sign-in and the tunnel prompt', { timeout: 30_000 }, async t => {
+  const result = await runVenvProbe(t, 'web-pilot-win-control-', `import base64, json, os, pathlib, subprocess, sys, types
+client_dir, root = sys.argv[1], pathlib.Path(sys.argv[2])
+sys.path.insert(0, client_dir)
+import server
+local, appdata = root / "Local", root / "Roaming"
+os.environ.update(LOCALAPPDATA=str(local), APPDATA=str(appdata), PATH="/usr/bin")
+for name in ("WEB_PILOT_CODEX_EXECUTOR_STATE_DIR", "WEB_PILOT_LEGACY_LOCAL_STATE_DIR", "WEB_PILOT_UV", "WEB_PILOT_CODEX_TUNNEL_CLIENT", "NO_PROXY"):
+    os.environ.pop(name, None)
+
+class NoSuchProcess(Exception): pass
+class ZombieProcess(Exception): pass
+class AccessDenied(Exception): pass
+table, events = {}, []
+class Process:
+    def __init__(self, pid):
+        if pid not in table: raise NoSuchProcess()
+        if table[pid].get("denied"): raise AccessDenied()
+        self.pid = pid
+    def create_time(self): return table[self.pid]["created"]
+    def exe(self): return table[self.pid]["exe"]
+    def cmdline(self): return table[self.pid]["cmdline"]
+    def children(self, recursive=False):
+        found = []
+        for child in table[self.pid].get("children", []):
+            found.append(Process(child))
+            if recursive: found += found[-1].children(recursive=True)
+        return found
+    def terminate(self):
+        events.append(["terminate", self.pid])
+        if not table[self.pid].get("stubborn"): table.pop(self.pid)
+    def kill(self):
+        events.append(["kill", self.pid]); table.pop(self.pid, None)
+def wait_procs(processes, timeout=None):
+    return [p for p in processes if p.pid not in table], [p for p in processes if p.pid in table]
+psutil = types.ModuleType("psutil")
+psutil.Process, psutil.wait_procs = Process, wait_procs
+psutil.NoSuchProcess, psutil.ZombieProcess, psutil.AccessDenied = NoSuchProcess, ZombieProcess, AccessDenied
+sys.modules["psutil"] = psutil
+
+registry = {}
+class Key:
+    def __init__(self, path): self.path = path
+    def __enter__(self): return self
+    def __exit__(self, *rest): return False
+winreg = types.ModuleType("winreg")
+winreg.HKEY_CURRENT_USER, winreg.KEY_QUERY_VALUE, winreg.KEY_SET_VALUE, winreg.REG_SZ = "HKCU", 1, 2, 1
+def open_key(hive, path, reserved, access):
+    if (hive, path) not in registry: raise FileNotFoundError()
+    return Key((hive, path))
+def create_key(hive, path, reserved, access):
+    registry.setdefault((hive, path), {}); return Key((hive, path))
+def query(key, name):
+    if name not in registry[key.path]: raise FileNotFoundError()
+    return registry[key.path][name], 1
+def set_value(key, name, reserved, kind, value): registry[key.path][name] = value
+def delete_value(key, name):
+    if name not in registry[key.path]: raise FileNotFoundError()
+    del registry[key.path][name]
+winreg.OpenKey, winreg.CreateKeyEx, winreg.QueryValueEx, winreg.SetValueEx, winreg.DeleteValue = open_key, create_key, query, set_value, delete_value
+sys.modules["winreg"] = winreg
+
+sys.platform = "win32"
+import control, tunnel_prompt
+out = {}
+state = local / "WebPilotCodexExecutor"
+out["paths"] = {"state": str(control.STATE), "python": str(control.PYTHON.relative_to(state)), "tunnel_client": str(control.TUNNEL_CLIENT.relative_to(state)),
+                "key": str(control.KEY_FILE.relative_to(state)), "legacy": str(control.LEGACY_LOCAL_STATE), "tools": str(control.TOOLS_FILE.relative_to(state)),
+                "server_name": control.MCP_SERVER_NAME, "same_name_as_server": control.MCP_SERVER_NAME == server.server_name("win32"),
+                "hidden": control._hidden()}
+
+def attempt(action):
+    try: action(); return None
+    except Exception as error: return type(error).__name__ + ": " + str(error)
+
+# Components recorded by Project Web Pilot.
+out["tools_missing"] = attempt(control.tool_locations)
+out["environment_before"] = control.environment()["PATH"].split(os.pathsep)
+tools = {"uv": control.TOOLS_DIR / "uv" / "uv.exe", "tunnel_client": control.TOOLS_DIR / "tunnel-client" / "tunnel-client.exe",
+         "rg": control.TOOLS_DIR / "ripgrep" / "ripgrep-15.2.0-x86_64-pc-windows-msvc" / "rg.exe", "git": control.TOOLS_DIR / "git" / "cmd" / "git.exe"}
+for target in tools.values():
+    target.parent.mkdir(parents=True, exist_ok=True); target.write_bytes(b"binary"); target.chmod(0o755)
+outside = root / "elsewhere" / "git.exe"
+outside.parent.mkdir(); outside.write_bytes(b"binary")
+control.TOOLS_FILE.write_text(json.dumps({"schema_version": 1, "tools": {**{k: str(v) for k, v in tools.items()}, "git": str(outside)}}))
+out["tools_outside"] = attempt(control.tool_locations)
+control.TOOLS_FILE.write_text("\\ufeff" + json.dumps({"schema_version": 1, "tools": {k: str(v) for k, v in tools.items()}}), encoding="utf-8")
+out["tools"] = sorted(control.tool_locations())
+env = control.environment()
+out["environment"] = {"path": env["PATH"].split(os.pathsep), "utf8": env["PYTHONUTF8"], "no_proxy": env["NO_PROXY"],
+                      "state": env["WEB_PILOT_CODEX_EXECUTOR_STATE_DIR"]}
+out["expected_path"] = [str(control.PYTHON.parent), str(tools["git"].parent), str(tools["rg"].parent), str(tools["uv"].parent), str(appdata / "npm"), "/usr/bin"]
+out["uv"] = control.find_uv() == str(tools["uv"].resolve())
+
+# Private folder access and the encrypted key.
+acl_calls = []
+def fake_run(argv, **options):
+    acl_calls.append([argv, {k: options[k] for k in ("creationflags", "check") if k in options}])
+    return types.SimpleNamespace(returncode=0, stdout='"host\\\\user","S-1-5-21-1-2-3-1001"\\n', stderr="")
+control.secure_private_directory(run=fake_run)
+out["acl"] = acl_calls[:]
+out["acl_bad_sid"] = attempt(lambda: control.secure_private_directory(run=lambda argv, **options: types.SimpleNamespace(returncode=0, stdout="nothing", stderr="")))
+secured = []
+control.secure_private_directory = lambda: secured.append(True)
+def fake_dpapi(data, *, decrypt=False):
+    if decrypt:
+        if not data.startswith(b"DPAPI:"): raise OSError("not protected data")
+        return bytes(reversed(data[6:]))
+    return b"DPAPI:" + bytes(reversed(data))
+control.dpapi = fake_dpapi
+
+# The tunnel of the previous Windows runtime is carried over once.
+legacy = local / "CodexLocalWindows" / "private"
+(legacy / "tunnel-profile").mkdir(parents=True)
+(legacy / "tunnel-profile" / "windows-local.yaml").write_text(json.dumps({"control_plane": {"tunnel_id": "tunnel_legacy0123456789abc"}}))
+(legacy / "tunnel-key.dpapi").write_bytes(fake_dpapi(b"sk-legacy-key-0123456789"))
+selected = control.configure_selector()
+out["adopted"] = {"flag": selected["adopted_tunnel"], "key": control.read_tunnel_key(), "tunnel_id": json.loads(control.PROFILE.read_text())["control_plane"]["tunnel_id"],
+                  "stored": control.KEY_FILE.read_bytes() == fake_dpapi(b"sk-legacy-key-0123456789"), "channel": selected["chatgpt_channel"],
+                  "legacy_kept": (legacy / "tunnel-key.dpapi").is_file(), "again": control.adopt_legacy_tunnel()}
+configured = control.configure_tunnel("tunnel_abcdefghijklmnop", "sk-new-key-0123456789abcdef")
+raw = control.KEY_FILE.read_bytes()
+out["key"] = {"plain_in_file": b"sk-new-key" in raw, "read": control.read_tunnel_key(), "secured": len(secured) >= 2, "configured": configured["configured"],
+              "profile_has_key": "sk-new-key" in control.PROFILE.read_text()}
+control.KEY_FILE.unlink(); control.PROFILE.unlink()
+(legacy / "tunnel-key.dpapi").write_bytes(b"damaged")
+out["damaged_legacy"] = control.adopt_legacy_tunnel()
+
+# Launch, identity and stopping the whole tree.
+popen_calls = []
+class FakePopen:
+    def __init__(self, argv, **options):
+        popen_calls.append([argv, {k: v for k, v in options.items() if k in ("creationflags", "start_new_session", "close_fds", "cwd")}])
+        self.pid = 4321
+        table[4321] = {"created": 1700000000.25, "exe": "C:/state/runtime/venv/Scripts/python.exe", "cmdline": argv, "children": [4322]}
+        table[4322] = {"created": 1700000000.5, "exe": "C:/python/python.exe", "cmdline": argv, "children": [4323]}
+        table[4323] = {"created": 1700000001.0, "exe": "C:/codex/codex.exe", "cmdline": ["codex", "app-server"], "stubborn": True}
+    def poll(self): return None
+real_popen = subprocess.Popen
+subprocess.Popen = FakePopen
+pid = control.launch("mcp", ["python.exe", "-B", "server.py"], {"PATH": "x"})
+subprocess.Popen = real_popen
+record = json.loads((control.STATE / "mcp.pid.json").read_text())
+out["launch"] = {"pid": pid, "call": popen_calls[0], "record": record, "managed": control.managed_process("mcp")}
+table[4321]["created"] = 1.0
+out["reused_pid"] = control.managed_process("mcp")
+out["stop_foreign"] = attempt(lambda: control.stop_one("mcp"))
+table[4321]["created"] = 1700000000.25
+table[4321]["denied"] = True
+out["denied"] = control.managed_process("mcp")
+table[4321]["denied"] = False
+out["stopped"] = control.stop_one("mcp")
+out["stop_events"] = events[:]
+out["after_stop"] = {"table": sorted(table), "record": (control.STATE / "mcp.pid.json").exists(), "managed": control.managed_process("mcp")}
+control.private_write(control.STATE / "tunnel.pid.json", json.dumps({"pid": 999, "identity": {"created": 5.0, "exe": "x", "cmdline": []}}))
+out["gone"] = [control.managed_process("tunnel"), (control.STATE / "tunnel.pid.json").exists()]
+
+# Start at sign-in.
+out["autostart_initial"] = control.autostart_status()
+out["autostart_without_pythonw"] = attempt(lambda: control.configure_autostart(True))
+control.PYTHON.parent.mkdir(parents=True, exist_ok=True)
+pythonw = control.PYTHON.with_name("pythonw.exe"); pythonw.write_bytes(b"binary")
+enabled = control.configure_autostart(True)
+launcher = control.AUTOSTART_LAUNCHER.read_text()
+compile(launcher, "autostart.pyw", "exec")
+value = registry[("HKCU", control.AUTOSTART_KEY)][control.AUTOSTART_VALUE]
+out["autostart"] = {"enabled": enabled, "value_ok": value == subprocess.list2cmdline([str(pythonw), "-B", str(control.AUTOSTART_LAUNCHER)]),
+                    "key": control.AUTOSTART_KEY, "name": control.AUTOSTART_VALUE, "launcher": launcher,
+                    "control": str(pathlib.Path(client_dir) / "control.py"), "state": str(control.STATE)}
+registry[("HKCU", control.AUTOSTART_KEY)][control.AUTOSTART_VALUE] = "C:\\\\old\\\\pythonw.exe -B old.pyw"
+out["autostart_stale"] = control.autostart_status()
+out["autostart_off"] = [control.configure_autostart(False), control.configure_autostart(False), control.AUTOSTART_LAUNCHER.exists(),
+                        control.AUTOSTART_VALUE in registry[("HKCU", control.AUTOSTART_KEY)]]
+
+# setup: the private Python and the pinned packages through the uv of the package.
+commands = []
+def setup_run(argv, **options):
+    commands.append([[str(part) for part in argv], {"creationflags": options.get("creationflags"), "check": options.get("check"),
+                     "uv_env": [options.get("env", {}).get("UV_PYTHON_INSTALL_DIR"), options.get("env", {}).get("UV_CACHE_DIR")]}])
+    if argv[1:2] == ["venv"]: control.PYTHON.write_bytes(b"binary")
+    return types.SimpleNamespace(returncode=0, stdout="tunnel-client 0.0.14\\n", stderr="")
+control.PYTHON.unlink(missing_ok=True)
+# shutil.which cannot search PATH under an emulated platform; nothing of the runtime is expected in PATH here.
+control.shutil.which = lambda *args, **kwargs: None
+control.require_codex = lambda: {"path": "C:/codex/codex.exe", "version": "0.160.0"}
+real_run, real_check_output = subprocess.run, subprocess.check_output
+subprocess.run = setup_run
+subprocess.check_output = lambda argv, **options: "tunnel-client 0.0.14\\n"
+installed = control.setup()
+control.TOOLS_FILE.unlink()
+out["setup_without_tools"] = attempt(control.setup)
+subprocess.run, subprocess.check_output = real_run, real_check_output
+out["setup"] = {"result": installed, "commands": commands, "tunnel_client_copied": control.TUNNEL_CLIENT.read_bytes() == b"binary",
+                "venv": str(control.VENV), "requirements": str(pathlib.Path(client_dir) / "requirements.txt"), "uv": str(tools["uv"].resolve()),
+                "python_dir": str(control.RUNTIME / "python"), "cache_dir": str(control.RUNTIME / "uv-cache")}
+
+# The tunnel prompt.
+prompts = []
+def prompt_run(argv, **options):
+    prompts.append([argv[:-1], base64.b64decode(argv[-1]).decode("utf-16-le"), {k: options[k] for k in ("creationflags", "timeout", "encoding")}])
+    return types.SimpleNamespace(returncode=0, stdout='\\ufeff{"value":"  sk-typed-secret  "}', stderr="")
+typed = tunnel_prompt.windows_prompt("Вставьте ключ", hidden=True, run=prompt_run)
+tunnel_prompt.windows_prompt("Видимое поле", run=prompt_run)
+def outcome(stdout, code=0):
+    try:
+        tunnel_prompt.windows_prompt("m", run=lambda argv, **options: types.SimpleNamespace(returncode=code, stdout=stdout, stderr="boom")); return "value"
+    except tunnel_prompt.Cancelled: return "cancelled"
+    except tunnel_prompt.PromptFailure: return "failure"
+def refused(argv, **options): raise OSError("powershell is blocked")
+def refused_outcome():
+    try: tunnel_prompt.windows_prompt("m", run=refused); return "value"
+    except tunnel_prompt.PromptFailure: return "failure"
+outcomes = {"cancelled": outcome('{"cancelled":true}'), "failed": outcome("", 1), "garbage": outcome("not json"),
+            "no_value": outcome('{"other":1}'), "refused": refused_outcome()}
+routed = []
+tunnel_prompt.windows_prompt = lambda message, hidden=False: routed.append(["windows", hidden]) or "x"
+tunnel_prompt.mac_prompt = lambda message, hidden=False: routed.append(["mac", hidden]) or "x"
+tunnel_prompt.prompt("m", hidden=True)
+sys.platform = "darwin"
+tunnel_prompt.prompt("m")
+out["prompt"] = {"typed": typed, "argv": prompts[0][0], "options": prompts[0][2], "hidden_script": prompts[0][1], "visible_script": prompts[1][1],
+                 "message64": base64.b64encode("Вставьте ключ".encode()).decode(), **outcomes, "routed": routed}
+print(json.dumps(out, ensure_ascii=False))
+`);
+  if (!result) return;
+  const { out, root } = result;
+  const local = path.join(root, 'Local'), state = path.join(local, 'WebPilotCodexExecutor');
+  assert.deepEqual(out.paths, { state, python: path.join('runtime', 'venv', 'Scripts', 'python.exe'), tunnel_client: path.join('runtime', 'tunnel-client.exe'),
+    key: path.join('private', 'tunnel-key.dpapi'), legacy: path.join(local, 'CodexLocalWindows'), tools: path.join('runtime', 'tools.json'),
+    server_name: 'Codex App Server Local Windows', same_name_as_server: true, hidden: { creationflags: 0x08000000 } });
+
+  assert.match(out.tools_missing, /Windows components are not prepared/);
+  assert.match(out.tools_outside, /Windows components are not prepared/, 'an executable outside the runtime tools folder is refused');
+  assert.deepEqual(out.tools, ['git', 'rg', 'tunnel_client', 'uv']);
+  assert.deepEqual(out.environment_before.slice(0, 2), [path.join(state, 'runtime', 'venv', 'Scripts'), path.join(root, 'Roaming', 'npm')], 'status works before the components are prepared');
+  assert.deepEqual(out.environment.path.map(item => item.replace(/^\/private/, '')), out.expected_path.map(item => item.replace(/^\/private/, '')),
+    'the Python of the runtime, then MinGit, ripgrep and uv of the package, then global npm');
+  assert.equal(out.environment.utf8, '1');
+  assert.equal(out.environment.no_proxy, '127.0.0.1,localhost');
+  assert.equal(out.environment.state, state);
+  assert.equal(out.uv, true);
+
+  assert.deepEqual(out.acl[0], [['whoami.exe', '/user', '/fo', 'csv', '/nh'], { creationflags: 0x08000000, check: true }]);
+  assert.deepEqual(out.acl[1], [['icacls.exe', path.join(state, 'private'), '/inheritance:r', '/grant:r', '*S-1-5-21-1-2-3-1001:(OI)(CI)F', '*S-1-5-18:(OI)(CI)F'],
+    { creationflags: 0x08000000, check: true }]);
+  assert.match(out.acl_bad_sid, /Cannot determine the current Windows user SID/);
+  assert.deepEqual(out.adopted, { flag: true, key: 'sk-legacy-key-0123456789', tunnel_id: 'tunnel_legacy0123456789abc', stored: true,
+    channel: 'secure-tunnel', legacy_kept: true, again: false });
+  assert.deepEqual(out.key, { plain_in_file: false, read: 'sk-new-key-0123456789abcdef', secured: true, configured: true, profile_has_key: false });
+  assert.equal(out.damaged_legacy, false, 'a key that cannot be decrypted is not carried over');
+
+  assert.equal(out.launch.pid, 4321);
+  assert.deepEqual(out.launch.call[1], { creationflags: 0x08000000 | 0x00000200, close_fds: true, cwd: clientDir }, 'no console window, own process group, no POSIX session');
+  assert.deepEqual(out.launch.record, { pid: 4321, identity: { created: 1700000000.25, exe: 'C:/state/runtime/venv/Scripts/python.exe', cmdline: ['python.exe', '-B', 'server.py'] } });
+  assert.deepEqual(out.launch.managed, { running: true, owned: true, pid: 4321 });
+  assert.deepEqual(out.reused_pid, { running: true, owned: false, pid: 4321 }, 'the same PID with another start time is a foreign process');
+  assert.match(out.stop_foreign, /Refusing to stop mcp: PID is not owned by this runtime/);
+  assert.deepEqual(out.denied, { running: true, owned: false, pid: 4321 });
+  assert.deepEqual(out.stopped, { service: 'mcp', stopped: true });
+  assert.deepEqual(out.stop_events, [['terminate', 4321], ['terminate', 4323], ['terminate', 4322], ['kill', 4323]], 'the whole tree, then force for what survived');
+  assert.deepEqual(out.after_stop, { table: [], record: false, managed: { running: false, owned: false, pid: null } });
+  assert.deepEqual(out.gone, [{ running: false, owned: false, pid: 999 }, false], 'a record of a finished process is removed');
+
+  assert.deepEqual(out.autostart_initial, { autostart: { enabled: false, current: false } });
+  assert.match(out.autostart_without_pythonw, /Windows background Python is missing/);
+  assert.deepEqual(out.autostart.enabled, { autostart: { enabled: true, current: true } });
+  assert.equal(out.autostart.value_ok, true);
+  assert.equal(out.autostart.key, 'Software\\Microsoft\\Windows\\CurrentVersion\\Run');
+  assert.equal(out.autostart.name, 'ProjectWebPilotCodexExecutor');
+  for (const text of ["'selector-start'", out.autostart.control, out.autostart.state, 'autostart.log', 'sys.path.insert(0, os.path.dirname(control))'])
+    assert.ok(out.autostart.launcher.includes(text), text);
+  assert.doesNotMatch(out.autostart.launcher, /sk-|tunnel_/, 'no credentials in the launcher');
+  assert.deepEqual(out.autostart_stale, { autostart: { enabled: true, current: false } }, 'an entry of another location is reported as not current');
+  assert.deepEqual(out.autostart_off, [{ autostart: { enabled: false, current: false } }, { autostart: { enabled: false, current: false } }, false, false]);
+
+  const setup = out.setup, flags = { creationflags: 0x08000000, check: true }, uvEnv = [setup.python_dir, setup.cache_dir];
+  assert.deepEqual(Object.keys(setup.result).sort(), ['codex', 'installed', 'mcp_url', 'python', 'state_directory', 'tunnel_client', 'tunnel_client_version', 'tunnel_health_url'],
+    'the same result fields as on macOS');
+  assert.equal(setup.result.tunnel_client_version, 'tunnel-client 0.0.14');
+  const real = value => value.replace(/^\/private/, '');
+  const uvCommands = setup.commands.filter(([argv]) => real(argv[0]) === real(setup.uv));
+  assert.deepEqual(uvCommands.map(([argv, options]) => [argv.slice(1).map(real), options]), [
+    [['venv', '--managed-python', '--python', '3.13', '--no-config', real(setup.venv)], { ...flags, uv_env: uvEnv }],
+    [['pip', 'install', '--no-config', '--python', real(path.join(setup.venv, 'Scripts', 'python.exe')), '-r', real(setup.requirements)], { ...flags, uv_env: uvEnv }],
+  ]);
+  assert.equal(setup.tunnel_client_copied, true, 'tunnel-client comes from the pinned archive of the package');
+  assert.match(out.setup_without_tools, /uv is missing from the prepared Windows components/);
+
+  const prompt = out.prompt;
+  assert.equal(prompt.typed, 'sk-typed-secret');
+  assert.deepEqual(prompt.argv, ['powershell.exe', '-NoLogo', '-NoProfile', '-STA', '-EncodedCommand']);
+  assert.deepEqual(prompt.options, { creationflags: 0x08000000, timeout: 900, encoding: 'utf-8' });
+  assert.ok(prompt.hidden_script.includes(`FromBase64String('${prompt.message64}')`));
+  assert.ok(!prompt.hidden_script.includes('Вставьте ключ'), 'the message is never quoted into the script');
+  assert.match(prompt.hidden_script, /UseSystemPasswordChar = \$true/);
+  assert.match(prompt.visible_script, /UseSystemPasswordChar = \$false/);
+  for (const text of ["'Продолжить'", "'Отмена'", '$field.Clear()']) assert.ok(prompt.hidden_script.includes(text), text);
+  assert.deepEqual([prompt.cancelled, prompt.failed, prompt.garbage, prompt.no_value, prompt.refused], ['cancelled', 'failure', 'failure', 'failure', 'failure']);
+  assert.deepEqual(prompt.routed, [['windows', true], ['mac', false]]);
+
+  const control = path.join(clientDir, 'control.py');
+  const refused = await runPython(control, ['autostart', '--state', 'status'], controlEnvironment(root));
+  assert.equal(refused.code, 1);
+  assert.match(JSON.parse(refused.stdout).error, /Start at login is set up by Project Web Pilot itself on this system/);
+  assert.equal((await (await import('node:fs/promises')).readFile(path.join(clientDir, 'requirements.txt'), 'utf8')).includes('psutil==7.2.2 ; sys_platform == "win32"'), true);
+});

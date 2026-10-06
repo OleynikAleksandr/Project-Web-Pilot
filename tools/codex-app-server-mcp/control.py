@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import argparse
 import contextlib
-import fcntl
+import csv
 import getpass
 import hashlib
 import io
@@ -23,19 +23,38 @@ import urllib.request
 from urllib.parse import urlparse
 import zipfile
 
+try:
+    import fcntl
+except ImportError:  # Windows: the lifecycle lock uses msvcrt instead
+    fcntl = None
+
+IS_WINDOWS = sys.platform == "win32"
 ROOT = Path(__file__).resolve().parent
-STATE = Path(os.environ.get("WEB_PILOT_CODEX_EXECUTOR_STATE_DIR") or
-             Path.home() / "Library/Application Support/WebPilotCodexExecutor")
+
+
+def _local_app_data() -> Path:
+    return Path(os.environ.get("LOCALAPPDATA") or Path.home() / "AppData" / "Local")
+
+
+STATE = Path(os.environ.get("WEB_PILOT_CODEX_EXECUTOR_STATE_DIR") or (
+    _local_app_data() / "WebPilotCodexExecutor" if IS_WINDOWS
+    else Path.home() / "Library/Application Support/WebPilotCodexExecutor"))
 PRIVATE = STATE / "private"
 RUNTIME = STATE / "runtime"
 VENV = RUNTIME / "venv"
-PYTHON = VENV / "bin/python"
-TUNNEL_CLIENT = RUNTIME / "tunnel-client"
+PYTHON = VENV / ("Scripts/python.exe" if IS_WINDOWS else "bin/python")
+TUNNEL_CLIENT = RUNTIME / ("tunnel-client.exe" if IS_WINDOWS else "tunnel-client")
+# Windows only: Project Web Pilot unpacks uv, tunnel-client, ripgrep and MinGit from its pinned
+# archive into TOOLS_DIR and records their executables in TOOLS_FILE.
+TOOLS_DIR = RUNTIME / "tools"
+TOOLS_FILE = RUNTIME / "tools.json"
 PROFILE_DIR = PRIVATE / "tunnel-profile"
 PROFILE_NAME = "codex-executor"
 PROFILE = PROFILE_DIR / f"{PROFILE_NAME}.yaml"
-KEY_FILE = PRIVATE / "tunnel-key"
+# Windows keeps the key encrypted for the current user (DPAPI); macOS keeps a 0600 file.
+KEY_FILE = PRIVATE / ("tunnel-key.dpapi" if IS_WINDOWS else "tunnel-key")
 SELECTOR_FILE = PRIVATE / "selector.json"
+MCP_SERVER_NAME = "Codex App Server Local Windows" if IS_WINDOWS else "Codex App Server Local Mac"
 MCP_PORT = int(os.environ.get("WEB_PILOT_CODEX_EXECUTOR_PORT", "17852"))
 TUNNEL_PORT = int(os.environ.get("WEB_PILOT_CODEX_EXECUTOR_TUNNEL_PORT", "17853"))
 TUNNEL_KEY_ENV = "WEB_PILOT_CODEX_EXECUTOR_TUNNEL_API_KEY"
@@ -43,9 +62,17 @@ TUNNEL_KEY_ENV = "WEB_PILOT_CODEX_EXECUTOR_TUNNEL_API_KEY"
 # or the user's own server, whose SSH tunnel Project Web Pilot maintains itself.
 CHATGPT_CHANNELS = ("secure-tunnel", "vps")
 DEFAULT_CHATGPT_CHANNEL = "secure-tunnel"
-# State of the retired local runtime (before 0.6.91): read once to carry its tunnel over, never written.
-LEGACY_LOCAL_STATE = Path(os.environ.get("WEB_PILOT_LEGACY_LOCAL_STATE_DIR") or
-                          Path.home() / "Library/Application Support/CodexLocalMac")
+# State of the retired local runtime (macOS before 0.6.91, Windows before 0.6.96): read once to
+# carry its tunnel over, never written.
+LEGACY_LOCAL_STATE = Path(os.environ.get("WEB_PILOT_LEGACY_LOCAL_STATE_DIR") or (
+    _local_app_data() / "CodexLocalWindows" if IS_WINDOWS
+    else Path.home() / "Library/Application Support/CodexLocalMac"))
+LEGACY_PROFILE_NAME = "windows-local.yaml" if IS_WINDOWS else "mac-local.yaml"
+# Windows start at login: a per-user Run value, no administrator rights.
+AUTOSTART_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
+AUTOSTART_VALUE = "ProjectWebPilotCodexExecutor"
+AUTOSTART_LAUNCHER = PRIVATE / "autostart.pyw"
+AUTOSTART_LOG = STATE / "autostart.log"
 
 
 class CodexNotFound(RuntimeError):
@@ -56,24 +83,116 @@ def json_out(value: object) -> None:
     print(json.dumps(value, ensure_ascii=False, indent=2))
 
 
-def private_write(path: Path, content: str) -> None:
+def _hidden() -> dict[str, int]:
+    """Windows: a console child of a windowless parent would open its own console window."""
+    return {"creationflags": getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)} if IS_WINDOWS else {}
+
+
+def private_write(path: Path, content: str | bytes) -> None:
     path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
     path.parent.chmod(0o700)
     temp = path.with_name(path.name + "." + secrets.token_hex(8) + ".tmp")
     try:
-        fd = os.open(temp, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-        with os.fdopen(fd, "w", encoding="utf-8") as handle:
-            handle.write(content)
+        # Bytes as given on both systems: no newline translation on Windows.
+        fd = os.open(temp, os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_BINARY", 0), 0o600)
+        with os.fdopen(fd, "wb") as handle:
+            handle.write(content.encode("utf-8") if isinstance(content, str) else content)
         os.replace(temp, path)
         path.chmod(0o600)
     finally:
         temp.unlink(missing_ok=True)
 
 
+def secure_private_directory(run=subprocess.run) -> None:
+    """Windows: only the current user and the system may read the private folder."""
+    PRIVATE.mkdir(parents=True, exist_ok=True)
+    result = run(["whoami.exe", "/user", "/fo", "csv", "/nh"], capture_output=True, text=True,
+                 errors="replace", check=True, timeout=10, **_hidden())
+    rows = list(csv.reader(result.stdout.strip().splitlines()))
+    sid = rows[-1][-1].strip() if rows else ""
+    if not re.fullmatch(r"S-1-[0-9-]+", sid):
+        raise RuntimeError("Cannot determine the current Windows user SID")
+    run(["icacls.exe", str(PRIVATE), "/inheritance:r", "/grant:r", f"*{sid}:(OI)(CI)F", "*S-1-5-18:(OI)(CI)F"],
+        capture_output=True, check=True, timeout=15, **_hidden())
+
+
+def dpapi(data: bytes, *, decrypt: bool = False) -> bytes:
+    """Windows DPAPI for the current user, without any interface; the plain key never reaches a file."""
+    import ctypes
+    from ctypes import wintypes
+
+    class Blob(ctypes.Structure):
+        _fields_ = [("cbData", wintypes.DWORD), ("pbData", ctypes.POINTER(ctypes.c_ubyte))]
+
+    crypt32 = ctypes.WinDLL("crypt32", use_last_error=True)
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    blob_ptr = ctypes.POINTER(Blob)
+    crypt32.CryptProtectData.argtypes = [blob_ptr, wintypes.LPCWSTR, blob_ptr, ctypes.c_void_p, ctypes.c_void_p, wintypes.DWORD, blob_ptr]
+    crypt32.CryptProtectData.restype = wintypes.BOOL
+    crypt32.CryptUnprotectData.argtypes = [blob_ptr, ctypes.c_void_p, blob_ptr, ctypes.c_void_p, ctypes.c_void_p, wintypes.DWORD, blob_ptr]
+    crypt32.CryptUnprotectData.restype = wintypes.BOOL
+    kernel32.LocalFree.argtypes = [ctypes.c_void_p]
+    kernel32.LocalFree.restype = ctypes.c_void_p
+    buffer = (ctypes.c_ubyte * len(data)).from_buffer_copy(data)
+    source = Blob(len(data), buffer)
+    output = Blob()
+    function = crypt32.CryptUnprotectData if decrypt else crypt32.CryptProtectData
+    description = None if decrypt else "Project Web Pilot tunnel key"
+    # 1 = CRYPTPROTECT_UI_FORBIDDEN
+    if not function(ctypes.byref(source), description, None, None, None, 1, ctypes.byref(output)):
+        raise ctypes.WinError(ctypes.get_last_error())
+    try:
+        return ctypes.string_at(output.pbData, output.cbData)
+    finally:
+        if output.pbData:
+            ctypes.memset(output.pbData, 0, output.cbData)
+            kernel32.LocalFree(output.pbData)
+        ctypes.memset(buffer, 0, len(data))
+
+
+def store_tunnel_key(key: str) -> None:
+    if IS_WINDOWS:
+        secure_private_directory()
+        private_write(KEY_FILE, dpapi(key.encode("utf-8")))
+    else:
+        private_write(KEY_FILE, key + "\n")
+
+
+def read_tunnel_key(path: Path | None = None) -> str:
+    source = path or KEY_FILE
+    if IS_WINDOWS:
+        return dpapi(source.read_bytes(), decrypt=True).decode("utf-8").strip()
+    return source.read_text(encoding="utf-8").strip()
+
+
+@contextlib.contextmanager
+def _windows_operation_lock():
+    import msvcrt
+    with (STATE / "control.lock").open("a+b") as handle:
+        handle.seek(0, os.SEEK_END)
+        if handle.tell() == 0:
+            handle.write(b"\0")
+            handle.flush()
+        handle.seek(0)
+        try:
+            msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
+        except OSError:
+            raise RuntimeError("Another Codex executor lifecycle operation is still running") from None
+        try:
+            yield
+        finally:
+            handle.seek(0)
+            msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
+
+
 @contextlib.contextmanager
 def operation_lock():
     STATE.mkdir(parents=True, exist_ok=True, mode=0o700)
     STATE.chmod(0o700)
+    if fcntl is None:
+        with _windows_operation_lock():
+            yield
+        return
     with (STATE / "control.lock").open("a") as handle:
         try:
             fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -85,11 +204,43 @@ def operation_lock():
             fcntl.flock(handle, fcntl.LOCK_UN)
 
 
+def tool_locations() -> dict[str, Path]:
+    """Windows components prepared by Project Web Pilot; every executable must lie inside the runtime tools folder."""
+    try:
+        recorded = json.loads(TOOLS_FILE.read_text(encoding="utf-8-sig"))["tools"]
+        base = TOOLS_DIR.resolve()
+        result = {}
+        for name in ("uv", "tunnel_client", "rg", "git"):
+            target = Path(recorded[name]).resolve()
+            if base not in target.parents or not target.is_file():
+                raise ValueError(name)
+            result[name] = target
+        return result
+    except (OSError, ValueError, KeyError, TypeError):
+        raise RuntimeError("Windows components are not prepared; let Project Web Pilot prepare them again") from None
+
+
 def environment() -> dict[str, str]:
     env = os.environ.copy()
     env["WEB_PILOT_CODEX_EXECUTOR_STATE_DIR"] = str(STATE)
     env["WEB_PILOT_CODEX_EXECUTOR_PORT"] = str(MCP_PORT)
     env["PYTHONDONTWRITEBYTECODE"] = "1"
+    if IS_WINDOWS:
+        env["PYTHONUTF8"] = "1"
+        prefixes = [str(PYTHON.parent)]
+        try:
+            tools = tool_locations()
+            # MinGit and ripgrep of the package come first: the same Git that Workflow Kit uses.
+            prefixes += [str(tools[name].parent) for name in ("git", "rg", "uv")]
+        except RuntimeError:
+            pass  # status is asked before the components are prepared
+        if env.get("APPDATA"):
+            # Global npm installs (the Codex CLI) live here; a login item may start without it in PATH.
+            prefixes.append(str(Path(env["APPDATA"]) / "npm"))
+        env["PATH"] = os.pathsep.join([*prefixes, env.get("PATH", "")])
+        # Loopback probes must not go through a system proxy.
+        env["NO_PROXY"] = ",".join(filter(None, [env.get("NO_PROXY", ""), "127.0.0.1", "localhost"]))
+        return env
     env["PATH"] = os.pathsep.join([
         str(VENV / "bin"),
         str(Path.home() / ".npm-global/bin"),
@@ -109,13 +260,16 @@ def download(url: str) -> bytes:
 def _working_tunnel_candidate() -> Path | None:
     explicit = os.environ.get("WEB_PILOT_CODEX_TUNNEL_CLIENT")
     candidates = [Path(explicit).expanduser() if explicit else None]
+    if IS_WINDOWS:
+        with contextlib.suppress(RuntimeError):
+            candidates.append(tool_locations()["tunnel_client"])
     from_path = shutil.which("tunnel-client")
     if from_path:
         candidates.append(Path(from_path))
     for candidate in candidates:
         if candidate is None or not candidate.is_file() or not os.access(candidate, os.X_OK):
             continue
-        result = subprocess.run([str(candidate), "--version"], capture_output=True, text=True, timeout=10)
+        result = subprocess.run([str(candidate), "--version"], capture_output=True, text=True, timeout=10, **_hidden())
         if result.returncode == 0:
             return candidate
     return None
@@ -124,7 +278,7 @@ def _working_tunnel_candidate() -> Path | None:
 def install_tunnel_client() -> str:
     RUNTIME.mkdir(parents=True, exist_ok=True, mode=0o700)
     if TUNNEL_CLIENT.is_file():
-        result = subprocess.run([str(TUNNEL_CLIENT), "--version"], capture_output=True, text=True, timeout=10)
+        result = subprocess.run([str(TUNNEL_CLIENT), "--version"], capture_output=True, text=True, timeout=10, **_hidden())
         if result.returncode == 0:
             return result.stdout.strip()
 
@@ -132,7 +286,10 @@ def install_tunnel_client() -> str:
     if existing is not None:
         shutil.copy2(existing, TUNNEL_CLIENT)
         TUNNEL_CLIENT.chmod(0o755)
-        return subprocess.check_output([str(TUNNEL_CLIENT), "--version"], text=True, timeout=10).strip()
+        return subprocess.check_output([str(TUNNEL_CLIENT), "--version"], text=True, timeout=10, **_hidden()).strip()
+    if IS_WINDOWS:
+        # The pinned archive of the package is the only source on Windows: nothing is downloaded here.
+        raise RuntimeError("tunnel-client is missing from the prepared Windows components; let Project Web Pilot prepare them again")
 
     release = json.loads(download("https://api.github.com/repos/openai/tunnel-client/releases/latest"))
     arch = {"arm64": "arm64", "x86_64": "amd64"}.get(platform.machine())
@@ -183,23 +340,42 @@ def find_uv() -> str | None:
     explicit = os.environ.get("WEB_PILOT_UV")
     if explicit and os.access(explicit, os.X_OK):
         return explicit
+    if IS_WINDOWS:
+        with contextlib.suppress(RuntimeError):
+            return str(tool_locations()["uv"])
     return shutil.which("uv", path=environment()["PATH"])
 
 
+def _setup_windows_python(uv: str | None) -> None:
+    """The private Python 3.13 and the pinned packages, both through the uv of the package."""
+    if not uv:
+        raise RuntimeError("uv is missing from the prepared Windows components; let Project Web Pilot prepare them again")
+    secure_private_directory()
+    env = {**os.environ, "UV_PYTHON_INSTALL_DIR": str(RUNTIME / "python"), "UV_CACHE_DIR": str(RUNTIME / "uv-cache")}
+    if not PYTHON.is_file():
+        subprocess.run([uv, "venv", "--managed-python", "--python", "3.13", "--no-config", str(VENV)],
+                       check=True, stdout=sys.stderr, env=env, **_hidden())
+    subprocess.run([uv, "pip", "install", "--no-config", "--python", str(PYTHON), "-r", str(ROOT / "requirements.txt")],
+                   check=True, stdout=sys.stderr, env=env, **_hidden())
+
+
 def setup() -> dict[str, object]:
-    if sys.platform != "darwin":
-        raise RuntimeError("This runtime is macOS-only")
+    if sys.platform not in ("darwin", "win32"):
+        raise RuntimeError("This runtime supports macOS and Windows only")
     codex = require_codex()
     RUNTIME.mkdir(parents=True, exist_ok=True, mode=0o700)
     uv = find_uv()
-    if not PYTHON.is_file():
-        # Installer chatter goes to stderr: stdout carries only the JSON result of this command.
-        if uv:
-            subprocess.run([uv, "venv", "--python", "3.13", str(VENV)], check=True, stdout=sys.stderr)
-        else:
-            subprocess.run([sys.executable, "-m", "venv", str(VENV)], check=True, stdout=sys.stderr)
-    installer = [uv, "pip", "install", "--python", str(PYTHON)] if uv else [str(PYTHON), "-m", "pip", "install"]
-    subprocess.run([*installer, "-r", str(ROOT / "requirements.txt")], check=True, stdout=sys.stderr)
+    if IS_WINDOWS:
+        _setup_windows_python(uv)
+    else:
+        if not PYTHON.is_file():
+            # Installer chatter goes to stderr: stdout carries only the JSON result of this command.
+            if uv:
+                subprocess.run([uv, "venv", "--python", "3.13", str(VENV)], check=True, stdout=sys.stderr)
+            else:
+                subprocess.run([sys.executable, "-m", "venv", str(VENV)], check=True, stdout=sys.stderr)
+        installer = [uv, "pip", "install", "--python", str(PYTHON)] if uv else [str(PYTHON), "-m", "pip", "install"]
+        subprocess.run([*installer, "-r", str(ROOT / "requirements.txt")], check=True, stdout=sys.stderr)
     version = install_tunnel_client()
     STATE.mkdir(parents=True, exist_ok=True, mode=0o700)
     return {
@@ -237,7 +413,7 @@ def configure_tunnel(tunnel_id: str, key: str) -> dict[str, object]:
             ]
         },
     }
-    private_write(KEY_FILE, key + "\n")
+    store_tunnel_key(key)
     private_write(PROFILE, json.dumps(profile, ensure_ascii=False, indent=2) + "\n")
     return {
         "configured": True,
@@ -273,7 +449,7 @@ def tunnel_target() -> str | None:
     if not PROFILE.is_file():
         return None
     try:
-        profile = json.loads(PROFILE.read_text())
+        profile = json.loads(PROFILE.read_text(encoding="utf-8"))
         urls = profile.get("mcp", {}).get("server_urls", [])
         if len(urls) != 1 or urls[0].get("channel") != "main":
             return None
@@ -292,7 +468,7 @@ def set_tunnel_target(mcp_url: str) -> str:
         raise RuntimeError("Recorded tunnel PID belongs to another process")
     if tunnel["owned"] and current != target:
         stop_one("tunnel")
-    profile = json.loads(PROFILE.read_text())
+    profile = json.loads(PROFILE.read_text(encoding="utf-8"))
     profile.setdefault("mcp", {})["server_urls"] = [{"channel": "main", "url": target}]
     private_write(PROFILE, json.dumps(profile, ensure_ascii=False, indent=2) + "\n")
     return target
@@ -312,14 +488,14 @@ def adopt_legacy_tunnel() -> bool:
     """Carry the tunnel of the retired local runtime over once; its key is never printed."""
     if PROFILE.is_file() and KEY_FILE.is_file():
         return False
-    legacy_profile = LEGACY_LOCAL_STATE / "private" / "tunnel-profile" / "mac-local.yaml"
-    legacy_key = LEGACY_LOCAL_STATE / "private" / "tunnel-key"
+    legacy_profile = LEGACY_LOCAL_STATE / "private" / "tunnel-profile" / LEGACY_PROFILE_NAME
+    legacy_key = LEGACY_LOCAL_STATE / "private" / KEY_FILE.name
     if not legacy_profile.is_file() or not legacy_key.is_file():
         return False
     try:
-        tunnel_id = json.loads(legacy_profile.read_text())["control_plane"]["tunnel_id"]
-        configure_tunnel(str(tunnel_id), legacy_key.read_text().strip())
-    except (OSError, json.JSONDecodeError, KeyError, TypeError, ValueError):
+        tunnel_id = json.loads(legacy_profile.read_text(encoding="utf-8"))["control_plane"]["tunnel_id"]
+        configure_tunnel(str(tunnel_id), read_tunnel_key(legacy_key))
+    except (OSError, json.JSONDecodeError, KeyError, TypeError, ValueError, RuntimeError):
         # A damaged legacy configuration is not carried over: the tunnel is entered again in the wizard.
         return False
     return True
@@ -355,7 +531,7 @@ def load_selector() -> dict[str, object]:
     if not SELECTOR_FILE.is_file():
         raise RuntimeError("MCP backend selector is not configured")
     try:
-        selector = json.loads(SELECTOR_FILE.read_text())
+        selector = json.loads(SELECTOR_FILE.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         raise RuntimeError("MCP backend selector is damaged") from None
     if selector.get("schema_version") != 1 or selector.get("mode") not in {"local", "app-server"}:
@@ -378,9 +554,19 @@ def selector_public() -> dict[str, object] | None:
     return {"mode": selector["mode"], "mcp_url": selector["mcp_url"], "chatgpt_channel": selector["chatgpt_channel"]}
 
 
-def pid_identity(pid: object) -> str | None:
+def pid_identity(pid: object) -> str | dict[str, object] | None:
     if not isinstance(pid, int) or pid <= 1:
         return None
+    if IS_WINDOWS:
+        import psutil
+        try:
+            process = psutil.Process(pid)
+            return {"created": process.create_time(), "exe": process.exe(), "cmdline": process.cmdline()}
+        except (psutil.NoSuchProcess, psutil.ZombieProcess):
+            return None
+        except psutil.AccessDenied:
+            # Running, but not ours to inspect: it never equals a recorded identity.
+            return {"access_denied": True}
     # `ps -o lstart` is locale-sensitive on macOS.  Persisted process identity
     # must compare identically whether control.py is called from Finder, Codex,
     # or a user's Terminal with another LANG/LC_* environment.
@@ -399,7 +585,7 @@ def managed_process(name: str) -> dict[str, object]:
     if not record.is_file():
         return {"running": False, "owned": False, "pid": None}
     try:
-        data = json.loads(record.read_text())
+        data = json.loads(record.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return {"running": False, "owned": False, "pid": None}
     actual = pid_identity(data.get("pid"))
@@ -416,10 +602,14 @@ def launch(name: str, argv: list[str], env: dict[str, str]) -> int:
     for path in (stdout_path, stderr_path):
         path.touch(mode=0o600, exist_ok=True)
         path.chmod(0o600)
+    # Detached from the caller on both systems; on Windows also without a console window.
+    detached = ({"creationflags": getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
+                 | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0x00000200)}
+                if IS_WINDOWS else {"start_new_session": True})
     with stdout_path.open("ab") as stdout, stderr_path.open("ab") as stderr:
         process = subprocess.Popen(
             argv, cwd=str(ROOT), env=env, stdin=subprocess.DEVNULL,
-            stdout=stdout, stderr=stderr, start_new_session=True, close_fds=True,
+            stdout=stdout, stderr=stderr, close_fds=True, **detached,
         )
     identity = pid_identity(process.pid)
     if identity is None or process.poll() is not None:
@@ -449,9 +639,9 @@ async def main():
     async with streamablehttp_client(%r) as (read, write, _):
         async with ClientSession(read, write) as session:
             result = await session.initialize()
-            return result.serverInfo.name == 'Codex App Server Local Mac'
+            return result.serverInfo.name == %r
 raise SystemExit(0 if asyncio.run(main()) else 3)
-""" % (f"http://127.0.0.1:{MCP_PORT}/mcp",)
+""" % (f"http://127.0.0.1:{MCP_PORT}/mcp", MCP_SERVER_NAME)
     try:
         result = subprocess.run(
             [str(PYTHON), "-B", "-c", probe],
@@ -460,6 +650,7 @@ raise SystemExit(0 if asyncio.run(main()) else 3)
             stderr=subprocess.DEVNULL,
             timeout=5,
             check=False,
+            **_hidden(),
         )
         return result.returncode == 0
     except (OSError, subprocess.TimeoutExpired):
@@ -467,8 +658,10 @@ raise SystemExit(0 if asyncio.run(main()) else 3)
 
 
 def tunnel_ready() -> bool:
+    # Windows reads the system proxy from the registry: the loopback probe must bypass it.
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({})) if IS_WINDOWS else urllib.request.build_opener()
     try:
-        with urllib.request.urlopen(f"http://127.0.0.1:{TUNNEL_PORT}/readyz", timeout=1) as response:
+        with opener.open(f"http://127.0.0.1:{TUNNEL_PORT}/readyz", timeout=1) as response:
             return response.status == 200 and response.read().decode().strip().strip('"') == "ready"
     except Exception:
         return False
@@ -509,7 +702,7 @@ def start_tunnel() -> dict[str, object]:
     if not tunnel["owned"]:
         if port_open(TUNNEL_PORT):
             raise RuntimeError(f"Port {TUNNEL_PORT} belongs to another process; it will not be stopped")
-        env[TUNNEL_KEY_ENV] = KEY_FILE.read_text().strip()
+        env[TUNNEL_KEY_ENV] = read_tunnel_key()
         launch(
             "tunnel",
             [str(TUNNEL_CLIENT), "run", "--profile", PROFILE_NAME, "--profile-dir", str(PROFILE_DIR)],
@@ -564,6 +757,26 @@ def start(*, mcp_only: bool = False, tunnel_only: bool = False) -> dict[str, obj
     return start_tunnel()
 
 
+def _stop_windows_tree(pid: int) -> None:
+    """The venv python.exe is a launcher with the real interpreter as its child: stop the whole tree."""
+    import psutil
+    try:
+        parent = psutil.Process(pid)
+        targets = parent.children(recursive=True) + [parent]
+    except psutil.NoSuchProcess:
+        return
+    for process in reversed(targets):
+        with contextlib.suppress(psutil.NoSuchProcess):
+            process.terminate()
+    _, alive = psutil.wait_procs(targets, timeout=5)
+    for process in alive:
+        with contextlib.suppress(psutil.NoSuchProcess):
+            process.kill()
+    _, alive = psutil.wait_procs(alive, timeout=3)
+    if alive:
+        raise RuntimeError("Processes did not stop: " + ",".join(str(process.pid) for process in alive))
+
+
 def stop_one(name: str) -> dict[str, object]:
     process = managed_process(name)
     if process["running"] and not process["owned"]:
@@ -571,18 +784,21 @@ def stop_one(name: str) -> dict[str, object]:
     if process["owned"]:
         pid = int(process["pid"])
         record_path = STATE / f"{name}.pid.json"
-        record = json.loads(record_path.read_text())
+        record = json.loads(record_path.read_text(encoding="utf-8"))
         if pid_identity(pid) != record["identity"]:
             raise RuntimeError(f"{name} process identity changed before stop")
-        try:
-            os.killpg(pid, signal.SIGTERM)
-        except ProcessLookupError:
-            pass
-        deadline = time.monotonic() + 5
-        while pid_identity(pid) == record["identity"] and time.monotonic() < deadline:
-            time.sleep(0.1)
-        if pid_identity(pid) == record["identity"]:
-            os.killpg(pid, signal.SIGKILL)
+        if IS_WINDOWS:
+            _stop_windows_tree(pid)
+        else:
+            try:
+                os.killpg(pid, signal.SIGTERM)
+            except ProcessLookupError:
+                pass
+            deadline = time.monotonic() + 5
+            while pid_identity(pid) == record["identity"] and time.monotonic() < deadline:
+                time.sleep(0.1)
+            if pid_identity(pid) == record["identity"]:
+                os.killpg(pid, signal.SIGKILL)
     (STATE / f"{name}.pid.json").unlink(missing_ok=True)
     return {"service": name, "stopped": True}
 
@@ -621,6 +837,58 @@ def selector_start() -> dict[str, object]:
     return stable
 
 
+def autostart_command() -> str:
+    return subprocess.list2cmdline([str(PYTHON.with_name("pythonw.exe")), "-B", str(AUTOSTART_LAUNCHER)])
+
+
+def autostart_status() -> dict[str, object]:
+    if not IS_WINDOWS:
+        raise RuntimeError("Start at login is set up by Project Web Pilot itself on this system")
+    import winreg
+    try:
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, AUTOSTART_KEY, 0, winreg.KEY_QUERY_VALUE) as key:
+            value = winreg.QueryValueEx(key, AUTOSTART_VALUE)[0]
+    except FileNotFoundError:
+        value = None
+    # "current" is false when the entry was written for another location of the runtime.
+    return {"autostart": {"enabled": value is not None,
+                          "current": value == autostart_command() and AUTOSTART_LAUNCHER.is_file()}}
+
+
+def configure_autostart(enabled: bool) -> dict[str, object]:
+    """Start the services when the user signs in to Windows: a per-user Run value, no administrator rights."""
+    if not IS_WINDOWS:
+        raise RuntimeError("Start at login is set up by Project Web Pilot itself on this system")
+    import winreg
+    if enabled:
+        if not PYTHON.with_name("pythonw.exe").is_file():
+            raise RuntimeError("Windows background Python is missing; run setup again")
+        control = str(ROOT / "control.py")
+        # No window and no console at login: the result goes to a log. No credentials appear here.
+        launcher = (
+            "import os, runpy, sys\n"
+            f"os.environ['WEB_PILOT_CODEX_EXECUTOR_STATE_DIR'] = {str(STATE)!r}\n"
+            "os.environ['PYTHONUTF8'] = '1'\n"
+            "os.environ['PYTHONDONTWRITEBYTECODE'] = '1'\n"
+            f"sys.stdout = sys.stderr = open({str(AUTOSTART_LOG)!r}, 'w', encoding='utf-8')\n"
+            f"control = {control!r}\n"
+            "sys.path.insert(0, os.path.dirname(control))\n"
+            "sys.argv = [control, 'selector-start']\n"
+            "runpy.run_path(control, run_name='__main__')\n"
+        )
+        private_write(AUTOSTART_LAUNCHER, launcher)
+        with winreg.CreateKeyEx(winreg.HKEY_CURRENT_USER, AUTOSTART_KEY, 0, winreg.KEY_SET_VALUE) as key:
+            winreg.SetValueEx(key, AUTOSTART_VALUE, 0, winreg.REG_SZ, autostart_command())
+    else:
+        try:
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, AUTOSTART_KEY, 0, winreg.KEY_SET_VALUE) as key:
+                winreg.DeleteValue(key, AUTOSTART_VALUE)
+        except FileNotFoundError:
+            pass
+        AUTOSTART_LAUNCHER.unlink(missing_ok=True)
+    return autostart_status()
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Lifecycle for the Codex App Server MCP")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -636,6 +904,8 @@ def parse_args() -> argparse.Namespace:
     channel = sub.add_parser("configure-channel")
     channel.add_argument("--channel", required=True, choices=list(CHATGPT_CHANNELS))
     sub.add_parser("configure-selector")
+    autostart = sub.add_parser("autostart", help="Windows: start the services at sign-in")
+    autostart.add_argument("--state", required=True, choices=["on", "off", "status"])
     configure = sub.add_parser("configure-tunnel")
     configure.add_argument("--tunnel-id")
     configure.add_argument(
@@ -647,6 +917,9 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
+    if IS_WINDOWS and hasattr(sys.stdout, "reconfigure"):
+        # The JSON result may carry paths with non-ASCII user names.
+        sys.stdout.reconfigure(encoding="utf-8")
     try:
         with operation_lock():
             if args.command == "setup":
@@ -663,6 +936,8 @@ def main() -> int:
                 result = configure_selector()
             elif args.command == "selector-start":
                 result = selector_start()
+            elif args.command == "autostart":
+                result = autostart_status() if args.state == "status" else configure_autostart(args.state == "on")
             elif args.command == "configure-tunnel":
                 tunnel_id = args.tunnel_id or input("OpenAI tunnel_id: ").strip()
                 key = (

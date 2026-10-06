@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1327,
+  "plan_revision": 1329,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "context-as-text-0.6.96-20261006",
@@ -717,7 +717,8 @@
       "functional_paths": [
         "tools/codex-app-server-mcp/control.py",
         "tools/codex-app-server-mcp/tunnel_prompt.py",
-        "tests/codex-app-server-mcp.test.mjs"
+        "tests/codex-app-server-mcp.test.mjs",
+        "tools/codex-app-server-mcp/requirements.txt"
       ],
       "documentation_paths": [
         "docs/planning/context-as-text.md"
@@ -736,13 +737,20 @@
         "Поведение и тесты macOS не меняются"
       ],
       "expected_commit_message": "feat: Службы исполнителя на Windows: установка, запуск, туннель, автозапуск",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "context-as-text-0.6.96-20261006",
         "task_id": "W003",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "docs/planning/context-as-text.md",
+        "tests/codex-app-server-mcp.test.mjs",
+        "tools/codex-app-server-mcp/control.py",
+        "tools/codex-app-server-mcp/requirements.txt",
+        "tools/codex-app-server-mcp/tunnel_prompt.py"
+      ]
     },
     {
       "id": "W004",
@@ -1210,7 +1218,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: context-as-text-0.6.96-20261006
 Current Task: нет
-Revision: 1327
+Revision: 1329
 
 ## Цель
 
@@ -1273,10 +1281,10 @@ Revision: 1327
   - Git Commit: [DONE] feat: Исполнитель на Windows: изображения, окна, снимки, уведомления
   - Reference: context-as-text-0.6.96-20261006 / W002 / implementation
   - Файлы: tools/codex-app-server-mcp/server.py, tests/codex-app-server-mcp.test.mjs, tools/codex-app-server-mcp/requirements.txt, tools/codex-app-server-mcp/windows_desktop.py, tools/codex-app-server-mcp/windows_notify.ps1, docs/planning/context-as-text.md
-- [TODO] W003: Службы исполнителя на Windows: установка, запуск, туннель, автозапуск — Ожидает
-  - Git Commit: [PENDING] feat: Службы исполнителя на Windows: установка, запуск, туннель, автозапуск
+- [DONE] W003: Службы исполнителя на Windows: установка, запуск, туннель, автозапуск — Завершено
+  - Git Commit: [DONE] feat: Службы исполнителя на Windows: установка, запуск, туннель, автозапуск
   - Reference: context-as-text-0.6.96-20261006 / W003 / implementation
-  - Файлы: tools/codex-app-server-mcp/control.py, tools/codex-app-server-mcp/tunnel_prompt.py, tests/codex-app-server-mcp.test.mjs, docs/planning/context-as-text.md
+  - Файлы: tools/codex-app-server-mcp/control.py, tools/codex-app-server-mcp/tunnel_prompt.py, tests/codex-app-server-mcp.test.mjs, tools/codex-app-server-mcp/requirements.txt, docs/planning/context-as-text.md
 - [TODO] W004: Web Pilot на Windows работает через исполнитель; переход с прежнего runtime — Ожидает
   - Git Commit: [PENDING] feat: Web Pilot на Windows работает через исполнитель; переход с прежнего runtime
   - Reference: context-as-text-0.6.96-20261006 / W004 / implementation
