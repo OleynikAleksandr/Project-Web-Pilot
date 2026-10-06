@@ -4,17 +4,17 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1357,
+  "plan_revision": 1358,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "recovery-on-demand-research-20261006",
   "execution_scope_status": "ACTIVE",
   "delivery_status": "IN_PROGRESS",
-  "objective": "Рефакторинг Workflow Kit: минимальная документация, восстановление по плану и Git, recovery из целых выбранных документов; сначала новый выпуск, затем согласованная миграция проекта.",
+  "objective": "Рефакторинг Workflow Kit: компактные документы до 28000 байт, recovery по плану и Git, доставка частями-вложениями; парный выпуск перед согласованной миграцией проекта вне плана.",
   "acceptance_criteria": [
-    "Правила, шаблоны и проверки реализуют согласованный жизненный цикл документации и Git-восстановления.",
-    "Recovery и Web Pilot одинаково работают на macOS/Windows по контракту, передают нужные целые документы без дублей и скрытого усечения.",
-    "Новый Kit выпущен до миграции документации; T008/T009 добавлены новым Kit и переход завершён только после проверки согласованности."
+    "Принятые правила С1–С15 и П1–П13 реализованы по двум частям спецификации; документы актуализируются перед выпуском, история доступна в Git.",
+    "Recovery и Web Pilot передают полный выбранный контекст без дублей/усечения одинаково на macOS и Windows; предел 28000 байт конфигурируемый, превышение изменённого документа блокирует commit.",
+    "Парный выпуск проверен и опубликован; переход старый Kit → новый Kit сохраняет план. После T007 остановка на READY_FOR_ACCEPTANCE; независимое ревью и миграция Claude вне плана до перезапуска, закрытие только по команде пользователя."
   ],
   "approved_scope": {
     "functional_paths": [
@@ -25,12 +25,30 @@
       "packages/workflow-kit/src/lib/transaction.mjs",
       "packages/workflow-kit/src/lib/simple-workflow.mjs",
       "packages/workflow-kit/src/lib/extend-plan.mjs",
+      "packages/workflow-kit/src/lib/session-plans.mjs",
+      "packages/workflow-kit/src/lib/installer.mjs",
+      "packages/workflow-kit/src/lib/task-update.mjs",
+      "packages/workflow-kit/src/lib/task-files.mjs",
+      "packages/workflow-kit/src/lib/command-help.mjs",
+      "packages/workflow-kit/src/cli.mjs",
+      "packages/workflow-kit/src/schemas/plan.schema.json",
       "packages/workflow-kit/scripts/check-runtime-fixture.mjs",
+      "packages/workflow-kit/scripts/check-carryover-fixture.mjs",
+      "tests/project-doctor.test.mjs",
+      "tests/release-all.test.mjs",
+      "tests/session-opening-performance.test.mjs",
+      "tests/session-plans.test.mjs",
+      "tests/workflow-kit-recovery.test.mjs",
+      "tests/workflow-kit-source.test.mjs",
+      "tests/workspace-setup.test.mjs",
+      "packages/workflow-kit/src/lib/installation-files.mjs",
+      "packages/workflow-kit/src/lib/inspection-inputs.mjs",
+      "packages/workflow-kit/src/schemas/workflow.schema.json",
+      "resources/workspace-setup-worker.mjs",
       "packages/workflow-kit/src/lib/recovery.mjs",
       "packages/workflow-kit/src/lib/project-facts.mjs",
       "packages/workflow-kit/src/lib/git.mjs",
-      "packages/workflow-kit/src/lib/command-help.mjs",
-      "tests/workflow-kit-recovery.test.mjs",
+      "packages/workflow-kit/src/lib/common.mjs",
       "src/context-session.mjs",
       "src/context-cache.mjs",
       "src/session-plans.mjs",
@@ -40,16 +58,20 @@
       "src/workspace-setup.mjs",
       "tests/context-session.test.mjs",
       "tests/context-cache.test.mjs",
-      "tests/session-plans.test.mjs",
       "tests/auto-plan.test.mjs",
-      "tests/workflow-kit-source.test.mjs",
       "packages/workflow-kit/package.json",
-      "packages/workflow-kit/src/lib/common.mjs",
       "package.json",
       "package-lock.json",
       ".harness/workflow.json",
+      "src/context-inputs.mjs",
+      "src/main.mjs",
+      "src/chatgpt-composer.mjs",
+      "src/chatgpt-dom.mjs",
+      "src/chatgpt-experience.mjs",
+      "tests/chatgpt-composer.test.mjs",
+      "tests/chatgpt-dom.test.mjs",
+      "tests/chatgpt-experience.test.mjs",
       "scripts/check-installed-release.mjs",
-      "packages/workflow-kit/src/install.mjs",
       "scripts/check-github-release.mjs"
     ],
     "documentation_paths": [
@@ -57,6 +79,7 @@
       "docs/planning/recovery-on-demand-research.md",
       "docs/DOCUMENTATION_INDEX.md",
       "docs/MODULES.md",
+      "docs/planning/workflow-kit-context-transition.md",
       "packages/workflow-kit/src/WORKFLOW.md",
       "packages/workflow-kit/src/templates/AGENTS.md",
       "packages/workflow-kit/src/templates/PROTOTYPE.md",
@@ -64,13 +87,21 @@
       "packages/workflow-kit/src/templates/PLAN.md",
       "packages/workflow-kit/src/templates/CONTINUE.md",
       "packages/workflow-kit/src/templates/STAGES.md",
+      "packages/workflow-kit/src/templates/PRODUCT.md",
+      "packages/workflow-kit/src/templates/ARCHITECTURE.md",
+      "packages/workflow-kit/src/templates/START.md",
+      "docs/modules/workflow-kit-recovery.md",
+      "docs/CONTEXT_DELIVERY.md",
+      "docs/WORKSPACE_SETUP.md",
+      "docs/modules/chatgpt-dom-compatibility.md",
       "docs/PRODUCT.md",
       "docs/architecture/ARCHITECTURE.md",
       "docs/architecture/OVERVIEW.md",
       "packages/workflow-kit/docs/modules/workflow-kit-package.md",
       "README.md",
       "AGENTS.md",
-      ".harness/kit/WORKFLOW.md"
+      "docs/planning/context-as-text.md",
+      "packages/workflow-kit/README.md"
     ]
   },
   "baseline_commit": "7bd5f4714fc3be0572dfa8a593804af3fab45d1f",
@@ -144,11 +175,41 @@
       ]
     },
     {
-      "id": "T002",
-      "title": "Реализовать правила документации и этапов работы в Workflow Kit",
-      "why": "Реализовать правила документации и этапов работы в Workflow Kit",
+      "id": "T001R",
+      "title": "Согласовать спецификацию и план по принятому ревью",
+      "why": "Устранить противоречия до реализации и сохранить завершённую T001 неизменной.",
       "dependencies": [
         "T001"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/planning/workflow-kit-context-refactor.md",
+        "docs/planning/workflow-kit-context-transition.md",
+        "docs/planning/recovery-on-demand-research.md",
+        "docs/DOCUMENTATION_INDEX.md"
+      ],
+      "verification_ids": [],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "В спецификации отражены С1–С15, П1–П13 и окончательные уточнения пользователя от 06.10.2026; единственный предел 28000 байт UTF-8.",
+        "План разделён на T002/T002A, проверки и переход T005 → T006 → T007 согласованы; будущих задач миграции нет; T001 неизменна.",
+        "Противоречивый исследовательский документ удалён, навигация актуальна; исходники, установленный Kit, сборка и публикация не изменялись."
+      ],
+      "expected_commit_message": "docs: согласовать ревью документации и recovery",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "recovery-on-demand-research-20261006",
+        "task_id": "T001R",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T002",
+      "title": "Реализовать жизненный цикл планов и документационных коммитов",
+      "why": "Позволить обсуждения без фиктивного плана и доработки после выпуска без потери подтверждённых коммитов.",
+      "dependencies": [
+        "T001R"
       ],
       "functional_paths": [
         "packages/workflow-kit/src/lib/actions.mjs",
@@ -158,10 +219,26 @@
         "packages/workflow-kit/src/lib/transaction.mjs",
         "packages/workflow-kit/src/lib/simple-workflow.mjs",
         "packages/workflow-kit/src/lib/extend-plan.mjs",
-        "packages/workflow-kit/scripts/check-runtime-fixture.mjs"
+        "packages/workflow-kit/src/lib/session-plans.mjs",
+        "packages/workflow-kit/src/lib/installer.mjs",
+        "packages/workflow-kit/src/lib/task-update.mjs",
+        "packages/workflow-kit/src/lib/task-files.mjs",
+        "packages/workflow-kit/src/lib/command-help.mjs",
+        "packages/workflow-kit/src/cli.mjs",
+        "packages/workflow-kit/src/schemas/plan.schema.json",
+        "packages/workflow-kit/scripts/check-runtime-fixture.mjs",
+        "packages/workflow-kit/scripts/check-carryover-fixture.mjs",
+        "tests/project-doctor.test.mjs",
+        "tests/release-all.test.mjs",
+        "tests/session-opening-performance.test.mjs",
+        "tests/session-plans.test.mjs",
+        "tests/workflow-kit-recovery.test.mjs",
+        "tests/workflow-kit-source.test.mjs",
+        "tests/workspace-setup.test.mjs"
       ],
       "documentation_paths": [
         "docs/planning/workflow-kit-context-refactor.md",
+        "docs/planning/workflow-kit-context-transition.md",
         "packages/workflow-kit/src/WORKFLOW.md",
         "packages/workflow-kit/src/templates/AGENTS.md",
         "packages/workflow-kit/src/templates/PROTOTYPE.md",
@@ -171,15 +248,17 @@
         "packages/workflow-kit/src/templates/STAGES.md"
       ],
       "verification_ids": [
-        "kit-check"
+        "kit-check",
+        "unit-all"
       ],
       "verification_kind": "code",
       "acceptance_criteria": [
-        "Обсуждение/исследование и отдельная спецификация не требуют фиктивного плана; управляемая запись документов без такого плана сохраняет проверки и авторство.",
-        "Полная DOCS нужна перед явным релизом; между релизами не навязывается обновление всех документов. Временные спецификации удаляются без копии архива с Git-ссылкой.",
-        "Проверены пределы документов и штатное добавление обычной фазы после завершённого delivery; DONE, транзакции и hooks сохранены. Перед реализацией сверены существующие и готовые решения."
+        "С4/С5/С15: docs:commit в NONE и idle ACTIVE, запрет при IN_PROGRESS; роль documentation, разрешённые пути, trailers, схема/состав/размер без suite приложения; DOCS только перед delivery.",
+        "Раунды после выполненного delivery добавляют работу без перестановки DONE; before только перед не начатой задачей; прошлые delivery привязаны к прежней итерации DOCS. Проверены раунды с новым выпуском и без, nextTask/delivery_status/pre-push.",
+        "Archive/carryover/legacy migration больше не создают архивных копий. install --update удаляет прежние архивы ролью kit-update только если все файлы tracked и совпадают с blob HEAD; при изменённом/untracked файле ошибка до удаления.",
+        "Переиспользованы существующие references, транзакции и команды. Проверены сохранение правок при ошибке, служебный kit-update внутри активной T006 и последующий commit новым Kit; проверки пакета и корневые тесты проходят."
       ],
-      "expected_commit_message": "feat: упростить документы и этапы Workflow Kit",
+      "expected_commit_message": "feat: поддержать раунды и самостоятельные документы в Kit",
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
@@ -189,11 +268,72 @@
       }
     },
     {
-      "id": "T003",
-      "title": "Реализовать recovery из целых документов и связей с Git",
-      "why": "Реализовать recovery из целых документов и связей с Git",
+      "id": "T002A",
+      "title": "Реализовать модель документов и общий предел размера",
+      "why": "Сделать документы компактными, убрать дубли правил и согласовать установку с новым составом.",
       "dependencies": [
         "T002"
+      ],
+      "functional_paths": [
+        "packages/workflow-kit/src/lib/installation-files.mjs",
+        "packages/workflow-kit/src/lib/installer.mjs",
+        "packages/workflow-kit/src/lib/inspection-inputs.mjs",
+        "packages/workflow-kit/src/lib/plan.mjs",
+        "packages/workflow-kit/src/lib/validate.mjs",
+        "packages/workflow-kit/src/lib/git-hooks.mjs",
+        "packages/workflow-kit/src/lib/transaction.mjs",
+        "packages/workflow-kit/src/lib/command-help.mjs",
+        "packages/workflow-kit/src/schemas/workflow.schema.json",
+        "resources/workspace-setup-worker.mjs",
+        "packages/workflow-kit/scripts/check-runtime-fixture.mjs",
+        "tests/project-doctor.test.mjs",
+        "tests/release-all.test.mjs",
+        "tests/session-opening-performance.test.mjs",
+        "tests/session-plans.test.mjs",
+        "tests/workflow-kit-recovery.test.mjs",
+        "tests/workflow-kit-source.test.mjs",
+        "tests/workspace-setup.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/planning/workflow-kit-context-refactor.md",
+        "docs/planning/workflow-kit-context-transition.md",
+        "packages/workflow-kit/src/WORKFLOW.md",
+        "packages/workflow-kit/src/templates/AGENTS.md",
+        "packages/workflow-kit/src/templates/PROTOTYPE.md",
+        "packages/workflow-kit/src/templates/SPEC.md",
+        "packages/workflow-kit/src/templates/PLAN.md",
+        "packages/workflow-kit/src/templates/CONTINUE.md",
+        "packages/workflow-kit/src/templates/STAGES.md",
+        "packages/workflow-kit/src/templates/PRODUCT.md",
+        "packages/workflow-kit/src/templates/ARCHITECTURE.md",
+        "packages/workflow-kit/src/templates/START.md"
+      ],
+      "verification_ids": [
+        "kit-check",
+        "unit-all"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "С1/С3: новые проекты получают минимальный состав; обновление не восстанавливает упразднённые документы; readiness и inspection учитывают старые проекты до миграции. Источники правил разделены по таблице спецификации, Kit-секция AGENTS в ядре не повторяется.",
+        "С2: budget.document_bytes по умолчанию 28000 в workflow.json; один предел для документов и частей. validateStaged проверяет index до ролей и тестов для всех изменённых .md, включая файлы Kit; единственное исключение — .harness/plans/todo-plan.md.",
+        "Проверены размер ровно 28000/превышение/UTF-8, index отличается от worktree, коммиты задач и служебные операции, нетронутый legacy документ. Ошибка содержит путь/байты/предел/команду повтора, правки сохранены.",
+        "Нет прежних символьных нормативов и новых обязательных документов с историей; изменения ядра и состава проверены kit-check и unit-all."
+      ],
+      "expected_commit_message": "feat: ограничить документы Kit и обновить их модель",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "recovery-on-demand-research-20261006",
+        "task_id": "T002A",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T003",
+      "title": "Реализовать recovery из целых документов и связей с Git",
+      "why": "Передавать достаточный контекст без накопленной истории, дублей и скрытого усечения.",
+      "dependencies": [
+        "T002A"
       ],
       "functional_paths": [
         "packages/workflow-kit/src/lib/recovery.mjs",
@@ -203,19 +343,30 @@
         "packages/workflow-kit/src/lib/actions.mjs",
         "packages/workflow-kit/src/lib/command-help.mjs",
         "packages/workflow-kit/scripts/check-runtime-fixture.mjs",
-        "tests/workflow-kit-recovery.test.mjs"
+        "tests/workflow-kit-recovery.test.mjs",
+        "packages/workflow-kit/src/lib/inspection-inputs.mjs",
+        "packages/workflow-kit/src/lib/transaction.mjs",
+        "packages/workflow-kit/src/lib/validate.mjs",
+        "packages/workflow-kit/src/lib/common.mjs",
+        "packages/workflow-kit/src/schemas/plan.schema.json"
       ],
       "documentation_paths": [
-        "docs/planning/workflow-kit-context-refactor.md"
+        "docs/planning/workflow-kit-context-refactor.md",
+        "docs/planning/workflow-kit-context-transition.md",
+        "docs/modules/workflow-kit-recovery.md",
+        "docs/CONTEXT_DELIVERY.md"
       ],
       "verification_ids": [
-        "kit-check"
+        "kit-check",
+        "unit-all"
       ],
       "verification_kind": "code",
       "acceptance_criteria": [
-        "ACTIVE включает ядро, план, спецификацию и выбранные источники один раз; NONE — ядро и точные ссылки на предыдущий план/Git, без всей истории в пакете.",
-        "Удалённая спецификация доступна по сохранённому SHA/пути; новый репозиторий, dirty/transaction, missing source, oversized и stale состояния проверены.",
-        "Размеры выражены корректными единицами; нет скрытого усечения, повторов и лишних обязательных шаблонов. До миграции документы старого формата не теряются."
+        "С6–С12: ACTIVE содержит ядро, проекцию всех задач (id/title/why/status/dependencies/criteria/SHA/files), рабочую спецификацию и выбранные целые документы; NONE — общие документы, archived_scope_id, SHA закрытия, задачи прошлого плана и ссылки на спецификацию.",
+        "Не передаются сырой JSON плана и diff; staged/unstaged/untracked/посторонние изменения перечислены, docs/planning представлен путями/заголовками/байтами. Перед реализацией агент читает нужные коммиты, диффы и код.",
+        "revision WORKTREE/SHA, дедупликация (path,revision), required побеждает; heading_path и dependency_task_ids старых планов совместимы без выборки разделов/включения диффов. Удаление required-документа и ссылка на существующий blob before_head атомарны; иначе ошибка.",
+        "Единый splitter: заголовки → абзацы → строки → символ UTF-8; каждый документ/проекция задач передаётся полностью, части со служебными заголовками <= budget.document_bytes (28000 default); legacy oversized помечен «разделить при следующей правке».",
+        "Сохранены hard_bytes 180000, свежесть, транзакции и приватные пути; удалены псевдотокены bytes/2 и soft_exceeded. Проверены missing WORKTREE/SHA, новый проект, dirty/stale, oversized раздел/задача и повторная правка уже dirty источника."
       ],
       "expected_commit_message": "feat: восстанавливать контекст по плану и Git",
       "implementation_status": "TODO",
@@ -229,7 +380,7 @@
     {
       "id": "T004",
       "title": "Согласовать Web Pilot с новым Kit и подготовить проверки выпуска",
-      "why": "Согласовать Web Pilot с новым Kit и подготовить проверки выпуска",
+      "why": "Доставить агенту полный пакет отдельными вложениями и подготовить совместимый выпуск обеих платформ.",
       "dependencies": [
         "T003"
       ],
@@ -250,20 +401,43 @@
         "packages/workflow-kit/src/lib/common.mjs",
         "package.json",
         "package-lock.json",
-        ".harness/workflow.json"
+        ".harness/workflow.json",
+        "packages/workflow-kit/src/lib/installer.mjs",
+        "packages/workflow-kit/src/lib/inspection-inputs.mjs",
+        "resources/workspace-setup-worker.mjs",
+        "src/context-inputs.mjs",
+        "src/main.mjs",
+        "src/chatgpt-composer.mjs",
+        "src/chatgpt-dom.mjs",
+        "src/chatgpt-experience.mjs",
+        "tests/chatgpt-composer.test.mjs",
+        "tests/chatgpt-dom.test.mjs",
+        "tests/chatgpt-experience.test.mjs",
+        "tests/workspace-setup.test.mjs",
+        "tests/session-opening-performance.test.mjs",
+        "scripts/check-installed-release.mjs",
+        "scripts/check-github-release.mjs"
       ],
       "documentation_paths": [
-        "docs/planning/workflow-kit-context-refactor.md"
+        "docs/planning/workflow-kit-context-refactor.md",
+        "docs/planning/workflow-kit-context-transition.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/modules/chatgpt-dom-compatibility.md"
       ],
       "verification_ids": [
         "kit-check",
-        "unit-all"
+        "unit-all",
+        "electron-smoke"
       ],
       "verification_kind": "code",
       "acceptance_criteria": [
-        "Общий сценарий macOS/Windows: текстовый старт, допустимое вложение, чтение файла, свежесть кеша и отсутствие дублей; AutoPlan и Sidebar не регрессировали.",
-        "Версии и проверки paired-release/release-installed/github-release актуализированы для нового выпуска, без старого evidence 0.6.96/1.5.6.",
-        "Новый Kit проверен на fixture продолжения текущего старого плана; сборка и установка на этом шаге не выполнялись."
+        "Первый шаг T004 — проверка осуществимости синтетической вставки File через DataTransfer в ChatGPT Web. Живую проверку выполняет пользователь; при отказе остановиться и доложить, без fallback к большой текстовой вставке и без остальной реализации T004.",
+        "После успешной проверки первое сообщение содержит все части-вложения <=28000 байт и короткий транспортный текст; загрузка завершена до Send, отправка ровно одна, частичный сбой не теряет части и не дублирует сообщение. Чтение вложений разрешено, MCP проекта в первом ответе не вызывается.",
+        "Одинаковый сценарий macOS/Windows; AutoPlan и nextTask согласованы с раундами; публичные экспорты Sidebar/pageOperation/pageScript совместимы и проверены при изменении трёх browser-модулей.",
+        "Реальный ключ inspectionInputs учитывает новые источники NONE/planning, повторная правка уже dirty документа меняет ключ; тестовый contextInputKey удалён либо синхронизирован.",
+        "upgradeFrom включает 1.5.6; fixture start T006 старым Kit → kit-update → commit T006 новым Kit → доступная T007 проходит. До релиза сохранён доступ к старому составу документов.",
+        "Подготовлены новые версии исходников и checks/evidence/stack; workflow.json обновляется через config:apply, включая budget.document_bytes=28000. Kit-check, unit-all и electron-smoke пройдены; сборки/установки реального приложения на T004 нет."
       ],
       "expected_commit_message": "feat: подключить новый recovery к Web Pilot",
       "implementation_status": "TODO",
@@ -277,10 +451,12 @@
     {
       "id": "DOCS",
       "title": "Актуализация всех документов проекта",
-      "why": "Подготовить документы нового Kit к выпуску; массовая миграция проекта выполняется после выпуска по прямому указанию пользователя.",
+      "why": "Зафиксировать корректное описание нового выпуска до сборки, сохраняя совместимость проекта в переходный период.",
       "dependencies": [
         "T001",
+        "T001R",
         "T002",
+        "T002A",
         "T003",
         "T004"
       ],
@@ -303,12 +479,22 @@
         "packages/workflow-kit/src/templates/CONTINUE.md",
         "packages/workflow-kit/src/templates/STAGES.md",
         "AGENTS.md",
-        ".harness/kit/WORKFLOW.md"
+        "docs/planning/workflow-kit-context-transition.md",
+        "docs/modules/workflow-kit-recovery.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/planning/context-as-text.md",
+        "docs/WORKSPACE_SETUP.md",
+        "packages/workflow-kit/README.md",
+        "docs/modules/chatgpt-dom-compatibility.md",
+        "packages/workflow-kit/src/templates/PRODUCT.md",
+        "packages/workflow-kit/src/templates/ARCHITECTURE.md",
+        "packages/workflow-kit/src/templates/START.md"
       ],
       "verification_ids": [],
       "acceptance_criteria": [
-        "Проверены и актуализированы документы изменённого Kit и сведения о предстоящем выпуске; нет ложной приёмки Windows.",
-        "Действующая общая документация проверена на противоречия выпуску; массовая перестройка файлов и удаление истории отложены до T008 согласно поручению пользователя."
+        "Актуализированы документы изменённого поведения и выпуска, включая recovery, доставку, workspace setup и README пакета; проверен весь действующий комплект, нет ложной приёмки native Windows.",
+        "До T006 действует установленный Kit 1.5.6: массовой миграции старых документов нет; текущие две части спецификации сохраняются до закрытия scope. Installed Kit и его секция AGENTS не редактируются вручную.",
+        "Источники новых инструкций соответствуют спецификации; docs перед сборкой зафиксированы. История и состав проекта переводятся Claude вне плана после T007/доработок, до пользовательского перезапуска."
       ],
       "expected_commit_message": "docs: подготовить выпуск нового Workflow Kit",
       "implementation_status": "TODO",
@@ -322,27 +508,22 @@
     {
       "id": "T005",
       "title": "Собрать парный выпуск Web Pilot с новым Workflow Kit",
-      "why": "Собрать парный выпуск Web Pilot с новым Workflow Kit",
+      "why": "Получить проверенные пакеты обеих платформ из одного подготовленного состояния исходников.",
       "dependencies": [
         "T004",
         "DOCS"
       ],
-      "functional_paths": [
-        "package.json",
-        "package-lock.json",
-        "packages/workflow-kit/package.json",
-        "packages/workflow-kit/src/lib/common.mjs"
-      ],
+      "functional_paths": [],
       "documentation_paths": [
-        "docs/planning/workflow-kit-context-refactor.md"
+        "docs/planning/workflow-kit-context-transition.md"
       ],
       "verification_ids": [
         "paired-release"
       ],
       "verification_kind": "package",
       "acceptance_criteria": [
-        "После DOCS собраны macOS arm64 и Windows x64 с одним новым Kit; состав/версии/хеши пакетов проверены.",
-        "Сборка выполняется один раз назначенной проверкой; нативная Windows и живая сессия не объявлены проверенными."
+        "На установленном Kit 1.5.6 после DOCS назначенная paired-release проверка один раз собирает macOS arm64 и Windows x64 с одинаковым новым Kit; версии, хеши и состав подтверждены.",
+        "Версии уже подготовлены T004; нет повторной сборки, изменения исходников и объявления native Windows/живого ChatGPT проверенными."
       ],
       "expected_commit_message": "release: собрать Web Pilot с новым Workflow Kit",
       "implementation_status": "TODO",
@@ -356,28 +537,23 @@
     {
       "id": "T006",
       "title": "Установить выпуск и активировать новый Kit для проекта",
-      "why": "Установить выпуск и активировать новый Kit для проекта",
+      "why": "Перевести текущий проект на новый runtime без потери выполняемой задачи и подтверждённых коммитов.",
       "dependencies": [
         "T005",
         "DOCS"
       ],
-      "functional_paths": [
-        "scripts/check-installed-release.mjs",
-        "packages/workflow-kit/src/install.mjs",
-        ".harness/workflow.json"
-      ],
+      "functional_paths": [],
       "documentation_paths": [
-        "docs/planning/workflow-kit-context-refactor.md",
-        "AGENTS.md",
-        ".harness/kit/WORKFLOW.md"
+        "docs/planning/workflow-kit-context-transition.md"
       ],
       "verification_ids": [
         "release-installed"
       ],
       "verification_kind": "installed",
       "acceptance_criteria": [
-        "Проверены установленные macOS-копии, identity и подпись; установленный runtime Kit обновлён штатно из проверенного пакета.",
-        "Текущий план, DONE и Git-ссылки сохранены; до миграции новый runtime умеет читать текущий состав документов. Нативная Windows остаётся пользовательской проверкой."
+        "task:start T006 выполняется старым Kit; устанавливается уже собранное приложение; install --update создаёт отдельный служебный kit-update, включая безопасное удаление старых архивов; commit --task T006 выполняется новым Kit.",
+        "Подтверждены установленные macOS-копии, identity/подпись и соответствие пакетам без пересборки. План читается, T001 и остальные DONE/references сохранены, commit T006 подтверждён, T007 доступна.",
+        "До общей миграции новый runtime читает старые документы; при недоступности открытого чата остановиться и сообщить пользователю, переход на внешнего клиента — только по его решению. Native Windows проверяет пользователь."
       ],
       "expected_commit_message": "release: установить новый Workflow Kit и Web Pilot",
       "implementation_status": "TODO",
@@ -390,28 +566,26 @@
     },
     {
       "id": "T007",
-      "title": "Опубликовать выпуск и подготовить последующую миграцию документов",
-      "why": "Опубликовать выпуск и подготовить последующую миграцию документов",
+      "title": "Опубликовать и проверить новый парный выпуск",
+      "why": "Предоставить пользователю проверенные артефакты и завершить реализацию перед независимым ревью.",
       "dependencies": [
         "T006",
         "DOCS"
       ],
-      "functional_paths": [
-        "scripts/check-github-release.mjs"
-      ],
+      "functional_paths": [],
       "documentation_paths": [
-        "docs/planning/workflow-kit-context-refactor.md"
+        "docs/planning/workflow-kit-context-transition.md"
       ],
       "verification_ids": [
         "github-release"
       ],
       "verification_kind": "package",
       "acceptance_criteria": [
-        "GitHub source/tag/артефакты нового парного выпуска сверены без пересборки.",
-        "После подтверждения выпуска новым Kit управляемо добавить T008 (миграция документов) и T009 (проверка recovery) из спецификации; существующие задачи и DONE не переписаны.",
-        "До T008 старые документы массово не ревизовались; готовность перехода не объявляется до T009."
+        "На новом Kit опубликован и проверен GitHub Release: source/tag/assets совпадают с manifest, пересборки и переноса опубликованного тега нет.",
+        "После подтверждения коммита план READY_FOR_ACCEPTANCE; агент останавливается. Задачи миграции не добавляются; Claude проверяет результат и затем мигрирует документы вне плана до перезапуска пользователя.",
+        "Готовность проекта к перезапуску ещё не объявляется: она требует согласованной проверенной миграции и push документационных коммитов."
       ],
-      "expected_commit_message": "release: опубликовать новый Kit и открыть фазу миграции",
+      "expected_commit_message": "release: опубликовать парный выпуск с новым Workflow Kit",
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
@@ -432,6 +606,11 @@
       "id": "workflow-kit-refactor-20261006",
       "text": "06.10.2026 пользователь согласовал минимальные документы без накопления истории, обновление перед релизом, восстановление агентом по спецификации/плану/коммитам/диффам и детерминированный recovery целых документов. Сначала новые инструкции и выпуск Kit, затем миграция документации. Поручено составить спецификацию и to-do: прежнее исследовательское ограничение расширено для планирования этих этапов; текущий ответ не выполняет реализацию/сборку/публикацию.",
       "recorded_at": "2026-10-06T14:12:48Z"
+    },
+    {
+      "id": "accepted-review-20261006",
+      "text": "06.10.2026: приняты обе части ревью и окончательные уточнения. Предел budget.document_bytes=28000 байт UTF-8 для документа и части со служебными заголовками; validateStaged проверяет index всех изменённых .md до ролей/тестов, единственное исключение .harness/plans/todo-plan.md. Разделение источников правил; docs:commit; раунды; Git вместо архивных копий. Архивы удаляет install --update ролью kit-update только tracked и совпадающие с HEAD. Дедупликация (path,revision), required before_head проверяется. Общий splitter заголовки/абзацы/строки/UTF-8. T004 начинается с проверки File/DataTransfer, при отказе остановка. T005 старый Kit; T006 task:start старым, установка приложения, kit-update, commit новым; T007 новый Kit. T001 неизменна; миграция Claude вне плана после T007/доработок до перезапуска, спецификация текущего scope сохраняется до закрытия. Правки спецификации/плана разрешены сейчас; реализация в этом ответе не выполняется.",
+      "recorded_at": "2026-10-06T16:16:25.261363+00:00"
     }
   ]
 }
@@ -444,17 +623,17 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: recovery-on-demand-research-20261006
 Current Task: нет
-Revision: 1357
+Revision: 1358
 
 ## Цель
 
-Рефакторинг Workflow Kit: минимальная документация, восстановление по плану и Git, recovery из целых выбранных документов; сначала новый выпуск, затем согласованная миграция проекта.
+Рефакторинг Workflow Kit: компактные документы до 28000 байт, recovery по плану и Git, доставка частями-вложениями; парный выпуск перед согласованной миграцией проекта вне плана.
 
 ## Критерии приёмки
 
-- Правила, шаблоны и проверки реализуют согласованный жизненный цикл документации и Git-восстановления.
-- Recovery и Web Pilot одинаково работают на macOS/Windows по контракту, передают нужные целые документы без дублей и скрытого усечения.
-- Новый Kit выпущен до миграции документации; T008/T009 добавлены новым Kit и переход завершён только после проверки согласованности.
+- Принятые правила С1–С15 и П1–П13 реализованы по двум частям спецификации; документы актуализируются перед выпуском, история доступна в Git.
+- Recovery и Web Pilot передают полный выбранный контекст без дублей/усечения одинаково на macOS и Windows; предел 28000 байт конфигурируемый, превышение изменённого документа блокирует commit.
+- Парный выпуск проверен и опубликован; переход старый Kit → новый Kit сохраняет план. После T007 остановка на READY_FOR_ACCEPTANCE; независимое ревью и миграция Claude вне плана до перезапуска, закрытие только по команде пользователя.
 
 ## Микрозадачи
 
@@ -462,34 +641,42 @@ Revision: 1357
   - Git Commit: [DONE] docs: спланировать рефакторинг документации и recovery
   - Reference: recovery-on-demand-research-20261006 / T001 / implementation
   - Файлы: docs/planning/workflow-kit-context-refactor.md, docs/planning/recovery-on-demand-research.md, docs/DOCUMENTATION_INDEX.md, docs/MODULES.md
-- [TODO] T002: Реализовать правила документации и этапов работы в Workflow Kit — Ожидает
-  - Git Commit: [PENDING] feat: упростить документы и этапы Workflow Kit
+- [TODO] T001R: Согласовать спецификацию и план по принятому ревью — Ожидает
+  - Git Commit: [PENDING] docs: согласовать ревью документации и recovery
+  - Reference: recovery-on-demand-research-20261006 / T001R / implementation
+  - Файлы: docs/planning/workflow-kit-context-refactor.md, docs/planning/workflow-kit-context-transition.md, docs/planning/recovery-on-demand-research.md, docs/DOCUMENTATION_INDEX.md
+- [TODO] T002: Реализовать жизненный цикл планов и документационных коммитов — Ожидает
+  - Git Commit: [PENDING] feat: поддержать раунды и самостоятельные документы в Kit
   - Reference: recovery-on-demand-research-20261006 / T002 / implementation
-  - Файлы: packages/workflow-kit/src/lib/actions.mjs, packages/workflow-kit/src/lib/plan.mjs, packages/workflow-kit/src/lib/validate.mjs, packages/workflow-kit/src/lib/git-hooks.mjs, packages/workflow-kit/src/lib/transaction.mjs, packages/workflow-kit/src/lib/simple-workflow.mjs, packages/workflow-kit/src/lib/extend-plan.mjs, packages/workflow-kit/scripts/check-runtime-fixture.mjs, docs/planning/workflow-kit-context-refactor.md, packages/workflow-kit/src/WORKFLOW.md, packages/workflow-kit/src/templates/AGENTS.md, packages/workflow-kit/src/templates/PROTOTYPE.md, packages/workflow-kit/src/templates/SPEC.md, packages/workflow-kit/src/templates/PLAN.md, packages/workflow-kit/src/templates/CONTINUE.md, packages/workflow-kit/src/templates/STAGES.md
+  - Файлы: packages/workflow-kit/src/lib/actions.mjs, packages/workflow-kit/src/lib/plan.mjs, packages/workflow-kit/src/lib/validate.mjs, packages/workflow-kit/src/lib/git-hooks.mjs, packages/workflow-kit/src/lib/transaction.mjs, packages/workflow-kit/src/lib/simple-workflow.mjs, packages/workflow-kit/src/lib/extend-plan.mjs, packages/workflow-kit/src/lib/session-plans.mjs, packages/workflow-kit/src/lib/installer.mjs, packages/workflow-kit/src/lib/task-update.mjs, packages/workflow-kit/src/lib/task-files.mjs, packages/workflow-kit/src/lib/command-help.mjs, packages/workflow-kit/src/cli.mjs, packages/workflow-kit/src/schemas/plan.schema.json, packages/workflow-kit/scripts/check-runtime-fixture.mjs, packages/workflow-kit/scripts/check-carryover-fixture.mjs, tests/project-doctor.test.mjs, tests/release-all.test.mjs, tests/session-opening-performance.test.mjs, tests/session-plans.test.mjs, tests/workflow-kit-recovery.test.mjs, tests/workflow-kit-source.test.mjs, tests/workspace-setup.test.mjs, docs/planning/workflow-kit-context-refactor.md, docs/planning/workflow-kit-context-transition.md, packages/workflow-kit/src/WORKFLOW.md, packages/workflow-kit/src/templates/AGENTS.md, packages/workflow-kit/src/templates/PROTOTYPE.md, packages/workflow-kit/src/templates/SPEC.md, packages/workflow-kit/src/templates/PLAN.md, packages/workflow-kit/src/templates/CONTINUE.md, packages/workflow-kit/src/templates/STAGES.md
+- [TODO] T002A: Реализовать модель документов и общий предел размера — Ожидает
+  - Git Commit: [PENDING] feat: ограничить документы Kit и обновить их модель
+  - Reference: recovery-on-demand-research-20261006 / T002A / implementation
+  - Файлы: packages/workflow-kit/src/lib/installation-files.mjs, packages/workflow-kit/src/lib/installer.mjs, packages/workflow-kit/src/lib/inspection-inputs.mjs, packages/workflow-kit/src/lib/plan.mjs, packages/workflow-kit/src/lib/validate.mjs, packages/workflow-kit/src/lib/git-hooks.mjs, packages/workflow-kit/src/lib/transaction.mjs, packages/workflow-kit/src/lib/command-help.mjs, packages/workflow-kit/src/schemas/workflow.schema.json, resources/workspace-setup-worker.mjs, packages/workflow-kit/scripts/check-runtime-fixture.mjs, tests/project-doctor.test.mjs, tests/release-all.test.mjs, tests/session-opening-performance.test.mjs, tests/session-plans.test.mjs, tests/workflow-kit-recovery.test.mjs, tests/workflow-kit-source.test.mjs, tests/workspace-setup.test.mjs, docs/planning/workflow-kit-context-refactor.md, docs/planning/workflow-kit-context-transition.md, packages/workflow-kit/src/WORKFLOW.md, packages/workflow-kit/src/templates/AGENTS.md, packages/workflow-kit/src/templates/PROTOTYPE.md, packages/workflow-kit/src/templates/SPEC.md, packages/workflow-kit/src/templates/PLAN.md, packages/workflow-kit/src/templates/CONTINUE.md, packages/workflow-kit/src/templates/STAGES.md, packages/workflow-kit/src/templates/PRODUCT.md, packages/workflow-kit/src/templates/ARCHITECTURE.md, packages/workflow-kit/src/templates/START.md
 - [TODO] T003: Реализовать recovery из целых документов и связей с Git — Ожидает
   - Git Commit: [PENDING] feat: восстанавливать контекст по плану и Git
   - Reference: recovery-on-demand-research-20261006 / T003 / implementation
-  - Файлы: packages/workflow-kit/src/lib/recovery.mjs, packages/workflow-kit/src/lib/project-facts.mjs, packages/workflow-kit/src/lib/plan.mjs, packages/workflow-kit/src/lib/git.mjs, packages/workflow-kit/src/lib/actions.mjs, packages/workflow-kit/src/lib/command-help.mjs, packages/workflow-kit/scripts/check-runtime-fixture.mjs, tests/workflow-kit-recovery.test.mjs, docs/planning/workflow-kit-context-refactor.md
+  - Файлы: packages/workflow-kit/src/lib/recovery.mjs, packages/workflow-kit/src/lib/project-facts.mjs, packages/workflow-kit/src/lib/plan.mjs, packages/workflow-kit/src/lib/git.mjs, packages/workflow-kit/src/lib/actions.mjs, packages/workflow-kit/src/lib/command-help.mjs, packages/workflow-kit/scripts/check-runtime-fixture.mjs, tests/workflow-kit-recovery.test.mjs, packages/workflow-kit/src/lib/inspection-inputs.mjs, packages/workflow-kit/src/lib/transaction.mjs, packages/workflow-kit/src/lib/validate.mjs, packages/workflow-kit/src/lib/common.mjs, packages/workflow-kit/src/schemas/plan.schema.json, docs/planning/workflow-kit-context-refactor.md, docs/planning/workflow-kit-context-transition.md, docs/modules/workflow-kit-recovery.md, docs/CONTEXT_DELIVERY.md
 - [TODO] T004: Согласовать Web Pilot с новым Kit и подготовить проверки выпуска — Ожидает
   - Git Commit: [PENDING] feat: подключить новый recovery к Web Pilot
   - Reference: recovery-on-demand-research-20261006 / T004 / implementation
-  - Файлы: src/context-session.mjs, src/context-cache.mjs, src/session-plans.mjs, src/mcp-runtime.mjs, src/auto-plan.mjs, src/mac-runtime-switch.mjs, src/workspace-setup.mjs, tests/context-session.test.mjs, tests/context-cache.test.mjs, tests/session-plans.test.mjs, tests/auto-plan.test.mjs, tests/workflow-kit-source.test.mjs, packages/workflow-kit/package.json, packages/workflow-kit/src/lib/common.mjs, package.json, package-lock.json, .harness/workflow.json, docs/planning/workflow-kit-context-refactor.md
+  - Файлы: src/context-session.mjs, src/context-cache.mjs, src/session-plans.mjs, src/mcp-runtime.mjs, src/auto-plan.mjs, src/mac-runtime-switch.mjs, src/workspace-setup.mjs, tests/context-session.test.mjs, tests/context-cache.test.mjs, tests/session-plans.test.mjs, tests/auto-plan.test.mjs, tests/workflow-kit-source.test.mjs, packages/workflow-kit/package.json, packages/workflow-kit/src/lib/common.mjs, package.json, package-lock.json, .harness/workflow.json, packages/workflow-kit/src/lib/installer.mjs, packages/workflow-kit/src/lib/inspection-inputs.mjs, resources/workspace-setup-worker.mjs, src/context-inputs.mjs, src/main.mjs, src/chatgpt-composer.mjs, src/chatgpt-dom.mjs, src/chatgpt-experience.mjs, tests/chatgpt-composer.test.mjs, tests/chatgpt-dom.test.mjs, tests/chatgpt-experience.test.mjs, tests/workspace-setup.test.mjs, tests/session-opening-performance.test.mjs, scripts/check-installed-release.mjs, scripts/check-github-release.mjs, docs/planning/workflow-kit-context-refactor.md, docs/planning/workflow-kit-context-transition.md, docs/CONTEXT_DELIVERY.md, docs/WORKSPACE_SETUP.md, docs/modules/chatgpt-dom-compatibility.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: подготовить выпуск нового Workflow Kit
   - Reference: recovery-on-demand-research-20261006 / DOCS / implementation
-  - Файлы: docs/planning/workflow-kit-context-refactor.md, docs/planning/recovery-on-demand-research.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/DOCUMENTATION_INDEX.md, docs/MODULES.md, docs/architecture/OVERVIEW.md, packages/workflow-kit/docs/modules/workflow-kit-package.md, README.md, packages/workflow-kit/src/WORKFLOW.md, packages/workflow-kit/src/templates/AGENTS.md, packages/workflow-kit/src/templates/PROTOTYPE.md, packages/workflow-kit/src/templates/SPEC.md, packages/workflow-kit/src/templates/PLAN.md, packages/workflow-kit/src/templates/CONTINUE.md, packages/workflow-kit/src/templates/STAGES.md, AGENTS.md, .harness/kit/WORKFLOW.md
+  - Файлы: docs/planning/workflow-kit-context-refactor.md, docs/planning/recovery-on-demand-research.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/DOCUMENTATION_INDEX.md, docs/MODULES.md, docs/architecture/OVERVIEW.md, packages/workflow-kit/docs/modules/workflow-kit-package.md, README.md, packages/workflow-kit/src/WORKFLOW.md, packages/workflow-kit/src/templates/AGENTS.md, packages/workflow-kit/src/templates/PROTOTYPE.md, packages/workflow-kit/src/templates/SPEC.md, packages/workflow-kit/src/templates/PLAN.md, packages/workflow-kit/src/templates/CONTINUE.md, packages/workflow-kit/src/templates/STAGES.md, AGENTS.md, docs/planning/workflow-kit-context-transition.md, docs/modules/workflow-kit-recovery.md, docs/CONTEXT_DELIVERY.md, docs/planning/context-as-text.md, docs/WORKSPACE_SETUP.md, packages/workflow-kit/README.md, docs/modules/chatgpt-dom-compatibility.md, packages/workflow-kit/src/templates/PRODUCT.md, packages/workflow-kit/src/templates/ARCHITECTURE.md, packages/workflow-kit/src/templates/START.md
 - [TODO] T005: Собрать парный выпуск Web Pilot с новым Workflow Kit — Ожидает
   - Git Commit: [PENDING] release: собрать Web Pilot с новым Workflow Kit
   - Reference: recovery-on-demand-research-20261006 / T005 / implementation
-  - Файлы: package.json, package-lock.json, packages/workflow-kit/package.json, packages/workflow-kit/src/lib/common.mjs, docs/planning/workflow-kit-context-refactor.md
+  - Файлы: docs/planning/workflow-kit-context-transition.md
 - [TODO] T006: Установить выпуск и активировать новый Kit для проекта — Ожидает
   - Git Commit: [PENDING] release: установить новый Workflow Kit и Web Pilot
   - Reference: recovery-on-demand-research-20261006 / T006 / implementation
-  - Файлы: scripts/check-installed-release.mjs, packages/workflow-kit/src/install.mjs, .harness/workflow.json, docs/planning/workflow-kit-context-refactor.md, AGENTS.md, .harness/kit/WORKFLOW.md
-- [TODO] T007: Опубликовать выпуск и подготовить последующую миграцию документов — Ожидает
-  - Git Commit: [PENDING] release: опубликовать новый Kit и открыть фазу миграции
+  - Файлы: docs/planning/workflow-kit-context-transition.md
+- [TODO] T007: Опубликовать и проверить новый парный выпуск — Ожидает
+  - Git Commit: [PENDING] release: опубликовать парный выпуск с новым Workflow Kit
   - Reference: recovery-on-demand-research-20261006 / T007 / implementation
-  - Файлы: scripts/check-github-release.mjs, docs/planning/workflow-kit-context-refactor.md
+  - Файлы: docs/planning/workflow-kit-context-transition.md
 
 ## Context Pack For This Cycle
 
