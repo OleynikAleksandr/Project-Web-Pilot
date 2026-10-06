@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import io
 import json
 import os
 import shutil
@@ -42,6 +43,40 @@ CODEX_TOOLS_LOCK_FILE = Path(__file__).resolve().parent / "codex-tools.lock.json
 # Codex asks PowerShell for UTF-8 output with the same line (codex-rs/shell-command/src/powershell.rs).
 POWERSHELL_UTF8_PREFIX = "try { [Console]::OutputEncoding=[System.Text.Encoding]::UTF8 } catch {}\n"
 POWERSHELL_NAMES = {"pwsh", "powershell"}
+
+
+WINDOWS_NOTIFY_SCRIPT = Path(__file__).resolve().parent / "windows_notify.ps1"
+VIEW_IMAGE_MAX_DIMENSION = 1600
+HEIF_BRANDS = {b"heic": "heic", b"heix": "heic", b"hevc": "heic", b"hevx": "heic", b"heim": "heic", b"heis": "heic",
+               b"mif1": "heif", b"msf1": "heif", b"avif": "avif", b"avis": "avif"}
+
+
+def sniff_image_mime(header: bytes) -> str | None:
+    """Image type by the first bytes of the file: the same on both systems, without an external command."""
+    if header.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "image/png"
+    if header.startswith(b"\xff\xd8\xff"):
+        return "image/jpeg"
+    if header[:6] in (b"GIF87a", b"GIF89a"):
+        return "image/gif"
+    if header[:4] == b"RIFF" and header[8:12] == b"WEBP":
+        return "image/webp"
+    if header[:4] in (b"II*\x00", b"MM\x00*"):
+        return "image/tiff"
+    if header[4:8] == b"ftyp" and header[8:12] in HEIF_BRANDS:
+        return "image/" + HEIF_BRANDS[header[8:12]]
+    if header[:2] == b"BM" and header[6:10] == b"\x00\x00\x00\x00" and int.from_bytes(header[14:18], "little") in {12, 40, 52, 56, 64, 108, 124}:
+        return "image/bmp"
+    if header[:4] == b"\x00\x00\x01\x00":
+        return "image/vnd.microsoft.icon"
+    if header[:4] == b"8BPS":
+        return "image/vnd.adobe.photoshop"
+    if header[:4] == b"icns":
+        return "image/x-icns"
+    text = header.lstrip(b"\xef\xbb\xbf \t\r\n")
+    if text.startswith(b"<svg") or (text.startswith(b"<?xml") and b"<svg" in text):
+        return "image/svg+xml"
+    return None
 
 
 def server_name(platform: str = sys.platform) -> str:
@@ -95,6 +130,7 @@ class LocalFacade:
         self.state_root = state_root
         # The platform is a field so that the Windows branches can be exercised on any system.
         self.platform = sys.platform
+        self._windows_desktop: Any = None
         state_root.mkdir(parents=True, exist_ok=True, mode=0o700)
         try:
             # The recoverable-delete folder of 0.6.94 and earlier: rmdir removes it only when it is empty.
@@ -278,25 +314,22 @@ class LocalFacade:
         if size > MAX_VIEW_IMAGE_BYTES:
             raise ValueError(f"Image is larger than {MAX_VIEW_IMAGE_BYTES} bytes")
         try:
-            probe = subprocess.run(
-                ["/usr/bin/file", "--mime-type", "-b", str(target)],
-                capture_output=True,
-                text=True,
-                timeout=10,
-                check=False,
-            )
-        except (OSError, subprocess.TimeoutExpired) as exc:
+            with target.open("rb") as stream:
+                mime = sniff_image_mime(stream.read(512))
+        except OSError as exc:
             raise ValueError(f"Image type check failed: {exc}") from None
-        mime = (probe.stdout or "").strip().lower()
-        if probe.returncode != 0 or not mime.startswith("image/"):
+        if mime is None:
             raise ValueError("File is not an image")
+        if self.platform == "win32":
+            data, image_format = self._resize_image_windows(target, mime)
+            return [{"source": str(target), "bytes": len(data)}, Image(data=data, format=image_format)]
         suffix = target.suffix if 0 < len(target.suffix) <= 16 else ".image"
         copy = self.state_root / f"view-image-{uuid.uuid4().hex}{suffix}"
         try:
             shutil.copyfile(target, copy)
             try:
                 resized = subprocess.run(
-                    ["/usr/bin/sips", "-Z", "1600", str(copy)],
+                    ["/usr/bin/sips", "-Z", str(VIEW_IMAGE_MAX_DIMENSION), str(copy)],
                     capture_output=True,
                     text=True,
                     timeout=30,
@@ -314,6 +347,25 @@ class LocalFacade:
                 copy.unlink()
             except OSError:
                 pass
+
+    @staticmethod
+    def _resize_image_windows(target: Path, mime: str) -> tuple[bytes, str]:
+        """Windows has no sips: Pillow from the executor runtime keeps the format and shrinks only a larger image."""
+        try:
+            from PIL import Image as PillowImage
+        except ImportError:
+            raise ValueError("Image resize is unavailable: Pillow is missing from the executor runtime; prepare the components again") from None
+        try:
+            with PillowImage.open(target) as picture:
+                if max(picture.size) <= VIEW_IMAGE_MAX_DIMENSION:
+                    return target.read_bytes(), mime.split("/", 1)[1]
+                picture_format = picture.format if picture.format in {"PNG", "JPEG", "GIF", "WEBP", "BMP", "TIFF"} else "PNG"
+                picture.thumbnail((VIEW_IMAGE_MAX_DIMENSION, VIEW_IMAGE_MAX_DIMENSION))
+                buffer = io.BytesIO()
+                picture.save(buffer, format=picture_format)
+                return buffer.getvalue(), picture_format.lower()
+        except Exception:
+            raise ValueError("Image format is not supported") from None
 
     @staticmethod
     def _command_limit(name: str, value: int, minimum: int, maximum: int) -> int:
@@ -520,7 +572,14 @@ class LocalFacade:
         "title:w.kCGWindowName===undefined?null:w.kCGWindowName,bounds:w.kCGWindowBounds||null})))"
     )
 
-    def computer_list_windows(self, title_contains: str = "", max_results: int = 200) -> dict[str, Any]:
+    def _desktop(self) -> Any:
+        """Windows observation module; created on first use so that macOS never loads it."""
+        if self._windows_desktop is None:
+            from windows_desktop import WindowsDesktop
+            self._windows_desktop = WindowsDesktop()
+        return self._windows_desktop
+
+    def _mac_windows(self) -> list[dict[str, Any]]:
         result = self._command(["/usr/bin/osascript", "-l", "JavaScript", "-e", self._WINDOW_LIST_JXA])
         if not result["ok"]:
             raise ValueError(result["stderr"] or "Window list is unavailable")
@@ -530,27 +589,37 @@ class LocalFacade:
             raise ValueError("Window list returned invalid data") from None
         if not isinstance(windows, list):
             raise ValueError("Window list returned invalid data")
-        windows = [w for w in windows if isinstance(w, dict) and isinstance(w.get("window_id"), int)]
-        needle = title_contains.lower().strip()
-        limit = max(1, min(int(max_results), 500))
         rows = []
         for window in windows:
-            title = window.get("title")
-            application = str(window.get("application") or "")
-            if needle and needle not in f"{title or ''} {application}".lower():
+            if not isinstance(window, dict) or not isinstance(window.get("window_id"), int):
                 continue
             bounds = window.get("bounds") if isinstance(window.get("bounds"), dict) else {}
             rows.append({
                 "window_id": window["window_id"],
-                "title": title,
-                "application": application,
+                "title": window.get("title"),
+                "application": str(window.get("application") or ""),
                 "pid": window.get("pid"),
                 "rect": {"x": bounds.get("X"), "y": bounds.get("Y"), "width": bounds.get("Width"), "height": bounds.get("Height")},
             })
+        return rows
+
+    def computer_list_windows(self, title_contains: str = "", max_results: int = 200) -> dict[str, Any]:
+        windows_system = self.platform == "win32"
+        try:
+            windows = self._desktop().list_windows() if windows_system else self._mac_windows()
+        except OSError as exc:
+            raise ValueError(f"Window list is unavailable: {exc}") from None
+        needle = title_contains.lower().strip()
+        limit = max(1, min(int(max_results), 500))
+        rows = []
+        for window in windows:
+            if needle and needle not in f"{window['title'] or ''} {window['application']}".lower():
+                continue
+            rows.append(window)
             if len(rows) >= limit:
                 break
-        data: dict[str, Any] = {"windows": rows, "backend": "CoreGraphics window list"}
-        if windows and all(w.get("title") is None for w in windows):
+        data: dict[str, Any] = {"windows": rows, "backend": "Win32 window list" if windows_system else "CoreGraphics window list"}
+        if not windows_system and windows and all(w.get("title") is None for w in windows):
             # macOS hides window names from a process without Screen Recording permission.
             data["note"] = "Window titles are hidden: grant Screen Recording permission to Project Web Pilot."
         return data
@@ -571,8 +640,17 @@ class LocalFacade:
                 pass
 
     def computer_capture_screen(self, x: int | None = None, y: int | None = None, width: int | None = None, height: int | None = None, max_dimension: int = 1600, include_cursor: bool = True) -> Any:
+        region = None not in (x, y, width, height)
+        if self.platform == "win32":
+            try:
+                # As on macOS, a region is used only when all four values are given.
+                png = self._desktop().capture_screen(*((x, y, width, height) if region else (None, None, None, None)),
+                                                     int(max_dimension), bool(include_cursor))
+            except OSError as exc:
+                raise ValueError(f"Screen capture failed: {exc}") from None
+            return [{"source": "desktop", "bytes": len(png)}, Image(data=png, format="png")]
         options = ["-C"] if include_cursor else []
-        if None not in (x, y, width, height):
+        if region:
             options += ["-R", f"{int(x)},{int(y)},{int(width)},{int(height)}"]
         png = self._screenshot(options, max_dimension)
         return [{"source": "desktop", "bytes": len(png)}, Image(data=png, format="png")]
@@ -580,6 +658,12 @@ class LocalFacade:
     def computer_capture_window(self, window_id: int, max_dimension: int = 1600) -> Any:
         if isinstance(window_id, bool) or not isinstance(window_id, int) or window_id <= 0:
             raise ValueError("window_id must be a positive integer from computer_list_windows")
+        if self.platform == "win32":
+            try:
+                png = self._desktop().capture_window(window_id, int(max_dimension))
+            except OSError as exc:
+                raise ValueError(f"Screen capture failed: {exc}") from None
+            return [{"source": "window", "window_id": window_id, "bytes": len(png)}, Image(data=png, format="png")]
         # -l captures that window even when another one covers it; -o leaves out the shadow.
         png = self._screenshot(["-o", "-l", str(window_id)], max_dimension)
         return [{"source": "window", "window_id": window_id, "bytes": len(png)}, Image(data=png, format="png")]
@@ -591,7 +675,25 @@ class TurnWatchdog:
         self._lock = threading.Lock()
         self._items: dict[str, threading.Timer] = {}
 
+    @staticmethod
+    def _notify_windows(title: str, message: str, popen=subprocess.Popen) -> bool:
+        # The invocation of the pinned Windows package: a hidden PowerShell shows a balloon and exits by itself.
+        if not WINDOWS_NOTIFY_SCRIPT.is_file():
+            return False
+        try:
+            popen(
+                ["powershell.exe", "-NoProfile", "-Sta", "-ExecutionPolicy", "Bypass", "-WindowStyle", "Hidden",
+                 "-File", str(WINDOWS_NOTIFY_SCRIPT), "-Title", title[:80], "-Message", message[:240]],
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+                close_fds=True,
+            )
+            return True
+        except OSError:
+            return False
+
     def _notify(self, title: str, message: str) -> bool:
+        if self.facade.platform == "win32":
+            return self._notify_windows(title, message)
         script = 'on run argv\n display notification (item 2 of argv) with title (item 1 of argv)\nend run'
         try:
             result = self.facade._command(["/usr/bin/osascript", "-e", script, title[:80], message[:240]], write=True, timeout_ms=5000)
@@ -658,7 +760,7 @@ def create_server(*, host: str, port: int, state_root: Path, codex_binary: str |
     @mcp.tool(annotations=LOCAL_NOTIFICATION)
     def turn_watchdog(
         action: Annotated[Literal["start","checkpoint","complete"], Field(description="Watchdog action: start a timer, checkpoint and restart it, or complete the watched turn.")],
-        summary: Annotated[str, Field(description="Short status text used in the macOS notification if the watchdog fires.")],
+        summary: Annotated[str, Field(description="Short status text used in the desktop notification if the watchdog fires.")],
         turn_token: Annotated[str, Field(description="Token returned by start; required for checkpoint and complete.")] = "",
         timeout_seconds: Annotated[int, Field(description="Watchdog timeout in seconds; values are clamped to 60-600.")] = 150,
         notify_checkpoint: Annotated[bool, Field(description="When true, checkpoint also posts a 'work continues' notification.")] = False,

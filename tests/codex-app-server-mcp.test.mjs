@@ -1408,3 +1408,158 @@ print(json.dumps(out, ensure_ascii=False))
   assert.ok(out.failure && /missing\.txt/.test(out.failure), out.failure);
   assert.match(out.unavailable, /^Codex apply_patch command is unavailable: failed to spawn: /);
 });
+
+test('image type is read from the file itself; Windows windows, screenshots and notifications keep the executor result', { timeout: 30_000 }, async t => {
+  const result = await runVenvProbe(t, 'web-pilot-win-desktop-', `import base64, json, struct, sys, pathlib, zlib
+sys.path.insert(0, sys.argv[1])
+import server, windows_desktop
+root = pathlib.Path(sys.argv[2])
+out = {}
+bmp = b"BM" + (70).to_bytes(4, "little") + b"\\x00\\x00\\x00\\x00" + (54).to_bytes(4, "little") + (40).to_bytes(4, "little") + b"\\x00" * 40
+samples = {
+    "png": b"\\x89PNG\\r\\n\\x1a\\n" + b"\\x00" * 20, "jpeg": b"\\xff\\xd8\\xff\\xe0" + b"\\x00" * 20, "gif": b"GIF89a" + b"\\x00" * 20,
+    "webp": b"RIFF\\x10\\x00\\x00\\x00WEBPVP8 ", "tiff_le": b"II*\\x00" + b"\\x00" * 8, "tiff_be": b"MM\\x00*" + b"\\x00" * 8,
+    "heic": b"\\x00\\x00\\x00\\x18ftypheic" + b"\\x00" * 8, "heif": b"\\x00\\x00\\x00\\x18ftypmif1" + b"\\x00" * 8, "avif": b"\\x00\\x00\\x00\\x1cftypavif" + b"\\x00" * 8,
+    "bmp": bmp, "ico": b"\\x00\\x00\\x01\\x00\\x01\\x00" + b"\\x00" * 16, "svg": b"\\xef\\xbb\\xbf<?xml version='1.0'?>\\n<svg xmlns='http://www.w3.org/2000/svg'/>",
+    "text": b"not an image", "bm_text": b"BMW is a car maker, not a bitmap file at all", "mp4": b"\\x00\\x00\\x00\\x18ftypisom" + b"\\x00" * 8, "empty": b"",
+}
+out["mime"] = {name: server.sniff_image_mime(data) for name, data in samples.items()}
+# The PNG encoder and the size rule of the Windows module run on any system.
+png = windows_desktop.encode_bgra_png(bytes([10, 20, 30, 0, 40, 50, 60, 0]), 2, 1)
+width, height = struct.unpack(">II", png[16:24])
+idat = png[png.index(b"IDAT") + 4: png.index(b"IEND") - 8]
+out["png"] = {"signature": png[:8] == b"\\x89PNG\\r\\n\\x1a\\n", "size": [width, height], "rgba": list(zlib.decompress(idat))}
+out["sizes"] = [windows_desktop.output_size(3200, 1600, 1600), windows_desktop.output_size(100, 50, 0), windows_desktop.output_size(3000, 10, 50), windows_desktop.output_size(8000, 100, 99999)]
+try:
+    windows_desktop.WindowsDesktop(); out["desktop_off_windows"] = None
+except RuntimeError as error:
+    out["desktop_off_windows"] = str(error)
+calls = []
+class Desktop:
+    failing = None
+    def list_windows(self):
+        calls.append(["list"])
+        if self.failing: raise OSError(5, "EnumWindows failed")
+        return [{"window_id": 1310, "title": "Отчёт — Блокнот", "application": "notepad", "pid": 700, "rect": {"x": -8, "y": 0, "width": 800, "height": 600}},
+                {"window_id": 2620, "title": "Project Web Pilot", "application": "Project Web Pilot", "pid": 701, "rect": {"x": 10, "y": 20, "width": 1200, "height": 900}}]
+    def capture_screen(self, x, y, width, height, max_dimension, include_cursor):
+        calls.append(["screen", x, y, width, height, max_dimension, include_cursor]); return b"SCREENPNG"
+    def capture_window(self, window_id, max_dimension):
+        calls.append(["window", window_id, max_dimension])
+        if window_id == 404: raise ValueError("window_id is not a valid window")
+        if window_id == 500: raise OSError(6, "GetDIBits failed")
+        return b"WINDOWPNG"
+class Client:
+    cwd = str(root)
+    def command_exec(self, argv, **kwargs): raise AssertionError("no macOS command on Windows: " + argv[0])
+facade = server.LocalFacade(Client(), root / "state")
+facade.platform = "win32"
+facade._windows_desktop = Desktop()
+out["list"] = facade.computer_list_windows()
+out["by_title"] = [row["window_id"] for row in facade.computer_list_windows("блокнот")["windows"]]
+out["by_app"] = [row["window_id"] for row in facade.computer_list_windows("web pilot")["windows"]]
+out["limited"] = len(facade.computer_list_windows(max_results=1)["windows"])
+errors = {}
+Desktop.failing = True
+try: facade.computer_list_windows(); errors["list"] = None
+except ValueError as error: errors["list"] = str(error)
+Desktop.failing = None
+calls.clear()
+def blocks(value): return [value[0], type(value[1]).__name__, value[1]._mime_type, base64.b64decode(value[1].to_image_content().data).decode()]
+out["screen"] = blocks(facade.computer_capture_screen())
+out["region"] = blocks(facade.computer_capture_screen(5, 6, 300, 200, 800, False))
+facade.computer_capture_screen(5, None, 300, 200)
+out["window"] = blocks(facade.computer_capture_window(1310, 900))
+out["capture_calls"] = calls[:]
+calls.clear()
+for name, bad in {"zero": 0, "negative": -5, "bool": True, "text": "84"}.items():
+    try: facade.computer_capture_window(bad); errors[name] = None
+    except ValueError as error: errors[name] = str(error)
+out["calls_for_invalid_ids"] = len(calls)
+for name, value in {"gone": 404, "gdi": 500}.items():
+    try: facade.computer_capture_window(value); errors[name] = None
+    except ValueError as error: errors[name] = str(error)
+out["errors"] = errors
+started = []
+out["notify"] = server.TurnWatchdog._notify_windows("T" * 100, "M" * 300, popen=lambda argv, **kwargs: started.append([argv, kwargs]))
+def refused(argv, **kwargs): raise OSError("powershell is blocked")
+out["notify_refused"] = server.TurnWatchdog._notify_windows("t", "m", popen=refused)
+out["notify_call"] = started
+watchdog = server.TurnWatchdog(facade)
+seen = []
+watchdog._notify_windows = lambda title, message: seen.append([title, message]) or True
+token = watchdog.action("start", "работаю", "", 60, False)["turn_token"]
+out["complete"] = watchdog.action("complete", "готово", token, 60, False)
+out["watchdog_notifications"] = seen
+mcp = server.create_server(host="127.0.0.1", port=0, state_root=root / "schema-state")
+out["summary_description"] = mcp._tool_manager.get_tool("turn_watchdog").parameters["properties"]["summary"]["description"]
+picture = root / "wide.png"
+picture.write_bytes(windows_desktop.encode_bgra_png(bytes([0, 0, 255, 0]) * (2000 * 10), 2000, 10))
+small = root / "small.png"
+small.write_bytes(windows_desktop.encode_bgra_png(bytes([0, 255, 0, 0]) * 6, 3, 2))
+try:
+    import PIL
+    shown = facade.view_image(str(picture))
+    from PIL import Image as PillowImage
+    import io
+    kept = facade.view_image(str(small))
+    out["view"] = {"pillow": True, "meta": shown[0], "size": list(PillowImage.open(io.BytesIO(shown[1].data)).size), "mime": shown[1]._mime_type,
+                   "small_untouched": kept[1].data == small.read_bytes()}
+    broken = root / "broken.png"
+    broken.write_bytes(b"\\x89PNG\\r\\n\\x1a\\n" + b"garbage" * 10)
+    try: facade.view_image(str(broken)); out["view"]["broken"] = None
+    except ValueError as error: out["view"]["broken"] = str(error)
+except ImportError:
+    try: facade.view_image(str(picture)); out["view"] = {"pillow": False, "error": None}
+    except ValueError as error: out["view"] = {"pillow": False, "error": str(error)}
+text = root / "plain.txt"
+text.write_text("not an image")
+try: facade.view_image(str(text)); out["view_text"] = None
+except ValueError as error: out["view_text"] = str(error)
+print(json.dumps(out, ensure_ascii=False))
+`);
+  if (!result) return;
+  const { out, root } = result;
+  assert.deepEqual(out.mime, { png: 'image/png', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', tiff_le: 'image/tiff', tiff_be: 'image/tiff',
+    heic: 'image/heic', heif: 'image/heif', avif: 'image/avif', bmp: 'image/bmp', ico: 'image/vnd.microsoft.icon', svg: 'image/svg+xml',
+    text: null, bm_text: null, mp4: null, empty: null });
+  assert.deepEqual(out.png, { signature: true, size: [2, 1], rgba: [0, 30, 20, 10, 255, 60, 50, 40, 255] }, 'BGRA becomes opaque RGBA');
+  assert.deepEqual(out.sizes, [[1600, 800, 0.5], [100, 50, 1], [100, 1, 100 / 3000], [5000, 62, 0.625]], '0 keeps the size; the limit is clamped to 100-5000');
+  assert.match(out.desktop_off_windows, /only on Windows/);
+  assert.deepEqual(out.list, { windows: [
+    { window_id: 1310, title: 'Отчёт — Блокнот', application: 'notepad', pid: 700, rect: { x: -8, y: 0, width: 800, height: 600 } },
+    { window_id: 2620, title: 'Project Web Pilot', application: 'Project Web Pilot', pid: 701, rect: { x: 10, y: 20, width: 1200, height: 900 } },
+  ], backend: 'Win32 window list' }, 'the fields of the macOS result');
+  assert.deepEqual(out.by_title, [1310]); assert.deepEqual(out.by_app, [2620]); assert.equal(out.limited, 1);
+  assert.deepEqual(out.screen, [{ source: 'desktop', bytes: 9 }, 'Image', 'image/png', 'SCREENPNG']);
+  assert.deepEqual(out.region, [{ source: 'desktop', bytes: 9 }, 'Image', 'image/png', 'SCREENPNG']);
+  assert.deepEqual(out.window, [{ source: 'window', window_id: 1310, bytes: 9 }, 'Image', 'image/png', 'WINDOWPNG']);
+  assert.deepEqual(out.capture_calls, [['screen', null, null, null, null, 1600, true], ['screen', 5, 6, 300, 200, 800, false],
+    ['screen', null, null, null, null, 1600, true], ['window', 1310, 900]], 'a region needs all four values, as on macOS');
+  assert.equal(out.calls_for_invalid_ids, 0);
+  for (const name of ['zero', 'negative', 'bool', 'text']) assert.match(out.errors[name], /window_id must be a positive integer/);
+  assert.match(out.errors.list, /^Window list is unavailable: /);
+  assert.equal(out.errors.gone, 'window_id is not a valid window');
+  assert.match(out.errors.gdi, /^Screen capture failed: /);
+  assert.equal(out.notify, true); assert.equal(out.notify_refused, false);
+  const [argv, options] = out.notify_call[0];
+  assert.deepEqual(argv.slice(0, 8), ['powershell.exe', '-NoProfile', '-Sta', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden', '-File']);
+  assert.equal(argv[8], path.join(clientDir, 'windows_notify.ps1'));
+  assert.deepEqual(argv.slice(9), ['-Title', 'T'.repeat(80), '-Message', 'M'.repeat(240)]);
+  assert.equal(options.close_fds, true);
+  assert.deepEqual(out.watchdog_notifications, [['Codex executor: ответ готов', 'готово']]);
+  assert.equal(out.complete.notification_requested, true);
+  assert.equal(out.summary_description, 'Short status text used in the desktop notification if the watchdog fires.');
+  if (out.view.pillow) {
+    assert.deepEqual(out.view.size, [1600, 8]); assert.equal(out.view.mime, 'image/png');
+    assert.equal(out.view.meta.source, path.join(root, 'wide.png'));
+    assert.equal(out.view.small_untouched, true, 'an image within the limit is returned as it is');
+    assert.equal(out.view.broken, 'Image format is not supported');
+  } else assert.match(out.view.error, /^Image resize is unavailable: Pillow is missing/);
+  assert.equal(out.view_text, 'File is not an image');
+  const notify = await (await import('node:fs/promises')).readFile(path.join(clientDir, 'windows_notify.ps1'), 'utf8');
+  assert.match(notify, /BalloonTipTitle = \$Title/); assert.doesNotMatch(notify, /[^\x00-\x7f]/, 'ASCII only: Windows PowerShell 5.1 reads it without a BOM');
+  const desktop = await (await import('node:fs/promises')).readFile(path.join(clientDir, 'windows_desktop.py'), 'utf8');
+  for (const control of ['SendInput', 'SetCursorPos', 'SetForegroundWindow', 'ShowWindow', 'BringWindowToTop', 'keybd', 'mouse_event'])
+    assert.ok(!desktop.includes(control), `the Windows module never drives the interface: ${control}`);
+});
