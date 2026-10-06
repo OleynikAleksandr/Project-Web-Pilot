@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1358,
+  "plan_revision": 1361,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "recovery-on-demand-research-20261006",
@@ -135,6 +135,11 @@
       {
         "path": "docs/planning/workflow-kit-context-refactor.md",
         "required": true
+      },
+      {
+        "path": "docs/planning/workflow-kit-context-transition.md",
+        "required": true,
+        "revision": "WORKTREE"
       }
     ],
     "include_last_completed_task": false,
@@ -196,13 +201,19 @@
         "Противоречивый исследовательский документ удалён, навигация актуальна; исходники, установленный Kit, сборка и публикация не изменялись."
       ],
       "expected_commit_message": "docs: согласовать ревью документации и recovery",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "recovery-on-demand-research-20261006",
         "task_id": "T001R",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "docs/planning/workflow-kit-context-refactor.md",
+        "docs/planning/workflow-kit-context-transition.md",
+        "docs/planning/recovery-on-demand-research.md",
+        "docs/DOCUMENTATION_INDEX.md"
+      ]
     },
     {
       "id": "T002",
@@ -623,7 +634,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: recovery-on-demand-research-20261006
 Current Task: нет
-Revision: 1358
+Revision: 1361
 
 ## Цель
 
@@ -641,8 +652,8 @@ Revision: 1358
   - Git Commit: [DONE] docs: спланировать рефакторинг документации и recovery
   - Reference: recovery-on-demand-research-20261006 / T001 / implementation
   - Файлы: docs/planning/workflow-kit-context-refactor.md, docs/planning/recovery-on-demand-research.md, docs/DOCUMENTATION_INDEX.md, docs/MODULES.md
-- [TODO] T001R: Согласовать спецификацию и план по принятому ревью — Ожидает
-  - Git Commit: [PENDING] docs: согласовать ревью документации и recovery
+- [DONE] T001R: Согласовать спецификацию и план по принятому ревью — Завершено
+  - Git Commit: [DONE] docs: согласовать ревью документации и recovery
   - Reference: recovery-on-demand-research-20261006 / T001R / implementation
   - Файлы: docs/planning/workflow-kit-context-refactor.md, docs/planning/workflow-kit-context-transition.md, docs/planning/recovery-on-demand-research.md, docs/DOCUMENTATION_INDEX.md
 - [TODO] T002: Реализовать жизненный цикл планов и документационных коммитов — Ожидает
@@ -684,5 +695,6 @@ Revision: 1358
 - docs/MODULES.md → Модули проекта
 - docs/DOCUMENTATION_INDEX.md → Каталог документации
 - docs/planning/workflow-kit-context-refactor.md
+- docs/planning/workflow-kit-context-transition.md
 
 Служебные состояния меняются только командами workflow. Приёмка не архивирует scope.

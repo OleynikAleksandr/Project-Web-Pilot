@@ -23,9 +23,9 @@
 | docs/DOCUMENTATION_INDEX.md | Полный пополняемый индекс действующей документации |
 <!-- workflow-kit:end -->
 
-## Исследование recovery
+## Рефакторинг документации и recovery
 
-[Рефакторинг документации и recovery Workflow Kit](planning/workflow-kit-context-refactor.md) — действующая спецификация: минимальные документы, восстановление по плану и Git, выпуск новых правил перед миграцией проекта. [Результаты исследования](planning/recovery-on-demand-research.md).
+[Рефакторинг документации и recovery Workflow Kit](planning/workflow-kit-context-refactor.md) — действующий контракт: документы и части до 28 000 байт, восстановление по плану и Git. [Переход, проверки и миграция](planning/workflow-kit-context-transition.md) — обязательная вторая часть; миграция вне плана после выпуска и до перезапуска пользователя.
 
 ## Project Web Pilot
 
