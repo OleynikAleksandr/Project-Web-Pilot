@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1361,
+  "plan_revision": 1362,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "recovery-on-demand-research-20261006",
@@ -216,11 +216,38 @@
       ]
     },
     {
+      "id": "T001R2",
+      "title": "Уточнить пять условий перед реализацией Kit",
+      "why": "Устранить ограничения путей и несовместимость переходной конфигурации до начала T002.",
+      "dependencies": [
+        "T001R"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/planning/workflow-kit-context-refactor.md",
+        "docs/planning/workflow-kit-context-transition.md"
+      ],
+      "verification_ids": [],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "В спецификации и задачах отражены пять уточнений: пути docs:commit/защита AGENTS, переходные token-поля, содержание README, семь вложений по 28000 байт, граница проверок T002/T004.",
+        "T001 и T001R неизменны; обе части спецификации меньше 28000 байт; конфигурация/runtime/код не изменены, T002 не начата."
+      ],
+      "expected_commit_message": "docs: уточнить условия реализации и перехода Kit",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "recovery-on-demand-research-20261006",
+        "task_id": "T001R2",
+        "role": "implementation"
+      }
+    },
+    {
       "id": "T002",
       "title": "Реализовать жизненный цикл планов и документационных коммитов",
       "why": "Позволить обсуждения без фиктивного плана и доработки после выпуска без потери подтверждённых коммитов.",
       "dependencies": [
-        "T001R"
+        "T001R2"
       ],
       "functional_paths": [
         "packages/workflow-kit/src/lib/actions.mjs",
@@ -264,10 +291,10 @@
       ],
       "verification_kind": "code",
       "acceptance_criteria": [
-        "С4/С5/С15: docs:commit в NONE и idle ACTIVE, запрет при IN_PROGRESS; роль documentation, разрешённые пути, trailers, схема/состав/размер без suite приложения; DOCS только перед delivery.",
+        "С4/С5/С15: docs:commit в NONE/idle ACTIVE, запрет при IN_PROGRESS; любой .md вне .harness/, включая документацию packages/workflow-kit. Управляемая секция AGENTS.md в index побайтно совпадает с HEAD; меняется только проектная часть. Роль documentation, trailers, схема/состав/размер без suite приложения; DOCS только перед delivery.",
         "Раунды после выполненного delivery добавляют работу без перестановки DONE; before только перед не начатой задачей; прошлые delivery привязаны к прежней итерации DOCS. Проверены раунды с новым выпуском и без, nextTask/delivery_status/pre-push.",
         "Archive/carryover/legacy migration больше не создают архивных копий. install --update удаляет прежние архивы ролью kit-update только если все файлы tracked и совпадают с blob HEAD; при изменённом/untracked файле ошибка до удаления.",
-        "Переиспользованы существующие references, транзакции и команды. Проверены сохранение правок при ошибке, служебный kit-update внутри активной T006 и последующий commit новым Kit; проверки пакета и корневые тесты проходят."
+        "Переиспользованы existing references, транзакции и команды; правки сохраняются при ошибке. Служебный коммит между task:start и commit не ломает учёт файлов задачи и её доказательства. Полный переход между версиями проверяется в T004; проверки пакета и корневые тесты проходят."
       ],
       "expected_commit_message": "feat: поддержать раунды и самостоятельные документы в Kit",
       "implementation_status": "TODO",
@@ -326,7 +353,7 @@
       "verification_kind": "code",
       "acceptance_criteria": [
         "С1/С3: новые проекты получают минимальный состав; обновление не восстанавливает упразднённые документы; readiness и inspection учитывают старые проекты до миграции. Источники правил разделены по таблице спецификации, Kit-секция AGENTS в ядре не повторяется.",
-        "С2: budget.document_bytes по умолчанию 28000 в workflow.json; один предел для документов и частей. validateStaged проверяет index до ролей и тестов для всех изменённых .md, включая файлы Kit; единственное исключение — .harness/plans/todo-plan.md.",
+        "С2: budget.document_bytes по умолчанию 28000 в workflow.json; один предел для документов и частей. validateStaged проверяет index до ролей и тестов для всех изменённых .md, включая файлы Kit; единственное исключение — .harness/plans/todo-plan.md. Новый runtime принимает конфигурацию как с budget.soft_tokens/hard_tokens, так и без них.",
         "Проверены размер ровно 28000/превышение/UTF-8, index отличается от worktree, коммиты задач и служебные операции, нетронутый legacy документ. Ошибка содержит путь/байты/предел/команду повтора, правки сохранены.",
         "Нет прежних символьных нормативов и новых обязательных документов с историей; изменения ядра и состава проверены kit-check и unit-all."
       ],
@@ -443,12 +470,12 @@
       ],
       "verification_kind": "code",
       "acceptance_criteria": [
-        "Первый шаг T004 — проверка осуществимости синтетической вставки File через DataTransfer в ChatGPT Web. Живую проверку выполняет пользователь; при отказе остановиться и доложить, без fallback к большой текстовой вставке и без остальной реализации T004.",
+        "Первый шаг T004 — проверка осуществимости File/DataTransfer в ChatGPT Web на максимуме: 7 файлов по 28000 байт в одном сообщении, все загружены до Send. Это отдельная транспортная проба (196000 байт), не изменение hard_bytes=180000 recovery. Живую проверку выполняет пользователь; при отказе остановиться и доложить, без большой текстовой вставки и без остальной реализации T004.",
         "После успешной проверки первое сообщение содержит все части-вложения <=28000 байт и короткий транспортный текст; загрузка завершена до Send, отправка ровно одна, частичный сбой не теряет части и не дублирует сообщение. Чтение вложений разрешено, MCP проекта в первом ответе не вызывается.",
         "Одинаковый сценарий macOS/Windows; AutoPlan и nextTask согласованы с раундами; публичные экспорты Sidebar/pageOperation/pageScript совместимы и проверены при изменении трёх browser-модулей.",
         "Реальный ключ inspectionInputs учитывает новые источники NONE/planning, повторная правка уже dirty документа меняет ключ; тестовый contextInputKey удалён либо синхронизирован.",
         "upgradeFrom включает 1.5.6; fixture start T006 старым Kit → kit-update → commit T006 новым Kit → доступная T007 проходит. До релиза сохранён доступ к старому составу документов.",
-        "Подготовлены новые версии исходников и checks/evidence/stack; workflow.json обновляется через config:apply, включая budget.document_bytes=28000. Kit-check, unit-all и electron-smoke пройдены; сборки/установки реального приложения на T004 нет."
+        "Подготовлены версии исходников и checks/evidence/stack; config:apply в T004 добавляет budget.document_bytes=28000, сохраняя обязательные для Kit 1.5.6 soft_tokens/hard_tokens до DOCS, T005 и task:start T006. Новый runtime принимает конфигурацию с ними и без; удалять не раньше перехода T006. Kit-check, unit-all и electron-smoke пройдены; сборки/установки реального приложения на T004 нет."
       ],
       "expected_commit_message": "feat: подключить новый recovery к Web Pilot",
       "implementation_status": "TODO",
@@ -466,6 +493,7 @@
       "dependencies": [
         "T001",
         "T001R",
+        "T001R2",
         "T002",
         "T002A",
         "T003",
@@ -505,7 +533,8 @@
       "acceptance_criteria": [
         "Актуализированы документы изменённого поведения и выпуска, включая recovery, доставку, workspace setup и README пакета; проверен весь действующий комплект, нет ложной приёмки native Windows.",
         "До T006 действует установленный Kit 1.5.6: массовой миграции старых документов нет; текущие две части спецификации сохраняются до закрытия scope. Installed Kit и его секция AGENTS не редактируются вручную.",
-        "Источники новых инструкций соответствуют спецификации; docs перед сборкой зафиксированы. История и состав проекта переводятся Claude вне плана после T007/доработок, до пользовательского перезапуска."
+        "Источники новых инструкций соответствуют спецификации; docs перед сборкой зафиксированы. История и состав проекта переводятся Claude вне плана после T007/доработок, до пользовательского перезапуска.",
+        "README: версия, установка, запуск; без статуса сборки/публикации, ссылок на конкретный релиз и хешей — они в release-manifest.json и GitHub Release."
       ],
       "expected_commit_message": "docs: подготовить выпуск нового Workflow Kit",
       "implementation_status": "TODO",
@@ -622,6 +651,11 @@
       "id": "accepted-review-20261006",
       "text": "06.10.2026: приняты обе части ревью и окончательные уточнения. Предел budget.document_bytes=28000 байт UTF-8 для документа и части со служебными заголовками; validateStaged проверяет index всех изменённых .md до ролей/тестов, единственное исключение .harness/plans/todo-plan.md. Разделение источников правил; docs:commit; раунды; Git вместо архивных копий. Архивы удаляет install --update ролью kit-update только tracked и совпадающие с HEAD. Дедупликация (path,revision), required before_head проверяется. Общий splitter заголовки/абзацы/строки/UTF-8. T004 начинается с проверки File/DataTransfer, при отказе остановка. T005 старый Kit; T006 task:start старым, установка приложения, kit-update, commit новым; T007 новый Kit. T001 неизменна; миграция Claude вне плана после T007/доработок до перезапуска, спецификация текущего scope сохраняется до закрытия. Правки спецификации/плана разрешены сейчас; реализация в этом ответе не выполняется.",
       "recorded_at": "2026-10-06T16:16:25.261363+00:00"
+    },
+    {
+      "id": "review-five-clarifications-20261006",
+      "text": "06.10.2026 после проверки 4186101 приняты пять уточнений: docs:commit разрешает любой .md вне .harness/, в AGENTS.md Kit-секция в index побайтно равна HEAD; T004 config:apply добавляет document_bytes и сохраняет soft_tokens/hard_tokens для старого Kit, новый runtime принимает оба формата, удаление не раньше T006; README без статусов/ссылок на конкретный релиз/хешей; проверка File/DataTransfer — 7 файлов по 28000 байт до Send; T002 проверяет устойчивость к промежуточному служебному коммиту, полный переход версий с upgradeFrom 1.5.6 — T004. Поручено внести до начала T002.",
+      "recorded_at": "2026-10-06T16:22:49.391693+00:00"
     }
   ]
 }
@@ -634,7 +668,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: recovery-on-demand-research-20261006
 Current Task: нет
-Revision: 1361
+Revision: 1362
 
 ## Цель
 
@@ -656,6 +690,10 @@ Revision: 1361
   - Git Commit: [DONE] docs: согласовать ревью документации и recovery
   - Reference: recovery-on-demand-research-20261006 / T001R / implementation
   - Файлы: docs/planning/workflow-kit-context-refactor.md, docs/planning/workflow-kit-context-transition.md, docs/planning/recovery-on-demand-research.md, docs/DOCUMENTATION_INDEX.md
+- [TODO] T001R2: Уточнить пять условий перед реализацией Kit — Ожидает
+  - Git Commit: [PENDING] docs: уточнить условия реализации и перехода Kit
+  - Reference: recovery-on-demand-research-20261006 / T001R2 / implementation
+  - Файлы: docs/planning/workflow-kit-context-refactor.md, docs/planning/workflow-kit-context-transition.md
 - [TODO] T002: Реализовать жизненный цикл планов и документационных коммитов — Ожидает
   - Git Commit: [PENDING] feat: поддержать раунды и самостоятельные документы в Kit
   - Reference: recovery-on-demand-research-20261006 / T002 / implementation
