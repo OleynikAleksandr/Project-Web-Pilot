@@ -3,7 +3,7 @@ import path from 'node:path';
 import { check, hash, PLAN, withPlanFile, json, atomic, safePath } from './common.mjs';
 import { listPlans } from './session-plans.mjs';
 import { parsePlan, isDocumentationFinalizationTask } from './plan.mjs';
-import { journal, readConfig, validateDocs, resolveReferences, validateDocumentationCommit } from './validate.mjs';
+import { journal, readConfig, validateDocs, resolveReferences, validateDocumentationCommit, validateDocumentSizes } from './validate.mjs';
 import { git, head, paths, run, localPath, snapshot } from './git.mjs';
 import { messageFor, saveJournal, completedTransaction, checkServicePaths } from './transaction.mjs';
 
@@ -17,6 +17,7 @@ export function validateStaged(root) {
   const planText = git(root, ['show', ':' + PLAN]).stdout;
   check(hash(planText) === t.candidate_hash, 'CANDIDATE_PLAN', 'Index содержит другой план.');
   check(git(root, ['write-tree']).stdout.trim() === t.candidate_tree, 'CANDIDATE_CHANGED', 'Index изменён после подготовки кандидата.');
+  validateDocumentSizes(root, selected, t);
   const plan = parsePlan(planText);
   if (t.role === 'implementation') {
     check(t.task?.id === t.task_id && plan.tasks.find(task => task.id === t.task_id)?.commit_status === 'DONE', 'CANDIDATE_TASK', 'Кандидат не завершает нужную задачу.');

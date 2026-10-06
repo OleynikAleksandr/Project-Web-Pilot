@@ -1,31 +1,19 @@
-## Продолжение существующего плана — plan:extend
+# Форма продолжения — plan:extend
 
-Используй current plan текущего checkout/worktree. `status` возвращает краткое состояние и plan_revision; полный контекст — `recover`. `--help` работает и у отдельных команд. Session ID не выбирает plan; historical plans не используются как runtime selector. Не редактируй служебный JSON и не читай реализацию Kit ради обычного продолжения.
-
-**Добавить задачи:** сохрани в `.harness/runtime/changes.json` только новые задачи:
+Процесс раундов задан Workflow Core. Запиши в `.harness/runtime/changes.json` только новые задачи:
 
 ```json
-{"tasks":[{"title":"Исправить навигацию","files":["src/main.mjs"],"checks":["navigation"],"acceptance":["Enter и Go открывают введённый адрес"]}]}
+{"spec":"docs/planning/navigation.md","tasks":[{"id":"T002","title":"Исправить навигацию","files":["src/main.mjs"],"checks":["navigation"],"acceptance":["Enter открывает введённый адрес"]}]}
 ```
 
-Вызови `./scripts/workflow plan:extend --input .harness/runtime/changes.json --expected-revision N`.
+Вызов: `./scripts/workflow plan:extend --input .harness/runtime/changes.json --expected-revision N`, где N — свежая revision из status.
 
-**Поля задачи:** `title` и `files` обязательны; необязательны `id`, `why`, `checks`, `dependencies`, `acceptance`, `commit`, `verification_kind`, `before`. Других полей у задачи нет. `spec` — необязательное поле верхнего уровня рядом с `tasks`, не внутри задачи: путь существующего документа docs/planning/ или docs/modules/, например `{"spec":"docs/planning/navigation.md","tasks":[{"title":"…","files":["src/main.mjs"]}]}`.
+Поля задачи: обязательны title и files; необязательны id, why, checks, dependencies, acceptance, commit, verification_kind, before. `spec` находится на верхнем уровне, не внутри задачи; это существующий документ docs/planning/ или docs/modules/.
 
-**Поставить задачу раньше:** `"before":"T002"` в новой задаче ставит её непосредственно перед ещё не начатой задачей T002 и добавляет T002 зависимость от новой задачи, поэтому T002 нельзя начать первой. Обычная задача ставится перед обычной, delivery — перед delivery. Без `before` новая задача добавляется после существующих. **Дополнить зависимости** ещё не начатых задач можно той же командой — полем верхнего уровня `"dependencies":{"T003":["T001A"]}`; зависимости только добавляются. Порядок в плане совпадает с порядком выполнения: зависимость от задачи, стоящей позже, отклоняется.
+`"before":"T003"` вставляет задачу перед T003 и добавляет ей зависимость от новой. Дополнение зависимостей существующей задачи: `"dependencies":{"T004":["T002"]}` на верхнем уровне. DOCS ведёт Kit.
 
-Kit обновит список файлов плана и сохранит записи и позиции DONE. Для нового выпуска создаст отдельную DOCS следующей итерации (DOCS-2, DOCS-3); прежние delivery сохранят зависимости от прежней DOCS. Без нового delivery автоматическая DOCS не добавляется. При активной DOCS Kit отложит её, передаст незакоммиченные документы первой доступной по зависимостям задаче и сохранит их на месте. Не закрывай DOCS, если уже известна ошибка продукта.
+Уточнение контракта задачи: `task:update --task T002 --input changes.json --expected-revision N`, вход `{"checks":["navigation"],"acceptance":["Enter открывает адрес"]}`. files/checks/acceptance добавляются.
 
-**Завершить задачу:** `./scripts/workflow commit --task T001` автоматически учтёт файлы, изменившиеся после task:start. Список files в плане — ориентир; лимита количества и file_limit_exception нет. Дополнительный package.json не требует task:update. Если нужны выбранные файлы или продолжение ранее начатых правок, передай `--files '["src/main.mjs","package.json"]'` либо `--input .harness/runtime/commit.json` с `{"files":["src/main.mjs","package.json"]}`. Kit сохранит фактический состав и план в том же коммите. Существовавшие до task:start правки автоматически не включаются; если они изменились снова, проверь diff и укажи фактические файлы явно. Это выбор состава коммита, дополнительное разрешение пользователя не требуется.
+Выбор файлов для коммита: `commit --task T002 --input files.json`, вход `{"files":["src/main.mjs","package.json"]}`. Фактический состав и работу с чужими правками описывает PROTOTYPE.
 
-**Уточнить проверки или критерии:** сохрани `{"checks":["navigation"],"acceptance":["Enter открывает адрес"]}` и вызови `./scripts/workflow task:update --task T001 --input .harness/runtime/changes.json --expected-revision N`. files/checks/acceptance добавляются; статусы и ссылки сохраняет Kit.
-
-checks — ID настроенных проверок. Новую проверку добавь через config:apply, сохранив остальные, затем прочитай новую revision. Ошибки содержат поле и причину; при конфликте revision прочитай status и проверь, не выполнено ли действие. Не повторяй вслепую. При NONE создай план через plan:create по `.harness/plans/todo-plan.template.md`.
-
-Перед реализацией — task:start, после работы — commit --task, перед delivery — DOCS своего раунда. Для обсуждения план не нужен. Документы вне активной задачи фиксируй через docs:commit --help. Сохраняй содержательные промежуточные сообщения. Не перемещай настройки и посторонние файлы ради допуска коммита: `.harness/settings/settings.json` принадлежит приложению.
-
-Для сборки указывай verification_kind: package, для проверки установки — installed, и соответствующий kind проверки с evidence (артефакт и сценарий). Синтаксис не доказывает работоспособность. Слово «проверено» используй только для выполненных проверок; ручную приёмку пользователя не заявляй за него. Пример безопасной упаковки и проверки — `.harness/kit/examples/PACKAGING.md`.
-
-## Закрытие с переносом незавершённых задач
-
-По прямому поручению пользователя используйте `plan:carryover --input carryover.json --expected-revision N`. Вход: `{"scope":"old-scope","id":"new-scope","approval_note":"Прямое поручение пользователя"}`; optional `objective`. Требуется чистый checkout без активной микрозадачи. Новый current plan содержит незавершённые задачи, сохраняет критерии, проверки и planning/module ссылки. Исходный план и выполненные зависимости доступны по source_commit в Git; архивных копий нет. Перенос фиксируется одним служебным коммитом. Повтор после успеха безопасен; при прерывании используйте status и штатный repair. Команда archive закрывает план только после всех DONE, без создания копии. Новый чат сам по себе не требует переноса.
+Перенос незавершённой работы: `plan:carryover --input carryover.json --expected-revision N`, вход `{"scope":"old-scope","id":"new-scope","approval_note":"Прямое поручение пользователя"}`; objective необязателен. Условия закрытия и история определены Workflow Core.

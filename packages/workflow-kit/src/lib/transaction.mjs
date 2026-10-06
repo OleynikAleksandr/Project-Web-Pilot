@@ -3,7 +3,7 @@ import {selectTaskFiles} from './task-files.mjs';
 import path from 'node:path';
 import { PLAN, planPath, check, hash, id, json, atomic, withLock, safePath } from './common.mjs';
 import { readPlan, renderPlan, parsePlan, isDocumentationFinalizationTask } from './plan.mjs';
-import { validate, journal, taskChecks } from './validate.mjs';
+import { validate, journal, taskChecks, retryCommand } from './validate.mjs';
 import { git, head, paths, localPath, gitPath, allChanges, ensureIdleGit, identityReady, snapshot } from './git.mjs';
 
 export const saveJournal = (root, data) => atomic(localPath(root, 'transaction.json'), json(data));
@@ -17,8 +17,8 @@ export function checkServicePaths(role, files, PLAN = ' .harness/plans/todo-plan
     'plan-carryover': p => p === PLAN,
     archive: p => p === PLAN,
     documentation: p => p === PLAN || !p.startsWith('.harness/') && p.endsWith('.md'),
-    bootstrap: p => p.startsWith('.harness/') || p.startsWith('docs/') || ['AGENTS.md', 'AGENTS.override.md', '.gitignore', '.gitattributes', '.codex/hooks.json', 'scripts/workflow', 'scripts/workflow.mjs', 'scripts/workflow.cmd'].includes(p) || p.startsWith('.husky/'),
-    'kit-update': p => p === PLAN || p.startsWith('.harness/kit/') || p.startsWith('.harness/plans/by-id/') || p.startsWith('.harness/plans/by-session/') || p.startsWith('.harness/plans/archive/') || ['.harness/kit-manifest.json', '.harness/plans/todo-plan.template.md', 'scripts/workflow', 'scripts/workflow.mjs', 'scripts/workflow.cmd', 'AGENTS.md', 'AGENTS.override.md', 'docs/DOCUMENTATION_INDEX.md', 'docs/MODULES.md', 'docs/architecture/OVERVIEW.md'].includes(p),
+    bootstrap: p => p.startsWith('.harness/') || p.startsWith('docs/') || ['README.md','AGENTS.md', 'AGENTS.override.md', '.gitignore', '.gitattributes', '.codex/hooks.json', 'scripts/workflow', 'scripts/workflow.mjs', 'scripts/workflow.cmd'].includes(p) || p.startsWith('.husky/'),
+    'kit-update': p => p === PLAN || p.startsWith('.harness/kit/') || p.startsWith('.harness/plans/by-id/') || p.startsWith('.harness/plans/by-session/') || p.startsWith('.harness/plans/archive/') || ['.harness/kit-manifest.json', '.harness/plans/todo-plan.template.md', 'scripts/workflow', 'scripts/workflow.mjs', 'scripts/workflow.cmd', 'README.md','AGENTS.md', 'AGENTS.override.md', 'docs/architecture/OVERVIEW.md'].includes(p),
   };
   check(patterns[role], 'SERVICE_ROLE', 'Недопустимая служебная роль.');
   check(files.every(patterns[role]), 'SERVICE_SCOPE', 'Служебный коммит содержит недопустимые пути.', { files, role });
@@ -106,7 +106,7 @@ export function commitCandidate(root, { plan, role, task = null, selected, messa
       atomic(path.join(root,PLAN),t.original_plan);
       fs.unlinkSync(localPath(root,'transaction.json'));fs.unlinkSync(backup);
     }
-    const retry = role === 'documentation' ? 'docs:commit' : role === 'implementation' ? 'commit --task ' + task.id : role === 'kit-update' ? 'install --update' : 'исходную команду';
+    const retry = retryCommand(t);
     check(false, 'COMMIT_FAILED', unchanged ? 'Проверка не пройдена. Правки сохранены. Исправьте причину и повторите ' + retry + '; repair не нужен.' : 'Обнаружены конкурирующие изменения. Журнал сохранён для repair.', { output:t.error, retryable:unchanged });
   }
   const sha = completedTransaction(root, t);

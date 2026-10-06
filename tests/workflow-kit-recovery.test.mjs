@@ -29,6 +29,8 @@ async function fixture(t) {
   await fs.writeFile(path.join(root, '.harness/workflow.json'), JSON.stringify({...defaultConfig(),checks:[{id:'package',kind:'package',executable:process.execPath,args:['-e','process.exit(0)'],required:false,timeout_ms:10000,evidence:'fixture delivery'}]}, null, 2) + '\n');
   writePlan(root, emptyPlan('Recovery Fixture'));
   await fs.writeFile(path.join(root, 'docs/architecture/OVERVIEW.md'), '# Краткая архитектура проекта\n\nOVERVIEW_REQUIRED\n');
+  await fs.writeFile(path.join(root,'README.md'),'# Recovery fixture\nREADME_REQUIRED\n');
+  await fs.writeFile(path.join(root,'AGENTS.md'),'<!-- workflow-kit:begin -->\nKIT_LOCATOR_DO_NOT_INLINE\n<!-- workflow-kit:end -->\nPROJECT_CONSTRAINT\n');
   await fs.writeFile(path.join(root, 'docs/MODULES.md'), '# Модули проекта\n\nFixture module map.\n');
   await fs.writeFile(path.join(root, 'docs/modules/module.md'), '# Module Specification — Fixture\n\nMODULE_REQUIRED\n');
   await fs.writeFile(path.join(root, 'docs/optional.md'), '# Optional\n\nOPTIONAL_SECRET_BODY_SHOULD_NOT_BE_COPIED\n');
@@ -73,12 +75,12 @@ test('NONE plan keeps project navigation and code-only scope does not add DOCS',
   const none = readPlan(root);
   assert.equal(none.objective, PROJECT_CONTINUATION_OBJECTIVE);
   assert.deepEqual(none.context_pack.documents.slice(0, 3).map(doc => doc.path), [
-    'docs/architecture/OVERVIEW.md', 'docs/MODULES.md', 'docs/DOCUMENTATION_INDEX.md',
+    'README.md', 'docs/architecture/OVERVIEW.md',
   ]);
   createScope(root, scopeInput(true));
   const active = readPlan(root);
   assert.deepEqual(active.tasks.map(t=>t.id), ['T001','T002','T003']);
-  for (const required of ['docs/architecture/OVERVIEW.md', 'docs/MODULES.md', 'docs/DOCUMENTATION_INDEX.md']) {
+  for (const required of ['README.md','docs/architecture/OVERVIEW.md']) {
     assert.ok(active.context_pack.documents.some(doc => doc.path === required && doc.required));
   }
 });
@@ -100,7 +102,7 @@ test('READY_FOR_ACCEPTANCE requires DOCS and archive returns a contextual NONE p
 
   startTask(root, 'DOCS');
   const docsPacket = recover(root, 'manual');
-  assert.match(docsPacket.text, /Fixture module map/, 'the final DOCS audits the full module map');
+  assert.match(docsPacket.text, /OVERVIEW_REQUIRED/, 'DOCS receives the current project overview');
   assert.equal(docsPacket.included.includes(implementation.sha), false, 'DOCS ordering dependency is not copied as commit diff');
   assert.doesNotMatch(docsPacket.text, /RESULT_READY/, 'DOCS recovery does not replay completed implementation diff');
   commitTask(root, 'DOCS');
@@ -117,14 +119,14 @@ test('READY_FOR_ACCEPTANCE requires DOCS and archive returns a contextual NONE p
   assert.equal(none.archived_scope_id, 'continuity-acceptance-001');
   assert.equal(none.objective, PROJECT_CONTINUATION_OBJECTIVE);
   assert.deepEqual(none.tasks, []);
-  for (const required of ['docs/architecture/OVERVIEW.md', 'docs/MODULES.md', 'docs/DOCUMENTATION_INDEX.md']) {
+  for (const required of ['README.md','docs/architecture/OVERVIEW.md']) {
     assert.ok(none.context_pack.documents.some(doc => doc.path === required && doc.required));
   }
   const packet = recover(root, 'startup');
   assert.match(packet.text, /OVERVIEW_REQUIRED/);
   // Workflow Kit 1.5.4: navigation maps and forms are read on demand outside the final DOCS.
   assert.doesNotMatch(packet.text, /Fixture module map/);
-  assert.ok(packet.text.includes('Прочитай при задаче: docs/MODULES.md'));
+  assert.match(packet.text,/README_REQUIRED/);
   assert.doesNotMatch(packet.text, /--- ДАННЫЕ: \.harness\/kit\/templates\/PLAN\.md ---/);
   assert.ok(packet.text.includes('plan:create --help'));
   assert.ok(packet.text.includes(PROJECT_CONTINUATION_OBJECTIVE));
@@ -201,6 +203,8 @@ test('Recovery v2 sends required module context, references optional docs, and i
   assert.doesNotMatch(packet.text, /## Обязательные правила/);
   assert.match(packet.text, /OVERVIEW_REQUIRED/);
   assert.match(packet.text, /MODULE_REQUIRED/);
+  assert.match(packet.text,/PROJECT_CONSTRAINT/);
+  assert.doesNotMatch(packet.text,/KIT_LOCATOR_DO_NOT_INLINE/);
   assert.match(packet.text, /docs\/optional\.md → Optional/);
   assert.doesNotMatch(packet.text, /OPTIONAL_SECRET_BODY_SHOULD_NOT_BE_COPIED/);
   assert.match(packet.text, new RegExp(first.sha));

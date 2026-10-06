@@ -4,7 +4,7 @@ import path from 'node:path';
 import { payload, hooksDirectory, hookContent, BLOCK_START, BLOCK_END, MD_START, MD_END, installationManifest } from '../workflow-kit/lib/installation-files.mjs';
 import { VERSION, MANIFEST, PLAN, withPlanFile, json, hash } from '../workflow-kit/lib/common.mjs';
 import { repoRoot, head, gitPath, ensureIdleGit, localPath } from '../workflow-kit/lib/git.mjs';
-import { parsePlan, renderPlan } from '../workflow-kit/lib/plan.mjs';
+import { parsePlan, renderPlan, projectContextPaths } from '../workflow-kit/lib/plan.mjs';
 import { journal, resolveReferences, readConfig } from '../workflow-kit/lib/validate.mjs';
 import { locked, completedTransaction, finishTransaction } from '../workflow-kit/lib/transaction.mjs';
 import { regularPath, readFile, signature, digest, fail, backupAndWrite } from './files.mjs';
@@ -103,7 +103,7 @@ export function inspectProject(workspace) {
     }
     withPlanFile(root, PLAN, {}, () => resolveReferences(root, currentPlan, pending));
     if (renderPlan(currentPlan) !== currentRaw) changes.push({ file: file(PLAN), content: renderPlan(currentPlan), mode: currentPlanFile.mode, label: 'Восстановлено читаемое представление текущего plan' });
-    const required = new Set(['docs/DOCUMENTATION_INDEX.md','docs/WORKFLOW_START.md','docs/PRODUCT.md','docs/architecture/ARCHITECTURE.md','docs/MODULES.md','docs/architecture/OVERVIEW.md','.harness/plans/todo-plan.template.md',
+    const required = new Set([...(manifest.required_documents ?? projectContextPaths()),'.harness/plans/todo-plan.template.md',
       ...[currentPlan.context_pack, ...currentPlan.tasks.map(task => task.context_pack)].flatMap(pack => (pack?.documents ?? []).filter(e => e.required).map(e => e.path))]);
     for (const name of required) {
       if (typeof name !== 'string' || path.isAbsolute(name) || name.split(/[\\/]/).includes('..')) throw fail('DOCTOR_PATH','Недопустимый путь документа.');

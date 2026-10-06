@@ -55,10 +55,11 @@ function inspectProject(opts) {
     return result;
   }
   if (!supported.has(p.version)) result.issues.push({ path: MANIFEST, reason: `Версия ${p.version} пока не поддерживается. Автоматическое обновление не выполняется.` });
-  const anchors = ['.harness/workflow.json', '.harness/plans/todo-plan.md', '.harness/plans/todo-plan.template.md',
-    'docs/DOCUMENTATION_INDEX.md', 'docs/WORKFLOW_START.md', 'docs/PRODUCT.md', 'docs/architecture/ARCHITECTURE.md'];
-  if (!['1.0.0', '1.1.0'].includes(p.version)) anchors.push('docs/MODULES.md', 'docs/architecture/OVERVIEW.md');
   const manifest = JSON.parse(fs.readFileSync(path.join(p.project_path, MANIFEST), 'utf8'));
+  const legacyDocuments = ['docs/DOCUMENTATION_INDEX.md','docs/WORKFLOW_START.md','docs/PRODUCT.md','docs/architecture/ARCHITECTURE.md',
+    ...(!['1.0.0','1.1.0'].includes(p.version) ? ['docs/MODULES.md','docs/architecture/OVERVIEW.md'] : [])];
+  const anchors = ['.harness/workflow.json', '.harness/plans/todo-plan.md', '.harness/plans/todo-plan.template.md',
+    ...(manifest.required_documents ?? legacyDocuments)];
   anchors.push(...manifest.files.filter(f => f.kind === 'managed' && /^AGENTS(?:\.override)?\.md$/.test(f.path)).map(f => f.path));
   if (!anchors.some(f => /^AGENTS/.test(f))) result.issues.push({ path: 'AGENTS.md', reason: 'Не найдены зарегистрированные инструкции проекта.' });
   for (const file of anchors) {

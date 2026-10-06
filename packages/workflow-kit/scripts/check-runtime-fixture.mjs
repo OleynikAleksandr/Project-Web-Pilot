@@ -128,12 +128,11 @@ try {
   assert.doesNotMatch(recovered.text, /--- ДАННЫЕ: \.harness\/kit\/templates\/(PLAN|SPEC|CONTINUE|STAGES)\.md ---/);
   assert.doesNotMatch(recovered.text, /--- ДАННЫЕ: docs\/(MODULES|DOCUMENTATION_INDEX)\.md ---/);
   assert.match(recovered.text, /ФОРМЫ И КАРТЫ ПО ЗАПРОСУ/);
-  for (const line of ['plan:create --help', 'plan:extend --help', 'task:start --help',
-    'Прочитай при задаче: docs/MODULES.md', 'Прочитай при задаче: docs/DOCUMENTATION_INDEX.md'])
+  for (const line of ['plan:create --help', 'plan:extend --help', 'task:start --help'])
     assert.ok(recovered.text.includes(line), line);
   for (const form of ['PLAN', 'SPEC', 'CONTINUE', 'STAGES'])
     assert.ok(recovered.omitted.some(item => item.path === '.harness/kit/templates/' + form + '.md' && item.reason === 'ON_DEMAND'), form);
-  assert.match(run(process.execPath, [path.join(root, 'scripts/workflow.mjs'), 'task:start', '--help'], root), /Формы остальных этапов Workflow Kit/);
+  assert.match(run(process.execPath, [path.join(root, 'scripts/workflow.mjs'), 'task:start', '--help'], root), /Формы проверки и документов/);
   assert.match(run(process.execPath, [path.join(root, 'scripts/workflow.mjs'), 'plan:create', '--help'], root), /Короткий контракт результата/);
 
   // project:rename: the project name in plan/recovery and manifest hook paths change
@@ -353,12 +352,12 @@ try {
     assert.deepEqual(ids(), ['T001', 'T002', 'T003', 'DOCS', 'T900']);
 
     const extendHelp = run(process.execPath, [path.join(orderRoot, 'scripts/workflow.mjs'), 'plan:extend', '--help'], orderRoot);
-    assert.match(extendHelp, /\*\*Поля задачи:\*\*/);
+    assert.match(extendHelp, /Поля задачи:/);
     for (const name of ['title', 'files', 'id', 'why', 'checks', 'dependencies', 'acceptance', 'commit', 'verification_kind', 'before'])
-      assert.ok(extendHelp.includes('`' + name + '`'), 'plan:extend --help names the task field ' + name);
-    assert.match(extendHelp, /`spec` — необязательное поле верхнего уровня рядом с `tasks`, не внутри задачи/);
-    assert.match(extendHelp, /"before":"T002"/);
-    assert.match(extendHelp, /"dependencies":\{"T003":\["T001A"\]\}/);
+      assert.ok(extendHelp.includes(name), 'plan:extend --help names the task field ' + name);
+    assert.match(extendHelp, /`spec` находится на верхнем уровне, не внутри задачи/);
+    assert.match(extendHelp, /"before":"T003"/);
+    assert.match(extendHelp, /"dependencies":\{"T004":\["T002"\]\}/);
     const specInside = await refuseExtend({ tasks: [{ title: 'Spec inside', files: ['a.txt'], spec: 'docs/planning/fixture.md' }] });
     assert.equal(specInside.code, 'PLAN_SCHEMA');
     assert.match(specInside.message, /spec указывается на верхнем уровне рядом с tasks/);
@@ -591,6 +590,17 @@ try {
     await fs.writeFile(runtimeWorkflow, legacyRuntimeText);
     const oldManifestFile = path.join(upgradeRoot, '.harness/kit-manifest.json');
     const oldManifest = JSON.parse(await fs.readFile(oldManifestFile, 'utf8'));
+    const retiredTemplate='.harness/kit/templates/PRODUCT.md';
+    const retiredText='# Retired product template\n';
+    await fs.writeFile(path.join(upgradeRoot,retiredTemplate),retiredText);
+    oldManifest.files.push({path:retiredTemplate,kind:'owned',mode:0o644,hash:createHash('sha256').update(retiredText).digest('hex')});
+    const legacyDocs=['docs/PRODUCT.md','docs/MODULES.md','docs/DOCUMENTATION_INDEX.md','docs/WORKFLOW_START.md','docs/architecture/ARCHITECTURE.md'];
+    for(const name of legacyDocs){
+      const text=name==='docs/PRODUCT.md' ? 'я'.repeat(20000) : '# Legacy document\n';
+      await fs.writeFile(path.join(upgradeRoot,name),text);
+      oldManifest.files.push({path:name,kind:'editable',mode:0o644,hash:createHash('sha256').update(text).digest('hex')});
+    }
+    oldManifest.required_documents=['docs/architecture/OVERVIEW.md',...legacyDocs];
     oldManifest.version = '1.4.13';
     const workflowEntry = oldManifest.files.find(entry => entry.path === '.harness/kit/WORKFLOW.md');
     assert.ok(workflowEntry, 'old manifest missing WORKFLOW entry');
@@ -598,7 +608,7 @@ try {
     await fs.writeFile(oldManifestFile, JSON.stringify(oldManifest, null, 2) + '\n');
 
     git(upgradeRoot, 'add', '.harness/kit-manifest.json', '.harness/kit/WORKFLOW.md',
-      '.harness/plans/todo-plan.md', '.harness/plans/by-session/old-session.md', '.harness/plans/archive/closed.md');
+      '.harness/plans/todo-plan.md', '.harness/plans/by-session/old-session.md', '.harness/plans/archive/closed.md',retiredTemplate,...legacyDocs);
     git(upgradeRoot, 'commit', '--no-verify', '-m', 'test: synthesize Workflow Kit 1.4.13 installation');
 
     const upgradePreview = installer.inspect({ project: upgradeRoot, mode: 'existing' });
@@ -626,6 +636,10 @@ try {
     const upgradedManifest = JSON.parse(await fs.readFile(oldManifestFile, 'utf8'));
     assert.equal(upgradedManifest.version, VERSION);
     assert.equal(upgradedManifest.upgraded_from, '1.4.13');
+    assert.deepEqual(upgradedManifest.required_documents,['README.md','docs/architecture/OVERVIEW.md']);
+    await assert.rejects(fs.access(path.join(upgradeRoot,retiredTemplate)));
+    assert.equal((await fs.stat(path.join(upgradeRoot,'docs/PRODUCT.md'))).size,40000,'upgrade preserves untouched oversized legacy documents');
+    assert.ok(legacyDocs.every(p=>!upgradedManifest.files.some(e=>e.path===p)),'obsolete project documents are no longer installation requirements');
     assert.equal(upgradedManifest.legacy_plan_migration?.removed_count, 2);
     await assert.rejects(fs.access(oldArchiveFile));
     assert.match(git(upgradeRoot,'log','-1','--format=%B'),/Workflow-Role: kit-update/);
@@ -640,11 +654,14 @@ try {
     await assert.rejects(fs.access(oldSessionFile));
     assert.equal((await fs.readFile(runtimeWorkflow, 'utf8')).includes('synthetic-1.4.13'), false);
 
+    for(const name of legacyDocs) await fs.unlink(path.join(upgradeRoot,name));
+    workflow(upgradeRoot,'docs:commit','--files',JSON.stringify(legacyDocs),'--message','docs: migrate fixture documents');
     const headAfterUpgrade = git(upgradeRoot, 'rev-parse', 'HEAD');
     const repeatedUpdate = installer.install({ project: upgradeRoot, mode: 'existing', update: true });
     assert.equal(repeatedUpdate.version, VERSION);
     assert.equal(git(upgradeRoot, 'rev-parse', 'HEAD'), headAfterUpgrade,
       'same-version reconnect after 1.4.13 upgrade unexpectedly committed changes');
+    for(const name of legacyDocs) await assert.rejects(fs.access(path.join(upgradeRoot,name)));
   } finally {
     await fs.rm(upgradeRoot, { recursive: true, force: true });
   }
@@ -664,3 +681,5 @@ try {
 } finally {
   await fs.rm(root, { recursive: true, force: true });
 }
+
+await import('./check-document-fixture.mjs');

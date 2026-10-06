@@ -57,7 +57,9 @@ test('create a real empty Workflow Kit project and reopen without changes', asyn
   const plan = JSON.parse((await fs.readFile(path.join(workspace, '.harness/plans/todo-plan.md'), 'utf8')).match(/```json\n([\s\S]*?)\n```/)[1]);
   assert.equal(config.profile, 'DISCOVERY'); assert.equal(config.budget.hard_bytes, 180000); assert.equal(plan.execution_scope_status, 'NONE'); assert.deepEqual(plan.tasks, []);
   assert.equal(plan.context_pack.include_last_completed_task, false);
-  await fs.stat(path.join(workspace, 'docs/MODULES.md')); await fs.stat(path.join(workspace, 'docs/architecture/OVERVIEW.md'));
+  await fs.stat(path.join(workspace, 'README.md')); await fs.stat(path.join(workspace, 'docs/architecture/OVERVIEW.md'));
+  assert.equal(config.budget.document_bytes,28000);
+  for(const name of ['docs/MODULES.md','docs/DOCUMENTATION_INDEX.md','docs/PRODUCT.md','docs/WORKFLOW_START.md','docs/architecture/ARCHITECTURE.md']) await assert.rejects(fs.access(path.join(workspace,name)));
   const head = git(workspace, 'rev-parse', 'HEAD');
   const next = await setup.preview({ mode: 'existing', workspace });
   assert.equal(next.action, 'open'); assert.ok(next.checks.every(c => c.ok));
@@ -98,8 +100,8 @@ test('missing local checks reconnect, changed core and missing documents never o
   const hookStat = await fs.stat(hook); if (process.platform !== 'win32') assert.ok(hookStat.mode & 0o111);
   const source = path.join(workspace, '.harness/kit/lib/common.mjs'); await fs.appendFile(source, '\n// user change\n');
   const conflict = await setup.preview({ mode: 'existing', workspace }); assert.equal(conflict.action, null); assert.ok(conflict.issues.some(i => i.path.endsWith('common.mjs')));
-  await fs.unlink(path.join(workspace, 'docs/WORKFLOW_START.md'));
-  const docs = await setup.preview({ mode: 'existing', workspace }); assert.ok(docs.issues.some(i => i.path === 'docs/WORKFLOW_START.md'));
+  await fs.unlink(path.join(workspace, 'README.md'));
+  const docs = await setup.preview({ mode: 'existing', workspace }); assert.ok(docs.issues.some(i => i.path === 'README.md'));
 });
 test('legacy compatible version opens unchanged and unsupported version is explicit', async t => {
   const { setup, workspace } = await create(t); const file = path.join(workspace, '.harness/kit-manifest.json');
@@ -125,7 +127,7 @@ test('compatible 1.2 installation upgrades to the current Kit and preserves user
   await fs.writeFile(path.join(workspace, 'docs/architecture/OVERVIEW.md'), '# Краткая архитектура проекта\n\nCUSTOM_OVERVIEW_STAYS\n');
   await fs.writeFile(path.join(workspace, 'docs/PRODUCT.md'), '# User product stays\n');
   const indexFile = path.join(workspace, 'docs/DOCUMENTATION_INDEX.md');
-  const customIndex = (await fs.readFile(indexFile, 'utf8')).replace('<!-- workflow-kit:end -->', '| docs/custom.md | User-added index row |\n<!-- workflow-kit:end -->');
+  const customIndex = '# Legacy index\n<!-- workflow-kit:begin -->\n| docs/custom.md | User-added index row |\n<!-- workflow-kit:end -->\n';
   await fs.writeFile(indexFile, customIndex);
   git(workspace, 'add', '.'); git(workspace, '-c', 'core.hooksPath=/dev/null', 'commit', '-m', 'simulate legacy 1.2 NONE');
 
@@ -136,7 +138,8 @@ test('compatible 1.2 installation upgrades to the current Kit and preserves user
   assert.ok((await fs.readFile(commonPath, 'utf8')).includes(`VERSION = '${VERSION}'`));
   assert.match(await fs.readFile(path.join(workspace, 'docs/architecture/OVERVIEW.md'), 'utf8'), /CUSTOM_OVERVIEW_STAYS/);
   assert.equal(await fs.readFile(path.join(workspace, 'docs/PRODUCT.md'), 'utf8'), '# User product stays\n');
-  const upgradedIndex = await fs.readFile(indexFile, 'utf8'); assert.match(upgradedIndex, /docs\/custom\.md/); assert.match(upgradedIndex, /docs\/MODULES\.md/); assert.match(upgradedIndex, /docs\/architecture\/OVERVIEW\.md/);
+  assert.equal(await fs.readFile(indexFile,'utf8'),customIndex,'upgrade preserves legacy documents without extending them');
+  for(const name of ['docs/MODULES.md','docs/WORKFLOW_START.md','docs/architecture/ARCHITECTURE.md']) await assert.rejects(fs.access(path.join(workspace,name)));
   const upgradedPlanText = await fs.readFile(planFile, 'utf8');
   const upgradedPlan = JSON.parse(upgradedPlanText.match(/```json\n([\s\S]*?)\n```/)[1]);
   assert.equal(upgradedPlan.execution_scope_status, 'NONE');

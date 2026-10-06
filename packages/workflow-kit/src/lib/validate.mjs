@@ -1,25 +1,42 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { check, CONFIG, PLAN, planPath, INDEX, readJSON, textFile, hash, contextPath, relativePath } from './common.mjs';
+import { check, CONFIG, PLAN, planPath, readJSON, textFile, hash, contextPath, relativePath } from './common.mjs';
 import { readPlan, parsePlan, renderPlan } from './plan.mjs';
 import { commitHistory, commitPaths, areAncestors, git, head, localPath } from './git.mjs';
 
 export function defaultConfig() {
   return { schema_version: 1, profile: 'DISCOVERY', stack: null, checks: [],
-    budget: { soft_tokens: 16000, hard_tokens: 90000, hard_bytes: 180000 },
-    documentation: { index: INDEX, mappings: [] } };
+    budget: { document_bytes: 28000, hard_bytes: 180000 },
+    documentation: { mappings: [] } };
+}
+export const documentByteLimit = config => config.budget.document_bytes ?? defaultConfig().budget.document_bytes;
+export function retryCommand(transaction) {
+  const commands = {documentation:'docs:commit',bootstrap:'install:commit', 'kit-update':'install --update',
+    'scope-plan':'plan:create', 'plan-carryover':'plan:carryover',archive:'archive',repair:'repair --apply <repair_id>'};
+  if (transaction.role === 'implementation') return 'commit --task ' + transaction.task_id;
+  if (transaction.role === 'plan-adjustment') return transaction.selected.includes(CONFIG) ? 'config:apply' : 'plan:apply';
+  return commands[transaction.role] ?? 'исходную команду';
+}
+export function validateDocumentSizes(root, files, transaction) {
+  const configBlob = git(root, ['show', ':' + CONFIG]);
+  const config = validateConfig(JSON.parse(configBlob.stdout));
+  const limit = documentByteLimit(config);
+  for (const file of files.filter(p => p.endsWith('.md') && p !== PLAN)) {
+    const entry = git(root, ['ls-files','--stage','-z','--',file]).stdout;
+    if (!entry) continue; // Deleted document has no candidate blob.
+    const oid = entry.split(' ')[1];
+    const bytes = Number(git(root, ['cat-file','-s',oid]).stdout.trim());
+    check(Number.isSafeInteger(bytes) && bytes <= limit, 'DOCUMENT_TOO_LARGE',
+      file + ': ' + bytes + ' байт UTF-8, предел ' + limit + '. Разделите документ и повторите ' + retryCommand(transaction) + '; правки сохранены.',
+      {path:file,bytes,limit,retry_command:retryCommand(transaction)});
+  }
 }
 // Read the candidate from Git's index, never the possibly newer working tree.
 export function validateDocumentationCommit(root, files, plan) {
   check(plan.current_task_id === null && ['NONE', 'ACTIVE'].includes(plan.execution_scope_status)
     && !plan.tasks.some(t => t.implementation_status === 'IN_PROGRESS'), 'TASK_ACTIVE', 'docs:commit запрещён во время задачи.');
-  const limit = readConfig(root).budget.document_bytes ?? 28000;
-  check(Number.isSafeInteger(limit) && limit > 0, 'CONFIG_SCHEMA', 'document_bytes должен быть положительным целым числом.');
   for (const file of files.filter(p => p !== PLAN)) {
     const candidate = git(root, ['show', ':' + file], {allowFailure:true, encoding:null});
-    if (candidate.status === 0) check(candidate.stdout.length <= limit, 'DOCUMENT_TOO_LARGE',
-      file + ': ' + candidate.stdout.length + ' байт, предел ' + limit + '. Разделите документ и повторите docs:commit; правки сохранены.',
-      {path:file, bytes:candidate.stdout.length, limit});
     if (file !== 'AGENTS.md') continue;
     const previous = git(root, ['show', 'HEAD:' + file], {allowFailure:true, encoding:null});
     const section = buffer => {
@@ -47,10 +64,14 @@ export function validateConfig(c) {
     if (test.cwd && test.cwd !== '.') relativePath(test.cwd);
     check(!test.stage || ['commit', 'push'].includes(test.stage), 'CONFIG_SCHEMA', 'Неизвестный этап проверки.');
   }
-  check(c.budget && ['soft_tokens', 'hard_tokens', 'hard_bytes'].every(f => Number.isSafeInteger(c.budget[f]) && c.budget[f] > 0), 'CONFIG_SCHEMA', 'Некорректный бюджет контекста.');
-  check(c.budget.soft_tokens <= c.budget.hard_tokens && c.budget.hard_bytes <= 1024 * 1024, 'CONFIG_SCHEMA', 'Некорректные границы бюджета.');
+  check(c.budget && Number.isSafeInteger(c.budget.hard_bytes) && c.budget.hard_bytes > 0 && c.budget.hard_bytes <= 1024 * 1024,
+    'CONFIG_SCHEMA', 'Некорректный бюджет контекста в байтах.');
+  check(Number.isSafeInteger(documentByteLimit(c)) && documentByteLimit(c) > 0, 'CONFIG_SCHEMA', 'document_bytes должен быть положительным целым числом.');
+  // Legacy token fields are accepted for the 1.5.6 transition, but impose no second limit.
+  for (const field of ['soft_tokens','hard_tokens']) if (c.budget[field] !== undefined)
+    check(Number.isSafeInteger(c.budget[field]) && c.budget[field] > 0, 'CONFIG_SCHEMA', 'Некорректное поле ' + field);
   check(c.documentation && Array.isArray(c.documentation.mappings), 'CONFIG_SCHEMA', 'Нужна карта документации.');
-  relativePath(c.documentation.index);
+  if (c.documentation.index !== undefined) relativePath(c.documentation.index);
   for (const m of c.documentation.mappings) {
     check(typeof m.code === 'string' && m.code.length > 0 && !m.code.startsWith('/') && !m.code.includes('..'), 'CONFIG_SCHEMA', 'Некорректный селектор документации.');
     check(Array.isArray(m.documents), 'CONFIG_SCHEMA', 'Нужен список документов.'); m.documents.forEach(relativePath);

@@ -45,8 +45,7 @@ export function inspectionInputs(workspace) {
   const headResult = git(root, ['rev-parse', '--verify', 'HEAD'], { allowFailure: true });
   const relative = new Set([PLAN, CONFIG, MANIFEST, '.codex/hooks.json', '.harness/plans/todo-plan.template.md',
     'scripts/workflow', 'scripts/workflow.cmd', 'scripts/workflow.mjs',
-    'docs/DOCUMENTATION_INDEX.md', 'docs/WORKFLOW_START.md', 'docs/PRODUCT.md', 'docs/architecture/ARCHITECTURE.md',
-    'docs/MODULES.md', 'docs/architecture/OVERVIEW.md']);
+    'README.md', 'AGENTS.md', 'AGENTS.override.md', 'docs/architecture/OVERVIEW.md']);
   const workflow = readJSON(path.join(root, CONFIG));
   if (workflow.documentation?.index) relative.add(workflow.documentation.index);
   for (const { file, plan } of listPlans(root)) {
@@ -58,6 +57,7 @@ export function inspectionInputs(workspace) {
     }
   }
   if (fs.existsSync(path.join(root, MANIFEST))) {
+    for (const file of readJSON(path.join(root, MANIFEST)).required_documents ?? []) relative.add(file);
     for (const entry of readJSON(path.join(root, MANIFEST)).files) {
       if (entry.kind !== 'git-hook') relative.add(entry.path);
     }

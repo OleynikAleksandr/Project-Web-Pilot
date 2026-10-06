@@ -8,19 +8,18 @@ const label = { TODO: 'Ожидает', IN_PROGRESS: 'В работе', DONE: '�
 const string = (v, field) => check(typeof v === 'string' && v.trim().length > 0, 'PLAN_SCHEMA', 'Нужно непустое поле: ' + field);
 const array = (v, field) => check(Array.isArray(v), 'PLAN_SCHEMA', 'Нужен массив: ' + field);
 const unique = (values, field) => check(new Set(values).size === values.length, 'PLAN_SCHEMA', 'Повторяющиеся значения: ' + field);
-export const PROJECT_CONTINUATION_OBJECTIVE = 'Если поручение уже ясно, создайте короткий план и приступайте; иначе обсудите следующий этап проекта.';
+export const PROJECT_CONTINUATION_OBJECTIVE = 'Продолжите обсуждение или исследование проекта; план реализации создаётся, когда определён её объём.';
 export const FINAL_DOCUMENTATION_TASK_ID = 'DOCS';
 export const FINAL_DOCUMENTATION_TASK_TITLE = 'Актуализация всех документов проекта';
 export const PROJECT_CONTEXT_DOCUMENTS = Object.freeze([
-  { path: 'docs/architecture/OVERVIEW.md', heading_path: ['Краткая архитектура проекта'], required: true, revision: 'WORKTREE' },
-  { path: 'docs/MODULES.md', heading_path: ['Модули проекта'], required: true, revision: 'WORKTREE' },
-  { path: 'docs/DOCUMENTATION_INDEX.md', heading_path: ['Каталог документации'], required: true, revision: 'WORKTREE' },
+  { path: 'README.md', required: true, revision: 'WORKTREE' },
+  { path: 'docs/architecture/OVERVIEW.md', required: true, revision: 'WORKTREE' },
 ]);
 export const projectContextPaths = () => PROJECT_CONTEXT_DOCUMENTS.map(doc => doc.path);
 export function projectContextPack(pack = {}) {
   const provided = new Map((pack.documents ?? []).map(doc => [doc.path, doc]));
   const foundation = PROJECT_CONTEXT_DOCUMENTS.map(doc => ({ ...doc, ...(provided.get(doc.path) ?? {}),
-    path: doc.path, heading_path: [...doc.heading_path], required: true, revision: 'WORKTREE' }));
+    path: doc.path, heading_path: undefined, required: true, revision: 'WORKTREE' }));
   const extras = (pack.documents ?? []).filter(doc => !PROJECT_CONTEXT_DOCUMENTS.some(base => base.path === doc.path));
   return { documents: [...foundation, ...extras], include_last_completed_task: pack.include_last_completed_task ?? false,
     dependency_task_ids: [...(pack.dependency_task_ids ?? [])] };
@@ -64,7 +63,7 @@ export function validatePlan(p) {
   validateContext(p.context_pack);
   if (p.execution_scope_status === 'NONE') {
     check(p.scope_id === null && p.current_task_id === null && p.tasks.length === 0, 'PLAN_SCHEMA', 'NONE не может содержать активные задачи.');
-    for (const doc of PROJECT_CONTEXT_DOCUMENTS) {
+    for (const doc of PROJECT_CONTEXT_DOCUMENTS.filter(d => d.path !== 'README.md')) {
       check(p.context_pack.documents.some(current => current.path === doc.path && current.required === true),
         'PROJECT_CONTEXT_REQUIRED', 'NONE должен сохранять обязательную ссылку: ' + doc.path);
     }
@@ -109,7 +108,7 @@ export function validatePlan(p) {
   for (const [finalIndex, finalTask] of p.tasks.entries()) if (isDocumentationFinalizationTask(finalTask)) {
     const beforeDocs = p.tasks.slice(0, finalIndex);
     check(finalTask.functional_paths.length === 0, 'DOCUMENTATION_FINAL_TASK', 'Финальная актуализация документации не содержит функциональных файлов.');
-    check(finalTask.documentation_paths.includes('docs/DOCUMENTATION_INDEX.md'), 'DOCUMENTATION_FINAL_TASK', 'Финальная актуализация должна включать docs/DOCUMENTATION_INDEX.md.');
+    check(finalTask.documentation_paths.some(p => ['docs/architecture/OVERVIEW.md','docs/DOCUMENTATION_INDEX.md'].includes(p)), 'DOCUMENTATION_FINAL_TASK', 'DOCS должна включать обзор проекта (либо прежний индекс до миграции).');
     const previous = beforeDocs.findLastIndex(isDocumentationFinalizationTask);
     const expected = beforeDocs.slice(previous + 1).filter(t => !isDeliveryTask(t)).map(t => t.id);
     check(expected.every(id => finalTask.dependencies.includes(id))

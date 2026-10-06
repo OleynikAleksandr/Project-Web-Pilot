@@ -25,15 +25,15 @@ test('production readiness and canonical recovery block insertion after real inp
     const sessionId = 'send-fixture', planId = 'send-inputs';
     withSessionPlan(workspace, { sessionId }, () => createScope(workspace, {
       scope_id: planId, objective: 'Send fixture', approval_note: 'Isolated verification', acceptance_criteria: ['Current inputs'],
-      approved_scope: { functional_paths: [], documentation_paths: ['docs/PRODUCT.md'], max_functional_files_per_task: 3 },
-      tasks: [{ id: 'T1', title: 'Fixture', why: 'Freshness', dependencies: [], functional_paths: [], documentation_paths: ['docs/PRODUCT.md'],
+      approved_scope: { functional_paths: [], documentation_paths: ['README.md'], max_functional_files_per_task: 3 },
+      tasks: [{ id: 'T1', title: 'Fixture', why: 'Freshness', dependencies: [], functional_paths: [], documentation_paths: ['README.md'],
         acceptance_criteria: ['Current'], verification_ids: [], expected_commit_message: 'docs: fixture' }],
     }));
     if (kind === 'index') await fs.writeFile(path.join(workspace, 'index-fixture.txt'), 'stage before fill');
     const setup = new WorkspaceSetup(), plans = new SessionPlans({ setup });
     const indexFile = path.resolve(workspace, git('rev-parse', '--git-path', 'index'));
     const indexBefore = await fs.readFile(indexFile);
-    const unchanged = path.join(workspace, 'docs/PRODUCT.md');
+    const unchanged = path.join(workspace, 'README.md');
     await fs.utimes(unchanged, new Date(1000), new Date(1000));
     assert.equal((await setup.ready(workspace)).ready, true);
     assert.deepEqual(await fs.readFile(indexFile), indexBefore, 'readiness must not refresh index stat cache itself');

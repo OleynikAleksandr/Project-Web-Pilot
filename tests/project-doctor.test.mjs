@@ -67,7 +67,7 @@ test('readable projection rebuilt from valid canonical plan only',t=>{
   fs.writeFileSync(file,original+'\nwrong projection\n');const r=repairProject(root);assert.equal(r.issues.length,0,JSON.stringify(r.issues));assert.equal(fs.readFileSync(file,'utf8'),original);
 });
 test('changed snapshot rejected and modified hook preserved',t=>{
-  const root=fixture(t);stale(root);const before=inspectProject(root);fs.appendFileSync(path.join(root,'docs/PRODUCT.md'),'\nnew user text');
+  const root=fixture(t);stale(root);const before=inspectProject(root);fs.appendFileSync(path.join(root,'README.md'),'\nnew user text');
   assert.throws(()=>repairProject(root,before.fingerprint),{code:'DOCTOR_CHANGED'});
   const hook=gitPath(root,'hooks/pre-commit');fs.writeFileSync(hook,fs.readFileSync(hook,'utf8').replace('git-hook pre-commit','git-hook changed'));
   assert.ok(repairProject(root).issues.some(e=>e.path==='Git/pre-commit'));
@@ -87,10 +87,10 @@ test('interrupted commit is finished only when the exact commit already exists',
   const root=fixture(t);
   // Generate a real managed scope/commit with the bundled CLI and deterministic failpoint.
   const cli=path.join(root,'scripts/workflow.mjs');
-  const draft={scope_id:'doctor-test',objective:'Doctor transaction fixture',approval_note:'Approved isolated doctor transaction fixture',acceptance_criteria:['Stored'],approved_scope:{functional_paths:[],documentation_paths:['docs/PRODUCT.md'],max_functional_files_per_task:3},context_pack:{documents:[],include_last_completed_task:false,dependency_task_ids:[]},tasks:[{id:'T001',title:'Fixture',why:'Test recovery',dependencies:[],functional_paths:[],documentation_paths:['docs/PRODUCT.md'],acceptance_criteria:['Stored'],verification_ids:[],expected_commit_message:'docs: fixture'}]};
+  const draft={scope_id:'doctor-test',objective:'Doctor transaction fixture',approval_note:'Approved isolated doctor transaction fixture',acceptance_criteria:['Stored'],approved_scope:{functional_paths:[],documentation_paths:['README.md'],max_functional_files_per_task:3},context_pack:{documents:[],include_last_completed_task:false,dependency_task_ids:[]},tasks:[{id:'T001',title:'Fixture',why:'Test recovery',dependencies:[],functional_paths:[],documentation_paths:['README.md'],acceptance_criteria:['Stored'],verification_ids:[],expected_commit_message:'docs: fixture'}]};
   const input=path.join(root,'.harness/runtime/draft.json');fs.writeFileSync(input,JSON.stringify(draft));
   execFileSync(process.execPath,[cli,'scope:create','--input',input],{cwd:root,env});
-  execFileSync(process.execPath,[cli,'task:start','T001'],{cwd:root,env});fs.appendFileSync(path.join(root,'docs/PRODUCT.md'),'\nfixture\n');
+  execFileSync(process.execPath,[cli,'task:start','T001'],{cwd:root,env});fs.appendFileSync(path.join(root,'README.md'),'\nfixture\n');
   assert.throws(()=>execFileSync(process.execPath,[cli,'commit','--task','T001'],{cwd:root,env:{...env,WORKFLOW_TEST_FAILPOINT:'prepared'},stdio:'pipe'}));
   const blocked=repairProject(root);assert.ok(blocked.issues.some(e=>e.code==='DOCTOR_PENDING'));
   assert.throws(()=>execFileSync(process.execPath,[cli,'commit','--task','T001'],{cwd:root,env:{...env,WORKFLOW_TEST_FAILPOINT:'committed'},stdio:'pipe'}));

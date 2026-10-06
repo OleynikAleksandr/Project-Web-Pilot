@@ -1,8 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { VERSION, PLAN, CONFIG, MANIFEST, INDEX, hash, json, check, safePath } from './common.mjs';
-import { emptyPlan, renderPlan } from './plan.mjs';
+import { VERSION, PLAN, CONFIG, MANIFEST, hash, json, check, safePath } from './common.mjs';
+import { emptyPlan, renderPlan, projectContextPaths } from './plan.mjs';
 import { defaultConfig } from './validate.mjs';
 import { git, gitPath } from './git.mjs';
 import { windowsHookCommand, windowsLauncher } from './platform.mjs';
@@ -14,21 +14,16 @@ export const BLOCK_END = '# workflow-kit:end';
 export const MD_START = '<!-- workflow-kit:begin -->';
 export const MD_END = '<!-- workflow-kit:end -->';
 
-const MODULES_TEMPLATE = `# Модули проекта
-
-Карта самостоятельных частей проекта и их владельцев. Проект может быть программным, исследовательским, проектным, творческим или прикладным. При новом поручении найдите затрагиваемую часть; для новой запишите короткий контракт результата, запуска и проверки. Ясное поручение не требует повторного согласования.
-
-Используйте достаточную для текущей задачи структуру. Обязательного дробления на слои, фасады и классы нет. Подробности храните в одном документе; здесь достаточно ссылки.
-
-| Модуль / часть проекта | Спецификация | Ответственность |
-| --- | --- | --- |
-| Первая часть | docs/modules/<part>.md | Уточняется перед первым рабочим scope |
-`;
 const OVERVIEW_TEMPLATE = `# Краткая архитектура проекта
 
-Коротко опишите назначение проекта, согласованный глобальный замысел, основные части и их связи. Проект не обязан быть программным. Этот документ предназначен для recovery и должен оставаться компактным; подробности живут в спецификациях частей и профильных документах.
+## Назначение и устройство
+Уточняется при обсуждении проекта: результат, основные части, их связи и постоянные ограничения. Описывается текущее устройство без истории разработки.
 
-Карта частей проекта: docs/MODULES.md. Полный пополняемый индекс документации: docs/DOCUMENTATION_INDEX.md.
+## Карта модулей
+Ссылки на действующие контракты в docs/modules/ добавляются по мере появления модулей. Подробности не дублируются в обзоре.
+
+## Запуск и проверка
+Установка и запуск — в README.md; проверки модулей — рядом с их контрактами.
 `;
 export function walk(directory, prefix = '') {
   if (!fs.existsSync(directory)) return [];
@@ -79,14 +74,8 @@ export function payload(root, name, hookLocation) {
   const activeAgents = fs.existsSync(path.join(root, 'AGENTS.override.md')) && fs.readFileSync(path.join(root, 'AGENTS.override.md'), 'utf8').trim() ? 'AGENTS.override.md' : 'AGENTS.md';
   const agentsOld = fs.existsSync(path.join(root, activeAgents)) ? fs.readFileSync(path.join(root, activeAgents), 'utf8') : '';
   add(activeAgents, addSection(agentsOld, fs.readFileSync(path.join(kitRoot, 'templates/AGENTS.md'), 'utf8')), 'managed');
-  for (const [target, source] of [['docs/PRODUCT.md', 'PRODUCT.md'], ['docs/architecture/ARCHITECTURE.md', 'ARCHITECTURE.md'], ['docs/WORKFLOW_START.md', 'START.md']]) {
-    if (!fs.existsSync(path.join(root, target))) add(target, fs.readFileSync(path.join(kitRoot, 'templates', source), 'utf8'), 'editable');
-  }
-  if (!fs.existsSync(path.join(root, 'docs/MODULES.md'))) add('docs/MODULES.md', MODULES_TEMPLATE, 'editable');
+  if (!fs.existsSync(path.join(root, 'README.md'))) add('README.md', '# ' + name + '\n\n## Назначение\nУточняется при обсуждении проекта.\n\n## Версия\nНе задана.\n\n## Установка и запуск\nУточняются вместе с первым работающим результатом.\n', 'editable');
   if (!fs.existsSync(path.join(root, 'docs/architecture/OVERVIEW.md'))) add('docs/architecture/OVERVIEW.md', OVERVIEW_TEMPLATE, 'editable');
-  const inventory = [...new Set([...walk(root), ...entries.map(e => e.path), INDEX])].filter(p => /\.(md|markdown)$/.test(p));
-  const indexOld = fs.existsSync(path.join(root, INDEX)) ? fs.readFileSync(path.join(root, INDEX), 'utf8') : '# Каталог документации\n';
-  add(INDEX, addSection(indexOld, '## Документы проекта\n\n| Документ | Назначение |\n| --- | --- |\n' + inventory.map(p => '| ' + p + ' | ' + (p === PLAN ? 'Единственный текущий plan этого checkout/worktree' : p.includes('/kit/') ? 'Протокол и шаблон комплекта' : 'Контракт проекта; уточняется при обсуждении') + ' |').join('\n')), 'managed');
   const ignore = fs.existsSync(path.join(root, '.gitignore')) ? fs.readFileSync(path.join(root, '.gitignore'), 'utf8') : '';
   add('.gitignore', addSection(ignore, '.harness/runtime/\n.harness/sessions/\n.harness/settings/settings.json\nnode_modules/\ndist/\n', BLOCK_START, BLOCK_END), 'managed');
   const attributes = fs.existsSync(path.join(root, '.gitattributes')) ? fs.readFileSync(path.join(root, '.gitattributes'), 'utf8') : '';
@@ -109,6 +98,7 @@ export function payload(root, name, hookLocation) {
 }
 export function installationManifest(entries, metadata) {
   return { schema_version: 1, version: VERSION, installed_at: new Date().toISOString(), ...metadata,
+    required_documents: projectContextPaths(),
     files: entries.map(({ content, ...entry }) => {
       if (['managed', 'git-hook'].includes(entry.kind)) {
         const start = entry.kind === 'git-hook' || ['.gitignore', '.gitattributes'].includes(entry.path) ? BLOCK_START : MD_START;

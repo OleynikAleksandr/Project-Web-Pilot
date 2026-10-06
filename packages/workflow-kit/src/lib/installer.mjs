@@ -4,7 +4,7 @@ import { VERSION, MANIFEST, PLAN, CONFIG, withPlanFile, check, hash, id, json, r
 import { git, run, repoRoot, head, allChanges, identityReady, localPath } from './git.mjs';
 import { listPlans, preflightPlanMigration, migrateLegacyPlans } from './session-plans.mjs';
 import { status } from './actions.mjs';
-import { readPlan, emptyPlan, writePlan } from './plan.mjs';
+import { readPlan, emptyPlan, writePlan, projectContextPaths } from './plan.mjs';
 import { journal } from './validate.mjs';
 import { commitCandidate, locked } from './transaction.mjs';
 import { payload, hooksDirectory, hookContent, installationManifest, HOOK_COMMAND, BLOCK_START, BLOCK_END, MD_START, MD_END } from './installation-files.mjs';
@@ -24,7 +24,7 @@ function migrateNonePlanForContinuity(root) {
   try { current = JSON.parse(match?.[1] ?? ''); } catch { return false; }
   if (current?.schema_version !== 1 || current.execution_scope_status !== 'NONE') return false;
   const required = new Set(current.context_pack?.documents?.filter(doc => doc.required).map(doc => doc.path) ?? []);
-  if (['docs/architecture/OVERVIEW.md', 'docs/MODULES.md', 'docs/DOCUMENTATION_INDEX.md'].every(name => required.has(name))) return false;
+  if (projectContextPaths().every(name => required.has(name)) && required.size === projectContextPaths().length) return false;
   const next = emptyPlan(typeof current.project_name === 'string' && current.project_name ? current.project_name : path.basename(root));
   next.project_id = current.project_id;
   next.plan_revision = Number.isSafeInteger(current.plan_revision) ? current.plan_revision + 1 : 1;
@@ -195,9 +195,18 @@ function upgradeInstallation(root, preview) {
       if (before !== content) { writes.push({ file, content, mode: entry.mode ?? 0o644 }); changed.push(entry.path); }
       replacements.set(entry.path, manifestEntry({ ...entry, content, original_hash: entry.original_hash ?? (before === null ? null : hash(before)), hash: hash(content), existed: before !== null }));
     };
+    const retired = [];
     for (const entry of old.files.filter(e => e.kind === 'owned' && (e.path.startsWith('.harness/kit/') || ['scripts/workflow', 'scripts/workflow.mjs', 'scripts/workflow.cmd'].includes(e.path)))) {
       const file = manifestTarget(root, entry); check(fs.existsSync(file) && hash(fs.readFileSync(file)) === entry.hash, 'MODIFIED_INTEGRATION', 'Runtime изменён; обновление остановлено: ' + entry.path);
-      const next = desiredMap.get(entry.path); check(next, 'UPGRADE_PAYLOAD', 'Новый runtime не содержит путь: ' + entry.path); write(next, next.content);
+      const next = desiredMap.get(entry.path);
+      if (next) write(next, next.content);
+      else {
+        const committed=git(root,['show','HEAD:'+entry.path],{allowFailure:true,encoding:null});
+        const staged=git(root,['show',':'+entry.path],{allowFailure:true,encoding:null});
+        check(committed.status===0 && staged.status===0 && committed.stdout.equals(staged.stdout)
+          && committed.stdout.equals(fs.readFileSync(file)), 'MODIFIED_INTEGRATION', 'Удаляемый файл Kit изменён или не записан в Git: '+entry.path);
+        retired.push(entry.path); changed.push(entry.path);
+      }
     }
     // New core files are part of the same preflight; never replace an unowned collision.
     for (const entry of desired.filter(e => e.kind === 'owned' && !oldMap.has(e.path))) {
@@ -217,16 +226,7 @@ function upgradeInstallation(root, preview) {
       const template = desiredMap.get('.harness/kit/templates/AGENTS.md')?.content; check(template, 'UPGRADE_PAYLOAD', 'Новый комплект не содержит AGENTS template.');
       const next = replaceOwnedSection(current, agentEntry, template); write({ ...agentEntry, path: agentEntry.path, external: false, kind: 'managed' }, next);
     }
-    const indexEntry = old.files.find(e => e.path === 'docs/DOCUMENTATION_INDEX.md' && e.kind === 'managed');
-    if (indexEntry) {
-      const current = fs.readFileSync(manifestTarget(root, indexEntry), 'utf8'); const found = sectionBounds(current, MD_START, MD_END);
-      // Documentation index is expected to evolve during normal project work. Upgrade is additive only:
-      // preserve every existing row and append the two new recovery-v2 entries when absent.
-      let section = found.value;
-      for (const row of ['| docs/MODULES.md | Карта архитектурных модулей |', '| docs/architecture/OVERVIEW.md | Компактная архитектура для recovery |']) if (!section.includes(row.split(' | ')[0])) section = section.replace(MD_END, row + '\n' + MD_END);
-      write({ ...indexEntry, path: indexEntry.path, external: false, kind: 'managed' }, current.slice(0, found.i) + section + current.slice(found.j + MD_END.length));
-    }
-    for (const name of ['docs/MODULES.md', 'docs/architecture/OVERVIEW.md']) {
+    for (const name of projectContextPaths()) {
       const entry = desiredMap.get(name); check(entry, 'UPGRADE_PAYLOAD', 'Новый комплект не содержит ' + name);
       const file = safePath(root, name);
       if (!fs.existsSync(file)) write(entry, entry.content);
@@ -239,18 +239,21 @@ function upgradeInstallation(root, preview) {
     const backup = path.join(root, '.harness/runtime/kit-upgrade-' + id());
     fs.mkdirSync(backup, { recursive: true });
     const originals = [...new Set([...writes.map(e => e.file), path.join(root, MANIFEST), path.join(root, PLAN),
-      ...legacyBefore.map(record => path.join(root, record.path))])].map((file, i) => {
+      ...retired.map(file => path.join(root,file)), ...legacyBefore.map(record => path.join(root, record.path))])].map((file, i) => {
       const exists = fs.existsSync(file), copy = exists ? String(i) + '.backup' : null;
       if (exists) fs.copyFileSync(file, path.join(backup, copy));
       return { path: path.relative(root, file).split(path.sep).join('/'), backup: copy };
     });
     atomic(path.join(backup, 'upgrade.json'), json({ version: VERSION, from: old.version, files: originals }));
     for (const entry of writes) { atomic(entry.file, entry.content, entry.mode); if (entry.mode === 0o755) fs.chmodSync(entry.file, 0o755); }
+    for (const file of retired) fs.unlinkSync(safePath(root,file));
     if (migrateNonePlanForContinuity(root)) changed.push(PLAN);
     const legacyMigration = migrateLegacyPlans(root);
     changed.push(...legacyMigration.changed_paths);
-    const kept = old.files.filter(e => !replacements.has(e.path));
+    const obsoleteDocuments = ['docs/DOCUMENTATION_INDEX.md','docs/MODULES.md','docs/PRODUCT.md','docs/architecture/ARCHITECTURE.md','docs/WORKFLOW_START.md'];
+    const kept = old.files.filter(e => !replacements.has(e.path) && !retired.includes(e.path) && !obsoleteDocuments.includes(e.path));
     const metadata = { ...old, version: VERSION, upgraded_from: old.version, upgraded_at: new Date().toISOString(),
+      required_documents: projectContextPaths(),
       legacy_plan_migration: { model: 'single-active-plan', removed_count: legacyMigration.removed.length,
         source_commit: head(root), migrated_at: new Date().toISOString() },
       files: [...kept, ...replacements.values()] };

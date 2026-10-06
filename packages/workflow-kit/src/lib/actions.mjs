@@ -44,9 +44,9 @@ function normalizeCompletionContract(plan) {
       id: taskId, title: FINAL_DOCUMENTATION_TASK_TITLE,
       implementation_status: 'TODO', commit_status: 'PENDING',
       commit_ref: {scope_id:plan.scope_id, task_id:taskId, role:'implementation', iteration},
-      why: 'Проверить весь действующий комплект документации по docs/DOCUMENTATION_INDEX.md и обновить только устаревшие сведения после выполнения scope.',
+      why: 'Перед выпуском сверить README, OVERVIEW и действующие контракты модулей с результатом; обновить устаревшее.',
       dependencies: [], functional_paths: [], documentation_paths: foundation,
-      acceptance_criteria: ['Все документы из индекса проверены; устаревшие сведения и ссылки исправлены; после этого результат готов только к пользовательской приёмке.'],
+      acceptance_criteria: ['Документы описывают текущий результат, существенное из выпущенных рабочих спецификаций перенесено в контракты модулей; история остаётся в Git.'],
       verification_ids: [], expected_commit_message: 'docs: актуализировать документацию проекта',
     };
   }

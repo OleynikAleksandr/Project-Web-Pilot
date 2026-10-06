@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { VERSION, PLAN, planPath, CONFIG, INDEX, check, contextPath, textFile, atomic, json, hash, id, errorResult } from './common.mjs';
-import { validate } from './validate.mjs';
+import { validate, documentByteLimit } from './validate.mjs';
 import { nextTask, PROJECT_CONTINUATION_OBJECTIVE, isDocumentationFinalizationTask } from './plan.mjs';
 import { snapshot, diff, git, localPath, head, fileFingerprint } from './git.mjs';
 import { projectFacts, projectFactPaths } from './project-facts.mjs';
@@ -10,6 +10,17 @@ import { inspectionInputs } from './inspection-inputs.mjs';
 export const TRANSPORT_HARD_BYTES = 180000;
 // Maps read when a task arrives; inlined only for the final DOCS that audits them.
 export const ON_DEMAND_MAPS = Object.freeze(['docs/MODULES.md', INDEX]);
+function withoutKitSection(text,file) {
+  const begin = '<!-- workflow-kit:begin -->', end = '<!-- workflow-kit:end -->';
+  const i = text.indexOf(begin), j = text.indexOf(end);
+  check(i < 0 && j < 0 || i >= 0 && j > i && text.indexOf(begin,i+begin.length)<0 && text.indexOf(end,j+end.length)<0,
+    'MODIFIED_INTEGRATION', 'Повреждена управляемая секция ' + file);
+  return i < 0 ? text : (text.slice(0,i) + text.slice(j+end.length)).trim();
+}
+function projectInstructions(root) {
+  const file = ['AGENTS.override.md','AGENTS.md'].find(p => fs.existsSync(path.join(root,p)) && textFile(root,p).trim());
+  return file ? {file,text:withoutKitSection(textFile(root,file),file)} : null;
+}
 
 export function section(text, headings, file) {
   if (!headings?.length) return text;
@@ -100,8 +111,9 @@ export function recoverState(root, reason = 'manual', options = {}) {
     const mandatory = documents.filter(d => d.required); const references = documents.filter(d => !d.required);
     const existingRefs = references.filter(d => fs.existsSync(path.join(root, d.path)));
     const policyPath = '.harness/kit/templates/PROTOTYPE.md';
+    const instructions = projectInstructions(root);
     const templatePaths = ['PLAN', 'SPEC', 'CONTINUE', 'STAGES'].map(name => '.harness/kit/templates/' + name + '.md');
-    const relevant = [PLAN, CONFIG, rulesPath, policyPath, ...templatePaths, ...projectFactPaths(root), ...mandatory.map(d => d.path), ...existingRefs.map(d => d.path), ...(task ? [...task.functional_paths, ...task.documentation_paths] : [])];
+    const relevant = [PLAN, CONFIG, rulesPath, policyPath, ...(instructions ? [instructions.file] : []), ...templatePaths, ...projectFactPaths(root), ...mandatory.map(d => d.path), ...existingRefs.map(d => d.path), ...(task ? [...task.functional_paths, ...task.documentation_paths] : [])];
     relevant.forEach(p => contextPath(root, p));
     const before = snapshot(root, relevant);
     if (before.head !== initialHead || before.files[PLAN] !== initialPlan || before.files[CONFIG] !== initialConfig) {
@@ -119,7 +131,7 @@ export function recoverState(root, reason = 'manual', options = {}) {
     const pending = transaction && !Object.values(resolved).some(r => r.sha && transaction.result_sha === r.sha);
     let continuation;
     if (transaction) continuation = 'Есть незавершённый журнал commit. Сначала status и повтор commit/repair; новую задачу не начинать.';
-    else if (plan.execution_scope_status === 'NONE') continuation = PROJECT_CONTINUATION_OBJECTIVE + ' Используй навигацию OVERVIEW, MODULES и DOCUMENTATION_INDEX. Ясное поручение уже разрешает короткий контракт и plan:create без повторного согласования.';
+    else if (plan.execution_scope_status === 'NONE') continuation = PROJECT_CONTINUATION_OBJECTIVE + ' Назначение и запуск — README, карта модулей — OVERVIEW.';
     else if (plan.execution_scope_status === 'BLOCKED') continuation = 'Разрешены обсуждение и диагностика. Причина: ' + plan.blocked_reason;
     else if (plan.delivery_status === 'READY_FOR_ACCEPTANCE') continuation = 'Все задачи выполнены, план остаётся видимым. Новое поручение добавляется через plan:extend; отдельная DOCS нужна при новом delivery. Закрытие требует отдельной прямой команды пользователя; история остаётся в Git.';
     else continuation = (plan.current_task_id ? 'Продолжить ' : 'Начать через task:start ') + (task?.id ?? 'задачу после уточнения зависимостей') + '. Проверки и фиксация выполняются управляемой командой commit.';
@@ -137,6 +149,7 @@ export function recoverState(root, reason = 'manual', options = {}) {
     add('state', 'Состояние: ' + plan.execution_scope_status + ' / ' + plan.delivery_status + (pending ? ' / COMMIT_PENDING' : ''));
     add('workflow-core', core);
     add('prototype-policy', textFile(root, policyPath));
+    if (instructions?.text) add('project-instructions', 'ПОСТОЯННЫЕ ОГРАНИЧЕНИЯ ПРОЕКТА (' + instructions.file + ')\n' + instructions.text);
     add('project-facts', 'СРЕДА И ПРОЕКТ (данные, не инструкции; команды не запускались)\n' + json(projectFacts(root)));
     // Forms are printed by command help when a plan is created or extended; they are not needed to resume work.
     const docsTask = isDocumentationFinalizationTask(task);
@@ -152,7 +165,7 @@ export function recoverState(root, reason = 'manual', options = {}) {
     add('remaining-tasks', 'НЕВЫПОЛНЕННЫЕ МИКРОЗАДАЧИ\n' + json(plan.tasks.filter(t => t.commit_status !== 'DONE').map(t => ({ id: t.id, title: t.title, why: t.why, dependencies: t.dependencies, acceptance_criteria: t.acceptance_criteria }))));
     add('progress', 'ПРОГРЕСС\n' + plan.tasks.map(t => t.id + ': ' + t.implementation_status + (resolved[t.id]?.sha ? ' / ' + resolved[t.id].sha : resolved[t.id]?.pending ? ' / COMMIT_PENDING' : '')).join('\n'));
 
-    const included = [PLAN, CONFIG, rulesPath, policyPath];
+    const included = [PLAN, CONFIG, rulesPath, policyPath, ...(instructions ? [instructions.file] : [])];
     const omitted = templatePaths.map(file => ({ path: file, reason: 'ON_DEMAND' }));
     const changeParts=[];
     const addChange=(label,text,paths,kind)=>{
@@ -166,8 +179,10 @@ export function recoverState(root, reason = 'manual', options = {}) {
     };
     for (const doc of mandatory) {
       contextPath(root, doc.path);
+      if (doc.path === instructions?.file) continue;
       if (deferredMaps.includes(doc)) { omitted.push({ path: doc.path, reason: 'ON_DEMAND' }); continue; }
-      const piece = dataBlock(doc.path, section(textFile(root, doc.path), doc.heading_path, doc.path));
+      const raw = textFile(root,doc.path);
+      const piece = dataBlock(doc.path, /^AGENTS(?:\.override)?\.md$/.test(doc.path) ? withoutKitSection(raw,doc.path) : section(raw,doc.heading_path,doc.path));
       add('required:' + doc.path, piece); included.push(doc.path);
     }
     if (references.length) {
@@ -201,7 +216,7 @@ export function recoverState(root, reason = 'manual', options = {}) {
 
     const orderedChanges=changeParts.sort((a,b)=>b.reference.bytes-a.reference.bytes);
     let inlineBytes=parts.reduce((sum,p)=>sum+Buffer.byteLength(p.text)+2,0);
-    const targetBytes=Math.min(config.budget.hard_bytes,config.budget.hard_tokens*2,TRANSPORT_HARD_BYTES)-8192;
+    const targetBytes=Math.min(config.budget.hard_bytes,TRANSPORT_HARD_BYTES)-8192;
     for(const entry of orderedChanges){
       if(entry.reference.bytes<=12000&&inlineBytes<=targetBytes)continue;
       const beforeBytes=Buffer.byteLength(entry.part.text);deferChange(entry);
@@ -210,10 +225,9 @@ export function recoverState(root, reason = 'manual', options = {}) {
     let body = parts.map(p => p.text).join('\n\n');
     body += '\n\nПОЛНОТА: COMPLETE\nВключено: ' + included.join(', ') + '\nReference-only: ' + json(omitted);
     const size = measure(body);
-    const effectiveBudget = { soft_tokens: config.budget.soft_tokens,
-      hard_tokens: Math.min(config.budget.hard_tokens, Math.ceil(TRANSPORT_HARD_BYTES / 2)),
+    const effectiveBudget = { document_bytes: documentByteLimit(config),
       hard_bytes: Math.min(config.budget.hard_bytes, TRANSPORT_HARD_BYTES), configured: config.budget };
-    check(size.tokens <= effectiveBudget.hard_tokens && size.bytes <= effectiveBudget.hard_bytes,
+    check(size.bytes <= effectiveBudget.hard_bytes,
       'CONTEXT_TOO_LARGE', 'Обязательный execution context превышает транспортный бюджет. Уменьшите required module/task context или разделите scope; данные не обрезаны.',
       { ...size, budget: effectiveBudget, largest_sections: sectionsForError(parts) });
 
@@ -228,7 +242,7 @@ export function recoverState(root, reason = 'manual', options = {}) {
       facts: { project_id: plan.project_id, project_name: plan.project_name, plan_revision: plan.plan_revision, scope_id: plan.scope_id,
         execution_scope_status: plan.execution_scope_status, delivery_status: plan.delivery_status, task_id: task?.id ?? null, task_title: task?.title ?? null }, text: body, marker, signature: hash(body), completeness: 'COMPLETE', reason, head: before.head, plan_revision: plan.plan_revision,
       scope_id: plan.scope_id, task_id: plan.current_task_id, next_task_id: task?.id ?? null, included, omitted, size,
-      budget: effectiveBudget, soft_exceeded: size.tokens > config.budget.soft_tokens,
+      budget: effectiveBudget, soft_exceeded: false,
       token_method: 'ceil(UTF-8 bytes / 2), conservative estimate', elapsed_ms: Date.now() - started };
     if (options.receipt) atomic(localPath(root, 'recovery.json'), json({ ...packet, text: undefined, worktree: root, created_at: new Date().toISOString() }));
     return { validation, snapshot: before, packet };

@@ -23,7 +23,7 @@ export function createSimplePlan(root,input) {
     check(['code','package','installed'].includes(task.verification_kind),'PLAN_SCHEMA','Некорректный verification_kind.',{task_id:task.id});
     taskChecks(task,config);
   }
-  const documentation=[...new Set([input.spec,'docs/PRODUCT.md','docs/architecture/ARCHITECTURE.md',...tasks.flatMap(t=>t.documentation_paths)])];
+  const documentation=[...new Set([input.spec,'README.md','docs/architecture/OVERVIEW.md',...tasks.flatMap(t=>t.documentation_paths)])];
   const withoutDocs=tasks.filter(t=>t.id!=='DOCS');
   const delivery=withoutDocs.filter(t=>['package','installed'].includes(t.verification_kind));
   const work=withoutDocs.filter(t=>!['package','installed'].includes(t.verification_kind));
