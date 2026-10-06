@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1337,
+  "plan_revision": 1339,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "context-as-text-0.6.96-20261006",
@@ -962,8 +962,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "context-as-text-0.6.96-20261006",
         "task_id": "T005",
@@ -1024,7 +1024,12 @@
         "Сборка, установка и публикация на этом шаге не выполняются",
         "Следующая за этой задачей DOCS синхронизирует все перечисленные документы, включая README.md, docs/CONTEXT_DELIVERY.md и проектную часть AGENTS.md (блок Workflow Kit в AGENTS.md не трогать)"
       ],
-      "expected_commit_message": "feat: Подготовить source версии 0.6.96 и проверить релизный исходник"
+      "expected_commit_message": "feat: Подготовить source версии 0.6.96 и проверить релизный исходник",
+      "actual_files": [
+        "docs/planning/context-as-text.md",
+        "package-lock.json",
+        "package.json"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -1297,7 +1302,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: context-as-text-0.6.96-20261006
 Current Task: нет
-Revision: 1337
+Revision: 1339
 
 ## Цель
 
@@ -1376,8 +1381,8 @@ Revision: 1337
   - Git Commit: [DONE] feat: Windows-пакет без прежнего сервера инструментов; проверка пакета
   - Reference: context-as-text-0.6.96-20261006 / W006 / implementation
   - Файлы: src/windows-runtime.mjs, scripts/prepare-windows-toolchain.mjs, scripts/verify-windows-package.mjs, scripts/release-all.mjs, tests/windows-runtime.test.mjs, tests/release-all.test.mjs, docs/planning/context-as-text.md
-- [TODO] T005: Подготовить source версии 0.6.96 и проверить релизный исходник — Ожидает
-  - Git Commit: [PENDING] feat: Подготовить source версии 0.6.96 и проверить релизный исходник
+- [DONE] T005: Подготовить source версии 0.6.96 и проверить релизный исходник — Завершено
+  - Git Commit: [DONE] feat: Подготовить source версии 0.6.96 и проверить релизный исходник
   - Reference: context-as-text-0.6.96-20261006 / T005 / implementation
   - Файлы: package.json, package-lock.json, docs/planning/context-as-text.md, AGENTS.md, README.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/DECISIONS.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/CONTEXT_DELIVERY.md, docs/modules/codex-app-server-executor.md, docs/CLEAN_INSTALL.md, docs/SOURCE_WORKSPACES.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKFLOW_START.md, docs/modules/workflow-kit-recovery.md, docs/planning/codex-native-tools-macos.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
