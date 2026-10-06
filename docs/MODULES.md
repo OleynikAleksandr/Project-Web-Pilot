@@ -1,6 +1,6 @@
 # Модули проекта
 
-Связанные проекты (03.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
+Состав и связи (06.10.2026): **Workflow Kit** — планы и recovery, пакет `packages/workflow-kit` этого репозитория; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс в своём репозитории. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
 
 **Текущая установленная и опубликованная версия — 0.6.95; предыдущая — 0.6.94** ([контракт](planning/codex-native-tools-macos.md)). 0.6.95 убирает самодельную корзину: `delete_path`, `list_trash`, `restore_trash` и их код удалены, каталог macOS — 10 инструментов. Удаление выполняется как в Codex — `rm` через `exec_command` или `*** Delete File` в `apply_patch`; откат даёт git. Исполнитель при запуске убирает прежнюю папку `trash` только пустой. Полный `npm test`: 553 теста, 549 passed, 4 skipped, 0 failed; `npm run check:codex-tools` подтвердил `rust-v0.160.0`. Release собран один раз из source commit `7416c88c7a96b358b21b0f1744decee6fb5e3fb7`, обе macOS-копии установлены как 0.6.95 с ASAR `506cd28c9bf954fe732a53df0b6efba7d545d20e06bcdef68037a86546ae251d`; [GitHub Release v0.6.95](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.95) содержит ровно шесть проверенных assets. Bundled Workflow Kit — 1.5.5; его документы синхронизированы commit `6bbec655497eaea69d5c5825c68e9bdf78a01c18`. Остальные десять инструментов, `codex-tools.lock.json`, Windows-runtime и VPS channel не менялись. После обновления нужно перезапустить Web Pilot и обновить инструменты в ChatGPT. Native Windows и clean VM остаются отдельной приёмкой.
@@ -37,6 +37,7 @@
 
 | Модуль / часть проекта | Спецификация | Ответственность |
 | --- | --- | --- |
+| Workflow Kit / пакет | `packages/workflow-kit/docs/modules/workflow-kit-package.md` | Единственный редактируемый исходник Kit (`packages/workflow-kit/src`): API и CLI пакета, установщик, схемы и шаблоны, runtime для приложений; текущий `.harness/plans/todo-plan.md` checkout, перенос старых `by-id/by-session` в историю, установленная копия `.harness/kit`, API потребителя (`currentPlanView`, переходный `sessionPlanView`, `getRuntimeRoot()`); порядок DOCS → delivery и push после DOCS — `packages/workflow-kit/docs/planning/` |
 | Workflow Kit / Context Recovery | `docs/modules/workflow-kit-recovery.md` | Единственный current plan checkout/worktree, lifecycle scope, recovery capsule, dependency context, migration legacy session plans, continuity и canonical delivery-ordering policy |
 | Workflow Kit / Delivery Ordering | `docs/planning/input-instruction-delivery-ordering.md` | Явная active delivery-задача, DOCS до package/installed хвоста, запрет незапланированных build/sign/release/publish и короткий startupMessage guard |
 | Project Doctor | `docs/modules/project-doctor.md` | Автономная диагностика, резервная копия и безопасное исправление известных проблем открытия проекта |
@@ -52,7 +53,7 @@
 
 ## Связанные проекты
 
-Workflow Kit — отдельный canonical пакет планов и recovery. Web Pilot Sidebar — отдельное расширение браузера из `/Users/oleksandroliinyk/VSCODE/Web Pilot Sidebar`, которое использует browser-адаптер Web Pilot. Владение данными и будущим Host API остаётся у Project Web Pilot; прототип Sidebar сейчас работает с тестовым хостом. [Реестр репозиториев](SOURCE_WORKSPACES.md), [публичный контракт Sidebar](modules/chatgpt-dom-compatibility.md).
+Workflow Kit — пакет планов и recovery в `packages/workflow-kit` этого репозитория ([README пакета](../packages/workflow-kit/README.md)). Web Pilot Sidebar — отдельное расширение браузера из `/Users/oleksandroliinyk/VSCODE/Web Pilot Sidebar`, которое использует browser-адаптер Web Pilot. Владение данными и будущим Host API остаётся у Project Web Pilot; прототип Sidebar сейчас работает с тестовым хостом. [Реестр репозиториев](SOURCE_WORKSPACES.md), [публичный контракт Sidebar](modules/chatgpt-dom-compatibility.md).
 
 ## Действующие совместные контракты
 - [Single active plan](modules/session-owned-plans.md): один current plan на checkout; sessions не владельцы плана.

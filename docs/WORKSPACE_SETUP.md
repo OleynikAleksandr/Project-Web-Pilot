@@ -156,4 +156,6 @@ Fingerprint, preview, исходный staging и правила bootstrap-ко�
 
 ## Canonical Workflow Kit package — 0.6.58
 
+История: с 06.10.2026 исходник Workflow Kit — `packages/workflow-kit/src` этого репозитория, зависимость — `file:packages/workflow-kit`; остальное в этом разделе описывает выпуск 0.6.58.
+
 Единственный редактируемый исходник Workflow Kit находится в `/Users/oleksandroliinyk/VSCODE/WorkflowKit/src`. WebPilot подключает `@webpilot/workflow-kit@1.5.0` как `file:../WorkflowKit`; `scripts/stage-workflow-kit.mjs` автоматически создаёт ignored `resources/workflow-kit` перед start/test/smoke/build. Canonical/staged runtime: 35 файлов, SHA-256 `0db567df6f0c8f68f3119a7322b4c1c6d28cd06bf57b267993b792097bbb2c75`. Workspace Setup и Project Doctor получают содержимое только из package; `.harness/kit` каждого проекта остаётся установленным runtime этого проекта.

@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1311,
+  "plan_revision": 1313,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "context-as-text-0.6.96-20261006",
@@ -106,7 +106,17 @@
       "packages/workflow-kit/README.md",
       "packages/workflow-kit/docs/modules/workflow-kit-package.md",
       "packages/workflow-kit/src/templates/CONTINUE.md",
-      "tools/codex-app-server-mcp/session-rules.md"
+      "tools/codex-app-server-mcp/session-rules.md",
+      "docs/WORKSPACE_SETUP.md",
+      "docs/modules/session-owned-plans.md",
+      "docs/planning/mcp-sequential-parts-kit-1.5.4.md",
+      "docs/planning/release-backups-kit-1.5.5.md",
+      "packages/workflow-kit/docs/DOCUMENTATION_INDEX.md",
+      "packages/workflow-kit/docs/MODULES.md",
+      "packages/workflow-kit/docs/PRODUCT.md",
+      "packages/workflow-kit/docs/WORKFLOW_START.md",
+      "packages/workflow-kit/docs/architecture/ARCHITECTURE.md",
+      "packages/workflow-kit/docs/architecture/OVERVIEW.md"
     ]
   },
   "baseline_commit": "919ddde533e906b05ecaeac0683a02e67d4ced9b",
@@ -288,7 +298,19 @@
         "docs/architecture/OVERVIEW.md",
         "docs/modules/workflow-kit-recovery.md",
         "packages/workflow-kit/README.md",
-        "packages/workflow-kit/docs/modules/workflow-kit-package.md"
+        "packages/workflow-kit/docs/modules/workflow-kit-package.md",
+        "README.md",
+        "docs/WORKFLOW_START.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/modules/session-owned-plans.md",
+        "docs/planning/mcp-sequential-parts-kit-1.5.4.md",
+        "docs/planning/release-backups-kit-1.5.5.md",
+        "packages/workflow-kit/docs/DOCUMENTATION_INDEX.md",
+        "packages/workflow-kit/docs/MODULES.md",
+        "packages/workflow-kit/docs/PRODUCT.md",
+        "packages/workflow-kit/docs/WORKFLOW_START.md",
+        "packages/workflow-kit/docs/architecture/ARCHITECTURE.md",
+        "packages/workflow-kit/docs/architecture/OVERVIEW.md"
       ],
       "verification_ids": [],
       "verification_kind": "code",
@@ -299,13 +321,36 @@
         "Код не меняется"
       ],
       "expected_commit_message": "docs: документы Workflow Kit в составе проекта",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "context-as-text-0.6.96-20261006",
         "task_id": "M002",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "AGENTS.md",
+        "README.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/MODULES.md",
+        "docs/SOURCE_WORKSPACES.md",
+        "docs/WORKFLOW_START.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/session-owned-plans.md",
+        "docs/modules/workflow-kit-recovery.md",
+        "docs/planning/context-as-text.md",
+        "docs/planning/mcp-sequential-parts-kit-1.5.4.md",
+        "docs/planning/release-backups-kit-1.5.5.md",
+        "packages/workflow-kit/README.md",
+        "packages/workflow-kit/docs/DOCUMENTATION_INDEX.md",
+        "packages/workflow-kit/docs/MODULES.md",
+        "packages/workflow-kit/docs/PRODUCT.md",
+        "packages/workflow-kit/docs/WORKFLOW_START.md",
+        "packages/workflow-kit/docs/architecture/ARCHITECTURE.md",
+        "packages/workflow-kit/docs/architecture/OVERVIEW.md",
+        "packages/workflow-kit/docs/modules/workflow-kit-package.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -856,7 +901,17 @@
         "docs/planning/codex-native-tools-macos.md",
         "packages/workflow-kit/README.md",
         "packages/workflow-kit/docs/modules/workflow-kit-package.md",
-        "packages/workflow-kit/src/templates/CONTINUE.md"
+        "packages/workflow-kit/src/templates/CONTINUE.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/modules/session-owned-plans.md",
+        "docs/planning/mcp-sequential-parts-kit-1.5.4.md",
+        "docs/planning/release-backups-kit-1.5.5.md",
+        "packages/workflow-kit/docs/DOCUMENTATION_INDEX.md",
+        "packages/workflow-kit/docs/MODULES.md",
+        "packages/workflow-kit/docs/PRODUCT.md",
+        "packages/workflow-kit/docs/WORKFLOW_START.md",
+        "packages/workflow-kit/docs/architecture/ARCHITECTURE.md",
+        "packages/workflow-kit/docs/architecture/OVERVIEW.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -1067,7 +1122,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: context-as-text-0.6.96-20261006
 Current Task: нет
-Revision: 1311
+Revision: 1313
 
 ## Цель
 
@@ -1098,10 +1153,10 @@ Revision: 1311
   - Git Commit: [DONE] feat: Объединить репозитории: Workflow Kit становится пакетом packages/workflow-kit
   - Reference: context-as-text-0.6.96-20261006 / M001 / implementation
   - Файлы: package.json, package-lock.json, .gitignore, scripts/stage-workflow-kit.mjs, scripts/check-workflow-kit-dependency.mjs, scripts/check-workflow-kit-staging.mjs, scripts/release-all.mjs, tests/workflow-kit-source.test.mjs, tests/workflow-kit-recovery.test.mjs, tests/release-all.test.mjs, packages/workflow-kit/package.json, packages/workflow-kit/.gitattributes, packages/workflow-kit/.gitignore, packages/workflow-kit/scripts/check-consumer-contract.mjs, packages/workflow-kit/scripts/check-package.mjs, packages/workflow-kit/scripts/check-runtime-fixture.mjs, scripts/check-installed-release.mjs, scripts/verify-windows-package.mjs, docs/planning/context-as-text.md
-- [TODO] M002: Документы Workflow Kit в составе проекта — Ожидает
-  - Git Commit: [PENDING] docs: документы Workflow Kit в составе проекта
+- [DONE] M002: Документы Workflow Kit в составе проекта — Завершено
+  - Git Commit: [DONE] docs: документы Workflow Kit в составе проекта
   - Reference: context-as-text-0.6.96-20261006 / M002 / implementation
-  - Файлы: docs/planning/context-as-text.md, AGENTS.md, docs/SOURCE_WORKSPACES.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/architecture/OVERVIEW.md, docs/modules/workflow-kit-recovery.md, packages/workflow-kit/README.md, packages/workflow-kit/docs/modules/workflow-kit-package.md
+  - Файлы: docs/planning/context-as-text.md, AGENTS.md, docs/SOURCE_WORKSPACES.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/architecture/OVERVIEW.md, docs/modules/workflow-kit-recovery.md, packages/workflow-kit/README.md, packages/workflow-kit/docs/modules/workflow-kit-package.md, README.md, docs/WORKFLOW_START.md, docs/WORKSPACE_SETUP.md, docs/modules/session-owned-plans.md, docs/planning/mcp-sequential-parts-kit-1.5.4.md, docs/planning/release-backups-kit-1.5.5.md, packages/workflow-kit/docs/DOCUMENTATION_INDEX.md, packages/workflow-kit/docs/MODULES.md, packages/workflow-kit/docs/PRODUCT.md, packages/workflow-kit/docs/WORKFLOW_START.md, packages/workflow-kit/docs/architecture/ARCHITECTURE.md, packages/workflow-kit/docs/architecture/OVERVIEW.md
 - [TODO] T001: Стартовое сообщение macOS несёт полный контекст; режим MCP-доставки удалён из клиента — Ожидает
   - Git Commit: [PENDING] feat: Стартовое сообщение macOS несёт полный контекст; режим MCP-доставки удалён из клиента
   - Reference: context-as-text-0.6.96-20261006 / T001 / implementation
@@ -1153,7 +1208,7 @@ Revision: 1311
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: context-as-text-0.6.96-20261006 / DOCS / implementation
-  - Файлы: docs/planning/context-as-text.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, tools/codex-app-server-mcp/session-rules.md, AGENTS.md, README.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/DECISIONS.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/CONTEXT_DELIVERY.md, docs/modules/codex-app-server-executor.md, docs/CLEAN_INSTALL.md, docs/SOURCE_WORKSPACES.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKFLOW_START.md, docs/modules/workflow-kit-recovery.md, docs/planning/codex-native-tools-macos.md, packages/workflow-kit/README.md, packages/workflow-kit/docs/modules/workflow-kit-package.md, packages/workflow-kit/src/templates/CONTINUE.md
+  - Файлы: docs/planning/context-as-text.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, tools/codex-app-server-mcp/session-rules.md, AGENTS.md, README.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/DECISIONS.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/CONTEXT_DELIVERY.md, docs/modules/codex-app-server-executor.md, docs/CLEAN_INSTALL.md, docs/SOURCE_WORKSPACES.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKFLOW_START.md, docs/modules/workflow-kit-recovery.md, docs/planning/codex-native-tools-macos.md, packages/workflow-kit/README.md, packages/workflow-kit/docs/modules/workflow-kit-package.md, packages/workflow-kit/src/templates/CONTINUE.md, docs/WORKSPACE_SETUP.md, docs/modules/session-owned-plans.md, docs/planning/mcp-sequential-parts-kit-1.5.4.md, docs/planning/release-backups-kit-1.5.5.md, packages/workflow-kit/docs/DOCUMENTATION_INDEX.md, packages/workflow-kit/docs/MODULES.md, packages/workflow-kit/docs/PRODUCT.md, packages/workflow-kit/docs/WORKFLOW_START.md, packages/workflow-kit/docs/architecture/ARCHITECTURE.md, packages/workflow-kit/docs/architecture/OVERVIEW.md
 - [TODO] T006: Собрать и проверить парный релиз 0.6.96 — Ожидает
   - Git Commit: [PENDING] feat: Собрать и проверить парный релиз 0.6.96
   - Reference: context-as-text-0.6.96-20261006 / T006 / implementation

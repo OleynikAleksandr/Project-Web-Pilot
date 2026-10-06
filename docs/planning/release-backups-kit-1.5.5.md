@@ -10,7 +10,7 @@
 ## Результат
 
 1. Резервные копии — в `.harness/runtime/release-backups.noindex` (Spotlight не индексирует папки `.noindex`). Для каждой цели установки (корневой app и `/Applications`) хранится одна копия — предыдущая версия: после проверенной установки новая копия заменяет прежнюю в постоянном слоте `mac-<папка>-<hash пути>`. Откат при ошибке установки не меняется. Если заменить слот не удалось, установка остаётся успешной, а копия — во временной папке рядом (`backupError` в результате).
-2. Bundled Workflow Kit **1.5.5** ([контракт](../../../WorkflowKit/docs/planning/push-after-docs.md)): управляемый `pre-push` отказывает в push, пока DOCS текущего плана не завершена. Release-gates Web Pilot ожидают 1.5.5; Kit проекта обновляется штатным `install --update`.
+2. Bundled Workflow Kit **1.5.5** ([контракт](../../packages/workflow-kit/docs/planning/push-after-docs.md)): управляемый `pre-push` отказывает в push, пока DOCS текущего плана не завершена. Release-gates Web Pilot ожидают 1.5.5; Kit проекта обновляется штатным `install --update`.
 3. Релиз **0.6.89**: версия → DOCS → парная сборка → установка → GitHub Release.
 
 ## Проверка

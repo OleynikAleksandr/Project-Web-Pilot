@@ -1,6 +1,6 @@
 # Начало работы
 
-Связанные проекты (03.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
+Состав и связи (06.10.2026): **Workflow Kit** — планы и recovery, пакет `packages/workflow-kit` этого репозитория; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс в своём репозитории. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
 ## Текущее состояние — 05.10.2026
 
@@ -53,7 +53,7 @@ Project Web Pilot передаёт recovery **текущего checkout**. Од�
 
 ## Разработка и выпуск
 
-Общий source macOS/Windows — [Project-Web-Pilot](https://github.com/OleynikAleksandr/Project-Web-Pilot); canonical Kit — [WorkflowKit](https://github.com/OleynikAleksandr/WorkflowKit). Runtime, userData, ключи и платформенные сборки не переносятся в Git. Встроенный Chromium показывает ChatGPT Web; локальные действия идут через MCP/tunnel, модельных API нет.
+Общий source macOS/Windows — [Project-Web-Pilot](https://github.com/OleynikAleksandr/Project-Web-Pilot); Workflow Kit — пакет [`packages/workflow-kit`](../packages/workflow-kit/README.md) того же репозитория. Runtime, userData, ключи и платформенные сборки не переносятся в Git. Встроенный Chromium показывает ChatGPT Web; локальные действия идут через MCP/tunnel, модельных API нет.
 
 Для изменений приложения обязательны Node suite и Electron smoke на изолированных fixtures; документальные задачи выполняют назначенные проверки Workflow Kit. Проверки внутри commit не запускаются отдельно на том же состоянии. Готовый проверенный бинарный релиз не пересобирается без изменения приложения.
 

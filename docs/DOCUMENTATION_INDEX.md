@@ -1,6 +1,6 @@
 # Каталог документации
 
-Связанные проекты (03.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
+Состав и связи (06.10.2026): **Workflow Kit** — планы и recovery, пакет `packages/workflow-kit` этого репозитория; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс в своём репозитории. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
 <!-- workflow-kit:begin -->
 ## Документы проекта
@@ -66,11 +66,20 @@
 ## Workflow Kit package и generated runtime
 | Документ / файл | Назначение |
 | --- | --- |
-| `/Users/oleksandroliinyk/VSCODE/WorkflowKit/docs/modules/workflow-kit-package.md` | Canonical contract package `@webpilot/workflow-kit` |
+| `packages/workflow-kit/README.md` | Пакет `@webpilot/workflow-kit` в этом репозитории: модель, устройство, проверка, как меняется Kit, история версий |
+| `packages/workflow-kit/docs/modules/workflow-kit-package.md` | Техническая спецификация пакета: контракт текущего плана, API потребителя, перенос старых планов, runtime, проверки |
+| `packages/workflow-kit/docs/planning/delivery-ordering-policy.md` | Kit: порядок DOCS → delivery и запрет незапланированных build/publish |
+| `packages/workflow-kit/docs/planning/push-after-docs.md` | Kit 1.5.5: push только после DOCS текущего плана (pre-push) |
+| `packages/workflow-kit/docs/planning/compact-recovery.md` | Kit 1.5.4: компактный recovery, формы и карты по запросу |
+| `packages/workflow-kit/docs/planning/project-rename.md` | Kit 1.5.3: команда project:rename |
+| `packages/workflow-kit/docs/planning/single-active-plan-migration.md` | Kit 1.5.0: переход к одному current plan на checkout |
+| `packages/workflow-kit/docs/planning/canonical-workflow-kit-package.md` | Исторический план выделения пакета |
+| `docs/planning/context-as-text.md` | 0.6.96: объединение репозиториев, Workflow Kit 1.5.6, контекст текстом, паритет Windows |
 | `docs/planning/workflow-kit-package-migration.md` | Контракт миграции WebPilot на package + staging |
-| `scripts/check-workflow-kit-dependency.mjs` | Проверка resolved package, версии, exports, 35-файлового fileset и digest |
+| `scripts/check-workflow-kit-dependency.mjs` | Зависимость ведёт в `packages/workflow-kit`, одна версия в `package.json` и `common.mjs`, экспорты; состав и digest исходника пакета |
 | `scripts/stage-workflow-kit.mjs` | Детерминированный generated staging в `resources/workflow-kit` |
-| `scripts/check-workflow-kit-staging.mjs` | Проверка равенства generated runtime canonical package и идемпотентности |
+| `scripts/check-workflow-kit-staging.mjs` | Копия `resources/workflow-kit` равна исходнику пакета файл в файл; повторная подготовка ничего не меняет |
+| `npm run check --prefix packages/workflow-kit` | Собственные проверки пакета (в плане — `kit-check`): состав, контракт потребителя, установка в пробный проект, перенос плана |
 ## Действующий контракт — single active plan и чаты
 | Документ | Назначение |
 | --- | --- |

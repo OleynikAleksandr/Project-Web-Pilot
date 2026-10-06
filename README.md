@@ -40,10 +40,10 @@ Project Web Pilot — локальное Electron-приложение для ma
 
 Функциональное поведение AutoPlan из 0.6.78 сохранено: native ID либо сохраняемый цикл генерации определяет паузу; загрузка истории ожидается, отменённая собственная вставка очищается с сохранением пользовательских правок. Публичные экспорты DOM/Composer и формат `pageScript` сохранены. [Контракт AutoPlan](docs/planning/auto-plan-client-driven-refactor.md).
 
-## Связанные репозитории
+## Состав репозитория и связанные проекты
 
-- [Project Web Pilot](https://github.com/OleynikAleksandr/Project-Web-Pilot) — приложение.
-- [WorkflowKit](https://github.com/OleynikAleksandr/WorkflowKit) — canonical source пакета `@webpilot/workflow-kit` для current plan, recovery и project lifecycle.
+- [Project Web Pilot](https://github.com/OleynikAleksandr/Project-Web-Pilot) — приложение и пакет Workflow Kit в одном репозитории.
+- [Workflow Kit](packages/workflow-kit/README.md) — пакет `@webpilot/workflow-kit` в папке `packages/workflow-kit`: current plan, recovery и project lifecycle. До 06.10.2026 разрабатывался в отдельном репозитории [WorkflowKit](https://github.com/OleynikAleksandr/WorkflowKit); его история перенесена сюда, прежний репозиторий остаётся только для чтения.
 - [Web Pilot Sidebar](https://github.com/OleynikAleksandr/Web-Pilot-Sidebar) — отдельное браузерное расширение, использующее адаптер ChatGPT из этого проекта. Workspace: `/Users/oleksandroliinyk/VSCODE/Web Pilot Sidebar`. Сейчас это прототип этапа 0 с тестовым хостом; production Host API в Web Pilot ещё не реализован. [Связь репозиториев](docs/SOURCE_WORKSPACES.md), [контракт адаптера](docs/modules/chatgpt-dom-compatibility.md).
 
 ## Автовыполнение

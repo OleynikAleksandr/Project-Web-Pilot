@@ -1,5 +1,7 @@
 # Workflow Kit Package — техническая спецификация
 
+С 06.10.2026 пакет живёт в `packages/workflow-kit` репозитория Project Web Pilot; до этого — отдельный репозиторий WorkflowKit, история которого перенесена. Обзор, устройство и история версий — [README пакета](../../README.md).
+
 Canonical source/runtime `@webpilot/workflow-kit` — **1.5.5**, 35 файлов, SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`. Последний отдельный GitHub Release Kit — **v1.5.1**, 35 файлов, SHA-256 `93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33`. Текущий опубликованный consumer — Project Web Pilot **0.6.95**, bundled runtime — Workflow Kit **1.5.5**.
 
 ## Среда Node.js
@@ -95,7 +97,7 @@ import { getRuntimeRoot } from '@webpilot/workflow-kit';
 await fs.cp(getRuntimeRoot(), stageDirectory, { recursive: true });
 ```
 
-Готовое приложение обязано быть self-contained и не зависеть от соседнего `/VSCODE/WorkflowKit`.
+Готовое приложение обязано быть self-contained и не зависеть от исходников пакета: в него попадает копия runtime, равная `src/` файл в файл.
 
 ## Project Web Pilot adaptation
 
@@ -117,9 +119,13 @@ Workspace Setup и project readiness проверяют только current che
 
 `scripts/check-runtime-fixture.mjs` проверяет single-active runtime, compatibility session IDs, legacy migration, strict current recovery budget, Git worktree isolation и порядок code → DOCS → package/installed при plan:create/plan:extend, включая повторное открытие DOCS для correction.
 
-`scripts/check-consumer-contract.mjs` проверяет local `file:` dependency, package/subpath imports, `currentPlanView/sessionPlanView`, `npm pack` standalone consumer и staging runtime без sibling repository.
+`scripts/check-consumer-contract.mjs` проверяет local `file:` dependency, package/subpath imports, `currentPlanView/sessionPlanView`, `npm pack` standalone consumer и копию runtime без исходника пакета.
 
-`scripts/check-package.mjs` проверяет package identity/fileset/exports и отсутствие project/runtime state в tarball.
+`scripts/check-package.mjs` проверяет package identity/exports, одну версию в `package.json` и `src/lib/common.mjs` и отсутствие project/runtime state в tarball.
+
+`scripts/check-carryover-fixture.mjs` проверяет `plan:carryover` через установленный CLI.
+
+Все четыре скрипта запускает `npm run check` пакета (из корня репозитория — `npm run check --prefix packages/workflow-kit`, в плане Project Web Pilot — проверка `kit-check`). Закреплённых версии, числа файлов и SHA-256 в скриптах нет: установленная и упакованная копии сверяются с `src/` файл в файл; значения ниже — справка о выпущенных состояниях.
 
 Последний отдельный GitHub Release **@webpilot/workflow-kit v1.5.1**: 35 runtime-файлов, SHA-256 **93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33**. Canonical source/runtime **1.5.5**: **35 файлов**, SHA-256 **8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376**. Исторические версии: 1.5.2 — `646fec106c498e004d8688a3bc40012bea1654178ce66a61b650211ab28055df`; 1.5.3 — `d59ae7b6b074e953fdd6c5d78d1f644902f0e7b9af5ad3c78d67d42f1f6a1c0f`; 1.5.4 — `3a9a3838dbfaac80bccf8cb05d3be71576797cbb6946c6b1537a9c73c383b562`. Installer сохраняет совместимые upgrade-paths; runtime regression проверяет migration, recovery budget и Git worktree isolation.
 

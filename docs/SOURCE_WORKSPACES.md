@@ -1,13 +1,15 @@
 # Исходные проекты и ссылки
 
-## Связанные рабочие репозитории — 05.10.2026
+## Связанные рабочие репозитории — 06.10.2026
+
+С 06.10.2026 Workflow Kit — пакет `packages/workflow-kit` этого репозитория. Его история перенесена из отдельного репозитория WorkflowKit одной операцией `git subtree` (импортный коммит `e1c8c92`, последний коммит прежнего репозитория — `6bbec655497eaea69d5c5825c68e9bdf78a01c18`). Прежний репозиторий и его локальная папка остаются только для чтения; упоминания `/Users/oleksandroliinyk/VSCODE/WorkflowKit` ниже и в исторических разделах других документов описывают состояние до объединения.
 
 Project Web Pilot: текущая локальная и опубликованная версия **0.6.95**, предыдущая — **0.6.94** ([контракт](planning/codex-native-tools-macos.md)). 0.6.95 опубликована из source commit `7416c88c7a96b358b21b0f1744decee6fb5e3fb7`, обе Mac-копии установлены. Bundled canonical Workflow Kit — **1.5.5** (35 файлов, SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`); его документы синхронизированы commit `6bbec655497eaea69d5c5825c68e9bdf78a01c18`. Native Windows остаётся отдельной platform-проверкой.
 
 | Репозиторий | Workspace | Роль и граница |
 | --- | --- | --- |
 | Project Web Pilot | `/Users/oleksandroliinyk/VSCODE/Project Web Pilot` | Electron-приложение, проекты, сессии, текущий план, доставка recovery и MCP/runtime |
-| [Workflow Kit](https://github.com/OleynikAleksandr/WorkflowKit) | `/Users/oleksandroliinyk/VSCODE/WorkflowKit` | Canonical локальный пакет `@webpilot/workflow-kit@1.5.5` (35 файлов, SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`); последний отдельный release — 1.5.1. Документы синхронизированы с Web Pilot 0.6.95 commit `6bbec655…`; код/runtime Kit не менялись |
+| Workflow Kit | `/Users/oleksandroliinyk/VSCODE/Project Web Pilot/packages/workflow-kit` | Пакет `@webpilot/workflow-kit@1.5.5` в этом репозитории (35 файлов runtime, SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`); последний отдельный release — 1.5.1. Прежний репозиторий [WorkflowKit](https://github.com/OleynikAleksandr/WorkflowKit) (`/Users/oleksandroliinyk/VSCODE/WorkflowKit`) — только чтение, не источник |
 | [Web Pilot Sidebar](https://github.com/OleynikAleksandr/Web-Pilot-Sidebar) | `/Users/oleksandroliinyk/VSCODE/Web Pilot Sidebar` | Отдельный репозиторий браузерного расширения; разрабатывается параллельно другим агентом, использует адаптер ChatGPT из Web Pilot |
 
 Sidebar отображает проекты, сессии и прогресс плана в настоящей странице chatgpt.com. Проектные данные, текущий план, recovery и локальные инструменты остаются ответственностью Project Web Pilot и Workflow Kit; расширение не пишет todo-plan.md и не хранит проектные данные. На 02.10.2026 Sidebar — прототип этапа 0 с тестовыми данными и тестовым хостом. Production Host API в Project Web Pilot ещё не реализован; его подключение требует отдельной задачи по собственному workflow этого репозитория.
@@ -16,7 +18,7 @@ Sidebar отображает проекты, сессии и прогресс п
 
 Источники Sidebar для чтения: `README.md`, `AGENTS.md`, `docs/modules/provider-adapter.md` и `docs/modules/host-api.md` относительно его workspace. Remote `origin` Sidebar — `https://github.com/OleynikAleksandr/Web-Pilot-Sidebar.git`. [GitHub Release v0.1.0](https://github.com/OleynikAleksandr/Web-Pilot-Sidebar/releases/tag/v0.1.0) содержит два проверенных артефакта: Chrome/Edge ZIP `web-pilot-sidebar-chrome-0.1.0.zip` — 34468 байт, SHA-256 `00f9fc9405549c9e3c5b8cab3dbfa95be245ce3da3540a7dd8ee46d5b19b471e`; подписанный macOS DMG `Web-Pilot-Sidebar-0.1.0-2610021544.dmg` — 222208 байт, SHA-256 `80d638fffb34a6f827a21be1ef5ef8bd423242c51e52c885f92c09c63a8c690b`. Публичный GitHub API подтвердил оба digest. Приложение внутри DMG проходит `codesign --verify`, Gatekeeper принимает его как Notarized Developer ID, stapler-ticket валиден. Тег `v0.1.0` остаётся на функциональном release commit `8786bef8ae7be64277604c29a949681b9f496146`; после релиза `main` продвинут параллельной packaging/documentation работой до `0fab32aa88a92abc8ba854b4f22c777004d7dac3`, и `origin/main` совпадает с ним. TestFlight ещё не опубликован: App Store Connect не содержит app record для `com.oleynik.WebPilotSidebar`. Исторические источники WF001 и Codex Local Mac ниже сохраняются отдельно от этих текущих связей.
 
-Последний отдельный WorkflowKit Release — [GitHub Release v1.5.1](https://github.com/OleynikAleksandr/WorkflowKit/releases/tag/v1.5.1), tag commit `dfc38c1b4a2cee1c13c68f9b54f064d3496dab10`. Canonical source/runtime — **1.5.5**, 35 файлов / SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`. Документальная синхронизация Web Pilot 0.6.95 опубликована в WorkflowKit `main` commit `6bbec655497eaea69d5c5825c68e9bdf78a01c18`; код/version/runtime Kit не менялись.
+Последний отдельный релиз Workflow Kit — [GitHub Release v1.5.1](https://github.com/OleynikAleksandr/WorkflowKit/releases/tag/v1.5.1) прежнего репозитория, tag commit `dfc38c1b4a2cee1c13c68f9b54f064d3496dab10`. Исходник и runtime пакета — **1.5.5**, 35 файлов / SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`, теперь в `packages/workflow-kit`. Последний коммит прежнего репозитория на момент переноса — `6bbec655497eaea69d5c5825c68e9bdf78a01c18` (документальная синхронизация с Web Pilot 0.6.95).
 
 ## Проверенный снимок
 
@@ -141,7 +143,7 @@ Scope 029 / T009: 0.6.29 собран из main 5028241 с изменением 
 
 ## Canonical Workflow Kit package — текущее состояние
 
-Текущий source of truth — `/Users/oleksandroliinyk/VSCODE/WorkflowKit`, package `@webpilot/workflow-kit@1.5.5`, 35 файлов / SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`; `resources/workflow-kit` создаётся автоматически и игнорируется Git. Сведения о переходе на canonical package ниже относятся к выпуску 0.6.58.
+Текущий source of truth — `packages/workflow-kit/src` этого репозитория, package `@webpilot/workflow-kit@1.5.5`, 35 файлов / SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`; зависимость — `file:packages/workflow-kit`; `resources/workflow-kit` создаётся автоматически, сверяется с исходником пакета файл в файл и игнорируется Git. Закреплённых версии, числа файлов и SHA-256 в скриптах больше нет. До 06.10.2026 источником был отдельный репозиторий `/Users/oleksandroliinyk/VSCODE/WorkflowKit`; сведения о переходе на canonical package ниже относятся к выпуску 0.6.58.
 
 ### История подключения canonical package — 0.6.58
 

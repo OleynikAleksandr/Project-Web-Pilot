@@ -214,7 +214,7 @@ Recovery 1.4.11 передаёт вместе с Workflow Core правила `P
 
 ## Workflow Kit 1.5.5 — текущий runtime / 05.10.2026
 
-Canonical source `/Users/oleksandroliinyk/VSCODE/WorkflowKit/src`, installed Kit этого checkout и bundled runtime опубликованного Project Web Pilot 0.6.95 используют Workflow Kit **1.5.5**: 35 файлов, SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`. Последний отдельный WorkflowKit release остаётся 1.5.1. Документы WorkflowKit синхронизированы с Web Pilot 0.6.95 commit `6bbec655497eaea69d5c5825c68e9bdf78a01c18`; код, версия и runtime Kit не менялись.
+Исходник пакета `packages/workflow-kit/src` этого репозитория (до 06.10.2026 — отдельный репозиторий `/Users/oleksandroliinyk/VSCODE/WorkflowKit`, история перенесена), installed Kit этого checkout и bundled runtime опубликованного Project Web Pilot 0.6.95 используют Workflow Kit **1.5.5**: 35 файлов, SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`. Последний отдельный релиз пакета остаётся 1.5.1. Последний коммит прежнего репозитория — `6bbec655497eaea69d5c5825c68e9bdf78a01c18`; при переносе код, версия и runtime Kit не менялись. Спецификация пакета — [packages/workflow-kit/docs/modules/workflow-kit-package.md](../../packages/workflow-kit/docs/modules/workflow-kit-package.md).
 
 1. Один checkout/worktree имеет один current plan `.harness/plans/todo-plan.md`; новый chat/client продолжает его, независимая работа использует отдельный worktree.
 2. Recovery выдаётся компактно по частям; формы/карты читаются по запросу, а обязательные OVERVIEW/MODULES/INDEX и документы текущего контракта остаются в project context.
