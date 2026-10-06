@@ -1189,3 +1189,222 @@ print(json.dumps({"identity":identity,"LC_ALL":seen.get("LC_ALL"),"LANG":seen.ge
     await rm(root, { recursive: true, force: true });
   }
 });
+
+// ---- Windows branches of the executor, exercised on the build host with the platform passed in ----
+
+async function runVenvProbe(t, name, script, args = []) {
+  if (!existsSync(executorVenvPython)) { t.skip('Codex App Server runtime venv is not installed'); return null; }
+  const root = await mkdtemp(path.join(tmpdir(), name));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const probe = path.join(root, 'probe.py');
+  await writeFile(probe, script);
+  const run = await new Promise((resolve, reject) => {
+    const child = spawn(executorVenvPython, ['-B', probe, clientDir, root, ...args], { cwd: root, env: { ...process.env, PYTHONDONTWRITEBYTECODE: '1' }, stdio: ['ignore', 'pipe', 'pipe'] });
+    child.stdout.setEncoding('utf8'); child.stderr.setEncoding('utf8');
+    let stdout = '', stderr = '';
+    child.stdout.on('data', chunk => { stdout += chunk; });
+    child.stderr.on('data', chunk => { stderr += chunk; });
+    child.on('error', reject);
+    child.on('close', code => resolve({ code, stdout, stderr }));
+  });
+  assert.equal(run.code, 0, run.stderr);
+  return { root, out: JSON.parse(run.stdout.trim().split('\n').at(-1)) };
+}
+
+test('Windows: Codex is found behind the npm launcher, on PATH and by architecture; macOS search is unchanged', { timeout: 30_000 }, async t => {
+  const result = await runVenvProbe(t, 'web-pilot-win-codex-', `import json, os, stat, sys, pathlib
+sys.path.insert(0, sys.argv[1])
+import app_server_client as client
+root = pathlib.Path(sys.argv[2])
+def binary(path, version):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("#!/bin/sh\\necho codex-cli " + version + "\\n")
+    path.chmod(0o755)
+    return str(path)
+appdata, local = root / "Roaming", root / "Local"
+npm = appdata / "npm"
+npm.mkdir(parents=True)
+launcher = npm / "codex.cmd"
+launcher.write_text("@echo off\\r\\nnode codex.js %*\\r\\n")
+scope = npm / "node_modules" / "@openai"
+x64 = binary(scope / "codex" / "node_modules" / "@openai" / "codex-win32-x64" / "vendor" / "x86_64-pc-windows-msvc" / "bin" / "codex.exe", "0.160.0")
+arm = binary(scope / "codex" / "node_modules" / "@openai" / "codex-win32-arm64" / "vendor" / "aarch64-pc-windows-msvc" / "bin" / "codex.exe", "0.160.0-arm")
+env = {"APPDATA": str(appdata), "LOCALAPPDATA": str(local), "PROCESSOR_ARCHITECTURE": "AMD64"}
+out = {"x64": x64, "arm": arm}
+found = client.discover_codex_binary(platform="win32", environ=env, which=lambda name: str(launcher))
+out["npm_launcher"] = [found.path, found.version]
+out["npm_without_path"] = client.discover_codex_binary(platform="win32", environ=env, which=lambda name: None).path
+out["arm64"] = client.discover_codex_binary(platform="win32", environ={**env, "PROCESSOR_ARCHITECTURE": "ARM64"}, which=lambda name: None).path
+out["wow64"] = client.discover_codex_binary(platform="win32", environ={**env, "PROCESSOR_ARCHITECTURE": "x86", "PROCESSOR_ARCHITEW6432": "ARM64"}, which=lambda name: None).path
+direct = binary(root / "bin" / "codex.exe", "9.9.9")
+out["exe_on_path"] = client.discover_codex_binary(platform="win32", environ=env, which=lambda name: direct).path
+winget = binary(local / "Microsoft" / "WinGet" / "Links" / "codex.exe", "1.0.0")
+out["winget"] = client.discover_codex_binary(platform="win32", environ={"LOCALAPPDATA": str(local)}, which=lambda name: None).path == winget
+explicit = binary(root / "explicit" / "codex.exe", "2.0.0")
+out["explicit"] = client.discover_codex_binary(explicit, platform="win32", environ=env, which=lambda name: str(launcher)).path == explicit
+out["env"] = client.discover_codex_binary(platform="win32", environ={**env, "CODEX_APP_SERVER_BIN": explicit}, which=lambda name: None).path == explicit
+try:
+    client.discover_codex_binary(platform="win32", environ={"APPDATA": str(root / "empty")}, which=lambda name: None)
+    out["missing"] = None
+except client.AppServerError as error:
+    out["missing"] = str(error)
+posix = binary(root / "posix" / "codex", "3.0.0")
+out["darwin_path"] = client.discover_codex_binary(platform="darwin", environ={"HOME": str(root)}, which=lambda name: posix).path in (posix, str(pathlib.Path.home() / ".npm-global/bin/codex"), str(pathlib.Path.home() / ".local/bin/codex"))
+out["detached_win"] = client._detached_process_options("win32")
+out["detached_mac"] = client._detached_process_options("darwin")
+calls = []
+class Process:
+    pid = 4242
+    def kill(self): calls.append("kill")
+    def terminate(self): calls.append("terminate")
+client._stop_process_tree(Process(), force=False, platform="win32", run=lambda argv, **kwargs: calls.append(argv))
+def broken(argv, **kwargs): raise OSError("no taskkill")
+client._stop_process_tree(Process(), force=True, platform="win32", run=broken)
+out["stop_calls"] = calls
+print(json.dumps(out))
+`);
+  if (!result) return;
+  const { out } = result;
+  assert.deepEqual(out.npm_launcher, [out.x64, 'codex-cli 0.160.0'], 'codex.cmd is only a launcher: the native executable is used');
+  assert.equal(out.npm_without_path, out.x64, '%APPDATA%\\npm is searched even when it is not on PATH');
+  assert.equal(out.arm64, out.arm); assert.equal(out.wow64, out.arm, 'the real architecture of an emulated process');
+  assert.ok(out.exe_on_path.endsWith('/bin/codex.exe'));
+  assert.equal(out.winget, true); assert.equal(out.explicit, true); assert.equal(out.env, true);
+  assert.equal(out.missing, 'No compatible Codex binary was found');
+  assert.equal(out.darwin_path, true);
+  assert.equal(out.detached_win.start_new_session, undefined);
+  assert.equal(out.detached_win.creationflags, 0x200 | 0x08000000, 'new process group, no console window');
+  assert.deepEqual(out.detached_mac, { start_new_session: true });
+  assert.deepEqual(out.stop_calls, [['taskkill', '/PID', '4242', '/T', '/F'], 'kill'], 'the whole tree is ended; a missing taskkill falls back to kill');
+});
+
+test('Windows: shell argv follows Codex, status names the system and the state lives in LOCALAPPDATA', { timeout: 30_000 }, async t => {
+  const result = await runVenvProbe(t, 'web-pilot-win-shell-', `import json, os, sys, pathlib
+sys.path.insert(0, sys.argv[1])
+import server
+root = pathlib.Path(sys.argv[2])
+out = {"names": [server.server_name("win32"), server.server_name("darwin")],
+       "state": [str(server.default_state_dir("win32", {"LOCALAPPDATA": str(root / "Local")})), str(server.default_state_dir("darwin"))],
+       "prefix": server.POWERSHELL_UTF8_PREFIX}
+argv = server.LocalFacade._shell_argv
+out["argv"] = {
+    "pwsh_login": argv(r"C:\\Program Files\\PowerShell\\7\\pwsh.exe", "Get-ChildItem", True, "win32"),
+    "powershell_plain": argv(r"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\PowerShell.EXE", "dir", False, "win32"),
+    "cmd": argv(r"C:\\Windows\\System32\\cmd.exe", "dir /b", True, "win32"),
+    "git_bash": argv(r"C:\\Program Files\\Git\\bin\\bash.exe", "ls", True, "win32"),
+    "mac_zsh": argv("/bin/zsh", "ls", True, "darwin"),
+    "mac_plain": argv("/bin/bash", "ls", False, "darwin"),
+    "mac_pwsh": argv("/usr/local/bin/pwsh", "ls", True, "darwin"),
+}
+shell = root / "tools" / "pwsh.exe"
+shell.parent.mkdir()
+shell.write_text("#!/bin/sh\\n")
+shell.chmod(0o755)
+started = []
+class Binary:
+    path = str(shell)
+    version = "codex-cli 0.160.0"
+class Client:
+    cwd = str(root)
+    binary = Binary()
+    environment = dict(os.environ)
+    def status(self): return {"running": True}
+    def command_exec(self, argv, **kwargs):
+        started.append(["exec", *argv]); return {"exitCode": 0, "stdout": "", "stderr": ""}
+    def start_command(self, argv, **kwargs):
+        started.append({"argv": argv, "tty": kwargs.get("tty"), "sandbox": kwargs.get("sandbox_policy")}); return {"process_id": "abcdef0123456789"}
+    def read_command_output(self, process_id, cursor=0, wait_ms=0):
+        return {"process_id": process_id, "running": False, "exit_code": 0, "output": "ok", "cursor": 2, "duration_ms": 5}
+facade = server.LocalFacade(Client(), root / "state")
+facade.platform = "win32"
+out["exec"] = facade.exec_command("Get-Date", str(root), str(shell))
+out["exec_plain"] = facade.exec_command("Get-Date", str(root), str(shell), False, True)
+out["started"] = started[:]
+for bad in ("missing-shell-name", str(root / "nope.exe"), "relative\\\\pwsh.exe"):
+    try:
+        facade.exec_command("x", str(root), bad); out.setdefault("bad", []).append(None)
+    except ValueError as error:
+        out.setdefault("bad", []).append(str(error))
+started.clear()
+status = facade.status()
+out["status"] = {"scope": status["filesystem_scope"], "apply_patch": status["codex_tools"]["apply_patch_available"], "calls": started[:]}
+facade.platform = "darwin"
+out["mac_scope"] = facade.status()["filesystem_scope"]
+out["mac_probe"] = started[-1]
+print(json.dumps(out))
+`);
+  if (!result) return;
+  const { out, root } = result;
+  const prefix = 'try { [Console]::OutputEncoding=[System.Text.Encoding]::UTF8 } catch {}\n';
+  assert.equal(out.prefix, prefix, 'the UTF-8 line of Codex itself');
+  assert.deepEqual(out.names, ['Codex App Server Local Windows', 'Codex App Server Local Mac']);
+  assert.equal(out.state[0], path.join(root, 'Local', 'WebPilotCodexExecutor'));
+  assert.ok(out.state[1].endsWith('Library/Application Support/WebPilotCodexExecutor'));
+  assert.deepEqual(out.argv.pwsh_login, ['C:\\Program Files\\PowerShell\\7\\pwsh.exe', '-Command', prefix + 'Get-ChildItem']);
+  assert.deepEqual(out.argv.powershell_plain, ['C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\PowerShell.EXE', '-NoProfile', '-Command', prefix + 'dir']);
+  assert.deepEqual(out.argv.cmd, ['C:\\Windows\\System32\\cmd.exe', '/c', 'dir /b']);
+  assert.deepEqual(out.argv.git_bash, ['C:\\Program Files\\Git\\bin\\bash.exe', '-lc', 'ls']);
+  assert.deepEqual(out.argv.mac_zsh, ['/bin/zsh', '-lc', 'ls']);
+  assert.deepEqual(out.argv.mac_plain, ['/bin/bash', '-c', 'ls']);
+  assert.deepEqual(out.argv.mac_pwsh, ['/usr/local/bin/pwsh', '-lc', 'ls'], 'macOS keeps its argv for every shell');
+  const shell = path.join(root, 'tools', 'pwsh.exe');
+  assert.deepEqual(out.started[0], { argv: [shell, '-Command', prefix + 'Get-Date'], tty: false, sandbox: { type: 'dangerFullAccess' } });
+  assert.deepEqual(out.started[1], { argv: [shell, '-NoProfile', '-Command', prefix + 'Get-Date'], tty: true, sandbox: { type: 'dangerFullAccess' } });
+  assert.match(out.exec, /^Chunk ID: abcdef01\nWall time: 0\.005 seconds\nProcess exited with code 0\nOriginal token count: 1\nOutput:\nok$/, 'the same result format');
+  assert.equal(out.bad.length, 3); for (const message of out.bad) assert.match(message, /^shell is not executable: /);
+  assert.equal(out.status.scope, 'local Windows filesystem with current user permissions');
+  assert.equal(out.status.apply_patch, true);
+  assert.deepEqual(out.status.calls, [], 'no /usr/bin/which on Windows');
+  assert.equal(out.mac_scope, 'local macOS filesystem with current user permissions');
+  assert.deepEqual(out.mac_probe, ['exec', '/usr/bin/which', 'apply_patch']);
+});
+
+test('Windows: apply_patch runs the Codex executable under the alias name and reads the patch from stdin', { timeout: 60_000 }, async t => {
+  const result = await runVenvProbe(t, 'web-pilot-win-patch-', `import json, os, sys, pathlib
+sys.path.insert(0, sys.argv[1])
+import server
+import glob
+root = pathlib.Path(sys.argv[2])
+# The native executable, as on Windows: the npm "codex" on PATH is a Node launcher and ignores the alias name.
+native = sorted(glob.glob(str(pathlib.Path.home() / ".npm-global/lib/node_modules/@openai/codex/node_modules/@openai/codex-darwin-*/vendor/*/bin/codex")))
+if not native:
+    print(json.dumps({"skipped": True})); raise SystemExit(0)
+work = root / "Проект с пробелом"
+work.mkdir()
+(work / "note.txt").write_text("one\\ntwo\\n", encoding="utf-8")
+class Client:
+    cwd = str(root)
+    binary = type("Binary", (), {"path": native[0], "version": "native"})()
+    environment = dict(os.environ)
+    def start_command(self, *args, **kwargs):
+        raise AssertionError("Windows does not route the patch through command/exec")
+facade = server.LocalFacade(Client(), root / "state")
+facade.platform = "win32"
+big = "".join(f"+строка {i}\\n" for i in range(4000))
+patch = "*** Begin Patch\\n*** Update File: note.txt\\n@@\\n one\\n-two\\n+два\\n*** Add File: big.txt\\n" + big + "*** End Patch\\n"
+out = {"bytes": len(patch.encode("utf-8"))}
+out["result"] = facade.apply_patch(patch, str(work))
+out["note"] = (work / "note.txt").read_text(encoding="utf-8")
+out["big_lines"] = len((work / "big.txt").read_text(encoding="utf-8").splitlines())
+try:
+    facade.apply_patch("*** Begin Patch\\n*** Update File: missing.txt\\n@@\\n-a\\n+b\\n*** End Patch\\n", str(work))
+    out["failure"] = None
+except ValueError as error:
+    out["failure"] = str(error)
+Client.binary = type("Binary", (), {"path": str(root / "no-codex.exe"), "version": "x"})()
+try:
+    facade.apply_patch(patch, str(work)); out["unavailable"] = None
+except ValueError as error:
+    out["unavailable"] = str(error)
+print(json.dumps(out, ensure_ascii=False))
+`);
+  if (!result) return;
+  const { out } = result;
+  if (out.skipped) { t.skip('native Codex executable of the npm install is not present'); return; }
+  assert.ok(out.bytes > 40_000, 'longer than a Windows command line: only stdin can carry it');
+  assert.match(out.result, /Success\. Updated the following files:/);
+  assert.match(out.result, /M note\.txt/); assert.match(out.result, /A big\.txt/);
+  assert.equal(out.note, 'one\nдва\n'); assert.equal(out.big_lines, 4000);
+  assert.ok(out.failure && /missing\.txt/.test(out.failure), out.failure);
+  assert.match(out.unavailable, /^Codex apply_patch command is unavailable: failed to spawn: /);
+});

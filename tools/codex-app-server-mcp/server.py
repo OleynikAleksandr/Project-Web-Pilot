@@ -7,6 +7,7 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 import threading
 import time
 import uuid
@@ -38,6 +39,21 @@ PREEXECUTION_RETRY_RULE = "If OpenAI blocked the call before execution, retry th
 # The record of the project open in Web Pilot, written by 0.6.86–0.6.95 for context delivery through MCP.
 RETIRED_ACTIVE_WORKSPACE_FILE = "active-workspace.json"
 CODEX_TOOLS_LOCK_FILE = Path(__file__).resolve().parent / "codex-tools.lock.json"
+# Codex asks PowerShell for UTF-8 output with the same line (codex-rs/shell-command/src/powershell.rs).
+POWERSHELL_UTF8_PREFIX = "try { [Console]::OutputEncoding=[System.Text.Encoding]::UTF8 } catch {}\n"
+POWERSHELL_NAMES = {"pwsh", "powershell"}
+
+
+def server_name(platform: str = sys.platform) -> str:
+    """One executor on both systems; the MCP server is named after the computer it runs on."""
+    return "Codex App Server Local Windows" if platform == "win32" else "Codex App Server Local Mac"
+
+
+def default_state_dir(platform: str = sys.platform, environ: dict[str, str] | None = None) -> Path:
+    environ = os.environ if environ is None else environ
+    if platform == "win32":
+        return Path(environ.get("LOCALAPPDATA") or Path.home() / "AppData" / "Local") / "WebPilotCodexExecutor"
+    return Path.home() / "Library/Application Support/WebPilotCodexExecutor"
 
 SENSITIVE_NAMES = {
     ".env", ".npmrc", ".pypirc", ".netrc", "credentials", "credentials.json",
@@ -77,6 +93,8 @@ class LocalFacade:
     def __init__(self, client: AppServerClient, state_root: Path) -> None:
         self.client = client
         self.state_root = state_root
+        # The platform is a field so that the Windows branches can be exercised on any system.
+        self.platform = sys.platform
         state_root.mkdir(parents=True, exist_ok=True, mode=0o700)
         try:
             # The recoverable-delete folder of 0.6.94 and earlier: rmdir removes it only when it is empty.
@@ -140,20 +158,27 @@ class LocalFacade:
             pinned_tag = lock.get("tag")
         except Exception as exc:
             lock_error = str(exc)
-        probe = self._command(["/usr/bin/which", "apply_patch"], timeout_ms=10_000)
         return {
             "pinned_version": pinned_version,
             "pinned_tag": pinned_tag,
             "installed_version": installed_version,
             "version_matches": bool(pinned_version and installed_version == pinned_version),
-            "apply_patch_available": bool(probe["ok"] and probe["stdout"].strip()),
+            "apply_patch_available": self._apply_patch_available(),
             **({"lock_error": lock_error} if lock_error else {}),
         }
 
+    def _apply_patch_available(self) -> bool:
+        if self.platform == "win32":
+            # On Windows the patch is applied by the Codex executable itself (see apply_patch).
+            return os.path.isfile(str(self.client.binary.path))
+        probe = self._command(["/usr/bin/which", "apply_patch"], timeout_ms=10_000)
+        return bool(probe["ok"] and probe["stdout"].strip())
+
     def status(self, repository: str = "") -> dict[str, Any]:
+        system = "Windows" if self.platform == "win32" else "macOS"
         data = {
             "executor": self.client.status(),
-            "filesystem_scope": "local macOS filesystem with current user permissions",
+            "filesystem_scope": f"local {system} filesystem with current user permissions",
             "repository_mode": "per-call",
             "state_root": str(self.state_root),
             "local_only": True,
@@ -188,6 +213,8 @@ class LocalFacade:
         if not patch.lstrip().startswith("*** Begin Patch"):
             raise ValueError("patch must start with *** Begin Patch")
         cwd = self._command_workdir(workdir)
+        if self.platform == "win32":
+            return self._apply_patch_direct(data, cwd)
         started = self.client.start_command(
             ["apply_patch"],
             cwd=str(cwd),
@@ -216,6 +243,31 @@ class LocalFacade:
         output = str(result.get("output") or "").strip()
         if result.get("exit_code") != 0:
             raise self._native_apply_patch_error(output or f"apply_patch exited with code {result.get('exit_code')}")
+        return output or "Done!"
+
+    def _apply_patch_direct(self, data: bytes, cwd: Path) -> str:
+        """Windows: Codex puts apply_patch.bat on PATH, and a batch file takes the patch as an argument.
+        A patch has many lines and may exceed the command line, so the same Codex executable is started
+        under the name apply_patch and reads the patch from stdin, exactly as the alias does on macOS."""
+        try:
+            result = subprocess.run(
+                ["apply_patch"],
+                executable=str(self.client.binary.path),
+                input=data,
+                cwd=str(cwd),
+                env=getattr(self.client, "environment", None),
+                capture_output=True,
+                timeout=120,
+                check=False,
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0) if sys.platform == "win32" else 0,
+            )
+        except subprocess.TimeoutExpired:
+            raise ValueError("Codex apply_patch did not finish within 120 seconds") from None
+        except OSError as exc:
+            raise self._native_apply_patch_error(f"failed to spawn: {exc}") from None
+        output = (result.stdout + result.stderr).decode("utf-8", errors="replace").strip()
+        if result.returncode != 0:
+            raise self._native_apply_patch_error(output or f"apply_patch exited with code {result.returncode}")
         return output or "Done!"
 
     def view_image(self, path: str) -> Any:
@@ -277,7 +329,40 @@ class LocalFacade:
             raise ValueError(f"workdir is not a directory: {cwd}")
         return cwd
 
+    def _windows_shell(self, shell: str) -> str:
+        requested = shell.strip() if isinstance(shell, str) else ""
+        if not requested:
+            # The order Codex uses: PowerShell 7 when installed, otherwise Windows PowerShell.
+            root = os.environ.get("SystemRoot") or r"C:\Windows"
+            candidates = [
+                shutil.which("pwsh"),
+                os.path.join(os.environ.get("ProgramFiles") or r"C:\Program Files", "PowerShell", "7", "pwsh.exe"),
+                shutil.which("powershell"),
+                os.path.join(root, "System32", "WindowsPowerShell", "v1.0", "powershell.exe"),
+            ]
+            requested = next((item for item in candidates if item and os.path.isfile(item)), "")
+            if not requested:
+                raise ValueError("PowerShell was not found; pass shell explicitly")
+        elif not any(separator in requested for separator in ("/", "\\")):
+            requested = shutil.which(requested) or requested
+        path = Path(requested).expanduser()
+        if not path.is_absolute() or not path.is_file():
+            raise ValueError(f"shell is not executable: {requested}")
+        return str(path)
+
+    @staticmethod
+    def _shell_argv(executable: str, cmd: str, login: bool, platform: str) -> list[str]:
+        """The argv Codex builds for a shell (codex-rs/core/src/shell.rs); POSIX shells are the same on both systems."""
+        name = Path(executable.replace("\\", "/")).name.lower().removesuffix(".exe")
+        if platform == "win32" and name in POWERSHELL_NAMES:
+            return [executable, *([] if login else ["-NoProfile"]), "-Command", POWERSHELL_UTF8_PREFIX + cmd]
+        if platform == "win32" and name == "cmd":
+            return [executable, "/c", cmd]
+        return [executable, "-lc" if login else "-c", cmd]
+
     def _command_shell(self, shell: str) -> str:
+        if self.platform == "win32":
+            return self._windows_shell(shell)
         requested = shell.strip() if isinstance(shell, str) else ""
         if not requested:
             environment = getattr(self.client, "environment", {})
@@ -344,7 +429,7 @@ class LocalFacade:
         if not isinstance(tty, bool):
             raise ValueError("tty must be true or false")
         started = self.client.start_command(
-            [executable, "-lc" if login else "-c", cmd],
+            self._shell_argv(executable, cmd, login, self.platform),
             cwd=str(cwd),
             output_bytes_cap=4_000_000,
             sandbox_policy={"type": "dangerFullAccess"},
@@ -550,7 +635,7 @@ def create_server(*, host: str, port: int, state_root: Path, codex_binary: str |
     facade = LocalFacade(client, state_root)
     watchdog = TurnWatchdog(facade)
     mcp = FastMCP(
-        "Codex App Server Local Mac",
+        server_name(),
         instructions=(
             "Local-computer tools only. Use ChatGPT native web/cloud tools for public information. "
             "This MCP uses Codex App Server as an executor and never launches a Codex model turn. "
@@ -668,7 +753,7 @@ def parse_args() -> argparse.Namespace:
     parser=argparse.ArgumentParser()
     parser.add_argument("--host",default="127.0.0.1",choices=["127.0.0.1"])
     parser.add_argument("--port",type=int,default=int(os.environ.get("WEB_PILOT_CODEX_EXECUTOR_PORT","17852")))
-    parser.add_argument("--state-dir",default=os.environ.get("WEB_PILOT_CODEX_EXECUTOR_STATE_DIR",str(Path.home()/ "Library/Application Support/WebPilotCodexExecutor")))
+    parser.add_argument("--state-dir",default=os.environ.get("WEB_PILOT_CODEX_EXECUTOR_STATE_DIR",str(default_state_dir())))
     parser.add_argument("--codex-bin",default=os.environ.get("CODEX_APP_SERVER_BIN"))
     parser.add_argument("--transport",choices=["streamable-http","stdio"],default="streamable-http")
     return parser.parse_args()

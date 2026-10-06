@@ -2,12 +2,14 @@
 from __future__ import annotations
 
 import base64
+import glob
 import json
 import os
 import queue
 import shutil
 import signal
 import subprocess
+import sys
 import threading
 import time
 import uuid
@@ -61,23 +63,104 @@ def _binary_version(path: str) -> str:
     return text
 
 
-def discover_codex_binary(explicit: str | None = None) -> CodexBinary:
+def _windows_npm_binaries(npm_root: str, machine: str) -> list[str]:
+    """Native codex.exe of a global npm install: the codex.cmd next to it is only a Node launcher."""
+    scope = os.path.join(npm_root, "node_modules", "@openai")
+    patterns = [
+        # The platform package is an optional dependency of @openai/codex; older releases kept the binary inside it.
+        os.path.join(scope, "codex", "node_modules", "@openai", "codex-win32-*", "vendor", "*", "*", "codex.exe"),
+        os.path.join(scope, "codex-win32-*", "vendor", "*", "*", "codex.exe"),
+        os.path.join(scope, "codex", "vendor", "*", "*", "codex.exe"),
+    ]
+    found = [path for pattern in patterns for path in sorted(glob.glob(pattern))]
+    triple = "aarch64" if machine.lower() in {"arm64", "aarch64"} else "x86_64"
+    return sorted(found, key=lambda path: triple not in path)
+
+
+def _windows_codex_candidates(environ: dict[str, str], which, machine: str) -> list[str]:
     candidates: list[str] = []
-    requested = explicit or os.environ.get("CODEX_APP_SERVER_BIN")
+    npm_roots: list[str] = []
+    from_path = which("codex")
+    if from_path:
+        if from_path.lower().endswith(".exe"):
+            candidates.append(from_path)
+        else:
+            npm_roots.append(os.path.dirname(from_path))
+    appdata, local = environ.get("APPDATA"), environ.get("LOCALAPPDATA")
+    if appdata:
+        npm_roots.append(os.path.join(appdata, "npm"))
+    for root in dict.fromkeys(npm_roots):
+        candidates.extend(_windows_npm_binaries(root, machine))
+    if local:
+        candidates.append(os.path.join(local, "Microsoft", "WinGet", "Links", "codex.exe"))
+        candidates.append(os.path.join(local, "Programs", "ChatGPT", "resources", "codex.exe"))
+    program_files = environ.get("ProgramFiles")
+    if program_files:
+        try:
+            # The Store package of the ChatGPT app; its folder is often not listable, then nothing is found here.
+            candidates.extend(sorted(glob.glob(os.path.join(
+                program_files, "WindowsApps", "OpenAI.ChatGPT-Desktop_*", "app", "resources", "codex.exe")), reverse=True))
+        except OSError:
+            pass
+    return candidates
+
+
+def _detached_process_options(platform: str = sys.platform) -> dict[str, Any]:
+    """Own process group, so the App Server and the commands it started can be stopped together."""
+    if platform == "win32":
+        return {"creationflags": getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0x200) | getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)}
+    return {"start_new_session": True}
+
+
+def _stop_process_tree(process: "subprocess.Popen[bytes]", *, force: bool, platform: str = sys.platform, run=subprocess.run) -> None:
+    if platform == "win32":
+        # Windows has no signal for a process group: taskkill ends the App Server with its children.
+        try:
+            run(["taskkill", "/PID", str(process.pid), "/T", "/F"], capture_output=True, timeout=10,
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000))
+        except (OSError, subprocess.TimeoutExpired):
+            try:
+                process.kill()
+            except OSError:
+                pass
+        return
+    try:
+        os.killpg(process.pid, signal.SIGKILL if force else signal.SIGTERM)
+    except (ProcessLookupError, PermissionError):
+        try:
+            process.kill() if force else process.terminate()
+        except OSError:
+            pass
+
+
+def discover_codex_binary(
+    explicit: str | None = None,
+    *,
+    platform: str = sys.platform,
+    environ: dict[str, str] | None = None,
+    which=shutil.which,
+) -> CodexBinary:
+    environ = os.environ if environ is None else environ
+    candidates: list[str] = []
+    requested = explicit or environ.get("CODEX_APP_SERVER_BIN")
     if requested:
         candidates.append(str(Path(requested).expanduser()))
 
-    home = Path.home()
-    candidates.extend(
-        [
-            str(home / ".npm-global/bin/codex"),
-            str(home / ".local/bin/codex"),
-        ]
-    )
-    from_path = shutil.which("codex")
-    if from_path:
-        candidates.append(from_path)
-    candidates.append("/Applications/ChatGPT.app/Contents/Resources/codex")
+    if platform == "win32":
+        candidates.extend(_windows_codex_candidates(
+            environ, which, environ.get("PROCESSOR_ARCHITEW6432") or environ.get("PROCESSOR_ARCHITECTURE") or "AMD64"))
+    else:
+        home = Path.home()
+        candidates.extend(
+            [
+                str(home / ".npm-global/bin/codex"),
+                str(home / ".local/bin/codex"),
+            ]
+        )
+        from_path = which("codex")
+        if from_path:
+            candidates.append(from_path)
+        candidates.append("/Applications/ChatGPT.app/Contents/Resources/codex")
 
     seen: set[str] = set()
     for candidate in candidates:
@@ -166,8 +249,8 @@ class AppServerClient:
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     shell=False,
-                    start_new_session=True,
                     bufsize=0,
+                    **_detached_process_options(),
                 )
             except OSError as exc:
                 self._process = None
@@ -639,23 +722,11 @@ class AppServerClient:
         if process is None:
             return
         if process.poll() is None:
-            try:
-                os.killpg(process.pid, signal.SIGTERM)
-            except (ProcessLookupError, PermissionError):
-                try:
-                    process.terminate()
-                except OSError:
-                    pass
+            _stop_process_tree(process, force=False)
             try:
                 process.wait(timeout=3)
             except subprocess.TimeoutExpired:
-                try:
-                    os.killpg(process.pid, signal.SIGKILL)
-                except (ProcessLookupError, PermissionError):
-                    try:
-                        process.kill()
-                    except OSError:
-                        pass
+                _stop_process_tree(process, force=True)
                 try:
                     process.wait(timeout=2)
                 except subprocess.TimeoutExpired:
