@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "profile": "DEVELOPMENT",
-  "stack": "Electron 44.5.1 / Node 24.21.0 / Workflow Kit 1.5.5 / Codex 0.160.0",
+  "stack": "Electron 44.5.1 / Node 24.21.0 / Workflow Kit 1.5.6 / Codex 0.160.0",
   "checks": [
     {
       "required": false,

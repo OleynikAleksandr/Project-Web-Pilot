@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1336,
+  "plan_revision": 1337,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "context-as-text-0.6.96-20261006",
@@ -1297,7 +1297,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: context-as-text-0.6.96-20261006
 Current Task: нет
-Revision: 1336
+Revision: 1337
 
 ## Цель
 
