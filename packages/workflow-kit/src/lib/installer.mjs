@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { VERSION, MANIFEST, PLAN, CONFIG, withPlanFile, check, hash, id, json, readJSON, atomic, safePath, errorResult } from './common.mjs';
 import { git, run, repoRoot, head, allChanges, identityReady, localPath } from './git.mjs';
-import { listPlans, discoverLegacyPlans, migrateLegacyPlans, LEGACY_ARCHIVE_DIRECTORY } from './session-plans.mjs';
+import { listPlans, preflightPlanMigration, migrateLegacyPlans } from './session-plans.mjs';
 import { status } from './actions.mjs';
 import { readPlan, emptyPlan, writePlan } from './plan.mjs';
 import { journal } from './validate.mjs';
@@ -181,7 +181,7 @@ function upgradeInstallation(root, preview) {
     check(upgradeFrom.has(old.version), 'UNSUPPORTED_MIGRATION', 'Версия установки изменилась после preview.');
     // Validate the canonical current plan before any upgrade write. Legacy plans
     // are inventoried only as history and never compete to become current.
-    const legacyBefore = discoverLegacyPlans(root);
+    const legacyBefore = preflightPlanMigration(root);
     const temp = path.join(root, '.harness/runtime/kit-upgrade-preview-' + id());
     fs.mkdirSync(temp, { recursive: true });
     let desired;
@@ -251,8 +251,8 @@ function upgradeInstallation(root, preview) {
     changed.push(...legacyMigration.changed_paths);
     const kept = old.files.filter(e => !replacements.has(e.path));
     const metadata = { ...old, version: VERSION, upgraded_from: old.version, upgraded_at: new Date().toISOString(),
-      legacy_plan_migration: { model: 'single-active-plan', archived_count: legacyMigration.archived.length,
-        archive_root: LEGACY_ARCHIVE_DIRECTORY, migrated_at: new Date().toISOString() },
+      legacy_plan_migration: { model: 'single-active-plan', removed_count: legacyMigration.removed.length,
+        source_commit: head(root), migrated_at: new Date().toISOString() },
       files: [...kept, ...replacements.values()] };
     delete metadata.installed_at; metadata.installed_at = new Date().toISOString();
     atomic(path.join(root, MANIFEST), json(metadata)); changed.push(MANIFEST);

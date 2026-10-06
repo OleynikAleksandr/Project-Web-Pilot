@@ -9,6 +9,30 @@ export function defaultConfig() {
     budget: { soft_tokens: 16000, hard_tokens: 90000, hard_bytes: 180000 },
     documentation: { index: INDEX, mappings: [] } };
 }
+// Read the candidate from Git's index, never the possibly newer working tree.
+export function validateDocumentationCommit(root, files, plan) {
+  check(plan.current_task_id === null && ['NONE', 'ACTIVE'].includes(plan.execution_scope_status)
+    && !plan.tasks.some(t => t.implementation_status === 'IN_PROGRESS'), 'TASK_ACTIVE', 'docs:commit запрещён во время задачи.');
+  const limit = readConfig(root).budget.document_bytes ?? 28000;
+  check(Number.isSafeInteger(limit) && limit > 0, 'CONFIG_SCHEMA', 'document_bytes должен быть положительным целым числом.');
+  for (const file of files.filter(p => p !== PLAN)) {
+    const candidate = git(root, ['show', ':' + file], {allowFailure:true, encoding:null});
+    if (candidate.status === 0) check(candidate.stdout.length <= limit, 'DOCUMENT_TOO_LARGE',
+      file + ': ' + candidate.stdout.length + ' байт, предел ' + limit + '. Разделите документ и повторите docs:commit; правки сохранены.',
+      {path:file, bytes:candidate.stdout.length, limit});
+    if (file !== 'AGENTS.md') continue;
+    const previous = git(root, ['show', 'HEAD:' + file], {allowFailure:true, encoding:null});
+    const section = buffer => {
+      const start = Buffer.from('<!-- workflow-kit:begin -->'), end = Buffer.from('<!-- workflow-kit:end -->');
+      const i = buffer.indexOf(start), j = buffer.indexOf(end, i + start.length);
+      check(i >= 0 && j >= i && buffer.indexOf(start, i + start.length) < 0 && buffer.indexOf(end, j + end.length) < 0,
+        'MODIFIED_INTEGRATION', 'AGENTS.md должен сохранять единственную управляемую секцию Kit.');
+      return buffer.subarray(i, j + end.length);
+    };
+    check(previous.status === 0 && candidate.status === 0 && section(previous.stdout).equals(section(candidate.stdout)),
+      'MODIFIED_INTEGRATION', 'Управляемая секция AGENTS.md в index должна побайтно совпадать с HEAD.');
+  }
+}
 export function validateConfig(c) {
   check(c?.schema_version === 1, 'CONFIG_SCHEMA', 'Неподдерживаемая схема настройки workflow.');
   check(['DISCOVERY', 'DEVELOPMENT'].includes(c.profile), 'CONFIG_SCHEMA', 'Профиль должен быть DISCOVERY или DEVELOPMENT.');
@@ -103,8 +127,9 @@ export function resolveReferences(root, p, pending = journal(root)) {
     const committed = planCandidates[0].plan;
     const record = committed.tasks.find(t => t.id === task.id);
     check(committed.scope_id === p.scope_id && record?.commit_status === 'DONE', 'COMMIT_PLAN_MISMATCH', 'Коммит не содержит завершение нужной задачи.');
-    const dependencyCommits = task.dependencies.map(dep => {
-      const depTask = p.tasks.find(item => item.id === dep);
+    const dependencyCommits = record.dependencies.map(dep => {
+      // Resolve the dependency iteration used by this historical commit.
+      const depTask = committed.tasks.find(item => item.id === dep);
       const depIteration = depTask?.commit_ref?.iteration ?? 1;
       const earlier = history.find(h => h.trailers['Workflow-Scope']?.[0] === p.scope_id && h.trailers['Workflow-Task']?.[0] === dep
         && h.trailers['Workflow-Role']?.[0] === 'implementation' && commitIteration(h) === depIteration);

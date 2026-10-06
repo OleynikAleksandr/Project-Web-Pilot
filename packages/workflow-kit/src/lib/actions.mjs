@@ -26,32 +26,41 @@ function normalizeCompletionContract(plan) {
   plan.context_pack = projectContextPack(plan.context_pack);
   plan.approved_scope = { ...plan.approved_scope,
     documentation_paths: [...new Set([...(plan.approved_scope?.documentation_paths ?? []), ...foundation])] };
-  const existing = plan.tasks.filter(task => task.id === FINAL_DOCUMENTATION_TASK_ID || task.title === FINAL_DOCUMENTATION_TASK_TITLE);
-  check(existing.length <= 1, 'DOCUMENTATION_FINAL_TASK', 'В scope должна быть одна финальная задача актуализации документации.');
+  // Completed records, including prior DOCS iterations, stay byte-for-byte in place.
+  const boundary = plan.tasks.findLastIndex(t => t.commit_status === 'DONE') + 1;
+  const history = plan.tasks.slice(0, boundary);
+  const pending = plan.tasks.slice(boundary);
+  const existing = pending.filter(isDocumentationFinalizationTask);
+  check(existing.length <= 1, 'DOCUMENTATION_FINAL_TASK', 'В раунде должна быть одна DOCS.');
   let finalTask = existing[0];
-  const ordinary = plan.tasks.filter(task => task !== finalTask);
+  const ordinary = pending.filter(task => task !== finalTask);
   const delivery = ordinary.filter(isDeliveryTask);
   const work = ordinary.filter(task => !isDeliveryTask(task));
+  if (!delivery.length && !finalTask) return plan;
   if (!finalTask) {
+    const iteration = Math.max(0,...history.filter(isDocumentationFinalizationTask).map(t => t.commit_ref?.iteration ?? 1)) + 1;
+    const taskId = iteration === 1 ? FINAL_DOCUMENTATION_TASK_ID : FINAL_DOCUMENTATION_TASK_ID + '-' + iteration;
     finalTask = {
-      id: FINAL_DOCUMENTATION_TASK_ID, title: FINAL_DOCUMENTATION_TASK_TITLE,
+      id: taskId, title: FINAL_DOCUMENTATION_TASK_TITLE,
+      implementation_status: 'TODO', commit_status: 'PENDING',
+      commit_ref: {scope_id:plan.scope_id, task_id:taskId, role:'implementation', iteration},
       why: 'Проверить весь действующий комплект документации по docs/DOCUMENTATION_INDEX.md и обновить только устаревшие сведения после выполнения scope.',
       dependencies: [], functional_paths: [], documentation_paths: foundation,
       acceptance_criteria: ['Все документы из индекса проверены; устаревшие сведения и ссылки исправлены; после этого результат готов только к пользовательской приёмке.'],
       verification_ids: [], expected_commit_message: 'docs: актуализировать документацию проекта',
     };
   }
-  check(finalTask.id === FINAL_DOCUMENTATION_TASK_ID && finalTask.title === FINAL_DOCUMENTATION_TASK_TITLE,
+  check(isDocumentationFinalizationTask(finalTask),
     'DOCUMENTATION_FINAL_TASK', 'Зарезервированный пункт DOCS должен называться «' + FINAL_DOCUMENTATION_TASK_TITLE + '».');
-  check(finalTask.commit_status !== 'DONE' || work.every(task => task.commit_status === 'DONE'),
-    'DOCUMENTATION_FINAL_TASK', 'DOCS нельзя завершить до незавершённых задач, предшествующих delivery-хвосту.');
   const deliveryIds = new Set(delivery.map(task => task.id));
   for (const task of work) check(!task.dependencies.some(id => deliveryIds.has(id)), 'DOCUMENTATION_FINAL_TASK',
     'Обычная задача не может зависеть от package/installed delivery-задачи.', {task_id:task.id});
-  finalTask = { ...finalTask, dependencies: work.map(task => task.id), functional_paths: [],
+  const previousDocs = history.findLastIndex(isDocumentationFinalizationTask);
+  const roundWork = [...history.slice(previousDocs + 1).filter(t=>!isDeliveryTask(t)), ...work];
+  finalTask = { ...finalTask, dependencies: [...new Set([...roundWork.map(task => task.id), ...finalTask.dependencies])], functional_paths: [],
     documentation_paths: [...new Set([...(finalTask.documentation_paths ?? []), ...ordinary.flatMap(t=>t.documentation_paths ?? []), ...foundation])] };
   const normalizedDelivery = delivery.map(task => ({ ...task, dependencies: [...new Set([...task.dependencies, finalTask.id])] }));
-  plan.tasks = [...work, finalTask, ...normalizedDelivery];
+  plan.tasks = [...history, ...work, finalTask, ...normalizedDelivery];
   return plan;
 }
 function service(root, plan, role, selected, message) {
@@ -112,17 +121,14 @@ export function applyPlan(root, input, expectedRevision) {
     const plan = { ...structuredClone(original), ...input, plan_revision: original.plan_revision + 1 };
     check(['ACTIVE', 'BLOCKED'].includes(plan.execution_scope_status) && original.execution_scope_status !== 'NONE', 'SCOPE_LIFECYCLE', 'Создание/архивирование scope выполняются отдельными командами.');
     const added = plan.tasks.filter(t => !original.tasks.some(old => old.id === t.id));
-    const originalFinal = original.tasks.find(isDocumentationFinalizationTask);
-    const deferDocs = original.current_task_id === 'DOCS' && added.length > 0;
-    const correctionRound = original.execution_scope_status === 'ACTIVE' && original.current_task_id === null
-      && originalFinal?.commit_status === 'DONE' && added.some(task => !isDeliveryTask(task));
+    const originalFinal = original.tasks.findLast(isDocumentationFinalizationTask);
+    const deferDocs = originalFinal && original.current_task_id === originalFinal.id && added.length > 0;
     for (const old of original.tasks) {
       const current = plan.tasks.find(t => t.id === old.id);
       check(current, 'TASK_REMOVAL', 'Существующие задачи не удаляются из активного scope.');
       if (old.commit_status === 'DONE') {
-        if (correctionRound && isDocumentationFinalizationTask(old))
-          check(JSON.stringify(current) === JSON.stringify(old), 'COMPLETED_TASK_IMMUTABLE', 'Перед повторным открытием DOCS её запись не меняется вручную.');
-        else check(JSON.stringify(current) === JSON.stringify(old), 'COMPLETED_TASK_IMMUTABLE', 'Запись завершённой задачи неизменяема.');
+        check(JSON.stringify(current) === JSON.stringify(old), 'COMPLETED_TASK_IMMUTABLE', 'Запись завершённой задачи неизменяема.');
+        check(plan.tasks.indexOf(current) === original.tasks.indexOf(old), 'TASK_ORDER', 'Завершённые задачи не переставляются.');
       } else {
         check(current.implementation_status === old.implementation_status && current.commit_status === old.commit_status && JSON.stringify(current.commit_ref) === JSON.stringify(old.commit_ref), 'MANAGED_FIELDS', 'Статусы и references меняются командами task:start/commit; для уточнения используйте task:update.', { task_id: old.id, field: 'task state', expected: { implementation_status: old.implementation_status, commit_status: old.commit_status, commit_ref: old.commit_ref }, received: { implementation_status: current.implementation_status, commit_status: current.commit_status, commit_ref: current.commit_ref }, next_action: 'task:update --task '+old.id+' --input changes.json --expected-revision '+original.plan_revision });
       }
@@ -138,16 +144,10 @@ export function applyPlan(root, input, expectedRevision) {
       const transferred=handoffTaskFiles(root,original,originalFinal,recipient,pendingDocs,false);
       deferredTransfer={from:originalFinal,to:recipient,files:transferred};
       recipient.documentation_paths = [...new Set([...recipient.documentation_paths, ...transferred])];
-      plan.tasks.find(isDocumentationFinalizationTask).implementation_status = 'TODO';
+      plan.tasks.find(t=>t.id===originalFinal.id).implementation_status = 'TODO';
       plan.current_task_id = null;
     }
-    if (correctionRound) {
-      const currentFinal = plan.tasks.find(isDocumentationFinalizationTask);
-      const iteration = currentFinal.commit_ref?.iteration ?? 1;
-      currentFinal.implementation_status = 'TODO'; currentFinal.commit_status = 'PENDING';
-      currentFinal.commit_ref = { ...currentFinal.commit_ref, iteration: iteration + 1 };
-    }
-    if (added.length || originalFinal?.commit_status !== 'DONE' || !originalFinal) normalizeCompletionContract(plan);
+    normalizeCompletionContract(plan);
     if (added.some(t => t.functional_paths.length) || (input.context_pack && plan.tasks.some(t => t.functional_paths.length && t.commit_status !== 'DONE'))) requireModuleContext(plan);
     plan.delivery_status = plan.tasks.length && plan.tasks.every(t => t.commit_status === 'DONE') ? 'READY_FOR_ACCEPTANCE' : 'IN_PROGRESS';
     validatePlan(plan); validatePlanConfiguration(root, plan, readConfig(root)); resolveReferences(root, plan);
@@ -169,7 +169,7 @@ export function applyConfig(root, input) {
   });
 }
 
-// Explicit scope rollover: the archived bytes retain truthful task states.
+// Explicit scope rollover: Git retains the exact source plan.
 export function carryoverPlan(root, input, expectedRevision) {
   const PLAN = planPath(root);
   return locked(root, () => {
@@ -186,11 +186,11 @@ export function carryoverPlan(root, input, expectedRevision) {
     // Retry after a confirmed commit is harmless, including after a lost response.
     if (previous.scope_id === input.id && previous.carryover?.from_scope === input.scope
         && previous.carryover.source_revision === Number(expectedRevision)) {
-      const archived = safePath(root, previous.carryover.archive_path);
-      check(hash(fs.readFileSync(archived)) === previous.carryover.archive_sha256,
-        'ARCHIVE_CHANGED', 'Архив переноса изменился.');
+      const source = git(root, ['show', previous.carryover.source_commit + ':' + PLAN]).stdout;
+      check(hash(source) === (previous.carryover.source_sha256 ?? previous.carryover.archive_sha256),
+        'CARRYOVER_SOURCE', 'Исходный план переноса не подтверждён в Git.');
       return { ok:true, already_transferred:true, scope_id:previous.scope_id,
-        archive:previous.carryover.archive_path, task_ids:previous.carryover.task_ids };
+        source_commit:previous.carryover.source_commit, task_ids:previous.carryover.task_ids };
     }
     revision(previous, expectedRevision);
     check(previous.scope_id === input.scope && previous.execution_scope_status !== 'NONE',
@@ -198,16 +198,8 @@ export function carryoverPlan(root, input, expectedRevision) {
     check(previous.current_task_id === null, 'TASK_ALREADY_ACTIVE', 'Сначала завершите текущую микрозадачу.');
     const remaining = previous.tasks.filter(t => t.commit_status !== 'DONE');
     check(remaining.length > 0, 'NOTHING_TO_TRANSFER', 'Нет незавершённых задач; используйте archive.');
-    const destination = '.harness/plans/archive/' + previous.scope_id + '.md';
-    const archiveFile = safePath(root, destination);
     const original = textFile(root, PLAN);
-    // An untracked exact copy may remain after a failed commit or an interrupted
-    // preparation. A tracked archive or different bytes must never be overwritten.
-    const exists = fs.existsSync(archiveFile);
-    if (exists) check(git(root, ['ls-files','--error-unmatch','--',destination], {allowFailure:true}).status !== 0
-        && fs.lstatSync(archiveFile).isFile() && fs.readFileSync(archiveFile,'utf8') === original,
-      'ARCHIVE_EXISTS', 'Архив уже существует и не является незавершённой точной копией.');
-    check(allChanges(root).every(p => exists && p === destination), 'DIRTY_WORKTREE',
+    check(allChanges(root).length === 0, 'DIRTY_WORKTREE',
       'Перенос требует чистого рабочего дерева.');
     const ids = new Set(remaining.map(t => t.id));
     const tasks = remaining.map(t => {
@@ -215,7 +207,8 @@ export function carryoverPlan(root, input, expectedRevision) {
       next.dependencies = t.dependencies.filter(dep => ids.has(dep));
       if (next.context_pack) next.context_pack.dependency_task_ids =
         (next.context_pack.dependency_task_ids ?? []).filter(dep => ids.has(dep));
-      next.commit_ref = {scope_id:input.id, task_id:t.id, role:'implementation'};
+      next.commit_ref = {scope_id:input.id, task_id:t.id, role:'implementation',
+        ...(isDocumentationFinalizationTask(t) ? {iteration:t.commit_ref?.iteration ?? 1} : {})};
       delete next.actual_files;
       return next;
     });
@@ -228,19 +221,15 @@ export function carryoverPlan(root, input, expectedRevision) {
         documentation_paths:[...new Set(tasks.flatMap(t=>t.documentation_paths))]}, tasks,
       user_decisions:[{id:id(),text:input.approval_note,recorded_at:new Date().toISOString()}],
       carryover:{from_scope:previous.scope_id, source_revision:previous.plan_revision,
-        source_commit:head(root), archive_path:destination, archive_sha256:hash(original),
+        source_commit:head(root), source_path:PLAN, source_sha256:hash(original),
         task_ids:remaining.map(t=>t.id),
         completed_dependencies:Object.fromEntries(remaining.map(t=>[t.id,t.dependencies.filter(dep=>!ids.has(dep))]))} };
     plan.context_pack.dependency_task_ids = plan.context_pack.dependency_task_ids.filter(dep=>ids.has(dep));
     normalizeCompletionContract(plan); requireModuleContext(plan);
     validatePlan(plan); validatePlanConfiguration(root,plan,config); resolveReferences(root,plan);
-    if (!exists) {
-      fs.mkdirSync(path.dirname(archiveFile),{recursive:true});
-      fs.writeFileSync(archiveFile,original,{flag:'wx'});
-    }
-    const result = service(root,plan,'plan-carryover',[PLAN,destination],
+    const result = service(root,plan,'plan-carryover',[PLAN],
       'docs: перенести незавершённые задачи ' + previous.scope_id + ' → ' + input.id);
-    return {...result, archive:destination, task_ids:remaining.map(t=>t.id), state:recover(root)};
+    return {...result, source_commit:plan.carryover.source_commit, task_ids:remaining.map(t=>t.id), state:recover(root)};
   });
 }
 
@@ -286,12 +275,26 @@ export function archive(root, scope, approvalNote) {
     check(typeof approvalNote === 'string' && approvalNote.trim().length >= 10, 'USER_CLOSE_REQUIRED', 'Нужна отдельная команда пользователя на закрытие, записанная в --approval-note. Приёмка сама по себе не закрывает scope.');
     check(plan.tasks.every(t => t.commit_status === 'DONE'), 'SCOPE_UNFINISHED', 'В scope остались незавершённые задачи; обычное архивирование отклонено.');
     check(allChanges(root).length === 0, 'DIRTY_WORKTREE', 'Архивирование требует чистого рабочего дерева.');
-    const destination = '.harness/plans/archive/' + scope + '.md';
-    check(!fs.existsSync(path.join(root, destination)), 'ARCHIVE_EXISTS', 'Архив с таким ID уже существует.');
-    atomic(path.join(root, destination), renderPlan(plan));
     const empty = emptyPlan(plan.project_name); empty.project_id = plan.project_id; empty.plan_revision = plan.plan_revision + 1;
     empty.archived_scope_id = scope; empty.user_decisions = [{ id: id(), text: approvalNote, recorded_at: new Date().toISOString() }];
-    return service(root, empty, 'archive', [PLAN, destination], 'docs: архивировать scope ' + scope);
+    return service(root, empty, 'archive', [PLAN], 'docs: закрыть scope ' + scope);
+  });
+}
+export function commitDocumentation(root, files, message) {
+  const PLAN = planPath(root);
+  return locked(root, () => {
+    noTransaction(root);
+    const { plan } = validate(root);
+    check(plan.execution_scope_status === 'NONE' || plan.execution_scope_status === 'ACTIVE' && plan.current_task_id === null,
+      'TASK_ACTIVE', 'docs:commit разрешён без плана или между микрозадачами ACTIVE-плана.');
+    check(!plan.tasks.some(t => t.implementation_status === 'IN_PROGRESS'), 'TASK_ACTIVE', 'Сначала завершите активную микрозадачу.');
+    check(Array.isArray(files) && files.length && files.every(p => typeof p === 'string' && p.endsWith('.md') && !p.startsWith('.harness/')),
+      'DOCUMENTATION_PATHS', 'Укажите непустой files: только .md вне .harness/.');
+    for (const file of files) safePath(root, file);
+    check(typeof message === 'string' && message.trim(), 'COMMIT_MESSAGE', 'Укажите --message для docs:commit.');
+    check(allChanges(root).some(p => files.includes(p)), 'NOTHING_TO_COMMIT', 'Нет выбранных изменений документации.');
+    plan.plan_revision++;
+    return service(root, plan, 'documentation', files, message);
   });
 }
 export function repair(root, applyId, cancelId) {

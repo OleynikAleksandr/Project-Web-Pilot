@@ -402,7 +402,7 @@ test('plan:create with a legacy session argument updates the one current plan fo
   await fs.stat(path.join(workspace, planFile));
   const view = await sessionPlanView(workspace, sessionId);
   assert.equal(view.plan_id, 'visible-plan-001'); assert.equal(view.plan_path, planFile);
-  assert.deepEqual(view.plan.tasks.map(task => task.id), ['T001', 'DOCS']);
+  assert.deepEqual(view.plan.tasks.map(task => task.id), ['T001']);
   run('task:start', 'T001'); await fs.writeFile(path.join(workspace, 'result.txt'), 'ok\n');
   assert.equal(run('commit', '--task', 'T001').ok, true);
   const after = await sessionPlanView(workspace, sessionId);

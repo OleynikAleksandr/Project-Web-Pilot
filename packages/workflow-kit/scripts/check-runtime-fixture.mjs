@@ -121,8 +121,8 @@ try {
   const recovered = workflow(root, 'recover', '--format', 'json');
   assert.equal(recovered.completeness, 'COMPLETE');
   assert.equal(recovered.plan_id, 'fixture-current-plan');
-  assert.deepEqual(planApi.readPlan(root).tasks.map(task => task.id), ['T001', 'DOCS'],
-    'code-only plan must keep DOCS as the final task');
+  assert.deepEqual(planApi.readPlan(root).tasks.map(task => task.id), ['T001'],
+    'code-only plan does not create a release DOCS task');
 
   // 1.5.4: compact recovery — forms and navigation maps on demand (maps are inlined only for the final DOCS).
   assert.doesNotMatch(recovered.text, /--- ДАННЫЕ: \.harness\/kit\/templates\/(PLAN|SPEC|CONTINUE|STAGES)\.md ---/);
@@ -272,14 +272,42 @@ try {
     workflow(deliveryRoot, 'plan:extend', '--input', secondExtend, '--expected-revision',
       String(workflow(deliveryRoot, 'status').plan_revision));
     deliveryPlan = planApi.readPlan(deliveryRoot);
-    assert.deepEqual(deliveryPlan.tasks.map(task => task.id), ['T001', 'T003', 'T004', 'DOCS', 'T002']);
-    const reopenedDocs = deliveryPlan.tasks.find(task => task.id === 'DOCS');
+    assert.deepEqual(deliveryPlan.tasks.map(task => task.id), ['T001', 'T003', 'DOCS', 'T004', 'DOCS-2', 'T002']);
+    const reopenedDocs = deliveryPlan.tasks.find(task => task.id === 'DOCS-2');
     assert.equal(reopenedDocs.commit_status, 'PENDING');
     assert.equal(reopenedDocs.implementation_status, 'TODO');
     assert.equal(reopenedDocs.commit_ref.iteration, 2);
-    assert.deepEqual(reopenedDocs.dependencies, ['T001', 'T003', 'T004']);
+    assert.deepEqual(reopenedDocs.dependencies, ['T004']);
     assert.equal(workflow(deliveryRoot, 'recover', '--format', 'json').next_task_id, 'T004');
     assert.match(gitFailure(deliveryRoot, 'push', '-q', 'origin', 'main'), /DOCS_BEFORE_PUSH/, 'reopened DOCS blocks push again');
+    for (const id of ['T004','DOCS-2','T002']) {
+      workflow(deliveryRoot,'task:start',id);
+      workflow(deliveryRoot,'commit','--task',id);
+    }
+    const completedRound = planApi.readPlan(deliveryRoot).tasks;
+    assert.equal(workflow(deliveryRoot,'status').delivery_status,'READY_FOR_ACCEPTANCE');
+    const extend = async tasks => {
+      await fs.writeFile(secondExtend,JSON.stringify({tasks}));
+      return workflow(deliveryRoot,'plan:extend','--input',secondExtend,'--expected-revision',String(planApi.readPlan(deliveryRoot).plan_revision));
+    };
+    await extend([{id:'T005',title:'Discuss next scope',files:['README.md'],checks:['code']}]);
+    assert.deepEqual(planApi.readPlan(deliveryRoot).tasks.slice(0,completedRound.length),completedRound);
+    assert.equal(planApi.readPlan(deliveryRoot).tasks.filter(planApi.isDocumentationFinalizationTask).length,2);
+    assert.equal(workflow(deliveryRoot,'recover','--format','json').next_task_id,'T005');
+    assert.equal(workflow(deliveryRoot,'status').delivery_status,'IN_PROGRESS');
+    git(deliveryRoot,'push','-q','origin','main');
+    workflow(deliveryRoot,'task:start','T005');workflow(deliveryRoot,'commit','--task','T005');
+    await extend([{id:'T006',title:'New release',files:['README.md'],checks:['artifact'],verification_kind:'package'}]);
+    const nextRound=planApi.readPlan(deliveryRoot);
+    assert.deepEqual(nextRound.tasks.slice(0,completedRound.length),completedRound);
+    assert.equal(nextRound.tasks.find(t=>t.id==='T002').dependencies.includes('DOCS-2'),true);
+    assert.equal(nextRound.tasks.find(t=>t.id==='T002').dependencies.includes('DOCS-3'),false);
+    assert.equal(workflow(deliveryRoot,'recover','--format','json').next_task_id,'DOCS-3');
+    assert.match(gitFailure(deliveryRoot,'push','-q','origin','main'),/DOCS_BEFORE_PUSH/);
+    workflow(deliveryRoot,'task:start','DOCS-3');workflow(deliveryRoot,'commit','--task','DOCS-3');
+    workflow(deliveryRoot,'task:start','T006');workflow(deliveryRoot,'commit','--task','T006');
+    workflow(deliveryRoot,'validate');git(deliveryRoot,'push','-q','origin','main');
+    assert.equal(workflow(deliveryRoot,'status').delivery_status,'READY_FOR_ACCEPTANCE');
   } finally {
     await fs.rm(deliveryRoot, { recursive: true, force: true });
     await fs.rm(deliveryRoot + '-remote.git', { recursive: true, force: true });
@@ -454,22 +482,26 @@ try {
   assert.equal(inspectedWithHistory.state?.ok, true, 'historical plans unexpectedly block readiness');
   assert.equal(workflow(root, 'status').scope_id, 'fixture-current-plan');
 
+  assert.throws(()=>sessionPlans.migrateLegacyPlans(root),{code:'LEGACY_PLAN_CHANGED'});
+  assert.equal(await fs.readFile(path.join(bySession,'session-a.md'),'utf8'),legacyA);
+  git(root,'add','.harness/plans');git(root,'commit','--no-verify','-m','test: seed committed legacy plans');
   const migrated = sessionPlans.migrateLegacyPlans(root);
-  assert.equal(migrated.archived.length, 3);
+  assert.equal(migrated.removed.length, 3);
   assert.equal(migrated.current_normalized, true);
   const migratedCurrent = planApi.readPlan(root);
   assert.equal(migratedCurrent.scope_id, 'fixture-current-plan');
   assert.equal(migratedCurrent.plan_revision, ownedCurrent.plan_revision + 1);
   assert.equal(Object.hasOwn(migratedCurrent, 'owner_session_id'), false);
   assert.equal(Object.hasOwn(migratedCurrent, 'prepared_in_session_id'), false);
-  for (const record of migrated.archived) {
-    assert.equal(await fs.readFile(path.join(root, record.archive_path), 'utf8'),
+  for (const record of migrated.removed) {
+    assert.equal(git(root,'show',record.source_commit+':'+record.path)+'\n',
       record.path.endsWith('session-a.md') ? legacyA : record.path.endsWith('session-b.md') ? legacyB : oversizedHistory);
     await assert.rejects(fs.access(path.join(root, record.path)));
   }
 
+  git(root,'add','.harness/plans');git(root,'commit','--no-verify','-m','test: record migration fixture');
   const repeatedMigration = sessionPlans.migrateLegacyPlans(root);
-  assert.equal(repeatedMigration.archived.length, 0);
+  assert.equal(repeatedMigration.removed.length, 0);
   assert.deepEqual(repeatedMigration.changed_paths, []);
 
   // Invalid canonical current state is a hard stop before any legacy write.
@@ -481,9 +513,10 @@ try {
   assert.throws(() => sessionPlans.migrateLegacyPlans(root));
   assert.equal(await fs.readFile(preservedSource, 'utf8'), legacyA);
   await fs.writeFile(planFile, validCurrentText);
+  git(root,'add','.harness/plans');git(root,'commit','--no-verify','-m','test: seed last legacy fixture');
   const finalMigration = sessionPlans.migrateLegacyPlans(root);
-  assert.equal(finalMigration.archived.length, 1);
-  assert.equal(await fs.readFile(path.join(root, finalMigration.archived[0].archive_path), 'utf8'), legacyA);
+  assert.equal(finalMigration.removed.length, 1);
+  assert.equal(git(root,'show',finalMigration.removed[0].source_commit+':'+finalMigration.removed[0].path)+'\n',legacyA);
 
   // The hard transport limit still applies to the current plan. History is
   // excluded, but an oversized current execution context must fail explicitly.
@@ -549,6 +582,9 @@ try {
     const oldSessionFile = path.join(upgradeRoot, '.harness/plans/by-session/old-session.md');
     await fs.mkdir(path.dirname(oldSessionFile), { recursive: true });
     await fs.writeFile(oldSessionFile, oldSessionText);
+    const oldArchiveFile=path.join(upgradeRoot,'.harness/plans/archive/closed.md');
+    await fs.mkdir(path.dirname(oldArchiveFile),{recursive:true});
+    await fs.writeFile(oldArchiveFile,'# Historical closed plan\n');
 
     const runtimeWorkflow = path.join(upgradeRoot, '.harness/kit/WORKFLOW.md');
     const legacyRuntimeText = await fs.readFile(runtimeWorkflow, 'utf8') + '\n<!-- synthetic-1.4.13 -->\n';
@@ -562,26 +598,45 @@ try {
     await fs.writeFile(oldManifestFile, JSON.stringify(oldManifest, null, 2) + '\n');
 
     git(upgradeRoot, 'add', '.harness/kit-manifest.json', '.harness/kit/WORKFLOW.md',
-      '.harness/plans/todo-plan.md', '.harness/plans/by-session/old-session.md');
+      '.harness/plans/todo-plan.md', '.harness/plans/by-session/old-session.md', '.harness/plans/archive/closed.md');
     git(upgradeRoot, 'commit', '--no-verify', '-m', 'test: synthesize Workflow Kit 1.4.13 installation');
 
     const upgradePreview = installer.inspect({ project: upgradeRoot, mode: 'existing' });
     assert.equal(upgradePreview.version, '1.4.13');
     assert.equal(upgradePreview.upgradeable, true);
+    const beforeMigrationHead=git(upgradeRoot,'rev-parse','HEAD');
+    await fs.appendFile(oldArchiveFile,'Changed by user\n');
+    assert.throws(()=>installer.install({project:upgradeRoot,mode:'existing',update:true}),{code:'LEGACY_PLAN_CHANGED'});
+    assert.equal(await fs.readFile(oldSessionFile,'utf8'),oldSessionText,'preflight failure deletes nothing');
+    assert.equal(await fs.readFile(runtimeWorkflow,'utf8'),legacyRuntimeText,'preflight failure writes no Kit files');
+    await fs.writeFile(oldArchiveFile,'# Historical closed plan\n');
+    const untrackedArchive=path.join(upgradeRoot,'.harness/plans/archive/untracked.md');
+    await fs.writeFile(untrackedArchive,'Uncommitted history\n');
+    assert.throws(()=>installer.install({project:upgradeRoot,mode:'existing',update:true}),{code:'LEGACY_PLAN_CHANGED'});
+    assert.equal(await fs.readFile(oldArchiveFile,'utf8'),'# Historical closed plan\n');
+    assert.equal(git(upgradeRoot,'rev-parse','HEAD'),beforeMigrationHead);
+    await fs.unlink(untrackedArchive);
+    await fs.appendFile(oldArchiveFile,'Staged change\n');git(upgradeRoot,'add','.harness/plans/archive/closed.md');
+    await fs.writeFile(oldArchiveFile,'# Historical closed plan\n');
+    assert.throws(()=>installer.install({project:upgradeRoot,mode:'existing',update:true}),{code:'LEGACY_PLAN_CHANGED'});
+    git(upgradeRoot,'add','.harness/plans/archive/closed.md');
     const upgraded = installer.install({ project: upgradeRoot, mode: 'existing', update: true });
     assert.equal(upgraded.upgraded, true);
     assert.equal(upgraded.version, VERSION);
     const upgradedManifest = JSON.parse(await fs.readFile(oldManifestFile, 'utf8'));
     assert.equal(upgradedManifest.version, VERSION);
     assert.equal(upgradedManifest.upgraded_from, '1.4.13');
-    assert.equal(upgradedManifest.legacy_plan_migration?.archived_count, 1);
+    assert.equal(upgradedManifest.legacy_plan_migration?.removed_count, 2);
+    await assert.rejects(fs.access(oldArchiveFile));
+    assert.match(git(upgradeRoot,'log','-1','--format=%B'),/Workflow-Role: kit-update/);
     const upgradedCurrent = planApi.readPlan(upgradeRoot);
     assert.equal(upgradedCurrent.scope_id, 'upgrade-current-plan');
     assert.equal(Object.hasOwn(upgradedCurrent, 'owner_session_id'), false);
     assert.equal(Object.hasOwn(upgradedCurrent, 'prepared_in_session_id'), false);
     const archivedOldSession = path.join(upgradeRoot,
       '.harness/plans/archive/legacy-session-plans/by-session/old-session.md');
-    assert.equal(await fs.readFile(archivedOldSession, 'utf8'), oldSessionText);
+    await assert.rejects(fs.access(archivedOldSession));
+    assert.equal(git(upgradeRoot,'show',upgradedManifest.legacy_plan_migration.source_commit+':.harness/plans/by-session/old-session.md')+'\n',oldSessionText);
     await assert.rejects(fs.access(oldSessionFile));
     assert.equal((await fs.readFile(runtimeWorkflow, 'utf8')).includes('synthetic-1.4.13'), false);
 
@@ -609,5 +664,3 @@ try {
 } finally {
   await fs.rm(root, { recursive: true, force: true });
 }
-
-await import('./check-carryover-fixture.mjs');

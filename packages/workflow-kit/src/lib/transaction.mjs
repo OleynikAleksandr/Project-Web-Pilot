@@ -14,10 +14,11 @@ export function checkServicePaths(role, files, PLAN = ' .harness/plans/todo-plan
     'scope-plan': p => p === PLAN || p.startsWith('docs/') && /\.(md|markdown)$/.test(p),
     'plan-adjustment': p => p === PLAN || p === '.harness/workflow.json' || p.startsWith('docs/') && /\.(md|markdown)$/.test(p),
     repair: p => p === PLAN, planPath,
-    'plan-carryover': p => p === PLAN || p.startsWith('.harness/plans/archive/') && p.endsWith('.md'),
-    archive: p => p === PLAN || p.startsWith('.harness/plans/archive/') && p.endsWith('.md'),
+    'plan-carryover': p => p === PLAN,
+    archive: p => p === PLAN,
+    documentation: p => p === PLAN || !p.startsWith('.harness/') && p.endsWith('.md'),
     bootstrap: p => p.startsWith('.harness/') || p.startsWith('docs/') || ['AGENTS.md', 'AGENTS.override.md', '.gitignore', '.gitattributes', '.codex/hooks.json', 'scripts/workflow', 'scripts/workflow.mjs', 'scripts/workflow.cmd'].includes(p) || p.startsWith('.husky/'),
-    'kit-update': p => p === PLAN || p.startsWith('.harness/kit/') || p.startsWith('.harness/plans/by-id/') || p.startsWith('.harness/plans/by-session/') || p.startsWith('.harness/plans/archive/legacy-session-plans/') || ['.harness/kit-manifest.json', '.harness/plans/todo-plan.template.md', 'scripts/workflow', 'scripts/workflow.mjs', 'scripts/workflow.cmd', 'AGENTS.md', 'AGENTS.override.md', 'docs/DOCUMENTATION_INDEX.md', 'docs/MODULES.md', 'docs/architecture/OVERVIEW.md'].includes(p),
+    'kit-update': p => p === PLAN || p.startsWith('.harness/kit/') || p.startsWith('.harness/plans/by-id/') || p.startsWith('.harness/plans/by-session/') || p.startsWith('.harness/plans/archive/') || ['.harness/kit-manifest.json', '.harness/plans/todo-plan.template.md', 'scripts/workflow', 'scripts/workflow.mjs', 'scripts/workflow.cmd', 'AGENTS.md', 'AGENTS.override.md', 'docs/DOCUMENTATION_INDEX.md', 'docs/MODULES.md', 'docs/architecture/OVERVIEW.md'].includes(p),
   };
   check(patterns[role], 'SERVICE_ROLE', 'Недопустимая служебная роль.');
   check(files.every(patterns[role]), 'SERVICE_SCOPE', 'Служебный коммит содержит недопустимые пути.', { files, role });
@@ -105,7 +106,8 @@ export function commitCandidate(root, { plan, role, task = null, selected, messa
       atomic(path.join(root,PLAN),t.original_plan);
       fs.unlinkSync(localPath(root,'transaction.json'));fs.unlinkSync(backup);
     }
-    check(false, 'COMMIT_FAILED', unchanged ? 'Проверка не пройдена. Файлы сохранены, задача открыта. Исправьте причину и повторите commit; repair не нужен.' : 'Обнаружены конкурирующие изменения. Журнал сохранён для repair.', { output:t.error, retryable:unchanged });
+    const retry = role === 'documentation' ? 'docs:commit' : role === 'implementation' ? 'commit --task ' + task.id : role === 'kit-update' ? 'install --update' : 'исходную команду';
+    check(false, 'COMMIT_FAILED', unchanged ? 'Проверка не пройдена. Правки сохранены. Исправьте причину и повторите ' + retry + '; repair не нужен.' : 'Обнаружены конкурирующие изменения. Журнал сохранён для repair.', { output:t.error, retryable:unchanged });
   }
   const sha = completedTransaction(root, t);
   check(sha, 'COMMIT_NOT_CONFIRMED', 'Git завершился, но нужный коммит не подтверждён.');

@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1364,
+  "plan_revision": 1366,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "recovery-on-demand-research-20261006",
@@ -276,7 +276,8 @@
         "tests/session-plans.test.mjs",
         "tests/workflow-kit-recovery.test.mjs",
         "tests/workflow-kit-source.test.mjs",
-        "tests/workspace-setup.test.mjs"
+        "tests/workspace-setup.test.mjs",
+        "packages/workflow-kit/src/lib/recovery.mjs"
       ],
       "documentation_paths": [
         "docs/planning/workflow-kit-context-refactor.md",
@@ -301,13 +302,38 @@
         "Переиспользованы existing references, транзакции и команды; правки сохраняются при ошибке. Служебный коммит между task:start и commit не ломает учёт файлов задачи и её доказательства. Полный переход между версиями проверяется в T004; проверки пакета и корневые тесты проходят."
       ],
       "expected_commit_message": "feat: поддержать раунды и самостоятельные документы в Kit",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "recovery-on-demand-research-20261006",
         "task_id": "T002",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "docs/planning/workflow-kit-context-refactor.md",
+        "packages/workflow-kit/scripts/check-carryover-fixture.mjs",
+        "packages/workflow-kit/scripts/check-runtime-fixture.mjs",
+        "packages/workflow-kit/src/WORKFLOW.md",
+        "packages/workflow-kit/src/cli.mjs",
+        "packages/workflow-kit/src/lib/actions.mjs",
+        "packages/workflow-kit/src/lib/command-help.mjs",
+        "packages/workflow-kit/src/lib/extend-plan.mjs",
+        "packages/workflow-kit/src/lib/git-hooks.mjs",
+        "packages/workflow-kit/src/lib/installer.mjs",
+        "packages/workflow-kit/src/lib/plan.mjs",
+        "packages/workflow-kit/src/lib/recovery.mjs",
+        "packages/workflow-kit/src/lib/session-plans.mjs",
+        "packages/workflow-kit/src/lib/simple-workflow.mjs",
+        "packages/workflow-kit/src/lib/task-files.mjs",
+        "packages/workflow-kit/src/lib/transaction.mjs",
+        "packages/workflow-kit/src/lib/validate.mjs",
+        "packages/workflow-kit/src/schemas/plan.schema.json",
+        "packages/workflow-kit/src/templates/AGENTS.md",
+        "packages/workflow-kit/src/templates/CONTINUE.md",
+        "packages/workflow-kit/src/templates/PLAN.md",
+        "tests/workflow-kit-recovery.test.mjs",
+        "tests/workspace-setup.test.mjs"
+      ]
     },
     {
       "id": "T002A",
@@ -672,7 +698,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: recovery-on-demand-research-20261006
 Current Task: нет
-Revision: 1364
+Revision: 1366
 
 ## Цель
 
@@ -698,10 +724,10 @@ Revision: 1364
   - Git Commit: [DONE] docs: уточнить условия реализации и перехода Kit
   - Reference: recovery-on-demand-research-20261006 / T001R2 / implementation
   - Файлы: docs/planning/workflow-kit-context-refactor.md, docs/planning/workflow-kit-context-transition.md
-- [TODO] T002: Реализовать жизненный цикл планов и документационных коммитов — Ожидает
-  - Git Commit: [PENDING] feat: поддержать раунды и самостоятельные документы в Kit
+- [DONE] T002: Реализовать жизненный цикл планов и документационных коммитов — Завершено
+  - Git Commit: [DONE] feat: поддержать раунды и самостоятельные документы в Kit
   - Reference: recovery-on-demand-research-20261006 / T002 / implementation
-  - Файлы: packages/workflow-kit/src/lib/actions.mjs, packages/workflow-kit/src/lib/plan.mjs, packages/workflow-kit/src/lib/validate.mjs, packages/workflow-kit/src/lib/git-hooks.mjs, packages/workflow-kit/src/lib/transaction.mjs, packages/workflow-kit/src/lib/simple-workflow.mjs, packages/workflow-kit/src/lib/extend-plan.mjs, packages/workflow-kit/src/lib/session-plans.mjs, packages/workflow-kit/src/lib/installer.mjs, packages/workflow-kit/src/lib/task-update.mjs, packages/workflow-kit/src/lib/task-files.mjs, packages/workflow-kit/src/lib/command-help.mjs, packages/workflow-kit/src/cli.mjs, packages/workflow-kit/src/schemas/plan.schema.json, packages/workflow-kit/scripts/check-runtime-fixture.mjs, packages/workflow-kit/scripts/check-carryover-fixture.mjs, tests/project-doctor.test.mjs, tests/release-all.test.mjs, tests/session-opening-performance.test.mjs, tests/session-plans.test.mjs, tests/workflow-kit-recovery.test.mjs, tests/workflow-kit-source.test.mjs, tests/workspace-setup.test.mjs, docs/planning/workflow-kit-context-refactor.md, docs/planning/workflow-kit-context-transition.md, packages/workflow-kit/src/WORKFLOW.md, packages/workflow-kit/src/templates/AGENTS.md, packages/workflow-kit/src/templates/PROTOTYPE.md, packages/workflow-kit/src/templates/SPEC.md, packages/workflow-kit/src/templates/PLAN.md, packages/workflow-kit/src/templates/CONTINUE.md, packages/workflow-kit/src/templates/STAGES.md
+  - Файлы: packages/workflow-kit/src/lib/actions.mjs, packages/workflow-kit/src/lib/plan.mjs, packages/workflow-kit/src/lib/validate.mjs, packages/workflow-kit/src/lib/git-hooks.mjs, packages/workflow-kit/src/lib/transaction.mjs, packages/workflow-kit/src/lib/simple-workflow.mjs, packages/workflow-kit/src/lib/extend-plan.mjs, packages/workflow-kit/src/lib/session-plans.mjs, packages/workflow-kit/src/lib/installer.mjs, packages/workflow-kit/src/lib/task-update.mjs, packages/workflow-kit/src/lib/task-files.mjs, packages/workflow-kit/src/lib/command-help.mjs, packages/workflow-kit/src/cli.mjs, packages/workflow-kit/src/schemas/plan.schema.json, packages/workflow-kit/scripts/check-runtime-fixture.mjs, packages/workflow-kit/scripts/check-carryover-fixture.mjs, tests/project-doctor.test.mjs, tests/release-all.test.mjs, tests/session-opening-performance.test.mjs, tests/session-plans.test.mjs, tests/workflow-kit-recovery.test.mjs, tests/workflow-kit-source.test.mjs, tests/workspace-setup.test.mjs, packages/workflow-kit/src/lib/recovery.mjs, docs/planning/workflow-kit-context-refactor.md, docs/planning/workflow-kit-context-transition.md, packages/workflow-kit/src/WORKFLOW.md, packages/workflow-kit/src/templates/AGENTS.md, packages/workflow-kit/src/templates/PROTOTYPE.md, packages/workflow-kit/src/templates/SPEC.md, packages/workflow-kit/src/templates/PLAN.md, packages/workflow-kit/src/templates/CONTINUE.md, packages/workflow-kit/src/templates/STAGES.md
 - [TODO] T002A: Реализовать модель документов и общий предел размера — Ожидает
   - Git Commit: [PENDING] feat: ограничить документы Kit и обновить их модель
   - Reference: recovery-on-demand-research-20261006 / T002A / implementation

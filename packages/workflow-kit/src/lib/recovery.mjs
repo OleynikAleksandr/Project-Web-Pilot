@@ -121,7 +121,7 @@ export function recoverState(root, reason = 'manual', options = {}) {
     if (transaction) continuation = 'Есть незавершённый журнал commit. Сначала status и повтор commit/repair; новую задачу не начинать.';
     else if (plan.execution_scope_status === 'NONE') continuation = PROJECT_CONTINUATION_OBJECTIVE + ' Используй навигацию OVERVIEW, MODULES и DOCUMENTATION_INDEX. Ясное поручение уже разрешает короткий контракт и plan:create без повторного согласования.';
     else if (plan.execution_scope_status === 'BLOCKED') continuation = 'Разрешены обсуждение и диагностика. Причина: ' + plan.blocked_reason;
-    else if (plan.delivery_status === 'READY_FOR_ACCEPTANCE') continuation = 'Финальная актуализация документации завершена. Все задачи выполнены, план остаётся видимым. Новое поручение добавляется через plan:extend с повторной DOCS; архивирование требует отдельной прямой команды пользователя.';
+    else if (plan.delivery_status === 'READY_FOR_ACCEPTANCE') continuation = 'Все задачи выполнены, план остаётся видимым. Новое поручение добавляется через plan:extend; отдельная DOCS нужна при новом delivery. Закрытие требует отдельной прямой команды пользователя; история остаётся в Git.';
     else continuation = (plan.current_task_id ? 'Продолжить ' : 'Начать через task:start ') + (task?.id ?? 'задачу после уточнения зависимостей') + '. Проверки и фиксация выполняются управляемой командой commit.';
 
     const parts = [];

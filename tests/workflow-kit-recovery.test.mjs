@@ -26,7 +26,7 @@ async function fixture(t) {
   await fs.copyFile(path.join(getRuntimeRoot(), 'WORKFLOW.md'), path.join(root, '.harness/kit/WORKFLOW.md'));
   // Recovery delivers the canonical work rules and stage forms together with WORKFLOW.md.
   await fs.cp(path.join(getRuntimeRoot(), 'templates'), path.join(root, '.harness/kit/templates'), { recursive: true });
-  await fs.writeFile(path.join(root, '.harness/workflow.json'), JSON.stringify(defaultConfig(), null, 2) + '\n');
+  await fs.writeFile(path.join(root, '.harness/workflow.json'), JSON.stringify({...defaultConfig(),checks:[{id:'package',kind:'package',executable:process.execPath,args:['-e','process.exit(0)'],required:false,timeout_ms:10000,evidence:'fixture delivery'}]}, null, 2) + '\n');
   writePlan(root, emptyPlan('Recovery Fixture'));
   await fs.writeFile(path.join(root, 'docs/architecture/OVERVIEW.md'), '# Краткая архитектура проекта\n\nOVERVIEW_REQUIRED\n');
   await fs.writeFile(path.join(root, 'docs/MODULES.md'), '# Модули проекта\n\nFixture module map.\n');
@@ -63,11 +63,12 @@ function continuityScopeInput() {
     approved_scope: { functional_paths: [], documentation_paths: ['docs/notes.md'], max_functional_files_per_task: 3 },
     context_pack: { documents: [], include_last_completed_task: false, dependency_task_ids: [] },
     tasks: [{ id: 'T001', title: 'Подготовить результат этапа', why: 'Создать проверяемое изменение проекта', dependencies: [],
-      functional_paths: [], documentation_paths: ['docs/notes.md'], acceptance_criteria: ['Результат подготовлен'], verification_ids: [], expected_commit_message: 'docs: подготовить результат этапа' }],
+      functional_paths: [], documentation_paths: ['docs/notes.md'], acceptance_criteria: ['Результат подготовлен'], verification_ids: [], expected_commit_message: 'docs: подготовить результат этапа' },
+      {id:'T900',title:'Delivery',why:'Publish fixture',dependencies:[],functional_paths:[],documentation_paths:['docs/notes.md'],acceptance_criteria:['Delivered'],verification_ids:['package'],verification_kind:'package',expected_commit_message:'chore: deliver fixture'}],
   };
 }
 
-test('NONE plan keeps project navigation and scope:create appends the mandatory documentation finalizer', async t => {
+test('NONE plan keeps project navigation and code-only scope does not add DOCS', async t => {
   const root = await fixture(t);
   const none = readPlan(root);
   assert.equal(none.objective, PROJECT_CONTINUATION_OBJECTIVE);
@@ -76,11 +77,7 @@ test('NONE plan keeps project navigation and scope:create appends the mandatory 
   ]);
   createScope(root, scopeInput(true));
   const active = readPlan(root);
-  const finalTask = active.tasks.at(-1);
-  assert.equal(finalTask.id, 'DOCS');
-  assert.equal(finalTask.title, FINAL_DOCUMENTATION_TASK_TITLE);
-  assert.deepEqual(finalTask.dependencies, ['T001', 'T002', 'T003']);
-  assert.ok(finalTask.documentation_paths.includes('docs/DOCUMENTATION_INDEX.md'));
+  assert.deepEqual(active.tasks.map(t=>t.id), ['T001','T002','T003']);
   for (const required of ['docs/architecture/OVERVIEW.md', 'docs/MODULES.md', 'docs/DOCUMENTATION_INDEX.md']) {
     assert.ok(active.context_pack.documents.some(doc => doc.path === required && doc.required));
   }
@@ -91,8 +88,8 @@ test('READY_FOR_ACCEPTANCE requires DOCS and archive returns a contextual NONE p
   createScope(root, continuityScopeInput());
   let plan = readPlan(root);
   assert.equal(plan.delivery_status, 'IN_PROGRESS');
-  assert.equal(plan.tasks.at(-1).id, 'DOCS');
-  assert.deepEqual(plan.tasks.at(-1).dependencies, ['T001']);
+  assert.equal(plan.tasks.at(-2).id, 'DOCS');
+  assert.deepEqual(plan.tasks.at(-2).dependencies, ['T001']);
 
   startTask(root, 'T001');
   await fs.appendFile(path.join(root, 'docs/notes.md'), '\nRESULT_READY\n');
@@ -107,11 +104,12 @@ test('READY_FOR_ACCEPTANCE requires DOCS and archive returns a contextual NONE p
   assert.equal(docsPacket.included.includes(implementation.sha), false, 'DOCS ordering dependency is not copied as commit diff');
   assert.doesNotMatch(docsPacket.text, /RESULT_READY/, 'DOCS recovery does not replay completed implementation diff');
   commitTask(root, 'DOCS');
+  startTask(root,'T900');commitTask(root,'T900');
   plan = readPlan(root);
   assert.equal(plan.execution_scope_status, 'ACTIVE');
   assert.equal(plan.delivery_status, 'READY_FOR_ACCEPTANCE');
   assert.equal(git(root, 'status', '--porcelain'), '');
-  assert.match(recover(root, 'manual').text, /Финальная актуализация документации завершена/);
+  assert.match(recover(root, 'manual').text, /Все задачи выполнены/);
 
   archive(root, plan.scope_id, 'Пользователь принял результат и поручил закрыть этот scope.');
   const none = readPlan(root);
@@ -141,35 +139,40 @@ test('READY_FOR_ACCEPTANCE can reopen for corrections and rerun DOCS with an una
   commitTask(root, 'T001');
   startTask(root, 'DOCS');
   const firstDocs = commitTask(root, 'DOCS');
+  startTask(root,'T900');commitTask(root,'T900');
   let plan = readPlan(root);
   assert.equal(plan.delivery_status, 'READY_FOR_ACCEPTANCE');
-  assert.equal(plan.tasks.at(-1).commit_ref.iteration, undefined);
+  const completed = structuredClone(plan.tasks);
 
   const correction = { id: 'T002', title: 'Исправить результат после проверки', why: 'Учесть замечание пользователя',
     dependencies: ['T001'], functional_paths: [], documentation_paths: ['docs/notes.md'],
     acceptance_criteria: ['Исправление внесено'], verification_ids: [], expected_commit_message: 'docs: исправить результат',
     implementation_status: 'TODO', commit_status: 'PENDING',
     commit_ref: { scope_id: plan.scope_id, task_id: 'T002', role: 'implementation' } };
-  applyPlan(root, { tasks: [...plan.tasks, correction] }, plan.plan_revision);
+  const delivery={...structuredClone(plan.tasks.at(-1)),id:'T901',dependencies:[],implementation_status:'TODO',commit_status:'PENDING',commit_ref:{scope_id:plan.scope_id,task_id:'T901',role:'implementation'}};
+  delete delivery.actual_files;
+  applyPlan(root, { tasks: [...plan.tasks, correction,delivery] }, plan.plan_revision);
   plan = readPlan(root);
   assert.equal(plan.delivery_status, 'IN_PROGRESS');
-  assert.equal(plan.tasks.at(-1).id, 'DOCS');
-  assert.equal(plan.tasks.at(-1).commit_status, 'PENDING');
-  assert.equal(plan.tasks.at(-1).commit_ref.iteration, 2);
-  assert.deepEqual(plan.tasks.at(-1).dependencies, ['T001', 'T002']);
+  assert.deepEqual(plan.tasks.slice(0,completed.length),completed);
+  assert.equal(plan.tasks.at(-2).id, 'DOCS-2');
+  assert.equal(plan.tasks.at(-2).commit_status, 'PENDING');
+  assert.equal(plan.tasks.at(-2).commit_ref.iteration, 2);
+  assert.deepEqual(plan.tasks.at(-2).dependencies, ['T002']);
 
   startTask(root, 'T002');
   await fs.appendFile(path.join(root, 'docs/notes.md'), '\nCORRECTED_RESULT\n');
   commitTask(root, 'T002');
-  startTask(root, 'DOCS');
+  startTask(root, 'DOCS-2');
   assert.doesNotThrow(() => recover(root, 'manual'));
-  const secondDocs = commitTask(root, 'DOCS');
+  const secondDocs = commitTask(root, 'DOCS-2');
+  startTask(root,'T901');commitTask(root,'T901');
   plan = readPlan(root);
   assert.equal(plan.delivery_status, 'READY_FOR_ACCEPTANCE');
-  assert.equal(plan.tasks.at(-1).commit_ref.iteration, 2);
+  assert.equal(plan.tasks.at(-2).commit_ref.iteration, 2);
   assert.notEqual(secondDocs.sha, firstDocs.sha);
   const log = git(root, 'log', '--format=%B', plan.baseline_commit + '..HEAD');
-  assert.match(log, /Workflow-Task: DOCS[\s\S]*Workflow-Iteration: 2/);
+  assert.match(log, /Workflow-Task: DOCS-2[\s\S]*Workflow-Iteration: 2/);
   assert.equal((log.match(/Workflow-Task: DOCS/g) ?? []).length, 2);
   assert.doesNotThrow(() => recover(root, 'manual'));
 });

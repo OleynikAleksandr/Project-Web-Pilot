@@ -25,7 +25,7 @@ export function projectContextPack(pack = {}) {
   return { documents: [...foundation, ...extras], include_last_completed_task: pack.include_last_completed_task ?? false,
     dependency_task_ids: [...(pack.dependency_task_ids ?? [])] };
 }
-export const isDocumentationFinalizationTask = task => task?.id === FINAL_DOCUMENTATION_TASK_ID
+export const isDocumentationFinalizationTask = task => /^DOCS(?:-[2-9][0-9]*|-[1-9][0-9]+)?$/.test(task?.id ?? '')
   && task?.title === FINAL_DOCUMENTATION_TASK_TITLE;
 export const isDeliveryTask = task => ['package','installed'].includes(task?.verification_kind);
 export function emptyPlan(name) {
@@ -106,22 +106,20 @@ export function validatePlan(p) {
   const current = p.tasks.filter(t => t.implementation_status === 'IN_PROGRESS');
   check(current.length <= 1 && (current[0]?.id ?? null) === p.current_task_id, 'PLAN_SCHEMA', 'current_task_id не соответствует текущей задаче.');
   check(p.execution_scope_status !== 'BLOCKED' || (typeof p.blocked_reason === 'string' && p.blocked_reason.trim()), 'PLAN_SCHEMA', 'BLOCKED требует причину.');
-  const finalTask = p.tasks.find(isDocumentationFinalizationTask);
-  if (finalTask) {
-    const finalIndex = p.tasks.indexOf(finalTask);
+  for (const [finalIndex, finalTask] of p.tasks.entries()) if (isDocumentationFinalizationTask(finalTask)) {
     const beforeDocs = p.tasks.slice(0, finalIndex);
-    const deliveryTail = p.tasks.slice(finalIndex + 1);
-    check(beforeDocs.every(task => !isDeliveryTask(task)), 'DOCUMENTATION_FINAL_TASK',
-      'Package/installed delivery-задачи должны находиться после DOCS.');
-    check(deliveryTail.every(isDeliveryTask), 'DOCUMENTATION_FINAL_TASK',
-      'После DOCS допустим только package/installed delivery-хвост.');
     check(finalTask.functional_paths.length === 0, 'DOCUMENTATION_FINAL_TASK', 'Финальная актуализация документации не содержит функциональных файлов.');
     check(finalTask.documentation_paths.includes('docs/DOCUMENTATION_INDEX.md'), 'DOCUMENTATION_FINAL_TASK', 'Финальная актуализация должна включать docs/DOCUMENTATION_INDEX.md.');
-    const expected = beforeDocs.map(task => task.id);
-    check(expected.every(id => finalTask.dependencies.includes(id)) && finalTask.dependencies.length === expected.length,
-      'DOCUMENTATION_FINAL_TASK', 'DOCS должна зависеть от всех задач до delivery-хвоста и только от них.');
-    for (const task of deliveryTail) check(task.dependencies.includes(finalTask.id), 'DOCUMENTATION_FINAL_TASK',
-      'Каждая package/installed delivery-задача должна зависеть от DOCS.', {task_id:task.id});
+    const previous = beforeDocs.findLastIndex(isDocumentationFinalizationTask);
+    const expected = beforeDocs.slice(previous + 1).filter(t => !isDeliveryTask(t)).map(t => t.id);
+    check(expected.every(id => finalTask.dependencies.includes(id))
+      && finalTask.dependencies.every(id => beforeDocs.some(t => t.id === id)),
+      'DOCUMENTATION_FINAL_TASK', 'DOCS зависит от работы своего раунда и не ссылается вперёд.');
+  }
+  for (const [index, task] of p.tasks.entries()) if (isDeliveryTask(task)) {
+    const docs = p.tasks.slice(0,index).findLast(isDocumentationFinalizationTask);
+    check(docs && task.dependencies.includes(docs.id), 'DOCUMENTATION_FINAL_TASK',
+      'Каждая delivery-задача должна зависеть от DOCS своего раунда.', {task_id:task.id});
   }
   check(p.delivery_status !== 'READY_FOR_ACCEPTANCE' || (p.tasks.length > 0 && p.tasks.every(t => t.commit_status === 'DONE')), 'PLAN_SCHEMA', 'Готовность к приёмке не подтверждается задачами.');
   return p;

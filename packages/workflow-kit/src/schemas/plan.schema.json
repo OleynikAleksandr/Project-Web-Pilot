@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Workflow plan v1",
-  "description": "Cross-field, dependency, scope and projection invariants are enforced by lib/plan.mjs and lib/validate.mjs.",
+  "description": "One current plan; history remains in Git. DOCS is generated only for delivery rounds; completed records retain their positions. Cross-field, dependency, scope and projection invariants are enforced by lib/plan.mjs and lib/validate.mjs.",
   "type": "object",
   "required": [
     "schema_version",
@@ -78,6 +78,14 @@
           "commit_ref"
         ],
         "properties": {
+          "commit_ref": {
+            "type": "object",
+            "required": ["scope_id", "task_id", "role"],
+            "properties": {
+              "role": {"const": "implementation"},
+              "iteration": {"type": "integer", "minimum": 1}
+            }
+          },
           "verification_kind": {
             "enum": [
               "code",

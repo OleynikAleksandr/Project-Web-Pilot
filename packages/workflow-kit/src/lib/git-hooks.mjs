@@ -3,7 +3,7 @@ import path from 'node:path';
 import { check, hash, PLAN, withPlanFile, json, atomic, safePath } from './common.mjs';
 import { listPlans } from './session-plans.mjs';
 import { parsePlan, isDocumentationFinalizationTask } from './plan.mjs';
-import { journal, readConfig, validateDocs, resolveReferences } from './validate.mjs';
+import { journal, readConfig, validateDocs, resolveReferences, validateDocumentationCommit } from './validate.mjs';
 import { git, head, paths, run, localPath, snapshot } from './git.mjs';
 import { messageFor, saveJournal, completedTransaction, checkServicePaths } from './transaction.mjs';
 
@@ -26,7 +26,10 @@ export function validateStaged(root) {
       check(r.status === 0, 'DOCUMENTATION_INDEX', 'Документ отсутствует в index: ' + p); return r.stdout;
     });
     resolveReferences(root, plan, t);
-  } else checkServicePaths(t.role, selected, PLAN);
+  } else {
+    checkServicePaths(t.role, selected, PLAN);
+    if (t.role === 'documentation') validateDocumentationCommit(root, selected, plan);
+  }
   return t;
 }
 export function preCommit(root) {
@@ -68,7 +71,7 @@ export function prePush(root) {
   for (const { file, plan } of listPlans(root)) {
     withPlanFile(root, file, {}, () => resolveReferences(root, plan));
     // 1.5.5: GitHub gets the result only after its documentation (delivery-ordering-policy, invariant 5).
-    const docs = plan.execution_scope_status === 'NONE' ? null : plan.tasks.find(isDocumentationFinalizationTask);
+    const docs = plan.execution_scope_status === 'NONE' ? null : plan.tasks.findLast(isDocumentationFinalizationTask);
     check(!docs || docs.commit_status === 'DONE', 'DOCS_BEFORE_PUSH',
       'Push выполняется только после DOCS текущего плана. Заверши DOCS, затем публикуй в delivery-задаче после неё (verification_kind=package с проверкой удалённой ветки). Не обходи hook через --no-verify.',
       { scope_id: plan.scope_id, docs_status: docs?.commit_status ?? null });
