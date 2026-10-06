@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1315,
+  "plan_revision": 1317,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "context-as-text-0.6.96-20261006",
@@ -411,8 +411,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "context-as-text-0.6.96-20261006",
         "task_id": "T002",
@@ -447,7 +447,12 @@
         "Тест каталога требует 9 имён и отсутствия workflow_context_recover в исходнике; tools/list настоящего сервера возвращает те же 9 имён с описаниями инструментов и параметров",
         "Остальные девять инструментов, их параметры, описания и поведение, codex-tools.lock.json не меняется; прежний Windows-runtime в этой задаче не трогается"
       ],
-      "expected_commit_message": "feat: MCP без доставки контекста: каталог из девяти инструментов"
+      "expected_commit_message": "feat: MCP без доставки контекста: каталог из девяти инструментов",
+      "actual_files": [
+        "tests/codex-app-server-mcp.test.mjs",
+        "tools/codex-app-server-mcp/server.py",
+        "tools/codex-app-server-mcp/session-rules.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -1135,7 +1140,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: context-as-text-0.6.96-20261006
 Current Task: нет
-Revision: 1315
+Revision: 1317
 
 ## Цель
 
@@ -1174,8 +1179,8 @@ Revision: 1315
   - Git Commit: [DONE] feat: Стартовое сообщение macOS несёт полный контекст; режим MCP-доставки удалён из клиента
   - Reference: context-as-text-0.6.96-20261006 / T001 / implementation
   - Файлы: src/mac-runtime-switch.mjs, src/context-session.mjs, src/mcp-runtime.mjs, src/ui/sidebar.mjs, src/ui/progress.mjs, src/ui/index.html, src/main.mjs, tests/context-session.test.mjs, tests/mac-runtime-switch.test.mjs, tests/mcp-runtime.test.mjs, tests/sidebar.test.mjs, tests/progress.test.mjs, docs/planning/context-as-text.md
-- [TODO] T002: MCP без доставки контекста: каталог из девяти инструментов — Ожидает
-  - Git Commit: [PENDING] feat: MCP без доставки контекста: каталог из девяти инструментов
+- [DONE] T002: MCP без доставки контекста: каталог из девяти инструментов — Завершено
+  - Git Commit: [DONE] feat: MCP без доставки контекста: каталог из девяти инструментов
   - Reference: context-as-text-0.6.96-20261006 / T002 / implementation
   - Файлы: tools/codex-app-server-mcp/server.py, tests/codex-app-server-mcp.test.mjs, src/mac-runtime-switch.mjs, tests/mac-runtime-switch.test.mjs, docs/planning/context-as-text.md, tools/codex-app-server-mcp/session-rules.md
 - [TODO] T003: Автопродолжение несёт текст следующей задачи — Ожидает

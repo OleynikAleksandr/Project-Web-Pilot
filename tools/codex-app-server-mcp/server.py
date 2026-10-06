@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-import hashlib
 import json
 import os
 import shutil
@@ -36,11 +35,8 @@ MAX_PATCH_BYTES = 1_000_000
 MAX_OUTPUT = 120_000
 STDIN_CLOSED_MESSAGE = "stdin is closed for this session; rerun exec_command with tty=true to keep stdin open"
 PREEXECUTION_RETRY_RULE = "If OpenAI blocked the call before execution, retry the same call once unchanged; change or split it only if the retry is blocked too."
-# ChatGPT shows a model roughly 10 000 tokens of one tool result; a text-only part of 28 000 bytes
-# is about 7 000 tokens of Russian text.
-CONTEXT_PART_BYTES = 28_000
-SESSION_RULES_FILE = Path(__file__).resolve().parent / "session-rules.md"
-ACTIVE_WORKSPACE_FILE = "active-workspace.json"
+# The record of the project open in Web Pilot, written by 0.6.86–0.6.95 for context delivery through MCP.
+RETIRED_ACTIVE_WORKSPACE_FILE = "active-workspace.json"
 CODEX_TOOLS_LOCK_FILE = Path(__file__).resolve().parent / "codex-tools.lock.json"
 
 SENSITIVE_NAMES = {
@@ -61,10 +57,6 @@ SENSITIVE_FRAGMENTS = [
 
 def clamp(text: str, limit: int = MAX_OUTPUT) -> str:
     return text if len(text) <= limit else text[:limit] + f"\n\n[TRUNCATED: {len(text)-limit} chars omitted]"
-
-
-def sha256_bytes(data: bytes) -> str:
-    return hashlib.sha256(data).hexdigest()
 
 
 def is_sensitive(path: Path) -> bool:
@@ -89,6 +81,11 @@ class LocalFacade:
         try:
             # The recoverable-delete folder of 0.6.94 and earlier: rmdir removes it only when it is empty.
             (state_root / "trash").rmdir()
+        except OSError:
+            pass
+        try:
+            # This MCP carries tools only: the project context goes in the start message of Web Pilot.
+            (state_root / RETIRED_ACTIVE_WORKSPACE_FILE).unlink()
         except OSError:
             pass
         self._command_sessions: dict[str, tuple[int, bool]] = {}
@@ -169,70 +166,6 @@ class LocalFacade:
             data["repository"] = str(repo)
             data["git"] = git
         return data
-
-    def workflow_recover(self, workspace: str, session_id: str = "") -> dict[str, Any]:
-        root = self.resolve(workspace, must_exist=True, allow_sensitive=True)
-        script = root / "scripts/workflow"
-        plan_file = root / ".harness/plans/todo-plan.md"
-        if not script.is_file() or not plan_file.is_file():
-            raise ValueError("WORKFLOW_NOT_INSTALLED")
-        before = self.client.fs_read_file(str(plan_file))
-        argv = [str(script), "recover", "--format", "json"]
-        if session_id:
-            argv += ["--session", session_id]
-        result = self._command(argv, cwd=root, timeout_ms=30_000, output_cap=400_000)
-        if not result["ok"]:
-            raise ValueError("RECOVERY_FAILED: " + result["stdout"][:2000] + result["stderr"][:1000])
-        packet = json.loads(result["stdout"])
-        after = self.client.fs_read_file(str(plan_file))
-        if before != after:
-            raise ValueError("RECOVERY_CHANGED")
-        text = packet.get("text")
-        if packet.get("ok") is not True or not isinstance(text, str) or not text.strip():
-            raise ValueError("RECOVERY_INCOMPLETE")
-        raw = text.encode("utf-8")
-        return {
-            "delivery_protocol": "inline-context-v1",
-            "status": "ready",
-            "completeness": packet.get("completeness"),
-            "workspace": str(root),
-            "head": packet.get("head"),
-            "signature": packet.get("signature"),
-            "context": text,
-            "context_sha256": sha256_bytes(raw),
-            "context_bytes": len(raw),
-            "generated_at_ms": int(time.time() * 1000),
-            "ack_required": False,
-        }
-
-    def active_workspace(self) -> str:
-        """The project Web Pilot has open; Web Pilot writes it for calls without a workspace."""
-        record = self.state_root / ACTIVE_WORKSPACE_FILE
-        try:
-            workspace = json.loads(record.read_text(encoding="utf-8")).get("workspace")
-        except (OSError, ValueError, AttributeError):
-            workspace = None
-        if not isinstance(workspace, str) or not Path(workspace).is_absolute():
-            raise ValueError("WORKSPACE_REQUIRED: no project is open in Web Pilot; ask the user for the absolute project folder path")
-        return workspace
-
-    def workflow_context(self, workspace: str = "", session_id: str = "", part: int = 0, after: str = "") -> dict[str, Any] | str:
-        workspace = workspace.strip() or self.active_workspace()
-        result = self.workflow_recover(workspace, session_id)
-        return context_part(result, part, after) if part else result
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     @staticmethod
     def _native_apply_patch_error(detail: str) -> ValueError:
@@ -491,9 +424,6 @@ class LocalFacade:
         return self._format_command_result(result, token_limit)
 
 
-
-
-
     # Observation only: this MCP lists windows and takes screenshots; it never drives the UI.
     # CoreGraphics through JXA needs neither Xcode tools nor Automation permission.
     # Options 1|16: on-screen windows only, no desktop elements; layer 0 is ordinary app windows.
@@ -615,61 +545,6 @@ class TurnWatchdog:
         raise ValueError("action must be start, checkpoint or complete")
 
 
-def session_rules() -> str:
-    return SESSION_RULES_FILE.read_text(encoding="utf-8").strip() + "\n\n"
-
-
-def split_context(text: str, limit: int = CONTEXT_PART_BYTES) -> list[str]:
-    """Split on line boundaries; a single longer line is cut by characters (at most 4 bytes each)."""
-    pieces: list[str] = []
-    for line in text.splitlines(keepends=True):
-        if len(line.encode("utf-8")) <= limit:
-            pieces.append(line)
-        else:
-            step = max(1, limit // 4)
-            pieces.extend(line[i:i + step] for i in range(0, len(line), step))
-    parts: list[str] = []
-    current: list[str] = []
-    size = 0
-    for piece in pieces:
-        n = len(piece.encode("utf-8"))
-        if current and size + n > limit:
-            parts.append("".join(current))
-            current, size = [], 0
-        current.append(piece)
-        size += n
-    if current:
-        parts.append("".join(current))
-    return parts or [""]
-
-
-def part_key(sha: str, part: int) -> str:
-    """Key printed only at the end of a part; the next part requires it, so parts cannot be fetched in one batch."""
-    return hashlib.sha256(f"{sha}:{part}".encode("utf-8")).hexdigest()[:8]
-
-
-def context_part(result: dict[str, Any], part: int, after: str = "") -> str:
-    """One readable part of the session rules plus the complete recovery packet."""
-    text = session_rules() + result["context"]
-    parts = split_context(text)
-    total = len(parts)
-    if part < 1 or part > total:
-        raise ValueError(f"PART_OUT_OF_RANGE: part must be 1..{total}")
-    sha = sha256_bytes(text.encode("utf-8"))
-    if part > 1 and after.strip() != part_key(sha, part - 1):
-        # Short on purpose: a batched call must not fill the visible output.
-        raise ValueError(f"PART_ORDER: part={part} needs the after key printed at the end of part {part - 1}. "
-                         "Read the parts one per tool call; if the context changed, start again with part=1.")
-    workspace = json.dumps(result["workspace"], ensure_ascii=False)
-    head = f"ЧАСТЬ {part} ИЗ {total} контекста проекта {workspace}; sha256 {sha[:16]}.\n\n"
-    tail = (f"\n[ПРОДОЛЖЕНИЕ] Контекст не закончен. Следующую часть вызывай отдельным последовательным вызовом, "
-            f"не объединяя с другими частями: workflow_context_recover(workspace={workspace}, part={part + 1}, "
-            f"after=\"{part_key(sha, part)}\").\n"
-            if part < total else
-            f"\n[КОНЕЦ ПАКЕТА] Получены все {total} части; sha256 {sha[:16]} совпадает во всех частях.\n")
-    return head + parts[part - 1] + tail
-
-
 def create_server(*, host: str, port: int, state_root: Path, codex_binary: str | None = None) -> FastMCP:
     client = AppServerClient(binary=codex_binary, cwd=str(Path.home()), request_timeout=30)
     facade = LocalFacade(client, state_root)
@@ -677,14 +552,6 @@ def create_server(*, host: str, port: int, state_root: Path, codex_binary: str |
     mcp = FastMCP(
         "Codex App Server Local Mac",
         instructions=(
-            "Workflow Kit projects: before your first answer in a conversation about a local project, read its context "
-            "with workflow_context_recover strictly sequentially, ONE PART PER TOOL CALL: call part=1, read it, then call "
-            "only the next part named at its end with its after key, until [КОНЕЦ ПАКЕТА]. No batching, no parallel "
-            "calls, no loops: one tool result is shown only up to about 10 000 tokens. If a result is truncated, repeat "
-            "only that part. Read the context again only when the user asks to refresh it. All parts together are the "
-            "complete project context and working rules: follow them; do not substitute reading project files for unread parts. "
-            "Omit workspace to use the project open in Web Pilot, or pass the absolute project folder the user names "
-            "or the path shown in the parts. "
             "Local-computer tools only. Use ChatGPT native web/cloud tools for public information. "
             "This MCP uses Codex App Server as an executor and never launches a Codex model turn. "
             "No UI control: this MCP cannot move the mouse, press keys or switch windows. Observation only: "
@@ -721,20 +588,6 @@ def create_server(*, host: str, port: int, state_root: Path, codex_binary: str |
         """Report Codex App Server executor status, local filesystem scope, and pinned/installed Codex tool compatibility."""
         return facade.status(repository)
 
-    # Text only: a structured copy would double what the client shows the model.
-    @mcp.tool(annotations=READ_ONLY, structured_output=False)
-    def workflow_context_recover(
-        workspace: Annotated[str, Field(description="Absolute Workflow Kit project folder. Omit to use the project currently open in Web Pilot.")] = "",
-        session_id: Annotated[str, Field(description="Optional legacy recovery session selector; normally leave empty for the checkout current plan.")] = "",
-        part: Annotated[int, Field(description="Context part to read. Use 1 first and then the next part named at the end; 0 returns the whole packet for compatibility.")] = 0,
-        after: Annotated[str, Field(description="Ordering key printed at the end of the previous part; required for part 2 and later.")] = "",
-    ) -> dict[str, Any] | str:
-        """Project context for Workflow Kit projects: working rules, current plan and project documents.
-        One part per tool call: call part=1, then only the next part named at the end of the result with its after key.
-        Never request several parts in one call, batch, parallel call or loop. workspace defaults to the project open
-        in Web Pilot. part=0 returns the whole packet in one result."""
-        return facade.workflow_context(workspace, session_id, part, after)
-
     @mcp.tool(annotations=READ_ONLY)
     def computer_list_windows(
         title_contains: Annotated[str, Field(description="Optional case-insensitive substring matched against window title and application name.")] = "",
@@ -765,17 +618,6 @@ def create_server(*, host: str, port: int, state_root: Path, codex_binary: str |
         return facade.computer_capture_window(window_id, max_dimension)
 
 
-
-
-
-
-
-
-
-
-
-
-
     @mcp.tool(annotations=ARBITRARY_COMMAND)
     async def apply_patch(
         patch: Annotated[str, Field(description="Codex patch text: *** Begin Patch, then Add/Delete/Update File operations, optional *** Move to, then *** End Patch.")],
@@ -790,7 +632,6 @@ def create_server(*, host: str, port: int, state_root: Path, codex_binary: str |
     ) -> Any:
         """View a local image file from the filesystem when visual inspection is needed. Use this for images already available on disk. This MCP resizes to at most 1600 points on the longest side. Result contains a text block with JSON metadata and an image/png block. In ChatGPT tool-call scripts the blocks are in content_items; pass the image block to image()."""
         return facade.view_image(path)
-
 
 
     @mcp.tool(annotations=ARBITRARY_COMMAND)
@@ -818,19 +659,6 @@ def create_server(*, host: str, port: int, state_root: Path, codex_binary: str |
     ) -> str:
         """Writes characters to an existing exec_command session and returns recent output. If OpenAI blocked the call before execution, retry the same call once unchanged; change or split it only if the retry is blocked too."""
         return await asyncio.to_thread(facade.write_stdin,session_id,chars,yield_time_ms,max_output_tokens)
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
     return mcp

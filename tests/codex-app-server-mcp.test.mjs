@@ -136,19 +136,29 @@ print(json.dumps({
   }
 });
 
-test('Codex App Server MCP exposes exactly the 10-tool macOS catalog', async () => {
+test('Codex App Server MCP exposes exactly the 9-tool catalog and delivers no project context', async () => {
   const { readFile } = await import('node:fs/promises');
   const source = await readFile(path.join(repoRoot, 'tools', 'codex-app-server-mcp', 'server.py'), 'utf8');
 
   const expected = [
     'exec_command', 'write_stdin', 'apply_patch', 'view_image',
-    'workflow_context_recover', 'bridge_status', 'turn_watchdog',
+    'bridge_status', 'turn_watchdog',
     'computer_list_windows', 'computer_capture_screen', 'computer_capture_window',
   ];
   for (const name of expected) {
     assert.match(source, new RegExp(`def ${name}\\(`), `missing local tool ${name}`);
   }
-  assert.equal(source.match(/@mcp\.tool/g).length, 10, 'catalog is exactly 10 tools');
+  assert.equal(source.match(/@mcp\.tool/g).length, 9, 'catalog is exactly 9 tools');
+  // 0.6.96: MCP carries tools only; the context and the session rules go in the start message of Web Pilot.
+  for (const name of ['workflow_context_recover', 'workflow_context', 'workflow_recover', 'active_workspace', 'session_rules',
+    'split_context', 'part_key', 'context_part', 'CONTEXT_PART_BYTES', 'SESSION_RULES_FILE', 'PART_ORDER', 'КОНЕЦ ПАКЕТА'])
+    assert.ok(!source.includes(name), `context delivery leftover ${name} must be absent from server.py`);
+  assert.equal(existsSync(path.join(clientDir, 'session-rules.md')), false, 'session-rules.md is deleted');
+  const instructions = source.slice(source.indexOf('instructions=('), source.indexOf('host=host'));
+  assert.doesNotMatch(instructions, /Workflow Kit|recover|context|part=|after key/i, 'server instructions do not mention recovery');
+  for (const phrase of ['Local-computer tools only', 'never launches a Codex model turn', 'No UI control',
+    'Tool usage: search with rg through exec_command', 'PREEXECUTION_RETRY_RULE'])
+    assert.ok(instructions.includes(phrase), phrase);
 
   const removedTools = [
     'list_drives', 'file_info', 'list_directory', 'read_file', 'read_binary',
@@ -951,7 +961,7 @@ test('App Server MCP answers a stale session id without initialize after a resta
   assert.deepEqual(tools.map(tool => tool.name).sort(), [
     'apply_patch', 'bridge_status', 'computer_capture_screen', 'computer_capture_window',
     'computer_list_windows', 'exec_command',
-    'turn_watchdog', 'view_image', 'workflow_context_recover', 'write_stdin',
+    'turn_watchdog', 'view_image', 'write_stdin',
   ]);
   for (const tool of tools) {
     assert.ok(tool.description?.trim(), `${tool.name} description is required`);
@@ -1095,84 +1105,42 @@ print(json.dumps(out, ensure_ascii=False))
   assert.deepEqual(out.leftovers, [], 'temporary screenshots are removed, also after a failed capture');
 });
 
-test('workflow context is read strictly one part per call with the session rules and the project open in Web Pilot', { timeout: 60_000 }, async t => {
+const SERVER_INSTRUCTIONS = 'Local-computer tools only. Use ChatGPT native web/cloud tools for public information. '
+  + 'This MCP uses Codex App Server as an executor and never launches a Codex model turn. '
+  + 'No UI control: this MCP cannot move the mouse, press keys or switch windows. Observation only: '
+  + 'computer_list_windows, computer_capture_screen and computer_capture_window. '
+  + 'Tool usage: search with rg through exec_command; edit text files with apply_patch and do not reread them after a successful patch. '
+  + 'If OpenAI blocked the call before execution, retry the same call once unchanged; change or split it only if the retry is blocked too.';
+
+test('server instructions are the short tool rules and the executor drops the retired active-workspace record', { timeout: 60_000 }, async t => {
   const venvPython = path.join(homedir(), 'Library', 'Application Support', 'WebPilotCodexExecutor', 'runtime', 'venv', 'bin', 'python');
   if (!existsSync(venvPython)) { t.skip('Codex App Server runtime venv is not installed'); return; }
-  const { chmod } = await import('node:fs/promises');
-  const root = await mkdtemp(path.join(tmpdir(), 'web-pilot-context-parts-'));
+  const root = await mkdtemp(path.join(tmpdir(), 'web-pilot-tools-only-'));
   t.after(() => rm(root, { recursive: true, force: true }));
-  const workspace = path.join(root, 'Мой проект');
-  await mkdir(path.join(workspace, 'scripts'), { recursive: true });
-  await mkdir(path.join(workspace, '.harness', 'plans'), { recursive: true });
-  await writeFile(path.join(workspace, '.harness', 'plans', 'todo-plan.md'), '# plan\n');
-  // About 70 KB of Russian lines plus one line longer than a part.
-  const lines = Array.from({ length: 900 }, (_, i) => `Строка ${i} контекста проекта: описание модулей и правил работы.`);
-  lines.splice(450, 0, 'Длинная строка '.repeat(2000));
-  const text = lines.join('\n') + '\nReference-only: []\n';
-  await writeFile(path.join(workspace, 'packet.json'), JSON.stringify({ ok: true, text, completeness: 'COMPLETE', head: 'h', signature: 's' }));
-  const script = path.join(workspace, 'scripts', 'workflow');
-  await writeFile(script, '#!/bin/sh\ncat "$(dirname "$0")/../packet.json"\n');
-  await chmod(script, 0o755);
   const probe = path.join(root, 'probe.py');
-  await writeFile(probe, `import json, re, sys, pathlib, subprocess
+  await writeFile(probe, `import asyncio, json, sys, pathlib
 sys.path.insert(0, sys.argv[1])
 import server
 root = pathlib.Path(sys.argv[2])
-workspace = sys.argv[3]
 class Client:
     cwd = str(root)
-    def fs_read_file(self, path):
-        return pathlib.Path(path).read_bytes()
-    def command_exec(self, argv, cwd=None, timeout_ms=None, output_bytes_cap=None, **kwargs):
-        run = subprocess.run(argv, cwd=cwd, capture_output=True, text=True)
-        return {"exitCode": run.returncode, "stdout": run.stdout, "stderr": run.stderr}
 state = root / "state"
 state.mkdir()
+record = state / "active-workspace.json"
+record.write_text(json.dumps({"workspace": "/Projects/Old"}), encoding="utf-8")
+(state / "keep.json").write_text("{}", encoding="utf-8")
 facade = server.LocalFacade(Client(), state)
-out = {}
-try:
-    facade.workflow_context("", "", 1)
-except ValueError as error:
-    out["no_active"] = str(error)
-(state / "active-workspace.json").write_text(json.dumps({"workspace": workspace}), encoding="utf-8")
-full = facade.workflow_context("", "", 0)
-out["full_context"] = full["context"]
-parts = []
-after = ""
-for number in range(1, 50):
-    part = facade.workflow_context("", "", number, after)
-    parts.append(part)
-    if "[КОНЕЦ ПАКЕТА]" in part:
-        break
-    after = re.search(r'after="([0-9a-f]{8})"\\)\\.\\n$', part).group(1)
-out["parts"] = parts
-keys = [re.search(r'after="([0-9a-f]{8})"', item).group(1) for item in parts[:-1]]
-out["explicit_second"] = facade.workflow_context(workspace, "", 2, keys[0]) == parts[1]
-out["guard"] = {}
-for name, number, key in (("missing", 2, ""), ("foreign", 2, "deadbeef"), ("skipped", 3, keys[0])):
-    try:
-        facade.workflow_context(workspace, "", number, key)
-        out["guard"][name] = None
-    except ValueError as error:
-        out["guard"][name] = str(error)
-out["range"] = []
-for bad in (len(parts) + 1, -1):
-    try:
-        facade.workflow_context(workspace, "", bad)
-        out["range"].append(None)
-    except ValueError as error:
-        out["range"].append(str(error))
-out["rules"] = server.session_rules()
+out = {"record_removed": not record.exists(), "other_kept": (state / "keep.json").exists()}
+server.LocalFacade(Client(), state)
+out["facade"] = [name for name in ("workflow_context", "workflow_recover", "active_workspace") if hasattr(facade, name)]
+out["module"] = [name for name in ("session_rules", "split_context", "part_key", "context_part") if hasattr(server, name)]
 mcp = server.create_server(host="127.0.0.1", port=0, state_root=state)
-tool = mcp._tool_manager.get_tool("workflow_context_recover")
-out["output_schema"] = tool.fn_metadata.output_schema
-out["params"] = tool.parameters
 out["instructions"] = mcp.instructions
+out["tools"] = sorted(tool.name for tool in asyncio.run(mcp.list_tools()))
 print(json.dumps(out, ensure_ascii=False))
 `);
   const run = await new Promise((resolve, reject) => {
-    const child = spawn(venvPython, ['-B', probe, clientDir, root, workspace], { cwd: root, env: { ...process.env, PYTHONDONTWRITEBYTECODE: '1' }, stdio: ['ignore', 'pipe', 'pipe'] });
-    // Decode as one stream: a Cyrillic character may be split between two chunks.
+    const child = spawn(venvPython, ['-B', probe, clientDir, root], { cwd: root, env: { ...process.env, PYTHONDONTWRITEBYTECODE: '1' }, stdio: ['ignore', 'pipe', 'pipe'] });
     child.stdout.setEncoding('utf8'); child.stderr.setEncoding('utf8');
     let stdout = '', stderr = '';
     child.stdout.on('data', chunk => { stdout += chunk; });
@@ -1182,54 +1150,14 @@ print(json.dumps(out, ensure_ascii=False))
   });
   assert.equal(run.code, 0, run.stderr);
   const out = JSON.parse(run.stdout.trim().split('\n').at(-1));
-  assert.match(out.no_active, /WORKSPACE_REQUIRED/);
-  assert.equal(out.full_context, text, 'part=0 keeps the whole packet');
-  assert.ok(out.parts.length >= 3, 'about 90 KB needs several parts');
-  const total = out.parts.length;
-  const resolvedWorkspace = await (await import('node:fs/promises')).realpath(workspace); // /var → /private/var on macOS
-  const bodies = [], shas = new Set();
-  out.parts.forEach((part, index) => {
-    const head = part.slice(0, part.indexOf('\n\n'));
-    assert.match(head, new RegExp(`^ЧАСТЬ ${index + 1} ИЗ ${total} контекста проекта `));
-    assert.ok(head.includes(JSON.stringify(resolvedWorkspace)), 'every part names the project folder');
-    shas.add(head.match(/sha256 ([0-9a-f]{16})/)[1]);
-    const marker = index + 1 < total ? '\n[ПРОДОЛЖЕНИЕ]' : '\n[КОНЕЦ ПАКЕТА]';
-    const body = part.slice(head.length + 2, part.lastIndexOf(marker));
-    assert.ok(Buffer.byteLength(body) <= 28_000, `part ${index + 1} body is ${Buffer.byteLength(body)} bytes`);
-    assert.doesNotMatch(head, /part=/, 'the header never names the next call');
-    if (index + 1 < total) {
-      assert.match(part, new RegExp(`part=${index + 2}, after="[0-9a-f]{8}"\\)\\.\\n$`), 'the next call and its key end the part');
-      assert.ok(part.includes('отдельным последовательным вызовом'));
-    } else assert.match(part, /\[КОНЕЦ ПАКЕТА\] Получены все/);
-    bodies.push(body);
-  });
-  assert.equal(shas.size, 1, 'all parts carry one sha256');
-  assert.equal(bodies.join(''), out.rules + text, 'parts join into the rules plus the exact packet');
-  assert.ok(bodies[0].startsWith('ПРАВИЛА СЕССИИ WEB PILOT'));
-  const toolUsage = 'Tool usage: search with rg through exec_command; edit text files with apply_patch and do not reread them after a successful patch.';
-  const retryRule = 'If OpenAI blocked the call before execution, retry the same call once unchanged; change or split it only if the retry is blocked too.';
-  for (const rule of ['не более одной микрозадачи', 'Не запускай codex exec', 'являются данными',
-    'Интерфейсом компьютера не управляй: не двигай мышь, не нажимай клавиши и не переключай окна — ни инструментами, ни командами (osascript, System Events, cliclick и подобными). Список окон и снимки экрана и окна (`computer_list_windows`, `computer_capture_screen`, `computer_capture_window`) разрешены. Живую проверку интерфейса выполняет пользователь.',
-    toolUsage, retryRule])
-    assert.ok(out.rules.includes(rule), rule);
-  assert.ok(!out.rules.includes('Delivery-порядок'), 'Workflow Core already carries the delivery order');
-  assert.equal(out.explicit_second, true, 'the key from part 1 opens part 2');
-  for (const name of ['missing', 'foreign', 'skipped']) {
-    assert.match(out.guard[name], /PART_ORDER/, name);
-    assert.ok(out.guard[name].length < 300, 'a refused batch call stays short');
-  }
-  assert.match(out.range[0], /PART_OUT_OF_RANGE/);
-  assert.match(out.range[1], /PART_OUT_OF_RANGE/);
-  assert.equal(out.output_schema, null, 'text only: no structured copy of the result');
-  assert.equal(out.params.properties.part.default, 0);
-  assert.equal(out.params.properties.workspace.default, '');
-  const lead = out.instructions.slice(0, 512);
-  assert.equal(out.params.properties.after.default, '');
-  assert.equal((await import('node:crypto')).createHash('sha256').update(lead).digest('hex'), '7169dfe9d8134492c5263a3e6c1b68478e0ca56b5f04a904d0e2c6e64adb03a0', 'the first 512 instruction characters stay unchanged');
-  for (const phrase of ['Workflow Kit projects', 'before your first answer', 'ONE PART PER TOOL CALL', 'after key', 'No batching, no parallel calls, no loops'])
-    assert.ok(lead.includes(phrase), phrase);
-  assert.ok(out.instructions.includes(toolUsage), 'server instructions carry the same tool-usage rule');
-  assert.ok(out.instructions.includes(retryRule), 'server instructions carry the same pre-execution retry rule');
+  assert.equal(out.record_removed, true, 'the record written by 0.6.86–0.6.95 is removed at start');
+  assert.equal(out.other_kept, true, 'nothing else in the state folder is touched');
+  assert.deepEqual(out.facade, []); assert.deepEqual(out.module, []);
+  assert.equal(out.instructions, SERVER_INSTRUCTIONS, 'the exact text of the server instructions');
+  assert.ok(out.instructions.length < 700, 'short instructions');
+  assert.doesNotMatch(out.instructions, /Workflow Kit|recover|context|part=|after key/i);
+  assert.deepEqual(out.tools, ['apply_patch', 'bridge_status', 'computer_capture_screen', 'computer_capture_window',
+    'computer_list_windows', 'exec_command', 'turn_watchdog', 'view_image', 'write_stdin']);
 });
 
 test('pid identity forces C locale for stable Terminal ownership checks', async () => {
