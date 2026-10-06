@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1301,
+  "plan_revision": 1302,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "context-as-text-0.6.96-20261006",
@@ -129,6 +129,30 @@
     "dependency_task_ids": []
   },
   "tasks": [
+    {
+      "id": "C001",
+      "title": "Зафиксировать расширенный контракт релиза 0.6.96",
+      "why": "Пользователь 06.10.2026 расширил объём: исправление дефектов Workflow Kit и паритет Windows. Контракт дополнен после создания плана, а команда уточнения плана фиксирует только файл плана.",
+      "dependencies": [],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/planning/context-as-text.md"
+      ],
+      "verification_ids": [],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "docs/planning/context-as-text.md содержит разделы «Workflow Kit 1.5.6» и «Паритет Windows», обновлённые результат, границы, проверку, риски и список задач",
+        "Код не меняется"
+      ],
+      "expected_commit_message": "docs: расширить контракт 0.6.96 — Workflow Kit 1.5.6 и паритет Windows",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "context-as-text-0.6.96-20261006",
+        "task_id": "C001",
+        "role": "implementation"
+      }
+    },
     {
       "implementation_status": "TODO",
       "commit_status": "PENDING",
@@ -627,6 +651,7 @@
         "role": "implementation"
       },
       "dependencies": [
+        "C001",
         "T001",
         "T002",
         "T003",
@@ -869,7 +894,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: context-as-text-0.6.96-20261006
 Current Task: нет
-Revision: 1301
+Revision: 1302
 
 ## Цель
 
@@ -888,6 +913,10 @@ Revision: 1301
 
 ## Микрозадачи
 
+- [TODO] C001: Зафиксировать расширенный контракт релиза 0.6.96 — Ожидает
+  - Git Commit: [PENDING] docs: расширить контракт 0.6.96 — Workflow Kit 1.5.6 и паритет Windows
+  - Reference: context-as-text-0.6.96-20261006 / C001 / implementation
+  - Файлы: docs/planning/context-as-text.md
 - [TODO] T001: Стартовое сообщение macOS несёт полный контекст; режим MCP-доставки удалён из клиента — Ожидает
   - Git Commit: [PENDING] feat: Стартовое сообщение macOS несёт полный контекст; режим MCP-доставки удалён из клиента
   - Reference: context-as-text-0.6.96-20261006 / T001 / implementation
