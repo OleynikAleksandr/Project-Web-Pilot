@@ -28,10 +28,40 @@ export function head(root) {
   return r.status === 0 ? r.stdout.trim() : null;
 }
 export const splitZ = value => value.split('\0').filter(Boolean);
+// Worktree changes by content. Git also lists a file whose bytes equal the index when only its stat data differ:
+// another Git refreshed the index from a different view of the same folder (a VM mount, another user or OS),
+// a backup restored the file, or it was touched. These commands never refresh the index (it is part of the
+// commit candidate), so such an entry is confirmed by hashing the file. Before 1.5.6 every tracked file could
+// appear changed, and the first private one (.codex/hooks.json) stopped commit --task with PRIVATE_CONTEXT.
+function worktreeChanges(root) {
+  const fields = splitZ(git(root, ['diff', '--no-ext-diff', '--no-textconv', '--no-renames', '--raw', '--no-abbrev', '-z']).stdout);
+  const changed = [], unconfirmed = [];
+  for (let i = 0; i + 1 < fields.length; i += 2) {
+    const [oldMode, newMode, id, , status] = fields[i].slice(1).split(' ');
+    const entry = { file: fields[i + 1], id, link: oldMode === '120000' };
+    // Deletions, mode and type changes, conflicts and submodules are changes by themselves.
+    if (status === 'M' && oldMode === newMode && /^(100|120)/.test(oldMode)) unconfirmed.push(entry); else changed.push(entry.file);
+  }
+  const files = unconfirmed.filter(entry => !entry.link);
+  for (let i = 0; i < files.length; i += 100) {
+    const chunk = files.slice(i, i + 100);
+    // hash-object applies the same clean filters and line-ending rules as git add.
+    const result = git(root, ['hash-object', '--', ...chunk.map(entry => entry.file)], { allowFailure: true });
+    const ids = result.status === 0 ? result.stdout.split('\n').filter(Boolean) : [];
+    chunk.forEach((entry, index) => { if (ids.length !== chunk.length || ids[index] !== entry.id) changed.push(entry.file); });
+  }
+  for (const entry of unconfirmed.filter(entry => entry.link)) {
+    let target = null; try { target = fs.readlinkSync(path.join(root, entry.file)); } catch { /* replaced meanwhile: a change */ }
+    const result = target === null ? null : git(root, ['hash-object', '--no-filters', '--stdin'], { input: target, allowFailure: true });
+    if (result?.status !== 0 || result.stdout.trim() !== entry.id) changed.push(entry.file);
+  }
+  return [...new Set(changed)].sort();
+}
 export function paths(root, mode = 'worktree') {
   if (mode === 'untracked') return splitZ(git(root, ['ls-files', '--others', '--exclude-standard', '-z']).stdout);
   if (mode === 'tracked') return splitZ(git(root, ['ls-files', '-z']).stdout);
-  return splitZ(git(root, ['diff', '--no-ext-diff', '--no-textconv', '--no-renames', '--name-only', '-z', ...(mode === 'staged' ? ['--cached'] : [])]).stdout);
+  if (mode === 'staged') return splitZ(git(root, ['diff', '--no-ext-diff', '--no-textconv', '--no-renames', '--name-only', '-z', '--cached']).stdout);
+  return worktreeChanges(root);
 }
 export function allChanges(root) { return [...new Set([...paths(root, 'staged'), ...paths(root), ...paths(root, 'untracked')])].sort(); }
 export function fileFingerprint(root, p) {
