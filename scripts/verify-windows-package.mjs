@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { WINDOWS_RUNTIME_ARCHIVE, WINDOWS_RUNTIME_SHA256 } from '../src/windows-runtime.mjs';
 import { NODE_ARCHIVE, NODE_FOLDER, NODE_SHA256 } from './prepare-windows-toolchain.mjs';
 import { verifyPackagedSources } from './release-all.mjs';
-import { EXPECTED_WORKFLOW_KIT_FILES, EXPECTED_WORKFLOW_KIT_SHA256, runtimeFiles, runtimeDigest } from './check-workflow-kit-dependency.mjs';
+import { verifyWorkflowKitRuntime } from './stage-workflow-kit.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -47,12 +47,8 @@ export async function verifyWindowsPackage(packageDir = path.join(ROOT, '.harnes
   const sourceProof = await verifyPackagedSources({ root: ROOT, resources, version });
   await requirePe(executable, 'Project Web Pilot.exe');
   await requirePe(nodeExe, 'portable node.exe');
-  const workflowFiles = await runtimeFiles(workflowRoot);
-  if (workflowFiles.length !== EXPECTED_WORKFLOW_KIT_FILES) throw new Error(`Workflow Kit fileset mismatch: ${workflowFiles.length}`);
-  const workflowSha256 = await runtimeDigest(workflowRoot, workflowFiles);
-  if (workflowSha256 !== EXPECTED_WORKFLOW_KIT_SHA256) throw new Error(`Workflow Kit SHA mismatch: ${workflowSha256}`);
-  const workflowCommon = await fs.readFile(path.join(workflowRoot, 'lib', 'common.mjs'), 'utf8');
-  if (!workflowCommon.includes("VERSION = '1.5.5'")) throw new Error('Workflow Kit version mismatch');
+  // The packaged Workflow Kit must be the package source of this repository, file for file.
+  const workflowKit = await verifyWorkflowKitRuntime(workflowRoot);
   const runtimeSha256 = await sha256File(runtimeArchive);
   if (runtimeSha256 !== WINDOWS_RUNTIME_SHA256) throw new Error(`Codex Local Windows SHA mismatch: ${runtimeSha256}`);
   const nodeSha256 = await sha256File(nodeArchive);
@@ -68,7 +64,7 @@ export async function verifyWindowsPackage(packageDir = path.join(ROOT, '.harnes
     runtimeSha256,
     nodeSha256,
     nodeExecutableBytes: nodeStat.size,
-    workflowKit: { version: '1.5.5', files: workflowFiles.length, sha256: workflowSha256 },
+    workflowKit: { version: workflowKit.version, files: workflowKit.files, sha256: workflowKit.sha256 },
     macBundle: false,
   };
 }

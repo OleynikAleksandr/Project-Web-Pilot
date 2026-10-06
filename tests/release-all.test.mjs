@@ -99,7 +99,8 @@ test('packager ignore of both platforms lets through only the application roots'
       assert.equal(ignore.test(kept), false, name + ' keeps ' + kept);
     for (const dropped of ['/Claude outputs', '/Claude outputs/draft.mp4', '/docs', '/tests/a.test.mjs', '/.harness/runtime', '/.git', '/.codex/hooks.json',
       '/Project Web Pilot.app', '/resources', '/tools/codex-app-server-mcp/server.py', '/scripts', '/AGENTS.md', '/README.md', '/package-lock.json',
-      '/src-old', '/src-old/main.mjs', '/package.json.bak', '/LICENSE.txt', '/node_modules_backup', '/windows-app'])
+      '/src-old', '/src-old/main.mjs', '/package.json.bak', '/LICENSE.txt', '/node_modules_backup', '/windows-app',
+      '/packages', '/packages/workflow-kit/src/cli.mjs'])
       assert.equal(ignore.test(dropped), true, name + ' drops ' + dropped);
     for (const root of PACKAGED_ROOTS) assert.equal(ignore.test('/' + root), false, name + ' allows the verified root ' + root);
   }

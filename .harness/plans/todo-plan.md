@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1309,
+  "plan_revision": 1311,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "context-as-text-0.6.96-20261006",
@@ -77,7 +77,11 @@
       "tools/codex-app-server-mcp/app_server_client.py",
       "tools/codex-app-server-mcp/control.py",
       "tools/codex-app-server-mcp/server.py",
-      "tools/codex-app-server-mcp/tunnel_prompt.py"
+      "tools/codex-app-server-mcp/tunnel_prompt.py",
+      "packages/workflow-kit/.gitattributes",
+      "packages/workflow-kit/.gitignore",
+      "packages/workflow-kit/scripts/check-consumer-contract.mjs",
+      "packages/workflow-kit/scripts/check-package.mjs"
     ],
     "documentation_paths": [
       "AGENTS.md",
@@ -214,7 +218,14 @@
         "tests/workflow-kit-source.test.mjs",
         "tests/workflow-kit-recovery.test.mjs",
         "tests/release-all.test.mjs",
-        "packages/workflow-kit/package.json"
+        "packages/workflow-kit/package.json",
+        "packages/workflow-kit/.gitattributes",
+        "packages/workflow-kit/.gitignore",
+        "packages/workflow-kit/scripts/check-consumer-contract.mjs",
+        "packages/workflow-kit/scripts/check-package.mjs",
+        "packages/workflow-kit/scripts/check-runtime-fixture.mjs",
+        "scripts/check-installed-release.mjs",
+        "scripts/verify-windows-package.mjs"
       ],
       "documentation_paths": [
         "docs/planning/context-as-text.md"
@@ -234,13 +245,31 @@
         "Установленный Kit этого checkout (.harness/kit) в этой задаче не меняется; сборка не выполняется — состав пакета приложения проверяют тесты сборочных скриптов, сама сборка остаётся за T006"
       ],
       "expected_commit_message": "feat: Объединить репозитории: Workflow Kit становится пакетом packages/workflow-kit",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "context-as-text-0.6.96-20261006",
         "task_id": "M001",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "docs/planning/context-as-text.md",
+        "package-lock.json",
+        "package.json",
+        "packages/workflow-kit/.gitattributes",
+        "packages/workflow-kit/.gitignore",
+        "packages/workflow-kit/package.json",
+        "packages/workflow-kit/scripts/check-consumer-contract.mjs",
+        "packages/workflow-kit/scripts/check-package.mjs",
+        "packages/workflow-kit/scripts/check-runtime-fixture.mjs",
+        "scripts/check-installed-release.mjs",
+        "scripts/check-workflow-kit-dependency.mjs",
+        "scripts/check-workflow-kit-staging.mjs",
+        "scripts/stage-workflow-kit.mjs",
+        "scripts/verify-windows-package.mjs",
+        "tests/release-all.test.mjs",
+        "tests/workflow-kit-source.test.mjs"
+      ]
     },
     {
       "id": "M002",
@@ -1038,7 +1067,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: context-as-text-0.6.96-20261006
 Current Task: нет
-Revision: 1309
+Revision: 1311
 
 ## Цель
 
@@ -1065,10 +1094,10 @@ Revision: 1309
   - Git Commit: [DONE] docs: дополнить контракт 0.6.96 — объединение репозиториев
   - Reference: context-as-text-0.6.96-20261006 / C002 / implementation
   - Файлы: docs/planning/context-as-text.md
-- [TODO] M001: Объединить репозитории: Workflow Kit становится пакетом packages/workflow-kit — Ожидает
-  - Git Commit: [PENDING] feat: Объединить репозитории: Workflow Kit становится пакетом packages/workflow-kit
+- [DONE] M001: Объединить репозитории: Workflow Kit становится пакетом packages/workflow-kit — Завершено
+  - Git Commit: [DONE] feat: Объединить репозитории: Workflow Kit становится пакетом packages/workflow-kit
   - Reference: context-as-text-0.6.96-20261006 / M001 / implementation
-  - Файлы: package.json, package-lock.json, .gitignore, scripts/stage-workflow-kit.mjs, scripts/check-workflow-kit-dependency.mjs, scripts/check-workflow-kit-staging.mjs, scripts/release-all.mjs, tests/workflow-kit-source.test.mjs, tests/workflow-kit-recovery.test.mjs, tests/release-all.test.mjs, packages/workflow-kit/package.json, docs/planning/context-as-text.md
+  - Файлы: package.json, package-lock.json, .gitignore, scripts/stage-workflow-kit.mjs, scripts/check-workflow-kit-dependency.mjs, scripts/check-workflow-kit-staging.mjs, scripts/release-all.mjs, tests/workflow-kit-source.test.mjs, tests/workflow-kit-recovery.test.mjs, tests/release-all.test.mjs, packages/workflow-kit/package.json, packages/workflow-kit/.gitattributes, packages/workflow-kit/.gitignore, packages/workflow-kit/scripts/check-consumer-contract.mjs, packages/workflow-kit/scripts/check-package.mjs, packages/workflow-kit/scripts/check-runtime-fixture.mjs, scripts/check-installed-release.mjs, scripts/verify-windows-package.mjs, docs/planning/context-as-text.md
 - [TODO] M002: Документы Workflow Kit в составе проекта — Ожидает
   - Git Commit: [PENDING] docs: документы Workflow Kit в составе проекта
   - Reference: context-as-text-0.6.96-20261006 / M002 / implementation

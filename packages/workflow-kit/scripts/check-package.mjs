@@ -8,9 +8,6 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = path.join(ROOT, 'src');
-const BASELINE_VERSION = '1.5.5';
-const BASELINE_FILE_COUNT = 35;
-const BASELINE_SHA256 = '8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376';
 
 async function filesBelow(directory, prefix = '') {
   const result = [];
@@ -40,7 +37,7 @@ async function copyPackageSnapshot(destination) {
 
 const pkg = JSON.parse(await fs.readFile(path.join(ROOT, 'package.json'), 'utf8'));
 assert.equal(pkg.name, '@webpilot/workflow-kit');
-assert.equal(pkg.version, BASELINE_VERSION);
+assert.match(pkg.version, /^\d+\.\d+\.\d+$/);
 assert.equal(pkg.type, 'module');
 assert.equal(pkg.main, './index.mjs');
 assert.equal(pkg.bin?.workflow, './src/cli.mjs');
@@ -48,9 +45,12 @@ assert.equal(pkg.engines?.node, '>=22');
 assert.deepEqual(pkg.files, ['index.mjs', 'src/']);
 
 const sourceFiles = await filesBelow(SRC);
-assert.equal(sourceFiles.length, BASELINE_FILE_COUNT, 'canonical Workflow Kit file count changed');
+for (const required of ['WORKFLOW.md', 'cli.mjs', 'install.mjs', 'lib/common.mjs', 'schemas/plan.schema.json', 'templates/PLAN.md'])
+  assert.ok(sourceFiles.includes(required), 'package source misses ' + required);
 const sourceSha256 = await digestFiles(SRC, sourceFiles);
-assert.equal(sourceSha256, BASELINE_SHA256, 'canonical Workflow Kit ' + BASELINE_VERSION + ' baseline changed');
+// One version in two places: package.json and the runtime constant that installed copies report.
+assert.ok((await fs.readFile(path.join(SRC, 'lib/common.mjs'), 'utf8')).includes(`VERSION = '${pkg.version}'`),
+  'package.json and src/lib/common.mjs name different versions');
 
 const api = await import('@webpilot/workflow-kit');
 assert.equal(api.VERSION, pkg.version);

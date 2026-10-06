@@ -8,6 +8,7 @@ import { execFileSync } from 'node:child_process';
 import { extractFile } from '@electron/asar';
 import { sourceSnapshot, verifyPackagedSources } from './release-all.mjs';
 import { verifyWindowsPackage } from './verify-windows-package.mjs';
+import { verifyWorkflowKitRuntime } from './stage-workflow-kit.mjs';
 import { createRequire } from 'node:module';
 import { verifyMacSignature } from './check-mac-signature.mjs';
 import { WINDOWS_RUNTIME_ARCHIVE, WINDOWS_RUNTIME_SHA256 } from '../src/windows-runtime.mjs';
@@ -85,6 +86,7 @@ assert.equal(windows.version, version);
 
 for (const resources of [targets[0], targets[3]]) {
   const kit = path.join(resources,'resources/workflow-kit');
+  const bundledKit = await verifyWorkflowKitRuntime(kit); // the package source of this repository, file for file
   const { readPlan } = await import(pathToFileURL(path.join(kit,'lib/plan.mjs')).href);
   const fixture = await fs.mkdtemp(path.join(os.tmpdir(),'web-pilot-carryover-'));
   const run = (exe,args) => execFileSync(exe,args,{cwd:fixture,encoding:'utf8',timeout:30000,env:isolatedEnvironment});
@@ -109,7 +111,7 @@ for (const resources of [targets[0], targets[3]]) {
     const preview = worker({ action: 'inspect' });
     assert.equal(preview.action, 'install');
     const installed = worker({ action: 'apply', fingerprint: preview.fingerprint });
-    assert.equal(installed.kitVersion, '1.5.5'); assert.equal(installed.ready, true);
+    assert.equal(installed.kitVersion, bundledKit.version); assert.equal(installed.ready, true);
     assert.equal(worker({ action: 'inspect' }).ready, true);
     cli('status'); assert.equal(cli('recover', '--format', 'json').completeness, 'COMPLETE');
     const file=path.join(fixture,'.harness/runtime/input.json');

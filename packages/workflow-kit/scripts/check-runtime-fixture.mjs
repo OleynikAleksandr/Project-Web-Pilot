@@ -4,10 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { installer, sessionPlans, plan as planApi, VERSION } from '@webpilot/workflow-kit';
-
-const EXPECTED_VERSION = '1.5.5';
-const EXPECTED_RUNTIME_SHA256 = '8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376';
+import { installer, sessionPlans, plan as planApi, VERSION, getRuntimeRoot } from '@webpilot/workflow-kit';
 
 function run(executable, args, cwd) {
   return execFileSync(executable, args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
@@ -84,9 +81,10 @@ try {
   const runtimeRoot = path.join(root, '.harness/kit');
   const runtimeFiles = await filesBelow(runtimeRoot);
   const runtimeSha256 = await digestFiles(runtimeRoot, runtimeFiles);
-  assert.equal(VERSION, EXPECTED_VERSION);
-  assert.equal(runtimeFiles.length, 35);
-  assert.equal(runtimeSha256, EXPECTED_RUNTIME_SHA256);
+  // The installed copy is the package source, file for file.
+  const sourceFiles = await filesBelow(getRuntimeRoot());
+  assert.deepEqual(runtimeFiles, sourceFiles);
+  assert.equal(runtimeSha256, await digestFiles(getRuntimeRoot(), sourceFiles));
 
   const inspected = installer.inspect({ project: root, mode: 'existing' });
   assert.equal(inspected.installed, true);

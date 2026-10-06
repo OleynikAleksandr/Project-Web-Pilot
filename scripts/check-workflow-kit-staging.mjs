@@ -3,18 +3,20 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { getRuntimeRoot } from '@webpilot/workflow-kit';
-import { runtimeFiles, runtimeDigest, EXPECTED_WORKFLOW_KIT_FILES, EXPECTED_WORKFLOW_KIT_SHA256 } from './check-workflow-kit-dependency.mjs';
+import { runtimeFiles, runtimeDigest, workflowKitSource } from './check-workflow-kit-dependency.mjs';
 import { PROJECT_ROOT, DEFAULT_STAGE, stageWorkflowKit } from './stage-workflow-kit.mjs';
 
 const scratch = path.join(PROJECT_ROOT, '.harness/runtime/workflow-kit-stage-check');
+
+const source = await workflowKitSource();
 
 async function compare(left, right) {
   const leftFiles = await runtimeFiles(left);
   const rightFiles = await runtimeFiles(right);
   assert.deepEqual(leftFiles, rightFiles);
-  assert.equal(leftFiles.length, EXPECTED_WORKFLOW_KIT_FILES);
-  assert.equal(await runtimeDigest(left, leftFiles), EXPECTED_WORKFLOW_KIT_SHA256);
-  assert.equal(await runtimeDigest(right, rightFiles), EXPECTED_WORKFLOW_KIT_SHA256);
+  assert.deepEqual(leftFiles, source.files);
+  assert.equal(await runtimeDigest(left, leftFiles), source.sha256);
+  assert.equal(await runtimeDigest(right, rightFiles), source.sha256);
 }
 
 try {

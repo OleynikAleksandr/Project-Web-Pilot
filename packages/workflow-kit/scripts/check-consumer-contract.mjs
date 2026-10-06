@@ -7,9 +7,7 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const EXPECTED_VERSION = '1.5.5';
-const EXPECTED_FILES = 35;
-const EXPECTED_SHA256 = '8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376';
+const EXPECTED_VERSION = JSON.parse(await fs.readFile(path.join(ROOT, 'package.json'), 'utf8')).version;
 const REQUIRED_SUBPATHS = [
   'common',
   'actions',
@@ -83,9 +81,7 @@ try {
   await copyPackageSnapshot(packageSource);
   const sourceRuntime = path.join(packageSource, 'src');
   const sourceRuntimeFiles = await filesBelow(sourceRuntime);
-  assert.equal(sourceRuntimeFiles.length, EXPECTED_FILES);
   const expectedRuntimeSha256 = await digestFiles(sourceRuntime, sourceRuntimeFiles);
-  assert.equal(expectedRuntimeSha256, EXPECTED_SHA256);
 
   const dev = path.join(temp, 'dev-consumer');
   await fs.mkdir(dev, { recursive: true });
@@ -116,7 +112,7 @@ try {
   await fs.mkdir(path.dirname(staged), { recursive: true });
   await fs.cp(packagedProbe.runtimeRoot, staged, { recursive: true });
   const stagedFiles = await filesBelow(staged);
-  assert.equal(stagedFiles.length, EXPECTED_FILES);
+  assert.deepEqual(stagedFiles, sourceRuntimeFiles);
   assert.equal(await digestFiles(staged, stagedFiles), expectedRuntimeSha256);
 
   process.stdout.write(JSON.stringify({

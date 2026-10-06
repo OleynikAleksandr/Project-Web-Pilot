@@ -1,8 +1,0 @@
-
-# workflow-kit:begin
-.harness/runtime/
-.harness/sessions/
-.harness/settings/settings.json
-node_modules/
-dist/
-# workflow-kit:end
