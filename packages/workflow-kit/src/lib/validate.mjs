@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { check, CONFIG, PLAN, planPath, readJSON, textFile, hash, contextPath, relativePath } from './common.mjs';
 import { readPlan, parsePlan, renderPlan } from './plan.mjs';
-import { commitHistory, commitPaths, areAncestors, git, head, localPath } from './git.mjs';
+import { commitHistory, commitPaths, areAncestors, git, head, localPath, documentText } from './git.mjs';
 
 export function defaultConfig() {
   return { schema_version: 1, profile: 'DISCOVERY', stack: null, checks: [],
@@ -89,7 +89,10 @@ export function validateDocs(root, changed, task, config, reader = p => textFile
   const PLAN = planPath(root);
   // Required context documents are validated by recovery; documentation mappings
   // are guidance, not an obligation to manufacture a text edit for every commit.
-  for (const document of (task.context_pack?.documents ?? []).filter(d=>d.required)) reader(document.path);
+  for (const document of (task.context_pack?.documents ?? []).filter(d=>d.required)) {
+    if ((document.revision ?? 'WORKTREE') === 'WORKTREE') reader(document.path);
+    else documentText(root, document);
+  }
 
   return true;
 }

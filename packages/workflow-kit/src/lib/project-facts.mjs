@@ -1,6 +1,23 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {git} from './git.mjs';
+import {contextPath, textFile} from './common.mjs';
+
+export function planningPaths(root, directory = 'docs/planning') {
+ contextPath(root,directory);
+ if(!fs.existsSync(path.join(root,directory)))return [];
+ return fs.readdirSync(path.join(root,directory),{withFileTypes:true}).sort((a,b)=>a.name<b.name?-1:a.name>b.name?1:0).flatMap(entry=>{
+  const file=directory+'/'+entry.name;
+  contextPath(root,file);
+  return entry.isDirectory()?planningPaths(root,file):entry.isFile()&&file.endsWith('.md')?[file]:[];
+ });
+}
+export function planningDocuments(root) {
+ return planningPaths(root).map(file=>{
+  const text=textFile(root,file);
+  return {path:file,title:/^#{1,6}\s+(.+)$/m.exec(text)?.[1]??path.basename(file),bytes:Buffer.byteLength(text)};
+ });
+}
 
 const manifests=['package.json','pyproject.toml','requirements.txt','Cargo.toml','go.mod','Package.swift','pubspec.yaml','Gemfile','pom.xml','build.gradle','build.gradle.kts','Makefile','CMakeLists.txt'];
 const regular=(root,name)=>fs.lstatSync(path.join(root,name),{throwIfNoEntry:false})?.isFile()===true;

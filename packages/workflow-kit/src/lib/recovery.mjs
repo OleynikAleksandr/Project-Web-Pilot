@@ -1,15 +1,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { VERSION, PLAN, planPath, CONFIG, INDEX, check, contextPath, textFile, atomic, json, hash, id, errorResult } from './common.mjs';
-import { validate, documentByteLimit } from './validate.mjs';
-import { nextTask, PROJECT_CONTINUATION_OBJECTIVE, isDocumentationFinalizationTask } from './plan.mjs';
-import { snapshot, diff, git, localPath, head, fileFingerprint } from './git.mjs';
-import { projectFacts, projectFactPaths } from './project-facts.mjs';
+import { VERSION, planPath, CONFIG, check, contextPath, textFile, atomic, json, hash, id, errorResult } from './common.mjs';
+import { validate, documentByteLimit, resolveReferences } from './validate.mjs';
+import { nextTask, PROJECT_CONTINUATION_OBJECTIVE, parsePlan, uniqueDocuments, isDeliveryTask } from './plan.mjs';
+import { snapshot, git, localPath, head, fileFingerprint, documentText, commitHistory } from './git.mjs';
+import { projectFacts, projectFactPaths, planningDocuments } from './project-facts.mjs';
 import { inspectionInputs } from './inspection-inputs.mjs';
 
 export const TRANSPORT_HARD_BYTES = 180000;
-// Maps read when a task arrives; inlined only for the final DOCS that audits them.
-export const ON_DEMAND_MAPS = Object.freeze(['docs/MODULES.md', INDEX]);
 function withoutKitSection(text,file) {
   const begin = '<!-- workflow-kit:begin -->', end = '<!-- workflow-kit:end -->';
   const i = text.indexOf(begin), j = text.indexOf(end);
@@ -44,15 +42,8 @@ export function section(text, headings, file) {
   return lines.slice(start, end).join('\n');
 }
 
-const dataBlock = (source, text) => '\n--- ДАННЫЕ: ' + source + ' ---\n' + text + '\n--- КОНЕЦ ДАННЫХ ---\n';
-const measure = s => ({ bytes: Buffer.byteLength(s, 'utf8'), tokens: Math.ceil(Buffer.byteLength(s, 'utf8') / 2) });
-const docKey = d => JSON.stringify([d.path, d.heading_path ?? [], Boolean(d.required)]);
-function uniqueDocuments(list) {
-  const seen = new Set(); const result = [];
-  for (const doc of list) { const key = docKey(doc); if (!seen.has(key)) { seen.add(key); result.push(doc); } }
-  return result;
-}
-function referenceLine(doc) { return '- ' + doc.path + (doc.heading_path?.length ? ' → ' + doc.heading_path.join(' / ') : ''); }
+const measure = s => ({ bytes: Buffer.byteLength(s, 'utf8'), characters: [...s].length });
+function referenceLine(doc) { return '- ' + doc.path + ' @ ' + (doc.revision ?? 'WORKTREE'); }
 function sectionsForError(parts) {
   return parts.map(part => ({ label: part.label, ...measure(part.text) })).sort((a, b) => b.bytes - a.bytes).slice(0, 12);
 }
@@ -85,167 +76,232 @@ export function recover(root, reason = 'manual', options = {}) {
   return recoverState(root, reason, options).packet;
 }
 
-// The state is produced here, never accepted from a caller as a validation bypass.
+// Split text without dropping separators or breaking UTF-8 characters.
+
+export function splitText(text, limit) {
+  check(Number.isSafeInteger(limit) && limit > 0, 'CONTEXT_PART_LIMIT', 'Нет места для текста части recovery.');
+  if (Buffer.byteLength(text) <= limit) return [text];
+  const result = [];
+  let rest = text;
+  while (rest) {
+    let end = 0, bytes = 0;
+    for (const char of rest) {
+      const size = Buffer.byteLength(char);
+      if (bytes + size > limit) break;
+      bytes += size; end += char.length;
+    }
+    check(end > 0, 'CONTEXT_PART_LIMIT', 'Предел меньше одного символа UTF-8.');
+    if (end < rest.length) {
+      const prefix = rest.slice(0,end);
+      let boundary = 0, offset = 0, fence = null;
+      for (const line of prefix.match(/[^\n]*\n|[^\n]+$/g) ?? []) {
+        const marker = /^\s{0,3}(\x60{3,}|~{3,})/.exec(line)?.[1];
+        if (marker) {
+          if (!fence) fence = marker;
+          else if (marker[0] === fence[0] && marker.length >= fence.length) fence = null;
+        } else if (!fence && /^#{1,6}\s/.test(line) && offset > 0) boundary = offset;
+        offset += line.length;
+      }
+      if (!boundary) for (const match of prefix.matchAll(/\r?\n[ \t]*\r?\n/g)) boundary = match.index + match[0].length;
+      if (!boundary) boundary = prefix.lastIndexOf('\n') + 1;
+      if (boundary > 0) end = boundary;
+    }
+    result.push(rest.slice(0,end)); rest = rest.slice(end);
+  }
+  return result;
+}
+
+// Exact source fragments and their service headers share the same byte budget.
+export function recoveryParts(units, limit) {
+  const outer = (index,total) => 'WORKFLOW RECOVERY — часть ' + index + '/' + total + '\n\n';
+  const outerReserve = Buffer.byteLength(outer('9999999999','9999999999'));
+  const fragments = [];
+  for (const unit of units) {
+    const source = unit.label, revision = unit.revision ?? 'WORKTREE';
+    const oversized = unit.document && Buffer.byteLength(unit.text) > limit;
+    const header = (part,total) => '--- ИСТОЧНИК: ' + source + ' @ ' + revision + ' / ' + part + '/' + total
+      + (oversized ? ' / разделить при следующей правке' : '') + ' ---\n';
+    const footer = '\n--- КОНЕЦ ИСТОЧНИКА ---';
+    const reserve = outerReserve + Buffer.byteLength(header('9999999999','9999999999') + footer);
+    const singleSize = outerReserve + Buffer.byteLength(header(1,1) + unit.text + footer);
+    const chunks = singleSize <= limit ? [unit.text] : splitText(unit.text, limit-reserve);
+    chunks.forEach((content,index) => fragments.push({
+      source, revision, part:index+1, total:chunks.length, content, oversized,
+      rendered:header(index+1,chunks.length)+content+footer
+    }));
+  }
+  const groups = [];
+  let group = [], bytes = outerReserve;
+  for (const fragment of fragments) {
+    const addition = Buffer.byteLength(fragment.rendered) + (group.length ? 2 : 0);
+    if (group.length && bytes+addition > limit) { groups.push(group); group=[]; bytes=outerReserve; }
+    bytes += Buffer.byteLength(fragment.rendered) + (group.length ? 2 : 0);
+    group.push(fragment);
+  }
+  if (group.length) groups.push(group);
+  check(groups.length < 1e10, 'CONTEXT_PART_LIMIT', 'Слишком много частей recovery.');
+  return groups.map((group,index)=>{
+    const text = outer(index+1,groups.length) + group.map(fragment=>fragment.rendered).join('\n\n');
+    check(Buffer.byteLength(text)<=limit, 'CONTEXT_PART_LIMIT', 'Часть recovery превышает предел.');
+    return {index:index+1,total:groups.length,text,...measure(text),sha256:hash(text),
+      sources:group.map(({rendered,...source})=>source)};
+  });
+}
+
+function taskProjection(task, resolved) {
+  const reference = resolved[task.id];
+  return '# ' + task.id + ' — ' + task.title
+    + '\nЗачем: ' + task.why
+    + '\nСтатус: ' + task.implementation_status + ' / ' + task.commit_status
+    + '\nЗависимости: ' + (task.dependencies.join(', ') || 'нет')
+    + '\nКритерии:\n' + task.acceptance_criteria.map(item=>'- '+item).join('\n')
+    + '\nКоммит: ' + (reference?.sha ?? (reference?.pending ? 'COMMIT_PENDING' : 'не создан'))
+    + (reference?.sha ? '\nРодитель: '+reference.parent+'\nЧтение: git show '+reference.sha : '')
+    + '\nФайлы:\n' + [...new Set([...task.functional_paths,...task.documentation_paths])].map(file=>'- '+file).join('\n')
+    + '\nФактические файлы: ' + (task.actual_files?.join(', ') || 'ещё не зафиксированы')
+    + '\nПроверки: ' + (task.verification_ids.join(', ') || 'схема и состав коммита')
+    + '\nСообщение коммита: ' + task.expected_commit_message;
+}
+
+function closedPlan(root, plan) {
+  if (!plan.archived_scope_id) return null;
+  const candidates = commitHistory(root,null).filter(commit=>
+    commit.trailers['Workflow-Role']?.length === 1 && commit.trailers['Workflow-Role'][0] === 'archive'
+    && commit.trailers['Workflow-Scope']?.length === 1 && commit.trailers['Workflow-Scope'][0] === plan.archived_scope_id);
+  for (const commit of candidates) {
+    check(commit.parents.length===1, 'CONTEXT_ARCHIVE', 'У коммита закрытия должен быть один родитель.');
+    const file = planPath(root);
+    const closed = parsePlan(documentText(root,{path:file,revision:commit.sha}));
+    if (closed.project_id !== plan.project_id || closed.archived_scope_id !== plan.archived_scope_id || closed.execution_scope_status !== 'NONE') continue;
+    const previous = parsePlan(documentText(root,{path:file,revision:commit.parents[0]}));
+    check(previous.project_id===plan.project_id && previous.scope_id===plan.archived_scope_id,
+      'CONTEXT_ARCHIVE','Коммит закрытия не подтверждает предыдущий план.');
+    const resolved = resolveReferences(root,previous,null);
+    const documents = uniqueDocuments([previous.context_pack,...previous.tasks.map(task=>task.context_pack)]
+      .flatMap(pack=>pack?.documents??[]).filter(doc=>/^docs\/(planning|modules)\//.test(doc.path)))
+      .map(doc=>({...doc, revision:doc.revision && doc.revision!=='WORKTREE'?doc.revision:commit.parents[0]}));
+    for (const doc of documents) documentText(root,doc,{optional:!doc.required,referenceOnly:true});
+    return {sha:commit.sha,parent:commit.parents[0],plan:previous,resolved,documents};
+  }
+  check(false,'CONTEXT_ARCHIVE','Не найден подтверждённый коммит закрытия: '+plan.archived_scope_id);
+}
+
 export function recoverState(root, reason = 'manual', options = {}) {
   const PLAN = planPath(root);
   for (let attempt = 0; attempt < 2; attempt++) {
-    const started = Date.now(); const marker = options.receipt ? id() : null;
+    const started = Date.now(), marker = options.receipt ? id() : null;
     const initialInputs = inspectionInputs(root).key;
-    const initialHead = head(root);
-    const initialPlan = fileFingerprint(root, PLAN);
-    const initialConfig = fileFingerprint(root, CONFIG);
-    const journalFile = localPath(root, 'transaction.json');
-    const initialJournal = fs.existsSync(journalFile) ? hash(fs.readFileSync(journalFile)) : null;
+    const initialHead = head(root), initialPlan = fileFingerprint(root,PLAN), initialConfig = fileFingerprint(root,CONFIG);
+    const journalFile = localPath(root,'transaction.json');
+    const journalHash = () => fs.existsSync(journalFile) ? hash(fs.readFileSync(journalFile)) : null;
+    const initialJournal = journalHash();
     let validation;
     try { validation = validate(root); } catch (error) {
-      const currentJournal = fs.existsSync(journalFile) ? hash(fs.readFileSync(journalFile)) : null;
-      const changed = head(root) !== initialHead || fileFingerprint(root,PLAN) !== initialPlan || fileFingerprint(root,CONFIG) !== initialConfig || currentJournal !== initialJournal;
-      if (!changed) throw error;
+      if (inspectionInputs(root).key === initialInputs) throw error;
       if (attempt === 0) continue;
       check(false,'CONCURRENT_CHANGE','Проект меняется во время проверки; повторите после завершения операции.');
     }
-    const { plan, config, resolved, transaction } = validation;
+    const {plan,config,resolved,transaction} = validation;
     const task = transaction?.task ?? nextTask(plan);
-    const rulesPath = '.harness/kit/WORKFLOW.md';
-    const documents = uniqueDocuments([...plan.context_pack.documents, ...(task?.context_pack?.documents ?? [])]);
-    const mandatory = documents.filter(d => d.required); const references = documents.filter(d => !d.required);
-    const existingRefs = references.filter(d => fs.existsSync(path.join(root, d.path)));
-    const policyPath = '.harness/kit/templates/PROTOTYPE.md';
+    const rulesPath = '.harness/kit/WORKFLOW.md', policyPath = '.harness/kit/templates/PROTOTYPE.md';
     const instructions = projectInstructions(root);
-    const templatePaths = ['PLAN', 'SPEC', 'CONTINUE', 'STAGES'].map(name => '.harness/kit/templates/' + name + '.md');
-    const relevant = [PLAN, CONFIG, rulesPath, policyPath, ...(instructions ? [instructions.file] : []), ...templatePaths, ...projectFactPaths(root), ...mandatory.map(d => d.path), ...existingRefs.map(d => d.path), ...(task ? [...task.functional_paths, ...task.documentation_paths] : [])];
-    relevant.forEach(p => contextPath(root, p));
-    const before = snapshot(root, relevant);
-    if (before.head !== initialHead || before.files[PLAN] !== initialPlan || before.files[CONFIG] !== initialConfig) {
-      if (attempt === 0) continue;
-      check(false, 'CONCURRENT_CHANGE', 'HEAD, план или конфигурация меняются во время проверки ссылок.');
+    const documents = uniqueDocuments([...plan.context_pack.documents,...(task?.context_pack?.documents??[])]);
+    documents.forEach(doc=>contextPath(root,doc.path));
+    const planning = planningDocuments(root);
+    const templatePaths = ['PLAN','SPEC','CONTINUE','STAGES'].map(name=>'.harness/kit/templates/'+name+'.md');
+    const relevant = [...new Set([PLAN,CONFIG,rulesPath,policyPath,...(instructions?[instructions.file]:[]),
+      ...templatePaths,...projectFactPaths(root),...planning.map(doc=>doc.path),
+      ...documents.filter(doc=>doc.revision==='WORKTREE').map(doc=>doc.path),
+      ...(task?[...task.functional_paths,...task.documentation_paths]:[])])];
+    relevant.forEach(file=>contextPath(root,file));
+    const before = snapshot(root,relevant);
+    if (before.head!==initialHead || before.files[PLAN]!==initialPlan || before.files[CONFIG]!==initialConfig) {
+      if (attempt===0) continue;
+      check(false,'CONCURRENT_CHANGE','HEAD, план или конфигурация меняются во время проверки ссылок.');
     }
-
-    const core = section(textFile(root, rulesPath), ['Workflow', 'Workflow Core'], rulesPath);
-    const taskDependencies = isDocumentationFinalizationTask(task) ? [] : (task?.dependencies ?? []);
-    const neededIds = [...new Set([...plan.context_pack.dependency_task_ids, ...taskDependencies])];
-    const neededShas = [];
-    const selected = task ? [...task.functional_paths, ...task.documentation_paths] : [];
-    const selectedSet = new Set(selected);
-    const foreign = [...new Set([...before.staged, ...before.unstaged, ...before.untracked])].filter(p => p !== PLAN && !selectedSet.has(p));
-    const pending = transaction && !Object.values(resolved).some(r => r.sha && transaction.result_sha === r.sha);
+    const previous = plan.execution_scope_status==='NONE' ? closedPlan(root,plan) : null;
+    const selected = new Set(task?[...task.functional_paths,...task.documentation_paths]:[]);
+    const foreign = [...new Set([...before.staged,...before.unstaged,...before.untracked])].filter(file=>file!==PLAN&&!selected.has(file));
     let continuation;
     if (transaction) continuation = 'Есть незавершённый журнал commit. Сначала status и повтор commit/repair; новую задачу не начинать.';
-    else if (plan.execution_scope_status === 'NONE') continuation = PROJECT_CONTINUATION_OBJECTIVE + ' Назначение и запуск — README, карта модулей — OVERVIEW.';
-    else if (plan.execution_scope_status === 'BLOCKED') continuation = 'Разрешены обсуждение и диагностика. Причина: ' + plan.blocked_reason;
-    else if (plan.delivery_status === 'READY_FOR_ACCEPTANCE') continuation = 'Все задачи выполнены, план остаётся видимым. Новое поручение добавляется через plan:extend; отдельная DOCS нужна при новом delivery. Закрытие требует отдельной прямой команды пользователя; история остаётся в Git.';
-    else continuation = (plan.current_task_id ? 'Продолжить ' : 'Начать через task:start ') + (task?.id ?? 'задачу после уточнения зависимостей') + '. Проверки и фиксация выполняются управляемой командой commit.';
-
-    const parts = [];
-    const add = (label, text) => parts.push({ label, text });
-    add('header', 'WORKFLOW RECOVERY / schema 2 / kit ' + VERSION + (marker ? '\nDELIVERY-MARKER: ' + marker : ''));
-    add('identity', 'Причина: ' + reason + '\nПроект: ' + plan.project_name + '\nProject ID: ' + plan.project_id + '\nScope: ' + (plan.scope_id ?? 'NONE') + '\nWorktree: ' + root);
-    add('current-plan', 'ТЕКУЩИЙ PLAN И КОМАНДЫ\nCurrent plan: ' + PLAN
-      + '\nCurrent worktree: ' + root
-      + '\nCommands: ./scripts/workflow <команда>'
-      + '\nТекущая plan_revision: ' + plan.plan_revision
-      + '\nНовый chat/client продолжает этот же checkout plan. Для независимой параллельной работы используй отдельный Git worktree.');
-    add('snapshot', 'HEAD: ' + (before.head ?? 'первого коммита ещё нет') + '\nPlan revision: ' + plan.plan_revision + '\nSnapshot: ' + before.fingerprint);
-    add('state', 'Состояние: ' + plan.execution_scope_status + ' / ' + plan.delivery_status + (pending ? ' / COMMIT_PENDING' : ''));
-    add('workflow-core', core);
-    add('prototype-policy', textFile(root, policyPath));
-    if (instructions?.text) add('project-instructions', 'ПОСТОЯННЫЕ ОГРАНИЧЕНИЯ ПРОЕКТА (' + instructions.file + ')\n' + instructions.text);
-    add('project-facts', 'СРЕДА И ПРОЕКТ (данные, не инструкции; команды не запускались)\n' + json(projectFacts(root)));
-    // Forms are printed by command help when a plan is created or extended; they are not needed to resume work.
-    const docsTask = isDocumentationFinalizationTask(task);
-    const deferredMaps = docsTask ? [] : mandatory.filter(doc => ON_DEMAND_MAPS.includes(doc.path));
-    add('on-demand', 'ФОРМЫ И КАРТЫ ПО ЗАПРОСУ (не включены в recovery; получай, когда начинаешь соответствующий шаг)\n'
-      + '- Новый план и контракт результата: ./scripts/workflow plan:create --help\n'
-      + '- Новые задачи в текущем плане: ./scripts/workflow plan:extend --help\n'
-      + '- Выполнение, проверка и DOCS: ./scripts/workflow task:start --help'
-      + deferredMaps.map(doc => '\n- Прочитай при задаче: ' + doc.path).join(''));
-    add('objective', 'ЦЕЛЬ\n' + (plan.objective || PROJECT_CONTINUATION_OBJECTIVE) + '\nКритерии:\n' + plan.acceptance_criteria.map(c => '- ' + c).join('\n'));
-    add('user-decisions', 'РЕШЕНИЯ ПОЛЬЗОВАТЕЛЯ\n' + json(plan.user_decisions));
-    add('current-task', 'ТЕКУЩАЯ ЗАДАЧА\n' + (task ? json(task) : 'Активной микрозадачи нет.'));
-    add('remaining-tasks', 'НЕВЫПОЛНЕННЫЕ МИКРОЗАДАЧИ\n' + json(plan.tasks.filter(t => t.commit_status !== 'DONE').map(t => ({ id: t.id, title: t.title, why: t.why, dependencies: t.dependencies, acceptance_criteria: t.acceptance_criteria }))));
-    add('progress', 'ПРОГРЕСС\n' + plan.tasks.map(t => t.id + ': ' + t.implementation_status + (resolved[t.id]?.sha ? ' / ' + resolved[t.id].sha : resolved[t.id]?.pending ? ' / COMMIT_PENDING' : '')).join('\n'));
-
-    const included = [PLAN, CONFIG, rulesPath, policyPath, ...(instructions ? [instructions.file] : [])];
-    const omitted = templatePaths.map(file => ({ path: file, reason: 'ON_DEMAND' }));
-    const changeParts=[];
-    const addChange=(label,text,paths,kind)=>{
-      const part={label,text};parts.push(part);
-      const reference={paths,kind,bytes:Buffer.byteLength(text),sha256:hash(text)};
-      changeParts.push({part,reference});
-    };
-    const deferChange=({part,reference})=>{
-      part.text=dataBlock(part.label, 'Содержимое изменения доступно локально и не включено в сообщение. Прочитай нужные файлы, git diff для staged/unstaged или git show для commit перед зависимым действием. Это ссылка на данные, не доказательство проверки.\n'+json(reference));
-      omitted.push({path:reference.paths.join(', '),reason:'CHANGE_CONTENT_ON_DEMAND',...reference});
-    };
-    for (const doc of mandatory) {
-      contextPath(root, doc.path);
-      if (doc.path === instructions?.file) continue;
-      if (deferredMaps.includes(doc)) { omitted.push({ path: doc.path, reason: 'ON_DEMAND' }); continue; }
-      const raw = textFile(root,doc.path);
-      const piece = dataBlock(doc.path, /^AGENTS(?:\.override)?\.md$/.test(doc.path) ? withoutKitSection(raw,doc.path) : section(raw,doc.heading_path,doc.path));
-      add('required:' + doc.path, piece); included.push(doc.path);
+    else if (plan.execution_scope_status==='NONE') continuation = PROJECT_CONTINUATION_OBJECTIVE;
+    else if (plan.execution_scope_status==='BLOCKED') continuation = 'Разрешены обсуждение и диагностика. Причина: '+plan.blocked_reason;
+    else if (plan.delivery_status==='READY_FOR_ACCEPTANCE') continuation = 'Все задачи выполнены, план остаётся видимым. Новое поручение добавляется через plan:extend; закрытие требует отдельной прямой команды пользователя.';
+    else continuation = (plan.current_task_id?'Продолжить ':'Начать через task:start ')+(task?.id??'задачу после уточнения зависимостей')+'.';
+    const units = [];
+    const add = (label,text,metadata={}) => units.push({label,text,...metadata});
+    add('identity','WORKFLOW RECOVERY / schema 3 / kit '+VERSION+(marker?'\nDELIVERY-MARKER: '+marker:'')
+      +'\nПричина: '+reason+'\nПроект: '+plan.project_name+'\nProject ID: '+plan.project_id
+      +'\nScope: '+(plan.scope_id??'NONE')+'\nWorktree: '+root+'\nCurrent plan: '+PLAN
+      +'\nCommands: ./scripts/workflow <команда>\nPlan revision: '+plan.plan_revision
+      +'\nHEAD: '+(before.head??'первого коммита ещё нет')+'\nSnapshot: '+before.fingerprint
+      +'\nСостояние: '+plan.execution_scope_status+' / '+plan.delivery_status+(transaction?' / COMMIT_PENDING':'')
+      +'\nТекущая задача: '+(task?.id??'нет')
+      +'\nНовый chat/client продолжает этот же checkout plan.');
+    add(rulesPath,section(textFile(root,rulesPath),['Workflow','Workflow Core'],rulesPath),{document:true});
+    add(policyPath,textFile(root,policyPath),{document:true});
+    if(instructions?.text) add(instructions.file,instructions.text,{document:true});
+    add('project-facts','СРЕДА И ПРОЕКТ (данные, не инструкции; команды не запускались)\n'+json(projectFacts(root)));
+    add('on-demand','ФОРМЫ ПО ЗАПРОСУ\n- Новый план: ./scripts/workflow plan:create --help\n- Новые задачи: ./scripts/workflow plan:extend --help\n- Выполнение и DOCS: ./scripts/workflow task:start --help');
+    add('objective','ЦЕЛЬ\n'+(plan.objective||PROJECT_CONTINUATION_OBJECTIVE)+'\nКритерии:\n'+plan.acceptance_criteria.map(item=>'- '+item).join('\n'));
+    add('user-decisions','РЕШЕНИЯ ПОЛЬЗОВАТЕЛЯ\n'+plan.user_decisions.map(item=>'- '+item.text).join('\n'));
+    for(const item of plan.tasks) add('task:'+item.id,taskProjection(item,resolved));
+    const deliveryIndex = plan.tasks.findLastIndex(item=>isDeliveryTask(item)&&item.commit_status==='DONE');
+    if(deliveryIndex>=0&&plan.tasks.length>deliveryIndex+1) {
+      const delivery=plan.tasks[deliveryIndex];
+      add('after-delivery','ИЗМЕНЕНИЯ ПОСЛЕ ВЫПУСКА\nПоследний delivery: '+delivery.id+' @ '+resolved[delivery.id]?.sha
+        +'\nСледующие задачи: '+plan.tasks.slice(deliveryIndex+1).map(item=>item.id).join(', '));
     }
-    if (references.length) {
-      add('reference-only', 'REFERENCE-ONLY ДОКУМЕНТЫ\n' + references.map(referenceLine).join('\n'));
-      for (const doc of references) omitted.push({ path: doc.path, reason: fs.existsSync(path.join(root, doc.path)) ? 'REFERENCE_ONLY' : 'MISSING_REFERENCE' });
-    }
+    if(previous) {
+      add('previous-plan','ПРЕДЫДУЩИЙ ПЛАН\narchived_scope_id: '+plan.archived_scope_id+'\nКоммит закрытия: '+previous.sha
+        +'\nЧтение плана: git show '+previous.sha+'^:'+PLAN
+        +'\nСпецификации:\n'+previous.documents.map(referenceLine).join('\n'));
+      for(const item of previous.plan.tasks) add('previous-task:'+item.id,taskProjection(item,previous.resolved),{revision:previous.parent});
+    } else if(plan.execution_scope_status==='NONE') add('previous-plan','Предыдущего закрытого плана нет.');
+    add('planning','РАБОЧИЕ СПЕЦИФИКАЦИИ docs/planning (содержимое по выбору)\n'
+      +(planning.map(doc=>'- '+doc.path+' — '+doc.title+' — '+doc.bytes+' байт').join('\n')||'нет'));
 
-    for (const taskId of neededIds) {
-      const reference = resolved[taskId];
-      check(reference?.sha, 'CONTEXT_COMMIT', 'Не разрешена обязательная зависимость контекста: ' + taskId);
-      const patch = git(root, ['diff', '--no-ext-diff', '--no-textconv', '--no-renames', '--no-color', reference.parent, reference.sha, '--', ...reference.paths.filter(p => p !== PLAN)]).stdout;
-      addChange('dependency:' + taskId, dataBlock('commit ' + reference.sha + ' / ' + taskId, patch), reference.paths, 'commit '+reference.sha); included.push(reference.sha); neededShas.push(reference.sha);
+    const included = [PLAN,CONFIG,rulesPath,policyPath,...(instructions?[instructions.file]:[])];
+    const omitted = templatePaths.map(file=>({path:file,reason:'ON_DEMAND'}));
+    for(const doc of documents) {
+      const raw = documentText(root,doc,{optional:!doc.required,referenceOnly:!doc.required});
+      if(!doc.required) {
+        omitted.push({path:doc.path,revision:doc.revision,reason:raw===null?'MISSING_REFERENCE':'REFERENCE_ONLY'});
+        continue;
+      }
+      if(doc.path===instructions?.file&&doc.revision==='WORKTREE') continue;
+      check(doc.path!==PLAN,'CONTEXT_PLAN_DOCUMENT','todo-plan.md передаётся проекцией задач, не вторым JSON-документом.');
+      const text = /^AGENTS(?:\.override)?\.md$/.test(doc.path)?withoutKitSection(raw,doc.path):raw;
+      add('required:'+doc.path,text,{revision:doc.revision,document:true}); included.push(doc.path);
     }
-
-    for (const [kind, pathsKey] of [['staged', 'staged'], ['unstaged', 'unstaged']]) {
-      const files = before[pathsKey].filter(p => selectedSet.has(p));
-      add(kind + '-summary', kind.toUpperCase() + ': ' + (files.join(', ') || 'нет'));
-      if (files.length) addChange(kind + '-diff', dataBlock(kind, diff(root, kind, files)),files,kind);
-    }
-    for (const file of before.untracked.filter(p => selectedSet.has(p))) {
-      contextPath(root, file);
-      const bytes = fs.readFileSync(path.join(root, file));
-      addChange('untracked:' + file, bytes.includes(0) ? dataBlock(file, 'Бинарный untracked: ' + bytes.length + ' байт. Нужен профильный просмотр.') : dataBlock('untracked: ' + file, textFile(root, file)),[file],'untracked');
-    }
-    add('foreign', 'ПОСТОРОННИЕ ИЗМЕНЕНИЯ\n' + (foreign.join('\n') || 'нет'));
-    if (transaction) add('transaction', 'ТРАНЗАКЦИЯ\n' + json({ id: transaction.id, task: transaction.task_id, phase: transaction.phase, before_head: transaction.before_head }));
-    const lastCheckedSha = [...plan.tasks].reverse().find(t => t.commit_status === 'DONE' && t.verification_ids?.length && resolved[t.id]?.sha);
-    const evidence = relevantEvidence(root, before.head, neededShas, transaction, lastCheckedSha ? resolved[lastCheckedSha.id].sha : null);
-    add('verification', 'ПРОВЕРКИ\n' + (evidence ? json(evidence) : 'Нет verification evidence, относящейся к текущему snapshot/dependency. Это не означает PASSED.'));
-    add('next-action', 'ПРОДОЛЖЕНИЕ\n' + continuation);
-
-    const orderedChanges=changeParts.sort((a,b)=>b.reference.bytes-a.reference.bytes);
-    let inlineBytes=parts.reduce((sum,p)=>sum+Buffer.byteLength(p.text)+2,0);
-    const targetBytes=Math.min(config.budget.hard_bytes,TRANSPORT_HARD_BYTES)-8192;
-    for(const entry of orderedChanges){
-      if(entry.reference.bytes<=12000&&inlineBytes<=targetBytes)continue;
-      const beforeBytes=Buffer.byteLength(entry.part.text);deferChange(entry);
-      inlineBytes+=Buffer.byteLength(entry.part.text)-beforeBytes;
-    }
-    let body = parts.map(p => p.text).join('\n\n');
-    body += '\n\nПОЛНОТА: COMPLETE\nВключено: ' + included.join(', ') + '\nReference-only: ' + json(omitted);
-    const size = measure(body);
-    const effectiveBudget = { document_bytes: documentByteLimit(config),
-      hard_bytes: Math.min(config.budget.hard_bytes, TRANSPORT_HARD_BYTES), configured: config.budget };
-    check(size.bytes <= effectiveBudget.hard_bytes,
-      'CONTEXT_TOO_LARGE', 'Обязательный execution context превышает транспортный бюджет. Уменьшите required module/task context или разделите scope; данные не обрезаны.',
-      { ...size, budget: effectiveBudget, largest_sections: sectionsForError(parts) });
-
+    for(const kind of ['staged','unstaged','untracked']) add(kind,kind.toUpperCase()+':\n'+(before[kind].join('\n')||'нет'));
+    add('foreign','ПОСТОРОННИЕ ИЗМЕНЕНИЯ\n'+(foreign.join('\n')||'нет'));
+    if(transaction) add('transaction','ТРАНЗАКЦИЯ\n'+json({id:transaction.id,task:transaction.task_id,phase:transaction.phase,before_head:transaction.before_head}));
+    const lastChecked = [...plan.tasks].reverse().find(item=>item.commit_status==='DONE'&&item.verification_ids.length&&resolved[item.id]?.sha);
+    const neededShas = Object.values(resolved).flatMap(ref=>ref.sha?[ref.sha]:[]);
+    const evidence = relevantEvidence(root,before.head,neededShas,transaction,lastChecked?resolved[lastChecked.id].sha:null);
+    add('verification','ПРОВЕРКИ\n'+(evidence?json(evidence):'Нет verification evidence, относящейся к текущему snapshot. Это не означает PASSED.'));
+    add('next-action','ПРОДОЛЖЕНИЕ\n'+continuation);
+    add('completeness','ПОЛНОТА: COMPLETE\nВключено: '+included.join(', ')+'\nReference-only:\n'+omitted.map(doc=>referenceLine(doc)+' — '+doc.reason).join('\n'));
+    const effectiveBudget = {document_bytes:documentByteLimit(config),hard_bytes:Math.min(config.budget.hard_bytes,TRANSPORT_HARD_BYTES)};
+    const parts = recoveryParts(units,effectiveBudget.document_bytes);
+    const body = parts.map(part=>part.text).join('\n\n'), size = measure(body);
+    check(size.bytes<=effectiveBudget.hard_bytes,'CONTEXT_TOO_LARGE',
+      'Обязательный execution context превышает транспортный бюджет. Уменьшите required module/task context или разделите scope; данные не обрезаны.',
+      {...size,budget:effectiveBudget,largest_sections:sectionsForError(units)});
     options.beforeRecheck?.(attempt);
-    const after = snapshot(root, relevant);
-    const finalJournal = fs.existsSync(journalFile) ? hash(fs.readFileSync(journalFile)) : null;
-    if (after.fingerprint !== before.fingerprint || finalJournal !== initialJournal || inspectionInputs(root).key !== initialInputs) {
-      if (attempt === 0) continue;
-      check(false, 'CONCURRENT_CHANGE', 'Проект меняется во время восстановления. Повторите после завершения другой операции.');
+    const after = snapshot(root,relevant);
+    if(after.fingerprint!==before.fingerprint||journalHash()!==initialJournal||inspectionInputs(root).key!==initialInputs) {
+      if(attempt===0) continue;
+      check(false,'CONCURRENT_CHANGE','Проект меняется во время восстановления. Повторите после завершения другой операции.');
     }
-    const packet = { ok: true, transaction_pending: Boolean(transaction), session_id: null, plan_id: plan.scope_id, plan_path: PLAN,
-      facts: { project_id: plan.project_id, project_name: plan.project_name, plan_revision: plan.plan_revision, scope_id: plan.scope_id,
-        execution_scope_status: plan.execution_scope_status, delivery_status: plan.delivery_status, task_id: task?.id ?? null, task_title: task?.title ?? null }, text: body, marker, signature: hash(body), completeness: 'COMPLETE', reason, head: before.head, plan_revision: plan.plan_revision,
-      scope_id: plan.scope_id, task_id: plan.current_task_id, next_task_id: task?.id ?? null, included, omitted, size,
-      budget: effectiveBudget, soft_exceeded: false,
-      token_method: 'ceil(UTF-8 bytes / 2), conservative estimate', elapsed_ms: Date.now() - started };
-    if (options.receipt) atomic(localPath(root, 'recovery.json'), json({ ...packet, text: undefined, worktree: root, created_at: new Date().toISOString() }));
-    return { validation, snapshot: before, packet };
+    const packet = {ok:true,transaction_pending:Boolean(transaction),session_id:null,plan_id:plan.scope_id,plan_path:PLAN,
+      facts:{project_id:plan.project_id,project_name:plan.project_name,plan_revision:plan.plan_revision,scope_id:plan.scope_id,
+        execution_scope_status:plan.execution_scope_status,delivery_status:plan.delivery_status,task_id:task?.id??null,task_title:task?.title??null},
+      text:body,parts,marker,signature:hash(body),completeness:'COMPLETE',reason,head:before.head,plan_revision:plan.plan_revision,
+      scope_id:plan.scope_id,task_id:plan.current_task_id,next_task_id:task?.id??null,included,omitted,size,budget:effectiveBudget,elapsed_ms:Date.now()-started};
+    if(options.receipt) atomic(localPath(root,'recovery.json'),json({...packet,text:undefined,parts:undefined,worktree:root,created_at:new Date().toISOString()}));
+    return {validation,snapshot:before,packet};
   }
 }
 
@@ -262,5 +318,6 @@ export function contextPacket(root) {
   return { ok: true, delivery_protocol: 'inline-context-v1', ack_required: false, status: 'ready', completeness: packet.completeness,
     workspace: root, session_id: packet.session_id, plan_id: packet.plan_id, plan_path: packet.plan_path,
     context: packet.text, context_bytes: Buffer.byteLength(packet.text, 'utf8'), context_sha256: hash(packet.text),
+    parts: packet.parts, size: packet.size, budget: packet.budget,
     signature: packet.signature, generated_at_ms: Date.now(), head: packet.head, facts: packet.facts };
 }

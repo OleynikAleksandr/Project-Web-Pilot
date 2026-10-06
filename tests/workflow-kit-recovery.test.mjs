@@ -7,9 +7,10 @@ import { execFileSync } from 'node:child_process';
 import { getRuntimeRoot } from '@webpilot/workflow-kit';
 import { emptyPlan, writePlan, readPlan, FINAL_DOCUMENTATION_TASK_TITLE, PROJECT_CONTINUATION_OBJECTIVE } from '@webpilot/workflow-kit/lib/plan';
 import { defaultConfig } from '@webpilot/workflow-kit/lib/validate';
-import { createScope, startTask, applyPlan, archive } from '@webpilot/workflow-kit/lib/actions';
+import { createScope, startTask, applyPlan, archive, commitDocumentation } from '@webpilot/workflow-kit/lib/actions';
 import { commitTask } from '@webpilot/workflow-kit/lib/transaction';
-import { recover } from '@webpilot/workflow-kit/lib/recovery';
+import { recover, splitText, recoveryParts } from '@webpilot/workflow-kit/lib/recovery';
+import { inspectionInputs } from '@webpilot/workflow-kit/lib/inspection-inputs';
 
 const env = { ...process.env, GIT_AUTHOR_NAME: 'Workflow Test', GIT_AUTHOR_EMAIL: 'workflow@example.invalid',
   GIT_COMMITTER_NAME: 'Workflow Test', GIT_COMMITTER_EMAIL: 'workflow@example.invalid' };
@@ -185,7 +186,7 @@ test('functional scope requires compact overview and module specification', asyn
   assert.equal(git(root, 'status', '--porcelain'), '');
 });
 
-test('Recovery v2 sends required module context, references optional docs, and includes only direct dependency commits', async t => {
+test('Recovery sends whole required documents, optional references and all tasks without commit diffs', async t => {
   const root = await fixture(t);
   createScope(root, scopeInput(true));
   startTask(root, 'T001');
@@ -196,7 +197,10 @@ test('Recovery v2 sends required module context, references optional docs, and i
   const second = commitTask(root, 'T002');
   const packet = recover(root, 'startup');
   assert.equal(packet.next_task_id, 'T003');
-  assert.equal(packet.soft_exceeded, packet.size.tokens > defaultConfig().budget.soft_tokens);
+  assert.equal(packet.soft_exceeded, undefined);
+  assert.equal(packet.size.tokens, undefined);
+  assert.equal(packet.token_method, undefined);
+  assert.equal(packet.size.characters,[...packet.text].length);
   assert.match(packet.text, /## Workflow Core/);
   assert.ok(packet.text.includes('Build/package/sign/notarize/release/publish'));
   assert.match(packet.text, /DOCS выполняется до явного delivery-хвоста/);
@@ -205,7 +209,7 @@ test('Recovery v2 sends required module context, references optional docs, and i
   assert.match(packet.text, /MODULE_REQUIRED/);
   assert.match(packet.text,/PROJECT_CONSTRAINT/);
   assert.doesNotMatch(packet.text,/KIT_LOCATOR_DO_NOT_INLINE/);
-  assert.match(packet.text, /docs\/optional\.md → Optional/);
+  assert.match(packet.text, /docs\/optional\.md @ WORKTREE/);
   assert.doesNotMatch(packet.text, /OPTIONAL_SECRET_BODY_SHOULD_NOT_BE_COPIED/);
   assert.match(packet.text, new RegExp(first.sha));
   assert.doesNotMatch(packet.text, new RegExp('ДАННЫЕ: commit ' + second.sha + ' / T002'));
@@ -293,4 +297,175 @@ test('batched ancestry follows merge graph and changed replacement refs', async 
   assert.deepEqual(commitHistory(root, base)[0].trailers['Workflow-Task'], ['replacement']);
   git(root, 'replace', '-d', merged);
   assert.equal(areAncestors(root, [base, side], merged), true);
+});
+
+const sourceText = (packet, source, revision = 'WORKTREE') => packet.parts.flatMap(part=>part.sources)
+  .filter(fragment=>fragment.source===source&&fragment.revision===revision).map(fragment=>fragment.content).join('');
+
+test('splitter preserves exact Unicode content at headings, paragraphs, lines and character boundaries', () => {
+  for (const text of [
+    '# A\n'+'я'.repeat(25)+'\n# B\n'+'ю'.repeat(40)+'\n',
+    'первая\n\n'+'вторая '.repeat(50), 'строка\n'.repeat(60), '😀漢я'.repeat(100),
+    '# Long section\n'+('строка 😀\r\n'.repeat(90))+'\nEND'
+  ]) {
+    const pieces=splitText(text,75);
+    assert.equal(pieces.join(''),text);
+    assert.ok(pieces.every(piece=>Buffer.byteLength(piece)<=75&&!piece.includes('\ufffd')));
+  }
+  assert.equal(splitText('# A\n123456\n# B\nabcdef',18)[0],'# A\n123456\n');
+  assert.equal(splitText('aaaa\n\nbbbbbbbbbbbb',12)[0],'aaaa\n\n');
+  assert.equal(splitText('aaaa\nbbbbbbbbbbbb',12)[0],'aaaa\n');
+  const text='# Большой документ\n'+'😀строка'.repeat(9000);
+  const parts=recoveryParts([{label:'long.md',text,document:true}],28000);
+  assert.equal(parts.flatMap(part=>part.sources).map(fragment=>fragment.content).join(''),text);
+  assert.ok(parts.every(part=>part.bytes<=28000&&part.bytes===Buffer.byteLength(part.text)));
+  assert.ok(parts.every(part=>part.text.includes('разделить при следующей правке')));
+  const whole=recoveryParts([{label:'small.md',text:'# Whole\nshort\n',document:true}],28000);
+  assert.equal(whole[0].sources[0].total,1);
+  assert.throws(()=>recoveryParts([{label:'long-name',text:'x'}],20),{code:'CONTEXT_PART_LIMIT'});
+});
+
+test('whole documents use exact revisions and pair deduplication with required winning', async t => {
+  const root=await fixture(t), file='docs/modules/module.md', sha=git(root,'rev-parse','HEAD');
+  const historical=await fs.readFile(path.join(root,file),'utf8');
+  await fs.appendFile(path.join(root,file),'\n# Outside old heading\nWHOLE_DOCUMENT_TAIL\n');
+  const plan=readPlan(root);
+  plan.context_pack.documents.push(
+    {path:file,required:false,heading_path:['nonexistent']},
+    {path:file,required:true,revision:'WORKTREE',heading_path:['also nonexistent']},
+    {path:file,required:true,revision:sha},
+    {path:file,required:false,revision:sha});
+  writePlan(root,plan);
+  const packet=recover(root);
+  assert.equal(sourceText(packet,'required:'+file),await fs.readFile(path.join(root,file),'utf8'));
+  assert.equal(sourceText(packet,'required:'+file,sha),historical);
+  assert.equal(packet.parts.flatMap(part=>part.sources).filter(s=>s.source==='required:'+file).length,2);
+  await fs.unlink(path.join(root,file));
+  assert.throws(()=>recover(root),{code:'MISSING_FILE'},'historical revision must not hide a missing WORKTREE source');
+  plan.context_pack.documents=plan.context_pack.documents.filter(doc=>doc.path!==file);
+  plan.context_pack.documents.push({path:file,required:true,revision:'0'.repeat(40)});
+  writePlan(root,plan);
+  assert.throws(()=>recover(root),{code:'CONTEXT_REVISION'});
+  plan.context_pack.documents.at(-1).revision=sha;
+  plan.context_pack.documents.at(-1).path='docs/never-existed.md';writePlan(root,plan);
+  assert.throws(()=>recover(root),{code:'MISSING_FILE'});
+  plan.context_pack.documents.at(-1).path='.env';writePlan(root,plan);
+  assert.throws(()=>recover(root),{code:'PRIVATE_CONTEXT'});
+});
+
+test('large task and legacy document are complete; changes are path lists without diff or untracked bodies', async t => {
+  const root=await fixture(t);
+  const input=scopeInput();
+  input.tasks[0].acceptance_criteria=['😀Критерий'.repeat(3500)+'CRITERION_END'];
+  createScope(root,input);
+  startTask(root,'T001');
+  const legacy='# Legacy\n'+'Я😀'.repeat(7000)+'LEGACY_END';
+  await fs.writeFile(path.join(root,'docs/modules/module.md'),legacy);
+  await fs.writeFile(path.join(root,'src/module.mjs'),'STAGED_PAYLOAD_MUST_NOT_APPEAR');
+  git(root,'add','src/module.mjs');
+  await fs.writeFile(path.join(root,'src/module.mjs'),'UNSTAGED_PAYLOAD_MUST_NOT_APPEAR');
+  await fs.writeFile(path.join(root,'foreign.txt'),'UNTRACKED_PAYLOAD_MUST_NOT_APPEAR');
+  const packet=recover(root);
+  assert.equal(sourceText(packet,'required:docs/modules/module.md'),legacy);
+  assert.ok(sourceText(packet,'task:T001').includes(input.tasks[0].acceptance_criteria[0]));
+  assert.match(packet.text,/разделить при следующей правке/);
+  assert.match(packet.text,/STAGED:\n/);assert.match(packet.text,/UNSTAGED:\n/);assert.match(packet.text,/UNTRACKED:\nforeign.txt/);
+  assert.ok(sourceText(packet,'foreign').split('\n').includes('foreign.txt'));
+  assert.doesNotMatch(packet.text,/PAYLOAD_MUST_NOT_APPEAR|diff --git|CHANGE_CONTENT_ON_DEMAND|"implementation_status"/);
+  assert.ok(packet.parts.every(part=>part.bytes<=28000));
+});
+
+test('planning inventory and real inspection key change on repeated dirty edits and invalidate a stale recovery', async t => {
+  const root=await fixture(t);
+  await fs.mkdir(path.join(root,'docs/planning'));
+  const file=path.join(root,'docs/planning/discussion.md');
+  await fs.writeFile(file,'# Discussion\nBODY_NOT_INCLUDED_1');
+  const first=inspectionInputs(root).key;
+  await fs.writeFile(file,'# Discussion\nBODY_NOT_INCLUDED_2');
+  const second=inspectionInputs(root).key;
+  assert.notEqual(first,second,'same path/status/size still changes content key');
+  let packet=recover(root);
+  assert.match(packet.text,/docs\/planning\/discussion.md — Discussion — 32 байт/);
+  assert.doesNotMatch(packet.text,/BODY_NOT_INCLUDED/);
+  assert.throws(()=>recover(root,'manual',{beforeRecheck:attempt=>{
+    execFileSync(process.execPath,['-e','require("fs").appendFileSync(process.argv[1],process.argv[2])',file,String(attempt)]);
+  }}),{code:'CONCURRENT_CHANGE'});
+  packet=recover(root,'manual',{beforeRecheck:attempt=>{
+    if(attempt===0) execFileSync(process.execPath,['-e','require("fs").writeFileSync(process.argv[1],"# Updated\\nbody")',file]);
+  }});
+  assert.match(packet.text,/discussion.md — Updated/);
+  await fs.unlink(file);
+  assert.notEqual(inspectionInputs(root).key,second);
+  assert.match(recover(root).text,/Предыдущего закрытого плана нет/);
+});
+
+test('NONE carries verified closure, all previous tasks and immutable specification references', async t => {
+  const root=await fixture(t), input=scopeInput();
+  input.tasks=input.tasks.slice(0,1);
+  createScope(root,input);
+  startTask(root,'T001');
+  await fs.appendFile(path.join(root,'docs/modules/module.md'),'\nRELEASED_SPEC\n');
+  const implementation=commitTask(root,'T001');
+  const closing=archive(root,readPlan(root).scope_id,'User explicitly accepts and closes this scope.');
+  await fs.unlink(path.join(root,'docs/modules/module.md'));
+  commitDocumentation(root,['docs/modules/module.md'],'docs: remove released specification');
+  const packet=recover(root);
+  assert.match(packet.text,new RegExp('Коммит закрытия: '+closing.sha));
+  assert.match(packet.text,new RegExp('docs/modules/module.md @ '+implementation.sha));
+  assert.match(sourceText(packet,'previous-task:T001',implementation.sha),new RegExp(implementation.sha));
+  assert.doesNotMatch(packet.text,/RELEASED_SPEC/,'closed specification is a Git reference, not automatic history replay');
+});
+
+test('installed hooks pin deleted required documents atomically and preserve edits after a failed commit', async t => {
+  const {installer}=await import('@webpilot/workflow-kit');
+  const root=await fs.mkdtemp(path.join(os.tmpdir(),'workflow-recovery-delete-'));
+  t.after(()=>fs.rm(root,{recursive:true,force:true}));
+  git(root,'init','-b','main');git(root,'config','user.name','Workflow Test');git(root,'config','user.email','workflow@example.invalid');
+  await fs.writeFile(path.join(root,'README.md'),'# Fixture\n');git(root,'add','.');git(root,'commit','-m','baseline');
+  installer.install({project:root,mode:'existing'});
+  await fs.mkdir(path.join(root,'docs/planning'),{recursive:true});
+  const file='docs/planning/current.md';
+  await fs.writeFile(path.join(root,file),'# Current spec\nSAVED_SPEC');
+  const input=continuityScopeInput();
+  input.tasks=input.tasks.slice(0,1);
+  input.tasks[0].documentation_paths=[file];
+  input.tasks[0].context_pack={documents:[{path:file,required:true}]};
+  input.approved_scope.documentation_paths=[file];
+  input.context_pack.documents=[{path:file,required:true},{path:file,required:false}];
+  createScope(root,input);
+  startTask(root,'T001');
+  const before=git(root,'rev-parse','HEAD');
+  const originalPlan=await fs.readFile(path.join(root,'.harness/plans/todo-plan.md'),'utf8');
+  await fs.unlink(path.join(root,file));
+  await fs.writeFile(path.join(root,'too-big.md'),'x'.repeat(28001));
+  assert.throws(()=>commitTask(root,'T001'),error=>error.code==='COMMIT_FAILED'&&error.details.output.includes('DOCUMENT_TOO_LARGE'));
+  assert.equal(git(root,'rev-parse','HEAD'),before);
+  assert.equal(await fs.readFile(path.join(root,'.harness/plans/todo-plan.md'),'utf8'),originalPlan);
+  await assert.rejects(fs.stat(path.join(root,file)),{code:'ENOENT'});
+  assert.equal((await fs.stat(path.join(root,'too-big.md'))).size,28001);
+  await fs.writeFile(path.join(root,'too-big.md'),'# Corrected\n');
+  process.env.WORKFLOW_TEST_FAILPOINT='prepared';
+  try { assert.throws(()=>commitTask(root,'T001'),{code:'TEST_INTERRUPTION'}); }
+  finally { delete process.env.WORKFLOW_TEST_FAILPOINT; }
+  const pending=recover(root);
+  assert.equal(pending.transaction_pending,true);
+  assert.match(pending.text,/COMMIT_PENDING/);
+  assert.match(pending.text,/SAVED_SPEC/);
+  const committed=commitTask(root,'T001');
+  const plan=readPlan(root);
+  assert.ok(plan.context_pack.documents.filter(doc=>doc.path===file).every(doc=>doc.revision===before));
+  assert.equal(plan.tasks[0].context_pack.documents[0].revision,before);
+  assert.match(git(root,'show',committed.sha+':.harness/plans/todo-plan.md'),new RegExp(before));
+  assert.match(recover(root).text,/SAVED_SPEC/);
+  // Required file created then removed before a commit has no recoverable blob.
+  const missing='docs/planning/never-committed.md';
+  plan.context_pack.documents.push({path:missing,required:true});
+  writePlan(root,plan);
+  await fs.writeFile(path.join(root,missing),'uncommitted');await fs.unlink(path.join(root,missing));
+  await fs.writeFile(path.join(root,'notes.md'),'# Other selected edit\n');
+  const damaged=await fs.readFile(path.join(root,'.harness/plans/todo-plan.md'),'utf8');
+  const index=git(root,'write-tree');
+  assert.throws(()=>commitDocumentation(root,[missing,'notes.md'],'docs: invalid deletion'),{code:'MISSING_FILE'});
+  assert.equal(git(root,'write-tree'),index);
+  assert.equal(await fs.readFile(path.join(root,'.harness/plans/todo-plan.md'),'utf8'),damaged);
 });

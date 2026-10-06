@@ -127,7 +127,12 @@ try {
   // 1.5.4: compact recovery — forms and navigation maps on demand (maps are inlined only for the final DOCS).
   assert.doesNotMatch(recovered.text, /--- ДАННЫЕ: \.harness\/kit\/templates\/(PLAN|SPEC|CONTINUE|STAGES)\.md ---/);
   assert.doesNotMatch(recovered.text, /--- ДАННЫЕ: docs\/(MODULES|DOCUMENTATION_INDEX)\.md ---/);
-  assert.match(recovered.text, /ФОРМЫ И КАРТЫ ПО ЗАПРОСУ/);
+  assert.match(recovered.text, /ФОРМЫ ПО ЗАПРОСУ/);
+  assert.ok(recovered.parts.length > 0);
+  assert.ok(recovered.parts.every(part => part.bytes === Buffer.byteLength(part.text) && part.bytes <= 28000));
+  assert.equal(recovered.parts.map(part => part.text).join('\n\n'), recovered.text);
+  assert.equal(recovered.size.tokens, undefined);
+  assert.equal(recovered.soft_exceeded, undefined);
   for (const line of ['plan:create --help', 'plan:extend --help', 'task:start --help'])
     assert.ok(recovered.text.includes(line), line);
   for (const form of ['PLAN', 'SPEC', 'CONTINUE', 'STAGES'])

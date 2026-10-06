@@ -4,7 +4,7 @@ import path from 'node:path';
 import { PLAN, planPath, check, hash, id, json, atomic, withLock, safePath } from './common.mjs';
 import { readPlan, renderPlan, parsePlan, isDocumentationFinalizationTask } from './plan.mjs';
 import { validate, journal, taskChecks, retryCommand } from './validate.mjs';
-import { git, head, paths, localPath, gitPath, allChanges, ensureIdleGit, identityReady, snapshot } from './git.mjs';
+import { git, head, paths, localPath, gitPath, allChanges, ensureIdleGit, identityReady, snapshot, documentText } from './git.mjs';
 
 export const saveJournal = (root, data) => atomic(localPath(root, 'transaction.json'), json(data));
 export const messageFor = t => t.message + '\n\nWorkflow-Scope: ' + (t.scope_id ?? 'NONE') + '\nWorkflow-Task: ' + (t.task_id ?? t.id) + '\nWorkflow-Role: ' + t.role + (t.role === 'implementation' ? '\nWorkflow-Iteration: ' + (t.task?.commit_ref?.iteration ?? 1) : '') + '\nWorkflow-Transaction: ' + t.id;
@@ -70,6 +70,19 @@ export function commitCandidate(root, { plan, role, task = null, selected, messa
   if (role !== 'implementation') checkServicePaths(role, files, PLAN);
   const staged = paths(root, 'staged');
   check(staged.every(p => files.includes(p)), 'FOREIGN_STAGED', 'В index есть посторонние файлы. Они не будут включены и не будут сняты со staging.', { paths: staged.filter(p => !files.includes(p)) });
+  // Preflight every deleted required source before writing the journal, plan or index.
+  // Use a clone so even the caller's plan remains intact on failure.
+  plan = structuredClone(plan);
+  const documents = [plan.context_pack, ...plan.tasks.map(item => item.context_pack)].flatMap(pack => pack?.documents ?? []);
+  const missing = documents.filter(doc => doc.required && (doc.revision ?? 'WORKTREE') === 'WORKTREE' && !fs.existsSync(safePath(root,doc.path)));
+  for (const doc of missing) {
+    check(files.includes(doc.path), 'MISSING_FILE', 'Отсутствует required WORKTREE-документ вне выбранной операции: ' + doc.path);
+    documentText(root, {...doc, revision:beforeHead});
+  }
+  const deleted = new Set(missing.map(doc => doc.path));
+  const pin = documents.filter(doc => (doc.revision ?? 'WORKTREE') === 'WORKTREE' && deleted.has(doc.path));
+  for (const doc of pin) doc.revision = beforeHead;
+  if (task) task = {...task, context_pack:plan.tasks.find(item => item.id === task.id)?.context_pack};
   const candidateText = renderPlan(plan);
   if (!t) {
     check(head(root) === beforeHead, 'HEAD_CHANGED', 'HEAD изменился перед подготовкой коммита.');
@@ -87,7 +100,11 @@ export function commitCandidate(root, { plan, role, task = null, selected, messa
   const changed = allChanges(root).filter(p => files.includes(p));
   check(changed.length > 0, 'NOTHING_TO_COMMIT', 'Нет изменений для фиксации.');
   check(head(root) === t.before_head, 'HEAD_CHANGED', 'HEAD изменился до staging.');
-  git(root, ['add', '--', ...changed]);
+  // On retry a deletion may already be absent from the index. git add with
+  // that path would fail even though the prepared deletion is still correct.
+  const indexed = new Set(paths(root,'tracked'));
+  const stageable = changed.filter(file => indexed.has(file) || fs.existsSync(path.join(root,file)));
+  if (stageable.length) git(root, ['add', '--', ...stageable]);
   t.selected = files; t.candidate_tree = git(root, ['write-tree']).stdout.trim();
   t.snapshot = snapshot(root, files).fingerprint; t.phase = 'PREPARED'; saveJournal(root, t);
   // Explicit failpoints are only for deterministic crash tests in temporary repositories.

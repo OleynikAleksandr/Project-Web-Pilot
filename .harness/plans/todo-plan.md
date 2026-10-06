@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1368,
+  "plan_revision": 1370,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "recovery-on-demand-research-20261006",
@@ -475,13 +475,27 @@
         "Сохранены hard_bytes 180000, свежесть, транзакции и приватные пути; удалены псевдотокены bytes/2 и soft_exceeded. Проверены missing WORKTREE/SHA, новый проект, dirty/stale, oversized раздел/задача и повторная правка уже dirty источника."
       ],
       "expected_commit_message": "feat: восстанавливать контекст по плану и Git",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "recovery-on-demand-research-20261006",
         "task_id": "T003",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "docs/planning/workflow-kit-context-refactor.md",
+        "packages/workflow-kit/scripts/check-runtime-fixture.mjs",
+        "packages/workflow-kit/src/lib/command-help.mjs",
+        "packages/workflow-kit/src/lib/git.mjs",
+        "packages/workflow-kit/src/lib/inspection-inputs.mjs",
+        "packages/workflow-kit/src/lib/plan.mjs",
+        "packages/workflow-kit/src/lib/project-facts.mjs",
+        "packages/workflow-kit/src/lib/recovery.mjs",
+        "packages/workflow-kit/src/lib/transaction.mjs",
+        "packages/workflow-kit/src/lib/validate.mjs",
+        "packages/workflow-kit/src/schemas/plan.schema.json",
+        "tests/workflow-kit-recovery.test.mjs"
+      ]
     },
     {
       "id": "T004",
@@ -736,7 +750,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: recovery-on-demand-research-20261006
 Current Task: нет
-Revision: 1368
+Revision: 1370
 
 ## Цель
 
@@ -770,8 +784,8 @@ Revision: 1368
   - Git Commit: [DONE] feat: ограничить документы Kit и обновить их модель
   - Reference: recovery-on-demand-research-20261006 / T002A / implementation
   - Файлы: packages/workflow-kit/src/lib/installation-files.mjs, packages/workflow-kit/src/lib/installer.mjs, packages/workflow-kit/src/lib/inspection-inputs.mjs, packages/workflow-kit/src/lib/plan.mjs, packages/workflow-kit/src/lib/validate.mjs, packages/workflow-kit/src/lib/git-hooks.mjs, packages/workflow-kit/src/lib/transaction.mjs, packages/workflow-kit/src/lib/command-help.mjs, packages/workflow-kit/src/schemas/workflow.schema.json, resources/workspace-setup-worker.mjs, packages/workflow-kit/scripts/check-runtime-fixture.mjs, tests/project-doctor.test.mjs, tests/release-all.test.mjs, tests/session-opening-performance.test.mjs, tests/session-plans.test.mjs, tests/workflow-kit-recovery.test.mjs, tests/workflow-kit-source.test.mjs, tests/workspace-setup.test.mjs, packages/workflow-kit/scripts/check-document-fixture.mjs, packages/workflow-kit/src/lib/actions.mjs, packages/workflow-kit/src/lib/recovery.mjs, packages/workflow-kit/src/lib/simple-workflow.mjs, resources/project-doctor/core.mjs, docs/planning/workflow-kit-context-refactor.md, docs/planning/workflow-kit-context-transition.md, packages/workflow-kit/src/WORKFLOW.md, packages/workflow-kit/src/templates/AGENTS.md, packages/workflow-kit/src/templates/PROTOTYPE.md, packages/workflow-kit/src/templates/SPEC.md, packages/workflow-kit/src/templates/PLAN.md, packages/workflow-kit/src/templates/CONTINUE.md, packages/workflow-kit/src/templates/STAGES.md, packages/workflow-kit/src/templates/PRODUCT.md, packages/workflow-kit/src/templates/ARCHITECTURE.md, packages/workflow-kit/src/templates/START.md
-- [TODO] T003: Реализовать recovery из целых документов и связей с Git — Ожидает
-  - Git Commit: [PENDING] feat: восстанавливать контекст по плану и Git
+- [DONE] T003: Реализовать recovery из целых документов и связей с Git — Завершено
+  - Git Commit: [DONE] feat: восстанавливать контекст по плану и Git
   - Reference: recovery-on-demand-research-20261006 / T003 / implementation
   - Файлы: packages/workflow-kit/src/lib/recovery.mjs, packages/workflow-kit/src/lib/project-facts.mjs, packages/workflow-kit/src/lib/plan.mjs, packages/workflow-kit/src/lib/git.mjs, packages/workflow-kit/src/lib/actions.mjs, packages/workflow-kit/src/lib/command-help.mjs, packages/workflow-kit/scripts/check-runtime-fixture.mjs, tests/workflow-kit-recovery.test.mjs, packages/workflow-kit/src/lib/inspection-inputs.mjs, packages/workflow-kit/src/lib/transaction.mjs, packages/workflow-kit/src/lib/validate.mjs, packages/workflow-kit/src/lib/common.mjs, packages/workflow-kit/src/schemas/plan.schema.json, docs/planning/workflow-kit-context-refactor.md, docs/planning/workflow-kit-context-transition.md, docs/modules/workflow-kit-recovery.md, docs/CONTEXT_DELIVERY.md
 - [TODO] T004: Согласовать Web Pilot с новым Kit и подготовить проверки выпуска — Ожидает

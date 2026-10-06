@@ -3,6 +3,27 @@
   "title": "Workflow plan v1",
   "description": "One current plan; history remains in Git. DOCS is generated only for delivery rounds; completed records retain their positions. Cross-field, dependency, scope and projection invariants are enforced by lib/plan.mjs and lib/validate.mjs.",
   "type": "object",
+  "$defs": {
+    "context_pack": {
+      "type": "object",
+      "properties": {
+        "documents": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["path", "required"],
+            "properties": {
+              "path": {"type": "string", "minLength": 1},
+              "required": {"type": "boolean"},
+              "revision": {"type": "string", "pattern": "^(WORKTREE|[a-f0-9]{40}|[a-f0-9]{64})$", "default": "WORKTREE"},
+              "heading_path": {"type": "array", "items": {"type": "string"}, "description": "Legacy metadata; recovery reads the whole document."}
+            }
+          }
+        },
+        "dependency_task_ids": {"type": "array", "items": {"type": "string"}, "description": "Legacy metadata; recovery never embeds diffs."}
+      }
+    }
+  },
   "required": [
     "schema_version",
     "plan_revision",
@@ -22,6 +43,7 @@
     "user_decisions"
   ],
   "properties": {
+    "context_pack": {"$ref": "#/$defs/context_pack"},
     "schema_version": {
       "const": 1
     },
@@ -78,6 +100,7 @@
           "commit_ref"
         ],
         "properties": {
+          "context_pack": {"$ref": "#/$defs/context_pack"},
           "commit_ref": {
             "type": "object",
             "required": ["scope_id", "task_id", "role"],

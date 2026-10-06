@@ -17,12 +17,24 @@ export const PROJECT_CONTEXT_DOCUMENTS = Object.freeze([
 ]);
 export const projectContextPaths = () => PROJECT_CONTEXT_DOCUMENTS.map(doc => doc.path);
 export function projectContextPack(pack = {}) {
-  const provided = new Map((pack.documents ?? []).map(doc => [doc.path, doc]));
-  const foundation = PROJECT_CONTEXT_DOCUMENTS.map(doc => ({ ...doc, ...(provided.get(doc.path) ?? {}),
-    path: doc.path, heading_path: undefined, required: true, revision: 'WORKTREE' }));
-  const extras = (pack.documents ?? []).filter(doc => !PROJECT_CONTEXT_DOCUMENTS.some(base => base.path === doc.path));
-  return { documents: [...foundation, ...extras], include_last_completed_task: pack.include_last_completed_task ?? false,
+  const documents = [...(pack.documents ?? []).map(doc => ({...doc}))];
+  for (const base of PROJECT_CONTEXT_DOCUMENTS) {
+    const existing = documents.filter(doc => doc.path === base.path);
+    if (!existing.length) documents.push({...base});
+    else existing[0].required = true;
+  }
+  return { documents: uniqueDocuments(documents), include_last_completed_task: pack.include_last_completed_task ?? false,
     dependency_task_ids: [...(pack.dependency_task_ids ?? [])] };
+}
+export function uniqueDocuments(documents) {
+  const result = new Map();
+  for (const doc of documents) {
+    const revision = doc.revision ?? 'WORKTREE';
+    const key = JSON.stringify([doc.path, revision]);
+    const previous = result.get(key);
+    result.set(key, {...doc, revision, required: Boolean(doc.required || previous?.required)});
+  }
+  return [...result.values()];
 }
 export const isDocumentationFinalizationTask = task => /^DOCS(?:-[2-9][0-9]*|-[1-9][0-9]+)?$/.test(task?.id ?? '')
   && task?.title === FINAL_DOCUMENTATION_TASK_TITLE;
@@ -56,7 +68,7 @@ export function validatePlan(p) {
     array(pack.documents, 'context.documents');
     for (const doc of pack.documents) {
       relativePath(doc.path); check(typeof doc.required === 'boolean', 'PLAN_SCHEMA', 'required должен быть boolean.');
-      check(doc.revision === undefined || doc.revision === 'WORKTREE', 'PLAN_SCHEMA', 'Первая версия читает документы текущего worktree.');
+      check(doc.revision === undefined || doc.revision === 'WORKTREE' || typeof doc.revision === 'string' && /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(doc.revision), 'PLAN_SCHEMA', 'revision: WORKTREE либо точный SHA коммита.');
       if (doc.heading_path) { array(doc.heading_path, 'heading_path'); doc.heading_path.forEach(h => string(h, 'heading')); }
     }
   };
