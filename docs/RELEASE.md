@@ -1,14 +1,27 @@
 # Выпуск и постоянный путь запуска
 
-## Выпуск 0.6.96 — исходник подготовлен 06.10.2026
+## Выпуск 0.6.96 — 06.10.2026
 
-**Текущий source — 0.6.96; сборка ещё не выполнялась**. [Контракт](planning/context-as-text.md); доказательства — [VERIFICATION](VERIFICATION.md), раздел от 2026-10-06.
+Текущая опубликованная и установленная версия; предыдущая — 0.6.95. [Контракт](planning/context-as-text.md); доказательства — [VERIFICATION](VERIFICATION.md), разделы от 2026-10-06. [GitHub Release v0.6.96](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.96).
 
 Состав: контекст текстом первым сообщением на macOS и Windows, MCP из девяти инструментов без доставки контекста, автопродолжение с текстом задачи, строка для внешнего клиента, Workflow Kit 1.5.6 в пакете `packages/workflow-kit`, Windows через исполнитель Codex App Server с каналами Secure MCP Tunnel и VPS. Электрон 44.5.1, Node 24.21.0, Codex 0.160.0 без изменений.
 
 Предсборочные доказательства: задачи M001–T005 зафиксированы (хеши — в VERIFICATION); полный `npm test` — 554 total, 553 passed, 1 skipped, 0 failed; Electron smoke и `npm run check:codex-tools` (`rust-v0.160.0`) пройдены.
 
-Порядок выпуска прежний: после этой DOCS — одна парная сборка `npm run build` (проверка `paired-release`), установка корневого app и `/Applications` без пересборки (`release-installed`), публикация GitHub Release с шестью файлами и push `main` (`github-release`). Состав поставки не меняется: два ZIP, закреплённый архив компонентов Windows, `SHA256SUMS.txt`, `INSTALL.txt`, `release-manifest.json`. `verify:win` дополнительно проверяет файлы исполнителя в Windows-пакете и четыре компонента в архиве.
+После предсборочной DOCS `9c2ced9cce9f7fdc387eaeddb0cc3b10898cadc9` выполнена одна парная сборка — её запустила проверка `paired-release` при коммите T006 (`4915aa6`); `release-manifest.sourceCommit` равен коммиту DOCS, `packagedSourceMatches=true`, 107 файлов исходника сверены, в каждом пакете 8 файлов исполнителя, bundled Workflow Kit 1.5.6 (35 файлов). Затем установка корневого app и `/Applications` без пересборки (T007 `48e5428`, identity сохранена, резервная копия прежней установки — в `release-backups.noindex`) и публикация (T008 `c925ae8`): tag `v0.6.96` указывает на `9c2ced9`, GitHub Release опубликован 2026-10-06T08:57:44Z, не draft/prerelease, `main` отправлен.
+
+Шесть файлов GitHub Release v0.6.96:
+
+| Файл | Байт | SHA-256 |
+| --- | --- | --- |
+| Project-Web-Pilot-0.6.96-macOS-arm64.zip | 185962947 | `df2271ce1a107f58e694c26233c06e23139e31597e5844987e9902b0d45135ef` |
+| Project-Web-Pilot-0.6.96-Windows-x64.zip | 355097855 | `4c3eae627588e488c20155fbdc674a11c37f460c8f51a2966205312cdeb34818` |
+| Windows-Codex-Local-2026-09-10.zip | 86242347 | `1f041488ad97d8abf1984fd3521afb8abe15f50b8df3d3e11f1cc4248e019d98` |
+| SHA256SUMS.txt | 315 | `a490d9b3aad6701c70879b45a512c5feb06d85f72f0a45ff7e57cc95c8daa439` |
+| INSTALL.txt | 1469 | `944222091756f8c60c6cb3f7f5e76a7f2d42e977992fddcb04dff2c47207f101` |
+| release-manifest.json | 1753 | `d01bcb0090a777c18051f4ae2155fc02e0eac9b73eacd8e0d12bcd4da5421c36` |
+
+ASAR обеих Mac-копий — `929df8f2aaec58b03badb899765aa0f64164f2798f0240b8fc80754a2dcd3ee0`; подпись — прежний выбранный сертификат Apple Development (Team `LXY7H5ZUE9`), CDHash `0c7e1f78d65386c156a4df4210d3a899dfda00af`. Локальная поставка — `~/Downloads/WebPilot-0.6.96/`. Состав поставки не меняется: два ZIP, закреплённый архив компонентов Windows, `SHA256SUMS.txt`, `INSTALL.txt`, `release-manifest.json`. `verify:win` дополнительно проверяет файлы исполнителя в Windows-пакете и четыре компонента в архиве.
 
 **Прежний репозиторий WorkflowKit.** Прежний репозиторий `OleynikAleksandr/WorkflowKit` (T009, 06.10.2026): README первой строкой ведёт на `packages/workflow-kit` этого репозитория — коммит `217c4a34739a44de2ea517ff459c20dd2e525e33` его собственного плана (задача T005 плана `push-after-docs-1.5.5-20261004`, перед ним служебный коммит плана `b691665`), отправлен в его `origin/main`; затем репозиторий переведён на GitHub в архив (только чтение). Последний коммит прежнего репозитория — `217c4a34739a44de2ea517ff459c20dd2e525e33`. Проверка `workflow-kit-archive` (`scripts/check-workflow-kit-archive.mjs`) запрашивает GitHub: `archived=true`, `main` указывает на этот коммит, первая строка README содержит ссылку на новый дом. Локальная папка `/Users/oleksandroliinyk/VSCODE/WorkflowKit` не удалялась; кроме этих двух коммитов в ней ничего не менялось.
 

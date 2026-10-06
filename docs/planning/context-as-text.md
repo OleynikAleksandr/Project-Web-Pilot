@@ -146,7 +146,11 @@
 - Ни один шаг Windows нельзя исполнить на Mac. Проверяются модульные тесты с подменой платформы и состав пакета (`verify:win`); настоящая проверка — на Windows пользователя. До неё Windows-часть релиза считается непроверенной.
 
 
-## Версия исходника (T005)
+## Выпуск (T005–T010)
+
+Опубликовано и установлено 06.10.2026: [GitHub Release v0.6.96](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.96), source commit `9c2ced9cce9f7fdc387eaeddb0cc3b10898cadc9`; сборка T006 `4915aa6`, установка T007 `48e5428`, публикация T008 `c925ae8`, прежний репозиторий в архиве — T009 `024205d`. Подробности — [RELEASE](../RELEASE.md) и [VERIFICATION](../VERIFICATION.md).
+
+### Версия исходника (T005)
 
 `package.json` и `package-lock.json` задают 0.6.96. Перед DOCS и до первой сборки на этом исходнике проходят полный `npm test`, Electron smoke на TEST FIXTURE и сверка определений инструментов с Codex `rust-v0.160.0`; числа — в `docs/VERIFICATION.md`. Подпись стека в `.harness/workflow.json` называет Workflow Kit 1.5.6. Сборка, установка и публикация выполняются отдельными задачами после DOCS.
 

@@ -1,6 +1,6 @@
 # Перенос на Windows 10/11
 
-> **0.6.96 (source, не собрана) меняет Windows-часть целиком** ([контракт](planning/context-as-text.md)). Опубликованная и проверявшаяся на Windows версия — 0.6.95; до приёмки 0.6.96 на настоящей Windows рабочей версией для Windows остаётся она.
+> **0.6.96 меняет Windows-часть целиком** ([контракт](planning/context-as-text.md)). Windows-пакет 0.6.96 собран и проверен на Mac, на настоящей Windows не запускался: до приёмки пользователем рабочей версией для Windows остаётся 0.6.95.
 >
 > Что изменится для пользователя Windows при переходе на 0.6.96:
 >
@@ -9,24 +9,24 @@
 > 3. **Туннель OpenAI остаётся**, перенастраивать его не нужно: ключ и ID переносятся автоматически. В ChatGPT в прежнем подключении нажмите Refresh — каталог сменится на девять инструментов Codex.
 > 4. **В настройках появится раздел «Подключение ChatGPT»** с кнопкой VPS; она неактивна, пока свой сервер не настроен на этом компьютере.
 > 5. Первый запуск скачивает собственный Python (нужен интернет) и занимает несколько минут.
-> 6. Откат — установка 0.6.95: она заново развернёт прежний сервер инструментов, настройки туннеля у него сохранились.
+> 6. Откат — установка 0.6.95: она заново развернёт прежний сервер инструментов, настройки туннеля у него сохранились. Перед её запуском отключите автозапуск исполнителя 0.6.96 — в Диспетчере задач на вкладке «Автозагрузка» запись `pythonw` (значение `ProjectWebPilotCodexExecutor`), иначе при входе в Windows оба подключения будут обращаться к одному туннелю.
 
 
-Текущая опубликованная Windows-поставка — **Project Web Pilot 0.6.95, Windows x64**, bundled Workflow Kit 1.5.5. ZIP: `~/Downloads/WebPilot-0.6.95/Project-Web-Pilot-0.6.95-Windows-x64.zip`, 355538964 байт, SHA-256 `070e98c4d7a75f7aae531e7f3ab5271eed713a26fef532a7863886f91f6b6598`; локальный SHA-256 и GitHub Release v0.6.95 digest совпадают. `verify:win` прошёл на Mac; native Windows/clean VM 0.6.95 не запускались. Предыдущая Windows-поставка — 0.6.94.
+Текущая опубликованная Windows-поставка — **Project Web Pilot 0.6.96, Windows x64**, bundled Workflow Kit 1.5.6. ZIP: `~/Downloads/WebPilot-0.6.96/Project-Web-Pilot-0.6.96-Windows-x64.zip`, 355097855 байт, SHA-256 `4c3eae627588e488c20155fbdc674a11c37f460c8f51a2966205312cdeb34818`; локальный SHA-256 и GitHub Release v0.6.96 digest совпадают. `verify:win` прошёл на Mac; native Windows/clean VM 0.6.96 не запускались. Предыдущая поставка 0.6.95: 355538964 байт, SHA-256 `070e98c4d7a75f7aae531e7f3ab5271eed713a26fef532a7863886f91f6b6598`. Предыдущая Windows-поставка — 0.6.94.
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
-Текущая опубликованная Windows-поставка — **Project Web Pilot 0.6.95, Windows x64**, опубликованная вместе с macOS arm64 ZIP и четырьмя служебными assets. Workflow Kit 1.5.5. Windows package собран штатным paired build и прошёл `verify:win` на Mac; native Windows/clean VM не запускались.
+Текущая опубликованная Windows-поставка — **Project Web Pilot 0.6.96, Windows x64**, опубликованная вместе с macOS arm64 ZIP и четырьмя служебными assets. Workflow Kit 1.5.6. Windows package собран штатным paired build и прошёл `verify:win` на Mac; native Windows/clean VM не запускались.
 
-На основном Mac локально установлена подписанная 0.6.95; root и `/Applications` прошли installed gate. Windows x64 0.6.95 собран, проверен на Mac и опубликован в парном GitHub Release; native Windows по-прежнему требует отдельной проверки. [Контракт macOS](planning/macos-screen-permission-stability.md), [RELEASE](RELEASE.md).
+На основном Mac локально установлена подписанная 0.6.96; root и `/Applications` прошли installed gate. Windows x64 0.6.96 собран, проверен на Mac и опубликован в парном GitHub Release; native Windows по-прежнему требует отдельной проверки. [Контракт macOS](planning/macos-screen-permission-stability.md), [RELEASE](RELEASE.md).
 
 ## Файл для переноса
 
-`~/Downloads/WebPilot-0.6.95/Project-Web-Pilot-0.6.95-Windows-x64.zip`
+`~/Downloads/WebPilot-0.6.96/Project-Web-Pilot-0.6.96-Windows-x64.zip`
 
-Размер: 355538964 bytes; SHA-256 `070e98c4d7a75f7aae531e7f3ab5271eed713a26fef532a7863886f91f6b6598`.
+Размер: 355097855 bytes; SHA-256 `4c3eae627588e488c20155fbdc674a11c37f460c8f51a2966205312cdeb34818`.
 
-[GitHub Release 0.6.95](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.95) содержит готовый Windows ZIP: 355538964 байт, SHA-256 `070e98c4d7a75f7aae531e7f3ab5271eed713a26fef532a7863886f91f6b6598`; локальный digest и server digest сверены после публикации. Electron 44.5.1, Node 24.21.0, Workflow Kit 1.5.5. `verify:win` прошёл на Mac; native Windows и живая приёмка Windows 0.6.95 не подтверждены. История — [RELEASE](RELEASE.md).
+[GitHub Release 0.6.96](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.96) содержит готовый Windows ZIP: 355097855 байт, SHA-256 `4c3eae627588e488c20155fbdc674a11c37f460c8f51a2966205312cdeb34818`; локальный digest и server digest сверены после публикации. Electron 44.5.1, Node 24.21.0, Workflow Kit 1.5.6. На Windows нужен установленный Codex CLI. `verify:win` прошёл на Mac; native Windows и живая приёмка Windows 0.6.95 не подтверждены. История — [RELEASE](RELEASE.md).
 
 Контрольные суммы, инструкция и общий manifest лежат рядом. Полностью распакуйте ZIP на локальный диск Windows; запускайте `Project Web Pilot.exe` из полученной папки. Не переносите один EXE отдельно от resources. Для обновления завершите старое приложение и распакуйте новую поставку в отдельную папку; данные аккаунта и проектов в пользовательском профиле сохраняются.
 

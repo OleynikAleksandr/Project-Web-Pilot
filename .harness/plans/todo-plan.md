@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1350,
+  "plan_revision": 1352,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "context-as-text-0.6.96-20261006",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Объединить репозитории Project Web Pilot и Workflow Kit; вернуть доставку контекста текстом и оставить в MCP только инструменты (девять); исправить дефекты Workflow Kit (1.5.6); сделать macOS и Windows одинаковыми по возможностям и способам — Windows работает через тот же исполнитель Codex App Server; синхронизировать все документы, включая README; выпустить Project Web Pilot 0.6.96.",
   "acceptance_criteria": [
     "На обеих платформах новая сессия начинается одним стартовым сообщением с правилами и полным пакетом recovery; режим MCP-доставки удалён",
@@ -1276,8 +1276,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "context-as-text-0.6.96-20261006",
         "task_id": "T010",
@@ -1307,7 +1307,9 @@
         "docs/TRANSFER_TO_WINDOWS.md",
         "docs/WORKFLOW_START.md",
         "docs/modules/workflow-kit-recovery.md",
-        "docs/planning/codex-native-tools-macos.md"
+        "docs/planning/codex-native-tools-macos.md",
+        "packages/workflow-kit/README.md",
+        "packages/workflow-kit/docs/modules/workflow-kit-package.md"
       ],
       "verification_ids": [
         "github-release"
@@ -1323,7 +1325,27 @@
         "origin/main совпадает с финальным локальным HEAD после публикации",
         "Ни один документ не описывает Workflow Kit как отдельный действующий репозиторий"
       ],
-      "expected_commit_message": "feat: Послерелизная сверка всех документов и README, синхронизация origin/main"
+      "expected_commit_message": "feat: Послерелизная сверка всех документов и README, синхронизация origin/main",
+      "actual_files": [
+        "README.md",
+        "docs/CLEAN_INSTALL.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/MODULES.md",
+        "docs/PRODUCT.md",
+        "docs/RELEASE.md",
+        "docs/SOURCE_WORKSPACES.md",
+        "docs/TRANSFER_TO_WINDOWS.md",
+        "docs/VERIFICATION.md",
+        "docs/WORKFLOW_START.md",
+        "docs/architecture/ARCHITECTURE.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/codex-app-server-executor.md",
+        "docs/modules/workflow-kit-recovery.md",
+        "docs/planning/context-as-text.md",
+        "packages/workflow-kit/README.md",
+        "packages/workflow-kit/docs/modules/workflow-kit-package.md"
+      ]
     }
   ],
   "blocked_reason": null,
@@ -1341,10 +1363,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: context-as-text-0.6.96-20261006
 Current Task: нет
-Revision: 1350
+Revision: 1352
 
 ## Цель
 
@@ -1447,10 +1469,10 @@ Revision: 1350
   - Git Commit: [DONE] feat: Прежний репозиторий WorkflowKit: только чтение и ссылка на новый дом
   - Reference: context-as-text-0.6.96-20261006 / T009 / implementation
   - Файлы: scripts/check-workflow-kit-archive.mjs, docs/planning/context-as-text.md, docs/RELEASE.md, docs/VERIFICATION.md
-- [TODO] T010: Послерелизная сверка всех документов и README, синхронизация origin/main — Ожидает
-  - Git Commit: [PENDING] feat: Послерелизная сверка всех документов и README, синхронизация origin/main
+- [DONE] T010: Послерелизная сверка всех документов и README, синхронизация origin/main — Завершено
+  - Git Commit: [DONE] feat: Послерелизная сверка всех документов и README, синхронизация origin/main
   - Reference: context-as-text-0.6.96-20261006 / T010 / implementation
-  - Файлы: docs/planning/context-as-text.md, AGENTS.md, README.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/DECISIONS.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/CONTEXT_DELIVERY.md, docs/modules/codex-app-server-executor.md, docs/CLEAN_INSTALL.md, docs/SOURCE_WORKSPACES.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKFLOW_START.md, docs/modules/workflow-kit-recovery.md, docs/planning/codex-native-tools-macos.md
+  - Файлы: docs/planning/context-as-text.md, AGENTS.md, README.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/DECISIONS.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/CONTEXT_DELIVERY.md, docs/modules/codex-app-server-executor.md, docs/CLEAN_INSTALL.md, docs/SOURCE_WORKSPACES.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKFLOW_START.md, docs/modules/workflow-kit-recovery.md, docs/planning/codex-native-tools-macos.md, packages/workflow-kit/README.md, packages/workflow-kit/docs/modules/workflow-kit-package.md
 
 ## Context Pack For This Cycle
 

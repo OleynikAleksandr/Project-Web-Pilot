@@ -214,7 +214,7 @@ Recovery 1.4.11 передаёт вместе с Workflow Core правила `P
 
 1.5.0 делает `.harness/plans/todo-plan.md` единственным runtime current plan. `listPlans` и `sessionPlanView` transitional facade возвращают тот же current plan для любой session; prepared/unassigned пусты. Legacy `by-id`/`by-session` обнаруживаются только migration code и переносятся в `.harness/plans/archive/legacy-session-plans/`.
 
-## Workflow Kit 1.5.5 — текущий runtime / 05.10.2026
+## Workflow Kit 1.5.5 — runtime 0.6.89–0.6.95 / 05.10.2026 (текущий — 1.5.6, см. примечание в начале документа)
 
 Исходник пакета `packages/workflow-kit/src` этого репозитория (до 06.10.2026 — отдельный репозиторий `/Users/oleksandroliinyk/VSCODE/WorkflowKit`, история перенесена), installed Kit этого checkout и bundled runtime опубликованного Project Web Pilot 0.6.95 используют Workflow Kit **1.5.5**: 35 файлов, SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`. Последний отдельный релиз пакета остаётся 1.5.1. Последний коммит прежнего репозитория — `6bbec655497eaea69d5c5825c68e9bdf78a01c18`; при переносе код, версия и runtime Kit не менялись. Спецификация пакета — [packages/workflow-kit/docs/modules/workflow-kit-package.md](../../packages/workflow-kit/docs/modules/workflow-kit-package.md).
 

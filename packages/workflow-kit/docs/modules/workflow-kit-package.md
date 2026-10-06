@@ -2,11 +2,11 @@
 
 С 06.10.2026 пакет живёт в `packages/workflow-kit` репозитория Project Web Pilot; до этого — отдельный репозиторий WorkflowKit, история которого перенесена. Обзор, устройство и история версий — [README пакета](../../README.md).
 
-Canonical source/runtime `@webpilot/workflow-kit` — **1.5.6**, 35 файлов; начиная с 1.5.6 SHA-256 в документах не ведётся — копии сверяются с исходником пакета. Версия 1.5.5, включённая в опубликованный Web Pilot 0.6.95, — 35 файлов, SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`. Последний отдельный GitHub Release Kit — **v1.5.1**, 35 файлов, SHA-256 `93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33`. Текущий опубликованный consumer — Project Web Pilot **0.6.95**, bundled runtime — Workflow Kit **1.5.5**.
+Canonical source/runtime `@webpilot/workflow-kit` — **1.5.6**, 35 файлов; начиная с 1.5.6 SHA-256 в документах не ведётся — копии сверяются с исходником пакета. Версия 1.5.5, включённая в Web Pilot 0.6.95, — 35 файлов, SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`. Последний отдельный GitHub Release Kit — **v1.5.1**, 35 файлов, SHA-256 `93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33`. Текущий опубликованный consumer — Project Web Pilot **0.6.95**, bundled runtime — Workflow Kit **1.5.5**.
 
 ## Среда Node.js
 
-Минимальное требование `@webpilot/workflow-kit` — **Node 22+**: его задают `package.json` (`engines.node: >=22`), CLI и installer launcher. Рабочая среда разработки и опубликованный Web Pilot 0.6.95 используют **Node 24.21.0**. Canonical package/runtime version — 1.5.6 (в опубликованном Web Pilot 0.6.95 — 1.5.5); последний отдельный GitHub Release Kit — v1.5.1.
+Минимальное требование `@webpilot/workflow-kit` — **Node 22+**: его задают `package.json` (`engines.node: >=22`), CLI и installer launcher. Рабочая среда разработки и опубликованный Web Pilot 0.6.95 используют **Node 24.21.0**. Canonical package/runtime version — 1.5.6 (в Web Pilot 0.6.96; в 0.6.95 — 1.5.5); последний отдельный GitHub Release Kit — v1.5.1.
 
 ## Назначение
 
@@ -111,11 +111,11 @@ Web Pilot сохраняет старые chat/session records и их chat URL/
 
 Workspace Setup и project readiness проверяют только current checkout state и не full-recover-ят historical plans.
 
-## Актуальная интеграция — Project Web Pilot 0.6.95 (опубликована) и source 0.6.96
+## Актуальная интеграция — Project Web Pilot 0.6.96
 
-Source Project Web Pilot 0.6.96 (сборка ещё не выполнялась) включает Workflow Kit 1.5.6 из этого пакета. Клиент 0.6.96 вставляет пакет `recover` первым сообщением на macOS и Windows, сообщение автопродолжения берёт данные следующей задачи из текущего плана, а строка для внешнего клиента просит агента выполнить `recover --format text > .harness/runtime/recovery.txt`. Доставка пакета через MCP (0.6.86–0.6.95) удалена. Мастер подготовки проекта Web Pilot берёт список обновляемых версий из установщика пакета (`upgradeFrom`). [Контракт](../../../../docs/planning/context-as-text.md).
+Опубликованный Project Web Pilot 0.6.96 включает Workflow Kit 1.5.6 из этого пакета (35 файлов). Клиент 0.6.96 вставляет пакет `recover` первым сообщением на macOS и Windows, сообщение автопродолжения берёт данные следующей задачи из текущего плана, а строка для внешнего клиента просит агента выполнить `recover --format text > .harness/runtime/recovery.txt`. Доставка пакета через MCP (0.6.86–0.6.95) удалена. Мастер подготовки проекта Web Pilot берёт список обновляемых версий из установщика пакета (`upgradeFrom`). [Контракт](../../../../docs/planning/context-as-text.md).
 
-Опубликованная парная Web Pilot 0.6.95 включает canonical Workflow Kit 1.5.5 (35 файлов, SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`). Клиент использует Node 24.21.0 и сохраняет checkout-scoped current-plan contract; изменения 0.6.95 относятся к macOS Codex App Server MCP и не меняют API/CLI/runtime Kit. Windows x64 0.6.95 собран и проверен на Mac; native Windows остаётся отдельной проверкой. [Release Web Pilot 0.6.95](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.95).
+Предыдущая парная Web Pilot 0.6.95 включала canonical Workflow Kit 1.5.5 (35 файлов, SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`). Клиент использует Node 24.21.0 и сохраняет checkout-scoped current-plan contract; изменения 0.6.95 относятся к macOS Codex App Server MCP и не меняют API/CLI/runtime Kit. Windows x64 0.6.95 собран и проверен на Mac; native Windows остаётся отдельной проверкой. [Release Web Pilot 0.6.95](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.95).
 
 ## Проверки package contract
 
