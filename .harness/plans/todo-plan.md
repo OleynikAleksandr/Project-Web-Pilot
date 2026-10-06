@@ -4,68 +4,92 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1300,
+  "plan_revision": 1301,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "context-as-text-0.6.96-20261006",
   "execution_scope_status": "ACTIVE",
   "delivery_status": "IN_PROGRESS",
-  "objective": "Вернуть доставку контекста текстом: на macOS стартовое сообщение несёт полный пакет, автопродолжение несёт текст следующей задачи, для внешних клиентов есть готовая строка; из MCP удалена доставка контекста — каталог из девяти инструментов; синхронизировать все документы, включая README и документы Workflow Kit; выпустить Project Web Pilot 0.6.96.",
+  "objective": "Вернуть доставку контекста текстом и оставить в MCP только инструменты (девять); исправить дефекты Workflow Kit (1.5.6); сделать macOS и Windows одинаковыми по возможностям и способам — Windows работает через тот же исполнитель Codex App Server; синхронизировать все документы, включая README и документы Workflow Kit; выпустить Project Web Pilot 0.6.96.",
   "acceptance_criteria": [
-    "На macOS новая сессия начинается одним стартовым сообщением с правилами и полным пакетом recovery; режим MCP-доставки удалён из клиента",
-    "Каталог MCP на macOS — девять инструментов; workflow_context_recover, протокол частей, session-rules.md, active-workspace.json и инструкция про чтение контекста удалены",
-    "Сообщение автопродолжения несёт текст следующей задачи из плана; логика AutoPlan не изменена",
-    "В меню проекта есть строка для внешнего клиента с путём к проекту и способом получить recovery",
-    "Windows-runtime и его доставка, экспорты трёх browser-модулей и формат pageScript, остальные девять инструментов, codex-tools.lock.json, канал VPS, код и версия Workflow Kit 1.5.5 не изменены",
+    "На обеих платформах новая сессия начинается одним стартовым сообщением с правилами и полным пакетом recovery; режим MCP-доставки удалён",
+    "Каталог MCP на обеих платформах — одни и те же девять инструментов; workflow_context_recover, протокол частей, session-rules.md и active-workspace.json удалены",
+    "Сообщение автопродолжения несёт текст следующей задачи из плана; в меню проекта есть строка для внешнего клиента",
+    "Workflow Kit 1.5.6 исправляет вставку задачи в середину плана и ложный PRIVATE_CONTEXT; Web Pilot переведён на 1.5.6",
+    "Windows работает через исполнитель Codex App Server с теми же каналами ChatGPT, тем же жизненным циклом служб и теми же настройками, что macOS; прежний Windows-мост не используется",
+    "Экспорты трёх browser-модулей и формат pageScript, codex-tools.lock.json, состав и SHA-256 закреплённого Windows-архива не изменены; поведение macOS не ухудшено",
     "Все документы проекта, включая README.md и проектную часть AGENTS.md, синхронизированы до сборки (DOCS) и после публикации; документы репозитория WorkflowKit синхронизированы и опубликованы",
-    "Релиз 0.6.96 собран один раз, установлен в /Applications, опубликован на GitHub; main синхронизирован"
+    "Релиз 0.6.96 собран один раз, установлен в /Applications, опубликован на GitHub; main синхронизирован; приёмка на живой Windows — за пользователем"
   ],
   "approved_scope": {
     "functional_paths": [
-      "src/mac-runtime-switch.mjs",
+      "package-lock.json",
+      "package.json",
+      "scripts/check-github-release.mjs",
+      "scripts/check-installed-release.mjs",
+      "scripts/check-workflow-kit-dependency.mjs",
+      "scripts/prepare-windows-toolchain.mjs",
+      "scripts/release-all.mjs",
+      "scripts/verify-windows-package.mjs",
+      "src/auto-plan.mjs",
       "src/context-session.mjs",
-      "src/mcp-runtime.mjs",
-      "src/ui/sidebar.mjs",
-      "src/ui/progress.mjs",
-      "src/ui/index.html",
+      "src/mac-runtime-switch.mjs",
       "src/main.mjs",
+      "src/mcp-runtime.mjs",
+      "src/platform.mjs",
+      "src/preload.cjs",
+      "src/startup-platform.mjs",
+      "src/startup-readiness.mjs",
+      "src/ui/index.html",
+      "src/ui/progress.mjs",
+      "src/ui/settings-panel.mjs",
+      "src/ui/sidebar.mjs",
+      "src/ui/startup.mjs",
+      "src/vps-tunnel.mjs",
+      "src/windows-runtime.mjs",
+      "tests/auto-plan.test.mjs",
+      "tests/codex-app-server-mcp.test.mjs",
       "tests/context-session.test.mjs",
       "tests/mac-runtime-switch.test.mjs",
       "tests/mcp-runtime.test.mjs",
-      "tests/sidebar.test.mjs",
       "tests/progress.test.mjs",
+      "tests/release-all.test.mjs",
+      "tests/settings-chatgpt-channel.test.mjs",
+      "tests/sidebar.test.mjs",
+      "tests/startup-platform.test.mjs",
+      "tests/startup-readiness.test.mjs",
+      "tests/vps-tunnel.test.mjs",
+      "tests/windows-autostart.test.mjs",
+      "tests/windows-first-run.test.mjs",
+      "tests/windows-runtime.test.mjs",
+      "tests/workflow-kit-recovery.test.mjs",
+      "tests/workflow-kit-source.test.mjs",
+      "tools/codex-app-server-mcp/app_server_client.py",
+      "tools/codex-app-server-mcp/control.py",
       "tools/codex-app-server-mcp/server.py",
-      "tests/codex-app-server-mcp.test.mjs",
-      "src/auto-plan.mjs",
-      "tests/auto-plan.test.mjs",
-      "src/preload.cjs",
-      "package.json",
-      "package-lock.json",
-      "scripts/release-all.mjs",
-      "scripts/check-installed-release.mjs",
-      "scripts/check-github-release.mjs"
+      "tools/codex-app-server-mcp/tunnel_prompt.py"
     ],
     "documentation_paths": [
-      "docs/planning/context-as-text.md",
-      "tools/codex-app-server-mcp/session-rules.md",
       "AGENTS.md",
       "README.md",
-      "docs/PRODUCT.md",
-      "docs/architecture/ARCHITECTURE.md",
-      "docs/architecture/OVERVIEW.md",
-      "docs/MODULES.md",
-      "docs/DOCUMENTATION_INDEX.md",
-      "docs/DECISIONS.md",
-      "docs/VERIFICATION.md",
-      "docs/RELEASE.md",
-      "docs/CONTEXT_DELIVERY.md",
-      "docs/modules/codex-app-server-executor.md",
       "docs/CLEAN_INSTALL.md",
+      "docs/CONTEXT_DELIVERY.md",
+      "docs/DECISIONS.md",
+      "docs/DOCUMENTATION_INDEX.md",
+      "docs/MODULES.md",
+      "docs/PRODUCT.md",
+      "docs/RELEASE.md",
       "docs/SOURCE_WORKSPACES.md",
       "docs/TRANSFER_TO_WINDOWS.md",
+      "docs/VERIFICATION.md",
       "docs/WORKFLOW_START.md",
+      "docs/architecture/ARCHITECTURE.md",
+      "docs/architecture/OVERVIEW.md",
+      "docs/modules/codex-app-server-executor.md",
       "docs/modules/workflow-kit-recovery.md",
-      "docs/planning/codex-native-tools-macos.md"
+      "docs/planning/codex-native-tools-macos.md",
+      "docs/planning/context-as-text.md",
+      "tools/codex-app-server-mcp/session-rules.md"
     ]
   },
   "baseline_commit": "919ddde533e906b05ecaeac0683a02e67d4ced9b",
@@ -145,7 +169,7 @@
         "Из клиента удалён режим MCP-доставки: mcpStartMessage, mcpSession, contextMode 'mcp', setActiveWorkspace и запись active-workspace.json, тексты сайдбара и индикатора про чтение через MCP",
         "Привязка чата по своему сообщению, откладывание при черновике и идущей генерации, отметка устаревшего контекста и повторная доставка по явному обновлению работают как в режиме первого сообщения",
         "Чаты, начатые в режиме MCP, остаются привязанными; в уже привязанные чаты ничего автоматически не отправляется",
-        "LocalMcpClient на macOS не требует workflow_context_recover в каталоге сервера; для Windows требование прежнее",
+        "LocalMcpClient на macOS не требует workflow_context_recover в каталоге сервера; для Windows требование остаётся до задачи W004",
         "Экспорты src/chatgpt-dom.mjs, src/chatgpt-composer.mjs, src/chatgpt-experience.mjs и формат pageScript не меняются"
       ],
       "expected_commit_message": "feat: Стартовое сообщение macOS несёт полный контекст; режим MCP-доставки удалён из клиента"
@@ -185,7 +209,7 @@
         "Server instructions — короткий текст без упоминания recovery: локальные инструменты, без модельных ходов Codex, без управления интерфейсом, правила работы с инструментами и правило одного повтора после блокировки OpenAI; тест фиксирует новый текст вместо хеша первых 512 символов",
         "Исполнитель при запуске удаляет прежний файл active-workspace.json в своём каталоге состояния",
         "Тест каталога требует 9 имён и отсутствия workflow_context_recover в исходнике; tools/list настоящего сервера возвращает те же 9 имён с описаниями инструментов и параметров",
-        "Остальные девять инструментов, их параметры, описания и поведение, codex-tools.lock.json, Windows-runtime и его workflow_context_recover не меняются"
+        "Остальные девять инструментов, их параметры, описания и поведение, codex-tools.lock.json не меняется; прежний Windows-runtime в этой задаче не трогается"
       ],
       "expected_commit_message": "feat: MCP без доставки контекста: каталог из девяти инструментов"
     },
@@ -257,6 +281,281 @@
       "expected_commit_message": "feat: Строка для внешнего клиента в меню проекта"
     },
     {
+      "id": "K001",
+      "title": "Workflow Kit 1.5.6: вставка задачи, подсказка о полях, ложный PRIVATE_CONTEXT; перевод Web Pilot на 1.5.6",
+      "why": "При выпусках 0.6.93 и 0.6.95 Kit дважды мешал работе: plan:extend не умеет ставить задачу перед существующей и дополнять её зависимости, а первый commit сессии ложно отказывал из-за неизменённого .codex/hooks.json. Пользователь поручил включить исправление в этот релиз.",
+      "dependencies": [
+        "T004"
+      ],
+      "functional_paths": [
+        "scripts/check-workflow-kit-dependency.mjs",
+        "tests/workflow-kit-source.test.mjs",
+        "tests/workflow-kit-recovery.test.mjs",
+        "package-lock.json"
+      ],
+      "documentation_paths": [
+        "docs/planning/context-as-text.md"
+      ],
+      "verification_ids": [
+        "unit-all"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "В репозитории WorkflowKit собственным планом Workflow Kit выполнен раздел «Workflow Kit 1.5.6» контракта: plan:extend ставит новую задачу перед указанной незавершённой и дополняет зависимости незавершённых задач; порядок в файле плана совпадает с порядком выполнения; DONE-задачи и правило work → DOCS → delivery не затронуты",
+        "plan:extend --help показывает допустимые поля задачи и место spec",
+        "Причина ложного PRIVATE_CONTEXT на неизменённом .codex/hooks.json установлена и устранена, есть воспроизводящий тест; действительно изменённый приватный путь не попадает в коммит задачи и перечисляется в excluded_changes",
+        "Версия Kit — 1.5.6; его проверки (npm run check) проходят; документы Kit актуальны; изменения отправлены в origin/main WorkflowKit после его DOCS",
+        "Web Pilot ожидает Workflow Kit 1.5.6: версия, число файлов и SHA-256 runtime в scripts/check-workflow-kit-dependency.mjs и тестах; установленный Kit этого checkout обновлён штатной командой; полный npm test проходит"
+      ],
+      "expected_commit_message": "feat: Workflow Kit 1.5.6: вставка задачи, подсказка о полях, ложный PRIVATE_CONTEXT; перевод Web Pilot на 1.5.6",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "context-as-text-0.6.96-20261006",
+        "task_id": "K001",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "W001",
+      "title": "Исполнитель на Windows: команды, патч, поиск Codex, статус",
+      "why": "На Windows работает прежний мост с 38 самодельными инструментами. Чтобы платформы были одинаковы, тот же исполнитель Codex App Server должен работать на Windows; в server.py и app_server_client.py зашиты пути и команды macOS.",
+      "dependencies": [
+        "T002"
+      ],
+      "functional_paths": [
+        "tools/codex-app-server-mcp/server.py",
+        "tools/codex-app-server-mcp/app_server_client.py",
+        "tests/codex-app-server-mcp.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/planning/context-as-text.md"
+      ],
+      "verification_ids": [
+        "executor-channel",
+        "unit-all",
+        "codex-tools-live"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "app_server_client.py находит Codex на Windows (PATH, глобальная установка npm, приложение ChatGPT) и запускает codex app-server; на macOS поиск прежний",
+        "exec_command на Windows по умолчанию запускает PowerShell с тем же смыслом login; write_stdin, сессии, Ctrl-C, пределы и формат ответа те же, что на macOS",
+        "apply_patch на Windows исполняет apply_patch, который Codex кладёт в PATH процесса; проверка его наличия в bridge_status не использует /usr/bin/which",
+        "Каталог состояния на Windows — в LOCALAPPDATA; пути и кодировка вывода обрабатываются без потерь",
+        "Платформенные различия собраны в отдельных ветках и покрыты модульными тестами с подменой платформы; поведение и тесты macOS не меняются"
+      ],
+      "expected_commit_message": "feat: Исполнитель на Windows: команды, патч, поиск Codex, статус",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "context-as-text-0.6.96-20261006",
+        "task_id": "W001",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "W002",
+      "title": "Исполнитель на Windows: изображения, окна, снимки, уведомления",
+      "why": "view_image, список окон, снимки и уведомление turn_watchdog на macOS вызывают file, sips, screencapture и osascript. В закреплённом Windows-архиве есть готовый код для окон, снимков и уведомлений.",
+      "dependencies": [
+        "W001"
+      ],
+      "functional_paths": [
+        "tools/codex-app-server-mcp/server.py",
+        "tests/codex-app-server-mcp.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/planning/context-as-text.md"
+      ],
+      "verification_ids": [
+        "executor-channel",
+        "unit-all"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "view_image определяет тип изображения без внешней команды file и уменьшает его до 1600 точек на обеих платформах; отказы (не изображение, слишком большой файл, защищённый путь) прежние",
+        "computer_list_windows, computer_capture_screen и computer_capture_window на Windows возвращают те же поля и тот же двухблочный результат (JSON и image/png), что на macOS",
+        "Уведомление turn_watchdog на Windows показывается штатным средством системы",
+        "Код Windows для окон, снимков и уведомлений взят из закреплённого архива и приведён к интерфейсу исполнителя; управление интерфейсом (мышь, клавиатура, активация окон) не переносится",
+        "Модульные тесты с подменой платформы покрывают разбор результатов; поведение и тесты macOS не меняются"
+      ],
+      "expected_commit_message": "feat: Исполнитель на Windows: изображения, окна, снимки, уведомления",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "context-as-text-0.6.96-20261006",
+        "task_id": "W002",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "W003",
+      "title": "Службы исполнителя на Windows: установка, запуск, туннель, автозапуск",
+      "why": "control.py исполнителя отказывается работать вне macOS: установка через uv, запуск и опознание процессов, архив tunnel-client и автозапуск написаны под macOS и LaunchAgent.",
+      "dependencies": [
+        "W001"
+      ],
+      "functional_paths": [
+        "tools/codex-app-server-mcp/control.py",
+        "tools/codex-app-server-mcp/tunnel_prompt.py",
+        "tests/codex-app-server-mcp.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/planning/context-as-text.md"
+      ],
+      "verification_ids": [
+        "executor-channel",
+        "unit-all"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "control.py на Windows выполняет setup, start, stop, status, configure-tunnel, выбор канала и selector-start с тем же JSON-ответом, что на macOS",
+        "Окружение Python создаётся uv из закреплённого архива с теми же закреплёнными зависимостями; tunnel-client берётся из того же архива; MinGit и ripgrep доступны командам исполнителя",
+        "Процессы MCP и туннеля запускаются отдельно от окна, опознаются и останавливаются без /bin/ps; повторный start идемпотентен",
+        "Автозапуск служб при входе в Windows настраивается и снимается управляемо, без прав администратора",
+        "Ввод ID и ключа туннеля работает на Windows; ключ не печатается и не попадает в журналы",
+        "Поведение и тесты macOS не меняются"
+      ],
+      "expected_commit_message": "feat: Службы исполнителя на Windows: установка, запуск, туннель, автозапуск",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "context-as-text-0.6.96-20261006",
+        "task_id": "W003",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "W004",
+      "title": "Web Pilot на Windows работает через исполнитель; переход с прежнего runtime",
+      "why": "Приложение на Windows ставит и запускает прежний мост из архива (WindowsRuntimeBootstrap, McpRuntime) и хранит папку runtime в настройках; на macOS исполнитель ставится из состава приложения без выбора папки.",
+      "dependencies": [
+        "W003",
+        "T001"
+      ],
+      "functional_paths": [
+        "src/mac-runtime-switch.mjs",
+        "src/windows-runtime.mjs",
+        "src/mcp-runtime.mjs",
+        "src/platform.mjs",
+        "src/startup-platform.mjs",
+        "src/startup-readiness.mjs",
+        "src/main.mjs",
+        "src/context-session.mjs",
+        "src/ui/startup.mjs",
+        "src/ui/sidebar.mjs",
+        "src/ui/index.html",
+        "tests/mac-runtime-switch.test.mjs",
+        "tests/windows-runtime.test.mjs",
+        "tests/windows-first-run.test.mjs",
+        "tests/windows-autostart.test.mjs",
+        "tests/mcp-runtime.test.mjs",
+        "tests/startup-platform.test.mjs",
+        "tests/startup-readiness.test.mjs",
+        "tests/context-session.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/planning/context-as-text.md"
+      ],
+      "verification_ids": [
+        "unit-all",
+        "electron-smoke"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "На Windows приложение синхронизирует исполнитель из своего состава в данные приложения, ставит его и запускает службы тем же порядком, что на macOS; папка runtime в настройках больше не используется",
+        "Мастер первого запуска на Windows проверяет наличие Codex и объясняет, что его нужно установить; отказ запуска служб не закрывает приложение, следующая попытка повторяет запуск",
+        "При первом запуске после обновления прежний мост останавливается, его автозапуск снимается, настроенный туннель переносится, если у исполнителя своего нет; папки пользователя вне данных приложения не удаляются",
+        "Стартовое сообщение и правила сессии одинаковы на обеих платформах; LocalMcpClient нигде не требует workflow_context_recover",
+        "Workflow Kit на Windows по-прежнему получает переносимый Node и MinGit; создание и подключение проектов работают как раньше",
+        "Экспорты src/chatgpt-dom.mjs, src/chatgpt-composer.mjs, src/chatgpt-experience.mjs и формат pageScript не меняются; поведение macOS не меняется"
+      ],
+      "expected_commit_message": "feat: Web Pilot на Windows работает через исполнитель; переход с прежнего runtime",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "context-as-text-0.6.96-20261006",
+        "task_id": "W004",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "W005",
+      "title": "Канал VPS и переключатель каналов на Windows",
+      "why": "Выбор канала ChatGPT (Secure MCP Tunnel или свой сервер) доступен только на macOS: туннель VPS держит LaunchAgent, а обработчики настроек отказывают на других платформах.",
+      "dependencies": [
+        "W004"
+      ],
+      "functional_paths": [
+        "src/vps-tunnel.mjs",
+        "src/main.mjs",
+        "src/ui/settings-panel.mjs",
+        "src/ui/index.html",
+        "tests/vps-tunnel.test.mjs",
+        "tests/settings-chatgpt-channel.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/planning/context-as-text.md"
+      ],
+      "verification_ids": [
+        "unit-all"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "На Windows настройки показывают тот же раздел «Подключение ChatGPT» с теми же двумя каналами и той же проверкой состояния, что на macOS",
+        "Туннель VPS на Windows — ssh из состава системы с тем же пробросом порта и тем же псевдонимом в ~/.ssh/config; за запуском при входе и перезапуском после обрыва следит служба Web Pilot",
+        "Конфликт с RemoteForward в ~/.ssh/config, несовпадение порта и последняя ошибка показываются так же, как на macOS",
+        "В канале VPS tunnel-client при входе не запускается; адрес коннектора по-прежнему уходит только в буфер обмена",
+        "Поведение и тесты канала на macOS не меняются"
+      ],
+      "expected_commit_message": "feat: Канал VPS и переключатель каналов на Windows",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "context-as-text-0.6.96-20261006",
+        "task_id": "W005",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "W006",
+      "title": "Windows-пакет без прежнего моста; проверка пакета",
+      "why": "Сборка Windows подключает закреплённый архив ради прежнего моста и накладывает на него правки. После W001–W005 из архива нужны только MinGit, ripgrep, tunnel-client и uv.",
+      "dependencies": [
+        "W005",
+        "W002"
+      ],
+      "functional_paths": [
+        "src/windows-runtime.mjs",
+        "scripts/prepare-windows-toolchain.mjs",
+        "scripts/verify-windows-package.mjs",
+        "scripts/release-all.mjs",
+        "tests/windows-runtime.test.mjs",
+        "tests/release-all.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/planning/context-as-text.md"
+      ],
+      "verification_ids": [
+        "unit-all"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Наложение правок на прежний мост (patchWindowsBridgeSource, удаление инструментов интерфейса, правка skill, WINDOWS_CONTEXT_PACKET_SOURCE) удалено вместе с тестами на него",
+        "Закреплённый архив Windows-Codex-Local-2026-09-10.zip используется только как источник MinGit, ripgrep, tunnel-client и uv; его имя и SHA-256 не меняются",
+        "verify:win проверяет, что Windows-пакет содержит исполнитель (server.py, app_server_client.py, control.py, codex-tools.lock.json) и не запускает прежний мост",
+        "В поставке по-прежнему шесть файлов; releaseAssetNames не меняется"
+      ],
+      "expected_commit_message": "feat: Windows-пакет без прежнего моста; проверка пакета",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "context-as-text-0.6.96-20261006",
+        "task_id": "W006",
+        "role": "implementation"
+      }
+    },
+    {
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
@@ -268,7 +567,14 @@
         "T001",
         "T002",
         "T003",
-        "T004"
+        "T004",
+        "K001",
+        "W001",
+        "W002",
+        "W003",
+        "W004",
+        "W005",
+        "W006"
       ],
       "functional_paths": [
         "package.json",
@@ -325,6 +631,13 @@
         "T002",
         "T003",
         "T004",
+        "K001",
+        "W001",
+        "W002",
+        "W003",
+        "W004",
+        "W005",
+        "W006",
         "T005"
       ],
       "functional_paths": [],
@@ -387,7 +700,7 @@
       "acceptance_criteria": [
         "Preflight identity записан до сборки; сборку выполняет проверка paired-release при коммите этой задачи, один раз и только после завершённой DOCS",
         "~/Downloads/WebPilot-0.6.96 собран из коммита после DOCS, packagedSourceMatches=true, bundled Workflow Kit 1.5.5, в поставке шесть файлов; executor в пакете не содержит session-rules.md",
-        "Windows-runtime и его каталог не изменены; GitHub Release на этом шаге не публикуется"
+        "Windows-пакет содержит исполнитель и закреплённый архив с прежним SHA-256; GitHub Release на этом шаге не публикуется"
       ],
       "expected_commit_message": "feat: Собрать и проверить парный релиз 0.6.96"
     },
@@ -556,21 +869,22 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: context-as-text-0.6.96-20261006
 Current Task: нет
-Revision: 1300
+Revision: 1301
 
 ## Цель
 
-Вернуть доставку контекста текстом: на macOS стартовое сообщение несёт полный пакет, автопродолжение несёт текст следующей задачи, для внешних клиентов есть готовая строка; из MCP удалена доставка контекста — каталог из девяти инструментов; синхронизировать все документы, включая README и документы Workflow Kit; выпустить Project Web Pilot 0.6.96.
+Вернуть доставку контекста текстом и оставить в MCP только инструменты (девять); исправить дефекты Workflow Kit (1.5.6); сделать macOS и Windows одинаковыми по возможностям и способам — Windows работает через тот же исполнитель Codex App Server; синхронизировать все документы, включая README и документы Workflow Kit; выпустить Project Web Pilot 0.6.96.
 
 ## Критерии приёмки
 
-- На macOS новая сессия начинается одним стартовым сообщением с правилами и полным пакетом recovery; режим MCP-доставки удалён из клиента
-- Каталог MCP на macOS — девять инструментов; workflow_context_recover, протокол частей, session-rules.md, active-workspace.json и инструкция про чтение контекста удалены
-- Сообщение автопродолжения несёт текст следующей задачи из плана; логика AutoPlan не изменена
-- В меню проекта есть строка для внешнего клиента с путём к проекту и способом получить recovery
-- Windows-runtime и его доставка, экспорты трёх browser-модулей и формат pageScript, остальные девять инструментов, codex-tools.lock.json, канал VPS, код и версия Workflow Kit 1.5.5 не изменены
+- На обеих платформах новая сессия начинается одним стартовым сообщением с правилами и полным пакетом recovery; режим MCP-доставки удалён
+- Каталог MCP на обеих платформах — одни и те же девять инструментов; workflow_context_recover, протокол частей, session-rules.md и active-workspace.json удалены
+- Сообщение автопродолжения несёт текст следующей задачи из плана; в меню проекта есть строка для внешнего клиента
+- Workflow Kit 1.5.6 исправляет вставку задачи в середину плана и ложный PRIVATE_CONTEXT; Web Pilot переведён на 1.5.6
+- Windows работает через исполнитель Codex App Server с теми же каналами ChatGPT, тем же жизненным циклом служб и теми же настройками, что macOS; прежний Windows-мост не используется
+- Экспорты трёх browser-модулей и формат pageScript, codex-tools.lock.json, состав и SHA-256 закреплённого Windows-архива не изменены; поведение macOS не ухудшено
 - Все документы проекта, включая README.md и проектную часть AGENTS.md, синхронизированы до сборки (DOCS) и после публикации; документы репозитория WorkflowKit синхронизированы и опубликованы
-- Релиз 0.6.96 собран один раз, установлен в /Applications, опубликован на GitHub; main синхронизирован
+- Релиз 0.6.96 собран один раз, установлен в /Applications, опубликован на GitHub; main синхронизирован; приёмка на живой Windows — за пользователем
 
 ## Микрозадачи
 
@@ -590,6 +904,34 @@ Revision: 1300
   - Git Commit: [PENDING] feat: Строка для внешнего клиента в меню проекта
   - Reference: context-as-text-0.6.96-20261006 / T004 / implementation
   - Файлы: src/ui/sidebar.mjs, src/main.mjs, src/preload.cjs, tests/sidebar.test.mjs, docs/planning/context-as-text.md
+- [TODO] K001: Workflow Kit 1.5.6: вставка задачи, подсказка о полях, ложный PRIVATE_CONTEXT; перевод Web Pilot на 1.5.6 — Ожидает
+  - Git Commit: [PENDING] feat: Workflow Kit 1.5.6: вставка задачи, подсказка о полях, ложный PRIVATE_CONTEXT; перевод Web Pilot на 1.5.6
+  - Reference: context-as-text-0.6.96-20261006 / K001 / implementation
+  - Файлы: scripts/check-workflow-kit-dependency.mjs, tests/workflow-kit-source.test.mjs, tests/workflow-kit-recovery.test.mjs, package-lock.json, docs/planning/context-as-text.md
+- [TODO] W001: Исполнитель на Windows: команды, патч, поиск Codex, статус — Ожидает
+  - Git Commit: [PENDING] feat: Исполнитель на Windows: команды, патч, поиск Codex, статус
+  - Reference: context-as-text-0.6.96-20261006 / W001 / implementation
+  - Файлы: tools/codex-app-server-mcp/server.py, tools/codex-app-server-mcp/app_server_client.py, tests/codex-app-server-mcp.test.mjs, docs/planning/context-as-text.md
+- [TODO] W002: Исполнитель на Windows: изображения, окна, снимки, уведомления — Ожидает
+  - Git Commit: [PENDING] feat: Исполнитель на Windows: изображения, окна, снимки, уведомления
+  - Reference: context-as-text-0.6.96-20261006 / W002 / implementation
+  - Файлы: tools/codex-app-server-mcp/server.py, tests/codex-app-server-mcp.test.mjs, docs/planning/context-as-text.md
+- [TODO] W003: Службы исполнителя на Windows: установка, запуск, туннель, автозапуск — Ожидает
+  - Git Commit: [PENDING] feat: Службы исполнителя на Windows: установка, запуск, туннель, автозапуск
+  - Reference: context-as-text-0.6.96-20261006 / W003 / implementation
+  - Файлы: tools/codex-app-server-mcp/control.py, tools/codex-app-server-mcp/tunnel_prompt.py, tests/codex-app-server-mcp.test.mjs, docs/planning/context-as-text.md
+- [TODO] W004: Web Pilot на Windows работает через исполнитель; переход с прежнего runtime — Ожидает
+  - Git Commit: [PENDING] feat: Web Pilot на Windows работает через исполнитель; переход с прежнего runtime
+  - Reference: context-as-text-0.6.96-20261006 / W004 / implementation
+  - Файлы: src/mac-runtime-switch.mjs, src/windows-runtime.mjs, src/mcp-runtime.mjs, src/platform.mjs, src/startup-platform.mjs, src/startup-readiness.mjs, src/main.mjs, src/context-session.mjs, src/ui/startup.mjs, src/ui/sidebar.mjs, src/ui/index.html, tests/mac-runtime-switch.test.mjs, tests/windows-runtime.test.mjs, tests/windows-first-run.test.mjs, tests/windows-autostart.test.mjs, tests/mcp-runtime.test.mjs, tests/startup-platform.test.mjs, tests/startup-readiness.test.mjs, tests/context-session.test.mjs, docs/planning/context-as-text.md
+- [TODO] W005: Канал VPS и переключатель каналов на Windows — Ожидает
+  - Git Commit: [PENDING] feat: Канал VPS и переключатель каналов на Windows
+  - Reference: context-as-text-0.6.96-20261006 / W005 / implementation
+  - Файлы: src/vps-tunnel.mjs, src/main.mjs, src/ui/settings-panel.mjs, src/ui/index.html, tests/vps-tunnel.test.mjs, tests/settings-chatgpt-channel.test.mjs, docs/planning/context-as-text.md
+- [TODO] W006: Windows-пакет без прежнего моста; проверка пакета — Ожидает
+  - Git Commit: [PENDING] feat: Windows-пакет без прежнего моста; проверка пакета
+  - Reference: context-as-text-0.6.96-20261006 / W006 / implementation
+  - Файлы: src/windows-runtime.mjs, scripts/prepare-windows-toolchain.mjs, scripts/verify-windows-package.mjs, scripts/release-all.mjs, tests/windows-runtime.test.mjs, tests/release-all.test.mjs, docs/planning/context-as-text.md
 - [TODO] T005: Подготовить source версии 0.6.96 и проверить релизный исходник — Ожидает
   - Git Commit: [PENDING] feat: Подготовить source версии 0.6.96 и проверить релизный исходник
   - Reference: context-as-text-0.6.96-20261006 / T005 / implementation
