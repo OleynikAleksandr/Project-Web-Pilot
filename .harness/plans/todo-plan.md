@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1307,
+  "plan_revision": 1309,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "context-as-text-0.6.96-20261006",
@@ -185,13 +185,16 @@
         "Код не меняется"
       ],
       "expected_commit_message": "docs: дополнить контракт 0.6.96 — объединение репозиториев",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "context-as-text-0.6.96-20261006",
         "task_id": "C002",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "docs/planning/context-as-text.md"
+      ]
     },
     {
       "id": "M001",
@@ -1035,7 +1038,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: context-as-text-0.6.96-20261006
 Current Task: нет
-Revision: 1307
+Revision: 1309
 
 ## Цель
 
@@ -1058,8 +1061,8 @@ Revision: 1307
   - Git Commit: [DONE] docs: расширить контракт 0.6.96 — Workflow Kit 1.5.6 и паритет Windows
   - Reference: context-as-text-0.6.96-20261006 / C001 / implementation
   - Файлы: docs/planning/context-as-text.md
-- [TODO] C002: Зафиксировать в контракте объединение репозиториев — Ожидает
-  - Git Commit: [PENDING] docs: дополнить контракт 0.6.96 — объединение репозиториев
+- [DONE] C002: Зафиксировать в контракте объединение репозиториев — Завершено
+  - Git Commit: [DONE] docs: дополнить контракт 0.6.96 — объединение репозиториев
   - Reference: context-as-text-0.6.96-20261006 / C002 / implementation
   - Файлы: docs/planning/context-as-text.md
 - [TODO] M001: Объединить репозитории: Workflow Kit становится пакетом packages/workflow-kit — Ожидает
