@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1362,
+  "plan_revision": 1364,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "recovery-on-demand-research-20261006",
@@ -234,13 +234,17 @@
         "T001 и T001R неизменны; обе части спецификации меньше 28000 байт; конфигурация/runtime/код не изменены, T002 не начата."
       ],
       "expected_commit_message": "docs: уточнить условия реализации и перехода Kit",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "recovery-on-demand-research-20261006",
         "task_id": "T001R2",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "docs/planning/workflow-kit-context-refactor.md",
+        "docs/planning/workflow-kit-context-transition.md"
+      ]
     },
     {
       "id": "T002",
@@ -668,7 +672,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: recovery-on-demand-research-20261006
 Current Task: нет
-Revision: 1362
+Revision: 1364
 
 ## Цель
 
@@ -690,8 +694,8 @@ Revision: 1362
   - Git Commit: [DONE] docs: согласовать ревью документации и recovery
   - Reference: recovery-on-demand-research-20261006 / T001R / implementation
   - Файлы: docs/planning/workflow-kit-context-refactor.md, docs/planning/workflow-kit-context-transition.md, docs/planning/recovery-on-demand-research.md, docs/DOCUMENTATION_INDEX.md
-- [TODO] T001R2: Уточнить пять условий перед реализацией Kit — Ожидает
-  - Git Commit: [PENDING] docs: уточнить условия реализации и перехода Kit
+- [DONE] T001R2: Уточнить пять условий перед реализацией Kit — Завершено
+  - Git Commit: [DONE] docs: уточнить условия реализации и перехода Kit
   - Reference: recovery-on-demand-research-20261006 / T001R2 / implementation
   - Файлы: docs/planning/workflow-kit-context-refactor.md, docs/planning/workflow-kit-context-transition.md
 - [TODO] T002: Реализовать жизненный цикл планов и документационных коммитов — Ожидает
