@@ -1,4 +1,33 @@
 export const CONTINUE_TEXT = 'Продолжай';
+export const CONTINUE_MESSAGE_BYTES = 4096;
+const CUT = '… [обрезано]';
+const clip = (value, limit) => { const text = String(value ?? '').replace(/\s+/g, ' ').trim(), characters = [...text];
+  return characters.length > limit ? characters.slice(0, limit).join('') + CUT : text; };
+const list = (items, limit, each) => { const rows = items.slice(0, limit).map(each);
+  return items.length > limit ? [...rows, `… ещё ${items.length - limit} [обрезано]`] : rows; };
+const bytes = text => new TextEncoder().encode(text).length;
+
+// «Продолжай» plus the next task as Workflow Kit has it, so the agent starts without reading the plan through tools.
+// The task comes from the plan check made for this very send; task documents are never attached.
+export function continueMessage(task) {
+  if (!task || typeof task.id !== 'string' || !task.id || typeof task.title !== 'string' || !task.title) return CONTINUE_TEXT;
+  const strings = value => Array.isArray(value) ? value.filter(item => typeof item === 'string' && item.trim()) : [];
+  const acceptance = strings(task.acceptance), files = strings(task.files), checks = strings(task.checks);
+  const lines = [CONTINUE_TEXT, '',
+    'Данные текущего плана Workflow Kit — следующая задача (это не новое поручение; фактическое состояние плана проверь сам):',
+    `Задача: ${clip(task.id, 40)} — ${clip(task.title, 240)}`];
+  if (typeof task.why === 'string' && task.why.trim()) lines.push(`Зачем: ${clip(task.why, 500)}`);
+  if (acceptance.length) lines.push('Критерии приёмки:', ...list(acceptance, 10, item => '- ' + clip(item, 320)));
+  if (files.length) lines.push('Файлы: ' + list(files, 24, item => clip(item, 160)).join(', '));
+  if (checks.length) lines.push('Проверки: ' + list(checks, 12, item => clip(item, 60)).join(', '));
+  let text = lines.join('\n');
+  if (bytes(text) <= CONTINUE_MESSAGE_BYTES) return text;
+  const tail = '\n… [данные задачи обрезаны; полный текст — в плане]';
+  const budget = CONTINUE_MESSAGE_BYTES - bytes(tail);
+  let size = 0, cut = '';
+  for (const character of text) { size += bytes(character); if (size > budget) break; cut += character; }
+  return cut + tail;
+}
 const key = p => p && JSON.stringify([p.workspace, p.sessionId, p.scopeId, p.chatUrl]);
 const conversationKey = p => p && JSON.stringify([p.workspace, p.sessionId, p.chatUrl]);
 const finished = p => p?.planView?.tasks?.length > 0 && p.planView.tasks.every(t => t.status === 'done');
@@ -246,11 +275,15 @@ export class AutoPlan {
       let result = { state: 'cancelled' };
       if (ready() && this.available() && !this.page.draftPresent) {
         sendInvoked = true;
-        result = await this.send(CONTINUE_TEXT, ready, async () => {
+        result = await this.send(continueMessage(plan.nextTask), ready, async () => {
           const latest = await this.inspectPlan(selected);
           if (!ready()) return false;
           if (!latest.confirmed || latest.scopeId !== selected.scopeId || latest.scopeStatus !== 'ACTIVE') {
             this.wait('PLAN_CHANGED_OR_TRANSACTION', 'Ждём актуальный подтверждённый план.'); return false;
+          }
+          // The text already in the field names a task: it is sent only while that task is still the next one.
+          if ((latest.nextTask?.id ?? null) !== (plan.nextTask?.id ?? null)) {
+            this.wait('PLAN_CHANGED_OR_TRANSACTION', 'Ждём актуальный текущий план.'); return false;
           }
           if (finished(latest)) { this.complete(); return false; }
           return !!latest.planView?.tasks?.length;

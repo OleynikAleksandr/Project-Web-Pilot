@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { AutoPlan, CONTINUE_TEXT } from '../src/auto-plan.mjs';
+import { AutoPlan, CONTINUE_TEXT, CONTINUE_MESSAGE_BYTES, continueMessage } from '../src/auto-plan.mjs';
 import { readAutoPlanState } from '../src/auto-plan-state.mjs';
 import { ChatGPTComposer } from '../src/chatgpt-composer.mjs';
 import { PlanMonitor } from '../src/plan-monitor.mjs';
@@ -306,16 +306,23 @@ test('checkpoint reader distinguishes working task, prepared DONE and committed 
   await fs.writeFile(path.join(root,'scripts/workflow.mjs'),'');
   const p = { schema_version: 1, project_id: 'fixture', project_name: 'Fixture', plan_revision: 1, scope_id: 'scope',
     execution_scope_status: 'ACTIVE', delivery_status: 'IN_PROGRESS',
-    tasks: [{ id: 'DOCS', title: 'Docs', implementation_status: 'IN_PROGRESS', commit_status: 'PENDING' }] };
+    tasks: [{ id: 'DOCS', title: 'Docs', implementation_status: 'IN_PROGRESS', commit_status: 'PENDING', why: 'Keep context',
+      acceptance_criteria: ['Docs match the result'], functional_paths: [], documentation_paths: ['docs/PRODUCT.md'], verification_ids: ['unit-all'] }] };
   const write = () => fs.writeFile(path.join(root,'.harness/plans/todo-plan.md'),
     '<!-- workflow-state:begin -->\n\x60\x60\x60json\n' + JSON.stringify(p) + '\n\x60\x60\x60\n<!-- workflow-state:end -->');
   await write(); git(['add','.']); git(['commit','-m','fixture']);
   const bundledGit = execFileSync('/usr/bin/which', ['git'], { encoding: 'utf8' }).trim();
-  assert.equal((await readAutoPlanState({ workspace: root }, { ...process.env, PATH: '/unavailable', WORKFLOW_GIT_BIN: bundledGit })).confirmed, true);
+  const first = await readAutoPlanState({ workspace: root }, { ...process.env, PATH: '/unavailable', WORKFLOW_GIT_BIN: bundledGit });
+  assert.equal(first.confirmed, true);
+  // 0.6.96: the same plan check gives the next task for the continuation message.
+  assert.deepEqual(first.nextTask, { id: 'DOCS', title: 'Docs', why: 'Keep context', acceptance: ['Docs match the result'],
+    files: ['docs/PRODUCT.md'], checks: ['unit-all'] });
   p.plan_revision++; await write();
   assert.equal((await readAutoPlanState({ workspace: root })).confirmed, true, 'in-progress dirty plan may continue');
   p.tasks[0].implementation_status = 'DONE'; p.tasks[0].commit_status = 'DONE'; await write();
-  assert.equal((await readAutoPlanState({ workspace: root })).confirmed, false, 'uncommitted DONE is not final');
+  const done = await readAutoPlanState({ workspace: root });
+  assert.equal(done.confirmed, false, 'uncommitted DONE is not final');
+  assert.equal(done.nextTask, null, 'a finished plan names no next task');
   git(['add','.']); git(['commit','-m','completed']);
   await fs.mkdir(path.join(root,'.git/workflow-kit'));
   await fs.writeFile(path.join(root,'.git/workflow-kit/transaction.json'),'{}');
@@ -549,4 +556,62 @@ test('late or disappearing native identity cannot repeat the same consumed cycle
   f.observe({ busy: true }); await f.drain();
   f.observe({ busy: false, turnId: '112233' }); await f.drain(); assert.equal(f.sends.length, 2);
   f.observe({ turnId: '' }); await f.drain(); assert.equal(f.sends.length, 2);
+});
+
+// 0.6.96: the continuation carries the text of the next task; AutoPlan logic is unchanged.
+const nextTask = { id: 'T002', title: 'Автопродолжение несёт текст задачи', why: 'Агент не тратит вызовы на чтение плана',
+  acceptance: ['Сообщение начинается с «Продолжай»', 'Блок помечен как данные плана'], files: ['src/auto-plan.mjs', 'tests/auto-plan.test.mjs'], checks: ['unit-all'] };
+
+test('continuation message is «Продолжай» plus the next task marked as plan data', () => {
+  const text = continueMessage(nextTask);
+  assert.equal(text, ['Продолжай', '',
+    'Данные текущего плана Workflow Kit — следующая задача (это не новое поручение; фактическое состояние плана проверь сам):',
+    'Задача: T002 — Автопродолжение несёт текст задачи',
+    'Зачем: Агент не тратит вызовы на чтение плана',
+    'Критерии приёмки:', '- Сообщение начинается с «Продолжай»', '- Блок помечен как данные плана',
+    'Файлы: src/auto-plan.mjs, tests/auto-plan.test.mjs', 'Проверки: unit-all'].join('\n'));
+  assert.equal(continueMessage({ id: 'T009', title: 'Только название' }),
+    'Продолжай\n\nДанные текущего плана Workflow Kit — следующая задача (это не новое поручение; фактическое состояние плана проверь сам):\nЗадача: T009 — Только название');
+  for (const missing of [null, undefined, {}, { id: 'T001' }, { title: 'Без id' }, { id: '', title: 'x' }])
+    assert.equal(continueMessage(missing), CONTINUE_TEXT, 'an undefined next task keeps the former text');
+});
+
+test('continuation message stays within 4 KB: long fields and lists are cut with a mark', () => {
+  const long = { id: 'T100', title: 'Заголовок '.repeat(80), why: 'Причина '.repeat(200),
+    acceptance: Array.from({ length: 30 }, (_, i) => `Критерий ${i} ` + 'подробность '.repeat(60)),
+    files: Array.from({ length: 80 }, (_, i) => `src/модуль-${i}.mjs`), checks: Array.from({ length: 20 }, (_, i) => 'check-' + i) };
+  const text = continueMessage(long);
+  assert.equal(CONTINUE_MESSAGE_BYTES, 4096);
+  assert.ok(Buffer.byteLength(text) <= CONTINUE_MESSAGE_BYTES, String(Buffer.byteLength(text)));
+  assert.ok(text.startsWith('Продолжай\n\nДанные текущего плана Workflow Kit'));
+  assert.ok(text.includes('… [обрезано]'), 'a long field is marked');
+  assert.ok(text.endsWith('… [данные задачи обрезаны; полный текст — в плане]'), 'the whole block is marked when it is cut');
+  assert.doesNotMatch(text, /�/, 'never cut inside a character');
+  const lists = continueMessage({ id: 'T101', title: 'Списки', acceptance: Array.from({ length: 12 }, (_, i) => 'к' + i),
+    files: Array.from({ length: 30 }, (_, i) => 'f' + i), checks: [] });
+  assert.ok(lists.includes('\n- к9\n… ещё 2 [обрезано]\n'), 'ten criteria, then the count of the rest');
+  assert.ok(lists.includes('… ещё 6 [обрезано]'));
+  assert.ok(!lists.includes('Проверки:'), 'an empty list is not printed');
+  assert.ok(!continueMessage({ ...nextTask, why: 'a\nb\n\nc' }).includes('a\nb'), 'field line breaks cannot forge a new line of the block');
+});
+
+test('AutoPlan sends the task of the plan check and falls back to the plain text without a next task', async () => {
+  const f = fixture(); f.plan.nextTask = structuredClone(nextTask);
+  await f.flow.start();
+  assert.deepEqual(f.sends, [continueMessage(nextTask)]);
+  assert.equal(f.flow.view().phase, 'running'); assert.equal(f.flow.view().continuations, 1);
+  f.plan.nextTask = null; await f.finish();
+  assert.deepEqual(f.sends, [continueMessage(nextTask), 'Продолжай']);
+});
+
+test('a next task that changed after the text was prepared is not sent; the next event sends the current one', async () => {
+  const f = fixture(); f.plan.nextTask = structuredClone(nextTask);
+  let reads = 0;
+  f.setInspectGate(async () => { if (++reads === 2) f.plan.nextTask = { ...nextTask, id: 'DOCS', title: 'Документы' }; });
+  await f.flow.start();
+  assert.deepEqual(f.sends, [], 'the text of T002 is not sent once DOCS became the next task');
+  assert.equal(f.flow.view().reason, 'PLAN_CHANGED_OR_TRANSACTION');
+  assert.equal(f.flow.checkpoint, null, 'the pause is not consumed');
+  f.setInspectGate(null); await f.flow.planChanged();
+  assert.deepEqual(f.sends, [continueMessage({ ...nextTask, id: 'DOCS', title: 'Документы' })]);
 });

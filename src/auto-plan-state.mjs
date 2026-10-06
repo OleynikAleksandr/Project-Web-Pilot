@@ -4,6 +4,23 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { readWorkspace } from './workspace-session.mjs';
 const execute = promisify(execFile);
+// The next unfinished task with the fields an agent needs to continue. Read together with the plan check;
+// a plan that changed in between gives no task, and the continuation falls back to the plain text.
+async function readNextTask(view) {
+  try {
+    const text = await fs.readFile(path.join(view.workspace, '.harness/plans/todo-plan.md'), 'utf8');
+    const plan = JSON.parse(text.match(/<!-- workflow-state:begin -->\s*```json\s*([\s\S]*?)```\s*<!-- workflow-state:end -->/)?.[1] ?? '');
+    if (plan.plan_revision !== view.planRevision || plan.scope_id !== view.scopeId) return null;
+    const task = plan.tasks.find(candidate => candidate?.id === view.nextTaskId);
+    if (!task || task.commit_status === 'DONE') return null;
+    const strings = value => Array.isArray(value) ? value.filter(item => typeof item === 'string' && item) : [];
+    return { id: task.id, title: task.title, why: typeof task.why === 'string' ? task.why : '',
+      acceptance: strings(task.acceptance_criteria),
+      files: [...strings(task.functional_paths), ...strings(task.documentation_paths)],
+      checks: strings(task.verification_ids) };
+  } catch { return null; }
+}
+
 // Only on relevant idle events and immediately before Send; never a Git polling loop.
 export async function readAutoPlanState(selected, environment = process.env) {
   const { workspace, sessionId } = selected;
@@ -15,6 +32,6 @@ export async function readAutoPlanState(selected, environment = process.env) {
   try { await fs.access(journal); pending = true; } catch (error) { if (error.code !== 'ENOENT') throw error; }
   const dirty = await git(['status', '--porcelain', '--', '.harness/plans/todo-plan.md']);
   const after = await readWorkspace(workspace, sessionId);
-  return { ...after, confirmed: !pending && (!after.planView.tasks.every(t => t.status === 'done') || !dirty) && before.planRevision === after.planRevision
+  return { ...after, nextTask: await readNextTask(after), confirmed: !pending && (!after.planView.tasks.every(t => t.status === 'done') || !dirty) && before.planRevision === after.planRevision
     && before.scopeId === after.scopeId };
 }

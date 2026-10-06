@@ -1179,7 +1179,10 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   const expectContinue = async (before, description) => {
     await waitFor(async () => await countMessages() === before + 1 && !autoPlan.pending
       && autoPlan.checkpoint?.status === 'sent', description, snapshot);
-    assert.equal(await browser.executeJavaScript('window.fixtureMessages.at(-1).text'), 'Продолжай');
+    // 0.6.96: the continuation carries the next task of the plan after the exact first line.
+    const continuation = await browser.executeJavaScript('window.fixtureMessages.at(-1).text');
+    assert.match(continuation, /^Продолжай\n\nДанные текущего плана Workflow Kit — следующая задача [^\n]+\nЗадача: \S+ — .+/s);
+    assert.ok(Buffer.byteLength(continuation) <= 4096, 'continuation stays within 4 KB');
   };
   const noExtraSend = async before => {
     await Promise.all([autoPlan.planChanged(), autoPlan.planChanged(), autoPlan.recover()]);

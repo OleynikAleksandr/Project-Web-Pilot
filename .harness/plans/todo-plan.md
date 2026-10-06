@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1317,
+  "plan_revision": 1319,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "context-as-text-0.6.96-20261006",
@@ -81,7 +81,9 @@
       "packages/workflow-kit/.gitattributes",
       "packages/workflow-kit/.gitignore",
       "packages/workflow-kit/scripts/check-consumer-contract.mjs",
-      "packages/workflow-kit/scripts/check-package.mjs"
+      "packages/workflow-kit/scripts/check-package.mjs",
+      "src/auto-plan-state.mjs",
+      "tests/electron-smoke.mjs"
     ],
     "documentation_paths": [
       "AGENTS.md",
@@ -455,8 +457,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "context-as-text-0.6.96-20261006",
         "task_id": "T003",
@@ -467,7 +469,9 @@
       ],
       "functional_paths": [
         "src/auto-plan.mjs",
-        "tests/auto-plan.test.mjs"
+        "tests/auto-plan.test.mjs",
+        "src/auto-plan-state.mjs",
+        "tests/electron-smoke.mjs"
       ],
       "documentation_paths": [
         "docs/planning/context-as-text.md"
@@ -485,7 +489,14 @@
         "Логика пауз, контрольных точек, повторов и отказов AutoPlan не меняется; тесты AutoPlan проходят с новым текстом",
         "Документы задачи автоматически не вкладываются"
       ],
-      "expected_commit_message": "feat: Автопродолжение несёт текст следующей задачи"
+      "expected_commit_message": "feat: Автопродолжение несёт текст следующей задачи",
+      "actual_files": [
+        "docs/planning/context-as-text.md",
+        "src/auto-plan-state.mjs",
+        "src/auto-plan.mjs",
+        "tests/auto-plan.test.mjs",
+        "tests/electron-smoke.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -1140,7 +1151,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: context-as-text-0.6.96-20261006
 Current Task: нет
-Revision: 1317
+Revision: 1319
 
 ## Цель
 
@@ -1183,10 +1194,10 @@ Revision: 1317
   - Git Commit: [DONE] feat: MCP без доставки контекста: каталог из девяти инструментов
   - Reference: context-as-text-0.6.96-20261006 / T002 / implementation
   - Файлы: tools/codex-app-server-mcp/server.py, tests/codex-app-server-mcp.test.mjs, src/mac-runtime-switch.mjs, tests/mac-runtime-switch.test.mjs, docs/planning/context-as-text.md, tools/codex-app-server-mcp/session-rules.md
-- [TODO] T003: Автопродолжение несёт текст следующей задачи — Ожидает
-  - Git Commit: [PENDING] feat: Автопродолжение несёт текст следующей задачи
+- [DONE] T003: Автопродолжение несёт текст следующей задачи — Завершено
+  - Git Commit: [DONE] feat: Автопродолжение несёт текст следующей задачи
   - Reference: context-as-text-0.6.96-20261006 / T003 / implementation
-  - Файлы: src/auto-plan.mjs, tests/auto-plan.test.mjs, docs/planning/context-as-text.md
+  - Файлы: src/auto-plan.mjs, tests/auto-plan.test.mjs, src/auto-plan-state.mjs, tests/electron-smoke.mjs, docs/planning/context-as-text.md
 - [TODO] T004: Строка для внешнего клиента в меню проекта — Ожидает
   - Git Commit: [PENDING] feat: Строка для внешнего клиента в меню проекта
   - Reference: context-as-text-0.6.96-20261006 / T004 / implementation
