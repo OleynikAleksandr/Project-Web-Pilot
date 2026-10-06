@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1344,
+  "plan_revision": 1346,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "context-as-text-0.6.96-20261006",
@@ -1169,8 +1169,8 @@
       "actual_files": []
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "context-as-text-0.6.96-20261006",
         "task_id": "T007",
@@ -1198,7 +1198,8 @@
         "Исполнитель внутри установленного приложения совпадает с исходником релиза",
         "Интерфейсом компьютера агент не управляет"
       ],
-      "expected_commit_message": "feat: Установить 0.6.96 и проверить установленные macOS-копии"
+      "expected_commit_message": "feat: Установить 0.6.96 и проверить установленные macOS-копии",
+      "actual_files": []
     },
     {
       "implementation_status": "TODO",
@@ -1336,7 +1337,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: context-as-text-0.6.96-20261006
 Current Task: нет
-Revision: 1344
+Revision: 1346
 
 ## Цель
 
@@ -1427,8 +1428,8 @@ Revision: 1344
   - Git Commit: [DONE] feat: Собрать и проверить парный релиз 0.6.96
   - Reference: context-as-text-0.6.96-20261006 / T006 / implementation
   - Файлы: scripts/release-all.mjs, docs/planning/context-as-text.md
-- [TODO] T007: Установить 0.6.96 и проверить установленные macOS-копии — Ожидает
-  - Git Commit: [PENDING] feat: Установить 0.6.96 и проверить установленные macOS-копии
+- [DONE] T007: Установить 0.6.96 и проверить установленные macOS-копии — Завершено
+  - Git Commit: [DONE] feat: Установить 0.6.96 и проверить установленные macOS-копии
   - Reference: context-as-text-0.6.96-20261006 / T007 / implementation
   - Файлы: scripts/check-installed-release.mjs, docs/planning/context-as-text.md
 - [TODO] T008: Опубликовать GitHub Release v0.6.96 и синхронизировать main — Ожидает
