@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import {atomic,json,hash,check,planPath,contextPath} from './common.mjs';
+import {atomic,json,hash,check,planPath,contextPath,isPrivate} from './common.mjs';
 import {allChanges,localPath} from './git.mjs';
 
 const identity=(root,plan,task)=>({plan:planPath(root),scope:plan.scope_id,task:task.id,iteration:task.commit_ref?.iteration??1});
@@ -32,7 +32,9 @@ export function selectTaskFiles(root,plan,task,explicit) {
   check(baseline,'TASK_FILES_UNKNOWN','Нет снимка начала задачи. Укажите фактические файлы через commit --files.',{task_id:task.id,next_action:'commit --task '+task.id+' --files \'["path/to/file"]\''});
   const mixed=baseline.preexisting.filter(p=>changed.includes(p)&&baseline.fingerprints[p]!==fingerprint(root,p));
   check(!mixed.length,'EXISTING_EDITS_CHANGED','Эти файлы уже содержали правки до задачи и изменились снова. Проверьте diff и явно укажите нужные файлы через --files.',{paths:mixed,next_action:'commit --task '+task.id+' --files <JSON array of actual paths>'});
-  selected=changed.filter(p=>!baseline.preexisting.includes(p)&&!managed(p));
+  // 1.5.6: a changed private path (.env, credentials, .codex) stays in the worktree and is reported in
+  // excluded_changes; only an explicit --files entry for it is refused below.
+  selected=changed.filter(p=>!baseline.preexisting.includes(p)&&!managed(p)&&!isPrivate(p));
  }
  for(const p of selected){check(!managed(p),'MANAGED_FILE','Состояние Workflow Kit изменяется его командами.',{path:p});contextPath(root,p);}
  const actual=selected.filter(p=>changed.includes(p));

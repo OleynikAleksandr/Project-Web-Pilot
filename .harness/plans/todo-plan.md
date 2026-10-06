@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1321,
+  "plan_revision": 1323,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "context-as-text-0.6.96-20261006",
@@ -83,7 +83,11 @@
       "packages/workflow-kit/scripts/check-consumer-contract.mjs",
       "packages/workflow-kit/scripts/check-package.mjs",
       "src/auto-plan-state.mjs",
-      "tests/electron-smoke.mjs"
+      "tests/electron-smoke.mjs",
+      "packages/workflow-kit/src/lib/git.mjs",
+      "packages/workflow-kit/src/lib/installer.mjs",
+      "resources/workspace-setup-worker.mjs",
+      "tests/workspace-setup.test.mjs"
     ],
     "documentation_paths": [
       "AGENTS.md",
@@ -562,12 +566,17 @@
         "packages/workflow-kit/scripts/check-runtime-fixture.mjs",
         "tests/workflow-kit-source.test.mjs",
         "tests/workflow-kit-recovery.test.mjs",
-        "package-lock.json"
+        "package-lock.json",
+        "packages/workflow-kit/src/lib/git.mjs",
+        "packages/workflow-kit/src/lib/installer.mjs",
+        "resources/workspace-setup-worker.mjs",
+        "tests/workspace-setup.test.mjs"
       ],
       "documentation_paths": [
         "docs/planning/context-as-text.md",
         "packages/workflow-kit/README.md",
-        "packages/workflow-kit/src/templates/CONTINUE.md"
+        "packages/workflow-kit/src/templates/CONTINUE.md",
+        "packages/workflow-kit/docs/modules/workflow-kit-package.md"
       ],
       "verification_ids": [
         "unit-all",
@@ -582,13 +591,29 @@
         "Установленный Kit этого checkout (.harness/kit) обновлён до 1.5.6 штатной командой после прохождения проверок"
       ],
       "expected_commit_message": "feat: Workflow Kit 1.5.6: вставка задачи, подсказка о полях, ложный PRIVATE_CONTEXT",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "context-as-text-0.6.96-20261006",
         "task_id": "K001",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "docs/planning/context-as-text.md",
+        "package-lock.json",
+        "packages/workflow-kit/README.md",
+        "packages/workflow-kit/docs/modules/workflow-kit-package.md",
+        "packages/workflow-kit/package.json",
+        "packages/workflow-kit/scripts/check-runtime-fixture.mjs",
+        "packages/workflow-kit/src/lib/common.mjs",
+        "packages/workflow-kit/src/lib/extend-plan.mjs",
+        "packages/workflow-kit/src/lib/git.mjs",
+        "packages/workflow-kit/src/lib/installer.mjs",
+        "packages/workflow-kit/src/lib/task-files.mjs",
+        "packages/workflow-kit/src/templates/CONTINUE.md",
+        "resources/workspace-setup-worker.mjs",
+        "tests/workspace-setup.test.mjs"
+      ]
     },
     {
       "id": "W001",
@@ -1165,7 +1190,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: context-as-text-0.6.96-20261006
 Current Task: нет
-Revision: 1321
+Revision: 1323
 
 ## Цель
 
@@ -1216,10 +1241,10 @@ Revision: 1321
   - Git Commit: [DONE] feat: Строка для внешнего клиента в меню проекта
   - Reference: context-as-text-0.6.96-20261006 / T004 / implementation
   - Файлы: src/ui/sidebar.mjs, src/main.mjs, src/preload.cjs, tests/sidebar.test.mjs, src/context-session.mjs, src/ui/progress.mjs, tests/context-session.test.mjs, tests/electron-smoke.mjs, docs/planning/context-as-text.md
-- [TODO] K001: Workflow Kit 1.5.6: вставка задачи, подсказка о полях, ложный PRIVATE_CONTEXT — Ожидает
-  - Git Commit: [PENDING] feat: Workflow Kit 1.5.6: вставка задачи, подсказка о полях, ложный PRIVATE_CONTEXT
+- [DONE] K001: Workflow Kit 1.5.6: вставка задачи, подсказка о полях, ложный PRIVATE_CONTEXT — Завершено
+  - Git Commit: [DONE] feat: Workflow Kit 1.5.6: вставка задачи, подсказка о полях, ложный PRIVATE_CONTEXT
   - Reference: context-as-text-0.6.96-20261006 / K001 / implementation
-  - Файлы: packages/workflow-kit/src/lib/extend-plan.mjs, packages/workflow-kit/src/lib/task-files.mjs, packages/workflow-kit/src/lib/command-help.mjs, packages/workflow-kit/src/lib/common.mjs, packages/workflow-kit/package.json, packages/workflow-kit/scripts/check-runtime-fixture.mjs, tests/workflow-kit-source.test.mjs, tests/workflow-kit-recovery.test.mjs, package-lock.json, docs/planning/context-as-text.md, packages/workflow-kit/README.md, packages/workflow-kit/src/templates/CONTINUE.md
+  - Файлы: packages/workflow-kit/src/lib/extend-plan.mjs, packages/workflow-kit/src/lib/task-files.mjs, packages/workflow-kit/src/lib/command-help.mjs, packages/workflow-kit/src/lib/common.mjs, packages/workflow-kit/package.json, packages/workflow-kit/scripts/check-runtime-fixture.mjs, tests/workflow-kit-source.test.mjs, tests/workflow-kit-recovery.test.mjs, package-lock.json, packages/workflow-kit/src/lib/git.mjs, packages/workflow-kit/src/lib/installer.mjs, resources/workspace-setup-worker.mjs, tests/workspace-setup.test.mjs, docs/planning/context-as-text.md, packages/workflow-kit/README.md, packages/workflow-kit/src/templates/CONTINUE.md, packages/workflow-kit/docs/modules/workflow-kit-package.md
 - [TODO] W001: Исполнитель на Windows: команды, патч, поиск Codex, статус — Ожидает
   - Git Commit: [PENDING] feat: Исполнитель на Windows: команды, патч, поиск Codex, статус
   - Reference: context-as-text-0.6.96-20261006 / W001 / implementation

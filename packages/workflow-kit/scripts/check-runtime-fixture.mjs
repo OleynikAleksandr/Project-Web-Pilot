@@ -285,6 +285,123 @@ try {
     await fs.rm(deliveryRoot + '-remote.git', { recursive: true, force: true });
   }
 
+  // 1.5.6: plan:extend places a task before a not yet started one and adds dependencies; the plan order is the
+  // execution order. Stat-only differences are not changes; a changed private path is excluded and reported.
+  const orderRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'workflow-kit-task-order-'));
+  try {
+    git(orderRoot, 'init', '-b', 'main');
+    git(orderRoot, 'config', 'user.name', 'Workflow Kit Order Test');
+    git(orderRoot, 'config', 'user.email', 'workflow-kit-order@test.local');
+    await fs.mkdir(path.join(orderRoot, 'docs/planning'), { recursive: true });
+    await fs.mkdir(path.join(orderRoot, 'config'));
+    await fs.writeFile(path.join(orderRoot, 'docs/planning/fixture.md'), '# Order fixture\n');
+    for (const name of ['README.md', 'a.txt', 'b.txt', 'config/credentials.json']) await fs.writeFile(path.join(orderRoot, name), name + '\n');
+    git(orderRoot, 'add', '.');
+    git(orderRoot, 'commit', '-m', 'test: order fixture baseline');
+    installer.install({ project: orderRoot, mode: 'existing' });
+    const orderFile = async (name, value) => {
+      const file = path.join(orderRoot, '.harness/runtime', name + '.json');
+      await fs.writeFile(file, JSON.stringify(value)); return file;
+    };
+    const revision = () => String(workflow(orderRoot, 'status').plan_revision);
+    const ids = () => planApi.readPlan(orderRoot).tasks.map(task => task.id);
+    const taskOf = id => planApi.readPlan(orderRoot).tasks.find(task => task.id === id);
+    const extend = async value => workflow(orderRoot, 'plan:extend', '--input', await orderFile('extend', value), '--expected-revision', revision());
+    const refuseExtend = async value => {
+      const before = revision();
+      const failure = workflowFailure(orderRoot, 'plan:extend', '--input', await orderFile('refused', value), '--expected-revision', before);
+      assert.equal(revision(), before, 'a refused plan:extend leaves the plan unchanged');
+      return failure;
+    };
+    workflow(orderRoot, 'plan:create', '--input', await orderFile('plan', {
+      id: 'fixture-task-order', spec: 'docs/planning/fixture.md', objective: 'Verify task placement and content-based changes', stack: 'Node.js',
+      checks: [{ id: 'code', executable: process.execPath, args: ['-e', 'process.exit(0)'], kind: 'test' },
+        { id: 'artifact', executable: process.execPath, args: ['-e', 'process.exit(0)'], kind: 'package', evidence: 'fixture package' }],
+      tasks: [{ id: 'T001', title: 'First', files: ['README.md'], checks: ['code'] },
+        { id: 'T002', title: 'Second', files: ['a.txt'], checks: ['code'], dependencies: ['T001'] },
+        { id: 'T003', title: 'Third', files: ['b.txt'], checks: ['code'] },
+        { id: 'T900', title: 'Package', files: ['README.md'], checks: ['artifact'], verification_kind: 'package' }],
+    }));
+    assert.deepEqual(ids(), ['T001', 'T002', 'T003', 'DOCS', 'T900']);
+
+    const extendHelp = run(process.execPath, [path.join(orderRoot, 'scripts/workflow.mjs'), 'plan:extend', '--help'], orderRoot);
+    assert.match(extendHelp, /\*\*Поля задачи:\*\*/);
+    for (const name of ['title', 'files', 'id', 'why', 'checks', 'dependencies', 'acceptance', 'commit', 'verification_kind', 'before'])
+      assert.ok(extendHelp.includes('`' + name + '`'), 'plan:extend --help names the task field ' + name);
+    assert.match(extendHelp, /`spec` — необязательное поле верхнего уровня рядом с `tasks`, не внутри задачи/);
+    assert.match(extendHelp, /"before":"T002"/);
+    assert.match(extendHelp, /"dependencies":\{"T003":\["T001A"\]\}/);
+    const specInside = await refuseExtend({ tasks: [{ title: 'Spec inside', files: ['a.txt'], spec: 'docs/planning/fixture.md' }] });
+    assert.equal(specInside.code, 'PLAN_SCHEMA');
+    assert.match(specInside.message, /spec указывается на верхнем уровне рядом с tasks/);
+    const unknownField = await refuseExtend({ tasks: [{ title: 'Unknown', files: ['a.txt'], priority: 1 }] });
+    assert.match(unknownField.message, /передавайте только id, title, why, files, checks, dependencies, acceptance, commit, verification_kind, before/);
+
+    await extend({ tasks: [{ id: 'T001A', title: 'Inserted', files: ['a.txt'], checks: ['code'], before: 'T002' }],
+      dependencies: { T003: ['T001A'] } });
+    assert.deepEqual(ids(), ['T001', 'T001A', 'T002', 'T003', 'DOCS', 'T900'], 'the new task stands right before T002');
+    assert.deepEqual(taskOf('T002').dependencies, ['T001', 'T001A'], 'T002 now waits for the inserted task');
+    assert.deepEqual(taskOf('T003').dependencies, ['T001A'], 'dependencies of a not started task are added by the same command');
+    assert.deepEqual(taskOf('DOCS').dependencies, ['T001', 'T001A', 'T002', 'T003']);
+    assert.deepEqual(taskOf('T001').dependencies, []);
+
+    workflow(orderRoot, 'task:start', 'T001');
+    assert.equal((await refuseExtend({ tasks: [{ title: 'Before started', files: ['a.txt'], checks: ['code'], before: 'T001' }] })).code, 'TASK_ORDER');
+    await fs.appendFile(path.join(orderRoot, 'README.md'), 'first\n');
+    workflow(orderRoot, 'commit', '--task', 'T001');
+    assert.equal(workflowFailure(orderRoot, 'task:start', 'T002').code, 'DEPENDENCY_PENDING', 'T002 cannot be started before the inserted task');
+    assert.equal(workflow(orderRoot, 'status').next_task_id, 'T001A', 'the file order is the execution order');
+    for (const [label, value] of [
+      ['a finished task', { tasks: [{ title: 'x', files: ['a.txt'], checks: ['code'], before: 'T001' }] }],
+      ['an unknown task', { tasks: [{ title: 'x', files: ['a.txt'], checks: ['code'], before: 'T777' }] }],
+      ['DOCS', { tasks: [{ title: 'x', files: ['a.txt'], checks: ['code'], before: 'DOCS' }] }],
+      ['ordinary before delivery', { tasks: [{ title: 'x', files: ['a.txt'], checks: ['code'], before: 'T900' }] }],
+      ['a dependency that stands later', { dependencies: { T001A: ['T003'] } }],
+      ['a new task at the end as a dependency of an earlier one', { tasks: [{ id: 'T050', title: 'x', files: ['a.txt'], checks: ['code'] }], dependencies: { T002: ['T050'] } }],
+      ['dependencies of a finished task', { dependencies: { T001: ['T002'] } }],
+    ]) assert.equal((await refuseExtend(value)).code, 'TASK_ORDER', label);
+    assert.equal((await refuseExtend({ dependencies: { DOCS: ['T003'] } })).code, 'PLAN_SCHEMA', 'DOCS dependencies belong to Kit');
+    assert.equal((await refuseExtend({ dependencies: { T003: [] } })).code, 'PLAN_SCHEMA');
+
+    await extend({ tasks: [{ id: 'T899', title: 'Sign', files: ['README.md'], checks: ['artifact'], verification_kind: 'package', before: 'T900' }] });
+    await extend({ tasks: [{ id: 'T004', title: 'Appended as before 1.5.6', files: ['b.txt'], checks: ['code'] }] });
+    assert.deepEqual(ids(), ['T001', 'T001A', 'T002', 'T003', 'T004', 'DOCS', 'T899', 'T900'], 'work → DOCS → delivery is kept');
+    assert.ok(['T899', 'DOCS'].every(id => taskOf('T900').dependencies.includes(id)));
+    assert.equal(taskOf('T001').commit_status, 'DONE', 'finished tasks are untouched');
+
+    // Another Git (a VM mount, another user) refreshed the index, or files were touched: no byte differs.
+    workflow(orderRoot, 'task:start', 'T001A');
+    await fs.appendFile(path.join(orderRoot, 'a.txt'), 'inserted\n');
+    const later = new Date(Date.now() + 5000);
+    for (const file of git(orderRoot, 'ls-files').split('\n')) await fs.utimes(path.join(orderRoot, file), later, later);
+    const statOnly = git(orderRoot, '-c', 'diff.autoRefreshIndex=false', 'diff', '--name-only').split('\n');
+    assert.ok(statOnly.includes('.codex/hooks.json') && statOnly.includes('README.md') && statOnly.includes('config/credentials.json'),
+      'the fixture reproduces the state in which Git lists unchanged files');
+    const inserted = workflow(orderRoot, 'commit', '--task', 'T001A');
+    assert.deepEqual(inserted.excluded_changes, [], 'an unchanged .codex/hooks.json neither stops the commit nor counts as a change');
+    assert.deepEqual(git(orderRoot, 'show', '--name-only', '--format=', 'HEAD').split('\n').sort(), ['.harness/plans/todo-plan.md', 'a.txt']);
+    assert.deepEqual(taskOf('T001A').actual_files, ['a.txt']);
+
+    // A really changed private path stays out of the task commit and is reported.
+    workflow(orderRoot, 'task:start', 'T002');
+    await fs.appendFile(path.join(orderRoot, 'a.txt'), 'second\n');
+    await fs.appendFile(path.join(orderRoot, 'config/credentials.json'), 'changed\n');
+    await fs.writeFile(path.join(orderRoot, '.env'), 'TOKEN=fixture\n');
+    const second = workflow(orderRoot, 'commit', '--task', 'T002');
+    assert.deepEqual([...second.excluded_changes].sort(), ['.env', 'config/credentials.json']);
+    assert.deepEqual(git(orderRoot, 'show', '--name-only', '--format=', 'HEAD').split('\n').sort(), ['.harness/plans/todo-plan.md', 'a.txt']);
+    assert.deepEqual(taskOf('T002').actual_files, ['a.txt']);
+    const leftInWorktree = git(orderRoot, 'status', '--porcelain').split('\n').map(line => line.trim()).sort();
+    assert.deepEqual(leftInWorktree, ['?? .env', 'M config/credentials.json'], 'both private changes are left in the worktree');
+    workflow(orderRoot, 'task:start', 'T003');
+    await fs.appendFile(path.join(orderRoot, 'b.txt'), 'third\n');
+    assert.equal(workflowFailure(orderRoot, 'commit', '--task', 'T003', '--files', JSON.stringify(['b.txt', '.env'])).code, 'PRIVATE_CONTEXT',
+      'an explicit request to commit a private path is still refused');
+    assert.deepEqual([...workflow(orderRoot, 'commit', '--task', 'T003').excluded_changes].sort(), ['.env', 'config/credentials.json']);
+  } finally {
+    await fs.rm(orderRoot, { recursive: true, force: true });
+  }
+
   const compatA = workflow(root, 'status', '--session', 'legacy-session-a');
   const compatB = workflow(root, 'status', '--session', 'legacy-session-b');
   assert.equal(compatA.scope_id, status.scope_id);

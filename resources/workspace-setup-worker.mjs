@@ -1,14 +1,14 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { inspectWithDiagnostics, install } from './workflow-kit/lib/installer.mjs';
+import { inspectWithDiagnostics, install, upgradeFrom } from './workflow-kit/lib/installer.mjs';
 import { inspectionInputs } from './workflow-kit/lib/inspection-inputs.mjs';
 import { check, hash, json, MANIFEST, VERSION, errorResult } from './workflow-kit/lib/common.mjs';
 import { hooksDirectory, BLOCK_START, BLOCK_END } from './workflow-kit/lib/installation-files.mjs';
 import { run, git, identityReady } from './workflow-kit/lib/git.mjs';
 
-// Versions the bundled installer can open or upgrade. Historical 1.4.13 is the last session-owned release.
-const supported = new Set(['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.4.0', '1.4.1', '1.4.2', '1.4.3', '1.4.4', '1.4.5',
-  '1.4.6', '1.4.7', '1.4.8', '1.4.9', '1.4.10', '1.4.11', '1.4.12', '1.4.13', VERSION]);
+// Versions the bundled installer can open or upgrade: its own list, so a new Kit version needs no second edit here.
+// Before 0.6.96 this was a separate list that stopped at 1.4.13, and projects with Kit 1.5.0–1.5.4 were refused.
+const supported = new Set(['1.0.0', ...upgradeFrom, VERSION]);
 function options(input) {
   check(input && ['inspect', 'apply', 'fingerprint'].includes(input.action), 'SETUP_ACTION', 'Неизвестное действие подготовки.');
   check(['new', 'existing'].includes(input.mode), 'SETUP_MODE', 'Выберите создание или подключение проекта.');

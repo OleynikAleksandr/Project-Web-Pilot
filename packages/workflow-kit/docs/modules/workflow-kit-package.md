@@ -129,6 +129,14 @@ Workspace Setup и project readiness проверяют только current che
 
 Последний отдельный GitHub Release **@webpilot/workflow-kit v1.5.1**: 35 runtime-файлов, SHA-256 **93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33**. Canonical source/runtime **1.5.5**: **35 файлов**, SHA-256 **8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376**. Исторические версии: 1.5.2 — `646fec106c498e004d8688a3bc40012bea1654178ce66a61b650211ab28055df`; 1.5.3 — `d59ae7b6b074e953fdd6c5d78d1f644902f0e7b9af5ad3c78d67d42f1f6a1c0f`; 1.5.4 — `3a9a3838dbfaac80bccf8cb05d3be71576797cbb6946c6b1537a9c73c383b562`. Installer сохраняет совместимые upgrade-paths; runtime regression проверяет migration, recovery budget и Git worktree isolation.
 
+## Workflow Kit 1.5.6 — задача в середину плана, изменения по содержимому
+
+`plan:extend`: поле задачи `before` ставит новую задачу перед ещё не начатой и добавляет той зависимость от новой; поле верхнего уровня `dependencies` дополняет зависимости не начатых задач; зависимость от задачи, стоящей позже, отклоняется (`TASK_ORDER`). `plan:extend --help` перечисляет поля задачи и место `spec`.
+
+Список изменений рабочей папки (`paths(root)` в `src/lib/git.mjs`) строится по содержимому: запись, которую Git показывает из-за расхождения служебных данных файла с индексом, подтверждается `git hash-object`. Индекс при этом не обновляется. Изменённый приватный путь исключается из автоматического состава коммита задачи и попадает в `excluded_changes`; явный `--files` с приватным путём отклоняется (`PRIVATE_CONTEXT`).
+
+Причина прежнего ложного `PRIVATE_CONTEXT` и описание для пользователя — в [README пакета](../../README.md). Проверка — сценарий порядка задач в `scripts/check-runtime-fixture.mjs`.
+
 ## Workflow Kit 1.5.5 — push только после DOCS
 
 По поручению пользователя 04.10.2026 ([контракт](../planning/push-after-docs.md)): управляемый `pre-push` hook отказывает в push, пока у текущего плана checkout есть незавершённая DOCS (`DOCS_BEFORE_PUSH`). Без плана и после DOCS push разрешён; повторно открытая `plan:extend` DOCS снова его останавливает. Так публикация исходников на GitHub, оформленная даже обычной задачей, не уходит раньше актуальных документов. Форма плана и правила прототипа называют такую публикацию delivery-задачей после DOCS (`verification_kind=package` с проверкой удалённой ветки). Новых полей схемы нет. Runtime 1.5.5: 35 файлов, SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`.

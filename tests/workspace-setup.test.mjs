@@ -360,7 +360,12 @@ test('real installation of the development Kit upgrades to the bundled Kit and a
     tasks: [{ id: 'T1', title: 'Fixture', why: 'Upgrade', dependencies: [], functional_paths: [], documentation_paths: ['docs/PRODUCT.md'], acceptance_criteria: ['Preserved'], verification_ids: [], expected_commit_message: 'docs: fixture' }],
   }));
   const originals = await Promise.all(listPlans(workspace).map(async p => [p.file, await fs.readFile(path.join(workspace, p.file))]));
-  assert.ok(originals.some(([file]) => file.startsWith('.harness/plans/by-id/')));
+  // A development Kit older than 1.5.0 keeps session plans in by-id: the upgrade archives them. From 1.5.0 on there is
+  // one current plan and nothing to archive; the same real upgrade (development → bundled version) is still checked.
+  const sessionOwned = originals.some(([file]) => file.startsWith('.harness/plans/by-id/'));
+  assert.equal(sessionOwned, Number(development.VERSION.split('.')[0]) === 1 && Number(development.VERSION.split('.')[1]) < 5,
+    'plan layout of the development Kit ' + development.VERSION);
+  assert.ok(originals.some(([file]) => file === '.harness/plans/todo-plan.md') || sessionOwned);
   const preview = await setup.preview({ mode: 'existing', workspace });
   assert.equal(preview.action, 'upgrade', JSON.stringify(preview));
   assert.equal(preview.version, development.VERSION); assert.equal(preview.kitVersion, VERSION);
