@@ -37,6 +37,22 @@ export function startupMessage(project, requestId, packet, toolRules = []) {
   ].join('\n');
 }
 
+// First line for a client outside Web Pilot (ChatGPT in a browser, Claude, a terminal agent): the user pastes it,
+// and the agent reads the rules and the recovery from the project folder with its ordinary tools.
+// Only the project name and folder go in: no connector address, no key.
+export function externalClientLine(project, platform = process.platform) {
+  const windows = platform === 'win32';
+  const command = windows ? 'scripts\\workflow.cmd recover --format text > .harness\\runtime\\recovery.txt'
+    : './scripts/workflow recover --format text > .harness/runtime/recovery.txt';
+  const file = windows ? '.harness\\runtime\\recovery.txt' : '.harness/runtime/recovery.txt';
+  return [
+    `Проект «${project.name}». Папка проекта (точная абсолютная папка, JSON-строка): ${JSON.stringify(project.workspace)}.`,
+    'Работай в этой папке. Сначала прочитай в ней AGENTS.md.',
+    `Затем получи контекст проекта: выполни в папке проекта команду ${command} и прочитай файл ${file} целиком, по частям, если он не помещается в один ответ инструмента.`,
+    'После этого коротко подтверди, что контекст получен, и в одном-двух предложениях опиши назначение проекта и текущее состояние плана.',
+  ].join('\n');
+}
+
 // Releases 0.6.86–0.6.95 started macOS sessions with a short message and let the agent read the context through MCP.
 // Such a chat stays bound; it carries no packet, so it is shown as a saved chat and gets the packet only on an explicit refresh.
 const startedThroughMcp = attempt => attempt?.packet?.contextMode === 'mcp';

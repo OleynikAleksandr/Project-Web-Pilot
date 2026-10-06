@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1319,
+  "plan_revision": 1321,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "context-as-text-0.6.96-20261006",
@@ -499,8 +499,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "context-as-text-0.6.96-20261006",
         "task_id": "T004",
@@ -513,7 +513,11 @@
         "src/ui/sidebar.mjs",
         "src/main.mjs",
         "src/preload.cjs",
-        "tests/sidebar.test.mjs"
+        "tests/sidebar.test.mjs",
+        "src/context-session.mjs",
+        "src/ui/progress.mjs",
+        "tests/context-session.test.mjs",
+        "tests/electron-smoke.mjs"
       ],
       "documentation_paths": [
         "docs/planning/context-as-text.md"
@@ -530,7 +534,17 @@
         "В буфер попадает текст: имя проекта, абсолютная папка (JSON-строка), указание прочитать AGENTS.md и получить recovery командой ./scripts/workflow recover --format text с выводом в файл .harness/runtime/recovery.txt, затем прочитать файл целиком по частям",
         "Строка не содержит адреса коннектора, ключей и иных секретов; действие ничего не отправляет в чат"
       ],
-      "expected_commit_message": "feat: Строка для внешнего клиента в меню проекта"
+      "expected_commit_message": "feat: Строка для внешнего клиента в меню проекта",
+      "actual_files": [
+        "src/context-session.mjs",
+        "src/main.mjs",
+        "src/preload.cjs",
+        "src/ui/progress.mjs",
+        "src/ui/sidebar.mjs",
+        "tests/context-session.test.mjs",
+        "tests/electron-smoke.mjs",
+        "tests/sidebar.test.mjs"
+      ]
     },
     {
       "id": "K001",
@@ -1151,7 +1165,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: context-as-text-0.6.96-20261006
 Current Task: нет
-Revision: 1319
+Revision: 1321
 
 ## Цель
 
@@ -1198,10 +1212,10 @@ Revision: 1319
   - Git Commit: [DONE] feat: Автопродолжение несёт текст следующей задачи
   - Reference: context-as-text-0.6.96-20261006 / T003 / implementation
   - Файлы: src/auto-plan.mjs, tests/auto-plan.test.mjs, src/auto-plan-state.mjs, tests/electron-smoke.mjs, docs/planning/context-as-text.md
-- [TODO] T004: Строка для внешнего клиента в меню проекта — Ожидает
-  - Git Commit: [PENDING] feat: Строка для внешнего клиента в меню проекта
+- [DONE] T004: Строка для внешнего клиента в меню проекта — Завершено
+  - Git Commit: [DONE] feat: Строка для внешнего клиента в меню проекта
   - Reference: context-as-text-0.6.96-20261006 / T004 / implementation
-  - Файлы: src/ui/sidebar.mjs, src/main.mjs, src/preload.cjs, tests/sidebar.test.mjs, docs/planning/context-as-text.md
+  - Файлы: src/ui/sidebar.mjs, src/main.mjs, src/preload.cjs, tests/sidebar.test.mjs, src/context-session.mjs, src/ui/progress.mjs, tests/context-session.test.mjs, tests/electron-smoke.mjs, docs/planning/context-as-text.md
 - [TODO] K001: Workflow Kit 1.5.6: вставка задачи, подсказка о полях, ложный PRIVATE_CONTEXT — Ожидает
   - Git Commit: [PENDING] feat: Workflow Kit 1.5.6: вставка задачи, подсказка о полях, ложный PRIVATE_CONTEXT
   - Reference: context-as-text-0.6.96-20261006 / K001 / implementation

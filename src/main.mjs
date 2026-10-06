@@ -25,7 +25,7 @@ import { readinessContextKey } from './context-inputs.mjs';
 const contextCache = new ContextCache({ load: workspace => runtime.loadContext(workspace),
   inputKey: workspace => readinessContextKey(workspaceSetup, workspace), onChange: () => publish() });
 import { SessionPlans } from './session-plans.mjs';
-import { ContextSession } from './context-session.mjs';
+import { ContextSession, externalClientLine } from './context-session.mjs';
 import { chatGPTEntrypoint, CHATGPT_SIGNIN_ENTRYPOINT } from './chatgpt-experience.mjs';
 import { WorkspaceDeletion } from './workspace-deletion.mjs';
 import { WorkspaceSetup } from './workspace-setup.mjs';
@@ -1043,6 +1043,14 @@ function registerIpc() {
     if (!project || project.archivedAt) throw new Error('Выберите активный проект.');
     await clipboard.writeText(project.workspace);
     return project.workspace;
+  });
+  registerAction('pilot:copy-external-client-line', async input => {
+    const project = store.project(input);
+    if (!project || project.archivedAt) throw new Error('Выберите активный проект.');
+    // Clipboard only: nothing is sent to a chat, and the line holds no connector address or key.
+    const line = externalClientLine({ name: project.displayName || project.name, workspace: project.workspace });
+    await clipboard.writeText(line);
+    return line;
   });
   registerAction('pilot:rename-project', async input => {
     if (typeof input?.workspace !== 'string') throw new Error('Выберите активный проект.');

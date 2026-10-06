@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { ContextCache } from '../src/context-cache.mjs';
-import { ContextSession, packetMatchesProject, startupMessage } from '../src/context-session.mjs';
+import { ContextSession, externalClientLine, packetMatchesProject, startupMessage } from '../src/context-session.mjs';
 import * as contextSessionModule from '../src/context-session.mjs';
 import { EXECUTOR_TOOL_RULES } from '../src/mac-runtime-switch.mjs';
 
@@ -623,4 +623,22 @@ test('known input change marks delivered recovery stale without another Send or 
   f.controller.projectChanged(); await settleEvents();
   assert.equal(f.controller.state.phase, 'stale'); assert.equal(f.sends(), 1); assert.equal(fingerprints, 1);
   await f.controller.tick(); assert.equal(f.controller.state.phase, 'stale'); assert.equal(fingerprints, 1);
+});
+
+test('the line for an external client names the folder, AGENTS.md and the recovery file and carries no secrets', () => {
+  const line = externalClientLine({ name: 'Мой проект', workspace: '/Projects/Мой "проект"' }, 'darwin');
+  assert.equal(line, [
+    'Проект «Мой проект». Папка проекта (точная абсолютная папка, JSON-строка): "/Projects/Мой \\"проект\\"".',
+    'Работай в этой папке. Сначала прочитай в ней AGENTS.md.',
+    'Затем получи контекст проекта: выполни в папке проекта команду ./scripts/workflow recover --format text > .harness/runtime/recovery.txt и прочитай файл .harness/runtime/recovery.txt целиком, по частям, если он не помещается в один ответ инструмента.',
+    'После этого коротко подтверди, что контекст получен, и в одном-двух предложениях опиши назначение проекта и текущее состояние плана.',
+  ].join('\n'));
+  const windows = externalClientLine({ name: 'Demo', workspace: 'C:\\Projects\\Demo' }, 'win32');
+  assert.ok(windows.includes('"C:\\\\Projects\\\\Demo"'), 'the folder is a JSON string');
+  assert.ok(windows.includes('scripts\\workflow.cmd recover --format text > .harness\\runtime\\recovery.txt'));
+  assert.ok(windows.includes('прочитай файл .harness\\runtime\\recovery.txt целиком'));
+  for (const text of [line, windows]) {
+    assert.doesNotMatch(text, /https?:\/\/|tunnel_|sk-|mcp|session|wp-request/i, 'no connector address, key or session data');
+    assert.ok(Buffer.byteLength(text) < 1200);
+  }
 });

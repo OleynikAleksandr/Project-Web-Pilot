@@ -239,3 +239,17 @@ test('startup deletion recovery error remains visible until settings are closed'
   f.emit({...f.state,settings:null,startupError:null});
   assert.equal(banner.hidden,true);assert.equal(banner.textContent,'');
 });
+
+test('project menu copies the line for an external client next to the full path', async t => {
+  const f = await fixture(t);
+  f.window.webPilot.copyWorkspacePath = async workspace => { f.calls.push(['copyWorkspacePath', workspace]); return { state: f.state }; };
+  f.window.webPilot.copyExternalClientLine = async workspace => { f.calls.push(['copyExternalClientLine', workspace]); return { state: f.state }; };
+  const items = [...f.document.querySelectorAll('.project-menu button')];
+  const labels = items.map(button => button.textContent);
+  const path = labels.indexOf('Скопировать полный путь');
+  assert.ok(path >= 0);
+  assert.equal(labels[path + 1], 'Скопировать строку для внешнего клиента', 'right after the path');
+  assert.ok(items[path + 1].classList.contains('copy-external-client-line'));
+  items[path + 1].click(); await f.settle();
+  assert.deepEqual(f.calls, [['copyExternalClientLine', '/demo']], 'one clipboard action with the project folder, nothing else');
+});

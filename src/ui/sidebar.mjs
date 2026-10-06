@@ -271,6 +271,7 @@ function render(state) {
         kind: 'project', workspace: project.workspace, value: project.name,
       }));
       menuAction('copy-workspace-path', 'Скопировать полный путь', () => action('copyWorkspacePath', project.workspace));
+      menuAction('copy-external-client-line', 'Скопировать строку для внешнего клиента', () => action('copyExternalClientLine', project.workspace));
       menuAction('archive-project', 'Перенести в архив', () => action('archiveProject', project.workspace));
       row.append(arrow, button, menuButton); item.append(row, menu);
       const sessions = document.createElement('ul'); sessions.className = 'sessions'; sessions.hidden = !project.expanded;

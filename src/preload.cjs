@@ -20,6 +20,7 @@ contextBridge.exposeInMainWorld('webPilot', Object.freeze({
   configureWindowsTunnel: () => ipcRenderer.invoke('pilot:configure-windows-tunnel'),
   refreshWindowsRuntime: () => ipcRenderer.invoke('pilot:refresh-windows-runtime'),
   copyWorkspacePath: workspace => ipcRenderer.invoke('pilot:copy-workspace-path', workspace),
+  copyExternalClientLine: workspace => ipcRenderer.invoke('pilot:copy-external-client-line', workspace),
   renameProject: (workspace, name) => ipcRenderer.invoke('pilot:rename-project', { workspace, name }),
   renameSession: (workspace, sessionId, name) => ipcRenderer.invoke('pilot:rename-session', { workspace, sessionId, name }),
   archiveProject: workspace => ipcRenderer.invoke('pilot:archive-project', workspace),

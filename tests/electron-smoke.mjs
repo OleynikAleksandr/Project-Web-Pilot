@@ -591,6 +591,13 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await waitFor(() => sidebar.executeJavaScript('!document.querySelector(".project-menu-button").disabled'), 'project menu enabled', snapshot);
   await sidebar.executeJavaScript(`document.querySelector('.project-menu-button').click(); document.querySelector('.copy-workspace-path').click()`);
   await waitFor(async () => await clipboard.readText() === workspace, 'copy exact workspace path from menu', snapshot);
+  // 0.6.96: the first line for a client outside Web Pilot; it goes to the clipboard only.
+  const messagesBeforeLine = await browser.executeJavaScript('window.fixtureMessages.length');
+  await sidebar.executeJavaScript(`document.querySelector('.project-menu-button').click(); document.querySelector('.copy-external-client-line').click()`);
+  await waitFor(async () => (await clipboard.readText()).includes('recover --format text > .harness/runtime/recovery.txt'), 'copy the line for an external client', snapshot);
+  const externalLine = await clipboard.readText();
+  assert.ok(externalLine.includes(JSON.stringify(workspace)) && externalLine.includes('AGENTS.md'));
+  assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), messagesBeforeLine, 'nothing is sent to the chat');
   assert.equal(await sidebar.executeJavaScript('document.getElementById("context-title").textContent'), 'Контекст передан');
   assert.equal(await sidebar.executeJavaScript('document.getElementById("context-toggle").getAttribute("aria-expanded")'), 'false');
   assert.equal(await sidebar.executeJavaScript('document.getElementById("context-details").hidden'), true);
@@ -672,7 +679,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await controller.contextCache.load(workspace);
   const warmPacketLoads = packetLoads;
   assert.deepEqual(await sidebar.executeJavaScript(`(() => { document.querySelector('.project-menu-button').click(); return Array.from(document.querySelectorAll('.project-menu button')).map(button => button.textContent); })()`),
-    ['Новый Chat', 'Новый Work', 'Переименовать', 'Скопировать полный путь', 'Перенести в архив']);
+    ['Новый Chat', 'Новый Work', 'Переименовать', 'Скопировать полный путь', 'Скопировать строку для внешнего клиента', 'Перенести в архив']);
   await sidebar.executeJavaScript(`document.querySelector('.project-menu-button').click(); document.querySelector('.rename-project').click()`);
   assert.equal(await sidebar.executeJavaScript('document.getElementById("rename-dialog").open'), true);
   assert.equal(await sidebar.executeJavaScript('document.getElementById("rename-dialog-input").value'), 'Тестовый проект с пробелами');

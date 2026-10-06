@@ -10,7 +10,7 @@ const actionLabels = {
   previewDelete: 'Проверяем содержимое папки', deleteProject: 'Удаляем проект с диска',
   recoverDeletions: 'Завершаем очистку', configureWindowsTunnel: 'Настраиваем подключение',
   refreshWindowsRuntime: 'Проверяем службы', setTheme: 'Меняем оформление',
-  setHideToolCalls: 'Обновляем отображение', copyWorkspacePath: 'Копируем путь',
+  setHideToolCalls: 'Обновляем отображение', copyWorkspacePath: 'Копируем путь', copyExternalClientLine: 'Копируем строку',
   closeSettings: 'Закрываем настройки', cancelSetup: 'Завершаем подготовку',
   cancelDelete: 'Отменяем удаление', beginCreate: 'Открываем создание проекта',
   setExpanded: 'Обновляем список сессий', setFirstSessionExperience: 'Выбираем тип сессии',
