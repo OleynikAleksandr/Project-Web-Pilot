@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1348,
+  "plan_revision": 1350,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "context-as-text-0.6.96-20261006",
@@ -1235,8 +1235,8 @@
       "actual_files": []
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "context-as-text-0.6.96-20261006",
         "task_id": "T009",
@@ -1267,7 +1267,13 @@
         "Локальная папка /Users/oleksandroliinyk/VSCODE/WorkflowKit не удаляется и не меняется сверх названного коммита",
         "scripts/check-workflow-kit-archive.mjs подтверждает архивный статус и ссылку запросом к GitHub; docs/RELEASE.md называет последний коммит прежнего репозитория"
       ],
-      "expected_commit_message": "feat: Прежний репозиторий WorkflowKit: только чтение и ссылка на новый дом"
+      "expected_commit_message": "feat: Прежний репозиторий WorkflowKit: только чтение и ссылка на новый дом",
+      "actual_files": [
+        "docs/RELEASE.md",
+        "docs/VERIFICATION.md",
+        "docs/planning/context-as-text.md",
+        "scripts/check-workflow-kit-archive.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -1338,7 +1344,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: context-as-text-0.6.96-20261006
 Current Task: нет
-Revision: 1348
+Revision: 1350
 
 ## Цель
 
@@ -1437,8 +1443,8 @@ Revision: 1348
   - Git Commit: [DONE] feat: Опубликовать GitHub Release v0.6.96 и синхронизировать main
   - Reference: context-as-text-0.6.96-20261006 / T008 / implementation
   - Файлы: scripts/check-github-release.mjs, docs/planning/context-as-text.md
-- [TODO] T009: Прежний репозиторий WorkflowKit: только чтение и ссылка на новый дом — Ожидает
-  - Git Commit: [PENDING] feat: Прежний репозиторий WorkflowKit: только чтение и ссылка на новый дом
+- [DONE] T009: Прежний репозиторий WorkflowKit: только чтение и ссылка на новый дом — Завершено
+  - Git Commit: [DONE] feat: Прежний репозиторий WorkflowKit: только чтение и ссылка на новый дом
   - Reference: context-as-text-0.6.96-20261006 / T009 / implementation
   - Файлы: scripts/check-workflow-kit-archive.mjs, docs/planning/context-as-text.md, docs/RELEASE.md, docs/VERIFICATION.md
 - [TODO] T010: Послерелизная сверка всех документов и README, синхронизация origin/main — Ожидает
