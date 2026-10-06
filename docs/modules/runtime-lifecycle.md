@@ -2,6 +2,8 @@
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](../SOURCE_WORKSPACES.md).
 
+> **С 0.6.96** на Windows действует тот же lifecycle исполнителя, что на macOS ([контракт](../planning/context-as-text.md), [спецификация исполнителя](codex-app-server-executor.md), раздел «Один исполнитель на macOS и Windows — 0.6.96»). Всё, что ниже сказано о Windows-runtime из архива (`WindowsRuntimeBootstrap`, `windows-control.py`, `windows-first-run.py`, порты 17842/17843, `CodexLocalWindows`), — история до 0.6.96; `windows-control.py` остаётся в пакете только для одноразовой остановки прежнего сервера инструментов.
+>
 > **С 0.6.91** на macOS один backend — Codex App Server Local Mac, его lifecycle описан в разделе «macOS: только executor — 0.6.91» в конце документа и в [спецификации executor](codex-app-server-executor.md). Разделы о Codex Local Mac (`mac-control.py`, `MacRuntimeBootstrap`, `mac-runtime.zip`, `macRuntimeMode`, переключатель в Settings) — история; разделы о Windows действуют.
 
 ## Назначение

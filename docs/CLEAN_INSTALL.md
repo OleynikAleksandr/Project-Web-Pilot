@@ -2,6 +2,8 @@
 
 > **0.6.91:** первый запуск macOS теперь ставит Codex App Server Local Mac ([описание](modules/first-run-onboarding.md)). Все записи ниже о чистой macOS получены с прежним runtime Codex Local Mac; с executor чистая macOS не проверялась — ни с установленным Codex, ни без него. Native Windows 0.6.91 также не проверялась.
 
+> **0.6.96 (source, не собрана):** первый запуск Windows теперь ставит тот же исполнитель Codex App Server, что и macOS, и требует установленный Codex CLI; все записи ниже о чистой Windows получены с прежним сервером инструментов из архива. С исполнителем ни чистая Windows, ни чистая macOS не проверялись — это остаётся за пользователем ([контракт](planning/context-as-text.md), раздел «Проверка»).
+
 Текущая локальная и опубликованная **0.6.95** установлена поверх существующего Mac; bundled Workflow Kit 1.5.5, общий ASAR root и `/Applications` — `506cd28c9bf954fe732a53df0b6efba7d545d20e06bcdef68037a86546ae251d`. Обе копии прошли installed gate с сохранением identity. Это **не clean install**; clean macOS с текущим executor и native Windows 0.6.95 не выполнялись. Предыдущая установленная/опубликованная версия — 0.6.94.
 
 Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).

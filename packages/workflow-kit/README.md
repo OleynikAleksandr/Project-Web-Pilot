@@ -4,7 +4,7 @@
 
 Пакет живёт в репозитории [Project Web Pilot](https://github.com/OleynikAleksandr/Project-Web-Pilot), папка `packages/workflow-kit`. До 06.10.2026 он разрабатывался в отдельном репозитории [WorkflowKit](https://github.com/OleynikAleksandr/WorkflowKit); история перенесена сюда одной операцией `git subtree` (последний коммит прежнего репозитория на момент переноса — `6bbec655497eaea69d5c5825c68e9bdf78a01c18`). Прежний репозиторий после публикации Web Pilot 0.6.96 переводится в архив: только чтение, со ссылкой сюда. Последний отдельный релиз пакета — [v1.5.1](https://github.com/OleynikAleksandr/WorkflowKit/releases/tag/v1.5.1).
 
-Версия — **1.5.6**. Она записана в двух местах, которые проверка пакета сверяет между собой: `package.json` и `src/lib/common.mjs`. Минимальный Node.js — 22 (`engines.node: >=22`); рабочая среда Web Pilot — Node 24.21.0.
+Версия — **1.5.6**; она входит в source Project Web Pilot 0.6.96, опубликованный Web Pilot 0.6.95 включает 1.5.5. Версия записана в двух местах, которые проверка пакета сверяет между собой: `package.json` и `src/lib/common.mjs`. Минимальный Node.js — 22 (`engines.node: >=22`); рабочая среда Web Pilot — Node 24.21.0.
 
 ## Основная модель
 

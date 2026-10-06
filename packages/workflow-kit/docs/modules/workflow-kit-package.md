@@ -2,11 +2,11 @@
 
 С 06.10.2026 пакет живёт в `packages/workflow-kit` репозитория Project Web Pilot; до этого — отдельный репозиторий WorkflowKit, история которого перенесена. Обзор, устройство и история версий — [README пакета](../../README.md).
 
-Canonical source/runtime `@webpilot/workflow-kit` — **1.5.5**, 35 файлов, SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`. Последний отдельный GitHub Release Kit — **v1.5.1**, 35 файлов, SHA-256 `93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33`. Текущий опубликованный consumer — Project Web Pilot **0.6.95**, bundled runtime — Workflow Kit **1.5.5**.
+Canonical source/runtime `@webpilot/workflow-kit` — **1.5.6**, 35 файлов; начиная с 1.5.6 SHA-256 в документах не ведётся — копии сверяются с исходником пакета. Версия 1.5.5, включённая в опубликованный Web Pilot 0.6.95, — 35 файлов, SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`. Последний отдельный GitHub Release Kit — **v1.5.1**, 35 файлов, SHA-256 `93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33`. Текущий опубликованный consumer — Project Web Pilot **0.6.95**, bundled runtime — Workflow Kit **1.5.5**.
 
 ## Среда Node.js
 
-Минимальное требование `@webpilot/workflow-kit` — **Node 22+**: его задают `package.json` (`engines.node: >=22`), CLI и installer launcher. Рабочая среда разработки и опубликованный Web Pilot 0.6.95 используют **Node 24.21.0**. Canonical package/runtime version — 1.5.5; последний отдельный GitHub Release Kit — v1.5.1.
+Минимальное требование `@webpilot/workflow-kit` — **Node 22+**: его задают `package.json` (`engines.node: >=22`), CLI и installer launcher. Рабочая среда разработки и опубликованный Web Pilot 0.6.95 используют **Node 24.21.0**. Canonical package/runtime version — 1.5.6 (в опубликованном Web Pilot 0.6.95 — 1.5.5); последний отдельный GitHub Release Kit — v1.5.1.
 
 ## Назначение
 
@@ -111,7 +111,9 @@ Web Pilot сохраняет старые chat/session records и их chat URL/
 
 Workspace Setup и project readiness проверяют только current checkout state и не full-recover-ят historical plans.
 
-## Актуальная интеграция — Project Web Pilot 0.6.95
+## Актуальная интеграция — Project Web Pilot 0.6.95 (опубликована) и source 0.6.96
+
+Source Project Web Pilot 0.6.96 (сборка ещё не выполнялась) включает Workflow Kit 1.5.6 из этого пакета. Клиент 0.6.96 вставляет пакет `recover` первым сообщением на macOS и Windows, сообщение автопродолжения берёт данные следующей задачи из текущего плана, а строка для внешнего клиента просит агента выполнить `recover --format text > .harness/runtime/recovery.txt`. Доставка пакета через MCP (0.6.86–0.6.95) удалена. Мастер подготовки проекта Web Pilot берёт список обновляемых версий из установщика пакета (`upgradeFrom`). [Контракт](../../../../docs/planning/context-as-text.md).
 
 Опубликованная парная Web Pilot 0.6.95 включает canonical Workflow Kit 1.5.5 (35 файлов, SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`). Клиент использует Node 24.21.0 и сохраняет checkout-scoped current-plan contract; изменения 0.6.95 относятся к macOS Codex App Server MCP и не меняют API/CLI/runtime Kit. Windows x64 0.6.95 собран и проверен на Mac; native Windows остаётся отдельной проверкой. [Release Web Pilot 0.6.95](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.95).
 
@@ -127,7 +129,7 @@ Workspace Setup и project readiness проверяют только current che
 
 Все четыре скрипта запускает `npm run check` пакета (из корня репозитория — `npm run check --prefix packages/workflow-kit`, в плане Project Web Pilot — проверка `kit-check`). Закреплённых версии, числа файлов и SHA-256 в скриптах нет: установленная и упакованная копии сверяются с `src/` файл в файл; значения ниже — справка о выпущенных состояниях.
 
-Последний отдельный GitHub Release **@webpilot/workflow-kit v1.5.1**: 35 runtime-файлов, SHA-256 **93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33**. Canonical source/runtime **1.5.5**: **35 файлов**, SHA-256 **8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376**. Исторические версии: 1.5.2 — `646fec106c498e004d8688a3bc40012bea1654178ce66a61b650211ab28055df`; 1.5.3 — `d59ae7b6b074e953fdd6c5d78d1f644902f0e7b9af5ad3c78d67d42f1f6a1c0f`; 1.5.4 — `3a9a3838dbfaac80bccf8cb05d3be71576797cbb6946c6b1537a9c73c383b562`. Installer сохраняет совместимые upgrade-paths; runtime regression проверяет migration, recovery budget и Git worktree isolation.
+Последний отдельный GitHub Release **@webpilot/workflow-kit v1.5.1**: 35 runtime-файлов, SHA-256 **93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33**. Canonical source/runtime **1.5.6**: **35 файлов**, SHA-256 не ведётся. Версия 1.5.5: **35 файлов**, SHA-256 **8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376**. Исторические версии: 1.5.2 — `646fec106c498e004d8688a3bc40012bea1654178ce66a61b650211ab28055df`; 1.5.3 — `d59ae7b6b074e953fdd6c5d78d1f644902f0e7b9af5ad3c78d67d42f1f6a1c0f`; 1.5.4 — `3a9a3838dbfaac80bccf8cb05d3be71576797cbb6946c6b1537a9c73c383b562`. Installer сохраняет совместимые upgrade-paths; runtime regression проверяет migration, recovery budget и Git worktree isolation.
 
 ## Workflow Kit 1.5.6 — задача в середину плана, изменения по содержимому
 

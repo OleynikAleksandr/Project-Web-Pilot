@@ -24,19 +24,21 @@
 <!-- workflow-kit:end -->
 ## Project Web Pilot
 
+**Текущий source — 0.6.96; сборка ещё не выполнялась** ([контракт](planning/context-as-text.md)). Опубликована и установлена по-прежнему 0.6.95. Что меняет 0.6.96: (1) контекст снова передаётся текстом — новая сессия на macOS и Windows получает полный пакет проекта первым сообщением вместе с правилами работы с инструментами; MCP контекст не доставляет и отдаёт только девять инструментов (`workflow_context_recover` и `session-rules.md` удалены); (2) автопродолжение несёт текст следующей задачи плана, в меню проекта есть «Скопировать строку для внешнего клиента»; (3) Workflow Kit — пакет `packages/workflow-kit` этого репозитория, версия 1.5.6: вставка задачи перед указанной, подсказка о полях задачи, устранён ложный отказ `PRIVATE_CONTEXT`; (4) Windows работает через тот же исполнитель Codex App Server, что и macOS: тот же каталог из девяти инструментов, те же каналы (Secure MCP Tunnel по умолчанию и VPS), тот же жизненный цикл служб; прежний сервер инструментов Windows (38 самодельных инструментов из архива) не используется, на Windows теперь нужен установленный Codex. Полный `npm test`: 554 теста, 553 passed, 1 skipped, 0 failed; Electron smoke и `npm run check:codex-tools` (`rust-v0.160.0`) пройдены. **Windows-часть проверена только на Mac тестами с подменой платформы; на настоящей Windows не запускалась — до приёмки пользователем рабочей версией для Windows остаётся 0.6.95.**
+
 **Текущая установленная и опубликованная версия — 0.6.95 / Workflow Kit 1.5.5; предыдущая — 0.6.94** ([контракт](planning/codex-native-tools-macos.md)). 0.6.95 убирает самодельную корзину: `delete_path`, `list_trash`, `restore_trash` и их код удалены, каталог macOS — 10 инструментов. Удаление выполняется как в Codex — `rm` через `exec_command` или `*** Delete File` в `apply_patch`; откат даёт git. Исполнитель при запуске убирает прежнюю папку `trash` только пустой. Полный `npm test`: 553 теста, 549 passed, 4 skipped, 0 failed; `npm run check:codex-tools` подтвердил `rust-v0.160.0`. Release собран один раз из source commit `7416c88c7a96b358b21b0f1744decee6fb5e3fb7`, обе macOS-копии установлены как 0.6.95 с ASAR `506cd28c9bf954fe732a53df0b6efba7d545d20e06bcdef68037a86546ae251d`; [GitHub Release v0.6.95](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.95) содержит ровно шесть проверенных assets. Bundled Workflow Kit — 1.5.5; его документы синхронизированы commit `6bbec655497eaea69d5c5825c68e9bdf78a01c18`. Остальные десять инструментов, `codex-tools.lock.json`, Windows-runtime и VPS channel не менялись. После обновления нужно перезапустить Web Pilot и обновить инструменты в ChatGPT. Native Windows и clean VM остаются отдельной приёмкой. История выпусков — [RELEASE.md](RELEASE.md).
 
-**Предыдущая версия 0.6.94 / Workflow Kit 1.5.5** ([контракт](planning/codex-native-tools-macos.md)). 0.6.94 сохраняет 13-tool каталог, исправляет Wall time/race `write_stdin`, ограничивает command-output 8000 оценочных токенов, заполняет descriptions всех tools/parameters, добавляет image-result hint и единое pre-execution retry-rule. Release sourceCommit `24b04476…`, обе Mac-копии установлены, GitHub содержит ровно шесть проверенных assets; WorkflowKit docs синхронизированы commit `6c8ad190…`. Native Windows остаётся отдельной проверкой. `codex-tools.lock.json`, Windows-runtime и VPS channel не менялись. История выпусков — [RELEASE.md](RELEASE.md).
+Прежние выпуски: краткие сводки — [RELEASE.md](RELEASE.md), раздел «Сводки прежних выпусков из обзорных документов».
 
 | Документ | Назначение |
 | --- | --- |
 | README.md | Актуальный запуск, пользовательское поведение, ограничения и разработка |
 | docs/DECISIONS.md | Решения пользователя и зафиксированные границы полномочий |
-| docs/CONTEXT_DELIVERY.md | Канонический контракт recovery capsule и доставки контекста в ChatGPT |
+| docs/CONTEXT_DELIVERY.md | Канонический контракт recovery capsule и доставки контекста в ChatGPT; с 0.6.96 — полный пакет первым сообщением на обеих системах, доставка через MCP (0.6.86–0.6.95) — история |
 | docs/modules/workflow-kit-recovery.md | Specification Workflow Kit / Context Recovery / project continuity |
 | docs/modules/project-doctor.md | Контракт автономного Доктора проекта и границы автоматического ремонта |
 | docs/modules/runtime-lifecycle.md | Specification self-healing MCP/tunnel lifecycle |
-| docs/modules/codex-app-server-executor.md | Единственный macOS executor: 13 tools с 0.6.92; 0.6.93 — stdin/timing correction; 0.6.94 — Wall time/race, output 8000, полный schema/image hint/retry-rule; опубликованная 0.6.95 — 10 tools, корзина удалена; lifecycle 0.6.91, наблюдение без UI control и исторический A/B |
+| docs/modules/codex-app-server-executor.md | Единственный executor обеих систем с 0.6.96: 9 tools, только инструменты, ветки Windows, службы и компоненты Windows. История macOS: 13 tools с 0.6.92; 0.6.93 — stdin/timing correction; 0.6.94 — Wall time/race, output 8000, полный schema/image hint/retry-rule; опубликованная 0.6.95 — 10 tools, корзина удалена; lifecycle 0.6.91, наблюдение без UI control и исторический A/B |
 | docs/modules/workspace-sessions.md | Specification проектов, Chat/Work sessions, session tree, переходов после scope, оформления и сохранения геометрии интерфейса |
 | docs/planning/session-title-sync.md | Контракт auto/manual session title и server-side синхронизации с native ChatGPT Recents |
 | docs/planning/input-instruction-delivery-ordering.md | Канонический порядок DOCS → delivery, startupMessage guard и границы незапланированных build/publish |
@@ -58,7 +60,7 @@
 | docs/VERIFICATION.md | Проверки, release evidence и границы пользовательской приёмки |
 | docs/RELEASE.md | Парный выпуск macOS/Windows, постоянный macOS app, Finder-алиас, ZIP, GitHub Release и проверка доставки |
 | docs/CLEAN_INSTALL.md | Стенд Clean/Test macOS/Windows, историческое evidence первого запуска, обновление существующего Mac до 0.6.80 и границы clean/native-проверок |
-| docs/TRANSFER_TO_WINDOWS.md | Опубликованная Windows x64 0.6.80, hashes и самостоятельная проверка |
+| docs/TRANSFER_TO_WINDOWS.md | Windows x64: опубликованная поставка, hashes, переход 0.6.95 → 0.6.96 (Codex CLI, прежний сервер инструментов останавливается) и самостоятельная проверка |
 | docs/WORKSPACE_SETUP.md | Создание/подключение workspace и install/upgrade Workflow Kit |
 | docs/PROJECT_ARCHIVE.md | Архив workspace, возврат и безопасное локальное удаление; веб-чаты сохраняются |
 ## Обязательная навигация проекта
@@ -74,7 +76,7 @@
 | `packages/workflow-kit/docs/planning/project-rename.md` | Kit 1.5.3: команда project:rename |
 | `packages/workflow-kit/docs/planning/single-active-plan-migration.md` | Kit 1.5.0: переход к одному current plan на checkout |
 | `packages/workflow-kit/docs/planning/canonical-workflow-kit-package.md` | Исторический план выделения пакета |
-| `docs/planning/context-as-text.md` | 0.6.96: объединение репозиториев, Workflow Kit 1.5.6, контекст текстом, паритет Windows |
+| `docs/planning/context-as-text.md` | 0.6.96, действующий контракт: объединение репозиториев, Workflow Kit 1.5.6, контекст текстом, MCP из 9 инструментов, автопродолжение с текстом задачи, строка для внешнего клиента, паритет Windows с записями «Как выполнено» по каждой задаче и перечнем непроверенного на Windows |
 | `docs/planning/workflow-kit-package-migration.md` | Контракт миграции WebPilot на package + staging |
 | `scripts/check-workflow-kit-dependency.mjs` | Зависимость ведёт в `packages/workflow-kit`, одна версия в `package.json` и `common.mjs`, экспорты; состав и digest исходника пакета |
 | `scripts/stage-workflow-kit.mjs` | Детерминированный generated staging в `resources/workflow-kit` |
