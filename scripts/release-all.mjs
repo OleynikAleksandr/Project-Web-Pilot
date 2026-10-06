@@ -14,7 +14,7 @@ import { WINDOWS_RUNTIME_ARCHIVE, WINDOWS_RUNTIME_SHA256 } from '../src/windows-
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
 // Everything electron-packager may take from the project root; package.json --ignore allows exactly these.
 export const PACKAGED_ROOTS = new Set(['src', 'node_modules', 'package.json', 'LICENSE']);
-// Every file of a GitHub Release. The pinned Windows runtime ships next to the packages,
+// Every file of a GitHub Release. The pinned archive of Windows components ships next to the packages,
 // so a fresh clone can build the Windows package without a private folder.
 export const releaseAssetNames = version => [`Project-Web-Pilot-${version}-macOS-arm64.zip`, `Project-Web-Pilot-${version}-Windows-x64.zip`,
   WINDOWS_RUNTIME_ARCHIVE, 'SHA256SUMS.txt', 'INSTALL.txt', 'release-manifest.json'];
@@ -140,7 +140,7 @@ export async function releaseAll({ root = fileURLToPath(new URL('..', import.met
         asarSha256: proof.asarSha256, codexExecutorFiles: codexExecutorSources.length });
     }
     const runtimeSource = path.join(runtime, 'windows-payload', WINDOWS_RUNTIME_ARCHIVE);
-    if (await sha256File(runtimeSource) !== WINDOWS_RUNTIME_SHA256) throw new Error('Windows runtime archive differs from the pinned payload');
+    if (await sha256File(runtimeSource) !== WINDOWS_RUNTIME_SHA256) throw new Error('The archive of Windows components differs from the pinned one');
     await fs.copyFile(runtimeSource, path.join(release, WINDOWS_RUNTIME_ARCHIVE));
     const windowsRuntimeArchive = { file: WINDOWS_RUNTIME_ARCHIVE, bytes: (await fs.stat(runtimeSource)).size, sha256: WINDOWS_RUNTIME_SHA256 };
     const shipped = [...artifacts, windowsRuntimeArchive];
@@ -155,7 +155,7 @@ export async function releaseAll({ root = fileURLToPath(new URL('..', import.met
       if (await sha256File(destination) !== artifact.sha256) throw new Error('Delivery copy mismatch');
     }
     const hashes = shipped.map(a => `${a.sha256}  ${a.file}`).join('\n') + '\n';
-    const instructions = `Project Web Pilot ${version}\n\nmacOS arm64: постоянное приложение в корне проекта обновлено; ZIP предназначен для переноса.\nWindows x64: распакуйте всю папку ZIP на локальный диск Windows, затем запустите Project Web Pilot.exe. Мастер подготовит компоненты, туннель и покажет подключение Codex Local Windows MCP в ChatGPT. Для этой Windows используйте отдельный туннель.\n\nОба пакета собраны одной командой и сверены с исходниками. Подключение личного аккаунта и проверка файлов в Windows выполняются пользователем отдельно. Windows ARM64 использует эмуляцию x64; отдельной сборки ARM64 нет.\n\n${WINDOWS_RUNTIME_ARCHIVE} — закреплённый Windows runtime для сборки из исходников; для установки он не нужен, он уже находится внутри Windows-пакета.\n`;
+    const instructions = `Project Web Pilot ${version}\n\nmacOS arm64: постоянное приложение в корне проекта обновлено; ZIP предназначен для переноса.\nWindows x64: распакуйте всю папку ZIP на локальный диск Windows, затем запустите Project Web Pilot.exe. На компьютере должен быть установлен Codex CLI. Мастер подготовит компоненты и туннель и покажет подключение «Codex App Server Local Windows» в ChatGPT; уже созданное подключение с этим туннелем достаточно обновить (Refresh). Для этой Windows используйте отдельный туннель.\n\nОба пакета собраны одной командой и сверены с исходниками. Подключение личного аккаунта и проверка файлов в Windows выполняются пользователем отдельно. Windows ARM64 использует эмуляцию x64; отдельной сборки ARM64 нет.\n\n${WINDOWS_RUNTIME_ARCHIVE} — закреплённый архив компонентов Windows (uv, tunnel-client, ripgrep, MinGit) для сборки из исходников; для установки он не нужен, он уже находится внутри Windows-пакета.\n`;
     for (const dir of [release, delivery]) {
       await fs.writeFile(path.join(dir, 'SHA256SUMS.txt'), hashes);
       await fs.writeFile(path.join(dir, 'INSTALL.txt'), instructions);

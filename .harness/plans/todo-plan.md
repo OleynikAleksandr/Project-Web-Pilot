@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1334,
+  "plan_revision": 1336,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "context-as-text-0.6.96-20261006",
@@ -945,13 +945,21 @@
         "В поставке по-прежнему шесть файлов; releaseAssetNames не меняется"
       ],
       "expected_commit_message": "feat: Windows-пакет без прежнего сервера инструментов; проверка пакета",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "context-as-text-0.6.96-20261006",
         "task_id": "W006",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "docs/planning/context-as-text.md",
+        "scripts/prepare-windows-toolchain.mjs",
+        "scripts/release-all.mjs",
+        "scripts/verify-windows-package.mjs",
+        "src/windows-runtime.mjs",
+        "tests/windows-runtime.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -1289,7 +1297,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: context-as-text-0.6.96-20261006
 Current Task: нет
-Revision: 1334
+Revision: 1336
 
 ## Цель
 
@@ -1364,8 +1372,8 @@ Revision: 1334
   - Git Commit: [DONE] feat: Канал VPS и переключатель каналов на Windows
   - Reference: context-as-text-0.6.96-20261006 / W005 / implementation
   - Файлы: src/vps-tunnel.mjs, src/main.mjs, src/ui/settings-panel.mjs, src/ui/index.html, tests/vps-tunnel.test.mjs, tests/settings-chatgpt-channel.test.mjs, src/mac-runtime-switch.mjs, tests/codex-app-server-mcp.test.mjs, tests/mac-runtime-switch.test.mjs, tools/codex-app-server-mcp/control.py, docs/planning/context-as-text.md
-- [TODO] W006: Windows-пакет без прежнего сервера инструментов; проверка пакета — Ожидает
-  - Git Commit: [PENDING] feat: Windows-пакет без прежнего сервера инструментов; проверка пакета
+- [DONE] W006: Windows-пакет без прежнего сервера инструментов; проверка пакета — Завершено
+  - Git Commit: [DONE] feat: Windows-пакет без прежнего сервера инструментов; проверка пакета
   - Reference: context-as-text-0.6.96-20261006 / W006 / implementation
   - Файлы: src/windows-runtime.mjs, scripts/prepare-windows-toolchain.mjs, scripts/verify-windows-package.mjs, scripts/release-all.mjs, tests/windows-runtime.test.mjs, tests/release-all.test.mjs, docs/planning/context-as-text.md
 - [TODO] T005: Подготовить source версии 0.6.96 и проверить релизный исходник — Ожидает

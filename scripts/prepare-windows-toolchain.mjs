@@ -16,7 +16,7 @@ export const NODE_SHA256 = '158f7685b44de51f6c0df1d153526cbcd3e1bc739a8dfc607721
 export const NODE_URL = `https://nodejs.org/dist/v${NODE_VERSION}/${NODE_ARCHIVE}`;
 export const NODE_FOLDER = `node-v${NODE_VERSION}-win-x64`;
 
-// The pinned runtime archive is published with every GitHub Release next to the packages.
+// The pinned archive of Windows components (uv, tunnel-client, ripgrep, MinGit) is published with every GitHub Release next to the packages.
 export const WINDOWS_RUNTIME_URL = `https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/latest/download/${WINDOWS_RUNTIME_ARCHIVE}`;
 
 export function windowsRuntimeSourceCandidates(root = ROOT, environment = process.env) {
@@ -59,13 +59,13 @@ export async function ensureWindowsRuntimePayload(root, cacheDir, { environment 
   try { await fetchArchive(WINDOWS_RUNTIME_URL, destination); }
   catch (error) {
     await fs.rm(destination, { force: true });
-    throw new Error(`Windows Codex Local payload is missing and its download failed (${error.message}). ${manual}`);
+    throw new Error(`The pinned archive of Windows components is missing and its download failed (${error.message}). ${manual}`);
   }
   let downloaded = null;
   try { downloaded = await sha256File(destination); } catch {}
   if (downloaded !== expectedSha256) {
     await fs.rm(destination, { force: true });
-    throw new Error(`Downloaded Windows Codex Local payload has SHA-256 ${downloaded ?? 'missing'}, expected ${expectedSha256}. ${manual}`);
+    throw new Error(`Downloaded archive of Windows components has SHA-256 ${downloaded ?? 'missing'}, expected ${expectedSha256}. ${manual}`);
   }
   return { file: destination, sha256: expectedSha256, reused: false, downloaded: true };
 }

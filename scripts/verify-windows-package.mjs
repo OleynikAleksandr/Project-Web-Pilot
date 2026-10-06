@@ -3,7 +3,8 @@ import fs from 'node:fs/promises';
 import fsSync from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { WINDOWS_RUNTIME_ARCHIVE, WINDOWS_RUNTIME_SHA256 } from '../src/windows-runtime.mjs';
+import { WINDOWS_RUNTIME_ARCHIVE, WINDOWS_RUNTIME_SHA256, WINDOWS_VENDOR_TOOLS } from '../src/windows-runtime.mjs';
+import { fileReader, zipEntries, zipEntryData } from '../src/zip-archive.mjs';
 import { NODE_ARCHIVE, NODE_FOLDER, NODE_SHA256 } from './prepare-windows-toolchain.mjs';
 import { verifyPackagedSources } from './release-all.mjs';
 import { verifyWorkflowKitRuntime } from './stage-workflow-kit.mjs';
@@ -14,6 +15,27 @@ async function requireFile(file, label) {
   const stat = await fs.stat(file).catch(() => null);
   if (!stat?.isFile()) throw new Error(`${label} missing: ${file}`);
   return stat;
+}
+
+// The executor is the only local MCP of the Windows package; these files are what the app syncs and runs.
+export const WINDOWS_EXECUTOR_FILES = Object.freeze(['server.py', 'app_server_client.py', 'control.py', 'tunnel_prompt.py',
+  'windows_desktop.py', 'windows_notify.ps1', 'requirements.txt', 'codex-tools.lock.json']);
+
+// The pinned archive is used only as the source of four tools: its vendor list must name them and hold their archives.
+export async function vendorTools(archive) {
+  const reader = await fileReader(archive);
+  try {
+    const entries = new Map((await zipEntries(reader)).map(entry => [entry.name, entry]));
+    const manifestEntry = entries.get('Windows-Codex-Local/vendor/manifest.json');
+    if (!manifestEntry) throw new Error('The archive of Windows components has no vendor list');
+    const manifest = JSON.parse((await zipEntryData(reader, manifestEntry)).toString('utf8').replace(/^\uFEFF/, ''));
+    return Object.keys(WINDOWS_VENDOR_TOOLS).map(id => {
+      const found = (manifest.tools ?? []).filter(tool => tool?.id === id);
+      if (found.length !== 1 || !entries.has('Windows-Codex-Local/vendor/' + found[0].file))
+        throw new Error(`The archive of Windows components does not hold ${id}`);
+      return { id, version: found[0].version, file: found[0].file };
+    });
+  } finally { await reader.close(); }
 }
 
 async function requirePe(file, label) {
@@ -37,20 +59,23 @@ export async function verifyWindowsPackage(packageDir = path.join(ROOT, '.harnes
   const setupWorker = path.join(resources, 'resources', 'workspace-setup-worker.mjs');
   const exeStat = await requireFile(executable, 'Project Web Pilot.exe');
   await requireFile(appAsar, 'app.asar');
-  await requireFile(runtimeArchive, 'Codex Local Windows payload');
+  await requireFile(runtimeArchive, 'pinned archive of Windows components');
   await requireFile(nodeArchive, 'portable Node archive');
   const nodeStat = await requireFile(nodeExe, 'portable node.exe');
   await requireFile(workflow, 'Workflow Kit');
   await requireFile(setupWorker, 'workspace setup worker');
+  for (const file of WINDOWS_EXECUTOR_FILES) await requireFile(path.join(resources, 'codex-app-server-mcp', file), 'Codex App Server executor: ' + file);
   // Only stops the bridge that Web Pilot ran before 0.6.96; the executor has its own control.py.
   await requireFile(path.join(resources, 'resources/runtime-control/windows-control.py'), 'lifecycle script of the previous Windows bridge');
+  if (fsSync.existsSync(path.join(resources, 'resources/runtime-control/windows-first-run.py'))) throw new Error('The worker of the previous Windows bridge is still in the package');
   const sourceProof = await verifyPackagedSources({ root: ROOT, resources, version });
   await requirePe(executable, 'Project Web Pilot.exe');
   await requirePe(nodeExe, 'portable node.exe');
   // The packaged Workflow Kit must be the package source of this repository, file for file.
   const workflowKit = await verifyWorkflowKitRuntime(workflowRoot);
   const runtimeSha256 = await sha256File(runtimeArchive);
-  if (runtimeSha256 !== WINDOWS_RUNTIME_SHA256) throw new Error(`Codex Local Windows SHA mismatch: ${runtimeSha256}`);
+  if (runtimeSha256 !== WINDOWS_RUNTIME_SHA256) throw new Error(`SHA-256 of the archive of Windows components differs from the pinned one: ${runtimeSha256}`);
+  const vendor = await vendorTools(runtimeArchive);
   const nodeSha256 = await sha256File(nodeArchive);
   if (nodeSha256 !== NODE_SHA256) throw new Error(`portable Node SHA mismatch: ${nodeSha256}`);
   if (fsSync.existsSync(path.join(packageDir, 'Contents', 'Info.plist'))) throw new Error('macOS bundle structure leaked into Windows package');
@@ -62,6 +87,8 @@ export async function verifyWindowsPackage(packageDir = path.join(ROOT, '.harnes
     executable,
     executableSha256: await sha256File(executable),
     runtimeSha256,
+    executor: [...WINDOWS_EXECUTOR_FILES],
+    vendorTools: vendor,
     nodeSha256,
     nodeExecutableBytes: nodeStat.size,
     workflowKit: { version: workflowKit.version, files: workflowKit.files, sha256: workflowKit.sha256 },

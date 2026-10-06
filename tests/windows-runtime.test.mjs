@@ -8,8 +8,8 @@ import net from 'node:net';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { fileURLToPath } from 'node:url';
-import { WindowsExecutorBootstrap, WINDOWS_RUNTIME_SHA256, WINDOWS_CONTEXT_PACKET_SOURCE, WINDOWS_REMOVED_TOOLS, WINDOWS_SKILL_DESKTOP_SECTION,
-  WINDOWS_VENDOR_TOOLS, patchWindowsBridgeSource, patchWindowsSkillSource, retireLegacyWindowsRuntime, windowsCommandFailureText,
+import * as windowsRuntime from '../src/windows-runtime.mjs';
+import { WindowsExecutorBootstrap, WINDOWS_RUNTIME_SHA256, WINDOWS_VENDOR_TOOLS, retireLegacyWindowsRuntime, windowsCommandFailureText,
   windowsExecutorPaths, windowsWorkflowEnvironment } from '../src/windows-runtime.mjs';
 import { ZipError, bufferReader, extractZip, zipEntries, zipEntryData } from '../src/zip-archive.mjs';
 import zlib from 'node:zlib';
@@ -17,34 +17,9 @@ const execute = promisify(execFile);
 const windowsControl = fileURLToPath(new URL('../resources/runtime-control/windows-control.py', import.meta.url));
 
 import { BUNDLED_NODE_VERSION, defaultRuntimeFolder, legacyWindowsStateFolder } from '../src/platform.mjs';
+import { WINDOWS_EXECUTOR_FILES, vendorTools } from '../scripts/verify-windows-package.mjs';
 import { ensureWindowsRuntimePayload, extractionCommand, NODE_ARCHIVE, NODE_SHA256, WINDOWS_RUNTIME_URL, windowsRuntimeSourceCandidates, windowsToolchainPaths } from '../scripts/prepare-windows-toolchain.mjs';
 import { createHash } from 'node:crypto';
-
-// A small bridge with the same shape as the pinned Windows-Codex-Local snapshot: every tool is one
-// "@mcp.tool(" block, the twelve computer_* tools follow bridge_status and list_drives comes after them.
-const WINDOWS_COMPUTER_TOOLS = [
-  ['Computer status', 'computer_status'], ['List visible Windows application windows', 'computer_list_windows'],
-  ['Activate a Windows application window', 'computer_activate_window'], ['Capture the Windows desktop', 'computer_capture_screen'],
-  ['Capture a Windows application window', 'computer_capture_window'], ['Move the Windows mouse pointer', 'computer_move_mouse'],
-  ['Click the Windows mouse', 'computer_click'], ['Scroll the Windows mouse wheel', 'computer_scroll'],
-  ['Type Unicode text into Windows', 'computer_type_text'], ['Press a Windows keyboard key', 'computer_key_press'],
-  ['Press a Windows keyboard shortcut', 'computer_hotkey'], ['Release Windows input state', 'computer_release_inputs'],
-];
-const WINDOWS_OBSERVATION_TOOLS = ['computer_list_windows', 'computer_capture_screen', 'computer_capture_window'];
-function windowsBridgeFixture() {
-  const tool = ([title, name]) => `    @mcp.tool(\n        title="${title}",\n    )\n    def ${name}():\n        return {}\n\n`;
-  return 'from windows_computer import WindowsComputer  # noqa: E402\n\ndef create_server():\n'
-    + '    mcp = FastMCP("Codex Local Windows")\n    computer = WindowsComputer()\n    turn_watchdog = TurnWatchdog()\n'
-    + '    @mcp.tool(\n        title="Bridge status",\n    )\n    def bridge_status(repository: str = ""):\n        status = {}\n'
-    + '        status["computer_use"] = computer.status()\n        return status\n\n'
-    + WINDOWS_COMPUTER_TOOLS.map(tool).join('')
-    + tool(['List local drives', 'list_drives']) + '    return mcp\n';
-}
-const WINDOWS_SKILL_FIXTURE = '---\nname: local-computer\ndescription: "Work on the connected Windows PC: files, Git, PowerShell/CMD, background processes and desktop actions requested in ChatGPT."\n---\n'
-  + '# Codex Local Windows\n\n## Files and commands\n\nCall bridge_status when starting local work.\n\n'
-  + '## Desktop\n\nCall computer_status and inspect computer_list_windows before interacting.\n\n'
-  + '## Turn notifications\n\nCall turn_watchdog.\n';
-const toolCount = source => source.split('    @mcp.tool(').length - 1;
 
 // A ZIP writer for fixtures: entries are [name, content, { method, crc }]; a name ending with "/" is a folder.
 function buildZip(files, { method = 8 } = {}) {
@@ -354,100 +329,40 @@ test('SHA-256 verification uses the canonical digest contract', async t => {
 });
 
 
-test('Windows MCP compatibility overlay adds Workflow Kit recovery exactly once', () => {
-  const fixture = windowsBridgeFixture();
-  const patched = patchWindowsBridgeSource(fixture);
-  assert.match(patched, /from context_packet import ContextPacket/);
-  assert.match(patched, /context_packet = ContextPacket\(\)/);
-  assert.equal(patched.split('def workflow_context_recover(workspace: str)').length - 1, 1);
-  assert.equal(patchWindowsBridgeSource(patched), patched, 'overlay is idempotent');
-  assert.match(WINDOWS_CONTEXT_PACKET_SOURCE, /\.harness\/runtime\/node\.exe/);
-  assert.match(WINDOWS_CONTEXT_PACKET_SOURCE, /inline-context-v1/);
-  assert.ok(WINDOWS_CONTEXT_PACKET_SOURCE.includes(String.raw`r'json\s*\n(.*?)\n'`));
-  assert.doesNotMatch(WINDOWS_CONTEXT_PACKET_SOURCE, /scripts\/workflow\.cmd/);
-});
-
-test('Windows overlay removes UI control tools, keeps observation and fails closed on an unknown bridge', () => {
-  const fixture = windowsBridgeFixture();
-  assert.equal(toolCount(fixture), 14);
-  const patched = patchWindowsBridgeSource(fixture);
-  assert.equal(WINDOWS_REMOVED_TOOLS.length, 9);
-  for (const name of WINDOWS_REMOVED_TOOLS) assert.doesNotMatch(patched, new RegExp(`def ${name}\\(`), name);
-  for (const name of [...WINDOWS_OBSERVATION_TOOLS, 'bridge_status', 'workflow_context_recover', 'list_drives']) {
-    assert.equal(patched.split(`def ${name}(`).length - 1, 1, name);
-  }
-  // 14 tools + workflow_context_recover - 9 UI control tools.
-  assert.equal(toolCount(patched), 6);
-  assert.doesNotMatch(patched, /computer_use/);
-  assert.match(patched, /computer = WindowsComputer\(\)/, 'the capture tools still need the computer object');
-  assert.ok(patched.endsWith('    return mcp\n'));
-
-  // A runtime installed by 0.6.89 already has the context tool and still has every UI tool: one more pass removes them.
-  const importAnchor = 'from windows_computer import WindowsComputer  # noqa: E402';
-  const previousOverlay = fixture
-    .replace(importAnchor, importAnchor + '\nfrom context_packet import ContextPacket  # noqa: E402')
-    .replace('    turn_watchdog = TurnWatchdog()\n', '    turn_watchdog = TurnWatchdog()\n    context_packet = ContextPacket()\n')
-    .replace('        return status\n\n', '        return status\n\n    @mcp.tool(\n        title="Read the selected project context",\n    )\n'
-      + '    def workflow_context_recover(workspace: str) -> dict[str, Any]:\n        return context_packet.recover(workspace)\n\n');
-  assert.equal(toolCount(previousOverlay), 15);
-  const upgraded = patchWindowsBridgeSource(previousOverlay);
-  assert.equal(toolCount(upgraded), 6);
-  for (const name of WINDOWS_REMOVED_TOOLS) assert.doesNotMatch(upgraded, new RegExp(`def ${name}\\(`), name);
-  assert.equal(upgraded.split('def workflow_context_recover(').length - 1, 1);
-
-  // Fail closed: a bridge with only some of the UI tools is not a snapshot this overlay knows.
-  const partial = patched.replace('    @mcp.tool(\n        title="List visible Windows application windows",',
-    '    @mcp.tool(\n        title="Computer status",\n    )\n    def computer_status():\n        return {}\n\n    @mcp.tool(\n        title="List visible Windows application windows",');
-  assert.throws(() => patchWindowsBridgeSource(partial), { code: 'WINDOWS_RUNTIME_BRIDGE_INVALID' });
-  const withoutOne = fixture.replace('    @mcp.tool(\n        title="Click the Windows mouse",\n    )\n    def computer_click():\n        return {}\n\n', '');
-  assert.throws(() => patchWindowsBridgeSource(withoutOne), { code: 'WINDOWS_RUNTIME_BRIDGE_INVALID' });
-  const duplicated = fixture.replace('    def computer_scroll():', '    def computer_scroll():\n        return {}\n\n    @mcp.tool(\n        title="Twice",\n    )\n    def computer_scroll():');
-  assert.throws(() => patchWindowsBridgeSource(duplicated), { code: 'WINDOWS_RUNTIME_BRIDGE_INVALID' });
-  const withoutStatusLine = fixture.replace('        status["computer_use"] = computer.status()\n', '');
-  assert.throws(() => patchWindowsBridgeSource(withoutStatusLine), { code: 'WINDOWS_RUNTIME_BRIDGE_INVALID' });
-});
-
-test('Windows skill instructions lose the Desktop control section exactly once', () => {
-  const patched = patchWindowsSkillSource(WINDOWS_SKILL_FIXTURE);
-  assert.ok(patched.includes(WINDOWS_SKILL_DESKTOP_SECTION + '## Turn notifications\n'));
-  assert.doesNotMatch(patched, /Call computer_status/);
-  assert.doesNotMatch(patched, /desktop actions requested in ChatGPT/);
-  assert.match(patched, /## Files and commands\n\nCall bridge_status/);
-  assert.equal(patchWindowsSkillSource(patched), patched, 'skill overlay is idempotent');
-  for (const broken of [WINDOWS_SKILL_FIXTURE.replace('## Desktop\n', '## Screen\n'), WINDOWS_SKILL_FIXTURE.replace('## Turn notifications\n', ''),
-    WINDOWS_SKILL_FIXTURE + '## Desktop\n', null]) {
-    assert.throws(() => patchWindowsSkillSource(broken), { code: 'WINDOWS_RUNTIME_BRIDGE_INVALID' });
+test('nothing patches or starts the previous Windows bridge any more: the archive is only a source of four tools', async () => {
+  for (const gone of ['patchWindowsBridgeSource', 'patchWindowsSkillSource', 'WINDOWS_REMOVED_TOOLS', 'WINDOWS_CONTEXT_PACKET_SOURCE',
+    'WINDOWS_SKILL_DESKTOP_SECTION', 'WindowsRuntimeBootstrap', 'configureWindowsTunnel', 'windowsSetupInvocation', 'windowsExpandInvocation'])
+    assert.equal(gone in windowsRuntime, false, gone);
+  const source = await fs.readFile(new URL('../src/windows-runtime.mjs', import.meta.url), 'utf8');
+  for (const text of ['bridge_mcp.py', 'setup.ps1', 'context_packet', 'Expand-Archive', 'workflow_context_recover', 'computer_click'])
+    assert.equal(source.includes(text), false, text);
+  assert.equal(windowsRuntime.WINDOWS_RUNTIME_ARCHIVE, 'Windows-Codex-Local-2026-09-10.zip', 'the pinned archive keeps its name');
+  assert.equal(WINDOWS_RUNTIME_SHA256, '1f041488ad97d8abf1984fd3521afb8abe15f50b8df3d3e11f1cc4248e019d98', 'and its SHA-256');
+  for (const file of ['../src/main.mjs', '../src/mac-runtime-switch.mjs', '../src/mcp-runtime.mjs', '../src/startup-platform.mjs']) {
+    const text = await fs.readFile(new URL(file, import.meta.url), 'utf8');
+    for (const gone of ['McpRuntime', 'WindowsRuntimeBootstrap', "'Codex Local Windows'", 'workflow_context_recover'])
+      assert.equal(text.includes(gone), false, `${file}: ${gone}`);
   }
 });
 
-test('Windows overlay leaves 38 tools in the real pinned bridge and valid Python', async t => {
-  const archive = path.join(windowsToolchainPaths().cacheDir, 'Windows-Codex-Local-2026-09-10.zip');
-  let digest = null;
-  try { digest = await sha256File(archive); } catch {}
-  if (process.platform === 'win32' || digest !== WINDOWS_RUNTIME_SHA256) { t.skip('pinned Windows runtime archive is not in the local build cache'); return; }
-  const read = async member => (await execute('/usr/bin/unzip', ['-p', archive, 'Windows-Codex-Local/' + member], { maxBuffer: 4 * 1024 * 1024 })).stdout;
-  const bridge = await read('mcp/bridge_mcp.py');
-  assert.equal(toolCount(bridge), 46);
-  const patched = patchWindowsBridgeSource(bridge);
-  assert.equal(toolCount(patched), 38);
-  for (const name of WINDOWS_REMOVED_TOOLS) assert.doesNotMatch(patched, new RegExp(`def ${name}\\(`), name);
-  for (const name of [...WINDOWS_OBSERVATION_TOOLS, 'workflow_context_recover', 'list_drives', 'git_show']) {
-    assert.equal(patched.split(`def ${name}(`).length - 1, 1, name);
-  }
-  assert.doesNotMatch(patched, /computer_use/);
-  assert.equal(patchWindowsBridgeSource(patched), patched);
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'web-pilot-win-overlay-'));
+test('package verification: every executor file exists in the source and the archive must hold the four tools', async t => {
+  assert.deepEqual(WINDOWS_EXECUTOR_FILES.slice(0, 3), ['server.py', 'app_server_client.py', 'control.py']);
+  assert.ok(WINDOWS_EXECUTOR_FILES.includes('codex-tools.lock.json'));
+  for (const file of WINDOWS_EXECUTOR_FILES) assert.equal(await present(new URL('../tools/codex-app-server-mcp/' + file, import.meta.url)), true, file);
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'web-pilot-win-verify-'));
   t.after(() => fs.rm(dir, { recursive: true, force: true }));
-  await fs.writeFile(path.join(dir, 'bridge_mcp.py'), patched);
-  await execute('python3', ['-m', 'py_compile', path.join(dir, 'bridge_mcp.py')]);
-
-  const skill = await read('skills/local-computer/SKILL.md');
-  assert.match(skill, /Call computer_status and inspect computer_list_windows/);
-  const patchedSkill = patchWindowsSkillSource(skill);
-  assert.ok(patchedSkill.includes(WINDOWS_SKILL_DESKTOP_SECTION + '## Turn notifications\n'));
-  assert.doesNotMatch(patchedSkill, /Call computer_status|computer_release_inputs|desktop actions requested in ChatGPT/);
-  assert.match(patchedSkill, /## Evidence and reconnection/);
-  assert.equal(patchWindowsSkillSource(patchedSkill), patchedSkill);
+  await fs.writeFile(path.join(dir, 'good.zip'), vendorArchive());
+  assert.deepEqual((await vendorTools(path.join(dir, 'good.zip'))).map(tool => [tool.id, tool.file]), [
+    ['uv', 'uv-x86_64-pc-windows-msvc.zip'], ['tunnel-client', 'tunnel-client-v0.0.14-windows-amd64.zip'],
+    ['ripgrep', 'ripgrep-15.2.0-x86_64-pc-windows-msvc.zip'], ['git', 'MinGit-2.55.0.5-64-bit.zip']]);
+  await fs.writeFile(path.join(dir, 'no-git.zip'), vendorArchive({ damage: 'no-git' }));
+  await assert.rejects(vendorTools(path.join(dir, 'no-git.zip')), /does not hold git/);
+  await fs.writeFile(path.join(dir, 'empty.zip'), buildZip([['readme.txt', 'x']]));
+  await assert.rejects(vendorTools(path.join(dir, 'empty.zip')), /no vendor list/);
+  const pinned = path.join(windowsToolchainPaths().cacheDir, 'Windows-Codex-Local-2026-09-10.zip');
+  if (await sha256File(pinned).catch(() => null) === WINDOWS_RUNTIME_SHA256)
+    assert.deepEqual((await vendorTools(pinned)).map(tool => [tool.id, tool.version]),
+      [['uv', '0.12.12'], ['tunnel-client', 'v0.0.14'], ['ripgrep', '15.2.0'], ['git', 'v2.55.0.windows.5']]);
 });
 
 test('portable Node build payload has pinned Windows x64 layout and safe extraction plans', () => {
@@ -501,7 +416,7 @@ test('Windows runtime payload comes from the build cache, a local copy or the re
   // A download with another digest is rejected and never stays in the cache; so does a damaged cache.
   await fs.writeFile(cached, 'damaged cache');
   await assert.rejects(ensureWindowsRuntimePayload(root, cacheDir, { environment: {}, expectedSha256,
-    fetchArchive: async (_url, destination) => fs.writeFile(destination, 'tampered') }), /Downloaded Windows Codex Local payload has SHA-256 [0-9a-f]{64}, expected/);
+    fetchArchive: async (_url, destination) => fs.writeFile(destination, 'tampered') }), /Downloaded archive of Windows components has SHA-256 [0-9a-f]{64}, expected/);
   await assert.rejects(fs.access(cached));
   await assert.rejects(ensureWindowsRuntimePayload(root, cacheDir, { environment: {}, expectedSha256, fetchArchive: offline }),
     /download failed \(HTTP 404\)\. Put Windows-Codex-Local-2026-09-10\.zip at /);
