@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1342,
+  "plan_revision": 1344,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "context-as-text-0.6.96-20261006",
@@ -1136,8 +1136,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "context-as-text-0.6.96-20261006",
         "task_id": "T006",
@@ -1165,7 +1165,8 @@
         "~/Downloads/WebPilot-0.6.96 собран из коммита после DOCS, packagedSourceMatches=true, bundled Workflow Kit 1.5.6, в поставке шесть файлов; executor в пакете не содержит session-rules.md",
         "Windows-пакет содержит исполнитель и закреплённый архив с прежним SHA-256; GitHub Release на этом шаге не публикуется"
       ],
-      "expected_commit_message": "feat: Собрать и проверить парный релиз 0.6.96"
+      "expected_commit_message": "feat: Собрать и проверить парный релиз 0.6.96",
+      "actual_files": []
     },
     {
       "implementation_status": "TODO",
@@ -1335,7 +1336,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: context-as-text-0.6.96-20261006
 Current Task: нет
-Revision: 1342
+Revision: 1344
 
 ## Цель
 
@@ -1422,8 +1423,8 @@ Revision: 1342
   - Git Commit: [DONE] docs: актуализировать контекст проекта
   - Reference: context-as-text-0.6.96-20261006 / DOCS / implementation
   - Файлы: docs/planning/context-as-text.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, AGENTS.md, README.md, docs/architecture/OVERVIEW.md, docs/MODULES.md, docs/DOCUMENTATION_INDEX.md, docs/DECISIONS.md, docs/VERIFICATION.md, docs/RELEASE.md, docs/CONTEXT_DELIVERY.md, docs/modules/codex-app-server-executor.md, docs/CLEAN_INSTALL.md, docs/SOURCE_WORKSPACES.md, docs/TRANSFER_TO_WINDOWS.md, docs/WORKFLOW_START.md, docs/modules/workflow-kit-recovery.md, docs/planning/codex-native-tools-macos.md, packages/workflow-kit/README.md, packages/workflow-kit/docs/modules/workflow-kit-package.md, packages/workflow-kit/src/templates/CONTINUE.md, docs/WORKSPACE_SETUP.md, docs/modules/session-owned-plans.md, docs/planning/mcp-sequential-parts-kit-1.5.4.md, docs/planning/release-backups-kit-1.5.5.md, packages/workflow-kit/docs/DOCUMENTATION_INDEX.md, packages/workflow-kit/docs/MODULES.md, packages/workflow-kit/docs/PRODUCT.md, packages/workflow-kit/docs/WORKFLOW_START.md, packages/workflow-kit/docs/architecture/ARCHITECTURE.md, packages/workflow-kit/docs/architecture/OVERVIEW.md, tools/codex-app-server-mcp/session-rules.md, docs/modules/runtime-lifecycle.md, docs/modules/first-run-onboarding.md
-- [TODO] T006: Собрать и проверить парный релиз 0.6.96 — Ожидает
-  - Git Commit: [PENDING] feat: Собрать и проверить парный релиз 0.6.96
+- [DONE] T006: Собрать и проверить парный релиз 0.6.96 — Завершено
+  - Git Commit: [DONE] feat: Собрать и проверить парный релиз 0.6.96
   - Reference: context-as-text-0.6.96-20261006 / T006 / implementation
   - Файлы: scripts/release-all.mjs, docs/planning/context-as-text.md
 - [TODO] T007: Установить 0.6.96 и проверить установленные macOS-копии — Ожидает
