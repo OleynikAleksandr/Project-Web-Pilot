@@ -33,6 +33,21 @@ export function macVolumeUUID(directory) {
   return uuid;
 }
 
+// Filesystem identity of an installed app directory, as recorded before a release and checked after it.
+export async function macDirectoryIdentity(app, { volumeUUID = macVolumeUUID, bootSessionUUID = macBootSessionUUID } = {}) {
+  const stat = await fs.stat(app);
+  return { path: app, device: stat.dev, inode: stat.ino, volumeUUID: volumeUUID(app), bootSessionUUID: bootSessionUUID() };
+}
+// Device numbers may change between boots; volume UUID + inode identify the same directory.
+// Records without a volume UUID (legacy receipts) can only be compared within the same boot.
+export function assertSameMacDirectory(before, after, label) {
+  if (before.volumeUUID) {
+    assert.equal(after.volumeUUID, before.volumeUUID, 'App volume identity: ' + label);
+    if (before.bootSessionUUID && before.bootSessionUUID === after.bootSessionUUID) assert.equal(after.device, before.device, 'App device: ' + label);
+  } else assert.equal(after.device, before.device, 'App device (legacy record): ' + label);
+  assert.equal(after.inode, before.inode, 'App inode: ' + label);
+}
+
 export async function verifyMacSignature({ bundle, identity, root = ROOT } = {}) {
   if (process.platform !== 'darwin') throw new Error('macOS signature verification requires macOS');
   const expected = identity ?? (await resolveMacSigning({ root, identity: process.env.WEBPILOT_MAC_SIGNING_IDENTITY })).identity;
@@ -90,15 +105,9 @@ export async function checkInstalledMacSignatures({ root = ROOT } = {}) {
   for (const app of apps.slice(1)) {
     const before = preflight.find(entry => entry.path === app);
     assert.ok(before, 'Preflight filesystem identity: ' + app);
-    const after = await fs.stat(app);
-    const volumeUUID = macVolumeUUID(app);
-    // Device numbers may change between boots; volume UUID + inode identify the same directory.
-    if (before.volumeUUID) {
-      assert.equal(volumeUUID, before.volumeUUID, 'App volume identity: ' + app);
-      if (before.bootSessionUUID === bootSessionUUID) assert.equal(after.dev, before.device);
-    } else assert.equal(after.dev, before.device); // Legacy same-boot receipts.
-    assert.equal(after.ino, before.inode);
-    filesystemIdentities.push({ app, device: after.dev, inode: after.ino, volumeUUID });
+    const after = await macDirectoryIdentity(app, { bootSessionUUID: () => bootSessionUUID });
+    assertSameMacDirectory(before, after, app);
+    filesystemIdentities.push({ app, device: after.device, inode: after.inode, volumeUUID: after.volumeUUID });
   }
   const receipt = JSON.parse(await fs.readFile(path.join(root, '.harness/runtime/releases', version, 'mac-release.json'), 'utf8'));
   assert.equal(receipt.version, version);

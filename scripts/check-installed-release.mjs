@@ -10,7 +10,7 @@ import { sourceSnapshot, verifyPackagedSources } from './release-all.mjs';
 import { verifyWindowsPackage } from './verify-windows-package.mjs';
 import { verifyWorkflowKitRuntime } from './stage-workflow-kit.mjs';
 import { createRequire } from 'node:module';
-import { verifyMacSignature } from './check-mac-signature.mjs';
+import { verifyMacSignature, macDirectoryIdentity, assertSameMacDirectory } from './check-mac-signature.mjs';
 import { WINDOWS_RUNTIME_ARCHIVE, WINDOWS_RUNTIME_SHA256 } from '../src/windows-runtime.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
@@ -37,8 +37,7 @@ const preflight = JSON.parse(await fs.readFile(path.join(root, '.harness/runtime
 for (const app of [rootApp, appsApp]) {
   const before = preflight.find(item => item.path === app);
   assert.ok(before, 'preflight identity for ' + app);
-  const after = await fs.stat(app);
-  assert.equal(after.dev, before.device); assert.equal(after.ino, before.inode);
+  assertSameMacDirectory(before, await macDirectoryIdentity(app), app);
 }
 assert.equal(Object.keys(sources).length, manifest.sourceFiles);
 const hashList = await fs.readFile(path.join(delivery, 'SHA256SUMS.txt'), 'utf8');
@@ -51,7 +50,7 @@ assert.ok((await fs.readFile(path.join(delivery, 'INSTALL.txt'), 'utf8')).starts
 assert.equal(manifest.artifacts.length, 2);
 assert.deepEqual(manifest.artifacts.map(a => a.platform), ['macOS arm64', 'Windows x64']);
 
-const stat = await fs.stat(rootApp); assert.equal(stat.ino, manifest.identity.inode); assert.equal(stat.dev, manifest.identity.device);
+assertSameMacDirectory(manifest.identity, await macDirectoryIdentity(rootApp), rootApp);
 for (const artifact of manifest.artifacts) {
   const zip = path.join(delivery, artifact.file);
   assert.equal((await fs.stat(zip)).size, artifact.bytes);

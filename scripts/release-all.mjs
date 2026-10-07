@@ -8,10 +8,25 @@ import { fileURLToPath } from 'node:url';
 import { isDeepStrictEqual } from 'node:util';
 import { extractFile, listPackage, uncache } from '@electron/asar';
 import { stageWorkflowKit, verifyWorkflowKitRuntime } from './stage-workflow-kit.mjs';
-import { verifyMacSignature } from './check-mac-signature.mjs';
+import { verifyMacSignature, macDirectoryIdentity } from './check-mac-signature.mjs';
 import { WINDOWS_RUNTIME_ARCHIVE, WINDOWS_RUNTIME_SHA256 } from '../src/windows-runtime.mjs';
 
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
+// The release records HEAD as its source commit, so everything it packages must already be committed.
+export const COMMITTED_SOURCE_PATHS = ['src', 'resources', 'tools/codex-app-server-mcp', 'package.json', 'package-lock.json', 'LICENSE'];
+export function assertCommittedSources(root, execute = (command, args) => execFileSync(command, args, { encoding: 'utf8' })) {
+  const changed = execute('git', ['-C', root, 'status', '--porcelain=v1', '--untracked-files=all', '--', ...COMMITTED_SOURCE_PATHS]).trim();
+  if (changed) throw new Error('Packaged sources have uncommitted changes; commit them before the paired release:\n' + changed);
+}
+// Identity of both installed copies before the build; the installed-release check compares against it.
+export async function recordReleasePreflight({ root, version, apps, identity = macDirectoryIdentity }) {
+  const file = path.join(root, '.harness/runtime', `release-${version}-preflight.json`);
+  if (await fs.stat(file).catch(e => { if (e.code !== 'ENOENT') throw e; })) return file; // The first record of this version wins.
+  const records = [];
+  for (const app of apps) if (await fs.stat(app).catch(e => { if (e.code !== 'ENOENT') throw e; })) records.push(await identity(app));
+  await fs.writeFile(file, JSON.stringify(records, null, 2) + '\n');
+  return file;
+}
 // Everything electron-packager may take from the project root; package.json --ignore allows exactly these.
 export const PACKAGED_ROOTS = new Set(['src', 'node_modules', 'package.json', 'LICENSE']);
 // Every file of a GitHub Release. The pinned archive of Windows components ships next to the packages,
@@ -83,6 +98,8 @@ export async function releaseAll({ root = fileURLToPath(new URL('..', import.met
   try {
     if (await fs.stat(path.join(release, 'release-manifest.json')).catch(e => { if (e.code !== 'ENOENT') throw e; }))
       throw new Error('This paired release already exists; use a new version');
+    assertCommittedSources(root);
+    await recordReleasePreflight({ root, version, apps: [path.join(root, 'Project Web Pilot.app'), '/Applications/Project Web Pilot.app'] });
     await stageWorkflowKit({ root });
     const workflowKit = await verifyWorkflowKitRuntime(path.join(root, 'resources', 'workflow-kit'));
     const sources = await sourceSnapshot(root);
@@ -103,6 +120,7 @@ export async function releaseAll({ root = fileURLToPath(new URL('..', import.met
     if (actual !== version) throw new Error('Installed app version mismatch');
     const identity = await fs.stat(target);
     if (before && (before.ino !== identity.ino || before.dev !== identity.dev)) throw new Error('Installed app identity changed');
+    const { volumeUUID } = await macDirectoryIdentity(target);
     for (const file of await files(path.join(runtime, 'mac-tools'))) {
       const expected = await sha256File(path.join(runtime, 'mac-tools', file));
       for (const res of [macResources, installedResources])
@@ -146,7 +164,7 @@ export async function releaseAll({ root = fileURLToPath(new URL('..', import.met
     const shipped = [...artifacts, windowsRuntimeArchive];
     const evidence = { version, sourceCommit, sourceFiles: Object.keys(sources).length, packagedSourceMatches: true,
       workflowKit: { version: workflowKit.version, files: workflowKit.files, sha256: workflowKit.sha256 },
-      identity: { device: identity.dev, inode: identity.ino }, macCodeSignature, artifacts, windowsRuntimeArchive,
+      identity: { device: identity.dev, inode: identity.ino, volumeUUID }, macCodeSignature, artifacts, windowsRuntimeArchive,
       nativeWindowsTested: false, cleanVmTested: false };
     await fs.mkdir(delivery, { recursive: true });
     for (const artifact of shipped) {

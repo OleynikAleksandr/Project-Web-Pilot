@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1417,
+  "plan_revision": 1419,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "recovery-on-demand-research-20261006",
@@ -94,7 +94,8 @@
       "src/chromium-diagnostics.mjs",
       "tests/workspace-session.test.mjs",
       "tests/sidebar.test.mjs",
-      "tests/chromium-diagnostics.test.mjs"
+      "tests/chromium-diagnostics.test.mjs",
+      "scripts/check-mac-signature.mjs"
     ],
     "documentation_paths": [
       "docs/planning/workflow-kit-context-refactor.md",
@@ -1141,7 +1142,8 @@
       "functional_paths": [
         "scripts/check-installed-release.mjs",
         "scripts/release-all.mjs",
-        "tests/release-all.test.mjs"
+        "tests/release-all.test.mjs",
+        "scripts/check-mac-signature.mjs"
       ],
       "documentation_paths": [
         "docs/planning/correction-round-0.6.99.md"
@@ -1156,13 +1158,19 @@
         "release-all отказывает при незакоммиченных изменениях."
       ],
       "expected_commit_message": "fix: проверки выпуска без ложных отказов",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "recovery-on-demand-research-20261006",
         "task_id": "T015",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "scripts/check-installed-release.mjs",
+        "scripts/check-mac-signature.mjs",
+        "scripts/release-all.mjs",
+        "tests/release-all.test.mjs"
+      ]
     },
     {
       "id": "T016",
@@ -1396,7 +1404,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: recovery-on-demand-research-20261006
 Current Task: нет
-Revision: 1417
+Revision: 1419
 
 ## Цель
 
@@ -1490,10 +1498,10 @@ Revision: 1417
   - Git Commit: [DONE] fix: версии Доктора и очистка копий хранилища
   - Reference: recovery-on-demand-research-20261006 / T014 / implementation
   - Файлы: resources/project-doctor/core.mjs, tests/project-doctor.test.mjs, src/workspace-deletion.mjs, tests/workspace-deletion.test.mjs, docs/planning/correction-round-0.6.99.md
-- [TODO] T015: Проверки выпуска: identity, preflight, чистое дерево — Ожидает
-  - Git Commit: [PENDING] fix: проверки выпуска без ложных отказов
+- [DONE] T015: Проверки выпуска: identity, preflight, чистое дерево — Завершено
+  - Git Commit: [DONE] fix: проверки выпуска без ложных отказов
   - Reference: recovery-on-demand-research-20261006 / T015 / implementation
-  - Файлы: scripts/check-installed-release.mjs, scripts/release-all.mjs, tests/release-all.test.mjs, docs/planning/correction-round-0.6.99.md
+  - Файлы: scripts/check-installed-release.mjs, scripts/release-all.mjs, tests/release-all.test.mjs, scripts/check-mac-signature.mjs, docs/planning/correction-round-0.6.99.md
 - [TODO] T016: Порты служб, чужой PID, повторный ввод туннеля — Ожидает
   - Git Commit: [PENDING] fix: свободные порты, чужой PID и повторная настройка туннеля
   - Reference: recovery-on-demand-research-20261006 / T016 / implementation

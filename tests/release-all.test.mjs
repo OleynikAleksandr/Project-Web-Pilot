@@ -4,7 +4,9 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import { createPackage } from '@electron/asar';
-import { buildPlatforms, PACKAGED_ROOTS, releaseAssetNames, sourceSnapshot, verifyPackagedSources } from '../scripts/release-all.mjs';
+import { execFileSync } from 'node:child_process';
+import { assertCommittedSources, buildPlatforms, PACKAGED_ROOTS, recordReleasePreflight, releaseAssetNames, sourceSnapshot, verifyPackagedSources } from '../scripts/release-all.mjs';
+import { assertSameMacDirectory } from '../scripts/check-mac-signature.mjs';
 
 async function fixture(t) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'pilot-paired-release-'));
@@ -109,4 +111,45 @@ test('packager ignore of both platforms lets through only the application roots'
 test('a release has six files: both packages, the pinned Windows runtime and three records', () => {
   assert.deepEqual(releaseAssetNames('1.2.3'), ['Project-Web-Pilot-1.2.3-macOS-arm64.zip', 'Project-Web-Pilot-1.2.3-Windows-x64.zip',
     'Windows-Codex-Local-2026-09-10.zip', 'SHA256SUMS.txt', 'INSTALL.txt', 'release-manifest.json']);
+});
+
+test('paired release refuses uncommitted packaged sources but ignores the plan and documents', async t => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'release-committed-'));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const env = { ...process.env, GIT_AUTHOR_NAME: 'R', GIT_AUTHOR_EMAIL: 'r@example.invalid', GIT_COMMITTER_NAME: 'R', GIT_COMMITTER_EMAIL: 'r@example.invalid' };
+  const git = (...args) => execFileSync('git', args, { cwd: root, env, encoding: 'utf8' });
+  git('init', '-q', '-b', 'main');
+  await fs.mkdir(path.join(root, 'src')); await fs.mkdir(path.join(root, 'docs'));
+  await fs.writeFile(path.join(root, 'src/main.mjs'), 'export {};\n'); await fs.writeFile(path.join(root, 'package.json'), '{}\n');
+  git('add', '.'); git('commit', '-q', '-m', 'baseline');
+  await fs.writeFile(path.join(root, 'docs/plan.md'), '# Plan change during the task\n');
+  assert.doesNotThrow(() => assertCommittedSources(root));
+  await fs.writeFile(path.join(root, 'src/main.mjs'), 'export const changed = true;\n');
+  assert.throws(() => assertCommittedSources(root), /uncommitted changes/);
+  git('checkout', '--', 'src/main.mjs');
+  await fs.writeFile(path.join(root, 'src/new.mjs'), 'export {};\n');
+  assert.throws(() => assertCommittedSources(root), /src\/new\.mjs/);
+});
+
+test('release preflight is recorded once by the script for existing app copies', async t => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'release-preflight-'));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  await fs.mkdir(path.join(root, '.harness/runtime'), { recursive: true });
+  const present = path.join(root, 'Project Web Pilot.app'), missing = path.join(root, 'absent', 'Project Web Pilot.app');
+  await fs.mkdir(present);
+  let calls = 0;
+  const identity = async app => { calls++; return { path: app, device: 1, inode: 2, volumeUUID: 'V', bootSessionUUID: 'B' }; };
+  const file = await recordReleasePreflight({ root, version: '9.9.9', apps: [present, missing], identity });
+  assert.deepEqual(JSON.parse(await fs.readFile(file, 'utf8')), [{ path: present, device: 1, inode: 2, volumeUUID: 'V', bootSessionUUID: 'B' }]);
+  await recordReleasePreflight({ root, version: '9.9.9', apps: [present], identity: async () => { throw new Error('must not re-record'); } });
+  assert.equal(calls, 1);
+});
+
+test('installed app identity survives a reboot: volume UUID and inode, device only within one boot', () => {
+  const before = { device: 16777230, inode: 42, volumeUUID: 'VOL', bootSessionUUID: 'BOOT-1' };
+  assert.doesNotThrow(() => assertSameMacDirectory(before, { device: 16777234, inode: 42, volumeUUID: 'VOL', bootSessionUUID: 'BOOT-2' }, 'app'));
+  assert.throws(() => assertSameMacDirectory(before, { device: 16777234, inode: 42, volumeUUID: 'VOL', bootSessionUUID: 'BOOT-1' }, 'app'));
+  assert.throws(() => assertSameMacDirectory(before, { device: 16777230, inode: 43, volumeUUID: 'VOL', bootSessionUUID: 'BOOT-1' }, 'app'));
+  assert.throws(() => assertSameMacDirectory(before, { device: 16777230, inode: 42, volumeUUID: 'OTHER', bootSessionUUID: 'BOOT-1' }, 'app'));
+  assert.throws(() => assertSameMacDirectory({ device: 1, inode: 42 }, { device: 2, inode: 42, volumeUUID: 'VOL' }, 'legacy'));
 });
