@@ -4,22 +4,49 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1437,
+  "plan_revision": 1438,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
-  "scope_id": null,
-  "execution_scope_status": "NONE",
+  "scope_id": "refactor-fixes-20261007",
+  "execution_scope_status": "ACTIVE",
   "delivery_status": "IN_PROGRESS",
-  "objective": "Продолжите обсуждение или исследование проекта; план реализации создаётся, когда определён её объём.",
-  "acceptance_criteria": [],
+  "objective": "Исправление ошибок, найденных живой приёмкой после рефакторинга Workflow Kit: автоматическая отправка каждого старта сессии и отсутствие брошенных копий хранилища; выпуск Web Pilot 0.6.100.",
+  "acceptance_criteria": [
+    "Исправление ошибок, найденных живой приёмкой после рефакторинга Workflow Kit: автоматическая отправка каждого старта сессии и отсутствие брошенных копий хранилища; выпуск Web Pilot 0.6.100."
+  ],
   "approved_scope": {
-    "functional_paths": [],
-    "documentation_paths": []
+    "functional_paths": [
+      "src/context-session.mjs",
+      "tests/context-session.test.mjs",
+      "tests/chatgpt-composer.test.mjs",
+      "package.json",
+      "package-lock.json",
+      "src/workspace-session.mjs",
+      "src/workspace-deletion.mjs",
+      "tests/workspace-session.test.mjs",
+      "tests/workspace-deletion.test.mjs"
+    ],
+    "documentation_paths": [
+      "docs/planning/refactor-fixes.md",
+      "docs/modules/context-delivery.md",
+      "docs/planning/correction-round-0.6.99.md",
+      "docs/planning/workflow-kit-context-refactor.md",
+      "docs/planning/workflow-kit-context-transition.md",
+      "docs/modules/workspace-sessions.md",
+      "docs/modules/project-archive.md",
+      "README.md",
+      "docs/architecture/OVERVIEW.md"
+    ]
   },
-  "baseline_commit": null,
+  "baseline_commit": "ca5a25740a0bd5f6b05973b50e94d123061c088f",
   "current_task_id": null,
   "context_pack": {
     "documents": [
+      {
+        "path": "docs/planning/refactor-fixes.md",
+        "required": true,
+        "revision": "WORKTREE"
+      },
       {
         "path": "docs/architecture/OVERVIEW.md",
         "required": true,
@@ -29,40 +56,258 @@
     "include_last_completed_task": false,
     "dependency_task_ids": []
   },
-  "tasks": [],
+  "tasks": [
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "refactor-fixes-20261007",
+        "task_id": "T001",
+        "role": "implementation"
+      },
+      "dependencies": [],
+      "functional_paths": [
+        "src/context-session.mjs",
+        "tests/context-session.test.mjs",
+        "tests/chatgpt-composer.test.mjs",
+        "package.json",
+        "package-lock.json"
+      ],
+      "documentation_paths": [
+        "docs/planning/refactor-fixes.md",
+        "docs/modules/context-delivery.md",
+        "docs/planning/correction-round-0.6.99.md",
+        "docs/planning/workflow-kit-context-refactor.md",
+        "docs/planning/workflow-kit-context-transition.md"
+      ],
+      "verification_ids": [
+        "unit-all",
+        "electron-smoke"
+      ],
+      "id": "T001",
+      "title": "Уникальные короткие имена частей контекста",
+      "why": "Регрессия 0.6.99: ChatGPT переименовывает повторное имя вложения в «…(1).md», карточки не распознаются, второй старт не отправляется.",
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Части называются context-<8 hex requestId>-NN-of-M.md; два старта дают разные имена.",
+        "Карточка, переименованная ChatGPT, не считается своей; распознавание по точному имени и строка о списке /mnt/data сохранены.",
+        "Версия Web Pilot 0.6.100."
+      ],
+      "expected_commit_message": "fix: уникальные имена частей контекста"
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "refactor-fixes-20261007",
+        "task_id": "T002",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "T001"
+      ],
+      "functional_paths": [
+        "src/workspace-session.mjs",
+        "src/workspace-deletion.mjs",
+        "tests/workspace-session.test.mjs",
+        "tests/workspace-deletion.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/planning/refactor-fixes.md",
+        "docs/modules/workspace-sessions.md",
+        "docs/modules/project-archive.md"
+      ],
+      "verification_ids": [
+        "unit-all"
+      ],
+      "id": "T002",
+      "title": "Брошенные временные файлы хранилища",
+      "why": "Прерванные атомарные записи оставляют workspaces.json.tmp-* с записями проектов, в том числе удалённых.",
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Неудачная запись не оставляет временного файла.",
+        "Загрузка хранилища удаляет осиротевшие временные файлы и не трогает посторонние.",
+        "Удаление проекта и локальное удаление сессий удаляют осиротевшие временные файлы без гонки с собственной записью."
+      ],
+      "expected_commit_message": "fix: очистка брошенных временных копий хранилища"
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "refactor-fixes-20261007",
+        "task_id": "DOCS",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "T001",
+        "T002"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/planning/refactor-fixes.md",
+        "README.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/context-delivery.md",
+        "docs/planning/correction-round-0.6.99.md",
+        "docs/planning/workflow-kit-context-refactor.md",
+        "docs/planning/workflow-kit-context-transition.md",
+        "docs/modules/workspace-sessions.md",
+        "docs/modules/project-archive.md"
+      ],
+      "verification_ids": [],
+      "id": "DOCS",
+      "title": "Актуализация всех документов проекта",
+      "why": "Сохранить актуальный контекст для следующего агента",
+      "acceptance_criteria": [
+        "Документы соответствуют результату"
+      ],
+      "expected_commit_message": "docs: актуализировать контекст проекта"
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "refactor-fixes-20261007",
+        "task_id": "T003",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "T001",
+        "T002",
+        "DOCS"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/planning/refactor-fixes.md"
+      ],
+      "verification_ids": [
+        "paired-release"
+      ],
+      "id": "T003",
+      "title": "Собрать парный выпуск 0.6.100",
+      "why": "Собрать парный выпуск 0.6.100",
+      "verification_kind": "package",
+      "acceptance_criteria": [
+        "После DOCS одна сборка macOS/Windows; manifest и хеши подтверждены."
+      ],
+      "expected_commit_message": "release: собрать Web Pilot 0.6.100"
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "refactor-fixes-20261007",
+        "task_id": "T004",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "T003",
+        "DOCS"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/planning/refactor-fixes.md"
+      ],
+      "verification_ids": [
+        "release-installed"
+      ],
+      "id": "T004",
+      "title": "Установить готовый выпуск 0.6.100",
+      "why": "Установить готовый выпуск 0.6.100",
+      "verification_kind": "installed",
+      "acceptance_criteria": [
+        "Обе macOS-копии соответствуют пакетам, identity и подпись сохранены; без пересборки."
+      ],
+      "expected_commit_message": "release: установить Web Pilot 0.6.100"
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "refactor-fixes-20261007",
+        "task_id": "T005",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "T004",
+        "DOCS"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/planning/refactor-fixes.md"
+      ],
+      "verification_ids": [
+        "github-release"
+      ],
+      "id": "T005",
+      "title": "Опубликовать выпуск 0.6.100",
+      "why": "Опубликовать выпуск 0.6.100",
+      "verification_kind": "package",
+      "acceptance_criteria": [
+        "Source/tag/шесть assets совпадают с manifest; push; READY_FOR_ACCEPTANCE."
+      ],
+      "expected_commit_message": "release: опубликовать Web Pilot 0.6.100"
+    }
+  ],
   "blocked_reason": null,
   "user_decisions": [
     {
-      "id": "7f5e2e34-4b1a-4b45-bd01-cc2bab835666",
-      "text": "Прямое поручение пользователя 07.10.2026: закрыть разросшийся план рефакторинга и открыть новый по исправлению ошибок",
-      "recorded_at": "2026-10-07T13:10:50.983Z"
+      "id": "298b81ca-13a0-438c-b9c6-d95d6849cfd6",
+      "text": "Прямое поручение пользователя 07.10.2026: открыть новый план исправлений после рефакторинга, выполнить, собрать, установить и опубликовать.",
+      "recorded_at": "2026-10-07T13:13:51.374Z"
     }
-  ],
-  "archived_scope_id": "recovery-on-demand-research-20261006"
+  ]
 }
 ```
 <!-- workflow-state:end -->
 
 ## Состояние
 
-Execution Scope Status: NONE
+Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
-Scope: не создан
+Scope: refactor-fixes-20261007
 Current Task: нет
-Revision: 1437
+Revision: 1438
 
 ## Цель
 
-Продолжите обсуждение или исследование проекта; план реализации создаётся, когда определён её объём.
+Исправление ошибок, найденных живой приёмкой после рефакторинга Workflow Kit: автоматическая отправка каждого старта сессии и отсутствие брошенных копий хранилища; выпуск Web Pilot 0.6.100.
 
 ## Критерии приёмки
 
+- Исправление ошибок, найденных живой приёмкой после рефакторинга Workflow Kit: автоматическая отправка каждого старта сессии и отсутствие брошенных копий хранилища; выпуск Web Pilot 0.6.100.
 
 ## Микрозадачи
 
+- [TODO] T001: Уникальные короткие имена частей контекста — Ожидает
+  - Git Commit: [PENDING] fix: уникальные имена частей контекста
+  - Reference: refactor-fixes-20261007 / T001 / implementation
+  - Файлы: src/context-session.mjs, tests/context-session.test.mjs, tests/chatgpt-composer.test.mjs, package.json, package-lock.json, docs/planning/refactor-fixes.md, docs/modules/context-delivery.md, docs/planning/correction-round-0.6.99.md, docs/planning/workflow-kit-context-refactor.md, docs/planning/workflow-kit-context-transition.md
+- [TODO] T002: Брошенные временные файлы хранилища — Ожидает
+  - Git Commit: [PENDING] fix: очистка брошенных временных копий хранилища
+  - Reference: refactor-fixes-20261007 / T002 / implementation
+  - Файлы: src/workspace-session.mjs, src/workspace-deletion.mjs, tests/workspace-session.test.mjs, tests/workspace-deletion.test.mjs, docs/planning/refactor-fixes.md, docs/modules/workspace-sessions.md, docs/modules/project-archive.md
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: актуализировать контекст проекта
+  - Reference: refactor-fixes-20261007 / DOCS / implementation
+  - Файлы: docs/planning/refactor-fixes.md, README.md, docs/architecture/OVERVIEW.md, docs/modules/context-delivery.md, docs/planning/correction-round-0.6.99.md, docs/planning/workflow-kit-context-refactor.md, docs/planning/workflow-kit-context-transition.md, docs/modules/workspace-sessions.md, docs/modules/project-archive.md
+- [TODO] T003: Собрать парный выпуск 0.6.100 — Ожидает
+  - Git Commit: [PENDING] release: собрать Web Pilot 0.6.100
+  - Reference: refactor-fixes-20261007 / T003 / implementation
+  - Файлы: docs/planning/refactor-fixes.md
+- [TODO] T004: Установить готовый выпуск 0.6.100 — Ожидает
+  - Git Commit: [PENDING] release: установить Web Pilot 0.6.100
+  - Reference: refactor-fixes-20261007 / T004 / implementation
+  - Файлы: docs/planning/refactor-fixes.md
+- [TODO] T005: Опубликовать выпуск 0.6.100 — Ожидает
+  - Git Commit: [PENDING] release: опубликовать Web Pilot 0.6.100
+  - Reference: refactor-fixes-20261007 / T005 / implementation
+  - Файлы: docs/planning/refactor-fixes.md
 
 ## Context Pack For This Cycle
 
+- docs/planning/refactor-fixes.md
 - docs/architecture/OVERVIEW.md
 
 Служебные состояния меняются только командами workflow. Приёмка не архивирует scope.
