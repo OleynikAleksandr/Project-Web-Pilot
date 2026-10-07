@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1384,
+  "plan_revision": 1386,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "recovery-on-demand-research-20261006",
@@ -758,13 +758,14 @@
         "Версии уже подготовлены T004; нет повторной сборки, изменения исходников и объявления native Windows/живого ChatGPT проверенными."
       ],
       "expected_commit_message": "release: собрать Web Pilot с новым Workflow Kit",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "recovery-on-demand-research-20261006",
         "task_id": "T005",
         "role": "implementation"
-      }
+      },
+      "actual_files": []
     },
     {
       "id": "T006",
@@ -860,7 +861,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: recovery-on-demand-research-20261006
 Current Task: нет
-Revision: 1384
+Revision: 1386
 
 ## Цель
 
@@ -910,8 +911,8 @@ Revision: 1384
   - Git Commit: [DONE] docs: подготовить выпуск нового Workflow Kit
   - Reference: recovery-on-demand-research-20261006 / DOCS / implementation
   - Файлы: docs/planning/workflow-kit-context-refactor.md, docs/planning/recovery-on-demand-research.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/DOCUMENTATION_INDEX.md, docs/MODULES.md, docs/architecture/OVERVIEW.md, packages/workflow-kit/docs/modules/workflow-kit-package.md, README.md, packages/workflow-kit/src/WORKFLOW.md, packages/workflow-kit/src/templates/AGENTS.md, packages/workflow-kit/src/templates/PROTOTYPE.md, packages/workflow-kit/src/templates/SPEC.md, packages/workflow-kit/src/templates/PLAN.md, packages/workflow-kit/src/templates/CONTINUE.md, packages/workflow-kit/src/templates/STAGES.md, AGENTS.md, docs/planning/workflow-kit-context-transition.md, docs/modules/workflow-kit-recovery.md, docs/CONTEXT_DELIVERY.md, docs/planning/context-as-text.md, docs/WORKSPACE_SETUP.md, packages/workflow-kit/README.md, docs/modules/chatgpt-dom-compatibility.md, packages/workflow-kit/src/templates/PRODUCT.md, packages/workflow-kit/src/templates/ARCHITECTURE.md, packages/workflow-kit/src/templates/START.md
-- [TODO] T005: Собрать парный выпуск Web Pilot с новым Workflow Kit — Ожидает
-  - Git Commit: [PENDING] release: собрать Web Pilot с новым Workflow Kit
+- [DONE] T005: Собрать парный выпуск Web Pilot с новым Workflow Kit — Завершено
+  - Git Commit: [DONE] release: собрать Web Pilot с новым Workflow Kit
   - Reference: recovery-on-demand-research-20261006 / T005 / implementation
   - Файлы: docs/planning/workflow-kit-context-transition.md
 - [TODO] T006: Установить выпуск и активировать новый Kit для проекта — Ожидает
