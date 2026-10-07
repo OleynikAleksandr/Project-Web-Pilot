@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1398,
+  "plan_revision": 1400,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "recovery-on-demand-research-20261006",
@@ -940,13 +940,14 @@
         "После DOCS одна сборка macOS/Windows; manifest и хеши подтверждены."
       ],
       "expected_commit_message": "release: собрать Web Pilot 0.6.98",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "recovery-on-demand-research-20261006",
         "task_id": "T009",
         "role": "implementation"
-      }
+      },
+      "actual_files": []
     },
     {
       "id": "T010",
@@ -1038,7 +1039,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: recovery-on-demand-research-20261006
 Current Task: нет
-Revision: 1398
+Revision: 1400
 
 ## Цель
 
@@ -1108,8 +1109,8 @@ Revision: 1398
   - Git Commit: [DONE] docs: актуализировать документацию проекта
   - Reference: recovery-on-demand-research-20261006 / DOCS-2 / implementation
   - Файлы: docs/architecture/OVERVIEW.md, docs/planning/workflow-kit-context-transition.md, README.md, docs/CONTEXT_DELIVERY.md, docs/modules/chatgpt-dom-compatibility.md, docs/modules/workflow-kit-recovery.md, docs/WORKSPACE_SETUP.md, packages/workflow-kit/docs/modules/workflow-kit-package.md, docs/DOCUMENTATION_INDEX.md, docs/MODULES.md
-- [TODO] T009: Собрать парный выпуск 0.6.98 — Ожидает
-  - Git Commit: [PENDING] release: собрать Web Pilot 0.6.98
+- [DONE] T009: Собрать парный выпуск 0.6.98 — Завершено
+  - Git Commit: [DONE] release: собрать Web Pilot 0.6.98
   - Reference: recovery-on-demand-research-20261006 / T009 / implementation
   - Файлы: docs/planning/workflow-kit-context-transition.md
 - [TODO] T010: Установить готовый выпуск 0.6.98 — Ожидает
