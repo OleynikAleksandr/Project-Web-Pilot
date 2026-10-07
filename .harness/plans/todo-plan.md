@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1422,
+  "plan_revision": 1423,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "recovery-on-demand-research-20261006",
@@ -97,7 +97,9 @@
       "tests/chromium-diagnostics.test.mjs",
       "scripts/check-mac-signature.mjs",
       "src/startup-platform.mjs",
-      "tests/startup-platform.test.mjs"
+      "tests/startup-platform.test.mjs",
+      "src/common.mjs",
+      "tests/common.test.mjs"
     ],
     "documentation_paths": [
       "docs/planning/workflow-kit-context-refactor.md",
@@ -1238,7 +1240,11 @@
         "tests/workspace-session.test.mjs",
         "tests/auto-plan.test.mjs",
         "tests/sidebar.test.mjs",
-        "tests/chromium-diagnostics.test.mjs"
+        "tests/chromium-diagnostics.test.mjs",
+        "src/common.mjs",
+        "src/workspace-deletion.mjs",
+        "src/auto-plan.mjs",
+        "tests/common.test.mjs"
       ],
       "documentation_paths": [
         "docs/planning/correction-round-0.6.99.md"
@@ -1417,7 +1423,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: recovery-on-demand-research-20261006
 Current Task: нет
-Revision: 1422
+Revision: 1423
 
 ## Цель
 
@@ -1522,7 +1528,7 @@ Revision: 1422
 - [TODO] T017: Мелкие исправления интерфейса и журналов — Ожидает
   - Git Commit: [PENDING] fix: мелкие исправления интерфейса и журналов
   - Reference: recovery-on-demand-research-20261006 / T017 / implementation
-  - Файлы: src/main.mjs, src/workspace-session.mjs, src/auto-plan-state.mjs, src/ui/sidebar.mjs, src/chromium-diagnostics.mjs, tests/workspace-session.test.mjs, tests/auto-plan.test.mjs, tests/sidebar.test.mjs, tests/chromium-diagnostics.test.mjs, docs/planning/correction-round-0.6.99.md
+  - Файлы: src/main.mjs, src/workspace-session.mjs, src/auto-plan-state.mjs, src/ui/sidebar.mjs, src/chromium-diagnostics.mjs, tests/workspace-session.test.mjs, tests/auto-plan.test.mjs, tests/sidebar.test.mjs, tests/chromium-diagnostics.test.mjs, src/common.mjs, src/workspace-deletion.mjs, src/auto-plan.mjs, tests/common.test.mjs, docs/planning/correction-round-0.6.99.md
 - [TODO] DOCS-3: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать документацию проекта
   - Reference: recovery-on-demand-research-20261006 / DOCS-3 / implementation
