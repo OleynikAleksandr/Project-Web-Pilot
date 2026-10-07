@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { VERSION, MANIFEST, PLAN, CONFIG, withPlanFile, check, hash, id, json, readJSON, atomic, safePath, errorResult } from './common.mjs';
-import { git, run, repoRoot, head, allChanges, identityReady, localPath } from './git.mjs';
+import { git, run, repoRoot, head, allChanges, identityReady, localPath, ensureIdleGit, paths } from './git.mjs';
 import { listPlans, preflightPlanMigration, migrateLegacyPlans } from './session-plans.mjs';
 import { status } from './actions.mjs';
 import { readPlan, emptyPlan, writePlan, projectContextPaths } from './plan.mjs';
@@ -14,7 +14,7 @@ import { inspectionInputs } from './inspection-inputs.mjs';
 const hookNames = ['pre-commit', 'commit-msg', 'post-commit', 'pre-push'];
 const hookName = entry => path.posix.basename(entry.path.replaceAll('\\', '/'));
 // Versions this installer upgrades in place. Consumers (Web Pilot Workspace Setup) read the same list.
-export const upgradeFrom = new Set(['1.1.0', '1.2.0', '1.3.0', '1.4.0', '1.4.1', '1.4.2', '1.4.3', '1.4.4', '1.4.5', '1.4.6', '1.4.7', '1.4.8', '1.4.9', '1.4.10', '1.4.11', '1.4.12', '1.4.13', '1.5.0', '1.5.1', '1.5.2', '1.5.3', '1.5.4', '1.5.5', '1.5.6']);
+export const upgradeFrom = new Set(['1.1.0', '1.2.0', '1.3.0', '1.4.0', '1.4.1', '1.4.2', '1.4.3', '1.4.4', '1.4.5', '1.4.6', '1.4.7', '1.4.8', '1.4.9', '1.4.10', '1.4.11', '1.4.12', '1.4.13', '1.5.0', '1.5.1', '1.5.2', '1.5.3', '1.5.4', '1.5.5', '1.5.6', '1.6.0']);
 function migrateNonePlanForContinuity(root) {
   const file = path.join(root, PLAN);
   if (!fs.existsSync(file)) return false;
@@ -182,6 +182,12 @@ function upgradeInstallation(root, preview) {
     // Validate the canonical current plan before any upgrade write. Legacy plans
     // are inventoried only as history and never compete to become current.
     const legacyBefore = preflightPlanMigration(root);
+    // Commit preconditions are checked before any write: a late refusal would leave
+    // a written runtime and manifest that a retry treats as already installed.
+    ensureIdleGit(root);
+    check(identityReady(root), 'GIT_IDENTITY', 'Git не знает автора. Настройте user.name и user.email; обновление не начато.');
+    const foreign = paths(root, 'staged');
+    check(!foreign.length, 'FOREIGN_STAGED', 'В index есть посторонние файлы. Обновление не начато.', { paths: foreign });
     const temp = path.join(root, '.harness/runtime/kit-upgrade-preview-' + id());
     fs.mkdirSync(temp, { recursive: true });
     let desired;
@@ -266,10 +272,19 @@ function upgradeInstallation(root, preview) {
   });
 }
 
+function applyGitIdentity(root, opts) {
+  for (const key of ['git-name', 'git-email']) check(typeof opts[key] === 'string' && opts[key].trim() && !/[\r\n\0]/.test(opts[key]), 'GIT_IDENTITY', 'Укажите имя и email автора Git.');
+  git(root, ['config', '--local', 'user.name', opts['git-name'].trim()]);
+  git(root, ['config', '--local', 'user.email', opts['git-email'].trim()]);
+}
+
 export function install(opts) {
   const preview = inspect(opts);
   if (opts['dry-run']) return publicPreview(preview);
-  if (preview.installed && opts.update && preview.upgradeable) return upgradeInstallation(preview.project_path, preview);
+  if (preview.installed && opts.update && preview.upgradeable) {
+    if (opts['git-name'] || opts['git-email']) applyGitIdentity(preview.project_path, opts);
+    return upgradeInstallation(preview.project_path, preview);
+  }
   if (preview.installed && opts.update) check(preview.compatible, 'UNSUPPORTED_MIGRATION', 'Для этой версии нет безопасной миграции. Существующая установка сохранена.');
   if (preview.installed) return reconnect(preview.project_path, preview);
   check(preview.can_install, 'INSTALL_CONFLICT', 'Установка остановлена из-за конфликтов. Существующие файлы сохранены.', { conflicts: preview.conflicts });
@@ -278,11 +293,7 @@ export function install(opts) {
   const fresh = !preview.is_git;
   if (fresh) git(root, ['init', '-b', 'main']);
   return locked(root, () => {
-    if (opts['git-name'] || opts['git-email']) {
-      for (const key of ['git-name', 'git-email']) check(typeof opts[key] === 'string' && opts[key].trim() && !/[\r\n\0]/.test(opts[key]), 'GIT_IDENTITY', 'Укажите имя и email автора Git.');
-      git(root, ['config', '--local', 'user.name', opts['git-name'].trim()]);
-      git(root, ['config', '--local', 'user.email', opts['git-email'].trim()]);
-    }
+    if (opts['git-name'] || opts['git-email']) applyGitIdentity(root, opts);
     const installJournal = path.join(root, '.harness/runtime/install-journal.json');
     const entries = preview._entries;
     atomic(installJournal, json({ schema_version: 1, version: VERSION, root, entries, initial_changes: preview.existing_changes, hook_location: preview._hook_location }), 0o600);

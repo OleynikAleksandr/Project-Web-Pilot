@@ -272,7 +272,7 @@ export function recoverState(root, reason = 'manual', options = {}) {
     add('planning','РАБОЧИЕ СПЕЦИФИКАЦИИ docs/planning (содержимое по выбору)\n'
       +(planning.map(doc=>'- '+doc.path+' — '+doc.title+' — '+doc.bytes+' байт').join('\n')||'нет'));
 
-    const included = [PLAN,CONFIG,rulesPath,policyPath,...(instructions?[instructions.file]:[])];
+    const included = [PLAN,CONFIG,rulesPath,policyPath,...(instructions?.text?[instructions.file]:[])];
     const omitted = templatePaths.map(file=>({path:file,reason:'ON_DEMAND'}));
     for(const doc of documents) {
       if (LEGACY_REFERENCE_DOCUMENTS.has(doc.path)) {
