@@ -87,7 +87,8 @@ export class WorkspaceDeletion {
     await fs.writeFile(temporary, JSON.stringify(job), { mode: 0o600 }); await fs.rename(temporary, this.jobFile(job));
   }
   async purgeCopies(workspace) {
-    for (const version of [1, 2]) {
+    // Every migration copy the store can create (v1–v5) may hold the project's URLs and attempts.
+    for (const version of [1, 2, 3, 4, 5]) {
       const file = this.store.file + `.v${version}-backup`;
       if (!await lstatOrNull(file)) continue;
       const data = JSON.parse(await fs.readFile(file, 'utf8'));

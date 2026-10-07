@@ -140,3 +140,15 @@ test('1.4.0 manifest reconciles to the trusted bundled Kit and missing task-requ
   assert.ok(result.issues.some(issue => issue.path === required));
   assert.equal(result.backupPath, undefined); assert.deepEqual(fs.readFileSync(manifestFile), before);
 });
+
+test('Doctor accepts every version Workspace Setup supports and rejects unknown ones', t => {
+  const root = fixture(t), manifestFile = path.join(root, '.harness/kit-manifest.json');
+  const original = fs.readFileSync(manifestFile, 'utf8');
+  const withVersion = version => { const data = JSON.parse(original); data.version = version; fs.writeFileSync(manifestFile, JSON.stringify(data)); };
+  for (const version of ['1.0.0', '1.4.13', '1.5.0', '1.5.6', '1.6.0', VERSION]) {
+    withVersion(version);
+    assert.ok(!inspectProject(root).issues.some(item => item.code === 'DOCTOR_VERSION'), version);
+  }
+  withVersion('0.9.0');
+  assert.ok(inspectProject(root).issues.some(item => item.code === 'DOCTOR_VERSION'));
+});

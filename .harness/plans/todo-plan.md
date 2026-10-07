@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1415,
+  "plan_revision": 1417,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "recovery-on-demand-research-20261006",
@@ -1117,13 +1117,19 @@
         "Удаление проекта чистит его записи во всех копиях .v1–.v5-backup."
       ],
       "expected_commit_message": "fix: версии Доктора и очистка копий хранилища",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "recovery-on-demand-research-20261006",
         "task_id": "T014",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "resources/project-doctor/core.mjs",
+        "src/workspace-deletion.mjs",
+        "tests/project-doctor.test.mjs",
+        "tests/workspace-deletion.test.mjs"
+      ]
     },
     {
       "id": "T015",
@@ -1390,7 +1396,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: recovery-on-demand-research-20261006
 Current Task: нет
-Revision: 1415
+Revision: 1417
 
 ## Цель
 
@@ -1480,8 +1486,8 @@ Revision: 1415
   - Git Commit: [DONE] fix: короткие имена частей контекста
   - Reference: recovery-on-demand-research-20261006 / T013 / implementation
   - Файлы: src/context-session.mjs, tests/context-session.test.mjs, tests/electron-smoke.mjs, docs/planning/correction-round-0.6.99.md
-- [TODO] T014: Доктор: версии Kit; удаление проекта: все копии хранилища — Ожидает
-  - Git Commit: [PENDING] fix: версии Доктора и очистка копий хранилища
+- [DONE] T014: Доктор: версии Kit; удаление проекта: все копии хранилища — Завершено
+  - Git Commit: [DONE] fix: версии Доктора и очистка копий хранилища
   - Reference: recovery-on-demand-research-20261006 / T014 / implementation
   - Файлы: resources/project-doctor/core.mjs, tests/project-doctor.test.mjs, src/workspace-deletion.mjs, tests/workspace-deletion.test.mjs, docs/planning/correction-round-0.6.99.md
 - [TODO] T015: Проверки выпуска: identity, preflight, чистое дерево — Ожидает

@@ -28,7 +28,7 @@ test('confirmed archive deletion removes files, all local sessions and backup re
   const { root, store, service, project } = await fixture(t); const a = await project('Удаляемый'), b = await project('Соседний');
   await store.newChat(a); await store.bindChat(a, store.project(a).sessionId, 'https://chatgpt.com/c/keep-cloud-chat');
   await directoryLink(b, path.join(a, 'outside-link'));
-  await fs.writeFile(store.file + '.v2-backup', JSON.stringify(store.snapshot()));
+  for (const version of [1, 2, 3, 4, 5]) await fs.writeFile(store.file + `.v${version}-backup`, JSON.stringify(store.snapshot()));
   await fs.writeFile(path.join(root, 'app/diagnostics.jsonl'), [a, b].map(workspace => JSON.stringify({ workspace })).join('\n') + '\n');
   await store.setArchived(a, true); const p = await service.preview(a);
   assert.equal(p.sessionCount, 2); assert.ok(p.bytes > 0); assert.equal(await fs.readFile(path.join(a, 'my-file.txt'), 'utf8'), 'keep until confirmed');
@@ -36,7 +36,10 @@ test('confirmed archive deletion removes files, all local sessions and backup re
   await service.apply(p.token, 'Удаляемый');
   await assert.rejects(fs.stat(a), { code: 'ENOENT' }); assert.ok(await fs.stat(b)); assert.equal(store.project(a), null);
   assert.equal(store.selected().workspace, b); assert.equal((await fs.readdir(service.journalDir)).length, 0);
-  assert.equal(JSON.parse(await fs.readFile(store.file + '.v2-backup')).projects.length, 1);
+  for (const version of [1, 2, 3, 4, 5]) {
+    const copy = JSON.parse(await fs.readFile(store.file + `.v${version}-backup`));
+    assert.deepEqual(copy.projects.map(item => item.workspace), [b], `v${version} copy keeps only the neighbour`);
+  }
   assert.deepEqual(JSON.parse((await fs.readFile(path.join(root, 'app/diagnostics.jsonl'), 'utf8')).trim()), { workspace: b });
 });
 

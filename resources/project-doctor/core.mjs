@@ -7,6 +7,7 @@ import { repoRoot, head, gitPath, ensureIdleGit, localPath } from '../workflow-k
 import { parsePlan, renderPlan, projectContextPaths } from '../workflow-kit/lib/plan.mjs';
 import { journal, resolveReferences, readConfig } from '../workflow-kit/lib/validate.mjs';
 import { locked, completedTransaction, finishTransaction } from '../workflow-kit/lib/transaction.mjs';
+import { upgradeFrom } from '../workflow-kit/lib/installer.mjs';
 import { regularPath, readFile, signature, digest, fail, backupAndWrite } from './files.mjs';
 
 let catalog;
@@ -30,6 +31,9 @@ function scanTree(folder, names = []) {
   return names;
 }
 
+// The same versions Workspace Setup opens or upgrades: the bundled installer's list, never a second copy.
+const SUPPORTED_VERSIONS = new Set(['1.0.0', ...upgradeFrom, VERSION]);
+
 export function inspectProject(workspace) {
   const result = { workspace, version: null, kitVersion: VERSION, checks: [], issues: [], repairs: [], projectReady: false };
   const changes = [], observed = new Set(); let pending = null, completed = null;
@@ -41,7 +45,7 @@ export function inspectProject(workspace) {
     const manifestBytes = read(MANIFEST);
     if (!manifestBytes) throw fail('DOCTOR_MANIFEST', 'Установочная запись отсутствует. Откройте папку проекта через обычную подготовку; доктор не угадывает состав установки.');
     let manifest; try { manifest = JSON.parse(manifestBytes.content); } catch { throw fail('DOCTOR_MANIFEST', 'Установочная запись повреждена. Нужна её резервная копия.'); }
-    if (manifest.schema_version !== 1 || !Array.isArray(manifest.files) || !['1.1.0', '1.2.0', '1.3.0', '1.4.0', '1.4.1', '1.4.2', '1.4.3', '1.4.4', '1.4.5', '1.4.6', '1.4.7', '1.4.8', '1.4.9', '1.4.10', '1.4.11', '1.4.12', VERSION].includes(manifest.version)) throw fail('DOCTOR_VERSION', 'Версия или формат установки неизвестны. Нужен совместимый выпуск приложения.');
+    if (manifest.schema_version !== 1 || !Array.isArray(manifest.files) || !SUPPORTED_VERSIONS.has(manifest.version)) throw fail('DOCTOR_VERSION', 'Версия или формат установки неизвестны. Нужен совместимый выпуск приложения.');
     result.version = manifest.version;
     const trusted = trustedFiles(), trustedMap = new Map(trusted.map(e => [e.path, e]));
     const owned = manifest.files.filter(e => e.kind === 'owned');
