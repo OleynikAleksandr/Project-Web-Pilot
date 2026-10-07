@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1451,
+  "plan_revision": 1452,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "refactor-fixes-20261007",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Исправление ошибок, найденных живой приёмкой после рефакторинга Workflow Kit: автоматическая отправка каждого старта сессии и отсутствие брошенных копий хранилища; выпуск Web Pilot 0.6.100.",
   "acceptance_criteria": [
     "Исправление ошибок, найденных живой приёмкой после рефакторинга Workflow Kit: автоматическая отправка каждого старта сессии и отсутствие брошенных копий хранилища; выпуск Web Pilot 0.6.100."
@@ -24,7 +24,10 @@
       "src/workspace-session.mjs",
       "src/workspace-deletion.mjs",
       "tests/workspace-session.test.mjs",
-      "tests/workspace-deletion.test.mjs"
+      "tests/workspace-deletion.test.mjs",
+      "tools/codex-app-server-mcp/server.py",
+      "src/mac-runtime-switch.mjs",
+      "tests/codex-app-server-mcp.test.mjs"
     ],
     "documentation_paths": [
       "docs/planning/refactor-fixes.md",
@@ -38,7 +41,8 @@
       "docs/architecture/OVERVIEW.md",
       "docs/modules/chatgpt-dom-compatibility.md",
       "docs/modules/workspace-setup.md",
-      "packages/workflow-kit/docs/modules/workflow-kit-package.md"
+      "packages/workflow-kit/docs/modules/workflow-kit-package.md",
+      "docs/modules/codex-app-server-executor.md"
     ]
   },
   "baseline_commit": "ca5a25740a0bd5f6b05973b50e94d123061c088f",
@@ -46,12 +50,12 @@
   "context_pack": {
     "documents": [
       {
-        "path": "docs/planning/refactor-fixes.md",
+        "path": "docs/architecture/OVERVIEW.md",
         "required": true,
         "revision": "WORKTREE"
       },
       {
-        "path": "docs/architecture/OVERVIEW.md",
+        "path": "docs/planning/refactor-fixes.md",
         "required": true,
         "revision": "WORKTREE"
       }
@@ -282,6 +286,158 @@
       ],
       "expected_commit_message": "release: опубликовать Web Pilot 0.6.100",
       "actual_files": []
+    },
+    {
+      "id": "T006",
+      "title": "Правило долгих команд исполнителя",
+      "why": "Исполнитель завершает процессы команды при её возврате; агент уводил npm test в фон через nohup &, и процесс исчезал с пустым журналом.",
+      "dependencies": [],
+      "functional_paths": [
+        "tools/codex-app-server-mcp/server.py",
+        "src/mac-runtime-switch.mjs",
+        "tests/codex-app-server-mcp.test.mjs",
+        "tests/context-session.test.mjs",
+        "package.json",
+        "package-lock.json"
+      ],
+      "documentation_paths": [
+        "docs/planning/refactor-fixes.md",
+        "docs/modules/codex-app-server-executor.md",
+        "docs/modules/context-delivery.md",
+        "docs/modules/workspace-sessions.md"
+      ],
+      "verification_ids": [
+        "unit-all",
+        "executor-channel",
+        "codex-tools-live"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "LONG_COMMAND_RULE в instructions сервера и описании exec_command; третья строка EXECUTOR_TOOL_RULES в стартовом сообщении.",
+        "Тексты закреплены тестами; поведение исполнителя не меняется.",
+        "Версия Web Pilot 0.6.101."
+      ],
+      "expected_commit_message": "fix: правило долгих команд исполнителя",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "refactor-fixes-20261007",
+        "task_id": "T006",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "DOCS-2",
+      "title": "Актуализация всех документов проекта",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "refactor-fixes-20261007",
+        "task_id": "DOCS-2",
+        "role": "implementation",
+        "iteration": 2
+      },
+      "why": "Перед выпуском сверить README, OVERVIEW и действующие контракты модулей с результатом; обновить устаревшее.",
+      "dependencies": [
+        "T006"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/architecture/OVERVIEW.md",
+        "docs/planning/refactor-fixes.md",
+        "docs/modules/codex-app-server-executor.md",
+        "docs/modules/context-delivery.md",
+        "docs/modules/workspace-sessions.md"
+      ],
+      "acceptance_criteria": [
+        "Документы описывают текущий результат, существенное из выпущенных рабочих спецификаций перенесено в контракты модулей; история остаётся в Git."
+      ],
+      "verification_ids": [],
+      "expected_commit_message": "docs: актуализировать документацию проекта"
+    },
+    {
+      "id": "T007",
+      "title": "Собрать парный выпуск 0.6.101",
+      "why": "Собрать парный выпуск 0.6.101",
+      "dependencies": [
+        "T006",
+        "DOCS-2"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/planning/refactor-fixes.md"
+      ],
+      "verification_ids": [
+        "paired-release"
+      ],
+      "verification_kind": "package",
+      "acceptance_criteria": [
+        "После DOCS одна сборка macOS/Windows; manifest и хеши подтверждены."
+      ],
+      "expected_commit_message": "release: собрать Web Pilot 0.6.101",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "refactor-fixes-20261007",
+        "task_id": "T007",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T008",
+      "title": "Установить готовый выпуск 0.6.101",
+      "why": "Установить готовый выпуск 0.6.101",
+      "dependencies": [
+        "T007",
+        "DOCS-2"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/planning/refactor-fixes.md"
+      ],
+      "verification_ids": [
+        "release-installed"
+      ],
+      "verification_kind": "installed",
+      "acceptance_criteria": [
+        "Обе macOS-копии соответствуют пакетам, identity и подпись сохранены; без пересборки."
+      ],
+      "expected_commit_message": "release: установить Web Pilot 0.6.101",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "refactor-fixes-20261007",
+        "task_id": "T008",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T009",
+      "title": "Опубликовать выпуск 0.6.101",
+      "why": "Опубликовать выпуск 0.6.101",
+      "dependencies": [
+        "T008",
+        "DOCS-2"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/planning/refactor-fixes.md"
+      ],
+      "verification_ids": [
+        "github-release"
+      ],
+      "verification_kind": "package",
+      "acceptance_criteria": [
+        "Source/tag/шесть assets совпадают с manifest; push; READY_FOR_ACCEPTANCE."
+      ],
+      "expected_commit_message": "release: опубликовать Web Pilot 0.6.101",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "refactor-fixes-20261007",
+        "task_id": "T009",
+        "role": "implementation"
+      }
     }
   ],
   "blocked_reason": null,
@@ -299,10 +455,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: refactor-fixes-20261007
 Current Task: нет
-Revision: 1451
+Revision: 1452
 
 ## Цель
 
@@ -338,10 +494,30 @@ Revision: 1451
   - Git Commit: [DONE] release: опубликовать Web Pilot 0.6.100
   - Reference: refactor-fixes-20261007 / T005 / implementation
   - Файлы: docs/planning/refactor-fixes.md
+- [TODO] T006: Правило долгих команд исполнителя — Ожидает
+  - Git Commit: [PENDING] fix: правило долгих команд исполнителя
+  - Reference: refactor-fixes-20261007 / T006 / implementation
+  - Файлы: tools/codex-app-server-mcp/server.py, src/mac-runtime-switch.mjs, tests/codex-app-server-mcp.test.mjs, tests/context-session.test.mjs, package.json, package-lock.json, docs/planning/refactor-fixes.md, docs/modules/codex-app-server-executor.md, docs/modules/context-delivery.md, docs/modules/workspace-sessions.md
+- [TODO] DOCS-2: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: актуализировать документацию проекта
+  - Reference: refactor-fixes-20261007 / DOCS-2 / implementation
+  - Файлы: docs/architecture/OVERVIEW.md, docs/planning/refactor-fixes.md, docs/modules/codex-app-server-executor.md, docs/modules/context-delivery.md, docs/modules/workspace-sessions.md
+- [TODO] T007: Собрать парный выпуск 0.6.101 — Ожидает
+  - Git Commit: [PENDING] release: собрать Web Pilot 0.6.101
+  - Reference: refactor-fixes-20261007 / T007 / implementation
+  - Файлы: docs/planning/refactor-fixes.md
+- [TODO] T008: Установить готовый выпуск 0.6.101 — Ожидает
+  - Git Commit: [PENDING] release: установить Web Pilot 0.6.101
+  - Reference: refactor-fixes-20261007 / T008 / implementation
+  - Файлы: docs/planning/refactor-fixes.md
+- [TODO] T009: Опубликовать выпуск 0.6.101 — Ожидает
+  - Git Commit: [PENDING] release: опубликовать Web Pilot 0.6.101
+  - Reference: refactor-fixes-20261007 / T009 / implementation
+  - Файлы: docs/planning/refactor-fixes.md
 
 ## Context Pack For This Cycle
 
-- docs/planning/refactor-fixes.md
 - docs/architecture/OVERVIEW.md
+- docs/planning/refactor-fixes.md
 
 Служебные состояния меняются только командами workflow. Приёмка не архивирует scope.
