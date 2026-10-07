@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1405,
+  "plan_revision": 1406,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "recovery-on-demand-research-20261006",
@@ -1022,7 +1022,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: READY_FOR_ACCEPTANCE
 Scope: recovery-on-demand-research-20261006
 Current Task: нет
-Revision: 1405
+Revision: 1406
 
 ## Цель
 

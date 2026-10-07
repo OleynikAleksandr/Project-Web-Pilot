@@ -111,36 +111,40 @@
     }
   ],
   "budget": {
-    "soft_tokens": 16000,
-    "hard_tokens": 90000,
     "hard_bytes": 180000,
     "document_bytes": 28000
   },
   "documentation": {
-    "index": "docs/DOCUMENTATION_INDEX.md",
     "mappings": [
       {
         "code": "src/**",
         "documents": [
-          "docs/architecture/ARCHITECTURE.md"
+          "docs/architecture/OVERVIEW.md"
         ]
       },
       {
-        "code": "tests/**",
+        "code": "resources/**",
         "documents": [
-          "docs/VERIFICATION.md"
+          "docs/architecture/OVERVIEW.md"
         ]
       },
       {
-        "code": "package*.json",
+        "code": "tools/**",
         "documents": [
-          "docs/architecture/ARCHITECTURE.md"
+          "docs/modules/codex-app-server-executor.md",
+          "docs/modules/runtime-lifecycle.md"
         ]
       },
       {
-        "code": ".gitignore",
+        "code": "scripts/**",
         "documents": [
-          "docs/architecture/ARCHITECTURE.md"
+          "docs/modules/release.md"
+        ]
+      },
+      {
+        "code": "packages/workflow-kit/src/**",
+        "documents": [
+          "packages/workflow-kit/docs/modules/workflow-kit-package.md"
         ]
       }
     ]
