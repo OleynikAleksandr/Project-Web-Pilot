@@ -1,44 +1,55 @@
 # Workflow Kit
 
-Пакет @webpilot/workflow-kit версии **1.6.0** внутри репозитория Project Web Pilot. Даёт агенту один текущий план на Git checkout/worktree, проверяемые коммиты задач и восстановление контекста. Требует Node.js 22+; приложение использует Node 24.21.0.
+Пакет `@webpilot/workflow-kit` версии **1.6.0** внутри репозитория Project Web Pilot. Даёт агенту один текущий план на Git checkout/worktree, проверяемые коммиты задач и полный стартовый контекст (recovery) из плана, документов и Git. Пакет приватный, в npm не публикуется.
 
-## Установка и запуск
+## Требования
+Node.js 22+ и Git; приложение Web Pilot использует Node 24.21.0. На Windows установщик кладёт Node в `.harness/runtime` проекта; Git — MinGit приложения или системный.
+
+## Исходник и копии
+- `packages/workflow-kit/src` — единственный редактируемый исходник; версия записана в `package.json` и `src/lib/common.mjs`.
+- `.harness/kit` проекта — установленная копия, которой выполняются коммиты; вручную не редактируется, обновляется установщиком отдельным шагом после проверок.
+- `resources/workflow-kit` — копия для приложения: создаётся `npm run stage:workflow-kit` перед start/test/smoke/build, сверяется с `src` файл в файл, в Git не хранится.
+- Прежний репозиторий WorkflowKit не источник: на GitHub он в архиве, его не менять, локальную папку не удалять.
+
+## Установка
 Из корня репозитория:
 
 ```bash
 npm ci
 node packages/workflow-kit/src/install.mjs --project /absolute/project/path
+node packages/workflow-kit/src/install.mjs --project /absolute/empty/folder --mode new
+node packages/workflow-kit/src/install.mjs --project /absolute/project/path --update
 ```
 
-Для совместимой установки — та же команда с --update. Установщик проверяет файлы и создаёт резервную копию; неизвестные изменения не перезаписывает. .harness/kit — установленная копия, её вручную не редактируют. Источник — packages/workflow-kit/src; resources/workflow-kit создаётся автоматически для приложения.
+`--dry-run` показывает изменения без записи. Установщик не перезаписывает занятые и изменённые файлы. `--update` обновляет установки версий 1.1.0, 1.2.0, 1.3.0, 1.4.0–1.4.13, 1.5.0–1.5.6: сохраняет резервную копию в `.harness/runtime/kit-upgrade-*`, текущий план остаётся источником, обновление фиксируется одним коммитом. Перед `--update` нужны автор Git (`user.name`, `user.email`), завершённые merge/rebase и отсутствие посторонних staged-файлов: иначе файлы уже обновлены, а коммит не создан. Новая установка без автора Git или поверх незакоммиченных изменений ждёт `./scripts/workflow install:commit`.
 
-В проекте:
+## Работа в проекте
 ```bash
 ./scripts/workflow status
 ./scripts/workflow recover --format text
 ./scripts/workflow plan:create --help
 ./scripts/workflow task:start T001
 ./scripts/workflow commit --task T001
+./scripts/workflow docs:commit --files '["README.md"]' --message "docs: уточнить README"
 ```
-На Windows PowerShell/CMD используется scripts/workflow.cmd. Реальные задачи и проверки сначала определяются в плане.
+На Windows PowerShell/CMD — `./scripts/workflow.cmd`. Список команд — `./scripts/workflow help`, форма команды — `--help`.
 
-## Работа с проектом
-- Обсуждение/исследование не требуют плана. docs:commit фиксирует документы вне .harness/ при NONE или idle ACTIVE; во время задачи запрещён.
-- Новый chat продолжает текущий todo-plan.md. Независимая работа — отдельный worktree.
-- plan:extend добавляет работу без изменения DONE. before допустим перед не начатой задачей.
-- DOCS предшествует явно заказанному выпуску. Новый раунд выпуска получает новую запись DOCS; без выпуска обязательная DOCS не создаётся.
-- Архивирование — только по команде пользователя. Прежний план читается из Git, архивные копии не создаются.
-- Recovery передаёт целые выбранные документы и проекцию задач; коммиты/диффы читаются по необходимости. Формы PLAN/SPEC/CONTINUE/STAGES доступны через --help.
-- Один предел budget.document_bytes, по умолчанию 28000 байт UTF-8, применяется к Markdown и каждой части пакета. Общий recovery — до 180000 байт и до 7 частей, без усечения. Ошибка размера не удаляет правки.
+- Обсуждение и исследование план не требуют. Новый chat продолжает текущий `.harness/plans/todo-plan.md`; независимая работа — отдельный Git worktree. Уже доставленный recovery повторно не запрашивать.
+- Задача: `task:start` до правок → работа → `commit --task`; Kit запускает назначенные проверки. Git hooks не обходить.
+- `plan:extend` добавляет работу без изменения DONE; `before` ставит задачу перед ещё не начатой.
+- Сборка и публикация — только в явно названных delivery-задачах; перед ними Kit ставит DOCS (`DOCS`, `DOCS-2`, …), push до её завершения отклоняется. Без выпуска DOCS не создаётся.
+- `docs:commit` фиксирует `.md` вне `.harness/` без плана или между задачами. Каждый изменённый документ ≤ `budget.document_bytes`, по умолчанию 28000 байт UTF-8. Recovery делится на части того же предела: всего ≤ 180000 байт и ≤ 7 частей, без усечения.
+- Закрытие плана (`archive`) и перенос незавершённого (`plan:carryover`) — только по поручению пользователя; прежний план читается из Git, архивных копий нет.
 
-## Проверка и интеграция
+## Где данные
+- `.harness/plans/todo-plan.md` — текущий план; `.harness/workflow.json` — профиль, проверки, бюджет; `.harness/kit-manifest.json` — состав установки; `.harness/runtime/` — локальные файлы вне Git.
+- `<git-dir>/workflow-kit/` — журнал транзакции, результаты проверок, квитанция recovery.
+
+## Проверка
 ```bash
 npm run check --prefix packages/workflow-kit
 npm test
 ```
+Первая команда проверяет пакет, внешнего потребителя, установку и обновление, Git lifecycle, документы и recovery полного проекта; вторая запускает корневые тесты Web Pilot, включая тесты Kit. Друг друга они не заменяют.
 
-Первая команда проверяет пакет, внешний consumer, установку/обновление, Git lifecycle, документы и recovery полного проекта. Вторая запускает корневые тесты Web Pilot; проверки взаимно не заменяются.
-
-Programmatic API и контракты — [спецификация пакета](docs/modules/workflow-kit-package.md). Web Pilot поставляет самодостаточную копию getRuntimeRoot(), не зависит от соседнего checkout. Внешний Web Pilot Sidebar использует browser-адаптер клиента; его workspace здесь не изменяется.
-
-[README приложения](../../README.md), [recovery](../../docs/modules/workflow-kit-recovery.md), [переход текущего проекта](../../docs/planning/workflow-kit-context-transition.md). Факты поставки и хеши находятся в release-manifest.json/GitHub Release; прежние версии документов — в Git.
+API, команды, коды ошибок и устройство recovery — [контракт пакета](docs/modules/workflow-kit-package.md). Что проверяет и доставляет приложение — [граница Kit ↔ Web Pilot](../../docs/modules/workflow-kit-recovery.md); само приложение — [README](../../README.md). Факты выпусков — `release-manifest.json` и GitHub Release, прежние версии документов — Git.

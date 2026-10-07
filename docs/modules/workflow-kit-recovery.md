@@ -1,54 +1,40 @@
-# Workflow Kit / восстановление контекста
+# Граница Workflow Kit ↔ Web Pilot: recovery
 
-Контракт Workflow Kit 1.6.0 и Web Pilot 0.6.98. Исходник — packages/workflow-kit/src; установленная .harness/kit обновляется штатным installer. Текущий проект уже переведён на Kit 1.6.0; исправление ожидания вложений относится только к Web Pilot. Порядок — [переход](../planning/workflow-kit-context-transition.md).
+Workflow Kit строит recovery текущего checkout и отвечает за его полноту; Web Pilot вызывает Kit проекта, проверяет целостность пакета, держит его в памяти и доставляет ([доставка](context-delivery.md)). Здесь — только граница и то, что проверяет Web Pilot. Состав пакета, документы и ревизии, деление на части, пределы и коды Kit описаны в [контракте пакета Kit](../../packages/workflow-kit/docs/modules/workflow-kit-package.md).
+
+## Код
+- Web Pilot: `src/session-plans.mjs` (`SessionPlans.call`, `loadContext`), `src/mcp-runtime.mjs` (`validateContextPacket`, `CONTEXT_PROTOCOL`), `src/context-inputs.mjs` (`readinessContextKey`), `src/context-cache.mjs`, `src/context-session.mjs` (`packetMatchesProject`, `externalClientLine`), `src/workspace-session.mjs` (`readWorkspace`), `src/auto-plan-state.mjs` (следующая задача), `resources/workspace-setup-worker.mjs` (`inspectionInputs` → `inputKey`).
+- Kit: `packages/workflow-kit/src/lib/recovery.mjs` (`contextPacket`, `TRANSPORT_HARD_BYTES = 180000`, `TRANSPORT_MAX_PARTS = 7`), `lib/inspection-inputs.mjs`, `src/WORKFLOW.md` (Workflow Core), `src/templates/PROTOTYPE.md`.
 
 ## Ответственность
-Kit владеет текущим планом, Git references, сборкой/полнотой recovery и проверками документов. Браузерная доставка принадлежит [Web Pilot](../CONTEXT_DELIVERY.md), runtime/MCP — исполнителю. Связанный Web Pilot Sidebar использует browser-адаптер, не меняет владельца recovery.
+- Kit: current plan, Git references, сборка и полнота recovery, деление на части, пределы размера, проверки документов, процессные правила (Workflow Core, PROTOTYPE, Kit-секция AGENTS). Пакет не назначает работу вместо пользователя.
+- Web Pilot: вызов, проверка целостности и соответствия плану, кеш в памяти, доставка, read-only показ плана ([план](plan-view.md)). Пакет не меняет, не режет, не дополняет; в стартовое сообщение добавляет только транспортные строки и правила исполнителя.
+- Исполнитель Codex App Server и его MCP к recovery отношения не имеют; Web Pilot Sidebar recovery не владеет.
+- Один checkout/worktree — один `.harness/plans/todo-plan.md`; chat и Session ID план не выбирают. Параллельная работа — отдельный worktree.
 
-Один checkout/worktree — один .harness/plans/todo-plan.md. Chat/session ID не выбирает план. Обсуждение и исследование допустимы без реализации; пакет не назначает работу вместо пользователя.
+## Контракт вызова
+- Используется Kit, установленный в проекте (`<workspace>/scripts/workflow.mjs` → `.harness/kit`), а не копия в приложении. Node и окружение (на Windows — с MinGit комплекта) выбирает WorkspaceSetup ([подготовка проекта](workspace-setup.md)).
+- `SessionPlans.call`: `node <workspace>/scripts/workflow.mjs <command> …`, `cwd = workspace`, таймаут 120 с, буфер 4 MiB, `windowsHide`. Входной JSON, если нужен, — временный `.harness/runtime/session-plans/<uuid>.json` (0600, удаляется после вызова). Ответ — JSON в stdout (берётся и при ненулевом коде выхода); не JSON — `PLAN_COMMAND_FAILED`; `ok:false` — код Kit пробрасывается (`CONTEXT_TOO_LARGE`, `CONCURRENT_CHANGE`, `CONTEXT_SECTION` и др.). Web Pilot вызывает так только `recover`. Относительная папка — `WORKSPACE_REQUIRED`.
+- `loadContext`: `recover --format packet`. Совместимость со старым Kit: при `SESSION_REQUIRED` из блока `workflow-state` в `todo-plan.md` берутся `owner_session_id` и `scope_id`, вызов повторяется с `--session <id> [--plan <scope_id>]`; нет `owner_session_id` — исходная ошибка; блок не читается — `WORKFLOW_PLAN_INVALID`. Текущий Kit принимает `--session` только как метаданные, `--plan` — только равный текущему scope.
+- Внешним клиентам Web Pilot даёт строку с `recover --format text` ([доставка](context-delivery.md)); прямые клиенты находят ту же команду в Kit-секции AGENTS.md. Hooks/SessionStart Kit Web Pilot не использует.
 
-## Состав пакета
-Общее ядро: Workflow Core, PROTOTYPE, проектная часть AGENTS.override.md либо AGENTS.md, OVERVIEW, workspace/HEAD/revision, среда, решения пользователя, состояние Git/транзакции и дальнейшее действие. Управляемая Kit-секция AGENTS повторно не включается. README не является обязательным общим источником, но может быть явно выбран.
+## Что Web Pilot проверяет
+- Пакет (`validateContextPacket`): `delivery_protocol = 'inline-context-v1'`, `ack_required = false`; свой `workspace`; `status = 'ready'`, `completeness = 'COMPLETE'`, непустые `context` и `signature`, `generated_at_ms`; ровно 8 `facts` (`project_id`, `project_name`, `plan_revision`, `scope_id`, `execution_scope_status`, `delivery_status`, `task_id`, `task_title`), без `probe_id`/`challenge`; `context` ≤ 180000 байт, точные `context_bytes`/`context_sha256`; `parts[]` с `index 1..N`, `total = N`, точными `bytes`/`sha256`, каждая ≤ `budget.document_bytes` (по умолчанию 28000), склейка через `\n\n` равна `context`. Коды: `MCP_UPDATE_REQUIRED`, `MCP_CONTEXT_MISMATCH`, `MCP_CONTEXT_INCOMPLETE`, `MCP_CONTEXT_TOO_LARGE`, `MCP_CONTEXT_DAMAGED` (префикс исторический).
+- Соответствие плану: после сборки 8 facts сверяются с проекцией `todo-plan.md` (`task_id`/`task_title` — текущая или первая незавершённая задача), иначе `CONTEXT_CHANGED`. `session_id`/`plan_id` пакета не участвуют.
+- ≤ 7 частей и ≤ min(`hard_bytes`, 180000) обеспечивает Kit (`CONTEXT_TOO_LARGE`, без усечения и частичного пакета); Web Pilot число частей не проверяет и дублирует только потолок 180000. Поля `sources[]`, `size` Web Pilot не использует.
 
-ACTIVE добавляет рабочую спецификацию, выбранные документы и **все задачи**: id/title/why/status/dependencies/criteria/SHA/files/checks. Плановые файлы перечислены один раз; фактический состав задаётся этим списком с точными добавлениями/исключениями. Сырой JSON плана и diff не передаются.
+## Свежесть
+- Ключ кеша — `sha256({version:4, workspace, readiness: inputKey})`; `inputKey` считает worker WorkspaceSetup через `inspectionInputs` копии Kit в приложении (содержимое плана и конфигурации, README/AGENTS/OVERVIEW, документов `context_pack` и путей задач, runtime Kit, Git status/HEAD/index/refs/config/hooks, транзакция). Ошибка readiness или ключа запрещает сборку и отправку (`CONTEXT_INPUTS_UNAVAILABLE`), возраст не подменяет ключ.
+- Kit сам сверяет входы до и после сборки (повтор, затем `CONCURRENT_CHANGE`); Web Pilot дополнительно сверяет ключ до и после `build` (2 попытки, затем `CONTEXT_CHANGED`) и перед вставкой (`CONTEXT_CHANGED_BEFORE_SEND`). Кеш не разрешает устаревшую отправку.
+- Просмотр `sent`/legacy/`unknown` чата не запускает `recover`; пользовательский черновик сохраняется.
 
-NONE добавляет archived_scope_id, проверенный SHA закрытия, компактные строки предыдущих задач «id — заголовок — статус — SHA» и ссылки на спецификации в Git. Источник прошлого плана — родитель коммита закрытия. Новый проект без прошлого плана допустим.
+## Что Web Pilot читает из плана напрямую
+`readWorkspace` только читает JSON-блок `<!-- workflow-state:begin -->` из `.harness/plans/todo-plan.md` (`schema_version 1`): идентичность проекта, facts, проекцию задач, `context_pack.documents` (входы наблюдения и название scope). Нет плана или `scripts/workflow.mjs` — `WORKFLOW_NOT_INSTALLED`; неверный формат — `WORKFLOW_PLAN_INVALID`. AutoPlan берёт поля следующей незавершённой задачи из того же блока при совпадении `plan_revision`/`scope_id`. План Web Pilot не пишет: изменения — только командами Kit агента или установщика.
 
-В пакете перечислены staged/unstaged/untracked и посторонние пути, но не содержимое изменений. docs/planning представлен путями, заголовками и размерами. Verification evidence относится к текущему кандидату/коммитам; историческая проверка не доказывает нынешний артефакт.
+## Проверки
+- `unit-all`: `tests/session-plans.test.mjs` (все адреса чатов проецируют один план; legacy `--session` не маршрутизирует), `tests/mcp-runtime.test.mjs`, `tests/context-cache.test.mjs`, `tests/workflow-kit-recovery.test.mjs` (полнота, 7 частей проходят, 8-я — ошибка ниже байтового предела, splitter UTF-8, ревизии документов, NONE), `tests/workflow-kit-source.test.mjs` (запас 20 % recovery реального проекта, Kit — пакет этого репозитория).
+- `kit-check` (`npm run check --prefix packages/workflow-kit`): контракт потребителя, runtime-fixture, `check-project-recovery-fixture.mjs` — реальный проект в изолированной копии до и после нормализации ≤ 144000 байт (запас ≥ 20 %) и ≤ 7 частей. Установленный Kit рабочего checkout он не заменяет.
+- Доставка проверяется отдельно ([доставка](context-delivery.md)); живой ChatGPT и native Windows — приёмка пользователя.
 
-Перед реализацией агент читает только нужные коммиты, диффы и код. Формы этапов не включаются заранее: plan:create --help, plan:extend --help, task:start --help.
-
-## Документы и ревизии
-context_pack.documents задаётся у плана/задачи:
-- path — безопасный путь проекта; revision — WORKTREE по умолчанию либо точный SHA;
-- required:true — целый документ; optional — проверяемая ссылка;
-- дедупликация по (path, revision), required побеждает; разные ревизии не смешиваются;
-- старый heading_path принимается, но не выбирает раздел; dependency_task_ids не добавляет diff;
-- совместимость: docs/MODULES.md и docs/DOCUMENTATION_INDEX.md передаются ссылкой с ревизией и размером даже при required. Источник проверяется.
-
-Отсутствующий required WORKTREE/blob — ошибка. При удалении required-документа транзакция закрепляет ссылку на существующий blob before_head; если документа там нет, операция отклоняется. Изменение ссылки и удаление атомарны, правки при отказе сохраняются. Приватные пути и неподходящие типы файлов не включаются.
-
-## Части и пределы
-budget.document_bytes в workflow.json — 28000 байт UTF-8 по умолчанию, вместе со служебным оформлением. Целые документы/карточки задач сохраняются единицами, пока помещаются. Общая функция делит большие единицы по заголовкам → абзацам → строкам → символам UTF-8, без потерь и повторов. Большой legacy-документ отмечается «разделить при следующей правке».
-
-Эффективный общий предел — min(budget.hard_bytes, 180000); частей не больше 7. Восьмая часть вызывает CONTEXT_TOO_LARGE даже ниже байтового предела. Ошибка сообщает размеры, число частей и крупнейшие источники; частичного успешного пакета нет. Псевдотокены bytes/2 и soft_exceeded удалены. Legacy soft_tokens/hard_tokens принимаются только для совместимости конфигурации.
-
-Формат parts[]: index, total, text, bytes, characters, sha256, sources[]. У source есть source/revision, part/total, точный content и oversized. Сцепление source-фрагментов восстанавливает документ. Общий text/context — части через два перевода строки, включая все заголовки и разделители.
-
-## Фасад и свежесть
-- recover(root), recoverState(root), contextPacket(root): проверенный полный пакет либо явная ошибка. contextPacket сохраняет delivery_protocol=inline-context-v1 для совместимости; теперь передаёт parts.
-- status/validate и currentPlanView читают тот же checkout. sessionPlanView — совместимый фасад, не маршрутизатор планов.
-- SessionStart использует тот же builder; фактический hook/автоматический compact отдельно не считаются подтверждёнными.
-- inspectionInputs вычисляет ключ по содержимому plan/config/документов/runtime, Git/index/hooks и служебному состоянию; новые planning/NONE-источники и повторная правка dirty-файла его меняют.
-- Builder сверяет входы до/после, допускает один повтор, затем CONCURRENT_CHANGE. Web Pilot использует реальный readiness inputKey; независимого тестового contextInputKey нет. Кеш не изменяет контекст и не разрешает stale-отправку.
-- Просмотр sent/legacy/unknown чата не инициирует новый recover. Свежесть проверяется перед вставкой; пользовательский черновик сохраняется.
-
-## План, документы и Git
-Workflow Core — единственный владелец процесса, PROTOTYPE — техники работы/Git. Требования документов описаны в [спецификации](../planning/workflow-kit-context-refactor.md); формы не создают дополнительные обязательные отчёты.
-
-docs:commit разрешён при NONE/idle ACTIVE для .md вне .harness/. Kit-секции AGENTS.md и AGENTS.override.md в index должны совпадать с HEAD побайтно. ValidateStaged до ролей/тестов проверяет размер всех изменённых .md/.markdown без учёта регистра, кроме точного .harness/plans/todo-plan.md; нетронутый legacy не блокирует коммит. Ошибка содержит путь, байты, предел и команду повтора.
-
-При выпуске DOCS фиксируется до delivery. Раунды сохраняют DONE и прежние зависимости, новый выпуск получает отдельную DOCS-итерацию. archive/carryover/session migration не создают архивных копий. install --update удаляет прежние архивы только после проверки tracked/HEAD/index; неизвестные изменения останавливают удаление.
-
-## Проверка
-kit-check и unit-all: NONE/ACTIVE, Git revisions и удаление, полнота/дедупликация, dirty/stale, UTF-8 splitter, общий предел и граница 7/8, роли коммитов, обновление/раунды. check-project-recovery-fixture.mjs использует полный реальный проект в изолированной копии до/после штатной нормализации: <=144000 байт (запас >=20%) и <=7 частей. Он не заменяет установленный Kit рабочего checkout. Доставка проверяется отдельно; live ChatGPT и native Windows требуют пользовательской приёмки.
+## Открыто
+- Правило безопасной промежуточной остановки без DONE (сохранить результат на контрольной точке, закончить ответ, «Продолжай» продолжает незавершённую работу) в recovery отсутствует: стартовое сообщение процессных правил не несёт, а п. 4 `WORKFLOW.md` требует только «одна микрозадача — один подтверждённый коммит, затем заверши ответ». Следствия для автопродолжения — [AutoPlan](auto-plan.md); решение (перенести в Workflow Core или отказаться) за пользователем.

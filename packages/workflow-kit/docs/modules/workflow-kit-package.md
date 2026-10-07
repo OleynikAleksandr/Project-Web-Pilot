@@ -1,57 +1,114 @@
-# Workflow Kit 1.6.0 — контракт пакета
+# Workflow Kit — контракт пакета
 
-@webpilot/workflow-kit — пакет packages/workflow-kit репозитория Project Web Pilot. Node 22+; рабочий consumer Web Pilot 0.6.98 использует Node 24.21.0. Исходник — src/, установленная .harness/kit и resources/workflow-kit — производные копии. Версии/хеши поставок читаются из manifest и Git, не из истории в README.
+`@webpilot/workflow-kit` 1.6.0 (`packages/workflow-kit`, `private`, Node ≥ 22): один current plan на Git checkout/worktree, проверяемые коммиты задач, recovery, установка в проект. Доставка recovery — Web Pilot ([граница Kit ↔ Web Pilot](../../../../docs/modules/workflow-kit-recovery.md)).
 
-## Публичный API
-```js
-import { VERSION, getRuntimeRoot, currentPlanView, sessionPlanView } from '@webpilot/workflow-kit';
-import { contextPacket } from '@webpilot/workflow-kit/lib/recovery';
-import { install, inspect } from '@webpilot/workflow-kit/lib/installer';
-```
-Существующие lib-subpaths (common/actions/plan/transaction/installer/inspection-inputs/installation-files/git/session-plans и остальные), schemas/templates/WORKFLOW, CLI и installer exports сохраняются.
+## Код
+- `index.mjs` — `VERSION`, `WorkflowError`, `getRuntimeRoot()`, `currentPlanView`, `sessionPlanView`, пространства `actions`, `plan`, `sessionPlans`, `recovery`, `installer`. Exports: `.`, `./cli`, `./install`, `./lib/*`, `./schemas/*`, `./templates/*`, `./examples/*`, `./WORKFLOW.md`; bin `workflow`. Экспорты и lib-подпути сохраняются: их импортируют потребители.
+- `src/cli.mjs` (команды), `src/install.mjs`, `src/lib/*.mjs` (модуль на подсистему; `simple-workflow` — plan:create).
+- `src/WORKFLOW.md` (Workflow Core, справка), `src/templates/` (AGENTS, PLAN, SPEC, CONTINUE, STAGES, PROTOTYPE), `src/schemas/`, `src/examples/`.
 
-currentPlanView(root) возвращает current todo-plan, scope/plan_id и parsed plan. sessionPlanView(root, sessionId) — совместимый фасад того же checkout: session_id может отражаться в результате, prepared/unassigned пусты; исторический planId не выбирает состояние. Независимая работа требует отдельного worktree, который Kit сам не создаёт.
+## Поведение
 
-## План и команды
-Один .harness/plans/todo-plan.md на checkout. Legacy --session — только метаданные; --plan допускает current scope, иначе PLAN_NOT_CURRENT. plan:prepare/bind/adopt удалены.
+### Источник и копии
+- Единственный редактируемый исходник — `src/` (обычная задача плана); версия — `package.json` и `VERSION` в `src/lib/common.mjs`, совпадение проверяется. Третью копию исходника не создавать.
+- `.harness/kit` — установленная копия, ею выполняются коммиты; вручную не правится, обновляется `install --update` отдельным шагом после проверок.
+- `resources/workflow-kit` — копия `getRuntimeRoot()` от `npm run stage:workflow-kit` (pre-хуки start/test/smoke/build*), сверка файлов и SHA-256, вне Git; проверки — `scripts/check-workflow-kit-{dependency,staging}.mjs`.
+- Второй потребитель подключает пакет отсюда (`file:` или `git subtree split`). Прежний репозиторий WorkflowKit — архив, не источник; его служебные файлы (`.harness`, `.codex`, AGENTS, `scripts/workflow*`) в пакет не входят.
 
-plan:create начинает реализацию при NONE; ясный запрос допускает спецификацию и план без фиктивного дополнительного согласования. Исследование/обсуждение не требует плана. task:start → работа → commit --task сохраняют фактические файлы, trailers, references и проверки. Транзакция и Git-история проверяются существующим resolver; промежуточный service commit не теряет файлы задачи.
+### План и состояние
+- Решение пользователя: один checkout/worktree — один current plan `.harness/plans/todo-plan.md` (JSON в блоке `workflow-state` + проекция; ручная правка проекции → `PLAN_PROJECTION`, исправляет `repair`). Новый chat/клиент продолжает его; независимая работа — отдельный Git worktree (Kit не создаёт). Session ID план не выбирает.
+- Scope: NONE (без задач, `archived_scope_id` закрытого) | ACTIVE | BLOCKED; `delivery_status`: IN_PROGRESS | READY_FOR_ACCEPTANCE; `verification_kind`: code | package | installed (два последних — delivery).
+- `--session` — метаданные без действия; `--plan` ≠ текущему scope → `PLAN_NOT_CURRENT`; `plan:prepare/bind/adopt` → `COMMAND_REMOVED`. `currentPlanView(root)` → `{plan_id, plan_path, plan}`; `sessionPlanView(root, id)` — тот же план, `session_id`, `prepared: []`, `unassigned: []`.
 
-plan:extend сохраняет позиции/содержимое DONE. before вставляет работу перед не начатой задачей и добавляет зависимость; зависимости вперёд недопустимы. spec — поле верхнего уровня, task:update уточняет checks/files/acceptance.
+### Команды
+`./scripts/workflow <команда>` (Windows — `./scripts/workflow.cmd`), `--help` — форма. Изменяющие команды держат `<git-dir>/workflow-kit/operation.lock` (`WORKFLOW_LOCKED`; после сбоя сам не снимается). `--expected-revision` обязателен для plan:apply/extend, task:update, plan:carryover, project:rename (`EXPECTED_REVISION_REQUIRED`; расхождение — `REVISION_CHANGED`/`REVISION_CONFLICT`).
+- `status`, `validate`, `recover --format text|json|packet`, `plan:view`.
+- `plan:create --input` при NONE (`SCOPE_EXISTS`): `spec` (существующий файл, `SPEC_REQUIRED`), задачи, стек, checks. Функциональному scope нужны required OVERVIEW и required `docs/planning|modules/*.md` (`MODULE_CONTEXT_REQUIRED`).
+- `task:start ID` — до любых правок задачи; зависимости DONE (`DEPENDENCY_PENDING`). Функциональные (не `.md`) файлы требуют профиль DEVELOPMENT (`STACK_NOT_CONFIGURED`) и проверку (`NOT_CONFIGURED`); delivery — проверку того же kind с `evidence` (`VERIFICATION_KIND`).
+- `commit --task ID [--files JSON]`: без списка — изменения после task:start, кроме `.harness/` и приватных путей; прежние правки, изменённые снова, → `EXISTING_EDITS_CHANGED`; явный приватный путь → `PRIVATE_CONTEXT`, `.harness/` → `MANAGED_FILE`. Невошедшее — в `excluded_changes`.
+- `plan:extend --input` (`spec`, `tasks`, `dependencies`), только ACTIVE (`SCOPE_LIFECYCLE`): DONE не меняются и не переставляются; новая задача — в конец или `before` перед ещё не начатой задачей того же вида (обычная/delivery, не DOCS), которая получает зависимость от новой; зависимость на задачу ниже → `TASK_ORDER`; ID `DOCS*` зарезервированы (`TASK_ID_CONFLICT`).
+- `task:update` добавляет files/checks/acceptance; `plan:apply` не меняет статусы и DONE (`MANAGED_FIELDS`, `COMPLETED_TASK_IMMUTABLE`); `config:apply` — полный файл конфигурации.
+- `project:rename --name` — имя в плане, recovery и путях hooks manifest одним коммитом kit-update; без активной задачи (`TASK_ACTIVE`), ≤ 100 символов (`PROJECT_NAME`); повтор без изменений — без коммита; папку не переименовывает.
+- `repair --dry-run` → `repair_id` → `--apply` (завершить/повторить транзакцию, восстановить проекцию, отложить DOCS) или `--cancel` (отменить неподтверждённую подготовку). Журнал вручную не удалять.
 
-DOCS требуется перед явно назначенным delivery. Новый раунд выпуска получает DOCS/DOCS-2/... и отдельную iteration; старые delivery сохраняют прежние зависимости. Без выпуска автоматической DOCS нет. Pre-push не пропускает незавершённую DOCS; all DONE означает READY_FOR_ACCEPTANCE, не автоматическое закрытие.
+### Коммит и Git
+- Каждый коммит — транзакция Kit (`<git-dir>/workflow-kit/transaction.json`) с trailers `Workflow-Scope`, `Workflow-Task`, `Workflow-Role`, `Workflow-Transaction`, у implementation — `Workflow-Iteration` (нет — 1). Коммит без журнала → `MANAGED_COMMIT_REQUIRED`; hooks не обходить, `--no-verify` запрещён.
+- pre-commit (`validateStaged`) до тестов сверяет index с кандидатом, размер документов и пути служебной роли (`SERVICE_SCOPE`; archive, carryover, repair — только план).
+- Отказ проверки → `COMMIT_FAILED`: план и index возвращаются, правки остаются, повторяется названная команда; при чужом вмешательстве журнал остаётся для `repair`.
+- `resolveReferences`: у задачи один коммит нужной iteration, один родитель, файлы в пределах задачи, коммиты зависимостей — предки (`AMBIGUOUS_COMMIT`, `HISTORY_NOT_LINEAR`, `PLAN_COMMIT_MISMATCH`, `COMMIT_SCOPE_MISMATCH`, `DEPENDENCY_ORDER`).
+- Git вызывается с `-c diff.autoRefreshIndex=false`, иначе `git diff` переписывает stat-cache index и меняет отпечаток кандидата. Изменение файла подтверждается `git hash-object`, иначе index, обновлённый Git другой среды (VM), делает изменёнными все файлы и даёт ложный `PRIVATE_CONTEXT`.
+- Приватные пути (сегменты `.env`, `auth`, `credentials`, `secret(s)` с расширением или без, `id_rsa`, `id_ed25519`, `node_modules`, `.codex`, `.git`; `*.pem|key|p12`; `.harness/runtime/`) в контекст и автоматический выбор не входят.
 
-docs:commit при NONE/idle ACTIVE фиксирует .md вне .harness/ ролью documentation, без suite приложения. Kit-секции AGENTS.md/AGENTS.override.md в index должны совпадать с HEAD. Все изменённые .md/.markdown любого регистра проверяются до ролей/тестов по budget.document_bytes (default 28000), кроме точного todo-plan.md. Ошибки сохраняют правки и дают команду повтора.
+### DOCS, delivery и раунды
+- Решение пользователя: build/package/sign/notarize/release/publish (и публикация исходников) — только в явно названной delivery-задаче.
+- DOCS (`DOCS`, `DOCS-2`, …; «Актуализация всех документов проекта») Kit создаёт, только когда в незавершённом хвосте есть delivery. Порядок: работа → DOCS → delivery; DOCS включает OVERVIEW, без функциональных файлов, зависит от обычной работы раунда, delivery — от DOCS своего раунда (`DOCUMENTATION_FINAL_TASK`).
+- Новый раунд с выпуском получает `DOCS-N` с `commit_ref.iteration = N`; завершённые DOCS и delivery не переоткрываются и сохраняют зависимости; опубликованный тег не переиспользуется. Правка без выпуска добавляется без DOCS.
+- Задачи, добавленные во время активной DOCS, откладывают её; её незакоммиченные документы переходят первой выполнимой новой задаче.
+- Все DONE → READY_FOR_ACCEPTANCE, не закрытие; новое поручение до архивирования — `plan:extend`. Задачи после последнего выпуска recovery показывает блоком «ИЗМЕНЕНИЯ ПОСЛЕ ВЫПУСКА».
+- pre-push: незавершённая транзакция → `TRANSACTION_PENDING`; последняя DOCS не-NONE плана не DONE → `DOCS_BEFORE_PUSH` (иначе результат уходит раньше документации); required-проверки `stage: push` → `PUSH_CHECK_FAILED`. План без DOCS и NONE push не блокируют.
 
-archive требует всех DONE и прямого поручения; сохраняет пустой current plan с archived_scope_id, прошлый читается из родителя closing commit. plan:carryover по поручению переносит незавершённые задачи, критерии/проверки/контекст и зависимости, сохраняет source_commit; нужен чистый checkout без активной задачи и точная revision. Архивных копий нет; повторы/прерывания обслуживает обычная транзакция.
+### Документы и docs:commit
+- Единственный норматив размера — `budget.document_bytes` (по умолчанию 28000 байт UTF-8): документы агента, README, любой изменённый `.md`/`.markdown` (и Kit) и каждая часть recovery с оформлением. Основание: 30000 байт плотного русского текста читались целиком, при 40000 вывод ChatGPT терял середину; `exec_command` режет после 32000 байт. Не читается за вызов — пользователь понижает значение.
+- Проверяется blob из index для всех ролей, кроме точного `.harness/plans/todo-plan.md`. Превышение → `DOCUMENT_TOO_LARGE` (путь, байты, предел, команда повтора), правки сохраняются, документ делят по содержанию. Удалённый или нетронутый большой документ не блокирует; при первой правке его делят. Код не ограничивается.
+- `docs:commit --files '[…]' --message "…"`: `.md` вне `.harness/` (`DOCUMENTATION_PATHS`) при NONE или ACTIVE без текущей задачи (`TASK_ACTIVE`); проверяются схема, состав, размер, транзакция, suite приложения не запускается. Kit-секция `AGENTS.md`/`AGENTS.override.md` в index побайтно = HEAD (`MODIFIED_INTEGRATION`); её меняет только установщик.
 
-project:rename меняет имя current plan и пути hooks в manifest служебным kit-update; не переименовывает папку. При активной задаче/неверном имени отказ, без изменений повторного коммита нет.
+### Закрытие плана
+- `archive --scope ID --approval-note "…"` — только по прямому поручению пользователя, означающему приёмку (`USER_CLOSE_REQUIRED`); все задачи DONE (`SCOPE_UNFINISHED`), чистое дерево (`DIRTY_WORKTREE`). Остаётся NONE-план с `archived_scope_id`; закрытый — `git show <closing-SHA>^:.harness/plans/todo-plan.md`. Архивных копий нет.
+- `plan:carryover --input {scope, id, approval_note[, objective]}` — по отдельному поручению (`USER_CLOSE_REQUIRED`), чистое дерево, без активной задачи: незавершённые задачи (критерии, проверки, context_pack, взаимные зависимости) — новый current plan с `carryover.source_commit` прежнего; один коммит, повтор после успеха безопасен.
 
-## Recovery и документы
-Общий пакет — Workflow Core, PROTOTYPE, проектные ограничения AGENTS и OVERVIEW; README не обязателен. ACTIVE содержит все карточки задач и целые выбранные документы; NONE — компактный прошлый план и Git-ссылки. MODULES/INDEX совместимых старых проектов передаются ссылкой даже при required. Формы по --help, сырые JSON/diff не включаются.
+### Recovery
+Сборщик детерминированно читает источники; модели и пересказов нет.
+- Состав: идентичность (проект, scope, worktree, plan, HEAD) → Workflow Core → PROTOTYPE → проектная часть `AGENTS.override.md`/`AGENTS.md` без Kit-секции → факты среды → «ФОРМЫ ПО ЗАПРОСУ» → цель, решения пользователя → все задачи → изменения после выпуска → прошлый план (NONE) → `docs/planning` (путь, заголовок, байты) → required-документы → пути изменений и посторонних правок → транзакция → evidence → продолжение → полнота.
+- Карточка задачи: заголовок, зачем, статусы, зависимости, критерии, SHA и `git show`, файлы с точными добавлениями/исключениями, проверки. JSON плана и тексты diff не передаются: коммиты и диффы агент читает по ссылкам.
+- NONE: `archived_scope_id`, коммит закрытия (подтверждён trailers, `CONTEXT_ARCHIVE`), строки «id — заголовок — статусы — SHA», ссылки на его спецификации на ревизии родителя закрытия; проект без прошлого плана — норма.
+- Формы PLAN/SPEC, CONTINUE, STAGES — через `plan:create`/`plan:extend`/`task:start --help`, не в пакете: ChatGPT показывает модели около 10000 токенов одного результата инструмента.
+- Evidence — только текущей транзакции или коммитов плана; отсутствие evidence ≠ PASSED.
 
-Документы дедуплицируются по path/revision, required побеждает. WORKTREE и точный SHA проверяются; удаление required-документа атомарно закрепляет существующий before_head blob. Если blob отсутствует, ошибка. Приватные пути исключаются, изменения файлов подтверждаются содержимым без обновления индекса; автоматически исключённые приватные правки перечисляются в excluded_changes, явный выбор отклоняется.
+#### Документы контекста
+- `context_pack.documents` плана и текущей (иначе следующей) задачи: `{path, required, revision}`; revision — `WORKTREE` (по умолчанию) или точный SHA коммита (blob из Git с проверкой пути, типа и UTF-8). Дедупликация по (path, revision), required побеждает. `heading_path` принимается, документ передаётся целиком.
+- required — целиком; optional — проверяемая ссылка. `docs/MODULES.md` и `docs/DOCUMENTATION_INDEX.md` — всегда ссылкой с ревизией и размером (`LEGACY_REFERENCE_ONLY`). Нет required-файла или blob → `MISSING_FILE`/`CONTEXT_REVISION`.
+- Kit добавляет required OVERVIEW в каждый план (NONE без него → `PROJECT_CONTEXT_REQUIRED`); README в обязательный набор не входит.
+- Операция, удаляющая required WORKTREE-документ, проверяет его blob в `before_head` и тем же коммитом закрепляет ссылки на эту ревизию; нет blob (создан и удалён без коммита) или удаление вне выбранных файлов → `MISSING_FILE` без изменения плана и index.
 
-contextPacket сохраняет inline-context-v1 и COMPLETE, но включает parts[] с индексами, размерами, SHA-256, точными source-фрагментами. Каждая часть с оформлением <=document_bytes; весь пакет <=min(hard_bytes,180000), не больше 7 частей. Splitter сохраняет UTF-8 и весь текст, ошибки CONTEXT_TOO_LARGE не возвращают усечённого успеха. Soft token-поля принимаются для перехода, но не задают ограничения.
+#### Части и пределы
+- Документы и задачи целы, пока помещаются; большая единица делится: заголовок → абзац → строка → символ UTF-8, без потерь и повторов. Документ больше предела помечается «разделить при следующей правке» и recovery не блокирует.
+- Часть (`WORKFLOW RECOVERY — часть i/n`, фрагменты `--- ИСТОЧНИК: <источник> @ <ревизия> / k/m ---`) ≤ `document_bytes`. Пакет ≤ min(`hard_bytes`, 180000) байт и ≤ 7 частей, иначе `CONTEXT_TOO_LARGE` с 12 крупнейшими источниками, без усечения. 7 — отдельный предел проверенного транспорта: восьмая часть отклоняется и ниже 180000 байт.
+- `parts[]`: `index`, `total`, `text`, `bytes`, `characters`, `sha256`, `sources[]` (`source`, `revision`, `part`, `total`, точный `content`); сцепление фрагментов восстанавливает текст. Псевдотокенов нет.
 
-Readiness/inspection проверяют только current state, учитывают реальные содержательные правки в NONE/planning и dirty-файлах. Web Pilot использует этот же inputKey. Полный контракт — [recovery](../../../../docs/modules/workflow-kit-recovery.md).
+#### Фасад и свежесть
+- `recover(root)` — пакет `completeness: COMPLETE` или ошибка; `contextPacket(root)` (`recover --format packet`): `inline-context-v1`, `context`, `context_bytes`, `context_sha256`, `parts`, `size`, `budget`, `head`, `facts`.
+- Сборка сверяет HEAD, план, конфигурацию, журнал и ключ входов до и после: первое расхождение — повтор, второе — `CONCURRENT_CHANGE`.
+- `inspectionInputs(root).key` — хеш содержимого (не времени) плана, конфигурации, manifest с его файлами, hooks, README/AGENTS/OVERVIEW, `docs/planning`, документов и файлов задач, `.harness/kit`, runtime, index, refs, `git status`; node/git — по identity, размеру и времени. Повторная правка dirty-файла задачи меняет ключ; посторонние файлы — только путь и статус. Legacy-планы в ключ не входят; большой current plan → `CONTEXT_TOO_LARGE`.
+- SessionStart hook отдаёт тот же текст с `DELIVERY-MARKER`, `hook:ack` отмечает получение; `auto_compact_status` всегда AUTO_COMPACT_UNVERIFIED.
 
-## Установка и совместимость
-install создаёт README, OVERVIEW, AGENTS locator и служебные файлы. Новые модули/спецификации появляются по необходимости. Упразднённые документы не восстанавливаются, исторический индекс не дополняется.
+### Установка и обновление
+- `install --project <abs> [--mode new] [--dry-run]`: new — пустая папка (`FOLDER_NOT_EMPTY`); без Git — `git init -b main`. Создаёт `.harness/kit/**`, `scripts/workflow{,.mjs,.cmd}`, `.harness/workflow.json` (`document_bytes` 28000, `hard_bytes` 180000), NONE-план, Kit-секцию AGENTS, README и OVERVIEW при отсутствии, секции `.gitignore`/`.gitattributes`, SessionStart в `.codex/hooks.json`, git hooks, manifest. Занятые пути не перезаписываются (`INSTALL_CONFLICT`); `--expected-fingerprint` → `PREVIEW_CHANGED`. Нет автора Git (задаётся `--git-name`/`--git-email`) или есть исходные изменения — коммит ждёт `install:commit`. Та же версия — reconnect (hooks, runtime).
+- Runtime: macOS/Linux — Node ≥ 22 из `/opt/homebrew/bin` или `/usr/local/bin`, иначе копия в `.harness/runtime/node`; Windows — `.harness/runtime/node.exe`, MinGit из `WORKFLOW_GIT_HOME` в `.harness/runtime/git` (иначе системный Git).
+- `install --update` — для `upgradeFrom` (1.1.0, 1.2.0, 1.3.0, 1.4.0–1.4.13, 1.5.0–1.5.6), иначе или при изменённом owned-файле — `UNSUPPORTED_MIGRATION`. Невалидный или отсутствующий current plan останавливает обновление до записи; победитель среди legacy не угадывается. `MODIFIED_INTEGRATION` — изменённые Kit-секция AGENTS или удаляемый файл Kit, занятый новый служебный путь. Резервная копия — `.harness/runtime/kit-upgrade-<id>/`. `by-id/`, `by-session/`, `archive/` удаляются, только если каждый файл tracked и побайтно равен HEAD, index и рабочей копии (`LEGACY_PLAN_CHANGED`); owner/session-поля снимаются, NONE-план без required OVERVIEW нормализуется. Один коммит kit-update; commit активной задачи выполняет новый runtime.
+- Упразднённые документы и индекс установщик не восстанавливает (миграция документации — отдельная работа); `soft_tokens`/`hard_tokens` принимаются, но не ограничивают.
+- `inspect`, `doctor` ничего не меняют; `remove --dry-run` → `--apply <remove_id>` — только при NONE без транзакции (`ACTIVE_SCOPE`), изменённое сохраняется.
 
-upgradeFrom включает 1.5.6. Проверяются целостность owned/managed файлов, резервная копия и отдельный kit-update. Current plan всегда остаётся источником; invalid/missing current останавливает миграцию. Legacy by-id/by-session/archive удаляются без архивных копий, только если каждый файл tracked и совпадает с HEAD/index; чужие изменения запрещают удаление. Owner/session-поля больше не управляют состоянием. Миграция проектной документации отдельно от установки.
+### Потребители
+`getRuntimeRoot()` — самодостаточный `src/`, потребитель копирует его. Web Pilot: worker подготовки — `installer` (`inspectWithDiagnostics`, `install`, `upgradeFrom`), `inspection-inputs`, `common`, `installation-files`, `git`; Доктор проекта — `installation-files`, `common`, `git`, `plan`, `validate`, `transaction`; recovery — CLI проекта (`recover --format packet`), кеш по ключу входов.
 
-getRuntimeRoot() возвращает самодостаточный payload. Consumer копирует его в resources; состав и содержимое сверяются с src/ без закреплённых вручную SHA/числа файлов. Готовое приложение не зависит от исходников или соседнего репозитория. Старые chat URL/title/history клиента сохраняются.
+## Решения и запреты
+Одно правило — один источник: Workflow Core — процесс; PROTOTYPE — работа и Git в задаче; Kit-секция AGENTS — где взять recovery; проектная часть AGENTS — ограничения проекта; обёртка Web Pilot — только транспорт.
 
-Текущий checkout уже переведён на 1.6.0 штатным установщиком; исправительный выпуск Web Pilot 0.6.98 не меняет пакет Kit. [Порядок перехода](../../../../docs/planning/workflow-kit-context-transition.md).
+Не возвращать:
+- выбор плана по chat/session, `plan:prepare/bind/adopt`, реестр, базу или облачное хранилище планов, session-router, второй формат recovery, слияние legacy-планов;
+- архивные копии планов, DOCS без выпуска;
+- диффы зависимостей в recovery, выбор раздела по `heading_path`, формы в стартовом пакете, псевдотокены и символьные нормативы;
+- закреплённые версию, число файлов и SHA Kit в скриптах приложения; публикацию в npm, registry, daemon, БД, WebSocket, update service;
+- модельный классификатор, модельный API, обязательные кнопки режимов.
 
 ## Проверки
-npm run check пакета (kit-check):
-- check-package — exports/identity/версия/состав npm pack;
-- check-consumer-contract — file:-зависимость, standalone imports/runtime без исходника;
-- check-runtime-fixture — CLI/hooks/lifecycle/upgrade/раунды, включая check-document-fixture и check-project-recovery-fixture;
-- check-carryover-fixture — перенос, Git history, зависимости, guards и прерывания.
+- `kit-check` (`npm run check --prefix packages/workflow-kit`): `check-package` (identity, exports, версия, состав `npm pack`), `check-consumer-contract` (`file:`/tarball без исходника, runtime = `src`), `check-runtime-fixture` (установка, recovery, rename, DOCS-N, pre-push, `before`, legacy-миграция, синтетическая 1.4.13) с `check-document-fixture` (28000/28001, index ≠ worktree, роли, docs:commit) и `check-project-recovery-fixture` (копия Web Pilot с исходниками Kit до/после нормализации: ≤ 144000 байт — запас ≥ 20% — и ≤ 7 частей, задачи целы), `check-carryover-fixture`.
+- `unit-all` (`npm test`): `tests/workflow-kit-{recovery,source,upgrade}.test.mjs` (upgrade — реальная 1.5.6: task:start → kit-update → commit новым runtime). Проверки взаимно не заменяются.
+- Пользователь: живой ChatGPT, native Windows (`workflow.cmd`, PowerShell-hook, MinGit); fixtures на Mac их не заменяют, для 1.6.0 не подтверждены.
 
-Корневой npm test (unit-all) обязателен отдельно. Реальная копия проекта с новым runtime проверяется до/после нормализации: <=144000 байт и <=7 частей, без сокращения плана и изменения рабочей .harness/kit. tests/workflow-kit-upgrade.test.mjs подтверждает start старым 1.5.6 → kit-update → commit новым → следующая задача.
-
-Web Pilot Sidebar переиспользует browser-модули клиента; его vendor lock и production Host API не принадлежат этому пакету. Live ChatGPT и native Windows остаются пользовательскими проверками.
+## Открыто
+- `upgradeFrom` объявляет 1.1.0–1.5.6; тестами покрыты синтетическая 1.4.13 и реальная 1.5.6.
+- Дефект `install --update`: `GIT_IDENTITY`, активная Git-операция и `FOREIGN_STAGED` проверяются при коммите — после записи runtime, manifest и плана; отказ оставляет обновление незакоммиченным, повтор идёт через reconnect без коммита. `--git-name`/`--git-email` здесь не применяются, worker Web Pilot передаёт их только установке.
+- Hot-swap bridge Web Pilot ↔ Kit — только операции current plan, без session-маршрутизации; не реализован.
+- Не поручено: удалить разовую проверку `workflow-kit-archive` и `soft_tokens`/`hard_tokens` из `.harness/workflow.json`.
+- `check-runtime-fixture`: устаревший комментарий о картах для финальной DOCS (они всегда ссылкой); его `doesNotMatch` ищут прежний заголовок `--- ДАННЫЕ:` и проходят всегда.

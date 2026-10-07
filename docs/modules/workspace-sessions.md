@@ -1,634 +1,104 @@
-# Module Specification — Workspace & Sessions
+# Проекты и сессии
 
-Связанные проекты (02.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](../SOURCE_WORKSPACES.md).
+Модуль ведёт локальный реестр проектов и их сессий: хранилище, жизненный цикл сессий, тип Chat/Work, привязку URL разговора, имена и синхронизацию названия с ChatGPT, время агента, архив сессий. Сессия — один облачный разговор ChatGPT и его навигация; план проекта ей не принадлежит.
 
-## Клиентский AutoPlan — 0.6.78
+Не входит: план и его показ ([plan-view.md](plan-view.md), Kit), сборка и доставка recovery ([context-delivery.md](context-delivery.md)), DOM ChatGPT ([chatgpt-dom-compatibility.md](chatgpt-dom-compatibility.md)), вид дерева и окна ([workspace-sidebar-ui.md](workspace-sidebar-ui.md)), архив и удаление проектов ([project-archive.md](project-archive.md)), путь открытия и readiness ([session-opening-performance.md](session-opening-performance.md)). Модель, reasoning, лимиты OpenAI, MCP и туннель модуль не трогает.
 
-AutoPlan связывает sidebar, PageStateSource/PlanMonitor и ChatGPTComposer одним последовательным reconcile. Toggle, изменения плана, выбранного контекста и состояния страницы пробуждают проверку; во время busy Git не опрашивается. Подтверждённый ACTIVE-план с незавершёнными задачами проверяется на подходящем idle и повторно перед Send. Единственный автоматический текст — «Продолжай»; существующие DONE не повторяются, новое DONE не обязательно для продолжения текущей задачи, все DONE завершают отправки.
+## Код
 
-Сохранённый выбор не меняется при ошибке, окончании плана, navigation или restart. Машинные ID последнего assistant/user и lastMessageRole отличают новую паузу от отправленного ручного сообщения. Checkpoint v3 сохраняет контекст/паузы, sending/sent и наблюдаемые циклы генерации; v1/v2 совместимы. Native ID может отсутствовать в Work: количество DOM-узлов не является ID. До загрузки сообщений автоматическая вставка не начинается; отменённая собственная вставка очищается только без пользовательских правок. Неизвестный исход блокирует только свою паузу. Draft сохраняется; ручной Send ждёт нового ответа, включая reload. Stop с частичным ответом может создать подходящий idle. Connection/page/plan ожидания повторно рассматриваются по следующему событию; watchdog пишет STALL_WARNING без Stop. Текст ответа не является протоколом. [Действующий контракт](../planning/auto-plan-client-driven-refactor.md).
+- `src/workspace-session.mjs` — `WorkspaceSessions` (хранилище и все мутации), `WorkspaceError`, `readWorkspace` (data-only проекция плана), `normalizeChatUrl`, `conversationUrlCompatibleWithExperience`, `activeSessionsNewestFirst`.
+- `src/chatgpt-experience.mjs` — entrypoints Chat/Work/входа, `chatGPTExperienceForUrl`, `isPendingChatGPTConversation` (модуль входит в контракт Web Pilot Sidebar — см. chatgpt-dom-compatibility).
+- `src/chatgpt-title.mjs` — `chatGPTTitleScript`, `conversationIdFromChatUrl`.
+- `src/agent-timer.mjs` — `AgentTimer`, `AGENT_IDLE_GRACE_MS = 5000`.
+- `src/main.mjs` — IPC `pilot:*` проектов/сессий, `openConnectedSession`, `rememberSessionTitle`, `rememberScopeTitle`, `syncSelectedSessionTitle`, `observeManualConversation`, `publish`/`snapshot`, проекции архива сессий.
+- `src/context-session.mjs` — привязка URL после отправки, фазы `chat-changed`/`manual-session`, `externalClientLine`.
 
-## Новая сессия — 0.6.66
+## Хранилище
 
-Команда нового Chat/Work (включая первую сессию проекта и новый разговор через Doctor) передаёт одноразовое разрешение очистить старый черновик entrypoint перед подготовкой recovery. Режим может восстановить собственный черновик; разрешение сохраняется до готовности выбранного режима, затем снимается. Выбор существующей сессии и retry этого разрешения не дают; новый пользовательский ввод после подготовки поля сохраняется. Кэш checkout-пакета остаётся общим, но новая attempt/text/requestId принадлежат новой сессии.
+- Файл `<userData>/workspaces.json` (`userData` — `~/Library/Application Support/Project Web Pilot`, Windows `%APPDATA%\Project Web Pilot`; вне `.app`, поэтому переживает обновления). `schemaVersion: 6`.
+- Одна очередь мутаций (`mutate`): изменение делается на копии, затем атомарная запись — временный `workspaces.json.tmp-<uuid>` (0600), `rename`; каталог создаётся с 0700. Записи сериализованы (`saveTail`).
+- Проект: `workspace` (realpath, уникален), `projectId` и `name` (= `project_id`/`project_name` Kit), opt. `displayName`, opt. `lastNamedScopeId`, `expanded`, `archivedAt|null`, `selectedSessionId`, `sessions[]`.
+- Сессия: `sessionId` (`web-pilot-<uuid>`, уникален), `experience` (`chat|work`, неизменен), `chatUrl|null` (нормализован, уникален по всем проектам, совместим с `experience`), `title`, `titleSource` (`page|manual|scope|null`), `lastNamedScopeId`, `createdAt`, `lastOpenedAt`, `archivedAt|null`, `attempt`, `receipt`, opt. `manualStart`, opt. `agentTime {totalMs,lastMs}` (целые ≥0, `lastMs ≤ totalMs`). Legacy-поля `planId`, `originSessionId`, `legacyPlanId` (проверяется формат) и `planBinding` хранятся, но ничего не выбирают.
+- Инварианты при загрузке: у проекта ≥1 активная сессия, выбранная сессия активна; нарушение, повреждённый JSON или неизвестная версия → `SESSIONS_INVALID`, файл не перезаписывается, приложение открывается с `storageError` (создание, подключение и выбор заблокированы до восстановления файла).
+- Миграции v1→v6 выполняются цепочкой при загрузке. Исходник сохраняется в `workspaces.json.v<N>-backup` с флагом `wx` (0600): существующая копия не перезаписывается, повторной миграции нет. v3→v4: `/work/...` → `work`, иначе `chat`; v4→v5: `archivedAt = null` у сессий; v5→v6: legacy-поля плана, `legacyPlanId` только при единственной сессии с отправленным пакетом этого scope (иначе не угадывается), удаляются проектные `planView/preparedPlans/unassignedPlans/scopeTransition`. Устаревший `tokenEstimate` удаляется при загрузке. Требование пользователя: миграция без потери URL, попыток отправки, имён, Chat/Work, дат и архива.
+- `updateSession` принимает только `attempt`, `receipt`, `manualStart` (их пишет доставка), иначе `INVALID_SESSION_PATCH`.
 
-## События страницы и разговоры — 0.6.64
+## Связь с планом
 
-Общий `PageStateSource` получает compact state от изолированного одностороннего preload. Проверяются текущий main frame, chatgpt.com, document ID и sequence; логика не зависит от rAF и работает в скрытом окне. Busy-переходы задают секундомер: первый idle фиксирует конец, одиночный grace-timeout 5 с объединяет короткие паузы. Периодические observeAgent/sampleDom удалены. В source фазы 2 PlanMonitor получает файловые события, startup-account использует тот же observer и единичные explicit snapshots, а общий функциональный пульс 1500 мс удалён. Изменение проекции не вызывает автоматическую повторную доставку recovery.
+Один checkout/worktree — один current plan; все сессии проекта видят один план, новая сессия свой план не создаёт (решение пользователя: сессии — только разговоры и навигация). Чтение и коды ошибок `readWorkspace` — [plan-view.md](plan-view.md); `sessionId` на результат не влияет. Другой `project_id` в папке → `PROJECT_REPLACED`, сохранённые чаты не меняются. Параллельная работа над другим планом — отдельная ветка/worktree.
 
-Ручная отправка своего recovery подтверждается requestId в пользовательском сообщении. Обычный первый Send подтверждается trusted click/Enter и наблюдением отправленного текста внутри страницы; его URL сохраняется с необязательным `manualStart: true` schema v6. Текст не проходит IPC. Такой разговор открывается без новой доставки в фазе manual-session; контекст отправляется только после явного обновления. Чужая навигация не привязывается.
+## Жизненный цикл
 
-С 0.6.65 error UI «Resume stream unavailable» также считается обрывом. При terminal stream/network error `ConversationRecovery` допускает одну попытку открыть тот же сохранённый URL, свежую проверку черновика/статуса отправки и отмену при смене сессии. Повторный сбой требует явного действия; 429 даёт паузу. Генерация и сообщения не повторяются автоматически. Контракт: `docs/planning/event-driven-runtime.md`; доказательства: `docs/VERIFICATION.md`.
+**Первая сессия.** При создании проекта и первом подключении незнакомой папки пользователь явно выбирает Chat или Work до финального действия (`pilot:set-first-session-experience`, `applySetup(token, experience)`), по умолчанию Chat, выбор между проектами не запоминается. Повторное открытие известного проекта сессию не создаёт и выбор не показывает.
 
+**Новая сессия** — операция проекта: «Новый Chat»/«Новый Work» в меню проекта или продолжение Доктора `chat|work`. IPC `pilot:new-session {workspace, experience}`: строгая проверка папки, затем `newSession(workspace, experience)` добавляет запись, выбирает её, раскрывает проект и открывает entrypoint с разовым разрешением очистить восстановленный черновик (`freshDraft`). Старые сессии не заменяются. Ошибки: `WORKSPACE_REQUIRED`, `PROJECT_ARCHIVED`, `SESSION_EXPERIENCE`. Черновик очищается только для новой сессии, только на entrypoint без сообщений, со сверкой документа в том же вызове; другая страница → `chat-changed`, неудачная очистка → `NEW_SESSION_DRAFT_CLEAR_FAILED`. Reopen и повтор черновик не трогают; clipboard, storage и аккаунт не очищаются (детали — context-delivery).
 
-## Действующая модель — 0.6.64 / schema v6
+**Выбор.** Клик по проекту (`pilot:select-workspace`, `latest`) раскрывает его и выбирает новейшую активную сессию сразу, без задержки ради двойного клика; стрелка только раскрывает/сворачивает (`pilot:set-expanded`). Строка сессии — `pilot:select-session`. Запуск, reload («Обновить ChatGPT», ⌘R), «Вернуться к чату проекта», служебное восстановление и выход из Settings сохраняют прежний выбор. Поколения выбора и навигации отбрасывают устаревшие результаты (A→B→A) — см. session-opening-performance.
 
-Session store остаётся schema v6 и backward-compatible: старые поля `planId`, `originSessionId`, `legacyPlanId`, `planBinding` могут присутствовать на диске, но runtime их не использует для выбора plan. Полные задачи в session store не копируются.
+**Порядок.** Активные сессии — по `createdAt` убыв., при равенстве — поздняя запись выше (`activeSessionsNewestFirst`). Открытие старой сессии меняет только `lastOpenedAt`, порядок не меняется. Архивные в дереве не показываются.
 
-`readWorkspace(workspace, sessionId)` всегда проецирует current `.harness/plans/todo-plan.md`. Поэтому две старые sessions одного workspace сохраняют разные `chatUrl`/title/Chat|Work, но получают одинаковые scope/revision/tasks. `currentView` также использует project current scope, а не сохранённый legacy `session.planId`.
+**Чужие чаты** не импортируются: сессии создаёт только Web Pilot.
 
-Новый Chat/Work добавляет session record и открывает новый ChatGPT conversation. Он не вызывает bind/adopt/prepare и получает checkout-scoped recovery. Старый session store не очищается разрушительно; исторические поля остаются для forensic/history compatibility.
+## Chat/Work и URL
 
-Быстрый выбор по-прежнему начинает открывать сохранённый URL до фоновой полной проверки. Поколение навигации защищает URL/health, а отправка нового recovery ждёт актуальной current-checkout readiness и повторной before-Send.
+- Entrypoints: Chat `https://chatgpt.com/`, Work `https://chatgpt.com/work/`, без проекта — `https://chatgpt.com/auth/login`. Открывается сохранённый `chatUrl`, иначе entrypoint по `experience`. `/?surface=work|tpp` считается Work. Модель и reasoning Web Pilot не выбирает.
+- Режим подтверждается нативным переключателем страницы до первого recovery, потому что URL его не доказывает (ChatGPT помнит режим и может открыть Work на `/`). Несовпадение — нативный клик и перечитывание; неподтверждённый режим → фаза `waiting-experience` (`EXPERIENCE_UNCONFIRMED`), подготовка и отправка блокируются, черновик сохраняется. Cookies, localStorage и внутренние функции ChatGPT не используются. Селекторы — chatgpt-dom-compatibility.
+- Fail-closed по фазе (несвязанная сессия): до начатой отправки Work открывается только в Work, Chat — только в Chat, иначе `CHATGPT_EXPERIENCE_MISMATCH` без сборки и Send; появившийся посторонний разговор → `chat-changed`. После начатой отправки временные `/c/WEB:<uuid>` и `/c/local-chatgpt:<uuid>` допустимы (`waiting-chat`/`send-unknown`), но не сохраняются; привязка ждёт постоянный URL без повтора отправки. Причина: созданный Work живёт на общем `/c/<id>`, поэтому истина — сохранённый `experience` и точный `chatUrl`, режим из пути не выводится.
+- `normalizeChatUrl`: только `https://chatgpt.com` без порта и учётных данных; пути `/c/<id>`, `/work/c/<id>`, `/work/<id>`, `/g/<gizmo>/c/<id>`, id ≥8 символов `[A-Za-z0-9_-]`; хвостовой `/` снимается. Chat не принимает `/work/...`; Work принимает `/work/...` и `/c/<id>`. Entrypoint не сохраняется.
+- `bindChat`: `CHAT_URL_INVALID`, `CHAT_EXPERIENCE_MISMATCH`, `CHAT_CHANGED` (у сессии уже другой URL), `CHAT_IN_USE` (URL у другой сессии); отказы — `SESSION_CHANGED`, `PROJECT_ARCHIVED`. У связанной сессии другой URL на странице → фаза `chat-changed`, перепривязки нет. `experience` не меняется никогда.
+- Ручной первый Send (своё сообщение пользователя на entrypoint без recovery этой сессии) привязывает URL с `manualStart: true` и даёт фазу `manual-session` без доставки.
+- Просмотр сохранённого чата не запускает службы, прогрев и доставку; recovery получают только новая сессия и явное «Обновить контекст»; отправка одна, без дубля (context-delivery).
 
-Подробные совместные контракты — [single active plan](session-owned-plans.md), [session opening performance](session-opening-performance.md) и [Context Delivery](../CONTEXT_DELIVERY.md). Версионные разделы ниже сохраняют историю прежней модели.
+## Имена
 
+- Проект: `displayName` — только локальный псевдоним (`pilot:rename-project`, ≤160 символов после схлопывания пробелов, пусто → `PROJECT_NAME_INVALID`). Папка, `workspace`, `project_id`, `project_name` Kit не меняются; агент `displayName` не меняет (каноническое `project_name` меняет только команда Kit `project:rename`). В снимке и архиве показывается `displayName || name`.
+- Сессия: `title` + `titleSource`. Приоритет `manual` > `scope` > `page`; ручное имя не перетирается ничем и переживает restart и архив. `pilot:rename-session` — `titleSource = manual`; архивная сессия → `SESSION_ARCHIVED`, архивный проект → `PROJECT_ARCHIVED`.
+- Лимит имени сессии — 80 символов и 200 байт UTF-8 (схлопывание пробелов, обрезка, снятие хвостовых тире/пробелов; пусто → `TITLE_INVALID`), потому что ChatGPT отвечал 422 на более длинные названия; лечится длиной, не повтором.
+- Page title (`page-title-updated`, без суффикса «- ChatGPT»; «ChatGPT», «New chat», «Новый чат» игнорируются) — только fallback и только когда открыт ровно `chatUrl` выбранной сессии.
+- Имя scope: H1 первого required-документа `docs/planning/*.md` из `context_pack` плана, затем `docs/modules/*.md`, иначе `objective`. Применяется только при `execution_scope_status` `ACTIVE|BLOCKED`, непустых `scope_id` и `objective`. Заголовок scope транзиентен, в store не пишется.
+- `applyScopeTitle` (вызывается из `publish`): scope именует сессию один раз на проект — ту, что выбрана при первом наблюдении scope (`lastNamedScopeId` у проекта и сессии). Переход на существующую соседнюю сессию имя не переносит, чтобы старый чат не получал имя текущего плана. Повторный вызов той же сессии обновляет scope-имя, если изменился канонический заголовок; ревизии и смена задачи не переименовывают. Ручное имя остаётся, но scope помечается использованным.
+- `newSession` при scope `ACTIVE|BLOCKED` с непустым `objective` сразу даёт новой сессии scope-имя.
+- Новых MCP-инструментов и модельных вызовов для имён нет.
 
-## Session title synchronization — 0.6.63
+## Синхронизация названия с ChatGPT
 
-Single-active plan остаётся checkout-scoped; naming не возвращает session-owned plan. Каждая session хранит собственные `title`, `titleSource` и `lastNamedScopeId`. Active/blocked current scope может один раз дать этой session auto-name из `objective` и `nextTaskTitle`; переключение на ранее существующий chat не переносит title, а новая session того же scope может получить собственное initial имя. `manual|scope` имеют приоритет над `page`.
+- Синхронизируется только `manual|scope`-имя выбранной сессии с привязанным `chatUrl` и только когда WebContents открыт ровно на нём и не грузится.
+- Скрипт (`chatGPTTitleScript`) выполняется в авторизованной странице: `GET /api/auth/session` (токен не покидает renderer, не возвращается, не хранится и не логируется) → `GET /backend-api/conversation/<id>`; совпало — без PATCH; иначе `PATCH {title}` и проверочный GET. `document.title` успехом не считается. Endpoint недокументирован и выбран после живой пробы, поэтому всё fail-closed.
+- Коды: страницы — `CHAT_CHANGED`, `CHAT_URL_INVALID`, `AUTH_SESSION`, `READ_FAILED`, `RATE_LIMITED` (429), `RENAME_FAILED`, `VERIFY_FAILED`, `VERIFY_MISMATCH`, `NETWORK_OR_PAGE_ERROR`; main — `TITLE_SYNC_NO_EXPLICIT_TITLE`, `TITLE_SYNC_NOT_READY`, `TITLE_SYNC_FAILED`, `TITLE_SYNC_EXECUTION_FAILED`. Локальное имя при ошибке сохраняется.
+- Триггеры — только события: `navigation-loaded`, `chat-bound`, `manual-chat-bound`, `scope-title-changed`, `manual-rename`, `title-changed-during-sync` (имя сменилось во время операции). Одна операция на сессию одновременно; таймеров, debounce и повторов нет; после 429 — одна неудача, следующая попытка при следующем событии (например, открытии). Причина: запуск от общего `ContextSession.onChange` давал шторм запросов в обход backoff и 429.
+- Итог пишется в Chromium diagnostics (`title-sync`: sessionId, ok, code, status, changed, matched, reason) без токена и текста названия ([chromium-diagnostics.md](chromium-diagnostics.md)).
 
-Main поддерживает единый desired-title sync для автоматического и ручного rename. Если selected session имеет exact bound `chatUrl` и WebContents действительно открыт на нём, `ChatGPTTitleAdapter` выполняет server-side rename внутри authenticated renderer и проверяет GET-readback. Navigation race, другой URL, отказ auth/backend и verify mismatch fail closed; локальное имя не теряется. Удалённый ChatGPT не получает local IPC/preload privileges, access token не покидает renderer.
+## Время агента
 
-0.6.60 делает этот путь reconciliation вместо безусловного rename: adapter сначала GET-читает server title; при совпадении завершает без PATCH. После reopen используется force-reconcile; debounce сохраняет `force=true`, даже если следом пришло обычное состояние `ContextSession`. После late `bindChat` новой session запускается отдельный sync. Ошибки readiness/auth получают ограниченную последовательность retry и пишутся в безопасную Chromium diagnostics без токена и текста сообщений.
+- Работа агента = видимая кнопка Stop ChatGPT (busy из наблюдателя страницы, без сети и опроса). Замер стартует на busy; idle запускает grace 5 с, busy в пределах grace продолжает то же задание. Конец — начало последнего idle после истечения grace, смена выбора/навигации, новый документ страницы, закрытие окна. Архивная выбранная сессия не замеряется.
+- Идущий замер живёт в памяти main (`agentTimer.view` → `selected.agentRun`); завершённый добавляется `recordAgentTime(workspace, sessionId, ms)` к `agentTime` своей сессии, даже если выбрана уже другая. Некорректное значение → `INVALID_AGENT_TIME`; некорректный `agentTime` в файле → `SESSIONS_INVALID`. Показ — workspace-sidebar-ui.
 
-0.6.61 меняет только canonical naming source: `readWorkspace()` читает H1 первого required `docs/planning/*` (затем `docs/modules/*`) из current plan context pack. Scope title хранится как transient projection и не добавляется в session store. Все session names проходят единый 80-char/200-byte normalizer. Existing `scope` title того же scope может мигрировать на новый canonical short title; manual title остаётся неизменным.
+## Архив и удаление сессий
 
-## Текущее создание проекта и первый запуск
+- `pilot:archive-session`: только у неархивного проекта; последнюю активную нельзя (`SESSION_LAST_ACTIVE`). Если архивируется выбранная — выбор переходит на последнюю открытую из оставшихся, и она открывается. Restore (`archive:restore-sessions`) возвращает `archivedAt = null`, `experience`/`chatUrl`/имя не меняет, выбор не трогает.
+- Локальное удаление (`archive:delete-sessions`) — только архивных (`SESSION_NOT_ARCHIVED`), набор проверяется целиком до изменений (`PROJECT_REPLACED`, `SESSION_ARCHIVE`). Удаляются запись сессии, её копии в `workspaces.json.v1..v5-backup` и строки `diagnostics.jsonl` этой сессии (backup без массива `projects` → `SESSION_LOCAL_CLEANUP`). Папка, Git, WorkspaceDeletion и облачные чаты не затрагиваются — удалять облачные чаты запрещено.
+- Окно «Архив», вкладка «Сессии»: только сессии неархивных проектов (название, Chat/Work, проект, время архивации), выбор click/Shift/⌘/Ctrl, пакетный возврат, локальное удаление после подтверждения с текстом, что облачные разговоры ChatGPT останутся. Архив проектов — независимый жизненный цикл ([project-archive.md](project-archive.md)).
 
-В 0.6.40 перед первым именем проекта пользователь явно выбирает расположение; оно сохраняется для следующих проектов и перезапусков. Chat/Work одним действием применяет preview и открывает первую сессию. macOS-мастер автоматически отслеживает установку Apple и новые скопированные данные подключения; Windows-мастер остаётся отдельной непроверенной частью. Подробные контракты — docs/WORKSPACE_SETUP.md и docs/modules/first-run-onboarding.md.
+## Снимок состояния для UI
 
+`publish()` строит один снимок и шлёт его сайдбару (`pilot:state-changed`) только при изменении сигнатуры; новый сайдбар получает начальный снимок после загрузки. Проекты в снимке — неархивные, сессии — активные newest-first с полями `sessionId, experience, chatUrl, title, createdAt`; у выбранной сессии `attempt` урезан до `protocol/requestId/state`, `receipt` скрыт. `diagnostics.jsonl` (0600) дописывается только при изменении сводной записи (фаза, сессия, `requestId`, sha пакета, revision, код ошибки, состояние страницы), без текста сообщений.
 
-## Назначение
+## Не возвращать
 
-Хранить локальную связь проекта Web Pilot с облачными разговорами ChatGPT и управлять созданием/выбором сессий проекта. Одна сессия проекта соответствует одному облачному разговору и с момента создания имеет явный experience: обычный Chat либо Work.
+- Счётчик токенов сессии (js-tiktoken, догрузка истории, `tokenEstimate`): сумма истории ≠ заполнению окна и тормозила готовность.
+- Индикатор «Контекстное окно»: ChatGPT Web не отдаёт занятость окна.
+- Планы сессий, выбор плана по `planId/originSessionId/legacyPlanId`, кнопку «Принять» и автосоздание сессии после закрытия плана (полный список — [plan-view.md](plan-view.md)).
+- Для имён: retry/backoff/debounce и запуск от `ContextSession.onChange`; LLM-вызов; MCP-инструмент переименования; внешний сервис, API key, расширение браузера или Tampermonkey (`chatgpt-triage` — не зависимость); массовое ретро-переименование; `window.prompt()` (в Electron не показывался); формат «objective — nextTaskTitle».
+- Импорт чужих чатов и удаление облачных разговоров; выбор модели.
 
-## Граница ответственности
+## Проверки
 
-Модуль владеет:
-- локальным списком проектов и их сессий;
-- типом сессии `chat | work`;
-- созданием первой и дополнительных сессий;
-- навигацией в правильный ChatGPT experience перед передачей первого recovery-пакета;
-- сохранением/восстановлением conversation URL, названия, времени и выбранной сессии;
-- пользовательским UI выбора Chat/Work и badge типа сессии.
+- Автоматические (`unit-all` = `npm test`, `electron-smoke` = `npm run smoke`): `tests/workspace-session.test.mjs` (миграции и backup, валидация, порядок, выбор, A→B→A, архив, удаление, имена, время агента), `tests/chatgpt-title.test.mjs`, `tests/agent-timer.test.mjs`, `tests/chatgpt-experience.test.mjs`, `tests/context-session.test.mjs` (привязка, fail-closed), `tests/sidebar.test.mjs`; smoke — переименование через диалог, удаление `tokenEstimate`. Smoke работает на TEST FIXTURE и живой ChatGPT не доказывает.
+- Ручные (пользователь, на установленной версии): новые Chat и Work в живом ChatGPT — подтверждение режима, привязка постоянного `/c/<id>`, нет повторной отправки; переоткрытие сохранённой сессии без отправки; restart возвращает выбранную сессию и её URL; переименование и автоимя доходят до названия разговора в аккаунте; архив/возврат/локальное удаление сессии не трогают облачный чат.
 
-Модуль не владеет:
-- содержимым Recovery Capsule и Workflow Kit;
-- выбором конкретной модели внутри Chat или Work;
-- лимитами/биллингом OpenAI;
-- MCP/tunnel lifecycle;
-- внутренним состоянием ChatGPT; допустимы только согласованные адаптеры переключения experience, прокрутки, фильтра служебных строк и локального оформления.
+## Открыто
 
-## Session Contract
-
-Каждая сессия хранит:
-
-```text
-sessionId
-planId: string | null
-originSessionId: string | null
-planBinding / legacyPlanId
-experience: "chat" | "work"
-chatUrl: string | null
-title
-createdAt
-lastOpenedAt
-archivedAt: number | null
-attempt / receipt
-```
-
-`experience` задаётся в момент создания сессии и после привязки облачного разговора не меняется. Production-проверка 14.09.2026 показала, что URL больше не кодирует experience однозначно: Work стартует на `/work/`, но после создания разговора ChatGPT переводит его на общий `/c/<id>`. Поэтому источником истины после создания является persisted `experience` + точный conversation URL, а не namespace URL.
-
-Для старого локального хранилища миграция определяется по URL:
-- Work URL (`/work/...`) → `work`;
-- обычный `/c/...` → `chat`;
-- ещё не привязанная старая сессия → `chat`.
-
-## Создание дополнительной сессии
-
-Операция уровня проекта, а не контекста. В меню `⋯` проекта расположены:
-
-```text
-Новый Chat
-Новый Work
-──────────
-Скопировать полный путь
-Перенести в архив
-```
-
-Текущая кнопка «Новый чат для проекта» из карточки контекста удаляется. Карточка контекста отвечает только за состояние выбранной сессии и действие «Обновить контекст»/проверку текущей передачи.
-
-Обе команды используют единый facade `newSession(workspace, experience)`; после создания новая сессия становится выбранной и Web Pilot открывает соответствующий ChatGPT experience.
-
-## Первая сессия проекта
-
-Когда Web Pilot действительно создаёт первую локальную сессию проекта, пользователь до финального открытия выбирает:
-
-```text
-Первая сессия проекта
-[ Chat ] [ Work ]
-```
-
-По умолчанию выбран `Chat`. Выбор не запоминается глобально между проектами.
-
-Это применяется к двум случаям:
-1. создание нового проекта;
-2. первое подключение существующей папки, которой ещё нет в локальном списке Web Pilot.
-
-Если папка проекта уже зарегистрирована и содержит сохранённые сессии, обычное повторное открытие проекта не создаёт новую сессию и не показывает выбор Chat/Work: при явном выборе проекта выбирается последняя созданная активная сессия; служебное восстановление сохраняет прежний выбор.
-
-## Представление в дереве
-
-Действующий контракт scope 015, утверждённый пользователем по интерактивному HTML-прототипу 15.09.2026.
-
-- Заголовок «Ваши проекты» раскрывает редкие действия: «Создать проект», «Открыть папку проекта», «Обновить ChatGPT». В закрытом состоянии эти кнопки не занимают место. Справа доступно общее сворачивание/раскрытие проектов.
-- Проект — отдельная заметная строка с папкой, стрелкой, именем и количеством активных сессий. Сессии — вложенные, более лёгкие строки. Вертикальная линия соосна центру стрелки; от неё идёт горизонтальная ветка к каждой сессии.
-- Одиночный выбор названия проекта раскрывает его и выбирает последнюю созданную активную сессию. Стрелка отдельно управляет раскрытием без навигации. Задержка одиночного клика ради двойного не нужна.
-- Активные сессии сортируются по createdAt по убыванию: самая новая первая, остальные ниже. При одинаковом createdAt более поздняя запись исходного массива идёт первой. lastOpenedAt и ручное открытие старой сессии не меняют порядок.
-- Новая сессия сразу выбрана и видна сверху. Выбор старой сессии сохраняет её выбор и положение прокрутки. При явном выборе проекта список возвращается к самой новой сессии.
-- Внутри каждого раскрытого проекта показано максимум три строки сессий. Более ранние доступны обычной вертикальной прокруткой внутри этого проекта. Полоса прокрутки видима справа при переполнении, для неё зарезервировано место; Chat/Work и меню ⋯ сдвинуты левее.
-- Обновление состояния не сбрасывает прокрутку к началу и не мешает открывать старые сессии. Меню сессии не обрезается областью прокрутки.
-- Название слева, дата ниже, справа read-only badge Chat/Work и меню ⋯. Badge не переключает режим. Все прежние команды создания Chat/Work, переименования, архива и копирования пути сохраняются.
-- Светлая/тёмная тема и регулируемая ширина sidebar от 312 px поддерживаются. Глобальные контекст, план, archive lifecycle и recovery не меняются.
-- Reload, «Вернуться к чату проекта» и восстановление приложения сохраняют ранее выбранную сессию: автоматический выбор самой новой относится к явному выбору проекта пользователем, а не к служебной перезагрузке.
-- Выбранная сессия не имеет отдельного толстого маркера слева. Вся строка сессии, включая badge `Chat/Work` и меню `⋯`, обводится тонкой скруглённой линией. Chevron раскрытия проекта, вертикальная магистраль, горизонтальные ветви и эта обводка используют один `tree-accent`; геометрическая толщина линий — 1 CSS px, stroke chevron подогнан визуально к той же толщине. Неактивные строки сохраняют прозрачную границу той же толщины, чтобы выбор не сдвигал содержимое.
-
-## ChatGPT Experience Routing
-
-Web Pilot выбирает только верхнеуровневый experience `Chat | Work`. Конкретная модель, reasoning effort и другие настройки остаются нативному UI ChatGPT.
-
-Перед реализацией должен быть эмпирически подтверждён способ создания чистой Work-сессии в текущем ChatGPT Web:
-1. предпочтительно использовать устойчивый официальный/фактический URL маршрута, если он существует;
-2. если Work выбирается только нативным UI, Web Pilot открывает чистый ChatGPT и выполняет минимальное переключение режима до отправки recovery;
-3. не использовать недокументированный brittle DOM selector без regression/fallback;
-4. после создания фактический conversation URL должен пройти `normalizeChatUrl()` и соответствовать выбранному experience.
-
-## Recovery Contract
-
-Context Recovery не различает Chat и Work. После того как Workspace & Sessions создал/выбрал сессию и открыл правильный experience, существующий `ContextSession` передаёт адресованный Recovery Capsule выбранного sessionId/planId тем же протоколом.
-
-Для обеих разновидностей обязательны те же свойства:
-- не перезаписывать пользовательский draft;
-- не отправлять пакет дважды;
-- привязать conversation URL только после наблюдаемой отправки;
-- при открытии другой облачной беседы считать сессию изменённой, а не молча перепривязывать её.
-
-## URL Contract
-
-`normalizeChatUrl()` принимает только HTTPS `chatgpt.com` concrete conversation URLs. Совместимость URL с persisted `experience` асимметрична: Chat не принимает явно Work-only `/work/...`; Work принимает как исторический `/work/...`, так и реальный production `/c/<id>`. Для legacy schema без поля `experience` обычный `/c/<id>` по-прежнему мигрируется как Chat.
-
-Начальный URL новой сессии не сохраняется как `chatUrl`: он только открывает нужный experience. `chatUrl` появляется после фактического создания/наблюдения облачного разговора.
-
-## UI Contract
-
-Контекстная карточка:
-- «Вернуться к чату проекта» — только при открытой чужой беседе;
-- «Обновить контекст» / «Проверить контекст» — для выбранной сессии;
-- кнопок создания новых сессий нет.
-
-Меню проекта:
-- `Новый Chat`;
-- `Новый Work`;
-- `Скопировать полный путь`;
-- `Перенести в архив`.
-
-Формы создания/первого подключения:
-- явный выбор первой сессии `Chat | Work` непосредственно перед финальным действием;
-- default `Chat`;
-- выбор используется только если проект ещё не зарегистрирован локально.
-
-## Инварианты
-
-- У проекта может быть любое сочетание Chat и Work сессий.
-- Experience выбранной сессии не меняется задним числом.
-- Повторное открытие зарегистрированного проекта не создаёт новую сессию.
-- Recovery Capsule и MCP одинаковы для Chat и Work.
-- Модель внутри Work/Chat никогда не фиксируется Web Pilot.
-- Старые сохранённые данные мигрируются без потери URL, попыток отправки и истории сессий.
-- В sidebar не показываются внутренние лимиты OpenAI как вычисляемые Web Pilot значения.
-
-## Приёмка
-
-- Меню каждого активного проекта создаёт отдельно Chat и Work сессию.
-- В карточке контекста больше нет «Новый чат для проекта».
-- Первая сессия нового/впервые подключаемого проекта создаётся в явно выбранном experience.
-- Для уже известного проекта выбор первой сессии не появляется и новая сессия не создаётся.
-- В дереве рядом с названием каждой сессии виден корректный badge Chat/Work.
-- После restart experience каждой сессии сохраняется.
-- Старое хранилище мигрируется детерминированно.
-- Chat и Work получают один и тот же recovery-flow без отдельной логики Context Recovery.
-- Новый Work действительно открывается как чистая Work-сессия в текущем ChatGPT Web и после первого сообщения сохраняется как Work conversation URL.
-
-## Подтверждённый Work entrypoint — 14.09.2026
-
-Для нового Work Web Pilot использует канонический верхнеуровневый entrypoint `https://chatgpt.com/work/`. OpenAI публикует Work именно по этому адресу и описывает Chat и Work как отдельные ChatGPT experiences. Перед первым recovery Web Pilot подтверждает фактический режим через нативный переключатель Chat/Work; конкретная модель не выбирается. Подробности production correction — T013.
-
-Fail-closed правило: стартовая Work session может передавать recovery только если текущий URL остаётся в `/work` namespace и страница предоставляет доступный composer с подтверждённым режимом Work. Если ChatGPT изменит маршрут/поведение, Web Pilot показывает ошибку/ожидание Work и не отправляет пакет в обычный Chat. После первой наблюдаемой отправки сохраняется фактический concrete conversation URL. В текущем production ChatGPT это обычный `/c/<id>`, хотя визуально и функционально conversation остаётся Work.
-
-Для Chat стартовый entrypoint остаётся `https://chatgpt.com/`; после первой наблюдаемой отправки сохраняется concrete обычный conversation URL `/c/<id>`.
-
-Актуальные публичные источники OpenAI на момент решения:
-- `https://chatgpt.com/work/` — канонический Work entrypoint;
-- OpenAI Help Center, `ChatGPT Work and Codex` — Chat и Work описаны как отдельные experiences; конкретный модельный выбор остаётся нативному ChatGPT UI.
-
-## Контракт session model — T002
-
-Для persisted-модели зафиксирована schema v4: каждая session обязана хранить `experience: chat|work`; канонический creator — `newSession(workspace, experience)`. Миграция v1/v2/v3 должна сохранять точный backup исходного файла, выводить `/work/...` как `work`, а обычные/непривязанные старые session — как `chat`. `bindChat()` обязан fail-closed отклонять concrete conversation URL другого experience. Фактическая реализация этого контракта объединяется с T003, где одновременно обновляются проектный UI и обязательный архитектурный документ.
-
-## Реализация project/session UI — T003
-
-Storage schema v4 и `newSession(workspace, experience)` реализованы вместе с UI. Создание дополнительной session из меню проекта одновременно выбирает этот проект; повторное открытие проекта сохраняет уже существующую selected session. Setup хранит first-session choice только transiently: new/first-connect preview показывает Chat|Work с default Chat, cancel/new setup снова начинается с Chat. Sidebar больше не содержит кнопку создания session в Context card; проектное меню содержит Новый Chat / Новый Work, а session row показывает badge справа от имени.
-
-## Реализация experience routing — T004
-
-Routing вынесен в `src/chatgpt-experience.mjs`: обычный Chat стартует на `https://chatgpt.com/`, Work — на `https://chatgpt.com/work/`. `navigate()` выбирает entrypoint только по persisted `session.experience` и не выбирает модель/режим reasoning. `ContextSession` независимо проверяет фактический URL перед recovery: новая Work-сессия принимает только `/work` namespace, Chat — обычный Chat namespace. При mismatch выдаётся `CHATGPT_EXPERIENCE_MISMATCH`, `loadContext()` и отправка не выполняются.
-
-После наблюдаемой отправки прежний `bindChat()` сохраняет только concrete conversation URL и дополнительно проверяет совпадение URL с immutable experience. Electron smoke создаёт через проектное меню сначала дополнительный Chat, затем Work; fixture Work начинается на `/work/`, после отправки становится `/work/<request-id>`, сохраняется как Work и отображается соответствующим badge.
-
-## Release integration — T005 / Project Web Pilot 0.6.5
-
-Релиз 0.6.5 включает storage schema v4, project-level `Новый Chat` / `Новый Work`, выбор первой session для нового/впервые подключаемого проекта, session badges и fail-closed Chat/Work routing. Recovery Capsule и MCP protocol не менялись: обе разновидности session используют один Context Recovery flow. Финальная ручная проверка реального аккаунта ChatGPT оставлена пользователю; scope не архивируется автоматически.
-
-## Production correction — T006 / shared conversation URL
-
-Реальная приёмка 0.6.5 показала Work UI с Astra при URL `/c/<id>`. Production diagnostics зафиксировали последовательность `/work/` → отправка recovery → `/c/<id>`. Storage contract исправлен: schema v4 сохраняет immutable `experience=work`, разрешает Work concrete `/c/<id>` и переживает restart. Legacy inference не меняется: старый `/c/<id>` без persisted experience мигрируется как Chat.
-
-
-## Production correction — T007 / Work provenance guard
-
-Fail-closed теперь действует по фазе lifecycle. До первой отправки unbound Work обязан находиться на `/work/`; обычный Chat URL блокируется до `loadContext()`/send. После того как send уже начат из подтверждённого Work и request marker наблюдается в текущем conversation, переход на shared `/c/<id>` допустим и URL привязывается к persisted `experience=work`. Для уже привязанной session источником истины является exact сохранённый conversation URL; повторно выводить experience из его namespace запрещено.
-
-
-## Release integration — T008 / Project Web Pilot 0.6.6
-
-Patch release 0.6.6 исправляет production mismatch Work после перехода `/work/` → shared `/c/<id>`. Persisted `experience=work` сохраняется, binding требует observed request marker, а до первой отправки Work entrypoint остаётся fail-closed. Финальная ручная проверка реального аккаунта остаётся пользователю.
-
-
-## Session Archive Contract — T009
-
-Session archive является частью Workspace & Sessions и не меняет облачный ChatGPT conversation. Каждая persisted session получает `archivedAt: number|null`; `null` означает активную session. Архивирование скрывает session из дерева активного проекта, но сохраняет `sessionId`, `experience`, `chatUrl`, title и delivery metadata для возможного restore.
-
-Правила lifecycle:
-- архивировать можно session только активного проекта;
-- последнюю активную session проекта архивировать нельзя (`SESSION_LAST_ACTIVE`), чтобы проект всегда оставался открываемым;
-- если архивируется выбранная session и существуют другие активные, `selectedSessionId` атомарно переключается на наиболее недавно открытую оставшуюся session;
-- restore снимает `archivedAt`, не меняя experience/chatUrl и не создавая новый облачный разговор;
-- удаление разрешено только для архивной session и удаляет локальную запись/привязку Web Pilot. Облачный ChatGPT conversation на стороне OpenAI остаётся неизменным.
-
-Archive UI содержит две независимые вкладки: `Проекты` и `Сессии`. В `Сессиях` показываются только архивные sessions проектов, которые сами не находятся в project archive. Строка session обязательно показывает project owner, title/fallback name, badge `Chat|Work` и дату архивирования. Если проект архивирован целиком, его sessions не дублируются в отдельной session-вкладке; после restore проекта ранее архивные sessions снова становятся видимы в session archive.
-
-Локальное удаление session очищает primary workspace storage и доступные локальные ссылки этой session в migration-backups/diagnostics, если они существуют. Папка проекта, Git repository и любые облачные чаты не удаляются.
-
-
-## Реализация session archive storage — T010
-
-Storage schema v5 добавляет `session.archivedAt`. Миграция v4 выставляет `archivedAt=null` и сохраняет `.v4-backup`. Архивирование выбранной session атомарно переключает selection на наиболее недавно открытую оставшуюся активную session; `SESSION_LAST_ACTIVE` блокирует архивирование последней активной session. Restore сохраняет `experience/chatUrl`. Локальный forget архивной session удаляет primary metadata и доступные ссылки этой session из migration backup/diagnostics, не удаляя workspace или cloud conversation.
-
-
-## Реализация session archive UI — T011
-
-Sidebar добавляет `⋯ → Перенести в архив` для каждой активной session. Main snapshot скрывает `session.archivedAt != null` из активного дерева. Общее окно `Архив` имеет две вкладки — `Проекты` и `Сессии`; session row показывает title, badge Chat/Work, project owner и дату архивации. В session tab доступны batch restore и подтверждаемое локальное delete; текст явно указывает, что cloud conversation OpenAI сохраняется. Sessions проектов, которые сами находятся в project archive, не показываются в session tab.
-
-
-## Release integration — T012 / Project Web Pilot 0.6.7
-
-Patch release 0.6.7 объединяет подтверждённые Chat/Work sessions и session archive. Storage schema v5 мигрирует прежние sessions как активные, отдельный archive позволяет restore или локальный delete без удаления OpenAI conversation, а project archive и session archive остаются независимыми lifecycle. Финальная ручная приёмка остаётся пользователю; scope автоматически не архивируется.
-
-
-## Исправление выбора Chat и временного URL — T013
-
-Production diagnostics 14.09.2026 17:52:57–17:53:08 UTC: новый Chat загрузил `/`, отправил recovery, затем прошёл `/c/WEB:<uuid>` → `/c/<id>`. Скриншот пользователя подтвердил фактический Work. Корневой URL не доказывает выбранный Chat: веб-приложение использует сохранённый режим и может выбирать Work по умолчанию.
-
-Проверен публичный код текущего ChatGPT Web: `4813494d-i88ebrgl0r2g94a4.js` определяет persisted ChatSurfaceMode и Work default; `984a38d2-hg7qoqxweuz8lvz0.js` реализует нативный toggle с `data-tpp-toggle-value=chatgpt|work` и `data-state=on|off`. Источник: https://chatgpt.com/cdn/assets/984a38d2-hg7qoqxweuz8lvz0.js. Web Pilot использует наблюдаемый нативный toggle; cookies, localStorage и внутренние функции ChatGPT не изменяются напрямую.
-
-Перед первым recovery новая session подтверждает фактический режим через toggle. Если выбран другой режим, выполняется нативный click и отдельное чтение подтверждения. Fallback ограничен группой с точным доступным именем Select chat surface / Выберите режим чата. Недоступный или неопределённый toggle блокирует подготовку/отправку; draft и active generation сохраняются. Режим дополнительно проверяется в renderer в том же действии, что fill/send. Это исправление исполняет ранее согласованный выбор Chat/Work и не выбирает модель.
-
-`/c/WEB:<uuid>` допускается только как промежуточный адрес после начатой отправки. Он не сохраняется в chatUrl. Наблюдение request marker подтверждает отправку; binding ждёт permanent concrete URL. Повторная отправка не выполняется. Уже привязанные sessions продолжают проверяться по exact URL.
-
-
-## Release integration — T014 / Project Web Pilot 0.6.8
-
-Patch 0.6.8 подтверждает фактический Chat/Work через нативный переключатель до первого recovery. Новый Chat после Work открывается с явно выбранным Chat; модель не фиксируется. Временный URL /c/WEB:<uuid> ожидает permanent URL без ложного mismatch и повторной отправки. Уже существующие привязки и пользовательские черновики сохраняются.
-
-macOS arm64 и Windows x64 packages пересобираются из одного исходного дерева. Реальная проверка нового Chat/Work остаётся пользователю; scope остаётся ACTIVE/READY_FOR_ACCEPTANCE после обязательных checks.
-
-
-## Оценка токенов сессии — scope 012
-
-14.09.2026 пользователь поручил интегрировать tiktoken и показывать количество токенов в правом нижнем углу плашки сессии; сравнение с реальным контекстным окном выполняет пользователь.
-
-Workspace & Sessions владеет этой оценкой. Контракт:
-- Считается суммарный доступный текст прочитанных сообщений пользователя и ассистента, включая стартовый recovery-пакет. Это не API billing usage и не измерение активного серверного контекста.
-- Локальный js-tiktoken использует фиксированную кодировку o200k_base. Расчёт не отправляет данные во внешние сервисы и не выбирает модель ChatGPT.
-- Повторное наблюдение сообщения с тем же идентификатором заменяет его оценку: streaming и повторный рендер не прибавляют старый текст повторно. Прочитанные ранее сообщения сохраняются в оценке при выгрузке DOM.
-- Скрытые инструкции, reasoning, содержимое вложений и недоступные/ещё не загруженные сообщения не учитываются. Альтернативный ответ с новым messageId является отдельным прочитанным сообщением; оценка не утверждает, что совпадает с текущей веткой серверного контекста.
-- Строка сессии справа снизу показывает «≈ N ток.»; до первого измерения — «— ток.». Tooltip поясняет, что это оценка прочитанного текста. Процент окна не вычисляется.
-- Оценка хранится отдельно по sessionId в локальном session record, переживает restart и archive/restore, удаляется вместе с локальной сессией. Счётчик хранит только идентификаторы, хеши и числа, без дополнительной копии текстов.
-- Обновление допускается только для выбранной сессии при точном совпадении её сохранённого conversation URL с открытой страницей. Результаты устаревшего асинхронного чтения после переключения отбрасываются.
-- Recovery, выбор Chat/Work и облачный conversation не меняются. Обе platform-сборки используют одинаковую реализацию.
-
-Приёмка: видимый счётчик справа снизу, независимые значения сессий, сохранение после restart, отсутствие двойного счёта при streaming/reload, пользовательское сравнение с реальным ChatGPT.
-
-### Реализация хранения оценки — scope 012 / T002
-
-Optional tokenEstimate в session schema v5 добавлен без обязательной миграции. Старые sessions имеют неизвестную оценку до первого чтения. setSessionTokenEstimate проверяет выбранную сессию, conversation URL и корректность суммы; archive/restore сохраняет поле, forget удаляет его вместе с record. Подсчёт идёт в отдельном worker через js-tiktoken 1.0.21/o200k_base, сохраняя только ID, SHA-256 и число токенов.
-
-### Реализация отображения — scope 012 / T003
-
-Main обновляет оценку открытой связанной сессии каждые 3 секунды. При навигации и переключении workspace/session устаревшие результаты отбрасываются. Sidebar получает только краткую числовую проекцию; нижняя строка session объединяет дату слева и ≈ N ток. справа. Tooltip объясняет смысл оценки; значение — ток. сохраняется до первого доступного измерения. Проверены узкая панель 312 px и Electron fixture для Chat/Work.
-
-### Release integration — scope 012 / T004 / Project Web Pilot 0.6.9
-
-Счётчик ≈ N ток. включён в обновлённые macOS arm64 и Windows x64 packages вместе с локальным js-tiktoken/o200k_base. Значения сохраняются отдельно по sessionId; старые сессии получают оценку после чтения доступных сообщений. Пользователь сравнивает показания с реальным ChatGPT после перезапуска приложения. Scope остаётся активным до отдельной команды на архивирование.
-
-## Индикаторы операций — scope 012 / T008
-
-Сайдбар и отдельное окно архива показывают спиннер, название действия и длительность при выполнении команд пользователя. Индикатор не требует раскрытия контекстной карточки. Смена этапа меняет подпись; завершение или ошибка снимает busy. Переходы проектов/сессий, подготовка папки, archive/restore/delete и настройки используют общий компонент; контракт облачных разговоров и подтверждение удаления не меняются.
-
-## Исправление полноты счётчика — scope 012 / T010
-
-15.09.2026 пользователь подтвердил, что значения 1073/2978 показывают лишь небольшой фрагмент. Прежняя реализация DOM-сэмплинга не выполняет намерение считать всю переписку. Следующий контракт заменяет ограничения первоначального счётчика в части полноты.
-
-- Источник полного подсчёта — текущая ветка сообщений из ответов ChatGPT Web, включая все предыдущие страницы до has_previous_page=false. Подсчёт не требует прокрутки окна. Нативный ответ страницы сам по себе не означает полноту.
-- Подтверждён фактический клиент: https://chatgpt.com/cdn/assets/4813494d-i88ebrgl0r2g94a4.js использует GET /backend-api/conversations/{id} и /backend-api/conversations/{id}/messages?before=<start_cursor>, include_has_versions и num_turns. Это внутренний меняющийся веб-контракт, а не публичный модельный API.
-- Авторизация берётся только из уже выполняемого браузером запроса выбранной беседы, используется в памяти для GET предыдущих страниц того же origin/ID и не пишется в storage/logs. Профили, cookies и ключи не экспортируются; дополнительные модельные вызовы не выполняются.
-- Полный снимок заменяет прежнюю накопленную DOM-оценку. Учитывается доступный текст сообщений user/assistant/tool выбранной ветки, включая доступные текстовые вызовы инструментов. Скрытые серверные инструкции, недоступные рассуждения и бинарные вложения не оцениваются; это сумма текста истории, не занятость активного контекстного окна.
-- Только завершённая пагинация даёт статус полной истории. Ошибки, отсутствие доступа, неизвестная схема, цикл курсора и ограничение объёма сохраняют неполный статус. Интерфейс не выдаёт старые фрагменты за общий итог; во время загрузки показывает ход подсчёта.
-- При переключении сессии запросы отменяются, устаревшие результаты отбрасываются. Повторная загрузка не дублирует сообщения; новая серверная ветка заменяет старый снимок.
-- Тексты существуют только во время подсчёта. Persisted estimate содержит ID/хеши/числа, признак полноты и время. Уже завершённая оценка сохраняется после restart; последующие ответы обновляют её.
-
-Приёмка: многостраничная история при DOM только последней страницы; остановка на реальном начале; замена старых фрагментов; отказ от ложной полноты при ошибке; изоляция переключений; macOS/Windows release. Fixture-проверка и реальная проверка аккаунта указываются раздельно.
-
-### Реализация полного сборщика — scope 012 / T011
-
-Добавлен ConversationHistory с ограниченной фоновой пагинацией наблюдаемой беседы и статусом загрузки/ошибки. Полный снимок заменяет старую сумму; рабочий поток tiktoken повторно использует хеши неизменных сообщений. После подтверждения обработки тексты снимка освобождаются. Лимиты: 64 MiB, 500 страниц, 100000 сообщений, 180 секунд; превышение не считается полной историей.
-
-### Интеграция полной истории — scope 012 / T012
-
-CDP подключается на пустой служебной странице до первой навигации ChatGPT. Нативный ответ беседы запускает загрузку всех предыдущих страниц; tiktoken обрабатывает результат в worker. DOM используется только как явно неполная оценка и никогда не переписывает полный снимок. Sidebar показывает «Подсчёт…», общий спиннер загрузки истории, затем ≈ N ток.; прежние фрагменты показываются как «Неполный подсчёт», их числа доступны только в пояснении. Смена проекта/сессии отменяет загрузку. Ответ, центрированный на старом сообщении без current_node, не выдаётся за всю текущую ветку.
-
-### Release integration — scope 012 / T013 / Project Web Pilot 0.6.11
-
-Исправлена причина подсчёта лишь последнего DOM-фрагмента. Полная текстовая история считывается через пагинацию текущего ChatGPT Web; старые оценки явно помечены неполными. Показаны процесс и ошибки загрузки; tiktoken работает локально. После restart пользователь открывает нужную сессию и дожидается завершения подсчёта. Реальная проверка длинной беседы в аккаунте пользователя остаётся частью приёмки; fixture не подтверждает доступность внутреннего endpoint для каждого аккаунта.
-
-## Отмена счётчика токенов — scope 012 / T014 (действующий контракт)
-
-15.09.2026 пользователь отказался от счётчика целиком: сумма истории не определяет заполнение активного окна модели и не должна замедлять готовность сессии. Этот раздел отменяет требования предыдущих разделов о подсчёте/пагинации/отображении токенов. Удаляются js-tiktoken, worker, DOM sampler, ConversationHistory, дополнительные GET страниц, token estimate API и UI. Старое optional tokenEstimate удаляется из primary storage при загрузке; ID, experience, URL, archive и recovery metadata сохраняются. Подготовка контекста заранее и общие спиннеры остаются. Сборка 0.6.12 предоставляется пользователю; scope до приёмки не закрывается.
-
-### Удаление счётчика — scope 012 / T015
-
-Удалены оба модуля, js-tiktoken, worker, периодический sampler, ранний about:blank/CDP startup для истории, UI числа/статусов и самостоятельные GET пагинации. Optional tokenEstimate очищается из всех sessions primary storage при загрузке с однократной записью; чистое хранилище повторно не переписывается. Сохраняются Chat/Work, archive, recovery cache и обычные индикаторы операций.
-
-### Release integration — scope 012 / T016 / Project Web Pilot 0.6.12
-
-Релиз удаляет экспериментальный счётчик целиком. Открытие сессии не запускает tokenizer, DOM-сэмплинг, дополнительные GET истории или ожидание расчёта. Старые оценки очищаются при загрузке приложения. macOS/Windows packages обновляются для пользовательской приёмки; план пока не закрыт.
-
-
-## Переименование проектов и сессий — scope 013
-
-15.09.2026 пользователь поручил добавить ручное переименование проектов и sessions и автоматическое название текущей session по новому scope. Контракт остаётся локальным для Web Pilot и не вводит отдельный управляющий MCP/API.
-
-- В меню `⋯` активного проекта появляется `Переименовать`. Это пользовательское действие меняет только локальное отображаемое имя проекта в Web Pilot. `workspace`, имя папки, `project_id` и каноническое `project_name` Workflow Kit не меняются. Agent/runtime не получают автоматического пути переименования проекта.
-- В меню `⋯` каждой активной session появляется `Переименовать`. Ручное имя сохраняется локально по `sessionId`, переживает restart/archive/restore и не изменяет название облачного разговора ChatGPT.
-- Автоматическое имя session не требует нового MCP tool. Когда Web Pilot впервые наблюдает новый `scope_id` выбранного проекта с `execution_scope_status=ACTIVE|BLOCKED` и непустым `objective`, выбранная в этот момент session получает нормализованное `objective` как имя scope. Один и тот же scope применяется ровно один раз на проект, поэтому последующее переключение на другую session не переименовывает её задним числом.
-- Ручное переименование session после автоматического сохраняется до появления следующего нового scope. Следующий `scope_id` снова может дать этой текущей session новое scope-имя.
-- Заголовок страницы ChatGPT используется только как fallback для session, которой ещё не назначено ручное или scope-имя. Он не имеет права затереть явное локальное название.
-- Пустые имена отклоняются; пробелы нормализуются; UI ограничивает разумную длину и сразу показывает новое имя во всех локальных представлениях, включая архив.
-- Для текущего scope согласованное название этой session: `Переименование проектов и сессий`.
-
-Приёмка: оба меню содержат `Переименовать`; проектный alias меняется только из пользовательского UI; session сохраняет ручное имя; новый scope автоматически именует только текущую session один раз; page title больше не перетирает явные имена; restart/archive сохраняют результат.
-
-
-### Persisted naming model — scope 013 / T001
-
-Project record хранит optional `displayName` отдельно от канонического `name`, а session — optional `titleSource=page|manual|scope`; в исторической schema v5 проект также запоминал `lastNamedScopeId`; в schema v6 автоимя и этот маркер принадлежат сессии. Старые schema v5 записи остаются валидными без миграции. Page title обновляет только fallback-имя, ручное и scope-имя защищены. `applyScopeTitle` атомарно закрепляет новый scope за текущей session и не переносит тот же scope на другую session после переключения.
-
-
-### Ручное переименование в sidebar — scope 013 / T002
-
-Локальный preload публикует только две узкие команды `renameProject(workspace,name)` и `renameSession(workspace,sessionId,name)` для sidebar origin. Удалённый ChatGPT Web их не получает. В project menu команда `Переименовать` находится рядом с пользовательскими действиями над проектом; в session menu — перед архивированием. Project snapshot и списки архива показывают `displayName || canonical name`; каноническая идентичность recovery не меняется.
-
-
-### Автоимя из scope — scope 013 / T003
-
-`readWorkspace` теперь проецирует непустой `objective` вместе со штатными `scopeId/scopeStatus`. После обычного poll ContextSession main-процесс сравнивает наблюдаемый scope с `lastNamedScopeId` и вызывает `applyScopeTitle` для выбранной session. Это тот же локальный inspect, который уже нужен доставке контекста; новый MCP tool, model call или скрытая команда агента не добавляются.
-
-
-### Release integration — scope 013 / T004 / Project Web Pilot 0.6.13
-
-Electron smoke проверяет наличие обеих команд «Переименовать», сохранение канонического project name, ручное имя session, защиту от позднего page title и автоимя текущей session после появления нового scope objective. Версия поставки повышена до 0.6.13 для macOS arm64 и Windows x64.
-
-
-Сборка 0.6.13 выполнена для macOS arm64 и Windows x64. Проверка обоих `app.asar` подтвердила package version 0.6.13 и наличие rename IPC/menu и scope-driven title logic.
-
-## История: новая сессия после приёмки — scope 014, заменён scope 028
-
-Поручение пользователя 15.09.2026: после принятия результата агент штатно архивирует текущий plan через Workflow Kit; затем Web Pilot спрашивает, открыть новую сессию Chat или Work. Это развитие существующих приёмки и session facade, без нового управляющего MCP или счётчика контекста.
-
-- Кнопка «Принять» отправляет агенту прямую команду принять результат и архивировать scope. Обычная прямая команда пользователя в разговоре приводит к тому же переходу. READY_FOR_ACCEPTANCE без приёмки не является закрытием.
-- Workflow Kit остаётся единственным владельцем архивирования: UI не редактирует plan. Источник события — наблюдаемый переход известного активного scope в NONE с совпадающим archived_scope_id.
-- В блоке плана появляется вопрос «План закрыт. Открыть новую сессию?» и две кнопки Chat / Work. До выбора текущий разговор остаётся открытым. Кнопки явно выбирают режим; глобального сохранённого default нет.
-- После выбора создаётся и открывается ровно одна новая сессия того же проекта. Стандартный ContextSession передаёт полный актуальный capsule состояния NONE. Новый scope появляется только по следующему заданию пользователя.
-- Старая сессия остаётся доступна в дереве; закрывается plan, а не облачный разговор.
-- Наблюдаемый scope и результат перехода сохраняются локально на проект: restart не теряет ожидающий выбор и не создаёт дубликат. Переключение проекта скрывает чужой вопрос. Повторная команда для обработанного scope использует созданную сессию, а не создаёт ещё одну.
-- Проект, впервые наблюдаемый уже в NONE, не вызывает переход по давнему архиву. ACTIVE/BLOCKED нового scope заменяет прежнее ожидание. Проект/план перечитываются непосредственно перед созданием; несовпадающий scope, заменённый проект и архивный проект отклоняются.
-- Сбой навигации/доставки обрабатывается штатным повторным открытием уже созданной сессии, без повторного создания.
-
-Приёмка: оба режима, прямое закрытие и кнопка, отсутствие перехода до archive, restart, повторный клик, смена проекта, старый архив, актуальный NONE recovery и сохранность старой session. Реальная пользовательская проверка выполняется после установки релиза.
-
-### Хранение перехода — scope 014 / T002
-
-Optional scopeTransition сохраняется в schema v5. ACTIVE/BLOCKED начинает watching; совпадающий NONE/archivedScopeId переводит в choice; явный выбор атомарно создаёт session и фиксирует opened с её ID. Прямое закрытие обнаруживается без зависимости от кнопки приёмки. Повторная команда не создаёт дубликат; перед созданием проверяются live plan и project identity.
-
-### Интеграция закрытия — scope 014 / T003
-
-Main наблюдает закрытие при обычном poll, независимо от источника прямой команды архивирования. Новый локальный IPC защищён тем же sidebar origin guard и повторной проверкой проекта. Стартовый envelope сообщает агенту поручение пользователя: явное принятие завершённого результата сопровождается штатным архивированием, после чего агент направляет к выбору Chat/Work в блоке плана. Кнопка приёмки содержит эту же прямую команду.
-
-### Вопрос Chat/Work — scope 014 / T004
-
-Выбор располагается непосредственно под состоянием закрытого плана, вне сворачиваемой карточки контекста. Две кнопки задают режим без глобального default. У другого проекта, до закрытия и после завершённого перехода вопрос скрыт; исходная сессия остаётся доступной в дереве.
-
-### Интеграционная приёмка — scope 014 / T005
-
-Проверочный fixture проходит реальный sidebar/preload/main/WorkspaceSessions/ContextSession для Chat и Work. Выбор виден в минимальном sidebar; повторная команда открывает ту же созданную session. Проверяются facts NONE и текущая revision нового recovery. Финальная проверка в реальном ChatGPT остаётся пользователю.
-
-### Release integration — scope 014 / T006 / Project Web Pilot 0.6.14
-
-Полная Node suite и Electron smoke прошли; оба режима проверены с настоящим архивированием временного плана через Workflow Kit. Собраны macOS arm64 и Windows x64 packages. Пользователь перезапускает приложение перед приёмкой, после закрытия выбирает Chat или Work в блоке плана и проверяет старт нового разговора. Старый разговор остаётся в дереве. Текущий scope не закрыт до пользовательской приёмки.
-
-### Release integration — scope 015 / T006 / Project Web Pilot 0.6.15
-
-Утверждённый HTML-прототип интегрирован в приложение: меню «Ваши проекты», отдельная папка проекта и связанное дерево сессий, newest-first, явный выбор проекта с переходом к последней сессии, viewport из трёх строк и заметная независимая прокрутка. Контекстная проверка папки, фоновые обновления и выбор старой сессии сохраняют scroll. Меню работают в верхнем слое Chromium. Служебное восстановление и перезапуск сохраняют ранее выбранный чат. Релиз собран для пользовательской проверки; scope остаётся ACTIVE до явной приёмки.
-
-## Удаление индикатора контекстного окна — scope 016 (действующий контракт)
-
-15.09.2026 пользователь поручил полностью убрать оставшуюся плашку «Контекстное окно / Ожидаем данные». Sidebar больше не показывает размер, процент заполнения или progress активного context window и не содержит отдельного UI для этих данных. Это уточняет существующий инвариант: Web Pilot не вычисляет и не отображает внутренние лимиты OpenAI как пользовательскую метрику.
-
-Общая безопасная Chromium diagnostics может продолжать собирать служебную telemetry для диагностики transport/compaction, но она не публикуется в sidebar как `contextWindow` state и не инициирует отдельные перерисовки ради такого индикатора. Recovery, Chat/Work routing, план и lifecycle сессий не меняются.
-
-### Release integration — scope 016 / T003 / Project Web Pilot 0.6.16
-
-Релиз удаляет пользовательскую плашку context window, formatter/progress UI и отдельную observer-публикацию `contextWindow`, сохраняя внутреннюю безопасную Chromium telemetry. Финальный Electron smoke подтверждает `contextWindowIndicatorRemoved=true`; Node suite и обе package-сборки пройдены. Scope остаётся ACTIVE до явной пользовательской приёмки.
-
-## Windows workspace Node — scope windows-node-setup-019
-
-По поручению пользователя от 15.09.2026 исправляется существующая подготовка Windows-проектов; новый продуктовый сценарий не вводится. Workspace & Sessions владеет запуском setup worker до создания первой session. Контракт встроенного portable Node: готовая Windows-поставка работает без системного Node; NODE_OPTIONS и NODE_PATH других приложений не влияют на дочерний worker. Отсутствие исполняемого файла, старая версия и ошибка запуска различаются. При ошибке кандидата поиск продолжается; неуспешный результат не кэшируется. Платформенная ветка macOS сохраняет существующее поведение. Полный setup contract — docs/WORKSPACE_SETUP.md.
-
-## Автопрокрутка разговора — scope chat-autoscroll-020
-
-15.09.2026 пользователь зафиксировал поведение встроенного ChatGPT: открытая сессия по умолчанию следует за последними сообщениями пользователя и агента. Пока viewport находится внизу, динамическое появление или рост сообщения автоматически удерживает последний фрагмент внизу без smooth-анимации.
-
-Если пользователь вручную прокрутил историю вверх, Web Pilot переводит только текущую страницу разговора в suspended-состояние и не меняет её scroll position из-за новых сообщений агента. Автоследование включается снова только когда пользователь сам возвращается к низу либо отправляет новый запрос через composer. Открытие или SPA-переход в другую сессию начинается с follow mode и показывает её последние сообщения.
-
-Реализация не использует внутренние React/API ChatGPT: scroll-container определяется по DOM-предкам реальных message/composer anchors и overflow semantics, изменения наблюдаются через MutationObserver, а отправка — через стандартные click/keydown/submit события composer. Повторная установка идемпотентна и не накапливает listeners/observers.
-
-### Release integration — scope chat-autoscroll-020 / T002 / Project Web Pilot 0.6.18
-
-Релиз 0.6.18 включает умную автопрокрутку для встроенных Chat и Work sessions на обеих платформах. При чтении истории выше текущей позиции новые ответы не перетягивают viewport вниз; возврат к низу или новая отправка снова включает follow mode. macOS arm64 и Windows x64 собраны из одного исходного дерева; реальное поведение на аккаунте ChatGPT остаётся пользовательской приёмкой, а scope до неё не архивируется.
-
-### Исправление повторного открытия — scope chat-autoscroll-020 / T003
-
-Пользовательская проверка выявила, что после холодного запуска ChatGPT может сам восстановить прежний `scrollTop` уже после установки контроллера. Такое программное событие `scroll` не является ручным чтением истории и не должно выключать follow mode. Контроллер теперь переводит сессию в suspended только после наблюдаемого пользовательского scroll-намерения: wheel/trackpad, клавиш навигации страницы, touch или pointer drag. Если non-bottom scroll произошёл без такого намерения, follow остаётся активным и диалог снова доводится до последнего сообщения. Явная отправка и переход в другую conversation очищают старое scroll-намерение.
-
-### Повторная сборка — scope chat-autoscroll-020 / T004 / Project Web Pilot 0.6.18
-
-После restart correction обе platform-сборки 0.6.18 пересобраны из одного исходного дерева без изменения номера версии. В macOS arm64 и Windows x64 `app.asar` находится controller v2 с тем же SHA-256, что и source. Старые ZIP 0.6.18 заменены новыми; пользовательская приёмка должна выполняться именно на повторно собранном пакете.
-
-## Скрытые tool-call строки и автопрокрутка — scope hidden-tool-scroll-023
-
-Если в Settings включено скрытие строк «Вызываемый инструмент», Web Pilot обязан удалять из layout не только сам кликабельный control, но и максимально высокий безопасный tool-only контейнер вокруг него. Контейнер считается безопасным только пока его нормализованный текст совпадает с текстом скрываемого control. Начиная с исправления `chat-layout-regression-034` проверка может включить ближайший message/turn boundary: такой корень скрывается только когда он целиком tool-only; если в нём есть содержательный текст пользователя или агента, скрывается только вложенная tool-only оболочка. Это сохраняет обычное содержимое сообщения и устраняет пустую высоту, которая иначе остаётся в `scrollHeight` после скрытия нескольких tool-call строк.
-
-Фильтр остаётся обратимым: отдельный marker layout-контейнера снимается вместе с marker исходного control, после чего браузер восстанавливает исходные CSS/layout без перезагрузки. После apply или restore фильтр вызывает только `refresh()` уже установленного контроллера автопрокрутки. `refresh()` не включает follow принудительно: если пользователь вручную читает историю выше, позиция сохраняется; если follow активен, низ пересчитывается уже без скрытого tool-call footprint.
-
-Функция остаётся исключительно визуальной. Выполнение MCP/tools, содержимое сообщений и ChatGPT conversation state не меняются. Regression fixture обязана покрывать старый nested wrapper, отдельный tool-only message boundary и mixed assistant message, корень которого нельзя скрывать.
-
-0.6.46 / `chat-layout-regression-034`: исправленный adapter проверен Node suite и Electron smoke и упакован для macOS arm64 и Windows x64 из source commit `ba9819ab5b241a979afcd543671d2c2fb09252f0`. Реальный текущий DOM ChatGPT не объявляется принятым автоматическими fixtures; после обновления требуется пользовательская проверка отсутствия пустого хвоста в живой сессии.
-
-## Редактор цветов чата — согласованный контракт 16.09.2026
-
-Пользователь поручил отдельную кнопку «Цвета чата…» в Settings и перемещаемое немодальное окно по образцу архива. Пять независимых nullable HEX-значений: background (общая подложка), userBackground (плашка пользователя), userText (его текст), assistantText (текст агента), composerBackground (фон скруглённого блока ввода). Изменение применяется сразу; палитра сохраняется локально между запусками, переходами и обновлениями. Сброс каждого цвета и всей палитры возвращает штатный CSS ChatGPT. Повторный вызов поднимает единственное окно.
-
-Facade оформления: ChatColors.set(palette)/apply()/dispose(), ChatColorsWindow.open()/close()/publish(). Входы — пять валидированных #RRGGBB или null; выходы — CSS с !important только для https://chatgpt.com и локальные settings. Renderer редактора имеет отдельный preload с узкими IPC; удалённая страница не получает локальный API. CSS не меняет сообщения, модель, режим Chat/Work, recovery, прокрутку или инструменты. Код, ссылки и SVG сохраняют собственные цвета. Основной поток сериализует сохранение с другими настройками. Внешний DOM может потребовать адаптации после обновления ChatGPT; native Windows и реальный аккаунт относятся к пользовательской приёмке.
-
-## Уточнение плашки пользователя — B001, 16.09.2026
-
-userBackground задаёт фон внутреннего скруглённого элемента `.user-message-bubble-color` (совместимость: `.user-message-bubble`). Внешний элемент с ролью user не получает фон или переменную --message-surface. Неизвестная разметка остаётся без изменения вместо окраски всей строки. Радиус, ширина и padding не меняются; сброс возвращает исходный акцент ChatGPT. CSS действует и на последующие сообщения без дополнительного наблюдателя DOM.
-
-## Фон ввода и потоковый текст — scope composer-color-025
-
-Пользователь согласовал пятый пункт «Фон поля ввода» в существующем редакторе и дополнительно поручил исправить возврат цвета текста агента к оригинальному во время ответа. composerBackground хранится в той же палитре: отсутствие поля в старых настройках означает null и штатный фон. Facade ChatColors/ChatColorsWindow остаётся прежним.
-
-Цель фонового CSS — composer surface, содержащий известный prompt editor: актуальный класс bg-(--composer-surface-primary), data-testid=composer либо совместимый #composer-background. CSS меняет только background и composer surface tokens; editor прозрачен, размеры, скругления, текст, кнопки, черновик и отправка не меняются. Неизвестные формы не окрашиваются.
-
-assistantText дополнительно охватывает markdown/prose ответа внутри main до появления role-обёртки, исключая пользовательские сообщения и редактируемые области. Добавленные или заменённые фрагменты получают тот же CSS без polling и MutationObserver. Сохранение и оба вида сброса используют существующий механизм.
-
-
-### Release integration — session-tree-outline-026 / 0.6.26
-
-В 0.6.26 визуальный контракт выбранной сессии поставлен для обеих платформ: прежний отдельный 3 px marker удалён, `.session-row` всегда резервирует прозрачную 1 px границу, а активная строка получает `tree-accent` border по всему периметру. Магистраль и ветви дерева также используют `tree-accent`; stroke chevron уменьшен так, чтобы визуально совпадать с 1 CSS px линиями. Это изменение не меняет session selection, сортировку, прокрутку, badge или меню.
-
-
-Scope 028 / T005: версия store 6; URL, Chat/Work, имена, порядок и архивы сохранены. Auto-title принадлежит session, ранее глобальный lastNamedScopeId больше не выбирает владельца. Данные планов читаются по явному sessionId.
-
-
-Scope 028 / T008: fromPrepared восстанавливает прежнюю связь при повторе, сохраняет источник и тип Chat/Work. newSession создаёт NONE. Наблюдение завершения scope больше не создаёт choice.
-
-
-T009: новый плановый блок сохраняет обе темы и существующее дерево с 0.5px tree-guide и скруглённой последней ветвью; просмотр связанного плана не выбирает другую сессию.
-
-T012: интеграционный Electron fixture проверяет собственный завершённый план, отсутствие автоматического перехода, сохранение исходного незавершённого плана, отмену Chat/Work, обе привязки, просмотр ссылки без смены владельца и переход туда/обратно. Пакеты самостоятельных сессий адресованы отдельно. Снимки обеих тем формируются в smoke evidence; реальные аккаунты не используются.
-
-T012: пустая сессия с неоднозначной legacy-связью явно сообщает, что прежний план сохранён в истории и не присвоен автоматически. После Doctor существующий чат может показывать устаревший контекст: повторная доставка выполняется только действием обновления.
-
-Scope 029 / T004: готовность workspace может переиспользоваться в памяти при новом совпадающем отпечатке. Это состояние всей папки, а не кэш выбранного плана или recovery; sessionId/planId всё равно читаются отдельно. Ранний показ и поколение навигации интегрированы в T005.
-
-## Быстрый выбор — 0.6.29 / scope 029
-
-Подключённые проекты показывают адресованную проекцию через доверенный SessionPlans из canonical package/generated packaged runtime и начинают loadURL до полной фоновой проверки. Последнее поколение навигации определяет store, план, URL, health и controller; чтения не удерживают очередь записей или общую очередь IPC. Ошибка фона не закрывает сохранённый чат и предлагает повтор/Доктора. Отмена Settings/выбора сохраняет загруженный DOM. Первое подключение и legacy adoption остаются строгими. Подробности, замеры и границы поставки — session-opening-performance.md.
-
-## Готовность доставки — scope 029 / T006
-
-Наблюдение ранее отправленного или legacy/unknown чата не запускает MCP/tunnel и прогрев recovery. Для новой Chat/Work и явного обновления контекста ContextCache получает ключ из WorkspaceSetup.ready с отдельными sessionId/planId; тот же путь проверяется перед Send. Ошибка и отмена не разрешают отправку, черновик сохраняется. Фоновая готовность просмотра и адресованный COMPLETE packet остаются разными результатами.
-
-## Сохранение геометрии интерфейса — 0.6.31
-
-Главное `BaseWindow` имеет стабильное имя `main-window` и включает Electron `windowStatePersistence` только для `bounds` (`displayMode: false`). Electron владеет восстановлением x/y/width/height и корректировкой при изменившейся конфигурации дисплеев. Дефолт 1440×940 и существующие minWidth/minHeight остаются fallback, когда сохранённого состояния нет.
-
-Ширина левого `WebContentsView` не дублируется в native window state: существующий IPC `pilot:set-sidebar-width` сохраняет `sidebarWidth` в `<userData>/settings.json`, startup загружает его до создания окна, а `clampedSidebarWidth()` сохраняет минимальную ширину браузера. `userData` стабилен между версиями Project Web Pilot и находится вне заменяемого `.app`, поэтому оба вида состояния переживают штатное обновление релиза.
-
-## Мастер первого запуска macOS — 0.6.32
-
-Новый профиль без проектов показывает автономный `src/ui/startup.mjs` до списка проектов. Этапы: аккаунт ChatGPT (включая отсутствие аккаунта), компоненты, личное подключение и первый проект. IPC `pilot:startup` доступен только локальному renderer; ссылки ограничены официальными адресами, секретных полей в renderer нет. Начальная настройка повторно открывается кнопкой внизу сайдбара. Создание первого проекта использует прежний WorkspaceSetup; отмена/возврат восстанавливают актуальную проверку страницы. Существующий профиль не принуждается заново проходить мастер; session schema v6 и планы не меняются. T009 и T014 зафиксировали повтор пустой панели; полный чистый прогон сохранён в T015.
-
-## Диагностика первого открытия — 0.6.33
-
-В macOS startup view вход/регистрация показываются после наблюдения страницы входа. При пустой странице доступны понятное ожидание, повтор и копирование отчёта. Общий ChromiumDiagnostics запускается до первой навигации обеих платформ; локальный pilot:startup копирует ограниченный отчёт текущего запуска без текста чатов. Pending loadURL не блокирует кнопку копирования. Схема сессий и планы не меняются; Windows-мастер ещё не адаптирован.
-
-## Первое открытие без бесконечного ожидания — 0.6.34
-
-Пустой browser без выбранного проекта использует openStartupPage: первый DOM либо ограниченная ошибка, один recovery до появления документа. Наблюдение аккаунта выполняется через mainFrame.executeJavaScript после готовности DOM. Доставка контекста и навигация существующих проектов сохраняют прежние проверки; schema сессий и планы не меняются. Cookies, сохранённые входы и проекты не очищаются.
-
-## Диагностическое первое открытие — 0.6.35
-
-Первое открытие в пустой панели остаётся автоматическим и ограничено одним непрерывным запросом до 120 секунд. Повтор без проекта во время этого запроса не меняет navigation generation. Подключение netLog ограничено запуском без проектов; сохранённые сессии, схемы и доставка контекста не меняются. Мастер macOS даёт скопировать отчёт после появления страницы входа.
-
-## Первый запуск — 0.6.37
-
-Без выбранного проекта начальное открытие и повтор используют /auth/login. Сохранённый URL выбранной сессии и явный entryUrl сохраняют приоритет; маршруты Chat/Work не изменены. В macOS начальная подготовка после xcode-select --install активирует штатное окно Apple через LaunchServices. При отказе показа мастер объясняет возврат к установке; готовность компонента подтверждается отдельно. На момент выпуска отдельная проверка видимости окна ожидала T017. Последующая пользовательская оценка чистого пути 0.6.38 и пределы отдельной фиксации описаны в docs/CLEAN_INSTALL.md.
-
-## Подготовка компонентов — актуальное исправление 0.6.37
-
-В 0.6.37 устранён воспроизведённый отказ MAC_RUNTIME_EXTERNAL_MODIFIED после установки Apple: точный известный control.py из комплектного ZIP принимается через facade, собственная папка отличается от внешней. Завершённая установка используется повторно с сохранением настроек. Неизвестно изменённые файлы остаются защищены. Время Apple описано без обещания нескольких минут; ошибки подготовки больше не подменяются советом проверить интернет. Проверены холодная установка и восстановление отдельной ранее неудачной установки; гостевой повтор 0.6.37 подтвердил готовность компонентов, позднее пользователь принял чистый путь 0.6.38. Границы завершения T017 записаны в docs/CLEAN_INSTALL.md.
-
-## Уточнение 0.6.41
-
-Windows 0.6.41: общий мастер перед созданием первой сессии готовит Windows-компоненты, туннель и показывает Plugins. Chat/Work, адресация планов, локальные архивы, полный контекст и выбор расположения проекта сохраняют прежний контракт.
-
-## 0.6.44 — создание проекта и подключение инструментов
-
-Создание первой сессии больше не принимает имя/email автора: applySetup(token, experience). Новый или сохранённый чат не получает MCP лишь вследствие доставки recovery; нужное подключение выбирается в ChatGPT. План и контекст остаются адресованными собственной сессии.
-
-## 0.6.45 — общий мастер подключения и разрешений
-
-Инструкция подключения ChatGPT на обеих платформах дополнена режимами Permissions перед первым проектом. Выбор подключения в новом чате остаётся явным действием пользователя; хранение сессий и планы не меняются.
-
-## Совместимость Chat/Work в 0.6.48
-
-Новые сессии из меню проекта учитывают выбранную кнопку режима и промежуточный `local-chatgpt` URL. Постоянная привязка устанавливается после перехода без повторного сообщения. Открытие сохранённой сессии не запускает повторный recovery. Реальная проверка обеих новых сессий приведена в `docs/VERIFICATION.md`.
-
-## Независимое наблюдение плана — 0.6.49
-
-`PlanMonitor` читает data-only projection выбранных workspace/session каждые
-1,5 секунды независимо от передачи контекста, страницы ChatGPT, MCP и окон
-настройки. Входы: выбранная сессия и `store.inspect`; выход: актуальный planView
-для sidebar. Наблюдатель не отправляет recovery, не выполняет команды Kit и
-не меняет задачи. Отложенный ответ другой сессии/проекта отбрасывается;
-одновременные чтения исключены; временный отказ чтения повторяется следующим
-тактом. При закрытии UI наблюдатель останавливается. Более новая проекция
-того же плана имеет приоритет над старой проекцией контроллера доставки.
-
-## Уточнение цвета поля — 0.6.49
-
-По уточнению пользователя composerBackground применяется непосредственно к
-редактируемому textbox/textarea, а не к внешней поверхности composer.
-Это заменяет прежнее правило фонового контейнера и прозрачного editor:
-подложка, кнопки и геометрия сохраняют оформление сайта. Сохранённый HEX и
-сброс палитры совместимы с прежними версиями.
-
-## Уточнение пользователя 0.6.50 — полная скруглённая плашка
-
-Настройка composerBackground должна менять видимую скруглённую плашку от
-кнопки «+» до голосовой кнопки включительно. Внешняя подложка страницы остаётся
-прежней; сами кнопки и текст сохраняют свои цвета. Правило 0.6.49 для одного
-editor заменяется этим контрактом. Выбор поверхности проверяется по реальному
-DOM и визуальному результату ChatGPT, а не по имени предполагаемого контейнера.
-
-## Время работы агента — 0.6.54
-
-Сессия может хранить необязательное поле `agentTime: { totalMs, lastMs }` — сумму и последнее значение времени, которое ChatGPT работал над заданиями этой сессии (целые миллисекунды, `lastMs ≤ totalMs`; иное значение делает файл недействительным, исходник сохраняется). `recordAgentTime(workspace, sessionId, ms)` добавляет завершённое задание именно своей сессии, даже если выбор уже сменился, и не меняет выбор. Идущий замер не сохраняется: он живёт в main (`src/agent-timer.mjs`) и передаётся сайдбару как `selected.agentRun`.
-
-Замер: раз в секунду main проверяет видимую кнопку Stop выбранной сессии (`chatgpt-dom.busy()`). Задание начинается с первого busy, продолжается через паузы короче 5 с (вызовы инструментов, смена потока) и завершается на последнем busy после 5 с простоя, при смене сессии или закрытии окна. Сайдбар показывает справа в заголовке карточки «План этой сессии» `mm:ss · Σ mm:ss`: текущее (или последнее) задание и сумму за сессию; во время работы значение обновляется каждую секунду, пауза замораживает его на последнем busy. Элемент имеет role=timer и не озвучивается каждую секунду.
-
-## Плашка поля ввода — 0.6.55
-
-Реальный DOM ChatGPT после входа (26.09.2026) рисует скруглённую плашку по-разному: в чате `/c/…` скругление 26px и фон у внешнего `ComposerLayoutRoot`, а `data-composer-body` внутри него прямоугольный; на новой странице `/` наоборот — скруглён сам `data-composer-body`, а `ComposerLayoutRoot` снаружи прозрачный и прямоугольный. Поэтому composerBackground больше не привязан к имени контейнера. Скрипт страницы `installComposerCapsule` для каждого видимого поля ввода находит ближайшего предка со скруглением ≥ 12px (не выше его form), помечает его `data-web-pilot-composer-capsule`, а прямоугольные обёртки между полем и плашкой — `data-web-pilot-composer-inner`. CSS закрашивает только плашку и делает эти обёртки и само поле прозрачными. Перестроение DOM (переход между чатами) повторяет разметку сразу (MutationObserver, до отрисовки) при появлении поля ввода или исчезновении плашки, плюс проверка раз в секунду; сброс цвета снимает все метки. Если скруглённого предка нет, ничего не закрашивается.
-## Быстрая передача контекста — 0.6.68
-
-ContextSession проверяет актуальность checkout перед вставкой (onBeforeFill); onBeforeSend сохраняет попытку без повторного чтения fingerprint. ChatGPTComposer хранит в памяти факт вставки по requestId/documentId для продолжения после недоступной кнопки. Изменения текста после вставки не возвращают сессию в waiting-draft. Смена документа инвалидирует маркер; stored unknown не разрешает дубль. Схема session store не менялась. Контракт: docs/CONTEXT_DELIVERY.md и docs/planning/event-driven-runtime.md.
-
-## Завершение автоматической передачи — 0.6.70
-
-Успешный вызов Send сохраняет sent/completion=send-dispatched без последующего поиска requestId. Контроллер привязывает совместимый постоянный URL по зарегистрированной попытке. Прежний sending/unknown сохраняет неопределённость, но позволяет открыть и сохранить разговор без фоновой проверки и повтора. waiting-chat — готовое состояние с неблокирующим сохранением адреса; send-unknown — нейтральное. Схема store не меняется.
-
-0.6.71: общий индикатор операций также исключает waiting-chat/send-unknown; после завершения вызова Send полоса скрывается и её секундомер останавливается.
+- Синхронизация названия на native Windows не проверена (как и весь Windows-клиент до приёмки пользователем).
+- Дефект: `mutate` записывает файл даже когда изменение вернуло «без изменений». `publish()` при активном scope вызывает `applyScopeTitle`, а при отличии page title от явного имени — `setSessionTitle`, поэтому `workspaces.json` перезаписывается почти на каждом `publish`. Требуется: запись только при фактическом изменении.
+- Расхождение: в запись проекта сохраняются поля последней проекции плана (`scopeId`, `planId`, `planRevision`, `scopeStatus`, `objective`, `nextTaskTitle`, `watchInputs`, `inspectedSessionId` и др.) — задачи не пишутся, но «проекция транзиентна» выполняется лишь частично; `save()` и `snapshot()` исключают разные наборы полей.
+- Мелкое расхождение: поле диалога переименования ограничено 80 символами и для проекта, хотя хранилище допускает 160.
