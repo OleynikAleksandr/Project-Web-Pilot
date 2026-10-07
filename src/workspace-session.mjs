@@ -243,6 +243,26 @@ function migrate(data) {
 
 }
 
+// Interrupted atomic writes leave whole copies of the store beside it, with project records in them.
+// Only the store's own temporary names are touched: workspaces.json.tmp-*, .vN-backup.tmp and
+// diagnostics.jsonl(.1).tmp*. Callers run this when none of their own writes is in flight.
+export async function removeStoreTemporaries(storeFile) {
+  const folder = path.dirname(storeFile), base = path.basename(storeFile).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const own = new RegExp(`^(?:${base}(?:\\.v[1-5]-backup)?|diagnostics\\.jsonl(?:\\.1)?)\\.tmp(?:-.+)?$`);
+  let entries;
+  try { entries = await fs.readdir(folder, { withFileTypes: true }); } catch (error) {
+    if (error.code === 'ENOENT') return 0;
+    throw error;
+  }
+  let removed = 0;
+  for (const entry of entries) {
+    if (!entry.isFile() || !own.test(entry.name)) continue;
+    await fs.rm(path.join(folder, entry.name), { force: true });
+    removed++;
+  }
+  return removed;
+}
+
 async function writeJsonAtomic(file, data) {
   const temporary = file + '.tmp-session-archive';
   await fs.writeFile(temporary, JSON.stringify(data, null, 2) + '\n', { mode: 0o600 });
@@ -302,6 +322,9 @@ export class WorkspaceSessions {
   }
 
   async load() {
+    // One app instance owns the store, and nothing is written before load: leftovers are orphans.
+    // Best effort here: a file locked by another program must not stop the app; deletion retries strictly.
+    await removeStoreTemporaries(this.file).catch(() => 0);
     let text;
     try { text = await fs.readFile(this.file, 'utf8'); } catch (error) {
       if (error.code === 'ENOENT') return this.snapshot();
@@ -353,12 +376,28 @@ export class WorkspaceSessions {
     const operation = this.saveTail.catch(() => {}).then(async () => {
       await fs.mkdir(path.dirname(this.file), { recursive: true, mode: 0o700 });
       const temporary = this.file + '.tmp-' + this.uuid();
-      await fs.writeFile(temporary, text, { mode: 0o600 });
-      if (!isCurrent()) { await fs.unlink(temporary); return false; }
-      await fs.rename(temporary, this.file);
-      return true;
+      let renamed = false;
+      try {
+        await fs.writeFile(temporary, text, { mode: 0o600 });
+        if (!isCurrent()) return false;
+        await fs.rename(temporary, this.file);
+        renamed = true;
+        return true;
+      } finally {
+        if (!renamed) await fs.rm(temporary, { force: true }).catch(() => {});
+      }
     });
     this.saveTail = operation;
+    return operation;
+  }
+
+  // In the mutation queue after pending saves, so no own temporary file is in flight.
+  removeTemporaries() {
+    const operation = this.mutationTail.catch(() => {}).then(async () => {
+      await this.saveTail.catch(() => {});
+      return removeStoreTemporaries(this.file);
+    });
+    this.mutationTail = operation;
     return operation;
   }
 
@@ -594,6 +633,8 @@ export class WorkspaceSessions {
         return { project, session };
       });
       for (const { project, session } of records) await purgeSessionCopies(this.file, project.workspace, session.sessionId);
+      await this.saveTail.catch(() => {});
+      await removeStoreTemporaries(this.file);
       for (const { project, session } of records) project.sessions = project.sessions.filter(item => item.sessionId !== session.sessionId);
       return records.length;
     });

@@ -28,6 +28,32 @@ async function fixture(t) {
 
 
 
+test('interrupted writes leave no copies: a failed save cleans up and load removes orphans', async t => {
+  const { root, project, store } = await fixture(t);
+  const folder = await project('Хранилище');
+  const selected = (await store.select(folder)).workspace;
+  const dir = path.dirname(store.file);
+  const orphans = ['sessions.json.tmp-0a26bc01-4d21-4c3f-8d83-6becf46588c6', 'sessions.json.tmp-session-archive',
+    'sessions.json.v2-backup.tmp', 'diagnostics.jsonl.tmp', 'diagnostics.jsonl.1.tmp-session-archive'];
+  const foreign = ['other.json.tmp-1', 'sessions.json.v2-backup', 'diagnostics.jsonl', 'sessions.json.tmp-dir'];
+  for (const name of orphans) await fs.writeFile(path.join(dir, name), '{"projects":[]}');
+  for (const name of foreign.slice(0, 3)) await fs.writeFile(path.join(dir, name), 'keep');
+  await fs.mkdir(path.join(dir, foreign[3]));
+  const reloaded = new WorkspaceSessions(store.file);
+  await reloaded.load();
+  assert.equal(reloaded.selected().workspace, selected);
+  const left = await fs.readdir(dir);
+  for (const name of orphans) assert.ok(!left.includes(name), name);
+  for (const name of foreign) assert.ok(left.includes(name), name);
+  // A write that fails after the temporary file exists removes it.
+  const failing = new WorkspaceSessions(store.file, { uuid: () => 'failing-write' });
+  await failing.load();
+  const original = fs.rename;
+  fs.rename = async () => { throw Object.assign(new Error('rename failed'), { code: 'EIO' }); };
+  try { await assert.rejects(failing.save(), { code: 'EIO' }); } finally { fs.rename = original; }
+  assert.ok(!(await fs.readdir(dir)).includes('sessions.json.tmp-failing-write'));
+});
+
 test('readWorkspace exposes user plan lifecycle without using plan revision as UI state', async t => {
   const { project } = await fixture(t);
   const folder = await project('Plan view');

@@ -43,6 +43,19 @@ test('confirmed archive deletion removes files, all local sessions and backup re
   assert.deepEqual(JSON.parse((await fs.readFile(path.join(root, 'app/diagnostics.jsonl'), 'utf8')).trim()), { workspace: b });
 });
 
+test('project deletion removes orphan temporary copies of the store that still hold the project', async t => {
+  const { root, store, service, project } = await fixture(t); const a = await project('Удаляемый'), b = await project('Соседний');
+  const orphans = [store.file + '.tmp-0a26bc01-4d21-4c3f-8d83-6becf46588c6', store.file + '.v3-backup.tmp', path.join(root, 'app/diagnostics.jsonl.tmp-session-archive')];
+  for (const file of orphans) await fs.writeFile(file, JSON.stringify(store.snapshot()));
+  const foreign = path.join(root, 'app/notes.tmp-keep');
+  await fs.writeFile(foreign, 'not ours');
+  await store.setArchived(a, true); const p = await service.preview(a);
+  await service.apply(p.token, 'Удаляемый');
+  for (const file of orphans) await assert.rejects(fs.stat(file), { code: 'ENOENT' }, file);
+  assert.equal(await fs.readFile(foreign, 'utf8'), 'not ours');
+  assert.equal(store.selected().workspace, b);
+});
+
 test('active, protected, nested, replaced and symlink roots cannot be deleted', async t => {
   const { root, store, service, project } = await fixture(t); const a = await project('A');
   await assert.rejects(service.preview(a), { code: 'PROJECT_NOT_ARCHIVED' }); await store.setArchived(a, true);

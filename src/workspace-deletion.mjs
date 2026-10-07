@@ -123,6 +123,7 @@ export class WorkspaceDeletion {
     job.stage = 'removing'; await this.saveJob(job);
     if (quarantined) await fs.rm(job.quarantine, { recursive: true });
     await this.purgeCopies(job.workspace);
+    await this.store.removeTemporaries();
     await this.store.forgetArchived(job.workspace, job.projectId);
     await fs.unlink(this.jobFile(job)); this.pending.delete(job.workspace);
   }

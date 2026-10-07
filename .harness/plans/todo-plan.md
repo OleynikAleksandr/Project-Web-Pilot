@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1440,
+  "plan_revision": 1442,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "refactor-fixes-20261007",
@@ -103,8 +103,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "refactor-fixes-20261007",
         "task_id": "T002",
@@ -136,7 +136,13 @@
         "Загрузка хранилища удаляет осиротевшие временные файлы и не трогает посторонние.",
         "Удаление проекта и локальное удаление сессий удаляют осиротевшие временные файлы без гонки с собственной записью."
       ],
-      "expected_commit_message": "fix: очистка брошенных временных копий хранилища"
+      "expected_commit_message": "fix: очистка брошенных временных копий хранилища",
+      "actual_files": [
+        "src/workspace-deletion.mjs",
+        "src/workspace-session.mjs",
+        "tests/workspace-deletion.test.mjs",
+        "tests/workspace-session.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -275,7 +281,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: refactor-fixes-20261007
 Current Task: нет
-Revision: 1440
+Revision: 1442
 
 ## Цель
 
@@ -291,8 +297,8 @@ Revision: 1440
   - Git Commit: [DONE] fix: уникальные имена частей контекста
   - Reference: refactor-fixes-20261007 / T001 / implementation
   - Файлы: src/context-session.mjs, tests/context-session.test.mjs, tests/chatgpt-composer.test.mjs, package.json, package-lock.json, docs/planning/refactor-fixes.md, docs/modules/context-delivery.md, docs/planning/correction-round-0.6.99.md, docs/planning/workflow-kit-context-refactor.md, docs/planning/workflow-kit-context-transition.md
-- [TODO] T002: Брошенные временные файлы хранилища — Ожидает
-  - Git Commit: [PENDING] fix: очистка брошенных временных копий хранилища
+- [DONE] T002: Брошенные временные файлы хранилища — Завершено
+  - Git Commit: [DONE] fix: очистка брошенных временных копий хранилища
   - Reference: refactor-fixes-20261007 / T002 / implementation
   - Файлы: src/workspace-session.mjs, src/workspace-deletion.mjs, tests/workspace-session.test.mjs, tests/workspace-deletion.test.mjs, docs/planning/refactor-fixes.md, docs/modules/workspace-sessions.md, docs/modules/project-archive.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
