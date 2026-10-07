@@ -6,6 +6,56 @@ import { chatGPTDOMScript } from '../src/chatgpt-dom.mjs';
 import { installPageObserver } from '../src/chatgpt-page-observer.mjs';
 import { ChatGPTComposer, pageOperation, pageScript } from '../src/chatgpt-composer.mjs';
 
+function attachmentFixture({partial=false,uploading=false}={}) {
+  const f=fixture(),w=f.dom.window;
+  Object.assign(w,{File,TextEncoder});
+  w.DataTransfer=class {constructor(){this.files=[];this.items={add:file=>this.files.push(file)};}};
+  w.ClipboardEvent=class extends w.Event {constructor(type,options){super(type,options);this.clipboardData=options.clipboardData;}};
+  let pastes=0;const received=[];
+  f.editor.addEventListener('paste',event=>{
+    event.preventDefault();pastes++;received.push(...event.clipboardData.files);
+    for(const file of event.clipboardData.files.slice(0,partial?6:7)) {
+      const card=f.document.createElement('div'),label=f.document.createElement('span'),remove=f.document.createElement('button');
+      label.textContent=file.name;remove.type='button';remove.setAttribute('aria-label','Remove file');card.append(label,remove);
+      if(uploading)card.setAttribute('aria-busy','true');
+      f.editor.before(card);
+    }
+  });
+  const request={requestId:'files-request',text:'Start files-request',attachments:Array.from({length:7},(_,i)=>({name:`part-${i+1}.md`,text:'я'.repeat(14000)}))};
+  return {...f,request,received,pastes:()=>pastes};
+}
+
+test('seven 28000-byte File parts upload before exactly one Send, with exact UTF-8 contents',async()=>{
+  const f=attachmentFixture({uploading:true});
+  let waits=0;const wait=f.composer.wait;
+  f.composer.wait=async ms=>{assert.equal(f.sends(),0);await wait(ms);waits++;for(const card of f.document.querySelectorAll('[aria-busy]'))card.removeAttribute('aria-busy');};
+  assert.equal((await f.composer.deliver(f.request)).state,'sent');
+  assert.equal(f.pastes(),1);assert.equal(f.sends(),1);assert.equal(f.received.length,7);assert(waits>0);
+  for(const file of f.received){assert.equal(file.size,28000);assert.equal(await file.text(),'я'.repeat(14000));}
+  assert.equal((await f.composer.deliver(f.request)).state,'sent');assert.equal(f.pastes(),1);assert.equal(f.sends(),1);
+});
+
+test('partial or failed upload never sends, repastes, or loses the prepared files',async()=>{
+  for(const partial of [true,false]) {
+    const f=attachmentFixture({partial});
+    const execute=f.view.executeJavaScript;
+    f.view.executeJavaScript=async script=>{const value=await execute(script);if(!partial&&value.action==='attachments-dispatched')f.document.querySelector('form > div').setAttribute('data-state','error');return value;};
+    const code=partial?'ATTACHMENTS_PENDING':'ATTACHMENTS_FAILED';
+    await assert.rejects(f.composer.deliver(f.request),{code});
+    await assert.rejects(f.composer.deliver(f.request),{code});
+    assert.equal(f.sends(),0);assert.equal(f.pastes(),1);assert.equal(f.received.length,7);
+    assert.equal(f.editor.value,f.request.text);assert.equal(f.request.attachments.length,7);
+  }
+});
+
+test('exception after actual Send is uncertain and never dispatched again',async()=>{
+  const f=attachmentFixture(),execute=f.view.executeJavaScript;
+  f.view.executeJavaScript=async script=>{const value=await execute(script);if(value.action==='clicked')throw Error('lost renderer reply');return value;};
+  assert.equal((await f.composer.deliver(f.request)).state,'unknown');
+  assert.equal((await f.composer.deliver(f.request)).state,'unknown');
+  assert.equal(f.sends(),1);assert.equal(f.pastes(),1);
+});
+
 function fixture({ draft = '', stop = false, emitMessage = true } = {}) {
   const dom = new JSDOM('<!doctype html><form><textarea id="prompt-textarea"></textarea><button data-testid="send-button" type="submit">Send</button></form>',
     { url:'https://chatgpt.com/', runScripts:'outside-only' });

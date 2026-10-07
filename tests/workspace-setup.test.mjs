@@ -28,6 +28,16 @@ async function create(t) {
   assert.equal(result.ready, true, JSON.stringify(result));
   return { ...f, workspace: result.workspace, result };
 }
+test('real readiness key tracks NONE planning and repeated edits to an already dirty source', async t => {
+  const {workspace,setup}=await create(t);
+  const key=async()=>{const result=await setup.ready(workspace);assert.equal(result.ready,true,JSON.stringify(result));return result.inputKey;};
+  const before=await key();
+  await fs.mkdir(path.join(workspace,'docs/planning'),{recursive:true});
+  const source=path.join(workspace,'docs/planning/new-scope.md');
+  await fs.writeFile(source,'# Scope\nalpha\n');const first=await key();assert.notEqual(first,before);
+  await fs.writeFile(source,'# Scope\nbravo\n');const second=await key();assert.notEqual(second,first);
+  await fs.writeFile(source,'# Scope\nthird\n');assert.notEqual(await key(),second);
+});
 function git(cwd, ...args) { return execFileSync('git', args, { cwd, env: environment, encoding: 'utf8' }).trim(); }
 const sha = value => createHash('sha256').update(value).digest('hex');
 

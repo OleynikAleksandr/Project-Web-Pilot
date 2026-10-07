@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1376,
+  "plan_revision": 1378,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "recovery-on-demand-research-20261006",
@@ -77,7 +77,10 @@
       "resources/project-doctor/core.mjs",
       "scripts/probe-chatgpt-file-paste.mjs",
       "tests/chatgpt-file-paste-probe.test.mjs",
-      "packages/workflow-kit/scripts/check-project-recovery-fixture.mjs"
+      "packages/workflow-kit/scripts/check-project-recovery-fixture.mjs",
+      "tests/electron-smoke.mjs",
+      "tests/mcp-runtime.test.mjs",
+      "tests/workflow-kit-upgrade.test.mjs"
     ],
     "documentation_paths": [
       "docs/planning/workflow-kit-context-refactor.md",
@@ -110,7 +113,7 @@
     ]
   },
   "baseline_commit": "7bd5f4714fc3be0572dfa8a593804af3fab45d1f",
-  "current_task_id": "T004",
+  "current_task_id": null,
   "context_pack": {
     "documents": [
       {
@@ -541,7 +544,10 @@
         "scripts/check-installed-release.mjs",
         "scripts/check-github-release.mjs",
         "scripts/probe-chatgpt-file-paste.mjs",
-        "tests/chatgpt-file-paste-probe.test.mjs"
+        "tests/chatgpt-file-paste-probe.test.mjs",
+        "tests/electron-smoke.mjs",
+        "tests/mcp-runtime.test.mjs",
+        "tests/workflow-kit-upgrade.test.mjs"
       ],
       "documentation_paths": [
         "docs/planning/workflow-kit-context-refactor.md",
@@ -566,13 +572,37 @@
         "Текст первого сообщения Web Pilot содержит правило: «Читай каждое вложение отдельно одним вызовом, не объединяй вложения в общий вывод, при признаках обрезки дочитай недостающее». Правило закреплено проверкой текста сообщения. Поддерживаемый максимум — 7 вложений; ограничение recovery реализуется отдельной T004A после T004, до DOCS."
       ],
       "expected_commit_message": "feat: подключить новый recovery к Web Pilot",
-      "implementation_status": "IN_PROGRESS",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "recovery-on-demand-research-20261006",
         "task_id": "T004",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "docs/planning/workflow-kit-context-refactor.md",
+        "docs/planning/workflow-kit-context-transition.md",
+        "package-lock.json",
+        "package.json",
+        "packages/workflow-kit/package.json",
+        "packages/workflow-kit/src/lib/common.mjs",
+        "packages/workflow-kit/src/lib/installer.mjs",
+        "scripts/probe-chatgpt-file-paste.mjs",
+        "src/chatgpt-composer.mjs",
+        "src/context-cache.mjs",
+        "src/context-inputs.mjs",
+        "src/context-session.mjs",
+        "src/mcp-runtime.mjs",
+        "tests/auto-plan.test.mjs",
+        "tests/chatgpt-composer.test.mjs",
+        "tests/chatgpt-file-paste-probe.test.mjs",
+        "tests/context-cache.test.mjs",
+        "tests/context-session.test.mjs",
+        "tests/electron-smoke.mjs",
+        "tests/mcp-runtime.test.mjs",
+        "tests/workflow-kit-upgrade.test.mjs",
+        "tests/workspace-setup.test.mjs"
+      ]
     },
     {
       "id": "T004A",
@@ -799,8 +829,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: recovery-on-demand-research-20261006
-Current Task: T004
-Revision: 1376
+Current Task: нет
+Revision: 1378
 
 ## Цель
 
@@ -838,10 +868,10 @@ Revision: 1376
   - Git Commit: [DONE] feat: восстанавливать контекст по плану и Git
   - Reference: recovery-on-demand-research-20261006 / T003 / implementation
   - Файлы: packages/workflow-kit/src/lib/recovery.mjs, packages/workflow-kit/src/lib/project-facts.mjs, packages/workflow-kit/src/lib/plan.mjs, packages/workflow-kit/src/lib/git.mjs, packages/workflow-kit/src/lib/actions.mjs, packages/workflow-kit/src/lib/command-help.mjs, packages/workflow-kit/scripts/check-runtime-fixture.mjs, tests/workflow-kit-recovery.test.mjs, packages/workflow-kit/src/lib/inspection-inputs.mjs, packages/workflow-kit/src/lib/transaction.mjs, packages/workflow-kit/src/lib/validate.mjs, packages/workflow-kit/src/lib/common.mjs, packages/workflow-kit/src/schemas/plan.schema.json, docs/planning/workflow-kit-context-refactor.md, docs/planning/workflow-kit-context-transition.md, docs/modules/workflow-kit-recovery.md, docs/CONTEXT_DELIVERY.md
-- [IN_PROGRESS] T004: Согласовать Web Pilot с новым Kit и подготовить проверки выпуска — В работе
-  - Git Commit: [PENDING] feat: подключить новый recovery к Web Pilot
+- [DONE] T004: Согласовать Web Pilot с новым Kit и подготовить проверки выпуска — Завершено
+  - Git Commit: [DONE] feat: подключить новый recovery к Web Pilot
   - Reference: recovery-on-demand-research-20261006 / T004 / implementation
-  - Файлы: src/context-session.mjs, src/context-cache.mjs, src/session-plans.mjs, src/mcp-runtime.mjs, src/auto-plan.mjs, src/mac-runtime-switch.mjs, src/workspace-setup.mjs, tests/context-session.test.mjs, tests/context-cache.test.mjs, tests/session-plans.test.mjs, tests/auto-plan.test.mjs, tests/workflow-kit-source.test.mjs, packages/workflow-kit/package.json, packages/workflow-kit/src/lib/common.mjs, package.json, package-lock.json, .harness/workflow.json, packages/workflow-kit/src/lib/installer.mjs, packages/workflow-kit/src/lib/inspection-inputs.mjs, resources/workspace-setup-worker.mjs, src/context-inputs.mjs, src/main.mjs, src/chatgpt-composer.mjs, src/chatgpt-dom.mjs, src/chatgpt-experience.mjs, tests/chatgpt-composer.test.mjs, tests/chatgpt-dom.test.mjs, tests/chatgpt-experience.test.mjs, tests/workspace-setup.test.mjs, tests/session-opening-performance.test.mjs, scripts/check-installed-release.mjs, scripts/check-github-release.mjs, scripts/probe-chatgpt-file-paste.mjs, tests/chatgpt-file-paste-probe.test.mjs, docs/planning/workflow-kit-context-refactor.md, docs/planning/workflow-kit-context-transition.md, docs/CONTEXT_DELIVERY.md, docs/WORKSPACE_SETUP.md, docs/modules/chatgpt-dom-compatibility.md
+  - Файлы: src/context-session.mjs, src/context-cache.mjs, src/session-plans.mjs, src/mcp-runtime.mjs, src/auto-plan.mjs, src/mac-runtime-switch.mjs, src/workspace-setup.mjs, tests/context-session.test.mjs, tests/context-cache.test.mjs, tests/session-plans.test.mjs, tests/auto-plan.test.mjs, tests/workflow-kit-source.test.mjs, packages/workflow-kit/package.json, packages/workflow-kit/src/lib/common.mjs, package.json, package-lock.json, .harness/workflow.json, packages/workflow-kit/src/lib/installer.mjs, packages/workflow-kit/src/lib/inspection-inputs.mjs, resources/workspace-setup-worker.mjs, src/context-inputs.mjs, src/main.mjs, src/chatgpt-composer.mjs, src/chatgpt-dom.mjs, src/chatgpt-experience.mjs, tests/chatgpt-composer.test.mjs, tests/chatgpt-dom.test.mjs, tests/chatgpt-experience.test.mjs, tests/workspace-setup.test.mjs, tests/session-opening-performance.test.mjs, scripts/check-installed-release.mjs, scripts/check-github-release.mjs, scripts/probe-chatgpt-file-paste.mjs, tests/chatgpt-file-paste-probe.test.mjs, tests/electron-smoke.mjs, tests/mcp-runtime.test.mjs, tests/workflow-kit-upgrade.test.mjs, docs/planning/workflow-kit-context-refactor.md, docs/planning/workflow-kit-context-transition.md, docs/CONTEXT_DELIVERY.md, docs/WORKSPACE_SETUP.md, docs/modules/chatgpt-dom-compatibility.md
 - [TODO] T004A: Устранить переполнение recovery и ограничить число частей — Ожидает
   - Git Commit: [PENDING] fix: ограничить recovery бюджетом и семью частями
   - Reference: recovery-on-demand-research-20261006 / T004A / implementation

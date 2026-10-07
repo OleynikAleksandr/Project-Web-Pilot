@@ -28,6 +28,14 @@ export function validateContextPacket(packet, workspace) {
   if (bytes !== packet.context_bytes || createHash('sha256').update(packet.context, 'utf8').digest('hex') !== packet.context_sha256) {
     throw new RuntimeError('MCP_CONTEXT_DAMAGED', 'Полный текст контекста не прошёл проверку целостности.');
   }
+  const parts = packet.parts, limit = packet.budget?.document_bytes ?? 28000;
+  if (!Number.isSafeInteger(limit) || limit < 1 || !Array.isArray(parts) || !parts.length)
+    throw new RuntimeError('MCP_UPDATE_REQUIRED', 'Workflow Kit должен подготовить части контекста для вложений.');
+  if (parts.some((part, index) => typeof part.text !== 'string' || part.index !== index + 1
+      || part.total !== parts.length || Buffer.byteLength(part.text, 'utf8') !== part.bytes
+      || part.bytes > limit || createHash('sha256').update(part.text, 'utf8').digest('hex') !== part.sha256)
+      || parts.map(part => part.text).join('\n\n') !== packet.context)
+    throw new RuntimeError('MCP_CONTEXT_DAMAGED', 'Части контекста не прошли проверку состава, размера или целостности.');
   return packet;
 }
 

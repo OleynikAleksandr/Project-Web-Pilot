@@ -329,6 +329,17 @@ test('checkpoint reader distinguishes working task, prepared DONE and committed 
   assert.equal((await readAutoPlanState({ workspace: root })).confirmed, false);
   await fs.unlink(path.join(root,'.git/workflow-kit/transaction.json'));
   assert.equal((await readAutoPlanState({ workspace: root })).confirmed, true);
+  const previous=structuredClone(p.tasks);
+  p.delivery_status='IN_PROGRESS';p.plan_revision++;
+  p.tasks.push({...p.tasks[0],id:'T002',title:'Correction round',implementation_status:'TODO',commit_status:'PENDING'});
+  await write();
+  let round=await readAutoPlanState({workspace:root});
+  assert.equal(round.nextTask.id,'T002');assert.equal(round.confirmed,true);
+  assert.equal(round.deliveryStatus,'IN_PROGRESS');
+  p.tasks.push({...p.tasks[1],id:'DOCS-2',title:'Release documents'},{...p.tasks[1],id:'T003',title:'New delivery'});
+  p.tasks[1].implementation_status='DONE';p.tasks[1].commit_status='DONE';p.plan_revision++;
+  await write();round=await readAutoPlanState({workspace:root});
+  assert.equal(round.nextTask.id,'DOCS-2');assert.deepEqual(p.tasks.slice(0,previous.length),previous);
 });
 test('real Composer keeps the AutoPlan guard valid for its own insertion and inFlight', async () => {
   const f = fixture();

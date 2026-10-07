@@ -1,8 +1,8 @@
-import { contextInputKey } from './context-inputs.mjs';
 import { validateContextPacket } from './mcp-runtime.mjs';
 
 export class ContextCache {
-  constructor({ load, inputKey = contextInputKey, limit = 4, onChange = () => {} }) {
+  constructor({ load, inputKey, limit = 4, onChange = () => {} }) {
+    if (typeof inputKey !== 'function') throw new TypeError('ContextCache requires the readiness input key');
     Object.assign(this, { loadPacket: load, inputKey, limit, onChange });
     this.entries = new Map(); this.pending = new Map(); this.warming = new Map(); this.building = new Set(); this.epoch = 0;
   }

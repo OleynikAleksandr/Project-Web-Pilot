@@ -15,6 +15,7 @@ const now=2000000;
 function packet(){
   const context='ПОЛНЫЙ КОНТЕКСТ\nОписание проекта\nПлан\n\nНезавершённые изменения\nКОНЕЦ';
   return {delivery_protocol:'inline-context-v1',ack_required:false,status:'ready',completeness:'COMPLETE',workspace:project.workspace,session_id:project.sessionId,plan_id:project.scopeId,
+    parts:[{index:1,total:1,text:context,bytes:Buffer.byteLength(context),sha256:createHash('sha256').update(context).digest('hex')}],
     context,context_bytes:Buffer.byteLength(context),context_sha256:createHash('sha256').update(context).digest('hex'),
     generated_at_ms:now,signature:'signature',head:'head',facts:{...facts}};
 }
@@ -30,7 +31,7 @@ function controllerFixture({ savedAttempt=null, chatUrl=project.chatUrl }={}){
   const composer={inspect:async options=>({...inspection,
     ...(options?.action==='select-experience'?{action: (inspection.experience??store.project().experience)===options.expectedExperience
       ?'experience-confirmed':'experience-selecting'}:{})}),contents:{getURL:()=>inspection.url},deliver:async options=>{
-    assert.equal(saved.attempt.state,'prepared');assert.ok(options.text.includes(packet().context));
+    assert.equal(saved.attempt.state,'prepared');assert.equal(options.attachments.map(p=>p.text).join('\n\n'),packet().context);assert.ok(!options.text.includes(packet().context));
     if(!options.canContinue())return {state:'cancelled'};
     await options.onBeforeFill?.();
     await options.onBeforeSend();if(!options.canContinue())return {state:'cancelled'};
@@ -44,14 +45,16 @@ function controllerFixture({ savedAttempt=null, chatUrl=project.chatUrl }={}){
 
 test('the first message contains the exact complete packet and asks for a short project reply without tools',()=>{
   const p=packet(), text=startupMessage(project,'unique-request',p);
-  assert.ok(text.includes('\n'+p.context+'\n'));
-  for(const item of ['"/Projects/Мой проект"','session-1','unique-request','коротко подтверди','опиши назначение проекта','не вызывай инструменты'])assert.ok(text.includes(item));
+  assert.ok(!text.includes(p.context));
+  assert.ok(text.includes('Читай каждое вложение отдельно одним вызовом'));
+  assert.ok(text.includes('при признаках обрезки дочитай'));
+  assert.ok(text.includes('Инструменты чтения вложений разрешены'));
+  for(const item of ['"/Projects/Мой проект"','session-1','unique-request','коротко подтверди','опиши назначение проекта','не вызывай MCP проекта'])assert.ok(text.includes(item));
   for(const name of ['workflow_context_recover','workflow_context_ack','workflow_context_hook'])assert.ok(!text.includes(name));
   assert.equal(packetMatchesProject(p,project),true);
   assert.equal(packetMatchesProject({...p,session_id:'legacy-other',plan_id:'historical-plan'},project),true);
   assert.equal(packetMatchesProject(p,{...project,planRevision:8}),false);
-  assert.ok(text.includes('текущему checkout/worktree'));
-  assert.ok(text.includes('только для навигации разговора'));
+  assert.ok(!text.includes('plan:prepare')); // Kit owns workflow rules.
   for (const rule of ['Не запускай codex exec', 'других модельных агентов', 'не делегируй им работу',
     'если пользователь прямо этого не попросил', 'локальный исполнитель MCP без модельных запросов разрешён'])
     assert.ok(text.includes(rule), rule);
@@ -61,17 +64,22 @@ test('the first message contains the exact complete packet and asks for a short 
 
 test('ordinary session contract defines one verified microtask per reply without an AutoPlan protocol', () => {
   const p = packet(), text = startupMessage(project, 'contract-request', p);
-  for (const rule of ['не более одной микрозадачи', 'task:start', 'проверкой и commit --task',
-    'кратко отчитайся и закончи ответ', 'безопасной контрольной точке', 'не помечая задачу DONE'])
-    assert.ok(text.includes(rule), rule);
-  for (const rule of ['build/package/sign/notarize/release/publish', 'прямо названо в активной микрозадаче',
-    'документы должны быть актуализированы и зафиксированы', 'DOCS выполняется до delivery-хвоста',
-    'Если явной delivery-задачи нет — не собирай и не публикуй'])
-    assert.ok(text.includes(rule), rule);
-  assert.equal(text.split(p.context).length, 2, 'complete recovery remains included exactly once');
+  assert.ok(!text.includes('Delivery-порядок'));
+  assert.ok(!text.includes(p.context), 'recovery is delivered only in attachments');
   assert.doesNotMatch(text, /AutoPlan|автовыполнения|Готов продолжать\.|Нужен ваш ответ\.|План завершён\./);
   assert.equal(startupMessage({ ...project, autoPlanEnabled: true }, 'contract-request', p),
     startupMessage({ ...project, autoPlanEnabled: false }, 'contract-request', p));
+});
+
+test('attachment failure keeps its request and complete payload on explicit retry',async()=>{
+  const f=controllerFixture({chatUrl:null}),deliver=f.composer.deliver;
+  f.composer.deliver=async()=>{throw Object.assign(Error('pending upload'),{code:'ATTACHMENTS_PENDING'});};
+  await f.controller.tick();assert.equal(f.controller.state.phase,'error');
+  const saved=structuredClone(f.saved.attempt);assert.equal(saved.attachments.length,1);
+  f.composer.deliver=deliver;await f.controller.retry();
+  assert.equal(f.saved.attempt.requestId,saved.requestId);
+  assert.deepEqual(f.saved.attempt.attachments,saved.attachments);
+  assert.equal(f.loads(),1);assert.equal(f.sends(),1);
 });
 
 test('loads once, saves full message before send, and reopens the same chat without another recovery or send',async()=>{
@@ -435,8 +443,8 @@ test('executor tool rules join the session rules of the start message; without t
     'OpenAI заблокировал вызов инструмента до выполнения', 'повтори тот же вызов один раз без изменений'])
     assert.ok(text.includes(item), item);
   assert.equal(text.replace(EXECUTOR_TOOL_RULES.join('\n') + '\n', ''), plain, 'only the two rule lines are added');
-  assert.ok(text.indexOf(EXECUTOR_TOOL_RULES[1]) < text.indexOf('НАЧАЛО ПАКЕТА'), 'rules precede the packet');
-  assert.equal(text.split(p.context).length, 2, 'the complete packet is still included exactly once');
+  assert.ok(text.indexOf(EXECUTOR_TOOL_RULES[1]) < text.indexOf('Вложения содержат'), 'rules precede attachment instructions');
+  assert.ok(!text.includes(p.context), 'packet is carried by separate files');
   for (const name of ['workflow_context_recover', 'part=1', 'ключом after']) assert.ok(!text.includes(name), name);
   assert.equal(contextSessionModule.mcpStartMessage, undefined, 'the short MCP start message is gone');
 });

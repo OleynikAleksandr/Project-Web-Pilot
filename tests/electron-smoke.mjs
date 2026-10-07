@@ -29,7 +29,8 @@ let fixtureTitleAuthFailures = 0;
 let fixtureTitleReadFailures = 0;
 let fixtureTitleDelayMs = 0;
 let fixtureTitleRequests = 0;
-const fixtureContext = Array.from({ length: 400 }, (_, i) => `Раздел ${i + 1}: полный контекст проекта, включая кириллицу и точные пути.\n  Файл: /Projects/Мой проект/src/модуль.mjs\n\n`).join('');
+const fixtureTexts = Array.from({length:4},(_,part)=>Array.from({ length: 100 }, (_, i) => `Раздел ${part*100+i + 1}: полный контекст проекта, включая кириллицу и точные пути.\n  Файл: /Projects/Мой проект/src/модуль.mjs\n\n`).join(''));
+const fixtureContext = fixtureTexts.join('\n\n');
 const fixtureTelemetrySse = [
   'data: {"type":"event_msg","payload":{"type":"token_count","info":{"last_token_usage":{"input_tokens":229043,"cached_input_tokens":220000,"total_tokens":229153},"model_context_window":258400},"message":"PRIVATE STREAM TEXT"}}',
   '',
@@ -48,6 +49,16 @@ const html = `<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>
 // Minimal editor adapter for smoke; real ProseMirror is covered by installed gate.
 document.getElementById('prompt-textarea').addEventListener('paste',event=>{
  event.preventDefault();const editor=event.currentTarget;
+ if(event.clipboardData.files.length){
+   const send=document.querySelector('[data-testid="send-button"]');send.disabled=true;
+   window.fixtureFiles=[];
+   Promise.all([...event.clipboardData.files].map(async file=>{
+     const card=document.createElement('div'),label=document.createElement('span'),remove=document.createElement('button');
+     label.textContent=file.name;remove.type='button';remove.setAttribute('aria-label','Remove file');card.append(label,remove);card.setAttribute('aria-busy','true');editor.before(card);
+     const text=await file.text();card.removeAttribute('aria-busy');return {name:file.name,bytes:file.size,text};
+   })).then(files=>{window.fixtureFiles=files;send.disabled=false;});
+   return;
+ }
  editor.append(document.createTextNode(event.clipboardData.getData('text/plain')));
  editor.dispatchEvent(new InputEvent('input',{bubbles:true,inputType:'insertFromPaste'}));
 });
@@ -69,7 +80,8 @@ function showMessage(text){const turn={role:'user',id:'fixture-message-'+window.
 window.fixtureAssistant=(text,id='fixture-answer-'+crypto.randomUUID())=>{const turn={role:'assistant',id,text};window.fixtureTurns.push(turn);showTurn(turn);saveTurns();return id;};
 document.querySelector('form').addEventListener('submit',event=>{
  event.preventDefault(); const editor=document.getElementById('prompt-textarea');const text=editor.innerText;
- const message={text,at:Date.now(),mode:window.fixtureMode};window.fixtureMessages.push(message);
+ const message={text,files:window.fixtureFiles||[],at:Date.now(),mode:window.fixtureMode};window.fixtureMessages.push(message);
+ window.fixtureFiles=[];document.querySelectorAll('form > div:not(#prompt-textarea)').forEach(card=>card.remove());
  showMessage(text);
  editor.textContent='';const match=text.match(/wp-request-[a-zA-Z0-9-]+/) || ['manual-'+crypto.randomUUID()];
  if(match && !location.pathname.startsWith('/c/')){
@@ -128,6 +140,7 @@ export async function createRuntime({ browser, session }) {
       return { workspace, facts, plan_id: info.scopeId, delivery_protocol: 'inline-context-v1', ack_required: false,
         status: 'ready', completeness: 'COMPLETE', signature: 'fixture-snapshot', head: 'fixture-head',
         generated_at_ms: Date.now(), context: fixtureContext, context_bytes: Buffer.byteLength(fixtureContext),
+        parts: fixtureTexts.map((text,index)=>({index:index+1,total:fixtureTexts.length,text,bytes:Buffer.byteLength(text),sha256:createHash('sha256').update(text).digest('hex')})),
         context_sha256: createHash('sha256').update(fixtureContext).digest('hex') };
     },
   };
@@ -417,7 +430,10 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   const deliverNormally = controller.composer.deliver.bind(controller.composer);
   let manualDeliveryArmed = !eventBaseline, manualDeliveryClicked = false;
   if (manualDeliveryArmed) controller.composer.deliver = async options => {
+    await controller.composer.inspect({action:'attach',attachments:options.attachments,requestId:options.requestId});
     await controller.composer.inspect({ action: 'fill', text: options.text, requestId: options.requestId });
+    const ready=await controller.composer.waitForSendReady(options,0,()=>true);
+    assert.equal(ready.attachmentsReady,true,'manual Send waits for every uploaded file');
     return { state: 'deferred', reason: 'DRAFT_CHANGED' };
   };
   await sidebar.executeJavaScript('document.getElementById("setup-experience-chat").click(); document.getElementById("setup-experience-work").click()');
@@ -456,7 +472,12 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(await sidebar.executeJavaScript('document.querySelector(".session-experience").textContent'), 'Chat');
   assert.equal(await sidebar.executeJavaScript('document.getElementById("new-chat")'), null, 'context card has no session creation button');
   assert.equal(first.attempt.state, 'sent');
-  assert.ok(first.attempt.text.includes(fixtureContext));
+  assert.ok(!first.attempt.text.includes(fixtureContext));
+  const files = await browser.executeJavaScript('window.fixtureMessages[0].files');
+  const fileDigest=text=>createHash('sha256').update(text).digest('hex');
+  assert.deepEqual(files.map(file=>({bytes:file.bytes,sha:fileDigest(file.text)})),fixtureTexts.map(text=>({bytes:Buffer.byteLength(text),sha:fileDigest(text)})));
+  assert.equal(fileDigest(files.map(file=>file.text).join('\n\n')),fileDigest(fixtureContext));
+  assert.equal(files.length,4);assert.ok(files.every(file=>file.bytes<=28000));
   assert.ok(Buffer.byteLength(fixtureContext) > 60000);
   assert.equal(snapshot().selected.attempt.text, undefined, 'Full prompt stays out of sidebar IPC');
   const sent = await browser.executeJavaScript('window.fixtureMessages[0].text');
@@ -554,9 +575,9 @@ export async function run({ app, window, browser, sidebar, store, controller, se
       { id: 'T003', title: 'Собрать релиз', implementation_status: 'TODO', commit_status: 'PENDING' },
     ] });
   delete activePlan.archived_scope_id;
-  activePlan.approved_scope.documentation_paths = ['docs/PRODUCT.md'];
+  activePlan.approved_scope.documentation_paths = ['docs/architecture/OVERVIEW.md'];
   activePlan.tasks = activePlan.tasks.map(task => ({ ...task, why: 'Isolated rendering fixture', dependencies: [],
-    functional_paths: [], documentation_paths: ['docs/PRODUCT.md'], acceptance_criteria: ['Fixture'], verification_ids: [],
+    functional_paths: [], documentation_paths: ['docs/architecture/OVERVIEW.md'], acceptance_criteria: ['Fixture'], verification_ids: [],
     expected_commit_message: 'docs: rendering fixture', commit_ref: {scope_id: activePlan.scope_id, task_id: task.id, role: 'implementation'} }));
   const writeFixturePlan = async plan => fs.writeFile(planFile, renderPlan(plan));
   await writeFixturePlan(activePlan); controller.attach(store.selected()); await controller.tick();
@@ -914,13 +935,13 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await sidebar.executeJavaScript('window.webPilot.closeSettings()');
   await waitFor(() => snapshot().context.phase === 'delivered', 'return after navigation races', snapshot);
   assert.equal(await browser.executeJavaScript('window.fixtureResumeMarker'), 29, 'closing settings preserves the loaded DOM');
-  const startFile = path.join(workspace, 'docs/WORKFLOW_START.md');
+  const startFile = path.join(workspace, 'docs/architecture/OVERVIEW.md');
   const startText = await fs.readFile(startFile); await fs.unlink(startFile);
   const urlBefore = browser.getURL();
   await selectWorkspace(workspace);
   await waitFor(() => snapshot().workspaceHealth?.phase === 'error' && !snapshot().pageLoading, 'background failure preserves chat', snapshot);
   assert.equal(snapshot().setup, null); assert.equal(snapshot().workspaceHealth.ready, false);
-  assert.ok(snapshot().workspaceHealth.issues.some(i => i.path === 'docs/WORKFLOW_START.md'));
+  assert.ok(snapshot().workspaceHealth.issues.some(i => i.path === 'docs/architecture/OVERVIEW.md'));
   assert.equal(controller.active, null);
   assert.equal(store.selected().sessionId, first.sessionId); assert.equal(browser.getURL(), urlBefore);
   await fs.writeFile(startFile, startText);
@@ -1226,10 +1247,13 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   const definition = {
     scope_id: 'fixture-current-plan', objective: 'Единый current plan smoke', approval_note: 'Изолированный single-active smoke fixture.',
     acceptance_criteria: ['Fixture завершён'],
-    approved_scope: { functional_paths: [], documentation_paths: ['docs/PRODUCT.md'], max_functional_files_per_task: 3 },
+    approved_scope: { functional_paths: [], documentation_paths: ['docs/architecture/OVERVIEW.md'], max_functional_files_per_task: 3 },
     tasks: [{ id: 'T001', title: 'Записать общий результат', why: 'Проверить один plan на несколько chats', dependencies: [],
-      functional_paths: [], documentation_paths: ['docs/PRODUCT.md'], acceptance_criteria: ['Запись добавлена'],
-      verification_ids: [], expected_commit_message: 'docs: single active smoke fixture' }],
+      functional_paths: [], documentation_paths: ['docs/architecture/OVERVIEW.md'], acceptance_criteria: ['Запись добавлена'],
+      verification_ids: [], expected_commit_message: 'docs: single active smoke fixture' },
+      {id:'T002',title:'Завершить заметку',why:'Проверить завершение плана без выпуска',dependencies:['T001'],
+        functional_paths:[],documentation_paths:['docs/architecture/OVERVIEW.md'],acceptance_criteria:['Заметка завершена'],
+        verification_ids:[],expected_commit_message:'docs: complete smoke fixture'}],
   };
   withSessionPlan(workspace, { sessionId: scopeOwner.sessionId }, () => createScope(workspace, definition));
   const currentScopeTitle = 'Единый current plan smoke';
@@ -1249,7 +1273,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   startTask(workspace, 'T001');
   await waitFor(() => snapshot().selected?.planView?.tasks.find(task => task.id === 'T001')?.status === 'current',
     'single current task visible during ordinary answer', snapshot);
-  await fs.appendFile(path.join(workspace, 'docs/PRODUCT.md'), '\nSingle active fixture result\n');
+  await fs.appendFile(path.join(workspace, 'docs/architecture/OVERVIEW.md'), '\nSingle active fixture result\n');
   assert.equal(commitTask(workspace, 'T001').ok, true);
   await waitFor(() => snapshot().selected?.planView?.completed === 1, 'Git commit reaches PlanMonitor', snapshot);
   await noExtraSend(2);
@@ -1428,11 +1452,12 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await expectContinue(beforeError, 'connection recovery reconsiders the idle pause');
   // PlanMonitor completion and busy->idle race cannot produce a final Send.
   await beginAnswer();
-  withSessionPlan(workspace, { sessionId: legacyChats[0].sessionId }, () => startTask(workspace, 'DOCS'));
-  assert.equal(withSessionPlan(workspace, { sessionId: legacyChats[1].sessionId }, () => commitTask(workspace, 'DOCS')).ok, true);
+  withSessionPlan(workspace, { sessionId: legacyChats[0].sessionId }, () => startTask(workspace, 'T002'));
+  await fs.appendFile(path.join(workspace,'docs/architecture/OVERVIEW.md'),'\nSmoke task T002 complete.\n');
+  assert.equal(withSessionPlan(workspace, { sessionId: legacyChats[1].sessionId }, () => commitTask(workspace, 'T002')).ok, true);
   await waitFor(() => snapshot().selected?.planView?.state === 'awaiting-acceptance', 'single current plan completed', snapshot);
   const beforeFinal = await countMessages(); await endAnswer();
-  await waitFor(() => autoPlan.view().phase === 'complete', 'all DONE including DOCS sends no Continue', snapshot);
+  await waitFor(() => autoPlan.view().phase === 'complete', 'all ordinary tasks DONE sends no Continue', snapshot);
   await noExtraSend(beforeFinal);
   await sidebar.executeJavaScript('window.webPilot.setAutoPlan(false)');
   await sidebar.executeJavaScript('window.webPilot.setAutoPlan(true)');

@@ -62,6 +62,7 @@ test('non-local addresses, another server on the port and a server without the s
 function contextPacket() {
   const context='Полный контекст\nЗадача и незавершённые изменения';
   return {delivery_protocol:'inline-context-v1',ack_required:false,status:'ready',completeness:'COMPLETE',workspace:'/project',
+    parts:[{index:1,total:1,text:context,bytes:Buffer.byteLength(context),sha256:createHash('sha256').update(context).digest('hex')}],
     context,context_bytes:Buffer.byteLength(context),context_sha256:createHash('sha256').update(context).digest('hex'),
     generated_at_ms:Date.now(),signature:'snapshot',head:'head',objective:'Example',
     facts:{project_id:'id',project_name:'Project',plan_revision:7,scope_id:'scope',execution_scope_status:'ACTIVE',delivery_status:'IN_PROGRESS',task_id:null,task_title:null}};
@@ -75,6 +76,11 @@ test('legacy diagnostics, another workspace, incomplete or modified context cann
     [p=>delete p.facts.task_id,'MCP_CONTEXT_INCOMPLETE'],
     [p=>p.context+=' extra','MCP_CONTEXT_DAMAGED'],
     [p=>p.context_bytes=1,'MCP_CONTEXT_DAMAGED'],
+    [p=>delete p.parts,'MCP_UPDATE_REQUIRED'],
+    [p=>p.parts[0].text+=' corrupt','MCP_CONTEXT_DAMAGED'],
+    [p=>p.parts[0].index=2,'MCP_CONTEXT_DAMAGED'],
+    [p=>p.parts[0].total=2,'MCP_CONTEXT_DAMAGED'],
+    [p=>p.budget={document_bytes:1},'MCP_CONTEXT_DAMAGED'],
     [p=>p.completeness='PARTIAL','MCP_CONTEXT_INCOMPLETE'],
     [p=>p.challenge='old-probe','MCP_CONTEXT_INCOMPLETE'],
     [p=>p.context='я'.repeat(100000),'MCP_CONTEXT_TOO_LARGE'],

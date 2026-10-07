@@ -6,7 +6,7 @@ class ComposerError extends Error {
 }
 
 // Runs only in the visible ChatGPT document. No page internals, cookies or API requests.
-export function pageOperation({ action = 'inspect', text = '', requestId = '', expectedExperience = null, diagnose = false, draftToken = '' } = {}, dom = createChatGPTDOM(CHATGPT_SELECTORS)) {
+export function pageOperation({ action = 'inspect', text = '', requestId = '', expectedExperience = null, diagnose = false, draftToken = '', attachments = [] } = {}, dom = createChatGPTDOM(CHATGPT_SELECTORS)) {
   const { first } = dom;
   const editor = dom.editor();
   const busy = dom.busy();
@@ -28,6 +28,30 @@ export function pageOperation({ action = 'inspect', text = '', requestId = '', e
   const experience = dom.experience();
   const result = { connectionError, url: location.href, editorAvailable: !!editor, writable, login, busy,
     draftLength, draftMatches, sendEnabled, messageSeen, userMessageCount: messages.length, experience };
+  // Only visible composer cards count. Message history cannot prove draft uploads.
+  const attachmentKey = Symbol.for('web-pilot-file-paste');
+  if (attachments.length) {
+    const nodes = [...document.querySelectorAll('[title],[aria-label],span,div,p')].filter(node => dom.visible(node)
+      && !node.closest(dom.selectors.user + ',' + dom.selectors.assistant + ',pre,code,[contenteditable="true"]'));
+    const cards = attachments.map(file => {
+      const labels = nodes.filter(node => node.getAttribute('title') === file.name || node.getAttribute('aria-label') === file.name
+        || (!node.children.length && (node.textContent ?? '').trim() === file.name));
+      for (const label of labels) {
+        for (let card = label, depth = 0; card && depth < 5 && card.tagName !== 'FORM'; card = card.parentElement, depth++) {
+          const remove = [...card.querySelectorAll('button')].some(button => /remove|delete|удалить/i.test(button.getAttribute('aria-label') ?? button.getAttribute('title') ?? button.textContent ?? ''));
+          if (remove) return card;
+        }
+      }
+      return null;
+    });
+    const progress = '[role="progressbar"],[aria-busy="true"],[data-state="uploading"],[data-testid="upload-progress"],.animate-spin';
+    const failed = card => card.matches('[role="alert"],[data-state="error"]') || !!card.querySelector('[role="alert"],[data-state="error"]')
+      || /upload failed|failed to upload|ошибка загрузки|не удалось загрузить/i.test(card.textContent ?? '');
+    result.attachmentsPresent = cards.filter(Boolean).length;
+    result.attachmentsFailed = cards.some(card => card && failed(card));
+    result.attachmentsReady = cards.every(card => card && !failed(card) && !card.matches(progress) && !card.querySelector(progress))
+      && new Set(cards).size === attachments.length && sendEnabled;
+  }
   if (diagnose) {
     let mismatchIndex = 0;
     while (mismatchIndex < Math.min(actual.length, expected.length) && actual[mismatchIndex] === expected[mismatchIndex]) mismatchIndex++;
@@ -114,6 +138,25 @@ export function pageOperation({ action = 'inspect', text = '', requestId = '', e
     }
     if (experience !== expectedExperience) return { ...result, action: 'deferred', reason: 'EXPERIENCE_UNCONFIRMED' };
   }
+  if (action === 'attach') {
+    if (!attachments.length || !requestId || attachments.some(file => !file.name || typeof file.text !== 'string'))
+      throw new Error('INVALID_ATTACHMENTS');
+    const identity = JSON.stringify(attachments);
+    let previous = editor[attachmentKey];
+    if (previous && previous.requestId !== requestId && messages.some(message =>
+      (message.innerText ?? message.textContent ?? '').includes(previous.requestId))) {
+      delete editor[attachmentKey]; previous = null;
+    }
+    if (previous) return { ...result, action: 'deferred', reason: previous.requestId === requestId && previous.identity === identity
+      ? 'ATTACHMENTS_PENDING' : 'ATTACHMENTS_CHANGED' };
+    const data = new DataTransfer();
+    for (const file of attachments) data.items.add(new File([file.text], file.name, { type: 'text/markdown', lastModified: 0 }));
+    // Mark before dispatch: a thrown event or partial upload must never cause a second paste.
+    editor[attachmentKey] = { requestId, identity };
+    editor.focus();
+    editor.dispatchEvent(new ClipboardEvent('paste', { clipboardData: data, bubbles: true, cancelable: true }));
+    return { ...result, action: 'attachments-dispatched' };
+  }
   if (action === 'fill' || action === 'paste') {
     // Reuse a restored exact packet; equality never gates Send after insertion.
     if (requestId && draftMatches) return { ...result, action: 'filled' };
@@ -155,6 +198,8 @@ export function pageOperation({ action = 'inspect', text = '', requestId = '', e
     return { ...result, action: 'filled' };
   }
   if (action === 'send') {
+    if (attachments.length && !result.attachmentsReady)
+      return { ...result, action: 'deferred', reason: result.attachmentsFailed ? 'ATTACHMENTS_FAILED' : 'ATTACHMENTS_PENDING' };
     // User authorized sending the editor as-is after our insertion.
     if (!sendEnabled) return { ...result, action: 'deferred', reason: 'SEND_UNAVAILABLE' };
     button.click();
@@ -181,7 +226,7 @@ export class ChatGPTComposer {
     this.filledRequest = null;
   }
 
-  async inspect({ text = '', requestId = '', action = 'inspect', expectedExperience = null, canContinue = () => true, draftToken = '' } = {}) {
+  async inspect({ text = '', requestId = '', action = 'inspect', expectedExperience = null, canContinue = () => true, draftToken = '', attachments = [] } = {}) {
     const current = this.contents.getURL();
     let url;
     try { url = new URL(current); } catch { return { login: true, editorAvailable: false, url: current }; }
@@ -193,12 +238,12 @@ export class ChatGPTComposer {
     const started = this.now();
     if (diagnose && action !== 'inspect') this.trace('action-start', { action, requestId });
     const documentKey = this.documentKey();
-    let observation = await this.contents.executeJavaScript(pageScript({ action, text, requestId, expectedExperience, diagnose, draftToken }), action !== 'inspect');
+    let observation = await this.contents.executeJavaScript(pageScript({ action, text, requestId, expectedExperience, diagnose, draftToken, attachments }), action !== 'inspect');
     if (observation.action === 'paste-ready') {
       if (!canContinue() || this.documentKey() !== documentKey)
         return { action: 'deferred', reason: 'CHAT_CHANGED' };
       observation = await this.contents.executeJavaScript(pageScript({
-        action: 'paste', text, requestId, expectedExperience, diagnose, draftToken,
+        action: 'paste', text, requestId, expectedExperience, diagnose, draftToken, attachments,
       }), true);
     }
     if (diagnose) {
@@ -268,10 +313,11 @@ export class ChatGPTComposer {
       if (!canContinue()) return observation ?? {};
       observation = await this.inspect(args);
       if (observation.messageSeen || observation.login || observation.busy || observation.connectionError
-          || (observation.sendEnabled && observation.writable)) return observation;
-      const signal = await this.waitForObservedChange(version, deadline, canContinue);
+          || observation.attachmentsFailed || (observation.sendEnabled && observation.writable
+            && (!args.attachments?.length || observation.attachmentsReady))) return observation;
+      const signal = await this.waitForObservedChange(version, args.attachments?.length ? Math.min(deadline, this.now() + 500) : deadline, canContinue);
       version = signal.version ?? version;
-      if (signal.cancelled || signal.timeout) return observation;
+      if (signal.cancelled || signal.timeout && !args.attachments?.length) return observation;
     } while (this.now() < deadline);
     return observation;
   }
@@ -336,7 +382,7 @@ export class ChatGPTComposer {
     }
   }
 
-  async deliverInternal({ text, requestId, expectedExperience = null, canContinue = () => true, onBeforeFill = async () => {}, onBeforeSend = async () => {} }) {
+  async deliverInternal({ text, requestId, attachments = [], expectedExperience = null, canContinue = () => true, onBeforeFill = async () => {}, onBeforeSend = async () => {} }) {
     if (this.inFlight) throw new ComposerError('SEND_IN_PROGRESS', 'Другая отправка ещё не завершилась.');
     if (typeof text !== 'string' || !text || !requestId || !text.includes(requestId)) throw new ComposerError('MESSAGE_INVALID', 'Не подготовлено стартовое сообщение.');
     this.inFlight = true;
@@ -345,10 +391,23 @@ export class ChatGPTComposer {
       if (!canContinue()) return { state: 'cancelled' };
       if (this.dispatchedRequestId === requestId)
         return { state: 'sent', completion: 'send-dispatched', recovered: true };
+      if (this.uncertainRequestId === requestId) return { state: 'unknown', reason: 'SEND_NOT_OBSERVED' };
       let observation = await this.inspect({ text, requestId });
       if (observation.messageSeen) return { state: 'sent', recovered: true, observation };
       if (!canContinue()) return { state: 'cancelled' };
       const fillVersion = this.pageState?.version ?? 0;
+      if (attachments.length && (this.attachmentRequest?.requestId !== requestId || this.attachmentRequest.documentKey !== this.documentKey())) {
+        await onBeforeFill();
+        if (!canContinue()) return { state: 'cancelled' };
+        this.attachmentRequest = { requestId, documentKey: this.documentKey() };
+        observation = await this.inspect({ action: 'attach', attachments, requestId, expectedExperience });
+        if (!['attachments-dispatched', 'deferred'].includes(observation.action))
+          return { state: 'deferred', reason: observation.reason ?? 'ATTACHMENTS_PENDING', observation };
+        if (observation.reason && observation.reason !== 'ATTACHMENTS_PENDING') {
+          this.attachmentRequest = null; // The page refused this attempt before dispatch.
+          return { state: 'deferred', reason: observation.reason, observation };
+        }
+      }
       if (!this.hasFilled(requestId)) {
         await onBeforeFill();
         if (!canContinue()) return { state: 'cancelled' };
@@ -359,9 +418,12 @@ export class ChatGPTComposer {
         if (!canContinue() || this.documentKey() !== documentKey) return { state: 'cancelled' };
         this.filledRequest = { requestId, documentKey };
       }
-      observation = await this.waitForSendReady({ text, requestId }, fillVersion, canContinue);
+      observation = await this.waitForSendReady({ text, requestId, attachments }, fillVersion, canContinue);
       if (!canContinue()) return { state: 'cancelled' };
       if (observation.messageSeen) return { state: 'sent', recovered: true, observation };
+      if (attachments.length && !observation.attachmentsReady)
+        throw new ComposerError(observation.attachmentsFailed ? 'ATTACHMENTS_FAILED' : 'ATTACHMENTS_PENDING',
+          'Не подтверждена загрузка всех частей контекста. Сообщение не отправлено; проверьте вложения.');
       if (!observation.sendEnabled || observation.busy) {
         return { state: 'deferred', reason: observation.busy ? 'GENERATION_ACTIVE' : 'SEND_UNAVAILABLE', observation };
       }
@@ -370,11 +432,14 @@ export class ChatGPTComposer {
       await onBeforeSend();
       this.trace('before-send-complete', { requestId });
       if (!canContinue()) return { state: 'cancelled' };
-      observation = await this.inspect({ action: 'send', text, requestId, expectedExperience });
+      clicked = true; // An exception after dispatch has an uncertain outcome, never replay automatically.
+      this.uncertainRequestId = requestId;
+      observation = await this.inspect({ action: 'send', text, requestId, expectedExperience, attachments });
       if (observation.action === 'already-sent') return { state: 'sent', recovered: true, observation };
-      if (observation.action !== 'clicked') return { state: 'deferred', reason: observation.reason, observation };
+      if (observation.action !== 'clicked') { clicked = false; this.uncertainRequestId = null; return { state: 'deferred', reason: observation.reason, observation }; }
       clicked = true;
       this.dispatchedRequestId = requestId;
+      this.uncertainRequestId = null;
       // Send dispatch completes recovery. The site may render it as an attachment,
       // so neither DOM marker discovery nor an agent response is a completion gate.
       return { state: 'sent', completion: 'send-dispatched', observation };
