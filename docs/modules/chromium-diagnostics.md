@@ -13,7 +13,7 @@
 ### Файлы
 Каталог данных: macOS `~/Library/Application Support/Project Web Pilot`, Windows `%APPDATA%\Project Web Pilot`; smoke — временный профиль.
 - `diagnostics/chromium-events.jsonl` — каталог 0700, файл 0600, JSONL `{ts, seq, diagnosticSession, source, event, …}`; `diagnosticSession` — новый UUID на запуск. При превышении 25 MiB файл переносится в `.1` (одна копия). Запись — очередь, ошибки глушатся (best-effort).
-- `diagnostics.jsonl` (0600) — строка из `publish()` только при изменении сигнатуры: фаза доставки, workspace, sessionId, requestId, `contextSha256`, `planRevision`, код ошибки, версия, страница старта. Удаление проекта или сессии вычищает их строки.
+- `diagnostics.jsonl` (0600) — строка из `publish()` только при изменении сигнатуры: фаза доставки, workspace, sessionId, requestId, `contextSha256`, `planRevision`, код ошибки, версия, страница старта. Ротация `appendDiagnostic` (`src/common.mjs`): при 4 МиБ файл становится `diagnostics.jsonl.1` (одна предыдущая копия). Удаление проекта или сессии вычищает их строки из обоих файлов.
 - `diagnostics/startup-network.json` — сырой netLog только на время захвата, всегда удаляется.
 
 ### Жизненный цикл
@@ -32,7 +32,7 @@
 - Никогда не пишутся: cookies, заголовки и authorization, тела запросов, значения query, текст сообщений и черновиков, recovery и имена/содержимое вложений, HTML, тексты исключений, токены и ключи, адрес коннектора и данные туннеля.
 - WebSocket/SSE — размер, SHA-256, формат, верхние ключи JSON (≤ 40) и пары `key=value` только для ключей `type/event/event_type/eventType/method/kind/op/action` со значением-идентификатором (≤ 96 символов `[A-Za-z0-9_.:/-]`).
 - Телеметрия — только числа из allowlist (`input_tokens`, `cached_input_tokens`, `output_tokens`, `reasoning_output_tokens`, `total_tokens`, `model_context_window`, `context_window` и подобные), фиксированные маркеры (`token_count`, `compacted`, `ContextCompaction`, …), признаки присутствия (`compaction_response_id`, `window_id`, …) и пути ключей с `token|context|usage|window|compact` (число либо только факт наличия). Поддеревья `message`, `content`, `parts`, `text`, `replacement_history`, `guardian_history`, `tool_output`, `output_text`, `input_text` не обходятся. Пределы глубины 10, 800 узлов, вложенный JSON ≤ 256 KiB, ≤ 12 вложенных разборов — граница приватности и DoS.
-- Тело ответа `/backend-api/f/conversation` с `text/event-stream` читается через `Network.getResponseBody` только в памяти: пишутся размер, SHA-256 и телеметрия. `GET /backend-api/models` — только `max_tokens` модели `gpt-5-6-thinking`; объект разговора — лишь наличие и тип `context_truncation_continuation`, наличие `summary_metadata`, `has_previous_page`.
+- Тело ответа `/backend-api/f/conversation` с `text/event-stream` читается через `Network.getResponseBody` только в памяти: пишутся размер, SHA-256 и телеметрия. `GET /backend-api/models` — только `max_tokens` модели `gpt-5-6-thinking`; объект разговора (`/backend-api/conversation/<id>`, как и устаревший `conversations/<id>`) — лишь наличие и тип `context_truncation_continuation`, наличие `summary_metadata`, `has_previous_page`.
 - Запись `telemetry/context`: `inputTokens`, `modelContextWindow`, `usedPercent`, `compactSignal` (`direct`; `token-reset`/`token-drop` после заполнения ≥ 75 %) — только для анализа; в UI и логику не попадает.
 
 ### HTTP 429
@@ -58,7 +58,5 @@
 - Вручную (пользователь): при сбое запуска — «Скопировать диагностику»; при подозрении на compact — сопоставить `telemetry/context` и `dom/state` до и после. Пауза, reconnect, число сообщений и новый пакет compact не доказывают.
 
 ## Открыто
-- Возможный дефект: запись `context-truncation-state` ждёт ответ на `/backend-api/conversations/<id>`, а объект разговора ChatGPT отдаёт по `/backend-api/conversation/<id>` (этот путь использует `src/chatgpt-title.mjs`); тестом не покрыто, вживую не проверено — вероятно, запись не появляется.
 - `model-limit` пишется только для закреплённого в коде slug `gpt-5-6-thinking`; для другой модели предела в журнале нет.
-- `diagnostics.jsonl` не имеет предела размера и ротации; сокращается только при удалении проекта или сессии.
 - Сигнал auto-compact не найден; восстановление после compact — открытое требование ([доставка](context-delivery.md)).

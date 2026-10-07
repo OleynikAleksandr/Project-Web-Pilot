@@ -1,6 +1,6 @@
 # Workflow Kit — контракт пакета
 
-`@webpilot/workflow-kit` 1.6.0 (`packages/workflow-kit`, `private`, Node ≥ 22): один current plan на Git checkout/worktree, проверяемые коммиты задач, recovery, установка в проект. Доставка recovery — Web Pilot ([граница Kit ↔ Web Pilot](../../../../docs/modules/workflow-kit-recovery.md)).
+`@webpilot/workflow-kit` 1.6.1 (`packages/workflow-kit`, `private`, Node ≥ 22): один current plan на Git checkout/worktree, проверяемые коммиты задач, recovery, установка в проект. Доставка recovery — Web Pilot ([граница Kit ↔ Web Pilot](../../../../docs/modules/workflow-kit-recovery.md)).
 
 ## Код
 - `index.mjs` — `VERSION`, `WorkflowError`, `getRuntimeRoot()`, `currentPlanView`, `sessionPlanView`, пространства `actions`, `plan`, `sessionPlans`, `recovery`, `installer`. Exports: `.`, `./cli`, `./install`, `./lib/*`, `./schemas/*`, `./templates/*`, `./examples/*`, `./WORKFLOW.md`; bin `workflow`. Экспорты и lib-подпути сохраняются: их импортируют потребители.
@@ -58,7 +58,7 @@
 
 ### Recovery
 Сборщик детерминированно читает источники; модели и пересказов нет.
-- Состав: идентичность (проект, scope, worktree, plan, HEAD) → Workflow Core → PROTOTYPE → проектная часть `AGENTS.override.md`/`AGENTS.md` без Kit-секции → факты среды → «ФОРМЫ ПО ЗАПРОСУ» → цель, решения пользователя → все задачи → изменения после выпуска → прошлый план (NONE) → `docs/planning` (путь, заголовок, байты) → required-документы → пути изменений и посторонних правок → транзакция → evidence → продолжение → полнота.
+- Состав: идентичность (проект, scope, worktree, plan, HEAD) → Workflow Core → PROTOTYPE → проектная часть `AGENTS.override.md`/`AGENTS.md` без Kit-секции → факты среды → «ФОРМЫ ПО ЗАПРОСУ» → цель, решения пользователя → все задачи → изменения после выпуска → прошлый план (NONE) → `docs/planning` (путь, заголовок, байты) → required-документы → пути изменений и посторонних правок → транзакция → evidence → продолжение → полнота. В строке полноты «Включено» `AGENTS.md` указывается, только если его проектная часть непуста и передана.
 - Карточка задачи: заголовок, зачем, статусы, зависимости, критерии, SHA и `git show`, файлы с точными добавлениями/исключениями, проверки. JSON плана и тексты diff не передаются: коммиты и диффы агент читает по ссылкам.
 - NONE: `archived_scope_id`, коммит закрытия (подтверждён trailers, `CONTEXT_ARCHIVE`), строки «id — заголовок — статусы — SHA», ссылки на его спецификации на ревизии родителя закрытия; проект без прошлого плана — норма.
 - Формы PLAN/SPEC, CONTINUE, STAGES — через `plan:create`/`plan:extend`/`task:start --help`, не в пакете: ChatGPT показывает модели около 10000 токенов одного результата инструмента.
@@ -84,7 +84,7 @@
 ### Установка и обновление
 - `install --project <abs> [--mode new] [--dry-run]`: new — пустая папка (`FOLDER_NOT_EMPTY`); без Git — `git init -b main`. Создаёт `.harness/kit/**`, `scripts/workflow{,.mjs,.cmd}`, `.harness/workflow.json` (`document_bytes` 28000, `hard_bytes` 180000), NONE-план, Kit-секцию AGENTS, README и OVERVIEW при отсутствии, секции `.gitignore`/`.gitattributes`, SessionStart в `.codex/hooks.json`, git hooks, manifest. Занятые пути не перезаписываются (`INSTALL_CONFLICT`); `--expected-fingerprint` → `PREVIEW_CHANGED`. Нет автора Git (задаётся `--git-name`/`--git-email`) или есть исходные изменения — коммит ждёт `install:commit`. Та же версия — reconnect (hooks, runtime).
 - Runtime: macOS/Linux — Node ≥ 22 из `/opt/homebrew/bin` или `/usr/local/bin`, иначе копия в `.harness/runtime/node`; Windows — `.harness/runtime/node.exe`, MinGit из `WORKFLOW_GIT_HOME` в `.harness/runtime/git` (иначе системный Git).
-- `install --update` — для `upgradeFrom` (1.1.0, 1.2.0, 1.3.0, 1.4.0–1.4.13, 1.5.0–1.5.6), иначе или при изменённом owned-файле — `UNSUPPORTED_MIGRATION`. Невалидный или отсутствующий current plan останавливает обновление до записи; победитель среди legacy не угадывается. `MODIFIED_INTEGRATION` — изменённые Kit-секция AGENTS или удаляемый файл Kit, занятый новый служебный путь. Резервная копия — `.harness/runtime/kit-upgrade-<id>/`. `by-id/`, `by-session/`, `archive/` удаляются, только если каждый файл tracked и побайтно равен HEAD, index и рабочей копии (`LEGACY_PLAN_CHANGED`); owner/session-поля снимаются, NONE-план без required OVERVIEW нормализуется. Один коммит kit-update; commit активной задачи выполняет новый runtime.
+- `install --update` — для `upgradeFrom` (1.1.0, 1.2.0, 1.3.0, 1.4.0–1.4.13, 1.5.0–1.5.6, 1.6.0), иначе или при изменённом owned-файле — `UNSUPPORTED_MIGRATION`. Невалидный или отсутствующий current plan останавливает обновление до записи; победитель среди legacy не угадывается. До записи проверяются и условия коммита: `GIT_OPERATION_ACTIVE`, `GIT_IDENTITY`, `FOREIGN_STAGED` (поздний отказ оставил бы записанный runtime, который повтор принял бы за установленный); `--git-name`/`--git-email` применяются и к обновлению. `MODIFIED_INTEGRATION` — изменённые Kit-секция AGENTS или удаляемый файл Kit, занятый новый служебный путь. Резервная копия — `.harness/runtime/kit-upgrade-<id>/`. `by-id/`, `by-session/`, `archive/` удаляются, только если каждый файл tracked и побайтно равен HEAD, index и рабочей копии (`LEGACY_PLAN_CHANGED`); owner/session-поля снимаются, NONE-план без required OVERVIEW нормализуется. Один коммит kit-update; commit активной задачи выполняет новый runtime.
 - Упразднённые документы и индекс установщик не восстанавливает (миграция документации — отдельная работа); `soft_tokens`/`hard_tokens` принимаются, но не ограничивают.
 - `inspect`, `doctor` ничего не меняют; `remove --dry-run` → `--apply <remove_id>` — только при NONE без транзакции (`ACTIVE_SCOPE`), изменённое сохраняется.
 
@@ -92,7 +92,7 @@
 `getRuntimeRoot()` — самодостаточный `src/`, потребитель копирует его. Web Pilot: worker подготовки — `installer` (`inspectWithDiagnostics`, `install`, `upgradeFrom`), `inspection-inputs`, `common`, `installation-files`, `git`; Доктор проекта — `installation-files`, `common`, `git`, `plan`, `validate`, `transaction`; recovery — CLI проекта (`recover --format packet`), кеш по ключу входов.
 
 ## Решения и запреты
-Одно правило — один источник: Workflow Core — процесс; PROTOTYPE — работа и Git в задаче; Kit-секция AGENTS — где взять recovery; проектная часть AGENTS — ограничения проекта; обёртка Web Pilot — только транспорт.
+Одно правило — один источник: Workflow Core — процесс, включая безопасную остановку незавершённой задачи без DONE (п. 4); PROTOTYPE — работа и Git в задаче, включая долгую команду в фоне и чтение её результата при продолжении; Kit-секция AGENTS — где взять recovery; проектная часть AGENTS — ограничения проекта; обёртка Web Pilot — только транспорт.
 
 Не возвращать:
 - выбор плана по chat/session, `plan:prepare/bind/adopt`, реестр, базу или облачное хранилище планов, session-router, второй формат recovery, слияние legacy-планов;
@@ -104,11 +104,9 @@
 ## Проверки
 - `kit-check` (`npm run check --prefix packages/workflow-kit`): `check-package` (identity, exports, версия, состав `npm pack`), `check-consumer-contract` (`file:`/tarball без исходника, runtime = `src`), `check-runtime-fixture` (установка, recovery, rename, DOCS-N, pre-push, `before`, legacy-миграция, синтетическая 1.4.13) с `check-document-fixture` (28000/28001, index ≠ worktree, роли, docs:commit) и `check-project-recovery-fixture` (копия Web Pilot с исходниками Kit до/после нормализации: ≤ 144000 байт — запас ≥ 20% — и ≤ 7 частей, задачи целы), `check-carryover-fixture`.
 - `unit-all` (`npm test`): `tests/workflow-kit-{recovery,source,upgrade}.test.mjs` (upgrade — реальная 1.5.6: task:start → kit-update → commit новым runtime). Проверки взаимно не заменяются.
-- Пользователь: живой ChatGPT, native Windows (`workflow.cmd`, PowerShell-hook, MinGit); fixtures на Mac их не заменяют, для 1.6.0 не подтверждены.
+- Пользователь: живой ChatGPT, native Windows (`workflow.cmd`, PowerShell-hook, MinGit); fixtures на Mac их не заменяют, для 1.6.x не подтверждены.
 
 ## Открыто
-- `upgradeFrom` объявляет 1.1.0–1.5.6; тестами покрыты синтетическая 1.4.13 и реальная 1.5.6.
-- Дефект `install --update`: `GIT_IDENTITY`, активная Git-операция и `FOREIGN_STAGED` проверяются при коммите — после записи runtime, manifest и плана; отказ оставляет обновление незакоммиченным, повтор идёт через reconnect без коммита. `--git-name`/`--git-email` здесь не применяются, worker Web Pilot передаёт их только установке.
+- `upgradeFrom` объявляет 1.1.0–1.6.0; тестами покрыты синтетическая 1.4.13 и реальная 1.5.6.
 - Hot-swap bridge Web Pilot ↔ Kit — только операции current plan, без session-маршрутизации; не реализован.
-- Не поручено: удалить разовую проверку `workflow-kit-archive` и `soft_tokens`/`hard_tokens` из `.harness/workflow.json`.
-- `check-runtime-fixture`: устаревший комментарий о картах для финальной DOCS (они всегда ссылкой); его `doesNotMatch` ищут прежний заголовок `--- ДАННЫЕ:` и проходят всегда.
+- Не поручено: удалить разовую проверку `workflow-kit-archive` из `.harness/workflow.json`.

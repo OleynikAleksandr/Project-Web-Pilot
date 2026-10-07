@@ -1,6 +1,6 @@
 # Краткая архитектура проекта
 
-Стек: Workflow Kit 1.6.0, Electron 44.5.1, Node 24.21.0; версия продукта — в `package.json` и [README](../../README.md). Это карта текущего устройства. Ход работы — в current plan и Git; факты сборки и публикации — в release-manifest.json и GitHub Release. Постоянные правила разработки — в [AGENTS.md](../../AGENTS.md), пользовательская инструкция — в README.
+Стек: Workflow Kit 1.6.1, Electron 44.5.1, Node 24.21.0; версия продукта — в `package.json` и [README](../../README.md). Это карта текущего устройства. Ход работы — в current plan и Git; факты сборки и публикации — в release-manifest.json и GitHub Release. Постоянные правила разработки — в [AGENTS.md](../../AGENTS.md), пользовательская инструкция — в README.
 
 ## Назначение и границы
 
@@ -54,7 +54,7 @@ Electron-приложение для macOS и Windows: одно окно, сле
 
 На macOS и Windows работает один backend — Codex App Server (`tools/codex-app-server-mcp`), имя подключения «Codex App Server Local Mac/Windows». Он отдаёт ровно девять MCP-инструментов: команды, stdin, patch, изображения, статус, watchdog и наблюдение экрана. Управления интерфейсом и модельных ходов нет, контекст через MCP не передаётся. Codex CLI устанавливает пользователь, версия закреплена в `codex-tools.lock.json`.
 
-Службы (MCP, tunnel-client, VPS-проброс) живут вне окна и стартуют при входе пользователя: LaunchAgent на macOS, HKCU Run на Windows. Порты: MCP 17852, tunnel-client 17853, удалённый порт VPS 17842. Подробности — [runtime-lifecycle](../modules/runtime-lifecycle.md) и [codex-app-server-executor](../modules/codex-app-server-executor.md).
+Службы (MCP, tunnel-client, VPS-проброс) живут вне окна и стартуют при входе пользователя: LaunchAgent на macOS, HKCU Run на Windows. Предпочтительные порты: MCP 17852, tunnel-client 17853; если порт занят другой программой, служба переходит на свободный и сохраняет его, а selector, туннель и VPS-проброс следуют фактическому адресу. Удалённый порт VPS — 17842. Подробности — [runtime-lifecycle](../modules/runtime-lifecycle.md) и [codex-app-server-executor](../modules/codex-app-server-executor.md).
 
 ## Исходники и потребители
 

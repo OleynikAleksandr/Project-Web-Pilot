@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1426,
+  "plan_revision": 1428,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "recovery-on-demand-research-20261006",
@@ -129,7 +129,17 @@
       "AGENTS.md",
       "docs/planning/context-as-text.md",
       "packages/workflow-kit/README.md",
-      "docs/planning/correction-round-0.6.99.md"
+      "docs/planning/correction-round-0.6.99.md",
+      "docs/modules/auto-plan.md",
+      "docs/modules/chromium-diagnostics.md",
+      "docs/modules/context-delivery.md",
+      "docs/modules/first-run-onboarding.md",
+      "docs/modules/plan-view.md",
+      "docs/modules/project-archive.md",
+      "docs/modules/project-doctor.md",
+      "docs/modules/release.md",
+      "docs/modules/runtime-lifecycle.md",
+      "docs/modules/workspace-sessions.md"
     ]
   },
   "baseline_commit": "7bd5f4714fc3be0572dfa8a593804af3fab45d1f",
@@ -1284,8 +1294,8 @@
     {
       "id": "DOCS-3",
       "title": "Актуализация всех документов проекта",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "recovery-on-demand-research-20261006",
         "task_id": "DOCS-3",
@@ -1306,13 +1316,46 @@
         "docs/architecture/OVERVIEW.md",
         "docs/planning/correction-round-0.6.99.md",
         "packages/workflow-kit/src/WORKFLOW.md",
-        "packages/workflow-kit/src/templates/PROTOTYPE.md"
+        "packages/workflow-kit/src/templates/PROTOTYPE.md",
+        "README.md",
+        "docs/modules/auto-plan.md",
+        "docs/modules/chromium-diagnostics.md",
+        "docs/modules/context-delivery.md",
+        "docs/modules/first-run-onboarding.md",
+        "docs/modules/plan-view.md",
+        "docs/modules/project-archive.md",
+        "docs/modules/project-doctor.md",
+        "docs/modules/release.md",
+        "docs/modules/runtime-lifecycle.md",
+        "docs/modules/workflow-kit-recovery.md",
+        "docs/modules/workspace-sessions.md",
+        "docs/planning/workflow-kit-context-transition.md",
+        "packages/workflow-kit/README.md",
+        "packages/workflow-kit/docs/modules/workflow-kit-package.md"
       ],
       "acceptance_criteria": [
         "Документы описывают текущий результат, существенное из выпущенных рабочих спецификаций перенесено в контракты модулей; история остаётся в Git."
       ],
       "verification_ids": [],
-      "expected_commit_message": "docs: актуализировать документацию проекта"
+      "expected_commit_message": "docs: актуализировать документацию проекта",
+      "actual_files": [
+        "README.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/auto-plan.md",
+        "docs/modules/chromium-diagnostics.md",
+        "docs/modules/context-delivery.md",
+        "docs/modules/first-run-onboarding.md",
+        "docs/modules/plan-view.md",
+        "docs/modules/project-archive.md",
+        "docs/modules/project-doctor.md",
+        "docs/modules/release.md",
+        "docs/modules/runtime-lifecycle.md",
+        "docs/modules/workflow-kit-recovery.md",
+        "docs/modules/workspace-sessions.md",
+        "docs/planning/workflow-kit-context-transition.md",
+        "packages/workflow-kit/README.md",
+        "packages/workflow-kit/docs/modules/workflow-kit-package.md"
+      ]
     },
     {
       "id": "T018",
@@ -1436,7 +1479,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: recovery-on-demand-research-20261006
 Current Task: нет
-Revision: 1426
+Revision: 1428
 
 ## Цель
 
@@ -1542,10 +1585,10 @@ Revision: 1426
   - Git Commit: [DONE] fix: мелкие исправления интерфейса и журналов
   - Reference: recovery-on-demand-research-20261006 / T017 / implementation
   - Файлы: src/main.mjs, src/workspace-session.mjs, src/auto-plan-state.mjs, src/ui/sidebar.mjs, src/chromium-diagnostics.mjs, tests/workspace-session.test.mjs, tests/auto-plan.test.mjs, tests/sidebar.test.mjs, tests/chromium-diagnostics.test.mjs, src/common.mjs, src/workspace-deletion.mjs, src/auto-plan.mjs, tests/common.test.mjs, docs/planning/correction-round-0.6.99.md
-- [TODO] DOCS-3: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать документацию проекта
+- [DONE] DOCS-3: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать документацию проекта
   - Reference: recovery-on-demand-research-20261006 / DOCS-3 / implementation
-  - Файлы: docs/architecture/OVERVIEW.md, docs/planning/correction-round-0.6.99.md, packages/workflow-kit/src/WORKFLOW.md, packages/workflow-kit/src/templates/PROTOTYPE.md
+  - Файлы: docs/architecture/OVERVIEW.md, docs/planning/correction-round-0.6.99.md, packages/workflow-kit/src/WORKFLOW.md, packages/workflow-kit/src/templates/PROTOTYPE.md, README.md, docs/modules/auto-plan.md, docs/modules/chromium-diagnostics.md, docs/modules/context-delivery.md, docs/modules/first-run-onboarding.md, docs/modules/plan-view.md, docs/modules/project-archive.md, docs/modules/project-doctor.md, docs/modules/release.md, docs/modules/runtime-lifecycle.md, docs/modules/workflow-kit-recovery.md, docs/modules/workspace-sessions.md, docs/planning/workflow-kit-context-transition.md, packages/workflow-kit/README.md, packages/workflow-kit/docs/modules/workflow-kit-package.md
 - [TODO] T018: Собрать парный выпуск 0.6.99 — Ожидает
   - Git Commit: [PENDING] release: собрать Web Pilot 0.6.99
   - Reference: recovery-on-demand-research-20261006 / T018 / implementation

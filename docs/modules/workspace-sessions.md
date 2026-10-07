@@ -16,7 +16,7 @@
 ## Хранилище
 
 - Файл `<userData>/workspaces.json` (`userData` — `~/Library/Application Support/Project Web Pilot`, Windows `%APPDATA%\Project Web Pilot`; вне `.app`, поэтому переживает обновления). `schemaVersion: 6`.
-- Одна очередь мутаций (`mutate`): изменение делается на копии, затем атомарная запись — временный `workspaces.json.tmp-<uuid>` (0600), `rename`; каталог создаётся с 0700. Записи сериализованы (`saveTail`).
+- Одна очередь мутаций (`mutate`): изменение делается на копии; если данные не изменились, файл не переписывается (повторные `applyScopeTitle`/`setSessionTitle` на каждом `publish`); иначе атомарная запись — временный `workspaces.json.tmp-<uuid>` (0600), `rename`; каталог создаётся с 0700. Записи сериализованы (`saveTail`).
 - Проект: `workspace` (realpath, уникален), `projectId` и `name` (= `project_id`/`project_name` Kit), opt. `displayName`, opt. `lastNamedScopeId`, `expanded`, `archivedAt|null`, `selectedSessionId`, `sessions[]`.
 - Сессия: `sessionId` (`web-pilot-<uuid>`, уникален), `experience` (`chat|work`, неизменен), `chatUrl|null` (нормализован, уникален по всем проектам, совместим с `experience`), `title`, `titleSource` (`page|manual|scope|null`), `lastNamedScopeId`, `createdAt`, `lastOpenedAt`, `archivedAt|null`, `attempt`, `receipt`, opt. `manualStart`, opt. `agentTime {totalMs,lastMs}` (целые ≥0, `lastMs ≤ totalMs`). Legacy-поля `planId`, `originSessionId`, `legacyPlanId` (проверяется формат) и `planBinding` хранятся, но ничего не выбирают.
 - Инварианты при загрузке: у проекта ≥1 активная сессия, выбранная сессия активна; нарушение, повреждённый JSON или неизвестная версия → `SESSIONS_INVALID`, файл не перезаписывается, приложение открывается с `storageError` (создание, подключение и выбор заблокированы до восстановления файла).
@@ -99,6 +99,5 @@
 ## Открыто
 
 - Синхронизация названия на native Windows не проверена (как и весь Windows-клиент до приёмки пользователем).
-- Дефект: `mutate` записывает файл даже когда изменение вернуло «без изменений». `publish()` при активном scope вызывает `applyScopeTitle`, а при отличии page title от явного имени — `setSessionTitle`, поэтому `workspaces.json` перезаписывается почти на каждом `publish`. Требуется: запись только при фактическом изменении.
 - Расхождение: в запись проекта сохраняются поля последней проекции плана (`scopeId`, `planId`, `planRevision`, `scopeStatus`, `objective`, `nextTaskTitle`, `watchInputs`, `inspectedSessionId` и др.) — задачи не пишутся, но «проекция транзиентна» выполняется лишь частично; `save()` и `snapshot()` исключают разные наборы полей.
 - Мелкое расхождение: поле диалога переименования ограничено 80 символами и для проекта, хотя хранилище допускает 160.
