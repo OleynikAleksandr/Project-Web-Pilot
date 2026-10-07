@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1442,
+  "plan_revision": 1444,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "refactor-fixes-20261007",
@@ -35,7 +35,10 @@
       "docs/modules/workspace-sessions.md",
       "docs/modules/project-archive.md",
       "README.md",
-      "docs/architecture/OVERVIEW.md"
+      "docs/architecture/OVERVIEW.md",
+      "docs/modules/chatgpt-dom-compatibility.md",
+      "docs/modules/workspace-setup.md",
+      "packages/workflow-kit/docs/modules/workflow-kit-package.md"
     ]
   },
   "baseline_commit": "ca5a25740a0bd5f6b05973b50e94d123061c088f",
@@ -145,8 +148,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "refactor-fixes-20261007",
         "task_id": "DOCS",
@@ -166,7 +169,10 @@
         "docs/planning/workflow-kit-context-refactor.md",
         "docs/planning/workflow-kit-context-transition.md",
         "docs/modules/workspace-sessions.md",
-        "docs/modules/project-archive.md"
+        "docs/modules/project-archive.md",
+        "docs/modules/chatgpt-dom-compatibility.md",
+        "docs/modules/workspace-setup.md",
+        "packages/workflow-kit/docs/modules/workflow-kit-package.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -175,7 +181,19 @@
       "acceptance_criteria": [
         "Документы соответствуют результату"
       ],
-      "expected_commit_message": "docs: актуализировать контекст проекта"
+      "expected_commit_message": "docs: актуализировать контекст проекта",
+      "actual_files": [
+        "README.md",
+        "docs/modules/chatgpt-dom-compatibility.md",
+        "docs/modules/context-delivery.md",
+        "docs/modules/project-archive.md",
+        "docs/modules/workspace-sessions.md",
+        "docs/modules/workspace-setup.md",
+        "docs/planning/correction-round-0.6.99.md",
+        "docs/planning/workflow-kit-context-refactor.md",
+        "docs/planning/workflow-kit-context-transition.md",
+        "packages/workflow-kit/docs/modules/workflow-kit-package.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -281,7 +299,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: refactor-fixes-20261007
 Current Task: нет
-Revision: 1442
+Revision: 1444
 
 ## Цель
 
@@ -301,10 +319,10 @@ Revision: 1442
   - Git Commit: [DONE] fix: очистка брошенных временных копий хранилища
   - Reference: refactor-fixes-20261007 / T002 / implementation
   - Файлы: src/workspace-session.mjs, src/workspace-deletion.mjs, tests/workspace-session.test.mjs, tests/workspace-deletion.test.mjs, docs/planning/refactor-fixes.md, docs/modules/workspace-sessions.md, docs/modules/project-archive.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать контекст проекта
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать контекст проекта
   - Reference: refactor-fixes-20261007 / DOCS / implementation
-  - Файлы: docs/planning/refactor-fixes.md, README.md, docs/architecture/OVERVIEW.md, docs/modules/context-delivery.md, docs/planning/correction-round-0.6.99.md, docs/planning/workflow-kit-context-refactor.md, docs/planning/workflow-kit-context-transition.md, docs/modules/workspace-sessions.md, docs/modules/project-archive.md
+  - Файлы: docs/planning/refactor-fixes.md, README.md, docs/architecture/OVERVIEW.md, docs/modules/context-delivery.md, docs/planning/correction-round-0.6.99.md, docs/planning/workflow-kit-context-refactor.md, docs/planning/workflow-kit-context-transition.md, docs/modules/workspace-sessions.md, docs/modules/project-archive.md, docs/modules/chatgpt-dom-compatibility.md, docs/modules/workspace-setup.md, packages/workflow-kit/docs/modules/workflow-kit-package.md
 - [TODO] T003: Собрать парный выпуск 0.6.100 — Ожидает
   - Git Commit: [PENDING] release: собрать Web Pilot 0.6.100
   - Reference: refactor-fixes-20261007 / T003 / implementation

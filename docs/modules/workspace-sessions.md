@@ -16,7 +16,8 @@
 ## Хранилище
 
 - Файл `<userData>/workspaces.json` (`userData` — `~/Library/Application Support/Project Web Pilot`, Windows `%APPDATA%\Project Web Pilot`; вне `.app`, поэтому переживает обновления). `schemaVersion: 6`.
-- Одна очередь мутаций (`mutate`): изменение делается на копии; если данные не изменились, файл не переписывается (повторные `applyScopeTitle`/`setSessionTitle` на каждом `publish`); иначе атомарная запись — временный `workspaces.json.tmp-<uuid>` (0600), `rename`; каталог создаётся с 0700. Записи сериализованы (`saveTail`).
+- Одна очередь мутаций (`mutate`): изменение делается на копии; если данные не изменились, файл не переписывается (повторные `applyScopeTitle`/`setSessionTitle` на каждом `publish`); иначе атомарная запись — временный `workspaces.json.tmp-<uuid>` (0600), `rename`; каталог создаётся с 0700. Записи сериализованы (`saveTail`). Неудачная запись удаляет свой временный файл.
+- Брошенные временные копии (`removeStoreTemporaries`: `workspaces.json.tmp-*`, `.vN-backup.tmp`, `diagnostics.jsonl(.1).tmp*`) содержат записи проектов. Их удаляет `load` (один экземпляр приложения, до любой записи; сбой не мешает запуску), а также удаление проекта (`removeTemporaries` в очереди мутаций) и локальное удаление сессий — после ожидающих записей, без гонки со своей. Посторонние файлы не трогаются.
 - Проект: `workspace` (realpath, уникален), `projectId` и `name` (= `project_id`/`project_name` Kit), opt. `displayName`, opt. `lastNamedScopeId`, `expanded`, `archivedAt|null`, `selectedSessionId`, `sessions[]`.
 - Сессия: `sessionId` (`web-pilot-<uuid>`, уникален), `experience` (`chat|work`, неизменен), `chatUrl|null` (нормализован, уникален по всем проектам, совместим с `experience`), `title`, `titleSource` (`page|manual|scope|null`), `lastNamedScopeId`, `createdAt`, `lastOpenedAt`, `archivedAt|null`, `attempt`, `receipt`, opt. `manualStart`, opt. `agentTime {totalMs,lastMs}` (целые ≥0, `lastMs ≤ totalMs`). Legacy-поля `planId`, `originSessionId`, `legacyPlanId` (проверяется формат) и `planBinding` хранятся, но ничего не выбирают.
 - Инварианты при загрузке: у проекта ≥1 активная сессия, выбранная сессия активна; нарушение, повреждённый JSON или неизвестная версия → `SESSIONS_INVALID`, файл не перезаписывается, приложение открывается с `storageError` (создание, подключение и выбор заблокированы до восстановления файла).
@@ -76,7 +77,7 @@
 ## Архив и удаление сессий
 
 - `pilot:archive-session`: только у неархивного проекта; последнюю активную нельзя (`SESSION_LAST_ACTIVE`). Если архивируется выбранная — выбор переходит на последнюю открытую из оставшихся, и она открывается. Restore (`archive:restore-sessions`) возвращает `archivedAt = null`, `experience`/`chatUrl`/имя не меняет, выбор не трогает.
-- Локальное удаление (`archive:delete-sessions`) — только архивных (`SESSION_NOT_ARCHIVED`), набор проверяется целиком до изменений (`PROJECT_REPLACED`, `SESSION_ARCHIVE`). Удаляются запись сессии, её копии в `workspaces.json.v1..v5-backup` и строки `diagnostics.jsonl` этой сессии (backup без массива `projects` → `SESSION_LOCAL_CLEANUP`). Папка, Git, WorkspaceDeletion и облачные чаты не затрагиваются — удалять облачные чаты запрещено.
+- Локальное удаление (`archive:delete-sessions`) — только архивных (`SESSION_NOT_ARCHIVED`), набор проверяется целиком до изменений (`PROJECT_REPLACED`, `SESSION_ARCHIVE`). Удаляются запись сессии, её копии в `workspaces.json.v1..v5-backup`, строки `diagnostics.jsonl` этой сессии и брошенные временные копии хранилища (backup без массива `projects` → `SESSION_LOCAL_CLEANUP`). Папка, Git, WorkspaceDeletion и облачные чаты не затрагиваются — удалять облачные чаты запрещено.
 - Окно «Архив», вкладка «Сессии»: только сессии неархивных проектов (название, Chat/Work, проект, время архивации), выбор click/Shift/⌘/Ctrl, пакетный возврат, локальное удаление после подтверждения с текстом, что облачные разговоры ChatGPT останутся. Архив проектов — независимый жизненный цикл ([project-archive.md](project-archive.md)).
 
 ## Снимок состояния для UI
@@ -93,7 +94,7 @@
 
 ## Проверки
 
-- Автоматические (`unit-all` = `npm test`, `electron-smoke` = `npm run smoke`): `tests/workspace-session.test.mjs` (миграции и backup, валидация, порядок, выбор, A→B→A, архив, удаление, имена, время агента), `tests/chatgpt-title.test.mjs`, `tests/agent-timer.test.mjs`, `tests/chatgpt-experience.test.mjs`, `tests/context-session.test.mjs` (привязка, fail-closed), `tests/sidebar.test.mjs`; smoke — переименование через диалог, удаление `tokenEstimate`. Smoke работает на TEST FIXTURE и живой ChatGPT не доказывает.
+- Автоматические (`unit-all` = `npm test`, `electron-smoke` = `npm run smoke`): `tests/workspace-session.test.mjs` (миграции и backup, брошенные временные копии, валидация, порядок, выбор, A→B→A, архив, удаление, имена, время агента), `tests/chatgpt-title.test.mjs`, `tests/agent-timer.test.mjs`, `tests/chatgpt-experience.test.mjs`, `tests/context-session.test.mjs` (привязка, fail-closed), `tests/sidebar.test.mjs`; smoke — переименование через диалог, удаление `tokenEstimate`. Smoke работает на TEST FIXTURE и живой ChatGPT не доказывает.
 - Ручные (пользователь, на установленной версии): новые Chat и Work в живом ChatGPT — подтверждение режима, привязка постоянного `/c/<id>`, нет повторной отправки; переоткрытие сохранённой сессии без отправки; restart возвращает выбранную сессию и её URL; переименование и автоимя доходят до названия разговора в аккаунте; архив/возврат/локальное удаление сессии не трогают облачный чат.
 
 ## Открыто

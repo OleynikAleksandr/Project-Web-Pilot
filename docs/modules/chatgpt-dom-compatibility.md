@@ -60,6 +60,7 @@
 - Sidebar — отдельный репозиторий другого агента, изменения его workspace согласуются отдельно. Он собирает `chatgpt-dom.mjs`, `chatgpt-composer.mjs`, `chatgpt-experience.mjs` в content script; они импортируют только друг друга именованными статическими импортами, без Node API и динамических импортов.
 - API: `CHATGPT_SELECTORS` (с `stop`); `createChatGPTDOM(selectors)` с `editor()`, `sendButton()`, `first(selector)`; `chatGPTDOMScript()`; публичная `pageOperation(args, dom)`; `ChatGPTComposer(contents, { timeoutMs, attachmentTimeoutMs })` с `deliver({ text, requestId, expectedExperience, attachments })` и `inspect({ action, text, attachments })`; от `contents` — только `getURL()`, `executeJavaScript(code)`; `chatGPTEntrypoint`, `isPendingChatGPTConversation`. Новые параметры необязательны.
 - Провод: `pageScript(args)` = `` `(${pageOperation})(${JSON.stringify(args)}, ${chatGPTDOMScript()})` ``; Sidebar исполняет его без eval. Имя `pageOperation` и сериализация — часть контракта.
+- Имена файлов вложений в публичный API трёх модулей не входят.
 - Поручение пользователя: экспорты и формат `pageScript` без явной необходимости не менять, изменение отмечать в описании коммита и передавать сопровождающему Sidebar. Три файла закреплены SHA-256 в `vendor.lock.json` Sidebar; re-pin и сборку делает его сопровождающий.
 - Граница: Sidebar показывает проекты, сессии и прогресс плана; данные проекта, план, recovery и инструменты — Web Pilot и Kit; расширение не пишет `todo-plan.md` и не хранит данные проекта.
 

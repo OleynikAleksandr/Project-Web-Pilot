@@ -10,7 +10,7 @@
 ## Поведение
 
 ### Источник и копии
-- Единственный редактируемый исходник — `src/` (обычная задача плана); версия — `package.json` и `VERSION` в `src/lib/common.mjs`, совпадение проверяется. Третью копию исходника не создавать.
+- Единственный редактируемый исходник — `src/` (обычная задача плана); версия — `package.json` и `VERSION` в `src/lib/common.mjs`, совпадение проверяется. Версия повышается только при изменении пакета; установка в этот checkout — `install --update` в задаче плана. Третью копию исходника не создавать.
 - `.harness/kit` — установленная копия, ею выполняются коммиты; вручную не правится, обновляется `install --update` отдельным шагом после проверок.
 - `resources/workflow-kit` — копия `getRuntimeRoot()` от `npm run stage:workflow-kit` (pre-хуки start/test/smoke/build*), сверка файлов и SHA-256, вне Git; проверки — `scripts/check-workflow-kit-{dependency,staging}.mjs`.
 - Второй потребитель подключает пакет отсюда (`file:` или `git subtree split`). Прежний репозиторий WorkflowKit — архив, не источник; его служебные файлы (`.harness`, `.codex`, AGENTS, `scripts/workflow*`) в пакет не входят.
@@ -65,7 +65,7 @@
 - Evidence — только текущей транзакции или коммитов плана; отсутствие evidence ≠ PASSED.
 
 #### Документы контекста
-- `context_pack.documents` плана и текущей (иначе следующей) задачи: `{path, required, revision}`; revision — `WORKTREE` (по умолчанию) или точный SHA коммита (blob из Git с проверкой пути, типа и UTF-8). Дедупликация по (path, revision), required побеждает. `heading_path` принимается, документ передаётся целиком.
+- `context_pack.documents` плана и текущей (иначе следующей) задачи: `{path, required, revision}`; revision — `WORKTREE` (по умолчанию) или точный SHA коммита (blob из Git с проверкой пути, типа и UTF-8). Дедупликация по (path, revision), required побеждает. `heading_path` принимается, документ передаётся целиком. Устаревшее `dependency_task_ids` принимается, диффы не добавляет.
 - required — целиком; optional — проверяемая ссылка. `docs/MODULES.md` и `docs/DOCUMENTATION_INDEX.md` — всегда ссылкой с ревизией и размером (`LEGACY_REFERENCE_ONLY`). Нет required-файла или blob → `MISSING_FILE`/`CONTEXT_REVISION`.
 - Kit добавляет required OVERVIEW в каждый план (NONE без него → `PROJECT_CONTEXT_REQUIRED`); README в обязательный набор не входит.
 - Операция, удаляющая required WORKTREE-документ, проверяет его blob в `before_head` и тем же коммитом закрепляет ссылки на эту ревизию; нет blob (создан и удалён без коммита) или удаление вне выбранных файлов → `MISSING_FILE` без изменения плана и index.
@@ -96,13 +96,13 @@
 
 Не возвращать:
 - выбор плана по chat/session, `plan:prepare/bind/adopt`, реестр, базу или облачное хранилище планов, session-router, второй формат recovery, слияние legacy-планов;
-- архивные копии планов, DOCS без выпуска;
+- архивные копии планов, DOCS без выпуска, файл-пересказ recovery или TODO рядом с current plan;
 - диффы зависимостей в recovery, выбор раздела по `heading_path`, формы в стартовом пакете, псевдотокены и символьные нормативы;
 - закреплённые версию, число файлов и SHA Kit в скриптах приложения; публикацию в npm, registry, daemon, БД, WebSocket, update service;
 - модельный классификатор, модельный API, обязательные кнопки режимов.
 
 ## Проверки
-- `kit-check` (`npm run check --prefix packages/workflow-kit`): `check-package` (identity, exports, версия, состав `npm pack`), `check-consumer-contract` (`file:`/tarball без исходника, runtime = `src`), `check-runtime-fixture` (установка, recovery, rename, DOCS-N, pre-push, `before`, legacy-миграция, синтетическая 1.4.13) с `check-document-fixture` (28000/28001, index ≠ worktree, роли, docs:commit) и `check-project-recovery-fixture` (копия Web Pilot с исходниками Kit до/после нормализации: ≤ 144000 байт — запас ≥ 20% — и ≤ 7 частей, задачи целы), `check-carryover-fixture`.
+- `kit-check` (`npm run check --prefix packages/workflow-kit`): `check-package` (identity, exports, версия, состав `npm pack`), `check-consumer-contract` (`file:`/tarball без исходника, runtime = `src`), `check-runtime-fixture` (установка, recovery, rename, DOCS-N, pre-push, `before`, legacy-миграция, синтетическая 1.4.13) с `check-document-fixture` (28000/28001, index ≠ worktree, роли, docs:commit) и `check-project-recovery-fixture` (копия Web Pilot с исходниками Kit до/после нормализации: ≤ 144000 байт — запас ≥ 20% без сокращения плана, повышения бюджета и потери обязательного контекста — и ≤ 7 частей, задачи целы), `check-carryover-fixture`.
 - `unit-all` (`npm test`): `tests/workflow-kit-{recovery,source,upgrade}.test.mjs` (upgrade — реальная 1.5.6: task:start → kit-update → commit новым runtime). Проверки взаимно не заменяются.
 - Пользователь: живой ChatGPT, native Windows (`workflow.cmd`, PowerShell-hook, MinGit); fixtures на Mac их не заменяют, для 1.6.x не подтверждены.
 
