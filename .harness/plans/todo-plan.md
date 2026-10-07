@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1457,
+  "plan_revision": 1459,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "refactor-fixes-20261007",
@@ -393,13 +393,14 @@
         "После DOCS одна сборка macOS/Windows; manifest и хеши подтверждены."
       ],
       "expected_commit_message": "release: собрать Web Pilot 0.6.101",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "refactor-fixes-20261007",
         "task_id": "T007",
         "role": "implementation"
-      }
+      },
+      "actual_files": []
     },
     {
       "id": "T008",
@@ -476,7 +477,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: refactor-fixes-20261007
 Current Task: нет
-Revision: 1457
+Revision: 1459
 
 ## Цель
 
@@ -520,8 +521,8 @@ Revision: 1457
   - Git Commit: [DONE] docs: актуализировать документацию проекта
   - Reference: refactor-fixes-20261007 / DOCS-2 / implementation
   - Файлы: docs/architecture/OVERVIEW.md, docs/planning/refactor-fixes.md, docs/modules/codex-app-server-executor.md, docs/modules/context-delivery.md, docs/modules/workspace-sessions.md, README.md
-- [TODO] T007: Собрать парный выпуск 0.6.101 — Ожидает
-  - Git Commit: [PENDING] release: собрать Web Pilot 0.6.101
+- [DONE] T007: Собрать парный выпуск 0.6.101 — Завершено
+  - Git Commit: [DONE] release: собрать Web Pilot 0.6.101
   - Reference: refactor-fixes-20261007 / T007 / implementation
   - Файлы: docs/planning/refactor-fixes.md
 - [TODO] T008: Установить готовый выпуск 0.6.101 — Ожидает
