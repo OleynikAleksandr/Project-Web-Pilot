@@ -48,6 +48,53 @@ test('partial or failed upload never sends, repastes, or loses the prepared file
   }
 });
 
+for (const outcome of ['ready', 'pending', 'failed']) test('attachment deadline with fake clock: '+outcome, async()=>{
+  const f=attachmentFixture({uploading:true}), records=[];
+  let time=0;
+  const pageState={version:0,waitForChange:async(version,{timeoutMs})=>{
+    assert.equal(f.sends(),0);
+    assert.ok(timeoutMs>0 && timeoutMs<=500);
+    time+=timeoutMs;
+    if(outcome==='ready' && time>=30000)
+      for(const card of f.document.querySelectorAll('[aria-busy]'))card.removeAttribute('aria-busy');
+    if(outcome==='failed' && time>=1000)f.document.querySelector('form > div').setAttribute('data-state','error');
+    return {timeout:true,version};
+  }};
+  const composer=new ChatGPTComposer(f.view,{now:()=>time,pageState,onDiagnostic:r=>records.push(r),
+    wait:()=>{throw Error('Event-driven wait required');}});
+  assert.equal(composer.timeoutMs,12000);
+  assert.equal(composer.attachmentTimeoutMs,120000);
+  if(outcome==='ready') {
+    assert.equal((await composer.deliver(f.request)).state,'sent');
+    assert.equal(time,30000);assert.equal(f.sends(),1);
+    assert.equal((await composer.deliver(f.request)).state,'sent');assert.equal(f.sends(),1);
+  } else {
+    await assert.rejects(composer.deliver(f.request),{code:outcome==='failed'?'ATTACHMENTS_FAILED':'ATTACHMENTS_PENDING'});
+    assert.equal(time,outcome==='failed'?1000:120000);assert.equal(f.sends(),0);
+  }
+  assert.equal(f.pastes(),1);assert.equal(f.received.length,7);
+  const observations=records.filter(r=>r.event==='observation' && r.attachmentsPresent===7);
+  assert.ok(observations.some(r=>r.attachmentsReady===false && r.attachmentsFailed===false));
+  if(outcome==='ready')assert.ok(observations.some(r=>r.attachmentsReady===true));
+  if(outcome==='failed')assert.ok(observations.some(r=>r.attachmentsFailed===true));
+  const serialized=JSON.stringify(records);
+  for(const file of f.request.attachments){assert.equal(serialized.includes(file.name),false);assert.equal(serialized.includes(file.text),false);}
+  assert.equal(serialized.includes(f.request.text),false);
+  f.dom.window.close();
+});
+
+test('text readiness retains its twelve-second deadline',async()=>{
+  const f=fixture();let time=0;
+  f.document.querySelector('button').disabled=true;
+  const pageState={version:0,waitForChange:async(version,{timeoutMs})=>{
+    assert.equal(timeoutMs,12000);time+=timeoutMs;return {timeout:true,version};
+  }};
+  const composer=new ChatGPTComposer(f.view,{now:()=>time,pageState});
+  assert.equal((await composer.deliver(request)).reason,'SEND_UNAVAILABLE');
+  assert.equal(time,12000);assert.equal(f.sends(),0);
+  f.dom.window.close();
+});
+
 test('exception after actual Send is uncertain and never dispatched again',async()=>{
   const f=attachmentFixture(),execute=f.view.executeJavaScript;
   f.view.executeJavaScript=async script=>{const value=await execute(script);if(value.action==='clicked')throw Error('lost renderer reply');return value;};
@@ -70,7 +117,7 @@ function fixture({ draft = '', stop = false, emitMessage = true } = {}) {
   });
   let time=0;
   const view={getURL:()=>dom.window.location.href,executeJavaScript:async script=>dom.window.eval(script)};
-  const composer=new ChatGPTComposer(view,{settleMs:1,timeoutMs:5,now:()=>time,wait:async ms=>{time+=ms;}});
+  const composer=new ChatGPTComposer(view,{settleMs:1,timeoutMs:5,attachmentTimeoutMs:5,now:()=>time,wait:async ms=>{time+=ms;}});
   return {dom,document,editor,view,composer,sends:()=>sends};
 }
 test('Sidebar can import pageOperation and reconstruct the exact pageScript wire format', () => {

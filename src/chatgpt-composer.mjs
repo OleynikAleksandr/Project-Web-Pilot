@@ -212,13 +212,14 @@ export function pageScript(args) { return `(${pageOperation.toString()})(${JSON.
 
 export class ChatGPTComposer {
   constructor(contents, { wait = pause, now = Date.now, settleMs = 200, timeoutMs = 12000,
-    allowFixture = false, pageState = null, onDiagnostic = null } = {}) {
+    attachmentTimeoutMs = 120000, allowFixture = false, pageState = null, onDiagnostic = null } = {}) {
     this.contents = contents;
     this.wait = wait;
     this.pageState = pageState;
     this.now = now;
     this.settleMs = settleMs;
     this.timeoutMs = timeoutMs;
+    this.attachmentTimeoutMs = attachmentTimeoutMs;
     this.allowFixture = allowFixture;
     this.inFlight = false;
     this.onDiagnostic = onDiagnostic;
@@ -248,9 +249,11 @@ export class ChatGPTComposer {
     }
     if (diagnose) {
       const { diagnostic, editorAvailable, writable, login, busy, draftLength, draftMatches, sendEnabled,
-        messageSeen, userMessageCount, experience, connectionError, insertionMethod, pasteHandled, action: outcome, reason } = observation;
+        messageSeen, userMessageCount, experience, connectionError, insertionMethod, pasteHandled,
+        attachmentsPresent, attachmentsReady, attachmentsFailed, action: outcome, reason } = observation;
       this.trace('observation', { action, requestId, diagnostic, editorAvailable, writable, login, busy,
-        draftLength, draftMatches, sendEnabled, messageSeen, userMessageCount, experience, connectionError, insertionMethod, pasteHandled, outcome, reason },
+        draftLength, draftMatches, sendEnabled, messageSeen, userMessageCount, experience, connectionError, insertionMethod, pasteHandled,
+        attachmentsPresent, attachmentsReady, attachmentsFailed, outcome, reason },
         Math.max(0, this.now() - started));
     }
     if (observation.reason === 'PASTE_UNHANDLED')
@@ -307,7 +310,7 @@ export class ChatGPTComposer {
   }
 
   async waitForSendReady(args, version, canContinue) {
-    const deadline = this.now() + this.timeoutMs;
+    const deadline = this.now() + (args.attachments?.length ? this.attachmentTimeoutMs : this.timeoutMs);
     let observation;
     do {
       if (!canContinue()) return observation ?? {};

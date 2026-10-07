@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1394,
+  "plan_revision": 1395,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "recovery-on-demand-research-20261006",
@@ -113,7 +113,7 @@
     ]
   },
   "baseline_commit": "7bd5f4714fc3be0572dfa8a593804af3fab45d1f",
-  "current_task_id": "T008",
+  "current_task_id": null,
   "context_pack": {
     "documents": [
       {
@@ -860,13 +860,20 @@
         "Экспорты и pageScript совместимы с Sidebar; версия Web Pilot 0.6.98, Kit 1.6.0; без сборки."
       ],
       "expected_commit_message": "fix: дать вложениям отдельный срок загрузки",
-      "implementation_status": "IN_PROGRESS",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "recovery-on-demand-research-20261006",
         "task_id": "T008",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "docs/planning/workflow-kit-context-transition.md",
+        "package-lock.json",
+        "package.json",
+        "src/chatgpt-composer.mjs",
+        "tests/chatgpt-composer.test.mjs"
+      ]
     },
     {
       "id": "DOCS-2",
@@ -1011,8 +1018,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: recovery-on-demand-research-20261006
-Current Task: T008
-Revision: 1394
+Current Task: нет
+Revision: 1395
 
 ## Цель
 
@@ -1074,8 +1081,8 @@ Revision: 1394
   - Git Commit: [DONE] release: опубликовать парный выпуск с новым Workflow Kit
   - Reference: recovery-on-demand-research-20261006 / T007 / implementation
   - Файлы: docs/planning/workflow-kit-context-transition.md
-- [IN_PROGRESS] T008: Исправить ожидание вложений — В работе
-  - Git Commit: [PENDING] fix: дать вложениям отдельный срок загрузки
+- [DONE] T008: Исправить ожидание вложений — Завершено
+  - Git Commit: [DONE] fix: дать вложениям отдельный срок загрузки
   - Reference: recovery-on-demand-research-20261006 / T008 / implementation
   - Файлы: src/chatgpt-composer.mjs, tests/chatgpt-composer.test.mjs, package.json, package-lock.json, .harness/workflow.json, docs/planning/workflow-kit-context-transition.md
 - [TODO] DOCS-2: Актуализация всех документов проекта — Ожидает
