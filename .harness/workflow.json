@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "profile": "DEVELOPMENT",
-  "stack": "Electron 44.5.1 / Node 24.21.0 / Workflow Kit 1.6.0 / Codex 0.160.0",
+  "stack": "Electron 44.5.1 / Node 24.21.0 / Workflow Kit 1.6.1 / Codex 0.160.0",
   "checks": [
     {
       "required": false,
@@ -60,7 +60,7 @@
         "run",
         "build"
       ],
-      "evidence": "~/Downloads/WebPilot-0.6.98: macOS arm64 + Windows x64 ZIP, ZIP Windows-runtime, SHA256SUMS.txt, INSTALL.txt, release-manifest.json; packaged sources и bundled Workflow Kit 1.6.0 verified. Сборку выполняет сама эта проверка при коммите задачи, один раз"
+      "evidence": "~/Downloads/WebPilot-0.6.99: macOS arm64 + Windows x64 ZIP, ZIP Windows-runtime, SHA256SUMS.txt, INSTALL.txt, release-manifest.json; packaged sources и bundled Workflow Kit 1.6.1 verified. Сборку выполняет сама эта проверка при коммите задачи, один раз"
     },
     {
       "required": false,
@@ -71,7 +71,7 @@
       "args": [
         "scripts/check-installed-release.mjs"
       ],
-      "evidence": "Root app и /Applications/Project Web Pilot.app — 0.6.98 из уже собранного staging; identity/signature/runtime и release artifacts verified без пересборки"
+      "evidence": "Root app и /Applications/Project Web Pilot.app — 0.6.99 из уже собранного staging; identity/signature/runtime и release artifacts verified без пересборки"
     },
     {
       "required": false,
@@ -82,7 +82,7 @@
       "args": [
         "scripts/check-github-release.mjs"
       ],
-      "evidence": "GitHub Release v0.6.98: tag, шесть assets и remote main сверены с локальным release-manifest.json без пересборки"
+      "evidence": "GitHub Release v0.6.99: tag, шесть assets и remote main сверены с локальным release-manifest.json без пересборки"
     },
     {
       "required": false,
