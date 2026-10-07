@@ -1,6 +1,6 @@
 # Workflow Kit 1.6.0 — контракт пакета
 
-@webpilot/workflow-kit — пакет packages/workflow-kit репозитория Project Web Pilot. Node 22+; рабочий consumer Web Pilot 0.6.97 использует Node 24.21.0. Исходник — src/, установленная .harness/kit и resources/workflow-kit — производные копии. Версии/хеши поставок читаются из manifest и Git, не из истории в README.
+@webpilot/workflow-kit — пакет packages/workflow-kit репозитория Project Web Pilot. Node 22+; рабочий consumer Web Pilot 0.6.98 использует Node 24.21.0. Исходник — src/, установленная .harness/kit и resources/workflow-kit — производные копии. Версии/хеши поставок читаются из manifest и Git, не из истории в README.
 
 ## Публичный API
 ```js
@@ -43,7 +43,7 @@ upgradeFrom включает 1.5.6. Проверяются целостност�
 
 getRuntimeRoot() возвращает самодостаточный payload. Consumer копирует его в resources; состав и содержимое сверяются с src/ без закреплённых вручную SHA/числа файлов. Готовое приложение не зависит от исходников или соседнего репозитория. Старые chat URL/title/history клиента сохраняются.
 
-В текущем checkout переход выполняется только в T006 после парной сборки; installed 1.5.6 и legacy budget сохраняются до него. [Порядок перехода](../../../../docs/planning/workflow-kit-context-transition.md).
+Текущий checkout уже переведён на 1.6.0 штатным установщиком; исправительный выпуск Web Pilot 0.6.98 не меняет пакет Kit. [Порядок перехода](../../../../docs/planning/workflow-kit-context-transition.md).
 
 ## Проверки
 npm run check пакета (kit-check):

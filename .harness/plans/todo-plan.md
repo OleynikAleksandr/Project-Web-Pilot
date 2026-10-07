@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1395,
+  "plan_revision": 1398,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "recovery-on-demand-research-20261006",
@@ -878,8 +878,8 @@
     {
       "id": "DOCS-2",
       "title": "Актуализация всех документов проекта",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "recovery-on-demand-research-20261006",
         "task_id": "DOCS-2",
@@ -893,13 +893,32 @@
       "functional_paths": [],
       "documentation_paths": [
         "docs/architecture/OVERVIEW.md",
-        "docs/planning/workflow-kit-context-transition.md"
+        "docs/planning/workflow-kit-context-transition.md",
+        "README.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/modules/chatgpt-dom-compatibility.md",
+        "docs/modules/workflow-kit-recovery.md",
+        "docs/WORKSPACE_SETUP.md",
+        "packages/workflow-kit/docs/modules/workflow-kit-package.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/MODULES.md"
       ],
       "acceptance_criteria": [
         "Документы описывают текущий результат, существенное из выпущенных рабочих спецификаций перенесено в контракты модулей; история остаётся в Git."
       ],
       "verification_ids": [],
-      "expected_commit_message": "docs: актуализировать документацию проекта"
+      "expected_commit_message": "docs: актуализировать документацию проекта",
+      "actual_files": [
+        "README.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/MODULES.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/chatgpt-dom-compatibility.md",
+        "docs/modules/workflow-kit-recovery.md",
+        "packages/workflow-kit/docs/modules/workflow-kit-package.md"
+      ]
     },
     {
       "id": "T009",
@@ -1019,7 +1038,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: recovery-on-demand-research-20261006
 Current Task: нет
-Revision: 1395
+Revision: 1398
 
 ## Цель
 
@@ -1085,10 +1104,10 @@ Revision: 1395
   - Git Commit: [DONE] fix: дать вложениям отдельный срок загрузки
   - Reference: recovery-on-demand-research-20261006 / T008 / implementation
   - Файлы: src/chatgpt-composer.mjs, tests/chatgpt-composer.test.mjs, package.json, package-lock.json, .harness/workflow.json, docs/planning/workflow-kit-context-transition.md
-- [TODO] DOCS-2: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать документацию проекта
+- [DONE] DOCS-2: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать документацию проекта
   - Reference: recovery-on-demand-research-20261006 / DOCS-2 / implementation
-  - Файлы: docs/architecture/OVERVIEW.md, docs/planning/workflow-kit-context-transition.md
+  - Файлы: docs/architecture/OVERVIEW.md, docs/planning/workflow-kit-context-transition.md, README.md, docs/CONTEXT_DELIVERY.md, docs/modules/chatgpt-dom-compatibility.md, docs/modules/workflow-kit-recovery.md, docs/WORKSPACE_SETUP.md, packages/workflow-kit/docs/modules/workflow-kit-package.md, docs/DOCUMENTATION_INDEX.md, docs/MODULES.md
 - [TODO] T009: Собрать парный выпуск 0.6.98 — Ожидает
   - Git Commit: [PENDING] release: собрать Web Pilot 0.6.98
   - Reference: recovery-on-demand-research-20261006 / T009 / implementation

@@ -1,6 +1,6 @@
 # Workflow Kit / восстановление контекста
 
-Контракт Workflow Kit 1.6.0 и Web Pilot 0.6.97. Исходник — packages/workflow-kit/src; установленная .harness/kit обновляется штатным installer. Для текущего проекта до T006 действует установленный Kit 1.5.6; порядок — [переход](../planning/workflow-kit-context-transition.md).
+Контракт Workflow Kit 1.6.0 и Web Pilot 0.6.98. Исходник — packages/workflow-kit/src; установленная .harness/kit обновляется штатным installer. Текущий проект уже переведён на Kit 1.6.0; исправление ожидания вложений относится только к Web Pilot. Порядок — [переход](../planning/workflow-kit-context-transition.md).
 
 ## Ответственность
 Kit владеет текущим планом, Git references, сборкой/полнотой recovery и проверками документов. Браузерная доставка принадлежит [Web Pilot](../CONTEXT_DELIVERY.md), runtime/MCP — исполнителю. Связанный Web Pilot Sidebar использует browser-адаптер, не меняет владельца recovery.
