@@ -119,12 +119,15 @@ for (const resources of [targets[0], targets[3]]) {
       tasks:[{id:'T001',title:'Remaining',files:['docs/planning/fixture.md'],acceptance:['Retained criterion']}]}));
     cli('plan:create','--input',file);
     const before=await fs.readFile(path.join(fixture,'.harness/plans/todo-plan.md'),'utf8');
+    const beforeHead=run('git',['rev-parse','HEAD']).trim();
     const revision=String(readPlan(fixture).plan_revision);
     await fs.writeFile(file,JSON.stringify({scope:'old',id:'new',approval_note:'Explicit installed test carryover'}));
     cli('plan:carryover','--input',file,'--expected-revision',revision);
     const after=readPlan(fixture);
-    assert.deepEqual(after.tasks.map(t=>[t.id,t.implementation_status]),[['T001','TODO'],['DOCS','TODO']]);
-    assert.equal(await fs.readFile(path.join(fixture,'.harness/plans/archive/old.md'),'utf8'),before);
+    assert.deepEqual(after.tasks.map(t=>[t.id,t.implementation_status]),[['T001','TODO']]);
+    assert.equal(after.carryover.source_commit,beforeHead);
+    assert.equal(run('git',['show',beforeHead+':.harness/plans/todo-plan.md']),before);
+    await assert.rejects(fs.access(path.join(fixture,'.harness/plans/archive/old.md')), { code: 'ENOENT' });
     assert.deepEqual(after.tasks[0].acceptance_criteria,['Retained criterion']);
     assert.ok(after.context_pack.documents.some(d=>d.path==='docs/planning/fixture.md' && d.required));
     cli('validate');assert.equal(run('git',['status','--porcelain']).trim(),'');
