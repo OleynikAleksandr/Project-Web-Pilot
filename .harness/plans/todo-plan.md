@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1455,
+  "plan_revision": 1457,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "refactor-fixes-20261007",
@@ -340,8 +340,8 @@
     {
       "id": "DOCS-2",
       "title": "Актуализация всех документов проекта",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "refactor-fixes-20261007",
         "task_id": "DOCS-2",
@@ -358,13 +358,20 @@
         "docs/planning/refactor-fixes.md",
         "docs/modules/codex-app-server-executor.md",
         "docs/modules/context-delivery.md",
-        "docs/modules/workspace-sessions.md"
+        "docs/modules/workspace-sessions.md",
+        "README.md"
       ],
       "acceptance_criteria": [
         "Документы описывают текущий результат, существенное из выпущенных рабочих спецификаций перенесено в контракты модулей; история остаётся в Git."
       ],
       "verification_ids": [],
-      "expected_commit_message": "docs: актуализировать документацию проекта"
+      "expected_commit_message": "docs: актуализировать документацию проекта",
+      "actual_files": [
+        "README.md",
+        "docs/modules/codex-app-server-executor.md",
+        "docs/modules/context-delivery.md",
+        "docs/modules/workspace-sessions.md"
+      ]
     },
     {
       "id": "T007",
@@ -469,7 +476,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: refactor-fixes-20261007
 Current Task: нет
-Revision: 1455
+Revision: 1457
 
 ## Цель
 
@@ -509,10 +516,10 @@ Revision: 1455
   - Git Commit: [DONE] fix: правило долгих команд исполнителя
   - Reference: refactor-fixes-20261007 / T006 / implementation
   - Файлы: tools/codex-app-server-mcp/server.py, src/mac-runtime-switch.mjs, tests/codex-app-server-mcp.test.mjs, tests/context-session.test.mjs, package.json, package-lock.json, tests/mac-runtime-switch.test.mjs, docs/planning/refactor-fixes.md, docs/modules/codex-app-server-executor.md, docs/modules/context-delivery.md, docs/modules/workspace-sessions.md
-- [TODO] DOCS-2: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать документацию проекта
+- [DONE] DOCS-2: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать документацию проекта
   - Reference: refactor-fixes-20261007 / DOCS-2 / implementation
-  - Файлы: docs/architecture/OVERVIEW.md, docs/planning/refactor-fixes.md, docs/modules/codex-app-server-executor.md, docs/modules/context-delivery.md, docs/modules/workspace-sessions.md
+  - Файлы: docs/architecture/OVERVIEW.md, docs/planning/refactor-fixes.md, docs/modules/codex-app-server-executor.md, docs/modules/context-delivery.md, docs/modules/workspace-sessions.md, README.md
 - [TODO] T007: Собрать парный выпуск 0.6.101 — Ожидает
   - Git Commit: [PENDING] release: собрать Web Pilot 0.6.101
   - Reference: refactor-fixes-20261007 / T007 / implementation

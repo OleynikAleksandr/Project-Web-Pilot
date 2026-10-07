@@ -25,8 +25,8 @@
 
 - Имя `Codex App Server Local Mac` / `Codex App Server Local Windows` (`server_name()` по ОС). Streamable HTTP только на `127.0.0.1`; порт `--port` / `WEB_PILOT_CODEX_EXECUTOR_PORT` (17852), состояние `--state-dir` / `WEB_PILOT_CODEX_EXECUTOR_STATE_DIR`, Codex `--codex-bin` / `CODEX_APP_SERVER_BIN`. Запускает `control.py`.
 - `stateless_http=True`, потому что Web Pilot перезапускает сервер при каждом старте, а ChatGPT и Claude (через VPS) держат прежний `Mcp-Session-Id`: stateful-сервер отвечал 404 «Session not found» без переподключения. Состояния MCP-сессии и in-session уведомлений нет.
-- Instructions (текст закреплён тестом, константа `SERVER_INSTRUCTIONS`): только локальные инструменты, публичное — средствами ChatGPT; без модельного хода; «No UI control … Observation only» с тремя `computer_*`; поиск `rg` через `exec_command`, правка `apply_patch` без перечитывания; `PREEXECUTION_RETRY_RULE` — заблокированный OpenAI до выполнения вызов повторить один раз без изменений, менять или дробить только после второй блокировки.
-- Те же правила (две строки `EXECUTOR_TOOL_RULES`) идут в стартовое сообщение через `runtime.startupRules` на обеих ОС.
+- Instructions (текст закреплён тестом, константа `SERVER_INSTRUCTIONS`): только локальные инструменты, публичное — средствами ChatGPT; без модельного хода; «No UI control … Observation only» с тремя `computer_*`; поиск `rg` через `exec_command`, правка `apply_patch` без перечитывания; `LONG_COMMAND_RULE` — долгую команду не уводить в фон через `&`/`nohup`, запускать обычным `exec_command` и при session ID опрашивать сессию `write_stdin` с пустым вводом, не запуская повторно (то же в описании `exec_command`); предел длины instructions в тесте — 850 символов; `PREEXECUTION_RETRY_RULE` — заблокированный OpenAI до выполнения вызов повторить один раз без изменений, менять или дробить только после второй блокировки.
+- Те же правила (три строки `EXECUTOR_TOOL_RULES`) идут в стартовое сообщение через `runtime.startupRules` на обеих ОС.
 - Каталог состояния — 0700. При старте сервер удаляет пустую папку `trash` (непустую не трогает) и оставшийся `active-workspace.json`.
 
 ### Каталог — ровно 9 инструментов на обеих ОС
@@ -48,7 +48,7 @@
 
 ### `exec_command` и `write_stdin`
 
-- Прямые `command/exec`, `command/exec/write`, `command/exec/terminate`, без thread и turn. Незавершённые сессии живут в памяти сервера и теряются при его перезапуске; таймаута у долгого процесса нет, App Server буферизует до 4 МБ вывода.
+- Прямые `command/exec`, `command/exec/write`, `command/exec/terminate`, без thread и turn. Незавершённые сессии живут в памяти сервера и теряются при его перезапуске; таймаута у долгого процесса нет, App Server буферизует до 4 МБ вывода. Когда команда возвращается, App Server завершает её процессы: фоновое задание оболочки (`&`, `nohup`) исчезает сразу с пустым журналом (проверено на исполнителе), поэтому долгая команда идёт через сессию.
 - `workdir` обязателен (`workdir is required`), потому что у MCP нет папки разговора. Полей sandbox, justification, environment_id нет.
 - Оболочка: macOS — `shell`, иначе `$SHELL`, иначе `/bin/zsh`; Windows — PowerShell 7, иначе Windows PowerShell (порядок Codex). Argv как в Codex `shell.rs`: POSIX `-lc`/`-c` по `login`; PowerShell `-Command` или `-NoProfile -Command` с префиксом вывода UTF-8; `cmd.exe /c`.
 - stdin открыт только при `tty=true`, как `stdin_open: tty` в Codex `rust-v0.160.0`: иначе `rg` без пути ждал stdin и вызов висел. Non-TTY `write_stdin` принимает пустой опрос и один Ctrl-C (`\x03` → terminate); иной ввод → `stdin is closed for this session; rerun exec_command with tty=true to keep stdin open`, сессия живёт.
