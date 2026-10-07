@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1404,
+  "plan_revision": 1405,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "recovery-on-demand-research-20261006",
@@ -118,25 +118,6 @@
     "documents": [
       {
         "path": "docs/architecture/OVERVIEW.md",
-        "heading_path": [
-          "Краткая архитектура проекта"
-        ],
-        "required": true,
-        "revision": "WORKTREE"
-      },
-      {
-        "path": "docs/MODULES.md",
-        "heading_path": [
-          "Модули проекта"
-        ],
-        "required": true,
-        "revision": "WORKTREE"
-      },
-      {
-        "path": "docs/DOCUMENTATION_INDEX.md",
-        "heading_path": [
-          "Каталог документации"
-        ],
         "required": true,
         "revision": "WORKTREE"
       },
@@ -1041,7 +1022,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: READY_FOR_ACCEPTANCE
 Scope: recovery-on-demand-research-20261006
 Current Task: нет
-Revision: 1404
+Revision: 1405
 
 ## Цель
 
@@ -1126,9 +1107,7 @@ Revision: 1404
 
 ## Context Pack For This Cycle
 
-- docs/architecture/OVERVIEW.md → Краткая архитектура проекта
-- docs/MODULES.md → Модули проекта
-- docs/DOCUMENTATION_INDEX.md → Каталог документации
+- docs/architecture/OVERVIEW.md
 - docs/planning/workflow-kit-context-refactor.md
 - docs/planning/workflow-kit-context-transition.md
 
