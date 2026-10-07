@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1391,
+  "plan_revision": 1392,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "recovery-on-demand-research-20261006",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Рефакторинг Workflow Kit: компактные документы до 28000 байт, recovery по плану и Git, доставка частями-вложениями; парный выпуск перед согласованной миграцией проекта вне плана.",
   "acceptance_criteria": [
     "Принятые правила С1–С15 и П1–П13 реализованы по двум частям спецификации; документы актуализируются перед выпуском, история доступна в Git.",
@@ -141,13 +141,14 @@
         "revision": "WORKTREE"
       },
       {
-        "path": "docs/planning/workflow-kit-context-transition.md",
+        "path": "docs/planning/workflow-kit-context-refactor.md",
         "required": true,
         "revision": "WORKTREE"
       },
       {
-        "path": "docs/planning/workflow-kit-context-refactor.md",
-        "required": true
+        "path": "docs/planning/workflow-kit-context-transition.md",
+        "required": true,
+        "revision": "WORKTREE"
       }
     ],
     "include_last_completed_task": false,
@@ -832,6 +833,150 @@
         "role": "implementation"
       },
       "actual_files": []
+    },
+    {
+      "id": "T008",
+      "title": "Исправить ожидание вложений",
+      "why": "Медленная загрузка не должна исчерпывать срок обычного текста.",
+      "dependencies": [],
+      "functional_paths": [
+        "src/chatgpt-composer.mjs",
+        "tests/chatgpt-composer.test.mjs",
+        "package.json",
+        "package-lock.json",
+        ".harness/workflow.json"
+      ],
+      "documentation_paths": [
+        "docs/planning/workflow-kit-context-transition.md"
+      ],
+      "verification_ids": [
+        "unit-all",
+        "electron-smoke"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Для вложений отдельный предел 120 с; текст сохраняет 12 с, готовность и ошибка завершают ожидание сразу.",
+        "Диагностика содержит attachmentsPresent/Ready/Failed без имён и содержимого; поддельные часы проверяют 30 с → один Send, 120 с → PENDING без Send, немедленный FAILED.",
+        "Экспорты и pageScript совместимы с Sidebar; версия Web Pilot 0.6.98, Kit 1.6.0; без сборки."
+      ],
+      "expected_commit_message": "fix: дать вложениям отдельный срок загрузки",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "recovery-on-demand-research-20261006",
+        "task_id": "T008",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "DOCS-2",
+      "title": "Актуализация всех документов проекта",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "recovery-on-demand-research-20261006",
+        "task_id": "DOCS-2",
+        "role": "implementation",
+        "iteration": 2
+      },
+      "why": "Перед выпуском сверить README, OVERVIEW и действующие контракты модулей с результатом; обновить устаревшее.",
+      "dependencies": [
+        "T008"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/architecture/OVERVIEW.md",
+        "docs/planning/workflow-kit-context-transition.md"
+      ],
+      "acceptance_criteria": [
+        "Документы описывают текущий результат, существенное из выпущенных рабочих спецификаций перенесено в контракты модулей; история остаётся в Git."
+      ],
+      "verification_ids": [],
+      "expected_commit_message": "docs: актуализировать документацию проекта"
+    },
+    {
+      "id": "T009",
+      "title": "Собрать парный выпуск 0.6.98",
+      "why": "Собрать парный выпуск 0.6.98",
+      "dependencies": [
+        "T008",
+        "DOCS-2"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/planning/workflow-kit-context-transition.md"
+      ],
+      "verification_ids": [
+        "paired-release"
+      ],
+      "verification_kind": "package",
+      "acceptance_criteria": [
+        "После DOCS одна сборка macOS/Windows; manifest и хеши подтверждены."
+      ],
+      "expected_commit_message": "release: собрать Web Pilot 0.6.98",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "recovery-on-demand-research-20261006",
+        "task_id": "T009",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T010",
+      "title": "Установить готовый выпуск 0.6.98",
+      "why": "Установить готовый выпуск 0.6.98",
+      "dependencies": [
+        "T009",
+        "DOCS-2"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/planning/workflow-kit-context-transition.md"
+      ],
+      "verification_ids": [
+        "release-installed"
+      ],
+      "verification_kind": "installed",
+      "acceptance_criteria": [
+        "Обе macOS-копии соответствуют пакетам, identity и подпись сохранены; без пересборки."
+      ],
+      "expected_commit_message": "release: установить Web Pilot 0.6.98",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "recovery-on-demand-research-20261006",
+        "task_id": "T010",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T011",
+      "title": "Опубликовать выпуск 0.6.98",
+      "why": "Опубликовать выпуск 0.6.98",
+      "dependencies": [
+        "T010",
+        "DOCS-2"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/planning/workflow-kit-context-transition.md"
+      ],
+      "verification_ids": [
+        "github-release"
+      ],
+      "verification_kind": "package",
+      "acceptance_criteria": [
+        "Source/tag/шесть assets совпадают с manifest; push финального коммита, READY_FOR_ACCEPTANCE и остановка. Миграцию выполняет Claude отдельно."
+      ],
+      "expected_commit_message": "release: опубликовать Web Pilot 0.6.98",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "recovery-on-demand-research-20261006",
+        "task_id": "T011",
+        "role": "implementation"
+      }
     }
   ],
   "blocked_reason": null,
@@ -864,10 +1009,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: recovery-on-demand-research-20261006
 Current Task: нет
-Revision: 1391
+Revision: 1392
 
 ## Цель
 
@@ -929,13 +1074,33 @@ Revision: 1391
   - Git Commit: [DONE] release: опубликовать парный выпуск с новым Workflow Kit
   - Reference: recovery-on-demand-research-20261006 / T007 / implementation
   - Файлы: docs/planning/workflow-kit-context-transition.md
+- [TODO] T008: Исправить ожидание вложений — Ожидает
+  - Git Commit: [PENDING] fix: дать вложениям отдельный срок загрузки
+  - Reference: recovery-on-demand-research-20261006 / T008 / implementation
+  - Файлы: src/chatgpt-composer.mjs, tests/chatgpt-composer.test.mjs, package.json, package-lock.json, .harness/workflow.json, docs/planning/workflow-kit-context-transition.md
+- [TODO] DOCS-2: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: актуализировать документацию проекта
+  - Reference: recovery-on-demand-research-20261006 / DOCS-2 / implementation
+  - Файлы: docs/architecture/OVERVIEW.md, docs/planning/workflow-kit-context-transition.md
+- [TODO] T009: Собрать парный выпуск 0.6.98 — Ожидает
+  - Git Commit: [PENDING] release: собрать Web Pilot 0.6.98
+  - Reference: recovery-on-demand-research-20261006 / T009 / implementation
+  - Файлы: docs/planning/workflow-kit-context-transition.md
+- [TODO] T010: Установить готовый выпуск 0.6.98 — Ожидает
+  - Git Commit: [PENDING] release: установить Web Pilot 0.6.98
+  - Reference: recovery-on-demand-research-20261006 / T010 / implementation
+  - Файлы: docs/planning/workflow-kit-context-transition.md
+- [TODO] T011: Опубликовать выпуск 0.6.98 — Ожидает
+  - Git Commit: [PENDING] release: опубликовать Web Pilot 0.6.98
+  - Reference: recovery-on-demand-research-20261006 / T011 / implementation
+  - Файлы: docs/planning/workflow-kit-context-transition.md
 
 ## Context Pack For This Cycle
 
 - docs/architecture/OVERVIEW.md → Краткая архитектура проекта
 - docs/MODULES.md → Модули проекта
 - docs/DOCUMENTATION_INDEX.md → Каталог документации
-- docs/planning/workflow-kit-context-transition.md
 - docs/planning/workflow-kit-context-refactor.md
+- docs/planning/workflow-kit-context-transition.md
 
 Служебные состояния меняются только командами workflow. Приёмка не архивирует scope.
