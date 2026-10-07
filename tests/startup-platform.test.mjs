@@ -155,3 +155,25 @@ test('macOS preparation failure is shown with its own message and the next check
   assert.equal(flow.snapshot().phase, 'tunnel');
   flow.dispose();
 });
+
+test('a revoked tunnel key does not block the wizard: the running MCP leads to the tunnel step and the tunnel is entered again', async () => {
+  const f = fixture('darwin');
+  let attempted = false;
+  f.input.bootstrap.inspect = async () => ({ installed: false, attempted });
+  f.input.ensureRuntime = async () => { f.calls.push(['ensure']); attempted = true; throw Object.assign(new Error('tunnel'), { code: 'RUNTIME_NOT_READY' }); };
+  f.input.control = async command => { f.calls.push([command]); return { mcp: { ready: true }, tunnel: { configured: true, ready: false } }; };
+  const flow = new StartupReadiness({ ...startupPlatformOptions(f.input), onChange: () => {} });
+  await flow.check({ prepare: true });
+  assert.equal(flow.snapshot().runtime, true, 'the MCP is reported ready after the failed activation');
+  assert.equal(flow.snapshot().tunnel, false);
+  const configured = await startupPlatformOptions(f.input).configureTunnel({ tunnel_id: 'x', api_key: 'y' });
+  assert.deepEqual(configured, { configured: true });
+  assert.ok(f.calls.some(([command]) => command === 'configure'), 'the tunnel is configured despite the failed activation');
+});
+
+test('without a ready MCP a failed activation still stops the tunnel step', async () => {
+  const f = fixture('darwin');
+  f.input.ensureRuntime = async () => { throw Object.assign(new Error('no codex'), { code: 'CODEX_NOT_FOUND' }); };
+  f.input.control = async () => ({ mcp: { ready: false }, tunnel: { configured: false, ready: false } });
+  await assert.rejects(startupPlatformOptions(f.input).configureTunnel({ tunnel_id: 'x', api_key: 'y' }), { code: 'CODEX_NOT_FOUND' });
+});

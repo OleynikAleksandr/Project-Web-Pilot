@@ -93,13 +93,16 @@ export class CodexAppServerRuntime {
     this.lastStatus = null;
     // Set by MacRuntimeSwitcher.activate: until then nothing here may be assumed installed or running.
     this.activated = false;
+    // Set when an activation has run its course, even unsuccessfully: the services may then be up
+    // while tunnel-client is not (revoked key), and the wizard reads their status to offer the tunnel step.
+    this.activationAttempted = false;
   }
 
   // The start message carries the full project context; these lines add the rules of the executor tools to it.
   get startupRules() { return EXECUTOR_TOOL_RULES; }
 
   // First-run wizard: the services may be asked for their status only after activation.
-  async inspect() { return { installed: this.activated, folder: this.stateDir }; }
+  async inspect() { return { installed: this.activated, attempted: this.activationAttempted, folder: this.stateDir }; }
 
   // True once setup has completed on this computer: the services then start in seconds, without downloads.
   async prepared() {
@@ -535,6 +538,7 @@ export class MacRuntimeSwitcher {
       await this.setLaunchAgentEnabled(this.appServerLabel, false);
     }
     let legacyRetired = false, combined;
+    app.activationAttempted = true;
     try {
       if (retireLegacy) {
         // Cleanup must never keep the working backend from starting; it is simply tried again next time.

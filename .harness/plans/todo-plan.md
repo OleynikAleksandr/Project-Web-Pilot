@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1420,
+  "plan_revision": 1422,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "recovery-on-demand-research-20261006",
@@ -1205,13 +1205,22 @@
         "При отозванном ключе ID и ключ туннеля можно ввести заново из мастера."
       ],
       "expected_commit_message": "fix: свободные порты, чужой PID и повторная настройка туннеля",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "recovery-on-demand-research-20261006",
         "task_id": "T016",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "scripts/check-mac-screen-capture.mjs",
+        "src/mac-runtime-switch.mjs",
+        "src/startup-platform.mjs",
+        "tests/codex-app-server-mcp.test.mjs",
+        "tests/mac-runtime-switch.test.mjs",
+        "tests/startup-platform.test.mjs",
+        "tools/codex-app-server-mcp/control.py"
+      ]
     },
     {
       "id": "T017",
@@ -1408,7 +1417,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: recovery-on-demand-research-20261006
 Current Task: нет
-Revision: 1420
+Revision: 1422
 
 ## Цель
 
@@ -1506,8 +1515,8 @@ Revision: 1420
   - Git Commit: [DONE] fix: проверки выпуска без ложных отказов
   - Reference: recovery-on-demand-research-20261006 / T015 / implementation
   - Файлы: scripts/check-installed-release.mjs, scripts/release-all.mjs, tests/release-all.test.mjs, scripts/check-mac-signature.mjs, docs/planning/correction-round-0.6.99.md
-- [TODO] T016: Порты служб, чужой PID, повторный ввод туннеля — Ожидает
-  - Git Commit: [PENDING] fix: свободные порты, чужой PID и повторная настройка туннеля
+- [DONE] T016: Порты служб, чужой PID, повторный ввод туннеля — Завершено
+  - Git Commit: [DONE] fix: свободные порты, чужой PID и повторная настройка туннеля
   - Reference: recovery-on-demand-research-20261006 / T016 / implementation
   - Файлы: tools/codex-app-server-mcp/control.py, src/mac-runtime-switch.mjs, src/main.mjs, scripts/check-mac-screen-capture.mjs, tests/codex-app-server-mcp.test.mjs, tests/mac-runtime-switch.test.mjs, src/startup-platform.mjs, tests/startup-platform.test.mjs, docs/planning/correction-round-0.6.99.md
 - [TODO] T017: Мелкие исправления интерфейса и журналов — Ожидает

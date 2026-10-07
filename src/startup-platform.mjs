@@ -21,7 +21,11 @@ export function startupPlatformOptions({ platform, setup, bootstrap, components 
     installGit: windows ? async () => { throw new Error('Windows components are prepared automatically'); } : installGit,
     inspectRuntime: async () => {
       const current = await bootstrap.inspect();
-      return current.installed ? control('status') : null;
+      if (current.installed) return control('status');
+      // Activation fails when a revoked key or a deleted tunnel keeps tunnel-client from becoming ready,
+      // yet the local MCP is running: the wizard must still reach the tunnel step.
+      if (current.attempted) return control('status').catch(() => null);
+      return null;
     },
     prepareRuntime: async () => {
       // Both systems install and start the services here, after Git. macOS: the system Python they need
@@ -33,7 +37,12 @@ export function startupPlatformOptions({ platform, setup, bootstrap, components 
       return status;
     },
     configureTunnel: async credentials => {
-      await ensureRuntime();
+      try { await ensureRuntime(); }
+      catch (error) {
+        // A failing tunnel must not block entering a new one while the MCP itself is ready.
+        const status = await control('status').catch(() => null);
+        if (!status?.mcp?.ready) throw error;
+      }
       return bootstrap.configureTunnel(credentials);
     },
   };

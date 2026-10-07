@@ -302,7 +302,7 @@ test('the first-run wizard sees the executor as installed only after activation 
   const state = path.join(root, 'state');
   const runtime = new CodexAppServerRuntime({ sourceDir: path.join(root, 'resource'), stateDir: state,
     sessionPlans: { loadContext() {} }, execute: async () => { throw new Error('not used'); } });
-  assert.deepEqual(await runtime.inspect(), { installed: false, folder: state });
+  assert.deepEqual(await runtime.inspect(), { installed: false, attempted: false, folder: state });
   assert.equal(await runtime.prepared(), false);
   await fs.mkdir(path.join(state, 'runtime', 'venv', 'bin'), { recursive: true });
   await fs.writeFile(path.join(state, 'runtime', 'venv', 'bin', 'python'), '');
@@ -310,6 +310,8 @@ test('the first-run wizard sees the executor as installed only after activation 
   await fs.writeFile(path.join(state, 'runtime', 'tunnel-client'), '');
   assert.equal(await runtime.prepared(), true);
   assert.equal((await runtime.inspect()).installed, false, 'installed files alone do not mean running services');
+  runtime.activationAttempted = true;
+  assert.equal((await runtime.inspect()).attempted, true, 'a failed activation still lets the wizard read the status');
   runtime.activated = true;
   assert.equal((await runtime.inspect()).installed, true);
 });

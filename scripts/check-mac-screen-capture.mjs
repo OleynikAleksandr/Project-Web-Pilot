@@ -11,6 +11,13 @@ const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const APP = 'Project Web Pilot.app';
 const ID = 'com.oleynik.ProjectWebPilot';
 const STATE = path.join(os.homedir(), 'Library/Application Support/WebPilotCodexExecutor');
+// The MCP may run on another port when the preferred one was taken: its actual address is in the selector.
+async function mcpPort() {
+  const selector = JSON.parse(await fs.readFile(path.join(STATE, 'private/selector.json'), 'utf8'));
+  const url = new URL(selector.mcp_url);
+  assert.equal(url.hostname, '127.0.0.1', 'MCP must listen on loopback');
+  return Number(url.port);
+}
 const env = { ...process.env, LC_ALL: 'C', LANG: 'C' };
 const run = (command, args, options = {}) => execFileSync(command, args, {
   encoding: 'utf8', timeout: 30000, maxBuffer: 8 * 1024 * 1024, env, ...options,
@@ -32,7 +39,8 @@ export async function screenCapturePreflight({ root = ROOT } = {}) {
   assert.ok(mcpProcess, 'Действующий MCP не найден.');
   assert.equal(run('/bin/ps', ['-p', String(record.pid), '-o', 'lstart=', '-o', 'command=']),
     record.identity, 'MCP process identity изменилась.');
-  const listeners = run('/usr/sbin/lsof', ['-nP', '-iTCP:17852', '-sTCP:LISTEN', '-t']).split(/\s+/).map(Number);
+  const port = await mcpPort();
+  const listeners = run('/usr/sbin/lsof', ['-nP', '-iTCP:' + port, '-sTCP:LISTEN', '-t']).split(/\s+/).map(Number);
   assert.deepEqual([...new Set(listeners)], [record.pid], 'Порт MCP должен принадлежать проверенному процессу.');
   for (const process of [appProcess, mcpProcess]) {
     assert.ok(Number.isFinite(process.startedAt), 'Не удалось определить время запуска.');
@@ -58,7 +66,7 @@ from mcp import ClientSession
 from mcp.client.streamable_http import streamablehttp_client
 
 async def main():
-    async with streamablehttp_client("http://127.0.0.1:17852/mcp", timeout=10, sse_read_timeout=40) as (read, write, _):
+    async with streamablehttp_client(sys.argv[2], timeout=10, sse_read_timeout=40) as (read, write, _):
         async with ClientSession(read, write, read_timeout_seconds=timedelta(seconds=40)) as session:
             initialized = await session.initialize()
             if initialized.serverInfo.name != "Codex App Server Local Mac":
@@ -101,7 +109,7 @@ export async function checkMacScreenCapture({ root = ROOT } = {}) {
   const startedAt = new Date();
   try {
     const capture = JSON.parse(run(path.join(STATE, 'runtime/venv/bin/python'),
-      ['-B', '-c', PYTHON, path.join(directory, 'screen.png')], { timeout: 55000 }));
+      ['-B', '-c', PYTHON, path.join(directory, 'screen.png'), `http://127.0.0.1:${await mcpPort()}/mcp`], { timeout: 55000 }));
     assert.equal(await sha256File(capture.png), capture.sha256);
     assert.equal((await fs.stat(capture.png)).size, capture.bytes);
     const after = await screenCapturePreflight({ root });

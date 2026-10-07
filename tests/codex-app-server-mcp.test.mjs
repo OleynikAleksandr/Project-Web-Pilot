@@ -1716,11 +1716,16 @@ record = json.loads((control.STATE / "mcp.pid.json").read_text())
 out["launch"] = {"pid": pid, "call": popen_calls[0], "record": record, "managed": control.managed_process("mcp")}
 table[4321]["created"] = 1.0
 out["reused_pid"] = control.managed_process("mcp")
+out["reused_record"] = (control.STATE / "mcp.pid.json").exists()
 out["stop_foreign"] = attempt(lambda: control.stop_one("mcp"))
+out["foreign_signals"] = events[:]
 table[4321]["created"] = 1700000000.25
+control.private_write(control.STATE / "mcp.pid.json", json.dumps(record))
 table[4321]["denied"] = True
 out["denied"] = control.managed_process("mcp")
+out["denied_record"] = (control.STATE / "mcp.pid.json").exists()
 table[4321]["denied"] = False
+control.private_write(control.STATE / "mcp.pid.json", json.dumps(record))
 out["stopped"] = control.stop_one("mcp")
 out["stop_events"] = events[:]
 out["after_stop"] = {"table": sorted(table), "record": (control.STATE / "mcp.pid.json").exists(), "managed": control.managed_process("mcp")}
@@ -1876,9 +1881,12 @@ print(json.dumps(out, ensure_ascii=False))
     'no console window, own process group, no POSIX session; the source folder stays replaceable');
   assert.deepEqual(out.launch.record, { pid: 4321, identity: { created: 1700000000.25, exe: 'C:/state/runtime/venv/Scripts/python.exe', cmdline: ['python.exe', '-B', 'server.py'] } });
   assert.deepEqual(out.launch.managed, { running: true, owned: true, pid: 4321 });
-  assert.deepEqual(out.reused_pid, { running: true, owned: false, pid: 4321 }, 'the same PID with another start time is a foreign process');
-  assert.match(out.stop_foreign, /Refusing to stop mcp: PID is not owned by this runtime/);
-  assert.deepEqual(out.denied, { running: true, owned: false, pid: 4321 });
+  assert.deepEqual(out.reused_pid, { running: false, owned: false, pid: 4321 }, 'the same PID with another start time belongs to another program: the stale record is dropped');
+  assert.equal(out.reused_record, false);
+  assert.equal(out.stop_foreign, null, 'without a record there is nothing of ours to stop');
+  assert.deepEqual(out.foreign_signals, [], 'the other program never receives a signal');
+  assert.deepEqual(out.denied, { running: false, owned: false, pid: 4321 }, 'a process that cannot be inspected is not ours');
+  assert.equal(out.denied_record, false);
   assert.deepEqual(out.stopped, { service: 'mcp', stopped: true });
   assert.deepEqual(out.stop_events, [['terminate', 4321], ['terminate', 4323], ['terminate', 4322], ['kill', 4323]], 'the whole tree, then force for what survived');
   assert.deepEqual(out.after_stop, { table: [], record: false, managed: { running: false, owned: false, pid: null } });
@@ -1966,4 +1974,56 @@ print(json.dumps(out, ensure_ascii=False))
   assert.equal(refused.code, 1);
   assert.match(JSON.parse(refused.stdout).error, /Start at login is set up by Project Web Pilot itself on this system/);
   assert.equal((await (await import('node:fs/promises')).readFile(path.join(clientDir, 'requirements.txt'), 'utf8')).includes('psutil==7.2.2 ; sys_platform == "win32"'), true);
+});
+
+test('busy ports move the services, a stale PID record of another program is dropped, the tunnel can be entered again', { timeout: 30_000 }, async () => {
+  const root = await mkdtemp(path.join(tmpdir(), 'web-pilot-codex-ports-'));
+  const state = path.join(root, 'state');
+  const control = path.join(repoRoot, 'tools', 'codex-app-server-mcp', 'control.py');
+  const env = controlEnvironment(root);
+  const probe = path.join(root, 'probe.py');
+  await writeFile(probe, `import importlib.util, json, os, socket, sys
+spec=importlib.util.spec_from_file_location("ctl", sys.argv[1])
+ctl=importlib.util.module_from_spec(spec); spec.loader.exec_module(ctl)
+out={}
+holder=socket.socket(); holder.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1); holder.bind(("127.0.0.1", ctl.PREFERRED_MCP_PORT)); holder.listen()
+out["chosen"]=ctl._choose_port("mcp", ctl.PREFERRED_MCP_PORT, ctl.tunnel_port())
+out["url"]=ctl.own_mcp_url()
+out["saved"]=json.loads(ctl.PORTS_FILE.read_text())
+holder.close()
+out["kept"]=ctl.mcp_port()
+ctl.STATE.mkdir(parents=True, exist_ok=True)
+(ctl.STATE / "mcp.pid.json").write_text(json.dumps({"pid": os.getpid(), "identity": "another program"}))
+out["stale"]=ctl.managed_process("mcp"); out["self"]=os.getpid()
+out["record_left"]=(ctl.STATE / "mcp.pid.json").exists()
+print(json.dumps(out))
+`);
+  const services = [];
+  try {
+    const result = await runPython(probe, [control], env);
+    assert.equal(result.code, 0, result.stderr || result.stdout);
+    const out = JSON.parse(result.stdout.trim());
+    assert.notEqual(out.chosen, 27852, 'a busy preferred port is not reused');
+    assert.notEqual(out.chosen, 27853, 'the tunnel port is avoided');
+    assert.equal(out.url, `http://127.0.0.1:${out.chosen}/mcp`);
+    assert.deepEqual(out.saved, { mcp: out.chosen });
+    assert.equal(out.kept, out.chosen, 'the chosen port is kept for the next start');
+    assert.deepEqual(out.stale, { running: false, owned: false, pid: out.self });
+    assert.equal(out.record_left, false);
+
+    // A tunnel that runs without becoming ready (revoked key) is replaced when it is entered again.
+    const first = await configureTunnel(control, env);
+    assert.equal(first.code, 0, first.stderr || first.stdout);
+    const tunnel = await fakeService(state, 'tunnel'); services.push(tunnel.child);
+    const again = await configureTunnel(control, env, 'abcdefghijklmnop0123456789');
+    assert.equal(again.code, 0, again.stderr || again.stdout);
+    assert.equal(await Promise.race([tunnel.exited, new Promise(resolve => setTimeout(() => resolve(false), 5000))]), true);
+    assert.equal(existsSync(path.join(state, 'tunnel.pid.json')), false);
+    const { readFile } = await import('node:fs/promises');
+    assert.equal((await readFile(path.join(state, 'private', 'tunnel-key'), 'utf8')).trim(), 'abcdefghijklmnop0123456789');
+    assert.match(await readFile(path.join(state, 'private', 'tunnel-profile', 'codex-executor.yaml'), 'utf8'), new RegExp(`127\\.0\\.0\\.1:${out.chosen}/mcp`));
+  } finally {
+    for (const child of services) { try { process.kill(-child.pid, 'SIGKILL'); } catch {} }
+    await rm(root, { recursive: true, force: true });
+  }
 });

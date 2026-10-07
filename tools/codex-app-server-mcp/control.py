@@ -60,8 +60,12 @@ PROFILE = PROFILE_DIR / f"{PROFILE_NAME}.yaml"
 KEY_FILE = PRIVATE / ("tunnel-key.dpapi" if IS_WINDOWS else "tunnel-key")
 SELECTOR_FILE = PRIVATE / "selector.json"
 MCP_SERVER_NAME = "Codex App Server Local Windows" if IS_WINDOWS else "Codex App Server Local Mac"
-MCP_PORT = int(os.environ.get("WEB_PILOT_CODEX_EXECUTOR_PORT", "17852"))
-TUNNEL_PORT = int(os.environ.get("WEB_PILOT_CODEX_EXECUTOR_TUNNEL_PORT", "17853"))
+# Preferred loopback ports. When another program holds one, a free port is chosen and kept in
+# PORTS_FILE, so the selector, the tunnel profile and the VPS forward follow the actual address.
+PREFERRED_MCP_PORT = int(os.environ.get("WEB_PILOT_CODEX_EXECUTOR_PORT", "17852"))
+PREFERRED_TUNNEL_PORT = int(os.environ.get("WEB_PILOT_CODEX_EXECUTOR_TUNNEL_PORT", "17853"))
+PORTS_FILE = STATE / "ports.json"
+PORT_SEARCH_SPAN = 48
 TUNNEL_KEY_ENV = "WEB_PILOT_CODEX_EXECUTOR_TUNNEL_API_KEY"
 # How ChatGPT reaches the selected MCP: OpenAI Secure MCP Tunnel (tunnel-client)
 # or the user's own server, whose SSH tunnel Project Web Pilot maintains itself.
@@ -235,7 +239,7 @@ def tool_locations() -> dict[str, Path]:
 def environment() -> dict[str, str]:
     env = os.environ.copy()
     env["WEB_PILOT_CODEX_EXECUTOR_STATE_DIR"] = str(STATE)
-    env["WEB_PILOT_CODEX_EXECUTOR_PORT"] = str(MCP_PORT)
+    env["WEB_PILOT_CODEX_EXECUTOR_PORT"] = str(mcp_port())
     env["PYTHONDONTWRITEBYTECODE"] = "1"
     if IS_WINDOWS:
         env["PYTHONUTF8"] = "1"
@@ -414,8 +418,8 @@ def setup() -> dict[str, object]:
         "python": str(PYTHON),
         "tunnel_client": str(TUNNEL_CLIENT),
         "tunnel_client_version": version,
-        "mcp_url": f"http://127.0.0.1:{MCP_PORT}/mcp",
-        "tunnel_health_url": f"http://127.0.0.1:{TUNNEL_PORT}/readyz",
+        "mcp_url": own_mcp_url(),
+        "tunnel_health_url": f"http://127.0.0.1:{tunnel_port()}/readyz",
         "state_directory": str(STATE),
         "codex": codex,
     }
@@ -426,8 +430,13 @@ def configure_tunnel(tunnel_id: str, key: str) -> dict[str, object]:
         raise ValueError("A valid OpenAI tunnel_id is required")
     if len(key) < 16 or any(character.isspace() for character in key):
         raise ValueError("Tunnel runtime key is invalid")
-    if managed_process("tunnel")["running"]:
-        raise RuntimeError("Stop the tunnel before changing its configuration")
+    # A revoked key or a deleted tunnel leaves tunnel-client running without being ready:
+    # entering the tunnel again in the wizard replaces it, so the old process is stopped first.
+    tunnel = managed_process("tunnel")
+    if tunnel["running"] and not tunnel["owned"]:
+        raise RuntimeError("Recorded tunnel PID belongs to another process")
+    if tunnel["owned"]:
+        stop_one("tunnel")
     profile = {
         "config_version": 1,
         "control_plane": {
@@ -435,12 +444,12 @@ def configure_tunnel(tunnel_id: str, key: str) -> dict[str, object]:
             "tunnel_id": tunnel_id,
             "api_key": f"env:{TUNNEL_KEY_ENV}",
         },
-        "health": {"listen_addr": f"127.0.0.1:{TUNNEL_PORT}"},
+        "health": {"listen_addr": f"127.0.0.1:{tunnel_port()}"},
         "admin_ui": {"open_browser": False},
         "log": {"level": "info", "format": "json"},
         "mcp": {
             "server_urls": [
-                {"channel": "main", "url": f"http://127.0.0.1:{MCP_PORT}/mcp"}
+                {"channel": "main", "url": own_mcp_url()}
             ]
         },
     }
@@ -505,8 +514,52 @@ def set_tunnel_target(mcp_url: str) -> str:
     return target
 
 
+def _saved_ports() -> dict[str, int]:
+    try:
+        data = json.loads(PORTS_FILE.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    if not isinstance(data, dict):
+        return {}
+    return {name: port for name, port in data.items()
+            if name in ("mcp", "tunnel") and isinstance(port, int) and 1024 <= port <= 65535}
+
+
+def mcp_port() -> int:
+    return _saved_ports().get("mcp", PREFERRED_MCP_PORT)
+
+
+def tunnel_port() -> int:
+    return _saved_ports().get("tunnel", PREFERRED_TUNNEL_PORT)
+
+
+def _save_port(name: str, port: int) -> None:
+    ports = _saved_ports()
+    ports[name] = port
+    STATE.mkdir(parents=True, exist_ok=True, mode=0o700)
+    private_write(PORTS_FILE, json.dumps(ports, indent=2, sort_keys=True) + "\n")
+
+
+def _bindable(port: int) -> bool:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+        try:
+            probe.bind(("127.0.0.1", port))
+            return True
+        except OSError:
+            return False
+
+
+def _choose_port(name: str, preferred: int, avoid: int) -> int:
+    """A port held by another program is never stopped: the service moves to a free one instead."""
+    for candidate in [preferred, *range(preferred + 2, preferred + 2 + PORT_SEARCH_SPAN)]:
+        if candidate != avoid and 1024 <= candidate <= 65535 and not port_open(candidate) and _bindable(candidate):
+            _save_port(name, candidate)
+            return candidate
+    raise RuntimeError(f"No free local port for {name} near {preferred}")
+
+
 def own_mcp_url() -> str:
-    return f"http://127.0.0.1:{MCP_PORT}/mcp"
+    return f"http://127.0.0.1:{mcp_port()}/mcp"
 
 
 def write_selector(mcp_url: str, channel: str) -> None:
@@ -620,10 +673,12 @@ def managed_process(name: str) -> dict[str, object]:
     except (OSError, json.JSONDecodeError):
         return {"running": False, "owned": False, "pid": None}
     actual = pid_identity(data.get("pid"))
-    owned = bool(actual and actual == data.get("identity"))
-    if actual is None:
+    if actual is None or actual != data.get("identity"):
+        # The process is gone, or its number now belongs to another program (after a reboot):
+        # the record is stale. It is dropped without signalling anyone; callers hold operation_lock.
         record.unlink(missing_ok=True)
-    return {"running": bool(actual), "owned": owned, "pid": data.get("pid")}
+        return {"running": False, "owned": False, "pid": data.get("pid")}
+    return {"running": True, "owned": True, "pid": data.get("pid")}
 
 
 def launch(name: str, argv: list[str], env: dict[str, str]) -> int:
@@ -663,7 +718,7 @@ def port_open(port: int) -> bool:
 
 
 def mcp_ready() -> bool:
-    if not port_open(MCP_PORT) or not PYTHON.is_file():
+    if not port_open(mcp_port()) or not PYTHON.is_file():
         return False
     probe = """import asyncio
 from mcp import ClientSession
@@ -674,7 +729,7 @@ async def main():
             result = await session.initialize()
             return result.serverInfo.name == %r
 raise SystemExit(0 if asyncio.run(main()) else 3)
-""" % (f"http://127.0.0.1:{MCP_PORT}/mcp", MCP_SERVER_NAME)
+""" % (own_mcp_url(), MCP_SERVER_NAME)
     try:
         result = subprocess.run(
             [str(PYTHON), "-B", "-c", probe],
@@ -694,7 +749,7 @@ def tunnel_ready() -> bool:
     # Windows reads the system proxy from the registry: the loopback probe must bypass it.
     opener = urllib.request.build_opener(urllib.request.ProxyHandler({})) if IS_WINDOWS else urllib.request.build_opener()
     try:
-        with opener.open(f"http://127.0.0.1:{TUNNEL_PORT}/readyz", timeout=1) as response:
+        with opener.open(f"http://127.0.0.1:{tunnel_port()}/readyz", timeout=1) as response:
             return response.status == 200 and response.read().decode().strip().strip('"') == "ready"
     except Exception:
         return False
@@ -709,8 +764,8 @@ def status() -> dict[str, object]:
     return {
         "mcp": mcp,
         "tunnel": tunnel,
-        "mcp_url": f"http://127.0.0.1:{MCP_PORT}/mcp",
-        "tunnel_ui": f"http://127.0.0.1:{TUNNEL_PORT}/ui",
+        "mcp_url": own_mcp_url(),
+        "tunnel_ui": f"http://127.0.0.1:{tunnel_port()}/ui",
         "tunnel_target": tunnel_target(),
         "selector": selector_public(),
         "state_directory": str(STATE),
@@ -734,8 +789,11 @@ def start_tunnel() -> dict[str, object]:
     if tunnel["running"] and not tunnel["owned"]:
         raise RuntimeError("Recorded tunnel PID belongs to another process")
     if not tunnel["owned"]:
-        if port_open(TUNNEL_PORT):
-            raise RuntimeError(f"Port {TUNNEL_PORT} belongs to another process; it will not be stopped")
+        if port_open(tunnel_port()):
+            port = _choose_port("tunnel", PREFERRED_TUNNEL_PORT, mcp_port())
+            profile = json.loads(PROFILE.read_text(encoding="utf-8"))
+            profile.setdefault("health", {})["listen_addr"] = f"127.0.0.1:{port}"
+            private_write(PROFILE, json.dumps(profile, ensure_ascii=False, indent=2) + "\n")
         env[TUNNEL_KEY_ENV] = read_tunnel_key()
         launch(
             "tunnel",
@@ -761,14 +819,15 @@ def start(*, mcp_only: bool = False, tunnel_only: bool = False) -> dict[str, obj
     if mcp["running"] and not mcp["owned"]:
         raise RuntimeError("Recorded MCP PID belongs to another process")
     if not mcp["owned"]:
-        if port_open(MCP_PORT):
-            raise RuntimeError(f"Port {MCP_PORT} belongs to another process; it will not be stopped")
+        if port_open(mcp_port()):
+            _choose_port("mcp", PREFERRED_MCP_PORT, tunnel_port())
+            env = environment()
         require_codex()
         launch(
             "mcp",
             [
                 str(PYTHON), "-B", str(ROOT / "server.py"),
-                "--port", str(MCP_PORT), "--state-dir", str(STATE),
+                "--port", str(mcp_port()), "--state-dir", str(STATE),
             ],
             env,
         )
@@ -777,6 +836,11 @@ def start(*, mcp_only: bool = False, tunnel_only: bool = False) -> dict[str, obj
         if time.monotonic() > deadline or not managed_process("mcp")["owned"]:
             raise RuntimeError(f"MCP did not become ready; see {STATE / 'mcp.err.log'}")
         time.sleep(0.25)
+    # The MCP may have moved to another port: the selector and the tunnel follow its actual address.
+    if SELECTOR_FILE.is_file():
+        write_selector(own_mcp_url(), current_chatgpt_channel())
+    if PROFILE.is_file() and KEY_FILE.is_file() and tunnel_target() != own_mcp_url():
+        set_tunnel_target(own_mcp_url())
 
     if mcp_only or not (PROFILE.is_file() and KEY_FILE.is_file()) or current_chatgpt_channel() == "vps":
         result = status()
