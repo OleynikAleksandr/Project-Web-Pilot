@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1408,
+  "plan_revision": 1409,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "recovery-on-demand-research-20261006",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Рефакторинг Workflow Kit: компактные документы до 28000 байт, recovery по плану и Git, доставка частями-вложениями; парный выпуск перед согласованной миграцией проекта вне плана.",
   "acceptance_criteria": [
     "Принятые правила С1–С15 и П1–П13 реализованы по двум частям спецификации; документы актуализируются перед выпуском, история доступна в Git.",
@@ -80,7 +80,21 @@
       "packages/workflow-kit/scripts/check-project-recovery-fixture.mjs",
       "tests/electron-smoke.mjs",
       "tests/mcp-runtime.test.mjs",
-      "tests/workflow-kit-upgrade.test.mjs"
+      "tests/workflow-kit-upgrade.test.mjs",
+      "src/workspace-deletion.mjs",
+      "tests/workspace-deletion.test.mjs",
+      "scripts/release-all.mjs",
+      "tools/codex-app-server-mcp/control.py",
+      "scripts/check-mac-screen-capture.mjs",
+      "tests/codex-app-server-mcp.test.mjs",
+      "tests/mac-runtime-switch.test.mjs",
+      "src/workspace-session.mjs",
+      "src/auto-plan-state.mjs",
+      "src/ui/sidebar.mjs",
+      "src/chromium-diagnostics.mjs",
+      "tests/workspace-session.test.mjs",
+      "tests/sidebar.test.mjs",
+      "tests/chromium-diagnostics.test.mjs"
     ],
     "documentation_paths": [
       "docs/planning/workflow-kit-context-refactor.md",
@@ -109,7 +123,8 @@
       "README.md",
       "AGENTS.md",
       "docs/planning/context-as-text.md",
-      "packages/workflow-kit/README.md"
+      "packages/workflow-kit/README.md",
+      "docs/planning/correction-round-0.6.99.md"
     ]
   },
   "baseline_commit": "7bd5f4714fc3be0572dfa8a593804af3fab45d1f",
@@ -128,6 +143,11 @@
       },
       {
         "path": "docs/planning/workflow-kit-context-transition.md",
+        "required": true,
+        "revision": "WORKTREE"
+      },
+      {
+        "path": "docs/planning/correction-round-0.6.99.md",
         "required": true,
         "revision": "WORKTREE"
       }
@@ -987,6 +1007,344 @@
         "role": "implementation"
       },
       "actual_files": []
+    },
+    {
+      "id": "T012",
+      "title": "Kit 1.6.1: безопасная остановка, полнота recovery, предпроверки обновления",
+      "why": "Агенту не передаётся правило безопасной остановки; «Включено» содержит пустой AGENTS; install --update проверяет предусловия после записи файлов.",
+      "dependencies": [],
+      "functional_paths": [
+        "packages/workflow-kit/src/lib/recovery.mjs",
+        "packages/workflow-kit/src/lib/installer.mjs",
+        "packages/workflow-kit/src/lib/common.mjs",
+        "packages/workflow-kit/package.json",
+        "packages/workflow-kit/scripts/check-runtime-fixture.mjs",
+        "tests/workflow-kit-recovery.test.mjs",
+        "tests/workflow-kit-upgrade.test.mjs",
+        "package.json",
+        "package-lock.json"
+      ],
+      "documentation_paths": [
+        "docs/planning/correction-round-0.6.99.md",
+        "packages/workflow-kit/src/WORKFLOW.md",
+        "packages/workflow-kit/src/templates/PROTOTYPE.md"
+      ],
+      "verification_ids": [
+        "kit-check",
+        "unit-all"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Правило безопасной остановки — в Workflow Core один раз; ожидание запущенной долгой команды — в PROTOTYPE.",
+        "AGENTS.md в «Включено» только при непустой проектной части.",
+        "install --update отказывает по GIT_IDENTITY/FOREIGN_STAGED/незавершённой операции до записи runtime и manifest; upgradeFrom включает 1.6.0.",
+        "check-runtime-fixture проверяет фактический формат; версии Kit 1.6.1 и Web Pilot 0.6.99."
+      ],
+      "expected_commit_message": "fix: Kit 1.6.1 — безопасная остановка и предпроверки обновления",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "recovery-on-demand-research-20261006",
+        "task_id": "T012",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T013",
+      "title": "Короткие имена вложений и подсказка при ненайденном файле",
+      "why": "Модель искажает длинный UUID в пути /mnt/data.",
+      "dependencies": [
+        "T012"
+      ],
+      "functional_paths": [
+        "src/context-session.mjs",
+        "tests/context-session.test.mjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "docs/planning/correction-round-0.6.99.md"
+      ],
+      "verification_ids": [
+        "unit-all",
+        "electron-smoke"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Части называются context-NN-of-M.md; requestId остаётся в тексте сообщения.",
+        "В стартовом сообщении строка о списке /mnt/data и запрет подтверждения до прочтения всех частей; прежняя строка о чтении сохранена дословно."
+      ],
+      "expected_commit_message": "fix: короткие имена частей контекста",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "recovery-on-demand-research-20261006",
+        "task_id": "T013",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T014",
+      "title": "Доктор: версии Kit; удаление проекта: все копии хранилища",
+      "why": "Доктор отвергает поддерживаемые версии; удаление оставляет данные в .v3–.v5-backup.",
+      "dependencies": [
+        "T012"
+      ],
+      "functional_paths": [
+        "resources/project-doctor/core.mjs",
+        "tests/project-doctor.test.mjs",
+        "src/workspace-deletion.mjs",
+        "tests/workspace-deletion.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/planning/correction-round-0.6.99.md"
+      ],
+      "verification_ids": [
+        "unit-all"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Доктор принимает 1.0.0, upgradeFrom и текущую версию; неизвестная — DOCTOR_VERSION.",
+        "Удаление проекта чистит его записи во всех копиях .v1–.v5-backup."
+      ],
+      "expected_commit_message": "fix: версии Доктора и очистка копий хранилища",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "recovery-on-demand-research-20261006",
+        "task_id": "T014",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T015",
+      "title": "Проверки выпуска: identity, preflight, чистое дерево",
+      "why": "Ложный отказ после перезагрузки, ручной preflight, сборка грязного дерева.",
+      "dependencies": [
+        "T012"
+      ],
+      "functional_paths": [
+        "scripts/check-installed-release.mjs",
+        "scripts/release-all.mjs",
+        "tests/release-all.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/planning/correction-round-0.6.99.md"
+      ],
+      "verification_ids": [
+        "unit-all"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Identity корневого app — volume UUID + inode.",
+        "Preflight записывается скриптом.",
+        "release-all отказывает при незакоммиченных изменениях."
+      ],
+      "expected_commit_message": "fix: проверки выпуска без ложных отказов",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "recovery-on-demand-research-20261006",
+        "task_id": "T015",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T016",
+      "title": "Порты служб, чужой PID, повторный ввод туннеля",
+      "why": "Решения пользователя 1–2; тупик мастера при отозванном ключе.",
+      "dependencies": [
+        "T012"
+      ],
+      "functional_paths": [
+        "tools/codex-app-server-mcp/control.py",
+        "src/mac-runtime-switch.mjs",
+        "src/main.mjs",
+        "scripts/check-mac-screen-capture.mjs",
+        "tests/codex-app-server-mcp.test.mjs",
+        "tests/mac-runtime-switch.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/planning/correction-round-0.6.99.md"
+      ],
+      "verification_ids": [
+        "unit-all",
+        "executor-channel"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Занятый чужим процессом порт → свободный порт, сохранённый адрес используется MCP, tunnel-client, VPS и проверками; удалённый порт VPS 17842 прежний.",
+        "Запись PID с чужой identity удаляется под operation_lock без сигнала.",
+        "При отозванном ключе ID и ключ туннеля можно ввести заново из мастера."
+      ],
+      "expected_commit_message": "fix: свободные порты, чужой PID и повторная настройка туннеля",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "recovery-on-demand-research-20261006",
+        "task_id": "T016",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T017",
+      "title": "Мелкие исправления интерфейса и журналов",
+      "why": "Найдены при ревью 0.6.98.",
+      "dependencies": [
+        "T012"
+      ],
+      "functional_paths": [
+        "src/main.mjs",
+        "src/workspace-session.mjs",
+        "src/auto-plan-state.mjs",
+        "src/ui/sidebar.mjs",
+        "src/chromium-diagnostics.mjs",
+        "tests/workspace-session.test.mjs",
+        "tests/auto-plan.test.mjs",
+        "tests/sidebar.test.mjs",
+        "tests/chromium-diagnostics.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/planning/correction-round-0.6.99.md"
+      ],
+      "verification_ids": [
+        "unit-all",
+        "electron-smoke"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "clipboard.writeText ожидается; workspaces.json не перезаписывается без изменений; ledger AutoPlan ограничен.",
+        "Статус задач доступен экранному диктору; формы числа «Все N задач выполнены» верны.",
+        "context-truncation-state слушает /backend-api/conversation/<id>; diagnostics.jsonl ротируется."
+      ],
+      "expected_commit_message": "fix: мелкие исправления интерфейса и журналов",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "recovery-on-demand-research-20261006",
+        "task_id": "T017",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "DOCS-3",
+      "title": "Актуализация всех документов проекта",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "recovery-on-demand-research-20261006",
+        "task_id": "DOCS-3",
+        "role": "implementation",
+        "iteration": 3
+      },
+      "why": "Перед выпуском сверить README, OVERVIEW и действующие контракты модулей с результатом; обновить устаревшее.",
+      "dependencies": [
+        "T012",
+        "T013",
+        "T014",
+        "T015",
+        "T016",
+        "T017"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/architecture/OVERVIEW.md",
+        "docs/planning/correction-round-0.6.99.md",
+        "packages/workflow-kit/src/WORKFLOW.md",
+        "packages/workflow-kit/src/templates/PROTOTYPE.md"
+      ],
+      "acceptance_criteria": [
+        "Документы описывают текущий результат, существенное из выпущенных рабочих спецификаций перенесено в контракты модулей; история остаётся в Git."
+      ],
+      "verification_ids": [],
+      "expected_commit_message": "docs: актуализировать документацию проекта"
+    },
+    {
+      "id": "T018",
+      "title": "Собрать парный выпуск 0.6.99",
+      "why": "Собрать парный выпуск 0.6.99",
+      "dependencies": [
+        "T013",
+        "T014",
+        "T015",
+        "T016",
+        "T017",
+        "DOCS-3"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/planning/correction-round-0.6.99.md"
+      ],
+      "verification_ids": [
+        "paired-release"
+      ],
+      "verification_kind": "package",
+      "acceptance_criteria": [
+        "После DOCS одна сборка macOS/Windows; manifest и хеши подтверждены."
+      ],
+      "expected_commit_message": "release: собрать Web Pilot 0.6.99",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "recovery-on-demand-research-20261006",
+        "task_id": "T018",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T019",
+      "title": "Установить готовый выпуск 0.6.99",
+      "why": "Установить готовый выпуск 0.6.99",
+      "dependencies": [
+        "T018",
+        "DOCS-3"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/planning/correction-round-0.6.99.md"
+      ],
+      "verification_ids": [
+        "release-installed"
+      ],
+      "verification_kind": "installed",
+      "acceptance_criteria": [
+        "Обе macOS-копии соответствуют пакетам, identity и подпись сохранены; без пересборки."
+      ],
+      "expected_commit_message": "release: установить Web Pilot 0.6.99",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "recovery-on-demand-research-20261006",
+        "task_id": "T019",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T020",
+      "title": "Опубликовать выпуск 0.6.99",
+      "why": "Опубликовать выпуск 0.6.99",
+      "dependencies": [
+        "T019",
+        "DOCS-3"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/planning/correction-round-0.6.99.md"
+      ],
+      "verification_ids": [
+        "github-release"
+      ],
+      "verification_kind": "package",
+      "acceptance_criteria": [
+        "Source/tag/шесть assets совпадают с manifest; push; READY_FOR_ACCEPTANCE."
+      ],
+      "expected_commit_message": "release: опубликовать Web Pilot 0.6.99",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "recovery-on-demand-research-20261006",
+        "task_id": "T020",
+        "role": "implementation"
+      }
     }
   ],
   "blocked_reason": null,
@@ -1019,10 +1377,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: recovery-on-demand-research-20261006
 Current Task: нет
-Revision: 1408
+Revision: 1409
 
 ## Цель
 
@@ -1104,11 +1462,52 @@ Revision: 1408
   - Git Commit: [DONE] release: опубликовать Web Pilot 0.6.98
   - Reference: recovery-on-demand-research-20261006 / T011 / implementation
   - Файлы: docs/planning/workflow-kit-context-transition.md
+- [TODO] T012: Kit 1.6.1: безопасная остановка, полнота recovery, предпроверки обновления — Ожидает
+  - Git Commit: [PENDING] fix: Kit 1.6.1 — безопасная остановка и предпроверки обновления
+  - Reference: recovery-on-demand-research-20261006 / T012 / implementation
+  - Файлы: packages/workflow-kit/src/lib/recovery.mjs, packages/workflow-kit/src/lib/installer.mjs, packages/workflow-kit/src/lib/common.mjs, packages/workflow-kit/package.json, packages/workflow-kit/scripts/check-runtime-fixture.mjs, tests/workflow-kit-recovery.test.mjs, tests/workflow-kit-upgrade.test.mjs, package.json, package-lock.json, docs/planning/correction-round-0.6.99.md, packages/workflow-kit/src/WORKFLOW.md, packages/workflow-kit/src/templates/PROTOTYPE.md
+- [TODO] T013: Короткие имена вложений и подсказка при ненайденном файле — Ожидает
+  - Git Commit: [PENDING] fix: короткие имена частей контекста
+  - Reference: recovery-on-demand-research-20261006 / T013 / implementation
+  - Файлы: src/context-session.mjs, tests/context-session.test.mjs, tests/electron-smoke.mjs, docs/planning/correction-round-0.6.99.md
+- [TODO] T014: Доктор: версии Kit; удаление проекта: все копии хранилища — Ожидает
+  - Git Commit: [PENDING] fix: версии Доктора и очистка копий хранилища
+  - Reference: recovery-on-demand-research-20261006 / T014 / implementation
+  - Файлы: resources/project-doctor/core.mjs, tests/project-doctor.test.mjs, src/workspace-deletion.mjs, tests/workspace-deletion.test.mjs, docs/planning/correction-round-0.6.99.md
+- [TODO] T015: Проверки выпуска: identity, preflight, чистое дерево — Ожидает
+  - Git Commit: [PENDING] fix: проверки выпуска без ложных отказов
+  - Reference: recovery-on-demand-research-20261006 / T015 / implementation
+  - Файлы: scripts/check-installed-release.mjs, scripts/release-all.mjs, tests/release-all.test.mjs, docs/planning/correction-round-0.6.99.md
+- [TODO] T016: Порты служб, чужой PID, повторный ввод туннеля — Ожидает
+  - Git Commit: [PENDING] fix: свободные порты, чужой PID и повторная настройка туннеля
+  - Reference: recovery-on-demand-research-20261006 / T016 / implementation
+  - Файлы: tools/codex-app-server-mcp/control.py, src/mac-runtime-switch.mjs, src/main.mjs, scripts/check-mac-screen-capture.mjs, tests/codex-app-server-mcp.test.mjs, tests/mac-runtime-switch.test.mjs, docs/planning/correction-round-0.6.99.md
+- [TODO] T017: Мелкие исправления интерфейса и журналов — Ожидает
+  - Git Commit: [PENDING] fix: мелкие исправления интерфейса и журналов
+  - Reference: recovery-on-demand-research-20261006 / T017 / implementation
+  - Файлы: src/main.mjs, src/workspace-session.mjs, src/auto-plan-state.mjs, src/ui/sidebar.mjs, src/chromium-diagnostics.mjs, tests/workspace-session.test.mjs, tests/auto-plan.test.mjs, tests/sidebar.test.mjs, tests/chromium-diagnostics.test.mjs, docs/planning/correction-round-0.6.99.md
+- [TODO] DOCS-3: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: актуализировать документацию проекта
+  - Reference: recovery-on-demand-research-20261006 / DOCS-3 / implementation
+  - Файлы: docs/architecture/OVERVIEW.md, docs/planning/correction-round-0.6.99.md, packages/workflow-kit/src/WORKFLOW.md, packages/workflow-kit/src/templates/PROTOTYPE.md
+- [TODO] T018: Собрать парный выпуск 0.6.99 — Ожидает
+  - Git Commit: [PENDING] release: собрать Web Pilot 0.6.99
+  - Reference: recovery-on-demand-research-20261006 / T018 / implementation
+  - Файлы: docs/planning/correction-round-0.6.99.md
+- [TODO] T019: Установить готовый выпуск 0.6.99 — Ожидает
+  - Git Commit: [PENDING] release: установить Web Pilot 0.6.99
+  - Reference: recovery-on-demand-research-20261006 / T019 / implementation
+  - Файлы: docs/planning/correction-round-0.6.99.md
+- [TODO] T020: Опубликовать выпуск 0.6.99 — Ожидает
+  - Git Commit: [PENDING] release: опубликовать Web Pilot 0.6.99
+  - Reference: recovery-on-demand-research-20261006 / T020 / implementation
+  - Файлы: docs/planning/correction-round-0.6.99.md
 
 ## Context Pack For This Cycle
 
 - docs/architecture/OVERVIEW.md
 - docs/planning/workflow-kit-context-refactor.md
 - docs/planning/workflow-kit-context-transition.md
+- docs/planning/correction-round-0.6.99.md
 
 Служебные состояния меняются только командами workflow. Приёмка не архивирует scope.
