@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1432,
+  "plan_revision": 1434,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "recovery-on-demand-research-20261006",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Рефакторинг Workflow Kit: компактные документы до 28000 байт, recovery по плану и Git, доставка частями-вложениями; парный выпуск перед согласованной миграцией проекта вне плана.",
   "acceptance_criteria": [
     "Принятые правила С1–С15 и П1–П13 реализованы по двум частям спецификации; документы актуализируются перед выпуском, история доступна в Git.",
@@ -1439,13 +1439,14 @@
         "Source/tag/шесть assets совпадают с manifest; push; READY_FOR_ACCEPTANCE."
       ],
       "expected_commit_message": "release: опубликовать Web Pilot 0.6.99",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "recovery-on-demand-research-20261006",
         "task_id": "T020",
         "role": "implementation"
-      }
+      },
+      "actual_files": []
     }
   ],
   "blocked_reason": null,
@@ -1478,10 +1479,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: recovery-on-demand-research-20261006
 Current Task: нет
-Revision: 1432
+Revision: 1434
 
 ## Цель
 
@@ -1599,8 +1600,8 @@ Revision: 1432
   - Git Commit: [DONE] release: установить Web Pilot 0.6.99
   - Reference: recovery-on-demand-research-20261006 / T019 / implementation
   - Файлы: docs/planning/correction-round-0.6.99.md
-- [TODO] T020: Опубликовать выпуск 0.6.99 — Ожидает
-  - Git Commit: [PENDING] release: опубликовать Web Pilot 0.6.99
+- [DONE] T020: Опубликовать выпуск 0.6.99 — Завершено
+  - Git Commit: [DONE] release: опубликовать Web Pilot 0.6.99
   - Reference: recovery-on-demand-research-20261006 / T020 / implementation
   - Файлы: docs/planning/correction-round-0.6.99.md
 
