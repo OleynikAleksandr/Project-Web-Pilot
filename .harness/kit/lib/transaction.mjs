@@ -3,8 +3,8 @@ import {selectTaskFiles} from './task-files.mjs';
 import path from 'node:path';
 import { PLAN, planPath, check, hash, id, json, atomic, withLock, safePath } from './common.mjs';
 import { readPlan, renderPlan, parsePlan, isDocumentationFinalizationTask } from './plan.mjs';
-import { validate, journal, taskChecks } from './validate.mjs';
-import { git, head, paths, localPath, gitPath, allChanges, ensureIdleGit, identityReady, snapshot } from './git.mjs';
+import { validate, journal, taskChecks, retryCommand } from './validate.mjs';
+import { git, head, paths, localPath, gitPath, allChanges, ensureIdleGit, identityReady, snapshot, documentText } from './git.mjs';
 
 export const saveJournal = (root, data) => atomic(localPath(root, 'transaction.json'), json(data));
 export const messageFor = t => t.message + '\n\nWorkflow-Scope: ' + (t.scope_id ?? 'NONE') + '\nWorkflow-Task: ' + (t.task_id ?? t.id) + '\nWorkflow-Role: ' + t.role + (t.role === 'implementation' ? '\nWorkflow-Iteration: ' + (t.task?.commit_ref?.iteration ?? 1) : '') + '\nWorkflow-Transaction: ' + t.id;
@@ -14,10 +14,11 @@ export function checkServicePaths(role, files, PLAN = ' .harness/plans/todo-plan
     'scope-plan': p => p === PLAN || p.startsWith('docs/') && /\.(md|markdown)$/.test(p),
     'plan-adjustment': p => p === PLAN || p === '.harness/workflow.json' || p.startsWith('docs/') && /\.(md|markdown)$/.test(p),
     repair: p => p === PLAN, planPath,
-    'plan-carryover': p => p === PLAN || p.startsWith('.harness/plans/archive/') && p.endsWith('.md'),
-    archive: p => p === PLAN || p.startsWith('.harness/plans/archive/') && p.endsWith('.md'),
-    bootstrap: p => p.startsWith('.harness/') || p.startsWith('docs/') || ['AGENTS.md', 'AGENTS.override.md', '.gitignore', '.gitattributes', '.codex/hooks.json', 'scripts/workflow', 'scripts/workflow.mjs', 'scripts/workflow.cmd'].includes(p) || p.startsWith('.husky/'),
-    'kit-update': p => p === PLAN || p.startsWith('.harness/kit/') || p.startsWith('.harness/plans/by-id/') || p.startsWith('.harness/plans/by-session/') || p.startsWith('.harness/plans/archive/legacy-session-plans/') || ['.harness/kit-manifest.json', '.harness/plans/todo-plan.template.md', 'scripts/workflow', 'scripts/workflow.mjs', 'scripts/workflow.cmd', 'AGENTS.md', 'AGENTS.override.md', 'docs/DOCUMENTATION_INDEX.md', 'docs/MODULES.md', 'docs/architecture/OVERVIEW.md'].includes(p),
+    'plan-carryover': p => p === PLAN,
+    archive: p => p === PLAN,
+    documentation: p => p === PLAN || !p.startsWith('.harness/') && p.endsWith('.md'),
+    bootstrap: p => p.startsWith('.harness/') || p.startsWith('docs/') || ['README.md','AGENTS.md', 'AGENTS.override.md', '.gitignore', '.gitattributes', '.codex/hooks.json', 'scripts/workflow', 'scripts/workflow.mjs', 'scripts/workflow.cmd'].includes(p) || p.startsWith('.husky/'),
+    'kit-update': p => p === PLAN || p.startsWith('.harness/kit/') || p.startsWith('.harness/plans/by-id/') || p.startsWith('.harness/plans/by-session/') || p.startsWith('.harness/plans/archive/') || ['.harness/kit-manifest.json', '.harness/plans/todo-plan.template.md', 'scripts/workflow', 'scripts/workflow.mjs', 'scripts/workflow.cmd', 'README.md','AGENTS.md', 'AGENTS.override.md', 'docs/architecture/OVERVIEW.md'].includes(p),
   };
   check(patterns[role], 'SERVICE_ROLE', 'Недопустимая служебная роль.');
   check(files.every(patterns[role]), 'SERVICE_SCOPE', 'Служебный коммит содержит недопустимые пути.', { files, role });
@@ -69,6 +70,19 @@ export function commitCandidate(root, { plan, role, task = null, selected, messa
   if (role !== 'implementation') checkServicePaths(role, files, PLAN);
   const staged = paths(root, 'staged');
   check(staged.every(p => files.includes(p)), 'FOREIGN_STAGED', 'В index есть посторонние файлы. Они не будут включены и не будут сняты со staging.', { paths: staged.filter(p => !files.includes(p)) });
+  // Preflight every deleted required source before writing the journal, plan or index.
+  // Use a clone so even the caller's plan remains intact on failure.
+  plan = structuredClone(plan);
+  const documents = [plan.context_pack, ...plan.tasks.map(item => item.context_pack)].flatMap(pack => pack?.documents ?? []);
+  const missing = documents.filter(doc => doc.required && (doc.revision ?? 'WORKTREE') === 'WORKTREE' && !fs.existsSync(safePath(root,doc.path)));
+  for (const doc of missing) {
+    check(files.includes(doc.path), 'MISSING_FILE', 'Отсутствует required WORKTREE-документ вне выбранной операции: ' + doc.path);
+    documentText(root, {...doc, revision:beforeHead});
+  }
+  const deleted = new Set(missing.map(doc => doc.path));
+  const pin = documents.filter(doc => (doc.revision ?? 'WORKTREE') === 'WORKTREE' && deleted.has(doc.path));
+  for (const doc of pin) doc.revision = beforeHead;
+  if (task) task = {...task, context_pack:plan.tasks.find(item => item.id === task.id)?.context_pack};
   const candidateText = renderPlan(plan);
   if (!t) {
     check(head(root) === beforeHead, 'HEAD_CHANGED', 'HEAD изменился перед подготовкой коммита.');
@@ -86,7 +100,11 @@ export function commitCandidate(root, { plan, role, task = null, selected, messa
   const changed = allChanges(root).filter(p => files.includes(p));
   check(changed.length > 0, 'NOTHING_TO_COMMIT', 'Нет изменений для фиксации.');
   check(head(root) === t.before_head, 'HEAD_CHANGED', 'HEAD изменился до staging.');
-  git(root, ['add', '--', ...changed]);
+  // On retry a deletion may already be absent from the index. git add with
+  // that path would fail even though the prepared deletion is still correct.
+  const indexed = new Set(paths(root,'tracked'));
+  const stageable = changed.filter(file => indexed.has(file) || fs.existsSync(path.join(root,file)));
+  if (stageable.length) git(root, ['add', '--', ...stageable]);
   t.selected = files; t.candidate_tree = git(root, ['write-tree']).stdout.trim();
   t.snapshot = snapshot(root, files).fingerprint; t.phase = 'PREPARED'; saveJournal(root, t);
   // Explicit failpoints are only for deterministic crash tests in temporary repositories.
@@ -105,7 +123,8 @@ export function commitCandidate(root, { plan, role, task = null, selected, messa
       atomic(path.join(root,PLAN),t.original_plan);
       fs.unlinkSync(localPath(root,'transaction.json'));fs.unlinkSync(backup);
     }
-    check(false, 'COMMIT_FAILED', unchanged ? 'Проверка не пройдена. Файлы сохранены, задача открыта. Исправьте причину и повторите commit; repair не нужен.' : 'Обнаружены конкурирующие изменения. Журнал сохранён для repair.', { output:t.error, retryable:unchanged });
+    const retry = retryCommand(t);
+    check(false, 'COMMIT_FAILED', unchanged ? 'Проверка не пройдена. Правки сохранены. Исправьте причину и повторите ' + retry + '; repair не нужен.' : 'Обнаружены конкурирующие изменения. Журнал сохранён для repair.', { output:t.error, retryable:unchanged });
   }
   const sha = completedTransaction(root, t);
   check(sha, 'COMMIT_NOT_CONFIRMED', 'Git завершился, но нужный коммит не подтверждён.');

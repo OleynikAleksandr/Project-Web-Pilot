@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {atomic,json,hash,check,planPath,contextPath,isPrivate} from './common.mjs';
 import {allChanges,localPath} from './git.mjs';
+import {isDocumentationFinalizationTask} from './plan.mjs';
 
 const identity=(root,plan,task)=>({plan:planPath(root),scope:plan.scope_id,task:task.id,iteration:task.commit_ref?.iteration??1});
 const recordPath=(root,plan,task)=>localPath(root,'task-files-'+hash(json(identity(root,plan,task))).slice(0,24)+'.json');
@@ -45,7 +46,7 @@ export function selectTaskFiles(root,plan,task,explicit) {
  task.actual_files=actual;
  plan.approved_scope.functional_paths=add(plan.approved_scope.functional_paths,task.functional_paths);
  plan.approved_scope.documentation_paths=add(plan.approved_scope.documentation_paths,task.documentation_paths);
- const docs=plan.tasks.find(t=>t.id==='DOCS');
+ const docs=plan.tasks.findLast(isDocumentationFinalizationTask);
  if(docs&&docs.commit_status!=='DONE')docs.documentation_paths=add(docs.documentation_paths,task.documentation_paths);
  return {selected:actual,excluded,preexisting:baseline?.preexisting??null};
 }

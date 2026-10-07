@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { PLAN, check, safePath, textFile, withPlanFile, atomic, hash } from './common.mjs';
 import { parsePlan, renderPlan } from './plan.mjs';
+import { git, head } from './git.mjs';
 
 // Legacy locations are retained only for upgrade/history compatibility.
 // They are never part of normal runtime plan selection.
@@ -38,18 +39,7 @@ function scanLegacyPlans(root) {
       let plan = null; let parseError = null;
       try { plan = parsePlan(raw, { projection: false }); }
       catch (error) { parseError = { code: error.code ?? 'PLAN_PARSE', message: error.message }; }
-      const relative = source.slice('.harness/plans/'.length);
-      const natural = LEGACY_ARCHIVE_DIRECTORY + '/' + relative;
-      let destination = natural;
-      if (fs.existsSync(safePath(root, natural)) && hash(fs.readFileSync(safePath(root, natural))) !== digest) {
-        const parsed = path.posix.parse(natural);
-        destination = parsed.dir + '/' + parsed.name + '.legacy-' + digest.slice(0, 12) + parsed.ext;
-      }
-      if (fs.existsSync(safePath(root, destination))) {
-        check(hash(fs.readFileSync(safePath(root, destination))) === digest, 'LEGACY_ARCHIVE_CONFLICT',
-          'Archive destination содержит другие данные: ' + destination);
-      }
-      records.push({ source, destination, raw, digest, bytes: Buffer.byteLength(raw, 'utf8'), plan, parseError });
+      records.push({ source, raw, digest, bytes: Buffer.byteLength(raw, 'utf8'), plan, parseError });
     }
   }
   return records;
@@ -57,7 +47,6 @@ function scanLegacyPlans(root) {
 
 const publicLegacyRecord = record => ({
   path: record.source,
-  archive_path: record.destination,
   digest: record.digest,
   bytes: record.bytes,
   scope_id: record.plan?.scope_id ?? null,
@@ -75,9 +64,40 @@ export function discoverLegacyPlans(root) {
   return scanLegacyPlans(root).map(publicLegacyRecord);
 }
 
+export function preflightPlanMigration(root) {
+  currentPlan(root);
+  const selected = new Set(scanLegacyPlans(root).map(record => record.source));
+  const archive = '.harness/plans/archive';
+  const visit = relative => {
+    const absolute = safePath(root, relative);
+    if (!fs.existsSync(absolute)) return;
+    const stat = fs.lstatSync(absolute);
+    check(!stat.isSymbolicLink(), 'SYMLINK_PATH', 'Миграция не удаляет символические ссылки: ' + relative);
+    if (stat.isDirectory()) for (const name of fs.readdirSync(absolute)) visit(relative + '/' + name);
+    else { check(stat.isFile(), 'LEGACY_PLAN_CHANGED', 'Необычный файл: ' + relative); selected.add(relative); }
+  };
+  visit(archive);
+  // Include tracked deletions as well: migration must not consume someone's staged edits.
+  for (const file of git(root, ['ls-files', '-z', '--', archive, ...PLAN_DIRECTORIES]).stdout.split('\0').filter(Boolean)) {
+    if (file.startsWith(archive + '/') || file.endsWith('.md')) selected.add(file);
+  }
+  const sourceCommit = head(root);
+  const records = [...selected].sort().map(file => {
+    const absolute = safePath(root, file);
+    const committed = git(root, ['show', 'HEAD:' + file], {allowFailure:true, encoding:null});
+    const staged = git(root, ['show', ':' + file], {allowFailure:true, encoding:null});
+    check(committed.status === 0 && staged.status === 0 && fs.existsSync(absolute)
+      && fs.lstatSync(absolute).isFile() && committed.stdout.equals(staged.stdout)
+      && committed.stdout.equals(fs.readFileSync(absolute)), 'LEGACY_PLAN_CHANGED',
+      'Миграция остановлена: файл должен быть tracked и побайтно совпадать с HEAD и index: ' + file, {path:file});
+    return {path:file, source_commit:sourceCommit, digest:hash(committed.stdout)};
+  });
+  return records;
+}
+
 export function migrateLegacyPlans(root) {
   const current = currentPlan(root);
-  const legacy = scanLegacyPlans(root);
+  const records = preflightPlanMigration(root);
 
   const normalized = structuredClone(current.plan);
   let normalizedCurrent = false;
@@ -86,33 +106,19 @@ export function migrateLegacyPlans(root) {
   }
   if (normalizedCurrent) normalized.plan_revision++;
 
-  // Copy every source first. Sources are removed only after all archive writes
-  // are confirmed, so interruption cannot lose legacy data.
-  const created = [];
-  for (const record of legacy) {
-    const destination = safePath(root, record.destination);
-    if (!fs.existsSync(destination)) {
-      atomic(destination, record.raw);
-      created.push(record.destination);
-    }
-    check(hash(fs.readFileSync(destination)) === record.digest, 'LEGACY_ARCHIVE_CONFLICT',
-      'Не удалось подтвердить архивную копию: ' + record.destination);
-  }
-
+  // Every byte has been checked against Git before any deletion.
   const removed = [];
-  for (const record of legacy) {
-    const source = safePath(root, record.source);
-    if (!fs.existsSync(source)) continue;
-    check(hash(fs.readFileSync(source)) === record.digest, 'LEGACY_PLAN_CHANGED',
-      'Legacy plan изменился во время migration: ' + record.source);
-    fs.unlinkSync(source);
-    removed.push(record.source);
+  for (const record of records) {
+    fs.unlinkSync(safePath(root, record.path));
+    removed.push(record.path);
   }
-
-  for (const directory of PLAN_DIRECTORIES) {
+  const prune = directory => {
     const absolute = safePath(root, directory);
-    if (fs.existsSync(absolute) && fs.readdirSync(absolute).length === 0) fs.rmdirSync(absolute);
-  }
+    if (!fs.existsSync(absolute)) return;
+    for (const entry of fs.readdirSync(absolute, {withFileTypes:true})) if (entry.isDirectory()) prune(directory + '/' + entry.name);
+    if (!fs.readdirSync(absolute).length) fs.rmdirSync(absolute);
+  };
+  for (const directory of [...PLAN_DIRECTORIES, '.harness/plans/archive']) prune(directory);
 
   if (normalizedCurrent) atomic(safePath(root, PLAN), renderPlan(normalized));
 
@@ -121,8 +127,8 @@ export function migrateLegacyPlans(root) {
     current_plan: PLAN,
     current_scope_id: normalized.scope_id,
     current_normalized: normalizedCurrent,
-    archived: legacy.map(publicLegacyRecord),
-    changed_paths: [...new Set([...created, ...removed, ...(normalizedCurrent ? [PLAN] : [])])],
+    removed: records,
+    changed_paths: [...new Set([...removed, ...(normalizedCurrent ? [PLAN] : [])])],
   };
 }
 

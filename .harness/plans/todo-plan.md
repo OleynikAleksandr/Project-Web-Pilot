@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1386,
+  "plan_revision": 1388,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "recovery-on-demand-research-20261006",
@@ -113,7 +113,7 @@
     ]
   },
   "baseline_commit": "7bd5f4714fc3be0572dfa8a593804af3fab45d1f",
-  "current_task_id": null,
+  "current_task_id": "T006",
   "context_pack": {
     "documents": [
       {
@@ -775,7 +775,9 @@
         "T005",
         "DOCS"
       ],
-      "functional_paths": [],
+      "functional_paths": [
+        "scripts/check-installed-release.mjs"
+      ],
       "documentation_paths": [
         "docs/planning/workflow-kit-context-transition.md"
       ],
@@ -789,7 +791,7 @@
         "До общей миграции новый runtime читает старые документы; при недоступности открытого чата остановиться и сообщить пользователю, переход на внешнего клиента — только по его решению. Native Windows проверяет пользователь."
       ],
       "expected_commit_message": "release: установить новый Workflow Kit и Web Pilot",
-      "implementation_status": "TODO",
+      "implementation_status": "IN_PROGRESS",
       "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "recovery-on-demand-research-20261006",
@@ -860,8 +862,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: recovery-on-demand-research-20261006
-Current Task: нет
-Revision: 1386
+Current Task: T006
+Revision: 1388
 
 ## Цель
 
@@ -915,10 +917,10 @@ Revision: 1386
   - Git Commit: [DONE] release: собрать Web Pilot с новым Workflow Kit
   - Reference: recovery-on-demand-research-20261006 / T005 / implementation
   - Файлы: docs/planning/workflow-kit-context-transition.md
-- [TODO] T006: Установить выпуск и активировать новый Kit для проекта — Ожидает
+- [IN_PROGRESS] T006: Установить выпуск и активировать новый Kit для проекта — В работе
   - Git Commit: [PENDING] release: установить новый Workflow Kit и Web Pilot
   - Reference: recovery-on-demand-research-20261006 / T006 / implementation
-  - Файлы: docs/planning/workflow-kit-context-transition.md
+  - Файлы: scripts/check-installed-release.mjs, docs/planning/workflow-kit-context-transition.md
 - [TODO] T007: Опубликовать и проверить новый парный выпуск — Ожидает
   - Git Commit: [PENDING] release: опубликовать парный выпуск с новым Workflow Kit
   - Reference: recovery-on-demand-research-20261006 / T007 / implementation

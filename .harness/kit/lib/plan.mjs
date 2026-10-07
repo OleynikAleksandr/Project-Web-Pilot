@@ -8,24 +8,34 @@ const label = { TODO: 'Ожидает', IN_PROGRESS: 'В работе', DONE: '�
 const string = (v, field) => check(typeof v === 'string' && v.trim().length > 0, 'PLAN_SCHEMA', 'Нужно непустое поле: ' + field);
 const array = (v, field) => check(Array.isArray(v), 'PLAN_SCHEMA', 'Нужен массив: ' + field);
 const unique = (values, field) => check(new Set(values).size === values.length, 'PLAN_SCHEMA', 'Повторяющиеся значения: ' + field);
-export const PROJECT_CONTINUATION_OBJECTIVE = 'Если поручение уже ясно, создайте короткий план и приступайте; иначе обсудите следующий этап проекта.';
+export const PROJECT_CONTINUATION_OBJECTIVE = 'Продолжите обсуждение или исследование проекта; план реализации создаётся, когда определён её объём.';
 export const FINAL_DOCUMENTATION_TASK_ID = 'DOCS';
 export const FINAL_DOCUMENTATION_TASK_TITLE = 'Актуализация всех документов проекта';
 export const PROJECT_CONTEXT_DOCUMENTS = Object.freeze([
-  { path: 'docs/architecture/OVERVIEW.md', heading_path: ['Краткая архитектура проекта'], required: true, revision: 'WORKTREE' },
-  { path: 'docs/MODULES.md', heading_path: ['Модули проекта'], required: true, revision: 'WORKTREE' },
-  { path: 'docs/DOCUMENTATION_INDEX.md', heading_path: ['Каталог документации'], required: true, revision: 'WORKTREE' },
+  { path: 'docs/architecture/OVERVIEW.md', required: true, revision: 'WORKTREE' },
 ]);
 export const projectContextPaths = () => PROJECT_CONTEXT_DOCUMENTS.map(doc => doc.path);
 export function projectContextPack(pack = {}) {
-  const provided = new Map((pack.documents ?? []).map(doc => [doc.path, doc]));
-  const foundation = PROJECT_CONTEXT_DOCUMENTS.map(doc => ({ ...doc, ...(provided.get(doc.path) ?? {}),
-    path: doc.path, heading_path: [...doc.heading_path], required: true, revision: 'WORKTREE' }));
-  const extras = (pack.documents ?? []).filter(doc => !PROJECT_CONTEXT_DOCUMENTS.some(base => base.path === doc.path));
-  return { documents: [...foundation, ...extras], include_last_completed_task: pack.include_last_completed_task ?? false,
+  const documents = [...(pack.documents ?? []).map(doc => ({...doc}))];
+  for (const base of PROJECT_CONTEXT_DOCUMENTS) {
+    const existing = documents.filter(doc => doc.path === base.path);
+    if (!existing.length) documents.push({...base});
+    else existing[0].required = true;
+  }
+  return { documents: uniqueDocuments(documents), include_last_completed_task: pack.include_last_completed_task ?? false,
     dependency_task_ids: [...(pack.dependency_task_ids ?? [])] };
 }
-export const isDocumentationFinalizationTask = task => task?.id === FINAL_DOCUMENTATION_TASK_ID
+export function uniqueDocuments(documents) {
+  const result = new Map();
+  for (const doc of documents) {
+    const revision = doc.revision ?? 'WORKTREE';
+    const key = JSON.stringify([doc.path, revision]);
+    const previous = result.get(key);
+    result.set(key, {...doc, revision, required: Boolean(doc.required || previous?.required)});
+  }
+  return [...result.values()];
+}
+export const isDocumentationFinalizationTask = task => /^DOCS(?:-[2-9][0-9]*|-[1-9][0-9]+)?$/.test(task?.id ?? '')
   && task?.title === FINAL_DOCUMENTATION_TASK_TITLE;
 export const isDeliveryTask = task => ['package','installed'].includes(task?.verification_kind);
 export function emptyPlan(name) {
@@ -57,7 +67,7 @@ export function validatePlan(p) {
     array(pack.documents, 'context.documents');
     for (const doc of pack.documents) {
       relativePath(doc.path); check(typeof doc.required === 'boolean', 'PLAN_SCHEMA', 'required должен быть boolean.');
-      check(doc.revision === undefined || doc.revision === 'WORKTREE', 'PLAN_SCHEMA', 'Первая версия читает документы текущего worktree.');
+      check(doc.revision === undefined || doc.revision === 'WORKTREE' || typeof doc.revision === 'string' && /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(doc.revision), 'PLAN_SCHEMA', 'revision: WORKTREE либо точный SHA коммита.');
       if (doc.heading_path) { array(doc.heading_path, 'heading_path'); doc.heading_path.forEach(h => string(h, 'heading')); }
     }
   };
@@ -106,22 +116,20 @@ export function validatePlan(p) {
   const current = p.tasks.filter(t => t.implementation_status === 'IN_PROGRESS');
   check(current.length <= 1 && (current[0]?.id ?? null) === p.current_task_id, 'PLAN_SCHEMA', 'current_task_id не соответствует текущей задаче.');
   check(p.execution_scope_status !== 'BLOCKED' || (typeof p.blocked_reason === 'string' && p.blocked_reason.trim()), 'PLAN_SCHEMA', 'BLOCKED требует причину.');
-  const finalTask = p.tasks.find(isDocumentationFinalizationTask);
-  if (finalTask) {
-    const finalIndex = p.tasks.indexOf(finalTask);
+  for (const [finalIndex, finalTask] of p.tasks.entries()) if (isDocumentationFinalizationTask(finalTask)) {
     const beforeDocs = p.tasks.slice(0, finalIndex);
-    const deliveryTail = p.tasks.slice(finalIndex + 1);
-    check(beforeDocs.every(task => !isDeliveryTask(task)), 'DOCUMENTATION_FINAL_TASK',
-      'Package/installed delivery-задачи должны находиться после DOCS.');
-    check(deliveryTail.every(isDeliveryTask), 'DOCUMENTATION_FINAL_TASK',
-      'После DOCS допустим только package/installed delivery-хвост.');
     check(finalTask.functional_paths.length === 0, 'DOCUMENTATION_FINAL_TASK', 'Финальная актуализация документации не содержит функциональных файлов.');
-    check(finalTask.documentation_paths.includes('docs/DOCUMENTATION_INDEX.md'), 'DOCUMENTATION_FINAL_TASK', 'Финальная актуализация должна включать docs/DOCUMENTATION_INDEX.md.');
-    const expected = beforeDocs.map(task => task.id);
-    check(expected.every(id => finalTask.dependencies.includes(id)) && finalTask.dependencies.length === expected.length,
-      'DOCUMENTATION_FINAL_TASK', 'DOCS должна зависеть от всех задач до delivery-хвоста и только от них.');
-    for (const task of deliveryTail) check(task.dependencies.includes(finalTask.id), 'DOCUMENTATION_FINAL_TASK',
-      'Каждая package/installed delivery-задача должна зависеть от DOCS.', {task_id:task.id});
+    check(finalTask.documentation_paths.some(p => ['docs/architecture/OVERVIEW.md','docs/DOCUMENTATION_INDEX.md'].includes(p)), 'DOCUMENTATION_FINAL_TASK', 'DOCS должна включать обзор проекта (либо прежний индекс до миграции).');
+    const previous = beforeDocs.findLastIndex(isDocumentationFinalizationTask);
+    const expected = beforeDocs.slice(previous + 1).filter(t => !isDeliveryTask(t)).map(t => t.id);
+    check(expected.every(id => finalTask.dependencies.includes(id))
+      && finalTask.dependencies.every(id => beforeDocs.some(t => t.id === id)),
+      'DOCUMENTATION_FINAL_TASK', 'DOCS зависит от работы своего раунда и не ссылается вперёд.');
+  }
+  for (const [index, task] of p.tasks.entries()) if (isDeliveryTask(task)) {
+    const docs = p.tasks.slice(0,index).findLast(isDocumentationFinalizationTask);
+    check(docs && task.dependencies.includes(docs.id), 'DOCUMENTATION_FINAL_TASK',
+      'Каждая delivery-задача должна зависеть от DOCS своего раунда.', {task_id:task.id});
   }
   check(p.delivery_status !== 'READY_FOR_ACCEPTANCE' || (p.tasks.length > 0 && p.tasks.every(t => t.commit_status === 'DONE')), 'PLAN_SCHEMA', 'Готовность к приёмке не подтверждается задачами.');
   return p;

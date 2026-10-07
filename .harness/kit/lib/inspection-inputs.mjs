@@ -6,6 +6,7 @@ import { git, gitPath } from './git.mjs';
 import { listPlans } from './session-plans.mjs';
 import { hooksDirectory, kitRoot } from './installation-files.mjs';
 import { gitExecutable } from './platform.mjs';
+import { planningPaths, projectFactPaths } from './project-facts.mjs';
 
 const missing = error => error.code === 'ENOENT' || error.code === 'ENOTDIR';
 function fileState(file) {
@@ -45,19 +46,19 @@ export function inspectionInputs(workspace) {
   const headResult = git(root, ['rev-parse', '--verify', 'HEAD'], { allowFailure: true });
   const relative = new Set([PLAN, CONFIG, MANIFEST, '.codex/hooks.json', '.harness/plans/todo-plan.template.md',
     'scripts/workflow', 'scripts/workflow.cmd', 'scripts/workflow.mjs',
-    'docs/DOCUMENTATION_INDEX.md', 'docs/WORKFLOW_START.md', 'docs/PRODUCT.md', 'docs/architecture/ARCHITECTURE.md',
-    'docs/MODULES.md', 'docs/architecture/OVERVIEW.md']);
+    'README.md', 'AGENTS.md', 'AGENTS.override.md', 'docs/architecture/OVERVIEW.md', ...planningPaths(root), ...projectFactPaths(root)]);
   const workflow = readJSON(path.join(root, CONFIG));
   if (workflow.documentation?.index) relative.add(workflow.documentation.index);
   for (const { file, plan } of listPlans(root)) {
     relative.add(file);
-    for (const doc of plan.context_pack.documents) relative.add(doc.path);
+    for (const doc of plan.context_pack.documents) if ((doc.revision ?? 'WORKTREE') === 'WORKTREE') relative.add(doc.path);
     for (const task of plan.tasks) {
       for (const name of [...task.functional_paths, ...task.documentation_paths]) relative.add(name);
-      for (const doc of task.context_pack?.documents ?? []) relative.add(doc.path);
+      for (const doc of task.context_pack?.documents ?? []) if ((doc.revision ?? 'WORKTREE') === 'WORKTREE') relative.add(doc.path);
     }
   }
   if (fs.existsSync(path.join(root, MANIFEST))) {
+    for (const file of readJSON(path.join(root, MANIFEST)).required_documents ?? []) relative.add(file);
     for (const entry of readJSON(path.join(root, MANIFEST)).files) {
       if (entry.kind !== 'git-hook') relative.add(entry.path);
     }

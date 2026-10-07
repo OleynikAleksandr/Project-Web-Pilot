@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { check, WorkflowError, hash, safePath } from './common.mjs';
+import { check, WorkflowError, hash, safePath, contextPath, textFile } from './common.mjs';
 import { gitExecutable, processEnvironment } from './platform.mjs';
 
 export function run(executable, args, cwd, options = {}) {
@@ -89,6 +89,33 @@ export function diff(root, mode, selected) {
 }
 export function commitPaths(root, sha) {
   return splitZ(git(root, ['diff-tree', '--root', '--no-commit-id', '--name-only', '-r', '--no-renames', '-z', sha]).stdout);
+}
+// Exact commit revisions only; historical symlinks and private paths never become text sources.
+export function documentText(root, document, { optional = false, referenceOnly = false } = {}) {
+  const { path: file, revision = 'WORKTREE' } = document;
+  contextPath(root, file);
+  if (revision === 'WORKTREE') {
+    if (optional && !fs.existsSync(path.join(root, file))) return null;
+    if (referenceOnly) {
+      check(fs.lstatSync(path.join(root,file)).isFile(), 'UNSUPPORTED_FILE', 'Ожидается обычный файл: ' + file);
+      return '';
+    }
+    return textFile(root, file);
+  }
+  check(/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(revision), 'CONTEXT_REVISION', 'Нужен точный SHA коммита: ' + revision);
+  const type = git(root, ['cat-file', '-t', revision], {allowFailure:true});
+  if (optional && type.status !== 0) return null;
+  check(type.status === 0 && type.stdout.trim() === 'commit', 'CONTEXT_REVISION', 'Коммит контекста отсутствует: ' + revision);
+  const entry = git(root, ['ls-tree', '-z', revision, '--', file]).stdout;
+  if (optional && !entry) return null;
+  check(entry, 'MISSING_FILE', 'Отсутствует документ: ' + revision + ':' + file);
+  check(/^100[0-7]{3} blob /.test(entry), 'UNSUPPORTED_FILE', 'Исторический документ должен быть обычным файлом: ' + file);
+  if (referenceOnly) return '';
+  const oid = entry.slice(0, entry.indexOf('\t')).split(' ')[2];
+  check(Number(git(root, ['cat-file','-s',oid]).stdout) <= 1024 * 1024, 'FILE_TOO_LARGE', 'Документ Git слишком велик: ' + file);
+  const bytes = git(root, ['cat-file','blob',oid], {encoding:null}).stdout;
+  check(!bytes.includes(0), 'BINARY_CONTEXT', 'Бинарный файл нельзя включить как текст: ' + file);
+  return new TextDecoder('utf-8', {fatal:true}).decode(bytes);
 }
 export function isAncestor(root, from, to = 'HEAD') {
   return git(root, ['merge-base', '--is-ancestor', from, to], { allowFailure: true }).status === 0;

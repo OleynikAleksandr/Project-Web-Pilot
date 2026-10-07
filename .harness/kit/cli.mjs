@@ -4,7 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { errorResult, check, readJSON, json, withPlanFile, PLAN } from './lib/common.mjs';
 import { repoRoot } from './lib/git.mjs';
-import { status, createScope, startTask, applyPlan, applyConfig, archive, carryoverPlan, repair, acknowledgeHook, renameProject } from './lib/actions.mjs';
+import { status, createScope, startTask, applyPlan, applyConfig, archive, carryoverPlan, repair, acknowledgeHook, renameProject, commitDocumentation } from './lib/actions.mjs';
 import { journal } from './lib/validate.mjs';
 import { withSessionPlan, sessionPlanView } from './lib/session-plans.mjs';
 import { validate } from './lib/validate.mjs';
@@ -66,10 +66,11 @@ export async function main(argv = process.argv.slice(2)) {
       case 'task:start': result = startTask(root, rest[0], opts['expected-revision']); break;
       case 'plan:apply': result = applyPlan(root, input(), opts['expected-revision']); break;
       case 'config:apply': result = applyConfig(root, input()); break;
-      case 'commit': { check(opts.task, 'TASK_REQUIRED', 'Укажите --task <id>.'); check(!(opts.files&&opts.input),'COMMIT_FILES','Используйте --files или --input, не оба.'); let files;
+      case 'docs:commit':
+      case 'commit': { if (command === 'commit') check(opts.task, 'TASK_REQUIRED', 'Укажите --task <id>.'); check(!(opts.files&&opts.input),'COMMIT_FILES','Используйте --files или --input, не оба.'); let files;
         if(opts.files!==undefined){try{files=JSON.parse(opts.files);}catch{check(false,'COMMIT_FILES','--files: нужен JSON-массив путей.',{example:['src/main.mjs','package.json']});}}
         else if(opts.input){const data=input();check(data&&Array.isArray(data.files),'COMMIT_FILES','--input: нужен объект с массивом files.',{example:{files:['src/main.mjs','package.json']}});files=data.files;}
-         result = commitTask(root, opts.task, files); result.state = recover(root); break; }
+         result = command === 'docs:commit' ? commitDocumentation(root, files, opts.message) : commitTask(root, opts.task, files); result.state = recover(root); break; }
       case 'repair': result = repair(root, opts.apply, opts.cancel); break;
       case 'archive': result = archive(root, opts.scope, opts['approval-note']); break;
       case 'hook:ack': result = acknowledgeHook(root, opts.marker, opts.client); break;
