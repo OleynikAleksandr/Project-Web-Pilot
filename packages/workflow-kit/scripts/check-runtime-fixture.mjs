@@ -641,7 +641,7 @@ try {
     const upgradedManifest = JSON.parse(await fs.readFile(oldManifestFile, 'utf8'));
     assert.equal(upgradedManifest.version, VERSION);
     assert.equal(upgradedManifest.upgraded_from, '1.4.13');
-    assert.deepEqual(upgradedManifest.required_documents,['README.md','docs/architecture/OVERVIEW.md']);
+    assert.deepEqual(upgradedManifest.required_documents,['docs/architecture/OVERVIEW.md']);
     await assert.rejects(fs.access(path.join(upgradeRoot,retiredTemplate)));
     assert.equal((await fs.stat(path.join(upgradeRoot,'docs/PRODUCT.md'))).size,40000,'upgrade preserves untouched oversized legacy documents');
     assert.ok(legacyDocs.every(p=>!upgradedManifest.files.some(e=>e.path===p)),'obsolete project documents are no longer installation requirements');
@@ -688,3 +688,4 @@ try {
 }
 
 await import('./check-document-fixture.mjs');
+await import('./check-project-recovery-fixture.mjs');

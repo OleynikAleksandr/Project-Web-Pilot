@@ -104,14 +104,17 @@ test('conflicting paths and changed preview block writes', async t => {
 });
 test('missing local checks reconnect, changed core and missing documents never overwrite', async t => {
   const { setup, workspace } = await create(t);
+  await fs.unlink(path.join(workspace, 'README.md'));
+  const optional = await setup.preview({ mode: 'existing', workspace });
+  assert.equal(optional.ready, true);assert.ok(!optional.issues.some(i => i.path === 'README.md'));
   const hook = path.join(workspace, '.git/hooks/pre-commit'); await fs.unlink(hook);
   const preview = await setup.preview({ mode: 'existing', workspace }); assert.equal(preview.action, 'reconnect');
   assert.equal((await setup.apply(preview.token)).ready, true);
   const hookStat = await fs.stat(hook); if (process.platform !== 'win32') assert.ok(hookStat.mode & 0o111);
   const source = path.join(workspace, '.harness/kit/lib/common.mjs'); await fs.appendFile(source, '\n// user change\n');
   const conflict = await setup.preview({ mode: 'existing', workspace }); assert.equal(conflict.action, null); assert.ok(conflict.issues.some(i => i.path.endsWith('common.mjs')));
-  await fs.unlink(path.join(workspace, 'README.md'));
-  const docs = await setup.preview({ mode: 'existing', workspace }); assert.ok(docs.issues.some(i => i.path === 'README.md'));
+  await fs.unlink(path.join(workspace, 'docs/architecture/OVERVIEW.md'));
+  const docs = await setup.preview({ mode: 'existing', workspace }); assert.ok(docs.issues.some(i => i.path === 'docs/architecture/OVERVIEW.md'));
 });
 test('legacy compatible version opens unchanged and unsupported version is explicit', async t => {
   const { setup, workspace } = await create(t); const file = path.join(workspace, '.harness/kit-manifest.json');

@@ -76,12 +76,13 @@ test('NONE plan keeps project navigation and code-only scope does not add DOCS',
   const none = readPlan(root);
   assert.equal(none.objective, PROJECT_CONTINUATION_OBJECTIVE);
   assert.deepEqual(none.context_pack.documents.slice(0, 3).map(doc => doc.path), [
-    'README.md', 'docs/architecture/OVERVIEW.md',
+    'docs/architecture/OVERVIEW.md',
   ]);
   createScope(root, scopeInput(true));
   const active = readPlan(root);
   assert.deepEqual(active.tasks.map(t=>t.id), ['T001','T002','T003']);
-  for (const required of ['README.md','docs/architecture/OVERVIEW.md']) {
+  assert.ok(!active.context_pack.documents.some(doc => doc.path === 'README.md'));
+  for (const required of ['docs/architecture/OVERVIEW.md']) {
     assert.ok(active.context_pack.documents.some(doc => doc.path === required && doc.required));
   }
 });
@@ -120,14 +121,14 @@ test('READY_FOR_ACCEPTANCE requires DOCS and archive returns a contextual NONE p
   assert.equal(none.archived_scope_id, 'continuity-acceptance-001');
   assert.equal(none.objective, PROJECT_CONTINUATION_OBJECTIVE);
   assert.deepEqual(none.tasks, []);
-  for (const required of ['README.md','docs/architecture/OVERVIEW.md']) {
+  for (const required of ['docs/architecture/OVERVIEW.md']) {
     assert.ok(none.context_pack.documents.some(doc => doc.path === required && doc.required));
   }
   const packet = recover(root, 'startup');
   assert.match(packet.text, /OVERVIEW_REQUIRED/);
   // Workflow Kit 1.5.4: navigation maps and forms are read on demand outside the final DOCS.
   assert.doesNotMatch(packet.text, /Fixture module map/);
-  assert.match(packet.text,/README_REQUIRED/);
+  assert.doesNotMatch(packet.text,/README_REQUIRED/);
   assert.doesNotMatch(packet.text, /--- ДАННЫЕ: \.harness\/kit\/templates\/PLAN\.md ---/);
   assert.ok(packet.text.includes('plan:create --help'));
   assert.ok(packet.text.includes(PROJECT_CONTINUATION_OBJECTIVE));
@@ -302,6 +303,50 @@ test('batched ancestry follows merge graph and changed replacement refs', async 
 const sourceText = (packet, source, revision = 'WORKTREE') => packet.parts.flatMap(part=>part.sources)
   .filter(fragment=>fragment.source===source&&fragment.revision===revision).map(fragment=>fragment.content).join('');
 
+test('legacy navigation references retain validated path, revision and bytes, never their bodies', async t => {
+  const root=await fixture(t), sha=git(root,'rev-parse','HEAD');
+  const plan=readPlan(root);
+  for(const file of ['docs/MODULES.md','docs/DOCUMENTATION_INDEX.md']) {
+    const old=await fs.readFile(path.join(root,file),'utf8');
+    const current='# Legacy\n'+'LEGACY_BODY_NOT_DELIVERED'.repeat(2000);
+    await fs.writeFile(path.join(root,file),current);
+    plan.context_pack.documents.push({path:file,required:true,revision:'WORKTREE'},{path:file,required:true,revision:sha});
+    writePlan(root,plan);
+    const packet=recover(root);
+    for(const [revision,text] of [['WORKTREE',current],[sha,old]]) {
+      const ref=packet.omitted.find(d=>d.path===file&&d.revision===revision);
+      assert.equal(ref.bytes,Buffer.byteLength(text));assert.equal(ref.reason,'LEGACY_REFERENCE_ONLY');
+      assert.ok(packet.text.includes(file+' @ '+revision+' — '+ref.bytes+' байт'));
+      assert.equal(sourceText(packet,'required:'+file,revision),'');
+    }
+    assert.doesNotMatch(packet.text,/LEGACY_BODY_NOT_DELIVERED/);
+    await fs.unlink(path.join(root,file));
+    assert.throws(()=>recover(root),{code:'MISSING_FILE'});
+    await fs.writeFile(path.join(root,file),current);
+  }
+  plan.context_pack.documents.find(d=>d.path==='docs/MODULES.md'&&d.revision===sha).revision='0'.repeat(40);
+  writePlan(root,plan);assert.throws(()=>recover(root),{code:'CONTEXT_REVISION'});
+});
+
+test('seven parts are complete; an eighth fails even below the total byte budget', async t => {
+  const root=await fixture(t), plan=readPlan(root);
+  for(let i=1;i<=6;i++) {
+    const file='docs/modules/part-'+i+'.md';
+    await fs.writeFile(path.join(root,file),'я'.repeat(11000));
+    plan.context_pack.documents.push({path:file,required:true});
+  }
+  writePlan(root,plan);
+  const seven=recover(root);
+  assert.equal(seven.parts.length,7);assert.ok(seven.size.bytes<180000);
+  for(let i=1;i<=6;i++) assert.equal(sourceText(seven,'required:docs/modules/part-'+i+'.md'),'я'.repeat(11000));
+  const file='docs/modules/part-7.md';await fs.writeFile(path.join(root,file),'я'.repeat(11000));
+  plan.context_pack.documents.push({path:file,required:true});writePlan(root,plan);
+  assert.throws(()=>recover(root),error=>{
+    assert.equal(error.code,'CONTEXT_TOO_LARGE');assert.equal(error.details.parts,8);
+    assert.equal(error.details.max_parts,7);assert.ok(error.details.bytes<180000);return true;
+  });
+});
+
 test('splitter preserves exact Unicode content at headings, paragraphs, lines and character boundaries', () => {
   for (const text of [
     '# A\n'+'я'.repeat(25)+'\n# B\n'+'ю'.repeat(40)+'\n',
@@ -412,7 +457,10 @@ test('NONE carries verified closure, all previous tasks and immutable specificat
   const packet=recover(root);
   assert.match(packet.text,new RegExp('Коммит закрытия: '+closing.sha));
   assert.match(packet.text,new RegExp('docs/modules/module.md @ '+implementation.sha));
-  assert.match(sourceText(packet,'previous-task:T001',implementation.sha),new RegExp(implementation.sha));
+  assert.equal(sourceText(packet,'previous-tasks',implementation.sha),
+    'T001 — '+input.tasks[0].title+' — DONE / DONE — '+implementation.sha);
+  assert.ok(!packet.parts.flatMap(part=>part.sources).some(source=>source.source.startsWith('previous-task:')));
+  assert.doesNotMatch(packet.text,/Зачем:|Фактические файлы:|Сообщение коммита:/);
   assert.doesNotMatch(packet.text,/RELEASED_SPEC/,'closed specification is a Git reference, not automatic history replay');
 });
 

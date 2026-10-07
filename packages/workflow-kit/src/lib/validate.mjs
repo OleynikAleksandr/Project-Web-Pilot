@@ -21,7 +21,7 @@ export function validateDocumentSizes(root, files, transaction) {
   const configBlob = git(root, ['show', ':' + CONFIG]);
   const config = validateConfig(JSON.parse(configBlob.stdout));
   const limit = documentByteLimit(config);
-  for (const file of files.filter(p => p.endsWith('.md') && p !== PLAN)) {
+  for (const file of files.filter(p => /\.(md|markdown)$/i.test(p) && p !== PLAN)) {
     const entry = git(root, ['ls-files','--stage','-z','--',file]).stdout;
     if (!entry) continue; // Deleted document has no candidate blob.
     const oid = entry.split(' ')[1];
@@ -37,17 +37,17 @@ export function validateDocumentationCommit(root, files, plan) {
     && !plan.tasks.some(t => t.implementation_status === 'IN_PROGRESS'), 'TASK_ACTIVE', 'docs:commit запрещён во время задачи.');
   for (const file of files.filter(p => p !== PLAN)) {
     const candidate = git(root, ['show', ':' + file], {allowFailure:true, encoding:null});
-    if (file !== 'AGENTS.md') continue;
+    if (!['AGENTS.md', 'AGENTS.override.md'].includes(file)) continue;
     const previous = git(root, ['show', 'HEAD:' + file], {allowFailure:true, encoding:null});
     const section = buffer => {
       const start = Buffer.from('<!-- workflow-kit:begin -->'), end = Buffer.from('<!-- workflow-kit:end -->');
       const i = buffer.indexOf(start), j = buffer.indexOf(end, i + start.length);
       check(i >= 0 && j >= i && buffer.indexOf(start, i + start.length) < 0 && buffer.indexOf(end, j + end.length) < 0,
-        'MODIFIED_INTEGRATION', 'AGENTS.md должен сохранять единственную управляемую секцию Kit.');
+        'MODIFIED_INTEGRATION', file + ' должен сохранять единственную управляемую секцию Kit.');
       return buffer.subarray(i, j + end.length);
     };
     check(previous.status === 0 && candidate.status === 0 && section(previous.stdout).equals(section(candidate.stdout)),
-      'MODIFIED_INTEGRATION', 'Управляемая секция AGENTS.md в index должна побайтно совпадать с HEAD.');
+      'MODIFIED_INTEGRATION', 'Управляемая секция ' + file + ' в index должна побайтно совпадать с HEAD.');
   }
 }
 export function validateConfig(c) {

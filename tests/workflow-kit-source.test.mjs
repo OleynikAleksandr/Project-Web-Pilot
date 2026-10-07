@@ -4,12 +4,21 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
+import { execFileSync } from 'node:child_process';
 import { VERSION, getRuntimeRoot } from '@webpilot/workflow-kit';
 import { DEFAULT_STAGE, verifyWorkflowKitRuntime } from '../scripts/stage-workflow-kit.mjs';
 import { verifyWorkflowKitDependency, workflowKitSource } from '../scripts/check-workflow-kit-dependency.mjs';
 
 const projectRoot = fileURLToPath(new URL('..', import.meta.url));
 const packageRoot = path.join(projectRoot, 'packages/workflow-kit');
+
+test('real project recovery has 20 percent reserve before and after plan normalization', () => {
+  const output=execFileSync(process.execPath,[path.join(packageRoot,'scripts/check-project-recovery-fixture.mjs')],
+    {cwd:projectRoot,encoding:'utf8',maxBuffer:1024*1024});
+  const result=JSON.parse(output);
+  assert.equal(result.ok,true);
+  assert.equal(result.realProjectRecovery.length,2);
+});
 
 async function snapshot(root) {
   root = path.resolve(root);

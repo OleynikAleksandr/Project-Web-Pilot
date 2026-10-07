@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import {execFileSync,spawnSync} from 'node:child_process';
 import {installer,plan as planApi} from '@webpilot/workflow-kit';
-import {validateConfig,validateDocumentSizes} from '@webpilot/workflow-kit/lib/validate';
+import {validateConfig,validateDocumentSizes,validateDocumentationCommit} from '@webpilot/workflow-kit/lib/validate';
 import {commitCandidate} from '@webpilot/workflow-kit/lib/transaction';
 
 const root=fs.mkdtempSync(path.join(os.tmpdir(),'workflow-document-limit-'));
@@ -25,6 +25,7 @@ const oversized=(value,name,bytes,command)=>{
 try {
   git('init','-b','main');git('config','user.name','Document Fixture');git('config','user.email','fixture@example.invalid');
   write('README.md','# Fixture\n');write('docs/legacy.md','л'.repeat(20000));
+  write('AGENTS.override.md','# Project override\n');
   git('add','.');git('commit','-m','test: committed large legacy document');
   installer.install({project:root,mode:'existing'});
   const config=JSON.parse(fs.readFileSync(file('.harness/workflow.json'),'utf8'));
@@ -36,6 +37,28 @@ try {
   assert.equal(cli(['recover','--format','json']).budget.document_bytes,28000,'legacy token values do not create a second limit');
   cli(['config:apply','--input',input('current-config',config)]);
   for(const p of ['docs/PRODUCT.md','docs/MODULES.md','docs/DOCUMENTATION_INDEX.md','docs/WORKFLOW_START.md','docs/architecture/ARCHITECTURE.md']) assert.equal(fs.existsSync(file(p)),false);
+
+  const agents='AGENTS.override.md', good=fs.readFileSync(file(agents),'utf8');
+  write(agents,good+'\nProject-only edit.\n');docs([agents]);
+  const saved=fs.readFileSync(file(agents),'utf8'), bad=saved.replace('<!-- workflow-kit:begin -->','<!-- workflow-kit:begin -->changed');
+  write(agents,bad);git('add',agents);write(agents,saved);
+  assert.throws(()=>validateDocumentationCommit(root,[agents],planApi.readPlan(root)),{code:'MODIFIED_INTEGRATION'});
+  git('add',agents);write(agents,bad);
+  assert.doesNotThrow(()=>validateDocumentationCommit(root,[agents],planApi.readPlan(root)));
+  assert.equal(docs([agents],false).code,'COMMIT_FAILED');
+  assert.equal(fs.readFileSync(file(agents),'utf8'),bad,'refusal preserves edits');
+  fs.unlinkSync(file(agents));assert.equal(docs([agents],false).code,'COMMIT_FAILED');
+  assert.equal(fs.existsSync(file(agents)),false,'refusal preserves deletion');
+  write(agents,saved);git('add',agents);
+
+  for(const name of ['upper.MD','mixed.mD','long.markdown','upper.MARKDOWN']) {
+    write(name,'я'.repeat(14000));git('add',name);
+    assert.doesNotThrow(()=>validateDocumentSizes(root,[name],{role:'implementation',task_id:'T001',selected:[name]}));
+    write(name,'я'.repeat(14000)+'x');git('add',name);write(name,'small');
+    assert.throws(()=>validateDocumentSizes(root,[name],{role:'implementation',task_id:'T001',selected:[name]}),
+      error=>error.code==='DOCUMENT_TOO_LARGE'&&error.details.path===name&&error.details.bytes===28001);
+    git('rm','--cached','-f',name);fs.unlinkSync(file(name));
+  }
 
   write('boundary.md','я'.repeat(14000));docs(['boundary.md']);
   write('boundary.md','я'.repeat(14000)+'x');

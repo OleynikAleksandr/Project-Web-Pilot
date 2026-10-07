@@ -12,7 +12,6 @@ export const PROJECT_CONTINUATION_OBJECTIVE = 'Продолжите обсужд
 export const FINAL_DOCUMENTATION_TASK_ID = 'DOCS';
 export const FINAL_DOCUMENTATION_TASK_TITLE = 'Актуализация всех документов проекта';
 export const PROJECT_CONTEXT_DOCUMENTS = Object.freeze([
-  { path: 'README.md', required: true, revision: 'WORKTREE' },
   { path: 'docs/architecture/OVERVIEW.md', required: true, revision: 'WORKTREE' },
 ]);
 export const projectContextPaths = () => PROJECT_CONTEXT_DOCUMENTS.map(doc => doc.path);
@@ -75,7 +74,7 @@ export function validatePlan(p) {
   validateContext(p.context_pack);
   if (p.execution_scope_status === 'NONE') {
     check(p.scope_id === null && p.current_task_id === null && p.tasks.length === 0, 'PLAN_SCHEMA', 'NONE не может содержать активные задачи.');
-    for (const doc of PROJECT_CONTEXT_DOCUMENTS.filter(d => d.path !== 'README.md')) {
+    for (const doc of PROJECT_CONTEXT_DOCUMENTS) {
       check(p.context_pack.documents.some(current => current.path === doc.path && current.required === true),
         'PROJECT_CONTEXT_REQUIRED', 'NONE должен сохранять обязательную ссылку: ' + doc.path);
     }

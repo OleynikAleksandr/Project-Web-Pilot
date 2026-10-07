@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1378,
+  "plan_revision": 1382,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "recovery-on-demand-research-20261006",
@@ -619,7 +619,10 @@
         "packages/workflow-kit/scripts/check-runtime-fixture.mjs",
         "packages/workflow-kit/scripts/check-project-recovery-fixture.mjs",
         "tests/workflow-kit-recovery.test.mjs",
-        "tests/workflow-kit-source.test.mjs"
+        "tests/workflow-kit-source.test.mjs",
+        "packages/workflow-kit/scripts/check-document-fixture.mjs",
+        "tests/project-doctor.test.mjs",
+        "tests/workspace-setup.test.mjs"
       ],
       "documentation_paths": [
         "docs/planning/workflow-kit-context-refactor.md",
@@ -639,13 +642,26 @@
         "Kit-check и unit-all проходят; изменение выполнено после T004 и до DOCS, завершённые задачи не переписаны."
       ],
       "expected_commit_message": "fix: ограничить recovery бюджетом и семью частями",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "recovery-on-demand-research-20261006",
         "task_id": "T004A",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "docs/planning/workflow-kit-context-transition.md",
+        "packages/workflow-kit/scripts/check-document-fixture.mjs",
+        "packages/workflow-kit/scripts/check-project-recovery-fixture.mjs",
+        "packages/workflow-kit/scripts/check-runtime-fixture.mjs",
+        "packages/workflow-kit/src/lib/plan.mjs",
+        "packages/workflow-kit/src/lib/recovery.mjs",
+        "packages/workflow-kit/src/lib/validate.mjs",
+        "tests/project-doctor.test.mjs",
+        "tests/workflow-kit-recovery.test.mjs",
+        "tests/workflow-kit-source.test.mjs",
+        "tests/workspace-setup.test.mjs"
+      ]
     },
     {
       "id": "DOCS",
@@ -830,7 +846,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: recovery-on-demand-research-20261006
 Current Task: нет
-Revision: 1378
+Revision: 1382
 
 ## Цель
 
@@ -872,10 +888,10 @@ Revision: 1378
   - Git Commit: [DONE] feat: подключить новый recovery к Web Pilot
   - Reference: recovery-on-demand-research-20261006 / T004 / implementation
   - Файлы: src/context-session.mjs, src/context-cache.mjs, src/session-plans.mjs, src/mcp-runtime.mjs, src/auto-plan.mjs, src/mac-runtime-switch.mjs, src/workspace-setup.mjs, tests/context-session.test.mjs, tests/context-cache.test.mjs, tests/session-plans.test.mjs, tests/auto-plan.test.mjs, tests/workflow-kit-source.test.mjs, packages/workflow-kit/package.json, packages/workflow-kit/src/lib/common.mjs, package.json, package-lock.json, .harness/workflow.json, packages/workflow-kit/src/lib/installer.mjs, packages/workflow-kit/src/lib/inspection-inputs.mjs, resources/workspace-setup-worker.mjs, src/context-inputs.mjs, src/main.mjs, src/chatgpt-composer.mjs, src/chatgpt-dom.mjs, src/chatgpt-experience.mjs, tests/chatgpt-composer.test.mjs, tests/chatgpt-dom.test.mjs, tests/chatgpt-experience.test.mjs, tests/workspace-setup.test.mjs, tests/session-opening-performance.test.mjs, scripts/check-installed-release.mjs, scripts/check-github-release.mjs, scripts/probe-chatgpt-file-paste.mjs, tests/chatgpt-file-paste-probe.test.mjs, tests/electron-smoke.mjs, tests/mcp-runtime.test.mjs, tests/workflow-kit-upgrade.test.mjs, docs/planning/workflow-kit-context-refactor.md, docs/planning/workflow-kit-context-transition.md, docs/CONTEXT_DELIVERY.md, docs/WORKSPACE_SETUP.md, docs/modules/chatgpt-dom-compatibility.md
-- [TODO] T004A: Устранить переполнение recovery и ограничить число частей — Ожидает
-  - Git Commit: [PENDING] fix: ограничить recovery бюджетом и семью частями
+- [DONE] T004A: Устранить переполнение recovery и ограничить число частей — Завершено
+  - Git Commit: [DONE] fix: ограничить recovery бюджетом и семью частями
   - Reference: recovery-on-demand-research-20261006 / T004A / implementation
-  - Файлы: packages/workflow-kit/src/lib/plan.mjs, packages/workflow-kit/src/lib/recovery.mjs, packages/workflow-kit/src/lib/validate.mjs, packages/workflow-kit/src/lib/transaction.mjs, packages/workflow-kit/scripts/check-runtime-fixture.mjs, packages/workflow-kit/scripts/check-project-recovery-fixture.mjs, tests/workflow-kit-recovery.test.mjs, tests/workflow-kit-source.test.mjs, docs/planning/workflow-kit-context-refactor.md, docs/planning/workflow-kit-context-transition.md
+  - Файлы: packages/workflow-kit/src/lib/plan.mjs, packages/workflow-kit/src/lib/recovery.mjs, packages/workflow-kit/src/lib/validate.mjs, packages/workflow-kit/src/lib/transaction.mjs, packages/workflow-kit/scripts/check-runtime-fixture.mjs, packages/workflow-kit/scripts/check-project-recovery-fixture.mjs, tests/workflow-kit-recovery.test.mjs, tests/workflow-kit-source.test.mjs, packages/workflow-kit/scripts/check-document-fixture.mjs, tests/project-doctor.test.mjs, tests/workspace-setup.test.mjs, docs/planning/workflow-kit-context-refactor.md, docs/planning/workflow-kit-context-transition.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: подготовить выпуск нового Workflow Kit
   - Reference: recovery-on-demand-research-20261006 / DOCS / implementation

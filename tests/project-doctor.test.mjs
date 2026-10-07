@@ -67,7 +67,7 @@ test('readable projection rebuilt from valid canonical plan only',t=>{
   fs.writeFileSync(file,original+'\nwrong projection\n');const r=repairProject(root);assert.equal(r.issues.length,0,JSON.stringify(r.issues));assert.equal(fs.readFileSync(file,'utf8'),original);
 });
 test('changed snapshot rejected and modified hook preserved',t=>{
-  const root=fixture(t);stale(root);const before=inspectProject(root);fs.appendFileSync(path.join(root,'README.md'),'\nnew user text');
+  const root=fixture(t);stale(root);const before=inspectProject(root);fs.appendFileSync(path.join(root,'docs/architecture/OVERVIEW.md'),'\nnew user text');
   assert.throws(()=>repairProject(root,before.fingerprint),{code:'DOCTOR_CHANGED'});
   const hook=gitPath(root,'hooks/pre-commit');fs.writeFileSync(hook,fs.readFileSync(hook,'utf8').replace('git-hook pre-commit','git-hook changed'));
   assert.ok(repairProject(root).issues.some(e=>e.path==='Git/pre-commit'));

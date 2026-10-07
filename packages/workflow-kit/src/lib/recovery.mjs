@@ -8,6 +8,8 @@ import { projectFacts, projectFactPaths, planningDocuments } from './project-fac
 import { inspectionInputs } from './inspection-inputs.mjs';
 
 export const TRANSPORT_HARD_BYTES = 180000;
+export const TRANSPORT_MAX_PARTS = 7;
+const LEGACY_REFERENCE_DOCUMENTS = new Set(['docs/MODULES.md', 'docs/DOCUMENTATION_INDEX.md']);
 function withoutKitSection(text,file) {
   const begin = '<!-- workflow-kit:begin -->', end = '<!-- workflow-kit:end -->';
   const i = text.indexOf(begin), j = text.indexOf(end);
@@ -43,7 +45,8 @@ export function section(text, headings, file) {
 }
 
 const measure = s => ({ bytes: Buffer.byteLength(s, 'utf8'), characters: [...s].length });
-function referenceLine(doc) { return '- ' + doc.path + ' @ ' + (doc.revision ?? 'WORKTREE'); }
+function referenceLine(doc) { return '- ' + doc.path + ' @ ' + (doc.revision ?? 'WORKTREE')
+  + (doc.bytes === undefined ? '' : ' — ' + doc.bytes + ' байт'); }
 function sectionsForError(parts) {
   return parts.map(part => ({ label: part.label, ...measure(part.text) })).sort((a, b) => b.bytes - a.bytes).slice(0, 12);
 }
@@ -150,6 +153,13 @@ export function recoveryParts(units, limit) {
 
 function taskProjection(task, resolved) {
   const reference = resolved[task.id];
+  const planned = [...new Set([...task.functional_paths,...task.documentation_paths])];
+  const actual = task.actual_files;
+  const added = actual?.filter(file=>!planned.includes(file)) ?? [];
+  const unchanged = actual ? planned.filter(file=>!actual.includes(file)) : [];
+  const actualDescription = !actual ? 'ещё не зафиксированы' :
+    'плановый список' + (unchanged.length ? '; исключены: '+unchanged.join(', ') : '')
+    + (added.length ? '; добавлены: '+added.join(', ') : '');
   return '# ' + task.id + ' — ' + task.title
     + '\nЗачем: ' + task.why
     + '\nСтатус: ' + task.implementation_status + ' / ' + task.commit_status
@@ -157,8 +167,8 @@ function taskProjection(task, resolved) {
     + '\nКритерии:\n' + task.acceptance_criteria.map(item=>'- '+item).join('\n')
     + '\nКоммит: ' + (reference?.sha ?? (reference?.pending ? 'COMMIT_PENDING' : 'не создан'))
     + (reference?.sha ? '\nРодитель: '+reference.parent+'\nЧтение: git show '+reference.sha : '')
-    + '\nФайлы:\n' + [...new Set([...task.functional_paths,...task.documentation_paths])].map(file=>'- '+file).join('\n')
-    + '\nФактические файлы: ' + (task.actual_files?.join(', ') || 'ещё не зафиксированы')
+    + '\nФайлы:\n' + planned.map(file=>'- '+file).join('\n')
+    + '\nФактические файлы: ' + actualDescription
     + '\nПроверки: ' + (task.verification_ids.join(', ') || 'схема и состав коммита')
     + '\nСообщение коммита: ' + task.expected_commit_message;
 }
@@ -256,7 +266,8 @@ export function recoverState(root, reason = 'manual', options = {}) {
       add('previous-plan','ПРЕДЫДУЩИЙ ПЛАН\narchived_scope_id: '+plan.archived_scope_id+'\nКоммит закрытия: '+previous.sha
         +'\nЧтение плана: git show '+previous.sha+'^:'+PLAN
         +'\nСпецификации:\n'+previous.documents.map(referenceLine).join('\n'));
-      for(const item of previous.plan.tasks) add('previous-task:'+item.id,taskProjection(item,previous.resolved),{revision:previous.parent});
+      add('previous-tasks',previous.plan.tasks.map(item=>item.id+' — '+item.title+' — '+item.implementation_status
+        +' / '+item.commit_status+' — '+previous.resolved[item.id].sha).join('\n'),{revision:previous.parent});
     } else if(plan.execution_scope_status==='NONE') add('previous-plan','Предыдущего закрытого плана нет.');
     add('planning','РАБОЧИЕ СПЕЦИФИКАЦИИ docs/planning (содержимое по выбору)\n'
       +(planning.map(doc=>'- '+doc.path+' — '+doc.title+' — '+doc.bytes+' байт').join('\n')||'нет'));
@@ -264,6 +275,12 @@ export function recoverState(root, reason = 'manual', options = {}) {
     const included = [PLAN,CONFIG,rulesPath,policyPath,...(instructions?[instructions.file]:[])];
     const omitted = templatePaths.map(file=>({path:file,reason:'ON_DEMAND'}));
     for(const doc of documents) {
+      if (LEGACY_REFERENCE_DOCUMENTS.has(doc.path)) {
+        const raw = documentText(root,doc,{optional:!doc.required});
+        omitted.push({path:doc.path,revision:doc.revision,bytes:raw===null?undefined:Buffer.byteLength(raw),
+          reason:raw===null?'MISSING_REFERENCE':'LEGACY_REFERENCE_ONLY'});
+        continue;
+      }
       const raw = documentText(root,doc,{optional:!doc.required,referenceOnly:!doc.required});
       if(!doc.required) {
         omitted.push({path:doc.path,revision:doc.revision,reason:raw===null?'MISSING_REFERENCE':'REFERENCE_ONLY'});
@@ -286,9 +303,9 @@ export function recoverState(root, reason = 'manual', options = {}) {
     const effectiveBudget = {document_bytes:documentByteLimit(config),hard_bytes:Math.min(config.budget.hard_bytes,TRANSPORT_HARD_BYTES)};
     const parts = recoveryParts(units,effectiveBudget.document_bytes);
     const body = parts.map(part=>part.text).join('\n\n'), size = measure(body);
-    check(size.bytes<=effectiveBudget.hard_bytes,'CONTEXT_TOO_LARGE',
-      'Обязательный execution context превышает транспортный бюджет. Уменьшите required module/task context или разделите scope; данные не обрезаны.',
-      {...size,budget:effectiveBudget,largest_sections:sectionsForError(units)});
+    check(size.bytes<=effectiveBudget.hard_bytes && parts.length<=TRANSPORT_MAX_PARTS,'CONTEXT_TOO_LARGE',
+      'Обязательный execution context превышает транспортный бюджет байтов или предел 7 частей. Уменьшите required module/task context или разделите scope; данные не обрезаны.',
+      {...size,parts:parts.length,max_parts:TRANSPORT_MAX_PARTS,budget:effectiveBudget,largest_sections:sectionsForError(units)});
     options.beforeRecheck?.(attempt);
     const after = snapshot(root,relevant);
     if(after.fingerprint!==before.fingerprint||journalHash()!==initialJournal||inspectionInputs(root).key!==initialInputs) {
