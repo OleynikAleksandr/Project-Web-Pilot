@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1419,
+  "plan_revision": 1420,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "recovery-on-demand-research-20261006",
@@ -95,7 +95,9 @@
       "tests/workspace-session.test.mjs",
       "tests/sidebar.test.mjs",
       "tests/chromium-diagnostics.test.mjs",
-      "scripts/check-mac-signature.mjs"
+      "scripts/check-mac-signature.mjs",
+      "src/startup-platform.mjs",
+      "tests/startup-platform.test.mjs"
     ],
     "documentation_paths": [
       "docs/planning/workflow-kit-context-refactor.md",
@@ -1185,7 +1187,9 @@
         "src/main.mjs",
         "scripts/check-mac-screen-capture.mjs",
         "tests/codex-app-server-mcp.test.mjs",
-        "tests/mac-runtime-switch.test.mjs"
+        "tests/mac-runtime-switch.test.mjs",
+        "src/startup-platform.mjs",
+        "tests/startup-platform.test.mjs"
       ],
       "documentation_paths": [
         "docs/planning/correction-round-0.6.99.md"
@@ -1404,7 +1408,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: recovery-on-demand-research-20261006
 Current Task: нет
-Revision: 1419
+Revision: 1420
 
 ## Цель
 
@@ -1505,7 +1509,7 @@ Revision: 1419
 - [TODO] T016: Порты служб, чужой PID, повторный ввод туннеля — Ожидает
   - Git Commit: [PENDING] fix: свободные порты, чужой PID и повторная настройка туннеля
   - Reference: recovery-on-demand-research-20261006 / T016 / implementation
-  - Файлы: tools/codex-app-server-mcp/control.py, src/mac-runtime-switch.mjs, src/main.mjs, scripts/check-mac-screen-capture.mjs, tests/codex-app-server-mcp.test.mjs, tests/mac-runtime-switch.test.mjs, docs/planning/correction-round-0.6.99.md
+  - Файлы: tools/codex-app-server-mcp/control.py, src/mac-runtime-switch.mjs, src/main.mjs, scripts/check-mac-screen-capture.mjs, tests/codex-app-server-mcp.test.mjs, tests/mac-runtime-switch.test.mjs, src/startup-platform.mjs, tests/startup-platform.test.mjs, docs/planning/correction-round-0.6.99.md
 - [TODO] T017: Мелкие исправления интерфейса и журналов — Ожидает
   - Git Commit: [PENDING] fix: мелкие исправления интерфейса и журналов
   - Reference: recovery-on-demand-research-20261006 / T017 / implementation
