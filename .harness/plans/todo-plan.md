@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1389,
+  "plan_revision": 1391,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "recovery-on-demand-research-20261006",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Рефакторинг Workflow Kit: компактные документы до 28000 байт, recovery по плану и Git, доставка частями-вложениями; парный выпуск перед согласованной миграцией проекта вне плана.",
   "acceptance_criteria": [
     "Принятые правила С1–С15 и П1–П13 реализованы по двум частям спецификации; документы актуализируются перед выпуском, история доступна в Git.",
@@ -824,13 +824,14 @@
         "Готовность проекта к перезапуску ещё не объявляется: она требует согласованной проверенной миграции и push документационных коммитов."
       ],
       "expected_commit_message": "release: опубликовать парный выпуск с новым Workflow Kit",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "recovery-on-demand-research-20261006",
         "task_id": "T007",
         "role": "implementation"
-      }
+      },
+      "actual_files": []
     }
   ],
   "blocked_reason": null,
@@ -863,10 +864,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: recovery-on-demand-research-20261006
 Current Task: нет
-Revision: 1389
+Revision: 1391
 
 ## Цель
 
@@ -924,8 +925,8 @@ Revision: 1389
   - Git Commit: [DONE] release: установить новый Workflow Kit и Web Pilot
   - Reference: recovery-on-demand-research-20261006 / T006 / implementation
   - Файлы: scripts/check-installed-release.mjs, docs/planning/workflow-kit-context-transition.md
-- [TODO] T007: Опубликовать и проверить новый парный выпуск — Ожидает
-  - Git Commit: [PENDING] release: опубликовать парный выпуск с новым Workflow Kit
+- [DONE] T007: Опубликовать и проверить новый парный выпуск — Завершено
+  - Git Commit: [DONE] release: опубликовать парный выпуск с новым Workflow Kit
   - Reference: recovery-on-demand-research-20261006 / T007 / implementation
   - Файлы: docs/planning/workflow-kit-context-transition.md
 
