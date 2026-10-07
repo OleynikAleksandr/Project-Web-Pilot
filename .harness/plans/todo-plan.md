@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1409,
+  "plan_revision": 1413,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "recovery-on-demand-research-20261006",
@@ -133,16 +133,6 @@
     "documents": [
       {
         "path": "docs/architecture/OVERVIEW.md",
-        "required": true,
-        "revision": "WORKTREE"
-      },
-      {
-        "path": "docs/planning/workflow-kit-context-refactor.md",
-        "required": true,
-        "revision": "WORKTREE"
-      },
-      {
-        "path": "docs/planning/workflow-kit-context-transition.md",
         "required": true,
         "revision": "WORKTREE"
       },
@@ -1022,7 +1012,8 @@
         "tests/workflow-kit-recovery.test.mjs",
         "tests/workflow-kit-upgrade.test.mjs",
         "package.json",
-        "package-lock.json"
+        "package-lock.json",
+        "resources/workspace-setup-worker.mjs"
       ],
       "documentation_paths": [
         "docs/planning/correction-round-0.6.99.md",
@@ -1041,13 +1032,28 @@
         "check-runtime-fixture проверяет фактический формат; версии Kit 1.6.1 и Web Pilot 0.6.99."
       ],
       "expected_commit_message": "fix: Kit 1.6.1 — безопасная остановка и предпроверки обновления",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "recovery-on-demand-research-20261006",
         "task_id": "T012",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "docs/planning/correction-round-0.6.99.md",
+        "package-lock.json",
+        "package.json",
+        "packages/workflow-kit/package.json",
+        "packages/workflow-kit/scripts/check-runtime-fixture.mjs",
+        "packages/workflow-kit/src/WORKFLOW.md",
+        "packages/workflow-kit/src/lib/common.mjs",
+        "packages/workflow-kit/src/lib/installer.mjs",
+        "packages/workflow-kit/src/lib/recovery.mjs",
+        "packages/workflow-kit/src/templates/PROTOTYPE.md",
+        "resources/workspace-setup-worker.mjs",
+        "tests/workflow-kit-recovery.test.mjs",
+        "tests/workflow-kit-upgrade.test.mjs"
+      ]
     },
     {
       "id": "T013",
@@ -1380,7 +1386,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: recovery-on-demand-research-20261006
 Current Task: нет
-Revision: 1409
+Revision: 1413
 
 ## Цель
 
@@ -1462,10 +1468,10 @@ Revision: 1409
   - Git Commit: [DONE] release: опубликовать Web Pilot 0.6.98
   - Reference: recovery-on-demand-research-20261006 / T011 / implementation
   - Файлы: docs/planning/workflow-kit-context-transition.md
-- [TODO] T012: Kit 1.6.1: безопасная остановка, полнота recovery, предпроверки обновления — Ожидает
-  - Git Commit: [PENDING] fix: Kit 1.6.1 — безопасная остановка и предпроверки обновления
+- [DONE] T012: Kit 1.6.1: безопасная остановка, полнота recovery, предпроверки обновления — Завершено
+  - Git Commit: [DONE] fix: Kit 1.6.1 — безопасная остановка и предпроверки обновления
   - Reference: recovery-on-demand-research-20261006 / T012 / implementation
-  - Файлы: packages/workflow-kit/src/lib/recovery.mjs, packages/workflow-kit/src/lib/installer.mjs, packages/workflow-kit/src/lib/common.mjs, packages/workflow-kit/package.json, packages/workflow-kit/scripts/check-runtime-fixture.mjs, tests/workflow-kit-recovery.test.mjs, tests/workflow-kit-upgrade.test.mjs, package.json, package-lock.json, docs/planning/correction-round-0.6.99.md, packages/workflow-kit/src/WORKFLOW.md, packages/workflow-kit/src/templates/PROTOTYPE.md
+  - Файлы: packages/workflow-kit/src/lib/recovery.mjs, packages/workflow-kit/src/lib/installer.mjs, packages/workflow-kit/src/lib/common.mjs, packages/workflow-kit/package.json, packages/workflow-kit/scripts/check-runtime-fixture.mjs, tests/workflow-kit-recovery.test.mjs, tests/workflow-kit-upgrade.test.mjs, package.json, package-lock.json, resources/workspace-setup-worker.mjs, docs/planning/correction-round-0.6.99.md, packages/workflow-kit/src/WORKFLOW.md, packages/workflow-kit/src/templates/PROTOTYPE.md
 - [TODO] T013: Короткие имена вложений и подсказка при ненайденном файле — Ожидает
   - Git Commit: [PENDING] fix: короткие имена частей контекста
   - Reference: recovery-on-demand-research-20261006 / T013 / implementation
@@ -1506,8 +1512,6 @@ Revision: 1409
 ## Context Pack For This Cycle
 
 - docs/architecture/OVERVIEW.md
-- docs/planning/workflow-kit-context-refactor.md
-- docs/planning/workflow-kit-context-transition.md
 - docs/planning/correction-round-0.6.99.md
 
 Служебные состояния меняются только командами workflow. Приёмка не архивирует scope.

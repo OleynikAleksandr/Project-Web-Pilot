@@ -131,7 +131,7 @@ try {
     check(result.action, 'SETUP_BLOCKED', 'Сначала устраните показанные проблемы. Файлы сохранены.');
     if (['install', 'reconnect', 'upgrade'].includes(result.action)) {
       const installed = install({ ...opts, ...(result.action === 'upgrade' ? { update: true } : {}), 'expected-fingerprint': input.fingerprint,
-        ...(result.action === 'install' ? localHistoryDefaults(result.workspace) : {}) });
+        ...(['install', 'upgrade'].includes(result.action) ? localHistoryDefaults(result.workspace) : {}) });
       result = inspectProject({ project: installed.project_path, mode: 'existing' });
     }
   }

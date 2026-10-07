@@ -124,9 +124,11 @@ try {
   assert.deepEqual(planApi.readPlan(root).tasks.map(task => task.id), ['T001'],
     'code-only plan does not create a release DOCS task');
 
-  // 1.5.4: compact recovery — forms and navigation maps on demand (maps are inlined only for the final DOCS).
-  assert.doesNotMatch(recovered.text, /--- ДАННЫЕ: \.harness\/kit\/templates\/(PLAN|SPEC|CONTINUE|STAGES)\.md ---/);
-  assert.doesNotMatch(recovered.text, /--- ДАННЫЕ: docs\/(MODULES|DOCUMENTATION_INDEX)\.md ---/);
+  // Forms are on demand; legacy navigation maps are reference-only, never inlined sources.
+  const sourceLabels = recovered.parts.flatMap(part => part.sources.map(source => source.source));
+  assert.ok(sourceLabels.includes('.harness/kit/templates/PROTOTYPE.md'), 'source labels use the current format');
+  assert.ok(!sourceLabels.some(label => /\.harness\/kit\/templates\/(PLAN|SPEC|CONTINUE|STAGES)\.md$/.test(label)));
+  assert.ok(!sourceLabels.some(label => /docs\/(MODULES|DOCUMENTATION_INDEX)\.md$/.test(label)));
   assert.match(recovered.text, /ФОРМЫ ПО ЗАПРОСУ/);
   assert.ok(recovered.parts.length > 0);
   assert.ok(recovered.parts.every(part => part.bytes === Buffer.byteLength(part.text) && part.bytes <= 28000));

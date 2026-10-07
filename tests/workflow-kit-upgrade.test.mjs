@@ -44,3 +44,30 @@ test('real 1.5.6 task start survives kit-update and new-runtime task commit', t 
   cli('task:start','T007');
   assert.equal(readPlan(project).current_task_id,'T007');
 });
+
+test('install --update refuses commit preconditions before writing runtime or manifest', t => {
+  const root=fs.mkdtempSync(path.join(os.tmpdir(),'kit-update-preflight-'));
+  t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
+  const source=fileURLToPath(new URL('..',import.meta.url)), old=path.join(root,'old'), project=path.join(root,'project');
+  fs.mkdirSync(old);fs.mkdirSync(project);
+  const env={...process.env,GIT_AUTHOR_NAME:'Fixture',GIT_AUTHOR_EMAIL:'fixture@example.invalid',GIT_COMMITTER_NAME:'Fixture',GIT_COMMITTER_EMAIL:'fixture@example.invalid'};
+  for(const key of ['GIT_DIR','GIT_INDEX_FILE','GIT_WORK_TREE','GIT_COMMON_DIR'])delete env[key];
+  const archive=execFileSync('git',['archive','ab6d3d99e5da577d45bfc3b78575f201817948b0','.harness/kit'],{cwd:source,maxBuffer:8*1024*1024});
+  execFileSync('tar',['-x','-C',old],{input:archive});
+  const run=(exe,args)=>execFileSync(exe,args,{cwd:project,env,encoding:'utf8',maxBuffer:4*1024*1024});
+  run('git',['init','-q','-b','main']);
+  run(process.execPath,[path.join(old,'.harness/kit/install.mjs'),'--project',project]);
+  run(process.execPath,['scripts/workflow.mjs','install:commit']);
+  const manifest=path.join(project,'.harness/kit-manifest.json'), core=path.join(project,'.harness/kit/WORKFLOW.md');
+  const before={manifest:fs.readFileSync(manifest,'utf8'),core:fs.readFileSync(core,'utf8'),head:run('git',['rev-parse','HEAD'])};
+  fs.writeFileSync(path.join(project,'foreign.txt'),'staged by the user\n');run('git',['add','foreign.txt']);
+  assert.throws(()=>install({project,update:true}),{code:'FOREIGN_STAGED'});
+  assert.equal(fs.readFileSync(manifest,'utf8'),before.manifest,'manifest is not written');
+  assert.equal(fs.readFileSync(core,'utf8'),before.core,'runtime is not written');
+  assert.equal(run('git',['rev-parse','HEAD']),before.head);
+  run('git',['reset','-q','foreign.txt']);
+  const upgraded=install({project,update:true});
+  assert.equal(upgraded.upgraded,true);
+  assert.equal(JSON.parse(fs.readFileSync(manifest,'utf8')).version,VERSION);
+  assert.match(run('git',['log','-1','--format=%B']),/Workflow-Role: kit-update/);
+});

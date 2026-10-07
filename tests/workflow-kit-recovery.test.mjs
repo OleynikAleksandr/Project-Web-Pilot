@@ -205,6 +205,8 @@ test('Recovery sends whole required documents, optional references and all tasks
   assert.match(packet.text, /## Workflow Core/);
   assert.ok(packet.text.includes('Build/package/sign/notarize/release/publish'));
   assert.match(packet.text, /DOCS выполняется до явного delivery-хвоста/);
+  assert.equal(packet.text.split('Если задачу нельзя завершить в этом ответе').length - 1, 1, 'safe stop rule is delivered once');
+  assert.match(packet.text, /Долгую команду веди в фоне с идентификатором процесса/);
   assert.doesNotMatch(packet.text, /## Обязательные правила/);
   assert.match(packet.text, /OVERVIEW_REQUIRED/);
   assert.match(packet.text, /MODULE_REQUIRED/);
@@ -216,6 +218,18 @@ test('Recovery sends whole required documents, optional references and all tasks
   assert.doesNotMatch(packet.text, new RegExp('ДАННЫЕ: commit ' + second.sha + ' / T002'));
   assert.doesNotMatch(packet.text, /T002_UNRELATED_CHANGE/);
   assert.ok(packet.size.bytes < 60000, `unexpected recovery size: ${packet.size.bytes}`);
+});
+
+test('completeness lists AGENTS.md only when its project part is delivered', async t => {
+  const root = await fixture(t);
+  await fs.writeFile(path.join(root,'AGENTS.md'),'<!-- workflow-kit:begin -->\nKIT_LOCATOR_DO_NOT_INLINE\n<!-- workflow-kit:end -->\n');
+  const kitOnly = recover(root, 'startup');
+  assert.doesNotMatch(kitOnly.text, /KIT_LOCATOR_DO_NOT_INLINE/);
+  assert.ok(!kitOnly.included.includes('AGENTS.md'), 'empty project part is not reported as included');
+  await fs.appendFile(path.join(root,'AGENTS.md'),'PROJECT_CONSTRAINT\n');
+  const withProject = recover(root, 'startup');
+  assert.match(withProject.text, /PROJECT_CONSTRAINT/);
+  assert.ok(withProject.included.includes('AGENTS.md'));
 });
 
 test('Recovery v2 reports largest sections when required context exceeds transport budget', async t => {
