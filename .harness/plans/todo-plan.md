@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1450,
+  "plan_revision": 1451,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "refactor-fixes-20261007",
@@ -302,7 +302,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: READY_FOR_ACCEPTANCE
 Scope: refactor-fixes-20261007
 Current Task: нет
-Revision: 1450
+Revision: 1451
 
 ## Цель
 
