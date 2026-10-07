@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1459,
+  "plan_revision": 1461,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "refactor-fixes-20261007",
@@ -422,13 +422,14 @@
         "Обе macOS-копии соответствуют пакетам, identity и подпись сохранены; без пересборки."
       ],
       "expected_commit_message": "release: установить Web Pilot 0.6.101",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "refactor-fixes-20261007",
         "task_id": "T008",
         "role": "implementation"
-      }
+      },
+      "actual_files": []
     },
     {
       "id": "T009",
@@ -477,7 +478,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: refactor-fixes-20261007
 Current Task: нет
-Revision: 1459
+Revision: 1461
 
 ## Цель
 
@@ -525,8 +526,8 @@ Revision: 1459
   - Git Commit: [DONE] release: собрать Web Pilot 0.6.101
   - Reference: refactor-fixes-20261007 / T007 / implementation
   - Файлы: docs/planning/refactor-fixes.md
-- [TODO] T008: Установить готовый выпуск 0.6.101 — Ожидает
-  - Git Commit: [PENDING] release: установить Web Pilot 0.6.101
+- [DONE] T008: Установить готовый выпуск 0.6.101 — Завершено
+  - Git Commit: [DONE] release: установить Web Pilot 0.6.101
   - Reference: refactor-fixes-20261007 / T008 / implementation
   - Файлы: docs/planning/refactor-fixes.md
 - [TODO] T009: Опубликовать выпуск 0.6.101 — Ожидает
