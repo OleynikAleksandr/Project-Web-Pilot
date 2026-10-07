@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1461,
+  "plan_revision": 1463,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "refactor-fixes-20261007",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Исправление ошибок, найденных живой приёмкой после рефакторинга Workflow Kit: автоматическая отправка каждого старта сессии и отсутствие брошенных копий хранилища; выпуск Web Pilot 0.6.100.",
   "acceptance_criteria": [
     "Исправление ошибок, найденных живой приёмкой после рефакторинга Workflow Kit: автоматическая отправка каждого старта сессии и отсутствие брошенных копий хранилища; выпуск Web Pilot 0.6.100."
@@ -451,13 +451,14 @@
         "Source/tag/шесть assets совпадают с manifest; push; READY_FOR_ACCEPTANCE."
       ],
       "expected_commit_message": "release: опубликовать Web Pilot 0.6.101",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "refactor-fixes-20261007",
         "task_id": "T009",
         "role": "implementation"
-      }
+      },
+      "actual_files": []
     }
   ],
   "blocked_reason": null,
@@ -475,10 +476,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: refactor-fixes-20261007
 Current Task: нет
-Revision: 1461
+Revision: 1463
 
 ## Цель
 
@@ -530,8 +531,8 @@ Revision: 1461
   - Git Commit: [DONE] release: установить Web Pilot 0.6.101
   - Reference: refactor-fixes-20261007 / T008 / implementation
   - Файлы: docs/planning/refactor-fixes.md
-- [TODO] T009: Опубликовать выпуск 0.6.101 — Ожидает
-  - Git Commit: [PENDING] release: опубликовать Web Pilot 0.6.101
+- [DONE] T009: Опубликовать выпуск 0.6.101 — Завершено
+  - Git Commit: [DONE] release: опубликовать Web Pilot 0.6.101
   - Reference: refactor-fixes-20261007 / T009 / implementation
   - Файлы: docs/planning/refactor-fixes.md
 
