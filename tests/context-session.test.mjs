@@ -31,7 +31,8 @@ function controllerFixture({ savedAttempt=null, chatUrl=project.chatUrl }={}){
   const composer={inspect:async options=>({...inspection,
     ...(options?.action==='select-experience'?{action: (inspection.experience??store.project().experience)===options.expectedExperience
       ?'experience-confirmed':'experience-selecting'}:{})}),contents:{getURL:()=>inspection.url},deliver:async options=>{
-    assert.equal(saved.attempt.state,'prepared');assert.equal(options.attachments.map(p=>p.text).join('\n\n'),packet().context);assert.ok(!options.text.includes(packet().context));
+    assert.equal(saved.attempt.state,'prepared');assert.equal(options.attachments.map(p=>p.text).join('\n\n'),packet().context);
+    assert.deepEqual(options.attachments.map(p=>p.name),packet().parts.map(p=>`context-${String(p.index).padStart(2,'0')}-of-${p.total}.md`));assert.ok(!options.text.includes(packet().context));
     if(!options.canContinue())return {state:'cancelled'};
     await options.onBeforeFill?.();
     await options.onBeforeSend();if(!options.canContinue())return {state:'cancelled'};
@@ -48,6 +49,8 @@ test('the first message contains the exact complete packet and asks for a short 
   assert.ok(!text.includes(p.context));
   assert.ok(text.includes('Читай каждое вложение отдельно одним вызовом'));
   assert.ok(text.includes('при признаках обрезки дочитай'));
+  assert.ok(text.includes('выведи список /mnt/data и открой файл по фактическому имени'));
+  assert.ok(text.includes('Не подтверждай восстановление, пока не прочитаны все части'));
   assert.ok(text.includes('Инструменты чтения вложений разрешены'));
   for(const item of ['"/Projects/Мой проект"','session-1','unique-request','коротко подтверди','опиши назначение проекта','не вызывай MCP проекта'])assert.ok(text.includes(item));
   for(const name of ['workflow_context_recover','workflow_context_ack','workflow_context_hook'])assert.ok(!text.includes(name));

@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1413,
+  "plan_revision": 1415,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "recovery-on-demand-research-20261006",
@@ -1080,13 +1080,17 @@
         "В стартовом сообщении строка о списке /mnt/data и запрет подтверждения до прочтения всех частей; прежняя строка о чтении сохранена дословно."
       ],
       "expected_commit_message": "fix: короткие имена частей контекста",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "recovery-on-demand-research-20261006",
         "task_id": "T013",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "src/context-session.mjs",
+        "tests/context-session.test.mjs"
+      ]
     },
     {
       "id": "T014",
@@ -1386,7 +1390,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: recovery-on-demand-research-20261006
 Current Task: нет
-Revision: 1413
+Revision: 1415
 
 ## Цель
 
@@ -1472,8 +1476,8 @@ Revision: 1413
   - Git Commit: [DONE] fix: Kit 1.6.1 — безопасная остановка и предпроверки обновления
   - Reference: recovery-on-demand-research-20261006 / T012 / implementation
   - Файлы: packages/workflow-kit/src/lib/recovery.mjs, packages/workflow-kit/src/lib/installer.mjs, packages/workflow-kit/src/lib/common.mjs, packages/workflow-kit/package.json, packages/workflow-kit/scripts/check-runtime-fixture.mjs, tests/workflow-kit-recovery.test.mjs, tests/workflow-kit-upgrade.test.mjs, package.json, package-lock.json, resources/workspace-setup-worker.mjs, docs/planning/correction-round-0.6.99.md, packages/workflow-kit/src/WORKFLOW.md, packages/workflow-kit/src/templates/PROTOTYPE.md
-- [TODO] T013: Короткие имена вложений и подсказка при ненайденном файле — Ожидает
-  - Git Commit: [PENDING] fix: короткие имена частей контекста
+- [DONE] T013: Короткие имена вложений и подсказка при ненайденном файле — Завершено
+  - Git Commit: [DONE] fix: короткие имена частей контекста
   - Reference: recovery-on-demand-research-20261006 / T013 / implementation
   - Файлы: src/context-session.mjs, tests/context-session.test.mjs, tests/electron-smoke.mjs, docs/planning/correction-round-0.6.99.md
 - [TODO] T014: Доктор: версии Kit; удаление проекта: все копии хранилища — Ожидает

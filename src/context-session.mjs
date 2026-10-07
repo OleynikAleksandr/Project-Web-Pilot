@@ -11,6 +11,10 @@ export function packetMatchesProject(packet, project) {
     && Object.keys(expected).every(key => packet.facts[key] === expected[key]);
 }
 
+// Short, fixed names: the model types the path into code by hand, and a long id invites typos.
+// A new conversation has its own file area, so the names need no request id.
+export const contextPartName = part => `context-${String(part.index).padStart(2, '0')}-of-${part.total}.md`;
+
 // toolRules: extra session rules of the local executor of this platform (runtime.startupRules).
 export function startupMessage(project, requestId, packet, toolRules = []) {
   return [
@@ -21,6 +25,7 @@ export function startupMessage(project, requestId, packet, toolRules = []) {
     `Идентификатор отправки: ${requestId}`,
     `Частей контекста: ${packet.parts.length}. Читай их в порядке номеров.`,
     'Читай каждое вложение отдельно одним вызовом, не объединяй вложения в общий вывод, при признаках обрезки дочитай недостающее.',
+    'Если вложение не найдено по пути, выведи список /mnt/data и открой файл по фактическому имени. Не подтверждай восстановление, пока не прочитаны все части.',
     'Первый ответ: коротко подтверди, что контекст проекта восстановлен, и в одном-двух предложениях опиши назначение проекта и его текущее состояние.',
     'Ответь по-русски, обычным текстом. Инструменты чтения вложений разрешены. Для первого ответа не вызывай MCP проекта и не запрашивай уже переданный контекст повторно. Файлы проекта не меняй.',
     'Не перечисляй технические идентификаторы, проверки или служебные оговорки. Дальнейшую работу начнём по следующему поручению пользователя.',
@@ -347,7 +352,7 @@ export class ContextSession {
         if (!packetMatchesProject(packet, project)) throw failure('CONTEXT_CHANGED', 'План изменился во время подготовки. Обновите контекст.');
         const requestId = 'wp-request-' + this.uuid();
         attempt = { protocol: CONTEXT_PROTOCOL, requestId, text: startupMessage(project, requestId, packet, this.runtime?.startupRules ?? []),
-          attachments: packet.parts.map(part => ({ name: `${requestId}-${String(part.index).padStart(2, '0')}-of-${part.total}.md`, text: part.text })),
+          attachments: packet.parts.map(part => ({ name: contextPartName(part), text: part.text })),
           packet: { ...metadata(packet), preparationMs }, createdAtMs: this.now(), sendStartedAtMs: null, state: 'prepared' };
         await this.store.updateSession(project.workspace, project.sessionId, { attempt, receipt: null });
         if (!this.current(generation)) return;
