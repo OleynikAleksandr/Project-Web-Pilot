@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1370,
+  "plan_revision": 1376,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "recovery-on-demand-research-20261006",
@@ -74,7 +74,10 @@
       "scripts/check-installed-release.mjs",
       "scripts/check-github-release.mjs",
       "packages/workflow-kit/scripts/check-document-fixture.mjs",
-      "resources/project-doctor/core.mjs"
+      "resources/project-doctor/core.mjs",
+      "scripts/probe-chatgpt-file-paste.mjs",
+      "tests/chatgpt-file-paste-probe.test.mjs",
+      "packages/workflow-kit/scripts/check-project-recovery-fixture.mjs"
     ],
     "documentation_paths": [
       "docs/planning/workflow-kit-context-refactor.md",
@@ -107,7 +110,7 @@
     ]
   },
   "baseline_commit": "7bd5f4714fc3be0572dfa8a593804af3fab45d1f",
-  "current_task_id": null,
+  "current_task_id": "T004",
   "context_pack": {
     "documents": [
       {
@@ -135,13 +138,13 @@
         "revision": "WORKTREE"
       },
       {
-        "path": "docs/planning/workflow-kit-context-refactor.md",
-        "required": true
-      },
-      {
         "path": "docs/planning/workflow-kit-context-transition.md",
         "required": true,
         "revision": "WORKTREE"
+      },
+      {
+        "path": "docs/planning/workflow-kit-context-refactor.md",
+        "required": true
       }
     ],
     "include_last_completed_task": false,
@@ -536,7 +539,9 @@
         "tests/workspace-setup.test.mjs",
         "tests/session-opening-performance.test.mjs",
         "scripts/check-installed-release.mjs",
-        "scripts/check-github-release.mjs"
+        "scripts/check-github-release.mjs",
+        "scripts/probe-chatgpt-file-paste.mjs",
+        "tests/chatgpt-file-paste-probe.test.mjs"
       ],
       "documentation_paths": [
         "docs/planning/workflow-kit-context-refactor.md",
@@ -552,19 +557,63 @@
       ],
       "verification_kind": "code",
       "acceptance_criteria": [
-        "Первый шаг T004 — проверка осуществимости File/DataTransfer в ChatGPT Web на максимуме: 7 файлов по 28000 байт в одном сообщении, все загружены до Send. Это отдельная транспортная проба (196000 байт), не изменение hard_bytes=180000 recovery. Живую проверку выполняет пользователь; при отказе остановиться и доложить, без большой текстовой вставки и без остальной реализации T004.",
-        "После успешной проверки первое сообщение содержит все части-вложения <=28000 байт и короткий транспортный текст; загрузка завершена до Send, отправка ровно одна, частичный сбой не теряет части и не дублирует сообщение. Чтение вложений разрешено, MCP проекта в первом ответе не вызывается.",
+        "По решению пользователя 07.10.2026 живая проверка File/DataTransfer перенесена на приёмку нового релиза и не блокирует T004. Проверить 7 файлов по 28000 байт в одном сообщении, все загружены до Send; транспортная проба 196000 байт не меняет hard_bytes=180000. До живой приёмки результат не подтверждён; молчаливый fallback к большой текстовой вставке запрещён.",
+        "Первое сообщение содержит все части-вложения <=28000 байт и короткий транспортный текст; загрузка завершена до Send, отправка ровно одна, частичный сбой не теряет части и не дублирует сообщение. Чтение вложений разрешено, MCP проекта в первом ответе не вызывается.",
         "Одинаковый сценарий macOS/Windows; AutoPlan и nextTask согласованы с раундами; публичные экспорты Sidebar/pageOperation/pageScript совместимы и проверены при изменении трёх browser-модулей.",
         "Реальный ключ inspectionInputs учитывает новые источники NONE/planning, повторная правка уже dirty документа меняет ключ; тестовый contextInputKey удалён либо синхронизирован.",
         "upgradeFrom включает 1.5.6; fixture start T006 старым Kit → kit-update → commit T006 новым Kit → доступная T007 проходит. До релиза сохранён доступ к старому составу документов.",
-        "Подготовлены версии исходников и checks/evidence/stack; config:apply в T004 добавляет budget.document_bytes=28000, сохраняя обязательные для Kit 1.5.6 soft_tokens/hard_tokens до DOCS, T005 и task:start T006. Новый runtime принимает конфигурацию с ними и без; удалять не раньше перехода T006. Kit-check, unit-all и electron-smoke пройдены; сборки/установки реального приложения на T004 нет."
+        "Подготовлены версии исходников и checks/evidence/stack; config:apply в T004 добавляет budget.document_bytes=28000, сохраняя обязательные для Kit 1.5.6 soft_tokens/hard_tokens до DOCS, T005 и task:start T006. Новый runtime принимает конфигурацию с ними и без; удалять не раньше перехода T006. Kit-check, unit-all и electron-smoke пройдены; сборки/установки реального приложения на T004 нет.",
+        "Текст первого сообщения Web Pilot содержит правило: «Читай каждое вложение отдельно одним вызовом, не объединяй вложения в общий вывод, при признаках обрезки дочитай недостающее». Правило закреплено проверкой текста сообщения. Поддерживаемый максимум — 7 вложений; ограничение recovery реализуется отдельной T004A после T004, до DOCS."
       ],
       "expected_commit_message": "feat: подключить новый recovery к Web Pilot",
-      "implementation_status": "TODO",
+      "implementation_status": "IN_PROGRESS",
       "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "recovery-on-demand-research-20261006",
         "task_id": "T004",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T004A",
+      "title": "Устранить переполнение recovery и ограничить число частей",
+      "why": "Обеспечить восстановление реального проекта после перехода на новый Kit без превышения бюджета и проверенного числа вложений.",
+      "dependencies": [
+        "T004"
+      ],
+      "functional_paths": [
+        "packages/workflow-kit/src/lib/plan.mjs",
+        "packages/workflow-kit/src/lib/recovery.mjs",
+        "packages/workflow-kit/src/lib/validate.mjs",
+        "packages/workflow-kit/src/lib/transaction.mjs",
+        "packages/workflow-kit/scripts/check-runtime-fixture.mjs",
+        "packages/workflow-kit/scripts/check-project-recovery-fixture.mjs",
+        "tests/workflow-kit-recovery.test.mjs",
+        "tests/workflow-kit-source.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/planning/workflow-kit-context-refactor.md",
+        "docs/planning/workflow-kit-context-transition.md"
+      ],
+      "verification_ids": [
+        "kit-check",
+        "unit-all"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "README.md исключён из PROJECT_CONTEXT_DOCUMENTS: нормализация не добавляет его как обязательный источник; создание установщиком разрешено. Старые docs/MODULES.md и docs/DOCUMENTATION_INDEX.md в контексте плана передаются ссылкой с путём, ревизией и размером, даже при required; источник проверяется.",
+        "В NONE прошлый план представлен списком «id — заголовок — статус — SHA» без полных карточек; archived_scope_id, SHA закрытия и ссылка на спецификацию сохранены. Обязательный контекст ACTIVE не теряется.",
+        "Recover в изолированной копии реального состояния этого репозитория с установленными исходниками нового Kit проходит до и после штатной нормализации плана: <=144000 байт, запас >=20% от hard_bytes=180000, <=7 частей. Проверка включена в обязательные checks, без сокращённого плана и без замены реального установленного Kit до T006.",
+        "Не больше 7 частей, каждая со служебным оформлением <=budget.document_bytes (28000 по умолчанию). Восьмая часть вызывает CONTEXT_TOO_LARGE даже при сумме <180000; нет усечения или частичной отправки. Проверены 7/8 частей и общий байтовый предел.",
+        "Размер staged blob проверяется для .md/.markdown без учёта регистра, единственное исключение .harness/plans/todo-plan.md. docs:commit защищает управляемую секцию AGENTS.override.md так же, как AGENTS.md: index побайтно совпадает с HEAD; правки при отказе сохраняются.",
+        "Kit-check и unit-all проходят; изменение выполнено после T004 и до DOCS, завершённые задачи не переписаны."
+      ],
+      "expected_commit_message": "fix: ограничить recovery бюджетом и семью частями",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "recovery-on-demand-research-20261006",
+        "task_id": "T004A",
         "role": "implementation"
       }
     },
@@ -579,7 +628,8 @@
         "T002",
         "T002A",
         "T003",
-        "T004"
+        "T004",
+        "T004A"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -749,8 +799,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: recovery-on-demand-research-20261006
-Current Task: нет
-Revision: 1370
+Current Task: T004
+Revision: 1376
 
 ## Цель
 
@@ -788,10 +838,14 @@ Revision: 1370
   - Git Commit: [DONE] feat: восстанавливать контекст по плану и Git
   - Reference: recovery-on-demand-research-20261006 / T003 / implementation
   - Файлы: packages/workflow-kit/src/lib/recovery.mjs, packages/workflow-kit/src/lib/project-facts.mjs, packages/workflow-kit/src/lib/plan.mjs, packages/workflow-kit/src/lib/git.mjs, packages/workflow-kit/src/lib/actions.mjs, packages/workflow-kit/src/lib/command-help.mjs, packages/workflow-kit/scripts/check-runtime-fixture.mjs, tests/workflow-kit-recovery.test.mjs, packages/workflow-kit/src/lib/inspection-inputs.mjs, packages/workflow-kit/src/lib/transaction.mjs, packages/workflow-kit/src/lib/validate.mjs, packages/workflow-kit/src/lib/common.mjs, packages/workflow-kit/src/schemas/plan.schema.json, docs/planning/workflow-kit-context-refactor.md, docs/planning/workflow-kit-context-transition.md, docs/modules/workflow-kit-recovery.md, docs/CONTEXT_DELIVERY.md
-- [TODO] T004: Согласовать Web Pilot с новым Kit и подготовить проверки выпуска — Ожидает
+- [IN_PROGRESS] T004: Согласовать Web Pilot с новым Kit и подготовить проверки выпуска — В работе
   - Git Commit: [PENDING] feat: подключить новый recovery к Web Pilot
   - Reference: recovery-on-demand-research-20261006 / T004 / implementation
-  - Файлы: src/context-session.mjs, src/context-cache.mjs, src/session-plans.mjs, src/mcp-runtime.mjs, src/auto-plan.mjs, src/mac-runtime-switch.mjs, src/workspace-setup.mjs, tests/context-session.test.mjs, tests/context-cache.test.mjs, tests/session-plans.test.mjs, tests/auto-plan.test.mjs, tests/workflow-kit-source.test.mjs, packages/workflow-kit/package.json, packages/workflow-kit/src/lib/common.mjs, package.json, package-lock.json, .harness/workflow.json, packages/workflow-kit/src/lib/installer.mjs, packages/workflow-kit/src/lib/inspection-inputs.mjs, resources/workspace-setup-worker.mjs, src/context-inputs.mjs, src/main.mjs, src/chatgpt-composer.mjs, src/chatgpt-dom.mjs, src/chatgpt-experience.mjs, tests/chatgpt-composer.test.mjs, tests/chatgpt-dom.test.mjs, tests/chatgpt-experience.test.mjs, tests/workspace-setup.test.mjs, tests/session-opening-performance.test.mjs, scripts/check-installed-release.mjs, scripts/check-github-release.mjs, docs/planning/workflow-kit-context-refactor.md, docs/planning/workflow-kit-context-transition.md, docs/CONTEXT_DELIVERY.md, docs/WORKSPACE_SETUP.md, docs/modules/chatgpt-dom-compatibility.md
+  - Файлы: src/context-session.mjs, src/context-cache.mjs, src/session-plans.mjs, src/mcp-runtime.mjs, src/auto-plan.mjs, src/mac-runtime-switch.mjs, src/workspace-setup.mjs, tests/context-session.test.mjs, tests/context-cache.test.mjs, tests/session-plans.test.mjs, tests/auto-plan.test.mjs, tests/workflow-kit-source.test.mjs, packages/workflow-kit/package.json, packages/workflow-kit/src/lib/common.mjs, package.json, package-lock.json, .harness/workflow.json, packages/workflow-kit/src/lib/installer.mjs, packages/workflow-kit/src/lib/inspection-inputs.mjs, resources/workspace-setup-worker.mjs, src/context-inputs.mjs, src/main.mjs, src/chatgpt-composer.mjs, src/chatgpt-dom.mjs, src/chatgpt-experience.mjs, tests/chatgpt-composer.test.mjs, tests/chatgpt-dom.test.mjs, tests/chatgpt-experience.test.mjs, tests/workspace-setup.test.mjs, tests/session-opening-performance.test.mjs, scripts/check-installed-release.mjs, scripts/check-github-release.mjs, scripts/probe-chatgpt-file-paste.mjs, tests/chatgpt-file-paste-probe.test.mjs, docs/planning/workflow-kit-context-refactor.md, docs/planning/workflow-kit-context-transition.md, docs/CONTEXT_DELIVERY.md, docs/WORKSPACE_SETUP.md, docs/modules/chatgpt-dom-compatibility.md
+- [TODO] T004A: Устранить переполнение recovery и ограничить число частей — Ожидает
+  - Git Commit: [PENDING] fix: ограничить recovery бюджетом и семью частями
+  - Reference: recovery-on-demand-research-20261006 / T004A / implementation
+  - Файлы: packages/workflow-kit/src/lib/plan.mjs, packages/workflow-kit/src/lib/recovery.mjs, packages/workflow-kit/src/lib/validate.mjs, packages/workflow-kit/src/lib/transaction.mjs, packages/workflow-kit/scripts/check-runtime-fixture.mjs, packages/workflow-kit/scripts/check-project-recovery-fixture.mjs, tests/workflow-kit-recovery.test.mjs, tests/workflow-kit-source.test.mjs, docs/planning/workflow-kit-context-refactor.md, docs/planning/workflow-kit-context-transition.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: подготовить выпуск нового Workflow Kit
   - Reference: recovery-on-demand-research-20261006 / DOCS / implementation
@@ -814,7 +868,7 @@ Revision: 1370
 - docs/architecture/OVERVIEW.md → Краткая архитектура проекта
 - docs/MODULES.md → Модули проекта
 - docs/DOCUMENTATION_INDEX.md → Каталог документации
-- docs/planning/workflow-kit-context-refactor.md
 - docs/planning/workflow-kit-context-transition.md
+- docs/planning/workflow-kit-context-refactor.md
 
 Служебные состояния меняются только командами workflow. Приёмка не архивирует scope.

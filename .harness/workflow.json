@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "profile": "DEVELOPMENT",
-  "stack": "Electron 44.5.1 / Node 24.21.0 / Workflow Kit 1.5.6 / Codex 0.160.0",
+  "stack": "Electron 44.5.1 / Node 24.21.0 / Workflow Kit 1.6.0 / Codex 0.160.0",
   "checks": [
     {
       "required": false,
@@ -36,7 +36,7 @@
         "run",
         "smoke"
       ],
-      "evidence": "Electron smoke на TEST FIXTURE: доставка контекста первым сообщением без регрессии"
+      "evidence": "Electron TEST FIXTURE: части во вложениях, загрузка до Send, отправка один раз; живая приёмка ChatGPT и Windows пользователем после выпуска"
     },
     {
       "required": false,
@@ -60,7 +60,7 @@
         "run",
         "build"
       ],
-      "evidence": "~/Downloads/WebPilot-0.6.96: macOS arm64 + Windows x64 ZIP, ZIP Windows-runtime, SHA256SUMS.txt, INSTALL.txt, release-manifest.json; packaged sources и bundled Workflow Kit 1.5.6 verified. Сборку выполняет сама эта проверка при коммите задачи, один раз"
+      "evidence": "~/Downloads/WebPilot-0.6.97: macOS arm64 + Windows x64 ZIP, ZIP Windows-runtime, SHA256SUMS.txt, INSTALL.txt, release-manifest.json; packaged sources и bundled Workflow Kit 1.6.0 verified. Сборку выполняет сама эта проверка при коммите задачи, один раз"
     },
     {
       "required": false,
@@ -71,7 +71,7 @@
       "args": [
         "scripts/check-installed-release.mjs"
       ],
-      "evidence": "Root app и /Applications/Project Web Pilot.app — 0.6.96 из уже собранного staging; identity/signature/runtime и release artifacts verified без пересборки"
+      "evidence": "Root app и /Applications/Project Web Pilot.app — 0.6.97 из уже собранного staging; identity/signature/runtime и release artifacts verified без пересборки"
     },
     {
       "required": false,
@@ -82,7 +82,7 @@
       "args": [
         "scripts/check-github-release.mjs"
       ],
-      "evidence": "GitHub Release v0.6.96: tag, шесть assets и remote main сверены с локальным release-manifest.json без пересборки"
+      "evidence": "GitHub Release v0.6.97: tag, шесть assets и remote main сверены с локальным release-manifest.json без пересборки"
     },
     {
       "required": false,
@@ -113,7 +113,8 @@
   "budget": {
     "soft_tokens": 16000,
     "hard_tokens": 90000,
-    "hard_bytes": 180000
+    "hard_bytes": 180000,
+    "document_bytes": 28000
   },
   "documentation": {
     "index": "docs/DOCUMENTATION_INDEX.md",
