@@ -11,9 +11,14 @@ export function packetMatchesProject(packet, project) {
     && Object.keys(expected).every(key => packet.facts[key] === expected[key]);
 }
 
-// Short, fixed names: the model types the path into code by hand, and a long id invites typos.
-// A new conversation has its own file area, so the names need no request id.
-export const contextPartName = part => `context-${String(part.index).padStart(2, '0')}-of-${part.total}.md`;
+// The model types the path into code by hand, and a long id invites typos: the name carries only
+// 8 hex of the request. ChatGPT renames an upload whose name it has already seen («…(1).md»),
+// and cards are recognised by the exact name, so every start needs its own names.
+export const contextPartName = (part, requestId) => {
+  const fragment = String(requestId ?? '').replace(/^wp-request-/, '').replace(/[^0-9A-Za-z]/g, '').slice(0, 8);
+  if (fragment.length < 8) throw new Error('Context part name needs a request id');
+  return `context-${fragment}-${String(part.index).padStart(2, '0')}-of-${part.total}.md`;
+};
 
 // toolRules: extra session rules of the local executor of this platform (runtime.startupRules).
 export function startupMessage(project, requestId, packet, toolRules = []) {
@@ -352,7 +357,7 @@ export class ContextSession {
         if (!packetMatchesProject(packet, project)) throw failure('CONTEXT_CHANGED', 'План изменился во время подготовки. Обновите контекст.');
         const requestId = 'wp-request-' + this.uuid();
         attempt = { protocol: CONTEXT_PROTOCOL, requestId, text: startupMessage(project, requestId, packet, this.runtime?.startupRules ?? []),
-          attachments: packet.parts.map(part => ({ name: contextPartName(part), text: part.text })),
+          attachments: packet.parts.map(part => ({ name: contextPartName(part, requestId), text: part.text })),
           packet: { ...metadata(packet), preparationMs }, createdAtMs: this.now(), sendStartedAtMs: null, state: 'prepared' };
         await this.store.updateSession(project.workspace, project.sessionId, { attempt, receipt: null });
         if (!this.current(generation)) return;

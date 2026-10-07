@@ -6,7 +6,7 @@ import { chatGPTDOMScript } from '../src/chatgpt-dom.mjs';
 import { installPageObserver } from '../src/chatgpt-page-observer.mjs';
 import { ChatGPTComposer, pageOperation, pageScript } from '../src/chatgpt-composer.mjs';
 
-function attachmentFixture({partial=false,uploading=false}={}) {
+function attachmentFixture({partial=false,uploading=false,renamed=false}={}) {
   const f=fixture(),w=f.dom.window;
   Object.assign(w,{File,TextEncoder});
   w.DataTransfer=class {constructor(){this.files=[];this.items={add:file=>this.files.push(file)};}};
@@ -16,7 +16,7 @@ function attachmentFixture({partial=false,uploading=false}={}) {
     event.preventDefault();pastes++;received.push(...event.clipboardData.files);
     for(const file of event.clipboardData.files.slice(0,partial?6:7)) {
       const card=f.document.createElement('div'),label=f.document.createElement('span'),remove=f.document.createElement('button');
-      label.textContent=file.name;remove.type='button';remove.setAttribute('aria-label','Remove file');card.append(label,remove);
+      label.textContent=renamed?file.name.replace(/\.md$/,'(1).md'):file.name;remove.type='button';remove.setAttribute('aria-label','Remove file');card.append(label,remove);
       if(uploading)card.setAttribute('aria-busy','true');
       f.editor.before(card);
     }
@@ -46,6 +46,14 @@ test('partial or failed upload never sends, repastes, or loses the prepared file
     assert.equal(f.sends(),0);assert.equal(f.pastes(),1);assert.equal(f.received.length,7);
     assert.equal(f.editor.value,f.request.text);assert.equal(f.request.attachments.length,7);
   }
+});
+
+// ChatGPT renames an upload whose name it has seen before; such a card is not ours, so nothing is sent.
+test('a card renamed by ChatGPT is not recognised and never sent',async()=>{
+  const f=attachmentFixture({renamed:true});
+  await assert.rejects(f.composer.deliver(f.request),{code:'ATTACHMENTS_PENDING'});
+  assert.equal(f.sends(),0);assert.equal(f.pastes(),1);
+  f.dom.window.close();
 });
 
 for (const outcome of ['ready', 'pending', 'failed']) test('attachment deadline with fake clock: '+outcome, async()=>{

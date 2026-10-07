@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1438,
+  "plan_revision": 1440,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "refactor-fixes-20261007",
@@ -58,8 +58,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "refactor-fixes-20261007",
         "task_id": "T001",
@@ -93,7 +93,14 @@
         "Карточка, переименованная ChatGPT, не считается своей; распознавание по точному имени и строка о списке /mnt/data сохранены.",
         "Версия Web Pilot 0.6.100."
       ],
-      "expected_commit_message": "fix: уникальные имена частей контекста"
+      "expected_commit_message": "fix: уникальные имена частей контекста",
+      "actual_files": [
+        "package-lock.json",
+        "package.json",
+        "src/context-session.mjs",
+        "tests/chatgpt-composer.test.mjs",
+        "tests/context-session.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -268,7 +275,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: refactor-fixes-20261007
 Current Task: нет
-Revision: 1438
+Revision: 1440
 
 ## Цель
 
@@ -280,8 +287,8 @@ Revision: 1438
 
 ## Микрозадачи
 
-- [TODO] T001: Уникальные короткие имена частей контекста — Ожидает
-  - Git Commit: [PENDING] fix: уникальные имена частей контекста
+- [DONE] T001: Уникальные короткие имена частей контекста — Завершено
+  - Git Commit: [DONE] fix: уникальные имена частей контекста
   - Reference: refactor-fixes-20261007 / T001 / implementation
   - Файлы: src/context-session.mjs, tests/context-session.test.mjs, tests/chatgpt-composer.test.mjs, package.json, package-lock.json, docs/planning/refactor-fixes.md, docs/modules/context-delivery.md, docs/planning/correction-round-0.6.99.md, docs/planning/workflow-kit-context-refactor.md, docs/planning/workflow-kit-context-transition.md
 - [TODO] T002: Брошенные временные файлы хранилища — Ожидает

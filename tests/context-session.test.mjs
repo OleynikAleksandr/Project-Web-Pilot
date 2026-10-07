@@ -32,7 +32,7 @@ function controllerFixture({ savedAttempt=null, chatUrl=project.chatUrl }={}){
     ...(options?.action==='select-experience'?{action: (inspection.experience??store.project().experience)===options.expectedExperience
       ?'experience-confirmed':'experience-selecting'}:{})}),contents:{getURL:()=>inspection.url},deliver:async options=>{
     assert.equal(saved.attempt.state,'prepared');assert.equal(options.attachments.map(p=>p.text).join('\n\n'),packet().context);
-    assert.deepEqual(options.attachments.map(p=>p.name),packet().parts.map(p=>`context-${String(p.index).padStart(2,'0')}-of-${p.total}.md`));assert.ok(!options.text.includes(packet().context));
+    assert.deepEqual(options.attachments.map(p=>p.name),packet().parts.map(p=>`context-testrequ-${String(p.index).padStart(2,'0')}-of-${p.total}.md`));assert.ok(!options.text.includes(packet().context));
     if(!options.canContinue())return {state:'cancelled'};
     await options.onBeforeFill?.();
     await options.onBeforeSend();if(!options.canContinue())return {state:'cancelled'};
@@ -63,6 +63,18 @@ test('the first message contains the exact complete packet and asks for a short 
     assert.ok(text.includes(rule), rule);
   // 0.6.90: the model may look at the screen but must not drive the interface, also through shell commands.
   assert.ok(text.includes('Интерфейсом компьютера не управляй: не двигай мышь, не нажимай клавиши и не переключай окна — ни инструментами, ни командами (osascript, System Events, cliclick и подобными). Список окон и снимки экрана и окна (`computer_list_windows`, `computer_capture_screen`, `computer_capture_window`) разрешены. Живую проверку интерфейса выполняет пользователь.'));
+});
+
+test('every start names its parts with a short fragment of its own request id', () => {
+  const { contextPartName } = contextSessionModule;
+  const part = { index: 1, total: 5 };
+  const first = contextPartName(part, 'wp-request-b8f5450a-cd1b-4c5f-9ea3-1a3004dca278');
+  const second = contextPartName(part, 'wp-request-0c9e7d21-5a4b-4c3d-8e2f-6a7b8c9d0e1f');
+  assert.equal(first, 'context-b8f5450a-01-of-5.md');
+  assert.equal(second, 'context-0c9e7d21-01-of-5.md');
+  assert.notEqual(first, second);
+  assert.equal(contextPartName({ index: 12, total: 12 }, 'wp-request-b8f5450a-cd1b'), 'context-b8f5450a-12-of-12.md');
+  assert.throws(() => contextPartName(part, ''), /request id/);
 });
 
 test('ordinary session contract defines one verified microtask per reply without an AutoPlan protocol', () => {
