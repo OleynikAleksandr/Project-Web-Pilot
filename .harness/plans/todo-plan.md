@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1382,
+  "plan_revision": 1384,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "recovery-on-demand-research-20261006",
@@ -715,13 +715,27 @@
         "README: версия, установка, запуск; без статуса сборки/публикации, ссылок на конкретный релиз и хешей — они в release-manifest.json и GitHub Release."
       ],
       "expected_commit_message": "docs: подготовить выпуск нового Workflow Kit",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "recovery-on-demand-research-20261006",
         "task_id": "DOCS",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "AGENTS.md",
+        "README.md",
+        "docs/CONTEXT_DELIVERY.md",
+        "docs/DOCUMENTATION_INDEX.md",
+        "docs/MODULES.md",
+        "docs/WORKSPACE_SETUP.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/chatgpt-dom-compatibility.md",
+        "docs/modules/workflow-kit-recovery.md",
+        "packages/workflow-kit/README.md",
+        "packages/workflow-kit/docs/modules/workflow-kit-package.md",
+        "packages/workflow-kit/src/WORKFLOW.md"
+      ]
     },
     {
       "id": "T005",
@@ -846,7 +860,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: recovery-on-demand-research-20261006
 Current Task: нет
-Revision: 1382
+Revision: 1384
 
 ## Цель
 
@@ -892,8 +906,8 @@ Revision: 1382
   - Git Commit: [DONE] fix: ограничить recovery бюджетом и семью частями
   - Reference: recovery-on-demand-research-20261006 / T004A / implementation
   - Файлы: packages/workflow-kit/src/lib/plan.mjs, packages/workflow-kit/src/lib/recovery.mjs, packages/workflow-kit/src/lib/validate.mjs, packages/workflow-kit/src/lib/transaction.mjs, packages/workflow-kit/scripts/check-runtime-fixture.mjs, packages/workflow-kit/scripts/check-project-recovery-fixture.mjs, tests/workflow-kit-recovery.test.mjs, tests/workflow-kit-source.test.mjs, packages/workflow-kit/scripts/check-document-fixture.mjs, tests/project-doctor.test.mjs, tests/workspace-setup.test.mjs, docs/planning/workflow-kit-context-refactor.md, docs/planning/workflow-kit-context-transition.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: подготовить выпуск нового Workflow Kit
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: подготовить выпуск нового Workflow Kit
   - Reference: recovery-on-demand-research-20261006 / DOCS / implementation
   - Файлы: docs/planning/workflow-kit-context-refactor.md, docs/planning/recovery-on-demand-research.md, docs/PRODUCT.md, docs/architecture/ARCHITECTURE.md, docs/DOCUMENTATION_INDEX.md, docs/MODULES.md, docs/architecture/OVERVIEW.md, packages/workflow-kit/docs/modules/workflow-kit-package.md, README.md, packages/workflow-kit/src/WORKFLOW.md, packages/workflow-kit/src/templates/AGENTS.md, packages/workflow-kit/src/templates/PROTOTYPE.md, packages/workflow-kit/src/templates/SPEC.md, packages/workflow-kit/src/templates/PLAN.md, packages/workflow-kit/src/templates/CONTINUE.md, packages/workflow-kit/src/templates/STAGES.md, AGENTS.md, docs/planning/workflow-kit-context-transition.md, docs/modules/workflow-kit-recovery.md, docs/CONTEXT_DELIVERY.md, docs/planning/context-as-text.md, docs/WORKSPACE_SETUP.md, packages/workflow-kit/README.md, docs/modules/chatgpt-dom-compatibility.md, packages/workflow-kit/src/templates/PRODUCT.md, packages/workflow-kit/src/templates/ARCHITECTURE.md, packages/workflow-kit/src/templates/START.md
 - [TODO] T005: Собрать парный выпуск Web Pilot с новым Workflow Kit — Ожидает

@@ -1,4 +1,14 @@
-# Совместимость интерфейса ChatGPT — текущий source / 29.09.2026
+# Совместимость интерфейса ChatGPT
+
+## Текущий контракт — 0.6.97
+
+Экспорты трёх browser-модулей и сериализация pageScript сохранены. `deliver` и `inspect`, а также публичная `pageOperation` принимают необязательный `attachments` (по умолчанию пустой массив) с объектами `{ name, text }`. Прежние вызовы без вложений остаются допустимы. Действие `attach` создаёт File типа text/markdown и передаёт DataTransfer через синтетический paste; системный clipboard не используется.
+
+Inspect возвращает attachmentsPresent, attachmentsFailed и attachmentsReady. Готовность требует отдельных карточек всех ожидаемых имён, отсутствия прогресса/ошибок и доступного Send. Composer ограниченно перепроверяет загрузку, а перед кликом вновь проверяет готовность. Частичный сбой сохраняет attempt; повторная вставка того же набора защищена requestId и идентичностью документа. Неопределённая отправка не повторяется автоматически. Ошибка не переключает recovery на одну большую текстовую вставку.
+
+Полный контракт состояния и ошибок — [CONTEXT_DELIVERY](../CONTEXT_DELIVERY.md). Максимум семь частей проверяется до отправки, каждая до 28000 байт по конфигурации Kit. Ручная загрузка и чтение семи файлов подтверждены пользователем; автоматический File/DataTransfer в живом ChatGPT отложен пользователем до нового выпуска. Fixtures не означают такую приёмку, как и приёмку native Windows.
+
+Sidebar должен обновить свои три vendor-файла и lock по собственному процессу; его workspace и сборка здесь не изменяются. Ниже сохранены постоянные границы общего API и сведения о прежних реализациях. При расхождении доставки действует этот раздел и текущий CONTEXT_DELIVERY.
 
 ## Внешний потребитель — Web Pilot Sidebar / 02.10.2026
 
@@ -8,7 +18,7 @@ Sidebar собирает `src/chatgpt-dom.mjs`, `src/chatgpt-composer.mjs` и `s
 
 - `CHATGPT_SELECTORS`, включая `stop`; `createChatGPTDOM(selectors)` с `editor()`, `sendButton()`, `first(selector)`; `chatGPTDOMScript()`.
 - `pageOperation(args, dom)` вызывается прямо на странице. Его экспорт восстановлен в T008 после уточнения внешнего потребителя; `ComposerError` Sidebar не использует, класс остаётся внутренним.
-- `ChatGPTComposer(contents, { timeoutMs })` с `deliver({ text, requestId, expectedExperience })` и `inspect({ action, text })`. От `contents` Sidebar предоставляет `getURL()` и `executeJavaScript(code)`.
+- `ChatGPTComposer(contents, { timeoutMs })` с `deliver({ text, requestId, expectedExperience, attachments })` и `inspect({ action, text, attachments })`. attachments необязателен. От `contents` Sidebar предоставляет `getURL()` и `executeJavaScript(code)`.
 - `chatGPTEntrypoint(experience)` и `isPendingChatGPTConversation(url)`.
 
 Sidebar восстанавливает точную строку `pageScript` из функции и DOM factory:

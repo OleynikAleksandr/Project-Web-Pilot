@@ -1,164 +1,57 @@
-# Workflow Kit Package — техническая спецификация
+# Workflow Kit 1.6.0 — контракт пакета
 
-С 06.10.2026 пакет живёт в `packages/workflow-kit` репозитория Project Web Pilot; до этого — отдельный репозиторий WorkflowKit, история которого перенесена. Обзор, устройство и история версий — [README пакета](../../README.md).
+@webpilot/workflow-kit — пакет packages/workflow-kit репозитория Project Web Pilot. Node 22+; рабочий consumer Web Pilot 0.6.97 использует Node 24.21.0. Исходник — src/, установленная .harness/kit и resources/workflow-kit — производные копии. Версии/хеши поставок читаются из manifest и Git, не из истории в README.
 
-Canonical source/runtime `@webpilot/workflow-kit` — **1.5.6**, 35 файлов; начиная с 1.5.6 SHA-256 в документах не ведётся — копии сверяются с исходником пакета. Версия 1.5.5, включённая в Web Pilot 0.6.95, — 35 файлов, SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`. Последний отдельный GitHub Release Kit — **v1.5.1**, 35 файлов, SHA-256 `93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33`. Текущий опубликованный consumer — Project Web Pilot **0.6.95**, bundled runtime — Workflow Kit **1.5.5**.
-
-## Среда Node.js
-
-Минимальное требование `@webpilot/workflow-kit` — **Node 22+**: его задают `package.json` (`engines.node: >=22`), CLI и installer launcher. Рабочая среда разработки и опубликованный Web Pilot 0.6.95 используют **Node 24.21.0**. Canonical package/runtime version — 1.5.6 (в Web Pilot 0.6.96; в 0.6.95 — 1.5.5); последний отдельный GitHub Release Kit — v1.5.1.
-
-## Назначение
-
-`@webpilot/workflow-kit` — единственный canonical Node.js package Workflow Kit. Он предоставляет CLI, installer/upgrade, programmatic imports для доверенных локальных клиентов и self-contained runtime payload для упаковки приложений.
-
-Source of truth: `src/`. Установленный `<project>/.harness/kit/` — производный snapshot installer-а, а не второй редактируемый исходник.
-
-## Current plan contract
-
-Project state принадлежит Git checkout/worktree:
-
-```text
-one checkout/worktree
-        =
-one current plan
-        =
-.harness/plans/todo-plan.md
-```
-
-Chat/WebPilot session не владеет plan и не выбирает его. Обычные `status/validate/recover/task/commit` работают без session selector.
-
-Legacy `--session` временно принимается только как compatibility metadata. Legacy `--plan` не может переключить runtime на historical plan: допускается только current scope ID, иначе возвращается `PLAN_NOT_CURRENT`.
-
-`plan:prepare`, `plan:bind` и ownership-`plan:adopt` удалены из постоянного workflow contract.
-
-## Consumer API
-
-Основные импорты:
-
+## Публичный API
 ```js
-import {
-  VERSION,
-  getRuntimeRoot,
-  currentPlanView,
-  sessionPlanView,
-} from '@webpilot/workflow-kit';
-
+import { VERSION, getRuntimeRoot, currentPlanView, sessionPlanView } from '@webpilot/workflow-kit';
 import { contextPacket } from '@webpilot/workflow-kit/lib/recovery';
 import { install, inspect } from '@webpilot/workflow-kit/lib/installer';
 ```
+Существующие lib-subpaths (common/actions/plan/transaction/installer/inspection-inputs/installation-files/git/session-plans и остальные), schemas/templates/WORKFLOW, CLI и installer exports сохраняются.
 
-Также сохраняются subpath exports для `common`, `actions`, `session-plans`, `plan`, `transaction`, `installer`, `inspection-inputs`, `installation-files`, `git` и других существующих lib-модулей.
+currentPlanView(root) возвращает current todo-plan, scope/plan_id и parsed plan. sessionPlanView(root, sessionId) — совместимый фасад того же checkout: session_id может отражаться в результате, prepared/unassigned пусты; исторический planId не выбирает состояние. Независимая работа требует отдельного worktree, который Kit сам не создаёт.
 
-### currentPlanView
+## План и команды
+Один .harness/plans/todo-plan.md на checkout. Legacy --session — только метаданные; --plan допускает current scope, иначе PLAN_NOT_CURRENT. plan:prepare/bind/adopt удалены.
 
-`currentPlanView(root)` — основной checkout-scoped consumer view. Он возвращает current `todo-plan.md`, его `plan_id`/scope и parsed plan.
+plan:create начинает реализацию при NONE; ясный запрос допускает спецификацию и план без фиктивного дополнительного согласования. Исследование/обсуждение не требует плана. task:start → работа → commit --task сохраняют фактические файлы, trailers, references и проверки. Транзакция и Git-история проверяются существующим resolver; промежуточный service commit не теряет файлы задачи.
 
-### sessionPlanView — transition facade
+plan:extend сохраняет позиции/содержимое DONE. before вставляет работу перед не начатой задачей и добавляет зависимость; зависимости вперёд недопустимы. spec — поле верхнего уровня, task:update уточняет checks/files/acceptance.
 
-`sessionPlanView(root, anySessionId)` временно сохраняется для адаптации старого Project Web Pilot.
+DOCS требуется перед явно назначенным delivery. Новый раунд выпуска получает DOCS/DOCS-2/... и отдельную iteration; старые delivery сохраняют прежние зависимости. Без выпуска автоматической DOCS нет. Pre-push не пропускает незавершённую DOCS; all DONE означает READY_FOR_ACCEPTANCE, не автоматическое закрытие.
 
-Его семантика:
+docs:commit при NONE/idle ACTIVE фиксирует .md вне .harness/ ролью documentation, без suite приложения. Kit-секции AGENTS.md/AGENTS.override.md в index должны совпадать с HEAD. Все изменённые .md/.markdown любого регистра проверяются до ролей/тестов по budget.document_bytes (default 28000), кроме точного todo-plan.md. Ошибки сохраняют правки и дают команду повтора.
 
-- любой syntactically valid session ID видит один и тот же current plan checkout;
-- `session_id` может echo-иться обратно consumer-у;
-- `prepared` и `unassigned` пусты;
-- session ID не выбирает plan и не создаёт owner;
-- historical `planId` не является runtime selector.
+archive требует всех DONE и прямого поручения; сохраняет пустой current plan с archived_scope_id, прошлый читается из родителя closing commit. plan:carryover по поручению переносит незавершённые задачи, критерии/проверки/контекст и зависимости, сохраняет source_commit; нужен чистый checkout без активной задачи и точная revision. Архивных копий нет; повторы/прерывания обслуживает обычная транзакция.
 
-После адаптации Web Pilot новый код должен предпочитать `currentPlanView`; compatibility facade можно удалить отдельным breaking change.
+project:rename меняет имя current plan и пути hooks в manifest служебным kit-update; не переименовывает папку. При активной задаче/неверном имени отказ, без изменений повторного коммита нет.
 
-## Legacy migration
+## Recovery и документы
+Общий пакет — Workflow Core, PROTOTYPE, проектные ограничения AGENTS и OVERVIEW; README не обязателен. ACTIVE содержит все карточки задач и целые выбранные документы; NONE — компактный прошлый план и Git-ссылки. MODULES/INDEX совместимых старых проектов передаются ссылкой даже при required. Формы по --help, сырые JSON/diff не включаются.
 
-Upgrade session-owned установки:
+Документы дедуплицируются по path/revision, required побеждает. WORKTREE и точный SHA проверяются; удаление required-документа атомарно закрепляет существующий before_head blob. Если blob отсутствует, ошибка. Приватные пути исключаются, изменения файлов подтверждаются содержимым без обновления индекса; автоматически исключённые приватные правки перечисляются в excluded_changes, явный выбор отклоняется.
 
-1. сначала строго валидирует existing `.harness/plans/todo-plan.md`;
-2. valid current plan всегда остаётся winner, даже если legacy directories содержат ACTIVE plans;
-3. invalid/missing current plan останавливает migration до любых destructive writes;
-4. `.harness/plans/by-id/*.md` и `.harness/plans/by-session/*.md` сохраняются в `.harness/plans/archive/legacy-session-plans/` с digest verification и collision-safe именами;
-5. только после подтверждённых archive copies исходные legacy files удаляются;
-6. owner/prepared/session ownership fields удаляются из current plan;
-7. повторный upgrade/migration идемпотентен.
+contextPacket сохраняет inline-context-v1 и COMPLETE, но включает parts[] с индексами, размерами, SHA-256, точными source-фрагментами. Каждая часть с оформлением <=document_bytes; весь пакет <=min(hard_bytes,180000), не больше 7 частей. Splitter сохраняет UTF-8 и весь текст, ошибки CONTEXT_TOO_LARGE не возвращают усечённого успеха. Soft token-поля принимаются для перехода, но не задают ограничения.
 
-Historical archive не участвует в normal readiness, inspection key или current recovery. Oversized history поэтому не блокирует проект; hard transport limit остаётся строгим для current recovery.
+Readiness/inspection проверяют только current state, учитывают реальные содержательные правки в NONE/planning и dirty-файлах. Web Pilot использует этот же inputKey. Полный контракт — [recovery](../../../../docs/modules/workflow-kit-recovery.md).
 
-## Git worktrees
+## Установка и совместимость
+install создаёт README, OVERVIEW, AGENTS locator и служебные файлы. Новые модули/спецификации появляются по необходимости. Упразднённые документы не восстанавливаются, исторический индекс не дополняется.
 
-Workflow Kit не создаёт worktrees автоматически. Если требуется независимая параллельная работа, consumer создаёт отдельный Git branch/worktree обычными средствами Git. Каждый worktree получает свой tracked `.harness/plans/todo-plan.md` и поэтому имеет независимое current state без глобального registry.
+upgradeFrom включает 1.5.6. Проверяются целостность owned/managed файлов, резервная копия и отдельный kit-update. Current plan всегда остаётся источником; invalid/missing current останавливает миграцию. Legacy by-id/by-session/archive удаляются без архивных копий, только если каждый файл tracked и совпадает с HEAD/index; чужие изменения запрещают удаление. Owner/session-поля больше не управляют состоянием. Миграция проектной документации отдельно от установки.
 
-## Runtime resource
+getRuntimeRoot() возвращает самодостаточный payload. Consumer копирует его в resources; состав и содержимое сверяются с src/ без закреплённых вручную SHA/числа файлов. Готовое приложение не зависит от исходников или соседнего репозитория. Старые chat URL/title/history клиента сохраняются.
 
-`getRuntimeRoot()` возвращает абсолютный путь к canonical runtime payload текущей package version. Consumer может stage его как build artifact:
+В текущем checkout переход выполняется только в T006 после парной сборки; installed 1.5.6 и legacy budget сохраняются до него. [Порядок перехода](../../../../docs/planning/workflow-kit-context-transition.md).
 
-```js
-import fs from 'node:fs/promises';
-import { getRuntimeRoot } from '@webpilot/workflow-kit';
+## Проверки
+npm run check пакета (kit-check):
+- check-package — exports/identity/версия/состав npm pack;
+- check-consumer-contract — file:-зависимость, standalone imports/runtime без исходника;
+- check-runtime-fixture — CLI/hooks/lifecycle/upgrade/раунды, включая check-document-fixture и check-project-recovery-fixture;
+- check-carryover-fixture — перенос, Git history, зависимости, guards и прерывания.
 
-await fs.cp(getRuntimeRoot(), stageDirectory, { recursive: true });
-```
+Корневой npm test (unit-all) обязателен отдельно. Реальная копия проекта с новым runtime проверяется до/после нормализации: <=144000 байт и <=7 частей, без сокращения плана и изменения рабочей .harness/kit. tests/workflow-kit-upgrade.test.mjs подтверждает start старым 1.5.6 → kit-update → commit новым → следующая задача.
 
-Готовое приложение обязано быть self-contained и не зависеть от исходников пакета: в него попадает копия runtime, равная `src/` файл в файл.
-
-## Project Web Pilot adaptation
-
-Web Pilot сохраняет старые chat/session records и их chat URL/title/history, но больше не использует legacy `planId`, `originSessionId` или binding metadata для выбора Workflow Kit state.
-
-Правило UI:
-
-> Открыть любой старый или новый chat = открыть его conversation history и показать актуальный current plan выбранного project checkout.
-
-Если нужен старый plan, связанный с прежним разговором, он показывается отдельным read-only history view.
-
-Workspace Setup и project readiness проверяют только current checkout state и не full-recover-ят historical plans.
-
-## Актуальная интеграция — Project Web Pilot 0.6.96
-
-Опубликованный Project Web Pilot 0.6.96 включает Workflow Kit 1.5.6 из этого пакета (35 файлов). Клиент 0.6.96 вставляет пакет `recover` первым сообщением на macOS и Windows, сообщение автопродолжения берёт данные следующей задачи из текущего плана, а строка для внешнего клиента просит агента выполнить `recover --format text > .harness/runtime/recovery.txt`. Доставка пакета через MCP (0.6.86–0.6.95) удалена. Мастер подготовки проекта Web Pilot берёт список обновляемых версий из установщика пакета (`upgradeFrom`). [Контракт](../../../../docs/planning/context-as-text.md).
-
-Предыдущая парная Web Pilot 0.6.95 включала canonical Workflow Kit 1.5.5 (35 файлов, SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`). Клиент использует Node 24.21.0 и сохраняет checkout-scoped current-plan contract; изменения 0.6.95 относятся к macOS Codex App Server MCP и не меняют API/CLI/runtime Kit. Windows x64 0.6.95 собран и проверен на Mac; native Windows остаётся отдельной проверкой. [Release Web Pilot 0.6.95](https://github.com/OleynikAleksandr/Project-Web-Pilot/releases/tag/v0.6.95).
-
-## Проверки package contract
-
-`scripts/check-runtime-fixture.mjs` проверяет single-active runtime, compatibility session IDs, legacy migration, strict current recovery budget, Git worktree isolation и порядок code → DOCS → package/installed при plan:create/plan:extend, включая повторное открытие DOCS для correction.
-
-`scripts/check-consumer-contract.mjs` проверяет local `file:` dependency, package/subpath imports, `currentPlanView/sessionPlanView`, `npm pack` standalone consumer и копию runtime без исходника пакета.
-
-`scripts/check-package.mjs` проверяет package identity/exports, одну версию в `package.json` и `src/lib/common.mjs` и отсутствие project/runtime state в tarball.
-
-`scripts/check-carryover-fixture.mjs` проверяет `plan:carryover` через установленный CLI.
-
-Все четыре скрипта запускает `npm run check` пакета (из корня репозитория — `npm run check --prefix packages/workflow-kit`, в плане Project Web Pilot — проверка `kit-check`). Закреплённых версии, числа файлов и SHA-256 в скриптах нет: установленная и упакованная копии сверяются с `src/` файл в файл; значения ниже — справка о выпущенных состояниях.
-
-Последний отдельный GitHub Release **@webpilot/workflow-kit v1.5.1**: 35 runtime-файлов, SHA-256 **93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33**. Canonical source/runtime **1.5.6**: **35 файлов**, SHA-256 не ведётся. Версия 1.5.5: **35 файлов**, SHA-256 **8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376**. Исторические версии: 1.5.2 — `646fec106c498e004d8688a3bc40012bea1654178ce66a61b650211ab28055df`; 1.5.3 — `d59ae7b6b074e953fdd6c5d78d1f644902f0e7b9af5ad3c78d67d42f1f6a1c0f`; 1.5.4 — `3a9a3838dbfaac80bccf8cb05d3be71576797cbb6946c6b1537a9c73c383b562`. Installer сохраняет совместимые upgrade-paths; runtime regression проверяет migration, recovery budget и Git worktree isolation.
-
-## Workflow Kit 1.5.6 — задача в середину плана, изменения по содержимому
-
-`plan:extend`: поле задачи `before` ставит новую задачу перед ещё не начатой и добавляет той зависимость от новой; поле верхнего уровня `dependencies` дополняет зависимости не начатых задач; зависимость от задачи, стоящей позже, отклоняется (`TASK_ORDER`). `plan:extend --help` перечисляет поля задачи и место `spec`.
-
-Список изменений рабочей папки (`paths(root)` в `src/lib/git.mjs`) строится по содержимому: запись, которую Git показывает из-за расхождения служебных данных файла с индексом, подтверждается `git hash-object`. Индекс при этом не обновляется. Изменённый приватный путь исключается из автоматического состава коммита задачи и попадает в `excluded_changes`; явный `--files` с приватным путём отклоняется (`PRIVATE_CONTEXT`).
-
-Причина прежнего ложного `PRIVATE_CONTEXT` и описание для пользователя — в [README пакета](../../README.md). Проверка — сценарий порядка задач в `scripts/check-runtime-fixture.mjs`.
-
-## Workflow Kit 1.5.5 — push только после DOCS
-
-По поручению пользователя 04.10.2026 ([контракт](../planning/push-after-docs.md)): управляемый `pre-push` hook отказывает в push, пока у текущего плана checkout есть незавершённая DOCS (`DOCS_BEFORE_PUSH`). Без плана и после DOCS push разрешён; повторно открытая `plan:extend` DOCS снова его останавливает. Так публикация исходников на GitHub, оформленная даже обычной задачей, не уходит раньше актуальных документов. Форма плана и правила прототипа называют такую публикацию delivery-задачей после DOCS (`verification_kind=package` с проверкой удалённой ветки). Новых полей схемы нет. Runtime 1.5.5: 35 файлов, SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`.
-
-## Workflow Kit 1.5.4 — компактный recovery
-
-По поручению пользователя 04.10.2026 ([контракт](../planning/compact-recovery.md)): recovery больше не включает формы PLAN/SPEC/CONTINUE/STAGES — их печатают `plan:create --help`, `plan:extend --help` и `task:start --help`. Карты `docs/MODULES.md` и `docs/DOCUMENTATION_INDEX.md` остаются обязательными документами плана, но в recovery идут ссылкой (целиком — только в финальной DOCS). Блок «ФОРМЫ И КАРТЫ ПО ЗАПРОСУ» перечисляет команды и пути. Пакет Project Web Pilot уменьшился примерно вдвое: агент в ChatGPT получает его за 1–2 чтения. Схема плана и проверки не менялись. Runtime 1.5.4 — 35 файлов, SHA-256 `3a9a3838dbfaac80bccf8cb05d3be71576797cbb6946c6b1537a9c73c383b562`; upgrade 1.5.3 → 1.5.4 через `install --update`.
-
-## Workflow Kit 1.5.3 — переименование проекта
-
-По поручению пользователя 04.10.2026 добавлена команда `project:rename --name <имя> --expected-revision N`. Она меняет `project_name` в current plan (заголовок плана и recovery) — например, после переименования папки проекта — и обновляет абсолютные пути git-hooks в `.harness/kit-manifest.json` под текущий checkout. Один служебный коммит (роль kit-update); повтор без изменений не коммитит; при активной микрозадаче и недопустимом имени — отказ без изменений. Папку команда не переименовывает. Установки 1.5.2 обновляются до 1.5.3 штатным `install --update`. Runtime: 35 файлов; SHA-256 `d59ae7b6b074e953fdd6c5d78d1f644902f0e7b9af5ad3c78d67d42f1f6a1c0f`. Проверка — сценарий переименования в `scripts/check-runtime-fixture.mjs`. Контракт: [Переименование проекта](../planning/project-rename.md).
-
-## Workflow Kit 1.5.1 — перенос остатка scope
-
-По поручению пользователя 28.09.2026 добавлена plan:carryover: архив содержит точную исходную копию со статусами TODO/DONE; новый current plan — только незавершённые задачи и DOCS. Критерии, проверки, planning/module ссылки и зависимости между оставшимися задачами сохраняются. Ссылки на выполненные зависимости хранятся в carryover metadata и архиве. Оба плана фиксируются одним Git-коммитом. Нужны чистый checkout, отсутствие активной микрозадачи, точная revision и прямое поручение. Повтор после успеха безопасен; прерывания обслуживает штатный repair. Обычный archive сохраняет требование всех DONE. Runtime: 35 файлов; SHA-256 93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33.
-
-Проверка — scripts/check-carryover-fixture.mjs через установленный CLI: точный архив, сохранность задач, зависимости, отказы без изменения плана, повтор и прерывания до/после коммита. Входит в runtime gate. 0.6.72 был первым Web Pilot с plan:carryover; текущий опубликованный consumer — Project Web Pilot 0.6.95 с bundled Kit 1.5.5.
-
-## Документальная актуализация после публикации 0.6.78 — 03.10.2026
-
-По поручению пользователя README и связанные документы отражают опубликованную поставку клиента. AutoPlan 0.6.78 использует native ID или сохраняемые наблюдаемые циклы генерации, ожидает готовность истории и очищает только собственную неизменённую отменённую вставку. Защита от повторов и ручной ввод сохраняются. Живая приёмка исправления, native Windows и чистый первый запуск отдельно не подтверждены. Источник проверки — опубликованный тег клиента и его release/verification документы.
-
-Проверка этой актуализации: версии и взаимные ссылки README, все локальные Markdown-ссылки, неизменность runtime/package относительно v1.5.1; затем managed commits и сверка main/README через GitHub. Новая версия Kit, сборка клиента и перемещение release tags не требуются. Архивирование не поручено.
+Web Pilot Sidebar переиспользует browser-модули клиента; его vendor lock и production Host API не принадлежат этому пакету. Live ChatGPT и native Windows остаются пользовательскими проверками.

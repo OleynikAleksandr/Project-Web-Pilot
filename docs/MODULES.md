@@ -1,5 +1,15 @@
 # Модули проекта
 
+## Актуальная карта 0.6.97 / Kit 1.6.0
+
+Короткая карта модулей и владельцев теперь находится в [OVERVIEW](architecture/OVERVIEW.md). Этот прежний маршрутизатор сохраняется до миграции после T007, в recovery передаётся ссылкой. Нижеследующие версии и доказательства относятся к предыдущим выпускам.
+
+Изменённые контракты: [recovery](modules/workflow-kit-recovery.md), [доставка вложениями](CONTEXT_DELIVERY.md), [Workspace Setup](WORKSPACE_SETUP.md), [пакет Kit](../packages/workflow-kit/docs/modules/workflow-kit-package.md), [browser API](modules/chatgpt-dom-compatibility.md). Они заменяют прежние описания контекстной capsule, единой текстовой вставки, архивных копий планов и безусловной DOCS. Current plan принадлежит checkout, README не обязателен в recovery, прошлый план в NONE представлен компактными строками; delivery нового раунда получает свою DOCS. MCP обеих ОС остаётся каталогом из девяти инструментов без контекста.
+
+Две рабочие спецификации — [требования](planning/workflow-kit-context-refactor.md) и [переход](planning/workflow-kit-context-transition.md). До T006 установленный Kit 1.5.6 не подменяется исходниками 1.6.0. Статус исходников не означает поставку или native Windows приёмку.
+
+## Сохранённая карта предыдущего выпуска
+
 Состав и связи (06.10.2026): **Workflow Kit** — планы и recovery, пакет `packages/workflow-kit` этого репозитория; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс в своём репозитории. [Рабочие каталоги и границы интеграции](SOURCE_WORKSPACES.md).
 
 

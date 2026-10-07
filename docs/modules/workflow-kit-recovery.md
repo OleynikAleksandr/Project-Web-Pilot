@@ -1,242 +1,54 @@
-# Module Specification — Workflow Kit / Context Recovery
+# Workflow Kit / восстановление контекста
 
-Связанные проекты (03.10.2026): **Workflow Kit** — планы и recovery; **Web Pilot Sidebar** — отдельно разрабатываемый браузерный интерфейс. [Рабочие каталоги и границы интеграции](../SOURCE_WORKSPACES.md).
+Контракт Workflow Kit 1.6.0 и Web Pilot 0.6.97. Исходник — packages/workflow-kit/src; установленная .harness/kit обновляется штатным installer. Для текущего проекта до T006 действует установленный Kit 1.5.6; порядок — [переход](../planning/workflow-kit-context-transition.md).
 
-> **0.6.96 / Workflow Kit 1.5.6** ([контракт](../planning/context-as-text.md)). Пакет recovery по-прежнему строит Kit командой `recover`; Web Pilot вставляет его первым сообщением на обеих системах, MCP его не доставляет. Kit 1.5.6: новая задача может быть поставлена перед указанной не начатой задачей (`"before"` в `plan:extend`, зависимости дополняются полем верхнего уровня `"dependencies"`), `plan:extend --help` перечисляет поля задачи, а список изменённых файлов подтверждается содержимым — индекс Git, тронутый другой программой, больше не вызывает ложный отказ `PRIVATE_CONTEXT`. Действительно изменённый приватный путь в коммит задачи не попадает и перечисляется в `excluded_changes`. Для агента вне Web Pilot recovery создаётся файлом: `recover --format text > .harness/runtime/recovery.txt`.
-
-## Назначение
+## Ответственность
+Kit владеет текущим планом, Git references, сборкой/полнотой recovery и проверками документов. Браузерная доставка принадлежит [Web Pilot](../CONTEXT_DELIVERY.md), runtime/MCP — исполнителю. Связанный Web Pilot Sidebar использует browser-адаптер, не меняет владельца recovery.
 
-Дать агенту минимальный самодостаточный execution state, достаточный для безопасного продолжения текущего scope после новой сессии, ручного refresh или подтверждённого compact. Recovery не является архивом знаний проекта и его размер не должен расти вместе с возрастом проекта.
+Один checkout/worktree — один .harness/plans/todo-plan.md. Chat/session ID не выбирает план. Обсуждение и исследование допустимы без реализации; пакет не назначает работу вместо пользователя.
 
-## Владелец функционала
+## Состав пакета
+Общее ядро: Workflow Core, PROTOTYPE, проектная часть AGENTS.override.md либо AGENTS.md, OVERVIEW, workspace/HEAD/revision, среда, решения пользователя, состояние Git/транзакции и дальнейшее действие. Управляемая Kit-секция AGENTS повторно не включается. README не является обязательным общим источником, но может быть явно выбран.
 
-Модуль владеет:
-- единственным current plan checkout/worktree в `.harness/plans/todo-plan.md` и read-only migration/history legacy session plans;
-- правилами формирования recovery capsule;
-- выбором обязательных документов и dependency commits;
-- continuity текущей микрозадачи через Git references и worktree diff;
-- budget/полнотой recovery.
+ACTIVE добавляет рабочую спецификацию, выбранные документы и **все задачи**: id/title/why/status/dependencies/criteria/SHA/files/checks. Плановые файлы перечислены один раз; фактический состав задаётся этим списком с точными добавлениями/исключениями. Сырой JSON плана и diff не передаются.
 
-Модуль не владеет:
-- содержанием продуктовой архитектуры других модулей;
-- браузерной доставкой сообщения в ChatGPT;
-- MCP/tunnel lifecycle и выбором сетевых портов;
-- полной историей проверок и решений проекта.
+NONE добавляет archived_scope_id, проверенный SHA закрытия, компактные строки предыдущих задач «id — заголовок — статус — SHA» и ссылки на спецификации в Git. Источник прошлого плана — родитель коммита закрытия. Новый проект без прошлого плана допустим.
 
-## Workflow Core
+В пакете перечислены staged/unstaged/untracked и посторонние пути, но не содержимое изменений. docs/planning представлен путями, заголовками и размерами. Verification evidence относится к текущему кандидату/коммитам; историческая проверка не доказывает нынешний артефакт.
 
-В каждую сессию передаётся только компактный неизменяемый core правил:
-1. Пользователь определяет продуктовый результат, scope, приёмку и закрытие.
-2. Один checkout/worktree имеет один current plan либо NONE; session ID не выбирает state. Transitional `--session` — compatibility/no-op, а `--plan` допускает только current scope.
-3. Новый запрос сначала сопоставляется с архитектурным модулем.
-4. Для существующего модуля сначала согласуется изменение его specification; при отсутствии владельца сначала создаётся новая specification.
-5. Todo-plan реализует уже согласованный контракт, а не проектирует архитектуру по ходу микрозадач.
-6. Перед изменением начинается текущая task; каждая микрозадача завершается собственным проверенным commit.
-7. Не обходить hooks, не удалять и не откатывать посторонние изменения.
-8. Cross-module работу по возможности делить по владельцам и небольшой интеграционной задаче.
-9. Архивирование scope требует отдельной прямой команды пользователя.
+Перед реализацией агент читает только нужные коммиты, диффы и код. Формы этапов не включаются заранее: plan:create --help, plan:extend --help, task:start --help.
 
-Большой `.harness/kit/WORKFLOW.md` остаётся reference manual для команд, repair, установки, миграций и редких аварийных сценариев; целиком в обычный recovery не входит.
+## Документы и ревизии
+context_pack.documents задаётся у плана/задачи:
+- path — безопасный путь проекта; revision — WORKTREE по умолчанию либо точный SHA;
+- required:true — целый документ; optional — проверяемая ссылка;
+- дедупликация по (path, revision), required побеждает; разные ревизии не смешиваются;
+- старый heading_path принимается, но не выбирает раздел; dependency_task_ids не добавляет diff;
+- совместимость: docs/MODULES.md и docs/DOCUMENTATION_INDEX.md передаются ссылкой с ревизией и размером даже при required. Источник проверяется.
 
-## Цикл изменения функционала
+Отсутствующий required WORKTREE/blob — ошибка. При удалении required-документа транзакция закрепляет ссылку на существующий blob before_head; если документа там нет, операция отклоняется. Изменение ссылки и удаление атомарны, правки при отказе сохраняются. Приватные пути и неподходящие типы файлов не включаются.
 
-1. Получить запрос пользователя.
-2. Найти владельца в `docs/MODULES.md`.
-3. Если модуль существует — изменить его specification и согласовать новый контракт.
-4. Если владельца нет — создать module specification с facade, входами, выходами, границами и инвариантами; зарегистрировать в module map; согласовать.
-5. Только после этого создать/уточнить todo-plan реализации.
-6. Todo-plan обязан явно перечислить внешний контекст, без которого следующая сессия не сможет безопасно продолжить работу.
+## Части и пределы
+budget.document_bytes в workflow.json — 28000 байт UTF-8 по умолчанию, вместе со служебным оформлением. Целые документы/карточки задач сохраняются единицами, пока помещаются. Общая функция делит большие единицы по заголовкам → абзацам → строкам → символам UTF-8, без потерь и повторов. Большой legacy-документ отмечается «разделить при следующей правке».
 
-Для чисто исследовательского или документального scope module specification может быть заменена явно указанным planning/spec document; функциональная реализация без согласованного владельца/контракта не начинается.
+Эффективный общий предел — min(budget.hard_bytes, 180000); частей не больше 7. Восьмая часть вызывает CONTEXT_TOO_LARGE даже ниже байтового предела. Ошибка сообщает размеры, число частей и крупнейшие источники; частичного успешного пакета нет. Псевдотокены bytes/2 и soft_exceeded удалены. Legacy soft_tokens/hard_tokens принимаются только для совместимости конфигурации.
 
-## Recovery Capsule v2
+Формат parts[]: index, total, text, bytes, characters, sha256, sources[]. У source есть source/revision, part/total, точный content и oversized. Сцепление source-фрагментов восстанавливает документ. Общий text/context — части через два перевода строки, включая все заголовки и разделители.
 
-Стандартный packet новой сессии, refresh и compact строится из текущего состояния репозитория и содержит:
-1. session metadata: session_id/plan_id/plan_path/project/workspace/HEAD/plan revision/scope/task/reason/signature;
-2. Workflow Core;
-3. краткий project overview;
-4. module specification и другие `required` sections, явно перечисленные текущим plan/task;
-5. текущую цель, acceptance criteria, progress и полное описание текущей task;
-6. актуальные решения пользователя текущего scope;
-7. diff только прямых task dependencies и явно объявленных context dependencies;
-8. staged/unstaged/untracked изменения только файлов текущей task;
-9. последнюю verification evidence, относящуюся к текущему candidate/commit;
-10. однозначное next action и completeness metadata.
+## Фасад и свежесть
+- recover(root), recoverState(root), contextPacket(root): проверенный полный пакет либо явная ошибка. contextPacket сохраняет delivery_protocol=inline-context-v1 для совместимости; теперь передаёт parts.
+- status/validate и currentPlanView читают тот же checkout. sessionPlanView — совместимый фасад, не маршрутизатор планов.
+- SessionStart использует тот же builder; фактический hook/автоматический compact отдельно не считаются подтверждёнными.
+- inspectionInputs вычисляет ключ по содержимому plan/config/документов/runtime, Git/index/hooks и служебному состоянию; новые planning/NONE-источники и повторная правка dirty-файла его меняют.
+- Builder сверяет входы до/после, допускает один повтор, затем CONCURRENT_CHANGE. Web Pilot использует реальный readiness inputKey; независимого тестового contextInputKey нет. Кеш не изменяет контекст и не разрешает stale-отправку.
+- Просмотр sent/legacy/unknown чата не инициирует новый recover. Свежесть проверяется перед вставкой; пользовательский черновик сохраняется.
 
-Не входят автоматически:
-- полный `WORKFLOW.md`;
-- полный исторический `VERIFICATION.md`;
-- полный `PRODUCT.md`, `ARCHITECTURE.md`, `DECISIONS.md`;
-- история старых scopes/build reports/SHA;
-- последний завершённый commit только потому, что он последний;
-- optional documents: они передаются как reference paths и читаются по необходимости.
+## План, документы и Git
+Workflow Core — единственный владелец процесса, PROTOTYPE — техники работы/Git. Требования документов описаны в [спецификации](../planning/workflow-kit-context-refactor.md); формы не создают дополнительные обязательные отчёты.
 
-## Context Pack Contract
+docs:commit разрешён при NONE/idle ACTIVE для .md вне .harness/. Kit-секции AGENTS.md и AGENTS.override.md в index должны совпадать с HEAD побайтно. ValidateStaged до ролей/тестов проверяет размер всех изменённых .md/.markdown без учёта регистра, кроме точного .harness/plans/todo-plan.md; нетронутый legacy не блокирует коммит. Ошибка содержит путь, байты, предел и команду повтора.
 
-`context_pack.documents` — единственный явный список внешнего документального контекста.
-- `required: true` означает: section входит в capsule целиком; без неё безопасное продолжение невозможно.
-- `required: false` означает: section является reference-only и в стандартный payload не копируется.
-- Для функционального scope required context должен содержать module specification `docs/modules/*.md` и компактный `docs/architecture/OVERVIEW.md` либо эквивалентные явно согласованные документы.
-- `heading_path` должен выбирать минимально достаточный раздел, а не H1 большого исторического документа без необходимости.
+При выпуске DOCS фиксируется до delivery. Раунды сохраняют DONE и прежние зависимости, новый выпуск получает отдельную DOCS-итерацию. archive/carryover/session migration не создают архивных копий. install --update удаляет прежние архивы только после проверки tracked/HEAD/index; неизвестные изменения останавливают удаление.
 
-`include_last_completed_task` по умолчанию `false`. Commit diff включается только если task является прямой dependency либо явно указан в `dependency_task_ids`.
-
-## Budget
-
-Целевой normal recovery: 15–30 KiB; сложный модуль: 30–50 KiB; 80–100 KiB — сигнал проверить границы. Транспортный hard limit Web Pilot остаётся 180000 UTF-8 bytes; Workflow Kit не должен разрешать packet больше транспортного лимита. `soft_tokens` является индикатором компактности, а не основанием silently обрезать required data.
-
-При превышении hard limit обязательные данные не усекать. Ошибка должна указывать крупнейшие секции, чтобы уменьшить module/task context либо разделить scope.
-
-## Facade
-
-Внешний контракт модуля:
-- `plan:create / scope:create / plan:extend / task:start / commit / archive` управляют lifecycle единственного current plan checkout; `status / recover / currentPlanView / sessionPlanView` читают current state; legacy `plan:prepare / plan:bind / plan:adopt` удалены из normal workflow;
-- `recover`/SessionStart возвращают COMPLETE capsule, детерминированный текущим worktree;
-- Web Pilot получает capsule read-only и проверяет bytes/hash/facts;
-- новая сессия, manual refresh и compact используют один builder; различается только `reason`.
-
-## Инварианты
-
-- Recovery новой сессии не зависит от текста предыдущего разговора.
-- Required context не теряется и не silently truncates.
-- Размер capsule не растёт только из-за накопления исторической документации.
-- Текущая task и её dependency commits восстанавливаются однозначно.
-- Посторонние изменения не включаются как рабочий diff текущей задачи.
-- Reference manual Workflow Kit не подменяет module specification.
-
-## Проверяемые свойства
-
-- Functional scope без module spec/overview блокируется до согласования контракта.
-- Default plan не включает last completed task автоматически.
-- Optional docs не копируются в body.
-- Прямые dependencies включаются; unrelated completed commits — нет.
-- Recovery текущего Project Web Pilot после миграции укладывается существенно ниже 180000 bytes и не содержит полного исторического `VERIFICATION.md`.
-- Fresh install создаёт module map и compact overview; migration 1.1→1.2 сохраняет пользовательские документы.
-
-## Реализация core Recovery v2 — T003
-
-Source Workflow Kit использует отдельный `Workflow Core` из reference manual вместо полного блока правил. `emptyPlan()` по умолчанию ставит `include_last_completed_task=false`. При `scope:create` функциональный scope требует required `docs/architecture/OVERVIEW.md` и хотя бы одну `docs/modules/*.md`; уже существующие legacy scope не блокируются только из-за старого контракта, но добавление нового функционального task требует актуального module context.
-
-Recovery builder копирует только `required` sections. `required=false` становится reference-only записью пути/heading и не расходует payload содержимым. Commit diffs выбираются только из прямых `task.dependencies` и явных `context_pack.dependency_task_ids`. Verification evidence включается только если относится к текущему HEAD/dependency или текущей transaction.
-
-Эффективный hard budget ограничен минимумом project config и transport ceiling 180000 bytes / 90000 conservative tokens. При переполнении exception содержит `largest_sections`; required data не обрезается. `soft_tokens` публикуется как quality signal (`soft_exceeded`), но не удаляет данные автоматически.
-
-## Install/upgrade contract 1.2 — T004
-
-Fresh Workflow Kit 1.2 создаёт `docs/MODULES.md`, `docs/architecture/OVERVIEW.md` и plan template с module-centric `context_pack`. Workspace Setup распознаёт неизменённую 1.1 installation как upgradeable. Upgrade заменяет только подтверждённый owned runtime, обновляет принадлежащие Kit managed sections и создаёт недостающие новые документы; пользовательский active plan/config/editable docs сохраняются. Изменённый owned runtime или неизвестная версия не перезаписываются автоматически.
-
-## Предварительная подготовка полного контекста — scope 012 / T005
-
-Поручение 15.09.2026 разрешает ускорение и релиз для тестов. Web Pilot хранит в памяти ограниченный кэш COMPLETE пакетов штатного Workflow Kit, отдельно для workspace/sessionId/planId. Начиная с 0.6.29 пакет готовится для выбранного адреса новой сессии или явного обновления контекста; прогрев во время ожидания composer/черновика использует тот же load. Просмотр сохранённого sent/legacy/unknown чата не запускает прогрев или recover. request_id добавляется при фактической передаче. Текст capsule не дополняется вручную и не сокращается: при изменении входов штатный builder формирует новую версию. Кэш не заменяет Workflow Kit как владельца recovery.
-
-Ключ актуальности учитывает канонический workspace, HEAD/ветку/index и Git status, содержимое plan/config, объявленных документов и task files, Workflow Kit runtime/launcher, transaction и verification evidence. Проверяется содержимое, а не только время файла или revision. Отсутствующие источники учитываются, чтобы их появление инвалидировало кэш. Во время commit transaction прогрев откладывается. До/после сборки входы должны совпасть; перед отправкой сравнение повторяется. При сомнении — полный recover, при изменении уже вставленного пакета — prepared-stale без удаления черновика. Возраст пакета сам по себе не делает неизменившиеся данные устаревшими, если актуальность подтверждена ключом.
-
-Фоновая подготовка не отправляет сообщения, не меняет проект/черновик, не запускает тесты и не перезапускает исправные службы. Одновременные запросы одного адреса workspace/sessionId/planId объединяются; хранится до четырёх пакетов, без дополнительной дисковой копии контекста. После перезапуска первая подготовка обычная. Chat и Work используют одинаковую реализацию.
-
-Проверки: независимые workspace, изменение содержимого при сохранённых размере/mtime, staged/unstaged и HEAD, добавление/удаление файлов, evidence, гонка со сборкой/отправкой, отсутствие дублей отправки. Отдельно измеряются подготовка пакета и браузерная доставка; целевой выигрыш >2x относится к подготовке повторной передачи при готовом кэше. Полное время загрузки ChatGPT/первого ответа не обещается.
-
-## Release integration 0.6.10 — scope 012 / T009
-
-Предварительная подготовка, повторная проверка входов и спиннеры поставлены для macOS/Windows. На неизменном пакете измерен выигрыш ~19x с учётом дополнительного before-Send input check. Содержимое capsule и штатный Workflow Kit runtime не изменены. Отдельная проверка packaged macOS подтвердила работу кэша с реальным локальным MCP. Финальная проверка UX и времени полного сценария остаётся пользователю.
-
-## История: переход после приёмки — scope 014
-
-Старый переход по NONE/archived_scope_id и обязательная кнопка приёмки заменены scope 028. Завершённый план остаётся в своей сессии. Подготовка продолжения выполняется отдельно; его создание через Chat/Work не требует завершения исходного плана.
-
-## Project Continuity Contract — scope 021
-
-Workflow Kit обслуживает проекты любого типа. Программный модуль — только один из вариантов самостоятельной части проекта; для исследования, проектирования, сада, планировки или другого предметного проекта используется эквивалентный planning/spec document. Для программных проектов сохраняется кластерно-модульная архитектура: внешние взаимодействия идут через согласованные facade-контракты, а внутренняя реализация дробится на узкие классы/микроклассы.
-
-Совместимый `.harness/plans/todo-plan.md` сохраняет навигацию проекта. После явного archive выбранный ACTIVE-plan переносится в архив, а его адрес получает navigation-plan со статусом `NONE` и той же принадлежностью сессии. Он не создаёт новый рабочий scope и не назначает работу, но обязан сохранять required-ссылки на:
-- `docs/architecture/OVERVIEW.md` — компактную действующую архитектуру/структуру проекта;
-- `docs/MODULES.md` — карту самостоятельных частей проекта;
-- `docs/DOCUMENTATION_INDEX.md` — полный пополняемый индекс документации.
-
-Цель navigation-plan в `NONE`: «Обсудите следующий этап проекта с пользователем». Recovery разворачивает required-документы из этих ссылок, поэтому новая сессия понимает существующий проект без чтения истории завершённых scopes и без ложного возврата к «идее нового проекта».
-
-Каждый новый рабочий scope содержит единственную системную задачу `DOCS` с названием «Актуализация всех документов проекта». Для code-only scope она завершает список задач и зависит от всей предшествующей работы. Начиная с Workflow Kit 1.5.2, для scope с `verification_kind=package|installed` `DOCS` размещается перед явным delivery-хвостом; текущий 1.5.5 сохраняет этот порядок. Delivery-задачи зависят от `DOCS`. Агент проходит весь действующий комплект документации через `docs/DOCUMENTATION_INDEX.md`, исправляет только устаревшие документы и ссылки и фиксирует результат. Если все документы уже актуальны, задача может завершиться без искусственного редактирования содержательных файлов: отдельный управляемый commit фиксирует факт проверки.
-
-`READY_FOR_ACCEPTANCE` допускается только после завершения **всех** задач. В code-only scope это означает завершённую `DOCS`; в delivery scope после `DOCS` должны быть завершены и явные delivery-задачи. Этот enum сохраняется для совместимости истории и обозначает завершённость задач. Пользователь оценивает результат в диалоге; обязательного интерфейсного gate нет. Archive по-прежнему требует отдельной прямой команды пользователя. Если после пользовательской проверки потребовались изменения, `DOCS` переоткрывается после correction-работы; при наличии delivery-хвоста она остаётся непосредственно перед ним.
-
-`scope:create` нормализует обязательный project navigation context и добавляет/проверяет `DOCS`. Порядок, введённый в Workflow Kit 1.5.2 и сохранённый в 1.5.5, — `work → DOCS → package/installed delivery`; `plan:apply`/`plan:extend` сохраняют этот порядок и обновляют зависимости при добавлении новых задач.
-
-## Correction round после пользовательской проверки — scope 022
-
-`READY_FOR_ACCEPTANCE` означает готовность результата к пользовательской проверке, но scope остаётся `ACTIVE`. Если пользователь после проверки поручает исправления до archive, `plan:apply`/`plan:extend` должны штатно вернуть тот же scope в `IN_PROGRESS`, добавить согласованные correction tasks перед `DOCS` и повторно открыть `DOCS`. При незавершённом delivery-хвосте переоткрытая `DOCS` остаётся перед ним, а не переносится в конец.
-
-Повторное выполнение `DOCS` не должно делать commit history неоднозначной. Для этого `commit_ref` поддерживает положительный `iteration`: первая фиксация задачи совместима с историческими commit без iteration и считается iteration 1; при повторном открытии уже завершённой `DOCS` её iteration увеличивается, статусы возвращаются в `TODO/PENDING`, зависимости пересчитываются на все остальные задачи scope. Commit trailers нового прохода содержат `Workflow-Iteration`, а resolver выбирает commit только требуемой iteration.
-
-Обычные завершённые задачи остаются неизменяемыми. Повторное открытие `DOCS` разрешено, когда исходный scope остаётся `ACTIVE`, `DOCS` завершена и пользователь явно добавляет новую обычную correction-задачу; это работает как после `READY_FOR_ACCEPTANCE`, так и при ещё незавершённом delivery-хвосте. Archive по-прежнему требует отдельной прямой команды пользователя. После correction tasks новая iteration `DOCS` снова является путём к дальнейшему delivery или, для code-only scope, к `READY_FOR_ACCEPTANCE`. Реализация использует `Workflow-Iteration` только для implementation commits; historical commits без этого trailer интерпретируются как iteration 1.
-
-
-Scope 028 / T002: слой session-plans адресует канонический файл без глобального переключателя; legacy путь сохраняется.
-
-
-T003: команды принимают --session/--plan; journal сохраняет plan_path, Git hooks читают именно кандидата этого плана.
-
-
-T004: resolver различает scope/path/iteration; план другой сессии читается без присвоения pending-коммита. Один IN_PROGRESS писатель сохраняется для всех адресованных операций.
-
-
-T006: canonical contextPacket формируется внутри Workflow Kit из одного проверенного snapshot. Web Pilot больше не нуждается в workspace-only выборе внешнего runtime для контекста сессии.
-
-T010: установленный и поставляемый Workflow Core и шаблоны синхронно обновлены для адресованных планов сессий. Во всех командах используется sessionId из пакета; старый безадресный CLI разрешён только до появления связей. Подготовка продолжения не заменяет собственный план, выполнение DOCS не архивирует его. Продолжение сохраняет прежние commit references и повторно открывает DOCS.
-
-T011: Workflow Kit 1.4.0 добавляет upgrade с 1.3.0, предварительную проверку новых файлов ядра и резервную копию перед заменой. Readiness проверяет контекст каждого канонического плана; Doctor проверяет все планы, восстанавливает только читаемую проекцию и сохраняет их в backup. Pre-push разрешает commit references всех планов. Согласование manifest допустимо только с полностью совпадающим доверенным комплектом, неизвестные изменения не перезаписываются.
-
-Scope 029 / T002: историю и unfolded trailers читает штатный git log. Для commit message с patch divider --- сохраняется прежний interpret-trailers --parse; дубликаты и Workflow-Iteration не теряются. Несколько dependencies проверяет один git rev-list по графу, поэтому merge/replace refs не подменяются линейным порядком log. Семантика ошибок baseline, неоднозначных references, состава коммита и dependency order сохранена.
-
-Scope 029 / T003: recoverState формирует проверенные validation/snapshot/COMPLETE одним проходом; status не запускает validate повторно. Полная инспекция переиспользует этот результат для диагностики и COMPLETE checks всех канонических планов. Публичного параметра skipValidate или injected validated object нет. Общий отпечаток входов до/после включает все планы/документы и Git/runtime metadata; изменение отклоняет устаревший успех. Повреждённый owned runtime не запускается для launcher probe.
-
-## Интеграция readiness и recovery — scope 029 / T006
-
-Web Pilot использует полный content-key WorkspaceSetup.ready и адрес sessionId/planId для отдельного RecoveryCache. Общий fingerprint учитывает все канонические планы, integrity и transaction; COMPLETE packet по-прежнему создаёт только Workflow Kit. Невозможность подтвердить ключ блокирует подготовку и Send, без обхода по возрасту пакета. Просмотр уже существующего чата не вызывает новый recover.
-
-## Поставка 1.4.1 — scope 029 / T007
-
-Installed/bundled ядро синхронно обновлено до patch-версии 1.4.1. Формат планов, адресация и recovery остаются совместимыми с 1.4.0. Обычный upgrade поддерживает 1.4.0 и сохраняет планы/commit references; штатный Doctor согласует manifest только при полном совпадении доверенного комплекта, с backup. Ускорение не отключает hooks или полную проверку планов.
-
-T008: общий Git facade отключает только автоматическую запись stat-cache из porcelain diff через `diff.autoRefreshIndex=false`. Это устраняет повтор полной проверки из-за её собственного чтения индекса. GIT_OPTIONAL_LOCKS=0 уже присутствовал и сам по себе этот случай не устранял. Индекс продолжает входить в fingerprint целиком; явные записи и hooks сохранены.
-
-## Поставка 1.4.11 — scope 038
-
-Поставляемый комплект `resources/workflow-kit` заменён на Workflow Kit 1.4.11 из CodeAppServer+WebChatGPT, ветка `codex/gpt-provider-names`, коммит `badcf20` (tree `1fe409fb`). Тест закрепляет его версию и SHA-256 содержимого 35 файлов. Собственный Kit этого репозитория (`.harness/kit`) остаётся 1.4.1 и больше не обязан совпадать с поставляемым.
-
-Recovery 1.4.11 передаёт вместе с Workflow Core правила `PROTOTYPE.md` и формы `PLAN`, `SPEC`, `CONTINUE`, `STAGES`. Ясное поручение разрешает короткий контракт и `plan:create`; добавлены `plan:extend`, `task:update`, адресная справка `--help` и сводка среды. Формат канонических планов (`schema_version 1`) и адресация `--session/--plan` не изменились, поэтому Web Pilot читает планы проектов 1.4.1 и 1.4.11 одним кодом.
-
-## Workflow Kit 1.4.12 — планы по адресу сессии (0.6.53)
-
-Живой прогон 0.6.52 показал: `plan:create --session <id>` с проверками сначала сохраняет конфигурацию, поэтому виртуальный план сессии записывается в `.harness/plans/by-session/<id>.md`, и `createScope` оставляет его там. Команды агента этот файл находили, а `listPlans` читал только `by-id`, поэтому сайдбар, Доктор и проверка готовности видели NONE. В 1.4.12 оба каталога канонические: `listPlans` и входы инспекции читают `by-id` и `by-session`, установщик обновляет установки 1.1.0–1.4.11. Остальной код 1.4.11 не менялся; исправление нужно перенести в исходный Kit (CodeAppServer, ветка `codex/gpt-provider-names`).
-
-## Canonical package и staging — 0.6.58 / Workflow Kit 1.5.0
-
-Исторические поставки 1.4.x выше сохраняют происхождение изменений. На этапе 0.6.58 владельцем source стал `/Users/oleksandroliinyk/VSCODE/WorkflowKit/src`, тогда package был `@webpilot/workflow-kit@1.5.0`. WebPilot programmatic imports используют package exports; external Workspace Setup/Project Doctor и Electron package получают generated runtime из `getRuntimeRoot()` в ignored `resources/workflow-kit`. Для того этапа canonical и staged runtime были подтверждены как 35 файлов, SHA-256 `0db567df6f0c8f68f3119a7322b4c1c6d28cd06bf57b267993b792097bbb2c75`. Текущее состояние — раздел 1.5.5 ниже.
-
-1.5.0 делает `.harness/plans/todo-plan.md` единственным runtime current plan. `listPlans` и `sessionPlanView` transitional facade возвращают тот же current plan для любой session; prepared/unassigned пусты. Legacy `by-id`/`by-session` обнаруживаются только migration code и переносятся в `.harness/plans/archive/legacy-session-plans/`.
-
-## Workflow Kit 1.5.5 — runtime 0.6.89–0.6.95 / 05.10.2026 (текущий — 1.5.6, см. примечание в начале документа)
-
-Исходник пакета `packages/workflow-kit/src` этого репозитория (до 06.10.2026 — отдельный репозиторий `/Users/oleksandroliinyk/VSCODE/WorkflowKit`, история перенесена), installed Kit этого checkout и bundled runtime опубликованного Project Web Pilot 0.6.95 используют Workflow Kit **1.5.5**: 35 файлов, SHA-256 `8eadd98869a840f670dbfb00c33350e3054d8ec7de5298b2b0beca82d787f376`. Последний отдельный релиз пакета остаётся 1.5.1. Последний коммит прежнего репозитория — `6bbec655497eaea69d5c5825c68e9bdf78a01c18`; при переносе код, версия и runtime Kit не менялись. Спецификация пакета — [packages/workflow-kit/docs/modules/workflow-kit-package.md](../../packages/workflow-kit/docs/modules/workflow-kit-package.md).
-
-1. Один checkout/worktree имеет один current plan `.harness/plans/todo-plan.md`; новый chat/client продолжает его, независимая работа использует отдельный worktree.
-2. Recovery выдаётся компактно по частям; формы/карты читаются по запросу, а обязательные OVERVIEW/MODULES/INDEX и документы текущего контракта остаются в project context.
-3. Delivery ordering остаётся `work → DOCS → explicit build/package/install/publish tasks`; build/publish вне названной delivery-задачи запрещены.
-4. `DOCS` до первой сборки обязана пройти весь действующий `DOCUMENTATION_INDEX`; поздняя correction переоткрывает новую iteration DOCS перед оставшимся delivery-хвостом.
-5. Связанный репозиторий WorkflowKit в scope 0.6.94 и 0.6.95 получал только документальную синхронизацию собственным managed plan после публикации Web Pilot; runtime 1.5.5 не изменился.
-
-## Workflow Kit 1.5.2 — delivery ordering / исторический снимок 03.10.2026
-
-На этом историческом этапе canonical source и installed workflow runtime Project Web Pilot использовали Workflow Kit **1.5.2**, 35 файлов, SHA-256 `646fec106c498e004d8688a3bc40012bea1654178ce66a61b650211ab28055df`. Последний опубликованный WorkflowKit release оставался 1.5.1; опубликованные бинарники Web Pilot 0.6.80 содержали bundled Kit 1.5.1. В том scope приложение не пересобиралось и не публиковалось.
-
-1. `build/package/sign/notarize/release/publish` разрешены только внутри активной микрозадачи, где действие прямо названо.
-2. До build или GitHub publish относящиеся к результату документы должны быть актуализированы и зафиксированы.
-3. Code-only plan заканчивается `DOCS`; delivery-plan нормализуется как `work → DOCS → package/installed delivery`.
-4. Поздняя correction после уже завершённой `DOCS` переоткрывает новую iteration `DOCS` перед незавершённым delivery-хвостом.
-5. `startupMessage()` Project Web Pilot дублирует короткий guard, а полный canonical policy приходит из recovery Workflow Kit.
-6. Cross-repository работа этой сессии управляется current plan Project Web Pilot. WorkflowKit не оставляет отдельный незавершённый current plan; после managed технических фиксаций его состояние возвращено в `NONE`.
-
-Контракт и критерии: [input-instruction-delivery-ordering.md](../planning/input-instruction-delivery-ordering.md).
-
-## Workflow Kit 1.5.1 / Web Pilot 0.6.72
-
-Команда plan:carryover по прямому поручению архивирует исходный scope с сохранением реальных статусов и создаёт новый current plan из незавершённых задач, включая DOCS. Критерии, проверки, ссылки на planning/module документы сохраняются; перенос — один Git-коммит. Обычный archive требует всех DONE. Canonical runtime: 35 файлов, SHA-256 93de6bb6362dfe968f971922a24028886780a8df6b773730f721c7489532dd33. Общий контракт фазы 2 — docs/planning/event-driven-runtime.md; перенос не означает её завершения.
+## Проверка
+kit-check и unit-all: NONE/ACTIVE, Git revisions и удаление, полнота/дедупликация, dirty/stale, UTF-8 splitter, общий предел и граница 7/8, роли коммитов, обновление/раунды. check-project-recovery-fixture.mjs использует полный реальный проект в изолированной копии до/после штатной нормализации: <=144000 байт (запас >=20%) и <=7 частей. Он не заменяет установленный Kit рабочего checkout. Доставка проверяется отдельно; live ChatGPT и native Windows требуют пользовательской приёмки.
