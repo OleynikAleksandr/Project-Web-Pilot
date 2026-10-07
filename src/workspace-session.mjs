@@ -1,4 +1,4 @@
-import { exists } from './common.mjs';
+import { exists, diagnosticFiles } from './common.mjs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
@@ -270,8 +270,8 @@ async function purgeSessionCopies(storeFile, workspace, sessionId) {
     if (projectRemoved && data.selectedWorkspace === workspace && !data.projects.some(project => project.workspace === workspace)) data.selectedWorkspace = null;
     await writeJsonAtomic(file, data);
   }
-  const diagnostics = path.join(path.dirname(storeFile), 'diagnostics.jsonl');
-  if (await exists(diagnostics, { strict: true })) {
+  for (const diagnostics of diagnosticFiles(path.join(path.dirname(storeFile), 'diagnostics.jsonl'))) {
+    if (!await exists(diagnostics, { strict: true })) continue;
     const lines = (await fs.readFile(diagnostics, 'utf8')).split('\n').filter(Boolean).filter(line => {
       const entry = JSON.parse(line);
       return !(entry.workspace === workspace && entry.sessionId === sessionId);
@@ -373,7 +373,10 @@ export class WorkspaceSessions {
       if (!isCurrent()) return null;
       const draft = copy(this.data);
       const result = await change(draft);
-      if (!isCurrent() || !await this.save(draft, isCurrent)) return null;
+      if (!isCurrent()) return null;
+      // Many publishes re-apply the same title or projection: an unchanged store is not rewritten.
+      if (JSON.stringify(draft) === JSON.stringify(this.data)) return result;
+      if (!await this.save(draft, isCurrent)) return null;
       // Selection can change during the atomic rename. Restore the previous snapshot
       // within the same mutation queue before another writer is allowed to proceed.
       if (!isCurrent()) { await this.save(this.data); return null; }

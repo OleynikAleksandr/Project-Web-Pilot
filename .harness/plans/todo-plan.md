@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1423,
+  "plan_revision": 1425,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "recovery-on-demand-research-20261006",
@@ -1260,13 +1260,26 @@
         "context-truncation-state слушает /backend-api/conversation/<id>; diagnostics.jsonl ротируется."
       ],
       "expected_commit_message": "fix: мелкие исправления интерфейса и журналов",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "recovery-on-demand-research-20261006",
         "task_id": "T017",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "src/auto-plan.mjs",
+        "src/chromium-diagnostics.mjs",
+        "src/common.mjs",
+        "src/main.mjs",
+        "src/ui/sidebar.mjs",
+        "src/workspace-deletion.mjs",
+        "src/workspace-session.mjs",
+        "tests/auto-plan.test.mjs",
+        "tests/common.test.mjs",
+        "tests/sidebar.test.mjs",
+        "tests/workspace-session.test.mjs"
+      ]
     },
     {
       "id": "DOCS-3",
@@ -1423,7 +1436,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: recovery-on-demand-research-20261006
 Current Task: нет
-Revision: 1423
+Revision: 1425
 
 ## Цель
 
@@ -1525,8 +1538,8 @@ Revision: 1423
   - Git Commit: [DONE] fix: свободные порты, чужой PID и повторная настройка туннеля
   - Reference: recovery-on-demand-research-20261006 / T016 / implementation
   - Файлы: tools/codex-app-server-mcp/control.py, src/mac-runtime-switch.mjs, src/main.mjs, scripts/check-mac-screen-capture.mjs, tests/codex-app-server-mcp.test.mjs, tests/mac-runtime-switch.test.mjs, src/startup-platform.mjs, tests/startup-platform.test.mjs, docs/planning/correction-round-0.6.99.md
-- [TODO] T017: Мелкие исправления интерфейса и журналов — Ожидает
-  - Git Commit: [PENDING] fix: мелкие исправления интерфейса и журналов
+- [DONE] T017: Мелкие исправления интерфейса и журналов — Завершено
+  - Git Commit: [DONE] fix: мелкие исправления интерфейса и журналов
   - Reference: recovery-on-demand-research-20261006 / T017 / implementation
   - Файлы: src/main.mjs, src/workspace-session.mjs, src/auto-plan-state.mjs, src/ui/sidebar.mjs, src/chromium-diagnostics.mjs, tests/workspace-session.test.mjs, tests/auto-plan.test.mjs, tests/sidebar.test.mjs, tests/chromium-diagnostics.test.mjs, src/common.mjs, src/workspace-deletion.mjs, src/auto-plan.mjs, tests/common.test.mjs, docs/planning/correction-round-0.6.99.md
 - [TODO] DOCS-3: Актуализация всех документов проекта — Ожидает

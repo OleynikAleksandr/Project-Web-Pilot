@@ -3,6 +3,7 @@ import path from 'node:path';
 import os from 'node:os';
 import { createHash, randomUUID } from 'node:crypto';
 import { readWorkspace, WorkspaceError } from './workspace-session.mjs';
+import { diagnosticFiles } from './common.mjs';
 
 const fail = (code, message) => { throw new WorkspaceError(code, message); };
 const within = (child, parent) => child === parent || child.startsWith(parent + path.sep);
@@ -97,8 +98,8 @@ export class WorkspaceDeletion {
       if (data.selectedWorkspace === workspace) data.selectedWorkspace = null;
       await fs.writeFile(file + '.tmp', JSON.stringify(data, null, 2) + '\n', { mode: 0o600 }); await fs.rename(file + '.tmp', file);
     }
-    const file = path.join(path.dirname(this.store.file), 'diagnostics.jsonl');
-    if (await lstatOrNull(file)) {
+    for (const file of diagnosticFiles(path.join(path.dirname(this.store.file), 'diagnostics.jsonl'))) {
+      if (!await lstatOrNull(file)) continue;
       const lines = (await fs.readFile(file, 'utf8')).split('\n').filter(Boolean).filter(line => JSON.parse(line).workspace !== workspace);
       await fs.writeFile(file + '.tmp', lines.length ? lines.join('\n') + '\n' : '', { mode: 0o600 }); await fs.rename(file + '.tmp', file);
     }

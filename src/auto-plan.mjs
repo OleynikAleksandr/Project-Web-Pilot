@@ -31,6 +31,18 @@ export function continueMessage(task) {
 const key = p => p && JSON.stringify([p.workspace, p.sessionId, p.scopeId, p.chatUrl]);
 const conversationKey = p => p && JSON.stringify([p.workspace, p.sessionId, p.chatUrl]);
 const finished = p => p?.planView?.tasks?.length > 0 && p.planView.tasks.every(t => t.status === 'done');
+// The ledger of answered pauses is persisted on every pause; only recent entries matter, because a
+// conversation's current pause is always its latest. The newest entries of each conversation are kept.
+export const LEDGER_PER_CONVERSATION = 20, LEDGER_TOTAL = 400;
+export function pruneLedger(entries) {
+  const kept = [], perConversation = new Map();
+  for (const [id, entry] of [...entries.entries()].reverse()) {
+    const count = (perConversation.get(entry.key) ?? 0) + 1;
+    perConversation.set(entry.key, count);
+    if (count <= LEDGER_PER_CONVERSATION && kept.length < LEDGER_TOTAL) kept.push([id, entry]);
+  }
+  return new Map(kept.reverse());
+}
 
 export class AutoPlan {
   constructor({ selected, inspectPlan, send, onChange = () => {}, log = () => {},
@@ -73,8 +85,9 @@ export class AutoPlan {
     const next = new Map(this.checkpoints);
     next.delete(JSON.stringify([owner, replacingTurnId]));
     if (checkpoint) next.set(JSON.stringify([owner, checkpoint.turnId]), checkpoint);
-    await this.saveCheckpoint(this.checkpointState(next));
-    this.checkpoints = next;
+    const pruned = pruneLedger(next);
+    await this.saveCheckpoint(this.checkpointState(pruned));
+    this.checkpoints = pruned;
   }
   restore(enabled, checkpoint = null) {
     this.epoch++; this.clearTimer(); this.clearWatchdog(); this.run = null; this.manualWaiting = null;

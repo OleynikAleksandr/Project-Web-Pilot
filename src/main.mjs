@@ -27,6 +27,7 @@ import { SessionPlans } from './session-plans.mjs';
 import { ContextSession, externalClientLine } from './context-session.mjs';
 import { chatGPTEntrypoint, CHATGPT_SIGNIN_ENTRYPOINT } from './chatgpt-experience.mjs';
 import { WorkspaceDeletion } from './workspace-deletion.mjs';
+import { appendDiagnostic } from './common.mjs';
 import { WorkspaceSetup } from './workspace-setup.mjs';
 import { ProjectDoctor } from './project-doctor.mjs';
 import { ChromiumDiagnostics, safeUrl } from './chromium-diagnostics.mjs';
@@ -339,7 +340,7 @@ function publish() {
   if (signature !== lastDiagnostic) {
     lastDiagnostic = signature;
     fsp.mkdir(dataDir, { recursive: true, mode: 0o700 })
-      .then(() => fsp.appendFile(path.join(dataDir, 'diagnostics.jsonl'), JSON.stringify({ at: new Date().toISOString(), fixture: smoke, ...record }) + '\n', { mode: 0o600 }))
+      .then(() => appendDiagnostic(path.join(dataDir, 'diagnostics.jsonl'), JSON.stringify({ at: new Date().toISOString(), fixture: smoke, ...record }) + '\n'))
       .catch(() => {});
   }
 }
@@ -866,7 +867,7 @@ async function startupAction(action) {
   }
   if (!startupActive) throw new Error('Сначала откройте начальную настройку.');
   if (action === 'copy-diagnostics') {
-    clipboard.writeText(await chromiumDiagnostics.startupReport());
+    await clipboard.writeText(await chromiumDiagnostics.startupReport());
     return true;
   }
   if (action === 'check') { await refreshStartupAccount(); return startupFlow.check({ prepare: true }); }
@@ -1001,7 +1002,7 @@ function registerIpc() {
     ensureRuntimeSwitcher();
     if (!vpsTunnel) throw new Error('Канал VPS недоступен на этой платформе.');
     // The full address goes straight to the clipboard; it is never returned, published or logged.
-    clipboard.writeText(await vpsTunnel.connectorUrl());
+    await clipboard.writeText(await vpsTunnel.connectorUrl());
     return { copied: true };
   });
   registerAction('pilot:copy-workspace-path', async input => {

@@ -672,3 +672,14 @@ test('manual conversation binding persists independently of context delivery', a
   assert.equal(reopened.selected().chatUrl, 'https://chatgpt.com/c/manual-one');
   await assert.rejects(store.bindChat(folder, id, 'https://chatgpt.com/c/foreign-other', { manual: true }), { code: 'CHAT_CHANGED' });
 });
+
+test('a mutation that changes nothing does not rewrite the store', async t => {
+  const { project, store } = await fixture(t);
+  await store.select(await project('Без лишней записи'));
+  let saves = 0; const save = store.save.bind(store);
+  store.save = (...args) => { saves++; return save(...args); };
+  assert.equal(await store.mutate(() => 'same'), 'same');
+  assert.equal(saves, 0, 'unchanged data is not written');
+  await store.mutate(data => { data.projects[0].displayName = 'Новое имя'; });
+  assert.equal(saves, 1);
+});

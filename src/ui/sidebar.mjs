@@ -339,7 +339,9 @@ function render(state) {
   if (selected) {
     const plural = count => count % 10 === 1 && count % 100 !== 11 ? 'задача'
       : count % 10 >= 2 && count % 10 <= 4 && !(count % 100 >= 12 && count % 100 <= 14) ? 'задачи' : 'задач';
-    const statusText = plan.state === 'awaiting-acceptance' ? `Все ${plan.total} ${plural(plan.total)} выполнены`
+    const completedText = count => count === 1 ? 'Задача выполнена'
+      : plural(count) === 'задача' ? `Все ${count} задача выполнена` : `Все ${count} ${plural(count)} выполнены`;
+    const statusText = plan.state === 'awaiting-acceptance' ? completedText(plan.total)
       : plan.state === 'blocked' ? `План заблокирован · ${plan.completed} из ${plan.total} выполнено`
         : plan.state === 'closed' ? 'Scope завершён и архивирован'
           : plan.state === 'not-created' ? 'План ещё не создан'
@@ -353,7 +355,9 @@ function render(state) {
     $('plan-reason').hidden = !planReason; $('plan-reason').textContent = planReason;
     $('plan-tasks').replaceChildren(...plan.tasks.map(task => {
       const item = document.createElement('li'); item.className = 'plan-task'; item.dataset.status = task.status;
-      const mark = document.createElement('span'); mark.className = 'plan-task-state'; mark.setAttribute('aria-hidden', 'true');
+      const mark = document.createElement('span'); mark.className = 'plan-task-state'; mark.setAttribute('role', 'img');
+      // The mark alone means nothing to a screen reader: its status is spoken as text.
+      mark.setAttribute('aria-label', task.status === 'done' ? 'выполнена' : task.status === 'current' ? 'текущая' : 'не начата');
       mark.textContent = task.status === 'done' ? '✓' : task.status === 'current' ? '●' : '○';
       const body = document.createElement('div'), title = document.createElement('strong');
       title.textContent = task.title; body.append(title); item.append(mark, body); return item;

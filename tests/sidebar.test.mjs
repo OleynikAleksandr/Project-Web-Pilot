@@ -128,6 +128,12 @@ test('one project plan stays visible for the selected chat and legacy ownership 
   assert.equal(f.document.querySelector('#plan-card .eyebrow').textContent,'Текущий план проекта');
   assert.equal(f.document.getElementById('plan-title').textContent,'Текущий план проекта');
   assert.equal(f.document.querySelector('#plan-tasks strong').textContent,'Сохранённый результат');
+  assert.equal(f.document.getElementById('plan-status').textContent,'Задача выполнена');
+  assert.equal(f.document.querySelector('#plan-tasks .plan-task-state').getAttribute('aria-label'),'выполнена');
+  for(const [total,text] of [[2,'Все 2 задачи выполнены'],[5,'Все 5 задач выполнены'],[21,'Все 21 задача выполнена'],[11,'Все 11 задач выполнены']]){
+    state.selected={...state.selected,planView:{...state.selected.planView,completed:total,total}};f.emit(state);
+    assert.equal(f.document.getElementById('plan-status').textContent,text);
+  }
   assert.equal(f.document.getElementById('prepared-card'),null);
   assert.equal(f.document.getElementById('plan-origin'),null);
   assert.equal(f.document.getElementById('plan-note').hidden,true);

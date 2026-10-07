@@ -626,3 +626,16 @@ test('a next task that changed after the text was prepared is not sent; the next
   f.setInspectGate(null); await f.flow.planChanged();
   assert.deepEqual(f.sends, [continueMessage({ ...nextTask, id: 'DOCS', title: 'Документы' })]);
 });
+
+test('the ledger of answered pauses keeps the newest entries of each conversation', async () => {
+  const { pruneLedger, LEDGER_PER_CONVERSATION } = await import('../src/auto-plan.mjs');
+  const entries = new Map();
+  for (let i = 0; i < 50; i++) entries.set(JSON.stringify(['a', 't' + i]), { key: 'a', turnId: 't' + i, status: 'sent' });
+  entries.set(JSON.stringify(['b', 'only']), { key: 'b', turnId: 'only', status: 'sent' });
+  const pruned = pruneLedger(entries);
+  const a = [...pruned.values()].filter(entry => entry.key === 'a');
+  assert.equal(a.length, LEDGER_PER_CONVERSATION);
+  assert.equal(a.at(-1).turnId, 't49', 'the current pause stays recorded');
+  assert.ok(pruned.has(JSON.stringify(['b', 'only'])));
+  assert.deepEqual([...pruned.keys()].slice(-1), [JSON.stringify(['b', 'only'])], 'order is preserved');
+});

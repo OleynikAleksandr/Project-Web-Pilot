@@ -457,7 +457,7 @@ export class ChromiumDiagnostics {
         }
         if (rawUrl.origin === 'https://chatgpt.com' && params.response?.mimeType === 'application/json') {
           if (rawUrl.pathname === '/backend-api/models') this.serviceResponses.set(params.requestId, { kind: 'models', url });
-          else if (/^\/backend-api\/conversations\/[^/]+$/.test(rawUrl.pathname)) this.serviceResponses.set(params.requestId, { kind: 'conversation', url });
+          else if (/^\/backend-api\/conversations?\/[^/]+$/.test(rawUrl.pathname)) this.serviceResponses.set(params.requestId, { kind: 'conversation', url });
         }
       } catch {}
       if (url.origin === 'https://chatgpt.com' && url.path === '/backend-api/f/conversation'
