@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1430,
+  "plan_revision": 1432,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "recovery-on-demand-research-20261006",
@@ -1410,13 +1410,14 @@
         "Обе macOS-копии соответствуют пакетам, identity и подпись сохранены; без пересборки."
       ],
       "expected_commit_message": "release: установить Web Pilot 0.6.99",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "recovery-on-demand-research-20261006",
         "task_id": "T019",
         "role": "implementation"
-      }
+      },
+      "actual_files": []
     },
     {
       "id": "T020",
@@ -1480,7 +1481,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: recovery-on-demand-research-20261006
 Current Task: нет
-Revision: 1430
+Revision: 1432
 
 ## Цель
 
@@ -1594,8 +1595,8 @@ Revision: 1430
   - Git Commit: [DONE] release: собрать Web Pilot 0.6.99
   - Reference: recovery-on-demand-research-20261006 / T018 / implementation
   - Файлы: docs/planning/correction-round-0.6.99.md
-- [TODO] T019: Установить готовый выпуск 0.6.99 — Ожидает
-  - Git Commit: [PENDING] release: установить Web Pilot 0.6.99
+- [DONE] T019: Установить готовый выпуск 0.6.99 — Завершено
+  - Git Commit: [DONE] release: установить Web Pilot 0.6.99
   - Reference: recovery-on-demand-research-20261006 / T019 / implementation
   - Файлы: docs/planning/correction-round-0.6.99.md
 - [TODO] T020: Опубликовать выпуск 0.6.99 — Ожидает
