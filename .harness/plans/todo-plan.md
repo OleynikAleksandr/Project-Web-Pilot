@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1428,
+  "plan_revision": 1430,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "recovery-on-demand-research-20261006",
@@ -1381,13 +1381,14 @@
         "После DOCS одна сборка macOS/Windows; manifest и хеши подтверждены."
       ],
       "expected_commit_message": "release: собрать Web Pilot 0.6.99",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "recovery-on-demand-research-20261006",
         "task_id": "T018",
         "role": "implementation"
-      }
+      },
+      "actual_files": []
     },
     {
       "id": "T019",
@@ -1479,7 +1480,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: recovery-on-demand-research-20261006
 Current Task: нет
-Revision: 1428
+Revision: 1430
 
 ## Цель
 
@@ -1589,8 +1590,8 @@ Revision: 1428
   - Git Commit: [DONE] docs: актуализировать документацию проекта
   - Reference: recovery-on-demand-research-20261006 / DOCS-3 / implementation
   - Файлы: docs/architecture/OVERVIEW.md, docs/planning/correction-round-0.6.99.md, packages/workflow-kit/src/WORKFLOW.md, packages/workflow-kit/src/templates/PROTOTYPE.md, README.md, docs/modules/auto-plan.md, docs/modules/chromium-diagnostics.md, docs/modules/context-delivery.md, docs/modules/first-run-onboarding.md, docs/modules/plan-view.md, docs/modules/project-archive.md, docs/modules/project-doctor.md, docs/modules/release.md, docs/modules/runtime-lifecycle.md, docs/modules/workflow-kit-recovery.md, docs/modules/workspace-sessions.md, docs/planning/workflow-kit-context-transition.md, packages/workflow-kit/README.md, packages/workflow-kit/docs/modules/workflow-kit-package.md
-- [TODO] T018: Собрать парный выпуск 0.6.99 — Ожидает
-  - Git Commit: [PENDING] release: собрать Web Pilot 0.6.99
+- [DONE] T018: Собрать парный выпуск 0.6.99 — Завершено
+  - Git Commit: [DONE] release: собрать Web Pilot 0.6.99
   - Reference: recovery-on-demand-research-20261006 / T018 / implementation
   - Файлы: docs/planning/correction-round-0.6.99.md
 - [TODO] T019: Установить готовый выпуск 0.6.99 — Ожидает
