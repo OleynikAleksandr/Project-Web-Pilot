@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1444,
+  "plan_revision": 1446,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "refactor-fixes-20261007",
@@ -196,8 +196,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "refactor-fixes-20261007",
         "task_id": "T003",
@@ -222,7 +222,8 @@
       "acceptance_criteria": [
         "После DOCS одна сборка macOS/Windows; manifest и хеши подтверждены."
       ],
-      "expected_commit_message": "release: собрать Web Pilot 0.6.100"
+      "expected_commit_message": "release: собрать Web Pilot 0.6.100",
+      "actual_files": []
     },
     {
       "implementation_status": "TODO",
@@ -299,7 +300,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: refactor-fixes-20261007
 Current Task: нет
-Revision: 1444
+Revision: 1446
 
 ## Цель
 
@@ -323,8 +324,8 @@ Revision: 1444
   - Git Commit: [DONE] docs: актуализировать контекст проекта
   - Reference: refactor-fixes-20261007 / DOCS / implementation
   - Файлы: docs/planning/refactor-fixes.md, README.md, docs/architecture/OVERVIEW.md, docs/modules/context-delivery.md, docs/planning/correction-round-0.6.99.md, docs/planning/workflow-kit-context-refactor.md, docs/planning/workflow-kit-context-transition.md, docs/modules/workspace-sessions.md, docs/modules/project-archive.md, docs/modules/chatgpt-dom-compatibility.md, docs/modules/workspace-setup.md, packages/workflow-kit/docs/modules/workflow-kit-package.md
-- [TODO] T003: Собрать парный выпуск 0.6.100 — Ожидает
-  - Git Commit: [PENDING] release: собрать Web Pilot 0.6.100
+- [DONE] T003: Собрать парный выпуск 0.6.100 — Завершено
+  - Git Commit: [DONE] release: собрать Web Pilot 0.6.100
   - Reference: refactor-fixes-20261007 / T003 / implementation
   - Файлы: docs/planning/refactor-fixes.md
 - [TODO] T004: Установить готовый выпуск 0.6.100 — Ожидает
