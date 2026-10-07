@@ -30,6 +30,8 @@ export const CHATGPT_CHANNELS = Object.freeze([CHATGPT_CHANNEL_SECURE, CHATGPT_C
 export const EXECUTOR_TOOL_RULES = Object.freeze([
   'Работа с инструментами: ищи через rg в exec_command; текстовые файлы правь через apply_patch и не перечитывай их после успешного патча.',
   'Если OpenAI заблокировал вызов инструмента до выполнения, повтори тот же вызов один раз без изменений; меняй или дроби его, только если повтор тоже заблокирован.',
+  // Codex App Server ends the processes of a command when it returns: a shell background job dies at once.
+  'Долгую команду не уводи в фон через & или nohup: исполнитель завершает процессы команды, когда она возвращается. Запускай её обычным exec_command; если вернулся session ID, опрашивай эту сессию через write_stdin с пустым вводом (до 60 с за опрос) и не запускай команду повторно.',
 ]);
 // The executor catalogue has no context tool: Web Pilot needs only the status tool to recognise its own server.
 const EXECUTOR_REQUIRED_TOOLS = Object.freeze(['bridge_status']);

@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1453,
+  "plan_revision": 1455,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "refactor-fixes-20261007",
@@ -27,7 +27,8 @@
       "tests/workspace-deletion.test.mjs",
       "tools/codex-app-server-mcp/server.py",
       "src/mac-runtime-switch.mjs",
-      "tests/codex-app-server-mcp.test.mjs"
+      "tests/codex-app-server-mcp.test.mjs",
+      "tests/mac-runtime-switch.test.mjs"
     ],
     "documentation_paths": [
       "docs/planning/refactor-fixes.md",
@@ -298,7 +299,8 @@
         "tests/codex-app-server-mcp.test.mjs",
         "tests/context-session.test.mjs",
         "package.json",
-        "package-lock.json"
+        "package-lock.json",
+        "tests/mac-runtime-switch.test.mjs"
       ],
       "documentation_paths": [
         "docs/planning/refactor-fixes.md",
@@ -318,13 +320,22 @@
         "Версия Web Pilot 0.6.101."
       ],
       "expected_commit_message": "fix: правило долгих команд исполнителя",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "refactor-fixes-20261007",
         "task_id": "T006",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "package-lock.json",
+        "package.json",
+        "src/mac-runtime-switch.mjs",
+        "tests/codex-app-server-mcp.test.mjs",
+        "tests/context-session.test.mjs",
+        "tests/mac-runtime-switch.test.mjs",
+        "tools/codex-app-server-mcp/server.py"
+      ]
     },
     {
       "id": "DOCS-2",
@@ -458,7 +469,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: refactor-fixes-20261007
 Current Task: нет
-Revision: 1453
+Revision: 1455
 
 ## Цель
 
@@ -494,10 +505,10 @@ Revision: 1453
   - Git Commit: [DONE] release: опубликовать Web Pilot 0.6.100
   - Reference: refactor-fixes-20261007 / T005 / implementation
   - Файлы: docs/planning/refactor-fixes.md
-- [TODO] T006: Правило долгих команд исполнителя — Ожидает
-  - Git Commit: [PENDING] fix: правило долгих команд исполнителя
+- [DONE] T006: Правило долгих команд исполнителя — Завершено
+  - Git Commit: [DONE] fix: правило долгих команд исполнителя
   - Reference: refactor-fixes-20261007 / T006 / implementation
-  - Файлы: tools/codex-app-server-mcp/server.py, src/mac-runtime-switch.mjs, tests/codex-app-server-mcp.test.mjs, tests/context-session.test.mjs, package.json, package-lock.json, docs/planning/refactor-fixes.md, docs/modules/codex-app-server-executor.md, docs/modules/context-delivery.md, docs/modules/workspace-sessions.md
+  - Файлы: tools/codex-app-server-mcp/server.py, src/mac-runtime-switch.mjs, tests/codex-app-server-mcp.test.mjs, tests/context-session.test.mjs, package.json, package-lock.json, tests/mac-runtime-switch.test.mjs, docs/planning/refactor-fixes.md, docs/modules/codex-app-server-executor.md, docs/modules/context-delivery.md, docs/modules/workspace-sessions.md
 - [TODO] DOCS-2: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать документацию проекта
   - Reference: refactor-fixes-20261007 / DOCS-2 / implementation

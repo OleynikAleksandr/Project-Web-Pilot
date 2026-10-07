@@ -157,7 +157,7 @@ test('Codex App Server MCP exposes exactly the 9-tool catalog and delivers no pr
   const instructions = source.slice(source.indexOf('instructions=('), source.indexOf('host=host'));
   assert.doesNotMatch(instructions, /Workflow Kit|recover|context|part=|after key/i, 'server instructions do not mention recovery');
   for (const phrase of ['Local-computer tools only', 'never launches a Codex model turn', 'No UI control',
-    'Tool usage: search with rg through exec_command', 'PREEXECUTION_RETRY_RULE'])
+    'Tool usage: search with rg through exec_command', 'LONG_COMMAND_RULE', 'PREEXECUTION_RETRY_RULE'])
     assert.ok(instructions.includes(phrase), phrase);
 
   const removedTools = [
@@ -1110,6 +1110,8 @@ const SERVER_INSTRUCTIONS = 'Local-computer tools only. Use ChatGPT native web/c
   + 'No UI control: this MCP cannot move the mouse, press keys or switch windows. Observation only: '
   + 'computer_list_windows, computer_capture_screen and computer_capture_window. '
   + 'Tool usage: search with rg through exec_command; edit text files with apply_patch and do not reread them after a successful patch. '
+  + 'Do not background commands with & or nohup: they end when the command returns. '
+  + 'Run a long command with exec_command and poll its session ID with write_stdin, empty chars; never rerun it. '
   + 'If OpenAI blocked the call before execution, retry the same call once unchanged; change or split it only if the retry is blocked too.';
 
 test('server instructions are the short tool rules and the executor drops the retired active-workspace record', { timeout: 60_000 }, async t => {
@@ -1154,7 +1156,8 @@ print(json.dumps(out, ensure_ascii=False))
   assert.equal(out.other_kept, true, 'nothing else in the state folder is touched');
   assert.deepEqual(out.facade, []); assert.deepEqual(out.module, []);
   assert.equal(out.instructions, SERVER_INSTRUCTIONS, 'the exact text of the server instructions');
-  assert.ok(out.instructions.length < 700, 'short instructions');
+  // 0.6.101: the long-command rule needs the room; the cap still keeps the instructions a short rule list.
+  assert.ok(out.instructions.length < 850, 'short instructions');
   assert.doesNotMatch(out.instructions, /Workflow Kit|recover|context|part=|after key/i);
   assert.deepEqual(out.tools, ['apply_patch', 'bridge_status', 'computer_capture_screen', 'computer_capture_window',
     'computer_list_windows', 'exec_command', 'turn_watchdog', 'view_image', 'write_stdin']);

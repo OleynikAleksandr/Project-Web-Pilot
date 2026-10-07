@@ -37,6 +37,10 @@ MAX_PATCH_BYTES = 1_000_000
 MAX_OUTPUT = 120_000
 STDIN_CLOSED_MESSAGE = "stdin is closed for this session; rerun exec_command with tty=true to keep stdin open"
 PREEXECUTION_RETRY_RULE = "If OpenAI blocked the call before execution, retry the same call once unchanged; change or split it only if the retry is blocked too."
+# Codex App Server ends the processes of a command when the command returns, so a shell background
+# job (& or nohup) dies at once with an empty log; a running command keeps its session instead.
+LONG_COMMAND_RULE = ("Do not background commands with & or nohup: they end when the command returns. "
+                     "Run a long command with exec_command and poll its session ID with write_stdin, empty chars; never rerun it.")
 # The record of the project open in Web Pilot, written by 0.6.86–0.6.95 for context delivery through MCP.
 RETIRED_ACTIVE_WORKSPACE_FILE = "active-workspace.json"
 CODEX_TOOLS_LOCK_FILE = Path(__file__).resolve().parent / "codex-tools.lock.json"
@@ -745,6 +749,7 @@ def create_server(*, host: str, port: int, state_root: Path, codex_binary: str |
             "computer_list_windows, computer_capture_screen and computer_capture_window. "
             "Tool usage: search with rg through exec_command; edit text files with apply_patch and do not reread them "
             "after a successful patch. "
+            + LONG_COMMAND_RULE + " "
             + PREEXECUTION_RETRY_RULE
         ),
         host=host,
@@ -832,6 +837,8 @@ def create_server(*, host: str, port: int, state_root: Path, codex_binary: str |
         max_output_tokens: Annotated[int, Field(description="Output token budget. Defaults to 8000 tokens; values are clamped to the MCP policy range of 1-8000.", strict=True)] = 8_000,
     ) -> str:
         """Runs a shell command, returning output or a session ID for ongoing interaction.
+
+        Do not background commands with & or nohup: they end when the command returns. Run a long command with exec_command and poll its session ID with write_stdin, empty chars; never rerun it.
 
         If OpenAI blocked the call before execution, retry the same call once unchanged; change or split it only if the retry is blocked too. Output is capped at 8000 estimated tokens so ChatGPT does not truncate it a second time.
         """

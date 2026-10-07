@@ -453,11 +453,12 @@ const mcpStarted = (state, extra = {}) => ({ protocol: 'inline-context-v1', requ
 
 test('executor tool rules join the session rules of the start message; without them the text is the former one', () => {
   const p = packet(), plain = startupMessage(project, 'rules-request', p), text = startupMessage(project, 'rules-request', p, EXECUTOR_TOOL_RULES);
-  assert.equal(EXECUTOR_TOOL_RULES.length, 2);
+  assert.equal(EXECUTOR_TOOL_RULES.length, 3);
   for (const item of ['rg в exec_command', 'apply_patch и не перечитывай их после успешного патча',
-    'OpenAI заблокировал вызов инструмента до выполнения', 'повтори тот же вызов один раз без изменений'])
+    'OpenAI заблокировал вызов инструмента до выполнения', 'повтори тот же вызов один раз без изменений',
+    'не уводи в фон через & или nohup', 'опрашивай эту сессию через write_stdin', 'не запускай команду повторно'])
     assert.ok(text.includes(item), item);
-  assert.equal(text.replace(EXECUTOR_TOOL_RULES.join('\n') + '\n', ''), plain, 'only the two rule lines are added');
+  assert.equal(text.replace(EXECUTOR_TOOL_RULES.join('\n') + '\n', ''), plain, 'only the executor rule lines are added');
   assert.ok(text.indexOf(EXECUTOR_TOOL_RULES[1]) < text.indexOf('Вложения содержат'), 'rules precede attachment instructions');
   assert.ok(!text.includes(p.context), 'packet is carried by separate files');
   for (const name of ['workflow_context_recover', 'part=1', 'ключом after']) assert.ok(!text.includes(name), name);

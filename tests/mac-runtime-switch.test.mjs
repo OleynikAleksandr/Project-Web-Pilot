@@ -345,9 +345,10 @@ test('the executor runtime adds its tool rules to the start message and no longe
   const runtime = new CodexAppServerRuntime({ sourceDir: path.join(root, 'resource'), stateDir: state,
     sessionPlans: { loadContext() {} }, execute: async () => { throw new Error('not used'); } });
   assert.equal(runtime.startupRules, EXECUTOR_TOOL_RULES);
-  assert.equal(EXECUTOR_TOOL_RULES.length, 2);
+  assert.equal(EXECUTOR_TOOL_RULES.length, 3);
   assert.match(EXECUTOR_TOOL_RULES[0], /rg в exec_command.*apply_patch/);
   assert.match(EXECUTOR_TOOL_RULES[1], /заблокировал вызов инструмента до выполнения.*один раз без изменений/);
+  assert.match(EXECUTOR_TOOL_RULES[2], /не уводи в фон через & или nohup.*write_stdin.*не запускай команду повторно/);
   for (const name of ['contextDelivery', 'setActiveWorkspace', 'activeWorkspace']) assert.equal(runtime[name], undefined, name);
   await assert.rejects(fs.access(path.join(state, 'active-workspace.json')), { code: 'ENOENT' });
 
