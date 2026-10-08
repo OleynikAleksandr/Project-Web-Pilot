@@ -88,6 +88,9 @@ export function prepareReview(root, input) {
     const run_id = continuing ? old.run_id : id();
     const dir = reviewDirectory(root, run_id); fs.mkdirSync(dir, {recursive:true});
     const round = continuing ? old.round ?? 0 : 0;
+    const recipient_session_id=input.recipient_session_id??(continuing?old.recipient_session_id:null);
+    check(recipient_session_id==null || typeof recipient_session_id==='string' && /^[A-Za-z0-9][A-Za-z0-9._-]{0,180}$/.test(recipient_session_id),
+      'REVIEW_RECIPIENT','recipient_session_id: Session ID из стартового сообщения Web Pilot.');
     const prefix = 'input-' + (round+1) + '-' + id().slice(0,8);
     const scope_file = prefix+'-scope.json', plan_file = prefix+'-plan.json';
     atomic(safePath(dir,scope_file),json(scope)); atomic(safePath(dir,plan_file),json(candidate));
@@ -102,6 +105,7 @@ export function prepareReview(root, input) {
     const exhausted=continuing && round>=old.max_rounds;
     const s = saveReview(root, {version:1,enabled:old.enabled,generation:old.generation,stage:exhausted?'NEEDS_USER':'PREPARED',run_id,
       scope_id:scope.scope_id,round,max_rounds:continuing?old.max_rounds:4,claude_session_id:continuing?old.claude_session_id:null,
+      recipient_session_id,
       base_head:head(root),base_revision:previous.plan_revision,documents,scope_file,plan_file,response_file,
       error:exhausted?{code:'REVIEW_ROUND_LIMIT',message:'Лимит раундов. Спросите пользователя о продолжении.'}:null,
       plan_digest:reviewPlanDigest(candidate),input_hashes:Object.fromEntries(files.map(f=>[f,hash(fs.readFileSync(safePath(dir,f)))]))});
@@ -133,6 +137,14 @@ export function reviewStatus(root) {
         error:{code:'REVIEW_INTERRUPTED',message:'Процесс ожидания потерян. Проверьте результат раунда и спросите пользователя; автоматический повтор запрещён.'}})};
     });
   }
+}
+export function acknowledgeReview(root, runId) {
+  return locked(root,()=>{
+    const s=readReview(root);
+    check(!runId || s.run_id===runId,'REVIEW_CHANGED','Цикл изменился.');
+    if(s.stage!=='NEEDS_USER' || s.notification_handled)return {ok:true,...s};
+    return {ok:true,...saveReview(root,{...s,notification_handled:true})};
+  });
 }
 export function cancelReview(root, note) {
   return locked(root,()=>{

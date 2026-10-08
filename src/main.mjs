@@ -1,5 +1,7 @@
 import { AutoPlan } from './auto-plan.mjs';
 import { PlanReviewClient } from './plan-review.mjs';
+import { ReviewContinuation } from './review-continuation.mjs';
+import { AutomationSendState } from './automation-send-state.mjs';
 import { readAutoPlanState } from './auto-plan-state.mjs';
 import { ConversationRecovery } from './conversation-recovery.mjs';
 import { PageStateSource } from './page-state.mjs';
@@ -75,6 +77,7 @@ let appServerRuntime = null, runtimeSwitcher = null, runtimeActivation = null, v
 let shellTheme = 'light';
 let hideToolCalls = true;
 let autoPlanEnabled = false, autoPlanCheckpoint = null;
+let reviewCheckpoint = null, automationCheckpoint = null;
 let chatColors = normalizeChatColors();
 let chatColorStyles, colorEditor;
 let settingsSaveTail = Promise.resolve();
@@ -168,23 +171,35 @@ const conversationRecovery = new ConversationRecovery({
   },
   onChange: () => publish(),
 });
+const automationSend = new AutomationSendState({save:async checkpoint=>{
+  automationCheckpoint=checkpoint;await saveSettings({automationCheckpoint});
+}});
+function sendAutomation(text,canContinue,onBeforeSend,flow) {
+  return automationSend.send({selected:flow.selected(),page:flow.page,ready:canContinue,kind:flow===autoPlan?'plan':'review',
+    perform:()=>controller.composer.sendUserMessage({text,canContinue,onBeforeSend,waitForAcknowledgement:false,cleanupOnCancel:true})});
+}
 const autoPlan = new AutoPlan({
   selected: () => { const p = store.selected(), info = planMonitor.view(p); return p && { ...p, scopeId: info ? info.scopeId : p.scopeId }; },
   inspectPlan: async selected => readAutoPlanState(selected, process.platform === 'win32'
     ? await windowsBootstrap.workflowEnvironment() : process.env),
-  send: (text, canContinue, onBeforeSend) => controller.composer.sendUserMessage({
-    text, canContinue, onBeforeSend, waitForAcknowledgement: false, cleanupOnCancel: true }),
+  send: (text, canContinue, onBeforeSend) => sendAutomation(text,canContinue,onBeforeSend,autoPlan),
   onChange: () => publish(),
   available: () => !!controller && !controller.composer.inFlight && !pageLoading && !setupState && !settingsState
     && workspaceHealth?.ready && workspaceHealth.workspace === store.selected()?.workspace,
   saveCheckpoint: async checkpoint => {
-    await saveSettings({ autoPlanCheckpoint: checkpoint });
     autoPlanCheckpoint = checkpoint;
+    await saveSettings({ autoPlanCheckpoint: checkpoint });
   },
   log: (event, fields) => chromiumDiagnostics?.log.record('auto-plan', event, fields),
 });
 const planReview = new PlanReviewClient({selected:()=>store.selected(),onChange:()=>publish()});
+const reviewContinuation=new ReviewContinuation({selected:()=>store.selected(),client:planReview,
+  send:sendAutomation,onChange:()=>publish(),
+  available:()=>!!controller && !controller.composer.inFlight && !pageLoading && !setupState && !settingsState
+    && workspaceHealth?.ready && workspaceHealth.workspace===store.selected()?.workspace,
+  saveCheckpoint:async checkpoint=>{reviewCheckpoint=checkpoint;await saveSettings({reviewCheckpoint});}});
 function applyObservedPage(event) {
+  automationSend.observe(store.selected(),event);
   if (event.reset) lastStopObservation = null;
   else {
     observeStartupAccount(event.state);
@@ -195,6 +210,7 @@ function applyObservedPage(event) {
     lastStopObservation = { documentId, revision };
   }
   autoPlan.observe(event);
+  reviewContinuation.observe(event);
   if (event.reset) { manualDocumentOwner = null; agentTimer.finish(); return; }
   chromiumDiagnostics?.observePage(event.state);
   if (pageLoading || setupState || settingsState) return;
@@ -236,7 +252,7 @@ function saveSettings(overrides = {}) {
     ...(process.platform === 'darwin' ? { macRuntimeMode: 'app-server' } : {}),
     [legacyRetiredSetting]: legacyRuntimeRetired, ...(legacyRuntimeRetired ? {} : { legacyRuntimeRoots }),
   };
-  const settings = { ...platformSettings, chatgptChannel, shellTheme, hideToolCalls, sidebarWidth, chatColors, projectsParent, autoPlanEnabled, autoPlanCheckpoint, ...overrides };
+  const settings = { ...platformSettings, chatgptChannel, shellTheme, hideToolCalls, sidebarWidth, chatColors, projectsParent, autoPlanEnabled, autoPlanCheckpoint, reviewCheckpoint, automationCheckpoint, ...overrides };
   const operation = settingsSaveTail.catch(() => {}).then(async () => {
     await fsp.mkdir(dataDir, { recursive: true, mode: 0o700 });
     await fsp.writeFile(settingsFile + '.tmp', JSON.stringify(settings, null, 2) + '\n', { mode: 0o600 });
@@ -300,7 +316,7 @@ function snapshot() {
     archives: projectedArchives(), settings: settingsState, doctor: doctorState,
     conversationRecovery: conversationRecovery.view(),
     autoPlan: autoPlan.view(),
-    planReview: planReview.view(),
+    planReview: {...planReview.view(),...(reviewContinuation.persistenceError?{message:reviewContinuation.flow.state.message}: {})},
     selected, context: controller?.state ?? { phase: 'selected', servicesReady: false, messageSent: false },
     contextPreparation: { busy: selected ? contextCache.isBuilding(selected.workspace) : false },
     runtimeFolder, platform: process.platform,
@@ -322,6 +338,7 @@ function snapshot() {
 function publish() {
   planMonitor.observeSelection();
   planReview.observeSelection();
+  reviewContinuation.update();
   autoPlan.selectionChanged();
   autoPlan.availabilityChanged();
   observeStartupClipboard();
@@ -1274,6 +1291,7 @@ async function createWindow() {
     try {
       ++navigationId; startupClipboard?.dispose(); startupClipboard = null; startupFlow?.dispose(); startupFlow = null;
       autoPlan.dispose(); conversationRecovery.reset(); controller?.cancel(); planMonitor.close();
+      reviewContinuation.dispose();
       if (eventRuntimeCheckerTimer !== null) clearInterval(eventRuntimeCheckerTimer);
       eventRuntimeCheckerTimer = null; disconnectPageState?.(); agentTimer.finish(); contextCache.clear(); workspaceSetup.invalidateReadiness();
       chatColorStyles?.dispose();
@@ -1352,11 +1370,15 @@ else {
       if (typeof settings.hideToolCalls === 'boolean') hideToolCalls = settings.hideToolCalls;
       autoPlanEnabled = settings.autoPlanEnabled === true;
       autoPlanCheckpoint = settings.autoPlanCheckpoint ?? null;
+      reviewCheckpoint = settings.reviewCheckpoint ?? null;
+      automationCheckpoint = settings.automationCheckpoint ?? null;
       chatColors = normalizeChatColors(settings.chatColors);
       if (Number.isFinite(settings.sidebarWidth)) sidebarWidth = Math.max(SIDEBAR_MIN_WIDTH, Math.round(settings.sidebarWidth));
       if (typeof settings.projectsParent === 'string' && path.isAbsolute(settings.projectsParent)) projectsParent = settings.projectsParent;
     } catch (error) { if (error.code !== 'ENOENT') startupError = { code: 'SETTINGS_INVALID', message: 'Не удалось прочитать локальные настройки Web Pilot. Проверьте настройки подключения.' }; }
     autoPlan.restore(autoPlanEnabled, autoPlanCheckpoint);
+    automationSend.restore(automationCheckpoint);
+    reviewContinuation.restore(reviewCheckpoint);
     applyShellTheme(shellTheme);
     try { await store.load(); } catch (error) { startupError = publicError(error); storageError = true; }
     if (!smoke && app.isPackaged && process.platform === 'darwin' && !storageError

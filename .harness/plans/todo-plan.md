@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1475,
+  "plan_revision": 1478,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "plan-review-20261008",
@@ -65,7 +65,8 @@
       "scripts/stage-workflow-kit.mjs",
       "tests/electron-smoke.mjs",
       "packages/workflow-kit/src/lib/installer.mjs",
-      "release-manifest.json"
+      "release-manifest.json",
+      "src/review-continuation.mjs"
     ],
     "documentation_paths": [
       "docs/planning/plan-review.md",
@@ -318,8 +319,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "plan-review-20261008",
         "task_id": "T004",
@@ -339,7 +340,12 @@
         "tests/plan-review.test.mjs",
         "tests/auto-plan.test.mjs",
         "tests/plan-monitor.test.mjs",
-        "tests/auto-plan-restart-fixture.cjs"
+        "tests/auto-plan-restart-fixture.cjs",
+        "packages/workflow-kit/src/cli.mjs",
+        "packages/workflow-kit/src/lib/claude-review.mjs",
+        "packages/workflow-kit/src/lib/command-help.mjs",
+        "packages/workflow-kit/src/lib/plan-review.mjs",
+        "src/review-continuation.mjs"
       ],
       "documentation_paths": [
         "docs/planning/plan-review.md",
@@ -349,7 +355,8 @@
       ],
       "verification_ids": [
         "unit-all",
-        "electron-smoke"
+        "electron-smoke",
+        "kit-check"
       ],
       "id": "T004",
       "title": "Продолжение ревью на паузе и переход к AutoPlan",
@@ -374,7 +381,17 @@
         ],
         "include_last_completed_task": false,
         "dependency_task_ids": []
-      }
+      },
+      "actual_files": [
+        "packages/workflow-kit/src/cli.mjs",
+        "packages/workflow-kit/src/lib/claude-review.mjs",
+        "packages/workflow-kit/src/lib/command-help.mjs",
+        "packages/workflow-kit/src/lib/plan-review.mjs",
+        "src/automation-send-state.mjs",
+        "src/main.mjs",
+        "src/review-continuation.mjs",
+        "tests/plan-review.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -677,7 +694,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: plan-review-20261008
 Current Task: нет
-Revision: 1475
+Revision: 1478
 
 ## Цель
 
@@ -704,10 +721,10 @@ Revision: 1475
   - Git Commit: [DONE] feat: Кнопка Review в панели и доставка правил основному агенту
   - Reference: plan-review-20261008 / T003 / implementation
   - Файлы: src/main.mjs, src/preload.cjs, src/ui/index.html, src/ui/sidebar.mjs, src/plan-review.mjs, src/workspace-session.mjs, src/context-session.mjs, src/context-inputs.mjs, packages/workflow-kit/src/lib/recovery.mjs, packages/workflow-kit/src/lib/plan-review.mjs, packages/workflow-kit/src/WORKFLOW.md, tests/plan-review.test.mjs, tests/context-session.test.mjs, tests/workspace-session.test.mjs, src/project-input-watch.mjs, tests/electron-smoke.mjs, docs/planning/plan-review.md, docs/planning/plan-review-integration.md, AGENTS.md, docs/modules/auto-plan.md, docs/modules/plan-view.md, docs/modules/context-delivery.md, docs/modules/plan-review.md
-- [TODO] T004: Продолжение ревью на паузе и переход к AutoPlan — Ожидает
-  - Git Commit: [PENDING] feat: Продолжение ревью на паузе и переход к AutoPlan
+- [DONE] T004: Продолжение ревью на паузе и переход к AutoPlan — Завершено
+  - Git Commit: [DONE] feat: Продолжение ревью на паузе и переход к AutoPlan
   - Reference: plan-review-20261008 / T004 / implementation
-  - Файлы: src/plan-review.mjs, src/main.mjs, src/project-input-watch.mjs, src/plan-monitor.mjs, src/auto-plan.mjs, src/auto-plan-state.mjs, src/automation-send-state.mjs, tests/plan-review.test.mjs, tests/auto-plan.test.mjs, tests/plan-monitor.test.mjs, tests/auto-plan-restart-fixture.cjs, docs/planning/plan-review.md, docs/planning/plan-review-integration.md, docs/modules/auto-plan.md, docs/modules/plan-review.md
+  - Файлы: src/plan-review.mjs, src/main.mjs, src/project-input-watch.mjs, src/plan-monitor.mjs, src/auto-plan.mjs, src/auto-plan-state.mjs, src/automation-send-state.mjs, tests/plan-review.test.mjs, tests/auto-plan.test.mjs, tests/plan-monitor.test.mjs, tests/auto-plan-restart-fixture.cjs, packages/workflow-kit/src/cli.mjs, packages/workflow-kit/src/lib/claude-review.mjs, packages/workflow-kit/src/lib/command-help.mjs, packages/workflow-kit/src/lib/plan-review.mjs, src/review-continuation.mjs, docs/planning/plan-review.md, docs/planning/plan-review-integration.md, docs/modules/auto-plan.md, docs/modules/plan-review.md
 - [TODO] T005: Очистка материалов ревью при начале первой задачи — Ожидает
   - Git Commit: [PENDING] feat: Очистка материалов ревью при начале первой задачи
   - Reference: plan-review-20261008 / T005 / implementation

@@ -106,5 +106,5 @@ export async function runReview(root,{maxTurns=30,timeoutMs=900000}={}, {spawn=n
       verdict:verdict?.verdict??null,ended_at:new Date().toISOString(),notification_handled:false});
   });
   atomic(safePath(dir,prefix+'-metadata.json'),json({...metadata,exit_code:exitCode,session_id:result?.session_id,models:Object.keys(result?.modelUsage??{}),duration_ms:Date.now()-started,stage:finished.stage,error:finished.error}));
-  return {ok:true,...finished,run_directory:dir,next_action:finished.stage==='NEEDS_USER'?'Сообщите проблему и спросите пользователя. Не повторяйте запуск автоматически.':'Прочитайте review_file полностью и сформулируйте позицию. Если согласны, review:publish; иначе review:prepare с response.'};
+  return {ok:true,...finished,run_directory:dir,next_action:finished.stage==='NEEDS_USER'?'Выполните review:acknowledge, сообщите проблему и спросите пользователя. Не повторяйте запуск автоматически.':'Прочитайте review_file полностью и сформулируйте позицию. Если согласны, review:publish; иначе review:prepare с response.'};
 }
