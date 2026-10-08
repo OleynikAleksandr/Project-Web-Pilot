@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1510,
+  "plan_revision": 1512,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "review-usability-0103-20261008",
@@ -380,8 +380,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "review-usability-0103-20261008",
         "task_id": "T006",
@@ -404,7 +404,8 @@
       "acceptance_criteria": [
         "Сборка один раз при commit после DOCS; обе поставки и root app сверены с manifest; приложение пользователя не перезапущено"
       ],
-      "expected_commit_message": "release: Собрать парный выпуск 0.6.103"
+      "expected_commit_message": "release: Собрать парный выпуск 0.6.103",
+      "actual_files": []
     },
     {
       "implementation_status": "TODO",
@@ -481,7 +482,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: review-usability-0103-20261008
 Current Task: нет
-Revision: 1510
+Revision: 1512
 
 ## Цель
 
@@ -518,8 +519,8 @@ Revision: 1510
   - Git Commit: [DONE] docs: описать исправления Review и восстановления страницы
   - Reference: review-usability-0103-20261008 / DOCS / implementation
   - Файлы: docs/planning/review-usability-0103.md, README.md, AGENTS.md, docs/architecture/OVERVIEW.md, docs/modules/plan-review.md, docs/modules/auto-plan.md, docs/modules/context-delivery.md, docs/modules/workspace-sidebar-ui.md, docs/modules/release.md, packages/workflow-kit/docs/modules/workflow-kit-package.md, packages/workflow-kit/README.md, docs/modules/plan-view.md, docs/modules/project-doctor.md
-- [TODO] T006: Собрать парный выпуск 0.6.103 — Ожидает
-  - Git Commit: [PENDING] release: Собрать парный выпуск 0.6.103
+- [DONE] T006: Собрать парный выпуск 0.6.103 — Завершено
+  - Git Commit: [DONE] release: Собрать парный выпуск 0.6.103
   - Reference: review-usability-0103-20261008 / T006 / implementation
   - Файлы: release-manifest.json
 - [TODO] T007: Установить готовый macOS выпуск — Ожидает
