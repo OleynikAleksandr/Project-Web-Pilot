@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1470,
+  "plan_revision": 1473,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "plan-review-20261008",
@@ -180,8 +180,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "plan-review-20261008",
         "task_id": "T002",
@@ -222,12 +222,19 @@
         "documents": [
           {
             "path": "docs/modules/codex-app-server-executor.md",
-            "required": true
+            "required": false
           }
         ],
         "include_last_completed_task": false,
         "dependency_task_ids": []
-      }
+      },
+      "actual_files": [
+        "packages/workflow-kit/scripts/check-plan-review-fixture.mjs",
+        "packages/workflow-kit/src/cli.mjs",
+        "packages/workflow-kit/src/lib/claude-review.mjs",
+        "packages/workflow-kit/src/lib/command-help.mjs",
+        "packages/workflow-kit/src/lib/plan-review.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -285,11 +292,11 @@
         "documents": [
           {
             "path": "docs/modules/auto-plan.md",
-            "required": true
+            "required": false
           },
           {
             "path": "docs/modules/plan-view.md",
-            "required": true
+            "required": false
           }
         ],
         "include_last_completed_task": false,
@@ -344,11 +351,11 @@
         "documents": [
           {
             "path": "docs/modules/auto-plan.md",
-            "required": true
+            "required": false
           },
           {
             "path": "docs/modules/chatgpt-dom-compatibility.md",
-            "required": true
+            "required": false
           }
         ],
         "include_last_completed_task": false,
@@ -399,7 +406,7 @@
         "documents": [
           {
             "path": "packages/workflow-kit/docs/modules/workflow-kit-package.md",
-            "required": true
+            "required": false
           }
         ],
         "include_last_completed_task": false,
@@ -460,11 +467,11 @@
         "documents": [
           {
             "path": "docs/modules/release.md",
-            "required": true
+            "required": false
           },
           {
             "path": "packages/workflow-kit/docs/modules/workflow-kit-package.md",
-            "required": true
+            "required": false
           }
         ],
         "include_last_completed_task": false,
@@ -551,7 +558,7 @@
         "documents": [
           {
             "path": "docs/modules/release.md",
-            "required": true
+            "required": false
           }
         ],
         "include_last_completed_task": false,
@@ -594,7 +601,7 @@
         "documents": [
           {
             "path": "docs/modules/release.md",
-            "required": true
+            "required": false
           }
         ],
         "include_last_completed_task": false,
@@ -656,7 +663,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: plan-review-20261008
 Current Task: нет
-Revision: 1470
+Revision: 1473
 
 ## Цель
 
@@ -675,8 +682,8 @@ Revision: 1470
   - Git Commit: [DONE] feat: Протокол ревью и публикация согласованного плана в Kit
   - Reference: plan-review-20261008 / T001 / implementation
   - Файлы: packages/workflow-kit/src/lib/plan-review.mjs, packages/workflow-kit/src/cli.mjs, packages/workflow-kit/src/lib/command-help.mjs, packages/workflow-kit/src/lib/actions.mjs, packages/workflow-kit/src/lib/simple-workflow.mjs, packages/workflow-kit/src/lib/plan.mjs, packages/workflow-kit/src/lib/recovery.mjs, packages/workflow-kit/src/lib/validate.mjs, packages/workflow-kit/src/lib/transaction.mjs, packages/workflow-kit/src/lib/inspection-inputs.mjs, packages/workflow-kit/src/schemas/plan.schema.json, packages/workflow-kit/scripts/check-plan-review-fixture.mjs, packages/workflow-kit/scripts/check-consumer-contract.mjs, packages/workflow-kit/package.json, docs/planning/plan-review.md, docs/planning/plan-review-integration.md, packages/workflow-kit/docs/modules/workflow-kit-package.md
-- [TODO] T002: Claude CLI: раунды, resume и запрос помощи пользователю — Ожидает
-  - Git Commit: [PENDING] feat: Claude CLI: раунды, resume и запрос помощи пользователю
+- [DONE] T002: Claude CLI: раунды, resume и запрос помощи пользователю — Завершено
+  - Git Commit: [DONE] feat: Claude CLI: раунды, resume и запрос помощи пользователю
   - Reference: plan-review-20261008 / T002 / implementation
   - Файлы: packages/workflow-kit/src/lib/claude-review.mjs, packages/workflow-kit/src/lib/plan-review.mjs, packages/workflow-kit/src/cli.mjs, packages/workflow-kit/src/lib/command-help.mjs, packages/workflow-kit/scripts/check-plan-review-fixture.mjs, packages/workflow-kit/package.json, docs/planning/plan-review.md, docs/planning/plan-review-integration.md, packages/workflow-kit/docs/modules/workflow-kit-package.md
 - [TODO] T003: Кнопка Review в панели и доставка правил основному агенту — Ожидает

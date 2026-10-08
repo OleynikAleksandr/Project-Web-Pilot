@@ -118,6 +118,20 @@ export function resolveReview(root, action, note) {
       max_rounds:action==='retry'?Math.max(s.max_rounds,s.round+1):s.max_rounds})};
   });
 }
+export function reviewStatus(root) {
+  const s=readReview(root);
+  if(s.stage!=='RUNNING' || !Number.isSafeInteger(s.runner_pid) || s.runner_pid<=0)return {ok:true,...s};
+  try{process.kill(s.runner_pid,0);return {ok:true,...s};}
+  catch(e){
+    if(e.code!=='ESRCH')return {ok:true,...s};
+    return locked(root,()=>{
+      const current=readReview(root);
+      if(current.stage!=='RUNNING' || current.launch_id!==s.launch_id)return {ok:true,...current};
+      return {ok:true,...saveReview(root,{...current,stage:'NEEDS_USER',runner_pid:null,notification_handled:false,
+        error:{code:'REVIEW_INTERRUPTED',message:'Процесс ожидания потерян. Проверьте результат раунда и спросите пользователя; автоматический повтор запрещён.'}})};
+    });
+  }
+}
 export function cancelReview(root, note) {
   return locked(root,()=>{
     const s=readReview(root);

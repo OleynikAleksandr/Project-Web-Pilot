@@ -3,12 +3,15 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { EventEmitter } from 'node:events';
 import { install } from '../src/lib/installer.mjs';
 import { readReview, setReviewEnabled, prepareReview, saveReview, publishReview, resolveReview, cancelReview } from '../src/lib/plan-review.mjs';
 import { createScope, repair } from '../src/lib/actions.mjs';
 import { createSimplePlan } from '../src/lib/simple-workflow.mjs';
 import { readPlan } from '../src/lib/plan.mjs';
 import { locked } from '../src/lib/transaction.mjs';
+import { localPath } from '../src/lib/git.mjs';
+import { runReview, parseVerdict, REVIEW_MODEL } from '../src/lib/claude-review.mjs';
 const roots=[];
 const git=(r,...args)=>execFileSync('git',args,{cwd:r,encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim();
 const write=(r,p,v)=>{fs.mkdirSync(path.dirname(path.join(r,p)),{recursive:true});fs.writeFileSync(path.join(r,p),v);};
@@ -76,6 +79,48 @@ try {
     expect('FOREIGN_STAGED',()=>publishReview(root));
     git(root,'reset','HEAD','--','README.md');
     assert.equal(publishReview(root).ok,true,'retry after pre-transaction failure');
+  }
+  {
+    const {root,input}=fixture();setReviewEnabled(root,true);prepareReview(root,input);
+    const calls=[];
+    const fake=(verdict,{timeout=false,badSession=false}={})=>(command,args,options)=>{
+      assert.equal(fs.existsSync(localPath(root,'operation.lock')),false,'Claude spawn must not hold Kit lock');
+      assert.equal(options.shell,false);assert.equal(options.cwd,root);
+      calls.push(args);
+      const child=new EventEmitter();child.stdin=new EventEmitter();
+      child.kill=()=>queueMicrotask(()=>child.emit('close',null));
+      child.stdin.end=request=>{
+        assert.match(request,/Нормализованный to-do plan/);
+        if(timeout)return;
+        queueMicrotask(()=>{
+          const i=args.indexOf('--resume')>=0?args.indexOf('--resume'):args.indexOf('--session-id');
+          fs.writeSync(options.stdio[1],JSON.stringify({subtype:'success',is_error:false,session_id:badSession?'wrong':args[i+1],modelUsage:{[REVIEW_MODEL]:{}},structured_output:verdict}));
+          child.emit('close',0);
+        });
+      };
+      return child;
+    };
+    const changes={verdict:'changes_requested',summary:'Исправить зависимость',findings:[{id:'F1',severity:'major',status:'open',reason:'Задача использует ещё не созданный файл.'}]};
+    const approval={verdict:'approved',summary:'Согласовано',findings:[]};
+    const first=await runReview(root,{}, {spawn:fake(changes)});
+    assert.equal(first.stage,'AUTHOR_PENDING');assert.equal(first.round,1);
+    assert.ok(calls[0].includes('--session-id'));
+    assert.equal(fs.readFileSync(path.join(first.run_directory,first.review_file),'utf8').includes('F1'),true);
+    prepareReview(root,{...input,response:'Согласен, зависимость уточнена.'});
+    const second=await runReview(root,{}, {spawn:fake(approval)});
+    assert.equal(second.stage,'AGREED');assert.equal(second.claude_session_id,first.claude_session_id);
+    assert.equal(calls[1][calls[1].indexOf('--resume')+1],first.claude_session_id);
+    prepareReview(root,{...input,response:'Дополнительная проверка.'});
+    const third=await runReview(root,{}, {spawn:fake(approval,{badSession:true})});
+    assert.equal(third.stage,'NEEDS_USER');assert.equal(third.error.code,'REVIEW_SESSION');
+    resolveReview(root,'retry','Пользователь разрешил повтор');
+    const fourth=await runReview(root,{timeoutMs:100}, {spawn:fake(approval,{timeout:true})});
+    assert.equal(fourth.stage,'NEEDS_USER');assert.equal(fourth.error.code,'REVIEW_TIMEOUT');
+    resolveReview(root,'retry','Ещё один раунд по решению пользователя');
+    const fifth=await runReview(root,{}, {spawn:fake(changes)});
+    assert.equal(fifth.stage,'NEEDS_USER');assert.equal(fifth.error.code,'REVIEW_ROUND_LIMIT');
+    assert.equal(fs.existsSync(localPath(root,'operation.lock')),false);
+    expect('REVIEW_FORMAT',()=>parseVerdict({structured_output:{...approval,findings:changes.findings}}));
   }
   console.log('Plan review fixtures: publication, OFF, SHA, retry, cancellation, crash recovery, foreign changes passed.');
 } finally {for(const root of roots)fs.rmSync(root,{recursive:true,force:true});}
