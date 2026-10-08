@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1506,
+  "plan_revision": 1507,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "review-usability-0103-20261008",
@@ -60,7 +60,7 @@
     ]
   },
   "baseline_commit": "98ce6212606858939324d4f234953b9e26261655",
-  "current_task_id": "T005",
+  "current_task_id": null,
   "context_pack": {
     "documents": [
       {
@@ -273,8 +273,8 @@
       ]
     },
     {
-      "implementation_status": "IN_PROGRESS",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "review-usability-0103-20261008",
         "task_id": "T005",
@@ -310,7 +310,17 @@
         "Версия 0.6.103 свободна и закреплена; версия Kit и upgrade/stage согласованы; evidence обновлён штатно",
         "Все пять замечаний проверены через соответствующие обработчики, четыре сочетания Review/AutoPlan сохранены; ограничения живой приёмки явно описаны"
       ],
-      "expected_commit_message": "fix: Проверить интеграцию и подготовить версии выпуска"
+      "expected_commit_message": "fix: Проверить интеграцию и подготовить версии выпуска",
+      "actual_files": [
+        "docs/planning/review-usability-0103.md",
+        "package-lock.json",
+        "package.json",
+        "packages/workflow-kit/package.json",
+        "packages/workflow-kit/src/lib/common.mjs",
+        "packages/workflow-kit/src/lib/installer.mjs",
+        "tests/workflow-kit-source.test.mjs",
+        "tests/workflow-kit-upgrade.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -452,8 +462,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: review-usability-0103-20261008
-Current Task: T005
-Revision: 1506
+Current Task: нет
+Revision: 1507
 
 ## Цель
 
@@ -482,8 +492,8 @@ Revision: 1506
   - Git Commit: [DONE] fix: Сохранять позицию автора на каждый отзыв и итоговое согласие
   - Reference: review-usability-0103-20261008 / T004 / implementation
   - Файлы: packages/workflow-kit/src/lib/plan-review.mjs, packages/workflow-kit/src/lib/claude-review.mjs, packages/workflow-kit/src/lib/command-help.mjs, packages/workflow-kit/src/lib/recovery.mjs, packages/workflow-kit/src/cli.mjs, src/review-continuation.mjs, packages/workflow-kit/scripts/check-plan-review-fixture.mjs, tests/plan-review.test.mjs, packages/workflow-kit/src/lib/actions.mjs, docs/planning/review-usability-0103.md
-- [IN_PROGRESS] T005: Проверить интеграцию и подготовить версии выпуска — В работе
-  - Git Commit: [PENDING] fix: Проверить интеграцию и подготовить версии выпуска
+- [DONE] T005: Проверить интеграцию и подготовить версии выпуска — Завершено
+  - Git Commit: [DONE] fix: Проверить интеграцию и подготовить версии выпуска
   - Reference: review-usability-0103-20261008 / T005 / implementation
   - Файлы: package.json, package-lock.json, packages/workflow-kit/package.json, packages/workflow-kit/src/lib/common.mjs, packages/workflow-kit/src/lib/installer.mjs, .harness/workflow.json, tests/workflow-kit-upgrade.test.mjs, tests/workflow-kit-source.test.mjs, tests/electron-smoke.mjs, docs/planning/review-usability-0103.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает

@@ -45,6 +45,10 @@ test('Workflow Kit is the package of this repository, not a neighbouring checkou
   assert.equal(await fs.realpath(getRuntimeRoot()), await fs.realpath(path.join(packageRoot, 'src')));
   const root = JSON.parse(await fs.readFile(path.join(projectRoot, 'package.json'), 'utf8'));
   assert.equal(root.dependencies['@webpilot/workflow-kit'], 'file:packages/workflow-kit');
+  const lock = JSON.parse(await fs.readFile(path.join(projectRoot, 'package-lock.json'), 'utf8'));
+  assert.equal(lock.version, root.version);
+  assert.equal(lock.packages[''].version, root.version);
+  assert.equal(lock.packages['packages/workflow-kit'].version, pkg.version);
 
   const canonical = await snapshot(getRuntimeRoot());
   assert.ok(canonical.contents.get('lib/common.mjs').includes(`VERSION = '${pkg.version}'`), 'package.json and lib/common.mjs name one version');
