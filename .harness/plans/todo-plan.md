@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1490,
+  "plan_revision": 1492,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "plan-review-20261008",
@@ -658,8 +658,8 @@
       "actual_files": []
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "plan-review-20261008",
         "task_id": "T008",
@@ -698,7 +698,8 @@
         ],
         "include_last_completed_task": false,
         "dependency_task_ids": []
-      }
+      },
+      "actual_files": []
     },
     {
       "id": "T009",
@@ -755,7 +756,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: plan-review-20261008
 Current Task: нет
-Revision: 1490
+Revision: 1492
 
 ## Цель
 
@@ -802,8 +803,8 @@ Revision: 1490
   - Git Commit: [DONE] release: Собрать парный локальный выпуск с Review
   - Reference: plan-review-20261008 / T007 / implementation
   - Файлы: release-manifest.json, docs/planning/plan-review.md, docs/planning/plan-review-integration.md, docs/modules/release.md
-- [TODO] T008: Установить готовый локальный выпуск и передать на приёмку — Ожидает
-  - Git Commit: [PENDING] release: Установить готовый локальный выпуск и передать на приёмку
+- [DONE] T008: Установить готовый локальный выпуск и передать на приёмку — Завершено
+  - Git Commit: [DONE] release: Установить готовый локальный выпуск и передать на приёмку
   - Reference: plan-review-20261008 / T008 / implementation
   - Файлы: release-manifest.json, docs/planning/plan-review.md, docs/planning/plan-review-integration.md, docs/modules/release.md
 - [TODO] T009: Опубликовать выпуск с Review на GitHub — Ожидает
