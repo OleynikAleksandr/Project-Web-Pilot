@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1518,
+  "plan_revision": 1520,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "technical-audit-20261008",
@@ -44,8 +44,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "technical-audit-20261008",
         "task_id": "T001",
@@ -64,7 +64,10 @@
         "В отчёте HEAD, состав исходных подсистем, реальные входы и способы проверки, exclusions и ограничения",
         "Ни один пользовательский процесс или проект не изменён"
       ],
-      "expected_commit_message": "docs: зафиксировать исходную линию технического аудита"
+      "expected_commit_message": "docs: зафиксировать исходную линию технического аудита",
+      "actual_files": [
+        "docs/planning/technical-audit-findings.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -211,7 +214,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: technical-audit-20261008
 Current Task: нет
-Revision: 1518
+Revision: 1520
 
 ## Цель
 
@@ -225,8 +228,8 @@ Revision: 1518
 
 ## Микрозадачи
 
-- [TODO] T001: Зафиксировать базовую линию и матрицу охвата — Ожидает
-  - Git Commit: [PENDING] docs: зафиксировать исходную линию технического аудита
+- [DONE] T001: Зафиксировать базовую линию и матрицу охвата — Завершено
+  - Git Commit: [DONE] docs: зафиксировать исходную линию технического аудита
   - Reference: technical-audit-20261008 / T001 / implementation
   - Файлы: docs/planning/technical-audit-findings.md
 - [TODO] T002: Исследовать дублирование и риск расхождений — Ожидает
