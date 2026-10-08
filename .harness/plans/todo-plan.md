@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1483,
+  "plan_revision": 1485,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "plan-review-20261008",
@@ -66,7 +66,8 @@
       "tests/electron-smoke.mjs",
       "packages/workflow-kit/src/lib/installer.mjs",
       "release-manifest.json",
-      "src/review-continuation.mjs"
+      "src/review-continuation.mjs",
+      "tools/codex-app-server-mcp/codex-tools.lock.json"
     ],
     "documentation_paths": [
       "docs/planning/plan-review.md",
@@ -474,7 +475,8 @@
         "scripts/check-installed-release.mjs",
         "scripts/stage-workflow-kit.mjs",
         "tests/electron-smoke.mjs",
-        "packages/workflow-kit/src/lib/installer.mjs"
+        "packages/workflow-kit/src/lib/installer.mjs",
+        "tools/codex-app-server-mcp/codex-tools.lock.json"
       ],
       "documentation_paths": [
         "docs/planning/plan-review.md",
@@ -487,7 +489,8 @@
         "unit-all",
         "electron-smoke",
         "kit-check",
-        "codex-tools-live"
+        "codex-tools-live",
+        "executor-channel"
       ],
       "id": "T006",
       "title": "Проверить полный сценарий и подготовить локальный выпуск",
@@ -497,7 +500,8 @@
         "Интеграционные fixtures покрывают четыре комбинации Review/AutoPlan, пару spec+plan, успешную публикацию, NEEDS_USER, restart и очистку через реальные пользовательские обработчики.",
         "Единые фактические инструкции и ошибки сверены; при необходимости изменения MCP добавить относящиеся файлы и executor-channel через task:update до правок.",
         "Версия приложения подготовлена как 0.6.102 (при занятости уточнить следующую), версия Kit обновлена по контракту; штатный install --update/stage доставляет код и help, evidence конфигурации обновлён через config:apply.",
-        "Для живой приёмки составлена короткая последовательность на временном проекте; подмена CLI, TEST FIXTURE и Mac-кросс-сборка не объявлены проверкой живого ChatGPT или native Windows."
+        "Для живой приёмки составлена короткая последовательность на временном проекте; подмена CLI, TEST FIXTURE и Mac-кросс-сборка не объявлены проверкой живого ChatGPT или native Windows.",
+        "Закрепление соответствует установленному Codex 0.161.0; три определения инструментов побайтно совпадают с предыдущими, канал исполнителя проверен."
       ],
       "expected_commit_message": "feat: Проверить полный сценарий и подготовить локальный выпуск",
       "context_pack": {
@@ -700,7 +704,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: plan-review-20261008
 Current Task: T006
-Revision: 1483
+Revision: 1485
 
 ## Цель
 
@@ -738,7 +742,7 @@ Revision: 1483
 - [IN_PROGRESS] T006: Проверить полный сценарий и подготовить локальный выпуск — В работе
   - Git Commit: [PENDING] feat: Проверить полный сценарий и подготовить локальный выпуск
   - Reference: plan-review-20261008 / T006 / implementation
-  - Файлы: package.json, package-lock.json, packages/workflow-kit/package.json, packages/workflow-kit/src/lib/common.mjs, .harness/workflow.json, tests/plan-review.test.mjs, tests/workflow-kit-source.test.mjs, tests/workflow-kit-upgrade.test.mjs, tests/workflow-kit-recovery.test.mjs, scripts/check-installed-release.mjs, scripts/stage-workflow-kit.mjs, tests/electron-smoke.mjs, packages/workflow-kit/src/lib/installer.mjs, docs/planning/plan-review.md, docs/planning/plan-review-integration.md, docs/modules/release.md, docs/modules/plan-review.md, packages/workflow-kit/docs/modules/workflow-kit-package.md
+  - Файлы: package.json, package-lock.json, packages/workflow-kit/package.json, packages/workflow-kit/src/lib/common.mjs, .harness/workflow.json, tests/plan-review.test.mjs, tests/workflow-kit-source.test.mjs, tests/workflow-kit-upgrade.test.mjs, tests/workflow-kit-recovery.test.mjs, scripts/check-installed-release.mjs, scripts/stage-workflow-kit.mjs, tests/electron-smoke.mjs, packages/workflow-kit/src/lib/installer.mjs, tools/codex-app-server-mcp/codex-tools.lock.json, docs/planning/plan-review.md, docs/planning/plan-review-integration.md, docs/modules/release.md, docs/modules/plan-review.md, packages/workflow-kit/docs/modules/workflow-kit-package.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: описать ревью планов и обновить контракты
   - Reference: plan-review-20261008 / DOCS / implementation

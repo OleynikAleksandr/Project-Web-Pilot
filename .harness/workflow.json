@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "profile": "DEVELOPMENT",
-  "stack": "Electron 44.5.1 / Node 24.21.0 / Workflow Kit 1.6.3 / Codex 0.160.0",
+  "stack": "Electron 44.5.1 / Node 24.21.0 / Workflow Kit 1.6.3 / Codex 0.161.0",
   "checks": [
     {
       "required": false,
@@ -48,7 +48,7 @@
         "run",
         "check:codex-tools"
       ],
-      "evidence": "Определения сверены с openai/codex rust-v0.160.0; codex-tools.lock.json без изменений"
+      "evidence": "Определения сверены с openai/codex rust-v0.161.0; три определения инструментов побайтно сохранены"
     },
     {
       "required": false,
