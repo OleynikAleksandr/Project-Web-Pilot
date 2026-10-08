@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import { assertReviewPublication, finishReviewPublication } from './plan-review.mjs';
 import {beginTaskFiles,handoffTaskFiles} from './task-files.mjs';
 import path from 'node:path';
 import { VERSION, PLAN, planPath, safePath, CONFIG, MANIFEST, check, readJSON, atomic, json, hash, id, textFile } from './common.mjs';
@@ -66,13 +67,7 @@ function normalizeCompletionContract(plan) {
 function service(root, plan, role, selected, message) {
   return commitCandidate(root, { plan, role, selected, message, beforeHead: head(root) });
 }
-export function createScope(root, input, expectedRevision) {
-  const PLAN = planPath(root);
-  return locked(root, () => {
-    noTransaction(root); assertSingleWriter(root, PLAN); const { plan: previous } = validate(root); revision(previous, expectedRevision);
-    check(previous.execution_scope_status === 'NONE', 'SCOPE_EXISTS', 'Текущий scope ещё не закрыт пользователем.');
-    check(head(root), 'NO_BASELINE', 'Сначала завершите bootstrap-коммит установки.');
-    check(typeof input.approval_note === 'string' && input.approval_note.trim().length >= 10, 'SCOPE_APPROVAL', 'Запишите согласованное пользователем содержание scope в approval_note.');
+export function buildScopePlan(root, input, previous) {
     const plan = { ...emptyPlan(previous.project_name), ...input, schema_version: 1, project_id: previous.project_id,
       project_name: previous.project_name, plan_revision: previous.plan_revision + 1, scope_id: input.scope_id || 'scope-' + id(),
       execution_scope_status: 'ACTIVE', delivery_status: 'IN_PROGRESS', baseline_commit: head(root), current_task_id: null, blocked_reason: null };
@@ -88,10 +83,23 @@ export function createScope(root, input, expectedRevision) {
     plan.tasks = plan.tasks.map(task => ({ implementation_status: 'TODO', commit_status: 'PENDING',
       commit_ref: { scope_id: plan.scope_id, task_id: task.id, role: 'implementation' }, ...task }));
     requireModuleContext(plan);
-    plan.user_decisions = [...(input.user_decisions ?? []), { id: id(), text: input.approval_note, recorded_at: new Date().toISOString() }];
+    plan.user_decisions = input.user_decisions ?? [];
     validatePlan(plan); validatePlanConfiguration(root, plan, readConfig(root));
-    const selected = [PLAN, ...allChanges(root).filter(p => plan.approved_scope.documentation_paths.includes(p))];
+    return plan;
+}
+export function createScope(root, input, expectedRevision) {
+  const PLAN = planPath(root);
+  return locked(root, () => {
+    noTransaction(root); assertSingleWriter(root, PLAN); const { plan: previous } = validate(root); revision(previous, expectedRevision);
+    check(previous.execution_scope_status === 'NONE', 'SCOPE_EXISTS', 'Текущий scope ещё не закрыт пользователем.');
+    check(head(root), 'NO_BASELINE', 'Сначала завершите bootstrap-коммит установки.');
+    check(typeof input.approval_note === 'string' && input.approval_note.trim().length >= 10, 'SCOPE_APPROVAL', 'Запишите согласованное пользователем содержание scope в approval_note.');
+    const plan = buildScopePlan(root, input, previous);
+    const review = assertReviewPublication(root, plan);
+    plan.user_decisions = [...(input.user_decisions ?? []), { id: id(), text: input.approval_note, recorded_at: new Date().toISOString() }];
+    const selected = [PLAN, ...allChanges(root).filter(p => (review ? review.documents.map(d => d.source) : plan.approved_scope.documentation_paths).includes(p))];
     const result = service(root, plan, 'scope-plan', selected, 'docs: согласовать scope ' + plan.scope_id);
+    finishReviewPublication(root, plan, result.sha);
     return { ...result, state: recover(root) };
   });
 }

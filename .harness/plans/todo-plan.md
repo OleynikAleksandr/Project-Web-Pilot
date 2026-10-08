@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1468,
+  "plan_revision": 1470,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "plan-review-20261008",
@@ -111,8 +111,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "plan-review-20261008",
         "task_id": "T001",
@@ -164,7 +164,20 @@
         ],
         "include_last_completed_task": false,
         "dependency_task_ids": []
-      }
+      },
+      "actual_files": [
+        "docs/planning/plan-review-integration.md",
+        "docs/planning/plan-review.md",
+        "packages/workflow-kit/package.json",
+        "packages/workflow-kit/scripts/check-plan-review-fixture.mjs",
+        "packages/workflow-kit/src/cli.mjs",
+        "packages/workflow-kit/src/lib/actions.mjs",
+        "packages/workflow-kit/src/lib/command-help.mjs",
+        "packages/workflow-kit/src/lib/inspection-inputs.mjs",
+        "packages/workflow-kit/src/lib/plan-review.mjs",
+        "packages/workflow-kit/src/lib/recovery.mjs",
+        "packages/workflow-kit/src/lib/simple-workflow.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -643,7 +656,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: plan-review-20261008
 Current Task: нет
-Revision: 1468
+Revision: 1470
 
 ## Цель
 
@@ -658,8 +671,8 @@ Revision: 1468
 
 ## Микрозадачи
 
-- [TODO] T001: Протокол ревью и публикация согласованного плана в Kit — Ожидает
-  - Git Commit: [PENDING] feat: Протокол ревью и публикация согласованного плана в Kit
+- [DONE] T001: Протокол ревью и публикация согласованного плана в Kit — Завершено
+  - Git Commit: [DONE] feat: Протокол ревью и публикация согласованного плана в Kit
   - Reference: plan-review-20261008 / T001 / implementation
   - Файлы: packages/workflow-kit/src/lib/plan-review.mjs, packages/workflow-kit/src/cli.mjs, packages/workflow-kit/src/lib/command-help.mjs, packages/workflow-kit/src/lib/actions.mjs, packages/workflow-kit/src/lib/simple-workflow.mjs, packages/workflow-kit/src/lib/plan.mjs, packages/workflow-kit/src/lib/recovery.mjs, packages/workflow-kit/src/lib/validate.mjs, packages/workflow-kit/src/lib/transaction.mjs, packages/workflow-kit/src/lib/inspection-inputs.mjs, packages/workflow-kit/src/schemas/plan.schema.json, packages/workflow-kit/scripts/check-plan-review-fixture.mjs, packages/workflow-kit/scripts/check-consumer-contract.mjs, packages/workflow-kit/package.json, docs/planning/plan-review.md, docs/planning/plan-review-integration.md, packages/workflow-kit/docs/modules/workflow-kit-package.md
 - [TODO] T002: Claude CLI: раунды, resume и запрос помощи пользователю — Ожидает

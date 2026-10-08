@@ -46,7 +46,7 @@ export function inspectionInputs(workspace) {
   const headResult = git(root, ['rev-parse', '--verify', 'HEAD'], { allowFailure: true });
   const relative = new Set([PLAN, CONFIG, MANIFEST, '.codex/hooks.json', '.harness/plans/todo-plan.template.md',
     'scripts/workflow', 'scripts/workflow.cmd', 'scripts/workflow.mjs',
-    'README.md', 'AGENTS.md', 'AGENTS.override.md', 'docs/architecture/OVERVIEW.md', ...planningPaths(root), ...projectFactPaths(root)]);
+    'README.md', 'AGENTS.md', 'AGENTS.override.md', 'docs/architecture/OVERVIEW.md', '.harness/runtime/plan-review/state.json', ...planningPaths(root), ...projectFactPaths(root)]);
   const workflow = readJSON(path.join(root, CONFIG));
   if (workflow.documentation?.index) relative.add(workflow.documentation.index);
   for (const { file, plan } of listPlans(root)) {

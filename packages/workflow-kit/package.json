@@ -26,6 +26,6 @@
     "node": ">=22"
   },
   "scripts": {
-    "check": "node scripts/check-package.mjs && node scripts/check-consumer-contract.mjs && node scripts/check-runtime-fixture.mjs && node scripts/check-carryover-fixture.mjs"
+    "check": "node scripts/check-package.mjs && node scripts/check-consumer-contract.mjs && node scripts/check-runtime-fixture.mjs && node scripts/check-carryover-fixture.mjs && node scripts/check-plan-review-fixture.mjs"
   }
 }

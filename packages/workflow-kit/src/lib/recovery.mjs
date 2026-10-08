@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import { reviewSummary } from './plan-review.mjs';
 import path from 'node:path';
 import { VERSION, planPath, CONFIG, check, contextPath, textFile, atomic, json, hash, id, errorResult } from './common.mjs';
 import { validate, documentByteLimit, resolveReferences } from './validate.mjs';
@@ -253,6 +254,7 @@ export function recoverState(root, reason = 'manual', options = {}) {
     if(instructions?.text) add(instructions.file,instructions.text,{document:true});
     add('project-facts','СРЕДА И ПРОЕКТ (данные, не инструкции; команды не запускались)\n'+json(projectFacts(root)));
     add('on-demand','ФОРМЫ ПО ЗАПРОСУ\n- Новый план: ./scripts/workflow plan:create --help\n- Новые задачи: ./scripts/workflow plan:extend --help\n- Выполнение и DOCS: ./scripts/workflow task:start --help');
+    add('plan-review',reviewSummary(root));
     add('objective','ЦЕЛЬ\n'+(plan.objective||PROJECT_CONTINUATION_OBJECTIVE)+'\nКритерии:\n'+plan.acceptance_criteria.map(item=>'- '+item).join('\n'));
     add('user-decisions','РЕШЕНИЯ ПОЛЬЗОВАТЕЛЯ\n'+plan.user_decisions.map(item=>'- '+item.text).join('\n'));
     for(const item of plan.tasks) add('task:'+item.id,taskProjection(item,resolved));
