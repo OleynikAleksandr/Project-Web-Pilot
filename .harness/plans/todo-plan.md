@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1524,
+  "plan_revision": 1526,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "technical-audit-20261008",
@@ -21,7 +21,8 @@
     "documentation_paths": [
       "docs/planning/technical-audit-20261008.md",
       "docs/planning/technical-audit-findings.md",
-      "docs/architecture/OVERVIEW.md"
+      "docs/architecture/OVERVIEW.md",
+      "docs/planning/technical-audit-findings-unused.md"
     ]
   },
   "baseline_commit": "fda09de65ed4a86648f44be3343c478b53468f5f",
@@ -126,8 +127,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "technical-audit-20261008",
         "task_id": "T004",
@@ -138,7 +139,8 @@
       ],
       "functional_paths": [],
       "documentation_paths": [
-        "docs/planning/technical-audit-findings.md"
+        "docs/planning/technical-audit-findings.md",
+        "docs/planning/technical-audit-findings-unused.md"
       ],
       "verification_ids": [],
       "id": "T004",
@@ -148,7 +150,11 @@
         "Проверены динамические, событийные, IPC, CLI, платформенные входы и публичные контракты Sidebar",
         "Для каждого кандидата дана оценка достижимости и недостаточности одного текстового поиска"
       ],
-      "expected_commit_message": "docs: исследовать неиспользуемые реализации"
+      "expected_commit_message": "docs: исследовать неиспользуемые реализации",
+      "actual_files": [
+        "docs/planning/technical-audit-findings.md",
+        "docs/planning/technical-audit-findings-unused.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -220,7 +226,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: technical-audit-20261008
 Current Task: нет
-Revision: 1524
+Revision: 1526
 
 ## Цель
 
@@ -246,10 +252,10 @@ Revision: 1524
   - Git Commit: [DONE] docs: проверить ссылки и состав поставки
   - Reference: technical-audit-20261008 / T003 / implementation
   - Файлы: docs/planning/technical-audit-findings.md
-- [TODO] T004: Проверить кандидатов на неиспользуемый код — Ожидает
-  - Git Commit: [PENDING] docs: исследовать неиспользуемые реализации
+- [DONE] T004: Проверить кандидатов на неиспользуемый код — Завершено
+  - Git Commit: [DONE] docs: исследовать неиспользуемые реализации
   - Reference: technical-audit-20261008 / T004 / implementation
-  - Файлы: docs/planning/technical-audit-findings.md
+  - Файлы: docs/planning/technical-audit-findings.md, docs/planning/technical-audit-findings-unused.md
 - [TODO] T005: Проверить обработку ошибок и жизненный цикл — Ожидает
   - Git Commit: [PENDING] docs: исследовать ошибки и жизненный цикл
   - Reference: technical-audit-20261008 / T005 / implementation
