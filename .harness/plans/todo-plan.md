@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1514,
+  "plan_revision": 1516,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "review-usability-0103-20261008",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Исправить пять замечаний пользовательского тестирования Review/AutoPlan и восстановления ChatGPT; выпустить обновление 0.6.103.",
   "acceptance_criteria": [
     "Пять замечаний устранены согласно спецификации; регрессии Review/AutoPlan и очистки исключены назначенными проверками",
@@ -437,8 +437,8 @@
       "actual_files": []
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "review-usability-0103-20261008",
         "task_id": "T008",
@@ -462,7 +462,8 @@
       "acceptance_criteria": [
         "Шесть готовых assets, тег на sourceCommit и main сверены; финальный push; пользователю версия, URL, проверки и шаги приёмки"
       ],
-      "expected_commit_message": "release: Опубликовать выпуск на GitHub"
+      "expected_commit_message": "release: Опубликовать выпуск на GitHub",
+      "actual_files": []
     }
   ],
   "blocked_reason": null,
@@ -480,10 +481,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: review-usability-0103-20261008
 Current Task: нет
-Revision: 1514
+Revision: 1516
 
 ## Цель
 
@@ -528,8 +529,8 @@ Revision: 1514
   - Git Commit: [DONE] release: Установить готовый macOS выпуск
   - Reference: review-usability-0103-20261008 / T007 / implementation
   - Файлы: release-manifest.json
-- [TODO] T008: Опубликовать выпуск на GitHub — Ожидает
-  - Git Commit: [PENDING] release: Опубликовать выпуск на GitHub
+- [DONE] T008: Опубликовать выпуск на GitHub — Завершено
+  - Git Commit: [DONE] release: Опубликовать выпуск на GitHub
   - Reference: review-usability-0103-20261008 / T008 / implementation
   - Файлы: release-manifest.json
 
