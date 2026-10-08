@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1467,
+  "plan_revision": 1468,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "plan-review-20261008",
@@ -64,6 +64,7 @@
       "scripts/check-installed-release.mjs",
       "scripts/stage-workflow-kit.mjs",
       "tests/electron-smoke.mjs",
+      "packages/workflow-kit/src/lib/installer.mjs",
       "release-manifest.json"
     ],
     "documentation_paths": [
@@ -150,7 +151,8 @@
       "acceptance_criteria": [
         "Opt-in команды подготовки, статуса и публикации имеют help, единую нормализацию пары spec+plan и состояния с SHA/HEAD/revision; выключенный режим сохраняет поведение потребителей.",
         "Проверки под блокировкой Kit покрывают plan:create/scope:create до изменения config; конфликт, спор, отсутствующее подтверждение и подмена входов не создают ACTIVE.",
-        "Фикстуры проверяют реальные коммиты согласованных документов/задач, сохранность checks, чужие изменения, повтор/repair; carryover сохраняет явно описанный прежний контракт."
+        "Фикстуры проверяют реальные коммиты согласованных документов/задач, сохранность checks, чужие изменения, повтор/repair; carryover сохраняет явно описанный прежний контракт.",
+        "Один state.json хранит политику и стадию checkout; OFF полностью возвращает обычную публикацию даже после спора. review:resolve поддерживает retry, publish, cancel по решению пользователя."
       ],
       "expected_commit_message": "feat: Протокол ревью и публикация согласованного плана в Kit",
       "context_pack": {
@@ -199,7 +201,8 @@
       "acceptance_criteria": [
         "Два документа и позиция автора передаются Opus 5.5 с high; новая сессия один раз, следующие раунды используют ровно её ID; не более четырёх раундов без нового решения пользователя.",
         "Полные результаты сохраняются; модель/session/exit/schema/SHA проверяются. Таймаут, авторизация, неверный ответ и существенный спор приводят к NEEDS_USER с причиной для вопроса основного агента.",
-        "Runner работает в exec session без nohup, молчаливого повтора или смены модели. Подменённый CLI проверяет success/error/timeout/resume; живая приёмка отдельно."
+        "Runner работает в exec session без nohup, молчаливого повтора или смены модели. Подменённый CLI проверяет success/error/timeout/resume; живая приёмка отдельно.",
+        "Claude запускается вне operation.lock; короткие изменения состояния защищены. Runner привязывает вердикт к SHA. Память разрешена, свежие решения имеют приоритет."
       ],
       "expected_commit_message": "feat: Claude CLI: раунды, resume и запрос помощи пользователю",
       "context_pack": {
@@ -261,7 +264,8 @@
       "acceptance_criteria": [
         "Review рядом с AutoPlan доступна при NONE; ON зелёный, aria-pressed и подсказка показывают смысл; OFF по умолчанию, сохранение и восстановление выбора однозначны для checkout.",
         "Клиент синхронизирует политику выбранного checkout через узкий IPC с sender validation; смена проекта не меняет cwd или политику работающего чужого чата.",
-        "Recovery и отказ REVIEW_REQUIRED доводят правило до новых и уже открытых агентов. Узкое разрешение Claude-review согласовано с startup text и проектным AGENTS; глобальные инструкции не меняются."
+        "Recovery и отказ REVIEW_REQUIRED доводят правило до новых и уже открытых агентов. Узкое разрешение Claude-review согласовано с startup text и проектным AGENTS; глобальные инструкции не меняются.",
+        "Кнопка читает политику из единого state.json checkout; показывает стадию и раунд. Старый Kit даёт явную необходимость обновления."
       ],
       "expected_commit_message": "feat: Кнопка Review в панели и доставка правил основному агенту",
       "context_pack": {
@@ -374,7 +378,8 @@
       "acceptance_criteria": [
         "Успешный первый task:start удаляет ровно папку связанного review при ручном старте и AutoPlan, в том числе без открытого Web Pilot; публикация и включение кнопки заранее её не удаляют.",
         "Повтор и crash восстанавливаются идемпотентно; symlink/посторонний каталог/старые эксперименты не удаляются, ошибка очистки видима и безопасно повторяется.",
-        "При споре материалы сохранены; опубликованные spec/plan и required recovery не зависят от удалённых файлов; остаётся лишь минимальное состояние, без архива ревью."
+        "При споре материалы сохранены; опубликованные spec/plan и required recovery не зависят от удалённых файлов; остаётся лишь минимальное состояние, без архива ревью.",
+        "Повтор очистки выполняется и при повторном task:start до раннего возврата; ошибка уборки не отменяет начало задачи."
       ],
       "expected_commit_message": "feat: Очистка материалов ревью при начале первой задачи",
       "context_pack": {
@@ -411,7 +416,8 @@
         "tests/workflow-kit-recovery.test.mjs",
         "scripts/check-installed-release.mjs",
         "scripts/stage-workflow-kit.mjs",
-        "tests/electron-smoke.mjs"
+        "tests/electron-smoke.mjs",
+        "packages/workflow-kit/src/lib/installer.mjs"
       ],
       "documentation_paths": [
         "docs/planning/plan-review.md",
@@ -568,7 +574,7 @@
       "verification_kind": "installed",
       "acceptance_criteria": [
         "Постоянное приложение обновлено из готового staging без пересборки с сохранением filesystem identity и проверкой release-installed.",
-        "Пользователю переданы шаги живой приёмки Review/AutoPlan/спор/очистка на временном проекте; факты приёмки не выдуманы. GitHub publish/push не выполняются в этом плане."
+        "Пользователю переданы шаги живой приёмки Review/AutoPlan/спор/очистка на временном проекте; факты приёмки не выдуманы. Публикация GitHub выполняется следующей отдельной задачей T009."
       ],
       "expected_commit_message": "release: Установить готовый локальный выпуск и передать на приёмку",
       "context_pack": {
@@ -620,6 +626,11 @@
       "id": "f5fd34ea-293e-4a8f-b3a7-54cfcc5f1bb2",
       "text": "Пользователь 08.10.2026 поручил подготовить рабочую спецификацию и план внедрения Review по согласованным решениям. Сейчас только подготовка плана; начало реализации отдельным продолжением. План предусматривает локальную сборку и установку, без публикации GitHub.",
       "recorded_at": "2026-10-08T12:53:45.685Z"
+    },
+    {
+      "id": "review-off-and-delivery-20261008",
+      "text": "Пользователь разрешил реализацию, сборку, установку и публикацию на GitHub. Review OFF возвращает обычную публикацию, включая ранее спорный план; память рецензента разрешена.",
+      "recorded_at": "2026-10-08T13:07:51.105Z"
     }
   ]
 }
@@ -632,7 +643,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: plan-review-20261008
 Current Task: нет
-Revision: 1467
+Revision: 1468
 
 ## Цель
 
@@ -670,7 +681,7 @@ Revision: 1467
 - [TODO] T006: Проверить полный сценарий и подготовить локальный выпуск — Ожидает
   - Git Commit: [PENDING] feat: Проверить полный сценарий и подготовить локальный выпуск
   - Reference: plan-review-20261008 / T006 / implementation
-  - Файлы: package.json, package-lock.json, packages/workflow-kit/package.json, packages/workflow-kit/src/lib/common.mjs, .harness/workflow.json, tests/plan-review.test.mjs, tests/workflow-kit-source.test.mjs, tests/workflow-kit-upgrade.test.mjs, tests/workflow-kit-recovery.test.mjs, scripts/check-installed-release.mjs, scripts/stage-workflow-kit.mjs, tests/electron-smoke.mjs, docs/planning/plan-review.md, docs/planning/plan-review-integration.md, docs/modules/release.md, docs/modules/plan-review.md, packages/workflow-kit/docs/modules/workflow-kit-package.md
+  - Файлы: package.json, package-lock.json, packages/workflow-kit/package.json, packages/workflow-kit/src/lib/common.mjs, .harness/workflow.json, tests/plan-review.test.mjs, tests/workflow-kit-source.test.mjs, tests/workflow-kit-upgrade.test.mjs, tests/workflow-kit-recovery.test.mjs, scripts/check-installed-release.mjs, scripts/stage-workflow-kit.mjs, tests/electron-smoke.mjs, packages/workflow-kit/src/lib/installer.mjs, docs/planning/plan-review.md, docs/planning/plan-review-integration.md, docs/modules/release.md, docs/modules/plan-review.md, packages/workflow-kit/docs/modules/workflow-kit-package.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: описать ревью планов и обновить контракты
   - Reference: plan-review-20261008 / DOCS / implementation
