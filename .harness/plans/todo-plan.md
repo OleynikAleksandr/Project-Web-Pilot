@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1466,
+  "plan_revision": 1467,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "plan-review-20261008",
@@ -581,6 +581,37 @@
         "include_last_completed_task": false,
         "dependency_task_ids": []
       }
+    },
+    {
+      "id": "T009",
+      "title": "Опубликовать выпуск с Review на GitHub",
+      "why": "Пользователь поручил завершить внедрение опубликованным выпуском.",
+      "dependencies": [
+        "T008",
+        "DOCS"
+      ],
+      "functional_paths": [
+        "release-manifest.json"
+      ],
+      "documentation_paths": [
+        "docs/planning/plan-review-integration.md"
+      ],
+      "verification_ids": [
+        "github-release"
+      ],
+      "verification_kind": "package",
+      "acceptance_criteria": [
+        "Готовые проверенные assets опубликованы на GitHub без пересборки; main и тег согласованы с release-manifest; финальный push выполнен.",
+        "Пользователю сообщены версия, ссылка на выпуск и фактически выполненные проверки."
+      ],
+      "expected_commit_message": "release: опубликовать выпуск с Review",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "plan-review-20261008",
+        "task_id": "T009",
+        "role": "implementation"
+      }
     }
   ],
   "blocked_reason": null,
@@ -601,7 +632,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: plan-review-20261008
 Current Task: нет
-Revision: 1466
+Revision: 1467
 
 ## Цель
 
@@ -652,6 +683,10 @@ Revision: 1466
   - Git Commit: [PENDING] release: Установить готовый локальный выпуск и передать на приёмку
   - Reference: plan-review-20261008 / T008 / implementation
   - Файлы: release-manifest.json, docs/planning/plan-review.md, docs/planning/plan-review-integration.md, docs/modules/release.md
+- [TODO] T009: Опубликовать выпуск с Review на GitHub — Ожидает
+  - Git Commit: [PENDING] release: опубликовать выпуск с Review
+  - Reference: plan-review-20261008 / T009 / implementation
+  - Файлы: release-manifest.json, docs/planning/plan-review-integration.md
 
 ## Context Pack For This Cycle
 
