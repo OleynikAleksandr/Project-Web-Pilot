@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1528,
+  "plan_revision": 1530,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "technical-audit-20261008",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Провести доказательный read-only аудит сопровождаемости и надёжности всего поддерживаемого Project Web Pilot, представить находки, минимальные предложения и ограничения; исходники не менять",
   "acceptance_criteria": [
     "Матрица охвата всех поддерживаемых подсистем и четырёх направлений с ограничениями",
@@ -23,7 +23,8 @@
       "docs/planning/technical-audit-findings.md",
       "docs/architecture/OVERVIEW.md",
       "docs/planning/technical-audit-findings-unused.md",
-      "docs/planning/technical-audit-findings-lifecycle.md"
+      "docs/planning/technical-audit-findings-lifecycle.md",
+      "docs/planning/technical-audit-findings-summary.md"
     ]
   },
   "baseline_commit": "fda09de65ed4a86648f44be3343c478b53468f5f",
@@ -188,8 +189,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "technical-audit-20261008",
         "task_id": "T006",
@@ -200,7 +201,8 @@
       ],
       "functional_paths": [],
       "documentation_paths": [
-        "docs/planning/technical-audit-findings.md"
+        "docs/planning/technical-audit-findings.md",
+        "docs/planning/technical-audit-findings-summary.md"
       ],
       "verification_ids": [],
       "id": "T006",
@@ -211,7 +213,11 @@
         "Матрица покрытия и отрицательные результаты каждого направления, ограничения, отсутствие необоснованных заявлений о Windows/чистой установке",
         "Исходники и связанные репозитории не изменены; предложен перечень дальнейших отдельных работ без их выполнения"
       ],
-      "expected_commit_message": "docs: завершить доказательный технический аудит"
+      "expected_commit_message": "docs: завершить доказательный технический аудит",
+      "actual_files": [
+        "docs/planning/technical-audit-findings.md",
+        "docs/planning/technical-audit-findings-summary.md"
+      ]
     }
   ],
   "blocked_reason": null,
@@ -229,10 +235,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: technical-audit-20261008
 Current Task: нет
-Revision: 1528
+Revision: 1530
 
 ## Цель
 
@@ -266,10 +272,10 @@ Revision: 1528
   - Git Commit: [DONE] docs: исследовать ошибки и жизненный цикл
   - Reference: technical-audit-20261008 / T005 / implementation
   - Файлы: docs/planning/technical-audit-findings.md, docs/planning/technical-audit-findings-lifecycle.md
-- [TODO] T006: Свести результаты и проверить доказательства — Ожидает
-  - Git Commit: [PENDING] docs: завершить доказательный технический аудит
+- [DONE] T006: Свести результаты и проверить доказательства — Завершено
+  - Git Commit: [DONE] docs: завершить доказательный технический аудит
   - Reference: technical-audit-20261008 / T006 / implementation
-  - Файлы: docs/planning/technical-audit-findings.md
+  - Файлы: docs/planning/technical-audit-findings.md, docs/planning/technical-audit-findings-summary.md
 
 ## Context Pack For This Cycle
 
