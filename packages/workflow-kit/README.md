@@ -1,6 +1,6 @@
 # Workflow Kit
 
-Пакет `@webpilot/workflow-kit` версии **1.6.3** внутри репозитория Project Web Pilot. Даёт агенту один текущий план на Git checkout/worktree, проверяемые коммиты задач и полный стартовый контекст (recovery) из плана, документов и Git. Пакет приватный, в npm не публикуется.
+Пакет `@webpilot/workflow-kit` версии **1.6.4** внутри репозитория Project Web Pilot. Даёт агенту один текущий план на Git checkout/worktree, проверяемые коммиты задач и полный стартовый контекст (recovery) из плана, документов и Git. Пакет приватный, в npm не публикуется.
 
 ## Требования
 Node.js 22+ и Git; приложение Web Pilot использует Node 24.21.0. На Windows установщик кладёт Node в `.harness/runtime` проекта; Git — MinGit приложения или системный.
@@ -21,7 +21,7 @@ node packages/workflow-kit/src/install.mjs --project /absolute/empty/folder --mo
 node packages/workflow-kit/src/install.mjs --project /absolute/project/path --update
 ```
 
-`--dry-run` показывает изменения без записи. Установщик не перезаписывает занятые и изменённые файлы. `--update` обновляет установки версий 1.1.0, 1.2.0, 1.3.0, 1.4.0–1.4.13, 1.5.0–1.5.6, 1.6.0–1.6.2: сохраняет резервную копию в `.harness/runtime/kit-upgrade-*`, текущий план остаётся источником, обновление фиксируется одним коммитом. Перед `--update` нужны автор Git (`user.name`, `user.email`; можно передать `--git-name`/`--git-email`), завершённые merge/rebase и отсутствие посторонних staged-файлов; иначе обновление отказывает до записи файлов. Новая установка без автора Git или поверх незакоммиченных изменений ждёт `./scripts/workflow install:commit`.
+`--dry-run` показывает изменения без записи. Установщик не перезаписывает занятые и изменённые файлы. `--update` обновляет установки версий 1.1.0, 1.2.0, 1.3.0, 1.4.0–1.4.13, 1.5.0–1.5.6, 1.6.0–1.6.3: сохраняет резервную копию в `.harness/runtime/kit-upgrade-*`, текущий план остаётся источником, обновление фиксируется одним коммитом. Перед `--update` нужны автор Git (`user.name`, `user.email`; можно передать `--git-name`/`--git-email`), завершённые merge/rebase и отсутствие посторонних staged-файлов; иначе обновление отказывает до записи файлов. Новая установка без автора Git или поверх незакоммиченных изменений ждёт `./scripts/workflow install:commit`.
 
 ## Работа в проекте
 ```bash
@@ -42,7 +42,11 @@ node packages/workflow-kit/src/install.mjs --project /absolute/project/path --up
 - Закрытие плана (`archive`) и перенос незавершённого (`plan:carryover`) — только по поручению пользователя; прежний план читается из Git, архивных копий нет.
 
 ## Review нового плана
-Опциональное согласование пары spec + to-do plan через Claude CLI перед ACTIVE. По умолчанию OFF, обычным потребителям Claude не нужен. При ON: `review:prepare --help` → `review:run` → позиция автора/исправления → `review:publish`. При ошибке — acknowledge, вопрос пользователю, затем resolve. Публикация проверяет точные входы, первый task:start очищает материалы. [Контракт Review](../../docs/modules/plan-review.md).
+Опциональное согласование spec + to-do plan через Claude CLI перед ACTIVE. По умолчанию OFF, обычным потребителям Claude не нужен. При ON: `review:prepare --help` → `review:run` → `review:respond --input <позиция.json>` → `review:publish`. Позиция обязательна на каждый успешный отзыв, включая approved. Неизменённое согласие не требует лишнего раунда; изменение пары требует нового ревью. Решения для исполнителя сохраняются в spec/критериях до окончательного согласования.
+
+Для доставки продолжения Web Pilot передаёт явный `recipient_session_id` из стартового сообщения (либо совпадающий `scope.session_id`); вне Web Pilot нужен `recipient_mode: manual`. План по-прежнему один на checkout. Смена адресата — только с `recipient_change_note` по поручению пользователя.
+
+Ошибка или существенный спор → acknowledge, вопрос пользователю, затем resolve. Явное resolve publish допускает спор, но не отменяет позицию на успешный отзыв; без успешного отзыва из-за ошибки она не нужна. OFF возвращает обычную публикацию. Первый task:start удаляет только материалы своего run; опубликованные документы сохраняются. [Контракт Review](../../docs/modules/plan-review.md).
 
 ## Где данные
 - `.harness/plans/todo-plan.md` — текущий план; `.harness/workflow.json` — профиль, проверки, бюджет; `.harness/kit-manifest.json` — состав установки; `.harness/runtime/` — локальные файлы вне Git.

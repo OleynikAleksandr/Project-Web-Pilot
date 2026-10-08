@@ -12,7 +12,9 @@
 - `src/chat-colors-window.mjs` (`ChatColorsWindow.open/close/publish`), `src/chat-colors-preload.cjs`, `src/ui/chat-colors.{html,mjs}` — редактор цветов; `src/chatgpt-colors.mjs` — `ChatColors.set/apply/dispose`, `normalizeChatColors`, `validateColorChange`, `DEFAULT_COLORS`.
 - `src/main.mjs` — `BaseWindow`, `layout`, `clampedSidebarWidth`, `saveSettings`, `applyShellTheme`, обработчики `pilot:set-sidebar-width|set-theme|copy-workspace-path|copy-external-client-line|open-chat-colors`.
 
-Карточка плана содержит независимые кнопки «Автовыполнение» и зелёную при ON Review; режимы не перенесены в Settings. Review передаёт выбранный workspace и boolean через узкий `pilot:plan-review`, правила — [plan-review](plan-review.md).
+Карточка плана содержит независимые кнопки «Включить/Выключить автовыполнение» и «Включить/Выключить Review». Обе зелёные при ON и обычные при OFF в двух темах; `aria-pressed` сообщает состояние. Review передаёт workspace и boolean через узкий `pilot:plan-review`. Слева от текста статуса (`role=status`) — декоративный индикатор работы/успеха/внимания; ожидание статично, reduced motion отключает анимацию. Правила — [plan-review](plan-review.md).
+
+Блок «Связь с ChatGPT» показывается по активному ConversationRecovery, не по STALL_WARNING. «Перезагрузить страницу чата» видна только при canRetry; причина и пояснение говорят о той же странице без нового чата и повторного Send. Обработчик — `pilot:reconnect`, защиты — [context-delivery](context-delivery.md).
 
 ## Дерево «Ваши проекты»
 

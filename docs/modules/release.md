@@ -92,6 +92,7 @@
 - **Поставка**: `shasum -c SHA256SUMS.txt`; `unzip -tq`; `unzip -l` без «Claude outputs», `.mp4`, `mac-runtime.zip`, `mac-control.py`, `mac-first-run.py`; `plutil -lint resources/mac-permissions.plist`; в Info.plist три ключа разрешений и верный `CFBundleIdentifier`.
 - **Независимая проверка** агентом ChatGPT (только чтение, `control.py status`): версия `/Applications`, MCP «Codex App Server Local Mac» с 9 инструментами и `bridge_status`, службы ([runtime-lifecycle.md](runtime-lifecycle.md)), SHA `app.asar` = manifest.
 - **Приёмка пользователем (macOS)**: запуск после полного выхода; новые Chat и Work получают recovery; повторное открытие без повторной отправки; AutoPlan и [Review](plan-review.md#проверки-и-пользовательская-приёмка) на временном проекте; архив, возврат, удаление; тема, скрытие вызовов, Доктор; ввод и отмена ID туннеля; `secure-tunnel`/`vps`; первый запуск из ZIP на чистой macOS. «Всё работает» — общая приёмка, не по пунктам.
+- **Восстановление чата**: при работающем Review длительное ожидание не открывает блок связи. При реально обнаруженной ошибке «Перезагрузить страницу чата» объясняет причину, сохраняет текущий чат, не повторяет сообщение; черновик, UNKNOWN и пауза ограничения запросов защищены. Fixture-проверки этого пути не подтверждают живой ChatGPT.
 
 ## Открыто
 

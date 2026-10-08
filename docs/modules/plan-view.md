@@ -66,7 +66,7 @@ Read-only показ current plan checkout (`.harness/plans/todo-plan.md`) в к
 
 - `#plan-reason`: сообщение ошибки чтения/наблюдения (`PLAN_READ_FAILED`, `PLAN_WATCH_FAILED`) важнее `blocked_reason`.
 - `#plan-tasks` («Микрозадачи плана»): все задачи по порядку плана, метки `✓` done / `●` current / `○` pending, текущая выделена фоном; показывается только название — без id, revision и слов «Revision/версия».
-- Под задачами — независимые переключатели AutoPlan ([auto-plan.md](auto-plan.md)) и Review ([plan-review.md](plan-review.md)); Review доступен при NONE, ON зелёный и aria-pressed, рядом стадия и раунд.
+- Под задачами — независимые AutoPlan ([auto-plan.md](auto-plan.md)) и Review ([plan-review.md]), доступные при NONE. Обе кнопки зелёные при ON, обычные при OFF, с aria-pressed и названием действия. У Review рядом стадия, раунд и индикатор работы/успеха/внимания.
 
 ### Завершение плана и приёмка
 

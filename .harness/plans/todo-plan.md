@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1507,
+  "plan_revision": 1510,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "review-usability-0103-20261008",
@@ -56,7 +56,9 @@
       "docs/modules/workspace-sidebar-ui.md",
       "docs/modules/release.md",
       "packages/workflow-kit/docs/modules/workflow-kit-package.md",
-      "packages/workflow-kit/README.md"
+      "packages/workflow-kit/README.md",
+      "docs/modules/plan-view.md",
+      "docs/modules/project-doctor.md"
     ]
   },
   "baseline_commit": "98ce6212606858939324d4f234953b9e26261655",
@@ -66,7 +68,7 @@
       {
         "path": "docs/planning/review-usability-0103.md",
         "required": true,
-        "revision": "WORKTREE"
+        "revision": "e2a15ed07917ae5709134885a806ec48114c8fa4"
       },
       {
         "path": "docs/modules/plan-review.md",
@@ -323,8 +325,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "review-usability-0103-20261008",
         "task_id": "DOCS",
@@ -349,7 +351,9 @@
         "docs/modules/workspace-sidebar-ui.md",
         "docs/modules/release.md",
         "packages/workflow-kit/docs/modules/workflow-kit-package.md",
-        "packages/workflow-kit/README.md"
+        "packages/workflow-kit/README.md",
+        "docs/modules/plan-view.md",
+        "docs/modules/project-doctor.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -359,7 +363,21 @@
         "Все действующие документы сверены с результатом, требования временной спецификации перенесены и она удалена с точной Git-ссылкой для recovery",
         "Непроверенная живая, Windows и чистая установка не объявлены пройденными"
       ],
-      "expected_commit_message": "docs: описать исправления Review и восстановления страницы"
+      "expected_commit_message": "docs: описать исправления Review и восстановления страницы",
+      "actual_files": [
+        "README.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/auto-plan.md",
+        "docs/modules/context-delivery.md",
+        "docs/modules/plan-review.md",
+        "docs/modules/plan-view.md",
+        "docs/modules/project-doctor.md",
+        "docs/modules/release.md",
+        "docs/modules/workspace-sidebar-ui.md",
+        "docs/planning/review-usability-0103.md",
+        "packages/workflow-kit/README.md",
+        "packages/workflow-kit/docs/modules/workflow-kit-package.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -463,7 +481,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: review-usability-0103-20261008
 Current Task: нет
-Revision: 1507
+Revision: 1510
 
 ## Цель
 
@@ -496,10 +514,10 @@ Revision: 1507
   - Git Commit: [DONE] fix: Проверить интеграцию и подготовить версии выпуска
   - Reference: review-usability-0103-20261008 / T005 / implementation
   - Файлы: package.json, package-lock.json, packages/workflow-kit/package.json, packages/workflow-kit/src/lib/common.mjs, packages/workflow-kit/src/lib/installer.mjs, .harness/workflow.json, tests/workflow-kit-upgrade.test.mjs, tests/workflow-kit-source.test.mjs, tests/electron-smoke.mjs, docs/planning/review-usability-0103.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: описать исправления Review и восстановления страницы
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: описать исправления Review и восстановления страницы
   - Reference: review-usability-0103-20261008 / DOCS / implementation
-  - Файлы: docs/planning/review-usability-0103.md, README.md, AGENTS.md, docs/architecture/OVERVIEW.md, docs/modules/plan-review.md, docs/modules/auto-plan.md, docs/modules/context-delivery.md, docs/modules/workspace-sidebar-ui.md, docs/modules/release.md, packages/workflow-kit/docs/modules/workflow-kit-package.md, packages/workflow-kit/README.md
+  - Файлы: docs/planning/review-usability-0103.md, README.md, AGENTS.md, docs/architecture/OVERVIEW.md, docs/modules/plan-review.md, docs/modules/auto-plan.md, docs/modules/context-delivery.md, docs/modules/workspace-sidebar-ui.md, docs/modules/release.md, packages/workflow-kit/docs/modules/workflow-kit-package.md, packages/workflow-kit/README.md, docs/modules/plan-view.md, docs/modules/project-doctor.md
 - [TODO] T006: Собрать парный выпуск 0.6.103 — Ожидает
   - Git Commit: [PENDING] release: Собрать парный выпуск 0.6.103
   - Reference: review-usability-0103-20261008 / T006 / implementation
