@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "version": "1.6.3",
+  "version": "1.6.4",
   "initialized_git": true,
   "hook_mechanism": "git",
   "node_runtime": "system",
@@ -108,7 +108,7 @@
       "kind": "owned",
       "mode": 420,
       "original_hash": "b6103aa447c13194a1bab6044af147e590bf3625965097e43d5643e75a06c22d",
-      "hash": "b6103aa447c13194a1bab6044af147e590bf3625965097e43d5643e75a06c22d",
+      "hash": "10dc7134893cb1588185d754d004d489299204c55db31e7ffa86d26f844d7bea",
       "existed": true
     },
     {
@@ -126,7 +126,7 @@
       "kind": "owned",
       "mode": 420,
       "original_hash": "63a009b26c8481c00615a252beed56677bd7439b2c7fd3e9c5a8d5339db1ea77",
-      "hash": "63a009b26c8481c00615a252beed56677bd7439b2c7fd3e9c5a8d5339db1ea77",
+      "hash": "a1e8cbb079bf6f349af1d6460043b01d81ec24a4c3120418265262595353c261",
       "existed": true
     },
     {
@@ -134,8 +134,8 @@
       "external": false,
       "kind": "owned",
       "mode": 420,
-      "original_hash": "34ed0da1080769a5493ad7eeb9ddab401688b4f95bf0b9fc7b608664f29951ff",
-      "hash": "e0ebab0b882f21aa1c758389a1db1cbfb606fbc90fc00455ca3c43cae3f5e865",
+      "original_hash": "e0ebab0b882f21aa1c758389a1db1cbfb606fbc90fc00455ca3c43cae3f5e865",
+      "hash": "f33ae5e8ec885397a2ca9308882ea00b4cb4bbd426c0673a4d23ee9e7d8bfd92",
       "existed": true
     },
     {
@@ -170,8 +170,8 @@
       "external": false,
       "kind": "owned",
       "mode": 420,
-      "original_hash": "b40cd1ac40fa47c9ad01869fddbf8a7357af4b72622fd13d8a7c7351d2ad2707",
-      "hash": "122e15a071ebf3349d2720ac7bcb86df8a04e65b1070f74948b85e84254785e1",
+      "original_hash": "122e15a071ebf3349d2720ac7bcb86df8a04e65b1070f74948b85e84254785e1",
+      "hash": "2b22d47ce8630d4779f2741b8e5ba03abb3c03ec68c55ced59535f0ba3f1a69d",
       "existed": true
     },
     {
@@ -324,7 +324,7 @@
       "kind": "owned",
       "mode": 420,
       "original_hash": "b926336f99b6a5e1181cfa86584d74f2fa2b5c727182b1599824779b42939c8f",
-      "hash": "b926336f99b6a5e1181cfa86584d74f2fa2b5c727182b1599824779b42939c8f",
+      "hash": "c1b40cc61f27e5a33c1fd288efe4aee647a9867b05059f9e423c80a9d0c6b143",
       "existed": true
     },
     {
@@ -413,8 +413,8 @@
       "external": false,
       "kind": "owned",
       "mode": 420,
-      "original_hash": "c3f3e3f778acd14c077ac0c0fa409c1364f4aa5696550304c8a4225e79943d51",
-      "hash": "7dbbef125a8df115b661fd4b509429a1da1165bed46e2fe2278d45da254efa1d",
+      "original_hash": "7dbbef125a8df115b661fd4b509429a1da1165bed46e2fe2278d45da254efa1d",
+      "hash": "41f8979712afa17fb66b33adaa15dc4f792e279731a8f1cedf9183fbc75ad809",
       "existed": true
     },
     {
@@ -423,7 +423,7 @@
       "kind": "owned",
       "mode": 420,
       "original_hash": "f631cb7bc9d78cb7d2f49e8921224ac146e826d526813bcc095846504e575210",
-      "hash": "f631cb7bc9d78cb7d2f49e8921224ac146e826d526813bcc095846504e575210",
+      "hash": "8081afaba6eb473985ae0ff230d29c61306c54c3668f75cfface71be8112779a",
       "existed": true
     },
     {
@@ -450,22 +450,22 @@
       "external": false,
       "kind": "editable",
       "mode": 420,
-      "original_hash": "fc5d174edea8c8773d21810e46cbb835250347caabbace8ae425b610c9be5b50",
-      "hash": "fc5d174edea8c8773d21810e46cbb835250347caabbace8ae425b610c9be5b50",
+      "original_hash": "1f9294ac3328ef4ca81eb66254a5b99e349936875318485253c76792f6fe84d3",
+      "hash": "1f9294ac3328ef4ca81eb66254a5b99e349936875318485253c76792f6fe84d3",
       "existed": true
     }
   ],
-  "upgraded_from": "1.6.2",
-  "upgraded_at": "2026-10-08T13:56:00.850Z",
+  "upgraded_from": "1.6.3",
+  "upgraded_at": "2026-10-08T16:48:04.424Z",
   "doctor_reconciled_at": "2026-09-17T11:37:46.304Z",
   "legacy_plan_migration": {
     "model": "single-active-plan",
     "removed_count": 0,
-    "source_commit": "d78188406644258bb29373111bf30beb6902d138",
-    "migrated_at": "2026-10-08T13:56:00.858Z"
+    "source_commit": "ea7b2b36273e734ab5056485aec313b940029bc1",
+    "migrated_at": "2026-10-08T16:48:04.431Z"
   },
   "required_documents": [
     "docs/architecture/OVERVIEW.md"
   ],
-  "installed_at": "2026-10-08T13:56:00.858Z"
+  "installed_at": "2026-10-08T16:48:04.431Z"
 }

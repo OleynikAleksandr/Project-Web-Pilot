@@ -4,7 +4,7 @@ import { spawn as nodeSpawn } from 'node:child_process';
 import { atomic, check, id, json, safePath, hash } from './common.mjs';
 import { readPlan } from './plan.mjs';
 import { locked } from './transaction.mjs';
-import { readReview, saveReview, reviewDirectory, checkReviewInputs, cleanupReview } from './plan-review.mjs';
+import { readReview, saveReview, reviewDirectory, checkReviewInputs, cleanupReview, reviewHistory, assertAuthorResponses } from './plan-review.mjs';
 
 export const REVIEW_MODEL='claude-opus-5-5';
 export const verdictSchema={type:'object',additionalProperties:false,required:['verdict','summary','findings'],properties:{
@@ -46,7 +46,8 @@ function promptFor(root,s,dir) {
     'Проект: '+root,'Раунд: '+s.round,
     ...s.documents.map(d=>'Спецификация: '+path.join(dir,d.snapshot)),
     'Нормализованный to-do plan: '+path.join(dir,s.plan_file),
-    ...(s.response_file?['Позиция автора: '+path.join(dir,s.response_file)]:[])
+    ...(s.response_file?['Позиция автора / описание изменений: '+path.join(dir,s.response_file)]:[]),
+    ...reviewHistory(root,s).filter(r=>r.author_response).map(r=>'Сохранённая позиция раунда '+r.round+': '+path.join(dir,r.author_response.file))
   ].join('\n');
 }
 export async function runReview(root,{maxTurns=30,timeoutMs=900000}={}, {spawn=nodeSpawn}={}) {
@@ -57,8 +58,9 @@ export async function runReview(root,{maxTurns=30,timeoutMs=900000}={}, {spawn=n
     check(old.enabled,'REVIEW_DISABLED','Review выключен; используйте обычную публикацию.');
     check(old.stage==='PREPARED','REVIEW_NOT_READY','Сначала review:status и review:prepare; работающий запуск повторять нельзя.');
     checkReviewInputs(root,old);
+    const review_history=assertAuthorResponses(root,old);
     check(old.round<old.max_rounds,'REVIEW_ROUND_LIMIT','Лимит раундов; спросите пользователя о продолжении.');
-    return saveReview(root,{...old,stage:'RUNNING',round:old.round+1,launch_id:id(),runner_pid:process.pid,
+    return saveReview(root,{...old,review_history,user_decision:null,stage:'RUNNING',round:old.round+1,launch_id:id(),runner_pid:process.pid,
       requested_session_id:old.claude_session_id??old.requested_session_id??id(),started_at:new Date().toISOString(),error:null,notification_handled:false});
   });
   const dir=reviewDirectory(root,s.run_id), prefix='round-'+s.round;
@@ -104,9 +106,11 @@ export async function runReview(root,{maxTurns=30,timeoutMs=900000}={}, {spawn=n
     atomic(safePath(dir,prefix+'-metadata.json'),json({...metadata,exit_code:exitCode,session_id:result?.session_id,models:Object.keys(result?.modelUsage??{}),duration_ms:Date.now()-started,stage,error:failure}));
     return saveReview(root,{...latest,stage,runner_pid:null,claude_session_id:result?.session_id===s.requested_session_id?s.requested_session_id:latest.claude_session_id,
       result_file:resultFile,review_file:verdict?prefix+'-review.txt':null,stderr_file:stderrFile,
+      review_history:!failure && verdict?[...s.review_history,{round:s.round,verdict:verdict.verdict,review_file:prefix+'-review.txt',
+        review_sha256:hash(fs.readFileSync(safePath(dir,prefix+'-review.txt'))),plan_digest:s.plan_digest,documents:s.documents,author_response:null}]:s.review_history,
       error:failure??(limit?{code:'REVIEW_ROUND_LIMIT',message:'Существенные замечания остались после '+latest.round+' раундов. Спросите пользователя, что делать дальше.'}:null),
       verdict:verdict?.verdict??null,ended_at:new Date().toISOString(),notification_handled:false});
   });
   if(finished.stage==='PUBLISHED')locked(root,()=>cleanupReview(root,readPlan(root)));
-  return {ok:true,...finished,run_directory:dir,next_action:finished.stage==='PUBLISHED'?'План опубликован при Review OFF; продолжайте обычный workflow.':finished.stage==='NEEDS_USER'?'Выполните review:acknowledge, сообщите проблему и спросите пользователя. Не повторяйте запуск автоматически.':'Прочитайте review_file полностью и сформулируйте позицию. Если согласны, review:publish; иначе review:prepare с response.'};
+  return {ok:true,...finished,run_directory:dir,next_action:finished.stage==='PUBLISHED'?'План опубликован при Review OFF; продолжайте обычный workflow.':finished.stage==='NEEDS_USER'?'Если получен успешный отзыв, сохраните позицию через review:respond. Выполните review:acknowledge, сообщите проблему и спросите пользователя. Не повторяйте запуск автоматически.':'Прочитайте review_file полностью и сохраните позицию через review:respond, включая approved. Согласованная неизменённая пара — review:publish без нового раунда. Исправления и существенные решения внесите в spec/критерии; затем review:prepare и review:run.'};
 }
