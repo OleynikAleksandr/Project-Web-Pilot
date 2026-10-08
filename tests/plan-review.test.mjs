@@ -7,7 +7,99 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawn, execFileSync } from 'node:child_process';
-import { once } from 'node:events';
+import { once, EventEmitter } from 'node:events';
+import { install } from '@webpilot/workflow-kit/lib/installer';
+import { setReviewEnabled, readReview } from '@webpilot/workflow-kit/lib/plan-review';
+import { runReview, REVIEW_MODEL } from '@webpilot/workflow-kit/lib/claude-review';
+import { startupMessage } from '../src/context-session.mjs';
+
+test('startup ID through normal prepare and simulated Claude round routes pauses and restart only to its recipient',async t=>{
+  const root=fs.mkdtempSync(path.join(os.tmpdir(),'review-routing-'));
+  let flow,client;
+  t.after(()=>{flow?.dispose();client?.dispose();fs.rmSync(root,{recursive:true,force:true});});
+  const git=(...args)=>execFileSync('git',args,{cwd:root,stdio:'pipe'});
+  git('init','-b','main');git('config','user.name','Fixture');git('config','user.email','fixture@test.local');
+  fs.writeFileSync(path.join(root,'README.md'),'# Fixture\n');git('add','README.md');git('commit','-m','fixture');
+  install({project:root,mode:'existing'});
+  const spec='docs/planning/review.md';fs.mkdirSync(path.join(root,'docs/planning'),{recursive:true});
+  fs.writeFileSync(path.join(root,spec),'# Review routing fixture\n');
+  let selected={workspace:root,sessionId:'web-pilot-fixture',chatUrl:'https://chatgpt.com/c/routing-fixture',scopeId:null};
+  const text=startupMessage({...selected,name:'Fixture'},'fixture-request',{parts:[{}]});
+  const recipient=JSON.parse(text.match(/\{"recipient_session_id":"[^"]+"\}/)[0]);
+  const scope={scope_id:'routing',objective:'Check routing',approval_note:'User requests a fixture plan',acceptance_criteria:['Correct route'],
+    approved_scope:{functional_paths:[],documentation_paths:[spec]},context_pack:{documents:[{path:spec,required:true}]},
+    tasks:[{id:'T001',title:'Fixture',why:'Check routing',functional_paths:[],documentation_paths:[spec],verification_ids:[],
+      acceptance_criteria:['Correct route'],expected_commit_message:'docs: fixture'}]};
+  const inputFile=path.join(root,'.harness/runtime/routing-input.json');
+  fs.writeFileSync(inputFile,JSON.stringify({scope,documents:[spec],...recipient}));
+  setReviewEnabled(root,true);
+  const prepared=JSON.parse(execFileSync(process.execPath,[path.join(root,'scripts/workflow.mjs'),'review:prepare','--input',inputFile],
+    {cwd:root,encoding:'utf8',stdio:['ignore','pipe','pipe'],env:process.env}));
+  assert.equal(prepared.recipient_session_id,selected.sessionId);
+  const first=await runReview(root,{}, {spawn:(_command,args,options)=>{
+    const child=new EventEmitter();child.stdin=new EventEmitter();
+    child.stdin.end=()=>queueMicrotask(()=>{
+      fs.writeSync(options.stdio[1],JSON.stringify({subtype:'success',is_error:false,session_id:args[args.indexOf('--session-id')+1],
+        modelUsage:{[REVIEW_MODEL]:{}},structured_output:{verdict:'changes_requested',summary:'Уточнить проверку',findings:[]}}));
+      child.emit('close',0);
+    });return child;
+  }});
+  assert.equal(first.stage,'AUTHOR_PENDING');
+  const checkpointFile=path.join(root,'.harness/runtime/routing-checkpoint.json'),sent=[];
+  let resultState='sent';
+  const createFlow=checkpoint=>{
+    client=new PlanReviewClient({selected:()=>selected});client.observeSelection();
+    flow=new ReviewContinuation({selected:()=>selected,client,available:()=>true,settleMs:0,
+      saveCheckpoint:async value=>fs.writeFileSync(checkpointFile,JSON.stringify(value)),
+      send:async(message,ready,before)=>{
+        if(!ready() || !await before())return {state:'cancelled'};
+        sent.push({sessionId:selected.sessionId,message});return {state:resultState};
+      }});
+    if(checkpoint)flow.restore(checkpoint);
+  };
+  const page={url:selected.chatUrl,busy:false,editorAvailable:true,writable:true,lastMessageRole:'assistant',
+    turnId:'round-one-pause',userTurnId:'request',draftPresent:false,manualStopRevision:0,manualSendRevision:0};
+  let restartCount=0;
+  const observe=patch=>{Object.assign(page,patch);flow.observe({state:{...page},documentId:'fixture-doc-'+restartCount});};
+  const drain=async()=>{await new Promise(r=>setTimeout(r,10));await flow.flow.reconcile();};
+  createFlow();
+  const original={...selected};
+  selected={...original,workspace:root+'-other'};observe({});flow.update();await drain();
+  assert.equal(sent.length,0,'stale client state from another checkout never routes');
+  selected={...original,sessionId:'foreign-chat'};observe({});flow.update();await drain();
+  assert.equal(sent.length,0,'another chat never receives continuation');
+  selected=original;observe({draftPresent:true});flow.update();await drain();assert.equal(sent.length,0);
+  observe({draftPresent:false});await drain();
+  assert.equal(sent.length,1);assert.equal(sent[0].sessionId,recipient.recipient_session_id);
+  assert.match(sent[0].message,/AUTHOR_PENDING/);
+  const restart=async()=>{
+    const checkpoint=JSON.parse(fs.readFileSync(checkpointFile,'utf8'));
+    flow.dispose();client.dispose();restartCount++;createFlow(checkpoint);observe({});flow.update();await drain();
+  };
+  await restart();assert.equal(sent.length,1,'restart does not duplicate a delivered continuation');
+  resultState='unknown';observe({busy:true});observe({busy:false,turnId:'next-pause'});await drain();
+  assert.equal(sent.length,2);
+  await restart();assert.equal(sent.length,2,'restart never repeats UNKNOWN');
+  assert.equal(readReview(root).recipient_session_id,recipient.recipient_session_id);
+});
+
+test('Review rechecks persisted recipient at final send even before the file event arrives',async()=>{
+  const selected={workspace:'/fixture',sessionId:'chat-a',chatUrl:'https://chatgpt.com/c/fixture'};
+  const original={enabled:true,stage:'AUTHOR_PENDING',run_id:'run',round:1,generation:1,recipient_session_id:'chat-a'};
+  const client={workspace:selected.workspace,state:original,refresh(){}};
+  let persisted=original,sends=0;
+  const flow=new ReviewContinuation({selected:()=>selected,client,available:()=>true,settleMs:0,status:()=>persisted,
+    saveCheckpoint:async()=>{},send:async(_text,ready,before)=>{
+      persisted={...original,generation:2,recipient_session_id:'chat-b'};
+      if(ready() && await before()){sends++;return {state:'sent'};}return {state:'cancelled'};
+    }});
+  try{
+    flow.observe({documentId:'doc',state:{url:selected.chatUrl,busy:false,editorAvailable:true,writable:true,
+      lastMessageRole:'assistant',turnId:'pause',userTurnId:'request',draftPresent:false}});
+    flow.update();await new Promise(r=>setTimeout(r,10));await flow.flow.reconcile();
+    assert.equal(sends,0);
+  }finally{flow.dispose();}
+});
 
 test('Review indicator distinguishes active work, waiting, success and attention; watchdog is bounded',()=>{
   let state={enabled:true,stage:'RUNNING',runner_pid:process.pid,started_at:new Date(0).toISOString()},now=0,readCount=0;
@@ -97,7 +189,7 @@ test('Review and AutoPlan share a conversation pause across scope change and res
 
 test('Review continuation at NONE targets its recipient, asks once and respects draft and manual Stop',async()=>{
   const selected={workspace:'/project',sessionId:'chat',chatUrl:'https://chatgpt.com/c/test',scopeId:null};
-  const client={state:{enabled:true,run_id:'run',stage:'PREPARED',round:0,generation:1,recipient_session_id:'chat'},refresh(){}};
+  const client={workspace:selected.workspace,state:{enabled:true,run_id:'run',stage:'PREPARED',round:0,generation:1,recipient_session_id:'chat'},refresh(){}};
   let saved;const sent=[];
   const flow=new ReviewContinuation({selected:()=>selected,client,available:()=>true,settleMs:0,
     status:()=>client.state,acknowledge:()=>{client.state={...client.state,notification_handled:true,generation:client.state.generation+1};},

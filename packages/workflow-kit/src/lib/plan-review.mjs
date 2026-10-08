@@ -61,6 +61,25 @@ export function checkReviewInputs(root, s, {base = true} = {}) {
   }
   return dir;
 }
+function reviewRecipient(input, old, continuing) {
+  const ids=[input.recipient_session_id,input.scope?.session_id].filter(value=>value!=null);
+  check(ids.every(value=>typeof value==='string' && /^[A-Za-z0-9][A-Za-z0-9._-]{0,180}$/.test(value)),
+    'REVIEW_RECIPIENT','Укажите точный Session ID из стартового сообщения Web Pilot.');
+  check(new Set(ids).size<=1,'REVIEW_RECIPIENT','recipient_session_id и scope.session_id должны совпадать.');
+  check(input.recipient_mode==null || ['webpilot','manual'].includes(input.recipient_mode),
+    'REVIEW_RECIPIENT','recipient_mode: webpilot или manual.');
+  const manual=input.recipient_mode==='manual' || (input.recipient_mode==null && !ids.length && continuing && old.recipient_mode==='manual');
+  check(!manual || !ids.length,'REVIEW_RECIPIENT','Ручной режим без доставки несовместим с Session ID.');
+  const recipient_session_id=manual?null:ids[0]??(continuing?old.recipient_session_id:null);
+  check(manual || typeof recipient_session_id==='string' && /^[A-Za-z0-9][A-Za-z0-9._-]{0,180}$/.test(recipient_session_id),'REVIEW_RECIPIENT',
+    'Для Web Pilot нужен recipient_session_id из стартового сообщения (либо совпадающий scope.session_id). Вне Web Pilot явно укажите recipient_mode: manual.');
+  const changed=continuing && (old.recipient_session_id??null)!==recipient_session_id;
+  check(!changed || typeof input.recipient_change_note==='string' && input.recipient_change_note.trim().length>=10,
+    'REVIEW_RECIPIENT','Смена получателя требует recipient_change_note с прямым поручением пользователя о подхвате. Не назначайте выбранный чат автоматически.');
+  return {recipient_session_id,recipient_mode:manual?'manual':'webpilot',
+    recipient_change:changed?{from:old.recipient_session_id??null,to:recipient_session_id,note:input.recipient_change_note.trim()}
+      :continuing?old.recipient_change??null:null};
+}
 export function prepareReview(root, input) {
   return locked(root, () => {
     check(!journal(root), 'TRANSACTION_PENDING', 'Сначала завершите commit/repair.');
@@ -85,12 +104,10 @@ export function prepareReview(root, input) {
     });
     const continuing = old.run_id && !['CANCELLED','PUBLISHED','IDLE'].includes(old.stage);
     check(!continuing || old.scope_id === scope.scope_id,'REVIEW_BUSY','Продолжите существующий scope или отмените его через review:cancel.');
+    const recipient=reviewRecipient(input,old,continuing);
     const run_id = continuing ? old.run_id : id();
     const dir = reviewDirectory(root, run_id); fs.mkdirSync(dir, {recursive:true});
     const round = continuing ? old.round ?? 0 : 0;
-    const recipient_session_id=input.recipient_session_id??(continuing?old.recipient_session_id:null);
-    check(recipient_session_id==null || typeof recipient_session_id==='string' && /^[A-Za-z0-9][A-Za-z0-9._-]{0,180}$/.test(recipient_session_id),
-      'REVIEW_RECIPIENT','recipient_session_id: Session ID из стартового сообщения Web Pilot.');
     const prefix = 'input-' + (round+1) + '-' + id().slice(0,8);
     const scope_file = prefix+'-scope.json', plan_file = prefix+'-plan.json';
     atomic(safePath(dir,scope_file),json(scope)); atomic(safePath(dir,plan_file),json(candidate));
@@ -105,7 +122,7 @@ export function prepareReview(root, input) {
     const exhausted=continuing && round>=old.max_rounds;
     const s = saveReview(root, {version:1,enabled:old.enabled,generation:old.generation,stage:exhausted?'NEEDS_USER':'PREPARED',run_id,
       scope_id:scope.scope_id,round,max_rounds:continuing?old.max_rounds:4,claude_session_id:continuing?old.claude_session_id:null,
-      recipient_session_id,
+      ...recipient,
       base_head:head(root),base_revision:previous.plan_revision,documents,scope_file,plan_file,response_file,
       error:exhausted?{code:'REVIEW_ROUND_LIMIT',message:'Лимит раундов. Спросите пользователя о продолжении.'}:null,
       plan_digest:reviewPlanDigest(candidate),input_hashes:Object.fromEntries(files.map(f=>[f,hash(fs.readFileSync(safePath(dir,f)))]))});
@@ -230,5 +247,7 @@ export function reviewSummary(root) {
   return 'Review: '+(s.enabled?'ON (пользователь разрешил рецензента Claude)':'OFF (обычная публикация без согласия Claude)')
     +'; стадия '+s.stage+'; раунд '+(s.round??0)+'. '+(s.enabled?next:'')
     +'\nДля нового плана при ON: review:prepare --help. Не меняйте enabled от имени агента. Память разрешена; свежие решения пользователя имеют приоритет.'
+    +'\nПолучатель Review — recipient_session_id из стартового сообщения (или совпадающий scope.session_id), только для доставки. Вне Web Pilot: recipient_mode: manual. Смена адресата — лишь с recipient_change_note по поручению пользователя.'
+    +(s.run_id && !['PUBLISHED','CANCELLED'].includes(s.stage)?'\nТекущий получатель: '+(s.recipient_session_id??(s.recipient_mode==='manual'?'ручной режим, без отправки':'не задан; автоматическая доставка невозможна')):'')
     +(s.cleanup_error?'\n'+s.cleanup_error:'');
 }

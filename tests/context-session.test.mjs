@@ -46,6 +46,8 @@ function controllerFixture({ savedAttempt=null, chatUrl=project.chatUrl }={}){
 
 test('the first message contains the exact complete packet and asks for a short project reply without tools',()=>{
   const p=packet(), text=startupMessage(project,'unique-request',p);
+  assert.ok(text.includes(JSON.stringify({recipient_session_id:project.sessionId})));
+  assert.match(text,/получатель продолжения, не владелец плана/);
   assert.ok(!text.includes(p.context));
   assert.ok(text.includes('Читай каждое вложение отдельно одним вызовом'));
   assert.ok(text.includes('при признаках обрезки дочитай'));

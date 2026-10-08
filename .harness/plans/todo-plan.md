@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1500,
+  "plan_revision": 1502,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "review-usability-0103-20261008",
@@ -42,7 +42,8 @@
       "tests/workflow-kit-upgrade.test.mjs",
       "tests/workflow-kit-source.test.mjs",
       "release-manifest.json",
-      "src/main.mjs"
+      "src/main.mjs",
+      "tests/context-session.test.mjs"
     ],
     "documentation_paths": [
       "docs/planning/review-usability-0103.md",
@@ -172,8 +173,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "review-usability-0103-20261008",
         "task_id": "T003",
@@ -190,7 +191,8 @@
         "src/context-session.mjs",
         "src/review-continuation.mjs",
         "tests/plan-review.test.mjs",
-        "packages/workflow-kit/scripts/check-plan-review-fixture.mjs"
+        "packages/workflow-kit/scripts/check-plan-review-fixture.mjs",
+        "tests/context-session.test.mjs"
       ],
       "documentation_paths": [
         "docs/planning/review-usability-0103.md"
@@ -207,7 +209,17 @@
         "Пауза между раундами и restart доставляют только своему чату; отсутствие/конфликт ID проверены; тестовые проекты пользователя не изменены",
         "Другой ID продолжающегося run отклоняется без явного recipient_change_note с решением пользователя; разрешённый подхват записан и проверен"
       ],
-      "expected_commit_message": "fix: Передавать явного получателя продолжения Review"
+      "expected_commit_message": "fix: Передавать явного получателя продолжения Review",
+      "actual_files": [
+        "docs/planning/review-usability-0103.md",
+        "packages/workflow-kit/scripts/check-plan-review-fixture.mjs",
+        "packages/workflow-kit/src/lib/command-help.mjs",
+        "packages/workflow-kit/src/lib/plan-review.mjs",
+        "src/context-session.mjs",
+        "src/review-continuation.mjs",
+        "tests/context-session.test.mjs",
+        "tests/plan-review.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -429,7 +441,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: review-usability-0103-20261008
 Current Task: нет
-Revision: 1500
+Revision: 1502
 
 ## Цель
 
@@ -450,10 +462,10 @@ Revision: 1500
   - Git Commit: [DONE] fix: Отделить ожидание от ошибки страницы ChatGPT
   - Reference: review-usability-0103-20261008 / T002 / implementation
   - Файлы: src/ui/sidebar.mjs, src/ui/index.html, src/conversation-recovery.mjs, tests/conversation-recovery.test.mjs, tests/electron-smoke.mjs, src/main.mjs, docs/planning/review-usability-0103.md
-- [TODO] T003: Передавать явного получателя продолжения Review — Ожидает
-  - Git Commit: [PENDING] fix: Передавать явного получателя продолжения Review
+- [DONE] T003: Передавать явного получателя продолжения Review — Завершено
+  - Git Commit: [DONE] fix: Передавать явного получателя продолжения Review
   - Reference: review-usability-0103-20261008 / T003 / implementation
-  - Файлы: packages/workflow-kit/src/lib/plan-review.mjs, packages/workflow-kit/src/lib/command-help.mjs, packages/workflow-kit/src/lib/recovery.mjs, packages/workflow-kit/src/lib/actions.mjs, src/context-session.mjs, src/review-continuation.mjs, tests/plan-review.test.mjs, packages/workflow-kit/scripts/check-plan-review-fixture.mjs, docs/planning/review-usability-0103.md
+  - Файлы: packages/workflow-kit/src/lib/plan-review.mjs, packages/workflow-kit/src/lib/command-help.mjs, packages/workflow-kit/src/lib/recovery.mjs, packages/workflow-kit/src/lib/actions.mjs, src/context-session.mjs, src/review-continuation.mjs, tests/plan-review.test.mjs, packages/workflow-kit/scripts/check-plan-review-fixture.mjs, tests/context-session.test.mjs, docs/planning/review-usability-0103.md
 - [TODO] T004: Сохранять позицию автора на каждый отзыв и итоговое согласие — Ожидает
   - Git Commit: [PENDING] fix: Сохранять позицию автора на каждый отзыв и итоговое согласие
   - Reference: review-usability-0103-20261008 / T004 / implementation

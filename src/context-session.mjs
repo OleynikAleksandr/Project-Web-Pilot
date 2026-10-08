@@ -27,6 +27,7 @@ export function startupMessage(project, requestId, packet, toolRules = []) {
     `Проект: ${project.name}`,
     `Workspace (точная абсолютная папка, JSON-строка): ${JSON.stringify(project.workspace)}`,
     `Session ID для этого чата: ${project.sessionId}`,
+    `При подготовке review:prepare передай в JSON верхнего уровня ${JSON.stringify({recipient_session_id:project.sessionId})}. Это получатель продолжения, не владелец плана. Не подставляй ID выбранного в панели чужого чата.`,
     `Идентификатор отправки: ${requestId}`,
     `Частей контекста: ${packet.parts.length}. Читай их в порядке номеров.`,
     'Читай каждое вложение отдельно одним вызовом, не объединяй вложения в общий вывод, при признаках обрезки дочитай недостающее.',

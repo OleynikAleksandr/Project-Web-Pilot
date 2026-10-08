@@ -21,7 +21,7 @@ function fixture() {
   write(root,'README.md','# Test\n');git(root,'add','README.md');git(root,'commit','-m','baseline');
   install({project:root,mode:'existing'});
   write(root,'docs/planning/review.md','# Review fixture\n');
-  const scope={scope_id:'review-fixture',objective:'Test reviewed publication',approval_note:'User requests fixture plan',acceptance_criteria:['Correct plan'],
+  const scope={scope_id:'review-fixture',session_id:'fixture-chat',objective:'Test reviewed publication',approval_note:'User requests fixture plan',acceptance_criteria:['Correct plan'],
     approved_scope:{functional_paths:[],documentation_paths:['docs/planning/review.md','README.md']},
     context_pack:{documents:[{path:'docs/planning/review.md',required:true}],include_last_completed_task:false,dependency_task_ids:[]},
     tasks:[{id:'T001',title:'Update documentation',why:'Test task',functional_paths:[],documentation_paths:['README.md'],verification_ids:[],acceptance_criteria:['Done'],expected_commit_message:'docs: fixture'}]};
@@ -30,6 +30,40 @@ function fixture() {
 const expect=(code,fn)=>assert.throws(fn,e=>e.code===code);
 const state=(r,changes)=>locked(r,()=>saveReview(r,{...readReview(r),...changes}));
 try {
+  {
+    const {root,input}=fixture();setReviewEnabled(root,true);
+    const missing=structuredClone(input);delete missing.scope.session_id;
+    const before=readReview(root);
+    for(const bad of [missing,{...input,recipient_session_id:'other'},
+      {...missing,recipient_session_id:''},{...input,recipient_mode:'manual'}]){
+      expect('REVIEW_RECIPIENT',()=>prepareReview(root,bad));
+      assert.deepEqual(readReview(root),before,'invalid routing changes no state');
+    }
+    write(root,'.harness/runtime/review-input.json',JSON.stringify(input));
+    const prepared=JSON.parse(execFileSync(process.execPath,[path.join(root,'scripts/workflow.mjs'),'review:prepare','--input','.harness/runtime/review-input.json'],{cwd:root,encoding:'utf8'}));
+    assert.equal(prepared.recipient_session_id,'fixture-chat','normal CLI reads explicit session metadata from scope');
+    assert.equal(readPlan(root).execution_scope_status,'NONE','routing does not create a chat-owned plan');
+    assert.equal(prepareReview(root,missing).recipient_session_id,'fixture-chat','next round inherits the same recipient');
+    state(root,{stage:'AUTHOR_PENDING',round:1});
+    missing.response='Автор прочитал первый отзыв; требуется следующая проверка.';
+    const changed={...missing,recipient_session_id:'new-chat'};
+    expect('REVIEW_RECIPIENT',()=>prepareReview(root,changed));
+    const handover=prepareReview(root,{...changed,recipient_change_note:'User explicitly resumes this review in new-chat.'});
+    assert.deepEqual(handover.recipient_change,{from:'fixture-chat',to:'new-chat',note:'User explicitly resumes this review in new-chat.'});
+    assert.equal(handover.run_id,prepared.run_id);
+    assert.equal(prepareReview(root,missing).recipient_session_id,'new-chat');
+    expect('REVIEW_RECIPIENT',()=>prepareReview(root,{...missing,recipient_mode:'manual'}));
+  }
+  {
+    const {root,input}=fixture();delete input.scope.session_id;input.recipient_mode='manual';
+    setReviewEnabled(root,true);
+    const s=prepareReview(root,input);assert.equal(s.recipient_session_id,null);assert.equal(s.recipient_mode,'manual');
+    assert.equal(prepareReview(root,input).recipient_mode,'manual');
+    state(root,{recipient_mode:undefined}); // legacy missing-ID state, not a guessed recipient
+    const explicit={...input,recipient_mode:'webpilot',recipient_session_id:'new-chat'};
+    expect('REVIEW_RECIPIENT',()=>prepareReview(root,explicit));
+    assert.equal(prepareReview(root,{...explicit,recipient_change_note:'User requests taking over the legacy review here.'}).recipient_session_id,'new-chat');
+  }
   {
     const {root,scope,input}=fixture();
     assert.equal(readReview(root).enabled,false);
@@ -45,6 +79,7 @@ try {
     const result=publishReview(root);assert.equal(result.ok,true);
     assert.equal(readReview(root).stage,'PUBLISHED');
     assert.equal(readPlan(root).scope_id,scope.scope_id);
+    assert.equal(readPlan(root).session_id,'fixture-chat','session is metadata, not a plan selector');
     assert.equal(git(root,'show','HEAD:README.md'),'# Test');
     assert.equal(git(root,'show','HEAD:docs/planning/review.md'),'# Review fixture');
     assert.equal(fs.readFileSync(path.join(root,'.harness/workflow.json'),'utf8'),config);

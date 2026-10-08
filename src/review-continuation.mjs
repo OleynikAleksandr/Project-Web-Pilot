@@ -24,7 +24,16 @@ export class ReviewContinuation {
       },onChange,
       send:async(_text,ready,before)=>{
         const p=this.selected(),s=this.client.state;
-        const result=await send(reviewContinueMessage(p.workspace,s),ready,before,this.flow);
+        if(!p || !eligible(s) || s.recipient_session_id!==p.sessionId || !ready())return {state:'cancelled'};
+        const same=latest=>owner(this.selected())===owner(p) && eligible(latest)
+          && latest.run_id===s.run_id && latest.generation===s.generation && latest.recipient_session_id===p.sessionId;
+        const current=()=>ready() && same(this.client.state);
+        const beforeSend=async()=>{
+          // Recheck persisted routing at the final send boundary, not only after the file event.
+          if(!current() || !same(this.status(p.workspace)))return false;
+          return await before() && current() && same(this.status(p.workspace));
+        };
+        const result=await send(reviewContinueMessage(p.workspace,s),current,beforeSend,this.flow);
         if(result.state==='sent' && s.stage==='NEEDS_USER'){
           this.acknowledge(p.workspace,s.run_id);this.client.refresh();
         }
@@ -34,13 +43,14 @@ export class ReviewContinuation {
   selection() {
     const p=this.selected(),s=this.client.state;
     if(!p)return null;
-    return {...p,scopeId:s?.run_id && s.recipient_session_id===p.sessionId?'review:'+s.run_id:null};
+    return {...p,scopeId:this.client.workspace===p.workspace
+      && s?.run_id && s.recipient_session_id===p.sessionId?'review:'+s.run_id:null};
   }
   inspect() {
     const p=this.selection();
     if(!p?.scopeId)return {confirmed:false};
     const s=this.status(p.workspace);this.client.refresh();
-    const ready=eligible(s) && s.recipient_session_id===p.sessionId;
+    const ready=eligible(s) && s.recipient_session_id===p.sessionId && p.scopeId==='review:'+s.run_id;
     return {confirmed:ready,scopeId:p.scopeId,scopeStatus:'ACTIVE',planView:{tasks:ready?[{id:'review',status:'pending'}]:[]},
       nextTask:{id:s.run_id+':'+s.generation,title:'Продолжить ревью'}};
   }
