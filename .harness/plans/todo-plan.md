@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1498,
+  "plan_revision": 1500,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "review-usability-0103-20261008",
@@ -130,8 +130,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "review-usability-0103-20261008",
         "task_id": "T002",
@@ -162,7 +162,14 @@
         "STALL_WARNING не открывает восстановление; обнаруженная ошибка сохраняет его",
         "Перезагрузить страницу чата объясняет причину и отсутствие нового чата/повторной отправки; draft/UNKNOWN/rate limit сохранены"
       ],
-      "expected_commit_message": "fix: Отделить ожидание от ошибки страницы ChatGPT"
+      "expected_commit_message": "fix: Отделить ожидание от ошибки страницы ChatGPT",
+      "actual_files": [
+        "src/conversation-recovery.mjs",
+        "src/ui/index.html",
+        "src/ui/sidebar.mjs",
+        "tests/conversation-recovery.test.mjs",
+        "tests/electron-smoke.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -422,7 +429,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: review-usability-0103-20261008
 Current Task: нет
-Revision: 1498
+Revision: 1500
 
 ## Цель
 
@@ -439,8 +446,8 @@ Revision: 1498
   - Git Commit: [DONE] fix: Согласовать кнопки и добавить индикатор Review
   - Reference: review-usability-0103-20261008 / T001 / implementation
   - Файлы: src/ui/index.html, src/ui/sidebar.mjs, src/plan-review.mjs, tests/plan-review.test.mjs, tests/electron-smoke.mjs, src/main.mjs, docs/planning/review-usability-0103.md
-- [TODO] T002: Отделить ожидание от ошибки страницы ChatGPT — Ожидает
-  - Git Commit: [PENDING] fix: Отделить ожидание от ошибки страницы ChatGPT
+- [DONE] T002: Отделить ожидание от ошибки страницы ChatGPT — Завершено
+  - Git Commit: [DONE] fix: Отделить ожидание от ошибки страницы ChatGPT
   - Reference: review-usability-0103-20261008 / T002 / implementation
   - Файлы: src/ui/sidebar.mjs, src/ui/index.html, src/conversation-recovery.mjs, tests/conversation-recovery.test.mjs, tests/electron-smoke.mjs, src/main.mjs, docs/planning/review-usability-0103.md
 - [TODO] T003: Передавать явного получателя продолжения Review — Ожидает

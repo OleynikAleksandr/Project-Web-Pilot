@@ -708,6 +708,8 @@ export async function run({ app, window, browser, sidebar, store, controller, se
 
   // Native error UI must reopen this exact persisted conversation once, without Send.
   const boundUrl = store.selected().chatUrl;
+  const boundSessionId = store.selected().sessionId;
+  const recoverySessionCount = store.snapshot().projects.find(p=>p.workspace===workspace).sessions.length;
   const previousDocument = pageState.current.documentId;
   const injectError = "(()=>{const e=document.createElement('div');e.setAttribute('role','alert');e.textContent='Resume stream unavailable';document.body.append(e)})()";
   // A healthy page event can reset restored to idle before a polling check.
@@ -730,6 +732,10 @@ export async function run({ app, window, browser, sidebar, store, controller, se
     await browser.executeJavaScript("document.getElementById('prompt-textarea').textContent='Несохранённый черновик'");
     await browser.executeJavaScript(injectError);
     await waitFor(() => snapshot().conversationRecovery.phase === 'failed', 'bounded reconnect', snapshot);
+    assert.equal(await sidebar.executeJavaScript("document.getElementById('conversation-recovery').hidden"),false);
+    assert.equal(await sidebar.executeJavaScript("document.getElementById('reconnect-chat').textContent"),'Перезагрузить страницу чата');
+    assert.match(await sidebar.executeJavaScript("document.getElementById('conversation-recovery-message').textContent"),/обнаружена ошибка соединения/);
+    assert.match(await sidebar.executeJavaScript("document.getElementById('conversation-recovery-explanation').textContent"),/текущая страница чата.*Новый чат не создаётся, сообщение повторно не отправляется/);
     await sidebar.executeJavaScript("document.getElementById('reconnect-chat').click()");
     await waitFor(() => snapshot().conversationRecovery.phase === 'blocked', 'draft blocks reconnect', snapshot);
     assert.equal(await browser.executeJavaScript("document.getElementById('prompt-textarea').textContent"), 'Несохранённый черновик');
@@ -739,6 +745,8 @@ export async function run({ app, window, browser, sidebar, store, controller, se
     await waitFor(() => sidebar.executeJavaScript('window.fixtureRecoveryPhases.includes("restored")'), 'manual reconnect button', snapshot);
     assert.equal(browser.getURL(), boundUrl);
     assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 1);
+    assert.equal(store.selected().sessionId,boundSessionId,'reload preserves the session');
+    assert.equal(store.snapshot().projects.find(p=>p.workspace===workspace).sessions.length,recoverySessionCount,'reload creates no new chat');
   } finally {
     await sidebar.executeJavaScript('window.stopFixtureRecoveryPhases(); delete window.stopFixtureRecoveryPhases; delete window.fixtureRecoveryPhases;');
   }
@@ -1505,6 +1513,17 @@ export async function run({ app, window, browser, sidebar, store, controller, se
     assert.equal(autoPlan.view().phase, 'running'); assert.equal(autoPlan.run, stalledRun);
     assert.equal(autoPlan.epoch, stalledEpoch); await noExtraSend(beforeWarning);
     await waitFor(() => sidebar.executeJavaScript("document.getElementById('auto-plan-message').textContent.includes('ещё работает')"), 'stall warning in sidebar', snapshot);
+    assert.equal(snapshot().conversationRecovery.phase,'idle');
+    assert.equal(await sidebar.executeJavaScript("document.getElementById('conversation-recovery').hidden"),true,'stall alone never offers recovery');
+    assert.equal(await sidebar.executeJavaScript("document.getElementById('reconnect-chat').hidden"),true);
+    // A long Claude wait keeps Review visible without turning silence into an outage.
+    const reviewWait={...snapshot(),planReview:{enabled:true,supported:true,stage:'RUNNING',indicator:'working',
+      message:'Раунд 1 из 4. Claude проверяет документы.'}};
+    sidebar.send('pilot:state-changed',reviewWait);
+    await waitFor(()=>sidebar.executeJavaScript("document.getElementById('plan-review-text').textContent.includes('Claude проверяет')"),'review wait status',snapshot);
+    assert.equal(await sidebar.executeJavaScript("document.getElementById('plan-review-indicator').dataset.state"),'working');
+    assert.equal(await sidebar.executeJavaScript("document.getElementById('conversation-recovery').hidden"),true,'review wait is not a connection error');
+    sidebar.send('pilot:state-changed',snapshot());
     autoPlan.stallMs = originalStall; await appendAnswer('Продолжаю проверку');
     await waitFor(() => autoPlan.view().warning === null && pageState.current?.state.busy, 'busy progress clears warning', snapshot);
   } finally { autoPlan.stallMs = originalStall; }

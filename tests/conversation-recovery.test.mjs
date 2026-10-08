@@ -30,6 +30,19 @@ test('draft and uncertain Send block automatic and manual reloads', async () => 
   assert.equal(await f.recovery.retry(), false);
   f.page.draftLength = 0; f.project.attempt.state = 'unknown';
   assert.equal(await f.recovery.retry(), false); assert.equal(f.calls(), 0);
+  assert.equal(await f.recovery.requestRetry(), false); assert.equal(f.calls(), 0, 'the button handler cannot bypass uncertain Send');
+  assert.match(f.recovery.view().message, /Отправка ещё не подтверждена/);
+});
+test('unchanging busy page and review waiting never infer a connection failure', () => {
+  const f=fixture();
+  for(const busy of [true,true,true,false]) {
+    f.recovery.observe({...f.page,connectionError:null,busy,warning:'STALL_WARNING'});
+    assert.deepEqual(f.recovery.view(),{phase:'idle',message:'',canRetry:false});
+    assert.equal(f.timers.size,0);assert.equal(f.calls(),0);
+  }
+  f.recovery.observe(f.page);
+  assert.equal(f.recovery.view().phase,'waiting');assert.equal(f.timers.size,1);
+  assert.match(f.recovery.view().message,/обнаружена ошибка соединения/);
 });
 test('switching session during inspection discards delayed recovery', async () => {
   const f = fixture(); let finish;
@@ -41,6 +54,7 @@ test('switching session during inspection discards delayed recovery', async () =
 test('429 cooldown stops automatic requests and only enables an explicit retry afterwards', async () => {
   const f = fixture(); f.recovery.observe(f.page); f.recovery.rateLimited('conversation-one', 120);
   assert.equal(f.recovery.view().phase, 'cooldown'); assert.equal(await f.recovery.retry(), false);
+  assert.equal(await f.recovery.requestRetry(),false,'manual button respects rate limiting');
   await f.fire(); assert.equal(f.calls(), 0); assert.equal(f.recovery.view().canRetry, true);
 });
 test('no fallback to a new conversation when the URL has not been bound', () => {

@@ -44,14 +44,14 @@ export class ConversationRecovery {
     if (this.key === key && this.state.phase !== 'idle') return;
     this.reset(); this.key = key;
     if (!known(project) || page.url !== project.chatUrl) {
-      this.set('blocked', 'Связь с ChatGPT прервалась. Адрес разговора ещё не подтверждён: сохраните страницу и проверьте сообщение справа.');
+      this.set('blocked', 'На странице ChatGPT обнаружена ошибка соединения. Адрес чата ещё не подтверждён: проверьте сообщение справа.');
       return;
     }
     if ((this.cooldowns.get(key) ?? 0) > this.now()) { this.cooldown(); return; }
     if (this.used.has(key)) {
-      this.set('failed', 'Связь с ChatGPT снова прервалась. Можно повторно открыть этот разговор.', true); return;
+      this.set('failed', 'На странице ChatGPT снова обнаружена ошибка соединения. Можно перезагрузить текущую страницу чата.', true); return;
     }
-    this.set('waiting', 'Связь с ChatGPT прервалась. Повторно открываем сохранённый разговор…');
+    this.set('waiting', 'На странице ChatGPT обнаружена ошибка соединения. Проверим возможность безопасной перезагрузки текущей страницы…');
     this.timer = this.schedule(() => { this.timer = null; void this.retry(); }, this.delayMs);
     this.timer?.unref?.();
   }
@@ -64,12 +64,12 @@ export class ConversationRecovery {
   }
   cooldown() {
     this.cancel(this.timer); this.timer = null; this.epoch++;
-    this.set('cooldown', 'ChatGPT временно ограничил запросы. Подождите; повторное открытие станет доступно после паузы.');
+    this.set('cooldown', 'ChatGPT временно ограничил запросы. Подождите; перезагрузка страницы станет доступна после паузы.');
     const epoch = this.epoch, delay = Math.max(0, (this.cooldowns.get(this.key) ?? this.now()) - this.now());
     this.timer = this.schedule(() => {
       if (epoch !== this.epoch) return;
       this.timer = null;
-      this.set('failed', 'Пауза завершена. Можно повторно открыть сохранённый разговор.', true);
+      this.set('failed', 'Пауза после ограничения запросов завершена. Можно перезагрузить текущую страницу чата.', true);
     }, delay);
     this.timer?.unref?.();
   }
@@ -79,10 +79,10 @@ export class ConversationRecovery {
     const project = this.selected(), key = keyOf(project), epoch = this.epoch;
     if (key !== this.key) return false;
     if (!known(project) || !this.available()) {
-      this.set('blocked', 'Отправка ещё не подтверждена или выполняется другая операция. Проверьте страницу, затем повторите открытие.', true); return false;
+      this.set('blocked', 'Отправка ещё не подтверждена или выполняется другая операция. Перезагрузка отложена: проверьте состояние страницы.', true); return false;
     }
     if ((this.cooldowns.get(key) ?? 0) > this.now()) { this.cooldown(); return false; }
-    this.set('reopening', 'Проверяем страницу перед повторным открытием…');
+    this.set('reopening', 'Проверяем страницу перед безопасной перезагрузкой…');
     const current = () => epoch === this.epoch && key === keyOf(this.selected()) ;
     try {
       const page = await this.inspect();
@@ -90,19 +90,19 @@ export class ConversationRecovery {
       if (page.url !== project.chatUrl || page.login || !page.editorAvailable || page.draftLength
           || !known(this.selected()) || !this.available()) {
         this.set('blocked', page.draftLength
-          ? 'В поле ввода есть текст. Сохраните или отправьте его, затем повторно откройте разговор.'
-          : 'Состояние разговора пока не подтверждено. Проверьте страницу перед повторным открытием.', true);
+          ? 'В поле ввода есть черновик. Сохраните его перед перезагрузкой страницы.'
+          : 'Состояние чата пока не подтверждено. Проверьте страницу перед перезагрузкой.', true);
         return false;
       }
       this.used.add(key);
       const restored = await this.reopen(project, current);
       if (!current()) return false;
       this.set(restored ? 'restored' : 'failed', restored
-        ? 'Разговор открыт повторно. Проверьте продолжение ответа в ChatGPT.'
-        : 'Не удалось восстановить страницу. Можно повторить открытие разговора.', !restored);
+        ? 'Текущая страница чата перезагружена. Проверьте продолжение ответа в ChatGPT.'
+        : 'Не удалось восстановить страницу чата. Можно повторить перезагрузку.', !restored);
       return restored;
     } catch {
-      if (current()) this.set('failed', 'Не удалось открыть разговор. Проверьте соединение и повторите попытку.', true);
+      if (current()) this.set('failed', 'Не удалось перезагрузить страницу чата. Проверьте соединение и повторите попытку.', true);
       return false;
     }
   }

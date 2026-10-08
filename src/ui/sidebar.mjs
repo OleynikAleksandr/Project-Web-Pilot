@@ -419,13 +419,9 @@ function render(state) {
   const recovery = state.conversationRecovery;
   $('conversation-recovery').hidden = !recovery || recovery.phase === 'idle' || !!state.setup || !!state.settings;
   $('conversation-recovery-message').textContent = recovery?.message ?? '';
-  const stalledAuto = state.autoPlan?.warning === 'STALL_WARNING' && recovery?.phase === 'idle';
-  if (stalledAuto && recovery?.phase === 'idle') {
-    $('conversation-recovery').hidden = false;
-    $('conversation-recovery-message').textContent = 'Можно повторно открыть сохранённый разговор. Это не повторяет команды.';
-  }
-  $('reconnect-chat').hidden = !recovery?.canRetry && !stalledAuto;
-  $('reconnect-chat').disabled = actionPending || (!recovery?.canRetry && !stalledAuto);
+  // A quiet response can be normal tool/review work, not evidence of a connection failure.
+  $('reconnect-chat').hidden = !recovery?.canRetry;
+  $('reconnect-chat').disabled = actionPending || !recovery?.canRetry;
   setupView.render(state, actionPending);
   settingsView.render(state, actionPending);
   const guidedStartup = !!state.startup?.active && !state.setup && !state.settings;

@@ -353,7 +353,8 @@ SOFTWARE.
       <section id="conversation-recovery" class="card" role="status" aria-live="polite" hidden>
         <h3>Связь с ChatGPT</h3>
         <p id="conversation-recovery-message" class="description"></p>
-        <button id="reconnect-chat" class="secondary">Повторно открыть разговор</button>
+        <p id="conversation-recovery-explanation" class="description">Перезагружается текущая страница чата. Новый чат не создаётся, сообщение повторно не отправляется.</p>
+        <button id="reconnect-chat" class="secondary" aria-describedby="conversation-recovery-message conversation-recovery-explanation">Перезагрузить страницу чата</button>
       </section>
       <section id="context-card" class="card" data-tone="neutral" aria-live="polite">
         <div class="card-head"><button id="context-toggle" class="context-toggle" type="button" aria-label="Показать подробности состояния контекста" aria-expanded="false" aria-controls="context-details"></button><h3 id="context-title">Готов к началу</h3></div>
