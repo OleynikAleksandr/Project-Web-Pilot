@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "profile": "DEVELOPMENT",
-  "stack": "Electron 44.5.1 / Node 24.21.0 / Workflow Kit 1.6.2 / Codex 0.160.0",
+  "stack": "Electron 44.5.1 / Node 24.21.0 / Workflow Kit 1.6.3 / Codex 0.160.0",
   "checks": [
     {
       "required": false,
@@ -60,7 +60,7 @@
         "run",
         "build"
       ],
-      "evidence": "~/Downloads/WebPilot-0.6.102: macOS arm64 + Windows x64 ZIP, ZIP Windows-runtime, SHA256SUMS.txt, INSTALL.txt, release-manifest.json; packaged sources и bundled Workflow Kit 1.6.2 verified. Сборку выполняет сама эта проверка при коммите задачи, один раз"
+      "evidence": "~/Downloads/WebPilot-0.6.102: macOS arm64 + Windows x64 ZIP, ZIP Windows-runtime, SHA256SUMS.txt, INSTALL.txt, release-manifest.json; packaged sources и bundled Workflow Kit 1.6.3 verified. Сборку выполняет сама эта проверка при коммите задачи, один раз"
     },
     {
       "required": false,

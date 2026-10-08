@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1482,
+  "plan_revision": 1483,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "plan-review-20261008",
@@ -700,7 +700,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: plan-review-20261008
 Current Task: T006
-Revision: 1482
+Revision: 1483
 
 ## Цель
 
