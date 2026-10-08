@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1522,
+  "plan_revision": 1524,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "technical-audit-20261008",
@@ -98,8 +98,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "technical-audit-20261008",
         "task_id": "T003",
@@ -120,7 +120,10 @@
         "Исследованы Markdown anchors, imports/exports, IPC/workers, npm scripts, config, generators, macOS/Windows package inclusion",
         "Отличены отсутствующие файлы от генерируемых; Git ссылки привязаны к коммитам; внешние URL отмечены отдельно без запросов секретных адресов"
       ],
-      "expected_commit_message": "docs: проверить ссылки и состав поставки"
+      "expected_commit_message": "docs: проверить ссылки и состав поставки",
+      "actual_files": [
+        "docs/planning/technical-audit-findings.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -217,7 +220,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: technical-audit-20261008
 Current Task: нет
-Revision: 1522
+Revision: 1524
 
 ## Цель
 
@@ -239,8 +242,8 @@ Revision: 1522
   - Git Commit: [DONE] docs: проверить дублирование и независимые реализации
   - Reference: technical-audit-20261008 / T002 / implementation
   - Файлы: docs/planning/technical-audit-findings.md
-- [TODO] T003: Проверить локальные ссылки, зависимости путей и упаковку — Ожидает
-  - Git Commit: [PENDING] docs: проверить ссылки и состав поставки
+- [DONE] T003: Проверить локальные ссылки, зависимости путей и упаковку — Завершено
+  - Git Commit: [DONE] docs: проверить ссылки и состав поставки
   - Reference: technical-audit-20261008 / T003 / implementation
   - Файлы: docs/planning/technical-audit-findings.md
 - [TODO] T004: Проверить кандидатов на неиспользуемый код — Ожидает
