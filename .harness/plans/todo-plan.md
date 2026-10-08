@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1512,
+  "plan_revision": 1514,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "review-usability-0103-20261008",
@@ -408,8 +408,8 @@
       "actual_files": []
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "review-usability-0103-20261008",
         "task_id": "T007",
@@ -433,7 +433,8 @@
       "acceptance_criteria": [
         "Готовый staging установлен без пересборки, identity/signature сохранены; работающий процесс не перезапущен"
       ],
-      "expected_commit_message": "release: Установить готовый macOS выпуск"
+      "expected_commit_message": "release: Установить готовый macOS выпуск",
+      "actual_files": []
     },
     {
       "implementation_status": "TODO",
@@ -482,7 +483,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: review-usability-0103-20261008
 Current Task: нет
-Revision: 1512
+Revision: 1514
 
 ## Цель
 
@@ -523,8 +524,8 @@ Revision: 1512
   - Git Commit: [DONE] release: Собрать парный выпуск 0.6.103
   - Reference: review-usability-0103-20261008 / T006 / implementation
   - Файлы: release-manifest.json
-- [TODO] T007: Установить готовый macOS выпуск — Ожидает
-  - Git Commit: [PENDING] release: Установить готовый macOS выпуск
+- [DONE] T007: Установить готовый macOS выпуск — Завершено
+  - Git Commit: [DONE] release: Установить готовый macOS выпуск
   - Reference: review-usability-0103-20261008 / T007 / implementation
   - Файлы: release-manifest.json
 - [TODO] T008: Опубликовать выпуск на GitHub — Ожидает
