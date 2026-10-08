@@ -16,7 +16,7 @@ export function readReview(root) {
   const s = readJSON(file);
   check(s.version === 1 && typeof s.enabled === 'boolean' && stages.includes(s.stage)
     && Number.isSafeInteger(s.generation), 'REVIEW_STATE', 'Повреждено состояние Review. Не публикуйте план до исправления.');
-  if (s.run_id) reviewDirectory(root, s.run_id);
+  if (s.run_id) check(typeof s.run_id==='string' && /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,100}$/.test(s.run_id),'REVIEW_RUN','Некорректный run ID.');
   return s;
 }
 export function reviewDirectory(root, runId) {
@@ -96,7 +96,7 @@ export function prepareReview(root, input) {
     atomic(safePath(dir,scope_file),json(scope)); atomic(safePath(dir,plan_file),json(candidate));
     const documents = input.documents.map((source,i) => {
       const snapshot = prefix+'-spec-'+(i+1)+'.md'; atomic(safePath(dir,snapshot),texts[i]);
-      return {source,snapshot,sha256:hash(texts[i])};
+      return {source,snapshot,sha256:hash(texts[i]),lf_sha256:hash(texts[i].replace(/\r\n/g,'\n'))};
     });
     const response_file = typeof input.response === 'string' && input.response.trim() ? prefix+'-author.txt' : null;
     if (continuing && round > 0) check(response_file, 'REVIEW_RESPONSE', 'После ревью укажите response: позицию автора и изменения.');
@@ -168,10 +168,36 @@ export function finishReviewPublication(root, plan, sha) {
   const s = readReview(root);
   if (!s.run_id || s.scope_id !== plan.scope_id) return;
   if (s.enabled) {
-    for (const d of s.documents) check(hash(git(root,['show',sha+':'+d.source]).stdout) === d.sha256,
+    for (const d of s.documents) check(hash(git(root,['show',sha+':'+d.source]).stdout.replace(/\r\n/g,'\n')) === (d.lf_sha256??d.sha256),
       'REVIEW_PUBLICATION', 'Закоммиченная спецификация отличается от одобренной.');
   }
   saveReview(root,{...s,stage:'PUBLISHED',published_scope:plan.scope_id,published_commit:sha,notification_handled:true});
+}
+// Runs under task:start's lock, AFTER the plan transition. Cleanup never rolls it back.
+export function cleanupReview(root, plan) {
+  const s=readReview(root);
+  if(s.stage!=='PUBLISHED' || s.published_scope!==plan.scope_id || s.cleanup_status==='done'
+    || !plan.tasks.some(t=>t.implementation_status!=='TODO'))return null;
+  try {
+    saveReview(root,{...s,cleanup_status:'pending',cleanup_error:null});
+    const dir=reviewDirectory(root,s.run_id);
+    const inspect=file=>{
+      const st=fs.lstatSync(file,{throwIfNoEntry:false});if(!st)return;
+      check(!st.isSymbolicLink(),'REVIEW_CLEANUP_PATH','В папке ревью найдена символическая ссылка; автоматическое удаление остановлено.');
+      if(st.isDirectory())for(const name of fs.readdirSync(file))inspect(path.join(file,name));
+      else check(st.isFile(),'REVIEW_CLEANUP_PATH','Необычный файл в папке ревью.');
+    };
+    inspect(dir);fs.rmSync(dir,{recursive:true,force:true});
+    const latest=readReview(root);
+    saveReview(root,{version:1,enabled:latest.enabled,generation:latest.generation,stage:'PUBLISHED',
+      run_id:s.run_id,scope_id:s.scope_id,published_scope:s.published_scope,published_commit:s.published_commit,
+      base_head:s.base_head,cleanup_status:'done',notification_handled:true});
+    return {ok:true};
+  } catch(e) {
+    const error='Не удалось очистить материалы ревью: '+e.message+'. Повторите task:start текущей задачи после устранения причины.';
+    try{saveReview(root,{...readReview(root),cleanup_status:'failed',cleanup_error:error});}catch{ /* Caller also returns the warning. */ }
+    return {ok:false,error};
+  }
 }
 export function publishReview(root) {
   let s = readReview(root);
@@ -203,5 +229,6 @@ export function reviewSummary(root) {
   const next = s.stage==='PREPARED'?'review:run':s.stage==='AGREED'?'review:publish':s.stage==='NEEDS_USER'?'Сообщить проблему, спросить пользователя; затем review:resolve':s.stage==='AUTHOR_PENDING'?'Прочитать ревью; review:prepare с исправлениями и response':'review:status';
   return 'Review: '+(s.enabled?'ON (пользователь разрешил рецензента Claude)':'OFF (обычная публикация без согласия Claude)')
     +'; стадия '+s.stage+'; раунд '+(s.round??0)+'. '+(s.enabled?next:'')
-    +'\nДля нового плана при ON: review:prepare --help. Не меняйте enabled от имени агента. Память разрешена; свежие решения пользователя имеют приоритет.';
+    +'\nДля нового плана при ON: review:prepare --help. Не меняйте enabled от имени агента. Память разрешена; свежие решения пользователя имеют приоритет.'
+    +(s.cleanup_error?'\n'+s.cleanup_error:'');
 }

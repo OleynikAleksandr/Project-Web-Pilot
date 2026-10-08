@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import { assertReviewPublication, finishReviewPublication } from './plan-review.mjs';
+import { assertReviewPublication, finishReviewPublication, cleanupReview } from './plan-review.mjs';
 import {beginTaskFiles,handoffTaskFiles} from './task-files.mjs';
 import path from 'node:path';
 import { VERSION, PLAN, planPath, safePath, CONFIG, MANIFEST, check, readJSON, atomic, json, hash, id, textFile } from './common.mjs';
@@ -110,13 +110,18 @@ export function startTask(root, taskId, expectedRevision) {
     check(plan.execution_scope_status === 'ACTIVE', 'SCOPE_NOT_ACTIVE', 'Реализация разрешена только в ACTIVE scope.');
     const task = plan.tasks.find(t => t.id === taskId);
     check(task, 'UNKNOWN_TASK', 'Задача не найдена: ' + taskId);
-    if (plan.current_task_id === taskId) return recover(root);
+    const started=()=>{
+      const cleanup=cleanupReview(root,plan), result=recover(root);
+      if(cleanup?.error)result.facts.review_cleanup_error=cleanup.error;
+      return result;
+    };
+    if (plan.current_task_id === taskId) return started();
     check(plan.current_task_id === null && task.implementation_status === 'TODO', 'TASK_ALREADY_ACTIVE', 'Другую или завершённую задачу начать нельзя.');
     check(task.dependencies.every(d => plan.tasks.find(t => t.id === d)?.commit_status === 'DONE'), 'DEPENDENCY_PENDING', 'Зависимости задачи ещё не завершены.');
     taskChecks(task, config);
     beginTaskFiles(root,plan,task);
     task.implementation_status = 'IN_PROGRESS'; plan.current_task_id = taskId; plan.plan_revision++;
-    writePlan(root, plan); return recover(root);
+    writePlan(root, plan); return started();
   });
 }
 export function applyPlan(root, input, expectedRevision) {

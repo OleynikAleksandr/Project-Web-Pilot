@@ -6,7 +6,7 @@ import { execFileSync } from 'node:child_process';
 import { EventEmitter } from 'node:events';
 import { install } from '../src/lib/installer.mjs';
 import { readReview, setReviewEnabled, prepareReview, saveReview, publishReview, resolveReview, cancelReview } from '../src/lib/plan-review.mjs';
-import { createScope, repair } from '../src/lib/actions.mjs';
+import { createScope, repair, startTask } from '../src/lib/actions.mjs';
 import { createSimplePlan } from '../src/lib/simple-workflow.mjs';
 import { readPlan } from '../src/lib/plan.mjs';
 import { locked } from '../src/lib/transaction.mjs';
@@ -49,6 +49,29 @@ try {
     assert.equal(git(root,'show','HEAD:docs/planning/review.md'),'# Review fixture');
     assert.equal(fs.readFileSync(path.join(root,'.harness/workflow.json'),'utf8'),config);
     assert.equal(publishReview(root).already_published,true);
+  }
+  for (const mode of ['normal','already-removed','symlink','off']) {
+    const {root,scope,input}=fixture();setReviewEnabled(root,true);
+    const prepared=prepareReview(root,input), dir=path.join(root,'.harness/runtime/plan-review',prepared.run_id);
+    state(root,{stage:mode==='off'?'NEEDS_USER':'AGREED'});
+    if(mode==='off'){setReviewEnabled(root,false);createScope(root,scope);}else publishReview(root);
+    const sibling=path.join(root,'.harness/runtime/plan-review/old-experiment');fs.mkdirSync(sibling);
+    fs.writeFileSync(path.join(sibling,'keep.txt'),'keep');
+    assert.ok(fs.existsSync(dir),'publication retains review');
+    if(mode==='already-removed')fs.rmSync(dir,{recursive:true});
+    if(mode==='symlink')fs.symlinkSync(sibling,path.join(dir,'foreign'));
+    const result=startTask(root,'T001');
+    assert.equal(readPlan(root).current_task_id,'T001');
+    if(mode==='symlink'){
+      assert.equal(readReview(root).cleanup_status,'failed');assert.ok(result.facts.review_cleanup_error);
+      assert.ok(fs.existsSync(path.join(sibling,'keep.txt')));
+      fs.unlinkSync(path.join(dir,'foreign'));
+    }
+    startTask(root,'T001');
+    assert.equal(readReview(root).cleanup_status,'done');assert.equal(fs.existsSync(dir),false);
+    assert.ok(fs.existsSync(path.join(sibling,'keep.txt')));
+    assert.ok(fs.existsSync(path.join(root,'docs/planning/review.md')));
+    assert.equal(readReview(root).documents,undefined,'no retained review archive');
   }
   {
     const {root,input}=fixture();setReviewEnabled(root,true);prepareReview(root,input);state(root,{stage:'AGREED'});

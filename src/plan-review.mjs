@@ -40,6 +40,6 @@ export class PlanReviewClient {
   view() {
     const s=this.state,enabled=s?.enabled===true;
     return {enabled,supported:this.supported,error:this.error,stage:s?.stage??'IDLE',round:s?.round??0,
-      message:this.error || (enabled?[s?.round?`Раунд ${s.round} из ${s.max_rounds??4}.`:'',messages[s?.stage]??'',s?.error?.message??''].filter(Boolean).join(' '):'')};
+      message:this.error || s?.cleanup_error || (enabled?[s?.round?`Раунд ${s.round} из ${s.max_rounds??4}.`:'',messages[s?.stage]??'',s?.error?.message??''].filter(Boolean).join(' '):'')};
   }
 }

@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1478,
+  "plan_revision": 1480,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "plan-review-20261008",
@@ -394,8 +394,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "plan-review-20261008",
         "task_id": "T005",
@@ -442,7 +442,13 @@
         ],
         "include_last_completed_task": false,
         "dependency_task_ids": []
-      }
+      },
+      "actual_files": [
+        "packages/workflow-kit/scripts/check-plan-review-fixture.mjs",
+        "packages/workflow-kit/src/lib/actions.mjs",
+        "packages/workflow-kit/src/lib/plan-review.mjs",
+        "src/plan-review.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -694,7 +700,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: plan-review-20261008
 Current Task: нет
-Revision: 1478
+Revision: 1480
 
 ## Цель
 
@@ -725,8 +731,8 @@ Revision: 1478
   - Git Commit: [DONE] feat: Продолжение ревью на паузе и переход к AutoPlan
   - Reference: plan-review-20261008 / T004 / implementation
   - Файлы: src/plan-review.mjs, src/main.mjs, src/project-input-watch.mjs, src/plan-monitor.mjs, src/auto-plan.mjs, src/auto-plan-state.mjs, src/automation-send-state.mjs, tests/plan-review.test.mjs, tests/auto-plan.test.mjs, tests/plan-monitor.test.mjs, tests/auto-plan-restart-fixture.cjs, packages/workflow-kit/src/cli.mjs, packages/workflow-kit/src/lib/claude-review.mjs, packages/workflow-kit/src/lib/command-help.mjs, packages/workflow-kit/src/lib/plan-review.mjs, src/review-continuation.mjs, docs/planning/plan-review.md, docs/planning/plan-review-integration.md, docs/modules/auto-plan.md, docs/modules/plan-review.md
-- [TODO] T005: Очистка материалов ревью при начале первой задачи — Ожидает
-  - Git Commit: [PENDING] feat: Очистка материалов ревью при начале первой задачи
+- [DONE] T005: Очистка материалов ревью при начале первой задачи — Завершено
+  - Git Commit: [DONE] feat: Очистка материалов ревью при начале первой задачи
   - Reference: plan-review-20261008 / T005 / implementation
   - Файлы: packages/workflow-kit/src/lib/plan-review.mjs, packages/workflow-kit/src/lib/actions.mjs, packages/workflow-kit/src/lib/recovery.mjs, packages/workflow-kit/scripts/check-plan-review-fixture.mjs, src/plan-review.mjs, tests/plan-review.test.mjs, docs/planning/plan-review.md, docs/planning/plan-review-integration.md, packages/workflow-kit/docs/modules/workflow-kit-package.md, docs/modules/plan-review.md
 - [TODO] T006: Проверить полный сценарий и подготовить локальный выпуск — Ожидает
