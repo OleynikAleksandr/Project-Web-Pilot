@@ -101,12 +101,12 @@ export async function runReview(root,{maxTurns=30,timeoutMs=900000}={}, {spawn=n
     try{if(!latest.published_scope)checkReviewInputs(root,latest);}catch(e){failure={code:e.code??'REVIEW_STALE',message:e.message};}
     const limit=!failure && verdict.verdict!=='approved' && latest.round>=latest.max_rounds;
     const stage=latest.published_scope?'PUBLISHED':failure||limit?'NEEDS_USER':verdict.verdict==='approved'?'AGREED':'AUTHOR_PENDING';
+    atomic(safePath(dir,prefix+'-metadata.json'),json({...metadata,exit_code:exitCode,session_id:result?.session_id,models:Object.keys(result?.modelUsage??{}),duration_ms:Date.now()-started,stage,error:failure}));
     return saveReview(root,{...latest,stage,runner_pid:null,claude_session_id:result?.session_id===s.requested_session_id?s.requested_session_id:latest.claude_session_id,
       result_file:resultFile,review_file:verdict?prefix+'-review.txt':null,stderr_file:stderrFile,
       error:failure??(limit?{code:'REVIEW_ROUND_LIMIT',message:'Существенные замечания остались после '+latest.round+' раундов. Спросите пользователя, что делать дальше.'}:null),
       verdict:verdict?.verdict??null,ended_at:new Date().toISOString(),notification_handled:false});
   });
-  atomic(safePath(dir,prefix+'-metadata.json'),json({...metadata,exit_code:exitCode,session_id:result?.session_id,models:Object.keys(result?.modelUsage??{}),duration_ms:Date.now()-started,stage:finished.stage,error:finished.error}));
   if(finished.stage==='PUBLISHED')locked(root,()=>cleanupReview(root,readPlan(root)));
-  return {ok:true,...finished,run_directory:dir,next_action:finished.stage==='NEEDS_USER'?'Выполните review:acknowledge, сообщите проблему и спросите пользователя. Не повторяйте запуск автоматически.':'Прочитайте review_file полностью и сформулируйте позицию. Если согласны, review:publish; иначе review:prepare с response.'};
+  return {ok:true,...finished,run_directory:dir,next_action:finished.stage==='PUBLISHED'?'План опубликован при Review OFF; продолжайте обычный workflow.':finished.stage==='NEEDS_USER'?'Выполните review:acknowledge, сообщите проблему и спросите пользователя. Не повторяйте запуск автоматически.':'Прочитайте review_file полностью и сформулируйте позицию. Если согласны, review:publish; иначе review:prepare с response.'};
 }
