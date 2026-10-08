@@ -73,7 +73,8 @@
     .startup-instructions{padding-left:18px;margin:12px 0}
     .startup-instructions li{padding-left:2px;margin:12px 0}
     .startup-step summary{font-size:11px}
-  </style>
+  .plan-toggles{display:flex;gap:6px;flex-wrap:wrap}.plan-toggles button{flex:1}#plan-review-toggle[aria-pressed=true]{background:#087c45;border-color:#087c45;color:#fff}#plan-review-toggle[aria-pressed=true]:hover{background:#066538}
+</style>
 </head>
 <body>
 <!-- Icons: Lucide. ISC License
@@ -329,8 +330,12 @@ SOFTWARE.
           <p id="plan-reason" class="plan-reason" hidden></p>
           <ul id="plan-tasks" class="plan-tasks" aria-label="Микрозадачи плана"></ul>
           <div class="actions">
-            <button id="auto-plan-toggle" class="secondary" type="button">Автовыполнение</button>
+            <div class="plan-toggles">
+              <button id="auto-plan-toggle" class="secondary" type="button">Автовыполнение</button>
+              <button id="plan-review-toggle" class="secondary" type="button" aria-pressed="false" title="Ревью нового плана через Claude CLI: включение разрешает передать рецензенту документы задачи. Независимо от автовыполнения.">Review</button>
+            </div>
             <p id="auto-plan-message" class="description" role="status" hidden></p>
+            <p id="plan-review-message" class="description" role="status" hidden></p>
           </div>
         </section>
       </section>

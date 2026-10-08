@@ -99,11 +99,13 @@ export function prepareReview(root, input) {
     if (continuing && round > 0) check(response_file, 'REVIEW_RESPONSE', 'После ревью укажите response: позицию автора и изменения.');
     if (response_file) atomic(safePath(dir,response_file),input.response);
     const files = [scope_file,plan_file,...(response_file?[response_file]:[])];
-    const s = saveReview(root, {version:1,enabled:old.enabled,generation:old.generation,stage:'PREPARED',run_id,
+    const exhausted=continuing && round>=old.max_rounds;
+    const s = saveReview(root, {version:1,enabled:old.enabled,generation:old.generation,stage:exhausted?'NEEDS_USER':'PREPARED',run_id,
       scope_id:scope.scope_id,round,max_rounds:continuing?old.max_rounds:4,claude_session_id:continuing?old.claude_session_id:null,
       base_head:head(root),base_revision:previous.plan_revision,documents,scope_file,plan_file,response_file,
+      error:exhausted?{code:'REVIEW_ROUND_LIMIT',message:'Лимит раундов. Спросите пользователя о продолжении.'}:null,
       plan_digest:reviewPlanDigest(candidate),input_hashes:Object.fromEntries(files.map(f=>[f,hash(fs.readFileSync(safePath(dir,f)))]))});
-    return {ok:true,...s,run_directory:dir,next_action:'review:run'};
+    return {ok:true,...s,run_directory:dir,next_action:exhausted?'Спросить пользователя; review:resolve':'review:run'};
   });
 }
 export function resolveReview(root, action, note) {

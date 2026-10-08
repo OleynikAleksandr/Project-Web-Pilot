@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1473,
+  "plan_revision": 1475,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "plan-review-20261008",
@@ -237,8 +237,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "plan-review-20261008",
         "task_id": "T003",
@@ -261,7 +261,9 @@
         "packages/workflow-kit/src/WORKFLOW.md",
         "tests/plan-review.test.mjs",
         "tests/context-session.test.mjs",
-        "tests/workspace-session.test.mjs"
+        "tests/workspace-session.test.mjs",
+        "src/project-input-watch.mjs",
+        "tests/electron-smoke.mjs"
       ],
       "documentation_paths": [
         "docs/planning/plan-review.md",
@@ -301,7 +303,19 @@
         ],
         "include_last_completed_task": false,
         "dependency_task_ids": []
-      }
+      },
+      "actual_files": [
+        "AGENTS.md",
+        "packages/workflow-kit/src/lib/plan-review.mjs",
+        "src/main.mjs",
+        "src/plan-review.mjs",
+        "src/preload.cjs",
+        "src/project-input-watch.mjs",
+        "src/ui/index.html",
+        "src/ui/sidebar.mjs",
+        "tests/electron-smoke.mjs",
+        "tests/plan-review.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -663,7 +677,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: plan-review-20261008
 Current Task: нет
-Revision: 1473
+Revision: 1475
 
 ## Цель
 
@@ -686,10 +700,10 @@ Revision: 1473
   - Git Commit: [DONE] feat: Claude CLI: раунды, resume и запрос помощи пользователю
   - Reference: plan-review-20261008 / T002 / implementation
   - Файлы: packages/workflow-kit/src/lib/claude-review.mjs, packages/workflow-kit/src/lib/plan-review.mjs, packages/workflow-kit/src/cli.mjs, packages/workflow-kit/src/lib/command-help.mjs, packages/workflow-kit/scripts/check-plan-review-fixture.mjs, packages/workflow-kit/package.json, docs/planning/plan-review.md, docs/planning/plan-review-integration.md, packages/workflow-kit/docs/modules/workflow-kit-package.md
-- [TODO] T003: Кнопка Review в панели и доставка правил основному агенту — Ожидает
-  - Git Commit: [PENDING] feat: Кнопка Review в панели и доставка правил основному агенту
+- [DONE] T003: Кнопка Review в панели и доставка правил основному агенту — Завершено
+  - Git Commit: [DONE] feat: Кнопка Review в панели и доставка правил основному агенту
   - Reference: plan-review-20261008 / T003 / implementation
-  - Файлы: src/main.mjs, src/preload.cjs, src/ui/index.html, src/ui/sidebar.mjs, src/plan-review.mjs, src/workspace-session.mjs, src/context-session.mjs, src/context-inputs.mjs, packages/workflow-kit/src/lib/recovery.mjs, packages/workflow-kit/src/lib/plan-review.mjs, packages/workflow-kit/src/WORKFLOW.md, tests/plan-review.test.mjs, tests/context-session.test.mjs, tests/workspace-session.test.mjs, docs/planning/plan-review.md, docs/planning/plan-review-integration.md, AGENTS.md, docs/modules/auto-plan.md, docs/modules/plan-view.md, docs/modules/context-delivery.md, docs/modules/plan-review.md
+  - Файлы: src/main.mjs, src/preload.cjs, src/ui/index.html, src/ui/sidebar.mjs, src/plan-review.mjs, src/workspace-session.mjs, src/context-session.mjs, src/context-inputs.mjs, packages/workflow-kit/src/lib/recovery.mjs, packages/workflow-kit/src/lib/plan-review.mjs, packages/workflow-kit/src/WORKFLOW.md, tests/plan-review.test.mjs, tests/context-session.test.mjs, tests/workspace-session.test.mjs, src/project-input-watch.mjs, tests/electron-smoke.mjs, docs/planning/plan-review.md, docs/planning/plan-review-integration.md, AGENTS.md, docs/modules/auto-plan.md, docs/modules/plan-view.md, docs/modules/context-delivery.md, docs/modules/plan-review.md
 - [TODO] T004: Продолжение ревью на паузе и переход к AutoPlan — Ожидает
   - Git Commit: [PENDING] feat: Продолжение ревью на паузе и переход к AutoPlan
   - Reference: plan-review-20261008 / T004 / implementation

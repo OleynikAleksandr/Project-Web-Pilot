@@ -1,6 +1,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('webPilot', Object.freeze({
   setAutoPlan: enabled => ipcRenderer.invoke('pilot:auto-plan', enabled),
+  setPlanReview: input => ipcRenderer.invoke('pilot:plan-review', input),
   startup: action => ipcRenderer.invoke('pilot:startup', action),
   openDoctor: () => ipcRenderer.invoke('pilot:open-doctor'),
   runDoctor: workspace => ipcRenderer.invoke('pilot:doctor-run', workspace),

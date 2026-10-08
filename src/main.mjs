@@ -1,4 +1,5 @@
 import { AutoPlan } from './auto-plan.mjs';
+import { PlanReviewClient } from './plan-review.mjs';
 import { readAutoPlanState } from './auto-plan-state.mjs';
 import { ConversationRecovery } from './conversation-recovery.mjs';
 import { PageStateSource } from './page-state.mjs';
@@ -59,6 +60,7 @@ const planMonitor = new PlanMonitor({ selected: () => store.selected(),
     if (change?.semanticChanged || change?.recovered) void autoPlan.planChanged().catch(report);
     if (change?.semanticChanged && !pageLoading && !setupState && !settingsState) void controller?.tick();
   }, onInputsChanged: () => {
+    planReview.refresh();
     if (!pageLoading && !setupState && !settingsState) controller?.projectChanged();
   }, onError: () => publish() });
 const partition = smoke ? 'web-pilot-smoke' : 'persist:chatgpt';
@@ -181,6 +183,7 @@ const autoPlan = new AutoPlan({
   },
   log: (event, fields) => chromiumDiagnostics?.log.record('auto-plan', event, fields),
 });
+const planReview = new PlanReviewClient({selected:()=>store.selected(),onChange:()=>publish()});
 function applyObservedPage(event) {
   if (event.reset) lastStopObservation = null;
   else {
@@ -297,6 +300,7 @@ function snapshot() {
     archives: projectedArchives(), settings: settingsState, doctor: doctorState,
     conversationRecovery: conversationRecovery.view(),
     autoPlan: autoPlan.view(),
+    planReview: planReview.view(),
     selected, context: controller?.state ?? { phase: 'selected', servicesReady: false, messageSent: false },
     contextPreparation: { busy: selected ? contextCache.isBuilding(selected.workspace) : false },
     runtimeFolder, platform: process.platform,
@@ -317,6 +321,7 @@ function snapshot() {
 
 function publish() {
   planMonitor.observeSelection();
+  planReview.observeSelection();
   autoPlan.selectionChanged();
   autoPlan.availabilityChanged();
   observeStartupClipboard();
@@ -919,6 +924,7 @@ function registerIpc() {
     if (choice) await autoPlan.start();
     else autoPlan.disable();
   });
+  registerAction('pilot:plan-review', input => planReview.setEnabled(input));
   registerAction('pilot:reconnect', () => conversationRecovery.requestRetry());
   registerAction('pilot:startup', action => startupAction(action), { navigation: true });
   registerAction('pilot:open-archive-window', input => openArchiveWindow(typeof input === 'string' ? input : null));
@@ -1263,7 +1269,7 @@ async function createWindow() {
     controller?.cancel(); report(new Error('Страница ChatGPT закрылась. Повторите открытие страницы.'));
   });
   window.on('resize', layout);
-  window.on('focus', () => { void planMonitor.refresh(); observeStartupClipboard(); });
+  window.on('focus', () => { void planMonitor.refresh(); planReview.refresh(); observeStartupClipboard(); });
   window.on('closed', () => {
     try {
       ++navigationId; startupClipboard?.dispose(); startupClipboard = null; startupFlow?.dispose(); startupFlow = null;

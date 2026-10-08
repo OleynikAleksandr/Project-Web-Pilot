@@ -563,6 +563,19 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(await sidebar.executeJavaScript('document.getElementById("plan-card").innerText.match(/План ещё не создан/g)?.length'), 1);
   assert.equal(await sidebar.executeJavaScript('document.getElementById("accept-plan") === null'), true);
 
+  // Exercise the real sidebar click, preload, sender-checked IPC and persisted checkout policy.
+  await waitFor(()=>sidebar.executeJavaScript("!document.getElementById('plan-review-toggle').disabled"),'review button at NONE',snapshot);
+  const autoBeforeReview=snapshot().autoPlan.enabled;
+  await sidebar.executeJavaScript("document.getElementById('plan-review-toggle').click()");
+  await waitFor(()=>snapshot().planReview.enabled,'review enabled',snapshot);
+  assert.equal(await sidebar.executeJavaScript("document.getElementById('plan-review-toggle').getAttribute('aria-pressed')"),'true');
+  assert.equal(await sidebar.executeJavaScript("getComputedStyle(document.getElementById('plan-review-toggle')).backgroundColor"),'rgb(8, 124, 69)');
+  assert.equal(JSON.parse(await fs.readFile(path.join(workspace,'.harness/runtime/plan-review/state.json'),'utf8')).enabled,true);
+  assert.equal(snapshot().autoPlan.enabled,autoBeforeReview);
+  await waitFor(()=>sidebar.executeJavaScript("!document.getElementById('plan-review-toggle').disabled"),'review toggle ready',snapshot);
+  await sidebar.executeJavaScript("document.getElementById('plan-review-toggle').click()");
+  await waitFor(()=>!snapshot().planReview.enabled,'review disabled',snapshot);
+
   const planFile = path.join(workspace, '.harness/plans/todo-plan.md');
   const originalPlanText = await fs.readFile(planFile, 'utf8');
   const block = originalPlanText.match(/<!-- workflow-state:begin -->\s*```json\s*([\s\S]*?)```\s*<!-- workflow-state:end -->/);
