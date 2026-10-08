@@ -33,6 +33,7 @@ test('real 1.5.6 task start survives kit-update and new-runtime task commit', t 
   cli('plan:create','--input','.harness/runtime/input.json');cli('task:start','T006');
   fs.appendFileSync(path.join(project,'docs/planning/transition.md'),'\nChange owned by T006 before upgrade.\n');
   assert(upgradeFrom.has('1.5.6'));
+  assert(upgradeFrom.has('1.6.1'),'last released Kit remains upgradeable');
   assert.equal(install({project,update:true}).ok,true);
   assert.match(run('git',['log','-1','--format=%B']),/Workflow-Role: kit-update/);
   assert.equal(JSON.parse(fs.readFileSync(path.join(project,'.harness/kit-manifest.json'))).version,VERSION);

@@ -70,3 +70,12 @@ test('Review continuation at NONE targets its recipient, asks once and respects 
     selected.sessionId='other';flow.update();observe({turnId:'f'});await drain();assert.equal(sent.length,3,'wrong recipient does not receive a review');
   } finally {flow.dispose();}
 });
+
+test('AutoPlan waits for confirmed reviewed publication, OFF and unrelated active plans remain ordinary',async()=>{
+  const {reviewBlocksExecution}=await import('../src/auto-plan-state.mjs');
+  for(const enabled of [false,true])for(const stage of ['PUBLISHING','PUBLISHED','NEEDS_USER']){
+    const s={enabled,stage,scope_id:'new'};
+    assert.equal(!!reviewBlocksExecution(s,'new'),enabled && stage!=='PUBLISHED');
+    assert.equal(!!reviewBlocksExecution(s,'old'),false);
+  }
+});

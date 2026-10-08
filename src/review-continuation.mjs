@@ -65,7 +65,7 @@ export class ReviewContinuation {
     if(changed)this.saveStops();
     this.flow.observe(event);
   }
-  saveStops(){void this.flow.saveCheckpoint(this.flow.checkpointState()).catch(()=>{this.persistenceError=true;this.flow.pause('Не удалось сохранить остановку ревью. Повторите после восстановления доступа к настройкам.','SEND_CHECKPOINT_ERROR');});}
+  saveStops(){while(this.stops.size>400)this.stops.delete(this.stops.keys().next().value);void this.flow.saveCheckpoint(this.flow.checkpointState()).catch(()=>{this.persistenceError=true;this.flow.pause('Не удалось сохранить остановку ревью. Повторите после восстановления доступа к настройкам.','SEND_CHECKPOINT_ERROR');});}
   restore(checkpoint){for(const s of checkpoint?.reviewStops??[])if(typeof s.key==='string')this.stops.set(s.key,s);this.flow.restore(false,checkpoint);}
   dispose(){this.flow.dispose();}
 }

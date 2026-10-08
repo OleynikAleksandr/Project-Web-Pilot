@@ -2,7 +2,7 @@ import { AutoPlan } from './auto-plan.mjs';
 import { PlanReviewClient } from './plan-review.mjs';
 import { ReviewContinuation } from './review-continuation.mjs';
 import { AutomationSendState } from './automation-send-state.mjs';
-import { readAutoPlanState } from './auto-plan-state.mjs';
+import { readAutoPlanState, reviewBlocksExecution } from './auto-plan-state.mjs';
 import { ConversationRecovery } from './conversation-recovery.mjs';
 import { PageStateSource } from './page-state.mjs';
 import { connectPageState } from './page-state-bridge.mjs';
@@ -185,7 +185,8 @@ const autoPlan = new AutoPlan({
   send: (text, canContinue, onBeforeSend) => sendAutomation(text,canContinue,onBeforeSend,autoPlan),
   onChange: () => publish(),
   available: () => !!controller && !controller.composer.inFlight && !pageLoading && !setupState && !settingsState
-    && workspaceHealth?.ready && workspaceHealth.workspace === store.selected()?.workspace,
+    && workspaceHealth?.ready && workspaceHealth.workspace === store.selected()?.workspace
+    && !reviewBlocksExecution(planReview.state,planMonitor.view(store.selected())?.scopeId),
   saveCheckpoint: async checkpoint => {
     autoPlanCheckpoint = checkpoint;
     await saveSettings({ autoPlanCheckpoint: checkpoint });

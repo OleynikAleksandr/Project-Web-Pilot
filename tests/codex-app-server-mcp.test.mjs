@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, writeFile, mkdir, rm } from 'node:fs/promises';
+import { mkdtemp, writeFile, readFile, mkdir, rm } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { tmpdir, homedir } from 'node:os';
 import path from 'node:path';
@@ -202,13 +202,14 @@ test('bridge_status reports pinned and installed Codex tool compatibility', { ti
   if (!existsSync(executorVenvPython)) { t.skip('Codex App Server runtime venv is not installed'); return; }
   const root = await mkdtemp(path.join(tmpdir(), 'web-pilot-codex-status-'));
   t.after(() => rm(root, { recursive: true, force: true }));
+  const pinned=JSON.parse(await readFile(path.join(clientDir,'codex-tools.lock.json'),'utf8'));
   const probe = path.join(root, 'probe.py');
   await writeFile(probe, `import json, pathlib, sys, types
 sys.path.insert(0, sys.argv[1])
 import server
 class Client:
     cwd = sys.argv[2]
-    binary = types.SimpleNamespace(version="codex-cli 0.160.0")
+    binary = types.SimpleNamespace(version="codex-cli ${pinned.codex_version}")
     def status(self):
         return {"version": self.binary.version}
     def command_exec(self, argv, **kwargs):
@@ -248,9 +249,9 @@ print(json.dumps({
   assert.equal(probed.full_trash, true, 'a non-empty legacy trash folder is left untouched');
   const status = probed.codex_tools;
   assert.deepEqual(status, {
-    pinned_version: '0.160.0',
-    pinned_tag: 'rust-v0.160.0',
-    installed_version: '0.160.0',
+    pinned_version: pinned.codex_version,
+    pinned_tag: pinned.tag,
+    installed_version: pinned.codex_version,
     version_matches: true,
     apply_patch_available: true,
   });

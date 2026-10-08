@@ -171,7 +171,7 @@ export function finishReviewPublication(root, plan, sha) {
     for (const d of s.documents) check(hash(git(root,['show',sha+':'+d.source]).stdout.replace(/\r\n/g,'\n')) === (d.lf_sha256??d.sha256),
       'REVIEW_PUBLICATION', 'Закоммиченная спецификация отличается от одобренной.');
   }
-  saveReview(root,{...s,stage:'PUBLISHED',published_scope:plan.scope_id,published_commit:sha,notification_handled:true});
+  saveReview(root,{...s,stage:s.stage==='RUNNING'?'RUNNING':'PUBLISHED',published_scope:plan.scope_id,published_commit:sha,notification_handled:true});
 }
 // Runs under task:start's lock, AFTER the plan transition. Cleanup never rolls it back.
 export function cleanupReview(root, plan) {

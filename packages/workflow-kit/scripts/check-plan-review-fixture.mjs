@@ -145,5 +145,19 @@ try {
     assert.equal(fs.existsSync(localPath(root,'operation.lock')),false);
     expect('REVIEW_FORMAT',()=>parseVerdict({structured_output:{...approval,findings:changes.findings}}));
   }
+  {
+    const {root,scope,input}=fixture();setReviewEnabled(root,true);const prepared=prepareReview(root,input);
+    const dir=path.join(root,'.harness/runtime/plan-review',prepared.run_id);
+    const result=await runReview(root,{}, {spawn:(_command,args,options)=>{
+      const child=new EventEmitter();child.stdin=new EventEmitter();child.stdin.end=()=>queueMicrotask(()=>{
+        setReviewEnabled(root,false);createScope(root,scope);startTask(root,'T001');
+        assert.ok(fs.existsSync(dir),'OFF publication must not delete a running process output');
+        fs.writeSync(options.stdio[1],JSON.stringify({subtype:'success',is_error:false,session_id:args[args.indexOf('--session-id')+1],modelUsage:{[REVIEW_MODEL]:{}},structured_output:{verdict:'approved',summary:'OK',findings:[]}}));
+        child.emit('close',0);
+      });return child;
+    }});
+    assert.equal(result.stage,'PUBLISHED');assert.equal(fs.existsSync(dir),false);
+    assert.equal(readReview(root).cleanup_status,'done');
+  }
   console.log('Plan review fixtures: publication, OFF, SHA, retry, cancellation, crash recovery, foreign changes passed.');
 } finally {for(const root of roots)fs.rmSync(root,{recursive:true,force:true});}

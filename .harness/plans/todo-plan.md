@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1485,
+  "plan_revision": 1486,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "plan-review-20261008",
@@ -67,7 +67,8 @@
       "packages/workflow-kit/src/lib/installer.mjs",
       "release-manifest.json",
       "src/review-continuation.mjs",
-      "tools/codex-app-server-mcp/codex-tools.lock.json"
+      "tools/codex-app-server-mcp/codex-tools.lock.json",
+      "tests/codex-app-server-mcp.test.mjs"
     ],
     "documentation_paths": [
       "docs/planning/plan-review.md",
@@ -89,7 +90,7 @@
     ]
   },
   "baseline_commit": "9a3397121e0645bb31ce60ee7a3050cea3d9524e",
-  "current_task_id": "T006",
+  "current_task_id": null,
   "context_pack": {
     "documents": [
       {
@@ -452,8 +453,8 @@
       ]
     },
     {
-      "implementation_status": "IN_PROGRESS",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "plan-review-20261008",
         "task_id": "T006",
@@ -476,7 +477,16 @@
         "scripts/stage-workflow-kit.mjs",
         "tests/electron-smoke.mjs",
         "packages/workflow-kit/src/lib/installer.mjs",
-        "tools/codex-app-server-mcp/codex-tools.lock.json"
+        "tools/codex-app-server-mcp/codex-tools.lock.json",
+        "packages/workflow-kit/scripts/check-plan-review-fixture.mjs",
+        "packages/workflow-kit/src/lib/claude-review.mjs",
+        "packages/workflow-kit/src/lib/command-help.mjs",
+        "packages/workflow-kit/src/lib/plan-review.mjs",
+        "src/auto-plan-state.mjs",
+        "src/context-session.mjs",
+        "src/main.mjs",
+        "src/review-continuation.mjs",
+        "tests/codex-app-server-mcp.test.mjs"
       ],
       "documentation_paths": [
         "docs/planning/plan-review.md",
@@ -517,7 +527,27 @@
         ],
         "include_last_completed_task": false,
         "dependency_task_ids": []
-      }
+      },
+      "actual_files": [
+        "package-lock.json",
+        "package.json",
+        "packages/workflow-kit/package.json",
+        "packages/workflow-kit/scripts/check-plan-review-fixture.mjs",
+        "packages/workflow-kit/src/lib/claude-review.mjs",
+        "packages/workflow-kit/src/lib/command-help.mjs",
+        "packages/workflow-kit/src/lib/common.mjs",
+        "packages/workflow-kit/src/lib/installer.mjs",
+        "packages/workflow-kit/src/lib/plan-review.mjs",
+        "src/auto-plan-state.mjs",
+        "src/context-session.mjs",
+        "src/main.mjs",
+        "src/review-continuation.mjs",
+        "tests/codex-app-server-mcp.test.mjs",
+        "tests/electron-smoke.mjs",
+        "tests/plan-review.test.mjs",
+        "tests/workflow-kit-upgrade.test.mjs",
+        "tools/codex-app-server-mcp/codex-tools.lock.json"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -703,8 +733,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: plan-review-20261008
-Current Task: T006
-Revision: 1485
+Current Task: нет
+Revision: 1486
 
 ## Цель
 
@@ -739,10 +769,10 @@ Revision: 1485
   - Git Commit: [DONE] feat: Очистка материалов ревью при начале первой задачи
   - Reference: plan-review-20261008 / T005 / implementation
   - Файлы: packages/workflow-kit/src/lib/plan-review.mjs, packages/workflow-kit/src/lib/actions.mjs, packages/workflow-kit/src/lib/recovery.mjs, packages/workflow-kit/scripts/check-plan-review-fixture.mjs, src/plan-review.mjs, tests/plan-review.test.mjs, docs/planning/plan-review.md, docs/planning/plan-review-integration.md, packages/workflow-kit/docs/modules/workflow-kit-package.md, docs/modules/plan-review.md
-- [IN_PROGRESS] T006: Проверить полный сценарий и подготовить локальный выпуск — В работе
-  - Git Commit: [PENDING] feat: Проверить полный сценарий и подготовить локальный выпуск
+- [DONE] T006: Проверить полный сценарий и подготовить локальный выпуск — Завершено
+  - Git Commit: [DONE] feat: Проверить полный сценарий и подготовить локальный выпуск
   - Reference: plan-review-20261008 / T006 / implementation
-  - Файлы: package.json, package-lock.json, packages/workflow-kit/package.json, packages/workflow-kit/src/lib/common.mjs, .harness/workflow.json, tests/plan-review.test.mjs, tests/workflow-kit-source.test.mjs, tests/workflow-kit-upgrade.test.mjs, tests/workflow-kit-recovery.test.mjs, scripts/check-installed-release.mjs, scripts/stage-workflow-kit.mjs, tests/electron-smoke.mjs, packages/workflow-kit/src/lib/installer.mjs, tools/codex-app-server-mcp/codex-tools.lock.json, docs/planning/plan-review.md, docs/planning/plan-review-integration.md, docs/modules/release.md, docs/modules/plan-review.md, packages/workflow-kit/docs/modules/workflow-kit-package.md
+  - Файлы: package.json, package-lock.json, packages/workflow-kit/package.json, packages/workflow-kit/src/lib/common.mjs, .harness/workflow.json, tests/plan-review.test.mjs, tests/workflow-kit-source.test.mjs, tests/workflow-kit-upgrade.test.mjs, tests/workflow-kit-recovery.test.mjs, scripts/check-installed-release.mjs, scripts/stage-workflow-kit.mjs, tests/electron-smoke.mjs, packages/workflow-kit/src/lib/installer.mjs, tools/codex-app-server-mcp/codex-tools.lock.json, packages/workflow-kit/scripts/check-plan-review-fixture.mjs, packages/workflow-kit/src/lib/claude-review.mjs, packages/workflow-kit/src/lib/command-help.mjs, packages/workflow-kit/src/lib/plan-review.mjs, src/auto-plan-state.mjs, src/context-session.mjs, src/main.mjs, src/review-continuation.mjs, tests/codex-app-server-mcp.test.mjs, docs/planning/plan-review.md, docs/planning/plan-review-integration.md, docs/modules/release.md, docs/modules/plan-review.md, packages/workflow-kit/docs/modules/workflow-kit-package.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: описать ревью планов и обновить контракты
   - Reference: plan-review-20261008 / DOCS / implementation

@@ -564,6 +564,8 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(await sidebar.executeJavaScript('document.getElementById("accept-plan") === null'), true);
 
   // Exercise the real sidebar click, preload, sender-checked IPC and persisted checkout policy.
+  const reviewStateFile=path.join(workspace,'.harness/runtime/plan-review/state.json');
+  const originalReviewState=await fs.readFile(reviewStateFile).catch(e=>{if(e.code==='ENOENT')return null;throw e;});
   await waitFor(()=>sidebar.executeJavaScript("!document.getElementById('plan-review-toggle').disabled"),'review button at NONE',snapshot);
   const autoBeforeReview=snapshot().autoPlan.enabled;
   await sidebar.executeJavaScript("document.getElementById('plan-review-toggle').click()");
@@ -575,6 +577,24 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await waitFor(()=>sidebar.executeJavaScript("!document.getElementById('plan-review-toggle').disabled"),'review toggle ready',snapshot);
   await sidebar.executeJavaScript("document.getElementById('plan-review-toggle').click()");
   await waitFor(()=>!snapshot().planReview.enabled,'review disabled',snapshot);
+
+  for(const [review,auto] of [[false,true],[true,true],[true,false],[false,false]]) {
+    for(const [id,current,wanted] of [
+      ['auto-plan-toggle',()=>snapshot().autoPlan.enabled,auto],
+      ['plan-review-toggle',()=>snapshot().planReview.enabled,review]]) {
+      if(current()!==wanted){
+        await waitFor(()=>sidebar.executeJavaScript(`!document.getElementById('${id}').disabled`),'independent toggles ready',snapshot);
+        await sidebar.executeJavaScript(`document.getElementById('${id}').click()`);
+        await waitFor(()=>current()===wanted,'independent toggle state',snapshot);
+      }
+    }
+    assert.equal(snapshot().planReview.enabled,review);assert.equal(snapshot().autoPlan.enabled,auto);
+    assert.equal(await sidebar.executeJavaScript("document.getElementById('plan-review-toggle').getAttribute('aria-pressed')"),String(review));
+  }
+
+  await waitFor(()=>snapshot().context.phase==='stale','review policy invalidates delivered recovery',snapshot);
+  // Restore the fixture input so unrelated context scenarios still start from the original packet.
+  if(originalReviewState)await fs.writeFile(reviewStateFile,originalReviewState);else await fs.rm(reviewStateFile);
 
   const planFile = path.join(workspace, '.harness/plans/todo-plan.md');
   const originalPlanText = await fs.readFile(planFile, 'utf8');
@@ -635,6 +655,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   const externalLine = await clipboard.readText();
   assert.ok(externalLine.includes(JSON.stringify(workspace)) && externalLine.includes('AGENTS.md'));
   assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), messagesBeforeLine, 'nothing is sent to the chat');
+  await waitFor(()=>sidebar.executeJavaScript('document.getElementById("context-title").textContent === "Контекст передан"'), 'context card settled after project input events', snapshot);
   assert.equal(await sidebar.executeJavaScript('document.getElementById("context-title").textContent'), 'Контекст передан');
   assert.equal(await sidebar.executeJavaScript('document.getElementById("context-toggle").getAttribute("aria-expanded")'), 'false');
   assert.equal(await sidebar.executeJavaScript('document.getElementById("context-details").hidden'), true);

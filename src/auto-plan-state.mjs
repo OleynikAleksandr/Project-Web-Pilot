@@ -1,4 +1,6 @@
 import fs from 'node:fs/promises';
+import { readReview } from '@webpilot/workflow-kit/lib/plan-review';
+export const reviewBlocksExecution=(review,scopeId)=>review?.enabled && review.scope_id===scopeId && review.stage!=='PUBLISHED';
 import path from 'node:path';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
@@ -32,6 +34,6 @@ export async function readAutoPlanState(selected, environment = process.env) {
   try { await fs.access(journal); pending = true; } catch (error) { if (error.code !== 'ENOENT') throw error; }
   const dirty = await git(['status', '--porcelain', '--', '.harness/plans/todo-plan.md']);
   const after = await readWorkspace(workspace, sessionId);
-  return { ...after, nextTask: await readNextTask(after), confirmed: !pending && (!after.planView.tasks.every(t => t.status === 'done') || !dirty) && before.planRevision === after.planRevision
+  return { ...after, nextTask: await readNextTask(after), confirmed: !pending && !reviewBlocksExecution(readReview(workspace),after.scopeId) && (!after.planView.tasks.every(t => t.status === 'done') || !dirty) && before.planRevision === after.planRevision
     && before.scopeId === after.scopeId };
 }

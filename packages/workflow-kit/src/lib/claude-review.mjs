@@ -2,8 +2,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawn as nodeSpawn } from 'node:child_process';
 import { atomic, check, id, json, safePath, hash } from './common.mjs';
+import { readPlan } from './plan.mjs';
 import { locked } from './transaction.mjs';
-import { readReview, saveReview, reviewDirectory, checkReviewInputs } from './plan-review.mjs';
+import { readReview, saveReview, reviewDirectory, checkReviewInputs, cleanupReview } from './plan-review.mjs';
 
 export const REVIEW_MODEL='claude-opus-5-5';
 export const verdictSchema={type:'object',additionalProperties:false,required:['verdict','summary','findings'],properties:{
@@ -97,14 +98,15 @@ export async function runReview(root,{maxTurns=30,timeoutMs=900000}={}, {spawn=n
   const finished=locked(root,()=>{
     const latest=readReview(root);
     check(latest.launch_id===s.launch_id && latest.stage==='RUNNING','REVIEW_CHANGED','Состояние запуска изменилось; результат сохранён, не повторяйте вызов.');
-    try{checkReviewInputs(root,latest);}catch(e){failure={code:e.code??'REVIEW_STALE',message:e.message};}
+    try{if(!latest.published_scope)checkReviewInputs(root,latest);}catch(e){failure={code:e.code??'REVIEW_STALE',message:e.message};}
     const limit=!failure && verdict.verdict!=='approved' && latest.round>=latest.max_rounds;
-    const stage=failure||limit?'NEEDS_USER':verdict.verdict==='approved'?'AGREED':'AUTHOR_PENDING';
+    const stage=latest.published_scope?'PUBLISHED':failure||limit?'NEEDS_USER':verdict.verdict==='approved'?'AGREED':'AUTHOR_PENDING';
+    atomic(safePath(dir,prefix+'-metadata.json'),json({...metadata,exit_code:exitCode,session_id:result?.session_id,models:Object.keys(result?.modelUsage??{}),duration_ms:Date.now()-started,stage,error:failure}));
     return saveReview(root,{...latest,stage,runner_pid:null,claude_session_id:result?.session_id===s.requested_session_id?s.requested_session_id:latest.claude_session_id,
       result_file:resultFile,review_file:verdict?prefix+'-review.txt':null,stderr_file:stderrFile,
       error:failure??(limit?{code:'REVIEW_ROUND_LIMIT',message:'Существенные замечания остались после '+latest.round+' раундов. Спросите пользователя, что делать дальше.'}:null),
       verdict:verdict?.verdict??null,ended_at:new Date().toISOString(),notification_handled:false});
   });
-  atomic(safePath(dir,prefix+'-metadata.json'),json({...metadata,exit_code:exitCode,session_id:result?.session_id,models:Object.keys(result?.modelUsage??{}),duration_ms:Date.now()-started,stage:finished.stage,error:finished.error}));
-  return {ok:true,...finished,run_directory:dir,next_action:finished.stage==='NEEDS_USER'?'Выполните review:acknowledge, сообщите проблему и спросите пользователя. Не повторяйте запуск автоматически.':'Прочитайте review_file полностью и сформулируйте позицию. Если согласны, review:publish; иначе review:prepare с response.'};
+  if(finished.stage==='PUBLISHED')locked(root,()=>cleanupReview(root,readPlan(root)));
+  return {ok:true,...finished,run_directory:dir,next_action:finished.stage==='PUBLISHED'?'План опубликован при Review OFF; продолжайте обычный workflow.':finished.stage==='NEEDS_USER'?'Выполните review:acknowledge, сообщите проблему и спросите пользователя. Не повторяйте запуск автоматически.':'Прочитайте review_file полностью и сформулируйте позицию. Если согласны, review:publish; иначе review:prepare с response.'};
 }
