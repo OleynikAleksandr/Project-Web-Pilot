@@ -317,7 +317,7 @@ function snapshot() {
     archives: projectedArchives(), settings: settingsState, doctor: doctorState,
     conversationRecovery: conversationRecovery.view(),
     autoPlan: autoPlan.view(),
-    planReview: {...planReview.view(),...(reviewContinuation.persistenceError?{message:reviewContinuation.flow.state.message}: {})},
+    planReview: {...planReview.view(),...(reviewContinuation.persistenceError?{message:reviewContinuation.flow.state.message,indicator:'attention'}: {})},
     selected, context: controller?.state ?? { phase: 'selected', servicesReady: false, messageSent: false },
     contextPreparation: { busy: selected ? contextCache.isBuilding(selected.workspace) : false },
     runtimeFolder, platform: process.platform,
@@ -1292,7 +1292,7 @@ async function createWindow() {
     try {
       ++navigationId; startupClipboard?.dispose(); startupClipboard = null; startupFlow?.dispose(); startupFlow = null;
       autoPlan.dispose(); conversationRecovery.reset(); controller?.cancel(); planMonitor.close();
-      reviewContinuation.dispose();
+      reviewContinuation.dispose(); planReview.dispose();
       if (eventRuntimeCheckerTimer !== null) clearInterval(eventRuntimeCheckerTimer);
       eventRuntimeCheckerTimer = null; disconnectPageState?.(); agentTimer.finish(); contextCache.clear(); workspaceSetup.invalidateReadiness();
       chatColorStyles?.dispose();

@@ -1,4 +1,5 @@
 import { ChatGPTComposer } from '../src/chatgpt-composer.mjs';
+import { PlanReviewClient } from '../src/plan-review.mjs';
 import { autoScrollPageScript } from '../src/chatgpt-auto-scroll.mjs';
 import { VERSION as BUNDLED_KIT_VERSION } from '@webpilot/workflow-kit/lib/common';
 import assert from 'node:assert/strict';
@@ -590,6 +591,39 @@ export async function run({ app, window, browser, sidebar, store, controller, se
     }
     assert.equal(snapshot().planReview.enabled,review);assert.equal(snapshot().autoPlan.enabled,auto);
     assert.equal(await sidebar.executeJavaScript("document.getElementById('plan-review-toggle').getAttribute('aria-pressed')"),String(review));
+    assert.equal(JSON.parse(await fs.readFile(path.join(dataDir,'settings.json'),'utf8')).autoPlanEnabled,auto);
+    const restoredReview=new PlanReviewClient({selected:()=>({workspace})});
+    restoredReview.observeSelection();assert.equal(restoredReview.view().enabled,review);restoredReview.dispose();
+    for(const theme of ['light','dark']){
+      await sidebar.executeJavaScript(`window.webPilot.setTheme(${JSON.stringify(theme)})`);
+      for(const [id,on] of [['auto-plan-toggle',auto],['plan-review-toggle',review]]){
+        const appearance=await sidebar.executeJavaScript(`(()=>{const b=document.getElementById('${id}');return {pressed:b.getAttribute('aria-pressed'),text:b.textContent,color:getComputedStyle(b).backgroundColor}})()`);
+        assert.equal(appearance.pressed,String(on));assert.match(appearance.text,on?/^Выключить/:/^Включить/);
+        assert.equal(appearance.color==='rgb(8, 124, 69)',on,theme+' '+id);
+      }
+    }
+  }
+
+  // Renderer handler on TEST FIXTURE: icons retain the explanatory live text.
+  const indicatorBase=snapshot();
+  for(const indicator of ['working','waiting','success','attention','none']){
+    sidebar.send('pilot:state-changed',{...indicatorBase,planReview:{...indicatorBase.planReview,message:'Проверка статуса Review',indicator}});
+    await waitFor(()=>sidebar.executeJavaScript(`document.getElementById('plan-review-indicator').dataset.state===${JSON.stringify(indicator)}`),'review indicator '+indicator,snapshot);
+    const icon=await sidebar.executeJavaScript(`(()=>{const i=document.getElementById('plan-review-indicator');return {hidden:i.hidden,decorative:i.getAttribute('aria-hidden'),animation:getComputedStyle(i).animationName,text:document.getElementById('plan-review-text').textContent,role:document.getElementById('plan-review-message').getAttribute('role')}})()`);
+    assert.equal(icon.hidden,indicator==='none');assert.equal(icon.decorative,'true');assert.equal(icon.role,'status');
+    assert.equal(icon.text,'Проверка статуса Review');
+    if(indicator!=='working')assert.equal(icon.animation,'none','waiting and attention never animate');
+  }
+  sidebar.debugger.attach('1.3');
+  try{
+    await sidebar.debugger.sendCommand('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
+    sidebar.send('pilot:state-changed',{...indicatorBase,planReview:{...indicatorBase.planReview,message:'Claude проверяет документы.',indicator:'working'}});
+    await waitFor(()=>sidebar.executeJavaScript("document.getElementById('plan-review-indicator').dataset.state==='working'"),'reduced motion review',snapshot);
+    assert.equal(await sidebar.executeJavaScript("getComputedStyle(document.getElementById('plan-review-indicator')).animationName"),'none');
+    assert.equal(await sidebar.executeJavaScript("document.getElementById('plan-review-text').textContent"),'Claude проверяет документы.');
+  }finally{
+    await sidebar.debugger.sendCommand('Emulation.setEmulatedMedia',{features:[]});sidebar.debugger.detach();
+    sidebar.send('pilot:state-changed',snapshot());
   }
 
   await waitFor(()=>snapshot().context.phase==='stale','review policy invalidates delivered recovery',snapshot);

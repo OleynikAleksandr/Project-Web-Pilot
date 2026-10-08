@@ -3,6 +3,56 @@ import assert from 'node:assert/strict';
 import { PlanReviewClient } from '../src/plan-review.mjs';
 import { AutomationSendState } from '../src/automation-send-state.mjs';
 import { ReviewContinuation } from '../src/review-continuation.mjs';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { spawn, execFileSync } from 'node:child_process';
+import { once } from 'node:events';
+
+test('Review indicator distinguishes active work, waiting, success and attention; watchdog is bounded',()=>{
+  let state={enabled:true,stage:'RUNNING',runner_pid:process.pid,started_at:new Date(0).toISOString()},now=0,readCount=0;
+  const timers=new Map();let seq=0;
+  const client=new PlanReviewClient({selected:()=>({workspace:'/fixture'}),supports:()=>true,
+    read:()=>{readCount++;return state;},now:()=>now,
+    schedule:(fn,ms)=>{const id=++seq;timers.set(id,{fn,ms});return id;},cancel:id=>timers.delete(id)});
+  client.observeSelection();assert.equal(client.view().indicator,'working');assert.equal(timers.size,1);
+  assert.equal([...timers.values()][0].ms,15000);
+  now=905000;[...timers.values()][0].fn();timers.delete(seq);
+  assert.equal(client.view().indicator,'attention');assert.equal(client.timer,null);
+  for(const [stage,indicator] of [['PREPARED','waiting'],['AUTHOR_PENDING','waiting'],['AGREED','success'],
+    ['PUBLISHED','success'],['NEEDS_USER','attention'],['STALE','attention'],['IDLE','none'],['CANCELLED','none'],['PUBLISHING','working']]){
+    state={enabled:true,stage};client.refresh();
+    assert.equal(client.view().indicator,indicator,stage);assert.equal(client.timer,null,stage);
+  }
+  state={enabled:true,stage:'RUNNING'};client.refresh();assert.equal(client.view().indicator,'attention','no PID is not verified work');
+  state={enabled:false,stage:'RUNNING',runner_pid:process.pid,started_at:new Date(now).toISOString()};
+  client.refresh();assert.equal(client.view().indicator,'none');assert.equal(client.timer,null);
+  state={enabled:true,stage:'RUNNING',runner_pid:process.pid,started_at:new Date(now).toISOString()};client.refresh();
+  assert.notEqual(client.timer,null);client.dispose();assert.equal(client.timer,null);
+  const before=readCount;client.refresh();assert.equal(readCount,before,'disposed client never restarts watchdog');
+});
+
+test('Review refresh/watchdog detects a terminated real runner and restart keeps static attention',async t=>{
+  const root=fs.mkdtempSync(path.join(os.tmpdir(),'review-runner-ui-'));
+  const child=spawn(process.execPath,['-e','setTimeout(()=>{},60000)'],{stdio:'ignore'});
+  const exited=once(child,'exit');
+  let client;
+  t.after(()=>{client?.dispose();child.kill();fs.rmSync(root,{recursive:true,force:true});});
+  await once(child,'spawn');
+  execFileSync('git',['init','--quiet',root]);
+  const dir=path.join(root,'.harness/runtime/plan-review');fs.mkdirSync(dir,{recursive:true});
+  const file=path.join(dir,'state.json');
+  fs.writeFileSync(file,JSON.stringify({version:1,enabled:true,stage:'RUNNING',generation:1,run_id:'fixture',
+    launch_id:'launch',round:1,runner_pid:child.pid,started_at:new Date().toISOString()}));
+  let watchdog;
+  const options={selected:()=>({workspace:root}),supports:()=>true,schedule:fn=>{watchdog=fn;return 1;},cancel:()=>{}};
+  client=new PlanReviewClient(options);client.observeSelection();assert.equal(client.view().indicator,'working');
+  child.kill();await exited;watchdog();
+  assert.equal(client.view().stage,'NEEDS_USER');assert.equal(client.view().indicator,'attention');assert.equal(client.timer,null);
+  assert.equal(JSON.parse(fs.readFileSync(file)).error.code,'REVIEW_INTERRUPTED');
+  client.dispose();client=new PlanReviewClient(options);client.observeSelection();
+  assert.equal(client.view().enabled,true);assert.equal(client.view().indicator,'attention');assert.equal(client.timer,null);
+});
 
 test('Review policy belongs to checkout, survives selection changes and rejects a stale IPC target',()=>{
   const states=new Map();let selected={workspace:'/project-a'},changed=0;

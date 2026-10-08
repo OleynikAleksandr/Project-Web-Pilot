@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1496,
+  "plan_revision": 1498,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "review-usability-0103-20261008",
@@ -88,8 +88,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "review-usability-0103-20261008",
         "task_id": "T001",
@@ -119,7 +119,15 @@
         "Спиннер только при выполнении; успех и внимание статичны, reduced motion учтён",
         "Живость runner проверяется при refresh; ограниченный watchdog только на время RUNNING переводит потерянный процесс в статическое внимание, включая restart; в простое polling нет"
       ],
-      "expected_commit_message": "fix: Согласовать кнопки и добавить индикатор Review"
+      "expected_commit_message": "fix: Согласовать кнопки и добавить индикатор Review",
+      "actual_files": [
+        "src/main.mjs",
+        "src/plan-review.mjs",
+        "src/ui/index.html",
+        "src/ui/sidebar.mjs",
+        "tests/electron-smoke.mjs",
+        "tests/plan-review.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -414,7 +422,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: review-usability-0103-20261008
 Current Task: нет
-Revision: 1496
+Revision: 1498
 
 ## Цель
 
@@ -427,8 +435,8 @@ Revision: 1496
 
 ## Микрозадачи
 
-- [TODO] T001: Согласовать кнопки и добавить индикатор Review — Ожидает
-  - Git Commit: [PENDING] fix: Согласовать кнопки и добавить индикатор Review
+- [DONE] T001: Согласовать кнопки и добавить индикатор Review — Завершено
+  - Git Commit: [DONE] fix: Согласовать кнопки и добавить индикатор Review
   - Reference: review-usability-0103-20261008 / T001 / implementation
   - Файлы: src/ui/index.html, src/ui/sidebar.mjs, src/plan-review.mjs, tests/plan-review.test.mjs, tests/electron-smoke.mjs, src/main.mjs, docs/planning/review-usability-0103.md
 - [TODO] T002: Отделить ожидание от ошибки страницы ChatGPT — Ожидает
