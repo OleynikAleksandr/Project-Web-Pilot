@@ -4,22 +4,35 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1517,
+  "plan_revision": 1518,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
-  "scope_id": null,
-  "execution_scope_status": "NONE",
+  "scope_id": "technical-audit-20261008",
+  "execution_scope_status": "ACTIVE",
   "delivery_status": "IN_PROGRESS",
-  "objective": "Продолжите обсуждение или исследование проекта; план реализации создаётся, когда определён её объём.",
-  "acceptance_criteria": [],
+  "objective": "Провести доказательный read-only аудит сопровождаемости и надёжности всего поддерживаемого Project Web Pilot, представить находки, минимальные предложения и ограничения; исходники не менять",
+  "acceptance_criteria": [
+    "Матрица охвата всех поддерживаемых подсистем и четырёх направлений с ограничениями",
+    "Раздельные подтверждённые дефекты, кандидаты на упрощение и гипотезы; для каждой подтверждённой находки доказательство, место, приоритет, минимальное исправление, проверка и платформенные/публичные риски",
+    "Никаких исправлений, удалений, сборок, инсталляций и релизов; Windows и чистую установку не объявлять испытанными"
+  ],
   "approved_scope": {
     "functional_paths": [],
-    "documentation_paths": []
+    "documentation_paths": [
+      "docs/planning/technical-audit-20261008.md",
+      "docs/planning/technical-audit-findings.md",
+      "docs/architecture/OVERVIEW.md"
+    ]
   },
-  "baseline_commit": null,
+  "baseline_commit": "fda09de65ed4a86648f44be3343c478b53468f5f",
   "current_task_id": null,
   "context_pack": {
     "documents": [
+      {
+        "path": "docs/planning/technical-audit-20261008.md",
+        "required": true,
+        "revision": "WORKTREE"
+      },
       {
         "path": "docs/architecture/OVERVIEW.md",
         "required": true,
@@ -29,40 +42,217 @@
     "include_last_completed_task": false,
     "dependency_task_ids": []
   },
-  "tasks": [],
+  "tasks": [
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "technical-audit-20261008",
+        "task_id": "T001",
+        "role": "implementation"
+      },
+      "dependencies": [],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/planning/technical-audit-findings.md"
+      ],
+      "verification_ids": [],
+      "id": "T001",
+      "title": "Зафиксировать базовую линию и матрицу охвата",
+      "why": "Проверяемая полнота охвата и входов до поиска находок",
+      "acceptance_criteria": [
+        "В отчёте HEAD, состав исходных подсистем, реальные входы и способы проверки, exclusions и ограничения",
+        "Ни один пользовательский процесс или проект не изменён"
+      ],
+      "expected_commit_message": "docs: зафиксировать исходную линию технического аудита"
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "technical-audit-20261008",
+        "task_id": "T002",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "T001"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/planning/technical-audit-findings.md"
+      ],
+      "verification_ids": [],
+      "id": "T002",
+      "title": "Исследовать дублирование и риск расхождений",
+      "why": "Отделить опасное повторение правил от намеренной независимости",
+      "acceptance_criteria": [
+        "Есть результаты по коду, платформам, Kit и документации с точными местами и доказательствами",
+        "Для каждого предлагаемого объединения объяснены экономия обслуживания и риск связности; ложные дубли отделены"
+      ],
+      "expected_commit_message": "docs: проверить дублирование и независимые реализации"
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "technical-audit-20261008",
+        "task_id": "T003",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "T002"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/planning/technical-audit-findings.md"
+      ],
+      "verification_ids": [],
+      "id": "T003",
+      "title": "Проверить локальные ссылки, зависимости путей и упаковку",
+      "why": "Проверить реальные точки подключения исходников и staged/runtime ресурсов",
+      "acceptance_criteria": [
+        "Исследованы Markdown anchors, imports/exports, IPC/workers, npm scripts, config, generators, macOS/Windows package inclusion",
+        "Отличены отсутствующие файлы от генерируемых; Git ссылки привязаны к коммитам; внешние URL отмечены отдельно без запросов секретных адресов"
+      ],
+      "expected_commit_message": "docs: проверить ссылки и состав поставки"
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "technical-audit-20261008",
+        "task_id": "T004",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "T003"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/planning/technical-audit-findings.md"
+      ],
+      "verification_ids": [],
+      "id": "T004",
+      "title": "Проверить кандидатов на неиспользуемый код",
+      "why": "Выявить безопасные варианты упрощения без преждевременных удалений",
+      "acceptance_criteria": [
+        "Проверены динамические, событийные, IPC, CLI, платформенные входы и публичные контракты Sidebar",
+        "Для каждого кандидата дана оценка достижимости и недостаточности одного текстового поиска"
+      ],
+      "expected_commit_message": "docs: исследовать неиспользуемые реализации"
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "technical-audit-20261008",
+        "task_id": "T005",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "T004"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/planning/technical-audit-findings.md"
+      ],
+      "verification_ids": [],
+      "id": "T005",
+      "title": "Проверить обработку ошибок и жизненный цикл",
+      "why": "Найти подтверждённые сбои в реальных пользовательских сценариях",
+      "acceptance_criteria": [
+        "Проверены promises, подавление ошибок, таймеры, подписки, watchers, процессы, гонки при смене чата/проекта и завершении",
+        "Неопределённый исход операции и постоянно работающие службы квалифицированы корректно; приведены доказательства и ограничения"
+      ],
+      "expected_commit_message": "docs: исследовать ошибки и жизненный цикл"
+    },
+    {
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "technical-audit-20261008",
+        "task_id": "T006",
+        "role": "implementation"
+      },
+      "dependencies": [
+        "T005"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/planning/technical-audit-findings.md"
+      ],
+      "verification_ids": [],
+      "id": "T006",
+      "title": "Свести результаты и проверить доказательства",
+      "why": "Предоставить пригодный для выбора точечных исправлений итог",
+      "acceptance_criteria": [
+        "Три независимые категории находок, приоритеты и реальные доказательства; у каждой подтверждённой есть место, последствия, минимальная правка, верификация, платформенные и API риски",
+        "Матрица покрытия и отрицательные результаты каждого направления, ограничения, отсутствие необоснованных заявлений о Windows/чистой установке",
+        "Исходники и связанные репозитории не изменены; предложен перечень дальнейших отдельных работ без их выполнения"
+      ],
+      "expected_commit_message": "docs: завершить доказательный технический аудит"
+    }
+  ],
   "blocked_reason": null,
   "user_decisions": [
     {
-      "id": "797181b2-bf2c-476d-88d6-7e4b800c8df7",
-      "text": "Пользователь принял выполненный план выпуска 0.6.103 и прямо поручил закрыть его: «Закрой пожалуйста план, я его принимаю». Это общая приёмка плана; отдельные непроведённые проверки живого ChatGPT, native Windows и чистой установки не объявляются пройденными.",
-      "recorded_at": "2026-10-08T17:19:49.744Z"
+      "id": "9130cacc-5b66-424d-9576-f6554bf0a2fd",
+      "text": "Пользователь разрешил подготовить и опубликовать план технического аудита; сам аудит будет начат отдельным поручением.",
+      "recorded_at": "2026-10-08T17:24:18.539Z"
     }
-  ],
-  "archived_scope_id": "review-usability-0103-20261008"
+  ]
 }
 ```
 <!-- workflow-state:end -->
 
 ## Состояние
 
-Execution Scope Status: NONE
+Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
-Scope: не создан
+Scope: technical-audit-20261008
 Current Task: нет
-Revision: 1517
+Revision: 1518
 
 ## Цель
 
-Продолжите обсуждение или исследование проекта; план реализации создаётся, когда определён её объём.
+Провести доказательный read-only аудит сопровождаемости и надёжности всего поддерживаемого Project Web Pilot, представить находки, минимальные предложения и ограничения; исходники не менять
 
 ## Критерии приёмки
 
+- Матрица охвата всех поддерживаемых подсистем и четырёх направлений с ограничениями
+- Раздельные подтверждённые дефекты, кандидаты на упрощение и гипотезы; для каждой подтверждённой находки доказательство, место, приоритет, минимальное исправление, проверка и платформенные/публичные риски
+- Никаких исправлений, удалений, сборок, инсталляций и релизов; Windows и чистую установку не объявлять испытанными
 
 ## Микрозадачи
 
+- [TODO] T001: Зафиксировать базовую линию и матрицу охвата — Ожидает
+  - Git Commit: [PENDING] docs: зафиксировать исходную линию технического аудита
+  - Reference: technical-audit-20261008 / T001 / implementation
+  - Файлы: docs/planning/technical-audit-findings.md
+- [TODO] T002: Исследовать дублирование и риск расхождений — Ожидает
+  - Git Commit: [PENDING] docs: проверить дублирование и независимые реализации
+  - Reference: technical-audit-20261008 / T002 / implementation
+  - Файлы: docs/planning/technical-audit-findings.md
+- [TODO] T003: Проверить локальные ссылки, зависимости путей и упаковку — Ожидает
+  - Git Commit: [PENDING] docs: проверить ссылки и состав поставки
+  - Reference: technical-audit-20261008 / T003 / implementation
+  - Файлы: docs/planning/technical-audit-findings.md
+- [TODO] T004: Проверить кандидатов на неиспользуемый код — Ожидает
+  - Git Commit: [PENDING] docs: исследовать неиспользуемые реализации
+  - Reference: technical-audit-20261008 / T004 / implementation
+  - Файлы: docs/planning/technical-audit-findings.md
+- [TODO] T005: Проверить обработку ошибок и жизненный цикл — Ожидает
+  - Git Commit: [PENDING] docs: исследовать ошибки и жизненный цикл
+  - Reference: technical-audit-20261008 / T005 / implementation
+  - Файлы: docs/planning/technical-audit-findings.md
+- [TODO] T006: Свести результаты и проверить доказательства — Ожидает
+  - Git Commit: [PENDING] docs: завершить доказательный технический аудит
+  - Reference: technical-audit-20261008 / T006 / implementation
+  - Файлы: docs/planning/technical-audit-findings.md
 
 ## Context Pack For This Cycle
 
+- docs/planning/technical-audit-20261008.md
 - docs/architecture/OVERVIEW.md
 
 Служебные состояния меняются только командами workflow. Приёмка не архивирует scope.
