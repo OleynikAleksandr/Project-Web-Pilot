@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1488,
+  "plan_revision": 1490,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "plan-review-20261008",
@@ -615,8 +615,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "plan-review-20261008",
         "task_id": "T007",
@@ -654,7 +654,8 @@
         ],
         "include_last_completed_task": false,
         "dependency_task_ids": []
-      }
+      },
+      "actual_files": []
     },
     {
       "implementation_status": "TODO",
@@ -754,7 +755,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: plan-review-20261008
 Current Task: нет
-Revision: 1488
+Revision: 1490
 
 ## Цель
 
@@ -797,8 +798,8 @@ Revision: 1488
   - Git Commit: [DONE] docs: описать ревью планов и обновить контракты
   - Reference: plan-review-20261008 / DOCS / implementation
   - Файлы: docs/planning/plan-review.md, docs/planning/plan-review-integration.md, README.md, docs/architecture/OVERVIEW.md, AGENTS.md, docs/modules/plan-review.md, docs/modules/auto-plan.md, docs/modules/plan-view.md, docs/modules/context-delivery.md, docs/modules/workflow-kit-recovery.md, docs/modules/workspace-sidebar-ui.md, docs/modules/codex-app-server-executor.md, docs/modules/runtime-lifecycle.md, docs/modules/release.md, packages/workflow-kit/docs/modules/workflow-kit-package.md, packages/workflow-kit/README.md, docs/modules/project-doctor.md
-- [TODO] T007: Собрать парный локальный выпуск с Review — Ожидает
-  - Git Commit: [PENDING] release: Собрать парный локальный выпуск с Review
+- [DONE] T007: Собрать парный локальный выпуск с Review — Завершено
+  - Git Commit: [DONE] release: Собрать парный локальный выпуск с Review
   - Reference: plan-review-20261008 / T007 / implementation
   - Файлы: release-manifest.json, docs/planning/plan-review.md, docs/planning/plan-review-integration.md, docs/modules/release.md
 - [TODO] T008: Установить готовый локальный выпуск и передать на приёмку — Ожидает
