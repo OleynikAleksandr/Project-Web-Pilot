@@ -13,6 +13,7 @@ import { updateTask } from './lib/task-update.mjs';
 import { extendPlan } from './lib/extend-plan.mjs';
 import { commandHelp } from './lib/command-help.mjs';
 import { createSimplePlan } from './lib/simple-workflow.mjs';
+import { reviewStatus, prepareReview, resolveReview, publishReview, cancelReview, acknowledgeReview } from './lib/plan-review.mjs';
 import { commitTask } from './lib/transaction.mjs';
 import { preCommit, commitMessage, postCommit, prePush } from './lib/git-hooks.mjs';
 
@@ -46,8 +47,22 @@ export async function main(argv = process.argv.slice(2)) {
     const root = repoRoot(opts.project || event?.cwd || process.cwd());
     let result;
     const input = () => { check(opts.input, 'INPUT_REQUIRED', 'Укажите --input <JSON-файл>.'); return readJSON(path.resolve(opts.input)); };
+    if(command==='review:run') {
+      const {runReview}=await import('./lib/claude-review.mjs');
+      const value=await withSessionPlan(root,{sessionId:opts.session,planId:opts.plan},()=>runReview(root,{
+        maxTurns:opts['max-turns']===undefined?30:Number(opts['max-turns']),
+        timeoutMs:opts['timeout-ms']===undefined?900000:Number(opts['timeout-ms'])
+      }));
+      return {value,json:true};
+    }
     const execute = () => {
     switch (command) {
+      case 'review:status': result = reviewStatus(root); break;
+      case 'review:acknowledge': result = acknowledgeReview(root,opts.run); break;
+      case 'review:prepare': result = prepareReview(root,input()); break;
+      case 'review:resolve': result = resolveReview(root,opts.action,opts.note); break;
+      case 'review:cancel': result = cancelReview(root,opts.note); break;
+      case 'review:publish': result = publishReview(root); break;
       case 'status': { result = status(root); if (!opts.full) { delete result.recovery_text; delete result.last_hook_execution; delete result.resolved; } break; }
       case 'validate': { const r = validate(root); result = { ok: true, message: 'План и Git согласованы.', plan_revision: r.plan.plan_revision, resolved: r.resolved, transaction_pending: !!r.transaction }; break; }
       case 'recover': { if (opts.format === 'packet') return { value: contextPacket(root), json: true }; const p = recover(root); return { value: opts.format === 'json' || opts.json ? p : p.text, json: opts.format === 'json' || !!opts.json }; }

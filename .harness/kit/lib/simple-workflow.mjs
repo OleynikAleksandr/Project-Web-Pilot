@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import { assertSimpleReview } from './plan-review.mjs';
 import path from 'node:path';
 import {check,contextPath} from './common.mjs';
 import {createScope,applyConfig} from './actions.mjs';
@@ -6,6 +7,7 @@ import {readConfig,validateConfig,taskChecks} from './validate.mjs';
 
 // The model supplies domain decisions; this facade supplies the workflow schema.
 export function createSimplePlan(root,input) {
+  assertSimpleReview(root);
   check(typeof input.spec === 'string', 'SPEC_REQUIRED', 'Укажите spec: путь к планировочному документу.');
   contextPath(root,input.spec);
   check(fs.existsSync(path.join(root,input.spec)), 'SPEC_REQUIRED', 'Сначала запишите планировочный документ: '+input.spec);
