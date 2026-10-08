@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1480,
+  "plan_revision": 1482,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "plan-review-20261008",
@@ -88,7 +88,7 @@
     ]
   },
   "baseline_commit": "9a3397121e0645bb31ce60ee7a3050cea3d9524e",
-  "current_task_id": null,
+  "current_task_id": "T006",
   "context_pack": {
     "documents": [
       {
@@ -451,7 +451,7 @@
       ]
     },
     {
-      "implementation_status": "TODO",
+      "implementation_status": "IN_PROGRESS",
       "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "plan-review-20261008",
@@ -699,8 +699,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: plan-review-20261008
-Current Task: нет
-Revision: 1480
+Current Task: T006
+Revision: 1482
 
 ## Цель
 
@@ -735,7 +735,7 @@ Revision: 1480
   - Git Commit: [DONE] feat: Очистка материалов ревью при начале первой задачи
   - Reference: plan-review-20261008 / T005 / implementation
   - Файлы: packages/workflow-kit/src/lib/plan-review.mjs, packages/workflow-kit/src/lib/actions.mjs, packages/workflow-kit/src/lib/recovery.mjs, packages/workflow-kit/scripts/check-plan-review-fixture.mjs, src/plan-review.mjs, tests/plan-review.test.mjs, docs/planning/plan-review.md, docs/planning/plan-review-integration.md, packages/workflow-kit/docs/modules/workflow-kit-package.md, docs/modules/plan-review.md
-- [TODO] T006: Проверить полный сценарий и подготовить локальный выпуск — Ожидает
+- [IN_PROGRESS] T006: Проверить полный сценарий и подготовить локальный выпуск — В работе
   - Git Commit: [PENDING] feat: Проверить полный сценарий и подготовить локальный выпуск
   - Reference: plan-review-20261008 / T006 / implementation
   - Файлы: package.json, package-lock.json, packages/workflow-kit/package.json, packages/workflow-kit/src/lib/common.mjs, .harness/workflow.json, tests/plan-review.test.mjs, tests/workflow-kit-source.test.mjs, tests/workflow-kit-upgrade.test.mjs, tests/workflow-kit-recovery.test.mjs, scripts/check-installed-release.mjs, scripts/stage-workflow-kit.mjs, tests/electron-smoke.mjs, packages/workflow-kit/src/lib/installer.mjs, docs/planning/plan-review.md, docs/planning/plan-review-integration.md, docs/modules/release.md, docs/modules/plan-review.md, packages/workflow-kit/docs/modules/workflow-kit-package.md
