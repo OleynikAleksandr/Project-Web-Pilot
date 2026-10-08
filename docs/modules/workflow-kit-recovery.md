@@ -24,7 +24,7 @@ Workflow Kit строит recovery текущего checkout и отвечает
 - ≤ 7 частей и ≤ min(`hard_bytes`, 180000) обеспечивает Kit (`CONTEXT_TOO_LARGE`, без усечения и частичного пакета); Web Pilot число частей не проверяет и дублирует только потолок 180000. Поля `sources[]`, `size` Web Pilot не использует.
 
 ## Свежесть
-- Ключ кеша — `sha256({version:4, workspace, readiness: inputKey})`; `inputKey` считает worker WorkspaceSetup через `inspectionInputs` копии Kit в приложении (содержимое плана и конфигурации, README/AGENTS/OVERVIEW, документов `context_pack` и путей задач, runtime Kit, Git status/HEAD/index/refs/config/hooks, транзакция). Ошибка readiness или ключа запрещает сборку и отправку (`CONTEXT_INPUTS_UNAVAILABLE`), возраст не подменяет ключ.
+- Ключ кеша — `sha256({version:4, workspace, readiness: inputKey})`; `inputKey` считает worker WorkspaceSetup через `inspectionInputs` копии Kit в приложении (содержимое плана и конфигурации, README/AGENTS/OVERVIEW, документов `context_pack` и путей задач, runtime Kit, Git status/HEAD/index/refs/config/hooks, транзакция, состояние Review). Ошибка readiness или ключа запрещает сборку и отправку (`CONTEXT_INPUTS_UNAVAILABLE`), возраст не подменяет ключ.
 - Kit сам сверяет входы до и после сборки (повтор, затем `CONCURRENT_CHANGE`); Web Pilot дополнительно сверяет ключ до и после `build` (2 попытки, затем `CONTEXT_CHANGED`) и перед вставкой (`CONTEXT_CHANGED_BEFORE_SEND`). Кеш не разрешает устаревшую отправку.
 - Просмотр `sent`/legacy/`unknown` чата не запускает `recover`; пользовательский черновик сохраняется.
 
@@ -35,3 +35,5 @@ Workflow Kit строит recovery текущего checkout и отвечает
 - `unit-all`: `tests/session-plans.test.mjs` (все адреса чатов проецируют один план; legacy `--session` не маршрутизирует), `tests/mcp-runtime.test.mjs`, `tests/context-cache.test.mjs`, `tests/workflow-kit-recovery.test.mjs` (полнота, 7 частей проходят, 8-я — ошибка ниже байтового предела, splitter UTF-8, ревизии документов, NONE), `tests/workflow-kit-source.test.mjs` (запас 20 % recovery реального проекта, Kit — пакет этого репозитория).
 - `kit-check` (`npm run check --prefix packages/workflow-kit`): контракт потребителя, runtime-fixture, `check-project-recovery-fixture.mjs` — реальный проект в изолированной копии до и после нормализации ≤ 144000 байт (запас ≥ 20 %) и ≤ 7 частей. Установленный Kit рабочего checkout он не заменяет.
 - Доставка проверяется отдельно ([доставка](context-delivery.md)); живой ChatGPT и native Windows — приёмка пользователя.
+
+Review добавляет в recovery краткую политику, стадию и следующую команду. Отзывы и runtime-снимки не включаются в required context; после очистки опубликованные документы остаются доступны. Полный контракт — [plan-review](plan-review.md).

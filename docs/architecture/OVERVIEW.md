@@ -1,6 +1,6 @@
 # Краткая архитектура проекта
 
-Стек: Workflow Kit 1.6.1, Electron 44.5.1, Node 24.21.0; версия продукта — в `package.json` и [README](../../README.md). Это карта текущего устройства. Ход работы — в current plan и Git; факты сборки и публикации — в release-manifest.json и GitHub Release. Постоянные правила разработки — в [AGENTS.md](../../AGENTS.md), пользовательская инструкция — в README.
+Стек: Workflow Kit 1.6.3, Electron 44.5.1, Node 24.21.0; версия продукта — в `package.json` и [README](../../README.md). Это карта текущего устройства. Ход работы — в current plan и Git; факты сборки и публикации — в release-manifest.json и GitHub Release. Постоянные правила разработки — в [AGENTS.md](../../AGENTS.md), пользовательская инструкция — в README.
 
 ## Назначение и границы
 
@@ -15,6 +15,7 @@ Electron-приложение для macOS и Windows: одно окно, сле
 | Каркас приложения | `src/main.mjs`, `common.mjs`, `platform.mjs` | этот документ |
 | Доставка контекста | `context-session`, `context-cache`, `context-inputs`, `session-plans`, `mcp-runtime`, `conversation-recovery` | [context-delivery](../modules/context-delivery.md) |
 | Граница Kit ↔ Web Pilot | вызов `recover`, проверка пакета | [workflow-kit-recovery](../modules/workflow-kit-recovery.md) |
+| Review нового плана | `plan-review`, `review-continuation`, `automation-send-state`, Kit `plan-review`/`claude-review` | [plan-review](../modules/plan-review.md) |
 | AutoPlan | `auto-plan`, `auto-plan-state` | [auto-plan](../modules/auto-plan.md) |
 | Текущий план в панели | `plan-monitor`, `project-input-watch` | [plan-view](../modules/plan-view.md) |
 | Проекты и сессии | `workspace-session`, `chatgpt-title`, `agent-timer` | [workspace-sessions](../modules/workspace-sessions.md) |
@@ -39,7 +40,7 @@ Electron-приложение для macOS и Windows: одно окно, сле
 2. Kit проекта строит recovery: Workflow Core, PROTOTYPE, проектная часть AGENTS, OVERVIEW, текущий план и выбранные им документы целиком. Пакет делится на части по `budget.document_bytes` (28000 байт), всего ≤ 7 частей и ≤ 180000 байт; превышение — `CONTEXT_TOO_LARGE` без усечения.
 3. Web Pilot проверяет актуальность и целостность пакета, прикрепляет части как файлы и вставляет короткий транспортный текст. Send — один раз, сразу после загрузки всех вложений (ожидание до 120 с). Неопределённый Send автоматически не повторяется.
 4. Агент читает каждое вложение отдельным вызовом и кратко подтверждает восстановление. MCP проекта в первом ответе не вызывается.
-5. Дальше агент работает по плану. AutoPlan (если включён) на паузе отправляет «Продолжай» с данными следующей задачи.
+5. При Review ON новый план предварительно согласуется с Claude CLI; ошибки и споры возвращаются пользователю ([plan-review](../modules/plan-review.md)). Это разрешённый пользователем внешний рецензент без модельного API. Дальше агент работает по плану. AutoPlan (если включён) на паузе отправляет «Продолжай» с данными следующей задачи.
 
 Сохранённый чат при обычном открытии контекст заново не получает. Подробности — [context-delivery](../modules/context-delivery.md), [auto-plan](../modules/auto-plan.md), [граница с Kit](../modules/workflow-kit-recovery.md).
 

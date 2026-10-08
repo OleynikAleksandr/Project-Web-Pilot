@@ -17,7 +17,7 @@
 - Режимом владеет только клиент: агент его не включает, не выключает и не сообщает, можно ли продолжать; текст ответа для решения не читается. Управление текстом агента пользователь отверг: footer-протокол давал ложную остановку (`NO_CHECKPOINT`) и «липкую» паузу при включённой кнопке.
 - Автоматически отправляется только сообщение, первая строка которого ровно `Продолжай`. Переключатель агенту ничего не шлёт и стартовый текст сессии не меняет.
 - Агент работает одинаково при любом положении переключателя: одна микрозадача за ответ (`task:start` → работа → `commit --task` → отчёт → конец ответа); правило передаёт Workflow Core в recovery (п. 4 `WORKFLOW.md` Kit), не Web Pilot.
-- Без модельного API, второго агента, новой службы и периодического опроса; модель состояний Kit не меняется — current plan единственный источник незавершённой работы.
+- AutoPlan работает без модельного API, второго агента, новой службы и периодического опроса. Current plan остаётся единственным источником незавершённой работы.
 
 ### Переключатель и хранение
 
@@ -59,7 +59,7 @@
 ### Проверка плана (`readAutoPlanState`)
 
 - `readWorkspace` → `git -C <ws> rev-parse --git-path workflow-kit/transaction.json` (файл есть → транзакция не завершена) → `git status --porcelain -- .harness/plans/todo-plan.md` → повторный `readWorkspace`.
-- `confirmed` = нет журнала транзакции И (есть незавершённые задачи ИЛИ plan-файл чист) И `planRevision`/`scopeId` совпали в двух чтениях. Неподтверждённый план отправку не разрешает; проверку плана и транзакции Kit не ослаблять.
+- `confirmed` = нет журнала транзакции И нет незавершённой публикации связанного Review при ON И (есть незавершённые задачи ИЛИ plan-файл чист) И `planRevision`/`scopeId` совпали в двух чтениях. Неподтверждённый план отправку не разрешает; проверку плана и транзакции Kit не ослаблять.
 - Git: таймаут 10 с, буфер 1 MiB, `WORKFLOW_GIT_BIN` из окружения; на Windows окружение даёт `WindowsExecutorBootstrap.workflowEnvironment()` (комплектный MinGit; его ошибка → `PLAN_READ_ERROR`).
 - `nextTask` читается из того же plan-файла: revision и scope равны проекции, задача `nextTaskId` (`current_task_id`, иначе первая не DONE) существует и не DONE. Поля: `id`, `title`, `why`, `acceptance_criteria`, `functional_paths` + `documentation_paths`, `verification_ids`. Любое расхождение или ошибка → `null`.
 
@@ -126,6 +126,9 @@
 - Коды: `MANUAL_OFF`, `PAGE_NOT_READY`, `CONNECTION_ERROR`, `DRAFT_PRESENT`, `HISTORY_NOT_READY`, `USER_MESSAGE_PENDING`, `PLAN_UNAVAILABLE`, `PLAN_READ_ERROR`, `PLAN_CHANGED_OR_TRANSACTION`, `LEGACY_PAUSE_UNKNOWN`, `PAUSE_CONSUMED`, `SEND_UNKNOWN`, `SEND_NOT_SENT`, `SEND_ERROR`, `SEND_CHECKPOINT_ERROR`, `STALL_WARNING`, `PLAN_COMPLETED`.
 - Диагностика — `chromium-events.jsonl`, источник `auto-plan`: `state` (фаза, код), `pause` (opaque ID, источник, поколение), `send` (вид, счётчик), `progress-timeout`/`progress-resumed`. Без текста разговора и UI, URL, секретов ([chromium-diagnostics.md](chromium-diagnostics.md)).
 
+### Совместная работа с Review
+Review и AutoPlan — независимые кнопки. Согласование заканчивается PUBLISHED; только включённый AutoPlan продолжает выполнение, без отдельного разрешения. При Review OFF действует обычный путь. Общий `AutomationSendState` в main сохраняет `automationCheckpoint`: sending до Send, sent после, UNKNOWN без повтора; смена review-scope на ACTIVE не разрешает вторую отправку на той же паузе. Для обычных переходов AutoPlan между scope прежний контракт сохранён. Подробности, получатель и ручной Stop именно ревью — [plan-review](plan-review.md).
+
 ## Решения и запреты
 
 Не возвращать:
@@ -134,7 +137,7 @@
 - Идентичность паузы по числу узлов/сообщений, хешу текста или случайному ID на снимок; повтор Send по таймеру; очистку реального checkpoint ledger.
 - Нажатие Stop по таймеру; выключение режима по технической причине.
 - Периодический опрос Git/плана, модельный API, второго агента, отдельную службу.
-- Автоматическую отправку чего-либо, кроме сообщения с первой строкой «Продолжай».
+- Другие сообщения от самого AutoPlan. Независимый Review имеет собственное узкое продолжение ([plan-review](plan-review.md)).
 
 ## Проверки
 

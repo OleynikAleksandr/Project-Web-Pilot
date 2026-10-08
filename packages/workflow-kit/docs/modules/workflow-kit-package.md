@@ -1,6 +1,6 @@
 # Workflow Kit — контракт пакета
 
-`@webpilot/workflow-kit` 1.6.1 (`packages/workflow-kit`, `private`, Node ≥ 22): один current plan на Git checkout/worktree, проверяемые коммиты задач, recovery, установка в проект. Доставка recovery — Web Pilot ([граница Kit ↔ Web Pilot](../../../../docs/modules/workflow-kit-recovery.md)).
+`@webpilot/workflow-kit` 1.6.3 (`packages/workflow-kit`, `private`, Node ≥ 22): один current plan на Git checkout/worktree, проверяемые коммиты задач, recovery, установка в проект. Доставка recovery — Web Pilot ([граница Kit ↔ Web Pilot](../../../../docs/modules/workflow-kit-recovery.md)).
 
 ## Код
 - `index.mjs` — `VERSION`, `WorkflowError`, `getRuntimeRoot()`, `currentPlanView`, `sessionPlanView`, пространства `actions`, `plan`, `sessionPlans`, `recovery`, `installer`. Exports: `.`, `./cli`, `./install`, `./lib/*`, `./schemas/*`, `./templates/*`, `./examples/*`, `./WORKFLOW.md`; bin `workflow`. Экспорты и lib-подпути сохраняются: их импортируют потребители.
@@ -30,6 +30,9 @@
 - `task:update` добавляет files/checks/acceptance; `plan:apply` не меняет статусы и DONE (`MANAGED_FIELDS`, `COMPLETED_TASK_IMMUTABLE`); `config:apply` — полный файл конфигурации.
 - `project:rename --name` — имя в плане, recovery и путях hooks manifest одним коммитом kit-update; без активной задачи (`TASK_ACTIVE`), ≤ 100 символов (`PROJECT_NAME`); повтор без изменений — без коммита; папку не переименовывает.
 - `repair --dry-run` → `repair_id` → `--apply` (завершить/повторить транзакцию, восстановить проекцию, отложить DOCS) или `--cancel` (отменить неподтверждённую подготовку). Журнал вручную не удалять.
+
+### Опциональный Review
+`lib/plan-review` и `lib/claude-review`: prepare/run/status/acknowledge/resolve/cancel/publish, gate новых plan:create/scope:create при ON, очистка на task:start. Политика и цикл — один `.harness/runtime/plan-review/state.json`; по умолчанию OFF без зависимости от Claude. Долгий процесс запускается вне operation.lock. Recovery содержит краткую политику, не отзывы. Полный контракт входов, ошибок, состояний, публикации и очистки — [Review](../../../../docs/modules/plan-review.md).
 
 ### Коммит и Git
 - Каждый коммит — транзакция Kit (`<git-dir>/workflow-kit/transaction.json`) с trailers `Workflow-Scope`, `Workflow-Task`, `Workflow-Role`, `Workflow-Transaction`, у implementation — `Workflow-Iteration` (нет — 1). Коммит без журнала → `MANAGED_COMMIT_REQUIRED`; hooks не обходить, `--no-verify` запрещён.
@@ -84,7 +87,7 @@
 ### Установка и обновление
 - `install --project <abs> [--mode new] [--dry-run]`: new — пустая папка (`FOLDER_NOT_EMPTY`); без Git — `git init -b main`. Создаёт `.harness/kit/**`, `scripts/workflow{,.mjs,.cmd}`, `.harness/workflow.json` (`document_bytes` 28000, `hard_bytes` 180000), NONE-план, Kit-секцию AGENTS, README и OVERVIEW при отсутствии, секции `.gitignore`/`.gitattributes`, SessionStart в `.codex/hooks.json`, git hooks, manifest. Занятые пути не перезаписываются (`INSTALL_CONFLICT`); `--expected-fingerprint` → `PREVIEW_CHANGED`. Нет автора Git (задаётся `--git-name`/`--git-email`) или есть исходные изменения — коммит ждёт `install:commit`. Та же версия — reconnect (hooks, runtime).
 - Runtime: macOS/Linux — Node ≥ 22 из `/opt/homebrew/bin` или `/usr/local/bin`, иначе копия в `.harness/runtime/node`; Windows — `.harness/runtime/node.exe`, MinGit из `WORKFLOW_GIT_HOME` в `.harness/runtime/git` (иначе системный Git).
-- `install --update` — для `upgradeFrom` (1.1.0, 1.2.0, 1.3.0, 1.4.0–1.4.13, 1.5.0–1.5.6, 1.6.0), иначе или при изменённом owned-файле — `UNSUPPORTED_MIGRATION`. Невалидный или отсутствующий current plan останавливает обновление до записи; победитель среди legacy не угадывается. До записи проверяются и условия коммита: `GIT_OPERATION_ACTIVE`, `GIT_IDENTITY`, `FOREIGN_STAGED` (поздний отказ оставил бы записанный runtime, который повтор принял бы за установленный); `--git-name`/`--git-email` применяются и к обновлению. `MODIFIED_INTEGRATION` — изменённые Kit-секция AGENTS или удаляемый файл Kit, занятый новый служебный путь. Резервная копия — `.harness/runtime/kit-upgrade-<id>/`. `by-id/`, `by-session/`, `archive/` удаляются, только если каждый файл tracked и побайтно равен HEAD, index и рабочей копии (`LEGACY_PLAN_CHANGED`); owner/session-поля снимаются, NONE-план без required OVERVIEW нормализуется. Один коммит kit-update; commit активной задачи выполняет новый runtime.
+- `install --update` — для `upgradeFrom` (1.1.0, 1.2.0, 1.3.0, 1.4.0–1.4.13, 1.5.0–1.5.6, 1.6.0–1.6.2), иначе или при изменённом owned-файле — `UNSUPPORTED_MIGRATION`. Невалидный или отсутствующий current plan останавливает обновление до записи; победитель среди legacy не угадывается. До записи проверяются и условия коммита: `GIT_OPERATION_ACTIVE`, `GIT_IDENTITY`, `FOREIGN_STAGED` (поздний отказ оставил бы записанный runtime, который повтор принял бы за установленный); `--git-name`/`--git-email` применяются и к обновлению. `MODIFIED_INTEGRATION` — изменённые Kit-секция AGENTS или удаляемый файл Kit, занятый новый служебный путь. Резервная копия — `.harness/runtime/kit-upgrade-<id>/`. `by-id/`, `by-session/`, `archive/` удаляются, только если каждый файл tracked и побайтно равен HEAD, index и рабочей копии (`LEGACY_PLAN_CHANGED`); owner/session-поля снимаются, NONE-план без required OVERVIEW нормализуется. Один коммит kit-update; commit активной задачи выполняет новый runtime.
 - Упразднённые документы и индекс установщик не восстанавливает (миграция документации — отдельная работа); `soft_tokens`/`hard_tokens` принимаются, но не ограничивают.
 - `inspect`, `doctor` ничего не меняют; `remove --dry-run` → `--apply <remove_id>` — только при NONE без транзакции (`ACTIVE_SCOPE`), изменённое сохраняется.
 
@@ -102,11 +105,11 @@
 - модельный классификатор, модельный API, обязательные кнопки режимов.
 
 ## Проверки
-- `kit-check` (`npm run check --prefix packages/workflow-kit`): `check-package` (identity, exports, версия, состав `npm pack`), `check-consumer-contract` (`file:`/tarball без исходника, runtime = `src`), `check-runtime-fixture` (установка, recovery, rename, DOCS-N, pre-push, `before`, legacy-миграция, синтетическая 1.4.13) с `check-document-fixture` (28000/28001, index ≠ worktree, роли, docs:commit) и `check-project-recovery-fixture` (копия Web Pilot с исходниками Kit до/после нормализации: ≤ 144000 байт — запас ≥ 20% без сокращения плана, повышения бюджета и потери обязательного контекста — и ≤ 7 частей, задачи целы), `check-carryover-fixture`.
+- `kit-check` (`npm run check --prefix packages/workflow-kit`): `check-package` (identity, exports, версия, состав `npm pack`), `check-consumer-contract` (`file:`/tarball без исходника, runtime = `src`), `check-runtime-fixture` (установка, recovery, rename, DOCS-N, pre-push, `before`, legacy-миграция, синтетическая 1.4.13) с `check-document-fixture` (28000/28001, index ≠ worktree, роли, docs:commit) и `check-project-recovery-fixture` (копия Web Pilot с исходниками Kit до/после нормализации: ≤ 144000 байт — запас ≥ 20% без сокращения плана, повышения бюджета и потери обязательного контекста — и ≤ 7 частей, задачи целы), `check-carryover-fixture`, `check-plan-review-fixture` (публикация, CLI, OFF, очистка).
 - `unit-all` (`npm test`): `tests/workflow-kit-{recovery,source,upgrade}.test.mjs` (upgrade — реальная 1.5.6: task:start → kit-update → commit новым runtime). Проверки взаимно не заменяются.
 - Пользователь: живой ChatGPT, native Windows (`workflow.cmd`, PowerShell-hook, MinGit); fixtures на Mac их не заменяют, для 1.6.x не подтверждены.
 
 ## Открыто
-- `upgradeFrom` объявляет 1.1.0–1.6.0; тестами покрыты синтетическая 1.4.13 и реальная 1.5.6.
+- `upgradeFrom` объявляет 1.1.0–1.6.2; тестами покрыты синтетическая 1.4.13 и реальная 1.5.6.
 - Hot-swap bridge Web Pilot ↔ Kit — только операции current plan, без session-маршрутизации; не реализован.
 - Не поручено: удалить разовую проверку `workflow-kit-archive` из `.harness/workflow.json`.

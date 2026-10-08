@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1486,
+  "plan_revision": 1488,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "plan-review-20261008",
@@ -86,7 +86,8 @@
       "docs/modules/runtime-lifecycle.md",
       "docs/modules/release.md",
       "packages/workflow-kit/docs/modules/workflow-kit-package.md",
-      "packages/workflow-kit/README.md"
+      "packages/workflow-kit/README.md",
+      "docs/modules/project-doctor.md"
     ]
   },
   "baseline_commit": "9a3397121e0645bb31ce60ee7a3050cea3d9524e",
@@ -101,12 +102,12 @@
       {
         "path": "docs/planning/plan-review.md",
         "required": true,
-        "revision": "WORKTREE"
+        "revision": "05bf06f5a9cfdf26e3bc9f29659944266d12d5dd"
       },
       {
         "path": "docs/planning/plan-review-integration.md",
         "required": true,
-        "revision": "WORKTREE"
+        "revision": "05bf06f5a9cfdf26e3bc9f29659944266d12d5dd"
       }
     ],
     "include_last_completed_task": false,
@@ -550,8 +551,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "plan-review-20261008",
         "task_id": "DOCS",
@@ -582,7 +583,8 @@
         "docs/modules/runtime-lifecycle.md",
         "docs/modules/release.md",
         "packages/workflow-kit/docs/modules/workflow-kit-package.md",
-        "packages/workflow-kit/README.md"
+        "packages/workflow-kit/README.md",
+        "docs/modules/project-doctor.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -592,7 +594,25 @@
         "README, OVERVIEW, модули, проектные инструкции и Kit описывают фактическое поведение; противоречий о втором агенте, автосообщениях и двух кнопках нет.",
         "Требования спецификации перенесены в действующие контракты; обе временные части удалены с точными Git-ссылками для required recovery; каждый Markdown не более 28000 байт."
       ],
-      "expected_commit_message": "docs: описать ревью планов и обновить контракты"
+      "expected_commit_message": "docs: описать ревью планов и обновить контракты",
+      "actual_files": [
+        "README.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/auto-plan.md",
+        "docs/modules/codex-app-server-executor.md",
+        "docs/modules/context-delivery.md",
+        "docs/modules/plan-review.md",
+        "docs/modules/plan-view.md",
+        "docs/modules/project-doctor.md",
+        "docs/modules/release.md",
+        "docs/modules/runtime-lifecycle.md",
+        "docs/modules/workflow-kit-recovery.md",
+        "docs/modules/workspace-sidebar-ui.md",
+        "docs/planning/plan-review-integration.md",
+        "docs/planning/plan-review.md",
+        "packages/workflow-kit/README.md",
+        "packages/workflow-kit/docs/modules/workflow-kit-package.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -734,7 +754,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: plan-review-20261008
 Current Task: нет
-Revision: 1486
+Revision: 1488
 
 ## Цель
 
@@ -773,10 +793,10 @@ Revision: 1486
   - Git Commit: [DONE] feat: Проверить полный сценарий и подготовить локальный выпуск
   - Reference: plan-review-20261008 / T006 / implementation
   - Файлы: package.json, package-lock.json, packages/workflow-kit/package.json, packages/workflow-kit/src/lib/common.mjs, .harness/workflow.json, tests/plan-review.test.mjs, tests/workflow-kit-source.test.mjs, tests/workflow-kit-upgrade.test.mjs, tests/workflow-kit-recovery.test.mjs, scripts/check-installed-release.mjs, scripts/stage-workflow-kit.mjs, tests/electron-smoke.mjs, packages/workflow-kit/src/lib/installer.mjs, tools/codex-app-server-mcp/codex-tools.lock.json, packages/workflow-kit/scripts/check-plan-review-fixture.mjs, packages/workflow-kit/src/lib/claude-review.mjs, packages/workflow-kit/src/lib/command-help.mjs, packages/workflow-kit/src/lib/plan-review.mjs, src/auto-plan-state.mjs, src/context-session.mjs, src/main.mjs, src/review-continuation.mjs, tests/codex-app-server-mcp.test.mjs, docs/planning/plan-review.md, docs/planning/plan-review-integration.md, docs/modules/release.md, docs/modules/plan-review.md, packages/workflow-kit/docs/modules/workflow-kit-package.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: описать ревью планов и обновить контракты
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: описать ревью планов и обновить контракты
   - Reference: plan-review-20261008 / DOCS / implementation
-  - Файлы: docs/planning/plan-review.md, docs/planning/plan-review-integration.md, README.md, docs/architecture/OVERVIEW.md, AGENTS.md, docs/modules/plan-review.md, docs/modules/auto-plan.md, docs/modules/plan-view.md, docs/modules/context-delivery.md, docs/modules/workflow-kit-recovery.md, docs/modules/workspace-sidebar-ui.md, docs/modules/codex-app-server-executor.md, docs/modules/runtime-lifecycle.md, docs/modules/release.md, packages/workflow-kit/docs/modules/workflow-kit-package.md, packages/workflow-kit/README.md
+  - Файлы: docs/planning/plan-review.md, docs/planning/plan-review-integration.md, README.md, docs/architecture/OVERVIEW.md, AGENTS.md, docs/modules/plan-review.md, docs/modules/auto-plan.md, docs/modules/plan-view.md, docs/modules/context-delivery.md, docs/modules/workflow-kit-recovery.md, docs/modules/workspace-sidebar-ui.md, docs/modules/codex-app-server-executor.md, docs/modules/runtime-lifecycle.md, docs/modules/release.md, packages/workflow-kit/docs/modules/workflow-kit-package.md, packages/workflow-kit/README.md, docs/modules/project-doctor.md
 - [TODO] T007: Собрать парный локальный выпуск с Review — Ожидает
   - Git Commit: [PENDING] release: Собрать парный локальный выпуск с Review
   - Reference: plan-review-20261008 / T007 / implementation

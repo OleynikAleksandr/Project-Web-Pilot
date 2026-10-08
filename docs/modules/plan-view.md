@@ -37,14 +37,14 @@ Read-only показ current plan checkout (`.harness/plans/todo-plan.md`) в к
 - Чтение: до двух повторов через 25 и 100 мс, затем `PLAN_READ_FAILED` (сообщение ≤ 500 символов) → `onError`. Последняя корректная проекция остаётся на экране вместе с ошибкой; бесконечного повтора нет; следующее успешное чтение даёт `recovered`.
 - После чтения `watcher.update(info.watchInputs)`: если набор входов изменился — ещё один проход, чтобы закрыть окно между первым чтением и регистрацией нового документа.
 - `onChange(info, {semanticChanged | recovered | initial})` — только при смене сигнатуры проекции (scope, заголовок, objective, revision, статусы, следующая задача, `planView`), без повторных уведомлений.
-- Реакции main: `publish()`; `semanticChanged`/`recovered` → `autoPlan.planChanged()`; `semanticChanged` вне загрузки/подготовки/Настроек → `controller.tick()`; сигнал входов при тех же условиях → `controller.projectChanged()` (прогрев ContextCache и признак устаревшего пакета — [context-delivery.md](context-delivery.md)). Изменение плана recovery не отправляет.
+- Реакции main: `publish()`; `semanticChanged`/`recovered` → `autoPlan.planChanged()`; `semanticChanged` вне загрузки/подготовки/Настроек → `controller.tick()`; сигнал входов при тех же условиях → `controller.projectChanged()` (прогрев ContextCache и признак устаревшего пакета — [context-delivery.md](context-delivery.md)). Изменение плана recovery не отправляет. Сигнал входов также обновляет PlanReviewClient; ReviewContinuation отдельно реагирует на поколение review state.
 - `refresh()` — при навигации (открытие, перезагрузка) и фокусе окна: явное перевооружение watcher (сброс счётчика повторов), сигнал входов, `tick()`. `close()` — при закрытии окна.
 - `view(selected, fallback)`: из проекции PlanMonitor и проекции контроллера доставки (`controller.state.projectInfo`) того же scope показывается более новая revision, иначе — PlanMonitor. Карточка отделена от контроллера чата, потому что при общей привязке UI залипал на раннем плане после отмены контроллера навигацией.
 
 ### ProjectInputWatch
 
 - Следит не за Git-деревом и не за всем `.harness/plans/`, а за именованными файлами: `fs.watch` их каталогов (нерекурсивно, `persistent: false`) по цепочке до корня workspace и его родителя — поэтому удалённый или заменённый workspace перевооружается.
-- Постоянные входы: `.harness/plans/todo-plan.md`, `scripts/workflow`, `scripts/workflow.mjs`, `scripts/workflow.cmd`, `.harness/workflow.json`, `.harness/kit-manifest.json`; плюс `watchInputs` плана (документы `context_pack`, в том числе источник H1 для имени scope).
+- Постоянные входы: `.harness/plans/todo-plan.md`, `scripts/workflow`, `scripts/workflow.mjs`, `scripts/workflow.cmd`, `.harness/workflow.json`, `.harness/kit-manifest.json`, `.harness/runtime/plan-review/state.json`; плюс `watchInputs` плана (документы `context_pack`, в том числе источник H1 для имени scope).
 - Событие с именем входа, без `filename` или с именем самого каталога → сигнал; debounce 20 мс → перевооружение и `onSignal`.
 - Идентичность каталога `dev:ino`: каталог, заменённый новым inode, наблюдается заново (`fs.watch` может остаться на unlinked inode).
 - Ошибка наблюдения (кроме `ENOENT`/`ENOTDIR`) → `PLAN_WATCH_FAILED` «Автообновление проекта недоступно (<код>). Повторите проверку или вернитесь в окно проекта.»; ограниченные повторы через 25 и 100 мс, затем ожидание явного `refresh` (выбор, фокус, навигация). Успешное перевооружение снимает ошибку.
@@ -66,7 +66,7 @@ Read-only показ current plan checkout (`.harness/plans/todo-plan.md`) в к
 
 - `#plan-reason`: сообщение ошибки чтения/наблюдения (`PLAN_READ_FAILED`, `PLAN_WATCH_FAILED`) важнее `blocked_reason`.
 - `#plan-tasks` («Микрозадачи плана»): все задачи по порядку плана, метки `✓` done / `●` current / `○` pending, текущая выделена фоном; показывается только название — без id, revision и слов «Revision/версия».
-- Под задачами — переключатель и сообщение AutoPlan ([auto-plan.md](auto-plan.md)).
+- Под задачами — независимые переключатели AutoPlan ([auto-plan.md](auto-plan.md)) и Review ([plan-review.md](plan-review.md)); Review доступен при NONE, ON зелёный и aria-pressed, рядом стадия и раунд.
 
 ### Завершение плана и приёмка
 

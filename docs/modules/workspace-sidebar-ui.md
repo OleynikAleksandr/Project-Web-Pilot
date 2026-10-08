@@ -12,6 +12,8 @@
 - `src/chat-colors-window.mjs` (`ChatColorsWindow.open/close/publish`), `src/chat-colors-preload.cjs`, `src/ui/chat-colors.{html,mjs}` — редактор цветов; `src/chatgpt-colors.mjs` — `ChatColors.set/apply/dispose`, `normalizeChatColors`, `validateColorChange`, `DEFAULT_COLORS`.
 - `src/main.mjs` — `BaseWindow`, `layout`, `clampedSidebarWidth`, `saveSettings`, `applyShellTheme`, обработчики `pilot:set-sidebar-width|set-theme|copy-workspace-path|copy-external-client-line|open-chat-colors`.
 
+Карточка плана содержит независимые кнопки «Автовыполнение» и зелёную при ON Review; режимы не перенесены в Settings. Review передаёт выбранный workspace и boolean через узкий `pilot:plan-review`, правила — [plan-review](plan-review.md).
+
 ## Дерево «Ваши проекты»
 
 - Заголовок «Ваши проекты» (`<details>`) раскрывает «Создать проект», «Открыть папку проекта», «Обновить ChatGPT» (переоткрывает выбранную сессию, как ⌘R). Справа — кнопка «Свернуть/Раскрыть все проекты». Меню закрывается кликом вне и Escape. Пустой список: «Откройте меню «Ваши проекты», чтобы создать проект или выбрать его папку.»

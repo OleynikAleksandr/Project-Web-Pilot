@@ -33,7 +33,7 @@
 ### Проверка (`inspectProject`)
 
 - Путь абсолютный, без CR/LF/NUL (`PROJECT_PATH`); корень репозитория; нет активной Git-операции (merge, cherry-pick, revert, rebase → `GIT_OPERATION_ACTIVE`).
-- `.harness/kit-manifest.json`: нет или не JSON → `DOCTOR_MANIFEST` (состав установки не угадывается); `schema_version: 1`, массив `files`, версия из того же списка, что у Workspace Setup: `1.0.0`, `upgradeFrom` комплектного установщика и `VERSION` (1.6.1); иначе `DOCTOR_VERSION`. Целая старая версия направляется в обычную подготовку.
+- `.harness/kit-manifest.json`: нет или не JSON → `DOCTOR_MANIFEST` (состав установки не угадывается); `schema_version: 1`, массив `files`, версия из того же списка, что у Workspace Setup: `1.0.0`, `upgradeFrom` комплектного установщика и `VERSION` (1.6.3); иначе `DOCTOR_VERSION`. Целая старая версия направляется в обычную подготовку.
 - Доверенный каталог — owned-файлы комплектного payload Kit. Owned-записи manifest уникальны и известны каталогу, иначе `DOCTOR_INVENTORY`.
 - Каждый доверенный owned-файл: есть и отличается → issue «Откройте обычную подготовку…», файл сохраняется; отсутствует, а manifest записывает другой hash → issue (другая версия); отсутствует при совпадающем hash → восстановить; потерян бит исполнения (кроме Windows) → восстановить. Лишний файл в `.harness/kit` → issue.
 - Любой issue на этом шаге — стоп без записи, даже при устаревшем manifest.

@@ -51,7 +51,7 @@
 - Прямые `command/exec`, `command/exec/write`, `command/exec/terminate`, без thread и turn. Незавершённые сессии живут в памяти сервера и теряются при его перезапуске; таймаута у долгого процесса нет, App Server буферизует до 4 МБ вывода. Когда команда возвращается, App Server завершает её процессы: фоновое задание оболочки (`&`, `nohup`) исчезает сразу с пустым журналом (проверено на исполнителе), поэтому долгая команда идёт через сессию.
 - `workdir` обязателен (`workdir is required`), потому что у MCP нет папки разговора. Полей sandbox, justification, environment_id нет.
 - Оболочка: macOS — `shell`, иначе `$SHELL`, иначе `/bin/zsh`; Windows — PowerShell 7, иначе Windows PowerShell (порядок Codex). Argv как в Codex `shell.rs`: POSIX `-lc`/`-c` по `login`; PowerShell `-Command` или `-NoProfile -Command` с префиксом вывода UTF-8; `cmd.exe /c`.
-- stdin открыт только при `tty=true`, как `stdin_open: tty` в Codex `rust-v0.160.0`: иначе `rg` без пути ждал stdin и вызов висел. Non-TTY `write_stdin` принимает пустой опрос и один Ctrl-C (`\x03` → terminate); иной ввод → `stdin is closed for this session; rerun exec_command with tty=true to keep stdin open`, сессия живёт.
+- stdin открыт только при `tty=true`, как `stdin_open: tty` в Codex `rust-v0.161.0`: иначе `rg` без пути ждал stdin и вызов висел. Non-TTY `write_stdin` принимает пустой опрос и один Ctrl-C (`\x03` → terminate); иной ввод → `stdin is closed for this session; rerun exec_command with tty=true to keep stdin open`, сессия живёт.
 - Вывод ≤ `max_output_tokens × 4` байт (8000 ≈ 32000 байт): начало и конец с одним маркером `... N bytes omitted ...`; `Original token count` — оценка полного вывода. Предел 8000, потому что больший ответ ChatGPT обрезает второй раз. Ответ — только текст: `Chunk ID`, `Wall time` (у `write_stdin` — текущего вызова), `Process running with session ID <id>` или `Process exited with code <n>`, `Original token count`, `Output`.
 - Процесс, завершившийся между проверкой и записью, отдаёт финальный вывод и код; дальше — `Unknown or finished command session`. Пустой опрос ограничен 60 с, чтобы вызов через туннель не висел.
 
@@ -93,7 +93,7 @@
 
 ### Закрепление формы Codex
 
-- `codex-tools.lock.json`: `openai/codex` 0.160.0, тег `rust-v0.160.0`, SHA-256 `shell_spec.rs`, `view_image_spec.rs`, `apply_patch.lark`. Пределы и тайминги команд — из этой версии.
+- `codex-tools.lock.json`: `openai/codex` 0.161.0, тег `rust-v0.161.0`, SHA-256 `shell_spec.rs`, `view_image_spec.rs`, `apply_patch.lark`. Пределы и тайминги команд — из этой версии.
 - `npm run check:codex-tools` находит Codex порядком macOS (Windows-путей не знает) и сверяет три файла тега `rust-v<установленная версия>` на GitHub с lock: 0 — совпало; 1 — отличаются файлы или версия, lock повреждён или Codex не найден; 2 — сеть или тег недоступны («не проверено»).
 
 ### Связь с приложением
@@ -133,3 +133,5 @@
 - Расхождение: описания `view_image` обещают блок `image/png`, код отдаёт MIME исходного типа (`image/jpeg`, `image/heic`, `image/svg+xml`, `image/vnd.adobe.photoshop` …; `sips -Z` формат сохраняет). Показ в ChatGPT форматов кроме PNG/JPEG/GIF/WebP не проверен.
 - TCC attribution не проверена для MCP, поднятого LaunchAgent при входе до открытия Web Pilot.
 - Латентность после `stateless_http` и через канал VPS не замерялась.
+
+Опциональный Review запускает Claude CLI командой Kit через обычные exec_command/write_stdin. Это не модельный ход Codex App Server и не новый MCP-инструмент; правила — [plan-review](plan-review.md).
