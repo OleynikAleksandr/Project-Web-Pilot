@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1520,
+  "plan_revision": 1522,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "technical-audit-20261008",
@@ -70,8 +70,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "technical-audit-20261008",
         "task_id": "T002",
@@ -92,7 +92,10 @@
         "Есть результаты по коду, платформам, Kit и документации с точными местами и доказательствами",
         "Для каждого предлагаемого объединения объяснены экономия обслуживания и риск связности; ложные дубли отделены"
       ],
-      "expected_commit_message": "docs: проверить дублирование и независимые реализации"
+      "expected_commit_message": "docs: проверить дублирование и независимые реализации",
+      "actual_files": [
+        "docs/planning/technical-audit-findings.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -214,7 +217,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: technical-audit-20261008
 Current Task: нет
-Revision: 1520
+Revision: 1522
 
 ## Цель
 
@@ -232,8 +235,8 @@ Revision: 1520
   - Git Commit: [DONE] docs: зафиксировать исходную линию технического аудита
   - Reference: technical-audit-20261008 / T001 / implementation
   - Файлы: docs/planning/technical-audit-findings.md
-- [TODO] T002: Исследовать дублирование и риск расхождений — Ожидает
-  - Git Commit: [PENDING] docs: проверить дублирование и независимые реализации
+- [DONE] T002: Исследовать дублирование и риск расхождений — Завершено
+  - Git Commit: [DONE] docs: проверить дублирование и независимые реализации
   - Reference: technical-audit-20261008 / T002 / implementation
   - Файлы: docs/planning/technical-audit-findings.md
 - [TODO] T003: Проверить локальные ссылки, зависимости путей и упаковку — Ожидает
