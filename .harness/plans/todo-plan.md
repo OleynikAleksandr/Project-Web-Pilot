@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1492,
+  "plan_revision": 1494,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "plan-review-20261008",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Встроить согласование новой спецификации и to-do plan с Claude CLI в Workflow Kit и Web Pilot: независимая зелёная кнопка Review, автоматический успешный цикл, вопрос пользователю при проблеме и очистка при начале выполнения.",
   "acceptance_criteria": [
     "Встроить согласование новой спецификации и to-do plan с Claude CLI в Workflow Kit и Web Pilot: независимая зелёная кнопка Review, автоматический успешный цикл, вопрос пользователю при проблеме и очистка при начале выполнения.",
@@ -724,13 +724,14 @@
         "Пользователю сообщены версия, ссылка на выпуск и фактически выполненные проверки."
       ],
       "expected_commit_message": "release: опубликовать выпуск с Review",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "plan-review-20261008",
         "task_id": "T009",
         "role": "implementation"
-      }
+      },
+      "actual_files": []
     }
   ],
   "blocked_reason": null,
@@ -753,10 +754,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: plan-review-20261008
 Current Task: нет
-Revision: 1492
+Revision: 1494
 
 ## Цель
 
@@ -807,8 +808,8 @@ Revision: 1492
   - Git Commit: [DONE] release: Установить готовый локальный выпуск и передать на приёмку
   - Reference: plan-review-20261008 / T008 / implementation
   - Файлы: release-manifest.json, docs/planning/plan-review.md, docs/planning/plan-review-integration.md, docs/modules/release.md
-- [TODO] T009: Опубликовать выпуск с Review на GitHub — Ожидает
-  - Git Commit: [PENDING] release: опубликовать выпуск с Review
+- [DONE] T009: Опубликовать выпуск с Review на GitHub — Завершено
+  - Git Commit: [DONE] release: опубликовать выпуск с Review
   - Reference: plan-review-20261008 / T009 / implementation
   - Файлы: release-manifest.json, docs/planning/plan-review-integration.md
 
