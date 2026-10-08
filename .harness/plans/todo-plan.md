@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1502,
+  "plan_revision": 1504,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "review-usability-0103-20261008",
@@ -222,8 +222,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "review-usability-0103-20261008",
         "task_id": "T004",
@@ -240,7 +240,8 @@
         "packages/workflow-kit/src/cli.mjs",
         "src/review-continuation.mjs",
         "packages/workflow-kit/scripts/check-plan-review-fixture.mjs",
-        "tests/plan-review.test.mjs"
+        "tests/plan-review.test.mjs",
+        "packages/workflow-kit/src/lib/actions.mjs"
       ],
       "documentation_paths": [
         "docs/planning/review-usability-0103.md"
@@ -258,7 +259,18 @@
         "Существенные решения опубликованы; ошибки/спор требуют пользователя; OFF и безопасная очистка сохранены",
         "После NEEDS_USER явное resolve publish разрешает публикацию с нерешённым спором: при успешном отзыве на текущую пару позиция обязательна, при ошибке без успешного отзыва не требуется; без решения пользователя публикация отклонена"
       ],
-      "expected_commit_message": "fix: Сохранять позицию автора на каждый отзыв и итоговое согласие"
+      "expected_commit_message": "fix: Сохранять позицию автора на каждый отзыв и итоговое согласие",
+      "actual_files": [
+        "docs/planning/review-usability-0103.md",
+        "packages/workflow-kit/scripts/check-plan-review-fixture.mjs",
+        "packages/workflow-kit/src/cli.mjs",
+        "packages/workflow-kit/src/lib/actions.mjs",
+        "packages/workflow-kit/src/lib/claude-review.mjs",
+        "packages/workflow-kit/src/lib/command-help.mjs",
+        "packages/workflow-kit/src/lib/plan-review.mjs",
+        "src/review-continuation.mjs",
+        "tests/plan-review.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -441,7 +453,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: review-usability-0103-20261008
 Current Task: нет
-Revision: 1502
+Revision: 1504
 
 ## Цель
 
@@ -466,10 +478,10 @@ Revision: 1502
   - Git Commit: [DONE] fix: Передавать явного получателя продолжения Review
   - Reference: review-usability-0103-20261008 / T003 / implementation
   - Файлы: packages/workflow-kit/src/lib/plan-review.mjs, packages/workflow-kit/src/lib/command-help.mjs, packages/workflow-kit/src/lib/recovery.mjs, packages/workflow-kit/src/lib/actions.mjs, src/context-session.mjs, src/review-continuation.mjs, tests/plan-review.test.mjs, packages/workflow-kit/scripts/check-plan-review-fixture.mjs, tests/context-session.test.mjs, docs/planning/review-usability-0103.md
-- [TODO] T004: Сохранять позицию автора на каждый отзыв и итоговое согласие — Ожидает
-  - Git Commit: [PENDING] fix: Сохранять позицию автора на каждый отзыв и итоговое согласие
+- [DONE] T004: Сохранять позицию автора на каждый отзыв и итоговое согласие — Завершено
+  - Git Commit: [DONE] fix: Сохранять позицию автора на каждый отзыв и итоговое согласие
   - Reference: review-usability-0103-20261008 / T004 / implementation
-  - Файлы: packages/workflow-kit/src/lib/plan-review.mjs, packages/workflow-kit/src/lib/claude-review.mjs, packages/workflow-kit/src/lib/command-help.mjs, packages/workflow-kit/src/lib/recovery.mjs, packages/workflow-kit/src/cli.mjs, src/review-continuation.mjs, packages/workflow-kit/scripts/check-plan-review-fixture.mjs, tests/plan-review.test.mjs, docs/planning/review-usability-0103.md
+  - Файлы: packages/workflow-kit/src/lib/plan-review.mjs, packages/workflow-kit/src/lib/claude-review.mjs, packages/workflow-kit/src/lib/command-help.mjs, packages/workflow-kit/src/lib/recovery.mjs, packages/workflow-kit/src/cli.mjs, src/review-continuation.mjs, packages/workflow-kit/scripts/check-plan-review-fixture.mjs, tests/plan-review.test.mjs, packages/workflow-kit/src/lib/actions.mjs, docs/planning/review-usability-0103.md
 - [TODO] T005: Проверить интеграцию и подготовить версии выпуска — Ожидает
   - Git Commit: [PENDING] fix: Проверить интеграцию и подготовить версии выпуска
   - Reference: review-usability-0103-20261008 / T005 / implementation

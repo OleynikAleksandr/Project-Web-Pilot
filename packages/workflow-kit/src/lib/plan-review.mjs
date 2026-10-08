@@ -61,6 +61,54 @@ export function checkReviewInputs(root, s, {base = true} = {}) {
   }
   return dir;
 }
+// Keep successful results across retries: a later CLI error must not erase an unanswered review.
+export function reviewHistory(root, s) {
+  if (Array.isArray(s.review_history)) return s.review_history;
+  // Existing, unfinished runs may predate the explicit author-response command.
+  return s.verdict && s.review_file ? [{round:s.round,verdict:s.verdict,review_file:s.review_file,
+    review_sha256:fingerprint(reviewDirectory(root,s.run_id),s.review_file),
+    plan_digest:s.plan_digest,documents:s.documents,author_response:null}] : [];
+}
+function sameReviewPair(s, review) {
+  return s.plan_digest===review.plan_digest && s.documents.length===review.documents.length
+    && s.documents.every(d=>review.documents.some(r=>r.source===d.source && r.sha256===d.sha256));
+}
+export function assertAuthorResponses(root, s) {
+  const history=reviewHistory(root,s), dir=reviewDirectory(root,s.run_id);
+  for (const review of history) {
+    const author=review.author_response;
+    check(author, 'REVIEW_RESPONSE', 'Сохраните содержательную позицию на раунд '+review.round+' через review:respond, включая approved.');
+    check(fingerprint(dir,review.review_file)===review.review_sha256
+      && fingerprint(dir,author.file)===author.sha256, 'REVIEW_RESPONSE_STALE', 'Отзыв или позиция изменены вне Kit; используйте review:respond.');
+  }
+  return history;
+}
+export function respondReview(root, input) {
+  return locked(root,()=>{
+    const s=readReview(root);
+    check(['PREPARED','AUTHOR_PENDING','AGREED','NEEDS_USER'].includes(s.stage), 'REVIEW_NOT_READY', 'Позиция сохраняется после завершённого отзыва; сначала review:status.');
+    const history=reviewHistory(root,s), review=history.at(-1);
+    check(review && Number.isSafeInteger(input.round) && input.round===review.round,
+      'REVIEW_RESPONSE', 'Укажите round последнего успешного отзыва из review:status.');
+    check(typeof input.position==='string' && input.position.trim().length>=40
+      && ['accept','revise','needs_user'].includes(input.disposition), 'REVIEW_RESPONSE',
+    'Нужны содержательная position (что принято/отклонено и почему, решения в spec/критериях) и disposition: accept|revise|needs_user.');
+    const dir=reviewDirectory(root,s.run_id);
+    check(fingerprint(dir,review.review_file)===review.review_sha256, 'REVIEW_RESPONSE_STALE', 'Отзыв изменён после получения.');
+    const file='round-'+review.round+'-author-'+id().slice(0,8)+'.json';
+    const content=json({round:review.round,review_file:review.review_file,review_sha256:review.review_sha256,
+      plan_digest:review.plan_digest,documents:review.documents,disposition:input.disposition,position:input.position.trim()});
+    atomic(safePath(dir,file),content);
+    const updated={...review,author_response:{file,sha256:hash(content),disposition:input.disposition}};
+    const overridden=s.user_decision?.action==='publish';
+    const stage=overridden?s.stage:input.disposition==='needs_user'?'NEEDS_USER'
+      :s.stage==='AGREED' && input.disposition==='revise'?'AUTHOR_PENDING'
+      :s.stage==='AUTHOR_PENDING' && review.verdict==='approved' && input.disposition==='accept' && sameReviewPair(s,review)?'AGREED':s.stage;
+    return {ok:true,...saveReview(root,{...s,stage,review_history:[...history.slice(0,-1),updated],
+      error:!overridden && input.disposition==='needs_user'?{code:'REVIEW_DISPUTE',message:'Автор сообщил существенное разногласие. Спросите пользователя.'}:s.error,
+      notification_handled:stage==='NEEDS_USER' && s.stage!=='NEEDS_USER'?false:s.notification_handled}),author_file:file};
+  });
+}
 function reviewRecipient(input, old, continuing) {
   const ids=[input.recipient_session_id,input.scope?.session_id].filter(value=>value!=null);
   check(ids.every(value=>typeof value==='string' && /^[A-Za-z0-9][A-Za-z0-9._-]{0,180}$/.test(value)),
@@ -105,6 +153,7 @@ export function prepareReview(root, input) {
     const continuing = old.run_id && !['CANCELLED','PUBLISHED','IDLE'].includes(old.stage);
     check(!continuing || old.scope_id === scope.scope_id,'REVIEW_BUSY','Продолжите существующий scope или отмените его через review:cancel.');
     const recipient=reviewRecipient(input,old,continuing);
+    const history=continuing?assertAuthorResponses(root,old):[];
     const run_id = continuing ? old.run_id : id();
     const dir = reviewDirectory(root, run_id); fs.mkdirSync(dir, {recursive:true});
     const round = continuing ? old.round ?? 0 : 0;
@@ -115,14 +164,16 @@ export function prepareReview(root, input) {
       const snapshot = prefix+'-spec-'+(i+1)+'.md'; atomic(safePath(dir,snapshot),texts[i]);
       return {source,snapshot,sha256:hash(texts[i]),lf_sha256:hash(texts[i].replace(/\r\n/g,'\n'))};
     });
-    const response_file = typeof input.response === 'string' && input.response.trim() ? prefix+'-author.txt' : null;
-    if (continuing && round > 0) check(response_file, 'REVIEW_RESPONSE', 'После ревью укажите response: позицию автора и изменения.');
-    if (response_file) atomic(safePath(dir,response_file),input.response);
+    // Author records have their own immutable hash/binding and are supplied from history.
+    // Do not also freeze a previous response as the next pair's editable input.
+    const response_file = typeof input.response === 'string' && input.response.trim() ? prefix+'-changes.txt' : null;
+    if (typeof input.response==='string' && input.response.trim()) atomic(safePath(dir,response_file),input.response);
     const files = [scope_file,plan_file,...(response_file?[response_file]:[])];
     const exhausted=continuing && round>=old.max_rounds;
     const s = saveReview(root, {version:1,enabled:old.enabled,generation:old.generation,stage:exhausted?'NEEDS_USER':'PREPARED',run_id,
       scope_id:scope.scope_id,round,max_rounds:continuing?old.max_rounds:4,claude_session_id:continuing?old.claude_session_id:null,
       ...recipient,
+      review_history:history,
       base_head:head(root),base_revision:previous.plan_revision,documents,scope_file,plan_file,response_file,
       error:exhausted?{code:'REVIEW_ROUND_LIMIT',message:'Лимит раундов. Спросите пользователя о продолжении.'}:null,
       plan_digest:reviewPlanDigest(candidate),input_hashes:Object.fromEntries(files.map(f=>[f,hash(fs.readFileSync(safePath(dir,f)))]))});
@@ -178,6 +229,9 @@ export function assertReviewPublication(root, candidate) {
   check(s.stage === 'AGREED', 'REVIEW_REQUIRED', 'Нужно согласование последней пары; выполните review:status.');
   checkReviewInputs(root,s);
   check(reviewPlanDigest(candidate) === s.plan_digest, 'REVIEW_STALE', 'Публикуемый план отличается от согласованного.');
+  const history=assertAuthorResponses(root,s), current=history.filter(r=>sameReviewPair(s,r)), last=current.at(-1);
+  check(s.user_decision?.action==='publish' || last?.verdict==='approved' && last.author_response.disposition==='accept',
+    'REVIEW_REQUIRED', 'Нужны согласие на текущую пару и позиция accept; при споре — явное решение пользователя через review:resolve.');
   saveReview(root,{...s,stage:'PUBLISHING'});
   return s;
 }
@@ -243,10 +297,11 @@ export function publishReview(root) {
 }
 export function reviewSummary(root) {
   const s=readReview(root);
-  const next = s.stage==='PREPARED'?'review:run':s.stage==='AGREED'?'review:publish':s.stage==='NEEDS_USER'?'Сообщить проблему, спросить пользователя; затем review:resolve':s.stage==='AUTHOR_PENDING'?'Прочитать ревью; review:prepare с исправлениями и response':'review:status';
+  const next = s.stage==='PREPARED'?'review:run':s.stage==='AGREED'?'review:respond на approved; затем review:publish без лишнего раунда':s.stage==='NEEDS_USER'?'Если есть успешный отзыв — review:respond; сообщить проблему, спросить пользователя; затем review:resolve':s.stage==='AUTHOR_PENDING'?'Прочитать ревью; review:respond, затем исправления и review:prepare':'review:status';
   return 'Review: '+(s.enabled?'ON (пользователь разрешил рецензента Claude)':'OFF (обычная публикация без согласия Claude)')
     +'; стадия '+s.stage+'; раунд '+(s.round??0)+'. '+(s.enabled?next:'')
     +'\nДля нового плана при ON: review:prepare --help. Не меняйте enabled от имени агента. Память разрешена; свежие решения пользователя имеют приоритет.'
+    +'\nПосле каждого успешного отзыва, включая approved: review:respond --help. Сохраните позицию через Kit; существенные решения перенесите в spec/критерии до окончательного ревью. Изменение пары требует нового согласия; ошибка без успешного отзыва не требует позиции.'
     +'\nПолучатель Review — recipient_session_id из стартового сообщения (или совпадающий scope.session_id), только для доставки. Вне Web Pilot: recipient_mode: manual. Смена адресата — лишь с recipient_change_note по поручению пользователя.'
     +(s.run_id && !['PUBLISHED','CANCELLED'].includes(s.stage)?'\nТекущий получатель: '+(s.recipient_session_id??(s.recipient_mode==='manual'?'ручной режим, без отправки':'не задан; автоматическая доставка невозможна')):'')
     +(s.cleanup_error?'\n'+s.cleanup_error:'');

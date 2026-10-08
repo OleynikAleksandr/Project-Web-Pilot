@@ -13,7 +13,7 @@ import { updateTask } from './lib/task-update.mjs';
 import { extendPlan } from './lib/extend-plan.mjs';
 import { commandHelp } from './lib/command-help.mjs';
 import { createSimplePlan } from './lib/simple-workflow.mjs';
-import { reviewStatus, prepareReview, resolveReview, publishReview, cancelReview, acknowledgeReview } from './lib/plan-review.mjs';
+import { reviewStatus, prepareReview, respondReview, resolveReview, publishReview, cancelReview, acknowledgeReview } from './lib/plan-review.mjs';
 import { commitTask } from './lib/transaction.mjs';
 import { preCommit, commitMessage, postCommit, prePush } from './lib/git-hooks.mjs';
 
@@ -60,6 +60,7 @@ export async function main(argv = process.argv.slice(2)) {
       case 'review:status': result = reviewStatus(root); break;
       case 'review:acknowledge': result = acknowledgeReview(root,opts.run); break;
       case 'review:prepare': result = prepareReview(root,input()); break;
+      case 'review:respond': result = respondReview(root,input()); break;
       case 'review:resolve': result = resolveReview(root,opts.action,opts.note); break;
       case 'review:cancel': result = cancelReview(root,opts.note); break;
       case 'review:publish': result = publishReview(root); break;

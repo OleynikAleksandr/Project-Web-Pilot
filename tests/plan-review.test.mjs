@@ -72,6 +72,8 @@ test('startup ID through normal prepare and simulated Claude round routes pauses
   observe({draftPresent:false});await drain();
   assert.equal(sent.length,1);assert.equal(sent[0].sessionId,recipient.recipient_session_id);
   assert.match(sent[0].message,/AUTHOR_PENDING/);
+  assert.match(sent[0].message,/review:respond/,'the actual continuation directs the author to persist the response');
+  assert.match(sent[0].message,/spec\/критерии до окончательного ревью/,'decisions must outlive runtime cleanup');
   const restart=async()=>{
     const checkpoint=JSON.parse(fs.readFileSync(checkpointFile,'utf8'));
     flow.dispose();client.dispose();restartCount++;createFlow(checkpoint);observe({});flow.update();await drain();

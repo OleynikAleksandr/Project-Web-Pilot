@@ -97,6 +97,9 @@ export function createScope(root, input, expectedRevision) {
     const plan = buildScopePlan(root, input, previous);
     const review = assertReviewPublication(root, plan);
     plan.user_decisions = [...(input.user_decisions ?? []), { id: id(), text: input.approval_note, recorded_at: new Date().toISOString() }];
+    if(review?.user_decision?.action==='publish')plan.user_decisions.push({id:id(),
+      text:'Публикация Review по явному решению пользователя (не означает снятия спора): '+review.user_decision.note,
+      recorded_at:new Date().toISOString()});
     const selected = [PLAN, ...allChanges(root).filter(p => (review ? review.documents.map(d => d.source) : plan.approved_scope.documentation_paths).includes(p))];
     const result = service(root, plan, 'scope-plan', selected, 'docs: согласовать scope ' + plan.scope_id);
     finishReviewPublication(root, plan, result.sha);
