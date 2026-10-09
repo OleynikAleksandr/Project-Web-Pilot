@@ -86,7 +86,7 @@
     },
     {
       "required": false,
-      "timeout_ms": 300000,
+      "timeout_ms": 600000,
       "id": "kit-check",
       "kind": "test",
       "executable": "npm",

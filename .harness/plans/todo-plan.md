@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1591,
+  "plan_revision": 1595,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-chat-execution-20261009",
@@ -93,7 +93,9 @@
       "tests/workspace-readiness.test.mjs",
       "tools/codex-app-server-mcp/codex-tools.lock.json",
       "packages/workflow-kit/src/lib/task-handoff.mjs",
-      "packages/workflow-kit/scripts/check-task-handoff-fixture.mjs"
+      "packages/workflow-kit/scripts/check-task-handoff-fixture.mjs",
+      "src/project-auto-plan.mjs",
+      "tests/project-auto-plan.test.mjs"
     ],
     "documentation_paths": [
       "docs/planning/parallel-execution-spec.md",
@@ -146,18 +148,13 @@
     ]
   },
   "baseline_commit": "39507e5655e81395bbcbeab0bd7b00572e4a746b",
-  "current_task_id": null,
+  "current_task_id": "T020",
   "context_pack": {
     "documents": [
       {
         "path": "docs/architecture/OVERVIEW.md",
         "required": true,
         "revision": "WORKTREE"
-      },
-      {
-        "path": "docs/planning/parallel-execution-spec.md",
-        "required": true,
-        "revision": "dcdb9132bec59b2e1e26e4cc17e332dbc7412f19"
       },
       {
         "path": "docs/modules/session-runtime.md",
@@ -1436,7 +1433,7 @@
         "Повтор и прерывание восстановления проверены временной fixture; стартовые инструкции однозначно передают выполнение parallel-плана приложению"
       ],
       "expected_commit_message": "feat: Защитить основной parallel-план и восстановить ошибочно начатую задачу",
-      "implementation_status": "TODO",
+      "implementation_status": "IN_PROGRESS",
       "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "parallel-chat-execution-20261009",
@@ -1445,11 +1442,54 @@
       }
     },
     {
+      "id": "T023",
+      "title": "Привязать AutoPlan к проекту и выключать после завершения плана",
+      "why": "Привязать AutoPlan к проекту и выключать после завершения плана",
+      "dependencies": [
+        "T020"
+      ],
+      "functional_paths": [
+        "src/project-auto-plan.mjs",
+        "src/main.mjs",
+        "src/parallel-execution.mjs",
+        "src/auto-plan.mjs",
+        "src/auto-plan-state.mjs",
+        "tests/project-auto-plan.test.mjs",
+        "tests/auto-plan.test.mjs",
+        "tests/electron-smoke.mjs",
+        "tests/parallel-execution.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/session-runtime.md"
+      ],
+      "verification_ids": [
+        "unit-all",
+        "electron-smoke"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Новый проект и новый план начинают с AutoPlan OFF; переключатель действует только на выбранный основной проект, исполнители наследуют его разрешение",
+        "Подтверждённое завершение всех задач выключает AutoPlan этого проекта и сохраняет OFF; staged/неподтверждённый DONE не выключает режим преждевременно",
+        "Смена проекта и чата не переносит разрешение; ON для незавершённого того же плана допускает restart без включения других проектов",
+        "Старое глобальное autoPlanEnabled=true не включает проекты при миграции; checkpoint и отправки из разных проектов изолированы",
+        "Проверены два проекта одновременно, завершение sequential и parallel, следующий scope, OFF при неизвестном плане и сохранение настроек"
+      ],
+      "expected_commit_message": "feat: Привязать AutoPlan к проекту и выключать после завершения плана",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "parallel-chat-execution-20261009",
+        "task_id": "T023",
+        "role": "implementation"
+      }
+    },
+    {
       "id": "T021",
       "title": "Единый AutoPlan для запуска parallel без дополнительных кнопок",
       "why": "Единый AutoPlan для запуска parallel без дополнительных кнопок",
       "dependencies": [
-        "T020"
+        "T020",
+        "T023"
       ],
       "functional_paths": [
         "src/parallel-execution.mjs",
@@ -1558,8 +1598,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: parallel-chat-execution-20261009
-Current Task: нет
-Revision: 1591
+Current Task: T020
+Revision: 1595
 
 ## Цель
 
@@ -1659,10 +1699,14 @@ Revision: 1591
   - Git Commit: [DONE] release: опубликовать исправленный выпуск 0.6.105
   - Reference: parallel-chat-execution-20261009 / T019 / implementation
   - Файлы: docs/modules/auto-plan.md, docs/modules/release.md
-- [TODO] T020: Защитить основной parallel-план и восстановить ошибочно начатую задачу — Ожидает
+- [IN_PROGRESS] T020: Защитить основной parallel-план и восстановить ошибочно начатую задачу — В работе
   - Git Commit: [PENDING] feat: Защитить основной parallel-план и восстановить ошибочно начатую задачу
   - Reference: parallel-chat-execution-20261009 / T020 / implementation
   - Файлы: packages/workflow-kit/src/lib/actions.mjs, packages/workflow-kit/src/lib/task-assignment.mjs, packages/workflow-kit/src/lib/task-handoff.mjs, packages/workflow-kit/src/lib/recovery.mjs, packages/workflow-kit/src/cli.mjs, packages/workflow-kit/src/lib/command-help.mjs, packages/workflow-kit/scripts/check-parallel-plan-fixture.mjs, packages/workflow-kit/scripts/check-task-handoff-fixture.mjs, packages/workflow-kit/package.json, packages/workflow-kit/src/lib/common.mjs, docs/modules/session-runtime.md, packages/workflow-kit/src/templates/PLAN.md, packages/workflow-kit/src/templates/STAGES.md, packages/workflow-kit/src/templates/PROTOTYPE.md, packages/workflow-kit/docs/modules/parallel-assignments.md
+- [TODO] T023: Привязать AutoPlan к проекту и выключать после завершения плана — Ожидает
+  - Git Commit: [PENDING] feat: Привязать AutoPlan к проекту и выключать после завершения плана
+  - Reference: parallel-chat-execution-20261009 / T023 / implementation
+  - Файлы: src/project-auto-plan.mjs, src/main.mjs, src/parallel-execution.mjs, src/auto-plan.mjs, src/auto-plan-state.mjs, tests/project-auto-plan.test.mjs, tests/auto-plan.test.mjs, tests/electron-smoke.mjs, tests/parallel-execution.test.mjs, docs/modules/session-runtime.md
 - [TODO] T021: Единый AutoPlan для запуска parallel без дополнительных кнопок — Ожидает
   - Git Commit: [PENDING] feat: Единый AutoPlan для запуска parallel без дополнительных кнопок
   - Reference: parallel-chat-execution-20261009 / T021 / implementation
@@ -1675,7 +1719,6 @@ Revision: 1591
 ## Context Pack For This Cycle
 
 - docs/architecture/OVERVIEW.md
-- docs/planning/parallel-execution-spec.md
 - docs/modules/session-runtime.md
 
 Служебные состояния меняются только командами workflow. Приёмка не архивирует scope.
