@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1612,
+  "plan_revision": 1614,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-chat-execution-20261009",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Реализовать опциональное параллельное выполнение плана через чат-сессии Web Pilot и отдельные worktree с проверенной последовательной интеграцией в main.",
   "acceptance_criteria": [
     "Снимок разрешения и лимита фиксируется при новой основной сессии; существующее выполнение не меняется от Settings.",
@@ -1814,13 +1814,14 @@
         "main и тег v0.6.106 отправлены штатно; GitHub Release содержит шесть сверенных assets; окончательный main синхронизирован"
       ],
       "expected_commit_message": "feat: Опубликовать выпуск 0.6.106 и синхронизировать GitHub",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "parallel-chat-execution-20261009",
         "task_id": "T027",
         "role": "implementation"
-      }
+      },
+      "actual_files": []
     }
   ],
   "blocked_reason": null,
@@ -1846,10 +1847,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: parallel-chat-execution-20261009
 Current Task: нет
-Revision: 1612
+Revision: 1614
 
 ## Цель
 
@@ -1981,8 +1982,8 @@ Revision: 1612
   - Git Commit: [DONE] feat: Установить и проверить готовый выпуск 0.6.106
   - Reference: parallel-chat-execution-20261009 / T026 / implementation
   - Файлы: docs/modules/session-runtime.md, docs/modules/release.md
-- [TODO] T027: Опубликовать выпуск 0.6.106 и синхронизировать GitHub — Ожидает
-  - Git Commit: [PENDING] feat: Опубликовать выпуск 0.6.106 и синхронизировать GitHub
+- [DONE] T027: Опубликовать выпуск 0.6.106 и синхронизировать GitHub — Завершено
+  - Git Commit: [DONE] feat: Опубликовать выпуск 0.6.106 и синхронизировать GitHub
   - Reference: parallel-chat-execution-20261009 / T027 / implementation
   - Файлы: docs/modules/session-runtime.md, docs/modules/release.md
 
