@@ -1,12 +1,12 @@
 # Краткая архитектура проекта
 
-Стек: Workflow Kit 1.6.4, Electron 44.5.1, Node 24.21.0; версия продукта — в `package.json` и [README](../../README.md). Это карта текущего устройства. Ход работы — в current plan и Git; факты сборки и публикации — в release-manifest.json и GitHub Release. Постоянные правила разработки — в [AGENTS.md](../../AGENTS.md), пользовательская инструкция — в README.
+Стек: Workflow Kit 1.7.0, Electron 44.5.1, Node 24.21.0; версия продукта — в `package.json` и [README](../../README.md). Это карта текущего устройства. Ход работы — в current plan и Git; факты сборки и публикации — в release-manifest.json и GitHub Release. Постоянные правила разработки — в [AGENTS.md](../../AGENTS.md), пользовательская инструкция — в README.
 
 ## Назначение и границы
 
 Electron-приложение для macOS и Windows: одно окно, слева собственный сайдбар локальных проектов, их чатов и текущего плана, справа ChatGPT Web во встроенном Chromium (`BaseWindow` + `WebContentsView`). Модель работает через веб-аккаунт пользователя, без модельного API. Web Pilot готовит и доставляет стартовый контекст. Локальный исполнитель Codex App Server выполняет команды через MCP. ChatGPT подключается к нему через Secure MCP Tunnel или VPS.
 
-Один Git checkout/worktree имеет один current plan (`.harness/plans/todo-plan.md`), которым управляет Workflow Kit. Сессии Web Pilot хранят чат, URL, тип Chat/Work и состояние интерфейса, но плана не владеют. Для независимой параллельной работы нужен отдельный worktree. Переключение проекта в панели не меняет рабочую папку уже открытого чата.
+Один Git checkout/worktree имеет один current plan (`.harness/plans/todo-plan.md`), которым управляет Workflow Kit. Сессии хранят разговор и состояние, но плана не владеют. Parallel-план в main выдаёт подчинённые задачи в отдельные worktree и Chat/Work, а результаты принимает проверенными интеграциями. Последовательный план сохраняет основной чат. Переключение панели не меняет cwd и не останавливает скрытую страницу.
 
 ## Карта модулей
 
@@ -17,6 +17,8 @@ Electron-приложение для macOS и Windows: одно окно, сле
 | Граница Kit ↔ Web Pilot | вызов `recover`, проверка пакета | [workflow-kit-recovery](../modules/workflow-kit-recovery.md) |
 | Review нового плана | `plan-review`, `review-continuation`, `automation-send-state`, Kit `plan-review`/`claude-review` | [plan-review](../modules/plan-review.md) |
 | AutoPlan | `auto-plan`, `auto-plan-state` | [auto-plan](../modules/auto-plan.md) |
+| Параллельные задачи | `parallel-settings`, `parallel-execution`, `parallel-kit`, `executor-session`, `execution-projection` | [parallel-execution](../modules/parallel-execution.md) |
+| Живые страницы | `session-runtime`, `conversation-recovery`, `agent-timer` | [session-runtime](../modules/session-runtime.md) |
 | Текущий план в панели | `plan-monitor`, `project-input-watch` | [plan-view](../modules/plan-view.md) |
 | Проекты и сессии | `workspace-session`, `chatgpt-title`, `agent-timer` | [workspace-sessions](../modules/workspace-sessions.md) |
 | Сайдбар и окно | `preload.cjs`, `src/ui/{index.html,sidebar,progress,settings-panel,chat-colors}`, `chat-colors-window`, `chat-colors-preload.cjs` | [workspace-sidebar-ui](../modules/workspace-sidebar-ui.md) |
@@ -39,10 +41,12 @@ Electron-приложение для macOS и Windows: одно окно, сле
 1. Пользователь выбирает проект и создаёт Chat или Work. Web Pilot открывает новую беседу в выбранном режиме.
 2. Kit проекта строит recovery: Workflow Core, PROTOTYPE, проектная часть AGENTS, OVERVIEW, текущий план и выбранные им документы целиком. Пакет делится на части по `budget.document_bytes` (28000 байт), всего ≤ 7 частей и ≤ 180000 байт; превышение — `CONTEXT_TOO_LARGE` без усечения.
 3. Web Pilot проверяет актуальность и целостность пакета, прикрепляет части как файлы и вставляет короткий транспортный текст. Send — один раз, сразу после загрузки всех вложений (ожидание до 120 с). Неопределённый Send автоматически не повторяется.
-4. Агент читает каждое вложение отдельным вызовом и кратко подтверждает восстановление. MCP проекта в первом ответе не вызывается.
+4. Основной агент читает каждое вложение отдельным вызовом и кратко подтверждает восстановление; MCP проекта в первом ответе не вызывает. Автоматически созданный исполнитель после чтения выполняет только назначенную задачу через task:start/commit.
 5. При Review ON новый план согласуется с Claude CLI; каждый успешный отзыв требует сохранённой позиции автора через Kit. Ошибки и споры возвращаются пользователю ([plan-review](../modules/plan-review.md)). Продолжение Review доставляется по явному Session ID, который планом не владеет. AutoPlan независим: если включён, после публикации отправляет «Продолжай» с данными следующей задачи.
 
 Сохранённый чат при обычном открытии контекст заново не получает. Подробности — [context-delivery](../modules/context-delivery.md), [auto-plan](../modules/auto-plan.md), [граница с Kit](../modules/workflow-kit-recovery.md).
+
+Новая основная сессия сохраняет снимок разрешения параллельности. Parallel-план запускает первую группу вручную, последующие — при AutoPlan ON. Происхождение снимка отдельно от получателя Review; legacy остаётся последовательным. У каждого живого чата собственные view, Composer, доставка, наблюдатель и восстановление; окно показывает выбранную страницу, не уничтожая остальные.
 
 ## Состояние, события, безопасность
 
@@ -68,6 +72,7 @@ Electron-приложение для macOS и Windows: одно окно, сле
 - `npm start` — запуск из исходников; `npm test` — Node suite (`tests/*.test.mjs`); `npm run smoke` — Electron smoke на TEST FIXTURE, не живой ChatGPT; `npm run build` — парная сборка macOS arm64 + Windows x64 ([release](../modules/release.md)).
 - Проверки задач задаются в `.harness/workflow.json` и назначаются в плане через `verification_ids`: `unit-all`, `electron-smoke`, `executor-channel`, `codex-tools-live`, `kit-check`, `paired-release`, `release-installed`, `github-release`, `workflow-kit-archive`.
 - Fixtures, smoke и упаковка проверяют разные уровни. Живой ChatGPT, чистую установку и native Windows принимает пользователь. Ручные протоколы — в документах модулей, раздел «Проверки».
+- [Приёмка параллельного выполнения](../modules/parallel-execution-acceptance.md) остаётся открытой после установки. [Отложенные замечания статического аудита](../modules/technical-audit-followups.md) не входят в этот выпуск.
 
 ## Документация
 

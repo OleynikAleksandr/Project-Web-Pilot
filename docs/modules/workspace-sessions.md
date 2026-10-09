@@ -22,7 +22,7 @@
 - Сессия: `sessionId` (`web-pilot-<uuid>`, уникален), `experience` (`chat|work`, неизменен), `chatUrl|null` (нормализован, уникален по всем проектам, совместим с `experience`), `title`, `titleSource` (`page|manual|scope|null`), `lastNamedScopeId`, `createdAt`, `lastOpenedAt`, `archivedAt|null`, `attempt`, `receipt`, opt. `manualStart`, opt. `agentTime {totalMs,lastMs}` (целые ≥0, `lastMs ≤ totalMs`). Legacy-поля `planId`, `originSessionId`, `legacyPlanId` (проверяется формат) и `planBinding` хранятся, но ничего не выбирают.
 - Инварианты при загрузке: у проекта ≥1 активная сессия, выбранная сессия активна; нарушение, повреждённый JSON или неизвестная версия → `SESSIONS_INVALID`, файл не перезаписывается, приложение открывается с `storageError` (создание, подключение и выбор заблокированы до восстановления файла).
 - Миграции v1→v6 выполняются цепочкой при загрузке. Исходник сохраняется в `workspaces.json.v<N>-backup` с флагом `wx` (0600): существующая копия не перезаписывается, повторной миграции нет. v3→v4: `/work/...` → `work`, иначе `chat`; v4→v5: `archivedAt = null` у сессий; v5→v6: legacy-поля плана, `legacyPlanId` только при единственной сессии с отправленным пакетом этого scope (иначе не угадывается), удаляются проектные `planView/preparedPlans/unassignedPlans/scopeTransition`. Устаревший `tokenEstimate` удаляется при загрузке. Требование пользователя: миграция без потери URL, попыток отправки, имён, Chat/Work, дат и архива.
-- `updateSession` принимает только `attempt`, `receipt`, `manualStart` (их пишет доставка), иначе `INVALID_SESSION_PATCH`.
+- `updateSession` принимает `attempt`, `receipt`, `manualStart`, `conversationRecovery`, иначе `INVALID_SESSION_PATCH`. Фоновая запись требует точного workspace/sessionId. Снимок `executionSnapshot` новой основной сессии неизменен; исполнитель хранит parentWorkspace/scope/task/assignment/origin, унаследованный снимок, `executionAutomation` и `executionTime`. Контракты — [назначения](parallel-execution.md) и [живые страницы](session-runtime.md).
 
 ## Связь с планом
 
@@ -38,7 +38,7 @@
 
 **Порядок.** Активные сессии — по `createdAt` убыв., при равенстве — поздняя запись выше (`activeSessionsNewestFirst`). Открытие старой сессии меняет только `lastOpenedAt`, порядок не меняется. Архивные в дереве не показываются.
 
-**Чужие чаты** не импортируются: сессии создаёт только Web Pilot.
+**Чужие чаты** не импортируются: сессии создаёт только Web Pilot. `ensureExecutor` создаёт одну фоновую сессию назначения с унаследованным Chat/Work, не меняя выбранную строку. Это подчинённое задание общего плана, не отдельный пользовательский план.
 
 ## Chat/Work и URL
 
@@ -71,7 +71,7 @@
 
 ## Время агента
 
-- Работа агента = видимая кнопка Stop ChatGPT (busy из наблюдателя страницы, без сети и опроса). Замер стартует на busy; idle запускает grace 5 с, busy в пределах grace продолжает то же задание. Конец — начало последнего idle после истечения grace, смена выбора/навигации, новый документ страницы, закрытие окна. Архивная выбранная сессия не замеряется.
+- Работа агента = кнопка Stop ChatGPT (busy наблюдателя своей страницы, без сети и опроса). Замер стартует на busy; idle запускает grace 5 с, busy в пределах grace продолжает задание. Конец — начало последнего idle после grace, новый документ или освобождение страницы. Переключение панели замер не обрывает; архивная сессия не замеряется. У исполнителя дополнительно раздельные часы работы/ожидания — [параллельное выполнение](parallel-execution.md).
 - Идущий замер живёт в памяти main (`agentTimer.view` → `selected.agentRun`); завершённый добавляется `recordAgentTime(workspace, sessionId, ms)` к `agentTime` своей сессии, даже если выбрана уже другая. Некорректное значение → `INVALID_AGENT_TIME`; некорректный `agentTime` в файле → `SESSIONS_INVALID`. Показ — workspace-sidebar-ui.
 
 ## Архив и удаление сессий

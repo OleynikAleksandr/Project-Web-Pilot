@@ -17,8 +17,8 @@
 - `diagnostics/startup-network.json` — сырой netLog только на время захвата, всегда удаляется.
 
 ### Жизненный цикл
-- Один экземпляр на основной ChatGPT WebContents; popup и сайдбар не наблюдаются. `start()` выполняется до первой навигации: `session-start` (версии приложения, Electron, Chromium, платформа, fixture), нативные события, сетевая трасса. Подключение CDP (`Network`, `Page`, `Log`, lifecycle) не ожидается и первую навигацию не задерживает; уже подключённый отладчик — `attach-skipped`, сбой — `attach-failed`.
-- `stop()` при закрытии окна: снимает обработчики, отключает CDP, только если подключал сам, завершает трассу, пишет `session-stop`.
+- Свой экземпляр на каждом живом ChatGPT WebContents; popup и сайдбар не наблюдаются. start вызывается до навигации, CDP не задерживает её; занятый отладчик даёт attach-skipped, сбой — attach-failed. HTTP 429 адресуется recovery своей страницы, Composer добавляет sessionId. Переключение панели диагностику скрытой страницы не снимает; освобождение runtime вызывает stop.
+- stop при освобождении страницы/закрытии приложения снимает обработчики, отключает только свой CDP, завершает трассу и пишет session-stop. Первичная сетевая трасса остаётся у стартовой страницы без проекта.
 
 ### Что записывается
 - `webContents`: навигация, `dom-ready`, `main-document-response` (status), `did-fail-load`/`did-fail-provisional-load` (код и имя `ERR_*`), загрузка, `render-process-gone` (reason, exitCode), `unresponsive`/`responsive`.

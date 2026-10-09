@@ -10,7 +10,7 @@ Workflow Kit строит recovery текущего checkout и отвечает
 - Kit: current plan, Git references, сборка и полнота recovery, деление на части, пределы размера, проверки документов, процессные правила (Workflow Core, PROTOTYPE, Kit-секция AGENTS). Пакет не назначает работу вместо пользователя.
 - Web Pilot: вызов, проверка целостности и соответствия плану, кеш в памяти, доставка, read-only показ плана ([план](plan-view.md)). Пакет не меняет, не режет, не дополняет; в стартовое сообщение добавляет только транспортные строки и правила исполнителя.
 - Исполнитель Codex App Server и его MCP к recovery отношения не имеют; Web Pilot Sidebar recovery не владеет.
-- Один checkout/worktree — один `.harness/plans/todo-plan.md`; chat и Session ID план не выбирают. Параллельная работа — отдельный worktree.
+- Один checkout/worktree — один `.harness/plans/todo-plan.md`; chat и Session ID план не выбирают. Parallel-план выдаёт подчинённые [назначения в worktree](../../packages/workflow-kit/docs/modules/parallel-assignments.md). Их recovery содержит одну задачу и доказанную базу; локальное DONE не закрывает общий план.
 
 ## Контракт вызова
 - Используется Kit, установленный в проекте (`<workspace>/scripts/workflow.mjs` → `.harness/kit`), а не копия в приложении. Node и окружение (на Windows — с MinGit комплекта) выбирает WorkspaceSetup ([подготовка проекта](workspace-setup.md)).

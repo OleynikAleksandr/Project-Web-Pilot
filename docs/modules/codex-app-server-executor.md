@@ -57,6 +57,8 @@
 
 ### `apply_patch`
 
+Для согласования интеграции exec/apply_patch создают в проекте `.harness/runtime/command-activity/<uuid>.json` с version, PID исполнителя и временем; команда, вывод и секреты не сохраняются. Долгая сессия держит отметку до подтверждённого завершения write_stdin. Ошибка с неизвестным исходом оставляет её и блокирует интеграцию; автоматической очистки по отсутствию PID нет. Каталог инструментов остаётся прежним, модельных запросов нет.
+
 - Формат Codex (`*** Begin Patch` … `*** End Patch`, Add/Delete/Update File, `*** Move to`); отклоняются пустой, не начинающийся с `*** Begin Patch` и больший 1 000 000 байт. `git apply` не используется.
 - macOS: псевдоним `apply_patch` из PATH команд App Server через `command/exec`, патч в stdin с `closeStdin`, ожидание ≤120 с. Windows: тот же `codex.exe` под именем `apply_patch`, патч в stdin, потому что `apply_patch.bat` берёт патч аргументом, а многострочный патч до 1 МБ в командную строку не помещается.
 - Удаление — `*** Delete File` или `rm`; откат — git; корзины нет.
@@ -93,7 +95,7 @@
 
 ### Закрепление формы Codex
 
-- `codex-tools.lock.json`: `openai/codex` 0.161.0, тег `rust-v0.161.0`, SHA-256 `shell_spec.rs`, `view_image_spec.rs`, `apply_patch.lark`. Пределы и тайминги команд — из этой версии.
+- `codex-tools.lock.json`: `openai/codex` 0.162.0, тег `rust-v0.162.0`, SHA-256 shell_spec.rs, view_image_spec.rs, apply_patch.lark. От 0.161.0 shell_spec меняет только внутреннее имя include_login_parameter; параметры JSON прежние, два остальных файла побайтно совпадают. Пределы и тайминги сохранены.
 - `npm run check:codex-tools` находит Codex порядком macOS (Windows-путей не знает) и сверяет три файла тега `rust-v<установленная версия>` на GitHub с lock: 0 — совпало; 1 — отличаются файлы или версия, lock повреждён или Codex не найден; 2 — сеть или тег недоступны («не проверено»).
 
 ### Связь с приложением

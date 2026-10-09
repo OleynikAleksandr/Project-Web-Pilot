@@ -4,6 +4,8 @@
 
 ## Код
 
+Жизненный цикл страниц и исполнителей — [SessionRuntimes](session-runtime.md). Их закрытие не завершает службы. Отметки активных команд для очереди интеграции — [контракт MCP](codex-app-server-executor.md), новой фоновой службы для parallel нет.
+
 - `tools/codex-app-server-mcp/control.py` — CLI служб (`managed_process`, `stop_one`, `operation_lock`, `configure_tunnel`, `adopt_legacy_tunnel`, `vps_*`); `tunnel_prompt.py` — окна ввода туннеля.
 - `src/mac-runtime-switch.mjs` — `CodexAppServerRuntime` (вызовы `control.py`), `MacSelectedRuntime` (MCP + канал), `MacRuntimeSwitcher` (`activate`, LaunchAgent, `retireLegacyRuntime`); имена исторические, классы работают на обеих ОС.
 - `src/vps-tunnel.mjs` (`VpsTunnel`, `WindowsVpsTunnel`), `src/windows-runtime.mjs` (`WindowsExecutorBootstrap`, `retireLegacyWindowsRuntime`), `src/zip-archive.mjs`, `src/tunnel-setup.mjs` (`runTunnelHelper`, `TUNNEL_ID_PATTERN`).

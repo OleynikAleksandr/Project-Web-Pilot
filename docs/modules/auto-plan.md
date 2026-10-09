@@ -4,6 +4,8 @@
 
 ## Код
 
+Для обычной сессии действует описанный здесь последовательный путь. В parallel-плане первая группа запускается вручную, AutoPlan ON разрешает следующие группы; у скрытого исполнителя свой контроллер и checkpoint до локального DONE. Основному чату задачи исполнителей не отправляются. Выдача и интеграции — [отдельная очередь](parallel-execution.md).
+
 - `src/auto-plan.mjs` — класс `AutoPlan` (`restore`, `start`, `disable`, `observe`, `selectionChanged`, `availabilityChanged`, `planChanged`, `reconcile`, `view`, `dispose`), `continueMessage(task)`, `CONTINUE_TEXT = 'Продолжай'`, `CONTINUE_MESSAGE_BYTES = 4096`.
 - `src/auto-plan-state.mjs` — `readAutoPlanState(selected, environment)`: подтверждённое чтение плана и `nextTask`.
 - `src/main.mjs` — сборка (`selected`, `inspectPlan`, `send`, `available`, `saveCheckpoint`, `log`), IPC `pilot:auto-plan`, восстановление из `settings.json`, события страницы, PlanMonitor, `publish()`.
@@ -127,7 +129,7 @@
 - Диагностика — `chromium-events.jsonl`, источник `auto-plan`: `state` (фаза, код), `pause` (opaque ID, источник, поколение), `send` (вид, счётчик), `progress-timeout`/`progress-resumed`. Без текста разговора и UI, URL, секретов ([chromium-diagnostics.md](chromium-diagnostics.md)).
 
 ### Совместная работа с Review
-Review и AutoPlan — независимые кнопки. Согласование заканчивается PUBLISHED; только включённый AutoPlan продолжает выполнение, без отдельного разрешения. При Review OFF действует обычный путь. Общий `AutomationSendState` в main сохраняет `automationCheckpoint`: sending до Send, sent после, UNKNOWN без повтора; смена review-scope на ACTIVE не разрешает вторую отправку на той же паузе. Для обычных переходов AutoPlan между scope прежний контракт сохранён. Подробности, получатель и ручной Stop именно ревью — [plan-review](plan-review.md).
+Review и AutoPlan независимы. После PUBLISHED включённый AutoPlan продолжает последовательный план; parallel ждёт первого ручного запуска группы. Общий AutomationSendState сохраняет sending до Send, sent после, UNKNOWN без повтора; смена review-scope на ACTIVE не разрешает вторую отправку на той же паузе. Подробности адресата и ручного Stop ревью — [plan-review](plan-review.md).
 
 ## Решения и запреты
 

@@ -1,6 +1,6 @@
 # Workflow Kit
 
-Пакет `@webpilot/workflow-kit` версии **1.6.4** внутри репозитория Project Web Pilot. Даёт агенту один текущий план на Git checkout/worktree, проверяемые коммиты задач и полный стартовый контекст (recovery) из плана, документов и Git. Пакет приватный, в npm не публикуется.
+Пакет `@webpilot/workflow-kit` версии **1.7.0** внутри репозитория Project Web Pilot. Даёт один текущий план на Git checkout/worktree, проверяемые коммиты задач, подчинённые назначения parallel-плана и полный recovery. Пакет приватный, в npm не публикуется.
 
 ## Требования
 Node.js 22+ и Git; приложение Web Pilot использует Node 24.21.0. На Windows установщик кладёт Node в `.harness/runtime` проекта; Git — MinGit приложения или системный.
@@ -21,7 +21,7 @@ node packages/workflow-kit/src/install.mjs --project /absolute/empty/folder --mo
 node packages/workflow-kit/src/install.mjs --project /absolute/project/path --update
 ```
 
-`--dry-run` показывает изменения без записи. Установщик не перезаписывает занятые и изменённые файлы. `--update` обновляет установки версий 1.1.0, 1.2.0, 1.3.0, 1.4.0–1.4.13, 1.5.0–1.5.6, 1.6.0–1.6.3: сохраняет резервную копию в `.harness/runtime/kit-upgrade-*`, текущий план остаётся источником, обновление фиксируется одним коммитом. Перед `--update` нужны автор Git (`user.name`, `user.email`; можно передать `--git-name`/`--git-email`), завершённые merge/rebase и отсутствие посторонних staged-файлов; иначе обновление отказывает до записи файлов. Новая установка без автора Git или поверх незакоммиченных изменений ждёт `./scripts/workflow install:commit`.
+`--dry-run` показывает изменения без записи. Установщик не перезаписывает занятые и изменённые файлы. `--update` поддерживает 1.1.0, 1.2.0, 1.3.0, 1.4.0–1.4.13, 1.5.0–1.5.6, 1.6.0–1.6.4: backup в .harness/runtime/kit-upgrade-*, текущий план сохраняется, один управляемый коммит. Нужны автор Git (можно --git-name/--git-email), завершённые merge/rebase, отсутствие чужого index и активных назначений/интеграций; иначе отказ до записи. Новая установка без автора или поверх незакоммиченных изменений ждёт install:commit.
 
 ## Работа в проекте
 ```bash
@@ -59,4 +59,4 @@ npm test
 ```
 Первая команда проверяет пакет, внешнего потребителя, установку и обновление, Git lifecycle, документы и recovery полного проекта; вторая запускает корневые тесты Web Pilot, включая тесты Kit. Друг друга они не заменяют.
 
-API, команды, коды ошибок и устройство recovery — [контракт пакета](docs/modules/workflow-kit-package.md). Что проверяет и доставляет приложение — [граница Kit ↔ Web Pilot](../../docs/modules/workflow-kit-recovery.md); само приложение — [README](../../README.md). Факты выпусков — `release-manifest.json` и GitHub Release, прежние версии документов — Git.
+API, команды, коды ошибок и recovery — [контракт пакета](docs/modules/workflow-kit-package.md). Выдача worktree, setup, integration:start/continue, доказательства DONE и ограничения upgrade — [назначения и интеграции](docs/modules/parallel-assignments.md). Приложение — [граница Kit ↔ Web Pilot](../../docs/modules/workflow-kit-recovery.md) и [README](../../README.md). Факты выпуска — manifest и GitHub Release, история — Git.
