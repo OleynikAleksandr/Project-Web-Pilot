@@ -147,7 +147,27 @@ class LocalFacade:
         except OSError:
             pass
         self._command_sessions: dict[str, tuple[int, bool]] = {}
+        self._command_activity: dict[str, Path] = {}
         self._command_sessions_lock = threading.Lock()
+
+    def _begin_activity(self, cwd: Path) -> Path | None:
+        # A completion witness, not a transcript. Missing completion remains
+        # unknown after a crash, so the app cannot merge over an active tool.
+        for root in (cwd, *cwd.parents):
+            if (root / ".harness" / "plans" / "todo-plan.md").is_file():
+                directory = root / ".harness" / "runtime" / "command-activity"
+                directory.mkdir(parents=True, exist_ok=True, mode=0o700)
+                marker = directory / (uuid.uuid4().hex + ".json")
+                with marker.open("x", encoding="utf-8") as stream:
+                    os.chmod(marker, 0o600)
+                    json.dump({"version": 1, "executor_pid": os.getpid(), "started_at_ms": int(time.time() * 1000)}, stream)
+                return marker
+        return None
+
+    @staticmethod
+    def _finish_activity(marker: Path | None) -> None:
+        if marker is not None:
+            marker.unlink(missing_ok=True)
 
     def resolve(self, path: str, *, must_exist: bool = False, allow_sensitive: bool = False) -> Path:
         candidate = Path(path).expanduser()
@@ -245,6 +265,12 @@ class LocalFacade:
         return ValueError(text)
 
     def apply_patch(self, patch: str, workdir: str) -> str:
+        marker = self._begin_activity(self._command_workdir(workdir))
+        result = self._apply_patch(patch, workdir)
+        self._finish_activity(marker)
+        return result
+
+    def _apply_patch(self, patch: str, workdir: str) -> str:
         if not isinstance(patch, str) or not patch.strip():
             raise ValueError("patch is empty")
         data = patch.encode("utf-8")
@@ -484,6 +510,7 @@ class LocalFacade:
             raise ValueError("login must be true or false")
         if not isinstance(tty, bool):
             raise ValueError("tty must be true or false")
+        marker = self._begin_activity(cwd)
         started = self.client.start_command(
             self._shell_argv(executable, cmd, login, self.platform),
             cwd=str(cwd),
@@ -499,6 +526,10 @@ class LocalFacade:
         if result.get("running"):
             with self._command_sessions_lock:
                 self._command_sessions[process_id] = (int(result["cursor"]), tty)
+                if marker is not None:
+                    self._command_activity[process_id] = marker
+        else:
+            self._finish_activity(marker)
         return self._format_command_result(result, token_limit)
 
     def write_stdin(
@@ -562,6 +593,7 @@ class LocalFacade:
                 self._command_sessions[session_id] = (int(result["cursor"]), tty)
             else:
                 self._command_sessions.pop(session_id, None)
+                self._finish_activity(self._command_activity.pop(session_id, None))
         return self._format_command_result(result, token_limit)
 
 

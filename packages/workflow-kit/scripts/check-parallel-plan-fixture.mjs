@@ -69,6 +69,10 @@ try {
     assert.doesNotThrow(() => build(root,forward),'legacy forward references remain valid');
     const modern = {...structuredClone(scope),...policy};
     const normalized = build(root,modern);
+    const originated=build(root,{...modern,execution_origin_session_id:'web-pilot-author'});
+    assert.equal(parsePlan(renderPlan(originated)).execution_origin_session_id,'web-pilot-author');
+    for(const execution_origin_session_id of [null,12,'','../other'])
+      expect('PLAN_EXECUTION_ORIGIN',()=>build(root,{...modern,execution_origin_session_id}));
     assert.deepEqual(normalized.tasks.map(t=>t.parallel_safe),[false,false]);
     assert.deepEqual(parsePlan(renderPlan(normalized)),normalized);
     for (const bad of [
@@ -166,7 +170,8 @@ try {
     assert.equal(reviewPlanDigest(candidate),prepared.plan_digest);
     for(const mutate of [
       p=>p.max_workers=3,p=>p.parallel_allowed=false,p=>p.execution_strategy='sequential',
-      p=>p.execution_reason='Changed decision',p=>p.tasks[0].parallel_safe=true
+      p=>p.execution_reason='Changed decision',p=>p.tasks[0].parallel_safe=true,
+      p=>p.execution_origin_session_id='another-session'
     ]) {const changed=structuredClone(candidate);mutate(changed);assert.notEqual(reviewPlanDigest(changed),prepared.plan_digest);}
     await approve(root);
     respondReview(root,{round:readReview(root).review_history.at(-1).round,disposition:'accept',

@@ -9,6 +9,23 @@ import { sessionExecutionMessage } from '../src/context-session.mjs';
 
 const directoryLink = (target, link) => fs.symlink(target, link, process.platform === 'win32' ? 'junction' : 'dir');
 
+test('assignment gets one inherited session without moving selection and persists its separate worktree',async t=>{
+  const {project,store}=await fixture(t);
+  store.getExecutionSettings=()=>({parallel_allowed:true,max_workers:2});
+  const main=await store.select(await project('Main'),{experience:'work'}),worktree=await fs.realpath(await project('Assigned worktree'));
+  const assignment={id:'worker-one',worktree,parent_root:main.workspace,parent_scope_id:'scope',parent_task_id:'T001',title:'Assigned task'};
+  store.getExecutionSettings=()=>{throw Error('must inherit');};
+  const first=await store.ensureExecutor(assignment,main),again=await store.ensureExecutor(assignment,main);
+  assert.equal(first.sessionId,again.sessionId);assert.equal(store.selected().sessionId,main.sessionId);
+  assert.equal(first.workspace,worktree);assert.equal(first.parentWorkspace,main.workspace);assert.equal(first.taskId,'T001');
+  assert.equal(first.experience,'work');assert.deepEqual(first.executionSnapshot,main.executionSnapshot);
+  await store.saveExecutorAutomation(worktree,first.sessionId,{autoPlanCheckpoint:{version:3,entries:[]}});
+  const restarted=new WorkspaceSessions(store.file);await restarted.load();
+  assert.equal(restarted.project(worktree).assignmentId,assignment.id);
+  assert.equal(restarted.project(worktree).executionAutomation.autoPlanCheckpoint.version,3);
+  await assert.rejects(store.ensureExecutor({...assignment,parent_task_id:'T002'},main),{code:'ASSIGNMENT_OWNER'});
+});
+
 test('execution settings are captured at creation, independent of edits, selection and restart', async t => {
   const { project, store } = await fixture(t);
   let settings = { parallel_allowed: true, max_workers: 3 };

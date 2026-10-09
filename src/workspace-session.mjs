@@ -101,7 +101,8 @@ function projectPlan(plan, scopeTitle = '') {
   if (['parallel_allowed', 'max_workers', 'execution_strategy', 'execution_reason'].some(key => Object.hasOwn(plan, key))) {
     try {
       planExecution = { ...validateParallelSettings({ parallel_allowed: plan.parallel_allowed, max_workers: plan.max_workers }),
-        execution_strategy: plan.execution_strategy, execution_reason: plan.execution_reason };
+        execution_strategy: plan.execution_strategy, execution_reason: plan.execution_reason,
+        ...(plan.execution_origin_session_id!==undefined?{execution_origin_session_id:plan.execution_origin_session_id}:{}) };
       if (!['sequential', 'parallel'].includes(planExecution.execution_strategy)
           || typeof planExecution.execution_reason !== 'string' || !planExecution.execution_reason.trim()
           || planExecution.execution_strategy === 'parallel' && (!planExecution.parallel_allowed || planExecution.max_workers < 2)) throw new Error('Invalid policy');
@@ -199,6 +200,11 @@ function validate(data) {
           || (s.chatUrl !== null && (!normalizeChatUrl(s.chatUrl) || normalizeChatUrl(s.chatUrl) !== s.chatUrl
             || !conversationUrlCompatibleWithExperience(s.chatUrl, s.experience)))) throw invalid();
       if (s.manualStart !== undefined && typeof s.manualStart !== 'boolean') throw invalid();
+      if(s.assignmentId!==undefined) {
+        if(!/^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$/.test(s.assignmentId)||typeof s.taskId!=='string'
+          ||typeof s.parentScopeId!=='string'||typeof s.parentWorkspace!=='string'||!path.isAbsolute(s.parentWorkspace)
+          ||typeof s.executionOriginSessionId!=='string'||p.parentWorkspace!==s.parentWorkspace)throw invalid();
+      }
       // Additive v6 field: missing means a legacy session, never today's Settings.
       if (s.executionSnapshot !== undefined) {
         try { validateParallelSettings(s.executionSnapshot); } catch { throw invalid(); }
@@ -526,6 +532,41 @@ export class WorkspaceSessions {
   }
 
   newChat(workspace) { return this.newSession(workspace, 'chat'); }
+
+  ensureExecutor(assignment,origin) {
+    return this.mutate(async data=>{
+      if(typeof assignment.worktree!=='string'||!path.isAbsolute(assignment.worktree))
+        throw new WorkspaceError('ASSIGNMENT_OWNER','Неверная папка назначения.');
+      const workspace=await fs.realpath(assignment.worktree);
+      if(workspace===assignment.parent_root||assignment.parent_root!==origin.workspace)
+        throw new WorkspaceError('ASSIGNMENT_OWNER','Неверная папка назначения.');
+      let project=data.projects.find(p=>p.workspace===workspace);
+      const existing=project?.sessions.find(s=>s.assignmentId===assignment.id);
+      if(existing) {
+        if(existing.taskId!==assignment.parent_task_id||existing.parentScopeId!==assignment.parent_scope_id
+          ||existing.executionOriginSessionId!==origin.sessionId||existing.archivedAt||project.archivedAt)
+          throw new WorkspaceError('ASSIGNMENT_OWNER','Сохранённая сессия не соответствует назначению.');
+        return currentView(project,existing.sessionId);
+      }
+      if(project)throw new WorkspaceError('ASSIGNMENT_OWNER','Worktree уже подключён без этого назначения.');
+      const info=await this.inspect(workspace),session=this.createSession(origin.experience,origin.executionSnapshot);
+      Object.assign(session,{assignmentId:assignment.id,taskId:assignment.parent_task_id,parentWorkspace:origin.workspace,
+        parentScopeId:assignment.parent_scope_id,executionOriginSessionId:origin.sessionId,
+        title:sessionName(assignment.parent_task_id+' — '+assignment.title),titleSource:'manual'});
+      project={...info,parentWorkspace:origin.workspace,parentScopeId:assignment.parent_scope_id,
+        selectedSessionId:session.sessionId,sessions:[session],expanded:false,archivedAt:null};
+      data.projects.push(project);return currentView(project);
+    });
+  }
+
+  saveExecutorAutomation(workspace,sessionId,patch) {
+    return this.mutate(data=>{
+      const {session}=this.activeRecord(workspace,sessionId,data,{background:true});
+      if(!session.assignmentId||Object.keys(patch).some(k=>!['autoPlanCheckpoint','automationCheckpoint'].includes(k)))
+        throw new WorkspaceError('ASSIGNMENT_OWNER','Нет такого исполнителя.');
+      session.executionAutomation={...session.executionAutomation,...copy(patch)};
+    });
+  }
 
   setExpanded(workspace, expanded) {
     return this.mutate(data => {

@@ -11,7 +11,7 @@ export class SessionPlans {
   constructor({ setup = new WorkspaceSetup(), run = execute, onWorkerStart = () => {} } = {}) {
     Object.assign(this, { setup, run, onWorkerStart });
   }
-  async call(workspace, command, args = [], input = null) {
+  async call(workspace, command, args = [], input = null, { timeout = 120000 } = {}) {
     if (!path.isAbsolute(workspace)) throw fail('WORKSPACE_REQUIRED', 'Нужна абсолютная папка проекта.');
     const node = await this.setup.node();
     let inputFile;
@@ -27,7 +27,7 @@ export class SessionPlans {
       try {
         this.onWorkerStart('workflow');
         ({ stdout } = await this.run(node, [path.join(workspace, 'scripts/workflow.mjs'), command, ...args],
-          { cwd: workspace, env: this.setup.environment, timeout: 120000, maxBuffer: 4 * 1024 * 1024, windowsHide: true, encoding: 'utf8' }));
+          { cwd: workspace, env: this.setup.environment, timeout, maxBuffer: 4 * 1024 * 1024, windowsHide: true, encoding: 'utf8' }));
       }
       catch (error) { if (!error.stdout) throw error; stdout = error.stdout; }
       let result;

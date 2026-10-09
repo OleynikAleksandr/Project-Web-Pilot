@@ -56,6 +56,9 @@ export function parallelTasksCompatible(left, right) {
     && !a.some(x => b.some(y => x === y || x.startsWith(y + '/') || y.startsWith(x + '/')));
 }
 function validateExecutionPolicy(plan) {
+  if (Object.hasOwn(plan,'execution_origin_session_id')) check(typeof plan.execution_origin_session_id==='string'
+    && /^[A-Za-z0-9][A-Za-z0-9._-]{0,180}$/.test(plan.execution_origin_session_id),
+    'PLAN_EXECUTION_ORIGIN','Некорректная сессия происхождения параметров выполнения.');
   if (!hasExecutionPolicy(plan)) {
     check(plan.tasks.every(task => !Object.hasOwn(task, 'parallel_safe')), 'PLAN_EXECUTION_POLICY', 'parallel_safe требует полного набора параметров выполнения плана.');
     return;

@@ -84,6 +84,7 @@
     "parallel_allowed": {"type": "boolean"},
     "max_workers": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
     "execution_strategy": {"enum": ["sequential", "parallel"]},
+    "execution_origin_session_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,180}$"},
     "execution_reason": {"type": "string", "pattern": "\\S"},
     "context_pack": {"$ref": "#/$defs/context_pack"},
     "schema_version": {

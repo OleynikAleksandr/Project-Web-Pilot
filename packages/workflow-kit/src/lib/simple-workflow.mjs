@@ -33,7 +33,7 @@ export function createSimplePlan(root,input) {
   const finalTask={id:'DOCS',title:'Актуализация всех документов проекта',why:'Сохранить актуальный контекст для следующего агента',dependencies:work.map(t=>t.id),functional_paths:[],documentation_paths:documentation,verification_ids:[],acceptance_criteria:['Документы соответствуют результату'],expected_commit_message:'docs: актуализировать контекст проекта'};
   const normalizedDelivery=delivery.map(t=>({...t,dependencies:[...new Set([...t.dependencies,'DOCS'])]}));
   tasks.splice(0,tasks.length,...work,...(delivery.length ? [finalTask,...normalizedDelivery] : []));
-  const policy=Object.fromEntries(EXECUTION_POLICY_FIELDS.filter(key=>Object.hasOwn(input,key)).map(key=>[key,input[key]]));
+  const policy=Object.fromEntries([...EXECUTION_POLICY_FIELDS,'execution_origin_session_id'].filter(key=>Object.hasOwn(input,key)).map(key=>[key,input[key]]));
   const scope={...policy,scope_id:input.id,objective:input.objective,approval_note:input.approval??'Пользователь поручил выполнить описанную задачу и план.',acceptance_criteria:input.acceptance??[input.objective],approved_scope:{functional_paths:[...new Set(tasks.flatMap(t=>t.functional_paths))],documentation_paths:[...new Set(tasks.flatMap(t=>t.documentation_paths))]},context_pack:{documents:[{path:input.spec,required:true}],include_last_completed_task:false,dependency_task_ids:[]},tasks};
   // Reject invalid execution metadata before changing project configuration.
   buildScopePlan(root,scope,readPlan(root),config);

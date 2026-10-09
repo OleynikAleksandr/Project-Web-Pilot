@@ -1215,6 +1215,54 @@ async function runVenvProbe(t, name, script, args = []) {
   return { root, out: JSON.parse(run.stdout.trim().split('\n').at(-1)) };
 }
 
+test('command activity survives unknown completion, covers subdirectories and clears only after confirmed completion',async t=>{
+  const result=await runVenvProbe(t,'web-pilot-command-activity-',`import json, pathlib, sys
+sys.path.insert(0, sys.argv[1])
+import server
+root=pathlib.Path(sys.argv[2]).resolve()
+(root / '.harness/plans').mkdir(parents=True)
+(root / '.harness/plans/todo-plan.md').write_text('fixture')
+(root / 'nested').mkdir()
+directory=root / '.harness/runtime/command-activity'
+def markers(): return list(directory.glob('*.json'))
+class Client:
+    cwd=str(root)
+    running=False
+    error=None
+    def start_command(self, *args, **kwargs):
+        assert markers(), 'mark before launch'
+        return {'process_id':'12345678'}
+    def read_command_output(self, *args, **kwargs):
+        return {'process_id':'12345678','running':self.running,'exit_code':None if self.running else 0,
+            'duration_ms':1,'output':'done','cursor':4,'error':self.error}
+client=Client()
+facade=server.LocalFacade(client,root/'state')
+facade.exec_command('PRIVATE COMMAND TEXT',str(root/'nested'),'/bin/sh',False)
+assert not markers()
+client.running=True
+facade.exec_command('PRIVATE COMMAND TEXT',str(root),'/bin/sh',False)
+assert len(markers())==1
+metadata=json.loads(markers()[0].read_text())
+assert sorted(metadata)==['executor_pid','started_at_ms','version']
+assert 'PRIVATE' not in markers()[0].read_text()
+client.running=False
+facade.write_stdin('12345678','',5000)
+assert not markers()
+client.error='unknown outcome'
+try: facade.exec_command('unknown',str(root),'/bin/sh',False)
+except ValueError: pass
+assert len(markers())==1
+def patch(*args):
+    assert len(markers())==2
+    return 'Done!'
+facade._apply_patch=patch
+assert facade.apply_patch('fixture',str(root))=='Done!'
+assert len(markers())==1
+print(json.dumps({'confirmed':True,'unknown':True,'patch':True}))
+`);
+  if(result)assert.deepEqual(result.out,{confirmed:true,unknown:true,patch:true});
+});
+
 test('Windows: Codex is found behind the npm launcher, on PATH and by architecture; macOS search is unchanged', { timeout: 30_000 }, async t => {
   const result = await runVenvProbe(t, 'web-pilot-win-codex-', `import json, os, stat, sys, pathlib
 sys.path.insert(0, sys.argv[1])

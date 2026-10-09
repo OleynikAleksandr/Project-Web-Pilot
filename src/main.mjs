@@ -26,6 +26,11 @@ const contextCache = new ContextCache({ load: workspace => runtime.loadContext(w
 import { SessionPlans } from './session-plans.mjs';
 import { externalClientLine } from './context-session.mjs';
 import { SessionRuntimes } from './session-runtime.mjs';
+import { sessionRuntimeKey } from './session-runtime.mjs';
+import { ParallelExecution } from './parallel-execution.mjs';
+import { ParallelKit } from './parallel-kit.mjs';
+import { ProjectInputWatch } from './project-input-watch.mjs';
+import { configureExecutor,executorPageState } from './executor-session.mjs';
 import { chatGPTEntrypoint, CHATGPT_SIGNIN_ENTRYPOINT } from './chatgpt-experience.mjs';
 import { WorkspaceDeletion } from './workspace-deletion.mjs';
 import { appendDiagnostic } from './common.mjs';
@@ -54,6 +59,7 @@ const dataDir = app.getPath('userData');
 const settingsFile = path.join(dataDir, 'settings.json');
 const chromiumDiagnosticsFile = path.join(dataDir, 'diagnostics', 'chromium-events.jsonl');
 let parallelExecution = { ...DEFAULT_PARALLEL_SETTINGS };
+let parallelExecutionBook = {};
 const store = new WorkspaceSessions(path.join(dataDir, 'workspaces.json'), { getExecutionSettings: () => parallelExecution });
 const planMonitor = new PlanMonitor({ selected: () => store.selected(),
   inspect: (workspace, sessionId) => store.inspect(workspace, sessionId), onChange: (_info, change) => {
@@ -163,6 +169,7 @@ const autoPlan = new AutoPlan({
   send: (text, canContinue, onBeforeSend) => sendAutomation(text,canContinue,onBeforeSend,autoPlan),
   onChange: () => publish(),
   available: () => !!controller && !controller.composer.inFlight && !pageLoading && !setupState && !settingsState
+    && !store.selected()?.assignmentId && planMonitor.view(store.selected())?.planExecution?.execution_strategy!=='parallel'
     && workspaceHealth?.ready && workspaceHealth.workspace === store.selected()?.workspace
     && !reviewBlocksExecution(planReview.state,planMonitor.view(store.selected())?.scopeId),
   saveCheckpoint: async checkpoint => {
@@ -183,11 +190,16 @@ function applyObservedPage(event, record = liveSessions.visible) {
   if(visible) {
     automationSend.observe(record.project(),event);
     if(!event.reset)observeStartupAccount(event.state);
-    autoPlan.observe(event);reviewContinuation.observe(event);
+    if(!record.identity?.assignmentId) {autoPlan.observe(event);reviewContinuation.observe(event);}
   }
   if(!event.reset) {
     record.diagnostics?.observePage(event.state);
     if(!record.loading)observeManualConversation(event.state,record);
+  }
+  record.executor?.observe(event);
+  const safety=JSON.stringify([event.documentId,event.state?.url,event.state?.busy,event.state?.lastMessageRole,event.state?.connectionError]);
+  if(record.identity&&!record.identity.assignmentId&&execution.unwatch.has(record.identity.workspace)&&record.executionSafety!==safety) {
+    record.executionSafety=safety;void execution.signal(record.identity.workspace);
   }
   publish();
 }
@@ -199,9 +211,31 @@ const liveSessions = new SessionRuntimes({store,runtime:()=>runtime,contextCache
   createView:()=>new WebContentsView({webPreferences:{...remotePreferences(),backgroundThrottling:false,
     preload:app.isPackaged?path.join(process.resourcesPath,'resources/chatgpt-page-observer-preload.cjs')
       :path.join(sourceDir,'../resources/chatgpt-page-observer-preload.cjs')}}),
-  onChange:record=>{if(record===liveSessions.visible)pageLoading=record.loading;publish();},
+  onChange:record=>{if(record===liveSessions.visible)pageLoading=record.loading;record.executor?.changed();publish();},
   onChatBound:record=>{if(record===liveSessions.visible)void syncSelectedSessionTitle({force:true,reason:'chat-bound'});},
   onPage:(record,event)=>applyObservedPage(event,record),onError:sessionRuntimeError,decorate:decorateSessionRuntime});
+const executionKit=new ParallelKit({plans:sessionPlans,setup:workspaceSetup});
+const liveRecord=project=>project&&liveSessions.records.get(sessionRuntimeKey(project));
+const execution=new ParallelExecution({kit:executionKit,book:parallelExecutionBook,
+  origin:(workspace,id)=>store.project(workspace,id),
+  save:async book=>{parallelExecutionBook=book;await saveSettings({parallelExecutionBook:book});},
+  onChange:()=>publish(),
+  watch:(workspace,signal)=>{const watcher=new ProjectInputWatch({workspace,onSignal:signal,
+    onError:error=>{if(error)execution.publish(workspace,{phase:'attention',error});}});watcher.update(['.harness/runtime/command-activity/']);return()=>watcher.close();},
+  mainState:origin=>executorPageState(liveRecord(origin)),
+  workerState:(assignment,entry)=>executorPageState(liveRecord(store.project(assignment.worktree,entry?.sessionId))),
+  openWorker:async(assignment,origin)=>{
+    const project=await store.ensureExecutor(assignment,origin),record=liveSessions.ensure(project);
+    configureExecutor(record,{store,enabled:autoPlanEnabled,
+      inspectPlan:selected=>readAutoPlanState(selected,workspaceSetup.environment),onChange:()=>publish(),
+      signal:()=>{void execution.signal(origin.workspace);},
+      log:(event,fields)=>record.diagnostics?.log.record('auto-plan',event,fields)});
+    record.ready=true;
+    await liveSessions.navigate(record,project.chatUrl??chatGPTEntrypoint(project.experience),{freshDraft:!project.attempt&&!project.chatUrl});
+    publish();return project;
+  },
+  sendCorrection:(origin,text,canContinue,onBeforeSend)=>liveRecord(origin).composer.sendUserMessage({text,canContinue,onBeforeSend,
+    waitForAcknowledgement:false,cleanupOnCancel:true})});
 let setupState = null;
 let workspaceHealth = null;
 let settingsState = null;
@@ -231,7 +265,7 @@ function saveSettings(overrides = {}) {
     ...(process.platform === 'darwin' ? { macRuntimeMode: 'app-server' } : {}),
     [legacyRetiredSetting]: legacyRuntimeRetired, ...(legacyRuntimeRetired ? {} : { legacyRuntimeRoots }),
   };
-  const settings = { ...platformSettings, chatgptChannel, shellTheme, hideToolCalls, sidebarWidth, chatColors, projectsParent, autoPlanEnabled, autoPlanCheckpoint, reviewCheckpoint, automationCheckpoint, parallelExecution, ...overrides };
+  const settings = { ...platformSettings, chatgptChannel, shellTheme, hideToolCalls, sidebarWidth, chatColors, projectsParent, autoPlanEnabled, autoPlanCheckpoint, reviewCheckpoint, automationCheckpoint, parallelExecution, parallelExecutionBook, ...overrides };
   const operation = settingsSaveTail.catch(() => {}).then(async () => {
     await fsp.mkdir(dataDir, { recursive: true, mode: 0o700 });
     await fsp.writeFile(settingsFile + '.tmp', JSON.stringify(settings, null, 2) + '\n', { mode: 0o600 });
@@ -293,8 +327,9 @@ function snapshot() {
     sessions: activeSessionsNewestFirst(sessions).map(({ sessionId, experience, chatUrl, title, createdAt }) => ({ sessionId, experience, chatUrl, title, createdAt })),
   })),
     archives: projectedArchives(), settings: settingsState, doctor: doctorState, parallelExecution: { ...parallelExecution },
+    execution: execution.view(saved?.parentWorkspace??saved?.workspace),
     conversationRecovery: conversationRecovery.view(),
-    autoPlan: autoPlan.view(),
+    autoPlan: liveSessions.visible?.executor?.flow.view()??autoPlan.view(),
     planReview: {...planReview.view(),...(reviewContinuation.persistenceError?{message:reviewContinuation.flow.state.message,indicator:'attention'}: {})},
     selected, context: controller?.state ?? { phase: 'selected', servicesReady: false, messageSent: false },
     contextPreparation: { busy: selected ? contextCache.isBuilding(selected.workspace) : false },
@@ -915,6 +950,7 @@ function connectController() {
 }
 function selectLiveSession(project=null) {
   const record=liveSessions.ensure(project);
+  if(project?.planExecution?.execution_strategy==='parallel')execution.observe(project.workspace);
   const changed=liveSessions.visible!==record;
   browser=record.view;controller=record.controller;pageState=record.pageState;
   agentTimer=record.timer;conversationRecovery=record.recovery;
@@ -962,11 +998,21 @@ function decorateSessionRuntime(record) {
 }
 
 function registerIpc() {
+  const executionWorkspace=input=>{
+    const selected=store.selected(),workspace=selected?.parentWorkspace??selected?.workspace;
+    if(!input||Object.keys(input).some(key=>key!=='workspace')||input.workspace!==workspace)
+      throw Object.assign(new Error('Выберите проект текущего плана.'),{code:'EXECUTION_SELECTION_CHANGED'});
+    return workspace;
+  };
+  registerAction('pilot:execute-tasks',input=>execution.launch(executionWorkspace(input)));
+  registerAction('pilot:correct-integration',input=>execution.correct(executionWorkspace(input)));
   ipcMain.handle('pilot:get-state', event => { assertLocalSender(event); return snapshot(); });
   registerAction('pilot:auto-plan', async enabled => {
     const choice = enabled === true;
     await saveSettings({ autoPlanEnabled: choice });
     autoPlanEnabled = choice;
+    execution.setEnabled(choice);
+    for(const record of liveSessions.records.values())record.executor?.setEnabled(choice);
     if (choice) await autoPlan.start();
     else autoPlan.disable();
   });
@@ -1285,7 +1331,7 @@ async function createWindow() {
   window.on('closed', () => {
     try {
       ++navigationId; startupClipboard?.dispose(); startupClipboard = null; startupFlow?.dispose(); startupFlow = null;
-      autoPlan.dispose(); conversationRecovery.reset(); controller?.cancel(); planMonitor.close();
+      autoPlan.dispose(); execution.dispose(); conversationRecovery.reset(); controller?.cancel(); planMonitor.close();
       reviewContinuation.dispose(); planReview.dispose();
       if (eventRuntimeCheckerTimer !== null) clearInterval(eventRuntimeCheckerTimer);
       eventRuntimeCheckerTimer = null; liveSessions.dispose(); contextCache.clear(); workspaceSetup.invalidateReadiness();
@@ -1362,6 +1408,8 @@ else {
       if (['light', 'dark'].includes(settings.shellTheme)) shellTheme = settings.shellTheme;
       if (typeof settings.hideToolCalls === 'boolean') hideToolCalls = settings.hideToolCalls;
       parallelExecution = validateParallelSettings(settings.parallelExecution);
+      if(settings.parallelExecutionBook&&typeof settings.parallelExecutionBook==='object'&&!Array.isArray(settings.parallelExecutionBook))
+        parallelExecutionBook=settings.parallelExecutionBook;
       autoPlanEnabled = settings.autoPlanEnabled === true;
       autoPlanCheckpoint = settings.autoPlanCheckpoint ?? null;
       reviewCheckpoint = settings.reviewCheckpoint ?? null;
@@ -1371,6 +1419,7 @@ else {
       if (typeof settings.projectsParent === 'string' && path.isAbsolute(settings.projectsParent)) projectsParent = settings.projectsParent;
     } catch (error) { if (error.code !== 'ENOENT') startupError = { code: 'SETTINGS_INVALID', message: 'Не удалось прочитать локальные настройки Web Pilot. Проверьте настройки подключения.' }; }
     autoPlan.restore(autoPlanEnabled, autoPlanCheckpoint);
+    execution.book=parallelExecutionBook;execution.enabled=autoPlanEnabled;
     automationSend.restore(automationCheckpoint);
     reviewContinuation.restore(reviewCheckpoint);
     applyShellTheme(shellTheme);

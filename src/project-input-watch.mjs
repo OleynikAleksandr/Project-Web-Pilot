@@ -37,6 +37,8 @@ export class ProjectInputWatch {
       if (typeof relative !== 'string' || path.isAbsolute(relative)) continue;
       let child = path.resolve(this.workspace, relative);
       if (!child.startsWith(this.workspace + path.sep)) continue;
+      // Explicit directory subscriptions observe entry creation/removal too.
+      if(relative.endsWith('/'))directories.set(child,new Set(['*']));
       // Watch the relevant tree plus the workspace parent so a removed/replaced
       // workspace can be rearmed without observing unrelated ancestors.
       const root = path.resolve(this.workspace);
@@ -65,7 +67,7 @@ export class ProjectInputWatch {
         const record = { identity, names, handle: null };
         record.handle = this.watchDirectory(directory, { persistent: false }, (_event, filename) => {
           if (this.closed || this.watches.get(directory) !== record) return;
-          if (filename == null || record.names.has(String(filename)) || String(filename) === path.basename(directory)) this.signal();
+          if (filename == null || record.names.has('*') || record.names.has(String(filename)) || String(filename) === path.basename(directory)) this.signal();
         });
         this.watches.set(directory, record);
         record.handle.on('error', error => {

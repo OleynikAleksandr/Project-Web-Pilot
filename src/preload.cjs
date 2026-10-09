@@ -16,6 +16,8 @@ contextBridge.exposeInMainWorld('webPilot', Object.freeze({
   setTheme: theme => ipcRenderer.invoke('pilot:set-theme', theme),
   setHideToolCalls: value => ipcRenderer.invoke('pilot:set-hide-tool-calls', value),
   setParallelExecution: value => ipcRenderer.invoke('pilot:set-parallel-execution', value),
+  executeTasks: workspace => ipcRenderer.invoke('pilot:execute-tasks', {workspace}),
+  correctIntegration: workspace => ipcRenderer.invoke('pilot:correct-integration', {workspace}),
   setChatgptChannel: channel => ipcRenderer.invoke('pilot:set-chatgpt-channel', channel),
   refreshChatgptChannel: () => ipcRenderer.invoke('pilot:refresh-chatgpt-channel'),
   copyVpsConnectorUrl: () => ipcRenderer.invoke('pilot:copy-vps-connector-url'),
