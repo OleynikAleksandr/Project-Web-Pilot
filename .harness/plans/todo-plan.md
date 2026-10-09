@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1642,
+  "plan_revision": 1644,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-chat-execution-20261009",
@@ -2232,13 +2232,14 @@
         "Готовый staging установлен без пересборки; подпись identity runtime проверены"
       ],
       "expected_commit_message": "feat: Установить выпуск 0.6.108",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "parallel-chat-execution-20261009",
         "task_id": "T036",
         "role": "implementation"
-      }
+      },
+      "actual_files": []
     },
     {
       "id": "T037",
@@ -2296,7 +2297,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: parallel-chat-execution-20261009
 Current Task: нет
-Revision: 1642
+Revision: 1644
 
 ## Цель
 
@@ -2472,8 +2473,8 @@ Revision: 1642
   - Git Commit: [DONE] feat: Собрать парный выпуск 0.6.108 для macOS и Windows
   - Reference: parallel-chat-execution-20261009 / T035 / implementation
   - Файлы: docs/modules/auto-plan.md, docs/modules/release.md
-- [TODO] T036: Установить выпуск 0.6.108 — Ожидает
-  - Git Commit: [PENDING] feat: Установить выпуск 0.6.108
+- [DONE] T036: Установить выпуск 0.6.108 — Завершено
+  - Git Commit: [DONE] feat: Установить выпуск 0.6.108
   - Reference: parallel-chat-execution-20261009 / T036 / implementation
   - Файлы: docs/modules/auto-plan.md, docs/modules/release.md
 - [TODO] T037: Опубликовать выпуск 0.6.108 на GitHub — Ожидает
