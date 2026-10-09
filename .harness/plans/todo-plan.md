@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1590,
+  "plan_revision": 1591,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-chat-execution-20261009",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Реализовать опциональное параллельное выполнение плана через чат-сессии Web Pilot и отдельные worktree с проверенной последовательной интеграцией в main.",
   "acceptance_criteria": [
     "Снимок разрешения и лимита фиксируется при новой основной сессии; существующее выполнение не меняется от Settings.",
@@ -91,7 +91,9 @@
       "src/workspace-readiness.mjs",
       "src/workspace-setup.mjs",
       "tests/workspace-readiness.test.mjs",
-      "tools/codex-app-server-mcp/codex-tools.lock.json"
+      "tools/codex-app-server-mcp/codex-tools.lock.json",
+      "packages/workflow-kit/src/lib/task-handoff.mjs",
+      "packages/workflow-kit/scripts/check-task-handoff-fixture.mjs"
     ],
     "documentation_paths": [
       "docs/planning/parallel-execution-spec.md",
@@ -137,7 +139,10 @@
       "docs/modules/session-runtime.md",
       "docs/modules/technical-audit-followups.md",
       "packages/workflow-kit/README.md",
-      "packages/workflow-kit/docs/modules/parallel-assignments.md"
+      "packages/workflow-kit/docs/modules/parallel-assignments.md",
+      "packages/workflow-kit/src/templates/STAGES.md",
+      "packages/workflow-kit/src/templates/PROTOTYPE.md",
+      "docs/planning/parallel-autoplan-fix.md"
     ]
   },
   "baseline_commit": "39507e5655e81395bbcbeab0bd7b00572e4a746b",
@@ -1396,6 +1401,136 @@
         "role": "implementation"
       },
       "actual_files": []
+    },
+    {
+      "id": "T020",
+      "title": "Защитить основной parallel-план и восстановить ошибочно начатую задачу",
+      "why": "Защитить основной parallel-план и восстановить ошибочно начатую задачу",
+      "dependencies": [],
+      "functional_paths": [
+        "packages/workflow-kit/src/lib/actions.mjs",
+        "packages/workflow-kit/src/lib/task-assignment.mjs",
+        "packages/workflow-kit/src/lib/task-handoff.mjs",
+        "packages/workflow-kit/src/lib/recovery.mjs",
+        "packages/workflow-kit/src/cli.mjs",
+        "packages/workflow-kit/src/lib/command-help.mjs",
+        "packages/workflow-kit/scripts/check-parallel-plan-fixture.mjs",
+        "packages/workflow-kit/scripts/check-task-handoff-fixture.mjs",
+        "packages/workflow-kit/package.json",
+        "packages/workflow-kit/src/lib/common.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/session-runtime.md",
+        "packages/workflow-kit/src/templates/PLAN.md",
+        "packages/workflow-kit/src/templates/STAGES.md",
+        "packages/workflow-kit/src/templates/PROTOTYPE.md",
+        "packages/workflow-kit/docs/modules/parallel-assignments.md"
+      ],
+      "verification_ids": [
+        "kit-check"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "task:start основного parallel-плана отклоняется до любых изменений; локальные назначения и sequential сохраняют поведение",
+        "Управляемая операция сохраняет все файлы ошибочно начатой задачи, переносит их в одно назначение и возвращает main к опубликованному плану без потери чужих правок; неоднозначное состояние блокируется с точной причиной",
+        "Повтор и прерывание восстановления проверены временной fixture; стартовые инструкции однозначно передают выполнение parallel-плана приложению"
+      ],
+      "expected_commit_message": "feat: Защитить основной parallel-план и восстановить ошибочно начатую задачу",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "parallel-chat-execution-20261009",
+        "task_id": "T020",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T021",
+      "title": "Единый AutoPlan для запуска parallel без дополнительных кнопок",
+      "why": "Единый AutoPlan для запуска parallel без дополнительных кнопок",
+      "dependencies": [
+        "T020"
+      ],
+      "functional_paths": [
+        "src/parallel-execution.mjs",
+        "src/parallel-kit.mjs",
+        "src/main.mjs",
+        "src/preload.cjs",
+        "src/ui/index.html",
+        "src/ui/sidebar.mjs",
+        "src/auto-plan.mjs",
+        "src/auto-plan-state.mjs",
+        "tests/parallel-execution.test.mjs",
+        "tests/parallel-execution-recovery.test.mjs",
+        "tests/parallel-execution-ui.test.mjs",
+        "tests/parallel-execution-smoke-fixture.cjs",
+        "tests/electron-smoke.mjs",
+        "packages/workflow-kit/scripts/check-parallel-execution-fixture.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/session-runtime.md"
+      ],
+      "verification_ids": [
+        "unit-all",
+        "electron-smoke"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Кнопки Выполнить доступные задачи и Повторить сверку удалены; AutoPlan ON запускает первую и последующие готовые группы после публикации, OFF запрещает новые отправки и назначения",
+        "После ошибочного старта main AutoPlan безопасно использует управляемое восстановление только в остановившемся чате без активной команды; неизвестные отправки не повторяются",
+        "Публикация, готовность страниц и завершение команд возобновляют очередь событиями без функционального polling",
+        "Сообщения различают неопубликованный/изменённый план, активную команду, чужие правки, активную main-задачу и ожидание готовности чата",
+        "Electron fixture через реальный AutoPlan IPC и публикацию плана запускает исполнителей без старых кнопок; OFF/ON, зависимости, интеграция и защита черновиков проверены"
+      ],
+      "expected_commit_message": "feat: Единый AutoPlan для запуска parallel без дополнительных кнопок",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "parallel-chat-execution-20261009",
+        "task_id": "T021",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T022",
+      "title": "Обновить локальный Kit и согласовать инструкции и контракты",
+      "why": "Обновить локальный Kit и согласовать инструкции и контракты",
+      "dependencies": [
+        "T021"
+      ],
+      "functional_paths": [
+        "package-lock.json",
+        "tests/workflow-kit-upgrade.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/session-runtime.md",
+        "docs/modules/parallel-execution.md",
+        "docs/modules/auto-plan.md",
+        "docs/modules/workspace-sidebar-ui.md",
+        "docs/architecture/OVERVIEW.md",
+        "packages/workflow-kit/README.md",
+        "packages/workflow-kit/docs/modules/workflow-kit-package.md",
+        "packages/workflow-kit/docs/modules/parallel-assignments.md",
+        "docs/planning/parallel-autoplan-fix.md"
+      ],
+      "verification_ids": [
+        "kit-check",
+        "unit-all"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Kit 1.7.1 установлен штатным install --update и проверен переход 1.7.0; ресурсы генерируются из пакета",
+        "Инструкции стартового recovery, форм плана, IPC и контрактов не требуют удалённых кнопок и согласованы с единым AutoPlan",
+        "Исправление не объявляется установленным релизом или живой пользовательской приёмкой; реальные тестовые проекты не изменяются"
+      ],
+      "expected_commit_message": "feat: Обновить локальный Kit и согласовать инструкции и контракты",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "parallel-chat-execution-20261009",
+        "task_id": "T022",
+        "role": "implementation"
+      }
     }
   ],
   "blocked_reason": null,
@@ -1421,10 +1556,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: parallel-chat-execution-20261009
 Current Task: нет
-Revision: 1590
+Revision: 1591
 
 ## Цель
 
@@ -1524,6 +1659,18 @@ Revision: 1590
   - Git Commit: [DONE] release: опубликовать исправленный выпуск 0.6.105
   - Reference: parallel-chat-execution-20261009 / T019 / implementation
   - Файлы: docs/modules/auto-plan.md, docs/modules/release.md
+- [TODO] T020: Защитить основной parallel-план и восстановить ошибочно начатую задачу — Ожидает
+  - Git Commit: [PENDING] feat: Защитить основной parallel-план и восстановить ошибочно начатую задачу
+  - Reference: parallel-chat-execution-20261009 / T020 / implementation
+  - Файлы: packages/workflow-kit/src/lib/actions.mjs, packages/workflow-kit/src/lib/task-assignment.mjs, packages/workflow-kit/src/lib/task-handoff.mjs, packages/workflow-kit/src/lib/recovery.mjs, packages/workflow-kit/src/cli.mjs, packages/workflow-kit/src/lib/command-help.mjs, packages/workflow-kit/scripts/check-parallel-plan-fixture.mjs, packages/workflow-kit/scripts/check-task-handoff-fixture.mjs, packages/workflow-kit/package.json, packages/workflow-kit/src/lib/common.mjs, docs/modules/session-runtime.md, packages/workflow-kit/src/templates/PLAN.md, packages/workflow-kit/src/templates/STAGES.md, packages/workflow-kit/src/templates/PROTOTYPE.md, packages/workflow-kit/docs/modules/parallel-assignments.md
+- [TODO] T021: Единый AutoPlan для запуска parallel без дополнительных кнопок — Ожидает
+  - Git Commit: [PENDING] feat: Единый AutoPlan для запуска parallel без дополнительных кнопок
+  - Reference: parallel-chat-execution-20261009 / T021 / implementation
+  - Файлы: src/parallel-execution.mjs, src/parallel-kit.mjs, src/main.mjs, src/preload.cjs, src/ui/index.html, src/ui/sidebar.mjs, src/auto-plan.mjs, src/auto-plan-state.mjs, tests/parallel-execution.test.mjs, tests/parallel-execution-recovery.test.mjs, tests/parallel-execution-ui.test.mjs, tests/parallel-execution-smoke-fixture.cjs, tests/electron-smoke.mjs, packages/workflow-kit/scripts/check-parallel-execution-fixture.mjs, docs/modules/session-runtime.md
+- [TODO] T022: Обновить локальный Kit и согласовать инструкции и контракты — Ожидает
+  - Git Commit: [PENDING] feat: Обновить локальный Kit и согласовать инструкции и контракты
+  - Reference: parallel-chat-execution-20261009 / T022 / implementation
+  - Файлы: package-lock.json, tests/workflow-kit-upgrade.test.mjs, docs/modules/session-runtime.md, docs/modules/parallel-execution.md, docs/modules/auto-plan.md, docs/modules/workspace-sidebar-ui.md, docs/architecture/OVERVIEW.md, packages/workflow-kit/README.md, packages/workflow-kit/docs/modules/workflow-kit-package.md, packages/workflow-kit/docs/modules/parallel-assignments.md, docs/planning/parallel-autoplan-fix.md
 
 ## Context Pack For This Cycle
 
