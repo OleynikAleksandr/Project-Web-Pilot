@@ -5,7 +5,7 @@ import {readPlan,isDeliveryTask,isDocumentationFinalizationTask} from './plan.mj
 import {readConfig,taskChecks} from './validate.mjs';
 import {applyPlan} from './actions.mjs';
 
-const TASK_FIELDS=['id','title','why','files','checks','dependencies','acceptance','commit','verification_kind','before'];
+const TASK_FIELDS=['id','title','why','files','checks','dependencies','acceptance','commit','verification_kind','before','parallel_safe'];
 const notStarted=t=>t.implementation_status==='TODO'&&t.commit_status==='PENDING';
 
 // Only new domain tasks and added dependencies enter here. applyPlan owns locking, revision and history.
@@ -37,6 +37,7 @@ export function extendPlan(root,input,expectedRevision) {
     check(Array.isArray(t.files)&&t.files.length>0,'PLAN_SCHEMA',field+'.files: перечислите файлы новой задачи.');
     t.files.forEach(f=>contextPath(root,f));
     const task={id,title:t.title,why:t.why??t.title,dependencies:t.dependencies??[],functional_paths:t.files.filter(f=>!f.endsWith('.md')),documentation_paths:[...new Set([...(input.spec?[input.spec]:[]),...t.files.filter(f=>f.endsWith('.md'))])],verification_ids:t.checks??[],verification_kind:t.verification_kind??'code',acceptance_criteria:t.acceptance??[t.title],expected_commit_message:t.commit??'feat: '+t.title,implementation_status:'TODO',commit_status:'PENDING',commit_ref:{scope_id:plan.scope_id,task_id:id,role:'implementation'}};
+    if(Object.hasOwn(t,'parallel_safe'))task.parallel_safe=t.parallel_safe;
     check(Array.isArray(task.verification_ids),'PLAN_SCHEMA',field+'.checks: нужен массив ID проверок.');
     try{taskChecks(task,config);}catch(error){error.message=field+'.checks ('+id+'): '+error.message;error.details={...error.details,task_id:id,field:field+'.checks',available_checks:config.checks.map(c=>c.id)};throw error;}
     if(t.before===undefined)ordered.push(task);

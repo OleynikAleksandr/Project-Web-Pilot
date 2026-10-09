@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
+import { startIntegration, continueIntegration, integrationStatus, assertIntegrationCommand } from './lib/task-integration.mjs';
+import { createAssignment, assignmentStatus, setupAssignment, assertAssignmentCommand } from './lib/task-assignment.mjs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { errorResult, check, readJSON, json, withPlanFile, PLAN } from './lib/common.mjs';
@@ -24,7 +26,7 @@ export function argumentsOf(argv) {
     if (!value.startsWith('--')) { args.push(value); continue; }
     const key = value.slice(2);
     check(!Object.hasOwn(opts, key), 'ARGUMENTS', 'Параметр повторяется: ' + value);
-    if (['json', 'dry-run', 'update', 'help', 'full'].includes(key)) opts[key] = true;
+    if (['json', 'dry-run', 'update', 'help', 'full', 'npm-ci'].includes(key)) opts[key] = true;
     else { check(i + 1 < argv.length && !argv[i + 1].startsWith('--'), 'ARGUMENTS', 'Не задано значение: ' + value); opts[key] = argv[++i]; }
   }
   return { opts, args };
@@ -39,12 +41,18 @@ export async function main(argv = process.argv.slice(2)) {
     check(Number(process.versions.node.split('.')[0]) >= 22, 'NODE_VERSION', 'Требуется Node.js 22 или новее.');
     if (command === 'help' || opts.help || rest.includes('help')) return { value: commandHelp(command === 'help' ? (aliases[rest[0]] ?? rest[0] ?? 'help') : command), json: false };
     if (['install', 'install:commit', 'inspect', 'remove', 'doctor'].includes(command)) {
+      if(opts.project && fs.existsSync(path.join(opts.project,'.git'))) {
+        assertAssignmentCommand(repoRoot(opts.project),command);
+        assertIntegrationCommand(repoRoot(opts.project),command);
+      }
       const { installerCommand } = await import('./lib/installer.mjs');
       return { value: await installerCommand(command, opts), json: true };
     }
 
     let event; if (isHook) event = JSON.parse(fs.readFileSync(0, 'utf8'));
     const root = repoRoot(opts.project || event?.cwd || process.cwd());
+    assertAssignmentCommand(root,command);
+    assertIntegrationCommand(root,command);
     let result;
     const input = () => { check(opts.input, 'INPUT_REQUIRED', 'Укажите --input <JSON-файл>.'); return readJSON(path.resolve(opts.input)); };
     if(command==='review:run') {
@@ -57,6 +65,12 @@ export async function main(argv = process.argv.slice(2)) {
     }
     const execute = () => {
     switch (command) {
+      case 'integration:start': result = startIntegration(root,input()); break;
+      case 'integration:continue': result = continueIntegration(root,opts.id); break;
+      case 'integration:status': result = integrationStatus(root); break;
+      case 'assignment:create': result = createAssignment(root,input(),opts['expected-revision']); break;
+      case 'assignment:status': result = assignmentStatus(root,opts.id); break;
+      case 'assignment:setup': result = setupAssignment(root,opts.id,{npmCi:!!opts['npm-ci']}); break;
       case 'review:status': result = reviewStatus(root); break;
       case 'review:acknowledge': result = acknowledgeReview(root,opts.run); break;
       case 'review:prepare': result = prepareReview(root,input()); break;

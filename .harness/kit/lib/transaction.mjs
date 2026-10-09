@@ -1,4 +1,6 @@
 import fs from 'node:fs';
+import { assertIntegrationIdle } from './task-integration.mjs';
+import { assertAssignment } from './task-assignment.mjs';
 import {selectTaskFiles} from './task-files.mjs';
 import path from 'node:path';
 import { PLAN, planPath, check, hash, id, json, atomic, withLock, safePath } from './common.mjs';
@@ -7,10 +9,11 @@ import { validate, journal, taskChecks, retryCommand } from './validate.mjs';
 import { git, head, paths, localPath, gitPath, allChanges, ensureIdleGit, identityReady, snapshot, documentText } from './git.mjs';
 
 export const saveJournal = (root, data) => atomic(localPath(root, 'transaction.json'), json(data));
-export const messageFor = t => t.message + '\n\nWorkflow-Scope: ' + (t.scope_id ?? 'NONE') + '\nWorkflow-Task: ' + (t.task_id ?? t.id) + '\nWorkflow-Role: ' + t.role + (t.role === 'implementation' ? '\nWorkflow-Iteration: ' + (t.task?.commit_ref?.iteration ?? 1) : '') + '\nWorkflow-Transaction: ' + t.id;
-export const locked = (root, fn) => withLock(localPath(root, 'operation.lock'), fn);
+export const messageFor = t => t.message + '\n\nWorkflow-Scope: ' + (t.scope_id ?? 'NONE') + '\nWorkflow-Task: ' + (t.task_id ?? t.id) + '\nWorkflow-Role: ' + t.role + (t.role === 'implementation' ? '\nWorkflow-Iteration: ' + (t.task?.commit_ref?.iteration ?? 1) : '') + '\nWorkflow-Transaction: ' + t.id + (t.role === 'integration' ? '\nWorkflow-Source: ' + t.source_commit : '');
+export const locked = (root, fn) => withLock(localPath(root, 'operation.lock'), () => { assertIntegrationIdle(root); return fn(); });
 export function checkServicePaths(role, files, PLAN = ' .harness/plans/todo-plan.md'.trim()) {
   const patterns = {
+    'assignment-plan': p => p === PLAN,
     'scope-plan': p => p === PLAN || p.startsWith('docs/') && /\.(md|markdown)$/.test(p),
     'plan-adjustment': p => p === PLAN || p === '.harness/workflow.json' || p.startsWith('docs/') && /\.(md|markdown)$/.test(p),
     repair: p => p === PLAN, planPath,
@@ -30,6 +33,8 @@ export function completedTransaction(root, t) {
   if (!trailers.split('\n').includes('Workflow-Transaction: ' + t.id)) return null;
   const parent = git(root, ['rev-parse', 'HEAD^'], { allowFailure: true });
   check((t.before_head === null && parent.status !== 0) || parent.stdout.trim() === t.before_head, 'TRANSACTION_PARENT', 'Родитель коммита не соответствует транзакции.');
+  if(t.role==='integration')check(git(root,['show','-s','--format=%P','HEAD']).stdout.trim()===t.before_head+' '+t.source_commit,
+    'INTEGRATION_PARENTS','Родители merge-коммита не соответствуют транзакции.');
   check(git(root, ['rev-parse', 'HEAD^{tree}']).stdout.trim() === t.candidate_tree, 'TRANSACTION_TREE', 'Содержимое коммита отличается от проверенного кандидата.');
   check(message.trim() === messageFor(t).trim(), 'TRANSACTION_MESSAGE', 'Идентичность созданного коммита изменилась.');
   return now;
@@ -54,6 +59,8 @@ export function finishTransaction(root, t, sha) {
     ...((t.excluded_changes?.length ?? 0) ? {next_action: 'Перечисленные изменения остались вне коммита: они существовали до task:start или не вошли в явный выбор --files. Сверьте их с задачей перед финальной DOCS. Не присваивайте чужие изменения; собственные оставшиеся правки включите в следующую задачу явно через commit --files.'} : {}) };
 }
 export function commitCandidate(root, { plan, role, task = null, selected, message, beforeHead, checks = [] }) {
+  assertIntegrationIdle(root);
+  assertAssignment(root, plan, {role,files:selected,ready:role==='implementation'});
   const PLAN = planPath(root);
   ensureIdleGit(root); check(identityReady(root), 'GIT_IDENTITY', 'Git не знает автора. Настройте user.name и user.email; файлы сохранены.');
   let t = journal(root);

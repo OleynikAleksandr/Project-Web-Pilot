@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1558,
+  "plan_revision": 1559,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-chat-execution-20261009",
@@ -125,7 +125,7 @@
     ]
   },
   "baseline_commit": "39507e5655e81395bbcbeab0bd7b00572e4a746b",
-  "current_task_id": null,
+  "current_task_id": "T009",
   "context_pack": {
     "documents": [
       {
@@ -764,7 +764,7 @@
       ]
     },
     {
-      "implementation_status": "TODO",
+      "implementation_status": "IN_PROGRESS",
       "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "parallel-chat-execution-20261009",
@@ -1115,8 +1115,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: parallel-chat-execution-20261009
-Current Task: нет
-Revision: 1558
+Current Task: T009
+Revision: 1559
 
 ## Цель
 
@@ -1164,7 +1164,7 @@ Revision: 1558
   - Git Commit: [DONE] feat: Восстановление назначений и сессий
   - Reference: parallel-chat-execution-20261009 / T008 / implementation
   - Файлы: src/parallel-execution.mjs, src/conversation-recovery.mjs, src/automation-send-state.mjs, src/auto-plan-state.mjs, src/session-runtime.mjs, src/workspace-session.mjs, src/main.mjs, packages/workflow-kit/src/lib/task-assignment.mjs, packages/workflow-kit/src/lib/task-integration.mjs, packages/workflow-kit/src/lib/actions.mjs, tests/parallel-execution-recovery.test.mjs, tests/conversation-recovery.test.mjs, packages/workflow-kit/scripts/check-task-assignment-fixture.mjs, packages/workflow-kit/scripts/check-task-integration-fixture.mjs, src/execution-projection.mjs, src/parallel-kit.mjs, src/preload.cjs, src/ui/index.html, src/ui/sidebar.mjs, docs/planning/parallel-execution-spec.md, docs/planning/parallel-recovery.md
-- [TODO] T009: Обновить локальный runtime Kit управляемым установщиком — Ожидает
+- [IN_PROGRESS] T009: Обновить локальный runtime Kit управляемым установщиком — В работе
   - Git Commit: [PENDING] feat: Обновить локальный runtime Kit управляемым установщиком
   - Reference: parallel-chat-execution-20261009 / T009 / implementation
   - Файлы: packages/workflow-kit/package.json, packages/workflow-kit/src/lib/common.mjs, packages/workflow-kit/src/install.mjs, tests/workflow-kit-upgrade.test.mjs, docs/planning/parallel-execution-spec.md

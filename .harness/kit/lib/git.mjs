@@ -22,7 +22,9 @@ export function repoRoot(cwd) {
   return fs.realpathSync(r.stdout.trim());
 }
 export function gitPath(root, name) { return output(root, ['rev-parse', '--path-format=absolute', '--git-path', name]); }
-export const localPath = (root, name) => gitPath(root, 'workflow-kit/' + name);
+// Custom --git-path names may resolve to the common directory in a linked tree.
+// Locks, journals and evidence belong to the individual Git administrative dir.
+export const localPath = (root, name) => path.join(output(root, ['rev-parse', '--absolute-git-dir']), 'workflow-kit', name);
 export function head(root) {
   const r = git(root, ['rev-parse', '--verify', 'HEAD'], { allowFailure: true });
   return r.status === 0 ? r.stdout.trim() : null;
@@ -128,10 +130,10 @@ export function areAncestors(root, from, to) {
   const result = git(root, ['rev-list', '--max-count=1', ...commits, '--not', to, '--'], { allowFailure: true });
   return result.status === 0 && result.stdout.trim() === '';
 }
-export function commitHistory(root, baseline) {
+export function commitHistory(root, baseline, tip = 'HEAD') {
   if (!head(root)) return [];
-  if (baseline) check(isAncestor(root, baseline), 'BASELINE_MISMATCH', 'Baseline не принадлежит текущей истории.');
-  const raw = git(root, ['log', '-z', '--format=%H%x00%P%x00%B%x00%(trailers:only,unfold)', baseline ? baseline + '..HEAD' : 'HEAD']).stdout;
+  if (baseline) check(isAncestor(root, baseline, tip), 'BASELINE_MISMATCH', 'Baseline не принадлежит текущей истории.');
+  const raw = git(root, ['log', '-z', '--format=%H%x00%P%x00%B%x00%(trailers:only,unfold)', baseline ? baseline + '..' + tip : tip]).stdout;
   const fields = raw.split('\0');
   if (fields.at(-1) === '') fields.pop();
   check(fields.length % 4 === 0, 'HISTORY_FORMAT', 'Git вернул неполную историю коммитов.');

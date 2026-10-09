@@ -3,7 +3,7 @@ import { reviewSummary } from './plan-review.mjs';
 import path from 'node:path';
 import { VERSION, planPath, CONFIG, check, contextPath, textFile, atomic, json, hash, id, errorResult } from './common.mjs';
 import { validate, documentByteLimit, resolveReferences } from './validate.mjs';
-import { nextTask, PROJECT_CONTINUATION_OBJECTIVE, parsePlan, uniqueDocuments, isDeliveryTask } from './plan.mjs';
+import { nextTask, PROJECT_CONTINUATION_OBJECTIVE, parsePlan, uniqueDocuments, isDeliveryTask, hasExecutionPolicy } from './plan.mjs';
 import { snapshot, git, localPath, head, fileFingerprint, documentText, commitHistory } from './git.mjs';
 import { projectFacts, projectFactPaths, planningDocuments } from './project-facts.mjs';
 import { inspectionInputs } from './inspection-inputs.mjs';
@@ -165,6 +165,8 @@ function taskProjection(task, resolved) {
     + '\nЗачем: ' + task.why
     + '\nСтатус: ' + task.implementation_status + ' / ' + task.commit_status
     + '\nЗависимости: ' + (task.dependencies.join(', ') || 'нет')
+    + (task.parallel_safe === undefined ? '' : '\nПараллельность: ' + (task.parallel_safe ? 'допустима при непересекающихся областях' : 'исключительное выполнение; в parallel-плане отдельный исполнитель'))
+    + (task.commit_ref.role === 'integration' ? '\nSource SHA: ' + task.commit_ref.source_commit + '\nИнтеграция: ' + task.commit_ref.operation_id : '')
     + '\nКритерии:\n' + task.acceptance_criteria.map(item=>'- '+item).join('\n')
     + '\nКоммит: ' + (reference?.sha ?? (reference?.pending ? 'COMMIT_PENDING' : 'не создан'))
     + (reference?.sha ? '\nРодитель: '+reference.parent+'\nЧтение: git show '+reference.sha : '')
@@ -237,6 +239,7 @@ export function recoverState(root, reason = 'manual', options = {}) {
     if (transaction) continuation = 'Есть незавершённый журнал commit. Сначала status и повтор commit/repair; новую задачу не начинать.';
     else if (plan.execution_scope_status==='NONE') continuation = PROJECT_CONTINUATION_OBJECTIVE;
     else if (plan.execution_scope_status==='BLOCKED') continuation = 'Разрешены обсуждение и диагностика. Причина: '+plan.blocked_reason;
+    else if (plan.assignment && plan.delivery_status==='READY_FOR_ACCEPTANCE') continuation = 'Назначение готово к интеграции. Родительская задача не завершена. Сохраните ветку и worktree; новые задачи и вложенные исполнители запрещены.';
     else if (plan.delivery_status==='READY_FOR_ACCEPTANCE') continuation = 'Все задачи выполнены, план остаётся видимым. Новое поручение добавляется через plan:extend; закрытие требует отдельной прямой команды пользователя.';
     else continuation = (plan.current_task_id?'Продолжить ':'Начать через task:start ')+(task?.id??'задачу после уточнения зависимостей')+'.';
     const units = [];
@@ -256,7 +259,9 @@ export function recoverState(root, reason = 'manual', options = {}) {
     add('on-demand','ФОРМЫ ПО ЗАПРОСУ\n- Новый план: ./scripts/workflow plan:create --help\n- Новые задачи: ./scripts/workflow plan:extend --help\n- Выполнение и DOCS: ./scripts/workflow task:start --help');
     add('plan-review',reviewSummary(root));
     add('objective','ЦЕЛЬ\n'+(plan.objective||PROJECT_CONTINUATION_OBJECTIVE)+'\nКритерии:\n'+plan.acceptance_criteria.map(item=>'- '+item).join('\n'));
+    if(hasExecutionPolicy(plan))add('execution-policy','ВЫПОЛНЕНИЕ\n'+JSON.stringify(Object.fromEntries(['parallel_allowed','max_workers','execution_strategy','execution_reason'].map(key=>[key,plan[key]])))+'\nРодительское DONE требует проверенной интеграции; коммит исполнителя не закрывает общий план.');
     add('user-decisions','РЕШЕНИЯ ПОЛЬЗОВАТЕЛЯ\n'+plan.user_decisions.map(item=>'- '+item.text).join('\n'));
+    if(plan.assignment)add('assignment','ЛОКАЛЬНОЕ НАЗНАЧЕНИЕ\n'+json(plan.assignment)+'Исполнитель не расширяет план и не создаёт вложенных назначений. Локальное DONE означает готовность к интеграции.');
     for(const item of plan.tasks) add('task:'+item.id,taskProjection(item,resolved));
     const deliveryIndex = plan.tasks.findLastIndex(item=>isDeliveryTask(item)&&item.commit_status==='DONE');
     if(deliveryIndex>=0&&plan.tasks.length>deliveryIndex+1) {

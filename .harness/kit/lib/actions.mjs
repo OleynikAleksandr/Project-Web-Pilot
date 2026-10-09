@@ -1,9 +1,10 @@
 import fs from 'node:fs';
+import { assertAssignment, assertAssignmentCommand } from './task-assignment.mjs';
 import { assertReviewPublication, finishReviewPublication, cleanupReview } from './plan-review.mjs';
 import {beginTaskFiles,handoffTaskFiles} from './task-files.mjs';
 import path from 'node:path';
 import { VERSION, PLAN, planPath, safePath, CONFIG, MANIFEST, check, readJSON, atomic, json, hash, id, textFile } from './common.mjs';
-import { emptyPlan, readPlan, parsePlan, renderPlan, writePlan, validatePlan, nextTask, projectContextPack, projectContextPaths,
+import { emptyPlan, readPlan, parsePlan, renderPlan, writePlan, validatePlan, nextTask, projectContextPack, projectContextPaths, normalizeExecutionPolicy,
   FINAL_DOCUMENTATION_TASK_ID, FINAL_DOCUMENTATION_TASK_TITLE, isDocumentationFinalizationTask, isDeliveryTask } from './plan.mjs';
 import { validate, validateConfig, validatePlanConfiguration, readConfig, journal, resolveReferences, taskChecks } from './validate.mjs';
 import { git, head, localPath, allChanges, identityReady, paths, gitPath } from './git.mjs';
@@ -67,7 +68,7 @@ function normalizeCompletionContract(plan) {
 function service(root, plan, role, selected, message) {
   return commitCandidate(root, { plan, role, selected, message, beforeHead: head(root) });
 }
-export function buildScopePlan(root, input, previous) {
+export function buildScopePlan(root, input, previous, config = readConfig(root)) {
     const plan = { ...emptyPlan(previous.project_name), ...input, schema_version: 1, project_id: previous.project_id,
       project_name: previous.project_name, plan_revision: previous.plan_revision + 1, scope_id: input.scope_id || 'scope-' + id(),
       execution_scope_status: 'ACTIVE', delivery_status: 'IN_PROGRESS', baseline_commit: head(root), current_task_id: null, blocked_reason: null };
@@ -84,7 +85,8 @@ export function buildScopePlan(root, input, previous) {
       commit_ref: { scope_id: plan.scope_id, task_id: task.id, role: 'implementation' }, ...task }));
     requireModuleContext(plan);
     plan.user_decisions = input.user_decisions ?? [];
-    validatePlan(plan); validatePlanConfiguration(root, plan, readConfig(root));
+    normalizeExecutionPolicy(plan);
+    validatePlan(plan); validatePlanConfiguration(root, plan, config);
     return plan;
 }
 export function createScope(root, input, expectedRevision) {
@@ -110,6 +112,7 @@ export function startTask(root, taskId, expectedRevision) {
   const PLAN = planPath(root);
   return locked(root, () => {
     noTransaction(root); assertSingleWriter(root, PLAN); const { plan, config } = validate(root); revision(plan, expectedRevision);
+    assertAssignment(root, plan, {ready:true});
     check(plan.execution_scope_status === 'ACTIVE', 'SCOPE_NOT_ACTIVE', 'Реализация разрешена только в ACTIVE scope.');
     const task = plan.tasks.find(t => t.id === taskId);
     check(task, 'UNKNOWN_TASK', 'Задача не найдена: ' + taskId);
@@ -128,6 +131,7 @@ export function startTask(root, taskId, expectedRevision) {
   });
 }
 export function applyPlan(root, input, expectedRevision) {
+  assertAssignmentCommand(root, 'plan:apply');
   const PLAN = planPath(root);
   return locked(root, () => {
     noTransaction(root); assertSingleWriter(root, PLAN); const { plan: original } = validate(root);
@@ -166,6 +170,7 @@ export function applyPlan(root, input, expectedRevision) {
     normalizeCompletionContract(plan);
     if (added.some(t => t.functional_paths.length) || (input.context_pack && plan.tasks.some(t => t.functional_paths.length && t.commit_status !== 'DONE'))) requireModuleContext(plan);
     plan.delivery_status = plan.tasks.length && plan.tasks.every(t => t.commit_status === 'DONE') ? 'READY_FOR_ACCEPTANCE' : 'IN_PROGRESS';
+    normalizeExecutionPolicy(plan);
     validatePlan(plan); validatePlanConfiguration(root, plan, readConfig(root)); resolveReferences(root, plan);
     if(deferredTransfer)handoffTaskFiles(root,original,deferredTransfer.from,deferredTransfer.to,deferredTransfer.files);
     if (plan.current_task_id || deferDocs) writePlan(root, plan);
@@ -174,6 +179,7 @@ export function applyPlan(root, input, expectedRevision) {
   });
 }
 export function applyConfig(root, input) {
+  assertAssignmentCommand(root, 'config:apply');
   const PLAN = planPath(root);
   return locked(root, () => {
     noTransaction(root); const candidateConfig = validateConfig(input); const { plan } = validate(root, candidateConfig);
