@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1533,
+  "plan_revision": 1540,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-chat-execution-20261009",
@@ -74,25 +74,47 @@
       "tests/workflow-kit-upgrade.test.mjs",
       "tests/electron-smoke.mjs",
       "tests/parallel-execution-smoke-fixture.cjs",
-      "packages/workflow-kit/scripts/check-parallel-execution-fixture.mjs"
+      "packages/workflow-kit/scripts/check-parallel-execution-fixture.mjs",
+      "package.json",
+      "package-lock.json",
+      ".harness/workflow.json"
     ],
     "documentation_paths": [
       "docs/planning/parallel-execution-spec.md",
       "docs/planning/parallel-execution-plan-draft.md",
       "packages/workflow-kit/src/templates/PLAN.md",
       "packages/workflow-kit/src/templates/SPEC.md",
-      "docs/architecture/OVERVIEW.md"
+      "docs/architecture/OVERVIEW.md",
+      "docs/modules/release.md",
+      "README.md",
+      "docs/modules/auto-plan.md",
+      "docs/modules/chatgpt-dom-compatibility.md",
+      "docs/modules/chromium-diagnostics.md",
+      "docs/modules/codex-app-server-executor.md",
+      "docs/modules/context-delivery.md",
+      "docs/modules/first-run-onboarding.md",
+      "docs/modules/plan-review.md",
+      "docs/modules/plan-view.md",
+      "docs/modules/project-archive.md",
+      "docs/modules/project-doctor.md",
+      "docs/modules/runtime-lifecycle.md",
+      "docs/modules/session-opening-performance.md",
+      "docs/modules/workflow-kit-recovery.md",
+      "docs/modules/workspace-sessions.md",
+      "docs/modules/workspace-setup.md",
+      "docs/modules/workspace-sidebar-ui.md",
+      "docs/planning/technical-audit-20261008.md",
+      "docs/planning/technical-audit-findings-lifecycle.md",
+      "docs/planning/technical-audit-findings-summary.md",
+      "docs/planning/technical-audit-findings-unused.md",
+      "docs/planning/technical-audit-findings.md",
+      "packages/workflow-kit/docs/modules/workflow-kit-package.md"
     ]
   },
   "baseline_commit": "39507e5655e81395bbcbeab0bd7b00572e4a746b",
   "current_task_id": null,
   "context_pack": {
     "documents": [
-      {
-        "path": "docs/planning/parallel-execution-spec.md",
-        "required": true,
-        "revision": "WORKTREE"
-      },
       {
         "path": "docs/planning/parallel-execution-plan-draft.md",
         "required": true,
@@ -102,6 +124,11 @@
         "path": "docs/architecture/OVERVIEW.md",
         "required": true,
         "revision": "WORKTREE"
+      },
+      {
+        "path": "docs/planning/parallel-execution-spec.md",
+        "required": true,
+        "revision": "WORKTREE"
       }
     ],
     "include_last_completed_task": false,
@@ -109,8 +136,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "parallel-chat-execution-20261009",
         "task_id": "T001",
@@ -126,12 +153,14 @@
         "packages/workflow-kit/src/lib/plan-review.mjs",
         "packages/workflow-kit/src/lib/recovery.mjs",
         "packages/workflow-kit/scripts/check-parallel-plan-fixture.mjs",
-        "packages/workflow-kit/package.json"
+        "packages/workflow-kit/package.json",
+        "packages/workflow-kit/src/lib/actions.mjs"
       ],
       "documentation_paths": [
         "docs/planning/parallel-execution-spec.md",
         "packages/workflow-kit/src/templates/PLAN.md",
-        "packages/workflow-kit/src/templates/SPEC.md"
+        "packages/workflow-kit/src/templates/SPEC.md",
+        "docs/planning/parallel-execution-plan-draft.md"
       ],
       "verification_ids": [
         "kit-check"
@@ -158,7 +187,21 @@
         ],
         "include_last_completed_task": false,
         "dependency_task_ids": []
-      }
+      },
+      "actual_files": [
+        "docs/planning/parallel-execution-plan-draft.md",
+        "docs/planning/parallel-execution-spec.md",
+        "packages/workflow-kit/package.json",
+        "packages/workflow-kit/scripts/check-parallel-plan-fixture.mjs",
+        "packages/workflow-kit/src/lib/actions.mjs",
+        "packages/workflow-kit/src/lib/extend-plan.mjs",
+        "packages/workflow-kit/src/lib/plan.mjs",
+        "packages/workflow-kit/src/lib/recovery.mjs",
+        "packages/workflow-kit/src/lib/simple-workflow.mjs",
+        "packages/workflow-kit/src/schemas/plan.schema.json",
+        "packages/workflow-kit/src/templates/PLAN.md",
+        "packages/workflow-kit/src/templates/SPEC.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -678,20 +721,214 @@
       ],
       "verification_ids": [],
       "id": "T011",
-      "title": "Пользовательская приёмка прототипа",
-      "why": "Приёмка реальных чатов пользователем.",
+      "title": "Подготовить пользовательскую приёмку нового выпуска",
+      "why": "Живая приёмка проводится пользователем после установки нового выпуска, а не до сборки.",
       "acceptance_criteria": [
-        "Записаны только фактически проверенные сценарии и платформа.",
-        "Сбои разобраны, изменения объёма согласованы, ограничения названы.",
-        "Агент не нажимает мышь/клавиши и не управляет окнами; fixtures не подменяют пользовательскую приёмку.",
-        "Native Windows/чистая установка не объявлены проверенными без реального результата.",
-        "После всех DONE план READY_FOR_ACCEPTANCE; закрытие только по прямой приёмке пользователя."
+        "Подготовлен сценарий проверки реальных Chat/Work, параллельных исполнителей, последовательного fallback и восстановления на установленном выпуске.",
+        "Живая приёмка и её результаты остаются открытыми до установки выпуска; fixtures не подменяют пользовательскую проверку.",
+        "Агент не управляет окнами, мышью и клавиатурой пользователя. Native Windows и чистая установка не объявлены проверенными без фактического результата.",
+        "После задач выпуска план READY_FOR_ACCEPTANCE; закрытие только после прямой приёмки пользователем."
       ],
-      "expected_commit_message": "docs: Пользовательская приёмка прототипа",
+      "expected_commit_message": "docs: подготовить приёмку нового выпуска",
       "context_pack": {
         "documents": [],
         "include_last_completed_task": false,
         "dependency_task_ids": []
+      }
+    },
+    {
+      "id": "T012",
+      "title": "Подготовить новую версию приложения к выпуску",
+      "why": "Подготовить новую версию приложения к выпуску",
+      "dependencies": [
+        "T011"
+      ],
+      "functional_paths": [
+        "package.json",
+        "package-lock.json",
+        ".harness/workflow.json"
+      ],
+      "documentation_paths": [
+        "docs/planning/parallel-execution-spec.md"
+      ],
+      "verification_ids": [
+        "unit-all",
+        "electron-smoke",
+        "codex-tools-live",
+        "kit-check"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Выбрана следующая свободная версия X.Y.Z; package.json и lock согласованы.",
+        "Через config:apply актуализированы evidence paired-release/release-installed/github-release с новой версией приложения и фактической версией Kit.",
+        "Все обязательные проверки исходников пройдены до DOCS; сборка не запускается в этой задаче."
+      ],
+      "expected_commit_message": "chore: подготовить версию приложения к выпуску",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "parallel-chat-execution-20261009",
+        "task_id": "T012",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "DOCS",
+      "title": "Актуализация всех документов проекта",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "parallel-chat-execution-20261009",
+        "task_id": "DOCS",
+        "role": "implementation",
+        "iteration": 1
+      },
+      "why": "Перед выпуском сверить README, OVERVIEW и действующие контракты модулей с результатом; обновить устаревшее.",
+      "dependencies": [
+        "T001",
+        "T002",
+        "T003",
+        "T004",
+        "T005",
+        "T006",
+        "T007",
+        "T008",
+        "T009",
+        "T010",
+        "T011",
+        "T012"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/architecture/OVERVIEW.md",
+        "docs/planning/parallel-execution-spec.md",
+        "packages/workflow-kit/src/templates/PLAN.md",
+        "packages/workflow-kit/src/templates/SPEC.md",
+        "docs/modules/release.md",
+        "README.md",
+        "docs/modules/auto-plan.md",
+        "docs/modules/chatgpt-dom-compatibility.md",
+        "docs/modules/chromium-diagnostics.md",
+        "docs/modules/codex-app-server-executor.md",
+        "docs/modules/context-delivery.md",
+        "docs/modules/first-run-onboarding.md",
+        "docs/modules/plan-review.md",
+        "docs/modules/plan-view.md",
+        "docs/modules/project-archive.md",
+        "docs/modules/project-doctor.md",
+        "docs/modules/runtime-lifecycle.md",
+        "docs/modules/session-opening-performance.md",
+        "docs/modules/workflow-kit-recovery.md",
+        "docs/modules/workspace-sessions.md",
+        "docs/modules/workspace-setup.md",
+        "docs/modules/workspace-sidebar-ui.md",
+        "docs/planning/parallel-execution-plan-draft.md",
+        "docs/planning/technical-audit-20261008.md",
+        "docs/planning/technical-audit-findings-lifecycle.md",
+        "docs/planning/technical-audit-findings-summary.md",
+        "docs/planning/technical-audit-findings-unused.md",
+        "docs/planning/technical-audit-findings.md",
+        "packages/workflow-kit/docs/modules/workflow-kit-package.md"
+      ],
+      "acceptance_criteria": [
+        "Документы описывают текущий результат, существенное из выпущенных рабочих спецификаций перенесено в контракты модулей; история остаётся в Git.",
+        "Сверены все документы проекта и Kit, включая README, обзор и контракты модулей; изменены только нуждающиеся в актуализации.",
+        "Контракты и инструкции отражают готовую реализацию и выпуск; живая пользовательская приёмка остаётся после установки."
+      ],
+      "verification_ids": [],
+      "expected_commit_message": "docs: актуализировать документацию проекта"
+    },
+    {
+      "id": "T013",
+      "title": "Собрать парный выпуск macOS и Windows",
+      "why": "Собрать парный выпуск macOS и Windows",
+      "dependencies": [
+        "T012",
+        "DOCS"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/planning/parallel-execution-spec.md",
+        "docs/modules/release.md"
+      ],
+      "verification_ids": [
+        "paired-release"
+      ],
+      "verification_kind": "package",
+      "acceptance_criteria": [
+        "Сборка запускается один раз самой проверкой paired-release при commit задачи; исходники и DOCS уже закоммичены.",
+        "Готовы обе платформы, шесть файлов поставки и manifest; sourceCommit указывает на HEAD после DOCS, исходники и bundled Kit сверены.",
+        "Корневое приложение обновлено с сохранением identity и действующей подписи."
+      ],
+      "expected_commit_message": "build: собрать новый парный выпуск",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "parallel-chat-execution-20261009",
+        "task_id": "T013",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T014",
+      "title": "Установить и проверить готовый выпуск",
+      "why": "Установить и проверить готовый выпуск",
+      "dependencies": [
+        "T013",
+        "DOCS"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/planning/parallel-execution-spec.md",
+        "docs/modules/release.md"
+      ],
+      "verification_ids": [
+        "release-installed"
+      ],
+      "verification_kind": "installed",
+      "acceptance_criteria": [
+        "Готовый staging установлен в /Applications через installMacBundle без пересборки; обе постоянные копии проверены.",
+        "Версия, подпись, identity, runtime и поставка совпадают с manifest; настройки и пользовательские данные сохранены.",
+        "Пользователю доступна новая версия для живой приёмки после полного перезапуска приложения."
+      ],
+      "expected_commit_message": "build: установить и проверить выпуск",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "parallel-chat-execution-20261009",
+        "task_id": "T014",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T015",
+      "title": "Опубликовать исходники и GitHub Release",
+      "why": "Опубликовать исходники и GitHub Release",
+      "dependencies": [
+        "T014",
+        "DOCS"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/planning/parallel-execution-spec.md",
+        "docs/modules/release.md"
+      ],
+      "verification_ids": [
+        "github-release"
+      ],
+      "verification_kind": "package",
+      "acceptance_criteria": [
+        "Пользователь разрешил публикацию: main и тег vX.Y.Z отправлены в текущий репозиторий GitHub штатно с hooks.",
+        "Тег указывает на manifest.sourceCommit; GitHub Release содержит шесть готовых assets из поставки, без пересборки.",
+        "После финального push коммита задачи проверены remote main, тег и assets; пользователю переданы ссылки и сценарий живой приёмки."
+      ],
+      "expected_commit_message": "release: опубликовать выпуск на GitHub",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "parallel-chat-execution-20261009",
+        "task_id": "T015",
+        "role": "implementation"
       }
     }
   ],
@@ -705,6 +942,10 @@
       "id": "91930bcf-f6fe-4b71-a7b0-e4383d9cc2a4",
       "text": "Пользователь согласовал требования и поручил Review с публикацией согласованной пары через Kit. Публикация плана не разрешает выполнение задач или выпуск; отдельное поручение реализации ещё требуется.",
       "recorded_at": "2026-10-09T07:57:39.502Z"
+    },
+    {
+      "id": "execution-and-release-authorized-20261009",
+      "text": "Пользователь поручил начать выполнение текущего плана и добавить стандартный выпуск: актуализацию всей документации, сборку, установку, публикацию нового релиза и репозитория на GitHub. Это последующее разрешение выполнения и выпуска; живую приёмку проводить на установленном выпуске."
     }
   ]
 }
@@ -717,7 +958,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: parallel-chat-execution-20261009
 Current Task: нет
-Revision: 1533
+Revision: 1540
 
 ## Цель
 
@@ -733,10 +974,10 @@ Revision: 1533
 
 ## Микрозадачи
 
-- [TODO] T001: Модель и валидация параллельного плана — Ожидает
-  - Git Commit: [PENDING] feat: Модель и валидация параллельного плана
+- [DONE] T001: Модель и валидация параллельного плана — Завершено
+  - Git Commit: [DONE] feat: Модель и валидация параллельного плана
   - Reference: parallel-chat-execution-20261009 / T001 / implementation
-  - Файлы: packages/workflow-kit/src/schemas/plan.schema.json, packages/workflow-kit/src/lib/plan.mjs, packages/workflow-kit/src/lib/simple-workflow.mjs, packages/workflow-kit/src/lib/extend-plan.mjs, packages/workflow-kit/src/lib/task-update.mjs, packages/workflow-kit/src/lib/plan-review.mjs, packages/workflow-kit/src/lib/recovery.mjs, packages/workflow-kit/scripts/check-parallel-plan-fixture.mjs, packages/workflow-kit/package.json, docs/planning/parallel-execution-spec.md, packages/workflow-kit/src/templates/PLAN.md, packages/workflow-kit/src/templates/SPEC.md
+  - Файлы: packages/workflow-kit/src/schemas/plan.schema.json, packages/workflow-kit/src/lib/plan.mjs, packages/workflow-kit/src/lib/simple-workflow.mjs, packages/workflow-kit/src/lib/extend-plan.mjs, packages/workflow-kit/src/lib/task-update.mjs, packages/workflow-kit/src/lib/plan-review.mjs, packages/workflow-kit/src/lib/recovery.mjs, packages/workflow-kit/scripts/check-parallel-plan-fixture.mjs, packages/workflow-kit/package.json, packages/workflow-kit/src/lib/actions.mjs, docs/planning/parallel-execution-spec.md, packages/workflow-kit/src/templates/PLAN.md, packages/workflow-kit/src/templates/SPEC.md, docs/planning/parallel-execution-plan-draft.md
 - [TODO] T002: Settings и неизменяемый снимок сессии — Ожидает
   - Git Commit: [PENDING] feat: Settings и неизменяемый снимок сессии
   - Reference: parallel-chat-execution-20261009 / T002 / implementation
@@ -773,15 +1014,35 @@ Revision: 1533
   - Git Commit: [PENDING] test: Сквозная регрессия готового сценария
   - Reference: parallel-chat-execution-20261009 / T010 / implementation
   - Файлы: tests/electron-smoke.mjs, tests/parallel-execution.test.mjs, tests/parallel-execution-smoke-fixture.cjs, packages/workflow-kit/scripts/check-parallel-execution-fixture.mjs, src/main.mjs, packages/workflow-kit/package.json, docs/planning/parallel-execution-spec.md
-- [TODO] T011: Пользовательская приёмка прототипа — Ожидает
-  - Git Commit: [PENDING] docs: Пользовательская приёмка прототипа
+- [TODO] T011: Подготовить пользовательскую приёмку нового выпуска — Ожидает
+  - Git Commit: [PENDING] docs: подготовить приёмку нового выпуска
   - Reference: parallel-chat-execution-20261009 / T011 / implementation
   - Файлы: docs/planning/parallel-execution-spec.md
+- [TODO] T012: Подготовить новую версию приложения к выпуску — Ожидает
+  - Git Commit: [PENDING] chore: подготовить версию приложения к выпуску
+  - Reference: parallel-chat-execution-20261009 / T012 / implementation
+  - Файлы: package.json, package-lock.json, .harness/workflow.json, docs/planning/parallel-execution-spec.md
+- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: актуализировать документацию проекта
+  - Reference: parallel-chat-execution-20261009 / DOCS / implementation
+  - Файлы: docs/architecture/OVERVIEW.md, docs/planning/parallel-execution-spec.md, packages/workflow-kit/src/templates/PLAN.md, packages/workflow-kit/src/templates/SPEC.md, docs/modules/release.md, README.md, docs/modules/auto-plan.md, docs/modules/chatgpt-dom-compatibility.md, docs/modules/chromium-diagnostics.md, docs/modules/codex-app-server-executor.md, docs/modules/context-delivery.md, docs/modules/first-run-onboarding.md, docs/modules/plan-review.md, docs/modules/plan-view.md, docs/modules/project-archive.md, docs/modules/project-doctor.md, docs/modules/runtime-lifecycle.md, docs/modules/session-opening-performance.md, docs/modules/workflow-kit-recovery.md, docs/modules/workspace-sessions.md, docs/modules/workspace-setup.md, docs/modules/workspace-sidebar-ui.md, docs/planning/parallel-execution-plan-draft.md, docs/planning/technical-audit-20261008.md, docs/planning/technical-audit-findings-lifecycle.md, docs/planning/technical-audit-findings-summary.md, docs/planning/technical-audit-findings-unused.md, docs/planning/technical-audit-findings.md, packages/workflow-kit/docs/modules/workflow-kit-package.md
+- [TODO] T013: Собрать парный выпуск macOS и Windows — Ожидает
+  - Git Commit: [PENDING] build: собрать новый парный выпуск
+  - Reference: parallel-chat-execution-20261009 / T013 / implementation
+  - Файлы: docs/planning/parallel-execution-spec.md, docs/modules/release.md
+- [TODO] T014: Установить и проверить готовый выпуск — Ожидает
+  - Git Commit: [PENDING] build: установить и проверить выпуск
+  - Reference: parallel-chat-execution-20261009 / T014 / implementation
+  - Файлы: docs/planning/parallel-execution-spec.md, docs/modules/release.md
+- [TODO] T015: Опубликовать исходники и GitHub Release — Ожидает
+  - Git Commit: [PENDING] release: опубликовать выпуск на GitHub
+  - Reference: parallel-chat-execution-20261009 / T015 / implementation
+  - Файлы: docs/planning/parallel-execution-spec.md, docs/modules/release.md
 
 ## Context Pack For This Cycle
 
-- docs/planning/parallel-execution-spec.md
 - docs/planning/parallel-execution-plan-draft.md
 - docs/architecture/OVERVIEW.md
+- docs/planning/parallel-execution-spec.md
 
 Служебные состояния меняются только командами workflow. Приёмка не архивирует scope.
