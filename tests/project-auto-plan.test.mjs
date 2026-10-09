@@ -62,3 +62,20 @@ test('two main chats continue independently while hidden; completion and OFF aff
  second.primaryAutomation.observe({documentId:'doc',state:{url:second.project().chatUrl,busy:false,editorAvailable:true,writable:true,lastMessageRole:'assistant',turnId:'next'}});
  await settle();assert.equal(sends.length,2);
 });
+
+test('explicit ON before a plan survives restart and binds once to the first scope',()=>{
+ const a=new ProjectAutoPlan();assert.equal(a.enabled('/a',null),false);
+ a.set('/a',null,true,'main');a.sync('/a',null);
+ assert.equal(a.enabled('/a',null),true);assert.equal(a.enabled('/b',null),false);
+ const b=new ProjectAutoPlan({saved:JSON.parse(JSON.stringify(a.snapshot()))});
+ assert.equal(b.enabled('/a',null),true);b.sync('/a','first');
+ assert.equal(b.enabled('/a','first'),true);assert.equal(b.state('/a').sessionId,'main');
+ b.sync('/a','first',{complete:true,confirmed:true});assert.equal(b.enabled('/a','first'),false);
+ b.sync('/a','second');assert.equal(b.enabled('/a','second'),false);
+});
+test('OFF cancels pre-plan authorization and a read failure cannot carry old scope ON',()=>{
+ const a=new ProjectAutoPlan();a.set('/a',null,true,'main');a.set('/a',null,false,'main');
+ a.sync('/a','first');assert.equal(a.enabled('/a','first'),false);
+ a.set('/a','first',true,'main');a.sync('/a',null);
+ assert.equal(a.enabled('/a','first'),false);assert.equal(a.enabled('/a',null),false);
+});

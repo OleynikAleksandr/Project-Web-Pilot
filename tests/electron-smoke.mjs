@@ -609,7 +609,7 @@ export async function run({ app, window, sidebar, store, selectWorkspace, worksp
   await waitFor(()=>!snapshot().planReview.enabled,'review disabled',snapshot);
 
   await sidebar.executeJavaScript('window.webPilot.setAutoPlan(true)');
-  assert.equal(snapshot().autoPlan.enabled,false,'NONE cannot retain an ON grant');
+  assert.equal(snapshot().autoPlan.enabled,true,'explicit ON waits for the first plan');
   for(const [review,auto] of [[false,false],[true,false],[false,false]]) {
     for(const [id,current,wanted] of [
       ['auto-plan-toggle',()=>snapshot().autoPlan.enabled,auto],
@@ -1367,7 +1367,7 @@ export async function run({ app, window, sidebar, store, selectWorkspace, worksp
   const prePlanChat = store.snapshot().projects.find(p => p.workspace === workspace).sessions
     .find(session => !session.archivedAt && session.chatUrl);
   await sidebar.executeJavaScript('window.webPilot.setAutoPlan(true)');
-  assert.equal((await savedAutoState()).autoPlanEnabled, false);
+  assert.equal((await savedAutoState()).autoPlanEnabled, true, 'explicit pre-plan authorization persists');
   await sidebar.executeJavaScript(`window.webPilot.newSession(${JSON.stringify(workspace)}, "chat")`);
   await waitFor(() => store.selected()?.sessionId !== prePlanChat.sessionId
     && snapshot().context.phase === 'delivered' && !snapshot().selected?.scopeId,
@@ -1730,6 +1730,8 @@ export async function run({ app, window, sidebar, store, selectWorkspace, worksp
   assert.equal(store.selected().experience, 'work');
   assert.equal(store.snapshot().projects.find(p => p.workspace === workTarget).sessions.length, 1);
 
+  // This geometry test needs animation frames in the presented fixture window.
+  window.show(); window.focus(); browser.focus();
   await browser.executeJavaScript(`(()=>{const box=document.createElement('div');box.id='reverse-probe';box.className='thread-scroll-container';box.style.cssText='position:fixed;top:80px;left:100px;width:240px;height:120px;overflow:auto;display:flex;flex-direction:column-reverse;z-index:9999';box.innerHTML='<div style="height:1200px;flex-shrink:0">scroll probe</div>';document.body.prepend(box);box.scrollTop=-400;window.__scrollWrites=0;const original=box.scrollTo.bind(box);box.scrollTo=opts=>{window.__scrollWrites++;original(opts)};})()`);
   await browser.executeJavaScript(autoScrollPageScript({forceFollow:true}));
   await waitFor(()=>browser.executeJavaScript('Math.abs(document.getElementById("reverse-probe").scrollTop)<1'), 'reverse bottom reached',snapshot);
