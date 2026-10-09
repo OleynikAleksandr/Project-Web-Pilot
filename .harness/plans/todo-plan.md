@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1668,
+  "plan_revision": 1670,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "project-state-deletion-20261009",
@@ -394,8 +394,8 @@
       "actual_files": []
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "project-state-deletion-20261009",
         "task_id": "T005",
@@ -420,7 +420,8 @@
       "acceptance_criteria": [
         "Готовый staging установлен без пересборки, подпись, runtime и identity проверены"
       ],
-      "expected_commit_message": "feat: Установить и проверить выпуск 0.6.109"
+      "expected_commit_message": "feat: Установить и проверить выпуск 0.6.109",
+      "actual_files": []
     },
     {
       "implementation_status": "TODO",
@@ -470,7 +471,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: project-state-deletion-20261009
 Current Task: нет
-Revision: 1668
+Revision: 1670
 
 ## Цель
 
@@ -510,8 +511,8 @@ Revision: 1668
   - Git Commit: [DONE] feat: Собрать парный выпуск 0.6.109
   - Reference: project-state-deletion-20261009 / T004 / implementation
   - Файлы: docs/planning/project-state-deletion.md, docs/modules/release.md
-- [TODO] T005: Установить и проверить выпуск 0.6.109 — Ожидает
-  - Git Commit: [PENDING] feat: Установить и проверить выпуск 0.6.109
+- [DONE] T005: Установить и проверить выпуск 0.6.109 — Завершено
+  - Git Commit: [DONE] feat: Установить и проверить выпуск 0.6.109
   - Reference: project-state-deletion-20261009 / T005 / implementation
   - Файлы: docs/planning/project-state-deletion.md, docs/modules/release.md
 - [TODO] T006: Опубликовать выпуск 0.6.109 и репозиторий — Ожидает
