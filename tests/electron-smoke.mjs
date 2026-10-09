@@ -7,6 +7,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import http from 'node:http';
 import { openStartupPage } from '../src/browser-startup.mjs';
+import { readinessContextKey } from '../src/context-inputs.mjs';
 import { TunnelClipboard } from '../src/tunnel-clipboard.mjs';
 import { StartupNetworkTrace } from '../src/startup-network-trace.mjs';
 import { StartupReadiness } from '../src/startup-readiness.mjs';
@@ -70,13 +71,14 @@ setFixtureMode(window.fixtureMode);
 document.getElementById('prompt-textarea').addEventListener('input',()=>{if(!document.getElementById('prompt-textarea').innerText.trim())localStorage.removeItem('fixture-restored-draft-'+window.fixtureMode);});
 
 document.querySelectorAll('[data-tpp-toggle-value]').forEach(button=>button.addEventListener('click',()=>{window.fixtureModeClicks++;setFixtureMode(button.dataset.tppToggleValue);}));
-window.fixtureMessages=JSON.parse(sessionStorage.getItem(location.pathname)||'[]');
+// Fixture-only shared persistence models server history across separate WebContents.
+window.fixtureMessages=JSON.parse(localStorage.getItem('fixture-messages:'+location.pathname)||'[]');
 // Keep machine message IDs and ordering through real navigation/reload.
-window.fixtureTurns=JSON.parse(sessionStorage.getItem('turns:'+location.pathname)||'null')
+window.fixtureTurns=JSON.parse(localStorage.getItem('fixture-turns:'+location.pathname)||'null')
  || window.fixtureMessages.map((message,index)=>({role:'user',id:'fixture-message-'+index,text:message.text}));
 function showTurn(turn){const article=document.createElement('article');article.dataset.messageAuthorRole=turn.role;article.dataset.messageId=turn.id;article.textContent=turn.text;document.getElementById('messages').append(article);}
 window.fixtureTurns.forEach(showTurn);
-function saveTurns(target=location.pathname){sessionStorage.setItem('turns:'+target,JSON.stringify(window.fixtureTurns));}
+function saveTurns(target=location.pathname){localStorage.setItem('fixture-turns:'+target,JSON.stringify(window.fixtureTurns));}
 function showMessage(text){const turn={role:'user',id:'fixture-message-'+window.fixtureTurns.filter(t=>t.role==='user').length,text};window.fixtureTurns.push(turn);showTurn(turn);}
 window.fixtureAssistant=(text,id='fixture-answer-'+crypto.randomUUID())=>{const turn={role:'assistant',id,text};window.fixtureTurns.push(turn);showTurn(turn);saveTurns();return id;};
 document.querySelector('form').addEventListener('submit',event=>{
@@ -87,9 +89,9 @@ document.querySelector('form').addEventListener('submit',event=>{
  editor.textContent='';const match=text.match(/wp-request-[a-zA-Z0-9-]+/) || ['manual-'+crypto.randomUUID()];
  if(match && !location.pathname.startsWith('/c/')){
    const target='/c/'+match[0];history.pushState({},'', '/c/WEB:12345678-1234-1234-1234-123456789abc');
-   sessionStorage.setItem(target,JSON.stringify(window.fixtureMessages));saveTurns(target);
+   localStorage.setItem('fixture-messages:'+target,JSON.stringify(window.fixtureMessages));saveTurns(target);
    setTimeout(()=>history.replaceState({},'',target),600);
- }else{sessionStorage.setItem(location.pathname,JSON.stringify(window.fixtureMessages));saveTurns();}
+ }else{localStorage.setItem('fixture-messages:'+location.pathname,JSON.stringify(window.fixtureMessages));saveTurns();}
 });
 </script></body></html>`;
 
@@ -195,7 +197,13 @@ async function verifyUninterruptedRequest(dataDir) {
   }
 }
 
-export async function run({ app, window, browser, sidebar, store, controller, selectWorkspace, workspaceSetup, snapshot, assertLocalSender, permissionAllowed, dataDir, chromiumDiagnostics, chromiumDiagnosticsFile, navigate, getArchiveWindow, getColorWindow, eventBaseline = false, runtimeMetrics = null, pageState, autoPlan }) {
+export async function run({ app, window, sidebar, store, selectWorkspace, workspaceSetup, snapshot, assertLocalSender, permissionAllowed, dataDir, chromiumDiagnosticsFile, navigate, getArchiveWindow, getColorWindow, eventBaseline = false, runtimeMetrics = null, autoPlan, getLive, liveSessions }) {
+  // Test actions follow the visible page; production controllers retain their own page.
+  const currentObject=key=>new Proxy({}, {
+    get:(_target,property)=>{const value=getLive()[key][property];return typeof value==='function'?value.bind(getLive()[key]):value;},
+    set:(_target,property,value)=>{getLive()[key][property]=value;return true;},
+  });
+  const browser=currentObject('browser'),controller=currentObject('controller'),pageState=currentObject('pageState'),chromiumDiagnostics=currentObject('chromiumDiagnostics');
   smokeDataDir = dataDir;
   // Keep frame-based fixture checks running when another desktop window covers this one.
   sidebar.setBackgroundThrottling(false);
@@ -428,9 +436,9 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await assert.rejects(fs.stat(workspace), { code: 'ENOENT' });
   await previewNew();
   assert.equal(snapshot().setup.firstSessionExperience, 'chat', 'choice is not remembered globally after cancel');
-  const deliverNormally = controller.composer.deliver.bind(controller.composer);
+  const deliverNormally = ChatGPTComposer.prototype.deliver;
   let manualDeliveryArmed = !eventBaseline, manualDeliveryClicked = false;
-  if (manualDeliveryArmed) controller.composer.deliver = async options => {
+  if (manualDeliveryArmed) ChatGPTComposer.prototype.deliver = async function(options) {
     await controller.composer.inspect({action:'attach',attachments:options.attachments,requestId:options.requestId});
     await controller.composer.inspect({ action: 'fill', text: options.text, requestId: options.requestId });
     const ready=await controller.composer.waitForSendReady(options,0,()=>true);
@@ -450,7 +458,7 @@ export async function run({ app, window, browser, sidebar, store, controller, se
         manualDeliveryArmed = false; manualDeliveryClicked = true;
         assert.equal(store.selected().chatUrl, null);
         assert.equal(store.selected().attempt.sendStartedAtMs, null);
-        controller.composer.deliver = deliverNormally;
+        ChatGPTComposer.prototype.deliver = deliverNormally;
         await browser.executeJavaScript("document.querySelector('[data-testid=send-button]').click()", true);
         return false;
       }
@@ -835,6 +843,15 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(packetLoads, warmPacketLoads, 'new Chat reuses the checkout-scoped recovery packet');
   assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), 1);
   const second = store.selected();
+  const firstRuntime=liveSessions.ensure(first),secondRuntime=liveSessions.ensure(second);
+  assert.notEqual(firstRuntime.view.webContents.id,secondRuntime.view.webContents.id);
+  const firstDocument=firstRuntime.pageState.current.documentId;
+  await firstRuntime.view.webContents.executeJavaScript("window.fixtureBackgroundMarker=17; document.getElementById('prompt-textarea').textContent='background draft'");
+  await waitFor(()=>firstRuntime.pageState.current.state.draftPresent,'hidden page continues to report its own state',snapshot);
+  assert.equal(secondRuntime.pageState.current.state.draftPresent,false,'hidden page does not alter selected page state');
+  assert.equal(firstRuntime.pageState.current.documentId,firstDocument);
+  assert.equal(firstRuntime.controller.active.sessionId,first.sessionId);
+  await firstRuntime.view.webContents.executeJavaScript("document.getElementById('prompt-textarea').textContent=''");
   assert.equal(second.attempt.packet.session_id, undefined);
   assert.equal(second.attempt.packet.plan_id, null);
   assert.equal(second.attempt.packet.contextSha256, first.attempt.packet.contextSha256);
@@ -976,37 +993,39 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await waitFor(() => controller.contextCache.pending.size === 0, 'settle before navigation races', snapshot);
   const realReady = workspaceSetup.ready.bind(workspaceSetup), readiness = [];
   const readyResult = await realReady(workspace), loadsBeforeNavigation = packetLoads;
+  // Hold only the opening checks; background context freshness still uses real inputs.
+  const cache=controller.contextCache,realInputKey=cache.inputKey;
+  cache.inputKey=workspace=>readinessContextKey({ready:realReady},workspace);
   workspaceSetup.ready = () => new Promise((resolve, reject) => readiness.push({ resolve, reject }));
   const choose = sessionId => sidebar.executeJavaScript(`window.webPilot.selectSession(${JSON.stringify(workspace)}, ${JSON.stringify(sessionId)})`);
   await choose(first.sessionId); await choose(fourth.sessionId); await choose(first.sessionId);
   await waitFor(() => !snapshot().pageLoading, 'saved chat before readiness', snapshot);
   assert.equal(readiness.length, 3); assert.equal(snapshot().workspaceHealth.phase, 'checking');
   assert.equal(snapshot().selected.sessionId, first.sessionId); assert.ok(snapshot().selected.planView);
-  assert.equal(controller.active, null); assert.equal(packetLoads, loadsBeforeNavigation);
+  assert.equal(controller.active?.sessionId,first.sessionId,'existing live controller survives selection readiness checks'); assert.equal(packetLoads, loadsBeforeNavigation);
   readiness[1].reject(new Error('obsolete B')); readiness[0].resolve({ ...readyResult, ready: false });
   await new Promise(resolve => setImmediate(resolve));
   assert.equal(snapshot().workspaceHealth.phase, 'checking'); assert.equal(snapshot().startupError, null);
   readiness[2].resolve(readyResult);
   await waitFor(() => snapshot().workspaceHealth.ready && snapshot().context.phase === 'delivered', 'newest A readiness', snapshot);
-  // Readiness can also finish first; attachment still waits for the current loadURL.
+  // Reopening an already live session changes presentation without loadURL.
   workspaceSetup.ready = async () => readyResult;
-  const loadURL = browser.loadURL.bind(browser);
-  let releaseLoad;
-  const heldLoad = new Promise(resolve => { releaseLoad = resolve; });
-  browser.loadURL = async (...args) => { await loadURL(...args); await heldLoad; };
+  const loadURL = browser.loadURL.bind(browser);let reopenedLoads=0;
+  browser.loadURL = async (...args) => { reopenedLoads++;return loadURL(...args); };
   await choose(first.sessionId);
   await waitFor(() => snapshot().workspaceHealth.ready, 'readiness before navigation completes', snapshot);
-  assert.equal(snapshot().pageLoading, true); assert.equal(controller.active, null);
-  releaseLoad(); browser.loadURL = loadURL;
+  assert.equal(snapshot().pageLoading, false); assert.equal(controller.active?.sessionId,first.sessionId);
+  assert.equal(reopenedLoads,0);browser.loadURL = loadURL;
   await waitFor(() => snapshot().context.phase === 'delivered', 'attach after both prerequisites', snapshot);
   workspaceSetup.ready = () => new Promise((resolve, reject) => readiness.push({ resolve, reject }));
   await choose(first.sessionId); await sidebar.executeJavaScript('window.webPilot.openSettings()');
   const healthBeforeLateResult = snapshot().workspaceHealth;
   readiness.at(-1).reject(new Error('obsolete after settings'));
   await new Promise(resolve => setImmediate(resolve));
-  assert.equal(controller.active, null); assert.deepEqual(snapshot().workspaceHealth, healthBeforeLateResult);
+  assert.equal(controller.active,null,'failed readiness cancels delivery without changing the displayed settings'); assert.deepEqual(snapshot().workspaceHealth, healthBeforeLateResult);
   assert.equal(snapshot().startupError, null);
   workspaceSetup.ready = realReady;
+  cache.inputKey=realInputKey;
   await browser.executeJavaScript('window.fixtureResumeMarker = 29');
   await sidebar.executeJavaScript('window.webPilot.closeSettings()');
   await waitFor(() => snapshot().context.phase === 'delivered', 'return after navigation races', snapshot);
@@ -1694,14 +1713,14 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   assert.equal(await sidebar.executeJavaScript('document.getElementById("plan-card").hidden'), false);
   assert.equal(snapshot().selected?.sessionId, beforeSidebarReload.selected?.sessionId, 'sidebar reload does not change selected session');
   // Ordinary first message: actual trusted input, persisted URL, no recovery acknowledgement.
-  const deliverBeforeManual = controller.composer.deliver;
-  controller.composer.deliver = async () => {
-    await controller.composer.inspect({ action: 'fill', text: 'Моё обычное ручное сообщение' });
+  const deliverBeforeManual = ChatGPTComposer.prototype.deliver;
+  ChatGPTComposer.prototype.deliver = async function () {
+    await this.inspect({ action: 'fill', text: 'Моё обычное ручное сообщение' });
     return { state: 'deferred', reason: 'DRAFT_PRESENT' };
   };
   await sidebar.executeJavaScript('window.webPilot.newSession(' + JSON.stringify(workTarget) + ', "chat")');
   await waitFor(() => snapshot().context.phase === 'waiting-draft', 'ordinary manual draft', snapshot);
-  controller.composer.deliver = deliverBeforeManual;
+  ChatGPTComposer.prototype.deliver = deliverBeforeManual;
   await browser.executeJavaScript("document.querySelector('[data-testid=send-button]').scrollIntoView({block:'center'})");
   const point = await browser.executeJavaScript("(()=>{const r=document.querySelector('[data-testid=send-button]').getBoundingClientRect();return {x:Math.round(r.x+r.width/2),y:Math.round(r.y+r.height/2)}})()");
   window.focus(); browser.focus();

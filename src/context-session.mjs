@@ -100,6 +100,7 @@ export class ContextSession {
   }
 
   attach(project, { freshDraft = false } = {}) {
+    this.retryGeneration = null;
     this.warmState = { requested: 0, started: -1, pending: false };
     this.inputsChanged = false; this.inputStale = false;
     this.freshDraft = freshDraft && !project.chatUrl && !project.attempt;
@@ -112,6 +113,7 @@ export class ContextSession {
   }
 
   cancel() {
+    this.retryGeneration = null;
     this.generation++; this.rerunRequested = false; this.active = null; this.servicesReady = false; this.freshDraft = false;
     this.emit({ phase: 'selected', messageSent: false, delivery: null, error: null, projectInfo: null });
   }
@@ -145,7 +147,8 @@ export class ContextSession {
 
   async retry() {
     if (!this.active) return;
-    if (this.pending) { this.rerunRequested = true; return; }
+    if (this.pending) { this.retryGeneration = this.generation; return; }
+    this.retryGeneration = null;
     const project = this.store.project(this.active.workspace);
     const attempt = project?.attempt;
     if (project?.manualStart) await this.store.updateSession(project.workspace, project.sessionId, { manualStart: false, attempt: null, receipt: null });
@@ -416,9 +419,17 @@ export class ContextSession {
         error: { code: error.code ?? 'CONTEXT_ERROR', message: error.message } });
     } finally {
       this.pending = false;
+      const retryGeneration = this.retryGeneration;
+      this.retryGeneration = null;
       const rerun = this.rerunRequested;
       this.rerunRequested = false;
-      if (rerun && this.current(this.generation) && this.state.phase !== 'error') {
+      if (retryGeneration != null && this.current(retryGeneration)) {
+        queueMicrotask(() => {
+          if (this.current(retryGeneration)) void this.retry().catch(error => {
+            if (this.current(retryGeneration)) this.emit({phase:'error',error:{code:error.code??'CONTEXT_ERROR',message:error.message}});
+          });
+        });
+      } else if (rerun && this.current(this.generation) && this.state.phase !== 'error') {
         queueMicrotask(() => { void this.tick(); });
       }
     }

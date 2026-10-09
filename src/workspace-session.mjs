@@ -317,10 +317,11 @@ async function purgeSessionCopies(storeFile, workspace, sessionId) {
   }
 }
 
-function currentView(project) {
+function currentView(project, sessionId = project?.selectedSessionId) {
   if (!project) return null;
   const { sessions, archivedAt: projectArchivedAt, ...info } = project;
-  const session = sessions.find(s => s.sessionId === project.selectedSessionId);
+  const session = sessions.find(s => s.sessionId === sessionId);
+  if (!session) return null;
   return copy({ ...info, ...session, projectLastNamedScopeId: info.lastNamedScopeId ?? null,
     planId: info.scopeId ?? null, originSessionId: null,
     archivedAt: projectArchivedAt, sessionArchivedAt: session.archivedAt });
@@ -375,15 +376,16 @@ export class WorkspaceSessions {
   // Archiving or deleting the selected project clears the selection; the UI then returns
   // to another active project. Only an empty active list means first run.
   landing() { return this.selected() ?? currentView(this.data.projects.find(p => p.archivedAt === null)); }
-  project(workspace) { return currentView(this.data.projects.find(p => p.workspace === workspace)); }
+  project(workspace, sessionId) { return currentView(this.data.projects.find(p => p.workspace === workspace), sessionId); }
 
-  activeRecord(workspace, sessionId, data = this.data) {
+  activeRecord(workspace, sessionId, data = this.data, { background = false } = {}) {
     const project = data.projects.find(p => p.workspace === workspace);
     if (project?.archivedAt) throw new WorkspaceError('PROJECT_ARCHIVED', 'Сначала верните проект из архива.');
-    if (!project || project.selectedSessionId !== sessionId) {
+    const session = project?.sessions.find(s => s.sessionId === sessionId);
+    if (!session || session.archivedAt || !background && project.selectedSessionId !== sessionId) {
       throw new WorkspaceError('SESSION_CHANGED', 'Проект или сессия уже изменились.');
     }
-    return { project, session: project.sessions.find(s => s.sessionId === sessionId) };
+    return { project, session };
   }
 
   save(data = this.data, isCurrent = () => true) {
@@ -484,11 +486,11 @@ export class WorkspaceSessions {
     }, current);
   }
 
-  bindChat(workspace, sessionId, input, { manual = false } = {}) {
+  bindChat(workspace, sessionId, input, { manual = false, background = false } = {}) {
     return this.mutate(data => {
       const url = normalizeChatUrl(input);
       if (!url) throw new WorkspaceError('CHAT_URL_INVALID', 'Откройте конкретный чат ChatGPT.');
-      const { session } = this.activeRecord(workspace, sessionId, data);
+      const { session } = this.activeRecord(workspace, sessionId, data, { background });
       if (!conversationUrlCompatibleWithExperience(url, session.experience)) {
         throw new WorkspaceError('CHAT_EXPERIENCE_MISMATCH', session.experience === 'work'
           ? 'Эта сессия создана как Work. Откройте разговор, созданный из Work.' : 'Эта сессия создана как Chat. Откройте обычный Chat.');
@@ -497,7 +499,7 @@ export class WorkspaceSessions {
       if (data.projects.some(p => p.sessions.some(s => s.sessionId !== sessionId && s.chatUrl === url))) throw new WorkspaceError('CHAT_IN_USE', 'Этот чат уже связан с другой сессией.');
       session.chatUrl = url;
       if (manual && !['sent', 'acknowledged'].includes(session.attempt?.state)) session.manualStart = true;
-      return currentView(data.projects.find(p => p.workspace === workspace));
+      return currentView(data.projects.find(p => p.workspace === workspace), sessionId);
     });
   }
 
@@ -602,12 +604,12 @@ export class WorkspaceSessions {
     });
   }
 
-  updateSession(workspace, sessionId, patch) {
+  updateSession(workspace, sessionId, patch, { background = false } = {}) {
     return this.mutate(data => {
-      const { project, session } = this.activeRecord(workspace, sessionId, data);
+      const { project, session } = this.activeRecord(workspace, sessionId, data, { background });
       if (Object.keys(patch).some(k => !['attempt', 'receipt', 'manualStart'].includes(k))) throw new Error('INVALID_SESSION_PATCH');
       if (patch.manualStart !== undefined && typeof patch.manualStart !== 'boolean') throw new Error('INVALID_SESSION_PATCH');
-      Object.assign(session, copy(patch)); return currentView(project);
+      Object.assign(session, copy(patch)); return currentView(project, sessionId);
     });
   }
 

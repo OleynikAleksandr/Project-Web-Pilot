@@ -3,11 +3,8 @@ import { PlanReviewClient } from './plan-review.mjs';
 import { ReviewContinuation } from './review-continuation.mjs';
 import { AutomationSendState } from './automation-send-state.mjs';
 import { readAutoPlanState, reviewBlocksExecution } from './auto-plan-state.mjs';
-import { ConversationRecovery } from './conversation-recovery.mjs';
-import { PageStateSource } from './page-state.mjs';
 import { connectPageState } from './page-state-bridge.mjs';
 import { PlanMonitor } from './plan-monitor.mjs';
-import { AgentTimer } from './agent-timer.mjs';
 import { chatGPTTitleScript } from './chatgpt-title.mjs';
 import { toolFilterScript } from './chatgpt-tool-filter.mjs';
 import { app, BaseWindow, BrowserWindow, WebContentsView, Menu, session, ipcMain, dialog, nativeTheme, clipboard, shell } from 'electron';
@@ -19,7 +16,6 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { WorkspaceSessions, normalizeChatUrl, activeSessionsNewestFirst } from './workspace-session.mjs';
 import { DEFAULT_PARALLEL_SETTINGS, validateParallelSettings } from './parallel-settings.mjs';
-import { ChatGPTComposer } from './chatgpt-composer.mjs';
 import { installChatGPTAutoScroll } from './chatgpt-auto-scroll.mjs';
 import { ChatColors, normalizeChatColors, validateColorChange, DEFAULT_COLORS } from './chatgpt-colors.mjs';
 import { ChatColorsWindow } from './chat-colors-window.mjs';
@@ -28,7 +24,8 @@ import { readinessContextKey } from './context-inputs.mjs';
 const contextCache = new ContextCache({ load: workspace => runtime.loadContext(workspace),
   inputKey: workspace => readinessContextKey(workspaceSetup, workspace), onChange: () => publish() });
 import { SessionPlans } from './session-plans.mjs';
-import { ContextSession, externalClientLine } from './context-session.mjs';
+import { externalClientLine } from './context-session.mjs';
+import { SessionRuntimes } from './session-runtime.mjs';
 import { chatGPTEntrypoint, CHATGPT_SIGNIN_ENTRYPOINT } from './chatgpt-experience.mjs';
 import { WorkspaceDeletion } from './workspace-deletion.mjs';
 import { appendDiagnostic } from './common.mjs';
@@ -129,50 +126,29 @@ const sessionPlans = new SessionPlans({ setup: workspaceSetup,
   onWorkerStart: () => { if (eventBaseline) runtimeMetrics.workerNodeStarts++; } });
 store.planService = sessionPlans;
 // Agent time: wall clock while ChatGPT shows its Stop control; each finished request is added to its own session.
-const agentTimer = new AgentTimer({ onFinish: ({ workspace, sessionId }, durationMs) => {
-  void store.recordAgentTime(workspace, sessionId, durationMs).then(() => publish(),
-    error => console.error('Project Web Pilot: agent time not saved:', error?.message ?? error));
-} });
-const pageState = new PageStateSource();
-let disconnectPageState = null;
-let manualDocumentOwner = null;
-let lastStopObservation = null;
-function observeManualConversation(state) {
-  const selected = store.selected(), documentId = pageState.current?.documentId;
+let agentTimer, pageState, conversationRecovery;
+function observeManualConversation(state, record = liveSessions.visible) {
+  const selected = record?.project(), documentId = record?.pageState.current?.documentId;
   if (!selected || selected.chatUrl || !documentId) return false;
-  if (!manualDocumentOwner && /^https:\/\/chatgpt\.com\/(?:work\/?)?$/.test(state.url) && state.userMessageCount === 0) {
-    manualDocumentOwner = { documentId, workspace: selected.workspace, sessionId: selected.sessionId, generation: navigationId, binding: false };
+  if (!record.manualDocumentOwner && /^https:\/\/chatgpt\.com\/(?:work\/?)?$/.test(state.url) && state.userMessageCount === 0) {
+    record.manualDocumentOwner = { documentId, workspace: selected.workspace, sessionId: selected.sessionId, generation: record.epoch, binding: false };
   }
-  const owner = manualDocumentOwner;
+  const owner = record.manualDocumentOwner;
   if (!owner || owner.documentId !== documentId || owner.workspace !== selected.workspace
-      || owner.sessionId !== selected.sessionId || owner.generation !== navigationId || !state.manualSendRevision) return false;
+      || owner.sessionId !== selected.sessionId || owner.generation !== record.epoch || !state.manualSendRevision) return false;
   const ownRecovery = selected.attempt?.state === 'sent' || selected.attempt?.sendStartedAtMs;
   if (ownRecovery) return false;
   const url = normalizeChatUrl(state.url);
-  controller?.cancel();
+  record.controller.cancel();
   if (!url || owner.binding) return true;
   owner.binding = true;
-  void store.bindChat(owner.workspace, owner.sessionId, url, { manual: true }).then(() => {
-    if (manualDocumentOwner !== owner || !navigationCurrent(owner.generation)) return;
-    attachController(store.selected()); void controller.tick(); publish();
-    void syncSelectedSessionTitle({ force: true, reason: 'manual-chat-bound' });
-  }, error => { if (manualDocumentOwner === owner) { owner.binding = false; report(error); } });
+  void store.bindChat(owner.workspace, owner.sessionId, url, { manual: true, background: true }).then(() => {
+    if (record.manualDocumentOwner !== owner || record.disposed || record.epoch !== owner.generation) return;
+    liveSessions.tick(record); publish();
+    if(record===liveSessions.visible)void syncSelectedSessionTitle({ force: true, reason: 'manual-chat-bound' });
+  }, error => { if (record.manualDocumentOwner === owner) { owner.binding = false; sessionRuntimeError(record,error); } });
   return true;
 }
-const conversationRecovery = new ConversationRecovery({
-  selected: () => store.selected(),
-  available: () => !pageLoading && !setupState && !settingsState && !controller?.composer.inFlight,
-  inspect: () => controller.composer.inspect(),
-  reopen: async (project, current) => {
-    if (!current()) return false;
-    await navigate(project, { generation: navigationId });
-    if (!current()) return false;
-    if (!pageState.current) await pageState.waitForChange(pageState.version, { timeoutMs: 5000, canContinue: current });
-    return current() && pageState.current?.state.url === project.chatUrl
-      && !pageState.current.state.connectionError && !!pageState.current.state.editorAvailable;
-  },
-  onChange: () => publish(),
-});
 const automationSend = new AutomationSendState({save:async checkpoint=>{
   automationCheckpoint=checkpoint;await saveSettings({automationCheckpoint});
 }});
@@ -201,31 +177,31 @@ const reviewContinuation=new ReviewContinuation({selected:()=>store.selected(),c
   available:()=>!!controller && !controller.composer.inFlight && !pageLoading && !setupState && !settingsState
     && workspaceHealth?.ready && workspaceHealth.workspace===store.selected()?.workspace,
   saveCheckpoint:async checkpoint=>{reviewCheckpoint=checkpoint;await saveSettings({reviewCheckpoint});}});
-function applyObservedPage(event) {
-  automationSend.observe(store.selected(),event);
-  if (event.reset) lastStopObservation = null;
-  else {
-    observeStartupAccount(event.state);
-    const documentId = event.documentId ?? pageState.current?.documentId;
-    const revision = event.state.manualStopRevision ?? 0;
-    if (revision > (lastStopObservation?.documentId === documentId ? lastStopObservation.revision : 0))
-      conversationRecovery.manualStop(event.state);
-    lastStopObservation = { documentId, revision };
+function applyObservedPage(event, record = liveSessions.visible) {
+  if(!record||record.disposed)return;
+  const visible=record===liveSessions.visible;
+  if(visible) {
+    automationSend.observe(record.project(),event);
+    if(!event.reset)observeStartupAccount(event.state);
+    autoPlan.observe(event);reviewContinuation.observe(event);
   }
-  autoPlan.observe(event);
-  reviewContinuation.observe(event);
-  if (event.reset) { manualDocumentOwner = null; agentTimer.finish(); return; }
-  chromiumDiagnostics?.observePage(event.state);
-  if (pageLoading || setupState || settingsState) return;
-  if (observeManualConversation(event.state)) return;
-  conversationRecovery.observe(event.state);
-  const selected = store.selected();
-  const target = selected && !selected.sessionArchivedAt
-    ? { workspace: selected.workspace, sessionId: selected.sessionId } : null;
-  if (agentTimer.observe(target, event.state.busy)) publish();
-  void controller?.tick();
+  if(!event.reset) {
+    record.diagnostics?.observePage(event.state);
+    if(!record.loading)observeManualConversation(event.state,record);
+  }
+  publish();
 }
-pageState.subscribe(applyObservedPage);
+function sessionRuntimeError(record,error) {
+  record.error=publicError(error);
+  if(record===liveSessions.visible&&!settingsState&&!setupState)report(error);else publish();
+}
+const liveSessions = new SessionRuntimes({store,runtime:()=>runtime,contextCache,ipc:ipcMain,connectPageState,
+  createView:()=>new WebContentsView({webPreferences:{...remotePreferences(),backgroundThrottling:false,
+    preload:app.isPackaged?path.join(process.resourcesPath,'resources/chatgpt-page-observer-preload.cjs')
+      :path.join(sourceDir,'../resources/chatgpt-page-observer-preload.cjs')}}),
+  onChange:record=>{if(record===liveSessions.visible)pageLoading=record.loading;publish();},
+  onChatBound:record=>{if(record===liveSessions.visible)void syncSelectedSessionTitle({force:true,reason:'chat-bound'});},
+  onPage:(record,event)=>applyObservedPage(event,record),onError:sessionRuntimeError,decorate:decorateSessionRuntime});
 let setupState = null;
 let workspaceHealth = null;
 let settingsState = null;
@@ -242,11 +218,11 @@ function applyShellTheme(theme) {
   if (window && !window.isDestroyed()) window.setBackgroundColor(shellBackground[shellTheme]);
 }
 
-async function applyToolCallVisibility() {
-  if (!browser || browser.webContents.isDestroyed()) return;
-  const url = browser.webContents.getURL();
+async function applyToolCallVisibility(view = browser) {
+  if (!view || view.webContents.isDestroyed()) return;
+  const url = view.webContents.getURL();
   if (!url.startsWith('https://chatgpt.com/')) return;
-  await browser.webContents.executeJavaScript(toolFilterScript(hideToolCalls), true).catch(() => {});
+  await view.webContents.executeJavaScript(toolFilterScript(hideToolCalls), true).catch(() => {});
 }
 
 function saveSettings(overrides = {}) {
@@ -267,7 +243,7 @@ function saveSettings(overrides = {}) {
 
 async function setChatColors(colors) {
   chatColors = normalizeChatColors(colors);
-  const apply = chatColorStyles.set(chatColors);
+  const apply = Promise.all([...liveSessions.records.values()].map(record=>record.colors.set(chatColors)));
   const save = saveSettings();
   await Promise.all([apply, save]);
 }
@@ -623,8 +599,6 @@ function nextNavigation() {
   const owner = actionContext.getStore();
   // An older async action cannot reclaim navigation after a newer user selection.
   if (owner && owner.generation !== navigationId) return owner.generation;
-  agentTimer.finish();
-  conversationRecovery.reset(); manualDocumentOwner = null;
   const generation = ++navigationId;
   if (owner) owner.generation = generation;
   return generation;
@@ -638,7 +612,11 @@ function attachController(project, { freshDraft = false } = {}) {
       || workspaceHealth.workspace !== project.workspace || workspaceHealth.sessionId !== project.sessionId
       || selected?.workspace !== project.workspace || selected.sessionId !== project.sessionId
       || pageLoading || setupState || settingsState) return false;
-  if (controller.active?.workspace !== project.workspace || controller.active?.sessionId !== project.sessionId) controller.attach(project, { freshDraft });
+  const record=liveSessions.visible;
+  if(record?.identity?.workspace!==project.workspace||record.identity.sessionId!==project.sessionId)return false;
+  record.ready=true;
+  if(!controller.active)controller.attach(project,{freshDraft:freshDraft||record.freshDraft===true});
+  record.freshDraft=false;
   return true;
 }
 
@@ -646,11 +624,11 @@ async function navigate(project = store.selected(), { refresh = false, generatio
   if (!project && pageLoading) return;
   const ownNavigation = generation ?? nextNavigation();
   if (!navigationCurrent(ownNavigation)) return;
+  const record=selectLiveSession(project);
   if (workspaceHealth?.ready && workspaceHealth.workspace === project?.workspace
       && (generation === null || workspaceHealth.generation === ownNavigation))
     workspaceHealth = { ...workspaceHealth, generation: ownNavigation, sessionId: project.sessionId };
-  controller?.cancel();
-  pageLoading = true; startupFlow?.beginPage(ownNavigation); publish();
+  pageLoading = record.loading; startupFlow?.beginPage(ownNavigation); publish();
   void planMonitor.refresh();
   const target = entryUrl ?? project?.chatUrl
     ?? (project ? chatGPTEntrypoint(project.experience ?? 'chat') : CHATGPT_SIGNIN_ENTRYPOINT);
@@ -665,13 +643,14 @@ async function navigate(project = store.selected(), { refresh = false, generatio
   }, 15000);
   waiting.unref?.();
   try {
-    const alreadyOpen = resume && !browser.webContents.isLoading() && browser.webContents.getURL() === target;
+    const alreadyOpen = !refresh && !entryUrl && record.view.webContents.getURL() === target;
     if (!alreadyOpen) {
-      const firstOpening = !project && !browser.webContents.getURL();
-      if (firstOpening) await openStartupPage(browser.webContents, target, {
+      const firstOpening = !project && !record.view.webContents.getURL();
+      pageLoading=true;
+      if (firstOpening) await openStartupPage(record.view.webContents, target, {
         isCurrent: () => navigationCurrent(ownNavigation),
       });
-      else await browser.webContents.loadURL(target);
+      else await liveSessions.navigate(record,target,{reload:refresh||!!entryUrl,freshDraft});
     }
     if (!navigationCurrent(ownNavigation)) return;
     pageLoading = false; startupFlow?.finishPage(ownNavigation);
@@ -699,7 +678,7 @@ async function navigate(project = store.selected(), { refresh = false, generatio
 function pauseForSetup() {
   const generation = nextNavigation();
   if (!navigationCurrent(generation)) return false;
-  controller?.cancel(); pageLoading = false; startupError = null;
+  pageLoading = false; startupError = null;
   startupFlow?.beginPage(generation);
   if (!browser.webContents.isLoading()) startupFlow?.finishPage(generation);
   return true;
@@ -714,7 +693,7 @@ async function reviewWorkspace(workspace, openReady = false, { generation = null
   if (storageError) throw new Error('Сначала нужно восстановить сохранённый список проектов. Исходный файл оставлен без изменений.');
   const ownNavigation = generation ?? nextNavigation();
   if (!navigationCurrent(ownNavigation)) return false;
-  controller?.cancel(); pageLoading = false; startupError = null;
+  pageLoading = false; startupError = null;
   const canonical = await fsp.realpath(workspace).catch(() => workspace);
   if (!navigationCurrent(ownNavigation)) return false;
   if (store.project(canonical)?.archivedAt) { await openArchiveWindow(canonical); publish(); return false; }
@@ -737,7 +716,7 @@ async function openConnectedSession(input, sessionId = null, { latest = false, r
   const current = () => navigationCurrent(generation);
   if (!current()) return null;
   if (storageError) throw new Error('Сначала нужно восстановить сохранённый список проектов.');
-  controller.cancel(); settingsState = null; setupState = null;
+  settingsState = null; setupState = null;
   startupError = null; pageLoading = true;
   workspaceHealth = { workspace: input, sessionId, generation, phase: 'checking', ready: false }; publish();
   try {
@@ -761,14 +740,22 @@ async function openConnectedSession(input, sessionId = null, { latest = false, r
     const project = await store.selectSession(workspace, sessionId, { isCurrent: current, expand: latest || explicitSession });
     if (!current() || !project) return null;
     publish();
+    const sessionRecord=liveSessions.ensure(project);
+    sessionRecord.ready=false;
+    const readinessEpoch=++sessionRecord.readinessEpoch;
     void navigate(project, { generation, resume });
     // Inspection runs in the existing worker and never holds the IPC or store queue.
     void workspaceSetup.ready(workspace).then(result => {
+      if(sessionRecord.disposed||sessionRecord.readinessEpoch!==readinessEpoch)return;
+      sessionRecord.ready=result.ready;
+      if(result.ready)liveSessions.tick(sessionRecord);else sessionRecord.controller.cancel();
       if (!current()) return;
       workspaceHealth = { ...result, workspace, sessionId, generation, phase: result.ready ? 'ready' : 'error' };
       if (attachController(project)) void controller.tick();
       publish();
     }).catch(error => {
+      if(sessionRecord.disposed||sessionRecord.readinessEpoch!==readinessEpoch)return;
+      sessionRecord.ready=false;sessionRecord.error=publicError(error);sessionRecord.controller.cancel();
       if (!current()) return;
       workspaceHealth = { workspace, sessionId, generation, phase: 'error', ready: false, error: publicError(error) }; publish();
     });
@@ -924,15 +911,54 @@ async function startupAction(action) {
 }
 
 function connectController() {
-  controller?.cancel();
-  controller = new ContextSession({ store, runtime, contextCache, composer: new ChatGPTComposer(browser.webContents, { pageState,
-      onDiagnostic: ({ event, ...fields }) => chromiumDiagnostics?.log.record('composer', event, {
-        sessionId: store.selected()?.sessionId ?? null, ...fields,
-      }),
-    }),
-    onChange: publish,
-    onChatBound: () => { void syncSelectedSessionTitle({ force: true, reason: 'chat-bound' }); },
+  for(const record of liveSessions.records.values())record.controller.runtime=runtime;
+}
+function selectLiveSession(project=null) {
+  const record=liveSessions.ensure(project);
+  const changed=liveSessions.visible!==record;
+  browser=record.view;controller=record.controller;pageState=record.pageState;
+  agentTimer=record.timer;conversationRecovery=record.recovery;
+  chromiumDiagnostics=record.diagnostics;chatColorStyles=record.colors;pageLoading=record.loading;
+  liveSessions.show(record,window?.contentView);layout();
+  if(changed)applyObservedPage(record.pageState.current??{reset:true},record);
+  return record;
+}
+function decorateSessionRuntime(record) {
+  const contents=record.view.webContents, handlers=[];
+  const on=(event,fn)=>{contents.on(event,fn);handlers.push([event,fn]);};
+  if(eventBaseline) {
+    const execute=contents.executeJavaScript.bind(contents);
+    contents.executeJavaScript=(...args)=>{runtimeMetrics.executeJavaScript++;return execute(...args);};
+  }
+  secureRemote(contents);
+  record.colors=new ChatColors(contents,chatColors);
+  record.diagnostics=new ChromiumDiagnostics(contents,{file:chromiumDiagnosticsFile,allowFixture:smoke,
+    onConversationRateLimit:(id,seconds)=>record.recovery.rateLimited(id,seconds),
+    startupNetwork:!smoke&&!record.identity&&store.snapshot().projects.length===0});
+  void record.diagnostics.start({appVersion:app.getVersion(),platform:process.platform,electron:process.versions.electron,
+    chromium:process.versions.chrome,fixture:smoke}).catch(()=>{});
+  record.composer.onDiagnostic=({event,...fields})=>record.diagnostics.log.record('composer',event,{sessionId:record.identity?.sessionId??null,...fields});
+  on('page-title-updated',()=>{if(record===liveSessions.visible)rememberSessionTitle();});
+  on('did-start-navigation',(event,_url,inPlace,mainFrame)=>{
+    if(record===liveSessions.visible&&(event.isMainFrame??mainFrame)&&!(event.isSameDocument??inPlace)&&startupActive)
+      startupFlow?.beginPage(navigationId);
   });
+  on('did-navigate-in-page',()=>{
+    void applyToolCallVisibility(record.view);void installChatGPTAutoScroll(contents);
+    if(record===liveSessions.visible)void syncSelectedSessionTitle({reason:'session-navigated'});
+  });
+  on('did-finish-load',()=>{
+    if(record===liveSessions.visible) {
+      pageLoading=false;
+      if(startupActive){startupFlow?.finishPage(navigationId);void refreshStartupAccount();}
+      attachController(record.project());
+    }
+    void applyToolCallVisibility(record.view);void installChatGPTAutoScroll(contents,{forceFollow:true});publish();
+  });
+  return ()=>{
+    for(const [event,fn] of handlers)contents.removeListener(event,fn);
+    record.colors.dispose();void record.diagnostics.stop().catch(()=>{});
+  };
 }
 
 function registerIpc() {
@@ -1013,7 +1039,7 @@ function registerIpc() {
     if (input === hideToolCalls) return;
     await saveSettings({ hideToolCalls: input });
     hideToolCalls = input;
-    await applyToolCallVisibility();
+    await Promise.all([...liveSessions.records.values()].map(record=>applyToolCallVisibility(record.view)));
   });
   registerAction('pilot:set-chatgpt-channel', async input => {
     if (smoke || typeof runtime?.setChannel !== 'function') throw new Error('Выбор канала ChatGPT недоступен на этой платформе.');
@@ -1241,75 +1267,34 @@ async function createWindow() {
     windowStatePersistence: { bounds: true, displayMode: false } });
   sidebar = new WebContentsView({ webPreferences: { preload: path.join(sourceDir, 'preload.cjs'),
     nodeIntegration: false, contextIsolation: true, sandbox: true, webSecurity: true } });
-  browser = new WebContentsView({ webPreferences: { ...remotePreferences(),
-    preload: app.isPackaged ? path.join(process.resourcesPath, 'resources/chatgpt-page-observer-preload.cjs')
-      : path.join(sourceDir, '../resources/chatgpt-page-observer-preload.cjs') } });
-  disconnectPageState = connectPageState(browser.webContents, ipcMain, pageState, { onFailure: code => {
-    controller?.cancel();
-    report(Object.assign(new Error('Наблюдатель ChatGPT недоступен. Повторите открытие страницы.'), { code }));
-  } });
-  if (eventBaseline) {
-    const executeJavaScript = browser.webContents.executeJavaScript.bind(browser.webContents);
-    browser.webContents.executeJavaScript = (...args) => {
-      runtimeMetrics.executeJavaScript++;
-      return executeJavaScript(...args);
-    };
-  }
-  chatColorStyles = new ChatColors(browser.webContents, chatColors);
+  window.contentView.addChildView(sidebar);
+  selectLiveSession(null);
   colorEditor = new ChatColorsWindow({
     sourceDir, getBounds: () => window?.getBounds(),
     getState: () => ({ colors: { ...chatColors }, defaults: DEFAULT_COLORS[shellTheme], theme: shellTheme }),
     change: input => { const { key, value } = validateColorChange(input); return setChatColors({ ...chatColors, [key]: value }); },
     reset: () => setChatColors({}),
   });
-  window.contentView.addChildView(sidebar); window.contentView.addChildView(browser);
-  secureRemote(browser.webContents);
-  chromiumDiagnostics = new ChromiumDiagnostics(browser.webContents, { file: chromiumDiagnosticsFile,
-    allowFixture: smoke,
-    onConversationRateLimit: (id, seconds) => conversationRecovery.rateLimited(id, seconds),
-    startupNetwork: !smoke && store.snapshot().projects.length === 0 });
   sidebar.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   sidebar.webContents.on('will-navigate', event => event.preventDefault());
   sidebar.webContents.on('did-start-loading', () => { sidebarReady = false; lastSidebarStateSignature = null; });
   sidebar.webContents.on('did-finish-load', () => { sidebarReady = true; lastSidebarStateSignature = null; publish(); });
-  browser.webContents.on('page-title-updated', rememberSessionTitle);
-  browser.webContents.on('did-start-navigation', (event, _url, inPlace, mainFrame) => {
-    if ((event.isMainFrame ?? mainFrame) && !(event.isSameDocument ?? inPlace)) {
-      controller?.cancel();
-      if (startupActive && !pageLoading) startupFlow?.beginPage(navigationId);
-    }
-  });
-  browser.webContents.on('did-navigate-in-page', () => {
-    void applyToolCallVisibility(); void installChatGPTAutoScroll(browser.webContents); publish();
-    if (!pageLoading && !setupState && !settingsState) void controller?.tick();
-  });
-  browser.webContents.on('did-finish-load', () => {
-    if (startupActive && !pageLoading) { startupFlow?.finishPage(navigationId); void refreshStartupAccount(); }
-    if (!pageLoading) attachController(store.selected());
-    if (pageState.current) applyObservedPage({ state: pageState.current.state });
-    void applyToolCallVisibility(); void installChatGPTAutoScroll(browser.webContents, { forceFollow: true }); publish();
-    if (!pageLoading && !setupState && !settingsState) void controller?.tick();
-  });
-  browser.webContents.on('render-process-gone', () => {
-    pageLoading = false; startupFlow?.finishPage(navigationId, 'RENDER_PROCESS_GONE');
-    controller?.cancel(); report(new Error('Страница ChatGPT закрылась. Повторите открытие страницы.'));
-  });
   window.on('resize', layout);
   window.on('focus', () => { void planMonitor.refresh(); planReview.refresh(); observeStartupClipboard(); });
+  window.on('close',()=>liveSessions.hide());
   window.on('closed', () => {
     try {
       ++navigationId; startupClipboard?.dispose(); startupClipboard = null; startupFlow?.dispose(); startupFlow = null;
       autoPlan.dispose(); conversationRecovery.reset(); controller?.cancel(); planMonitor.close();
       reviewContinuation.dispose(); planReview.dispose();
       if (eventRuntimeCheckerTimer !== null) clearInterval(eventRuntimeCheckerTimer);
-      eventRuntimeCheckerTimer = null; disconnectPageState?.(); agentTimer.finish(); contextCache.clear(); workspaceSetup.invalidateReadiness();
-      chatColorStyles?.dispose();
-      void chromiumDiagnostics?.stop().catch(() => {}); chromiumDiagnostics = null;
+      eventRuntimeCheckerTimer = null; liveSessions.dispose(); contextCache.clear(); workspaceSetup.invalidateReadiness();
+      chromiumDiagnostics = null;
     } finally {
       // Auth/help popups and hidden auxiliary windows must not keep the UI alive.
       // Independent MCP/tunnel processes are deliberately not stopped here.
       for (const child of BrowserWindow.getAllWindows()) if (!child.isDestroyed()) child.destroy();
-      for (const view of [sidebar, browser]) if (view && !view.webContents.isDestroyed())
+      for (const view of [sidebar]) if (view && !view.webContents.isDestroyed())
         view.webContents.close({ waitForBeforeUnload: false });
       window = null;
       if (!smoke) app.quit();
@@ -1318,8 +1303,6 @@ async function createWindow() {
   });
   layout();
   // Observe the first request, including failure before a document ever loads.
-  await chromiumDiagnostics.start({ appVersion: app.getVersion(), platform: process.platform, electron: process.versions.electron,
-    chromium: process.versions.chrome, fixture: smoke }).catch(() => {});
   if (smoke) {
     await fsp.mkdir(dataDir + '-projects', { recursive: true });
     fixture = await import('../tests/electron-smoke.mjs');
@@ -1345,7 +1328,8 @@ async function createWindow() {
     await fixture.run({ app, window, browser: browser.webContents, sidebar: sidebar.webContents,
       store, controller, selectWorkspace, workspaceSetup, snapshot, assertLocalSender, permissionAllowed, dataDir,
       chromiumDiagnostics, chromiumDiagnosticsFile, navigate, openArchiveWindow, getArchiveWindow: () => archiveWindow,
-      getColorWindow: () => colorEditor.window, chatColorStyles, eventBaseline, runtimeMetrics, pageState, autoPlan });
+      getColorWindow: () => colorEditor.window, chatColorStyles, eventBaseline, runtimeMetrics, pageState, autoPlan,
+      liveSessions,getLive:()=>({browser:browser.webContents,controller,pageState,chromiumDiagnostics,chatColorStyles}) });
     await chromiumDiagnostics.stop(); chromiumDiagnostics = null;
     window.close(); app.quit();
   } else { const current = store.selected(); if (current && !storageError && !settingsState) void selectWorkspace(current.workspace).catch(report); else void navigate(); }

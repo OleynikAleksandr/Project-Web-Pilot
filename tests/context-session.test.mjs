@@ -167,6 +167,23 @@ test('changed plan after delivery is shown as stale and explicit refresh obtains
   await f.controller.retry();await f.controller.tick();assert.equal(f.controller.state.phase,'delivered');assert.equal(f.sends(),2);
 });
 
+test('explicit refresh during a background read is retained once and cancelled with its session',async()=>{
+  for (const cancelled of [false,true]) {
+    const f=controllerFixture();await f.controller.tick();f.info.planRevision=8;
+    const inspect=f.store.inspect;let release;
+    f.store.inspect=()=>new Promise(resolve=>{release=()=>{f.store.inspect=inspect;resolve(inspect());};});
+    const reading=f.controller.tick();await new Promise(resolve=>setImmediate(resolve));
+    f.runtime.loadContext=async()=>{const p=packet();p.facts.plan_revision=8;return p;};
+    await f.controller.retry();await f.controller.retry();
+    if(cancelled)f.controller.cancel();
+    release();await reading;
+    for(let i=0;i<8;i++)await new Promise(resolve=>setImmediate(resolve));
+    await f.controller.tick();
+    assert.equal(f.sends(),cancelled?1:2);
+    assert.equal(f.controller.state.phase,cancelled?'selected':'delivered');
+  }
+});
+
 
 test('Work session fails closed when ChatGPT is not in Work experience', async()=>{
   const f=controllerFixture({chatUrl:null});

@@ -79,6 +79,20 @@ test('legacy sessions retain data and never acquire current execution settings',
   assert.equal(await fs.readFile(store.file, 'utf8'), bad, 'invalid input is not overwritten');
 });
 
+test('explicit background delivery updates only its own live saved session', async t => {
+  const { project, store } = await fixture(t);
+  const a=await store.select(await project('Background'));
+  const b=await store.newSession(a.workspace,'chat');
+  await assert.rejects(store.updateSession(a.workspace,a.sessionId,{attempt:{state:'sent'}}),{code:'SESSION_CHANGED'});
+  await store.updateSession(a.workspace,a.sessionId,{attempt:{state:'sent'}},{background:true});
+  const bound=await store.bindChat(a.workspace,a.sessionId,'https://chatgpt.com/c/background-worker',{background:true});
+  assert.equal(bound.sessionId,a.sessionId);assert.equal(store.selected().sessionId,b.sessionId);
+  assert.equal(store.selected().attempt,null);assert.equal(store.project(a.workspace,a.sessionId).attempt.state,'sent');
+  assert.equal(store.project(a.workspace,'missing'),null);
+  await store.setSessionArchived(a.workspace,a.sessionId,true);
+  await assert.rejects(store.updateSession(a.workspace,a.sessionId,{attempt:null},{background:true}),{code:'SESSION_CHANGED'});
+});
+
 async function fixture(t) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'web-pilot-workspaces-'));
   t.after(() => fs.rm(root, { recursive: true, force: true }));

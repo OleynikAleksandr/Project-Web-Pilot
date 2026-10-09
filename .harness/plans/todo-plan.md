@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1550,
+  "plan_revision": 1552,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-chat-execution-20261009",
@@ -110,7 +110,8 @@
       "docs/planning/technical-audit-findings-unused.md",
       "docs/planning/technical-audit-findings.md",
       "packages/workflow-kit/docs/modules/workflow-kit-package.md",
-      "docs/planning/parallel-integration.md"
+      "docs/planning/parallel-integration.md",
+      "docs/planning/live-session-runtime.md"
     ]
   },
   "baseline_commit": "39507e5655e81395bbcbeab0bd7b00572e4a746b",
@@ -421,8 +422,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "parallel-chat-execution-20261009",
         "task_id": "T005",
@@ -440,10 +441,13 @@
         "src/session-runtime.mjs",
         "tests/session-runtime.test.mjs",
         "tests/context-session.test.mjs",
-        "tests/page-state.test.mjs"
+        "tests/page-state.test.mjs",
+        "tests/electron-smoke.mjs",
+        "tests/workspace-session.test.mjs"
       ],
       "documentation_paths": [
-        "docs/planning/parallel-execution-spec.md"
+        "docs/planning/parallel-execution-spec.md",
+        "docs/planning/live-session-runtime.md"
       ],
       "verification_ids": [
         "unit-all",
@@ -475,7 +479,19 @@
         ],
         "include_last_completed_task": false,
         "dependency_task_ids": []
-      }
+      },
+      "actual_files": [
+        "docs/planning/live-session-runtime.md",
+        "docs/planning/parallel-execution-spec.md",
+        "src/context-session.mjs",
+        "src/main.mjs",
+        "src/session-runtime.mjs",
+        "src/workspace-session.mjs",
+        "tests/context-session.test.mjs",
+        "tests/electron-smoke.mjs",
+        "tests/session-runtime.test.mjs",
+        "tests/workspace-session.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -880,7 +896,8 @@
         "docs/planning/technical-audit-findings-unused.md",
         "docs/planning/technical-audit-findings.md",
         "packages/workflow-kit/docs/modules/workflow-kit-package.md",
-        "docs/planning/parallel-integration.md"
+        "docs/planning/parallel-integration.md",
+        "docs/planning/live-session-runtime.md"
       ],
       "acceptance_criteria": [
         "Документы описывают текущий результат, существенное из выпущенных рабочих спецификаций перенесено в контракты модулей; история остаётся в Git.",
@@ -1010,7 +1027,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: parallel-chat-execution-20261009
 Current Task: нет
-Revision: 1550
+Revision: 1552
 
 ## Цель
 
@@ -1042,10 +1059,10 @@ Revision: 1550
   - Git Commit: [DONE] feat: Управляемое слияние и доказательства интеграции
   - Reference: parallel-chat-execution-20261009 / T004 / implementation
   - Файлы: packages/workflow-kit/src/lib/transaction.mjs, packages/workflow-kit/src/lib/validate.mjs, packages/workflow-kit/src/lib/git.mjs, packages/workflow-kit/src/lib/git-hooks.mjs, packages/workflow-kit/src/lib/plan.mjs, packages/workflow-kit/src/lib/task-integration.mjs, packages/workflow-kit/src/lib/command-help.mjs, packages/workflow-kit/src/cli.mjs, packages/workflow-kit/scripts/check-task-integration-fixture.mjs, packages/workflow-kit/package.json, docs/planning/parallel-execution-spec.md, docs/planning/parallel-integration.md
-- [TODO] T005: Несколько живых сессий без привязки к окну — Ожидает
-  - Git Commit: [PENDING] feat: Несколько живых сессий без привязки к окну
+- [DONE] T005: Несколько живых сессий без привязки к окну — Завершено
+  - Git Commit: [DONE] feat: Несколько живых сессий без привязки к окну
   - Reference: parallel-chat-execution-20261009 / T005 / implementation
-  - Файлы: src/main.mjs, src/context-session.mjs, src/page-state.mjs, src/page-state-bridge.mjs, src/workspace-session.mjs, src/session-runtime.mjs, tests/session-runtime.test.mjs, tests/context-session.test.mjs, tests/page-state.test.mjs, docs/planning/parallel-execution-spec.md
+  - Файлы: src/main.mjs, src/context-session.mjs, src/page-state.mjs, src/page-state-bridge.mjs, src/workspace-session.mjs, src/session-runtime.mjs, tests/session-runtime.test.mjs, tests/context-session.test.mjs, tests/page-state.test.mjs, tests/electron-smoke.mjs, tests/workspace-session.test.mjs, docs/planning/parallel-execution-spec.md, docs/planning/live-session-runtime.md
 - [TODO] T006: Выдача задач и последовательная очередь main — Ожидает
   - Git Commit: [PENDING] feat: Выдача задач и последовательная очередь main
   - Reference: parallel-chat-execution-20261009 / T006 / implementation
@@ -1077,7 +1094,7 @@ Revision: 1550
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать документацию проекта
   - Reference: parallel-chat-execution-20261009 / DOCS / implementation
-  - Файлы: docs/architecture/OVERVIEW.md, docs/planning/parallel-execution-spec.md, packages/workflow-kit/src/templates/PLAN.md, packages/workflow-kit/src/templates/SPEC.md, docs/modules/release.md, README.md, docs/modules/auto-plan.md, docs/modules/chatgpt-dom-compatibility.md, docs/modules/chromium-diagnostics.md, docs/modules/codex-app-server-executor.md, docs/modules/context-delivery.md, docs/modules/first-run-onboarding.md, docs/modules/plan-review.md, docs/modules/plan-view.md, docs/modules/project-archive.md, docs/modules/project-doctor.md, docs/modules/runtime-lifecycle.md, docs/modules/session-opening-performance.md, docs/modules/workflow-kit-recovery.md, docs/modules/workspace-sessions.md, docs/modules/workspace-setup.md, docs/modules/workspace-sidebar-ui.md, docs/planning/parallel-execution-plan-draft.md, docs/planning/technical-audit-20261008.md, docs/planning/technical-audit-findings-lifecycle.md, docs/planning/technical-audit-findings-summary.md, docs/planning/technical-audit-findings-unused.md, docs/planning/technical-audit-findings.md, packages/workflow-kit/docs/modules/workflow-kit-package.md, docs/planning/parallel-integration.md
+  - Файлы: docs/architecture/OVERVIEW.md, docs/planning/parallel-execution-spec.md, packages/workflow-kit/src/templates/PLAN.md, packages/workflow-kit/src/templates/SPEC.md, docs/modules/release.md, README.md, docs/modules/auto-plan.md, docs/modules/chatgpt-dom-compatibility.md, docs/modules/chromium-diagnostics.md, docs/modules/codex-app-server-executor.md, docs/modules/context-delivery.md, docs/modules/first-run-onboarding.md, docs/modules/plan-review.md, docs/modules/plan-view.md, docs/modules/project-archive.md, docs/modules/project-doctor.md, docs/modules/runtime-lifecycle.md, docs/modules/session-opening-performance.md, docs/modules/workflow-kit-recovery.md, docs/modules/workspace-sessions.md, docs/modules/workspace-setup.md, docs/modules/workspace-sidebar-ui.md, docs/planning/parallel-execution-plan-draft.md, docs/planning/technical-audit-20261008.md, docs/planning/technical-audit-findings-lifecycle.md, docs/planning/technical-audit-findings-summary.md, docs/planning/technical-audit-findings-unused.md, docs/planning/technical-audit-findings.md, packages/workflow-kit/docs/modules/workflow-kit-package.md, docs/planning/parallel-integration.md, docs/planning/live-session-runtime.md
 - [TODO] T013: Собрать парный выпуск macOS и Windows — Ожидает
   - Git Commit: [PENDING] build: собрать новый парный выпуск
   - Reference: parallel-chat-execution-20261009 / T013 / implementation
