@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1619,
+  "plan_revision": 1620,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-chat-execution-20261009",
@@ -152,7 +152,7 @@
     ]
   },
   "baseline_commit": "39507e5655e81395bbcbeab0bd7b00572e4a746b",
-  "current_task_id": "T029",
+  "current_task_id": null,
   "context_pack": {
     "documents": [
       {
@@ -1894,13 +1894,17 @@
         "Версия и evidence нового выпуска согласованы; сборка до DOCS не выполняется"
       ],
       "expected_commit_message": "feat: Подготовить исправленный выпуск 0.6.107",
-      "implementation_status": "IN_PROGRESS",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "parallel-chat-execution-20261009",
         "task_id": "T029",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "package-lock.json",
+        "package.json"
+      ]
     },
     {
       "id": "DOCS-4",
@@ -2044,8 +2048,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: parallel-chat-execution-20261009
-Current Task: T029
-Revision: 1619
+Current Task: нет
+Revision: 1620
 
 ## Цель
 
@@ -2185,8 +2189,8 @@ Revision: 1619
   - Git Commit: [DONE] feat: Исправить включение AutoPlan до публикации первого плана
   - Reference: parallel-chat-execution-20261009 / T028 / implementation
   - Файлы: src/project-auto-plan.mjs, src/main.mjs, tests/project-auto-plan.test.mjs, tests/parallel-execution-smoke-fixture.cjs, tests/electron-smoke.mjs, docs/modules/auto-plan.md, docs/modules/auto-plan-send.md
-- [IN_PROGRESS] T029: Подготовить исправленный выпуск 0.6.107 — В работе
-  - Git Commit: [PENDING] feat: Подготовить исправленный выпуск 0.6.107
+- [DONE] T029: Подготовить исправленный выпуск 0.6.107 — Завершено
+  - Git Commit: [DONE] feat: Подготовить исправленный выпуск 0.6.107
   - Reference: parallel-chat-execution-20261009 / T029 / implementation
   - Файлы: package.json, package-lock.json, docs/modules/auto-plan.md
 - [TODO] DOCS-4: Актуализация всех документов проекта — Ожидает
