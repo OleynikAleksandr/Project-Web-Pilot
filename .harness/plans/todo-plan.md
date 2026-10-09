@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1599,
+  "plan_revision": 1601,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-chat-execution-20261009",
@@ -1541,7 +1541,12 @@
         "tests/parallel-execution-ui.test.mjs",
         "tests/parallel-execution-smoke-fixture.cjs",
         "tests/electron-smoke.mjs",
-        "packages/workflow-kit/scripts/check-parallel-execution-fixture.mjs"
+        "packages/workflow-kit/scripts/check-parallel-execution-fixture.mjs",
+        "src/context-session.mjs",
+        "src/executor-session.mjs",
+        "src/project-session-auto-plan.mjs",
+        "src/ui/progress.mjs",
+        "tests/context-session.test.mjs"
       ],
       "documentation_paths": [
         "docs/modules/session-runtime.md"
@@ -1559,13 +1564,32 @@
         "Electron fixture через реальный AutoPlan IPC и публикацию плана запускает исполнителей без старых кнопок; OFF/ON, зависимости, интеграция и защита черновиков проверены"
       ],
       "expected_commit_message": "feat: Единый AutoPlan для запуска parallel без дополнительных кнопок",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "parallel-chat-execution-20261009",
         "task_id": "T021",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "packages/workflow-kit/scripts/check-parallel-execution-fixture.mjs",
+        "src/context-session.mjs",
+        "src/executor-session.mjs",
+        "src/main.mjs",
+        "src/parallel-execution.mjs",
+        "src/parallel-kit.mjs",
+        "src/preload.cjs",
+        "src/project-session-auto-plan.mjs",
+        "src/ui/index.html",
+        "src/ui/progress.mjs",
+        "src/ui/sidebar.mjs",
+        "tests/context-session.test.mjs",
+        "tests/electron-smoke.mjs",
+        "tests/parallel-execution-recovery.test.mjs",
+        "tests/parallel-execution-smoke-fixture.cjs",
+        "tests/parallel-execution-ui.test.mjs",
+        "tests/parallel-execution.test.mjs"
+      ]
     },
     {
       "id": "T022",
@@ -1794,7 +1818,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: parallel-chat-execution-20261009
 Current Task: нет
-Revision: 1599
+Revision: 1601
 
 ## Цель
 
@@ -1902,10 +1926,10 @@ Revision: 1599
   - Git Commit: [DONE] feat: Привязать AutoPlan к проекту и выключать после завершения плана
   - Reference: parallel-chat-execution-20261009 / T023 / implementation
   - Файлы: src/project-auto-plan.mjs, src/main.mjs, src/parallel-execution.mjs, src/auto-plan.mjs, src/auto-plan-state.mjs, tests/project-auto-plan.test.mjs, tests/auto-plan.test.mjs, tests/electron-smoke.mjs, tests/parallel-execution.test.mjs, package-lock.json, src/project-session-auto-plan.mjs, tests/auto-plan-restart-fixture.cjs, docs/modules/session-runtime.md
-- [TODO] T021: Единый AutoPlan для запуска parallel без дополнительных кнопок — Ожидает
-  - Git Commit: [PENDING] feat: Единый AutoPlan для запуска parallel без дополнительных кнопок
+- [DONE] T021: Единый AutoPlan для запуска parallel без дополнительных кнопок — Завершено
+  - Git Commit: [DONE] feat: Единый AutoPlan для запуска parallel без дополнительных кнопок
   - Reference: parallel-chat-execution-20261009 / T021 / implementation
-  - Файлы: src/parallel-execution.mjs, src/parallel-kit.mjs, src/main.mjs, src/preload.cjs, src/ui/index.html, src/ui/sidebar.mjs, src/auto-plan.mjs, src/auto-plan-state.mjs, tests/parallel-execution.test.mjs, tests/parallel-execution-recovery.test.mjs, tests/parallel-execution-ui.test.mjs, tests/parallel-execution-smoke-fixture.cjs, tests/electron-smoke.mjs, packages/workflow-kit/scripts/check-parallel-execution-fixture.mjs, docs/modules/session-runtime.md
+  - Файлы: src/parallel-execution.mjs, src/parallel-kit.mjs, src/main.mjs, src/preload.cjs, src/ui/index.html, src/ui/sidebar.mjs, src/auto-plan.mjs, src/auto-plan-state.mjs, tests/parallel-execution.test.mjs, tests/parallel-execution-recovery.test.mjs, tests/parallel-execution-ui.test.mjs, tests/parallel-execution-smoke-fixture.cjs, tests/electron-smoke.mjs, packages/workflow-kit/scripts/check-parallel-execution-fixture.mjs, src/context-session.mjs, src/executor-session.mjs, src/project-session-auto-plan.mjs, src/ui/progress.mjs, tests/context-session.test.mjs, docs/modules/session-runtime.md
 - [TODO] T022: Обновить локальный Kit и согласовать инструкции и контракты — Ожидает
   - Git Commit: [PENDING] feat: Обновить локальный Kit и согласовать инструкции и контракты
   - Reference: parallel-chat-execution-20261009 / T022 / implementation

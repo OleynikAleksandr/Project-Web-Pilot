@@ -24,16 +24,19 @@ module.exports.run=async function({sidebar,store,workspaceSetup,snapshot,selectW
   await main.view.webContents.executeJavaScript('window.fixtureAssistant("Планировщик готов")');
   await run('--plan',root,origin.sessionId);
   const base=await git(root,'rev-parse','HEAD');
+  await run('--legacy-start',root);
   await wait(()=>main.pageState.current?.state.lastMessageRole==='assistant','main observed pause');
   await ipc('openSettings');await ipc('setParallelExecution',{parallel_allowed:false,max_workers:1});await ipc('closeSettings');
   assert.deepEqual(store.project(root,origin.sessionId).executionSnapshot,{parallel_allowed:true,max_workers:2});
-  assert.equal((await ipc('executeTasks',root)).ok,true);
+  assert.equal((await ipc('setAutoPlan',true)).ok,true);
   await wait(()=>snapshot().execution.assignments.length===2,'two assigned worktrees');
   let assignments=snapshot().execution.assignments;
   const a=assignments.find(a=>a.parent_task_id==='T001'),b=assignments.find(a=>a.parent_task_id==='T002');
   assert.ok(a&&b);assert.notEqual(a.worktree,b.worktree);
   await wait(()=>[a,b].every(a=>store.project(a.worktree)?.chatUrl&&record(a.worktree)?.controller.state.phase==='delivered'),'independent delivered chats');
   const first=record(a.worktree),second=record(b.worktree);
+  assert.equal(await fs.readFile(path.join(a.worktree,'README.md'),'utf8'),'# worker-a\n','legacy main work transferred without loss');
+  assert.equal(await git(root,'status','--porcelain'),'','legacy main restored clean');
   for(const item of [a,b]) {
     assert.equal(await fs.stat(path.join(item.worktree,'node_modules')).then(s=>s.isDirectory()),true);
     assert.deepEqual(store.project(item.worktree).executionSnapshot,origin.executionSnapshot);
@@ -42,6 +45,7 @@ module.exports.run=async function({sidebar,store,workspaceSetup,snapshot,selectW
   const finish=record=>record.view.webContents.executeJavaScript('document.getElementById("parallel-held")?.remove();window.fixtureAssistant("Задача завершена")');
   await hold(first);await hold(second);
   await wait(()=>first.pageState.current?.state.busy&&second.pageState.current?.state.busy,'both workers busy');
+  await ipc('setAutoPlan',false);
   await ipc('selectSession',a.worktree,store.project(a.worktree).sessionId);
   await ipc('selectSession',b.worktree,store.project(b.worktree).sessionId);
   assert.equal(first.pageState.current.state.busy,true);
@@ -52,7 +56,7 @@ module.exports.run=async function({sidebar,store,workspaceSetup,snapshot,selectW
   assert.equal(await git(root,'rev-parse','HEAD'),base,'local commits do not change main');
   assert.equal(await fs.readFile(path.join(root,'README.md'),'utf8'),'# Original\n');
   await run('--conflict',root);
-  await finish(first);await ipc('reconcileExecution',root);
+  await finish(first);
   await wait(()=>snapshot().execution.integration?.status==='CONFLICT','merge conflict retained in main');
   assert.equal(snapshot().execution.planView.completed,0);
   assert.equal(second.pageState.current.state.busy,true,'independent worker keeps its page during main conflict');
@@ -66,27 +70,27 @@ module.exports.run=async function({sidebar,store,workspaceSetup,snapshot,selectW
   assert.ok(message.includes(root)&&message.includes(operation)&&message.includes('integration:continue'));
   await ipc('correctIntegration',root);
   assert.equal(await main.view.webContents.executeJavaScript('window.fixtureMessages.length'),before+1,'no duplicate correction');
-  await run('--correct',root,operation);await finish(main);await ipc('reconcileExecution',root);
+  await run('--correct',root,operation);await finish(main);
   await wait(()=>snapshot().execution.assignments.find(x=>x.id===a.id)?.status==='INTEGRATED','corrected merge proof');
-  await finish(second);await ipc('reconcileExecution',root);
+  await finish(second);
   await wait(()=>snapshot().execution.planView.completed===2,'second integration');
   assert.equal(snapshot().execution.assignments.length,2,'AutoPlan OFF does not dispatch the dependent task');
   const combined=await git(root,'rev-parse','HEAD');
-  assert.equal((await ipc('executeTasks',root)).ok,true);
-  await wait(()=>snapshot().execution.assignments.length===3,'explicit dependent task');
+  assert.equal((await ipc('setAutoPlan',true)).ok,true);
+  await wait(()=>snapshot().execution.assignments.length===3,'AutoPlan resumes dependent task');
   const c=snapshot().execution.assignments.find(x=>x.parent_task_id==='T003');assert.equal(c.base_commit,combined);
   assert.match(await fs.readFile(path.join(c.worktree,'README.md'),'utf8'),/worker-a/);
   assert.match(await fs.readFile(path.join(c.worktree,'SECOND.md'),'utf8'),/worker-b/);
   await wait(()=>record(c.worktree)?.controller.state.phase==='delivered','dependent context delivered');
-  const third=record(c.worktree);await hold(third);await run('--complete',c.worktree);await finish(third);await ipc('reconcileExecution',root);
+  const third=record(c.worktree);await hold(third);await run('--complete',c.worktree);await finish(third);
   await wait(()=>snapshot().execution.phase==='complete','three verified integrations');
   assert.equal(await git(root,'rev-list','--count','--merges',base+'..HEAD'),'3');
   for(const theme of ['dark','light']) {
     await ipc('setTheme',theme);
-    const ui=await sidebar.executeJavaScript('({rows:document.querySelectorAll(".executor-row").length,text:document.querySelector(".executor-group")?.textContent,recheck:document.getElementById("reconcile-execution").textContent})');
-    assert.equal(ui.rows,3);assert.match(ui.text,/Завершено · интеграция проверена/);assert.match(ui.text,/Работа/);assert.match(ui.recheck,/Повторить сверку/);
+    const ui=await sidebar.executeJavaScript('({rows:document.querySelectorAll(".executor-row").length,text:document.querySelector(".executor-group")?.textContent,removed:!document.getElementById("reconcile-execution")&&!document.getElementById("execute-tasks")})');
+    assert.equal(ui.rows,3);assert.match(ui.text,/Завершено · интеграция проверена/);assert.match(ui.text,/Работа/);assert.equal(ui.removed,true);
   }
-  assert.equal(snapshot().execution.planView.completed,3);
+  assert.equal(snapshot().execution.planView.completed,3);assert.equal(snapshot().autoPlan.enabled,false,'verified parallel completion turns project OFF');
   await fs.writeFile(path.join(dataDir,'parallel-execution-result.json'),JSON.stringify({mode:'isolated-fixture',realIpc:true,
     realDependency:true,workers:3,independentPages:true,conflictCorrectionMainChat:true,mergeCommits:3,liveChatGPT:false,nativeWindows:false,cleanOS:false},null,2));
   return true;

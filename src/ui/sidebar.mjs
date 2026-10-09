@@ -369,11 +369,9 @@ function render(state) {
   const correcting=['CONFLICT','CHECKS_FAILED','RESOLVING'].includes(execution.integration?.status);
   $('correct-integration').hidden=!correcting;
   $('correct-integration').disabled=actionPending||execution.phase==='merging'||!!execution.correctionStatus||execution.canCorrect===false;
-  $('execute-tasks').disabled=actionPending||['preparing','merging','integration','complete'].includes(execution.phase)||correcting;
-  $('reconcile-execution').disabled=actionPending||['preparing','merging'].includes(execution.phase);
   $('execution-message').textContent=execution.error?.message??({sending:'Поручение исправления отправляется…',sent:'Поручение исправления отправлено. Ждём основной чат.',unknown:'Исход отправки исправления неизвестен. Повтор не отправляется.'}[execution.correctionStatus])??({preparing:'Подготавливаем исполнителей…',merging:'Проверяем слияние в main…',
     complete:'Все результаты интегрированы. Ожидается приёмка.',integration:'Интеграция удерживает main. Другие слияния ждут.',
-    waiting:'Состояния исполнителей показаны в дереве. Пауза не означает вопрос пользователя.'}[execution.phase]??'Запуск выдаст доступную группу задач.');
+    paused:'Автовыполнение проекта выключено. Новые задачи и сообщения не запускаются.',waiting:'Состояния исполнителей показаны в дереве. Пауза не означает вопрос пользователя.'}[execution.phase]??'Включите автовыполнение этого проекта для запуска готовых задач.');
   const auto = state.autoPlan ?? { phase: 'off', active: false, message: '' };
   $('auto-plan-toggle').textContent = auto.enabled ? 'Выключить автовыполнение' : 'Включить автовыполнение';
   $('auto-plan-toggle').disabled = actionPending;
@@ -388,9 +386,10 @@ function render(state) {
   $('plan-review-indicator').hidden=reviewIndicator==='none';
   $('plan-review-indicator').dataset.state=reviewIndicator;
   $('plan-review-indicator').textContent=({success:'✓',attention:'!',waiting:'·'})[reviewIndicator]??'';
-  const autoSent = auto.continuations > 0 ? `Автоматически отправлено «Продолжай» №${auto.continuations}.` : '';
-  $('auto-plan-message').hidden = !auto.message && !autoSent;
-  $('auto-plan-message').textContent = [autoSent, auto.message].filter(Boolean).join(' ');
+  const autoMessage=parallel?(auto.enabled?'Автовыполнение этого проекта включено.':'Автовыполнение этого проекта выключено.'):auto.message;
+  const autoSent = !parallel&&auto.continuations > 0 ? `Автоматически отправлено «Продолжай» №${auto.continuations}.` : '';
+  $('auto-plan-message').hidden = !autoMessage && !autoSent;
+  $('auto-plan-message').textContent = [autoSent, autoMessage].filter(Boolean).join(' ');
   $('auto-plan-message').dataset.reason = auto.reason ?? '';
 
   renderAgentTime(selected);
@@ -464,7 +463,7 @@ function render(state) {
   $('error-banner').hidden = !error;
   $('error-banner').textContent = error ? `${error.message} (${error.code})` : '';
   for (const button of document.querySelectorAll('button')) {
-    if (button.closest('#startup-panel') || ['open-startup','execute-tasks','correct-integration','reconcile-execution'].includes(button.id)) continue;
+    if (button.closest('#startup-panel') || ['open-startup','correct-integration'].includes(button.id)) continue;
     button.disabled = actionPending || (state.storageError && ['create-workspace', 'add-workspace', 'retry-context'].includes(button.id));
   }
   const recovery = state.conversationRecovery;
@@ -495,9 +494,7 @@ $('reload-chat').addEventListener('click', () => action('reload'));
 $('workspace-health-retry').addEventListener('click', () => action(kitUpgradeNeeded(currentState?.workspaceHealth) ? 'retry' : 'reload'));
 $('workspace-health-doctor').addEventListener('click', () => action('openDoctor'));
 $('auto-plan-toggle').addEventListener('click', () => action('setAutoPlan', !currentState?.autoPlan?.enabled));
-$('execute-tasks').addEventListener('click',()=>action('executeTasks',currentState?.selected?.parentWorkspace??currentState?.selected?.workspace));
 $('correct-integration').addEventListener('click',()=>action('correctIntegration',currentState?.selected?.parentWorkspace??currentState?.selected?.workspace));
-$('reconcile-execution').addEventListener('click',()=>action('reconcileExecution',currentState?.selected?.parentWorkspace??currentState?.selected?.workspace));
 $('plan-review-toggle').addEventListener('click', () => action('setPlanReview', {workspace:currentState?.selected?.workspace,enabled:!currentState?.planReview?.enabled}));
 $('reconnect-chat').addEventListener('click', () => action('reconnect'));
 $('retry-context').addEventListener('click', () => action('retry'));

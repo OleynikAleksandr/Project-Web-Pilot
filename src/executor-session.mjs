@@ -53,7 +53,7 @@ export function configureExecutor(record,{store,inspectPlan,enabled,onChange,sig
     const safety=JSON.stringify([event.documentId,event.state?.url,event.state?.busy,event.state?.lastMessageRole,event.state?.connectionError]);
     if(safety!==lastSafety){lastSafety=safety;signal();}
   },
-    setEnabled:value=>{if(value)void flow.start();else flow.disable();},
+    setEnabled:value=>{if(value&&!flow.enabled&&flow.state.phase!=='complete')void flow.start();else if(!value&&flow.enabled)flow.disable();},
     changed:()=>{
       flow.availabilityChanged();const stopped=executorPageState(record).stopped;
       if(stopped!==lastStopped){lastStopped=stopped;signal();}

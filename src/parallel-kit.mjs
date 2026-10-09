@@ -53,15 +53,29 @@ export class ParallelKit {
       }catch(error){assignments.push({...record,status:'UNKNOWN',error:{code:error.code,message:error.message}});}
     }
     const pending=await exists(path.join(gitDir,'workflow-kit','transaction.json'));
+    const handoff=await fs.readFile(path.join(gitDir,'workflow-kit','task-handoff.json'),'utf8').then(JSON.parse).catch(e=>{if(e.code==='ENOENT')return null;throw e;});
     const committed=await this.git(workspace,['show','HEAD:'+planFile]);
     const unchanged=text===(await fs.readFile(path.join(workspace,planFile),'utf8'));
     const head=await this.git(workspace,['rev-parse','HEAD']);
     const integrated=proof.resolved?.[integration.task_id];
     integration.committed=!!integrated?.integration_commit&&integrated.sha===head&&integrated.source_commit===integration.source_commit;
-    return {workspace,plan:projectVerifiedPlan(plan,proof.resolved),head,assignments,integration,
+    const reviewPending=reviewBlocksExecution(readReview(workspace),plan.scope_id);
+    const confirmationError=!unchanged?{code:'PLAN_CHANGED_DURING_READ',message:'План меняется. Ждём завершения его записи.'}
+      :pending?{code:'TRANSACTION_PENDING',message:'Ждём завершения сохранённой транзакции Kit.'}
+      :committed!==text.trim()?{code:'PLAN_UNPUBLISHED_OR_CHANGED',message:'Текущие изменения плана ещё не опубликованы в Git.'}
+      :reviewPending?{code:'REVIEW_PENDING',message:'Ждём завершения согласования и публикации плана.'}:null;
+    return {workspace,plan:projectVerifiedPlan(plan,proof.resolved),head,assignments,integration,confirmationError,
+      handoff:handoff&&handoff.phase!=='DONE'?handoff:null,
+      watchInputs:['operation.lock','transaction.json','task-handoff.json','integration.json','assignments/'].map(name=>path.relative(workspace,path.join(gitDir,'workflow-kit',name))+(name.endsWith('/')?'/':'')),
       mainClean:!await this.git(workspace,['status','--porcelain']),
       commandActive:await commandActivity(workspace)||await exists(path.join(gitDir,'workflow-kit','operation.lock')),
-      confirmed:unchanged&&!pending&&committed===text.trim()&&!reviewBlocksExecution(readReview(workspace),plan.scope_id)};
+      confirmed:!confirmationError};
+  }
+  async handoff(workspace,plan,task,id,base,previous=null) {
+    const directory=path.join(path.dirname(workspace),'.web-pilot-worktrees',createHash('sha256').update(workspace).digest('hex').slice(0,16));
+    if(!previous)await fs.mkdir(directory,{recursive:true});
+    return this.plans.call(workspace,'assignment:handoff',['--expected-revision',String(plan.plan_revision)],
+      previous?.input??{id,task_id:task.id,base_commit:base,worktree:path.join(directory,id)},{timeout:600000});
   }
   async create(workspace,plan,task,id,base) {
     const directory=path.join(path.dirname(workspace),'.web-pilot-worktrees',createHash('sha256').update(workspace).digest('hex').slice(0,16));

@@ -40,14 +40,15 @@ function fixture(t) {
     const a={id,parent_root:'/main',parent_scope_id:'scope',parent_task_id:taskId,worktree:'/trees/'+id,status};
     state.assignments.push(a);ledger.assignments[id]={id,taskId,worktree:a.worktree,phase:'running',sessionId:'saved-session'};return a;
   };
-  return {state,ledger,calls,kit,runtime,assignment};
+  const grant=async()=>{const previous=runtime.enabled;runtime.setEnabled(true);await runtime.signal('/main');runtime.setEnabled(previous);};
+  return {state,ledger,calls,kit,runtime,assignment,grant};
 }
 
 test('reserved identities missing in Kit retain capacity and visible uncertainty after restart',async t=>{
   const f=fixture(t);
   f.ledger.assignments.a={id:'a',taskId:'A',phase:'creating'};
   f.ledger.assignments.b={id:'b',taskId:'B',phase:'creating'};
-  await f.runtime.launch('/main');await f.runtime.signal('/main');
+  await f.grant();await f.runtime.signal('/main');
   assert.equal(f.calls.created,0);assert.equal(f.calls.opened,0);
   assert.equal(f.runtime.view('/main').assignments.length,2);
   assert.equal(f.runtime.view('/main').error.code,'ASSIGNMENT_UNKNOWN');
@@ -83,24 +84,23 @@ test('missing or mismatched saved chat blocks its source, while an independent s
   assert.equal(f.runtime.view('/main').error.code,'EXECUTOR_SESSION_MISMATCH');
 });
 
-test('known unfinished setup resumes only explicitly or with AutoPlan, retaining assignment identity',async t=>{
+test('known unfinished setup resumes only with AutoPlan, retaining assignment identity',async t=>{
   const f=fixture(t);const a=f.assignment('a','A','NEEDS_SETUP');delete f.ledger.assignments.a.sessionId;
   f.ledger.assignments.a.phase='attention';f.runtime.restoreWorker=async()=>null;
   let setups=0;f.kit.setupAssignment=async()=>{setups++;a.status='READY';return a;};
   f.state.plan.tasks[1].commit_status='DONE';
   await f.runtime.signal('/main');assert.equal(setups,0);
-  await f.runtime.launch('/main');assert.equal(setups,1);assert.equal(f.calls.opened,1);assert.equal(f.calls.created,0);
+  await f.grant();assert.equal(setups,1);assert.equal(f.calls.opened,1);assert.equal(f.calls.created,0);
 });
 
 test('malformed ledger fails closed before any assignment or chat operation',async t=>{
   const f=fixture(t);f.ledger.assignments={a:null};
-  await f.runtime.launch('/main');assert.equal(f.runtime.view('/main').error.code,'EXECUTION_LEDGER_INVALID');
+  await f.grant();assert.equal(f.runtime.view('/main').error.code,'EXECUTION_LEDGER_INVALID');
   assert.equal(f.calls.created+f.calls.opened+f.calls.merged,0);
 });
 
-test('explicit recheck resumes a known Kit journal only when its own source and main have stopped',async t=>{
+test('an input event resumes a known Kit journal only when its own source and main have stopped',async t=>{
   const f=fixture(t);f.assignment();f.state.integration={status:'CHECKING',operation_id:'integration-a',assignment_id:'a'};
-  await f.runtime.signal('/main');assert.equal(f.calls.continued,0);
   f.runtime.workerState=()=>({stopped:false});await f.runtime.recheck('/main');assert.equal(f.calls.continued,0);
   f.runtime.workerState=()=>({stopped:true});f.kit.continueIntegration=async()=>{f.calls.continued++;f.state.integration={status:'CONFLICT'};};
   await f.runtime.recheck('/main');assert.equal(f.calls.continued,1);assert.equal(f.calls.opened,0);assert.equal(f.calls.created,0);

@@ -30,7 +30,8 @@ function fixture(t) {
     sendCorrection:async(_origin,text,ready,before)=>{assert.ok(ready());assert.ok(await before());calls.corrections.push(text);return {state:'sent'};}});
   t.after(()=>runtime.dispose());
   const finish=id=>{const a=state.assignments.find(x=>x.parent_task_id===id);a.status='READY_FOR_INTEGRATION';a.source_commit='source-'+id;pages.set(a.id,{stopped:true});return a;};
-  return {runtime,state,kit,calls,origin,pages,finish};
+  const grant=async()=>{const previous=runtime.enabled;runtime.setEnabled(true);runtime.observe('/main');await runtime.signal('/main');runtime.setEnabled(previous);};
+  return {runtime,state,kit,calls,origin,pages,finish,grant};
 }
 
 test('origin is exact immutable session metadata; unknown/OFF/mismatched policy fails closed',()=>{
@@ -44,27 +45,28 @@ test('origin is exact immutable session metadata; unknown/OFF/mismatched policy 
   assert.equal(executionOrigin({...plan,execution_strategy:'sequential'},()=>null),null);
 });
 
-test('manual group is bounded, duplicate events/clicks do not clone worktrees or chats, OFF launches no next group',async t=>{
+test('ON group is bounded, duplicate events do not clone worktrees or chats, OFF launches no next group',async t=>{
   const f=fixture(t);
-  await Promise.all([f.runtime.launch('/main'),f.runtime.launch('/main'),f.runtime.signal('/main')]);
+  f.runtime.setEnabled(true);await Promise.all([f.runtime.signal('/main'),f.runtime.signal('/main')]);f.runtime.setEnabled(false);
   assert.deepEqual(f.calls.created.map(x=>x.task),['A','B']);assert.equal(f.calls.opened.length,2);
   assert.equal(new Set(f.calls.created.map(x=>x.id)).size,2);
   const a=f.finish('A');await f.runtime.signal('/main');
   assert.deepEqual(f.calls.merged,[a.id]);assert.equal(f.calls.created.length,2);
-  await f.runtime.launch('/main');assert.equal(f.calls.created.at(-1).task,'C');
+  await f.grant();assert.equal(f.calls.created.at(-1).task,'C');
   assert.equal(f.calls.created.at(-1).base,'base-merge');
 });
 
-test('manual launch waits for main preparation without losing the request while AutoPlan is OFF',async t=>{
-  const f=fixture(t);f.runtime.mainState=()=>({stopped:false});
-  await f.runtime.launch('/main');assert.equal(f.calls.created.length,0);
+test('ON waits for main readiness and OFF prevents subsequent assignment',async t=>{
+  const f=fixture(t);f.runtime.mainState=()=>({stopped:false});f.runtime.observe('/main');f.runtime.setEnabled(true);
+  await f.runtime.signal('/main');assert.equal(f.calls.created.length,0);
+  assert.equal(f.runtime.view('/main').error.code,'MAIN_CHAT_NOT_READY');
   f.runtime.mainState=()=>({stopped:true});await f.runtime.signal('/main');
   assert.deepEqual(f.calls.created.map(x=>x.task),['A','B']);
-  f.finish('A');await f.runtime.signal('/main');assert.equal(f.calls.created.length,2,'one manual group only');
+  f.runtime.setEnabled(false);f.finish('A');await f.runtime.signal('/main');assert.equal(f.calls.created.length,2);
 });
 
 test('ON starts subsequent ready tasks only from the integrated base; a busy or active-command source never merges',async t=>{
-  const f=fixture(t);f.runtime.setEnabled(true);await f.runtime.launch('/main');
+  const f=fixture(t);f.runtime.setEnabled(true);await f.grant();
   const a=f.finish('A');f.pages.set(a.id,{stopped:false});await f.runtime.signal('/main');assert.equal(f.calls.merged.length,0);
   f.pages.set(a.id,{stopped:true});a.commandActive=true;await f.runtime.signal('/main');assert.equal(f.calls.merged.length,0);
   a.commandActive=false;a.dirty=true;await f.runtime.signal('/main');assert.equal(f.calls.merged.length,0);
@@ -73,7 +75,7 @@ test('ON starts subsequent ready tasks only from the integrated base; a busy or 
 });
 
 test('ready queue does not wait for an earlier unfinished independent task and remains serialized',async t=>{
-  const f=fixture(t);await f.runtime.launch('/main');const b=f.finish('B');
+  const f=fixture(t);await f.grant();const b=f.finish('B');
   let release;const merge=f.kit.integrate;
   f.kit.integrate=async(...args)=>{await new Promise(resolve=>{release=resolve;});return merge(...args);};
   const pending=f.runtime.signal('/main');await new Promise(resolve=>setImmediate(resolve));
@@ -94,23 +96,23 @@ test('exclusive barrier waits for all earlier assignments to integrate; overlap 
 });
 
 test('unpublished or Review-blocked plan, OFF origin and sequential strategy never create an assignment',async t=>{
-  const f=fixture(t);f.state.confirmed=false;await f.runtime.launch('/main');
+  const f=fixture(t);f.state.confirmed=false;await f.grant();
   assert.equal(f.runtime.view('/main').error.code,'PLAN_NOT_READY');assert.equal(f.calls.created.length,0);
-  f.state.confirmed=true;f.origin.executionSnapshot.parallel_allowed=false;await f.runtime.launch('/main');
+  f.state.confirmed=true;f.origin.executionSnapshot.parallel_allowed=false;await f.grant();
   assert.equal(f.runtime.view('/main').error.code,'EXECUTION_POLICY_MISMATCH');
-  f.state.plan.execution_strategy='sequential';await f.runtime.launch('/main');assert.equal(f.calls.created.length,0);
+  f.state.plan.execution_strategy='sequential';await f.grant();assert.equal(f.calls.created.length,0);
 });
 
 test('unknown integration outcome is preserved without repeating merge or launching dependent work',async t=>{
-  const f=fixture(t);await f.runtime.launch('/main');f.finish('A');let attempts=0;
+  const f=fixture(t);await f.grant();f.finish('A');let attempts=0;
   f.kit.integrate=async()=>{attempts++;throw Error('connection ended');};
-  await f.runtime.signal('/main');await f.runtime.signal('/main');await f.runtime.launch('/main');
+  await f.runtime.signal('/main');await f.runtime.signal('/main');await f.grant();
   assert.equal(attempts,1);assert.equal(f.runtime.view('/main').error.code,'INTEGRATION_UNKNOWN');
   assert.equal(f.calls.created.length,2);
 });
 
 test('conflict keeps main exclusive and explicit correction is delivered once; UNKNOWN cannot replay',async t=>{
-  const f=fixture(t);await f.runtime.launch('/main');
+  const f=fixture(t);await f.grant();
   f.state.integration={status:'CONFLICT',operation_id:'integration-wp-1',task_id:'A',conflicts:['src/A.mjs']};
   await f.runtime.signal('/main');assert.equal(f.runtime.view('/main').phase,'integration');
   await f.runtime.correct('/main');await f.runtime.correct('/main');
@@ -160,4 +162,43 @@ test('source needs an observed final assistant pause in the exact chat, with no 
   }
   record.controller.pending=true;assert.equal(executorPageState(record).stopped,false);
   assert.equal(executorPageState(null).stopped,false);
+});
+
+test('project-scoped AutoPlan starts first groups independently and OFF is rechecked after assignment preparation',async t=>{
+  const a=fixture(t),b=fixture(t);let allowedA=false,allowedB=true;
+  a.runtime.isEnabled=(workspace,scope)=>workspace==='/main'&&scope==='scope'&&allowedA;
+  b.runtime.isEnabled=(workspace,scope)=>workspace==='/main'&&scope==='scope'&&allowedB;
+  await Promise.all([a.runtime.signal('/main'),b.runtime.signal('/main')]);
+  assert.equal(a.calls.created.length,0);assert.equal(b.calls.created.length,2);
+  const create=a.kit.create;a.kit.create=async(...args)=>{const result=await create(...args);allowedA=false;return result;};
+  allowedA=true;await a.runtime.signal('/main');
+  assert.equal(a.calls.created.length,1);assert.equal(a.calls.opened.length,0,'OFF during create prevents delivery and next assignment');
+  a.kit.create=create;allowedA=true;await a.runtime.signal('/main');assert.equal(a.calls.opened.length,2);
+});
+
+test('legacy task handoff waits for safe main, reuses identity after interruption and resumes automatically',async t=>{
+  const f=fixture(t);f.state.plan.current_task_id='A';f.state.plan.tasks[0].implementation_status='IN_PROGRESS';
+  f.state.confirmed=false;f.state.mainClean=false;f.runtime.setEnabled(true);
+  let stopped=false,calls=0,identity;
+  f.runtime.mainState=()=>({stopped,canSend:stopped});
+  f.kit.handoff=async(workspace,plan,task,id,base)=>{
+    calls++;if(identity)assert.equal(id,identity);identity=id;
+    if(calls===1)throw Object.assign(Error('Interrupted transfer'),{code:'HANDOFF_INTERRUPTED'});
+    f.state.plan.current_task_id=null;f.state.plan.tasks[0].implementation_status='TODO';f.state.confirmed=true;f.state.mainClean=true;
+    return f.kit.create(workspace,plan,task,id,base);
+  };
+  await f.runtime.signal('/main');assert.equal(calls,0);assert.equal(f.runtime.view('/main').error.code,'MAIN_CHAT_NOT_READY');
+  stopped=true;f.state.commandActive=true;await f.runtime.signal('/main');assert.equal(calls,0);
+  assert.equal(f.runtime.view('/main').error.code,'COMMAND_ACTIVE');
+  f.state.commandActive=false;await f.runtime.signal('/main');assert.equal(calls,1);
+  await f.runtime.signal('/main');assert.equal(calls,2);assert.equal(f.calls.opened.length,2);
+  assert.equal(f.calls.created.filter(x=>x.task==='A').length,1);
+});
+
+test('published-plan diagnostics retain actual Kit reason instead of a generic launch message',async t=>{
+  const f=fixture(t);f.runtime.setEnabled(true);f.state.confirmed=false;
+  for(const code of ['PLAN_UNPUBLISHED_OR_CHANGED','TRANSACTION_PENDING','REVIEW_PENDING']) {
+    f.state.confirmationError={code,message:'Concrete '+code};await f.runtime.signal('/main');
+    assert.equal(f.runtime.view('/main').error.code,code);assert.equal(f.calls.created.length,0);
+  }
 });

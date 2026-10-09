@@ -6,7 +6,8 @@ import {pathToFileURL} from 'node:url';
 import {execFileSync} from 'node:child_process';
 import {install} from '../src/lib/installer.mjs';
 import {createScope,startTask,commitDocumentation,applyConfig} from '../src/lib/actions.mjs';
-import {readPlan} from '../src/lib/plan.mjs';
+import {readPlan,writePlan} from '../src/lib/plan.mjs';
+import {beginTaskFiles} from '../src/lib/task-files.mjs';
 import {createAssignment,setupAssignment,assignmentStatus} from '../src/lib/task-assignment.mjs';
 import {startIntegration,continueIntegration} from '../src/lib/task-integration.mjs';
 import {commitTask} from '../src/lib/transaction.mjs';
@@ -46,6 +47,11 @@ export function planFixture(root,origin='fixture-origin') {
     acceptance_criteria:['Independent sources and checked main'],approved_scope:{functional_paths:[],documentation_paths:['README.md','SECOND.md','THIRD.md']},
     context_pack:{documents:[],dependency_task_ids:[],include_last_completed_task:false},
     tasks:[task('T001','README.md'),task('T002','SECOND.md'),task('T003','THIRD.md',['T001','T002'])]});
+}
+export function legacyStartFixture(root) {
+  const plan=readPlan(root),task=plan.tasks[0];beginTaskFiles(root,plan,task);
+  task.implementation_status='IN_PROGRESS';plan.current_task_id=task.id;plan.plan_revision++;writePlan(root,plan);
+  write(root,'README.md','# worker-a\n');return {legacyStart:true};
 }
 export function completeFixture(root) {
   const task=readPlan(root).tasks[0];
@@ -94,7 +100,7 @@ export function runFixture() {
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href) {
   const [mode,root,value]=process.argv.slice(2);
   const result=mode==='--create'?{root:createFixture(root)}:mode==='--plan'?planFixture(root,value)
-    :mode==='--complete'?completeFixture(root):mode==='--conflict'?conflictFixture(root)
+    :mode==='--legacy-start'?legacyStartFixture(root):mode==='--complete'?completeFixture(root):mode==='--conflict'?conflictFixture(root)
       :mode==='--correct'?correctFixture(root,value):runFixture();
   console.log(JSON.stringify(result));
 }

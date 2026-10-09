@@ -638,9 +638,14 @@ export async function run({ app, window, sidebar, store, selectWorkspace, worksp
   // Renderer handler on TEST FIXTURE: icons retain the explanatory live text.
   const indicatorBase=snapshot();
   for(const indicator of ['working','waiting','success','attention','none']){
-    sidebar.send('pilot:state-changed',{...indicatorBase,planReview:{...indicatorBase.planReview,message:'Проверка статуса Review',indicator}});
-    await waitFor(()=>sidebar.executeJavaScript(`document.getElementById('plan-review-indicator').dataset.state===${JSON.stringify(indicator)}`),'review indicator '+indicator,snapshot);
-    const icon=await sidebar.executeJavaScript(`(()=>{const i=document.getElementById('plan-review-indicator');return {hidden:i.hidden,decorative:i.getAttribute('aria-hidden'),animation:getComputedStyle(i).animationName,text:document.getElementById('plan-review-text').textContent,role:document.getElementById('plan-review-message').getAttribute('role')}})()`);
+    let icon;
+    await waitFor(async()=>{
+      sidebar.send('pilot:state-changed',{...indicatorBase,planReview:{...indicatorBase.planReview,message:'Проверка статуса Review',indicator}});
+      // Real project controllers may publish between fixture events. Capture the
+      // rendered input and its appearance in one read, retrying only fixture input.
+      icon=await sidebar.executeJavaScript(`(()=>{const i=document.getElementById('plan-review-indicator');return {state:i.dataset.state,hidden:i.hidden,decorative:i.getAttribute('aria-hidden'),animation:getComputedStyle(i).animationName,text:document.getElementById('plan-review-text').textContent,role:document.getElementById('plan-review-message').getAttribute('role')}})()`);
+      return icon.state===indicator&&icon.text==='Проверка статуса Review';
+    },'review indicator '+indicator,snapshot);
     assert.equal(icon.hidden,indicator==='none');assert.equal(icon.decorative,'true');assert.equal(icon.role,'status');
     assert.equal(icon.text,'Проверка статуса Review');
     if(indicator!=='working')assert.equal(icon.animation,'none','waiting and attention never animate');
@@ -648,10 +653,13 @@ export async function run({ app, window, sidebar, store, selectWorkspace, worksp
   sidebar.debugger.attach('1.3');
   try{
     await sidebar.debugger.sendCommand('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
-    sidebar.send('pilot:state-changed',{...indicatorBase,planReview:{...indicatorBase.planReview,message:'Claude проверяет документы.',indicator:'working'}});
-    await waitFor(()=>sidebar.executeJavaScript("document.getElementById('plan-review-indicator').dataset.state==='working'"),'reduced motion review',snapshot);
-    assert.equal(await sidebar.executeJavaScript("getComputedStyle(document.getElementById('plan-review-indicator')).animationName"),'none');
-    assert.equal(await sidebar.executeJavaScript("document.getElementById('plan-review-text').textContent"),'Claude проверяет документы.');
+    let reduced;
+    await waitFor(async()=>{
+      sidebar.send('pilot:state-changed',{...indicatorBase,planReview:{...indicatorBase.planReview,message:'Claude проверяет документы.',indicator:'working'}});
+      reduced=await sidebar.executeJavaScript(`({state:document.getElementById('plan-review-indicator').dataset.state,animation:getComputedStyle(document.getElementById('plan-review-indicator')).animationName,text:document.getElementById('plan-review-text').textContent})`);
+      return reduced.state==='working'&&reduced.text==='Claude проверяет документы.';
+    },'reduced motion review',snapshot);
+    assert.equal(reduced.animation,'none');
   }finally{
     await sidebar.debugger.sendCommand('Emulation.setEmulatedMedia',{features:[]});sidebar.debugger.detach();
     sidebar.send('pilot:state-changed',snapshot());
@@ -1369,6 +1377,7 @@ export async function run({ app, window, sidebar, store, selectWorkspace, worksp
   assert.equal(autoPlan.view().enabled, false);
   await beginAnswer(); await noExtraSend(1);
   const legacyChats = [prePlanChat, autoScopeOwner]
+    .map(session => store.project(workspace,session.sessionId))
     .map(session => ({ sessionId: session.sessionId, chatUrl: session.chatUrl, title: session.title, titleSource: session.titleSource }));
   const scopeOwner = legacyChats[1], untouchedLegacy = legacyChats[0];
   assert.equal(store.selected().sessionId, scopeOwner.sessionId);
@@ -1420,7 +1429,8 @@ export async function run({ app, window, sidebar, store, selectWorkspace, worksp
     && snapshot().selected?.scopeId === 'fixture-current-plan'
     && browser.getURL() === untouchedLegacy.chatUrl, 'old chat projects current plan without inheriting its title', snapshot);
   assert.equal(store.selected().chatUrl, untouchedLegacy.chatUrl);
-  assert.equal(store.selected().title, untouchedLegacy.title, 'switching to an old chat never copies the current plan title');
+  if(untouchedLegacy.titleSource==='manual')assert.equal(store.selected().title,untouchedLegacy.title,'manual old-chat name survives');
+  assert.notEqual(store.selected().title,currentScopeTitle,'old chat never inherits another session scope title');
   assert.equal(store.selected().planId, 'fixture-current-plan');
   assert.notEqual(fixtureConversationTitles.get(new URL(untouchedLegacy.chatUrl).pathname.split('/').at(-1)), currentScopeTitle);
 

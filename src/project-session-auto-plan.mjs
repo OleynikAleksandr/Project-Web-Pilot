@@ -42,7 +42,7 @@ export function configureProjectAutoPlan(record,{store,authorization,inspectPlan
     }while(again&&!record.disposed);})().finally(()=>{refreshing=null;});
   };
   monitor=new PlanMonitor({selected:record.project,inspect:(workspace,id)=>store.inspect(workspace,id),onChange:()=>{changed();onChange();},
-    onInputsChanged:()=>record.controller.projectChanged(),onError:onChange});
+    onInputsChanged:()=>record.controller.projectChanged(),onError:error=>{if(error){const p=selected();authorization.sync(p?.workspace,null);}onChange();}});
   record.primaryAutomation={flow,automation,monitor,update,changed,observe:event=>{update();automation.observe(selected(),event);flow.observe(event);}};
   const p=selected(),saved=authorization.checkpoint(p.workspace,p.scopeId,p.sessionId);
   automation.restore(saved.automationCheckpoint);flow.restore(permitted(p),saved.autoPlanCheckpoint);

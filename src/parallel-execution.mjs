@@ -59,36 +59,36 @@ export class ParallelExecution {
     this.enabled=value===true;
     if(this.enabled)for(const workspace of this.unwatch.keys())void this.signal(workspace);
   }
-  launch(workspace) {this.observe(workspace);return this.enqueue(workspace,true);}
-  signal(workspace) {return this.enqueue(workspace,false);}
-  recheck(workspace) {this.observe(workspace);return this.enqueue(workspace,false,true);}
-  enqueue(workspace,manual,recovery=false) {
+  signal(workspace) {return this.enqueue(workspace,true);}
+  recheck(workspace) {this.observe(workspace);return this.enqueue(workspace,true);}
+  enqueue(workspace,recovery=false) {
     if(this.closed)return Promise.resolve();
     if(this.correcting.has(workspace))return Promise.resolve(this.view(workspace));
     let queue=this.queues.get(workspace);
-    if(queue){queue.again=true;queue.manual||=manual;queue.recovery||=recovery;return queue.promise;}
-    queue={again:true,manual,recovery};this.queues.set(workspace,queue);
+    if(queue){queue.again=true;queue.recovery||=recovery;return queue.promise;}
+    queue={again:true,recovery};this.queues.set(workspace,queue);
     queue.promise=Promise.resolve().then(async()=>{
-      do {queue.again=false;const requested=queue.manual,recover=queue.recovery;queue.manual=false;queue.recovery=false;
-        try {await this.reconcile(workspace,requested,recover);}
+      do {queue.again=false;const recover=queue.recovery;queue.recovery=false;
+        try {await this.reconcile(workspace,recover);}
         catch(error){this.publish(workspace,{phase:'attention',error:issue(error)});}
       }while(queue.again&&!this.closed);
       return this.view(workspace);
     }).finally(()=>this.queues.delete(workspace));
     return queue.promise;
   }
-  async reconcile(workspace,manual,recovery=false) {
+  async reconcile(workspace,recovery=false) {
     const state=await this.kit.read(workspace),{plan}=state;
     if(plan.execution_strategy!=='parallel') {this.publish(workspace,{phase:'sequential',assignments:[],error:null});return;}
-    const enabled=this.isEnabled?this.isEnabled(workspace,plan.scope_id):this.enabled;
+    const enabled=()=>this.isEnabled?this.isEnabled(workspace,plan.scope_id):this.enabled;
+    this.unwatch.get(workspace)?.update?.(state.watchInputs);
     const origin=executionOrigin(plan,id=>this.origin(workspace,id));
     const ledger=this.ledger(workspace,plan.scope_id);
     const assignments=state.assignments.map(a=>({...a,...(ledger.assignments[a.id]?.readyAt?{readyAt:ledger.assignments[a.id].readyAt}:{})}));
     for(const entry of Object.values(ledger.assignments))if(!assignments.some(a=>a.id===entry.id))
       assignments.push({id:entry.id,parent_task_id:entry.taskId,worktree:entry.worktree,status:'UNKNOWN',
-        error:entry.error??issue(fail('ASSIGNMENT_UNKNOWN','Назначение не подтверждено Kit. Повторите сверку; повторного создания нет.'))});
+        error:entry.error??issue(fail('ASSIGNMENT_UNKNOWN','Назначение не подтверждено Kit. Откройте соответствующий чат и проверьте назначение; повторного создания нет.'))});
     let recoveryError=null;
-    if(ledger.started||manual) {
+    if(ledger.started||enabled()) {
       try {await this.restoreOrigin(origin);}catch(error){recoveryError=issue(error);}
       for(const a of assignments) {
         if(a.status==='INTEGRATED') {
@@ -98,7 +98,7 @@ export class ParallelExecution {
         }
         if(a.status==='UNKNOWN'){recoveryError??=a.error;continue;}
         try {
-          const restored=await this.restoreWorker(a,origin,ledger.assignments[a.id],recovery);
+          const restored=await this.restoreWorker(a,origin,ledger.assignments[a.id],recovery&&enabled());
           if(restored) {
             const entry=ledger.assignments[a.id]??={id:a.id,taskId:a.parent_task_id,worktree:a.worktree};
             if(entry.sessionId!==restored.sessionId){entry.sessionId=restored.sessionId;entry.phase='running';await this.persist();}
@@ -129,13 +129,29 @@ export class ParallelExecution {
       }
       this.publish(workspace,{phase:'integration',error:operation.error?{code:'INTEGRATION_PENDING',message:operation.error}:recoveryError??{
         code:'INTEGRATION_PENDING',message:operation.status==='UNKNOWN'?'Исход слияния неизвестен. Проверьте основной чат и integration:status; повторный merge запрещён.'
-          :'Сохранена незавершённая интеграция. Дождитесь остановки чатов и повторите сверку либо откройте основной чат для исправления.'}});return;
+          :'Сохранена незавершённая интеграция. После остановки чатов сохранённая операция продолжится автоматически; конфликт передайте основному агенту.'}});return;
     }
-    if(!state.confirmed||plan.execution_scope_status!=='ACTIVE'||state.commandActive)
-      throw fail('PLAN_NOT_READY','Ждём опубликованный план и завершение текущей команды Kit.');
+    if(state.commandActive)throw fail('COMMAND_ACTIVE','В проекте ещё выполняется команда Kit. После её завершения очередь продолжится автоматически.');
+    if(plan.current_task_id||state.handoff) {
+      if(!enabled()){this.publish(workspace,{phase:'paused',error:{code:'MAIN_TASK_ACTIVE',message:'В main осталась начатая задача. Включите автовыполнение проекта для безопасной передачи исполнителю.'}});return;}
+      const page=this.mainState(origin);
+      if(!page.stopped||page.canSend===false)throw fail('MAIN_CHAT_NOT_READY','Ждём остановки основного чата и готовности поля без черновика.');
+      if(!this.kit.handoff)throw fail('HANDOFF_NOT_SUPPORTED','Для безопасной передачи задачи требуется Workflow Kit 1.7.1.');
+      const task=plan.tasks.find(t=>t.id===(state.handoff?.input.task_id??plan.current_task_id));
+      if(!task)throw fail('HANDOFF_TASK_UNKNOWN','Не найдена задача сохранённой передачи.');
+      const id=state.handoff?.input.id??Object.values(ledger.assignments).find(e=>e.taskId===task.id)?.id??'wp-'+this.uuid();
+      const entry=ledger.assignments[id]??={id,taskId:task.id,base:state.head,phase:'handoff'};
+      ledger.started=true;await this.persist();this.publish(workspace,{phase:'preparing'});
+      if(!enabled())return;
+      const result=await this.kit.handoff(workspace,plan,task,id,state.head,state.handoff);
+      entry.worktree=result.worktree;entry.phase=result.status;entry.error=null;await this.persist();
+      this.queues.get(workspace).again=true;return;
+    }
+    if(!state.confirmed)throw fail(state.confirmationError?.code??'PLAN_NOT_READY',state.confirmationError?.message??'Ждём опубликованный и подтверждённый план.');
+    if(plan.execution_scope_status!=='ACTIVE')throw fail('SCOPE_NOT_ACTIVE','Текущий план не разрешён к выполнению.');
     if(plan.tasks.length&&plan.tasks.every(t=>t.commit_status==='DONE')) {this.onComplete(workspace,plan.scope_id);this.publish(workspace,{phase:'complete'});return;}
-    if(manual){ledger.started=true;ledger.manualRequested=true;await this.persist();}
-    if(!ledger.started)return;
+    if(enabled()&&!ledger.started){ledger.started=true;await this.persist();}
+    if(!ledger.started){this.publish(workspace,{phase:'paused',error:null});return;}
     const stopped=a=>{const page=this.workerState(a,ledger.assignments[a.id]);return {...page,stopped:page.stopped&&!a.error&&!a.commandActive&&!a.transaction_pending&&!a.dirty};};
     for(const a of assignments) {
       const entry=ledger.assignments[a.id];
@@ -153,39 +169,43 @@ export class ParallelExecution {
       catch(error){entry.integration='unknown';await this.persist();throw error;}
       this.queues.get(workspace).again=true;return;
     }
-    const requested=manual||ledger.manualRequested===true;
-    if(!requested&&!enabled)return;
-    if(!state.mainClean||!this.mainState(origin).stopped)return;
-    if(ledger.manualRequested){ledger.manualRequested=false;await this.persist();}
+    if(!enabled()){this.publish(workspace,{phase:'paused'});return;}
+    if(!state.mainClean)throw fail('MAIN_DIRTY','В main есть незакоммиченные изменения. Автовыполнение не удаляет и не присваивает их.');
+    const mainPage=this.mainState(origin);
+    if(!mainPage.stopped||mainPage.canSend===false)throw fail('MAIN_CHAT_NOT_READY','Ждём готовности основного чата без активного ответа и черновика.');
     // A known, never-opened assignment may finish setup under the same identity.
     for(const a of assignments) {
       const entry=ledger.assignments[a.id];
       if(!entry||entry.sessionId||a.error||!['READY','NEEDS_SETUP'].includes(a.status)||a.commandActive||a.transaction_pending)continue;
+      if(!enabled())break;
       if(entry.phase==='opening')continue; // Crash during session creation is reconciled from the session store above.
       try {
         let prepared=a;
         if(a.status==='NEEDS_SETUP')prepared=await this.kit.setupAssignment(workspace,a.id);
-        if(prepared.status!=='READY')continue;
+        if(prepared.status!=='READY'||!enabled())continue;
         entry.phase='opening';await this.persist();
+        if(!enabled()){entry.phase='ready';await this.persist();break;}
         const session=await this.openWorker({...a,...prepared,title:plan.tasks.find(t=>t.id===a.parent_task_id)?.title},origin);
         entry.sessionId=session.sessionId;entry.phase='running';entry.error=null;await this.persist();
       }catch(error){entry.error=issue(error);await this.persist();recoveryError??=entry.error;}
     }
     for(const task of availableTasks(plan,assignments,stopped)) {
-      if(this.closed||!requested&&!enabled)break;
+      if(this.closed||!enabled())break;
       // Persist identity before creating a worktree. An ambiguous result never gets a new ID.
       let entry=Object.values(ledger.assignments).find(a=>a.taskId===task.id);
       if(entry)continue;
       const id='wp-'+this.uuid();entry=ledger.assignments[id]={id,taskId:task.id,base:state.head,phase:'creating'};
       await this.persist();this.publish(workspace,{phase:'preparing'});
+      if(this.closed||!enabled()){delete ledger.assignments[id];await this.persist();break;}
       try {
         let assignment=await this.kit.create(workspace,plan,task,id,state.head);
         entry.worktree=assignment.worktree;entry.phase=assignment.status;await this.persist();
         if(assignment.status==='NEEDS_SETUP')assignment=await this.kit.setupAssignment(workspace,id);
         entry.phase=assignment.status;await this.persist();
         if(assignment.status!=='READY')throw fail('NEEDS_SETUP','Окружение задания не готово. Повторите подготовку задания.');
-        if(this.closed||!requested&&!enabled){entry.phase='ready';await this.persist();break;}
+        if(this.closed||!enabled()){entry.phase='ready';await this.persist();break;}
         entry.phase='opening';await this.persist();
+        if(!enabled()){entry.phase='ready';await this.persist();break;}
         const session=await this.openWorker({...assignment,id,parent_root:workspace,parent_scope_id:plan.scope_id,
           parent_task_id:task.id,title:task.title},origin);
         entry.sessionId=session.sessionId;entry.phase='running';await this.persist();

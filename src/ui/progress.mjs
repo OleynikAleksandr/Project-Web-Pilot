@@ -1,5 +1,5 @@
 const actionLabels = {
-  executeTasks:'Подготавливаем исполнителей',correctIntegration:'Передаём исправление основному агенту',
+  correctIntegration:'Передаём исправление основному агенту',
   runDoctor: 'Проверяем и восстанавливаем проект', continueDoctor: 'Возвращаемся к работе', reviewDoctorProject: 'Проверяем папку',
   newSession: 'Создаём сессию', selectSession: 'Открываем сессию', selectWorkspace: 'Открываем проект',
   reload: 'Обновляем ChatGPT', retry: 'Обновляем контекст', returnToChat: 'Возвращаемся к чату',

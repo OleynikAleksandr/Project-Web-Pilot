@@ -696,3 +696,12 @@ test('the line for an external client names the folder, AGENTS.md and the recove
     assert.ok(Buffer.byteLength(text) < 1200);
   }
 });
+
+test('assigned initial recovery waits while project AutoPlan is OFF and resumes without a new attempt',async()=>{
+  const f=controllerFixture({chatUrl:null});let allowed=false;
+  await f.store.updateSession(project.workspace,project.sessionId,{assignmentId:'assigned',taskId:'T001',parentWorkspace:'/main',parentScopeId:'scope'});
+  f.controller.canSendContext=()=>allowed;
+  await f.controller.tick();assert.equal(f.sends(),0);assert.equal(f.loads(),0);assert.equal(f.saved.attempt,null);
+  allowed=true;await f.controller.tick();assert.equal(f.sends(),1);assert.equal(f.saved.attempt.state,'sent');
+  allowed=false;await f.controller.tick();assert.equal(f.sends(),1,'OFF cannot replay an already delivered recovery');
+});

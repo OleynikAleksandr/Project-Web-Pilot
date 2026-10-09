@@ -303,6 +303,9 @@ export class ContextSession {
       if (project.manualStart && !ownMessageSeen) {
         this.emit({ phase: 'manual-session', projectInfo: info, messageSent: false, delivery: null, error: null }); return;
       }
+      if(project.assignmentId&&this.canSendContext&&!this.canSendContext(project)&&!attempt?.sendStartedAtMs&&!ownMessageSeen) {
+        this.emit({phase:'selected',projectInfo:info,messageSent:false,error:null});return;
+      }
       if (this.freshDraft && !project.chatUrl && !attempt) {
         const cleared = await this.composer.clearNewSessionDraft({
           canContinue: () => this.current(generation) && this.atExpectedChat(project),
@@ -402,7 +405,7 @@ export class ContextSession {
       const result = await this.composer.deliver({ text: attempt.text, requestId: attempt.requestId,
         attachments: attempt.attachments,
         expectedExperience: project.chatUrl ? null : experience,
-        canContinue: () => this.current(generation) && this.atExpectedChat(project, attempt), onBeforeFill: async () => {
+        canContinue: () => this.current(generation) && this.atExpectedChat(project, attempt) && (!this.canSendContext||this.canSendContext(project)), onBeforeFill: async () => {
           const latest = { ...project, ...await this.inspectProject(project.workspace, project.sessionId, generation) };
           if (!await this.packetIsCurrent(attempt.packet, latest)) {
             throw failure('CONTEXT_CHANGED_BEFORE_SEND', 'Пакет устарел до вставки. Обновите контекст.');

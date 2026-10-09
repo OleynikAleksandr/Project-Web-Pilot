@@ -89,7 +89,7 @@ const projectAutoPlan=new ProjectAutoPlan({onChange:workspace=>{
     const project=record.project();
     if((project?.parentWorkspace??project?.workspace)!==workspace)continue;
     record.primaryAutomation?.update();
-    if(record.executor)record.executor.setEnabled(projectAutoPlan.enabled(workspace,project.parentScopeId));
+    if(record.executor){record.executor.setEnabled(projectAutoPlan.enabled(workspace,project.parentScopeId));record.controller.signal();}
   }
   void saveSettings().catch(report);void execution.signal(workspace);publish();
 }});
@@ -255,7 +255,8 @@ const execution=new ParallelExecution({kit:executionKit,book:parallelExecutionBo
     publish();
   },
   watch:(workspace,signal)=>{const watcher=new ProjectInputWatch({workspace,onSignal:signal,
-    onError:error=>{if(error)execution.publish(workspace,{phase:'attention',error});}});watcher.update(['.harness/runtime/command-activity/']);return()=>watcher.close();},
+    onError:error=>{if(error)execution.publish(workspace,{phase:'attention',error});}});watcher.update(['.harness/runtime/command-activity/']);const stop=()=>watcher.close();
+    stop.update=paths=>watcher.update(['.harness/runtime/command-activity/',...(paths??[])]);return stop;},
   mainState:origin=>executorPageState(liveRecord(origin)),
   workerState:(assignment,entry)=>executorPageState(liveRecord(store.project(assignment.worktree,entry?.sessionId))),
   restoreOrigin:origin=>restoreExecutionPage(origin),
@@ -466,7 +467,7 @@ function checkEventRuntimeState() {
 }
 
 function rememberSessionTitle() {
-  if (!browser || browser.webContents.isDestroyed() || pageLoading) return;
+  if (!browser?.webContents || browser.webContents.isDestroyed() || pageLoading) return;
   const selected = store.selected();
   if (!selected?.chatUrl || normalizeChatUrl(browser.webContents.getURL()) !== selected.chatUrl) return;
   const title = browser.webContents.getTitle().replace(/\s*[-–—|]\s*ChatGPT$/i, '').trim();
@@ -496,7 +497,7 @@ function selectedTitleCandidate() {
 }
 
 function selectedTitleSyncTarget(candidate = selectedTitleCandidate()) {
-  if (!candidate || !browser || browser.webContents.isDestroyed() || pageLoading) return null;
+  if (!candidate || !browser?.webContents || browser.webContents.isDestroyed() || pageLoading) return null;
   if (normalizeChatUrl(browser.webContents.getURL()) !== candidate.chatUrl) return null;
   return candidate;
 }
@@ -1015,6 +1016,7 @@ function selectLiveSession(project=null) {
 }
 function decorateSessionRuntime(record) {
   configurePrimary(record);
+  record.controller.canSendContext=project=>!project.assignmentId||projectAutoPlan.enabled(project.parentWorkspace,project.parentScopeId);
   const contents=record.view.webContents, handlers=[];
   const on=(event,fn)=>{contents.on(event,fn);handlers.push([event,fn]);};
   if(eventBaseline) {
@@ -1059,9 +1061,7 @@ function registerIpc() {
       throw Object.assign(new Error('Выберите проект текущего плана.'),{code:'EXECUTION_SELECTION_CHANGED'});
     return workspace;
   };
-  registerAction('pilot:execute-tasks',input=>{void execution.launch(executionWorkspace(input));return {queued:true};});
   registerAction('pilot:correct-integration',input=>execution.correct(executionWorkspace(input)));
-  registerAction('pilot:reconcile-execution',input=>{void execution.recheck(executionWorkspace(input));return {queued:true};});
   ipcMain.handle('pilot:get-state', event => { assertLocalSender(event); return snapshot(); });
   registerAction('pilot:auto-plan', async enabled => {
     const selected=store.selected(),workspace=selected?.parentWorkspace??selected?.workspace;

@@ -40,7 +40,7 @@ test('real sidebar renders executor group, worktree/status/time, protected actio
     selected:{workspace:'/main',sessionId:'author',scopeId:'scope',planExecution:{execution_strategy:'parallel'},planView:{state:'working',completed:0,total:1,tasks:[{id:'T1',title:'Task',status:'current'}]}},
     execution:{phase:'waiting',scopeId:'scope',assignments:[],planView:{state:'working',completed:0,total:1,tasks:[{id:'T1',title:'Task',status:'current'}]}},context:{phase:'delivered'}};
   const action=name=>async(...args)=>{calls.push([name,...args]);return {state};};
-  window.webPilot={getState:async()=>state,onState:fn=>{listener=fn;},executeTasks:action('executeTasks'),
+  window.webPilot={getState:async()=>state,onState:fn=>{listener=fn;},
     correctIntegration:action('correctIntegration'),selectSession:action('selectSession')};
   window.eval('const createProgress=()=>({show(){},destroy(){}});const operationLabel=()=>"";const settingsPanelView=()=>({render(){}});const workspaceSetupView=()=>({render(){}});\n'+source.replace(/^import .*;\n/gm,''));
   const settle=()=>new Promise(resolve=>setTimeout(resolve,0));await settle();
@@ -49,7 +49,8 @@ test('real sidebar renders executor group, worktree/status/time, protected actio
   assert.match(document.querySelector('.executor-row').textContent,/Готово к слиянию/);
   assert.match(document.querySelector('[data-executor-time]').textContent,/Работа 00:02 · ожидание 00:03/);
   document.querySelector('.executor-row').click();await settle();assert.deepEqual(calls.pop(),['selectSession','/tree','child']);
-  document.getElementById('execute-tasks').click();await settle();assert.deepEqual(calls.pop(),['executeTasks','/main']);
+  assert.match(document.getElementById('auto-plan-message').textContent,/Автовыполнение этого проекта выключено/);
+  assert.equal(document.getElementById('execute-tasks'),null);assert.equal(document.getElementById('reconcile-execution'),null);
   state={...state,selected:{...state.selected,workspace:'/tree',parentWorkspace:'/main',assignmentId:'a',sessionId:'child',
     planView:{state:'awaiting-acceptance',completed:1,total:1,tasks:[{id:'T1',title:'Task',status:'done'}]}},
     execution:{...state.execution,phase:'integration',integration:{status:'CONFLICT'}}};
@@ -57,6 +58,5 @@ test('real sidebar renders executor group, worktree/status/time, protected actio
   assert.equal(document.querySelector('.executor-row').getAttribute('aria-current'),'page');
   assert.match(document.getElementById('plan-status').textContent,/0 из 1/,'local DONE does not complete main');
   assert.equal(document.getElementById('correct-integration').hidden,false);
-  assert.equal(document.getElementById('execute-tasks').disabled,true);
   document.getElementById('correct-integration').click();await settle();assert.deepEqual(calls.pop(),['correctIntegration','/main']);
 });
