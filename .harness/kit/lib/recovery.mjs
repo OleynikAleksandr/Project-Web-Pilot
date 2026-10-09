@@ -241,6 +241,7 @@ export function recoverState(root, reason = 'manual', options = {}) {
     else if (plan.execution_scope_status==='BLOCKED') continuation = 'Разрешены обсуждение и диагностика. Причина: '+plan.blocked_reason;
     else if (plan.assignment && plan.delivery_status==='READY_FOR_ACCEPTANCE') continuation = 'Назначение готово к интеграции. Родительская задача не завершена. Сохраните ветку и worktree; новые задачи и вложенные исполнители запрещены.';
     else if (plan.delivery_status==='READY_FOR_ACCEPTANCE') continuation = 'Все задачи выполнены, план остаётся видимым. Новое поручение добавляется через plan:extend; закрытие требует отдельной прямой команды пользователя.';
+    else if (plan.execution_strategy==='parallel' && !plan.assignment) continuation = 'Основной чат ведёт планирование и исправление интеграций. Все задачи, включая общую основу и исключительные, выполняют отдельные назначения Web Pilot. Не вызывайте task:start/commit задачи в main. AutoPlan выбранного проекта управляет запуском. Если осталась прежняя начатая задача main, приложение сохраняет её через assignment:handoff; при блокировке сообщите точную причину, не удаляйте правки.';
     else continuation = (plan.current_task_id?'Продолжить ':'Начать через task:start ')+(task?.id??'задачу после уточнения зависимостей')+'.';
     const units = [];
     const add = (label,text,metadata={}) => units.push({label,text,...metadata});

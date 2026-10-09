@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1601,
+  "plan_revision": 1602,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-chat-execution-20261009",
@@ -151,7 +151,7 @@
     ]
   },
   "baseline_commit": "39507e5655e81395bbcbeab0bd7b00572e4a746b",
-  "current_task_id": null,
+  "current_task_id": "T022",
   "context_pack": {
     "documents": [
       {
@@ -1624,7 +1624,7 @@
         "Исправление не объявляется установленным релизом или живой пользовательской приёмкой; реальные тестовые проекты не изменяются"
       ],
       "expected_commit_message": "feat: Обновить локальный Kit и согласовать инструкции и контракты",
-      "implementation_status": "TODO",
+      "implementation_status": "IN_PROGRESS",
       "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "parallel-chat-execution-20261009",
@@ -1817,8 +1817,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: parallel-chat-execution-20261009
-Current Task: нет
-Revision: 1601
+Current Task: T022
+Revision: 1602
 
 ## Цель
 
@@ -1930,7 +1930,7 @@ Revision: 1601
   - Git Commit: [DONE] feat: Единый AutoPlan для запуска parallel без дополнительных кнопок
   - Reference: parallel-chat-execution-20261009 / T021 / implementation
   - Файлы: src/parallel-execution.mjs, src/parallel-kit.mjs, src/main.mjs, src/preload.cjs, src/ui/index.html, src/ui/sidebar.mjs, src/auto-plan.mjs, src/auto-plan-state.mjs, tests/parallel-execution.test.mjs, tests/parallel-execution-recovery.test.mjs, tests/parallel-execution-ui.test.mjs, tests/parallel-execution-smoke-fixture.cjs, tests/electron-smoke.mjs, packages/workflow-kit/scripts/check-parallel-execution-fixture.mjs, src/context-session.mjs, src/executor-session.mjs, src/project-session-auto-plan.mjs, src/ui/progress.mjs, tests/context-session.test.mjs, docs/modules/session-runtime.md
-- [TODO] T022: Обновить локальный Kit и согласовать инструкции и контракты — Ожидает
+- [IN_PROGRESS] T022: Обновить локальный Kit и согласовать инструкции и контракты — В работе
   - Git Commit: [PENDING] feat: Обновить локальный Kit и согласовать инструкции и контракты
   - Reference: parallel-chat-execution-20261009 / T022 / implementation
   - Файлы: package-lock.json, tests/workflow-kit-upgrade.test.mjs, docs/modules/session-runtime.md, docs/modules/parallel-execution.md, docs/modules/auto-plan.md, docs/modules/workspace-sidebar-ui.md, docs/architecture/OVERVIEW.md, packages/workflow-kit/README.md, packages/workflow-kit/docs/modules/workflow-kit-package.md, packages/workflow-kit/docs/modules/parallel-assignments.md, docs/planning/parallel-autoplan-fix.md

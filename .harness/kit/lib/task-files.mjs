@@ -50,3 +50,8 @@ export function selectTaskFiles(root,plan,task,explicit) {
  if(docs&&docs.commit_status!=='DONE')docs.documentation_paths=add(docs.documentation_paths,task.documentation_paths);
  return {selected:actual,excluded,preexisting:baseline?.preexisting??null};
 }
+
+// Verified handoff files belong to the incoming task, not to preexisting edits.
+export function adoptTaskFiles(root,plan,task,files) {
+ atomic(recordPath(root,plan,task)+'.handoff',json(files),0o600);
+}
