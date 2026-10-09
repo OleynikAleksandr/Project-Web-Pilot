@@ -1,43 +1,39 @@
 # Живые страницы сессий
 
-`SessionRuntimes` в `src/session-runtime.mjs` на уровне приложения хранит отдельные WebContentsView, PageState, Composer, ContextSession, AgentTimer и ConversationRecovery. Ключ — workspace/sessionId/assignmentId/taskId. Страницы используют общий профиль входа ChatGPT, фоновые страницы работают с backgroundThrottling=false.
+`SessionRuntimes` (`src/session-runtime.mjs`) на уровне приложения хранит отдельные WebContentsView, PageState, Composer, ContextSession, AgentTimer и ConversationRecovery. Ключ — workspace/sessionId/assignmentId/taskId; профиль входа ChatGPT общий, backgroundThrottling=false.
 
-До создания первой страницы snapshot панели не требует runtime: conversationRecovery = {phase: 'idle', message: '', canRetry: false}, agentRun = null. Это позволяет загрузить разрешения AutoPlan проектов и опубликовать состояние до создания окна. После выбора страницы проекция использует её recovery и timer.
+До первой страницы snapshot возвращает conversationRecovery={phase:'idle',message:'',canRetry:false}, agentRun=null: загрузка разрешений AutoPlan не требует runtime. Затем используются recovery/timer выбранной страницы.
 
 ## Представление и адресация
 
-Окно показывает выбранную страницу через show/hide; скрытие снимает view с contentView, сохраняя её работу и обработчики. Возврат к уже открытому URL не вызывает loadURL и не повторяет recovery. Навигация, epoch, отмена доставки и readiness принадлежат своей записи; запоздалый результат не меняет соседнюю сессию. Тема и скрытие вызовов применяются к живым страницам.
+show/hide снимает view с contentView, сохраняя работу и обработчики. Уже открытый URL не загружается повторно, recovery не переотправляется. Навигация, epoch, отмена доставки и readiness принадлежат своей записи; поздний результат не меняет соседей. Тема и скрытие вызовов применяются ко всем живым страницам.
 
-Узкий sessionStore имеет неизменный адрес. Фоновая запись attempt, chatUrl и recovery требует background и точного workspace/sessionId; обычные UI-методы сохраняют проверку выбора. Запись в чужую, удалённую или архивную сессию запрещена. Обновление фоновой проекции не выбирает строку в панели.
+sessionStore имеет неизменный адрес. Фоновая запись attempt/chatUrl/recovery требует background и точного workspace/sessionId; обычные UI-методы проверяют выбор. Удалённые, архивные и чужие сессии недоступны. Фоновая проекция не выбирает строку панели.
 
-Наблюдатель проверяет WebContents, mainFrame и текущий документ. PageStateBridge использует один IPC listener на ipcMain и карту отдельных получателей по WebContents; освобождение последнего снимает listener. Отсутствие наблюдателя или render-process-gone даёт видимую ошибку и отменяет неподтверждённую доставку своей страницы.
+Наблюдатель проверяет WebContents/mainFrame/документ. PageStateBridge имеет один ipcMain listener и карту получателей по WebContents; последний release снимает listener. Отсутствующий наблюдатель/render-process-gone дают видимую ошибку и отменяют неподтверждённую доставку своей страницы.
 
-show/hide не уничтожают сессию. Отдельный release без force отказывает при busy, pending-доставке или inFlight Composer; при освобождении снимает подписки. Закрытие приложения освобождает реестр, не останавливая независимые службы MCP. Контроллер не владеет BaseWindow; detach/attach и дополнительные окна чатов не реализованы.
+release без force отказывает при busy, pending-доставке или inFlight Composer; успешное освобождение снимает подписки. Закрытие приложения освобождает реестр, сохраняя независимые службы MCP. Контроллер не владеет BaseWindow; detach/attach и дополнительные окна не реализованы.
 
-Обычный AgentTimer теперь остаётся у своей страницы при переключении. Для назначений дополнительно сохраняются раздельные activeMs/waitingMs через ExecutorTimer — [параллельное выполнение](parallel-execution.md).
-
-## AutoPlan проекта
-
-Каждый основной runtime имеет собственные AutoPlan, AutomationSendState и PlanMonitor через project-session-auto-plan. Отправка привязана к record.project(), Composer и Session ID своей страницы, включая скрытую. Один основной чат продолжает sequential, исполнители наследуют родительское разрешение. Хранение workspace/scope, ожидание первого плана, OFF после завершения, restart и журналы Session ID — [AutoPlan](auto-plan.md).
+AgentTimer остаётся у своей страницы. ExecutorTimer сохраняет activeMs/waitingMs назначений — [parallel-execution](parallel-execution.md). Каждый основной runtime имеет AutoPlan/AutomationSendState/PlanMonitor через project-session-auto-plan; адрес отправки — record.project(), Composer и Session ID своей страницы, включая скрытую. Разрешения и журналы — [AutoPlan](auto-plan.md).
 
 ## Восстановление разговора
 
-ConversationRecovery реагирует на видимый error UI (alert/Retry, не текст сообщения): stream recovery timed out, Resume stream unavailable, network error / connection lost на поддержанных EN/RU вариантах. Долгое ожидание и STALL_WARNING сами не открывают восстановление.
+ConversationRecovery реагирует на видимый alert/Retry error UI, а не текст сообщения: stream recovery timed out, Resume stream unavailable, network error/connection lost на поддержанных EN/RU вариантах. Долгое ожидание/STALL_WARNING не запускают восстановление.
 
-Известный разговор — нормализованный chatUrl и manualStart либо отправленный attempt. Одна автоматическая попытка через 3 секунды перепроверяет URL, вход, поле, отсутствие черновика и другой операции, затем открывает тот же адрес. Она не создаёт чат, не повторяет Send и не нажимает Retry генерации.
+Для известного нормализованного chatUrl и manualStart либо отправленного attempt допускается одна автоматическая попытка через 3 с: перепроверяются URL, вход, поле, отсутствие черновика и другой операции, затем открывается тот же адрес. Новый чат, Send и Retry генерации не выполняются. Неизвестный URL/UNKNOWN Send запрещают перезагрузку.
 
-Неизвестный URL/UNKNOWN Send блокируют перезагрузку. Кнопка «Перезагрузить страницу чата» видна по canRetry и объясняет причину. HTTP 429 учитывает Retry-After в диапазоне 60–300 секунд, затем требует явного повтора. Ручной Stop подавляет автоматическое открытие до нового сообщения.
+«Перезагрузить страницу чата» видна по canRetry с причиной. HTTP 429 учитывает Retry-After (60–300 с), затем требует явного повтора. Ручной Stop подавляет автоматическое открытие до нового сообщения.
 
-Checkpoint `conversationRecovery {key,used,cooldownUntil,stoppedAt}` сохраняется в своей сессии; использованная попытка записывается до перезагрузки. Смена видимой сессии не сбрасывает чужое восстановление. После перезапуска сохраняются пауза, Stop и использованная попытка; черновик и неизвестный Send по-прежнему защищены.
+Checkpoint conversationRecovery={key,used,cooldownUntil,stoppedAt} сохраняется в своей сессии; использованная попытка записывается до перезагрузки. Смена выбора не сбрасывает чужой checkpoint. Restart сохраняет паузу, Stop и использованную попытку; черновик и UNKNOWN защищены.
 
 ## Readiness и доставка
 
-Один worker проверяет папки последовательно. UI оставляет последний ожидающий выбор, а запросы контекста исполнителей с retain=true сохраняются в отдельной очереди и не вытесняются переключением панели. Одинаковые запросы объединяются. CONCURRENT_CHANGE при inspect допускает один ограниченный повтор. Кеш готовых результатов ограничен четырьмя папками; сама readiness отправку не разрешает.
+Один worker проверяет папки последовательно. UI сохраняет последний ожидающий выбор; запросы исполнителей retain=true имеют отдельную очередь и не вытесняются выбором панели. Одинаковые запросы объединяются; CONCURRENT_CHANGE при inspect допускает один повтор. Кеш ограничен четырьмя папками; readiness не разрешает Send.
 
-Явная повторная сверка может возобновить ContextSession после CONTEXT_INPUTS_UNAVAILABLE/CONTEXT_CHANGED/PROJECT_READ_FAILED только до начатого Send, без pending-операции и manualStart. Сохранённая попытка не сбрасывается. Отправленные, sending и UNKNOWN не переигрываются. Полный контракт — [доставка контекста](context-delivery.md).
+Явная сверка может возобновить ContextSession после CONTEXT_INPUTS_UNAVAILABLE/CONTEXT_CHANGED/PROJECT_READ_FAILED только до Send, без pending-операции и manualStart, сохраняя attempt. Отправленные/sending/UNKNOWN не переигрываются — [context-delivery](context-delivery.md).
 
 ## Проверки и пределы
 
-Electron smoke начинает настоящий main со старым глобальным AutoPlan ON в свежем временном профиле, до создания окна и страницы; проверяет открывшуюся панель и миграцию в OFF. Пользовательские данные не используются.
+Electron smoke запускает настоящий main со старым глобальным AutoPlan ON в свежем временном профиле до окна/страницы; проверяет открытие панели и миграцию в OFF. Пользовательские данные не используются.
 
-Unit-тесты покрывают адресацию, независимость страниц, переключение/перенос представления без пересоздания, отказ release при работе, позднюю навигацию, сохранение recovery и фоновой очереди. Electron TEST FIXTURE проверяет разные настоящие WebContents и события скрытой страницы. Живые Chat/Work и native Windows остаются пользовательской приёмкой.
+Unit покрывает адресацию, независимость страниц, смену представления без пересоздания, отказ release при работе, позднюю навигацию, recovery и фоновую очередь. Electron TEST FIXTURE проверяет отдельные WebContents и события скрытых страниц. Живые Chat/Work и native Windows принимает пользователь.

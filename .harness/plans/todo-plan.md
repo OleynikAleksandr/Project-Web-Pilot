@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1637,
+  "plan_revision": 1640,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-chat-execution-20261009",
@@ -2138,8 +2138,8 @@
     {
       "id": "DOCS-5",
       "title": "Актуализация всех документов проекта",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "parallel-chat-execution-20261009",
         "task_id": "DOCS-5",
@@ -2156,13 +2156,30 @@
         "docs/architecture/OVERVIEW.md",
         "docs/modules/auto-plan.md",
         "docs/modules/release.md",
-        "docs/modules/session-runtime.md"
+        "docs/modules/session-runtime.md",
+        "README.md",
+        "docs/modules/parallel-execution.md",
+        "docs/modules/workspace-sidebar-ui.md",
+        "docs/modules/plan-view.md",
+        "docs/modules/parallel-execution-acceptance.md",
+        "docs/modules/workspace-setup.md"
       ],
       "acceptance_criteria": [
         "Документы описывают текущий результат, существенное из выпущенных рабочих спецификаций перенесено в контракты модулей; история остаётся в Git."
       ],
       "verification_ids": [],
-      "expected_commit_message": "docs: актуализировать документацию проекта"
+      "expected_commit_message": "docs: актуализировать документацию проекта",
+      "actual_files": [
+        "README.md",
+        "docs/modules/auto-plan.md",
+        "docs/modules/parallel-execution-acceptance.md",
+        "docs/modules/parallel-execution.md",
+        "docs/modules/plan-view.md",
+        "docs/modules/release.md",
+        "docs/modules/session-runtime.md",
+        "docs/modules/workspace-setup.md",
+        "docs/modules/workspace-sidebar-ui.md"
+      ]
     },
     {
       "id": "T035",
@@ -2278,7 +2295,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: parallel-chat-execution-20261009
 Current Task: нет
-Revision: 1637
+Revision: 1640
 
 ## Цель
 
@@ -2446,10 +2463,10 @@ Revision: 1637
   - Git Commit: [DONE] feat: Подготовить выпуск 0.6.108
   - Reference: parallel-chat-execution-20261009 / T034 / implementation
   - Файлы: package.json, package-lock.json, docs/modules/auto-plan.md
-- [TODO] DOCS-5: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать документацию проекта
+- [DONE] DOCS-5: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать документацию проекта
   - Reference: parallel-chat-execution-20261009 / DOCS-5 / implementation
-  - Файлы: docs/architecture/OVERVIEW.md, docs/modules/auto-plan.md, docs/modules/release.md, docs/modules/session-runtime.md
+  - Файлы: docs/architecture/OVERVIEW.md, docs/modules/auto-plan.md, docs/modules/release.md, docs/modules/session-runtime.md, README.md, docs/modules/parallel-execution.md, docs/modules/workspace-sidebar-ui.md, docs/modules/plan-view.md, docs/modules/parallel-execution-acceptance.md, docs/modules/workspace-setup.md
 - [TODO] T035: Собрать парный выпуск 0.6.108 для macOS и Windows — Ожидает
   - Git Commit: [PENDING] feat: Собрать парный выпуск 0.6.108 для macOS и Windows
   - Reference: parallel-chat-execution-20261009 / T035 / implementation

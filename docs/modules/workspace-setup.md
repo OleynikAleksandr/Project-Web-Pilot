@@ -57,6 +57,9 @@
 
 ### Worker и Node
 
+WorkspaceSetup добавляет каталог успешно выбранного абсолютного Node первым в PATH своего дочернего окружения. Это распространяется на SessionPlans, Git hooks и вложенные node --test при запуске приложения с минимальным PATH. Кешированный Node восстанавливает этот приоритет после подготовки runtime; исходное окружение приложения не изменяется, Windows сохраняет единственное поле Path.
+
+
 - Worker — отдельный Node-процесс, не Electron: `execFile(node, [workspace-setup-worker.mjs])`, вход — JSON в stdin (`action, mode, project, name?, fingerprint?`), выход — JSON в stdout; 120 с, 4 MiB. Из окружения удаляются `ELECTRON_RUN_AS_NODE`, `GIT_DIR`, `GIT_WORK_TREE`, `GIT_INDEX_FILE`, `GIT_COMMON_DIR`, `GIT_OBJECT_DIRECTORY`, `GIT_ALTERNATE_OBJECT_DIRECTORIES`, `GIT_PREFIX`; задаются `GIT_OPTIONAL_LOCKS=0`, `GIT_TERMINAL_PROMPT=0`. Коды worker: `SETUP_ACTION`, `SETUP_MODE`, `PROJECT_PATH`, `PREVIEW_CHANGED`, `SETUP_BLOCKED`, `CONCURRENT_CHANGE` и коды Kit; ответ без JSON → `SETUP_FAILED` с хвостом stderr (≤500 символов).
 - Кандидаты Node: macOS — комплектный `Contents/Resources/mac-tools/node/bin/node` (в разработке `.harness/runtime/mac-tools/…`), затем `/opt/homebrew/bin/node`, `/usr/local/bin/node`; Windows — portable `resources/windows-node/node-v24.21.0-win-x64/node.exe` (в разработке `.harness/runtime/windows-node/…`), затем `%ProgramFiles%\nodejs`, `%ProgramFiles(x86)%\nodejs`, `node.exe` из PATH. `process.execPath` Electron как Node не используется. Системный Node на Windows не нужен, автоустановки Node нет.
 - Принимается только линия 24 не ниже 24.21; иначе `NODE_TOO_OLD` (ниже) или `NODE_UNSUPPORTED` (25+). Windows различает `NODE_START_FAILED` (не запускается, таймаут, неверный вывод) и `NODE_MISSING`; macOS — `NODE_MISSING`. Сбойный кандидат не останавливает перебор, кешируется только успешный. stderr и окружение кандидатов в сообщения не попадают. Сам Kit требует Node ≥22.

@@ -4,7 +4,7 @@ Read-only показ current plan checkout (`.harness/plans/todo-plan.md`) в к
 
 ## Код
 
-При выборе назначенного исполнителя Web Pilot показывает родительский общий план. Локальное DONE не подтверждает его завершение. Parallel-проекция проверяет Git через Kit и скрывает staged DONE без source/integration SHA; обычный readWorkspace остаётся быстрым data-only чтением. Состояния исполнителей и очередь — [parallel-execution](parallel-execution.md).
+При выборе назначенного исполнителя Web Pilot скрывает общий план и кнопки его управления; карточка назначения показывает только название и состояние его задачи. В основном чате parallel-проекция заменяет устаревший TODO основного checkout статусом назначения и готовности к интеграции. Локальное DONE не подтверждает общий DONE. Parallel-проекция проверяет Git через Kit и скрывает staged DONE без source/integration SHA; обычный readWorkspace остаётся быстрым data-only чтением. Состояния исполнителей и очередь — [parallel-execution](parallel-execution.md).
 
 - `src/workspace-session.mjs` — `readWorkspace(workspace, sessionId)` (data-only разбор плана), `projectPlan` (→ `planView`), `readScopeTitle`; `WorkspaceSessions.inspect`.
 - `src/plan-monitor.mjs` — `PlanMonitor` (`observeSelection`, `refresh`, `tick`, `view`, `invalidate`, `close`).
